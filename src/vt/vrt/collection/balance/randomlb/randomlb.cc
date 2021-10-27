@@ -52,8 +52,43 @@ void RandomLB::init(objgroup::proxy::Proxy<RandomLB> in_proxy) {
   proxy = in_proxy;
 }
 
+/*static*/ std::unordered_map<std::string, std::string>
+RandomLB::getInputKeysWithHelp() {
+  std::unordered_map<std::string, std::string> const keys_help = {
+    {
+      "randomize_seed",
+      R"(
+Values: {true, false}
+Default: false
+Description:
+  Whether the seed which determines placement of objects should be randomized.
+  The parameter "seed" is only read if this is set to false. When it is true,
+  the load balancer will create a std::random_device to generate the values.
+)"
+    },
+    {
+      "seed",
+      R"(
+Values: <int>
+Default: 123456789
+Description:
+  An integer value that is used to seed the value that generates random
+  locations for migrations. The seed is deterministically combined with the
+  phase number and the node (rank) to provide a unique seed for each rank for
+  each phase.
+)"
+    }
+  };
+  return keys_help;
+}
+
 void RandomLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"seed", "randomize_seed"};
+  auto keys_help = getInputKeysWithHelp();
+
+  std::vector<std::string> allowed;
+  for (auto&& elm : keys_help) {
+    allowed.push_back(elm.first);
+  }
   spec->checkAllowedKeys(allowed);
   seed_ = spec->getOrDefault<int32_t>("seed", seed_);
   randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);

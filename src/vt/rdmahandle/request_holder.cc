@@ -65,7 +65,7 @@ bool RequestHolder::test() {
   std::vector<MPI_Status> stats;
   stats.resize(reqs_.size());
   auto flags = std::make_unique<int[]>(reqs_.size());
-  MPI_Testall(reqs_.size(), &reqs_[0], &flags[0], &stats[0]);
+  MPI_Testall(reqs_.size(), reqs_.data(), flags.get(), stats.data());
   for (std::size_t i = 0; i < reqs_.size(); i++) {
     if (not flags[i]) {
       new_reqs.push_back(reqs_[i]);

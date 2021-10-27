@@ -67,6 +67,8 @@ struct ZoltanLB : BaseLB {
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
 
+  static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
+
 private:
   struct Graph {
     using GID = std::unique_ptr<ZOLTAN_ID_TYPE[]>;

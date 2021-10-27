@@ -190,7 +190,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_small_put) {
   if (my_node == from_node) {
     for (int i = 0; i < num_msg_sent; i++) {
       auto msg = makeMessage<PutTestMessage>();
-      msg->setPut(&test_vec[0], sizeof(int)*test_vec.size());
+      msg->setPut(test_vec.data(), sizeof(int)*test_vec.size());
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
@@ -215,7 +215,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
   if (my_node == from_node) {
     for (int i = 0; i < num_msg_sent; i++) {
       auto msg = makeMessage<PutTestMessage>();
-      msg->setPut(&test_vec_2[0], sizeof(int)*test_vec_2.size());
+      msg->setPut(test_vec_2.data(), sizeof(int)*test_vec_2.size());
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif

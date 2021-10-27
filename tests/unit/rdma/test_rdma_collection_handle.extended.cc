@@ -77,7 +77,7 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
     auto next_x = idx.x() + 1 < 8 ? idx.x() + 1 : 0;
     vt::Index2D next(next_x, idx.y());
     auto ptr = std::make_unique<T[]>(8);
-    handle_.get(next, &ptr[0], 8, 0, vt::Lock::Shared);
+    handle_.get(next, ptr.get(), 8, 0, vt::Lock::Shared);
     for (int i = 0; i < 8; i++) {
       EXPECT_EQ(ptr[i], next_x * 100 + idx.y());
     }
@@ -106,7 +106,7 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
     auto next_x = idx.x() + 1 < 8 ? idx.x() + 1 : 0;
     vt::Index2D next(next_x, idx.y());
     auto ptr = std::make_unique<T[]>(8);
-    handle_.get(next, &ptr[0], 8, 0, vt::Lock::Shared);
+    handle_.get(next, ptr.get(), 8, 0, vt::Lock::Shared);
     for (int i = 0; i < 8; i++) {
       EXPECT_EQ(ptr[i], next_x * 100 + idx.y());
     }

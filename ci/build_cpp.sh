@@ -110,6 +110,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_doxygen_enabled="${VT_DOXYGEN_ENABLED:-0}" \
       -Dvt_mimalloc_enabled="${VT_MIMALLOC_ENABLED:-0}" \
       -Dvt_asan_enabled="${VT_ASAN_ENABLED:-0}" \
+      -Dvt_ubsan_enabled="${VT_UBSAN_ENABLED:-0}" \
       -Dvt_werror_enabled="${VT_WERROR_ENABLED:-0}" \
       -Dvt_pool_enabled="${VT_POOL_ENABLED:-1}" \
       -Dvt_build_extended_tests="${VT_EXTENDED_TESTS_ENABLED:-1}" \
@@ -140,6 +141,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_ci_build="${VT_CI_BUILD:-0}" \
       -Dvt_debug_verbose="${VT_DEBUG_VERBOSE:-}" \
       -Dvt_tests_num_nodes="${VT_TESTS_NUM_NODES:-}" \
+      -Dvt_no_color_enabled="${VT_NO_COLOR_ENABLED:-0}" \
       "$VT"
 cmake_conf_ret=$?
 

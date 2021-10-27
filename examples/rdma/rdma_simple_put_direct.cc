@@ -72,13 +72,13 @@ static void putDataFn(HandleMsg* msg) {
   if (this_node == 1 or this_node == 2) {
     fmt::print(
       "{}: putting data, handle={}, my_data={}\n",
-      this_node, msg->han, print_ptr(&my_data[0])
+      this_node, msg->han, print_ptr(my_data.get())
     );
 
     int const num_elm = 2;
     int const offset = num_elm*(this_node-1);
     auto han = msg->han;
-    vt::theRDMA()->putTypedData(msg->han, &my_data[0], num_elm, offset, [=]{
+    vt::theRDMA()->putTypedData(msg->han, my_data.get(), num_elm, offset, [=]{
       fmt::print(
         "{}: after put: sending msg back to 0: offset={}\n", this_node, offset
       );
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 
   if (this_node == 0) {
     vt::RDMA_HandleType my_handle =
-      vt::theRDMA()->registerNewTypedRdmaHandler(&my_data[0], put_len);
+      vt::theRDMA()->registerNewTypedRdmaHandler(my_data.get(), put_len);
 
     fmt::print(
       "{}: initializing my_handle={}\n",

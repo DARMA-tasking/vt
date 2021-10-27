@@ -84,7 +84,7 @@ struct hash<LBTypeType> {
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-extern std::unordered_map<LBType,std::string> lb_names_;
+std::unordered_map<LBType, std::string>& get_lb_names();
 
 }}}} /* end namespace vt::vrt::collection::balance */
 

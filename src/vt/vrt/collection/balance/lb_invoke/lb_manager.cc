@@ -84,7 +84,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   vt_debug_print(
     verbose, lb,
     "LBManager::decideLBToRun: phase={}, try_file={}, cached_phase_={}, lb={}\n",
-    phase, try_file, cached_phase_, lb_names_[cached_lb_]
+    phase, try_file, cached_phase_, get_lb_names()[cached_lb_]
   );
 
   if (phase == cached_phase_) {
@@ -101,7 +101,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   }
 
   //--- User-specified map without any change, thus do not run
-  if ((theConfig()->vt_lb_name == lb_names_[LBType::StatsMapLB]) and
+  if ((theConfig()->vt_lb_name == get_lb_names()[LBType::StatsMapLB]) and
       not theStatsReader()->needsLB(phase)) {
     return LBType::NoLB;
   }
@@ -117,7 +117,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
     vtAssert(interval != 0, "LB Interval must not be 0");
     if (phase % interval == 1 || (interval == 1 && phase != 0)) {
       bool name_match = false;
-      for (auto&& elm : lb_names_) {
+      for (auto&& elm : get_lb_names()) {
         if (elm.second == theConfig()->vt_lb_name) {
           the_lb = elm.first;
           name_match = true;
@@ -138,7 +138,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   vt_debug_print(
     terse, lb,
     "LBManager::decidedLBToRun: phase={}, return lb_={}\n",
-    phase, lb_names_[the_lb]
+    phase, get_lb_names()[the_lb]
   );
 
   cached_lb_ = the_lb;
@@ -231,7 +231,7 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
       "LBManager::startLB: phase={}, balancer={}, name={}\n",
       phase,
       static_cast<typename std::underlying_type<LBType>::type>(lb),
-      lb_names_[lb]
+      get_lb_names()[lb]
     );
   }
 
@@ -260,6 +260,82 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
 
   LBProxyType base_proxy = lb_instances_["chosen"];
   runLB(base_proxy, phase);
+}
+
+/*static*/
+void LBManager::printLBArgsHelp(LBType lb) {
+  auto sep = fmt::format("{}{:-^120}{}\n", debug::bd_green(), "", debug::reset());
+  fmt::print(sep);
+  fmt::print(
+    "{}{}LB arguments for {}{}{}:\n",
+    debug::vtPre(), debug::green(), debug::magenta(),
+    get_lb_names()[lb], debug::reset()
+  );
+  fmt::print(sep);
+  fmt::print("\n");
+
+  std::unordered_map<std::string, std::string> help;
+
+  switch (lb) {
+  case LBType::HierarchicalLB:
+    help = lb::HierarchicalLB::getInputKeysWithHelp();
+    break;
+  case LBType::GreedyLB:
+    help = lb::GreedyLB::getInputKeysWithHelp();
+    break;
+  case LBType::RotateLB:
+    help = lb::RotateLB::getInputKeysWithHelp();
+    break;
+  case LBType::TemperedLB:
+    help = lb::TemperedLB::getInputKeysWithHelp();
+    break;
+  case LBType::RandomLB:
+    help = lb::RandomLB::getInputKeysWithHelp();
+    break;
+  case LBType::StatsMapLB:
+    help = lb::StatsMapLB::getInputKeysWithHelp();
+    break;
+# if vt_check_enabled(zoltan)
+  case LBType::ZoltanLB:
+    help = lb::ZoltanLB::getInputKeysWithHelp();
+    break;
+# endif
+  case LBType::NoLB:
+    // deliberately skip retrieving arguments
+    break;
+  default:
+    fmt::print("Documentation has not been provided for this LB.\n\n");
+    return;
+    break;
+  }
+
+  if (help.size() > 0) {
+    for (auto &arg_help : help) {
+      fmt::print(
+        "{}Argument: {}{}{}",
+        debug::yellow(), debug::red(), arg_help.first, debug::reset()
+      );
+      fmt::print("{}{}{}\n", debug::reset(), arg_help.second, debug::reset());
+    }
+  } else {
+    fmt::print("No LB arguments are supported by this load balancer.\n\n");
+  }
+}
+
+/*static*/
+void LBManager::printLBArgsHelp(std::string lb_name) {
+  if (lb_name.compare("NoLB") == 0) {
+    for (auto&& lb : vrt::collection::balance::get_lb_names()) {
+      vrt::collection::balance::LBManager::printLBArgsHelp(lb.first);
+    }
+  } else {
+    for (auto&& lb : vrt::collection::balance::get_lb_names()) {
+      if (lb_name == lb.second) {
+        vrt::collection::balance::LBManager::printLBArgsHelp(lb.first);
+        break;
+      }
+    }
+  }
 }
 
 void LBManager::startup() {

@@ -26,12 +26,14 @@ jobs:
       VT_MIMALLOC: [% vt_mimalloc %]
       VT_DOCS: [% vt_docs %]
       VT_ASAN: [% vt_asan %]
+      VT_UBSAN: [% vt_ubsan %]
       VT_POOL: [% vt_pool %]
       VT_EXTENDED_TESTS: [% vt_extended_tests %]
       VT_UNITY_BUILD: [% vt_unity_build %]
       VT_ZOLTAN: [% vt_zoltan %]
       VT_CI_BUILD: [% vt_ci_build %]
-      VT_DIAGNOSTICS:  [% vt_diagnostics %]
+      VT_DIAGNOSTICS: [% vt_diagnostics %]
+      VT_NO_COLOR: [% vt_no_color %]
       CACHE: [% cache_dir %]
 
     steps:

@@ -203,7 +203,7 @@ DemanglerUtils::join(
 ) {
   std::string s;
   for (std::string const& i : strs) {
-    if (&i != &strs[0]) {
+    if (&i != strs.data()) {
       s += delim;
     }
     s += i;

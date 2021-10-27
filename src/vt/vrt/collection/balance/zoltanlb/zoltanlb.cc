@@ -62,6 +62,34 @@ void ZoltanLB::init(objgroup::proxy::Proxy<ZoltanLB> in_proxy) {
   proxy = in_proxy;
 }
 
+/*static*/ std::unordered_map<std::string, std::string>
+ZoltanLB::getInputKeysWithHelp() {
+  std::string const read_manual = "Please read Zoltan manual.";
+  std::unordered_map<std::string, std::string> const keys_help = {
+    {"LB_APPROACH",                   read_manual },
+    {"DEBUG_LEVEL",                   read_manual },
+    {"FINAL_OUTPUT",                  read_manual },
+    {"DEBUG_PROCESSOR",               read_manual },
+    {"CHECK_HYPERGRAPH",              read_manual },
+    {"PHG_EDGE_WEIGHT_OPERATION",     read_manual },
+    {"IMBALANCE_TOL",                 read_manual },
+    {"PHG_REPART_MULTIPLIER",         read_manual },
+    {"PHG_EDGE_WEIGHT_OPERATION",     read_manual },
+    {"PHG_CUT_OBJECTIVE",             read_manual },
+    {"PHG_OUTPUT_LEVEL",              read_manual },
+    {"PHG_COARSENING_METHOD",         read_manual },
+    {"PHG_COARSEPARTITION_METHOD",    read_manual },
+    {"PHG_REFINEMENT_QUALITY",        read_manual },
+    {"PHG_RANDOMIZE_INPUT",           read_manual },
+    {"PHG_EDGE_SIZE_THRESHOLD",       read_manual },
+    {"PHG_PROCESSOR_REDUCTION_LIMIT", read_manual },
+    {"PHG_REFINEMENT_METHOD",         read_manual },
+    {"PHG_MULTILEVEL",                read_manual },
+    {"SEED",                          read_manual }
+  };
+  return keys_help;
+}
+
 void ZoltanLB::inputParams(balance::SpecEntry* spec) {
   zoltan_config_ = {
     {"LB_APPROACH",                   "REPARTITION" },

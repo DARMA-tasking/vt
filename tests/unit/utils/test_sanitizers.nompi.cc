@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 rotatelb.cc
+//                           test_sanitizers.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,49 +41,20 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
-#include "vt/vrt/collection/manager.h"
+#include <gtest/gtest.h>
+#include <gtest/gtest-spi.h>
 
-#include <memory>
+#ifdef VT_UBSAN_ENABLED
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
-
-void RotateLB::init(objgroup::proxy::Proxy<RotateLB> in_proxy) {
-  proxy = in_proxy;
+void test_if_ubsan_fails() {
+  int i = 2048;
+  i <<= 28;
+  std::cout << "i: " << i << std::endl;
 }
 
-/*static*/ std::unordered_map<std::string, std::string>
-RotateLB::getInputKeysWithHelp() {
-  return std::unordered_map<std::string, std::string>{};
+TEST(TestSanitizers, test_if_ubsan_fails) {
+  EXPECT_FATAL_FAILURE(
+    test_if_ubsan_fails(), "Encountered an undefined behavior sanitizer error");
 }
 
-void RotateLB::inputParams(balance::SpecEntry* spec) { }
-
-void RotateLB::runLB() {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-  auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
-
-  if (this_node == 0) {
-    vt_print(
-      lb,
-      "RotateLB: runLB: next_node={}\n",
-      next_node
-    );
-    fflush(stdout);
-  }
-
-  for (auto obj : *load_model_) {
-    auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
-    vt_debug_print(
-      terse, lb,
-      "\t RotateLB::migrating object to: obj={}, load={}, to_node={}\n",
-      obj, load, next_node
-    );
-    migrateObjectTo(obj, next_node);
-  }
-}
-
-}}}} /* end namespace vt::vrt::collection::lb */
-
+#endif

@@ -26,6 +26,7 @@
 #   VT_DOCS=0                 # Enable doxygen build
 #   VT_TRACE_RT=0             # Enable tracing at runtime (for testing)
 #   VT_ASAN=0                 # Enable address sanitizer
+#   VT_UBSAN=0                # Enable undefined behavior sanitizer
 #   VT_WERROR=1               # Treat all warnings as errors
 #   VT_EXTENDED_TESTS=1       # Build all the extended testing
 #   VT_ZOLTAN=0               # Build with Zoltan enabled
@@ -39,6 +40,7 @@
 #   BUILD_TYPE=release        # CMake build type
 #   CODE_COVERAGE=0           # Enable generation of code coverage reports
 #   VT_DEBUG_VERBOSE          # Enable verbose debug prints at compile-time
+#   VT_NO_COLOR_ENABLED=0     # Set --vt_no_color flag to true by default
 #
 # In order to run in the container, there are two stages. First, one must build
 # or pull the base container with the variables exported (or using the defaults
@@ -132,6 +134,7 @@ x-vtopts: &vtopts
   VT_TRACE_RUNTIME_ENABLED: ${VT_TRACE_RT:-0}
   VT_BUILD_TRACE_ONLY: ${VT_TRACE_ONLY:-0}
   VT_ASAN_ENABLED: ${VT_ASAN:-0}
+  VT_UBSAN_ENABLED: ${VT_UBSAN:-0}
   VT_WERROR_ENABLED: ${VT_WERROR:-1}
   VT_POOL_ENABLED: ${VT_POOL:-1}
   VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
@@ -149,9 +152,11 @@ x-vtopts: &vtopts
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
   LSAN_OPTIONS: ${LSAN_OPTIONS-}
+  UBSAN_OPTIONS: ${UBSAN_OPTIONS-}
   VT_CI_BUILD: ${VT_CI_BUILD:-0}
   VT_DEBUG_VERBOSE: ${VT_DEBUG_VERBOSE-}
   VT_TESTS_NUM_NODES: ${VT_TESTS_NUM_NODES:-}
+  VT_NO_COLOR_ENABLED: ${VT_NO_COLOR:-0}
   CODECOV_TOKEN: ${CODECOV_TOKEN:-}
 
 services:

@@ -36,6 +36,7 @@ variables:
   VT_MIMALLOC: 0
   VT_DOCS: 0
   VT_ASAN: 0
+  VT_UBSAN: 0
   VT_WERROR: 1
   VT_POOL: 1
   VT_EXTENDED_TESTS: 1
@@ -48,6 +49,7 @@ variables:
   VT_ZOLTAN: 0
   VT_CI_BUILD: 1
   VT_DIAGNOSTICS: 1
+  VT_NO_COLOR: 1
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-clang-3.9-cache
   build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
@@ -55,6 +57,7 @@ variables:
   TS_YEAR: 0
   TS_MONTH: 0
   TS_DAY: 0
+
 
 
 stages:

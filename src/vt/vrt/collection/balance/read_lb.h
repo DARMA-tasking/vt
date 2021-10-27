@@ -120,7 +120,7 @@ struct SpecEntry {
   std::string getName() const { return lb_name_; }
   ParamMapType getParams() const { return params_; }
   LBType getLB() const {
-    for (auto&& elm : lb_names_) {
+    for (auto&& elm : get_lb_names()) {
       if (lb_name_ == elm.second) {
         return elm.first;
       }

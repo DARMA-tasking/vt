@@ -103,7 +103,7 @@ static void put_handler_fn(
   fmt::print(
     "{}: put_handler_fn: my_data={}, in_ptr={}, in_num_bytes={}, tag={}, "
     "offset={}\n",
-    this_node, print_ptr(&my_data[0]), print_ptr(in_ptr), in_num_bytes, tag,
+    this_node, print_ptr(my_data.get()), print_ptr(in_ptr), in_num_bytes, tag,
     offset
   );
 
@@ -115,7 +115,7 @@ static void put_handler_fn(
     );
   }
 
-  std::memcpy(&my_data[0] + offset, in_ptr, in_num_bytes);
+  std::memcpy(my_data.get() + offset, in_ptr, in_num_bytes);
 }
 
 int main(int argc, char** argv) {

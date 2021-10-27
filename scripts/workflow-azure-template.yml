@@ -26,6 +26,7 @@ variables:
   VT_MIMALLOC: [% vt_mimalloc %]
   VT_DOCS: [% vt_docs %]
   VT_ASAN: [% vt_asan %]
+  VT_UBSAN: [% vt_ubsan %]
   VT_WERROR: [% vt_werror %]
   VT_POOL: [% vt_pool %]
   VT_EXTENDED_TESTS: [% vt_extended_tests %]
@@ -38,6 +39,7 @@ variables:
   VT_ZOLTAN: [% vt_zoltan %]
   VT_CI_BUILD: [% vt_ci_build %]
   VT_DIAGNOSTICS: [% vt_diagnostics %]
+  VT_NO_COLOR: [% vt_no_color %]
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: [% cache_name %]
   build_root: "$(CACHE)/[% build_root %]/"
@@ -46,6 +48,7 @@ variables:
   TS_MONTH: 0
   TS_DAY: 0
 [% IF lsan_options %]  LSAN_OPTIONS: [% lsan_options %][% END %]
+[% IF ubsan_options %]  UBSAN_OPTIONS: [% ubsan_options %][% END %]
 
 stages:
 - stage: Build
