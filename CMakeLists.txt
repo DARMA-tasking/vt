@@ -89,6 +89,7 @@ endif()
 option(vt_mimalloc_enabled "Build VT with mimalloc" OFF)
 option(vt_mimalloc_static "Build VT with mimalloc using static linking" ON)
 option(vt_asan_enabled "Build VT with address sanitizer" OFF)
+option(vt_ubsan_enabled "Build VT with undefined behavior sanitizer" OFF)
 
 option(vt_werror_enabled "Build VT with -Werror enabled" OFF)
 if (vt_werror_enabled)

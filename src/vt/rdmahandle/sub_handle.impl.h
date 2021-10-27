@@ -210,7 +210,7 @@ void SubHandle<T,E,IndexT>::updateInfo(
   auto ptr = std::make_unique<uint64_t[]>(home_size);
   // These can probably be relaxed to Shared locks because lin_idx is never
   // modified
-  loc_handle_.get(home, &ptr[0], home_size, 0, Lock::Exclusive);
+  loc_handle_.get(home, ptr.get(), home_size, 0, Lock::Exclusive);
   for (uint64_t i = 0; i < home_size; i += 4) {
     vt_debug_print(
       verbose, rdma,
@@ -229,7 +229,7 @@ void SubHandle<T,E,IndexT>::updateInfo(
       auto pptr = std::make_unique<uint64_t[]>(2);
       pptr[0] = info.getOffset();
       pptr[1] = info.getNode();
-      loc_handle_.put(home, &pptr[0], 2, offset + 1, Lock::Exclusive);
+      loc_handle_.put(home, pptr.get(), 2, offset + 1, Lock::Exclusive);
     }
   }
 }
@@ -242,7 +242,7 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
     auto offset = getOrderedOffset(idx, home_node);
     if (not is_migratable_) {
       auto ptr = std::make_unique<uint64_t[]>(4);
-      loc_handle_.get(home_node, &ptr[0], 4, offset*2, Lock::Exclusive);
+      loc_handle_.get(home_node, ptr.get(), 4, offset*2, Lock::Exclusive);
       auto lin_idx = linearize(idx);
       vt_debug_print(
         verbose, rdma,
@@ -254,7 +254,7 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
       return IndexInfo(home_node, ptr[1], ptr[3]-ptr[1]);
     } else {
       auto ptr = std::make_unique<uint64_t[]>(4);
-      loc_handle_.get(home_node, &ptr[0], 4, offset*4, Lock::Exclusive);
+      loc_handle_.get(home_node, ptr.get(), 4, offset*4, Lock::Exclusive);
       auto lin_idx = linearize(idx);
       vt_debug_print(
         verbose, rdma,
@@ -274,7 +274,7 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
     );
     auto lin_idx = linearize(idx);
     auto ptr = std::make_unique<uint64_t[]>(home_size);
-    loc_handle_.get(home_node, &ptr[0], home_size, 0, Lock::Exclusive);
+    loc_handle_.get(home_node, ptr.get(), home_size, 0, Lock::Exclusive);
     if (not is_migratable_) {
       for (uint64_t i = 0; i < home_size; i += 2) {
         vt_debug_print(

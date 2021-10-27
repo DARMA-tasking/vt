@@ -119,7 +119,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_1) {
       auto idx_rank = node * num_hans + han;
       vt::Index2D idx(node, han);
       auto ptr = std::make_unique<T[]>(num_vals);
-      han_set->get(idx, &ptr[0], num_vals, 0, vt::Lock::Shared);
+      han_set->get(idx, ptr.get(), num_vals, 0, vt::Lock::Shared);
       UpdateData<T>::test(std::move(ptr), space, num_vals, idx_rank, 0);
     }
   }
@@ -164,7 +164,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_2) {
 
       auto idx_rank = node * max_hans + han;
       auto ptr = std::make_unique<T[]>(count);
-      han_set->get(idx, &ptr[0], count, 0, vt::Lock::Shared);
+      han_set->get(idx, ptr.get(), count, 0, vt::Lock::Shared);
       UpdateData<T>::test(std::move(ptr), space, count, idx_rank, 0);
     }
   }
@@ -245,7 +245,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_3) {
 
       auto idx_rank = node * num_hans + han;
       auto ptr = std::make_unique<T[]>(size);
-      auto req = han_set->rget(idx, &ptr[0], size, 0, vt::Lock::Exclusive);
+      auto req = han_set->rget(idx, ptr.get(), size, 0, vt::Lock::Exclusive);
       req.wait();
       UpdateData<T>::test(std::move(ptr), space, size, idx_rank, 0, num_nodes);
     }
@@ -286,8 +286,8 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_4) {
     vt::Index2D idx(next, han);
     auto ptr = std::make_unique<T[]>(num_vals/2);
     auto idx_rank = this_node * num_hans + han;
-    UpdateData<T>::setMem(&ptr[0], space, num_vals/2, idx_rank, num_vals/2);
-    han_set->put(idx, &ptr[0], num_vals/2, num_vals/2, vt::Lock::Exclusive);
+    UpdateData<T>::setMem(ptr.get(), space, num_vals/2, idx_rank, num_vals/2);
+    han_set->put(idx, ptr.get(), num_vals/2, num_vals/2, vt::Lock::Exclusive);
   }
 
   // Barrier to order following locks
@@ -297,7 +297,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_4) {
     vt::Index2D idx(next, han);
     auto ptr = std::make_unique<T[]>(num_vals);
     auto ptr2 = std::make_unique<T[]>(num_vals);
-    han_set->get(idx, &ptr[0], num_vals, 0, vt::Lock::Shared);
+    han_set->get(idx, ptr.get(), num_vals, 0, vt::Lock::Shared);
     for (std::size_t i  = 0; i < num_vals; i++) {
       ptr2[i] = ptr[i];
     }
@@ -353,7 +353,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_5) {
       vt::Index2D idx(node, han);
       auto idx_rank = node * num_hans + han;
       auto ptr = std::make_unique<T[]>(num_vals);
-      han_set->get(idx, &ptr[0], num_vals, 0, vt::Lock::Exclusive);
+      han_set->get(idx, ptr.get(), num_vals, 0, vt::Lock::Exclusive);
       UpdateData<T>::test(std::move(ptr), space, num_vals, idx_rank, 0, num_nodes);
     }
   }

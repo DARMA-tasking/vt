@@ -270,7 +270,7 @@ void StatsRestartReader::gatherMsgs(VecMsg *msg) {
       proc_phase_runs_LB_[phaseID] = (!migrate.empty());
       auto& myList = proc_move_list_[phaseID];
       myList.resize(toMove.size() - header);
-      std::copy(&toMove[header], &toMove[0] + toMove.size(),
+      std::copy(&toMove[header], toMove.data() + toMove.size(),
                 myList.begin());
     }
   }
@@ -293,7 +293,7 @@ void StatsRestartReader::scatterMsgs(VecMsg *msg) {
   }
   //--- Copy the migration information
   myList.resize(recvVec.size() - header);
-  std::copy(&recvVec[header], &recvVec[0]+recvVec.size(), myList.begin());
+  std::copy(&recvVec[header], recvVec.data()+recvVec.size(), myList.begin());
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

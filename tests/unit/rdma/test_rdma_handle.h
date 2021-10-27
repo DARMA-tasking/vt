@@ -101,18 +101,18 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
   for (vt::NodeType node = 0; node < num; node++) {
     {
       auto ptr = std::make_unique<T[]>(size);
-      handle.get(node, &ptr[0], size, 0, vt::Lock::Shared);
+      handle.get(node, ptr.get(), size, 0, vt::Lock::Shared);
       UpdateData<T>::test(std::move(ptr), space, size, node, 0);
     }
     {
       auto ptr = std::make_unique<T[]>(size/2);
-      auto req = handle.rget(node, &ptr[0], size/2, size/2, vt::Lock::Shared);
+      auto req = handle.rget(node, ptr.get(), size/2, size/2, vt::Lock::Shared);
       req.wait();
       UpdateData<T>::test(std::move(ptr), space, size/2, node, size/2);
     }
     {
       auto ptr = std::make_unique<T[]>(1);
-      handle.get(node, &ptr[0], 1, size-1, vt::Lock::Shared);
+      handle.get(node, ptr.get(), 1, size-1, vt::Lock::Shared);
       UpdateData<T>::test(std::move(ptr), space, 1, node, size-1);
     }
   }
@@ -144,7 +144,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
   for (vt::NodeType node = 0; node < num; node++) {
     {
       auto ptr = std::make_unique<T[]>(size);
-      handle.get(node, &ptr[0], size, 0, vt::Lock::Shared);
+      handle.get(node, ptr.get(), size, 0, vt::Lock::Shared);
       UpdateData<T>::test(std::move(ptr), space, size, node, 0);
     }
   }
@@ -154,8 +154,8 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
 
   {
     auto ptr = std::make_unique<T[]>(size/2);
-    UpdateData<T>::setMem(&ptr[0], space, size/2, rank, size/2);
-    handle.put(next, &ptr[0], size/2, size/2, vt::Lock::Exclusive);
+    UpdateData<T>::setMem(ptr.get(), space, size/2, rank, size/2);
+    handle.put(next, ptr.get(), size/2, size/2, vt::Lock::Exclusive);
   }
 
   // Barrier to allow puts to finish
@@ -164,7 +164,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
   {
     auto ptr = std::make_unique<T[]>(size);
     auto ptr2 = std::make_unique<T[]>(size);
-    handle.get(next, &ptr[0], size, 0, vt::Lock::Shared);
+    handle.get(next, ptr.get(), size, 0, vt::Lock::Shared);
     for (std::size_t i  = 0; i < size; i++) {
       ptr2[i] = ptr[i];
     }
@@ -198,7 +198,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_3) {
       for (std::size_t i = 0; i < size; i++) {
         ptr[i] = static_cast<T>(1);
       }
-      handle.accum(node, &ptr[0], size, 0, MPI_SUM, vt::Lock::Shared);
+      handle.accum(node, ptr.get(), size, 0, MPI_SUM, vt::Lock::Shared);
     }
   }
 
@@ -208,7 +208,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_3) {
   for (vt::NodeType node = 0; node < num; node++) {
     {
       auto ptr = std::make_unique<T[]>(size);
-      handle.get(node, &ptr[0], size, 0, vt::Lock::Exclusive);
+      handle.get(node, ptr.get(), size, 0, vt::Lock::Exclusive);
       UpdateData<T>::test(std::move(ptr), space, size, 0, 0, num);
     }
   }
@@ -268,7 +268,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_5) {
   for (vt::NodeType node = 0; node < num; node++) {
     {
       auto ptr = std::make_unique<T[]>(size);
-      handle.get(node, &ptr[0], size, 0, vt::Lock::Exclusive);
+      handle.get(node, ptr.get(), size, 0, vt::Lock::Exclusive);
       UpdateData<T>::test(std::move(ptr), space, size, 0, node, num);
     }
   }

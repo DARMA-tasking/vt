@@ -231,4 +231,8 @@ function(link_target_with_vt)
   if (vt_asan_enabled)
     target_link_libraries(${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} -fsanitize=address)
   endif()
+
+  if (vt_ubsan_enabled)
+    target_link_libraries(${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} -fsanitize=undefined)
+  endif()
 endfunction()

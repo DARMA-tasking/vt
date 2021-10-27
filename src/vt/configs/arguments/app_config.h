@@ -78,7 +78,11 @@ struct AppConfig {
   }
 
   bool vt_color      = true;
+#ifdef VT_NO_COLOR_ENABLED
+  bool vt_no_color   = true;
+#else
   bool vt_no_color   = false;
+#endif
   bool vt_auto_color = false;
   bool vt_quiet      = false;
   // Derived from vt_*_color arguments after parsing.
@@ -145,6 +149,7 @@ struct AppConfig {
   std::string vt_lb_stats_file    = "stats.%p.json";
   std::string vt_lb_stats_dir_in  = "vt_lb_stats_in";
   std::string vt_lb_stats_file_in = "stats.%p.json";
+  bool vt_help_lb_args        = false;
 
   bool vt_no_detect_hang       = false;
   bool vt_print_no_progress    = true;
@@ -308,6 +313,7 @@ struct AppConfig {
       | vt_lb_stats_file
       | vt_lb_stats_dir_in
       | vt_lb_stats_file_in
+      | vt_help_lb_args
 
       | vt_no_detect_hang
       | vt_print_no_progress

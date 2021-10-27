@@ -52,8 +52,17 @@ char** test_argv = nullptr;
 
 }}} // end namespace vt::tests::unit
 
-int main(int argc, char **argv) {
+extern "C" {
+#ifdef VT_UBSAN_ENABLED
 
+void __ubsan_on_report() {
+  FAIL() << "Encountered an undefined behavior sanitizer error";
+}
+
+#endif
+}
+
+int main(int argc, char** argv) {
   using namespace vt::tests::unit;
 
   test_argc = argc;

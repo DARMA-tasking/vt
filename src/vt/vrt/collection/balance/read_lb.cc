@@ -199,7 +199,7 @@ int eatWhitespace(std::ifstream& file) {
      * Check to make sure we have a valid LB name
      */
     bool valid_lb_found = false;
-    for (auto&& elm : lb_names_) {
+    for (auto&& elm : get_lb_names()) {
       if (lb_name == elm.second) {
         valid_lb_found = true;
       }

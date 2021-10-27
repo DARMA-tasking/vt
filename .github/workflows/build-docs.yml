@@ -27,6 +27,7 @@ jobs:
       VT_MIMALLOC: 0
       VT_DOCS: 1
       VT_ASAN: 0
+      VT_UBSAN: 0
       TOKEN: ${{ secrets.GH_PAT }}
 
     steps:

@@ -312,7 +312,7 @@ void Runtime::printStartupBanner() {
 
       // Check validity of LB passed to VT
       bool found = false;
-      for (auto&& lb : vrt::collection::balance::lb_names_) {
+      for (auto&& lb : vrt::collection::balance::get_lb_names()) {
         if (getAppConfig()->vt_lb_name == lb.second) {
           found = true;
           break;

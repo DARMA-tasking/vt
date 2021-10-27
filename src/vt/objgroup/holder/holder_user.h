@@ -61,6 +61,7 @@ struct HolderUser final : HolderObjBase<ObjT> {
 public:
   ObjT* get() override { return *obj_; }
   bool exists() override { return obj_ != nullptr; }
+  void* getPtr() override { return *obj_; }
 
   template <typename... Args>
   void reset(Args&&... args) {

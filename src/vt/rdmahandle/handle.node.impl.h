@@ -95,11 +95,11 @@ Handle<
   if (this->getBuffer() == nullptr) {
     auto ptr = std::make_unique<T[]>(len);
     auto r = vt::theHandleRDMA()->getEntry<T,E>(key_).rget(
-      node, l, &ptr[0], len, offset + this->hoff()
+      node, l, ptr.get(), len, offset + this->hoff()
     );
     r.addAction([cptr=std::move(ptr),actions=this->actions_]{
       for (auto&& action : actions) {
-        action(&cptr[0]);
+        action(cptr.get());
       }
     });
     return r;
