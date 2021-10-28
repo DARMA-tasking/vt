@@ -163,8 +163,40 @@ ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
         loads_by_elm_by_phase[elm_id.id][phase].duration = load;
       }
     } catch (...) {
-      auto str = fmt::format("Data for phase {} was not found", phase);
+      auto str = fmt::format("Load data for phase {} was not found", phase);
       vtAbort(str);
+    }
+
+    try {
+      auto &phase_data = sd.node_comm_.at(phase);
+      for (auto const& entry : phase_data) {
+        auto type = entry.first.cat_;
+        auto bytes = entry.second.bytes;
+        vt_debug_print(
+          normal, replay,
+          "reading in comm type={}, bytes={} on phase={}\n",
+          type, bytes, phase
+        );
+        if (type == CommCategory::NodeToCollection) {
+          auto to = entry.first.to_;
+          loads_by_elm_by_phase[to.id][phase].serialized_bytes = bytes;
+        } else if (type == CommCategory::CollectionToNode) {
+          auto from = entry.first.from_;
+          loads_by_elm_by_phase[from.id][phase].callback_bytes = bytes;
+        } else {
+          vt_debug_print(
+            normal, replay,
+            "skipping this comm data due to type={}\n",
+            type
+          );
+        }
+      }
+    } catch (...) {
+      vt_debug_print(
+        normal, replay,
+        "Comm data for phase {} was not found",
+        phase
+      );
     }
   }
 
