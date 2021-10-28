@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     vt_print(replay, "Timestepping...\n");
   for (int i = 0; i < phases_to_run; i++) {
     if (node == 0)
-      vt_print(replay, "Simulated phase {}...\n", i + initial_phase);
+      vt_print(replay, "Simulating phase {}...\n", i + initial_phase);
 
     vt::thePhase()->nextPhaseCollective();
   }
