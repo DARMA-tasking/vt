@@ -160,18 +160,21 @@ void StatsDrivenCollection<IndexType>::emulate(EmulateMsg *msg) {
   // start tracking real time usage
   clock::time_point start = clock::now();
 
-  // set up the serialized size needed for the next phase
-  auto payload_size = getPayloadSize(msg->phase_ + 1);
-  payload_.resize(payload_size);
-  auto achieved = ::checkpoint::getSize(*this);
-
   auto idx = this->getIndex();
-  auto simulated_phase = msg->phase_ + 1 + initial_phase_;
-  vt_debug_print(
-    normal, replay,
-    "emulate: index {} has serialized size {} when {} was requested\n",
-    idx, achieved, stats_to_replay_[simulated_phase].serialized_bytes
-  );
+
+  // set up the serialized size needed for the next phase
+  if (msg->phase_ >= phases_to_simulate_ - 1) {
+    auto payload_size = getPayloadSize(msg->phase_ + 1);
+    payload_.resize(payload_size);
+    auto achieved = ::checkpoint::getSize(*this);
+
+    auto simulated_phase = msg->phase_ + 1 + initial_phase_;
+    vt_debug_print(
+      normal, replay,
+      "emulate: index {} has serialized size {} when {} was requested\n",
+      idx, achieved, stats_to_replay_[simulated_phase].serialized_bytes
+    );
+  }
 
   if (msg->phase_ >= phases_to_simulate_) {
     vt_debug_print(
