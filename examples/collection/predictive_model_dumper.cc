@@ -89,6 +89,8 @@ std::map<vt::Index1D, int /*mpi_rank*/> OneAndDoneCol::rank_mapping_;
 struct TaskData {
   double measured_load;
   double modeled_load;
+  std::size_t serialized_bytes;
+  std::size_t callback_bytes;
 };
 
 
@@ -129,11 +131,16 @@ int main(int argc, char** argv) {
     int mpi_rank = -1;
     double measured_load = 0.0;
     double modeled_load = 0.0;
-    iss >> mpi_rank >> measured_load >> modeled_load;
+    std::size_t serialized_bytes = 0;
+    std::size_t callback_bytes = 0;
+    iss >> mpi_rank >> measured_load >> modeled_load
+        >> serialized_bytes >> callback_bytes;
     vt::Index1D index(count);
     OneAndDoneCol::rank_mapping_[index] = mpi_rank;
     if (mpi_rank == this_node) {
-      tasks[index] = TaskData{measured_load, modeled_load};
+      tasks[index] = TaskData{
+        measured_load, modeled_load, serialized_bytes, callback_bytes
+      };
     }
     ++count;
   }
@@ -148,24 +155,46 @@ int main(int argc, char** argv) {
   vt::vrt::collection::balance::StatsData sd;
 
   using LoadMapType = vt::vrt::collection::balance::LoadMapType;
+  using CommMapType = vt::vrt::collection::balance::CommMapType;
+  using LBCommKey = vt::vrt::collection::balance::LBCommKey;
+  using CommVolume = vt::vrt::collection::balance::CommVolume;
+  using CommBytesType = vt::vrt::collection::balance::CommBytesType;
+
   LoadMapType modeled_phase, measured_phase;
+  CommMapType node_comm;
+
   for (auto it = tasks.begin(); it != tasks.end(); ++it) {
     vt::Index1D idx = it->first;
-    TaskData &t = it->second;
     auto elm_ptr = proxy(idx).tryGetLocalPtr();
     assert(elm_ptr != nullptr);
     auto elm_id = elm_ptr->getElmID();
+
+    TaskData &t = it->second;
     modeled_phase[elm_id] = std::max(t.modeled_load, load_floor);
     measured_phase[elm_id] = t.measured_load;
+
+    LBCommKey skey(LBCommKey::NodeToCollectionTag{}, this_node, elm_id, false);
+    CommVolume svol{static_cast<CommBytesType>(t.serialized_bytes), 1};
+    node_comm[skey] = svol;
+
+    LBCommKey ckey(LBCommKey::CollectionToNodeTag{}, elm_id, this_node, false);
+    CommVolume cvol{static_cast<CommBytesType>(t.callback_bytes), 1};
+    node_comm[ckey] = cvol;
+
     std::vector<uint64_t> arr;
     arr.push_back(idx.x());
     sd.node_idx_[elm_id] = std::make_tuple(proxy.getProxy(), arr);
   }
 
   sd.node_data_[0] = modeled_phase;
+  sd.node_comm_[0] = node_comm;
+
   sd.node_data_[1] = measured_phase;
+  sd.node_comm_[1] = node_comm;
+
   // add the measured loads again so we can see what the LB could have been with perfect info
   sd.node_data_[2] = measured_phase;
+  sd.node_comm_[2] = node_comm;
  
   auto const compress = false;
   using JSONAppender = vt::util::json::Appender<std::ofstream>;
