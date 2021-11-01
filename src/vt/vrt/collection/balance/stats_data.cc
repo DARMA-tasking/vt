@@ -164,8 +164,10 @@ StatsData::StatsData(nlohmann::json const& j) {
     for (auto const& phase : phases) {
       auto id = phase["id"];
       auto tasks = phase["tasks"];
+      auto comms = phase["communications"];
 
       this->node_data_[id];
+      this->node_comm_[id];
 
       if (tasks.is_array()) {
         for (auto const& task : tasks) {
@@ -223,11 +225,106 @@ StatsData::StatsData(nlohmann::json const& j) {
           }
         }
       }
+
+      if (comms.is_array()) {
+        for (auto const& comm : comms) {
+          auto bytes = comm["bytes"];
+          auto messages = comm["messages"];
+          auto type = comm["type"];
+
+          vtAssertExpr(bytes.is_number());
+          vtAssertExpr(messages.is_number());
+
+          if (type == "SendRecv" || type == "Broadcast") {
+            vtAssertExpr(comm["from"]["type"] == "object");
+            vtAssertExpr(comm["to"]["type"] == "object");
+
+            auto from_object = comm["from"]["id"];
+            vtAssertExpr(from_object.is_number());
+            NodeType from_home = uninitialized_destination;
+            if (comm["from"].find("home") != comm["from"].end()) {
+              auto home_json = comm["from"]["home"];
+              vtAssertExpr(home_json.is_number());
+              from_home = home_json;
+            }
+            auto from_elm = ElementIDStruct{from_object, from_home, this_node};
+
+            auto to_object = comm["to"]["id"];
+            vtAssertExpr(to_object.is_number());
+            NodeType to_home = uninitialized_destination;
+            if (comm["to"].find("home") != comm["to"].end()) {
+              auto home_json = comm["to"]["home"];
+              vtAssertExpr(home_json.is_number());
+              to_home = home_json;
+            }
+            auto to_elm = ElementIDStruct{to_object, to_home, this_node};
+
+            LBCommKey key(
+              LBCommKey::CollectionTag{},
+              from_elm, to_elm, type == "Broadcast"
+            );
+            CommVolume vol{bytes, messages};
+            this->node_comm_[id][key] = vol;
+          } else if (
+            type == "NodeToCollection" || type == "NodeToCollectionBcast"
+          ) {
+            vtAssertExpr(comm["from"]["type"] == "node");
+            vtAssertExpr(comm["to"]["type"] == "object");
+
+            auto from_node = comm["from"]["id"];
+            vtAssertExpr(from_node.is_number());
+
+            auto to_object = comm["to"]["id"];
+            vtAssertExpr(to_object.is_number());
+            NodeType to_home = uninitialized_destination;
+            if (comm["to"].find("home") != comm["to"].end()) {
+              auto home_json = comm["to"]["home"];
+              vtAssertExpr(home_json.is_number());
+              to_home = home_json;
+            }
+            auto to_elm = ElementIDStruct{to_object, to_home, this_node};
+
+            LBCommKey key(
+              LBCommKey::NodeToCollectionTag{},
+              static_cast<NodeType>(from_node), to_elm,
+              type == "NodeToCollectionBcast"
+            );
+            CommVolume vol{bytes, messages};
+            this->node_comm_[id][key] = vol;
+          } else if (
+            type == "CollectionToNode" || type == "CollectionToNodeBcast"
+          ) {
+            vtAssertExpr(comm["from"]["type"] == "object");
+            vtAssertExpr(comm["to"]["type"] == "node");
+
+            auto from_object = comm["from"]["id"];
+            vtAssertExpr(from_object.is_number());
+            NodeType from_home = uninitialized_destination;
+            if (comm["from"].find("home") != comm["from"].end()) {
+              auto home_json = comm["from"]["home"];
+              vtAssertExpr(home_json.is_number());
+              from_home = home_json;
+            }
+            auto from_elm = ElementIDStruct{from_object, from_home, this_node};
+
+            auto to_node = comm["to"]["id"];
+            vtAssertExpr(to_node.is_number());
+
+            LBCommKey key(
+              LBCommKey::CollectionToNodeTag{},
+              from_elm, static_cast<NodeType>(to_node),
+              type == "CollectionToNodeBcast"
+            );
+            CommVolume vol{bytes, messages};
+            this->node_comm_[id][key] = vol;
+          }
+        }
+      }
     }
   }
 
-  // @todo: implement communication de-serialization, no use for it right now, so
-  // it will be ignored
+  // @todo: implement subphase communication de-serialization, no use for it
+  // right now, so it will be ignored
 }
 
 void StatsData::clear() {
