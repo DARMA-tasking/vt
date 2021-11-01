@@ -85,8 +85,8 @@ EpochWindow::EpochWindow(EpochType epoch) {
   // All epochs in a given window start out terminated (thus, reusable).
   terminated_epochs_.insertInterval(interval);
 
-  vt_print(
-    term,
+  vt_debug_print(
+    normal, term,
     "EpochWindow: epoch={:x}, arch={:x}, min={:x}, max={:x}\n",
     epoch, archetype_epoch_, min_epoch, max_epoch
   );
