@@ -178,7 +178,6 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
 std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
   using namespace balance;
 
-  pending_reassignment_ = std::make_unique<Reassignment>();
   Reassignment& r = *pending_reassignment_.get();
 
   r.node_ = theContext()->getNode();

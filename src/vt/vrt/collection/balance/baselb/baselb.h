@@ -74,7 +74,16 @@ struct BaseLB {
   using DepartListType   = std::vector<std::tuple<ObjIDType, LoadSummary>>;
   using ArriveListType   = std::vector<std::tuple<ObjIDType, NodeType>>;
 
-  BaseLB() = default;
+  explicit BaseLB(
+    bool in_comm_aware = false,
+    bool in_comm_collectives = false,
+    int32_t in_bin_size = default_bin_size
+  ) : bin_size_(in_bin_size),
+      comm_aware_(in_comm_aware),
+      comm_collectives_(in_comm_collectives),
+      pending_reassignment_(std::make_unique<Reassignment>())
+  { }
+
   BaseLB(BaseLB const &) = delete;
   BaseLB(BaseLB &&) noexcept = default;
   BaseLB &operator=(BaseLB const &) = delete;
