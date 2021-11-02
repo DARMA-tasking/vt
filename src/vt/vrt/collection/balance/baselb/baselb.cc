@@ -198,13 +198,9 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
     if (current_node == r.node_) {
       r.depart_[obj_id] = new_node;
     } else if (new_node == r.node_) {
-      // the object's new location is here---so it's arriving
-
-      // @todo: this might not be valid to call here because we might not have
-      // the data yet.
-      r.arrive_[obj_id] = getObjectLoads(
-        load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
-      );
+      // the object's new location is here---so it's arriving---but we don't
+      // have the data most likely for it, so we will receive it later
+      r.arrive_[obj_id] = {};
     } else {
       // The user has specified a migration neither on the send or receive side?
       vtAbort(
