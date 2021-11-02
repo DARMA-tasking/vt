@@ -182,6 +182,8 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
 
   r.node_ = theContext()->getNode();
 
+  std::map<NodeType, ObjListType> migrate_other;
+
   // Do local setup of reassignment data structure
   for (auto&& transfer : transfers_) {
     auto const obj_id = std::get<0>(transfer);
@@ -201,13 +203,22 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
       // have the data most likely for it, so we will receive it later
       r.arrive_[obj_id] = {};
     } else {
-      // The user has specified a migration neither on the send or receive side?
-      vtAbort(
-        "A migration has been requested for an object that neither lives here"
-        " nor will be migrated here"
-      );
+      // The user has specified a migration neither on the send or receive side
+      migrate_other[current_node].push_back(obj_id);
     }
   }
+
+  runInEpochCollective("BaseLB -> sendMigrateOthers", [&]{
+    if (migrate_other.size() > 0) {
+      using ObjListMsgType = TransferMsg<ObjListType>;
+
+      for (auto&& other : migrate_other) {
+        auto const dest = std::get<0>(other);
+        auto const& vec = std::get<1>(other);
+        proxy_[dest].template send<ObjListMsgType, &BaseLB::notifyMigrating>(vec);
+      }
+    }
+  });
 
   // Do remote work to normalize the reassignments
   runInEpochCollective("BaseLB -> normalizeReassignments", [&]{
@@ -250,6 +261,13 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
   });
 
   return std::move(pending_reassignment_);
+}
+
+void BaseLB::notifyMigrating(TransferMsg<ObjListType>* msg) {
+  auto const& migrate_list = msg->getTransfer();
+  for (auto&& obj_id : migrate_list) {
+    pending_reassignment_->depart_[obj_id] = {};
+  }
 }
 
 void BaseLB::notifyDeparting(TransferMsg<DepartListType>* msg) {

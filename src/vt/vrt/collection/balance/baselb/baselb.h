@@ -73,6 +73,7 @@ struct BaseLB {
   using LoadSummary      = balance::LoadSummary;
   using DepartListType   = std::vector<std::tuple<ObjIDType, LoadSummary>>;
   using ArriveListType   = std::vector<std::tuple<ObjIDType, NodeType>>;
+  using ObjListType      = std::vector<ObjIDType>;
 
   explicit BaseLB(
     bool in_comm_aware = false,
@@ -81,7 +82,7 @@ struct BaseLB {
   ) : bin_size_(in_bin_size),
       comm_aware_(in_comm_aware),
       comm_collectives_(in_comm_collectives),
-      pending_reassignment_(std::make_unique<Reassignment>())
+      pending_reassignment_(std::make_unique<balance::Reassignment>())
   { }
 
   BaseLB(BaseLB const &) = delete;
@@ -124,6 +125,7 @@ struct BaseLB {
    * \return A normalized reassignment
    */
   std::unique_ptr<balance::Reassignment> normalizeReassignments();
+  void notifyMigrating(TransferMsg<ObjListType>* msg);
   void notifyDeparting(TransferMsg<DepartListType>* msg);
   void notifyArriving(TransferMsg<ArriveListType>* msg);
   void arriveLoadSummary(TransferMsg<DepartListType>* msg);
