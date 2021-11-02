@@ -62,14 +62,14 @@ struct epoch_guard {
   epoch_guard& operator=(const epoch_guard&) = delete;
   epoch_guard& operator=(epoch_guard&&) noexcept = default;
 
-  void finish_epoch() { theTerm()->finishedEpoch(guarded_epoch_); }
-
   void pop() {
     if (guarded_epoch_ != no_epoch) {
       theMsg()->popEpoch(guarded_epoch_);
       guarded_epoch_ = no_epoch;
     }
   }
+
+  EpochType get_epoch() const noexcept { return guarded_epoch_; }
 
   private:
   EpochType guarded_epoch_ = no_epoch;

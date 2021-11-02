@@ -67,7 +67,25 @@ struct TestEpochGuard : TestParallelHarness {
   {
     ep = theTerm()->makeEpochCollective();
 
-    auto guard = epoch_guard( ep );
+    {
+      auto guard = epoch_guard(ep);
+
+      auto msg = makeMessage<TestMsg>();
+      EXPECT_EQ(theMsg()->getEpoch(), ep);
+      auto node = theContext()->getNode();
+      if (0 == node) {
+        theMsg()->sendMsg<TestMsg, test_guarded_msg_recv>(1, msg);
+      }
+    }
+
+    ::vt::theTerm()->finishedEpoch(ep);
+  }
+
+  static void test_guarded_msg_send_close_early()
+  {
+    ep = theTerm()->makeEpochCollective();
+
+    auto guard = epoch_guard(ep);
 
     auto msg = makeMessage<TestMsg>();
     EXPECT_EQ(theMsg()->getEpoch(), ep);
@@ -76,7 +94,11 @@ struct TestEpochGuard : TestParallelHarness {
       theMsg()->sendMsg<TestMsg, test_guarded_msg_recv>(1, msg);
     }
 
-    guard.finish_epoch();
+    guard.pop();
+
+    EXPECT_EQ(guard.get_epoch(), no_epoch);
+
+    ::vt::theTerm()->finishedEpoch(guard.get_epoch());
   }
 };
 
