@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 epoch_guard.h
+//                                epoch_guard.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
