@@ -203,7 +203,7 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
       // have the data most likely for it, so we will receive it later
       r.arrive_[obj_id] = {};
     } else {
-      // The user has specified a migration neither on the send or receive side
+      // The user has specified a migration neither on the send nor the receive side
       migrate_other[current_node].push_back(obj_id);
     }
   }
