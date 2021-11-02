@@ -68,7 +68,7 @@ struct TestEpochGuard : TestParallelHarness {
     ep = theTerm()->makeEpochCollective();
 
     {
-      auto guard = epoch_guard(ep);
+      auto guard = EpochGuard(ep);
 
       auto msg = makeMessage<TestMsg>();
       EXPECT_EQ(theMsg()->getEpoch(), ep);
@@ -85,7 +85,7 @@ struct TestEpochGuard : TestParallelHarness {
   {
     ep = theTerm()->makeEpochCollective();
 
-    auto guard = epoch_guard(ep);
+    auto guard = EpochGuard(ep);
 
     auto msg = makeMessage<TestMsg>();
     EXPECT_EQ(theMsg()->getEpoch(), ep);
@@ -98,7 +98,7 @@ struct TestEpochGuard : TestParallelHarness {
 
     EXPECT_EQ(guard.get_epoch(), no_epoch);
 
-    ::vt::theTerm()->finishedEpoch(guard.get_epoch());
+    ::vt::theTerm()->finishedEpoch(ep);
   }
 };
 
@@ -107,6 +107,11 @@ EpochType TestEpochGuard::ep = no_epoch;
 TEST_F(TestEpochGuard, test_epoch_guard1) {
   SET_NUM_NODES_CONSTRAINT(2);
   vt::runInEpochCollective( test_guarded_msg_send );
+}
+
+TEST_F(TestEpochGuard, test_epoch_guard2) {
+  SET_NUM_NODES_CONSTRAINT(2);
+  vt::runInEpochCollective( test_guarded_msg_send_close_early );
 }
 
 }}} // end namespace vt::tests::unit

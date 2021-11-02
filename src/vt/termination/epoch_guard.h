@@ -47,22 +47,22 @@
 #include "vt/config.h"
 
 namespace vt {
-struct epoch_guard {
-  public:
-  explicit epoch_guard(EpochType ep);
+struct EpochGuard {
+public:
+  explicit EpochGuard(EpochType ep);
 
-  epoch_guard(const epoch_guard&) = delete;
-  epoch_guard(epoch_guard&&) noexcept = default;
+  EpochGuard(const EpochGuard&) = delete;
+  EpochGuard(EpochGuard&&) noexcept = default;
 
-  ~epoch_guard();
+  ~EpochGuard();
 
-  epoch_guard& operator=(const epoch_guard&) = delete;
-  epoch_guard& operator=(epoch_guard&&) noexcept = default;
+  EpochGuard& operator=(const EpochGuard&) = delete;
+  EpochGuard& operator=(EpochGuard&&) noexcept = default;
 
   void pop();
   EpochType get_epoch() const noexcept;
 
-  private:
+private:
   EpochType guarded_epoch_ = no_epoch;
 };
 } // namespace vt
