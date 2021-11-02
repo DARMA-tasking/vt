@@ -231,7 +231,7 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
       proxy_[dest].template send<DepartMsgType, &BaseLB::notifyDeparting>(vec);
     }
 
-    // Notify current owner's of objects that their object has been reassigned
+    // Notify current owners of objects that their object has been reassigned
     // to this node
     using ArriveMsgType = TransferMsg<ArriveListType>;
     std::map<NodeType, ArriveListType> arrive_map;
