@@ -47,19 +47,55 @@
 #include "vt/config.h"
 
 namespace vt {
+/**
+ * \brief An epoch warapper that provides an RAII-style mechanism for owning an
+ * epoch for the duration of a scope block.
+ *
+ * When EpochGuard is created, it pushes the given epoch onto the epoch stack.
+ * When EpochGuard is destroyed, it pops the epoch. It can explicitly pop the
+ * epoch early.
+ *
+ * EpochGuard is non-copyable.
+ *
+ * \see vt::messaging::ActiveMessenger::pushEpoch
+ * \see vt::messaging::ActiveMessenger::popEpoch
+ */
 struct EpochGuard {
 public:
+  /**
+   * \brief Construct the EpochGuard with a given epoch.
+   *
+   * The given epoch will be popped when EpochGuard is destroyed.
+   *
+   * \param ep  the epoch to manage
+   *
+   * \pre ep != vt::no_epoch
+   */
   explicit EpochGuard(EpochType ep);
 
   EpochGuard(const EpochGuard&) = delete;
   EpochGuard(EpochGuard&&) noexcept = default;
 
+  /**
+   * \brief Destroy the EpochGuard, popping the managed epoch.
+   */
   ~EpochGuard();
 
   EpochGuard& operator=(const EpochGuard&) = delete;
   EpochGuard& operator=(EpochGuard&&) noexcept = default;
 
+  /**
+   * \brief Manually pop the managed epoch.
+   *
+   * This operation effectively sets the managed epoch to vt::no_epoch
+   */
   void pop();
+
+  /**
+   * \brief Obtain a handle to the managed epoch.
+   *
+   * \return the managed epoch, or vt::no_epoch if the managed epoch was popped
+   */
   EpochType get_epoch() const noexcept;
 
 private:
