@@ -254,13 +254,12 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
 
 void BaseLB::notifyDeparting(TransferMsg<DepartListType>* msg) {
   auto const& arrival_list = msg->getTransfer();
-  auto& r = *pending_reassignment_.get();
 
   // Add arriving objects to our local reassignment list
   for (auto&& arrival : arrival_list) {
     auto const obj_id = std::get<0>(arrival);
     auto const& load_summary = std::get<1>(arrival);
-    r.arrive_[obj_id] = load_summary;
+    pending_reassignment_->arrive_[obj_id] = load_summary;
   }
 }
 
