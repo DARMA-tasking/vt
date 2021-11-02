@@ -51,6 +51,7 @@ variables:
   VT_DIAGNOSTICS: 1
   VT_NO_COLOR: 1
   VT_SHARED_LIB: 0
+  VT_INCLUSION: TPL
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-clang-9-cache
   build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
