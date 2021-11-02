@@ -35,6 +35,7 @@ jobs:
       VT_DIAGNOSTICS: [% vt_diagnostics %]
       VT_NO_COLOR: [% vt_no_color %]
       VT_SHARED_LIB: [% vt_shared_lib %]
+      VT_INCLUSION: [% vt_inclusion %]
       CACHE: [% cache_dir %]
 
     steps:
