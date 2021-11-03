@@ -44,7 +44,7 @@ variables:
   VT_CI_BUILD: 1
   VT_DIAGNOSTICS: 1
   VT_NO_COLOR: 1
-  VT_SHARED_LIB: 0
+  VT_BUILD_SHARED_LIBS: 0
   VT_INCLUSION: TPL
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-nvidia-11-cache

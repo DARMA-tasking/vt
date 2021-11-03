@@ -18,14 +18,7 @@ include(cmake/check_system_functions.cmake)
 set(VIRTUAL_TRANSPORT_LIBRARY vt CACHE INTERNAL "" FORCE )
 set(FCONTEXT_LIBRARY fcontext)
 
-option(vt_shared_lib_enabled "Build VT as shared library" OFF)
-if (vt_shared_lib_enabled)
-  message(STATUS "Building VT as shared library")
-  set(BUILD_SHARED_LIBS ON)
-else()
-  message(STATUS "Building VT as static library")
-  set(BUILD_SHARED_LIBS OFF)
-endif()
+option(BUILD_SHARED_LIBS "Build VT as shared library" OFF)
 
 # Set the local module path so custom cmake scripts can be located automatically
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules/")
