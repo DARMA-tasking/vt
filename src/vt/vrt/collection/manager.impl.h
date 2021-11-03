@@ -121,7 +121,7 @@ void CollectionManager::destroyCollections() {
 }
 
 template <typename ColT, typename IndexT, typename... Args>
-/*static*/ typename CollectionManager::VirtualPtrType<ColT, IndexT>
+/*static*/ typename CollectionManager::VirtualPtrType<IndexT>
 CollectionManager::runConstructor(Args&&... args) {
   return std::make_unique<ColT>(std::forward<Args>(args)...);
 }
@@ -136,7 +136,7 @@ void CollectionManager::addCleanupFn(VirtualProxyType proxy) {
 
 template <typename ColT>
 std::size_t CollectionManager::groupElementCount(VirtualProxyType const& p) {
-  auto elm_holder = theCollection()->findElmHolder<ColT>(p);
+  auto elm_holder = theCollection()->findElmHolder<typename ColT::IndexType>(p);
   std::size_t const num_elms = elm_holder->numElements();
 
   vt_debug_print(
@@ -152,6 +152,8 @@ template <typename ColT>
 GroupType CollectionManager::createGroupCollection(
   VirtualProxyType const& proxy, bool const in_group
 ) {
+  using IndexType = typename ColT::IndexType;
+
   vt_debug_print(
     terse, vrt_coll,
     "createGroupCollection: proxy={:x}, in_group={}\n",
@@ -160,7 +162,7 @@ GroupType CollectionManager::createGroupCollection(
 
   {
     // Delete the old group that is no longer needed since we are replacing it
-    auto elm_holder = theCollection()->findElmHolder<ColT>(proxy);
+    auto elm_holder = theCollection()->findElmHolder<IndexType>(proxy);
     auto old_group_id = elm_holder->group();
     if (old_group_id != no_group and old_group_id != default_group) {
       auto old_group_default = theGroup()->isGroupDefault(old_group_id);
@@ -174,7 +176,7 @@ GroupType CollectionManager::createGroupCollection(
     in_group, [proxy](GroupType new_group){
       auto const& group_root = theGroup()->groupRoot(new_group);
       auto const& is_group_default = theGroup()->isGroupDefault(new_group);
-      auto elm_holder = theCollection()->findElmHolder<ColT>(proxy);
+      auto elm_holder = theCollection()->findElmHolder<IndexType>(proxy);
       elm_holder->setGroup(new_group);
       elm_holder->setUseGroup(!is_group_default);
       elm_holder->setGroupReady(true);
@@ -204,7 +206,7 @@ GroupType CollectionManager::createGroupCollection(
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
 /*static*/ CollectionManager::IsWrapType<ColT, UserMsgT, MsgT>
 CollectionManager::collectionAutoMsgDeliver(
-  MsgT* msg, CollectionBase<ColT, IndexT>* base, HandlerType han, NodeType from,
+  MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
   trace::TraceEventIDType event, bool immediate
 ) {
   auto user_msg = makeMessage<UserMsgT>(std::move(msg->getMsg()));
@@ -233,7 +235,7 @@ CollectionManager::collectionAutoMsgDeliver(
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
 /*static*/ CollectionManager::IsNotWrapType<ColT, UserMsgT, MsgT>
 CollectionManager::collectionAutoMsgDeliver(
-  MsgT* msg, CollectionBase<ColT, IndexT>* base, HandlerType han, NodeType from,
+  MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
   trace::TraceEventIDType event, bool immediate
 ) {
   // Expand out the index for tracing purposes; Projections takes up to
@@ -273,7 +275,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     bcast_proxy, col_msg->getVrtHandler(),
     cur_epoch, msg_epoch, group, default_group
   );
-  auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(bcast_proxy);
+  auto elm_holder = theCollection()->findElmHolder<IndexT>(bcast_proxy);
   if (elm_holder) {
     auto const handler = col_msg->getVrtHandler();
     vt_debug_print(
@@ -281,7 +283,7 @@ template <typename ColT, typename IndexT, typename MsgT>
       "broadcast apply: size={}\n", elm_holder->numElements()
     );
     elm_holder->foreach([col_msg, msg, handler](
-      IndexT const& idx, CollectionBase<ColT,IndexT>* base
+      IndexT const& idx, Indexable<IndexT>* base
     ) {
       vtAssert(base != nullptr, "Must be valid pointer");
 
@@ -320,7 +322,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto const& col = entity_proxy.getCollectionProxy();
   auto const& elm = entity_proxy.getElementProxy();
   auto const& idx = elm.getIndex();
-  auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(col);
+  auto elm_holder = theCollection()->findElmHolder<IndexT>(col);
 
   bool const exists = elm_holder->exists(idx);
 
@@ -398,7 +400,7 @@ ColT* CollectionManager::getCollectionPtrForInvoke(
 ) {
   auto idx = proxy.getElementProxy().getIndex();
   auto elm_holder =
-    theCollection()->findElmHolder<ColT, IndexT>(proxy.getCollectionProxy());
+    theCollection()->findElmHolder<IndexT>(proxy.getCollectionProxy());
 
   vtAssert(elm_holder != nullptr, "Must have elm holder");
   vtAssert(
@@ -518,7 +520,7 @@ void CollectionManager::invokeMsgImpl(
 
   auto idx = proxy.getElementProxy().getIndex();
   auto elm_holder =
-    theCollection()->findElmHolder<ColT, IndexT>(proxy.getCollectionProxy()
+    theCollection()->findElmHolder<IndexT>(proxy.getCollectionProxy()
   );
 
   vtAssert(elm_holder != nullptr, "Must have elm holder");
@@ -599,7 +601,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   // broadcast to all nodes
   auto const& this_node = theContext()->getNode();
   auto const& proxy = msg->getBcastProxy();
-  auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(proxy);
+  auto elm_holder = theCollection()->findElmHolder<IndexT>(proxy);
   auto const bcast_node = VirtualProxyBuilder::getVirtualNode(proxy);
 
   vtAssert(elm_holder != nullptr, "Must have elm holder");
@@ -940,7 +942,7 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
   auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
 
   theMsg()->pushEpoch(cur_epoch);
-  auto elm_holder = findElmHolder<ColT,IndexT>(col_proxy);
+  auto elm_holder = findElmHolder<IndexT>(col_proxy);
 
   std::size_t num_elms = 0;
   if (expr_fn == nullptr) {
@@ -1178,12 +1180,12 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
       theMsg()->pushEpoch(cur_epoch);
       auto home_node = theCollection()->getMappedNode<ColT>(col_proxy, idx);
       // route the message to the destination using the location manager
-      auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
+      auto lm = theLocMan()->getCollectionLM<IdxT>(col_proxy);
       vtAssert(lm != nullptr, "LM must exist");
       theMsg()->markAsCollectionMessage(msg);
       lm->template routeMsgSerializeHandler<
         MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
-      >(toProxy, home_node, msg);
+      >(idx, home_node, msg);
       theMsg()->popEpoch(cur_epoch);
     }
   };
@@ -1191,11 +1193,11 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 
 template <typename ColT, typename IndexT>
 bool CollectionManager::insertCollectionElement(
-  VirtualPtrType<ColT, IndexT> vc, VirtualProxyType const proxy,
+  VirtualPtrType<IndexT> vc, VirtualProxyType const proxy,
   IndexT const& idx, NodeType const home_node, bool const is_migrated_in,
   NodeType const migrated_from
 ) {
-  auto holder = findColHolder<ColT, IndexT>(proxy);
+  auto holder = findColHolder<IndexT>(proxy);
 
   vt_debug_print(
     terse, vrt_coll,
@@ -1205,7 +1207,7 @@ bool CollectionManager::insertCollectionElement(
 
   vtAssert(holder != nullptr, "Must have meta-data before inserting");
 
-  auto elm_holder = findElmHolder<ColT,IndexT>(proxy);
+  auto elm_holder = findElmHolder<IndexT>(proxy);
   auto const elm_exists = elm_holder->exists(idx);
 
   vt_debug_print(
@@ -1228,21 +1230,21 @@ bool CollectionManager::insertCollectionElement(
   );
 
   if (!destroyed) {
-    elm_holder->insert(idx, typename Holder<ColT, IndexT>::InnerHolder{
+    elm_holder->insert(idx, typename Holder<IndexT>::InnerHolder{
       std::move(vc)
     });
 
     if (is_migrated_in) {
-      theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->entityImmigrated(
-        VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node, migrated_from,
+      theLocMan()->getCollectionLM<IndexT>(proxy)->entityImmigrated(
+        idx, home_node, migrated_from,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementMigratedIn, idx
       );
     } else {
-      theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntity(
-        VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node,
+      theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
+        idx, home_node,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
       elm_holder->applyListeners(
@@ -1353,7 +1355,7 @@ void CollectionManager::insertMetaCollection(
   VirtualProxyType const& proxy, Args&&... args
 ) {
   using IndexType      = typename ColT::IndexType;
-  using MetaHolderType = EntireHolder<ColT, IndexType>;
+  using MetaHolderType = EntireHolder<IndexType>;
   using HolderType     = typename MetaHolderType::InnerHolder;
 
   // Create and insert the meta-data into the meta-collection holder
@@ -1366,7 +1368,7 @@ void CollectionManager::insertMetaCollection(
    *  This is to ensure that the collection LM instance gets created so that
    *  messages can be forwarded properly
    */
-  theLocMan()->getCollectionLM<ColT,IndexType>(proxy);
+  theLocMan()->getCollectionLM<IndexType>(proxy);
 
   /**
    * Type-erase some lambdas for doing the collective broadcast that collects up
@@ -1459,9 +1461,8 @@ template <typename ColT, typename MsgT>
   using IndexType = typename ColT::IndexType;
   auto proxy = msg->proxy_;
   auto idx = msg->idx_;
-  auto lm = theLocMan()->getCollectionLM<ColT, IndexType>(proxy.getProxy());
-  VrtElmProxy<ColT, IndexType> elm{proxy.getProxy(),idx};
-  auto elm_lives_somewhere = lm->isCached(elm);
+  auto lm = theLocMan()->getCollectionLM<IndexType>(proxy.getProxy());
+  auto elm_lives_somewhere = lm->isCached(idx);
 
   vt_debug_print(
     verbose, vrt_coll,
@@ -1474,7 +1475,7 @@ template <typename ColT, typename MsgT>
   } else {
     auto const insert_node = msg->construct_node_;
     // reserve the slot to stop any race with other insertions
-    lm->registerEntityRemote(elm, msg->home_node_, insert_node);
+    lm->registerEntityRemote(idx, msg->home_node_, insert_node);
 
     // send a message back that the insertion shall proceed
     auto send_msg = makeMessage<InsertMsg<ColT, MsgT>>(
@@ -1489,11 +1490,11 @@ template <typename ColT, typename MsgT>
   }
 }
 
-template <typename ColT>
+template <typename IdxT>
 NodeType CollectionManager::getMappedNode(
-  VirtualProxyType proxy, typename ColT::IndexType const& idx
+  VirtualProxyType proxy, IdxT const& idx
 ) {
-  auto col_holder = findColHolder<ColT>(proxy);
+  auto col_holder = findColHolder<IdxT>(proxy);
   auto map_han = col_holder->map_fn;
   auto map_object = col_holder->map_object;
   auto bounds = col_holder->bounds;
@@ -1506,7 +1507,7 @@ NodeType CollectionManager::getMappedNode(
   typename ColT::IndexType const& idx
 ) {
   auto const untyped_proxy = proxy.getProxy();
-  return getMappedNode<ColT>(untyped_proxy, idx);
+  return getMappedNode<typename ColT::IndexType>(untyped_proxy, idx);
 }
 
 template <typename ColT, typename IndexT>
@@ -1514,7 +1515,7 @@ ColT* CollectionManager::tryGetLocalPtr(
   CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx
 ) {
   auto const untyped = proxy.getProxy();
-  auto elm_holder = findElmHolder<ColT,IndexT>(untyped);
+  auto elm_holder = findElmHolder<IndexT>(untyped);
 
    vtAssert(
      elm_holder != nullptr, "Collection must be registered here"
@@ -1573,9 +1574,9 @@ void CollectionManager::finishModification(
   using StrongSeq = collective::reduce::detail::StrongSeq;
   using SeqType = typename StrongSeq::Type;
 
-  auto elm_holder = findElmHolder<ColT>(untyped_proxy);
+  auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
   SeqType min_seq = std::numeric_limits<SeqType>::max();
-  elm_holder->foreach([&](IndexType const&, CollectionBase<ColT,IndexType>* c) {
+  elm_holder->foreach([&](IndexType const&, Indexable<IndexType>* c) {
     // skip zeros since they are insertions that just happened
     if (*c->reduce_stamp_ != 0) {
       min_seq = std::min(*c->reduce_stamp_, min_seq);
@@ -1608,7 +1609,7 @@ void CollectionManager::finishModification(
   reduce_stamp_.erase(iter);
 
   // set all new insertions to proper value
-  elm_holder->foreach([&](IndexType const&, CollectionBase<ColT,IndexType>* c) {
+  elm_holder->foreach([&](IndexType const&, Indexable<IndexType>* c) {
     if (*c->reduce_stamp_ == 0) {
       *c->reduce_stamp_ = global_min_stamp;
     }
@@ -1690,17 +1691,14 @@ void CollectionManager::insert(
     // Case 0--insertion from home node onto home node (or message sent from
     // another node to insert on home node)
     if (mapped_node == this_node) {
-      auto elm_holder = findElmHolder<ColT>(untyped_proxy);
+      auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
       auto const elm_exists = elm_holder->exists(idx);
       if (elm_exists) {
         // element exists here and is live--return
         proceed_with_insertion = false;
       } else {
-        auto lm = theLocMan()->getCollectionLM<ColT, IndexType>(
-          untyped_proxy
-        );
-        VrtElmProxy<ColT, IndexType> elm{untyped_proxy,idx};
-        auto elm_lives_somewhere = lm->isCached(elm);
+        auto lm = theLocMan()->getCollectionLM<IndexType>(untyped_proxy);
+        auto elm_lives_somewhere = lm->isCached(idx);
         if (elm_lives_somewhere) {
           // element exists somewhere in the system and since we are the home
           // we check the cache to determine if it has been inserted
@@ -1726,7 +1724,7 @@ void CollectionManager::insert(
     auto cons_fn = detail::InsertMsgDispatcher<MsgT, ColT>::makeCons(insert_msg);
     makeCollectionElement<ColT>(untyped_proxy, idx, mapped_node, cons_fn);
 
-    auto elm_holder = findElmHolder<ColT>(untyped_proxy);
+    auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
     auto raw_ptr = elm_holder->lookup(idx).getRawPtr();
     raw_ptr->getStats().updatePhase(thePhase()->getCurrentPhase());
   } else if (insert_node != this_node) {
@@ -1747,6 +1745,8 @@ void CollectionManager::destroyElm(
   CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
   ModifierToken& token
 ) {
+  using IndexType = typename ColT::IndexType;
+
   auto const modify_epoch = token.modifyEpoch();
   auto const untyped_proxy = proxy.getProxy();
   vtAssert(modify_epoch != no_epoch, "Modification epoch should be valid");
@@ -1760,12 +1760,12 @@ void CollectionManager::destroyElm(
   theMsg()->pushEpoch(modify_epoch);
 
   // First, check on this node for the element, and remove it if it's found
-  auto elm_holder = findElmHolder<ColT>(untyped_proxy);
+  auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
   if (elm_holder->exists(idx)) {
     // Delay this so we can finish processing this work unit first (which might
     // be this collection element running)
     theSched()->enqueue([idx,untyped_proxy]{
-      auto elm = theCollection()->findElmHolder<ColT>(untyped_proxy);
+      auto elm = theCollection()->findElmHolder<IndexType>(untyped_proxy);
       if (elm->exists(idx)) {
         elm->remove(idx);
       }
@@ -1832,7 +1832,7 @@ MigrateStatus CollectionManager::migrateOut(
    auto const& proxy = CollectionProxy<ColT, IndexT>(col_proxy).operator()(
      idx
    );
-   auto elm_holder = findElmHolder<ColT, IndexT>(col_proxy);
+   auto elm_holder = findElmHolder<IndexT>(col_proxy);
    vtAssert(
      elm_holder != nullptr, "Element must be registered here"
    );
@@ -1893,9 +1893,7 @@ MigrateStatus CollectionManager::migrateOut(
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
    >(dest, msg);
 
-   theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityEmigrated(
-     proxy, dest
-   );
+   theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityEmigrated(idx, dest);
 
    /*
     * Invoke the virtual epilog migrate out function
@@ -1935,7 +1933,7 @@ MigrateStatus CollectionManager::migrateOut(
 template <typename ColT, typename IndexT>
 MigrateStatus CollectionManager::migrateIn(
   VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-  VirtualPtrType<ColT, IndexT> vrt_elm_ptr
+  VirtualPtrType<IndexT> vrt_elm_ptr
 ) {
   vt_debug_print(
     terse, vrt_coll,
@@ -2009,9 +2007,9 @@ void CollectionManager::destroyMatching(
 
   auto const untyped_proxy = proxy.getProxy();
   typeless_holder_.destroyCollection(untyped_proxy);
-  auto elm_holder = findElmHolder<ColT,IndexT>(untyped_proxy);
+  auto elm_holder = findElmHolder<IndexT>(untyped_proxy);
   if (elm_holder) {
-    elm_holder->foreach([&](IndexT const& idx, CollectionBase<ColT,IndexT>*) {
+    elm_holder->foreach([&](IndexT const& idx, Indexable<IndexT>*) {
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementDestroyed, idx
       );
@@ -2019,7 +2017,7 @@ void CollectionManager::destroyMatching(
     elm_holder->destroyAll();
   }
 
-  EntireHolder<ColT, IndexT>::remove(untyped_proxy);
+  EntireHolder<IndexT>::remove(untyped_proxy);
 
   auto iter = cleanup_fns_.find(untyped_proxy);
   if (iter != cleanup_fns_.end()) {
@@ -2027,12 +2025,12 @@ void CollectionManager::destroyMatching(
   }
 }
 
-template <typename ColT, typename IndexT>
-CollectionHolder<ColT, IndexT>* CollectionManager::findColHolder(
+template <typename IndexT>
+CollectionHolder<IndexT>* CollectionManager::findColHolder(
   VirtualProxyType const& proxy
 ) {
   #pragma sst global proxy_container_
-  auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
+  auto& holder_container = EntireHolder<IndexT>::proxy_container_;
   auto holder_iter = holder_container.find(proxy);
   auto const& found_holder = holder_iter != holder_container.end();
   if (found_holder) {
@@ -2042,11 +2040,11 @@ CollectionHolder<ColT, IndexT>* CollectionManager::findColHolder(
   }
 }
 
-template <typename ColT, typename IndexT>
-Holder<ColT, IndexT>* CollectionManager::findElmHolder(
+template <typename IndexT>
+Holder<IndexT>* CollectionManager::findElmHolder(
   VirtualProxyType const& proxy
 ) {
-  auto ret = findColHolder<ColT, IndexT>(proxy);
+  auto ret = findColHolder<IndexT>(proxy);
   if (ret != nullptr) {
     return &ret->holder_;
   } else {
@@ -2054,11 +2052,9 @@ Holder<ColT, IndexT>* CollectionManager::findElmHolder(
   }
 }
 
-template <typename ColT, typename IndexT>
-Holder<ColT, IndexT>* CollectionManager::findElmHolder(
-  CollectionProxyWrapType<ColT> proxy
-) {
-  return findElmHolder<ColT,IndexT>(proxy.getProxy());
+template <typename ProxyT, typename IndexT>
+Holder<IndexT>* CollectionManager::findElmHolder(ProxyT proxy) {
+  return findElmHolder<IndexT>(proxy.getProxy());
 }
 
 template <typename MsgT, typename ColT>
@@ -2078,7 +2074,7 @@ template <typename ColT, typename IndexT>
 int CollectionManager::registerElementListener(
   VirtualProxyType proxy, listener::ListenFnType<IndexT> fn
 ) {
-  auto elm_holder = findElmHolder<ColT>(proxy);
+  auto elm_holder = findElmHolder<IndexT>(proxy);
   return elm_holder->addListener(fn);
 }
 
@@ -2086,13 +2082,13 @@ template <typename ColT, typename IndexT>
 void CollectionManager::unregisterElementListener(
   VirtualProxyType proxy, int element
 ) {
-  auto elm_holder = findElmHolder<ColT>(proxy);
+  auto elm_holder = findElmHolder<IndexT>(proxy);
   elm_holder->removeListener(element);
 }
 
 template <typename ColT, typename IndexT>
 IndexT CollectionManager::getRange(VirtualProxyType proxy) {
-  auto col_holder = findColHolder<ColT>(proxy);
+  auto col_holder = findColHolder<IndexT>(proxy);
   return col_holder->bounds;
 }
 
@@ -2100,9 +2096,9 @@ template <typename ColT, typename IndexT>
 std::set<IndexT> CollectionManager::getLocalIndices(
   CollectionProxyWrapType<ColT> proxy
 ) {
-  auto elm_holder = findElmHolder<ColT>(proxy);
+  auto elm_holder = findElmHolder<IndexT>(proxy);
   std::set<IndexT> local;
-  elm_holder->foreach([&](IndexT const& idx, CollectionBase<ColT,IndexT>*) {
+  elm_holder->foreach([&](IndexT const& idx, Indexable<IndexT>*) {
     local.insert(idx);
   });
   return local;
@@ -2176,14 +2172,14 @@ void CollectionManager::checkpointToFile(
   );
 
   // Get the element holder
-  auto holder_ = findElmHolder<ColT>(proxy_bits);
+  auto holder_ = findElmHolder<IndexT>(proxy_bits);
   vtAssert(holder_ != nullptr, "Must have valid holder for collection");
 
   auto range = getRange<ColT>(proxy_bits);
 
   CollectionDirectory<IndexT> directory;
 
-  holder_->foreach([&](IndexT const& idx, CollectionBase<ColT,IndexT>* elm) {
+  holder_->foreach([&](IndexT const& idx, Indexable<IndexT>* elm) {
     auto const name = makeFilename(
       range, idx, file_base, make_sub_dirs, files_per_directory
     );
@@ -2280,10 +2276,10 @@ void CollectionManager::restoreFromFileInPlace(
     auto file_name = elm.file_name_;
     vtAssertExpr(proxy(idx).tryGetLocalPtr() != nullptr);
 
-    auto holder = findColHolder<ColT, IndexType>(proxy_bits);
+    auto holder = findColHolder<IndexType>(proxy_bits);
     vtAssertExpr(holder != nullptr);
 
-    auto elm_holder = findElmHolder<ColT,IndexType>(proxy_bits);
+    auto elm_holder = findElmHolder<IndexType>(proxy_bits);
     auto const elm_exists = elm_holder->exists(idx);
     vtAssertExpr(elm_exists);
 

@@ -49,8 +49,8 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-CollectionHolder<ColT, IndexT>::CollectionHolder(
+template <typename IndexT>
+CollectionHolder<IndexT>::CollectionHolder(
   HandlerType const in_map_fn, bool const in_has_dynamic_membership,
   ObjGroupProxyType in_map_object, bool const in_has_bounds,
   IndexT const in_bounds
@@ -61,8 +61,8 @@ CollectionHolder<ColT, IndexT>::CollectionHolder(
     bounds(in_bounds)
 { }
 
-template <typename ColT, typename IndexT>
-void CollectionHolder<ColT, IndexT>::destroy() {
+template <typename IndexT>
+void CollectionHolder<IndexT>::destroy() {
   holder_.destroyAll();
 }
 

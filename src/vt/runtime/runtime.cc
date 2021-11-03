@@ -72,6 +72,7 @@
 #include "vt/timetrigger/time_trigger_manager.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/epoch/epoch_manip.h"
+#include "vt/datarep/dr.h"
 
 #include "vt/configs/arguments/app_config.h"
 #include "vt/configs/arguments/args.h"
@@ -900,6 +901,13 @@ void Runtime::initializeComponents() {
     >{}
   );
 
+  p_->registerComponent<datarep::DataReplicator>(
+    &theDR, Deps<
+      ctx::Context,                        // Everything depends on theContext
+      objgroup::ObjGroupManager            // Since it's an objgroup
+    >{}
+  );
+
   p_->add<arguments::ArgConfig>();
   p_->add<ctx::Context>();
   p_->add<util::memory::MemoryUsage>();
@@ -934,6 +942,7 @@ void Runtime::initializeComponents() {
   p_->add<vrt::collection::balance::LBManager>();
   p_->add<timetrigger::TimeTriggerManager>();
   p_->add<phase::PhaseManager>();
+  p_->add<datarep::DataReplicator>();
 
   if (addStatsRestartReader) {
     p_->add<vrt::collection::balance::StatsRestartReader>();

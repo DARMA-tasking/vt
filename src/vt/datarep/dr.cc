@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               indexable.impl.h
+//                                    dr.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,69 +41,16 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H
+#include "vt/datarep/dr.h"
+#include "vt/objgroup/manager.h"
 
-#include "vt/config.h"
-#include "vt/vrt/vrt_common.h"
-#include "vt/vrt/collection/types/type_attorney.h"
-#include "vt/vrt/collection/types/migrate_hooks.h"
-#include "vt/vrt/collection/types/migratable.h"
-#include "vt/vrt/collection/types/indexable.h"
-#include "vt/vrt/collection/manager.h"
+namespace vt { namespace datarep {
 
-namespace vt { namespace vrt { namespace collection {
-
-template <typename IndexT>
-Indexable<IndexT>::Indexable(IndexT&& in_index)
-  : Migratable(),
-    index_(std::move(in_index)),
-    set_index_(true)
-{ }
-
-
-template <typename IndexT>
-IndexT const& Indexable<IndexT>::getIndex() const {
-  if (!set_index_) {
-    auto ctx_idx = theCollection()->queryIndexContext<IndexT>();
-    vtAssertExpr(ctx_idx != nullptr);
-    return *ctx_idx;
-  } else {
-    return index_;
-  }
+/*static*/ std::unique_ptr<DataReplicator> DataReplicator::construct() {
+  auto ptr = std::make_unique<DataReplicator>();
+  auto proxy = vt::theObjGroup()->makeCollective<DataReplicator>(ptr.get());
+  proxy.get()->setup(proxy.getProxy());
+  return ptr;
 }
 
-template <typename IndexT>
-template <typename SerializerT>
-void Indexable<IndexT>::serialize(SerializerT& s) {
-  Migratable::serialize(s);
-  s | set_index_;
-  s | index_;
-  s | cur_bcast_epoch_;
-  s | reduce_stamp_;
-}
-
-template <typename IndexT>
-void Indexable<IndexT>::setIndex(IndexT const& in_index) {
-  // Set the field and then indicate that the `index_` field is now valid with
-  // `set_index_`
-  index_ = in_index;
-  set_index_ = true;
-}
-
-template <typename IndexT>
-void Indexable<IndexT>::zeroReduceStamp() {
-  *reduce_stamp_ = 0;
-}
-
-template <typename IndexT>
-typename Indexable<IndexT>::ReduceStampType Indexable<IndexT>::getNextStamp() {
-  ReduceStampType stamp;
-  stamp.init<ReduceSeqStampType>(reduce_stamp_);
-  ++reduce_stamp_;
-  return stamp;
-}
-
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H*/
+}} /* end namespace vt::datarep */

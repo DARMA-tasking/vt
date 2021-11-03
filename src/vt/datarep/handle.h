@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               indexable.impl.h
+//                                   handle.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,69 +41,52 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H
+#if !defined INCLUDED_VT_DATAREP_HANDLE_H
+#define INCLUDED_VT_DATAREP_HANDLE_H
 
-#include "vt/config.h"
-#include "vt/vrt/vrt_common.h"
-#include "vt/vrt/collection/types/type_attorney.h"
-#include "vt/vrt/collection/types/migrate_hooks.h"
-#include "vt/vrt/collection/types/migratable.h"
-#include "vt/vrt/collection/types/indexable.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/configs/types/types_sentinels.h"
+#include "vt/datarep/base.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <memory>
 
-template <typename IndexT>
-Indexable<IndexT>::Indexable(IndexT&& in_index)
-  : Migratable(),
-    index_(std::move(in_index)),
-    set_index_(true)
-{ }
+namespace vt { namespace datarep {
 
+template <typename T, typename IndexT = int8_t>
+struct DR : detail::DR_Base<IndexT> {
 
-template <typename IndexT>
-IndexT const& Indexable<IndexT>::getIndex() const {
-  if (!set_index_) {
-    auto ctx_idx = theCollection()->queryIndexContext<IndexT>();
-    vtAssertExpr(ctx_idx != nullptr);
-    return *ctx_idx;
-  } else {
-    return index_;
+  DR() = default;
+  DR(DR const&) = default;
+  DR(DR&&) = default;
+  DR& operator=(DR const&) = default;
+  ~DR();
+
+  template <typename U>
+  void publish(DataVersionType version, U&& data);
+
+  void unpublish(DataVersionType version);
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    detail::DR_Base<IndexT>::serialize(s);
   }
-}
 
-template <typename IndexT>
-template <typename SerializerT>
-void Indexable<IndexT>::serialize(SerializerT& s) {
-  Migratable::serialize(s);
-  s | set_index_;
-  s | index_;
-  s | cur_bcast_epoch_;
-  s | reduce_stamp_;
-}
+private:
+  struct DR_TAG_CONSTRUCT {};
 
-template <typename IndexT>
-void Indexable<IndexT>::setIndex(IndexT const& in_index) {
-  // Set the field and then indicate that the `index_` field is now valid with
-  // `set_index_`
-  index_ = in_index;
-  set_index_ = true;
-}
+  DR(DR_TAG_CONSTRUCT, DataRepIDType in_handle)
+    : detail::DR_Base<IndexT>(in_handle)
+  {}
 
-template <typename IndexT>
-void Indexable<IndexT>::zeroReduceStamp() {
-  *reduce_stamp_ = 0;
-}
+  DR(
+    DR_TAG_CONSTRUCT, DataRepIDType in_handle, IndexT in_index,
+    TagType in_tag = no_tag, DataRepEnum in_hint = DataRepEnum::Normal
+  ) : detail::DR_Base<IndexT>(in_handle, in_index, in_tag, in_hint)
+  {}
 
-template <typename IndexT>
-typename Indexable<IndexT>::ReduceStampType Indexable<IndexT>::getNextStamp() {
-  ReduceStampType stamp;
-  stamp.init<ReduceSeqStampType>(reduce_stamp_);
-  ++reduce_stamp_;
-  return stamp;
-}
+  friend struct DataReplicator;
+};
 
-}}} /* end namespace vt::vrt::collection */
+}} /* end namespace vt::datarep */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H*/
+#endif /*INCLUDED_VT_DATAREP_HANDLE_H*/

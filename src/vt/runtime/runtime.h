@@ -416,6 +416,7 @@ public:
   ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger = nullptr;
   ComponentPtrType<phase::PhaseManager> thePhase = nullptr;
   ComponentPtrType<epoch::EpochManip> theEpoch = nullptr;
+  ComponentPtrType<datarep::DataReplicator> theDR = nullptr;
 
   // Node-level worker-based components for vt (these are optional)
   #if vt_threading_enabled

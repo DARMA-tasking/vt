@@ -119,6 +119,10 @@ using PriorityLevelType       = uint8_t;
 using ComponentIDType         = uint32_t;
 /// Used to hold a unique ID for a user-level thread on a particular node
 using ThreadIDType            = uint64_t;
+/// Used to hold a data replication handle
+using DataRepIDType           = uint64_t;
+/// Used to hold a version of a data replication handle
+using DataVersionType         = int64_t;
 
 // Action types for attaching a closure to a runtime function
 /// Used for generically store an action to perform

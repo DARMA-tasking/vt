@@ -42,32 +42,67 @@
 */
 
 #include <vt/transport.h>
+#include <vt/datarep/dr.h>
 
 struct HelloMsg : vt::Message {
-  HelloMsg(vt::NodeType in_from) : from(in_from) { }
+  HelloMsg(vt::NodeType in_from, vt::DataRepIDType handle_id)
+    : from(in_from),
+      handle_id_(handle_id)
+  { }
 
   vt::NodeType from = 0;
+  vt::DataRepIDType handle_id_ = vt::no_datarep;
 };
 
-static void hello_world(HelloMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  fmt::print("{}: Hello from node {}\n", this_node, msg->from);
-}
+struct MyCol : vt::Collection<MyCol, vt::Index2D> {
+  MyCol() {
+    auto proxy = getCollectionProxy();
+    auto idx = getIndex();
+    vt_print(gen, "MyCol: {}\n", idx);
+    //proxy[idx].makeIndexedHandle(test_dr);
+    test_dr = vt::theDR()->makeIndexedHandle<std::vector<double>>(proxy[idx]);
+    test_dr.publish(0, std::vector<double>{10.2, 32.4, 22.3 + idx.x() * idx.y()});
+  }
+
+  using TestMsg = vt::CollectionMessage<MyCol>;
+
+  void doWork(TestMsg* msg) {
+    auto proxy = getCollectionProxy();
+    auto idx = getIndex();
+    vt_print(gen, "Hello from {}\n", idx);
+    vt::datarep::Reader<std::vector<double>, vt::Index2D> reader;
+    auto idx_x = (idx.x() + 1) % 4;
+    reader = vt::theDR()->makeIndexedReader<std::vector<double>>(proxy(idx_x, idx.y()));
+    reader.fetch(0);
+    vt::theSched()->runSchedulerWhile([&]{ return not reader.isReady(); });
+    auto const& vec = reader.get(0);
+    for (auto&& elm : *vec) {
+      vt_print(gen, "idx={}, elm={}\n", idx, elm);
+    }
+    reader.release(0);
+  }
+
+  vt::datarep::DR<std::vector<double>, vt::Index2D> test_dr;
+};
+
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  // vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
     return vt::rerror("requires at least 2 nodes");
   }
 
-  if (this_node == 0) {
-    auto msg = vt::makeMessage<HelloMsg>(this_node);
-    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
-  }
+  auto range = vt::Index2D(4, 1);
+  auto proxy = vt::makeCollection<MyCol>()
+    .bounds(range)
+    .bulkInsert()
+    .wait();
+
+  proxy.broadcastCollective<MyCol::TestMsg,&MyCol::doWork>();
 
   vt::finalize();
 

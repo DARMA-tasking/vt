@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               indexable.impl.h
+//                                    base.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,69 +41,64 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H
+#if !defined INCLUDED_VT_DATAREP_BASE_H
+#define INCLUDED_VT_DATAREP_BASE_H
 
-#include "vt/config.h"
-#include "vt/vrt/vrt_common.h"
-#include "vt/vrt/collection/types/type_attorney.h"
-#include "vt/vrt/collection/types/migrate_hooks.h"
-#include "vt/vrt/collection/types/migratable.h"
-#include "vt/vrt/collection/types/indexable.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/configs/types/types_sentinels.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace datarep {
 
-template <typename IndexT>
-Indexable<IndexT>::Indexable(IndexT&& in_index)
-  : Migratable(),
-    index_(std::move(in_index)),
-    set_index_(true)
-{ }
+enum struct DataRepEnum : int8_t {
+  Normal = 0,
+  PersistentAcrossVersions = 1
+};
 
+namespace detail {
+
+struct ReaderBase {};
 
 template <typename IndexT>
-IndexT const& Indexable<IndexT>::getIndex() const {
-  if (!set_index_) {
-    auto ctx_idx = theCollection()->queryIndexContext<IndexT>();
-    vtAssertExpr(ctx_idx != nullptr);
-    return *ctx_idx;
-  } else {
-    return index_;
+struct DR_Base : ReaderBase {
+
+  DR_Base() = default;
+  explicit DR_Base(DataRepIDType in_handle)
+    : handle_(in_handle)
+  { }
+
+  DR_Base(
+    DataRepIDType in_handle, IndexT in_index, TagType in_tag,
+    DataRepEnum in_hint = DataRepEnum::Normal
+  ) : handle_(in_handle),
+      tag_(in_tag),
+      is_proxy_(true),
+      index_(in_index),
+      hint_(in_hint)
+  { }
+
+  DataRepIDType getHandleID() const { return handle_; }
+  TagType getTag() const { return tag_; }
+  bool isProxy() const { return is_proxy_; }
+  IndexT getIndex() const { return index_; }
+  DataRepEnum getHint() const { return hint_; }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | handle_
+      | tag_
+      | is_proxy_
+      | index_
+      | hint_;
   }
-}
 
-template <typename IndexT>
-template <typename SerializerT>
-void Indexable<IndexT>::serialize(SerializerT& s) {
-  Migratable::serialize(s);
-  s | set_index_;
-  s | index_;
-  s | cur_bcast_epoch_;
-  s | reduce_stamp_;
-}
+protected:
+  DataRepIDType handle_ = no_datarep;
+  TagType tag_ = no_tag;
+  bool is_proxy_ = false;
+  IndexT index_ = {};
+  DataRepEnum hint_ = DataRepEnum::Normal;
+};
 
-template <typename IndexT>
-void Indexable<IndexT>::setIndex(IndexT const& in_index) {
-  // Set the field and then indicate that the `index_` field is now valid with
-  // `set_index_`
-  index_ = in_index;
-  set_index_ = true;
-}
+}}} /* end namespace vt::datarep::detail */
 
-template <typename IndexT>
-void Indexable<IndexT>::zeroReduceStamp() {
-  *reduce_stamp_ = 0;
-}
-
-template <typename IndexT>
-typename Indexable<IndexT>::ReduceStampType Indexable<IndexT>::getNextStamp() {
-  ReduceStampType stamp;
-  stamp.init<ReduceSeqStampType>(reduce_stamp_);
-  ++reduce_stamp_;
-  return stamp;
-}
-
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H*/
+#endif /*INCLUDED_VT_DATAREP_BASE_H*/

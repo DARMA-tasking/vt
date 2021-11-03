@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               indexable.impl.h
+//                                reader.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,69 +41,34 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H
+#if !defined INCLUDED_VT_DATAREP_READER_IMPL_H
+#define INCLUDED_VT_DATAREP_READER_IMPL_H
 
-#include "vt/config.h"
-#include "vt/vrt/vrt_common.h"
-#include "vt/vrt/collection/types/type_attorney.h"
-#include "vt/vrt/collection/types/migrate_hooks.h"
-#include "vt/vrt/collection/types/migratable.h"
-#include "vt/vrt/collection/types/indexable.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/datarep/reader.h"
+#include "vt/datarep/dr.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace datarep {
 
-template <typename IndexT>
-Indexable<IndexT>::Indexable(IndexT&& in_index)
-  : Migratable(),
-    index_(std::move(in_index)),
-    set_index_(true)
-{ }
-
-
-template <typename IndexT>
-IndexT const& Indexable<IndexT>::getIndex() const {
-  if (!set_index_) {
-    auto ctx_idx = theCollection()->queryIndexContext<IndexT>();
-    vtAssertExpr(ctx_idx != nullptr);
-    return *ctx_idx;
-  } else {
-    return index_;
-  }
+template <typename T, typename IndexT>
+void Reader<T, IndexT>::fetch(DataVersionType version) {
+  version_ = version;
+  theDR()->requestData<T, IndexT>(*this, version_, this);
 }
 
-template <typename IndexT>
-template <typename SerializerT>
-void Indexable<IndexT>::serialize(SerializerT& s) {
-  Migratable::serialize(s);
-  s | set_index_;
-  s | index_;
-  s | cur_bcast_epoch_;
-  s | reduce_stamp_;
+template <typename T, typename IndexT>
+void Reader<T, IndexT>::release(DataVersionType version) {
+  data_ = nullptr;
+  version_ = -1;
 }
 
-template <typename IndexT>
-void Indexable<IndexT>::setIndex(IndexT const& in_index) {
-  // Set the field and then indicate that the `index_` field is now valid with
-  // `set_index_`
-  index_ = in_index;
-  set_index_ = true;
+template <typename T, typename IndexT>
+std::shared_ptr<T const> Reader<T, IndexT>::get(DataVersionType version) const {
+  vtAssert(ready_, "Data must be ready to get it");
+  vtAssert(data_ != nullptr, "Must have data");
+  vtAssert(version_ == version, "Must have the right version");
+  return data_;
 }
 
-template <typename IndexT>
-void Indexable<IndexT>::zeroReduceStamp() {
-  *reduce_stamp_ = 0;
-}
+}} /* end namespace vt::datarep */
 
-template <typename IndexT>
-typename Indexable<IndexT>::ReduceStampType Indexable<IndexT>::getNextStamp() {
-  ReduceStampType stamp;
-  stamp.init<ReduceSeqStampType>(reduce_stamp_);
-  ++reduce_stamp_;
-  return stamp;
-}
-
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H*/
+#endif /*INCLUDED_VT_DATAREP_READER_IMPL_H*/

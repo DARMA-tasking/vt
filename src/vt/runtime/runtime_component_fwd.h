@@ -116,6 +116,9 @@ struct PhaseManager;
 namespace epoch {
 struct EpochManip;
 }
+namespace datarep {
+struct DataReplicator;
+}
 
 #if vt_check_enabled(trace_enabled)
 namespace trace {

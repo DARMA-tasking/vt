@@ -54,15 +54,15 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-bool Holder<ColT, IndexT>::exists(IndexT const& idx ) {
+template <typename IndexT>
+bool Holder<IndexT>::exists(IndexT const& idx ) {
   auto& container = vc_container_;
   auto iter = container.find(idx);
   return iter != container.end() and not iter->second.erased_;
 }
 
-template <typename ColT, typename IndexT>
-void Holder<ColT, IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
+template <typename IndexT>
+void Holder<IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
   vtAssert(!is_destroyed_, "Must not be destroyed to insert a new element");
   vtAssert(!exists(idx), "Should not exist to insert element");
 
@@ -94,8 +94,8 @@ void Holder<ColT, IndexT>::insert(IndexT const& idx, InnerHolder&& inner) {
   );
 }
 
-template <typename ColT, typename IndexT>
-typename Holder<ColT, IndexT>::InnerHolder& Holder<ColT, IndexT>::lookup(
+template <typename IndexT>
+typename Holder<IndexT>::InnerHolder& Holder<IndexT>::lookup(
   IndexT const& idx
 ) {
   auto const& lookup = idx;
@@ -107,8 +107,8 @@ typename Holder<ColT, IndexT>::InnerHolder& Holder<ColT, IndexT>::lookup(
   return iter->second;
 }
 
-template <typename ColT, typename IndexT>
-typename Holder<ColT, IndexT>::VirtualPtrType Holder<ColT, IndexT>::remove(
+template <typename IndexT>
+typename Holder<IndexT>::VirtualPtrType Holder<IndexT>::remove(
   IndexT const& idx
 ) {
   auto const& lookup = idx;
@@ -124,21 +124,21 @@ typename Holder<ColT, IndexT>::VirtualPtrType Holder<ColT, IndexT>::remove(
   return owned_ptr;
 }
 
-template <typename ColT, typename IndexT>
-void Holder<ColT, IndexT>::destroyAll() {
+template <typename IndexT>
+void Holder<IndexT>::destroyAll() {
   if (!is_destroyed_) {
     vc_container_.clear();
     is_destroyed_ = true;
   }
 }
 
-template <typename ColT, typename IndexT>
-bool Holder<ColT, IndexT>::isDestroyed() const {
+template <typename IndexT>
+bool Holder<IndexT>::isDestroyed() const {
   return is_destroyed_;
 }
 
-template <typename ColT, typename IndexT>
-void Holder<ColT, IndexT>::cleanupExists() {
+template <typename IndexT>
+void Holder<IndexT>::cleanupExists() {
   auto& container = vc_container_;
   for (auto iter = container.begin(); iter != container.end(); ) {
     if (iter->second.erased_) {
@@ -150,8 +150,8 @@ void Holder<ColT, IndexT>::cleanupExists() {
   }
 }
 
-template <typename ColT, typename IndexT>
-void Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
+template <typename IndexT>
+void Holder<IndexT>::foreach(FuncApplyType fn) {
   static uint64_t num_reentrant = 0;
 
   num_reentrant++;
@@ -171,36 +171,36 @@ void Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
   }
 }
 
-template <typename ColT, typename IndexT>
-typename Holder<ColT,IndexT>::TypedIndexContainer::size_type
-Holder<ColT,IndexT>::numElements() const {
+template <typename IndexT>
+typename Holder<IndexT>::TypedIndexContainer::size_type
+Holder<IndexT>::numElements() const {
   return vc_container_.size() - num_erased_not_removed_;
 }
 
-template <typename ColT, typename IndexT>
-typename Holder<ColT,IndexT>::TypedIndexContainer::size_type
-Holder<ColT,IndexT>::numElementsExpr(FuncExprType fn) const {
-  typename Holder<ColT,IndexT>::TypedIndexContainer::size_type num_in = 0;
+template <typename IndexT>
+typename Holder<IndexT>::TypedIndexContainer::size_type
+Holder<IndexT>::numElementsExpr(FuncExprType fn) const {
+  typename Holder<IndexT>::TypedIndexContainer::size_type num_in = 0;
   for (auto&& elm : vc_container_) {
     num_in += fn(elm.first);
   }
   return num_in;
 }
 
-template <typename ColT, typename IndexT>
-int Holder<ColT, IndexT>::addListener(listener::ListenFnType<IndexT> fn) {
+template <typename IndexT>
+int Holder<IndexT>::addListener(listener::ListenFnType<IndexT> fn) {
   event_listeners_.push_back(fn);
   return event_listeners_.size() - 1;
 }
 
-template <typename ColT, typename IndexT>
-void Holder<ColT, IndexT>::removeListener(int element) {
+template <typename IndexT>
+void Holder<IndexT>::removeListener(int element) {
   vtAssert(event_listeners_.size() > element, "Listener must exist");
   event_listeners_[element] = nullptr;
 }
 
-template <typename ColT, typename IndexT>
-void Holder<ColT, IndexT>::applyListeners(
+template <typename IndexT>
+void Holder<IndexT>::applyListeners(
   listener::ElementEventEnum event, IndexT const& idx
 ) {
   for (auto&& l : event_listeners_) {

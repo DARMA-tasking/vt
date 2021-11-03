@@ -17,6 +17,7 @@ set(TOP_LEVEL_SUBDIRS
   registry
   runnable
   activefn
+  datarep
   # Add single-directory components
   context event handler parameterization sequence termination
   scheduler worker standalone runtime trace timing demangle rdmahandle
