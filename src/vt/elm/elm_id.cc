@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 lb_common.cc
+//                                  elm_id.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,63 +41,16 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
-#include "vt/vrt/collection/balance/node_stats.h"
-#include "vt/scheduler/scheduler.h"
+#include "vt/elm/elm_id.h"
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+#include <ostream>
+#include <fmt/ostream.h>
 
-LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
-                           ElementIDStruct object, PhaseOffset when) {
-  return getObjectLoads(model.get(), object, when);
+namespace vt { namespace elm {
+
+std::ostream& operator<<(std::ostream& os, ::vt::elm::ElementIDStruct const& id) {
+  os << "(" << id.id << "," << id.home_node << "," << id.curr_node << ")";
+  return os;
 }
 
-LoadSummary getObjectLoads(LoadModel* model,
-                           ElementIDStruct object, PhaseOffset when)
-{
-  LoadSummary ret;
-  ret.whole_phase_load = model->getWork(object, {when.phases, PhaseOffset::WHOLE_PHASE});
-
-  unsigned int subphases = model->getNumSubphases();
-  for (unsigned int i = 0; i < subphases; ++i)
-    ret.subphase_loads.push_back(model->getWork(object, {when.phases, i}));
-
-  return ret;
-}
-
-LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when)
-{
-  LoadSummary ret;
-
-  auto subphases = model->getNumSubphases();
-  ret.subphase_loads.resize(subphases, 0.0);
-
-  for (auto obj : *model) {
-    ret += getObjectLoads(model, obj, when);
-  }
-
-  return ret;
-}
-
-void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reassignment) {
-  runInEpochCollective([&] {
-    auto from = theContext()->getNode();
-
-    for (auto&& departing_elm : reassignment->depart_) {
-      auto obj_id = departing_elm.first;
-      auto to = departing_elm.second;
-
-      vt_debug_print(
-                     normal, lb,
-                     "migrateObjectTo, obj_id={}, home={}, from={}, to={}\n",
-                     obj_id.id, obj_id.home_node, from, to
-                     );
-
-      theNodeStats()->migrateObjTo(obj_id, to);
-    }
-  });
-}
-
-}}}} /* end namespace vt::vrt::collection::balance */
+}} /* end namespace vt::elm */

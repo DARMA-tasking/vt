@@ -45,20 +45,20 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/elm_id.h"
+#include "vt/elm/elm_id.h"
 #include "vt/timing/timing_type.h"
 #include "vt/messaging/message/message.h"
 
-#include <cstdlib>
-#include <unordered_map>
-#include <ostream>
-#include <map>
 #include <vector>
-
-#include <fmt/ostream.h>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
+
+using ElementIDStruct = elm::ElementIDStruct;
+using ElementIDType = elm::ElementIDType;
+
+static constexpr ElementIDType const no_element_id = elm::no_element_id;
 
 /**
  * \brief A description of the interval of interest for a modeled load query

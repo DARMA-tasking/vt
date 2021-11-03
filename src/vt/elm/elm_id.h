@@ -41,16 +41,18 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_ID_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_ID_H
+#if !defined INCLUDED_VT_ELM_ELM_ID_H
+#define INCLUDED_VT_ELM_ELM_ID_H
 
-#include "vt/config.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/configs/types/types_sentinels.h"
 
+#include <unordered_map>
 #include <ostream>
 
 #include <fmt/ostream.h>
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace elm {
 
 using ElementIDType = uint64_t;
 
@@ -71,12 +73,21 @@ struct ElementIDStruct {
   }
 };
 
-std::ostream& operator<<(
-  std::ostream& os, const ::vt::vrt::collection::balance::ElementIDStruct& id
-);
+std::ostream& operator<<(std::ostream& os, ::vt::elm::ElementIDStruct const& id);
 
 static constexpr ElementIDType const no_element_id = 0;
 
-}}}} /* end namespace vt::vrt::collection::balance */
+}} /* end namespace vt::elm */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_ID_H*/
+namespace std {
+
+template <>
+struct hash<vt::elm::ElementIDStruct> {
+  size_t operator()(vt::elm::ElementIDStruct const& in) const {
+    return std::hash<vt::elm::ElementIDType>()(in.id);
+  }
+};
+
+} /* end namespace std */
+
+#endif /*INCLUDED_VT_ELM_ELM_ID_H*/
