@@ -121,13 +121,4 @@ void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
   return theObjGroup()->dispatch(msg,han);
 }
 
-void scheduleMsg(
-  MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
-) {
-  auto const node = theContext()->getNode();
-  runnable::makeRunnable(msg, true, han, node)
-    .withTDEpoch(epoch)
-    .enqueue();
-}
-
 }} /* end namespace vt::objgroup */

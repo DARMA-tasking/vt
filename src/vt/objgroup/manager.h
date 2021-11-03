@@ -397,10 +397,6 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    */
   ObjGroupProxyType getProxy(ObjGroupProxyType proxy);
 
-  friend void scheduleMsg(
-    MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType ep
-  );
-
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_obj_id_

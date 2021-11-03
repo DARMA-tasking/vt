@@ -59,10 +59,12 @@ void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
   if (dest_node != this_node) {
     theMsg()->sendMsg<MsgT>(dest_node, han,msg, no_tag);
   } else {
-  // Get the current epoch for the message
+    // Get the current epoch for the message
     auto const cur_epoch = theMsg()->setupEpochMsg(msg);
-    // Schedule the work of dispatching the message handler for later
-    scheduleMsg(msg.template toVirtual<ShortMessage>(),han,cur_epoch);
+
+    runnable::makeRunnable(msg, true, han, this_node)
+      .withTDEpoch(cur_epoch)
+      .enqueue();
   }
 }
 

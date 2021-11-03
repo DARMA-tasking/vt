@@ -59,9 +59,6 @@ template <typename MsgT>
 void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType node);
 template <typename MsgT>
 void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(
-  MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
-);
 
 }} /* end namespace vt::objgroup */
 
