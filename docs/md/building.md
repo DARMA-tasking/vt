@@ -71,6 +71,7 @@ build configuration:
 | `VT_BUILD_EXAMPLES`              | 1               | Build all VT examples                                                                              |
 | `vt_debug_verbose`               | 1 (not Release) | Enable VT verbose debug prints at compile-time                                                     |
 | `vt_no_color_enabled`            | 0               | Set `--vt_no_color` flag to true by default                                                        |
+| `BUILD_SHARED_LIBS`              | 0               | Build VT as shared library                                                                         |
 
 \subsection using-the-build-script Using the Build Script
 
@@ -107,6 +108,7 @@ parameters.
 | `VT_DEBUG_VERBOSE`               | <empty>       | Enable VT verbose debug prints at compile-time                                                     |
 | `VT_TESTS_NUM_NODES`             | <empty>       | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
 | `VT_NO_COLOR_ENABLED`            | 0             | Set `--vt_no_color` flag to true by default                                                        |
+| `BUILD_SHARED_LIBS`              | 0             | Build VT as shared library                                                                         |
 
 With these set, invoke the script with two arguments: the path to the *vt* root
 directory and the build path. Here's an example assuming that *vt* is cloned
@@ -178,6 +180,7 @@ which `docker-compose` will read.
 #   CODE_COVERAGE=0           # Enable generation of code coverage reports
 #   VT_DEBUG_VERBOSE          # Enable verbose debug prints at compile-time
 #   VT_NO_COLOR_ENABLED=0     # Set --vt_no_color flag to true by default
+#   VT_BUILD_SHARED_LIBS=0    # Build VT as shared library
 ```
 
 With these set, one may run the following for a non-interactive build with

@@ -101,8 +101,12 @@ function(create_trace_only_target)
   set(VT_TRACE_LIB vt-trace CACHE INTERNAL "" FORCE)
   add_library(
     ${VT_TRACE_LIB}
-    STATIC
     ${TRACE_HEADER_FILES} ${TRACE_SOURCE_FILES}
+  )
+
+  set_target_properties(
+    ${VT_TRACE_LIB} PROPERTIES
+    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
   )
 
   target_include_directories(
