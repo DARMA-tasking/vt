@@ -71,10 +71,14 @@ struct LBStats final : Base {
   /**
    * \brief Construct a \c LBStats
    *
-   * \param[in] in_elm the collection element
+   * \param[in] in_stats the statistics
+   * \param[in] in_elm_id the element ID
    */
-  template <typename ElmT>
-  explicit LBStats(ElmT* in_elm);
+  LBStats(ElementStats* in_stats, ElementIDStruct const& in_elm_id)
+    : stats_(in_stats),
+      cur_elm_id_(in_elm_id),
+      should_instrument_(true)
+  { }
 
   /**
    * \brief Set the context and timing for a collection task

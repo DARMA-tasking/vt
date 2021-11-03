@@ -186,7 +186,7 @@ struct RunnableMaker {
   template <typename ElmT>
   RunnableMaker&& withLBStatsVoidMsg(ElmT* elm) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBStats>(elm);
+    impl_->template addContext<ctx::LBStats>(&elm->getStats(), elm->getElmID());
 #endif
     return std::move(*this);
   }
