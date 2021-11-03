@@ -156,12 +156,12 @@ void CollectionMessage<ColT, BaseMsgT>::setElm(
 }
 
 template <typename ColT, typename BaseMsgT>
-balance::CommCategory CollectionMessage<ColT, BaseMsgT>::getCat() const {
+elm::CommCategory CollectionMessage<ColT, BaseMsgT>::getCat() const {
   return cat_;
 }
 
 template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT, BaseMsgT>::setCat(balance::CommCategory cat) {
+void CollectionMessage<ColT, BaseMsgT>::setCat(elm::CommCategory cat) {
   cat_ = cat;
 }
 

@@ -79,7 +79,7 @@ void ElementStats::stopTime() {
 }
 
 void ElementStats::recvComm(
-  LBCommKey key, double bytes
+  elm::CommKey key, double bytes
 ) {
   phase_comm_[cur_phase_][key].receiveMsg(bytes);
   subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
@@ -90,7 +90,7 @@ void ElementStats::recvObjData(
   ElementIDStruct pto,
   ElementIDStruct pfrom, double bytes, bool bcast
 ) {
-  LBCommKey key(LBCommKey::CollectionTag{}, pfrom, pto, bcast);
+  elm::CommKey key(elm::CommKey::CollectionTag{}, pfrom, pto, bcast);
   recvComm(key, bytes);
 }
 
@@ -98,7 +98,7 @@ void ElementStats::recvFromNode(
   ElementIDStruct pto, NodeType from,
   double bytes, bool bcast
 ) {
-  LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, pto, bcast);
+  elm::CommKey key(elm::CommKey::NodeToCollectionTag{}, from, pto, bcast);
   recvComm(key, bytes);
 }
 
@@ -106,7 +106,7 @@ void ElementStats::recvToNode(
   NodeType to, ElementIDStruct pfrom,
   double bytes, bool bcast
 ) {
-  LBCommKey key(LBCommKey::CollectionToNodeTag{}, pfrom, to, bcast);
+  elm::CommKey key(elm::CommKey::CollectionToNodeTag{}, pfrom, to, bcast);
   recvComm(key, bytes);
 }
 

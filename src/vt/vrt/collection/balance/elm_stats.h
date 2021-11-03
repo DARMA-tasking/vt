@@ -45,8 +45,8 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_H
 
 #include "vt/config.h"
+#include "vt/elm/elm_comm.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/elm_stats.fwd.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
@@ -68,7 +68,7 @@ struct ElementStats {
   void startTime();
   void stopTime();
   void addTime(TimeType const& time);
-  void recvComm(LBCommKey key, double bytes);
+  void recvComm(elm::CommKey key, double bytes);
   void recvObjData(
     ElementIDStruct to_perm,
     ElementIDStruct from_perm, double bytes, bool bcast

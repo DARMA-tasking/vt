@@ -96,9 +96,9 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
       j["communications"][i]["messages"] = volume.messages;
 
       switch(key.cat_) {
-      case CommCategory::Broadcast:
-      case CommCategory::SendRecv: {
-        if (key.cat_ == CommCategory::SendRecv) {
+      case elm::CommCategory::Broadcast:
+      case elm::CommCategory::SendRecv: {
+        if (key.cat_ == elm::CommCategory::SendRecv) {
           j["communications"][i]["type"] = "SendRecv";
         } else {
           j["communications"][i]["type"] = "Broadcast";
@@ -111,9 +111,9 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
         j["communications"][i]["to"]["home"] = key.toObj().home_node;
         break;
       }
-      case CommCategory::NodeToCollection:
-      case CommCategory::NodeToCollectionBcast: {
-        if (key.cat_ == CommCategory::NodeToCollection) {
+      case elm::CommCategory::NodeToCollection:
+      case elm::CommCategory::NodeToCollectionBcast: {
+        if (key.cat_ == elm::CommCategory::NodeToCollection) {
           j["communications"][i]["type"] = "NodeToCollection";
         } else {
           j["communications"][i]["type"] = "NodeToCollectionBcast";
@@ -126,9 +126,9 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
         j["communications"][i]["to"]["home"] = key.toObj().home_node;
         break;
       }
-      case CommCategory::CollectionToNode:
-      case CommCategory::CollectionToNodeBcast: {
-        if (key.cat_ == CommCategory::CollectionToNode) {
+      case elm::CommCategory::CollectionToNode:
+      case elm::CommCategory::CollectionToNodeBcast: {
+        if (key.cat_ == elm::CommCategory::CollectionToNode) {
           j["communications"][i]["type"] = "CollectionToNode";
         } else {
           j["communications"][i]["type"] = "CollectionToNodeBcast";
@@ -141,8 +141,8 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
         j["communications"][i]["from"]["home"] = key.fromObj().home_node;
         break;
       }
-      case CommCategory::LocalInvoke:
-      case CommCategory::CollectiveToCollectionBcast:
+      case elm::CommCategory::LocalInvoke:
+      case elm::CommCategory::CollectiveToCollectionBcast:
         // not currently supported
         break;
       }

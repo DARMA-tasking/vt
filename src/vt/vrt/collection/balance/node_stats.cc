@@ -188,24 +188,24 @@ void NodeStats::closeStatsFile() {
 }
 
 std::pair<ElementIDType, ElementIDType>
-getRecvSendDirection(CommKeyType const& comm) {
+getRecvSendDirection(elm::CommKeyType const& comm) {
   switch (comm.cat_) {
-  case CommCategory::SendRecv:
-  case CommCategory::Broadcast:
+  case elm::CommCategory::SendRecv:
+  case elm::CommCategory::Broadcast:
     return std::make_pair(comm.toObj().id, comm.fromObj().id);
 
-  case CommCategory::NodeToCollection:
-  case CommCategory::NodeToCollectionBcast:
+  case elm::CommCategory::NodeToCollection:
+  case elm::CommCategory::NodeToCollectionBcast:
     return std::make_pair(comm.toObj().id, comm.fromNode());
 
-  case CommCategory::CollectionToNode:
-  case CommCategory::CollectionToNodeBcast:
+  case elm::CommCategory::CollectionToNode:
+  case elm::CommCategory::CollectionToNodeBcast:
     return std::make_pair(comm.toNode(), comm.fromObj().id);
 
   // Comm stats are not recorded for local operations
   // this case is just to avoid warning of not handled enum
-  case CommCategory::CollectiveToCollectionBcast:
-  case CommCategory::LocalInvoke:
+  case elm::CommCategory::CollectiveToCollectionBcast:
+  case elm::CommCategory::LocalInvoke:
     return std::make_pair(ElementIDType{}, ElementIDType{});
   }
 

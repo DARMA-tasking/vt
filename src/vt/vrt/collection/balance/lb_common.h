@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/elm/elm_id.h"
+#include "vt/elm/elm_comm.h"
 #include "vt/timing/timing_type.h"
 #include "vt/messaging/message/message.h"
 
@@ -57,6 +58,7 @@ namespace balance {
 
 using ElementIDStruct = elm::ElementIDStruct;
 using ElementIDType = elm::ElementIDType;
+using CommMapType = elm::CommMapType;
 
 static constexpr ElementIDType const no_element_id = elm::no_element_id;
 

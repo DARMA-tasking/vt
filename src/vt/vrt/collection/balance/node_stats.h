@@ -46,7 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/elm/elm_comm.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/types/migratable.h"

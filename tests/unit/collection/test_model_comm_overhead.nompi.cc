@@ -43,7 +43,7 @@
 
 #include <vt/vrt/collection/balance/model/load_model.h>
 #include <vt/vrt/collection/balance/model/comm_overhead.h>
-#include <vt/vrt/collection/balance/lb_comm.h>
+#include <vt/elm/lb_comm.h>
 
 #include <gtest/gtest.h>
 
@@ -55,11 +55,11 @@ namespace vt { namespace tests { namespace unit { namespace comm {
 
 using TestModelCommOverhead = TestHarness;
 
-using vt::vrt::collection::balance::CommKeyType;
-using vt::vrt::collection::balance::CommMapType;
-using vt::vrt::collection::balance::CommOverhead;
-using vt::vrt::collection::balance::CommVolume;
-using vt::vrt::collection::balance::ElementIDStruct;
+using vt::elm::CommKeyType;
+using vt::elm::CommMapType;
+using vt::elm::CommOverhead;
+using vt::elm::CommVolume;
+using vt::elm::ElementIDStruct;
 using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ObjectIterator;

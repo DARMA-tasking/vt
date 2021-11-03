@@ -372,21 +372,21 @@ template <typename ColT, typename MsgT>
     verbose, vrt_coll,
     "recordStats: receive msg: elm(to={}, from={}),"
     " no={}, size={}, category={}\n",
-    pto, pfrom, balance::no_element_id, msg_size,
-    static_cast<typename std::underlying_type<balance::CommCategory>::type>(cat)
+    pto, pfrom, elm::no_element_id, msg_size,
+    static_cast<typename std::underlying_type<elm::CommCategory>::type>(cat)
   );
   if (
-    cat == balance::CommCategory::SendRecv or
-    cat == balance::CommCategory::Broadcast
+    cat == elm::CommCategory::SendRecv or
+    cat == elm::CommCategory::Broadcast
   ) {
-    vtAssert(pfrom.id != balance::no_element_id, "Must not be no element ID");
-    bool bcast = cat == balance::CommCategory::SendRecv ? false : true;
+    vtAssert(pfrom.id != elm::no_element_id, "Must not be no element ID");
+    bool bcast = cat == elm::CommCategory::SendRecv ? false : true;
     stats.recvObjData(pto, pfrom, msg_size, bcast);
   } else if (
-    cat == balance::CommCategory::NodeToCollection or
-    cat == balance::CommCategory::NodeToCollectionBcast
+    cat == elm::CommCategory::NodeToCollection or
+    cat == elm::CommCategory::NodeToCollectionBcast
   ) {
-    bool bcast = cat == balance::CommCategory::NodeToCollection ? false : true;
+    bool bcast = cat == elm::CommCategory::NodeToCollection ? false : true;
     auto nfrom = msg->getFromNode();
     stats.recvFromNode(pto, nfrom, msg_size, bcast);
   }
@@ -539,10 +539,10 @@ void CollectionManager::invokeMsgImpl(
     elm_id
   );
 
-  if (elm_id.id != balance::no_element_id) {
+  if (elm_id.id != elm::no_element_id) {
     msgPtr->setElm(elm_id);
   }
-  msgPtr->setCat(balance::CommCategory::LocalInvoke);
+  msgPtr->setCat(elm::CommCategory::LocalInvoke);
 
 #endif
 
@@ -703,7 +703,7 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
 
 #if vt_check_enabled(lblite)
   msg->setLBLiteInstrument(instrument);
-  msg->setCat(balance::CommCategory::CollectiveToCollectionBcast);
+  msg->setCat(elm::CommCategory::CollectiveToCollectionBcast);
 #endif
 
   theMsg()->markAsCollectionMessage(msg);
@@ -869,11 +869,11 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
     elm_id
   );
 
-  if (elm_id.id != balance::no_element_id) {
+  if (elm_id.id != elm::no_element_id) {
     msg->setElm(elm_id);
-    msg->setCat(balance::CommCategory::Broadcast);
+    msg->setCat(elm::CommCategory::Broadcast);
   } else {
-    msg->setCat(balance::CommCategory::NodeToCollection);
+    msg->setCat(elm::CommCategory::NodeToCollection);
   }
 # endif
 
@@ -1135,11 +1135,11 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     elm_id
   );
 
-  if (elm_id.id != balance::no_element_id) {
+  if (elm_id.id != elm::no_element_id) {
     msg->setElm(elm_id);
-    msg->setCat(balance::CommCategory::SendRecv);
+    msg->setCat(elm::CommCategory::SendRecv);
   } else {
-    msg->setCat(balance::CommCategory::NodeToCollection);
+    msg->setCat(elm::CommCategory::NodeToCollection);
   }
 # endif
 

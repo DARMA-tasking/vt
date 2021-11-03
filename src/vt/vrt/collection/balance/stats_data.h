@@ -46,7 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/elm/elm_comm.h"
 
 #include <unordered_map>
 #include <memory>
