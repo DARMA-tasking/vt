@@ -75,14 +75,8 @@ struct BaseLB {
   using ArriveListType   = std::vector<std::tuple<ObjIDType, NodeType>>;
   using ObjListType      = std::vector<ObjIDType>;
 
-  explicit BaseLB(
-    bool in_comm_aware = false,
-    bool in_comm_collectives = false,
-    int32_t in_bin_size = default_bin_size
-  ) : bin_size_(in_bin_size),
-      comm_aware_(in_comm_aware),
-      comm_collectives_(in_comm_collectives),
-      pending_reassignment_(std::make_unique<balance::Reassignment>())
+  explicit BaseLB()
+    : pending_reassignment_(std::make_unique<balance::Reassignment>())
   { }
 
   BaseLB(BaseLB const &) = delete;
