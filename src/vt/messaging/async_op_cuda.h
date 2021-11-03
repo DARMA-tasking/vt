@@ -89,7 +89,7 @@ struct AsyncOpCUDA : AsyncOp {
   bool poll() override {
     auto ret = cudaEventQuery(event_);
     if (cudaSuccess != ret && cudaErrorNotReady != ret) {
-      vtAbort(fmt::format("Failure on stream event {:x}: {}: {}", event_, cudaGetErrorName(ret), cudaGetErrorString(ret)));
+      vtAbort(fmt::format("Failure on stream event: {}: {}", cudaGetErrorName(ret), cudaGetErrorString(ret)));
     }
     return ret == cudaSuccess;
   }

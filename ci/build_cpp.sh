@@ -142,6 +142,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_debug_verbose="${VT_DEBUG_VERBOSE:-}" \
       -Dvt_tests_num_nodes="${VT_TESTS_NUM_NODES:-}" \
       -Dvt_no_color_enabled="${VT_NO_COLOR_ENABLED:-0}" \
+      -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS:-0}" \
       "$VT"
 cmake_conf_ret=$?
 
@@ -225,6 +226,15 @@ then
     exit "$compilation_ret"
 fi
 
+inclusion_type=""
+if test "$VT_INCLUSION_TYPE" = "TPL"
+then
+  inclusion_type="-Dbuild_with_tpl=1"
+elif test "$VT_INCLUSION_TYPE" = "EXT_LIB"
+then
+  inclusion_type="-Dbuild_with_libs=1"
+fi
+
 # Don't build vt-sample on Alpine Linux
 is_alpine="$(grep ID < /etc/os-release | grep -c alpine || true)"
 if test "$is_alpine" -eq 0 && test "${VT_CI_BUILD:-0}" -eq 1 && test "${target}" = "install"
@@ -246,7 +256,7 @@ then
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
       -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
       -DCMAKE_C_COMPILER="${CC:-cc}" \
-      -Dbuild_with_tpl=1 \
+      "$inclusion_type" \
       ..
     cmake --build .
 fi
