@@ -50,8 +50,6 @@
 #include <unordered_map>
 #include <ostream>
 
-#include <fmt/ostream.h>
-
 namespace vt { namespace elm {
 
 using ElementIDType = uint64_t;
@@ -73,7 +71,7 @@ struct ElementIDStruct {
   }
 };
 
-std::ostream& operator<<(std::ostream& os, ::vt::elm::ElementIDStruct const& id);
+// std::ostream& operator<<(std::ostream& os, ::vt::elm::ElementIDStruct const& id);
 
 static constexpr ElementIDType const no_element_id = 0;
 
