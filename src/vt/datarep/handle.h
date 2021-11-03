@@ -80,8 +80,8 @@ private:
 
   DR(
     DR_TAG_CONSTRUCT, DataRepIDType in_handle, IndexT in_index,
-    TagType in_tag = no_tag
-  ) : detail::DR_Base<IndexT>(in_handle, in_index, in_tag)
+    TagType in_tag = no_tag, DataRepEnum in_hint = DataRepEnum::Normal
+  ) : detail::DR_Base<IndexT>(in_handle, in_index, in_tag, in_hint)
   {}
 
   friend struct DataReplicator;

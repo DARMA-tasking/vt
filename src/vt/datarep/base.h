@@ -47,7 +47,14 @@
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
 
-namespace vt { namespace datarep { namespace detail {
+namespace vt { namespace datarep {
+
+enum struct DataRepEnum : int8_t {
+  Normal = 0,
+  PersistentAcrossVersions = 1
+};
+
+namespace detail {
 
 struct ReaderBase {};
 
@@ -59,24 +66,29 @@ struct DR_Base : ReaderBase {
     : handle_(in_handle)
   { }
 
-  DR_Base(DataRepIDType in_handle, IndexT in_index, TagType in_tag)
-    : handle_(in_handle),
+  DR_Base(
+    DataRepIDType in_handle, IndexT in_index, TagType in_tag,
+    DataRepEnum in_hint = DataRepEnum::Normal
+  ) : handle_(in_handle),
       tag_(in_tag),
       is_proxy_(true),
-      index_(in_index)
+      index_(in_index),
+      hint_(in_hint)
   { }
 
   DataRepIDType getHandleID() const { return handle_; }
   TagType getTag() const { return tag_; }
   bool isProxy() const { return is_proxy_; }
   IndexT getIndex() const { return index_; }
+  DataRepEnum getHint() const { return hint_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | handle_
       | tag_
       | is_proxy_
-      | index_;
+      | index_
+      | hint_;
   }
 
 protected:
@@ -84,6 +96,7 @@ protected:
   TagType tag_ = no_tag;
   bool is_proxy_ = false;
   IndexT index_ = {};
+  DataRepEnum hint_ = DataRepEnum::Normal;
 };
 
 }}} /* end namespace vt::datarep::detail */

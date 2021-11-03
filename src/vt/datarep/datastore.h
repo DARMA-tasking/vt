@@ -46,6 +46,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <set>
 
 namespace vt { namespace datarep {
 
@@ -55,7 +56,9 @@ struct DataStoreBase {
 
 template <typename T, typename IndexT>
 struct DataStore final : DataStoreBase {
-  using VersionMapType = std::unordered_map<DataVersionType, std::shared_ptr<T>>;
+  using NodeSetType     = std::set<NodeType>;
+  using VersionMapType  = std::unordered_map<DataVersionType, std::shared_ptr<T>>;
+  using VersionNodeType = std::unordered_map<DataVersionType, NodeSetType>;
 
   explicit DataStore(
     bool in_is_master, IndexT idx, DataVersionType version,
@@ -92,12 +95,29 @@ struct DataStore final : DataStoreBase {
     if (iter != cache_.end()) {
       auto iter2 = iter->second.find(version);
       if (iter2 != iter->second.end()) {
-        iter2->second.erase(iter2);
+        iter->second.erase(iter2);
       }
       if (iter->second.size() == 0) {
         cache_.erase(iter);
       }
     }
+  }
+
+  void recordRequest(IndexT idx, DataVersionType version, NodeType requestor) {
+    request_nodes_[idx][version].insert(requestor);
+  }
+
+  NodeSetType const& getRequestors(IndexT idx, DataVersionType version) const {
+    auto iter = request_nodes_.find(idx);
+    if (iter != request_node_.end()) {
+      auto version_iter = iter->second.find(version);
+      if (version_iter != iter->second.end()) {
+        return version_iter->second;
+      }
+    }
+
+    std::set<NodeType> empty_set;
+    return empty_set;
   }
 
   bool hasVersion(IndexT idx, DataVersionType version) const {
@@ -107,8 +127,12 @@ struct DataStore final : DataStoreBase {
   }
 
 private:
+  /// Whether this is the master copy or not
   bool is_master = false;
-  std::unordered_map<IndexT, VersionMapType> cache_ = {};
+  /// The actual data (either cached or the original copy)
+  std::unordered_map<IndexT, VersionMapType> cache_          = {};
+  /// Information about nodes that requested the data for each version
+  std::unordered_map<IndexT, VersionNodeType> request_nodes_ = {};
 };
 
 }} /* end namespace vt::datarep */

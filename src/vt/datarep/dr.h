@@ -116,7 +116,8 @@ struct DataReplicator : runtime::component::Component<DataReplicator> {
 
   template <typename T, typename ProxyType>
   DR<T, typename ProxyType::IndexType> makeIndexedHandle(
-    ProxyType proxy, TagType tag = no_tag
+    ProxyType proxy, DataRepEnum hint = DataRepEnum::Normal,
+    TagType tag = no_tag
   );
 
   template <typename T>
@@ -144,6 +145,9 @@ struct DataReplicator : runtime::component::Component<DataReplicator> {
   );
 
 private:
+  template <typename T, typename IndexT>
+  void recordAccess(detail::DR_Base<IndexT> dr_base, DataVersionType version);
+
   template <typename T, typename IndexT>
   T const& getDataRef(detail::DR_Base<IndexT> dr_base, DataVersionType version) const;
 

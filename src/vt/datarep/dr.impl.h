@@ -77,7 +77,7 @@ DR<T> DataReplicator::makeHandle() {
 
 template <typename T, typename ProxyType>
 DR<T, typename ProxyType::IndexType> DataReplicator::makeIndexedHandle(
-  ProxyType proxy, TagType tag
+  ProxyType proxy, DataRepEnum hint, TagType tag
 ) {
   using IndexType = typename ProxyType::IndexType;
 
@@ -90,7 +90,7 @@ DR<T, typename ProxyType::IndexType> DataReplicator::makeIndexedHandle(
   );
 
   using TagType = typename DR<T, IndexType>::DR_TAG_CONSTRUCT;
-  return DR<T, IndexType>{TagType{}, proxy_bits, index, tag};
+  return DR<T, IndexType>{TagType{}, proxy_bits, index, tag, hint};
 }
 
 template <typename T, typename ProxyType>
@@ -384,6 +384,13 @@ void DataReplicator::dataRequestHandler(
       &DataReplicator::dataIncomingHandler<T, IndexT>
     >(dr_base, getDataRef<T>(dr_base, version), version);
   }
+}
+
+template <typename T, typename IndexT>
+void DataReplicator::recordAccess(
+  detail::DR_Base<IndexT> dr_base, DataVersionType version
+) {
+
 }
 
 }} /* end namespace vt::datarep */
