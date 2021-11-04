@@ -51,15 +51,20 @@
 
 namespace vt { namespace elm {
 
+/// The underlying element ID type
 using ElementIDType = uint64_t;
 
+/// Sentinel value for no element ID
+static constexpr ElementIDType const no_element_id = 0;
+
+/**
+ * \struct ElementIDStruct
+ *
+ * \brief A general identifier for a task context. The \c id is unique in the
+ * system.
+ */
 struct ElementIDStruct {
   using isByteCopyable = std::true_type;
-
-  // id must be unique across nodes
-  ElementIDType id = 0;
-  NodeType home_node = uninitialized_destination;
-  NodeType curr_node = uninitialized_destination;
 
   bool operator==(const ElementIDStruct& rhs) const {
     return id == rhs.id;
@@ -68,9 +73,12 @@ struct ElementIDStruct {
   bool operator<(const ElementIDStruct& rhs) const {
     return id < rhs.id;
   }
+
+  ElementIDType id = no_element_id; /**< id must be unique across nodes */
+  NodeType home_node = uninitialized_destination; /**< the home node */
+  NodeType curr_node = uninitialized_destination; /**< the current node */
 };
 
-static constexpr ElementIDType const no_element_id = 0;
 
 }} /* end namespace vt::elm */
 
