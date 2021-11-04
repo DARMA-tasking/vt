@@ -41,24 +41,14 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_H
+#if !defined INCLUDED_VT_ELM_ELM_STATS_H
+#define INCLUDED_VT_ELM_ELM_STATS_H
 
-#include "vt/config.h"
+#include "vt/elm/elm_id.h"
 #include "vt/elm/elm_comm.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/elm_stats.fwd.h"
-#include "vt/vrt/collection/balance/phase_msg.h"
-#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/timing/timing.h"
-#include "vt/vrt/collection/types/migratable.fwd.h"
 
-#include <cstdint>
-#include <vector>
-#include <tuple>
-#include <unordered_map>
-
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace elm {
 
 struct ElementStats {
   ElementStats() = default;
@@ -98,18 +88,20 @@ struct ElementStats {
   std::size_t getSubphaseLoadPhaseCount() const;
   std::size_t getSubphaseCommPhaseCount() const;
 
-  static const constexpr SubphaseType no_subphase = std::numeric_limits<SubphaseType>::max();
-  static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
-  static SubphaseType getFocusedSubPhase(VirtualProxyType collection);
-
   template <typename Serializer>
-  void serialize(Serializer& s);
+  void serialize(Serializer& s) {
+    s | cur_time_started_;
+    s | cur_time_;
+    s | cur_phase_;
+    s | phase_timings_;
+    s | phase_comm_;
+    s | cur_subphase_;
+    s | subphase_timings_;
+    s | subphase_comm_;
+  }
 
-public:
-  template <typename ColT>
-  static void syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col);
-
-  friend struct collection::Migratable;
+  static const constexpr SubphaseType no_subphase =
+    std::numeric_limits<SubphaseType>::max();
 
 protected:
   /**
@@ -127,10 +119,8 @@ protected:
   SubphaseType cur_subphase_ = 0;
   std::unordered_map<PhaseType, std::vector<TimeType>> subphase_timings_ = {};
   std::unordered_map<PhaseType, std::vector<CommMapType>> subphase_comm_ = {};
-
-  static std::unordered_map<VirtualProxyType, SubphaseType> focused_subphase_;
 };
 
-}}}} /* end namespace vt::vrt::collection::balance */
+}} /* end namespace vt::elm */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_H*/
+#endif /*INCLUDED_VT_ELM_ELM_STATS_H*/

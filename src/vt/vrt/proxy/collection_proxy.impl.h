@@ -48,7 +48,7 @@
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/vrt/proxy/base_elm_proxy.h"
 #include "vt/vrt/collection/proxy_traits/proxy_col_traits.h"
-#include "vt/vrt/collection/balance/elm_stats.h"
+#include "vt/vrt/collection/balance/col_stats.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -103,7 +103,7 @@ CollectionProxy<ColT, IndexT>::operator()(IndexU const& idx) const {
 template <typename ColT, typename IndexT>
 void
 CollectionProxy<ColT, IndexT>::setFocusedSubPhase(SubphaseType subphase) {
-  balance::ElementStats::setFocusedSubPhase(this->getProxy(), subphase);
+  balance::CollectionStats::setFocusedSubPhase(this->getProxy(), subphase);
 }
 
 }}} /* end namespace vt::vrt::collection */

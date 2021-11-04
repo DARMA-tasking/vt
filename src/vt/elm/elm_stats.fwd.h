@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               lb_stats.impl.h
+//                               elm_stats.fwd.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,28 +41,13 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H
+#if !defined INCLUDED_VT_ELM_ELM_STATS_FWD_H
+#define INCLUDED_VT_ELM_ELM_STATS_FWD_H
 
-#include "vt/context/runnable_context/lb_stats.h"
-#include "vt/messaging/active.h"
-#include "vt/elm/elm_stats.h"
-#include "vt/vrt/collection/manager.h"
+namespace vt { namespace elm {
 
-#include <memory>
+struct ElementStats;
 
-namespace vt { namespace ctx {
+}} /* end namespace vt::elm */
 
-template <typename ElmT, typename MsgT>
-LBStats::LBStats(ElmT* in_elm, MsgT* msg)
-  : stats_(&in_elm->getStats()),
-    cur_elm_id_(in_elm->getElmID()),
-    should_instrument_(msg->lbLiteInstrument())
-{
-  // record the communication stats right away!
-  theCollection()->recordStats(in_elm, msg);
-}
-
-}} /* end namespace vt::ctx */
-
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_ELM_ELM_STATS_FWD_H*/

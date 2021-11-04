@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               elm_stats.fwd.h
+//                               col_stats.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,15 +41,65 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_FWD_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_FWD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_IMPL_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/col_stats.h"
+#include "vt/vrt/collection/balance/phase_msg.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
+#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/manager.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
+#include "vt/timing/timing.h"
+
+#include <cassert>
+#include <type_traits>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct ElementStats;
+template <typename ColT>
+/*static*/
+void CollectionStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
+  auto& stats = col->stats_;
+
+  vt_debug_print(
+    normal, lb,
+    "ElementStats: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
+    "msg->getPhase()={}\n",
+    print_ptr(col), col->getIndex(), stats.getPhase(), msg->getPhase()
+  );
+
+  vtAssert(stats.getPhase() == msg->getPhase(), "Phases must match");
+  stats.updatePhase(1);
+
+  auto const& cur_phase = msg->getPhase();
+  auto const& untyped_proxy = col->getProxy();
+  auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
+  auto const& comm = stats.getComm(cur_phase);
+  auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
+
+  std::vector<TimeType> empty_sub_phase;
+  std::vector<TimeType>* subphase_loads = &empty_sub_phase;
+  auto iter = stats.subphase_timings_.find(cur_phase);
+  if (iter != stats.subphase_timings_.end()) {
+    subphase_loads = &iter->second;
+  }
+
+  std::vector<uint64_t> idx;
+  for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
+    idx.push_back(static_cast<uint64_t>(col->getIndex()[i]));
+  }
+
+  theNodeStats()->addNodeStats(
+    col, cur_phase, total_load, *subphase_loads, comm, subphase_comm, idx
+  );
+
+  auto model = theLBManager()->getLoadModel();
+  stats.releaseStatsFromUnneededPhases(cur_phase, model->getNumPastPhasesNeeded());
+}
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_FWD_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_IMPL_H*/

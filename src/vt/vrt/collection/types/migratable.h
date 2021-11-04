@@ -51,7 +51,7 @@
 #include "vt/vrt/collection/types/migratable.fwd.h"
 #include "vt/vrt/collection/types/storage/storable.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/elm_stats.h"
+#include "vt/vrt/collection/balance/col_stats.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -106,13 +106,15 @@ protected:
   void serialize(Serializer& s);
 
 protected:
-  friend struct balance::ElementStats;
+  friend struct balance::CollectionStats;
   friend struct balance::NodeStats;
-  balance::ElementStats stats_;
+  balance::CollectionStats stats_;
 public:
-  balance::ElementStats& getStats() { return stats_; }
+  balance::CollectionStats& getStats() { return stats_; }
 protected:
-  balance::ElementIDStruct elm_id_ = {0, uninitialized_destination, uninitialized_destination};
+  balance::ElementIDStruct elm_id_ = {
+    elm::no_element_id, uninitialized_destination, uninitialized_destination
+  };
 };
 
 }}} /* end namespace vt::vrt::collection */

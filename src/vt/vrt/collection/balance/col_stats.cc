@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               lb_stats.impl.h
+//                                 col_stats.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,28 +41,33 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/col_stats.h"
+#include "vt/timing/timing.h"
 
-#include "vt/context/runnable_context/lb_stats.h"
-#include "vt/messaging/active.h"
-#include "vt/elm/elm_stats.h"
-#include "vt/vrt/collection/manager.h"
+#include <cassert>
 
-#include <memory>
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-namespace vt { namespace ctx {
-
-template <typename ElmT, typename MsgT>
-LBStats::LBStats(ElmT* in_elm, MsgT* msg)
-  : stats_(&in_elm->getStats()),
-    cur_elm_id_(in_elm->getElmID()),
-    should_instrument_(msg->lbLiteInstrument())
-{
-  // record the communication stats right away!
-  theCollection()->recordStats(in_elm, msg);
+/*static*/
+void CollectionStats::setFocusedSubPhase(
+  VirtualProxyType collection, SubphaseType subphase
+) {
+  focused_subphase_[collection] = subphase;
 }
 
-}} /* end namespace vt::ctx */
+/*static*/
+SubphaseType CollectionStats::getFocusedSubPhase(VirtualProxyType collection) {
+  auto i = focused_subphase_.find(collection);
+  if (i != focused_subphase_.end())
+    return i->second;
+  else
+    return no_subphase;
+}
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H*/
+/*static*/
+std::unordered_map<VirtualProxyType,SubphaseType>
+CollectionStats::focused_subphase_;
+
+}}}} /* end namespace vt::vrt::collection::balance */
+

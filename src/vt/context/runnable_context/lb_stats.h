@@ -46,7 +46,7 @@
 
 #include "vt/context/runnable_context/base.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/elm_stats.fwd.h"
+#include "vt/elm/elm_stats.fwd.h"
 
 namespace vt { namespace ctx {
 
@@ -56,8 +56,8 @@ namespace vt { namespace ctx {
  * \brief Context for collection LB statistics when a task runs
  */
 struct LBStats final : Base {
-  using ElementIDStruct = vrt::collection::balance::ElementIDStruct;
-  using ElementStats = vrt::collection::balance::ElementStats;
+  using ElementIDStruct = elm::ElementIDStruct;
+  using ElementStats    = elm::ElementStats;
 
   /**
    * \brief Construct a \c LBStats

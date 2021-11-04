@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               elm_stats.impl.h
+//                                 col_stats.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,77 +41,43 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/elm_stats.h"
+#include "vt/elm/elm_stats.h"
+#include "vt/elm/elm_comm.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
-#include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/vrt/collection/manager.h"
-#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
-#include "vt/timing/timing.h"
+#include "vt/vrt/collection/types/migratable.fwd.h"
 
-#include <cassert>
-#include <type_traits>
+#include <cstdint>
+#include <vector>
+#include <tuple>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-template <typename Serializer>
-void ElementStats::serialize(Serializer& s) {
-  s | cur_time_started_;
-  s | cur_time_;
-  s | cur_phase_;
-  s | phase_timings_;
-  s | phase_comm_;
-  s | cur_subphase_;
-  s | subphase_timings_;
-  s | subphase_comm_;
-}
+struct CollectionStats : elm::ElementStats {
+  static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
+  static SubphaseType getFocusedSubPhase(VirtualProxyType collection);
 
-template <typename ColT>
-/*static*/
-void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
-  auto& stats = col->stats_;
-
-  vt_debug_print(
-    normal, lb,
-    "ElementStats: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
-    "msg->getPhase()={}\n",
-    print_ptr(col), col->getIndex(), stats.getPhase(), msg->getPhase()
-  );
-
-  vtAssert(stats.getPhase() == msg->getPhase(), "Phases must match");
-  stats.updatePhase(1);
-
-  auto const& cur_phase = msg->getPhase();
-  auto const& untyped_proxy = col->getProxy();
-  auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
-  auto const& comm = stats.getComm(cur_phase);
-  auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
-
-  std::vector<TimeType> empty_sub_phase;
-  std::vector<TimeType>* subphase_loads = &empty_sub_phase;
-  auto iter = stats.subphase_timings_.find(cur_phase);
-  if (iter != stats.subphase_timings_.end()) {
-    subphase_loads = &iter->second;
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    elm::ElementStats::serialize(s);
   }
 
-  std::vector<uint64_t> idx;
-  for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
-    idx.push_back(static_cast<uint64_t>(col->getIndex()[i]));
-  }
+public:
+  template <typename ColT>
+  static void syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col);
 
-  theNodeStats()->addNodeStats(
-    col, cur_phase, total_load, *subphase_loads, comm, subphase_comm, idx
-  );
+  friend struct collection::Migratable;
 
-  auto model = theLBManager()->getLoadModel();
-  stats.releaseStatsFromUnneededPhases(cur_phase, model->getNumPastPhasesNeeded());
-}
+protected:
+  static std::unordered_map<VirtualProxyType, SubphaseType> focused_subphase_;
+};
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H*/
