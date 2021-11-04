@@ -259,4 +259,8 @@ then
       "$inclusion_type" \
       ..
     cmake --build .
+
+    # Try to actually run samples
+    mpiexec -n 2 ./vt-runtime-sample
+    mpiexec -n 2 ./vt-trace-only-sample
 fi
