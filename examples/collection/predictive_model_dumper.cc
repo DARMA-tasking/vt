@@ -89,8 +89,8 @@ std::map<vt::Index1D, int /*mpi_rank*/> OneAndDoneCol::rank_mapping_;
 struct TaskData {
   double measured_load;
   double modeled_load;
-  std::size_t serialized_bytes;
-  std::size_t callback_bytes;
+  double serialized_bytes;
+  double callback_bytes;
 };
 
 
@@ -131,8 +131,8 @@ int main(int argc, char** argv) {
     int mpi_rank = -1;
     double measured_load = 0.0;
     double modeled_load = 0.0;
-    std::size_t serialized_bytes = 0;
-    std::size_t callback_bytes = 0;
+    double serialized_bytes = 0;
+    double callback_bytes = 0;
     iss >> mpi_rank >> measured_load >> modeled_load
         >> serialized_bytes >> callback_bytes;
     vt::Index1D index(count);
