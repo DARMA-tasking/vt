@@ -182,6 +182,10 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
   return total_load;
 }
 
+std::vector<TimeType> const& ElementStats::getSubphaseTimes(PhaseType phase) {
+  return subphase_timings_[phase];
+}
+
 CommMapType const&
 ElementStats::getComm(PhaseType const& phase) {
   auto const& phase_comm = phase_comm_[phase];
