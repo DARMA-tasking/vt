@@ -91,7 +91,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   for (size_t ii = 0; ii < numElements; ++ii) {
     //--- Shift by 1 to avoid the null permID
     myElemList[ii] = ElementIDStruct{
-      getElemPermID(ii+1, this_node), this_node, this_node
+      getElemPermID(ii+1, this_node), this_node, this_node, true
     };
   }
 
@@ -122,7 +122,9 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
     }
     for (NodeType in = 0; in+1 < num_nodes; ++in) {
       for (uint64_t elmID = 1; elmID < numElements; ++elmID) {
-        auto permID = ElementIDStruct{getElemPermID(elmID+1, in), this_node, in};
+        auto permID = ElementIDStruct{
+          getElemPermID(elmID+1, in), this_node, in, true
+        };
         sd->node_data_[phase][permID].whole_phase_load = tval;
       }
     }

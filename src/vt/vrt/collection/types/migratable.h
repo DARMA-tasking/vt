@@ -112,9 +112,7 @@ protected:
 public:
   balance::CollectionStats& getStats() { return stats_; }
 protected:
-  balance::ElementIDStruct elm_id_ = {
-    elm::no_element_id, uninitialized_destination, uninitialized_destination
-  };
+  balance::ElementIDStruct elm_id_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */

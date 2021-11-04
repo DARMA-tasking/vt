@@ -1721,7 +1721,7 @@ private:
    *
    * \return the element ID
    */
-  balance::ElementIDStruct getCurrentContext() const;
+  elm::ElementIDStruct getCurrentContext() const;
 
 ////////////////////////////////////////////////////////////////////////////////
 private:

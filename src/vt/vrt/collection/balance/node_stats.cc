@@ -50,6 +50,7 @@
 #include "vt/runtime/runtime.h"
 #include "vt/utils/json/json_appender.h"
 #include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/elm/elm_stats.h"
 
 #include <vector>
 #include <unordered_map>
@@ -117,12 +118,13 @@ void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
   // Clear migrate lambdas and proxy lookup since LB is complete
   NodeStats::node_migrate_.clear();
   node_collection_lookup_.clear();
+  node_objgroup_lookup_.clear();
 }
 
-ElementIDStruct NodeStats::getNextElm() {
+ElementIDStruct NodeStats::getNextElm(bool is_migratable) {
   auto const& this_node = theContext()->getNode();
   auto id = (next_elm_++ << 32) | this_node;
-  ElementIDStruct elm{id, this_node, this_node};
+  ElementIDStruct elm{id, this_node, this_node, is_migratable};
   return elm;
 }
 
@@ -228,40 +230,53 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
   writer->addElm(*j);
 }
 
-ElementIDStruct NodeStats::addNodeStats(
-  Migratable* col_elm,
-  PhaseType const& phase, TimeType const& time,
-  std::vector<TimeType> const& subphase_time,
-  CommMapType const& comm, std::vector<CommMapType> const& subphase_comm,
-  std::vector<uint64_t> const& index
+void NodeStats::registerCollectionInfo(
+  ElementIDStruct id, VirtualProxyType proxy,
+  std::vector<uint64_t> const& index, MigrateFnType migrate_fn
 ) {
-  // The ID struct is modified when a object is migrated into a node
+  // Add the index to the map
+  stats_->node_idx_[id] = std::make_tuple(proxy, index);
+  node_migrate_[id] = migrate_fn;
+  node_collection_lookup_[id] = proxy;
+}
 
-  auto const obj_id = col_elm->elm_id_;
+void NodeStats::registerObjGroupInfo(
+  ElementIDStruct id, ObjGroupProxyType proxy
+) {
+  stats_->node_objgroup_[id] = proxy;
+  node_objgroup_lookup_[id] = proxy;
+}
 
+void NodeStats::addNodeStats(
+  ElementIDStruct id, elm::ElementStats* in, SubphaseType focused_subphase
+) {
   vt_debug_print(
     normal, lb,
-    "NodeStats::addNodeStats: obj_id={}, phase={}, subphases={}, load={}\n",
-    obj_id, phase, subphase_time.size(), time
+    "NodeStats::addNodeStats: id={}\n", id
   );
 
-  // Add the index to the map
-  stats_->node_idx_[obj_id] = std::make_tuple(col_elm->getProxy(), index);
+  auto const phase = in->getPhase();
+  auto const& total_load = in->getLoad(phase, focused_subphase);
 
   auto &phase_data = stats_->node_data_[phase];
-  auto elm_iter = phase_data.find(obj_id);
+  auto elm_iter = phase_data.find(id);
   vtAssert(elm_iter == phase_data.end(), "Must not exist");
+
+  auto& subphase_times = in->getSubphaseTimes(phase);
+
   phase_data.emplace(
     std::piecewise_construct,
-    std::forward_as_tuple(obj_id),
-    std::forward_as_tuple(LoadSummary{time, subphase_time})
+    std::forward_as_tuple(id),
+    std::forward_as_tuple(LoadSummary{total_load, subphase_times})
   );
 
+  auto const& comm = in->getComm(phase);
   auto &comm_data = stats_->node_comm_[phase];
   for (auto&& c : comm) {
     comm_data[c.first] += c.second;
   }
 
+  auto const& subphase_comm = in->getSubphaseComm(phase);
   auto &subphase_comm_data = stats_->node_subphase_comm_[phase];
   for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
     for (auto& sp : subphase_comm[i]) {
@@ -269,21 +284,10 @@ ElementIDStruct NodeStats::addNodeStats(
     }
   }
 
-  auto migrate_iter = node_migrate_.find(obj_id);
-  if (migrate_iter == node_migrate_.end()) {
-    node_migrate_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(obj_id),
-      std::forward_as_tuple([col_elm](NodeType node){
-        col_elm->migrate(node);
-      })
-    );
-  }
+  in->updatePhase(1);
 
-  auto const col_proxy = col_elm->getProxy();
-  node_collection_lookup_[obj_id] = col_proxy;
-
-  return obj_id;
+  auto model = theLBManager()->getLoadModel();
+  in->releaseStatsFromUnneededPhases(phase, model->getNumPastPhasesNeeded());
 }
 
 VirtualProxyType NodeStats::getCollectionProxyForElement(
@@ -292,6 +296,16 @@ VirtualProxyType NodeStats::getCollectionProxyForElement(
   auto iter = node_collection_lookup_.find(obj_id);
   if (iter == node_collection_lookup_.end()) {
     return no_vrt_proxy;
+  }
+  return iter->second;
+}
+
+ObjGroupProxyType NodeStats::getObjGroupProxyForElement(
+  ElementIDStruct obj_id
+) const {
+  auto iter = node_objgroup_lookup_.find(obj_id);
+  if (iter == node_objgroup_lookup_.end()) {
+    return no_obj_group;
   }
   return iter->second;
 }

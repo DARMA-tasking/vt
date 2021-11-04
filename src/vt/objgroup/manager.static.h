@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
+#include "vt/objgroup/holder/holder_base.h"
 #include "vt/messaging/active.h"
 #include "vt/runnable/make_runnable.h"
 
@@ -62,8 +63,13 @@ void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
     // Get the current epoch for the message
     auto const cur_epoch = theMsg()->setupEpochMsg(msg);
 
+    auto holder = detail::getHolderBase(han);
+    auto const& elm_id = holder->getElmID();
+    auto stats = &holder->getStats();
+
     runnable::makeRunnable(msg, true, han, this_node)
       .withTDEpoch(cur_epoch)
+      .withLBStats(stats, elm_id)
       .enqueue();
   }
 }

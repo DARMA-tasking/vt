@@ -77,6 +77,7 @@ struct ElementIDStruct {
   ElementIDType id = no_element_id; /**< id must be unique across nodes */
   NodeType home_node = uninitialized_destination; /**< the home node */
   NodeType curr_node = uninitialized_destination; /**< the current node */
+  bool migratable = false; /**< whether entity is migratable */
 };
 
 
@@ -129,8 +130,10 @@ struct formatter<vt::elm::ElementIDStruct> {
   auto format(vt::elm::ElementIDStruct const& e, FormatContext& ctx) {
     std::string id_format =
       presentation == 'b' ? "{:b}" : (presentation == 'd' ? "{:d}" : "{:x}");
-    auto fmt_str = "(" + id_format + ",{},{})";
-    return format_to(ctx.out(), fmt_str, e.id, e.home_node, e.curr_node);
+    auto fmt_str = "(" + id_format + ",{},{},{})";
+    return format_to(
+      ctx.out(), fmt_str, e.id, e.home_node, e.curr_node, e.migratable
+    );
   }
 };
 

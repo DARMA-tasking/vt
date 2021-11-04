@@ -98,10 +98,10 @@ struct CommKey {
       cat_(bcast ? CommCategory::NodeToCollectionBcast : CommCategory::NodeToCollection)
   { }
 
-  ElementIDStruct from_ = { no_element_id, uninitialized_destination, uninitialized_destination };
-  ElementIDStruct to_   = { no_element_id, uninitialized_destination, uninitialized_destination };
+  ElementIDStruct from_ = {};
+  ElementIDStruct to_   = {};
 
-  ElementIDStruct edge_id_ = { no_element_id, uninitialized_destination, uninitialized_destination };
+  ElementIDStruct edge_id_ = {};
   NodeType nfrom_          = uninitialized_destination;
   NodeType nto_            = uninitialized_destination;
   CommCategory  cat_       = CommCategory::SendRecv;

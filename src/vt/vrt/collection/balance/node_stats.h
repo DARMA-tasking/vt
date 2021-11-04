@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_comm.h"
+#include "vt/elm/elm_stats.fwd.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/types/migratable.h"
@@ -103,22 +104,36 @@ public:
   static std::unique_ptr<NodeStats> construct();
 
   /**
-   * \internal \brief Add node statistics for local object
+   * \internal \brief Add collection element info
    *
-   * \param[in] col_elm the collection element pointer
-   * \param[in] phase the current phase
-   * \param[in] time the time the object took
-   * \param[in] comm the comm graph for the object
+   * \param[in] id the element ID
+   * \param[in] proxy the collection proxy
    * \param[in] index the index for the object
-   *
-   * \return the ID struct for the object assigned for this phase
+   * \param[in] migrate_fn the migration function
    */
-  ElementIDStruct addNodeStats(
-    Migratable* col_elm,
-    PhaseType const& phase, TimeType const& time,
-    std::vector<TimeType> const& subphase_time,
-    CommMapType const& comm, std::vector<CommMapType> const& subphase_comm,
-    std::vector<uint64_t> const& index
+  void registerCollectionInfo(
+    ElementIDStruct id, VirtualProxyType proxy,
+    std::vector<uint64_t> const& index, MigrateFnType migrate_fn
+  );
+
+  /**
+   * \internal \brief Add objgroup element info
+   *
+   * \param[in] id the element ID
+   * \param[in] proxy the objgroup proxy
+   */
+  void registerObjGroupInfo(ElementIDStruct id, ObjGroupProxyType proxy);
+
+  /**
+   * \internal \brief Add statistics for element (non-collection)
+   *
+   * \param[in] id the element ID
+   * \param[in] in the stats
+   * \param[in] focused_subphase the focused subphase (optional)
+   */
+  void addNodeStats(
+    ElementIDStruct id, elm::ElementStats* in,
+    SubphaseType focused_subphase = elm::ElementStats::no_subphase
   );
 
   /**
@@ -143,7 +158,7 @@ public:
   /**
    * \internal \brief Generate the next object element ID for LB
    */
-  ElementIDStruct getNextElm();
+  ElementIDStruct getNextElm(bool is_migratable);
 
   /**
    * \internal \brief Get stored object loads
@@ -195,6 +210,16 @@ public:
    */
   VirtualProxyType getCollectionProxyForElement(ElementIDStruct obj_id) const;
 
+  /**
+   * \internal \brief Get the objgroup proxy for a given element ID
+   *
+   * \param[in] obj_id the ID struct for the element
+   *
+   * \return the objgroup proxy if the element is part of an objgroup;
+   * otherwise \c no_obj_group
+   */
+  ObjGroupProxyType getObjGroupProxyForElement(ElementIDStruct obj_id) const;
+
   void initialize() override;
   void finalize() override;
   void fatalError() override;
@@ -204,6 +229,7 @@ public:
     s | proxy_
       | node_migrate_
       | node_collection_lookup_
+      | node_objgroup_lookup_
       | next_elm_
       | created_dir_
       | stats_;
@@ -227,6 +253,8 @@ private:
   std::unordered_map<ElementIDStruct,MigrateFnType> node_migrate_;
   /// Map from element ID to the collection's virtual proxy (untyped)
   std::unordered_map<ElementIDStruct,VirtualProxyType> node_collection_lookup_;
+  /// Map from element ID to the objgroup's proxy (untyped)
+  std::unordered_map<ElementIDStruct,ObjGroupProxyType> node_objgroup_lookup_;
   /// The current element ID
   ElementIDType next_elm_;
   /// Whether the stats directory has been created

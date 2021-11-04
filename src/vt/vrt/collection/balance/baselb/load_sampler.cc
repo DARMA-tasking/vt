@@ -53,7 +53,9 @@ void LoadSamplerBaseLB::buildHistogram() {
     );
     auto const& load_milli = loadMilli(load);
     auto const& bin = histogramSample(load_milli);
-    obj_sample[bin].push_back(obj);
+    if (obj.migratable) {
+      obj_sample[bin].push_back(obj);
+    }
 
     vt_debug_print(
       verbose, lb,

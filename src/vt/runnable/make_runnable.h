@@ -185,8 +185,19 @@ struct RunnableMaker {
    */
   template <typename ElmT>
   RunnableMaker&& withLBStatsVoidMsg(ElmT* elm) {
+    return withLBStats(&elm->getStats(), elm->getElmID());
+  }
+
+  /**
+   * \brief Add LB stats for instrumentation directly with element ID and stats
+   *
+   * \param[in] stats the stats
+   * \param[in] elm_id the element ID
+   */
+  template <typename StatsT, typename T>
+  RunnableMaker&& withLBStats(StatsT* stats, T elm_id) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBStats>(&elm->getStats(), elm->getElmID());
+    impl_->template addContext<ctx::LBStats>(stats, elm_id);
 #endif
     return std::move(*this);
   }

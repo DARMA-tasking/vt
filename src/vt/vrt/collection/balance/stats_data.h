@@ -102,6 +102,8 @@ public:
   std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
+  /// Map from id to objgroup proxy
+  std::unordered_map<ElementIDStruct, ObjGroupProxyType> node_objgroup_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

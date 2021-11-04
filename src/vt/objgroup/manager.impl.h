@@ -106,6 +106,7 @@ ObjGroupManager::ProxyType<ObjT>
 ObjGroupManager::makeCollectiveObj(ObjT* obj, HolderBasePtrType holder) {
   auto const obj_type_idx = registry::makeObjIdx<ObjT>();
   auto const obj_ptr = reinterpret_cast<void*>(obj);
+  holder->setElmID(getNextElm());
   auto const proxy = makeCollectiveImpl(std::move(holder),obj_type_idx,obj_ptr);
   vt_debug_print(
     terse, objgroup,

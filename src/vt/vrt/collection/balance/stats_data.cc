@@ -65,6 +65,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
       j["tasks"][i]["entity"]["type"] = "object";
       j["tasks"][i]["entity"]["id"] = id.id;
       j["tasks"][i]["entity"]["home"] = id.home_node;
+      j["tasks"][i]["entity"]["migratable"] = id.migratable;
       if (node_idx_.find(id) != node_idx_.end()) {
         auto const& proxy_id = std::get<0>(node_idx_.find(id)->second);
         auto const& idx_vec = std::get<1>(node_idx_.find(id)->second);
@@ -72,6 +73,10 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
         for (std::size_t x = 0; x < idx_vec.size(); x++) {
           j["tasks"][i]["entity"]["index"][x] = idx_vec[x];
         }
+      } else if (node_objgroup_.find(id) != node_objgroup_.end()) {
+        auto const& proxy_id = node_objgroup_.find(id)->second;
+        j["tasks"][i]["entity"]["objgroup_id"] = proxy_id;
+      } else {
       }
 
       auto const& subphase_times = elm.second.subphase_loads;
@@ -185,8 +190,13 @@ StatsData::StatsData(nlohmann::json const& j) {
               home = home_json;
             }
 
-            auto elm = ElementIDStruct{object, home, node};
-            this->node_data_[id][elm].whole_phase_load = time;
+            bool migratable = true;
+            if (task["entity"].find("migratable") != task["entity"].end()) {
+              migratable = task["entity"]["migratable"];
+            }
+
+            auto elm = ElementIDStruct{object, home, node, migratable};
+            this->node_data_[id][elm].whole_phase_load = time;;
 
             if (
               task["entity"].find("collection_id") != task["entity"].end() and

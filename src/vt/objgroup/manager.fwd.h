@@ -49,7 +49,15 @@
 
 namespace vt { namespace objgroup {
 
+namespace holder {
+struct HolderBase;
+} /* end namespace holder */
+
 struct ObjGroupManager;
+
+namespace detail {
+holder::HolderBase* getHolderBase(HandlerType handler);
+} /* end namespace detail */
 
 void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
 

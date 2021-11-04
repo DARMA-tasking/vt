@@ -48,6 +48,12 @@
 #include "vt/elm/elm_comm.h"
 #include "vt/timing/timing.h"
 
+namespace vt { namespace vrt { namespace collection { namespace balance {
+
+struct NodeStats;
+
+}}}} /* end namespace vt::vrt::collection::balance */
+
 namespace vt { namespace elm {
 
 struct ElementStats {
@@ -109,6 +115,8 @@ protected:
    * \internal \brief Release stats data from phases prior to lookback
    */
   void releaseStatsFromUnneededPhases(PhaseType phase, unsigned int look_back);
+
+  friend struct vrt::collection::balance::NodeStats;
 
 protected:
   bool cur_time_started_ = false;

@@ -72,32 +72,18 @@ void CollectionStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   );
 
   vtAssert(stats.getPhase() == msg->getPhase(), "Phases must match");
-  stats.updatePhase(1);
 
-  auto const& cur_phase = msg->getPhase();
-  auto const& untyped_proxy = col->getProxy();
-  auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
-  auto const& comm = stats.getComm(cur_phase);
-  auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
-
-  std::vector<TimeType> empty_sub_phase;
-  std::vector<TimeType>* subphase_loads = &empty_sub_phase;
-  auto iter = stats.subphase_timings_.find(cur_phase);
-  if (iter != stats.subphase_timings_.end()) {
-    subphase_loads = &iter->second;
-  }
+  auto const proxy = col->getProxy();
+  auto const subphase = getFocusedSubPhase(proxy);
+  theNodeStats()->addNodeStats(col->elm_id_, &col->stats_, subphase);
 
   std::vector<uint64_t> idx;
   for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
     idx.push_back(static_cast<uint64_t>(col->getIndex()[i]));
   }
 
-  theNodeStats()->addNodeStats(
-    col, cur_phase, total_load, *subphase_loads, comm, subphase_comm, idx
-  );
-
-  auto model = theLBManager()->getLoadModel();
-  stats.releaseStatsFromUnneededPhases(cur_phase, model->getNumPastPhasesNeeded());
+  auto migrate = [col](NodeType node){ col->migrate(node); };
+  theNodeStats()->registerCollectionInfo(col->elm_id_, proxy, idx, migrate);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
