@@ -48,7 +48,6 @@
 #include "vt/configs/types/types_sentinels.h"
 
 #include <unordered_map>
-#include <ostream>
 
 namespace vt { namespace elm {
 
@@ -70,8 +69,6 @@ struct ElementIDStruct {
     return id < rhs.id;
   }
 };
-
-// std::ostream& operator<<(std::ostream& os, ::vt::elm::ElementIDStruct const& id);
 
 static constexpr ElementIDType const no_element_id = 0;
 
