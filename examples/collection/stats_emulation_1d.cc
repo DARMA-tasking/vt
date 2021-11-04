@@ -72,8 +72,12 @@ int main(int argc, char** argv) {
 
   auto const node = vt::theContext()->getNode();
 
+  using clock = std::chrono::high_resolution_clock;
+  clock::time_point start = clock::now();
+
   if (node == 0)
     vt_print(replay, "Timestepping...\n");
+
   for (int i = 0; i < phases_to_run; i++) {
     if (node == 0) {
       if (i < phases_to_simulate) {
@@ -83,8 +87,19 @@ int main(int argc, char** argv) {
       }
     }
 
-    vt::theLoadStatsReplayer()->emulatePhase(proxy, i);
+    vt::runInEpochCollective([&proxy, i]{
+      vt::theLoadStatsReplayer()->emulatePhase(proxy, i);
+    });
+
+    double elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(
+      clock::now() - start
+    ).count();
+
+    vt_print(replay, "Phase {} time: {} sec\n", i, elapsed);
+
     vt::thePhase()->nextPhaseCollective();
+
+    start = clock::now();
   }
 
   vt::finalize();
