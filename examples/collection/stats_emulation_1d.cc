@@ -73,7 +73,8 @@ int main(int argc, char** argv) {
   auto const node = vt::theContext()->getNode();
 
   using clock = std::chrono::high_resolution_clock;
-  clock::time_point start = clock::now();
+  clock::time_point phstart = clock::now();
+  clock::time_point lbstart = phstart;
 
   if (node == 0)
     vt_print(replay, "Timestepping...\n");
@@ -91,15 +92,25 @@ int main(int argc, char** argv) {
       vt::theLoadStatsReplayer()->emulatePhase(proxy, i);
     });
 
-    double elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(
-      clock::now() - start
-    ).count();
+    clock::time_point finished = clock::now();
+    double phase_elapsed = std::chrono::duration_cast<
+      std::chrono::duration<double>
+    >(finished - phstart).count();
+    double mig_plus_phase_elapsed = std::chrono::duration_cast<
+      std::chrono::duration<double>
+    >(finished - lbstart).count();
 
-    vt_print(replay, "Phase {} time: {} sec\n", i, elapsed);
+    if (node == 0) {
+      vt_print(
+        replay,
+        "Phase {} time: mig_plus_phase={} sec, phase_only={} sec\n",
+        i, mig_plus_phase_elapsed, phase_elapsed
+      );
+    }
 
+    lbstart = clock::now();
     vt::thePhase()->nextPhaseCollective();
-
-    start = clock::now();
+    phstart = clock::now();
   }
 
   vt::finalize();
