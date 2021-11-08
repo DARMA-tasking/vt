@@ -55,6 +55,8 @@
 #include "vt/runtime/mpi_access.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/runnable/make_runnable.h"
+#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/phase/phase_manager.h"
 
 namespace vt { namespace messaging {
 
@@ -147,6 +149,17 @@ ActiveMessenger::ActiveMessenger()
       UnitType::Bytes
     )
   };
+}
+
+void ActiveMessenger::startup() {
+  elm_id_ = theNodeStats()->getNextElm(false);
+
+#if vt_check_enabled(lblite)
+  // Hook to collect statistics about objgroups
+  thePhase()->registerHookCollective(phase::PhaseHook::End, [this]{
+    theNodeStats()->addNodeStats(elm_id_, &elm_stats_);
+  });
+#endif
 }
 
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {
@@ -961,6 +974,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
       .withContinuation(cont)
       .withTag(tag)
       .withTDEpochFromMsg(is_term)
+      .withLBStats(&elm_stats_, elm_id_)
       .enqueue();
 
     if (is_term) {
