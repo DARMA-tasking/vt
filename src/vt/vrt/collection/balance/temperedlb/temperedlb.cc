@@ -1082,11 +1082,13 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
           return left_load < right_load;
         }
       );
-      vt_debug_print(
-        normal, temperedlb,
-        "TemperedLB::decide: over_avg={}, single_obj_load={}\n",
-        over_avg, cur_objs[ordered_obj_ids[0]]
-      );
+      if (cur_objs.size() > 0) {
+        vt_debug_print(
+          normal, temperedlb,
+          "TemperedLB::decide: over_avg={}, single_obj_load={}\n",
+          over_avg, cur_objs[ordered_obj_ids[0]]
+        );
+      }
     }
     break;
   case ObjectOrderEnum::SmallObjects:
@@ -1140,11 +1142,13 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
           return left_load < right_load;
         }
       );
-      vt_debug_print(
-        normal, temperedlb,
-        "TemperedLB::decide: over_avg={}, marginal_obj_load={}\n",
-        over_avg, cur_objs[ordered_obj_ids[0]]
-      );
+      if (cur_objs.size() > 0) {
+        vt_debug_print(
+          normal, temperedlb,
+          "TemperedLB::decide: over_avg={}, marginal_obj_load={}\n",
+          over_avg, cur_objs[ordered_obj_ids[0]]
+        );
+      }
     }
     break;
   case ObjectOrderEnum::LargestObjects:
