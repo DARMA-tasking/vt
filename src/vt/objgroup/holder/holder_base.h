@@ -61,6 +61,7 @@ struct HolderBase {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
+    s | stats_;
     s | elm_id_;
   }
 
