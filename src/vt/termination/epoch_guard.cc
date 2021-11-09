@@ -41,7 +41,7 @@
 //@HEADER
 */
 #include "epoch_guard.h"
-#include "../messaging/active.h"
+#include "vt/messaging/active.h"
 
 namespace vt {
 EpochGuard::EpochGuard(EpochType ep) : guarded_epoch_(ep) {
