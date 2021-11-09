@@ -159,6 +159,8 @@ struct StatsDrivenCollection : vt::Collection<
 
   void emulate(EmulateMsg *msg);
 
+  void contributeResult(PhaseType phase);
+
   static void recvResult(ResultMsg *msg);
 
   template <typename Serializer>
@@ -183,6 +185,13 @@ private:
   std::vector<char> payload_;
   /// \brief Mapper from collection element IDs to indices
   static StatsDrivenCollectionMapper<IndexType> *mapping_;
+  /// \brief Type for tracking buffer contributions
+  using buffer_contributions_type = std::pair<
+    std::size_t /*contributed*/, std::size_t /*expected*/
+  >;
+  /// \brief Buffer contribution counts for accumulating results
+  static std::unordered_map<NodeType, buffer_contributions_type> ret_counts_;
+  static constexpr bool accumulate_contributions_ = true;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

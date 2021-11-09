@@ -62,6 +62,13 @@ StatsDrivenCollection<IndexType>::mapping_ = nullptr;
 
 template <typename IndexType>
 /*static*/
+std::unordered_map<
+  NodeType,
+  typename StatsDrivenCollection<IndexType>::buffer_contributions_type
+> StatsDrivenCollection<IndexType>::ret_counts_ = {};
+
+template <typename IndexType>
+/*static*/
 void StatsDrivenCollection<IndexType>::migrateInitialObjectsHere(
   ProxyType coll_proxy, const ElmPhaseLoadsMapType &loads_by_elm_by_phase,
   std::size_t initial_phase, StatsDrivenCollectionMapper<IndexType> &mapper
@@ -204,21 +211,7 @@ void StatsDrivenCollection<IndexType>::emulate(EmulateMsg *msg) {
       );
     }
 
-    // send result back to home rank if we're not at home
-    auto home = mapping_->getKnownHome(idx);
-    vtAssert(home != uninitialized_destination, "Home must be known");
-    if (home != theContext()->getNode()) {
-      auto return_size = getReturnSize(msg->phase_);
-      if (return_size > 0) {
-        vt_debug_print(
-          terse, replay,
-          "emulate: index {} is sending {} bytes to home rank {}\n",
-          idx, return_size, home
-        );
-        auto ret_msg = makeMessage<ResultMsg>(return_size);
-        theMsg()->sendMsg<ResultMsg, recvResult>(home, ret_msg);
-      }
-    }
+    contributeResult(msg->phase_);
   } else {
     vt_debug_print(
       normal, replay,
@@ -226,6 +219,47 @@ void StatsDrivenCollection<IndexType>::emulate(EmulateMsg *msg) {
       idx, msg->phase_
     );
     (void) start;
+  }
+}
+
+template <typename IndexType>
+void StatsDrivenCollection<IndexType>::contributeResult(
+  PhaseType phase
+) {
+  // send result back to home rank if we're not at home
+  auto idx = this->getIndex();
+  auto home = mapping_->getKnownHome(idx);
+  vtAssert(home != uninitialized_destination, "Home must be known");
+  if (home != theContext()->getNode()) {
+    auto return_size = getReturnSize(phase);
+    if (return_size > 0) {
+      if (!accumulate_contributions_) {
+        vt_debug_print(
+          terse, replay,
+          "emulate: index {} is sending {} bytes to home rank {}\n",
+          idx, return_size, home
+        );
+        auto ret_msg = makeMessage<ResultMsg>(return_size);
+        theMsg()->sendMsg<ResultMsg, recvResult>(home, ret_msg);
+      } else {
+        vt_debug_print(
+          terse, replay,
+          "emulate: index {} is accumulating {} bytes to home rank {}\n",
+          idx, return_size, home
+        );
+        auto &counts = ret_counts_[home];
+        (counts.first)++;
+        if (counts.first == counts.second) {
+          vt_debug_print(
+            terse, replay,
+            "emulate: all {} contributions received; sending {} bytes to home rank {}\n",
+            counts.second, return_size, home
+          );
+          auto ret_msg = makeMessage<ResultMsg>(return_size);
+          theMsg()->sendMsg<ResultMsg, recvResult>(home, ret_msg);
+        }
+      }
+    }
   }
 }
 
@@ -244,6 +278,10 @@ void StatsDrivenCollection<IndexType>::epiMigrateIn() {
   auto elm_id = this->getElmID().id;
   auto index = this->getIndex();
   mapping_->addElmToIndexMapping(elm_id, index);
+
+  auto home = this->getElmID().home_node;
+  auto &counts = ret_counts_[home];
+  (counts.second)++;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
