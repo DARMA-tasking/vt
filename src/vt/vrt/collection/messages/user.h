@@ -136,9 +136,7 @@ private:
      * (sendMsg,broadcastMsg) they are automatically instrumented
      */
     bool lb_lite_instrument_ = false;
-    balance::ElementIDStruct elm_ = {
-      0, uninitialized_destination, uninitialized_destination
-    };
+    balance::ElementIDStruct elm_ = {};
     elm::CommCategory cat_ = elm::CommCategory::SendRecv;
   #endif
 

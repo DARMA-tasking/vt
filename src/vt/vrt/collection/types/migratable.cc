@@ -46,11 +46,16 @@
 #include "vt/vrt/collection/types/migratable.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/proxy/proxy_bits.h"
+#include "vt/elm/elm_id_bits.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 Migratable::Migratable()
-  : elm_id_(theNodeStats()->getNextElm(VirtualProxyBuilder::isMigratable(getProxy())))
+  : elm_id_(
+    elm::ElmIDBits::createCollection(
+      VirtualProxyBuilder::isMigratable(getProxy())
+    )
+  )
 { }
 
 /*virtual*/ void Migratable::destroy() {

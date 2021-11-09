@@ -121,11 +121,8 @@ void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
   node_objgroup_lookup_.clear();
 }
 
-ElementIDStruct NodeStats::getNextElm(bool is_migratable) {
-  auto const& this_node = theContext()->getNode();
-  auto id = (next_elm_++ << 32) | this_node;
-  ElementIDStruct elm{id, this_node, this_node, is_migratable};
-  return elm;
+ElementIDType NodeStats::getNextElm() {
+  return next_elm_++;
 }
 
 void NodeStats::initialize() {

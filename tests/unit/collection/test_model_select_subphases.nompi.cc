@@ -109,8 +109,8 @@ private:
 
 TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
   NodeType this_node = 0;
-  ElementIDStruct id1{1,this_node,this_node};
-  ElementIDStruct id2{2,this_node,this_node};
+  ElementIDStruct id1{1,this_node};
+  ElementIDStruct id2{2,this_node};
 
   ProcLoadMap proc_load = {
     {0,
@@ -159,9 +159,9 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node,this_node},
+       {ElementIDStruct{1,this_node},
         {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
-       {ElementIDStruct{2,this_node,this_node},
+       {ElementIDStruct{2,this_node},
         {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}
      }
     }
@@ -177,8 +177,8 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
   test_model->updateLoads(0);
 
   std::unordered_map<ElementIDStruct, TimeType> expected_values = {
-    {ElementIDStruct{1,this_node,this_node}, TimeType{50}},
-    {ElementIDStruct{2,this_node,this_node}, TimeType{110}}};
+    {ElementIDStruct{1,this_node}, TimeType{50}},
+    {ElementIDStruct{2,this_node}, TimeType{110}}};
 
   int objects_seen = 0;
 

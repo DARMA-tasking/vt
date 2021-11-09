@@ -106,8 +106,8 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
   // For linear regression there needs to be at least 2 phases completed
   // so we begin with 1 phase already done
   std::unordered_map<PhaseType, LoadMapType> proc_loads{{0, LoadMapType{
-        {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, {}}},
-        {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}
+        {ElementIDStruct{1,this_node}, {TimeType{10}, {}}},
+        {ElementIDStruct{2,this_node}, {TimeType{40}, {}}}
     }}};
   test_model->setLoads(&proc_loads, nullptr);
   test_model->updateLoads(0);
@@ -115,23 +115,23 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{5}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{5}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{10}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{30}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{100}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{30}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{100}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{50}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{50}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{40}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{2}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{50}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{2}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{50}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{20}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{60}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{20}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{100}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{100}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{10}, {}}}},
   };
 
   std::array<std::pair<TimeType, TimeType>, num_test_interations> expected_data{

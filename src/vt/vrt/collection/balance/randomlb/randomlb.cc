@@ -121,7 +121,7 @@ void RandomLB::runLB(TimeType) {
   // Sort the objects so we have a deterministic order over them
   std::set<ObjIDType> objs;
   for (auto obj : *load_model_) {
-    if (obj.migratable) {
+    if (obj.isMigratable()) {
       objs.insert(obj);
     }
   }
@@ -133,7 +133,7 @@ void RandomLB::runLB(TimeType) {
       vt_debug_print(
         terse, lb,
         "RandomLB: migrating obj={:x} home={} from={} to={}\n",
-        it->id, it->home_node, this_node, to_node
+        it->id, it->getHomeNode(), this_node, to_node
       );
       migrateObjectTo(*it, to_node);
     }

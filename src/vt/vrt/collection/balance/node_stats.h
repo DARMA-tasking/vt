@@ -158,7 +158,7 @@ public:
   /**
    * \internal \brief Generate the next object element ID for LB
    */
-  ElementIDStruct getNextElm(bool is_migratable);
+  ElementIDType getNextElm();
 
   /**
    * \internal \brief Get stored object loads
@@ -256,7 +256,7 @@ private:
   /// Map from element ID to the objgroup's proxy (untyped)
   std::unordered_map<ElementIDStruct,ObjGroupProxyType> node_objgroup_lookup_;
   /// The current element ID
-  ElementIDType next_elm_;
+  ElementIDType next_elm_ = 1;
   /// Whether the stats directory has been created
   bool created_dir_ = false;
   /// The appender for outputting stat files in JSON format

@@ -52,6 +52,7 @@
 #include "vt/elm/elm_id.h"
 #include "vt/vrt/collection/balance/node_stats.h"
 #include "vt/phase/phase_manager.h"
+#include "vt/elm/elm_id_bits.h"
 
 namespace vt { namespace objgroup {
 
@@ -64,8 +65,10 @@ void ObjGroupManager::startup() {
       auto holder = obj.second.get();
       auto const& elm_id = holder->getElmID();
       if (elm_id.id != elm::no_element_id) {
-        theNodeStats()->addNodeStats(elm_id, &holder->getStats());
+        auto proxy = elm::ElmIDBits::getObjGroupProxy(elm_id.id, false);
+        vtAssertExpr(proxy == obj.first);
         theNodeStats()->registerObjGroupInfo(elm_id, obj.first);
+        theNodeStats()->addNodeStats(elm_id, &holder->getStats());
       }
     }
   });
@@ -168,10 +171,11 @@ holder::HolderBase* getHolderBase(HandlerType handler) {
 }
 } /* end namespace detail */
 
-elm::ElementIDStruct ObjGroupManager::getNextElm() {
+elm::ElementIDStruct ObjGroupManager::getNextElm(ObjGroupProxyType proxy) {
   // Avoid startup races
   if (theNodeStats()) {
-    return theNodeStats()->getNextElm(false);
+    auto const this_node = theContext()->getNode();
+    return elm::ElmIDBits::createObjGroup(proxy, this_node);
   } else {
     return elm::ElementIDStruct{};
   }

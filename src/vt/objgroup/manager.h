@@ -459,9 +459,11 @@ private:
   /**
    * \internal \brief Get the next element ID from \c NodeStats
    *
+   * \param[in] proxy the objgroup proxy
+   *
    * \return the next element ID
    */
-  elm::ElementIDStruct getNextElm();
+  elm::ElementIDStruct getNextElm(ObjGroupProxyType proxy);
 
 private:
   /// The current obj ID, sequential on each node for collective construction

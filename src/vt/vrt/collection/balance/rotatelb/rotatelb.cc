@@ -81,7 +81,7 @@ void RotateLB::runLB(TimeType) {
       "\t RotateLB::migrating object to: obj={}, load={}, to_node={}\n",
       obj, load, next_node
     );
-    if (obj.migratable) {
+    if (obj.isMigratable()) {
       migrateObjectTo(obj, next_node);
     }
   }

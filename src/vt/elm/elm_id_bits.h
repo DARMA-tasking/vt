@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               load_sampler.cc
+//                                elm_id_bits.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,38 +41,56 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/baselb/load_sampler.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
+#if !defined INCLUDED_VT_ELM_ELM_ID_BITS_H
+#define INCLUDED_VT_ELM_ELM_ID_BITS_H
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+#include "vt/configs/types/types_type.h"
+#include "vt/utils/bits/bits_common.h"
+#include "vt/elm/elm_id.h"
 
-void LoadSamplerBaseLB::buildHistogram() {
-  for (auto obj : *load_model_) {
-    auto load = load_model_->getWork(
-      obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-    );
-    auto const& load_milli = loadMilli(load);
-    auto const& bin = histogramSample(load_milli);
-    if (obj.isMigratable()) {
-      obj_sample[bin].push_back(obj);
-    }
+namespace vt { namespace elm {
 
-    vt_debug_print(
-      verbose, lb,
-      "\t buildHistogram: obj={}, home={}, load={}, "
-      "load_milli={}, bin={}\n",
-      obj.id, obj.getHomeNode(), load, load_milli, bin
-    );
-  }
-}
+enum eElmIDControlBits {
+  ObjGroup                = 0,  /**< An objgroup element ID (non-migratable) */
+  BareHandler             = 1,  /**< A bare handler element ID */
+  CollectionNonMigratable = 2,  /**< A non-migratable collection element */
+  CollectionMigratable    = 3   /**< A migratable collection element */
+};
 
-LoadSamplerBaseLB::ObjBinType
-LoadSamplerBaseLB::histogramSample(LoadType const& load) const {
-  auto const bin_size = getBinSize();
-  ObjBinType const bin =
-    ((static_cast<int32_t>(load)) / bin_size * bin_size)
-    + bin_size;
-  return bin;
-}
+static constexpr BitCountType const num_control_bits = 2;
 
-}}}} /* end namespace vt::vrt::collection::lb */
+enum eElmIDProxyBitsObjGroup {
+  Control    = 0,
+  ObjGroupID = num_control_bits
+};
+
+enum eElmIDProxyBitsNonObjGroup {
+  Control2   = 0,
+  Node       = num_control_bits,
+  ID         = eElmIDProxyBitsNonObjGroup::Node + BitCounterType<NodeType>::value
+};
+
+static constexpr BitCountType const elm_id_num_bits =
+  BitCounterType<ElementIDType>::value - (2 + BitCounterType<NodeType>::value);
+
+struct ElmIDBits {
+  static ElementIDStruct createCollection(bool migratable);
+  static ElementIDStruct createObjGroup(ObjGroupProxyType proxy, NodeType node);
+  static ElementIDStruct createBareHandler(NodeType node);
+
+  static void setObjGroup(
+    ElementIDType& id, ObjGroupProxyType proxy, NodeType node
+  );
+  static void setCollectionID(
+    ElementIDType& id, bool migratable, ElementIDType seq_id, NodeType node
+  );
+
+  static eElmIDControlBits getControlBits(ElementIDType id);
+  static bool isMigratable(ElementIDType id);
+  static NodeType getNode(ElementIDType id);
+  static ObjGroupProxyType getObjGroupProxy(ElementIDType id, bool include_node);
+};
+
+}} /* end namespace vt::elm */
+
+#endif /*INCLUDED_VT_ELM_ELM_ID_BITS_H*/

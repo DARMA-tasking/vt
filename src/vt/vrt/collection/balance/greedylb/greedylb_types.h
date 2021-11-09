@@ -75,9 +75,7 @@ struct GreedyRecord {
   ObjType getObj() const { return obj_; }
 
 private:
-  GreedyLBTypes::ObjIDType obj_ = {
-    0, uninitialized_destination, uninitialized_destination
-  };
+  GreedyLBTypes::ObjIDType obj_ = { elm::no_element_id, uninitialized_destination };
   LoadType load_ = 0.0f;
 };
 

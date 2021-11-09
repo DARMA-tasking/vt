@@ -100,17 +100,17 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   NodeType this_node = 0;
   std::unordered_map<PhaseType, LoadMapType> proc_loads = {
     {0, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{10}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{40}, {}}}}},
     {1, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{20}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{30}, {}}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{20}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{30}, {}}}}},
     {2, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{30}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{30}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{10}, {}}}}},
     {3, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{40}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{5}, {}}}}}};
+      {ElementIDStruct{1,this_node}, {TimeType{40}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{5}, {}}}}}};
 
   auto test_model =
     std::make_shared<MultiplePhases>(std::make_shared<StubModel>(), 4);

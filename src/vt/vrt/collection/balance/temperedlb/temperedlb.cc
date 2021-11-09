@@ -481,7 +481,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         // Copy this node's object assignments to a local, mutable copy
         cur_objs_.clear();
         for (auto obj : *load_model_) {
-          if (obj.migratable) {
+          if (obj.isMigratable()) {
             cur_objs_[obj] = load_model_->getWork(
               obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
             );
@@ -1243,7 +1243,7 @@ void TemperedLB::decide() {
           selected_node,
           selected_load,
           obj_id.id,
-          obj_id.home_node,
+          obj_id.getHomeNode(),
           obj_load,
           target_max_load_,
           this_new_load_,

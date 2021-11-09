@@ -57,9 +57,14 @@ static constexpr BitCountType const objgrp_id_num_bits =
     BitCounterType<ObjGroupIDType>::value;
 static constexpr BitCountType const objgrp_proxy_num_bits =
     BitCounterType<ObjGroupProxyType>::value;
+
+// Remove two extra bits for ElementIDStruct for the control bits
 static constexpr BitCountType const objgrp_idx_num_bits =
    objgrp_proxy_num_bits -
-  (objgrp_is_collective_num_bits + objgrp_node_num_bits + objgrp_id_num_bits);
+  (objgrp_is_collective_num_bits +
+   objgrp_control_num_bits +
+   objgrp_node_num_bits +
+   objgrp_id_num_bits + 2);
 
 enum eObjGroupProxyBits {
   ObjGroup   = 0,

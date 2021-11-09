@@ -108,7 +108,7 @@ std::deque<std::set<ElementIDType>> StatsRestartReader::readIntoElementHistory(
   for (PhaseType phase = 0; phase < sd.node_data_.size(); phase++) {
     std::set<ElementIDType> buffer;
     for (auto const& obj : sd.node_data_.at(phase)) {
-      if (obj.first.migratable) {
+      if (obj.first.isMigratable()) {
         buffer.insert(obj.first.id);
       }
     }

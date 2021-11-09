@@ -57,6 +57,7 @@
 #include "vt/runnable/make_runnable.h"
 #include "vt/vrt/collection/balance/node_stats.h"
 #include "vt/phase/phase_manager.h"
+#include "vt/elm/elm_id_bits.h"
 
 namespace vt { namespace messaging {
 
@@ -152,7 +153,8 @@ ActiveMessenger::ActiveMessenger()
 }
 
 void ActiveMessenger::startup() {
-  elm_id_ = theNodeStats()->getNextElm(false);
+  auto const this_node = theContext()->getNode();
+  elm_id_ = elm::ElmIDBits::createBareHandler(this_node);
 
 #if vt_check_enabled(lblite)
   // Hook to collect statistics about objgroups
