@@ -65,8 +65,8 @@ enum eObjGroupProxyBits {
   ObjGroup   = 0,
   Collective = eObjGroupProxyBits::ObjGroup   + objgrp_control_num_bits,
   Node       = eObjGroupProxyBits::Collective + objgrp_is_collective_num_bits,
-  TypeIdx    = eObjGroupProxyBits::Node       + objgrp_idx_num_bits,
-  ID         = eObjGroupProxyBits::TypeIdx    + objgrp_node_num_bits
+  TypeIdx    = eObjGroupProxyBits::Node       + objgrp_node_num_bits,
+  ID         = eObjGroupProxyBits::TypeIdx    + objgrp_idx_num_bits
 };
 
 struct ObjGroupProxy {
