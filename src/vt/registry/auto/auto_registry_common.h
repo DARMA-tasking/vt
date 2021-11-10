@@ -79,26 +79,44 @@ private:
   struct DispatchImpl;
 
   template <typename T>
-  struct DispatchImpl<
-    T,
-    typename std::enable_if_t<
-      std::is_same<T, ActiveTypedFnType<MsgT>*>::value
-    >
-  > {
+  using isActiveTypedFnType = std::enable_if_t<
+    std::is_same<
+      T,
+      ActiveTypedFnType<MsgT>*
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveTypedFnType<T>> {
+    static void run(MsgT* msg, void*, HandlerT han) { han(msg); }
+  };
+
+  template <typename T>
+  using isActiveColTypedFnType = std::enable_if_t<
+    std::is_same<
+      T,
+      vrt::collection::ActiveColTypedFnType<MsgT, ObjT>*
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveColTypedFnType<T>> {
     static void run(MsgT* msg, void* object, HandlerT han) {
-      han(msg);
+      auto elm = static_cast<ObjT*>(object);
+      han(msg, elm);
     }
   };
 
   template <typename T>
-  struct DispatchImpl<
-    T,
-    typename std::enable_if_t<
-      std::is_same<
-        T, vrt::collection::ActiveColMemberTypedFnType<MsgT, ObjT>
-      >::value
-    >
-  > {
+  using isActiveColMemberTypedFnType = std::enable_if_t<
+    std::is_same<
+      T,
+      vrt::collection::ActiveColMemberTypedFnType<MsgT, ObjT>
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveColMemberTypedFnType<T>> {
     static void run(MsgT* msg, void* object, HandlerT han) {
       auto elm = static_cast<ObjT*>(object);
       (elm->*han)(msg);
@@ -114,11 +132,16 @@ private:
   HandlerT fn_ptr_ = nullptr;
 };
 
+// using AutoActiveType              = ActiveFnPtrType;
 using AutoActiveType              = std::shared_ptr<BaseDispatcher>;
 using AutoActiveFunctorType       = ActiveFnPtrType;
-using AutoActiveVCType            = vrt::ActiveVirtualFnPtrType;
-using AutoActiveCollectionType    = vrt::collection::ActiveColFnPtrType;
+// using AutoActiveVCType            = vrt::ActiveVirtualFnPtrType;
+using AutoActiveVCType            = std::shared_ptr<BaseDispatcher>;
+// using AutoActiveCollectionType    = vrt::collection::ActiveColFnPtrType;
+using AutoActiveCollectionType    = std::shared_ptr<BaseDispatcher>;
+// using AutoActiveCollectionMemType = vrt::collection::ActiveColMemberFnPtrType;
 using AutoActiveCollectionMemType = std::shared_ptr<BaseDispatcher>;
+
 using AutoActiveMapType           = mapping::ActiveMapFnPtrType;
 using AutoActiveMapFunctorType    = mapping::ActiveMapFnPtrType;
 using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;

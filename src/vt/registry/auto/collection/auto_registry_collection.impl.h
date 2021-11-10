@@ -60,7 +60,7 @@ inline AutoActiveCollectionType getAutoHandlerCollection(
 
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
 inline HandlerType makeAutoHandlerCollection() {
-  using FunctorT = FunctorAdapter<ActiveColTypedFnType<MsgT, ColT>, f>;
+  using FunctorT = FunctorAdapter<ActiveColTypedFnType<MsgT, ColT>, f, MsgT, ColT>;
   using ContainerType = AutoActiveCollectionContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveCollectionType>;
   using FuncType = ActiveColFnPtrType;

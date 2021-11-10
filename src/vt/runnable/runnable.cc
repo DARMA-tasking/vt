@@ -61,11 +61,11 @@ void RunnableNew::setupHandler(
 
   if (not is_void) {
     if (is_obj) {
-      task_ = [=]{ objgroup::dispatchObjGroup(msg_, handler); };
+      task_ = [=] { objgroup::dispatchObjGroup(msg_, handler); };
     } else {
       auto_registry::NumArgsType num_args = 1;
-      bool is_auto = HandlerManagerType::isHandlerAuto(handler);
-      bool is_functor = HandlerManagerType::isHandlerFunctor(handler);
+      bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
+      bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
       ActiveFnPtrType func;
 
       if (is_auto && is_functor) {
@@ -73,7 +73,7 @@ void RunnableNew::setupHandler(
         num_args = auto_registry::getAutoHandlerFunctorArgs(handler);
       } else if (is_auto) {
         auto f = auto_registry::getAutoHandler(handler);
-        task_ = [=]{ f->dispatch(msg_.get(), nullptr); };
+        task_ = [=] { f->dispatch(msg_.get(), nullptr); };
         return;
       } else {
         auto typed_func = theRegistry()->getHandler(handler, tag);
@@ -89,8 +89,8 @@ void RunnableNew::setupHandler(
       }
     }
   } else {
-    bool is_auto = HandlerManagerType::isHandlerAuto(handler);
-    bool is_functor = HandlerManagerType::isHandlerFunctor(handler);
+    bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
+    bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
     ActiveFnPtrType func = nullptr;
 
@@ -98,7 +98,7 @@ void RunnableNew::setupHandler(
       func = auto_registry::getAutoHandlerFunctor(handler);
     } else if (is_auto) {
       auto f = auto_registry::getAutoHandler(handler);
-      task_ = [=]{ f->dispatch(nullptr, nullptr); };
+      task_ = [=] { f->dispatch(nullptr, nullptr); };
       return;
     } else {
       vtAbort("Must be auto/functor for a void handler");
@@ -117,16 +117,16 @@ void RunnableNew::setupHandlerElement(
     auto const f = auto_registry::getAutoHandlerCollectionMem(handler);
     task_ = [=]{ f->dispatch(msg_.get(), elm); };
   } else {
-    auto const func = auto_registry::getAutoHandlerCollection(handler);
-    task_ = [=]{ func(msg_.get(), elm); };
+    auto const f = auto_registry::getAutoHandlerCollection(handler);
+    task_ = [=]{ f->dispatch(msg_.get(), elm); };
   };
 }
 
 void RunnableNew::setupHandlerElement(
   vrt::VirtualContext* elm, HandlerType handler
 ) {
-  auto const func = auto_registry::getAutoHandlerVC(handler);
-  task_ = [=]{ func(msg_.get(), elm); };
+  auto const f = auto_registry::getAutoHandlerVC(handler);
+  task_ = [=]{ f->dispatch(msg_.get(), elm); };
 }
 
 void RunnableNew::run() {

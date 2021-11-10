@@ -69,6 +69,8 @@ struct RegistrarHelper<
   RunnableT, RegT, InfoT, FnT,
   typename std::enable_if_t<
     not std::is_same<InfoT, AutoRegInfo<AutoActiveType>>::value and
+    not std::is_same<InfoT, AutoRegInfo<AutoActiveVCType>>::value and
+    not std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionType>>::value and
     not std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionMemType>>::value
   >
 > {
@@ -103,6 +105,8 @@ struct RegistrarHelper<
   RunnableT, RegT, InfoT, FnT,
   typename std::enable_if_t<
     std::is_same<InfoT, AutoRegInfo<AutoActiveType>>::value or
+    std::is_same<InfoT, AutoRegInfo<AutoActiveVCType>>::value or
+    std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionType>>::value or
     std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionMemType>>::value
   >
 > {
