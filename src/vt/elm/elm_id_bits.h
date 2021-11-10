@@ -74,9 +74,13 @@ static constexpr BitCountType const elm_id_num_bits =
   BitCounterType<ElementIDType>::value - (2 + BitCounterType<NodeType>::value);
 
 struct ElmIDBits {
-  static ElementIDStruct createCollection(bool migratable);
+  static ElementIDStruct createCollection(bool migratable, NodeType curr_node);
   static ElementIDStruct createObjGroup(ObjGroupProxyType proxy, NodeType node);
   static ElementIDStruct createBareHandler(NodeType node);
+
+  static ElementIDStruct createCollectionImpl(
+    bool migratable, ElementIDType seq_id, NodeType home_node, NodeType curr_node
+  );
 
   static void setObjGroup(
     ElementIDType& id, ObjGroupProxyType proxy, NodeType node

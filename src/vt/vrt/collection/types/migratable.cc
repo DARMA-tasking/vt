@@ -53,7 +53,7 @@ namespace vt { namespace vrt { namespace collection {
 Migratable::Migratable()
   : elm_id_(
     elm::ElmIDBits::createCollection(
-      VirtualProxyBuilder::isMigratable(getProxy())
+      VirtualProxyBuilder::isMigratable(getProxy()), theContext()->getNode()
     )
   )
 { }

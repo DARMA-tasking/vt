@@ -49,12 +49,20 @@
 
 namespace vt { namespace elm {
 
-/*static*/ ElementIDStruct ElmIDBits::createCollection(bool migratable) {
-  ElementIDType ret = 0;
+/*static*/ ElementIDStruct ElmIDBits::createCollection(
+  bool migratable, NodeType curr_node
+) {
   auto const seq_id = theNodeStats()->getNextElm();
-  auto const this_node = theContext()->getNode();
-  setCollectionID(ret, migratable, seq_id, this_node);
-  return ElementIDStruct{ret, this_node};
+  auto const home_node = theContext()->getNode();
+  return createCollectionImpl(migratable, seq_id, home_node, curr_node);
+}
+
+/*static*/ ElementIDStruct ElmIDBits::createCollectionImpl(
+  bool migratable, ElementIDType seq_id, NodeType home_node, NodeType curr_node
+) {
+  ElementIDType ret = 0;
+  setCollectionID(ret, migratable, seq_id, home_node);
+  return ElementIDStruct{ret, curr_node};
 }
 
 /*static*/ ElementIDStruct ElmIDBits::createObjGroup(
