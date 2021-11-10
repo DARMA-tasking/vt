@@ -55,7 +55,7 @@ namespace vt { namespace auto_registry {
 
 using namespace mapping;
 
-AutoActiveMapFunctorType getAutoHandlerFunctorMap(HandlerType const han);
+AutoActiveMapType getAutoHandlerFunctorMap(HandlerType const han);
 
 template <typename FunctorT, typename... Args>
 HandlerType makeAutoHandlerFunctorMap();

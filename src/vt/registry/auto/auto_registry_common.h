@@ -66,17 +66,33 @@ struct SentinelObject {};
 struct BaseDispatcher {
   virtual ~BaseDispatcher() = default;
   virtual void dispatch(messaging::BaseMsg* msg, void* object) = 0;
+  virtual NodeType dispatch(
+    index::BaseIndex* cur_idx_ptr,
+    index::BaseIndex* range_ptr,
+    NodeType num_nodes
+  ) = 0;
 };
 
 template <typename MsgT, typename HandlerT, typename ObjT>
 struct Dispatcher final : BaseDispatcher {
-  explicit Dispatcher(HandlerT in_fn_ptr)
-    : fn_ptr_(in_fn_ptr)
-  { }
+  explicit Dispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) { }
 
 private:
   template <typename T, typename = void>
   struct DispatchImpl;
+
+  template <typename T>
+  using isActiveVoidFnType = std::enable_if_t<
+    std::is_same<
+      T,
+      ActiveVoidFnType*
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveVoidFnType<T>> {
+    static void run(MsgT*, void*, HandlerT han) { han(); }
+  };
 
   template <typename T>
   using isActiveTypedFnType = std::enable_if_t<
@@ -128,22 +144,79 @@ public:
     DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
   }
 
+  NodeType dispatch(index::BaseIndex*, index::BaseIndex*, NodeType) override {
+    return NodeType{};
+  }
+
+private:
+  HandlerT fn_ptr_ = nullptr;
+};
+
+struct BaseDispatcherMapping : BaseDispatcher {};
+
+template <typename IndexT, typename HandlerT>
+struct DispatcherMapping final : BaseDispatcherMapping {
+  explicit DispatcherMapping(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) { }
+
+private:
+  template <typename T, typename = void>
+  struct DispatchImpl;
+
+  template <typename T>
+  using isActiveMapFnPtrType = std::enable_if_t<
+    std::is_same<
+      T,
+      vt::mapping::ActiveMapTypedFnType<IndexT>*
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveMapFnPtrType<T>> {
+    static NodeType run(
+      IndexT* cur_idx_ptr,
+      IndexT* range_ptr,
+      NodeType num_nodes,
+      HandlerT han
+    ) {
+      return han(cur_idx_ptr, range_ptr, num_nodes);
+    }
+  };
+
+public:
+  void dispatch(messaging::BaseMsg*, void*) override { }
+
+  NodeType dispatch(
+    index::BaseIndex* cur_idx_ptr,
+    index::BaseIndex* range_ptr,
+    NodeType num_nodes
+  ) override {
+    return DispatchImpl<HandlerT>::run(
+      static_cast<IndexT*>(cur_idx_ptr),
+      static_cast<IndexT*>(range_ptr),
+      num_nodes,
+      fn_ptr_
+    );
+  }
+
 private:
   HandlerT fn_ptr_ = nullptr;
 };
 
 // using AutoActiveType              = ActiveFnPtrType;
 using AutoActiveType              = std::shared_ptr<BaseDispatcher>;
-using AutoActiveFunctorType       = ActiveFnPtrType;
+// using AutoActiveFunctorType       = ActiveFnPtrType;
+using AutoActiveFunctorType       = std::shared_ptr<BaseDispatcher>;
 // using AutoActiveVCType            = vrt::ActiveVirtualFnPtrType;
 using AutoActiveVCType            = std::shared_ptr<BaseDispatcher>;
 // using AutoActiveCollectionType    = vrt::collection::ActiveColFnPtrType;
 using AutoActiveCollectionType    = std::shared_ptr<BaseDispatcher>;
 // using AutoActiveCollectionMemType = vrt::collection::ActiveColMemberFnPtrType;
 using AutoActiveCollectionMemType = std::shared_ptr<BaseDispatcher>;
+// using AutoActiveMapType           = mapping::ActiveMapFnPtrType;
+using AutoActiveMapType           = std::shared_ptr<BaseDispatcherMapping>;
+//using AutoActiveMapFunctorType    = mapping::ActiveMapFnPtrType;
+using AutoActiveMapFunctorType    = std::shared_ptr<BaseDispatcherMapping>;
 
-using AutoActiveMapType           = mapping::ActiveMapFnPtrType;
-using AutoActiveMapFunctorType    = mapping::ActiveMapFnPtrType;
 using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;
 using AutoActiveRDMAGetType       = ActiveRDMAGetFnPtrType;
 using AutoActiveRDMAPutType       = ActiveRDMAPutFnPtrType;

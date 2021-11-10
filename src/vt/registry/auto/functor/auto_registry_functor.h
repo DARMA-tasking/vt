@@ -53,12 +53,8 @@
 
 namespace vt { namespace auto_registry {
 
-template <typename FunctorT, typename RegT, typename InfoT, typename FnT>
-struct RegistrarFunctor {
-  AutoHandlerType index;
-
-  RegistrarFunctor();
-};
+template <typename FunctorT, typename RegT, typename InfoT, typename FnT, typename = void>
+struct RegistrarFunctor;
 
 AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const handler);
 NumArgsType getAutoHandlerFunctorArgs(HandlerType const handler);

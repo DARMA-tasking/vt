@@ -70,27 +70,73 @@ inline HandlerType makeAutoHandlerFunctor() {
 }
 
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
-RegistrarFunctor<RunnableT, RegT, InfoT, FnT>::RegistrarFunctor() {
-  using AdapterType = typename RunnableT::AdapterType;
+struct RegistrarFunctor<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<std::is_same<InfoT, AutoRegInfo<AutoActiveType>>::value>
+> {
+  AutoHandlerType index;
 
-  RegT& reg = getAutoRegistryGen<RegT>();
-  index = reg.size(); // capture current index
+  RegistrarFunctor() {
+    using AdapterType = typename RunnableT::AdapterType;
+    using MsgType = typename AdapterType::MsgType;
+    using ObjType = typename AdapterType::ObjType;
 
-  FnT fn = reinterpret_cast<FnT>(AdapterType::getFunction());
-  NumArgsType num_args = AdapterType::getNumArgs();
+    RegT& reg = getAutoRegistryGen<RegT>();
+    index = reg.size(); // capture current index
+
+    auto fn = AdapterType::getFunction();
+    std::shared_ptr<BaseDispatcher> d =
+      std::make_shared<Dispatcher<MsgType, decltype(fn), ObjType>>(fn);
+
+    NumArgsType num_args = AdapterType::getNumArgs();
 
   #if vt_check_enabled(trace_enabled)
-  // trace
-  std::string event_type_name = AdapterType::traceGetEventType();
-  std::string event_name = AdapterType::traceGetEventName();
-  auto const trace_ep = trace::TraceRegistry::registerEventHashed(
-    event_type_name, event_name);
-  reg.emplace_back(InfoT{NumArgsTag, fn, trace_ep, num_args});
+    // trace
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    auto const trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT(NumArgsTag, fn, trace_ep, num_args));
   #else
-  // non-trace
-  reg.emplace_back(InfoT{NumArgsTag, fn, num_args});
+    // non-trace
+    reg.emplace_back(InfoT(NumArgsTag, std::move(d), num_args));
   #endif
-}
+  }
+};
+
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+struct RegistrarFunctor<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<std::is_same<InfoT, AutoRegInfo<AutoActiveMapType>>::value>
+> {
+  AutoHandlerType index;
+
+  RegistrarFunctor() {
+    using AdapterType = typename RunnableT::AdapterType;
+    using IndexT = typename AdapterType::MsgType;
+
+    RegT& reg = getAutoRegistryGen<RegT>();
+    index = reg.size(); // capture current index
+
+    auto fn = AdapterType::getFunction();
+    std::shared_ptr<BaseDispatcherMapping> d =
+      std::make_shared<DispatcherMapping<IndexT, decltype(fn)>>(fn);
+
+    NumArgsType num_args = AdapterType::getNumArgs();
+
+  #if vt_check_enabled(trace_enabled)
+    // trace
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    auto const trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT(NumArgsTag, fn, trace_ep, num_args));
+  #else
+    // non-trace
+    reg.emplace_back(InfoT(NumArgsTag, std::move(d), num_args));
+  #endif
+  }
+};
 
 inline NumArgsType getAutoHandlerFunctorArgs(HandlerType const han) {
   auto const id = HandlerManagerType::getHandlerIdentifier(han);

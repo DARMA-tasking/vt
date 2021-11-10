@@ -65,16 +65,12 @@ void SubHandle<T,E,IndexT>::initialize(
 
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::makeSubHandles(bool initial) {
-  using BaseIdxType = vt::index::BaseIndex;
-
   if (ordered_opt_) {
     auto this_node = theContext()->getNode();
     auto num_nodes = theContext()->getNumNodes();
     auto map_fn = auto_registry::getHandlerMap(map_han_);
     range_.foreach([&](IndexT cur_idx) {
-      auto* cur_idx_ptr = static_cast<BaseIdxType*>(&cur_idx);
-      auto* range_ptr = static_cast<BaseIdxType*>(&range_);
-      auto home_node = map_fn(cur_idx_ptr, range_ptr, num_nodes);
+      auto home_node = map_fn->dispatch(&cur_idx, &range_, num_nodes);
       auto iter = sub_handles_staged_.find(cur_idx);
       if (home_node == this_node and iter != sub_handles_staged_.end()) {
         stageLocalIndex(iter->first, iter->second);
@@ -157,13 +153,10 @@ SubHandle<T,E,IndexT>::linearize(IndexT idx) {
 
 template <typename T, HandleEnum E, typename IndexT>
 NodeType SubHandle<T,E,IndexT>::getHomeNode(IndexT const& idx) {
-  using BaseIdxType = vt::index::BaseIndex;
   auto fn = auto_registry::getHandlerMap(map_han_);
   auto const num_nodes = theContext()->getNumNodes();
   auto idx_p = idx;
-  auto* cur = static_cast<BaseIdxType*>(&idx_p);
-  auto* range = static_cast<BaseIdxType*>(&range_);
-  return fn(cur, range, num_nodes);
+  return fn->dispatch(&idx_p, &range_, num_nodes);
 }
 
 template <typename T, HandleEnum E, typename IndexT>
@@ -171,14 +164,11 @@ int SubHandle<T,E,IndexT>::getOrderedOffset(IndexT idx, NodeType home_node) {
   auto iter = ordered_local_offset_.find(idx);
   int found_offset = 0;
   if (iter == ordered_local_offset_.end()) {
-    using BaseIdxType = vt::index::BaseIndex;
     auto num_nodes = theContext()->getNumNodes();
     auto map_fn = auto_registry::getHandlerMap(map_han_);
     int offset = 0;
     range_.foreach([&](IndexT cur_idx) {
-      auto* cur_idx_ptr = static_cast<BaseIdxType*>(&cur_idx);
-      auto* range_ptr = static_cast<BaseIdxType*>(&range_);
-      auto map_node = map_fn(cur_idx_ptr, range_ptr, num_nodes);
+      auto map_node = map_fn->dispatch(&cur_idx, &range_, num_nodes);
       if (home_node == map_node) {
         if (cur_idx == idx) {
           found_offset = offset;

@@ -69,9 +69,12 @@ struct RegistrarHelper<
   RunnableT, RegT, InfoT, FnT,
   typename std::enable_if_t<
     not std::is_same<InfoT, AutoRegInfo<AutoActiveType>>::value and
+    not std::is_same<InfoT, AutoRegInfo<AutoActiveFunctorType>>::value and
     not std::is_same<InfoT, AutoRegInfo<AutoActiveVCType>>::value and
     not std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionType>>::value and
-    not std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionMemType>>::value
+    not std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionMemType>>::value and
+    not std::is_same<InfoT, AutoRegInfo<AutoActiveMapType>>::value and
+    not std::is_same<InfoT, AutoRegInfo<AutoActiveMapFunctorType>>::value
   >
 > {
   static std::size_t work() {
@@ -105,6 +108,7 @@ struct RegistrarHelper<
   RunnableT, RegT, InfoT, FnT,
   typename std::enable_if_t<
     std::is_same<InfoT, AutoRegInfo<AutoActiveType>>::value or
+    std::is_same<InfoT, AutoRegInfo<AutoActiveFunctorType>>::value or
     std::is_same<InfoT, AutoRegInfo<AutoActiveVCType>>::value or
     std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionType>>::value or
     std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionMemType>>::value
@@ -127,6 +131,35 @@ struct RegistrarHelper<
 
     std::shared_ptr<BaseDispatcher> d =
       std::make_shared<Dispatcher<MsgType, FuncType, ObjType>>(fn);
+
+    // non-trace, trace code missing for now
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});
+
+    return index;
+  }
+};
+
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+struct RegistrarHelper<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<
+    std::is_same<InfoT, AutoRegInfo<AutoActiveMapType>>::value or
+    std::is_same<InfoT, AutoRegInfo<AutoActiveMapFunctorType>>::value
+  >
+> {
+  static std::size_t work() {
+    using AdapterType = typename RunnableT::AdapterType;
+    using IndexT = typename AdapterType::MsgType;
+
+    RegT& reg = getAutoRegistryGen<RegT>();
+    auto index = reg.size(); // capture current index
+
+    auto fn = AdapterType::getFunction();
+    std::shared_ptr<BaseDispatcherMapping> d =
+      std::make_shared<DispatcherMapping<IndexT, decltype(fn)>>(fn);
+
+    RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
+      new RegistrarGenInfoImpl<typename RunnableT::ObjType>());
 
     // non-trace, trace code missing for now
     reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});

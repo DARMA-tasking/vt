@@ -62,40 +62,39 @@ void RunnableNew::setupHandler(
   if (not is_void) {
     if (is_obj) {
       task_ = [=] { objgroup::dispatchObjGroup(msg_, handler); };
+      return;
     } else {
-      auto_registry::NumArgsType num_args = 1;
       bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
       bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
-      ActiveFnPtrType func;
 
       if (is_auto && is_functor) {
-        func = auto_registry::getAutoHandlerFunctor(handler);
-        num_args = auto_registry::getAutoHandlerFunctorArgs(handler);
+        auto f = auto_registry::getAutoHandlerFunctor(handler);
+        auto const num_args = auto_registry::getAutoHandlerFunctorArgs(handler);
+        if (num_args == 0) {
+          task_ = [=] { f->dispatch(nullptr, nullptr); };
+        } else {
+          task_ = [=] { f->dispatch(msg_.get(), nullptr); };
+        }
+
+        return;
       } else if (is_auto) {
         auto f = auto_registry::getAutoHandler(handler);
         task_ = [=] { f->dispatch(msg_.get(), nullptr); };
         return;
       } else {
         auto typed_func = theRegistry()->getHandler(handler, tag);
-        task_ = [=]{ typed_func(msg_.get()); };
+        task_ = [=] { typed_func(msg_.get()); };
         return;
-      }
-
-      if (num_args == 0) {
-        auto no_arg_fn = reinterpret_cast<FnParamType<>>(func);
-        task_ = [=]{ no_arg_fn(); };
-      } else {
-        task_ = [=]{ func(msg_.get()); };
       }
     }
   } else {
     bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
     bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
-    ActiveFnPtrType func = nullptr;
-
     if (is_auto && is_functor) {
-      func = auto_registry::getAutoHandlerFunctor(handler);
+      auto f = auto_registry::getAutoHandlerFunctor(handler);
+      task_ = [=] { f->dispatch(nullptr, nullptr); };
+      return;
     } else if (is_auto) {
       auto f = auto_registry::getAutoHandler(handler);
       task_ = [=] { f->dispatch(nullptr, nullptr); };
@@ -103,9 +102,6 @@ void RunnableNew::setupHandler(
     } else {
       vtAbort("Must be auto/functor for a void handler");
     }
-
-    auto void_fn = reinterpret_cast<FnParamType<>>(func);
-    task_ = [=] { void_fn(); };
   }
 }
 

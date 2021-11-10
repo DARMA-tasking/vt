@@ -73,11 +73,7 @@ struct TestMappingRegistry : TestParallelHarness {
     Index1D idx(val);
     Index1D max_idx(max);
 
-    auto const& node = fn(
-      reinterpret_cast<index::BaseIndex*>(&idx),
-      reinterpret_cast<index::BaseIndex*>(&max_idx),
-      nnodes
-    );
+    auto const node = fn->dispatch(&idx, &max_idx, nnodes);
 
     if (msg->is_block) {
       EXPECT_EQ(val / (max / nnodes), node);

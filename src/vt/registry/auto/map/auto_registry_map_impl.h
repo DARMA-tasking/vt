@@ -82,7 +82,7 @@ inline HandlerType makeAutoHandlerFunctorMap() {
   return han;
 }
 
-inline AutoActiveMapFunctorType getAutoHandlerFunctorMap(
+inline AutoActiveMapType getAutoHandlerFunctorMap(
   HandlerType const han
 ) {
   using ContainerType = AutoActiveMapFunctorContainerType;
@@ -109,7 +109,7 @@ inline AutoActiveMapFunctorType getAutoHandlerFunctorMap(
 
 template <typename IndexT, ActiveMapTypedFnType<IndexT>* f>
 inline HandlerType makeAutoHandlerMap() {
-  using FunctorType = FunctorAdapter<ActiveMapTypedFnType<IndexT>, f>;
+  using FunctorType = FunctorAdapter<ActiveMapTypedFnType<IndexT>, f, IndexT>;
   using ContainerType = AutoActiveMapContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveMapType>;
   using FuncType = ActiveMapFnPtrType;
