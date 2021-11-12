@@ -19,4 +19,8 @@ if(NOT hasParent)
   enable_cxx_compiler_flag_if_supported("-Wsign-compare")
   # Not really a warning, is still diagnostic related..
   enable_cxx_compiler_flag_if_supported("-ftemplate-backtrace-limit=100")
+
+  if (vt_werror_enabled)   # Treat warning as errors
+    enable_cxx_compiler_flag_if_supported("-Werror")
+  endif()
 endif()
