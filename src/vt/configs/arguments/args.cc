@@ -686,7 +686,7 @@ std::tuple<int, std::string> ArgConfig::parseArguments(CLI::App& app, int& argc,
 
   // Build string-vector and reverse order to parse (CLI quirk)
   std::vector<std::string> args_to_parse;
-  for (auto it = vt_args.end(); it-- != vt_args.begin();) {
+  for (auto it = vt_args.crbegin(); it != vt_args.crend(); ++it) {
     args_to_parse.push_back(*it);
   }
 
