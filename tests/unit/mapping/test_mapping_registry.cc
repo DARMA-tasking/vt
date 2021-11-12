@@ -64,7 +64,6 @@ struct TestMappingRegistry : TestParallelHarness {
   static void test_handler(TestMsg* msg) {
     //auto const& this_node = theContext()->getNode();
     //fmt::print("{}: test_handler: han={}\n", this_node, msg->han);
-    auto fn = auto_registry::getAutoHandlerMap(msg->han);
 
     static constexpr Index1D::DenseIndexType const val = 64;
     static constexpr Index1D::DenseIndexType const max = 256;
@@ -73,6 +72,7 @@ struct TestMappingRegistry : TestParallelHarness {
     Index1D idx(val);
     Index1D max_idx(max);
 
+    auto const& fn = auto_registry::getAutoHandlerMap(msg->han);
     auto const node = fn->dispatch(&idx, &max_idx, nnodes);
 
     if (msg->is_block) {

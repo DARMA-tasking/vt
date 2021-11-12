@@ -68,74 +68,26 @@ template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
 struct RegistrarHelper<
   RunnableT, RegT, InfoT, FnT,
   typename std::enable_if_t<
-    not std::is_same<InfoT, AutoRegInfo<AutoActiveType>>::value and
-    not std::is_same<InfoT, AutoRegInfo<AutoActiveFunctorType>>::value and
-    not std::is_same<InfoT, AutoRegInfo<AutoActiveVCType>>::value and
-    not std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionType>>::value and
-    not std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionMemType>>::value and
-    not std::is_same<InfoT, AutoRegInfo<AutoActiveMapType>>::value and
-    not std::is_same<InfoT, AutoRegInfo<AutoActiveMapFunctorType>>::value
+    not std::is_same<InfoT, AutoRegInfo<BaseDispatcherPtr>>::value and
+    not std::is_same<InfoT, AutoRegInfo<BaseDispatcherMappingPtr>>::value
   >
 > {
-  static std::size_t work() {
+  static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
     using AdapterType = typename RunnableT::AdapterType;
 
-    RegT& reg = getAutoRegistryGen<RegT>();
-    auto index = reg.size(); // capture current index
-
     FnT fn = reinterpret_cast<FnT>(AdapterType::getFunction());
-    RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
-      new RegistrarGenInfoImpl<typename RunnableT::ObjType>());
 
 #if vt_check_enabled(trace_enabled)
     // trace
     std::string event_type_name = AdapterType::traceGetEventType();
     std::string event_name = AdapterType::traceGetEventName();
-    trace::TraceEntryIDType trace_ep = trace::TraceRegistry::registerEventHashed(
-      event_type_name, event_name);
+    trace::TraceEntryIDType trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
     reg.emplace_back(InfoT{fn, std::move(indexAccessor), trace_ep});
 #else
     // non-trace
     reg.emplace_back(InfoT{fn, std::move(indexAccessor)});
 #endif
-
-    return index;
-  }
-};
-
-template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
-struct RegistrarHelper<
-  RunnableT, RegT, InfoT, FnT,
-  typename std::enable_if_t<
-    std::is_same<InfoT, AutoRegInfo<AutoActiveType>>::value or
-    std::is_same<InfoT, AutoRegInfo<AutoActiveFunctorType>>::value or
-    std::is_same<InfoT, AutoRegInfo<AutoActiveVCType>>::value or
-    std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionType>>::value or
-    std::is_same<InfoT, AutoRegInfo<AutoActiveCollectionMemType>>::value
-  >
-> {
-  static std::size_t work() {
-    using AdapterType = typename RunnableT::AdapterType;
-    using MsgType = typename AdapterType::MsgType;
-    using ObjType = typename AdapterType::ObjType;
-
-    RegT& reg = getAutoRegistryGen<RegT>();
-    auto index = reg.size(); // capture current index
-
-    auto fn = AdapterType::getFunction();
-
-    using FuncType = decltype(fn);
-
-    RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
-      new RegistrarGenInfoImpl<typename RunnableT::ObjType>());
-
-    std::shared_ptr<BaseDispatcher> d =
-      std::make_shared<Dispatcher<MsgType, FuncType, ObjType>>(fn);
-
-    // non-trace, trace code missing for now
-    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});
-
-    return index;
   }
 };
 
@@ -143,34 +95,56 @@ template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
 struct RegistrarHelper<
   RunnableT, RegT, InfoT, FnT,
   std::enable_if_t<
-    std::is_same<InfoT, AutoRegInfo<AutoActiveMapType>>::value or
-    std::is_same<InfoT, AutoRegInfo<AutoActiveMapFunctorType>>::value
+    std::is_same<InfoT, AutoRegInfo<BaseDispatcherPtr>>::value
   >
 > {
-  static std::size_t work() {
+  static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
     using AdapterType = typename RunnableT::AdapterType;
-    using IndexT = typename AdapterType::MsgType;
-
-    RegT& reg = getAutoRegistryGen<RegT>();
-    auto index = reg.size(); // capture current index
+    using MsgType = typename AdapterType::MsgType;
+    using ObjType = typename AdapterType::ObjType;
+    using FuncType = typename AdapterType::FunctionPtrType;
 
     auto fn = AdapterType::getFunction();
-    std::shared_ptr<BaseDispatcherMapping> d =
-      std::make_shared<DispatcherMapping<IndexT, decltype(fn)>>(fn);
-
-    RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
-      new RegistrarGenInfoImpl<typename RunnableT::ObjType>());
+    BaseDispatcherPtr d =
+      std::make_unique<Dispatcher<MsgType, FuncType, ObjType>>(fn);
 
     // non-trace, trace code missing for now
     reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});
+  }
+};
 
-    return index;
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+struct RegistrarHelper<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<
+    std::is_same<InfoT, AutoRegInfo<BaseDispatcherMappingPtr>>::value
+  >
+> {
+  static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
+    using AdapterType = typename RunnableT::AdapterType;
+    using IndexT = typename AdapterType::MsgType;
+    using FuncType = typename AdapterType::FunctionPtrType;
+
+    auto fn = AdapterType::getFunction();
+    BaseDispatcherMappingPtr d =
+      std::make_unique<DispatcherMapping<IndexT, FuncType>>(fn);
+
+    // non-trace, trace code missing for now
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});
   }
 };
 
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
 RegistrarGen<RunnableT, RegT, InfoT, FnT>::RegistrarGen() {
-  index = RegistrarHelper<RunnableT, RegT, InfoT, FnT>::work();
+  RegT& reg = getAutoRegistryGen<RegT>();
+
+  index = reg.size(); // capture current index
+
+  RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
+    new RegistrarGenInfoImpl<typename RunnableT::ObjType>());
+
+  RegistrarHelper<RunnableT, RegT, InfoT, FnT>::registerHandler(
+    reg, std::move(indexAccessor));
 }
 
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>

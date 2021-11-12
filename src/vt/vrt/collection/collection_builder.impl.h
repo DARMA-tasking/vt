@@ -250,15 +250,12 @@ NodeType CollectionManager::getElementMapping(
     // Get the map handler function
     bool const is_functor =
       auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
-    auto_registry::AutoActiveMapType map_fn = nullptr;
-    if (is_functor) {
-      map_fn = auto_registry::getAutoHandlerFunctorMap(map_han);
-    } else {
-      map_fn = auto_registry::getAutoHandlerMap(map_han);
-    }
-
+    auto const& map_fn = is_functor ?
+      auto_registry::getAutoHandlerFunctorMap(map_han) :
+      auto_registry::getAutoHandlerMap(map_han);
     auto const num_nodes = theContext()->getNumNodes();
     auto const mapped_node = map_fn->dispatch(&idx, &bounds, num_nodes);
+
     return mapped_node;
   }
 

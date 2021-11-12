@@ -118,7 +118,8 @@ void Scatter::scatterIn(ScatterMsg* msg) {
       child, child_msg, sizeof(ScatterMsg) + child_bytes_size
     );
   });
-  auto active_fn = auto_registry::getAutoHandler(user_handler);
+
+  auto const& active_fn = auto_registry::getAutoHandler(user_handler);
   active_fn->dispatch(reinterpret_cast<BaseMessage*>(in_base_ptr), nullptr);
 }
 

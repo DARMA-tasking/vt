@@ -49,9 +49,8 @@
 
 namespace vt { namespace auto_registry {
 
-inline AutoActiveCollectionType getAutoHandlerCollection(
-  HandlerType const handler
-) {
+inline AutoActiveCollectionType const&
+getAutoHandlerCollection(HandlerType const handler) {
   using ContainerType = AutoActiveCollectionContainerType;
 
   auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
@@ -72,9 +71,8 @@ inline HandlerType makeAutoHandlerCollection() {
   return handler;
 }
 
-inline AutoActiveCollectionMemType getAutoHandlerCollectionMem(
-  HandlerType const handler
-) {
+inline AutoActiveCollectionMemType const&
+getAutoHandlerCollectionMem(HandlerType const handler) {
   using ContainerType = AutoActiveCollectionMemContainerType;
 
   auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);

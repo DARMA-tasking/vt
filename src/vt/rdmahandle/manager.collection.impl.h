@@ -122,8 +122,8 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
     auto num_nodes = theContext()->getNumNodes();
     auto min_node_mapped = theContext()->getNumNodes();
     std::size_t local_count = 0;
-    auto map_fn = auto_registry::getHandlerMap(map_han);
-    range.foreach([&](IndexT cur_idx) {
+    auto const& map_fn = auto_registry::getHandlerMap(map_han);
+    range.foreach ([&](IndexT cur_idx) {
       auto home_node = map_fn->dispatch(&cur_idx, &range, num_nodes);
       if (home_node == this_node) {
         local_count++;

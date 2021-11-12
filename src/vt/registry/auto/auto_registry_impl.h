@@ -115,7 +115,7 @@ inline HandlerType makeAutoHandlerParam() {
   return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
 }
 
-inline AutoActiveType getAutoHandler(HandlerType const handler) {
+inline AutoActiveType const& getAutoHandler(HandlerType const handler) {
   auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
   bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);

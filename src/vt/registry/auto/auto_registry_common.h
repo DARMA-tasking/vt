@@ -65,12 +65,12 @@ struct SentinelObject {};
 
 struct BaseDispatcher {
   virtual ~BaseDispatcher() = default;
-  virtual void dispatch(messaging::BaseMsg* msg, void* object) = 0;
+  virtual void dispatch(messaging::BaseMsg* msg, void* object) const = 0;
   virtual NodeType dispatch(
     index::BaseIndex* cur_idx_ptr,
     index::BaseIndex* range_ptr,
     NodeType num_nodes
-  ) = 0;
+  ) const = 0;
 };
 
 template <typename MsgT, typename HandlerT, typename ObjT>
@@ -140,11 +140,12 @@ private:
   };
 
 public:
-  void dispatch(messaging::BaseMsg* msg, void* object) override {
+  void dispatch(messaging::BaseMsg* msg, void* object) const override {
     DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
   }
 
-  NodeType dispatch(index::BaseIndex*, index::BaseIndex*, NodeType) override {
+  NodeType
+  dispatch(index::BaseIndex*, index::BaseIndex*, NodeType) const override {
     return NodeType{};
   }
 
@@ -183,13 +184,13 @@ private:
   };
 
 public:
-  void dispatch(messaging::BaseMsg*, void*) override { }
+  void dispatch(messaging::BaseMsg*, void*) const override { }
 
   NodeType dispatch(
     index::BaseIndex* cur_idx_ptr,
     index::BaseIndex* range_ptr,
     NodeType num_nodes
-  ) override {
+  ) const override {
     return DispatchImpl<HandlerT>::run(
       static_cast<IndexT*>(cur_idx_ptr),
       static_cast<IndexT*>(range_ptr),
@@ -202,20 +203,16 @@ private:
   HandlerT fn_ptr_ = nullptr;
 };
 
-// using AutoActiveType              = ActiveFnPtrType;
-using AutoActiveType              = std::shared_ptr<BaseDispatcher>;
-// using AutoActiveFunctorType       = ActiveFnPtrType;
-using AutoActiveFunctorType       = std::shared_ptr<BaseDispatcher>;
-// using AutoActiveVCType            = vrt::ActiveVirtualFnPtrType;
-using AutoActiveVCType            = std::shared_ptr<BaseDispatcher>;
-// using AutoActiveCollectionType    = vrt::collection::ActiveColFnPtrType;
-using AutoActiveCollectionType    = std::shared_ptr<BaseDispatcher>;
-// using AutoActiveCollectionMemType = vrt::collection::ActiveColMemberFnPtrType;
-using AutoActiveCollectionMemType = std::shared_ptr<BaseDispatcher>;
-// using AutoActiveMapType           = mapping::ActiveMapFnPtrType;
-using AutoActiveMapType           = std::shared_ptr<BaseDispatcherMapping>;
-//using AutoActiveMapFunctorType    = mapping::ActiveMapFnPtrType;
-using AutoActiveMapFunctorType    = std::shared_ptr<BaseDispatcherMapping>;
+using BaseDispatcherPtr         = std::unique_ptr<BaseDispatcher>;
+using BaseDispatcherMappingPtr  = std::unique_ptr<BaseDispatcherMapping>;
+
+using AutoActiveType              = BaseDispatcherPtr;
+using AutoActiveFunctorType       = BaseDispatcherPtr;
+using AutoActiveVCType            = BaseDispatcherPtr;
+using AutoActiveCollectionType    = BaseDispatcherPtr;
+using AutoActiveCollectionMemType = BaseDispatcherPtr;
+using AutoActiveMapType           = BaseDispatcherMappingPtr;
+using AutoActiveMapFunctorType    = BaseDispatcherMappingPtr;
 
 using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;
 using AutoActiveRDMAGetType       = ActiveRDMAGetFnPtrType;
@@ -309,15 +306,16 @@ struct AutoRegInfo {
     }
   #else
     explicit AutoRegInfo(
-      FnT const& in_active_fun_t,
+      FnT in_active_fun_t,
       RegistrarGenInfo in_gen
-    ) : activeFunT(in_active_fun_t), gen_obj_idx_(std::move(in_gen))
+    ) : activeFunT(std::move(in_active_fun_t)), gen_obj_idx_(std::move(in_gen))
     { }
+
     AutoRegInfo(
       NumArgsTagType,
-      FnT const& in_active_fun_t,
+      FnT in_active_fun_t,
       NumArgsType const& in_args
-    ) : activeFunT(in_active_fun_t), args_(in_args)
+    ) : activeFunT(std::move(in_active_fun_t)), args_(in_args)
     { }
   #endif
 
@@ -336,7 +334,7 @@ struct AutoRegInfo {
     return args_;
   }
 
-  FnT getFun() const {
+  FnT const& getFun() const {
     return activeFunT;
   }
 };

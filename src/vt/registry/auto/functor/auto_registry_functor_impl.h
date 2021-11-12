@@ -85,8 +85,8 @@ struct RegistrarFunctor<
     index = reg.size(); // capture current index
 
     auto fn = AdapterType::getFunction();
-    std::shared_ptr<BaseDispatcher> d =
-      std::make_shared<Dispatcher<MsgType, decltype(fn), ObjType>>(fn);
+    BaseDispatcherPtr d =
+      std::make_unique<Dispatcher<MsgType, decltype(fn), ObjType>>(fn);
 
     NumArgsType num_args = AdapterType::getNumArgs();
 
@@ -119,8 +119,8 @@ struct RegistrarFunctor<
     index = reg.size(); // capture current index
 
     auto fn = AdapterType::getFunction();
-    std::shared_ptr<BaseDispatcherMapping> d =
-      std::make_shared<DispatcherMapping<IndexT, decltype(fn)>>(fn);
+    BaseDispatcherMappingPtr d =
+      std::make_unique<DispatcherMapping<IndexT, decltype(fn)>>(fn);
 
     NumArgsType num_args = AdapterType::getNumArgs();
 
@@ -145,7 +145,8 @@ inline NumArgsType getAutoHandlerFunctorArgs(HandlerType const han) {
   return getAutoRegistryGen<ContainerType>().at(id).getNumArgs();
 }
 
-inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const han) {
+inline AutoActiveFunctorType const&
+getAutoHandlerFunctor(HandlerType const han) {
   auto const id = HandlerManagerType::getHandlerIdentifier(han);
   bool const is_auto = HandlerManagerType::isHandlerAuto(han);
   bool const is_functor = HandlerManagerType::isHandlerFunctor(han);
@@ -156,9 +157,7 @@ inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const han) {
     han, id, print_bool(is_auto), print_bool(is_functor)
   );
 
-  assert(
-    (is_functor && is_auto) && "Handler should be auto and functor type!"
-  );
+  assert((is_functor && is_auto) && "Handler should be auto and functor type!");
 
   using ContainerType = AutoActiveFunctorContainerType;
   return getAutoRegistryGen<ContainerType>().at(id).getFun();

@@ -82,9 +82,8 @@ inline HandlerType makeAutoHandlerFunctorMap() {
   return han;
 }
 
-inline AutoActiveMapType getAutoHandlerFunctorMap(
-  HandlerType const han
-) {
+inline AutoActiveMapType const&
+getAutoHandlerFunctorMap(HandlerType const han) {
   using ContainerType = AutoActiveMapFunctorContainerType;
   auto const id = HandlerManagerType::getHandlerIdentifier(han);
   bool const is_auto = HandlerManagerType::isHandlerAuto(han);
@@ -96,9 +95,7 @@ inline AutoActiveMapType getAutoHandlerFunctorMap(
     han, id, print_bool(is_auto), print_bool(is_functor)
   );
 
-  assert(
-    (is_functor && is_auto) && "Handler should be auto and functor type!"
-  );
+  assert((is_functor && is_auto) && "Handler should be auto and functor type!");
 
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
 }
@@ -125,12 +122,11 @@ inline HandlerType makeAutoHandlerMap() {
   return han;
 }
 
-inline AutoActiveMapType getAutoHandlerMap(HandlerType const handler) {
+inline AutoActiveMapType const& getAutoHandlerMap(HandlerType const handler) {
   using ContainerType = AutoActiveMapContainerType;
   auto const id = HandlerManagerType::getHandlerIdentifier(handler);
   vt_debug_print(
-    verbose, handler,
-    "getAutoHandlerMap: id={}, handler={}\n", id, handler
+    verbose, handler, "getAutoHandlerMap: id={}, handler={}\n", id, handler
   );
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
 }
@@ -164,7 +160,7 @@ inline AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const handler) {
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
 }
 
-inline AutoActiveMapType getHandlerMap(HandlerType const han) {
+inline AutoActiveMapType const& getHandlerMap(HandlerType const han) {
   bool const is_functor = HandlerManagerType::isHandlerFunctor(han);
   if (is_functor) {
     return getAutoHandlerFunctorMap(han);
