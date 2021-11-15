@@ -65,7 +65,7 @@ struct SentinelObject {};
 
 struct BaseDispatcher {
   virtual ~BaseDispatcher() = default;
-  virtual void dispatch(messaging::BaseMsg* msg, void* object) const = 0;
+  virtual void dispatch(void* msg, void* object) const = 0;
   virtual NodeType dispatch(
     index::BaseIndex* cur_idx_ptr,
     index::BaseIndex* range_ptr,
@@ -140,7 +140,7 @@ private:
   };
 
 public:
-  void dispatch(messaging::BaseMsg* msg, void* object) const override {
+  void dispatch(void* msg, void* object) const override {
     DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
   }
 
@@ -184,7 +184,7 @@ private:
   };
 
 public:
-  void dispatch(messaging::BaseMsg*, void*) const override { }
+  void dispatch(void*, void*) const override { }
 
   NodeType dispatch(
     index::BaseIndex* cur_idx_ptr,
