@@ -289,17 +289,17 @@ struct AutoRegInfo {
   #if vt_check_enabled(trace_enabled)
     trace::TraceEntryIDType event_id;
     AutoRegInfo(
-      FnT const& in_active_fun_t,
+      FnT in_active_fun_t,
       RegistrarGenInfo in_gen,
       trace::TraceEntryIDType const& in_event_id
-    ) : activeFunT(in_active_fun_t), gen_obj_idx_(std::move(in_gen)), event_id(in_event_id)
+    ) : activeFunT(std::move(in_active_fun_t)), gen_obj_idx_(std::move(in_gen)), event_id(in_event_id)
     { }
     AutoRegInfo(
       NumArgsTagType,
-      FnT const& in_active_fun_t,
+      FnT in_active_fun_t,
       trace::TraceEntryIDType const& in_event_id,
       NumArgsType const& in_args
-    ) : activeFunT(in_active_fun_t), args_(in_args), event_id(in_event_id)
+    ) : activeFunT(std::move(in_active_fun_t)), args_(in_args), event_id(in_event_id)
     { }
     trace::TraceEntryIDType theTraceID() const {
       return event_id;

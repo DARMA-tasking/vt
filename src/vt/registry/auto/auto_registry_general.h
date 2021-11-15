@@ -108,7 +108,7 @@ struct FunctorAdapterArgs<ObjTypeT> {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
     std::vector<std::string> arg_types = {
-      TE::getTypeName<ArgsT>()...
+      TE::getTypeName<ObjTypeT>()
     };
     auto args = DU::join(",", arg_types);
     return DU::removeSpaces("operator(" + args + ")");
@@ -144,7 +144,7 @@ struct FunctorAdapterArgs<ObjTypeT, MsgT> {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
     std::vector<std::string> arg_types = {
-      TE::getTypeName<ArgsT>()...
+      TE::getTypeName<ObjTypeT>(), TE::getTypeName<MsgT>()
     };
     auto args = DU::join(",", arg_types);
     return DU::removeSpaces("operator(" + args + ")");

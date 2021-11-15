@@ -91,14 +91,12 @@ struct RegistrarFunctor<
     NumArgsType num_args = AdapterType::getNumArgs();
 
   #if vt_check_enabled(trace_enabled)
-    // trace
     std::string event_type_name = AdapterType::traceGetEventType();
     std::string event_name = AdapterType::traceGetEventName();
     auto const trace_ep =
       trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
-    reg.emplace_back(InfoT(NumArgsTag, fn, trace_ep, num_args));
+    reg.emplace_back(InfoT(NumArgsTag, std::move(d), trace_ep, num_args));
   #else
-    // non-trace
     reg.emplace_back(InfoT(NumArgsTag, std::move(d), num_args));
   #endif
   }
@@ -130,7 +128,7 @@ struct RegistrarFunctor<
     std::string event_name = AdapterType::traceGetEventName();
     auto const trace_ep =
       trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
-    reg.emplace_back(InfoT(NumArgsTag, fn, trace_ep, num_args));
+    reg.emplace_back(InfoT(NumArgsTag, std::move(d), trace_ep, num_args));
   #else
     // non-trace
     reg.emplace_back(InfoT(NumArgsTag, std::move(d), num_args));

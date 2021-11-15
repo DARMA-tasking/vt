@@ -78,14 +78,12 @@ struct RegistrarHelper<
     FnT fn = reinterpret_cast<FnT>(AdapterType::getFunction());
 
 #if vt_check_enabled(trace_enabled)
-    // trace
     std::string event_type_name = AdapterType::traceGetEventType();
     std::string event_name = AdapterType::traceGetEventName();
     trace::TraceEntryIDType trace_ep =
       trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
     reg.emplace_back(InfoT{fn, std::move(indexAccessor), trace_ep});
 #else
-    // non-trace
     reg.emplace_back(InfoT{fn, std::move(indexAccessor)});
 #endif
   }
@@ -108,8 +106,15 @@ struct RegistrarHelper<
     BaseDispatcherPtr d =
       std::make_unique<Dispatcher<MsgType, FuncType, ObjType>>(fn);
 
-    // non-trace, trace code missing for now
+#if vt_check_enabled(trace_enabled)
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    trace::TraceEntryIDType trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor), trace_ep});
+#else
     reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});
+#endif
   }
 };
 
@@ -129,8 +134,15 @@ struct RegistrarHelper<
     BaseDispatcherMappingPtr d =
       std::make_unique<DispatcherMapping<IndexT, FuncType>>(fn);
 
-    // non-trace, trace code missing for now
+#if vt_check_enabled(trace_enabled)
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    trace::TraceEntryIDType trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor), trace_ep});
+#else
     reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});
+#endif
   }
 };
 
