@@ -327,8 +327,7 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
   using CommVolume = vt::vrt::collection::balance::CommVolume;
   using CommBytesType = vt::vrt::collection::balance::CommBytesType;
 
-  // @todo: should do more than one phase, subphase loads, subphase comm, and
-  //        other types of comm
+  // @todo: should do more than one phase and other types of comm
 
   {
     PhaseType phase = 0;
