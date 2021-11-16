@@ -353,12 +353,16 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
         sd.node_data_[phase][elm_id] = dur;
         sd.node_subphase_data_[phase][elm_id] = dur_vec;
 
-        LBCommKey ntockey(LBCommKey::NodeToCollectionTag{}, this_node, elm_id, false);
+        LBCommKey ntockey(
+          LBCommKey::NodeToCollectionTag{}, this_node, elm_id, false
+        );
         CommVolume ntocvol{ntoc, ntocm};
         sd.node_comm_[phase][ntockey] = ntocvol;
         sd.node_subphase_comm_[phase][i % 2][ntockey] = ntocvol;
 
-        LBCommKey ctonkey(LBCommKey::CollectionToNodeTag{}, elm_id, this_node, false);
+        LBCommKey ctonkey(
+          LBCommKey::CollectionToNodeTag{}, elm_id, this_node, false
+        );
         CommVolume ctonvol{cton, ctonm};
         sd.node_comm_[phase][ctonkey] = ctonvol;
         sd.node_subphase_comm_[phase][(i + 1) % 2][ctonkey] = ctonvol;
@@ -381,169 +385,201 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
   }
   json_writer = nullptr;
 
-  //vt::runInEpochCollective([=]{
-    vt::util::json::Reader r(out_file_name);
-    auto json_ptr = r.readFile();
-    auto sd_read = vt::vrt::collection::balance::StatsData(*json_ptr);
+  vt::util::json::Reader r(out_file_name);
+  auto json_ptr = r.readFile();
+  auto sd_read = vt::vrt::collection::balance::StatsData(*json_ptr);
 
-    if (sd_read.node_data_.size() != sd.node_data_.size()) {
-      vtAbort(fmt::format(
-        "Wrote {} phases of whole-phase load data but read in {} phases",
-        sd.node_data_.size(), sd_read.node_data_.size()
-      ));
-    }
+  // whole-phase loads
+  EXPECT_EQ(sd_read.node_data_.size(), sd.node_data_.size());
+  if (sd_read.node_data_.size() != sd.node_data_.size()) {
+    fmt::print(
+      "Wrote {} phases of whole-phase load data but read in {} phases",
+      sd.node_data_.size(), sd_read.node_data_.size()
+    );
+  } else {
     // compare the whole-phase load data in detail
     for (auto &phase_data : sd.node_data_) {
       auto phase = phase_data.first;
+      EXPECT_FALSE(sd_read.node_data_.find(phase) == sd_read.node_data_.end());
       if (sd_read.node_data_.find(phase) == sd_read.node_data_.end()) {
-        vtAbort(fmt::format(
-          "Phase {} in whole-phase loads was not read in",
+        fmt::print(
+          "Phase {} in whole-phase loads were not read in",
           phase
-        ));
-      }
-      auto &read_load_map = sd_read.node_data_[phase];
-      auto &orig_load_map = phase_data.second;
-      for (auto &entry : read_load_map) {
-        auto read_elm_id = entry.first;
-        if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
-          vtAbort(fmt::format(
-            "Unexpected element ID read in whole-phase loads: "
-            "id={}, home={}, curr={}",
-            read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
-          ));
-        }
-        auto orig_elm_id = orig_load_map.find(read_elm_id)->first;
-        if (
-          read_elm_id.home_node != orig_elm_id.home_node ||
-          read_elm_id.curr_node != orig_elm_id.curr_node
-        ) {
-          vtAbort(fmt::format(
-            "Corrupted element ID read in whole-phase loads: "
-            "id={}, home={}, curr={} (expected id={}, home={}, curr={})",
-            read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node,
-            orig_elm_id.id, orig_elm_id.home_node, orig_elm_id.curr_node
-          ));
-        }
-        auto read_load = read_load_map[read_elm_id];
-        auto orig_load = entry.second;
-        // @todo: make this a more robust floating point comparison
-        if (orig_load != read_load) {
-          vtAbort(fmt::format(
-            "Read whole-phase load {} but expected {}",
-            read_load, orig_load
-          ));
-        }
-      }
-    }
-
-    if (sd_read.node_subphase_data_.size() != sd.node_subphase_data_.size()) {
-      vtAbort(fmt::format(
-        "Wrote {} phases of subphase load data but read in {} phases",
-        sd.node_subphase_data_.size(), sd_read.node_subphase_data_.size()
-      ));
-    }
-    // detailed comparison of subphase load data
-    for (auto &phase_data : sd.node_subphase_data_) {
-      auto phase = phase_data.first;
-      if (
-        sd_read.node_subphase_data_.find(phase) ==
-        sd_read.node_subphase_data_.end()
-      ) {
-        vtAbort(fmt::format(
-          "Phase {} in subphase loads was not read in",
-          phase
-        ));
-      }
-      auto &read_load_map = sd_read.node_subphase_data_[phase];
-      auto &orig_load_map = phase_data.second;
-      for (auto &entry : read_load_map) {
-        auto read_elm_id = entry.first;
-        if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
-          vtAbort(fmt::format(
-            "Unexpected element ID read in subphase loads: "
-            "id={}, home={}, curr={}",
-            read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
-          ));
-        }
-        auto orig_elm_id = orig_load_map.find(read_elm_id)->first;
-        if (
-          read_elm_id.home_node != orig_elm_id.home_node ||
-          read_elm_id.curr_node != orig_elm_id.curr_node
-        ) {
-          vtAbort(fmt::format(
-            "Corrupted element ID read in whole-phase loads: "
-            "id={}, home={}, curr={} (expected id={}, home={}, curr={})",
-            read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node,
-            orig_elm_id.id, orig_elm_id.home_node, orig_elm_id.curr_node
-          ));
-        }
-        auto read_subloads = read_load_map[read_elm_id];
-        auto orig_subloads = entry.second;
-        if (read_subloads.size() != orig_subloads.size()) {
-          vtAbort(fmt::format(
-            "Read {} subphase loads but expected {} for elm.id={} on phase={}",
-            read_subloads.size(), orig_subloads.size(), read_elm_id.id, phase
-          ));
-        }
-        for (std::size_t i=0; i<orig_subloads.size(); ++i) {
-          auto orig_subld = orig_subloads[i];
-          auto read_subld = read_subloads[i];
-          // @todo: make this a more robust floating point comparison
-          if (orig_subld != read_subld) {
-            vtAbort(fmt::format(
-              "Read subphase load {} but expected {} for elm.id={} on phase={}",
-              read_subld, orig_subld, read_elm_id.id, phase
-            ));
+        );
+      } else {
+        auto &read_load_map = sd_read.node_data_[phase];
+        auto &orig_load_map = phase_data.second;
+        for (auto &entry : read_load_map) {
+          auto read_elm_id = entry.first;
+          EXPECT_FALSE(orig_load_map.find(read_elm_id) == orig_load_map.end());
+          if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
+            fmt::print(
+              "Unexpected element ID read in whole-phase loads on phase={}: "
+              "id={}, home={}, curr={}",
+              phase,
+              read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
+            );
+          } else {
+            auto orig_elm_id = orig_load_map.find(read_elm_id)->first;
+            EXPECT_EQ(read_elm_id.home_node, orig_elm_id.home_node);
+            EXPECT_EQ(read_elm_id.curr_node, orig_elm_id.curr_node);
+            if (
+              read_elm_id.home_node != orig_elm_id.home_node ||
+              read_elm_id.curr_node != orig_elm_id.curr_node
+            ) {
+              fmt::print(
+                "Corrupted element ID read in whole-phase loads on phase={}: "
+                "id={}, home={}, curr={} (expected id={}, home={}, curr={})",
+                phase,
+                read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node,
+                orig_elm_id.id, orig_elm_id.home_node, orig_elm_id.curr_node
+              );
+            }
+            auto read_load = read_load_map[read_elm_id];
+            auto orig_load = entry.second;
+            // @todo: make this a more robust floating point comparison
+            EXPECT_EQ(orig_load, read_load);
+            if (orig_load != read_load) {
+              fmt::print(
+                "Read whole-phase load {} but expected {} for id={} "
+                "on phase={}",
+                read_load, orig_load, read_elm_id.id, phase
+              );
+            }
           }
         }
       }
     }
+  }
 
-    if (sd_read.node_idx_.size() != sd.node_idx_.size()) {
-      vtAbort(fmt::format(
-        "Wrote index mapping for {} elements but read in {}",
-        sd.node_idx_.size(), sd_read.node_idx_.size()
-      ));
+  // subphase loads
+  EXPECT_EQ(sd_read.node_subphase_data_.size(), sd.node_subphase_data_.size());
+  if (sd_read.node_subphase_data_.size() != sd.node_subphase_data_.size()) {
+    fmt::print(
+      "Wrote {} phases of subphase load data but read in {} phases",
+      sd.node_subphase_data_.size(), sd_read.node_subphase_data_.size()
+    );
+  } else {
+    // detailed comparison of subphase load data
+    for (auto &phase_data : sd.node_subphase_data_) {
+      auto phase = phase_data.first;
+      EXPECT_FALSE(
+        sd_read.node_subphase_data_.find(phase) ==
+        sd_read.node_subphase_data_.end()
+      );
+      if (
+        sd_read.node_subphase_data_.find(phase) ==
+        sd_read.node_subphase_data_.end()
+      ) {
+        fmt::print(
+          "Phase {} in subphase loads was not read in",
+          phase
+        );
+      } else {
+        auto &read_load_map = sd_read.node_subphase_data_[phase];
+        auto &orig_load_map = phase_data.second;
+        for (auto &entry : read_load_map) {
+          auto read_elm_id = entry.first;
+          EXPECT_FALSE(orig_load_map.find(read_elm_id) == orig_load_map.end());
+          if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
+            fmt::print(
+              "Unexpected element ID read in subphase loads on phase={}: "
+              "id={}, home={}, curr={}",
+              phase,
+              read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
+            );
+          } else {
+            auto orig_elm_id = orig_load_map.find(read_elm_id)->first;
+            EXPECT_EQ(read_elm_id.home_node, orig_elm_id.home_node);
+            EXPECT_EQ(read_elm_id.curr_node, orig_elm_id.curr_node);
+            if (
+              read_elm_id.home_node != orig_elm_id.home_node ||
+              read_elm_id.curr_node != orig_elm_id.curr_node
+            ) {
+              fmt::print(
+                "Corrupted element ID read in subphase loads on phase={}: "
+                "id={}, home={}, curr={} (expected id={}, home={}, curr={})",
+                phase,
+                read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node,
+                orig_elm_id.id, orig_elm_id.home_node, orig_elm_id.curr_node
+              );
+            } else {
+              auto read_subloads = read_load_map[read_elm_id];
+              auto orig_subloads = entry.second;
+              EXPECT_EQ(read_subloads.size(), orig_subloads.size());
+              if (read_subloads.size() != orig_subloads.size()) {
+                fmt::print(
+                  "Read {} subphase loads but expected {} for id={} "
+                  "on phase={}",
+                  read_subloads.size(), orig_subloads.size(), read_elm_id.id,
+                  phase
+                );
+              } else {
+                for (std::size_t i=0; i<orig_subloads.size(); ++i) {
+                  auto orig_subld = orig_subloads[i];
+                  auto read_subld = read_subloads[i];
+                  // @todo: make this a more robust floating point comparison
+                  EXPECT_EQ(orig_subld, read_subld);
+                  if (orig_subld != read_subld) {
+                    fmt::print(
+                      "Read subphase load {} but expected {} for id={} "
+                      "on phase={}",
+                      read_subld, orig_subld, read_elm_id.id, phase
+                    );
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
+  }
+
+  // element id to index mapping
+  EXPECT_EQ(sd_read.node_idx_.size(), sd.node_idx_.size());
+  if (sd_read.node_idx_.size() != sd.node_idx_.size()) {
+    fmt::print(
+      "Wrote index mapping for {} elements but read in {}",
+      sd.node_idx_.size(), sd_read.node_idx_.size()
+    );
+  } else {
     // detailed comparison of element id to index mapping
     for (auto &entry : sd_read.node_idx_) {
       auto read_elm_id = entry.first;
+      EXPECT_FALSE(sd.node_idx_.find(read_elm_id) == sd.node_idx_.end());
       if (sd.node_idx_.find(read_elm_id) == sd.node_idx_.end()) {
-        vtAbort(fmt::format(
+        fmt::print(
           "Unexpected element ID read in index mapping: "
           "id={}, home={}, curr={}",
           read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
-        ));
+        );
+      } else {
+        auto orig_idx = sd.node_idx_[read_elm_id];
+        auto read_idx = entry.second;
+        EXPECT_EQ(orig_idx, read_idx);
+        if (orig_idx != read_idx) {
+          fmt::print(
+            "Unexpected collection index for elm id={}, home={}, curr={}",
+            read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
+          );
+        }
       }
-      auto orig_idx = sd.node_idx_[read_elm_id];
-      auto read_idx = entry.second;
-      if (orig_idx != read_idx) {
-        vtAbort(fmt::format(
-          "Unexpected collection index for elm id={}, home={}, curr={}",
-          read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
-        ));
-      }
     }
+  }
 
-    if (sd_read.node_comm_.size() != sd.node_comm_.size()) {
-      vtAbort(fmt::format(
-        "Wrote {} phases of whole-phase comm data but read in {} phases",
-        sd.node_comm_.size(), sd_read.node_comm_.size()
-      ));
-    }
-    // @todo: detailed comparison of whole-phase comm data
+  // whole-phase communication
+  EXPECT_EQ(sd_read.node_comm_.size(), sd.node_comm_.size());
+  if (sd_read.node_comm_.size() != sd.node_comm_.size()) {
+    fmt::print(
+      "Wrote {} phases of whole-phase comm data but read in {} phases",
+      sd.node_comm_.size(), sd_read.node_comm_.size()
+    );
+  }
+  // @todo: detailed comparison of whole-phase comm data
 
-/*
-    // writing and reading subphase comm isn't implemented yet
-    if (sd_read.node_subphase_comm_.size() != sd.node_subphase_comm_.size()) {
-      vtAbort(fmt::format(
-        "Wrote {} phases of subphase comm data but read in {} phases",
-        sd.node_subphase_comm_.size(), sd_read.node_subphase_comm_.size()
-      ));
-    }
-    // @todo: detailed comparison of subphase comm data
-*/
-  //});
+  // @todo: compare subphase comm when writing/reading is implemented
+  // @todo: detailed comparison of subphase comm data
 
   // @todo: clean up files
 }
