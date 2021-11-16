@@ -16,11 +16,11 @@ fi
 
 if test "${VT_CI_BUILD:-0}" -eq 1
 then
-export VT=${source_dir}
-export VT_BUILD=${build_dir}/vt
-export VT_INSTALL=${VT_BUILD}/install
-export DETECTOR=${build_dir}/detector
-export CHECKPOINT=${DETECTOR}/build/checkpoint
+    export VT=${source_dir}
+    export VT_BUILD=${build_dir}/vt
+    export VT_INSTALL=${VT_BUILD}/install
+    export DETECTOR=${build_dir}/detector
+    export CHECKPOINT=${DETECTOR}/build/checkpoint
 
     cd "$VT_BUILD"
 
