@@ -73,3 +73,4 @@ ENV VT_LB_ENABLED=${VT_LB_ENABLED} \
 
 RUN /vt/ci/build_cpp.sh /vt /build
 RUN /vt/ci/test_cpp.sh /vt /build
+RUN /vt/ci/build_vt_sample.sh /vt /build
