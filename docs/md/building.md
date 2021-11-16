@@ -207,6 +207,7 @@ $ cd vt
 $ docker-compose run -e BUILD_TYPE=debug -e VT_TRACE=1 ubuntu-cpp-interactive
 # /vt/ci/build_cpp.sh /vt /build
 # /vt/ci/test_cpp.sh /vt /build
+# /vt/ci/build_vt_sample.sh /vt /build
 ```
 
 The same call applies to alpine distro builds if you swap

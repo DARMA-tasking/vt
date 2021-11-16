@@ -92,3 +92,5 @@ RUN /vt/ci/build_cpp.sh /vt /build
 
 FROM build as test
 RUN /vt/ci/test_cpp.sh /vt /build
+
+RUN /vt/ci/build_vt_sample.sh /vt /build
