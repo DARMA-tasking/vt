@@ -51,28 +51,49 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 class ObjectIterator;
-class EndObjectIterator {
+struct EndObjectIterator {
   // Take rhs by reference to enable virtual dispatch and avoid slicing
   bool operator==(const ObjectIterator& rhs) const;
   bool operator!=(const ObjectIterator& rhs) const;
 };
 
-class ObjectIterator {
-  using difference_type = std::ptrdiff_t;
-  using value_type = LoadMapType::key_type;
-  using pointer = value_type*;
-  using reference = value_type&;
+struct ObjectIteratorImpl
+{
+  using value_type = ElementIDStruct;
 
+  ObjectIteratorImpl() = default;
+  virtual ~ObjectIteratorImpl() = default;
+
+  virtual void operator++() = 0;
+  virtual value_type operator*() const = 0;
+  virtual bool operator==(EndObjectIterator rhs) const = 0;
+  virtual bool operator!=(EndObjectIterator rhs) const = 0;
+};
+
+class LoadMapObjectIterator : public ObjectIteratorImpl
+{
   using map_iterator_type = LoadMapType::const_iterator;
   using iterator_category = std::iterator_traits<map_iterator_type>::iterator_category;
   map_iterator_type i, end;
 
 public:
-  ObjectIterator(map_iterator_type in, map_iterator_type in_end) : i(in), end(in_end) { }
-  void operator++() { ++i; }
-  value_type operator*() const { return i->first; }
-  bool operator==(EndObjectIterator rhs) const { return i == end; }
-  bool operator!=(EndObjectIterator rhs) const { return i != end; }
+  LoadMapObjectIterator(map_iterator_type in, map_iterator_type in_end) : i(in), end(in_end) { }
+  void operator++() override { ++i; }
+  value_type operator*() const override { return i->first; }
+  bool operator==(EndObjectIterator rhs) const override { return i == end; }
+  bool operator!=(EndObjectIterator rhs) const override { return i != end; }
+};
+
+class ObjectIterator {
+  std::unique_ptr<ObjectIteratorImpl> impl;
+public:
+  ObjectIterator(std::unique_ptr<ObjectIteratorImpl>&& in_impl)
+    : impl(std::move(in_impl))
+  { }
+  void operator++() { ++(*impl); }
+  ElementIDStruct operator*() const { return **impl; }
+  bool operator==(EndObjectIterator rhs) const { return *impl == rhs; }
+  bool operator!=(EndObjectIterator rhs) const { return *impl != rhs; }
 };
 
 inline bool EndObjectIterator::operator==(const ObjectIterator& rhs) const { return rhs == *this; }

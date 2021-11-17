@@ -62,6 +62,7 @@ using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::CommMapType;
 using vt::vrt::collection::balance::ObjectIterator;
+using vt::vrt::collection::balance::LoadMapObjectIterator;
 
 static int32_t getIndexFromPhase(int32_t phase) {
   return std::max(0, -1 * phase - 1);
@@ -87,7 +88,7 @@ struct StubModel : LoadModel {
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(3).begin(), proc_load_->at(3).end());
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(3).begin(), proc_load_->at(3).end())};
   }
 
   // Not used in this test

@@ -64,6 +64,7 @@ using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
+using vt::vrt::collection::balance::LoadMapObjectIterator;
 
 struct StubModel : LoadModel {
 
@@ -85,7 +86,7 @@ struct StubModel : LoadModel {
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(0).begin(), proc_load_->at(0).end());
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(0).begin(), proc_load_->at(0).end())};
   }
 
   virtual int getNumObjects() override { return 2; }

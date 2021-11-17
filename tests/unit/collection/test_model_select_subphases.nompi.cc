@@ -62,6 +62,7 @@ using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SelectSubphases;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
+using vt::vrt::collection::balance::LoadMapObjectIterator;
 
 using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
 using ProcSubphaseLoadMap = std::unordered_map<PhaseType, SubphaseLoadMapType>;
@@ -88,7 +89,7 @@ struct StubModel : LoadModel {
   }
 
   ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(0).begin(), proc_load_->at(0).end());
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(0).begin(), proc_load_->at(0).end())};
   }
 
   int getNumSubphases() override { return num_subphases; }
