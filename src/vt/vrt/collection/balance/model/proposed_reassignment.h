@@ -49,6 +49,14 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+class ReassignmentIterator : public ObjectIteratorImpl
+{
+  void operator++() override = 0;
+  value_type operator*() const override = 0;
+  bool operator==(EndObjectIterator rhs) const override = 0;
+  bool operator!=(EndObjectIterator rhs) const override = 0;
+};
+
 class ProposedReassignment : public ComposedModel
 {
   ProposedReassignment(std::shared_ptr<balance::LoadModel> base,
