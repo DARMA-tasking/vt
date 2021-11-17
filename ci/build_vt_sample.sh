@@ -14,7 +14,9 @@ then
   inclusion_type="-Dbuild_with_libs=1"
 fi
 
-if test "${VT_CI_BUILD:-0}" -eq 1
+# Don't build vt-sample-project on Alpine Linux
+is_alpine="$(grep ID < /etc/os-release | grep -c alpine || true)"
+if test "$is_alpine" -eq 0 && test "${VT_CI_BUILD:-0}" -eq 1
 then
     export VT=${source_dir}
     export VT_BUILD=${build_dir}/vt
