@@ -37,9 +37,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   add_compile_options(-fcolor-diagnostics)
 endif()
 
-include(SetCXXCompilerFlags)
-set_darma_compiler_flags()
-
 # Code coverage option of VT
 option(CODE_COVERAGE "Enable coverage reporting" OFF)
 # OPTION(CODE_COVERAGE_ENABLED FALSE)

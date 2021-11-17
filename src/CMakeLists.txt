@@ -231,6 +231,9 @@ target_compile_features(
   cxx_alias_templates
 )
 
+include(SetCXXCompilerFlags)
+set_darma_compiler_flags(${VIRTUAL_TRANSPORT_LIBRARY})
+
 if (vt_gold_linker_enabled)
   if (UNIX AND NOT APPLE)
     execute_process(
