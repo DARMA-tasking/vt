@@ -68,10 +68,6 @@ ObjectIterator ComposedModel::begin() {
   return base_->begin();
 }
 
-ObjectIterator ComposedModel::end() {
-  return base_->end();
-}
-
 int ComposedModel::getNumObjects() {
   return base_->getNumObjects();
 }

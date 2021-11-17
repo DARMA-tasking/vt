@@ -84,10 +84,7 @@ struct StubModel : LoadModel {
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(3).begin());
-  }
-  virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(3).end());
+    return ObjectIterator(proc_load_->at(3).begin(), proc_load_->at(3).end());
   }
 
   // Not used by this test
@@ -122,7 +119,8 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   test_model->setLoads(&proc_loads, nullptr, nullptr);
   test_model->updateLoads(3);
 
-  for (auto&& obj : *test_model) {
+  for (auto it = test_model->begin(); it != test_model->end(); ++it) {
+    auto &&obj = *it;
     auto work_val = test_model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
     EXPECT_EQ(work_val, obj.id == 1 ? TimeType{100} : TimeType{85});
   }

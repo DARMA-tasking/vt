@@ -479,8 +479,10 @@ void TemperedLB::doLBStages(TimeType start_imb) {
       if (first_iter) {
         // Copy this node's object assignments to a local, mutable copy
         cur_objs_.clear();
-        for (auto obj : *load_model_)
+        for (auto it = load_model_->begin(); it != load_model_->end(); ++it) {
+	  auto obj = *it;
           cur_objs_[obj] = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
+	}
         this_new_load_ = this_load;
       } else {
         // Clear out data structures from previous iteration

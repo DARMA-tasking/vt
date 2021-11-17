@@ -66,7 +66,6 @@ struct RawData : public LoadModel {
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
 
   ObjectIterator begin() override;
-  ObjectIterator end() override;
 
   int getNumObjects() override;
   unsigned int getNumCompletedPhases() override;

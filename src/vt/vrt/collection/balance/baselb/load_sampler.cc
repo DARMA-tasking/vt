@@ -46,7 +46,8 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 void LoadSamplerBaseLB::buildHistogram() {
-  for (auto obj : *load_model_) {
+  for (auto it = load_model_->begin(); it != load_model_->end(); ++it) {
+    auto obj = *it;
     auto load = load_model_->getWork(
       obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );

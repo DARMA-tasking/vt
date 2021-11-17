@@ -434,7 +434,8 @@ void LBManager::computeStatistics(bool comm_collectives, PhaseType phase) {
 
   total_load = 0.;
   std::vector<balance::LoadData> O_l;
-  for (auto elm : *model_) {
+  for (auto it = model_->begin(); it != model_->end(); ++it) {
+    auto elm = *it;
     auto work = model_->getWork(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );

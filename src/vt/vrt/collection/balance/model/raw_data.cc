@@ -62,23 +62,19 @@ void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_lo
 ObjectIterator RawData::begin() {
   auto iter = proc_load_->find(last_completed_phase_);
   if (iter != proc_load_->end()) {
-    return ObjectIterator(iter->second.cbegin());
+    return ObjectIterator(iter->second.cbegin(), iter->second.cend());
   } else {
-    return ObjectIterator{typename LoadMapType::const_iterator{}};
-  }
-}
-
-ObjectIterator RawData::end() {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return ObjectIterator(iter->second.cend());
-  } else {
-    return ObjectIterator{typename LoadMapType::const_iterator{}};
+    return ObjectIterator{typename LoadMapType::const_iterator{}, typename LoadMapType::const_iterator{}};
   }
 }
 
 int RawData::getNumObjects() {
-  return end() - begin();
+  auto iter = proc_load_->find(last_completed_phase_);
+  if (iter != proc_load_->end()) {
+    return iter->second.size();
+  } else {
+    return 0;
+  }
 }
 
 unsigned int RawData::getNumCompletedPhases() {

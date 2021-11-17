@@ -85,10 +85,7 @@ struct StubModel : LoadModel {
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(0).begin());
-  }
-  virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(0).end());
+    return ObjectIterator(proc_load_->at(0).begin(), proc_load_->at(0).end());
   }
 
   virtual int getNumObjects() override { return 2; }
@@ -152,7 +149,8 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
     test_model->updateLoads(num_phases);
     ++num_phases;
 
-    for (auto&& obj : *test_model) {
+    for (auto it = test_model->begin(); it != test_model->end(); ++it) {
+      auto &&obj = *it;
       auto work_val = test_model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
       EXPECT_EQ(
         work_val,

@@ -150,7 +150,8 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
     // infrastructure when the LB hasn't run, and we need this for the
     // model to function
     model->updateLoads(0);
-    for (auto&& obj : *model) {
+    for (auto it = model->begin(); it != model->end(); ++it) {
+      auto &&obj = *it;
       auto work_val = model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
       EXPECT_DOUBLE_EQ(work_val, static_cast<TimeType>(id_proxy_map[obj]));
       //fmt::print("{:x} {}\n", obj, work_val);

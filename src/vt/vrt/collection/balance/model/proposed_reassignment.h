@@ -68,7 +68,6 @@ class ProposedReassignment : public ComposedModel
   }
 
   ObjectIterator begin() override;
-  ObjectIterator end() override;
 
   int getNumObjects() override
   {

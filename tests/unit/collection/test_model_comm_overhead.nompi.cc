@@ -96,10 +96,7 @@ struct StubModel : LoadModel {
   }
 
   ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(0).begin());
-  }
-  ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(0).end());
+    return ObjectIterator(proc_load_->at(0).begin(), proc_load_->at(0).end());
   }
 
   unsigned int getNumCompletedPhases() override { return num_phases; }
@@ -165,7 +162,8 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
     test_model->updateLoads(num_phases);
     int objects_seen = 0;
 
-    for (auto&& obj : *test_model) {
+    for (auto it = test_model->begin(); it != test_model->end(); ++it) {
+      auto &&obj = *it;
       EXPECT_TRUE(obj.id == 2);
       ++objects_seen;
 

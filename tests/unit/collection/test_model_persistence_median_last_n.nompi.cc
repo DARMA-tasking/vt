@@ -85,10 +85,7 @@ struct StubModel : LoadModel {
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(num_phases-1).begin());
-  }
-  virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(num_phases-1).end());
+    return ObjectIterator(proc_load_->at(num_phases-1).begin(), proc_load_->at(num_phases-1).end());
   }
 
   virtual int getNumObjects() override { return 2; }
@@ -151,7 +148,8 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
     test_model->updateLoads(iter);
     ++num_phases;
 
-    for (auto&& obj : *test_model) {
+    for (auto it = test_model->begin(); it != test_model->end(); ++it) {
+      auto &&obj = *it;
       auto work_val = test_model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
       EXPECT_EQ(
         work_val,

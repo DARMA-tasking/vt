@@ -119,8 +119,8 @@ void RandomLB::runLB(TimeType) {
 
   // Sort the objects so we have a deterministic order over them
   std::set<ObjIDType> objs;
-  for (auto obj : *load_model_) {
-    objs.insert(obj);
+  for (auto it = load_model_->begin(); it != load_model_->end(); ++it) {
+    objs.insert(*it);
   }
 
   // we skip the first object to be certain we never end up with zero objects

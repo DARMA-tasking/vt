@@ -50,6 +50,13 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+class ObjectIterator;
+class EndObjectIterator {
+  // Take rhs by reference to enable virtual dispatch and avoid slicing
+  bool operator==(const ObjectIterator& rhs) const;
+  bool operator!=(const ObjectIterator& rhs) const;
+};
+
 class ObjectIterator {
   using difference_type = std::ptrdiff_t;
   using value_type = LoadMapType::key_type;
@@ -58,15 +65,18 @@ class ObjectIterator {
 
   using map_iterator_type = LoadMapType::const_iterator;
   using iterator_category = std::iterator_traits<map_iterator_type>::iterator_category;
-  map_iterator_type i;
+  map_iterator_type i, end;
 
 public:
-  explicit ObjectIterator(map_iterator_type in) : i(in) { }
+  ObjectIterator(map_iterator_type in, map_iterator_type in_end) : i(in), end(in_end) { }
   void operator++() { ++i; }
-  value_type operator*() { return i->first; }
-  bool operator!=(ObjectIterator rhs) { return i != rhs.i; }
-  difference_type operator-(ObjectIterator rhs) { return std::distance(rhs.i, i); }
+  value_type operator*() const { return i->first; }
+  bool operator==(EndObjectIterator rhs) const { return i == end; }
+  bool operator!=(EndObjectIterator rhs) const { return i != end; }
 };
+
+inline bool EndObjectIterator::operator==(const ObjectIterator& rhs) const { return rhs == *this; }
+inline bool EndObjectIterator::operator!=(const ObjectIterator& rhs) const { return rhs != *this; }
 
 /**
  * \brief Interface for transforming measurements of past object loads
@@ -142,7 +152,7 @@ public:
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual ObjectIterator end() = 0;
+  EndObjectIterator end() { return EndObjectIterator{}; }
 
   /**
    * Object enumeration, to abstract away access to the underlying structures from NodeStats

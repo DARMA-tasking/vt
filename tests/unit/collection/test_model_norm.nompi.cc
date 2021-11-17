@@ -89,10 +89,7 @@ struct StubModel : LoadModel {
   }
 
   ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(0).begin());
-  }
-  ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(0).end());
+    return ObjectIterator(proc_load_->at(0).begin(), proc_load_->at(0).end());
   }
 
   int getNumSubphases() override { return num_subphases; }
@@ -127,7 +124,8 @@ TEST_F(TestModelNorm, test_model_norm_1) {
 
   for (unsigned int iter = 0; iter < num_subphases; ++iter) {
     int objects_seen = 0;
-    for (auto&& obj : *test_model) {
+    for (auto it = test_model->begin(); it != test_model->end(); ++it) {
+      auto &&obj = *it;
       EXPECT_TRUE(obj.id == 1 || obj.id == 2);
       ++objects_seen;
 
@@ -164,7 +162,8 @@ TEST_F(TestModelNorm, test_model_norm_2) {
     TimeType{33.019}, TimeType{73.986}};
 
   int objects_seen = 0;
-  for (auto&& obj : *test_model) {
+  for (auto it = test_model->begin(); it != test_model->end(); ++it) {
+    auto &&obj = *it;
     EXPECT_TRUE(obj.id == 1 || obj.id == 2);
     ++objects_seen;
 
@@ -199,7 +198,8 @@ TEST_F(TestModelNorm, test_model_norm_3) {
   std::array<TimeType, 2> expected_norms = {TimeType{30}, TimeType{60}};
 
   int objects_seen = 0;
-  for (auto&& obj : *test_model) {
+  for (auto it = test_model->begin(); it != test_model->end(); ++it) {
+    auto &&obj = *it;
     EXPECT_TRUE(obj.id == 1 || obj.id == 2);
     ++objects_seen;
 

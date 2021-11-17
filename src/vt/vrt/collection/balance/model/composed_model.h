@@ -74,7 +74,6 @@ public:
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
   ObjectIterator begin() override;
-  ObjectIterator end() override;
 
   int getNumObjects() override;
   unsigned int getNumCompletedPhases() override;

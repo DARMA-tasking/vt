@@ -87,10 +87,7 @@ struct StubModel : LoadModel {
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(3).begin());
-  }
-  virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(3).end());
+    return ObjectIterator(proc_load_->at(3).begin(), proc_load_->at(3).end());
   }
 
   // Not used in this test
@@ -125,7 +122,8 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
   test_model->setLoads(&proc_loads, nullptr, nullptr);
   test_model->updateLoads(3);
 
-  for (auto&& obj : *test_model) {
+  for (auto it = test_model->begin(); it != test_model->end(); ++it) {
+    auto &&obj = *it;
     for (auto phase : {0, -1, -2, -3, -4}) {
       auto work_val = test_model->getWork(obj, PhaseOffset{phase, 1});
       EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj));
