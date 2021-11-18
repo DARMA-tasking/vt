@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          proposed_reassignment.h
+//                           proposed_reassignment.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC

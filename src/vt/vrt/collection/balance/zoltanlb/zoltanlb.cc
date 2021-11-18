@@ -181,8 +181,8 @@ void ZoltanLB::runLB(TimeType total_load) {
   );
 
   std::set<ObjIDType> load_objs;
-  for (auto obj : *load_model_) {
-    load_objs.insert(obj);
+  for (auto it = load_model_->begin(); it != load_model_->end(); ++it) {
+    load_objs.insert(*it);
   }
 
   for (int i = 0; i < num_export; i++) {
@@ -456,8 +456,8 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   // Insert local load objs into a std::set to get a deterministic order to
   // traverse them for building the graph consistenly
   std::set<ObjIDType> load_objs;
-  for (auto obj : *load_model_) {
-    load_objs.insert(obj);
+  for (auto it = load_model_->begin(); it != load_model_->end(); ++it) {
+    load_objs.insert(*it);
   }
 
   // Initialize all the local vertices with global id
