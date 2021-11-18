@@ -242,11 +242,13 @@ void StatsDrivenCollection<IndexType>::contributeResult(
         auto ret_msg = makeMessage<ResultMsg>(return_size);
         theMsg()->sendMsg<ResultMsg, recvResult>(home, ret_msg);
       } else {
+        // ***THIS IS AN APPLICATION-SPECIFIC OPTIMIZATION***
         vt_debug_print(
           terse, replay,
           "emulate: index {} is accumulating {} bytes to home rank {}\n",
           idx, return_size, home
         );
+        // @todo: verify that the matrix contribution is of the expected size
         auto &counts = ret_counts_[home];
         (counts.first)++;
         if (counts.first == counts.second) {
@@ -279,6 +281,7 @@ void StatsDrivenCollection<IndexType>::epiMigrateIn() {
   auto index = this->getIndex();
   mapping_->addElmToIndexMapping(elm_id, index);
 
+  // ***THIS IS AN APPLICATION-SPECIFIC OPTIMIZATION***
   auto home = this->getElmID().home_node;
   auto &counts = ret_counts_[home];
   (counts.second)++;
