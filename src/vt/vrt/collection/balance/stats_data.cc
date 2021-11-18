@@ -58,7 +58,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
   if (node_data_.find(phase) != node_data_.end()) {
     for (auto&& elm : node_data_.at(phase)) {
       ElementIDStruct id = elm.first;
-      TimeType time = elm.second;
+      TimeType time = elm.second.whole_phase_load_;
       j["tasks"][i]["resource"] = "cpu";
       j["tasks"][i]["node"] = theContext()->getNode();
       j["tasks"][i]["time"] = time;
@@ -189,7 +189,7 @@ StatsData::StatsData(nlohmann::json const& j) {
             }
 
             auto elm = ElementIDStruct{object, home, node};
-            this->node_data_[id][elm] = time;
+            this->node_data_[id][elm].whole_phase_load_ = time;
 
             if (
               task["entity"].find("collection_id") != task["entity"].end() and
@@ -218,6 +218,10 @@ StatsData::StatsData(nlohmann::json const& j) {
                     static_cast<std::size_t>(sid) + 1
                   );
                   this->node_subphase_data_[id][elm][sid] = stime;
+		  this->node_data_[id][elm].subphase_loads_.resize(
+                    static_cast<std::size_t>(sid) + 1
+                  );
+		  this->node_data_[id][elm].subphase_loads_[sid] = stime;
                 }
               }
             }

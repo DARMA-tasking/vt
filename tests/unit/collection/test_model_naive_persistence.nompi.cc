@@ -84,7 +84,7 @@ struct StubModel : LoadModel {
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     EXPECT_LE(phase.phases, -1);
-    return proc_load_->at(getIndexFromPhase(phase.phases)).at(id);
+    return proc_load_->at(getIndexFromPhase(phase.phases)).at(id).whole_phase_load_;
   }
 
   virtual ObjectIterator begin() override {
@@ -105,17 +105,17 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
   NodeType this_node = 0;
   std::unordered_map<PhaseType, LoadMapType> proc_loads = {
     {0, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{10}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{40}}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}}},
     {1, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{4}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{4}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}}},
     {2, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{20}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{50}}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{20}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{50}, {}}}}},
     {3, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{40}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{100}}}}};
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{40}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{100}, {}}}}}};
 
   auto test_model =
     std::make_shared<NaivePersistence>(std::make_shared<StubModel>());
@@ -127,7 +127,7 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
     auto &&obj = *it;
     for (auto phase : {0, -1, -2, -3, -4}) {
       auto work_val = test_model->getWork(obj, PhaseOffset{phase, 1});
-      EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj));
+      EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj).whole_phase_load_);
     }
   }
 }

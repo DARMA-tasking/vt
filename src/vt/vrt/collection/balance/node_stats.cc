@@ -260,7 +260,7 @@ ElementIDStruct NodeStats::addNodeStats(
   phase_data.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(obj_id),
-    std::forward_as_tuple(time)
+    std::forward_as_tuple(LoadSummary{time, subphase_time})
   );
 
   auto &subphase_data = stats_->node_subphase_data_[phase];

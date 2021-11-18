@@ -112,8 +112,8 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {id1, TimeType{60}},
-       {id2, TimeType{150}}}}};
+       {id1, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
+       {id2, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
 
   ProcSubphaseLoadMap proc_subphase_load = {
     {0,
@@ -163,8 +163,8 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
-       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
+       {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
+       {ElementIDStruct{2,this_node,this_node}, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
 
   ProcSubphaseLoadMap proc_subphase_load = {
     {0,

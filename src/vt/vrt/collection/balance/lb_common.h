@@ -92,9 +92,6 @@ std::ostream& operator<<(
 
 static constexpr ElementIDType const no_element_id = 0;
 
-using LoadMapType         = std::unordered_map<ElementIDStruct,TimeType>;
-using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<TimeType>>;
-
 /**
  * \brief A description of the interval of interest for a modeled load query
  *
@@ -118,7 +115,7 @@ struct LoadSummary
   TimeType whole_phase_load_;
   std::vector<TimeType> subphase_loads_;
 
-  TimeType get(PhaseOffset when)
+  TimeType get(PhaseOffset when) const
   {
     if (when.subphase == PhaseOffset::WHOLE_PHASE)
       return whole_phase_load_;
@@ -132,6 +129,9 @@ struct LoadSummary
       | subphase_loads_;
   }
 };
+
+using LoadMapType         = std::unordered_map<ElementIDStruct, LoadSummary>;
+using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<TimeType>>;
 
 struct Reassignment
 {

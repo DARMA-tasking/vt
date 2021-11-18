@@ -110,8 +110,8 @@ TEST_F(TestModelNorm, test_model_norm_1) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
-       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
+       {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {}}},
+       {ElementIDStruct{2,this_node,this_node}, {TimeType{150}, {}}}}}};
 
   ProcSubphaseLoadMap proc_subphase_load = {
     {0,
@@ -145,8 +145,8 @@ TEST_F(TestModelNorm, test_model_norm_2) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
-       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
+       {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {}}},
+       {ElementIDStruct{2,this_node,this_node}, {TimeType{150}, {}}}}}};
 
   ProcSubphaseLoadMap proc_subphase_load = {
     {0,
@@ -181,8 +181,8 @@ TEST_F(TestModelNorm, test_model_norm_3) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
-       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
+       {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {}}},
+       {ElementIDStruct{2,this_node,this_node}, {TimeType{150}, {}}}}}};
 
   ProcSubphaseLoadMap proc_subphase_load = {
     {0,

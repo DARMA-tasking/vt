@@ -87,7 +87,7 @@ struct StubModel : LoadModel {
   void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
-    const auto work = proc_load_->at(0).at(id);
+    const auto work = proc_load_->at(0).at(id).whole_phase_load_;
 
     if (phase.subphase == PhaseOffset::WHOLE_PHASE) {
       return work;
@@ -123,7 +123,7 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   // Element 3 (home node == 3)
   ElementIDStruct const elem3 = {3, 3, 3};
 
-  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, TimeType{150}}}}};
+  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, {TimeType{150}, {}}}}}};
 
   ProcCommMap proc_comm = {
     {0,
