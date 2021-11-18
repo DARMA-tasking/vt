@@ -92,6 +92,25 @@ std::ostream& operator<<(
 
 static constexpr ElementIDType const no_element_id = 0;
 
+}}}}
+
+namespace std {
+
+using ElementIDStructType = vt::vrt::collection::balance::ElementIDStruct;
+using ElementIDMemberType = vt::vrt::collection::balance::ElementIDType;
+
+template <>
+struct hash<ElementIDStructType> {
+  size_t operator()(ElementIDStructType const& in) const {
+    return std::hash<ElementIDMemberType>()(in.id);
+  }
+};
+
+} /* end namespace std */
+
+namespace vt { namespace vrt { namespace collection {
+namespace balance {
+
 /**
  * \brief A description of the interval of interest for a modeled load query
  *
@@ -138,8 +157,8 @@ struct Reassignment
   // Include the subject node so that these structures can be formed
   // and passed through collectives
   NodeType node_;
-  std::map<ElementIDStruct, NodeType> depart_;
-  std::map<ElementIDStruct, LoadSummary> arrive_;
+  std::unordered_map<ElementIDStruct, NodeType> depart_;
+  std::unordered_map<ElementIDStruct, LoadSummary> arrive_;
 };
 
 class LoadModel;
@@ -196,19 +215,5 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 std::unordered_map<Statistic, std::string>& get_lb_stat_name();
 
 }}}} /* end namespace vt::vrt::collection::lb */
-
-namespace std {
-
-using ElementIDStructType = vt::vrt::collection::balance::ElementIDStruct;
-using ElementIDMemberType = vt::vrt::collection::balance::ElementIDType;
-
-template <>
-struct hash<ElementIDStructType> {
-  size_t operator()(ElementIDStructType const& in) const {
-    return std::hash<ElementIDMemberType>()(in.id);
-  }
-};
-
-} /* end namespace std */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H*/

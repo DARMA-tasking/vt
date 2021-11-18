@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 load_model.h
+//                          proposed_reassignment.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -49,60 +49,38 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+class ProposedReassignment;
+
 class ReassignmentIterator : public ObjectIteratorImpl
 {
-  void operator++() override = 0;
-  value_type operator*() const override = 0;
-  bool operator==(EndObjectIterator rhs) const override = 0;
-  bool operator!=(EndObjectIterator rhs) const override = 0;
+public:
+  void operator++() override;
+  value_type operator*() const override;
+  bool operator==(EndObjectIterator rhs) const override;
+  bool operator!=(EndObjectIterator rhs) const override;
+
+  ReassignmentIterator(ObjectIterator &&present,
+		       LoadMapObjectIterator arriving,
+		       ProposedReassignment *p_in);
+
+private:
+  ObjectIterator it_present;
+  LoadMapObjectIterator it_arriving;
+  ProposedReassignment *p;
 };
 
 class ProposedReassignment : public ComposedModel
 {
   ProposedReassignment(std::shared_ptr<balance::LoadModel> base,
-                       Reassignment reassignment)
-    : ComposedModel(base)
-    , reassignment_(std::move(reassignment))
-  {
-    vtAssert(reassignment_.node_ == vt::theContext()->getNode(),
-             "ProposedReassignment model needs to be applied to the present node's data");
-
-    // Check invariants?
-
-    // depart should be a subset of present
-
-    // subtract depart to allow for self-migration
-    // arrive ^ (present \ depart) == 0
-  }
+                       Reassignment reassignment);
 
   ObjectIterator begin() override;
-
-  int getNumObjects() override
-  {
-    int base = ComposedModel::getNumObjects();
-    int departing = reassignment_.depart_.size();
-    int arriving = reassignment_.arrive_.size();
-
-    // This would handle self-migration without a problem
-    return base - departing + arriving;
-  }
-
-  TimeType getWork(ElementIDStruct object, PhaseOffset when) override
-  {
-    auto a = reassignment_.arrive_.find(object);
-    if (a != reassignment_.arrive_.end()) {
-      return a->second.get(when);
-    }
-
-    // Check this *after* arrivals to handle hypothetical self-migration
-    vtAssert(reassignment_.depart_.find(object) == reassignment_.depart_.end(),
-             "Departing object should not appear as a load query subject");
-
-    return ComposedModel::getWork(object, when);
-  }
+  int getNumObjects() override;
+  TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
 
  private:
   Reassignment reassignment_;
+  friend class ReassignmentIterator;
 };
 
 }}}}
