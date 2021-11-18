@@ -302,6 +302,22 @@ INSTANTIATE_TEST_SUITE_P(
 
 using TestRestoreStatsData = TestParallelHarness;
 
+vt::vrt::collection::balance::StatsData
+getStatsDataForPhase(
+  vt::PhaseType phase,  vt::vrt::collection::balance::StatsData in
+) {
+  using JSONAppender = vt::util::json::Appender<std::stringstream>;
+  using vt::vrt::collection::balance::StatsData;
+  using json = nlohmann::json;
+  std::stringstream ss{std::ios_base::out | std::ios_base::in};
+  auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), false);
+  auto j = in.toJson(phase);
+  ap->addElm(*j);
+  ss = ap->finish();
+  //fmt::print("{}\n", ss.str());
+  return StatsData{json::parse(ss)};
+}
+
 TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
   auto this_node = vt::theContext()->getNode();
   std::string out_file_name = "test_restore_stats_data_1.%p.json";
@@ -322,15 +338,16 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
   });
 
   vt::vrt::collection::balance::StatsData sd;
+  PhaseType write_phase = 0;
 
   using LBCommKey = vt::vrt::collection::balance::LBCommKey;
   using CommVolume = vt::vrt::collection::balance::CommVolume;
   using CommBytesType = vt::vrt::collection::balance::CommBytesType;
 
-  // @todo: should do more than one phase and other types of comm
+  // @todo: should do other types of comm
 
   {
-    PhaseType phase = 0;
+    PhaseType phase = write_phase;
     sd.node_data_[phase];
     sd.node_comm_[phase];
 
@@ -373,20 +390,7 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
     }
   }
 
-  auto const compress = false;
-  using JSONAppender = vt::util::json::Appender<std::ofstream>;
-  auto json_writer = std::make_unique<JSONAppender>(
-    "phases", out_file_name, compress
-  );
-  {
-    auto j = sd.toJson(0);
-    json_writer->addElm(*j);
-  }
-  json_writer = nullptr;
-
-  vt::util::json::Reader r(out_file_name);
-  auto json_ptr = r.readFile();
-  auto sd_read = vt::vrt::collection::balance::StatsData(*json_ptr);
+  auto sd_read = getStatsDataForPhase(write_phase, sd);
 
   // whole-phase loads
   EXPECT_EQ(sd_read.node_data_.size(), sd.node_data_.size());
