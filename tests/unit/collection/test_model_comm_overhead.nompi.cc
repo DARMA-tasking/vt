@@ -79,7 +79,7 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    ProcLoadMap const* proc_load, ProcSubphaseLoadMap const*,
+    ProcLoadMap const* proc_load,
     ProcCommMap const*) override {
     proc_load_ = proc_load;
   }
@@ -153,7 +153,7 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   auto test_model = std::make_shared<CommOverhead>(
     std::make_shared<StubModel>(), per_msg_weight, per_byte_weight
   );
-  test_model->setLoads(&proc_load, nullptr, &proc_comm);
+  test_model->setLoads(&proc_load, &proc_comm);
 
   std::unordered_map<PhaseType, TimeType> expected_work = {
     {0, TimeType{296}}, {1, TimeType{295.5}}

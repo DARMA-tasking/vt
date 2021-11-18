@@ -73,7 +73,6 @@ struct StubModel : LoadModel {
 
   void setLoads(
     std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, SubphaseLoadMapType> const*,
     std::unordered_map<PhaseType, CommMapType> const*) override {
     proc_load_ = proc_load;
   }
@@ -111,7 +110,7 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
 	{ElementIDStruct{1,this_node,this_node}, {TimeType{10}, {}}},
 	{ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}
     }}};
-  test_model->setLoads(&proc_loads, nullptr, nullptr);
+  test_model->setLoads(&proc_loads, nullptr);
   test_model->updateLoads(0);
 
   // Work loads to be added in each test iteration

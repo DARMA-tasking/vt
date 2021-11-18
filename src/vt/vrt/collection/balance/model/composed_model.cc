@@ -46,9 +46,8 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void ComposedModel::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                             std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
                              std::unordered_map<PhaseType, CommMapType> const* proc_comm) {
-  base_->setLoads(proc_load, proc_subphase_load, proc_comm);
+  base_->setLoads(proc_load, proc_comm);
 }
 
 void ComposedModel::updateLoads(PhaseType last_completed_phase) {

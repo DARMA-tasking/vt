@@ -150,7 +150,6 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   model_ = model;
   auto nstats = theNodeStats();
   model_->setLoads(nstats->getNodeLoad(),
-                   nstats->getNodeSubphaseLoad(),
                    nstats->getNodeComm());
 }
 

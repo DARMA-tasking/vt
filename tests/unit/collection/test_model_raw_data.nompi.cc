@@ -69,8 +69,7 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
     std::make_shared<RawData>();
 
   std::unordered_map<PhaseType, LoadMapType> proc_loads;
-  std::unordered_map<PhaseType, SubphaseLoadMapType> subphase_loads;
-  test_model->setLoads(&proc_loads, &subphase_loads, nullptr);
+  test_model->setLoads(&proc_loads, nullptr);
 
   ElementIDStruct id1{1,this_node,this_node};
   ElementIDStruct id2{2,this_node,this_node};

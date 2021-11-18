@@ -51,7 +51,6 @@ void RawData::updateLoads(PhaseType last_completed_phase) {
 }
 
 void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                       std::unordered_map<PhaseType, SubphaseLoadMapType> const* ,
                        std::unordered_map<PhaseType, CommMapType> const* proc_comm)
 {
   proc_load_ = proc_load;

@@ -71,7 +71,6 @@ struct StubModel : LoadModel {
 
   void setLoads(
     std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, SubphaseLoadMapType> const*,
     std::unordered_map<PhaseType, CommMapType> const*) override {
     proc_load_ = proc_load;
   }
@@ -117,7 +116,7 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   auto test_model =
     std::make_shared<MultiplePhases>(std::make_shared<StubModel>(), 4);
 
-  test_model->setLoads(&proc_loads, nullptr, nullptr);
+  test_model->setLoads(&proc_loads, nullptr);
   test_model->updateLoads(3);
 
   for (auto it = test_model->begin(); it != test_model->end(); ++it) {

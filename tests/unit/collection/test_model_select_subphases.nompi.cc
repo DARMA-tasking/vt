@@ -76,16 +76,15 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    ProcLoadMap const* proc_load, ProcSubphaseLoadMap const* proc_subphase_load,
+    ProcLoadMap const* proc_load,
     ProcCommMap const*) override {
     proc_load_ = proc_load;
-    proc_subphase_load_ = proc_subphase_load;
   }
 
   void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
-    return proc_subphase_load_->at(0).at(id).at(phase.subphase);
+    return proc_load_->at(0).at(id).subphase_loads_.at(phase.subphase);
   }
 
   ObjectIterator begin() override {
@@ -101,7 +100,6 @@ struct StubModel : LoadModel {
 
 private:
   ProcLoadMap const* proc_load_ = nullptr;
-  ProcSubphaseLoadMap const* proc_subphase_load_ = nullptr;
 };
 
 TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
@@ -127,7 +125,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
 
   EXPECT_EQ(test_model->getNumSubphases(), subphases.size());
 
-  test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
   std::unordered_map<ElementIDStruct, std::vector<TimeType>> expected_values = {
@@ -178,7 +176,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
 
   EXPECT_EQ(test_model->getNumSubphases(), subphases.size());
 
-  test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
   std::unordered_map<ElementIDStruct, TimeType> expected_values = {

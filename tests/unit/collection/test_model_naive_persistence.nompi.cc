@@ -75,7 +75,6 @@ struct StubModel : LoadModel {
 
   void setLoads(
     std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, SubphaseLoadMapType> const*,
     std::unordered_map<PhaseType, CommMapType> const*) override {
     proc_load_ = proc_load;
   }
@@ -120,7 +119,7 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
   auto test_model =
     std::make_shared<NaivePersistence>(std::make_shared<StubModel>());
 
-  test_model->setLoads(&proc_loads, nullptr, nullptr);
+  test_model->setLoads(&proc_loads, nullptr);
   test_model->updateLoads(3);
 
   for (auto it = test_model->begin(); it != test_model->end(); ++it) {
