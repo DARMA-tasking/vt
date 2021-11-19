@@ -114,7 +114,7 @@ struct BaseLB {
 
   /**
    * \brief Normalizes the reassignment graph by setting up in/out edges on both
-   * sides regardless of how they are pass to \c migrateObjectTo
+   * sides regardless of how they are passed to \c migrateObjectTo
    *
    * \return A normalized reassignment
    */
