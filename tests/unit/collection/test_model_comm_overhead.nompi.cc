@@ -87,7 +87,7 @@ struct StubModel : LoadModel {
   void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
-    const auto work = proc_load_->at(0).at(id).whole_phase_load_;
+    const auto work = proc_load_->at(0).at(id).whole_phase_load;
 
     if (phase.subphase == PhaseOffset::WHOLE_PHASE) {
       return work;

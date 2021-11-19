@@ -86,7 +86,7 @@ unsigned int RawData::getNumCompletedPhases() {
 int RawData::getNumSubphases() {
   const auto& last_phase = proc_load_->at(last_completed_phase_);
   const auto& an_object = *last_phase.begin();
-  const auto& subphases = an_object.second.subphase_loads_;
+  const auto& subphases = an_object.second.subphase_loads;
   return subphases.size();
 }
 

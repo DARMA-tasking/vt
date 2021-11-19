@@ -66,11 +66,11 @@ LoadSummary getObjectLoads(LoadModel* model,
                            ElementIDStruct object, PhaseOffset when)
 {
   LoadSummary ret;
-  ret.whole_phase_load_ = model->getWork(object, {when.phases, PhaseOffset::WHOLE_PHASE});
+  ret.whole_phase_load = model->getWork(object, {when.phases, PhaseOffset::WHOLE_PHASE});
 
   unsigned int subphases = model->getNumSubphases();
   for (unsigned int i = 0; i < subphases; ++i)
-    ret.subphase_loads_.push_back(model->getWork(object, {when.phases, i}));
+    ret.subphase_loads.push_back(model->getWork(object, {when.phases, i}));
 
   return ret;
 }

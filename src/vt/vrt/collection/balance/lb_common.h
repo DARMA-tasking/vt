@@ -131,21 +131,21 @@ struct PhaseOffset {
 
 struct LoadSummary
 {
-  TimeType whole_phase_load_;
-  std::vector<TimeType> subphase_loads_;
+  TimeType whole_phase_load;
+  std::vector<TimeType> subphase_loads;
 
   TimeType get(PhaseOffset when) const
   {
     if (when.subphase == PhaseOffset::WHOLE_PHASE)
-      return whole_phase_load_;
+      return whole_phase_load;
     else
-      return subphase_loads_.at(when.subphase);
+      return subphase_loads.at(when.subphase);
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | whole_phase_load_
-      | subphase_loads_;
+    s | whole_phase_load
+      | subphase_loads;
   }
 };
 

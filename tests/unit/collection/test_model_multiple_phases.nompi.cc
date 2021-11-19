@@ -80,7 +80,7 @@ struct StubModel : LoadModel {
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     // Here we return predicted loads for future phases
     // For the sake of the test we use values from the past phases
-    return proc_load_->at(phase.phases).at(id).whole_phase_load_;
+    return proc_load_->at(phase.phases).at(id).whole_phase_load;
   }
 
   virtual ObjectIterator begin() override {

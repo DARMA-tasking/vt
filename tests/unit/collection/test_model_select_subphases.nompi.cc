@@ -84,7 +84,7 @@ struct StubModel : LoadModel {
   void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
-    return proc_load_->at(0).at(id).subphase_loads_.at(phase.subphase);
+    return proc_load_->at(0).at(id).subphase_loads.at(phase.subphase);
   }
 
   ObjectIterator begin() override {

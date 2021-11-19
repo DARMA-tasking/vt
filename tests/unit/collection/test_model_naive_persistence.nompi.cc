@@ -83,7 +83,7 @@ struct StubModel : LoadModel {
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     EXPECT_LE(phase.phases, -1);
-    return proc_load_->at(getIndexFromPhase(phase.phases)).at(id).whole_phase_load_;
+    return proc_load_->at(getIndexFromPhase(phase.phases)).at(id).whole_phase_load;
   }
 
   virtual ObjectIterator begin() override {
@@ -126,7 +126,7 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
     auto &&obj = *it;
     for (auto phase : {0, -1, -2, -3, -4}) {
       auto work_val = test_model->getWork(obj, PhaseOffset{phase, 1});
-      EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj).whole_phase_load_);
+      EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj).whole_phase_load);
     }
   }
 }

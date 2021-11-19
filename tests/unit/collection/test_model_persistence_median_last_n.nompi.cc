@@ -81,7 +81,7 @@ struct StubModel : LoadModel {
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     // Most recent phase will be at the end of vector
-    return proc_load_->at(num_phases + phase.phases).at(id).whole_phase_load_;
+    return proc_load_->at(num_phases + phase.phases).at(id).whole_phase_load;
   }
 
   virtual ObjectIterator begin() override {
