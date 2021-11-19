@@ -39,6 +39,6 @@ if (vt_ubsan_enabled)
 endif()
 
 message(DEBUG "Target ${vt_target} compile options: ${TARGET_CXX_FLAGS}")
-target_compile_options(${vt_target} PUBLIC ${TARGET_CXX_FLAGS})
+target_compile_options(${vt_target} PRIVATE ${TARGET_CXX_FLAGS})
 
 endmacro()
