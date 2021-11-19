@@ -59,7 +59,7 @@ namespace balance {
 
 using ElementIDType = uint64_t;
 
-struct ElementIDStruct : vt::Message {
+struct ElementIDStruct {
   using isByteCopyable = std::true_type;
 
   ElementIDStruct() = default;

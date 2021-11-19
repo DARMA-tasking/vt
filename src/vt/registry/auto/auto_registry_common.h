@@ -65,7 +65,7 @@ struct SentinelObject {};
 
 struct BaseHandlersDispatcher {
   virtual ~BaseHandlersDispatcher() = default;
-  virtual void dispatch(messaging::BaseMsg* msg, void* object) const = 0;
+  virtual void dispatch(void* msg, void* object) const = 0;
 };
 
 template <typename MsgT, typename HandlerT, typename ObjT>
@@ -135,7 +135,7 @@ private:
   };
 
 public:
-  void dispatch(messaging::BaseMsg* msg, void* object) const override {
+  void dispatch(void* msg, void* object) const override {
     DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
   }
 
