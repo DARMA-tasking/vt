@@ -85,8 +85,8 @@ struct RegistrarFunctor<
     index = reg.size(); // capture current index
 
     auto fn = AdapterType::getFunction();
-    BaseDispatcherPtr d =
-      std::make_unique<Dispatcher<MsgType, decltype(fn), ObjType>>(fn);
+    BaseHandlersDispatcherPtr d =
+      std::make_unique<HandlersDispatcher<MsgType, decltype(fn), ObjType>>(fn);
 
     NumArgsType num_args = AdapterType::getNumArgs();
 
@@ -117,8 +117,8 @@ struct RegistrarFunctor<
     index = reg.size(); // capture current index
 
     auto fn = AdapterType::getFunction();
-    BaseDispatcherMappingPtr d =
-      std::make_unique<DispatcherMapping<IndexT, decltype(fn)>>(fn);
+    BaseMapsDispatcherPtr d =
+      std::make_unique<MapsDispatcher<IndexT, decltype(fn)>>(fn);
 
     NumArgsType num_args = AdapterType::getNumArgs();
 

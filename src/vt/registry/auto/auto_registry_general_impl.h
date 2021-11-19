@@ -67,9 +67,9 @@ struct RegistrarHelper;
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
 struct RegistrarHelper<
   RunnableT, RegT, InfoT, FnT,
-  typename std::enable_if_t<
-    not std::is_same<InfoT, AutoRegInfo<BaseDispatcherPtr>>::value and
-    not std::is_same<InfoT, AutoRegInfo<BaseDispatcherMappingPtr>>::value
+  std::enable_if_t<
+    not std::is_same<InfoT, AutoRegInfo<BaseHandlersDispatcherPtr>>::value and
+    not std::is_same<InfoT, AutoRegInfo<BaseMapsDispatcherPtr>>::value
   >
 > {
   static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
@@ -93,18 +93,18 @@ template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
 struct RegistrarHelper<
   RunnableT, RegT, InfoT, FnT,
   std::enable_if_t<
-    std::is_same<InfoT, AutoRegInfo<BaseDispatcherPtr>>::value
+    std::is_same<InfoT, AutoRegInfo<BaseHandlersDispatcherPtr>>::value
   >
 > {
   static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
     using AdapterType = typename RunnableT::AdapterType;
     using MsgType = typename AdapterType::MsgType;
-    using ObjType = typename AdapterType::ObjType;
     using FuncType = typename AdapterType::FunctionPtrType;
+    using ObjType = typename AdapterType::ObjType;
 
     auto fn = AdapterType::getFunction();
-    BaseDispatcherPtr d =
-      std::make_unique<Dispatcher<MsgType, FuncType, ObjType>>(fn);
+    BaseHandlersDispatcherPtr d =
+      std::make_unique<HandlersDispatcher<MsgType, FuncType, ObjType>>(fn);
 
 #if vt_check_enabled(trace_enabled)
     std::string event_type_name = AdapterType::traceGetEventType();
@@ -122,7 +122,7 @@ template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
 struct RegistrarHelper<
   RunnableT, RegT, InfoT, FnT,
   std::enable_if_t<
-    std::is_same<InfoT, AutoRegInfo<BaseDispatcherMappingPtr>>::value
+    std::is_same<InfoT, AutoRegInfo<BaseMapsDispatcherPtr>>::value
   >
 > {
   static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
@@ -131,8 +131,8 @@ struct RegistrarHelper<
     using FuncType = typename AdapterType::FunctionPtrType;
 
     auto fn = AdapterType::getFunction();
-    BaseDispatcherMappingPtr d =
-      std::make_unique<DispatcherMapping<IndexT, FuncType>>(fn);
+    BaseMapsDispatcherPtr d =
+      std::make_unique<MapsDispatcher<IndexT, FuncType>>(fn);
 
 #if vt_check_enabled(trace_enabled)
     std::string event_type_name = AdapterType::traceGetEventType();
@@ -153,10 +153,12 @@ RegistrarGen<RunnableT, RegT, InfoT, FnT>::RegistrarGen() {
   index = reg.size(); // capture current index
 
   RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
-    new RegistrarGenInfoImpl<typename RunnableT::ObjType>());
+    new RegistrarGenInfoImpl<typename RunnableT::ObjType>()
+  );
 
   RegistrarHelper<RunnableT, RegT, InfoT, FnT>::registerHandler(
-    reg, std::move(indexAccessor));
+    reg, std::move(indexAccessor)
+  );
 }
 
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>

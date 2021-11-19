@@ -63,19 +63,14 @@ namespace vt { namespace auto_registry {
 
 struct SentinelObject {};
 
-struct BaseDispatcher {
-  virtual ~BaseDispatcher() = default;
-  virtual void dispatch(void* msg, void* object) const = 0;
-  virtual NodeType dispatch(
-    index::BaseIndex* cur_idx_ptr,
-    index::BaseIndex* range_ptr,
-    NodeType num_nodes
-  ) const = 0;
+struct BaseHandlersDispatcher {
+  virtual ~BaseHandlersDispatcher() = default;
+  virtual void dispatch(messaging::BaseMsg* msg, void* object) const = 0;
 };
 
 template <typename MsgT, typename HandlerT, typename ObjT>
-struct Dispatcher final : BaseDispatcher {
-  explicit Dispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) { }
+struct HandlersDispatcher final : BaseHandlersDispatcher {
+  explicit HandlersDispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) { }
 
 private:
   template <typename T, typename = void>
@@ -140,24 +135,26 @@ private:
   };
 
 public:
-  void dispatch(void* msg, void* object) const override {
+  void dispatch(messaging::BaseMsg* msg, void* object) const override {
     DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
-  }
-
-  NodeType
-  dispatch(index::BaseIndex*, index::BaseIndex*, NodeType) const override {
-    return NodeType{};
   }
 
 private:
   HandlerT fn_ptr_ = nullptr;
 };
 
-struct BaseDispatcherMapping : BaseDispatcher {};
+struct BaseMapsDispatcher {
+  virtual ~BaseMapsDispatcher() = default;
+  virtual NodeType dispatch(
+    index::BaseIndex* cur_idx_ptr,
+    index::BaseIndex* range_ptr,
+    NodeType num_nodes
+  ) const = 0;
+};
 
 template <typename IndexT, typename HandlerT>
-struct DispatcherMapping final : BaseDispatcherMapping {
-  explicit DispatcherMapping(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) { }
+struct MapsDispatcher final : BaseMapsDispatcher {
+  explicit MapsDispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) { }
 
 private:
   template <typename T, typename = void>
@@ -184,8 +181,6 @@ private:
   };
 
 public:
-  void dispatch(void*, void*) const override { }
-
   NodeType dispatch(
     index::BaseIndex* cur_idx_ptr,
     index::BaseIndex* range_ptr,
@@ -203,16 +198,16 @@ private:
   HandlerT fn_ptr_ = nullptr;
 };
 
-using BaseDispatcherPtr         = std::unique_ptr<BaseDispatcher>;
-using BaseDispatcherMappingPtr  = std::unique_ptr<BaseDispatcherMapping>;
+using BaseHandlersDispatcherPtr = std::unique_ptr<BaseHandlersDispatcher>;
+using BaseMapsDispatcherPtr     = std::unique_ptr<BaseMapsDispatcher>;
 
-using AutoActiveType              = BaseDispatcherPtr;
-using AutoActiveFunctorType       = BaseDispatcherPtr;
-using AutoActiveVCType            = BaseDispatcherPtr;
-using AutoActiveCollectionType    = BaseDispatcherPtr;
-using AutoActiveCollectionMemType = BaseDispatcherPtr;
-using AutoActiveMapType           = BaseDispatcherMappingPtr;
-using AutoActiveMapFunctorType    = BaseDispatcherMappingPtr;
+using AutoActiveType              = BaseHandlersDispatcherPtr;
+using AutoActiveFunctorType       = BaseHandlersDispatcherPtr;
+using AutoActiveVCType            = BaseHandlersDispatcherPtr;
+using AutoActiveCollectionType    = BaseHandlersDispatcherPtr;
+using AutoActiveCollectionMemType = BaseHandlersDispatcherPtr;
+using AutoActiveMapType           = BaseMapsDispatcherPtr;
+using AutoActiveMapFunctorType    = BaseMapsDispatcherPtr;
 
 using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;
 using AutoActiveRDMAGetType       = ActiveRDMAGetFnPtrType;
