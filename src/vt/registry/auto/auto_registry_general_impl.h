@@ -69,7 +69,8 @@ struct RegistrarHelper<
   RunnableT, RegT, InfoT, FnT,
   std::enable_if_t<
     not std::is_same<InfoT, AutoRegInfo<BaseHandlersDispatcherPtr>>::value and
-    not std::is_same<InfoT, AutoRegInfo<BaseMapsDispatcherPtr>>::value
+    not std::is_same<InfoT, AutoRegInfo<BaseMapsDispatcherPtr>>::value and
+    not std::is_same<InfoT, AutoRegInfo<BaseScatterDispatcherPtr>>::value
   >
 > {
   static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
@@ -105,6 +106,35 @@ struct RegistrarHelper<
     auto fn = AdapterType::getFunction();
     BaseHandlersDispatcherPtr d =
       std::make_unique<HandlersDispatcher<MsgType, FuncType, ObjType>>(fn);
+
+#if vt_check_enabled(trace_enabled)
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    trace::TraceEntryIDType trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor), trace_ep});
+#else
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});
+#endif
+  }
+};
+
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+struct RegistrarHelper<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<
+    std::is_same<InfoT, AutoRegInfo<BaseScatterDispatcherPtr>>::value
+  >
+> {
+  static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
+    using AdapterType = typename RunnableT::AdapterType;
+    using MsgType = typename AdapterType::MsgType;
+    using FuncType = typename AdapterType::FunctionPtrType;
+    using ObjType = typename AdapterType::ObjType;
+
+    auto fn = AdapterType::getFunction();
+    BaseScatterDispatcherPtr d =
+      std::make_unique<ScatterDispatcher<MsgType, FuncType, ObjType>>(fn);
 
 #if vt_check_enabled(trace_enabled)
     std::string event_type_name = AdapterType::traceGetEventType();

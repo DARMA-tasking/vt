@@ -65,7 +65,7 @@ struct SentinelObject {};
 
 struct BaseHandlersDispatcher {
   virtual ~BaseHandlersDispatcher() = default;
-  virtual void dispatch(void* msg, void* object) const = 0;
+  virtual void dispatch(messaging::BaseMsg* msg, void* object) const = 0;
 };
 
 template <typename MsgT, typename HandlerT, typename ObjT>
@@ -135,7 +135,7 @@ private:
   };
 
 public:
-  void dispatch(void* msg, void* object) const override {
+  void dispatch(messaging::BaseMsg* msg, void* object) const override {
     DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
   }
 
@@ -198,8 +198,44 @@ private:
   HandlerT fn_ptr_ = nullptr;
 };
 
+struct BaseScatterDispatcher {
+  virtual ~BaseScatterDispatcher() = default;
+  virtual void dispatch(void* msg, void* object) const = 0;
+};
+
+template <typename MsgT, typename HandlerT, typename ObjT>
+struct ScatterDispatcher final : BaseScatterDispatcher {
+  explicit ScatterDispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) {}
+
+private:
+  template <typename T, typename = void>
+  struct DispatchImpl;
+
+  template <typename T>
+  using isActiveTypedFnType = std::enable_if_t<
+    std::is_same<
+      T,
+      ActiveTypedFnType<MsgT>*
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveTypedFnType<T>> {
+    static void run(MsgT* msg, void*, HandlerT han) { han(msg); }
+  };
+
+public:
+  void dispatch(void* msg, void* object) const override {
+    DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
+  }
+
+private:
+  HandlerT fn_ptr_ = nullptr;
+};
+
 using BaseHandlersDispatcherPtr = std::unique_ptr<BaseHandlersDispatcher>;
 using BaseMapsDispatcherPtr     = std::unique_ptr<BaseMapsDispatcher>;
+using BaseScatterDispatcherPtr  = std::unique_ptr<BaseScatterDispatcher>;
 
 using AutoActiveType              = BaseHandlersDispatcherPtr;
 using AutoActiveFunctorType       = BaseHandlersDispatcherPtr;
@@ -340,18 +376,19 @@ using AutoRegInfoType = AutoRegInfo<Fn>;
 template <typename RegInfoT>
 using RegContType = std::vector<AutoRegInfoType<RegInfoT>>;
 
-using AutoActiveContainerType              = RegContType<AutoActiveType>;
-using AutoActiveVCContainerType            = RegContType<AutoActiveVCType>;
-using AutoActiveCollectionContainerType    = RegContType<AutoActiveCollectionType>;
-using AutoActiveCollectionMemContainerType = RegContType<AutoActiveCollectionMemType>;
-using AutoActiveMapContainerType           = RegContType<AutoActiveMapType>;
-using AutoActiveMapFunctorContainerType    = RegContType<AutoActiveMapFunctorType>;
-using AutoActiveSeedMapContainerType       = RegContType<AutoActiveSeedMapType>;
-using AutoActiveFunctorContainerType       = RegContType<AutoActiveFunctorType>;
-using AutoActiveRDMAGetContainerType       = RegContType<AutoActiveRDMAGetType>;
-using AutoActiveRDMAPutContainerType       = RegContType<AutoActiveRDMAPutType>;
-using AutoActiveIndexContainerType         = RegContType<AutoActiveIndexType>;
-using AutoActiveObjGroupContainerType      = RegContType<AutoActiveObjGroupType>;
+using AutoActiveContainerType               = RegContType<AutoActiveType>;
+using AutoActiveVCContainerType             = RegContType<AutoActiveVCType>;
+using AutoActiveCollectionContainerType     = RegContType<AutoActiveCollectionType>;
+using AutoActiveCollectionMemContainerType  = RegContType<AutoActiveCollectionMemType>;
+using AutoActiveMapContainerType            = RegContType<AutoActiveMapType>;
+using AutoActiveMapFunctorContainerType     = RegContType<AutoActiveMapFunctorType>;
+using AutoActiveSeedMapContainerType        = RegContType<AutoActiveSeedMapType>;
+using AutoActiveFunctorContainerType        = RegContType<AutoActiveFunctorType>;
+using AutoActiveRDMAGetContainerType        = RegContType<AutoActiveRDMAGetType>;
+using AutoActiveRDMAPutContainerType        = RegContType<AutoActiveRDMAPutType>;
+using AutoActiveIndexContainerType          = RegContType<AutoActiveIndexType>;
+using AutoActiveObjGroupContainerType       = RegContType<AutoActiveObjGroupType>;
+using ScatterContainerType                  = RegContType<BaseScatterDispatcherPtr>;
 
 }} // end namespace vt::auto_registry
 

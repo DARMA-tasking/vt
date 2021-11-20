@@ -102,6 +102,19 @@ inline HandlerType makeAutoHandler() {
   return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
 }
 
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+inline HandlerType makeScatterHandler() {
+  using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f, MessageT>;
+  using ContainerType = ScatterContainerType;
+  using RegInfoType = AutoRegInfoType<BaseScatterDispatcherPtr>;
+  using FuncType = void (*)(void*);
+  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
+
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = false;
+  return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
+}
+
 template <typename T, T value>
 inline HandlerType makeAutoHandlerParam() {
   using AdapterT = FunctorAdapterParam<T, value>;
