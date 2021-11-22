@@ -55,13 +55,13 @@ namespace vt { namespace auto_registry {
 
 using namespace mapping;
 
-AutoActiveMapFunctorType getAutoHandlerFunctorMap(HandlerType const han);
+AutoActiveMapType const& getAutoHandlerFunctorMap(HandlerType const han);
 
 template <typename FunctorT, typename... Args>
 HandlerType makeAutoHandlerFunctorMap();
 
 // Registration for collection index mapping functions
-AutoActiveMapType getAutoHandlerMap(HandlerType const handler);
+AutoActiveMapType const& getAutoHandlerMap(HandlerType const handler);
 
 template <typename IndexT, ActiveMapTypedFnType<IndexT>* f>
 HandlerType makeAutoHandlerMap();
@@ -72,7 +72,7 @@ AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const handler);
 template <ActiveSeedMapFnType* f>
 HandlerType makeAutoHandlerSeedMap();
 
-AutoActiveMapType getHandlerMap(HandlerType const han);
+AutoActiveMapType const& getHandlerMap(HandlerType const han);
 
 }} // end namespace vt::auto_registry
 

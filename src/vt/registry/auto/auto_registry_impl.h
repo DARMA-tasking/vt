@@ -91,7 +91,7 @@ inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 inline HandlerType makeAutoHandler() {
-  using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f>;
+  using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f, MessageT>;
   using ContainerType = AutoActiveContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
   using FuncType = ActiveFnPtrType;
@@ -100,6 +100,47 @@ inline HandlerType makeAutoHandler() {
   constexpr bool is_auto = true;
   constexpr bool is_functor = false;
   return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
+}
+
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+inline HandlerType makeScatterHandler() {
+  using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f, MessageT>;
+  using ContainerType = ScatterContainerType;
+  using RegInfoType = AutoRegInfoType<BaseScatterDispatcherPtr>;
+  using FuncType = void (*)(void*);
+  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
+
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = false;
+  const auto handler_id = RunType::idx;
+  constexpr bool is_objgroup = false;
+  constexpr HandlerControlType control = 0;
+  constexpr bool is_trace = true;
+  constexpr bool is_member = false;
+  constexpr bool is_base_msg_derived = false;
+
+  return HandlerManagerType::makeHandler(
+    is_auto, is_functor, handler_id, is_objgroup, control, is_trace, is_member,
+    is_base_msg_derived
+  );
+}
+
+inline BaseScatterDispatcherPtr const& getScatterAutoHandler(HandlerType const handler) {
+  auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
+  bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
+  bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
+
+  vt_debug_print(
+    verbose, handler,
+    "getAuoHandler: handler={}, id={}, is_auto={}, is_functor={}\n",
+    handler, han_id, print_bool(is_auto), print_bool(is_functor)
+  );
+
+  assert(
+    not is_functor and is_auto and "Handler should not be a functor, but auto"
+  );
+
+  return getAutoRegistryGen<ScatterContainerType>().at(han_id).getFun();
 }
 
 template <typename T, T value>
@@ -115,7 +156,7 @@ inline HandlerType makeAutoHandlerParam() {
   return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
 }
 
-inline AutoActiveType getAutoHandler(HandlerType const handler) {
+inline AutoActiveType const& getAutoHandler(HandlerType const handler) {
   auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
   bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);

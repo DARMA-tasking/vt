@@ -62,18 +62,15 @@ void Scatter::scatter(
   auto const& num_nodes = theContext()->getNumNodes();
   auto const& elm_size = max_proc_size;
   auto const& combined_size = num_nodes * elm_size;
-  auto scatter_msg = makeMessageSz<ScatterMsg>(
-    combined_size, combined_size, elm_size
-  );
+  auto scatter_msg =
+    makeMessageSz<ScatterMsg>(combined_size, combined_size, elm_size);
   vtAssert(total_size == combined_size, "Sizes must be consistent");
   auto ptr = reinterpret_cast<char*>(scatter_msg.get()) + sizeof(ScatterMsg);
 #if vt_check_enabled(memory_pool)
-  auto remaining_size = thePool()->remainingSize(
-    reinterpret_cast<void*>(scatter_msg.get())
-  );
+  auto remaining_size =
+    thePool()->remainingSize(reinterpret_cast<void*>(scatter_msg.get()));
   vtAssertInfo(
-    remaining_size >= combined_size,
-    "Remaining size must be sufficient",
+    remaining_size >= combined_size, "Remaining size must be sufficient",
     total_size, combined_size, remaining_size, elm_size
   );
 #else
@@ -89,16 +86,14 @@ void Scatter::scatter(
   auto const& root_node = 0;
   auto nptr = applyScatterRecur(root_node, ptr, elm_size, size_fn, data_fn);
   vt_debug_print(
-    verbose, scatter,
-    "Scatter::scatter: incremented size={}\n",
-    nptr-ptr
+    verbose, scatter, "Scatter::scatter: incremented size={}\n", nptr - ptr
   );
   vtAssert(nptr == ptr + combined_size, "nptr must match size");
-  auto const& handler = auto_registry::makeAutoHandler<MessageT,f>();
+  auto const& handler = auto_registry::makeScatterHandler<MessageT, f>();
   auto const& this_node = theContext()->getNode();
   scatter_msg->user_han = handler;
   if (this_node != root_node) {
-    theMsg()->sendMsgSz<ScatterMsg,scatterHandler>(
+    theMsg()->sendMsgSz<ScatterMsg, scatterHandler>(
       root_node, scatter_msg, sizeof(ScatterMsg) + combined_size
     );
   } else {

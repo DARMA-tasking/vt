@@ -56,7 +56,7 @@ using namespace vrt;
 
 template <typename VrtT, typename MsgT, ActiveVrtTypedFnType<MsgT, VrtT>* f>
 inline HandlerType makeAutoHandlerVC() {
-  using FunctorT = FunctorAdapter<ActiveVrtTypedFnType<MsgT, VrtT>, f>;
+  using FunctorT = FunctorAdapter<ActiveVrtTypedFnType<MsgT, VrtT>, f, MsgT, VrtT>;
   using ContainerType = AutoActiveVCContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveVCType>;
   using FuncType = ActiveVirtualFnPtrType;
@@ -66,7 +66,7 @@ inline HandlerType makeAutoHandlerVC() {
   return HandlerManager::makeHandler(false, false, id);
 }
 
-inline AutoActiveVCType getAutoHandlerVC(HandlerType const handler) {
+inline AutoActiveVCType const& getAutoHandlerVC(HandlerType const handler) {
   using ContainerType = AutoActiveVCContainerType;
 
   auto const han_id = HandlerManager::getHandlerIdentifier(handler);

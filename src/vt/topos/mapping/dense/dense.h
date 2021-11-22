@@ -102,26 +102,28 @@ NodeType dense3DBlockMap(       Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType n);
 template <typename T = IdxBase>   using i1D   = IdxType1D<T>;
 template <typename T = IdxBase>   using i2D   = IdxType2D<T>;
 template <typename T = IdxBase>   using i3D   = IdxType3D<T>;
-template <typename F, F* f>       using Adapt = FunctorAdapt<F,f>;
+
+template <typename F, F* f, typename IndexT>
+using Adapt = MapFunctorAdapt<F, f, IndexT>;
 
 template <typename T = IdxBase>
-using dense1DMapFn    = Adapt<MapAdapter<i1D<T>>, defaultDenseIndex1DMap<T>>;
+using dense1DMapFn    = Adapt<MapAdapter<i1D<T>>, defaultDenseIndex1DMap<T>, i1D<T>>;
 template <typename T = IdxBase>
-using dense2DMapFn    = Adapt<MapAdapter<i2D<T>>, defaultDenseIndex2DMap<T>>;
+using dense2DMapFn    = Adapt<MapAdapter<i2D<T>>, defaultDenseIndex2DMap<T>, i2D<T> >;
 template <typename T = IdxBase>
-using dense3DMapFn    = Adapt<MapAdapter<i3D<T>>, defaultDenseIndex3DMap<T>>;
+using dense3DMapFn    = Adapt<MapAdapter<i3D<T>>, defaultDenseIndex3DMap<T>, i3D<T> >;
 template <typename T = IdxBase>
-using dense1DRRMapFn  = Adapt<MapAdapter<i1D<T>>, dense1DRoundRobinMap<T>>;
+using dense1DRRMapFn  = Adapt<MapAdapter<i1D<T>>, dense1DRoundRobinMap<T>, i1D<T>>;
 template <typename T = IdxBase>
-using dense2DRRMapFn  = Adapt<MapAdapter<i2D<T>>, dense2DRoundRobinMap<T>>;
+using dense2DRRMapFn  = Adapt<MapAdapter<i2D<T>>, dense2DRoundRobinMap<T>, i2D<T>>;
 template <typename T = IdxBase>
-using dense3DRRMapFn  = Adapt<MapAdapter<i3D<T>>, dense3DRoundRobinMap<T>>;
+using dense3DRRMapFn  = Adapt<MapAdapter<i3D<T>>, dense3DRoundRobinMap<T>, i3D<T>>;
 template <typename T = IdxBase>
-using dense1DBlkMapFn = Adapt<MapAdapter<i1D<T>>, dense1DBlockMap<T>>;
+using dense1DBlkMapFn = Adapt<MapAdapter<i1D<T>>, dense1DBlockMap<T>, i1D<T>>;
 template <typename T = IdxBase>
-using dense2DBlkMapFn = Adapt<MapAdapter<i2D<T>>, dense2DBlockMap<T>>;
+using dense2DBlkMapFn = Adapt<MapAdapter<i2D<T>>, dense2DBlockMap<T>, i2D<T>>;
 template <typename T = IdxBase>
-using dense3DBlkMapFn = Adapt<MapAdapter<i3D<T>>, dense3DBlockMap<T>>;
+using dense3DBlkMapFn = Adapt<MapAdapter<i3D<T>>, dense3DBlockMap<T>, i3D<T>>;
 
 }}  // end namespace vt::mapping
 

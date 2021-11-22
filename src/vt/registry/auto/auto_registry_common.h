@@ -61,13 +61,190 @@
 
 namespace vt { namespace auto_registry {
 
-using AutoActiveType              = ActiveFnPtrType;
-using AutoActiveFunctorType       = ActiveFnPtrType;
-using AutoActiveVCType            = vrt::ActiveVirtualFnPtrType;
-using AutoActiveCollectionType    = vrt::collection::ActiveColFnPtrType;
-using AutoActiveCollectionMemType = vrt::collection::ActiveColMemberFnPtrType;
-using AutoActiveMapType           = mapping::ActiveMapFnPtrType;
-using AutoActiveMapFunctorType    = mapping::ActiveMapFnPtrType;
+struct SentinelObject {};
+
+struct BaseHandlersDispatcher {
+  virtual ~BaseHandlersDispatcher() = default;
+  virtual void dispatch(messaging::BaseMsg* msg, void* object) const = 0;
+};
+
+template <typename MsgT, typename HandlerT, typename ObjT>
+struct HandlersDispatcher final : BaseHandlersDispatcher {
+  explicit HandlersDispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) { }
+
+private:
+  template <typename T, typename = void>
+  struct DispatchImpl;
+
+  template <typename T>
+  using isActiveVoidFnType = std::enable_if_t<
+    std::is_same<
+      T,
+      ActiveVoidFnType*
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveVoidFnType<T>> {
+    static void run(MsgT*, void*, HandlerT han) { han(); }
+  };
+
+  template <typename T>
+  using isActiveTypedFnType = std::enable_if_t<
+    std::is_same<
+      T,
+      ActiveTypedFnType<MsgT>*
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveTypedFnType<T>> {
+    static void run(MsgT* msg, void*, HandlerT han) { han(msg); }
+  };
+
+  template <typename T>
+  using isActiveColTypedFnType = std::enable_if_t<
+    std::is_same<
+      T,
+      vrt::collection::ActiveColTypedFnType<MsgT, ObjT>*
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveColTypedFnType<T>> {
+    static void run(MsgT* msg, void* object, HandlerT han) {
+      auto elm = static_cast<ObjT*>(object);
+      han(msg, elm);
+    }
+  };
+
+  template <typename T>
+  using isActiveColMemberTypedFnType = std::enable_if_t<
+    std::is_same<
+      T,
+      vrt::collection::ActiveColMemberTypedFnType<MsgT, ObjT>
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveColMemberTypedFnType<T>> {
+    static void run(MsgT* msg, void* object, HandlerT han) {
+      auto elm = static_cast<ObjT*>(object);
+      (elm->*han)(msg);
+    }
+  };
+
+public:
+  void dispatch(messaging::BaseMsg* msg, void* object) const override {
+    DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
+  }
+
+private:
+  HandlerT fn_ptr_ = nullptr;
+};
+
+struct BaseMapsDispatcher {
+  virtual ~BaseMapsDispatcher() = default;
+  virtual NodeType dispatch(
+    index::BaseIndex* cur_idx_ptr,
+    index::BaseIndex* range_ptr,
+    NodeType num_nodes
+  ) const = 0;
+};
+
+template <typename IndexT, typename HandlerT>
+struct MapsDispatcher final : BaseMapsDispatcher {
+  explicit MapsDispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) { }
+
+private:
+  template <typename T, typename = void>
+  struct DispatchImpl;
+
+  template <typename T>
+  using isActiveMapFnPtrType = std::enable_if_t<
+    std::is_same<
+      T,
+      vt::mapping::ActiveMapTypedFnType<IndexT>*
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveMapFnPtrType<T>> {
+    static NodeType run(
+      IndexT* cur_idx_ptr,
+      IndexT* range_ptr,
+      NodeType num_nodes,
+      HandlerT han
+    ) {
+      return han(cur_idx_ptr, range_ptr, num_nodes);
+    }
+  };
+
+public:
+  NodeType dispatch(
+    index::BaseIndex* cur_idx_ptr,
+    index::BaseIndex* range_ptr,
+    NodeType num_nodes
+  ) const override {
+    return DispatchImpl<HandlerT>::run(
+      static_cast<IndexT*>(cur_idx_ptr),
+      static_cast<IndexT*>(range_ptr),
+      num_nodes,
+      fn_ptr_
+    );
+  }
+
+private:
+  HandlerT fn_ptr_ = nullptr;
+};
+
+struct BaseScatterDispatcher {
+  virtual ~BaseScatterDispatcher() = default;
+  virtual void dispatch(void* msg, void* object) const = 0;
+};
+
+template <typename MsgT, typename HandlerT, typename ObjT>
+struct ScatterDispatcher final : BaseScatterDispatcher {
+  explicit ScatterDispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) {}
+
+private:
+  template <typename T, typename = void>
+  struct DispatchImpl;
+
+  template <typename T>
+  using isActiveTypedFnType = std::enable_if_t<
+    std::is_same<
+      T,
+      ActiveTypedFnType<MsgT>*
+    >::value
+  >;
+
+  template <typename T>
+  struct DispatchImpl<T, isActiveTypedFnType<T>> {
+    static void run(MsgT* msg, void*, HandlerT han) { han(msg); }
+  };
+
+public:
+  void dispatch(void* msg, void* object) const override {
+    DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
+  }
+
+private:
+  HandlerT fn_ptr_ = nullptr;
+};
+
+using BaseHandlersDispatcherPtr = std::unique_ptr<BaseHandlersDispatcher>;
+using BaseMapsDispatcherPtr     = std::unique_ptr<BaseMapsDispatcher>;
+using BaseScatterDispatcherPtr  = std::unique_ptr<BaseScatterDispatcher>;
+
+using AutoActiveType              = BaseHandlersDispatcherPtr;
+using AutoActiveFunctorType       = BaseHandlersDispatcherPtr;
+using AutoActiveVCType            = BaseHandlersDispatcherPtr;
+using AutoActiveCollectionType    = BaseHandlersDispatcherPtr;
+using AutoActiveCollectionMemType = BaseHandlersDispatcherPtr;
+using AutoActiveMapType           = BaseMapsDispatcherPtr;
+using AutoActiveMapFunctorType    = BaseMapsDispatcherPtr;
+
 using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;
 using AutoActiveRDMAGetType       = ActiveRDMAGetFnPtrType;
 using AutoActiveRDMAPutType       = ActiveRDMAPutFnPtrType;
@@ -143,32 +320,33 @@ struct AutoRegInfo {
   #if vt_check_enabled(trace_enabled)
     trace::TraceEntryIDType event_id;
     AutoRegInfo(
-      FnT const& in_active_fun_t,
+      FnT in_active_fun_t,
       RegistrarGenInfo in_gen,
       trace::TraceEntryIDType const& in_event_id
-    ) : activeFunT(in_active_fun_t), gen_obj_idx_(std::move(in_gen)), event_id(in_event_id)
+    ) : activeFunT(std::move(in_active_fun_t)), gen_obj_idx_(std::move(in_gen)), event_id(in_event_id)
     { }
     AutoRegInfo(
       NumArgsTagType,
-      FnT const& in_active_fun_t,
+      FnT in_active_fun_t,
       trace::TraceEntryIDType const& in_event_id,
       NumArgsType const& in_args
-    ) : activeFunT(in_active_fun_t), args_(in_args), event_id(in_event_id)
+    ) : activeFunT(std::move(in_active_fun_t)), args_(in_args), event_id(in_event_id)
     { }
     trace::TraceEntryIDType theTraceID() const {
       return event_id;
     }
   #else
     explicit AutoRegInfo(
-      FnT const& in_active_fun_t,
+      FnT in_active_fun_t,
       RegistrarGenInfo in_gen
-    ) : activeFunT(in_active_fun_t), gen_obj_idx_(std::move(in_gen))
+    ) : activeFunT(std::move(in_active_fun_t)), gen_obj_idx_(std::move(in_gen))
     { }
+
     AutoRegInfo(
       NumArgsTagType,
-      FnT const& in_active_fun_t,
+      FnT in_active_fun_t,
       NumArgsType const& in_args
-    ) : activeFunT(in_active_fun_t), args_(in_args)
+    ) : activeFunT(std::move(in_active_fun_t)), args_(in_args)
     { }
   #endif
 
@@ -187,7 +365,7 @@ struct AutoRegInfo {
     return args_;
   }
 
-  FnT getFun() const {
+  FnT const& getFun() const {
     return activeFunT;
   }
 };
@@ -198,18 +376,19 @@ using AutoRegInfoType = AutoRegInfo<Fn>;
 template <typename RegInfoT>
 using RegContType = std::vector<AutoRegInfoType<RegInfoT>>;
 
-using AutoActiveContainerType              = RegContType<AutoActiveType>;
-using AutoActiveVCContainerType            = RegContType<AutoActiveVCType>;
-using AutoActiveCollectionContainerType    = RegContType<AutoActiveCollectionType>;
-using AutoActiveCollectionMemContainerType = RegContType<AutoActiveCollectionMemType>;
-using AutoActiveMapContainerType           = RegContType<AutoActiveMapType>;
-using AutoActiveMapFunctorContainerType    = RegContType<AutoActiveMapFunctorType>;
-using AutoActiveSeedMapContainerType       = RegContType<AutoActiveSeedMapType>;
-using AutoActiveFunctorContainerType       = RegContType<AutoActiveFunctorType>;
-using AutoActiveRDMAGetContainerType       = RegContType<AutoActiveRDMAGetType>;
-using AutoActiveRDMAPutContainerType       = RegContType<AutoActiveRDMAPutType>;
-using AutoActiveIndexContainerType         = RegContType<AutoActiveIndexType>;
-using AutoActiveObjGroupContainerType      = RegContType<AutoActiveObjGroupType>;
+using AutoActiveContainerType               = RegContType<AutoActiveType>;
+using AutoActiveVCContainerType             = RegContType<AutoActiveVCType>;
+using AutoActiveCollectionContainerType     = RegContType<AutoActiveCollectionType>;
+using AutoActiveCollectionMemContainerType  = RegContType<AutoActiveCollectionMemType>;
+using AutoActiveMapContainerType            = RegContType<AutoActiveMapType>;
+using AutoActiveMapFunctorContainerType     = RegContType<AutoActiveMapFunctorType>;
+using AutoActiveSeedMapContainerType        = RegContType<AutoActiveSeedMapType>;
+using AutoActiveFunctorContainerType        = RegContType<AutoActiveFunctorType>;
+using AutoActiveRDMAGetContainerType        = RegContType<AutoActiveRDMAGetType>;
+using AutoActiveRDMAPutContainerType        = RegContType<AutoActiveRDMAPutType>;
+using AutoActiveIndexContainerType          = RegContType<AutoActiveIndexType>;
+using AutoActiveObjGroupContainerType       = RegContType<AutoActiveObjGroupType>;
+using ScatterContainerType                  = RegContType<BaseScatterDispatcherPtr>;
 
 }} // end namespace vt::auto_registry
 

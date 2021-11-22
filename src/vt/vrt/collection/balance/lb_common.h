@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/timing/timing_type.h"
+#include "vt/messaging/message/message.h"
 
 #include <cstdlib>
 #include <unordered_map>
@@ -60,6 +61,14 @@ using ElementIDType = uint64_t;
 
 struct ElementIDStruct {
   using isByteCopyable = std::true_type;
+
+  ElementIDStruct() = default;
+  ElementIDStruct(
+    ElementIDType in_id, NodeType in_home_node, NodeType in_curr_node
+  ) : id(in_id),
+      home_node(in_home_node),
+      curr_node(in_curr_node)
+  { }
 
   // id must be unique across nodes
   ElementIDType id = 0;

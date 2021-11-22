@@ -90,6 +90,8 @@ using ActiveClosureFnType = std::function<void(vt::BaseMessage*)>;
 using ActiveFnType = void(vt::BaseMessage *);
 using ActiveFnPtrType = void(*)(vt::BaseMessage *);
 
+using ActiveVoidFnType = void();
+
 template <typename MessageT>
 using ActiveTypedFnType = void(MessageT *);
 
