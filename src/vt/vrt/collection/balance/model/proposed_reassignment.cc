@@ -56,12 +56,12 @@ void ReassignmentIterator::operator++()
 
       // We've run out of present objects, so move on to arrivals
       if (it_present == end)
-	break;
+        break;
 
       // The current object pointed at is not departing, so it will
       // still be present post-reassignment
       if (depart.find(*it_present) == depart.end())
-	return;
+        return;
     }
   }
 
@@ -88,8 +88,8 @@ bool ReassignmentIterator::operator!=(EndObjectIterator rhs) const
 }
 
 ReassignmentIterator::ReassignmentIterator(ObjectIterator &&present,
-					   LoadMapObjectIterator arriving,
-					   ProposedReassignment *p_in)
+                                           LoadMapObjectIterator arriving,
+                                           ProposedReassignment *p_in)
   : it_present(std::move(present))
   , it_arriving(arriving)
   , p(p_in)
@@ -97,12 +97,12 @@ ReassignmentIterator::ReassignmentIterator(ObjectIterator &&present,
 
 
 ProposedReassignment::ProposedReassignment(std::shared_ptr<balance::LoadModel> base,
-					   Reassignment reassignment)
+                                           Reassignment reassignment)
   : ComposedModel(base)
   , reassignment_(std::move(reassignment))
 {
   vtAssert(reassignment_.node_ == vt::theContext()->getNode(),
-	   "ProposedReassignment model needs to be applied to the present node's data");
+           "ProposedReassignment model needs to be applied to the present node's data");
 
   // Check invariants?
 
@@ -114,14 +114,17 @@ ProposedReassignment::ProposedReassignment(std::shared_ptr<balance::LoadModel> b
 
 ObjectIterator ProposedReassignment::begin()
 {
-  return {std::make_unique<ReassignmentIterator>(
-						 ComposedModel::begin(),
-						 LoadMapObjectIterator{
-						   reassignment_.arrive_.begin(),
-						   reassignment_.arrive_.end()
-						 },
-						 this
-						 )};
+  return {
+    std::make_unique<ReassignmentIterator>
+    (
+     ComposedModel::begin(),
+     LoadMapObjectIterator{
+       reassignment_.arrive_.begin(),
+       reassignment_.arrive_.end()
+     },
+     this
+     )
+  };
 }
 
 int ProposedReassignment::getNumObjects()
@@ -143,7 +146,7 @@ TimeType ProposedReassignment::getWork(ElementIDStruct object, PhaseOffset when)
 
   // Check this *after* arrivals to handle hypothetical self-migration
   vtAssert(reassignment_.depart_.find(object) == reassignment_.depart_.end(),
-	   "Departing object should not appear as a load query subject");
+           "Departing object should not appear as a load query subject");
 
   return ComposedModel::getWork(object, when);
 }

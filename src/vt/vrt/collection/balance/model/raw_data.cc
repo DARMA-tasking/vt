@@ -61,7 +61,7 @@ ObjectIterator RawData::begin() {
   auto iter = proc_load_->find(last_completed_phase_);
   if (iter != proc_load_->end()) {
     return {std::make_unique<LoadMapObjectIterator>(iter->second.cbegin(),
-						    iter->second.cend())};
+                                                    iter->second.cend())};
   } else {
     return {std::make_unique<LoadMapObjectIterator>(
       typename LoadMapType::const_iterator{},
@@ -93,7 +93,7 @@ int RawData::getNumSubphases() {
 TimeType RawData::getWork(ElementIDStruct object, PhaseOffset offset)
 {
   vtAssert(offset.phases < 0,
-	   "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
+           "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
   auto phase = getNumCompletedPhases() + offset.phases;
   return proc_load_->at(phase).at(object).get(offset);

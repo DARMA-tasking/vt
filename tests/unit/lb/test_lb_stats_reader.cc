@@ -89,7 +89,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   std::vector<ElementIDStruct> myElemList(numElements);
 
   for (size_t ii = 0; ii < numElements; ++ii) {
-	//--- Shift by 1 to avoid the null permID
+    //--- Shift by 1 to avoid the null permID
     myElemList[ii] = ElementIDStruct{
       getElemPermID(ii+1, this_node), this_node, this_node
     };

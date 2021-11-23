@@ -60,8 +60,8 @@ public:
   bool operator!=(EndObjectIterator rhs) const override;
 
   ReassignmentIterator(ObjectIterator &&present,
-		       LoadMapObjectIterator arriving,
-		       ProposedReassignment *p_in);
+                       LoadMapObjectIterator arriving,
+                       ProposedReassignment *p_in);
 
 private:
   ObjectIterator it_present;
