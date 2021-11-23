@@ -1,7 +1,7 @@
 include(CheckCXXCompilerFlag)
 
 macro(add_cxx_compiler_flag_if_supported flag)
-  check_cxx_compiler_flag("${flag}" flag_supported)
+  check_cxx_compiler_flag(${flag} flag_supported)
   if(flag_supported)
     list(APPEND VT_WARNING_FLAGS "${flag}")
   endif()
@@ -19,6 +19,16 @@ if(NOT DEFINED VT_WARNING_FLAGS)
 
   if (vt_werror_enabled)   # Treat warning as errors
   add_cxx_compiler_flag_if_supported("-Werror")
+  endif()
+
+  # Silence some spurious warnings on older compilers
+  if (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU" AND
+      CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6)
+    list(APPEND VT_WARNING_FLAGS -Wno-unused-variable)
+  endif()
+  if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" AND
+      CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6)
+    list(APPEND VT_WARNING_FLAGS -Wno-missing-braces)
   endif()
 endif()
 
