@@ -193,18 +193,12 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     strat->startLB(phase, base_proxy, model_.get(), stats, *comm, total_load);
   });
 
-  int32_t global_migration_count = 0;
+  std::unique_ptr<balance::Reassignment> reassignment = strat->normalizeReassignments();
 
-  runInEpochCollective("LBManager::runLB -> applyMigrations", [&] {
-    vt_debug_print(
-      terse, lb,
-      "LBManager: starting migrations\n"
-    );
-    strat->applyMigrations(strat->getTransfers(), [&](int32_t global_count) {
-      global_migration_count = global_count;
-    });
-  });
+  lb::BaseLB::applyReassignment(reassignment);
 
+  // FIXME: Actually reduce over the reassignments
+  int32_t global_migration_count = 1;
   // Inform the collection manager to rebuild spanning trees if needed
   if (global_migration_count != 0) {
     theCollection()->getTypelessHolder().invokeAllGroupConstructors();

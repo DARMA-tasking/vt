@@ -124,6 +124,8 @@ struct BaseLB {
   void notifyArriving(TransferMsg<ArriveListType>* msg);
   void arriveLoadSummary(TransferMsg<DepartListType>* msg);
 
+  static void applyReassignment(const std::unique_ptr<balance::Reassignment> &reassignment);
+
   void applyMigrations(
     TransferVecType const& transfers, MigrationCountCB migration_count_callback
   );
