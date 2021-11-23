@@ -208,14 +208,12 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
   }
 
   runInEpochCollective("BaseLB -> sendMigrateOthers", [&]{
-    if (migrate_other.size() > 0) {
-      using ObjListMsgType = TransferMsg<ObjListType>;
+    using ObjListMsgType = TransferMsg<ObjListType>;
 
-      for (auto&& other : migrate_other) {
-        auto const dest = std::get<0>(other);
-        auto const& vec = std::get<1>(other);
-        proxy_[dest].template send<ObjListMsgType, &BaseLB::notifyMigrating>(vec);
-      }
+    for (auto&& other : migrate_other) {
+      auto const dest = std::get<0>(other);
+      auto const& vec = std::get<1>(other);
+      proxy_[dest].template send<ObjListMsgType, &BaseLB::notifyMigrating>(vec);
     }
   });
 
