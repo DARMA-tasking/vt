@@ -178,9 +178,8 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
 std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
   using namespace balance;
 
-  Reassignment& r = *pending_reassignment_.get();
-
-  r.node_ = theContext()->getNode();
+  auto this_node = theContext()->getNode();
+  pending_reassignment_->node_ = this_node;
 
   std::map<NodeType, ObjListType> migrate_other;
 
@@ -196,12 +195,12 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
     }
 
     // the object lives here, so it's departing.
-    if (current_node == r.node_) {
-      r.depart_[obj_id] = new_node;
-    } else if (new_node == r.node_) {
+    if (current_node == this_node) {
+      pending_reassignment_->depart_[obj_id] = new_node;
+    } else if (new_node == this_node) {
       // the object's new location is here---so it's arriving---but we don't
       // have the data most likely for it, so we will receive it later
-      r.arrive_[obj_id] = {};
+      pending_reassignment_->arrive_[obj_id] = {};
     } else {
       // The user has specified a migration neither on the send nor the receive side
       migrate_other[current_node].push_back(obj_id);
@@ -227,7 +226,7 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
     using DepartMsgType = TransferMsg<DepartListType>;
     std::map<NodeType, DepartListType> depart_map;
 
-    for (auto&& departing : r.depart_) {
+    for (auto&& departing : pending_reassignment_->depart_) {
       auto const obj_id = std::get<0>(departing);
       auto const dest = std::get<1>(departing);
       auto const load_summary = getObjectLoads(
@@ -247,10 +246,10 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
     using ArriveMsgType = TransferMsg<ArriveListType>;
     std::map<NodeType, ArriveListType> arrive_map;
 
-    for (auto&& arriving : r.arrive_) {
+    for (auto&& arriving : pending_reassignment_->arrive_) {
       auto const obj_id = std::get<0>(arriving);
       auto const current_node = obj_id.curr_node;
-      arrive_map[current_node].push_back(std::make_tuple(obj_id, r.node_));
+      arrive_map[current_node].push_back(std::make_tuple(obj_id, this_node));
     }
 
     for (auto&& arrive_list : arrive_map) {
@@ -285,7 +284,6 @@ void BaseLB::notifyArriving(TransferMsg<ArriveListType>* msg) {
   using namespace balance;
 
   auto const& depart_list = msg->getTransfer();
-  auto& r = *pending_reassignment_.get();
 
   NodeType from = uninitialized_destination;
   DepartListType summary;
@@ -294,7 +292,7 @@ void BaseLB::notifyArriving(TransferMsg<ArriveListType>* msg) {
   for (auto&& depart : depart_list) {
     auto const obj_id = std::get<0>(depart);
     auto const& new_node = std::get<1>(depart);
-    r.depart_[obj_id] = new_node;
+    pending_reassignment_->depart_[obj_id] = new_node;
     from = obj_id.curr_node;
     summary.push_back(
       std::make_tuple(obj_id, getObjectLoads(
@@ -308,12 +306,11 @@ void BaseLB::notifyArriving(TransferMsg<ArriveListType>* msg) {
 }
 
 void BaseLB::arriveLoadSummary(TransferMsg<DepartListType>* msg) {
-  auto& r = *pending_reassignment_.get();
   auto const& arrive_list = msg->getTransfer();
   for (auto&& elm : arrive_list) {
     auto const obj_id = std::get<0>(elm);
     auto const load_sum = std::get<1>(elm);
-    r.arrive_[obj_id] = load_sum;
+    pending_reassignment_->arrive_[obj_id] = load_sum;
   }
 }
 
