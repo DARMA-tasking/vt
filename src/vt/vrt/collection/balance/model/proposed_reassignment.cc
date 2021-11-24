@@ -46,69 +46,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-// Invariant: points either to an element that satisfies filter, or to end
-struct FilterIterator : public ObjectIteratorImpl
-{
-  FilterIterator(ObjectIterator&& in_it, std::function<bool(ElementIDStruct)>&& in_filter)
-    : it(std::move(in_it))
-    , filter(std::move(in_filter))
-  {
-    advanceToNext();
-  }
-
-  // Satisfy the invariant at initialization or increment
-  void advanceToNext() {
-    while (it.isValid() && !filter(*it)) {
-      ++it;
-    }
-  }
-
-  void operator++() override {
-    ++it;
-    advanceToNext();
-  }
-  value_type operator*() const override { return *it; }
-  bool isValid() const override { return it.isValid(); }
-
-  ObjectIterator it;
-  std::function<bool(ElementIDStruct)> filter;
-};
-
-struct ConcatenatedIterator : public ObjectIteratorImpl
-{
-  ConcatenatedIterator(ObjectIterator&& in_it1, ObjectIterator&& in_it2)
-    : it1(std::move(in_it1))
-    , it2(std::move(in_it2))
-  { }
-
-  void operator++() override
-  {
-    if (it1.isValid()) {
-      ++it1;
-      return;
-    }
-
-    if (it2.isValid()) {
-      ++it2;
-    }
-  }
-
-  value_type operator*() const override
-  {
-    if (it1.isValid())
-      return *it1;
-    else
-      return *it2;
-  }
-
-  bool isValid() const override
-  {
-    return it1.isValid() || it2.isValid();
-  }
-
-  ObjectIterator it1, it2;
-};
-
 ProposedReassignment::ProposedReassignment(std::shared_ptr<balance::LoadModel> base,
                                            std::shared_ptr<const Reassignment> reassignment)
   : ComposedModel(base)
