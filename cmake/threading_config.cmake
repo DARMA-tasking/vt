@@ -14,15 +14,6 @@ function(config_for_openmp)
   set(vt_fcontext_enabled "0" PARENT_SCOPE)
 
   set(LOCAL_THREADS_DEPENDENCY "find_dependency(OpenMP REQUIRED)" PARENT_SCOPE)
-
-  #
-  # The OpenMP compiler and linker flags are handled through the target instead
-  # of manually setting the flags for VT:
-  #
-  # string(APPEND VT_TARGET_CXX_FLAGS ${OpenMP_CXX_FLAGS})
-  # set(VT_TARGET_CXX_FLAGS "${VT_TARGET_CXX_FLAGS}" PARENT_SCOPE)
-  # string(APPEND VT_TARGET_LINKER_FLAGS ${OpenMP_EXE_LINKER_FLAGS})
-  # set(VT_TARGET_LINKER_FLAGS "${VT_TARGET_LINKER_FLAGS}" PARENT_SCOPE)
 endfunction(config_for_openmp)
 
 function(config_for_std_thread)

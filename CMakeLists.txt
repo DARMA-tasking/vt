@@ -11,15 +11,17 @@ cmake_policy(SET CMP0082 NEW)
 
 get_directory_property(hasParent PARENT_DIRECTORY)
 
-include(cmake/turn_on_warnings.cmake)
-
 include(cmake/check_system_functions.cmake)
 
 set(VIRTUAL_TRANSPORT_LIBRARY vt CACHE INTERNAL "" FORCE )
 set(FCONTEXT_LIBRARY fcontext)
 
 # Set the local module path so custom cmake scripts can be located automatically
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules/")
+set(
+  CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules/"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
+)
 
 # Try to find ccache to speed up compilation
 find_program(ccache_binary ccache)
@@ -31,14 +33,13 @@ if (ccache_binary)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${ccache_binary}")
 endif()
 
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   add_compile_options(-fdiagnostics-color=always)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   add_compile_options(-fcolor-diagnostics)
 endif()
-
-include(SetCXXCompilerFlags)
-set_darma_compiler_flags()
 
 # Code coverage option of VT
 option(CODE_COVERAGE "Enable coverage reporting" OFF)
@@ -90,11 +91,7 @@ option(vt_mimalloc_enabled "Build VT with mimalloc" OFF)
 option(vt_mimalloc_static "Build VT with mimalloc using static linking" ON)
 option(vt_asan_enabled "Build VT with address sanitizer" OFF)
 option(vt_ubsan_enabled "Build VT with undefined behavior sanitizer" OFF)
-
 option(vt_werror_enabled "Build VT with -Werror enabled" OFF)
-if (vt_werror_enabled)
-  enable_cxx_compiler_flag_if_supported("-Werror")
-endif()
 
 include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 include(cmake/load_bundled_libraries.cmake)
