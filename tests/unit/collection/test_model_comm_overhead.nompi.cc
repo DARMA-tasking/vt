@@ -162,8 +162,7 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
     test_model->updateLoads(num_phases);
     int objects_seen = 0;
 
-    for (auto it = test_model->begin(); it != test_model->end(); ++it) {
-      auto &&obj = *it;
+    for (auto&& obj : *test_model) {
       EXPECT_TRUE(obj.id == 2);
       ++objects_seen;
 

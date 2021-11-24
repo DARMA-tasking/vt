@@ -96,8 +96,7 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
     EXPECT_EQ(test_model->getNumPastPhasesNeeded(2*iter), 2*iter);
 
     int objects_seen = 0;
-    for (auto it = test_model->begin(); it != test_model->end(); ++it) {
-      auto &&obj = *it;
+    for (auto&& obj : *test_model) {
       EXPECT_TRUE(obj.id == 1 || obj.id == 2);
       objects_seen++;
 

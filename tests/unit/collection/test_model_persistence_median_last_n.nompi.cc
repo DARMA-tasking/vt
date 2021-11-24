@@ -147,8 +147,7 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
     test_model->updateLoads(iter);
     ++num_phases;
 
-    for (auto it = test_model->begin(); it != test_model->end(); ++it) {
-      auto &&obj = *it;
+    for (auto&& obj : *test_model) {
       auto work_val = test_model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
       EXPECT_EQ(
         work_val,

@@ -74,8 +74,7 @@ void RotateLB::runLB(TimeType) {
     fflush(stdout);
   }
 
-  for (auto it = load_model_->begin(); it != load_model_->end(); ++it) {
-    auto obj = *it;
+  for (auto obj : *load_model_) {
     auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
     vt_debug_print(
       terse, lb,

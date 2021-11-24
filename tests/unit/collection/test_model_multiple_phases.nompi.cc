@@ -118,8 +118,7 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   test_model->setLoads(&proc_loads, nullptr);
   test_model->updateLoads(3);
 
-  for (auto it = test_model->begin(); it != test_model->end(); ++it) {
-    auto &&obj = *it;
+  for (auto&& obj : *test_model) {
     auto work_val = test_model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
     EXPECT_EQ(work_val, obj.id == 1 ? TimeType{100} : TimeType{85});
   }

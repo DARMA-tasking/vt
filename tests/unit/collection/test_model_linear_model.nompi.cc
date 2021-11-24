@@ -148,8 +148,7 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
     test_model->updateLoads(num_phases);
     ++num_phases;
 
-    for (auto it = test_model->begin(); it != test_model->end(); ++it) {
-      auto &&obj = *it;
+    for (auto&& obj : *test_model) {
       auto work_val = test_model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
       EXPECT_EQ(
         work_val,

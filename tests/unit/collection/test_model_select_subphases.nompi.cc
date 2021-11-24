@@ -140,8 +140,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
   for (unsigned int iter = 0; iter < num_subphases; ++iter) {
     int objects_seen = 0;
 
-    for (auto it = test_model->begin(); it != test_model->end(); ++it) {
-      auto &&obj = *it;
+    for (auto&& obj : *test_model) {
       EXPECT_TRUE(obj.id == 1 || obj.id == 2);
       ++objects_seen;
 
@@ -184,8 +183,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
 
   int objects_seen = 0;
 
-  for (auto it = test_model->begin(); it != test_model->end(); ++it) {
-    auto &&obj = *it;
+  for (auto&& obj : *test_model) {
     EXPECT_TRUE(obj.id == 1 || obj.id == 2);
     ++objects_seen;
 

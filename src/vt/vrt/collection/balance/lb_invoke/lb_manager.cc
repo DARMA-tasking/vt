@@ -433,8 +433,7 @@ void LBManager::computeStatistics(std::shared_ptr<LoadModel> model,
 
   total_load = 0.;
   std::vector<balance::LoadData> O_l;
-  for (auto it = model->begin(); it != model->end(); ++it) {
-    auto elm = *it;
+  for (auto elm : *model) {
     auto work = model->getWork(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
