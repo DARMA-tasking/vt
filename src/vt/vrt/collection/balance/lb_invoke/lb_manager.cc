@@ -195,6 +195,11 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
 
   auto reassignment = strat->normalizeReassignments();
 
+  auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
+  runInEpochCollective("LBManager::runLB -> computeStats", [=] {
+    computeStatistics(proposed, false, phase);
+  });
+
   lb::BaseLB::applyReassignment(reassignment);
 
   // FIXME: Actually reduce over the reassignments
