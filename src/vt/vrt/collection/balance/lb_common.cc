@@ -75,4 +75,18 @@ LoadSummary getObjectLoads(LoadModel* model,
   return ret;
 }
 
+LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when)
+{
+  LoadSummary ret;
+
+  auto subphases = model->getNumSubphases();
+  ret.subphase_loads.resize(subphases, 0.0);
+
+  for (auto it = model->begin(); it != model->end(); ++it) {
+    ret += getObjectLoads(model, *it, when);
+  }
+
+  return ret;
+}
+
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -131,8 +131,8 @@ struct PhaseOffset {
 
 struct LoadSummary
 {
-  TimeType whole_phase_load;
-  std::vector<TimeType> subphase_loads;
+  TimeType whole_phase_load = 0.0;
+  std::vector<TimeType> subphase_loads = {};
 
   TimeType get(PhaseOffset when) const
   {
@@ -140,6 +140,15 @@ struct LoadSummary
       return whole_phase_load;
     else
       return subphase_loads.at(when.subphase);
+  }
+
+  void operator += (const LoadSummary& rhs) {
+    vtAssert(subphase_loads.size() == rhs.subphase_loads.size(),
+             "Subphase counts must match");
+
+    whole_phase_load += rhs.whole_phase_load;
+    for (size_t i = 0; i < subphase_loads.size(); ++i)
+      subphase_loads[i] += rhs.subphase_loads[i];
   }
 
   template <typename SerializerT>
@@ -169,6 +178,7 @@ LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
 LoadSummary getObjectLoads(LoadModel* model,
                            ElementIDStruct object, PhaseOffset when);
 
+LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when);
 } /* end namespace balance */
 
 namespace lb {
