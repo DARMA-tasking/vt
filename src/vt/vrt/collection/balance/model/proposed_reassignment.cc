@@ -46,55 +46,72 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void ReassignmentIterator::operator++()
+// Invariant: points either to an element that satisfies filter, or to end
+struct FilterIterator : public ObjectIteratorImpl
 {
-  auto end = EndObjectIterator{};
-  if (it_present != end) {
-    const auto& depart = p->reassignment_->depart_;
-    while (true) {
-      ++it_present;
+  FilterIterator(ObjectIterator&& in_it, std::function<bool(ElementIDStruct)>&& in_filter)
+    : it(std::move(in_it))
+    , filter(std::move(in_filter))
+  {
+    advanceToNext();
+  }
 
-      // We've run out of present objects, so move on to arrivals
-      if (it_present == end)
-        break;
-
-      // The current object pointed at is not departing, so it will
-      // still be present post-reassignment
-      if (depart.find(*it_present) == depart.end())
-        return;
+  // Satisfy the invariant at initialization or increment
+  void advanceToNext() {
+    while (it != EndObjectIterator{} && !filter(*it)) {
+      ++it;
     }
   }
 
-  if (it_arriving != end)
-    ++it_arriving;
-}
+  void operator++() override {
+    ++it;
+    advanceToNext();
+  }
+  value_type operator*() const override { return *it; }
+  bool operator==(EndObjectIterator end) const override { return it == end; }
+  bool operator!=(EndObjectIterator end) const override { return it != end; }
 
-ReassignmentIterator::value_type ReassignmentIterator::operator*() const
+  ObjectIterator it;
+  std::function<bool(ElementIDStruct)> filter;
+};
+
+struct ConcatenatedIterator : public ObjectIteratorImpl
 {
-  if (it_present != EndObjectIterator{})
-    return *it_present;
-  else
-    return *it_arriving;
-}
+  ConcatenatedIterator(ObjectIterator&& in_it1, ObjectIterator&& in_it2)
+    : it1(std::move(in_it1))
+    , it2(std::move(in_it2))
+  { }
 
-bool ReassignmentIterator::operator==(EndObjectIterator rhs) const
-{
-  return it_present == rhs && it_arriving == rhs;
-}
+  void operator++() override
+  {
+    if (it1 != EndObjectIterator{}) {
+      ++it1;
+      return;
+    }
 
-bool ReassignmentIterator::operator!=(EndObjectIterator rhs) const
-{
-  return !(*this == rhs);
-}
+    if (it2 != EndObjectIterator{}) {
+      ++it2;
+    }
+  }
 
-ReassignmentIterator::ReassignmentIterator(ObjectIterator &&present,
-                                           LoadMapObjectIterator arriving,
-                                           ProposedReassignment *p_in)
-  : it_present(std::move(present))
-  , it_arriving(arriving)
-  , p(p_in)
-{ }
+  value_type operator*() const override
+  {
+    if (it1 != EndObjectIterator{})
+      return *it1;
+    else
+      return *it2;
+  }
+  bool operator==(EndObjectIterator rhs) const override
+  {
+    return it1 == rhs && it2 == rhs;
+  }
+  bool operator!=(EndObjectIterator rhs) const override
+  {
+    return !(*this == rhs);
+  }
 
+  ObjectIterator it1, it2;
+};
 
 ProposedReassignment::ProposedReassignment(std::shared_ptr<balance::LoadModel> base,
                                            std::shared_ptr<const Reassignment> reassignment)
@@ -115,14 +132,20 @@ ProposedReassignment::ProposedReassignment(std::shared_ptr<balance::LoadModel> b
 ObjectIterator ProposedReassignment::begin()
 {
   return {
-    std::make_unique<ReassignmentIterator>
+    std::make_unique<ConcatenatedIterator>
     (
-     ComposedModel::begin(),
-     LoadMapObjectIterator{
-       reassignment_->arrive_.begin(),
-       reassignment_->arrive_.end()
-     },
-     this
+     ObjectIterator{std::make_unique<LoadMapObjectIterator>
+         (
+          reassignment_->arrive_.begin(),
+          reassignment_->arrive_.end()
+          )},
+     ObjectIterator{std::make_unique<FilterIterator>
+         (
+          ComposedModel::begin(),
+          [this](ElementIDStruct elm) {
+            return reassignment_->depart_.find(elm) == reassignment_->depart_.end();
+          }
+          )}
      )
   };
 }
