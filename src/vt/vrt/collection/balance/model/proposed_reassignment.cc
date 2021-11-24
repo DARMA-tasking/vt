@@ -50,7 +50,7 @@ void ReassignmentIterator::operator++()
 {
   auto end = EndObjectIterator{};
   if (it_present != end) {
-    const auto& depart = p->reassignment_.depart_;
+    const auto& depart = p->reassignment_->depart_;
     while (true) {
       ++it_present;
 
@@ -97,11 +97,11 @@ ReassignmentIterator::ReassignmentIterator(ObjectIterator &&present,
 
 
 ProposedReassignment::ProposedReassignment(std::shared_ptr<balance::LoadModel> base,
-                                           Reassignment reassignment)
+                                           std::shared_ptr<const Reassignment> reassignment)
   : ComposedModel(base)
-  , reassignment_(std::move(reassignment))
+  , reassignment_(reassignment)
 {
-  vtAssert(reassignment_.node_ == vt::theContext()->getNode(),
+  vtAssert(reassignment_->node_ == vt::theContext()->getNode(),
            "ProposedReassignment model needs to be applied to the present node's data");
 
   // Check invariants?
@@ -119,8 +119,8 @@ ObjectIterator ProposedReassignment::begin()
     (
      ComposedModel::begin(),
      LoadMapObjectIterator{
-       reassignment_.arrive_.begin(),
-       reassignment_.arrive_.end()
+       reassignment_->arrive_.begin(),
+       reassignment_->arrive_.end()
      },
      this
      )
@@ -130,8 +130,8 @@ ObjectIterator ProposedReassignment::begin()
 int ProposedReassignment::getNumObjects()
 {
   int base = ComposedModel::getNumObjects();
-  int departing = reassignment_.depart_.size();
-  int arriving = reassignment_.arrive_.size();
+  int departing = reassignment_->depart_.size();
+  int arriving = reassignment_->arrive_.size();
 
   // This would handle self-migration without a problem
   return base - departing + arriving;
@@ -139,13 +139,13 @@ int ProposedReassignment::getNumObjects()
 
 TimeType ProposedReassignment::getWork(ElementIDStruct object, PhaseOffset when)
 {
-  auto a = reassignment_.arrive_.find(object);
-  if (a != reassignment_.arrive_.end()) {
+  auto a = reassignment_->arrive_.find(object);
+  if (a != reassignment_->arrive_.end()) {
     return a->second.get(when);
   }
 
   // Check this *after* arrivals to handle hypothetical self-migration
-  vtAssert(reassignment_.depart_.find(object) == reassignment_.depart_.end(),
+  vtAssert(reassignment_->depart_.find(object) == reassignment_->depart_.end(),
            "Departing object should not appear as a load query subject");
 
   return ComposedModel::getWork(object, when);

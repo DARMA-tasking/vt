@@ -76,7 +76,7 @@ struct BaseLB {
   using ObjListType      = std::vector<ObjIDType>;
 
   explicit BaseLB()
-    : pending_reassignment_(std::make_unique<balance::Reassignment>())
+    : pending_reassignment_(std::make_shared<balance::Reassignment>())
   { }
 
   BaseLB(BaseLB const &) = delete;
@@ -118,13 +118,13 @@ struct BaseLB {
    *
    * \return A normalized reassignment
    */
-  std::unique_ptr<balance::Reassignment> normalizeReassignments();
+  std::shared_ptr<const balance::Reassignment> normalizeReassignments();
   void notifyMigrating(TransferMsg<ObjListType>* msg);
   void notifyDeparting(TransferMsg<DepartListType>* msg);
   void notifyArriving(TransferMsg<ArriveListType>* msg);
   void arriveLoadSummary(TransferMsg<DepartListType>* msg);
 
-  static void applyReassignment(const std::unique_ptr<balance::Reassignment> &reassignment);
+  static void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reassignment);
 
   void applyMigrations(
     TransferVecType const& transfers, MigrationCountCB migration_count_callback
@@ -162,7 +162,7 @@ private:
   int32_t local_migration_count_                  = 0;
   MigrationCountCB migration_count_cb_            = nullptr;
   StatisticMapType const* base_stats_             = nullptr;
-  std::unique_ptr<balance::Reassignment> pending_reassignment_ = nullptr;
+  std::shared_ptr<balance::Reassignment> pending_reassignment_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

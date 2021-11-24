@@ -72,14 +72,14 @@ private:
 class ProposedReassignment : public ComposedModel
 {
   ProposedReassignment(std::shared_ptr<balance::LoadModel> base,
-                       Reassignment reassignment);
+                       std::shared_ptr<const Reassignment> reassignment);
 
   ObjectIterator begin() override;
   int getNumObjects() override;
   TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
 
  private:
-  Reassignment reassignment_;
+  std::shared_ptr<const Reassignment> reassignment_;
   friend class ReassignmentIterator;
 };
 

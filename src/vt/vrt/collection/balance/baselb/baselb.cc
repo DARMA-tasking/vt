@@ -121,7 +121,7 @@ void BaseLB::getArgs(PhaseType phase) {
   }
 }
 
-void BaseLB::applyReassignment(const std::unique_ptr<balance::Reassignment> &reassignment) {
+void BaseLB::applyReassignment(const std::shared_ptr<const balance::Reassignment> &reassignment) {
   runInEpochCollective([&] {
     auto from = theContext()->getNode();
 
@@ -140,7 +140,7 @@ void BaseLB::applyReassignment(const std::unique_ptr<balance::Reassignment> &rea
   });
 }
 
-std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
+std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
   using namespace balance;
 
   auto this_node = theContext()->getNode();
@@ -224,7 +224,7 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
     }
   });
 
-  return std::move(pending_reassignment_);
+  return pending_reassignment_;
 }
 
 void BaseLB::notifyMigrating(TransferMsg<ObjListType>* msg) {

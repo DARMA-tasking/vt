@@ -193,7 +193,7 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     strat->startLB(phase, base_proxy, model_.get(), stats, *comm, total_load);
   });
 
-  std::unique_ptr<balance::Reassignment> reassignment = strat->normalizeReassignments();
+  auto reassignment = strat->normalizeReassignments();
 
   lb::BaseLB::applyReassignment(reassignment);
 
