@@ -88,7 +88,6 @@ struct StubModel : LoadModel {
     return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(num_phases-1).begin(), proc_load_->at(num_phases-1).end())};
   }
 
-  virtual int getNumObjects() override { return 2; }
   virtual unsigned int getNumCompletedPhases() override { return num_phases; }
   virtual int getNumSubphases() override { return 1; }
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }

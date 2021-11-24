@@ -180,7 +180,11 @@ public:
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual int getNumObjects() = 0;
+  virtual int getNumObjects() {
+    int count = 0;
+    for (auto it = begin(); it != end(); ++it, ++count) {}
+    return count;
+  }
 
   /**
    * Returns the number of phases of history available

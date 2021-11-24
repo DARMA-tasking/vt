@@ -103,7 +103,6 @@ struct StubModel : LoadModel {
   unsigned int getNumCompletedPhases() override { return num_phases; }
 
   // Not used in this test
-  int getNumObjects() override { return 0; }
   int getNumSubphases() override { return 0; }
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
 

@@ -435,10 +435,17 @@ void ZoltanLB::setParams() {
 }
 
 std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
+  // Insert local load objs into a std::set to get a deterministic order to
+  // traverse them for building the graph consistenly
+  std::set<ObjIDType> load_objs;
+  for (auto it = load_model_->begin(); it != load_model_->end(); ++it) {
+    load_objs.insert(*it);
+  }
+
   auto graph = std::make_unique<Graph>();
 
   // Number of local vertices (overdecomposed blocks) on this node
-  graph->num_vertices = load_model_->getNumObjects();
+  graph->num_vertices = load_objs.size();
 
   // Allocate space for each vertex to describe it
   graph->vertex_gid = std::make_unique<ZOLTAN_ID_TYPE[]>(graph->num_vertices);
@@ -452,13 +459,6 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
     "ObjIDType must be exactly the same size as ZOLTAN_ID_TYPE\n"
     "Please recompile with \"-D Zoltan_ENABLE_ULLONG_IDS:Bool=ON\""
   );
-
-  // Insert local load objs into a std::set to get a deterministic order to
-  // traverse them for building the graph consistenly
-  std::set<ObjIDType> load_objs;
-  for (auto it = load_model_->begin(); it != load_model_->end(); ++it) {
-    load_objs.insert(*it);
-  }
 
   // Initialize all the local vertices with global id
   {
