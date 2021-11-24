@@ -175,7 +175,7 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
   });
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    computeStatistics(false, phase);
+    computeStatistics(model_, false, phase);
   });
 
   runInEpochCollective("LBManager::runLB -> startLB", [=] {
@@ -413,7 +413,8 @@ void LBManager::statsHandler(StatsMsgType* msg) {
   }
 }
 
-void LBManager::computeStatistics(bool comm_collectives, PhaseType phase) {
+void LBManager::computeStatistics(std::shared_ptr<LoadModel> model,
+                                  bool comm_collectives, PhaseType phase) {
   vt_debug_print(
     normal, lb,
     "computeStatistics\n"
@@ -427,9 +428,9 @@ void LBManager::computeStatistics(bool comm_collectives, PhaseType phase) {
 
   total_load = 0.;
   std::vector<balance::LoadData> O_l;
-  for (auto it = model_->begin(); it != model_->end(); ++it) {
+  for (auto it = model->begin(); it != model->end(); ++it) {
     auto elm = *it;
-    auto work = model_->getWork(
+    auto work = model->getWork(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
     O_l.emplace_back(LoadData{lb::Statistic::O_l, work});
