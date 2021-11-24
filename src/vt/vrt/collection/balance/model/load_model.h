@@ -51,11 +51,6 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 class ObjectIterator;
-struct EndObjectIterator {
-  // Take rhs by reference to enable virtual dispatch and avoid slicing
-  bool operator==(const ObjectIterator& rhs) const;
-  bool operator!=(const ObjectIterator& rhs) const;
-};
 
 struct ObjectIteratorImpl
 {
@@ -66,8 +61,7 @@ struct ObjectIteratorImpl
 
   virtual void operator++() = 0;
   virtual value_type operator*() const = 0;
-  virtual bool operator==(EndObjectIterator rhs) const = 0;
-  virtual bool operator!=(EndObjectIterator rhs) const = 0;
+  virtual bool isValid() const = 0;
 };
 
 class LoadMapObjectIterator : public ObjectIteratorImpl
@@ -80,8 +74,7 @@ public:
   LoadMapObjectIterator(map_iterator_type in, map_iterator_type in_end) : i(in), end(in_end) { }
   void operator++() override { ++i; }
   value_type operator*() const override { return i->first; }
-  bool operator==(EndObjectIterator rhs) const override { return i == end; }
-  bool operator!=(EndObjectIterator rhs) const override { return i != end; }
+  bool isValid() const override { return i != end; }
 };
 
 class ObjectIterator {
@@ -90,14 +83,23 @@ public:
   ObjectIterator(std::unique_ptr<ObjectIteratorImpl>&& in_impl)
     : impl(std::move(in_impl))
   { }
-  void operator++() { ++(*impl); }
-  ElementIDStruct operator*() const { return **impl; }
-  bool operator==(EndObjectIterator rhs) const { return *impl == rhs; }
-  bool operator!=(EndObjectIterator rhs) const { return *impl != rhs; }
+  ObjectIterator(nullptr_t)
+    : impl(nullptr)
+  { }
+  void operator++() {
+    vtAssert(isValid(), "Can only increment a valid iterator");
+    ++(*impl);
+  }
+  ElementIDStruct operator*() const {
+    vtAssert(isValid(), "Can only increment a valid iterator");
+    return **impl;
+  }
+  bool isValid() const { return impl && impl->isValid(); }
+  bool operator!=(const ObjectIterator& rhs) const {
+    vtAssert(rhs.impl == nullptr, "Can only compare against an end() iterator");
+    return isValid();
+  }
 };
-
-inline bool EndObjectIterator::operator==(const ObjectIterator& rhs) const { return rhs == *this; }
-inline bool EndObjectIterator::operator!=(const ObjectIterator& rhs) const { return rhs != *this; }
 
 /**
  * \brief Interface for transforming measurements of past object loads
@@ -172,7 +174,7 @@ public:
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  EndObjectIterator end() { return EndObjectIterator{}; }
+  ObjectIterator end() { return ObjectIterator{nullptr}; }
 
   /**
    * Object enumeration, to abstract away access to the underlying structures from NodeStats

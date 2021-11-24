@@ -60,7 +60,6 @@ struct ProposedReassignment : public ComposedModel
 
  private:
   std::shared_ptr<const Reassignment> reassignment_;
-  friend class ReassignmentIterator;
 };
 
 }}}}

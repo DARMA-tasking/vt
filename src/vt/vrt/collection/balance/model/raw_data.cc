@@ -63,10 +63,7 @@ ObjectIterator RawData::begin() {
     return {std::make_unique<LoadMapObjectIterator>(iter->second.cbegin(),
                                                     iter->second.cend())};
   } else {
-    return {std::make_unique<LoadMapObjectIterator>(
-      typename LoadMapType::const_iterator{},
-      typename LoadMapType::const_iterator{}
-      )};
+    return {nullptr};
   }
 }
 

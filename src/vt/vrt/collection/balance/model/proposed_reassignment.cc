@@ -58,7 +58,7 @@ struct FilterIterator : public ObjectIteratorImpl
 
   // Satisfy the invariant at initialization or increment
   void advanceToNext() {
-    while (it != EndObjectIterator{} && !filter(*it)) {
+    while (it.isValid() && !filter(*it)) {
       ++it;
     }
   }
@@ -68,8 +68,7 @@ struct FilterIterator : public ObjectIteratorImpl
     advanceToNext();
   }
   value_type operator*() const override { return *it; }
-  bool operator==(EndObjectIterator end) const override { return it == end; }
-  bool operator!=(EndObjectIterator end) const override { return it != end; }
+  bool isValid() const override { return it.isValid(); }
 
   ObjectIterator it;
   std::function<bool(ElementIDStruct)> filter;
@@ -84,30 +83,27 @@ struct ConcatenatedIterator : public ObjectIteratorImpl
 
   void operator++() override
   {
-    if (it1 != EndObjectIterator{}) {
+    if (it1.isValid()) {
       ++it1;
       return;
     }
 
-    if (it2 != EndObjectIterator{}) {
+    if (it2.isValid()) {
       ++it2;
     }
   }
 
   value_type operator*() const override
   {
-    if (it1 != EndObjectIterator{})
+    if (it1.isValid())
       return *it1;
     else
       return *it2;
   }
-  bool operator==(EndObjectIterator rhs) const override
+
+  bool isValid() const override
   {
-    return it1 == rhs && it2 == rhs;
-  }
-  bool operator!=(EndObjectIterator rhs) const override
-  {
-    return !(*this == rhs);
+    return it1.isValid() || it2.isValid();
   }
 
   ObjectIterator it1, it2;
