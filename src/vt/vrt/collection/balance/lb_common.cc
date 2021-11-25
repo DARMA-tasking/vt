@@ -44,6 +44,8 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
+#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/scheduler/scheduler.h"
 
 #include <ostream>
 #include <fmt/ostream.h>
@@ -87,6 +89,25 @@ LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when)
   }
 
   return ret;
+}
+
+void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reassignment) {
+  runInEpochCollective([&] {
+    auto from = theContext()->getNode();
+
+    for (auto&& departing_elm : reassignment->depart_) {
+      auto obj_id = departing_elm.first;
+      auto to = departing_elm.second;
+
+      vt_debug_print(
+                     normal, lb,
+                     "migrateObjectTo, obj_id={}, home={}, from={}, to={}\n",
+                     obj_id.id, obj_id.home_node, from, to
+                     );
+
+      theNodeStats()->migrateObjTo(obj_id, to);
+    }
+  });
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -200,7 +200,7 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     computeStatistics(proposed, false, phase);
   });
 
-  lb::BaseLB::applyReassignment(reassignment);
+  applyReassignment(reassignment);
 
   // FIXME: Actually reduce over the reassignments
   int32_t global_migration_count = 1;

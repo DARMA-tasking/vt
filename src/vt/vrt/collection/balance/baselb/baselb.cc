@@ -121,25 +121,6 @@ void BaseLB::getArgs(PhaseType phase) {
   }
 }
 
-void BaseLB::applyReassignment(const std::shared_ptr<const balance::Reassignment> &reassignment) {
-  runInEpochCollective([&] {
-    auto from = theContext()->getNode();
-
-    for (auto&& departing_elm : reassignment->depart_) {
-      auto obj_id = departing_elm.first;
-      auto to = departing_elm.second;
-
-      vt_debug_print(
-                     normal, lb,
-                     "migrateObjectTo, obj_id={}, home={}, from={}, to={}\n",
-                     obj_id.id, obj_id.home_node, from, to
-                     );
-
-      theNodeStats()->migrateObjTo(obj_id, to);
-    }
-  });
-}
-
 std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
   using namespace balance;
 

@@ -170,6 +170,8 @@ struct Reassignment
   std::unordered_map<ElementIDStruct, LoadSummary> arrive_;
 };
 
+void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reassignment);
+
 class LoadModel;
 
 LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
