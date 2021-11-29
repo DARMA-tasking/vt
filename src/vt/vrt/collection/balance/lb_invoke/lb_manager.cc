@@ -168,8 +168,6 @@ LBManager::makeLB() {
 
 void
 LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
-  lb::BaseLB* strat = base_proxy.get();
-
   runInEpochCollective("LBManager::runLB -> updateLoads", [=] {
     model_->updateLoads(phase);
   });
@@ -178,22 +176,17 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     computeStatistics(model_, false, phase);
   });
 
-  runInEpochCollective("LBManager::runLB -> startLB", [=] {
-    vt_debug_print(
-      terse, lb,
-      "LBManager: running strategy\n"
-    );
+  balance::CommMapType empty_comm;
+  balance::CommMapType const* comm = &empty_comm;
+  auto iter = theNodeStats()->getNodeComm()->find(phase);
+  if (iter != theNodeStats()->getNodeComm()->end()) {
+    comm = &iter->second;
+  }
 
-    balance::CommMapType empty_comm;
-    balance::CommMapType const* comm = &empty_comm;
-    auto iter = theNodeStats()->getNodeComm()->find(phase);
-    if (iter != theNodeStats()->getNodeComm()->end()) {
-      comm = &iter->second;
-    }
-    strat->startLB(phase, base_proxy, model_.get(), stats, *comm, total_load);
-  });
+  vt_debug_print(terse, lb, "LBManager: running strategy\n");
 
-  auto reassignment = strat->normalizeReassignments();
+  lb::BaseLB* strat = base_proxy.get();
+  auto reassignment = strat->startLB(phase, base_proxy, model_.get(), stats, *comm, total_load);
 
   auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {

@@ -59,7 +59,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-void BaseLB::startLB(
+std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   PhaseType phase,
   objgroup::proxy::Proxy<BaseLB> proxy,
   balance::LoadModel* model,
@@ -81,6 +81,8 @@ void BaseLB::startLB(
       runLB(total_load);
     }
   );
+
+  return normalizeReassignments();
 }
 
 /*static*/

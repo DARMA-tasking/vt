@@ -87,16 +87,16 @@ struct BaseLB {
   virtual ~BaseLB() = default;
 
   /**
-   * This must invoke the particular strategy implementations through
-   * virtual methods `initParams` and `runLB`
+   * This sets up and invokes the particular strategy implementations
+   * through virtual methods `initParams` and `runLB`, and then
+   * normalizes their output to a reassignment that can be evaluated
+   * and applied
    *
-   * This expects to be run within a collective epoch. When that epoch
-   * is complete, the concrete strategy implementation should have
-   * recorded a complete set of intended migrations in `transfers_`
-   * through calls to `migrateObjectTo`. Callers can then access that
-   * set using `getTransfers` and apply it using `applyMigrations`.
+   * This must be called collectively.
+   *
+   * \return A normalized reassignment
    */
-  void startLB(
+  std::shared_ptr<const balance::Reassignment> startLB(
     PhaseType phase,
     objgroup::proxy::Proxy<BaseLB> proxy,
     balance::LoadModel *model,
@@ -112,13 +112,6 @@ struct BaseLB {
   static LoadType loadMilli(LoadType const& load);
   NodeType objGetNode(ObjIDType const id) const;
 
-  /**
-   * \brief Normalizes the reassignment graph by setting up in/out edges on both
-   * sides regardless of how they are passed to \c migrateObjectTo
-   *
-   * \return A normalized reassignment
-   */
-  std::shared_ptr<const balance::Reassignment> normalizeReassignments();
   void notifyMigrating(TransferMsg<ObjListType>* msg);
   void notifyDeparting(TransferMsg<DepartListType>* msg);
   void notifyArriving(TransferMsg<ArriveListType>* msg);
@@ -155,6 +148,14 @@ protected:
   balance::LoadModel* load_model_                 = nullptr;
 
 private:
+  /**
+   * \brief Normalizes the reassignment graph by setting up in/out edges on both
+   * sides regardless of how they are passed to \c migrateObjectTo
+   *
+   * \return A normalized reassignment
+   */
+  std::shared_ptr<const balance::Reassignment> normalizeReassignments();
+
   TransferVecType transfers_                      = {};
   TransferType off_node_migrate_                  = {};
   int32_t local_migration_count_                  = 0;
