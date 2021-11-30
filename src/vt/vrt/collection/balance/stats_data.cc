@@ -74,18 +74,15 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
         }
       }
 
-      if (node_subphase_data_.find(phase) != node_subphase_data_.end()) {
-        if (node_subphase_data_.at(phase).find(id) != node_subphase_data_.at(phase).end()) {
-          auto const& subphase_times = node_subphase_data_.at(phase).at(id);
-          std::size_t const subphases = subphase_times.size();
-          if (subphases != 0) {
-            for (std::size_t s = 0; s < subphases; s++) {
-              j["tasks"][i]["subphases"][s]["id"] = s;
-              j["tasks"][i]["subphases"][s]["time"] = subphase_times[s];
-            }
-          }
+      auto const& subphase_times = elm.second.subphase_loads;
+      std::size_t const subphases = subphase_times.size();
+      if (subphases != 0) {
+        for (std::size_t s = 0; s < subphases; s++) {
+          j["tasks"][i]["subphases"][s]["id"] = s;
+          j["tasks"][i]["subphases"][s]["time"] = subphase_times[s];
         }
       }
+
       i++;
     }
   }
@@ -214,10 +211,6 @@ StatsData::StatsData(nlohmann::json const& j) {
                   vtAssertExpr(sid.is_number());
                   vtAssertExpr(stime.is_number());
 
-                  this->node_subphase_data_[id][elm].resize(
-                    static_cast<std::size_t>(sid) + 1
-                  );
-                  this->node_subphase_data_[id][elm][sid] = stime;
                   this->node_data_[id][elm].subphase_loads.resize(
                     static_cast<std::size_t>(sid) + 1);
                   this->node_data_[id][elm].subphase_loads[sid] = stime;
@@ -335,7 +328,6 @@ StatsData::StatsData(nlohmann::json const& j) {
 void StatsData::clear() {
   node_comm_.clear();
   node_data_.clear();
-  node_subphase_data_.clear();
   node_subphase_comm_.clear();
   node_idx_.clear();
 }

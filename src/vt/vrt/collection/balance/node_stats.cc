@@ -93,11 +93,6 @@ NodeStats::getNodeLoad() const {
   return &stats_->node_data_;
 }
 
-std::unordered_map<PhaseType, SubphaseLoadMapType> const*
-NodeStats::getNodeSubphaseLoad() const {
-  return &stats_->node_subphase_data_;
-}
-
 std::unordered_map<PhaseType, CommMapType> const* NodeStats::getNodeComm() const {
   return &stats_->node_comm_;
 }
@@ -115,7 +110,6 @@ void NodeStats::clearStats() {
 void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
   if (phase >= look_back) {
     stats_->node_data_.erase(phase - look_back);
-    stats_->node_subphase_data_.erase(phase - look_back);
     stats_->node_comm_.erase(phase - look_back);
     stats_->node_subphase_comm_.erase(phase - look_back);
   }
@@ -261,15 +255,6 @@ ElementIDStruct NodeStats::addNodeStats(
     std::piecewise_construct,
     std::forward_as_tuple(obj_id),
     std::forward_as_tuple(LoadSummary{time, subphase_time})
-  );
-
-  auto &subphase_data = stats_->node_subphase_data_[phase];
-  auto elm_subphase_iter = subphase_data.find(obj_id);
-  vtAssert(elm_subphase_iter == subphase_data.end(), "Must not exist");
-  subphase_data.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(obj_id),
-    std::forward_as_tuple(subphase_time)
   );
 
   auto &comm_data = stats_->node_comm_[phase];

@@ -366,8 +366,8 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
 
         std::vector<TimeType> dur_vec(2);
         dur_vec[i % 2] = dur;
-        sd.node_data_[phase][elm_id] = dur;
-        sd.node_subphase_data_[phase][elm_id] = dur_vec;
+        sd.node_data_[phase][elm_id].whole_phase_load = dur;
+        sd.node_data_[phase][elm_id].subphase_loads = dur_vec;
 
         LBCommKey ntockey(
           LBCommKey::NodeToCollectionTag{}, this_node, elm_id, false
@@ -441,98 +441,8 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
             auto read_load = read_load_map[read_elm_id];
             auto orig_load = entry.second;
             // @todo: make this a more robust floating point comparison
-            EXPECT_EQ(orig_load, read_load);
-            if (orig_load != read_load) {
-              fmt::print(
-                "Read whole-phase load {} but expected {} for id={} "
-                "on phase={}",
-                read_load, orig_load, read_elm_id.id, phase
-              );
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // subphase loads
-  EXPECT_EQ(sd_read.node_subphase_data_.size(), sd.node_subphase_data_.size());
-  if (sd_read.node_subphase_data_.size() != sd.node_subphase_data_.size()) {
-    fmt::print(
-      "Wrote {} phases of subphase load data but read in {} phases",
-      sd.node_subphase_data_.size(), sd_read.node_subphase_data_.size()
-    );
-  } else {
-    // detailed comparison of subphase load data
-    for (auto &phase_data : sd.node_subphase_data_) {
-      auto phase = phase_data.first;
-      EXPECT_FALSE(
-        sd_read.node_subphase_data_.find(phase) ==
-        sd_read.node_subphase_data_.end()
-      );
-      if (
-        sd_read.node_subphase_data_.find(phase) ==
-        sd_read.node_subphase_data_.end()
-      ) {
-        fmt::print(
-          "Phase {} in subphase loads was not read in",
-          phase
-        );
-      } else {
-        auto &read_load_map = sd_read.node_subphase_data_[phase];
-        auto &orig_load_map = phase_data.second;
-        for (auto &entry : read_load_map) {
-          auto read_elm_id = entry.first;
-          EXPECT_FALSE(orig_load_map.find(read_elm_id) == orig_load_map.end());
-          if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
-            fmt::print(
-              "Unexpected element ID read in subphase loads on phase={}: "
-              "id={}, home={}, curr={}",
-              phase,
-              read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
-            );
-          } else {
-            auto orig_elm_id = orig_load_map.find(read_elm_id)->first;
-            EXPECT_EQ(read_elm_id.home_node, orig_elm_id.home_node);
-            EXPECT_EQ(read_elm_id.curr_node, orig_elm_id.curr_node);
-            if (
-              read_elm_id.home_node != orig_elm_id.home_node ||
-              read_elm_id.curr_node != orig_elm_id.curr_node
-            ) {
-              fmt::print(
-                "Corrupted element ID read in subphase loads on phase={}: "
-                "id={}, home={}, curr={} (expected id={}, home={}, curr={})",
-                phase,
-                read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node,
-                orig_elm_id.id, orig_elm_id.home_node, orig_elm_id.curr_node
-              );
-            } else {
-              auto read_subloads = read_load_map[read_elm_id];
-              auto orig_subloads = entry.second;
-              EXPECT_EQ(read_subloads.size(), orig_subloads.size());
-              if (read_subloads.size() != orig_subloads.size()) {
-                fmt::print(
-                  "Read {} subphase loads but expected {} for id={} "
-                  "on phase={}",
-                  read_subloads.size(), orig_subloads.size(), read_elm_id.id,
-                  phase
-                );
-              } else {
-                for (std::size_t i=0; i<orig_subloads.size(); ++i) {
-                  auto orig_subld = orig_subloads[i];
-                  auto read_subld = read_subloads[i];
-                  // @todo: make this a more robust floating point comparison
-                  EXPECT_EQ(orig_subld, read_subld);
-                  if (orig_subld != read_subld) {
-                    fmt::print(
-                      "Read subphase load {} but expected {} for id={} "
-                      "on phase={}",
-                      read_subld, orig_subld, read_elm_id.id, phase
-                    );
-                  }
-                }
-              }
-            }
+            EXPECT_EQ(orig_load.whole_phase_load, read_load.whole_phase_load);
+            EXPECT_EQ(orig_load.subphase_loads, read_load.subphase_loads);
           }
         }
       }

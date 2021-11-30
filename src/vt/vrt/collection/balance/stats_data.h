@@ -75,7 +75,6 @@ struct StatsData {
   void serialize(SerializerT& s) {
     s | node_data_;
     s | node_comm_;
-    s | node_subphase_data_;
     s | node_subphase_comm_;
     s | node_idx_;
   }
@@ -99,8 +98,6 @@ public:
   std::unordered_map<PhaseType, LoadMapType> node_data_;
   /// Node communication graph for each local object
   std::unordered_map<PhaseType, CommMapType> node_comm_;
-  /// Node subphase timings for each local object
-  std::unordered_map<PhaseType, SubphaseLoadMapType> node_subphase_data_;
   /// Node communication graph for each subphase
   std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// Node indices for each ID along with the proxy ID
