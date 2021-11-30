@@ -166,6 +166,9 @@ struct Reassignment
   // Include the subject node so that these structures can be formed
   // and passed through collectives
   NodeType node_;
+  // Global sum reduction result to let the system know whether any
+  // distributed structures need to be rebuilt
+  int32_t global_migration_count;
   std::unordered_map<ElementIDStruct, NodeType> depart_;
   std::unordered_map<ElementIDStruct, LoadSummary> arrive_;
 };

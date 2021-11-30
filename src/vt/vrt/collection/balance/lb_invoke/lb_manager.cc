@@ -195,10 +195,8 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
 
   applyReassignment(reassignment);
 
-  // FIXME: Actually reduce over the reassignments
-  int32_t global_migration_count = 1;
   // Inform the collection manager to rebuild spanning trees if needed
-  if (global_migration_count != 0) {
+  if (reassignment->global_migration_count != 0) {
     theCollection()->getTypelessHolder().invokeAllGroupConstructors();
   }
 

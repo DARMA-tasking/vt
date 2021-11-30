@@ -129,6 +129,13 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
   auto this_node = theContext()->getNode();
   pending_reassignment_->node_ = this_node;
 
+  runInEpochCollective("Sum migrations", [&] {
+    auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);
+    int32_t local_migration_count = transfers_.size();
+    auto msg = makeMessage<CountMsg>(local_migration_count);
+    proxy_.template reduce<collective::PlusOp<int32_t>>(msg,cb);
+  });
+
   std::map<NodeType, ObjListType> migrate_other;
 
   // Do local setup of reassignment data structure
@@ -271,6 +278,8 @@ void BaseLB::finalize(CountMsg* msg) {
   if (migration_count_cb_) {
     migration_count_cb_(global_count);
   }
+
+  pending_reassignment_->global_migration_count = global_count;
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const total_time = timing::Timing::getCurrentTime() - start_time_;
