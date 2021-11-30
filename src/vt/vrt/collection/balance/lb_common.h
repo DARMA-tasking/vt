@@ -96,13 +96,10 @@ static constexpr ElementIDType const no_element_id = 0;
 
 namespace std {
 
-using ElementIDStructType = vt::vrt::collection::balance::ElementIDStruct;
-using ElementIDMemberType = vt::vrt::collection::balance::ElementIDType;
-
 template <>
-struct hash<ElementIDStructType> {
-  size_t operator()(ElementIDStructType const& in) const {
-    return std::hash<ElementIDMemberType>()(in.id);
+struct hash<vt::vrt::collection::balance::ElementIDStruct> {
+  size_t operator()(vt::vrt::collection::balance::ElementIDStruct const& in) const {
+    return std::hash<vt::vrt::collection::balance::ElementIDType>()(in.id);
   }
 };
 
@@ -212,12 +209,11 @@ enum struct Statistic : int8_t {
 
 namespace std {
 
-using StatisticType = vt::vrt::collection::lb::Statistic;
-
 template <>
-struct hash<StatisticType> {
-  size_t operator()(StatisticType const& in) const {
-    using StatisticUnderType = typename std::underlying_type<StatisticType>::type;
+struct hash<vt::vrt::collection::lb::Statistic> {
+  size_t operator()(vt::vrt::collection::lb::Statistic const& in) const {
+    using StatisticUnderType =
+      typename std::underlying_type<vt::vrt::collection::lb::Statistic>::type;
     auto const val = static_cast<StatisticUnderType>(in);
     return std::hash<StatisticUnderType>()(val);
   }
