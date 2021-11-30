@@ -112,12 +112,6 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
        {id1, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
        {id2, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
 
-  ProcSubphaseLoadMap proc_subphase_load = {
-    {0,
-     SubphaseLoadMapType{
-       {id1, {TimeType{10}, TimeType{20}, TimeType{30}}},
-       {id2, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
-
   std::vector<unsigned int> subphases{2, 0, 1};
   auto test_model =
     std::make_shared<SelectSubphases>(std::make_shared<StubModel>(), subphases);
@@ -129,13 +123,13 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
 
   std::unordered_map<ElementIDStruct, std::vector<TimeType>> expected_values = {
     {id1,
-     {proc_subphase_load[0][id1][subphases[0]],
-      proc_subphase_load[0][id1][subphases[1]],
-      proc_subphase_load[0][id1][subphases[2]]}},
+     {proc_load[0][id1].subphase_loads[subphases[0]],
+      proc_load[0][id1].subphase_loads[subphases[1]],
+      proc_load[0][id1].subphase_loads[subphases[2]]}},
     {id2,
-     {proc_subphase_load[0][id2][subphases[0]],
-      proc_subphase_load[0][id2][subphases[1]],
-      proc_subphase_load[0][id2][subphases[2]]}}};
+     {proc_load[0][id2].subphase_loads[subphases[0]],
+      proc_load[0][id2].subphase_loads[subphases[1]],
+      proc_load[0][id2].subphase_loads[subphases[2]]}}};
 
   for (unsigned int iter = 0; iter < num_subphases; ++iter) {
     int objects_seen = 0;
@@ -161,12 +155,6 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
      LoadMapType{
        {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
        {ElementIDStruct{2,this_node,this_node}, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
-
-  ProcSubphaseLoadMap proc_subphase_load = {
-    {0,
-     SubphaseLoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, TimeType{20}, TimeType{30}}},
-       {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
 
   std::vector<unsigned int> subphases{2, 1};
   auto test_model =
