@@ -88,14 +88,20 @@ struct StubModel : LoadModel {
   }
 
   ObjectIterator begin() override {
-    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(0).begin(), proc_load_->at(0).end())};
+    return {
+      std::make_unique<LoadMapObjectIterator>(
+        proc_load_->at(0).begin(), proc_load_->at(0).end()
+      )
+    };
   }
 
   int getNumSubphases() override { return num_subphases; }
 
   // Not used in this test
   unsigned int getNumCompletedPhases() override { return 0; }
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override {
+    return look_back;
+  }
 
 private:
   ProcLoadMap const* proc_load_ = nullptr;
@@ -153,8 +159,13 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
-       {ElementIDStruct{2,this_node,this_node}, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
+       {ElementIDStruct{1,this_node,this_node},
+        {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
+       {ElementIDStruct{2,this_node,this_node},
+        {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}
+     }
+    }
+  };
 
   std::vector<unsigned int> subphases{2, 1};
   auto test_model =

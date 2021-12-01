@@ -73,7 +73,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   auto proxy = theObjGroup()->makeCollective<LBManager>(ptr.get());
   proxy.get()->setProxy(proxy);
 
-  ptr->base_model_ = std::make_shared<balance::NaivePersistence>(std::make_shared<balance::RawData>());
+  ptr->base_model_ = std::make_shared<balance::NaivePersistence>(
+    std::make_shared<balance::RawData>()
+  );
   ptr->setLoadModel(ptr->base_model_);
 
   return ptr;
@@ -186,7 +188,9 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
   vt_debug_print(terse, lb, "LBManager: running strategy\n");
 
   lb::BaseLB* strat = base_proxy.get();
-  auto reassignment = strat->startLB(phase, base_proxy, model_.get(), stats, *comm, total_load);
+  auto reassignment = strat->startLB(
+    phase, base_proxy, model_.get(), stats, *comm, total_load
+  );
 
   auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
@@ -409,8 +413,9 @@ void LBManager::statsHandler(StatsMsgType* msg) {
   }
 }
 
-void LBManager::computeStatistics(std::shared_ptr<LoadModel> model,
-                                  bool comm_collectives, PhaseType phase) {
+void LBManager::computeStatistics(
+  std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase
+) {
   vt_debug_print(
     normal, lb,
     "computeStatistics\n"

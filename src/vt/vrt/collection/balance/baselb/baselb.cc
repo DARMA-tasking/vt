@@ -75,13 +75,11 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
 
   importProcessorData(in_stats, in_comm_stats);
 
-  runInEpochCollective(
-    "BaseLB::startLB -> runLB", [this,total_load]{
-      getArgs(phase_);
-      inputParams(spec_entry_.get());
-      runLB(total_load);
-    }
-  );
+  runInEpochCollective("BaseLB::startLB -> runLB", [this,total_load]{
+    getArgs(phase_);
+    inputParams(spec_entry_.get());
+    runLB(total_load);
+  });
 
   return normalizeReassignments();
 }
@@ -168,10 +166,9 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
     for (auto&& other : migrate_other) {
       auto const current_host = std::get<0>(other);
       auto const& vec = std::get<1>(other);
-      proxy_[current_host].
-        template send<ArriveListMsgType,
-                      &BaseLB::notifyCurrentHostNodeOfObjectsDeparting>
-        (vec);
+      proxy_[current_host].template send<
+        ArriveListMsgType, &BaseLB::notifyCurrentHostNodeOfObjectsDeparting
+      >(vec);
     }
   });
 
@@ -197,7 +194,9 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
     for (auto&& depart_list : depart_map) {
       auto const dest = std::get<0>(depart_list);
       auto const& vec = std::get<1>(depart_list);
-      proxy_[dest].template send<DepartMsgType, &BaseLB::notifyNewHostNodeOfObjectsArriving>(vec);
+      proxy_[dest].template send<
+        DepartMsgType, &BaseLB::notifyNewHostNodeOfObjectsArriving
+      >(vec);
     }
   });
 
@@ -207,14 +206,18 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
   return pending_reassignment_;
 }
 
-void BaseLB::notifyCurrentHostNodeOfObjectsDeparting(TransferMsg<ObjDestinationListType>* msg) {
+void BaseLB::notifyCurrentHostNodeOfObjectsDeparting(
+  TransferMsg<ObjDestinationListType>* msg
+) {
   auto const& migrate_list = msg->getTransfer();
   for (auto&& obj : migrate_list) {
     pending_reassignment_->depart_[std::get<0>(obj)] = std::get<1>(obj);
   }
 }
 
-void BaseLB::notifyNewHostNodeOfObjectsArriving(TransferMsg<ObjLoadListType>* msg) {
+void BaseLB::notifyNewHostNodeOfObjectsArriving(
+  TransferMsg<ObjLoadListType>* msg
+) {
   auto const& arrival_list = msg->getTransfer();
 
   // Add arriving objects to our local reassignment list

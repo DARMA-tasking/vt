@@ -91,15 +91,18 @@ struct LoadMapObjectIterator : public ObjectIteratorImpl {
   using iterator_category = std::iterator_traits<map_iterator_type>::iterator_category;
   map_iterator_type i, end;
 
-  LoadMapObjectIterator(map_iterator_type in, map_iterator_type in_end) : i(in), end(in_end) { }
+  LoadMapObjectIterator(map_iterator_type in, map_iterator_type in_end)
+    : i(in), end(in_end)
+  { }
   void operator++() override { ++i; }
   value_type operator*() const override { return i->first; }
   bool isValid() const override { return i != end; }
 };
 
 struct FilterIterator : public ObjectIteratorImpl {
-  FilterIterator(ObjectIterator&& in_it, std::function<bool(ElementIDStruct)>&& in_filter)
-    : it(std::move(in_it))
+  FilterIterator(
+    ObjectIterator&& in_it, std::function<bool(ElementIDStruct)>&& in_filter
+  ) : it(std::move(in_it))
     , filter(std::move(in_filter))
   {
     advanceToNext();
@@ -174,8 +177,10 @@ struct LoadModel
    * This would typically be called by LBManager when the user has
    * passed a new model instance for a collection
    */
-  virtual void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                        std::unordered_map<PhaseType, CommMapType> const* proc_comm) = 0;
+  virtual void setLoads(
+    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+    std::unordered_map<PhaseType, CommMapType> const* proc_comm
+  ) = 0;
 
   /**
    * \brief Signals that load data for a new phase is available
@@ -218,14 +223,17 @@ struct LoadModel
   virtual unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) = 0;
 
   /**
-   * Object enumeration, to abstract away access to the underlying structures from NodeStats
+   * Object enumeration, to abstract away access to the underlying structures
+   * from NodeStats
    *
    * The `updateLoads` method must have been called before any call to
    * this.
    */
   virtual ObjectIterator begin() = 0;
+
   /**
-   * Object enumeration, to abstract away access to the underlying structures from NodeStats
+   * Object enumeration, to abstract away access to the underlying structures
+   * from NodeStats
    *
    * The `updateLoads` method must have been called before any call to
    * this.
@@ -233,7 +241,8 @@ struct LoadModel
   ObjectIterator end() { return ObjectIterator{nullptr}; }
 
   /**
-   * Object enumeration, to abstract away access to the underlying structures from NodeStats
+   * Object enumeration, to abstract away access to the underlying structures
+   * from NodeStats
    *
    * The `updateLoads` method must have been called before any call to
    * this.

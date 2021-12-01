@@ -76,8 +76,8 @@ struct BaseLB {
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
   using LoadSummary      = balance::LoadSummary;
-  using ObjLoadListType          = std::vector<std::tuple<ObjIDType, LoadSummary>>;
-  using ObjDestinationListType   = std::vector<std::tuple<ObjIDType, NodeType>>;
+  using ObjLoadListType  = std::vector<std::tuple<ObjIDType, LoadSummary>>;
+  using ObjDestinationListType = std::vector<std::tuple<ObjIDType, NodeType>>;
 
   explicit BaseLB()
     : pending_reassignment_(std::make_shared<balance::Reassignment>())
@@ -116,8 +116,12 @@ struct BaseLB {
   static LoadType loadMilli(LoadType const& load);
   NodeType objGetNode(ObjIDType const id) const;
 
-  void notifyCurrentHostNodeOfObjectsDeparting(TransferMsg<ObjDestinationListType>* msg);
-  void notifyNewHostNodeOfObjectsArriving(TransferMsg<ObjLoadListType>* msg);
+  void notifyCurrentHostNodeOfObjectsDeparting(
+    TransferMsg<ObjDestinationListType>* msg
+  );
+  void notifyNewHostNodeOfObjectsArriving(
+    TransferMsg<ObjLoadListType>* msg
+  );
 
   void applyMigrations(
     TransferVecType const& transfers, MigrationCountCB migration_count_callback

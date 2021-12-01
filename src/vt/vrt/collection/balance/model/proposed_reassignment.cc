@@ -46,9 +46,10 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-ProposedReassignment::ProposedReassignment(std::shared_ptr<balance::LoadModel> base,
-                                           std::shared_ptr<const Reassignment> reassignment)
-  : ComposedModel(base)
+ProposedReassignment::ProposedReassignment(
+  std::shared_ptr<balance::LoadModel> base,
+  std::shared_ptr<const Reassignment> reassignment
+) : ComposedModel(base)
   , reassignment_(reassignment)
 {
   vtAssert(reassignment_->node_ == vt::theContext()->getNode(),
@@ -65,22 +66,21 @@ ProposedReassignment::ProposedReassignment(std::shared_ptr<balance::LoadModel> b
 ObjectIterator ProposedReassignment::begin()
 {
   return {
-    std::make_unique<ConcatenatedIterator>
-    (
-     ObjectIterator{std::make_unique<LoadMapObjectIterator>
-         (
-          reassignment_->arrive_.begin(),
-          reassignment_->arrive_.end()
-          )},
-     ObjectIterator{std::make_unique<FilterIterator>
-         (
-          ComposedModel::begin(),
-          [this](ElementIDStruct elm) {
-            return reassignment_->depart_.find(elm) == reassignment_->depart_.end();
-          }
-          )}
-     )
-  };
+    std::make_unique<ConcatenatedIterator>(
+      ObjectIterator{
+        std::make_unique<LoadMapObjectIterator>(
+          reassignment_->arrive_.begin(), reassignment_->arrive_.end()
+        )
+     },
+     ObjectIterator{
+       std::make_unique<FilterIterator>(
+         ComposedModel::begin(),
+         [this](ElementIDStruct elm) {
+           return reassignment_->depart_.find(elm) == reassignment_->depart_.end();
+         }
+       )
+    }
+  )};
 }
 
 int ProposedReassignment::getNumObjects()

@@ -50,8 +50,10 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ProposedReassignment : public ComposedModel {
-  ProposedReassignment(std::shared_ptr<balance::LoadModel> base,
-                       std::shared_ptr<const Reassignment> reassignment);
+  ProposedReassignment(
+    std::shared_ptr<balance::LoadModel> base,
+    std::shared_ptr<const Reassignment> reassignment
+  );
 
   ObjectIterator begin() override;
   int getNumObjects() override;
