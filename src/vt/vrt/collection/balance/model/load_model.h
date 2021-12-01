@@ -50,8 +50,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct ObjectIteratorImpl
-{
+struct ObjectIteratorImpl {
   using value_type = ElementIDStruct;
 
   ObjectIteratorImpl() = default;
@@ -62,9 +61,7 @@ struct ObjectIteratorImpl
   virtual bool isValid() const = 0;
 };
 
-class ObjectIterator {
-  std::unique_ptr<ObjectIteratorImpl> impl;
-public:
+struct ObjectIterator {
   ObjectIterator(std::unique_ptr<ObjectIteratorImpl>&& in_impl)
     : impl(std::move(in_impl))
   { }
@@ -84,23 +81,23 @@ public:
     vtAssert(rhs.impl == nullptr, "Can only compare against an end() iterator");
     return isValid();
   }
+
+private:
+  std::unique_ptr<ObjectIteratorImpl> impl;
 };
 
-class LoadMapObjectIterator : public ObjectIteratorImpl
-{
+struct LoadMapObjectIterator : public ObjectIteratorImpl {
   using map_iterator_type = LoadMapType::const_iterator;
   using iterator_category = std::iterator_traits<map_iterator_type>::iterator_category;
   map_iterator_type i, end;
 
-public:
   LoadMapObjectIterator(map_iterator_type in, map_iterator_type in_end) : i(in), end(in_end) { }
   void operator++() override { ++i; }
   value_type operator*() const override { return i->first; }
   bool isValid() const override { return i != end; }
 };
 
-struct FilterIterator : public ObjectIteratorImpl
-{
+struct FilterIterator : public ObjectIteratorImpl {
   FilterIterator(ObjectIterator&& in_it, std::function<bool(ElementIDStruct)>&& in_filter)
     : it(std::move(in_it))
     , filter(std::move(in_filter))
@@ -127,8 +124,7 @@ struct FilterIterator : public ObjectIteratorImpl
   std::function<bool(ElementIDStruct)> filter;
 };
 
-struct ConcatenatedIterator : public ObjectIteratorImpl
-{
+struct ConcatenatedIterator : public ObjectIteratorImpl {
   ConcatenatedIterator(ObjectIterator&& in_it1, ObjectIterator&& in_it2)
     : it1(std::move(in_it1))
     , it2(std::move(in_it2))
@@ -167,9 +163,8 @@ struct ConcatenatedIterator : public ObjectIteratorImpl
  * into predictions of future object load for load balancing
  * strategies
  */
-class LoadModel
+struct LoadModel
 {
-public:
   LoadModel() = default;
   virtual ~LoadModel() = default;
 
@@ -268,7 +263,7 @@ public:
 
   template <typename Serializer>
   void serialize(Serializer& s) {}
-}; // class LoadModel
+}; // struct LoadModel
 
 }}}} // namespaces
 

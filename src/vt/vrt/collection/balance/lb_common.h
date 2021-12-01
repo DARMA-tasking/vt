@@ -126,8 +126,7 @@ struct PhaseOffset {
   static constexpr unsigned int WHOLE_PHASE = ~0u;
 };
 
-struct LoadSummary
-{
+struct LoadSummary {
   TimeType whole_phase_load = 0.0;
   std::vector<TimeType> subphase_loads = {};
 
@@ -158,8 +157,7 @@ struct LoadSummary
 using LoadMapType         = std::unordered_map<ElementIDStruct, LoadSummary>;
 using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<TimeType>>;
 
-struct Reassignment
-{
+struct Reassignment {
   // Include the subject node so that these structures can be formed
   // and passed through collectives
   NodeType node_;
@@ -172,7 +170,7 @@ struct Reassignment
 
 void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reassignment);
 
-class LoadModel;
+struct LoadModel;
 
 LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
                            ElementIDStruct object, PhaseOffset when);

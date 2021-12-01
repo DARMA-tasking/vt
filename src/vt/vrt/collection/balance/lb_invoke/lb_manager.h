@@ -60,7 +60,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-class LoadModel;
+struct LoadModel;
 
 /**
  * \struct LBManager
