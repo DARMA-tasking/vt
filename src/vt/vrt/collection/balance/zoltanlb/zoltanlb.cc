@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/collective/collective_alg.h"
 
 #if vt_check_enabled(zoltan)
@@ -435,10 +436,17 @@ void ZoltanLB::setParams() {
 }
 
 std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
+  // Insert local load objs into a std::set to get a deterministic order to
+  // traverse them for building the graph consistenly
+  std::set<ObjIDType> load_objs;
+  for (auto obj : *load_model_) {
+    load_objs.insert(obj);
+  }
+
   auto graph = std::make_unique<Graph>();
 
   // Number of local vertices (overdecomposed blocks) on this node
-  graph->num_vertices = load_model_->getNumObjects();
+  graph->num_vertices = load_objs.size();
 
   // Allocate space for each vertex to describe it
   graph->vertex_gid = std::make_unique<ZOLTAN_ID_TYPE[]>(graph->num_vertices);
@@ -452,13 +460,6 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
     "ObjIDType must be exactly the same size as ZOLTAN_ID_TYPE\n"
     "Please recompile with \"-D Zoltan_ENABLE_ULLONG_IDS:Bool=ON\""
   );
-
-  // Insert local load objs into a std::set to get a deterministic order to
-  // traverse them for building the graph consistenly
-  std::set<ObjIDType> load_objs;
-  for (auto obj : *load_model_) {
-    load_objs.insert(obj);
-  }
 
   // Initialize all the local vertices with global id
   {

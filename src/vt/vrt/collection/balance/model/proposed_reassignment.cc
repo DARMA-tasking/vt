@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               composed_model.h
+//                           proposed_reassignment.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,47 +41,70 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_COMPOSED_MODEL_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_COMPOSED_MODEL_H
-
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
+#include "vt/vrt/collection/balance/model/proposed_reassignment.h"
+#include "vt/context/context.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/**
- * \brief Utility class to support implementation of composable load
- * modeling components
- *
- * All model implementations meant to compose with arbitrary other
- * models should inherit from this class. It implements all methods by
- * calling the same method on the underlying model passed at
- * construction.
- */
-class ComposedModel : public LoadModel
+ProposedReassignment::ProposedReassignment(
+  std::shared_ptr<balance::LoadModel> base,
+  std::shared_ptr<const Reassignment> reassignment
+) : ComposedModel(base)
+  , reassignment_(reassignment)
 {
-public:
-  // \param[in] base must not be null
-  explicit ComposedModel(std::shared_ptr<LoadModel> base) : base_(base) {}
+  vtAssert(reassignment_->node_ == vt::theContext()->getNode(),
+           "ProposedReassignment model needs to be applied to the present node's data");
 
-  void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
+  // Check invariants?
 
-  void updateLoads(PhaseType last_completed_phase) override;
+  // depart should be a subset of present
 
-  TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+  // subtract depart to allow for self-migration
+  // arrive ^ (present \ depart) == 0
+}
 
-  ObjectIterator begin() override;
+ObjectIterator ProposedReassignment::begin()
+{
+  return {
+    std::make_unique<ConcatenatedIterator>(
+      ObjectIterator{
+        std::make_unique<LoadMapObjectIterator>(
+          reassignment_->arrive_.begin(), reassignment_->arrive_.end()
+        )
+     },
+     ObjectIterator{
+       std::make_unique<FilterIterator>(
+         ComposedModel::begin(),
+         [this](ElementIDStruct elm) {
+           return reassignment_->depart_.find(elm) == reassignment_->depart_.end();
+         }
+       )
+    }
+  )};
+}
 
-  int getNumObjects() override;
-  unsigned int getNumCompletedPhases() override;
-  int getNumSubphases() override;
+int ProposedReassignment::getNumObjects()
+{
+  int base = ComposedModel::getNumObjects();
+  int departing = reassignment_->depart_.size();
+  int arriving = reassignment_->arrive_.size();
 
-private:
-  std::shared_ptr<LoadModel> base_;
-}; // class ComposedModel
+  // This would handle self-migration without a problem
+  return base - departing + arriving;
+}
 
-}}}} // namespaces
+TimeType ProposedReassignment::getWork(ElementIDStruct object, PhaseOffset when)
+{
+  auto a = reassignment_->arrive_.find(object);
+  if (a != reassignment_->arrive_.end()) {
+    return a->second.get(when);
+  }
 
-#endif
+  // Check this *after* arrivals to handle hypothetical self-migration
+  vtAssert(reassignment_->depart_.find(object) == reassignment_->depart_.end(),
+           "Departing object should not appear as a load query subject");
+
+  return ComposedModel::getWork(object, when);
+}
+
+}}}}

@@ -51,34 +51,29 @@ void RawData::updateLoads(PhaseType last_completed_phase) {
 }
 
 void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                       std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
                        std::unordered_map<PhaseType, CommMapType> const* proc_comm)
 {
   proc_load_ = proc_load;
-  proc_subphase_load_ = proc_subphase_load;
   proc_comm_ = proc_comm;
 }
 
 ObjectIterator RawData::begin() {
   auto iter = proc_load_->find(last_completed_phase_);
   if (iter != proc_load_->end()) {
-    return ObjectIterator(iter->second.cbegin());
+    return {std::make_unique<LoadMapObjectIterator>(iter->second.cbegin(),
+                                                    iter->second.cend())};
   } else {
-    return ObjectIterator{typename LoadMapType::const_iterator{}};
-  }
-}
-
-ObjectIterator RawData::end() {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return ObjectIterator(iter->second.cend());
-  } else {
-    return ObjectIterator{typename LoadMapType::const_iterator{}};
+    return {nullptr};
   }
 }
 
 int RawData::getNumObjects() {
-  return end() - begin();
+  auto iter = proc_load_->find(last_completed_phase_);
+  if (iter != proc_load_->end()) {
+    return iter->second.size();
+  } else {
+    return 0;
+  }
 }
 
 unsigned int RawData::getNumCompletedPhases() {
@@ -86,27 +81,19 @@ unsigned int RawData::getNumCompletedPhases() {
 }
 
 int RawData::getNumSubphases() {
-  const auto& last_phase = proc_subphase_load_->at(last_completed_phase_);
+  const auto& last_phase = proc_load_->at(last_completed_phase_);
   const auto& an_object = *last_phase.begin();
-  const auto& subphases = an_object.second;
+  const auto& subphases = an_object.second.subphase_loads;
   return subphases.size();
 }
 
 TimeType RawData::getWork(ElementIDStruct object, PhaseOffset offset)
 {
   vtAssert(offset.phases < 0,
-	   "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
+           "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
   auto phase = getNumCompletedPhases() + offset.phases;
-  if (offset.subphase == PhaseOffset::WHOLE_PHASE)
-    return proc_load_->at(phase).at(object);
-  else {
-    auto &phase_data = proc_subphase_load_->at(phase);
-    auto &object_data = phase_data.at(object);
-    auto retval = object_data.at(offset.subphase);
-
-    return retval;
-  }
+  return proc_load_->at(phase).at(object).get(offset);
 }
 
 unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back)

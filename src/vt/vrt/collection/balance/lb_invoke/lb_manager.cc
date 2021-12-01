@@ -62,6 +62,7 @@
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/model/naive_persistence.h"
 #include "vt/vrt/collection/balance/model/raw_data.h"
+#include "vt/vrt/collection/balance/model/proposed_reassignment.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/vrt/collection/manager.h"
 
@@ -72,7 +73,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   auto proxy = theObjGroup()->makeCollective<LBManager>(ptr.get());
   proxy.get()->setProxy(proxy);
 
-  ptr->base_model_ = std::make_shared<balance::NaivePersistence>(std::make_shared<balance::RawData>());
+  ptr->base_model_ = std::make_shared<balance::NaivePersistence>(
+    std::make_shared<balance::RawData>()
+  );
   ptr->setLoadModel(ptr->base_model_);
 
   return ptr;
@@ -149,7 +152,6 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   model_ = model;
   auto nstats = theNodeStats();
   model_->setLoads(nstats->getNodeLoad(),
-                   nstats->getNodeSubphaseLoad(),
                    nstats->getNodeComm());
 }
 
@@ -168,45 +170,37 @@ LBManager::makeLB() {
 
 void
 LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
-  lb::BaseLB* strat = base_proxy.get();
-
   runInEpochCollective("LBManager::runLB -> updateLoads", [=] {
     model_->updateLoads(phase);
   });
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    computeStatistics(false, phase);
+    computeStatistics(model_, false, phase);
   });
 
-  runInEpochCollective("LBManager::runLB -> startLB", [=] {
-    vt_debug_print(
-      terse, lb,
-      "LBManager: running strategy\n"
-    );
+  balance::CommMapType empty_comm;
+  balance::CommMapType const* comm = &empty_comm;
+  auto iter = theNodeStats()->getNodeComm()->find(phase);
+  if (iter != theNodeStats()->getNodeComm()->end()) {
+    comm = &iter->second;
+  }
 
-    balance::CommMapType empty_comm;
-    balance::CommMapType const* comm = &empty_comm;
-    auto iter = theNodeStats()->getNodeComm()->find(phase);
-    if (iter != theNodeStats()->getNodeComm()->end()) {
-      comm = &iter->second;
-    }
-    strat->startLB(phase, base_proxy, model_.get(), stats, *comm, total_load);
+  vt_debug_print(terse, lb, "LBManager: running strategy\n");
+
+  lb::BaseLB* strat = base_proxy.get();
+  auto reassignment = strat->startLB(
+    phase, base_proxy, model_.get(), stats, *comm, total_load
+  );
+
+  auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
+  runInEpochCollective("LBManager::runLB -> computeStats", [=] {
+    computeStatistics(proposed, false, phase);
   });
 
-  int32_t global_migration_count = 0;
-
-  runInEpochCollective("LBManager::runLB -> applyMigrations", [&] {
-    vt_debug_print(
-      terse, lb,
-      "LBManager: starting migrations\n"
-    );
-    strat->applyMigrations(strat->getTransfers(), [&](int32_t global_count) {
-      global_migration_count = global_count;
-    });
-  });
+  applyReassignment(reassignment);
 
   // Inform the collection manager to rebuild spanning trees if needed
-  if (global_migration_count != 0) {
+  if (reassignment->global_migration_count != 0) {
     theCollection()->getTypelessHolder().invokeAllGroupConstructors();
   }
 
@@ -419,7 +413,9 @@ void LBManager::statsHandler(StatsMsgType* msg) {
   }
 }
 
-void LBManager::computeStatistics(bool comm_collectives, PhaseType phase) {
+void LBManager::computeStatistics(
+  std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase
+) {
   vt_debug_print(
     normal, lb,
     "computeStatistics\n"
@@ -433,8 +429,8 @@ void LBManager::computeStatistics(bool comm_collectives, PhaseType phase) {
 
   total_load = 0.;
   std::vector<balance::LoadData> O_l;
-  for (auto elm : *model_) {
-    auto work = model_->getWork(
+  for (auto elm : *model) {
+    auto work = model->getWork(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
     O_l.emplace_back(LoadData{lb::Statistic::O_l, work});

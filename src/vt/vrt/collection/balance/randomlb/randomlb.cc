@@ -42,6 +42,7 @@
 */
 
 #include "vt/vrt/collection/balance/randomlb/randomlb.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 
 #include <random>
 #include <set>

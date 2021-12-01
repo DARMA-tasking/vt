@@ -50,14 +50,19 @@
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/objgroup/headers.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
 
 #include <set>
 #include <map>
 #include <unordered_map>
 #include <tuple>
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+namespace vt { namespace vrt { namespace collection {
+
+namespace balance {
+struct LoadModel;
+}
+
+namespace lb {
 
 struct BaseLB {
   using ObjIDType        = balance::ElementIDStruct;
@@ -70,8 +75,14 @@ struct BaseLB {
   using MigrationCountCB = std::function<void(int32_t)>;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
+  using LoadSummary      = balance::LoadSummary;
+  using ObjLoadListType  = std::vector<std::tuple<ObjIDType, LoadSummary>>;
+  using ObjDestinationListType = std::vector<std::tuple<ObjIDType, NodeType>>;
 
-  BaseLB() = default;
+  explicit BaseLB()
+    : pending_reassignment_(std::make_shared<balance::Reassignment>())
+  { }
+
   BaseLB(BaseLB const &) = delete;
   BaseLB(BaseLB &&) noexcept = default;
   BaseLB &operator=(BaseLB const &) = delete;
@@ -80,16 +91,16 @@ struct BaseLB {
   virtual ~BaseLB() = default;
 
   /**
-   * This must invoke the particular strategy implementations through
-   * virtual methods `initParams` and `runLB`
+   * This sets up and invokes the particular strategy implementations
+   * through virtual methods `initParams` and `runLB`, and then
+   * normalizes their output to a reassignment that can be evaluated
+   * and applied
    *
-   * This expects to be run within a collective epoch. When that epoch
-   * is complete, the concrete strategy implementation should have
-   * recorded a complete set of intended migrations in `transfers_`
-   * through calls to `migrateObjectTo`. Callers can then access that
-   * set using `getTransfers` and apply it using `applyMigrations`.
+   * This must be called collectively.
+   *
+   * \return A normalized reassignment
    */
-  void startLB(
+  std::shared_ptr<const balance::Reassignment> startLB(
     PhaseType phase,
     objgroup::proxy::Proxy<BaseLB> proxy,
     balance::LoadModel *model,
@@ -104,6 +115,13 @@ struct BaseLB {
 
   static LoadType loadMilli(LoadType const& load);
   NodeType objGetNode(ObjIDType const id) const;
+
+  void notifyCurrentHostNodeOfObjectsDeparting(
+    TransferMsg<ObjDestinationListType>* msg
+  );
+  void notifyNewHostNodeOfObjectsArriving(
+    TransferMsg<ObjLoadListType>* msg
+  );
 
   void applyMigrations(
     TransferVecType const& transfers, MigrationCountCB migration_count_callback
@@ -136,11 +154,20 @@ protected:
   balance::LoadModel* load_model_                 = nullptr;
 
 private:
+  /**
+   * \brief Normalizes the reassignment graph by setting up in/out edges on both
+   * sides regardless of how they are passed to \c migrateObjectTo
+   *
+   * \return A normalized reassignment
+   */
+  std::shared_ptr<const balance::Reassignment> normalizeReassignments();
+
   TransferVecType transfers_                      = {};
   TransferType off_node_migrate_                  = {};
   int32_t local_migration_count_                  = 0;
   MigrationCountCB migration_count_cb_            = nullptr;
   StatisticMapType const* base_stats_             = nullptr;
+  std::shared_ptr<balance::Reassignment> pending_reassignment_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

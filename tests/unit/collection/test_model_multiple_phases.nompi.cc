@@ -62,6 +62,7 @@ using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::CommMapType;
 using vt::vrt::collection::balance::ObjectIterator;
+using vt::vrt::collection::balance::LoadMapObjectIterator;
 
 struct StubModel : LoadModel {
 
@@ -70,7 +71,6 @@ struct StubModel : LoadModel {
 
   void setLoads(
     std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, SubphaseLoadMapType> const*,
     std::unordered_map<PhaseType, CommMapType> const*) override {
     proc_load_ = proc_load;
   }
@@ -80,18 +80,14 @@ struct StubModel : LoadModel {
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     // Here we return predicted loads for future phases
     // For the sake of the test we use values from the past phases
-    return proc_load_->at(phase.phases).at(id);
+    return proc_load_->at(phase.phases).at(id).whole_phase_load;
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(3).begin());
-  }
-  virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(3).end());
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(3).begin(), proc_load_->at(3).end())};
   }
 
   // Not used by this test
-  virtual int getNumObjects() override { return 0; }
   virtual unsigned int getNumCompletedPhases() override { return 0; }
   virtual int getNumSubphases() override { return 0; }
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
@@ -104,22 +100,22 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   NodeType this_node = 0;
   std::unordered_map<PhaseType, LoadMapType> proc_loads = {
     {0, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{10}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{40}}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}}},
     {1, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{20}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{30}}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{20}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{30}, {}}}}},
     {2, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{30}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{30}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}}},
     {3, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{40}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{5}}}}};
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{40}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{5}, {}}}}}};
 
   auto test_model =
     std::make_shared<MultiplePhases>(std::make_shared<StubModel>(), 4);
 
-  test_model->setLoads(&proc_loads, nullptr, nullptr);
+  test_model->setLoads(&proc_loads, nullptr);
   test_model->updateLoads(3);
 
   for (auto&& obj : *test_model) {

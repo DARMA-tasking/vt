@@ -62,11 +62,9 @@ struct RawData : public LoadModel {
   TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
 
   ObjectIterator begin() override;
-  ObjectIterator end() override;
 
   int getNumObjects() override;
   unsigned int getNumCompletedPhases() override;
@@ -75,7 +73,6 @@ struct RawData : public LoadModel {
 
   // Observer pointers to the underlying data. In operation, these would be owned by NodeStats
   std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;
-  std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load_;
   std::unordered_map<PhaseType, CommMapType>         const* proc_comm_;
   PhaseType last_completed_phase_ = ~0;
 }; // class RawData

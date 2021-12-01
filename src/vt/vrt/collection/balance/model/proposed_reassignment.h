@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               load_sampler.cc
+//                           proposed_reassignment.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,36 +41,28 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/baselb/load_sampler.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_PROPOSED_REASSIGNMENT_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_PROPOSED_REASSIGNMENT_H
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/model/composed_model.h"
 
-void LoadSamplerBaseLB::buildHistogram() {
-  for (auto obj : *load_model_) {
-    auto load = load_model_->getWork(
-      obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-    );
-    auto const& load_milli = loadMilli(load);
-    auto const& bin = histogramSample(load_milli);
-    obj_sample[bin].push_back(obj);
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-    vt_debug_print(
-      verbose, lb,
-      "\t buildHistogram: obj={}, home={}, load={}, "
-      "load_milli={}, bin={}\n",
-      obj.id, obj.home_node, load, load_milli, bin
-    );
-  }
-}
+struct ProposedReassignment : public ComposedModel {
+  ProposedReassignment(
+    std::shared_ptr<balance::LoadModel> base,
+    std::shared_ptr<const Reassignment> reassignment
+  );
 
-LoadSamplerBaseLB::ObjBinType
-LoadSamplerBaseLB::histogramSample(LoadType const& load) const {
-  auto const bin_size = getBinSize();
-  ObjBinType const bin =
-    ((static_cast<int32_t>(load)) / bin_size * bin_size)
-    + bin_size;
-  return bin;
-}
+  ObjectIterator begin() override;
+  int getNumObjects() override;
+  TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
 
-}}}} /* end namespace vt::vrt::collection::lb */
+ private:
+  std::shared_ptr<const Reassignment> reassignment_;
+};
+
+}}}}
+
+#endif

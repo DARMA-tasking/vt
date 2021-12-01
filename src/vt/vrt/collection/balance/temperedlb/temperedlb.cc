@@ -43,6 +43,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
 #include "vt/vrt/collection/balance/temperedlb/tempered_msgs.h"
 #include "vt/vrt/collection/balance/temperedlb/tempered_constants.h"

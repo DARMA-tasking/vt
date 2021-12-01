@@ -65,6 +65,7 @@ using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
+using vt::vrt::collection::balance::LoadMapObjectIterator;
 
 using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
 using ProcSubphaseLoadMap = std::unordered_map<PhaseType, SubphaseLoadMapType>;
@@ -78,7 +79,7 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    ProcLoadMap const* proc_load, ProcSubphaseLoadMap const*,
+    ProcLoadMap const* proc_load,
     ProcCommMap const*) override {
     proc_load_ = proc_load;
   }
@@ -86,7 +87,7 @@ struct StubModel : LoadModel {
   void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
-    const auto work = proc_load_->at(0).at(id);
+    const auto work = proc_load_->at(0).at(id).whole_phase_load;
 
     if (phase.subphase == PhaseOffset::WHOLE_PHASE) {
       return work;
@@ -96,16 +97,12 @@ struct StubModel : LoadModel {
   }
 
   ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(0).begin());
-  }
-  ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(0).end());
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(0).begin(), proc_load_->at(0).end())};
   }
 
   unsigned int getNumCompletedPhases() override { return num_phases; }
 
   // Not used in this test
-  int getNumObjects() override { return 0; }
   int getNumSubphases() override { return 0; }
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
 
@@ -125,7 +122,7 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   // Element 3 (home node == 3)
   ElementIDStruct const elem3 = {3, 3, 3};
 
-  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, TimeType{150}}}}};
+  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, {TimeType{150}, {}}}}}};
 
   ProcCommMap proc_comm = {
     {0,
@@ -155,7 +152,7 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   auto test_model = std::make_shared<CommOverhead>(
     std::make_shared<StubModel>(), per_msg_weight, per_byte_weight
   );
-  test_model->setLoads(&proc_load, nullptr, &proc_comm);
+  test_model->setLoads(&proc_load, &proc_comm);
 
   std::unordered_map<PhaseType, TimeType> expected_work = {
     {0, TimeType{296}}, {1, TimeType{295.5}}

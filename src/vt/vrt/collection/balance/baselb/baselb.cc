@@ -54,12 +54,13 @@
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 
 #include <tuple>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-void BaseLB::startLB(
+std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   PhaseType phase,
   objgroup::proxy::Proxy<BaseLB> proxy,
   balance::LoadModel* model,
@@ -74,13 +75,13 @@ void BaseLB::startLB(
 
   importProcessorData(in_stats, in_comm_stats);
 
-  runInEpochCollective(
-    "BaseLB::startLB -> runLB", [this,total_load]{
-      getArgs(phase_);
-      inputParams(spec_entry_.get());
-      runLB(total_load);
-    }
-  );
+  runInEpochCollective("BaseLB::startLB -> runLB", [this,total_load]{
+    getArgs(phase_);
+    inputParams(spec_entry_.get());
+    runLB(total_load);
+  });
+
+  return normalizeReassignments();
 }
 
 /*static*/
@@ -121,57 +122,109 @@ void BaseLB::getArgs(PhaseType phase) {
   }
 }
 
-void BaseLB::applyMigrations(
-  TransferVecType const &transfers, MigrationCountCB migration_count_callback
-) {
-  migration_count_cb_ = migration_count_callback;
+std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
+  using namespace balance;
 
-  TransferType off_node_migrate;
+  auto this_node = theContext()->getNode();
+  pending_reassignment_->node_ = this_node;
 
-  for (auto&& elm : transfers) {
-    auto obj_id = std::get<0>(elm);
-    auto to = std::get<1>(elm);
-    auto from = objGetNode(obj_id);
+  runInEpochCollective("Sum migrations", [&] {
+    auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);
+    int32_t local_migration_count = transfers_.size();
+    auto msg = makeMessage<CountMsg>(local_migration_count);
+    proxy_.template reduce<collective::PlusOp<int32_t>>(msg,cb);
+  });
 
-    if (from != to) {
-      bool has_object = theNodeStats()->hasObjectToMigrate(obj_id);
+  std::map<NodeType, ObjDestinationListType> migrate_other;
 
-      vt_debug_print(
-        normal, lb,
-        "migrateObjectTo, obj_id={}, home={}, from={}, to={}, found={}\n",
-        obj_id.id, obj_id.home_node, from, to, has_object
-      );
+  // Do local setup of reassignment data structure
+  for (auto&& transfer : transfers_) {
+    auto const obj_id = std::get<0>(transfer);
+    auto const new_node = std::get<1>(transfer);
+    auto const current_node = obj_id.curr_node;
 
-      local_migration_count_++;
-      if (has_object) {
-        theNodeStats()->migrateObjTo(obj_id, to);
-      } else {
-        off_node_migrate[from].push_back(std::make_tuple(obj_id,to));
-      }
+    // self-migration
+    if (current_node == new_node) {
+      // Filter out self-migrations entirely
+      continue;
+      // vtAbort("Not currently implemented -- self-migration");
+    }
+
+    // the object lives here, so it's departing.
+    if (current_node == this_node) {
+      pending_reassignment_->depart_[obj_id] = new_node;
+    } else {
+      // The user has specified a migration that the current host will
+      // need to be informed of
+      migrate_other[current_node].push_back(transfer);
     }
   }
 
-  for (auto&& elm : off_node_migrate) {
-    transferSend(elm.first, elm.second);
-  }
+  runInEpochCollective("BaseLB -> sendMigrateOthers", [&]{
+    using ArriveListMsgType = TransferMsg<ObjDestinationListType>;
 
-  // @todo: removed re-computation of statistics, which needs to be added back
-  // in the future.
-  migrationDone();
+    for (auto&& other : migrate_other) {
+      auto const current_host = std::get<0>(other);
+      auto const& vec = std::get<1>(other);
+      proxy_[current_host].template send<
+        ArriveListMsgType, &BaseLB::notifyCurrentHostNodeOfObjectsDeparting
+      >(vec);
+    }
+  });
+
+  // At this point, all nodes should have complete data on which
+  // objects will be departing, and to where
+
+  // Do remote work to normalize the reassignments
+  runInEpochCollective("BaseLB -> normalizeReassignments", [&]{
+    // Notify all potential recipients for this reassignment that they have an
+    // arriving object
+    using DepartMsgType = TransferMsg<ObjLoadListType>;
+    std::map<NodeType, ObjLoadListType> depart_map;
+
+    for (auto&& departing : pending_reassignment_->depart_) {
+      auto const obj_id = std::get<0>(departing);
+      auto const dest = std::get<1>(departing);
+      auto const load_summary = getObjectLoads(
+        load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      depart_map[dest].push_back(std::make_tuple(obj_id, load_summary));
+    }
+
+    for (auto&& depart_list : depart_map) {
+      auto const dest = std::get<0>(depart_list);
+      auto const& vec = std::get<1>(depart_list);
+      proxy_[dest].template send<
+        DepartMsgType, &BaseLB::notifyNewHostNodeOfObjectsArriving
+      >(vec);
+    }
+  });
+
+  // And now, all nodes should have complete data on which objects
+  // will be arriving, and how much load they represent
+
+  return pending_reassignment_;
 }
 
-void BaseLB::transferSend(NodeType from, TransferVecType const& transfer) {
-  using MsgType = TransferMsg<TransferVecType>;
-  proxy_[from].template send<MsgType,&BaseLB::transferMigrations>(transfer);
-}
-
-void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
+void BaseLB::notifyCurrentHostNodeOfObjectsDeparting(
+  TransferMsg<ObjDestinationListType>* msg
+) {
   auto const& migrate_list = msg->getTransfer();
-  for (auto&& elm : migrate_list) {
-    auto obj_id  = std::get<0>(elm);
-    auto to_node = std::get<1>(elm);
-    vtAssert(theNodeStats()->hasObjectToMigrate(obj_id), "Must have object");
-    theNodeStats()->migrateObjTo(obj_id, to_node);
+  for (auto&& obj : migrate_list) {
+    pending_reassignment_->depart_[std::get<0>(obj)] = std::get<1>(obj);
+  }
+}
+
+void BaseLB::notifyNewHostNodeOfObjectsArriving(
+  TransferMsg<ObjLoadListType>* msg
+) {
+  auto const& arrival_list = msg->getTransfer();
+
+  // Add arriving objects to our local reassignment list
+  for (auto&& arrival : arrival_list) {
+    auto const obj_id = std::get<0>(arrival);
+    auto const& load_summary = std::get<1>(arrival);
+    pending_reassignment_->arrive_[obj_id] = load_summary;
   }
 }
 
@@ -184,6 +237,8 @@ void BaseLB::finalize(CountMsg* msg) {
   if (migration_count_cb_) {
     migration_count_cb_(global_count);
   }
+
+  pending_reassignment_->global_migration_count = global_count;
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const total_time = timing::Timing::getCurrentTime() - start_time_;
@@ -194,17 +249,6 @@ void BaseLB::finalize(CountMsg* msg) {
     );
     fflush(stdout);
   }
-}
-
-void BaseLB::migrationDone() {
-  vt_debug_print(
-    normal, lb,
-    "BaseLB::migrationDone: local migration count={}\n",
-    local_migration_count_
-  );
-  auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);
-  auto msg = makeMessage<CountMsg>(local_migration_count_);
-  proxy_.template reduce<collective::PlusOp<int32_t>>(msg,cb);
 }
 
 NodeType BaseLB::objGetNode(ObjIDType const id) const {
