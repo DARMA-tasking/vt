@@ -157,7 +157,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
     } else {
       // The user has specified a migration that the current host will
       // need to be informed of
-      migrate_other[current_node].push_back({obj_id, new_node});
+      migrate_other[current_node].push_back(transfer);
     }
   }
 
