@@ -50,14 +50,19 @@
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/objgroup/headers.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
 
 #include <set>
 #include <map>
 #include <unordered_map>
 #include <tuple>
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+namespace vt { namespace vrt { namespace collection {
+
+namespace balance {
+struct LoadModel;
+}
+
+namespace lb {
 
 struct BaseLB {
   using ObjIDType        = balance::ElementIDStruct;

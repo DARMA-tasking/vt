@@ -42,6 +42,7 @@
 */
 
 #include "vt/vrt/collection/balance/baselb/load_sampler.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
