@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/collective/collective_alg.h"
 
 #if vt_check_enabled(zoltan)
