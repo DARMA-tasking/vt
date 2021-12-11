@@ -22,7 +22,14 @@ add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 # fmt always included in the build
 set(FMT_LIBRARY fmt)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
-target_compile_definitions(${FMT_LIBRARY} PUBLIC FMT_INLINE_NAMESPACE_NAME=vt)
+target_compile_definitions(
+  ${FMT_LIBRARY}
+  PUBLIC
+  FMT_BEGIN_NAMESPACE=namespace\ fmt\ \{\ inline\ namespace\ vt\ \{)
+target_compile_definitions(
+  ${FMT_LIBRARY}
+  PUBLIC
+  FMT_END_NAMESPACE=\}\})
 
 # json library always included in the build
 set(JSON_BuildTests OFF)
