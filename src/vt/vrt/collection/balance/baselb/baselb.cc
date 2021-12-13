@@ -244,7 +244,7 @@ void BaseLB::finalize(CountMsg* msg) {
     vt_print(
       lb,
       "BaseLB::finalize: LB total time={}, total migration count={}\n",
-      total_time, global_count
+      timing::Timing::getTimeWithUnits(total_time), global_count
     );
     fflush(stdout);
   }
