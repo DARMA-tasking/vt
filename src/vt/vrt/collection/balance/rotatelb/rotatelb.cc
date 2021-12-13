@@ -42,12 +42,15 @@
 */
 
 #include "vt/config.h"
+#include "vt/timing/timing.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/manager.h"
 
 #include <memory>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
+
+using timing::Timing;
 
 void RotateLB::init(objgroup::proxy::Proxy<RotateLB> in_proxy) {
   proxy = in_proxy;
@@ -79,7 +82,7 @@ void RotateLB::runLB(TimeType) {
     vt_debug_print(
       terse, lb,
       "\t RotateLB::migrating object to: obj={}, load={}, to_node={}\n",
-      obj, load, next_node
+      obj, Timing::getTimeWithUnits(load), next_node
     );
     if (obj.isMigratable()) {
       migrateObjectTo(obj, next_node);

@@ -66,6 +66,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+using timing::Timing;
+
 void HierarchicalLB::init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy) {
   proxy = in_proxy;
 }
@@ -167,7 +169,7 @@ void HierarchicalLB::setupTree(double const threshold) {
   vt_debug_print(
     terse, hierlb,
     "HierarchicalLB: setupTree: threshold={}\n",
-    threshold
+    Timing::getTimeWithUnits(threshold)
   );
 
   for (NodeType node = 0; node < hierlb_nary; node++) {
@@ -304,7 +306,9 @@ void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
     normal, hierlb,
     "loadOverBin: this_load_begin={}, this_load={}, threshold={}: "
     "adding unit: bin={}, milli={}\n",
-    this_load_begin, this_load, threshold, bin, obj_time_milli
+    Timing::getTimeWithUnits(this_load_begin),
+    Timing::getTimeWithUnits(this_load), Timing::getTimeWithUnits(threshold),
+    bin, obj_time_milli
   );
 }
 
@@ -315,7 +319,8 @@ void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
     normal, hierlb,
     "calcLoadOver: this_load={}, avg_load={}, threshold={}, "
     "strategy={}\n",
-    this_load, getAvgLoad(), threshold,
+    Timing::getTimeWithUnits(this_load), Timing::getTimeWithUnits(getAvgLoad()),
+    Timing::getTimeWithUnits(threshold),
     extract == HeapExtractEnum::LoadOverLessThan ? "LoadOverLessThan" :
     extract == HeapExtractEnum::LoadOverGreaterThan ? "LoadOverGreaterThan" :
     extract == HeapExtractEnum::LoadOverRandom ? "LoadOverRandom" :
@@ -411,7 +416,8 @@ void HierarchicalLB::downTree(
         verbose, hierlb,
         "downTree: from={}, taken_bin={}, taken_bin_count={}, "
         "total_taken_load={}\n",
-        from, item.first, item.second.size(), total_taken_load
+        from, item.first, item.second.size(),
+        Timing::getTimeWithUnits(total_taken_load)
       );
 
       this_load += total_taken_load;
@@ -420,7 +426,9 @@ void HierarchicalLB::downTree(
     vt_debug_print(
       normal, hierlb,
       "downTree: this_load_begin={}, new load profile={}, avg_load={}\n",
-      this_load_begin, this_load, getAvgLoad()
+      Timing::getTimeWithUnits(this_load_begin),
+      Timing::getTimeWithUnits(this_load),
+      Timing::getTimeWithUnits(getAvgLoad())
     );
 
     startMigrations();
@@ -460,9 +468,11 @@ void HierarchicalLB::lbTreeUp(
     "lbTreeUp: child={}, child_load={}, child_size={}, "
     "child_msgs={}, children.size()={}, agg_node_size={}, "
     "avg_load={}, child_avg={}, incoming load.size={}\n",
-    child, child_load, child_size, child_msgs+1, children.size(),
-    agg_node_size + child_size, getAvgLoad(), child_load/child_size,
-    load.size()
+    child, Timing::getTimeWithUnits(child_load), child_size, child_msgs+1,
+    children.size(), agg_node_size + child_size,
+    Timing::getTimeWithUnits(getAvgLoad()),
+    Timing::getTimeWithUnits(child_load/child_size),
+    Timing::getTimeWithUnits(load.size())
   );
 
   LoadType total_child_load = 0.0f;
@@ -535,7 +545,8 @@ void HierarchicalLB::lbTreeUp(
       vt_debug_print(
         normal, hierlb,
         "lbTreeUp: reached root!: total_load={}, avg={}\n",
-        total_child_load, total_child_load/agg_node_size
+        Timing::getTimeWithUnits(total_child_load),
+        Timing::getTimeWithUnits(total_child_load/agg_node_size)
       );
       sendDownTree();
     } else {
@@ -558,7 +569,7 @@ HierLBChild* HierarchicalLB::findMinChild() {
   vt_debug_print(
     normal, hierlb,
     "findMinChild, cur->node={}, load={}\n",
-    cur->node, cur->cur_load
+    cur->node, Timing::getTimeWithUnits(cur->cur_load)
   );
 
   for (auto&& c : children) {
@@ -567,12 +578,15 @@ HierLBChild* HierarchicalLB::findMinChild() {
     vt_debug_print(
       verbose, hierlb,
       "\t findMinChild: CUR node={}, node_size={}, load={}, rel-load={}\n",
-      cur->node, cur->node_size, cur->cur_load, cur_load
+      cur->node, cur->node_size, Timing::getTimeWithUnits(cur->cur_load),
+      Timing::getTimeWithUnits(cur_load)
     );
     vt_debug_print(
       verbose, hierlb,
       "\t findMinChild: C node={}, node_size={}, load={}, rel-load={}\n",
-      c.second->node, c.second->node_size, c.second->cur_load, load
+      c.second->node, c.second->node_size,
+      Timing::getTimeWithUnits(c.second->cur_load),
+      Timing::getTimeWithUnits(load)
     );
     if (load < cur_load && cur->is_live) {
       cur = c.second.get();
@@ -693,7 +707,8 @@ void HierarchicalLB::distributeAmoungChildren() {
         vt_debug_print(
           verbose, hierlb,
           "\t Up: distribute: child={}, cur_load={}, time={}\n",
-          c->node, c->cur_load, cIter->first
+          c->node, Timing::getTimeWithUnits(c->cur_load),
+          Timing::getTimeWithUnits(cIter->first)
         );
 
         // @todo agglomerate units into this bin together to increase efficiency
@@ -726,7 +741,7 @@ void HierarchicalLB::distributeAmoungChildren() {
       verbose, hierlb,
       "distributeAmoungChildren: parent={}, child={}. is_live={}, size={}, "
       "load={}\n",
-      parent, node, is_live, node_size, load
+      parent, node, is_live, node_size, Timing::getTimeWithUnits(load)
     );
     if (is_live) {
       total_child_load += load;

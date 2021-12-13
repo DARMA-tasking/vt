@@ -56,6 +56,7 @@
 #include "vt/vrt/collection/manager.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/vrt/collection/balance/lb_args_enum_converter.h"
+#include "vt/timing/timing.h"
 
 #include <unordered_map>
 #include <memory>
@@ -64,6 +65,8 @@
 #include <cassert>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
+
+using timing::Timing;
 
 /*static*/ objgroup::proxy::Proxy<GreedyLB> GreedyLB::scatter_proxy = {};
 
@@ -206,7 +209,8 @@ void GreedyLB::reduceCollect() {
   vt_debug_print(
     verbose, lb,
     "GreedyLB::reduceCollect: load={}, load_begin={} load_over.size()={}\n",
-    this_load, this_load_begin, load_over.size()
+    Timing::getTimeWithUnits(this_load),
+    Timing::getTimeWithUnits(this_load_begin), load_over.size()
   );
   using MsgType = GreedyCollectMsg;
   auto cb = vt::theCB()->makeSend<GreedyLB, MsgType, &GreedyLB::collectHandler>(proxy[0]);
@@ -260,8 +264,9 @@ void GreedyLB::runBalancer(
       verbose, lb,
       "\t GreedyLB::runBalancer: min_node={}, load_={}, "
       "recs_={}, max_rec: obj={}, time={}\n",
-      min_node.node_, min_node.load_, min_node.recs_.size(),
-      max_rec.getObj(), max_rec.getLoad()
+      min_node.node_, Timing::getTimeWithUnits(min_node.load_),
+      min_node.recs_.size(), max_rec.getObj(),
+      Timing::getTimeWithUnits(max_rec.getLoad())
     );
     min_node.recs_.push_back(max_rec.getObj());
     min_node.load_ += max_rec.getLoad();
@@ -403,7 +408,9 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
     normal, lb,
     "loadOverBin: this_load_begin={}, this_load={}, threshold={}: "
     "adding unit: bin={}, milli={}\n",
-    this_load_begin, this_load, threshold, bin, obj_time_milli
+    Timing::getTimeWithUnits(this_load_begin),
+    Timing::getTimeWithUnits(this_load), Timing::getTimeWithUnits(threshold),
+    bin, obj_time_milli
   );
 }
 
@@ -414,7 +421,9 @@ void GreedyLB::calcLoadOver() {
   vt_debug_print(
     normal, lb,
     "calcLoadOver: this_load={}, avg_load={}, threshold={}\n",
-    this_load, avg_load, threshold
+    Timing::getTimeWithUnits(this_load),
+    Timing::getTimeWithUnits(avg_load),
+    Timing::getTimeWithUnits(threshold)
   );
 
   auto cur_item = obj_sample.begin();
