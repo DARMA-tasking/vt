@@ -197,12 +197,12 @@
 #    define FMT_INLINE_NAMESPACE namespace
 #    define FMT_END_NAMESPACE \
       }                       \
-      using namespace v7;     \
+      using namespace vt;     \
       }
 #  endif
 #  define FMT_BEGIN_NAMESPACE \
     namespace fmt {           \
-    FMT_INLINE_NAMESPACE v7 {
+    FMT_INLINE_NAMESPACE vt {
 #endif
 
 #if !defined(FMT_HEADER_ONLY) && defined(_WIN32)
