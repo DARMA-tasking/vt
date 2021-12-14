@@ -62,7 +62,10 @@ struct ModifierToken {
     : modify_epoch_(in_modify_epoch)
   { }
   ModifierToken(ModifierToken const&) = delete;
-  ModifierToken(ModifierToken&&) = default;
+  ModifierToken(ModifierToken&&) noexcept = default;
+
+  ModifierToken &operator=(ModifierToken const&) = delete;
+  ModifierToken &operator=(ModifierToken &&) noexcept = default;
 
   /**
    * \brief Get the modify epoch
