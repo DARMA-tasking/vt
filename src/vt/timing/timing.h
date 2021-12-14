@@ -50,23 +50,21 @@
 
 namespace vt { namespace timing {
 
-struct Timing {
-  /**
-   * \brief Get current time on the calling processor
-   *
-   * \return current time in seconds
-   */
-  static TimeType getCurrentTime();
+/**
+  * \brief Get current time on the calling processor
+  *
+  * \return current time in seconds
+  */
+TimeType getCurrentTime();
 
-  /**
-   * \brief Format a time value to a \c std::string with units
-   *
-   * \param[in] time time in seconds
-   *
-   * \return pretty-printed \c std::string
-   */
-  static std::string getTimeWithUnits(TimeType const time);
-};
+/**
+  * \brief Format a time value to a \c std::string with units
+  *
+  * \param[in] time time in seconds
+  *
+  * \return pretty-printed \c std::string
+  */
+std::string getTimeWithUnits(TimeType const time);
 
 }} /* end namespace vt::timing */
 

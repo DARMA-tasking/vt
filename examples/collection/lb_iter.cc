@@ -124,13 +124,13 @@ int main(int argc, char** argv) {
     .wait();
 
   for (int i = 0; i < num_iter; i++) {
-    auto cur_time = vt::timing::Timing::getCurrentTime();
+    auto cur_time = vt::timing::getCurrentTime();
 
     vt::runInEpochCollective([=]{
       proxy.broadcastCollective<IterCol::IterMsg,&IterCol::iterWork>(10, i);
     });
 
-    auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
+    auto total_time = vt::timing::getCurrentTime() - cur_time;
     if (this_node == 0) {
       fmt::print("iteration: iter={},time={}\n", i, total_time);
     }

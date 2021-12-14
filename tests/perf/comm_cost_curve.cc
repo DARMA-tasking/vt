@@ -85,7 +85,7 @@ static void handler(PingMsg*) {
 
 template <int64_t bytes>
 void sender() {
-  auto start = vt::timing::Timing::getCurrentTime();
+  auto start = vt::timing::getCurrentTime();
   for (int i = 0; i < pings; i++) {
     auto msg = vt::makeMessage<PingMsg>(bytes);
     vt::theMsg()->sendMsg<PingMsg,handler>(1, msg);
@@ -94,7 +94,7 @@ void sender() {
   vt::theSched()->runSchedulerWhile([]{return !is_done; });
 
   is_done = false;
-  auto time = (vt::timing::Timing::getCurrentTime() - start) / pings;
+  auto time = (vt::timing::getCurrentTime() - start) / pings;
   auto Mb = static_cast<double>(bytes) / 1024.0 / 1024.0;
   fmt::print("{:<8} {:<16} 0x{:<10x} {:<22} {:<22}\n", pings, bytes, bytes, Mb, time);
 }

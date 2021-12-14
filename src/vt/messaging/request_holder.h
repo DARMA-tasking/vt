@@ -100,7 +100,7 @@ struct RequestHolder {
     std::size_t const holder_size_start = holder_.size();
     TimeType tr_begin = 0.0;
     if (theConfig()->vt_trace_irecv_polling) {
-      tr_begin = vt::timing::Timing::getCurrentTime();
+      tr_begin = vt::timing::getCurrentTime();
     }
 #   endif
 
@@ -131,7 +131,7 @@ struct RequestHolder {
 #   if vt_check_enabled(trace_enabled)
     if (theConfig()->vt_trace_irecv_polling) {
        if (holder_size_start > 0) {
-         auto tr_end = vt::timing::Timing::getCurrentTime();
+         auto tr_end = vt::timing::getCurrentTime();
          auto tr_note = fmt::format(
            "completed {} of {}",
            holder_size_start - holder_.size(),

@@ -48,22 +48,20 @@
 
 namespace vt { namespace elm {
 
-using timing::Timing;
-
 void ElementStats::startTime() {
-  auto const start_time = Timing::getCurrentTime();
+  auto const start_time = timing::getCurrentTime();
   cur_time_ = start_time;
   cur_time_started_ = true;
 
   vt_debug_print(
     verbose, lb,
     "ElementStats: startTime: time={}\n",
-    Timing::getTimeWithUnits(start_time)
+    timing::getTimeWithUnits(start_time)
   );
 }
 
 void ElementStats::stopTime() {
-  auto const stop_time = Timing::getCurrentTime();
+  auto const stop_time = timing::getCurrentTime();
   auto const total_time = stop_time - cur_time_;
   //vtAssert(cur_time_started_, "Must have started time");
   auto const started = cur_time_started_;
@@ -75,9 +73,9 @@ void ElementStats::stopTime() {
   vt_debug_print(
     verbose, lb,
     "ElementStats: stopTime: time={}, total={}, started={}\n",
-    Timing::getTimeWithUnits(stop_time),
-    Timing::getTimeWithUnits(total_time),
-    Timing::getTimeWithUnits(started)
+    timing::getTimeWithUnits(stop_time),
+    timing::getTimeWithUnits(total_time),
+    timing::getTimeWithUnits(started)
   );
 }
 
@@ -135,8 +133,8 @@ void ElementStats::addTime(TimeType const& time) {
   vt_debug_print(
     verbose,lb,
     "ElementStats: addTime: time={}, cur_load={}\n",
-    timing::Timing::getTimeWithUnits(time),
-    timing::Timing::getTimeWithUnits(phase_timings_[cur_phase_])
+    timing::getTimeWithUnits(time),
+    timing::getTimeWithUnits(phase_timings_[cur_phase_])
   );
 }
 
@@ -173,7 +171,7 @@ TimeType ElementStats::getLoad(PhaseType const& phase) const {
     vt_debug_print(
       verbose, lb,
       "ElementStats: getLoad: load={}, phase={}, size={}\n",
-      timing::Timing::getTimeWithUnits(total_load), phase, phase_timings_.size()
+      timing::getTimeWithUnits(total_load), phase, phase_timings_.size()
     );
 
     return total_load;
@@ -194,7 +192,7 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
   vt_debug_print(
     verbose, lb,
     "ElementStats: getLoad: load={}, phase={}, subphase={}\n",
-    timing::Timing::getTimeWithUnits(total_load), phase, subphase
+    timing::getTimeWithUnits(total_load), phase, subphase
   );
 
   return total_load;

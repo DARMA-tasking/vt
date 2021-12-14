@@ -53,37 +53,36 @@ namespace vt { namespace tests { namespace unit {
 using TestTiming = TestParallelHarness;
 
 TEST_F(TestTiming, test_time_formatting) {
-  using vt::timing::Timing;
   theConfig()->vt_time_units = true;
 
   {
     auto const t = 15664645.400691890716;
-    EXPECT_EQ(Timing::getTimeWithUnits(t), "15664645.4 sec");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "15664645.4 sec");
   }
 
   {
     auto const t = 4.0006918907165527344;
-    EXPECT_EQ(Timing::getTimeWithUnits(t), "4.0 sec");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "4.0 sec");
   }
 
   {
     auto const t = 0.0691890716552734423;
-    EXPECT_EQ(Timing::getTimeWithUnits(t), "69.2 ms");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "69.2 ms");
   }
 
   {
     auto const t = -0.0691890716552734423;
-    EXPECT_EQ(Timing::getTimeWithUnits(t), "-69.2 ms");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "-69.2 ms");
   }
 
   {
     auto const t = 0.0006918907165527344;
-    EXPECT_EQ(Timing::getTimeWithUnits(t), "691.9 μs");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "691.9 μs");
   }
 
   {
     auto const t = 0.0000006918907165527;
-    EXPECT_EQ(Timing::getTimeWithUnits(t), "691.9 ns");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "691.9 ns");
   }
 }
 

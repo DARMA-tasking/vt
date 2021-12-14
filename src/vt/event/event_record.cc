@@ -57,7 +57,7 @@ EventRecord::EventRecord(EventRecordType const& type, EventType const& id)
 {
 
 # if vt_check_enabled(diagnostics)
-  creation_time_stamp_ = timing::Timing::getCurrentTime();
+  creation_time_stamp_ = timing::getCurrentTime();
 # endif
 
   switch (type) {

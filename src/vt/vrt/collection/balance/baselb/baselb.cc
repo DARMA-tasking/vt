@@ -67,7 +67,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   ElementCommType const& in_comm_stats,
   TimeType total_load
 ) {
-  start_time_ = timing::Timing::getCurrentTime();
+  start_time_ = timing::getCurrentTime();
   phase_ = phase;
   proxy_ = proxy;
   load_model_ = model;
@@ -240,11 +240,11 @@ void BaseLB::finalize(CountMsg* msg) {
   pending_reassignment_->global_migration_count = global_count;
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
-    auto const total_time = timing::Timing::getCurrentTime() - start_time_;
+    auto const total_time = timing::getCurrentTime() - start_time_;
     vt_print(
       lb,
       "BaseLB::finalize: LB total time={}, total migration count={}\n",
-      timing::Timing::getTimeWithUnits(total_time), global_count
+      timing::getTimeWithUnits(total_time), global_count
     );
     fflush(stdout);
   }

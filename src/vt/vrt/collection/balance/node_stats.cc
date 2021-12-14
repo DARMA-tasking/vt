@@ -61,8 +61,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-using timing::Timing;
-
 void NodeStats::setProxy(objgroup::proxy::Proxy<NodeStats> in_proxy) {
   proxy_ = in_proxy;
 }

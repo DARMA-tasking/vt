@@ -95,7 +95,7 @@ public:
    * \brief Start the timer for an event being tracked
    */
   void start() {
-    start_time_ = timing::Timing::getCurrentTime();
+    start_time_ = timing::getCurrentTime();
   }
 
   /**
@@ -103,7 +103,7 @@ public:
    */
   void stop() {
     if (start_time_ != 0) {
-      update(start_time_, timing::Timing::getCurrentTime());
+      update(start_time_, timing::getCurrentTime());
       start_time_ = 0;
     }
   }

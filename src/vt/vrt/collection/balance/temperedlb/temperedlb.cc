@@ -61,8 +61,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-using timing::Timing;
-
 void TemperedLB::init(objgroup::proxy::Proxy<TemperedLB> in_proxy) {
   proxy_ = in_proxy;
   auto const this_node = theContext()->getNode();
@@ -451,8 +449,8 @@ void TemperedLB::runLB(TimeType total_load) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
-      Timing::getTimeWithUnits(avg), Timing::getTimeWithUnits(max),
-      Timing::getTimeWithUnits(pole), imb, Timing::getTimeWithUnits(load),
+      timing::getTimeWithUnits(avg), timing::getTimeWithUnits(max),
+      timing::getTimeWithUnits(pole), imb, timing::getTimeWithUnits(load),
       should_lb
     );
   }
@@ -505,8 +503,8 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         normal, temperedlb,
         "TemperedLB::doLBStages: (before) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
-        trial_, iter_, num_iters_, Timing::getTimeWithUnits(this_load),
-        Timing::getTimeWithUnits(this_new_load_)
+        trial_, iter_, num_iters_, timing::getTimeWithUnits(this_load),
+        timing::getTimeWithUnits(this_new_load_)
       );
 
       if (isOverloaded(this_new_load_)) {
@@ -532,8 +530,8 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         verbose, temperedlb,
         "TemperedLB::doLBStages: (after) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
-        trial_, iter_, num_iters_, Timing::getTimeWithUnits(this_load),
-        Timing::getTimeWithUnits(this_new_load_)
+        trial_, iter_, num_iters_, timing::getTimeWithUnits(this_load),
+        timing::getTimeWithUnits(this_new_load_)
       );
 
       if (rollback_ || theConfig()->vt_debug_temperedlb || (iter_ == num_iters_ - 1)) {
@@ -614,9 +612,9 @@ void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
       terse, temperedlb,
       "TemperedLB::loadStatsHandler: trial={} iter={} max={} min={} "
       "avg={} pole={} imb={:0.4f}\n",
-      trial_, iter_, Timing::getTimeWithUnits(in.max()),
-      Timing::getTimeWithUnits(in.min()), Timing::getTimeWithUnits(in.avg()),
-      Timing::getTimeWithUnits(
+      trial_, iter_, timing::getTimeWithUnits(in.max()),
+      timing::getTimeWithUnits(in.min()), timing::getTimeWithUnits(in.avg()),
+      timing::getTimeWithUnits(
         stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max)),
       in.I()
     );
@@ -650,7 +648,7 @@ void TemperedLB::informAsync() {
     "TemperedLB::informAsync: starting inform phase: trial={}, iter={}, "
     "k_max={}, is_underloaded={}, is_overloaded={}, load={}\n",
     trial_, iter_, k_max_, is_underloaded_, is_overloaded_,
-    Timing::getTimeWithUnits(this_new_load_)
+    timing::getTimeWithUnits(this_new_load_)
   );
 
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
@@ -1096,8 +1094,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         vt_debug_print(
           normal, temperedlb,
           "TemperedLB::decide: over_avg={}, single_obj_load={}\n",
-          Timing::getTimeWithUnits(over_avg),
-          Timing::getTimeWithUnits(cur_objs[ordered_obj_ids[0]])
+          timing::getTimeWithUnits(over_avg),
+          timing::getTimeWithUnits(cur_objs[ordered_obj_ids[0]])
         );
       }
     }
@@ -1157,8 +1155,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         vt_debug_print(
           normal, temperedlb,
           "TemperedLB::decide: over_avg={}, marginal_obj_load={}\n",
-          Timing::getTimeWithUnits(over_avg),
-          Timing::getTimeWithUnits(cur_objs[ordered_obj_ids[0]])
+          timing::getTimeWithUnits(over_avg),
+          timing::getTimeWithUnits(cur_objs[ordered_obj_ids[0]])
         );
       }
     }
@@ -1256,9 +1254,9 @@ void TemperedLB::decide() {
           selected_load,
           obj_id.id,
           obj_id.getHomeNode(),
-          Timing::getTimeWithUnits(obj_load),
-          Timing::getTimeWithUnits(target_max_load_),
-          Timing::getTimeWithUnits(this_new_load_),
+          timing::getTimeWithUnits(obj_load),
+          timing::getTimeWithUnits(target_max_load_),
+          timing::getTimeWithUnits(this_new_load_),
           eval
         );
 

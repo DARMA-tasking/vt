@@ -133,13 +133,13 @@ TEST_F(TestLB, test_lb_1) {
   auto proxy = theCollection()->constructCollective<LBTest>(range);
 
   for (int i = 0; i < num_iter; i++) {
-    auto cur_time = vt::timing::Timing::getCurrentTime();
+    auto cur_time = vt::timing::getCurrentTime();
 
     vt::runInEpochCollective([=]{
       proxy.broadcastCollective<IterMsg,&LBTest::iterWork>(i);
     });
 
-    auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
+    auto total_time = vt::timing::getCurrentTime() - cur_time;
     if (this_node == 0) {
       fmt::print("iteration: iter={},time={}\n", i, total_time);
     }
@@ -154,7 +154,7 @@ TEST_F(TestLB, test_lb_1) {
 //     auto const& range = Index1D(64);
 //     auto proxy_1 = theCollection()->construct<LBTest>(range);
 //     auto proxy_2 = theCollection()->construct<LBTest>(range);
-//     cur_time = ::vt::timing::Timing::getCurrentTime();
+//     cur_time = ::vt::timing::getCurrentTime();
 //     startIter(0,proxy_1);
 //     startIter(0,proxy_2);
 //   }
@@ -167,7 +167,7 @@ TEST_F(TestLB, test_lb_1) {
 //     auto proxy_1 = theCollection()->construct<LBTest>(range);
 //     auto proxy_2 = theCollection()->construct<LBTest>(range);
 //     auto proxy_3 = theCollection()->construct<LBTest>(range);
-//     cur_time = ::vt::timing::Timing::getCurrentTime();
+//     cur_time = ::vt::timing::getCurrentTime();
 //     startIter(0,proxy_1);
 //     startIter(0,proxy_2);
 //     startIter(0,proxy_3);

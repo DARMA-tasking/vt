@@ -53,11 +53,11 @@
 
 namespace vt { namespace timing {
 
-/*static*/ TimeType Timing::getCurrentTime() {
+TimeType getCurrentTime() {
   return MPI_Wtime();
 }
 
-/*static*/ std::string Timing::getTimeWithUnits(TimeType const time) {
+std::string getTimeWithUnits(TimeType const time) {
   if (not debug::preConfig()->vt_time_units) {
     return std::to_string(time);
   }

@@ -47,8 +47,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-using timing::Timing;
-
 void LoadSamplerBaseLB::buildHistogram() {
   for (auto obj : *load_model_) {
     auto load = load_model_->getWork(
@@ -64,7 +62,7 @@ void LoadSamplerBaseLB::buildHistogram() {
       verbose, lb,
       "\t buildHistogram: obj={}, home={}, load={}, "
       "load_milli={}, bin={}\n",
-      obj.id, obj.getHomeNode(), Timing::getTimeWithUnits(load), load_milli, bin
+      obj.id, obj.getHomeNode(), timing::getTimeWithUnits(load), load_milli, bin
     );
   }
 }

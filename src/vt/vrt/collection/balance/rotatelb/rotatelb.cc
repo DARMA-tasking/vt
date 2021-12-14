@@ -50,8 +50,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-using timing::Timing;
-
 void RotateLB::init(objgroup::proxy::Proxy<RotateLB> in_proxy) {
   proxy = in_proxy;
 }
@@ -82,7 +80,7 @@ void RotateLB::runLB(TimeType) {
     vt_debug_print(
       terse, lb,
       "\t RotateLB::migrating object to: obj={}, load={}, to_node={}\n",
-      obj, Timing::getTimeWithUnits(load), next_node
+      obj, timing::getTimeWithUnits(load), next_node
     );
     if (obj.isMigratable()) {
       migrateObjectTo(obj, next_node);

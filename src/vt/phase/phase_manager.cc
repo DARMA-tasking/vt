@@ -218,15 +218,15 @@ void PhaseManager::runHooksManual(PhaseHook type) {
 }
 
 void PhaseManager::setStartTime() {
-  start_time_ = timing::Timing::getCurrentTime();
+  start_time_ = timing::getCurrentTime();
 }
 
 void PhaseManager::printSummary() {
   if (theContext()->getNode() == 0 and cur_phase_ != 0) {
-    auto time = timing::Timing::getCurrentTime() - start_time_;
+    auto time = timing::getCurrentTime() - start_time_;
     vt_print(
       phase, "PhaseManager::printSummary, phase={}, time={}\n",
-      cur_phase_, timing::Timing::getTimeWithUnits(time)
+      cur_phase_, timing::getTimeWithUnits(time)
     );
   }
 }
