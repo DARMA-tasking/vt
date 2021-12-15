@@ -52,7 +52,6 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
-#include "vt/vrt/collection/balance/stats_msg.h"
 
 #include <functional>
 #include <map>
@@ -61,6 +60,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct LoadModel;
+struct NodeStatsMsg;
 
 /**
  * \struct LBManager
@@ -216,9 +216,6 @@ private:
     std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase
   );
   void statsHandler(StatsMsgType* msg);
-  balance::LoadData reduceVec(
-    lb::Statistic stat, std::vector<balance::LoadData>&& vec
-  ) const;
   bool isCollectiveComm(elm::CommCategory cat) const;
 
 private:

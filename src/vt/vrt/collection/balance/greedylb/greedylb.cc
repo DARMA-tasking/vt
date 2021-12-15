@@ -51,7 +51,6 @@
 #include "vt/vrt/collection/balance/greedylb/greedylb_constants.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb_msgs.h"
 #include "vt/vrt/collection/balance/read_lb.h"
-#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
 #include "vt/context/context.h"
 #include "vt/vrt/collection/manager.h"

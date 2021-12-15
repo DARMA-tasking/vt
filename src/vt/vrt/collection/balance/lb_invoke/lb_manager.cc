@@ -45,6 +45,7 @@
 #include "vt/configs/arguments/app_config.h"
 #include "vt/context/context.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/node_stats.h"
@@ -413,6 +414,20 @@ void LBManager::statsHandler(StatsMsgType* msg) {
   }
 }
 
+balance::LoadData reduceVec(
+  lb::Statistic stat, std::vector<balance::LoadData>&& vec
+) {
+  balance::LoadData reduce_ld(stat, 0.0f);
+  if (vec.size() == 0) {
+    return reduce_ld;
+  } else {
+    for (std::size_t i = 1; i < vec.size(); i++) {
+      vec[0] = vec[0] + vec[i];
+    }
+    return vec[0];
+  }
+}
+
 void LBManager::computeStatistics(
   std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase
 ) {
@@ -474,21 +489,6 @@ void LBManager::computeStatistics(
 
   auto msg = makeMessage<StatsMsgType>(std::move(lstats));
   proxy_.template reduce<ReduceOp>(msg,cb);
-}
-
-balance::LoadData
-LBManager::reduceVec(
-  lb::Statistic stat, std::vector<balance::LoadData>&& vec
-) const {
-  balance::LoadData reduce_ld(stat, 0.0f);
-  if (vec.size() == 0) {
-    return reduce_ld;
-  } else {
-    for (std::size_t i = 1; i < vec.size(); i++) {
-      vec[0] = vec[0] + vec[i];
-    }
-    return vec[0];
-  }
 }
 
 bool LBManager::isCollectiveComm(elm::CommCategory cat) const {

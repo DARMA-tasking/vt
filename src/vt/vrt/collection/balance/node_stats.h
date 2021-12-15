@@ -49,7 +49,6 @@
 #include "vt/elm/elm_comm.h"
 #include "vt/elm/elm_stats.fwd.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
-#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/types/migratable.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/timing/timing.h"
