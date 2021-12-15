@@ -122,7 +122,7 @@ struct LoadData {
   TimeType sum() const { return sum_; }
   TimeType min() const { return min_; }
   TimeType avg() const { return avg_; }
-  TimeType var() const { return M2_ * (1.0f / N_); }
+  TimeType var() const { return N_ > 0 ? M2_ * (1.0f / N_) : 0.0; }
   TimeType skew() const {
     static const double min_sqrt = std::sqrt(std::numeric_limits<double>::min());
     if (N_ == 1 or M2_ < min_sqrt) { // 1.e-150
@@ -146,7 +146,7 @@ struct LoadData {
       return nvar_inv * var_inv * M4_ - 3.;
     }
   }
-  TimeType I() const { return (max() / avg()) - 1.0f; }
+  TimeType I() const { return avg() > 0.0 ? (max() / avg()) - 1.0f : 0.0; }
   TimeType stdv() const { return std::sqrt(var()); }
   int32_t  npr() const { return P_; }
 
