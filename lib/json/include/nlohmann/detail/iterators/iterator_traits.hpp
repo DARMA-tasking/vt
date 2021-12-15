@@ -5,7 +5,7 @@
 #include <nlohmann/detail/meta/void_t.hpp>
 #include <nlohmann/detail/meta/cpp_future.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -48,4 +48,4 @@ struct iterator_traits<T*, enable_if_t<std::is_object<T>::value>>
     using reference = T&;
 };
 } // namespace detail
-} // namespace nlohmann
+}} // namespace nlohmann::vt

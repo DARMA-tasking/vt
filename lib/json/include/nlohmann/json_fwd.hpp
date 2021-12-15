@@ -12,7 +12,7 @@
 @see https://github.com/nlohmann
 @since version 1.0.0
 */
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 /*!
 @brief default JSONSerializer template argument
@@ -73,6 +73,6 @@ This type preserves the insertion order of object keys.
 */
 using ordered_json = basic_json<nlohmann::ordered_map>;
 
-}  // namespace nlohmann
+}} // namespace nlohmann::vt
 
 #endif  // INCLUDE_NLOHMANN_JSON_FWD_HPP_

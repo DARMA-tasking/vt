@@ -2,7 +2,7 @@
 
 #include <cstddef> // size_t
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -24,4 +24,4 @@ struct position_t
 };
 
 } // namespace detail
-} // namespace nlohmann
+}} // namespace nlohmann::vt
