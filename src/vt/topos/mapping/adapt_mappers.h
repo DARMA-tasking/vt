@@ -55,6 +55,9 @@ using MapAdapter = PhysicalResourceType(IndexT*, IndexT*, PhysicalResourceType);
 template <typename F, F* f>
 using FunctorAdapt = ::vt::auto_registry::FunctorAdapter<F,f>;
 
+template <typename F, F* f, typename IndexT>
+using MapFunctorAdapt = ::vt::auto_registry::FunctorAdapter<F, f, IndexT>;
+
 }}  // end namespace vt::mapping
 
 #endif /*INCLUDED_VT_TOPOS_MAPPING_ADAPT_MAPPERS_H*/

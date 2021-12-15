@@ -61,6 +61,9 @@
 #include <utility>
 #include <vector>
 
+namespace vt {
+
+
 
 // Verbatim copy from CLI/Version.hpp:
 
@@ -8220,4 +8223,6 @@ inline std::string Formatter::make_option_usage(const Option *opt) const {
 }
 
 } // namespace CLI
+
+} // namespace vt
 

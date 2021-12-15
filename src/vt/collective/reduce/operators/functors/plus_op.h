@@ -60,7 +60,7 @@ struct PlusOp< std::vector<T> > {
   void operator()(std::vector<T>& v1, std::vector<T> const& v2) {
     vtAssert(v1.size() == v2.size(), "Sizes of vectors in reduce must be equal");
     for (size_t ii = 0; ii < v1.size(); ++ii)
-      v1[ii] += v2[ii];
+      v1[ii] = v1[ii] + v2[ii];
   }
 };
 

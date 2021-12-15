@@ -70,6 +70,7 @@ static constexpr BitCountType const objgroup_num_bits = 1;
 static constexpr BitCountType const trace_num_bits = 1;
 static constexpr BitCountType const control_num_bits = 20;
 static constexpr BitCountType const member_num_bits = 1;
+static constexpr BitCountType const base_msg_derived_num_bits = 1;
 static constexpr BitCountType const handler_id_num_bits =
  BitCounterType<HandlerType>::value - (
      auto_num_bits
@@ -78,18 +79,20 @@ static constexpr BitCountType const handler_id_num_bits =
    + control_num_bits
    + trace_num_bits
    + member_num_bits
+   + base_msg_derived_num_bits
  );
 
 // eHandlerBits::ObjGroup identifies the handler as targeting an objgroup; the
 // control bits are an extensible field used for module-specific sub-handlers
 enum eHandlerBits {
   ObjGroup   = 0,
-  Auto       = eHandlerBits::ObjGroup + objgroup_num_bits,
-  Functor    = eHandlerBits::Auto     + auto_num_bits,
-  Trace      = eHandlerBits::Functor  + functor_num_bits,
-  Control    = eHandlerBits::Trace    + trace_num_bits,
-  Member     = eHandlerBits::Control  + control_num_bits,
-  Identifier = eHandlerBits::Member   + member_num_bits,
+  Auto            = eHandlerBits::ObjGroup       + objgroup_num_bits,
+  Functor         = eHandlerBits::Auto           + auto_num_bits,
+  Trace           = eHandlerBits::Functor        + functor_num_bits,
+  Control         = eHandlerBits::Trace          + trace_num_bits,
+  Member          = eHandlerBits::Control        + control_num_bits,
+  BaseMsgDerived  = eHandlerBits::Member         + member_num_bits,
+  Identifier      = eHandlerBits::BaseMsgDerived + base_msg_derived_num_bits,
 };
 
 struct HandlerManager {
@@ -100,7 +103,8 @@ struct HandlerManager {
   static HandlerType makeHandler(
     bool is_auto, bool is_functor, HandlerIdentifierType id,
     bool is_objgroup = false, HandlerControlType control = 0,
-    bool is_trace = true, bool is_member = false
+    bool is_trace = true, bool is_member = false,
+    bool is_base_msg_derived = true
   );
   static void setHandlerIdentifier(HandlerType& han, HandlerIdentifierType id);
   static void setHandlerControl(HandlerType& han, HandlerControlType control);
@@ -111,10 +115,12 @@ struct HandlerManager {
   static void setHandlerFunctor(HandlerType& han, bool is_functor);
   static void setHandlerObjGroup(HandlerType& han, bool is_objgroup);
   static void setHandlerMember(HandlerType& han, bool is_member);
+  static void setHandlerBaseMsgDerived(HandlerType& han, bool is_base_msg_derived);
   static bool isHandlerAuto(HandlerType han);
   static bool isHandlerFunctor(HandlerType han);
   static bool isHandlerObjGroup(HandlerType han);
   static bool isHandlerMember(HandlerType han);
+  static bool isHandlerBaseMsgDerived(HandlerType han);
 #if vt_check_enabled(trace_enabled)
   static void setHandlerTrace(HandlerType& han, bool is_trace);
   static bool isHandlerTrace(HandlerType han);

@@ -50,40 +50,115 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/**
- * \brief A description of the interval of interest for a modeled load query
- *
- * The value of `phases` can be in the past or future. Negative values
- * represent a distance into the past, in which -1 is most recent. A
- * value of 0 represents the immediate upcoming phase. Positive values
- * represent more distant future phases.
- */
-struct PhaseOffset {
-  PhaseOffset() = delete;
+struct ObjectIteratorImpl {
+  using value_type = ElementIDStruct;
 
-  int phases;
-  static constexpr unsigned int NEXT_PHASE = 0;
+  ObjectIteratorImpl() = default;
+  virtual ~ObjectIteratorImpl() = default;
 
-  unsigned int subphase;
-  static constexpr unsigned int WHOLE_PHASE = ~0u;
+  virtual void operator++() = 0;
+  virtual value_type operator*() const = 0;
+  virtual bool isValid() const = 0;
 };
 
-class ObjectIterator {
-  using difference_type = std::ptrdiff_t;
-  using value_type = LoadMapType::key_type;
-  using pointer = value_type*;
-  using reference = value_type&;
+struct ObjectIterator {
+  ObjectIterator(std::unique_ptr<ObjectIteratorImpl>&& in_impl)
+    : impl(std::move(in_impl))
+  { }
+  ObjectIterator(std::nullptr_t)
+    : impl(nullptr)
+  { }
+  void operator++() {
+    vtAssert(isValid(), "Can only increment a valid iterator");
+    ++(*impl);
+  }
+  ElementIDStruct operator*() const {
+    vtAssert(isValid(), "Can only increment a valid iterator");
+    return **impl;
+  }
+  bool isValid() const { return impl && impl->isValid(); }
+  bool operator!=(const ObjectIterator& rhs) const {
+    vtAssert(rhs.impl == nullptr, "Can only compare against an end() iterator");
+    return isValid();
+  }
 
+private:
+  std::unique_ptr<ObjectIteratorImpl> impl;
+};
+
+struct LoadMapObjectIterator : public ObjectIteratorImpl {
   using map_iterator_type = LoadMapType::const_iterator;
   using iterator_category = std::iterator_traits<map_iterator_type>::iterator_category;
-  map_iterator_type i;
+  map_iterator_type i, end;
 
-public:
-  explicit ObjectIterator(map_iterator_type in) : i(in) { }
-  void operator++() { ++i; }
-  value_type operator*() { return i->first; }
-  bool operator!=(ObjectIterator rhs) { return i != rhs.i; }
-  difference_type operator-(ObjectIterator rhs) { return std::distance(rhs.i, i); }
+  LoadMapObjectIterator(map_iterator_type in, map_iterator_type in_end)
+    : i(in), end(in_end)
+  { }
+  void operator++() override { ++i; }
+  value_type operator*() const override { return i->first; }
+  bool isValid() const override { return i != end; }
+};
+
+struct FilterIterator : public ObjectIteratorImpl {
+  FilterIterator(
+    ObjectIterator&& in_it, std::function<bool(ElementIDStruct)>&& in_filter
+  ) : it(std::move(in_it))
+    , filter(std::move(in_filter))
+  {
+    advanceToNext();
+  }
+
+  // Satisfy the invariant at initialization or increment
+  void advanceToNext() {
+    while (it.isValid() && !filter(*it)) {
+      ++it;
+    }
+  }
+
+  void operator++() override {
+    ++it;
+    advanceToNext();
+  }
+  value_type operator*() const override { return *it; }
+  bool isValid() const override { return it.isValid(); }
+
+  // Invariant: points either to an element that satisfies filter, or to end
+  ObjectIterator it;
+  std::function<bool(ElementIDStruct)> filter;
+};
+
+struct ConcatenatedIterator : public ObjectIteratorImpl {
+  ConcatenatedIterator(ObjectIterator&& in_it1, ObjectIterator&& in_it2)
+    : it1(std::move(in_it1))
+    , it2(std::move(in_it2))
+  { }
+
+  void operator++() override
+  {
+    if (it1.isValid()) {
+      ++it1;
+      return;
+    }
+
+    if (it2.isValid()) {
+      ++it2;
+    }
+  }
+
+  value_type operator*() const override
+  {
+    if (it1.isValid())
+      return *it1;
+    else
+      return *it2;
+  }
+
+  bool isValid() const override
+  {
+    return it1.isValid() || it2.isValid();
+  }
+
+  ObjectIterator it1, it2;
 };
 
 /**
@@ -91,9 +166,8 @@ public:
  * into predictions of future object load for load balancing
  * strategies
  */
-class LoadModel
+struct LoadModel
 {
-public:
   LoadModel() = default;
   virtual ~LoadModel() = default;
 
@@ -103,9 +177,10 @@ public:
    * This would typically be called by LBManager when the user has
    * passed a new model instance for a collection
    */
-  virtual void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                        std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
-                        std::unordered_map<PhaseType, CommMapType> const* proc_comm) = 0;
+  virtual void setLoads(
+    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+    std::unordered_map<PhaseType, CommMapType> const* proc_comm
+  ) = 0;
 
   /**
    * \brief Signals that load data for a new phase is available
@@ -148,27 +223,35 @@ public:
   virtual unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) = 0;
 
   /**
-   * Object enumeration, to abstract away access to the underlying structures from NodeStats
+   * Object enumeration, to abstract away access to the underlying structures
+   * from NodeStats
    *
    * The `updateLoads` method must have been called before any call to
    * this.
    */
   virtual ObjectIterator begin() = 0;
-  /**
-   * Object enumeration, to abstract away access to the underlying structures from NodeStats
-   *
-   * The `updateLoads` method must have been called before any call to
-   * this.
-   */
-  virtual ObjectIterator end() = 0;
 
   /**
-   * Object enumeration, to abstract away access to the underlying structures from NodeStats
+   * Object enumeration, to abstract away access to the underlying structures
+   * from NodeStats
    *
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual int getNumObjects() = 0;
+  ObjectIterator end() { return ObjectIterator{nullptr}; }
+
+  /**
+   * Object enumeration, to abstract away access to the underlying structures
+   * from NodeStats
+   *
+   * The `updateLoads` method must have been called before any call to
+   * this.
+   */
+  virtual int getNumObjects() {
+    int count = 0;
+    for (auto it = begin(); it != end(); ++it, ++count) {}
+    return count;
+  }
 
   /**
    * Returns the number of phases of history available
@@ -189,7 +272,7 @@ public:
 
   template <typename Serializer>
   void serialize(Serializer& s) {}
-}; // class LoadModel
+}; // struct LoadModel
 
 }}}} // namespaces
 

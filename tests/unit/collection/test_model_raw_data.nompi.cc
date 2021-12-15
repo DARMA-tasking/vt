@@ -69,26 +69,23 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
     std::make_shared<RawData>();
 
   std::unordered_map<PhaseType, LoadMapType> proc_loads;
-  std::unordered_map<PhaseType, SubphaseLoadMapType> subphase_loads;
-  test_model->setLoads(&proc_loads, &subphase_loads, nullptr);
+  test_model->setLoads(&proc_loads, nullptr);
 
   ElementIDStruct id1{1,this_node,this_node};
   ElementIDStruct id2{2,this_node,this_node};
 
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
-    LoadMapType{{id1, TimeType{5}},   {id2, TimeType{10}}},
-    LoadMapType{{id1, TimeType{30}},  {id2, TimeType{100}}},
-    LoadMapType{{id1, TimeType{50}},  {id2, TimeType{40}}},
-    LoadMapType{{id1, TimeType{2}},   {id2, TimeType{50}}},
-    LoadMapType{{id1, TimeType{60}},  {id2, TimeType{20}}},
-    LoadMapType{{id1, TimeType{100}}, {id2, TimeType{10}}},
+    LoadMapType{{id1, {TimeType{5}, {TimeType{5}}}},   {id2, {TimeType{10}, {TimeType{10}}}}},
+    LoadMapType{{id1, {TimeType{30}, {TimeType{30}}}},  {id2, {TimeType{100}, {TimeType{100}}}}},
+    LoadMapType{{id1, {TimeType{50}, {TimeType{50}}}},  {id2, {TimeType{40}, {TimeType{40}}}}},
+    LoadMapType{{id1, {TimeType{2}, {TimeType{2}}}},   {id2, {TimeType{50}, {TimeType{50}}}}},
+    LoadMapType{{id1, {TimeType{60}, {TimeType{60}}}},  {id2, {TimeType{20}, {TimeType{20}}}}},
+    LoadMapType{{id1, {TimeType{100}, {TimeType{100}}}}, {id2, {TimeType{10}, {TimeType{10}}}}},
   };
 
   for (size_t iter = 0; iter < load_holder.size(); ++iter) {
     proc_loads[iter] = load_holder[iter];
-    subphase_loads[iter][id1] = {load_holder[iter][id1]};
-    subphase_loads[iter][id2] = {load_holder[iter][id2]};
     test_model->updateLoads(iter);
 
     EXPECT_EQ(test_model->getNumObjects(), 2);
@@ -104,10 +101,10 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
       objects_seen++;
 
       auto work_val = test_model->getWork(obj, PhaseOffset{-1, PhaseOffset::WHOLE_PHASE});
-      EXPECT_EQ(work_val, load_holder[iter][obj]);
+      EXPECT_EQ(work_val, load_holder[iter][obj].whole_phase_load);
 
       auto sub_work_val = test_model->getWork(obj, PhaseOffset{-1, 0});
-      EXPECT_EQ(sub_work_val, load_holder[iter][obj]);
+      EXPECT_EQ(sub_work_val, load_holder[iter][obj].subphase_loads[0]);
     }
     EXPECT_EQ(objects_seen, 2);
   }

@@ -246,32 +246,28 @@ template <typename IdxT>
 NodeType CollectionManager::getElementMapping(
   HandlerType map_han, ObjGroupProxyType map_object, IdxT idx, IdxT bounds
 ) {
-  using BaseIdxType = vt::index::BaseIndex;
   if (map_han != uninitialized_handler) {
     // Get the map handler function
     bool const is_functor =
       auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
-    auto_registry::AutoActiveMapType map_fn = nullptr;
-    if (is_functor) {
-      map_fn = auto_registry::getAutoHandlerFunctorMap(map_han);
-    } else {
-      map_fn = auto_registry::getAutoHandlerMap(map_han);
-    }
-
+    auto const& map_fn = is_functor ?
+      auto_registry::getAutoHandlerFunctorMap(map_han) :
+      auto_registry::getAutoHandlerMap(map_han);
     auto const num_nodes = theContext()->getNumNodes();
-    auto const idx_base = static_cast<BaseIdxType*>(&idx);
-    auto const bounds_base = static_cast<BaseIdxType*>(&bounds);
-    auto const mapped_node = map_fn(idx_base, bounds_base, num_nodes);
+    auto const mapped_node = map_fn->dispatch(&idx, &bounds, num_nodes);
+
     return mapped_node;
-  } else if (map_object != no_obj_group) {
+  }
+
+  if (map_object != no_obj_group) {
     objgroup::proxy::Proxy<mapping::BaseMapper<IdxT>> p{map_object};
     auto map_obj_ptr = p.get();
     auto num_nodes = theContext()->getNumNodes();
     return map_obj_ptr->map(&idx, idx.ndims(), num_nodes);
-  } else {
-    vtAbort("No valid map fn or object group specified for the collection");
-    return uninitialized_destination;
   }
+
+  vtAbort("No valid map fn or object group specified for the collection");
+  return uninitialized_destination;
 }
 
 }}} /* end namespace vt::vrt::collection */

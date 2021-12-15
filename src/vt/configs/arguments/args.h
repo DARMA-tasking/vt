@@ -53,11 +53,13 @@
 #include <vector>
 #include <tuple>
 
+namespace vt {
+
 namespace CLI {
 class App;
 } /* end namespace CLI */
 
-namespace vt { namespace arguments {
+namespace arguments {
 
 /**
  * \struct ArgConfig
@@ -108,6 +110,7 @@ private:
   bool parsed_ = false;
 };
 
-}} /* end namespace vt::arguments */
+} // namespace arguments
+} // namespace vt
 
 #endif /*INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H*/

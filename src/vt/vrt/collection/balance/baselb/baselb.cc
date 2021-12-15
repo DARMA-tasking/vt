@@ -54,30 +54,34 @@
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 
 #include <tuple>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-void BaseLB::startLB(
+std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   PhaseType phase,
   objgroup::proxy::Proxy<BaseLB> proxy,
   balance::LoadModel* model,
-  ElementCommType const& in_comm_stats
+  StatisticMapType const& in_stats,
+  ElementCommType const& in_comm_stats,
+  TimeType total_load
 ) {
   start_time_ = timing::Timing::getCurrentTime();
   phase_ = phase;
   proxy_ = proxy;
   load_model_ = model;
 
-  importProcessorData(in_comm_stats);
+  importProcessorData(in_stats, in_comm_stats);
 
-  runInEpochCollective(
-    "BaseLB::startLB -> computeStatistics", [this]{ computeStatistics(); }
-  );
-  runInEpochCollective(
-    "BaseLB::startLB -> finishedStats", [this]{ finishedStats(); }
-  );
+  runInEpochCollective("BaseLB::startLB -> runLB", [this,total_load]{
+    getArgs(phase_);
+    inputParams(spec_entry_.get());
+    runLB(total_load);
+  });
+
+  return normalizeReassignments();
 }
 
 /*static*/
@@ -86,39 +90,17 @@ BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) {
   return load * 1000;
 }
 
-BaseLB::ObjBinType BaseLB::histogramSample(LoadType const& load) const {
-  auto const bin_size = getBinSize();
-  ObjBinType const bin =
-    ((static_cast<int32_t>(load)) / bin_size * bin_size)
-    + bin_size;
-  return bin;
-}
-
 void BaseLB::importProcessorData(
-  ElementCommType const& comm_in
+  StatisticMapType const& in_stats, ElementCommType const& comm_in
 ) {
-  auto const& this_node = theContext()->getNode();
   vt_debug_print(
     normal, lb,
-    "{}: importProcessorData: load stats size={}, load comm size={}\n",
-    this_node, load_model_->getNumObjects(), comm_in.size()
+    "importProcessorData: load stats size={}, load comm size={}\n",
+    load_model_->getNumObjects(), comm_in.size()
   );
-  for (auto obj : *load_model_) {
-    auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
-    auto const& load_milli = loadMilli(load);
-    auto const& bin = histogramSample(load_milli);
-    this_load += load_milli;
-    obj_sample[bin].push_back(obj);
-
-    vt_debug_print(
-      verbose, lb,
-      "\t {}: importProcessorData: this_load={}, obj={}, home={}, load={}, "
-      "load_milli={}, bin={}\n",
-      this_node, this_load, obj.id, obj.home_node, load, load_milli, bin
-    );
-  }
 
   comm_data = &comm_in;
+  base_stats_ = &in_stats;
 }
 
 void BaseLB::getArgs(PhaseType phase) {
@@ -140,100 +122,109 @@ void BaseLB::getArgs(PhaseType phase) {
   }
 }
 
-void BaseLB::statsHandler(StatsMsgType* msg) {
-  auto in       = msg->getConstVal();
-  auto max      = in.max();
-  auto min      = in.min();
-  auto avg      = in.avg();
-  auto sum      = in.sum();
-  auto npr      = in.npr();
-  auto car      = in.N_;
-  auto imb      = in.I();
-  auto var      = in.var();
-  auto stdv     = in.stdv();
-  auto skew     = in.skew();
-  auto krte     = in.krte();
-  auto the_stat = msg->stat_;
+std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
+  using namespace balance;
 
-  stats[the_stat][lb::StatisticQuantity::max] = max;
-  stats[the_stat][lb::StatisticQuantity::min] = min;
-  stats[the_stat][lb::StatisticQuantity::avg] = avg;
-  stats[the_stat][lb::StatisticQuantity::sum] = sum;
-  stats[the_stat][lb::StatisticQuantity::npr] = npr;
-  stats[the_stat][lb::StatisticQuantity::car] = car;
-  stats[the_stat][lb::StatisticQuantity::var] = var;
-  stats[the_stat][lb::StatisticQuantity::npr] = npr;
-  stats[the_stat][lb::StatisticQuantity::imb] = imb;
-  stats[the_stat][lb::StatisticQuantity::std] = stdv;
-  stats[the_stat][lb::StatisticQuantity::skw] = skew;
-  stats[the_stat][lb::StatisticQuantity::kur] = krte;
+  auto this_node = theContext()->getNode();
+  pending_reassignment_->node_ = this_node;
 
-  if (theContext()->getNode() == 0) {
-    vt_print(
-      lb,
-      "BaseLB: Statistic={}: "
-      " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
-      " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
-      " npr={}, imb={:.2f}, num_stats={}\n",
-      get_lb_stat_name()[the_stat],
-      max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
-      stats.size()
-    );
-  }
-}
+  runInEpochCollective("Sum migrations", [&] {
+    auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);
+    int32_t local_migration_count = transfers_.size();
+    auto msg = makeMessage<CountMsg>(local_migration_count);
+    proxy_.template reduce<collective::PlusOp<int32_t>>(msg,cb);
+  });
 
-void BaseLB::applyMigrations(
-  TransferVecType const &transfers, MigrationCountCB migration_count_callback
-) {
-  migration_count_cb_ = migration_count_callback;
+  std::map<NodeType, ObjDestinationListType> migrate_other;
 
-  TransferType off_node_migrate;
+  // Do local setup of reassignment data structure
+  for (auto&& transfer : transfers_) {
+    auto const obj_id = std::get<0>(transfer);
+    auto const new_node = std::get<1>(transfer);
+    auto const current_node = obj_id.curr_node;
 
-  for (auto&& elm : transfers) {
-    auto obj_id = std::get<0>(elm);
-    auto to = std::get<1>(elm);
-    auto from = objGetNode(obj_id);
+    // self-migration
+    if (current_node == new_node) {
+      // Filter out self-migrations entirely
+      continue;
+      // vtAbort("Not currently implemented -- self-migration");
+    }
 
-    if (from != to) {
-      bool has_object = theNodeStats()->hasObjectToMigrate(obj_id);
-
-      vt_debug_print(
-        normal, lb,
-        "migrateObjectTo, obj_id={}, home={}, from={}, to={}, found={}\n",
-        obj_id.id, obj_id.home_node, from, to, has_object
-      );
-
-      local_migration_count_++;
-      if (has_object) {
-        theNodeStats()->migrateObjTo(obj_id, to);
-      } else {
-        off_node_migrate[from].push_back(std::make_tuple(obj_id,to));
-      }
+    // the object lives here, so it's departing.
+    if (current_node == this_node) {
+      pending_reassignment_->depart_[obj_id] = new_node;
+    } else {
+      // The user has specified a migration that the current host will
+      // need to be informed of
+      migrate_other[current_node].push_back(transfer);
     }
   }
 
-  for (auto&& elm : off_node_migrate) {
-    transferSend(elm.first, elm.second);
-  }
+  runInEpochCollective("BaseLB -> sendMigrateOthers", [&]{
+    using ArriveListMsgType = TransferMsg<ObjDestinationListType>;
 
-  // Re-compute the statistics with the new partition based on current
-  // this_load_ values
-  computeStatistics();
-  migrationDone();
+    for (auto&& other : migrate_other) {
+      auto const current_host = std::get<0>(other);
+      auto const& vec = std::get<1>(other);
+      proxy_[current_host].template send<
+        ArriveListMsgType, &BaseLB::notifyCurrentHostNodeOfObjectsDeparting
+      >(vec);
+    }
+  });
+
+  // At this point, all nodes should have complete data on which
+  // objects will be departing, and to where
+
+  // Do remote work to normalize the reassignments
+  runInEpochCollective("BaseLB -> normalizeReassignments", [&]{
+    // Notify all potential recipients for this reassignment that they have an
+    // arriving object
+    using DepartMsgType = TransferMsg<ObjLoadListType>;
+    std::map<NodeType, ObjLoadListType> depart_map;
+
+    for (auto&& departing : pending_reassignment_->depart_) {
+      auto const obj_id = std::get<0>(departing);
+      auto const dest = std::get<1>(departing);
+      auto const load_summary = getObjectLoads(
+        load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      depart_map[dest].push_back(std::make_tuple(obj_id, load_summary));
+    }
+
+    for (auto&& depart_list : depart_map) {
+      auto const dest = std::get<0>(depart_list);
+      auto const& vec = std::get<1>(depart_list);
+      proxy_[dest].template send<
+        DepartMsgType, &BaseLB::notifyNewHostNodeOfObjectsArriving
+      >(vec);
+    }
+  });
+
+  // And now, all nodes should have complete data on which objects
+  // will be arriving, and how much load they represent
+
+  return pending_reassignment_;
 }
 
-void BaseLB::transferSend(NodeType from, TransferVecType const& transfer) {
-  using MsgType = TransferMsg<TransferVecType>;
-  proxy_[from].template send<MsgType,&BaseLB::transferMigrations>(transfer);
-}
-
-void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
+void BaseLB::notifyCurrentHostNodeOfObjectsDeparting(
+  TransferMsg<ObjDestinationListType>* msg
+) {
   auto const& migrate_list = msg->getTransfer();
-  for (auto&& elm : migrate_list) {
-    auto obj_id  = std::get<0>(elm);
-    auto to_node = std::get<1>(elm);
-    vtAssert(theNodeStats()->hasObjectToMigrate(obj_id), "Must have object");
-    theNodeStats()->migrateObjTo(obj_id, to_node);
+  for (auto&& obj : migrate_list) {
+    pending_reassignment_->depart_[std::get<0>(obj)] = std::get<1>(obj);
+  }
+}
+
+void BaseLB::notifyNewHostNodeOfObjectsArriving(
+  TransferMsg<ObjLoadListType>* msg
+) {
+  auto const& arrival_list = msg->getTransfer();
+
+  // Add arriving objects to our local reassignment list
+  for (auto&& arrival : arrival_list) {
+    auto const obj_id = std::get<0>(arrival);
+    auto const& load_summary = std::get<1>(arrival);
+    pending_reassignment_->arrive_[obj_id] = load_summary;
   }
 }
 
@@ -246,6 +237,8 @@ void BaseLB::finalize(CountMsg* msg) {
   if (migration_count_cb_) {
     migration_count_cb_(global_count);
   }
+
+  pending_reassignment_->global_migration_count = global_count;
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const total_time = timing::Timing::getCurrentTime() - start_time_;
@@ -258,119 +251,8 @@ void BaseLB::finalize(CountMsg* msg) {
   }
 }
 
-void BaseLB::migrationDone() {
-  vt_debug_print(
-    normal, lb,
-    "BaseLB::migrationDone: local migration count={}\n",
-    local_migration_count_
-  );
-  auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);
-  auto msg = makeMessage<CountMsg>(local_migration_count_);
-  proxy_.template reduce<collective::PlusOp<int32_t>>(msg,cb);
-}
-
 NodeType BaseLB::objGetNode(ObjIDType const id) const {
   return balance::objGetNode(id);
-}
-
-void BaseLB::finishedStats() {
-  getArgs(phase_);
-  this->inputParams(spec_entry_.get());
-  this->runLB();
-}
-
-void BaseLB::computeStatistics() {
-  vt_debug_print(
-    normal, lb,
-    "computeStatistics: this_load={}\n", this_load
-  );
-
-  computeStatisticsOver(Statistic::P_l);
-  computeStatisticsOver(Statistic::O_l);
-
-  if (comm_aware_) {
-    computeStatisticsOver(Statistic::P_c);
-    computeStatisticsOver(Statistic::O_c);
-  }
-  // @todo: add P_c, P_t, O_c, O_t
-}
-
-balance::LoadData BaseLB::reduceVec(std::vector<balance::LoadData>&& vec) const {
-  balance::LoadData reduce_ld(0.0f);
-  if (vec.size() == 0) {
-    return reduce_ld;
-  } else {
-    for (std::size_t i = 1; i < vec.size(); i++) {
-      vec[0] = vec[0] + vec[i];
-    }
-    return vec[0];
-  }
-}
-
-bool BaseLB::isCollectiveComm(balance::CommCategory cat) const {
-  bool is_collective =
-    cat == balance::CommCategory::Broadcast or
-    cat == balance::CommCategory::CollectionToNodeBcast or
-    cat == balance::CommCategory::NodeToCollectionBcast;
-  return is_collective;
-}
-
-void BaseLB::computeStatisticsOver(Statistic stat) {
-  using ReduceOp = collective::PlusOp<balance::LoadData>;
-
-  auto cb = vt::theCB()->makeBcast<BaseLB, StatsMsgType, &BaseLB::statsHandler>(proxy_);
-
-  switch (stat) {
-  case Statistic::P_l: {
-    // Perform the reduction for P_l -> processor load only
-    auto msg = makeMessage<StatsMsgType>(Statistic::P_l, this_load);
-    proxy_.template reduce<ReduceOp>(msg,cb);
-  }
-  break;
-  case Statistic::P_c: {
-    // Perform the reduction for P_c -> processor comm only
-    double comm_load = 0.0;
-    for (auto&& elm : *comm_data) {
-      if (not comm_collectives_ and isCollectiveComm(elm.first.cat_)) {
-        continue;
-      }
-      if (elm.first.onNode() or elm.first.selfEdge()) {
-        continue;
-      }
-      //vt_print(lb, "comm_load={}, elm={}\n", comm_load, elm.second.bytes);
-      comm_load += elm.second.bytes;
-    }
-    auto msg = makeMessage<StatsMsgType>(Statistic::P_c, comm_load);
-    proxy_.template reduce<ReduceOp>(msg,cb);
-  }
-  break;
-  case Statistic::O_c: {
-    // Perform the reduction for O_c -> object comm only
-    std::vector<balance::LoadData> lds;
-    for (auto&& elm : *comm_data) {
-      // Only count object-to-object direct edges in the O_c statistics
-      if (elm.first.cat_ == balance::CommCategory::SendRecv and not elm.first.selfEdge()) {
-        lds.emplace_back(balance::LoadData(elm.second.bytes));
-      }
-    }
-    auto msg = makeMessage<StatsMsgType>(Statistic::O_c, reduceVec(std::move(lds)));
-    proxy_.template reduce<ReduceOp>(msg,cb);
-  }
-  break;
-  case Statistic::O_l: {
-    // Perform the reduction for O_l -> object load only
-    std::vector<balance::LoadData> lds;
-    for (auto elm : *load_model_) {
-      lds.emplace_back(load_model_->getWork(elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}));
-    }
-    auto msg = makeMessage<StatsMsgType>(Statistic::O_l, reduceVec(std::move(lds)));
-    proxy_.template reduce<ReduceOp>(msg,cb);
-  }
-  break;
-  default:
-    break;
-  }
-
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

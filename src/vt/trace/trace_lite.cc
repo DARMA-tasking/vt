@@ -125,8 +125,11 @@ TraceLite::TraceLite(std::string const& in_prog_name)
    *  incremental_flush_mode_ to Z_FINISH
    */
 
-  auto const use_z_finish = theConfig()->vt_trace_gzip_finish_flush;
-  setFlushType(use_z_finish ? Z_FINISH : Z_SYNC_FLUSH);
+  auto const* conf_ptr = theConfig();
+  if (conf_ptr) {
+    auto const use_z_finish = conf_ptr->vt_trace_gzip_finish_flush;
+    setFlushType(use_z_finish ? Z_FINISH : Z_SYNC_FLUSH);
+  }
 
   // The first (implied) scheduler always starts with an empty event stack.
   event_holds_.push_back(0);
@@ -134,16 +137,19 @@ TraceLite::TraceLite(std::string const& in_prog_name)
 
 TraceLite::~TraceLite() {}
 
-void TraceLite::setFlushType(int flush_type){
+void TraceLite::setFlushType(int flush_type) {
   vtAssert(
     flush_type <= 6 and flush_type >= 0,
-    fmt::format("flush_type={} has to be in [0;6] range!\n", flush_type));
+    fmt::format("flush_type={} has to be in [0;6] range!\n", flush_type)
+  );
 
   incremental_flush_mode_ = flush_type;
 }
 
 #if vt_check_enabled(trace_only)
 void TraceLite::initializeStandalone(MPI_Comm comm) {
+  setFlushType(Z_FINISH);
+
   trace_ptr = this;
   context_ptr = new ctx::Context(true, comm);
 

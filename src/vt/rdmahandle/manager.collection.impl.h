@@ -79,7 +79,6 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
 ) {
   using ElementListener = vrt::collection::listener::ElementEventEnum;
   using SubType         = SubHandle<T, vt::rdma::HandleEnum::StaticSize, IndexT>;
-  using BaseIdxType     = vt::index::BaseIndex;
   using ListenerType    = vrt::collection::listener::ListenFnType<IndexT>;
 
   RDMA_HandleType next_handle = in_next_handle;
@@ -123,11 +122,9 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
     auto num_nodes = theContext()->getNumNodes();
     auto min_node_mapped = theContext()->getNumNodes();
     std::size_t local_count = 0;
-    auto map_fn = auto_registry::getHandlerMap(map_han);
-    range.foreach([&](IndexT cur_idx) {
-      auto* cur_idx_ptr = static_cast<BaseIdxType*>(&cur_idx);
-      auto* range_ptr = static_cast<BaseIdxType*>(&range);
-      auto home_node = map_fn(cur_idx_ptr, range_ptr, num_nodes);
+    auto const& map_fn = auto_registry::getHandlerMap(map_han);
+    range.foreach ([&](IndexT cur_idx) {
+      auto home_node = map_fn->dispatch(&cur_idx, &range, num_nodes);
       if (home_node == this_node) {
         local_count++;
       }

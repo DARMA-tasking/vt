@@ -2,7 +2,7 @@ Language: Cpp
 ColumnLimit: 80
 UseTab: Never
 
-AccessModifierOffset: -4
+AccessModifierOffset: -2
 AlignAfterOpenBracket: AlwaysBreak
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false

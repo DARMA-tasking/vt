@@ -89,7 +89,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   std::vector<ElementIDStruct> myElemList(numElements);
 
   for (size_t ii = 0; ii < numElements; ++ii) {
-	//--- Shift by 1 to avoid the null permID
+    //--- Shift by 1 to avoid the null permID
     myElemList[ii] = ElementIDStruct{
       getElemPermID(ii+1, this_node), this_node, this_node
     };
@@ -109,21 +109,21 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   //--- Iteration 0
   for (auto&& elmID : myElemList) {
     //--- Use a dummy time value as it is not used.
-    sd->node_data_[phase][elmID] = tval;
+    sd->node_data_[phase][elmID].whole_phase_load = tval;
   }
 
   //--- Iteration 1
   phase += 1;
   if (this_node != num_nodes - 1) {
-    sd->node_data_[phase][myElemList[0]] = tval;
+    sd->node_data_[phase][myElemList[0]].whole_phase_load = tval;
   } else {
     for (auto&& elmID : myElemList) {
-      sd->node_data_[phase][elmID] = tval;
+      sd->node_data_[phase][elmID].whole_phase_load = tval;
     }
     for (NodeType in = 0; in+1 < num_nodes; ++in) {
       for (uint64_t elmID = 1; elmID < numElements; ++elmID) {
         auto permID = ElementIDStruct{getElemPermID(elmID+1, in), this_node, in};
-        sd->node_data_[phase][permID] = tval;
+        sd->node_data_[phase][permID].whole_phase_load = tval;
       }
     }
   }
@@ -131,7 +131,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   //--- Iteration 2
   phase += 1;
   for (auto&& elmID : myElemList) {
-    sd->node_data_[phase][elmID] = tval;
+    sd->node_data_[phase][elmID].whole_phase_load = tval;
   }
 
   phase += 1;

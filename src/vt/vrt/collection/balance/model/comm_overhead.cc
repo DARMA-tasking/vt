@@ -55,10 +55,9 @@ CommOverhead::CommOverhead(
 { }
 
 void CommOverhead::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                            std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
                             std::unordered_map<PhaseType, CommMapType> const* proc_comm) {
   proc_comm_ = proc_comm;
-  ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
+  ComposedModel::setLoads(proc_load, proc_comm);
 }
 
 TimeType CommOverhead::getWork(ElementIDStruct object, PhaseOffset offset) {

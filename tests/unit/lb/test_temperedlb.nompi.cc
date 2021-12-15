@@ -76,12 +76,12 @@ TimeType setupProblem(
 void orderAndVerify(
   ObjectOrdering order,
   const std::unordered_map<ElementIDStruct, TimeType> &cur_objs,
-  TimeType my_load_ms, TimeType target_load_ms,
+  TimeType my_load, TimeType target_load,
   const std::vector<ElementIDType> &soln
 ) {
   // have TemperedLB order the objects
   auto ordered_objs = vt::vrt::collection::lb::TemperedLB::orderObjects(
-    order, cur_objs, my_load_ms, target_load_ms
+    order, cur_objs, my_load, target_load
   );
 
   // verify correctness of the returned ordering
@@ -96,15 +96,10 @@ void orderUsingOverloadAndVerify(
   const std::vector<ElementIDType> &soln
 ) {
   std::unordered_map<ElementIDStruct, TimeType> cur_objs;
-  TimeType my_load_ms = vt::vrt::collection::lb::BaseLB::loadMilli(
-    setupProblem(cur_objs)
-  );
+  TimeType my_load = setupProblem(cur_objs);
+  TimeType target_load = my_load - over_avg_sec;
 
-  // we know how overloaded we are and need to compute the target load
-  TimeType target_load_ms = my_load_ms -
-    vt::vrt::collection::lb::BaseLB::loadMilli(over_avg_sec);
-
-  orderAndVerify(order, cur_objs, my_load_ms, target_load_ms, soln);
+  orderAndVerify(order, cur_objs, my_load, target_load, soln);
 }
 
 void orderUsingTargetLoadAndVerify(
@@ -112,16 +107,10 @@ void orderUsingTargetLoadAndVerify(
   const std::vector<ElementIDType> &soln
 ) {
   std::unordered_map<ElementIDStruct, TimeType> cur_objs;
-  TimeType my_load_ms = vt::vrt::collection::lb::BaseLB::loadMilli(
-    setupProblem(cur_objs)
-  );
+  TimeType my_load = setupProblem(cur_objs);
+  TimeType target_load = target_load_sec;
 
-  // we were given the target load directly but need to convert units
-  TimeType target_load_ms = vt::vrt::collection::lb::BaseLB::loadMilli(
-    target_load_sec
-  );
-
-  orderAndVerify(order, cur_objs, my_load_ms, target_load_ms, soln);
+  orderAndVerify(order, cur_objs, my_load, target_load, soln);
 }
 
 ///////////////////////////////////////////////////////////////////////////

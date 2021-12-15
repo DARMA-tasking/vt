@@ -54,7 +54,7 @@ void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
   proxy_ = in_proxy;
 }
 
-void StatsMapLB::runLB() {
+void StatsMapLB::runLB(TimeType) {
   auto const& myNewList = theStatsReader()->getMoveList(phase_);
   for (size_t in = 0; in < myNewList.size(); in += 2) {
     auto this_node = theContext()->getNode();

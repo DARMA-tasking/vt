@@ -63,6 +63,7 @@ using vt::vrt::collection::balance::Norm;
 using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
+using vt::vrt::collection::balance::LoadMapObjectIterator;
 
 using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
 using ProcSubphaseLoadMap = std::unordered_map<PhaseType, SubphaseLoadMapType>;
@@ -76,35 +77,29 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    ProcLoadMap const* proc_load, ProcSubphaseLoadMap const* proc_subphase_load,
+    ProcLoadMap const* proc_load,
     ProcCommMap const*) override {
     proc_load_ = proc_load;
-    proc_subphase_load_ = proc_subphase_load;
   }
 
   void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
-    return proc_subphase_load_->at(0).at(id).at(phase.subphase);
+    return proc_load_->at(0).at(id).subphase_loads.at(phase.subphase);
   }
 
   ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(0).begin());
-  }
-  ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(0).end());
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(0).begin(), proc_load_->at(0).end())};
   }
 
   int getNumSubphases() override { return num_subphases; }
 
   // Not used in this test
-  int getNumObjects() override { return 0; }
   unsigned int getNumCompletedPhases() override { return 0; }
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
 
 private:
   ProcLoadMap const* proc_load_ = nullptr;
-  ProcSubphaseLoadMap const* proc_subphase_load_ = nullptr;
 };
 
 TEST_F(TestModelNorm, test_model_norm_1) {
@@ -112,17 +107,11 @@ TEST_F(TestModelNorm, test_model_norm_1) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
-       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
-
-  ProcSubphaseLoadMap proc_subphase_load = {
-    {0,
-     SubphaseLoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, TimeType{20}, TimeType{30}}},
-       {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
+       {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
+       {ElementIDStruct{2,this_node,this_node}, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
 
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
-  test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
   for (unsigned int iter = 0; iter < num_subphases; ++iter) {
@@ -134,7 +123,7 @@ TEST_F(TestModelNorm, test_model_norm_1) {
       // offset.subphase != PhaseOffset::WHOLE_PHASE
       // expect work load value for given subphase
       auto work_val = test_model->getWork(obj, PhaseOffset{0, iter});
-      EXPECT_EQ(work_val, proc_subphase_load[0][obj][iter]);
+      EXPECT_EQ(work_val, proc_load[0][obj].subphase_loads[iter]);
     }
 
     EXPECT_EQ(objects_seen, 2);
@@ -146,18 +135,12 @@ TEST_F(TestModelNorm, test_model_norm_2) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
-       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
-
-  ProcSubphaseLoadMap proc_subphase_load = {
-    {0,
-     SubphaseLoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, TimeType{20}, TimeType{30}}},
-       {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
+       {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
+       {ElementIDStruct{2,this_node,this_node}, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
 
   // finite 'power' value
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
-  test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
   std::array<TimeType, 2> expected_norms = {
@@ -181,19 +164,13 @@ TEST_F(TestModelNorm, test_model_norm_3) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
-       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
-
-  ProcSubphaseLoadMap proc_subphase_load = {
-    {0,
-     SubphaseLoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, TimeType{20}, TimeType{30}}},
-       {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
+       {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
+       {ElementIDStruct{2,this_node,this_node}, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
 
   // infinite 'power' value
   auto test_model = std::make_shared<Norm>(
     std::make_shared<StubModel>(), std::numeric_limits<double>::infinity());
-  test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
   std::array<TimeType, 2> expected_norms = {TimeType{30}, TimeType{60}};
