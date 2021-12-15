@@ -73,11 +73,23 @@ stages:
     timeoutInMinutes: 180
     steps:
       - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
+      - task: Bash@3
         displayName: Job setup
         inputs:
           targetType: 'inline'
           script: |
             echo setup
+      - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
       - task: Bash@3
         displayName: Build timestamp for caching
         continueOnError: true
@@ -101,12 +113,24 @@ stages:
             val=$(cmake -P script)
             echo "##vso[task.setvariable variable=TS_DAY]$val"
       - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
+      - task: Bash@3
         displayName: Output timestamp for caching
         continueOnError: true
         condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
         inputs:
           targetType: 'inline'
           script: 'echo "my pipeline variable is $(TS) $(TS_YEAR) $(TS_MONTH) $(TS_DAY)"'
+      - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
       - task: Cache@2
         displayName: Update cache
         continueOnError: true
@@ -121,6 +145,12 @@ stages:
             $(Agent.OS) | "$(cache_name)" | $(TS_YEAR)
             $(Agent.OS) | "$(cache_name)"
       - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
+      - task: Bash@3
         displayName: Check for changes in containers
         condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
         inputs:
@@ -128,6 +158,12 @@ stages:
           script: |
             val=$(./scripts/check_containers.sh)
             echo "##vso[task.setvariable variable=compose_command]$val"
+      - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
       - task: DockerCompose@0
         displayName: Pull container
         inputs:
@@ -135,6 +171,12 @@ stages:
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
           dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean'
+      - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
       - task: DockerCompose@0
         displayName: Build container
         inputs:
@@ -144,6 +186,12 @@ stages:
           dockerComposeCommand: 'run ubuntu-cpp-clean'
         env:
           CODECOV_TOKEN: $(codecov_token)
+      - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
       - task: Bash@3
         displayName: Put compilation's and tests' logs in PR comment
         continueOnError: true
@@ -163,6 +211,12 @@ stages:
                 "$(Agent.JobStatus)"
         env:
           GITHUB_PAT: $(github_pat)
+      - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
       - task: DockerCompose@0
         displayName: Push container to registry
         continueOnError: true
@@ -174,6 +228,12 @@ stages:
           action: 'Run a Docker Compose command'
           dockerComposeCommand: 'push ubuntu-cpp-clean'
       - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
+      - task: Bash@3
         displayName: Create artifacts
         continueOnError: true
         condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
@@ -182,6 +242,12 @@ stages:
           script: |
             zip -j $(Agent.TempDirectory)/LastTest.log.gz $(build_root)/vt/Testing/Temporary/LastTest.log
             zip -j $(Agent.TempDirectory)/cmake-output.log.gz $(build_root)/vt/cmake-output.log
+      - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake test output artifact
         continueOnError: true
@@ -190,6 +256,12 @@ stages:
           targetPath: '$(Agent.TempDirectory)/LastTest.log.gz'
           artifact: 'CMakeLastTestLog'
           publishLocation: 'pipeline'
+      - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake full output artifact
         continueOnError: true
@@ -199,9 +271,21 @@ stages:
           artifact: 'CMakeOutputLog'
           publishLocation: 'pipeline'
       - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
+      - task: Bash@3
         displayName: Finish pipeline
         condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
         inputs:
           targetType: 'inline'
           script: |
             echo Done
+      - task: Bash@3
+        displayName: Disk space
+        inputs:
+          targetType: 'inline'
+          script: |
+            df -h
