@@ -70,27 +70,71 @@ inline HandlerType makeAutoHandlerFunctor() {
 }
 
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
-RegistrarFunctor<RunnableT, RegT, InfoT, FnT>::RegistrarFunctor() {
-  using AdapterType = typename RunnableT::AdapterType;
+struct RegistrarFunctor<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<std::is_same<InfoT, AutoRegInfo<AutoActiveType>>::value>
+> {
+  AutoHandlerType index;
 
-  RegT& reg = getAutoRegistryGen<RegT>();
-  index = reg.size(); // capture current index
+  RegistrarFunctor() {
+    using AdapterType = typename RunnableT::AdapterType;
+    using MsgType = typename AdapterType::MsgType;
+    using ObjType = typename AdapterType::ObjType;
 
-  FnT fn = reinterpret_cast<FnT>(AdapterType::getFunction());
-  NumArgsType num_args = AdapterType::getNumArgs();
+    RegT& reg = getAutoRegistryGen<RegT>();
+    index = reg.size(); // capture current index
+
+    auto fn = AdapterType::getFunction();
+    BaseHandlersDispatcherPtr d =
+      std::make_unique<HandlersDispatcher<MsgType, decltype(fn), ObjType>>(fn);
+
+    NumArgsType num_args = AdapterType::getNumArgs();
 
   #if vt_check_enabled(trace_enabled)
-  // trace
-  std::string event_type_name = AdapterType::traceGetEventType();
-  std::string event_name = AdapterType::traceGetEventName();
-  auto const trace_ep = trace::TraceRegistry::registerEventHashed(
-    event_type_name, event_name);
-  reg.emplace_back(InfoT{NumArgsTag, fn, trace_ep, num_args});
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    auto const trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT(NumArgsTag, std::move(d), trace_ep, num_args));
   #else
-  // non-trace
-  reg.emplace_back(InfoT{NumArgsTag, fn, num_args});
+    reg.emplace_back(InfoT(NumArgsTag, std::move(d), num_args));
   #endif
-}
+  }
+};
+
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+struct RegistrarFunctor<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<std::is_same<InfoT, AutoRegInfo<AutoActiveMapType>>::value>
+> {
+  AutoHandlerType index;
+
+  RegistrarFunctor() {
+    using AdapterType = typename RunnableT::AdapterType;
+    using IndexT = typename AdapterType::MsgType;
+
+    RegT& reg = getAutoRegistryGen<RegT>();
+    index = reg.size(); // capture current index
+
+    auto fn = AdapterType::getFunction();
+    BaseMapsDispatcherPtr d =
+      std::make_unique<MapsDispatcher<IndexT, decltype(fn)>>(fn);
+
+    NumArgsType num_args = AdapterType::getNumArgs();
+
+  #if vt_check_enabled(trace_enabled)
+    // trace
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    auto const trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT(NumArgsTag, std::move(d), trace_ep, num_args));
+  #else
+    // non-trace
+    reg.emplace_back(InfoT(NumArgsTag, std::move(d), num_args));
+  #endif
+  }
+};
 
 inline NumArgsType getAutoHandlerFunctorArgs(HandlerType const han) {
   auto const id = HandlerManagerType::getHandlerIdentifier(han);
@@ -99,7 +143,8 @@ inline NumArgsType getAutoHandlerFunctorArgs(HandlerType const han) {
   return getAutoRegistryGen<ContainerType>().at(id).getNumArgs();
 }
 
-inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const han) {
+inline AutoActiveFunctorType const&
+getAutoHandlerFunctor(HandlerType const han) {
   auto const id = HandlerManagerType::getHandlerIdentifier(han);
   bool const is_auto = HandlerManagerType::isHandlerAuto(han);
   bool const is_functor = HandlerManagerType::isHandlerFunctor(han);
@@ -110,9 +155,7 @@ inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const han) {
     han, id, print_bool(is_auto), print_bool(is_functor)
   );
 
-  assert(
-    (is_functor && is_auto) && "Handler should be auto and functor type!"
-  );
+  assert((is_functor && is_auto) && "Handler should be auto and functor type!");
 
   using ContainerType = AutoActiveFunctorContainerType;
   return getAutoRegistryGen<ContainerType>().at(id).getFun();

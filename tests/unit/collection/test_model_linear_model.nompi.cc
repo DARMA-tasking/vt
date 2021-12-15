@@ -64,6 +64,7 @@ using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
+using vt::vrt::collection::balance::LoadMapObjectIterator;
 
 struct StubModel : LoadModel {
 
@@ -72,7 +73,6 @@ struct StubModel : LoadModel {
 
   void setLoads(
     std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, SubphaseLoadMapType> const*,
     std::unordered_map<PhaseType, CommMapType> const*) override {
     proc_load_ = proc_load;
   }
@@ -81,17 +81,13 @@ struct StubModel : LoadModel {
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     // Most recent phase will be at the end of vector
-    return proc_load_->at(num_phases + phase.phases).at(id);
+    return proc_load_->at(num_phases + phase.phases).at(id).whole_phase_load;
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(0).begin());
-  }
-  virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(0).end());
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(0).begin(), proc_load_->at(0).end())};
   }
 
-  virtual int getNumObjects() override { return 2; }
   virtual unsigned int getNumCompletedPhases() override { return num_phases; }
   virtual int getNumSubphases() override { return 1; }
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
@@ -110,32 +106,32 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
   // For linear regression there needs to be at least 2 phases completed
   // so we begin with 1 phase already done
   std::unordered_map<PhaseType, LoadMapType> proc_loads{{0, LoadMapType{
-    {ElementIDStruct{1,this_node,this_node}, TimeType{10}},
-    {ElementIDStruct{2,this_node,this_node}, TimeType{40}}
+        {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, {}}},
+        {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}
     }}};
-  test_model->setLoads(&proc_loads, nullptr, nullptr);
+  test_model->setLoads(&proc_loads, nullptr);
   test_model->updateLoads(0);
 
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{5}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{5}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{30}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{100}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{30}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{100}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{50}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{40}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{50}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{2}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{50}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{2}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{50}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{20}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{20}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{100}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{100}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}},
   };
 
   std::array<std::pair<TimeType, TimeType>, num_test_interations> expected_data{

@@ -48,13 +48,15 @@ namespace vt {
 
 /*static*/ HandlerType HandlerManager::makeHandler(
   bool is_auto, bool is_functor, HandlerIdentifierType id, bool is_objgroup,
-  HandlerControlType control, bool is_trace, bool is_member
+  HandlerControlType control, bool is_trace, bool is_member,
+  bool is_base_msg_derived
 ) {
   HandlerType new_han = blank_handler;
   HandlerManager::setHandlerAuto(new_han, is_auto);
   HandlerManager::setHandlerObjGroup(new_han, is_objgroup);
   HandlerManager::setHandlerFunctor(new_han, is_functor);
   HandlerManager::setHandlerMember(new_han, is_member);
+  HandlerManager::setHandlerBaseMsgDerived(new_han, is_base_msg_derived);
   HandlerManager::setHandlerIdentifier(new_han, id);
 
 #if vt_check_enabled(trace_enabled)
@@ -130,6 +132,14 @@ namespace vt {
   BitPackerType::boolSetField<HandlerBitsType::Member>(han, is_member);
 }
 
+/*static*/ void HandlerManager::setHandlerBaseMsgDerived(
+  HandlerType& han, bool is_base_msg_derived
+) {
+  BitPackerType::boolSetField<HandlerBitsType::BaseMsgDerived>(
+    han, is_base_msg_derived
+  );
+}
+
 /*static*/ bool HandlerManager::isHandlerAuto(HandlerType han) {
   return BitPackerType::boolGetField<HandlerBitsType::Auto>(han);
 }
@@ -144,6 +154,10 @@ namespace vt {
 
 /*static*/ bool HandlerManager::isHandlerMember(HandlerType han) {
   return BitPackerType::boolGetField<HandlerBitsType::Member>(han);
+}
+
+/*static*/ bool HandlerManager::isHandlerBaseMsgDerived(HandlerType han) {
+  return BitPackerType::boolGetField<HandlerBitsType::BaseMsgDerived>(han);
 }
 
 #if vt_check_enabled(trace_enabled)

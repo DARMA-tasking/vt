@@ -48,7 +48,9 @@
 #include "data_message.h"
 
 #include "vt/vrt/collection/manager.h"
+#include "vt/vrt/collection/balance/stats_data.h"
 #include "vt/utils/json/json_reader.h"
+#include "vt/utils/json/json_appender.h"
 
 #include <nlohmann/json.hpp>
 
@@ -297,6 +299,203 @@ auto const intervals = ::testing::Values(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 INSTANTIATE_TEST_SUITE_P(
   NodeStatsDumperExplode, TestNodeStatsDumper, intervals
 );
+
+using TestRestoreStatsData = TestParallelHarness;
+
+vt::vrt::collection::balance::StatsData
+getStatsDataForPhase(
+  vt::PhaseType phase,  vt::vrt::collection::balance::StatsData in
+) {
+  using JSONAppender = vt::util::json::Appender<std::stringstream>;
+  using vt::vrt::collection::balance::StatsData;
+  using json = nlohmann::json;
+  std::stringstream ss{std::ios_base::out | std::ios_base::in};
+  auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), false);
+  auto j = in.toJson(phase);
+  ap->addElm(*j);
+  ss = ap->finish();
+  //fmt::print("{}\n", ss.str());
+  return StatsData{json::parse(ss)};
+}
+
+TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
+  auto this_node = vt::theContext()->getNode();
+  std::string out_file_name = "test_restore_stats_data_1.%p.json";
+  std::size_t rank = out_file_name.find("%p");
+  auto str_rank = std::to_string(this_node);
+  if (rank == std::string::npos) {
+    out_file_name = out_file_name + str_rank;
+  } else {
+    out_file_name.replace(rank, 2, str_rank);
+  }
+
+  vt::vrt::collection::CollectionProxy<MyCol> proxy;
+  auto const range = vt::Index1D(num_elms);
+
+  // Construct a collection
+  runInEpochCollective([&] {
+    proxy = vt::theCollection()->constructCollective<MyCol>(range);
+  });
+
+  vt::vrt::collection::balance::StatsData sd;
+  PhaseType write_phase = 0;
+
+  using LBCommKey = vt::vrt::collection::balance::LBCommKey;
+  using CommVolume = vt::vrt::collection::balance::CommVolume;
+  using CommBytesType = vt::vrt::collection::balance::CommBytesType;
+
+  // @todo: should do other types of comm
+
+  {
+    PhaseType phase = write_phase;
+    sd.node_data_[phase];
+    sd.node_comm_[phase];
+
+    for (int i=0; i<num_elms; ++i) {
+      vt::Index1D idx(i);
+
+      TimeType dur = (i % 10 + 1) * 0.1;
+      uint64_t ntocm = (i+1) % 3 + 2;
+      CommBytesType ntoc = (i+1) * 100;
+      uint64_t ctonm = (i+1) % 2 + 1;
+      CommBytesType cton = (i+1) * 200;
+
+      auto elm_ptr = proxy(idx).tryGetLocalPtr();
+      if (elm_ptr != nullptr) {
+        auto elm_id = elm_ptr->getElmID();
+
+        std::vector<TimeType> dur_vec(2);
+        dur_vec[i % 2] = dur;
+        sd.node_data_[phase][elm_id].whole_phase_load = dur;
+        sd.node_data_[phase][elm_id].subphase_loads = dur_vec;
+
+        LBCommKey ntockey(
+          LBCommKey::NodeToCollectionTag{}, this_node, elm_id, false
+        );
+        CommVolume ntocvol{ntoc, ntocm};
+        sd.node_comm_[phase][ntockey] = ntocvol;
+        sd.node_subphase_comm_[phase][i % 2][ntockey] = ntocvol;
+
+        LBCommKey ctonkey(
+          LBCommKey::CollectionToNodeTag{}, elm_id, this_node, false
+        );
+        CommVolume ctonvol{cton, ctonm};
+        sd.node_comm_[phase][ctonkey] = ctonvol;
+        sd.node_subphase_comm_[phase][(i + 1) % 2][ctonkey] = ctonvol;
+
+        std::vector<uint64_t> arr;
+        arr.push_back(idx.x());
+        sd.node_idx_[elm_id] = std::make_tuple(proxy.getProxy(), arr);
+      }
+    }
+  }
+
+  auto sd_read = getStatsDataForPhase(write_phase, sd);
+
+  // whole-phase loads
+  EXPECT_EQ(sd_read.node_data_.size(), sd.node_data_.size());
+  if (sd_read.node_data_.size() != sd.node_data_.size()) {
+    fmt::print(
+      "Wrote {} phases of whole-phase load data but read in {} phases",
+      sd.node_data_.size(), sd_read.node_data_.size()
+    );
+  } else {
+    // compare the whole-phase load data in detail
+    for (auto &phase_data : sd.node_data_) {
+      auto phase = phase_data.first;
+      EXPECT_FALSE(sd_read.node_data_.find(phase) == sd_read.node_data_.end());
+      if (sd_read.node_data_.find(phase) == sd_read.node_data_.end()) {
+        fmt::print(
+          "Phase {} in whole-phase loads were not read in",
+          phase
+        );
+      } else {
+        auto &read_load_map = sd_read.node_data_[phase];
+        auto &orig_load_map = phase_data.second;
+        for (auto &entry : read_load_map) {
+          auto read_elm_id = entry.first;
+          EXPECT_FALSE(orig_load_map.find(read_elm_id) == orig_load_map.end());
+          if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
+            fmt::print(
+              "Unexpected element ID read in whole-phase loads on phase={}: "
+              "id={}, home={}, curr={}",
+              phase,
+              read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
+            );
+          } else {
+            auto orig_elm_id = orig_load_map.find(read_elm_id)->first;
+            EXPECT_EQ(read_elm_id.home_node, orig_elm_id.home_node);
+            EXPECT_EQ(read_elm_id.curr_node, orig_elm_id.curr_node);
+            if (
+              read_elm_id.home_node != orig_elm_id.home_node ||
+              read_elm_id.curr_node != orig_elm_id.curr_node
+            ) {
+              fmt::print(
+                "Corrupted element ID read in whole-phase loads on phase={}: "
+                "id={}, home={}, curr={} (expected id={}, home={}, curr={})",
+                phase,
+                read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node,
+                orig_elm_id.id, orig_elm_id.home_node, orig_elm_id.curr_node
+              );
+            }
+            auto read_load = read_load_map[read_elm_id];
+            auto orig_load = entry.second;
+            // @todo: make this a more robust floating point comparison
+            EXPECT_EQ(orig_load.whole_phase_load, read_load.whole_phase_load);
+            EXPECT_EQ(orig_load.subphase_loads, read_load.subphase_loads);
+          }
+        }
+      }
+    }
+  }
+
+  // element id to index mapping
+  EXPECT_EQ(sd_read.node_idx_.size(), sd.node_idx_.size());
+  if (sd_read.node_idx_.size() != sd.node_idx_.size()) {
+    fmt::print(
+      "Wrote index mapping for {} elements but read in {}",
+      sd.node_idx_.size(), sd_read.node_idx_.size()
+    );
+  } else {
+    // detailed comparison of element id to index mapping
+    for (auto &entry : sd_read.node_idx_) {
+      auto read_elm_id = entry.first;
+      EXPECT_FALSE(sd.node_idx_.find(read_elm_id) == sd.node_idx_.end());
+      if (sd.node_idx_.find(read_elm_id) == sd.node_idx_.end()) {
+        fmt::print(
+          "Unexpected element ID read in index mapping: "
+          "id={}, home={}, curr={}",
+          read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
+        );
+      } else {
+        auto orig_idx = sd.node_idx_[read_elm_id];
+        auto read_idx = entry.second;
+        EXPECT_EQ(orig_idx, read_idx);
+        if (orig_idx != read_idx) {
+          fmt::print(
+            "Unexpected collection index for elm id={}, home={}, curr={}",
+            read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
+          );
+        }
+      }
+    }
+  }
+
+  // whole-phase communication
+  EXPECT_EQ(sd_read.node_comm_.size(), sd.node_comm_.size());
+  if (sd_read.node_comm_.size() != sd.node_comm_.size()) {
+    fmt::print(
+      "Wrote {} phases of whole-phase comm data but read in {} phases",
+      sd.node_comm_.size(), sd_read.node_comm_.size()
+    );
+  }
+  // @todo: detailed comparison of whole-phase comm data
+
+  // @todo: compare subphase comm when writing/reading is implemented
+  // @todo: detailed comparison of subphase comm data
+
+  // @todo: clean up files
+}
 
 }}}} // end namespace vt::tests::unit::lb
 

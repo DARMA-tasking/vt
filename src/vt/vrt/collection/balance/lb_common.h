@@ -46,10 +46,13 @@
 
 #include "vt/config.h"
 #include "vt/timing/timing_type.h"
+#include "vt/messaging/message/message.h"
 
 #include <cstdlib>
 #include <unordered_map>
 #include <ostream>
+#include <map>
+#include <vector>
 
 #include <fmt/ostream.h>
 
@@ -60,6 +63,14 @@ using ElementIDType = uint64_t;
 
 struct ElementIDStruct {
   using isByteCopyable = std::true_type;
+
+  ElementIDStruct() = default;
+  ElementIDStruct(
+    ElementIDType in_id, NodeType in_home_node, NodeType in_curr_node
+  ) : id(in_id),
+      home_node(in_home_node),
+      curr_node(in_curr_node)
+  { }
 
   // id must be unique across nodes
   ElementIDType id = 0;
@@ -81,8 +92,93 @@ std::ostream& operator<<(
 
 static constexpr ElementIDType const no_element_id = 0;
 
-using LoadMapType         = std::unordered_map<ElementIDStruct,TimeType>;
+}}}}
+
+namespace std {
+
+template <>
+struct hash<vt::vrt::collection::balance::ElementIDStruct> {
+  size_t operator()(vt::vrt::collection::balance::ElementIDStruct const& in) const {
+    return std::hash<vt::vrt::collection::balance::ElementIDType>()(in.id);
+  }
+};
+
+} /* end namespace std */
+
+namespace vt { namespace vrt { namespace collection {
+namespace balance {
+
+/**
+ * \brief A description of the interval of interest for a modeled load query
+ *
+ * The value of `phases` can be in the past or future. Negative values
+ * represent a distance into the past, in which -1 is most recent. A
+ * value of 0 represents the immediate upcoming phase. Positive values
+ * represent more distant future phases.
+ */
+struct PhaseOffset {
+  PhaseOffset() = delete;
+
+  int phases;
+  static constexpr unsigned int NEXT_PHASE = 0;
+
+  unsigned int subphase;
+  static constexpr unsigned int WHOLE_PHASE = ~0u;
+};
+
+struct LoadSummary {
+  TimeType whole_phase_load = 0.0;
+  std::vector<TimeType> subphase_loads = {};
+
+  TimeType get(PhaseOffset when) const
+  {
+    if (when.subphase == PhaseOffset::WHOLE_PHASE)
+      return whole_phase_load;
+    else
+      return subphase_loads.at(when.subphase);
+  }
+
+  void operator += (const LoadSummary& rhs) {
+    vtAssert(subphase_loads.size() == rhs.subphase_loads.size(),
+             "Subphase counts must match");
+
+    whole_phase_load += rhs.whole_phase_load;
+    for (size_t i = 0; i < subphase_loads.size(); ++i)
+      subphase_loads[i] += rhs.subphase_loads[i];
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | whole_phase_load
+      | subphase_loads;
+  }
+};
+
+using LoadMapType         = std::unordered_map<ElementIDStruct, LoadSummary>;
 using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<TimeType>>;
+
+struct Reassignment {
+  // Include the subject node so that these structures can be formed
+  // and passed through collectives
+  NodeType node_;
+  // Global sum reduction result to let the system know whether any
+  // distributed structures need to be rebuilt
+  int32_t global_migration_count;
+  std::unordered_map<ElementIDStruct, NodeType> depart_;
+  std::unordered_map<ElementIDStruct, LoadSummary> arrive_;
+};
+
+void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reassignment);
+
+struct LoadModel;
+
+LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
+                           ElementIDStruct object, PhaseOffset when);
+
+LoadSummary getObjectLoads(LoadModel* model,
+                           ElementIDStruct object, PhaseOffset when);
+
+LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when);
 } /* end namespace balance */
 
 namespace lb {
@@ -111,12 +207,11 @@ enum struct Statistic : int8_t {
 
 namespace std {
 
-using StatisticType = vt::vrt::collection::lb::Statistic;
-
 template <>
-struct hash<StatisticType> {
-  size_t operator()(StatisticType const& in) const {
-    using StatisticUnderType = typename std::underlying_type<StatisticType>::type;
+struct hash<vt::vrt::collection::lb::Statistic> {
+  size_t operator()(vt::vrt::collection::lb::Statistic const& in) const {
+    using StatisticUnderType =
+      typename std::underlying_type<vt::vrt::collection::lb::Statistic>::type;
     auto const val = static_cast<StatisticUnderType>(in);
     return std::hash<StatisticUnderType>()(val);
   }
@@ -129,19 +224,5 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 std::unordered_map<Statistic, std::string>& get_lb_stat_name();
 
 }}}} /* end namespace vt::vrt::collection::lb */
-
-namespace std {
-
-using ElementIDStructType = vt::vrt::collection::balance::ElementIDStruct;
-using ElementIDMemberType = vt::vrt::collection::balance::ElementIDType;
-
-template <>
-struct hash<ElementIDStructType> {
-  size_t operator()(ElementIDStructType const& in) const {
-    return std::hash<ElementIDMemberType>()(in.id);
-  }
-};
-
-} /* end namespace std */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H*/

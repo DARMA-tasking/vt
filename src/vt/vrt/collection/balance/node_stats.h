@@ -175,13 +175,6 @@ public:
   std::unordered_map<PhaseType, LoadMapType> const* getNodeLoad() const;
 
   /**
-   * \internal \brief Get stored object loads for individual subphases
-   *
-   * \return an observer pointer to the subphase load map
-   */
-  std::unordered_map<PhaseType, SubphaseLoadMapType> const* getNodeSubphaseLoad() const;
-
-  /**
    * \internal \brief Get stored object comm graph
    *
    * \return an observer pointer to the comm graph

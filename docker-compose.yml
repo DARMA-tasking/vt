@@ -89,6 +89,7 @@ volumes:
   amd64-ubuntu-18.04-icc-18-cache:
   amd64-ubuntu-18.04-icc-19-cache:
   amd64-ubuntu-18.04-icc-20-cache:
+  amd64-ubuntu-18.04-icpx-cache:
   amd64-ubuntu-18.04-nvcc-10-cache:
   amd64-ubuntu-18.04-nvcc-10.2-cache:
   amd64-ubuntu-18.04-nvcc-11-cache:
@@ -109,6 +110,7 @@ volumes:
   amd64-alpine-icc-18-cache:
   amd64-alpine-icc-19-cache:
   amd64-alpine-icc-20-cache:
+  amd64-alpine-icpx-cache:
   amd64-alpine-nvcc-10-cache:
   amd64-alpine-nvcc-10.2-cache:
   amd64-alpine-nvcc-11-cache:
@@ -191,7 +193,8 @@ services:
     command: &vt-cpp-command >
       /bin/bash -c "
         /vt/ci/build_cpp.sh /vt /build &&
-        /vt/ci/test_cpp.sh  /vt /build"
+        /vt/ci/test_cpp.sh  /vt /build &&
+        /vt/ci/build_vt_sample.sh /vt /build"
 
   ##############################################################################
   # C++ build/test/clean target for VT on ubuntu platform from container
@@ -217,6 +220,7 @@ services:
       /bin/bash -c "
         /vt/ci/build_cpp.sh /vt /build &&
         /vt/ci/test_cpp.sh  /vt /build &&
+        /vt/ci/build_vt_sample.sh /vt /build &&
         /vt/ci/clean_cpp.sh /vt /build"
 
   ##############################################################################
@@ -228,6 +232,7 @@ services:
   # You will get a command line where you can run the build command:
   #   $ /vt/ci/build_cpp.sh /vt /build
   #   $ /vt/ci/test_cpp.sh  /vt /build
+  #   $ /vt/ci/build_vt_sample.sh /vt /build
   ubuntu-cpp-interactive:
     image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
     build:

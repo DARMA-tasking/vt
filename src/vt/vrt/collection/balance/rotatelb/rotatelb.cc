@@ -60,7 +60,7 @@ RotateLB::getInputKeysWithHelp() {
 
 void RotateLB::inputParams(balance::SpecEntry* spec) { }
 
-void RotateLB::runLB() {
+void RotateLB::runLB(TimeType) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;

@@ -51,6 +51,7 @@
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/timing/timing.h"
 
 #include <cassert>

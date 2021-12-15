@@ -50,6 +50,7 @@
 #include "vt/objgroup/type_registry/registry.h"
 
 #include <functional>
+#include <memory>
 
 namespace vt { namespace auto_registry {
 
@@ -60,28 +61,134 @@ struct RegistrarGenInfoImpl : RegistrarGenInfoBase {
   }
 };
 
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT, typename = void>
+struct RegistrarHelper;
+
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
-RegistrarGen<RunnableT, RegT, InfoT, FnT>::RegistrarGen() {
-  using AdapterType = typename RunnableT::AdapterType;
+struct RegistrarHelper<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<
+    not std::is_same<InfoT, AutoRegInfo<BaseHandlersDispatcherPtr>>::value and
+    not std::is_same<InfoT, AutoRegInfo<BaseMapsDispatcherPtr>>::value and
+    not std::is_same<InfoT, AutoRegInfo<BaseScatterDispatcherPtr>>::value
+  >
+> {
+  static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
+    using AdapterType = typename RunnableT::AdapterType;
 
-  RegT& reg = getAutoRegistryGen<RegT>();
-  index = reg.size(); // capture current index
-
-  FnT fn = reinterpret_cast<FnT>(AdapterType::getFunction());
-  RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
-    new RegistrarGenInfoImpl<typename RunnableT::ObjType>());
+    FnT fn = reinterpret_cast<FnT>(AdapterType::getFunction());
 
 #if vt_check_enabled(trace_enabled)
-  // trace
-  std::string event_type_name = AdapterType::traceGetEventType();
-  std::string event_name = AdapterType::traceGetEventName();
-  trace::TraceEntryIDType trace_ep = trace::TraceRegistry::registerEventHashed(
-    event_type_name, event_name);
-  reg.emplace_back(InfoT{fn, std::move(indexAccessor), trace_ep});
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    trace::TraceEntryIDType trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT{fn, std::move(indexAccessor), trace_ep});
 #else
-  // non-trace
-  reg.emplace_back(InfoT{fn, std::move(indexAccessor)});
+    reg.emplace_back(InfoT{fn, std::move(indexAccessor)});
 #endif
+  }
+};
+
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+struct RegistrarHelper<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<
+    std::is_same<InfoT, AutoRegInfo<BaseHandlersDispatcherPtr>>::value
+  >
+> {
+  static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
+    using AdapterType = typename RunnableT::AdapterType;
+    using MsgType = typename AdapterType::MsgType;
+    using FuncType = typename AdapterType::FunctionPtrType;
+    using ObjType = typename AdapterType::ObjType;
+
+    auto fn = AdapterType::getFunction();
+    BaseHandlersDispatcherPtr d =
+      std::make_unique<HandlersDispatcher<MsgType, FuncType, ObjType>>(fn);
+
+#if vt_check_enabled(trace_enabled)
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    trace::TraceEntryIDType trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor), trace_ep});
+#else
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});
+#endif
+  }
+};
+
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+struct RegistrarHelper<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<
+    std::is_same<InfoT, AutoRegInfo<BaseScatterDispatcherPtr>>::value
+  >
+> {
+  static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
+    using AdapterType = typename RunnableT::AdapterType;
+    using MsgType = typename AdapterType::MsgType;
+    using FuncType = typename AdapterType::FunctionPtrType;
+    using ObjType = typename AdapterType::ObjType;
+
+    auto fn = AdapterType::getFunction();
+    BaseScatterDispatcherPtr d =
+      std::make_unique<ScatterDispatcher<MsgType, FuncType, ObjType>>(fn);
+
+#if vt_check_enabled(trace_enabled)
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    trace::TraceEntryIDType trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor), trace_ep});
+#else
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});
+#endif
+  }
+};
+
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+struct RegistrarHelper<
+  RunnableT, RegT, InfoT, FnT,
+  std::enable_if_t<
+    std::is_same<InfoT, AutoRegInfo<BaseMapsDispatcherPtr>>::value
+  >
+> {
+  static void registerHandler(RegT& reg, RegistrarGenInfo indexAccessor) {
+    using AdapterType = typename RunnableT::AdapterType;
+    using IndexT = typename AdapterType::MsgType;
+    using FuncType = typename AdapterType::FunctionPtrType;
+
+    auto fn = AdapterType::getFunction();
+    BaseMapsDispatcherPtr d =
+      std::make_unique<MapsDispatcher<IndexT, FuncType>>(fn);
+
+#if vt_check_enabled(trace_enabled)
+    std::string event_type_name = AdapterType::traceGetEventType();
+    std::string event_name = AdapterType::traceGetEventName();
+    trace::TraceEntryIDType trace_ep =
+      trace::TraceRegistry::registerEventHashed(event_type_name, event_name);
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor), trace_ep});
+#else
+    reg.emplace_back(InfoT{std::move(d), std::move(indexAccessor)});
+#endif
+  }
+};
+
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+RegistrarGen<RunnableT, RegT, InfoT, FnT>::RegistrarGen() {
+  RegT& reg = getAutoRegistryGen<RegT>();
+
+  index = reg.size(); // capture current index
+
+  RegistrarGenInfo indexAccessor = RegistrarGenInfo::takeOwnership(
+    new RegistrarGenInfoImpl<typename RunnableT::ObjType>()
+  );
+
+  RegistrarHelper<RunnableT, RegT, InfoT, FnT>::registerHandler(
+    reg, std::move(indexAccessor)
+  );
 }
 
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>

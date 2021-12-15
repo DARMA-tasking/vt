@@ -77,17 +77,21 @@ static inline auto proxyOperatorToNewInstanceReg(Args... args) {
 /// MULTIPLE INSTANCES of the type will be created and discarded.
 /// This cannot be used for a stateful instance.
 /// This is an implementation detail that could be reconsidered.
-template <typename ObjTypeT, typename... ArgsT>
-struct FunctorAdapterArgs {
-  using FunctionPtrType = void (*)(ArgsT...);
+template <typename... T>
+struct FunctorAdapterArgs;
+
+template <typename ObjTypeT>
+struct FunctorAdapterArgs<ObjTypeT> {
+  using FunctionPtrType = void (*)();
   using ObjType = ObjTypeT;
+  using MsgType = void;
 
   static constexpr FunctionPtrType getFunction() {
-    return &proxyOperatorToNewInstanceReg<ObjType, ArgsT...>;
+    return &proxyOperatorToNewInstanceReg<ObjType>;
   }
 
-  static NumArgsType getNumArgs() {
-    return sizeof...(ArgsT);
+  static constexpr NumArgsType getNumArgs() {
+    return 0;
   }
 
 #if vt_check_enabled(trace_enabled)
@@ -104,7 +108,43 @@ struct FunctorAdapterArgs {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
     std::vector<std::string> arg_types = {
-      TE::getTypeName<ArgsT>()...
+      TE::getTypeName<ObjTypeT>()
+    };
+    auto args = DU::join(",", arg_types);
+    return DU::removeSpaces("operator(" + args + ")");
+  }
+#endif // end trace_enabled
+};
+
+template <typename ObjTypeT, typename MsgT>
+struct FunctorAdapterArgs<ObjTypeT, MsgT> {
+  using FunctionPtrType = void (*)(MsgT);
+  using ObjType = ObjTypeT;
+  using MsgType = std::remove_pointer_t<MsgT>;
+
+  static constexpr FunctionPtrType getFunction() {
+    return &proxyOperatorToNewInstanceReg<ObjType, MsgT>;
+  }
+
+  static constexpr NumArgsType getNumArgs() {
+    return 1;
+  }
+
+#if vt_check_enabled(trace_enabled)
+  static std::string traceGetEventType() {
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto ns = TE::getTypeName<ObjTypeT>();
+    if (ns.empty())
+      ns = "(none)";
+    return DU::removeSpaces(ns);
+  }
+
+  static std::string traceGetEventName() {
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    std::vector<std::string> arg_types = {
+      TE::getTypeName<ObjTypeT>(), TE::getTypeName<MsgT>()
     };
     auto args = DU::join(",", arg_types);
     return DU::removeSpaces("operator(" + args + ")");
@@ -145,10 +185,11 @@ struct FunctorAdapterParam {
 #endif // end trace_enabled
 };
 
-template <typename F, F* f>
+template <typename F, F* f, typename MsgT = void, typename ObjT = SentinelObject>
 struct FunctorAdapter {
   using FunctionPtrType = F*;
-  using ObjType = void;
+  using ObjType = ObjT;
+  using MsgType = MsgT;
 
   static constexpr FunctionPtrType getFunction() { return f; }
 
@@ -176,10 +217,11 @@ struct FunctorAdapter {
 #endif // end trace_enabled
 };
 
-template <typename F, F f, typename ObjT = void>
+template <typename F, F f, typename ObjT = void, typename MsgT = void>
 struct FunctorAdapterMember {
   using FunctionPtrType = F;
   using ObjType = ObjT;
+  using MsgType = MsgT;
 
   static constexpr FunctionPtrType getFunction() { return f; }
 

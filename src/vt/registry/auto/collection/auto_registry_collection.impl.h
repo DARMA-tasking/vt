@@ -49,9 +49,8 @@
 
 namespace vt { namespace auto_registry {
 
-inline AutoActiveCollectionType getAutoHandlerCollection(
-  HandlerType const handler
-) {
+inline AutoActiveCollectionType const&
+getAutoHandlerCollection(HandlerType const handler) {
   using ContainerType = AutoActiveCollectionContainerType;
 
   auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
@@ -60,7 +59,7 @@ inline AutoActiveCollectionType getAutoHandlerCollection(
 
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
 inline HandlerType makeAutoHandlerCollection() {
-  using FunctorT = FunctorAdapter<ActiveColTypedFnType<MsgT, ColT>, f>;
+  using FunctorT = FunctorAdapter<ActiveColTypedFnType<MsgT, ColT>, f, MsgT, ColT>;
   using ContainerType = AutoActiveCollectionContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveCollectionType>;
   using FuncType = ActiveColFnPtrType;
@@ -72,9 +71,8 @@ inline HandlerType makeAutoHandlerCollection() {
   return handler;
 }
 
-inline AutoActiveCollectionMemType getAutoHandlerCollectionMem(
-  HandlerType const handler
-) {
+inline AutoActiveCollectionMemType const&
+getAutoHandlerCollectionMem(HandlerType const handler) {
   using ContainerType = AutoActiveCollectionMemContainerType;
 
   auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
@@ -85,7 +83,9 @@ template <
   typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
 >
 inline HandlerType makeAutoHandlerCollectionMem() {
-  using FunctorT = FunctorAdapterMember<ActiveColMemberTypedFnType<MsgT, ColT>, f>;
+  using FunctorT = FunctorAdapterMember<
+    ActiveColMemberTypedFnType<MsgT, ColT>, f, ColT, MsgT
+  >;
   using ContainerType = AutoActiveCollectionMemContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveCollectionMemType>;
   using FuncType = ActiveColMemberFnPtrType;

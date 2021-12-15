@@ -55,7 +55,7 @@ struct RandomLB : BaseLB {
   RandomLB() = default;
 
   void init(objgroup::proxy::Proxy<RandomLB> in_proxy);
-  void runLB() override;
+  void runLB(TimeType) override;
   void inputParams(balance::SpecEntry* spec) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();

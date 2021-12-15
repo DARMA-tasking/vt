@@ -62,6 +62,7 @@ using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SelectSubphases;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
+using vt::vrt::collection::balance::LoadMapObjectIterator;
 
 using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
 using ProcSubphaseLoadMap = std::unordered_map<PhaseType, SubphaseLoadMapType>;
@@ -75,35 +76,35 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    ProcLoadMap const* proc_load, ProcSubphaseLoadMap const* proc_subphase_load,
+    ProcLoadMap const* proc_load,
     ProcCommMap const*) override {
     proc_load_ = proc_load;
-    proc_subphase_load_ = proc_subphase_load;
   }
 
   void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
-    return proc_subphase_load_->at(0).at(id).at(phase.subphase);
+    return proc_load_->at(0).at(id).subphase_loads.at(phase.subphase);
   }
 
   ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(0).begin());
-  }
-  ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(0).end());
+    return {
+      std::make_unique<LoadMapObjectIterator>(
+        proc_load_->at(0).begin(), proc_load_->at(0).end()
+      )
+    };
   }
 
   int getNumSubphases() override { return num_subphases; }
 
   // Not used in this test
-  int getNumObjects() override { return 0; }
   unsigned int getNumCompletedPhases() override { return 0; }
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override {
+    return look_back;
+  }
 
 private:
   ProcLoadMap const* proc_load_ = nullptr;
-  ProcSubphaseLoadMap const* proc_subphase_load_ = nullptr;
 };
 
 TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
@@ -114,14 +115,8 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {id1, TimeType{60}},
-       {id2, TimeType{150}}}}};
-
-  ProcSubphaseLoadMap proc_subphase_load = {
-    {0,
-     SubphaseLoadMapType{
-       {id1, {TimeType{10}, TimeType{20}, TimeType{30}}},
-       {id2, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
+       {id1, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
+       {id2, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
 
   std::vector<unsigned int> subphases{2, 0, 1};
   auto test_model =
@@ -129,18 +124,18 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
 
   EXPECT_EQ(test_model->getNumSubphases(), subphases.size());
 
-  test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
   std::unordered_map<ElementIDStruct, std::vector<TimeType>> expected_values = {
     {id1,
-     {proc_subphase_load[0][id1][subphases[0]],
-      proc_subphase_load[0][id1][subphases[1]],
-      proc_subphase_load[0][id1][subphases[2]]}},
+     {proc_load[0][id1].subphase_loads[subphases[0]],
+      proc_load[0][id1].subphase_loads[subphases[1]],
+      proc_load[0][id1].subphase_loads[subphases[2]]}},
     {id2,
-     {proc_subphase_load[0][id2][subphases[0]],
-      proc_subphase_load[0][id2][subphases[1]],
-      proc_subphase_load[0][id2][subphases[2]]}}};
+     {proc_load[0][id2].subphase_loads[subphases[0]],
+      proc_load[0][id2].subphase_loads[subphases[1]],
+      proc_load[0][id2].subphase_loads[subphases[2]]}}};
 
   for (unsigned int iter = 0; iter < num_subphases; ++iter) {
     int objects_seen = 0;
@@ -164,14 +159,13 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
-       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
-
-  ProcSubphaseLoadMap proc_subphase_load = {
-    {0,
-     SubphaseLoadMapType{
-       {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, TimeType{20}, TimeType{30}}},
-       {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
+       {ElementIDStruct{1,this_node,this_node},
+        {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
+       {ElementIDStruct{2,this_node,this_node},
+        {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}
+     }
+    }
+  };
 
   std::vector<unsigned int> subphases{2, 1};
   auto test_model =
@@ -179,7 +173,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
 
   EXPECT_EQ(test_model->getNumSubphases(), subphases.size());
 
-  test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
   std::unordered_map<ElementIDStruct, TimeType> expected_values = {

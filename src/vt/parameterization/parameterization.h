@@ -114,11 +114,11 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
 #endif
 
   if (HandlerManagerType::isHandlerFunctor(msg->sub_han)) {
-    auto fn = auto_registry::getAutoHandlerFunctor(msg->sub_han);
+    auto const& fn = auto_registry::getAutoHandlerFunctor(msg->sub_han);
     invokeCallableTuple(msg->tup, fn, true);
   } else {
     // regular active function
-    auto fn = auto_registry::getAutoHandler(msg->sub_han);
+    auto const& fn = auto_registry::getAutoHandler(msg->sub_han);
     invokeCallableTuple(msg->tup, fn, false);
   }
 

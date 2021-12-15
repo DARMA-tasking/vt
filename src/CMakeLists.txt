@@ -202,11 +202,6 @@ add_library(
   ${HEADER_FILES} ${SOURCE_FILES}
 )
 
-set_target_properties(
-  ${VIRTUAL_TRANSPORT_LIBRARY} PROPERTIES
-  POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
-)
-
 option(vt_no_color_enabled "Build VT with option --vt_no_color set to true by default" OFF)
 if(vt_no_color_enabled)
   message(STATUS "Building VT with --vt_no_color set to true by default")
@@ -236,7 +231,11 @@ target_compile_features(
   cxx_alias_templates
 )
 
-target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${VT_TARGET_CXX_FLAGS})
+include(turn_on_warnings)
+turn_on_warnings(${VIRTUAL_TRANSPORT_LIBRARY})
+
+include(SetCXXCompilerFlags)
+set_darma_compiler_flags(${VIRTUAL_TRANSPORT_LIBRARY})
 
 if (vt_gold_linker_enabled)
   if (UNIX AND NOT APPLE)

@@ -62,6 +62,7 @@ set_target_properties(gtest_main PROPERTIES FOLDER extern)
 #set_target_properties(gmock_main PROPERTIES FOLDER extern)
 
 include(GoogleTest)
+include(turn_on_warnings)
 
 function(add_unit_test unit_test_name unit_test_files uses_mpi)
   add_executable(
@@ -75,6 +76,8 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
 
   target_include_directories(${unit_test_name} PRIVATE ${PROJECT_TEST_UNIT_DIR})
   target_include_directories(${unit_test_name} PRIVATE ${PROJECT_GTEST_INCLUDE_DIR})
+
+  turn_on_warnings(${unit_test_name})
 
   link_target_with_vt(
     TARGET ${unit_test_name}

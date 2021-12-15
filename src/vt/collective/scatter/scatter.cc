@@ -92,38 +92,37 @@ void Scatter::scatterIn(ScatterMsg* msg) {
   Tree::foreachChild([&](NodeType child) {
     auto const& num_children = getNumDescendants(child) + 1;
     auto const& child_bytes_size = num_children * elm_size;
-    auto child_msg = makeMessageSz<ScatterMsg>(
-      child_bytes_size, child_bytes_size, elm_size
-    );
+    auto child_msg =
+      makeMessageSz<ScatterMsg>(child_bytes_size, child_bytes_size, elm_size);
     vt_debug_print(
       verbose, scatter,
       "Scatter::scatterIn: child={}, num_children={}, child_bytes_size={}\n",
       child, num_children, child_bytes_size
     );
-    auto const child_remaining_size = thePool()->remainingSize(
-      reinterpret_cast<void*>(child_msg.get())
-    );
+    auto const child_remaining_size =
+      thePool()->remainingSize(reinterpret_cast<void*>(child_msg.get()));
     child_msg->user_han = user_handler;
     auto ptr = reinterpret_cast<char*>(child_msg.get()) + sizeof(ScatterMsg);
     vt_debug_print(
       verbose, scatter,
       "Scatter::scatterIn: child={}, num_children={}, elm_size={}, "
       "offset={}, child_remaining={}, parent size={}, child_bytes_size={}\n",
-      child, num_children, elm_size, in_ptr - in_base_ptr,
-      child_remaining_size, total_size, child_bytes_size
+      child, num_children, elm_size, in_ptr - in_base_ptr, child_remaining_size,
+      total_size, child_bytes_size
     );
     std::memcpy(ptr, in_ptr, child_bytes_size);
     in_ptr += child_bytes_size;
-    theMsg()->sendMsgSz<ScatterMsg,scatterHandler>(
+    theMsg()->sendMsgSz<ScatterMsg, scatterHandler>(
       child, child_msg, sizeof(ScatterMsg) + child_bytes_size
     );
   });
-  auto active_fn = auto_registry::getAutoHandler(user_handler);
-  active_fn(reinterpret_cast<BaseMessage*>(in_base_ptr));
+
+  auto const& active_fn = auto_registry::getScatterAutoHandler(user_handler);
+  active_fn->dispatch(in_base_ptr, nullptr);
 }
 
 /*static*/ void Scatter::scatterHandler(ScatterMsg* msg) {
-  return theCollective()->scatterIn(msg);
+  theCollective()->scatterIn(msg);
 }
 
 }}} /* end namespace vt::collective::scatter */

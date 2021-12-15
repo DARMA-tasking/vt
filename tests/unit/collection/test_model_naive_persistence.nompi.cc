@@ -62,6 +62,7 @@ using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::CommMapType;
 using vt::vrt::collection::balance::ObjectIterator;
+using vt::vrt::collection::balance::LoadMapObjectIterator;
 
 static int32_t getIndexFromPhase(int32_t phase) {
   return std::max(0, -1 * phase - 1);
@@ -74,7 +75,6 @@ struct StubModel : LoadModel {
 
   void setLoads(
     std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, SubphaseLoadMapType> const*,
     std::unordered_map<PhaseType, CommMapType> const*) override {
     proc_load_ = proc_load;
   }
@@ -83,18 +83,14 @@ struct StubModel : LoadModel {
 
   TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     EXPECT_LE(phase.phases, -1);
-    return proc_load_->at(getIndexFromPhase(phase.phases)).at(id);
+    return proc_load_->at(getIndexFromPhase(phase.phases)).at(id).whole_phase_load;
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(3).begin());
-  }
-  virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(3).end());
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(3).begin(), proc_load_->at(3).end())};
   }
 
   // Not used in this test
-  virtual int getNumObjects() override { return 1; }
   virtual unsigned int getNumCompletedPhases() override { return 1; }
   virtual int getNumSubphases() override { return 1; }
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
@@ -107,28 +103,29 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
   NodeType this_node = 0;
   std::unordered_map<PhaseType, LoadMapType> proc_loads = {
     {0, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{10}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{40}}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}}},
     {1, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{4}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{4}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}}},
     {2, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{20}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{50}}}},
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{20}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{50}, {}}}}},
     {3, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, TimeType{40}},
-      {ElementIDStruct{2,this_node,this_node}, TimeType{100}}}}};
+      {ElementIDStruct{1,this_node,this_node}, {TimeType{40}, {}}},
+      {ElementIDStruct{2,this_node,this_node}, {TimeType{100}, {}}}}}};
 
   auto test_model =
     std::make_shared<NaivePersistence>(std::make_shared<StubModel>());
 
-  test_model->setLoads(&proc_loads, nullptr, nullptr);
+  test_model->setLoads(&proc_loads, nullptr);
   test_model->updateLoads(3);
 
-  for (auto&& obj : *test_model) {
+  for (auto it = test_model->begin(); it != test_model->end(); ++it) {
+    auto &&obj = *it;
     for (auto phase : {0, -1, -2, -3, -4}) {
       auto work_val = test_model->getWork(obj, PhaseOffset{phase, 1});
-      EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj));
+      EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj).whole_phase_load);
     }
   }
 }

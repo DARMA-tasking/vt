@@ -104,11 +104,6 @@ function(create_trace_only_target)
     ${TRACE_HEADER_FILES} ${TRACE_SOURCE_FILES}
   )
 
-  set_target_properties(
-    ${VT_TRACE_LIB} PROPERTIES
-    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
-  )
-
   target_include_directories(
     ${VT_TRACE_LIB} PUBLIC
     $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/src>
