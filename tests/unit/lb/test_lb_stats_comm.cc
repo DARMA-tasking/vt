@@ -70,7 +70,6 @@ using TestLBStatsComm = TestParallelHarness;
 using StatsData = vt::vrt::collection::balance::StatsData;
 
 StatsData getStatsDataForPhase(vt::PhaseType phase) {
-#if 1
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
   using vt::util::json::DecompressionInputContainer;
   using vt::vrt::collection::balance::StatsData;
@@ -80,14 +79,10 @@ StatsData getStatsDataForPhase(vt::PhaseType phase) {
   auto j = vt::theNodeStats()->getStatsData()->toJson(phase);
   ap->addElm(*j);
   ss = ap->finish();
-  // fmt::print("{}\n", ss.str());
   auto c = DecompressionInputContainer{
     DecompressionInputContainer::AnyStreamTag{}, std::move(ss)
   };
   return StatsData{json::parse(c)};
-#else
-  return *vt::theNodeStats()->getStatsData();
-#endif
 }
 
 namespace {
