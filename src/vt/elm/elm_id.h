@@ -47,8 +47,6 @@
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
 
-#include <unordered_map>
-
 namespace vt { namespace elm {
 
 /// The underlying element ID type
