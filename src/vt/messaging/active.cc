@@ -154,12 +154,15 @@ ActiveMessenger::ActiveMessenger()
 
 void ActiveMessenger::startup() {
   auto const this_node = theContext()->getNode();
-  elm_id_ = elm::ElmIDBits::createBareHandler(this_node);
+  bare_handler_dummy_elm_id_for_lb_stats_ =
+    elm::ElmIDBits::createBareHandler(this_node);
 
 #if vt_check_enabled(lblite)
   // Hook to collect statistics about objgroups
   thePhase()->registerHookCollective(phase::PhaseHook::End, [this]{
-    theNodeStats()->addNodeStats(elm_id_, &elm_stats_);
+    theNodeStats()->addNodeStats(
+      bare_handler_dummy_elm_id_for_lb_stats_, &bare_handler_stats_
+    );
   });
 #endif
 }
@@ -979,7 +982,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
       .withContinuation(cont)
       .withTag(tag)
       .withTDEpochFromMsg(is_term)
-      .withLBStats(&elm_stats_, elm_id_)
+      .withLBStats(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
       .enqueue();
 
     if (is_term) {

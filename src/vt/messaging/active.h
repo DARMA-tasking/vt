@@ -1769,8 +1769,8 @@ private:
   diagnostic::CounterGauge amForwardCounterGauge;
 
 private:
-  elm::ElementIDStruct elm_id_ = {};
-  elm::ElementStats elm_stats_;
+  elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_stats_ = {};
+  elm::ElementStats bare_handler_stats_;
 };
 
 }} // end namespace vt::messaging
