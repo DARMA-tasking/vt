@@ -59,4 +59,3 @@ NodeType ElementIDStruct::getCurrNode() const {
 }
 
 }} /* end namespace vt::elm */
-

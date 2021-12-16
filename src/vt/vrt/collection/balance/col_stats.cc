@@ -70,4 +70,3 @@ std::unordered_map<VirtualProxyType,SubphaseType>
 CollectionStats::focused_subphase_;
 
 }}}} /* end namespace vt::vrt::collection::balance */
-
