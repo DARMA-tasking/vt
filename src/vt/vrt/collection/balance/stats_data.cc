@@ -181,7 +181,7 @@ StatsData::StatsData(nlohmann::json const& j) {
             vtAssertExpr(object.is_number());
 
             auto elm = ElementIDStruct{object, node};
-            this->node_data_[id][elm] = time;
+            this->node_data_[id][elm].whole_phase_load = time;
 
             if (
               task["entity"].find("collection_id") != task["entity"].end() and

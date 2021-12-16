@@ -92,7 +92,7 @@ void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reass
       vt_debug_print(
                      normal, lb,
                      "migrateObjectTo, obj_id={}, home={}, from={}, to={}\n",
-                     obj_id.id, obj_id.home_node, from, to
+                     obj_id.id, obj_id.getHomeNode(), from, to
                      );
 
       theNodeStats()->migrateObjTo(obj_id, to);

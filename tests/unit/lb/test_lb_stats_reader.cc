@@ -120,7 +120,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
         auto permID = elm::ElmIDBits::createCollectionImpl(
           true, elmID+1, in, in
         );
-        sd->node_data_[phase][permID] = tval;
+        sd->node_data_[phase][permID].whole_phase_load = tval;
       }
     }
   }
