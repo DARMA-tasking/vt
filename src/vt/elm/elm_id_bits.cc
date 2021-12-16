@@ -79,8 +79,11 @@ namespace vt { namespace elm {
   BitPackerType::setField<eElmIDProxyBitsObjGroup::Control, num_control_bits>(
     ret, BareHandler
   );
-  auto const this_node = theContext()->getNode();
-  return ElementIDStruct{ret, this_node};
+  constexpr auto num_node_bits = BitCounterType<NodeType>::value;
+  BitPackerType::setField<eElmIDProxyBitsNonObjGroup::Node, num_node_bits>(
+    ret, node
+  );
+  return ElementIDStruct{ret, node};
 }
 
 /*static*/ void ElmIDBits::setObjGroup(

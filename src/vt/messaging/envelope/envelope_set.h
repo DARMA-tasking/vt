@@ -207,6 +207,15 @@ template <typename Env>
 inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized);
 
 /**
+ * \brief Set whether this message is internal
+ *
+ * \param[in,out] env the envelope
+ * \param[in] is_internal_message value indicating message is an internal message
+ */
+template <typename Env>
+inline void envelopeSetInternalMessage(Env& env, bool is_internal_message);
+
+/**
  * \brief Set whether this message's envelope is locked.
  *
  * A locked message will prevent key parts of the envelope from being updated

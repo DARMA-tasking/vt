@@ -93,6 +93,15 @@ struct StatsData {
    */
   void clear();
 
+private:
+  /**
+   * \brief Output an entity to json
+   *
+   * \param[in] j the json
+   * \param[in] elm_id the element to output
+   */
+  void outputEntity(nlohmann::json& j, ElementIDStruct const& elm_id) const;
+
 public:
   /// Node timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;

@@ -136,6 +136,14 @@ inline bool envelopeHasBeenSerialized(Env& env);
 template <typename Env>
 inline bool envelopeIsLocked(Env& env);
 
+/**
+ * \brief Test if an envelope is internal
+ *
+ * \param[in] env the envelope
+ */
+template <typename Env>
+inline bool envelopeIsInternal(Env& env);
+
 }} //end namespace vt::messaging
 
 #include "vt/messaging/envelope/envelope_test.impl.h"

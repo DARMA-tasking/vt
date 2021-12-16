@@ -224,6 +224,15 @@ public:
   void finalize() override;
   void fatalError() override;
 
+  /**
+   * \brief Get the underlying stats data
+   *
+   * \warning For testing only!
+   *
+   * \return the stats data
+   */
+  StatsData* getStatsData() { return stats_.get(); }
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | proxy_

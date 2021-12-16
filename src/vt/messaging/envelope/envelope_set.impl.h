@@ -152,6 +152,11 @@ inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized) {
 }
 
 template <typename Env>
+inline void envelopeSetInternalMessage(Env& env, bool is_internal_message) {
+  reinterpret_cast<Envelope*>(&env)->is_internal_message = is_internal_message;
+}
+
+template <typename Env>
 inline void envelopeSetIsLocked(Env& env, bool is_locked) {
   reinterpret_cast<Envelope*>(&env)->is_locked = is_locked;
 }

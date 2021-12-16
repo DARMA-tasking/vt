@@ -77,6 +77,19 @@ void ElementStats::stopTime() {
   );
 }
 
+void ElementStats::sendToEntity(
+  ElementIDStruct to, ElementIDStruct from, double bytes
+) {
+  elm::CommKey key(elm::CommKey::SendRecvTag{}, from, to, false);
+  sendComm(key, bytes);
+}
+
+void ElementStats::sendComm(elm::CommKey key, double bytes) {
+  phase_comm_[cur_phase_][key].sendMsg(bytes);
+  subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
+  subphase_comm_[cur_phase_].at(cur_subphase_)[key].sendMsg(bytes);
+}
+
 void ElementStats::recvComm(
   elm::CommKey key, double bytes
 ) {

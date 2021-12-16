@@ -58,6 +58,7 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
 #include "vt/runnable/invoke.h"
+#include "vt/elm/elm_id_bits.h"
 
 #include <memory>
 
@@ -258,11 +259,23 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const dest_node = proxy.getNode();
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
+
+  // set as internal message so it isn't recorded as it routes through bare
+  // handlers
+  envelopeSetInternalMessage(msg->env, true);
+
+  if (theContext()->getTask() != nullptr) {
+    auto dest_elm_id = elm::ElmIDBits::createObjGroup(proxy_bits, dest_node);
+    auto const num_bytes = serialization::MsgSizer<MsgT>::get(msg.get());
+    theContext()->getTask()->send(dest_elm_id, num_bytes);
+  }
+
   vt_debug_print(
     terse, objgroup,
     "ObjGroupManager::send: proxy={:x}, node={}, ctrl={:x}, han={:x}\n",
     proxy_bits, dest_node, ctrl, han
   );
+
   send<MsgT>(msg,han,dest_node);
 }
 

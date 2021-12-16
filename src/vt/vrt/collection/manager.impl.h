@@ -363,13 +363,18 @@ template <typename ColT, typename IndexT, typename MsgT>
 
 template <typename ColT, typename MsgT>
 /*static*/ void CollectionManager::recordStats(ColT* col_ptr, MsgT* msg) {
+  auto const pfrom = msg->getSenderElm();
+
+  if (pfrom.id == elm::no_element_id) {
+    return;
+  }
+
   auto const pto = col_ptr->getElmID();
-  auto const pfrom = msg->getElm();
   auto& stats = col_ptr->getStats();
   auto const msg_size = serialization::MsgSizer<MsgT>::get(msg);
   auto const cat = msg->getCat();
   vt_debug_print(
-    verbose, vrt_coll,
+    normal, vrt_coll,
     "recordStats: receive msg: elm(to={}, from={}),"
     " no={}, size={}, category={}\n",
     pto, pfrom, elm::no_element_id, msg_size,
@@ -379,7 +384,6 @@ template <typename ColT, typename MsgT>
     cat == elm::CommCategory::SendRecv or
     cat == elm::CommCategory::Broadcast
   ) {
-    vtAssert(pfrom.id != elm::no_element_id, "Must not be no element ID");
     bool bcast = cat == elm::CommCategory::SendRecv ? false : true;
     stats.recvObjData(pto, pfrom, msg_size, bcast);
   } else if (
@@ -540,10 +544,9 @@ void CollectionManager::invokeMsgImpl(
   );
 
   if (elm_id.id != elm::no_element_id) {
-    msgPtr->setElm(elm_id);
+    msgPtr->setSenderElm(elm_id);
+    msgPtr->setCat(elm::CommCategory::LocalInvoke);
   }
-  msgPtr->setCat(elm::CommCategory::LocalInvoke);
-
 #endif
 
   auto const cur_epoch = theMsg()->setupEpochMsg(msgPtr);
@@ -870,10 +873,8 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   );
 
   if (elm_id.id != elm::no_element_id) {
-    msg->setElm(elm_id);
+    msg->setSenderElm(elm_id);
     msg->setCat(elm::CommCategory::Broadcast);
-  } else {
-    msg->setCat(elm::CommCategory::NodeToCollection);
   }
 # endif
 
@@ -1136,12 +1137,14 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   );
 
   if (elm_id.id != elm::no_element_id) {
-    msg->setElm(elm_id);
+    msg->setSenderElm(elm_id);
     msg->setCat(elm::CommCategory::SendRecv);
-  } else {
-    msg->setCat(elm::CommCategory::NodeToCollection);
   }
 # endif
+
+  // set as internal message so it isn't recorded as it routes through bare
+  // handlers
+  envelopeSetInternalMessage(msg->env, true);
 
 # if vt_check_enabled(trace_enabled)
   // Create the trace creation event here to connect it a higher semantic

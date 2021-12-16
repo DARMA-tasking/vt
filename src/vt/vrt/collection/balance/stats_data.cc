@@ -48,6 +48,26 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+void StatsData::outputEntity(nlohmann::json& j, ElementIDStruct const& id) const {
+  j["type"] = "object";
+  j["id"] = id.id;
+  j["home"] = id.getHomeNode();
+  j["migratable"] = id.isMigratable();
+  if (node_idx_.find(id) != node_idx_.end()) {
+    auto const& proxy_id = std::get<0>(node_idx_.find(id)->second);
+    auto const& idx_vec = std::get<1>(node_idx_.find(id)->second);
+    j["collection_id"] = proxy_id;
+    for (std::size_t x = 0; x < idx_vec.size(); x++) {
+      j["index"][x] = idx_vec[x];
+    }
+  } else if (node_objgroup_.find(id) != node_objgroup_.end()) {
+    auto const& proxy_id = node_objgroup_.find(id)->second;
+    j["objgroup_id"] = proxy_id;
+  } else {
+    // bare handler
+  }
+}
+
 std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
   using json = nlohmann::json;
 
@@ -62,22 +82,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
       j["tasks"][i]["resource"] = "cpu";
       j["tasks"][i]["node"] = theContext()->getNode();
       j["tasks"][i]["time"] = time;
-      j["tasks"][i]["entity"]["type"] = "object";
-      j["tasks"][i]["entity"]["id"] = id.id;
-      j["tasks"][i]["entity"]["home"] = id.home_node;
-      j["tasks"][i]["entity"]["migratable"] = id.migratable;
-      if (node_idx_.find(id) != node_idx_.end()) {
-        auto const& proxy_id = std::get<0>(node_idx_.find(id)->second);
-        auto const& idx_vec = std::get<1>(node_idx_.find(id)->second);
-        j["tasks"][i]["entity"]["collection_id"] = proxy_id;
-        for (std::size_t x = 0; x < idx_vec.size(); x++) {
-          j["tasks"][i]["entity"]["index"][x] = idx_vec[x];
-        }
-      } else if (node_objgroup_.find(id) != node_objgroup_.end()) {
-        auto const& proxy_id = node_objgroup_.find(id)->second;
-        j["tasks"][i]["entity"]["objgroup_id"] = proxy_id;
-      } else {
-      }
+      outputEntity(j["tasks"][i]["entity"], id);
 
       auto const& subphase_times = elm.second.subphase_loads;
       std::size_t const subphases = subphase_times.size();
@@ -108,12 +113,8 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
         } else {
           j["communications"][i]["type"] = "Broadcast";
         }
-        j["communications"][i]["from"]["type"] = "object";
-        j["communications"][i]["from"]["id"] = key.fromObj().id;
-        j["communications"][i]["from"]["home"] = key.fromObj().home_node;
-        j["communications"][i]["to"]["type"] = "object";
-        j["communications"][i]["to"]["id"] = key.toObj().id;
-        j["communications"][i]["to"]["home"] = key.toObj().home_node;
+        outputEntity(j["communications"][i]["from"], key.fromObj());
+        outputEntity(j["communications"][i]["to"], key.toObj());
         break;
       }
       case elm::CommCategory::NodeToCollection:
@@ -126,9 +127,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
 
         j["communications"][i]["from"]["type"] = "node";
         j["communications"][i]["from"]["id"] = key.fromNode();
-        j["communications"][i]["to"]["type"] = "object";
-        j["communications"][i]["to"]["id"] = key.toObj().id;
-        j["communications"][i]["to"]["home"] = key.toObj().home_node;
+        outputEntity(j["communications"][i]["to"], key.toObj());
         break;
       }
       case elm::CommCategory::CollectionToNode:
@@ -141,9 +140,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
 
         j["communications"][i]["to"]["type"] = "node";
         j["communications"][i]["to"]["id"] = key.toNode();
-        j["communications"][i]["from"]["type"] = "object";
-        j["communications"][i]["from"]["id"] = key.fromObj().id;
-        j["communications"][i]["from"]["home"] = key.fromObj().home_node;
+        outputEntity(j["communications"][i]["from"], key.fromObj());
         break;
       }
       case elm::CommCategory::LocalInvoke:
@@ -183,20 +180,8 @@ StatsData::StatsData(nlohmann::json const& j) {
             auto object = task["entity"]["id"];
             vtAssertExpr(object.is_number());
 
-            NodeType home = uninitialized_destination;
-            if (task["entity"].find("home") != task["entity"].end()) {
-              auto home_json = task["entity"]["home"];
-              vtAssertExpr(home_json.is_number());
-              home = home_json;
-            }
-
-            bool migratable = true;
-            if (task["entity"].find("migratable") != task["entity"].end()) {
-              migratable = task["entity"]["migratable"];
-            }
-
-            auto elm = ElementIDStruct{object, home, node, migratable};
-            this->node_data_[id][elm].whole_phase_load = time;;
+            auto elm = ElementIDStruct{object, node};
+            this->node_data_[id][elm] = time;
 
             if (
               task["entity"].find("collection_id") != task["entity"].end() and
@@ -231,6 +216,9 @@ StatsData::StatsData(nlohmann::json const& j) {
         }
       }
 
+      using CommKey = elm::CommKey;
+      using CommVolume = elm::CommVolume;
+
       if (phase.find("communications") != phase.end()) {
         auto comms = phase["communications"];
         if (comms.is_array()) {
@@ -248,26 +236,14 @@ StatsData::StatsData(nlohmann::json const& j) {
 
               auto from_object = comm["from"]["id"];
               vtAssertExpr(from_object.is_number());
-              NodeType from_home = uninitialized_destination;
-              if (comm["from"].find("home") != comm["from"].end()) {
-                auto home_json = comm["from"]["home"];
-                vtAssertExpr(home_json.is_number());
-                from_home = home_json;
-              }
-              auto from_elm = ElementIDStruct{from_object, from_home, this_node};
+              auto from_elm = ElementIDStruct{from_object, this_node};
 
               auto to_object = comm["to"]["id"];
               vtAssertExpr(to_object.is_number());
-              NodeType to_home = uninitialized_destination;
-              if (comm["to"].find("home") != comm["to"].end()) {
-                auto home_json = comm["to"]["home"];
-                vtAssertExpr(home_json.is_number());
-                to_home = home_json;
-              }
-              auto to_elm = ElementIDStruct{to_object, to_home, this_node};
+              auto to_elm = ElementIDStruct{to_object, this_node};
 
-              LBCommKey key(
-                LBCommKey::CollectionTag{},
+              CommKey key(
+                CommKey::CollectionTag{},
                 from_elm, to_elm, type == "Broadcast"
               );
               CommVolume vol{bytes, messages};
@@ -283,16 +259,10 @@ StatsData::StatsData(nlohmann::json const& j) {
 
               auto to_object = comm["to"]["id"];
               vtAssertExpr(to_object.is_number());
-              NodeType to_home = uninitialized_destination;
-              if (comm["to"].find("home") != comm["to"].end()) {
-                auto home_json = comm["to"]["home"];
-                vtAssertExpr(home_json.is_number());
-                to_home = home_json;
-              }
-              auto to_elm = ElementIDStruct{to_object, to_home, this_node};
+              auto to_elm = ElementIDStruct{to_object, this_node};
 
-              LBCommKey key(
-                LBCommKey::NodeToCollectionTag{},
+              CommKey key(
+                CommKey::NodeToCollectionTag{},
                 static_cast<NodeType>(from_node), to_elm,
                 type == "NodeToCollectionBcast"
               );
@@ -306,19 +276,13 @@ StatsData::StatsData(nlohmann::json const& j) {
 
               auto from_object = comm["from"]["id"];
               vtAssertExpr(from_object.is_number());
-              NodeType from_home = uninitialized_destination;
-              if (comm["from"].find("home") != comm["from"].end()) {
-                auto home_json = comm["from"]["home"];
-                vtAssertExpr(home_json.is_number());
-                from_home = home_json;
-              }
-              auto from_elm = ElementIDStruct{from_object, from_home, this_node};
+              auto from_elm = ElementIDStruct{from_object, this_node};
 
               auto to_node = comm["to"]["id"];
               vtAssertExpr(to_node.is_number());
 
-              LBCommKey key(
-                LBCommKey::CollectionToNodeTag{},
+              CommKey key(
+                CommKey::CollectionToNodeTag{},
                 from_elm, static_cast<NodeType>(to_node),
                 type == "CollectionToNodeBcast"
               );

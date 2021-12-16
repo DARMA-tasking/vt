@@ -447,7 +447,14 @@ EventType ActiveMessenger::sendMsgBytes(
   }
 
   if (theContext()->getTask() != nullptr) {
-    theContext()->getTask()->send(dest, msg_size, is_bcast);
+    auto lb = theContext()->getTask()->get<ctx::LBStats>();
+    if (lb) {
+      auto const is_internal = envelopeIsInternal(msg->env);
+      if (not is_internal) {
+        auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);
+        theContext()->getTask()->send(dest_elm_id, msg_size);
+      }
+    }
   }
 
   return event_id;
@@ -564,10 +571,6 @@ SendInfo ActiveMessenger::sendData(
   // if required to inhibit early termination of that epoch
   theTerm()->produce(term::any_epoch_sentinel,1,dest);
   theTerm()->hangDetectSend();
-
-  if (theContext()->getTask() != nullptr) {
-    theContext()->getTask()->send(dest, num_bytes, false);
-  }
 
   return SendInfo{event_id, send_tag, num};
 }

@@ -67,6 +67,7 @@ inline NodeType objGetNode(ElementIDStruct const id) {
 
 struct CommKey {
 
+  struct SendRecvTag { };
   struct CollectionTag { };
   struct CollectionToNodeTag { };
   struct NodeToCollectionTag { };
@@ -75,6 +76,14 @@ struct CommKey {
   CommKey(CommKey const&) = default;
   CommKey(CommKey&&) = default;
   CommKey& operator=(CommKey const&) = default;
+
+  CommKey(
+    SendRecvTag,
+    ElementIDStruct from, ElementIDStruct to,
+    bool bcast
+  ) : from_(from), to_(to),
+      cat_(bcast ? CommCategory::Broadcast : CommCategory::SendRecv)
+  { }
 
   CommKey(
     CollectionTag,
@@ -148,6 +157,11 @@ struct CommVolume {
   uint64_t messages = 0;
 
   void receiveMsg(double b) {
+    messages++;
+    bytes += b;
+  }
+
+  void sendMsg(double b) {
     messages++;
     bytes += b;
   }

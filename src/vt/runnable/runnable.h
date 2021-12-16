@@ -46,6 +46,7 @@
 
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/context/runnable_context/base.h"
+#include "vt/elm/elm_id.h"
 
 // fwd-declarations for the element types
 namespace vt { namespace vrt {
@@ -188,11 +189,10 @@ public:
    * \brief Loop through all contexts add run the \c send() method associated
    * with this runnable
    *
-   * \param[in] dest the destination node for the send
-   * \param[in] size the message size
-   * \param[in] bcast whether it's a broadcast
+   * \param[in] dest the destination element for the send
+   * \param[in] bytes the message size
    */
-  void send(NodeType dest, MsgSizeType size, bool bcast);
+  void send(elm::ElementIDStruct elm, MsgSizeType bytes);
 
   /**
    * \brief Get a context object by the type \c T

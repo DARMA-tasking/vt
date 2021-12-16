@@ -64,6 +64,10 @@ struct ElementStats {
   void startTime();
   void stopTime();
   void addTime(TimeType const& time);
+
+  void sendToEntity(ElementIDStruct to, ElementIDStruct from, double bytes);
+  void sendComm(elm::CommKey key, double bytes);
+
   void recvComm(elm::CommKey key, double bytes);
   void recvObjData(
     ElementIDStruct to_perm,

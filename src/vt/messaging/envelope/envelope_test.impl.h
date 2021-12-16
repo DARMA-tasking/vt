@@ -97,6 +97,11 @@ inline bool envelopeIsLocked(Env& env) {
   return reinterpret_cast<Envelope const*>(&env)->is_locked;
 }
 
+template <typename Env>
+inline bool envelopeIsInternal(Env& env) {
+  return reinterpret_cast<Envelope const*>(&env)->is_internal_message;
+}
+
 }} //end namespace vt::messaging
 
 #endif /*INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_TEST_IMPL_H*/
