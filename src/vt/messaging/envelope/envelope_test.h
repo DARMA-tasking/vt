@@ -137,12 +137,13 @@ template <typename Env>
 inline bool envelopeIsLocked(Env& env);
 
 /**
- * \brief Test if an envelope is internal
+ * \brief Test if an envelope indicates that bare handlers shouldn't record LB
+ * comm stats
  *
  * \param[in] env the envelope
  */
 template <typename Env>
-inline bool envelopeIsInternal(Env& env);
+inline bool envelopeNoBareHandlerCommStats(Env& env);
 
 }} //end namespace vt::messaging
 

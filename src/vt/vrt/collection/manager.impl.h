@@ -1142,9 +1142,8 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   }
 # endif
 
-  // set as internal message so it isn't recorded as it routes through bare
-  // handlers
-  envelopeSetInternalMessage(msg->env, true);
+  // set bit so it isn't recorded as it routes through bare handlers
+  envelopeSetNoBareHandlerCommStats(msg->env, true);
 
 # if vt_check_enabled(trace_enabled)
   // Create the trace creation event here to connect it a higher semantic

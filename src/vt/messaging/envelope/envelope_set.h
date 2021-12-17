@@ -207,13 +207,17 @@ template <typename Env>
 inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized);
 
 /**
- * \brief Set whether this message is internal
+ * \brief Set whether this message shouldn't record bare handler communication
+ * stats for LB
  *
  * \param[in,out] env the envelope
- * \param[in] is_internal_message value indicating message is an internal message
+ * \param[in] no_bare_handler_comm_stats value indicating message shouldn't
+ * record bare handler stats
  */
 template <typename Env>
-inline void envelopeSetInternalMessage(Env& env, bool is_internal_message);
+inline void envelopeSetNoBareHandlerCommStats(
+  Env& env, bool no_bare_handler_comm_stats
+);
 
 /**
  * \brief Set whether this message's envelope is locked.

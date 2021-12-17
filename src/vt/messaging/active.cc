@@ -452,8 +452,8 @@ EventType ActiveMessenger::sendMsgBytes(
   if (theContext()->getTask() != nullptr) {
     auto lb = theContext()->getTask()->get<ctx::LBStats>();
     if (lb) {
-      auto const is_internal = envelopeIsInternal(msg->env);
-      if (not is_internal) {
+      auto const no_stats = envelopeNoBareHandlerCommStats(msg->env);
+      if (not no_stats) {
         auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);
         theContext()->getTask()->send(dest_elm_id, msg_size);
       }

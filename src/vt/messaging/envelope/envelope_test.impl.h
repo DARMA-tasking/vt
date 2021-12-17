@@ -98,8 +98,8 @@ inline bool envelopeIsLocked(Env& env) {
 }
 
 template <typename Env>
-inline bool envelopeIsInternal(Env& env) {
-  return reinterpret_cast<Envelope const*>(&env)->is_internal_message;
+inline bool envelopeNoBareHandlerCommStats(Env& env) {
+  return reinterpret_cast<Envelope const*>(&env)->no_bare_handler_comm_stats;
 }
 
 }} //end namespace vt::messaging

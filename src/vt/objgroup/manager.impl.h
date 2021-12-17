@@ -260,9 +260,9 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
 
-  // set as internal message so it isn't recorded as it routes through bare
+  // set bit so it isn't recorded as it routes through bare
   // handlers
-  envelopeSetInternalMessage(msg->env, true);
+  envelopeSetNoBareHandlerCommStats(msg->env, true);
 
   if (theContext()->getTask() != nullptr) {
     auto dest_elm_id = elm::ElmIDBits::createObjGroup(proxy_bits, dest_node);
