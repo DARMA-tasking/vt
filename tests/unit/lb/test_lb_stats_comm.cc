@@ -51,6 +51,8 @@
 
 #include <nlohmann/json.hpp>
 
+#if vt_check_enabled(lblite)
+
 namespace vt { namespace tests { namespace unit { namespace comm {
 
 /**
@@ -744,3 +746,5 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_handler_to_handler_send) {
 } /* end anon namespace */
 
 }}}} // end namespace vt::tests::unit::comm
+
+#endif
