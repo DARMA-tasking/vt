@@ -81,12 +81,12 @@ public:
   /**
    * \brief Get the first terminated epoch in the window
    */
-  EpochType getFirst() const { return EpochType{terminated_epochs_.lower()}; }
+  EpochType getFirst() const { return terminated_epochs_.lower(); }
 
   /**
    * \brief Get the last terminated epoch in the window
    */
-  EpochType getLast()  const { return EpochType{terminated_epochs_.upper()}; }
+  EpochType getLast()  const { return terminated_epochs_.upper(); }
 
   /**
    * \brief Check if an epoch is terminated or not.

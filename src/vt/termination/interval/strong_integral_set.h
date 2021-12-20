@@ -112,9 +112,9 @@ struct StrongIntegralSet {
   auto contains(ImplType const& val) const { return impl_.contains(val); }
   auto exists(ImplType const& val) const { return impl_.exists(val); }
   auto clear() { impl_.clear(); }
-  auto range() const { return impl_.range(); }
-  auto lower() const { return impl_.lower(); }
-  auto upper() const { return impl_.upper(); }
+  auto range() const { return T{impl_.range()}; }
+  auto lower() const { return T{impl_.lower()}; }
+  auto upper() const { return T{impl_.upper()}; }
   auto empty() const { return impl_.empty(); }
   auto size() const { return impl_.size(); }
   auto compressedSize() const { return impl_.compressedSize(); }
