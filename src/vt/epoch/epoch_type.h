@@ -114,7 +114,7 @@ namespace fmt {
 
 /// Custom fmt formatter/print for \c EpochType
 template <>
-struct formatter<vt::epoch::EpochType> {
+struct formatter<::vt::epoch::EpochType> {
   /// Presentation format:
   ///  - 'x' - hex (default)
   ///  - 'd' - decimal
@@ -141,7 +141,7 @@ struct formatter<vt::epoch::EpochType> {
   /// Formats the epoch using the parsed format specification (presentation)
   /// stored in this formatter.
   template <typename FormatContext>
-  auto format(vt::epoch::EpochType const& e, FormatContext& ctx) {
+  auto format(::vt::epoch::EpochType const& e, FormatContext& ctx) {
     return format_to(
       ctx.out(),
       presentation == 'b' ? "{:b}" : (presentation == 'd' ? "{:d}" : "{:x}"),
