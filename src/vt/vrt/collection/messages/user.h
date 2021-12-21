@@ -51,7 +51,7 @@
 #include "vt/vrt/collection/proxy.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/elm/elm_comm.h"
 
 #include <type_traits>
 
@@ -111,10 +111,10 @@ struct CollectionMessage : RoutedMessageType<BaseMsgT, ColT> {
   #if vt_check_enabled(lblite)
     bool lbLiteInstrument() const;
     void setLBLiteInstrument(bool const& val);
-    balance::ElementIDStruct getElm() const;
-    void setElm(balance::ElementIDStruct elm);
-    balance::CommCategory getCat() const;
-    void setCat(balance::CommCategory cat);
+    balance::ElementIDStruct getSenderElm() const;
+    void setSenderElm(balance::ElementIDStruct elm);
+    elm::CommCategory getCat() const;
+    void setCat(elm::CommCategory cat);
   #endif
 
   template <typename SerializerT>
@@ -136,10 +136,8 @@ private:
      * (sendMsg,broadcastMsg) they are automatically instrumented
      */
     bool lb_lite_instrument_ = false;
-    balance::ElementIDStruct elm_ = {
-      0, uninitialized_destination, uninitialized_destination
-    };
-    balance::CommCategory cat_ = balance::CommCategory::SendRecv;
+    balance::ElementIDStruct sender_elm_ = {};
+    elm::CommCategory cat_ = elm::CommCategory::SendRecv;
   #endif
 
   #if vt_check_enabled(trace_enabled)

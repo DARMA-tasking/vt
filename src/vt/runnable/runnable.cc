@@ -222,9 +222,9 @@ void RunnableNew::resume() {
   }
 }
 
-void RunnableNew::send(NodeType dest, MsgSizeType size, bool bcast) {
+void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
   for (auto&& ctx : contexts_) {
-    ctx->send(dest, size, bcast);
+    ctx->send(elm, bytes);
   }
 }
 

@@ -1491,8 +1491,8 @@ private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmDestroyAttorney;
 
-  friend struct balance::ElementStats;
-
+  friend struct balance::CollectionStats;
+  friend struct elm::ElementStats;
   friend struct ctx::LBStats;
 
   template <typename ColT>
@@ -1721,7 +1721,7 @@ private:
    *
    * \return the element ID
    */
-  balance::ElementIDStruct getCurrentContext() const;
+  elm::ElementIDStruct getCurrentContext() const;
 
 ////////////////////////////////////////////////////////////////////////////////
 private:
@@ -1826,7 +1826,7 @@ private:
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.impl.h"
 #include "vt/vrt/collection/broadcast/broadcastable.impl.h"
 #include "vt/vrt/collection/rdmaable/rdmaable.impl.h"
-#include "vt/vrt/collection/balance/elm_stats.impl.h"
+#include "vt/vrt/collection/balance/col_stats.impl.h"
 #include "vt/vrt/collection/types/indexable.impl.h"
 #include "vt/vrt/collection/dispatch/dispatch.impl.h"
 #include "vt/vrt/collection/dispatch/registry.impl.h"

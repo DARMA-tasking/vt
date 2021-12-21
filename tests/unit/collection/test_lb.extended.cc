@@ -340,9 +340,9 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
   vt::vrt::collection::balance::StatsData sd;
   PhaseType write_phase = 0;
 
-  using LBCommKey = vt::vrt::collection::balance::LBCommKey;
-  using CommVolume = vt::vrt::collection::balance::CommVolume;
-  using CommBytesType = vt::vrt::collection::balance::CommBytesType;
+  using CommKey = vt::elm::CommKey;
+  using CommVolume = vt::elm::CommVolume;
+  using CommBytesType = vt::elm::CommBytesType;
 
   // @todo: should do other types of comm
 
@@ -369,15 +369,15 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
         sd.node_data_[phase][elm_id].whole_phase_load = dur;
         sd.node_data_[phase][elm_id].subphase_loads = dur_vec;
 
-        LBCommKey ntockey(
-          LBCommKey::NodeToCollectionTag{}, this_node, elm_id, false
+        CommKey ntockey(
+          CommKey::NodeToCollectionTag{}, this_node, elm_id, false
         );
         CommVolume ntocvol{ntoc, ntocm};
         sd.node_comm_[phase][ntockey] = ntocvol;
         sd.node_subphase_comm_[phase][i % 2][ntockey] = ntocvol;
 
-        LBCommKey ctonkey(
-          LBCommKey::CollectionToNodeTag{}, elm_id, this_node, false
+        CommKey ctonkey(
+          CommKey::CollectionToNodeTag{}, elm_id, this_node, false
         );
         CommVolume ctonvol{cton, ctonm};
         sd.node_comm_[phase][ctonkey] = ctonvol;
@@ -420,22 +420,22 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
               "Unexpected element ID read in whole-phase loads on phase={}: "
               "id={}, home={}, curr={}",
               phase,
-              read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
+              read_elm_id.id, read_elm_id.getHomeNode(), read_elm_id.curr_node
             );
           } else {
             auto orig_elm_id = orig_load_map.find(read_elm_id)->first;
-            EXPECT_EQ(read_elm_id.home_node, orig_elm_id.home_node);
+            EXPECT_EQ(read_elm_id.getHomeNode(), orig_elm_id.getHomeNode());
             EXPECT_EQ(read_elm_id.curr_node, orig_elm_id.curr_node);
             if (
-              read_elm_id.home_node != orig_elm_id.home_node ||
+              read_elm_id.getHomeNode() != orig_elm_id.getHomeNode() ||
               read_elm_id.curr_node != orig_elm_id.curr_node
             ) {
               fmt::print(
                 "Corrupted element ID read in whole-phase loads on phase={}: "
                 "id={}, home={}, curr={} (expected id={}, home={}, curr={})",
                 phase,
-                read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node,
-                orig_elm_id.id, orig_elm_id.home_node, orig_elm_id.curr_node
+                read_elm_id.id, read_elm_id.getHomeNode(), read_elm_id.curr_node,
+                orig_elm_id.id, orig_elm_id.getHomeNode(), orig_elm_id.curr_node
               );
             }
             auto read_load = read_load_map[read_elm_id];
@@ -465,7 +465,7 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
         fmt::print(
           "Unexpected element ID read in index mapping: "
           "id={}, home={}, curr={}",
-          read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
+          read_elm_id.id, read_elm_id.getHomeNode(), read_elm_id.curr_node
         );
       } else {
         auto orig_idx = sd.node_idx_[read_elm_id];
@@ -474,7 +474,7 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
         if (orig_idx != read_idx) {
           fmt::print(
             "Unexpected collection index for elm id={}, home={}, curr={}",
-            read_elm_id.id, read_elm_id.home_node, read_elm_id.curr_node
+            read_elm_id.id, read_elm_id.getHomeNode(), read_elm_id.curr_node
           );
         }
       }

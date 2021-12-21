@@ -56,6 +56,7 @@
 #include "vt/messaging/message/message.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
+#include "vt/elm/elm_id.h"
 
 #include <memory>
 #include <functional>
@@ -102,6 +103,8 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   ObjGroupManager() = default;
 
   std::string name() override { return "ObjGroupManager"; }
+
+  void startup() override;
 
   /*
    * Creation of a new object group across the distributed system. For now,
@@ -397,10 +400,6 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    */
   ObjGroupProxyType getProxy(ObjGroupProxyType proxy);
 
-  friend void scheduleMsg(
-    MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType ep
-  );
-
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_obj_id_
@@ -410,6 +409,9 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
       | pending_
       | derived_to_bases_;
   }
+
+  // Friend function to access the holder without including this header file
+  friend holder::HolderBase* detail::getHolderBase(HandlerType handler);
 
 private:
   /**
@@ -444,6 +446,24 @@ private:
    */
   template <typename ObjT>
   void regObjProxy(ObjT* obj, ObjGroupProxyType proxy);
+
+  /**
+   * \internal \brief Get the holder for an objgroup from a handler
+   *
+   * \param[in] han the handler
+   *
+   * \return the base holder
+   */
+  HolderBaseType* getHolderBase(HandlerType han);
+
+  /**
+   * \internal \brief Get the next element ID from \c NodeStats
+   *
+   * \param[in] proxy the objgroup proxy
+   *
+   * \return the next element ID
+   */
+  elm::ElementIDStruct getNextElm(ObjGroupProxyType proxy);
 
 private:
   /// The current obj ID, sequential on each node for collective construction

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                migratable.cc
+//                                elm_id_bits.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,28 +41,60 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/vrt_common.h"
-#include "vt/vrt/collection/types/migratable.h"
-#include "vt/vrt/collection/manager.h"
-#include "vt/vrt/proxy/proxy_bits.h"
-#include "vt/elm/elm_id_bits.h"
+#if !defined INCLUDED_VT_ELM_ELM_ID_BITS_H
+#define INCLUDED_VT_ELM_ELM_ID_BITS_H
 
-namespace vt { namespace vrt { namespace collection {
+#include "vt/configs/types/types_type.h"
+#include "vt/utils/bits/bits_common.h"
+#include "vt/elm/elm_id.h"
 
-Migratable::Migratable()
-  : elm_id_(
-    elm::ElmIDBits::createCollection(
-      VirtualProxyBuilder::isMigratable(getProxy()), theContext()->getNode()
-    )
-  )
-{ }
+namespace vt { namespace elm {
 
-/*virtual*/ void Migratable::destroy() {
-  vt_debug_print(
-    verbose, vrt_coll,
-    "Migratable::destroy(): this={}\n", print_ptr(this)
+enum eElmIDControlBits {
+  ObjGroup                = 0,  /**< An objgroup element ID (non-migratable) */
+  BareHandler             = 1,  /**< A bare handler element ID */
+  CollectionNonMigratable = 2,  /**< A non-migratable collection element */
+  CollectionMigratable    = 3   /**< A migratable collection element */
+};
+
+static constexpr BitCountType const num_control_bits = 2;
+
+enum eElmIDProxyBitsObjGroup {
+  Control    = 0,
+  ObjGroupID = num_control_bits
+};
+
+enum eElmIDProxyBitsNonObjGroup {
+  Control2   = 0,
+  Node       = num_control_bits,
+  ID         = eElmIDProxyBitsNonObjGroup::Node + BitCounterType<NodeType>::value
+};
+
+static constexpr BitCountType const elm_id_num_bits =
+  BitCounterType<ElementIDType>::value - (2 + BitCounterType<NodeType>::value);
+
+struct ElmIDBits {
+  static ElementIDStruct createCollection(bool migratable, NodeType curr_node);
+  static ElementIDStruct createObjGroup(ObjGroupProxyType proxy, NodeType node);
+  static ElementIDStruct createBareHandler(NodeType node);
+
+  static ElementIDStruct createCollectionImpl(
+    bool migratable, ElementIDType seq_id, NodeType home_node, NodeType curr_node
   );
-}
 
-}}} /* end namespace vt::vrt::collection */
+  static void setObjGroup(
+    ElementIDType& id, ObjGroupProxyType proxy, NodeType node
+  );
+  static void setCollectionID(
+    ElementIDType& id, bool migratable, ElementIDType seq_id, NodeType node
+  );
+
+  static eElmIDControlBits getControlBits(ElementIDType id);
+  static bool isMigratable(ElementIDType id);
+  static NodeType getNode(ElementIDType id);
+  static ObjGroupProxyType getObjGroupProxy(ElementIDType id, bool include_node);
+};
+
+}} /* end namespace vt::elm */
+
+#endif /*INCLUDED_VT_ELM_ELM_ID_BITS_H*/

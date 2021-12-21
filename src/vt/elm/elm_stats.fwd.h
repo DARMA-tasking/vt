@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                migratable.cc
+//                               elm_stats.fwd.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,28 +41,13 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/vrt_common.h"
-#include "vt/vrt/collection/types/migratable.h"
-#include "vt/vrt/collection/manager.h"
-#include "vt/vrt/proxy/proxy_bits.h"
-#include "vt/elm/elm_id_bits.h"
+#if !defined INCLUDED_VT_ELM_ELM_STATS_FWD_H
+#define INCLUDED_VT_ELM_ELM_STATS_FWD_H
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace elm {
 
-Migratable::Migratable()
-  : elm_id_(
-    elm::ElmIDBits::createCollection(
-      VirtualProxyBuilder::isMigratable(getProxy()), theContext()->getNode()
-    )
-  )
-{ }
+struct ElementStats;
 
-/*virtual*/ void Migratable::destroy() {
-  vt_debug_print(
-    verbose, vrt_coll,
-    "Migratable::destroy(): this={}\n", print_ptr(this)
-  );
-}
+}} /* end namespace vt::elm */
 
-}}} /* end namespace vt::vrt::collection */
+#endif /*INCLUDED_VT_ELM_ELM_STATS_FWD_H*/

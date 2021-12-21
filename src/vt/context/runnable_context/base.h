@@ -45,6 +45,7 @@
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
 
 #include "vt/configs/types/types_type.h"
+#include "vt/elm/elm_id.h"
 
 namespace vt { namespace ctx {
 
@@ -95,7 +96,7 @@ struct Base {
    * \param[in] size the size of the message
    * \param[in] bcast whether the message is being broadcast or sent
    */
-  virtual void send(NodeType dest, MsgSizeType size, bool bcast) { }
+  virtual void send(elm::ElementIDStruct dest, MsgSizeType bytes) { }
 };
 
 }} /* end namespace vt::ctx */

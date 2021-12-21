@@ -101,6 +101,10 @@ struct ActiveEnvelope {
   // Used only for broadcast to default group
   // Determines whether message should also be sent to the sender
   bool deliver_bcast_to_sender : 1;
+
+  /// Used to denote that the message's bare handlers shouldn't record
+  /// communication statistics due to redundancy
+  bool comm_stats_recorded_above_bare_handler : 1;
 };
 
 }} /* end namespace vt::messaging */

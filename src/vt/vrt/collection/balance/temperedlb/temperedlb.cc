@@ -480,8 +480,13 @@ void TemperedLB::doLBStages(TimeType start_imb) {
       if (first_iter) {
         // Copy this node's object assignments to a local, mutable copy
         cur_objs_.clear();
-        for (auto obj : *load_model_)
-          cur_objs_[obj] = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
+        for (auto obj : *load_model_) {
+          if (obj.isMigratable()) {
+            cur_objs_[obj] = load_model_->getWork(
+              obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+            );
+          }
+        }
         this_new_load_ = this_load;
       } else {
         // Clear out data structures from previous iteration
@@ -1077,11 +1082,13 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
           return left_load < right_load;
         }
       );
-      vt_debug_print(
-        normal, temperedlb,
-        "TemperedLB::decide: over_avg={}, single_obj_load={}\n",
-        over_avg, cur_objs[ordered_obj_ids[0]]
-      );
+      if (cur_objs.size() > 0) {
+        vt_debug_print(
+          normal, temperedlb,
+          "TemperedLB::decide: over_avg={}, single_obj_load={}\n",
+          over_avg, cur_objs[ordered_obj_ids[0]]
+        );
+      }
     }
     break;
   case ObjectOrderEnum::SmallObjects:
@@ -1135,11 +1142,13 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
           return left_load < right_load;
         }
       );
-      vt_debug_print(
-        normal, temperedlb,
-        "TemperedLB::decide: over_avg={}, marginal_obj_load={}\n",
-        over_avg, cur_objs[ordered_obj_ids[0]]
-      );
+      if (cur_objs.size() > 0) {
+        vt_debug_print(
+          normal, temperedlb,
+          "TemperedLB::decide: over_avg={}, marginal_obj_load={}\n",
+          over_avg, cur_objs[ordered_obj_ids[0]]
+        );
+      }
     }
     break;
   case ObjectOrderEnum::LargestObjects:
@@ -1234,7 +1243,7 @@ void TemperedLB::decide() {
           selected_node,
           selected_load,
           obj_id.id,
-          obj_id.home_node,
+          obj_id.getHomeNode(),
           obj_load,
           target_max_load_,
           this_new_load_,

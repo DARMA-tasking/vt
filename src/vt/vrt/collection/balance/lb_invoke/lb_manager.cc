@@ -178,8 +178,8 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     computeStatistics(model_, false, phase);
   });
 
-  balance::CommMapType empty_comm;
-  balance::CommMapType const* comm = &empty_comm;
+  elm::CommMapType empty_comm;
+  elm::CommMapType const* comm = &empty_comm;
   auto iter = theNodeStats()->getNodeComm()->find(phase);
   if (iter != theNodeStats()->getNodeComm()->end()) {
     comm = &iter->second;
@@ -437,8 +437,8 @@ void LBManager::computeStatistics(
     total_load += work;
   }
 
-  balance::CommMapType empty_comm;
-  balance::CommMapType const* comm_data = &empty_comm;
+  elm::CommMapType empty_comm;
+  elm::CommMapType const* comm_data = &empty_comm;
   auto iter = theNodeStats()->getNodeComm()->find(phase);
   if (iter != theNodeStats()->getNodeComm()->end()) {
     comm_data = &iter->second;
@@ -465,7 +465,7 @@ void LBManager::computeStatistics(
   std::vector<balance::LoadData> O_c;
   for (auto&& elm : *comm_data) {
     // Only count object-to-object direct edges in the O_c statistics
-    if (elm.first.cat_ == balance::CommCategory::SendRecv and not elm.first.selfEdge()) {
+    if (elm.first.cat_ == elm::CommCategory::SendRecv and not elm.first.selfEdge()) {
       O_c.emplace_back(LoadData{lb::Statistic::O_c, elm.second.bytes});
     }
   }
@@ -491,11 +491,11 @@ LBManager::reduceVec(
   }
 }
 
-bool LBManager::isCollectiveComm(balance::CommCategory cat) const {
+bool LBManager::isCollectiveComm(elm::CommCategory cat) const {
   bool is_collective =
-    cat == balance::CommCategory::Broadcast or
-    cat == balance::CommCategory::CollectionToNodeBcast or
-    cat == balance::CommCategory::NodeToCollectionBcast;
+    cat == elm::CommCategory::Broadcast or
+    cat == elm::CommCategory::CollectionToNodeBcast or
+    cat == elm::CommCategory::NodeToCollectionBcast;
   return is_collective;
 }
 

@@ -47,17 +47,7 @@
 #include "vt/vrt/collection/balance/node_stats.h"
 #include "vt/scheduler/scheduler.h"
 
-#include <ostream>
-#include <fmt/ostream.h>
-
 namespace vt { namespace vrt { namespace collection { namespace balance {
-
-std::ostream& operator<<(
-  std::ostream& os, const ::vt::vrt::collection::balance::ElementIDStruct& id
-) {
-  os << "(" << id.id << "," << id.home_node << "," << id.curr_node << ")";
-  return os;
-}
 
 LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
                            ElementIDStruct object, PhaseOffset when) {
@@ -102,7 +92,7 @@ void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reass
       vt_debug_print(
                      normal, lb,
                      "migrateObjectTo, obj_id={}, home={}, from={}, to={}\n",
-                     obj_id.id, obj_id.home_node, from, to
+                     obj_id.id, obj_id.getHomeNode(), from, to
                      );
 
       theNodeStats()->migrateObjTo(obj_id, to);

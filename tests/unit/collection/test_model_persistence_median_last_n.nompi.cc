@@ -110,26 +110,26 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{10}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{40}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{4}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{4}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{10}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{20}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{100}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{20}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{100}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{50}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{50}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{40}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{2}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{50}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{2}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{50}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{60}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{20}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{60}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{20}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{100}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{100}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{10}, {}}}},
   };
 
   std::array<std::pair<TimeType, TimeType>, num_total_phases> expected_medians{

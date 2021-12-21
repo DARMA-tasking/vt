@@ -219,7 +219,7 @@ private:
   balance::LoadData reduceVec(
     lb::Statistic stat, std::vector<balance::LoadData>&& vec
   ) const;
-  bool isCollectiveComm(balance::CommCategory cat) const;
+  bool isCollectiveComm(elm::CommCategory cat) const;
 
 private:
   PhaseType cached_phase_                  = no_lb_phase;

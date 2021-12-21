@@ -71,8 +71,8 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
   std::unordered_map<PhaseType, LoadMapType> proc_loads;
   test_model->setLoads(&proc_loads, nullptr);
 
-  ElementIDStruct id1{1,this_node,this_node};
-  ElementIDStruct id2{2,this_node,this_node};
+  ElementIDStruct id1{1,this_node};
+  ElementIDStruct id2{2,this_node};
 
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{

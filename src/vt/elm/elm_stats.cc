@@ -41,13 +41,12 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/elm_stats.h"
-#include "vt/timing/timing.h"
+#if !defined INCLUDED_VT_ELM_ELM_STATS_CC
+#define INCLUDED_VT_ELM_ELM_STATS_CC
 
-#include <cassert>
+#include "vt/elm/elm_stats.h"
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace elm {
 
 void ElementStats::startTime() {
   auto const start_time = timing::Timing::getCurrentTime();
@@ -78,8 +77,21 @@ void ElementStats::stopTime() {
   );
 }
 
+void ElementStats::sendToEntity(
+  ElementIDStruct to, ElementIDStruct from, double bytes
+) {
+  elm::CommKey key(elm::CommKey::SendRecvTag{}, from, to, false);
+  sendComm(key, bytes);
+}
+
+void ElementStats::sendComm(elm::CommKey key, double bytes) {
+  phase_comm_[cur_phase_][key].sendMsg(bytes);
+  subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
+  subphase_comm_[cur_phase_].at(cur_subphase_)[key].sendMsg(bytes);
+}
+
 void ElementStats::recvComm(
-  LBCommKey key, double bytes
+  elm::CommKey key, double bytes
 ) {
   phase_comm_[cur_phase_][key].receiveMsg(bytes);
   subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
@@ -90,7 +102,7 @@ void ElementStats::recvObjData(
   ElementIDStruct pto,
   ElementIDStruct pfrom, double bytes, bool bcast
 ) {
-  LBCommKey key(LBCommKey::CollectionTag{}, pfrom, pto, bcast);
+  elm::CommKey key(elm::CommKey::CollectionTag{}, pfrom, pto, bcast);
   recvComm(key, bytes);
 }
 
@@ -98,7 +110,7 @@ void ElementStats::recvFromNode(
   ElementIDStruct pto, NodeType from,
   double bytes, bool bcast
 ) {
-  LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, pto, bcast);
+  elm::CommKey key(elm::CommKey::NodeToCollectionTag{}, from, pto, bcast);
   recvComm(key, bytes);
 }
 
@@ -106,7 +118,7 @@ void ElementStats::recvToNode(
   NodeType to, ElementIDStruct pfrom,
   double bytes, bool bcast
 ) {
-  LBCommKey key(LBCommKey::CollectionToNodeTag{}, pfrom, to, bcast);
+  elm::CommKey key(elm::CommKey::CollectionToNodeTag{}, pfrom, to, bcast);
   recvComm(key, bytes);
 }
 
@@ -183,6 +195,10 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
   return total_load;
 }
 
+std::vector<TimeType> const& ElementStats::getSubphaseTimes(PhaseType phase) {
+  return subphase_timings_[phase];
+}
+
 CommMapType const&
 ElementStats::getComm(PhaseType const& phase) {
   auto const& phase_comm = phase_comm_[phase];
@@ -242,20 +258,6 @@ std::size_t ElementStats::getSubphaseCommPhaseCount() const {
   return subphase_comm_.size();
 }
 
-/*static*/
-void ElementStats::setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase) {
-  focused_subphase_[collection] = subphase;
-}
+}} /* end namespace vt::elm */
 
-/*static*/
-SubphaseType ElementStats::getFocusedSubPhase(VirtualProxyType collection) {
-  auto i = focused_subphase_.find(collection);
-  if (i != focused_subphase_.end())
-    return i->second;
-  else
-    return no_subphase;
-}
-
-/*static*/ std::unordered_map<VirtualProxyType,SubphaseType> ElementStats::focused_subphase_;
-
-}}}} /* end namespace vt::vrt::collection::balance */
+#endif /*INCLUDED_VT_ELM_ELM_STATS_CC*/

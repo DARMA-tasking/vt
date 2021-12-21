@@ -58,12 +58,12 @@ TimeType setupProblem(
   std::unordered_map<ElementIDStruct, TimeType> &cur_objs
 ) {
   // total load of 29 seconds
-  cur_objs.emplace(ElementIDStruct{3,0,0}, 4.0);
-  cur_objs.emplace(ElementIDStruct{5,0,0}, 5.0);
-  cur_objs.emplace(ElementIDStruct{2,0,0}, 9.0);
-  cur_objs.emplace(ElementIDStruct{0,0,0}, 2.0);
-  cur_objs.emplace(ElementIDStruct{1,0,0}, 6.0);
-  cur_objs.emplace(ElementIDStruct{4,0,0}, 3.0);
+  cur_objs.emplace(ElementIDStruct{3,0}, 4.0);
+  cur_objs.emplace(ElementIDStruct{5,0}, 5.0);
+  cur_objs.emplace(ElementIDStruct{2,0}, 9.0);
+  cur_objs.emplace(ElementIDStruct{0,0}, 2.0);
+  cur_objs.emplace(ElementIDStruct{1,0}, 6.0);
+  cur_objs.emplace(ElementIDStruct{4,0}, 3.0);
 
   // compute the load for this processor
   TimeType my_load = 0;

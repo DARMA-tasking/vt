@@ -363,30 +363,34 @@ template <typename ColT, typename IndexT, typename MsgT>
 
 template <typename ColT, typename MsgT>
 /*static*/ void CollectionManager::recordStats(ColT* col_ptr, MsgT* msg) {
+  auto const pfrom = msg->getSenderElm();
+
+  if (pfrom.id == elm::no_element_id) {
+    return;
+  }
+
   auto const pto = col_ptr->getElmID();
-  auto const pfrom = msg->getElm();
   auto& stats = col_ptr->getStats();
   auto const msg_size = serialization::MsgSizer<MsgT>::get(msg);
   auto const cat = msg->getCat();
   vt_debug_print(
-    verbose, vrt_coll,
+    normal, vrt_coll,
     "recordStats: receive msg: elm(to={}, from={}),"
     " no={}, size={}, category={}\n",
-    pto, pfrom, balance::no_element_id, msg_size,
-    static_cast<typename std::underlying_type<balance::CommCategory>::type>(cat)
+    pto, pfrom, elm::no_element_id, msg_size,
+    static_cast<typename std::underlying_type<elm::CommCategory>::type>(cat)
   );
   if (
-    cat == balance::CommCategory::SendRecv or
-    cat == balance::CommCategory::Broadcast
+    cat == elm::CommCategory::SendRecv or
+    cat == elm::CommCategory::Broadcast
   ) {
-    vtAssert(pfrom.id != balance::no_element_id, "Must not be no element ID");
-    bool bcast = cat == balance::CommCategory::SendRecv ? false : true;
+    bool bcast = cat == elm::CommCategory::SendRecv ? false : true;
     stats.recvObjData(pto, pfrom, msg_size, bcast);
   } else if (
-    cat == balance::CommCategory::NodeToCollection or
-    cat == balance::CommCategory::NodeToCollectionBcast
+    cat == elm::CommCategory::NodeToCollection or
+    cat == elm::CommCategory::NodeToCollectionBcast
   ) {
-    bool bcast = cat == balance::CommCategory::NodeToCollection ? false : true;
+    bool bcast = cat == elm::CommCategory::NodeToCollection ? false : true;
     auto nfrom = msg->getFromNode();
     stats.recvFromNode(pto, nfrom, msg_size, bcast);
   }
@@ -539,11 +543,10 @@ void CollectionManager::invokeMsgImpl(
     elm_id
   );
 
-  if (elm_id.id != balance::no_element_id) {
-    msgPtr->setElm(elm_id);
+  if (elm_id.id != elm::no_element_id) {
+    msgPtr->setSenderElm(elm_id);
+    msgPtr->setCat(elm::CommCategory::LocalInvoke);
   }
-  msgPtr->setCat(balance::CommCategory::LocalInvoke);
-
 #endif
 
   auto const cur_epoch = theMsg()->setupEpochMsg(msgPtr);
@@ -703,7 +706,7 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
 
 #if vt_check_enabled(lblite)
   msg->setLBLiteInstrument(instrument);
-  msg->setCat(balance::CommCategory::CollectiveToCollectionBcast);
+  msg->setCat(elm::CommCategory::CollectiveToCollectionBcast);
 #endif
 
   theMsg()->markAsCollectionMessage(msg);
@@ -869,11 +872,9 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
     elm_id
   );
 
-  if (elm_id.id != balance::no_element_id) {
-    msg->setElm(elm_id);
-    msg->setCat(balance::CommCategory::Broadcast);
-  } else {
-    msg->setCat(balance::CommCategory::NodeToCollection);
+  if (elm_id.id != elm::no_element_id) {
+    msg->setSenderElm(elm_id);
+    msg->setCat(elm::CommCategory::Broadcast);
   }
 # endif
 
@@ -1135,13 +1136,14 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     elm_id
   );
 
-  if (elm_id.id != balance::no_element_id) {
-    msg->setElm(elm_id);
-    msg->setCat(balance::CommCategory::SendRecv);
-  } else {
-    msg->setCat(balance::CommCategory::NodeToCollection);
+  if (elm_id.id != elm::no_element_id) {
+    msg->setSenderElm(elm_id);
+    msg->setCat(elm::CommCategory::SendRecv);
   }
 # endif
+
+  // set bit so it isn't recorded as it routes through bare handlers
+  envelopeSetCommStatsRecordedAboveBareHandler(msg->env, true);
 
 # if vt_check_enabled(trace_enabled)
   // Create the trace creation event here to connect it a higher semantic
@@ -1377,7 +1379,7 @@ void CollectionManager::insertMetaCollection(
     using MsgType = CollectStatsMsg<ColT>;
     auto const phase = thePhase()->getCurrentPhase();
     CollectionProxyWrapType<ColT> p{bits};
-    p.template broadcastCollective<MsgType,ElementStats::syncNextPhase<ColT>>(
+    p.template broadcastCollective<MsgType,CollectionStats::syncNextPhase<ColT>>(
       phase
     );
   };

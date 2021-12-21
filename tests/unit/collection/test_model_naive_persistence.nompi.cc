@@ -103,17 +103,17 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
   NodeType this_node = 0;
   std::unordered_map<PhaseType, LoadMapType> proc_loads = {
     {0, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, {}}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{10}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{40}, {}}}}},
     {1, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{4}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{10}, {}}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{4}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{10}, {}}}}},
     {2, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{20}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{50}, {}}}}},
+      {ElementIDStruct{1,this_node}, {TimeType{20}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{50}, {}}}}},
     {3, LoadMapType{
-      {ElementIDStruct{1,this_node,this_node}, {TimeType{40}, {}}},
-      {ElementIDStruct{2,this_node,this_node}, {TimeType{100}, {}}}}}};
+      {ElementIDStruct{1,this_node}, {TimeType{40}, {}}},
+      {ElementIDStruct{2,this_node}, {TimeType{100}, {}}}}}};
 
   auto test_model =
     std::make_shared<NaivePersistence>(std::make_shared<StubModel>());

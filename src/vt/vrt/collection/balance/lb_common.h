@@ -45,68 +45,22 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H
 
 #include "vt/config.h"
+#include "vt/elm/elm_id.h"
+#include "vt/elm/elm_comm.h"
 #include "vt/timing/timing_type.h"
 #include "vt/messaging/message/message.h"
 
-#include <cstdlib>
-#include <unordered_map>
-#include <ostream>
-#include <map>
 #include <vector>
-
-#include <fmt/ostream.h>
-
-namespace vt { namespace vrt { namespace collection {
-namespace balance {
-
-using ElementIDType = uint64_t;
-
-struct ElementIDStruct {
-  using isByteCopyable = std::true_type;
-
-  ElementIDStruct() = default;
-  ElementIDStruct(
-    ElementIDType in_id, NodeType in_home_node, NodeType in_curr_node
-  ) : id(in_id),
-      home_node(in_home_node),
-      curr_node(in_curr_node)
-  { }
-
-  // id must be unique across nodes
-  ElementIDType id = 0;
-  NodeType home_node = uninitialized_destination;
-  NodeType curr_node = uninitialized_destination;
-
-  bool operator==(const ElementIDStruct& rhs) const {
-    return id == rhs.id;
-  }
-
-  bool operator<(const ElementIDStruct& rhs) const {
-    return id < rhs.id;
-  }
-};
-
-std::ostream& operator<<(
-  std::ostream& os, const ::vt::vrt::collection::balance::ElementIDStruct& id
-);
-
-static constexpr ElementIDType const no_element_id = 0;
-
-}}}}
-
-namespace std {
-
-template <>
-struct hash<vt::vrt::collection::balance::ElementIDStruct> {
-  size_t operator()(vt::vrt::collection::balance::ElementIDStruct const& in) const {
-    return std::hash<vt::vrt::collection::balance::ElementIDType>()(in.id);
-  }
-};
-
-} /* end namespace std */
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
+
+using ElementIDStruct = elm::ElementIDStruct;
+using ElementIDType = elm::ElementIDType;
+using CommMapType = elm::CommMapType;
+
+static constexpr ElementIDType const no_element_id = elm::no_element_id;
 
 /**
  * \brief A description of the interval of interest for a modeled load query
@@ -179,6 +133,7 @@ LoadSummary getObjectLoads(LoadModel* model,
                            ElementIDStruct object, PhaseOffset when);
 
 LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when);
+
 } /* end namespace balance */
 
 namespace lb {

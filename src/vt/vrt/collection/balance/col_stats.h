@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 elm_stats.h
+//                                 col_stats.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,16 +41,15 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H
 
 #include "vt/config.h"
+#include "vt/elm/elm_stats.h"
+#include "vt/elm/elm_comm.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
-#include "vt/vrt/collection/balance/elm_stats.fwd.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
-#include "vt/timing/timing.h"
 #include "vt/vrt/collection/types/migratable.fwd.h"
 
 #include <cstdint>
@@ -60,50 +59,14 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct ElementStats {
-  ElementStats() = default;
-  ElementStats(ElementStats const&) = default;
-  ElementStats(ElementStats&&) = default;
-
-  void startTime();
-  void stopTime();
-  void addTime(TimeType const& time);
-  void recvComm(LBCommKey key, double bytes);
-  void recvObjData(
-    ElementIDStruct to_perm,
-    ElementIDStruct from_perm, double bytes, bool bcast
-  );
-  void recvFromNode(
-    ElementIDStruct to_perm, NodeType from,
-    double bytes, bool bcast
-  );
-  void recvToNode(
-    NodeType to, ElementIDStruct from_perm,
-    double bytes, bool bcast
-  );
-  void updatePhase(PhaseType const& inc = 1);
-  void resetPhase();
-  PhaseType getPhase() const;
-  TimeType getLoad(PhaseType const& phase) const;
-  TimeType getLoad(PhaseType phase, SubphaseType subphase) const;
-
-  CommMapType const& getComm(PhaseType const& phase);
-  std::vector<CommMapType> const& getSubphaseComm(PhaseType phase);
-  void setSubPhase(SubphaseType subphase);
-  SubphaseType getSubPhase() const;
-
-  // these are just for unit testing
-  std::size_t getLoadPhaseCount() const;
-  std::size_t getCommPhaseCount() const;
-  std::size_t getSubphaseLoadPhaseCount() const;
-  std::size_t getSubphaseCommPhaseCount() const;
-
-  static const constexpr SubphaseType no_subphase = std::numeric_limits<SubphaseType>::max();
+struct CollectionStats : elm::ElementStats {
   static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
   static SubphaseType getFocusedSubPhase(VirtualProxyType collection);
 
   template <typename Serializer>
-  void serialize(Serializer& s);
+  void serialize(Serializer& s) {
+    elm::ElementStats::serialize(s);
+  }
 
 public:
   template <typename ColT>
@@ -112,25 +75,9 @@ public:
   friend struct collection::Migratable;
 
 protected:
-  /**
-   * \internal \brief Release stats data from phases prior to lookback
-   */
-  void releaseStatsFromUnneededPhases(PhaseType phase, unsigned int look_back);
-
-protected:
-  bool cur_time_started_ = false;
-  TimeType cur_time_ = 0.0;
-  PhaseType cur_phase_ = fst_lb_phase;
-  std::unordered_map<PhaseType, TimeType> phase_timings_ = {};
-  std::unordered_map<PhaseType, CommMapType> phase_comm_ = {};
-
-  SubphaseType cur_subphase_ = 0;
-  std::unordered_map<PhaseType, std::vector<TimeType>> subphase_timings_ = {};
-  std::unordered_map<PhaseType, std::vector<CommMapType>> subphase_comm_ = {};
-
   static std::unordered_map<VirtualProxyType, SubphaseType> focused_subphase_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H*/

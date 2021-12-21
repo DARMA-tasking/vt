@@ -113,7 +113,7 @@ void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
 
   #if vt_check_enabled(lblite)
     s | lb_lite_instrument_;
-    s | elm_;
+    s | sender_elm_;
     s | cat_;
   #endif
 
@@ -144,24 +144,25 @@ void CollectionMessage<ColT, BaseMsgT>::setLBLiteInstrument(bool const& val) {
 }
 
 template <typename ColT, typename BaseMsgT>
-balance::ElementIDStruct CollectionMessage<ColT, BaseMsgT>::getElm() const {
-  return elm_;
+balance::ElementIDStruct
+CollectionMessage<ColT, BaseMsgT>::getSenderElm() const {
+  return sender_elm_;
 }
 
 template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT, BaseMsgT>::setElm(
-  balance::ElementIDStruct elm
+void CollectionMessage<ColT, BaseMsgT>::setSenderElm(
+  balance::ElementIDStruct sender_elm
 ) {
-  elm_ = elm;
+  sender_elm_ = sender_elm;
 }
 
 template <typename ColT, typename BaseMsgT>
-balance::CommCategory CollectionMessage<ColT, BaseMsgT>::getCat() const {
+elm::CommCategory CollectionMessage<ColT, BaseMsgT>::getCat() const {
   return cat_;
 }
 
 template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT, BaseMsgT>::setCat(balance::CommCategory cat) {
+void CollectionMessage<ColT, BaseMsgT>::setCat(elm::CommCategory cat) {
   cat_ = cat;
 }
 

@@ -46,7 +46,7 @@
 
 #include "vt/context/runnable_context/lb_stats.h"
 #include "vt/messaging/active.h"
-#include "vt/vrt/collection/balance/elm_stats.h"
+#include "vt/elm/elm_stats.h"
 #include "vt/vrt/collection/manager.h"
 
 #include <memory>
@@ -62,13 +62,6 @@ LBStats::LBStats(ElmT* in_elm, MsgT* msg)
   // record the communication stats right away!
   theCollection()->recordStats(in_elm, msg);
 }
-
-template <typename ElmT>
-LBStats::LBStats(ElmT* in_elm)
-  : stats_(&in_elm->getStats()),
-    cur_elm_id_(in_elm->getElmID()),
-    should_instrument_(true)
-{ }
 
 }} /* end namespace vt::ctx */
 

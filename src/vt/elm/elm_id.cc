@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               elm_stats.fwd.h
+//                                  elm_id.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,15 +41,21 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_FWD_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_FWD_H
+#include "vt/elm/elm_id.h"
+#include "vt/elm/elm_id_bits.h"
 
-#include "vt/config.h"
+namespace vt { namespace elm {
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+bool ElementIDStruct::isMigratable() const {
+  return ElmIDBits::isMigratable(id);
+}
 
-struct ElementStats;
+NodeType ElementIDStruct::getHomeNode() const {
+  return ElmIDBits::getNode(id);
+}
 
-}}}} /* end namespace vt::vrt::collection::balance */
+NodeType ElementIDStruct::getCurrNode() const {
+  return curr_node;
+}
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_FWD_H*/
+}} /* end namespace vt::elm */
