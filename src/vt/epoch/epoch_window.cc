@@ -110,7 +110,7 @@ EpochType EpochWindow::allocateNewEpoch() {
   // be allocated
   do {
     EpochType next = EpochType{*next_epoch_};
-    if (terminated_epochs_.contains(*next)) {
+    if (terminated_epochs_.contains(next)) {
       (*next_epoch_)++;
 
       // Tell the system the epoch is now active
@@ -143,8 +143,8 @@ void EpochWindow::activateEpoch(EpochType epoch) {
     terminated_epochs_.size()
   );
 
-  if (terminated_epochs_.contains(*epoch)) {
-    terminated_epochs_.erase(*epoch);
+  if (terminated_epochs_.contains(epoch)) {
+    terminated_epochs_.erase(epoch);
   }
 
   vt_debug_print(
@@ -165,7 +165,7 @@ void EpochWindow::setEpochTerminated(EpochType epoch) {
     terminated_epochs_.size(), terminated_epochs_.compression()
   );
 
-  terminated_epochs_.insert(*epoch);
+  terminated_epochs_.insert(epoch);
   total_terminated_++;
 
   vt_debug_print(
@@ -186,7 +186,7 @@ bool EpochWindow::isTerminated(EpochType epoch) const {
     terminated_epochs_.size(), terminated_epochs_.compression()
   );
 
-  return terminated_epochs_.contains(*epoch);
+  return terminated_epochs_.contains(epoch);
 }
 
 }} /* end namespace vt::epoch */

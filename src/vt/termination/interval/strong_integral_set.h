@@ -62,24 +62,24 @@ struct StrongIntegralSet {
     typename U,
     typename = std::enable_if_t<
       std::is_same<
-        std::remove_const_t<std::remove_reference_t<U>>, ImplType
+        std::remove_const_t<std::remove_reference_t<U>>, T
       >::value
     >
   >
   auto insert(U&& val) {
-    return impl_.insert(std::forward<U>(val));
+    return impl_.insert(*std::forward<U>(val));
   }
 
   template <
     typename U,
     typename = std::enable_if_t<
       std::is_same<
-        std::remove_const_t<std::remove_reference_t<U>>, ImplType
+        std::remove_const_t<std::remove_reference_t<U>>, T
       >::value
     >
   >
   auto insert(typename SetType::IteratorType it, U&& val) {
-    return impl_.insert(it, std::forward<U>(val));
+    return impl_.insert(it, *std::forward<U>(val));
   }
 
   template <
@@ -108,9 +108,9 @@ struct StrongIntegralSet {
     return impl_.insertInterval(it, std::forward<IntervalU>(i));
   }
 
-  auto erase(ImplType const& val) { impl_.erase(val); }
-  auto contains(ImplType const& val) const { return impl_.contains(val); }
-  auto exists(ImplType const& val) const { return impl_.exists(val); }
+  auto erase(T const& val) { impl_.erase(*val); }
+  auto contains(T const& val) const { return impl_.contains(*val); }
+  auto exists(T const& val) const { return impl_.exists(*val); }
   auto clear() { impl_.clear(); }
   auto range() const { return T{impl_.range()}; }
   auto lower() const { return T{impl_.lower()}; }
