@@ -75,7 +75,7 @@ inline void envelopeInit(Env& env) {
   envelopeSetTraceEvent(env, trace::no_trace_event);
 #endif
   envelopeSetHasBeenSerialized(env, false);
-  envelopeSetNoBareHandlerCommStats(env, false);
+  envelopeSetCommStatsRecordedAboveBareHandler(env, false);
 }
 
 inline void envelopeInitEmpty(Envelope& env) {

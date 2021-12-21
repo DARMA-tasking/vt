@@ -262,7 +262,7 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
 
   // set bit so it isn't recorded as it routes through bare
   // handlers
-  envelopeSetNoBareHandlerCommStats(msg->env, true);
+  envelopeSetCommStatsRecordedAboveBareHandler(msg->env, true);
 
   if (theContext()->getTask() != nullptr) {
     auto dest_elm_id = elm::ElmIDBits::createObjGroup(proxy_bits, dest_node);

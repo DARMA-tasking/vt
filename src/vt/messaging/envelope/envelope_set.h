@@ -211,12 +211,12 @@ inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized);
  * stats for LB
  *
  * \param[in,out] env the envelope
- * \param[in] no_bare_handler_comm_stats value indicating message shouldn't
- * record bare handler stats
+ * \param[in] comm_stats_recorded_above_bare_handler value indicating message
+ * shouldn't record bare handler stats
  */
 template <typename Env>
-inline void envelopeSetNoBareHandlerCommStats(
-  Env& env, bool no_bare_handler_comm_stats
+inline void envelopeSetCommStatsRecordedAboveBareHandler(
+  Env& env, bool comm_stats_recorded_above_bare_handler
 );
 
 /**

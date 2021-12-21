@@ -104,7 +104,7 @@ struct ActiveEnvelope {
 
   /// Used to denote that the message's bare handlers shouldn't record
   /// communication statistics due to redundancy
-  bool no_bare_handler_comm_stats : 1;
+  bool comm_stats_recorded_above_bare_handler : 1;
 };
 
 }} /* end namespace vt::messaging */

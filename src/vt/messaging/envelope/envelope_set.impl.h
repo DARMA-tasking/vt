@@ -152,11 +152,11 @@ inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized) {
 }
 
 template <typename Env>
-inline void envelopeSetNoBareHandlerCommStats(
-  Env& env, bool no_bare_handler_comm_stats
+inline void envelopeSetCommStatsRecordedAboveBareHandler(
+  Env& env, bool comm_stats_recorded_above_bare_handler
 ) {
-  reinterpret_cast<Envelope*>(&env)->no_bare_handler_comm_stats =
-    no_bare_handler_comm_stats;
+  reinterpret_cast<Envelope*>(&env)->comm_stats_recorded_above_bare_handler =
+    comm_stats_recorded_above_bare_handler;
 }
 
 template <typename Env>

@@ -143,7 +143,7 @@ inline bool envelopeIsLocked(Env& env);
  * \param[in] env the envelope
  */
 template <typename Env>
-inline bool envelopeNoBareHandlerCommStats(Env& env);
+inline bool envelopeCommStatsRecordedAboveBareHandler(Env& env);
 
 }} //end namespace vt::messaging
 
