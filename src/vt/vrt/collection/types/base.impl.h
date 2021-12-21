@@ -86,7 +86,6 @@ template <typename ColT, typename IndexT>
 template <typename Serializer>
 void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
   Indexable<IndexT>::serialize(s);
-  s | cur_bcast_epoch_;
   s | reduce_stamp_;
 }
 
@@ -103,7 +102,7 @@ typename CollectionBase<ColT, IndexT>::ReduceStampType
 CollectionBase<ColT, IndexT>::getNextStamp() {
   ReduceStampType stamp;
   stamp.init<ReduceSeqStampType>(reduce_stamp_);
-  ++reduce_stamp_;
+  *reduce_stamp_ = *reduce_stamp_ + 1;
   return stamp;
 }
 

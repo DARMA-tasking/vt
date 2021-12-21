@@ -45,6 +45,7 @@
 #define INCLUDED_VT_CONFIGS_TYPES_TYPES_SIZE_H
 
 #include "vt/utils/bits/bits_counter.h"
+#include "vt/epoch/epoch_impl_type.h"
 
 namespace vt {
 
@@ -55,7 +56,7 @@ static constexpr BitCountType const
 static constexpr BitCountType const
     ref_num_bits = utils::BitCounter<RefType>::value;
 static constexpr BitCountType const
-    epoch_num_bits = utils::BitCounter<EpochType>::value;
+    epoch_num_bits = utils::BitCounter<vt::epoch::detail::EpochImplType>::value;
 static constexpr BitCountType const
     tag_num_bits = utils::BitCounter<TagType>::value;
 static constexpr BitCountType const

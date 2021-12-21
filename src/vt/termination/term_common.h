@@ -51,7 +51,9 @@
 namespace vt { namespace term {
 
 // Universally covers all messages regardless of associated epoch
-static constexpr EpochType const any_epoch_sentinel = static_cast<EpochType>(-1000);
+static constexpr EpochType const any_epoch_sentinel = EpochType{
+  static_cast<EpochType::ImplType>(-1000)
+};
 
 using TermCounterType = int64_t;
 using TermWaveType = int64_t;

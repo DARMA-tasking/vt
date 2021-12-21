@@ -91,7 +91,6 @@ struct CollectionBase : Indexable<IndexT> {
   void zeroReduceStamp();
 
 protected:
-  EpochType cur_bcast_epoch_ = 0;
   ReduceSeqStampType reduce_stamp_ = ReduceSeqStampType{1};
 };
 

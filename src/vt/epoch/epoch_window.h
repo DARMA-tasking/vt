@@ -44,7 +44,7 @@
 #if !defined INCLUDED_VT_EPOCH_EPOCH_WINDOW_H
 #define INCLUDED_VT_EPOCH_EPOCH_WINDOW_H
 
-#include "vt/termination/interval/integral_set.h"
+#include "vt/termination/interval/strong_integral_set.h"
 #include "vt/utils/adt/ranged_counter.h"
 
 namespace vt { namespace epoch {
@@ -150,13 +150,13 @@ private:
   EpochType archetype_epoch_ = no_epoch;
 
   /// The set of epochs terminated
-  vt::IntegralSet<EpochType> terminated_epochs_;
+  vt::StrongIntegralSet<EpochType> terminated_epochs_;
 
   /// The next epoch to potentially allocate within the proper range for the
   /// archetype. Used to continuously allocate epochs far apart from previous
   /// allocated epochs instead of consulting \c terminated_epoch_ to select the
   /// next one.
-  std::unique_ptr<adt::RangedCounter<EpochType>> next_epoch_;
+  std::unique_ptr<adt::RangedCounter<EpochType::ImplType>> next_epoch_;
 
   ///
   /// The total number of terminated epochs for this window.
