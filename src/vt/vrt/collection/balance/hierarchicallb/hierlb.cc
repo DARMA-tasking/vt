@@ -49,7 +49,6 @@
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_constants.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_strat.h"
-#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
 #include "vt/collective/collective_alg.h"
