@@ -9,7 +9,7 @@
 
 #include <nlohmann/detail/macro_scope.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -1102,4 +1102,4 @@ char* to_chars(char* first, const char* last, FloatType value)
 }
 
 } // namespace detail
-} // namespace nlohmann
+}} // namespace nlohmann::vt

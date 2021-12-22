@@ -1,6 +1,6 @@
 #pragma once
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -10,4 +10,4 @@ template<typename ...Ts> struct make_void
 };
 template<typename ...Ts> using void_t = typename make_void<Ts...>::type;
 } // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

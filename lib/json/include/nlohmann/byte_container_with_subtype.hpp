@@ -4,7 +4,7 @@
 #include <tuple> // tie
 #include <utility> // move
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 
 /*!
@@ -163,4 +163,4 @@ class byte_container_with_subtype : public BinaryType
     bool m_has_subtype = false;
 };
 
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

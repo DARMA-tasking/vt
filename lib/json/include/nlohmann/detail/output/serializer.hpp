@@ -20,7 +20,7 @@
 #include <nlohmann/detail/output/output_adapters.hpp>
 #include <nlohmann/detail/value_t.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -957,4 +957,4 @@ class serializer
     const error_handler_t error_handler;
 };
 }  // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

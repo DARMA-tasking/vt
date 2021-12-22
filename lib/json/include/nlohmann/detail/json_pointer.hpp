@@ -12,7 +12,7 @@
 #include <nlohmann/detail/macro_scope.hpp>
 #include <nlohmann/detail/value_t.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 template<typename BasicJsonType>
 class json_pointer
@@ -972,4 +972,4 @@ class json_pointer
     /// the reference tokens
     std::vector<std::string> reference_tokens;
 };
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

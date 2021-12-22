@@ -14,7 +14,7 @@
 #include <nlohmann/detail/input/position_t.hpp>
 #include <nlohmann/detail/macro_scope.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -1620,4 +1620,4 @@ scan_number_done:
     const char_int_type decimal_point_char = '.';
 };
 }  // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

@@ -2,7 +2,7 @@
 
 #include <nlohmann/detail/iterators/primitive_iterator.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -22,4 +22,4 @@ template<typename BasicJsonType> struct internal_iterator
     primitive_iterator_t primitive_iterator {};
 };
 }  // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

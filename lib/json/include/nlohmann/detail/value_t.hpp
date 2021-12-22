@@ -5,7 +5,7 @@
 #include <cstdint> // uint8_t
 #include <string> // string
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -78,4 +78,4 @@ inline bool operator<(const value_t lhs, const value_t rhs) noexcept
     return l_index < order.size() && r_index < order.size() && order[l_index] < order[r_index];
 }
 }  // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

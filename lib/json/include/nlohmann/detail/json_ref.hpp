@@ -5,7 +5,7 @@
 
 #include <nlohmann/detail/meta/type_traits.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -73,4 +73,4 @@ class json_ref
     const bool is_rvalue = true;
 };
 }  // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt
