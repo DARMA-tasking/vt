@@ -57,10 +57,8 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename MessageT, typename ColT>
-using RoutedMessageType = LocationRoutedMsg<
-  ::vt::vrt::VirtualElmProxyType<ColT, typename ColT::IndexType>, MessageT
->;
+template <typename MessageT, typename IndexT>
+using RoutedMessageType = LocationRoutedMsg<IndexT, MessageT>;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
@@ -68,8 +66,8 @@ static struct ColMsgWrapTagType { } ColMsgWrapTag { };
 #pragma GCC diagnostic pop
 
 template <typename ColT, typename BaseMsgT = ::vt::Message>
-struct CollectionMessage : RoutedMessageType<BaseMsgT, ColT> {
-  using MessageParentType = RoutedMessageType<BaseMsgT, ColT>;
+struct CollectionMessage : RoutedMessageType<BaseMsgT, typename ColT::IndexType> {
+  using MessageParentType = RoutedMessageType<BaseMsgT, typename ColT::IndexType>;
   vt_msg_serialize_if_needed_by_parent();
 
   /*

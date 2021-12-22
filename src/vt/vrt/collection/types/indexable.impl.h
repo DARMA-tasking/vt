@@ -79,6 +79,7 @@ void Indexable<IndexT>::serialize(SerializerT& s) {
   Migratable::serialize(s);
   s | set_index_;
   s | index_;
+  s | reduce_stamp_;
 }
 
 template <typename IndexT>
@@ -87,6 +88,19 @@ void Indexable<IndexT>::setIndex(IndexT const& in_index) {
   // `set_index_`
   index_ = in_index;
   set_index_ = true;
+}
+
+template <typename IndexT>
+void Indexable<IndexT>::zeroReduceStamp() {
+  *reduce_stamp_ = 0;
+}
+
+template <typename IndexT>
+typename Indexable<IndexT>::ReduceStampType Indexable<IndexT>::getNextStamp() {
+  ReduceStampType stamp;
+  stamp.init<ReduceSeqStampType>(reduce_stamp_);
+  *reduce_stamp_ = *reduce_stamp_ + 1;
+  return stamp;
 }
 
 }}} /* end namespace vt::vrt::collection */
