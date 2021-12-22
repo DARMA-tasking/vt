@@ -100,7 +100,7 @@ namespace fmt {
 
 /// Custom fmt formatter/print for \c vt::elm::ElementIDStruct
 template <>
-struct formatter<vt::elm::ElementIDStruct> {
+struct formatter<::vt::elm::ElementIDStruct> {
   /// Presentation format:
   ///  - 'x' - hex (default)
   ///  - 'd' - decimal
@@ -127,7 +127,7 @@ struct formatter<vt::elm::ElementIDStruct> {
   /// Formats the epoch using the parsed format specification (presentation)
   /// stored in this formatter.
   template <typename FormatContext>
-  auto format(vt::elm::ElementIDStruct const& e, FormatContext& ctx) {
+  auto format(::vt::elm::ElementIDStruct const& e, FormatContext& ctx) {
     std::string id_format =
       presentation == 'b' ? "{:b}" : (presentation == 'd' ? "{:d}" : "{:x}");
     auto fmt_str = "(" + id_format + ",{},{},{})";
