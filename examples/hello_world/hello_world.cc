@@ -42,115 +42,21 @@
 */
 
 #include <vt/transport.h>
-
-using RegisteredIndexType = int;
+#include <vt/vrt/collection/index/untyped.h>
 
 struct IndexMessage : vt::Message {
   vt::VirtualProxyType proxy = vt::no_vrt_proxy;
-  RegisteredIndexType idx = -1;
-  std::array<char, 48> bytes;
+  vt::vrt::collection::index::UntypedIndex<48> u;
 };
-
-struct IndexInfo {
-  using DispatchFnType = std::function<void(IndexMessage* msg)>;
-
-  IndexInfo(
-    RegisteredIndexType in_idx,
-    std::size_t in_bytes,
-    bool in_is_bytecopyable,
-    DispatchFnType in_dispatch
-  ) : idx_(in_idx),
-      bytes_(in_bytes),
-      is_bytecopyable_(in_is_bytecopyable),
-      dispatch_(in_dispatch)
-  { }
-
-  RegisteredIndexType idx_ = -1;
-  std::size_t bytes_ = 0;
-  bool is_bytecopyable_ = false;
-  DispatchFnType dispatch_;
-};
-
-using RegistryType = std::vector<IndexInfo>;
-
-inline RegistryType& getRegistry() {
-  static RegistryType reg;
-  return reg;
-}
-
-template <typename IdxT>
-struct Registrar {
-  Registrar();
-  RegisteredIndexType index;
-};
-
-template <typename IdxT>
-struct Type {
-  static RegisteredIndexType const idx;
-};
-
-template <typename IdxT>
-RegisteredIndexType const Type<IdxT>::idx = Registrar<IdxT>().index;
-
-inline auto getDispatch(RegisteredIndexType han) {
-  return getRegistry().at(han).dispatch_;
-}
-
-template <typename IdxT>
-inline RegisteredIndexType makeIdx() {
-  return Type<IdxT>::idx;
-}
-
-template <typename IdxT>
-Registrar<IdxT>::Registrar() {
-  static constexpr bool const is_bytecopyable = checkpoint::SerializableTraits<IdxT>::is_bytecopyable;
-
-  auto& reg = getRegistry();
-  index = reg.size();
-  reg.emplace_back(
-    IndexInfo{
-      index,
-      sizeof(IdxT),
-      is_bytecopyable,
-      [](IndexMessage* msg){
-        //@todo: handle serialization case with enable_if on Registrar
-        char const* const data = msg->bytes.data();
-        IdxT const reconstructed_idx = *reinterpret_cast<IdxT const*>(data);
-        fmt::print("the index is {}\n", reconstructed_idx);
-
-        /**
-           // collection manager code
-           auto proxy = msg->proxy;
-           auto elm_holder = theCollection()->findElmHolder<IdxT>(proxy);
-           auto& inner_holder = elm_holder->lookup(idx);
-           auto const col_ptr = inner_holder.getRawPtr();
-           // deliver message to col_ptr handler
-         */
-      }
-    }
-  );
-}
-
-template <typename IndexT>
-std::array<char, 48> toBytes(IndexT idx) {
-  //@todo: handle serialization case
-  vtAssert(sizeof(IndexT) < 48, "Must fit");
-  std::array<char, 48> out;
-  char* data = out.data();
-  *reinterpret_cast<IndexT*>(data) = idx;
-  return out;
-}
 
 void testHandler(IndexMessage* msg) {
-  getDispatch(msg->idx)(msg);
+  vt::vrt::collection::index::registry::getDispatch(msg->u.idx_)(&msg->u);
 }
 
 template <typename IndexT>
 void sendIndex(IndexT idx) {
-  auto x = makeIdx<IndexT>();
   auto m = vt::makeMessage<IndexMessage>();
-  m->idx = x;
-  m->bytes = toBytes(idx);
+  m->u = vt::vrt::collection::index::UntypedIndex<48>{idx};
   vt::theMsg()->sendMsg<IndexMessage, testHandler>(1, m);
 }
 
@@ -165,8 +71,8 @@ int main(int argc, char** argv) {
   }
 
   if (this_node == 0) {
-    vt::Index3D idx{10, -20, 55};
-    sendIndex(idx);
+    sendIndex(vt::Index3D{10, -20, 55});
+    sendIndex(vt::Index2D{293, 222});
   }
 
   vt::finalize();
