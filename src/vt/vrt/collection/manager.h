@@ -492,6 +492,21 @@ struct CollectionManager
   );
 
   /**
+   * \brief Send collection element a message from active member handler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <
+    typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
+  >
+  messaging::PendingSend sendMsgNew(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
+  );
+
+  /**
    * \brief Send collection element a message from active function handler with
    * a proper \c CollectionMessage<ColT>
    *
@@ -632,6 +647,9 @@ struct CollectionManager
    */
   template <typename ColT, typename IndexT, typename MsgT>
   static void collectionMsgTypedHandler(MsgT* msg);
+
+  template <typename MsgT>
+  static void collectionHandler(MsgT* msg);
 
   /**
    * \internal \brief Record statistics for collection message handler when a
@@ -1495,6 +1513,10 @@ private:
 
   template <typename ColT>
   friend struct param::ConstructParams;
+
+  template <typename IdxT>
+  friend std::tuple<void*, std::unique_ptr<ctx::Base>>
+  makeContext(IdxT const& idx, VirtualProxyType proxy);
 
   /**
    * \internal \brief Migrate an element out of this node

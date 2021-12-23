@@ -129,6 +129,19 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) co
   return sendMsg<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
+>
+messaging::PendingSend
+Sendable<ColT,IndexT,BaseProxyT>::sendNew(Args&&... args) const {
+  auto col_proxy = this->getCollectionProxy();
+  auto elm_proxy = this->getElementProxy();
+  auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy, elm_proxy);
+  auto m = makeMessage<MsgT>(std::forward<Args>(args)...);
+  return theCollection()->sendMsgNew<ColT, MsgT, f>(proxy, m.get());
+}
+
 
 }}} /* end namespace vt::vrt::collection */
 

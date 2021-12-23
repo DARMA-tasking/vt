@@ -52,6 +52,7 @@
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_comm.h"
+#include "vt/vrt/collection/index/untyped.h"
 
 #include <type_traits>
 
@@ -64,6 +65,39 @@ using RoutedMessageType = LocationRoutedMsg<IndexT, MessageT>;
 #pragma GCC diagnostic ignored "-Wunused-variable"
 static struct ColMsgWrapTagType { } ColMsgWrapTag { };
 #pragma GCC diagnostic pop
+
+struct IndexMessage : RoutedMessageType<::vt::Message, index::UntypedIndex<48>> {
+
+  IndexMessage() = default;
+
+  VirtualProxyType getProxy() const { return proxy_; }
+  void setProxy(VirtualProxyType in_proxy) { proxy_ = in_proxy; }
+
+  void setVrtHandler(HandlerType const in_handler) { vrt_handler_ = in_handler; }
+  HandlerType getVrtHandler() const { return vrt_handler_; }
+
+  NodeType getFromNode() const { return from_node_; }
+  void setFromNode(NodeType const& node) { from_node_ = node; }
+
+  #if vt_check_enabled(lblite)
+    bool lbLiteInstrument() const { return lb_lite_instrument_; }
+    void setLBLiteInstrument(bool val) { lb_lite_instrument_ = val; }
+    balance::ElementIDStruct getSenderElm() const { return sender_elm_; }
+    void setSenderElm(balance::ElementIDStruct elm) { sender_elm_ = elm; }
+    elm::CommCategory getCat() const { return cat_; }
+    void setCat(elm::CommCategory cat) { cat_ = cat; }
+  #endif
+
+  #if vt_check_enabled(lblite)
+    bool lb_lite_instrument_ = false;
+    balance::ElementIDStruct sender_elm_ = {};
+    elm::CommCategory cat_ = elm::CommCategory::SendRecv;
+  #endif
+
+  VirtualProxyType proxy_ = no_vrt_proxy;
+  HandlerType vrt_handler_ = uninitialized_handler;
+  NodeType from_node_ = uninitialized_destination;
+};
 
 template <typename ColT, typename BaseMsgT = ::vt::Message>
 struct CollectionMessage : RoutedMessageType<BaseMsgT, typename ColT::IndexType> {

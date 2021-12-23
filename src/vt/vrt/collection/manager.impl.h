@@ -1117,6 +1117,76 @@ messaging::PendingSend CollectionManager::sendMsgImpl(
   return sendMsgUntypedHandler<MsgT>(proxy, msg, h);
 }
 
+template <
+  typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
+>
+messaging::PendingSend CollectionManager::sendMsgNew(
+  VirtualElmProxyType<ColT> const& proxy, MsgT *raw_msg
+) {
+  using UntypedIndexType = collection::index::UntypedIndex<48>;
+  auto col_proxy = proxy.getCollectionProxy();
+  auto elm_proxy = proxy.getElementProxy();
+  auto idx = elm_proxy.getIndex();
+  auto msg = promoteMsg(raw_msg);
+  auto handler = auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>();
+  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
+  msg->setFromNode(theContext()->getNode());
+  msg->setVrtHandler(handler);
+  msg->setProxy(col_proxy);
+  msg->setEntity(UntypedIndexType{idx});
+  return messaging::PendingSend{
+    msg, [=](MsgSharedPtr<BaseMsgType>& inner_msg){
+      theMsg()->pushEpoch(cur_epoch);
+      auto home_node = theCollection()->getMappedNode<ColT>(col_proxy, idx);
+      auto lm = theLocMan()->getCollectionLM<UntypedIndexType>(col_proxy);
+      vtAssert(lm != nullptr, "LM must exist");
+      theMsg()->markAsCollectionMessage(msg);
+      lm->template routeMsgSerializeHandler<MsgT, collectionHandler<MsgT>>(
+        msg->getEntity(), home_node, msg
+      );
+      theMsg()->popEpoch(cur_epoch);
+    }
+  };
+}
+
+template <typename MsgT>
+/*static*/ void CollectionManager::collectionHandler(MsgT* msg) {
+  auto const proxy = msg->getProxy();
+  auto const handler = msg->getVrtHandler();
+  auto const from = msg->getFromNode();
+
+  auto tup = index::registry::getDispatch(msg->getEntity().idx_)(
+    msg->getEntity(), proxy
+  );
+  auto ptr = std::get<0>(tup);
+  auto ctx = std::move(std::get<1>(tup));
+
+  auto const member = HandlerManager::isHandlerMember(handler);
+  auto reg = member ?
+    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
+    auto_registry::RegistryTypeEnum::RegVrtCollection;
+
+  auto m = promoteMsg(msg);
+  runnable::makeRunnable(m, true, handler, from, reg)
+    .withTDEpoch(theMsg()->getEpochContextMsg(msg))
+    .withCollection(ptr, std::move(ctx))
+    .withLBStats(reinterpret_cast<Migratable*>(ptr))
+    .runOrEnqueue(false);
+}
+
+template <typename IdxT>
+std::tuple<void*, std::unique_ptr<ctx::Base>>
+makeContext(IdxT const& idx, VirtualProxyType proxy) {
+  auto elm_holder = theCollection()->findElmHolder<IdxT>(proxy);
+  bool const exists = elm_holder->exists(idx);
+  vtAssert(exists, "Element must exist");
+  auto& inner_holder = elm_holder->lookup(idx);
+  auto const base = inner_holder.getRawPtr();
+  std::unique_ptr<ctx::Base> ctx = std::make_unique<ctx::Collection<IdxT>>(base);
+  auto void_ptr = static_cast<void*>(base);
+  return std::make_tuple(void_ptr, std::move(ctx));
+}
+
 template <typename MsgT, typename ColT, typename IdxT>
 messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   VirtualElmProxyType<ColT> const& toProxy, MsgT* raw_msg,
@@ -1199,6 +1269,7 @@ bool CollectionManager::insertCollectionElement(
   IndexT const& idx, NodeType const home_node, bool const is_migrated_in,
   NodeType const migrated_from
 ) {
+  using UntypedIndexType = collection::index::UntypedIndex<48>;
   auto holder = findColHolder<IndexT>(proxy);
 
   vt_debug_print(
@@ -1236,19 +1307,16 @@ bool CollectionManager::insertCollectionElement(
       std::move(vc)
     });
 
+    UntypedIndexType ui{idx};
+    auto lm = theLocMan()->getCollectionLM<UntypedIndexType>(proxy);
+
     if (is_migrated_in) {
-      theLocMan()->getCollectionLM<IndexT>(proxy)->entityImmigrated(
-        idx, home_node, migrated_from,
-        CollectionManager::collectionMsgHandler<ColT, IndexT>
-      );
+      lm->entityImmigrated(ui, home_node, migrated_from);
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementMigratedIn, idx
       );
     } else {
-      theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
-        idx, home_node,
-        CollectionManager::collectionMsgHandler<ColT, IndexT>
-      );
+      lm->registerEntity(ui, home_node);
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementCreated, idx
       );

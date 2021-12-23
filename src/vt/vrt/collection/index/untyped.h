@@ -46,7 +46,13 @@
 
 #include <cstdlib>
 
-namespace vt { namespace vrt { namespace collection { namespace index {
+namespace vt { namespace vrt { namespace collection {
+
+template <typename IdxT>
+std::tuple<void*, std::unique_ptr<ctx::Base>>
+makeContext(IdxT const& idx, VirtualProxyType proxy);
+
+namespace index {
 
 using RegisteredIndexType = uint16_t;
 
@@ -71,22 +77,32 @@ namespace registry {
 
 template <unsigned num_bytes>
 struct IndexInfo {
-  using DispatchFnType = std::function<void(UntypedIndex<num_bytes>* msg)>;
+  using DispatchFnType = std::function<
+    std::tuple<void*, std::unique_ptr<ctx::Base>>(
+      UntypedIndex<num_bytes> const& bits, VirtualProxyType proxy
+    )
+  >;
   using IsEqualFnType = std::function<
     bool(UntypedIndex<num_bytes> const& a, UntypedIndex<num_bytes> const& b)
   >;
+  using HashFnType = std::function<std::size_t(UntypedIndex<num_bytes> const& a)>;
+  using FormatFnType = std::function<std::string(UntypedIndex<num_bytes> const& a)>;
 
   IndexInfo(
     RegisteredIndexType in_idx,
     std::size_t in_bytes,
     bool in_is_bytecopyable,
     DispatchFnType in_dispatch,
-    IsEqualFnType in_is_equal
+    IsEqualFnType in_is_equal,
+    HashFnType in_hash,
+    FormatFnType in_fmt
   ) : idx_(in_idx),
       bytes_(in_bytes),
       is_bytecopyable_(in_is_bytecopyable),
       dispatch_(in_dispatch),
-      is_equal_(in_is_equal)
+      is_equal_(in_is_equal),
+      hash_(in_hash),
+      fmt_(in_fmt)
   { }
 
   RegisteredIndexType idx_ = -1;
@@ -94,6 +110,8 @@ struct IndexInfo {
   bool is_bytecopyable_ = false;
   DispatchFnType dispatch_;
   IsEqualFnType is_equal_;
+  HashFnType hash_;
+  FormatFnType fmt_;
 };
 
  static constexpr unsigned const base_num_bytes = 48;
@@ -121,6 +139,14 @@ RegisteredIndexType const Type<IdxT>::idx = Registrar<IdxT>().index;
 
 inline auto getDispatch(RegisteredIndexType han) {
   return getRegistry().at(han).dispatch_;
+}
+
+inline auto getHash(RegisteredIndexType han) {
+  return getRegistry().at(han).hash_;
+}
+
+inline auto getFmt(RegisteredIndexType han) {
+  return getRegistry().at(han).fmt_;
 }
 
 template <unsigned num_bytes>
@@ -157,15 +183,25 @@ Registrar<IdxT>::Registrar() {
       index,
       sizeof(IdxT),
       is_bytecopyable,
-      [](Untyped* msg){
+      [](Untyped const& bits, VirtualProxyType proxy) -> std::tuple<void*, std::unique_ptr<ctx::Base>> {
         //@todo: handle serialization case with enable_if on Registrar
-        char const* const data = msg->idx_bytes_.data();
-        IdxT const reconstructed_idx = *reinterpret_cast<IdxT const*>(data);
-        fmt::print("the index is {}\n", reconstructed_idx);
+        char const* const data = bits.idx_bytes_.data();
+        IdxT const idx = *reinterpret_cast<IdxT const*>(data);
+        return vt::vrt::collection::makeContext<IdxT>(idx, proxy);
       },
       [](Untyped const& a, Untyped const& b) -> bool {
         return *reinterpret_cast<IdxT const*>(a.idx_bytes_.data()) ==
                *reinterpret_cast<IdxT const*>(b.idx_bytes_.data());
+      },
+      [](Untyped const& a) -> std::size_t {
+        return std::hash<IdxT>()(
+          *reinterpret_cast<IdxT const*>(a.idx_bytes_.data())
+        );
+      },
+      [](Untyped const& a) -> std::string {
+        return fmt::format(
+          "{}", *reinterpret_cast<IdxT const*>(a.idx_bytes_.data())
+        );
       }
     }
   );
@@ -188,5 +224,36 @@ bool UntypedIndex<num_bytes>::operator==(
 }
 
 }}}} /* end namespace vt::vrt::collection::index */
+
+namespace std {
+
+template <>
+struct hash<vt::vrt::collection::index::UntypedIndex<48>> {
+  size_t operator()(vt::vrt::collection::index::UntypedIndex<48> const& in) const {
+    return std::hash<vt::vrt::collection::index::RegisteredIndexType>()(in.idx_)
+      ^ vt::vrt::collection::index::registry::getHash(in.idx_)(in);
+  }
+};
+
+} /* end namespace std */
+
+#include <fmt/format.h>
+
+namespace fmt {
+
+template <>
+struct formatter<::vt::vrt::collection::index::UntypedIndex<48>>
+  : formatter<std::string>
+{
+  template <typename FormatContext>
+  auto format(
+    ::vt::vrt::collection::index::UntypedIndex<48> const& i, FormatContext& ctx
+  ) {
+    auto str = ::vt::vrt::collection::index::registry::getFmt(i.idx_)(i);
+    return fmt::formatter<std::string>::format(str, ctx);
+  }
+};
+
+} /* end namespace fmt */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_INDEX_UNTYPED_H*/
