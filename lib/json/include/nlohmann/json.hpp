@@ -78,7 +78,7 @@ SOFTWARE.
 @see https://github.com/nlohmann
 @since version 1.0.0
 */
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 
 /*!
@@ -8685,7 +8685,7 @@ std::string to_string(const NLOHMANN_BASIC_JSON_TPL& j)
 {
     return j.dump();
 }
-} // namespace nlohmann
+}} // namespace nlohmann::vt
 
 ///////////////////////
 // nonmember support //

@@ -45,6 +45,7 @@
 #include <string>
 #include <vector>
 
+#include <vt/elm/elm_id_bits.h>
 #include <vt/vrt/collection/balance/node_stats.h>
 #include <vt/vrt/collection/balance/stats_data.h>
 #include <vt/vrt/collection/balance/stats_restart_reader.h>
@@ -57,11 +58,6 @@ namespace vt { namespace tests { namespace unit {
 
 struct TestLBStatsReader : TestParallelHarness { };
 using ElementIDType = uint64_t;
-
-ElementIDType getElemPermID(size_t elm, NodeType inode) {
-  //--- Formula inside the function "Stats::getNextElem()"
-  return static_cast<ElementIDType>((elm << 32) | inode);
-}
 
 TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
 
@@ -89,10 +85,9 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   std::vector<ElementIDStruct> myElemList(numElements);
 
   for (size_t ii = 0; ii < numElements; ++ii) {
-    //--- Shift by 1 to avoid the null permID
-    myElemList[ii] = ElementIDStruct{
-      getElemPermID(ii+1, this_node), this_node, this_node
-    };
+    myElemList[ii] = elm::ElmIDBits::createCollectionImpl(
+      true, ii+1, this_node, this_node
+    );
   }
 
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
@@ -122,7 +117,9 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
     }
     for (NodeType in = 0; in+1 < num_nodes; ++in) {
       for (uint64_t elmID = 1; elmID < numElements; ++elmID) {
-        auto permID = ElementIDStruct{getElemPermID(elmID+1, in), this_node, in};
+        auto permID = elm::ElmIDBits::createCollectionImpl(
+          true, elmID+1, in, in
+        );
         sd->node_data_[phase][permID].whole_phase_load = tval;
       }
     }
@@ -168,7 +165,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
       auto it = std::find(myList.begin(), myList.end(), myPermID.id);
       EXPECT_TRUE(it != myList.end());
       size_t shift = static_cast<size_t>(it - myList.begin());
-      EXPECT_TRUE(myList[shift+1] == static_cast<ElementIDType>(num_nodes - 1));
+      EXPECT_EQ(myList[shift+1], static_cast<ElementIDType>(num_nodes - 1));
     }
   }
 
@@ -182,7 +179,9 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
     EXPECT_TRUE(myList.size() % 2 == 0);
     for (NodeType in = 0; in+1 < num_nodes; ++in) {
       for (ElementIDType elmID = 1; elmID < numElements; ++elmID) {
-        ElementIDType permID = getElemPermID(elmID + 1, in);
+        ElementIDType permID = elm::ElmIDBits::createCollectionImpl(
+          true, elmID+1, in, in
+        ).id;
         auto it = std::find(myList.begin(), myList.end(), permID);
         EXPECT_TRUE(it != myList.end());
         size_t shift = static_cast<size_t>(it - myList.begin());

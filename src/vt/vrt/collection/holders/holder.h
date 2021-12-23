@@ -71,14 +71,14 @@ namespace vt { namespace vrt { namespace collection {
  * proxy. Provides functionality to find, add, remove, and foreach over the
  * collection elements.
  */
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct Holder {
   template <typename T, typename U>
   using ContType            = std::unordered_map<T, U>;
-  using CollectionType      = CollectionBase<ColT, IndexT>;
+  using CollectionType      = Indexable<IndexT>;
   using VirtualPtrType      = std::unique_ptr<CollectionType>;
   using LookupElementType   = IndexT;
-  using InnerHolder         = ElementHolder<ColT, IndexT>;
+  using InnerHolder         = ElementHolder<IndexT>;
   using TypedIndexContainer = ContType<LookupElementType, InnerHolder>;
   using LBContFnType        = std::function<void()>;
   using LBContListType      = std::list<LBContFnType>;

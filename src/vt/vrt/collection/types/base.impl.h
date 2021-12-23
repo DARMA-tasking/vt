@@ -86,26 +86,10 @@ template <typename ColT, typename IndexT>
 template <typename Serializer>
 void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
   Indexable<IndexT>::serialize(s);
-  s | cur_bcast_epoch_;
-  s | reduce_stamp_;
 }
 
 template <typename ColT, typename IndexT>
 /*virtual*/ CollectionBase<ColT, IndexT>::~CollectionBase() {}
-
-template <typename ColT, typename IndexT>
-void CollectionBase<ColT, IndexT>::zeroReduceStamp() {
-  *reduce_stamp_ = 0;
-}
-
-template <typename ColT, typename IndexT>
-typename CollectionBase<ColT, IndexT>::ReduceStampType
-CollectionBase<ColT, IndexT>::getNextStamp() {
-  ReduceStampType stamp;
-  stamp.init<ReduceSeqStampType>(reduce_stamp_);
-  ++reduce_stamp_;
-  return stamp;
-}
 
 }}} /* end namespace vt::vrt::collection */
 

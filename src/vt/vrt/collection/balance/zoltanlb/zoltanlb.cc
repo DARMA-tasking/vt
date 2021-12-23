@@ -48,6 +48,7 @@
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/collective/collective_alg.h"
+#include "vt/elm/elm_comm.h"
 
 #if vt_check_enabled(zoltan)
 
@@ -183,7 +184,9 @@ void ZoltanLB::runLB(TimeType total_load) {
 
   std::set<ObjIDType> load_objs;
   for (auto obj : *load_model_) {
-    load_objs.insert(obj);
+    if (obj.isMigratable()) {
+      load_objs.insert(obj);
+    }
   }
 
   for (int i = 0; i < num_export; i++) {
@@ -197,9 +200,7 @@ void ZoltanLB::runLB(TimeType total_load) {
 
     auto const obj_id = export_global_ids[i];
     auto iter = load_objs.find(
-      ObjIDType{
-        obj_id, uninitialized_destination, uninitialized_destination
-      }
+      ObjIDType{obj_id, uninitialized_destination}
     );
     vtAssert(iter != load_objs.end(), "Object must exist here");
 
@@ -225,7 +226,7 @@ void ZoltanLB::makeGraphSymmetric() {
 
   for (auto&& elm : *comm_data) {
     if (
-      elm.first.cat_ == balance::CommCategory::SendRecv and
+      elm.first.cat_ == elm::CommCategory::SendRecv and
       not elm.first.selfEdge()
     ) {
       auto from = elm.first.fromObj();
@@ -284,8 +285,8 @@ void ZoltanLB::combineEdges() {
     auto from = std::max(e1.first.fromObj(), e1.first.toObj());
     auto to = std::min(e1.first.fromObj(), e1.first.toObj());
 
-    auto key = balance::LBCommKey{
-      balance::LBCommKey::CollectionTag{}, from, to, false
+    auto key = elm::CommKey{
+      elm::CommKey::CollectionTag{}, from, to, false
     };
     load_comm_combined[key] += e1.second;
   }
@@ -306,7 +307,7 @@ void ZoltanLB::countEdges() {
   auto const this_node = theContext()->getNode();
   for (auto&& elm : load_comm_symm) {
     if (
-      elm.first.cat_ == balance::CommCategory::SendRecv and
+      elm.first.cat_ == elm::CommCategory::SendRecv and
       not elm.first.selfEdge()
     ) {
       auto from = elm.first.fromObj();
@@ -440,7 +441,9 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   // traverse them for building the graph consistenly
   std::set<ObjIDType> load_objs;
   for (auto obj : *load_model_) {
-    load_objs.insert(obj);
+    if (obj.isMigratable()) {
+      load_objs.insert(obj);
+    }
   }
 
   auto graph = std::make_unique<Graph>();
@@ -492,7 +495,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   if (do_edges_) {
     // Only get communication edges between vertices/migratable elements
     // Insert local comm objs into a std::set for deterministic ordering
-    std::vector<balance::LBCommKey> comm_objs;
+    std::vector<elm::CommKey> comm_objs;
     for (auto&& elm : load_comm_edge_id) {
       comm_objs.push_back(elm.first);
     }
@@ -526,7 +529,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
         auto comm = iter->second;
 
         vtAssert(
-          iter->first.edge_id_.id != balance::no_element_id,
+          iter->first.edge_id_.id != elm::no_element_id,
           "Must have element ID"
         );
 

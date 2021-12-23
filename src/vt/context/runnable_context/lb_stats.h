@@ -46,7 +46,7 @@
 
 #include "vt/context/runnable_context/base.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/elm_stats.fwd.h"
+#include "vt/elm/elm_stats.fwd.h"
 
 namespace vt { namespace ctx {
 
@@ -56,8 +56,8 @@ namespace vt { namespace ctx {
  * \brief Context for collection LB statistics when a task runs
  */
 struct LBStats final : Base {
-  using ElementIDStruct = vrt::collection::balance::ElementIDStruct;
-  using ElementStats = vrt::collection::balance::ElementStats;
+  using ElementIDStruct = elm::ElementIDStruct;
+  using ElementStats    = elm::ElementStats;
 
   /**
    * \brief Construct a \c LBStats
@@ -71,10 +71,14 @@ struct LBStats final : Base {
   /**
    * \brief Construct a \c LBStats
    *
-   * \param[in] in_elm the collection element
+   * \param[in] in_stats the statistics
+   * \param[in] in_elm_id the element ID
    */
-  template <typename ElmT>
-  explicit LBStats(ElmT* in_elm);
+  LBStats(ElementStats* in_stats, ElementIDStruct const& in_elm_id)
+    : stats_(in_stats),
+      cur_elm_id_(in_elm_id),
+      should_instrument_(true)
+  { }
 
   /**
    * \brief Set the context and timing for a collection task
@@ -94,7 +98,7 @@ struct LBStats final : Base {
    * \param[in] size the size of the message
    * \param[in] bcast whether the message is being broadcast or sent
    */
-  void send(NodeType dest, MsgSizeType size, bool bcast) final override;
+  void send(elm::ElementIDStruct dest, MsgSizeType bytes) final override;
 
   void suspend() final override;
   void resume() final override;

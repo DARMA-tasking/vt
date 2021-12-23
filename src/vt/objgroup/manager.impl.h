@@ -58,6 +58,7 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
 #include "vt/runnable/invoke.h"
+#include "vt/elm/elm_id_bits.h"
 
 #include <memory>
 
@@ -107,6 +108,10 @@ ObjGroupManager::makeCollectiveObj(ObjT* obj, HolderBasePtrType holder) {
   auto const obj_type_idx = registry::makeObjIdx<ObjT>();
   auto const obj_ptr = reinterpret_cast<void*>(obj);
   auto const proxy = makeCollectiveImpl(std::move(holder),obj_type_idx,obj_ptr);
+  auto iter = objs_.find(proxy);
+  vtAssert(iter != objs_.end(), "Obj must exist on this node");
+  HolderBaseType* h = iter->second.get();
+  h->setElmID(getNextElm(proxy));
   vt_debug_print(
     terse, objgroup,
     "makeCollectiveObj: obj_type_idx={}, proxy={:x}\n",
@@ -254,11 +259,23 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const dest_node = proxy.getNode();
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
+
+  // set bit so it isn't recorded as it routes through bare
+  // handlers
+  envelopeSetCommStatsRecordedAboveBareHandler(msg->env, true);
+
+  if (theContext()->getTask() != nullptr) {
+    auto dest_elm_id = elm::ElmIDBits::createObjGroup(proxy_bits, dest_node);
+    auto const num_bytes = serialization::MsgSizer<MsgT>::get(msg.get());
+    theContext()->getTask()->send(dest_elm_id, num_bytes);
+  }
+
   vt_debug_print(
     terse, objgroup,
     "ObjGroupManager::send: proxy={:x}, node={}, ctrl={:x}, han={:x}\n",
     proxy_bits, dest_node, ctrl, han
   );
+
   send<MsgT>(msg,han,dest_node);
 }
 

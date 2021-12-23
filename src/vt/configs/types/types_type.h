@@ -73,8 +73,6 @@ using EnvelopeDataType        = int8_t;
 using EventType               = uint64_t;
 /// Used to hold a sequential identifier for ordered/stateful operations
 using SequentialIDType        = uint64_t;
-/// Used to hold an epoch for termination detection
-using EpochType               = uint64_t;
 /// Used to hold an tag, e.g., on messages or reduces
 using TagType                 = int32_t;
 /// Used to identify a specific barrier
@@ -129,5 +127,8 @@ using ActionProxyType         = std::function<void(VirtualProxyType)>;
 using ActionNodeType          = std::function<void(NodeType)>;
 
 }  // end namespace vt
+
+// Include the epoch type, which is a strong, named type
+#include "vt/epoch/epoch_type.h"
 
 #endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_TYPE_H*/

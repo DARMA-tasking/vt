@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_comm.h
+//                                  elm_comm.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,15 +41,14 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMM_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMM_H
+#if !defined INCLUDED_VT_ELM_ELM_COMM_H
+#define INCLUDED_VT_ELM_ELM_COMM_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/elm/elm_id.h"
 
 #include <unordered_map>
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace elm {
 
 enum struct CommCategory : int8_t {
   SendRecv = 1,
@@ -66,32 +65,41 @@ inline NodeType objGetNode(ElementIDStruct const id) {
   return id.curr_node;
 }
 
-struct LBCommKey {
+struct CommKey {
 
+  struct SendRecvTag { };
   struct CollectionTag { };
   struct CollectionToNodeTag { };
   struct NodeToCollectionTag { };
 
-  LBCommKey() = default;
-  LBCommKey(LBCommKey const&) = default;
-  LBCommKey(LBCommKey&&) = default;
-  LBCommKey& operator=(LBCommKey const&) = default;
+  CommKey() = default;
+  CommKey(CommKey const&) = default;
+  CommKey(CommKey&&) = default;
+  CommKey& operator=(CommKey const&) = default;
 
-  LBCommKey(
+  CommKey(
+    SendRecvTag,
+    ElementIDStruct from, ElementIDStruct to,
+    bool bcast
+  ) : from_(from), to_(to),
+      cat_(bcast ? CommCategory::Broadcast : CommCategory::SendRecv)
+  { }
+
+  CommKey(
     CollectionTag,
     ElementIDStruct from, ElementIDStruct to,
     bool bcast
   ) : from_(from), to_(to),
       cat_(bcast ? CommCategory::Broadcast : CommCategory::SendRecv)
   { }
-  LBCommKey(
+  CommKey(
     CollectionToNodeTag,
     ElementIDStruct from, NodeType to,
     bool bcast
   ) : from_(from), nto_(to),
       cat_(bcast ? CommCategory::CollectionToNodeBcast : CommCategory::CollectionToNode)
   { }
-  LBCommKey(
+  CommKey(
     NodeToCollectionTag,
     NodeType from, ElementIDStruct to,
     bool bcast
@@ -99,10 +107,10 @@ struct LBCommKey {
       cat_(bcast ? CommCategory::NodeToCollectionBcast : CommCategory::NodeToCollection)
   { }
 
-  ElementIDStruct from_ = { no_element_id, uninitialized_destination, uninitialized_destination };
-  ElementIDStruct to_   = { no_element_id, uninitialized_destination, uninitialized_destination };
+  ElementIDStruct from_ = {};
+  ElementIDStruct to_   = {};
 
-  ElementIDStruct edge_id_ = { no_element_id, uninitialized_destination, uninitialized_destination };
+  ElementIDStruct edge_id_ = {};
   NodeType nfrom_          = uninitialized_destination;
   NodeType nto_            = uninitialized_destination;
   CommCategory  cat_       = CommCategory::SendRecv;
@@ -127,7 +135,7 @@ struct LBCommKey {
   }
   bool onNode() const { return !offNode(); }
 
-  bool operator==(LBCommKey const& k) const {
+  bool operator==(CommKey const& k) const {
     return
       k.from_  ==  from_ and k.to_  ==  to_ and
       k.nfrom_ == nfrom_ and k.nto_ == nto_ and
@@ -141,7 +149,7 @@ struct LBCommKey {
 };
 
 // Set the types for the communication graph
-using CommKeyType   = LBCommKey;
+using CommKeyType   = CommKey;
 using CommBytesType = double;
 
 struct CommVolume {
@@ -149,6 +157,11 @@ struct CommVolume {
   uint64_t messages = 0;
 
   void receiveMsg(double b) {
+    messages++;
+    bytes += b;
+  }
+
+  void sendMsg(double b) {
     messages++;
     bytes += b;
   }
@@ -166,13 +179,13 @@ struct CommVolume {
 
 using CommMapType   = std::unordered_map<CommKeyType,CommVolume>;
 
-}}}} /* end namespace vt::vrt::collection::balance */
+}} /* end namespace vt::elm */
 
 namespace std {
 
-using CommCategoryType    = vt::vrt::collection::balance::CommCategory;
-using LBCommKeyType       = vt::vrt::collection::balance::LBCommKey;
-using ElementIDStructType = vt::vrt::collection::balance::ElementIDStruct;
+using CommCategoryType    = vt::elm::CommCategory;
+using CommKeyType         = vt::elm::CommKey;
+using ElementIDStructType = vt::elm::ElementIDStruct;
 
 template <>
 struct hash<CommCategoryType> {
@@ -184,8 +197,8 @@ struct hash<CommCategoryType> {
 };
 
 template <>
-struct hash<LBCommKeyType> {
-  size_t operator()(LBCommKeyType const& in) const {
+struct hash<CommKeyType> {
+  size_t operator()(CommKeyType const& in) const {
     return std::hash<uint64_t>()(
       std::hash<ElementIDStructType>()(in.from_) ^
       std::hash<ElementIDStructType>()(in.to_) ^ in.nfrom_ ^ in.nto_
@@ -195,4 +208,4 @@ struct hash<LBCommKeyType> {
 
 } /* end namespace std */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMM_H*/
+#endif /*INCLUDED_VT_ELM_ELM_COMM_H*/

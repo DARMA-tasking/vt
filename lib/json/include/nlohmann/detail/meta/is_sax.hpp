@@ -7,7 +7,7 @@
 #include <nlohmann/detail/meta/detected.hpp>
 #include <nlohmann/detail/meta/type_traits.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -146,4 +146,4 @@ struct is_sax_static_asserts
         "std::string&, const exception&)");
 };
 }  // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

@@ -83,7 +83,7 @@ getDispatcher(auto_registry::AutoHandlerType const han) {
   return theCollection()->getDispatcher(han);
 }
 
-balance::ElementIDStruct CollectionManager::getCurrentContext() const {
+elm::ElementIDStruct CollectionManager::getCurrentContext() const {
 # if vt_check_enabled(lblite)
   if (theContext()->getTask() != nullptr) {
     auto lb = theContext()->getTask()->get<ctx::LBStats>();
@@ -92,9 +92,7 @@ balance::ElementIDStruct CollectionManager::getCurrentContext() const {
     }
   }
 #endif
-  return balance::ElementIDStruct{
-    balance::no_element_id, uninitialized_destination, uninitialized_destination
-  };
+  return elm::ElementIDStruct{};
 }
 
 void CollectionManager::schedule(ActionType action) {

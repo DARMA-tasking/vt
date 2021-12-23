@@ -60,8 +60,8 @@ void LBStats::end() {
   }
 }
 
-void LBStats::send(NodeType dest, MsgSizeType size, bool bcast) {
-  stats_->recvToNode(dest, cur_elm_id_, size, bcast);
+void LBStats::send(elm::ElementIDStruct dest, MsgSizeType bytes) {
+  stats_->sendToEntity(dest, cur_elm_id_, bytes);
 }
 
 void LBStats::suspend() {

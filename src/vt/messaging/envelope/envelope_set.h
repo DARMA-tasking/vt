@@ -207,6 +207,19 @@ template <typename Env>
 inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized);
 
 /**
+ * \brief Set whether this message shouldn't record bare handler communication
+ * stats for LB
+ *
+ * \param[in,out] env the envelope
+ * \param[in] comm_stats_recorded_above_bare_handler value indicating message
+ * shouldn't record bare handler stats
+ */
+template <typename Env>
+inline void envelopeSetCommStatsRecordedAboveBareHandler(
+  Env& env, bool comm_stats_recorded_above_bare_handler
+);
+
+/**
  * \brief Set whether this message's envelope is locked.
  *
  * A locked message will prevent key parts of the envelope from being updated

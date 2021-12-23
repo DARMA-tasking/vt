@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   strong.h
+//                                  elm_id.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,67 +41,21 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_SCOPING_STRONG_H
-#define INCLUDED_VT_COLLECTIVE_REDUCE_SCOPING_STRONG_H
+#include "vt/elm/elm_id.h"
+#include "vt/elm/elm_id_bits.h"
 
-namespace vt { namespace collective { namespace reduce { namespace detail {
+namespace vt { namespace elm {
 
-/**
- * \internal \struct Strong
- *
- * \brief Used to hoist VT types (like \c vt::VirtualProxyType ) into strongly
- * typed values that have a unique type.
- */
-template <typename T, T initial_value, typename Tag>
-struct Strong {
-  using Type = T;
+bool ElementIDStruct::isMigratable() const {
+  return ElmIDBits::isMigratable(id);
+}
 
-  Strong() = default;
-  explicit Strong(T v) : v_(v) { }
-  operator T() { return v_; }
-  operator T const() { return v_; }
+NodeType ElementIDStruct::getHomeNode() const {
+  return ElmIDBits::getNode(id);
+}
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | v_;
-  }
+NodeType ElementIDStruct::getCurrNode() const {
+  return curr_node;
+}
 
-  bool operator==(Strong<T, initial_value, Tag> const& in) const {
-    return v_ == in.v_;
-  }
-
-  bool operator!=(Strong<T, initial_value, Tag> const& in) const {
-    return v_ != in.v_;
-  }
-
-  Strong<T,initial_value,Tag>& operator++() {
-    v_++;
-    return *this;
-  }
-
-  T& operator*() { return v_; }
-  T const& operator*() const { return v_; }
-
-  T& get() { return v_; }
-  T const& get() const { return v_; }
-
-private:
-  T v_ = initial_value;
-};
-
-}}}} /* end namespace vt::collective::reduce::detail */
-
-namespace std {
-
-template <typename T, T initial_value, typename Tag>
-struct hash<vt::collective::reduce::detail::Strong<T, initial_value, Tag>> {
-  size_t operator()(
-    vt::collective::reduce::detail::Strong<T, initial_value, Tag> const& in
-  ) const {
-    return std::hash<T>()(in.get());
-  }
-};
-
-} /* end namespace std */
-
-#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_SCOPING_STRONG_H*/
+}} /* end namespace vt::elm */

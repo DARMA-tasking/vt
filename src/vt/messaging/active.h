@@ -62,6 +62,8 @@
 #include "vt/trace/trace_common.h"
 #include "vt/utils/static_checks/functor.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/elm/elm_id.h"
+#include "vt/elm/elm_stats.h"
 
 #if vt_check_enabled(trace_enabled)
   #include "vt/trace/trace_headers.h"
@@ -336,8 +338,9 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   virtual ~ActiveMessenger();
 
-
   std::string name() override { return "ActiveMessenger"; }
+
+  void startup() override;
 
   /**
    * \brief Mark a message as a termination message.
@@ -1764,6 +1767,10 @@ private:
 
   // Diagnostic counters for counting forwarded messages
   diagnostic::CounterGauge amForwardCounterGauge;
+
+private:
+  elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_stats_ = {};
+  elm::ElementStats bare_handler_stats_;
 };
 
 }} // end namespace vt::messaging

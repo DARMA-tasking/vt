@@ -46,7 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/elm/elm_comm.h"
 
 #include <unordered_map>
 #include <memory>
@@ -93,6 +93,15 @@ struct StatsData {
    */
   void clear();
 
+private:
+  /**
+   * \brief Output an entity to json
+   *
+   * \param[in] j the json
+   * \param[in] elm_id the element to output
+   */
+  void outputEntity(nlohmann::json& j, ElementIDStruct const& elm_id) const;
+
 public:
   /// Node timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;
@@ -102,6 +111,8 @@ public:
   std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
+  /// Map from id to objgroup proxy
+  std::unordered_map<ElementIDStruct, ObjGroupProxyType> node_objgroup_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

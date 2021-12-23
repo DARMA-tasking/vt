@@ -6,6 +6,7 @@ on:
 
 jobs:
   check:
+    if: ${{ github.base_ref == 'develop' }}
     name: Check PR description
     runs-on: ubuntu-latest
     steps:

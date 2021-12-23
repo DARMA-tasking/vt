@@ -43,7 +43,7 @@
 
 #include <vt/vrt/collection/balance/model/load_model.h>
 #include <vt/vrt/collection/balance/model/comm_overhead.h>
-#include <vt/vrt/collection/balance/lb_comm.h>
+#include <vt/elm/elm_comm.h>
 
 #include <gtest/gtest.h>
 
@@ -55,11 +55,11 @@ namespace vt { namespace tests { namespace unit { namespace comm {
 
 using TestModelCommOverhead = TestHarness;
 
-using vt::vrt::collection::balance::CommKeyType;
-using vt::vrt::collection::balance::CommMapType;
+using vt::elm::CommKeyType;
+using vt::elm::CommMapType;
+using vt::elm::CommVolume;
+using vt::elm::ElementIDStruct;
 using vt::vrt::collection::balance::CommOverhead;
-using vt::vrt::collection::balance::CommVolume;
-using vt::vrt::collection::balance::ElementIDStruct;
 using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ObjectIterator;
@@ -114,13 +114,13 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
 
   // For simplicity's sake, the elements are on the home node
   // Element 1 (home node == 1)
-  ElementIDStruct const elem1 = {1, 1, 1};
+  ElementIDStruct const elem1 = {1, 1};
 
   // Element 2 (home node == 2)
-  ElementIDStruct const elem2 = {2, 2, 2};
+  ElementIDStruct const elem2 = {2, 2};
 
   // Element 3 (home node == 3)
-  ElementIDStruct const elem3 = {3, 3, 3};
+  ElementIDStruct const elem3 = {3, 3};
 
   ProcLoadMap proc_load = {{0, LoadMapType{{elem2, {TimeType{150}, {}}}}}};
 

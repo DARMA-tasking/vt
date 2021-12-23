@@ -55,6 +55,9 @@
 #include "vt/runtime/mpi_access.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/runnable/make_runnable.h"
+#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/phase/phase_manager.h"
+#include "vt/elm/elm_id_bits.h"
 
 namespace vt { namespace messaging {
 
@@ -147,6 +150,21 @@ ActiveMessenger::ActiveMessenger()
       UnitType::Bytes
     )
   };
+}
+
+void ActiveMessenger::startup() {
+  auto const this_node = theContext()->getNode();
+  bare_handler_dummy_elm_id_for_lb_stats_ =
+    elm::ElmIDBits::createBareHandler(this_node);
+
+#if vt_check_enabled(lblite)
+  // Hook to collect statistics about objgroups
+  thePhase()->registerHookCollective(phase::PhaseHook::End, [this]{
+    theNodeStats()->addNodeStats(
+      bare_handler_dummy_elm_id_for_lb_stats_, &bare_handler_stats_
+    );
+  });
+#endif
 }
 
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {
@@ -432,7 +450,15 @@ EventType ActiveMessenger::sendMsgBytes(
   }
 
   if (theContext()->getTask() != nullptr) {
-    theContext()->getTask()->send(dest, msg_size, is_bcast);
+    auto lb = theContext()->getTask()->get<ctx::LBStats>();
+    if (lb) {
+      auto const already_recorded =
+        envelopeCommStatsRecordedAboveBareHandler(msg->env);
+      if (not already_recorded) {
+        auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);
+        theContext()->getTask()->send(dest_elm_id, msg_size);
+      }
+    }
   }
 
   return event_id;
@@ -549,10 +575,6 @@ SendInfo ActiveMessenger::sendData(
   // if required to inhibit early termination of that epoch
   theTerm()->produce(term::any_epoch_sentinel,1,dest);
   theTerm()->hangDetectSend();
-
-  if (theContext()->getTask() != nullptr) {
-    theContext()->getTask()->send(dest, num_bytes, false);
-  }
 
   return SendInfo{event_id, send_tag, num};
 }
@@ -961,6 +983,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
       .withContinuation(cont)
       .withTag(tag)
       .withTDEpochFromMsg(is_term)
+      .withLBStats(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
       .enqueue();
 
     if (is_term) {

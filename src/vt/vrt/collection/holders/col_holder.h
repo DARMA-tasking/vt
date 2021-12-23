@@ -60,7 +60,7 @@ namespace vt { namespace vrt { namespace collection {
  * the virtual overloaded function for running LB and destroying the collection
  * from a type-erased base class.
  */
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct CollectionHolder : BaseHolder {
 
 public:
@@ -92,7 +92,7 @@ public:
   ObjGroupProxyType map_object = no_obj_group; /**< The map object */
   bool has_bounds = false;                     /**< Whether it as bounds */
   IndexT bounds = {};                          /**< The bounds */
-  Holder<ColT, IndexT> holder_;                /**< Inner holder of elements */
+  Holder<IndexT> holder_;                      /**< Inner holder of elements */
 };
 
 }}} /* end namespace vt::vrt::collection */

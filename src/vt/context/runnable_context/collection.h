@@ -48,8 +48,8 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-struct CollectionBase;
+template <typename IndexT>
+struct Indexable;
 
 }}} /* end namespace vt::vrt::collection */
 
@@ -69,8 +69,7 @@ struct Collection final : Base {
    *
    * \param[in] elm the collection element to extract the index and proxy
    */
-  template <typename ColT>
-  explicit Collection(vrt::collection::CollectionBase<ColT, IndexT>* elm);
+  explicit Collection(vrt::collection::Indexable<IndexT>* elm);
 
   /**
    * \brief Set the collection context

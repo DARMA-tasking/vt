@@ -197,12 +197,12 @@
 #    define FMT_INLINE_NAMESPACE namespace
 #    define FMT_END_NAMESPACE \
       }                       \
-      using namespace v7;     \
+      using namespace vt;     \
       }
 #  endif
 #  define FMT_BEGIN_NAMESPACE \
     namespace fmt {           \
-    FMT_INLINE_NAMESPACE v7 {
+    FMT_INLINE_NAMESPACE vt {
 #endif
 
 #if !defined(FMT_HEADER_ONLY) && defined(_WIN32)
@@ -500,7 +500,7 @@ constexpr basic_string_view<typename S::char_type> to_string_view(const S& s) {
 
 namespace detail {
 void to_string_view(...);
-using fmt::v7::to_string_view;
+using fmt::to_string_view;
 
 // Specifies whether S is a string type convertible to fmt::basic_string_view.
 // It should be a constexpr function but MSVC 2017 fails to compile it in

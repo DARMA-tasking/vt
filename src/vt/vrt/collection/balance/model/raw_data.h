@@ -45,7 +45,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_RAW_DATA_H
 
 #include "vt/vrt/collection/balance/model/load_model.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/elm/elm_comm.h"
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {

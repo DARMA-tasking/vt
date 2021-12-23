@@ -1,6 +1,7 @@
 set(TOP_LEVEL_SUBDIRS
   configs
   collective
+  elm
   epoch
   group
   messaging
@@ -33,6 +34,7 @@ set(
       collective/scatter/
       collective/reduce/
         collective/reduce/operators collective/reduce/functors
+    elm
     group/id group/region group/global group/msg group/collective group/rooted
     group/base
     pipe/id pipe/msg pipe/state pipe/signal pipe/interface pipe/callback
@@ -95,7 +97,7 @@ set(
       serialization/sizing
     utils/demangle utils/container utils/bits utils/mutex
     utils/hash utils/atomic utils/tls utils/static_checks utils/string
-    utils/memory utils/mpi_limits utils/compress utils/json
+    utils/memory utils/mpi_limits utils/compress utils/json utils/strong
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection
       registry/auto/vc registry/auto/rdma registry/auto/index

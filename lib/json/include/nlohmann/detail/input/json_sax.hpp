@@ -8,7 +8,7 @@
 #include <nlohmann/detail/exceptions.hpp>
 #include <nlohmann/detail/macro_scope.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 
 /*!
@@ -692,4 +692,4 @@ class json_sax_acceptor
 };
 }  // namespace detail
 
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

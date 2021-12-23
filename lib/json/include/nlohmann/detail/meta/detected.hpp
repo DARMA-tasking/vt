@@ -5,7 +5,7 @@
 #include <nlohmann/detail/meta/void_t.hpp>
 
 // https://en.cppreference.com/w/cpp/experimental/is_detected
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -55,4 +55,4 @@ template<class To, template<class...> class Op, class... Args>
 using is_detected_convertible =
     std::is_convertible<detected_t<Op, Args...>, To>;
 }  // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

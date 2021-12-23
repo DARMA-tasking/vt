@@ -46,6 +46,10 @@
 
 #include "vt/config.h"
 
+#include <ostream>
+
+#include <fmt/ostream.h>
+
 namespace vt { namespace term { namespace interval {
 
 /*

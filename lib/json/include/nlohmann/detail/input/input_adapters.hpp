@@ -15,7 +15,7 @@
 #include <nlohmann/detail/iterators/iterator_traits.hpp>
 #include <nlohmann/detail/macro_scope.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -451,4 +451,4 @@ class span_input_adapter
     contiguous_bytes_input_adapter ia;
 };
 }  // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

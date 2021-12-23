@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               elm_stats.fwd.h
+//                                 col_stats.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,15 +41,32 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_FWD_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_FWD_H
-
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/col_stats.h"
+#include "vt/timing/timing.h"
+
+#include <cassert>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct ElementStats;
+/*static*/
+void CollectionStats::setFocusedSubPhase(
+  VirtualProxyType collection, SubphaseType subphase
+) {
+  focused_subphase_[collection] = subphase;
+}
+
+/*static*/
+SubphaseType CollectionStats::getFocusedSubPhase(VirtualProxyType collection) {
+  auto i = focused_subphase_.find(collection);
+  if (i != focused_subphase_.end())
+    return i->second;
+  else
+    return no_subphase;
+}
+
+/*static*/
+std::unordered_map<VirtualProxyType,SubphaseType>
+CollectionStats::focused_subphase_;
 
 }}}} /* end namespace vt::vrt::collection::balance */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_FWD_H*/

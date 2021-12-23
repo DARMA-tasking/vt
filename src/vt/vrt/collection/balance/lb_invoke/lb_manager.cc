@@ -45,6 +45,7 @@
 #include "vt/configs/arguments/app_config.h"
 #include "vt/context/context.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/node_stats.h"
@@ -178,8 +179,8 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     computeStatistics(model_, false, phase);
   });
 
-  balance::CommMapType empty_comm;
-  balance::CommMapType const* comm = &empty_comm;
+  elm::CommMapType empty_comm;
+  elm::CommMapType const* comm = &empty_comm;
   auto iter = theNodeStats()->getNodeComm()->find(phase);
   if (iter != theNodeStats()->getNodeComm()->end()) {
     comm = &iter->second;
@@ -413,6 +414,20 @@ void LBManager::statsHandler(StatsMsgType* msg) {
   }
 }
 
+balance::LoadData reduceVec(
+  lb::Statistic stat, std::vector<balance::LoadData>&& vec
+) {
+  balance::LoadData reduce_ld(stat, 0.0f);
+  if (vec.size() == 0) {
+    return reduce_ld;
+  } else {
+    for (std::size_t i = 1; i < vec.size(); i++) {
+      vec[0] = vec[0] + vec[i];
+    }
+    return vec[0];
+  }
+}
+
 void LBManager::computeStatistics(
   std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase
 ) {
@@ -437,8 +452,8 @@ void LBManager::computeStatistics(
     total_load += work;
   }
 
-  balance::CommMapType empty_comm;
-  balance::CommMapType const* comm_data = &empty_comm;
+  elm::CommMapType empty_comm;
+  elm::CommMapType const* comm_data = &empty_comm;
   auto iter = theNodeStats()->getNodeComm()->find(phase);
   if (iter != theNodeStats()->getNodeComm()->end()) {
     comm_data = &iter->second;
@@ -465,7 +480,7 @@ void LBManager::computeStatistics(
   std::vector<balance::LoadData> O_c;
   for (auto&& elm : *comm_data) {
     // Only count object-to-object direct edges in the O_c statistics
-    if (elm.first.cat_ == balance::CommCategory::SendRecv and not elm.first.selfEdge()) {
+    if (elm.first.cat_ == elm::CommCategory::SendRecv and not elm.first.selfEdge()) {
       O_c.emplace_back(LoadData{lb::Statistic::O_c, elm.second.bytes});
     }
   }
@@ -476,26 +491,11 @@ void LBManager::computeStatistics(
   proxy_.template reduce<ReduceOp>(msg,cb);
 }
 
-balance::LoadData
-LBManager::reduceVec(
-  lb::Statistic stat, std::vector<balance::LoadData>&& vec
-) const {
-  balance::LoadData reduce_ld(stat, 0.0f);
-  if (vec.size() == 0) {
-    return reduce_ld;
-  } else {
-    for (std::size_t i = 1; i < vec.size(); i++) {
-      vec[0] = vec[0] + vec[i];
-    }
-    return vec[0];
-  }
-}
-
-bool LBManager::isCollectiveComm(balance::CommCategory cat) const {
+bool LBManager::isCollectiveComm(elm::CommCategory cat) const {
   bool is_collective =
-    cat == balance::CommCategory::Broadcast or
-    cat == balance::CommCategory::CollectionToNodeBcast or
-    cat == balance::CommCategory::NodeToCollectionBcast;
+    cat == elm::CommCategory::Broadcast or
+    cat == elm::CommCategory::CollectionToNodeBcast or
+    cat == elm::CommCategory::NodeToCollectionBcast;
   return is_collective;
 }
 

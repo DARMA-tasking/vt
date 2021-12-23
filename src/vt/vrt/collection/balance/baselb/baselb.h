@@ -47,7 +47,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/elm/elm_comm.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/objgroup/headers.h"
 
@@ -67,7 +67,7 @@ namespace lb {
 struct BaseLB {
   using ObjIDType        = balance::ElementIDStruct;
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
-  using ElementCommType  = balance::CommMapType;
+  using ElementCommType  = elm::CommMapType;
   using TransferDestType = std::tuple<ObjIDType,NodeType>;
   using TransferVecType  = std::vector<TransferDestType>;
   using TransferType     = std::map<NodeType, TransferVecType>;
@@ -114,7 +114,6 @@ struct BaseLB {
   );
 
   static LoadType loadMilli(LoadType const& load);
-  NodeType objGetNode(ObjIDType const id) const;
 
   void notifyCurrentHostNodeOfObjectsDeparting(
     TransferMsg<ObjDestinationListType>* msg

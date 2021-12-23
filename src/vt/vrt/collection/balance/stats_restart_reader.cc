@@ -47,7 +47,6 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/objgroup/manager.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/stats_data.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/decompression_input_container.h"
@@ -109,7 +108,9 @@ std::deque<std::set<ElementIDType>> StatsRestartReader::readIntoElementHistory(
   for (PhaseType phase = 0; phase < sd.node_data_.size(); phase++) {
     std::set<ElementIDType> buffer;
     for (auto const& obj : sd.node_data_.at(phase)) {
-      buffer.insert(obj.first.id);
+      if (obj.first.isMigratable()) {
+        buffer.insert(obj.first.id);
+      }
     }
     element_history.emplace_back(std::move(buffer));
   }

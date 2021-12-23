@@ -5,7 +5,7 @@
 #include <nlohmann/detail/conversions/from_json.hpp>
 #include <nlohmann/detail/conversions/to_json.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 
 template<typename, typename>
@@ -46,4 +46,4 @@ struct adl_serializer
     }
 };
 
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

@@ -46,16 +46,32 @@
 
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
+#include "vt/elm/elm_id.h"
+#include "vt/elm/elm_stats.h"
 
 namespace vt { namespace objgroup { namespace holder {
 
 struct HolderBase {
+  using ElmIDType        = elm::ElementIDStruct;
+  using ElementStatsType = elm::ElementStats;
+
   virtual ~HolderBase() = default;
   virtual bool exists() = 0;
   virtual void* getPtr() = 0;
 
   template <typename Serializer>
-  void serialize(Serializer& s) {}
+  void serialize(Serializer& s) {
+    s | stats_;
+    s | elm_id_;
+  }
+
+  ElmIDType getElmID() const { return elm_id_; }
+  void setElmID(ElmIDType in_elm_id) { elm_id_ = in_elm_id; }
+  ElementStatsType& getStats() { return stats_; }
+
+protected:
+  ElementStatsType stats_;
+  ElmIDType elm_id_ = {};
 };
 
 template <typename ObjT>

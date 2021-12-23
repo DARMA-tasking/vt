@@ -8,7 +8,7 @@
 #include <nlohmann/detail/meta/type_traits.hpp>
 #include <nlohmann/detail/value_t.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 namespace detail
 {
@@ -147,7 +147,7 @@ auto get(const nlohmann::detail::iteration_proxy_value<IteratorType>& i) -> decl
     return i.value();
 }
 }  // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt
 
 // The Addition to the STD Namespace is required to add
 // Structured Bindings Support to the iteration_proxy_value class

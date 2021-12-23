@@ -46,7 +46,6 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/node_stats.h"
@@ -249,10 +248,6 @@ void BaseLB::finalize(CountMsg* msg) {
     );
     fflush(stdout);
   }
-}
-
-NodeType BaseLB::objGetNode(ObjIDType const id) const {
-  return balance::objGetNode(id);
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

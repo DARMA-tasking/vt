@@ -49,7 +49,15 @@
 
 namespace vt { namespace objgroup {
 
+namespace holder {
+struct HolderBase;
+} /* end namespace holder */
+
 struct ObjGroupManager;
+
+namespace detail {
+holder::HolderBase* getHolderBase(HandlerType handler);
+} /* end namespace detail */
 
 void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
 
@@ -59,9 +67,6 @@ template <typename MsgT>
 void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType node);
 template <typename MsgT>
 void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(
-  MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
-);
 
 }} /* end namespace vt::objgroup */
 

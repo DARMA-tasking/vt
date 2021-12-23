@@ -152,6 +152,14 @@ inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized) {
 }
 
 template <typename Env>
+inline void envelopeSetCommStatsRecordedAboveBareHandler(
+  Env& env, bool comm_stats_recorded_above_bare_handler
+) {
+  reinterpret_cast<Envelope*>(&env)->comm_stats_recorded_above_bare_handler =
+    comm_stats_recorded_above_bare_handler;
+}
+
+template <typename Env>
 inline void envelopeSetIsLocked(Env& env, bool is_locked) {
   reinterpret_cast<Envelope*>(&env)->is_locked = is_locked;
 }

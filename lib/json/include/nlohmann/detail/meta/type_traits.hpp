@@ -10,7 +10,7 @@
 #include <nlohmann/detail/meta/detected.hpp>
 #include <nlohmann/json_fwd.hpp>
 
-namespace nlohmann
+namespace nlohmann { inline namespace vt
 {
 /*!
 @brief detail namespace with internal helper functions
@@ -392,4 +392,4 @@ struct is_constructible_tuple : std::false_type {};
 template<typename T1, typename... Args>
 struct is_constructible_tuple<T1, std::tuple<Args...>> : conjunction<std::is_constructible<T1, Args>...> {};
 }  // namespace detail
-}  // namespace nlohmann
+}} // namespace nlohmann::vt

@@ -56,29 +56,29 @@ EpochWindow::EpochWindow(EpochType epoch) {
   // easily to incoming epochs to check that they match all the control bit
   // fields. For efficiency, the window relies on the sequentiality of
   // same-typed epochs to create a semi-contiguous window of terminated epochs.
-  EpochManip::setSeq(arch_epoch,0);
+  EpochManip::setSeq(arch_epoch, 0);
   archetype_epoch_ = arch_epoch;
 
   // Set all non-control bits (sequence bits to max value) to build the max
   // epoch allowed for this archetype
   EpochType max_epoch = archetype_epoch_;
-  EpochManip::setSeq(max_epoch, (~0ull-1));
+  EpochManip::setSeq(max_epoch, static_cast<EpochType::ImplType>(~0ull-1));
 
   // The minimum epoch within this archetype always starts with the sequence
   // number at 1; this saves space for the global, collective epoch which is
   // zero. In fact, for simplicity, the global epoch is all zeros given the
   // control bit scheme
   EpochType min_epoch = archetype_epoch_;
-  EpochManip::setSeq(min_epoch, 1);
+  EpochManip::setSeq(min_epoch, 1ull);
 
-  using IntervalType = typename IntegralSet<EpochType>::IntervalType;
+  using IntervalType = typename IntegralSet<EpochType::ImplType>::IntervalType;
 
   // The allowable interval for this window
-  IntervalType interval{min_epoch, max_epoch};
+  IntervalType interval{*min_epoch, *max_epoch};
 
   // The ranged counter for allocating the next epoch which will always be
   // within the interval
-  next_epoch_ = std::make_unique<adt::RangedCounter<EpochType>>(
+  next_epoch_ = std::make_unique<adt::RangedCounter<EpochType::ImplType>>(
     interval.lower(), interval.upper()
   );
 
@@ -109,7 +109,7 @@ EpochType EpochWindow::allocateNewEpoch() {
   // Increment the next epoch counter until we find an terminated epoch that can
   // be allocated
   do {
-    EpochType next = *next_epoch_;
+    EpochType next = EpochType{*next_epoch_};
     if (terminated_epochs_.contains(next)) {
       (*next_epoch_)++;
 
@@ -122,7 +122,7 @@ EpochType EpochWindow::allocateNewEpoch() {
 
 inline bool EpochWindow::isArchetypal(EpochType epoch) {
   auto epoch_arch = epoch;
-  epoch::EpochManip::setSeq(epoch_arch,0);
+  epoch::EpochManip::setSeq(epoch_arch, 0);
   return epoch_arch == archetype_epoch_;
 }
 

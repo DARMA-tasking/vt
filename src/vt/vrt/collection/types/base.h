@@ -60,9 +60,6 @@ template <typename ColT, typename IndexT>
 struct CollectionBase : Indexable<IndexT> {
   using ProxyType = VirtualElmProxyType<ColT, IndexT>;
   using CollectionProxyType = CollectionProxy<ColT, IndexT>;
-  using IndexType = IndexT;
-  using ReduceStampType = collective::reduce::detail::ReduceStamp;
-  using ReduceSeqStampType = collective::reduce::detail::StrongSeq;
 
   CollectionBase() = default;
 
@@ -75,24 +72,6 @@ struct CollectionBase : Indexable<IndexT> {
 
   template <typename Serializer>
   void serialize(Serializer& s);
-
-  friend struct CollectionManager;
-
-  /**
-   * \brief Get the next reduce stamp and increment
-   *
-   * \return the reduce stamp
-   */
-  ReduceStampType getNextStamp();
-
-  /**
-   * \brief Zero out the reduce stamp
-   */
-  void zeroReduceStamp();
-
-protected:
-  EpochType cur_bcast_epoch_ = 0;
-  ReduceSeqStampType reduce_stamp_ = ReduceSeqStampType{1};
 };
 
 }}} /* end namespace vt::vrt::collection */

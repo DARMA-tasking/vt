@@ -49,8 +49,31 @@
 #include "vt/context/context.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/runnable/make_runnable.h"
+#include "vt/elm/elm_id.h"
+#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/phase/phase_manager.h"
+#include "vt/elm/elm_id_bits.h"
 
 namespace vt { namespace objgroup {
+
+void ObjGroupManager::startup() {
+#if vt_check_enabled(lblite)
+  // Hook to collect statistics about objgroups
+  thePhase()->registerHookCollective(phase::PhaseHook::End, []{
+    auto& objs = theObjGroup()->objs_;
+    for (auto&& obj : objs) {
+      auto holder = obj.second.get();
+      auto const& elm_id = holder->getElmID();
+      if (elm_id.id != elm::no_element_id) {
+        auto proxy = elm::ElmIDBits::getObjGroupProxy(elm_id.id, false);
+        vtAssertExpr(proxy == obj.first);
+        theNodeStats()->registerObjGroupInfo(elm_id, obj.first);
+        theNodeStats()->addNodeStats(elm_id, &holder->getStats());
+      }
+    }
+  });
+#endif
+}
 
 proxy::DefaultProxyType ObjGroupManager::getDefault() const {
   return proxy::DefaultProxyType{};
@@ -113,21 +136,57 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
   return proxy;
 }
 
+ObjGroupManager::HolderBaseType* ObjGroupManager::getHolderBase(HandlerType han) {
+  auto const ctrl = HandlerManager::getHandlerControl(han);
+  auto const type_idx = auto_registry::getAutoHandlerObjTypeIdx(han);
+  auto const node = 0;
+  auto const proxy = proxy::ObjGroupProxy::create(ctrl, type_idx, node, true);
+  vt_debug_print(
+    normal, objgroup,
+    "getHolderBase: type_idx={:x}, ctrl={:x}, han={:x}, proxy={:x}\n",
+    type_idx, ctrl, han, proxy
+  );
+  auto iter = objs_.find(proxy);
+  if (iter != objs_.end()) {
+    return iter->second.get();
+  } else {
+    for (auto&& elm : derived_to_bases_) {
+      for (auto&& base : elm.second) {
+        if (base == proxy) {
+          auto const derived = elm.first;
+          auto iter2 = objs_.find(derived);
+          if (iter2 != objs_.end()) {
+            return iter2->second.get();
+          }
+        }
+      }
+    }
+  }
+  return nullptr;
+}
+
+namespace detail {
+holder::HolderBase* getHolderBase(HandlerType handler) {
+  return theObjGroup()->getHolderBase(handler);
+}
+} /* end namespace detail */
+
+elm::ElementIDStruct ObjGroupManager::getNextElm(ObjGroupProxyType proxy) {
+  // Avoid startup races
+  if (theNodeStats()) {
+    auto const this_node = theContext()->getNode();
+    return elm::ElmIDBits::createObjGroup(proxy, this_node);
+  } else {
+    return elm::ElementIDStruct{};
+  }
+}
+
 void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
   vt_debug_print(
     verbose, objgroup,
     "dispatchObjGroup: han={:x}\n", han
   );
   return theObjGroup()->dispatch(msg,han);
-}
-
-void scheduleMsg(
-  MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
-) {
-  auto const node = theContext()->getNode();
-  runnable::makeRunnable(msg, true, han, node)
-    .withTDEpoch(epoch)
-    .enqueue();
 }
 
 }} /* end namespace vt::objgroup */
