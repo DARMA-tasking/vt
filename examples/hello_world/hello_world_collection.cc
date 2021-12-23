@@ -43,23 +43,16 @@
 
 #include <vt/transport.h>
 
+struct TestMsg : vt::vrt::collection::IndexMessage {
+
+};
+
+
 /// [Hello world collection]
 struct Hello : vt::Collection<Hello, vt::Index1D> {
-  Hello() = default;
-
-  virtual ~Hello() {
-    vtAssert(counter_ == 1, "Must be equal");
-  }
-
-  using TestMsg = vt::CollectionMessage<Hello>;
-
   void doWork(TestMsg* msg) {
     fmt::print("Hello from {}\n", this->getIndex());
-    counter_++;
   }
-
-private:
-  int32_t counter_ = 0;
 };
 
 int main(int argc, char** argv) {
@@ -73,13 +66,14 @@ int main(int argc, char** argv) {
     num_elms = atoi(argv[1]);
   }
 
+  auto range = vt::Index1D(num_elms);
+  auto proxy = vt::makeCollection<Hello>()
+    .bounds(range)
+    .bulkInsert()
+    .wait();
+
   if (this_node == 0) {
-    auto range = vt::Index1D(num_elms);
-    auto proxy = vt::makeCollectionRooted<Hello>()
-      .bounds(range)
-      .bulkInsert()
-      .wait();
-    proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
+    proxy[num_elms-1].sendNew<TestMsg, &Hello::doWork>();
   }
 
   vt::finalize();
