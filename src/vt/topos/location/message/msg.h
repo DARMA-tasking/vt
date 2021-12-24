@@ -86,6 +86,7 @@ struct LocationMsg : vt::Message {
 template <typename EntityID, typename ActiveMessageT>
 struct EntityMsg : ActiveMessageT {
   using MessageParentType = ActiveMessageT;
+  using EntityType = EntityID;
   vt_msg_serialize_if_needed_by_parent();
 
   EntityMsg() = default;

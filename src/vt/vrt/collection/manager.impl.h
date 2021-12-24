@@ -1123,7 +1123,7 @@ template <
 messaging::PendingSend CollectionManager::sendMsgNew(
   VirtualElmProxyType<ColT> const& proxy, MsgT *raw_msg
 ) {
-  using UntypedIndexType = collection::index::UntypedIndex<48>;
+  using UntypedIndexType = typename MsgT::EntityType;
   auto col_proxy = proxy.getCollectionProxy();
   auto elm_proxy = proxy.getElementProxy();
   auto idx = elm_proxy.getIndex();
