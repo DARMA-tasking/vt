@@ -2098,7 +2098,7 @@ template <typename ColT, typename IndexT>
 std::set<IndexT> CollectionManager::getLocalIndices(
   CollectionProxyWrapType<ColT> proxy
 ) {
-  auto elm_holder = findElmHolder<IndexT>(proxy);
+  auto elm_holder = findElmHolder<IndexT>(proxy.getProxy());
   std::set<IndexT> local;
   elm_holder->foreach([&](IndexT const& idx, Indexable<IndexT>*) {
     local.insert(idx);
