@@ -48,6 +48,8 @@
 #include "vt/runtime/component/diagnostic_units.h"
 #include "vt/runtime/component/diagnostic_value_format.h"
 
+#include <eng_format.hpp>
+
 #include <mpi.h>
 #include <string>
 

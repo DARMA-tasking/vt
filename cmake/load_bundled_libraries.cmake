@@ -23,6 +23,9 @@ add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 set(FMT_LIBRARY fmt)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 
+# EngFormat-Cpp always included in the build
+add_subdirectory(${PROJECT_LIB_DIR}/EngFormat-Cpp)
+
 # json library always included in the build
 set(JSON_BuildTests OFF)
 set(JSON_MultipleHeaders ON)

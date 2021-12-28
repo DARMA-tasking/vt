@@ -48,6 +48,8 @@
 #include "vt/configs/arguments/app_config.h"
 #include "vt/timing/timing.h"
 
+#include <eng_format.hpp>
+
 namespace vt { namespace tests { namespace unit {
 
 using TestTiming = TestParallelHarness;
@@ -84,6 +86,8 @@ TEST_F(TestTiming, test_time_formatting) {
     auto const t = 0.0000006918907165527;
     EXPECT_EQ(timing::getTimeWithUnits(t), "691.9 ns");
   }
+
+  EXPECT_EQ(to_engineering_string( 1230, 3, false ), "1.23 k");
 }
 
 }}} /* end namespace vt::tests::unit */

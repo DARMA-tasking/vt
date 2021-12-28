@@ -163,6 +163,10 @@ function(link_target_with_vt)
     )
   endif()
 
+  target_link_libraries(
+    ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} EngFormat-Cpp
+  )
+
   if (NOT DEFINED ARG_LINK_CHECKPOINT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_CHECKPOINT)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: checkpoint=${ARG_LINK_CHECKPOINT}")
