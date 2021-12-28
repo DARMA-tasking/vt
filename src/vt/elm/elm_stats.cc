@@ -46,6 +46,8 @@
 
 #include "vt/elm/elm_stats.h"
 
+#include "vt/config.h"
+
 namespace vt { namespace elm {
 
 void ElementStats::startTime() {
