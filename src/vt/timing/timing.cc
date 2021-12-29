@@ -64,12 +64,7 @@ std::string getTimeWithUnits(TimeType const time) {
     return std::to_string(time);
   }
 
-  using DF = vt::runtime::component::detail::DiagnosticFormatter;
-  using vt::runtime::component::detail::decimal_format;
-
-  auto constexpr unit = vt::runtime::component::DiagnosticUnit::Seconds;
-  bool constexpr align = false;
-  return DF::getValueWithUnits(time, unit, decimal_format, align);
+  return to_engineering_string(time, 3, eng_exponential, "s");
 }
 
 }} /* end namespace vt::timing */

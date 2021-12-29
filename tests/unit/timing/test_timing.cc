@@ -59,35 +59,33 @@ TEST_F(TestTiming, test_time_formatting) {
 
   {
     auto const t = 15664645.400691890716;
-    EXPECT_EQ(timing::getTimeWithUnits(t), "15664645.4 sec");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "15.7e6 s");
   }
 
   {
     auto const t = 4.0006918907165527344;
-    EXPECT_EQ(timing::getTimeWithUnits(t), "4.0 sec");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "4.00e0 s");
   }
 
   {
     auto const t = 0.0691890716552734423;
-    EXPECT_EQ(timing::getTimeWithUnits(t), "69.2 ms");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "69.2e-3 s");
   }
 
   {
     auto const t = -0.0691890716552734423;
-    EXPECT_EQ(timing::getTimeWithUnits(t), "-69.2 ms");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "-69.2e-3 s");
   }
 
   {
     auto const t = 0.0006918907165527344;
-    EXPECT_EQ(timing::getTimeWithUnits(t), "691.9 μs");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "692e-6 s");
   }
 
   {
     auto const t = 0.0000006918907165527;
-    EXPECT_EQ(timing::getTimeWithUnits(t), "691.9 ns");
+    EXPECT_EQ(timing::getTimeWithUnits(t), "692e-9 s");
   }
-
-  EXPECT_EQ(to_engineering_string( 1230, 3, false ), "1.23 k");
 }
 
 }}} /* end namespace vt::tests::unit */
