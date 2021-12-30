@@ -52,8 +52,6 @@ namespace vt { namespace tests { namespace unit {
 using TestTiming = TestHarness;
 
 TEST_F(TestTiming, test_time_formatting) {
-  theConfig()->vt_time_units = true;
-
   {
     auto const t = 15664645.400691890716;
     EXPECT_EQ(timing::getTimeWithUnits(t), "15.7e6 s");

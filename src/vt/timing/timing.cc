@@ -43,15 +43,9 @@
 
 #include "vt/timing/timing.h"
 
-#include "vt/configs/arguments/app_config.h"
-#include "vt/configs/debug/debug_print.h"
-#include "vt/runtime/component/diagnostic_units.h"
-#include "vt/runtime/component/diagnostic_value_format.h"
-
 #include <eng_format.hpp>
 
 #include <mpi.h>
-#include <string>
 
 namespace vt { namespace timing {
 
@@ -60,10 +54,6 @@ TimeType getCurrentTime() {
 }
 
 std::string getTimeWithUnits(TimeType const time) {
-  if (not debug::preConfig()->vt_time_units) {
-    return std::to_string(time);
-  }
-
   return to_engineering_string(time, 3, eng_exponential, "s");
 }
 
