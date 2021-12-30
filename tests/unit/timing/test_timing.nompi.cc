@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                test_timing.cc
+//                             test_timing.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -43,16 +43,13 @@
 
 #include <gtest/gtest.h>
 
-#include "test_parallel_harness.h"
+#include "test_harness.h"
 
-#include "vt/configs/arguments/app_config.h"
 #include "vt/timing/timing.h"
-
-#include <eng_format.hpp>
 
 namespace vt { namespace tests { namespace unit {
 
-using TestTiming = TestParallelHarness;
+using TestTiming = TestHarness;
 
 TEST_F(TestTiming, test_time_formatting) {
   theConfig()->vt_time_units = true;
