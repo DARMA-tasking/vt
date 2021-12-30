@@ -31,7 +31,7 @@ variables:
   CODE_COVERAGE: 1
   VT_LB: 1
   VT_TRACE: 1
-  VT_TRACE_RT: 0
+  VT_TRACE_RT: 1
   VT_TRACE_ONLY: 1
   VT_MIMALLOC: 0
   VT_DOCS: 0
@@ -170,7 +170,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean'
+          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean-noinstall'
       - task: Bash@3
         displayName: Disk space
         inputs:
@@ -183,7 +183,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'run ubuntu-cpp-clean'
+          dockerComposeCommand: 'run ubuntu-cpp-clean-noinstall'
         env:
           CODECOV_TOKEN: $(codecov_token)
       - task: Bash@3
@@ -226,7 +226,7 @@ stages:
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'push ubuntu-cpp-clean'
+          dockerComposeCommand: 'push ubuntu-cpp-clean-noinstall'
       - task: Bash@3
         displayName: Disk space
         inputs:
