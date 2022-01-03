@@ -16,8 +16,6 @@ function(create_trace_only_target)
     vt/runtime/component/diagnostic_types.h vt/runtime/component/diagnostic_units.h
     vt/runtime/component/diagnostic_value.h vt/runtime/component/diagnostic_erased_value.h
     vt/runtime/component/diagnostic_value_base.h vt/runtime/component/diagnostic_meter.h
-    vt/runtime/component/diagnostic_enum_format.h
-    vt/runtime/component/diagnostic_value_format.h
     vt/runtime/component/meter/counter.h vt/runtime/component/meter/stats_pack.h
     vt/runtime/component/meter/gauge.h vt/runtime/component/meter/timer.h
     vt/runtime/component/meter/counter_gauge.h
@@ -54,7 +52,6 @@ function(create_trace_only_target)
     vt/utils/bits/bits_packer.impl.h vt/utils/adt/union.h
     vt/utils/tls/tls.h vt/utils/tls/std_tls.h vt/utils/tls/null_tls.h
     vt/utils/tls/tls.impl.h vt/utils/adt/histogram_approx.h
-    vt/utils/memory/memory_units.h
 
     # vt/collective
     vt/collective/basic.h
@@ -71,8 +68,6 @@ function(create_trace_only_target)
     ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_lite.cc ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_user_event.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_registry.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/pmpi_component.cc ${CMAKE_CURRENT_SOURCE_DIR}/vt/runtime/mpi_access.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/vt/runtime/component/diagnostic_enum_format.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/vt/utils/memory/memory_units.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/vt/timing/timing.cc ${PROJECT_BIN_DIR}/src/vt/configs/generated/vt_git_revision.cc
     ${PROJECT_BIN_DIR}/src/vt/pmpi/generated/mpiwrap.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/vt/context/context.cc ${CMAKE_CURRENT_SOURCE_DIR}/vt/utils/demangle/demangle.cc
