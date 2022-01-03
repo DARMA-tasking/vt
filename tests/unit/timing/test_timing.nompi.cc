@@ -83,4 +83,10 @@ TEST_F(TestTiming, test_time_formatting) {
   }
 }
 
+TEST_F(TestTiming, test_time_wrapper) {
+  timing::TimeWrapper wrapper;
+  wrapper.time_ = 3.14;
+  EXPECT_EQ(fmt::format("{}", wrapper), "3.14e0 s");
+}
+
 }}} /* end namespace vt::tests::unit */

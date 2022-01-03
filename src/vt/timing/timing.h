@@ -46,6 +46,8 @@
 
 #include <string>
 
+#include <fmt/core.h>
+
 #include "vt/timing/timing_type.h"
 
 namespace vt { namespace timing {
@@ -66,6 +68,30 @@ TimeType getCurrentTime();
   */
 std::string getTimeWithUnits(TimeType const time);
 
+struct TimeWrapper {
+  double time_;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | time_;
+  }
+};
+
 }} /* end namespace vt::timing */
+
+template<>
+struct fmt::formatter<vt::timing::TimeWrapper> {
+  template<typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) {
+    return ctx.begin();
+  }
+
+  template<typename FormatContext>
+  auto format(::vt::timing::TimeWrapper const& t, FormatContext& ctx) {
+    return fmt::format_to(
+      ctx.out(), "{}", ::vt::timing::getTimeWithUnits(t.time_)
+    );
+  }
+};
 
 #endif /*INCLUDED_VT_TIMING_TIMING_H*/
