@@ -49,7 +49,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace vt { namespace util { namespace json {
 

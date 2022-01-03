@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include "fmt/core.h"
+#include <fmt/core.h>
 
 #include "vt/configs/error/stack_out.h"
 

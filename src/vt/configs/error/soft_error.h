@@ -57,7 +57,7 @@
 
 #include <string>
 
-#include "fmt/core.h"
+#include <fmt/core.h>
 
 namespace vt {
 

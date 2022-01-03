@@ -54,7 +54,7 @@
 #include <tuple>
 #include <type_traits>
 
-#include "fmt/core.h"
+#include <fmt/core.h>
 
 namespace vt { namespace error {
 
