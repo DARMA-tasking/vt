@@ -79,8 +79,10 @@ struct TimeWrapper {
 
 }} /* end namespace vt::timing */
 
+namespace fmt {
+
 template<>
-struct fmt::formatter<vt::timing::TimeWrapper> {
+struct formatter<::vt::timing::TimeWrapper> {
   template<typename ParseContext>
   constexpr auto parse(ParseContext& ctx) {
     return ctx.begin();
@@ -93,5 +95,7 @@ struct fmt::formatter<vt::timing::TimeWrapper> {
     );
   }
 };
+
+} /* end namespace fmt */
 
 #endif /*INCLUDED_VT_TIMING_TIMING_H*/
