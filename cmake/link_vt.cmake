@@ -24,6 +24,7 @@ function(link_target_with_vt)
     LINK_ATOMIC
     LINK_MPI
     LINK_FMT
+    LINK_ENG_FORMAT
     LINK_ZLIB
     LINK_FCONTEXT
     LINK_CHECKPOINT
@@ -163,9 +164,14 @@ function(link_target_with_vt)
     )
   endif()
 
-  target_link_libraries(
-    ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} EngFormat-Cpp
-  )
+  if (NOT DEFINED ARG_LINK_ENG_FORMAT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_ENG_FORMAT)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: EngFormat-Cpp=${ARG_LINK_ENG_FORMAT}")
+    endif()
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${ENG_FORMAT_LIBRARY}
+    )
+  endif()
 
   if (NOT DEFINED ARG_LINK_CHECKPOINT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_CHECKPOINT)
     if (${ARG_DEBUG_LINK})

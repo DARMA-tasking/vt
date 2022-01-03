@@ -119,6 +119,7 @@ function(create_trace_only_target)
     TARGET ${VT_TRACE_LIB}
     LINK_VT_LIB
     LINK_FMT 1
+    LINK_ENG_FORMAT 1
     LINK_ZLIB 1
     LINK_MPI 1
   )

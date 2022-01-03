@@ -24,6 +24,7 @@ set(FMT_LIBRARY fmt)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 
 # EngFormat-Cpp always included in the build
+set(ENG_FORMAT_LIBRARY EngFormat-Cpp)
 add_subdirectory(${PROJECT_LIB_DIR}/EngFormat-Cpp)
 
 # json library always included in the build
