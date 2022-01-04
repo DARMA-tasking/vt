@@ -43,7 +43,7 @@
 
 #include "vt/timing/timing.h"
 
-#include <eng_format.hpp>
+#include <EngFormat-Cpp/eng_format.hpp>
 
 #include <mpi.h>
 

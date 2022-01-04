@@ -99,7 +99,7 @@ function(create_trace_only_target)
   )
 
   install(
-    FILES "${CMAKE_CURRENT_SOURCE_DIR}/../lib/EngFormat-Cpp/include/eng_format.hpp"
+    FILES "${CMAKE_CURRENT_SOURCE_DIR}/../lib/EngFormat-Cpp/include/EngFormat-Cpp/eng_format.hpp"
     DESTINATION "include/vt-trace/EngFormat-Cpp"
   )
 
