@@ -1,1 +1,2 @@
 leak:MPIDI_CH3U_Receive_data_unexpected
+leak:libmpi.so

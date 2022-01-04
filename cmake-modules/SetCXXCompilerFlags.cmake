@@ -23,7 +23,7 @@ elseif (NOT ${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
 endif ()
 
 if (vt_asan_enabled)
-  list(APPEND TARGET_PUBLIC_CXX_FLAGS -fsanitize=address -fno-omit-frame-pointer)
+  list(APPEND TARGET_PUBLIC_CXX_FLAGS -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls)
 endif()
 
 if (vt_ubsan_enabled)
