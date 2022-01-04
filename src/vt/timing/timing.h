@@ -68,30 +68,21 @@ TimeType getCurrentTime();
   */
 std::string getTimeWithUnits(TimeType const time);
 
-struct TimeWrapper {
-  double time_;
-
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | time_;
-  }
-};
-
 }} /* end namespace vt::timing */
 
 namespace fmt {
 
 template<>
-struct formatter<::vt::timing::TimeWrapper> {
+struct formatter<::vt::TimeTypeWrapper> {
   template<typename ParseContext>
   constexpr auto parse(ParseContext& ctx) {
     return ctx.begin();
   }
 
   template<typename FormatContext>
-  auto format(::vt::timing::TimeWrapper const& t, FormatContext& ctx) {
+  auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) {
     return fmt::format_to(
-      ctx.out(), "{}", ::vt::timing::getTimeWithUnits(t.time_)
+      ctx.out(), "{}", ::vt::timing::getTimeWithUnits(t.seconds())
     );
   }
 };
