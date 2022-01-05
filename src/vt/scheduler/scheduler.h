@@ -116,6 +116,14 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using EventTriggerContType = std::vector<TriggerContainerType>;
   using RunnablePtrType      = std::unique_ptr<runnable::RunnableNew>;
 
+  struct SchedulerLoopGuard {
+    SchedulerLoopGuard(Scheduler* scheduler);
+    ~SchedulerLoopGuard();
+
+  private:
+    Scheduler* scheduler_ = nullptr;
+  };
+
 # if vt_check_enabled(priorities)
   using UnitType             = PriorityUnit;
 # else

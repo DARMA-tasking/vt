@@ -289,6 +289,15 @@ void Scheduler::runSchedulerOnceImpl(bool msg_only) {
   }
 }
 
+Scheduler::SchedulerLoopGuard::SchedulerLoopGuard(Scheduler* scheduler)
+  : scheduler_{scheduler} {
+  scheduler_->triggerEvent(SchedulerEventType::BeginSchedulerLoop);
+}
+
+Scheduler::SchedulerLoopGuard::~SchedulerLoopGuard() {
+  scheduler_->triggerEvent(SchedulerEventType::EndSchedulerLoop);
+}
+
 void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
   // This loop construct can run either in a top-level or nested context.
   // 1. In a top-level context the idle time will encompass the time not
@@ -298,7 +307,7 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
   //    as the parent context is "not idle". Likewise, no 'between scheduler'
   //    event is started.
 
-  triggerEvent(SchedulerEventType::BeginSchedulerLoop);
+  SchedulerLoopGuard loopGuard{this};
 
   // Ensure to immediately enter an idle state if such applies.
   // The scheduler call ends idle as picking up work.
@@ -318,8 +327,6 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
     is_idle = false;
     triggerEvent(SchedulerEventType::EndIdle);
   }
-
-  triggerEvent(SchedulerEventType::EndSchedulerLoop);
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {
