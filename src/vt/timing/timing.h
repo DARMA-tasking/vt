@@ -60,7 +60,7 @@ namespace vt { namespace timing {
 TimeType getCurrentTime();
 
 /**
-  * \brief Format a time value to a \c std::string with units
+  * \brief Format a time value into exponential notation with unit (seconds)
   *
   * \param[in] time time in seconds
   *
