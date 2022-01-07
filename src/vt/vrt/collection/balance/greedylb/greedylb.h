@@ -130,12 +130,11 @@ private:
 namespace std {
 
 template <>
-struct hash<::vt::vrt::collection::lb::DataDistStrategy> {
-  size_t operator()(::vt::vrt::collection::lb::DataDistStrategy const& in) const {
-    using under = std::underlying_type<
-      ::vt::vrt::collection::lb::DataDistStrategy
-    >::type;
-    return std::hash<under>()(static_cast<under>(in));
+struct hash<vt::vrt::collection::lb::DataDistStrategy> {
+  size_t operator()(vt::vrt::collection::lb::DataDistStrategy const& in) const {
+    using UnderType =
+      std::underlying_type<vt::vrt::collection::lb::DataDistStrategy>::type;
+    return std::hash<UnderType>()(static_cast<UnderType>(in));
   }
 };
 
