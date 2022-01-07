@@ -69,12 +69,11 @@ enum struct LBType : int8_t {
 
 namespace std {
 
-using LBTypeType = vt::vrt::collection::balance::LBType;
-
 template <>
-struct hash<LBTypeType> {
-  size_t operator()(LBTypeType const& in) const {
-    using LBUnderType = typename std::underlying_type<LBTypeType>::type;
+struct hash<vt::vrt::collection::balance::LBType> {
+  size_t operator()(vt::vrt::collection::balance::LBType const& in) const {
+    using LBUnderType =
+      std::underlying_type<vt::vrt::collection::balance::LBType>::type;
     auto const val = static_cast<LBUnderType>(in);
     return std::hash<LBUnderType>()(val);
   }

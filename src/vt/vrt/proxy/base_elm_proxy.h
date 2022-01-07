@@ -88,18 +88,17 @@ protected:
 
 }}} /* end namespace vt::vrt::collection */
 
-template <typename IndexT>
-using ElmType = ::vt::vrt::collection::BaseElmProxy<IndexT>;
-
 namespace std {
-  template <typename IndexT>
-  struct hash<ElmType<IndexT>> {
-    size_t operator()(ElmType<IndexT> const& in) const {
-      return std::hash<typename ElmType<IndexT>::IndexType>()(
-        in.getIndex()
-      );
-    }
-  };
+
+template <typename IndexT>
+struct hash<vt::vrt::collection::BaseElmProxy<IndexT>> {
+  size_t operator()(vt::vrt::collection::BaseElmProxy<IndexT> const& in) const {
+    using IndexType =
+      typename vt::vrt::collection::BaseElmProxy<IndexT>::IndexType;
+    return std::hash<IndexType>()(in.getIndex());
+  }
+};
+
 }
 
 #endif /*INCLUDED_VT_VRT_PROXY_BASE_ELM_PROXY_H*/
