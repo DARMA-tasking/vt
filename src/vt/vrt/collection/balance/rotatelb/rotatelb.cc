@@ -76,11 +76,11 @@ void RotateLB::runLB(TimeType) {
   }
 
   for (auto obj : *load_model_) {
-    auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
+    TimeTypeWrapper const load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
     vt_debug_print(
       terse, lb,
       "\t RotateLB::migrating object to: obj={}, load={}, to_node={}\n",
-      obj, timing::getTimeWithUnits(load), next_node
+      obj, load, next_node
     );
     if (obj.isMigratable()) {
       migrateObjectTo(obj, next_node);

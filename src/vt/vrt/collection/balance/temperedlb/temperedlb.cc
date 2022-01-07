@@ -449,9 +449,8 @@ void TemperedLB::runLB(TimeType total_load) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
-      timing::getTimeWithUnits(avg), timing::getTimeWithUnits(max),
-      timing::getTimeWithUnits(pole), imb, timing::getTimeWithUnits(load),
-      should_lb
+      TimeTypeWrapper(avg), TimeTypeWrapper(max), TimeTypeWrapper(pole), imb,
+      TimeTypeWrapper(load), should_lb
     );
   }
 
@@ -503,8 +502,8 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         normal, temperedlb,
         "TemperedLB::doLBStages: (before) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
-        trial_, iter_, num_iters_, timing::getTimeWithUnits(this_load),
-        timing::getTimeWithUnits(this_new_load_)
+        trial_, iter_, num_iters_, TimeTypeWrapper(this_load),
+        TimeTypeWrapper(this_new_load_)
       );
 
       if (isOverloaded(this_new_load_)) {
@@ -530,8 +529,8 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         verbose, temperedlb,
         "TemperedLB::doLBStages: (after) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
-        trial_, iter_, num_iters_, timing::getTimeWithUnits(this_load),
-        timing::getTimeWithUnits(this_new_load_)
+        trial_, iter_, num_iters_, TimeTypeWrapper(this_load),
+        TimeTypeWrapper(this_new_load_)
       );
 
       if (rollback_ || theConfig()->vt_debug_temperedlb || (iter_ == num_iters_ - 1)) {
@@ -612,9 +611,9 @@ void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
       terse, temperedlb,
       "TemperedLB::loadStatsHandler: trial={} iter={} max={} min={} "
       "avg={} pole={} imb={:0.4f}\n",
-      trial_, iter_, timing::getTimeWithUnits(in.max()),
-      timing::getTimeWithUnits(in.min()), timing::getTimeWithUnits(in.avg()),
-      timing::getTimeWithUnits(
+      trial_, iter_, TimeTypeWrapper(in.max()),
+      TimeTypeWrapper(in.min()), TimeTypeWrapper(in.avg()),
+      TimeTypeWrapper(
         stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max)),
       in.I()
     );
@@ -648,7 +647,7 @@ void TemperedLB::informAsync() {
     "TemperedLB::informAsync: starting inform phase: trial={}, iter={}, "
     "k_max={}, is_underloaded={}, is_overloaded={}, load={}\n",
     trial_, iter_, k_max_, is_underloaded_, is_overloaded_,
-    timing::getTimeWithUnits(this_new_load_)
+    TimeTypeWrapper(this_new_load_)
   );
 
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
@@ -1094,8 +1093,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         vt_debug_print(
           normal, temperedlb,
           "TemperedLB::decide: over_avg={}, single_obj_load={}\n",
-          timing::getTimeWithUnits(over_avg),
-          timing::getTimeWithUnits(cur_objs[ordered_obj_ids[0]])
+          TimeTypeWrapper(over_avg),
+          TimeTypeWrapper(cur_objs[ordered_obj_ids[0]])
         );
       }
     }
@@ -1155,8 +1154,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         vt_debug_print(
           normal, temperedlb,
           "TemperedLB::decide: over_avg={}, marginal_obj_load={}\n",
-          timing::getTimeWithUnits(over_avg),
-          timing::getTimeWithUnits(cur_objs[ordered_obj_ids[0]])
+          TimeTypeWrapper(over_avg),
+          TimeTypeWrapper(cur_objs[ordered_obj_ids[0]])
         );
       }
     }
@@ -1254,9 +1253,9 @@ void TemperedLB::decide() {
           selected_load,
           obj_id.id,
           obj_id.getHomeNode(),
-          timing::getTimeWithUnits(obj_load),
-          timing::getTimeWithUnits(target_max_load_),
-          timing::getTimeWithUnits(this_new_load_),
+          TimeTypeWrapper(obj_load),
+          TimeTypeWrapper(target_max_load_),
+          TimeTypeWrapper(this_new_load_),
           eval
         );
 

@@ -223,10 +223,10 @@ void PhaseManager::setStartTime() {
 
 void PhaseManager::printSummary() {
   if (theContext()->getNode() == 0 and cur_phase_ != 0) {
-    auto time = timing::getCurrentTime() - start_time_;
+    TimeTypeWrapper const time = timing::getCurrentTime() - start_time_;
     vt_print(
       phase, "PhaseManager::printSummary, phase={}, time={}\n",
-      cur_phase_, timing::getTimeWithUnits(time)
+      cur_phase_, time
     );
   }
 }

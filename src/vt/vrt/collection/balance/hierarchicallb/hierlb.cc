@@ -153,7 +153,7 @@ void HierarchicalLB::inputParams(balance::SpecEntry* spec) {
   }
 }
 
-void HierarchicalLB::setupTree(double const threshold) {
+void HierarchicalLB::setupTree(TimeTypeWrapper const threshold) {
   vtAssert(
     tree_setup == false,
     "Tree must not already be set up when is this called"
@@ -162,12 +162,12 @@ void HierarchicalLB::setupTree(double const threshold) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  this_threshold = threshold;
+  this_threshold = threshold.seconds();
 
   vt_debug_print(
     terse, hierlb,
     "HierarchicalLB: setupTree: threshold={}\n",
-    timing::getTimeWithUnits(threshold)
+    threshold
   );
 
   for (NodeType node = 0; node < hierlb_nary; node++) {
@@ -265,10 +265,11 @@ void HierarchicalLB::loadStats() {
   if (this_node == 0) {
     vt_print(
       hierlb,
-      "loadStats: load={:.2f}, total={:.2f}, avg={:.2f}, I={:.2f},"
+      "loadStats: load={}, total={}, avg={}, I={:.2f},"
       "should_lb={}, auto={}, threshold={}\n",
-      this_load, total_load, avg_load, I, should_lb, auto_threshold,
-      this_threshold
+      TimeTypeWrapper(this_load / 1000), TimeTypeWrapper(total_load / 1000),
+      TimeTypeWrapper(avg_load / 1000), I, should_lb, auto_threshold,
+      TimeTypeWrapper(this_threshold / 1000)
     );
     fflush(stdout);
   }
@@ -304,8 +305,8 @@ void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
     normal, hierlb,
     "loadOverBin: this_load_begin={}, this_load={}, threshold={}: "
     "adding unit: bin={}, milli={}\n",
-    timing::getTimeWithUnits(this_load_begin),
-    timing::getTimeWithUnits(this_load), timing::getTimeWithUnits(threshold),
+    TimeTypeWrapper(this_load_begin / 1000),
+    TimeTypeWrapper(this_load / 1000), TimeTypeWrapper(threshold / 1000),
     bin, obj_time_milli
   );
 }
@@ -317,8 +318,8 @@ void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
     normal, hierlb,
     "calcLoadOver: this_load={}, avg_load={}, threshold={}, "
     "strategy={}\n",
-    timing::getTimeWithUnits(this_load), timing::getTimeWithUnits(getAvgLoad()),
-    timing::getTimeWithUnits(threshold),
+    TimeTypeWrapper(this_load / 1000), TimeTypeWrapper(getAvgLoad() / 1000),
+    TimeTypeWrapper(threshold / 1000),
     extract == HeapExtractEnum::LoadOverLessThan ? "LoadOverLessThan" :
     extract == HeapExtractEnum::LoadOverGreaterThan ? "LoadOverGreaterThan" :
     extract == HeapExtractEnum::LoadOverRandom ? "LoadOverRandom" :
@@ -415,7 +416,7 @@ void HierarchicalLB::downTree(
         "downTree: from={}, taken_bin={}, taken_bin_count={}, "
         "total_taken_load={}\n",
         from, item.first, item.second.size(),
-        timing::getTimeWithUnits(total_taken_load)
+        TimeTypeWrapper(total_taken_load / 1000)
       );
 
       this_load += total_taken_load;
@@ -424,9 +425,8 @@ void HierarchicalLB::downTree(
     vt_debug_print(
       normal, hierlb,
       "downTree: this_load_begin={}, new load profile={}, avg_load={}\n",
-      timing::getTimeWithUnits(this_load_begin),
-      timing::getTimeWithUnits(this_load),
-      timing::getTimeWithUnits(getAvgLoad())
+      TimeTypeWrapper(this_load_begin / 1000),
+      TimeTypeWrapper(this_load / 1000), TimeTypeWrapper(getAvgLoad() / 1000)
     );
 
     startMigrations();
@@ -466,11 +466,11 @@ void HierarchicalLB::lbTreeUp(
     "lbTreeUp: child={}, child_load={}, child_size={}, "
     "child_msgs={}, children.size()={}, agg_node_size={}, "
     "avg_load={}, child_avg={}, incoming load.size={}\n",
-    child, timing::getTimeWithUnits(child_load), child_size, child_msgs+1,
+    child, TimeTypeWrapper(child_load / 1000), child_size, child_msgs+1,
     children.size(), agg_node_size + child_size,
-    timing::getTimeWithUnits(getAvgLoad()),
-    timing::getTimeWithUnits(child_load/child_size),
-    timing::getTimeWithUnits(load.size())
+    TimeTypeWrapper(getAvgLoad() / 1000),
+    TimeTypeWrapper(child_load/child_size/1000),
+    load.size()
   );
 
   LoadType total_child_load = 0.0f;
@@ -543,8 +543,8 @@ void HierarchicalLB::lbTreeUp(
       vt_debug_print(
         normal, hierlb,
         "lbTreeUp: reached root!: total_load={}, avg={}\n",
-        timing::getTimeWithUnits(total_child_load),
-        timing::getTimeWithUnits(total_child_load/agg_node_size)
+        TimeTypeWrapper(total_child_load / 1000),
+        TimeTypeWrapper(total_child_load/agg_node_size/1000)
       );
       sendDownTree();
     } else {
@@ -567,7 +567,7 @@ HierLBChild* HierarchicalLB::findMinChild() {
   vt_debug_print(
     normal, hierlb,
     "findMinChild, cur->node={}, load={}\n",
-    cur->node, timing::getTimeWithUnits(cur->cur_load)
+    cur->node, TimeTypeWrapper(cur->cur_load / 1000)
   );
 
   for (auto&& c : children) {
@@ -576,15 +576,15 @@ HierLBChild* HierarchicalLB::findMinChild() {
     vt_debug_print(
       verbose, hierlb,
       "\t findMinChild: CUR node={}, node_size={}, load={}, rel-load={}\n",
-      cur->node, cur->node_size, timing::getTimeWithUnits(cur->cur_load),
-      timing::getTimeWithUnits(cur_load)
+      cur->node, cur->node_size, TimeTypeWrapper(cur->cur_load / 1000),
+      TimeTypeWrapper(cur_load / 1000)
     );
     vt_debug_print(
       verbose, hierlb,
       "\t findMinChild: C node={}, node_size={}, load={}, rel-load={}\n",
       c.second->node, c.second->node_size,
-      timing::getTimeWithUnits(c.second->cur_load),
-      timing::getTimeWithUnits(load)
+      TimeTypeWrapper(c.second->cur_load / 1000),
+      TimeTypeWrapper(load / 1000)
     );
     if (load < cur_load && cur->is_live) {
       cur = c.second.get();
@@ -624,7 +624,8 @@ void HierarchicalLB::sendDownTree() {
         vt_debug_print(
           verbose, hierlb,
           "\t sendDownTree: distribute: child={}, cur_load={}, time={}\n",
-          c->node, c->cur_load, cIter->first
+          c->node, TimeTypeWrapper(c->cur_load / 1000),
+          TimeTypeWrapper(cIter->first)
        );
 
         // @todo agglomerate units into this bin together to increase efficiency
@@ -695,7 +696,8 @@ void HierarchicalLB::distributeAmoungChildren() {
       print_ptr(c),
       c ? c->node : -1,
       c ? c->cur_load : -1.0,
-      weight, getAvgLoad(), threshold
+      weight, TimeTypeWrapper(getAvgLoad() / 1000),
+      TimeTypeWrapper(threshold / 1000)
     );
 
     if (c == nullptr || c->cur_load > threshold || weight == 0) {
@@ -705,8 +707,8 @@ void HierarchicalLB::distributeAmoungChildren() {
         vt_debug_print(
           verbose, hierlb,
           "\t Up: distribute: child={}, cur_load={}, time={}\n",
-          c->node, timing::getTimeWithUnits(c->cur_load),
-          timing::getTimeWithUnits(cIter->first)
+          c->node, TimeTypeWrapper(c->cur_load / 1000),
+          TimeTypeWrapper(cIter->first)
         );
 
         // @todo agglomerate units into this bin together to increase efficiency
@@ -739,7 +741,7 @@ void HierarchicalLB::distributeAmoungChildren() {
       verbose, hierlb,
       "distributeAmoungChildren: parent={}, child={}. is_live={}, size={}, "
       "load={}\n",
-      parent, node, is_live, node_size, timing::getTimeWithUnits(load)
+      parent, node, is_live, node_size, TimeTypeWrapper(load / 1000)
     );
     if (is_live) {
       total_child_load += load;

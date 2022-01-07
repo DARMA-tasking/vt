@@ -63,7 +63,7 @@ struct ElementStats {
 
   void startTime();
   void stopTime();
-  void addTime(TimeType const& time);
+  void addTime(TimeTypeWrapper const& time);
 
   void sendToEntity(ElementIDStruct to, ElementIDStruct from, double bytes);
   void sendComm(elm::CommKey key, double bytes);
