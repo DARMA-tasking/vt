@@ -46,6 +46,7 @@
 
 #include <string>
 
+#include <EngFormat-Cpp/eng_format.hpp>
 #include <fmt/core.h>
 
 #include "vt/timing/timing_type.h"
@@ -58,15 +59,6 @@ namespace vt { namespace timing {
   * \return current time in seconds
   */
 TimeType getCurrentTime();
-
-/**
-  * \brief Format a time value into exponential notation with unit (seconds)
-  *
-  * \param[in] time time in seconds
-  *
-  * \return pretty-printed \c std::string
-  */
-std::string getTimeWithUnits(TimeType const time);
 
 }} /* end namespace vt::timing */
 
@@ -82,7 +74,8 @@ struct formatter<::vt::TimeTypeWrapper> {
   template<typename FormatContext>
   auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) {
     return fmt::format_to(
-      ctx.out(), "{}", ::vt::timing::getTimeWithUnits(t.seconds())
+      ctx.out(), "{}",
+      to_engineering_string(t.seconds(), 3, eng_exponential, "s")
     );
   }
 };

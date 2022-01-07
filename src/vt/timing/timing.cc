@@ -43,7 +43,6 @@
 
 #include "vt/timing/timing.h"
 
-#include <EngFormat-Cpp/eng_format.hpp>
 
 #include <mpi.h>
 
@@ -51,10 +50,6 @@ namespace vt { namespace timing {
 
 TimeType getCurrentTime() {
   return MPI_Wtime();
-}
-
-std::string getTimeWithUnits(TimeType const time) {
-  return to_engineering_string(time, 3, eng_exponential, "s");
 }
 
 }} /* end namespace vt::timing */
