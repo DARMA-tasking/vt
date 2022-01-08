@@ -113,11 +113,9 @@ namespace std {
 
 template <>
 struct hash<vt::collective::reduce::detail::TagPair> {
-  size_t operator()(
-    vt::collective::reduce::detail::TagPair const& in
-  ) const {
+  size_t operator()(vt::collective::reduce::detail::TagPair const& in) const {
     return std::hash<vt::TagType>()(in.first()) ^
-           std::hash<vt::TagType>()(in.second());
+      std::hash<vt::TagType>()(in.second());
   }
 };
 

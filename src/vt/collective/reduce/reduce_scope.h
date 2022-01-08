@@ -261,11 +261,9 @@ namespace std {
 
 template <>
 struct hash<vt::collective::reduce::detail::ReduceScope> {
-  size_t operator()(
-    vt::collective::reduce::detail::ReduceScope const& in
-  ) const {
-    using ValueType =
-      typename vt::collective::reduce::detail::ReduceScope::ValueType;
+  size_t
+  operator()(vt::collective::reduce::detail::ReduceScope const& in) const {
+    using ValueType = vt::collective::reduce::detail::ReduceScope::ValueType;
     return std::hash<ValueType>()(in.get());
   }
 };

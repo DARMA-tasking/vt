@@ -166,7 +166,7 @@ template <>
 struct hash<vt::vrt::collection::lb::Statistic> {
   size_t operator()(vt::vrt::collection::lb::Statistic const& in) const {
     using StatisticUnderType =
-      typename std::underlying_type<vt::vrt::collection::lb::Statistic>::type;
+      std::underlying_type<vt::vrt::collection::lb::Statistic>::type;
     auto const val = static_cast<StatisticUnderType>(in);
     return std::hash<StatisticUnderType>()(val);
   }

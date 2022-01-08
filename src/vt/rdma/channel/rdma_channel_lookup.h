@@ -85,18 +85,17 @@ operator==(ChannelLookup const& c1, ChannelLookup const& c2) {
 }} //end namespace vt::rdma
 
 namespace std {
-  using RDMA_ChannelLookupType = vt::rdma::ChannelLookup;
 
-  template <>
-  struct hash<RDMA_ChannelLookupType> {
-    size_t operator()(RDMA_ChannelLookupType const& in) const {
-      auto const& combined =
-        std::hash<vt::RDMA_HandleType>()(in.handle) ^
-        std::hash<vt::NodeType>()(in.target) ^
-        std::hash<vt::NodeType>()(in.non_target);
-      return combined;
-    }
-  };
+template <>
+struct hash<vt::rdma::ChannelLookup> {
+  size_t operator()(vt::rdma::ChannelLookup const& in) const {
+    auto const& combined = std::hash<vt::RDMA_HandleType>()(in.handle) ^
+      std::hash<vt::NodeType>()(in.target) ^
+      std::hash<vt::NodeType>()(in.non_target);
+    return combined;
+  }
+};
+
 }
 
 #endif /*INCLUDED_VT_RDMA_CHANNEL_RDMA_CHANNEL_LOOKUP_H*/

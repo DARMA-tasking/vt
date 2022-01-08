@@ -113,18 +113,20 @@ template <typename ColT, typename IndexT>
 using ElmProxyType = ::vt::vrt::collection::VrtElmProxy<ColT, IndexT>;
 
 namespace std {
+
 template <typename ColT, typename IndexT>
 struct hash<ElmProxyType<ColT, IndexT>> {
   size_t operator()(ElmProxyType<ColT, IndexT> const& in) const {
-    return
-      std::hash<typename ElmProxyType<ColT, IndexT>::CollectionProxyType>()(
-        in.getCollectionProxy()
-      ) +
-      std::hash<typename ElmProxyType<ColT, IndexT>::ElementProxyType>()(
-        in.getElementProxy()
-      );
+    using CollectionProxyType =
+      typename ElmProxyType<ColT, IndexT>::CollectionProxyType;
+    using ElementProxyType =
+      typename ElmProxyType<ColT, IndexT>::ElementProxyType;
+
+    return std::hash<CollectionProxyType>()(in.getCollectionProxy()) +
+      std::hash<ElementProxyType>()(in.getElementProxy());
   }
 };
-}
+
+} // namespace std
 
 #endif /*INCLUDED_VT_VRT_PROXY_COLLECTION_ELM_PROXY_H*/
