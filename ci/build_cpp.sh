@@ -156,8 +156,6 @@ then
     git checkout master
     cd ../
 
-    sed -i 's/assert len(self.children) < 16 and len(self.results) < 2048/\#removed assertion/' ./m.css/documentation/_search.py
-
     "$MCSS/documentation/doxygen.py" Doxyfile-mcss
     cp -R docs "$GHPAGE"
     cd "$GHPAGE"
