@@ -95,10 +95,19 @@ struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
 };
 
 struct SerialMsg : ShortMsg {
+  using MessageParentType = ShortMsg;
+  vt_msg_serialize_required();
+
+  SerialMsg() = default;
   SerialMsg(int in_entity, vt::NodeType in_from)
     : ShortMsg(in_entity, in_from)
-  {
-    setSerialize(true);
+  { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | from_;
+    s | entity_;
   }
 };
 
@@ -148,15 +157,13 @@ void verifyCacheConsistency(
   for (int iter = 0; iter < nb_rounds; ++iter) {
     // create an entity message to route
     auto msg = vt::makeMessage<MsgT>(entity, my_node);
-    // check if should be serialized or not
-    bool serialize = msg->getSerialize();
 
     // perform the checks only after all entity messages have been
     // correctly delivered
     runInEpochCollective([&]{
       if (my_node not_eq home) {
         // route entity message
-        vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg, serialize);
+        vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg);
       }
     });
 
@@ -170,8 +177,8 @@ void verifyCacheConsistency(
       vt_debug_print(
         normal, location,
         "verifyCacheConsistency: iter={}, entityID={}, home={}, bytes={}, "
-        "in cache={}, serialize={}\n",
-        iter, entity, msg->from_, sizeof(*msg), is_entity_cached, serialize
+        "in cache={}\n",
+        iter, entity, msg->from_, sizeof(*msg), is_entity_cached
       );
 
       if (not is_eager) {

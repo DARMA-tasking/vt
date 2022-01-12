@@ -105,8 +105,6 @@ struct EntityMsg : ActiveMessageT {
   bool hasHandler() const { return handler_ != uninitialized_handler; }
   void setHandler(HandlerType const han) { handler_ = han; }
   HandlerType getHandler() const { return handler_; }
-  void setSerialize(bool const is_serialize) { serialize_ = is_serialize; }
-  bool getSerialize() const { return serialize_; }
   void incHops() { hops_ += 1; }
   int16_t getHops() const { return hops_; }
   void setAskNode(NodeType const& node) { ask_node_ = node; }
@@ -120,7 +118,6 @@ struct EntityMsg : ActiveMessageT {
     s | loc_from_node_;
     s | loc_man_inst_;
     s | handler_;
-    s | serialize_;
     s | hops_;
     s | ask_node_;
   }
@@ -131,7 +128,6 @@ private:
   NodeType loc_from_node_ = uninitialized_destination;
   LocInstType loc_man_inst_ = no_loc_inst;
   HandlerType handler_ = uninitialized_handler;
-  bool serialize_ = false;
   int16_t hops_ = 0;
   NodeType ask_node_ =  uninitialized_destination;
 };

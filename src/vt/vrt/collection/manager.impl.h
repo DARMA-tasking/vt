@@ -1141,7 +1141,7 @@ messaging::PendingSend CollectionManager::sendMsgNew(
       auto lm = theLocMan()->getCollectionLM<UntypedIndexType>(col_proxy);
       vtAssert(lm != nullptr, "LM must exist");
       theMsg()->markAsCollectionMessage(msg);
-      lm->template routeMsgSerializeHandler<MsgT, collectionHandler<MsgT>>(
+      lm->template routeMsgHandler<MsgT, collectionHandler<MsgT>>(
         msg->getEntity(), home_node, msg
       );
       theMsg()->popEpoch(cur_epoch);
@@ -1255,7 +1255,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
       auto lm = theLocMan()->getCollectionLM<IdxT>(col_proxy);
       vtAssert(lm != nullptr, "LM must exist");
       theMsg()->markAsCollectionMessage(msg);
-      lm->template routeMsgSerializeHandler<
+      lm->template routeMsgHandler<
         MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
       >(idx, home_node, msg);
       theMsg()->popEpoch(cur_epoch);
