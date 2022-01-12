@@ -24,6 +24,10 @@ install(
 EXECUTE_PROCESS(COMMAND uname -p OUTPUT_VARIABLE CPU_ARCH )
 string(REGEX REPLACE "\n$" ""  CPU_ARCH "${CPU_ARCH}" )
 
+if (CPU_ARCH MATCHES "aarch64")
+  set(CPU_ARCH "arm64")
+endif()
+
 if (CPU_ARCH MATCHES "ppc")
   set(CPU_ARCH "ppc64")
 endif()
