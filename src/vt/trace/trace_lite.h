@@ -238,7 +238,7 @@ struct TraceLite  {
    * \return query the current clock time
    */
   static inline double getCurrentTime() {
-    return ::vt::timing::Timing::getCurrentTime();
+    return ::vt::timing::getCurrentTime();
   }
 
   /**

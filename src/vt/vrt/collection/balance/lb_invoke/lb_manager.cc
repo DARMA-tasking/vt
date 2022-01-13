@@ -44,6 +44,7 @@
 #include "vt/config.h"
 #include "vt/configs/arguments/app_config.h"
 #include "vt/context/context.h"
+#include "vt/phase/phase_hook_enum.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
@@ -338,8 +339,13 @@ void LBManager::printLBArgsHelp(std::string lb_name) {
 }
 
 void LBManager::startup() {
+  thePhase()->registerHookRooted(phase::PhaseHook::Start, []{
+    thePhase()->setStartTime();
+  });
+
   thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, []{
     auto const phase = thePhase()->getCurrentPhase();
+    thePhase()->printSummary();
     theLBManager()->finishedLB(phase);
   });
 }
@@ -349,15 +355,6 @@ void LBManager::finishedLB(PhaseType phase) {
     normal, lb,
     "finishedLB\n"
   );
-
-  auto this_node = theContext()->getNode();
-
-  if (this_node == 0) {
-    vt_print(
-      lb,
-      "LBManager::finishedLB, phase={}\n", phase
-    );
-  }
 
   theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
   theNodeStats()->outputStatsForPhase(phase);

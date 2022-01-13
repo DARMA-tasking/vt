@@ -307,7 +307,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
   TimeType tr_begin = 0.0;
 
   if (theConfig()->vt_trace_event_polling) {
-    tr_begin = timing::Timing::getCurrentTime();
+    tr_begin = timing::getCurrentTime();
   }
 # endif
 
@@ -329,7 +329,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
 
 #     if vt_check_enabled(diagnostics)
       mpiEventWaitTime.update(
-        event->getCreateTime(), timing::Timing::getCurrentTime()
+        event->getCreateTime(), timing::getCurrentTime()
       );
 #     endif
 
@@ -356,7 +356,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
 # if vt_check_enabled(trace_enabled)
   if (theConfig()->vt_trace_event_polling) {
     if (num_completed > 0) {
-      TimeType tr_end = timing::Timing::getCurrentTime();
+      TimeType tr_end = timing::getCurrentTime();
       auto tr_note = fmt::format("completed {} of {}", num_completed, cur);
       trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_event_polling);
     }

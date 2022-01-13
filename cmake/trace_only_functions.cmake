@@ -98,6 +98,11 @@ function(create_trace_only_target)
     DESTINATION "include/vt-trace/fmt"
   )
 
+  install(
+    FILES "${CMAKE_CURRENT_SOURCE_DIR}/../lib/EngFormat-Cpp/include/EngFormat-Cpp/eng_format.hpp"
+    DESTINATION "include/vt-trace/EngFormat-Cpp"
+  )
+
   set(VT_TRACE_LIB vt-trace CACHE INTERNAL "" FORCE)
   add_library(
     ${VT_TRACE_LIB}
@@ -114,6 +119,7 @@ function(create_trace_only_target)
     TARGET ${VT_TRACE_LIB}
     LINK_VT_LIB
     LINK_FMT 1
+    LINK_ENG_FORMAT 1
     LINK_ZLIB 1
     LINK_MPI 1
   )

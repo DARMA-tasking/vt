@@ -318,6 +318,7 @@ install(
 
 set(FMT_LIBRARY_EXPORT ${FMT_LIBRARY})
 install(TARGETS ${FMT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+install(TARGETS ${ENG_FORMAT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 
 install(TARGETS ${JSON_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 install(TARGETS ${BROTLI_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
@@ -342,6 +343,7 @@ export(
                             ${MIMALLOC_LIBRARY_EXPORT}
                             ${FORT_LIBRARY_EXPORT}
                             ${FMT_LIBRARY_EXPORT}
+                            ${ENG_FORMAT_LIBRARY}
                             ${JSON_LIBRARY}
                             ${BROTLI_LIBRARY}
   FILE                      "vtTargets.cmake"

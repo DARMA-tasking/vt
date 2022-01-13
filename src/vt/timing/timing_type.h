@@ -44,11 +44,23 @@
 #if !defined INCLUDED_VT_TIMING_TIMING_TYPE_H
 #define INCLUDED_VT_TIMING_TIMING_TYPE_H
 
-#include "vt/config.h"
-
 namespace vt {
 
 using TimeType = double;
+
+struct TimeTypeWrapper {
+  TimeTypeWrapper(const TimeType time) : time_(time) {}
+
+  TimeType seconds() const {return time_; }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | time_;
+  }
+
+private:
+  TimeType time_;
+};
 
 } /* end namespace vt */
 

@@ -65,7 +65,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
 
   bool done = false;
 
-  auto cur_time = vt::timing::Timing::getCurrentTime();
+  auto cur_time = vt::timing::getCurrentTime();
   auto testSched = std::make_unique<vt::sched::Scheduler>();
   testSched->runProgress();
 
@@ -86,7 +86,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
 
   // This ought to take close to a second
   EXPECT_GT(
-    vt::timing::Timing::getCurrentTime() - cur_time,
+    vt::timing::getCurrentTime() - cur_time,
     vt::theConfig()->vt_sched_progress_sec * fudge
   );
 
@@ -106,7 +106,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_2) {
 
   bool done = false;
 
-  auto cur_time = vt::timing::Timing::getCurrentTime();
+  auto cur_time = vt::timing::getCurrentTime();
   auto testSched = std::make_unique<vt::sched::Scheduler>();
   testSched->runProgress();
 
@@ -125,7 +125,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_2) {
 
   // This ought to take close to a second
   EXPECT_GT(
-    vt::timing::Timing::getCurrentTime() - cur_time,
+    vt::timing::getCurrentTime() - cur_time,
     vt::theConfig()->vt_sched_progress_sec * fudge
   );
 
