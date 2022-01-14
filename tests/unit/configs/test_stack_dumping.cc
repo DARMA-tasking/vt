@@ -64,4 +64,16 @@ TEST_F(TestStackDumping, find_function_names) {
   EXPECT_NE(stack_pretty.find("main"), std::string::npos);
 }
 
+TEST_F(TestStackDumping, skip_first_function) {
+  auto stack = debug::stack::dumpStack(1);
+  auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
+
+  fmt::print("{}", stack_pretty);
+
+  EXPECT_NE(stack_pretty.find("Dump Stack Backtrace"), std::string::npos);
+  EXPECT_EQ(stack_pretty.find("vt::debug::stack::dumpStack"), std::string::npos);
+  EXPECT_NE(stack_pretty.find("vt::tests::unit::TestStackDumping"), std::string::npos);
+  EXPECT_NE(stack_pretty.find("main"), std::string::npos);
+}
+
 }}} // end namespace vt::tests::unit
