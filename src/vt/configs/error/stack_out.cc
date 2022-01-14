@@ -41,82 +41,63 @@
 //@HEADER
 */
 
-#include <fmt/core.h>
-
 #include "vt/configs/error/stack_out.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/context/context.h"
 
-#include <cstdlib>
-#include <vector>
-#include <tuple>
-#include <sstream>
-
-#include <execinfo.h>
-#include <dlfcn.h>
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
 #include <cxxabi.h>
 
 namespace vt { namespace debug { namespace stack {
 
 DumpStackType dumpStack(int skip) {
-  void* callstack[128];
-  int const max_frames = sizeof(callstack) / sizeof(callstack[0]);
-  int num_frames = backtrace(callstack, max_frames);
-  char** symbols = backtrace_symbols(callstack, num_frames);
-  std::ostringstream trace_buf;
-  StackVectorType tuple;
+  StackVectorType stack;
 
-  for (auto i = skip; i < num_frames; i++) {
-    //printf("%s\n", symbols[i]);
+  unw_cursor_t cursor;
+  unw_context_t context;
 
-    std::string str = "";
-    Dl_info info;
-    if (dladdr(callstack[i], &info) && info.dli_sname) {
-      char *demangled = nullptr;
-      int status = -1;
-      if (info.dli_sname[0] == '_') {
-        demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+  // Initialize cursor to current frame for local unwinding.
+  unw_getcontext(&context);
+  unw_init_local(&cursor, &context);
+
+  // Unwind frames one by one, going up the frame stack.
+  int i = 0;
+  do {
+    if (i++ < skip) {
+      continue;
+    }
+
+    unw_word_t offset, pc;
+    unw_get_reg(&cursor, UNW_REG_IP, &pc);
+    if (pc == 0) {
+      break;
+    }
+
+    char sym[256];
+    if (unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) == 0) {
+      char* nameptr = sym;
+      int status;
+      char* demangled = abi::__cxa_demangle(sym, nullptr, nullptr, &status);
+      if (status == 0) {
+        nameptr = demangled;
       }
-      auto const call = status == 0 ?
-        demangled : info.dli_sname == 0 ? symbols[i] : info.dli_sname;
 
-      tuple.emplace_back(
+      stack.emplace_back(
         std::forward_as_tuple(
-          static_cast<int>(2 + sizeof(void*) * 2), callstack[i], call,
-          static_cast<char*>(callstack[i]) - static_cast<char*>(info.dli_saddr)
-        )
-      );
-
-      auto const& t = tuple.back();
-      str = fmt::format(
-        "{:<4} {:<4} {:<15} {} + {}\n",
-        i, std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t)
+          static_cast<int>(2 + sizeof(void*) * 2), pc, nameptr, offset)
       );
 
       std::free(demangled);
     } else {
-
-      tuple.emplace_back(
-        std::forward_as_tuple(
-          static_cast<int>(2 + sizeof(void*) * 2), callstack[i], symbols[i], 0
-        )
-      );
-
-      auto const& t = tuple.back();
-      str = fmt::format(
-        "{:10} {} {} {}\n", i, std::get<0>(t), std::get<1>(t), std::get<2>(t)
-      );
+      // FIXME!
+      std::printf(" -- error: unable to obtain symbol name for this frame\n");
     }
-
-    trace_buf << str;
   }
-  std::free(symbols);
+  while (unw_step(&cursor) > 0);
 
-  if (num_frames == max_frames) {
-    trace_buf << "[truncated]\n";
-  }
-
-  return std::make_tuple(trace_buf.str(),tuple);
+  // FIXME! - is "truncated" backup still necessary?
+  return std::make_tuple("",stack);
 }
 
 std::string prettyPrintStack(StackVectorType const& stack) {
@@ -142,7 +123,7 @@ std::string prettyPrintStack(StackVectorType const& stack) {
   int i = 0;
   for (auto&& t : stack) {
     auto ret_str = fmt::format(
-      "{}{}{:<3}{} {}{:<3} {:<13}{} {}{}{} + {}{}\n",
+      "{}{}{:<3}{} {}{:<3} {:#x}{} {}{}{} + {}{}\n",
       prefix,
       bred, i, reset,
       magenta, std::get<0>(t), std::get<1>(t), reset,
