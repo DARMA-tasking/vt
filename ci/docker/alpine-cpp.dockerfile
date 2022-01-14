@@ -20,7 +20,7 @@ RUN apk add --no-cache \
         cmake \
         dpkg \
         libdwarf-dev \
-        libexecinfo-dev \
+        libunwind-dev \
         libtool \
         linux-headers \
         m4 \

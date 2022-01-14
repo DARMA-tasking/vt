@@ -94,6 +94,8 @@ function(link_target_with_vt)
     target_link_libraries(${ARG_TARGET} PRIVATE gtest)
   endif()
 
+  target_link_libraries(${ARG_TARGET} PRIVATE unwind)
+
   if (NOT ARG_LINK_VT_LIB)
     # Unconditionally link the VT library for this target unless linking the VT
     # library itself itself

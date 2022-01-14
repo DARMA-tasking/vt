@@ -25,6 +25,7 @@ RUN apt-get update -y -q && \
     gnupg \
     make-guile \
     libomp5 \
+    libunwind-dev \
     valgrind \
     ccache && \
     apt-get clean && \
