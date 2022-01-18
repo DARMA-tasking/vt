@@ -49,14 +49,64 @@
 
 namespace vt {
 
+/**
+ * \brief Initialize the VT runtime (with threads)
+ *
+ * \param[in] argc argc from main to parse arguments and remove VT ones
+ * \param[in] argv argv from main to parse arguments and remove VT ones
+ * \param[in] num_workers the number of workers (threads)
+ * \param[in] is_interop whether running in interop (no MPI init)
+ * \param[in] comm the MPI communicator
+ * \param[in] delay_startup_banner whether to delay printing the startup banner
+ *            until the VT scheduler runs the first time
+ *
+ * \return the runtime pointer
+ */
 RuntimePtrType initialize(
   int& argc, char**& argv, WorkerCountType const num_workers,
-  bool is_interop = false, MPI_Comm* comm = nullptr
+  bool is_interop = false, MPI_Comm* comm = nullptr,
+  bool delay_startup_banner = false
 );
-RuntimePtrType initialize(int& argc, char**& argv, MPI_Comm* comm = nullptr);
-RuntimePtrType initialize(MPI_Comm* comm = nullptr);
 
+/**
+ * \brief Initialize the VT runtime
+ *
+ * \param[in] argc argc from main to parse arguments and remove VT ones
+ * \param[in] argv argv from main to parse arguments and remove VT ones
+ * \param[in] comm the MPI communicator (optional)
+ * \param[in] delay_startup_banner whether to delay printing the startup banner
+ *            until the VT scheduler runs the first time
+ *
+ * \return the runtime pointer
+ */
+RuntimePtrType initialize(
+  int& argc, char**& argv, MPI_Comm* comm = nullptr,
+  bool delay_startup_banner = false
+);
+
+/**
+ * \brief Initialize the VT runtime
+ *
+ * \param[in] comm the MPI communicator (optional)
+ * \param[in] delay_startup_banner whether to delay printing the startup banner
+ *            until the VT scheduler runs the first time
+ *
+ * \return the runtime pointer
+ */
+RuntimePtrType initialize(
+  MPI_Comm* comm = nullptr, bool delay_startup_banner = false
+);
+
+/**
+ * \brief Finalize the VT runtime
+ *
+ * \param[in] in_rt the runtime pointer
+ */
 void finalize(RuntimePtrType in_rt);
+
+/**
+ * \brief Finalize the VT runtime (the currently active one)
+ */
 void finalize();
 
 } /* end namespace vt */
