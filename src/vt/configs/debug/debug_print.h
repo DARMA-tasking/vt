@@ -159,15 +159,45 @@
 
 #define vt_option_check_enabled(mode, bit) ((mode & bit) not_eq 0)
 
+/**
+ * \brief Temporarily enable debug print option
+*/
 #define vt_debug_temp_enable_opt(opt) \
   ::vt::debug::preConfigRef()->vt_debug_##opt = true
 
+/**
+ * \brief Temporarily disable debug print option
+*/
 #define vt_debug_temp_disable_opt(opt) \
   ::vt::debug::preConfigRef()->vt_debug_##opt = false
 
+/**
+ * \brief Temporarily enable debug print option in given scope. When exiting
+ * a scope, it restores original option value.
+ *
+ * Usage:
+ * {
+ * ...
+ * auto const scopedEnabledContext = vt_debug_scoped_enable_opt(context);
+ * ...
+ * }
+ }
+*/
 #define vt_debug_scoped_enable_opt(opt) \
   ScopedModifier_##opt##_##true { }
 
+/**
+ * \brief Temporarily disable debug print option in given scope. When exiting
+ * a scope, it restores original option value.
+ *
+ * Usage:
+ * {
+ * ...
+ * auto const scopedDisabledContext = vt_debug_scoped_disable_opt(context);
+ * ...
+ * }
+ }
+*/
 #define vt_debug_scoped_disable_opt(opt) \
   ScopedModifier_##opt##_##false { }
 
