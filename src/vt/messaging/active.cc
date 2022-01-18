@@ -528,8 +528,21 @@ EventType ActiveMessenger::doMessageSend(
     if (dest != this_node) {
       sendMsgBytesWithPut(dest, base, send_tag);
     } else {
+      if (theContext()->getTask() != nullptr) {
+        auto lb = theContext()->getTask()->get<ctx::LBStats>();
+        if (lb) {
+          auto const already_recorded =
+            envelopeCommStatsRecordedAboveBareHandler(msg->env);
+          if (not already_recorded) {
+            auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);
+            theContext()->getTask()->send(dest_elm_id, base.size());
+          }
+        }
+      }
+
       runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
         .withTDEpochFromMsg(is_term)
+        .withLBStats(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
         .enqueue();
     }
     return no_event;
