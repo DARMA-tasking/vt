@@ -160,20 +160,23 @@
 #define vt_option_check_enabled(mode, bit) ((mode & bit) not_eq 0)
 
 /**
- * \brief Temporarily enable debug print option
+ * \brief Temporarily enable debug print option.
+ * vt needs to be initialized before usage.
 */
 #define vt_debug_temp_enable_opt(opt) \
-  ::vt::debug::preConfigRef()->vt_debug_##opt = true
+  ::vt::theConfig()->vt_debug_##opt = true
 
 /**
- * \brief Temporarily disable debug print option
+ * \brief Temporarily disable debug print option.
+ * vt needs to be initialized before usage.
 */
 #define vt_debug_temp_disable_opt(opt) \
-  ::vt::debug::preConfigRef()->vt_debug_##opt = false
+  ::vt::theConfig()->vt_debug_##opt = false
 
 /**
  * \brief Temporarily enable debug print option in given scope. When exiting
  * a scope, it restores original option value.
+ * vt needs to be initialized before usage.
  *
  * Usage:
  * {
@@ -189,6 +192,7 @@
 /**
  * \brief Temporarily disable debug print option in given scope. When exiting
  * a scope, it restores original option value.
+ * vt needs to be initialized before usage.
  *
  * Usage:
  * {
@@ -201,19 +205,19 @@
 #define vt_debug_scoped_disable_opt(opt) \
   ScopedModifier_##opt##_##false { }
 
-#define vt_scoped_modifier_opt(opt, val)                     \
-  struct ScopedModifier_##opt##_##val {                      \
-    ScopedModifier_##opt##_##val()                           \
-      : origVal{::vt::debug::preConfig()->vt_debug_##opt} {  \
-      ::vt::debug::preConfigRef()->vt_debug_##opt = val;     \
-    }                                                        \
-                                                             \
-    ~ScopedModifier_##opt##_##val() {                        \
-      ::vt::debug::preConfigRef()->vt_debug_##opt = origVal; \
-    }                                                        \
-                                                             \
-  private:                                                   \
-    bool origVal;                                            \
+#define vt_scoped_modifier_opt(opt, val)             \
+  struct ScopedModifier_##opt##_##val {              \
+    ScopedModifier_##opt##_##val()                   \
+      : origVal{::vt::theConfig()->vt_debug_##opt} { \
+      ::vt::theConfig()->vt_debug_##opt = val;       \
+    }                                                \
+                                                     \
+    ~ScopedModifier_##opt##_##val() {                \
+      ::vt::theConfig()->vt_debug_##opt = origVal;   \
+    }                                                \
+                                                     \
+  private:                                           \
+    bool origVal;                                    \
   }
 
 #define vt_define_debug_scoped_modifiers(opt) \
