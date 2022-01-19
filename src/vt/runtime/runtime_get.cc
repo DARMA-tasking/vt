@@ -169,15 +169,7 @@ static arguments::AppConfig preInitAppConfig{};
  * \return A modifiable configuration
  */
 arguments::AppConfig* preConfigRef() {
-  if (not curRT)
-    return &preInitAppConfig;
-
-  auto* config = curRT->theArgConfig;
-  if (not config) {
-    return &preInitAppConfig;
-  }
-
-  return &config->config_;
+  return &preInitAppConfig;
 }
 
 /**
