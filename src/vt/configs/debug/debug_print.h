@@ -162,15 +162,23 @@
 /**
  * \brief Temporarily enable debug print option.
  * vt needs to be initialized before usage.
-*/
-#define vt_debug_temp_enable_opt(opt) \
+ */
+#define vt_debug_temp_enable_opt(opt)                                          \
+  if (not ::vt::curRT) {                                                       \
+    vtAbort("Trying to read config when VT is not initialized");               \
+  }                                                                            \
+                                                                               \
   ::vt::theConfig()->vt_debug_##opt = true
 
 /**
  * \brief Temporarily disable debug print option.
  * vt needs to be initialized before usage.
-*/
-#define vt_debug_temp_disable_opt(opt) \
+ */
+#define vt_debug_temp_disable_opt(opt)                                         \
+  if (not ::vt::curRT) {                                                       \
+    vtAbort("Trying to read config when VT is not initialized");               \
+  }                                                                            \
+                                                                               \
   ::vt::theConfig()->vt_debug_##opt = false
 
 /**
@@ -184,10 +192,8 @@
  * auto const scopedEnabledContext = vt_debug_scoped_enable_opt(context);
  * ...
  * }
- }
-*/
-#define vt_debug_scoped_enable_opt(opt) \
-  ScopedModifier_##opt##_##true { }
+ */
+#define vt_debug_scoped_enable_opt(opt) createScopedModifier_##opt##_true()
 
 /**
  * \brief Temporarily disable debug print option in given scope. When exiting
@@ -200,65 +206,63 @@
  * auto const scopedDisabledContext = vt_debug_scoped_disable_opt(context);
  * ...
  * }
- }
-*/
-#define vt_debug_scoped_disable_opt(opt) \
-  ScopedModifier_##opt##_##false { }
+ */
+#define vt_debug_scoped_disable_opt(opt) createScopedModifier_##opt##_##false()
 
-#define vt_scoped_modifier_opt(opt, val)             \
-  struct ScopedModifier_##opt##_##val {              \
-    ScopedModifier_##opt##_##val()                   \
-      : origVal{::vt::theConfig()->vt_debug_##opt} { \
-      ::vt::theConfig()->vt_debug_##opt = val;       \
-    }                                                \
-                                                     \
-    ~ScopedModifier_##opt##_##val() {                \
-      ::vt::theConfig()->vt_debug_##opt = origVal;   \
-    }                                                \
-                                                     \
-  private:                                           \
-    bool origVal;                                    \
-  }
+#define vt_scoped_modifier_opt_declaration(opt, val)                           \
+  struct ScopedModifier_##opt##_##val {                                        \
+    ScopedModifier_##opt##_##val();                                            \
+    ~ScopedModifier_##opt##_##val();                                           \
+                                                                               \
+  private:                                                                     \
+    bool orig_val;                                                             \
+  };                                                                           \
+                                                                               \
+  ScopedModifier_##opt##_##val createScopedModifier_##opt##_##val()
 
-#define vt_define_debug_scoped_modifiers(opt) \
-  vt_scoped_modifier_opt(opt, true);          \
-  vt_scoped_modifier_opt(opt, false)
+#define vt_declare_debug_scoped_modifiers(opt)                                 \
+  vt_scoped_modifier_opt_declaration(opt, true);                               \
+  vt_scoped_modifier_opt_declaration(opt, false)
 
-vt_define_debug_scoped_modifiers(all);
-vt_define_debug_scoped_modifiers(none);
-vt_define_debug_scoped_modifiers(gen);
-vt_define_debug_scoped_modifiers(runtime);
-vt_define_debug_scoped_modifiers(active);
-vt_define_debug_scoped_modifiers(term);
-vt_define_debug_scoped_modifiers(termds);
-vt_define_debug_scoped_modifiers(barrier);
-vt_define_debug_scoped_modifiers(event);
-vt_define_debug_scoped_modifiers(pipe);
-vt_define_debug_scoped_modifiers(pool);
-vt_define_debug_scoped_modifiers(reduce);
-vt_define_debug_scoped_modifiers(rdma);
-vt_define_debug_scoped_modifiers(rdma_channel);
-vt_define_debug_scoped_modifiers(rdma_state);
-vt_define_debug_scoped_modifiers(param);
-vt_define_debug_scoped_modifiers(handler);
-vt_define_debug_scoped_modifiers(hierlb);
-vt_define_debug_scoped_modifiers(temperedlb);
-vt_define_debug_scoped_modifiers(scatter);
-vt_define_debug_scoped_modifiers(sequence);
-vt_define_debug_scoped_modifiers(sequence_vrt);
-vt_define_debug_scoped_modifiers(serial_msg);
-vt_define_debug_scoped_modifiers(trace);
-vt_define_debug_scoped_modifiers(location);
-vt_define_debug_scoped_modifiers(lb);
-vt_define_debug_scoped_modifiers(vrt);
-vt_define_debug_scoped_modifiers(vrt_coll);
-vt_define_debug_scoped_modifiers(worker);
-vt_define_debug_scoped_modifiers(group);
-vt_define_debug_scoped_modifiers(broadcast);
-vt_define_debug_scoped_modifiers(objgroup);
-vt_define_debug_scoped_modifiers(phase);
-vt_define_debug_scoped_modifiers(context);
-vt_define_debug_scoped_modifiers(epoch);
+namespace vt {
+
+vt_declare_debug_scoped_modifiers(all);
+vt_declare_debug_scoped_modifiers(none);
+vt_declare_debug_scoped_modifiers(gen);
+vt_declare_debug_scoped_modifiers(runtime);
+vt_declare_debug_scoped_modifiers(active);
+vt_declare_debug_scoped_modifiers(term);
+vt_declare_debug_scoped_modifiers(termds);
+vt_declare_debug_scoped_modifiers(barrier);
+vt_declare_debug_scoped_modifiers(event);
+vt_declare_debug_scoped_modifiers(pipe);
+vt_declare_debug_scoped_modifiers(pool);
+vt_declare_debug_scoped_modifiers(reduce);
+vt_declare_debug_scoped_modifiers(rdma);
+vt_declare_debug_scoped_modifiers(rdma_channel);
+vt_declare_debug_scoped_modifiers(rdma_state);
+vt_declare_debug_scoped_modifiers(param);
+vt_declare_debug_scoped_modifiers(handler);
+vt_declare_debug_scoped_modifiers(hierlb);
+vt_declare_debug_scoped_modifiers(temperedlb);
+vt_declare_debug_scoped_modifiers(scatter);
+vt_declare_debug_scoped_modifiers(sequence);
+vt_declare_debug_scoped_modifiers(sequence_vrt);
+vt_declare_debug_scoped_modifiers(serial_msg);
+vt_declare_debug_scoped_modifiers(trace);
+vt_declare_debug_scoped_modifiers(location);
+vt_declare_debug_scoped_modifiers(lb);
+vt_declare_debug_scoped_modifiers(vrt);
+vt_declare_debug_scoped_modifiers(vrt_coll);
+vt_declare_debug_scoped_modifiers(worker);
+vt_declare_debug_scoped_modifiers(group);
+vt_declare_debug_scoped_modifiers(broadcast);
+vt_declare_debug_scoped_modifiers(objgroup);
+vt_declare_debug_scoped_modifiers(phase);
+vt_declare_debug_scoped_modifiers(context);
+vt_declare_debug_scoped_modifiers(epoch);
+
+} // namespace vt
 
 namespace vt { namespace runtime {
 struct Runtime;
