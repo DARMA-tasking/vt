@@ -94,7 +94,10 @@ function(link_target_with_vt)
     target_link_libraries(${ARG_TARGET} PRIVATE gtest)
   endif()
 
-  target_link_libraries(${ARG_TARGET} PRIVATE unwind)
+  # FIXME! do the usual ARG_LINK_UNWIND here
+  if (NOT DEFINED APPLE)
+    target_link_libraries(${ARG_TARGET} PRIVATE unwind)
+  endif()
 
   if (NOT ARG_LINK_VT_LIB)
     # Unconditionally link the VT library for this target unless linking the VT
