@@ -60,7 +60,7 @@ FixNamespaceComments: true
 IncludeBlocks: Preserve
 IndentCaseLabels: false
 IndentGotoLabels: false
-IndentPPDirectives: BeforeHash
+IndentPPDirectives: PPDIS_None
 IndentWidth: 2
 IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
