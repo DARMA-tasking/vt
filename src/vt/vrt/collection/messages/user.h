@@ -66,10 +66,7 @@ using RoutedMessageType = LocationRoutedMsg<IndexT, MessageT>;
 static struct ColMsgWrapTagType { } ColMsgWrapTag { };
 #pragma GCC diagnostic pop
 
-struct IndexMessage : RoutedMessageType<::vt::Message, index::UntypedIndex<48>> {
-
-  IndexMessage() = default;
-
+struct CollectionMsgInfo {
   VirtualProxyType getProxy() const { return proxy_; }
   void setProxy(VirtualProxyType in_proxy) { proxy_ = in_proxy; }
 
@@ -94,9 +91,58 @@ struct IndexMessage : RoutedMessageType<::vt::Message, index::UntypedIndex<48>> 
     elm::CommCategory cat_ = elm::CommCategory::SendRecv;
   #endif
 
+  template <typename SerializerT>
+  void invokeSerialize(SerializerT& s) {
+    s | proxy_;
+    s | vrt_handler_;
+    s | from_node_;
+
+#if vt_check_enabled(lblite)
+    s | lb_lite_instrument_;
+    s | sender_elm_;
+    s | cat_;
+#endif
+  }
+
   VirtualProxyType proxy_ = no_vrt_proxy;
   HandlerType vrt_handler_ = uninitialized_handler;
   NodeType from_node_ = uninitialized_destination;
+};
+
+struct IndexMessage :
+    RoutedMessageType<::vt::Message, index::UntypedIndex<48>>,
+    CollectionMsgInfo
+{
+  using MessageParentType = RoutedMessageType<::vt::Message, index::UntypedIndex<48>>;
+  vt_msg_serialize_if_needed_by_parent();
+
+  IndexMessage() = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    CollectionMsgInfo::invokeSerialize(s);
+    MessageParentType::serialize(s);
+  }
+};
+
+template <typename IndexT, typename IndexMsgT>
+struct WrappedIndexMessage
+  : RoutedMessageType<::vt::Message, IndexT>, CollectionMsgInfo
+{
+  using MessageParentType = RoutedMessageType<::vt::Message, IndexT>;
+  vt_msg_serialize_required();
+
+  MsgSharedPtr<IndexMsgT> msg_impl_;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    CollectionMsgInfo::invokeSerialize(s);
+    MessageParentType::serialize(s);
+    if (s.isUnpacking()) {
+      msg_impl_ = makeMessage<IndexMsgT>();
+    }
+    s | *msg_impl_;
+  }
 };
 
 template <typename ColT, typename BaseMsgT = ::vt::Message>

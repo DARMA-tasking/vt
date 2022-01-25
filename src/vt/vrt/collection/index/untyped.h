@@ -58,10 +58,12 @@ using RegisteredIndexType = uint16_t;
 
 template <unsigned num_bytes>
 struct UntypedIndex {
+  using isByteCopyable = std::true_type;
+
   UntypedIndex() = default;
 
   template <typename IdxT>
-  explicit UntypedIndex(IdxT const& in_idx);
+  UntypedIndex(IdxT const& in_idx);
 
   bool operator==(UntypedIndex<num_bytes> const& other) const;
 
@@ -71,6 +73,31 @@ struct UntypedIndex {
 
   RegisteredIndexType idx_ = 0;
   std::array<char, num_bytes> idx_bytes_;
+};
+
+template <typename IdxT, typename Enable = void>
+struct GetEntity;
+
+template <typename IdxT>
+struct GetEntity<
+  IdxT,
+  typename std::enable_if_t<true and
+    not std::isgreater(sizeof(IdxT), 48) and
+    checkpoint::SerializableTraits<IdxT>::is_bytecopyable
+  >
+> {
+  using EntityType = UntypedIndex<48>;
+};
+
+template <typename IdxT>
+struct GetEntity<
+  IdxT,
+  typename std::enable_if_t<true and
+     std::isgreater(sizeof(IdxT), 48) or not
+     checkpoint::SerializableTraits<IdxT>::is_bytecopyable
+  >
+> {
+  using EntityType = IdxT;
 };
 
 namespace registry {
@@ -114,7 +141,7 @@ struct IndexInfo {
   FormatFnType fmt_;
 };
 
- static constexpr unsigned const base_num_bytes = 48;
+static constexpr unsigned const base_num_bytes = 48;
 
 using RegistryType = std::vector<IndexInfo<base_num_bytes>>;
 

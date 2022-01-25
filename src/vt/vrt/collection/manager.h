@@ -403,7 +403,7 @@ struct CollectionManager
    */
   template <
     typename MsgT,
-    typename ColT = typename MsgT::CollectionType,
+    typename ColT,
     typename IdxT = typename ColT::IndexType
   >
   messaging::PendingSend sendMsgUntypedHandler(
@@ -469,10 +469,10 @@ struct CollectionManager
    * \return a pending send
    */
   template <
-    typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+    typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f
   >
   messaging::PendingSend sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   /**
@@ -484,11 +484,10 @@ struct CollectionManager
    * \return a pending send
    */
   template <
-    typename MsgT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   messaging::PendingSend sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   /**
@@ -596,7 +595,7 @@ struct CollectionManager
   template <
     typename MsgT,
     typename ColT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   messaging::PendingSend sendMsgImpl(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg

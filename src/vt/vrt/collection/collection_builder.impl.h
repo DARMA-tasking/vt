@@ -46,6 +46,7 @@
 
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/param/construct_params.h"
+#include "vt/vrt/collection/index/untyped.h"
 #include "vt/topos/mapping/dense/unbounded_default.h"
 
 namespace vt { namespace vrt { namespace collection {
@@ -102,6 +103,7 @@ struct ContainableElementFn {
 template <typename ColT>
 void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
   using IndexType = typename ColT::IndexType;
+  using EntityType = typename index::GetEntity<IndexType>::EntityType;
 
   if (not po.has_bounds_ and po.bulk_inserts_.size() == 1) {
     po.bounds_ = po.bulk_inserts_[0];
@@ -128,7 +130,7 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
 
   // Invoke getCollectionLM() to create a new location manager instance for
   // this collection
-  theLocMan()->getCollectionLM<index::UntypedIndex<48>>(proxy);
+  theLocMan()->getCollectionLM<EntityType>(proxy);
 
   // Insert action on cleanup for this collection
   addCleanupFn<ColT>(proxy);

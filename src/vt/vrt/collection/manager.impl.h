@@ -1042,23 +1042,20 @@ messaging::PendingSend CollectionManager::sendNormalMsg(
 }
 
 template <
-  typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+  typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f
 >
 messaging::PendingSend CollectionManager::sendMsg(
-  VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  using ColT = typename MsgT::CollectionType;
   return sendMsg<MsgT,ColT,f>(proxy,msg);
 }
 
 template <
-  typename MsgT,
-  ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+  typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f
 >
 messaging::PendingSend CollectionManager::sendMsg(
-  VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
+  VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  using ColT = typename MsgT::CollectionType;
   return sendMsg<MsgT,ColT,f>(proxy,msg);
 }
 
@@ -1103,18 +1100,18 @@ messaging::PendingSend CollectionManager::sendMsgImpl(
   VirtualElmProxyType<ColT> const& proxy, MsgT* msg
 ) {
   auto const& h = auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>();
-  return sendMsgUntypedHandler<MsgT>(proxy, msg, h);
+  return sendMsgUntypedHandler<MsgT, ColT>(proxy, msg, h);
 }
 
 template <
   typename MsgT, typename ColT,
-  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+  ActiveColMemberTypedFnType<MsgT, ColT> f
 >
 messaging::PendingSend CollectionManager::sendMsgImpl(
   VirtualElmProxyType<ColT> const& proxy, MsgT* msg
 ) {
   auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>();
-  return sendMsgUntypedHandler<MsgT>(proxy, msg, h);
+  return sendMsgUntypedHandler<MsgT, ColT>(proxy, msg, h);
 }
 
 template <
@@ -1123,7 +1120,7 @@ template <
 messaging::PendingSend CollectionManager::sendMsgNew(
   VirtualElmProxyType<ColT> const& proxy, MsgT *raw_msg
 ) {
-  using UntypedIndexType = typename MsgT::EntityType;
+  using EntityType = typename MsgT::EntityType;
   auto col_proxy = proxy.getCollectionProxy();
   auto elm_proxy = proxy.getElementProxy();
   auto idx = elm_proxy.getIndex();
@@ -1133,12 +1130,12 @@ messaging::PendingSend CollectionManager::sendMsgNew(
   msg->setFromNode(theContext()->getNode());
   msg->setVrtHandler(handler);
   msg->setProxy(col_proxy);
-  msg->setEntity(UntypedIndexType{idx});
+  msg->setEntity(idx);
   return messaging::PendingSend{
     msg, [=](MsgSharedPtr<BaseMsgType>& inner_msg){
       theMsg()->pushEpoch(cur_epoch);
       auto home_node = theCollection()->getMappedNode<ColT>(col_proxy, idx);
-      auto lm = theLocMan()->getCollectionLM<UntypedIndexType>(col_proxy);
+      auto lm = theLocMan()->getCollectionLM<EntityType>(col_proxy);
       vtAssert(lm != nullptr, "LM must exist");
       theMsg()->markAsCollectionMessage(msg);
       lm->template routeMsgHandler<MsgT, collectionHandler<MsgT>>(
@@ -1235,11 +1232,12 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 #endif
 
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
+  auto idx = elm_proxy.getIndex();
   msg->setFromNode(theContext()->getNode());
   msg->setVrtHandler(handler);
   msg->setProxy(toProxy);
+  msg->setEntity(idx);
 
-  auto idx = elm_proxy.getIndex();
   vt_debug_print(
     terse, vrt_coll,
     "sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={:x}, idx={}, "
@@ -1257,7 +1255,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
       theMsg()->markAsCollectionMessage(msg);
       lm->template routeMsgHandler<
         MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
-      >(idx, home_node, msg);
+      >(msg->getEntity(), home_node, msg);
       theMsg()->popEpoch(cur_epoch);
     }
   };
