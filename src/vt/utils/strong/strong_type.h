@@ -178,7 +178,7 @@ struct less<vt::util::strong::detail::Strong<T, init_val, Tag>> {
   bool operator()(
     vt::util::strong::detail::Strong<T, init_val, Tag> const& a,
     vt::util::strong::detail::Strong<T, init_val, Tag> const& b
-) const {
+  ) const {
     return *a < *b;
   }
 };

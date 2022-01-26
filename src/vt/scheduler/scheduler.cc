@@ -95,8 +95,6 @@ Scheduler::Scheduler()
   // Explicitly define these out when diagnostics are disabled---they might be
   // expensive
 # if vt_check_enabled(diagnostics)
-  using timing::Timing;
-
   // Triggers to get the in-scheduler-loop time added to diagnostics
   registerTrigger(BeginSchedulerLoop, [this]{ schedLoopTime.start(); });
   registerTrigger(EndSchedulerLoop, [this]{ schedLoopTime.stop(); });
@@ -236,13 +234,11 @@ void Scheduler::runProgress(bool msg_only) {
 
   // Reset count of processed handlers since the last time progress was invoked
   processed_after_last_progress_ = 0;
-  last_progress_time_ = timing::Timing::getCurrentTime();
+  last_progress_time_ = timing::getCurrentTime();
 }
 
 void Scheduler::runSchedulerOnceImpl(bool msg_only) {
-  using TimerType = timing::Timing;
-
-  auto time_since_last_progress = TimerType::getCurrentTime() - last_progress_time_;
+  auto time_since_last_progress = timing::getCurrentTime() - last_progress_time_;
   if (
     work_queue_.empty() or
     shouldCallProgress(processed_after_last_progress_, time_since_last_progress)
@@ -289,6 +285,15 @@ void Scheduler::runSchedulerOnceImpl(bool msg_only) {
   }
 }
 
+Scheduler::SchedulerLoopGuard::SchedulerLoopGuard(Scheduler* scheduler)
+  : scheduler_{scheduler} {
+  scheduler_->triggerEvent(SchedulerEventType::BeginSchedulerLoop);
+}
+
+Scheduler::SchedulerLoopGuard::~SchedulerLoopGuard() {
+  scheduler_->triggerEvent(SchedulerEventType::EndSchedulerLoop);
+}
+
 void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
   // This loop construct can run either in a top-level or nested context.
   // 1. In a top-level context the idle time will encompass the time not
@@ -298,7 +303,7 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
   //    as the parent context is "not idle". Likewise, no 'between scheduler'
   //    event is started.
 
-  triggerEvent(SchedulerEventType::BeginSchedulerLoop);
+  SchedulerLoopGuard loopGuard{this};
 
   // Ensure to immediately enter an idle state if such applies.
   // The scheduler call ends idle as picking up work.
@@ -318,8 +323,6 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
     is_idle = false;
     triggerEvent(SchedulerEventType::EndIdle);
   }
-
-  triggerEvent(SchedulerEventType::EndSchedulerLoop);
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {

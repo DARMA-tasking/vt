@@ -367,7 +367,7 @@ EventType ActiveMessenger::sendMsgMPI(
       #if vt_check_enabled(trace_enabled)
         double tr_begin = 0;
         if (theConfig()->vt_trace_mpi) {
-          tr_begin = vt::timing::Timing::getCurrentTime();
+          tr_begin = vt::timing::getCurrentTime();
         }
       #endif
       int const ret = MPI_Isend(
@@ -378,7 +378,7 @@ EventType ActiveMessenger::sendMsgMPI(
 
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
-          auto tr_end = vt::timing::Timing::getCurrentTime();
+          auto tr_end = vt::timing::getCurrentTime();
           auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
           trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
         }
@@ -599,7 +599,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
       #if vt_check_enabled(trace_enabled)
         double tr_begin = 0;
         if (theConfig()->vt_trace_mpi) {
-          tr_begin = vt::timing::Timing::getCurrentTime();
+          tr_begin = vt::timing::getCurrentTime();
         }
       #endif
 
@@ -619,7 +619,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
 
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
-          auto tr_end = vt::timing::Timing::getCurrentTime();
+          auto tr_end = vt::timing::getCurrentTime();
           auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, subsize);
           trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
         }
@@ -797,7 +797,7 @@ void ActiveMessenger::recvDataDirect(
     #if vt_check_enabled(trace_enabled)
       double tr_begin = 0;
       if (theConfig()->vt_trace_mpi) {
-        tr_begin = vt::timing::Timing::getCurrentTime();
+        tr_begin = vt::timing::getCurrentTime();
       }
     #endif
 
@@ -814,7 +814,7 @@ void ActiveMessenger::recvDataDirect(
 
     #if vt_check_enabled(trace_enabled)
       if (theConfig()->vt_trace_mpi) {
-        auto tr_end = vt::timing::Timing::getCurrentTime();
+        auto tr_end = vt::timing::getCurrentTime();
         auto tr_note = fmt::format(
           "Irecv(Data): from={}, bytes={}",
           from, sublen
@@ -1046,7 +1046,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
       #if vt_check_enabled(trace_enabled)
         double tr_begin = 0;
         if (theConfig()->vt_trace_mpi) {
-          tr_begin = vt::timing::Timing::getCurrentTime();
+          tr_begin = vt::timing::getCurrentTime();
         }
       #endif
 
@@ -1060,7 +1060,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
-          auto tr_end = vt::timing::Timing::getCurrentTime();
+          auto tr_end = vt::timing::getCurrentTime();
           auto tr_note = fmt::format(
             "Irecv(AM): from={}, bytes={}",
             stat.MPI_SOURCE, num_probe_bytes

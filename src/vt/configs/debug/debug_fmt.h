@@ -46,7 +46,7 @@
 
 #include "vt/config.h"
 
-#include "fmt/core.h"
+#include <fmt/core.h>
 
 #include <iosfwd>
 

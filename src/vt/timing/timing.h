@@ -44,15 +44,42 @@
 #if !defined INCLUDED_VT_TIMING_TIMING_H
 #define INCLUDED_VT_TIMING_TIMING_H
 
-#include "vt/config.h"
+#include <string>
+
+#include <EngFormat-Cpp/eng_format.hpp>
+#include <fmt/core.h>
+
 #include "vt/timing/timing_type.h"
 
 namespace vt { namespace timing {
 
-struct Timing {
-  static TimeType getCurrentTime();
-};
+/**
+  * \brief Get current time on the calling processor
+  *
+  * \return current time in seconds
+  */
+TimeType getCurrentTime();
 
 }} /* end namespace vt::timing */
+
+namespace fmt {
+
+template<>
+struct formatter<::vt::TimeTypeWrapper> {
+  template<typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) {
+    return ctx.begin();
+  }
+
+  template<typename FormatContext>
+  auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) {
+    return fmt::format_to(
+      ctx.out(), "{}",
+      to_engineering_string(t.seconds(), 3, eng_exponential, "s")
+    );
+  }
+};
+
+} /* end namespace fmt */
 
 #endif /*INCLUDED_VT_TIMING_TIMING_H*/

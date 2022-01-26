@@ -229,7 +229,7 @@ struct DiagnosticFormatter {
       // and if not, upgrade it until we find one that works
       auto multiplier = static_cast<int8_t>(TimeMultiplier::Nanoseconds);
       for ( ; multiplier < 0; multiplier++) {
-        auto value_tmp = static_cast<double>(val);
+        auto value_tmp = std::abs(static_cast<double>(val));
         for (int8_t i = static_cast<int8_t>(multiplier); i < 0; i++) {
           value_tmp *= 1000.0;
         }
@@ -260,9 +260,7 @@ struct DiagnosticFormatter {
       } else {
         // Compute the new value with multiplier as a double
         auto new_value = static_cast<double>(val);
-        for (int8_t i = static_cast<int8_t>(multiplier); i < 0; i++) {
-          new_value *= 1000.0;
-        }
+        new_value *= std::pow(1000.0, static_cast<int8_t>(-multiplier));
 
         auto decimal = std::string{decimal_format};
         return fmt::format(

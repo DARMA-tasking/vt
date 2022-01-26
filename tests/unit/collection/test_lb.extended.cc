@@ -84,13 +84,10 @@ void colHandler(MyMsg*, MyCol* col) {
   }
 }
 
-struct TestLoadBalancer : TestParallelHarnessParam<std::string> {
-  void runTest();
-};
+struct TestLoadBalancerOther : TestParallelHarnessParam<std::string> { };
+struct TestLoadBalancerGreedy : TestParallelHarnessParam<std::string> { };
 
-void TestLoadBalancer::runTest() {
-  auto lb_name = GetParam();
-
+void runTest(std::string lb_name) {
   vt::theConfig()->vt_lb = true;
   vt::theConfig()->vt_lb_name = lb_name;
   if (vt::theContext()->getNode() == 0) {
@@ -133,18 +130,29 @@ void TestLoadBalancer::runTest() {
   return;
 }
 
-TEST_P(TestLoadBalancer, test_load_balancer_1) {
-  runTest();
+TEST_P(TestLoadBalancerOther, test_load_balancer_other_1) {
+  runTest(GetParam());
 }
 
-TEST_P(TestLoadBalancer, test_load_balancer_keep_last_elm) {
+TEST_P(TestLoadBalancerOther, test_load_balancer_other_keep_last_elm) {
   vt::theConfig()->vt_lb_keep_last_elm = true;
-  runTest();
+  runTest(GetParam());
+}
+
+TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_2) {
+  runTest(GetParam());
+}
+
+TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_keep_last_elm) {
+  vt::theConfig()->vt_lb_keep_last_elm = true;
+  runTest(GetParam());
 }
 
 struct MyCol2 : vt::Collection<MyCol2,vt::Index1D> {};
 
-TEST_P(TestLoadBalancer, test_load_balancer_no_work) {
+using TestLoadBalancerNoWork = TestParallelHarness;
+
+TEST_F(TestLoadBalancerNoWork, test_load_balancer_no_work) {
   auto const num_nodes = theContext()->getNumNodes();
   auto const range = Index1D(num_nodes * 8);
   theCollection()->constructCollective<MyCol2>(
@@ -164,21 +172,28 @@ TEST_P(TestLoadBalancer, test_load_balancer_no_work) {
   }
 }
 
-auto balancers = ::testing::Values(
+auto balancers_other = ::testing::Values(
     "RandomLB",
     "RotateLB",
     "HierarchicalLB",
-    "TemperedLB",
-    "GreedyLB:strategy=scatter",
-    "GreedyLB:strategy=pt2pt",
-    "GreedyLB:strategy=bcast"
+    "TemperedLB"
 #   if vt_check_enabled(zoltan)
     , "ZoltanLB"
 #   endif
 );
 
+auto balancers_greedy = ::testing::Values(
+    "GreedyLB:strategy=scatter",
+    "GreedyLB:strategy=pt2pt",
+    "GreedyLB:strategy=bcast"
+);
+
 INSTANTIATE_TEST_SUITE_P(
-  LoadBalancerExplode, TestLoadBalancer, balancers
+  LoadBalancerExplodeOther, TestLoadBalancerOther, balancers_other
+);
+
+INSTANTIATE_TEST_SUITE_P(
+  LoadBalancerExplodeGreedy, TestLoadBalancerGreedy, balancers_greedy
 );
 
 struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {

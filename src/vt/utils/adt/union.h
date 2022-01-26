@@ -737,9 +737,7 @@ namespace std {
 
 template <typename T, typename... Ts>
 struct hash<vt::util::adt::AlignedCharUnion<T, Ts...>> {
-  size_t operator()(
-    vt::util::adt::AlignedCharUnion<T, Ts...> const& in
-  ) const {
+  size_t operator()(vt::util::adt::AlignedCharUnion<T, Ts...> const& in) const {
     return in.hash();
   }
 };

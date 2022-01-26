@@ -23,6 +23,10 @@ add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 set(FMT_LIBRARY fmt)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 
+# EngFormat-Cpp always included in the build
+set(ENG_FORMAT_LIBRARY EngFormat-Cpp)
+add_subdirectory(${PROJECT_LIB_DIR}/EngFormat-Cpp)
+
 # json library always included in the build
 set(JSON_BuildTests OFF)
 set(JSON_MultipleHeaders ON)
@@ -52,7 +56,7 @@ if (vt_asan_enabled)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR
       CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
       CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    message(STATUS "Building with address sanitizer enabled")
+    message(STATUS "Building VT with AddressSanitizer enabled")
   endif()
 endif()
 
@@ -60,7 +64,7 @@ if (vt_ubsan_enabled)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR
       CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
       CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    message(STATUS "Building with undefined behavior sanitizer enabled")
+    message(STATUS "Building VT with UndefinedBehaviorSanitizer enabled")
   else()
     message(SEND_ERROR "Cannot use UBSan without clang or gcc >= 4.8")
   endif()

@@ -42,6 +42,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/timing/timing.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
@@ -448,7 +449,8 @@ void TemperedLB::runLB(TimeType total_load) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
-      avg, max, pole, imb, load, should_lb
+      TimeTypeWrapper(avg), TimeTypeWrapper(max), TimeTypeWrapper(pole), imb,
+      TimeTypeWrapper(load), should_lb
     );
   }
 
@@ -500,7 +502,8 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         normal, temperedlb,
         "TemperedLB::doLBStages: (before) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
-        trial_, iter_, num_iters_, this_load, this_new_load_
+        trial_, iter_, num_iters_, TimeTypeWrapper(this_load),
+        TimeTypeWrapper(this_new_load_)
       );
 
       if (isOverloaded(this_new_load_)) {
@@ -526,7 +529,8 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         verbose, temperedlb,
         "TemperedLB::doLBStages: (after) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
-        trial_, iter_, num_iters_, this_load, this_new_load_
+        trial_, iter_, num_iters_, TimeTypeWrapper(this_load),
+        TimeTypeWrapper(this_new_load_)
       );
 
       if (rollback_ || theConfig()->vt_debug_temperedlb || (iter_ == num_iters_ - 1)) {
@@ -605,10 +609,12 @@ void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
   if (this_node == 0) {
     vt_debug_print(
       terse, temperedlb,
-      "TemperedLB::loadStatsHandler: trial={} iter={} max={:0.2f} min={:0.2f} "
-      "avg={:0.2f} pole={:0.2f} imb={:0.4f}\n",
-      trial_, iter_, in.max(), in.min(), in.avg(),
-      stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max),
+      "TemperedLB::loadStatsHandler: trial={} iter={} max={} min={} "
+      "avg={} pole={} imb={:0.4f}\n",
+      trial_, iter_, TimeTypeWrapper(in.max()),
+      TimeTypeWrapper(in.min()), TimeTypeWrapper(in.avg()),
+      TimeTypeWrapper(
+        stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max)),
       in.I()
     );
   }
@@ -640,7 +646,8 @@ void TemperedLB::informAsync() {
     normal, temperedlb,
     "TemperedLB::informAsync: starting inform phase: trial={}, iter={}, "
     "k_max={}, is_underloaded={}, is_overloaded={}, load={}\n",
-    trial_, iter_, k_max_, is_underloaded_, is_overloaded_, this_new_load_
+    trial_, iter_, k_max_, is_underloaded_, is_overloaded_,
+    TimeTypeWrapper(this_new_load_)
   );
 
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
@@ -1086,7 +1093,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         vt_debug_print(
           normal, temperedlb,
           "TemperedLB::decide: over_avg={}, single_obj_load={}\n",
-          over_avg, cur_objs[ordered_obj_ids[0]]
+          TimeTypeWrapper(over_avg),
+          TimeTypeWrapper(cur_objs[ordered_obj_ids[0]])
         );
       }
     }
@@ -1146,7 +1154,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         vt_debug_print(
           normal, temperedlb,
           "TemperedLB::decide: over_avg={}, marginal_obj_load={}\n",
-          over_avg, cur_objs[ordered_obj_ids[0]]
+          TimeTypeWrapper(over_avg),
+          TimeTypeWrapper(cur_objs[ordered_obj_ids[0]])
         );
       }
     }
@@ -1235,7 +1244,7 @@ void TemperedLB::decide() {
           verbose, temperedlb,
           "TemperedLB::decide: trial={}, iter={}, under.size()={}, "
           "selected_node={}, selected_load={:e}, obj_id={:x}, home={}, "
-          "obj_load={:e}, target_max_load={:e}, this_new_load_={:e}, "
+          "obj_load={}, target_max_load={}, this_new_load_={}, "
           "criterion={}\n",
           trial_,
           iter_,
@@ -1244,9 +1253,9 @@ void TemperedLB::decide() {
           selected_load,
           obj_id.id,
           obj_id.getHomeNode(),
-          obj_load,
-          target_max_load_,
-          this_new_load_,
+          TimeTypeWrapper(obj_load),
+          TimeTypeWrapper(target_max_load_),
+          TimeTypeWrapper(this_new_load_),
           eval
         );
 

@@ -56,6 +56,7 @@
 #include "vt/vrt/collection/manager.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/vrt/collection/balance/lb_args_enum_converter.h"
+#include "vt/timing/timing.h"
 
 #include <unordered_map>
 #include <memory>
@@ -168,10 +169,11 @@ void GreedyLB::loadStats() {
   if (this_node == 0) {
     vt_print(
       lb,
-      "loadStats: load={:.2f}, total={:.2f}, avg={:.2f}, I={:.2f},"
+      "loadStats: load={}, total={}, avg={}, I={:.2f},"
       "should_lb={}, auto={}, threshold={}\n",
-      this_load, total_load, avg_load, I, should_lb, auto_threshold,
-      this_threshold
+      TimeTypeWrapper(this_load / 1000), TimeTypeWrapper(total_load / 1000),
+      TimeTypeWrapper(avg_load / 1000), I, should_lb, auto_threshold,
+      TimeTypeWrapper(this_threshold / 1000)
     );
     fflush(stdout);
   }
@@ -206,7 +208,8 @@ void GreedyLB::reduceCollect() {
   vt_debug_print(
     verbose, lb,
     "GreedyLB::reduceCollect: load={}, load_begin={} load_over.size()={}\n",
-    this_load, this_load_begin, load_over.size()
+    TimeTypeWrapper(this_load / 1000),
+    TimeTypeWrapper(this_load_begin / 1000), load_over.size()
   );
   using MsgType = GreedyCollectMsg;
   auto cb = vt::theCB()->makeSend<GreedyLB, MsgType, &GreedyLB::collectHandler>(proxy[0]);
@@ -260,8 +263,9 @@ void GreedyLB::runBalancer(
       verbose, lb,
       "\t GreedyLB::runBalancer: min_node={}, load_={}, "
       "recs_={}, max_rec: obj={}, time={}\n",
-      min_node.node_, min_node.load_, min_node.recs_.size(),
-      max_rec.getObj(), max_rec.getLoad()
+      min_node.node_, TimeTypeWrapper(min_node.load_ / 1000),
+      min_node.recs_.size(), max_rec.getObj(),
+      TimeTypeWrapper(max_rec.getLoad() / 1000)
     );
     min_node.recs_.push_back(max_rec.getObj());
     min_node.load_ += max_rec.getLoad();
@@ -403,7 +407,9 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
     normal, lb,
     "loadOverBin: this_load_begin={}, this_load={}, threshold={}: "
     "adding unit: bin={}, milli={}\n",
-    this_load_begin, this_load, threshold, bin, obj_time_milli
+    TimeTypeWrapper(this_load_begin / 1000),
+    TimeTypeWrapper(this_load / 1000), TimeTypeWrapper(threshold / 1000),
+    bin, obj_time_milli
   );
 }
 
@@ -414,7 +420,9 @@ void GreedyLB::calcLoadOver() {
   vt_debug_print(
     normal, lb,
     "calcLoadOver: this_load={}, avg_load={}, threshold={}\n",
-    this_load, avg_load, threshold
+    TimeTypeWrapper(this_load / 1000),
+    TimeTypeWrapper(avg_load / 1000),
+    TimeTypeWrapper(threshold / 1000)
   );
 
   auto cur_item = obj_sample.begin();

@@ -183,25 +183,21 @@ using CommMapType   = std::unordered_map<CommKeyType,CommVolume>;
 
 namespace std {
 
-using CommCategoryType    = vt::elm::CommCategory;
-using CommKeyType         = vt::elm::CommKey;
-using ElementIDStructType = vt::elm::ElementIDStruct;
-
 template <>
-struct hash<CommCategoryType> {
-  size_t operator()(CommCategoryType const& in) const {
-    using LBUnderType = typename std::underlying_type<CommCategoryType>::type;
+struct hash<vt::elm::CommCategory> {
+  size_t operator()(vt::elm::CommCategory const& in) const {
+    using LBUnderType = std::underlying_type<vt::elm::CommCategory>::type;
     auto const val = static_cast<LBUnderType>(in);
     return std::hash<LBUnderType>()(val);
   }
 };
 
 template <>
-struct hash<CommKeyType> {
-  size_t operator()(CommKeyType const& in) const {
+struct hash<vt::elm::CommKey> {
+  size_t operator()(vt::elm::CommKey const& in) const {
     return std::hash<uint64_t>()(
-      std::hash<ElementIDStructType>()(in.from_) ^
-      std::hash<ElementIDStructType>()(in.to_) ^ in.nfrom_ ^ in.nto_
+      std::hash<vt::elm::ElementIDStruct>()(in.from_) ^
+      std::hash<vt::elm::ElementIDStruct>()(in.to_) ^ in.nfrom_ ^ in.nto_
     );
   }
 };

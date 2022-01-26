@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  timing.cc
+//                             test_timing.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,15 +41,51 @@
 //@HEADER
 */
 
+#include <gtest/gtest.h>
+
+#include "test_harness.h"
+
 #include "vt/timing/timing.h"
 
+namespace vt { namespace tests { namespace unit {
 
-#include <mpi.h>
+using TestTiming = TestHarness;
 
-namespace vt { namespace timing {
+TEST_F(TestTiming, test_time_formatting) {
+  {
+    TimeTypeWrapper const t = 15664645.400691890716;
+    EXPECT_EQ(fmt::format("{}", t), "15.7e6 s");
+  }
 
-TimeType getCurrentTime() {
-  return MPI_Wtime();
+  {
+    TimeTypeWrapper const t = 4.0006918907165527344;
+    EXPECT_EQ(fmt::format("{}", t), "4.00e0 s");
+  }
+
+  {
+    TimeTypeWrapper const t = 0.0691890716552734423;
+    EXPECT_EQ(fmt::format("{}", t), "69.2e-3 s");
+  }
+
+  {
+    TimeTypeWrapper const t = -0.0691890716552734423;
+    EXPECT_EQ(fmt::format("{}", t), "-69.2e-3 s");
+  }
+
+  {
+    TimeTypeWrapper const t = 0.0006918907165527344;
+    EXPECT_EQ(fmt::format("{}", t), "692e-6 s");
+  }
+
+  {
+    TimeTypeWrapper const t = 0.0000006918907165527;
+    EXPECT_EQ(fmt::format("{}", t), "692e-9 s");
+  }
+
+  {
+    TimeTypeWrapper const t = 3.14;
+    EXPECT_EQ(fmt::format("{}", t), "3.14e0 s");
+  }
 }
 
-}} /* end namespace vt::timing */
+}}} /* end namespace vt::tests::unit */

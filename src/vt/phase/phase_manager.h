@@ -153,6 +153,16 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
    */
   void nextPhaseCollective();
 
+  /**
+   * \brief Store start time for the current phase.
+   */
+  void setStartTime();
+
+  /**
+   * \brief Print summary for the current phase.
+   */
+  void printSummary();
+
 private:
   /**
    * \internal
@@ -197,7 +207,8 @@ public:
       | next_rooted_hook_id_
       | in_next_phase_collective_
       | reduce_next_phase_done_
-      | reduce_finished_;
+      | reduce_finished_
+      | start_time_;
   }
 
 private:
@@ -210,6 +221,7 @@ private:
   bool in_next_phase_collective_ = false;   /**< Whether blocked in next phase */
   bool reduce_next_phase_done_ = false;     /**< Whether reduce is complete */
   bool reduce_finished_ = false;            /**< Whether next phase is done */
+  TimeType start_time_;                     /**< Current phase start time */
 };
 
 }} /* end namespace vt::phase */
