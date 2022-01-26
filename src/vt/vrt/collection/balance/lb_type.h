@@ -63,6 +63,7 @@ enum struct LBType : int8_t {
   , ZoltanLB         = 6
 # endif
   , RandomLB         = 7
+  , SerdeTestLB      = 8
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

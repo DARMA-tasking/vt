@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.cc
+//                                serdetestlb.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,51 +41,49 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_type.h"
+// #include "vt/config.h"
+// #include "vt/timing/timing.h"
+#include "vt/vrt/collection/balance/serdetestlb/serdetestlb.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
+// #include "vt/vrt/collection/manager.h"
 
-namespace vt { namespace vrt { namespace collection {
+// #include <memory>
 
-namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-static std::unordered_map<LBType,std::string> lb_names_ = {
-  {LBType::NoLB,           std::string{"NoLB"          }},
-# if vt_check_enabled(zoltan)
-  {LBType::ZoltanLB,       std::string{"ZoltanLB"      }},
-# endif
-  {LBType::GreedyLB,       std::string{"GreedyLB"      }},
-  {LBType::HierarchicalLB, std::string{"HierarchicalLB"}},
-  {LBType::RotateLB,       std::string{"RotateLB"      }},
-  {LBType::TemperedLB,     std::string{"TemperedLB"    }},
-  {LBType::OfflineLB,      std::string{"OfflineLB"    }},
-  {LBType::RandomLB,       std::string{"RandomLB"      }},
-  {LBType::SerdeTestLB,    std::string{"SerdeTestLB"   }},
-};
-
-std::unordered_map<LBType, std::string>& get_lb_names() {
-  return lb_names_;
+/*static*/ std::unordered_map<std::string, std::string>
+SerdeTestLB::getInputKeysWithHelp() {
+  return std::unordered_map<std::string, std::string>{};
 }
 
-} /* end namespace balance */
+void SerdeTestLB::init(objgroup::proxy::Proxy<SerdeTestLB>) { }
 
-namespace lb {
+void SerdeTestLB::inputParams(balance::SpecEntry*) { }
 
-static std::unordered_map<Statistic,std::string> lb_stat_name_ = {
-  {Statistic::P_l,         std::string{"P_l"}},
-  {Statistic::P_c,         std::string{"P_c"}},
-  {Statistic::P_t,         std::string{"P_t"}},
-  {Statistic::O_l,         std::string{"O_l"}},
-  {Statistic::O_c,         std::string{"O_c"}},
-  {Statistic::O_t,         std::string{"O_t"}},
-  {Statistic::ObjectRatio, std::string{"ObjectRatio"}},
-  {Statistic::EdgeRatio,   std::string{"EdgeRatio"}}
-};
+void SerdeTestLB::runLB(TimeType) {
+  auto const this_node = theContext()->getNode();
+  auto const next_node = this_node;
 
-std::unordered_map<Statistic, std::string>& get_lb_stat_name() {
-  return lb_stat_name_;
+  if (this_node == 0) {
+    vt_print(
+      lb,
+      "SerdeTestLB: runLB: next_node={}\n",
+      next_node
+    );
+    fflush(stdout);
+  }
+
+  for (auto obj : *load_model_) {
+    TimeTypeWrapper const load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
+    vt_debug_print(
+      terse, lb,
+      "\t SerdeTestLB::migrating object to: obj={}, load={}, to_node={} from_node={}\n",
+      obj, load, next_node, this_node
+    );
+    if (obj.isMigratable()) {
+      migrateObjectTo(obj, next_node);
+    }
+  }
 }
 
-} /* end namespace lb */
-
-}}} /* end namespace vt::vrt::collection::balance */
+}}}} /* end namespace vt::vrt::collection::lb */

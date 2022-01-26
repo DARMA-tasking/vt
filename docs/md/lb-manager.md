@@ -51,15 +51,16 @@ To print LB specification during startup, use `--vt_lb_show_spec` command line f
 
 \section load-balancers Load balancers
 
-| Load Balancer  | Type                    | Description                                    | Reference |
-| -------------- | ----------------------- | ---------------------------------------------- | --------- |
-| RotateLB       | Testing                 | Rotate objects in a ring                       | `vt::vrt::collection::lb::RotateLB` |
-| RandomLB       | Testing                 | Randomly migrate object with seed              | `vt::vrt::collection::lb::RandomLB` |
-| GreedyLB       | Centralized             | Gather to central node apply min/max heap      | `vt::vrt::collection::lb::GreedyLB` |
-| TemperedLB     | Distributed             | Inspired by epidemic algorithms                | `vt::vrt::collection::lb::TemperedLB` |
-| HierarchicalLB | Hierarchical            | Build tree to move objects nodes               | `vt::vrt::collection::lb::HierarchicalLB` |
-| ZoltanLB       | Hyper-graph Partitioner | Run Zoltan in hyper-graph mode to LB           | `vt::vrt::collection::lb::ZoltanLB` |
-| OfflineLB     | User-specified          | Read file to determine mapping                 | `vt::vrt::collection::lb::OfflineLB` |
+| Load Balancer  | Type                    | Description                                                                         | Reference                                 |
+| -------------- | ----------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------- |
+| RotateLB       | Testing                 | Rotate objects in a ring                                                            | `vt::vrt::collection::lb::RotateLB`       |
+| RandomLB       | Testing                 | Randomly migrate object with seed                                                   | `vt::vrt::collection::lb::RandomLB`       |
+| GreedyLB       | Centralized             | Gather to central node apply min/max heap                                           | `vt::vrt::collection::lb::GreedyLB`       |
+| TemperedLB     | Distributed             | Inspired by epidemic algorithms                                                     | `vt::vrt::collection::lb::TemperedLB`     |
+| HierarchicalLB | Hierarchical            | Build tree to move objects nodes                                                    | `vt::vrt::collection::lb::HierarchicalLB` |
+| ZoltanLB       | Hyper-graph Partitioner | Run Zoltan in hyper-graph mode to LB                                                | `vt::vrt::collection::lb::ZoltanLB`       |
+| OfflineLB      | User-specified          | Read file to determine mapping                                                      | `vt::vrt::collection::lb::OfflineLB`      |
+| SerdeTestLB    | Testing                 | Migrate objects to the same node, for testing serialization/deserialization purpose | `vt::vrt::collection::lb::SerdeTestLB`    |
 
 \section load-models Object Load Models
 
@@ -104,22 +105,22 @@ times those objects will take in all future phases.
 
 The full set of load model classes provided with \vt is as follows
 
-| Load Model         | Description                                         | Reference |
-| ------------------ | --------------------------------------------------- | --------- |
-| **Utilities**      | | |
-| LoadModel          | Pure virtual interface class, which the following implement | `vt::vrt::collection::balance::LoadModel` |
-| ComposedModel      | A convenience class for most implementations to inherit from, that passes unmodified calls through to an underlying model instance | `vt::vrt::collection::balance::ComposedModel` |
-| RawData            | Returns historical data only, from the measured times | `vt::vrt::collection::balance::RawData` |
-| **Transformers**   | Transforms the values computed by the composed model(s), agnostic to whether a query refers to a past or future phase | |
-| Norm               | When asked for a `WHOLE_PHASE` value, computes a specified l-norm over all subphases | `vt::vrt::collection::balance::Norm` |
-| SelectSubphases    | Filters and remaps the subphases with data present in the underlying model | `vt::vrt::collection::balance::SelectSubphases` |
-| CommOverhead       | Adds a specified amount of imputed 'system overhead' time to each object's work based on the number of messages received | `vt::vrt::collection::balance::CommOverhead` |
-| PerCollection      | Maintains a set of load models associated with different collection instances, and passes queries for an object through to the model corresponding to its collection | `vt::vrt::collection::balance::PerCollection` |
-| **Predictors**     | Computes values for future phase queries, and passes through past phase queries | |
-| NaivePersistence   | Passes through historical queries, and maps all future queries to the most recent past phase | `vt::vrt::collection::balance::NaivePersistence` |
-| PersistenceMedianLastN | Similar to NaivePersistence, except that it predicts based on a median over the N most recent phases | `vt::vrt::collection::balance::PersistenceMedianLastN` |
-| LinearModel        | Computes a linear regression over on object's loads from a number of recent phases | `vt::vrt::collection::balance::LinearModel` |
-| MultiplePhases     | Computes values for future phases based on sums of the underlying model's predictions for N corresponding future phases |  `vt::vrt::collection::balance::MultiplePhases` |
+| Load Model             | Description                                                                                                                                                          | Reference                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **Utilities**          |                                                                                                                                                                      |                                                        |
+| LoadModel              | Pure virtual interface class, which the following implement                                                                                                          | `vt::vrt::collection::balance::LoadModel`              |
+| ComposedModel          | A convenience class for most implementations to inherit from, that passes unmodified calls through to an underlying model instance                                   | `vt::vrt::collection::balance::ComposedModel`          |
+| RawData                | Returns historical data only, from the measured times                                                                                                                | `vt::vrt::collection::balance::RawData`                |
+| **Transformers**       | Transforms the values computed by the composed model(s), agnostic to whether a query refers to a past or future phase                                                |                                                        |
+| Norm                   | When asked for a `WHOLE_PHASE` value, computes a specified l-norm over all subphases                                                                                 | `vt::vrt::collection::balance::Norm`                   |
+| SelectSubphases        | Filters and remaps the subphases with data present in the underlying model                                                                                           | `vt::vrt::collection::balance::SelectSubphases`        |
+| CommOverhead           | Adds a specified amount of imputed 'system overhead' time to each object's work based on the number of messages received                                             | `vt::vrt::collection::balance::CommOverhead`           |
+| PerCollection          | Maintains a set of load models associated with different collection instances, and passes queries for an object through to the model corresponding to its collection | `vt::vrt::collection::balance::PerCollection`          |
+| **Predictors**         | Computes values for future phase queries, and passes through past phase queries                                                                                      |                                                        |
+| NaivePersistence       | Passes through historical queries, and maps all future queries to the most recent past phase                                                                         | `vt::vrt::collection::balance::NaivePersistence`       |
+| PersistenceMedianLastN | Similar to NaivePersistence, except that it predicts based on a median over the N most recent phases                                                                 | `vt::vrt::collection::balance::PersistenceMedianLastN` |
+| LinearModel            | Computes a linear regression over on object's loads from a number of recent phases                                                                                   | `vt::vrt::collection::balance::LinearModel`            |
+| MultiplePhases         | Computes values for future phases based on sums of the underlying model's predictions for N corresponding future phases                                              | `vt::vrt::collection::balance::MultiplePhases`         |
 
 All of the provided load balancers described in the previous section
 require that the installed load model provide responses to future

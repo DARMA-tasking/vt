@@ -58,6 +58,7 @@
 #include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 #include "vt/vrt/collection/balance/randomlb/randomlb.h"
+#include "vt/vrt/collection/balance/serdetestlb/serdetestlb.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/utils/memory/memory_usage.h"
@@ -278,6 +279,7 @@ void LBManager::startLB(
 #   if vt_check_enabled(zoltan)
   case LBType::ZoltanLB:       lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();       break;
 #   endif
+  case LBType::SerdeTestLB:    lb_instances_["chosen"] = makeLB<lb::SerdeTestLB>();    break;
   case LBType::NoLB:
     vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
     break;
@@ -328,6 +330,9 @@ void LBManager::printLBArgsHelp(LBType lb) {
     help = lb::ZoltanLB::getInputKeysWithHelp();
     break;
 # endif
+  case LBType::SerdeTestLB:
+    help = lb::SerdeTestLB::getInputKeysWithHelp();
+    break;
   case LBType::NoLB:
     // deliberately skip retrieving arguments
     break;
