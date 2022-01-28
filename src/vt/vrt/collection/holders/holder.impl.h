@@ -195,7 +195,10 @@ int Holder<IndexT>::addListener(listener::ListenFnType<IndexT> fn) {
 
 template <typename IndexT>
 void Holder<IndexT>::removeListener(int element) {
-  vtAssert(event_listeners_.size() > element, "Listener must exist");
+  vtAssert(
+    event_listeners_.size() > static_cast<size_t>(element),
+    "Listener must exist"
+  );
   event_listeners_[element] = nullptr;
 }
 
