@@ -246,8 +246,11 @@ struct Holder {
    *
    * \param[in] event the event type
    * \param[in] idx the index to run on
+   * \param[in] home the home node for the element
    */
-  void applyListeners(listener::ElementEventEnum event, IndexT const& idx);
+  void applyListeners(
+    listener::ElementEventEnum event, IndexT const& idx, NodeType home_node
+  );
 
   friend struct CollectionManager;
 

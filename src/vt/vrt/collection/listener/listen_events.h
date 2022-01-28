@@ -64,7 +64,9 @@ enum struct ElementEventEnum : int8_t {
  * \brief Listener function type
  */
 template <typename IndexT>
-using ListenFnType = std::function<void(listener::ElementEventEnum, IndexT)>;
+using ListenFnType = std::function<
+  void(listener::ElementEventEnum event, IndexT idx, NodeType home_node)
+>;
 
 }}}} /* end namespace vt::vrt::collection::listener */
 

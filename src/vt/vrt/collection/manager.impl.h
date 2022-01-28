@@ -1242,7 +1242,7 @@ bool CollectionManager::insertCollectionElement(
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
       elm_holder->applyListeners(
-        listener::ElementEventEnum::ElementMigratedIn, idx
+        listener::ElementEventEnum::ElementMigratedIn, idx, home_node
       );
     } else {
       theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
@@ -1250,7 +1250,7 @@ bool CollectionManager::insertCollectionElement(
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
       elm_holder->applyListeners(
-        listener::ElementEventEnum::ElementCreated, idx
+        listener::ElementEventEnum::ElementCreated, idx, home_node
       );
     }
     return true;
@@ -1915,8 +1915,9 @@ MigrateStatus CollectionManager::migrateOut(
    col_unique_ptr->destroy();
    col_unique_ptr = nullptr;
 
+   auto const home_node = getMappedNode<IndexT>(col_proxy, idx);
    elm_holder->applyListeners(
-     listener::ElementEventEnum::ElementMigratedOut, idx
+     listener::ElementEventEnum::ElementMigratedOut, idx, home_node
    );
 
    return MigrateStatus::MigratedToRemote;
@@ -2012,8 +2013,9 @@ void CollectionManager::destroyMatching(
   auto elm_holder = findElmHolder<IndexT>(untyped_proxy);
   if (elm_holder) {
     elm_holder->foreach([&](IndexT const& idx, Indexable<IndexT>*) {
+      auto const home = getMappedNode<IndexT>(untyped_proxy, idx);
       elm_holder->applyListeners(
-        listener::ElementEventEnum::ElementDestroyed, idx
+        listener::ElementEventEnum::ElementDestroyed, idx, home
       );
     });
     elm_holder->destroyAll();

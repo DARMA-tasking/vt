@@ -204,11 +204,11 @@ void Holder<IndexT>::removeListener(int element) {
 
 template <typename IndexT>
 void Holder<IndexT>::applyListeners(
-  listener::ElementEventEnum event, IndexT const& idx
+  listener::ElementEventEnum event, IndexT const& idx, NodeType home_node
 ) {
   for (auto&& l : event_listeners_) {
     if (l) {
-      l(event, idx);
+      l(event, idx, home_node);
     }
   }
 }
