@@ -65,14 +65,22 @@ CollectionChainSet<Index>::CollectionChainSet(
   auto p = theObjGroup()->makeCollective<CollectionChainSet<Index>>(this);
 
   auto const this_node = theContext()->getNode();
+  auto const proxy_bits = proxy.getProxy();
 
   ListenerType l = [=](ElementEventEnum event, IndexT idx, NodeType home) {
     switch (event) {
     case ElementEventEnum::ElementCreated:
     case ElementEventEnum::ElementMigratedIn:
       if (layout == Local or (layout == Home and home == this_node)) {
-        addIndex(idx);
-      } else {
+        if (chains_.find(idx) == chains_.end()) {
+          addIndex(idx);
+        } else {
+          vtAssert(
+            layout == Home and event == ElementEventEnum::ElementMigratedIn,
+            "Must be home layout and migrated in"
+          );
+        }
+      } else if (event != ElementEventEnum::ElementMigratedIn) {
         vtAssert(layout == Home, "Must be a home layout");
         p[home].template send<IdxMsg, &ThisType::addIndexHan>(idx);
       }
@@ -81,20 +89,34 @@ CollectionChainSet<Index>::CollectionChainSet(
     case ElementEventEnum::ElementMigratedOut:
       if (chains_.find(idx) != chains_.end()) {
         removeIndex(idx);
-      } else {
+      } else if (event != ElementEventEnum::ElementMigratedOut) {
         vtAssert(layout == Home, "Must be a home layout");
         p[home].template send<IdxMsg, &ThisType::removeIndexHan>(idx);
       }
       break;
     }
   };
+
+  // Register the listener with the system
   auto listener = theCollection()->template registerElementListener<ColT>(
-    proxy.getProxy(), l
+    proxy_bits, l
   );
+
+  // Any elements that currently exist must be added as they won't be triggered
+  // by the listener
+  auto const& local_set = theCollection()->getLocalIndices(proxy);
+  for (auto&& idx : local_set) {
+    auto const home = theCollection()->getMappedNode(proxy, idx);
+    if (layout == Local or (layout == Home and home == this_node)) {
+      addIndex(idx);
+    } else {
+      p[home].template send<IdxMsg, &ThisType::addIndexHan>(idx);
+    }
+  }
 
   deallocator_ = [=]{
     theCollection()->template unregisterElementListener<ColT>(
-      proxy.getProxy(), listener
+      proxy_bits, listener
     );
   };
 }
