@@ -316,7 +316,6 @@ struct MyObjGroup {
   }
 
   void makeColl(NodeType num_nodes, int k) {
-    auto const node = theContext()->getNode();
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
     backend_proxy_ = vt::theCollection()->constructCollective<MyCol>(
       range, [=](vt::Index2D idx) {
@@ -324,11 +323,9 @@ struct MyObjGroup {
       }
     );
 
-    chains_ = std::make_unique<vt::messaging::CollectionChainSet<vt::Index2D>>();
-
-    for (int i = 0; i < k; ++i) {
-      chains_->addIndex(vt::Index2D(static_cast<int>(node), i));
-    }
+    chains_ = std::make_unique<vt::messaging::CollectionChainSet<vt::Index2D>>(
+      backend_proxy_
+    );
   }
 
   void startUpdate() {
