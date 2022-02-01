@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               manager.static.h
+//                             pending_send.fwd.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,64 +41,11 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_OBJGROUP_MANAGER_STATIC_H
-#define INCLUDED_VT_OBJGROUP_MANAGER_STATIC_H
+#if !defined INCLUDED_VT_MESSAGING_PENDING_SEND_FWD_H
+#define INCLUDED_VT_MESSAGING_PENDING_SEND_FWD_H
 
-#include "vt/config.h"
-#include "vt/objgroup/common.h"
-#include "vt/objgroup/holder/holder_base.h"
-#include "vt/messaging/active.h"
-#include "vt/runnable/make_runnable.h"
+namespace vt { namespace messaging {
+struct PendingSend;
+}} /* end namespace vt::messaging */
 
-namespace vt { namespace objgroup {
-
-template <typename MsgT>
-messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
-  auto const num_nodes = theContext()->getNumNodes();
-  auto const this_node = theContext()->getNode();
-  vtAssert(dest_node < num_nodes, "Invalid node (must be < num_nodes)");
-  if (dest_node != this_node) {
-    return theMsg()->sendMsg<MsgT>(dest_node, han,msg, no_tag);
-  } else {
-    // Get the current epoch for the message
-    auto const cur_epoch = theMsg()->setupEpochMsg(msg);
-
-    return messaging::PendingSend{cur_epoch, [msg, han, cur_epoch, this_node](){
-      auto holder = detail::getHolderBase(han);
-      auto const& elm_id = holder->getElmID();
-      auto stats = &holder->getStats();
-
-      runnable::makeRunnable(msg, true, han, this_node)
-        .withTDEpoch(cur_epoch)
-        .withLBStats(stats, elm_id)
-        .enqueue();
-    }};
-  }
-}
-
-template <typename MsgT>
-void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_node) {
-  auto const this_node = theContext()->getNode();
-
-  vtAssert(
-    dest_node == this_node,
-    fmt::format(
-      "Attempting to invoke handler on node:{} instead of node:{}!", this_node,
-      dest_node
-    )
-  );
-
-  // this is a local invocation.. no thread required
-  runnable::makeRunnable(msg.msg_, false, han, this_node)
-    .withTDEpochFromMsg()
-    .run();
-}
-
-template <typename MsgT>
-messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
-  return theMsg()->broadcastMsg<MsgT>(han, msg);
-}
-
-}} /* end namespace vt::objgroup */
-
-#endif /*INCLUDED_VT_OBJGROUP_MANAGER_STATIC_H*/
+#endif /*INCLUDED_VT_MESSAGING_PENDING_SEND_FWD_H*/

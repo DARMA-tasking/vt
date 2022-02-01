@@ -212,7 +212,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] msg message to send
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  void send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
+  PendingSendType send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
   /**
    * \internal \brief Invoke message handler on an element of the object group
@@ -241,7 +241,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] msg message to broadcast
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  void broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
+  PendingSendType broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
   /**
    * \brief Change the traced name of the object group
@@ -333,7 +333,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] node node to send message
    */
   template <typename MsgT>
-  void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
+  PendingSendType send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
 
   /**
    * \internal \brief Invoke a message handler on an objgroup
@@ -353,7 +353,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] han handler to invoke
    */
   template <typename MsgT>
-  void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
+  PendingSendType broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 
   /**
    * \internal \brief Get the proxy, identity function
