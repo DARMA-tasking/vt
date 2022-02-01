@@ -86,12 +86,15 @@ CollectionChainSet<Index>::CollectionChainSet(
       }
       break;
     case ElementEventEnum::ElementDestroyed:
-    case ElementEventEnum::ElementMigratedOut:
       if (chains_.find(idx) != chains_.end()) {
         removeIndex(idx);
-      } else if (event != ElementEventEnum::ElementMigratedOut) {
+      } else {
         vtAssert(layout == Home, "Must be a home layout");
         p[home].template send<IdxMsg, &ThisType::removeIndexHan>(idx);
+      }
+    case ElementEventEnum::ElementMigratedOut:
+      if (layout == Local) {
+        removeIndex(idx);
       }
       break;
     }
