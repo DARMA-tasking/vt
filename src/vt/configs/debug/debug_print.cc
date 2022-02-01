@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/debug/debug_masterconfig.h"
 #include "vt/configs/debug/debug_print.h"
 #include "vt/configs/error/hard_error.h"
 
