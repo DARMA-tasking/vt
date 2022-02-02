@@ -62,10 +62,15 @@ TEST_F(TestCollectionChainsetTracking, test_local_chainset_tracking) {
     .bulkInsert()
     .wait();
   auto cs = std::make_unique<messaging::CollectionChainSet<Index3D>>(proxy);
+
+  theCollective()->barrier();
+
   auto local_set = theCollection()->getLocalIndices(proxy);
   auto cs_set = std::set<Index3D>{cs->getSet().begin(), cs->getSet().end()};
   EXPECT_EQ(local_set, cs_set);
   cs->phaseDone();
+
+  theCollective()->barrier();
 
   auto getNthPosition = [&](Index3D idx, int n) -> NodeType {
     auto const home = theCollection()->getMappedNode(proxy, idx);
@@ -100,10 +105,15 @@ TEST_F(TestCollectionChainsetTracking, test_home_chainset_tracking) {
   auto cs = std::make_unique<messaging::CollectionChainSet<Index3D>>(
     proxy, messaging::Home
   );
+
+  theCollective()->barrier();
+
   auto local_set = theCollection()->getLocalIndices(proxy);
   auto cs_set = std::set<Index3D>{cs->getSet().begin(), cs->getSet().end()};
   EXPECT_EQ(local_set, cs_set);
   cs->phaseDone();
+
+  theCollective()->barrier();
 
   auto getNthPosition = [&](Index3D idx, int n) -> NodeType {
     auto const home = theCollection()->getMappedNode(proxy, idx);
