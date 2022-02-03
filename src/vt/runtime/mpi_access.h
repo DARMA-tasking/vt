@@ -44,7 +44,7 @@
 #if !defined INCLUDED_VT_RUNTIME_MPI_ACCESS_H
 #define INCLUDED_VT_RUNTIME_MPI_ACCESS_H
 
-#include "vt/configs/features/features_enableif.h"
+#include "vt/configs/features/features_defines.h"
 
 #if vt_check_enabled(mpi_access_guards)
 #define VT_ALLOW_MPI_CALLS vt::runtime::ScopedMPIAccess _vt_allow_scoped_mpi{};
