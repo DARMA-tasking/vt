@@ -45,10 +45,10 @@
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/context/context.h"
 
-#include <fmt/core.h>
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 #include <cxxabi.h>
+#include <tuple>
 
 namespace vt { namespace debug { namespace stack {
 
@@ -59,11 +59,12 @@ DumpStackType dumpStack(int skip) {
   unw_context_t context;
 
   // Initialize cursor to current frame for local unwinding.
-  if (unw_getcontext(&context) != 0) {
-    fmt::print("unw_getcontext failed");
-  }
-  if (unw_init_local(&cursor, &context) != 0) {
-    fmt::print("unw_init_local failed");
+  if (unw_getcontext(&context) or unw_init_local(&cursor, &context)) {
+    stack.emplace_back(
+      std::forward_as_tuple(
+        0, 0, "Unwinding error: unable to get stack backtrace", 0)
+    );
+    return stack;
   }
 
   // Unwind frames one by one, going up the frame stack.
@@ -75,7 +76,7 @@ DumpStackType dumpStack(int skip) {
 
     unw_word_t offset, pc;
     if (unw_get_reg(&cursor, UNW_REG_IP, &pc) != 0) {
-      fmt::print("unw_get_reg failed");
+      continue;
     }
     if (pc == 0) {
       break;
@@ -97,8 +98,10 @@ DumpStackType dumpStack(int skip) {
 
       std::free(demangled);
     } else {
-      // FIXME!
-      fmt::print(" -- error: unable to obtain symbol name for this frame\n");
+      stack.emplace_back(
+        std::forward_as_tuple(
+          0, 0, "Unwinding error: unable to obtain symbol name for this frame", 0)
+      );
     }
   }
   while (unw_step(&cursor) > 0);
