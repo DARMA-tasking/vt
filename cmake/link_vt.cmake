@@ -24,6 +24,7 @@ function(link_target_with_vt)
     LINK_ATOMIC
     LINK_MPI
     LINK_FMT
+    LINK_UNWIND
     LINK_ENG_FORMAT
     LINK_ZLIB
     LINK_FCONTEXT
@@ -94,9 +95,15 @@ function(link_target_with_vt)
     target_link_libraries(${ARG_TARGET} PRIVATE gtest)
   endif()
 
-  # FIXME! do the usual ARG_LINK_UNWIND here
-  if (NOT DEFINED APPLE)
-    target_link_libraries(${ARG_TARGET} PRIVATE unwind)
+  if (NOT DEFINED ARG_LINK_UNWIND AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_UNWIND)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: unwind=${ARG_LINK_UNWIND}")
+    endif()
+    if (NOT DEFINED APPLE)
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} unwind
+      )
+    endif()
   endif()
 
   if (NOT ARG_LINK_VT_LIB)
