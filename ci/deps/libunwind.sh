@@ -24,7 +24,8 @@ cd ${libunwind_name}
 ./configure \
     --enable-static \
     --enable-shared \
-    --enable-setjmp=no
+    --enable-setjmp=no \
+    --prefix=`/usr/lib/x86_64-linux-gnu/`
 make
 make install
 cd -
