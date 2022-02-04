@@ -25,7 +25,6 @@ RUN apt-get update -y -q && \
     make-guile \
     libomp5 \
     libomp-dev \
-    libunwind-dev \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -36,6 +35,9 @@ RUN ln -s \
 
 ENV CC=${compiler} \
     CXX=clang++
+
+COPY ./ci/deps/libunwind.sh libunwind.sh
+RUN ./libunwind.sh 1.6.2
 
 COPY ./ci/deps/cmake.sh cmake.sh
 RUN ./cmake.sh 3.18.4
