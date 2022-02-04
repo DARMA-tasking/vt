@@ -54,7 +54,7 @@ struct TestStackDumping : TestParallelHarness {};
 
 TEST_F(TestStackDumping, find_function_names) {
   auto stack = debug::stack::dumpStack();
-  auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
+  auto stack_pretty = debug::stack::prettyPrintStack(stack);
 
   fmt::print("{}", stack_pretty);
 
@@ -65,7 +65,7 @@ TEST_F(TestStackDumping, find_function_names) {
 
 TEST_F(TestStackDumping, skip_first_function) {
   auto stack = debug::stack::dumpStack(1);
-  auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
+  auto stack_pretty = debug::stack::prettyPrintStack(stack);
 
   fmt::print("{}", stack_pretty);
 

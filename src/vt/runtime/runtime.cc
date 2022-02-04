@@ -276,7 +276,7 @@ void Runtime::pauseForDebugger() {
 # endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
+    auto stack_pretty = debug::stack::prettyPrintStack(stack);
     if (vt::theConfig()->vt_stack_file != "") {
       Runtime::writeToFile(stack_pretty);
     } else {
@@ -602,7 +602,7 @@ void Runtime::output(
     if (dump) {
       if (Runtime::nodeStackWrite()) {
         auto stack = debug::stack::dumpStack();
-        auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
+        auto stack_pretty = debug::stack::prettyPrintStack(stack);
         if (theConfig()->vt_stack_file != "") {
           Runtime::writeToFile(stack_pretty);
         } else {

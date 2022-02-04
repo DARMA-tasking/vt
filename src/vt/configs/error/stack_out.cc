@@ -53,7 +53,7 @@
 namespace vt { namespace debug { namespace stack {
 
 DumpStackType dumpStack(int skip) {
-  StackVectorType stack;
+  DumpStackType stack;
 
   unw_cursor_t cursor;
   unw_context_t context;
@@ -103,11 +103,10 @@ DumpStackType dumpStack(int skip) {
   }
   while (unw_step(&cursor) > 0);
 
-  // FIXME! - is "truncated" backup still necessary?
-  return std::make_tuple("",stack);
+  return stack;
 }
 
-std::string prettyPrintStack(StackVectorType const& stack) {
+std::string prettyPrintStack(DumpStackType const& stack) {
   auto green      = ::vt::debug::green();
   auto bred       = ::vt::debug::bred();
   auto reset      = ::vt::debug::reset();
