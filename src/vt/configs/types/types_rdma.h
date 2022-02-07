@@ -44,7 +44,6 @@
 #if !defined INCLUDED_VT_CONFIGS_TYPES_TYPES_RDMA_H
 #define INCLUDED_VT_CONFIGS_TYPES_TYPES_RDMA_H
 
-#include "vt/configs/debug/debug_masterconfig.h"
 #include "vt/configs/types/types_type.h"
 
 #include <cstdint>

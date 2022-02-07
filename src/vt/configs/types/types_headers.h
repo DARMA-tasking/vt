@@ -49,5 +49,6 @@
 #include "vt/configs/types/types_rdma.h"
 #include "vt/configs/types/types_size.h"
 #include "vt/configs/types/types_sentinels.h"
+#include "vt/epoch/epoch_type.h"
 
 #endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_HEADERS_H*/

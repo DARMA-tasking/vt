@@ -44,6 +44,8 @@
 #if !defined INCLUDED_VT_UTILS_BITS_BITS_COUNTER_H
 #define INCLUDED_VT_UTILS_BITS_BITS_COUNTER_H
 
+#include <vt/configs/types/types_type.h>
+
 // Do not pull in other VT dependencies here
 
 namespace vt { namespace utils {
