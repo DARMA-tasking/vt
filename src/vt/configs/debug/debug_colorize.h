@@ -50,11 +50,8 @@
 #include <string>
 
 namespace vt { namespace debug {
-arguments::AppConfig * preConfigRef();
-arguments::AppConfig const* preConfig();
-}} /* end namespace vt::debug */
 
-namespace vt { namespace debug {
+arguments::AppConfig const* preConfig();
 
 inline bool colorizeOutput() {
   return vt::debug::preConfig()->colorize_output;

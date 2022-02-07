@@ -52,7 +52,13 @@
 #include <numeric>
 #include <fstream>
 
-namespace vt { namespace tests { namespace perf { namespace common {
+namespace vt {
+
+namespace debug {
+arguments::AppConfig *preConfigRef();
+} // namespace debug
+
+namespace tests { namespace perf { namespace common {
 
 /////////////////////////////////////////////////
 ///////////////      HELPERS      ///////////////
@@ -445,4 +451,6 @@ void PerfTestHarness::GetMemoryUsage() {
   memory_use_[current_run_].push_back(mem_tracker_.getUsage());
 }
 
-}}}} // namespace vt::tests::perf::common
+}}} // namespace tests::perf::common
+
+} // namespace vt

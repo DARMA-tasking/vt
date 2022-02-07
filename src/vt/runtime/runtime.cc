@@ -94,7 +94,13 @@
 #include <unistd.h>
 #include <csignal>
 
-namespace vt { namespace runtime {
+namespace vt {
+
+namespace debug {
+arguments::AppConfig * preConfigRef();
+} // namespace debug
+
+namespace runtime {
 
 /*static*/ bool volatile Runtime::sig_user_1_ = false;
 
@@ -1230,4 +1236,6 @@ arguments::AppConfig const* Runtime::getAppConfig() const {
   return app_config_;
 }
 
-}} //end namespace vt::runtime
+} // namespace runtime
+
+} // namespace vt
