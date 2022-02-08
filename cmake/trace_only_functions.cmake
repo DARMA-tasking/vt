@@ -30,7 +30,7 @@ function(create_trace_only_target)
 
     # vt/configs
     vt/configs/generated/vt_git_revision.h vt/configs/error/hard_error.h
-    vt/configs/features/features_enableif.h vt/configs/features/features_featureswitch.h
+    vt/configs/features/features_featureswitch.h
     vt/configs/features/features_defines.h vt/configs/types/types_type.h
     vt/configs/error/pretty_print_message.h vt/configs/debug/debug_masterconfig.h
     vt/configs/debug/debug_config.h
