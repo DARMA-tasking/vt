@@ -45,8 +45,7 @@
 #define INCLUDED_VT_CONFIGS_ERROR_PRETTY_PRINT_STACK_H
 
 #include "vt/config.h"
-#include "vt/configs/error/stack_out.h"
-#include "vt/configs/debug/debug_colorize.h"
+#include "vt/context/context.h"
 
 #include <string>
 

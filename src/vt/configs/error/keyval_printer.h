@@ -44,9 +44,6 @@
 #if !defined INCLUDED_VT_CONFIGS_ERROR_KEYVAL_PRINTER_H
 #define INCLUDED_VT_CONFIGS_ERROR_KEYVAL_PRINTER_H
 
-#include "vt/configs/error/common.h"
-#include "vt/configs/debug/debug_config.h"
-
 #include <cstdlib>
 #include <tuple>
 #include <type_traits>

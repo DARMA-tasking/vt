@@ -45,8 +45,6 @@
 #define INCLUDED_VT_CONFIGS_ERROR_ERROR_H
 
 #include "vt/configs/types/types_headers.h"
-#include "vt/configs/debug/debug_config.h"
-#include "vt/configs/error/common.h"
 
 #include <string>
 #include <tuple>
