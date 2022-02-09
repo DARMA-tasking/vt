@@ -44,6 +44,8 @@
 #include <fmt/core.h>
 
 #include "vt/configs/error/stack_out.h"
+#include "vt/configs/debug/debug_colorize.h"
+#include "vt/context/context.h"
 
 #include <cstdlib>
 #include <vector>
@@ -117,5 +119,43 @@ DumpStackType dumpStack(int skip) {
   return std::make_tuple(trace_buf.str(),tuple);
 }
 
-}}} /* end namespace vt::debug::stack */
+std::string prettyPrintStack(StackVectorType const& stack) {
+  auto green      = ::vt::debug::green();
+  auto bred       = ::vt::debug::bred();
+  auto reset      = ::vt::debug::reset();
+  auto magenta    = ::vt::debug::magenta();
+  auto yellow     = ::vt::debug::yellow();
+  auto vt_pre     = ::vt::debug::vtPre();
+  auto node       = ::vt::theContext()->getNode();
+  auto node_str   = ::vt::debug::proc(node);
+  auto prefix     = vt_pre + node_str + " ";
+  auto seperator  = fmt::format("{}{}{:-^120}{}\n", prefix, yellow, "", reset);
+  auto title_node = fmt::format("on Node {}", node);
+  auto title      = fmt::format(" Dump Stack Backtrace {} ", title_node);
 
+  std::string out = "";
+
+  out += fmt::format("{}", seperator);
+  out += fmt::format("{}{}{:-^120}{}\n", prefix, yellow, title, reset);
+  out += fmt::format("{}", seperator);
+
+  int i = 0;
+  for (auto&& t : stack) {
+    auto ret_str = fmt::format(
+      "{}{}{:<3}{} {}{:<3} {:<13}{} {}{}{} + {}{}\n",
+      prefix,
+      bred, i, reset,
+      magenta, std::get<0>(t), std::get<1>(t), reset,
+      green,   std::get<2>(t), reset,
+      std::get<3>(t), reset
+    );
+    out += ret_str;
+    i++;
+  }
+
+  //out += seperator + seperator + seperator;
+
+  return out;
+}
+
+}}} /* end namespace vt::debug::stack */

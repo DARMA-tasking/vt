@@ -61,6 +61,8 @@ using DumpStackType = std::tuple<std::string, StackVectorType>;
  */
 DumpStackType dumpStack(int skip = 0);
 
+std::string prettyPrintStack(StackVectorType const& stack);
+
 }}} /* end namespace vt::debug::stack */
 
 #endif /*INCLUDED_VT_CONFIGS_ERROR_STACK_OUT_H*/
