@@ -52,13 +52,7 @@
 #include "test_config.h"
 #include "data_message.h"
 
-namespace vt {
-
-namespace debug {
-arguments::AppConfig *preConfigRef();
-} // namespace debug
-
-namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit {
 
 template <typename TestBase>
 struct TestHarnessAny : TestBase {
@@ -79,8 +73,6 @@ using TestHarness = TestHarnessAny<testing::Test>;
 template <typename ParamT>
 using TestHarnessParam = TestHarnessAny<testing::TestWithParam<ParamT>>;
 
-}} // end namespace tests::unit
-
-} // namespace vt
+}}} // end namespace vt::tests::unit
 
 #endif /* INCLUDED_UNIT_TEST_HARNESS_H */
