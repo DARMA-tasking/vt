@@ -56,7 +56,7 @@ namespace vt {
 template <runtime::RuntimeInstType instance>
 RuntimePtrType CollectiveAnyOps<instance>::initialize(
   int& argc, char**& argv, WorkerCountType const num_workers,
-  bool is_interop, MPI_Comm* comm
+  bool is_interop, MPI_Comm* comm, arguments::AppConfig const* appConfig
 ) {
   using vt::runtime::RuntimeInst;
   using vt::runtime::Runtime;
@@ -66,7 +66,8 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
 
 #pragma sst global rt
   RuntimeInst<instance>::rt = std::make_unique<Runtime>(
-    argc, argv, num_workers, is_interop, resolved_comm
+    argc, argv, num_workers, is_interop, resolved_comm,
+    eRuntimeInstance::DefaultInstance, appConfig
   );
 
 #pragma sst global rt
