@@ -67,9 +67,8 @@ DumpStackType dumpStack(int skip) {
   }
 
   // Unwind frames one by one, going up the frame stack.
-  int i = 0;
   do {
-    if (i++ < skip) {
+    if (skip-- > 0) {
       continue;
     }
 
