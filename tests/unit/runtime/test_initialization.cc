@@ -49,38 +49,111 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestInitialization : TestParallelHarness {
-  void SetUp() override {
-    using namespace vt;
-
-    TestHarness::SetUp();
-
-    // communicator is duplicated.
-    MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
-
-    static char prog_name[]{"vt_program"};
-    static char cli_argument[]{"--cli_argument=100"};
-    static char vt_no_terminate[]{"--vt_no_terminate"};
-    custom_args.emplace_back(prog_name);
-    custom_args.emplace_back(cli_argument);
-    custom_args.emplace_back(vt_no_terminate);
-    custom_args.emplace_back(nullptr);
-
-    custom_argc = custom_args.size() - 1;
-    custom_argv = custom_args.data();
-    EXPECT_EQ(custom_argc, 3);
-
-    vt::initialize(custom_argc, custom_argv, no_workers, true, &comm);
-  }
-
-  std::vector<char*> custom_args;
-  int custom_argc;
-  char** custom_argv;
-};
+struct TestInitialization : TestParallelHarness { };
 
 TEST_F(TestInitialization, test_initialize_with_args) {
+  MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
+
+  static char prog_name[]{"vt_program"};
+  static char cli_argument[]{"--cli_argument=100"};
+  static char vt_no_terminate[]{"--vt_no_terminate"};
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(cli_argument);
+  custom_args.emplace_back(vt_no_terminate);
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char** custom_argv = custom_args.data();
+
+  EXPECT_EQ(custom_argc, 3);
+
+  vt::initialize(custom_argc, custom_argv, no_workers, true, &comm);
+
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
   EXPECT_EQ(theConfig()->vt_no_terminate, true);
+
+  EXPECT_EQ(custom_argc, 2);
+  EXPECT_STREQ(custom_argv[0], "vt_program");
+  EXPECT_STREQ(custom_argv[1], "--cli_argument=100");
+  EXPECT_EQ(custom_argv[2], nullptr);
+}
+
+TEST_F(TestInitialization, test_initialize_with_appconfig) {
+  MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
+
+  static char prog_name[]{"vt_program"};
+  static char cli_argument[]{"--cli_argument=100"};
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(cli_argument);
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char** custom_argv = custom_args.data();
+
+  EXPECT_EQ(custom_argc, 2);
+
+  arguments::AppConfig appConfig{};
+  appConfig.vt_lb = true;
+  appConfig.vt_lb_name = "RotateLB";
+  appConfig.vt_lb_stats = true;
+
+  vt::initialize(custom_argc, custom_argv, no_workers, true, &comm, &appConfig);
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_program");
+  EXPECT_EQ(theConfig()->vt_lb, true);
+  EXPECT_EQ(theConfig()->vt_lb_name, "RotateLB");
+  EXPECT_EQ(theConfig()->vt_lb_stats, true);
+
+  // vt_no_detect_hang wasn't set, should be default
+  EXPECT_EQ(theConfig()->vt_no_detect_hang, false);
+
+  EXPECT_EQ(custom_argc, 2);
+  EXPECT_STREQ(custom_argv[0], "vt_program");
+  EXPECT_STREQ(custom_argv[1], "--cli_argument=100");
+  EXPECT_EQ(custom_argv[2], nullptr);
+}
+
+TEST_F(TestInitialization, test_initialize_with_args_and_appconfig) {
+  MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
+
+  static char prog_name[]{"vt_program"};
+  static char cli_argument[]{"--cli_argument=100"};
+  static char vt_no_terminate[]{"--vt_no_terminate"};
+  static char vt_no_detect_hang[]{"--vt_no_detect_hang"};
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(cli_argument);
+  custom_args.emplace_back(vt_no_terminate);
+  custom_args.emplace_back(vt_no_detect_hang);
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char** custom_argv = custom_args.data();
+
+  EXPECT_EQ(custom_argc, 4);
+
+  arguments::AppConfig appConfig{};
+  appConfig.vt_color = false;
+  appConfig.vt_lb = true;
+  appConfig.vt_lb_name = "RotateLB";
+  appConfig.vt_lb_stats = true;
+  appConfig.vt_no_detect_hang = false;
+
+  vt::initialize(custom_argc, custom_argv, no_workers, true, &comm, &appConfig);
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_program");
+  EXPECT_EQ(theConfig()->vt_color, false);
+  EXPECT_EQ(theConfig()->vt_lb, true);
+  EXPECT_EQ(theConfig()->vt_lb_name, "RotateLB");
+  EXPECT_EQ(theConfig()->vt_lb_stats, true);
+  EXPECT_EQ(theConfig()->vt_no_terminate, true);
+  // CLI args should overwritten hardcoded appConfig
+  EXPECT_EQ(theConfig()->vt_no_detect_hang, true);
 
   EXPECT_EQ(custom_argc, 2);
   EXPECT_STREQ(custom_argv[0], "vt_program");

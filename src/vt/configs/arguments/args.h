@@ -73,8 +73,9 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
   /// On success the tuple will be {-1, ""}. Otherwise the exit code
   /// (which may be 0 if help was requested) will be returned along
   /// with an appropriate display message.
-  std::tuple<int, std::string> parse(int& argc, char**& argv);
-  std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv);
+  std::tuple<int, std::string> parse(
+    int& argc, char**& argv, arguments::AppConfig const* appConfig
+  );
 
   static std::unique_ptr<ArgConfig> construct(std::unique_ptr<ArgConfig> arg);
 
@@ -89,23 +90,30 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
   AppConfig config_;
 
 private:
-  void addColorArgs(CLI::App& app);
-  void addSignalArgs(CLI::App& app);
-  void addMemUsageArgs(CLI::App& app);
-  void addStackDumpArgs(CLI::App& app);
-  void addTraceArgs(CLI::App& app);
-  void addDebugPrintArgs(CLI::App& app);
-  void addLbArgs(CLI::App& app);
-  void addDiagnosticArgs(CLI::App& app);
-  void addTerminationArgs(CLI::App& app);
-  void addDebuggerArgs(CLI::App& app);
-  void addUserArgs(CLI::App& app);
-  void addSchedulerArgs(CLI::App& app);
-  void addConfigFileArgs(CLI::App& app);
-  void addRuntimeArgs(CLI::App& app);
-  void addThreadingArgs(CLI::App& app);
+  std::tuple<int, std::string> parseToConfig(
+    int& argc, char**& argv, arguments::AppConfig& appConfig
+  );
+  std::tuple<int, std::string> parseArguments(
+    CLI::App& app, int& argc, char**& argv, arguments::AppConfig& appConfig
+  );
 
-  void postParseTransform();
+  void addColorArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addSignalArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addMemUsageArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addStackDumpArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addTraceArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addDebugPrintArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addLbArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addDiagnosticArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addTerminationArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addDebuggerArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addUserArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addSchedulerArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addConfigFileArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addRuntimeArgs(CLI::App& app, arguments::AppConfig& appConfig);
+  void addThreadingArgs(CLI::App& app, arguments::AppConfig& appConfig);
+
+  void postParseTransform(arguments::AppConfig& appConfig);
 
   bool parsed_ = false;
 };
