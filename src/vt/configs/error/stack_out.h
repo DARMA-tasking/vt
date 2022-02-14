@@ -46,6 +46,7 @@
 
 #include <cstdlib>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace vt { namespace debug { namespace stack {
@@ -54,7 +55,7 @@ using StackTupleType  = std::tuple<int32_t,uint64_t,std::string,std::size_t>;
 using DumpStackType   = std::vector<StackTupleType>;
 
 /*
- * This function automatically produce a backtrace of the stack with demangled
+ * This function automatically produces a backtrace of the stack with demangled
  * function names and method name.
  */
 DumpStackType dumpStack(int skip = 0);

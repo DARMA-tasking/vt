@@ -48,7 +48,6 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 #include <cxxabi.h>
-#include <tuple>
 
 namespace vt { namespace debug { namespace stack {
 
