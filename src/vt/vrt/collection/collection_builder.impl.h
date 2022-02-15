@@ -62,7 +62,9 @@ std::tuple<EpochType, VirtualProxyType> CollectionManager::makeCollection(
   po.proxy_bits_ = proxy_bits;
 
   if (not is_collective) {
-    auto ep = theTerm()->makeEpochRooted("collection construction");
+    auto ep = theTerm()->makeEpochRooted(
+      "collection construction", term::UseDS{false}
+    );
     theMsg()->pushEpoch(ep);
     using MsgType = param::ConstructParamMsg<ColT>;
     auto m = makeMessage<MsgType>(po);
