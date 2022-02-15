@@ -51,9 +51,11 @@
  *  the cost of these checks can be fully optimized out.
  */
 
+#include "vt/collective/basic.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/error/common.h"
 #include "vt/configs/error/pretty_print_message.h"
+#include "vt/configs/features/features_defines.h"
 
 #include <string>
 

@@ -44,7 +44,7 @@
 #if !defined INCLUDED_VT_TRACE_TRACE_LITE_H
 #define INCLUDED_VT_TRACE_TRACE_LITE_H
 
-#include "vt/configs/features/features_enableif.h"
+#include "vt/configs/features/features_defines.h"
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_log.h"
 #include "vt/trace/trace_user_event.h"

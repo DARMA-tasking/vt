@@ -128,7 +128,4 @@ using ActionNodeType          = std::function<void(NodeType)>;
 
 }  // end namespace vt
 
-// Include the epoch type, which is a strong, named type
-#include "vt/epoch/epoch_type.h"
-
 #endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_TYPE_H*/

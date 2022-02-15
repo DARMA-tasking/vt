@@ -44,8 +44,6 @@
 #if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_MASTERCONFIG_H
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_MASTERCONFIG_H
 
-#include <vt/cmake_config.h>
-
 /*
  * Define the compile-time configuration options. Eventually this will be
  * partially defined with cmake options

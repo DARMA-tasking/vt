@@ -64,7 +64,6 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/error/stack_out.h"
-#include "vt/configs/error/pretty_print_stack.h"
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"

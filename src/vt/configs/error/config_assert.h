@@ -49,12 +49,8 @@
  *  build/runtime mode when the assertion breaks
  */
 
-#include "vt/configs/debug/debug_config.h"
-#include "vt/configs/types/types_type.h"
-#include "vt/configs/error/common.h"
 #include "vt/configs/error/assert_out.h"
 #include "vt/configs/error/assert_out_info.h"
-#include "vt/configs/error/keyval_printer.h"
 
 #include <tuple>
 #include <type_traits>

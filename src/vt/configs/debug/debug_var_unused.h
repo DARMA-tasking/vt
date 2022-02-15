@@ -44,6 +44,8 @@
 #if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_VAR_UNUSED_H
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_VAR_UNUSED_H
 
+#include <utility>
+
 #define vt_force_use(...)           vt::debug::useVars(__VA_ARGS__);
 
 namespace vt { namespace debug {

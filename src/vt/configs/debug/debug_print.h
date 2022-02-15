@@ -44,7 +44,6 @@
 #if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINT_H
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINT_H
 
-#include "vt/configs/arguments/app_config.h"
 #include "vt/configs/types/types_headers.h"
 #include "vt/configs/debug/debug_config.h"
 #include "vt/configs/debug/debug_colorize.h"
@@ -273,7 +272,6 @@ extern runtime::Runtime* curRT;
 } /* end namespace vt */
 
 namespace vt { namespace debug {
-arguments::AppConfig const* preConfig();
 NodeType preNode();
 }} /* end namespace vt::debug */
 
