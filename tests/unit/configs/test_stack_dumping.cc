@@ -45,7 +45,6 @@
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
-#include "vt/configs/error/pretty_print_stack.h"
 #include "vt/configs/error/stack_out.h"
 
 namespace vt { namespace tests { namespace unit {
