@@ -36,6 +36,9 @@ RUN ln -s \
 ENV CC=${compiler} \
     CXX=clang++
 
+COPY ./ci/deps/libunwind.sh libunwind.sh
+RUN ./libunwind.sh 1.6.2
+
 COPY ./ci/deps/cmake.sh cmake.sh
 RUN ./cmake.sh 3.18.4
 

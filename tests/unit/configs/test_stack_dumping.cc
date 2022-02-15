@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 stack_out.h
+//                            test_stack_dumping.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,27 +41,36 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_ERROR_STACK_OUT_H
-#define INCLUDED_VT_CONFIGS_ERROR_STACK_OUT_H
+#include <fmt/core.h>
+#include <gtest/gtest.h>
 
-#include <cstdlib>
-#include <string>
-#include <tuple>
-#include <vector>
+#include "test_parallel_harness.h"
+#include "vt/configs/error/stack_out.h"
 
-namespace vt { namespace debug { namespace stack {
+namespace vt { namespace tests { namespace unit {
 
-using StackTupleType  = std::tuple<int32_t,uint64_t,std::string,std::size_t>;
-using DumpStackType   = std::vector<StackTupleType>;
+struct TestStackDumping : TestParallelHarness {};
 
-/*
- * This function automatically produces a backtrace of the stack with demangled
- * function names and method name.
- */
-DumpStackType dumpStack(int skip = 0);
+TEST_F(TestStackDumping, find_function_names) {
+  auto stack = debug::stack::dumpStack();
+  auto stack_pretty = debug::stack::prettyPrintStack(stack);
 
-std::string prettyPrintStack(DumpStackType const& stack);
+  fmt::print("{}", stack_pretty);
 
-}}} /* end namespace vt::debug::stack */
+  EXPECT_NE(stack_pretty.find("Dump Stack Backtrace"), std::string::npos);
+  EXPECT_NE(stack_pretty.find("vt::debug::stack::dumpStack"), std::string::npos);
+  EXPECT_NE(stack_pretty.find("vt::tests::unit::TestStackDumping"), std::string::npos);
+}
 
-#endif /*INCLUDED_VT_CONFIGS_ERROR_STACK_OUT_H*/
+TEST_F(TestStackDumping, skip_first_function) {
+  auto stack = debug::stack::dumpStack(1);
+  auto stack_pretty = debug::stack::prettyPrintStack(stack);
+
+  fmt::print("{}", stack_pretty);
+
+  EXPECT_NE(stack_pretty.find("Dump Stack Backtrace"), std::string::npos);
+  EXPECT_EQ(stack_pretty.find("vt::debug::stack::dumpStack"), std::string::npos);
+  EXPECT_NE(stack_pretty.find("vt::tests::unit::TestStackDumping"), std::string::npos);
+}
+
+}}} // end namespace vt::tests::unit
