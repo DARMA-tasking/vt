@@ -78,15 +78,13 @@ RuntimePtrType initialize(MPI_Comm* comm) {
 RuntimePtrType initialize(
   int& argc, char**& argv, arguments::AppConfig const* appConfig
 ) {
-  auto mpiComm = MPI_COMM_WORLD;
-  return initialize(argc, argv, &mpiComm, appConfig);
+  return initialize(argc, argv, nullptr, appConfig);
 }
 
 RuntimePtrType initialize(arguments::AppConfig const* appConfig) {
  int argc = 0;
  char** argv = nullptr;
- auto mpiComm = MPI_COMM_WORLD;
- return initialize(argc, argv, &mpiComm, appConfig);
+ return initialize(argc, argv, nullptr, appConfig);
 }
 
 void finalize(RuntimePtrType in_rt) {
