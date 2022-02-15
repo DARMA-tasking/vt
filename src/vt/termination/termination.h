@@ -213,7 +213,7 @@ public:
    * \return the new epoch
    */
   EpochType makeEpochRooted(
-    UseDS use_ds = UseDS{false},
+    UseDS use_ds = UseDS{true},
     ParentEpochCapture parent = ParentEpochCapture{}
   );
 
@@ -239,7 +239,7 @@ public:
    */
   EpochType makeEpochRooted(
     std::string const& label,
-    UseDS use_ds = UseDS{false},
+    UseDS use_ds = UseDS{true},
     ParentEpochCapture parent = ParentEpochCapture{}
   );
 
