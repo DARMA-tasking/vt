@@ -60,7 +60,7 @@ RuntimePtrType initialize(
 );
 RuntimePtrType initialize(MPI_Comm* comm = nullptr);
 RuntimePtrType initialize(
-  int& argc, char**& argv, arguments::ArgConfig const* appConfig
+  int& argc, char**& argv, arguments::AppConfig const* appConfig
 );
 
 void finalize(RuntimePtrType in_rt);
