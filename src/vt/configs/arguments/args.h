@@ -74,7 +74,7 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
   /// (which may be 0 if help was requested) will be returned along
   /// with an appropriate display message.
   std::tuple<int, std::string> parse(
-    int& argc, char**& argv, arguments::AppConfig const* appConfig
+    int& argc, char**& argv, AppConfig const* appConfig
   );
 
   static std::unique_ptr<ArgConfig> construct(std::unique_ptr<ArgConfig> arg);
@@ -91,29 +91,8 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
 
 private:
   std::tuple<int, std::string> parseToConfig(
-    int& argc, char**& argv, arguments::AppConfig& appConfig
+    int& argc, char**& argv, AppConfig& appConfig
   );
-  std::tuple<int, std::string> parseArguments(
-    CLI::App& app, int& argc, char**& argv, arguments::AppConfig& appConfig
-  );
-
-  void addColorArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addSignalArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addMemUsageArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addStackDumpArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addTraceArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addDebugPrintArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addLbArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addDiagnosticArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addTerminationArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addDebuggerArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addUserArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addSchedulerArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addConfigFileArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addRuntimeArgs(CLI::App& app, arguments::AppConfig& appConfig);
-  void addThreadingArgs(CLI::App& app, arguments::AppConfig& appConfig);
-
-  void postParseTransform(arguments::AppConfig& appConfig);
 
   bool parsed_ = false;
 };

@@ -56,15 +56,135 @@ namespace vt { namespace arguments {
 
 // Temporary variables used only for parsing artifacts.
 namespace {
-std::vector<std::string> arg_trace_mpi;
-} /* end anon namespace */
 
-/*static*/ std::unique_ptr<ArgConfig>
-ArgConfig::construct(std::unique_ptr<ArgConfig> arg) {
-  return arg;
+std::vector<std::string> arg_trace_mpi;
+
+/**
+ * \internal
+ * Application specific cleanup and mapping to actual app args.
+ */
+void postParseTransform(AppConfig& appConfig) {
+  auto contains = [](std::vector<std::string> &v, std::string str){
+    return std::find(v.begin(), v.end(), str) not_eq v.end();
+  };
+
+  appConfig.vt_trace_mpi = contains(arg_trace_mpi, "internal");
+  appConfig.vt_trace_pmpi = contains(arg_trace_mpi, "external");
+
+  using config::ModeEnum;
+
+  auto const& level = appConfig.vt_debug_level;
+  if (level == "terse" or level == "0") {
+    appConfig.vt_debug_level_val = ModeEnum::terse;
+  } else if (level == "normal" or level == "1") {
+    appConfig.vt_debug_level_val = ModeEnum::terse | ModeEnum::normal;
+  } else if (level == "verbose" or level == "2") {
+    appConfig.vt_debug_level_val =
+      ModeEnum::terse | ModeEnum::normal | ModeEnum::verbose;
+  } else {
+    vtAbort("Invalid value passed to --vt_debug_level");
+  }
 }
 
-void ArgConfig::addColorArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+std::tuple<int, std::string> parseArguments(
+  CLI::App& app, int& argc, char**& argv, AppConfig& appConfig
+) {
+
+  std::vector<char*> vt_args;
+
+  // Load up vectors (has curious ability to altnerate vt/mpi/passthru)
+  std::vector<char*>* rargs = nullptr;
+  for (int i = 1; i < argc; i++) {
+    char* c = argv[i];
+    if (0 == strcmp(c, "--vt_args")) {
+      rargs = &vt_args;
+    } else if (0 == strcmp(c, "--")) {
+      rargs = &appConfig.passthru_args;
+    } else if (rargs) {
+      rargs->push_back(c);
+    } else if (0 == strncmp(c, "--vt_", 5)) {
+      // Implicit start of VT args allows pass-thru 'for compatibility'
+      // although the recommended calling pattern to always provide VT args first.
+      rargs = &vt_args;
+      rargs->push_back(c);
+    } else {
+      appConfig.passthru_args.push_back(c);
+    }
+  }
+
+  // All must be accounted for
+  app.allow_extras(false);
+
+  // Build string-vector and reverse order to parse (CLI quirk)
+  std::vector<std::string> args_to_parse;
+  for (auto it = vt_args.crbegin(); it != vt_args.crend(); ++it) {
+    args_to_parse.push_back(*it);
+  }
+
+  // Allow a input config file
+  app.set_config(
+    "--vt_input_config",
+    "", // no default file name
+    "Read in an ini config file for VT",
+    false // not required
+  );
+
+  try {
+    app.parse(args_to_parse);
+  } catch (CLI::Error &ex) {
+    // Return exit code and message, delaying logic processing of such.
+    // The default exit code for 'help' is 0.
+    std::stringstream message_stream;
+    int result = app.exit(ex, message_stream, message_stream);
+
+    return std::make_tuple(result, message_stream.str());
+  }
+
+  // If the user specified to output the full configuration, save it in a string
+  // so node 0 can output in the runtime once MPI is init'ed
+  if (appConfig.vt_output_config) {
+    appConfig.vt_output_config_str = app.config_to_str(true, true);
+  }
+
+  // Get the clean prog name; don't allow path bleed in usages.
+  // std::filesystem is C++17.
+  std::string clean_prog_name = argv[0];
+  size_t l = clean_prog_name.find_last_of("/\\");
+  if (l not_eq std::string::npos and l + 1 < clean_prog_name.size()) {
+    clean_prog_name = clean_prog_name.substr(l + 1, std::string::npos);
+  }
+
+  appConfig.prog_name = clean_prog_name;
+  appConfig.argv_prog_name = argv[0];
+
+  postParseTransform(appConfig);
+
+  // Rebuild passthru into ref-returned argc/argv
+
+  // It should be possible to modify the original argv as the outgoing
+  // number of arguments is always less. As currently allocated here,
+  // ownership of the new object is ill-defined.
+  int new_argc = appConfig.passthru_args.size() + 1; // does not include argv[0]
+
+  static std::unique_ptr<char*[]> new_argv = nullptr;
+
+  new_argv = std::make_unique<char*[]>(new_argc + 1);
+
+  int i = 0;
+  new_argv[i++] = appConfig.argv_prog_name;
+  for (auto&& arg : appConfig.passthru_args) {
+    new_argv[i++] = arg;
+  }
+  new_argv[i++] = nullptr;
+
+  // Set them back with all vt (and MPI) arguments elided
+  argc = new_argc;
+  argv = new_argv.get();
+
+  return std::make_tuple(-1, std::string{});
+}
+
+void addColorArgs(CLI::App& app, AppConfig& appConfig) {
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
   auto always = "Colorize output (default)";
   auto never  = "Do not colorize output (overrides --vt_color)";
@@ -81,7 +201,7 @@ void ArgConfig::addColorArgs(CLI::App& app, arguments::AppConfig& appConfig) {
   // b->excludes(a);
 }
 
-void ArgConfig::addSignalArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addSignalArgs(CLI::App& app, AppConfig& appConfig) {
   auto no_sigint      = "Do not register signal handler for SIGINT";
   auto no_sigsegv     = "Do not register signal handler for SIGSEGV";
   auto no_sigbus      = "Do not register signal handler for SIGBUS";
@@ -97,7 +217,7 @@ void ArgConfig::addSignalArgs(CLI::App& app, arguments::AppConfig& appConfig) {
   g->group(signalGroup);
 }
 
-void ArgConfig::addMemUsageArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addMemUsageArgs(CLI::App& app, AppConfig& appConfig) {
   /*
    * Flags for controlling memory usage reporting
    */
@@ -128,8 +248,7 @@ void ArgConfig::addMemUsageArgs(CLI::App& app, arguments::AppConfig& appConfig) 
   mf->group(memoryGroup);
 }
 
-
-void ArgConfig::addStackDumpArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addStackDumpArgs(CLI::App& app, AppConfig& appConfig) {
   /*
    * Flags to control stack dumping
    */
@@ -157,7 +276,7 @@ void ArgConfig::addStackDumpArgs(CLI::App& app, arguments::AppConfig& appConfig)
   m->group(stackGroup);
 }
 
-void ArgConfig::addTraceArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addTraceArgs(CLI::App& app, AppConfig& appConfig) {
   /*
    * Flags to control tracing output
    */
@@ -217,8 +336,8 @@ void ArgConfig::addTraceArgs(CLI::App& app, arguments::AppConfig& appConfig) {
   qze->group(traceGroup);
 }
 
-void ArgConfig::addDebugPrintArgs(CLI::App& app, arguments::AppConfig& appConfig) {
-  #define debug_pp(opt) +std::string(vt::config::PrettyPrintCat<config::opt>::str)+
+void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
+  #define debug_pp(opt) +std::string(config::PrettyPrintCat<config::opt>::str)+
 
   auto rp  = "Enable all debug prints";
   auto rq  = "Set level for debug prints (0=>terse, 1=>normal, 2=>verbose)";
@@ -338,7 +457,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app, arguments::AppConfig& appConfig
   eb->group(debugGroup);
 }
 
-void ArgConfig::addLbArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   /*
    * Flags for enabling load balancing and configuring it
    */
@@ -401,7 +520,7 @@ void ArgConfig::addLbArgs(CLI::App& app, arguments::AppConfig& appConfig) {
   (void) h1;
 }
 
-void ArgConfig::addDiagnosticArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addDiagnosticArgs(CLI::App& app, AppConfig& appConfig) {
   /*
    * Flags for controlling diagnostic collection and output
    */
@@ -424,7 +543,7 @@ void ArgConfig::addDiagnosticArgs(CLI::App& app, arguments::AppConfig& appConfig
   e->group(diagnosticGroup);
 }
 
-void ArgConfig::addTerminationArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addTerminationArgs(CLI::App& app, AppConfig& appConfig) {
   auto hang         = "Disable termination hang detection";
   auto hang_freq    = "The number of tree traversals before a hang is detected";
   auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
@@ -450,14 +569,14 @@ void ArgConfig::addTerminationArgs(CLI::App& app, arguments::AppConfig& appConfi
   y->group(debugTerm);
 }
 
-void ArgConfig::addDebuggerArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addDebuggerArgs(CLI::App& app, AppConfig& appConfig) {
   auto pause        = "Pause at startup so GDB/LLDB can be attached";
   auto z = app.add_flag("--vt_pause", appConfig.vt_pause, pause);
   auto launchTerm = "Debugging/Launch";
   z->group(launchTerm);
 }
 
-void ArgConfig::addUserArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addUserArgs(CLI::App& app, AppConfig& appConfig) {
   auto user1    = "User Option 1a (boolean)";
   auto user2    = "User Option 2a (boolean)";
   auto user3    = "User Option 3a (boolean)";
@@ -488,7 +607,7 @@ void ArgConfig::addUserArgs(CLI::App& app, arguments::AppConfig& appConfig) {
   us3->group(userOpts);
 }
 
-void ArgConfig::addSchedulerArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addSchedulerArgs(CLI::App& app, AppConfig& appConfig) {
   auto nsched = "Number of times to run the progress function in scheduler";
   auto ksched = "Run the MPI progress function at least every k handlers that run";
   auto ssched = "Run the MPI progress function at least every s seconds";
@@ -501,7 +620,7 @@ void ArgConfig::addSchedulerArgs(CLI::App& app, arguments::AppConfig& appConfig)
   kca->group(schedulerGroup);
 }
 
-void ArgConfig::addConfigFileArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addConfigFileArgs(CLI::App& app, AppConfig& appConfig) {
   auto doconfig   = "Output all VT args to configuration file";
   auto configname = "Name of configuration file to output";
 
@@ -513,7 +632,7 @@ void ArgConfig::addConfigFileArgs(CLI::App& app, arguments::AppConfig& appConfig
   a2->group(configGroup);
 }
 
-void ArgConfig::addRuntimeArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addRuntimeArgs(CLI::App& app, AppConfig& appConfig) {
   auto max_size = "Maximum MPI send size (causes larger messages to be split "
                   "into multiple MPI sends)";
   auto assert = "Do not abort the program when vtAssert(..) is invoked";
@@ -537,7 +656,7 @@ void ArgConfig::addRuntimeArgs(CLI::App& app, arguments::AppConfig& appConfig) {
   a3->group(configRuntime);
 }
 
-void ArgConfig::addThreadingArgs(CLI::App& app, arguments::AppConfig& appConfig) {
+void addThreadingArgs(CLI::App& app, AppConfig& appConfig) {
 #if (vt_feature_fcontext != 0)
   auto ult_disable = "Disable running handlers in user-level threads";
   auto stack_size = "The default stack size for user-level threads";
@@ -553,6 +672,13 @@ void ArgConfig::addThreadingArgs(CLI::App& app, arguments::AppConfig& appConfig)
   a1->group(configThreads);
   a2->group(configThreads);
 #endif
+}
+
+} /* end anon namespace */
+
+/*static*/ std::unique_ptr<ArgConfig>
+ArgConfig::construct(std::unique_ptr<ArgConfig> arg) {
+  return arg;
 }
 
 class VtFormatter : public CLI::Formatter {
@@ -583,7 +709,7 @@ public:
 };
 
 std::tuple<int, std::string> ArgConfig::parse(
-  int& argc, char**& argv, arguments::AppConfig const* appConfig
+  int& argc, char**& argv, AppConfig const* appConfig
 ) {
   // If user didn't define appConfig, parse into this->config_.
   if (not appConfig) {
@@ -591,7 +717,7 @@ std::tuple<int, std::string> ArgConfig::parse(
   }
 
   // if user defines appConfig, parse into temporary config for later comparison.
-  arguments::AppConfig config{*appConfig};
+  AppConfig config{*appConfig};
   auto const parse_result = parseToConfig(argc, argv, config);
 
   config_ = config;
@@ -600,7 +726,7 @@ std::tuple<int, std::string> ArgConfig::parse(
 }
 
 std::tuple<int, std::string> ArgConfig::parseToConfig(
-  int& argc, char**& argv, arguments::AppConfig& appConfig
+  int& argc, char**& argv, AppConfig& appConfig
 ) {
   if (parsed_ || argc == 0 || argv == nullptr) {
     // Odd case.. pretend nothing bad happened.
@@ -647,131 +773,6 @@ std::tuple<int, std::string> ArgConfig::parseToConfig(
   parsed_ = true;
 
   return result;
-}
-
-/**
- * \internal
- * Application specific cleanup and mapping to actual app args.
- */
-void ArgConfig::postParseTransform(vt::arguments::AppConfig& appConfig) {
-  auto contains = [](std::vector<std::string> &v, std::string str){
-    return std::find(v.begin(), v.end(), str) not_eq v.end();
-  };
-
-  appConfig.vt_trace_mpi = contains(arg_trace_mpi, "internal");
-  appConfig.vt_trace_pmpi = contains(arg_trace_mpi, "external");
-
-  using vt::config::ModeEnum;
-
-  auto const& level = appConfig.vt_debug_level;
-  if (level == "terse" or level == "0") {
-    appConfig.vt_debug_level_val = ModeEnum::terse;
-  } else if (level == "normal" or level == "1") {
-    appConfig.vt_debug_level_val = ModeEnum::terse | ModeEnum::normal;
-  } else if (level == "verbose" or level == "2") {
-    appConfig.vt_debug_level_val =
-      ModeEnum::terse | ModeEnum::normal | ModeEnum::verbose;
-  } else {
-    vtAbort("Invalid value passed to --vt_debug_level");
-  }
-}
-
-std::tuple<int, std::string> ArgConfig::parseArguments(
-  CLI::App& app, int& argc, char**& argv, arguments::AppConfig& appConfig
-) {
-
-  std::vector<char*> vt_args;
-
-  // Load up vectors (has curious ability to altnerate vt/mpi/passthru)
-  std::vector<char*>* rargs = nullptr;
-  for (int i = 1; i < argc; i++) {
-    char* c = argv[i];
-    if (0 == strcmp(c, "--vt_args")) {
-      rargs = &vt_args;
-    } else if (0 == strcmp(c, "--")) {
-      rargs = &appConfig.passthru_args;
-    } else if (rargs) {
-      rargs->push_back(c);
-    } else if (0 == strncmp(c, "--vt_", 5)) {
-      // Implicit start of VT args allows pass-thru 'for compatibility'
-      // although the recommended calling pattern to always provide VT args first.
-      rargs = &vt_args;
-      rargs->push_back(c);
-    } else {
-      appConfig.passthru_args.push_back(c);
-    }
-  }
-
-  // All must be accounted for
-  app.allow_extras(false);
-
-  // Build string-vector and reverse order to parse (CLI quirk)
-  std::vector<std::string> args_to_parse;
-  for (auto it = vt_args.crbegin(); it != vt_args.crend(); ++it) {
-    args_to_parse.push_back(*it);
-  }
-
-  // Allow a input config file
-  app.set_config(
-    "--vt_input_config",
-    "", // no default file name
-    "Read in an ini config file for VT",
-    false // not required
-  );
-
-  try {
-    app.parse(args_to_parse);
-  } catch (CLI::Error &ex) {
-    // Return exit code and message, delaying logic processing of such.
-    // The default exit code for 'help' is 0.
-    std::stringstream message_stream;
-    int result = app.exit(ex, message_stream, message_stream);
-
-    return std::make_tuple(result, message_stream.str());
-  }
-
-  // If the user specified to output the full configuration, save it in a string
-  // so node 0 can output in the runtime once MPI is init'ed
-  if (appConfig.vt_output_config) {
-    appConfig.vt_output_config_str = app.config_to_str(true, true);
-  }
-
-  // Get the clean prog name; don't allow path bleed in usages.
-  // std::filesystem is C++17.
-  std::string clean_prog_name = argv[0];
-  size_t l = clean_prog_name.find_last_of("/\\");
-  if (l not_eq std::string::npos and l + 1 < clean_prog_name.size()) {
-    clean_prog_name = clean_prog_name.substr(l + 1, std::string::npos);
-  }
-
-  appConfig.prog_name = clean_prog_name;
-  appConfig.argv_prog_name = argv[0];
-
-  postParseTransform(appConfig);
-
-  // Rebuild passthru into ref-returned argc/argv
-
-  // It should be possible to modify the original argv as the outgoing
-  // number of arguments is always less. As currently allocated here,
-  // ownership of the new object is ill-defined.
-  int new_argc = appConfig.passthru_args.size() + 1; // does not include argv[0]
-
-  static std::unique_ptr<char*[]> new_argv = nullptr;
-
-  new_argv = std::make_unique<char*[]>(new_argc + 1);
-
-  int i = 0;
-  new_argv[i++] = appConfig.argv_prog_name;
-  for (auto&& arg : appConfig.passthru_args) {
-    new_argv[i++] = arg;
-  }
-  new_argv[i++] = nullptr;
-
-  // Set them back with all vt (and MPI) arguments elided
-  argc = new_argc;
-  argv = new_argv.get();
-
-  return std::make_tuple(-1, std::string{});
 }
 
 namespace {
