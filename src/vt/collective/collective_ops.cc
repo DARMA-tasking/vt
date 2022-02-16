@@ -237,6 +237,8 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
 #pragma sst global rt
   RuntimeInst<instance>::rt->initialize();
 
+  // If appConfig is not nullptr, compare CLI arguments with user-defined ones,
+  // and report overwritten ones.
   if (appConfig && theContext()->getNode() == 0) {
     printOverwrittens(*rt->getAppConfig(), *appConfig);
   }
