@@ -152,8 +152,6 @@ Runtime::Runtime(
   }
 
   // n.b. ref-update of args with pass-through arguments
-  // If appConfig is not nullptr, compare CLI arguments with user-defined ones,
-  // and report overwritten ones.
   std::tuple<int, std::string> result =
     arg_config_->parse(argc, argv, appConfig);
   int exit_code = std::get<0>(result);
