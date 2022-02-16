@@ -256,7 +256,6 @@ struct MyDistMapper : vt::mapping::BaseMapper<IndexT> {
       /// get to decide the mapping
       return (val ^ my_state) % num_nodes;
     } else {
-      // runInEpochRooted is not DS?
       auto ep = theTerm()->makeEpochRooted("mapTest", term::UseDS{true});
       theMsg()->pushEpoch(ep);
       proxy[owner].template send<GetMapMsg, &MyDistMapper<IndexT>::getMap>(
