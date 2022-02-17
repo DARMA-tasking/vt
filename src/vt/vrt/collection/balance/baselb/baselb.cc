@@ -228,7 +228,9 @@ void BaseLB::notifyNewHostNodeOfObjectsArriving(
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
-  transfers_.push_back(TransferDestType{obj_id, to});
+  if (obj_id.curr_node != to) {
+    transfers_.push_back(TransferDestType{obj_id, to});
+  }
 }
 
 void BaseLB::finalize(CountMsg* msg) {
