@@ -152,7 +152,7 @@ TEST_F(TestInitialization, test_initialize_with_args_and_appconfig) {
   EXPECT_EQ(theConfig()->vt_lb_name, "RotateLB");
   EXPECT_EQ(theConfig()->vt_lb_stats, true);
   EXPECT_EQ(theConfig()->vt_no_terminate, true);
-  // CLI args should overwritten hardcoded appConfig
+  // CLI args should overwrite hardcoded appConfig
   EXPECT_EQ(theConfig()->vt_no_detect_hang, true);
 
   EXPECT_EQ(custom_argc, 2);
