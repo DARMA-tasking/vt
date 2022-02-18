@@ -143,9 +143,8 @@ LoadStatsReplayer::create1DCollection(
   mapping.notifyOwners(1);
 
   auto coll_proxy = vt::makeCollection<StatsDrivenCollection<Index1D>>()
-    .bounds(range)
-    .bulkInsert()
-    .mapperObjGroup<StatsDrivenCollectionMapper<Index1D>>(map_proxy)
+    .bulkInsert(range)
+    .mapperObjGroup(map_proxy)
     .wait();
 
   runInEpochCollective([=]{
@@ -180,8 +179,8 @@ LoadStatsReplayer::create2DCollection(
 
   auto coll_proxy = vt::makeCollection<StatsDrivenCollection<Index2D>>()
     .bounds(range)
-    .bulkInsert()
-    .mapperObjGroup<StatsDrivenCollectionMapper<Index2D>>(map_proxy)
+    .bulkInsert(range)
+    .mapperObjGroup(map_proxy)
     .wait();
 
   runInEpochCollective([=]{
