@@ -61,21 +61,29 @@ template <typename CollectionIndexType>
 TimeType StatsReplay<CollectionIndexType>::getWork(
   ElementIDStruct object, PhaseOffset offset
 ) {
-  auto const phase = getNumCompletedPhases() - 1;
-  vt_debug_print(
-    verbose, replay,
-    "getWork {} phase={}\n",
-    object.id, phase
-  );
-
   vtAbortIf(
     offset.phases != PhaseOffset::NEXT_PHASE,
-    "This driver only supports offset.phases == NEXT_PHASE"
+    "This load model only supports offset.phases == NEXT_PHASE"
   );
-  vtAbortIf(
-    offset.subphase != PhaseOffset::WHOLE_PHASE,
-    "This driver only supports offset.subphase == WHOLE_PHASE"
-  );
+
+  auto const phase = getNumCompletedPhases() - 1;
+  if (offset.subphase != PhaseOffset::WHOLE_PHASE) {
+    vt_debug_print(
+      verbose, replay,
+      "getWork {} phase={} subphase={}\n",
+      object.id, phase, offset.subphase
+    );
+    // since this doesn't support subphases, say everything is in subphase 0
+    if (offset.subphase > 0) {
+      return 0;
+    }
+  } else {
+    vt_debug_print(
+      verbose, replay,
+      "getWork {} phase={}\n",
+      object.id, phase
+    );
+  }
 
   auto index = mapper_.getIndexFromElm(object.id);
   auto elm_ptr = proxy_(index).tryGetLocalPtr();
