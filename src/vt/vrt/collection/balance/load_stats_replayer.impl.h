@@ -90,6 +90,8 @@ void LoadStatsReplayer::configureCollectionForReplay(
   configureCollectionWithLoads(
     coll_proxy, mapping, loads_by_elm_by_phase, initial_phase
   );
+  // TODO: erase any comm history that resulted from setting up for replay;
+  //       has to be removed from each collection element, not from node stats
 }
 
 template <typename IndexType>
