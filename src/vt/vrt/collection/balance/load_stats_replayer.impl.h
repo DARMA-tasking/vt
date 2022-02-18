@@ -142,10 +142,10 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
       auto &phase_data = sd.node_data_.at(phase);
       for (auto const& entry : phase_data) {
         auto elm_id = entry.first;
-        auto load = entry.second;
+        auto load = entry.second.whole_phase_load;
         vt_debug_print(
           normal, replay,
-          "reading in loads for elm={}, home={} on phase={}: load={}\n",
+          "reading in loads for elm={}, home={} on phase={}: whole_phase_load={}\n",
           elm_id.id, elm_id.getHomeNode(), phase, load
         );
         loads_by_elm_by_phase[elm_id.id][phase] = load;
