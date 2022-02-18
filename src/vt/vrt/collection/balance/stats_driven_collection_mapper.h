@@ -118,7 +118,7 @@ struct StatsDrivenCollectionMapper : vt::mapping::BaseMapper<IndexType> {
 private:
   objgroup::proxy::Proxy<StatsDrivenCollectionMapper<IndexType>> proxy_;
 
-  std::map<IndexType, int /*mpi_rank*/> rank_mapping_ = {};
+  std::map<IndexType, NodeType /*mpi_rank*/> rank_mapping_ = {};
 
   /// \brief Mapping from element ids to vt indices
   std::unordered_map<ElmIDType, IndexType> elm_to_index_mapping_ = {};
