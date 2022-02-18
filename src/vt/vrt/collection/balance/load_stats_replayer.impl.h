@@ -146,7 +146,7 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
         vt_debug_print(
           normal, replay,
           "reading in loads for elm={}, home={} on phase={}: load={}\n",
-          elm_id.id, elm_id.home_node, phase, load
+          elm_id.id, elm_id.getHomeNode(), phase, load
         );
         loads_by_elm_by_phase[elm_id.id][phase] = load;
       }
@@ -169,10 +169,10 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
     vt_debug_print(
       normal, replay,
       "reading in mapping from elm={}, home={} to index={}\n",
-      elm_id.id, elm_id.home_node, idx
+      elm_id.id, elm_id.getHomeNode(), idx
     );
     mapping.addCollectionMapping(
-      idx, elm_id.home_node
+      idx, elm_id.getHomeNode()
     );
   }
 
