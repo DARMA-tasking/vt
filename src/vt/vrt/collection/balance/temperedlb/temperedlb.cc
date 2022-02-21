@@ -252,6 +252,33 @@ Description:
   instead of the processor-average load.
 )"
     },
+    {
+      "alpha",
+      R"(
+Values: <double>
+Default: 1.0
+Description:
+  Controls the load part in affine combination of load and communication.
+)"
+    },
+    {
+      "beta",
+      R"(
+Values: <double>
+Default: 0.0
+Description:
+  Controls the communication part in affine combination of load and communication.
+)"
+    },
+    {
+      "gamma",
+      R"(
+Values: <double>
+Default: 0.0
+Description:
+  ...
+)"
+    },
   };
   return keys_help;
 }
@@ -352,6 +379,10 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
 
   num_iters_     = spec->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
+
+  alpha_         = spec->getOrDefault<double>("alpha", alpha_);
+  beta_          = spec->getOrDefault<double>("alpha", beta_);
+  gamma_         = spec->getOrDefault<double>("alpha", gamma_);
 
   deterministic_ = spec->getOrDefault<bool>("deterministic", deterministic_);
   rollback_      = spec->getOrDefault<bool>("rollback", rollback_);
