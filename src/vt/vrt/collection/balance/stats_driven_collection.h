@@ -58,11 +58,11 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * task costs from imported stats files.
  */
 template <typename IndexType>
-struct StatsDrivenCollection : vt::Collection<
+struct StatsDrivenCollection : Collection<
   StatsDrivenCollection<IndexType>, IndexType
 > {
   using ThisType = StatsDrivenCollection<IndexType>;
-  using ProxyType = vt::CollectionProxy<ThisType, IndexType>;
+  using ProxyType = CollectionProxy<ThisType, IndexType>;
   using IndexVec = std::vector<uint64_t>;
   using ElmIDType = ElementIDType;
   using PhaseLoadsMapType = std::unordered_map<
@@ -72,20 +72,20 @@ struct StatsDrivenCollection : vt::Collection<
     ElmIDType, PhaseLoadsMapType
   >;
 
-  using NullMsg = vt::CollectionMessage<ThisType>;
+  using NullMsg = CollectionMessage<ThisType>;
 
-  struct MigrateHereMsg : vt::CollectionMessage<ThisType> {
+  struct MigrateHereMsg : CollectionMessage<ThisType> {
     MigrateHereMsg() = default;
 
-    MigrateHereMsg(vt::NodeType src)
+    MigrateHereMsg(NodeType src)
       : src_(src)
     { }
 
-    vt::NodeType src_ = vt::uninitialized_destination;
+    NodeType src_ = uninitialized_destination;
   };
 
-  struct LoadStatsDataMsg : vt::CollectionMessage<ThisType> {
-    using MessageParentType = vt::CollectionMessage<ThisType>;
+  struct LoadStatsDataMsg : CollectionMessage<ThisType> {
+    using MessageParentType = CollectionMessage<ThisType>;
     vt_msg_serialize_required();
 
     LoadStatsDataMsg() = default;
@@ -103,7 +103,7 @@ struct StatsDrivenCollection : vt::Collection<
     PhaseLoadsMapType stats_;
   };
 
-  struct InitialPhaseMsg : vt::CollectionMessage<ThisType> {
+  struct InitialPhaseMsg : CollectionMessage<ThisType> {
     InitialPhaseMsg() = default;
 
     InitialPhaseMsg(std::size_t initial_phase)
@@ -132,7 +132,7 @@ struct StatsDrivenCollection : vt::Collection<
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    vt::Collection<ThisType, IndexType>::serialize(s);
+    Collection<ThisType, IndexType>::serialize(s);
     s | stats_to_replay_
       | initial_phase_;
   }

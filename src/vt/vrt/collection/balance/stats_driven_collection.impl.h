@@ -66,7 +66,7 @@ void StatsDrivenCollection<IndexType>::migrateInitialObjectsHere(
   // loop over stats elms that were local for initial phase, asking for the
   // corresponding collection elements to be migrated here
   mapping_ = &mapper;
-  auto const this_rank = vt::theContext()->getNode();
+  auto const this_rank = theContext()->getNode();
   for (auto &item : loads_by_elm_by_phase) {
     auto elm_id = item.first;
     auto &loads_by_phase = item.second;

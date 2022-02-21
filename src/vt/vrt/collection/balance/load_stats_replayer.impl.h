@@ -119,7 +119,6 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
   std::size_t phases_to_run, StatsDrivenCollectionMapper<IndexType> &mapping
 ) {
   using vt::util::json::Reader;
-  using vt::vrt::collection::balance::StatsData;
 
   vt_debug_print(
     normal, replay, "constructing reader\n"
@@ -193,7 +192,7 @@ void LoadStatsReplayer::configureElementLocations(
     "configureElementLocations: initial_phase={}\n",
     initial_phase
   );
-  vt::runInEpochCollective([
+  runInEpochCollective([
     &coll_proxy, &loads_by_elm_by_phase, &initial_phase, &mapping
   ]{
     StatsDrivenCollection<IndexType>::migrateInitialObjectsHere(
@@ -214,7 +213,7 @@ void LoadStatsReplayer::configureCollectionWithLoads(
     "configureCollectionWithLoads: num_elms={}, initial_phase={}\n",
     loads_by_elm_by_phase.size(), initial_phase
   );
-  vt::runInEpochCollective([
+  runInEpochCollective([
     this, &coll_proxy, &loads_by_elm_by_phase, initial_phase, &mapping
   ]{
     // find vt index of each elm id in our local stats files and send message

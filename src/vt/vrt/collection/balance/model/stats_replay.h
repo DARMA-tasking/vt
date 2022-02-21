@@ -57,7 +57,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 template <typename CollectionIndexType>
 class StatsReplay : public ComposedModel {
 public:
-  using ProxyType = vt::CollectionProxy<
+  using ProxyType = CollectionProxy<
     StatsDrivenCollection<CollectionIndexType>, CollectionIndexType
   >;
 

@@ -58,7 +58,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * index and element id.
  */
 template <typename IndexType>
-struct StatsDrivenCollectionMapper : vt::mapping::BaseMapper<IndexType> {
+struct StatsDrivenCollectionMapper : mapping::BaseMapper<IndexType> {
   using ThisType = StatsDrivenCollectionMapper<IndexType>;
   using IndexVec = std::vector<uint64_t>;
   using ElmIDType = ElementIDType;

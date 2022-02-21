@@ -82,7 +82,7 @@ void LoadStatsReplayer::create1DAndConfigureForReplay(
   std::size_t coll_elms, std::size_t initial_phase,
   std::size_t phases_to_run
 ) {
-  auto base = vt::theLBManager()->getBaseLoadModel();
+  auto base = theLBManager()->getBaseLoadModel();
   auto replay_model = std::make_shared<StatsReplay<Index1D>>(base);
   auto &mapping = replay_model->getMapping();
 
@@ -92,12 +92,10 @@ void LoadStatsReplayer::create1DAndConfigureForReplay(
   );
 
   replay_model->setCollectionProxy(coll_proxy);
-  auto per_col = std::make_shared<
-    vt::vrt::collection::balance::PerCollection
-  >(base);
+  auto per_col = std::make_shared<PerCollection>(base);
   auto proxy_bits = coll_proxy.getProxy();
   per_col->addModel(proxy_bits, replay_model);
-  vt::theLBManager()->setLoadModel(per_col);
+  theLBManager()->setLoadModel(per_col);
 
   configureCollectionForReplay(coll_proxy, mapping, loads, initial_phase);
 }
@@ -106,7 +104,7 @@ void LoadStatsReplayer::create2DAndConfigureForReplay(
   std::size_t coll_elms_per_node, std::size_t initial_phase,
   std::size_t phases_to_run
 ) {
-  auto base = vt::theLBManager()->getBaseLoadModel();
+  auto base = theLBManager()->getBaseLoadModel();
   auto replay_model = std::make_shared<StatsReplay<Index2D>>(base);
   auto &mapping = replay_model->getMapping();
 
@@ -116,12 +114,10 @@ void LoadStatsReplayer::create2DAndConfigureForReplay(
   );
 
   replay_model->setCollectionProxy(coll_proxy);
-  auto per_col = std::make_shared<
-    vt::vrt::collection::balance::PerCollection
-  >(base);
+  auto per_col = std::make_shared<PerCollection>(base);
   auto proxy_bits = coll_proxy.getProxy();
   per_col->addModel(proxy_bits, replay_model);
-  vt::theLBManager()->setLoadModel(per_col);
+  theLBManager()->setLoadModel(per_col);
 
   configureCollectionForReplay(coll_proxy, mapping, loads, initial_phase);
 }
@@ -142,7 +138,7 @@ LoadStatsReplayer::create1DCollection(
   mapping.setProxy(map_proxy);
   mapping.notifyOwners(1);
 
-  auto coll_proxy = vt::makeCollection<StatsDrivenCollection<Index1D>>()
+  auto coll_proxy = makeCollection<StatsDrivenCollection<Index1D>>()
     .bulkInsert(range)
     .mapperObjGroup(map_proxy)
     .wait();
@@ -169,7 +165,7 @@ LoadStatsReplayer::create2DCollection(
     "create2DCollection: creating 2d collection with {} elms per node\n",
     coll_elms_per_node
   );
-  auto nranks = vt::theContext()->getNumNodes();
+  auto nranks = theContext()->getNumNodes();
   auto range = Index2D(
     static_cast<int>(nranks), static_cast<int>(coll_elms_per_node)
   );
@@ -177,7 +173,7 @@ LoadStatsReplayer::create2DCollection(
   mapping.setProxy(map_proxy);
   mapping.notifyOwners(2);
 
-  auto coll_proxy = vt::makeCollection<StatsDrivenCollection<Index2D>>()
+  auto coll_proxy = makeCollection<StatsDrivenCollection<Index2D>>()
     .bounds(range)
     .bulkInsert(range)
     .mapperObjGroup(map_proxy)
