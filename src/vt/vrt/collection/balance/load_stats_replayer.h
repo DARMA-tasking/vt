@@ -74,7 +74,7 @@ public:
   using IndexVec = std::vector<uint64_t>;
   using ElmIDType = ElementIDType;
   using PhaseLoadsMapType = std::unordered_map<
-    std::size_t /*phase from stats file*/, vt::TimeType
+    std::size_t /*phase from stats file*/, LoadSummary
   >;
   using ElmPhaseLoadsMapType = std::unordered_map<
     ElmIDType, PhaseLoadsMapType

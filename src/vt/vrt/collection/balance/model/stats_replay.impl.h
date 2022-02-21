@@ -67,24 +67,6 @@ TimeType StatsReplay<CollectionIndexType>::getWork(
   );
 
   auto const phase = getNumCompletedPhases() - 1;
-  if (offset.subphase != PhaseOffset::WHOLE_PHASE) {
-    vt_debug_print(
-      verbose, replay,
-      "getWork {} phase={} subphase={}\n",
-      object.id, phase, offset.subphase
-    );
-    // since this doesn't support subphases, say everything is in subphase 0
-    if (offset.subphase > 0) {
-      return 0;
-    }
-  } else {
-    vt_debug_print(
-      verbose, replay,
-      "getWork {} phase={}\n",
-      object.id, phase
-    );
-  }
-
   auto index = mapper_.getIndexFromElm(object.id);
   auto elm_ptr = proxy_(index).tryGetLocalPtr();
   if (elm_ptr == nullptr) {
@@ -96,13 +78,32 @@ TimeType StatsReplay<CollectionIndexType>::getWork(
     return 0; // FIXME: this BREAKS the O_l statistics post-migration!
   }
   vtAbortIf(elm_ptr == nullptr, "Must have element locally");
-  auto load = elm_ptr->getLoad(phase);
-  vt_debug_print(
-    verbose, replay,
-    "getWork: elm_id={} index={} has load={}\n",
-    object.id, index, load
-  );
-  return load;
+  auto load_summary = elm_ptr->getLoad(phase);
+  if (
+    offset.subphase != PhaseOffset::WHOLE_PHASE and
+    load_summary.subphase_loads.size() == 0
+  ) {
+    // our input statistics do not contain subphases; attribute the whole phase
+    // load to the first subphase and nothing to any remaining subphases
+    auto assumed_subphase_load = load_summary.whole_phase_load;
+    if (offset.subphase > 0) {
+      assumed_subphase_load = 0;
+    }
+    vt_debug_print(
+      verbose, replay,
+      "getWork: elm_id={} index={} subphase={} has assumed load={}\n",
+      object.id, index, offset.subphase, assumed_subphase_load
+    );
+    return assumed_subphase_load;
+  } else {
+    auto load = load_summary.get(offset);
+    vt_debug_print(
+      verbose, replay,
+      "getWork: elm_id={} index={} subphase={} has load={}\n",
+      object.id, index, offset.subphase, load
+    );
+    return load;
+  }
 }
 
 }}}} // end namespace

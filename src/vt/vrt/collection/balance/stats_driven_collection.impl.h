@@ -119,7 +119,7 @@ void StatsDrivenCollection<IndexType>::recvLoadStatsData(LoadStatsDataMsg *msg) 
 }
 
 template <typename IndexType>
-vt::TimeType StatsDrivenCollection<IndexType>::getLoad(int real_phase) {
+LoadSummary StatsDrivenCollection<IndexType>::getLoad(int real_phase) {
   vtAssert(initial_phase_ >= 0, "Initial phase did not get set before load was queried");
   auto simulated_phase = real_phase + initial_phase_;
   vt_debug_print(
