@@ -52,6 +52,7 @@
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_comm.h"
+#include "vt/vrt/collection/index/untyped.h"
 
 #include <type_traits>
 
@@ -64,6 +65,85 @@ using RoutedMessageType = LocationRoutedMsg<IndexT, MessageT>;
 #pragma GCC diagnostic ignored "-Wunused-variable"
 static struct ColMsgWrapTagType { } ColMsgWrapTag { };
 #pragma GCC diagnostic pop
+
+struct CollectionMsgInfo {
+  VirtualProxyType getProxy() const { return proxy_; }
+  void setProxy(VirtualProxyType in_proxy) { proxy_ = in_proxy; }
+
+  void setVrtHandler(HandlerType const in_handler) { vrt_handler_ = in_handler; }
+  HandlerType getVrtHandler() const { return vrt_handler_; }
+
+  NodeType getFromNode() const { return from_node_; }
+  void setFromNode(NodeType const& node) { from_node_ = node; }
+
+  #if vt_check_enabled(lblite)
+    bool lbLiteInstrument() const { return lb_lite_instrument_; }
+    void setLBLiteInstrument(bool val) { lb_lite_instrument_ = val; }
+    balance::ElementIDStruct getSenderElm() const { return sender_elm_; }
+    void setSenderElm(balance::ElementIDStruct elm) { sender_elm_ = elm; }
+    elm::CommCategory getCat() const { return cat_; }
+    void setCat(elm::CommCategory cat) { cat_ = cat; }
+  #endif
+
+  #if vt_check_enabled(lblite)
+    bool lb_lite_instrument_ = false;
+    balance::ElementIDStruct sender_elm_ = {};
+    elm::CommCategory cat_ = elm::CommCategory::SendRecv;
+  #endif
+
+  template <typename SerializerT>
+  void invokeSerialize(SerializerT& s) {
+    s | proxy_;
+    s | vrt_handler_;
+    s | from_node_;
+
+#if vt_check_enabled(lblite)
+    s | lb_lite_instrument_;
+    s | sender_elm_;
+    s | cat_;
+#endif
+  }
+
+  VirtualProxyType proxy_ = no_vrt_proxy;
+  HandlerType vrt_handler_ = uninitialized_handler;
+  NodeType from_node_ = uninitialized_destination;
+};
+
+struct IndexMessage :
+    RoutedMessageType<::vt::Message, index::UntypedIndex<48>>,
+    CollectionMsgInfo
+{
+  using MessageParentType = RoutedMessageType<::vt::Message, index::UntypedIndex<48>>;
+  vt_msg_serialize_if_needed_by_parent();
+
+  IndexMessage() = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    CollectionMsgInfo::invokeSerialize(s);
+    MessageParentType::serialize(s);
+  }
+};
+
+template <typename IndexT, typename IndexMsgT>
+struct WrappedIndexMessage
+  : RoutedMessageType<::vt::Message, IndexT>, CollectionMsgInfo
+{
+  using MessageParentType = RoutedMessageType<::vt::Message, IndexT>;
+  vt_msg_serialize_required();
+
+  MsgSharedPtr<IndexMsgT> msg_impl_;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    CollectionMsgInfo::invokeSerialize(s);
+    MessageParentType::serialize(s);
+    if (s.isUnpacking()) {
+      msg_impl_ = makeMessage<IndexMsgT>();
+    }
+    s | *msg_impl_;
+  }
+};
 
 template <typename ColT, typename BaseMsgT = ::vt::Message>
 struct CollectionMessage : RoutedMessageType<BaseMsgT, typename ColT::IndexType> {

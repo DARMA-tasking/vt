@@ -112,6 +112,17 @@ public:
   }
 
   /**
+   * \brief Add a new context for this handler
+   *
+   * \param[in] args arguments to build the context, forwarded to constructor of
+   * \c T
+   */
+  template <typename T>
+  void addExistingContext(std::unique_ptr<T> ptr) {
+    contexts_.emplace_back(std::move(ptr));
+  }
+
+  /**
    * \brief Set up a handler to run on an collection object
    *
    * \param[in] elm the object pointer

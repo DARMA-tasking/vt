@@ -180,6 +180,12 @@ class CollectionChainSet final {
     theTerm()->finishedEpoch(epoch);
   }
 
+  void nextStepCollective(
+    std::string const& label, EpochType epoch
+  ) {
+    chain.add(epoch, PendingSend{});
+  }
+
   /**
    * \brief The next collective step to execute for each index that is added
    * to the CollectionChainSet on each node.

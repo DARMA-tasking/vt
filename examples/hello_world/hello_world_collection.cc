@@ -43,23 +43,19 @@
 
 #include <vt/transport.h>
 
+struct TestMsg : vt::vrt::collection::IndexMessage {
+
+};
+
 /// [Hello world collection]
-struct Hello : vt::Collection<Hello, vt::Index1D> {
-  Hello() = default;
-
-  virtual ~Hello() {
-    vtAssert(counter_ == 1, "Must be equal");
-  }
-
-  using TestMsg = vt::CollectionMessage<Hello>;
-
+struct Hello : vt::Collection<Hello, vt::Index3D> {
   void doWork(TestMsg* msg) {
     fmt::print("Hello from {}\n", this->getIndex());
-    counter_++;
   }
+};
 
-private:
-  int32_t counter_ = 0;
+struct TestMsg2 : vt::CollectionMessage<Hello> {
+
 };
 
 int main(int argc, char** argv) {
@@ -73,13 +69,16 @@ int main(int argc, char** argv) {
     num_elms = atoi(argv[1]);
   }
 
+  fmt::print("IndexMessage={} CollectionMessage={} index size={}\n", sizeof(TestMsg), sizeof(TestMsg2), sizeof(vt::Index3D));
+
+  auto range = vt::Index3D(num_elms, 1, 1);
+  auto proxy = vt::makeCollection<Hello>()
+    .bounds(range)
+    .bulkInsert()
+    .wait();
+
   if (this_node == 0) {
-    auto range = vt::Index1D(num_elms);
-    auto proxy = vt::makeCollectionRooted<Hello>()
-      .bounds(range)
-      .bulkInsert()
-      .wait();
-    proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
+    proxy[vt::Index3D{num_elms-1, 0, 0}].send<TestMsg, &Hello::doWork>();
   }
 
   vt::finalize();

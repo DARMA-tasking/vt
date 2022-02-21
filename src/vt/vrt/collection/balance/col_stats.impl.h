@@ -77,7 +77,7 @@ void CollectionStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   theNodeStats()->addNodeStats(col->elm_id_, &col->stats_, subphase);
 
   std::vector<uint64_t> idx;
-  for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
+  for (vt::index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
     idx.push_back(static_cast<uint64_t>(col->getIndex()[i]));
   }
 

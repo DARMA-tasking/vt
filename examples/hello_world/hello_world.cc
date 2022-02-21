@@ -42,16 +42,22 @@
 */
 
 #include <vt/transport.h>
+#include <vt/vrt/collection/index/untyped.h>
 
-struct HelloMsg : vt::Message {
-  HelloMsg(vt::NodeType in_from) : from(in_from) { }
-
-  vt::NodeType from = 0;
+struct IndexMessage : vt::Message {
+  vt::VirtualProxyType proxy = vt::no_vrt_proxy;
+  vt::vrt::collection::index::UntypedIndex<48> u;
 };
 
-static void hello_world(HelloMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  fmt::print("{}: Hello from node {}\n", this_node, msg->from);
+void testHandler(IndexMessage* msg) {
+  vt::vrt::collection::index::registry::getDispatch(msg->u.idx_)(&msg->u);
+}
+
+template <typename IndexT>
+void sendIndex(IndexT idx) {
+  auto m = vt::makeMessage<IndexMessage>();
+  m->u = vt::vrt::collection::index::UntypedIndex<48>{idx};
+  vt::theMsg()->sendMsg<IndexMessage, testHandler>(1, m);
 }
 
 int main(int argc, char** argv) {
@@ -65,8 +71,8 @@ int main(int argc, char** argv) {
   }
 
   if (this_node == 0) {
-    auto msg = vt::makeMessage<HelloMsg>(this_node);
-    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
+    sendIndex(vt::Index3D{10, -20, 55});
+    sendIndex(vt::Index2D{293, 222});
   }
 
   vt::finalize();

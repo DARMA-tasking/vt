@@ -403,7 +403,7 @@ struct CollectionManager
    */
   template <
     typename MsgT,
-    typename ColT = typename MsgT::CollectionType,
+    typename ColT,
     typename IdxT = typename ColT::IndexType
   >
   messaging::PendingSend sendMsgUntypedHandler(
@@ -469,10 +469,10 @@ struct CollectionManager
    * \return a pending send
    */
   template <
-    typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+    typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f
   >
   messaging::PendingSend sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   /**
@@ -484,11 +484,25 @@ struct CollectionManager
    * \return a pending send
    */
   template <
-    typename MsgT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   messaging::PendingSend sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
+  );
+
+  /**
+   * \brief Send collection element a message from active member handler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <
+    typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
+  >
+  messaging::PendingSend sendMsgNew(
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   /**
@@ -581,7 +595,7 @@ struct CollectionManager
   template <
     typename MsgT,
     typename ColT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   messaging::PendingSend sendMsgImpl(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
@@ -632,6 +646,9 @@ struct CollectionManager
    */
   template <typename ColT, typename IndexT, typename MsgT>
   static void collectionMsgTypedHandler(MsgT* msg);
+
+  template <typename MsgT>
+  static void collectionHandler(MsgT* msg);
 
   /**
    * \internal \brief Record statistics for collection message handler when a
@@ -1495,6 +1512,10 @@ private:
 
   template <typename ColT>
   friend struct param::ConstructParams;
+
+  template <typename IdxT>
+  friend std::tuple<void*, std::unique_ptr<ctx::Base>>
+  makeContext(IdxT const& idx, VirtualProxyType proxy);
 
   /**
    * \internal \brief Migrate an element out of this node

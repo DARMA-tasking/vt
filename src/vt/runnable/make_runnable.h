@@ -163,6 +163,27 @@ struct RunnableMaker {
     return std::move(*this);
   }
 
+
+  /**
+   * \brief Add a collection; sets up the handler and collection contexts
+   *
+   * \param[in] elm the collection element pointer
+   */
+  RunnableMaker&& withCollection(void* elm, std::unique_ptr<ctx::Base> ptr) {
+    impl_->template addExistingContext(std::move(ptr));
+    set_handler_ = true;
+
+    if (handler_ != uninitialized_handler) {
+      // Be careful with type casting here..convert to typeless before
+      // reinterpreting the pointer so the compiler does not produce the wrong
+      // offset
+      auto col = reinterpret_cast<vrt::collection::UntypedCollection*>(elm);
+      impl_->setupHandlerElement(col, handler_);
+    }
+
+    return std::move(*this);
+  }
+
   /**
    * \brief Add LB stats for instrumentation
    *

@@ -121,6 +121,18 @@ struct Sendable : BaseProxyT {
     typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
   >
   messaging::PendingSend send(Args&&... args) const;
+
+  /**
+   * \brief Create message (with action member handler) and send to collection element
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <
+    typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
+  >
+  messaging::PendingSend sendNew(Args&&... args) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
