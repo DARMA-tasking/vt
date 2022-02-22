@@ -1732,8 +1732,8 @@ private:
    * \param[in] msg_size the size of the message being sent
    */
   void recordLbStatsCommForSend(
-    NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-    MsgSizeType const& msg_size
+    NodeType const dest, MsgSharedPtr<BaseMsgType> const& base,
+    MsgSizeType const msg_size
   );
 
 private:

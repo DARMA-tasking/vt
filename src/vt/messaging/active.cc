@@ -889,8 +889,8 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
 }
 
 void ActiveMessenger::recordLbStatsCommForSend(
-  NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-  MsgSizeType const& msg_size
+  NodeType const dest, MsgSharedPtr<BaseMsgType> const& base,
+  MsgSizeType const msg_size
 ) {
   if (theContext()->getTask() != nullptr) {
     auto lb = theContext()->getTask()->get<ctx::LBStats>();
