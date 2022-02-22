@@ -30,6 +30,39 @@ int main(int argc, char** argv) {
 }
 \endcode
 
+If, for any reason, you want to predefine configuration, you can do it
+by creating AppConfig object, setting its members as you wish,
+and passing it to `vt::initialize`:
+
+\code{.cpp}
+int main(int argc, char** argv) {
+  arguments::AppConfig appConfig{};
+  appConfig.vt_lb_name = "RotateLB";
+  appConfig.vt_lb_stats = true;
+
+  vt::initialize(argc, argv, &appConfig);
+   // program here
+  vt::finalize();
+}
+\endcode
+
+You can do also do it if you initialized MPI on your own:
+
+\code{.cpp}
+int main(int argc, char** argv) {
+  MPI_Init(&argc, &argv);
+
+  arguments::AppConfig appConfig{};
+  appConfig.vt_lb_name = "RotateLB";
+  appConfig.vt_lb_stats = true;
+
+  vt::initialize(argc, argv, &MPI_COMM_WORLD, &appConfig);
+   // program here
+  vt::finalize();
+  MPI_Finalize();
+}
+\endcode
+
 \section tutorial-walkthrough Tutorial Code Snippets
 
 This page walks through the tutorial that exists in the source code. See
