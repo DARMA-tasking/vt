@@ -14,6 +14,8 @@
 message(STATUS "Reading head file ${HEAD_FILE}")
 message(STATUS "Using git executable at \"${GIT_EXECUTABLE}\"")
 
+get_filename_component(ROOT_DIR ${GIT_DIR} DIRECTORY)
+
 set(GIT_SHA1)
 
 file(READ "${HEAD_FILE}" HEAD_CONTENTS LIMIT 1024)
@@ -45,7 +47,7 @@ execute_process(COMMAND
         ${GIT_SHA1}
         --tags --abbrev=0 --all
         WORKING_DIRECTORY
-        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${ROOT_DIR}"
         RESULT_VARIABLE
         res
         OUTPUT_VARIABLE
@@ -63,7 +65,7 @@ execute_process(COMMAND
         ${GIT_SHA1}
         --abbrev=10 --always --tags --long --all
         WORKING_DIRECTORY
-        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${ROOT_DIR}"
         RESULT_VARIABLE
         res
         OUTPUT_VARIABLE
@@ -79,7 +81,7 @@ execute_process(COMMAND
         "${GIT_EXECUTABLE}"
         diff-index --quiet HEAD --
         WORKING_DIRECTORY
-        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${ROOT_DIR}"
         RESULT_VARIABLE
         res
         OUTPUT_STRIP_TRAILING_WHITESPACE)
