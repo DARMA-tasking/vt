@@ -50,7 +50,6 @@ execute_process(COMMAND
         res
         OUTPUT_VARIABLE
         GIT_EXACT_TAG
-        ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(NOT res EQUAL 0)
     message(FATAL_ERROR "could not get the exact git tag")
@@ -69,7 +68,6 @@ execute_process(COMMAND
         res
         OUTPUT_VARIABLE
         GIT_DESCRIPTION
-        ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(NOT res EQUAL 0)
     message(FATAL_ERROR "could not get the description")
@@ -84,7 +82,6 @@ execute_process(COMMAND
         "${CMAKE_CURRENT_SOURCE_DIR}"
         RESULT_VARIABLE
         res
-        ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(res EQUAL 0)
     set(GIT_CLEAN_STATUS "CLEAN")
