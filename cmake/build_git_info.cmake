@@ -35,7 +35,11 @@ string(STRIP "${HEAD_CONTENTS}" HEAD_CONTENTS)
 if(HEAD_CONTENTS MATCHES "ref")
     # named branch
     string(REPLACE "ref: " "" REFSPEC "${HEAD_CONTENTS}")
-    set(REFFILE ${GIT_DIR}/${REFSPEC})
+    set(REF_FILE ${GIT_DIR}/${REFSPEC})
+endif()
+
+if (EXISTS ${GIT_DIR}/packed-refs)
+    set(PACKED_REF_FILE ${GIT_DIR}/packed-refs)
 endif()
 
 message(STATUS "Git HEAD file: \"${HEAD_FILE}\"")
@@ -47,7 +51,7 @@ set(VT_GIT_CONFIG_FILE "${PROJECT_BIN_DIR}/src/vt/configs/generated/vt_git_revis
 add_custom_command(
         OUTPUT ${VT_GIT_CONFIG_FILE}
         COMMAND ${CMAKE_COMMAND} -DIN_FILE=${PROJECT_BASE_DIR}/vt_git_revision.cc.in -DOUT_FILE=${VT_GIT_CONFIG_FILE} -DGIT_EXECUTABLE=${GIT_EXECUTABLE} -DGIT_DIR=${GIT_DIR} -DHEAD_FILE=${HEAD_FILE} -P ${CMAKE_CURRENT_LIST_DIR}/run-git.cmake
-        DEPENDS ${HEAD_FILE} ${GIT_DIR}/packed-refs ${REFFILE}
+        DEPENDS ${HEAD_FILE} ${PACKED_REF_FILE} ${REF_FILE}
         )
 
 target_sources(${VIRTUAL_TRANSPORT_LIBRARY} PRIVATE ${VT_GIT_CONFIG_FILE})
