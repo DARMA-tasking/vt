@@ -1729,8 +1729,12 @@ private:
    *
    * \param[in] dest the destination of the message
    * \param[in] base the message base pointer
+   * \param[in] msg_size the size of the message being sent
    */
-  void recordLbStatsCommForSend(NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base);
+  void recordLbStatsCommForSend(
+    NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+    MsgSizeType const& msg_size
+  );
 
 private:
 # if vt_check_enabled(trace_enabled)
