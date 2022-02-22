@@ -64,8 +64,6 @@ include(cmake/link_vt.cmake)
 # Load packages that are required for core VT build
 include(cmake/load_packages.cmake)
 
-include(cmake/build_git_info.cmake)
-
 include(cmake/check_compiler.cmake)
 
 option(vt_gold_linker_enabled "Build VT using the `gold' linker" ON)
