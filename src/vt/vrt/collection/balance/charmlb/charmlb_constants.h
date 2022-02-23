@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.h
+//                             charmlb_constants.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,51 +41,20 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_CONSTANTS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_CONSTANTS_H
 
 #include "vt/config.h"
 
-#include <unordered_map>
-#include <string>
-#include <type_traits>
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+static constexpr NodeType const charm_root             = 0;
+static constexpr int32_t  const charm_bin_size         = 10;
+static constexpr bool     const charm_auto_threshold_p = true;
+static constexpr double   const charm_tolerance        = 0.05f;
+static constexpr double   const charm_threshold_p      = 0.3f;
+static constexpr double   const charm_max_threshold_p  = 1.004f;
 
-enum struct LBType : int8_t {
-    NoLB             = 0
-  , GreedyLB         = 1
-  , HierarchicalLB   = 2
-  , RotateLB         = 3
-  , TemperedLB       = 4
-  , StatsMapLB       = 5
-# if vt_check_enabled(zoltan)
-  , ZoltanLB         = 6
-# endif
-  , RandomLB         = 7
-  , CharmLB          = 8
-};
+}}}} /* end namespace vt::vrt::collection::lb */
 
-}}}} /* end namespace vt::vrt::collection::balance */
-
-namespace std {
-
-template <>
-struct hash<vt::vrt::collection::balance::LBType> {
-  size_t operator()(vt::vrt::collection::balance::LBType const& in) const {
-    using LBUnderType =
-      std::underlying_type<vt::vrt::collection::balance::LBType>::type;
-    auto const val = static_cast<LBUnderType>(in);
-    return std::hash<LBUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
-
-namespace vt { namespace vrt { namespace collection { namespace balance {
-
-std::unordered_map<LBType, std::string>& get_lb_names();
-
-}}}} /* end namespace vt::vrt::collection::balance */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_CONSTANTS_H*/
