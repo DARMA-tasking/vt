@@ -538,7 +538,8 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           hid, from, handler, envelopeGetRef(msg->env)
         );
 
-        runnable::makeRunnable(msg, true, handler, from)
+        auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+        runnable::makeRunnable(msg, true, handler, from, han_type)
           .withTDEpochFromMsg()
           .run();
       } else {

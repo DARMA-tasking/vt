@@ -540,8 +540,10 @@ EventType ActiveMessenger::doMessageSend(
         }
       }
 
-      runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
-        .withTDEpochFromMsg(is_term)
+      auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+      runnable::makeRunnable(
+        base, true, envelopeGetHandler(msg->env), dest, han_type
+      ) .withTDEpochFromMsg(is_term)
         .withLBStats(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
         .enqueue();
     }
@@ -1000,7 +1002,8 @@ bool ActiveMessenger::prepareActiveMsgToRun(
   }
 
   if (has_handler) {
-    runnable::makeRunnable(base, not is_term, handler, from_node)
+    auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+    runnable::makeRunnable(base, not is_term, handler, from_node, han_type)
       .withContinuation(cont)
       .withTag(tag)
       .withTDEpochFromMsg(is_term)
