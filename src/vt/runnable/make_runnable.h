@@ -325,7 +325,8 @@ RunnableMaker<U> makeRunnable(
 ) {
   auto r = std::make_unique<RunnableNew>(msg, is_threaded);
   if (han_type == auto_registry::RegistryTypeEnum::RegVrt or
-      han_type == auto_registry::RegistryTypeEnum::RegGeneral) {
+      han_type == auto_registry::RegistryTypeEnum::RegGeneral or
+      han_type == auto_registry::RegistryTypeEnum::RegObjGroup) {
     r->template addContext<ctx::Trace>(msg, handler, from, han_type);
   }
   r->template addContext<ctx::FromNode>(from);
