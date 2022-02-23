@@ -515,7 +515,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         cur_objs_.clear();
         for (auto obj : *load_model_) {
           if (obj.isMigratable()) {
-            cur_objs_[obj] = load_model_->getWork(
+            cur_objs_[obj] = alpha_ * load_model_->getWork(
               obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
             );
           }
