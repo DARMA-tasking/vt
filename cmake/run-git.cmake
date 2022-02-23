@@ -24,21 +24,24 @@ string(STRIP "${HEAD_CONTENTS}" HEAD_CONTENTS)
 if(HEAD_CONTENTS MATCHES "ref")
     # named branch
     string(REPLACE "ref: " "" GIT_REFSPEC "${HEAD_CONTENTS}")
-    if(EXISTS "${GIT_DIR}/${GIT_REFSPEC}")
-        file(READ "${GIT_DIR}/${GIT_REFSPEC}" GIT_SHA1 LIMIT 1024)
-        string(STRIP "${GIT_SHA1}" GIT_SHA1)
-    else()
-        file(READ "${GIT_DIR}/packed-refs" PACKED_REFS)
-        if(${PACKED_REFS} MATCHES "([0-9a-z]*) ${GIT_REFSPEC}")
-            set(GIT_SHA1 "${CMAKE_MATCH_1}")
-        endif()
-    endif()
-else()
-    # detached HEAD
-    string(STRIP "${HEAD_CONTENTS}" GIT_SHA1)
 endif()
 
 message(STATUS "GIT_REFSPEC: \"${GIT_REFSPEC}\"")
+
+execute_process(COMMAND
+        "${GIT_EXECUTABLE}"
+        rev-parse --verify HEAD
+        WORKING_DIRECTORY
+        "${ROOT_DIR}"
+        RESULT_VARIABLE
+        res
+        OUTPUT_VARIABLE
+        GIT_SHA1
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT res EQUAL 0)
+    message(FATAL_ERROR "could not get the git sha1")
+endif()
+
 message(STATUS "GIT_SHA1: \"${GIT_SHA1}\"")
 
 execute_process(COMMAND
