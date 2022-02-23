@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.cc
+//                               charmlb_types.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,55 +41,70 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_TYPES_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_TYPES_H
+
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_type.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <cstdlib>
+#include <list>
+#include <unordered_map>
+#include <map>
 
-namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-static std::unordered_map<LBType,std::string> lb_names_ = {
-  {LBType::NoLB,                std::string{"NoLB"               }},
-# if vt_check_enabled(zoltan)
-  {LBType::ZoltanLB,            std::string{"ZoltanLB"           }},
-# endif
-  {LBType::GreedyLB,            std::string{"GreedyLB"           }},
-  {LBType::HierarchicalLB,      std::string{"HierarchicalLB"     }},
-  {LBType::RotateLB,            std::string{"RotateLB"           }},
-  {LBType::TemperedLB,          std::string{"TemperedLB"         }},
-  {LBType::OfflineLB,           std::string{"OfflineLB"          }},
-  {LBType::RandomLB,            std::string{"RandomLB"           }},
-  {LBType::TestSerializationLB, std::string{"TestSerializationLB"}},
-  {LBType::TemperedWMin,        std::string{"TemperedWMin"       }},
-  {LBType::CharmLB,             std::string{"CharmLB"            }},
+struct CharmLBTypes {
+  using ObjIDType = balance::ElementIDStruct;
+  using ObjBinType = int32_t;
+  using ObjBinListType = std::list<ObjIDType>;
+  using ObjSampleType = std::map<ObjBinType, ObjBinListType>;
+  using LoadType = double;
+  using LoadProfileType = std::unordered_map<NodeType,LoadType>;
 };
 
-std::unordered_map<LBType, std::string>& get_lb_names() {
-  return lb_names_;
-}
+struct CharmRecord {
+  using IDType = CharmLBTypes::ObjIDType;
+  using LoadType = CharmLBTypes::LoadType;
 
-} /* end namespace balance */
+  CharmRecord(IDType const& in_id, LoadType const& in_load)
+    : id_(in_id), load_(in_load)
+  { }
 
-namespace lb {
+  LoadType getLoad() const { return load_; }
+  LoadType getLoad(const int dim) const { return load_; }
+  LoadType operator[](const size_t dim) const { return load_; }
+  IDType getID() const { return id_; }
 
-static std::unordered_map<Statistic,std::string> lb_stat_name_ = {
-  {Statistic::Rank_load_modeled,   std::string{"Rank_load_modeled"}},
-  {Statistic::Rank_load_raw,       std::string{"Rank_load_raw"}},
-  {Statistic::Rank_comm,           std::string{"Rank_comm"}},
-  {Statistic::Rank_work_modeled,   std::string{"Rank_work_modeled"}},
-  {Statistic::Object_load_modeled, std::string{"Object_load_modeled"}},
-  {Statistic::Object_load_raw,     std::string{"Object_load_raw"}},
-  {Statistic::Object_comm,         std::string{"Object_comm"}},
-  {Statistic::Object_work_modeled, std::string{"Object_work_modeled"}},
-  {Statistic::ObjectRatio,         std::string{"ObjectRatio"}},
-  {Statistic::EdgeRatio,           std::string{"EdgeRatio"}}
+private:
+  CharmLBTypes::ObjIDType id_ = { elm::no_element_id, uninitialized_destination };
+  LoadType load_ = 0.0f;
 };
 
-std::unordered_map<Statistic, std::string>& get_lb_stat_name() {
-  return lb_stat_name_;
-}
+struct CharmDecision {
+  CharmDecision() = default;
+  CharmDecision(NodeType const &in_node,
+                std::vector<CharmLBTypes::ObjIDType> &&objs)
+      : node_(in_node), objs_(objs) {}
 
-} /* end namespace lb */
+  NodeType node_ = uninitialized_destination;
+  std::vector<CharmLBTypes::ObjIDType> objs_;
+};
 
-}}} /* end namespace vt::vrt::collection::balance */
+template <typename T>
+struct CharmCompareLoadMin {
+  bool operator()(T const& p1, T const& p2) const {
+    return p1.getLoad() > p2.getLoad();
+  }
+};
+
+template <typename T>
+struct CharmCompareLoadMax {
+  bool operator()(T const& p1, T const& p2) const {
+    return p1.getLoad() < p2.getLoad();
+  }
+};
+
+}}}} /* end namespace vt::vrt::collection::lb */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_TYPES_H*/

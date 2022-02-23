@@ -53,6 +53,7 @@
 #include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
+#include "vt/vrt/collection/balance/charmlb/charmlb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
 #include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
@@ -325,6 +326,7 @@ void LBManager::startLB(
   switch (lb) {
   case LBType::HierarchicalLB:      lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>(lb_name);      break;
   case LBType::GreedyLB:            lb_instances_["chosen"] = makeLB<lb::GreedyLB>(lb_name);            break;
+  case LBType::CharmLB:             lb_instances_["chosen"] = makeLB<lb::CharmLB>();                    break;
   case LBType::RotateLB:            lb_instances_["chosen"] = makeLB<lb::RotateLB>(lb_name);            break;
   case LBType::TemperedLB:          lb_instances_["chosen"] = makeLB<lb::TemperedLB>(lb_name);          break;
   case LBType::OfflineLB:           lb_instances_["chosen"] = makeLB<lb::OfflineLB>(lb_name);           break;
@@ -366,6 +368,9 @@ void LBManager::printLBArgsHelp(LBType lb) {
     break;
   case LBType::GreedyLB:
     help = lb::GreedyLB::getInputKeysWithHelp();
+    break;
+  case LBType::CharmLB:
+    help = lb::CharmLB::getInputKeysWithHelp();
     break;
   case LBType::RotateLB:
     help = lb::RotateLB::getInputKeysWithHelp();

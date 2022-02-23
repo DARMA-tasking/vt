@@ -91,6 +91,7 @@ void colHandler(MyMsg*, MyCol* col) {
 
 struct TestLoadBalancerOther : TestParallelHarnessParam<std::string> { };
 struct TestLoadBalancerGreedy : TestParallelHarnessParam<std::string> { };
+struct TestLoadBalancerCharm : TestParallelHarnessParam<std::string> { };
 
 void runTest(std::string const& lb_name, std::string const& label) {
   vt::theConfig()->vt_lb = true;
@@ -111,6 +112,12 @@ void runTest(std::string const& lb_name, std::string const& label) {
   if (lb_name.substr(0, 8).compare("GreedyLB") == 0) {
     vt::theConfig()->vt_lb_name = "GreedyLB";
     auto strat_arg = lb_name.substr(9, lb_name.size() - 9);
+    fmt::print("strat_arg={}\n", strat_arg);
+    vt::theConfig()->vt_lb_args = strat_arg;
+  }
+  if (lb_name.substr(0, 7).compare("CharmLB") == 0) {
+    vt::theConfig()->vt_lb_name = "CharmLB";
+    auto strat_arg = lb_name.substr(8, lb_name.size() - 8);
     fmt::print("strat_arg={}\n", strat_arg);
     vt::theConfig()->vt_lb_args = strat_arg;
   }
@@ -221,6 +228,15 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   ASSERT_TRUE(prev_to_this);
 }
 
+TEST_P(TestLoadBalancerCharm, test_load_balancer_charm_2) {
+  runTest(GetParam());
+}
+
+TEST_P(TestLoadBalancerCharm, test_load_balancer_charm_keep_last_elm) {
+  vt::theConfig()->vt_lb_keep_last_elm = true;
+  runTest(GetParam());
+}
+
 struct MyCol2 : vt::Collection<MyCol2,vt::Index1D> {};
 
 using TestLoadBalancerNoWork = TestParallelHarness;
@@ -263,12 +279,23 @@ auto balancers_greedy = ::testing::Values(
     "GreedyLB:strategy=bcast"
 );
 
+auto balancers_charm = ::testing::Values(
+    "CharmLB:strategy=scatter",
+    "CharmLB:strategy=pt2pt",
+    "CharmLB:strategy=bcast"
+);
+
+
 INSTANTIATE_TEST_SUITE_P(
   LoadBalancerExplodeOther, TestLoadBalancerOther, balancers_other
 );
 
 INSTANTIATE_TEST_SUITE_P(
   LoadBalancerExplodeGreedy, TestLoadBalancerGreedy, balancers_greedy
+);
+
+INSTANTIATE_TEST_SUITE_P(
+  LoadBalancerExplodeCharm, TestLoadBalancerCharm, balancers_charm
 );
 
 struct TestParallelHarnessWithLBDataDumping : TestParallelHarnessParam<int> {
