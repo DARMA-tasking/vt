@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
 \endcode
 
 If, for any reason, you want to predefine configuration, you can do it
-by creating AppConfig object, setting its members as you wish,
+by creating `AppConfig` object, setting its members as you wish,
 and passing it to `vt::initialize`:
 
 \code{.cpp}
@@ -62,6 +62,8 @@ int main(int argc, char** argv) {
   MPI_Finalize();
 }
 \endcode
+
+It is worth noting that if you run your application with any of vt's command-line arguments and at the same time you define and pass `AppConfig` to `vt::initialize`, CLI arguments have a higher priority. In other words, if you predefine in source code and give from the command line the same vt's argument, but with a different value, the program will use the CLI one.
 
 \section tutorial-walkthrough Tutorial Code Snippets
 
