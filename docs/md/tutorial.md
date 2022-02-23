@@ -65,6 +65,8 @@ int main(int argc, char** argv) {
 
 It is worth noting that if you run your application with any of vt's command-line arguments and at the same time you define and pass `AppConfig` to `vt::initialize`, CLI arguments have a higher priority. In other words, if you predefine in source code and give from the command line the same vt's argument, but with a different value, the program will use the CLI one.
 
+There is also an option to use configuration file. Refer to CLI11 documentation for details https://cliutils.github.io/CLI11/book/chapters/config.html. Important thing to remember - CLI11 processes configuration file before command line arguments, so in the end command line arguments might overwrite values defined in configuration file.
+
 \section tutorial-walkthrough Tutorial Code Snippets
 
 This page walks through the tutorial that exists in the source code. See

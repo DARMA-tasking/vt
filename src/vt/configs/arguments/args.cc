@@ -716,7 +716,7 @@ std::tuple<int, std::string> ArgConfig::parse(
     return parseToConfig(argc, argv, config_);
   }
 
-  // if user defines appConfig, parse into temporary config for later comparison.
+  // If user defines appConfig, parse into temporary config for later comparison.
   AppConfig config{*appConfig};
   auto const parse_result = parseToConfig(argc, argv, config);
 
