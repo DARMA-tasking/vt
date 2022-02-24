@@ -71,7 +71,8 @@ void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   );
   auto pmsg = promoteMsg(msg);
   if (this_node == send_node_) {
-    runnable::makeRunnable(pmsg, true, handler_, this_node)
+    auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+    runnable::makeRunnable(pmsg, true, handler_, this_node, han_type)
       .withTDEpochFromMsg()
       .enqueue();
   } else {
