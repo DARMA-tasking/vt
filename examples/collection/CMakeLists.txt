@@ -9,6 +9,7 @@ set(
   insertable_collection
   reduce_integral
   transpose
+  stats_replay_driver
 )
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})

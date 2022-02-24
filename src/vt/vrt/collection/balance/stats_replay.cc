@@ -1,0 +1,354 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                              stats_replay.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
+
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/stats_replay.h"
+#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
+#include "vt/utils/json/json_reader.h"
+
+#include <nlohmann/json.hpp>
+
+#include <set>
+
+namespace vt { namespace vrt { namespace collection {
+namespace balance {
+
+void replayFromInputStats(
+  PhaseType initial_phase, PhaseType phases_to_run
+) {
+  using util::json::Reader;
+  using ObjIDType = elm::ElementIDStruct;
+
+  // read in object loads from json files
+  auto const filename = theConfig()->getLBStatsFileIn();
+  Reader r{filename};
+  auto json = r.readFile();
+  auto sd = StatsData(*json);
+
+  // remember vt's base load model
+  auto base_load_model = theLBManager()->getBaseLoadModel();
+
+  // allow remembering the migrations suggested by the load balancer
+  std::shared_ptr<const Reassignment> lb_reassignment = nullptr;
+
+  // allow remembering what objects are here after the load balancer migrates
+  std::set<ObjIDType> objects_here;
+
+  // simulate the requested number of phases
+  auto const this_rank = theContext()->getNode();
+  auto stop_phase = initial_phase + phases_to_run;
+  for (PhaseType phase = initial_phase; phase < stop_phase; phase++) {
+    if (this_rank == 0)
+      vt_print(replay, "Simulated phase {}...\n", phase);
+
+    // reapply the base load model if in case we overwrote it on a previous iter
+    theLBManager()->setLoadModel(base_load_model);
+
+    // force it to use our json stats, not anything it may have collected
+    base_load_model->setLoads(&sd.node_data_, &sd.node_comm_);
+
+    // point the load model at the stats for the relevant phase
+    runInEpochCollective("StatsReplayDriver -> updateLoads", [=] {
+      base_load_model->updateLoads(phase);
+    });
+
+    size_t count = 0;
+    for (auto stat_obj_id : *base_load_model) {
+      if (stat_obj_id.isMigratable()) {
+        ++count;
+        vt_debug_print(
+          normal, replay,
+          "stats for id {} are here on phase {}\n",
+          stat_obj_id, phase
+        );
+      }
+    }
+    // sanity output
+    vt_debug_print(
+      terse, replay,
+      "Stats num objects: {}\n", count
+    );
+
+    auto pre_lb_load_model = base_load_model;
+
+    // if this isn't the initial phase, then the stats may exist on a rank
+    // other than where the objects are currently meant to exist; we will
+    // use a Reassignment object to get those load stats where they need to be
+    if (phase > initial_phase) {
+      // at the beginning of this phase, objects will exist in the locations
+      // they were placed by the previous lb invocation; this will be the
+      // arriving node for the purposes of this load model; that location
+      // is known by both the rank at which the lb placed the object and the
+      // rank from which the lb removed the object; the curr_node member of
+      // the object ids in the lb_reassignment object refers to the pre-lb
+      // location on the previous phase, but the curr_node member for our new
+      // load model must point to where the stats data exists for this phase
+
+      // the stats data for this phase can exist at arbitrary locations; the
+      // only rank to know the location of this data is the one that has it;
+      // this will be the departing node for the purposes of this load model;
+      // we need to make sure the curr_node member of the object ids in our
+      // new load model points to the node on which the stats data lives
+
+      runInEpochCollective("StatsReplayDriver -> migrateStatsDataHome", [&] {
+        auto norm_lb_proxy = LBStatsMigrator::construct(base_load_model);
+        auto normalizer = norm_lb_proxy.get();
+        pre_lb_load_model = normalizer->createStatsAtHomeModel(
+          base_load_model, objects_here
+        );
+        norm_lb_proxy.destroyCollective();
+      });
+      theLBManager()->setLoadModel(pre_lb_load_model);
+      pre_lb_load_model->setLoads(&sd.node_data_, &sd.node_comm_);
+
+      runInEpochCollective("StatsReplayDriver -> migrateStatsDataHere", [&] {
+        auto norm_lb_proxy = LBStatsMigrator::construct(pre_lb_load_model);
+        auto normalizer = norm_lb_proxy.get();
+        pre_lb_load_model = normalizer->createStatsHereModel(
+          pre_lb_load_model, objects_here
+        );
+        norm_lb_proxy.destroyCollective();
+      });
+      theLBManager()->setLoadModel(pre_lb_load_model);
+      pre_lb_load_model->setLoads(&sd.node_data_, &sd.node_comm_);
+    }
+
+    // sanity output
+    count = 0;
+    for (auto stat_obj_id : *pre_lb_load_model) {
+      if (stat_obj_id.isMigratable()) {
+        ++count;
+        vt_debug_print(
+          normal, replay,
+          "element {} is here on phase {} pre-lb\n",
+          stat_obj_id, phase
+        );
+      }
+    }
+    vt_debug_print(
+      terse, replay,
+      "Pre-lb num objects: {}\n", count
+    );
+
+    vt_debug_print(
+      terse, replay,
+      "constructing load model from real load balancer\n"
+    );
+
+    runInEpochCollective("StatsReplayDriver -> runRealLB", [&] {
+      // run the load balancer but don't let it automatically migrate;
+      // instead, remember where the LB wanted to migrate objects
+      lb_reassignment = theLBManager()->selectStartLB(phase);
+
+      auto proposed_model = std::make_shared<ProposedReassignment>(
+        pre_lb_load_model, lb_reassignment
+      );
+      objects_here.clear();
+      for (auto it = proposed_model->begin(); it.isValid(); ++it) {
+        if ((*it).isMigratable()) {
+          ObjIDType loc_id = *it;
+          loc_id.curr_node = this_rank;
+          objects_here.insert(loc_id);
+          vt_debug_print(
+            normal, replay,
+            "element {} is here on phase {} post-lb\n",
+            loc_id, phase
+          );
+        }
+      }
+      vt_debug_print(
+        terse, replay,
+        "Post-lb num objects: {}\n", objects_here.size()
+      );
+    });
+    runInEpochCollective("StatsReplayDriver -> destroyLB", [&] {
+      theLBManager()->destroyLB();
+    });
+    theCollective()->barrier();
+  }
+}
+
+
+/*static*/
+objgroup::proxy::Proxy<LBStatsMigrator>
+LBStatsMigrator::construct(std::shared_ptr<LoadModel> model_base) {
+  auto my_proxy = theObjGroup()->makeCollective<LBStatsMigrator>();
+  auto strat = my_proxy.get();
+  strat->init(my_proxy);
+  auto base_proxy = my_proxy.template registerBaseCollective<lb::BaseLB>();
+  vt_debug_print(
+    verbose, replay,
+    "LBStatsMigrator proxy={} base_proxy={}\n",
+    my_proxy.getProxy(), base_proxy.getProxy()
+  );
+  strat->proxy_ = base_proxy;
+  strat->load_model_ = model_base.get();
+  return my_proxy;
+}
+
+void LBStatsMigrator::init(objgroup::proxy::Proxy<LBStatsMigrator> in_proxy) {
+  proxy = in_proxy;
+}
+
+void LBStatsMigrator::runLB(TimeType) { }
+
+void LBStatsMigrator::inputParams(SpecEntry* spec) { }
+
+std::unordered_map<std::string, std::string>
+LBStatsMigrator::getInputKeysWithHelp() {
+  std::unordered_map<std::string, std::string> const keys_help;
+  return keys_help;
+}
+
+std::shared_ptr<ProposedReassignment>
+LBStatsMigrator::createStatsAtHomeModel(
+  std::shared_ptr<LoadModel> model_base,
+  std::set<ObjIDType> objects_here
+) {
+  auto const this_rank = vt::theContext()->getNode();
+  vt_debug_print(
+    terse, replay,
+    "constructing load model to get loads from file location to home\n"
+  );
+
+  runInEpochCollective("LBStatsMigrator -> transferStatsHome", [&] {
+    for (auto stat_obj_id : *model_base) {
+      if (stat_obj_id.isMigratable()) {
+        // if the object belongs here, do nothing; otherwise, "transfer" it to
+        // the home rank
+        if (stat_obj_id.getHomeNode() != this_rank) {
+          if (objects_here.count(stat_obj_id) == 0) {
+            vt_debug_print(
+              verbose, replay,
+              "will transfer load of {} home to {}\n",
+              stat_obj_id, stat_obj_id.getHomeNode()
+            );
+            migrateObjectTo(stat_obj_id, stat_obj_id.getHomeNode());
+          }
+        }
+      }
+    }
+  });
+
+  auto tmp_assignment = normalizeReassignments();
+  auto home_assignment = std::make_shared<Reassignment>();
+  home_assignment->node_ = tmp_assignment->node_;
+  home_assignment->global_migration_count = tmp_assignment->global_migration_count;
+  for (auto &dep : tmp_assignment->depart_) {
+    ObjIDType id = dep.first;
+    NodeType dest = dep.second;
+    id.curr_node = dest;
+    home_assignment->depart_[id] = dest;
+  }
+  for (auto &arr : tmp_assignment->arrive_) {
+    ObjIDType id = arr.first;
+    id.curr_node = this_rank;
+    home_assignment->arrive_[id] = arr.second;
+  }
+  return std::make_shared<ProposedReassignment>(model_base, home_assignment);
+}
+
+std::shared_ptr<ProposedReassignment>
+LBStatsMigrator::createStatsHereModel(
+  std::shared_ptr<LoadModel> model_base,
+  std::set<ObjIDType> objects_here
+) {
+  auto const this_rank = vt::theContext()->getNode();
+  vt_debug_print(
+    terse, replay,
+    "constructing load model to get loads from home to here\n"
+  );
+
+  runInEpochCollective("LBStatsMigrator -> transferStatsHere", [&] {
+    for (auto stat_obj_id : objects_here) {
+      if (stat_obj_id.isMigratable()) {
+        // if the object is already here, do nothing; otherwise, "transfer" it
+        // from the home rank
+        bool stats_here = false;
+        for (auto other_id : *model_base) {
+          if (stat_obj_id == other_id) {
+            stats_here = true;
+            break;
+          }
+        }
+        if (!stats_here) {
+          // check that this isn't something that should already have been here
+          assert(stat_obj_id.getHomeNode() != this_rank);
+
+          vt_debug_print(
+            verbose, replay,
+            "will transfer load of {} from home {}\n",
+            stat_obj_id, stat_obj_id.getHomeNode()
+          );
+          ObjIDType mod_id = stat_obj_id;
+          // Override curr_node to force retrieval from the home rank
+          mod_id.curr_node = stat_obj_id.getHomeNode();
+          migrateObjectTo(mod_id, this_rank);
+        }
+      }
+    }
+  });
+
+  auto tmp_assignment = normalizeReassignments();
+
+  // now restore the curr_node values to reflect the placement of the "real" object
+  auto here_assignment = std::make_shared<Reassignment>();
+  here_assignment->node_ = tmp_assignment->node_;
+  here_assignment->global_migration_count = tmp_assignment->global_migration_count;
+  for (auto &dep : tmp_assignment->depart_) {
+    ObjIDType id = dep.first;
+    NodeType dest = dep.second;
+    id.curr_node = dest;
+    here_assignment->depart_[id] = dest;
+  }
+  for (auto &arr : tmp_assignment->arrive_) {
+    ObjIDType id = arr.first;
+    id.curr_node = this_rank;
+    here_assignment->arrive_[id] = arr.second;
+  }
+  return std::make_shared<ProposedReassignment>(model_base, here_assignment);
+}
+
+}}}} /* end namespace vt::vrt::collection::balance */
