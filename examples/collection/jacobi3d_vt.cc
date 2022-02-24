@@ -74,9 +74,9 @@
 //
 
 
-static constexpr std::size_t const default_nrow_object = 16;
+static constexpr std::size_t const default_nrow_object = 64;
 static constexpr std::size_t const default_ncol_object = 16; // Not used at this moment
-static constexpr std::size_t const default_num_objs = 16;
+static constexpr std::size_t const default_num_objs = 4;
 static constexpr double const default_tol = 1.0e-02;
 
 struct NodeObj {
@@ -220,9 +220,6 @@ public:
                              + told_[node - 1] + told_[node + 1]
                              + told_[node - ldx] + told_[node + ldx] 
                              + told_[node - ldx*ldy] + told_[node + ldx*ldy]);
-          //tcur_[node] = 0.25 * (rhs_[node]
-          //                   + told_[node - 1] + told_[node + 1]
-          //                   + told_[node - ldx] + told_[node + ldx]);
         }
       }
     }
@@ -253,7 +250,7 @@ public:
     auto proxy = this->getCollectionProxy();
     auto cb = vt::theCB()->makeSend<
       LinearPb3DJacobi,ReduxMsg,&LinearPb3DJacobi::checkCompleteCB
-    >(proxy(0,0,0)); // What is proxy(0,0) doing? Should it be proxy(0,0,0)?
+    >(proxy(0,0,0)); 
     auto msg2 = vt::makeMessage<ReduxMsg>(maxNorm);
     proxy.reduce<vt::collective::MaxOp<double>>(msg2.get(),cb);
   }
@@ -288,14 +285,9 @@ public:
     size_t nz;
   };
 
-  //
-  // 1/29 NEED fix
-  //
   void exchange(VecMsg *msg) {
 
     // Receive and treat the message from a neighboring object.
-    // NEED FIX (1/29)
-    //
     if (this->getIndex().x() > msg->from_index.x()) {   // Receiving message YZ plane from X+1
       const size_t ldx = numRowsPerObject_ + 2;
       const size_t ldy = numRowsPerObject_ + 2;
@@ -518,6 +510,7 @@ public:
     double hz = 1.0 / (numRowsPerObject_ * numObjsZ_ + 1.0);
     // Need 3 values for max
     size_t maxNObjs = (size_t) std::max(numObjsX_, numObjsY_);
+    maxNObjs = (maxNObjs < numObjsY_ ) ? numObjs_Y : maxNObjs;
 
     int nf = 3 * int(numRowsPerObject_ * maxNObjs + 1) / 6;
 
@@ -665,9 +658,7 @@ int main(int argc, char** argv) {
     );
     fmt::print(stdout, " - Second-order centered finite difference\n");
     fmt::print(
-      stdout, " - Uniform grid with ({} x {} x {} = {}) points in the x-direction and "
-      " ({} x {} x {}  = {}) points in the y-direction\n",
-      " ({} x {} x {}  = {}) points in the z-direction\n",
+      stdout, " - Uniform grid with ({} x {} x {} = {}) points in the x-direction and ({} x {} x {}  = {}) points in the y-direction  ({} x {} x {}  = {}) points in the z-direction\n",
       numX_objs, default_nrow_object, default_nrow_object, numX_objs * default_nrow_object * default_nrow_object,
       numY_objs, default_nrow_object, default_nrow_object, numY_objs * default_nrow_object * default_nrow_object,
       numZ_objs, default_nrow_object, default_nrow_object, numZ_objs * default_nrow_object * default_nrow_object
