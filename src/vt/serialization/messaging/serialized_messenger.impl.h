@@ -88,7 +88,8 @@ template <typename UserMsgT>
   auto msg_data = ptr_offset;
   auto user_msg = deserializeFullMessage<UserMsgT>(msg_data);
 
-  runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
+  auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+  runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node, han_type)
     .withTDEpochFromMsg()
     .enqueue();
 }
@@ -132,7 +133,8 @@ template <typename UserMsgT>
         handler, recv_tag, envelopeGetEpoch(msg->env)
       );
 
-      runnable::makeRunnable(msg, true, handler, node)
+      auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+      runnable::makeRunnable(msg, true, handler, node, han_type)
         .withTDEpoch(epoch, not is_valid_epoch)
         .withContinuation(action)
         .enqueue();
@@ -174,7 +176,8 @@ template <typename UserMsgT, typename BaseEagerMsgT>
     print_ptr(user_msg.get()), envelopeGetEpoch(sys_msg->env)
   );
 
-  runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
+  auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+  runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node, han_type)
     .withTDEpochFromMsg()
     .enqueue();
 }
@@ -407,7 +410,8 @@ template <typename MsgT, typename BaseT>
 
         auto base_msg = msg.template to<BaseMsgType>();
         return messaging::PendingSend(base_msg, [=](MsgPtr<BaseMsgType> in){
-          runnable::makeRunnable(msg, true, typed_handler, node)
+          auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+          runnable::makeRunnable(msg, true, typed_handler, node, han_type)
             .withTDEpochFromMsg()
             .enqueue();
         });

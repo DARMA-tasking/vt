@@ -313,19 +313,19 @@ private:
  * \param[in] is_threaded whether it is threaded
  * \param[in] handler the handler bits
  * \param[in] from the node that caused this runnable to execute
- * \param[in] han_type the type of handler (default RegGeneral)
+ * \param[in] han_type the type of handler
  *
  * \return the maker for further customization
  */
 template <typename U>
 RunnableMaker<U> makeRunnable(
   MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler,
-  NodeType from, auto_registry::RegistryTypeEnum han_type =
-  auto_registry::RegistryTypeEnum::RegGeneral
+  NodeType from, auto_registry::RegistryTypeEnum han_type
 ) {
   auto r = std::make_unique<RunnableNew>(msg, is_threaded);
   if (han_type == auto_registry::RegistryTypeEnum::RegVrt or
-      han_type == auto_registry::RegistryTypeEnum::RegGeneral) {
+      han_type == auto_registry::RegistryTypeEnum::RegGeneral or
+      han_type == auto_registry::RegistryTypeEnum::RegObjGroup) {
     r->template addContext<ctx::Trace>(msg, handler, from, han_type);
   }
   r->template addContext<ctx::FromNode>(from);
@@ -339,15 +339,14 @@ RunnableMaker<U> makeRunnable(
  * \param[in] is_threaded whether it is threaded
  * \param[in] handler the handler bits
  * \param[in] from the node that caused this runnable to execute
- * \param[in] han_type the type of handler (default RegGeneral)
  *
  * \return the maker for further customization
  */
 inline RunnableMaker<BaseMsgType> makeRunnableVoid(
-  bool is_threaded, HandlerType handler,
-  NodeType from, auto_registry::RegistryTypeEnum han_type =
-  auto_registry::RegistryTypeEnum::RegGeneral
+  bool is_threaded, HandlerType handler, NodeType from
 ) {
+  // These are currently only types of registry entries that can be void
+  auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
   auto r = std::make_unique<RunnableNew>(is_threaded);
   // @todo: figure out how to trace this?
   r->template addContext<ctx::FromNode>(from);

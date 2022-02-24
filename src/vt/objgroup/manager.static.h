@@ -66,8 +66,9 @@ void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
     auto holder = detail::getHolderBase(han);
     auto const& elm_id = holder->getElmID();
     auto stats = &holder->getStats();
+    auto han_type = auto_registry::RegistryTypeEnum::RegObjGroup;
 
-    runnable::makeRunnable(msg, true, han, this_node)
+    runnable::makeRunnable(msg, true, han, this_node, han_type)
       .withTDEpoch(cur_epoch)
       .withLBStats(stats, elm_id)
       .enqueue();
@@ -87,7 +88,8 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
   );
 
   // this is a local invocation.. no thread required
-  runnable::makeRunnable(msg.msg_, false, han, this_node)
+  auto han_type = auto_registry::RegistryTypeEnum::RegObjGroup;
+  runnable::makeRunnable(msg.msg_, false, han, this_node, han_type)
     .withTDEpochFromMsg()
     .run();
 }

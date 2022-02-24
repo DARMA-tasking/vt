@@ -78,9 +78,10 @@ void Reduce::reduceRootRecv(MsgT* msg) {
   msg->is_root_ = true;
 
   auto const& from_node = theContext()->getFromNodeCurrentTask();
+  auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
 
   auto m = promoteMsg(msg);
-  runnable::makeRunnable(m, false, handler, from_node)
+  runnable::makeRunnable(m, false, handler, from_node, han_type)
     .withTDEpochFromMsg()
     .run();
 }
@@ -258,7 +259,8 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
 
       // this needs to run inline.. threaded not allowed for reduction
       // combination
-      runnable::makeRunnable(state.msgs[0], false, handler, from_node)
+      auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+      runnable::makeRunnable(state.msgs[0], false, handler, from_node, han_type)
         .withTDEpochFromMsg()
         .run();
     }
