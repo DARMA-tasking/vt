@@ -510,7 +510,7 @@ public:
     double hz = 1.0 / (numRowsPerObject_ * numObjsZ_ + 1.0);
     // Need 3 values for max
     size_t maxNObjs = (size_t) std::max(numObjsX_, numObjsY_);
-    maxNObjs = (maxNObjs < numObjsY_ ) ? numObjs_Y : maxNObjs;
+    maxNObjs = (maxNObjs < numObjsY_ ) ? numObjsY_ : maxNObjs;
 
     int nf = 3 * int(numRowsPerObject_ * maxNObjs + 1) / 6;
 
