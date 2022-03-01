@@ -204,6 +204,8 @@ add_library(
   ${HEADER_FILES} ${SOURCE_FILES}
 )
 
+include(${CMAKE_CURRENT_LIST_DIR}/../cmake/build_git_info.cmake)
+
 option(vt_no_color_enabled "Build VT with option --vt_no_color set to true by default" OFF)
 if(vt_no_color_enabled)
   message(STATUS "Building VT with --vt_no_color set to true by default")
