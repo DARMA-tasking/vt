@@ -51,7 +51,7 @@ struct IterCol : vt::Collection<IterCol, vt::Index1D> {
 
   struct IterMsg : vt::CollectionMessage<IterCol> {
     IterMsg() = default;
-    explicit IterMsg(
+    IterMsg(
       int64_t const in_work_amt, int64_t const in_iter, int64_t const subphase
     )
       : iter_(in_iter), work_amt_(in_work_amt), subphase_(subphase)
