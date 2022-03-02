@@ -260,15 +260,11 @@ void CharmLB::runBalancer(
 
   using Solution_t = TreeStrategy::Solution<ObjType, ProcType>;
   auto strategy = TreeStrategy::Greedy<ObjType, ProcType, Solution_t>();
-  Solution_t solution; // Dummy solution object, passes through assignments to underlying node
+  Solution_t solution(nodes);
   strategy.solve(recs, nodes, solution, false);
 
   std::vector<CharmDecision> decisions;
-  for (auto&& node : nodes)
-  {
-    decisions.emplace_back(node.id, std::move(node.objs));
-  }
-  return transferObjs(std::move(decisions));
+  return transferObjs(std::move(solution.decisions));
 }
 
 CharmLB::ObjIDType CharmLB::objSetNode(
