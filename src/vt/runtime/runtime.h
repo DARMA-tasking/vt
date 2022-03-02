@@ -101,7 +101,8 @@ struct Runtime {
     WorkerCountType in_num_workers = no_workers,
     bool const interop_mode = false,
     MPI_Comm in_comm = MPI_COMM_WORLD,
-    RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
+    RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance,
+    arguments::AppConfig const* appConfig = nullptr
   );
 
   Runtime(Runtime const&) = delete;

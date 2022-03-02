@@ -30,6 +30,43 @@ int main(int argc, char** argv) {
 }
 \endcode
 
+If, for any reason, you want to predefine configuration, you can do it
+by creating `AppConfig` object, setting its members as you wish,
+and passing it to `vt::initialize`:
+
+\code{.cpp}
+int main(int argc, char** argv) {
+  arguments::AppConfig appConfig{};
+  appConfig.vt_lb_name = "RotateLB";
+  appConfig.vt_lb_stats = true;
+
+  vt::initialize(argc, argv, &appConfig);
+   // program here
+  vt::finalize();
+}
+\endcode
+
+You can do also do it if you initialized MPI on your own:
+
+\code{.cpp}
+int main(int argc, char** argv) {
+  MPI_Init(&argc, &argv);
+
+  arguments::AppConfig appConfig{};
+  appConfig.vt_lb_name = "RotateLB";
+  appConfig.vt_lb_stats = true;
+
+  vt::initialize(argc, argv, &MPI_COMM_WORLD, &appConfig);
+   // program here
+  vt::finalize();
+  MPI_Finalize();
+}
+\endcode
+
+It is worth noting that if you run your application with any of vt's command-line arguments and at the same time you define and pass `AppConfig` to `vt::initialize`, CLI arguments have a higher priority. In other words, if you predefine in source code and give from the command line the same vt's argument, but with a different value, the program will use the CLI one.
+
+There is also an option to use configuration file. Refer to CLI11 documentation for details https://cliutils.github.io/CLI11/book/chapters/config.html. Important thing to remember - CLI11 processes configuration file before command line arguments, so in the end command line arguments might overwrite values defined in configuration file.
+
 \section tutorial-walkthrough Tutorial Code Snippets
 
 This page walks through the tutorial that exists in the source code. See
