@@ -4,12 +4,15 @@
 #include "vt/configs/types/types_type.h"
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/charmlb/charmlb_types.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <initializer_list>
 #include <random>
+#include <unordered_map>
 
 using LoadFloatType = double;
 
@@ -218,7 +221,6 @@ class Proc<N, false, multi>
 public:
   NodeType id = vt::uninitialized_destination;
   static constexpr auto dimension = N;
-  std::vector<ObjIDType> objs;
 
   inline Proc(NodeType const& _id, LoadFloatType* _bgload, LoadFloatType* _speed)
   {
@@ -244,7 +246,6 @@ public:
       this->load[i] += o->load[i];
       this->totalload += o->load[i];
     }
-    objs.push_back(o->id);
   }
   inline void assign(const Obj<N>& o) { assign(&o); }
 
@@ -281,7 +282,6 @@ template <>
 void Proc<1, false>::assign(const Obj<1>* o)
 {
   this->load += o->load;
-  objs.push_back(o->id);
 }
 
 template <>
@@ -304,7 +304,6 @@ class Proc<N, true, multi>
 public:
   NodeType id = vt::uninitialized_destination;
   static constexpr auto dimension = N;
-  std::vector<ObjIDType> objs;
   std::array<LoadFloatType, N> speed;
 
   inline Proc(NodeType const& _id, LoadFloatType* _bgload, LoadFloatType* _speed)
@@ -331,7 +330,6 @@ public:
       this->load[i] += (o->load[i] / speed[i]);
       this->totalload += (o->load[i] / speed[i]);
     }
-    objs.push_back(o->id);
   }
   inline void assign(const Obj<N>& o) { assign(&o); }
 
@@ -374,7 +372,6 @@ template <>
 void Proc<1, true>::assign(const Obj<1>* o)
 {
   this->load += (o->load / speed[0]);
-  objs.push_back(o->id);
 }
 template <>
 void Proc<1, true>::resetLoad()
@@ -383,12 +380,25 @@ void Proc<1, true>::resetLoad()
 }
 
 template <typename O, typename P>
-class Solution
-{
-  public:
-  void assign(const O& obj, P& proc)
-  {
+class Solution {
+private:
+  std::unordered_map<vt::NodeType, size_t> id2index;
+
+public:
+  std::vector<vt::vrt::collection::lb::CharmDecision> decisions;
+
+  Solution(const std::vector<P> &procs) {
+    for (const auto &p : procs) {
+      id2index[p.id] = decisions.size();
+      decisions.emplace_back(
+          p.id,
+          std::initializer_list<vt::vrt::collection::lb::CharmLBTypes::ObjIDType>(
+              {}));
+    }
+  }
+  void assign(const O &obj, P &proc) {
     proc.assign(obj);
+    decisions[id2index[proc.id]].objs_.emplace_back(obj.id);
   }
 };
 
