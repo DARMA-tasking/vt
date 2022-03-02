@@ -94,6 +94,10 @@ void printMemoryFootprint(T* component) {
   }
 }
 
+TEST_F(TestMemoryFootprinting, test_arg_config) {
+  printMemoryFootprint(vt::rt->theArgConfig);
+}
+
 TEST_F(TestMemoryFootprinting, test_time_trigger_manager) {
   printMemoryFootprint(theTimeTrigger());
 }
