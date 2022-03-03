@@ -68,6 +68,7 @@
 
 // Include Charm++ LB file
 #include "vt/vrt/collection/balance/charmlb/greedy.h"
+#include "vt/vrt/collection/balance/charmlb/kdlb.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -209,7 +210,14 @@ void CharmLB::collectHandler(CharmCollectMsg* msg) {
 
   auto objs = std::move(msg->getVal().getObjListMove());
   auto profile = std::move(msg->getVal().getLoadProfileMove());
-  runBalancer(std::move(objs),std::move(profile));
+
+  vtAssert(objs.size() > 0, "LB must have at least one object");
+  const auto dimension = std::get<1>(objs[0]).subphase_loads.size();
+  for (const auto& obj : objs) {
+    vtAssert(std::get<1>(obj).subphase_loads.size() == dimension, "All objects must have equal number of subphases");
+  }
+
+  runBalancer<10>(dimension, std::move(objs),std::move(profile));
 }
 
 void CharmLB::reduceCollect() {
@@ -225,11 +233,32 @@ void CharmLB::reduceCollect() {
   proxy.template reduce<collective::PlusOp<CharmPayload>>(msg.get(),cb);
 }
 
-void CharmLB::runBalancer(
+template <int N>
+void CharmLB::runBalancer(int dimension, ObjLoadListType &&in_objs,
+                          LoadProfileType &&in_profile) {
+  if (N == dimension) {
+    runBalancerHelper<N>(std::move(in_objs), std::move(in_profile));
+  } else {
+    runBalancer<N - 1>(dimension, std::move(in_objs), std::move(in_profile));
+  }
+}
+
+template <>
+void CharmLB::runBalancer<1>(int dimension, ObjLoadListType &&in_objs,
+                          LoadProfileType &&in_profile) {
+    runBalancerHelper<1>(std::move(in_objs), std::move(in_profile));
+}
+
+
+template <int N>
+void CharmLB::runBalancerHelper(
   ObjLoadListType&& in_objs, LoadProfileType&& in_profile
 ) {
-  using ObjType = TreeStrategy::Obj<1>;
-  using ProcType = TreeStrategy::Proc<1, false>;
+  using ObjType = TreeStrategy::Obj<N>;
+  using ProcType = TreeStrategy::Proc<N, false>;
+
+  vt_print(lb, "CharmLB::runBalancer Running with {} dimensions\n", N);
+
   auto const& num_nodes = theContext()->getNumNodes();
   ObjLoadListType objs{std::move(in_objs)};
   LoadProfileType profile{std::move(in_profile)};
@@ -242,17 +271,17 @@ void CharmLB::runBalancer(
 
   for (auto&& obj : objs) {
     auto const& id = std::get<0>(obj);
-    auto const& load = std::get<1>(obj);
-    recs.emplace_back(id, &(load.whole_phase_load));
+    auto&& load = std::get<1>(obj);
+
+    recs.emplace_back(id, load.whole_phase_load, std::move(load.subphase_loads));
   }
 
   auto nodes = std::vector<ProcType>{};
   for (NodeType n = 0; n < num_nodes; n++) {
     auto iter = profile.find(n);
     vtAssert(iter != profile.end(), "Must have load profile");
-    std::array<LoadType, 1> load = {iter->second};
     std::array<LoadType, 1> speed = {0}; // Dummy for now
-    nodes.emplace_back(n,load.data(), speed.data());
+    nodes.emplace_back(n, iter->second, speed.data());
     vt_debug_print(
       verbose, lb,
       "\t CharmLB::runBalancer: node={}, profile={}\n",
@@ -261,7 +290,8 @@ void CharmLB::runBalancer(
   }
 
   using Solution_t = TreeStrategy::Solution<ObjType, ProcType>;
-  auto strategy = TreeStrategy::Greedy<ObjType, ProcType, Solution_t>();
+  //auto strategy = TreeStrategy::Greedy<ObjType, ProcType, Solution_t>();
+  auto strategy = TreeStrategy::RKdLB<ObjType, ProcType, Solution_t>();
   Solution_t solution(nodes);
   strategy.solve(recs, nodes, solution, false);
 
