@@ -151,7 +151,6 @@ void CharmLB::inputParams(balance::SpecEntry* spec) {
 
 void CharmLB::runLB(TimeType total_load) {
   this_load = loadMilli(total_load);
-  buildHistogram();
   loadStats();
 }
 
@@ -191,12 +190,13 @@ void CharmLB::loadStats() {
       auto load = balance::getObjectLoads(
           load_model_, obj, {balance::PhaseOffset::NEXT_PHASE, 0});
 
+      this_load -= loadMilli(load.whole_phase_load);
+
       obj_loads.push_back(std::make_tuple(obj, load));
     }
   }
 
   if (should_lb) {
-    calcLoadOver();
     reduceCollect();
   }
 }
@@ -412,57 +412,6 @@ double CharmLB::getMaxLoad() const {
 
 double CharmLB::getSumLoad() const {
   return getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::sum);
-}
-
-void CharmLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
-  auto avg_load = getAvgLoad();
-  auto const threshold = this_threshold * avg_load;
-  auto const obj_id = bin_list.back();
-
-  //load_over[bin].push_back(obj_id);
-  bin_list.pop_back();
-
-  auto const& obj_time_milli = loadMilli(load_model_->getWork(obj_id, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}));
-
-  this_load -= obj_time_milli;
-
-  vt_debug_print(
-    normal, lb,
-    "loadOverBin: this_load_begin={}, this_load={}, threshold={}: "
-    "adding unit: bin={}, milli={}\n",
-    TimeTypeWrapper(this_load_begin / 1000),
-    TimeTypeWrapper(this_load / 1000), TimeTypeWrapper(threshold / 1000),
-    bin, obj_time_milli
-  );
-}
-
-void CharmLB::calcLoadOver() {
-  auto avg_load = getAvgLoad();
-  auto const threshold = this_threshold * avg_load;
-
-  vt_debug_print(
-    normal, lb,
-    "calcLoadOver: this_load={}, avg_load={}, threshold={}\n",
-    TimeTypeWrapper(this_load / 1000),
-    TimeTypeWrapper(avg_load / 1000),
-    TimeTypeWrapper(threshold / 1000)
-  );
-
-  auto cur_item = obj_sample.begin();
-  while (this_load > threshold && cur_item != obj_sample.end()) {
-    if (cur_item->second.size() != 0) {
-      loadOverBin(cur_item->first, cur_item->second);
-    } else {
-      cur_item++;
-    }
-  }
-
-  for (size_t i = 0; i < obj_sample.size(); i++) {
-    auto obj_iter = obj_sample.find(i);
-    if (obj_iter != obj_sample.end() && obj_iter->second.size() == 0) {
-      obj_sample.erase(obj_iter);
-    }
-  }
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
