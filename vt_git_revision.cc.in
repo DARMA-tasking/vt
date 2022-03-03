@@ -45,12 +45,18 @@
 
 #include <string>
 
+#define VT_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define VT_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define VT_VERSION_PATCH @PROJECT_VERSION_PATCH@
 #define VT_GIT_SHA1 "@GIT_SHA1@"
 #define VT_GIT_EXACT_TAG "@GIT_EXACT_TAG@"
 #define VT_GIT_REFSPEC "@GIT_REFSPEC@"
 #define VT_GIT_DESCRIPTION "@GIT_DESCRIPTION@"
 #define VT_GIT_CLEAN_STATUS "@GIT_CLEAN_STATUS@"
 
+int const vt_version_major = VT_VERSION_MAJOR;
+int const vt_version_minor = VT_VERSION_MINOR;
+int const vt_version_patch = VT_VERSION_PATCH;
 std::string const vt_git_sha1 = VT_GIT_SHA1;
 std::string const vt_git_exact_tag = VT_GIT_EXACT_TAG;
 std::string const vt_git_refspec = VT_GIT_REFSPEC;
