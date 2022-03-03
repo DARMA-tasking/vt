@@ -42,6 +42,7 @@
 */
 
 #include "vt/vrt/collection/balance/charmlb/TreeStrategyBase.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_CC
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_CC
 
@@ -182,6 +183,17 @@ void CharmLB::loadStats() {
     fflush(stdout);
   }
 
+  for (const auto obj : *load_model_) {
+    if (obj.isMigratable()) {
+      // Get LoadSummary object for this object containing all subphase loads
+      // (note: 0 is an unused value)
+      auto load = balance::getObjectLoads(
+          load_model_, obj, {balance::PhaseOffset::NEXT_PHASE, 0});
+
+      obj_loads.push_back(std::make_tuple(obj, load));
+    }
+  }
+
   if (should_lb) {
     calcLoadOver();
     reduceCollect();
@@ -192,18 +204,10 @@ void CharmLB::collectHandler(CharmCollectMsg* msg) {
   vt_debug_print(
     normal, lb,
     "CharmLB::collectHandler: entries size={}\n",
-    msg->getConstVal().getSample().size()
+    msg->getConstVal().getObjList().size()
   );
 
-  for (auto&& elm : msg->getConstVal().getSample()) {
-    vt_debug_print(
-      verbose, lb,
-      "\t collectHandler: bin={}, num={}\n",
-      elm.first, elm.second.size()
-    );
-  }
-
-  auto objs = std::move(msg->getVal().getSampleMove());
+  auto objs = std::move(msg->getVal().getObjListMove());
   auto profile = std::move(msg->getVal().getLoadProfileMove());
   runBalancer(std::move(objs),std::move(profile));
 }
@@ -211,23 +215,23 @@ void CharmLB::collectHandler(CharmCollectMsg* msg) {
 void CharmLB::reduceCollect() {
   vt_debug_print(
     verbose, lb,
-    "CharmLB::reduceCollect: load={}, load_begin={} load_over.size()={}\n",
+    "CharmLB::reduceCollect: load={}, load_begin={} obj_loads.size()={}\n",
     TimeTypeWrapper(this_load / 1000),
-    TimeTypeWrapper(this_load_begin / 1000), load_over.size()
+    TimeTypeWrapper(this_load_begin / 1000), obj_loads.size()
   );
   using MsgType = CharmCollectMsg;
   auto cb = vt::theCB()->makeSend<CharmLB, MsgType, &CharmLB::collectHandler>(proxy[0]);
-  auto msg = makeMessage<MsgType>(load_over,this_load);
+  auto msg = makeMessage<MsgType>(obj_loads,this_load);
   proxy.template reduce<collective::PlusOp<CharmPayload>>(msg.get(),cb);
 }
 
 void CharmLB::runBalancer(
-  ObjSampleType&& in_objs, LoadProfileType&& in_profile
+  ObjLoadListType&& in_objs, LoadProfileType&& in_profile
 ) {
   using ObjType = TreeStrategy::Obj<1>;
   using ProcType = TreeStrategy::Proc<1, false>;
   auto const& num_nodes = theContext()->getNumNodes();
-  ObjSampleType objs{std::move(in_objs)};
+  ObjLoadListType objs{std::move(in_objs)};
   LoadProfileType profile{std::move(in_profile)};
   std::vector<ObjType> recs;
   vt_debug_print(
@@ -235,13 +239,11 @@ void CharmLB::runBalancer(
     "CharmLB::runBalancer: objs={}, profile={}\n",
     objs.size(), profile.size()
   );
-  for (auto&& elm : objs) {
-    auto const& bin = elm.first;
-    auto const& obj_list = elm.second;
-    for (auto&& obj : obj_list) {
-      std::array<LoadType, 1> load = {static_cast<LoadType>(bin)};
-      recs.emplace_back(obj, load.data());
-    }
+
+  for (auto&& obj : objs) {
+    auto const& id = std::get<0>(obj);
+    auto const& load = std::get<1>(obj);
+    recs.emplace_back(id, &(load.whole_phase_load));
   }
 
   auto nodes = std::vector<ProcType>{};
@@ -388,7 +390,7 @@ void CharmLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   auto const threshold = this_threshold * avg_load;
   auto const obj_id = bin_list.back();
 
-  load_over[bin].push_back(obj_id);
+  //load_over[bin].push_back(obj_id);
   bin_list.pop_back();
 
   auto const& obj_time_milli = loadMilli(load_model_->getWork(obj_id, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}));

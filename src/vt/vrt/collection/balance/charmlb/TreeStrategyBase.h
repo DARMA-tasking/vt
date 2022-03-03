@@ -116,7 +116,7 @@ class Obj : public std::conditional<multi, obj_N_data<N>, obj_1_data>::type
 
   static constexpr auto dimension = N;
 
-  inline Obj(IDType const& _id, LoadFloatType* _load) //int _oldPe)
+  inline Obj(IDType const& _id, const LoadFloatType* _load) //int _oldPe)
   {
     id = _id;
     //oldPe = _oldPe;
@@ -140,7 +140,7 @@ class Obj : public std::conditional<multi, obj_N_data<N>, obj_1_data>::type
 };
 
 template <>
-inline Obj<1>::Obj(IDType const& _id, LoadFloatType* _load)// int _oldPe)
+inline Obj<1>::Obj(IDType const& _id, const LoadFloatType* _load)// int _oldPe)
 {
   id = _id;
   load = *_load;

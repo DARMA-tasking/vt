@@ -87,7 +87,7 @@ private:
   void reduceCollect();
   void calcLoadOver();
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
-  void runBalancer(ObjSampleType&& objs, LoadProfileType&& profile);
+  void runBalancer(ObjLoadListType&& objs, LoadProfileType&& profile);
   void transferObjs(std::vector<CharmDecision>&& decision);
   ObjIDType objSetNode(NodeType const& node, ObjIDType const& id);
   void recvObjsDirect(std::size_t len, CharmLBTypes::ObjIDType* objs);
@@ -104,7 +104,7 @@ private:
 private:
   double this_threshold = 0.0f;
   LoadType this_load_begin = 0.0f;
-  ObjSampleType load_over;
+  ObjLoadListType obj_loads;
   objgroup::proxy::Proxy<CharmLB> proxy = {};
 
   // Parameters read from LB spec file
