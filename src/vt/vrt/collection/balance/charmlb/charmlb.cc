@@ -256,6 +256,7 @@ void CharmLB::runBalancerHelper(
 ) {
   using ObjType = TreeStrategy::Obj<N>;
   using ProcType = TreeStrategy::Proc<N, false>;
+  using SolutionType = TreeStrategy::Solution<ObjType, ProcType>;
 
   vt_print(lb, "CharmLB::runBalancer Running with {} dimensions\n", N);
 
@@ -289,13 +290,11 @@ void CharmLB::runBalancerHelper(
     );
   }
 
-  using Solution_t = TreeStrategy::Solution<ObjType, ProcType>;
   //auto strategy = TreeStrategy::Greedy<ObjType, ProcType, Solution_t>();
-  auto strategy = TreeStrategy::RKdLB<ObjType, ProcType, Solution_t>();
-  Solution_t solution(nodes);
+  auto strategy = TreeStrategy::RKdLB<ObjType, ProcType, SolutionType>();
+  SolutionType solution(nodes);
   strategy.solve(recs, nodes, solution, false);
 
-  std::vector<CharmDecision> decisions;
   return transferObjs(std::move(solution.decisions));
 }
 
