@@ -62,7 +62,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct CharmLB : LoadSamplerBaseLB {
+struct CharmLB : BaseLB {
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
   using TransferType     = std::map<NodeType, std::vector<ObjIDType>>;
   using LoadType         = double;
@@ -85,8 +85,6 @@ private:
   void loadStats();
   void finishedLB();
   void reduceCollect();
-  void calcLoadOver();
-  void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
   void transferObjs(std::vector<CharmDecision>&& decision);
   ObjIDType objSetNode(NodeType const& node, ObjIDType const& id);
   void recvObjsDirect(std::size_t len, CharmLBTypes::ObjIDType* objs);
