@@ -45,6 +45,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_MSGS_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/charmlb/charmlb_types.h"
 #include "vt/messaging/message.h"
 #include "vt/collective/reduce/operators/default_msg.h"
@@ -55,9 +56,11 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct CharmPayload : CharmLBTypes {
+  using ObjLoadListType = BaseLB::ObjLoadListType;
+
   CharmPayload() = default;
-  CharmPayload(ObjSampleType const& in_sample, LoadType const& in_profile)
-    : sample_(in_sample)
+  CharmPayload(ObjLoadListType const& in_objs, LoadType const& in_profile)
+    : collected_objs_(in_objs)
   {
     auto const& this_node = theContext()->getNode();
     auto iter = load_profile_.find(this_node);
@@ -71,15 +74,11 @@ struct CharmPayload : CharmLBTypes {
   }
 
   friend CharmPayload operator+(CharmPayload ld1, CharmPayload const& ld2) {
-    auto& sample1 = ld1.sample_;
-    auto const& sample2 = ld2.sample_;
-    for (auto&& elm : sample2) {
-      auto const& bin = elm.first;
-      auto const& entries = elm.second;
-      for (auto&& entry : entries) {
-        sample1[bin].push_back(entry);
-      }
-    }
+    auto& objs1 = ld1.collected_objs_;
+    auto const& objs2 = ld2.collected_objs_;
+    objs1.insert(objs1.end(), std::make_move_iterator(objs2.begin()),
+                 std::make_move_iterator(objs2.end()));
+
     auto& load1 = ld1.load_profile_;
     auto const& load2 = ld2.load_profile_;
     for (auto&& elm : load2) {
@@ -93,25 +92,26 @@ struct CharmPayload : CharmLBTypes {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | sample_ | load_profile_;
+    s | collected_objs_ | load_profile_;
   }
 
-  ObjSampleType const& getSample() const { return sample_; }
-  ObjSampleType&& getSampleMove() { return std::move(sample_); }
+  ObjLoadListType const& getObjList() const { return collected_objs_; }
+  ObjLoadListType&& getObjListMove() { return std::move(collected_objs_); }
   LoadProfileType const& getLoadProfile() const { return load_profile_; }
   LoadProfileType&& getLoadProfileMove() { return std::move(load_profile_); }
 
 protected:
   LoadProfileType load_profile_;
-  ObjSampleType sample_;
+  ObjLoadListType collected_objs_;
 };
 
 struct CharmCollectMsg : CharmLBTypes, collective::ReduceTMsg<CharmPayload> {
   using MessageParentType = collective::ReduceTMsg<CharmPayload>;
+  using ObjLoadListType = BaseLB::ObjLoadListType;
   vt_msg_serialize_required(); // prev. serialize(1)
 
   CharmCollectMsg() = default;
-  CharmCollectMsg(ObjSampleType const& in_load, LoadType const& in_profile)
+  CharmCollectMsg(ObjLoadListType const& in_load, LoadType const& in_profile)
     : collective::ReduceTMsg<CharmPayload>(CharmPayload{in_load,in_profile})
   { }
 
@@ -120,12 +120,12 @@ struct CharmCollectMsg : CharmLBTypes, collective::ReduceTMsg<CharmPayload> {
     MessageParentType::serialize(s);
   }
 
-  ObjSampleType const& getLoad() const {
-    return collective::ReduceTMsg<CharmPayload>::getConstVal().getSample();
+  ObjLoadListType const& getLoad() const {
+    return collective::ReduceTMsg<CharmPayload>::getConstVal().getObjList();
   }
 
-  ObjSampleType&& getLoadMove() {
-    return collective::ReduceTMsg<CharmPayload>::getVal().getSampleMove();
+  ObjLoadListType&& getLoadMove() {
+    return collective::ReduceTMsg<CharmPayload>::getVal().getObjListMove();
   }
 };
 
