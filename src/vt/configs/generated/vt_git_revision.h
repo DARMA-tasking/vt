@@ -46,6 +46,9 @@
 
 #include <string>
 
+extern int const vt_version_major;
+extern int const vt_version_minor;
+extern int const vt_version_patch;
 extern std::string const vt_git_sha1;
 extern std::string const vt_git_exact_tag;
 extern std::string const vt_git_refspec;
