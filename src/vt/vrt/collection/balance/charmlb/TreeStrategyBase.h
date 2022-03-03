@@ -116,17 +116,14 @@ class Obj : public std::conditional<multi, obj_N_data<N>, obj_1_data>::type
 
   static constexpr auto dimension = N;
 
-  inline Obj(IDType const& _id, const LoadFloatType* _load) //int _oldPe)
+  inline Obj(IDType const& _id, const LoadFloatType _load, std::vector<LoadFloatType>&& vecLoad) //int _oldPe)
   {
     id = _id;
     //oldPe = _oldPe;
-    // The zeroth element of _load will be the traditional walltime load,
-    // and then 1 through N will be the elements of the vector load
-    this->totalload = *_load;
-    _load++;
+    this->totalload = _load;
     for (int i = 0; i < N; i++)
     {
-      this->load[i] = _load[i];
+      this->load[i] = vecLoad[i];
     }
   }
 
@@ -140,10 +137,10 @@ class Obj : public std::conditional<multi, obj_N_data<N>, obj_1_data>::type
 };
 
 template <>
-inline Obj<1>::Obj(IDType const& _id, const LoadFloatType* _load)// int _oldPe)
+inline Obj<1>::Obj(IDType const& _id, const LoadFloatType _load, std::vector<LoadFloatType>&& vecLoad)// int _oldPe)
 {
   id = _id;
-  load = *_load;
+  load = _load;
   //oldPe = _oldPe;
 }
 
@@ -222,11 +219,11 @@ public:
   NodeType id = vt::uninitialized_destination;
   static constexpr auto dimension = N;
 
-  inline Proc(NodeType const& _id, LoadFloatType* _bgload, LoadFloatType* _speed)
+  inline Proc(NodeType const& _id, LoadFloatType _bgload, LoadFloatType* _speed)
   {
     id = _id;
     // TODO: implement vector bgload
-    std::fill_n(this->bgload.begin(), N, *_bgload);
+    std::fill_n(this->bgload.begin(), N, _bgload / N);
   }
 
   inline LoadFloatType getLoad() const { return this->totalload; }
@@ -263,10 +260,10 @@ public:
 };
 
 template <>
-Proc<1, false>::Proc(NodeType const& _id, LoadFloatType* _bgload, LoadFloatType* _speed)
+Proc<1, false>::Proc(NodeType const& _id, LoadFloatType _bgload, LoadFloatType* _speed)
 {
   id = _id;
-  this->bgload = *_bgload;
+  this->bgload = _bgload;
 }
 template <>
 LoadFloatType Proc<1, false>::getLoad() const
@@ -306,10 +303,10 @@ public:
   static constexpr auto dimension = N;
   std::array<LoadFloatType, N> speed;
 
-  inline Proc(NodeType const& _id, LoadFloatType* _bgload, LoadFloatType* _speed)
+  inline Proc(NodeType const& _id, LoadFloatType _bgload, LoadFloatType* _speed)
   {
     id = _id;
-    std::copy_n(_bgload, N, this->bgload.begin());
+    std::fill_n(this->bgload.begin(), N, _bgload / N);
     std::copy_n(_speed, N, this->speed.begin());
   }
 
@@ -347,10 +344,10 @@ public:
 };
 
 template <>
-Proc<1, true>::Proc(NodeType const& _id, LoadFloatType* _bgload, LoadFloatType* _speed)
+Proc<1, true>::Proc(NodeType const& _id, LoadFloatType _bgload, LoadFloatType* _speed)
 {
   id = _id;
-  this->bgload = *_bgload;
+  this->bgload = _bgload;
   speed[0] = _speed[0];
 }
 template <>

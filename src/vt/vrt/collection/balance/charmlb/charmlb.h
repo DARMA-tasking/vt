@@ -87,7 +87,6 @@ private:
   void reduceCollect();
   void calcLoadOver();
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
-  void runBalancer(ObjLoadListType&& objs, LoadProfileType&& profile);
   void transferObjs(std::vector<CharmDecision>&& decision);
   ObjIDType objSetNode(NodeType const& node, ObjIDType const& id);
   void recvObjsDirect(std::size_t len, CharmLBTypes::ObjIDType* objs);
@@ -95,6 +94,11 @@ private:
   void recvObjsBcast(CharmBcastMsg* msg);
   void finishedTransferExchange();
   void collectHandler(CharmCollectMsg* msg);
+
+  template <int N>
+  void runBalancer(int dimension, ObjLoadListType&& objs, LoadProfileType&& profile);
+  template <int N>
+  void runBalancerHelper(ObjLoadListType&& objs, LoadProfileType&& profile);
 
   // This must stay static due to limitations in the scatter implementation
   // (does not work with objgroups)
