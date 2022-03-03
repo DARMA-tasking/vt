@@ -82,9 +82,16 @@ unsigned int RawData::getNumCompletedPhases() {
 
 int RawData::getNumSubphases() {
   const auto& last_phase = proc_load_->at(last_completed_phase_);
-  const auto& an_object = *last_phase.begin();
-  const auto& subphases = an_object.second.subphase_loads;
-  return subphases.size();
+
+  // @todo: this workaround is O(#objects) and should be removed when we finish
+  // the new subphase API
+  int subphases = 0;
+  for (auto &obj : last_phase) {
+    if (obj.second.subphase_loads.size() > static_cast<size_t>(subphases)) {
+      subphases = obj.second.subphase_loads.size();
+    }
+  }
+  return subphases;
 }
 
 TimeType RawData::getWork(ElementIDStruct object, PhaseOffset offset)
