@@ -95,7 +95,10 @@ void printMemoryFootprint(T* component) {
 }
 
 TEST_F(TestMemoryFootprinting, test_arg_config) {
-  printMemoryFootprint(vt::rt->theArgConfig);
+  EXPECT_TRUE(theConfig()->passthru_args.empty());
+  ASSERT_EQ(theConfig()->passthru_args.size(), 0);
+
+  checkpoint::getMemoryFootprint(theConfig()->passthru_args);
 }
 
 TEST_F(TestMemoryFootprinting, test_time_trigger_manager) {
