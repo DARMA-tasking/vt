@@ -118,29 +118,30 @@ template <typename UserMsgT>
 
   auto node = sys_msg->from_node;
   theMsg()->recvDataDirect(
-      nchunks, recv_tag, sys_msg->from_node, len,
-      [handler, recv_tag, node, epoch, is_valid_epoch]
-      (RDMA_GetType ptr, ActionType action) {
-        // be careful here not to use "sys_msg", it is no longer valid
-        auto msg_data = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
-        auto msg = deserializeFullMessage<UserMsgT>(msg_data);
+    nchunks, recv_tag, sys_msg->from_node, len,
+    [handler, recv_tag, node, epoch, is_valid_epoch]
+    (RDMA_GetType ptr, ActionType action) {
+      // be careful here not to use "sys_msg", it is no longer valid
+      auto msg_data = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
+      auto msg = deserializeFullMessage<UserMsgT>(msg_data);
 
-        vt_debug_print(
-          normal, serial_msg,
-          "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={},"
-          "epoch={}\n",
-          handler, recv_tag, envelopeGetEpoch(msg->env)
-        );
+      vt_debug_print(
+        normal, serial_msg,
+        "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={},"
+        "epoch={}\n",
+        handler, recv_tag, envelopeGetEpoch(msg->env)
+      );
 
-        runnable::makeRunnable(msg, true, handler, node)
-          .withTDEpoch(epoch, not is_valid_epoch)
-          .withContinuation(action)
-          .enqueue();
+      runnable::makeRunnable(msg, true, handler, node)
+        .withTDEpoch(epoch, not is_valid_epoch)
+        .withContinuation(action)
+        .enqueue();
 
-        if (is_valid_epoch) {
-          theTerm()->consume(epoch);
-        }
-      });
+      if (is_valid_epoch) {
+        theTerm()->consume(epoch);
+      }
+    }
+  );
 }
 
 template <typename UserMsgT, typename BaseEagerMsgT>
