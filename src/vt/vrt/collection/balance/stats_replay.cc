@@ -75,6 +75,17 @@ void replayFromInputStats(
 
   // allow remembering what objects are here after the load balancer migrates
   std::set<ObjIDType> migratable_objects_here;
+  // force it to use our json stats, not anything it may have collected
+  base_load_model->setLoads(&sd.node_data_, &sd.node_comm_);
+  // point the load model at the stats for the relevant phase
+  runInEpochCollective("StatsReplayDriver -> updateLoads", [=] {
+    base_load_model->updateLoads(initial_phase);
+  });
+  for (auto stat_obj_id : *base_load_model) {
+    if (stat_obj_id.isMigratable()) {
+      migratable_objects_here.insert(stat_obj_id);
+    }
+  }
 
   // simulate the requested number of phases
   auto const this_rank = theContext()->getNode();
@@ -191,20 +202,22 @@ void replayFromInputStats(
       // instead, remember where the LB wanted to migrate objects
       lb_reassignment = theLBManager()->selectStartLB(phase);
 
-      auto proposed_model = std::make_shared<ProposedReassignment>(
-        pre_lb_load_model, lb_reassignment
-      );
-      migratable_objects_here.clear();
-      for (auto it = proposed_model->begin(); it.isValid(); ++it) {
-        if ((*it).isMigratable()) {
-          ObjIDType loc_id = *it;
-          loc_id.curr_node = this_rank;
-          migratable_objects_here.insert(loc_id);
-          vt_debug_print(
-            normal, replay,
-            "element {} is here on phase {} post-lb\n",
-            loc_id, phase
-          );
+      if (lb_reassignment) {
+        auto proposed_model = std::make_shared<ProposedReassignment>(
+          pre_lb_load_model, lb_reassignment
+        );
+        migratable_objects_here.clear();
+        for (auto it = proposed_model->begin(); it.isValid(); ++it) {
+          if ((*it).isMigratable()) {
+            ObjIDType loc_id = *it;
+            loc_id.curr_node = this_rank;
+            migratable_objects_here.insert(loc_id);
+            vt_debug_print(
+               normal, replay,
+              "element {} is here on phase {} post-lb\n",
+              loc_id, phase
+            );
+          }
         }
       }
       vt_debug_print(
