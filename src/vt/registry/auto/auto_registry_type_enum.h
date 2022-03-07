@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            auto_registry_common.h
+//                          auto_registry_type_enum.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
