@@ -73,8 +73,10 @@ inline HandlerType makeAutoHandlerFunctorMap() {
 
   constexpr bool is_auto = true;
   constexpr bool is_functor = true;
-  auto const han =
-    HandlerManagerType::makeHandler(is_auto, is_functor, RunnableT::idx);
+  constexpr auto reg_type = RegistryTypeEnum::RegMap;
+  auto const han = HandlerManagerType::makeHandler(
+    is_auto, is_functor, RunnableT::idx, reg_type
+  );
   vt_debug_print(
     verbose, handler,
     "makeAutoHandlerFunctorMap: handler={}\n", han
@@ -114,7 +116,10 @@ inline HandlerType makeAutoHandlerMap() {
   constexpr bool is_auto = true;
   constexpr bool is_functor = false;
   auto id = RunnableGen<FunctorType, ContainerType, RegInfoType, FuncType>::idx;
-  auto const han = HandlerManagerType::makeHandler(is_auto, is_functor, id);
+  constexpr auto reg_type = RegistryTypeEnum::RegMap;
+  auto const han = HandlerManagerType::makeHandler(
+    is_auto, is_functor, id, reg_type
+  );
   vt_debug_print(
     verbose, handler,
     "makeAutoHandlerMap: id={}, han={}\n", id, han
@@ -141,7 +146,10 @@ inline HandlerType makeAutoHandlerSeedMap() {
   constexpr bool is_auto = true;
   constexpr bool is_functor = false;
   auto id = RunnableGen<FunctorType, ContainerType, RegInfoType, FuncType>::idx;
-  auto const han = HandlerManagerType::makeHandler(is_auto, is_functor, id);
+  constexpr auto reg_type = RegistryTypeEnum::RegSeed;
+  auto const han = HandlerManagerType::makeHandler(
+    is_auto, is_functor, id, reg_type
+  );
   vt_debug_print(
     verbose, handler,
     "makeAutoHandlerMap: id={}, han={}\n", id, han

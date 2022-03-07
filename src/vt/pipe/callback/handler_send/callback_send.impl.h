@@ -110,8 +110,7 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   if (this_node == send_node_) {
     auto msg = reinterpret_cast<ShortMessage*>(data);
     auto m = promoteMsg(msg);
-    auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
-    runnable::makeRunnable(m, true, handler_, this_node, han_type)
+    runnable::makeRunnable(m, true, handler_, this_node)
       .withTDEpochFromMsg()
       .enqueue();
   } else {

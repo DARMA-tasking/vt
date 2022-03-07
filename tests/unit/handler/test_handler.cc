@@ -55,12 +55,14 @@ TEST_F(TestHandler, test_make_handler_default_params) {
   constexpr bool is_auto = true;
   constexpr bool is_functor = false;
   constexpr HandlerIdentifierType id = 134;
+  constexpr auto reg_type = auto_registry::RegistryTypeEnum::RegObjGroup;
 
-  auto const han = HandlerManager::makeHandler(is_auto, is_functor, id);
+  auto const han = HandlerManager::makeHandler(is_auto, is_functor, id, reg_type);
 
   EXPECT_EQ(is_auto, HandlerManager::isHandlerAuto(han));
   EXPECT_EQ(is_functor, HandlerManager::isHandlerFunctor(han));
   EXPECT_EQ(id, HandlerManager::getHandlerIdentifier(han));
+  EXPECT_EQ(reg_type, HandlerManager::getHandlerRegistryType(han));
 
   // Default parameters' values
   constexpr bool is_objgroup = false;
@@ -81,18 +83,20 @@ TEST_F(TestHandler, TestHandler_test_make_handler_custom_params) {
   constexpr bool is_auto = false;
   constexpr bool is_functor = true;
   constexpr HandlerIdentifierType id = 9746;
+  constexpr auto reg_type = auto_registry::RegistryTypeEnum::RegVrtCollectionMember;
   constexpr bool is_objgroup = true;
   constexpr HandlerControlType control = 2289;
   constexpr bool is_trace = false;
   constexpr bool is_member = true;
 
   auto const han = HandlerManager::makeHandler(
-    is_auto, is_functor, id, is_objgroup, control, is_trace, is_member
+    is_auto, is_functor, id, reg_type, is_objgroup, control, is_trace, is_member
   );
 
   EXPECT_EQ(is_auto, HandlerManager::isHandlerAuto(han));
   EXPECT_EQ(is_functor, HandlerManager::isHandlerFunctor(han));
   EXPECT_EQ(id, HandlerManager::getHandlerIdentifier(han));
+  EXPECT_EQ(reg_type, HandlerManager::getHandlerRegistryType(han));
   EXPECT_EQ(is_objgroup, HandlerManager::isHandlerObjGroup(han));
   EXPECT_EQ(control, HandlerManager::getHandlerControl(han));
   EXPECT_EQ(is_member, HandlerManager::isHandlerMember(han));

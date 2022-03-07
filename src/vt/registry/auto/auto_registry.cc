@@ -59,7 +59,8 @@ trace::TraceEntryIDType getTraceID(HandlerType const handler) {
 }
 
 trace::TraceEntryIDType
-handlerTraceID(HandlerType const handler, RegistryTypeEnum const reg_type) {
+handlerTraceID(HandlerType const handler) {
+  auto const reg_type = HandlerManager::getHandlerRegistryType(handler);
   switch (reg_type) {
   case RegistryTypeEnum::RegGeneral: {
     if (HandlerManagerType::isHandlerFunctor(handler)) {

@@ -47,7 +47,8 @@
 namespace vt {
 
 /*static*/ HandlerType HandlerManager::makeHandler(
-  bool is_auto, bool is_functor, HandlerIdentifierType id, bool is_objgroup,
+  bool is_auto, bool is_functor, HandlerIdentifierType id,
+  RegistryTypeEnum const registry_type, bool is_objgroup,
   HandlerControlType control, bool is_trace, bool is_member,
   bool is_base_msg_derived
 ) {
@@ -57,6 +58,7 @@ namespace vt {
   HandlerManager::setHandlerFunctor(new_han, is_functor);
   HandlerManager::setHandlerMember(new_han, is_member);
   HandlerManager::setHandlerBaseMsgDerived(new_han, is_base_msg_derived);
+  HandlerManager::setHandlerRegistryType(new_han, registry_type);
   HandlerManager::setHandlerIdentifier(new_han, id);
 
 #if vt_check_enabled(trace_enabled)
@@ -69,10 +71,10 @@ namespace vt {
 
   vt_debug_print(
     verbose, handler,
-    "HandlerManager::makeHandler: is_functor={}, is_auto={}, is_objgroup={},"
-    "is_member={} id={:x}, control={:x}, han={:x}, is_trace={}\n",
-    is_functor, is_auto, is_objgroup, is_member, id, control, new_han,
-    is_trace
+    "HandlerManager::makeHandler: is_functor={}, is_auto={}, is_objgroup={}, "
+    "is_member={}, registry_type={}, id={:x}, control={:x}, han={:x}, is_trace={}\n",
+    is_functor, is_auto, is_objgroup, is_member, registry_type, id, control,
+    new_han, is_trace
   );
 
   return new_han;
@@ -91,6 +93,14 @@ namespace vt {
 ) {
   return BitPackerType::getField<
     HandlerBitsType::Control, control_num_bits, HandlerControlType
+  >(han);
+}
+
+/*static*/ HandlerManager::RegistryTypeEnum HandlerManager::getHandlerRegistryType(
+  HandlerType han
+) {
+  return BitPackerType::getField<
+    HandlerBitsType::RegistryType, registry_type_bits, RegistryTypeEnum
   >(han);
 }
 
@@ -137,6 +147,14 @@ namespace vt {
 ) {
   BitPackerType::boolSetField<HandlerBitsType::BaseMsgDerived>(
     han, is_base_msg_derived
+  );
+}
+
+/*static*/ void HandlerManager::setHandlerRegistryType(
+  HandlerType& han, RegistryTypeEnum registry_type
+) {
+  BitPackerType::setField<HandlerBitsType::RegistryType, registry_type_bits>(
+    han, registry_type
   );
 }
 

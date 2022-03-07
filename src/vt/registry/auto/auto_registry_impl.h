@@ -81,8 +81,9 @@ inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
   constexpr bool is_functor = false;
   constexpr bool is_objgroup = true;
   auto const idx = RunType::idx;
-  auto const han =
-    HandlerManagerType::makeHandler(is_auto, is_functor, idx, is_objgroup, ctrl
+  constexpr auto reg_type = RegistryTypeEnum::RegObjGroup;
+  auto const han = HandlerManagerType::makeHandler(
+    is_auto, is_functor, idx, reg_type, is_objgroup, ctrl
   );
   auto obj_idx = objgroup::registry::makeObjIdx<ObjT>();
   getAutoRegistryGen<ContainerType>().at(idx).setObjIdx(obj_idx);
@@ -99,7 +100,10 @@ inline HandlerType makeAutoHandler() {
 
   constexpr bool is_auto = true;
   constexpr bool is_functor = false;
-  return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
+  constexpr auto reg_type = RegistryTypeEnum::RegGeneral;
+  return HandlerManagerType::makeHandler(
+    is_auto, is_functor, RunType::idx, reg_type
+  );
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -113,6 +117,7 @@ inline HandlerType makeScatterHandler() {
   constexpr bool is_auto = true;
   constexpr bool is_functor = false;
   const auto handler_id = RunType::idx;
+  constexpr auto reg_type = RegistryTypeEnum::RegGeneral;
   constexpr bool is_objgroup = false;
   constexpr HandlerControlType control = 0;
   constexpr bool is_trace = true;
@@ -120,8 +125,8 @@ inline HandlerType makeScatterHandler() {
   constexpr bool is_base_msg_derived = false;
 
   return HandlerManagerType::makeHandler(
-    is_auto, is_functor, handler_id, is_objgroup, control, is_trace, is_member,
-    is_base_msg_derived
+    is_auto, is_functor, handler_id, reg_type, is_objgroup, control,
+    is_trace, is_member, is_base_msg_derived
   );
 }
 
@@ -153,7 +158,10 @@ inline HandlerType makeAutoHandlerParam() {
 
   constexpr bool is_auto = true;
   constexpr bool is_functor = false;
-  return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
+  constexpr auto reg_type = RegistryTypeEnum::RegGeneral;
+  return HandlerManagerType::makeHandler(
+    is_auto, is_functor, RunType::idx, reg_type
+  );
 }
 
 inline AutoActiveType const& getAutoHandler(HandlerType const handler) {
@@ -180,7 +188,7 @@ void setHandlerTraceNameObjGroup(
 ) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerObjGroup<ObjT,MsgT,f>(ctrl);
-  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegObjGroup);
+  auto const trace_id = handlerTraceID(handler);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
@@ -189,7 +197,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandler<MsgT,f>();
-  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
+  auto const trace_id = handlerTraceID(handler);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
@@ -198,7 +206,7 @@ template <typename T, T value>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerParam<T,value>();
-  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
+  auto const trace_id = handlerTraceID(handler);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }

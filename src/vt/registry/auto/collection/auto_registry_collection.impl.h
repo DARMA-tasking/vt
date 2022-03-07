@@ -66,7 +66,8 @@ inline HandlerType makeAutoHandlerCollection() {
 
   auto const id =
     RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
-  auto handler = HandlerManager::makeHandler(false, false, id);
+  constexpr auto reg_type = RegistryTypeEnum::RegVrtCollection;
+  auto handler = HandlerManager::makeHandler(false, false, id, reg_type);
   HandlerManager::setHandlerMember(handler, false);
   return handler;
 }
@@ -92,7 +93,8 @@ inline HandlerType makeAutoHandlerCollectionMem() {
 
   auto const id =
     RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
-  auto handler = HandlerManager::makeHandler(false, false, id);
+  constexpr auto reg_type = RegistryTypeEnum::RegVrtCollectionMember;
+  auto handler = HandlerManager::makeHandler(false, false, id, reg_type);
   HandlerManager::setHandlerMember(handler, true);
   return handler;
 }
@@ -101,7 +103,7 @@ template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
 void setHandlerTraceNameColl(std::string const& name, std::string const& parent) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerCollection<ColT,MsgT,f>();
-  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegVrtCollection);
+  auto const trace_id = handlerTraceID(handler);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
@@ -110,7 +112,7 @@ template <typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
 void setHandlerTraceNameCollMem(std::string const& name, std::string const& parent) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerCollectionMem<ColT,MsgT,f>();
-  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegVrtCollectionMember);
+  auto const trace_id = handlerTraceID(handler);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }

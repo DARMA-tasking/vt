@@ -529,7 +529,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       bool const& has_handler = msg->hasHandler();
       auto const& from = msg->getLocFromNode();
       if (has_handler) {
-        auto const& handler = msg->getHandler();
+        auto const handler = msg->getHandler();
 
         vt_debug_print(
           verbose, location,
@@ -538,8 +538,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           hid, from, handler, envelopeGetRef(msg->env)
         );
 
-        auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
-        runnable::makeRunnable(msg, true, handler, from, han_type)
+        runnable::makeRunnable(msg, true, handler, from)
           .withTDEpochFromMsg()
           .run();
       } else {

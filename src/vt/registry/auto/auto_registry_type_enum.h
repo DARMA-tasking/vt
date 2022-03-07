@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           auto_registry_vc_impl.h
+//                            auto_registry_common.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -40,40 +40,25 @@
 // *****************************************************************************
 //@HEADER
 */
-#if !defined INCLUDED_VT_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_IMPL_H
-#define INCLUDED_VT_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_IMPL_H
 
-#include "vt/config.h"
-#include "vt/registry/auto/auto_registry_common.h"
-#include "vt/registry/auto/auto_registry.h"
-#include "vt/vrt/context/context_vrt_funcs.h"
-
-#include <vector>
+#if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_TYPE_ENUM_H
+#define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_TYPE_ENUM_H
 
 namespace vt { namespace auto_registry {
 
-using namespace vrt;
-
-template <typename VrtT, typename MsgT, ActiveVrtTypedFnType<MsgT, VrtT>* f>
-inline HandlerType makeAutoHandlerVC() {
-  using FunctorT = FunctorAdapter<ActiveVrtTypedFnType<MsgT, VrtT>, f, MsgT, VrtT>;
-  using ContainerType = AutoActiveVCContainerType;
-  using RegInfoType = AutoRegInfoType<AutoActiveVCType>;
-  using FuncType = ActiveVirtualFnPtrType;
-
-  auto const id =
-    RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
-  constexpr auto reg_type = RegistryTypeEnum::RegVrt;
-  return HandlerManager::makeHandler(false, false, id, reg_type);
-}
-
-inline AutoActiveVCType const& getAutoHandlerVC(HandlerType const handler) {
-  using ContainerType = AutoActiveVCContainerType;
-
-  auto const han_id = HandlerManager::getHandlerIdentifier(handler);
-  return getAutoRegistryGen<ContainerType>().at(han_id).getFun();
-}
+enum struct RegistryTypeEnum {
+  RegGeneral = 1,
+  RegMap,
+  RegVrt,
+  RegSeed,
+  RegVrtCollection,
+  RegVrtCollectionMember,
+  RegRDMAGet,
+  RegRDMAPut,
+  RegIndex,
+  RegObjGroup
+};
 
 }} // end namespace vt::auto_registry
 
-#endif /*INCLUDED_VT_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_IMPL_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_TYPE_ENUM_H*/
