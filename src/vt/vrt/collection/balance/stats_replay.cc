@@ -80,9 +80,6 @@ void replayFromInputStats(
   auto const this_rank = theContext()->getNode();
   auto stop_phase = initial_phase + phases_to_run;
   for (PhaseType phase = initial_phase; phase < stop_phase; phase++) {
-    if (this_rank == 0)
-      vt_print(replay, "Simulated phase {}...\n", phase);
-
     // reapply the base load model if in case we overwrote it on a previous iter
     theLBManager()->setLoadModel(base_load_model);
 
@@ -117,6 +114,14 @@ void replayFromInputStats(
     // other than where the objects are currently meant to exist; we will
     // use a Reassignment object to get those load stats where they need to be
     if (phase > initial_phase) {
+      if (this_rank == 0) {
+        vt_print(
+          replay,
+          "Migrating imported object stats to phase {} ranks...\n",
+          phase
+        );
+      }
+
       // at the beginning of this phase, objects will exist in the locations
       // they were placed by the previous lb invocation; this will be the
       // arriving node for the purposes of this load model; that location
@@ -153,6 +158,10 @@ void replayFromInputStats(
       });
       theLBManager()->setLoadModel(pre_lb_load_model);
       pre_lb_load_model->setLoads(&sd.node_data_, &sd.node_comm_);
+    }
+
+    if (this_rank == 0) {
+      vt_print(replay, "Simulating phase {}...\n", phase);
     }
 
     // sanity output
