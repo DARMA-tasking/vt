@@ -74,7 +74,7 @@ void replayFromInputStats(
   std::shared_ptr<const Reassignment> lb_reassignment = nullptr;
 
   // allow remembering what objects are here after the load balancer migrates
-  std::set<ObjIDType> objects_here;
+  std::set<ObjIDType> migratable_objects_here;
 
   // simulate the requested number of phases
   auto const this_rank = theContext()->getNode();
@@ -141,7 +141,7 @@ void replayFromInputStats(
         auto norm_lb_proxy = LBStatsMigrator::construct(base_load_model);
         auto normalizer = norm_lb_proxy.get();
         pre_lb_load_model = normalizer->createStatsAtHomeModel(
-          base_load_model, objects_here
+          base_load_model, migratable_objects_here
         );
         norm_lb_proxy.destroyCollective();
       });
@@ -152,7 +152,7 @@ void replayFromInputStats(
         auto norm_lb_proxy = LBStatsMigrator::construct(pre_lb_load_model);
         auto normalizer = norm_lb_proxy.get();
         pre_lb_load_model = normalizer->createStatsHereModel(
-          pre_lb_load_model, objects_here
+          pre_lb_load_model, migratable_objects_here
         );
         norm_lb_proxy.destroyCollective();
       });
@@ -194,12 +194,12 @@ void replayFromInputStats(
       auto proposed_model = std::make_shared<ProposedReassignment>(
         pre_lb_load_model, lb_reassignment
       );
-      objects_here.clear();
+      migratable_objects_here.clear();
       for (auto it = proposed_model->begin(); it.isValid(); ++it) {
         if ((*it).isMigratable()) {
           ObjIDType loc_id = *it;
           loc_id.curr_node = this_rank;
-          objects_here.insert(loc_id);
+          migratable_objects_here.insert(loc_id);
           vt_debug_print(
             normal, replay,
             "element {} is here on phase {} post-lb\n",
@@ -209,7 +209,7 @@ void replayFromInputStats(
       }
       vt_debug_print(
         terse, replay,
-        "Post-lb num objects: {}\n", objects_here.size()
+        "Post-lb num objects: {}\n", migratable_objects_here.size()
       );
     });
     runInEpochCollective("StatsReplayDriver -> destroyLB", [&] {
@@ -225,7 +225,6 @@ objgroup::proxy::Proxy<LBStatsMigrator>
 LBStatsMigrator::construct(std::shared_ptr<LoadModel> model_base) {
   auto my_proxy = theObjGroup()->makeCollective<LBStatsMigrator>();
   auto strat = my_proxy.get();
-  strat->init(my_proxy);
   auto base_proxy = my_proxy.template registerBaseCollective<lb::BaseLB>();
   vt_debug_print(
     verbose, replay,
@@ -235,10 +234,6 @@ LBStatsMigrator::construct(std::shared_ptr<LoadModel> model_base) {
   strat->proxy_ = base_proxy;
   strat->load_model_ = model_base.get();
   return my_proxy;
-}
-
-void LBStatsMigrator::init(objgroup::proxy::Proxy<LBStatsMigrator> in_proxy) {
-  proxy = in_proxy;
 }
 
 void LBStatsMigrator::runLB(TimeType) { }
@@ -254,7 +249,7 @@ LBStatsMigrator::getInputKeysWithHelp() {
 std::shared_ptr<ProposedReassignment>
 LBStatsMigrator::createStatsAtHomeModel(
   std::shared_ptr<LoadModel> model_base,
-  std::set<ObjIDType> objects_here
+  std::set<ObjIDType> migratable_objects_here
 ) {
   auto const this_rank = vt::theContext()->getNode();
   vt_debug_print(
@@ -268,7 +263,7 @@ LBStatsMigrator::createStatsAtHomeModel(
         // if the object belongs here, do nothing; otherwise, "transfer" it to
         // the home rank
         if (stat_obj_id.getHomeNode() != this_rank) {
-          if (objects_here.count(stat_obj_id) == 0) {
+          if (migratable_objects_here.count(stat_obj_id) == 0) {
             vt_debug_print(
               verbose, replay,
               "will transfer load of {} home to {}\n",
@@ -302,7 +297,7 @@ LBStatsMigrator::createStatsAtHomeModel(
 std::shared_ptr<ProposedReassignment>
 LBStatsMigrator::createStatsHereModel(
   std::shared_ptr<LoadModel> model_base,
-  std::set<ObjIDType> objects_here
+  std::set<ObjIDType> migratable_objects_here
 ) {
   auto const this_rank = vt::theContext()->getNode();
   vt_debug_print(
@@ -311,31 +306,29 @@ LBStatsMigrator::createStatsHereModel(
   );
 
   runInEpochCollective("LBStatsMigrator -> transferStatsHere", [&] {
-    for (auto stat_obj_id : objects_here) {
-      if (stat_obj_id.isMigratable()) {
-        // if the object is already here, do nothing; otherwise, "transfer" it
-        // from the home rank
-        bool stats_here = false;
-        for (auto other_id : *model_base) {
-          if (stat_obj_id == other_id) {
-            stats_here = true;
-            break;
-          }
+    for (auto stat_obj_id : migratable_objects_here) {
+      // if the object is already here, do nothing; otherwise, "transfer" it
+      // from the home rank
+      bool stats_here = false;
+      for (auto other_id : *model_base) {
+        if (stat_obj_id == other_id) {
+          stats_here = true;
+          break;
         }
-        if (!stats_here) {
-          // check that this isn't something that should already have been here
-          assert(stat_obj_id.getHomeNode() != this_rank);
+      }
+      if (!stats_here) {
+        // check that this isn't something that should already have been here
+        assert(stat_obj_id.getHomeNode() != this_rank);
 
-          vt_debug_print(
-            verbose, replay,
-            "will transfer load of {} from home {}\n",
-            stat_obj_id, stat_obj_id.getHomeNode()
-          );
-          ObjIDType mod_id = stat_obj_id;
-          // Override curr_node to force retrieval from the home rank
-          mod_id.curr_node = stat_obj_id.getHomeNode();
-          migrateObjectTo(mod_id, this_rank);
-        }
+        vt_debug_print(
+          verbose, replay,
+          "will transfer load of {} from home {}\n",
+          stat_obj_id, stat_obj_id.getHomeNode()
+        );
+        ObjIDType mod_id = stat_obj_id;
+        // Override curr_node to force retrieval from the home rank
+        mod_id.curr_node = stat_obj_id.getHomeNode();
+        migrateObjectTo(mod_id, this_rank);
       }
     }
   });

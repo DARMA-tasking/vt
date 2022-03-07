@@ -71,8 +71,6 @@ struct LBStatsMigrator : lb::BaseLB {
   static objgroup::proxy::Proxy<LBStatsMigrator>
   construct(std::shared_ptr<LoadModel> model_base);
 
-  void init(objgroup::proxy::Proxy<LBStatsMigrator> in_proxy);
-
   void runLB(TimeType) override;
 
   void inputParams(SpecEntry* spec) override;
@@ -84,17 +82,14 @@ struct LBStatsMigrator : lb::BaseLB {
   std::shared_ptr<ProposedReassignment>
   createStatsAtHomeModel(
     std::shared_ptr<LoadModel> model_base,
-    std::set<ObjIDType> objects_here
+    std::set<ObjIDType> migratable_objects_here
   );
 
   std::shared_ptr<ProposedReassignment>
   createStatsHereModel(
     std::shared_ptr<LoadModel> model_base,
-    std::set<ObjIDType> objects_here
+    std::set<ObjIDType> migratable_objects_here
   );
-
-private:
-  objgroup::proxy::Proxy<LBStatsMigrator> proxy = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
