@@ -64,7 +64,6 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/error/stack_out.h"
-#include "vt/configs/error/pretty_print_stack.h"
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
@@ -100,7 +99,8 @@ namespace vt { namespace runtime {
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm in_comm, RuntimeInstType const in_instance
+  bool const interop_mode, MPI_Comm in_comm, RuntimeInstType const in_instance,
+  arguments::AppConfig const* appConfig
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers),
      initial_communicator_(in_comm),
@@ -153,7 +153,7 @@ Runtime::Runtime(
 
   // n.b. ref-update of args with pass-through arguments
   std::tuple<int, std::string> result =
-    arg_config_->parse(/*out*/ argc, /*out*/ argv);
+    arg_config_->parse(argc, argv, appConfig);
   int exit_code = std::get<0>(result);
 
   if (getAppConfig()->vt_help_lb_args) {

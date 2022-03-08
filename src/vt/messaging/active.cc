@@ -233,7 +233,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
 
   vtWarnIf(
     !(dest != theContext()->getNode() || is_bcast),
-    "Destination {} should != this node"
+    fmt::format("Destination {} should != this node", dest)
   );
 
   MsgSizeType new_msg_size = base.size();
@@ -522,8 +522,31 @@ EventType ActiveMessenger::doMessageSend(
     base, uninitialized_destination, true, &deliver
   );
 
+  // Don't go through MPI with self-send, schedule the message locally instead
+  auto const this_node = theContext()->getNode();
   if (deliver) {
-    sendMsgBytesWithPut(dest, base, send_tag);
+    if (dest != this_node) {
+      sendMsgBytesWithPut(dest, base, send_tag);
+    } else {
+      if (theContext()->getTask() != nullptr) {
+        auto lb = theContext()->getTask()->get<ctx::LBStats>();
+        if (lb) {
+          auto const already_recorded =
+            envelopeCommStatsRecordedAboveBareHandler(msg->env);
+          if (not already_recorded) {
+            auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);
+            theContext()->getTask()->send(dest_elm_id, base.size());
+          }
+        }
+      }
+
+      auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+      runnable::makeRunnable(
+        base, true, envelopeGetHandler(msg->env), dest, han_type
+      ) .withTDEpochFromMsg(is_term)
+        .withLBStats(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
+        .enqueue();
+    }
     return no_event;
   }
 
@@ -979,7 +1002,8 @@ bool ActiveMessenger::prepareActiveMsgToRun(
   }
 
   if (has_handler) {
-    runnable::makeRunnable(base, not is_term, handler, from_node)
+    auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
+    runnable::makeRunnable(base, not is_term, handler, from_node, han_type)
       .withContinuation(cont)
       .withTag(tag)
       .withTDEpochFromMsg(is_term)

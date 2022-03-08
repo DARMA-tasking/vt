@@ -44,6 +44,9 @@
 #if !defined INCLUDED_VT_UTILS_STRONG_STRONG_TYPE_H
 #define INCLUDED_VT_UTILS_STRONG_STRONG_TYPE_H
 
+#include <functional>
+#include <type_traits>
+
 namespace vt { namespace util { namespace strong { namespace detail {
 
 /**

@@ -47,6 +47,7 @@
 #include "vt/context/runnable_context/base.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
+#include "vt/epoch/epoch_type.h"
 
 #include <vector>
 

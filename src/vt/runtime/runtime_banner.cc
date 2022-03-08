@@ -164,7 +164,7 @@ void Runtime::printStartupBanner() {
 #endif
 
   std::string dirty = "";
-  if (strncmp(vt_git_clean_status.c_str(), "DIRTY", 5) == 0) {
+  if (vt_git_clean_status == "DIRTY") {
     dirty = red + std::string("*dirty*") + reset;
   }
 
@@ -174,29 +174,29 @@ void Runtime::printStartupBanner() {
   auto const version = std::to_string(std::get<0>(version_tuple));
   auto const subversion = std::to_string(std::get<1>(version_tuple));
 
-  auto f1 = fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd));
-  auto f2a = fmt::format("{}Program: {} ({})\n", green,
-                         emph(getAppConfig()->prog_name), emph(getAppConfig()->argv_prog_name));
-  auto f2b = fmt::format("{}Running on: {}\n", green, emph(all_node));
-  auto f3 = fmt::format("{}Machine Hostname: {}\n", green, emph(hostname));
-  auto f3a = fmt::format("{}MPI Version: {}.{}\n", green, emph(version), emph(subversion));
-  auto f3b = fmt::format("{}MPI Max tag: {}\n", green, emph(max_tag_str));
+  auto vt_version_string = fmt::format("{}.{}.{}", vt_version_major, vt_version_minor, vt_version_patch);
+  std::array< std::string, 11 > info_lines = {
+      fmt::format("{}Version: {}\n", green, emph(vt_version_string)),
 
-  auto f4 = fmt::format("{}Build SHA: {}\n", green, emph(vt_git_sha1));
-  auto f5 = fmt::format("{}Build Ref: {}\n", green, emph(vt_git_refspec));
-  auto f6 = fmt::format("{}Description: {} {}\n", green, emph(vt_git_description), dirty);
-  auto f7 = fmt::format("{}Compile-time Features Enabled:{}\n", green, reset);
+      fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd)),
+      fmt::format("{}Program: {} ({})\n", green,
+                             emph(getAppConfig()->prog_name), emph(getAppConfig()->argv_prog_name)),
+      fmt::format("{}Running on: {}\n", green, emph(all_node)),
+      fmt::format("{}Machine Hostname: {}\n", green, emph(hostname)),
+      fmt::format("{}MPI Version: {}.{}\n", green, emph(version), emph(subversion)),
+      fmt::format("{}MPI Max tag: {}\n", green, emph(max_tag_str)),
 
-  fmt::print("{}{}{}", vt_pre, f1, reset);
-  fmt::print("{}{}{}", vt_pre, f2a, reset);
-  fmt::print("{}{}{}", vt_pre, f2b, reset);
-  fmt::print("{}{}{}", vt_pre, f3, reset);
-  fmt::print("{}{}{}", vt_pre, f3a, reset);
-  fmt::print("{}{}{}", vt_pre, f3b, reset);
-  fmt::print("{}{}{}", vt_pre, f4, reset);
-  fmt::print("{}{}{}", vt_pre, f5, reset);
-  fmt::print("{}{}{}", vt_pre, f6, reset);
-  fmt::print("{}{}{}", vt_pre, f7, reset);
+      fmt::format("{}Build SHA: {}\n", green, emph(vt_git_sha1)),
+      fmt::format("{}Build Ref: {}\n", green, emph(vt_git_refspec)),
+      fmt::format("{}Description: {} {}\n", green, emph(vt_git_description), dirty),
+      fmt::format("{}Compile-time Features Enabled:{}\n", green, reset)
+  };
+
+  for (auto &&line: info_lines)
+  {
+    fmt::print("{}{}{}", vt_pre, line, reset);
+  }
+
   for (size_t i = 0; i < features.size(); i++) {
     fmt::print("{}\t{}\n", vt_pre, emph(features.at(i)));
   }

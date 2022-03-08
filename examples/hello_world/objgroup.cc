@@ -57,7 +57,7 @@ struct MyObjGroup {
 };
 
 int main(int argc, char** argv) {
-  vt::initialize(argc, argv, nullptr);
+  vt::initialize(argc, argv);
 
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();

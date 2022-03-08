@@ -44,8 +44,6 @@
 #if !defined INCLUDED_VT_CONFIGS_ERROR_CODE_H
 #define INCLUDED_VT_CONFIGS_ERROR_CODE_H
 
-#include "vt/configs/error/code_class.h"
-
 #include <cstdlib>
 
 namespace vt { namespace error {

@@ -168,7 +168,7 @@ static arguments::AppConfig preInitAppConfig{};
  *
  * \return A modifiable configuration
  */
-arguments::AppConfig* preConfigRef(){
+arguments::AppConfig* preConfigRef() {
   return &preInitAppConfig;
 }
 

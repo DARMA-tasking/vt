@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
-project(vt VERSION 1.1.0)
+
+file(READ "VERSION" _vt_version_str)
+string(STRIP "${_vt_version_str}" _vt_version_str)
+project(vt VERSION ${_vt_version_str})
 
 # To generate output file with compilation errors and warnings
 # CMake generator needs to be known
@@ -63,8 +66,6 @@ include(cmake/link_vt.cmake)
 
 # Load packages that are required for core VT build
 include(cmake/load_packages.cmake)
-
-include(cmake/build_git_info.cmake)
 
 include(cmake/check_compiler.cmake)
 

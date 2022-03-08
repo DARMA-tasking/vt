@@ -47,18 +47,21 @@
 #include <cstdlib>
 #include <vector>
 #include <tuple>
+#include <string>
 
 namespace vt { namespace debug { namespace stack {
 
-using StackTupleType  = std::tuple<int32_t,void*,std::string,std::size_t>;
+using StackTupleType = std::tuple<int32_t, void *, std::string, std::size_t>;
 using StackVectorType = std::vector<StackTupleType>;
-using DumpStackType   = std::tuple<std::string,StackVectorType>;
+using DumpStackType = std::tuple<std::string, StackVectorType>;
 
 /*
  * This function automatically produce a backtrace of the stack with demangled
  * function names and method name.
  */
 DumpStackType dumpStack(int skip = 0);
+
+std::string prettyPrintStack(StackVectorType const& stack);
 
 }}} /* end namespace vt::debug::stack */
 

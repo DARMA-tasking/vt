@@ -49,6 +49,7 @@
 #include "vt/configs/error/common.h"
 #include "vt/configs/error/error.h"
 #include "vt/configs/error/pretty_print_message.h"
+#include "vt/collective/basic.h"
 
 #include <string>
 #include <tuple>

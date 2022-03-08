@@ -44,6 +44,8 @@
 #if !defined INCLUDED_VT_EPOCH_EPOCH_IMPL_TYPE_H
 #define INCLUDED_VT_EPOCH_EPOCH_IMPL_TYPE_H
 
+#include <cstdint>
+
 namespace vt { namespace epoch { namespace detail {
 
 /// Epoch tag type for the strong type
