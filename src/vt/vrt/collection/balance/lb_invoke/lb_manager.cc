@@ -656,7 +656,13 @@ void LBManager::computeStatistics(
   }
 
   double comm_load = 0.0;
+  std::vector<balance::LoadData> obj_comm;
   for (auto&& elm : *comm_data) {
+    // Only count object-to-object direct edges in the Object_comm statistics
+    if (elm.first.cat_ == elm::CommCategory::SendRecv and not elm.first.selfEdge()) {
+      obj_comm.emplace_back(LoadData{lb::Statistic::Object_comm, elm.second.bytes});
+    }
+
     if (not comm_collectives and isCollectiveComm(elm.first.cat_)) {
       continue;
     }
@@ -668,17 +674,6 @@ void LBManager::computeStatistics(
   }
 
   lstats.emplace_back(LoadData{lb::Statistic::Rank_comm, comm_load});
-
-  std::vector<balance::LoadData> obj_comm;
-  for (auto&& elm : *comm_data) {
-    // Only count object-to-object direct edges in the Object_comm statistics
-    if (elm.first.cat_ == elm::CommCategory::SendRecv and not elm.first.selfEdge()) {
-      obj_comm.emplace_back(
-        LoadData{lb::Statistic::Object_comm, elm.second.bytes}
-      );
-    }
-  }
-
   lstats.emplace_back(reduceVec(
     lb::Statistic::Object_comm, std::move(obj_comm)
   ));
