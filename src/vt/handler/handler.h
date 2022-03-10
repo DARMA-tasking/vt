@@ -67,20 +67,16 @@ static constexpr HandlerType const blank_handler = 0;
 
 static constexpr BitCountType const auto_num_bits = 1;
 static constexpr BitCountType const functor_num_bits = 1;
-static constexpr BitCountType const objgroup_num_bits = 1;
 static constexpr BitCountType const trace_num_bits = 1;
 static constexpr BitCountType const control_num_bits = 20;
-static constexpr BitCountType const member_num_bits = 1;
 static constexpr BitCountType const base_msg_derived_num_bits = 1;
 static constexpr BitCountType const registry_type_bits = 4;
 static constexpr BitCountType const handler_id_num_bits =
  BitCounterType<HandlerType>::value - (
      auto_num_bits
    + functor_num_bits
-   + objgroup_num_bits
    + control_num_bits
    + trace_num_bits
-   + member_num_bits
    + base_msg_derived_num_bits
    + registry_type_bits
  );
@@ -88,13 +84,11 @@ static constexpr BitCountType const handler_id_num_bits =
 // eHandlerBits::ObjGroup identifies the handler as targeting an objgroup; the
 // control bits are an extensible field used for module-specific sub-handlers
 enum eHandlerBits {
-  ObjGroup   = 0,
-  Auto            = eHandlerBits::ObjGroup       + objgroup_num_bits,
+  Auto   = 0,
   Functor         = eHandlerBits::Auto           + auto_num_bits,
   Trace           = eHandlerBits::Functor        + functor_num_bits,
   Control         = eHandlerBits::Trace          + trace_num_bits,
-  Member          = eHandlerBits::Control        + control_num_bits,
-  BaseMsgDerived  = eHandlerBits::Member         + member_num_bits,
+  BaseMsgDerived  = eHandlerBits::Control        + control_num_bits,
   RegistryType    = eHandlerBits::BaseMsgDerived + base_msg_derived_num_bits,
   Identifier      = eHandlerBits::RegistryType   + registry_type_bits,
 };
@@ -107,9 +101,8 @@ struct HandlerManager {
 
   static HandlerType makeHandler(
     bool is_auto, bool is_functor, HandlerIdentifierType id,
-    RegistryTypeEnum const registry_type, bool is_objgroup = false,
-    HandlerControlType control = 0, bool is_trace = true,
-    bool is_member = false, bool is_base_msg_derived = true
+    RegistryTypeEnum const registry_type, HandlerControlType control = 0,
+    bool is_trace = true, bool is_base_msg_derived = true
   );
   static void setHandlerIdentifier(HandlerType& han, HandlerIdentifierType id);
   static void setHandlerControl(HandlerType& han, HandlerControlType control);
@@ -119,8 +112,6 @@ struct HandlerManager {
   static RegistryTypeEnum getHandlerRegistryType(HandlerType han);
   static void setHandlerAuto(HandlerType& han, bool is_auto);
   static void setHandlerFunctor(HandlerType& han, bool is_functor);
-  static void setHandlerObjGroup(HandlerType& han, bool is_objgroup);
-  static void setHandlerMember(HandlerType& han, bool is_member);
   static void setHandlerBaseMsgDerived(HandlerType& han, bool is_base_msg_derived);
   static void setHandlerRegistryType(HandlerType& han, RegistryTypeEnum registryType);
   static bool isHandlerAuto(HandlerType han);

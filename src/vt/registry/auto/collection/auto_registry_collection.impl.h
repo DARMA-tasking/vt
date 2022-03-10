@@ -68,7 +68,6 @@ inline HandlerType makeAutoHandlerCollection() {
     RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
   constexpr auto reg_type = RegistryTypeEnum::RegVrtCollection;
   auto handler = HandlerManager::makeHandler(false, false, id, reg_type);
-  HandlerManager::setHandlerMember(handler, false);
   return handler;
 }
 
@@ -95,7 +94,6 @@ inline HandlerType makeAutoHandlerCollectionMem() {
     RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
   constexpr auto reg_type = RegistryTypeEnum::RegVrtCollectionMember;
   auto handler = HandlerManager::makeHandler(false, false, id, reg_type);
-  HandlerManager::setHandlerMember(handler, true);
   return handler;
 }
 

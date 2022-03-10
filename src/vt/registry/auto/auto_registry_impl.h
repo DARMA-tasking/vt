@@ -79,11 +79,10 @@ inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
 
   constexpr bool is_auto = true;
   constexpr bool is_functor = false;
-  constexpr bool is_objgroup = true;
   auto const idx = RunType::idx;
   constexpr auto reg_type = RegistryTypeEnum::RegObjGroup;
   auto const han = HandlerManagerType::makeHandler(
-    is_auto, is_functor, idx, reg_type, is_objgroup, ctrl
+    is_auto, is_functor, idx, reg_type, ctrl
   );
   auto obj_idx = objgroup::registry::makeObjIdx<ObjT>();
   getAutoRegistryGen<ContainerType>().at(idx).setObjIdx(obj_idx);
@@ -118,15 +117,12 @@ inline HandlerType makeScatterHandler() {
   constexpr bool is_functor = false;
   const auto handler_id = RunType::idx;
   constexpr auto reg_type = RegistryTypeEnum::RegGeneral;
-  constexpr bool is_objgroup = false;
   constexpr HandlerControlType control = 0;
   constexpr bool is_trace = true;
-  constexpr bool is_member = false;
   constexpr bool is_base_msg_derived = false;
 
   return HandlerManagerType::makeHandler(
-    is_auto, is_functor, handler_id, reg_type, is_objgroup, control,
-    is_trace, is_member, is_base_msg_derived
+    is_auto, is_functor, handler_id, reg_type, control, is_trace, is_base_msg_derived
   );
 }
 

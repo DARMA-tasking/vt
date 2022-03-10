@@ -48,33 +48,29 @@ namespace vt {
 
 /*static*/ HandlerType HandlerManager::makeHandler(
   bool is_auto, bool is_functor, HandlerIdentifierType id,
-  RegistryTypeEnum const registry_type, bool is_objgroup,
-  HandlerControlType control, bool is_trace, bool is_member,
-  bool is_base_msg_derived
+  RegistryTypeEnum const registry_type, HandlerControlType control,
+  bool is_trace, bool is_base_msg_derived
 ) {
   HandlerType new_han = blank_handler;
-  HandlerManager::setHandlerAuto(new_han, is_auto);
-  HandlerManager::setHandlerObjGroup(new_han, is_objgroup);
-  HandlerManager::setHandlerFunctor(new_han, is_functor);
-  HandlerManager::setHandlerMember(new_han, is_member);
-  HandlerManager::setHandlerBaseMsgDerived(new_han, is_base_msg_derived);
-  HandlerManager::setHandlerRegistryType(new_han, registry_type);
-  HandlerManager::setHandlerIdentifier(new_han, id);
+  setHandlerAuto(new_han, is_auto);
+  setHandlerFunctor(new_han, is_functor);
+  setHandlerBaseMsgDerived(new_han, is_base_msg_derived);
+  setHandlerRegistryType(new_han, registry_type);
+  setHandlerIdentifier(new_han, id);
 
 #if vt_check_enabled(trace_enabled)
-  HandlerManager::setHandlerTrace(new_han, is_trace);
+  setHandlerTrace(new_han, is_trace);
 #endif
 
   if (control != 0) {
-    HandlerManager::setHandlerControl(new_han, control);
+    setHandlerControl(new_han, control);
   }
 
   vt_debug_print(
     verbose, handler,
-    "HandlerManager::makeHandler: is_functor={}, is_auto={}, is_objgroup={}, "
-    "is_member={}, registry_type={}, id={:x}, control={:x}, han={:x}, is_trace={}\n",
-    is_functor, is_auto, is_objgroup, is_member, registry_type, id, control,
-    new_han, is_trace
+    "HandlerManager::makeHandler: is_functor={}, is_auto={}, registry_type={}, "
+    "id={:x}, control={:x}, han={:x}, is_trace={}\n",
+    is_functor, is_auto, registry_type, id, control, new_han, is_trace
   );
 
   return new_han;
@@ -124,22 +120,10 @@ namespace vt {
   BitPackerType::boolSetField<HandlerBitsType::Auto>(han, is_auto);
 }
 
-/*static*/ void HandlerManager::setHandlerObjGroup(
-  HandlerType& han, bool is_objgroup
-) {
-  BitPackerType::boolSetField<HandlerBitsType::ObjGroup>(han, is_objgroup);
-}
-
 /*static*/ void HandlerManager::setHandlerFunctor(
   HandlerType& han, bool is_functor
 ) {
   BitPackerType::boolSetField<HandlerBitsType::Functor>(han, is_functor);
-}
-
-/*static*/ void HandlerManager::setHandlerMember(
-  HandlerType& han, bool is_member
-) {
-  BitPackerType::boolSetField<HandlerBitsType::Member>(han, is_member);
 }
 
 /*static*/ void HandlerManager::setHandlerBaseMsgDerived(
@@ -167,11 +151,15 @@ namespace vt {
 }
 
 /*static*/ bool HandlerManager::isHandlerObjGroup(HandlerType han) {
-  return BitPackerType::boolGetField<HandlerBitsType::ObjGroup>(han);
+  auto const reg_type = getHandlerRegistryType(han);
+  auto const isObjGroup = reg_type == RegistryTypeEnum::RegObjGroup;
+  return isObjGroup;
 }
 
 /*static*/ bool HandlerManager::isHandlerMember(HandlerType han) {
-  return BitPackerType::boolGetField<HandlerBitsType::Member>(han);
+  auto const reg_type = getHandlerRegistryType(han);
+  auto const isMember = reg_type ==  RegistryTypeEnum::RegVrtCollectionMember;
+  return isMember;
 }
 
 /*static*/ bool HandlerManager::isHandlerBaseMsgDerived(HandlerType han) {
