@@ -252,33 +252,6 @@ Description:
   instead of the processor-average load.
 )"
     },
-    {
-      "alpha",
-      R"(
-Values: <double>
-Default: 1.0
-Description:
-  Load part coefficient in affine combination of load and communication.
-)"
-    },
-    {
-      "beta",
-      R"(
-Values: <double>
-Default: 0.0
-Description:
-  Communication part coefficient in affine combination of load and communication.
-)"
-    },
-    {
-      "gamma",
-      R"(
-Values: <double>
-Default: 0.0
-Description:
-  ...
-)"
-    },
   };
   return keys_help;
 }
@@ -379,10 +352,6 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
 
   num_iters_     = spec->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
-
-  alpha_         = spec->getOrDefault<double>("alpha", alpha_);
-  beta_          = spec->getOrDefault<double>("beta", beta_);
-  gamma_         = spec->getOrDefault<double>("gamma", gamma_);
 
   deterministic_ = spec->getOrDefault<bool>("deterministic", deterministic_);
   rollback_      = spec->getOrDefault<bool>("rollback", rollback_);
@@ -530,10 +499,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         cur_objs_.clear();
         for (auto obj : *load_model_) {
           if (obj.isMigratable()) {
-            // TODO: `beta_ * communication` component is still missing here
-            cur_objs_[obj] = alpha_ * load_model_->getLoad(
-              obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-            ) + gamma_;
+            cur_objs_[obj] = getTotalWork(obj);
           }
         }
         this_new_load_ = this_load;
@@ -1393,6 +1359,12 @@ void TemperedLB::lazyMigrateObjsTo(
 
 void TemperedLB::migrate() {
   vtAssertExpr(false);
+}
+
+TimeType TemperedLB::getTotalWork(const elm::ElementIDStruct& obj) {
+  return load_model_->getLoad(
+    obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+  );
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

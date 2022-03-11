@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.h
+//                               temperedwmin.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,52 +41,54 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
+#include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 
-#include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 
-#include <unordered_map>
-#include <string>
-#include <type_traits>
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+/*static*/ std::unordered_map<std::string, std::string>
+TemperedWMin::getInputKeysWithHelp() {
+  auto map = TemperedLB::getInputKeysWithHelp();
+  map["alpha"] =
+    R"(
+Values: <double>
+Default: 1.0
+Description:
+  Load part coefficient in affine combination of load and communication.
+)";
+  map["beta"] =
+    R"(
+Values: <double>
+Default: 0.0
+Description:
+  Communication part coefficient in affine combination of load and communication.
+)";
+  map["gamma"] =
+    R"(
+Values: <double>
+Default: 0.0
+Description:
+  Unspecified constant cost.
+)";
+  return map;
+}
 
-enum struct LBType : int8_t {
-    NoLB                = 0
-  , GreedyLB            = 1
-  , HierarchicalLB      = 2
-  , RotateLB            = 3
-  , TemperedLB          = 4
-  , OfflineLB           = 5
-# if vt_check_enabled(zoltan)
-  , ZoltanLB            = 6
-# endif
-  , RandomLB            = 7
-  , TestSerializationLB = 8
-  , TemperedWMin        = 9
-};
+void TemperedWMin::inputParams(balance::SpecEntry* spec) {
+  TemperedLB::inputParams(spec);
 
-}}}} /* end namespace vt::vrt::collection::balance */
+  alpha_         = spec->getOrDefault<double>("alpha", alpha_);
+  beta_          = spec->getOrDefault<double>("beta", beta_);
+  gamma_         = spec->getOrDefault<double>("gamma", gamma_);
+}
 
-namespace std {
+TimeType TemperedWMin::getTotalWork(const elm::ElementIDStruct& obj) {
+  balance::PhaseOffset when =
+      {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
 
-template <>
-struct hash<vt::vrt::collection::balance::LBType> {
-  size_t operator()(vt::vrt::collection::balance::LBType const& in) const {
-    using LBUnderType =
-      std::underlying_type<vt::vrt::collection::balance::LBType>::type;
-    auto const val = static_cast<LBUnderType>(in);
-    return std::hash<LBUnderType>()(val);
-  }
-};
+  return alpha_ * load_model_->getLoad(obj, when)
+      + beta_ * load_model_->getComm(obj, when) + gamma_;
+}
 
-} /* end namespace std */
-
-namespace vt { namespace vrt { namespace collection { namespace balance {
-
-std::unordered_map<LBType, std::string>& get_lb_names();
-
-}}}} /* end namespace vt::vrt::collection::balance */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H*/
+}}}} // namespace vt::vrt::collection::lb

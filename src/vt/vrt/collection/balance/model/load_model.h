@@ -264,25 +264,6 @@ struct LoadModel
   }
 
   /**
-   * \brief Provide an estimate of the total work for a given object during
-   * a specified interval
-   *
-   * \param[in] object The object whose total work is desired
-   * \param[in] when The interval in which the work takes place
-   *
-   * \return Estimated total time of work for the object
-   *
-   * The `updateLoads` method must have been called before any call to
-   * this.
-   */
-  TimeType getTotalWork(
-    ElementIDStruct object, PhaseOffset when,
-    double alpha, double beta, double gamma
-  ) {
-    return alpha * getLoad(object, when) + beta * getComm(object, when) + gamma;
-  }
-
-  /**
    * \brief Compute how many phases of past load statistics need to be
    * kept availble for the model to use
    *

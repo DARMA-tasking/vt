@@ -111,6 +111,7 @@ protected:
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
+  virtual TimeType getTotalWork(const elm::ElementIDStruct& obj);
 
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
@@ -126,9 +127,6 @@ private:
   uint8_t k_cur_                                    = 0;
   uint16_t iter_                                    = 0;
   uint16_t trial_                                   = 0;
-  double alpha_                                     = 1.0;
-  double beta_                                      = 0.0;
-  double gamma_                                     = 0.0;
   uint16_t num_iters_                               = 4;
   /**
    * \brief Number of trials

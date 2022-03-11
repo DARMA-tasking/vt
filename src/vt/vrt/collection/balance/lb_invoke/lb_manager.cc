@@ -54,6 +54,7 @@
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
+#include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 #include "vt/vrt/collection/balance/offlinelb/offlinelb.h"
 #include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
@@ -320,6 +321,7 @@ void LBManager::startLB(
   case LBType::ZoltanLB:            lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();            break;
 #   endif
   case LBType::TestSerializationLB: lb_instances_["chosen"] = makeLB<lb::TestSerializationLB>(); break;
+  // case LBType::TemperedWMin:   lb_instances_["chosen"] = makeLB<lb::TemperedWMin>();   break;
   case LBType::NoLB:
     vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
     break;
@@ -358,6 +360,9 @@ void LBManager::printLBArgsHelp(LBType lb) {
     break;
   case LBType::TemperedLB:
     help = lb::TemperedLB::getInputKeysWithHelp();
+    break;
+  case LBType::TemperedWMin:
+    help = lb::TemperedWMin::getInputKeysWithHelp();
     break;
   case LBType::RandomLB:
     help = lb::RandomLB::getInputKeysWithHelp();
