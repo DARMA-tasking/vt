@@ -1,8 +1,4 @@
-# Ubuntu 12.04 LTS has CMake 2.8.7, and is an important target since
-# several CI services, such as Travis and Drone, use it.  Solaris 11
-# has 2.8.6, and it's not difficult to support if you already have to
-# support 2.8.7.
-cmake_minimum_required(VERSION 2.8.6)
+cmake_minimum_required(VERSION 3.17)
 
 cmake_policy(SET CMP0048 NEW)
 project(brotli VERSION 1.0.9)
