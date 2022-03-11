@@ -107,6 +107,28 @@ TimeType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) {
   return proc_load_->at(phase).at(object).get(offset);
 }
 
+TimeType RawData::getComm(ElementIDStruct object, PhaseOffset when) {
+  auto phase = getNumCompletedPhases() + when.phases;
+  auto& comm = proc_comm_->at(phase);
+
+  TimeType incoming = 0., outgoing = 0.;
+  for (auto&& c : comm) {
+    if (c.first.commCategory() == elm::CommCategory::SendRecv
+        and c.first.offNode()) {
+      if (c.first.toObj() == object) {
+        incoming += /*per_msg_weight_ * */ c.second.messages;
+        incoming += /*per_byte_weight_ **/ c.second.bytes;
+      } else if (c.first.fromObj() == object) {
+        outgoing += /*per_msg_weight_ * */ c.second.messages;
+        outgoing += /*per_byte_weight_ **/ c.second.bytes;
+      }
+    }
+  }
+
+  // TODO: consider subphases (?)
+  return std::max(incoming, outgoing);
+}
+
 unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back)
 {
   return look_back;

@@ -62,6 +62,7 @@ struct RawData : public LoadModel {
   TimeType getLoad(ElementIDStruct object, PhaseOffset when) override;
   bool hasRawLoad() const override { return true; }
   TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getComm(ElementIDStruct object, PhaseOffset when) override;
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
