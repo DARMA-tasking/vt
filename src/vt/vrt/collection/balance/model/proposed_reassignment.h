@@ -57,7 +57,7 @@ struct ProposedReassignment : public ComposedModel {
 
   ObjectIterator begin() override;
   int getNumObjects() override;
-  TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getLoad(ElementIDStruct object, PhaseOffset when) override;
   TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
 
  private:

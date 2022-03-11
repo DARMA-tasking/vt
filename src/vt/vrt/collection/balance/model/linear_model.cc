@@ -48,12 +48,12 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-TimeType LinearModel::getWork(ElementIDStruct object, PhaseOffset when) {
+TimeType LinearModel::getLoad(ElementIDStruct object, PhaseOffset when) {
   using util::stats::LinearRegression;
 
   // Retrospective queries don't call for a prediction
   if (when.phases < 0)
-    return ComposedModel::getWork(object, when);
+    return ComposedModel::getLoad(object, when);
 
   std::vector<double> x;
   std::vector<double> y;
@@ -65,7 +65,7 @@ TimeType LinearModel::getWork(ElementIDStruct object, PhaseOffset when) {
   for (int i = -1 * static_cast<int>(phases); i < 0; i++) {
     x.emplace_back(i);
     past_phase.phases = i;
-    y.emplace_back(ComposedModel::getWork(object, past_phase));
+    y.emplace_back(ComposedModel::getLoad(object, past_phase));
   }
 
   // should we re-create this every time?

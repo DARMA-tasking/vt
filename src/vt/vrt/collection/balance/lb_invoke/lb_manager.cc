@@ -608,7 +608,7 @@ void LBManager::computeStatistics(
   total_load_from_model = 0.;
   std::vector<balance::LoadData> obj_load_model;
   for (auto elm : *model) {
-    auto work = model->getWork(
+    auto work = model->getLoad(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
     obj_load_model.emplace_back(

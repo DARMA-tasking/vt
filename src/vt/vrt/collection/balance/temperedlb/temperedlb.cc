@@ -531,7 +531,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         for (auto obj : *load_model_) {
           if (obj.isMigratable()) {
             // TODO: `beta_ * communication` component is still missing here
-            cur_objs_[obj] = alpha_ * load_model_->getWork(
+            cur_objs_[obj] = alpha_ * load_model_->getLoad(
               obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
             ) + gamma_;
           }

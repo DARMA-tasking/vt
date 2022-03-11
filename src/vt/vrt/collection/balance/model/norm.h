@@ -64,7 +64,7 @@ public:
    */
   Norm(std::shared_ptr<balance::LoadModel> base, double power);
 
-  TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getLoad(ElementIDStruct object, PhaseOffset when) override;
 
 private:
   const double power_;

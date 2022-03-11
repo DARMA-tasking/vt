@@ -206,7 +206,7 @@ struct LoadModel
    *
    * This would typically be called by LBManager collectively inside
    * an epoch that can be used for global communication in advance of
-   * any calls to getWork()
+   * any calls to getLoad()
    *
    * The `setLoads` method must have been called before any call to
    * this.
@@ -224,7 +224,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual TimeType getWork(ElementIDStruct object, PhaseOffset when) = 0;
+  virtual TimeType getLoad(ElementIDStruct object, PhaseOffset when) = 0;
 
   /**
    * \brief Whether or not the model is based on the RawData model
