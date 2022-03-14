@@ -108,6 +108,14 @@ struct ConstructParams {
 TYPED_TEST_SUITE_P(TestConstruct);
 TYPED_TEST_SUITE_P(TestConstructDist);
 
+template <typename ColT, uint8_t N>
+typename ColT::IndexType CreateRange(typename ColT::IndexType::DenseIndexType range) {
+  std::array<typename ColT::IndexType::DenseIndexType, N> arr;
+  std::fill(arr.begin(), arr.end(), range);
+
+  return arr;
+}
+
 template<typename ColType>
 void test_construct_1(std::string const& label) {
   using MsgType   = typename ColType::MsgType;
@@ -115,8 +123,10 @@ void test_construct_1(std::string const& label) {
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const& col_size = 32;
-    auto rng = TestIndex(col_size);
+
+    auto rng = CreateRange<ColType, ColType::IndexType::ndims()>(col_size);
     auto proxy = ConstructParams<ColType>::construct(label, rng);
+
     proxy.template broadcast<
       MsgType,
       ConstructHandlers::handler<ColType,MsgType>
@@ -129,10 +139,8 @@ void test_construct_distributed_1() {
   using MsgType   = typename ColType::MsgType;
 
   auto const& col_size = 32;
-  auto rng = TestIndex(col_size);
-  auto proxy = ConstructParams<ColType>::constructCollective(
-    rng, "test_construct_distributed_1"
-  );
+  auto rng = CreateRange<ColType, ColType::IndexType::ndims()>(col_size);
+  auto proxy = ConstructParams<ColType>::constructCollective(rng, "test_construct_distributed_1");
   proxy.template broadcast<
     MsgType,
     ConstructHandlers::handler<ColType,MsgType>
