@@ -913,13 +913,11 @@ void Runtime::printStartupBanner() {
     auto f11 = fmt::format("None. All arguments handled.\n");
     fmt::print("{}\t{}{}", vt_pre, f11, reset);
   } else {
-    if (not passthru_args.empty()) {
-      auto f11 = fmt::format(
-        "Application args: [{}]\n",
-        arg_str(passthru_args)
-      );
-      fmt::print("{}\t{}{}", vt_pre, f11, reset);
-    }
+    auto f11 = fmt::format(
+      "Application args: [{}]\n",
+      arg_str(passthru_args)
+    );
+    fmt::print("{}\t{}{}", vt_pre, f11, reset);
   }
 
   if (getAppConfig()->vt_print_memory_footprint) {
