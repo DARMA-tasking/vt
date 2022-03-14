@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# Apply formatting style defined in .clang-format on committed changes.
+# Prints the resulting changes if there are any.
+
+output=$(git clang-format HEAD~1)
+
+if [ "$output" != "" ]
+then
+    git diff
+fi
