@@ -256,7 +256,7 @@ sub emit_guard {
   vtAbortIf (
     not vt::runtime::ScopedMPIAccess::mpiCallsAllowed(),
     "The MPI function '$name' was called from a VT handler."
-    " MPI functions should not used inside user code invoked from VT handlers."
+    " MPI functions should not be used inside user code invoked from VT handlers."
   );
 MPI_GUARD
 }
