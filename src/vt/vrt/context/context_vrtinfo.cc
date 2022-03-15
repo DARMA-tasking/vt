@@ -104,8 +104,7 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
     // @todo: fix the from node
     auto const& from_node = 0;
     auto m = promoteMsg(raw_msg);
-    auto reg = auto_registry::RegistryTypeEnum::RegVrt;
-    runnable::makeRunnable(m, false, sub_handler, from_node, reg)
+    runnable::makeRunnable(m, false, sub_handler, from_node)
       .withTDEpochFromMsg()
       .withElementHandler(vc_ptr)
       .run();

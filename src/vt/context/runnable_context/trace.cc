@@ -59,7 +59,7 @@ void Trace::begin() {
     return;
   }
 
-  auto trace_id = auto_registry::handlerTraceID(handler_, han_type_);
+  auto const trace_id = auto_registry::handlerTraceID(handler_);
 
   if (is_collection_) {
     auto const cur_node = theContext()->getFromNodeCurrentTask();

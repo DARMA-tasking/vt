@@ -183,11 +183,10 @@ void ActiveMessenger::startup() {
 }
 
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
-  HandlerType const handler, auto_registry::RegistryTypeEnum type,
-  ByteType serialized_msg_size, bool is_bcast
+  HandlerType const handler, ByteType serialized_msg_size, bool is_bcast
 ) {
   #if vt_check_enabled(trace_enabled)
-    trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler, type);
+    trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler);
     trace::TraceEventIDType event = trace::no_trace_event;
     if (not is_bcast) {
       event = theTrace()->messageCreation(ep, serialized_msg_size);
@@ -496,12 +495,7 @@ EventType ActiveMessenger::doMessageSend(
     envelopeSetHandler(msg->env, handler);
 
     if (not is_bcast or (is_bcast and dest == this_node_)) {
-      // auto cur_event = envelopeGetTraceEvent(msg->env);
-      // if (cur_event == trace::no_trace_event) {
-      auto event = makeTraceCreationSend(
-        handler, auto_registry::RegistryTypeEnum::RegGeneral,
-        base.size(), is_bcast
-      );
+      auto const event = makeTraceCreationSend(handler, base.size(), is_bcast);
       envelopeSetTraceEvent(msg->env, event);
     }
 
@@ -540,10 +534,8 @@ EventType ActiveMessenger::doMessageSend(
         }
       }
 
-      auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
-      runnable::makeRunnable(
-        base, true, envelopeGetHandler(msg->env), dest, han_type
-      ) .withTDEpochFromMsg(is_term)
+      runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
+        .withTDEpochFromMsg(is_term)
         .withLBStats(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
         .enqueue();
     }
@@ -1002,8 +994,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
   }
 
   if (has_handler) {
-    auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
-    runnable::makeRunnable(base, not is_term, handler, from_node, han_type)
+    runnable::makeRunnable(base, not is_term, handler, from_node)
       .withContinuation(cont)
       .withTag(tag)
       .withTDEpochFromMsg(is_term)

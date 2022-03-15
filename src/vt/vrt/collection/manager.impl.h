@@ -219,12 +219,7 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
 
-  auto const member = HandlerManager::isHandlerMember(han);
-  auto reg = member ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-
-  runnable::makeRunnable(user_msg, true, han, from, reg)
+  runnable::makeRunnable(user_msg, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
@@ -246,13 +241,8 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
 
-  auto const member = HandlerManager::isHandlerMember(han);
-  auto reg = member ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-
   auto m = promoteMsg(msg);
-  runnable::makeRunnable(m, true, han, from, reg)
+  runnable::makeRunnable(m, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
@@ -566,15 +556,10 @@ void CollectionManager::invokeMsgImpl(
   trace::TraceEventIDType trace_event = trace::no_trace_event;
 #if vt_check_enabled(trace_enabled)
 
-  auto reg_type = HandlerManager::isHandlerMember(han) ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msgPtr.get());
+  auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msgPtr.get());
   const bool is_bcast = false;
 
-  trace_event = theMsg()->makeTraceCreationSend(
-    han, reg_type, msg_size, is_bcast
-  );
+  trace_event = theMsg()->makeTraceCreationSend(han, msg_size, is_bcast);
 #endif
 
   collectionAutoMsgDeliver<ColT, IndexT, MsgT, typename MsgT::UserMsgType>(
@@ -694,15 +679,10 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
   // Create the trace creation event for the broadcast here to connect it a
   // higher semantic level
   auto const han = msg->getVrtHandler();
-  auto reg_type = HandlerManager::isHandlerMember(han) ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+  auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   const bool is_bcast = true;
 
-  auto event = theMsg()->makeTraceCreationSend(
-    han, reg_type, msg_size, is_bcast
-  );
+  auto event = theMsg()->makeTraceCreationSend(han, msg_size, is_bcast);
   msg->setFromTraceEvent(event);
 #endif
 
@@ -852,15 +832,9 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 # if vt_check_enabled(trace_enabled)
   // Create the trace creation event for the broadcast here to connect it a
   // higher semantic level
-  auto reg_type = HandlerManager::isHandlerMember(handler) ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+  auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   const bool is_bcast = true;
-
-  auto event = theMsg()->makeTraceCreationSend(
-    handler, reg_type, msg_size, is_bcast
-  );
+  auto event = theMsg()->makeTraceCreationSend(handler, msg_size, is_bcast);
   msg->setFromTraceEvent(event);
 # endif
 
@@ -1152,15 +1126,9 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   // level. Do it in the imm_context so we see the send event when the user
   // actually invokes send on the proxy (not outside the event that actually
   // sent it)
-  auto reg_type = HandlerManager::isHandlerMember(handler) ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
-  const bool is_bcast = false;
-
-  auto event = theMsg()->makeTraceCreationSend(
-    handler, reg_type, msg_size, is_bcast
-  );
+  auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+  bool const is_bcast = false;
+  auto const event = theMsg()->makeTraceCreationSend(handler,  msg_size, is_bcast);
   msg->setFromTraceEvent(event);
 #endif
 

@@ -72,16 +72,14 @@ void Reduce::reduceUpHan(MsgT* msg) {
 
 template <typename MsgT>
 void Reduce::reduceRootRecv(MsgT* msg) {
-  auto const& handler = msg->combine_handler_;
+  auto const handler = msg->combine_handler_;
   msg->next_ = nullptr;
   msg->count_ = 1;
   msg->is_root_ = true;
 
-  auto const& from_node = theContext()->getFromNodeCurrentTask();
-  auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
-
+  auto const from_node = theContext()->getFromNodeCurrentTask();
   auto m = promoteMsg(msg);
-  runnable::makeRunnable(m, false, handler, from_node, han_type)
+  runnable::makeRunnable(m, false, handler, from_node)
     .withTDEpochFromMsg()
     .run();
 }
@@ -254,13 +252,12 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
        *  Invoke user handler to run the functor that combines messages,
        *  applying the reduction operator
        */
-      auto const& handler = state.combine_handler_;
-      auto const& from_node = theContext()->getFromNodeCurrentTask();
+      auto const handler = state.combine_handler_;
+      auto const from_node = theContext()->getFromNodeCurrentTask();
 
       // this needs to run inline.. threaded not allowed for reduction
       // combination
-      auto han_type = auto_registry::RegistryTypeEnum::RegGeneral;
-      runnable::makeRunnable(state.msgs[0], false, handler, from_node, han_type)
+      runnable::makeRunnable(state.msgs[0], false, handler, from_node)
         .withTDEpochFromMsg()
         .run();
     }
