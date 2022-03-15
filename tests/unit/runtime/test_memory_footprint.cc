@@ -43,31 +43,7 @@
 
 #include <gtest/gtest.h>
 
-#include <checkpoint/checkpoint.h>
-#include "vt/configs/arguments/args.h"
-#include "vt/timetrigger/time_trigger_manager.h"
-#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/vrt/collection/balance/stats_restart_reader.h"
-#include "vt/vrt/collection/balance/node_stats.h"
-#include "vt/utils/memory/memory_usage.h"
-#include "vt/rdmahandle/manager.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/pipe/pipe_manager.h"
-#include "vt/group/group_manager.h"
-#include "vt/vrt/collection/manager.h"
-#include "vt/topos/location/manager.h"
-#include "vt/termination/termination.h"
-#include "vt/sequence/sequencer_headers.h"
-#include "vt/scheduler/scheduler.h"
-#include "vt/rdma/rdma.h"
-#include "vt/parameterization/parameterization.h"
-#include "vt/messaging/active.h"
-#include "vt/event/event.h"
-#include "vt/vrt/context/context_vrtmanager.h"
-#include "vt/pool/pool.h"
-#include "vt/context/context.h"
-#include "vt/trace/trace.h"
-#include "vt/pmpi/pmpi_component.h"
+#include "vt/runtime/runtime_inst.h"
 
 #include "test_parallel_harness.h"
 
@@ -83,11 +59,8 @@ TEST_F(TestMemoryFootprinting, test_live_components_at_shutdown) {
   theConfig()->vt_print_memory_footprint = true;
 }
 
-TEST_F(TestMemoryFootprinting, test_arg_config) {
-  EXPECT_TRUE(theConfig()->passthru_args.empty());
-  ASSERT_EQ(theConfig()->passthru_args.size(), 0);
-
-  checkpoint::getMemoryFootprint(theConfig()->passthru_args);
+TEST_F(TestMemoryFootprinting, test_passthru_args) {
+  ASSERT_TRUE(theConfig()->passthru_args.empty());
 }
 
 }}} /* end namespace vt::tests::unit */
