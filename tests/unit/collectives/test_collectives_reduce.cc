@@ -94,6 +94,8 @@ vt::NodeType map(vt::Index1D* idx, vt::Index1D* max_idx, vt::NodeType num_nodes)
 }
 
 TEST_F(TestReduce, test_reduce_with_no_elements_on_root_rank) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+
   vt::NodeType this_node = vt::theContext()->getNode();
 
   int32_t num_elms = 16;
