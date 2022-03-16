@@ -448,17 +448,7 @@ EventType ActiveMessenger::sendMsgBytes(
     theTerm()->hangDetectSend();
   }
 
-  if (theContext()->getTask() != nullptr) {
-    auto lb = theContext()->getTask()->get<ctx::LBStats>();
-    if (lb) {
-      auto const already_recorded =
-        envelopeCommStatsRecordedAboveBareHandler(msg->env);
-      if (not already_recorded) {
-        auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);
-        theContext()->getTask()->send(dest_elm_id, msg_size);
-      }
-    }
-  }
+  recordLbStatsCommForSend(dest, base, msg_size);
 
   return event_id;
 }
@@ -522,17 +512,7 @@ EventType ActiveMessenger::doMessageSend(
     if (dest != this_node) {
       sendMsgBytesWithPut(dest, base, send_tag);
     } else {
-      if (theContext()->getTask() != nullptr) {
-        auto lb = theContext()->getTask()->get<ctx::LBStats>();
-        if (lb) {
-          auto const already_recorded =
-            envelopeCommStatsRecordedAboveBareHandler(msg->env);
-          if (not already_recorded) {
-            auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);
-            theContext()->getTask()->send(dest_elm_id, base.size());
-          }
-        }
-      }
+      recordLbStatsCommForSend(dest, base, base.size());
 
       runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
         .withTDEpochFromMsg(is_term)
@@ -905,6 +885,26 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
       theTerm()->hangDetectRecv();
     };
     theSched()->enqueue(irecv->priority, run);
+  }
+}
+
+void ActiveMessenger::recordLbStatsCommForSend(
+  NodeType const dest, MsgSharedPtr<BaseMsgType> const& base,
+  MsgSizeType const msg_size
+) {
+  if (theContext()->getTask() != nullptr) {
+    auto lb = theContext()->getTask()->get<ctx::LBStats>();
+
+    if (lb) {
+      auto const& msg = base.get();
+      auto const already_recorded =
+        envelopeCommStatsRecordedAboveBareHandler(msg->env);
+
+      if (not already_recorded) {
+        auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);
+        theContext()->getTask()->send(dest_elm_id, msg_size);
+      }
+    }
   }
 }
 

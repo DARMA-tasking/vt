@@ -96,7 +96,6 @@ struct LBStats final : Base {
    *
    * \param[in] dest the destination of the message
    * \param[in] size the size of the message
-   * \param[in] bcast whether the message is being broadcast or sent
    */
   void send(elm::ElementIDStruct dest, MsgSizeType bytes) final override;
 

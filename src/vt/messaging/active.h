@@ -1724,6 +1724,18 @@ private:
    */
   void finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv);
 
+  /**
+   * @brief Record LB's statistics for sending a message
+   *
+   * \param[in] dest the destination of the message
+   * \param[in] base the message base pointer
+   * \param[in] msg_size the size of the message being sent
+   */
+  void recordLbStatsCommForSend(
+    NodeType const dest, MsgSharedPtr<BaseMsgType> const& base,
+    MsgSizeType const msg_size
+  );
+
 private:
 # if vt_check_enabled(trace_enabled)
   trace::UserEventIDType trace_irecv             = trace::no_user_event_id;
