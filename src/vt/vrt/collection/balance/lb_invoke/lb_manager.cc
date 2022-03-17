@@ -467,9 +467,6 @@ void LBManager::statsHandler(StatsMsgType* msg) {
     //   );
     // }
   }
-
-  if (theContext()->getNode() == 0) {
-  }
 }
 
 balance::LoadData reduceVec(
