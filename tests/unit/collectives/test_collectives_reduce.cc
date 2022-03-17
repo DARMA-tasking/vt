@@ -46,6 +46,7 @@
 #include "test_parallel_harness.h"
 #include "data_message.h"
 #include "test_collectives_reduce.h"
+#include "test_helpers.h"
 
 #include <vt/transport.h>
 
