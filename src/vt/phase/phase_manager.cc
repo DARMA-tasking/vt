@@ -221,12 +221,19 @@ void PhaseManager::setStartTime() {
   start_time_ = timing::getCurrentTime();
 }
 
-void PhaseManager::printSummary() {
-  if (theContext()->getNode() == 0 and cur_phase_ != 0) {
-    TimeTypeWrapper const time = timing::getCurrentTime() - start_time_;
+void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info) {
+  if (theContext()->getNode() == 0) {
+    TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
     vt_print(
-      phase, "PhaseManager::printSummary, phase={}, time={}\n",
-      cur_phase_, time
+      phase,
+      "phase={}, total time={}, max_load={}, avg_load={}, imbalance={:.3f}, max_obj={}, migration count={}\n",
+      cur_phase_,
+      total_time,
+      TimeTypeWrapper(last_phase_info->max_load),
+      TimeTypeWrapper(last_phase_info->avg_load),
+      last_phase_info->imb_load,
+      TimeTypeWrapper(last_phase_info->max_obj),
+      last_phase_info->migration_count
     );
   }
 }

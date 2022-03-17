@@ -48,6 +48,7 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/phase/phase_hook_enum.h"
 #include "vt/phase/phase_hook_id.h"
+#include "vt/vrt/collection/balance/lb_invoke/phase_info.h"
 
 #include <unordered_map>
 #include <map>
@@ -160,8 +161,10 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
 
   /**
    * \brief Print summary for the current phase.
+   *
+   * \param[in] last_phase_info The info for the last phase execution
    */
-  void printSummary();
+  void printSummary(vrt::collection::lb::PhaseInfo* last_phase_info);
 
 private:
   /**

@@ -174,7 +174,7 @@ LBManager::makeLB() {
 void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
   auto r = msg->reassignment;
   auto phase = msg->phase;
-  auto proposed = std::make_shared<ProposedReassignment>(model_, r);
+  auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
     auto stats_cb = vt::theCB()->makeBcast<
@@ -183,10 +183,12 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
     computeStatistics(proposed, false, phase, stats_cb);
   });
 
-  applyReassignment(r);
+  last_phase_info_->migration_count = reassignment->global_migration_count;
+
+  applyReassignment(reassignment);
 
   // Inform the collection manager to rebuild spanning trees if needed
-  if (r->global_migration_count != 0) {
+  if (reassignment->global_migration_count != 0) {
     theCollection()->getTypelessHolder().invokeAllGroupConstructors();
   }
 
@@ -265,6 +267,15 @@ void LBManager::startLB(
   }
 
   if (lb == LBType::NoLB) {
+    last_phase_info_->migration_count = 0;
+
+    runInEpochCollective("LBManager::noLB -> updateLoads", [=] {
+      model_->updateLoads(phase);
+    });
+
+    runInEpochCollective("LBManager::noLB -> computeStats", [=] {
+      computeStatistics(model_, false, phase);
+    });
     // nothing to do
     return;
   }
@@ -372,13 +383,15 @@ void LBManager::printLBArgsHelp(std::string lb_name) {
 }
 
 void LBManager::startup() {
+  last_phase_info_ = std::make_unique<lb::PhaseInfo>();
+
   thePhase()->registerHookRooted(phase::PhaseHook::Start, []{
     thePhase()->setStartTime();
   });
 
-  thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, []{
+  thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, [this]{
     auto const phase = thePhase()->getCurrentPhase();
-    thePhase()->printSummary();
+    thePhase()->printSummary(last_phase_info_.get());
     theLBManager()->finishedLB(phase);
   });
 }
@@ -433,18 +446,29 @@ void LBManager::statsHandler(StatsMsgType* msg) {
     stats[stat][lb::StatisticQuantity::skw] = skew;
     stats[stat][lb::StatisticQuantity::kur] = krte;
 
-    if (theContext()->getNode() == 0) {
-      vt_print(
-        lb,
-        "LBManager: Statistic={}: "
-        " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
-        " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
-        " npr={}, imb={:.2f}, num_stats={}\n",
-        lb::get_lb_stat_name()[stat],
-        max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
-        stats.size()
-      );
+    if (stat == lb::Statistic::P_l) {
+      last_phase_info_->max_load = max;
+      last_phase_info_->avg_load = avg;
+      last_phase_info_->imb_load = imb;
+    } else if (stat == lb::Statistic::O_l) {
+      last_phase_info_->max_obj = max;
     }
+
+    // if (theContext()->getNode() == 0) {
+    //   vt_print(
+    //     lb,
+    //     "LBManager: Statistic={}: "
+    //     " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
+    //     " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
+    //     " npr={}, imb={:.2f}, num_stats={}\n",
+    //     lb::get_lb_stat_name()[stat],
+    //     max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
+    //     stats.size()
+    //   );
+    // }
+  }
+
+  if (theContext()->getNode() == 0) {
   }
 }
 

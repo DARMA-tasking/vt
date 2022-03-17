@@ -52,6 +52,7 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/lb_invoke/phase_info.h"
 
 #include <functional>
 #include <map>
@@ -264,6 +265,7 @@ private:
   std::unordered_map<std::string, LBProxyType> lb_instances_;
   StatisticMapType stats;
   TimeType total_load = 0.;
+  std::unique_ptr<lb::PhaseInfo> last_phase_info_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
