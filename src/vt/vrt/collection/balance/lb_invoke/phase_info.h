@@ -51,6 +51,9 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 struct PhaseInfo {
   double max_load = 0, avg_load = 0, imb_load = 0;
   double max_obj = 0;
+  double max_load_post_lb = 0, avg_load_post_lb = 0, imb_load_post_lb = 0;
+  double max_obj_post_lb = 0;
+  bool ran_lb = false;
   int32_t migration_count = 0;
 };
 

@@ -180,10 +180,17 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
     auto stats_cb = vt::theCB()->makeBcast<
       LBManager, StatsMsgType, &LBManager::statsHandler
     >(proxy_);
+    before_lb_stats_ = false;
     computeStatistics(proposed, false, phase, stats_cb);
   });
 
+  // Inform the collection manager to rebuild spanning trees if needed
+  if (reassignment->global_migration_count != 0) {
+    theCollection()->getTypelessHolder().invokeAllGroupConstructors();
+  }
+
   last_phase_info_->migration_count = reassignment->global_migration_count;
+  last_phase_info_->ran_lb = true;
 
   applyReassignment(reassignment);
 
@@ -210,6 +217,7 @@ LBManager::runLB(
     auto stats_cb = vt::theCB()->makeBcast<
       LBManager, StatsMsgType, &LBManager::statsHandler
     >(proxy_);
+    before_lb_stats_ = true;
     computeStatistics(model_, false, phase, stats_cb);
   });
 
@@ -268,12 +276,14 @@ void LBManager::startLB(
 
   if (lb == LBType::NoLB) {
     last_phase_info_->migration_count = 0;
+    last_phase_info_->ran_lb = false;
 
     runInEpochCollective("LBManager::noLB -> updateLoads", [=] {
       model_->updateLoads(phase);
     });
 
     runInEpochCollective("LBManager::noLB -> computeStats", [=] {
+      before_lb_stats_ = true;
       computeStatistics(model_, false, phase);
     });
     // nothing to do
@@ -419,6 +429,8 @@ void LBManager::finishedLB(PhaseType phase) {
 void LBManager::statsHandler(StatsMsgType* msg) {
   auto in_stat_vec = msg->getConstVal();
 
+  //vt_print(lb, "before_lb_stats_={}\n", before_lb_stats_);
+
   for (auto&& st : in_stat_vec) {
     auto stat     = st.stat_;
     auto max      = st.max();
@@ -447,11 +459,21 @@ void LBManager::statsHandler(StatsMsgType* msg) {
     stats[stat][lb::StatisticQuantity::kur] = krte;
 
     if (stat == lb::Statistic::P_l) {
-      last_phase_info_->max_load = max;
-      last_phase_info_->avg_load = avg;
-      last_phase_info_->imb_load = imb;
+      if (before_lb_stats_) {
+        last_phase_info_->max_load = max;
+        last_phase_info_->avg_load = avg;
+        last_phase_info_->imb_load = imb;
+      } else {
+        last_phase_info_->max_load_post_lb = max;
+        last_phase_info_->avg_load_post_lb = avg;
+        last_phase_info_->imb_load_post_lb = imb;
+      }
     } else if (stat == lb::Statistic::O_l) {
-      last_phase_info_->max_obj = max;
+      if (before_lb_stats_) {
+        last_phase_info_->max_obj = max;
+      } else {
+        last_phase_info_->max_obj_post_lb = max;
+      }
     }
 
     // if (theContext()->getNode() == 0) {

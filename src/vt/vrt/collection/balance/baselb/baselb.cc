@@ -239,16 +239,16 @@ void BaseLB::finalize(CountMsg* msg) {
   }
 
   pending_reassignment_->global_migration_count = global_count;
-  auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
-    TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
-    vt_print(
-      lb,
-      "BaseLB::finalize: LB total time={}, total migration count={}\n",
-      total_time, global_count
-    );
-    fflush(stdout);
-  }
+  // auto const& this_node = theContext()->getNode();
+  // if (this_node == 0) {
+  //   TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
+  //   vt_print(
+  //     lb,
+  //     "BaseLB::finalize: LB total time={}, total migration count={}\n",
+  //     total_time, global_count
+  //   );
+  //   fflush(stdout);
+  // }
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

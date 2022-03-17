@@ -266,6 +266,7 @@ private:
   StatisticMapType stats;
   TimeType total_load = 0.;
   std::unique_ptr<lb::PhaseInfo> last_phase_info_ = nullptr;
+  bool before_lb_stats_ = true;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
