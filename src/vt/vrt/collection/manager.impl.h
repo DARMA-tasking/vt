@@ -2083,8 +2083,14 @@ std::string CollectionManager::makeMetaFilename(
   auto this_node = theContext()->getNode();
   if (make_sub_dirs) {
 
+    int flag = 0;
+    flag = mkdir(file_base.c_str(), S_IRWXU);
+    if (flag < 0 && errno != EEXIST) {
+      throw std::runtime_error("Failed to create directory: " + file_base);
+    }
+
     auto subdir = fmt::format("{}/directory-{}", file_base, this_node);
-    int flag = mkdir(subdir.c_str(), S_IRWXU);
+    flag = mkdir(subdir.c_str(), S_IRWXU);
     if (flag < 0 && errno != EEXIST) {
       throw std::runtime_error("Failed to create directory: " + subdir);
     }
