@@ -59,6 +59,7 @@ template <typename MsgT, typename Op, typename ActOp>
       "ROOT: reduce root: valid={}, ptr={}\n", cb.valid(), print_ptr(msg)
     );
     if (cb.valid()) {
+      envelopeUnlockForForwarding(msg->env);
       cb.template send<MsgT>(msg);
     } else {
       ActOp()(msg);

@@ -46,8 +46,9 @@
 #include "test_parallel_harness.h"
 #include "data_message.h"
 #include "test_collectives_reduce.h"
+#include "test_helpers.h"
 
-#include "vt/collective/collective.h"
+#include <vt/transport.h>
 
 namespace vt { namespace tests { namespace unit {
 
@@ -58,6 +59,60 @@ TEST_F(TestReduce, test_reduce_op) {
   auto msg = makeMessage<MyReduceMsg>(my_node);
   vt_debug_print(normal, reduce, "msg->num={}\n", msg->num);
   theCollective()->global()->reduce<MyReduceMsg, reducePlus>(root, msg.get());
+}
+
+using ReduceMsg = vt::collective::ReduceTMsg<int>;
+
+struct MyObjGroup {
+  void handler(ReduceMsg* msg) {
+    fmt::print("Reduce complete at {} value {}\n", vt::theContext()->getNode(), msg->getVal());
+  }
+};
+
+vt::objgroup::proxy::Proxy<MyObjGroup> objgroup_proxy;
+
+struct Hello : vt::Collection<Hello, vt::Index1D> {
+
+  using TestMsg = vt::CollectionMessage<Hello>;
+
+  void doWork(TestMsg* msg) {
+    fmt::print("{}: Hello from {}\n", vt::theContext()->getNode(), this->getIndex());
+
+    // Get the proxy for the collection
+    auto proxy = this->getCollectionProxy();
+
+    // Create a callback for when the reduction finishes
+    auto cb = vt::theCB()->makeBcast<MyObjGroup,ReduceMsg,&MyObjGroup::handler>(objgroup_proxy);
+
+    // Create and send the reduction message holding an int
+    auto red_msg = vt::makeMessage<ReduceMsg>(this->getIndex().x());
+    proxy.reduce<vt::collective::PlusOp<int>>(red_msg.get(),cb);
+  }
+};
+
+vt::NodeType map(vt::Index1D* idx, vt::Index1D* max_idx, vt::NodeType num_nodes) {
+  return (idx->x() % (num_nodes-1))+1;
+}
+
+TEST_F(TestReduce, test_reduce_with_no_elements_on_root_rank) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+
+  vt::NodeType this_node = vt::theContext()->getNode();
+
+  int32_t num_elms = 16;
+
+  objgroup_proxy = vt::theObjGroup()->makeCollective<MyObjGroup>();
+
+  auto range = vt::Index1D(num_elms);
+  auto proxy = vt::makeCollection<Hello>()
+    .bounds(range)
+    .mapperFunc<map>()
+    .bulkInsert()
+    .wait();
+
+  if (this_node == 0) {
+    proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
+  }
 }
 
 }}} // end namespace vt::tests::unit
