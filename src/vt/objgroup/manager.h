@@ -238,7 +238,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \internal \brief Broadcast a message to all nodes in object group
    *
    * \param[in] proxy proxy to the object group
-   * \param[in] msg message to send
+   * \param[in] msg message to broadcast
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
