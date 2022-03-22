@@ -67,6 +67,22 @@ void replayFromInputStats(
   auto json = r.readFile();
   auto sd = StatsData(*json);
 
+  for (auto &phase_data : sd.node_data_) {
+    vt_debug_print(
+      normal, replay,
+      "found {} loads for phase {}\n",
+      phase_data.second.size(), phase_data.first
+    );
+  }
+
+  for (auto &phase_data : sd.node_comm_) {
+    vt_debug_print(
+      normal, replay,
+      "found {} comms for phase {}\n",
+      phase_data.second.size(), phase_data.first
+    );
+  }
+
   // remember vt's base load model
   auto base_load_model = theLBManager()->getBaseLoadModel();
 
@@ -274,7 +290,8 @@ LBStatsMigrator::createStatsAtHomeModel(
     for (auto stat_obj_id : *model_base) {
       if (stat_obj_id.isMigratable()) {
         // if the object belongs here, do nothing; otherwise, "transfer" it to
-        // the home rank
+        // the home rank so that it can later be sent to the rank holding the
+        // object
         if (stat_obj_id.getHomeNode() != this_rank) {
           if (migratable_objects_here.count(stat_obj_id) == 0) {
             vt_debug_print(
@@ -321,7 +338,7 @@ LBStatsMigrator::createStatsHereModel(
   runInEpochCollective("LBStatsMigrator -> transferStatsHere", [&] {
     for (auto stat_obj_id : migratable_objects_here) {
       // if the object is already here, do nothing; otherwise, "transfer" it
-      // from the home rank
+      // from the home rank so that we will have the needed stats data
       bool stats_here = false;
       for (auto other_id : *model_base) {
         if (stat_obj_id == other_id) {
