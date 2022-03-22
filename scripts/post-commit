@@ -5,6 +5,12 @@
 # every commit.
 # Prints the resulting changes if there are any.
 
+# don't run the action during rebase
+if ! [[ $(git branch --show-current) ]]
+then
+    exit
+fi
+
 output=$(git clang-format HEAD~1)
 
 if [ "$output" != "" ]
