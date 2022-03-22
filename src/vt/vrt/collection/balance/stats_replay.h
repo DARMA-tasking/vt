@@ -79,6 +79,12 @@ struct LBStatsMigrator : lb::BaseLB {
 
   using BaseLB::normalizeReassignments;
 
+  static
+  std::shared_ptr<Reassignment>
+  updateCurrentNodes(
+    std::shared_ptr<const Reassignment> lb_reassignment
+  );
+
   std::shared_ptr<ProposedReassignment>
   createStatsAtHomeModel(
     std::shared_ptr<LoadModel> model_base,

@@ -275,6 +275,30 @@ LBStatsMigrator::getInputKeysWithHelp() {
   return keys_help;
 }
 
+/*static*/
+std::shared_ptr<Reassignment>
+LBStatsMigrator::updateCurrentNodes(
+  std::shared_ptr<const Reassignment> lb_reassignment
+) {
+  auto modified_reassignment = std::make_shared<Reassignment>();
+  modified_reassignment->node_ = lb_reassignment->node_;
+  modified_reassignment->global_migration_count =
+    lb_reassignment->global_migration_count;
+  for (auto &dep : lb_reassignment->depart_) {
+    ObjIDType id = dep.first;
+    NodeType dest = dep.second;
+    id.curr_node = dest;
+    modified_reassignment->depart_[id] = dest;
+  }
+  auto const this_rank = vt::theContext()->getNode();
+  for (auto &arr : lb_reassignment->arrive_) {
+    ObjIDType id = arr.first;
+    id.curr_node = this_rank;
+    modified_reassignment->arrive_[id] = arr.second;
+  }
+  return modified_reassignment;
+}
+
 std::shared_ptr<ProposedReassignment>
 LBStatsMigrator::createStatsAtHomeModel(
   std::shared_ptr<LoadModel> model_base,
@@ -307,20 +331,7 @@ LBStatsMigrator::createStatsAtHomeModel(
   });
 
   auto tmp_assignment = normalizeReassignments();
-  auto home_assignment = std::make_shared<Reassignment>();
-  home_assignment->node_ = tmp_assignment->node_;
-  home_assignment->global_migration_count = tmp_assignment->global_migration_count;
-  for (auto &dep : tmp_assignment->depart_) {
-    ObjIDType id = dep.first;
-    NodeType dest = dep.second;
-    id.curr_node = dest;
-    home_assignment->depart_[id] = dest;
-  }
-  for (auto &arr : tmp_assignment->arrive_) {
-    ObjIDType id = arr.first;
-    id.curr_node = this_rank;
-    home_assignment->arrive_[id] = arr.second;
-  }
+  auto home_assignment = updateCurrentNodes(tmp_assignment);
   return std::make_shared<ProposedReassignment>(model_base, home_assignment);
 }
 
@@ -364,22 +375,9 @@ LBStatsMigrator::createStatsHereModel(
   });
 
   auto tmp_assignment = normalizeReassignments();
-
   // now restore the curr_node values to reflect the placement of the "real" object
-  auto here_assignment = std::make_shared<Reassignment>();
-  here_assignment->node_ = tmp_assignment->node_;
-  here_assignment->global_migration_count = tmp_assignment->global_migration_count;
-  for (auto &dep : tmp_assignment->depart_) {
-    ObjIDType id = dep.first;
-    NodeType dest = dep.second;
-    id.curr_node = dest;
-    here_assignment->depart_[id] = dest;
-  }
-  for (auto &arr : tmp_assignment->arrive_) {
-    ObjIDType id = arr.first;
-    id.curr_node = this_rank;
-    here_assignment->arrive_[id] = arr.second;
-  }
+  auto here_assignment = updateCurrentNodes(tmp_assignment);
+
   return std::make_shared<ProposedReassignment>(model_base, here_assignment);
 }
 
