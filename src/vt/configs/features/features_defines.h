@@ -73,6 +73,7 @@
 #define vt_feature_diagnostics_runtime 0 || vt_feature_cmake_diagnostics_runtime
 #define vt_feature_libfort             0 || vt_feature_cmake_libfort
 #define vt_feature_production_build    0 || vt_feature_cmake_production_build
+#define vt_feature_debug_verbose       0 || vt_feature_cmake_debug_verbose
 
 #define vt_check_enabled(test_option) (vt_feature_ ## test_option != 0)
 
