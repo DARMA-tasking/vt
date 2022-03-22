@@ -81,8 +81,9 @@ struct BaseLB {
   >;
   using ObjDestinationListType = std::vector<std::tuple<ObjIDType, NodeType>>;
 
-  explicit BaseLB()
-    : pending_reassignment_(std::make_shared<balance::Reassignment>())
+  explicit BaseLB(bool in_comm_aware = false)
+    : comm_aware_(in_comm_aware),
+      pending_reassignment_(std::make_shared<balance::Reassignment>())
   { }
 
   BaseLB(BaseLB const &) = delete;
@@ -153,6 +154,7 @@ protected:
   std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
   // Observer only - LBManager owns the instance
   balance::LoadModel* load_model_                 = nullptr;
+  bool comm_aware_                                = false;
 
 protected:
   /**
