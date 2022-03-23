@@ -320,6 +320,183 @@ TEST_F(TestLBStatsMigrator, test_move_some_data_home) {
   }
 }
 
+TEST_F(TestLBStatsMigrator, test_move_data_here_from_home) {
+  auto const& this_node = vt::theContext()->getNode();
+  auto const& num_nodes = vt::theContext()->getNumNodes();
+
+  PhaseType phase = 0;
+  const size_t numElements = 5;
+
+  using vt::vrt::collection::balance::StatsData;
+  auto sd = setupStats(phase, numElements);
+
+  auto base_load_model = vt::theLBManager()->getBaseLoadModel();
+  // force it to use our json stats, not anything it may have collected
+  base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
+
+  vt::runInEpochCollective("updateLoads", [&]{
+    base_load_model->updateLoads(phase);
+  });
+
+  using vt::vrt::collection::balance::LBStatsMigrator;
+  using vt::vrt::collection::balance::ProposedReassignment;
+  using vt::vrt::collection::balance::LBType;
+  using ObjIDType = vt::elm::ElementIDStruct;
+  std::set<ObjIDType> migratable_objects_here;
+  std::shared_ptr<ProposedReassignment> not_home_model = nullptr;
+
+  // move everything off the home node
+  vt::runInEpochCollective("do shift", [&]{
+    auto lb_reassignment = vt::theLBManager()->startLB(phase, LBType::RotateLB);
+    if (lb_reassignment != nullptr) {
+      fmt::print(
+        "{}: global_mig={}, depart={}, arrive={}\n",
+        lb_reassignment->node_,
+        lb_reassignment->global_migration_count,
+        lb_reassignment->depart_.size(),
+        lb_reassignment->arrive_.size()
+      );
+      not_home_model = std::make_shared<ProposedReassignment>(
+        base_load_model, LBStatsMigrator::updateCurrentNodes(lb_reassignment)
+      );
+      for (auto it = not_home_model->begin(); it.isValid(); ++it) {
+        if ((*it).isMigratable()) {
+          migratable_objects_here.insert(*it);
+        }
+      }
+    }
+  });
+  runInEpochCollective("destroy lb", [&]{
+    vt::theLBManager()->destroyLB();
+  });
+
+  vt::objgroup::proxy::Proxy<LBStatsMigrator> norm_lb_proxy;
+  std::shared_ptr<ProposedReassignment> here_model = nullptr;
+
+  // then create a load model that pulls loads here from home,
+  // based on the base load model, not the one we just created
+  vt::runInEpochCollective("migrate stats here", [&]{
+    norm_lb_proxy = LBStatsMigrator::construct(base_load_model);
+    auto normalizer = norm_lb_proxy.get();
+
+    here_model = normalizer->createStatsHereModel(
+      base_load_model, migratable_objects_here
+    );
+  });
+  runInEpochCollective("destroy migrator", [&]{
+    norm_lb_proxy.destroyCollective();
+  });
+
+  // then iterate over it to make sure what shows up here is correct
+  for (auto obj_id : *here_model) {
+    if (obj_id.isMigratable()) {
+      auto home = obj_id.getHomeNode();
+      EXPECT_EQ(home, (this_node + num_nodes - 1) % num_nodes);
+      EXPECT_EQ(obj_id.getCurrNode(), this_node);
+
+      using vt::vrt::collection::balance::PhaseOffset;
+      auto load = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(load, obj_id.id * 2);
+    }
+  }
+}
+
+TEST_F(TestLBStatsMigrator, test_move_some_data_here_from_home) {
+  auto const& this_node = vt::theContext()->getNode();
+  auto const& num_nodes = vt::theContext()->getNumNodes();
+
+  PhaseType phase = 0;
+  const size_t numElements = 5;
+
+  using vt::vrt::collection::balance::StatsData;
+  auto sd = setupStats(phase, numElements);
+
+  auto base_load_model = vt::theLBManager()->getBaseLoadModel();
+  // force it to use our json stats, not anything it may have collected
+  base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
+
+  vt::runInEpochCollective("updateLoads", [&]{
+    base_load_model->updateLoads(phase);
+  });
+
+  using vt::vrt::collection::balance::LBStatsMigrator;
+  using vt::vrt::collection::balance::ProposedReassignment;
+  using vt::vrt::collection::balance::LBType;
+  using ObjIDType = vt::elm::ElementIDStruct;
+  std::set<ObjIDType> migratable_objects_here;
+  std::shared_ptr<ProposedReassignment> not_home_model = nullptr;
+
+  // move everything off the home node
+  vt::runInEpochCollective("do shift", [&]{
+    auto lb_reassignment = vt::theLBManager()->startLB(phase, LBType::RotateLB);
+    if (lb_reassignment != nullptr) {
+      fmt::print(
+        "{}: global_mig={}, depart={}, arrive={}\n",
+        lb_reassignment->node_,
+        lb_reassignment->global_migration_count,
+        lb_reassignment->depart_.size(),
+        lb_reassignment->arrive_.size()
+      );
+      not_home_model = std::make_shared<ProposedReassignment>(
+        base_load_model, LBStatsMigrator::updateCurrentNodes(lb_reassignment)
+      );
+      for (auto it = not_home_model->begin(); it.isValid(); ++it) {
+        if ((*it).isMigratable()) {
+          // only claim a subset of them are here (relates to an optimization in
+          // the code being tested)
+          if ((*it).id % 3 == 0) {
+            migratable_objects_here.insert(*it);
+          }
+        }
+      }
+    }
+  });
+  runInEpochCollective("destroy lb", [&]{
+    vt::theLBManager()->destroyLB();
+  });
+
+  vt::objgroup::proxy::Proxy<LBStatsMigrator> norm_lb_proxy;
+  std::shared_ptr<ProposedReassignment> here_model = nullptr;
+
+  // then create a load model that pulls loads here from home,
+  // based on the base load model, not the one we just created
+  vt::runInEpochCollective("migrate stats here", [&]{
+    norm_lb_proxy = LBStatsMigrator::construct(base_load_model);
+    auto normalizer = norm_lb_proxy.get();
+
+    here_model = normalizer->createStatsHereModel(
+      base_load_model, migratable_objects_here
+    );
+  });
+  runInEpochCollective("destroy migrator", [&]{
+    norm_lb_proxy.destroyCollective();
+  });
+
+  // then iterate over it to make sure what shows up here is correct
+  for (auto obj_id : *here_model) {
+    if (obj_id.isMigratable()) {
+      auto home = obj_id.getHomeNode();
+      if (obj_id.id % 3 == 0) {
+        // these must have moved here from home
+        EXPECT_EQ(home, (this_node + num_nodes - 1) % num_nodes);
+      } else {
+        // but the optimization should have prevented these from moving away
+        // from home
+        EXPECT_EQ(home, this_node);
+      }
+      EXPECT_EQ(obj_id.getCurrNode(), this_node);
+
+      using vt::vrt::collection::balance::PhaseOffset;
+      auto load = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(load, obj_id.id * 2);
+    }
+  }
+}
+
 }}}} // end namespace vt::tests::unit::reassignment
 
 #endif /*vt_check_enabled(lblite)*/
