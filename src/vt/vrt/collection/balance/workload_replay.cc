@@ -60,32 +60,30 @@ void replayWorkloads(
 ) {
   using ObjIDType = elm::ElementIDStruct;
 
+  auto const this_rank = theContext()->getNode();
+
   // read in object loads from json files
   auto const filename = theConfig()->getLBStatsFileIn();
   auto sd = WorkloadDataMigrator::readInWorkloads(filename);
 
   // remember vt's base load model
   auto base_load_model = theLBManager()->getBaseLoadModel();
-
-  // allow remembering the migrations suggested by the load balancer
-  std::shared_ptr<const Reassignment> lb_reassignment = nullptr;
-
-  // allow remembering what objects are here after the load balancer migrates
-  std::set<ObjIDType> migratable_objects_here;
   // force it to use our json workloads, not anything it may have collected
   base_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
   // point the load model at the workloads for the relevant phase
   runInEpochCollective("WorkloadReplayDriver -> updateLoads", [=] {
     base_load_model->updateLoads(initial_phase);
   });
-  for (auto stat_obj_id : *base_load_model) {
-    if (stat_obj_id.isMigratable()) {
-      migratable_objects_here.insert(stat_obj_id);
+
+  // allow remembering what objects are here after the load balancer migrates
+  std::set<ObjIDType> migratable_objects_here;
+  for (auto workload_id : *base_load_model) {
+    if (workload_id.isMigratable()) {
+      migratable_objects_here.insert(workload_id);
     }
   }
 
   // simulate the requested number of phases
-  auto const this_rank = theContext()->getNode();
   auto stop_phase = initial_phase + phases_to_run;
   for (PhaseType phase = initial_phase; phase < stop_phase; phase++) {
     // reapply the base load model if in case we overwrote it on a previous iter
@@ -99,34 +97,32 @@ void replayWorkloads(
       base_load_model->updateLoads(phase);
     });
 
-    size_t count = 0;
-    for (auto stat_obj_id : *base_load_model) {
-      if (stat_obj_id.isMigratable()) {
-        ++count;
-        vt_debug_print(
-          normal, replay,
-          "workloads for id {} are here on phase {}\n",
-          stat_obj_id, phase
-        );
+    if (theConfig()->vt_debug_replay) {
+      size_t count = 0;
+      for (auto workload_id : *base_load_model) {
+        if (workload_id.isMigratable()) {
+          ++count;
+          vt_debug_print(
+            normal, replay,
+            "workload for element {} is here on phase {}\n", workload_id, phase
+          );
+        }
       }
+      vt_debug_print(
+        terse, replay,
+        "Number of known workloads: {}\n", count
+      );
     }
-    // sanity output
-    vt_debug_print(
-      terse, replay,
-      "Stats num objects: {}\n", count
-    );
 
     auto pre_lb_load_model = base_load_model;
 
-    // if this isn't the initial phase, then the workloads may exist on a rank
+    // if this isn't the initial phase, then the workload may exist on a rank
     // other than where the objects are currently meant to exist; we will
     // use a Reassignment object to get those workloads where they need to be
     if (phase > initial_phase) {
       if (this_rank == 0) {
         vt_print(
-          replay,
-          "Migrating imported object workloads to phase {} ranks...\n",
-          phase
+          replay, "Migrating object workloads to phase {} ranks...\n", phase
         );
       }
 
@@ -146,22 +142,22 @@ void replayWorkloads(
       vt_print(replay, "Simulating phase {}...\n", phase);
     }
 
-    // sanity output
-    count = 0;
-    for (auto stat_obj_id : *pre_lb_load_model) {
-      if (stat_obj_id.isMigratable()) {
-        ++count;
-        vt_debug_print(
-          normal, replay,
-          "element {} is here on phase {} pre-lb\n",
-          stat_obj_id, phase
-        );
+    if (theConfig()->vt_debug_replay) {
+      size_t count = 0;
+      for (auto workload_id : *pre_lb_load_model) {
+        if (workload_id.isMigratable()) {
+          ++count;
+          vt_debug_print(
+            normal, replay,
+            "element {} is here on phase {} before LB\n", workload_id, phase
+          );
+        }
       }
+      vt_debug_print(
+        terse, replay,
+        "Number of objects before LB: {}\n", count
+      );
     }
-    vt_debug_print(
-      terse, replay,
-      "Pre-lb num objects: {}\n", count
-    );
 
     vt_debug_print(
       terse, replay,
@@ -171,29 +167,27 @@ void replayWorkloads(
     runInEpochCollective("WorkloadReplayDriver -> runRealLB", [&] {
       // run the load balancer but don't let it automatically migrate;
       // instead, remember where the LB wanted to migrate objects
-      lb_reassignment = theLBManager()->selectStartLB(phase);
+      auto lb_reassignment = theLBManager()->selectStartLB(phase);
 
       if (lb_reassignment) {
         auto proposed_model = std::make_shared<ProposedReassignment>(
-          pre_lb_load_model, lb_reassignment
+          pre_lb_load_model,
+          WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
         );
         migratable_objects_here.clear();
         for (auto it = proposed_model->begin(); it.isValid(); ++it) {
           if ((*it).isMigratable()) {
-            ObjIDType loc_id = *it;
-            loc_id.curr_node = this_rank;
-            migratable_objects_here.insert(loc_id);
+            migratable_objects_here.insert(*it);
             vt_debug_print(
                normal, replay,
-              "element {} is here on phase {} post-lb\n",
-              loc_id, phase
+              "element {} is here on phase {} after LB\n", *it, phase
             );
           }
         }
       }
       vt_debug_print(
         terse, replay,
-        "Post-lb num objects: {}\n", migratable_objects_here.size()
+        "Number of objects after LB: {}\n", migratable_objects_here.size()
       );
     });
     runInEpochCollective("WorkloadReplayDriver -> destroyLB", [&] {
@@ -355,19 +349,19 @@ WorkloadDataMigrator::createModelToMoveWorkloadsHome(
   );
 
   runInEpochCollective("WorkloadDataMigrator -> transferStatsHome", [&] {
-    for (auto stat_obj_id : *model_base) {
-      if (stat_obj_id.isMigratable()) {
+    for (auto workload_id : *model_base) {
+      if (workload_id.isMigratable()) {
         // if the object belongs here, do nothing; otherwise, "transfer" it to
         // the home rank so that it can later be sent to the rank holding the
         // object
-        if (stat_obj_id.getHomeNode() != this_rank) {
-          if (migratable_objects_here.count(stat_obj_id) == 0) {
+        if (workload_id.getHomeNode() != this_rank) {
+          if (migratable_objects_here.count(workload_id) == 0) {
             vt_debug_print(
               verbose, replay,
               "will transfer load of {} home to {}\n",
-              stat_obj_id, stat_obj_id.getHomeNode()
+              workload_id, workload_id.getHomeNode()
             );
-            migrateObjectTo(stat_obj_id, stat_obj_id.getHomeNode());
+            migrateObjectTo(workload_id, workload_id.getHomeNode());
           }
         }
       }
@@ -391,28 +385,28 @@ WorkloadDataMigrator::createModelToMoveWorkloadsHere(
   );
 
   runInEpochCollective("WorkloadDataMigrator -> transferStatsHere", [&] {
-    for (auto stat_obj_id : migratable_objects_here) {
+    for (auto workload_id : migratable_objects_here) {
       // if the object is already here, do nothing; otherwise, "transfer" it
-      // from the home rank so that we will have the needed workloads data
+      // from the home rank so that we will have the needed workload data
       bool workloads_here = false;
       for (auto other_id : *model_base) {
-        if (stat_obj_id == other_id) {
+        if (workload_id == other_id) {
           workloads_here = true;
           break;
         }
       }
       if (!workloads_here) {
         // check that this isn't something that should already have been here
-        assert(stat_obj_id.getHomeNode() != this_rank);
+        assert(workload_id.getHomeNode() != this_rank);
 
         vt_debug_print(
           verbose, replay,
           "will transfer load of {} from home {}\n",
-          stat_obj_id, stat_obj_id.getHomeNode()
+          workload_id, workload_id.getHomeNode()
         );
-        ObjIDType mod_id = stat_obj_id;
+        ObjIDType mod_id = workload_id;
         // Override curr_node to force retrieval from the home rank
-        mod_id.curr_node = stat_obj_id.getHomeNode();
+        mod_id.curr_node = workload_id.getHomeNode();
         migrateObjectTo(mod_id, this_rank);
       }
     }
