@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/elm/elm_id.h"
+#include "vt/vrt/collection/balance/stats_data.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/model/proposed_reassignment.h"
@@ -79,11 +80,13 @@ struct LBStatsMigrator : lb::BaseLB {
 
   using BaseLB::normalizeReassignments;
 
-  static
-  std::shared_ptr<Reassignment>
+  static std::shared_ptr<Reassignment>
   updateCurrentNodes(
     std::shared_ptr<const Reassignment> lb_reassignment
   );
+
+  static std::shared_ptr<StatsData>
+  readInWorkloads(std::string filename);
 
   std::shared_ptr<ProposedReassignment>
   createStatsAtHomeModel(

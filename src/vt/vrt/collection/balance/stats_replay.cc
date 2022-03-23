@@ -58,30 +58,11 @@ namespace balance {
 void replayFromInputStats(
   PhaseType initial_phase, PhaseType phases_to_run
 ) {
-  using util::json::Reader;
   using ObjIDType = elm::ElementIDStruct;
 
   // read in object loads from json files
   auto const filename = theConfig()->getLBStatsFileIn();
-  Reader r{filename};
-  auto json = r.readFile();
-  auto sd = StatsData(*json);
-
-  for (auto &phase_data : sd.node_data_) {
-    vt_debug_print(
-      normal, replay,
-      "found {} loads for phase {}\n",
-      phase_data.second.size(), phase_data.first
-    );
-  }
-
-  for (auto &phase_data : sd.node_comm_) {
-    vt_debug_print(
-      normal, replay,
-      "found {} comms for phase {}\n",
-      phase_data.second.size(), phase_data.first
-    );
-  }
+  auto sd = LBStatsMigrator::readInWorkloads(filename);
 
   // remember vt's base load model
   auto base_load_model = theLBManager()->getBaseLoadModel();
@@ -92,7 +73,7 @@ void replayFromInputStats(
   // allow remembering what objects are here after the load balancer migrates
   std::set<ObjIDType> migratable_objects_here;
   // force it to use our json stats, not anything it may have collected
-  base_load_model->setLoads(&sd.node_data_, &sd.node_comm_);
+  base_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
   // point the load model at the stats for the relevant phase
   runInEpochCollective("StatsReplayDriver -> updateLoads", [=] {
     base_load_model->updateLoads(initial_phase);
@@ -111,7 +92,7 @@ void replayFromInputStats(
     theLBManager()->setLoadModel(base_load_model);
 
     // force it to use our json stats, not anything it may have collected
-    base_load_model->setLoads(&sd.node_data_, &sd.node_comm_);
+    base_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
 
     // point the load model at the stats for the relevant phase
     runInEpochCollective("StatsReplayDriver -> updateLoads", [=] {
@@ -173,7 +154,7 @@ void replayFromInputStats(
         norm_lb_proxy.destroyCollective();
       });
       theLBManager()->setLoadModel(pre_lb_load_model);
-      pre_lb_load_model->setLoads(&sd.node_data_, &sd.node_comm_);
+      pre_lb_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
 
       runInEpochCollective("StatsReplayDriver -> migrateStatsDataHere", [&] {
         auto norm_lb_proxy = LBStatsMigrator::construct(pre_lb_load_model);
@@ -184,7 +165,7 @@ void replayFromInputStats(
         norm_lb_proxy.destroyCollective();
       });
       theLBManager()->setLoadModel(pre_lb_load_model);
-      pre_lb_load_model->setLoads(&sd.node_data_, &sd.node_comm_);
+      pre_lb_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
     }
 
     if (this_rank == 0) {
@@ -297,6 +278,34 @@ LBStatsMigrator::updateCurrentNodes(
     modified_reassignment->arrive_[id] = arr.second;
   }
   return modified_reassignment;
+}
+
+/*static*/
+std::shared_ptr<StatsData>
+LBStatsMigrator::readInWorkloads(std::string filename) {
+  using util::json::Reader;
+
+  Reader r{filename};
+  auto json = r.readFile();
+  auto sd = std::make_shared<StatsData>(*json);
+
+  for (auto &phase_data : sd->node_data_) {
+    vt_debug_print(
+      normal, replay,
+      "found {} loads for phase {}\n",
+      phase_data.second.size(), phase_data.first
+    );
+  }
+
+  for (auto &phase_data : sd->node_comm_) {
+    vt_debug_print(
+      normal, replay,
+      "found {} comms for phase {}\n",
+      phase_data.second.size(), phase_data.first
+    );
+  }
+
+  return sd;
 }
 
 std::shared_ptr<ProposedReassignment>
