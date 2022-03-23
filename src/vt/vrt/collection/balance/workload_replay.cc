@@ -130,41 +130,15 @@ void replayWorkloads(
         );
       }
 
-      // at the beginning of this phase, objects will exist in the locations
-      // they were placed by the previous lb invocation; this will be the
-      // arriving node for the purposes of this load model; that location
-      // is known by both the rank at which the lb placed the object and the
-      // rank from which the lb removed the object; the curr_node member of
-      // the object ids in the lb_reassignment object refers to the pre-lb
-      // location on the previous phase, but the curr_node member for our new
-      // load model must point to where the workloads data exists for this phase
+      // get the workloads to the ranks where the objects currently exist
+      pre_lb_load_model = WorkloadDataMigrator::relocateWorkloadsForReplay(
+        base_load_model, migratable_objects_here
+      );
 
-      // the workloads data for this phase can exist at arbitrary locations; the
-      // only rank to know the location of this data is the one that has it;
-      // this will be the departing node for the purposes of this load model;
-      // we need to make sure the curr_node member of the object ids in our
-      // new load model points to the node on which the workloads data lives
-
-      runInEpochCollective("WorkloadReplayDriver -> migrateStatsDataHome", [&] {
-        auto norm_lb_proxy = WorkloadDataMigrator::construct(base_load_model);
-        auto normalizer = norm_lb_proxy.get();
-        pre_lb_load_model = normalizer->createModelToMoveWorkloadsHome(
-          base_load_model, migratable_objects_here
-        );
-        norm_lb_proxy.destroyCollective();
-      });
+      // update the load model that will be used by the real load balancer
       theLBManager()->setLoadModel(pre_lb_load_model);
-      pre_lb_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
 
-      runInEpochCollective("WorkloadReplayDriver -> migrateStatsDataHere", [&] {
-        auto norm_lb_proxy = WorkloadDataMigrator::construct(pre_lb_load_model);
-        auto normalizer = norm_lb_proxy.get();
-        pre_lb_load_model = normalizer->createModelToMoveWorkloadsHere(
-          pre_lb_load_model, migratable_objects_here
-        );
-        norm_lb_proxy.destroyCollective();
-      });
-      theLBManager()->setLoadModel(pre_lb_load_model);
+      // force it to use our json workloads, not anything it may have collected
       pre_lb_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
     }
 
@@ -306,6 +280,67 @@ WorkloadDataMigrator::readInWorkloads(std::string filename) {
   }
 
   return sd;
+}
+
+/*static*/
+std::shared_ptr<ProposedReassignment>
+WorkloadDataMigrator::relocateWorkloadsForReplay(
+  std::shared_ptr<LoadModel> model_base,
+  std::set<ObjIDType> migratable_objects_here
+) {
+  // Object workloads may exist on arbitrary ranks instead of being colocated
+  // with the objects themselves. Relocate the workloads to where the objects
+  // themselves exist. Do this by first migrating home all workloads that are
+  // neither at home nor colocated with the object. Finally, migrate from home
+  // all workloads not already colocated with the object.
+
+  std::shared_ptr<ProposedReassignment> move_home_model =
+    relocateMisplacedWorkloadsHome(model_base, migratable_objects_here);
+
+  std::shared_ptr<ProposedReassignment> move_here_model =
+    relocateMisplacedWorkloadsHere(move_home_model, migratable_objects_here);
+
+  return move_here_model;
+}
+
+/*static*/
+std::shared_ptr<ProposedReassignment>
+WorkloadDataMigrator::relocateMisplacedWorkloadsHome(
+  std::shared_ptr<LoadModel> model_base,
+  std::set<ObjIDType> migratable_objects_here
+) {
+  std::shared_ptr<ProposedReassignment> move_home_model = nullptr;
+
+  runInEpochCollective("WorkloadDataMigrator -> migrateStatsDataHome", [&] {
+    auto norm_lb_proxy = WorkloadDataMigrator::construct(model_base);
+    auto normalizer = norm_lb_proxy.get();
+    move_home_model = normalizer->createModelToMoveWorkloadsHome(
+      model_base, migratable_objects_here
+    );
+    norm_lb_proxy.destroyCollective();
+  });
+
+  return move_home_model;
+}
+
+/*static*/
+std::shared_ptr<ProposedReassignment>
+WorkloadDataMigrator::relocateMisplacedWorkloadsHere(
+  std::shared_ptr<LoadModel> model_base,
+  std::set<ObjIDType> migratable_objects_here
+) {
+  std::shared_ptr<ProposedReassignment> move_here_model = nullptr;
+
+  runInEpochCollective("WorkloadDataMigrator -> migrateStatsDataHere", [&] {
+    auto norm_lb_proxy = WorkloadDataMigrator::construct(model_base);
+    auto normalizer = norm_lb_proxy.get();
+    move_here_model = normalizer->createModelToMoveWorkloadsHere(
+      model_base, migratable_objects_here
+    );
+    norm_lb_proxy.destroyCollective();
+  });
+
+  return move_here_model;
 }
 
 std::shared_ptr<ProposedReassignment>

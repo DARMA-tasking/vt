@@ -88,6 +88,24 @@ struct WorkloadDataMigrator : lb::BaseLB {
   static std::shared_ptr<StatsData>
   readInWorkloads(std::string filename);
 
+  static std::shared_ptr<ProposedReassignment>
+  relocateWorkloadsForReplay(
+    std::shared_ptr<LoadModel> model_base,
+    std::set<ObjIDType> migratable_objects_here
+  );
+
+  static std::shared_ptr<ProposedReassignment>
+  relocateMisplacedWorkloadsHome(
+    std::shared_ptr<LoadModel> model_base,
+    std::set<ObjIDType> migratable_objects_here
+  );
+
+  static std::shared_ptr<ProposedReassignment>
+  relocateMisplacedWorkloadsHere(
+    std::shared_ptr<LoadModel> model_base,
+    std::set<ObjIDType> migratable_objects_here
+  );
+
   std::shared_ptr<ProposedReassignment>
   createModelToMoveWorkloadsHome(
     std::shared_ptr<LoadModel> model_base,
