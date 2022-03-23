@@ -60,9 +60,14 @@ namespace vt { namespace tests { namespace unit { namespace reassignment {
 
 using namespace vt::tests::unit;
 
+using vt::vrt::collection::balance::StatsData;
+using vt::vrt::collection::balance::LoadModel;
+using vt::vrt::collection::balance::ProposedReassignment;
+using vt::vrt::collection::balance::WorkloadDataMigrator;
+
 struct TestWorkloadDataMigrator : TestParallelHarness { };
 
-std::unique_ptr<vt::vrt::collection::balance::StatsData>
+std::shared_ptr<StatsData>
 setupWorkloads(PhaseType phase, size_t numElements) {
   auto const& this_node = vt::theContext()->getNode();
 
@@ -76,15 +81,59 @@ setupWorkloads(PhaseType phase, size_t numElements) {
     );
   }
 
-  using vt::vrt::collection::balance::StatsData;
-  auto sd = std::make_unique<StatsData>();
+  auto sd = std::make_shared<StatsData>();
 
   for (auto&& elmID : myElemList) {
     double tval = elmID.id * 2;
     sd->node_data_[phase][elmID].whole_phase_load = tval;
   }
 
-  return std::move(sd);
+  return sd;
+}
+
+std::shared_ptr<LoadModel>
+setupBaseModel(PhaseType phase, std::shared_ptr<StatsData> sd) {
+  auto base_load_model = vt::theLBManager()->getBaseLoadModel();
+  // force it to use our json workloads, not anything it may have collected
+  base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
+
+  vt::runInEpochCollective("updateLoads", [&]{
+    base_load_model->updateLoads(phase);
+  });
+
+  return base_load_model;
+}
+
+std::shared_ptr<ProposedReassignment>
+shiftObjectsRight(
+  std::shared_ptr<LoadModel> base_load_model,
+  vt::PhaseType phase
+) {
+  std::shared_ptr<ProposedReassignment> new_model = nullptr;
+
+  vt::runInEpochCollective("do shift", [&]{
+    using vt::vrt::collection::balance::LBType;
+    auto lb_reassignment = vt::theLBManager()->startLB(phase, LBType::RotateLB);
+    if (lb_reassignment != nullptr) {
+      vt_debug_print(
+        normal, replay,
+        "global_mig={}, depart={}, arrive={}\n",
+        lb_reassignment->global_migration_count,
+        lb_reassignment->depart_.size(),
+        lb_reassignment->arrive_.size()
+      );
+      new_model = std::make_shared<ProposedReassignment>(
+        base_load_model,
+        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
+      );
+    }
+  });
+
+  runInEpochCollective("destroy lb", [&]{
+    vt::theLBManager()->destroyLB();
+  });
+
+  return new_model;
 }
 
 
@@ -95,20 +144,10 @@ TEST_F(TestWorkloadDataMigrator, test_normalize_call) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  using vt::vrt::collection::balance::StatsData;
   auto sd = setupWorkloads(phase, numElements);
+  auto base_load_model = setupBaseModel(phase, sd);
 
-  auto base_load_model = vt::theLBManager()->getBaseLoadModel();
-  // force it to use our json workloads, not anything it may have collected
-  base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
-
-  vt::runInEpochCollective("updateLoads", [&]{
-    base_load_model->updateLoads(phase);
-  });
-
-  using vt::vrt::collection::balance::WorkloadDataMigrator;
   vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
-  using vt::vrt::collection::balance::ProposedReassignment;
   std::shared_ptr<ProposedReassignment> new_model = nullptr;
 
   // choose a set of migrations for the load model to represent
@@ -156,45 +195,16 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_home) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  using vt::vrt::collection::balance::StatsData;
   auto sd = setupWorkloads(phase, numElements);
-
-  auto base_load_model = vt::theLBManager()->getBaseLoadModel();
-  // force it to use our json workloads, not anything it may have collected
-  base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
-
-  vt::runInEpochCollective("updateLoads", [&]{
-    base_load_model->updateLoads(phase);
-  });
-
-  using vt::vrt::collection::balance::WorkloadDataMigrator;
-  using vt::vrt::collection::balance::ProposedReassignment;
-  using vt::vrt::collection::balance::LBType;
-  using ObjIDType = vt::elm::ElementIDStruct;
-  std::shared_ptr<ProposedReassignment> not_home_model = nullptr;
+  auto base_load_model = setupBaseModel(phase, sd);
 
   // move everything off the home node
-  vt::runInEpochCollective("do shift", [&]{
-    auto lb_reassignment = vt::theLBManager()->startLB(phase, LBType::RotateLB);
-    if (lb_reassignment != nullptr) {
-      fmt::print(
-        "{}: global_mig={}, depart={}, arrive={}\n",
-        lb_reassignment->node_,
-        lb_reassignment->global_migration_count,
-        lb_reassignment->depart_.size(),
-        lb_reassignment->arrive_.size()
-      );
-      not_home_model = std::make_shared<ProposedReassignment>(
-        base_load_model,
-        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
-      );
-    }
-  });
-  runInEpochCollective("destroy lb", [&]{
-    vt::theLBManager()->destroyLB();
-  });
+  std::shared_ptr<ProposedReassignment> not_home_model = shiftObjectsRight(
+    base_load_model, phase
+  );
 
   // list nothing as here so that we skip the optimization
+  using ObjIDType = vt::elm::ElementIDStruct;
   std::set<ObjIDType> no_migratable_objects_here;
 
   vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
@@ -236,53 +246,24 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_home) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  using vt::vrt::collection::balance::StatsData;
   auto sd = setupWorkloads(phase, numElements);
-
-  auto base_load_model = vt::theLBManager()->getBaseLoadModel();
-  // force it to use our json workloads, not anything it may have collected
-  base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
-
-  vt::runInEpochCollective("updateLoads", [&]{
-    base_load_model->updateLoads(phase);
-  });
-
-  using vt::vrt::collection::balance::WorkloadDataMigrator;
-  using vt::vrt::collection::balance::ProposedReassignment;
-  using vt::vrt::collection::balance::LBType;
-  using ObjIDType = vt::elm::ElementIDStruct;
-  std::set<ObjIDType> migratable_objects_here;
-  std::shared_ptr<ProposedReassignment> not_home_model = nullptr;
+  auto base_load_model = setupBaseModel(phase, sd);
 
   // move everything off the home node
-  vt::runInEpochCollective("do shift", [&]{
-    auto lb_reassignment = vt::theLBManager()->startLB(phase, LBType::RotateLB);
-    if (lb_reassignment != nullptr) {
-      fmt::print(
-        "{}: global_mig={}, depart={}, arrive={}\n",
-        lb_reassignment->node_,
-        lb_reassignment->global_migration_count,
-        lb_reassignment->depart_.size(),
-        lb_reassignment->arrive_.size()
-      );
-      not_home_model = std::make_shared<ProposedReassignment>(
-        base_load_model,
-        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
-      );
-      for (auto it = not_home_model->begin(); it.isValid(); ++it) {
-        if ((*it).isMigratable()) {
-          // only claim a subset of them are here (relates to an optimization in
-          // the code being tested)
-          if ((*it).id % 3 == 0) {
-            migratable_objects_here.insert(*it);
-          }
-        }
+  std::shared_ptr<ProposedReassignment> not_home_model = shiftObjectsRight(
+    base_load_model, phase
+  );
+  using ObjIDType = vt::elm::ElementIDStruct;
+  std::set<ObjIDType> migratable_objects_here;
+  for (auto it = not_home_model->begin(); it.isValid(); ++it) {
+    if ((*it).isMigratable()) {
+      // only claim a subset of them are here (relates to an optimization in
+      // the code being tested)
+      if ((*it).id % 3 == 0) {
+        migratable_objects_here.insert(*it);
       }
     }
-  });
-  runInEpochCollective("destroy lb", [&]{
-    vt::theLBManager()->destroyLB();
-  });
+  }
 
   vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
   std::shared_ptr<ProposedReassignment> back_home_if_not_here_model = nullptr;
@@ -329,49 +310,20 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_home) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  using vt::vrt::collection::balance::StatsData;
   auto sd = setupWorkloads(phase, numElements);
-
-  auto base_load_model = vt::theLBManager()->getBaseLoadModel();
-  // force it to use our json workloads, not anything it may have collected
-  base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
-
-  vt::runInEpochCollective("updateLoads", [&]{
-    base_load_model->updateLoads(phase);
-  });
-
-  using vt::vrt::collection::balance::WorkloadDataMigrator;
-  using vt::vrt::collection::balance::ProposedReassignment;
-  using vt::vrt::collection::balance::LBType;
-  using ObjIDType = vt::elm::ElementIDStruct;
-  std::set<ObjIDType> migratable_objects_here;
-  std::shared_ptr<ProposedReassignment> not_home_model = nullptr;
+  auto base_load_model = setupBaseModel(phase, sd);
 
   // move everything off the home node
-  vt::runInEpochCollective("do shift", [&]{
-    auto lb_reassignment = vt::theLBManager()->startLB(phase, LBType::RotateLB);
-    if (lb_reassignment != nullptr) {
-      fmt::print(
-        "{}: global_mig={}, depart={}, arrive={}\n",
-        lb_reassignment->node_,
-        lb_reassignment->global_migration_count,
-        lb_reassignment->depart_.size(),
-        lb_reassignment->arrive_.size()
-      );
-      not_home_model = std::make_shared<ProposedReassignment>(
-        base_load_model,
-        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
-      );
-      for (auto it = not_home_model->begin(); it.isValid(); ++it) {
-        if ((*it).isMigratable()) {
-          migratable_objects_here.insert(*it);
-        }
-      }
+  std::shared_ptr<ProposedReassignment> not_home_model = shiftObjectsRight(
+    base_load_model, phase
+  );
+  using ObjIDType = vt::elm::ElementIDStruct;
+  std::set<ObjIDType> migratable_objects_here;
+  for (auto it = not_home_model->begin(); it.isValid(); ++it) {
+    if ((*it).isMigratable()) {
+      migratable_objects_here.insert(*it);
     }
-  });
-  runInEpochCollective("destroy lb", [&]{
-    vt::theLBManager()->destroyLB();
-  });
+  }
 
   vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
   std::shared_ptr<ProposedReassignment> here_model = nullptr;
@@ -413,53 +365,24 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_here_from_home) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  using vt::vrt::collection::balance::StatsData;
   auto sd = setupWorkloads(phase, numElements);
-
-  auto base_load_model = vt::theLBManager()->getBaseLoadModel();
-  // force it to use our json workloads, not anything it may have collected
-  base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
-
-  vt::runInEpochCollective("updateLoads", [&]{
-    base_load_model->updateLoads(phase);
-  });
-
-  using vt::vrt::collection::balance::WorkloadDataMigrator;
-  using vt::vrt::collection::balance::ProposedReassignment;
-  using vt::vrt::collection::balance::LBType;
-  using ObjIDType = vt::elm::ElementIDStruct;
-  std::set<ObjIDType> migratable_objects_here;
-  std::shared_ptr<ProposedReassignment> not_home_model = nullptr;
+  auto base_load_model = setupBaseModel(phase, sd);
 
   // move everything off the home node
-  vt::runInEpochCollective("do shift", [&]{
-    auto lb_reassignment = vt::theLBManager()->startLB(phase, LBType::RotateLB);
-    if (lb_reassignment != nullptr) {
-      fmt::print(
-        "{}: global_mig={}, depart={}, arrive={}\n",
-        lb_reassignment->node_,
-        lb_reassignment->global_migration_count,
-        lb_reassignment->depart_.size(),
-        lb_reassignment->arrive_.size()
-      );
-      not_home_model = std::make_shared<ProposedReassignment>(
-        base_load_model,
-        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
-      );
-      for (auto it = not_home_model->begin(); it.isValid(); ++it) {
-        if ((*it).isMigratable()) {
-          // only claim a subset of them are here (relates to an optimization in
-          // the code being tested)
-          if ((*it).id % 3 == 0) {
-            migratable_objects_here.insert(*it);
-          }
-        }
+  std::shared_ptr<ProposedReassignment> not_home_model = shiftObjectsRight(
+    base_load_model, phase
+  );
+  using ObjIDType = vt::elm::ElementIDStruct;
+  std::set<ObjIDType> migratable_objects_here;
+  for (auto it = not_home_model->begin(); it.isValid(); ++it) {
+    if ((*it).isMigratable()) {
+      // only claim a subset of them are here (relates to an optimization in
+      // the code being tested)
+      if ((*it).id % 3 == 0) {
+        migratable_objects_here.insert(*it);
       }
     }
-  });
-  runInEpochCollective("destroy lb", [&]{
-    vt::theLBManager()->destroyLB();
-  });
+  }
 
   vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
   std::shared_ptr<ProposedReassignment> here_model = nullptr;
