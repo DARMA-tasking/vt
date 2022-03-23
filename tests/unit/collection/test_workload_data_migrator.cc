@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                         test_lb_stats_migrator.cc
+//                      test_workload_data_migrator.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -51,7 +51,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/stats_data.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/vrt/collection/balance/stats_replay.h"
+#include "vt/vrt/collection/balance/workload_replay.h"
 #include "vt/vrt/collection/balance/model/proposed_reassignment.h"
 
 #if vt_check_enabled(lblite)

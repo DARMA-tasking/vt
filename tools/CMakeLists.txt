@@ -32,4 +32,4 @@ macro(add_tool tool_name)
 #  endif()
 endmacro()
 
-add_subdirectory(stats_replay)
+add_subdirectory(workload_replay)

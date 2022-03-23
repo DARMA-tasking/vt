@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              stats_replay.cc
+//                             workload_replay.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -43,7 +43,7 @@
 */
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/stats_replay.h"
+#include "vt/vrt/collection/balance/workload_replay.h"
 #include "vt/vrt/collection/balance/stats_data.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/utils/json/json_reader.h"

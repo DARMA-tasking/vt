@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               stats_replay.h
+//                             simulate_replay.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,29 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_REPLAY_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_REPLAY_H
+#include <vt/transport.h>
+#include <vt/vrt/collection/balance/workload_replay.h>
 
-#include "vt/config.h"
-#include "vt/elm/elm_id.h"
-#include "vt/vrt/collection/balance/stats_data.h"
-#include "vt/vrt/collection/balance/baselb/baselb.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
-#include "vt/vrt/collection/balance/model/proposed_reassignment.h"
+int main(int argc, char** argv) {
+  using vt::PhaseType;
 
-#include <string>
-#include <unordered_map>
-#include <set>
+  vt::initialize(argc, argv);
 
-namespace vt { namespace vrt { namespace collection {
-namespace balance {
-
-void replayWorkloads(
-  PhaseType initial_phase, PhaseType phases_to_run
-);
-
-struct WorkloadDataMigrator : lb::BaseLB {
-
-  using ObjIDType = elm::ElementIDStruct;
-
-  WorkloadDataMigrator() = default;
-
-  static objgroup::proxy::Proxy<WorkloadDataMigrator>
-  construct(std::shared_ptr<LoadModel> model_base);
-
-  void runLB(TimeType) override;
-
-  void inputParams(SpecEntry* spec) override;
-
-  static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
-
-  using BaseLB::normalizeReassignments;
-
-  static std::shared_ptr<Reassignment>
-  updateCurrentNodes(
-    std::shared_ptr<const Reassignment> lb_reassignment
+  vtAbortIf(
+    argc != 3,
+    "Must have two arguments: <initial phase> <phases to run>"
   );
 
-  static std::shared_ptr<StatsData>
-  readInWorkloads(std::string filename);
+  // initial phase to simulate
+  PhaseType initial_phase = atoi(argv[1]);
+  // number of phases to simulate
+  PhaseType phases_to_run = atoi(argv[2]);
 
-  std::shared_ptr<ProposedReassignment>
-  createModelToMoveWorkloadsHome(
-    std::shared_ptr<LoadModel> model_base,
-    std::set<ObjIDType> migratable_objects_here
+  vt::vrt::collection::balance::replayWorkloads(
+    initial_phase, phases_to_run
   );
 
-  std::shared_ptr<ProposedReassignment>
-  createModelToMoveWorkloadsHere(
-    std::shared_ptr<LoadModel> model_base,
-    std::set<ObjIDType> migratable_objects_here
-  );
-};
+  vt::finalize();
 
-}}}} /* end namespace vt::vrt::collection::balance */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_REPLAY_H*/
+  return 0;
+}
