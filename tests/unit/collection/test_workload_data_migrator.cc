@@ -136,6 +136,38 @@ shiftObjectsRight(
   return new_model;
 }
 
+std::shared_ptr<ProposedReassignment>
+shiftObjectsRandomly(
+  std::shared_ptr<LoadModel> base_load_model,
+  vt::PhaseType phase
+) {
+  std::shared_ptr<ProposedReassignment> new_model = nullptr;
+
+  vt::runInEpochCollective("do shift", [&]{
+    using vt::vrt::collection::balance::LBType;
+    auto lb_reassignment = vt::theLBManager()->startLB(phase, LBType::RandomLB);
+    if (lb_reassignment != nullptr) {
+      vt_debug_print(
+        normal, replay,
+        "global_mig={}, depart={}, arrive={}\n",
+        lb_reassignment->global_migration_count,
+        lb_reassignment->depart_.size(),
+        lb_reassignment->arrive_.size()
+      );
+      new_model = std::make_shared<ProposedReassignment>(
+        base_load_model,
+        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
+      );
+    }
+  });
+
+  runInEpochCollective("destroy lb", [&]{
+    vt::theLBManager()->destroyLB();
+  });
+
+  return new_model;
+}
+
 
 TEST_F(TestWorkloadDataMigrator, test_normalize_call) {
   auto const& this_node = vt::theContext()->getNode();
@@ -353,7 +385,7 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_here_from_home) {
     }
   }
 
-  // then create a load model that restores them to homes
+  // then create a load model that brings them here
   std::shared_ptr<ProposedReassignment> here_model =
     WorkloadDataMigrator::relocateMisplacedWorkloadsHere(
       base_load_model, migratable_objects_here
@@ -371,6 +403,98 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_here_from_home) {
         // from home
         EXPECT_EQ(home, this_node);
       }
+      EXPECT_EQ(obj_id.getCurrNode(), this_node);
+
+      using vt::vrt::collection::balance::PhaseOffset;
+      auto load = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(load, obj_id.id * 2);
+    }
+  }
+}
+
+TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_1) {
+  auto const& this_node = vt::theContext()->getNode();
+
+  PhaseType phase = 0;
+  const size_t numElements = 5;
+
+  auto sd = setupWorkloads(phase, numElements);
+  auto base_load_model = setupBaseModel(phase, sd);
+
+  // shift the workloads to not be home
+  std::shared_ptr<ProposedReassignment> workloads_not_home_model =
+    shiftObjectsRight(base_load_model, phase);
+
+  // put the objects whereever
+  std::shared_ptr<ProposedReassignment> objects_whereever_model =
+    shiftObjectsRandomly(base_load_model, phase);
+  using ObjIDType = vt::elm::ElementIDStruct;
+  std::set<ObjIDType> migratable_objects_here;
+  for (auto it = objects_whereever_model->begin(); it.isValid(); ++it) {
+    if ((*it).isMigratable()) {
+      migratable_objects_here.insert(*it);
+    }
+  }
+
+  // then create a load model that matches everything up
+  std::shared_ptr<ProposedReassignment> here_model =
+    WorkloadDataMigrator::relocateWorkloadsForReplay(
+      workloads_not_home_model, migratable_objects_here
+    );
+
+  // then iterate over it to make sure what shows up here is correct
+  for (auto obj_id : *here_model) {
+    if (obj_id.isMigratable()) {
+      EXPECT_EQ(migratable_objects_here.count(obj_id), 1);
+
+      EXPECT_EQ(obj_id.getCurrNode(), this_node);
+
+      using vt::vrt::collection::balance::PhaseOffset;
+      auto load = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(load, obj_id.id * 2);
+    }
+  }
+}
+
+TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_2) {
+  auto const& this_node = vt::theContext()->getNode();
+
+  PhaseType phase = 0;
+  const size_t numElements = 5;
+
+  auto sd = setupWorkloads(phase, numElements);
+  auto base_load_model = setupBaseModel(phase, sd);
+
+  // put the workloads whereever
+  std::shared_ptr<ProposedReassignment> workloads_whereever_model =
+    shiftObjectsRandomly(base_load_model, phase);
+
+  // shift the objects so they aren't at home
+  std::shared_ptr<ProposedReassignment> objects_not_home_model =
+    shiftObjectsRight(base_load_model, phase);
+  using ObjIDType = vt::elm::ElementIDStruct;
+  std::set<ObjIDType> migratable_objects_here;
+  for (auto it = objects_not_home_model->begin(); it.isValid(); ++it) {
+    if ((*it).isMigratable()) {
+      migratable_objects_here.insert(*it);
+    }
+  }
+
+  // then create a load model that matches everything up
+  std::shared_ptr<ProposedReassignment> here_model =
+    WorkloadDataMigrator::relocateWorkloadsForReplay(
+      workloads_whereever_model, migratable_objects_here
+    );
+
+  // then iterate over it to make sure what shows up here is correct
+  for (auto obj_id : *here_model) {
+    if (obj_id.isMigratable()) {
+      EXPECT_EQ(migratable_objects_here.count(obj_id), 1);
+
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 
       using vt::vrt::collection::balance::PhaseOffset;
