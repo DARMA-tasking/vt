@@ -55,14 +55,14 @@
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
 
-void replayFromInputStats(
+void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run
 ) {
   using ObjIDType = elm::ElementIDStruct;
 
   // read in object loads from json files
   auto const filename = theConfig()->getLBStatsFileIn();
-  auto sd = LBStatsMigrator::readInWorkloads(filename);
+  auto sd = WorkloadDataMigrator::readInWorkloads(filename);
 
   // remember vt's base load model
   auto base_load_model = theLBManager()->getBaseLoadModel();
@@ -72,10 +72,10 @@ void replayFromInputStats(
 
   // allow remembering what objects are here after the load balancer migrates
   std::set<ObjIDType> migratable_objects_here;
-  // force it to use our json stats, not anything it may have collected
+  // force it to use our json workloads, not anything it may have collected
   base_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
-  // point the load model at the stats for the relevant phase
-  runInEpochCollective("StatsReplayDriver -> updateLoads", [=] {
+  // point the load model at the workloads for the relevant phase
+  runInEpochCollective("WorkloadReplayDriver -> updateLoads", [=] {
     base_load_model->updateLoads(initial_phase);
   });
   for (auto stat_obj_id : *base_load_model) {
@@ -91,11 +91,11 @@ void replayFromInputStats(
     // reapply the base load model if in case we overwrote it on a previous iter
     theLBManager()->setLoadModel(base_load_model);
 
-    // force it to use our json stats, not anything it may have collected
+    // force it to use our json workloads, not anything it may have collected
     base_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
 
-    // point the load model at the stats for the relevant phase
-    runInEpochCollective("StatsReplayDriver -> updateLoads", [=] {
+    // point the load model at the workloads for the relevant phase
+    runInEpochCollective("WorkloadReplayDriver -> updateLoads", [=] {
       base_load_model->updateLoads(phase);
     });
 
@@ -105,7 +105,7 @@ void replayFromInputStats(
         ++count;
         vt_debug_print(
           normal, replay,
-          "stats for id {} are here on phase {}\n",
+          "workloads for id {} are here on phase {}\n",
           stat_obj_id, phase
         );
       }
@@ -118,14 +118,14 @@ void replayFromInputStats(
 
     auto pre_lb_load_model = base_load_model;
 
-    // if this isn't the initial phase, then the stats may exist on a rank
+    // if this isn't the initial phase, then the workloads may exist on a rank
     // other than where the objects are currently meant to exist; we will
-    // use a Reassignment object to get those load stats where they need to be
+    // use a Reassignment object to get those workloads where they need to be
     if (phase > initial_phase) {
       if (this_rank == 0) {
         vt_print(
           replay,
-          "Migrating imported object stats to phase {} ranks...\n",
+          "Migrating imported object workloads to phase {} ranks...\n",
           phase
         );
       }
@@ -137,18 +137,18 @@ void replayFromInputStats(
       // rank from which the lb removed the object; the curr_node member of
       // the object ids in the lb_reassignment object refers to the pre-lb
       // location on the previous phase, but the curr_node member for our new
-      // load model must point to where the stats data exists for this phase
+      // load model must point to where the workloads data exists for this phase
 
-      // the stats data for this phase can exist at arbitrary locations; the
+      // the workloads data for this phase can exist at arbitrary locations; the
       // only rank to know the location of this data is the one that has it;
       // this will be the departing node for the purposes of this load model;
       // we need to make sure the curr_node member of the object ids in our
-      // new load model points to the node on which the stats data lives
+      // new load model points to the node on which the workloads data lives
 
-      runInEpochCollective("StatsReplayDriver -> migrateStatsDataHome", [&] {
-        auto norm_lb_proxy = LBStatsMigrator::construct(base_load_model);
+      runInEpochCollective("WorkloadReplayDriver -> migrateStatsDataHome", [&] {
+        auto norm_lb_proxy = WorkloadDataMigrator::construct(base_load_model);
         auto normalizer = norm_lb_proxy.get();
-        pre_lb_load_model = normalizer->createStatsAtHomeModel(
+        pre_lb_load_model = normalizer->createModelToMoveWorkloadsHome(
           base_load_model, migratable_objects_here
         );
         norm_lb_proxy.destroyCollective();
@@ -156,10 +156,10 @@ void replayFromInputStats(
       theLBManager()->setLoadModel(pre_lb_load_model);
       pre_lb_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
 
-      runInEpochCollective("StatsReplayDriver -> migrateStatsDataHere", [&] {
-        auto norm_lb_proxy = LBStatsMigrator::construct(pre_lb_load_model);
+      runInEpochCollective("WorkloadReplayDriver -> migrateStatsDataHere", [&] {
+        auto norm_lb_proxy = WorkloadDataMigrator::construct(pre_lb_load_model);
         auto normalizer = norm_lb_proxy.get();
-        pre_lb_load_model = normalizer->createStatsHereModel(
+        pre_lb_load_model = normalizer->createModelToMoveWorkloadsHere(
           pre_lb_load_model, migratable_objects_here
         );
         norm_lb_proxy.destroyCollective();
@@ -194,7 +194,7 @@ void replayFromInputStats(
       "constructing load model from real load balancer\n"
     );
 
-    runInEpochCollective("StatsReplayDriver -> runRealLB", [&] {
+    runInEpochCollective("WorkloadReplayDriver -> runRealLB", [&] {
       // run the load balancer but don't let it automatically migrate;
       // instead, remember where the LB wanted to migrate objects
       lb_reassignment = theLBManager()->selectStartLB(phase);
@@ -222,7 +222,7 @@ void replayFromInputStats(
         "Post-lb num objects: {}\n", migratable_objects_here.size()
       );
     });
-    runInEpochCollective("StatsReplayDriver -> destroyLB", [&] {
+    runInEpochCollective("WorkloadReplayDriver -> destroyLB", [&] {
       theLBManager()->destroyLB();
     });
     theCollective()->barrier();
@@ -231,14 +231,14 @@ void replayFromInputStats(
 
 
 /*static*/
-objgroup::proxy::Proxy<LBStatsMigrator>
-LBStatsMigrator::construct(std::shared_ptr<LoadModel> model_base) {
-  auto my_proxy = theObjGroup()->makeCollective<LBStatsMigrator>();
+objgroup::proxy::Proxy<WorkloadDataMigrator>
+WorkloadDataMigrator::construct(std::shared_ptr<LoadModel> model_base) {
+  auto my_proxy = theObjGroup()->makeCollective<WorkloadDataMigrator>();
   auto strat = my_proxy.get();
   auto base_proxy = my_proxy.template registerBaseCollective<lb::BaseLB>();
   vt_debug_print(
     verbose, replay,
-    "LBStatsMigrator proxy={} base_proxy={}\n",
+    "WorkloadDataMigrator proxy={} base_proxy={}\n",
     my_proxy.getProxy(), base_proxy.getProxy()
   );
   strat->proxy_ = base_proxy;
@@ -246,19 +246,19 @@ LBStatsMigrator::construct(std::shared_ptr<LoadModel> model_base) {
   return my_proxy;
 }
 
-void LBStatsMigrator::runLB(TimeType) { }
+void WorkloadDataMigrator::runLB(TimeType) { }
 
-void LBStatsMigrator::inputParams(SpecEntry* spec) { }
+void WorkloadDataMigrator::inputParams(SpecEntry* spec) { }
 
 std::unordered_map<std::string, std::string>
-LBStatsMigrator::getInputKeysWithHelp() {
+WorkloadDataMigrator::getInputKeysWithHelp() {
   std::unordered_map<std::string, std::string> const keys_help;
   return keys_help;
 }
 
 /*static*/
 std::shared_ptr<Reassignment>
-LBStatsMigrator::updateCurrentNodes(
+WorkloadDataMigrator::updateCurrentNodes(
   std::shared_ptr<const Reassignment> lb_reassignment
 ) {
   auto modified_reassignment = std::make_shared<Reassignment>();
@@ -282,7 +282,7 @@ LBStatsMigrator::updateCurrentNodes(
 
 /*static*/
 std::shared_ptr<StatsData>
-LBStatsMigrator::readInWorkloads(std::string filename) {
+WorkloadDataMigrator::readInWorkloads(std::string filename) {
   using util::json::Reader;
 
   Reader r{filename};
@@ -309,7 +309,7 @@ LBStatsMigrator::readInWorkloads(std::string filename) {
 }
 
 std::shared_ptr<ProposedReassignment>
-LBStatsMigrator::createStatsAtHomeModel(
+WorkloadDataMigrator::createModelToMoveWorkloadsHome(
   std::shared_ptr<LoadModel> model_base,
   std::set<ObjIDType> migratable_objects_here
 ) {
@@ -319,7 +319,7 @@ LBStatsMigrator::createStatsAtHomeModel(
     "constructing load model to get loads from file location to home\n"
   );
 
-  runInEpochCollective("LBStatsMigrator -> transferStatsHome", [&] {
+  runInEpochCollective("WorkloadDataMigrator -> transferStatsHome", [&] {
     for (auto stat_obj_id : *model_base) {
       if (stat_obj_id.isMigratable()) {
         // if the object belongs here, do nothing; otherwise, "transfer" it to
@@ -345,7 +345,7 @@ LBStatsMigrator::createStatsAtHomeModel(
 }
 
 std::shared_ptr<ProposedReassignment>
-LBStatsMigrator::createStatsHereModel(
+WorkloadDataMigrator::createModelToMoveWorkloadsHere(
   std::shared_ptr<LoadModel> model_base,
   std::set<ObjIDType> migratable_objects_here
 ) {
@@ -355,18 +355,18 @@ LBStatsMigrator::createStatsHereModel(
     "constructing load model to get loads from home to here\n"
   );
 
-  runInEpochCollective("LBStatsMigrator -> transferStatsHere", [&] {
+  runInEpochCollective("WorkloadDataMigrator -> transferStatsHere", [&] {
     for (auto stat_obj_id : migratable_objects_here) {
       // if the object is already here, do nothing; otherwise, "transfer" it
-      // from the home rank so that we will have the needed stats data
-      bool stats_here = false;
+      // from the home rank so that we will have the needed workloads data
+      bool workloads_here = false;
       for (auto other_id : *model_base) {
         if (stat_obj_id == other_id) {
-          stats_here = true;
+          workloads_here = true;
           break;
         }
       }
-      if (!stats_here) {
+      if (!workloads_here) {
         // check that this isn't something that should already have been here
         assert(stat_obj_id.getHomeNode() != this_rank);
 
@@ -384,7 +384,8 @@ LBStatsMigrator::createStatsHereModel(
   });
 
   auto tmp_assignment = normalizeReassignments();
-  // now restore the curr_node values to reflect the placement of the "real" object
+  // now restore the curr_node values to reflect the placement of the "real"
+  // object
   auto here_assignment = updateCurrentNodes(tmp_assignment);
 
   return std::make_shared<ProposedReassignment>(model_base, here_assignment);

@@ -60,10 +60,10 @@ namespace vt { namespace tests { namespace unit { namespace reassignment {
 
 using namespace vt::tests::unit;
 
-struct TestLBStatsMigrator : TestParallelHarness { };
+struct TestWorkloadDataMigrator : TestParallelHarness { };
 
 std::unique_ptr<vt::vrt::collection::balance::StatsData>
-setupStats(PhaseType phase, size_t numElements) {
+setupWorkloads(PhaseType phase, size_t numElements) {
   auto const& this_node = vt::theContext()->getNode();
 
   using vt::vrt::collection::balance::ElementIDStruct;
@@ -88,7 +88,7 @@ setupStats(PhaseType phase, size_t numElements) {
 }
 
 
-TEST_F(TestLBStatsMigrator, test_normalize_call) {
+TEST_F(TestWorkloadDataMigrator, test_normalize_call) {
   auto const& this_node = vt::theContext()->getNode();
   auto const& num_nodes = vt::theContext()->getNumNodes();
 
@@ -96,24 +96,24 @@ TEST_F(TestLBStatsMigrator, test_normalize_call) {
   const size_t numElements = 5;
 
   using vt::vrt::collection::balance::StatsData;
-  auto sd = setupStats(phase, numElements);
+  auto sd = setupWorkloads(phase, numElements);
 
   auto base_load_model = vt::theLBManager()->getBaseLoadModel();
-  // force it to use our json stats, not anything it may have collected
+  // force it to use our json workloads, not anything it may have collected
   base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
 
   vt::runInEpochCollective("updateLoads", [&]{
     base_load_model->updateLoads(phase);
   });
 
-  using vt::vrt::collection::balance::LBStatsMigrator;
-  vt::objgroup::proxy::Proxy<LBStatsMigrator> norm_lb_proxy;
+  using vt::vrt::collection::balance::WorkloadDataMigrator;
+  vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
   using vt::vrt::collection::balance::ProposedReassignment;
   std::shared_ptr<ProposedReassignment> new_model = nullptr;
 
   // choose a set of migrations for the load model to represent
   vt::runInEpochCollective("do_lb", [&]{
-    norm_lb_proxy = LBStatsMigrator::construct(base_load_model);
+    norm_lb_proxy = WorkloadDataMigrator::construct(base_load_model);
     auto normalizer = norm_lb_proxy.get();
 
     vt::runInEpochCollective("choose migrations", [&]{
@@ -127,7 +127,7 @@ TEST_F(TestLBStatsMigrator, test_normalize_call) {
 
     auto reassignment = normalizer->normalizeReassignments();
     new_model = std::make_shared<ProposedReassignment>(
-      base_load_model, LBStatsMigrator::updateCurrentNodes(reassignment)
+      base_load_model, WorkloadDataMigrator::updateCurrentNodes(reassignment)
     );
   });
   vt::runInEpochCollective("destroy lb", [&]{
@@ -150,24 +150,24 @@ TEST_F(TestLBStatsMigrator, test_normalize_call) {
   }
 }
 
-TEST_F(TestLBStatsMigrator, test_move_data_home) {
+TEST_F(TestWorkloadDataMigrator, test_move_data_home) {
   auto const& this_node = vt::theContext()->getNode();
 
   PhaseType phase = 0;
   const size_t numElements = 5;
 
   using vt::vrt::collection::balance::StatsData;
-  auto sd = setupStats(phase, numElements);
+  auto sd = setupWorkloads(phase, numElements);
 
   auto base_load_model = vt::theLBManager()->getBaseLoadModel();
-  // force it to use our json stats, not anything it may have collected
+  // force it to use our json workloads, not anything it may have collected
   base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
 
   vt::runInEpochCollective("updateLoads", [&]{
     base_load_model->updateLoads(phase);
   });
 
-  using vt::vrt::collection::balance::LBStatsMigrator;
+  using vt::vrt::collection::balance::WorkloadDataMigrator;
   using vt::vrt::collection::balance::ProposedReassignment;
   using vt::vrt::collection::balance::LBType;
   using ObjIDType = vt::elm::ElementIDStruct;
@@ -185,7 +185,8 @@ TEST_F(TestLBStatsMigrator, test_move_data_home) {
         lb_reassignment->arrive_.size()
       );
       not_home_model = std::make_shared<ProposedReassignment>(
-        base_load_model, LBStatsMigrator::updateCurrentNodes(lb_reassignment)
+        base_load_model,
+        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
       );
     }
   });
@@ -196,15 +197,15 @@ TEST_F(TestLBStatsMigrator, test_move_data_home) {
   // list nothing as here so that we skip the optimization
   std::set<ObjIDType> no_migratable_objects_here;
 
-  vt::objgroup::proxy::Proxy<LBStatsMigrator> norm_lb_proxy;
+  vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
   std::shared_ptr<ProposedReassignment> back_home_model = nullptr;
 
   // then create a load model that restores them to homes
-  vt::runInEpochCollective("migrate stats home", [&]{
-    norm_lb_proxy = LBStatsMigrator::construct(not_home_model);
+  vt::runInEpochCollective("migrate workloads home", [&]{
+    norm_lb_proxy = WorkloadDataMigrator::construct(not_home_model);
     auto normalizer = norm_lb_proxy.get();
 
-    back_home_model = normalizer->createStatsAtHomeModel(
+    back_home_model = normalizer->createModelToMoveWorkloadsHome(
       not_home_model, no_migratable_objects_here
     );
   });
@@ -228,7 +229,7 @@ TEST_F(TestLBStatsMigrator, test_move_data_home) {
   }
 }
 
-TEST_F(TestLBStatsMigrator, test_move_some_data_home) {
+TEST_F(TestWorkloadDataMigrator, test_move_some_data_home) {
   auto const& this_node = vt::theContext()->getNode();
   auto const& num_nodes = vt::theContext()->getNumNodes();
 
@@ -236,17 +237,17 @@ TEST_F(TestLBStatsMigrator, test_move_some_data_home) {
   const size_t numElements = 5;
 
   using vt::vrt::collection::balance::StatsData;
-  auto sd = setupStats(phase, numElements);
+  auto sd = setupWorkloads(phase, numElements);
 
   auto base_load_model = vt::theLBManager()->getBaseLoadModel();
-  // force it to use our json stats, not anything it may have collected
+  // force it to use our json workloads, not anything it may have collected
   base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
 
   vt::runInEpochCollective("updateLoads", [&]{
     base_load_model->updateLoads(phase);
   });
 
-  using vt::vrt::collection::balance::LBStatsMigrator;
+  using vt::vrt::collection::balance::WorkloadDataMigrator;
   using vt::vrt::collection::balance::ProposedReassignment;
   using vt::vrt::collection::balance::LBType;
   using ObjIDType = vt::elm::ElementIDStruct;
@@ -265,7 +266,8 @@ TEST_F(TestLBStatsMigrator, test_move_some_data_home) {
         lb_reassignment->arrive_.size()
       );
       not_home_model = std::make_shared<ProposedReassignment>(
-        base_load_model, LBStatsMigrator::updateCurrentNodes(lb_reassignment)
+        base_load_model,
+        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
       );
       for (auto it = not_home_model->begin(); it.isValid(); ++it) {
         if ((*it).isMigratable()) {
@@ -282,15 +284,15 @@ TEST_F(TestLBStatsMigrator, test_move_some_data_home) {
     vt::theLBManager()->destroyLB();
   });
 
-  vt::objgroup::proxy::Proxy<LBStatsMigrator> norm_lb_proxy;
+  vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
   std::shared_ptr<ProposedReassignment> back_home_if_not_here_model = nullptr;
 
   // then create a load model that restores them to homes
-  vt::runInEpochCollective("migrate stats home", [&]{
-    norm_lb_proxy = LBStatsMigrator::construct(not_home_model);
+  vt::runInEpochCollective("migrate workloads home", [&]{
+    norm_lb_proxy = WorkloadDataMigrator::construct(not_home_model);
     auto normalizer = norm_lb_proxy.get();
 
-    back_home_if_not_here_model = normalizer->createStatsAtHomeModel(
+    back_home_if_not_here_model = normalizer->createModelToMoveWorkloadsHome(
       not_home_model, migratable_objects_here
     );
   });
@@ -320,7 +322,7 @@ TEST_F(TestLBStatsMigrator, test_move_some_data_home) {
   }
 }
 
-TEST_F(TestLBStatsMigrator, test_move_data_here_from_home) {
+TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_home) {
   auto const& this_node = vt::theContext()->getNode();
   auto const& num_nodes = vt::theContext()->getNumNodes();
 
@@ -328,17 +330,17 @@ TEST_F(TestLBStatsMigrator, test_move_data_here_from_home) {
   const size_t numElements = 5;
 
   using vt::vrt::collection::balance::StatsData;
-  auto sd = setupStats(phase, numElements);
+  auto sd = setupWorkloads(phase, numElements);
 
   auto base_load_model = vt::theLBManager()->getBaseLoadModel();
-  // force it to use our json stats, not anything it may have collected
+  // force it to use our json workloads, not anything it may have collected
   base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
 
   vt::runInEpochCollective("updateLoads", [&]{
     base_load_model->updateLoads(phase);
   });
 
-  using vt::vrt::collection::balance::LBStatsMigrator;
+  using vt::vrt::collection::balance::WorkloadDataMigrator;
   using vt::vrt::collection::balance::ProposedReassignment;
   using vt::vrt::collection::balance::LBType;
   using ObjIDType = vt::elm::ElementIDStruct;
@@ -357,7 +359,8 @@ TEST_F(TestLBStatsMigrator, test_move_data_here_from_home) {
         lb_reassignment->arrive_.size()
       );
       not_home_model = std::make_shared<ProposedReassignment>(
-        base_load_model, LBStatsMigrator::updateCurrentNodes(lb_reassignment)
+        base_load_model,
+        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
       );
       for (auto it = not_home_model->begin(); it.isValid(); ++it) {
         if ((*it).isMigratable()) {
@@ -370,16 +373,16 @@ TEST_F(TestLBStatsMigrator, test_move_data_here_from_home) {
     vt::theLBManager()->destroyLB();
   });
 
-  vt::objgroup::proxy::Proxy<LBStatsMigrator> norm_lb_proxy;
+  vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
   std::shared_ptr<ProposedReassignment> here_model = nullptr;
 
   // then create a load model that pulls loads here from home,
   // based on the base load model, not the one we just created
-  vt::runInEpochCollective("migrate stats here", [&]{
-    norm_lb_proxy = LBStatsMigrator::construct(base_load_model);
+  vt::runInEpochCollective("migrate workloads here", [&]{
+    norm_lb_proxy = WorkloadDataMigrator::construct(base_load_model);
     auto normalizer = norm_lb_proxy.get();
 
-    here_model = normalizer->createStatsHereModel(
+    here_model = normalizer->createModelToMoveWorkloadsHere(
       base_load_model, migratable_objects_here
     );
   });
@@ -403,7 +406,7 @@ TEST_F(TestLBStatsMigrator, test_move_data_here_from_home) {
   }
 }
 
-TEST_F(TestLBStatsMigrator, test_move_some_data_here_from_home) {
+TEST_F(TestWorkloadDataMigrator, test_move_some_data_here_from_home) {
   auto const& this_node = vt::theContext()->getNode();
   auto const& num_nodes = vt::theContext()->getNumNodes();
 
@@ -411,17 +414,17 @@ TEST_F(TestLBStatsMigrator, test_move_some_data_here_from_home) {
   const size_t numElements = 5;
 
   using vt::vrt::collection::balance::StatsData;
-  auto sd = setupStats(phase, numElements);
+  auto sd = setupWorkloads(phase, numElements);
 
   auto base_load_model = vt::theLBManager()->getBaseLoadModel();
-  // force it to use our json stats, not anything it may have collected
+  // force it to use our json workloads, not anything it may have collected
   base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
 
   vt::runInEpochCollective("updateLoads", [&]{
     base_load_model->updateLoads(phase);
   });
 
-  using vt::vrt::collection::balance::LBStatsMigrator;
+  using vt::vrt::collection::balance::WorkloadDataMigrator;
   using vt::vrt::collection::balance::ProposedReassignment;
   using vt::vrt::collection::balance::LBType;
   using ObjIDType = vt::elm::ElementIDStruct;
@@ -440,7 +443,8 @@ TEST_F(TestLBStatsMigrator, test_move_some_data_here_from_home) {
         lb_reassignment->arrive_.size()
       );
       not_home_model = std::make_shared<ProposedReassignment>(
-        base_load_model, LBStatsMigrator::updateCurrentNodes(lb_reassignment)
+        base_load_model,
+        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
       );
       for (auto it = not_home_model->begin(); it.isValid(); ++it) {
         if ((*it).isMigratable()) {
@@ -457,16 +461,16 @@ TEST_F(TestLBStatsMigrator, test_move_some_data_here_from_home) {
     vt::theLBManager()->destroyLB();
   });
 
-  vt::objgroup::proxy::Proxy<LBStatsMigrator> norm_lb_proxy;
+  vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
   std::shared_ptr<ProposedReassignment> here_model = nullptr;
 
   // then create a load model that pulls loads here from home,
   // based on the base load model, not the one we just created
-  vt::runInEpochCollective("migrate stats here", [&]{
-    norm_lb_proxy = LBStatsMigrator::construct(base_load_model);
+  vt::runInEpochCollective("migrate workloads here", [&]{
+    norm_lb_proxy = WorkloadDataMigrator::construct(base_load_model);
     auto normalizer = norm_lb_proxy.get();
 
-    here_model = normalizer->createStatsHereModel(
+    here_model = normalizer->createModelToMoveWorkloadsHere(
       base_load_model, migratable_objects_here
     );
   });

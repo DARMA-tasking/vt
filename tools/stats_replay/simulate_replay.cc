@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
   // number of phases to simulate
   PhaseType phases_to_run = atoi(argv[2]);
 
-  vt::vrt::collection::balance::replayFromInputStats(
+  vt::vrt::collection::balance::replayWorkloads(
     initial_phase, phases_to_run
   );
 

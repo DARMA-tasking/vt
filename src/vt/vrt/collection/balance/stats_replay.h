@@ -59,17 +59,17 @@
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
 
-void replayFromInputStats(
+void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run
 );
 
-struct LBStatsMigrator : lb::BaseLB {
+struct WorkloadDataMigrator : lb::BaseLB {
 
   using ObjIDType = elm::ElementIDStruct;
 
-  LBStatsMigrator() = default;
+  WorkloadDataMigrator() = default;
 
-  static objgroup::proxy::Proxy<LBStatsMigrator>
+  static objgroup::proxy::Proxy<WorkloadDataMigrator>
   construct(std::shared_ptr<LoadModel> model_base);
 
   void runLB(TimeType) override;
@@ -89,13 +89,13 @@ struct LBStatsMigrator : lb::BaseLB {
   readInWorkloads(std::string filename);
 
   std::shared_ptr<ProposedReassignment>
-  createStatsAtHomeModel(
+  createModelToMoveWorkloadsHome(
     std::shared_ptr<LoadModel> model_base,
     std::set<ObjIDType> migratable_objects_here
   );
 
   std::shared_ptr<ProposedReassignment>
-  createStatsHereModel(
+  createModelToMoveWorkloadsHere(
     std::shared_ptr<LoadModel> model_base,
     std::set<ObjIDType> migratable_objects_here
   );
