@@ -207,21 +207,11 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_home) {
   using ObjIDType = vt::elm::ElementIDStruct;
   std::set<ObjIDType> no_migratable_objects_here;
 
-  vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
-  std::shared_ptr<ProposedReassignment> back_home_model = nullptr;
-
   // then create a load model that restores them to homes
-  vt::runInEpochCollective("migrate workloads home", [&]{
-    norm_lb_proxy = WorkloadDataMigrator::construct(not_home_model);
-    auto normalizer = norm_lb_proxy.get();
-
-    back_home_model = normalizer->createModelToMoveWorkloadsHome(
+  std::shared_ptr<ProposedReassignment> back_home_model =
+    WorkloadDataMigrator::relocateMisplacedWorkloadsHome(
       not_home_model, no_migratable_objects_here
     );
-  });
-  runInEpochCollective("destroy migrator", [&]{
-    norm_lb_proxy.destroyCollective();
-  });
 
   // then iterate over it to make sure what shows up here is correct
   for (auto obj_id : *back_home_model) {
@@ -265,21 +255,11 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_home) {
     }
   }
 
-  vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
-  std::shared_ptr<ProposedReassignment> back_home_if_not_here_model = nullptr;
-
   // then create a load model that restores them to homes
-  vt::runInEpochCollective("migrate workloads home", [&]{
-    norm_lb_proxy = WorkloadDataMigrator::construct(not_home_model);
-    auto normalizer = norm_lb_proxy.get();
-
-    back_home_if_not_here_model = normalizer->createModelToMoveWorkloadsHome(
+  std::shared_ptr<ProposedReassignment> back_home_if_not_here_model =
+    WorkloadDataMigrator::relocateMisplacedWorkloadsHome(
       not_home_model, migratable_objects_here
     );
-  });
-  runInEpochCollective("destroy migrator", [&]{
-    norm_lb_proxy.destroyCollective();
-  });
 
   // then iterate over it to make sure what shows up here is correct
   for (auto obj_id : *back_home_if_not_here_model) {
@@ -325,22 +305,11 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_home) {
     }
   }
 
-  vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
-  std::shared_ptr<ProposedReassignment> here_model = nullptr;
-
-  // then create a load model that pulls loads here from home,
-  // based on the base load model, not the one we just created
-  vt::runInEpochCollective("migrate workloads here", [&]{
-    norm_lb_proxy = WorkloadDataMigrator::construct(base_load_model);
-    auto normalizer = norm_lb_proxy.get();
-
-    here_model = normalizer->createModelToMoveWorkloadsHere(
+  // then create a load model that restores them to homes
+  std::shared_ptr<ProposedReassignment> here_model =
+    WorkloadDataMigrator::relocateMisplacedWorkloadsHere(
       base_load_model, migratable_objects_here
     );
-  });
-  runInEpochCollective("destroy migrator", [&]{
-    norm_lb_proxy.destroyCollective();
-  });
 
   // then iterate over it to make sure what shows up here is correct
   for (auto obj_id : *here_model) {
@@ -384,22 +353,11 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_here_from_home) {
     }
   }
 
-  vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
-  std::shared_ptr<ProposedReassignment> here_model = nullptr;
-
-  // then create a load model that pulls loads here from home,
-  // based on the base load model, not the one we just created
-  vt::runInEpochCollective("migrate workloads here", [&]{
-    norm_lb_proxy = WorkloadDataMigrator::construct(base_load_model);
-    auto normalizer = norm_lb_proxy.get();
-
-    here_model = normalizer->createModelToMoveWorkloadsHere(
+  // then create a load model that restores them to homes
+  std::shared_ptr<ProposedReassignment> here_model =
+    WorkloadDataMigrator::relocateMisplacedWorkloadsHere(
       base_load_model, migratable_objects_here
     );
-  });
-  runInEpochCollective("destroy migrator", [&]{
-    norm_lb_proxy.destroyCollective();
-  });
 
   // then iterate over it to make sure what shows up here is correct
   for (auto obj_id : *here_model) {
