@@ -776,7 +776,9 @@ std::tuple<int, std::string> ArgConfig::parseToConfig(
 }
 
 namespace {
-static std::string buildFile(std::string const& file, std::string const& dir) {
+static std::string buildFile(
+  std::string const& file, std::string const& dir, bool add_br_extension
+) {
   std::string name = file;
   std::size_t rank = name.find("%p");
   auto str_rank = std::to_string(theContext()->getNode());
@@ -785,17 +787,22 @@ static std::string buildFile(std::string const& file, std::string const& dir) {
   } else {
     name.replace(rank, 2, str_rank);
   }
+  if (add_br_extension) {
+    if (name.substr(name.length()-3, 3) != ".br") {
+      name = name + ".br";
+    }
+  }
   return dir + "/" + name;
 
 }
 } /* end anon namespace */
 
-std::string AppConfig::getLBDataFileOut() const {
-  return buildFile(vt_lb_data_file, vt_lb_data_dir);
+std::string AppConfig::getLBStatsFileOut() const {
+  return buildFile(vt_lb_stats_file, vt_lb_stats_dir, vt_lb_stats_compress);
 }
 
-std::string AppConfig::getLBDataFileIn() const {
-  return buildFile(vt_lb_data_file_in, vt_lb_data_dir_in);
+std::string AppConfig::getLBStatsFileIn() const {
+  return buildFile(vt_lb_stats_file_in, vt_lb_stats_dir_in, false);
 }
 
 }} /* end namespace vt::arguments */
