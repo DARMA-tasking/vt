@@ -57,18 +57,25 @@ namespace balance {
 void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run
 ) {
+  // read in object loads from json files
+  auto const filename = theConfig()->getLBStatsFileIn();
+  auto workloads = WorkloadDataMigrator::readInWorkloads(filename);
+
+  replayWorkloads(initial_phase, phases_to_run, workloads);
+}
+
+void replayWorkloads(
+  PhaseType initial_phase, PhaseType phases_to_run,
+  std::shared_ptr<StatsData> workloads
+) {
   using ObjIDType = elm::ElementIDStruct;
 
   auto const this_rank = theContext()->getNode();
 
-  // read in object loads from json files
-  auto const filename = theConfig()->getLBStatsFileIn();
-  auto sd = WorkloadDataMigrator::readInWorkloads(filename);
-
   // remember vt's base load model
   auto base_load_model = theLBManager()->getBaseLoadModel();
-  // force it to use our json workloads, not anything it may have collected
-  base_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
+  // force it to use our given workloads, not anything it may have collected
+  base_load_model->setLoads(&(workloads->node_data_), &(workloads->node_comm_));
   // point the load model at the workloads for the relevant phase
   runInEpochCollective("WorkloadReplayDriver -> updateLoads", [=] {
     base_load_model->updateLoads(initial_phase);
@@ -82,14 +89,16 @@ void replayWorkloads(
     }
   }
 
-  // simulate the requested number of phases
+  // simulate the given number of phases
   auto stop_phase = initial_phase + phases_to_run;
   for (PhaseType phase = initial_phase; phase < stop_phase; phase++) {
     // reapply the base load model if in case we overwrote it on a previous iter
     theLBManager()->setLoadModel(base_load_model);
 
-    // force it to use our json workloads, not anything it may have collected
-    base_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
+    // force it to use our given workloads, not anything it may have collected
+    base_load_model->setLoads(
+      &(workloads->node_data_), &(workloads->node_comm_)
+    );
 
     // point the load model at the workloads for the relevant phase
     runInEpochCollective("WorkloadReplayDriver -> updateLoads", [=] {
@@ -133,8 +142,10 @@ void replayWorkloads(
       // update the load model that will be used by the real load balancer
       theLBManager()->setLoadModel(pre_lb_load_model);
 
-      // force it to use our json workloads, not anything it may have collected
-      pre_lb_load_model->setLoads(&(sd->node_data_), &(sd->node_comm_));
+      // force it to use our given workloads, not anything it may have collected
+      pre_lb_load_model->setLoads(
+        &(workloads->node_data_), &(workloads->node_comm_)
+      );
     }
 
     if (this_rank == 0) {

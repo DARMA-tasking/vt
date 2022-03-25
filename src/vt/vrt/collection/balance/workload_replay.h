@@ -67,13 +67,31 @@ namespace balance {
  *
  * The json files specified by the command-line arguments --vt_lb_stats_file_in
  * and --vt_lb_stats_dir_in will be imported and the LB data contained within
- * will be fed through the specified load balancer(s) on each requested phase,
- * allowing new load balancing migrations to happen. There is no requirement to
- * colocate the LB data on the same rank as the object exists during any given
- * phase.
+ * will be fed through the load balancer(s) specified on the vt command-line
+ * on each requested phase, allowing new load balancing decisions to happen.
+ * There is no requirement to colocate the LB data on the same rank as the
+ * object exists during any given phase.
  */
 void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run
+);
+
+/**
+ * \brief Simulate replaying the object workloads passed in, but allow new load
+ * balancing decisions to be made.
+ *
+ * \param[in] initial_phase the first phase to replay
+ * \param[in] phases_to_run how many phases to replay
+ * \param[in] workloads the workload data to simulate
+ *
+ * LB data passed in will be fed through the load balancer(s) specified on the
+ * vt command-line on each requested phase, allowing new load balancing
+ * decisions to happen. There is no requirement to colocate the LB data on the
+ * same rank as the object exists during any given phase.
+ */
+void replayWorkloads(
+  PhaseType initial_phase, PhaseType phases_to_run,
+  std::shared_ptr<StatsData> workloads
 );
 
 /**
