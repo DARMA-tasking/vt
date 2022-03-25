@@ -42,7 +42,6 @@
 */
 
 #include <vt/transport.h>
-
 #include <cstdlib>
 #include <cassert>
 #include <iostream>
