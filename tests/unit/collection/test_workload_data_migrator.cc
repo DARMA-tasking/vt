@@ -565,6 +565,99 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_2) {
   }
 }
 
+std::shared_ptr<StatsData>
+setupManyWorkloads(
+  PhaseType initial_phase, PhaseType num_phases, size_t numElements
+) {
+  auto const& this_node = vt::theContext()->getNode();
+
+  using vt::vrt::collection::balance::ElementIDStruct;
+
+  std::vector<ElementIDStruct> myElemList(numElements);
+
+  for (size_t ii = 0; ii < numElements; ++ii) {
+    myElemList[ii] = elm::ElmIDBits::createCollectionImpl(
+      true, ii+1, this_node, this_node
+    );
+  }
+
+  auto sd = std::make_shared<StatsData>();
+
+  PhaseType stop_phase = initial_phase + num_phases;
+  for (PhaseType phase = initial_phase; phase < stop_phase; ++phase) {
+    for (size_t ii = 0; ii < numElements; ++ii) {
+      auto elmID = myElemList[ii];
+      double tval = this_node + (ii + 10) * 2;
+      sd->node_data_[phase][elmID].whole_phase_load = tval + phase;
+      auto &subphase_loads = sd->node_data_[phase][elmID].subphase_loads;
+      subphase_loads.push_back(elmID.id % 2 ? tval : phase);
+      subphase_loads.push_back(elmID.id % 2 ? phase : tval);
+    }
+  }
+
+  auto scrambled_sd = std::make_shared<StatsData>();
+
+  for (PhaseType phase = initial_phase; phase < stop_phase; ++phase) {
+    auto base_load_model = setupBaseModel(phase, sd);
+
+    std::shared_ptr<ProposedReassignment> not_home_model =
+      shiftObjectsRight(base_load_model, phase);
+
+    std::set<ElementIDStruct> migratable_objects_here;
+    for (auto it = not_home_model->begin(); it.isValid(); ++it) {
+      if ((*it).isMigratable()) {
+        migratable_objects_here.insert(*it);
+      }
+    }
+
+    // then create a load model that matches everything up
+    std::shared_ptr<ProposedReassignment> here_model =
+      WorkloadDataMigrator::relocateWorkloadsForReplay(
+        not_home_model, migratable_objects_here
+      );
+
+    // then store them at their new locations
+    for (auto it = here_model->begin(); it.isValid(); ++it) {
+      auto obj_id = *it;
+      using vt::vrt::collection::balance::PhaseOffset;
+      scrambled_sd->node_data_[phase][obj_id].whole_phase_load =
+        here_model->getWork(
+          obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+        );
+      scrambled_sd->node_data_[phase][*it].subphase_loads.push_back(
+        here_model->getWork(obj_id, {PhaseOffset::NEXT_PHASE, 0})
+      );
+      scrambled_sd->node_data_[phase][*it].subphase_loads.push_back(
+        here_model->getWork(obj_id, {PhaseOffset::NEXT_PHASE, 1})
+      );
+    }
+  }
+
+  return scrambled_sd;
+}
+
+struct TestWorkloadReplay : TestParallelHarness {
+#if vt_check_enabled(lblite)
+  void addAdditionalArgs() override {
+    static char vt_lb[]{"--vt_lb"};
+    static char vt_lb_name[]{"--vt_lb_name=RandomLB"};
+    addArgs(vt_lb, vt_lb_name);
+  }
+#endif
+};
+
+TEST_F(TestWorkloadReplay, test_run_replay_no_verify) {
+  PhaseType initial_phase = 1;
+  PhaseType num_phases = 3;
+  const size_t numElements = 5;
+
+  // first set up the workloads to replay, moving them around by phase
+  auto sd = setupManyWorkloads(initial_phase, num_phases, numElements);
+
+  // then replay them but allow the lb to place objects differently
+  replayWorkloads(initial_phase, num_phases, sd);
+}
+
 }}}} // end namespace vt::tests::unit::reassignment
 
 #endif /*vt_check_enabled(lblite)*/
