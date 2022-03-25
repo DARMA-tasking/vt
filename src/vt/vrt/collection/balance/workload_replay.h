@@ -58,16 +58,45 @@
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
 
+/**
+ * \brief Simulate replaying the object workloads as recorded in the json file,
+ * but allow new load balancing decisions to be made.
+ *
+ * \param[in] initial_phase the first phase to replay
+ * \param[in] phases_to_run how many phases to replay
+ *
+ * The json files specified by the command-line arguments --vt_lb_stats_file_in
+ * and --vt_lb_stats_dir_in will be imported and the LB data contained within
+ * will be fed through the specified load balancer(s) on each requested phase,
+ * allowing new load balancing migrations to happen. There is no requirement to
+ * colocate the LB data on the same rank as the object exists during any given
+ * phase.
+ */
 void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run
 );
 
+/**
+ * \struct WorkloadDataMigrator
+ *
+ * \brief A helper objgroup for workload replay. Derives from
+ * \c vt::Vrt::collection::lb::BaseLB in order to gain access to
+ * normalizeReassignments but is not a load balancer in the traditional sense.
+ * A new instance should be created for each call to normalizeReassignments.
+ */
 struct WorkloadDataMigrator : lb::BaseLB {
 
   using ObjIDType = elm::ElementIDStruct;
 
   WorkloadDataMigrator() = default;
 
+  /**
+   * \brief Construct an objgroup and configure it
+   *
+   * \param[in] model_base the load model that reflects the known workloads
+   *
+   * \return the objgroup proxy to use for exchanging workload information
+   */
   static objgroup::proxy::Proxy<WorkloadDataMigrator>
   construct(std::shared_ptr<LoadModel> model_base);
 
@@ -79,38 +108,95 @@ struct WorkloadDataMigrator : lb::BaseLB {
 
   using BaseLB::normalizeReassignments;
 
+  /**
+   * \brief Update the current locations of objects so that ProposedReassignment
+   * load models can be composed
+   *
+   * \param[in] lb_reassignment the Reassignment returned by a load balancer
+   *
+   * \return a new Reassignment that reflects the updated locations of objects
+   */
   static std::shared_ptr<Reassignment>
   updateCurrentNodes(
     std::shared_ptr<const Reassignment> lb_reassignment
   );
 
+  /**
+   * \brief Build a StatsData object from the LB data in a json file
+   *
+   * \param[in] filename read in LB data from the specified json file
+   *
+   * \return the StatsData object built from the LB data
+   */
   static std::shared_ptr<StatsData>
   readInWorkloads(std::string filename);
 
+  /**
+   * \brief Relocate object workloads to the rank where the objects are supposed
+   * to exist during this phase
+   *
+   * \param[in] model_base the load model for the phase we are simulating
+   * \param[in] migratable_objects_here migratable objects here on this phase
+   *
+   * \return load model that makes the necessary object workloads available
+   */
   static std::shared_ptr<ProposedReassignment>
   relocateWorkloadsForReplay(
     std::shared_ptr<LoadModel> model_base,
     std::set<ObjIDType> migratable_objects_here
   );
 
+  /**
+   * \brief Instantiate objgroup and relocate applicable object workloads home
+   *
+   * \param[in] model_base the load model for the phase we are simulating
+   * \param[in] migratable_objects_here migratable objects here on this phase
+   *
+   * \return load model that makes the necessary object workloads available
+   */
   static std::shared_ptr<ProposedReassignment>
   relocateMisplacedWorkloadsHome(
     std::shared_ptr<LoadModel> model_base,
     std::set<ObjIDType> migratable_objects_here
   );
 
+  /**
+   * \brief Instantiate objgroup and relocate applicable workloads here
+   *
+   * \param[in] model_base the load model for the phase we are simulating
+   * \param[in] migratable_objects_here migratable objects here on this phase
+   *
+   * \return load model that makes the necessary object workloads available
+   */
   static std::shared_ptr<ProposedReassignment>
   relocateMisplacedWorkloadsHere(
     std::shared_ptr<LoadModel> model_base,
     std::set<ObjIDType> migratable_objects_here
   );
 
+private:
+  /**
+   * \brief Relocate object workloads home if the object is not on this rank
+   *
+   * \param[in] model_base the load model for the phase we are simulating
+   * \param[in] migratable_objects_here migratable objects here on this phase
+   *
+   * \return load model that makes the necessary object workloads available
+   */
   std::shared_ptr<ProposedReassignment>
   createModelToMoveWorkloadsHome(
     std::shared_ptr<LoadModel> model_base,
     std::set<ObjIDType> migratable_objects_here
   );
 
+  /**
+   * \brief Relocate workloads here for objects on this rank
+   *
+   * \param[in] model_base the load model for the phase we are simulating
+   * \param[in] migratable_objects_here migratable objects here on this phase
+   *
+   * \return load model that makes the necessary object workloads available
+   */
   std::shared_ptr<ProposedReassignment>
   createModelToMoveWorkloadsHere(
     std::shared_ptr<LoadModel> model_base,
