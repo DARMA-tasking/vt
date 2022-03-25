@@ -86,6 +86,9 @@ setupWorkloads(PhaseType phase, size_t numElements) {
   for (auto&& elmID : myElemList) {
     double tval = elmID.id * 2;
     sd->node_data_[phase][elmID].whole_phase_load = tval;
+    auto &subphase_loads = sd->node_data_[phase][elmID].subphase_loads;
+    subphase_loads.push_back(elmID.id % 2 ? tval : 0);
+    subphase_loads.push_back(elmID.id % 2 ? 0 : tval);
   }
 
   return sd;
@@ -217,6 +220,14 @@ TEST_F(TestWorkloadDataMigrator, test_normalize_call) {
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
+      auto subload0 = new_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 0}
+      );
+      EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
+      auto subload1 = new_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 1}
+      );
+      EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
     }
   }
 }
@@ -257,6 +268,14 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_home) {
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
+      auto subload0 = back_home_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 0}
+      );
+      EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
+      auto subload1 = back_home_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 1}
+      );
+      EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
     }
   }
 }
@@ -311,6 +330,14 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_home) {
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
+      auto subload0 = back_home_if_not_here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 0}
+      );
+      EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
+      auto subload1 = back_home_if_not_here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 1}
+      );
+      EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
     }
   }
 }
@@ -355,6 +382,14 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_home) {
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
+      auto subload0 = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 0}
+      );
+      EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
+      auto subload1 = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 1}
+      );
+      EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
     }
   }
 }
@@ -410,6 +445,14 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_here_from_home) {
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
+      auto subload0 = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 0}
+      );
+      EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
+      auto subload1 = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 1}
+      );
+      EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
     }
   }
 }
@@ -456,6 +499,14 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_1) {
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
+      auto subload0 = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 0}
+      );
+      EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
+      auto subload1 = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 1}
+      );
+      EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
     }
   }
 }
@@ -502,6 +553,14 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_2) {
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
+      auto subload0 = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 0}
+      );
+      EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
+      auto subload1 = here_model->getWork(
+        obj_id, {PhaseOffset::NEXT_PHASE, 1}
+      );
+      EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
     }
   }
 }
