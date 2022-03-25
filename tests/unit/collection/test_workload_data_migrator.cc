@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                      test_workload_data_migrator.cc
+//                        test_workload_data_migrator.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
