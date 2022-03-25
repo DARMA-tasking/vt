@@ -8,6 +8,7 @@ set(
   insertable_collection
   reduce_integral
   transpose
+  predictive_model_dumper
 )
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})
