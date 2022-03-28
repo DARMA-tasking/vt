@@ -65,6 +65,25 @@
 // effectiveness of the model for balancing the load.  This of course
 // assumes that the loads are independent of execution location.
 
+
+// When defined, reduce the number processors in the row and column dimensions
+// by half and act like the four blocks that were separate ranks are
+// overdecomposed regions instead
+#define BLOCK_REMAP_TO_SIMULATE_OVERDECOMP
+
+
+#ifdef BLOCK_REMAP_TO_SIMULATE_OVERDECOMP
+// this is hard-coded to map from 6 across, 8 down to 3 across, 4 down
+const int refined_rows = 8, refined_cols = 6;
+const int refined_ranks = refined_rows * refined_cols;
+const int course_rows = 4, course_cols = 3;
+const int course_ranks = course_rows * course_cols;
+const int row_ratio = refined_rows / course_rows;
+const int col_ratio = refined_cols / course_cols;
+const int overdecomp_ratio = row_ratio * col_ratio;
+#endif
+
+
 struct OneAndDoneCol : vt::Collection<OneAndDoneCol, vt::Index3D> {
   OneAndDoneCol() = default;
 
@@ -103,6 +122,14 @@ int main(int argc, char** argv) {
 
   vt::NodeType this_node = vt::theContext()->getNode();
 
+#ifdef BLOCK_REMAP_TO_SIMULATE_OVERDECOMP
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+
+  if (num_nodes != course_ranks) {
+    vtAbort("Compiled to simulate overdecomposition; fix hard-coded mapping!");
+  }
+#endif
+
   auto in_file_name = argv[1];
   std::string out_file_name(argv[2]);
   auto load_floor = atof(argv[3]);
@@ -135,9 +162,41 @@ int main(int argc, char** argv) {
     iss >> mpi_rank >> measured_load >> modeled_load
         >> serialized_bytes >> return_bytes;
 
+#ifdef BLOCK_REMAP_TO_SIMULATE_OVERDECOMP
+    int refined_row = mpi_rank / refined_cols;
+    int refined_col = mpi_rank % refined_cols;
+
+    int course_row = refined_row / row_ratio;
+    int course_col = refined_col / col_ratio;
+
+    int delta_row = refined_row % row_ratio;
+    int delta_col = refined_col % col_ratio;
+
+    int mod_mpi_rank = course_row * course_cols + course_col;
+    int overdecomp = delta_row * col_ratio + delta_col;
+
+    if (
+      mpi_rank >= refined_ranks or mod_mpi_rank >= course_ranks or
+      overdecomp >= overdecomp_ratio
+    ) {
+      vtAbort("Compiled to simulate overdecomposition; fix hard-coded mapping!");
+    }
+#else
     int mod_mpi_rank = mpi_rank;
     int overdecomp = 0;
+#endif
+
     if (mod_mpi_rank == this_node) {
+#if 0 && defined(BLOCK_REMAP_TO_SIMULATE_OVERDECOMP)
+      fmt::print(
+        "{}: refined rank={} row={} col={}; course rank={} row={} col={}; "
+        "delta rank={} row={} col={}\n",
+        this_node, mpi_rank, refined_row, refined_col,
+        mod_mpi_rank, course_row, course_col,
+        overdecomp, delta_row, delta_col
+      );
+#endif
+
       vt::Index3D index{
         mod_mpi_rank, overdecomp, count_this_block[overdecomp]
       };
