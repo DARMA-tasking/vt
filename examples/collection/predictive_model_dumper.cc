@@ -57,33 +57,23 @@
 // on their home ranks as listed.  Phase 0 lists model-predicted loads
 // while phase 1 lists measured loads.
 
-// The JSON file can be fed into the LB tuning driver.  Phase 0 of
+// The JSON file can be fed into the workload replay driver.  Phase 0 of
 // the execution will reflect the model, thus allowing the load
 // balancer place tasks based on the model alone.  Phase 1 will
-// reflect measured home-rank loads, but the LB tuning driver will
+// reflect measured home-rank loads, but the workload replay driver will
 // apply them at the post-LB locations, allowing for evaluating the
 // effectiveness of the model for balancing the load.  This of course
 // assumes that the loads are independent of execution location.
 
-struct OneAndDoneCol : vt::Collection<OneAndDoneCol, vt::Index1D> {
+struct OneAndDoneCol : vt::Collection<OneAndDoneCol, vt::Index3D> {
   OneAndDoneCol() = default;
 
   inline static vt::NodeType collectionMap(
-    vt::Index1D* idx, vt::Index1D*, vt::NodeType
+    vt::Index3D* idx, vt::Index3D*, vt::NodeType
   ) {
-    auto it = rank_mapping_.find(*idx);
-    if (it != rank_mapping_.end()) {
-      return it->second;
-    }
-    return vt::uninitialized_destination;
+    return idx->x();
   }
-
-public:
-  static std::map<vt::Index1D, int /*mpi_rank*/> rank_mapping_;
 };
-
-/*static*/
-std::map<vt::Index1D, int /*mpi_rank*/> OneAndDoneCol::rank_mapping_;
 
 struct RankManager {
   RankManager() {
@@ -101,12 +91,14 @@ struct TaskData {
 };
 
 
-
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   if (argc != 4) {
-    vtAbort("Specify the input and output file name, as well as a modeled load floor, on the command line.\n");
+    vtAbort(
+      "Specify the input and output file name, as well as a modeled load floor,"
+      " on the command line.\n"
+    );
   }
 
   vt::NodeType this_node = vt::theContext()->getNode();
@@ -128,11 +120,11 @@ int main(int argc, char** argv) {
     this_node, in_file_name, this_node, out_file_name
   );
 
-  std::map<vt::Index1D, TaskData> tasks;
+  std::map<vt::Index3D, TaskData> tasks;
+  std::map<int, int> count_this_block;
 
   std::ifstream f(in_file_name);
   std::string line;
-  int count = 0;
   while (std::getline(f, line)) {
     std::istringstream iss(line);
     int mpi_rank = -1;
@@ -142,22 +134,39 @@ int main(int argc, char** argv) {
     double return_bytes = 0;
     iss >> mpi_rank >> measured_load >> modeled_load
         >> serialized_bytes >> return_bytes;
-    vt::Index1D index(count);
-    OneAndDoneCol::rank_mapping_[index] = mpi_rank;
-    if (mpi_rank == this_node) {
+
+    int mod_mpi_rank = mpi_rank;
+    int overdecomp = 0;
+    if (mod_mpi_rank == this_node) {
+      vt::Index3D index{
+        mod_mpi_rank, overdecomp, count_this_block[overdecomp]
+      };
       tasks[index] = TaskData{
         measured_load, modeled_load, serialized_bytes, return_bytes
       };
+      ++(count_this_block[overdecomp]);
     }
-    ++count;
   }
   f.close();
 
-  auto range = vt::Index1D(count);
-  auto proxy = vt::theCollection()->constructCollective<
-    OneAndDoneCol, OneAndDoneCol::collectionMap
-  >(range);
-  // might need to spin scheduler here
+  for (auto &block : count_this_block) {
+    fmt::print(
+      "{}: found {} tasks for rank={} block={}\n",
+      this_node, block.second, this_node, block.first
+    );
+  }
+
+  std::vector<std::tuple<vt::Index3D, std::unique_ptr<OneAndDoneCol>>> elms;
+  for (auto &task : tasks) {
+    elms.emplace_back(
+      std::make_tuple(task.first, std::make_unique<OneAndDoneCol>())
+    );
+  }
+
+  auto proxy = vt::makeCollection<OneAndDoneCol>()
+    .listInsertHere(std::move(elms))
+    .mapperFunc<OneAndDoneCol::collectionMap>()
+    .wait();
 
   RankManager man;
   auto objgrp_id = vt::elm::ElmIDBits::createObjGroup(
@@ -177,7 +186,7 @@ int main(int argc, char** argv) {
   CommMapType node_comm;
 
   for (auto it = tasks.begin(); it != tasks.end(); ++it) {
-    vt::Index1D idx = it->first;
+    vt::Index3D idx = it->first;
     auto elm_ptr = proxy(idx).tryGetLocalPtr();
     assert(elm_ptr != nullptr);
     auto elm_id = elm_ptr->getElmID();
@@ -196,6 +205,8 @@ int main(int argc, char** argv) {
 
     std::vector<uint64_t> arr;
     arr.push_back(idx.x());
+    arr.push_back(idx.y());
+    arr.push_back(idx.z());
     sd.node_idx_[elm_id] = std::make_tuple(proxy.getProxy(), arr);
   }
 
@@ -205,7 +216,8 @@ int main(int argc, char** argv) {
   sd.node_data_[1] = measured_phase;
   sd.node_comm_[1] = node_comm;
 
-  // add the measured loads again so we can see what the LB could have been with perfect info
+  // add the measured loads again so we can see what the LB could have been
+  // with perfect load predictions
   sd.node_data_[2] = measured_phase;
   sd.node_comm_[2] = node_comm;
 
