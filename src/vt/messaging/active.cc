@@ -161,7 +161,7 @@ void ActiveMessenger::startup() {
   // Hook to collect statistics about objgroups
   thePhase()->registerHookCollective(phase::PhaseHook::End, [this]{
     theNodeStats()->addNodeStats(
-      bare_handler_dummy_elm_id_for_lb_stats_, &bare_handler_stats_
+      bare_handler_dummy_elm_id_for_lb_stats_, &bare_handler_stats_, nullptr
     );
   });
 #endif

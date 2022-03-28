@@ -74,7 +74,7 @@ void CollectionStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
 
   auto const proxy = col->getProxy();
   auto const subphase = getFocusedSubPhase(proxy);
-  theNodeStats()->addNodeStats(col->elm_id_, &col->stats_, subphase);
+  theNodeStats()->addNodeStats(col->elm_id_, &col->stats_, col, subphase);
 
   std::vector<uint64_t> idx;
   for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {

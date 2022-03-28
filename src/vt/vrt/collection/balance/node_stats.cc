@@ -245,7 +245,8 @@ void NodeStats::registerObjGroupInfo(
 }
 
 void NodeStats::addNodeStats(
-  ElementIDStruct id, elm::ElementStats* in, SubphaseType focused_subphase
+  ElementIDStruct id, elm::ElementStats* in, StorableType *storable,
+  SubphaseType focused_subphase
 ) {
   vt_debug_print(
     normal, lb,

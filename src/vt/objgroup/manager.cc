@@ -68,7 +68,9 @@ void ObjGroupManager::startup() {
         auto proxy = elm::ElmIDBits::getObjGroupProxy(elm_id.id, false);
         vtAssertExpr(proxy == obj.first);
         theNodeStats()->registerObjGroupInfo(elm_id, obj.first);
-        theNodeStats()->addNodeStats(elm_id, &holder->getStats());
+        theNodeStats()->addNodeStats(
+          elm_id, &holder->getStats(), nullptr
+        );
       }
     }
   });
