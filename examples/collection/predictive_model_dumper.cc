@@ -92,6 +92,12 @@ struct OneAndDoneCol : vt::Collection<OneAndDoneCol, vt::Index3D> {
   ) {
     return idx->x();
   }
+
+  inline static vt::NodeType vertexLabel(
+    vt::Index3D* idx, vt::Index3D*, vt::NodeType num_nodes
+  ) {
+    return idx->y() * num_nodes + idx->x();
+  }
 };
 
 struct RankManager {
@@ -225,7 +231,15 @@ int main(int argc, char** argv) {
   auto proxy = vt::makeCollection<OneAndDoneCol>()
     .listInsertHere(std::move(elms))
     .mapperFunc<OneAndDoneCol::collectionMap>()
+//    .vertexLabelingFunction<OneAndDoneCol::vertexLabel>()
     .wait();
+
+  using BaseIndexType = typename vt::Index3D::DenseIndexType;
+  auto pseudo_range = vt::Index3D(
+    static_cast<BaseIndexType>(num_nodes),
+    static_cast<BaseIndexType>(overdecomp_ratio),
+    static_cast<BaseIndexType>(0)
+  );
 
   RankManager man;
   auto objgrp_id = vt::elm::ElmIDBits::createObjGroup(
@@ -252,6 +266,9 @@ int main(int argc, char** argv) {
 
     TaskData &t = it->second;
 
+    auto block_id = OneAndDoneCol::vertexLabel(&idx, &pseudo_range, num_nodes);
+
+    elm_ptr->valInsert("block_id", block_id, true);
     elm_ptr->valInsert("task_bytes", t.serialized_bytes, true);
     elm_ptr->valInsert("block_bytes", t.return_bytes, true);
 
