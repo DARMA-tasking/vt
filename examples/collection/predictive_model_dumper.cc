@@ -52,7 +52,7 @@
 // of the application.  Chacteristics of the task can be used to
 // predict the task load.  This example reads in a file with one task
 // per line, with each line containing:
-//   home_rank measured_load model-predicted load
+//   home_rank measured_load model-predicted_load serialized_bytes return_bytes
 // This driver will dump a JSON file where all tasks appear to execute
 // on their home ranks as listed.  Phase 0 lists model-predicted loads
 // while phase 1 lists measured loads.
@@ -63,8 +63,7 @@
 // reflect measured home-rank loads, but the LB tuning driver will
 // apply them at the post-LB locations, allowing for evaluating the
 // effectiveness of the model for balancing the load.  This of course
-// assumes that the loads are independent of execution location and
-// neglects the cost of migration.
+// assumes that the loads are independent of execution location.
 
 struct OneAndDoneCol : vt::Collection<OneAndDoneCol, vt::Index1D> {
   OneAndDoneCol() = default;
@@ -90,7 +89,7 @@ struct TaskData {
   double measured_load;
   double modeled_load;
   double serialized_bytes;
-  double callback_bytes;
+  double return_bytes;
 };
 
 
@@ -132,14 +131,14 @@ int main(int argc, char** argv) {
     double measured_load = 0.0;
     double modeled_load = 0.0;
     double serialized_bytes = 0;
-    double callback_bytes = 0;
+    double return_bytes = 0;
     iss >> mpi_rank >> measured_load >> modeled_load
-        >> serialized_bytes >> callback_bytes;
+        >> serialized_bytes >> return_bytes;
     vt::Index1D index(count);
     OneAndDoneCol::rank_mapping_[index] = mpi_rank;
     if (mpi_rank == this_node) {
       tasks[index] = TaskData{
-        measured_load, modeled_load, serialized_bytes, callback_bytes
+        measured_load, modeled_load, serialized_bytes, return_bytes
       };
     }
     ++count;
@@ -178,9 +177,9 @@ int main(int argc, char** argv) {
     CommVolume svol{static_cast<CommBytesType>(t.serialized_bytes), 1};
     node_comm[skey] = svol;
 
-    CommKey ckey(CommKey::CollectionToNodeTag{}, elm_id, this_node, false);
-    CommVolume cvol{static_cast<CommBytesType>(t.callback_bytes), 1};
-    node_comm[ckey] = cvol;
+    CommKey rkey(CommKey::CollectionToNodeTag{}, elm_id, this_node, false);
+    CommVolume rvol{static_cast<CommBytesType>(t.return_bytes), 1};
+    node_comm[rkey] = rvol;
 
     std::vector<uint64_t> arr;
     arr.push_back(idx.x());
