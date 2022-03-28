@@ -114,6 +114,13 @@ struct Storable {
    */
   void valRemove(std::string const& str);
 
+  /**
+   * \brief Generate the json if applicable
+   *
+   * \return the json
+   */
+  nlohmann::json toJson();
+
 private:
   /// Map of type-erased, stored values
   std::unordered_map<std::string, std::unique_ptr<StoreElmBase>> map_;
