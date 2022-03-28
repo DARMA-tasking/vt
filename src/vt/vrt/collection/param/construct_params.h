@@ -381,8 +381,11 @@ private:
     }
     if (not dynamic_membership_) {
       vtAssert(
-        has_bounds_ or (not has_bounds_ and bulk_inserts_.size() == 1),
-        "Must have valid bounds or exactly one bulk insert"
+        has_bounds_ or
+        (not has_bounds_ and bulk_inserts_.size() == 1) or
+        (not has_bounds_ and
+         (list_inserts_.size() > 0 or list_insert_here_.size() > 0)),
+        "Must have valid bounds or exactly one bulk insert or use list insertion"
       );
     }
   }
