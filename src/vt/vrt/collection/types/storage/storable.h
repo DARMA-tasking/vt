@@ -76,7 +76,7 @@ struct Storable {
    * \param[in] u the value
    */
   template <typename U>
-  void valInsert(std::string const& str, U&& u);
+  void valInsert(std::string const& str, U&& u, bool dump_to_json = false);
 
   /**
    * \brief Get the value from a key

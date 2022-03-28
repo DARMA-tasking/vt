@@ -67,6 +67,13 @@ struct StoreElmBase {
   virtual ~StoreElmBase() {}
 
   /**
+   * \brief Whether the value should be dumped to the json LB data file
+   *
+   * \return whether to dump
+   */
+  virtual bool shouldJson() const = 0;
+
+  /**
    * \brief Get the value as \c T
    *
    * \return the value
@@ -126,6 +133,20 @@ struct StoreElm<
   { }
 
   /**
+   * \brief Construct with value
+   *
+   * \param[in] u the value
+   * \param[in] dump_to_json whether to dump this to json LB data file
+   *
+   * @todo: make this disabled if not jsonable
+   */
+  template <typename U>
+  StoreElm(U&& u, bool dump_to_json)
+    : elm_(std::forward<U>(u)),
+      dump_to_json_(dump_to_json)
+  { }
+
+  /**
    * \brief Serialization re-constructor
    *
    * \param[in] SERIALIZE_CONSTRUCT_TAG tag
@@ -139,7 +160,8 @@ struct StoreElm<
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | elm_;
+    s | elm_
+      | dump_to_json_;
   }
 
   /**
@@ -156,8 +178,17 @@ struct StoreElm<
    */
   T const& get() const { return elm_; }
 
+  /**
+   * \brief Whether the value should be dumped to the json LB data file
+   *
+   * \return whether to dump
+   */
+  bool shouldJson() const { return dump_to_json_; }
+
 private:
   T elm_ = {};                  /**< The stored value */
+
+  bool dump_to_json_ = false;
 };
 
 namespace detail {
@@ -223,6 +254,20 @@ struct StoreElm<
   { }
 
   /**
+   * \brief Construct with value
+   *
+   * \param[in] u the value
+   * \param[in] dump_to_json whether to dump this to json LB data file
+   *
+   * @todo: make this disabled if not jsonable
+   */
+  template <typename U>
+  StoreElm(U&& u, bool dump_to_json)
+    : wrapper_(detail::ByteWrapper<T>{std::forward<U>(u)}),
+      dump_to_json_(dump_to_json)
+  { }
+
+  /**
    * \brief Serialization re-constructor
    *
    * \param[in] SERIALIZE_CONSTRUCT_TAG tag
@@ -236,7 +281,8 @@ struct StoreElm<
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | wrapper_;
+    s | wrapper_
+      | dump_to_json_;
   }
 
   /**
@@ -253,8 +299,17 @@ struct StoreElm<
    */
   T const& get() const { return wrapper_.elm_; }
 
+  /**
+   * \brief Whether the value should be dumped to the json LB data file
+   *
+   * \return whether to dump
+   */
+  bool shouldJson() const { return dump_to_json_; }
+
 private:
   detail::ByteWrapper<T> wrapper_ = {}; /**< The byte-copyable value wrapper */
+
+  bool dump_to_json_ = false;
 };
 
 }}}} /* end namespace vt::vrt::collection::storage */
