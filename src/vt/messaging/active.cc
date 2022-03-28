@@ -161,7 +161,7 @@ void ActiveMessenger::startup() {
   // Hook to collect LB data about objgroups
   thePhase()->registerHookCollective(phase::PhaseHook::End, [this]{
     theNodeLBData()->addNodeLBData(
-      bare_handler_dummy_elm_id_for_lb_data_, &bare_handler_lb_data_
+      bare_handler_dummy_elm_id_for_lb_data_, &bare_handler_lb_data_, nullptr
     );
   });
 #endif

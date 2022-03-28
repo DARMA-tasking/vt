@@ -245,7 +245,8 @@ void NodeLBData::registerObjGroupInfo(
 }
 
 void NodeLBData::addNodeLBData(
-  ElementIDStruct id, elm::ElementLBData* in, SubphaseType focused_subphase
+  ElementIDStruct id, elm::ElementLBData* in, StorableType *storable,
+  SubphaseType focused_subphase
 ) {
   vt_debug_print(
     normal, lb,
