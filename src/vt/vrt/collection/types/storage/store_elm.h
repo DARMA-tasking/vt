@@ -46,6 +46,8 @@
 
 #include "vt/config.h"
 
+#include <nlohmann/json.hpp>
+
 #include <checkpoint/checkpoint.h>
 
 #include <type_traits>
@@ -72,6 +74,13 @@ struct StoreElmBase {
    * \return whether to dump
    */
   virtual bool shouldJson() const = 0;
+
+  /**
+   * \brief Generate the json if applicable
+   *
+   * \return the json
+   */
+  virtual nlohmann::json toJson() = 0;
 
   /**
    * \brief Get the value as \c T
@@ -184,6 +193,17 @@ struct StoreElm<
    * \return whether to dump
    */
   bool shouldJson() const { return dump_to_json_; }
+
+  /**
+   * \brief Generate the json if applicable
+   *
+   * \return the json
+   */
+  nlohmann::json toJson()
+  {
+    nlohmann::json j(elm_);
+    return j;
+  }
 
 private:
   T elm_ = {};                  /**< The stored value */
@@ -305,6 +325,17 @@ struct StoreElm<
    * \return whether to dump
    */
   bool shouldJson() const { return dump_to_json_; }
+
+  /**
+   * \brief Generate the json if applicable
+   *
+   * \return the json
+   */
+  nlohmann::json toJson()
+  {
+    nlohmann::json j(wrapper_.elm_);
+    return j;
+  }
 
 private:
   detail::ByteWrapper<T> wrapper_ = {}; /**< The byte-copyable value wrapper */

@@ -56,4 +56,14 @@ void Storable::valRemove(std::string const& str) {
   }
 }
 
+nlohmann::json Storable::toJson() {
+  nlohmann::json j;
+  for (auto iter = map_.begin(); iter != map_.end(); ++iter) {
+    if (iter->second->shouldJson()) {
+      j[iter->first] = iter->second->toJson();
+    }
+  }
+  return j;
+}
+
 }}}} /* end namespace vt::vrt::collection::storage */
