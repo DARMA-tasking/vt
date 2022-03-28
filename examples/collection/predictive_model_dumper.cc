@@ -251,6 +251,14 @@ int main(int argc, char** argv) {
     auto elm_id = elm_ptr->getElmID();
 
     TaskData &t = it->second;
+
+    elm_ptr->valInsert("task_bytes", t.serialized_bytes, true);
+    elm_ptr->valInsert("block_bytes", t.return_bytes, true);
+
+    sd.user_defined_json_[0][elm_id] = elm_ptr->toJson();
+    sd.user_defined_json_[1][elm_id] = elm_ptr->toJson();
+    sd.user_defined_json_[2][elm_id] = elm_ptr->toJson();
+
     modeled_phase[elm_id] = LoadSummary{std::max(t.modeled_load, load_floor)};
     measured_phase[elm_id] = LoadSummary{t.measured_load};
 
