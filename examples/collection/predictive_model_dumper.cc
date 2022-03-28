@@ -85,6 +85,14 @@ public:
 /*static*/
 std::map<vt::Index1D, int /*mpi_rank*/> OneAndDoneCol::rank_mapping_;
 
+struct RankManager {
+  RankManager() {
+    auto proxy = vt::theObjGroup()->makeCollective(this);
+    proxy_ = proxy;
+  }
+  vt::objgroup::proxy::Proxy<RankManager> proxy_;
+};
+
 struct TaskData {
   double measured_load;
   double modeled_load;
@@ -151,6 +159,11 @@ int main(int argc, char** argv) {
   >(range);
   // might need to spin scheduler here
 
+  RankManager man;
+  auto objgrp_id = vt::elm::ElmIDBits::createObjGroup(
+    man.proxy_.getProxy(), this_node
+  );
+
   vt::vrt::collection::balance::StatsData sd;
 
   using LoadMapType = vt::vrt::collection::balance::LoadMapType;
@@ -173,11 +186,11 @@ int main(int argc, char** argv) {
     modeled_phase[elm_id] = LoadSummary{std::max(t.modeled_load, load_floor)};
     measured_phase[elm_id] = LoadSummary{t.measured_load};
 
-    CommKey skey(CommKey::NodeToCollectionTag{}, this_node, elm_id, false);
+    CommKey skey(CommKey::SendRecvTag{}, objgrp_id, elm_id, false);
     CommVolume svol{static_cast<CommBytesType>(t.serialized_bytes), 1};
     node_comm[skey] = svol;
 
-    CommKey rkey(CommKey::CollectionToNodeTag{}, elm_id, this_node, false);
+    CommKey rkey(CommKey::SendRecvTag{}, elm_id, objgrp_id, false);
     CommVolume rvol{static_cast<CommBytesType>(t.return_bytes), 1};
     node_comm[rkey] = rvol;
 
