@@ -82,6 +82,12 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       j["tasks"][i]["resource"] = "cpu";
       j["tasks"][i]["node"] = theContext()->getNode();
       j["tasks"][i]["time"] = time;
+      if (user_defined_json_.find(phase) != user_defined_json_.end()) {
+        auto user_def_phase = user_defined_json_.at(phase);
+        if (user_def_phase.find(id) != user_def_phase.end()) {
+          j["tasks"][i]["user_defined"] = user_def_phase.at(id);
+        }
+      }
       outputEntity(j["tasks"][i]["entity"], id);
 
       auto const& subphase_times = elm.second.subphase_loads;

@@ -282,6 +282,10 @@ void NodeLBData::addNodeLBData(
     }
   }
 
+  if (storable) {
+    stats_->user_defined_json_[phase][id] = storable->toJson();
+  }
+
   in->updatePhase(1);
 
   auto model = theLBManager()->getLoadModel();
