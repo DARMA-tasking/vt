@@ -53,7 +53,7 @@ xlC-vortex:
   only:
     refs:
       - develop
-      - merge_request
+      - add_pipeline
   tags:
     - ppc64le 
 
@@ -67,6 +67,6 @@ arm-stria:
   only:
     refs:
       - develop
-      - merge_request
+      - add_pipeline
   tags:
     - aarch64 
