@@ -49,7 +49,7 @@ xlC-vortex:
     - module load cuda/10.1.243
     - module unload spectrum-mpi
     - module load spectrum-mpi/rolling-release
-    - vt/ci/build_cpp.sh $CI_PROJECT_DIR ~/vt_build_ats2
+    - ci/build_cpp.sh $CI_PROJECT_DIR ~/vt_build_ats2
   only:
     refs:
       - develop
@@ -63,7 +63,7 @@ arm-stria:
   script:
     - module unload devpack-gnu7
     - module load devpack-arm
-    - vt/ci/build_cpp.sh $CI_PROJECT_DIR ~/vt_build_van1
+    - ci/build_cpp.sh $CI_PROJECT_DIR ~/vt_build_van1
   only:
     refs:
       - develop
