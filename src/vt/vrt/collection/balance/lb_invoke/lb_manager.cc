@@ -176,10 +176,10 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
   auto proposed = std::make_shared<ProposedReassignment>(model_, r);
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    auto cb = vt::theCB()->makeBcast<
+    auto stats_cb = vt::theCB()->makeBcast<
       LBManager, StatsMsgType, &LBManager::statsHandler
     >(proxy_);
-    computeStatistics(proposed, false, phase, cb);
+    computeStatistics(proposed, false, phase, stats_cb);
   });
 
   applyReassignment(r);
