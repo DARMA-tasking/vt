@@ -80,7 +80,7 @@ using BarrierType             = uint64_t;
 /// Used to identify a collective operation
 using CollectiveAlgType       = uint64_t;
 /// Used to hold the reference count for messages
-using RefType                 = int16_t;
+using RefType                 = uint16_t;
 /// Used to store some number of bytes
 using ByteType                = uint64_t;
 /// Used to store the number of bits in a field
