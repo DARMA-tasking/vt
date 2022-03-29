@@ -35,8 +35,8 @@ xlC-vortex:
     FC: "gfortran"
     OMPI_CC: "gcc"
     CC: "gcc"
-    OMPI_CXX: "nvcc_wrapper"
-    CXX: "nvcc_wrapper"
+    OMPI_CXX: "g++"
+    CXX: "g++"
   stage: build
   script:
     - module load cmake/3.18.0
@@ -49,7 +49,7 @@ xlC-vortex:
     - module load cuda/10.1.243
     - module unload spectrum-mpi
     - module load spectrum-mpi/rolling-release
-    - ci/build_cpp.sh $CI_PROJECT_DIR ~/vt_build_ats2
+    - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/build
   only:
     refs:
       - develop
@@ -59,11 +59,16 @@ xlC-vortex:
 
 
 arm-stria:
+  variables:
+    CC: "gcc"
+    CXX: "c++"
   stage: build
   script:
     - module unload devpack-gnu7
     - module load devpack-arm
-    - ci/build_cpp.sh $CI_PROJECT_DIR ~/vt_build_van1
+    - module load cde/v2.1/ninja
+    - module swap cmake cmake/3.20.5
+    - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/build
   only:
     refs:
       - develop
