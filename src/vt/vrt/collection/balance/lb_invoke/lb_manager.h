@@ -234,9 +234,19 @@ protected:
   void defaultPostLBWork(ReassignmentMsg* r);
 
 private:
+  /**
+   * \brief Compute statistics given a load model
+   *
+   * \param[in] model the load model
+   * \param[in] comm_collectives whether to consider collective communication
+   * \param[in] phase the phase
+   * \param[in] cb the callback to receive the statistics
+   */
   void computeStatistics(
-    std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase
+    std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase,
+    vt::Callback<StatsMsgType> cb
   );
+
   void statsHandler(StatsMsgType* msg);
   bool isCollectiveComm(elm::CommCategory cat) const;
 

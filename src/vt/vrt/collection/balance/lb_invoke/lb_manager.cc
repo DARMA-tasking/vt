@@ -176,7 +176,10 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
   auto proposed = std::make_shared<ProposedReassignment>(model_, r);
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    computeStatistics(proposed, false, phase);
+    auto cb = vt::theCB()->makeBcast<
+      LBManager, StatsMsgType, &LBManager::statsHandler
+    >(proxy_);
+    computeStatistics(proposed, false, phase, cb);
   });
 
   applyReassignment(r);
@@ -201,7 +204,10 @@ LBManager::runLB(
   });
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    computeStatistics(model_, false, phase);
+    auto cb = vt::theCB()->makeBcast<
+      LBManager, StatsMsgType, &LBManager::statsHandler
+    >(proxy_);
+    computeStatistics(model_, false, phase, cb);
   });
 
   elm::CommMapType empty_comm;
@@ -448,7 +454,8 @@ balance::LoadData reduceVec(
 }
 
 void LBManager::computeStatistics(
-  std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase
+  std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase,
+  vt::Callback<StatsMsgType> cb
 ) {
   vt_debug_print(
     normal, lb,
@@ -456,10 +463,6 @@ void LBManager::computeStatistics(
   );
 
   using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
-
-  auto cb = vt::theCB()->makeBcast<
-    LBManager, StatsMsgType, &LBManager::statsHandler
-  >(proxy_);
 
   total_load = 0.;
   std::vector<balance::LoadData> O_l;
