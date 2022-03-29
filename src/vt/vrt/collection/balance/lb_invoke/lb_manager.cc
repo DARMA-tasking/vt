@@ -170,8 +170,32 @@ LBManager::makeLB() {
   return base_proxy;
 }
 
+void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
+  auto r = msg->reassignment;
+  auto phase = msg->phase;
+  auto proposed = std::make_shared<ProposedReassignment>(model_, r);
+
+  runInEpochCollective("LBManager::runLB -> computeStats", [=] {
+    computeStatistics(proposed, false, phase);
+  });
+
+  applyReassignment(r);
+
+  // Inform the collection manager to rebuild spanning trees if needed
+  if (r->global_migration_count != 0) {
+    theCollection()->getTypelessHolder().invokeAllGroupConstructors();
+  }
+
+  vt_debug_print(
+    terse, lb,
+    "LBManager: finished migrations\n"
+  );
+}
+
 void
-LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
+LBManager::runLB(
+  LBProxyType base_proxy, PhaseType phase, vt::Callback<ReassignmentMsg> cb
+) {
   runInEpochCollective("LBManager::runLB -> updateLoads", [=] {
     model_->updateLoads(phase);
   });
@@ -193,31 +217,29 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
   auto reassignment = strat->startLB(
     phase, base_proxy, model_.get(), stats, *comm, total_load
   );
-
-  auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
-  runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    computeStatistics(proposed, false, phase);
-  });
-
-  applyReassignment(reassignment);
-
-  // Inform the collection manager to rebuild spanning trees if needed
-  if (reassignment->global_migration_count != 0) {
-    theCollection()->getTypelessHolder().invokeAllGroupConstructors();
-  }
-
-  vt_debug_print(
-    terse, lb,
-    "LBManager: finished migrations\n"
-  );
+  cb.send(reassignment, phase);
 }
 
 void LBManager::selectStartLB(PhaseType phase) {
-  LBType lb = decideLBToRun(phase, true);
-  startLB(phase, lb);
+  namespace ph = std::placeholders;
+  auto post_lb_ptr = std::mem_fn(&LBManager::defaultPostLBWork);
+  auto post_lb_fn = std::bind(post_lb_ptr, this, ph::_1);
+  auto cb = theCB()->makeFunc<ReassignmentMsg>(
+    vt::pipe::LifetimeEnum::Once, post_lb_fn
+  );
+  selectStartLB(phase, cb);
 }
 
-void LBManager::startLB(PhaseType phase, LBType lb) {
+void LBManager::selectStartLB(
+  PhaseType phase, vt::Callback<ReassignmentMsg> cb
+) {
+  LBType lb = decideLBToRun(phase, true);
+  startLB(phase, lb, cb);
+}
+
+void LBManager::startLB(
+  PhaseType phase, LBType lb, vt::Callback<ReassignmentMsg> cb
+) {
   vt_debug_print(
     normal, lb,
     "LBManager::startLB: phase={}\n", phase
@@ -259,7 +281,7 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
   }
 
   LBProxyType base_proxy = lb_instances_["chosen"];
-  runLB(base_proxy, phase);
+  runLB(base_proxy, phase, cb);
 }
 
 /*static*/
