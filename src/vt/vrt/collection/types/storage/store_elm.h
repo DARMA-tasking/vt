@@ -146,11 +146,13 @@ struct StoreElm<
    *
    * \param[in] u the value
    * \param[in] dump_to_json whether to dump this to json LB data file
-   *
-   * @todo: make this disabled if not jsonable
    */
   template <typename U>
-  StoreElm(U&& u, bool dump_to_json)
+  StoreElm(
+    U&& u, bool dump_to_json, typename std::enable_if<
+      nlohmann::detail::has_to_json<nlohmann::json,U>::value
+    >::type* = nullptr
+  )
     : elm_(std::forward<U>(u)),
       dump_to_json_(dump_to_json)
   { }
@@ -278,11 +280,13 @@ struct StoreElm<
    *
    * \param[in] u the value
    * \param[in] dump_to_json whether to dump this to json LB data file
-   *
-   * @todo: make this disabled if not jsonable
    */
   template <typename U>
-  StoreElm(U&& u, bool dump_to_json)
+  StoreElm(
+    U&& u, bool dump_to_json, typename std::enable_if<
+      nlohmann::detail::has_to_json<nlohmann::json,U>::value
+    >::type* = nullptr
+  )
     : wrapper_(detail::ByteWrapper<T>{std::forward<U>(u)}),
       dump_to_json_(dump_to_json)
   { }
