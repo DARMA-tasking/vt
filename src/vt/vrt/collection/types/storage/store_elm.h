@@ -64,6 +64,8 @@ struct StoreElmBase {
   /// uses polymorphic serialization
   checkpoint_virtual_serialize_root()
 
+  using json = nlohmann::json;
+
   StoreElmBase() = default;
 
   virtual ~StoreElmBase() {}
@@ -105,6 +107,36 @@ struct StoreElmBase {
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) { }
+
+  /**
+   * \brief Generate the json because it is jsonable
+   *
+   * \param[in] u the data to convert to json
+   */
+  template <typename U>
+  static json maybeGenerateJson(
+    const U& u, typename std::enable_if<
+      nlohmann::detail::has_to_json<json,U>::value
+    >::type* = nullptr
+  ) {
+    json j(u);
+    return j;
+  }
+
+  /**
+   * \brief Abort because it is not jsonable
+   *
+   * \param[in] u the data that cannot be converted to json
+   */
+  template <typename U>
+  static json maybeGenerateJson(
+    const U& u, typename std::enable_if<
+      not nlohmann::detail::has_to_json<json,U>::value
+    >::type* = nullptr
+  ) {
+    vtAbort("Instantiated maybeGenerateJson on non-jsonable type");
+    return json{};
+  }
 };
 
 /**
@@ -197,14 +229,13 @@ struct StoreElm<
   bool shouldJson() const { return dump_to_json_; }
 
   /**
-   * \brief Generate the json if applicable
+   * \brief Generate the json if jsonable
    *
    * \return the json
    */
   nlohmann::json toJson()
   {
-    nlohmann::json j(elm_);
-    return j;
+    return StoreElm::maybeGenerateJson<T>(elm_);
   }
 
 private:
@@ -331,14 +362,13 @@ struct StoreElm<
   bool shouldJson() const { return dump_to_json_; }
 
   /**
-   * \brief Generate the json if applicable
+   * \brief Generate the json if jsonable
    *
    * \return the json
    */
   nlohmann::json toJson()
   {
-    nlohmann::json j(wrapper_.elm_);
-    return j;
+    return StoreElm::maybeGenerateJson<T>(wrapper_.elm_);
   }
 
 private:
