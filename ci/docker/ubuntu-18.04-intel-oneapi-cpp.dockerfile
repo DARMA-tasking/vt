@@ -22,6 +22,7 @@ RUN apt-get update -y -q && \
     valgrind \
     make-guile \
     libomp5 \
+    brotli \
     libunwind-dev \
     ccache && \
     apt-get clean && \

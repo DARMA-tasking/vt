@@ -29,6 +29,7 @@ RUN apt-get update -y -q && \
     make-guile \
     libomp5 \
     libunwind-dev \
+    brotli \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

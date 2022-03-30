@@ -27,6 +27,7 @@ RUN apt-get update -y -q && \
     libomp-dev \
     llvm-10 \
     python3 \
+    brotli \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
