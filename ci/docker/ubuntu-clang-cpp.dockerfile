@@ -29,7 +29,10 @@ RUN apt-get update -y -q && \
     valgrind \
     wget \
     zlib1g \
-    zlib1g-dev && \
+    zlib1g-dev \
+    libunwind-dev \
+    brotli \
+    ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
