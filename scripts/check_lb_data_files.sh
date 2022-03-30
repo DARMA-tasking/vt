@@ -20,4 +20,3 @@ for i in $(find . -iname "*.json.br")
 do
     run_schema_validator "$i"
 done
-
