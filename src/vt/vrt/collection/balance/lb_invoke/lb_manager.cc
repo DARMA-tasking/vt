@@ -204,10 +204,10 @@ LBManager::runLB(
   });
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    auto cb = vt::theCB()->makeBcast<
+    auto stats_cb = vt::theCB()->makeBcast<
       LBManager, StatsMsgType, &LBManager::statsHandler
     >(proxy_);
-    computeStatistics(model_, false, phase, cb);
+    computeStatistics(model_, false, phase, stats_cb);
   });
 
   elm::CommMapType empty_comm;
