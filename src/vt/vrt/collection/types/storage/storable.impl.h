@@ -54,6 +54,19 @@ void Storable::serialize(SerializerT& s) {
 }
 
 template <typename U>
+void Storable::valInsert(std::string const& str, U&& u) {
+  map_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(str),
+    std::forward_as_tuple(
+      std::make_unique<StoreElm<typename std::decay<U>::type>>(
+        std::forward<U>(u)
+      )
+    )
+  );
+}
+
+template <typename U>
 void Storable::valInsert(std::string const& str, U&& u, bool dump_to_json) {
   map_.emplace(
     std::piecewise_construct,
