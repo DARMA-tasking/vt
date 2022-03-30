@@ -68,14 +68,11 @@ struct StoreElmBase {
 
   StoreElmBase() = default;
 
-  virtual ~StoreElmBase() {}
+  StoreElmBase(bool dump_to_json)
+    : dump_to_json_(dump_to_json)
+  {}
 
-  /**
-   * \brief Whether the value should be dumped to the json LB data file
-   *
-   * \return whether to dump
-   */
-  virtual bool shouldJson() const = 0;
+  virtual ~StoreElmBase() {}
 
   /**
    * \brief Generate the json if applicable
@@ -106,7 +103,16 @@ struct StoreElmBase {
    * \param[in] s the serializer
    */
   template <typename SerializerT>
-  void serialize(SerializerT& s) { }
+  void serialize(SerializerT& s) {
+    s | dump_to_json_;
+  }
+
+  /**
+   * \brief Whether the value should be dumped to the json LB data file
+   *
+   * \return whether to dump
+   */
+  bool shouldJson() const { return dump_to_json_; }
 
   /**
    * \brief Generate the json because it is jsonable
@@ -137,6 +143,9 @@ struct StoreElmBase {
     vtAbort("Instantiated maybeGenerateJson on non-jsonable type");
     return json{};
   }
+
+protected:
+  bool dump_to_json_ = false;
 };
 
 /**
@@ -185,8 +194,8 @@ struct StoreElm<
       nlohmann::detail::has_to_json<nlohmann::json,U>::value
     >::type* = nullptr
   )
-    : elm_(std::forward<U>(u)),
-      dump_to_json_(dump_to_json)
+    : StoreElmBase(dump_to_json),
+      elm_(std::forward<U>(u))
   { }
 
   /**
@@ -203,8 +212,7 @@ struct StoreElm<
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | elm_
-      | dump_to_json_;
+    s | elm_;
   }
 
   /**
@@ -222,13 +230,6 @@ struct StoreElm<
   T const& get() const { return elm_; }
 
   /**
-   * \brief Whether the value should be dumped to the json LB data file
-   *
-   * \return whether to dump
-   */
-  bool shouldJson() const { return dump_to_json_; }
-
-  /**
    * \brief Generate the json if jsonable
    *
    * \return the json
@@ -240,8 +241,6 @@ struct StoreElm<
 
 private:
   T elm_ = {};                  /**< The stored value */
-
-  bool dump_to_json_ = false;
 };
 
 namespace detail {
@@ -318,8 +317,8 @@ struct StoreElm<
       nlohmann::detail::has_to_json<nlohmann::json,U>::value
     >::type* = nullptr
   )
-    : wrapper_(detail::ByteWrapper<T>{std::forward<U>(u)}),
-      dump_to_json_(dump_to_json)
+    : StoreElmBase(dump_to_json),
+      wrapper_(detail::ByteWrapper<T>{std::forward<U>(u)})
   { }
 
   /**
@@ -336,8 +335,7 @@ struct StoreElm<
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | wrapper_
-      | dump_to_json_;
+    s | wrapper_;
   }
 
   /**
@@ -355,13 +353,6 @@ struct StoreElm<
   T const& get() const { return wrapper_.elm_; }
 
   /**
-   * \brief Whether the value should be dumped to the json LB data file
-   *
-   * \return whether to dump
-   */
-  bool shouldJson() const { return dump_to_json_; }
-
-  /**
    * \brief Generate the json if jsonable
    *
    * \return the json
@@ -373,8 +364,6 @@ struct StoreElm<
 
 private:
   detail::ByteWrapper<T> wrapper_ = {}; /**< The byte-copyable value wrapper */
-
-  bool dump_to_json_ = false;
 };
 
 }}}} /* end namespace vt::vrt::collection::storage */
