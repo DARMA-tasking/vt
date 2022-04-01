@@ -335,14 +335,6 @@ getLBDataForPhase(
 
 TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
   auto this_node = vt::theContext()->getNode();
-  std::string out_file_name = "test_restore_lb_data_1.%p.json";
-  std::size_t rank = out_file_name.find("%p");
-  auto str_rank = std::to_string(this_node);
-  if (rank == std::string::npos) {
-    out_file_name = out_file_name + str_rank;
-  } else {
-    out_file_name.replace(rank, 2, str_rank);
-  }
 
   vt::vrt::collection::CollectionProxy<MyCol> proxy;
   auto const range = vt::Index1D(num_elms);
@@ -508,8 +500,6 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
 
   // @todo: compare subphase comm when writing/reading is implemented
   // @todo: detailed comparison of subphase comm data
-
-  // @todo: clean up files
 }
 
 struct TestDumpUserdefinedData : TestParallelHarnessParam<bool> { };
