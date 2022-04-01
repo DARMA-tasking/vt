@@ -234,7 +234,7 @@ struct StoreElm<
    *
    * \return the json
    */
-  nlohmann::json toJson()
+  nlohmann::json toJson() override
   {
     return StoreElm::maybeGenerateJson<T>(elm_);
   }
@@ -357,7 +357,7 @@ struct StoreElm<
    *
    * \return the json
    */
-  nlohmann::json toJson()
+  nlohmann::json toJson() override
   {
     return StoreElm::maybeGenerateJson<T>(wrapper_.elm_);
   }
