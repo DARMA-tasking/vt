@@ -512,6 +512,81 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
   // @todo: clean up files
 }
 
+struct TestDumpUserdefinedData : TestParallelHarnessParam<bool> { };
+
+std::string
+getJsonStringForPhase(
+  vt::PhaseType phase,  vt::vrt::collection::balance::StatsData in
+) {
+  using vt::vrt::collection::balance::StatsData;
+  using JSONAppender = vt::util::json::Appender<std::stringstream>;
+  std::stringstream ss{std::ios_base::out | std::ios_base::in};
+  auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), false);
+  auto j = in.toJson(phase);
+  ap->addElm(*j);
+  ss = ap->finish();
+  return ss.str();
+}
+
+TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
+  bool should_dump = GetParam();
+
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
+
+  vt::vrt::collection::CollectionProxy<MyCol> proxy;
+  auto const range = vt::Index1D(num_nodes * 1);
+
+  // Construct a collection
+  runInEpochCollective([&] {
+    proxy = vt::theCollection()->constructCollective<MyCol>(range);
+  });
+
+  vt::vrt::collection::balance::StatsData sd;
+  PhaseType write_phase = 0;
+
+  {
+    PhaseType phase = write_phase;
+    sd.node_data_[phase];
+    sd.node_comm_[phase];
+
+    vt::Index1D idx(this_node * 1);
+    auto elm_ptr = proxy(idx).tryGetLocalPtr();
+    EXPECT_NE(elm_ptr, nullptr);
+    if (elm_ptr != nullptr) {
+      auto elm_id = elm_ptr->getElmID();
+
+      elm_ptr->valInsert("hello", std::string("world"), should_dump);
+      elm_ptr->valInsert("elephant", 123456789, should_dump);
+      sd.user_defined_json_[phase][elm_id] = elm_ptr->toJson();
+
+      sd.node_data_[phase][elm_id].whole_phase_load = 1.0;
+    }
+  }
+
+  auto json_str = getJsonStringForPhase(write_phase, sd);
+  fmt::print("{}\n", json_str);
+  if (should_dump) {
+    EXPECT_NE(json_str.find("user_defined"), std::string::npos);
+    EXPECT_NE(json_str.find("hello"), std::string::npos);
+    EXPECT_NE(json_str.find("world"), std::string::npos);
+    EXPECT_NE(json_str.find("elephant"), std::string::npos);
+    EXPECT_NE(json_str.find("123456789"), std::string::npos);
+  } else {
+    EXPECT_EQ(json_str.find("user_defined"), std::string::npos);
+    EXPECT_EQ(json_str.find("hello"), std::string::npos);
+    EXPECT_EQ(json_str.find("world"), std::string::npos);
+    EXPECT_EQ(json_str.find("elephant"), std::string::npos);
+    EXPECT_EQ(json_str.find("123456789"), std::string::npos);
+  }
+}
+
+auto const booleans = ::testing::Values(false, true);
+
+INSTANTIATE_TEST_SUITE_P(
+  DumpUserdefinedDataExplode, TestDumpUserdefinedData, booleans
+);
+
 }}}} // end namespace vt::tests::unit::lb
 
 #endif /*vt_check_enabled(lblite)*/
