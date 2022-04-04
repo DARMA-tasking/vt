@@ -81,7 +81,8 @@ void SerdeTestLB::runLB(TimeType) {
       obj, load, next_node, this_node
     );
     if (obj.isMigratable()) {
-      migrateObjectTo(obj, next_node);
+      constexpr bool allow_self_migration = true;
+      migrateObjectTo(obj, next_node, allow_self_migration);
     }
   }
 }

@@ -126,7 +126,8 @@ struct BaseLB {
     TransferVecType const& transfers, MigrationCountCB migration_count_callback
   );
   void migrationDone();
-  void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
+  // TODO (STRZ) - in the end don't use bool var
+  void migrateObjectTo(ObjIDType const obj_id, NodeType const node, bool const allow_self_migration = false);
   void transferSend(NodeType from, TransferVecType const& transfer);
   void transferMigrations(TransferMsg<TransferVecType>* msg);
   void finalize(CountMsg* msg);

@@ -230,11 +230,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     );
   }
 
-  vtWarnIf(
-    !(dest != theContext()->getNode() || is_bcast),
-    fmt::format("Destination {} should != this node", dest)
-  );
-
   MsgSizeType new_msg_size = base.size();
 
   if (is_put && !is_put_packed) {

@@ -65,11 +65,12 @@ template <typename ColT, typename IndexT>
   auto const& col_proxy = full_proxy.getCollectionProxy();
   auto const& elm_proxy = full_proxy.getElementProxy();
   auto const& idx = elm_proxy.getIndex();
+  auto const this_node = theContext()->getNode();
 
   vt_debug_print(
     terse, vrt_coll,
-    "migrateInHandler: from_node={}, idx={}\n",
-    from_node, idx
+    "migrateInHandler: from_node={}, this_node={}, idx={}\n",
+    from_node, this_node, idx
   );
 
   auto vc_elm_ptr = std::unique_ptr<ColT>(msg->elm_);
