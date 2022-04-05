@@ -46,33 +46,33 @@
 
 namespace vt { namespace ctx {
 
-void LBStats::begin() {
+void LBData::begin() {
   // record start time
   if (should_instrument_) {
     stats_->startTime();
   }
 }
 
-void LBStats::end() {
+void LBData::end() {
   // record end time
   if (should_instrument_) {
     stats_->stopTime();
   }
 }
 
-void LBStats::send(elm::ElementIDStruct dest, MsgSizeType bytes) {
+void LBData::send(elm::ElementIDStruct dest, MsgSizeType bytes) {
   stats_->sendToEntity(dest, cur_elm_id_, bytes);
 }
 
-void LBStats::suspend() {
+void LBData::suspend() {
   end();
 }
 
-void LBStats::resume() {
+void LBData::resume() {
   begin();
 }
 
-typename LBStats::ElementIDStruct const& LBStats::getCurrentElementID() const {
+typename LBData::ElementIDStruct const& LBData::getCurrentElementID() const {
   return cur_elm_id_;
 }
 

@@ -516,7 +516,7 @@ EventType ActiveMessenger::doMessageSend(
 
       runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
         .withTDEpochFromMsg(is_term)
-        .withLBStats(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
+        .withLBData(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
         .enqueue();
     }
     return no_event;
@@ -893,7 +893,7 @@ void ActiveMessenger::recordLbStatsCommForSend(
   MsgSizeType const msg_size
 ) {
   if (theContext()->getTask() != nullptr) {
-    auto lb = theContext()->getTask()->get<ctx::LBStats>();
+    auto lb = theContext()->getTask()->get<ctx::LBData>();
 
     if (lb) {
       auto const& msg = base.get();
@@ -998,7 +998,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
       .withContinuation(cont)
       .withTag(tag)
       .withTDEpochFromMsg(is_term)
-      .withLBStats(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
+      .withLBData(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
       .enqueue();
 
     if (is_term) {

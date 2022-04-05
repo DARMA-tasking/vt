@@ -168,9 +168,9 @@ struct RunnableMaker {
    * captured one)
    */
   template <typename ElmT, typename MsgU>
-  RunnableMaker&& withLBStats(ElmT* elm, MsgU* msg) {
+  RunnableMaker&& withLBData(ElmT* elm, MsgU* msg) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBStats>(elm, msg);
+    impl_->template addContext<ctx::LBData>(elm, msg);
 #endif
     return std::move(*this);
   }
@@ -181,8 +181,8 @@ struct RunnableMaker {
    * \param[in] elm the element
    */
   template <typename ElmT>
-  RunnableMaker&& withLBStatsVoidMsg(ElmT* elm) {
-    return withLBStats(&elm->getStats(), elm->getElmID());
+  RunnableMaker&& withLBDataVoidMsg(ElmT* elm) {
+    return withLBData(&elm->getStats(), elm->getElmID());
   }
 
   /**
@@ -192,9 +192,9 @@ struct RunnableMaker {
    * \param[in] elm_id the element ID
    */
   template <typename StatsT, typename T>
-  RunnableMaker&& withLBStats(StatsT* stats, T elm_id) {
+  RunnableMaker&& withLBData(StatsT* stats, T elm_id) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBStats>(stats, elm_id);
+    impl_->template addContext<ctx::LBData>(stats, elm_id);
 #endif
     return std::move(*this);
   }
@@ -205,9 +205,9 @@ struct RunnableMaker {
    * \param[in] elm the element
    */
   template <typename ElmT>
-  RunnableMaker&& withLBStats(ElmT* elm) {
+  RunnableMaker&& withLBData(ElmT* elm) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBStats>(elm, msg_.get());
+    impl_->template addContext<ctx::LBData>(elm, msg_.get());
 #endif
     return std::move(*this);
   }

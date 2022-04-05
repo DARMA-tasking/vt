@@ -136,7 +136,7 @@ void NodeStats::initialize() {
 }
 
 void NodeStats::createStatsFile() {
-  auto const file_name = theConfig()->getLBStatsFileOut();
+  auto const file_name = theConfig()->getLBDataFileOut();
   auto const compress = theConfig()->vt_lb_stats_compress;
 
   vt_debug_print(

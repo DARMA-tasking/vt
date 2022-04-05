@@ -223,7 +223,7 @@ CollectionManager::collectionAutoMsgDeliver(
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
-    .withLBStats(base, msg)
+    .withLBData(base, msg)
     .runOrEnqueue(immediate);
 }
 
@@ -246,7 +246,7 @@ CollectionManager::collectionAutoMsgDeliver(
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
-    .withLBStats(base)
+    .withLBData(base)
     .runOrEnqueue(immediate);
 }
 
@@ -419,7 +419,7 @@ util::Copyable<Type> CollectionManager::invoke(
 
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
-    .withLBStatsVoidMsg(ptr)
+    .withLBDataVoidMsg(ptr)
     .withExplicitTask([&]{
       result = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
     })
@@ -439,7 +439,7 @@ util::NotCopyable<Type> CollectionManager::invoke(
 
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
-    .withLBStatsVoidMsg(ptr)
+    .withLBDataVoidMsg(ptr)
     .withExplicitTask([&]{
       auto&& ret = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
       result = std::move(ret);
@@ -459,7 +459,7 @@ util::IsVoidReturn<Type> CollectionManager::invoke(
 
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
-    .withLBStatsVoidMsg(ptr)
+    .withLBDataVoidMsg(ptr)
     .withExplicitTask([&]{
       runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
     })

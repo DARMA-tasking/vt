@@ -72,7 +72,7 @@ void StatsRestartReader::setProxy(
 }
 
 void StatsRestartReader::startup() {
-  auto const file_name = theConfig()->getLBStatsFileIn();
+  auto const file_name = theConfig()->getLBDataFileIn();
   readStats(file_name);
 }
 

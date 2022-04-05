@@ -1491,7 +1491,7 @@ private:
 
   friend struct balance::CollectionStats;
   friend struct elm::ElementStats;
-  friend struct ctx::LBStats;
+  friend struct ctx::LBData;
 
   template <typename ColT>
   friend struct param::ConstructParams;

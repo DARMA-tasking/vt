@@ -56,10 +56,10 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestLBStatsReader : TestParallelHarness { };
+struct TestLBDataReader : TestParallelHarness { };
 using ElementIDType = uint64_t;
 
-TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
+TEST_F(TestLBDataReader, test_lb_stats_read_1) {
 
   // Iter 0
   // Node 0 -> [0, 1, 2, 3, 4] // local ID

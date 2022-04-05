@@ -51,30 +51,30 @@
 namespace vt { namespace ctx {
 
 /**
- * \struct LBStats
+ * \struct LBData
  *
  * \brief Context for collection LB statistics when a task runs
  */
-struct LBStats final : Base {
+struct LBData final : Base {
   using ElementIDStruct = elm::ElementIDStruct;
   using ElementStats    = elm::ElementStats;
 
   /**
-   * \brief Construct a \c LBStats
+   * \brief Construct a \c LBData
    *
    * \param[in] in_elm the collection element
    * \param[in] msg the incoming message (used for communication stats)
    */
   template <typename ElmT, typename MsgT>
-  LBStats(ElmT* in_elm, MsgT* msg);
+  LBData(ElmT* in_elm, MsgT* msg);
 
   /**
-   * \brief Construct a \c LBStats
+   * \brief Construct a \c LBData
    *
    * \param[in] in_stats the statistics
    * \param[in] in_elm_id the element ID
    */
-  LBStats(ElementStats* in_stats, ElementIDStruct const& in_elm_id)
+  LBData(ElementStats* in_stats, ElementIDStruct const& in_elm_id)
     : stats_(in_stats),
       cur_elm_id_(in_elm_id),
       should_instrument_(true)

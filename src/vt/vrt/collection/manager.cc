@@ -86,7 +86,7 @@ getDispatcher(auto_registry::AutoHandlerType const han) {
 elm::ElementIDStruct CollectionManager::getCurrentContext() const {
 # if vt_check_enabled(lblite)
   if (theContext()->getTask() != nullptr) {
-    auto lb = theContext()->getTask()->get<ctx::LBStats>();
+    auto lb = theContext()->getTask()->get<ctx::LBData>();
     if (lb != nullptr) {
       return lb->getCurrentElementID();
     }

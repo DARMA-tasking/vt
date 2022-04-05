@@ -790,11 +790,11 @@ static std::string buildFile(std::string const& file, std::string const& dir) {
 }
 } /* end anon namespace */
 
-std::string AppConfig::getLBStatsFileOut() const {
+std::string AppConfig::getLBDataFileOut() const {
   return buildFile(vt_lb_data_file, vt_lb_data_dir);
 }
 
-std::string AppConfig::getLBStatsFileIn() const {
+std::string AppConfig::getLBDataFileIn() const {
   return buildFile(vt_lb_data_file_in, vt_lb_data_dir_in);
 }
 

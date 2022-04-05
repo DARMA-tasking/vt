@@ -46,7 +46,7 @@
 
 namespace vt { namespace ctx {
 
-struct LBStats;
+struct LBData;
 
 }} /* end namespace vt::ctx */
 

@@ -245,8 +245,8 @@ struct AppConfig {
   /// Does not include argv[0]. Original char* objects.
   std::vector<char*> passthru_args;
 
-  std::string getLBStatsFileOut() const;
-  std::string getLBStatsFileIn() const;
+  std::string getLBDataFileOut() const;
+  std::string getLBDataFileIn() const;
 
   template <typename Serializer>
   void serialize(Serializer& s) {

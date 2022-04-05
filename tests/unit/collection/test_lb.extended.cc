@@ -249,7 +249,7 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
   using vt::util::json::Reader;
 
   vt::runInEpochCollective([=]{
-    Reader r(theConfig()->getLBStatsFileOut());
+    Reader r(theConfig()->getLBDataFileOut());
     auto json_ptr = r.readFile();
     auto& json = *json_ptr;
 
