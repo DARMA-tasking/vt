@@ -153,7 +153,9 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
     // model to function
     model->updateLoads(0);
     for (auto&& obj : *model) {
-      auto work_val = model->getLoadMetric(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
+      auto work_val = model->getLoadMetric(
+        obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
       if (id_proxy_map.find(obj) != id_proxy_map.end()) {
         EXPECT_DOUBLE_EQ(work_val, static_cast<TimeType>(id_proxy_map[obj]));
       }

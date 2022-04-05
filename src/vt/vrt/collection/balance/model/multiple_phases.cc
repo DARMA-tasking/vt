@@ -45,7 +45,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-TimeType MultiplePhases::getLoadMetric(ElementIDStruct object, PhaseOffset when) {
+TimeType
+MultiplePhases::getLoadMetric(ElementIDStruct object, PhaseOffset when) {
   // Retrospective queries don't call for a prediction
   if (when.phases < 0)
     return ComposedModel::getLoadMetric(object, when);

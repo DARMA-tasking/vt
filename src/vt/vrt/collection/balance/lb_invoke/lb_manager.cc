@@ -326,7 +326,7 @@ void LBManager::startLB(
   case LBType::ZoltanLB:            lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();            break;
 #   endif
   case LBType::TestSerializationLB: lb_instances_["chosen"] = makeLB<lb::TestSerializationLB>(); break;
-  // case LBType::TemperedWMin:   lb_instances_["chosen"] = makeLB<lb::TemperedWMin>();   break;
+  case LBType::TemperedWMin:        lb_instances_["chosen"] = makeLB<lb::TemperedWMin>();        break;
   case LBType::NoLB:
     vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
     break;

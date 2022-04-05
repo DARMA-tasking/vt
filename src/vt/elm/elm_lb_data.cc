@@ -180,7 +180,8 @@ TimeType ElementLBData::getLoadMetric(PhaseType const& phase) const {
   }
 }
 
-TimeType ElementLBData::getLoadMetric(PhaseType phase, SubphaseType subphase) const {
+TimeType
+ElementLBData::getLoadMetric(PhaseType phase, SubphaseType subphase) const {
   if (subphase == no_subphase)
     return getLoadMetric(phase);
 

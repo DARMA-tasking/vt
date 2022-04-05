@@ -48,6 +48,13 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+void TemperedWMin::init(objgroup::proxy::Proxy<TemperedWMin> in_proxy) {
+  auto proxy_bits = in_proxy.getProxy();
+  auto proxy = objgroup::proxy::Proxy<TemperedLB>(proxy_bits);
+  auto strat = proxy.get();
+  strat->init(proxy);
+}
+
 /*static*/ std::unordered_map<std::string, std::string>
 TemperedWMin::getInputKeysWithHelp() {
   auto map = TemperedLB::getInputKeysWithHelp();
@@ -87,8 +94,8 @@ TimeType TemperedWMin::getTotalWork(const elm::ElementIDStruct& obj) {
   balance::PhaseOffset when =
       {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
 
-  return alpha_ * load_model_->getLoadMetric(obj, when)
-      + beta_ * load_model_->getComm(obj, when) + gamma_;
+  return alpha_ * load_model_->getLoadMetric(obj, when) +
+    beta_ * load_model_->getComm(obj, when) + gamma_;
 }
 
 }}}} // namespace vt::vrt::collection::lb

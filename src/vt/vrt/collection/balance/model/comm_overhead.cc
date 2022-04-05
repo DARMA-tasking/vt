@@ -60,7 +60,8 @@ void CommOverhead::setLoads(std::unordered_map<PhaseType, LoadMapType> const* pr
   ComposedModel::setLoads(proc_load, proc_comm);
 }
 
-TimeType CommOverhead::getLoadMetric(ElementIDStruct object, PhaseOffset offset) {
+TimeType
+CommOverhead::getLoadMetric(ElementIDStruct object, PhaseOffset offset) {
   auto work = ComposedModel::getLoadMetric(object, offset);
 
   auto phase = getNumCompletedPhases() + offset.phases;
@@ -79,10 +80,11 @@ TimeType CommOverhead::getLoadMetric(ElementIDStruct object, PhaseOffset offset)
     return work + overhead;
   } else {
     // @todo: we don't record comm costs for each subphase---split it proportionally
-    auto whole_phase_work = ComposedModel::getLoadMetric(object, PhaseOffset{offset.phases, PhaseOffset::WHOLE_PHASE});
+    auto whole_phase_work = ComposedModel::getLoadMetric(
+      object, PhaseOffset{offset.phases, PhaseOffset::WHOLE_PHASE}
+    );
     return work + overhead * ( static_cast<double>(work)/whole_phase_work );
   }
 }
-
 
 }}}}

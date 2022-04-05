@@ -93,8 +93,8 @@ int ProposedReassignment::getNumObjects()
   return base - departing + arriving;
 }
 
-TimeType ProposedReassignment::getLoadMetric(ElementIDStruct object, PhaseOffset when)
-{
+TimeType
+ProposedReassignment::getLoadMetric(ElementIDStruct object, PhaseOffset when) {
   auto a = reassignment_->arrive_.find(object);
   if (a != reassignment_->arrive_.end()) {
     return std::get<0>(a->second).get(when);

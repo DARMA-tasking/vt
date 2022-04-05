@@ -60,7 +60,7 @@ struct ProposedReassignment : public ComposedModel {
   TimeType getLoadMetric(ElementIDStruct object, PhaseOffset when) override;
   TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
 
- private:
+private:
   std::shared_ptr<const Reassignment> reassignment_;
 };
 

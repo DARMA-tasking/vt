@@ -44,7 +44,7 @@
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
 
-#include "vt/config.h"
+#include "vt/configs/features/features_defines.h"
 
 #include <unordered_map>
 #include <string>

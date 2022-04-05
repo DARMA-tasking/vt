@@ -55,8 +55,7 @@ Norm::Norm(std::shared_ptr<balance::LoadModel> base, double power)
   vtAssert(power >= 0.0, "Reciprocal loads make no sense");
 }
 
-TimeType Norm::getLoadMetric(ElementIDStruct object, PhaseOffset offset)
-{
+TimeType Norm::getLoadMetric(ElementIDStruct object, PhaseOffset offset) {
   if (offset.subphase != PhaseOffset::WHOLE_PHASE)
     return ComposedModel::getLoadMetric(object, offset);
 
@@ -83,6 +82,5 @@ TimeType Norm::getLoadMetric(ElementIDStruct object, PhaseOffset offset)
     return max;
   }
 }
-
 
 }}}}

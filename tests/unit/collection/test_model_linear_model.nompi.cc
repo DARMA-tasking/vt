@@ -149,7 +149,9 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
     ++num_phases;
 
     for (auto&& obj : *test_model) {
-      auto work_val = test_model->getLoadMetric(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
+      auto work_val = test_model->getLoadMetric(
+        obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
       EXPECT_EQ(
         work_val,
         obj.id == 1 ? expected_data[iter].first : expected_data[iter].second)
