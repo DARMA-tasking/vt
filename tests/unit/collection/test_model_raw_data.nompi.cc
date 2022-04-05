@@ -101,10 +101,10 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
       EXPECT_TRUE(obj.id == 1 || obj.id == 2);
       objects_seen++;
 
-      auto work_val = test_model->getLoad(obj, PhaseOffset{-1, PhaseOffset::WHOLE_PHASE});
+      auto work_val = test_model->getLoadMetric(obj, PhaseOffset{-1, PhaseOffset::WHOLE_PHASE});
       EXPECT_EQ(work_val, load_holder[iter][obj].whole_phase_load);
 
-      auto sub_work_val = test_model->getLoad(obj, PhaseOffset{-1, 0});
+      auto sub_work_val = test_model->getLoadMetric(obj, PhaseOffset{-1, 0});
       EXPECT_EQ(sub_work_val, load_holder[iter][obj].subphase_loads[0]);
 
       auto raw_load_val = test_model->getRawLoad(obj, PhaseOffset{-1, PhaseOffset::WHOLE_PHASE});

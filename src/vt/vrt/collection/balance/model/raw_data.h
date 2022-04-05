@@ -59,7 +59,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 struct RawData : public LoadModel {
   RawData() = default;
   void updateLoads(PhaseType last_completed_phase) override;
-  TimeType getLoad(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getLoadMetric(ElementIDStruct object, PhaseOffset when) override;
   bool hasRawLoad() const override { return true; }
   TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
   TimeType getComm(ElementIDStruct object, PhaseOffset when) override;

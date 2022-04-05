@@ -258,7 +258,7 @@ void NodeLBData::addNodeLBData(
   );
 
   auto const phase = in->getPhase();
-  auto const& total_load = in->getLoad(phase, focused_subphase);
+  auto const& total_load = in->getLoadMetric(phase, focused_subphase);
 
   auto &phase_data = lb_data_->node_data_[phase];
   auto elm_iter = phase_data.find(id);

@@ -54,8 +54,8 @@ void ComposedModel::updateLoads(PhaseType last_completed_phase) {
   base_->updateLoads(last_completed_phase);
 }
 
-TimeType ComposedModel::getLoad(ElementIDStruct object, PhaseOffset when) {
-  return base_->getLoad(object, when);
+TimeType ComposedModel::getLoadMetric(ElementIDStruct object, PhaseOffset when) {
+  return base_->getLoadMetric(object, when);
 }
 
 bool ComposedModel::hasRawLoad() const {

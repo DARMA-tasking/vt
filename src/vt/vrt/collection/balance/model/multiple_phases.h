@@ -79,7 +79,7 @@ struct MultiplePhases : ComposedModel {
     , future_phase_block_size_(in_future_phase_block_size)
   { }
 
-  TimeType getLoad(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getLoadMetric(ElementIDStruct object, PhaseOffset when) override;
 
 private:
   int future_phase_block_size_ = 0;

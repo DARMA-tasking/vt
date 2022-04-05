@@ -93,7 +93,7 @@ int ProposedReassignment::getNumObjects()
   return base - departing + arriving;
 }
 
-TimeType ProposedReassignment::getLoad(ElementIDStruct object, PhaseOffset when)
+TimeType ProposedReassignment::getLoadMetric(ElementIDStruct object, PhaseOffset when)
 {
   auto a = reassignment_->arrive_.find(object);
   if (a != reassignment_->arrive_.end()) {
@@ -104,7 +104,7 @@ TimeType ProposedReassignment::getLoad(ElementIDStruct object, PhaseOffset when)
   vtAssert(reassignment_->depart_.find(object) == reassignment_->depart_.end(),
            "Departing object should not appear as a load query subject");
 
-  return ComposedModel::getLoad(object, when);
+  return ComposedModel::getLoadMetric(object, when);
 }
 
 TimeType ProposedReassignment::getRawLoad(ElementIDStruct object, PhaseOffset when)

@@ -79,7 +79,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getLoad(ElementIDStruct id, PhaseOffset phase) override {
+  TimeType getLoadMetric(ElementIDStruct id, PhaseOffset phase) override {
     // Most recent phase will be at the end of vector
     return proc_load_->at(num_phases + phase.phases).at(id).whole_phase_load;
   }
@@ -148,7 +148,7 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
     ++num_phases;
 
     for (auto&& obj : *test_model) {
-      auto work_val = test_model->getLoad(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
+      auto work_val = test_model->getLoadMetric(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
       EXPECT_EQ(
         work_val,
         obj.id == 1 ? expected_medians[iter].first : expected_medians[iter].second)

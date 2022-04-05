@@ -77,7 +77,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getLoad(ElementIDStruct id, PhaseOffset phase) override {
+  TimeType getLoadMetric(ElementIDStruct id, PhaseOffset phase) override {
     // Here we return predicted loads for future phases
     // For the sake of the test we use values from the past phases
     return proc_load_->at(phase.phases).at(id).whole_phase_load;
@@ -119,7 +119,7 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   test_model->updateLoads(3);
 
   for (auto&& obj : *test_model) {
-    auto work_val = test_model->getLoad(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
+    auto work_val = test_model->getLoadMetric(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
     EXPECT_EQ(work_val, obj.id == 1 ? TimeType{100} : TimeType{85});
   }
 }

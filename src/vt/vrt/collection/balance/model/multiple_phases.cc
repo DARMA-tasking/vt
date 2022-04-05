@@ -45,16 +45,16 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-TimeType MultiplePhases::getLoad(ElementIDStruct object, PhaseOffset when) {
+TimeType MultiplePhases::getLoadMetric(ElementIDStruct object, PhaseOffset when) {
   // Retrospective queries don't call for a prediction
   if (when.phases < 0)
-    return ComposedModel::getLoad(object, when);
+    return ComposedModel::getLoadMetric(object, when);
 
   TimeType sum = 0.0;
   for (int i = 0; i < future_phase_block_size_; ++i) {
     PhaseOffset p{future_phase_block_size_*when.phases + i,
                   when.subphase};
-    sum += ComposedModel::getLoad(object, p);
+    sum += ComposedModel::getLoadMetric(object, p);
   }
 
   return sum;

@@ -163,7 +163,7 @@ PhaseType ElementLBData::getPhase() const {
   return cur_phase_;
 }
 
-TimeType ElementLBData::getLoad(PhaseType const& phase) const {
+TimeType ElementLBData::getLoadMetric(PhaseType const& phase) const {
   auto iter = phase_timings_.find(phase);
   if (iter != phase_timings_.end()) {
     TimeTypeWrapper const total_load = phase_timings_.at(phase);
@@ -180,9 +180,9 @@ TimeType ElementLBData::getLoad(PhaseType const& phase) const {
   }
 }
 
-TimeType ElementLBData::getLoad(PhaseType phase, SubphaseType subphase) const {
+TimeType ElementLBData::getLoadMetric(PhaseType phase, SubphaseType subphase) const {
   if (subphase == no_subphase)
-    return getLoad(phase);
+    return getLoadMetric(phase);
 
   auto const& subphase_loads = subphase_timings_.at(phase);
 

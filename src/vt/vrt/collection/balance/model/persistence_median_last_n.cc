@@ -54,17 +54,17 @@ PersistenceMedianLastN::PersistenceMedianLastN(std::shared_ptr<LoadModel> base, 
   vtAssert(n > 0, "Cannot take a median over no phases");
 }
 
-TimeType PersistenceMedianLastN::getLoad(ElementIDStruct object, PhaseOffset when)
+TimeType PersistenceMedianLastN::getLoadMetric(ElementIDStruct object, PhaseOffset when)
 {
   // Retrospective queries don't call for a prospective calculation
   if (when.phases < 0)
-    return ComposedModel::getLoad(object, when);
+    return ComposedModel::getLoadMetric(object, when);
 
   unsigned int phases = std::min(n_, getNumCompletedPhases());
   std::vector<TimeType> times(phases);
   for (unsigned int i = 1; i <= phases; ++i) {
     PhaseOffset p{-1*static_cast<int>(i), when.subphase};
-    TimeType t = ComposedModel::getLoad(object, p);
+    TimeType t = ComposedModel::getLoadMetric(object, p);
     times[i-1] = t;
   }
 
