@@ -327,11 +327,11 @@ void Runtime::printStartupBanner() {
     }
   }
 
-  if (getAppConfig()->vt_lb_stats) {
+  if (getAppConfig()->vt_lb_data) {
     auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
 
-    if (getAppConfig()->vt_lb_stats_compress) {
+    if (getAppConfig()->vt_lb_data_compress) {
       auto f10 = opt_on("--vt_lb_stats_compress", "Compressing statistics files");
       fmt::print("{}\t{}{}", vt_pre, f10, reset);
     } else {
@@ -339,28 +339,28 @@ void Runtime::printStartupBanner() {
       fmt::print("{}\t{}{}", vt_pre, f10, reset);
     }
 
-    auto const fname = getAppConfig()->vt_lb_stats_file;
+    auto const fname = getAppConfig()->vt_lb_data_file;
     if (fname != "") {
       auto f11 = fmt::format("LB stats file name \"{}\"", fname);
       auto f12 = opt_on("--vt_lb_stats_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
-    auto const fdir = getAppConfig()->vt_lb_stats_dir;
+    auto const fdir = getAppConfig()->vt_lb_data_dir;
     if (fdir != "") {
       auto f11 = fmt::format("LB stats directory \"{}\"", fdir);
       auto f12 = opt_on("--vt_lb_stats_dir", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
-    auto const fnamein = getAppConfig()->vt_lb_stats_file_in;
+    auto const fnamein = getAppConfig()->vt_lb_data_file_in;
     if (fnamein != "") {
       auto f11 = fmt::format("LB stats file name in \"{}\"", fnamein);
       auto f12 = opt_on("--vt_lb_stats_file_in", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
-    auto const fdirin = getAppConfig()->vt_lb_stats_dir_in;
+    auto const fdirin = getAppConfig()->vt_lb_data_dir_in;
     if (fdirin != "") {
       auto f11 = fmt::format("LB stats directory in \"{}\"", fdirin);
       auto f12 = opt_on("--vt_lb_stats_dir_in", f11);
