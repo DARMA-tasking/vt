@@ -105,14 +105,14 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
   }
 };
 
-using TestLBstatsRetention = TestParallelHarness;
+using TestLBDataRetention = TestParallelHarness;
 
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::PersistenceMedianLastN;
 
 static constexpr int32_t const num_elms = 16;
 
-TEST_F(TestLBstatsRetention, test_lbstats_retention_last1) {
+TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
   static constexpr int const num_phases = 5;
 
   // We must have more or equal number of elements than nodes for this test to
@@ -148,7 +148,7 @@ TEST_F(TestLBstatsRetention, test_lbstats_retention_last1) {
   }
 }
 
-TEST_F(TestLBstatsRetention, test_lbstats_retention_last2) {
+TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
   static constexpr int const num_phases = 6;
 
   // We must have more or equal number of elements than nodes for this test to
@@ -184,7 +184,7 @@ TEST_F(TestLBstatsRetention, test_lbstats_retention_last2) {
   }
 }
 
-TEST_F(TestLBstatsRetention, test_lbstats_retention_last4) {
+TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
   static constexpr int const num_phases = 8;
 
   // We must have more or equal number of elements than nodes for this test to
