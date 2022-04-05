@@ -61,8 +61,17 @@ struct DefaultMapBase {
   using MapParamPackType = std::tuple<IndexPtrType,IndexPtrType,NodeType>;
 };
 
-template <typename CollectionT, typename Enable=void>
-struct DefaultMap;
+template <typename CollectionT, typename Enable = void>
+struct DefaultMap : DefaultMapBase<CollectionT> {
+  using BaseType = typename CollectionT::IndexType::DenseIndexType;
+  using BlockMapType =
+    ::vt::mapping::denseNDMapFn<BaseType, CollectionT::IndexType::ndims()>;
+  using RRMapType =
+    ::vt::mapping::denseNDRRMapFn<BaseType, CollectionT::IndexType::ndims()>;
+  using DefaultMapType =
+    ::vt::mapping::denseNDMapFn<BaseType, CollectionT::IndexType::ndims()>;
+  using MapType = DefaultMapType;
+};
 
 /*
  * Default mappings for Index1D: RR, Block, etc.
