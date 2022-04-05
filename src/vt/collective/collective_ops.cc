@@ -131,12 +131,12 @@ void printOverwrittens(
   printIfOverwritten(vt_lb_name);
   printIfOverwritten(vt_lb_args);
   printIfOverwritten(vt_lb_interval);
-  printIfOverwritten(vt_lb_stats);
-  printIfOverwritten(vt_lb_stats_compress);
-  printIfOverwritten(vt_lb_stats_dir);
-  printIfOverwritten(vt_lb_stats_file);
-  printIfOverwritten(vt_lb_stats_dir_in);
-  printIfOverwritten(vt_lb_stats_file_in);
+  printIfOverwritten(vt_lb_data);
+  printIfOverwritten(vt_lb_data_compress);
+  printIfOverwritten(vt_lb_data_dir);
+  printIfOverwritten(vt_lb_data_file);
+  printIfOverwritten(vt_lb_data_dir_in);
+  printIfOverwritten(vt_lb_data_file_in);
   printIfOverwritten(vt_help_lb_args);
   printIfOverwritten(vt_no_detect_hang);
   printIfOverwritten(vt_print_no_progress);

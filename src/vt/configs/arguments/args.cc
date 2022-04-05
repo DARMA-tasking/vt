@@ -490,12 +490,12 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto v1 = app.add_option("--vt_lb_args",          appConfig.vt_lb_args,        lb_args,      lba);
   auto w  = app.add_option("--vt_lb_interval",      appConfig.vt_lb_interval,    lb_interval,  lbi);
   auto wl = app.add_flag("--vt_lb_keep_last_elm",   appConfig.vt_lb_keep_last_elm, lb_keep_last_elm);
-  auto ww = app.add_flag("--vt_lb_stats",           appConfig.vt_lb_stats,       lb_stats);
-  auto xz = app.add_flag("--vt_lb_stats_compress",  appConfig.vt_lb_stats_compress, lb_stats_comp);
-  auto wx = app.add_option("--vt_lb_stats_dir",     appConfig.vt_lb_stats_dir,   lb_stats_dir, lbd);
-  auto wy = app.add_option("--vt_lb_stats_file",    appConfig.vt_lb_stats_file,  lb_stats_file,lbs);
-  auto xx = app.add_option("--vt_lb_stats_dir_in",  appConfig.vt_lb_stats_dir_in,  lb_stats_dir_in, lbd);
-  auto xy = app.add_option("--vt_lb_stats_file_in", appConfig.vt_lb_stats_file_in, lb_stats_file_in,lbs);
+  auto ww = app.add_flag("--vt_lb_stats",           appConfig.vt_lb_data,       lb_data);
+  auto xz = app.add_flag("--vt_lb_stats_compress",  appConfig.vt_lb_data_compress, lb_data_comp);
+  auto wx = app.add_option("--vt_lb_stats_dir",     appConfig.vt_lb_data_dir,   lb_data_dir, lbd);
+  auto wy = app.add_option("--vt_lb_stats_file",    appConfig.vt_lb_data_file,  lb_data_file,lbs);
+  auto xx = app.add_option("--vt_lb_stats_dir_in",  appConfig.vt_lb_data_dir_in,  lb_data_dir_in, lbd);
+  auto xy = app.add_option("--vt_lb_stats_file_in", appConfig.vt_lb_data_file_in, lb_data_file_in,lbs);
 
   auto debugLB = "Load Balancing";
   s->group(debugLB);
@@ -791,11 +791,11 @@ static std::string buildFile(std::string const& file, std::string const& dir) {
 } /* end anon namespace */
 
 std::string AppConfig::getLBStatsFileOut() const {
-  return buildFile(vt_lb_stats_file, vt_lb_stats_dir);
+  return buildFile(vt_lb_data_file, vt_lb_data_dir);
 }
 
 std::string AppConfig::getLBStatsFileIn() const {
-  return buildFile(vt_lb_stats_file_in, vt_lb_stats_dir_in);
+  return buildFile(vt_lb_data_file_in, vt_lb_data_dir_in);
 }
 
 }} /* end namespace vt::arguments */

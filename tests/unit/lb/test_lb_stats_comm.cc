@@ -68,7 +68,7 @@ namespace vt { namespace tests { namespace unit { namespace comm {
  *  --------------------------------------
  */
 
-using TestLBStatsComm = TestParallelHarness;
+using TestLBDataComm = TestParallelHarness;
 using StatsData = vt::vrt::collection::balance::StatsData;
 
 StatsData getStatsDataForPhase(vt::PhaseType phase) {
