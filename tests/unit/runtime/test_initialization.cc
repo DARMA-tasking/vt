@@ -101,14 +101,14 @@ TEST_F(TestInitialization, test_initialize_with_appconfig) {
   arguments::AppConfig appConfig{};
   appConfig.vt_epoch_graph_on_hang = false;
   appConfig.vt_lb_name = "RotateLB";
-  appConfig.vt_lb_stats = true;
+  appConfig.vt_lb_data = true;
 
   vt::initialize(custom_argc, custom_argv, no_workers, true, &comm, &appConfig);
 
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
   EXPECT_EQ(theConfig()->vt_epoch_graph_on_hang, false);
   EXPECT_EQ(theConfig()->vt_lb_name, "RotateLB");
-  EXPECT_EQ(theConfig()->vt_lb_stats, true);
+  EXPECT_EQ(theConfig()->vt_lb_data, true);
 
   // vt_no_detect_hang wasn't set, should be default
   EXPECT_EQ(theConfig()->vt_no_detect_hang, false);
@@ -143,7 +143,7 @@ TEST_F(TestInitialization, test_initialize_with_args_and_appconfig) {
   appConfig.vt_color = false;
   appConfig.vt_epoch_graph_on_hang = false;
   appConfig.vt_lb_name = "RotateLB";
-  appConfig.vt_lb_stats = true;
+  appConfig.vt_lb_data = true;
   appConfig.vt_no_detect_hang = false;
 
   vt::initialize(custom_argc, custom_argv, no_workers, true, &comm, &appConfig);
@@ -152,7 +152,7 @@ TEST_F(TestInitialization, test_initialize_with_args_and_appconfig) {
   EXPECT_EQ(theConfig()->vt_color, false);
   EXPECT_EQ(theConfig()->vt_epoch_graph_on_hang, false);
   EXPECT_EQ(theConfig()->vt_lb_name, "RotateLB");
-  EXPECT_EQ(theConfig()->vt_lb_stats, true);
+  EXPECT_EQ(theConfig()->vt_lb_data, true);
   EXPECT_EQ(theConfig()->vt_no_terminate, true);
   // CLI args should overwrite hardcoded appConfig
   EXPECT_EQ(theConfig()->vt_no_detect_hang, true);

@@ -198,11 +198,11 @@ INSTANTIATE_TEST_SUITE_P(
 
 struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
   virtual void addAdditionalArgs() override {
-    static char vt_lb_stats[]{"--vt_lb_stats"};
-    static char vt_lb_stats_dir[]{"--vt_lb_stats_dir=test_stats_dir"};
-    static char vt_lb_stats_file[]{"--vt_lb_stats_file=test_stats_outfile.%p.json"};
+    static char vt_lb_data[]{"--vt_lb_stats"};
+    static char vt_lb_data_dir[]{"--vt_lb_stats_dir=test_stats_dir"};
+    static char vt_lb_data_file[]{"--vt_lb_stats_file=test_stats_outfile.%p.json"};
 
-    addArgs(vt_lb_stats, vt_lb_stats_dir, vt_lb_stats_file);
+    addArgs(vt_lb_data, vt_lb_data_dir, vt_lb_data_file);
   }
 };
 
@@ -258,12 +258,12 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
   });
 
   if (vt::theContext()->getNode() == 0) {
-    removeStatsOutputDir(vt::theConfig()->vt_lb_stats_dir.c_str());
+    removeStatsOutputDir(vt::theConfig()->vt_lb_data_dir.c_str());
   }
 
   // Prevent NodeStats from closing files during finalize()
   // All the tmp files are removed already
-  vt::theConfig()->vt_lb_stats = false;
+  vt::theConfig()->vt_lb_data = false;
 }
 
 int countCreatedStatsFiles(char const* path) {

@@ -129,7 +129,7 @@ void NodeStats::initialize() {
   stats_ = std::make_unique<StatsData>();
 
 #if vt_check_enabled(lblite)
-  if (theConfig()->vt_lb_stats) {
+  if (theConfig()->vt_lb_data) {
     theNodeStats()->createStatsFile();
   }
 #endif
@@ -137,14 +137,14 @@ void NodeStats::initialize() {
 
 void NodeStats::createStatsFile() {
   auto const file_name = theConfig()->getLBDataFileOut();
-  auto const compress = theConfig()->vt_lb_stats_compress;
+  auto const compress = theConfig()->vt_lb_data_compress;
 
   vt_debug_print(
     normal, lb,
     "NodeStats::createStatsFile: file={}\n", file_name
   );
 
-  auto const dir = theConfig()->vt_lb_stats_dir;
+  auto const dir = theConfig()->vt_lb_data_dir;
   // Node 0 creates the directory
   if (not created_dir_ and theContext()->getNode() == 0) {
     mkdir(dir.c_str(), S_IRWXU);
@@ -172,7 +172,7 @@ void NodeStats::finalize() {
 
   // If statistics are enabled, close output file and clear stats
 #if vt_check_enabled(lblite)
-  if (theConfig()->vt_lb_stats) {
+  if (theConfig()->vt_lb_data) {
     clearStats();
   }
 #endif
@@ -214,7 +214,7 @@ getRecvSendDirection(elm::CommKeyType const& comm) {
 
 void NodeStats::outputStatsForPhase(PhaseType phase) {
   // Statistics output when LB is enabled and appropriate flag is enabled
-  if (!theConfig()->vt_lb_stats) {
+  if (!theConfig()->vt_lb_data) {
     return;
   }
 
