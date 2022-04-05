@@ -65,7 +65,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * node.
  *
  * A common flow is for the LBAF (Load Balancing Analysis Framework) to generate
- * a new load distribution offline, producing LB stats file, which are then read
+ * a new load distribution offline, producing LB data file, which are then read
  * by this component to follow the LB distribution described in those mapping
  * files.
  */

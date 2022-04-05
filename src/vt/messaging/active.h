@@ -1731,7 +1731,7 @@ private:
    * \param[in] base the message base pointer
    * \param[in] msg_size the size of the message being sent
    */
-  void recordLbStatsCommForSend(
+  void recordLBDataCommForSend(
     NodeType const dest, MsgSharedPtr<BaseMsgType> const& base,
     MsgSizeType const msg_size
   );

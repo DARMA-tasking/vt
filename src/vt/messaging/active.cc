@@ -448,7 +448,7 @@ EventType ActiveMessenger::sendMsgBytes(
     theTerm()->hangDetectSend();
   }
 
-  recordLbStatsCommForSend(dest, base, msg_size);
+  recordLBDataCommForSend(dest, base, msg_size);
 
   return event_id;
 }
@@ -512,7 +512,7 @@ EventType ActiveMessenger::doMessageSend(
     if (dest != this_node) {
       sendMsgBytesWithPut(dest, base, send_tag);
     } else {
-      recordLbStatsCommForSend(dest, base, base.size());
+      recordLBDataCommForSend(dest, base, base.size());
 
       runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
         .withTDEpochFromMsg(is_term)
@@ -888,7 +888,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
   }
 }
 
-void ActiveMessenger::recordLbStatsCommForSend(
+void ActiveMessenger::recordLBDataCommForSend(
   NodeType const dest, MsgSharedPtr<BaseMsgType> const& base,
   MsgSizeType const msg_size
 ) {

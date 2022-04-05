@@ -161,7 +161,7 @@ struct RunnableMaker {
   }
 
   /**
-   * \brief Add LB stats for instrumentation
+   * \brief Add LB data for instrumentation
    *
    * \param[in] elm the element
    * \param[in] msg the associated message (might be different than the already
@@ -176,7 +176,7 @@ struct RunnableMaker {
   }
 
   /**
-   * \brief Add LB stats for instrumentation (without a message)
+   * \brief Add LB data for instrumentation (without a message)
    *
    * \param[in] elm the element
    */
@@ -186,7 +186,7 @@ struct RunnableMaker {
   }
 
   /**
-   * \brief Add LB stats for instrumentation directly with element ID and stats
+   * \brief Add LB data for instrumentation directly with element ID and stats
    *
    * \param[in] stats the stats
    * \param[in] elm_id the element ID
@@ -200,7 +200,7 @@ struct RunnableMaker {
   }
 
   /**
-   * \brief Add LB stats for instrumentation
+   * \brief Add LB data for instrumentation
    *
    * \param[in] elm the element
    */
