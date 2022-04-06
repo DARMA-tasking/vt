@@ -53,6 +53,7 @@
 #include "vt/utils/json/json_appender.h"
 
 #include <nlohmann/json.hpp>
+#include <memory>
 
 #include <dirent.h>
 
@@ -545,11 +546,11 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
     EXPECT_NE(elm_ptr, nullptr);
     if (elm_ptr != nullptr) {
       auto elm_id = elm_ptr->getElmID();
-
       elm_ptr->valInsert("hello", std::string("world"), should_dump);
       elm_ptr->valInsert("elephant", 123456789, should_dump);
-      sd.user_defined_json_[phase][elm_id] = elm_ptr->toJson();
-
+      sd.user_defined_json_[phase][elm_id] = std::make_shared<nlohmann::json>(
+        elm_ptr->toJson()
+      );
       sd.node_data_[phase][elm_id].whole_phase_load = 1.0;
     }
   }

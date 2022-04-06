@@ -56,6 +56,7 @@
 #include <unordered_map>
 #include <cstdio>
 #include <sys/stat.h>
+#include <memory>
 
 #include <fmt/core.h>
 
@@ -283,7 +284,9 @@ void NodeLBData::addNodeLBData(
   }
 
   if (storable) {
-    stats_->user_defined_json_[phase][id] = storable->toJson();
+    stats_->user_defined_json_[phase][id] = std::make_shared<nlohmann::json>(
+      storable->toJson()
+    );
   }
 
   in->updatePhase(1);
