@@ -86,18 +86,17 @@ ObjGroupProxyType ObjGroupManager::getProxy(ObjGroupProxyType proxy) {
 void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
   // Extract the control-bit sequence from the handler
   auto const ctrl = HandlerManager::getHandlerControl(han);
-  auto const type_idx = auto_registry::getAutoHandlerObjTypeIdx(han);
   vt_debug_print(
     verbose, objgroup,
-    "dispatch: type_idx={:x}, ctrl={:x}, han={:x}\n", type_idx, ctrl, han
+    "dispatch: ctrl={:x}, han={:x}\n", ctrl, han
   );
   auto const node = 0;
-  auto const proxy = proxy::ObjGroupProxy::create(ctrl,type_idx,node,true);
+  auto const proxy = proxy::ObjGroupProxy::create(ctrl, node, true);
   auto dispatch_iter = dispatch_.find(proxy);
   vt_debug_print(
     normal, objgroup,
-    "dispatch: try type_idx={:x}, ctrl={:x}, han={:x}, has dispatch={}\n",
-    type_idx, ctrl, han, dispatch_iter != dispatch_.end()
+    "dispatch: try ctrl={:x}, han={:x}, has dispatch={}\n",
+    ctrl, han, dispatch_iter != dispatch_.end()
   );
   if (dispatch_iter == dispatch_.end()) {
     auto const epoch = envelopeGetEpoch(msg->env);
@@ -111,18 +110,12 @@ void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) 
 }
 
 ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
-  HolderBasePtrType base, ObjTypeIdxType idx, void* obj_ptr
+  HolderBasePtrType base, void* obj_ptr
 ) {
-  auto iter = cur_obj_id_.find(idx);
-  if (iter == cur_obj_id_.end()) {
-    cur_obj_id_[idx] = fst_obj_group_id;
-    iter = cur_obj_id_.find(idx);
-  }
-  vtAssert(iter != cur_obj_id_.end(), "Must have valid type idx lookup");
-  auto const id = iter->second++;
+  auto const id = cur_obj_id_++;
   auto const node = theContext()->getNode();
   auto const is_collective = true;
-  auto const proxy = proxy::ObjGroupProxy::create(id, idx, node, is_collective);
+  auto const proxy = proxy::ObjGroupProxy::create(id, node, is_collective);
 
   obj_to_proxy_[obj_ptr] = proxy;
 
@@ -138,29 +131,16 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
 
 ObjGroupManager::HolderBaseType* ObjGroupManager::getHolderBase(HandlerType han) {
   auto const ctrl = HandlerManager::getHandlerControl(han);
-  auto const type_idx = auto_registry::getAutoHandlerObjTypeIdx(han);
   auto const node = 0;
-  auto const proxy = proxy::ObjGroupProxy::create(ctrl, type_idx, node, true);
+  auto const proxy = proxy::ObjGroupProxy::create(ctrl, node, true);
   vt_debug_print(
     normal, objgroup,
-    "getHolderBase: type_idx={:x}, ctrl={:x}, han={:x}, proxy={:x}\n",
-    type_idx, ctrl, han, proxy
+    "getHolderBase: ctrl={:x}, han={:x}, proxy={:x}\n",
+    ctrl, han, proxy
   );
   auto iter = objs_.find(proxy);
   if (iter != objs_.end()) {
     return iter->second.get();
-  } else {
-    for (auto&& elm : derived_to_bases_) {
-      for (auto&& base : elm.second) {
-        if (base == proxy) {
-          auto const derived = elm.first;
-          auto iter2 = objs_.find(derived);
-          if (iter2 != objs_.end()) {
-            return iter2->second.get();
-          }
-        }
-      }
-    }
   }
   return nullptr;
 }
