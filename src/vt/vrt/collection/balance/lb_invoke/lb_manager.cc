@@ -219,6 +219,12 @@ LBManager::runLB(
     model_->updateLoads(phase);
   });
 
+  lb::BaseLB* strat = base_proxy.get();
+  if (strat->isCommAware()) {
+    // do exchange
+    // runInEpochCollective(...)
+  }
+
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
     auto stats_cb = vt::theCB()->makeBcast<
       LBManager, StatsMsgType, &LBManager::statsHandler
@@ -239,7 +245,6 @@ LBManager::runLB(
 
   vt_debug_print(terse, lb, "LBManager: running strategy\n");
 
-  lb::BaseLB* strat = base_proxy.get();
   auto reassignment = strat->startLB(
     phase, base_proxy, model_.get(), stats, *comm, total_load_from_model
   );

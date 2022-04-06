@@ -143,6 +143,8 @@ struct BaseLB {
 
   TransferVecType& getTransfers() { return transfers_; }
 
+  bool isCommAware() const { return comm_aware_; }
+
 protected:
   void getArgs(PhaseType phase);
 
