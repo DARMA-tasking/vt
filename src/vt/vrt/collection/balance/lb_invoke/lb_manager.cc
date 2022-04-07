@@ -163,7 +163,7 @@ LBManager::makeLB() {
   auto proxy = theObjGroup()->makeCollective<LB>();
   auto strat = proxy.get();
   strat->init(proxy);
-  auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
+  auto base_proxy = proxy.template castToBase<lb::BaseLB>();
 
   destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
 

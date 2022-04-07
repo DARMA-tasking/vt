@@ -243,37 +243,12 @@ public:
   ObjGroupProxyType getProxy() const;
 
   /**
-   * \brief Register the base class type for this objgroup, returning a valid
-   * proxy to operate on the base.
+   * \brief Cast typed proxy to the base class type for this objgroup
    *
    * \return base class proxy
    */
   template <typename BaseT>
-  Proxy<BaseT> registerBaseCollective() const;
-
-  /**
-   * \brief Downcast the proxy
-   *
-   * \warning In most cases this should not be called by users. It can have
-   * dangerous behavior depending on how its used. Use \c registerBaseCollective
-   * to get a proxy to the base.
-   *
-   * \return the typed proxy to the base
-   */
-  template <typename BaseT>
-  Proxy<BaseT> downcast() const;
-
-  /**
-   * \brief Upcast the proxy
-   *
-   * \warning In most cases this should not be called by users. It can have
-   * dangerous behavior depending on how its used. Use \c registerBaseCollective
-   * to get a proxy to the base.
-   *
-   * \return the typed proxy to the derived
-   */
-  template <typename DerivedT>
-  Proxy<DerivedT> upcast() const;
+  Proxy<BaseT> castToBase() const;
 
   /**
    * \brief Collective destroy this objgroup instance on all nodes
