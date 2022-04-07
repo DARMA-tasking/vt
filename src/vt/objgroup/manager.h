@@ -61,7 +61,6 @@
 #include <memory>
 #include <functional>
 #include <unordered_map>
-#include <deque>
 #include <vector>
 
 namespace vt { namespace objgroup {
