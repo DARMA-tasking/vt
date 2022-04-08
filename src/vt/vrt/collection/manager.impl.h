@@ -1789,7 +1789,7 @@ template <typename ColT, typename IndexT>
 MigrateStatus CollectionManager::migrateOut(
   VirtualProxyType const& col_proxy, IndexT const& idx, NodeType const& dest
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNode();
 
   vt_debug_print(
     terse, vrt_coll,
@@ -1797,7 +1797,6 @@ MigrateStatus CollectionManager::migrateOut(
     col_proxy, this_node, dest, print_index(idx)
   );
 
-  // if (this_node != dest) {
   vt_debug_print(
     terse, vrt_coll, "migrating from {} to {}\n", this_node, dest
   );
@@ -1860,8 +1859,7 @@ MigrateStatus CollectionManager::migrateOut(
 
   using MigrateMsgType = MigrateMsg<ColT, IndexT>;
 
-  auto msg =
-    makeMessage<MigrateMsgType>(proxy, this_node, dest, &typed_col_ref);
+  auto msg = makeMessage<MigrateMsgType>(proxy, this_node, dest, &typed_col_ref);
 
   theMsg()->sendMsg<
     MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
@@ -1893,16 +1891,6 @@ MigrateStatus CollectionManager::migrateOut(
   );
 
   return MigrateStatus::MigratedToRemote;
-  // } else {
-  // #if vt_check_enabled(runtime_checks)
-  //   vtAssert(
-  //     false, "Migration should only be called when to_node is != this_node"
-  //   );
-  // #else
-  //     // Do nothing
-  // #endif
-  //   return MigrateStatus::NoMigrationNecessary;
-  // }
 }
 
 template <typename ColT, typename IndexT>

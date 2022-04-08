@@ -144,7 +144,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
 
     if (current_node == new_node) {
       vt_debug_print(
-        terse, lb, "BaseLB::normalizeReassignments(): self migration\n"
+        verbose, lb, "BaseLB::normalizeReassignments(): self migration\n"
        );
     }
 
@@ -226,10 +226,18 @@ void BaseLB::notifyNewHostNodeOfObjectsArriving(
   }
 }
 
-void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to, bool const allow_self_migration) {
-  if (obj_id.curr_node != to || allow_self_migration) {
-    transfers_.push_back(TransferDestType{obj_id, to});
+void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
+  if (obj_id.curr_node != to) {
+    migrateObject(obj_id, to);
   }
+}
+
+void BaseLB::migrateObjectToSelf(const ObjIDType obj_id) {
+  migrateObject(obj_id, obj_id.curr_node);
+}
+
+void BaseLB::migrateObject(const ObjIDType obj_id, const NodeType to) {
+  transfers_.push_back(TransferDestType{obj_id, to});
 }
 
 void BaseLB::finalize(CountMsg* msg) {

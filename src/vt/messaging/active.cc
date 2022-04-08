@@ -220,7 +220,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   auto const& is_term = envelopeIsTerm(msg->env);
   auto const& is_put = envelopeIsPut(msg->env);
   auto const& is_put_packed = envelopeIsPackedPutType(msg->env);
-  auto const& is_bcast = envelopeIsBcast(msg->env);
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(

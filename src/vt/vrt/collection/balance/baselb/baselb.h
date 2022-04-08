@@ -126,8 +126,14 @@ struct BaseLB {
     TransferVecType const& transfers, MigrationCountCB migration_count_callback
   );
   void migrationDone();
-  // TODO (STRZ) - in the end don't use bool var
-  void migrateObjectTo(ObjIDType const obj_id, NodeType const node, bool const allow_self_migration = false);
+  void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
+
+  /*
+   * This function migrates object from and to the same node. It is used
+   * by SerdeTestLB for purpose of testing serialization and deserialization.
+   */
+  void migrateObjectToSelf(ObjIDType const obj_id);
+
   void transferSend(NodeType from, TransferVecType const& transfer);
   void transferMigrations(TransferMsg<TransferVecType>* msg);
   void finalize(CountMsg* msg);
@@ -161,6 +167,8 @@ protected:
    * \return A normalized reassignment
    */
   std::shared_ptr<const balance::Reassignment> normalizeReassignments();
+
+  void migrateObject(ObjIDType const obj_id, NodeType const node);
 
 private:
   TransferVecType transfers_                      = {};

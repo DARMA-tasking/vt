@@ -59,7 +59,6 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct SerdeTestLB : BaseLB {
-
   SerdeTestLB() = default;
   virtual ~SerdeTestLB() {}
 
@@ -68,9 +67,6 @@ struct SerdeTestLB : BaseLB {
   void inputParams(balance::SpecEntry* spec) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
-
-private:
-  objgroup::proxy::Proxy<SerdeTestLB> proxy = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

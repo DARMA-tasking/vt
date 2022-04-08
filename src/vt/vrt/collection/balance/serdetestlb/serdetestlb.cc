@@ -41,13 +41,8 @@
 //@HEADER
 */
 
-// #include "vt/config.h"
-// #include "vt/timing/timing.h"
 #include "vt/vrt/collection/balance/serdetestlb/serdetestlb.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
-// #include "vt/vrt/collection/manager.h"
-
-// #include <memory>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -62,27 +57,16 @@ void SerdeTestLB::inputParams(balance::SpecEntry*) { }
 
 void SerdeTestLB::runLB(TimeType) {
   auto const this_node = theContext()->getNode();
-  auto const next_node = this_node;
-
-  if (this_node == 0) {
-    vt_print(
-      lb,
-      "SerdeTestLB: runLB: next_node={}\n",
-      next_node
-    );
-    fflush(stdout);
-  }
-
   for (auto obj : *load_model_) {
     TimeTypeWrapper const load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
     vt_debug_print(
       terse, lb,
-      "\t SerdeTestLB::migrating object to: obj={}, load={}, to_node={} from_node={}\n",
-      obj, load, next_node, this_node
+      "\t SerdeTestLB::migrating object to: obj={}, load={}, from_node={} to_node={}\n",
+      obj, load, this_node, this_node
     );
+
     if (obj.isMigratable()) {
-      constexpr bool allow_self_migration = true;
-      migrateObjectTo(obj, next_node, allow_self_migration);
+      migrateObjectToSelf(obj);
     }
   }
 }
