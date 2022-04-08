@@ -60,6 +60,7 @@ static std::unordered_map<LBType,std::string> lb_names_ = {
   {LBType::TemperedLB,     std::string{"TemperedLB"    }},
   {LBType::StatsMapLB,     std::string{"StatsMapLB"    }},
   {LBType::RandomLB,       std::string{"RandomLB"      }},
+  {LBType::CharmLB,        std::string{"CharmLB"      }},
 };
 
 std::unordered_map<LBType, std::string>& get_lb_names() {

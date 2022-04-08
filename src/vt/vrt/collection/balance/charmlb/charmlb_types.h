@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.h
+//                               charmlb_types.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,51 +41,70 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_TYPES_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_TYPES_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 
+#include <cstdlib>
+#include <list>
 #include <unordered_map>
-#include <string>
-#include <type_traits>
+#include <map>
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-enum struct LBType : int8_t {
-    NoLB             = 0
-  , GreedyLB         = 1
-  , HierarchicalLB   = 2
-  , RotateLB         = 3
-  , TemperedLB       = 4
-  , StatsMapLB       = 5
-# if vt_check_enabled(zoltan)
-  , ZoltanLB         = 6
-# endif
-  , RandomLB         = 7
-  , CharmLB          = 8
+struct CharmLBTypes {
+  using ObjIDType = balance::ElementIDStruct;
+  using ObjBinType = int32_t;
+  using ObjBinListType = std::list<ObjIDType>;
+  using ObjSampleType = std::map<ObjBinType, ObjBinListType>;
+  using LoadType = double;
+  using LoadProfileType = std::unordered_map<NodeType,LoadType>;
 };
 
-}}}} /* end namespace vt::vrt::collection::balance */
+struct CharmRecord {
+  using IDType = CharmLBTypes::ObjIDType;
+  using LoadType = CharmLBTypes::LoadType;
 
-namespace std {
+  CharmRecord(IDType const& in_id, LoadType const& in_load)
+    : id_(in_id), load_(in_load)
+  { }
 
-template <>
-struct hash<vt::vrt::collection::balance::LBType> {
-  size_t operator()(vt::vrt::collection::balance::LBType const& in) const {
-    using LBUnderType =
-      std::underlying_type<vt::vrt::collection::balance::LBType>::type;
-    auto const val = static_cast<LBUnderType>(in);
-    return std::hash<LBUnderType>()(val);
+  LoadType getLoad() const { return load_; }
+  LoadType getLoad(const int dim) const { return load_; }
+  LoadType operator[](const size_t dim) const { return load_; }
+  IDType getID() const { return id_; }
+
+private:
+  CharmLBTypes::ObjIDType id_ = { elm::no_element_id, uninitialized_destination };
+  LoadType load_ = 0.0f;
+};
+
+struct CharmDecision {
+  CharmDecision() = default;
+  CharmDecision(NodeType const &in_node,
+                std::vector<CharmLBTypes::ObjIDType> &&objs)
+      : node_(in_node), objs_(objs) {}
+
+  NodeType node_ = uninitialized_destination;
+  std::vector<CharmLBTypes::ObjIDType> objs_;
+};
+
+template <typename T>
+struct CharmCompareLoadMin {
+  bool operator()(T const& p1, T const& p2) const {
+    return p1.getLoad() > p2.getLoad();
   }
 };
 
-} /* end namespace std */
+template <typename T>
+struct CharmCompareLoadMax {
+  bool operator()(T const& p1, T const& p2) const {
+    return p1.getLoad() < p2.getLoad();
+  }
+};
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+}}}} /* end namespace vt::vrt::collection::lb */
 
-std::unordered_map<LBType, std::string>& get_lb_names();
-
-}}}} /* end namespace vt::vrt::collection::balance */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_CHARMLB_CHARMLB_TYPES_H*/
