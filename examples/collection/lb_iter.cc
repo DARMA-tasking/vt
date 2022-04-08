@@ -66,14 +66,6 @@ struct IterCol : vt::Collection<IterCol, vt::Index1D> {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    if (s.isSizing()) {
-      fmt::print("IterCol::serialize()::isSizing()\n");
-    } else if (s.isPacking()) {
-      fmt::print("IterCol::serialize()::isPacking()\n");
-    } else if (s.isUnpacking()) {
-      fmt::print("IterCol::serialize()::isUnpacking()\n");
-    }
-
     vt::Collection<IterCol, vt::Index1D>::serialize(s);
     s | data_2;
   }
