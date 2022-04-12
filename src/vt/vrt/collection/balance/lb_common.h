@@ -122,6 +122,27 @@ struct Reassignment {
   std::unordered_map<ElementIDStruct, LoadSummary> arrive_;
 };
 
+struct ReassignmentMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_required();
+
+  ReassignmentMsg() = default;
+  ReassignmentMsg(ReassignmentMsg const&) = default;
+  ReassignmentMsg(
+    std::shared_ptr<Reassignment const> in_reassignment, PhaseType in_phase
+  ) : reassignment(in_reassignment),
+      phase(in_phase)
+  { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    vtAssert(false, "Must never be called");
+  }
+
+  std::shared_ptr<Reassignment const> reassignment;
+  PhaseType phase;
+};
+
 void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reassignment);
 
 struct LoadModel;

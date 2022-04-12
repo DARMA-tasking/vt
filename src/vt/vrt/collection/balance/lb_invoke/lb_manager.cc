@@ -170,14 +170,44 @@ LBManager::makeLB() {
   return base_proxy;
 }
 
+void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
+  auto r = msg->reassignment;
+  auto phase = msg->phase;
+  auto proposed = std::make_shared<ProposedReassignment>(model_, r);
+
+  runInEpochCollective("LBManager::runLB -> computeStats", [=] {
+    auto stats_cb = vt::theCB()->makeBcast<
+      LBManager, StatsMsgType, &LBManager::statsHandler
+    >(proxy_);
+    computeStatistics(proposed, false, phase, stats_cb);
+  });
+
+  applyReassignment(r);
+
+  // Inform the collection manager to rebuild spanning trees if needed
+  if (r->global_migration_count != 0) {
+    theCollection()->getTypelessHolder().invokeAllGroupConstructors();
+  }
+
+  vt_debug_print(
+    terse, lb,
+    "LBManager: finished migrations\n"
+  );
+}
+
 void
-LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
+LBManager::runLB(
+  LBProxyType base_proxy, PhaseType phase, vt::Callback<ReassignmentMsg> cb
+) {
   runInEpochCollective("LBManager::runLB -> updateLoads", [=] {
     model_->updateLoads(phase);
   });
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    computeStatistics(model_, false, phase);
+    auto stats_cb = vt::theCB()->makeBcast<
+      LBManager, StatsMsgType, &LBManager::statsHandler
+    >(proxy_);
+    computeStatistics(model_, false, phase, stats_cb);
   });
 
   elm::CommMapType empty_comm;
@@ -193,31 +223,29 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
   auto reassignment = strat->startLB(
     phase, base_proxy, model_.get(), stats, *comm, total_load
   );
-
-  auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
-  runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    computeStatistics(proposed, false, phase);
-  });
-
-  applyReassignment(reassignment);
-
-  // Inform the collection manager to rebuild spanning trees if needed
-  if (reassignment->global_migration_count != 0) {
-    theCollection()->getTypelessHolder().invokeAllGroupConstructors();
-  }
-
-  vt_debug_print(
-    terse, lb,
-    "LBManager: finished migrations\n"
-  );
+  cb.send(reassignment, phase);
 }
 
 void LBManager::selectStartLB(PhaseType phase) {
-  LBType lb = decideLBToRun(phase, true);
-  startLB(phase, lb);
+  namespace ph = std::placeholders;
+  auto post_lb_ptr = std::mem_fn(&LBManager::defaultPostLBWork);
+  auto post_lb_fn = std::bind(post_lb_ptr, this, ph::_1);
+  auto cb = theCB()->makeFunc<ReassignmentMsg>(
+    vt::pipe::LifetimeEnum::Once, post_lb_fn
+  );
+  selectStartLB(phase, cb);
 }
 
-void LBManager::startLB(PhaseType phase, LBType lb) {
+void LBManager::selectStartLB(
+  PhaseType phase, vt::Callback<ReassignmentMsg> cb
+) {
+  LBType lb = decideLBToRun(phase, true);
+  startLB(phase, lb, cb);
+}
+
+void LBManager::startLB(
+  PhaseType phase, LBType lb, vt::Callback<ReassignmentMsg> cb
+) {
   vt_debug_print(
     normal, lb,
     "LBManager::startLB: phase={}\n", phase
@@ -259,7 +287,7 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
   }
 
   LBProxyType base_proxy = lb_instances_["chosen"];
-  runLB(base_proxy, phase);
+  runLB(base_proxy, phase, cb);
 }
 
 /*static*/
@@ -426,7 +454,8 @@ balance::LoadData reduceVec(
 }
 
 void LBManager::computeStatistics(
-  std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase
+  std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase,
+  vt::Callback<StatsMsgType> cb
 ) {
   vt_debug_print(
     normal, lb,
@@ -434,10 +463,6 @@ void LBManager::computeStatistics(
   );
 
   using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
-
-  auto cb = vt::theCB()->makeBcast<
-    LBManager, StatsMsgType, &LBManager::statsHandler
-  >(proxy_);
 
   total_load = 0.;
   std::vector<balance::LoadData> O_l;

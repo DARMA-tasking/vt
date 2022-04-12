@@ -128,6 +128,15 @@ public:
    * \brief Collectively start load balancing after deciding which to run
    *
    * \param[in] phase the phase
+   * \param[in] cb the callback for delivering the reassignment
+   */
+  void selectStartLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb);
+
+  /**
+   * \internal
+   * \brief Collectively start load balancing after deciding which to run
+   *
+   * \param[in] phase the phase
    */
   void selectStartLB(PhaseType phase);
 
@@ -137,8 +146,9 @@ public:
    *
    * \param[in] phase the phase
    * \param[in] lb the load balancer to run
+   * \param[in] cb the callback for delivering the reassignment
    */
-  void startLB(PhaseType phase, LBType lb);
+  void startLB(PhaseType phase, LBType lb, vt::Callback<ReassignmentMsg> cb);
 
   /**
    * \internal
@@ -209,12 +219,34 @@ protected:
   template <typename LB>
   LBProxyType makeLB();
 
-  void runLB(LBProxyType base_proxy, PhaseType phase);
+  /**
+   * \internal
+   * \brief Run the load balancer
+   *
+   * \param[in] base_proxy the base proxy for the LB
+   * \param[in] phase the phase
+   * \param[in] cb the callback for delivering the reassignment
+   */
+  void runLB(
+    LBProxyType base_proxy, PhaseType phase, vt::Callback<ReassignmentMsg> cb
+  );
+
+  void defaultPostLBWork(ReassignmentMsg* r);
 
 private:
+  /**
+   * \brief Compute statistics given a load model
+   *
+   * \param[in] model the load model
+   * \param[in] comm_collectives whether to consider collective communication
+   * \param[in] phase the phase
+   * \param[in] cb the callback to receive the statistics
+   */
   void computeStatistics(
-    std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase
+    std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase,
+    vt::Callback<StatsMsgType> cb
   );
+
   void statsHandler(StatsMsgType* msg);
   bool isCollectiveComm(elm::CommCategory cat) const;
 
