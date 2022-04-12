@@ -1,4 +1,4 @@
-# This runs testing for intel 18 and 19 which are not available
+# This runs testing for intel 19 and platforms which are not available
 # in the github testing environment
 
 stages:
@@ -7,7 +7,7 @@ stages:
 
 # before_script:
 
-.intel19:
+intel19:
   variables:
     - OMPI_FC: "ifort"
     - FC: "ifort"
@@ -19,37 +19,39 @@ stages:
   script:
     - module load cde/v2/cmake/3.19.2
     - module load cde/v2/ninja/1.10.1
+    - module unload intel/16.0
     - module load cde/v2/compiler/intel/19.1.2
+    - module unload openmpi-intel/1.10
     - module load cde/v2/intel/19.1.2/openmpi/4.0.5
-    - vt/ci/build_cpp.sh $CI_PROJECT_DIR ~/vt_build_intel19
+    - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
   only:
     refs:
       - develop
       - merge_request
   tags:
-    - foobar
+    - intel19
 
 xlC-vortex:
   variables:
     OMPI_FC: "gfortran"
-    FC: "gfortran"
+    FC: "xlf"
     OMPI_CC: "gcc"
-    CC: "gcc"
+    CC: "xlc"
     OMPI_CXX: "g++"
-    CXX: "g++"
+    CXX: "xlc++"
   stage: build
   script:
     - module load cmake/3.18.0
     - module load ninja/1.9.0
     - module load git
-    - module unload xl
-    - module unload gcc
-    - module load gcc/7.2.1-redhat
-    - module unload cuda
-    - module load cuda/10.1.243
-    - module unload spectrum-mpi
-    - module load spectrum-mpi/rolling-release
-    - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/build
+    # module unload xl
+    # module unload gcc
+    # module load gcc/7.2.1-redhat
+    # module unload cuda
+    # module load cuda/10.1.243
+    # module unload spectrum-mpi
+    # module load spectrum-mpi/rolling-release
+    - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_xlC
   only:
     refs:
       - develop
@@ -68,7 +70,7 @@ arm-stria:
     - module load devpack-arm
     - module load cde/v2.1/ninja
     - module swap cmake cmake/3.20.5
-    - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/build
+    - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_gcc
   only:
     refs:
       - develop
