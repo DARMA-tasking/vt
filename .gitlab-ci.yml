@@ -27,7 +27,7 @@ intel19:
   only:
     refs:
       - develop
-      - merge_request
+      - add_pipeline
   tags:
     - intel19_batch
 
