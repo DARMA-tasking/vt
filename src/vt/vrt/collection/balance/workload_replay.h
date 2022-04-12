@@ -56,7 +56,7 @@
 #include <set>
 
 namespace vt { namespace vrt { namespace collection {
-namespace balance {
+namespace balance { namespace replay {
 
 /**
  * \brief Simulate replaying the object workloads as recorded in the json file,
@@ -222,6 +222,6 @@ private:
   );
 };
 
-}}}} /* end namespace vt::vrt::collection::balance */
+}}}}} /* end namespace vt::vrt::collection::balance::replay */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_WORKLOAD_REPLAY_H*/

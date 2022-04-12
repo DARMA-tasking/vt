@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 
   // the workloads used will be those specified with the command-line arguments
   // --vt_lb_stats_file_in and --vt_lb_stats_dir_in
-  vt::vrt::collection::balance::replayWorkloads(
+  vt::vrt::collection::balance::replay::replayWorkloads(
     initial_phase, phases_to_run
   );
 

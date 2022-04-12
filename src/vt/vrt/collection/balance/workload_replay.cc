@@ -52,7 +52,7 @@
 #include <set>
 
 namespace vt { namespace vrt { namespace collection {
-namespace balance {
+namespace balance { namespace replay {
 
 void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run
@@ -430,4 +430,4 @@ WorkloadDataMigrator::createModelToMoveWorkloadsHere(
   return std::make_shared<ProposedReassignment>(model_base, here_assignment);
 }
 
-}}}} /* end namespace vt::vrt::collection::balance */
+}}}}} /* end namespace vt::vrt::collection::balance::replay */

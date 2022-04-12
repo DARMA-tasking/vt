@@ -56,14 +56,14 @@
 
 #if vt_check_enabled(lblite)
 
-namespace vt { namespace tests { namespace unit { namespace reassignment {
+namespace vt { namespace tests { namespace unit { namespace replay {
 
 using namespace vt::tests::unit;
 
 using vt::vrt::collection::balance::StatsData;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ProposedReassignment;
-using vt::vrt::collection::balance::WorkloadDataMigrator;
+using vt::vrt::collection::balance::replay::WorkloadDataMigrator;
 
 struct TestWorkloadDataMigrator : TestParallelHarness { };
 
@@ -655,9 +655,11 @@ TEST_F(TestWorkloadReplay, test_run_replay_no_verify) {
   auto sd = setupManyWorkloads(initial_phase, num_phases, numElements);
 
   // then replay them but allow the lb to place objects differently
-  replayWorkloads(initial_phase, num_phases, sd);
+  vt::vrt::collection::balance::replay::replayWorkloads(
+    initial_phase, num_phases, sd
+  );
 }
 
-}}}} // end namespace vt::tests::unit::reassignment
+}}}} // end namespace vt::tests::unit::replay
 
 #endif /*vt_check_enabled(lblite)*/
