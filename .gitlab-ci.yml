@@ -29,7 +29,7 @@ intel19:
       - develop
       - merge_request
   tags:
-    - intel19
+    - intel19_batch
 
 xlC-vortex:
   variables:
@@ -44,13 +44,6 @@ xlC-vortex:
     - module load cmake/3.18.0
     - module load ninja/1.9.0
     - module load git
-    # module unload xl
-    # module unload gcc
-    # module load gcc/7.2.1-redhat
-    # module unload cuda
-    # module load cuda/10.1.243
-    # module unload spectrum-mpi
-    # module load spectrum-mpi/rolling-release
     - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_xlC
   only:
     refs:
