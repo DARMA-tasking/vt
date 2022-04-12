@@ -9,12 +9,12 @@ stages:
 
 intel19:
   variables:
-    - OMPI_FC: "ifort"
-    - FC: "ifort"
-    - OMPI_CC: "icc"
-    - CC: "icc"
-    - OMPI_CXX: "icpc"
-    - CXX: "icpc"
+    OMPI_FC: "ifort"
+    FC: "ifort"
+    OMPI_CC: "icc"
+    CC: "icc"
+    OMPI_CXX: "icpc"
+    CXX: "icpc"
   stage: build
   script:
     - module load cde/v2/cmake/3.19.2
