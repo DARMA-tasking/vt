@@ -59,7 +59,7 @@ void replayWorkloads(
 ) {
   // read in object loads from json files
   auto const filename = theConfig()->getLBStatsFileIn();
-  auto workloads = WorkloadDataMigrator::readInWorkloads(filename);
+  auto workloads = readInWorkloads(filename);
 
   replayWorkloads(initial_phase, phases_to_run, workloads);
 }
@@ -207,6 +207,33 @@ void replayWorkloads(
   }
 }
 
+std::shared_ptr<StatsData>
+readInWorkloads(const std::string &filename) {
+  using util::json::Reader;
+
+  Reader r{filename};
+  auto json = r.readFile();
+  auto sd = std::make_shared<StatsData>(*json);
+
+  for (auto &phase_data : sd->node_data_) {
+    vt_debug_print(
+      normal, replay,
+      "found {} loads for phase {}\n",
+      phase_data.second.size(), phase_data.first
+    );
+  }
+
+  for (auto &phase_data : sd->node_comm_) {
+    vt_debug_print(
+      normal, replay,
+      "found {} comms for phase {}\n",
+      phase_data.second.size(), phase_data.first
+    );
+  }
+
+  return sd;
+}
+
 
 /*static*/
 objgroup::proxy::Proxy<WorkloadDataMigrator>
@@ -256,34 +283,6 @@ WorkloadDataMigrator::updateCurrentNodes(
     modified_reassignment->arrive_[id] = arr.second;
   }
   return modified_reassignment;
-}
-
-/*static*/
-std::shared_ptr<StatsData>
-WorkloadDataMigrator::readInWorkloads(std::string filename) {
-  using util::json::Reader;
-
-  Reader r{filename};
-  auto json = r.readFile();
-  auto sd = std::make_shared<StatsData>(*json);
-
-  for (auto &phase_data : sd->node_data_) {
-    vt_debug_print(
-      normal, replay,
-      "found {} loads for phase {}\n",
-      phase_data.second.size(), phase_data.first
-    );
-  }
-
-  for (auto &phase_data : sd->node_comm_) {
-    vt_debug_print(
-      normal, replay,
-      "found {} comms for phase {}\n",
-      phase_data.second.size(), phase_data.first
-    );
-  }
-
-  return sd;
 }
 
 /*static*/

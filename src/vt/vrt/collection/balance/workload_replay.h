@@ -95,6 +95,17 @@ void replayWorkloads(
 );
 
 /**
+ * \brief Build a StatsData object from the LB data in a json file
+ *
+ * \param[in] filename read in LB data from the specified json file
+ *
+ * \return the StatsData object built from the LB data
+ */
+std::shared_ptr<StatsData>
+readInWorkloads(const std::string &filename);
+
+
+/**
  * \struct WorkloadDataMigrator
  *
  * \brief A helper objgroup for workload replay. Derives from
@@ -138,16 +149,6 @@ struct WorkloadDataMigrator : lb::BaseLB {
   updateCurrentNodes(
     std::shared_ptr<const Reassignment> lb_reassignment
   );
-
-  /**
-   * \brief Build a StatsData object from the LB data in a json file
-   *
-   * \param[in] filename read in LB data from the specified json file
-   *
-   * \return the StatsData object built from the LB data
-   */
-  static std::shared_ptr<StatsData>
-  readInWorkloads(std::string filename);
 
   /**
    * \brief Relocate object workloads to the rank where the objects are supposed
