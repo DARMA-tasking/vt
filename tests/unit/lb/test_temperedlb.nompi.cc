@@ -44,6 +44,7 @@
 #include <vt/vrt/collection/balance/lb_common.h>
 #include <vt/vrt/collection/balance/baselb/baselb.h>
 #include <vt/vrt/collection/balance/temperedlb/temperedlb.h>
+#include <vt/vrt/collection/balance/temperedwmin/temperedwmin.h>
 
 #include "test_harness.h"
 
@@ -75,14 +76,15 @@ TimeType setupProblem(
 
 void orderAndVerify(
   ObjectOrdering order,
-  const std::unordered_map<ElementIDStruct, TimeType> &cur_objs,
+  const std::unordered_map<ElementIDStruct, TimeType>& cur_objs,
   TimeType my_load, TimeType target_load,
-  const std::vector<ElementIDType> &soln
-) {
+  const std::vector<ElementIDType>& soln, bool use_tempered_wmin = false) {
   // have TemperedLB order the objects
-  auto ordered_objs = vt::vrt::collection::lb::TemperedLB::orderObjects(
-    order, cur_objs, my_load, target_load
-  );
+  auto ordered_objs = use_tempered_wmin ?
+    vt::vrt::collection::lb::TemperedWMin::orderObjects(
+      order, cur_objs, my_load, target_load) :
+    vt::vrt::collection::lb::TemperedLB::orderObjects(
+      order, cur_objs, my_load, target_load);
 
   // verify correctness of the returned ordering
   int i = 0;
@@ -195,6 +197,17 @@ TEST_F(TestTemperedLB, test_temperedlb_ordering_largestobjects) {
   TimeType over_avg = 4.5;
   // result will be independent of over_avg
   std::vector<ElementIDType> soln = {2, 1, 5, 3, 4, 0};
+
+  orderUsingOverloadAndVerify(order, over_avg, soln);
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+TEST_F(TestTemperedLB, test_temperedwmin) {
+  ObjectOrdering order = ObjectOrdering::ElmID;
+  TimeType over_avg = 4.5;
+  // result will be independent of over_avg
+  std::vector<ElementIDType> soln = {0, 1, 2, 3, 4, 5};
 
   orderUsingOverloadAndVerify(order, over_avg, soln);
 }
