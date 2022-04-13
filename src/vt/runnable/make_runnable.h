@@ -50,7 +50,7 @@
 #include "vt/context/runnable_context/from_node.h"
 #include "vt/context/runnable_context/set_context.h"
 #include "vt/context/runnable_context/collection.h"
-#include "vt/context/runnable_context/lb_stats.h"
+#include "vt/context/runnable_context/lb_data.h"
 #include "vt/context/runnable_context/continuation.h"
 #include "vt/registry/auto/auto_registry_common.h"
 

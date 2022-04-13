@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_stats.h
+//                                  lb_data.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_H
 
 #include "vt/context/runnable_context/base.h"
 #include "vt/vrt/collection/balance/lb_common.h"
@@ -117,4 +117,4 @@ private:
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_H*/

@@ -1,7 +1,7 @@
 \page stats-reader LB Restart Reader
 \brief Follow input LB distribution
 
-The LB stats restart reader component
+The LB data restart reader component
 `vt::vrt::collection::balance::StatsRestartReader`, accessed via
 `vt::theStatsReader()` reads in an input object distribution for a given program
 and follows the distribution as specified in the file.

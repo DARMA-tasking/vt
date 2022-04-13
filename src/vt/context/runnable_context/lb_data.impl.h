@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               lb_stats.impl.h
+//                               lb_data.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,10 +41,10 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_IMPL_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_IMPL_H
 
-#include "vt/context/runnable_context/lb_stats.h"
+#include "vt/context/runnable_context/lb_data.h"
 #include "vt/messaging/active.h"
 #include "vt/elm/elm_stats.h"
 #include "vt/vrt/collection/manager.h"
@@ -65,4 +65,4 @@ LBData::LBData(ElmT* in_elm, MsgT* msg)
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_IMPL_H*/

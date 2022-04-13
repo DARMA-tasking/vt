@@ -71,7 +71,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/runnable/invoke.h"
-#include "vt/context/runnable_context/lb_stats.fwd.h"
+#include "vt/context/runnable_context/lb_data.fwd.h"
 #include "vt/vrt/collection/param/construct_params.h"
 #include "vt/vrt/collection/param/construct_params_msg.h"
 
@@ -1831,7 +1831,7 @@ private:
 #include "vt/vrt/collection/types/base.impl.h"
 #include "vt/rdmahandle/manager.collection.impl.h"
 #include "vt/vrt/proxy/collection_proxy.impl.h"
-#include "vt/context/runnable_context/lb_stats.impl.h"
+#include "vt/context/runnable_context/lb_data.impl.h"
 #include "vt/context/runnable_context/collection.impl.h"
 
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
