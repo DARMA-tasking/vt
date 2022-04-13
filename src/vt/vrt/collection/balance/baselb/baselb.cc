@@ -260,6 +260,16 @@ void BaseLB::finalize(CountMsg* msg) {
   }
 }
 
+void BaseLB::recvSharedEdges(CommMsg* msg) {
+  auto& comm = msg->comm_;
+  for (auto&& elm : comm) {
+    vt_debug_print(
+      verbose, lb, "recv shared edge: from={}, to={}\n", elm.first.fromObj(),
+      elm.first.toObj()
+    );
+  }
+}
+
 }}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_CC*/

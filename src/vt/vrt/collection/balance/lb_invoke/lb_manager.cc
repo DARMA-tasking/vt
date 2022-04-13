@@ -45,6 +45,7 @@
 #include "vt/configs/arguments/app_config.h"
 #include "vt/context/context.h"
 #include "vt/phase/phase_hook_enum.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
@@ -220,9 +221,12 @@ LBManager::runLB(
   });
 
   lb::BaseLB* strat = base_proxy.get();
+  auto proxy = lb_instances_["chosen"];
   if (strat->isCommAware()) {
-    // do exchange
-    // runInEpochCollective(...)
+    runInEpochCollective(
+      "LBManager::runLB -> makeGraphSymmetric",
+      [phase, proxy] { makeGraphSymmetric(phase, proxy); }
+    );
   }
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
@@ -722,6 +726,59 @@ void LBManager::createStatisticsFile() {
 
 void LBManager::closeStatisticsFile() {
   statistics_writer_ = nullptr;
+}
+
+void makeGraphSymmetric(
+  PhaseType phase, objgroup::proxy::Proxy<lb::BaseLB> proxy
+) {
+  auto const this_node = theContext()->getNode();
+
+  // TODO: extract to helper method
+  elm::CommMapType empty_comm;
+  elm::CommMapType const* comm_data = &empty_comm;
+  auto iter = theNodeStats()->getNodeComm()->find(phase);
+  // TODO: is it an error when we don't find the phase?
+  if (iter != theNodeStats()->getNodeComm()->end()) {
+    comm_data = &iter->second;
+  }
+
+  // Go through the comm graph and extract out paired SendRecv edges that are
+  // not self-send and have a non-local edge
+  std::unordered_map<NodeType, lb::BaseLB::ElementCommType> shared_edges;
+
+  for (auto&& elm : *comm_data) {
+    if (
+      elm.first.commCategory() == elm::CommCategory::SendRecv and
+      not elm.first.selfEdge()
+    ) {
+      auto from = elm.first.fromObj();
+      auto to = elm.first.toObj();
+
+      auto from_node = from.curr_node;
+      auto to_node = to.curr_node;
+
+      vtAssert(
+        from_node == this_node or to_node == this_node,
+        "One node must involve this node"
+      );
+
+      vt_debug_print(
+        verbose, lb, "makeGraphSymmetric: from={}, to={}\n", from, to
+      );
+
+      if (from_node != this_node) {
+        shared_edges[from_node][elm.first] = elm.second;
+      } else if (to_node != this_node) {
+        shared_edges[to_node][elm.first] = elm.second;
+      }
+    }
+  }
+
+  for (auto&& elm : shared_edges) {
+    proxy[elm.first].send<lb::CommMsg, &lb::BaseLB::recvSharedEdges>(
+      elm.second
+    );
+  }
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -292,6 +292,10 @@ private:
   std::unique_ptr<util::json::BaseAppender> statistics_writer_ = nullptr;
 };
 
+void makeGraphSymmetric(
+  PhaseType phase, objgroup::proxy::Proxy<lb::BaseLB> proxy
+);
+
 }}}} /* end namespace vt::vrt::collection::balance */
 
 namespace vt {

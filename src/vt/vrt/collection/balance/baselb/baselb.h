@@ -64,6 +64,8 @@ struct LoadModel;
 
 namespace lb {
 
+struct CommMsg;
+
 struct BaseLB {
   using ObjIDType        = balance::ElementIDStruct;
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
@@ -144,6 +146,7 @@ struct BaseLB {
   TransferVecType& getTransfers() { return transfers_; }
 
   bool isCommAware() const { return comm_aware_; }
+  void recvSharedEdges(CommMsg* msg);
 
 protected:
   void getArgs(PhaseType phase);
@@ -176,6 +179,22 @@ private:
   std::shared_ptr<balance::Reassignment> pending_reassignment_ = nullptr;
 };
 
-}}}} /* end namespace vt::vrt::collection::lb */
+struct CommMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_required();
+
+  CommMsg() = default;
+  explicit CommMsg(lb::BaseLB::ElementCommType in_comm) : comm_(in_comm) { }
+
+  lb::BaseLB::ElementCommType comm_;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | comm_;
+  }
+};
+
+}}}} // namespace vt::vrt::collection::lb
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_H*/
