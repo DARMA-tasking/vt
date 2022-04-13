@@ -478,7 +478,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lbn = "NoLB";
   auto lbi = 1;
   auto lbf = "";
-  auto lbd = "vt_lb_stats";
+  auto lbd = "vt_lb_data";
   auto lbs = "stats";
   auto lba = "";
   auto s  = app.add_flag("--vt_lb",                 appConfig.vt_lb,             lb);
@@ -490,12 +490,12 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto v1 = app.add_option("--vt_lb_args",          appConfig.vt_lb_args,        lb_args,      lba);
   auto w  = app.add_option("--vt_lb_interval",      appConfig.vt_lb_interval,    lb_interval,  lbi);
   auto wl = app.add_flag("--vt_lb_keep_last_elm",   appConfig.vt_lb_keep_last_elm, lb_keep_last_elm);
-  auto ww = app.add_flag("--vt_lb_stats",           appConfig.vt_lb_data,       lb_data);
-  auto xz = app.add_flag("--vt_lb_stats_compress",  appConfig.vt_lb_data_compress, lb_data_comp);
-  auto wx = app.add_option("--vt_lb_stats_dir",     appConfig.vt_lb_data_dir,   lb_data_dir, lbd);
-  auto wy = app.add_option("--vt_lb_stats_file",    appConfig.vt_lb_data_file,  lb_data_file,lbs);
-  auto xx = app.add_option("--vt_lb_stats_dir_in",  appConfig.vt_lb_data_dir_in,  lb_data_dir_in, lbd);
-  auto xy = app.add_option("--vt_lb_stats_file_in", appConfig.vt_lb_data_file_in, lb_data_file_in,lbs);
+  auto ww = app.add_flag("--vt_lb_data",           appConfig.vt_lb_data,       lb_data);
+  auto xz = app.add_flag("--vt_lb_data_compress",  appConfig.vt_lb_data_compress, lb_data_comp);
+  auto wx = app.add_option("--vt_lb_data_dir",     appConfig.vt_lb_data_dir,   lb_data_dir, lbd);
+  auto wy = app.add_option("--vt_lb_data_file",    appConfig.vt_lb_data_file,  lb_data_file,lbs);
+  auto xx = app.add_option("--vt_lb_data_dir_in",  appConfig.vt_lb_data_dir_in,  lb_data_dir_in, lbd);
+  auto xy = app.add_option("--vt_lb_data_file_in", appConfig.vt_lb_data_file_in, lb_data_file_in,lbs);
 
   auto debugLB = "Load Balancing";
   s->group(debugLB);

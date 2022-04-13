@@ -148,9 +148,9 @@ private:
    * Example:
    * struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
    *   virtual void addAdditionalArgs() override {
-   *     static char vt_lb_data[]{"--vt_lb_stats"};
-   *     static char vt_lb_data_dir[]{"--vt_lb_stats_dir=test_stats_dir"};
-   *     static char vt_lb_data_file[]{"--vt_lb_stats_file=test_stats_outfile"};
+   *     static char vt_lb_data[]{"--vt_lb_data"};
+   *     static char vt_lb_data_dir[]{"--vt_lb_data_dir=test_data_dir"};
+   *     static char vt_lb_data_file[]{"--vt_lb_data_file=test_data_outfile"};
    *
    *     addArgs(vt_lb_data, vt_lb_data_dir, vt_lb_data_file);
    *   }
