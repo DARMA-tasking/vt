@@ -96,13 +96,13 @@ struct PipeManagerBase {
 
   PipeType makeCallbackFuncVoid(
     bool const& persist, FuncType fn, bool const& dispatch = false,
-    RefType num_signals = -1, RefType num_listeners = 1
+    PipeRefType num_signals = -1, PipeRefType num_listeners = 1
   );
 
   template <typename MsgT>
   PipeType makeCallbackFunc(
     bool const& persist, FuncMsgType<MsgT> fn, bool const& dispatch = false,
-    RefType num_signals = -1, RefType num_listeners = 1
+    PipeRefType num_signals = -1, PipeRefType num_listeners = 1
   );
 
   template <typename MsgT>
@@ -113,7 +113,7 @@ protected:
   template <typename MsgT, typename ListenerT>
   PipeType makeCallbackAny(
     bool const& persist, ListenerT&& fn, bool const& dispatch = false,
-    RefType num_signals = -1, RefType num_listeners = 1
+    PipeRefType num_signals = -1, PipeRefType num_listeners = 1
   );
 
   template <typename MsgT, typename ListenerT>
@@ -137,8 +137,8 @@ protected:
   void triggerPipe(PipeType const& pipe);
   void generalSignalTrigger(PipeType const& pipe);
   void newPipeState(
-    PipeType const& pipe, bool persist, bool typeless, RefType num_sig,
-    RefType num_listeners, RefType num_reg_listeners,
+    PipeType const& pipe, bool persist, bool typeless, PipeRefType num_sig,
+    PipeRefType num_listeners, PipeRefType num_reg_listeners,
     DispatchFuncType fn = nullptr
   );
 

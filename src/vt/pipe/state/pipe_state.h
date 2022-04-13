@@ -55,7 +55,7 @@ struct PipeState {
   using DispatchFuncType = std::function<void(void*)>;
 
   PipeState(
-    PipeType const& in_pipe, RefType const& in_signals, RefType const& in_lis,
+    PipeType const& in_pipe, PipeRefType const& in_signals, PipeRefType const& in_lis,
     bool const& in_typeless = false
   );
 
@@ -68,7 +68,7 @@ struct PipeState {
   bool isPersist() const;
   PipeType getPipe() const;
   bool finished() const;
-  RefType refsPerListener() const;
+  PipeRefType refsPerListener() const;
 
   bool hasDispatch() const;
   void setDispatch(DispatchFuncType in_dispatch);
@@ -77,10 +77,10 @@ struct PipeState {
 private:
   bool automatic_                 = false;
   bool typeless_                  = false;
-  RefType num_signals_expected_   = -1;
-  RefType num_signals_received_   = 0;
-  RefType num_listeners_expected_ = -1;
-  RefType num_listeners_received_ = 0;
+  PipeRefType num_signals_expected_   = -1;
+  PipeRefType num_signals_received_   = 0;
+  PipeRefType num_listeners_expected_ = -1;
+  PipeRefType num_listeners_received_ = 0;
   PipeType pipe_                  = no_pipe;
   DispatchFuncType dispatch_      = nullptr;
 };
