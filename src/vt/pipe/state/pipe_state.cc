@@ -48,7 +48,7 @@
 namespace vt { namespace pipe {
 
 PipeState::PipeState(
-  PipeType const& in_pipe, RefType const& in_signals, RefType const& in_lis,
+  PipeType const& in_pipe, PipeRefType const& in_signals, PipeRefType const& in_lis,
   bool const& in_typeless
 ) : automatic_(true), typeless_(in_typeless), num_signals_expected_(in_signals),
     num_listeners_expected_(in_lis), pipe_(in_pipe)
@@ -82,7 +82,7 @@ PipeType PipeState::getPipe() const {
   return pipe_;
 }
 
-RefType PipeState::refsPerListener() const {
+PipeRefType PipeState::refsPerListener() const {
   return num_signals_expected_;
 }
 

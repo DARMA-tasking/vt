@@ -59,12 +59,6 @@ inline void envelopeRef(Env& env) {
     "This is can be caused by explicitly using 'new Message(..)' "
     "instead of a MsgPtr/makeMessage/makeSharedMessage construct."
   );
-  vtAssertInfo(
-    envp->ref >= 0 and envp->ref < 100,
-    "Bad ref-count on message ref-increment. "
-    "Message ref-count must never be negative and cannnot exceed limit (100).",
-    static_cast<RefType>(envp->ref)
-  );
 
   envp->ref++;
 }
@@ -73,11 +67,9 @@ template <typename Env>
 inline RefType envelopeDeref(Env& env) {
   Envelope* envp = reinterpret_cast<Envelope*>(&env);
 
-  vtAssertInfo(
-    envp->ref >= 1,
-    "Bad ref-count on message ref-decrement.",
-    static_cast<RefType>(envp->ref)
-  );
+  if(not (envp->ref >= 1)){
+    vtAbort("Bad ref-count on message ref-decrement.");
+  }
 
   return --(envp->ref);
 }

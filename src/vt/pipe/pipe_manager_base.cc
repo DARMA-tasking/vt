@@ -70,8 +70,8 @@ namespace vt { namespace pipe {
 }
 
 void PipeManagerBase::newPipeState(
-  PipeType const& pipe, bool persist, bool typeless, RefType num_signals,
-  RefType num_listeners, RefType num_reg_listeners, DispatchFuncType fn
+  PipeType const& pipe, bool persist, bool typeless, PipeRefType num_signals,
+  PipeRefType num_listeners, PipeRefType num_reg_listeners, DispatchFuncType fn
 ) {
   /*
    *  Create pipe state of `pipe' to track the state locally on this node
@@ -103,8 +103,8 @@ void PipeManagerBase::newPipeState(
 }
 
 PipeType PipeManagerBase::makeCallbackFuncVoid(
-  bool const& persist, FuncType fn, bool const& dispatch, RefType num_signals,
-  RefType num_listeners
+  bool const& persist, FuncType fn, bool const& dispatch, PipeRefType num_signals,
+  PipeRefType num_listeners
 ) {
   using SignalType = signal::SignalVoid;
 
