@@ -172,7 +172,7 @@ LBManager::makeLB() {
 }
 
 void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
-  auto r = msg->reassignment;
+  auto reassignment = msg->reassignment;
   auto phase = msg->phase;
   auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
 
@@ -284,7 +284,11 @@ void LBManager::startLB(
 
     runInEpochCollective("LBManager::noLB -> computeStats", [=] {
       before_lb_stats_ = true;
-      computeStatistics(model_, false, phase);
+      auto stats_cb = vt::theCB()->makeBcast<
+        LBManager, StatsMsgType, &LBManager::statsHandler
+      >(proxy_);
+      before_lb_stats_ = true;
+      computeStatistics(model_, false, phase, stats_cb);
     });
     // nothing to do
     return;

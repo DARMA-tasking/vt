@@ -85,7 +85,7 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
   using HookMapType = std::map<std::size_t, ActionType>;
   using HookIDMapType = std::unordered_map<HookIDType, HookMapType>;
 
-  PhaseManager() = default;
+  PhaseManager();
 
   std::string name() override { return "PhaseManager"; }
 

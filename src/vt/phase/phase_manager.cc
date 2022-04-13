@@ -48,6 +48,10 @@
 
 namespace vt { namespace phase {
 
+PhaseManager::PhaseManager() {
+  setStartTime();
+}
+
 /*static*/ std::unique_ptr<PhaseManager> PhaseManager::construct() {
   auto ptr = std::make_unique<PhaseManager>();
   auto proxy = theObjGroup()->makeCollective<PhaseManager>(ptr.get());
@@ -226,8 +230,8 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
     TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
     vt_print(
       phase,
-      "phase={}, total time={}, max_load={}, avg_load={}, imbalance={:.3f}, "
-      "max_obj={}, migration count={}\n",
+      "phase={}, duration={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.3f}, "
+      "grain_max_time={}, migration count={}\n",
       cur_phase_,
       total_time,
       TimeTypeWrapper(last_phase_info->max_load),
@@ -247,33 +251,56 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
     //   TimeTypeWrapper(last_phase_info->max_obj_post_lb),
     //   last_phase_info->migration_count
     // );
-    auto const I = last_phase_info->imb_load;
+
+    auto compute_speedup = [](double t1, double t2) -> double {
+       return t1 / t2;
+    };
+    auto compute_percent_improvement = [&](double t1, double t2) -> double {
+      return (t1 - t2) / t1 * 100.0;
+    };
+
     if (not last_phase_info->ran_lb) {
-      auto percent_improvement = I * 100.0;
+      auto speedup = compute_speedup(
+        last_phase_info->max_load, last_phase_info->avg_load
+      );
+      auto percent_improvement = compute_percent_improvement(
+        last_phase_info->max_load, last_phase_info->avg_load
+      );
       // @todo: where should we cut off this print?
-      if (percent_improvement > 3.0) {
+      // if (percent_improvement > 3.0) {
         vt_print(
           phase,
-          "Ideal load balance would run in {:0.0f}% less time\n",
-          percent_improvement
+          "Ideal load balance would run {:.2f}x faster "
+          "(or take {:.2f}% less time)\n",
+          speedup, percent_improvement
         );
-      }
+      // }
     } else if (last_phase_info->ran_lb and last_phase_info->migration_count > 0)  {
-      auto const I_post = last_phase_info->imb_load_post_lb;
-      auto percent_improvement = (I - I_post) * 100.0;
+      auto speedup = compute_speedup(
+        last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
+      );
+      auto percent_improvement = compute_percent_improvement(
+        last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
+      );
       vt_print(
         phase,
-        "After load balancing, expected execution should take {:0.0f}% "
-        "less time\n",
-        percent_improvement
+        "After load balancing, expected execution should get a {:.2f}%x speedup"
+        " (or take {:.2f}% less time)\n",
+        speedup, percent_improvement
       );
     }
     if (last_phase_info->max_obj > last_phase_info->avg_load) {
+      auto speedup = compute_speedup(
+        last_phase_info->max_load, last_phase_info->max_obj
+      );
+      auto percent_improvement = compute_percent_improvement(
+        last_phase_info->max_load, last_phase_info->max_obj
+      );
       vt_print(
         phase,
-        "Largest grain object limits load balancing improvement to {:0.0f}% "
-        "less time\n",
-        ((last_phase_info->max_load / last_phase_info->max_obj) - 1) * 100.0
+        "Largest grain object limits load balancing improvement to a "
+        "{:.2f}x speedup (or take {:.2f}% less time)\n",
+        speedup, percent_improvement
       );
     }
     fflush(stdout);
