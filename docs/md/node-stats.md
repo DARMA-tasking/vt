@@ -21,8 +21,8 @@ can dump these to files in a VOM file (Virtual Object Map). As indicated by the
 name, the VOM file specifies the mapping of object to node for each phase along
 with statistics for each object (computation time and communication load).
 
-To output VOM files, pass `--vt_lb_stats` to enable output along with
-`--vt_lb_stats_dir=<my-directory>` and `--vt_lb_stats_file=<my-base-name>` to
+To output VOM files, pass `--vt_lb_data` to enable output along with
+`--vt_lb_data_dir=<my-directory>` and `--vt_lb_data_file=<my-base-name>` to
 control the directory the files are generated along with the base file
 name. With this enabled, \vt will generate a file for each node that contains
 the statistics and mapping.
@@ -30,7 +30,7 @@ the statistics and mapping.
 \subsection stats-file-format File Format
 
 The VOM files are output in JSON format, either compressed with brotli
-compression (default on) or pure JSON if the argument `--vt_lb_stats_compress`
+compression (default on) or pure JSON if the argument `--vt_lb_data_compress`
 is set to `false`.
 
 The JSON files contain an array of `phases` that have been captured by \vt and

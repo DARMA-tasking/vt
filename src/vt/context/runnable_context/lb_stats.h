@@ -53,7 +53,7 @@ namespace vt { namespace ctx {
 /**
  * \struct LBData
  *
- * \brief Context for collection LB statistics when a task runs
+ * \brief Context for collection of LB data when a task runs
  */
 struct LBData final : Base {
   using ElementIDStruct = elm::ElementIDStruct;
