@@ -63,6 +63,7 @@ using namespace vt::tests::unit;
 using vt::vrt::collection::balance::StatsData;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ProposedReassignment;
+using vt::vrt::collection::balance::ReassignmentMsg;
 using vt::vrt::collection::balance::replay::WorkloadDataMigrator;
 
 struct TestWorkloadDataMigrator : TestParallelHarness { };
@@ -108,28 +109,34 @@ setupBaseModel(PhaseType phase, std::shared_ptr<StatsData> sd) {
 }
 
 std::shared_ptr<ProposedReassignment>
-shiftObjectsRight(
+migrateObjects(
   std::shared_ptr<LoadModel> base_load_model,
-  vt::PhaseType phase
+  vt::PhaseType phase,
+  vt::vrt::collection::balance::LBType balancer
 ) {
   std::shared_ptr<ProposedReassignment> new_model = nullptr;
 
-  vt::runInEpochCollective("do shift", [&]{
-    using vt::vrt::collection::balance::LBType;
-    auto lb_reassignment = vt::theLBManager()->startLB(phase, LBType::RotateLB);
-    if (lb_reassignment != nullptr) {
-      vt_debug_print(
-        normal, replay,
-        "global_mig={}, depart={}, arrive={}\n",
-        lb_reassignment->global_migration_count,
-        lb_reassignment->depart_.size(),
-        lb_reassignment->arrive_.size()
-      );
-      new_model = std::make_shared<ProposedReassignment>(
-        base_load_model,
-        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
-      );
-    }
+  vt::runInEpochCollective("migrate", [&]{
+    auto postLBWork = [&](ReassignmentMsg *msg) {
+      auto lb_reassignment = msg->reassignment;
+      if (lb_reassignment) {
+        vt_debug_print(
+          normal, replay,
+          "global_mig={}, depart={}, arrive={}\n",
+          lb_reassignment->global_migration_count,
+          lb_reassignment->depart_.size(),
+          lb_reassignment->arrive_.size()
+        );
+        new_model = std::make_shared<ProposedReassignment>(
+          base_load_model,
+          WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
+        );
+      }
+    };
+    auto cb = theCB()->makeFunc<ReassignmentMsg>(
+      vt::pipe::LifetimeEnum::Once, postLBWork
+    );
+    theLBManager()->startLB(phase, balancer, cb);
   });
 
   runInEpochCollective("destroy lb", [&]{
@@ -140,35 +147,21 @@ shiftObjectsRight(
 }
 
 std::shared_ptr<ProposedReassignment>
+shiftObjectsRight(
+  std::shared_ptr<LoadModel> base_load_model,
+  vt::PhaseType phase
+) {
+  using vt::vrt::collection::balance::LBType;
+  return migrateObjects(base_load_model, phase, LBType::RotateLB);
+}
+
+std::shared_ptr<ProposedReassignment>
 shiftObjectsRandomly(
   std::shared_ptr<LoadModel> base_load_model,
   vt::PhaseType phase
 ) {
-  std::shared_ptr<ProposedReassignment> new_model = nullptr;
-
-  vt::runInEpochCollective("do shift", [&]{
-    using vt::vrt::collection::balance::LBType;
-    auto lb_reassignment = vt::theLBManager()->startLB(phase, LBType::RandomLB);
-    if (lb_reassignment != nullptr) {
-      vt_debug_print(
-        normal, replay,
-        "global_mig={}, depart={}, arrive={}\n",
-        lb_reassignment->global_migration_count,
-        lb_reassignment->depart_.size(),
-        lb_reassignment->arrive_.size()
-      );
-      new_model = std::make_shared<ProposedReassignment>(
-        base_load_model,
-        WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
-      );
-    }
-  });
-
-  runInEpochCollective("destroy lb", [&]{
-    vt::theLBManager()->destroyLB();
-  });
-
-  return new_model;
+  using vt::vrt::collection::balance::LBType;
+  return migrateObjects(base_load_model, phase, LBType::RandomLB);
 }
 
 

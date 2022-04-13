@@ -177,28 +177,43 @@ void replayWorkloads(
     runInEpochCollective("WorkloadReplayDriver -> runRealLB", [&] {
       // run the load balancer but don't let it automatically migrate;
       // instead, remember where the LB wanted to migrate objects
-      auto lb_reassignment = theLBManager()->selectStartLB(phase);
 
-      if (lb_reassignment) {
-        auto proposed_model = std::make_shared<ProposedReassignment>(
-          pre_lb_load_model,
-          WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
-        );
-        migratable_objects_here.clear();
-        for (auto it = proposed_model->begin(); it.isValid(); ++it) {
-          if ((*it).isMigratable()) {
-            migratable_objects_here.insert(*it);
-            vt_debug_print(
-               normal, replay,
-              "element {} is here on phase {} after LB\n", *it, phase
-            );
+      std::shared_ptr<ProposedReassignment> proposed_model = nullptr;
+      auto postLBWork = [&](ReassignmentMsg *msg) {
+        auto lb_reassignment = msg->reassignment;
+        if (lb_reassignment) {
+          proposed_model = std::make_shared<ProposedReassignment>(
+            pre_lb_load_model,
+            WorkloadDataMigrator::updateCurrentNodes(lb_reassignment)
+          );
+          migratable_objects_here.clear();
+          for (auto it = proposed_model->begin(); it.isValid(); ++it) {
+            if ((*it).isMigratable()) {
+              migratable_objects_here.insert(*it);
+              vt_debug_print(
+                 normal, replay,
+                "element {} is here on phase {} after LB\n", *it, phase
+              );
+            }
           }
         }
-      }
-      vt_debug_print(
-        terse, replay,
-        "Number of objects after LB: {}\n", migratable_objects_here.size()
+        vt_debug_print(
+          terse, replay,
+          "Number of objects after LB: {}\n", migratable_objects_here.size()
+        );
+        runInEpochCollective("postLBWorkForReplay -> computeStats", [=] {
+          auto stats_cb = vt::theCB()->makeBcast<
+            LBManager, balance::NodeStatsMsg, &LBManager::statsHandler
+          >(theLBManager()->getProxy());
+          theLBManager()->computeStatistics(
+            proposed_model, false, phase, stats_cb
+          );
+        });
+      };
+      auto cb = theCB()->makeFunc<ReassignmentMsg>(
+        vt::pipe::LifetimeEnum::Once, postLBWork
       );
+      theLBManager()->selectStartLB(phase, cb);
     });
     runInEpochCollective("WorkloadReplayDriver -> destroyLB", [&] {
       theLBManager()->destroyLB();
@@ -240,7 +255,7 @@ objgroup::proxy::Proxy<WorkloadDataMigrator>
 WorkloadDataMigrator::construct(std::shared_ptr<LoadModel> model_base) {
   auto my_proxy = theObjGroup()->makeCollective<WorkloadDataMigrator>();
   auto strat = my_proxy.get();
-  auto base_proxy = my_proxy.template registerBaseCollective<lb::BaseLB>();
+  auto base_proxy = my_proxy.template castToBase<lb::BaseLB>();
   vt_debug_print(
     verbose, replay,
     "WorkloadDataMigrator proxy={} base_proxy={}\n",
