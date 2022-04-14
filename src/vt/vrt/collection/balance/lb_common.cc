@@ -78,13 +78,16 @@ LoadSummary getObjectRawLoads(
   LoadModel* model, ElementIDStruct object, PhaseOffset when
 ) {
   LoadSummary ret;
-  ret.whole_phase_load = model->getRawLoad(
-    object, {when.phases, PhaseOffset::WHOLE_PHASE}
-  );
 
-  unsigned int subphases = model->getNumSubphases();
-  for (unsigned int i = 0; i < subphases; ++i)
-    ret.subphase_loads.push_back(model->getRawLoad(object, {when.phases, i}));
+  if (model->hasRawLoad()) {
+    ret.whole_phase_load = model->getRawLoad(
+      object, {when.phases, PhaseOffset::WHOLE_PHASE}
+    );
+
+    unsigned int subphases = model->getNumSubphases();
+    for (unsigned int i = 0; i < subphases; ++i)
+      ret.subphase_loads.push_back(model->getRawLoad(object, {when.phases, i}));
+  }
 
   return ret;
 }
