@@ -67,8 +67,8 @@ void ObjGroupManager::startup() {
       if (elm_id.id != elm::no_element_id) {
         auto proxy = elm::ElmIDBits::getObjGroupProxy(elm_id.id, false);
         vtAssertExpr(proxy == obj.first);
-        theNodeStats()->registerObjGroupInfo(elm_id, obj.first);
-        theNodeStats()->addNodeStats(elm_id, &holder->getStats());
+        theNodeLBData()->registerObjGroupInfo(elm_id, obj.first);
+        theNodeLBData()->addNodeLBData(elm_id, &holder->getStats());
       }
     }
   });
@@ -153,7 +153,7 @@ holder::HolderBase* getHolderBase(HandlerType handler) {
 
 elm::ElementIDStruct ObjGroupManager::getNextElm(ObjGroupProxyType proxy) {
   // Avoid startup races
-  if (theNodeStats()) {
+  if (theNodeLBData()) {
     auto const this_node = theContext()->getNode();
     return elm::ElmIDBits::createObjGroup(proxy, this_node);
   } else {

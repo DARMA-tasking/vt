@@ -74,7 +74,7 @@ void CollectionStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
 
   auto const proxy = col->getProxy();
   auto const subphase = getFocusedSubPhase(proxy);
-  theNodeStats()->addNodeStats(col->elm_id_, &col->lb_data_, subphase);
+  theNodeLBData()->addNodeLBData(col->elm_id_, &col->lb_data_, subphase);
 
   std::vector<uint64_t> idx;
   for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
@@ -82,7 +82,7 @@ void CollectionStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   }
 
   auto migrate = [col](NodeType node){ col->migrate(node); };
-  theNodeStats()->registerCollectionInfo(col->elm_id_, proxy, idx, migrate);
+  theNodeLBData()->registerCollectionInfo(col->elm_id_, proxy, idx, migrate);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

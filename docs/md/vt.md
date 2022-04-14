@@ -52,7 +52,7 @@ management.
 | \subpage objgroup           | `vt::theObjGroup()`    | \copybrief objgroup         | @m_class{m-label m-success} **Core**           |
 | \subpage param              | `vt::theParam()`       | \copybrief param            | @m_class{m-label m-danger} **Experimental**    |
 | \subpage pipe               | `vt::theCB()`          | \copybrief pipe             | @m_class{m-label m-success} **Core**           |
-| \subpage node-stats         | `vt::theNodeStats()`   | \copybrief node-stats       | @m_class{m-label m-warning} **Optional**       |
+| \subpage node-stats         | `vt::theNodeLBData()`   | \copybrief node-stats       | @m_class{m-label m-warning} **Optional**       |
 | \subpage phase              | `vt::thePhase()`       | \copybrief phase            | @m_class{m-label m-success} **Core**           |
 | \subpage pool               | `vt::thePool()`        | \copybrief pool             | @m_class{m-label m-success} **Core**           |
 | \subpage rdma               | `vt::theRDMA()`        | \copybrief rdma             | @m_class{m-label m-danger} **Experimental**    |

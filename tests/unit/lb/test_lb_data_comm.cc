@@ -78,7 +78,7 @@ StatsData getStatsDataForPhase(vt::PhaseType phase) {
   using json = nlohmann::json;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
   auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), true);
-  auto j = vt::theNodeStats()->getStatsData()->toJson(phase);
+  auto j = vt::theNodeLBData()->getStatsData()->toJson(phase);
   ap->addElm(*j);
   ss = ap->finish();
   auto c = DecompressionInputContainer{

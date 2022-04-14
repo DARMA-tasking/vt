@@ -61,23 +61,23 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void NodeStats::setProxy(objgroup::proxy::Proxy<NodeStats> in_proxy) {
+void NodeLBData::setProxy(objgroup::proxy::Proxy<NodeLBData> in_proxy) {
   proxy_ = in_proxy;
 }
 
-/*static*/ std::unique_ptr<NodeStats> NodeStats::construct() {
-  auto ptr = std::make_unique<NodeStats>();
-  auto proxy = theObjGroup()->makeCollective<NodeStats>(ptr.get());
+/*static*/ std::unique_ptr<NodeLBData> NodeLBData::construct() {
+  auto ptr = std::make_unique<NodeLBData>();
+  auto proxy = theObjGroup()->makeCollective<NodeLBData>(ptr.get());
   proxy.get()->setProxy(proxy);
   return ptr;
 }
 
-bool NodeStats::hasObjectToMigrate(ElementIDStruct obj_id) const {
+bool NodeLBData::hasObjectToMigrate(ElementIDStruct obj_id) const {
   auto iter = node_migrate_.find(obj_id);
   return iter != node_migrate_.end();
 }
 
-bool NodeStats::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
+bool NodeLBData::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
   auto iter = node_migrate_.find(obj_id);
   if (iter == node_migrate_.end()) {
     return false;
@@ -90,25 +90,25 @@ bool NodeStats::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
 }
 
 std::unordered_map<PhaseType, LoadMapType> const*
-NodeStats::getNodeLoad() const {
+NodeLBData::getNodeLoad() const {
   return &lb_data_->node_data_;
 }
 
-std::unordered_map<PhaseType, CommMapType> const* NodeStats::getNodeComm() const {
+std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() const {
   return &lb_data_->node_comm_;
 }
 
-std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeStats::getNodeSubphaseComm() const {
+std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
   return &lb_data_->node_subphase_comm_;
 }
 
-void NodeStats::clearStats() {
+void NodeLBData::clearStats() {
   lb_data_->clear();
   node_migrate_.clear();
   next_elm_ = 1;
 }
 
-void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
+void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
   if (phase >= look_back) {
     lb_data_->node_data_.erase(phase - look_back);
     lb_data_->node_comm_.erase(phase - look_back);
@@ -116,32 +116,32 @@ void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
   }
 
   // Clear migrate lambdas and proxy lookup since LB is complete
-  NodeStats::node_migrate_.clear();
+  NodeLBData::node_migrate_.clear();
   node_collection_lookup_.clear();
   node_objgroup_lookup_.clear();
 }
 
-ElementIDType NodeStats::getNextElm() {
+ElementIDType NodeLBData::getNextElm() {
   return next_elm_++;
 }
 
-void NodeStats::initialize() {
+void NodeLBData::initialize() {
   lb_data_ = std::make_unique<StatsData>();
 
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_data) {
-    theNodeStats()->createStatsFile();
+    theNodeLBData()->createStatsFile();
   }
 #endif
 }
 
-void NodeStats::createStatsFile() {
+void NodeLBData::createStatsFile() {
   auto const file_name = theConfig()->getLBDataFileOut();
   auto const compress = theConfig()->vt_lb_data_compress;
 
   vt_debug_print(
     normal, lb,
-    "NodeStats::createStatsFile: file={}\n", file_name
+    "NodeLBData::createStatsFile: file={}\n", file_name
   );
 
   auto const dir = theConfig()->vt_lb_data_dir;
@@ -167,7 +167,7 @@ void NodeStats::createStatsFile() {
   }
 }
 
-void NodeStats::finalize() {
+void NodeLBData::finalize() {
   stat_writer_ = nullptr;
 
   // If statistics are enabled, close output file and clear stats
@@ -178,12 +178,12 @@ void NodeStats::finalize() {
 #endif
 }
 
-void NodeStats::fatalError() {
+void NodeLBData::fatalError() {
   // make flush occur on all stat data collected immediately
   stat_writer_ = nullptr;
 }
 
-void NodeStats::closeStatsFile() {
+void NodeLBData::closeStatsFile() {
 }
 
 std::pair<ElementIDType, ElementIDType>
@@ -212,13 +212,13 @@ getRecvSendDirection(elm::CommKeyType const& comm) {
   return std::make_pair(ElementIDType{}, ElementIDType{});
 }
 
-void NodeStats::outputStatsForPhase(PhaseType phase) {
+void NodeLBData::outputStatsForPhase(PhaseType phase) {
   // Statistics output when LB is enabled and appropriate flag is enabled
   if (!theConfig()->vt_lb_data) {
     return;
   }
 
-  vt_print(lb, "NodeStats::outputStatsForPhase: phase={}\n", phase);
+  vt_print(lb, "NodeLBData::outputStatsForPhase: phase={}\n", phase);
 
   using JSONAppender = util::json::Appender<std::ofstream>;
 
@@ -227,7 +227,7 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
   writer->addElm(*j);
 }
 
-void NodeStats::registerCollectionInfo(
+void NodeLBData::registerCollectionInfo(
   ElementIDStruct id, VirtualProxyType proxy,
   std::vector<uint64_t> const& index, MigrateFnType migrate_fn
 ) {
@@ -237,19 +237,19 @@ void NodeStats::registerCollectionInfo(
   node_collection_lookup_[id] = proxy;
 }
 
-void NodeStats::registerObjGroupInfo(
+void NodeLBData::registerObjGroupInfo(
   ElementIDStruct id, ObjGroupProxyType proxy
 ) {
   lb_data_->node_objgroup_[id] = proxy;
   node_objgroup_lookup_[id] = proxy;
 }
 
-void NodeStats::addNodeStats(
+void NodeLBData::addNodeLBData(
   ElementIDStruct id, elm::ElementLBData* in, SubphaseType focused_subphase
 ) {
   vt_debug_print(
     normal, lb,
-    "NodeStats::addNodeStats: id={}\n", id
+    "NodeLBData::addNodeLBData: id={}\n", id
   );
 
   auto const phase = in->getPhase();
@@ -287,7 +287,7 @@ void NodeStats::addNodeStats(
   in->releaseStatsFromUnneededPhases(phase, model->getNumPastPhasesNeeded());
 }
 
-VirtualProxyType NodeStats::getCollectionProxyForElement(
+VirtualProxyType NodeLBData::getCollectionProxyForElement(
   ElementIDStruct obj_id
 ) const {
   auto iter = node_collection_lookup_.find(obj_id);
@@ -297,7 +297,7 @@ VirtualProxyType NodeStats::getCollectionProxyForElement(
   return iter->second;
 }
 
-ObjGroupProxyType NodeStats::getObjGroupProxyForElement(
+ObjGroupProxyType NodeLBData::getObjGroupProxyForElement(
   ElementIDStruct obj_id
 ) const {
   auto iter = node_objgroup_lookup_.find(obj_id);

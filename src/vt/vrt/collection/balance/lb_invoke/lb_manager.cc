@@ -152,9 +152,9 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 
 void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   model_ = model;
-  auto nstats = theNodeStats();
-  model_->setLoads(nstats->getNodeLoad(),
-                   nstats->getNodeComm());
+  auto nlb_data = theNodeLBData();
+  model_->setLoads(nlb_data->getNodeLoad(),
+                   nlb_data->getNodeComm());
 }
 
 template <typename LB>
@@ -212,8 +212,8 @@ LBManager::runLB(
 
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm = &empty_comm;
-  auto iter = theNodeStats()->getNodeComm()->find(phase);
-  if (iter != theNodeStats()->getNodeComm()->end()) {
+  auto iter = theNodeLBData()->getNodeComm()->find(phase);
+  if (iter != theNodeLBData()->getNodeComm()->end()) {
     comm = &iter->second;
   }
 
@@ -384,8 +384,8 @@ void LBManager::finishedLB(PhaseType phase) {
     "finishedLB\n"
   );
 
-  theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
-  theNodeStats()->outputStatsForPhase(phase);
+  theNodeLBData()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
+  theNodeLBData()->outputStatsForPhase(phase);
 
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {
@@ -476,8 +476,8 @@ void LBManager::computeStatistics(
 
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm_data = &empty_comm;
-  auto iter = theNodeStats()->getNodeComm()->find(phase);
-  if (iter != theNodeStats()->getNodeComm()->end()) {
+  auto iter = theNodeLBData()->getNodeComm()->find(phase);
+  if (iter != theNodeLBData()->getNodeComm()->end()) {
     comm_data = &iter->second;
   }
 

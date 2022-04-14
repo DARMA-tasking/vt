@@ -244,7 +244,7 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
   }
 
   // Finalize to get data output
-  theNodeStats()->finalize();
+  theNodeLBData()->finalize();
 
   using vt::util::json::Reader;
 
@@ -261,7 +261,7 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
     removeStatsOutputDir(vt::theConfig()->vt_lb_data_dir.c_str());
   }
 
-  // Prevent NodeStats from closing files during finalize()
+  // Prevent NodeLBData from closing files during finalize()
   // All the tmp files are removed already
   vt::theConfig()->vt_lb_data = false;
 }

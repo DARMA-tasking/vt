@@ -95,7 +95,7 @@ void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reass
                      obj_id.id, obj_id.getHomeNode(), from, to
                      );
 
-      theNodeStats()->migrateObjTo(obj_id, to);
+      theNodeLBData()->migrateObjTo(obj_id, to);
     }
   });
 }

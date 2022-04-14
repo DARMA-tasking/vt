@@ -63,7 +63,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
- * \struct NodeStats
+ * \struct NodeLBData
  *
  * \brief A VT component that backs the instrumentation of virtualized entities
  * on each node, such as the objects that the collection manager orchestrates,
@@ -71,36 +71,36 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * occurs in \c vt::vrt:collection::balance::ElementLBData which is composed into
  * the elements of a collection.
  *
- * Collects statistics/timings on active function/methods for objects and
+ * Collects LB data/timings on active function/methods for objects and
  * communication between them on each node. After collecting this data, passes
  * it to the load balancing framework, specifically the
  * \c * vt::vrt::collection::balance::LBManager
  */
-struct NodeStats : runtime::component::Component<NodeStats> {
+struct NodeLBData : runtime::component::Component<NodeLBData> {
   using MigrateFnType       = std::function<void(NodeType)>;
 
   /**
-   * \internal \brief System call to construct \c NodeStats
+   * \internal \brief System call to construct \c NodeLBData
    */
-  NodeStats() = default;
+  NodeLBData() = default;
 
-  std::string name() override { return "NodeStats"; }
+  std::string name() override { return "NodeLBData"; }
 
 private:
   /**
-   * \internal \brief Setup the proxy for \c NodeStats
+   * \internal \brief Setup the proxy for \c NodeLBData
    *
    * \param[in] in_proxy the objgroup proxy
    */
-  void setProxy(objgroup::proxy::Proxy<NodeStats> in_proxy);
+  void setProxy(objgroup::proxy::Proxy<NodeLBData> in_proxy);
 
 public:
   /**
-   * \internal \brief Construct the NodeStats component
+   * \internal \brief Construct the NodeLBData component
    *
    * \return pointer to the component
    */
-  static std::unique_ptr<NodeStats> construct();
+  static std::unique_ptr<NodeLBData> construct();
 
   /**
    * \internal \brief Add collection element info
@@ -130,7 +130,7 @@ public:
    * \param[in] in the stats
    * \param[in] focused_subphase the focused subphase (optional)
    */
-  void addNodeStats(
+  void addNodeLBData(
     ElementIDStruct id, elm::ElementLBData* in,
     SubphaseType focused_subphase = elm::ElementLBData::no_subphase
   );
@@ -256,7 +256,7 @@ private:
 
 private:
   /// Local proxy to objgroup
-  objgroup::proxy::Proxy<NodeStats> proxy_;
+  objgroup::proxy::Proxy<NodeLBData> proxy_;
   /// Local migration type-free lambdas for each object
   std::unordered_map<ElementIDStruct,MigrateFnType> node_migrate_;
   /// Map from element ID to the collection's virtual proxy (untyped)
@@ -277,7 +277,7 @@ private:
 
 namespace vt {
 
-extern vrt::collection::balance::NodeStats* theNodeStats();
+extern vrt::collection::balance::NodeLBData* theNodeLBData();
 
 } /* end namespace vt */
 

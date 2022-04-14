@@ -91,7 +91,7 @@ namespace vrt { namespace collection {
 struct CollectionManager;
 }}
 namespace vrt { namespace collection { namespace balance {
-struct NodeStats;
+struct NodeLBData;
 struct StatsRestartReader;
 struct LBManager;
 }}}

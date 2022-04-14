@@ -1,31 +1,31 @@
-\page node-stats Node Statistics
+\page node-stats Node LB Data
 \brief Manager object profiling data
 
-The node statistics manager component
-`vt::vrt::collection::balance::NodeStats`, accessed via `vt::theNodeStats()`
+The node LB data manager component
+`vt::vrt::collection::balance::NodeLBData`, accessed via `vt::theNodeLBData()`
 manages instrumentation data from objects in a collection. It holds data per
 node on the timing of these objects and communication between them demarcated by
 phase and subphase.
 
 When LB is invoked in \vt, the \ref lb-manager passes the node
-statistics to the various LB strategies to run the load balancer. The node
-statistics component can also dump the statistic data it holds to files, which
+LB data to the various LB strategies to run the load balancer. The node
+LB data component can also dump the statistic data it holds to files, which
 can be read externally. The LBAF (Load Balancing Analysis Framework) can also
 then read this data to analyze the quality of the load distribution at any phase
 in the file.
 
 \section export-lb-stats-file Exporting LB Statistic Files (VOM)
 
-The `NodeStats` component, after collecting statistics from the running program,
+The `NodeLBData` component, after collecting LB data from the running program,
 can dump these to files in a VOM file (Virtual Object Map). As indicated by the
 name, the VOM file specifies the mapping of object to node for each phase along
-with statistics for each object (computation time and communication load).
+with LB data for each object (computation time and communication load).
 
 To output VOM files, pass `--vt_lb_data` to enable output along with
 `--vt_lb_data_dir=<my-directory>` and `--vt_lb_data_file=<my-base-name>` to
 control the directory the files are generated along with the base file
 name. With this enabled, \vt will generate a file for each node that contains
-the statistics and mapping.
+the LB data and mapping.
 
 \subsection stats-file-format File Format
 

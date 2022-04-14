@@ -849,7 +849,7 @@ void Runtime::initializeComponents() {
       group::GroupManager,                 // For broadcasts
       sched::Scheduler,                    // For scheduling work
       location::LocationManager,           // For element location
-      vrt::collection::balance::NodeStats, // For stat collection
+      vrt::collection::balance::NodeLBData, // For LB data collection
       vrt::collection::balance::LBManager  // For load balancing
     >{}
   );
@@ -864,8 +864,8 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_->registerComponent<vrt::collection::balance::NodeStats>(
-    &theNodeStats, Deps<
+  p_->registerComponent<vrt::collection::balance::NodeLBData>(
+    &theNodeLBData, Deps<
       ctx::Context,                       // Everything depends on theContext
       phase::PhaseManager                 // For phase structure
     >{}
@@ -874,7 +874,7 @@ void Runtime::initializeComponents() {
   p_->registerComponent<vrt::collection::balance::StatsRestartReader>(
     &theStatsReader, Deps<
       ctx::Context,                        // Everything depends on theContext
-      vrt::collection::balance::NodeStats  // Depends on node stats for input
+      vrt::collection::balance::NodeLBData  // Depends on node LB data for input
     >{}
   );
 
@@ -882,7 +882,7 @@ void Runtime::initializeComponents() {
     &theLBManager, Deps<
       ctx::Context,                        // Everything depends on theContext
       util::memory::MemoryUsage,           // Output mem usage on phase change
-      vrt::collection::balance::NodeStats, // For stat collection
+      vrt::collection::balance::NodeLBData, // For LB data collection
       phase::PhaseManager                  // For phase structure
     >{}
   );
@@ -930,7 +930,7 @@ void Runtime::initializeComponents() {
   p_->add<registry::Registry>();
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
-  p_->add<vrt::collection::balance::NodeStats>();
+  p_->add<vrt::collection::balance::NodeLBData>();
   p_->add<vrt::collection::balance::LBManager>();
   p_->add<timetrigger::TimeTriggerManager>();
   p_->add<phase::PhaseManager>();
@@ -1177,9 +1177,9 @@ void Runtime::printMemoryFootprint() const {
       printComponentFootprint(
         static_cast<util::memory::MemoryUsage*>(base)
       );
-    } else if (name == "NodeStats") {
+    } else if (name == "NodeLBData") {
       printComponentFootprint(
-        static_cast<vrt::collection::balance::NodeStats*>(base)
+        static_cast<vrt::collection::balance::NodeLBData*>(base)
       );
     } else if (name == "StatsRestartReader") {
       printComponentFootprint(

@@ -50,7 +50,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct NodeStats;
+struct NodeLBData;
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
@@ -120,7 +120,7 @@ protected:
    */
   void releaseStatsFromUnneededPhases(PhaseType phase, unsigned int look_back);
 
-  friend struct vrt::collection::balance::NodeStats;
+  friend struct vrt::collection::balance::NodeLBData;
 
 protected:
   bool cur_time_started_ = false;

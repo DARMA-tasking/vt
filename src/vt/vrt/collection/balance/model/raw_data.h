@@ -71,7 +71,7 @@ struct RawData : public LoadModel {
   int getNumSubphases() override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
-  // Observer pointers to the underlying data. In operation, these would be owned by NodeStats
+  // Observer pointers to the underlying data. In operation, these would be owned by NodeLBData
   std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;
   std::unordered_map<PhaseType, CommMapType>         const* proc_comm_;
   PhaseType last_completed_phase_ = ~0;

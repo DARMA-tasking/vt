@@ -52,7 +52,7 @@ namespace vt { namespace elm {
 /*static*/ ElementIDStruct ElmIDBits::createCollection(
   bool migratable, NodeType curr_node
 ) {
-  auto const seq_id = theNodeStats()->getNextElm();
+  auto const seq_id = theNodeLBData()->getNextElm();
   auto const home_node = theContext()->getNode();
   return createCollectionImpl(migratable, seq_id, home_node, curr_node);
 }

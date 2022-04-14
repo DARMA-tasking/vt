@@ -132,7 +132,7 @@ pipe::PipeManager*          theCB()                 { return CUR_RT->theCB;     
 objgroup::ObjGroupManager*  theObjGroup()           { return CUR_RT->theObjGroup;       }
 rdma::Manager*              theHandleRDMA()         { return CUR_RT->theHandleRDMA;     }
 util::memory::MemoryUsage*  theMemUsage()           { return CUR_RT->theMemUsage;       }
-vrt::collection::balance::NodeStats* theNodeStats() { return CUR_RT->theNodeStats;      }
+vrt::collection::balance::NodeLBData* theNodeLBData() { return CUR_RT->theNodeLBData;      }
 vrt::collection::balance::StatsRestartReader* theStatsReader() { return CUR_RT->theStatsReader;      }
 vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
 timetrigger::TimeTriggerManager* theTimeTrigger()   { return CUR_RT->theTimeTrigger;    }

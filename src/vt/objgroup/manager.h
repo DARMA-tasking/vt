@@ -417,7 +417,7 @@ private:
   HolderBaseType* getHolderBase(HandlerType han);
 
   /**
-   * \internal \brief Get the next element ID from \c NodeStats
+   * \internal \brief Get the next element ID from \c NodeLBData
    *
    * \param[in] proxy the objgroup proxy
    *
