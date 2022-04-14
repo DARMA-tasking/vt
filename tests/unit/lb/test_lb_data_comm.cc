@@ -69,12 +69,12 @@ namespace vt { namespace tests { namespace unit { namespace comm {
  */
 
 using TestLBDataComm = TestParallelHarness;
-using StatsData = vt::vrt::collection::balance::StatsData;
+using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
 
-StatsData getStatsDataForPhase(vt::PhaseType phase) {
+LBDataHolder getStatsDataForPhase(vt::PhaseType phase) {
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
   using vt::util::json::DecompressionInputContainer;
-  using vt::vrt::collection::balance::StatsData;
+  using vt::vrt::collection::balance::LBDataHolder;
   using json = nlohmann::json;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
   auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), true);
@@ -84,7 +84,7 @@ StatsData getStatsDataForPhase(vt::PhaseType phase) {
   auto c = DecompressionInputContainer{
     DecompressionInputContainer::AnyStreamTag{}, std::move(ss)
   };
-  return StatsData{json::parse(c)};
+  return LBDataHolder{json::parse(c)};
 }
 
 namespace {

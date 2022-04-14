@@ -90,7 +90,7 @@ public:
   void readStats(std::string const& fileName);
 
   std::deque<std::set<ElementIDType>> readIntoElementHistory(
-    StatsData const& sd
+    LBDataHolder const& sd
   );
 
   std::vector<ElementIDType> const& getMoveList(PhaseType phase) const;

@@ -50,14 +50,14 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/
-void CollectionStats::setFocusedSubPhase(
+void CollectionLBData::setFocusedSubPhase(
   VirtualProxyType collection, SubphaseType subphase
 ) {
   focused_subphase_[collection] = subphase;
 }
 
 /*static*/
-SubphaseType CollectionStats::getFocusedSubPhase(VirtualProxyType collection) {
+SubphaseType CollectionLBData::getFocusedSubPhase(VirtualProxyType collection) {
   auto i = focused_subphase_.find(collection);
   if (i != focused_subphase_.end())
     return i->second;
@@ -67,6 +67,6 @@ SubphaseType CollectionStats::getFocusedSubPhase(VirtualProxyType collection) {
 
 /*static*/
 std::unordered_map<VirtualProxyType,SubphaseType>
-CollectionStats::focused_subphase_;
+CollectionLBData::focused_subphase_;
 
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -126,7 +126,7 @@ ElementIDType NodeLBData::getNextElm() {
 }
 
 void NodeLBData::initialize() {
-  lb_data_ = std::make_unique<StatsData>();
+  lb_data_ = std::make_unique<LBDataHolder>();
 
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_data) {

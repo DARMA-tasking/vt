@@ -230,7 +230,7 @@ public:
    *
    * \return the stats data
    */
-  StatsData* getStatsData() { return lb_data_.get(); }
+  LBDataHolder* getStatsData() { return lb_data_.get(); }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -270,7 +270,7 @@ private:
   /// The appender for outputting LB data files in JSON format
   std::unique_ptr<util::json::BaseAppender> lb_data_writer_ = nullptr;
   /// The struct that holds all the statistic data
-  std::unique_ptr<StatsData> lb_data_ = nullptr;
+  std::unique_ptr<LBDataHolder> lb_data_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

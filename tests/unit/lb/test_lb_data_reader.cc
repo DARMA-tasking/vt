@@ -95,8 +95,8 @@ TEST_F(TestLBDataReader, test_lb_data_read_1) {
   std::stringstream stream{std::ios_base::out | std::ios_base::in};
   auto ap = std::make_unique<JSONAppender>("phases", std::move(stream), true);
 
-  using vt::vrt::collection::balance::StatsData;
-  auto sd = std::make_unique<StatsData>();
+  using vt::vrt::collection::balance::LBDataHolder;
+  auto sd = std::make_unique<LBDataHolder>();
 
   PhaseType phase = 0;
   double tval = 0.0;

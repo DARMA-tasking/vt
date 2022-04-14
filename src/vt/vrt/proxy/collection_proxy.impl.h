@@ -103,7 +103,7 @@ CollectionProxy<ColT, IndexT>::operator()(IndexU const& idx) const {
 template <typename ColT, typename IndexT>
 void
 CollectionProxy<ColT, IndexT>::setFocusedSubPhase(SubphaseType subphase) {
-  balance::CollectionStats::setFocusedSubPhase(this->getProxy(), subphase);
+  balance::CollectionLBData::setFocusedSubPhase(this->getProxy(), subphase);
 }
 
 }}} /* end namespace vt::vrt::collection */

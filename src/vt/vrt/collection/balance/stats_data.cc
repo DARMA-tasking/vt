@@ -48,7 +48,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void StatsData::outputEntity(nlohmann::json& j, ElementIDStruct const& id) const {
+void LBDataHolder::outputEntity(nlohmann::json& j, ElementIDStruct const& id) const {
   j["type"] = "object";
   j["id"] = id.id;
   j["home"] = id.getHomeNode();
@@ -68,7 +68,7 @@ void StatsData::outputEntity(nlohmann::json& j, ElementIDStruct const& id) const
   }
 }
 
-std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
+std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   using json = nlohmann::json;
 
   json j;
@@ -155,7 +155,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
   return std::make_unique<json>(std::move(j));
 }
 
-StatsData::StatsData(nlohmann::json const& j) {
+LBDataHolder::LBDataHolder(nlohmann::json const& j) {
   auto this_node = theContext()->getNode();
 
   auto phases = j["phases"];
@@ -299,7 +299,7 @@ StatsData::StatsData(nlohmann::json const& j) {
   // right now, so it will be ignored
 }
 
-void StatsData::clear() {
+void LBDataHolder::clear() {
   node_comm_.clear();
   node_data_.clear();
   node_subphase_comm_.clear();

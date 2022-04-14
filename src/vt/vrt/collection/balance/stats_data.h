@@ -56,20 +56,20 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
- * \struct StatsData
+ * \struct LBDataHolder
  *
  * \brief Data structure that holds LB data for a set of phases. Can
  * output them as JSON.
  */
-struct StatsData {
-  StatsData() = default;
+struct LBDataHolder {
+  LBDataHolder() = default;
 
   /**
-   * \brief Create \c StatsData from input JSON
+   * \brief Create \c LBDataHolder from input JSON
    *
    * \param[in] j the json that contains the stats
    */
-  StatsData(nlohmann::json const& j);
+  LBDataHolder(nlohmann::json const& j);
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {

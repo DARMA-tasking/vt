@@ -59,7 +59,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct CollectionStats : elm::ElementLBData {
+struct CollectionLBData : elm::ElementLBData {
   static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
   static SubphaseType getFocusedSubPhase(VirtualProxyType collection);
 

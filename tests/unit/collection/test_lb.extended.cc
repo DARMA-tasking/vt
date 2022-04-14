@@ -317,12 +317,12 @@ INSTANTIATE_TEST_SUITE_P(
 
 using TestRestoreStatsData = TestParallelHarness;
 
-vt::vrt::collection::balance::StatsData
+vt::vrt::collection::balance::LBDataHolder
 getStatsDataForPhase(
-  vt::PhaseType phase,  vt::vrt::collection::balance::StatsData in
+  vt::PhaseType phase,  vt::vrt::collection::balance::LBDataHolder in
 ) {
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
-  using vt::vrt::collection::balance::StatsData;
+  using vt::vrt::collection::balance::LBDataHolder;
   using json = nlohmann::json;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
   auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), false);
@@ -330,7 +330,7 @@ getStatsDataForPhase(
   ap->addElm(*j);
   ss = ap->finish();
   //fmt::print("{}\n", ss.str());
-  return StatsData{json::parse(ss)};
+  return LBDataHolder{json::parse(ss)};
 }
 
 TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
@@ -352,7 +352,7 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
     proxy = vt::theCollection()->constructCollective<MyCol>(range);
   });
 
-  vt::vrt::collection::balance::StatsData sd;
+  vt::vrt::collection::balance::LBDataHolder sd;
   PhaseType write_phase = 0;
 
   using CommKey = vt::elm::CommKey;

@@ -106,11 +106,11 @@ protected:
   void serialize(Serializer& s);
 
 protected:
-  friend struct balance::CollectionStats;
+  friend struct balance::CollectionLBData;
   friend struct balance::NodeLBData;
-  balance::CollectionStats lb_data_;
+  balance::CollectionLBData lb_data_;
 public:
-  balance::CollectionStats& getLBData() { return lb_data_; }
+  balance::CollectionLBData& getLBData() { return lb_data_; }
 protected:
   balance::ElementIDStruct elm_id_ = {};
 };

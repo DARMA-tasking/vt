@@ -1489,7 +1489,7 @@ private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmDestroyAttorney;
 
-  friend struct balance::CollectionStats;
+  friend struct balance::CollectionLBData;
   friend struct elm::ElementLBData;
   friend struct ctx::LBData;
 

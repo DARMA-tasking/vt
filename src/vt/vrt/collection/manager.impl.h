@@ -1349,7 +1349,7 @@ void CollectionManager::insertMetaCollection(
     using MsgType = CollectStatsMsg<ColT>;
     auto const phase = thePhase()->getCurrentPhase();
     CollectionProxyWrapType<ColT> p{bits};
-    p.template broadcastCollective<MsgType,CollectionStats::syncNextPhase<ColT>>(
+    p.template broadcastCollective<MsgType,CollectionLBData::syncNextPhase<ColT>>(
       phase
     );
   };
