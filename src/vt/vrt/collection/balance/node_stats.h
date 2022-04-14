@@ -247,7 +247,7 @@ private:
   /**
    * \internal \brief Create the stats file
    */
-  void createStatsFile();
+  void createLBDataFile();
 
   /**
    * \internal \brief Close the stats file

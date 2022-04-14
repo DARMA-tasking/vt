@@ -66,7 +66,7 @@ messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType de
     return messaging::PendingSend{cur_epoch, [msg, han, cur_epoch, this_node](){
       auto holder = detail::getHolderBase(han);
       auto const& elm_id = holder->getElmID();
-      auto stats = &holder->getStats();
+      auto stats = &holder->getLBData();
 
       runnable::makeRunnable(msg, true, han, this_node)
         .withTDEpoch(cur_epoch)

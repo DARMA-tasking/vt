@@ -182,7 +182,7 @@ struct RunnableMaker {
    */
   template <typename ElmT>
   RunnableMaker&& withLBDataVoidMsg(ElmT* elm) {
-    return withLBData(&elm->getStats(), elm->getElmID());
+    return withLBData(&elm->getLBData(), elm->getElmID());
   }
 
   /**

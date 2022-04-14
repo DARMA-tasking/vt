@@ -67,7 +67,7 @@ struct HolderBase {
 
   ElmIDType getElmID() const { return elm_id_; }
   void setElmID(ElmIDType in_elm_id) { elm_id_ = in_elm_id; }
-  ElementLBDataType& getStats() { return lb_data_; }
+  ElementLBDataType& getLBData() { return lb_data_; }
 
 protected:
   ElementLBDataType lb_data_;

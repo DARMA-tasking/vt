@@ -362,7 +362,7 @@ template <typename ColT, typename MsgT>
   }
 
   auto const pto = col_ptr->getElmID();
-  auto& stats = col_ptr->getStats();
+  auto& stats = col_ptr->getLBData();
   auto const msg_size = serialization::MsgSizer<MsgT>::get(msg);
   auto const cat = msg->getCat();
   vt_debug_print(
@@ -1696,7 +1696,7 @@ void CollectionManager::insert(
 
     auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
     auto raw_ptr = elm_holder->lookup(idx).getRawPtr();
-    raw_ptr->getStats().updatePhase(thePhase()->getCurrentPhase());
+    raw_ptr->getLBData().updatePhase(thePhase()->getCurrentPhase());
   } else if (insert_node != this_node) {
     auto msg = makeMessage<InsertMsg<ColT, MsgT>>(
       proxy, idx, insert_node, mapped_node, modify_epoch, insert_msg

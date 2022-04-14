@@ -110,7 +110,7 @@ protected:
   friend struct balance::NodeLBData;
   balance::CollectionStats lb_data_;
 public:
-  balance::CollectionStats& getStats() { return lb_data_; }
+  balance::CollectionStats& getLBData() { return lb_data_; }
 protected:
   balance::ElementIDStruct elm_id_ = {};
 };

@@ -130,18 +130,18 @@ void NodeLBData::initialize() {
 
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_data) {
-    theNodeLBData()->createStatsFile();
+    theNodeLBData()->createLBDataFile();
   }
 #endif
 }
 
-void NodeLBData::createStatsFile() {
+void NodeLBData::createLBDataFile() {
   auto const file_name = theConfig()->getLBDataFileOut();
   auto const compress = theConfig()->vt_lb_data_compress;
 
   vt_debug_print(
     normal, lb,
-    "NodeLBData::createStatsFile: file={}\n", file_name
+    "NodeLBData::createLBDataFile: file={}\n", file_name
   );
 
   auto const dir = theConfig()->vt_lb_data_dir;

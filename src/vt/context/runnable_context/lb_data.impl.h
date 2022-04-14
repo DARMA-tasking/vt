@@ -55,7 +55,7 @@ namespace vt { namespace ctx {
 
 template <typename ElmT, typename MsgT>
 LBData::LBData(ElmT* in_elm, MsgT* msg)
-  : lb_data_(&in_elm->getStats()),
+  : lb_data_(&in_elm->getLBData()),
     cur_elm_id_(in_elm->getElmID()),
     should_instrument_(msg->lbLiteInstrument())
 {
