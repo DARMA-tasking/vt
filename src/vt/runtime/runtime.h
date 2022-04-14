@@ -412,7 +412,7 @@ public:
   ComponentPtrType<util::memory::MemoryUsage> theMemUsage = nullptr;
   ComponentPtrType<rdma::Manager> theHandleRDMA = nullptr;
   ComponentPtrType<vrt::collection::balance::NodeLBData> theNodeLBData = nullptr;
-  ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader = nullptr;
+  ComponentPtrType<vrt::collection::balance::LBDataRestartReader> theLBDataReader = nullptr;
   ComponentPtrType<vrt::collection::balance::LBManager> theLBManager = nullptr;
   ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger = nullptr;
   ComponentPtrType<phase::PhaseManager> thePhase = nullptr;

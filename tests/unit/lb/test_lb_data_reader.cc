@@ -142,7 +142,7 @@ TEST_F(TestLBDataReader, test_lb_data_read_1) {
   stream = ap->finish();
 
   //--- Start the testing
-  auto ptr = vrt::collection::balance::StatsRestartReader::construct();
+  auto ptr = vrt::collection::balance::LBDataRestartReader::construct();
   ptr->readStatsFromStream(std::move(stream));
 
   //--- Spin here so the test does not end before the communications complete

@@ -55,14 +55,14 @@ void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
 }
 
 void StatsMapLB::runLB(TimeType) {
-  auto const& myNewList = theStatsReader()->getMoveList(phase_);
+  auto const& myNewList = theLBDataReader()->getMoveList(phase_);
   for (size_t in = 0; in < myNewList.size(); in += 2) {
     auto this_node = theContext()->getNode();
     ObjIDType id{myNewList[in], this_node};
     migrateObjectTo(id, myNewList[in+1]);
   }
 
-  theStatsReader()->clearMoveList(phase_);
+  theLBDataReader()->clearMoveList(phase_);
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

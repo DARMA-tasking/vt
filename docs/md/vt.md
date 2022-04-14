@@ -52,7 +52,7 @@ management.
 | \subpage objgroup           | `vt::theObjGroup()`    | \copybrief objgroup         | @m_class{m-label m-success} **Core**           |
 | \subpage param              | `vt::theParam()`       | \copybrief param            | @m_class{m-label m-danger} **Experimental**    |
 | \subpage pipe               | `vt::theCB()`          | \copybrief pipe             | @m_class{m-label m-success} **Core**           |
-| \subpage node-stats         | `vt::theNodeLBData()`   | \copybrief node-stats       | @m_class{m-label m-warning} **Optional**       |
+| \subpage node-lb-data         | `vt::theNodeLBData()`   | \copybrief node-lb-data       | @m_class{m-label m-warning} **Optional**       |
 | \subpage phase              | `vt::thePhase()`       | \copybrief phase            | @m_class{m-label m-success} **Core**           |
 | \subpage pool               | `vt::thePool()`        | \copybrief pool             | @m_class{m-label m-success} **Core**           |
 | \subpage rdma               | `vt::theRDMA()`        | \copybrief rdma             | @m_class{m-label m-danger} **Experimental**    |
@@ -65,7 +65,7 @@ management.
 | \subpage epoch              | `vt::theEpoch()`       | \copybrief epoch            | @m_class{m-label m-success} **Core**           |
 | \subpage time-trigger       | `vt::theTimeTrigger()` | \copybrief time-trigger     | @m_class{m-label m-warning} **Optional**       |
 | \subpage trace              | `vt::theTrace()`       | \copybrief trace            | @m_class{m-label m-warning} **Optional**       |
-| \subpage stats-reader       | `vt::theStatsReader()` | \copybrief stats-reader     | @m_class{m-label m-warning} **Optional**       |
+| \subpage lb-data-reader       | `vt::theLBDataReader()` | \copybrief lb-data-reader     | @m_class{m-label m-warning} **Optional**       |
 
 
 \section how-to-build-intro How to build

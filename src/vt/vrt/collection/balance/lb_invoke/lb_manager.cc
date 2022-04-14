@@ -107,7 +107,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 
   //--- User-specified map without any change, thus do not run
   if ((theConfig()->vt_lb_name == get_lb_names()[LBType::StatsMapLB]) and
-      not theStatsReader()->needsLB(phase)) {
+      not theLBDataReader()->needsLB(phase)) {
     return LBType::NoLB;
   }
 

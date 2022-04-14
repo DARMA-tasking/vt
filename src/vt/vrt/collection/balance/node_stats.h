@@ -267,7 +267,7 @@ private:
   ElementIDType next_elm_ = 1;
   /// Whether the stats directory has been created
   bool created_dir_ = false;
-  /// The appender for outputting stat files in JSON format
+  /// The appender for outputting LB data files in JSON format
   std::unique_ptr<util::json::BaseAppender> stat_writer_ = nullptr;
   /// The struct that holds all the statistic data
   std::unique_ptr<StatsData> lb_data_ = nullptr;

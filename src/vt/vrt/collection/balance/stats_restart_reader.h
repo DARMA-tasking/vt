@@ -59,7 +59,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
- * \struct StatsRestartReader
+ * \struct LBDataRestartReader
  *
  * \brief A VT component for reading a user-input mapping file for object to
  * node.
@@ -69,17 +69,17 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * by this component to follow the LB distribution described in those mapping
  * files.
  */
-struct StatsRestartReader : runtime::component::Component<StatsRestartReader> {
+struct LBDataRestartReader : runtime::component::Component<LBDataRestartReader> {
   using VecMsg = lb::TransferMsg<std::vector<balance::ElementIDType> >;
 
 public:
-  StatsRestartReader() = default;
+  LBDataRestartReader() = default;
 
-  void setProxy(objgroup::proxy::Proxy<StatsRestartReader> in_proxy);
+  void setProxy(objgroup::proxy::Proxy<LBDataRestartReader> in_proxy);
 
-  static std::unique_ptr<StatsRestartReader> construct();
+  static std::unique_ptr<LBDataRestartReader> construct();
 
-  std::string name() override { return "StatsRestartReader"; }
+  std::string name() override { return "LBDataRestartReader"; }
 
   void startup() override;
 
@@ -133,7 +133,7 @@ private:
   std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>> totalMove;
 
   /// \brief Proxy for communicating the migration information
-  objgroup::proxy::Proxy<StatsRestartReader> proxy_;
+  objgroup::proxy::Proxy<LBDataRestartReader> proxy_;
 
   /// \brief Queue of migrations for each iteration.
   /// \note At each iteration, a vector of length 2 times (# of migrations)
@@ -150,7 +150,7 @@ private:
 
 namespace vt {
 
-extern vrt::collection::balance::StatsRestartReader* theStatsReader();
+extern vrt::collection::balance::LBDataRestartReader* theLBDataReader();
 
 } /* end namespace vt */
 

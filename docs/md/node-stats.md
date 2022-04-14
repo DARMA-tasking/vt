@@ -1,4 +1,4 @@
-\page node-stats Node LB Data
+\page node-lb-data Node LB Data
 \brief Manager object profiling data
 
 The node LB data manager component
@@ -9,12 +9,12 @@ phase and subphase.
 
 When LB is invoked in \vt, the \ref lb-manager passes the node
 LB data to the various LB strategies to run the load balancer. The node
-LB data component can also dump the statistic data it holds to files, which
+LB data component can also dump the LB data it holds to files, which
 can be read externally. The LBAF (Load Balancing Analysis Framework) can also
 then read this data to analyze the quality of the load distribution at any phase
 in the file.
 
-\section export-lb-stats-file Exporting LB Statistic Files (VOM)
+\section export-lb-data-file Exporting LB Data Files (VOM)
 
 The `NodeLBData` component, after collecting LB data from the running program,
 can dump these to files in a VOM file (Virtual Object Map). As indicated by the
@@ -27,7 +27,7 @@ control the directory the files are generated along with the base file
 name. With this enabled, \vt will generate a file for each node that contains
 the LB data and mapping.
 
-\subsection stats-file-format File Format
+\subsection lb-data-file-format File Format
 
 The VOM files are output in JSON format, either compressed with brotli
 compression (default on) or pure JSON if the argument `--vt_lb_data_compress`

@@ -871,8 +871,8 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_->registerComponent<vrt::collection::balance::StatsRestartReader>(
-    &theStatsReader, Deps<
+  p_->registerComponent<vrt::collection::balance::LBDataRestartReader>(
+    &theLBDataReader, Deps<
       ctx::Context,                        // Everything depends on theContext
       vrt::collection::balance::NodeLBData  // Depends on node LB data for input
     >{}
@@ -936,7 +936,7 @@ void Runtime::initializeComponents() {
   p_->add<phase::PhaseManager>();
 
   if (addStatsRestartReader) {
-    p_->add<vrt::collection::balance::StatsRestartReader>();
+    p_->add<vrt::collection::balance::LBDataRestartReader>();
   }
 
   #if vt_threading_enabled
@@ -1181,9 +1181,9 @@ void Runtime::printMemoryFootprint() const {
       printComponentFootprint(
         static_cast<vrt::collection::balance::NodeLBData*>(base)
       );
-    } else if (name == "StatsRestartReader") {
+    } else if (name == "LBDataRestartReader") {
       printComponentFootprint(
-        static_cast<vrt::collection::balance::StatsRestartReader*>(base)
+        static_cast<vrt::collection::balance::LBDataRestartReader*>(base)
       );
     } else if (name == "LBManager") {
       printComponentFootprint(

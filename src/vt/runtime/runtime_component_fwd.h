@@ -92,7 +92,7 @@ struct CollectionManager;
 }}
 namespace vrt { namespace collection { namespace balance {
 struct NodeLBData;
-struct StatsRestartReader;
+struct LBDataRestartReader;
 struct LBManager;
 }}}
 namespace group {
