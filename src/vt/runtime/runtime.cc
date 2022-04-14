@@ -388,7 +388,7 @@ bool Runtime::tryFinalize(bool const disable_sig) {
   return finalize_now;
 }
 
-bool Runtime::needStatsRestartReader() {
+bool Runtime::needLBDataRestartReader() {
   #if vt_check_enabled(lblite)
     if (arg_config_->config_.vt_lb_data) {
       auto lbNames = vrt::collection::balance::get_lb_names();
@@ -659,7 +659,7 @@ void Runtime::initializeComponents() {
   using component::Deps;
 
   p_ = std::make_unique<ComponentPack>();
-  bool addStatsRestartReader = needStatsRestartReader();
+  bool addLBDataRestartReader = needLBDataRestartReader();
 # if vt_check_enabled(trace_enabled)
   std::string const prog_name = arg_config_->config_.prog_name;
 # endif
@@ -935,7 +935,7 @@ void Runtime::initializeComponents() {
   p_->add<timetrigger::TimeTriggerManager>();
   p_->add<phase::PhaseManager>();
 
-  if (addStatsRestartReader) {
+  if (addLBDataRestartReader) {
     p_->add<vrt::collection::balance::LBDataRestartReader>();
   }
 

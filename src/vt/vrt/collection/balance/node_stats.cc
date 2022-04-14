@@ -102,7 +102,7 @@ std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> con
   return &lb_data_->node_subphase_comm_;
 }
 
-void NodeLBData::clearStats() {
+void NodeLBData::clearLBData() {
   lb_data_->clear();
   node_migrate_.clear();
   next_elm_ = 1;
@@ -162,25 +162,25 @@ void NodeLBData::createLBDataFile() {
 
   using JSONAppender = util::json::Appender<std::ofstream>;
 
-  if (not stat_writer_) {
-    stat_writer_ = std::make_unique<JSONAppender>("phases", file_name, compress);
+  if (not lb_data_writer_) {
+    lb_data_writer_ = std::make_unique<JSONAppender>("phases", file_name, compress);
   }
 }
 
 void NodeLBData::finalize() {
-  stat_writer_ = nullptr;
+  lb_data_writer_ = nullptr;
 
-  // If statistics are enabled, close output file and clear stats
+  // If LB data are enabled, close output file and clear stats
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_data) {
-    clearStats();
+    clearLBData();
   }
 #endif
 }
 
 void NodeLBData::fatalError() {
   // make flush occur on all stat data collected immediately
-  stat_writer_ = nullptr;
+  lb_data_writer_ = nullptr;
 }
 
 void NodeLBData::closeStatsFile() {
@@ -223,7 +223,7 @@ void NodeLBData::outputStatsForPhase(PhaseType phase) {
   using JSONAppender = util::json::Appender<std::ofstream>;
 
   auto j = lb_data_->toJson(phase);
-  auto writer = static_cast<JSONAppender*>(stat_writer_.get());
+  auto writer = static_cast<JSONAppender*>(lb_data_writer_.get());
   writer->addElm(*j);
 }
 

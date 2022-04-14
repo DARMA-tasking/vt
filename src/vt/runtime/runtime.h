@@ -300,11 +300,11 @@ protected:
   void initializeWorkers(WorkerCountType const num_workers);
 
   /**
-   * \internal \brief Check if we should create a stats restart reader component
+   * \internal \brief Check if we should create a LB data restart reader component
    *
    * \return whether we should create it
    */
-  bool needStatsRestartReader();
+  bool needLBDataRestartReader();
 
   /**
    * \internal \brief Perform setup actions, such as registering a termination
