@@ -99,6 +99,22 @@ struct LoadMapObjectIterator : public ObjectIteratorImpl {
   bool isValid() const override { return i != end; }
 };
 
+struct DualLoadMapObjectIterator : public ObjectIteratorImpl {
+  using DualLoadMapType = std::unordered_map<
+    ElementIDStruct, std::tuple<LoadSummary, LoadSummary>
+  >;
+  using map_iterator_type = DualLoadMapType::const_iterator;
+  using iterator_category = std::iterator_traits<map_iterator_type>::iterator_category;
+  map_iterator_type i, end;
+
+  DualLoadMapObjectIterator(map_iterator_type in, map_iterator_type in_end)
+    : i(in), end(in_end)
+  { }
+  void operator++() override { ++i; }
+  value_type operator*() const override { return i->first; }
+  bool isValid() const override { return i != end; }
+};
+
 struct FilterIterator : public ObjectIteratorImpl {
   FilterIterator(
     ObjectIterator&& in_it, std::function<bool(ElementIDStruct)>&& in_filter

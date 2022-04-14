@@ -52,6 +52,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <tuple>
 
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
@@ -119,7 +120,9 @@ struct Reassignment {
   // distributed structures need to be rebuilt
   int32_t global_migration_count;
   std::unordered_map<ElementIDStruct, NodeType> depart_;
-  std::unordered_map<ElementIDStruct, LoadSummary> arrive_;
+  std::unordered_map<
+    ElementIDStruct, std::tuple<LoadSummary, LoadSummary>
+  > arrive_;
 };
 
 struct ReassignmentMsg : vt::Message {

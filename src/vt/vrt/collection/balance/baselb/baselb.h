@@ -76,7 +76,9 @@ struct BaseLB {
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
   using LoadSummary      = balance::LoadSummary;
-  using ObjLoadListType  = std::vector<std::tuple<ObjIDType, LoadSummary>>;
+  using ObjLoadListType  = std::vector<
+    std::tuple<ObjIDType, LoadSummary, LoadSummary>
+  >;
   using ObjDestinationListType = std::vector<std::tuple<ObjIDType, NodeType>>;
 
   explicit BaseLB()
