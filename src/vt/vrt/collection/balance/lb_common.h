@@ -147,11 +147,21 @@ void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reass
 
 struct LoadModel;
 
-LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
-                           ElementIDStruct object, PhaseOffset when);
+LoadSummary getObjectLoads(
+  std::shared_ptr<LoadModel> model, ElementIDStruct object, PhaseOffset when
+);
 
-LoadSummary getObjectLoads(LoadModel* model,
-                           ElementIDStruct object, PhaseOffset when);
+LoadSummary getObjectLoads(
+  LoadModel* model, ElementIDStruct object, PhaseOffset when
+);
+
+LoadSummary getObjectRawLoads(
+  std::shared_ptr<LoadModel> model, ElementIDStruct object, PhaseOffset when
+);
+
+LoadSummary getObjectRawLoads(
+  LoadModel* model, ElementIDStruct object, PhaseOffset when
+);
 
 LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when);
 
