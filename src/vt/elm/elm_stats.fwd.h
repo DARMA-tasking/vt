@@ -46,7 +46,7 @@
 
 namespace vt { namespace elm {
 
-struct ElementStats;
+struct ElementLBData;
 
 }} /* end namespace vt::elm */
 

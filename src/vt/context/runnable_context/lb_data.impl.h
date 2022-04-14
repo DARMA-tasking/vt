@@ -55,11 +55,11 @@ namespace vt { namespace ctx {
 
 template <typename ElmT, typename MsgT>
 LBData::LBData(ElmT* in_elm, MsgT* msg)
-  : stats_(&in_elm->getStats()),
+  : lb_data_(&in_elm->getStats()),
     cur_elm_id_(in_elm->getElmID()),
     should_instrument_(msg->lbLiteInstrument())
 {
-  // record the communication stats right away!
+  // record the communication LB data right away!
   theCollection()->recordStats(in_elm, msg);
 }
 

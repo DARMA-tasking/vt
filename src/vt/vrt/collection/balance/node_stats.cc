@@ -91,28 +91,28 @@ bool NodeStats::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
 
 std::unordered_map<PhaseType, LoadMapType> const*
 NodeStats::getNodeLoad() const {
-  return &stats_->node_data_;
+  return &lb_data_->node_data_;
 }
 
 std::unordered_map<PhaseType, CommMapType> const* NodeStats::getNodeComm() const {
-  return &stats_->node_comm_;
+  return &lb_data_->node_comm_;
 }
 
 std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeStats::getNodeSubphaseComm() const {
-  return &stats_->node_subphase_comm_;
+  return &lb_data_->node_subphase_comm_;
 }
 
 void NodeStats::clearStats() {
-  stats_->clear();
+  lb_data_->clear();
   node_migrate_.clear();
   next_elm_ = 1;
 }
 
 void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
   if (phase >= look_back) {
-    stats_->node_data_.erase(phase - look_back);
-    stats_->node_comm_.erase(phase - look_back);
-    stats_->node_subphase_comm_.erase(phase - look_back);
+    lb_data_->node_data_.erase(phase - look_back);
+    lb_data_->node_comm_.erase(phase - look_back);
+    lb_data_->node_subphase_comm_.erase(phase - look_back);
   }
 
   // Clear migrate lambdas and proxy lookup since LB is complete
@@ -126,7 +126,7 @@ ElementIDType NodeStats::getNextElm() {
 }
 
 void NodeStats::initialize() {
-  stats_ = std::make_unique<StatsData>();
+  lb_data_ = std::make_unique<StatsData>();
 
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_data) {
@@ -222,7 +222,7 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
 
   using JSONAppender = util::json::Appender<std::ofstream>;
 
-  auto j = stats_->toJson(phase);
+  auto j = lb_data_->toJson(phase);
   auto writer = static_cast<JSONAppender*>(stat_writer_.get());
   writer->addElm(*j);
 }
@@ -232,7 +232,7 @@ void NodeStats::registerCollectionInfo(
   std::vector<uint64_t> const& index, MigrateFnType migrate_fn
 ) {
   // Add the index to the map
-  stats_->node_idx_[id] = std::make_tuple(proxy, index);
+  lb_data_->node_idx_[id] = std::make_tuple(proxy, index);
   node_migrate_[id] = migrate_fn;
   node_collection_lookup_[id] = proxy;
 }
@@ -240,12 +240,12 @@ void NodeStats::registerCollectionInfo(
 void NodeStats::registerObjGroupInfo(
   ElementIDStruct id, ObjGroupProxyType proxy
 ) {
-  stats_->node_objgroup_[id] = proxy;
+  lb_data_->node_objgroup_[id] = proxy;
   node_objgroup_lookup_[id] = proxy;
 }
 
 void NodeStats::addNodeStats(
-  ElementIDStruct id, elm::ElementStats* in, SubphaseType focused_subphase
+  ElementIDStruct id, elm::ElementLBData* in, SubphaseType focused_subphase
 ) {
   vt_debug_print(
     normal, lb,
@@ -255,7 +255,7 @@ void NodeStats::addNodeStats(
   auto const phase = in->getPhase();
   auto const& total_load = in->getLoad(phase, focused_subphase);
 
-  auto &phase_data = stats_->node_data_[phase];
+  auto &phase_data = lb_data_->node_data_[phase];
   auto elm_iter = phase_data.find(id);
   vtAssert(elm_iter == phase_data.end(), "Must not exist");
 
@@ -268,13 +268,13 @@ void NodeStats::addNodeStats(
   );
 
   auto const& comm = in->getComm(phase);
-  auto &comm_data = stats_->node_comm_[phase];
+  auto &comm_data = lb_data_->node_comm_[phase];
   for (auto&& c : comm) {
     comm_data[c.first] += c.second;
   }
 
   auto const& subphase_comm = in->getSubphaseComm(phase);
-  auto &subphase_comm_data = stats_->node_subphase_comm_[phase];
+  auto &subphase_comm_data = lb_data_->node_subphase_comm_[phase];
   for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
     for (auto& sp : subphase_comm[i]) {
       subphase_comm_data[i][sp.first] += sp.second;

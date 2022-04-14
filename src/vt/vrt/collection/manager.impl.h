@@ -2263,7 +2263,7 @@ void CollectionManager::restoreFromFileInPlace(
 
     auto ptr = elm_holder->lookup(idx).getRawPtr();
     checkpoint::deserializeInPlaceFromFile<ColT>(file_name, static_cast<ColT*>(ptr));
-    ptr->stats_.resetPhase();
+    ptr->lb_data_.resetPhase();
   }
 }
 
@@ -2306,7 +2306,7 @@ CollectionManager::restoreFromFile(
     // @todo: error check the file read with bytes in directory
 
     auto col_ptr = checkpoint::deserializeFromFile<ColT>(file_name);
-    col_ptr->stats_.resetPhase();
+    col_ptr->lb_data_.resetPhase();
     elms.emplace_back(std::make_tuple(idx, std::move(col_ptr)));
   }
 

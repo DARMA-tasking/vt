@@ -58,7 +58,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /**
  * \struct StatsData
  *
- * \brief Data structure that holds LB statistics for a set of phases. Can
+ * \brief Data structure that holds LB data for a set of phases. Can
  * output them as JSON.
  */
 struct StatsData {
@@ -80,7 +80,7 @@ struct StatsData {
   }
 
   /**
-   * \brief Output a phase's stats to JSON
+   * \brief Output a phase's LB data to JSON
    *
    * \param[in] phase the phase
    *
@@ -89,7 +89,7 @@ struct StatsData {
   std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
 
   /**
-   * \brief Clear all statistics
+   * \brief Clear all LB data
    */
   void clear();
 

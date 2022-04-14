@@ -158,10 +158,10 @@ void ActiveMessenger::startup() {
     elm::ElmIDBits::createBareHandler(this_node);
 
 #if vt_check_enabled(lblite)
-  // Hook to collect statistics about objgroups
+  // Hook to collect LB data about objgroups
   thePhase()->registerHookCollective(phase::PhaseHook::End, [this]{
     theNodeStats()->addNodeStats(
-      bare_handler_dummy_elm_id_for_lb_data_, &bare_handler_stats_
+      bare_handler_dummy_elm_id_for_lb_data_, &bare_handler_lb_data_
     );
   });
 #endif
@@ -516,7 +516,7 @@ EventType ActiveMessenger::doMessageSend(
 
       runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
         .withTDEpochFromMsg(is_term)
-        .withLBData(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_data_)
+        .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
         .enqueue();
     }
     return no_event;
@@ -998,7 +998,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
       .withContinuation(cont)
       .withTag(tag)
       .withTDEpochFromMsg(is_term)
-      .withLBData(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_data_)
+      .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
       .enqueue();
 
     if (is_term) {

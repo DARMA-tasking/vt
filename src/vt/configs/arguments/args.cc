@@ -479,7 +479,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lbi = 1;
   auto lbf = "";
   auto lbd = "vt_lb_data";
-  auto lbs = "stats";
+  auto lbs = "data";
   auto lba = "";
   auto s  = app.add_flag("--vt_lb",                 appConfig.vt_lb,             lb);
   auto t1 = app.add_flag("--vt_lb_quiet",           appConfig.vt_lb_quiet,       lb_quiet);

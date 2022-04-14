@@ -59,13 +59,13 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct CollectionStats : elm::ElementStats {
+struct CollectionStats : elm::ElementLBData {
   static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
   static SubphaseType getFocusedSubPhase(VirtualProxyType collection);
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    elm::ElementStats::serialize(s);
+    elm::ElementLBData::serialize(s);
   }
 
 public:

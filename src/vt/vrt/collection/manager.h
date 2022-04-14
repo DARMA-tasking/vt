@@ -1490,7 +1490,7 @@ private:
   friend struct CollectionElmDestroyAttorney;
 
   friend struct balance::CollectionStats;
-  friend struct elm::ElementStats;
+  friend struct elm::ElementLBData;
   friend struct ctx::LBData;
 
   template <typename ColT>

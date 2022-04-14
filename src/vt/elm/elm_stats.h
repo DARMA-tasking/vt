@@ -56,10 +56,10 @@ struct NodeStats;
 
 namespace vt { namespace elm {
 
-struct ElementStats {
-  ElementStats() = default;
-  ElementStats(ElementStats const&) = default;
-  ElementStats(ElementStats&&) = default;
+struct ElementLBData {
+  ElementLBData() = default;
+  ElementLBData(ElementLBData const&) = default;
+  ElementLBData(ElementLBData&&) = default;
 
   void startTime();
   void stopTime();

@@ -57,13 +57,13 @@ namespace vt { namespace ctx {
  */
 struct LBData final : Base {
   using ElementIDStruct = elm::ElementIDStruct;
-  using ElementStats    = elm::ElementStats;
+  using ElementLBData    = elm::ElementLBData;
 
   /**
    * \brief Construct a \c LBData
    *
    * \param[in] in_elm the collection element
-   * \param[in] msg the incoming message (used for communication stats)
+   * \param[in] msg the incoming message (used for communication LB data)
    */
   template <typename ElmT, typename MsgT>
   LBData(ElmT* in_elm, MsgT* msg);
@@ -71,11 +71,11 @@ struct LBData final : Base {
   /**
    * \brief Construct a \c LBData
    *
-   * \param[in] in_stats the statistics
+   * \param[in] in_lb_data the LB data
    * \param[in] in_elm_id the element ID
    */
-  LBData(ElementStats* in_stats, ElementIDStruct const& in_elm_id)
-    : stats_(in_stats),
+  LBData(ElementLBData* in_lb_data, ElementIDStruct const& in_elm_id)
+    : lb_data_(in_lb_data),
       cur_elm_id_(in_elm_id),
       should_instrument_(true)
   { }
@@ -91,7 +91,7 @@ struct LBData final : Base {
   void end() final override;
 
   /**
-   * \brief Record statistics whenever a message is sent and a collection
+   * \brief Record LB data whenever a message is sent and a collection
    * element is running.
    *
    * \param[in] dest the destination of the message
@@ -110,7 +110,7 @@ struct LBData final : Base {
   ElementIDStruct const& getCurrentElementID() const;
 
 private:
-  ElementStats* stats_ = nullptr;     /**< Element statistics */
+  ElementLBData* lb_data_ = nullptr;     /**< Element LB data */
   ElementIDStruct cur_elm_id_ = {};   /**< Current element ID  */
   bool should_instrument_ = false;    /**< Whether we are instrumenting */
 };

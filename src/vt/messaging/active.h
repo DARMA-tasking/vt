@@ -1725,7 +1725,7 @@ private:
   void finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv);
 
   /**
-   * @brief Record LB's statistics for sending a message
+   * @brief Record LB's data for sending a message
    *
    * \param[in] dest the destination of the message
    * \param[in] base the message base pointer
@@ -1781,7 +1781,7 @@ private:
 
 private:
   elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_data_ = {};
-  elm::ElementStats bare_handler_stats_;
+  elm::ElementLBData bare_handler_lb_data_;
 };
 
 }} // end namespace vt::messaging

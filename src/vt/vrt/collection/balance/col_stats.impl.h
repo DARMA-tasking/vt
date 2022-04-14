@@ -61,11 +61,11 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 template <typename ColT>
 /*static*/
 void CollectionStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
-  auto& stats = col->stats_;
+  auto& stats = col->lb_data_;
 
   vt_debug_print(
     normal, lb,
-    "ElementStats: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
+    "ElementLBData: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
     "msg->getPhase()={}\n",
     print_ptr(col), col->getIndex(), stats.getPhase(), msg->getPhase()
   );
@@ -74,7 +74,7 @@ void CollectionStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
 
   auto const proxy = col->getProxy();
   auto const subphase = getFocusedSubPhase(proxy);
-  theNodeStats()->addNodeStats(col->elm_id_, &col->stats_, subphase);
+  theNodeStats()->addNodeStats(col->elm_id_, &col->lb_data_, subphase);
 
   std::vector<uint64_t> idx;
   for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {

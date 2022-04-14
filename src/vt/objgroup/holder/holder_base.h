@@ -53,7 +53,7 @@ namespace vt { namespace objgroup { namespace holder {
 
 struct HolderBase {
   using ElmIDType        = elm::ElementIDStruct;
-  using ElementStatsType = elm::ElementStats;
+  using ElementLBDataType = elm::ElementLBData;
 
   virtual ~HolderBase() = default;
   virtual bool exists() = 0;
@@ -61,16 +61,16 @@ struct HolderBase {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | stats_;
+    s | lb_data_;
     s | elm_id_;
   }
 
   ElmIDType getElmID() const { return elm_id_; }
   void setElmID(ElmIDType in_elm_id) { elm_id_ = in_elm_id; }
-  ElementStatsType& getStats() { return stats_; }
+  ElementLBDataType& getStats() { return lb_data_; }
 
 protected:
-  ElementStatsType stats_;
+  ElementLBDataType lb_data_;
   ElmIDType elm_id_ = {};
 };
 

@@ -49,19 +49,19 @@ namespace vt { namespace ctx {
 void LBData::begin() {
   // record start time
   if (should_instrument_) {
-    stats_->startTime();
+    lb_data_->startTime();
   }
 }
 
 void LBData::end() {
   // record end time
   if (should_instrument_) {
-    stats_->stopTime();
+    lb_data_->stopTime();
   }
 }
 
 void LBData::send(elm::ElementIDStruct dest, MsgSizeType bytes) {
-  stats_->sendToEntity(dest, cur_elm_id_, bytes);
+  lb_data_->sendToEntity(dest, cur_elm_id_, bytes);
 }
 
 void LBData::suspend() {

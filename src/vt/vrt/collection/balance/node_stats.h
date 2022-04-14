@@ -68,7 +68,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * \brief A VT component that backs the instrumentation of virtualized entities
  * on each node, such as the objects that the collection manager orchestrates,
  * to provide data to the load balancing framework. The actual instrumentation
- * occurs in \c vt::vrt:collection::balance::ElementStats which is composed into
+ * occurs in \c vt::vrt:collection::balance::ElementLBData which is composed into
  * the elements of a collection.
  *
  * Collects statistics/timings on active function/methods for objects and
@@ -131,8 +131,8 @@ public:
    * \param[in] focused_subphase the focused subphase (optional)
    */
   void addNodeStats(
-    ElementIDStruct id, elm::ElementStats* in,
-    SubphaseType focused_subphase = elm::ElementStats::no_subphase
+    ElementIDStruct id, elm::ElementLBData* in,
+    SubphaseType focused_subphase = elm::ElementLBData::no_subphase
   );
 
   /**
@@ -230,7 +230,7 @@ public:
    *
    * \return the stats data
    */
-  StatsData* getStatsData() { return stats_.get(); }
+  StatsData* getStatsData() { return lb_data_.get(); }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -240,7 +240,7 @@ public:
       | node_objgroup_lookup_
       | next_elm_
       | created_dir_
-      | stats_;
+      | lb_data_;
   }
 
 private:
@@ -270,7 +270,7 @@ private:
   /// The appender for outputting stat files in JSON format
   std::unique_ptr<util::json::BaseAppender> stat_writer_ = nullptr;
   /// The struct that holds all the statistic data
-  std::unique_ptr<StatsData> stats_ = nullptr;
+  std::unique_ptr<StatsData> lb_data_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

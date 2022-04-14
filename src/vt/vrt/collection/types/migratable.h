@@ -108,9 +108,9 @@ protected:
 protected:
   friend struct balance::CollectionStats;
   friend struct balance::NodeStats;
-  balance::CollectionStats stats_;
+  balance::CollectionStats lb_data_;
 public:
-  balance::CollectionStats& getStats() { return stats_; }
+  balance::CollectionStats& getStats() { return lb_data_; }
 protected:
   balance::ElementIDStruct elm_id_ = {};
 };
