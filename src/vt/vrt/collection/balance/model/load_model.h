@@ -211,6 +211,29 @@ struct LoadModel
   virtual TimeType getWork(ElementIDStruct object, PhaseOffset when) = 0;
 
   /**
+   * \brief Whether or not the model is based on the RawData model
+   */
+  virtual bool hasRawLoad() { return false; }
+
+  /**
+   * \brief Provide the given object's raw load during a specified interval
+   *
+   * \param[in] object The object whose raw load is desired
+   * \param[in] when The interval in which the raw load is desired
+   *
+   * \return How much computation time the object required
+   *
+   * The `updateLoads` method must have been called before any call to
+   * this.
+   */
+  virtual TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) {
+    vtAbort(
+      "LoadModel::getRawLoad() called on a model that does not implement it"
+    );
+    return 0.0;
+  };
+
+  /**
    * \brief Compute how many phases of past load statistics need to be
    * kept availble for the model to use
    *

@@ -107,4 +107,10 @@ TimeType ProposedReassignment::getWork(ElementIDStruct object, PhaseOffset when)
   return ComposedModel::getWork(object, when);
 }
 
+TimeType ProposedReassignment::getRawLoad(ElementIDStruct object, PhaseOffset when)
+{
+  vtAbort("ProposedReassignment::getRawLoad: not yet implemented");
+  return 0.0;
+}
+
 }}}}

@@ -96,6 +96,10 @@ int RawData::getNumSubphases() {
 
 TimeType RawData::getWork(ElementIDStruct object, PhaseOffset offset)
 {
+  return getRawLoad(object, offset);
+}
+
+TimeType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) {
   vtAssert(offset.phases < 0,
            "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
