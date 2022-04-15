@@ -58,6 +58,14 @@ TimeType ComposedModel::getWork(ElementIDStruct object, PhaseOffset when) {
   return base_->getWork(object, when);
 }
 
+bool ComposedModel::hasRawLoad() {
+  return base_->hasRawLoad();
+}
+
+TimeType ComposedModel::getRawLoad(ElementIDStruct object, PhaseOffset when) {
+  return base_->getRawLoad(object, when);
+}
+
 unsigned int ComposedModel::getNumPastPhasesNeeded(unsigned int look_back)
 {
   return base_->getNumPastPhasesNeeded(look_back);

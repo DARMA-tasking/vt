@@ -58,6 +58,14 @@ TimeType NaivePersistence::getWork(ElementIDStruct object, PhaseOffset offset)
   return ComposedModel::getWork(object, offset);
 }
 
+TimeType NaivePersistence::getRawLoad(ElementIDStruct object, PhaseOffset offset)
+{
+  if (offset.phases >= 0)
+    offset.phases = -1;
+
+  return ComposedModel::getRawLoad(object, offset);
+}
+
 unsigned int NaivePersistence::getNumPastPhasesNeeded(unsigned int look_back)
 {
   return ComposedModel::getNumPastPhasesNeeded(std::max(1u, look_back));
