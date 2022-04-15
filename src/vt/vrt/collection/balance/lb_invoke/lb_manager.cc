@@ -435,6 +435,16 @@ void LBManager::statsHandler(StatsMsgType* msg) {
 
   //vt_print(lb, "before_lb_stats_={}\n", before_lb_stats_);
 
+  // use the raw loads if they were computed, otherwise fall back on model loads
+  lb::Statistic rank_statistic = lb::Statistic::Rank_load_model;
+  lb::Statistic obj_statistic  = lb::Statistic::Object_load_model;
+  for (auto&& st : in_stat_vec) {
+    if (st.stat_ == lb::Statistic::Rank_load_raw) {
+      rank_statistic = lb::Statistic::Rank_load_raw;
+      obj_statistic = lb::Statistic::Object_load_raw;
+    }
+  }
+
   for (auto&& st : in_stat_vec) {
     auto stat     = st.stat_;
     auto max      = st.max();
@@ -462,7 +472,7 @@ void LBManager::statsHandler(StatsMsgType* msg) {
     stats[stat][lb::StatisticQuantity::skw] = skew;
     stats[stat][lb::StatisticQuantity::kur] = krte;
 
-    if (stat == lb::Statistic::Rank_load_model) {
+    if (stat == rank_statistic) {
       if (before_lb_stats_) {
         last_phase_info_->max_load = max;
         last_phase_info_->avg_load = avg;
@@ -472,7 +482,7 @@ void LBManager::statsHandler(StatsMsgType* msg) {
         last_phase_info_->avg_load_post_lb = avg;
         last_phase_info_->imb_load_post_lb = imb;
       }
-    } else if (stat == lb::Statistic::Object_load_model) {
+    } else if (stat == obj_statistic) {
       if (before_lb_stats_) {
         last_phase_info_->max_obj = max;
       } else {
