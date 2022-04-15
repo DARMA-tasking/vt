@@ -41,35 +41,13 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
-
-struct HelloMsg : vt::Message {
-  HelloMsg(vt::NodeType in_from) : from(in_from) { }
-
-  vt::NodeType from = 0;
-};
-
-static void hello_world(HelloMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  fmt::print("{}: Hello from node {}\n", this_node, msg->from);
-}
+#include "vt/configs/arguments/app_config.h"
+#include "vt/configs/arguments/args.h"
 
 int main(int argc, char** argv) {
-  vt::initialize(argc, argv);
+  vt::arguments::ArgConfig arg;
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
-
-  if (num_nodes == 1) {
-    return vt::rerror("requires at least 2 nodes");
-  }
-
-  if (this_node == 0) {
-    auto msg = vt::makeMessage<HelloMsg>(this_node);
-    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
-  }
-
-  vt::finalize();
+  arg.parse(argc, argv, nullptr);
 
   return 0;
 }
