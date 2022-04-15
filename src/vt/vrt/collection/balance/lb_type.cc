@@ -73,9 +73,11 @@ namespace lb {
 
 static std::unordered_map<Statistic,std::string> lb_stat_name_ = {
   {Statistic::Rank_load_model,   std::string{"Rank_load_model"}},
+  {Statistic::Rank_load_raw,     std::string{"Rank_load_raw"}},
   {Statistic::Rank_comm,         std::string{"Rank_comm"}},
   {Statistic::Rank_work_model,   std::string{"Rank_work_model"}},
   {Statistic::Object_load_model, std::string{"Object_load_model"}},
+  {Statistic::Object_load_raw,   std::string{"Object_load_raw"}},
   {Statistic::Object_comm,       std::string{"Object_comm"}},
   {Statistic::Object_work_model, std::string{"Object_work_model"}},
   {Statistic::ObjectRatio,       std::string{"ObjectRatio"}},

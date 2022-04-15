@@ -532,6 +532,20 @@ void LBManager::computeStatistics(
     total_load_from_model += work;
   }
 
+  TimeType total_load_raw = 0.;
+  std::vector<balance::LoadData> obj_load_raw;
+  if (model->hasRawLoad()) {
+    for (auto elm : *model) {
+      auto raw_load = model->getRawLoad(
+        elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+      );
+      obj_load_raw.emplace_back(
+        LoadData{lb::Statistic::Object_load_raw, raw_load}
+      );
+      total_load_raw += raw_load;
+    }
+  }
+
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm_data = &empty_comm;
   auto iter = theNodeLBData()->getNodeComm()->find(phase);
@@ -546,6 +560,15 @@ void LBManager::computeStatistics(
   lstats.emplace_back(reduceVec(
     lb::Statistic::Object_load_model, std::move(obj_load_model)
   ));
+
+  if (model->hasRawLoad()) {
+    lstats.emplace_back(
+      LoadData{lb::Statistic::Rank_load_raw, total_load_raw}
+    );
+    lstats.emplace_back(reduceVec(
+      lb::Statistic::Object_load_raw, std::move(obj_load_raw)
+    ));
+  }
 
   double comm_load = 0.0;
   for (auto&& elm : *comm_data) {
