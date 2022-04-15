@@ -44,11 +44,7 @@
 #if !defined INCLUDED_VT_RUNTIME_RUNTIME_INST_IMPL_H
 #define INCLUDED_VT_RUNTIME_RUNTIME_INST_IMPL_H
 
-#include "vt/config.h"
 #include "vt/runtime/runtime_inst.h"
-#include "vt/runtime/runtime.h"
-
-#include <memory>
 
 namespace vt { namespace runtime {
 

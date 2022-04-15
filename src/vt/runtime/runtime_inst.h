@@ -44,9 +44,7 @@
 #if !defined INCLUDED_VT_RUNTIME_RUNTIME_INST_H
 #define INCLUDED_VT_RUNTIME_RUNTIME_INST_H
 
-#include "vt/config.h"
 #include "vt/runtime/runtime_common.h"
-#include "vt/utils/tls/tls.h"
 
 #include <memory>
 

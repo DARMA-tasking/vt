@@ -44,9 +44,7 @@
 #if !defined INCLUDED_VT_RUNTIME_RUNTIME_HEADERS_H
 #define INCLUDED_VT_RUNTIME_RUNTIME_HEADERS_H
 
-#include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_inst.h"
-#include "vt/runtime/runtime.h"
 #include "vt/runtime/runtime_holder.h"
 
 namespace vt { namespace runtime {

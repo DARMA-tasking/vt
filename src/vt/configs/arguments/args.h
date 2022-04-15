@@ -47,10 +47,8 @@
 #include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/component/component.h"
 
-#include <functional>
 #include <memory>
 #include <string>
-#include <vector>
 #include <tuple>
 
 namespace vt {

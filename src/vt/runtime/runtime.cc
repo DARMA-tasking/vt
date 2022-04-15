@@ -43,6 +43,7 @@
 
 #include "vt/config.h"
 #include "vt/runtime/runtime.h"
+#include "vt/runtime/runtime_inst.h"
 #include "vt/context/context.h"
 #include "vt/context/context_attorney.h"
 #include "vt/registry/registry.h"
