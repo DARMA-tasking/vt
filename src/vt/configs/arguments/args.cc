@@ -64,7 +64,7 @@ std::vector<std::string> arg_trace_mpi;
  * Application specific cleanup and mapping to actual app args.
  */
 void postParseTransform(AppConfig& appConfig) {
-  auto contains = [](std::vector<std::string> &v, std::string str){
+  auto contains = [](std::vector<std::string> &v, const std::string &str){
     return std::find(v.begin(), v.end(), str) not_eq v.end();
   };
 
