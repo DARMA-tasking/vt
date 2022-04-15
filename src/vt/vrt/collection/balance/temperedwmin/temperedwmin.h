@@ -49,7 +49,7 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct TemperedWMin : TemperedLB {
-  TemperedWMin() = default;
+  TemperedWMin() { comm_aware_ = true; }
   TemperedWMin(TemperedWMin const&) = delete;
 
   virtual ~TemperedWMin() { }
