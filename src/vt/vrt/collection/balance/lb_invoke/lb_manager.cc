@@ -232,7 +232,7 @@ LBManager::runLB(
 
   lb::BaseLB* strat = base_proxy.get();
   auto reassignment = strat->startLB(
-    phase, base_proxy, model_.get(), stats, *comm, total_load
+    phase, base_proxy, model_.get(), stats, *comm, total_load_from_model
   );
   cb.send(reassignment, phase);
 }
@@ -520,7 +520,7 @@ void LBManager::computeStatistics(
 
   using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
 
-  total_load = 0.;
+  total_load_from_model = 0.;
   std::vector<balance::LoadData> obj_load_model;
   for (auto elm : *model) {
     auto work = model->getWork(
@@ -529,7 +529,7 @@ void LBManager::computeStatistics(
     obj_load_model.emplace_back(
       LoadData{lb::Statistic::Object_load_model, work}
     );
-    total_load += work;
+    total_load_from_model += work;
   }
 
   elm::CommMapType empty_comm;
@@ -540,7 +540,9 @@ void LBManager::computeStatistics(
   }
 
   std::vector<LoadData> lstats;
-  lstats.emplace_back(LoadData{lb::Statistic::Rank_load_model, total_load});
+  lstats.emplace_back(
+    LoadData{lb::Statistic::Rank_load_model, total_load_from_model}
+  );
   lstats.emplace_back(reduceVec(
     lb::Statistic::Object_load_model, std::move(obj_load_model)
   ));
