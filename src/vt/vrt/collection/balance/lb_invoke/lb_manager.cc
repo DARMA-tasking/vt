@@ -462,7 +462,7 @@ void LBManager::statsHandler(StatsMsgType* msg) {
     stats[stat][lb::StatisticQuantity::skw] = skew;
     stats[stat][lb::StatisticQuantity::kur] = krte;
 
-    if (stat == lb::Statistic::P_l) {
+    if (stat == lb::Statistic::Rank_load_model) {
       if (before_lb_stats_) {
         last_phase_info_->max_load = max;
         last_phase_info_->avg_load = avg;
@@ -472,7 +472,7 @@ void LBManager::statsHandler(StatsMsgType* msg) {
         last_phase_info_->avg_load_post_lb = avg;
         last_phase_info_->imb_load_post_lb = imb;
       }
-    } else if (stat == lb::Statistic::O_l) {
+    } else if (stat == lb::Statistic::Object_load_model) {
       if (before_lb_stats_) {
         last_phase_info_->max_obj = max;
       } else {
@@ -521,12 +521,14 @@ void LBManager::computeStatistics(
   using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
 
   total_load = 0.;
-  std::vector<balance::LoadData> O_l;
+  std::vector<balance::LoadData> obj_load_model;
   for (auto elm : *model) {
     auto work = model->getWork(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
-    O_l.emplace_back(LoadData{lb::Statistic::O_l, work});
+    obj_load_model.emplace_back(
+      LoadData{lb::Statistic::Object_load_model, work}
+    );
     total_load += work;
   }
 
@@ -538,8 +540,10 @@ void LBManager::computeStatistics(
   }
 
   std::vector<LoadData> lstats;
-  lstats.emplace_back(LoadData{lb::Statistic::P_l, total_load});
-  lstats.emplace_back(reduceVec(lb::Statistic::O_l, std::move(O_l)));
+  lstats.emplace_back(LoadData{lb::Statistic::Rank_load_model, total_load});
+  lstats.emplace_back(reduceVec(
+    lb::Statistic::Object_load_model, std::move(obj_load_model)
+  ));
 
   double comm_load = 0.0;
   for (auto&& elm : *comm_data) {
@@ -553,17 +557,21 @@ void LBManager::computeStatistics(
     comm_load += elm.second.bytes;
   }
 
-  lstats.emplace_back(LoadData{lb::Statistic::P_c, comm_load});
+  lstats.emplace_back(LoadData{lb::Statistic::Rank_comm, comm_load});
 
-  std::vector<balance::LoadData> O_c;
+  std::vector<balance::LoadData> obj_comm;
   for (auto&& elm : *comm_data) {
-    // Only count object-to-object direct edges in the O_c statistics
+    // Only count object-to-object direct edges in the Object_comm statistics
     if (elm.first.cat_ == elm::CommCategory::SendRecv and not elm.first.selfEdge()) {
-      O_c.emplace_back(LoadData{lb::Statistic::O_c, elm.second.bytes});
+      obj_comm.emplace_back(
+        LoadData{lb::Statistic::Object_comm, elm.second.bytes}
+      );
     }
   }
 
-  lstats.emplace_back(reduceVec(lb::Statistic::O_c, std::move(O_c)));
+  lstats.emplace_back(reduceVec(
+    lb::Statistic::Object_comm, std::move(obj_comm)
+  ));
 
   auto msg = makeMessage<StatsMsgType>(std::move(lstats));
   proxy_.template reduce<ReduceOp>(msg,cb);

@@ -177,8 +177,8 @@ enum struct StatisticQuantity : int8_t {
 };
 
 enum struct Statistic : int8_t {
-  P_l, P_c, P_t,
-  O_l, O_c, O_t,
+  Rank_load_model, Rank_comm, Rank_work_model,
+  Object_load_model, Object_comm, Object_work_model,
   // W_l_min, W_l_max, W_l_avg, W_l_std, W_l_var, W_l_skewness, W_l_kurtosis,
   // W_c_min, W_c_max, W_c_avg, W_c_std, W_c_var, W_c_skewness, W_c_kurtosis,
   // W_t_min, W_t_max, W_t_avg, W_t_std, W_t_var, W_t_skewness, W_t_kurtosis,

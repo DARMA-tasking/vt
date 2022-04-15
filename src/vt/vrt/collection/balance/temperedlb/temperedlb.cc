@@ -426,10 +426,18 @@ void TemperedLB::runLB(TimeType total_load) {
   this_load = total_load;
   stats = *getStats();
 
-  auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
-  auto const max  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
-  auto const pole = stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max);
-  auto const imb  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
+  auto const avg  = stats.at(lb::Statistic::Rank_load_model).at(
+    lb::StatisticQuantity::avg
+  );
+  auto const max  = stats.at(lb::Statistic::Rank_load_model).at(
+    lb::StatisticQuantity::max
+  );
+  auto const pole = stats.at(lb::Statistic::Object_load_model).at(
+    lb::StatisticQuantity::max
+  );
+  auto const imb  = stats.at(lb::Statistic::Rank_load_model).at(
+    lb::StatisticQuantity::imb
+  );
   auto const load = this_load;
 
   if (target_pole_) {
@@ -534,15 +542,15 @@ void TemperedLB::doLBStages(TimeType start_imb) {
       );
 
       if (rollback_ || theConfig()->vt_debug_temperedlb || (iter_ == num_iters_ - 1)) {
-        runInEpochCollective("TemperedLB::doLBStages -> P_l reduce", [=] {
+        runInEpochCollective("TemperedLB::doLBStages -> Rank_load_model reduce", [=] {
           using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
           auto cb = vt::theCB()->makeBcast<
             TemperedLB, StatsMsgType, &TemperedLB::loadStatsHandler
           >(this->proxy_);
-          // Perform the reduction for P_l -> processor load only
+          // Perform the reduction for Rank_load_model -> processor load only
           auto msg = makeMessage<StatsMsgType>(
             std::vector<balance::LoadData>{
-              {balance::LoadData{Statistic::P_l, this_new_load_}}
+              {balance::LoadData{Statistic::Rank_load_model, this_new_load_}}
             }
           );
           this->proxy_.template reduce<ReduceOp>(msg,cb);
@@ -613,8 +621,9 @@ void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
       "avg={} pole={} imb={:0.4f}\n",
       trial_, iter_, TimeTypeWrapper(in.max()),
       TimeTypeWrapper(in.min()), TimeTypeWrapper(in.avg()),
-      TimeTypeWrapper(
-        stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max)),
+      TimeTypeWrapper(stats.at(
+        lb::Statistic::Object_load_model
+      ).at(lb::StatisticQuantity::max)),
       in.I()
     );
   }

@@ -72,14 +72,14 @@ std::unordered_map<LBType, std::string>& get_lb_names() {
 namespace lb {
 
 static std::unordered_map<Statistic,std::string> lb_stat_name_ = {
-  {Statistic::P_l,         std::string{"P_l"}},
-  {Statistic::P_c,         std::string{"P_c"}},
-  {Statistic::P_t,         std::string{"P_t"}},
-  {Statistic::O_l,         std::string{"O_l"}},
-  {Statistic::O_c,         std::string{"O_c"}},
-  {Statistic::O_t,         std::string{"O_t"}},
-  {Statistic::ObjectRatio, std::string{"ObjectRatio"}},
-  {Statistic::EdgeRatio,   std::string{"EdgeRatio"}}
+  {Statistic::Rank_load_model,   std::string{"Rank_load_model"}},
+  {Statistic::Rank_comm,         std::string{"Rank_comm"}},
+  {Statistic::Rank_work_model,   std::string{"Rank_work_model"}},
+  {Statistic::Object_load_model, std::string{"Object_load_model"}},
+  {Statistic::Object_comm,       std::string{"Object_comm"}},
+  {Statistic::Object_work_model, std::string{"Object_work_model"}},
+  {Statistic::ObjectRatio,       std::string{"ObjectRatio"}},
+  {Statistic::EdgeRatio,         std::string{"EdgeRatio"}}
 };
 
 std::unordered_map<Statistic, std::string>& get_lb_stat_name() {
