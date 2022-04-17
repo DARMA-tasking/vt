@@ -105,8 +105,8 @@ struct ConstructParams {
 TYPED_TEST_SUITE_P(TestConstruct);
 TYPED_TEST_SUITE_P(TestConstructDist);
 
-TYPED_TEST_P(TestConstruct, test_construct_1) {
-  using ColType   = TypeParam;
+template<typename ColType>
+void test_construct_1() {
   using MsgType   = typename ColType::MsgType;
 
   auto const& this_node = theContext()->getNode();
@@ -121,8 +121,8 @@ TYPED_TEST_P(TestConstruct, test_construct_1) {
   }
 }
 
-TYPED_TEST_P(TestConstructDist, test_construct_distributed_1) {
-  using ColType   = TypeParam;
+template<typename ColType>
+void test_construct_distributed_1() {
   using MsgType   = typename ColType::MsgType;
 
   auto const& col_size = 32;
@@ -133,9 +133,6 @@ TYPED_TEST_P(TestConstructDist, test_construct_distributed_1) {
     ConstructHandlers::handler<ColType,MsgType>
   >();
 }
-
-REGISTER_TYPED_TEST_SUITE_P(TestConstruct,     test_construct_1);
-REGISTER_TYPED_TEST_SUITE_P(TestConstructDist, test_construct_distributed_1);
 
 }}} // end namespace vt::tests::unit
 

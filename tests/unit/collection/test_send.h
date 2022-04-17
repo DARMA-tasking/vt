@@ -140,9 +140,8 @@ struct TestCollectionSendMem : TestParallelHarness {};
 TYPED_TEST_SUITE_P(TestCollectionSend);
 TYPED_TEST_SUITE_P(TestCollectionSendMem);
 
-template<typename TypeParam>
+template<typename ColType>
 void test_collection_send_1() {
-  using ColType = TypeParam;
   using MsgType = typename ColType::MsgType;
   using TestParamType = typename ColType::ParamType;
 
@@ -166,9 +165,8 @@ void test_collection_send_1() {
   }
 }
 
-template<typename TypeParam>
+template<typename ColType>
 void test_collection_send_ptm_1(){
-  using ColType = TypeParam;
   using MsgType = typename ColType::MsgType;
   using TestParamType = typename ColType::ParamType;
 
