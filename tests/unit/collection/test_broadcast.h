@@ -118,8 +118,8 @@ struct TestBroadcast : TestParallelHarness {};
 
 TYPED_TEST_SUITE_P(TestBroadcast);
 
-TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
-  using ColType = TypeParam;
+template<typename ColType>
+void test_broadcast_1(){
   using MsgType = typename ColType::MsgType;
   using TestParamType = typename ColType::ParamType;
 

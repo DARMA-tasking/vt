@@ -51,7 +51,11 @@
 
 namespace vt { namespace tests { namespace unit { namespace bcast {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+TYPED_TEST_P(TestBroadcast, test_broadcast_basic_1) {
+  test_broadcast_1<TypeParam>();
+}
+
+REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_basic_1);
 
 using CollectionTestTypesBasic = testing::Types<
   bcast_col_            ::TestCol<int32_t>
