@@ -81,7 +81,8 @@ struct TestRDMAHandle : TestParallelHarness { };
 
 TYPED_TEST_SUITE_P(TestRDMAHandle);
 
-TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
+template<typename TypeParam>
+void test_rdma_handle_1(){
   std::size_t size = 10;
 
   using T = TypeParam;
@@ -122,7 +123,8 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
   proxy.destroyHandleRDMA(handle);
 }
 
-TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
+template<typename TypeParam>
+void test_rdma_handle_2(){
   std::size_t size = 10;
 
   using T = TypeParam;
@@ -176,7 +178,8 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
   proxy.destroyHandleRDMA(handle);
 }
 
-TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_3) {
+template<typename TypeParam>
+void test_rdma_handle_3(){
   std::size_t size = 10;
 
   using T = TypeParam;
@@ -217,7 +220,8 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_3) {
   proxy.destroyHandleRDMA(handle);
 }
 
-TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_4) {
+template<typename TypeParam>
+void test_rdma_handle_4(){
   auto rank = vt::theContext()->getNode();
   std::size_t per_size = 10;
   std::size_t size = per_size * (rank + 1);
@@ -240,7 +244,8 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_4) {
   proxy.destroyHandleRDMA(handle);
 }
 
-TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_5) {
+template<typename TypeParam>
+void test_rdma_handle_5(){
   std::size_t size = 10;
 
   using T = TypeParam;

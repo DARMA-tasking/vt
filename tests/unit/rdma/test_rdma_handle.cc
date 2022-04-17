@@ -50,13 +50,33 @@ namespace vt { namespace tests { namespace unit {
 
 using RDMATestTypesBasic = testing::Types<int>;
 
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_basic_1) {
+  test_rdma_handle_1<TypeParam>();
+}
+
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_basic_2) {
+  test_rdma_handle_2<TypeParam>();
+}
+
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_basic_3) {
+  test_rdma_handle_3<TypeParam>();
+}
+
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_basic_4) {
+  test_rdma_handle_4<TypeParam>();
+}
+
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_basic_5) {
+  test_rdma_handle_5<TypeParam>();
+}
+
 REGISTER_TYPED_TEST_SUITE_P(
   TestRDMAHandle,
-  test_rdma_handle_1,
-  test_rdma_handle_2,
-  test_rdma_handle_3,
-  test_rdma_handle_4,
-  test_rdma_handle_5
+  test_rdma_handle_basic_1,
+  test_rdma_handle_basic_2,
+  test_rdma_handle_basic_3,
+  test_rdma_handle_basic_4,
+  test_rdma_handle_basic_5
 );
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
