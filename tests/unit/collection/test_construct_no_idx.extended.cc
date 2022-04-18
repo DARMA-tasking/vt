@@ -57,7 +57,6 @@ struct ColMsg;
 struct TestCol : Collection<TestCol,vt::Index1D> {
   using MsgType = ColMsg;
 };
-
 struct ColMsg : CollectionMessage<TestCol> {};
 } /* end namespace multi_param_no_idx_ */
 

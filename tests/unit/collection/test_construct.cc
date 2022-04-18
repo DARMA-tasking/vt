@@ -100,7 +100,7 @@ TEST_F(TestConstructLabel, test_labels) {
   auto const range = Index1D(num_nodes);
   std::string const label = "test_labels";
 
-  auto proxy = makeCollection<default_::TestCol>(label)
+  auto proxy = makeCollection<default_::TestCol1D>(label)
     .bounds(range)
     .bulkInsert()
     .wait();
