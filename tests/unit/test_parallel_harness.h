@@ -146,7 +146,7 @@ private:
    * needed arguments to `additional_args_` vector.
    *
    * Example:
-   * struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
+   * struct TestParallelHarnessWithLBDataDumping : TestParallelHarnessParam<int> {
    *   virtual void addAdditionalArgs() override {
    *     static char vt_lb_data[]{"--vt_lb_data"};
    *     static char vt_lb_data_dir[]{"--vt_lb_data_dir=test_data_dir"};

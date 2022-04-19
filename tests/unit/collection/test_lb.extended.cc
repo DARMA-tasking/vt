@@ -196,7 +196,7 @@ INSTANTIATE_TEST_SUITE_P(
   LoadBalancerExplodeGreedy, TestLoadBalancerGreedy, balancers_greedy
 );
 
-struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
+struct TestParallelHarnessWithLBDataDumping : TestParallelHarnessParam<int> {
   virtual void addAdditionalArgs() override {
     static char vt_lb_data[]{"--vt_lb_data"};
     static char vt_lb_data_dir[]{"--vt_lb_data_dir=test_data_dir"};
@@ -206,21 +206,21 @@ struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
   }
 };
 
-struct TestNodeStatsDumper : TestParallelHarnessWithStatsDumping {};
+struct TestNodeLBDataDumper : TestParallelHarnessWithLBDataDumping {};
 
 void closeNodeLBDataFile(char const* file_path);
 int countCreatedLBDataFiles(char const* path);
 void removeLBDataOutputDir(char const* path);
 std::map<int, int> getPhasesFromLBDataFile(const char* file_path);
 
-TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
+TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
   vt::theConfig()->vt_lb = true;
   vt::theConfig()->vt_lb_name = "GreedyLB";
   vt::theConfig()->vt_lb_interval = GetParam();
 
   if (vt::theContext()->getNode() == 0) {
     fmt::print(
-      "Testing dumping Node Stats with LB interval {}\n",
+      "Testing dumping Node LB data with LB interval {}\n",
       vt::theConfig()->vt_lb_interval
     );
   }
@@ -312,10 +312,10 @@ void removeLBDataOutputDir(char const* path) {
 auto const intervals = ::testing::Values(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
 INSTANTIATE_TEST_SUITE_P(
-  NodeStatsDumperExplode, TestNodeStatsDumper, intervals
+  NodeLBDataDumperExplode, TestNodeLBDataDumper, intervals
 );
 
-using TestRestoreStatsData = TestParallelHarness;
+using TestRestoreLBData = TestParallelHarness;
 
 vt::vrt::collection::balance::LBDataHolder
 getLBDataForPhase(
@@ -333,9 +333,9 @@ getLBDataForPhase(
   return LBDataHolder{json::parse(ss)};
 }
 
-TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
+TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
   auto this_node = vt::theContext()->getNode();
-  std::string out_file_name = "test_restore_stats_data_1.%p.json";
+  std::string out_file_name = "test_restore_lb_data_1.%p.json";
   std::size_t rank = out_file_name.find("%p");
   auto str_rank = std::to_string(this_node);
   if (rank == std::string::npos) {
