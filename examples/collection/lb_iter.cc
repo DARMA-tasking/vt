@@ -77,7 +77,7 @@ private:
 static double weight = 1.0f;
 
 void IterCol::iterWork(IterMsg* msg) {
-  this->stats_.setSubPhase(msg->subphase_);
+  this->lb_data_.setSubPhase(msg->subphase_);
   double val = 0.1f;
   double val2 = 0.4f * msg->work_amt_;
   auto const idx = getIndex().x();

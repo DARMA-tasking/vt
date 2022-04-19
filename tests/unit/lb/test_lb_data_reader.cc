@@ -133,7 +133,7 @@ TEST_F(TestLBDataReader, test_lb_data_read_1) {
 
   phase += 1;
 
-  // Write the stats
+  // Write the LB data
   for (PhaseType p = 0; p < phase; p++) {
     auto json = lbdh->toJson(p);
     ap->addElm(*json);

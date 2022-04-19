@@ -66,11 +66,11 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
 
   static void colHandler(MyMsg<TestCol>* msg, TestCol* col) {
 
-    auto& stats = col->stats_;
-    auto load_phase_count = stats.getLoadPhaseCount();
-    auto comm_phase_count = stats.getCommPhaseCount();
-    auto sp_load_phase_count = stats.getSubphaseLoadPhaseCount();
-    auto sp_comm_phase_count = stats.getSubphaseCommPhaseCount();
+    auto& lb_data = col->lb_data_;
+    auto load_phase_count = lb_data.getLoadPhaseCount();
+    auto comm_phase_count = lb_data.getCommPhaseCount();
+    auto sp_load_phase_count = lb_data.getSubphaseLoadPhaseCount();
+    auto sp_comm_phase_count = lb_data.getSubphaseCommPhaseCount();
 
     #if vt_check_enabled(lblite)
       auto phase = col->prevCalls();

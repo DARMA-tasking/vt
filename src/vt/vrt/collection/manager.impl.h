@@ -354,7 +354,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 }
 
 template <typename ColT, typename MsgT>
-/*static*/ void CollectionManager::recordStats(ColT* col_ptr, MsgT* msg) {
+/*static*/ void CollectionManager::recordLBData(ColT* col_ptr, MsgT* msg) {
   auto const pfrom = msg->getSenderElm();
 
   if (pfrom.id == elm::no_element_id) {
@@ -367,7 +367,7 @@ template <typename ColT, typename MsgT>
   auto const cat = msg->getCat();
   vt_debug_print(
     normal, vrt_coll,
-    "recordStats: receive msg: elm(to={}, from={}),"
+    "recordLBData: receive msg: elm(to={}, from={}),"
     " no={}, size={}, category={}\n",
     pto, pfrom, elm::no_element_id, msg_size,
     static_cast<typename std::underlying_type<elm::CommCategory>::type>(cat)
