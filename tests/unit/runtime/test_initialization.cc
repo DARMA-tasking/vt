@@ -43,6 +43,8 @@
 
 #include <gtest/gtest.h>
 
+#include "vt/configs/arguments/app_config.h"
+
 #include "test_parallel_harness.h"
 
 #include <vt/collective/startup.h>
