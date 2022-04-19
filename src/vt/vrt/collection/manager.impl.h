@@ -362,7 +362,7 @@ template <typename ColT, typename MsgT>
   }
 
   auto const pto = col_ptr->getElmID();
-  auto& stats = col_ptr->getLBData();
+  auto& lb_data = col_ptr->getLBData();
   auto const msg_size = serialization::MsgSizer<MsgT>::get(msg);
   auto const cat = msg->getCat();
   vt_debug_print(
@@ -377,14 +377,14 @@ template <typename ColT, typename MsgT>
     cat == elm::CommCategory::Broadcast
   ) {
     bool bcast = cat == elm::CommCategory::SendRecv ? false : true;
-    stats.recvObjData(pto, pfrom, msg_size, bcast);
+    lb_data.recvObjData(pto, pfrom, msg_size, bcast);
   } else if (
     cat == elm::CommCategory::NodeToCollection or
     cat == elm::CommCategory::NodeToCollectionBcast
   ) {
     bool bcast = cat == elm::CommCategory::NodeToCollection ? false : true;
     auto nfrom = msg->getFromNode();
-    stats.recvFromNode(pto, nfrom, msg_size, bcast);
+    lb_data.recvFromNode(pto, nfrom, msg_size, bcast);
   }
 }
 
@@ -1344,7 +1344,7 @@ void CollectionManager::insertMetaCollection(
    * Type-erase some lambdas for doing the collective broadcast that collects up
    * the LB data on each node for each collection element
    */
-  collect_stats_for_lb_[proxy] = [bits=proxy]{
+  collect_lb_data_for_lb_[proxy] = [bits=proxy]{
     using namespace balance;
     using MsgType = CollectStatsMsg<ColT>;
     auto const phase = thePhase()->getCurrentPhase();

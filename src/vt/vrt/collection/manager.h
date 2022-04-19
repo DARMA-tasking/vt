@@ -1704,7 +1704,7 @@ public:
   void serialize(SerializerT& s) {
     s | cleanup_fns_
       | release_lb_
-      | collect_stats_for_lb_
+      | collect_lb_data_for_lb_
       | next_collective_id_
       | next_rooted_id_
       | typeless_holder_
@@ -1802,7 +1802,7 @@ private:
 
 private:
   CleanupListFnType cleanup_fns_;
-  std::unordered_map<VirtualProxyType,ActionType> collect_stats_for_lb_;
+  std::unordered_map<VirtualProxyType,ActionType> collect_lb_data_for_lb_;
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
   VirtualIDType next_collective_id_ = 0;
   VirtualIDType next_rooted_id_ = 0;

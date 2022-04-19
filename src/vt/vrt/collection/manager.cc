@@ -61,9 +61,9 @@ void CollectionManager::finalize() {
 
 void CollectionManager::startup() {
 #if vt_check_enabled(lblite)
-  // First hook, do all stat manipulation
+  // First hook, do all LB data manipulation
   thePhase()->registerHookCollective(phase::PhaseHook::End, []{
-    auto const& map = theCollection()->collect_stats_for_lb_;
+    auto const& map = theCollection()->collect_lb_data_for_lb_;
     for (auto&& elm : map) {
       // this will trigger all the data collection required for LB
       elm.second();
