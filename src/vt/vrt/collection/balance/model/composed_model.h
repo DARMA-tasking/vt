@@ -70,7 +70,7 @@ public:
   void updateLoads(PhaseType last_completed_phase) override;
 
   TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
-  bool hasRawLoad() override;
+  bool hasRawLoad() const override;
   TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 

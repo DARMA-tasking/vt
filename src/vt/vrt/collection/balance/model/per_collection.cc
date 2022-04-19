@@ -78,7 +78,7 @@ TimeType PerCollection::getWork(ElementIDStruct object, PhaseOffset when) {
   return ComposedModel::getWork(object, when);
 }
 
-bool PerCollection::hasRawLoad() {
+bool PerCollection::hasRawLoad() const {
   // Only return true if all possible paths lead to true
   bool has_raw_load = true;
 

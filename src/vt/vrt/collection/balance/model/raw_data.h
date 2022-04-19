@@ -60,7 +60,7 @@ struct RawData : public LoadModel {
   RawData() = default;
   void updateLoads(PhaseType last_completed_phase) override;
   TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
-  bool hasRawLoad() override { return true; }
+  bool hasRawLoad() const override { return true; }
   TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
 
 

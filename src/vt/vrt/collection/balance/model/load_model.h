@@ -229,7 +229,7 @@ struct LoadModel
   /**
    * \brief Whether or not the model is based on the RawData model
    */
-  virtual bool hasRawLoad() { return false; }
+  virtual bool hasRawLoad() const { return false; }
 
   /**
    * \brief Provide the given object's raw load during a specified interval

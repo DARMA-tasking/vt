@@ -58,7 +58,7 @@ TimeType ComposedModel::getWork(ElementIDStruct object, PhaseOffset when) {
   return base_->getWork(object, when);
 }
 
-bool ComposedModel::hasRawLoad() {
+bool ComposedModel::hasRawLoad() const {
   return base_->hasRawLoad();
 }
 
