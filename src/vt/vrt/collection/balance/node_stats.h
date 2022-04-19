@@ -124,10 +124,10 @@ public:
   void registerObjGroupInfo(ElementIDStruct id, ObjGroupProxyType proxy);
 
   /**
-   * \internal \brief Add statistics for element (non-collection)
+   * \internal \brief Add LB data for element (non-collection)
    *
    * \param[in] id the element ID
-   * \param[in] in the stats
+   * \param[in] in the LB data
    * \param[in] focused_subphase the focused subphase (optional)
    */
   void addNodeLBData(
@@ -136,7 +136,7 @@ public:
   );
 
   /**
-   * \internal \brief Clear/reset all statistics and IDs on this node
+   * \internal \brief Clear/reset all LB data and IDs on this node
    */
   void clearLBData();
 
@@ -146,13 +146,13 @@ public:
   void startIterCleanup(PhaseType phase, unsigned int look_back);
 
   /**
-   * \internal \brief Output stats file for given phase based on instrumented
+   * \internal \brief Output LB data file for given phase based on instrumented
    * data
    *
-   * This outputs statistics in JSON format that includes task timings,
+   * This outputs LB data in JSON format that includes task timings,
    * mappings, and communication.
    */
-  void outputStatsForPhase(PhaseType phase);
+  void outputLBDataForPhase(PhaseType phase);
 
   /**
    * \internal \brief Generate the next object element ID for LB

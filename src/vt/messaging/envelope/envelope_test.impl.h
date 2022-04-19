@@ -98,9 +98,9 @@ inline bool envelopeIsLocked(Env& env) {
 }
 
 template <typename Env>
-inline bool envelopeCommStatsRecordedAboveBareHandler(Env& env) {
+inline bool envelopeCommLBDataRecordedAboveBareHandler(Env& env) {
   return reinterpret_cast<Envelope const*>(&env)->
-    comm_stats_recorded_above_bare_handler;
+    comm_lb_data_recorded_above_bare_handler;
 }
 
 }} //end namespace vt::messaging

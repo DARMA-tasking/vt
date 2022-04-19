@@ -898,7 +898,7 @@ void ActiveMessenger::recordLBDataCommForSend(
     if (lb) {
       auto const& msg = base.get();
       auto const already_recorded =
-        envelopeCommStatsRecordedAboveBareHandler(msg->env);
+        envelopeCommLBDataRecordedAboveBareHandler(msg->env);
 
       if (not already_recorded) {
         auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);

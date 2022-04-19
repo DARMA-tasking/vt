@@ -385,7 +385,7 @@ void LBManager::finishedLB(PhaseType phase) {
   );
 
   theNodeLBData()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
-  theNodeLBData()->outputStatsForPhase(phase);
+  theNodeLBData()->outputLBDataForPhase(phase);
 
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {

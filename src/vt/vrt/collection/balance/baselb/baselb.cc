@@ -64,7 +64,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   objgroup::proxy::Proxy<BaseLB> proxy,
   balance::LoadModel* model,
   StatisticMapType const& in_stats,
-  ElementCommType const& in_comm_stats,
+  ElementCommType const& in_comm_lb_data,
   TimeType total_load
 ) {
   start_time_ = timing::getCurrentTime();
@@ -72,7 +72,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   proxy_ = proxy;
   load_model_ = model;
 
-  importProcessorData(in_stats, in_comm_stats);
+  importProcessorData(in_stats, in_comm_lb_data);
 
   runInEpochCollective("BaseLB::startLB -> runLB", [this,total_load]{
     getArgs(phase_);

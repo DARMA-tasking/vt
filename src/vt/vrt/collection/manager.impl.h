@@ -1119,7 +1119,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 # endif
 
   // set bit so it isn't recorded as it routes through bare handlers
-  envelopeSetCommStatsRecordedAboveBareHandler(msg->env, true);
+  envelopeSetCommLBDataRecordedAboveBareHandler(msg->env, true);
 
 # if vt_check_enabled(trace_enabled)
   // Create the trace creation event here to connect it a higher semantic
@@ -1342,7 +1342,7 @@ void CollectionManager::insertMetaCollection(
 
   /**
    * Type-erase some lambdas for doing the collective broadcast that collects up
-   * the statistics on each node for each collection element
+   * the LB data on each node for each collection element
    */
   collect_stats_for_lb_[proxy] = [bits=proxy]{
     using namespace balance;

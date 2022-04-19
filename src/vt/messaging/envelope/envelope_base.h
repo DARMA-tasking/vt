@@ -103,8 +103,8 @@ struct ActiveEnvelope {
   bool deliver_bcast_to_sender : 1;
 
   /// Used to denote that the message's bare handlers shouldn't record
-  /// communication statistics due to redundancy
-  bool comm_stats_recorded_above_bare_handler : 1;
+  /// communication LB data due to redundancy
+  bool comm_lb_data_recorded_above_bare_handler : 1;
 };
 
 }} /* end namespace vt::messaging */

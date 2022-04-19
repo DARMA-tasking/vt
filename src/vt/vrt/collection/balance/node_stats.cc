@@ -201,7 +201,7 @@ getRecvSendDirection(elm::CommKeyType const& comm) {
   case elm::CommCategory::CollectionToNodeBcast:
     return std::make_pair(comm.toNode(), comm.fromObj().id);
 
-  // Comm stats are not recorded for local operations
+  // Comm LB data are not recorded for local operations
   // this case is just to avoid warning of not handled enum
   case elm::CommCategory::CollectiveToCollectionBcast:
   case elm::CommCategory::LocalInvoke:
@@ -212,13 +212,13 @@ getRecvSendDirection(elm::CommKeyType const& comm) {
   return std::make_pair(ElementIDType{}, ElementIDType{});
 }
 
-void NodeLBData::outputStatsForPhase(PhaseType phase) {
-  // Statistics output when LB is enabled and appropriate flag is enabled
+void NodeLBData::outputLBDataForPhase(PhaseType phase) {
+  // LB data output when LB is enabled and appropriate flag is enabled
   if (!theConfig()->vt_lb_data) {
     return;
   }
 
-  vt_print(lb, "NodeLBData::outputStatsForPhase: phase={}\n", phase);
+  vt_print(lb, "NodeLBData::outputLBDataForPhase: phase={}\n", phase);
 
   using JSONAppender = util::json::Appender<std::ofstream>;
 

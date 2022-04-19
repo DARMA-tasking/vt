@@ -58,7 +58,7 @@ namespace vt { namespace objgroup {
 
 void ObjGroupManager::startup() {
 #if vt_check_enabled(lblite)
-  // Hook to collect statistics about objgroups
+  // Hook to collect LB data about objgroups
   thePhase()->registerHookCollective(phase::PhaseHook::End, []{
     auto& objs = theObjGroup()->objs_;
     for (auto&& obj : objs) {

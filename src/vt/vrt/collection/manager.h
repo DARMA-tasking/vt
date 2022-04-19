@@ -634,7 +634,7 @@ struct CollectionManager
   static void collectionMsgTypedHandler(MsgT* msg);
 
   /**
-   * \internal \brief Record statistics for collection message handler when a
+   * \internal \brief Record LB data for collection message handler when a
    * message arrives for the element.
    *
    * Records where the message came from, size of message, and type of
