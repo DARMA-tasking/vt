@@ -60,7 +60,7 @@ LBData::LBData(ElmT* in_elm, MsgT* msg)
     should_instrument_(msg->lbLiteInstrument())
 {
   // record the communication LB data right away!
-  theCollection()->recordStats(in_elm, msg);
+  theCollection()->recordLBData(in_elm, msg);
 }
 
 }} /* end namespace vt::ctx */

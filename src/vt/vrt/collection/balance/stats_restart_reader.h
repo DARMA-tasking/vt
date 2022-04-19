@@ -83,14 +83,14 @@ public:
 
   void startup() override;
 
-  void readStatsFromStream(std::stringstream stream);
+  void readLBDataFromStream(std::stringstream stream);
 
   void constructMoveList(std::deque<std::set<ElementIDType>> element_history);
 
-  void readStats(std::string const& fileName);
+  void readLBData(std::string const& fileName);
 
   std::deque<std::set<ElementIDType>> readIntoElementHistory(
-    LBDataHolder const& sd
+    LBDataHolder const& lbdh
   );
 
   std::vector<ElementIDType> const& getMoveList(PhaseType phase) const;
@@ -111,7 +111,7 @@ public:
   }
 
 private:
-  std::deque<std::set<ElementIDType>> inputStatsFile(
+  std::deque<std::set<ElementIDType>> inputLBDataFile(
     std::string const& fileName
   );
 

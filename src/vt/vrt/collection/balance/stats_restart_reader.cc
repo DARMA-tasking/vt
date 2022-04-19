@@ -73,7 +73,7 @@ void LBDataRestartReader::setProxy(
 
 void LBDataRestartReader::startup() {
   auto const file_name = theConfig()->getLBDataFileIn();
-  readStats(file_name);
+  readLBData(file_name);
 }
 
 std::vector<ElementIDType> const&
@@ -102,12 +102,12 @@ LBDataRestartReader::getMigrationList() const {
 }
 
 std::deque<std::set<ElementIDType>> LBDataRestartReader::readIntoElementHistory(
-  LBDataHolder const& sd
+  LBDataHolder const& lbdh
 ) {
   std::deque<std::set<ElementIDType>> element_history;
-  for (PhaseType phase = 0; phase < sd.node_data_.size(); phase++) {
+  for (PhaseType phase = 0; phase < lbdh.node_data_.size(); phase++) {
     std::set<ElementIDType> buffer;
-    for (auto const& obj : sd.node_data_.at(phase)) {
+    for (auto const& obj : lbdh.node_data_.at(phase)) {
       if (obj.first.isMigratable()) {
         buffer.insert(obj.first.id);
       }
@@ -117,7 +117,7 @@ std::deque<std::set<ElementIDType>> LBDataRestartReader::readIntoElementHistory(
   return element_history;
 }
 
-void LBDataRestartReader::readStatsFromStream(std::stringstream stream) {
+void LBDataRestartReader::readLBDataFromStream(std::stringstream stream) {
   using vt::util::json::DecompressionInputContainer;
   using vt::vrt::collection::balance::LBDataHolder;
   using json = nlohmann::json;
@@ -126,15 +126,15 @@ void LBDataRestartReader::readStatsFromStream(std::stringstream stream) {
     DecompressionInputContainer::AnyStreamTag{}, std::move(stream)
   );
   json j = json::parse(c);
-  auto sd = LBDataHolder(j);
+  auto lbdh = LBDataHolder(j);
 
-  auto element_history = readIntoElementHistory(sd);
+  auto element_history = readIntoElementHistory(lbdh);
   constructMoveList(std::move(element_history));
 }
 
-void LBDataRestartReader::readStats(std::string const& fileName) {
+void LBDataRestartReader::readLBData(std::string const& fileName) {
   // Read the input files
-  auto elements_history = inputStatsFile(fileName);
+  auto elements_history = inputLBDataFile(fileName);
   constructMoveList(std::move(elements_history));
 }
 
@@ -160,15 +160,15 @@ void LBDataRestartReader::constructMoveList(
 }
 
 std::deque<std::set<ElementIDType>>
-LBDataRestartReader::inputStatsFile(std::string const& fileName) {
+LBDataRestartReader::inputLBDataFile(std::string const& fileName) {
   using vt::util::json::Reader;
   using vt::vrt::collection::balance::LBDataHolder;
 
   Reader r{fileName};
   auto json = r.readFile();
-  auto sd = LBDataHolder(*json);
+  auto lbdh = LBDataHolder(*json);
 
-  return readIntoElementHistory(sd);
+  return readIntoElementHistory(lbdh);
 }
 
 void LBDataRestartReader::createMigrationInfo(

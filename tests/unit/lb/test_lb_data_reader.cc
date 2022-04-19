@@ -96,7 +96,7 @@ TEST_F(TestLBDataReader, test_lb_data_read_1) {
   auto ap = std::make_unique<JSONAppender>("phases", std::move(stream), true);
 
   using vt::vrt::collection::balance::LBDataHolder;
-  auto sd = std::make_unique<LBDataHolder>();
+  auto lbdh = std::make_unique<LBDataHolder>();
 
   PhaseType phase = 0;
   double tval = 0.0;
@@ -104,23 +104,23 @@ TEST_F(TestLBDataReader, test_lb_data_read_1) {
   //--- Iteration 0
   for (auto&& elmID : myElemList) {
     //--- Use a dummy time value as it is not used.
-    sd->node_data_[phase][elmID].whole_phase_load = tval;
+    lbdh->node_data_[phase][elmID].whole_phase_load = tval;
   }
 
   //--- Iteration 1
   phase += 1;
   if (this_node != num_nodes - 1) {
-    sd->node_data_[phase][myElemList[0]].whole_phase_load = tval;
+    lbdh->node_data_[phase][myElemList[0]].whole_phase_load = tval;
   } else {
     for (auto&& elmID : myElemList) {
-      sd->node_data_[phase][elmID].whole_phase_load = tval;
+      lbdh->node_data_[phase][elmID].whole_phase_load = tval;
     }
     for (NodeType in = 0; in+1 < num_nodes; ++in) {
       for (uint64_t elmID = 1; elmID < numElements; ++elmID) {
         auto permID = elm::ElmIDBits::createCollectionImpl(
           true, elmID+1, in, in
         );
-        sd->node_data_[phase][permID].whole_phase_load = tval;
+        lbdh->node_data_[phase][permID].whole_phase_load = tval;
       }
     }
   }
@@ -128,14 +128,14 @@ TEST_F(TestLBDataReader, test_lb_data_read_1) {
   //--- Iteration 2
   phase += 1;
   for (auto&& elmID : myElemList) {
-    sd->node_data_[phase][elmID].whole_phase_load = tval;
+    lbdh->node_data_[phase][elmID].whole_phase_load = tval;
   }
 
   phase += 1;
 
   // Write the stats
   for (PhaseType p = 0; p < phase; p++) {
-    auto json = sd->toJson(p);
+    auto json = lbdh->toJson(p);
     ap->addElm(*json);
   }
 
@@ -143,7 +143,7 @@ TEST_F(TestLBDataReader, test_lb_data_read_1) {
 
   //--- Start the testing
   auto ptr = vrt::collection::balance::LBDataRestartReader::construct();
-  ptr->readStatsFromStream(std::move(stream));
+  ptr->readLBDataFromStream(std::move(stream));
 
   //--- Spin here so the test does not end before the communications complete
   vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });

@@ -224,13 +224,13 @@ public:
   void fatalError() override;
 
   /**
-   * \brief Get the underlying stats data
+   * \brief Get the underlying LB data
    *
    * \warning For testing only!
    *
-   * \return the stats data
+   * \return the LB data
    */
-  LBDataHolder* getStatsData() { return lb_data_.get(); }
+  LBDataHolder* getLBData() { return lb_data_.get(); }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -245,14 +245,14 @@ public:
 
 private:
   /**
-   * \internal \brief Create the stats file
+   * \internal \brief Create the LB data file
    */
   void createLBDataFile();
 
   /**
-   * \internal \brief Close the stats file
+   * \internal \brief Close the LB data file
    */
-  void closeStatsFile();
+  void closeLBDataFile();
 
 private:
   /// Local proxy to objgroup

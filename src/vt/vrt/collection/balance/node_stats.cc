@@ -179,11 +179,11 @@ void NodeLBData::finalize() {
 }
 
 void NodeLBData::fatalError() {
-  // make flush occur on all stat data collected immediately
+  // make flush occur on all LB data collected immediately
   lb_data_writer_ = nullptr;
 }
 
-void NodeLBData::closeStatsFile() {
+void NodeLBData::closeLBDataFile() {
 }
 
 std::pair<ElementIDType, ElementIDType>

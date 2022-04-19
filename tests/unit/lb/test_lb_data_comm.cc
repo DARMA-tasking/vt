@@ -71,14 +71,14 @@ namespace vt { namespace tests { namespace unit { namespace comm {
 using TestLBDataComm = TestParallelHarness;
 using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
 
-LBDataHolder getStatsDataForPhase(vt::PhaseType phase) {
+LBDataHolder getLBDataForPhase(vt::PhaseType phase) {
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
   using vt::util::json::DecompressionInputContainer;
   using vt::vrt::collection::balance::LBDataHolder;
   using json = nlohmann::json;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
   auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), true);
-  auto j = vt::theNodeLBData()->getStatsData()->toJson(phase);
+  auto j = vt::theNodeLBData()->getLBData()->toJson(phase);
   ap->addElm(*j);
   ss = ap->finish();
   auto c = DecompressionInputContainer{
@@ -296,8 +296,8 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_col_send) {
   });
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   // Check that communication exists on the receive side as expected
   for (int i = 0; i < dim1; i++) {
@@ -354,8 +354,8 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_objgroup_send) {
   });
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -416,8 +416,8 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_col_send) {
   });
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -466,8 +466,8 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_objgroup_send) {
   vt::thePhase()->nextPhaseCollective();
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -524,8 +524,8 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_col_send) {
   });
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -584,8 +584,8 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_handler_send) {
   });
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -632,8 +632,8 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_handler_send) {
   vt::thePhase()->nextPhaseCollective();
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -675,8 +675,8 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_objgroup_send) {
   vt::thePhase()->nextPhaseCollective();
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -716,8 +716,8 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_handler_send) {
   vt::thePhase()->nextPhaseCollective();
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();

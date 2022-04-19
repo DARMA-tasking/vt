@@ -208,10 +208,10 @@ struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
 
 struct TestNodeStatsDumper : TestParallelHarnessWithStatsDumping {};
 
-void closeNodeStatsFile(char const* file_path);
-int countCreatedStatsFiles(char const* path);
-void removeStatsOutputDir(char const* path);
-std::map<int, int> getPhasesFromStatsFile(const char* file_path);
+void closeNodeLBDataFile(char const* file_path);
+int countCreatedLBDataFiles(char const* path);
+void removeLBDataOutputDir(char const* path);
+std::map<int, int> getPhasesFromLBDataFile(const char* file_path);
 
 TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
   vt::theConfig()->vt_lb = true;
@@ -258,7 +258,7 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
   });
 
   if (vt::theContext()->getNode() == 0) {
-    removeStatsOutputDir(vt::theConfig()->vt_lb_data_dir.c_str());
+    removeLBDataOutputDir(vt::theConfig()->vt_lb_data_dir.c_str());
   }
 
   // Prevent NodeLBData from closing files during finalize()
@@ -266,7 +266,7 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
   vt::theConfig()->vt_lb_data = false;
 }
 
-int countCreatedStatsFiles(char const* path) {
+int countCreatedLBDataFiles(char const* path) {
   int files_counter = 0;
   if (auto* dir = opendir(path)) {
     while (auto* dir_ent = readdir(dir)) {
@@ -290,7 +290,7 @@ int countCreatedStatsFiles(char const* path) {
   return files_counter;
 }
 
-void removeStatsOutputDir(char const* path) {
+void removeLBDataOutputDir(char const* path) {
   if (auto* dir = opendir(path)) {
     while (auto* dir_ent = readdir(dir)) {
       if (
@@ -318,7 +318,7 @@ INSTANTIATE_TEST_SUITE_P(
 using TestRestoreStatsData = TestParallelHarness;
 
 vt::vrt::collection::balance::LBDataHolder
-getStatsDataForPhase(
+getLBDataForPhase(
   vt::PhaseType phase,  vt::vrt::collection::balance::LBDataHolder in
 ) {
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
@@ -352,7 +352,7 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
     proxy = vt::theCollection()->constructCollective<MyCol>(range);
   });
 
-  vt::vrt::collection::balance::LBDataHolder sd;
+  vt::vrt::collection::balance::LBDataHolder lbdh;
   PhaseType write_phase = 0;
 
   using CommKey = vt::elm::CommKey;
@@ -363,8 +363,8 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
 
   {
     PhaseType phase = write_phase;
-    sd.node_data_[phase];
-    sd.node_comm_[phase];
+    lbdh.node_data_[phase];
+    lbdh.node_comm_[phase];
 
     for (int i=0; i<num_elms; ++i) {
       vt::Index1D idx(i);
@@ -381,51 +381,51 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
 
         std::vector<TimeType> dur_vec(2);
         dur_vec[i % 2] = dur;
-        sd.node_data_[phase][elm_id].whole_phase_load = dur;
-        sd.node_data_[phase][elm_id].subphase_loads = dur_vec;
+        lbdh.node_data_[phase][elm_id].whole_phase_load = dur;
+        lbdh.node_data_[phase][elm_id].subphase_loads = dur_vec;
 
         CommKey ntockey(
           CommKey::NodeToCollectionTag{}, this_node, elm_id, false
         );
         CommVolume ntocvol{ntoc, ntocm};
-        sd.node_comm_[phase][ntockey] = ntocvol;
-        sd.node_subphase_comm_[phase][i % 2][ntockey] = ntocvol;
+        lbdh.node_comm_[phase][ntockey] = ntocvol;
+        lbdh.node_subphase_comm_[phase][i % 2][ntockey] = ntocvol;
 
         CommKey ctonkey(
           CommKey::CollectionToNodeTag{}, elm_id, this_node, false
         );
         CommVolume ctonvol{cton, ctonm};
-        sd.node_comm_[phase][ctonkey] = ctonvol;
-        sd.node_subphase_comm_[phase][(i + 1) % 2][ctonkey] = ctonvol;
+        lbdh.node_comm_[phase][ctonkey] = ctonvol;
+        lbdh.node_subphase_comm_[phase][(i + 1) % 2][ctonkey] = ctonvol;
 
         std::vector<uint64_t> arr;
         arr.push_back(idx.x());
-        sd.node_idx_[elm_id] = std::make_tuple(proxy.getProxy(), arr);
+        lbdh.node_idx_[elm_id] = std::make_tuple(proxy.getProxy(), arr);
       }
     }
   }
 
-  auto sd_read = getStatsDataForPhase(write_phase, sd);
+  auto lbdh_read = getLBDataForPhase(write_phase, lbdh);
 
   // whole-phase loads
-  EXPECT_EQ(sd_read.node_data_.size(), sd.node_data_.size());
-  if (sd_read.node_data_.size() != sd.node_data_.size()) {
+  EXPECT_EQ(lbdh_read.node_data_.size(), lbdh.node_data_.size());
+  if (lbdh_read.node_data_.size() != lbdh.node_data_.size()) {
     fmt::print(
       "Wrote {} phases of whole-phase load data but read in {} phases",
-      sd.node_data_.size(), sd_read.node_data_.size()
+      lbdh.node_data_.size(), lbdh_read.node_data_.size()
     );
   } else {
     // compare the whole-phase load data in detail
-    for (auto &phase_data : sd.node_data_) {
+    for (auto &phase_data : lbdh.node_data_) {
       auto phase = phase_data.first;
-      EXPECT_FALSE(sd_read.node_data_.find(phase) == sd_read.node_data_.end());
-      if (sd_read.node_data_.find(phase) == sd_read.node_data_.end()) {
+      EXPECT_FALSE(lbdh_read.node_data_.find(phase) == lbdh_read.node_data_.end());
+      if (lbdh_read.node_data_.find(phase) == lbdh_read.node_data_.end()) {
         fmt::print(
           "Phase {} in whole-phase loads were not read in",
           phase
         );
       } else {
-        auto &read_load_map = sd_read.node_data_[phase];
+        auto &read_load_map = lbdh_read.node_data_[phase];
         auto &orig_load_map = phase_data.second;
         for (auto &entry : read_load_map) {
           auto read_elm_id = entry.first;
@@ -465,25 +465,25 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
   }
 
   // element id to index mapping
-  EXPECT_EQ(sd_read.node_idx_.size(), sd.node_idx_.size());
-  if (sd_read.node_idx_.size() != sd.node_idx_.size()) {
+  EXPECT_EQ(lbdh_read.node_idx_.size(), lbdh.node_idx_.size());
+  if (lbdh_read.node_idx_.size() != lbdh.node_idx_.size()) {
     fmt::print(
       "Wrote index mapping for {} elements but read in {}",
-      sd.node_idx_.size(), sd_read.node_idx_.size()
+      lbdh.node_idx_.size(), lbdh_read.node_idx_.size()
     );
   } else {
     // detailed comparison of element id to index mapping
-    for (auto &entry : sd_read.node_idx_) {
+    for (auto &entry : lbdh_read.node_idx_) {
       auto read_elm_id = entry.first;
-      EXPECT_FALSE(sd.node_idx_.find(read_elm_id) == sd.node_idx_.end());
-      if (sd.node_idx_.find(read_elm_id) == sd.node_idx_.end()) {
+      EXPECT_FALSE(lbdh.node_idx_.find(read_elm_id) == lbdh.node_idx_.end());
+      if (lbdh.node_idx_.find(read_elm_id) == lbdh.node_idx_.end()) {
         fmt::print(
           "Unexpected element ID read in index mapping: "
           "id={}, home={}, curr={}",
           read_elm_id.id, read_elm_id.getHomeNode(), read_elm_id.curr_node
         );
       } else {
-        auto orig_idx = sd.node_idx_[read_elm_id];
+        auto orig_idx = lbdh.node_idx_[read_elm_id];
         auto read_idx = entry.second;
         EXPECT_EQ(orig_idx, read_idx);
         if (orig_idx != read_idx) {
@@ -497,11 +497,11 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
   }
 
   // whole-phase communication
-  EXPECT_EQ(sd_read.node_comm_.size(), sd.node_comm_.size());
-  if (sd_read.node_comm_.size() != sd.node_comm_.size()) {
+  EXPECT_EQ(lbdh_read.node_comm_.size(), lbdh.node_comm_.size());
+  if (lbdh_read.node_comm_.size() != lbdh.node_comm_.size()) {
     fmt::print(
       "Wrote {} phases of whole-phase comm data but read in {} phases",
-      sd.node_comm_.size(), sd_read.node_comm_.size()
+      lbdh.node_comm_.size(), lbdh_read.node_comm_.size()
     );
   }
   // @todo: detailed comparison of whole-phase comm data

@@ -644,7 +644,7 @@ struct CollectionManager
    * \param[in] msg the message to deliver
    */
   template <typename ColT, typename MsgT>
-  static void recordStats(ColT* col_ptr, MsgT* msg);
+  static void recordLBData(ColT* col_ptr, MsgT* msg);
 
   /**
    * \brief Invoke function 'f' (with copyable return type) inline without going
