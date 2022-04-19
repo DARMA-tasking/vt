@@ -47,7 +47,7 @@ ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
 
 COPY ./ci/deps/mpich.sh mpich.sh
-RUN ./mpich.sh 3.3.2 -j4
+RUN ./mpich.sh 4.0.2 -j4
 
 ENV MPI_EXTRA_FLAGS="" \
     CMAKE_PREFIX_PATH="/lib/x86_64-linux-gnu/" \
