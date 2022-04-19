@@ -176,6 +176,13 @@ public:
   std::unordered_map<PhaseType, CommMapType> const* getNodeComm() const;
 
   /**
+   * \internal \brief Get stored object comm graph
+   *
+   * \return a pointer to the comm graph
+   */
+  std::unordered_map<PhaseType, CommMapType>* getNodeComm();
+
+  /**
    * \internal \brief Get stored object comm subphase graph
    *
    * \return an observer pointer to the comm subphase graph

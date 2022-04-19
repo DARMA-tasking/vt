@@ -54,6 +54,7 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
+#include "vt/phase/phase_manager.h"
 
 #include <tuple>
 
@@ -261,12 +262,20 @@ void BaseLB::finalize(CountMsg* msg) {
 }
 
 void BaseLB::recvSharedEdges(CommMsg* msg) {
-  auto& comm = msg->comm_;
-  for (auto&& elm : comm) {
-    vt_debug_print(
-      verbose, lb, "recv shared edge: from={}, to={}\n", elm.first.fromObj(),
-      elm.first.toObj()
-    );
+  auto phase = thePhase()->getCurrentPhase();
+  auto iter = theNodeStats()->getNodeComm()->find(phase);
+
+  if (iter != theNodeStats()->getNodeComm()->end()) {
+    auto comm_map = &iter->second;
+
+    auto& comm = msg->comm_;
+    for (auto&& elm : comm) {
+      comm_map->insert(elm);
+      vt_debug_print(
+        verbose, lb, "recv shared edge: from={}, to={}\n", elm.first.fromObj(),
+        elm.first.toObj()
+      );
+    }
   }
 }
 
