@@ -59,13 +59,33 @@ using RDMATestTypesExtended = testing::Types<
   uint16_t
 >;
 
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_extended_1) {
+  test_rdma_handle_1<TypeParam>();
+}
+
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_extended_2) {
+  test_rdma_handle_2<TypeParam>();
+}
+
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_extended_3) {
+  test_rdma_handle_3<TypeParam>();
+}
+
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_extended_4) {
+  test_rdma_handle_4<TypeParam>();
+}
+
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_extended_5) {
+  test_rdma_handle_5<TypeParam>();
+}
+
 REGISTER_TYPED_TEST_SUITE_P(
   TestRDMAHandle,
-  test_rdma_handle_1,
-  test_rdma_handle_2,
-  test_rdma_handle_3,
-  test_rdma_handle_4,
-  test_rdma_handle_5
+  test_rdma_handle_extended_1,
+  test_rdma_handle_extended_2,
+  test_rdma_handle_extended_3,
+  test_rdma_handle_extended_4,
+  test_rdma_handle_extended_5
 );
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
