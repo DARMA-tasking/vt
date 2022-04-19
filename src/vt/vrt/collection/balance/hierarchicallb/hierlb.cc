@@ -255,8 +255,8 @@ void HierarchicalLB::loadStats() {
   auto const& this_node = theContext()->getNode();
   auto avg_load = getAvgLoad();
   auto total_load = getSumLoad();
-  auto I = getStats()->at(
-    lb::Statistic::Rank_load_model).at(lb::StatisticQuantity::imb
+  auto I = getStats()->at(lb::Statistic::Rank_load_model).at(
+    lb::StatisticQuantity::imb
   );
 
   bool should_lb = false;
