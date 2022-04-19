@@ -44,8 +44,8 @@
 #if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 
-#include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/component/component.h"
+#include "vt/configs/arguments/app_config.h"
 
 #include <memory>
 #include <string>
