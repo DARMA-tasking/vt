@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            lb_data_restart_reader.h
+//                           lb_data_restart_reader.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
