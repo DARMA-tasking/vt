@@ -75,8 +75,8 @@ struct NodeStatsMsg;
 struct LBManager : runtime::component::Component<LBManager> {
   using LBProxyType      = objgroup::proxy::Proxy<lb::BaseLB>;
   using StatsMsgType     = balance::NodeStatsMsg;
-  using QuantityType     = std::map<lb::StatisticQuantity, double>;
-  using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
+  using QuantityType     = lb::StatisticQuantityMap;
+  using StatisticMapType = lb::StatisticMap;
 
   /**
    * \internal \brief System call to construct a \c LBManager

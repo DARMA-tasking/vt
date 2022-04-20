@@ -50,6 +50,8 @@
 #include "vt/timing/timing_type.h"
 #include "vt/messaging/message/message.h"
 
+#include <nlohmann/json_fwd.hpp>
+
 #include <vector>
 #include <unordered_map>
 #include <tuple>
@@ -189,6 +191,13 @@ enum struct Statistic : int8_t {
   // ExternalEdgesCardinality,
   // InternalEdgesCardinality
 };
+
+using StatisticQuantityMap = std::map<StatisticQuantity, double>;
+using StatisticMap = std::unordered_map<Statistic, StatisticQuantityMap>;
+
+std::shared_ptr<nlohmann::json> jsonifyPhaseStatistics(
+  PhaseType phase, const StatisticMap &statistics, int32_t migration_count = -1
+);
 
 } /* end namespace lb */
 

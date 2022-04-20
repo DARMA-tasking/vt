@@ -47,6 +47,8 @@
 #include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/scheduler/scheduler.h"
 
+#include <nlohmann/json.hpp>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 LoadSummary getObjectLoads(
@@ -126,3 +128,46 @@ void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reass
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
+
+namespace vt { namespace vrt { namespace collection { namespace lb {
+
+NLOHMANN_JSON_SERIALIZE_ENUM(StatisticQuantity, {
+  {StatisticQuantity::min, "min"},
+  {StatisticQuantity::max, "max"},
+  {StatisticQuantity::avg, "avg"},
+  {StatisticQuantity::std, "std"},
+  {StatisticQuantity::var, "var"},
+  {StatisticQuantity::skw, "skw"},
+  {StatisticQuantity::kur, "kur"},
+  {StatisticQuantity::car, "car"},
+  {StatisticQuantity::imb, "imb"},
+  {StatisticQuantity::npr, "npr"},
+  {StatisticQuantity::sum, "sum"},
+})
+
+std::shared_ptr<nlohmann::json> jsonifyPhaseStatistics(
+  PhaseType phase, const StatisticMap &statistics, int32_t migration_count
+) {
+  nlohmann::json j;
+
+  j["id"] = phase;
+
+  if (migration_count >= 0) {
+    j["migration count"] = migration_count;
+  }
+
+  std::size_t i = 0;
+  for (auto &entry : statistics) {
+    auto &name = get_lb_stat_name()[entry.first];
+    nlohmann::json &this_stat = j[name];
+    for (auto &quant : entry.second) {
+      const nlohmann::json quant_name = quant.first;
+      this_stat[quant_name.get<std::string>()] = quant.second;
+    }
+    ++i;
+  }
+
+  return std::make_shared<nlohmann::json>(j);
+}
+
+}}}} /* end namespace vt::vrt::collection::lb */
