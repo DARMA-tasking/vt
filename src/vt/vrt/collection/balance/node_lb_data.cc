@@ -169,7 +169,7 @@ void NodeLBData::createLBDataFile() {
 }
 
 void NodeLBData::finalize() {
-  lb_data_writer_ = nullptr;
+  closeLBDataFile();
 
   // If LB data are enabled, close output file and clear LB data
 #if vt_check_enabled(lblite)
@@ -181,10 +181,11 @@ void NodeLBData::finalize() {
 
 void NodeLBData::fatalError() {
   // make flush occur on all LB data collected immediately
-  lb_data_writer_ = nullptr;
+  closeLBDataFile();
 }
 
 void NodeLBData::closeLBDataFile() {
+  lb_data_writer_ = nullptr;
 }
 
 std::pair<ElementIDType, ElementIDType>
