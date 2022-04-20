@@ -26,7 +26,6 @@ RUN apk add --no-cache \
         m4 \
         make \
         ninja \
-        python3 \
         wget \
         zlib \
         zlib-dev
@@ -46,7 +45,7 @@ ENV CC=clang \
     CXX=clang++
 
 COPY ./ci/deps/mpich.sh mpich.sh
-RUN ./mpich.sh 4.0.2 -j4
+RUN ./mpich.sh 3.3.2 -j4
 
 ENV CC=mpicc \
     CXX=mpicxx \
