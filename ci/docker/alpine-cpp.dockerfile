@@ -26,6 +26,7 @@ RUN apk add --no-cache \
         m4 \
         make \
         ninja \
+        python3 \
         wget \
         zlib \
         zlib-dev

@@ -26,6 +26,7 @@ RUN apt-get update -y -q && \
     libomp5 \
     libomp-dev \
     llvm-10 \
+    python3 \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
