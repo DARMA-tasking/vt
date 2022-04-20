@@ -107,6 +107,35 @@ struct Appender : BaseAppender {
   }
 
   /**
+   * \brief Create an additional element in stages
+   *
+   * \param[in] in an object to stage
+   */
+  void stageObject(jsonlib const& in) {
+    if (staged_ == nullptr) {
+      staged_ = std::make_unique<jsonlib>();
+    }
+    auto &st = *staged_;
+    if (in.is_object()) {
+      for (auto &kv : in.items()) {
+        st[kv.key()] = kv.value();
+      }
+    } else {
+      vtAbort("Appender::stageObject: cannot stage a non-object");
+    }
+  }
+
+  /**
+   * \brief Commit a staged element
+   */
+  void commitStaged() {
+    if (staged_) {
+      addElm(*staged_);
+      staged_.reset();
+    }
+  }
+
+  /**
    * \brief Finalize the output, closing the array, and flushing the stream
    */
   StreamLike finish() {
@@ -131,6 +160,7 @@ private:
   std::shared_ptr<AdaptorType> oa_ = nullptr;  /**< The output adaptor */
   bool first_append = true;                    /**< First append?  */
   bool finished_ = false;                      /**< Is finished? */
+  std::unique_ptr<jsonlib> staged_ = nullptr;
 };
 
 }}} /* end namespace vt::util::json */
