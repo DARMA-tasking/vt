@@ -1824,7 +1824,7 @@ private:
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.impl.h"
 #include "vt/vrt/collection/broadcast/broadcastable.impl.h"
 #include "vt/vrt/collection/rdmaable/rdmaable.impl.h"
-#include "vt/vrt/collection/balance/col_stats.impl.h"
+#include "vt/vrt/collection/balance/col_lb_data.impl.h"
 #include "vt/vrt/collection/types/indexable.impl.h"
 #include "vt/vrt/collection/dispatch/dispatch.impl.h"
 #include "vt/vrt/collection/dispatch/registry.impl.h"

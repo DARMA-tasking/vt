@@ -42,7 +42,7 @@
 */
 
 #include "vt/vrt/collection/balance/model/per_collection.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 

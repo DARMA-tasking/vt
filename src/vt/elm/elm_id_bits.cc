@@ -45,7 +45,7 @@
 #include "vt/utils/bits/bits_common.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/proxy/proxy_bits.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 
 namespace vt { namespace elm {
 

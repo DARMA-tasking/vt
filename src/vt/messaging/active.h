@@ -63,7 +63,7 @@
 #include "vt/utils/static_checks/functor.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/elm/elm_id.h"
-#include "vt/elm/elm_stats.h"
+#include "vt/elm/elm_lb_data.h"
 
 #if vt_check_enabled(trace_enabled)
   #include "vt/trace/trace_headers.h"

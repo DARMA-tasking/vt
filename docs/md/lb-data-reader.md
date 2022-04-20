@@ -1,4 +1,4 @@
-\page stats-reader LB Restart Reader
+\page lb-data-reader LB Restart Reader
 \brief Follow input LB distribution
 
 The LB data restart reader component

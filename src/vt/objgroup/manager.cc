@@ -50,7 +50,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/runnable/make_runnable.h"
 #include "vt/elm/elm_id.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/elm/elm_id_bits.h"
 

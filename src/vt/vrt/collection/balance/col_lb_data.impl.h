@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               col_stats.impl.h
+//                               col_lb_data.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,11 +41,11 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_IMPL_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/col_stats.h"
+#include "vt/vrt/collection/balance/col_lb_data.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/manager.h"
@@ -61,16 +61,16 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 template <typename ColT>
 /*static*/
 void CollectionLBData::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
-  auto& stats = col->lb_data_;
+  auto& lb_data = col->lb_data_;
 
   vt_debug_print(
     normal, lb,
-    "ElementLBData: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
+    "ElementLBData: syncNextPhase ({}) (idx={}): lb_data.getPhase()={}, "
     "msg->getPhase()={}\n",
-    print_ptr(col), col->getIndex(), stats.getPhase(), msg->getPhase()
+    print_ptr(col), col->getIndex(), lb_data.getPhase(), msg->getPhase()
   );
 
-  vtAssert(stats.getPhase() == msg->getPhase(), "Phases must match");
+  vtAssert(lb_data.getPhase() == msg->getPhase(), "Phases must match");
 
   auto const proxy = col->getProxy();
   auto const subphase = getFocusedSubPhase(proxy);
@@ -87,4 +87,4 @@ void CollectionLBData::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_IMPL_H*/

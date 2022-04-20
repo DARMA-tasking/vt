@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 node_stats.h
+//                                 node_lb_data.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,20 +41,20 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_LB_DATA_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_LB_DATA_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_comm.h"
-#include "vt/elm/elm_stats.fwd.h"
+#include "vt/elm/elm_lb_data.fwd.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/types/migratable.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/timing/timing.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/utils/json/base_appender.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 
 #include <string>
 #include <unordered_map>
@@ -265,11 +265,11 @@ private:
   std::unordered_map<ElementIDStruct,ObjGroupProxyType> node_objgroup_lookup_;
   /// The current element ID
   ElementIDType next_elm_ = 1;
-  /// Whether the stats directory has been created
+  /// Whether the LB data directory has been created
   bool created_dir_ = false;
   /// The appender for outputting LB data files in JSON format
   std::unique_ptr<util::json::BaseAppender> lb_data_writer_ = nullptr;
-  /// The struct that holds all the statistic data
+  /// The struct that holds all the LB data
   std::unique_ptr<LBDataHolder> lb_data_ = nullptr;
 };
 
@@ -281,4 +281,4 @@ extern vrt::collection::balance::NodeLBData* theNodeLBData();
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_LB_DATA_H*/

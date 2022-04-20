@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                stats_data.cc
+//                                lb_data_holder.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/context/context.h"
 
 #include <nlohmann/json.hpp>

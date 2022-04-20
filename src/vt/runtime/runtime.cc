@@ -67,7 +67,7 @@
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
-#include "vt/vrt/collection/balance/stats_restart_reader.h"
+#include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/timetrigger/time_trigger_manager.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/epoch/epoch_manip.h"

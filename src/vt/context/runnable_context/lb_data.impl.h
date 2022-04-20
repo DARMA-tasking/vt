@@ -46,7 +46,7 @@
 
 #include "vt/context/runnable_context/lb_data.h"
 #include "vt/messaging/active.h"
-#include "vt/elm/elm_stats.h"
+#include "vt/elm/elm_lb_data.h"
 #include "vt/vrt/collection/manager.h"
 
 #include <memory>

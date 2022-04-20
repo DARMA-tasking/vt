@@ -48,7 +48,7 @@
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/vrt/proxy/base_elm_proxy.h"
 #include "vt/vrt/collection/proxy_traits/proxy_col_traits.h"
-#include "vt/vrt/collection/balance/col_stats.h"
+#include "vt/vrt/collection/balance/col_lb_data.h"
 
 namespace vt { namespace vrt { namespace collection {
 

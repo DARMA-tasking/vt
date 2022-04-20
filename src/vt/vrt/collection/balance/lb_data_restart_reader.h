@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            stats_restart_reader.h
+//                            lb_data_restart_reader.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,15 +41,15 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 
 #include <deque>
 #include <map>
@@ -154,4 +154,4 @@ extern vrt::collection::balance::LBDataRestartReader* theLBDataReader();
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_H*/

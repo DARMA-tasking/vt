@@ -208,11 +208,11 @@ inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized);
 
 /**
  * \brief Set whether this message shouldn't record bare handler communication
- * stats for LB
+ * data for LB
  *
  * \param[in,out] env the envelope
  * \param[in] comm_lb_data_recorded_above_bare_handler value indicating message
- * shouldn't record bare handler stats
+ * shouldn't record bare handler LB data
  */
 template <typename Env>
 inline void envelopeSetCommLBDataRecordedAboveBareHandler(

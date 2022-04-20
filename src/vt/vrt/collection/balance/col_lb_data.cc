@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 col_stats.cc
+//                                 col_lb_data.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -42,7 +42,7 @@
 */
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/col_stats.h"
+#include "vt/vrt/collection/balance/col_lb_data.h"
 #include "vt/timing/timing.h"
 
 #include <cassert>

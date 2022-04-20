@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                node_stats.cc
+//                                node_lb_data.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -42,15 +42,15 @@
 */
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
 #include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/runtime.h"
 #include "vt/utils/json/json_appender.h"
-#include "vt/vrt/collection/balance/stats_data.h"
-#include "vt/elm/elm_stats.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
+#include "vt/elm/elm_lb_data.h"
 
 #include <vector>
 #include <unordered_map>
@@ -152,12 +152,12 @@ void NodeLBData::createLBDataFile() {
   }
 
   // Barrier: wait for node 0 to create directory before trying to put a file in
-  // the stats destination directory
+  // the LB data destination directory
   if (curRT) {
     curRT->systemSync();
   } else {
     // Something is wrong
-    vtAssert(false, "Trying to dump stats when VT runtime is deallocated?");
+    vtAssert(false, "Trying to dump LB data when VT runtime is deallocated?");
   }
 
   using JSONAppender = util::json::Appender<std::ofstream>;
@@ -170,7 +170,7 @@ void NodeLBData::createLBDataFile() {
 void NodeLBData::finalize() {
   lb_data_writer_ = nullptr;
 
-  // If LB data are enabled, close output file and clear stats
+  // If LB data are enabled, close output file and clear LB data
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_data) {
     clearLBData();
@@ -284,7 +284,7 @@ void NodeLBData::addNodeLBData(
   in->updatePhase(1);
 
   auto model = theLBManager()->getLoadModel();
-  in->releaseStatsFromUnneededPhases(phase, model->getNumPastPhasesNeeded());
+  in->releaseLBDataFromUnneededPhases(phase, model->getNumPastPhasesNeeded());
 }
 
 VirtualProxyType NodeLBData::getCollectionProxyForElement(

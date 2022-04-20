@@ -47,7 +47,7 @@
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 #include "vt/elm/elm_id.h"
-#include "vt/elm/elm_stats.h"
+#include "vt/elm/elm_lb_data.h"
 
 namespace vt { namespace objgroup { namespace holder {
 

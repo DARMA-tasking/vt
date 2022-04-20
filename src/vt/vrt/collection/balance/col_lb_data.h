@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 col_stats.h
+//                                 col_lb_data.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,11 +41,11 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_H
 
 #include "vt/config.h"
-#include "vt/elm/elm_stats.h"
+#include "vt/elm/elm_lb_data.h"
 #include "vt/elm/elm_comm.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
@@ -80,4 +80,4 @@ protected:
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_H*/

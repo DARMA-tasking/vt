@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               elm_stats.fwd.h
+//                               elm_lb_data.fwd.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_ELM_ELM_STATS_FWD_H
-#define INCLUDED_VT_ELM_ELM_STATS_FWD_H
+#if !defined INCLUDED_VT_ELM_ELM_LB_DATA_FWD_H
+#define INCLUDED_VT_ELM_ELM_LB_DATA_FWD_H
 
 namespace vt { namespace elm {
 
@@ -50,4 +50,4 @@ struct ElementLBData;
 
 }} /* end namespace vt::elm */
 
-#endif /*INCLUDED_VT_ELM_ELM_STATS_FWD_H*/
+#endif /*INCLUDED_VT_ELM_ELM_LB_DATA_FWD_H*/

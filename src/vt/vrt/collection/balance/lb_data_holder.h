@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 stats_data.h
+//                                 lb_data_holder.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DATA_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DATA_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_HOLDER_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_HOLDER_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
@@ -67,7 +67,7 @@ struct LBDataHolder {
   /**
    * \brief Create \c LBDataHolder from input JSON
    *
-   * \param[in] j the json that contains the stats
+   * \param[in] j the json that contains the LB data
    */
   LBDataHolder(nlohmann::json const& j);
 
@@ -117,4 +117,4 @@ public:
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DATA_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_HOLDER_H*/

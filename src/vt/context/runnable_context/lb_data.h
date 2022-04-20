@@ -46,7 +46,7 @@
 
 #include "vt/context/runnable_context/base.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/elm/elm_stats.fwd.h"
+#include "vt/elm/elm_lb_data.fwd.h"
 
 namespace vt { namespace ctx {
 

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           stats_restart_reader.cc
+//                           lb_data_restart_reader.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,13 +41,13 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_CC
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_CC
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_CC
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_CC
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/stats_restart_reader.h"
+#include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/objgroup/manager.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/decompression_input_container.h"
 #include "vt/utils/json/input_iterator.h"
@@ -299,4 +299,4 @@ void LBDataRestartReader::scatterMsgs(VecMsg *msg) {
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_CC*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_CC*/

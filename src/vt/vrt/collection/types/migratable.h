@@ -51,7 +51,7 @@
 #include "vt/vrt/collection/types/migratable.fwd.h"
 #include "vt/vrt/collection/types/storage/storable.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/col_stats.h"
+#include "vt/vrt/collection/balance/col_lb_data.h"
 
 namespace vt { namespace vrt { namespace collection {
 

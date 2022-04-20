@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 elm_stats.cc
+//                                 elm_lb_data.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,10 +41,10 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_ELM_ELM_STATS_CC
-#define INCLUDED_VT_ELM_ELM_STATS_CC
+#if !defined INCLUDED_VT_ELM_ELM_LB_DATA_CC
+#define INCLUDED_VT_ELM_ELM_LB_DATA_CC
 
-#include "vt/elm/elm_stats.h"
+#include "vt/elm/elm_lb_data.h"
 
 #include "vt/config.h"
 
@@ -236,7 +236,7 @@ SubphaseType ElementLBData::getSubPhase() const {
   return cur_subphase_;
 }
 
-void ElementLBData::releaseStatsFromUnneededPhases(PhaseType phase, unsigned int look_back) {
+void ElementLBData::releaseLBDataFromUnneededPhases(PhaseType phase, unsigned int look_back) {
   if (phase >= look_back) {
     phase_timings_.erase(phase - look_back);
     subphase_timings_.erase(phase - look_back);
@@ -263,4 +263,4 @@ std::size_t ElementLBData::getSubphaseCommPhaseCount() const {
 
 }} /* end namespace vt::elm */
 
-#endif /*INCLUDED_VT_ELM_ELM_STATS_CC*/
+#endif /*INCLUDED_VT_ELM_ELM_LB_DATA_CC*/
