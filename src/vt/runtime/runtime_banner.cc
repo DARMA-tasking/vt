@@ -258,6 +258,10 @@ void Runtime::printStartupBanner() {
       auto f9 = warn_cr("--vt_lb_data", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
+    if (getAppConfig()->vt_lb_statistics) {
+      auto f9 = warn_cr("--vt_lb_statistics", "lblite");
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);
+    }
   #endif
 
   {
@@ -374,6 +378,25 @@ void Runtime::printStartupBanner() {
     }
   }
 
+  if (getAppConfig()->vt_lb_statistics) {
+    auto f9 = opt_on("--vt_lb_statistics", "Load balancing statistics file dumping");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
+
+    if (getAppConfig()->vt_lb_statistics_compress) {
+      auto f10 = opt_on("--vt_lb_statistics_compress", "Compressing LB statistics files");
+      fmt::print("{}\t{}{}", vt_pre, f10, reset);
+    } else {
+      auto f10 = opt_off("--vt_lb_statistics_compress", "Not compressing LB statistics files");
+      fmt::print("{}\t{}{}", vt_pre, f10, reset);
+    }
+
+    auto const fname = getAppConfig()->vt_lb_statistics_file;
+    if (fname != "") {
+      auto f11 = fmt::format("LB statistics file name \"{}\"", fname);
+      auto f12 = opt_on("--vt_lb_statistics_file", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+  }
 
   #if !vt_check_enabled(trace_enabled)
     if (getAppConfig()->vt_trace) {

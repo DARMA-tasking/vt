@@ -475,6 +475,9 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lb_data_file = "Load balancing data output file name";
   auto lb_data_dir_in  = "Load balancing data input directory";
   auto lb_data_file_in = "Load balancing data input file name";
+  auto lb_statistics = "Dump load balancing statistics to file";
+  auto lb_statistics_comp = "Compress load balancing statistics file with brotli";
+  auto lb_statistics_file = "Load balancing statistics output file name";
   auto lb_self_migration = "Allow load balancer to migrate objects to the same node";
   auto lbn = "NoLB";
   auto lbi = 1;
@@ -482,6 +485,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lbd = "vt_lb_data";
   auto lbs = "data";
   auto lba = "";
+  auto lbq = "vt_lb_statistics.json";
   auto s  = app.add_flag("--vt_lb", appConfig.vt_lb, lb);
   auto t1 = app.add_flag("--vt_lb_quiet", appConfig.vt_lb_quiet, lb_quiet);
   auto u  = app.add_option("--vt_lb_file_name", appConfig.vt_lb_file_name, lb_file_name, lbf)->check(CLI::ExistingFile);
@@ -496,6 +500,9 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto wy = app.add_option("--vt_lb_data_file", appConfig.vt_lb_data_file, lb_data_file,lbs);
   auto xx = app.add_option("--vt_lb_data_dir_in", appConfig.vt_lb_data_dir_in, lb_data_dir_in, lbd);
   auto xy = app.add_option("--vt_lb_data_file_in", appConfig.vt_lb_data_file_in, lb_data_file_in, lbs);
+  auto yx = app.add_flag("--vt_lb_statistics",          appConfig.vt_lb_statistics,          lb_statistics);
+  auto yy = app.add_flag("--vt_lb_statistics_compress", appConfig.vt_lb_statistics_compress, lb_statistics_comp);
+  auto yz = app.add_option("--vt_lb_statistics_file",   appConfig.vt_lb_statistics_file,     lb_statistics_file,lbq);
   auto lbasm = app.add_flag("--vt_lb_self_migration", appConfig.vt_lb_self_migration, lb_self_migration);
 
   auto debugLB = "Load Balancing";
@@ -513,6 +520,9 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   xx->group(debugLB);
   xy->group(debugLB);
   xz->group(debugLB);
+  yx->group(debugLB);
+  yy->group(debugLB);
+  yz->group(debugLB);
   lbasm->group(debugLB);
 
   // help options deliberately omitted from the debugLB group above so that
@@ -818,6 +828,14 @@ std::string AppConfig::getLBDataFileOut() const {
 
 std::string AppConfig::getLBDataFileIn() const {
   return buildFile(vt_lb_data_file_in, vt_lb_data_dir_in);
+}
+
+std::string AppConfig::getLBStatisticsFile() const {
+  std::string name = vt_lb_statistics_file;
+  if (vt_lb_statistics_compress and name.substr(name.length()-3, 3) != ".br") {
+    name = name + ".br";
+  }
+  return name;
 }
 
 }} /* end namespace vt::arguments */
