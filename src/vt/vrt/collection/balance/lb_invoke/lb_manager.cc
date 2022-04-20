@@ -68,6 +68,7 @@
 #include "vt/vrt/collection/balance/model/proposed_reassignment.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/utils/json/json_appender.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -191,6 +192,10 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
 
   last_phase_info_->migration_count = reassignment->global_migration_count;
   last_phase_info_->ran_lb = true;
+  if (theContext()->getNode() == 0) {
+    stagePostLBStatistics(stats, last_phase_info_->migration_count);
+    commitPhaseStatistics(phase);
+  }
 
   applyReassignment(reassignment);
 
@@ -221,6 +226,9 @@ LBManager::runLB(
     computeStatistics(model_, false, phase, stats_cb);
   });
 
+  if (theContext()->getNode() == 0) {
+    stagePreLBStatistics(stats);
+  }
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm = &empty_comm;
   auto iter = theNodeLBData()->getNodeComm()->find(phase);
@@ -290,6 +298,10 @@ void LBManager::startLB(
       before_lb_stats_ = true;
       computeStatistics(model_, false, phase, stats_cb);
     });
+    if (theContext()->getNode() == 0) {
+      stagePreLBStatistics(stats);
+      commitPhaseStatistics(phase);
+    }
     // nothing to do
     return;
   }
@@ -416,6 +428,20 @@ void LBManager::destroyLB() {
     destroy_lb_();
     destroy_lb_ = nullptr;
   }
+
+void LBManager::initialize() {
+#if vt_check_enabled(lblite)
+  createStatisticsFile();
+#endif
+}
+
+void LBManager::finalize() {
+  closeStatisticsFile();
+}
+
+void LBManager::fatalError() {
+  // make flush occur on all statistics collected immediately
+  closeStatisticsFile();
 }
 
 void LBManager::finishedLB(PhaseType phase) {
@@ -503,6 +529,54 @@ void LBManager::statsHandler(StatsMsgType* msg) {
     //   );
     // }
   }
+}
+
+void LBManager::stagePreLBStatistics(const StatisticMapType &statistics) {
+  // Statistics output when LB is enabled and appropriate flag is enabled
+  if (!theConfig()->vt_lb_statistics) {
+    return;
+  }
+
+  nlohmann::json j;
+  j["pre-LB"] = lb::jsonifyPhaseStatistics(statistics);
+
+  using JSONAppender = util::json::Appender<std::ofstream>;
+  auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
+  writer->stageObject(j);
+}
+
+void LBManager::stagePostLBStatistics(
+  const StatisticMapType &statistics, int32_t migration_count
+) {
+  // Statistics output when LB is enabled and appropriate flag is enabled
+  if (!theConfig()->vt_lb_statistics) {
+    return;
+  }
+
+  nlohmann::json j;
+  j["post-LB"] = lb::jsonifyPhaseStatistics(statistics);
+  j["migration count"] = migration_count;
+
+  using JSONAppender = util::json::Appender<std::ofstream>;
+  auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
+  writer->stageObject(j);
+}
+
+void LBManager::commitPhaseStatistics(PhaseType phase) {
+  // Statistics output when LB is enabled and appropriate flag is enabled
+  if (!theConfig()->vt_lb_statistics) {
+    return;
+  }
+
+  vt_print(lb, "LBManager::outputStatisticsForPhase: phase={}\n", phase);
+
+  nlohmann::json j;
+  j["id"] = phase;
+
+  using JSONAppender = util::json::Appender<std::ofstream>;
+  auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
+  writer->stageObject(j);
+  writer->commitStaged();
 }
 
 balance::LoadData reduceVec(
@@ -618,6 +692,30 @@ bool LBManager::isCollectiveComm(elm::CommCategory cat) const {
     cat == elm::CommCategory::CollectionToNodeBcast or
     cat == elm::CommCategory::NodeToCollectionBcast;
   return is_collective;
+}
+
+void LBManager::createStatisticsFile() {
+  if (theConfig()->vt_lb_statistics and theContext()->getNode() == 0) {
+    auto const file_name = theConfig()->getLBStatisticsFile();
+    auto const compress = theConfig()->vt_lb_statistics_compress;
+
+    vt_debug_print(
+      normal, lb,
+      "LBManager::createStatsFile: file={}\n", file_name
+    );
+
+    using JSONAppender = util::json::Appender<std::ofstream>;
+
+    if (not statistics_writer_) {
+      statistics_writer_ = std::make_unique<JSONAppender>(
+        "phases", file_name, compress
+      );
+    }
+  }
+}
+
+void LBManager::closeStatisticsFile() {
+  statistics_writer_ = nullptr;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

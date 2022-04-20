@@ -195,9 +195,7 @@ enum struct Statistic : int8_t {
 using StatisticQuantityMap = std::map<StatisticQuantity, double>;
 using StatisticMap = std::unordered_map<Statistic, StatisticQuantityMap>;
 
-std::shared_ptr<nlohmann::json> jsonifyPhaseStatistics(
-  PhaseType phase, const StatisticMap &statistics, int32_t migration_count = -1
-);
+nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics);
 
 } /* end namespace lb */
 

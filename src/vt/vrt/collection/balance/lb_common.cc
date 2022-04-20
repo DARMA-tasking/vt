@@ -145,16 +145,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(StatisticQuantity, {
   {StatisticQuantity::sum, "sum"},
 })
 
-std::shared_ptr<nlohmann::json> jsonifyPhaseStatistics(
-  PhaseType phase, const StatisticMap &statistics, int32_t migration_count
-) {
+nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics) {
   nlohmann::json j;
-
-  j["id"] = phase;
-
-  if (migration_count >= 0) {
-    j["migration count"] = migration_count;
-  }
 
   std::size_t i = 0;
   for (auto &entry : statistics) {
@@ -167,7 +159,7 @@ std::shared_ptr<nlohmann::json> jsonifyPhaseStatistics(
     ++i;
   }
 
-  return std::make_shared<nlohmann::json>(j);
+  return j;
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
