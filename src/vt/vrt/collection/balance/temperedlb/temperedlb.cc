@@ -426,16 +426,16 @@ void TemperedLB::runLB(TimeType total_load) {
   this_load = total_load;
   stats = *getStats();
 
-  auto const avg  = stats.at(lb::Statistic::Rank_load_model).at(
+  auto const avg  = stats.at(lb::Statistic::Rank_load_modeled).at(
     lb::StatisticQuantity::avg
   );
-  auto const max  = stats.at(lb::Statistic::Rank_load_model).at(
+  auto const max  = stats.at(lb::Statistic::Rank_load_modeled).at(
     lb::StatisticQuantity::max
   );
-  auto const pole = stats.at(lb::Statistic::Object_load_model).at(
+  auto const pole = stats.at(lb::Statistic::Object_load_modeled).at(
     lb::StatisticQuantity::max
   );
-  auto const imb  = stats.at(lb::Statistic::Rank_load_model).at(
+  auto const imb  = stats.at(lb::Statistic::Rank_load_modeled).at(
     lb::StatisticQuantity::imb
   );
   auto const load = this_load;
@@ -542,15 +542,15 @@ void TemperedLB::doLBStages(TimeType start_imb) {
       );
 
       if (rollback_ || theConfig()->vt_debug_temperedlb || (iter_ == num_iters_ - 1)) {
-        runInEpochCollective("TemperedLB::doLBStages -> Rank_load_model reduce", [=] {
+        runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
           using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
           auto cb = vt::theCB()->makeBcast<
             TemperedLB, StatsMsgType, &TemperedLB::loadStatsHandler
           >(this->proxy_);
-          // Perform the reduction for Rank_load_model -> processor load only
+          // Perform the reduction for Rank_load_modeled -> processor load only
           auto msg = makeMessage<StatsMsgType>(
             std::vector<balance::LoadData>{
-              {balance::LoadData{Statistic::Rank_load_model, this_new_load_}}
+              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}}
             }
           );
           this->proxy_.template reduce<ReduceOp>(msg,cb);
@@ -622,7 +622,7 @@ void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
       trial_, iter_, TimeTypeWrapper(in.max()),
       TimeTypeWrapper(in.min()), TimeTypeWrapper(in.avg()),
       TimeTypeWrapper(stats.at(
-        lb::Statistic::Object_load_model
+        lb::Statistic::Object_load_modeled
       ).at(lb::StatisticQuantity::max)),
       in.I()
     );

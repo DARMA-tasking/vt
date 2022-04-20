@@ -436,8 +436,8 @@ void LBManager::statsHandler(StatsMsgType* msg) {
   //vt_print(lb, "before_lb_stats_={}\n", before_lb_stats_);
 
   // use the raw loads if they were computed, otherwise fall back on model loads
-  lb::Statistic rank_statistic = lb::Statistic::Rank_load_model;
-  lb::Statistic obj_statistic  = lb::Statistic::Object_load_model;
+  lb::Statistic rank_statistic = lb::Statistic::Rank_load_modeled;
+  lb::Statistic obj_statistic  = lb::Statistic::Object_load_modeled;
   for (auto&& st : in_stat_vec) {
     if (st.stat_ == lb::Statistic::Rank_load_raw) {
       rank_statistic = lb::Statistic::Rank_load_raw;
@@ -537,7 +537,7 @@ void LBManager::computeStatistics(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
     obj_load_model.emplace_back(
-      LoadData{lb::Statistic::Object_load_model, work}
+      LoadData{lb::Statistic::Object_load_modeled, work}
     );
     total_load_from_model += work;
   }
@@ -565,10 +565,10 @@ void LBManager::computeStatistics(
 
   std::vector<LoadData> lstats;
   lstats.emplace_back(
-    LoadData{lb::Statistic::Rank_load_model, total_load_from_model}
+    LoadData{lb::Statistic::Rank_load_modeled, total_load_from_model}
   );
   lstats.emplace_back(reduceVec(
-    lb::Statistic::Object_load_model, std::move(obj_load_model)
+    lb::Statistic::Object_load_modeled, std::move(obj_load_model)
   ));
 
   if (model->hasRawLoad()) {

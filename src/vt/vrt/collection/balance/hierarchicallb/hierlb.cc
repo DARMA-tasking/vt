@@ -234,19 +234,19 @@ void HierarchicalLB::setupTree(TimeTypeWrapper const threshold) {
 }
 
 double HierarchicalLB::getAvgLoad() const {
-  return getStats()->at(lb::Statistic::Rank_load_model).at(
+  return getStats()->at(lb::Statistic::Rank_load_modeled).at(
     lb::StatisticQuantity::avg
   );
 }
 
 double HierarchicalLB::getMaxLoad() const {
-  return getStats()->at(lb::Statistic::Rank_load_model).at(
+  return getStats()->at(lb::Statistic::Rank_load_modeled).at(
     lb::StatisticQuantity::max
   );
 }
 
 double HierarchicalLB::getSumLoad() const {
-  return getStats()->at(lb::Statistic::Rank_load_model).at(
+  return getStats()->at(lb::Statistic::Rank_load_modeled).at(
     lb::StatisticQuantity::sum
   );
 }
@@ -255,7 +255,7 @@ void HierarchicalLB::loadStats() {
   auto const& this_node = theContext()->getNode();
   auto avg_load = getAvgLoad();
   auto total_load = getSumLoad();
-  auto I = getStats()->at(lb::Statistic::Rank_load_model).at(
+  auto I = getStats()->at(lb::Statistic::Rank_load_modeled).at(
     lb::StatisticQuantity::imb
   );
 
