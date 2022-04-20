@@ -49,6 +49,7 @@
 #include <vector>
 #include <sstream>
 #include <tuple>
+#include <ctime>
 
 #include "CLI/CLI11.hpp"
 
@@ -485,7 +486,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lbd = "vt_lb_data";
   auto lbs = "data";
   auto lba = "";
-  auto lbq = "vt_lb_statistics.json";
+  auto lbq = "vt_lb_statistics.%t.json";
   auto s  = app.add_flag("--vt_lb", appConfig.vt_lb, lb);
   auto t1 = app.add_flag("--vt_lb_quiet", appConfig.vt_lb_quiet, lb_quiet);
   auto u  = app.add_option("--vt_lb_file_name", appConfig.vt_lb_file_name, lb_file_name, lbf)->check(CLI::ExistingFile);
@@ -832,6 +833,14 @@ std::string AppConfig::getLBDataFileIn() const {
 
 std::string AppConfig::getLBStatisticsFile() const {
   std::string name = vt_lb_statistics_file;
+  std::size_t timestamp = name.find("%t");
+  if (timestamp != std::string::npos) {
+    std::time_t t = std::time(nullptr);
+    std::tm tm = *std::localtime(&t);
+    std::stringstream ss;
+    ss << std::put_time(&tm, "%Y-%m-%d-%H-%M-%S");
+    name.replace(timestamp, 2, ss.str());
+  }
   if (vt_lb_statistics_compress and name.substr(name.length()-3, 3) != ".br") {
     name = name + ".br";
   }
