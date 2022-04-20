@@ -48,7 +48,7 @@
 #include "data_message.h"
 
 #include "vt/vrt/collection/manager.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/json_appender.h"
 

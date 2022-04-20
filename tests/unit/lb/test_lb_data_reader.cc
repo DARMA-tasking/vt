@@ -46,9 +46,9 @@
 #include <vector>
 
 #include <vt/elm/elm_id_bits.h>
-#include <vt/vrt/collection/balance/node_stats.h>
-#include <vt/vrt/collection/balance/stats_data.h>
-#include <vt/vrt/collection/balance/stats_restart_reader.h>
+#include <vt/vrt/collection/balance/node_lb_data.h>
+#include <vt/vrt/collection/balance/lb_data_holder.h>
+#include <vt/vrt/collection/balance/lb_data_restart_reader.h>
 #include <vt/utils/json/json_appender.h>
 
 #include "test_parallel_harness.h"

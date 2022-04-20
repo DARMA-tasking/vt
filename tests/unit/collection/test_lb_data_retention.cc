@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include <vt/vrt/collection/balance/col_stats.h>
+#include <vt/vrt/collection/balance/col_lb_data.h>
 #include <vt/vrt/collection/balance/model/persistence_median_last_n.h>
 #include <vt/vrt/collection/balance/model/load_model.h>
 #include <vt/vrt/collection/balance/lb_invoke/lb_manager.h>
