@@ -4,6 +4,8 @@
 stages:
   - build
 
+variables:
+  ASC_WCID: "fy150069"
 
 # before_script:
 
@@ -15,6 +17,7 @@ intel19:
     CC: "icc"
     OMPI_CXX: "icpc"
     CXX: "icpc"
+    SCHEDULER_PARAMETERS: "--account=${ASC_WCID} --partition=short,batch --time=1:00:00 --nodes=1"
   stage: build
   script:
     - module load cde/v2/cmake/3.19.2
@@ -27,7 +30,7 @@ intel19:
   only:
     refs:
       - develop
-      - add_pipeline
+      - merge_requests
   tags:
     - intel19_batch
 
@@ -48,7 +51,7 @@ xlC-vortex:
   only:
     refs:
       - develop
-      - add_pipeline
+      - merge_requests
   tags:
     - ppc64le 
 
@@ -67,6 +70,6 @@ arm-stria:
   only:
     refs:
       - develop
-      - add_pipeline
+      - merge_requests
   tags:
     - aarch64 
