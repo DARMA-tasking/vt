@@ -121,9 +121,6 @@ protected:
 
   void setupDone(ReduceMsgType* msg);
 
-  std::mt19937 gen_propagate_;
-  std::mt19937 gen_sample_;
-
 private:
   uint16_t f_                                       = 0;
   uint8_t k_max_                                    = 0;
@@ -182,6 +179,8 @@ private:
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;
   std::vector<bool> propagated_k_;
+  std::mt19937 gen_propagate_;
+  std::mt19937 gen_sample_;
   StatisticMapType stats;
   LoadType this_load                                = 0.0f;
 };
