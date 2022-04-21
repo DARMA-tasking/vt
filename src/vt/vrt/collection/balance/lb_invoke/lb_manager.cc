@@ -732,21 +732,17 @@ void makeGraphSymmetric(
   PhaseType phase, objgroup::proxy::Proxy<lb::BaseLB> proxy
 ) {
   auto const this_node = theContext()->getNode();
-
-  // TODO: extract to helper method
-  elm::CommMapType empty_comm;
-  elm::CommMapType const* comm_data = &empty_comm;
   auto iter = theNodeStats()->getNodeComm()->find(phase);
-  // TODO: is it an error when we don't find the phase?
-  if (iter != theNodeStats()->getNodeComm()->end()) {
-    comm_data = &iter->second;
+  if (iter == theNodeStats()->getNodeComm()->end()) {
+    return;
   }
 
   // Go through the comm graph and extract out paired SendRecv edges that are
   // not self-send and have a non-local edge
+  elm::CommMapType const& comm_data = iter->second;
   std::unordered_map<NodeType, lb::BaseLB::ElementCommType> shared_edges;
 
-  for (auto&& elm : *comm_data) {
+  for (auto&& elm : comm_data) {
     if (
       elm.first.commCategory() == elm::CommCategory::SendRecv and
       not elm.first.selfEdge()

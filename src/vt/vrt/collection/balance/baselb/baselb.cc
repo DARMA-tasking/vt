@@ -263,11 +263,9 @@ void BaseLB::finalize(CountMsg* msg) {
 
 void BaseLB::recvSharedEdges(CommMsg* msg) {
   auto phase = thePhase()->getCurrentPhase();
-  auto iter = theNodeStats()->getNodeComm()->find(phase);
+  auto comm_map = theNodeStats()->getNodeComm(phase);
 
-  if (iter != theNodeStats()->getNodeComm()->end()) {
-    auto comm_map = &iter->second;
-
+  if (comm_map != nullptr) {
     auto& comm = msg->comm_;
     for (auto&& elm : comm) {
       comm_map->insert(elm);
