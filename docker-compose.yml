@@ -13,7 +13,7 @@
 #   COMPILER={gcc-5, gcc-6, gcc-7, gcc-8, gcc-9, gcc-10,
 #             clang-3.9, clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
 #             clang-9, clang-10,
-#             icc-18, icc-19,
+#             icpx,
 #             nvcc-10, nvcc-10.2, nvcc-11}
 #   REPO=lifflander1/vt
 #   UBUNTU={18.04, 20.04}
@@ -47,11 +47,11 @@
 # or pull the base container with the variables exported (or using the defaults
 # in `vt/.env` that configure it:
 #
-# For instance, if you want an interactive intel build with icc-18 that enables
+# For instance, if you want an interactive intel build with icpx that enables
 # VT tracing, run the following commands:
 #
 # $ export COMPILER_TYPE=intel
-# $ export COMPILER=icc-18
+# $ export COMPILER=icpx
 # $ export VT_TRACE=1
 # $ docker-compose pull ubuntu-cpp-interactive
 # $ docker-compose run ubuntu-cpp-interactive
@@ -86,9 +86,6 @@ volumes:
   amd64-ubuntu-18.04-gcc-8-cache:
   amd64-ubuntu-20.04-gcc-9-cache:
   amd64-ubuntu-20.04-gcc-10-cache:
-  amd64-ubuntu-18.04-icc-18-cache:
-  amd64-ubuntu-18.04-icc-19-cache:
-  amd64-ubuntu-18.04-icc-20-cache:
   amd64-ubuntu-18.04-icpx-cache:
   amd64-ubuntu-18.04-nvcc-10-cache:
   amd64-ubuntu-18.04-nvcc-10.2-cache:
