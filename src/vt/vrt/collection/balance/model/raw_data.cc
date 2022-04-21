@@ -107,7 +107,7 @@ TimeType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) {
   return proc_load_->at(phase).at(object).get(offset);
 }
 
-TimeType RawData::getComm(ElementIDStruct object, PhaseOffset when) {
+TimeType RawData::getModeledComm(ElementIDStruct object, PhaseOffset when) {
   auto phase = getNumCompletedPhases() + when.phases;
   auto& comm = proc_comm_->at(phase);
 

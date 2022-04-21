@@ -95,7 +95,7 @@ TimeType TemperedWMin::getTotalWork(const elm::ElementIDStruct& obj) {
       {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
 
   return alpha_ * load_model_->getModeledLoad(obj, when) +
-    beta_ * load_model_->getComm(obj, when) + gamma_;
+    beta_ * load_model_->getModeledComm(obj, when) + gamma_;
 }
 
 }}}} // namespace vt::vrt::collection::lb

@@ -259,7 +259,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual TimeType getComm(ElementIDStruct object, PhaseOffset when) {
+  virtual TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) {
     return {};
   }
 
