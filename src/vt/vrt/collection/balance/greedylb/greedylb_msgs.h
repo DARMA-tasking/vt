@@ -120,7 +120,7 @@ struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
     MessageParentType::serialize(s);
   }
 
-  ObjSampleType const& getLoadMetric() const {
+  ObjSampleType const& getModeledLoad() const {
     return collective::ReduceTMsg<GreedyPayload>::getConstVal().getSample();
   }
 

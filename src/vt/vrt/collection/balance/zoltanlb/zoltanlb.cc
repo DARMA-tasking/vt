@@ -483,7 +483,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   {
     int idx = 0;
     for (auto&& obj : load_objs) {
-      auto load = load_model_->getLoadMetric(
+      auto load = load_model_->getModeledLoad(
         obj,
         {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
       );

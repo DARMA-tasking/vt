@@ -83,7 +83,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getLoadMetric(ElementIDStruct id, PhaseOffset phase) override {
+  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) override {
     return proc_load_->at(0).at(id).subphase_loads.at(phase.subphase);
   }
 
@@ -146,7 +146,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
 
       // offset.subphase != PhaseOffset::WHOLE_PHASE
       // expect work load value for given subphase
-      auto work_val = test_model->getLoadMetric(obj, PhaseOffset{0, iter});
+      auto work_val = test_model->getModeledLoad(obj, PhaseOffset{0, iter});
       EXPECT_EQ(work_val, expected_values[obj][iter]);
     }
 
@@ -187,7 +187,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
     ++objects_seen;
 
     auto work_val =
-      test_model->getLoadMetric(obj, PhaseOffset{0, PhaseOffset::WHOLE_PHASE});
+      test_model->getModeledLoad(obj, PhaseOffset{0, PhaseOffset::WHOLE_PHASE});
     EXPECT_EQ(work_val, expected_values[obj]);
   }
 

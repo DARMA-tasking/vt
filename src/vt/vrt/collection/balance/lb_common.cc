@@ -62,12 +62,12 @@ LoadSummary getObjectLoads(
 ) {
   LoadSummary ret;
   ret.whole_phase_load =
-    model->getLoadMetric(object, {when.phases, PhaseOffset::WHOLE_PHASE});
+    model->getModeledLoad(object, {when.phases, PhaseOffset::WHOLE_PHASE});
 
   unsigned int subphases = model->getNumSubphases();
   for (unsigned int i = 0; i < subphases; ++i)
     ret.subphase_loads.push_back(
-      model->getLoadMetric(object, {when.phases, i})
+      model->getModeledLoad(object, {when.phases, i})
     );
 
   return ret;

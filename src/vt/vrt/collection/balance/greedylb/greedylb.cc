@@ -273,10 +273,10 @@ void GreedyLB::runBalancer(
       "recs_={}, max_rec: obj={}, time={}\n",
       min_node.node_, TimeTypeWrapper(min_node.load_ / 1000),
       min_node.recs_.size(), max_rec.getObj(),
-      TimeTypeWrapper(max_rec.getLoadMetric() / 1000)
+      TimeTypeWrapper(max_rec.getModeledLoad() / 1000)
     );
     min_node.recs_.push_back(max_rec.getObj());
-    min_node.load_ += max_rec.getLoadMetric();
+    min_node.load_ += max_rec.getModeledLoad();
     nodes.push_back(min_node);
     std::push_heap(nodes.begin(), nodes.end(), CompProcType());
   }
@@ -413,7 +413,9 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   load_over[bin].push_back(obj_id);
   bin_list.pop_back();
 
-  auto const& obj_time_milli = loadMilli(load_model_->getLoadMetric(obj_id, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}));
+  auto const& obj_time_milli = loadMilli(load_model_->getModeledLoad(
+    obj_id, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+  ));
 
   this_load -= obj_time_milli;
 

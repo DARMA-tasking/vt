@@ -94,7 +94,7 @@ int ProposedReassignment::getNumObjects()
 }
 
 TimeType
-ProposedReassignment::getLoadMetric(ElementIDStruct object, PhaseOffset when) {
+ProposedReassignment::getModeledLoad(ElementIDStruct object, PhaseOffset when) {
   auto a = reassignment_->arrive_.find(object);
   if (a != reassignment_->arrive_.end()) {
     return std::get<0>(a->second).get(when);
@@ -104,7 +104,7 @@ ProposedReassignment::getLoadMetric(ElementIDStruct object, PhaseOffset when) {
   vtAssert(reassignment_->depart_.find(object) == reassignment_->depart_.end(),
            "Departing object should not appear as a load query subject");
 
-  return ComposedModel::getLoadMetric(object, when);
+  return ComposedModel::getModeledLoad(object, when);
 }
 
 TimeType ProposedReassignment::getRawLoad(ElementIDStruct object, PhaseOffset when)

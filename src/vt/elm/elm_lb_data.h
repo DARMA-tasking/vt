@@ -84,8 +84,8 @@ struct ElementLBData {
   void updatePhase(PhaseType const& inc = 1);
   void resetPhase();
   PhaseType getPhase() const;
-  TimeType getLoadMetric(PhaseType const& phase) const;
-  TimeType getLoadMetric(PhaseType phase, SubphaseType subphase) const;
+  TimeType getModeledLoad(PhaseType const& phase) const;
+  TimeType getModeledLoad(PhaseType phase, SubphaseType subphase) const;
 
   CommMapType const& getComm(PhaseType const& phase);
   std::vector<CommMapType> const& getSubphaseComm(PhaseType phase);

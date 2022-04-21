@@ -68,7 +68,7 @@ public:
    */
   SelectSubphases(std::shared_ptr<LoadModel> base, std::vector<unsigned int> subphases);
 
-  TimeType getLoadMetric(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) override;
   int getNumSubphases() override;
 
   std::vector<unsigned int> subphases_;

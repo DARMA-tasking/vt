@@ -1362,7 +1362,7 @@ void TemperedLB::migrate() {
 }
 
 TimeType TemperedLB::getTotalWork(const elm::ElementIDStruct& obj) {
-  return load_model_->getLoadMetric(
+  return load_model_->getModeledLoad(
     obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
   );
 }

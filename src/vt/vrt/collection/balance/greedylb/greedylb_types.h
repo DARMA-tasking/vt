@@ -71,7 +71,7 @@ struct GreedyRecord {
     : obj_(in_obj), load_(in_load)
   { }
 
-  LoadType getLoadMetric() const { return load_; }
+  LoadType getModeledLoad() const { return load_; }
   ObjType getObj() const { return obj_; }
 
 private:
@@ -85,7 +85,7 @@ struct GreedyProc {
     NodeType const& in_node, GreedyLBTypes::LoadType const& in_load
   ) : node_(in_node), load_(in_load) {}
 
-  GreedyLBTypes::LoadType getLoadMetric() const { return load_; }
+  GreedyLBTypes::LoadType getModeledLoad() const { return load_; }
 
   NodeType node_ = uninitialized_destination;
   GreedyLBTypes::LoadType load_ = 0.0f;
@@ -95,14 +95,14 @@ struct GreedyProc {
 template <typename T>
 struct GreedyCompareLoadMin {
   bool operator()(T const& p1, T const& p2) const {
-    return p1.getLoadMetric() > p2.getLoadMetric();
+    return p1.getModeledLoad() > p2.getModeledLoad();
   }
 };
 
 template <typename T>
 struct GreedyCompareLoadMax {
   bool operator()(T const& p1, T const& p2) const {
-    return p1.getLoadMetric() < p2.getLoadMetric();
+    return p1.getModeledLoad() < p2.getModeledLoad();
   }
 };
 

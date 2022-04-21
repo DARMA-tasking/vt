@@ -76,7 +76,9 @@ void RotateLB::runLB(TimeType) {
   }
 
   for (auto obj : *load_model_) {
-    TimeTypeWrapper const load = load_model_->getLoadMetric(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
+    TimeTypeWrapper const load = load_model_->getModeledLoad(
+      obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+    );
     vt_debug_print(
       terse, lb,
       "\t RotateLB::migrating object to: obj={}, load={}, to_node={}\n",

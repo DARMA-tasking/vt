@@ -59,18 +59,18 @@ SelectSubphases::SelectSubphases(std::shared_ptr<LoadModel> base, std::vector<un
 }
 
 TimeType
-SelectSubphases::getLoadMetric(ElementIDStruct object, PhaseOffset when) {
+SelectSubphases::getModeledLoad(ElementIDStruct object, PhaseOffset when) {
   if (when.subphase == PhaseOffset::WHOLE_PHASE) {
     // Sum up the selected subphases as if they represent the entire phase
     TimeType sum = 0.0;
     for (auto s : subphases_) {
       PhaseOffset p{when.phases, s};
-      sum += ComposedModel::getLoadMetric(object, p);
+      sum += ComposedModel::getModeledLoad(object, p);
     }
     return sum;
   } else {
     when.subphase = subphases_.at(when.subphase);
-    return ComposedModel::getLoadMetric(object, when);
+    return ComposedModel::getModeledLoad(object, when);
   }
 }
 

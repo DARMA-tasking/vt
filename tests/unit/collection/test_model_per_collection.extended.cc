@@ -74,7 +74,7 @@ struct ConstantTestModel : ComposedModel {
       proxy_(in_proxy)
   { }
 
-  TimeType getLoadMetric(ElementIDStruct, PhaseOffset) override {
+  TimeType getModeledLoad(ElementIDStruct, PhaseOffset) override {
     return static_cast<TimeType>(proxy_);
   }
 
@@ -153,7 +153,7 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
     // model to function
     model->updateLoads(0);
     for (auto&& obj : *model) {
-      auto work_val = model->getLoadMetric(
+      auto work_val = model->getModeledLoad(
         obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       if (id_proxy_map.find(obj) != id_proxy_map.end()) {
