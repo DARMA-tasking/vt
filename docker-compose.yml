@@ -80,6 +80,7 @@ volumes:
   amd64-ubuntu-18.04-clang-8-cache:
   amd64-ubuntu-18.04-clang-9-cache:
   amd64-ubuntu-20.04-clang-10-cache:
+  amd64-ubuntu-22.04-clang-11-cache:
   amd64-ubuntu-18.04-gcc-5-cache:
   amd64-ubuntu-18.04-gcc-6-cache:
   amd64-ubuntu-18.04-gcc-7-cache:
