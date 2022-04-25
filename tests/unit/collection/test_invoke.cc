@@ -85,7 +85,9 @@ TEST_F(TestCollectionInvoke, test_collection_invoke_1) {
   auto const& num_nodes = theContext()->getNumNodes();
   auto const num_elems = Index1D{static_cast<int>(num_nodes)};
 
-  auto proxy = theCollection()->constructCollective<TestCol>(num_elems);
+  auto proxy = theCollection()->constructCollective<TestCol>(
+    "test_collection_invoke_1", num_elems
+  );
 
   auto const dest_elem = Index1D{static_cast<int>(this_node)};
 

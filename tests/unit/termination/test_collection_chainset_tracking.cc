@@ -56,7 +56,7 @@ using TestCollectionChainsetTracking = TestParallelHarness;
 TEST_F(TestCollectionChainsetTracking, test_local_chainset_tracking) {
   auto num_nodes = theContext()->getNumNodes();
   auto range = Index3D(2, static_cast<int>(num_nodes), 3);
-  auto proxy = vt::makeCollection<MyCol>()
+  auto proxy = vt::makeCollection<MyCol>("test_local_chainset_tracking")
     .collective(true)
     .bounds(range)
     .bulkInsert()
@@ -97,7 +97,7 @@ TEST_F(TestCollectionChainsetTracking, test_local_chainset_tracking) {
 TEST_F(TestCollectionChainsetTracking, test_home_chainset_tracking) {
   auto num_nodes = theContext()->getNumNodes();
   auto range = Index3D(2, static_cast<int>(num_nodes), 3);
-  auto proxy = vt::makeCollection<MyCol>()
+  auto proxy = vt::makeCollection<MyCol>("test_home_chainset_tracking")
     .collective(true)
     .bounds(range)
     .bulkInsert()

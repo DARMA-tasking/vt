@@ -90,12 +90,15 @@ struct ConstructParams {
   using IndexType = typename ColT::IndexType;
   using ProxyType = CollectionIndexProxy<ColT,IndexType>;
 
-  static ProxyType construct(IndexType idx) {
-    return theCollection()->construct<ColT>(idx);
+  static ProxyType construct(std::string const& label, IndexType idx) {
+    return theCollection()->construct<ColT>(label, idx);
   }
-  static ProxyType constructCollective(IndexType idx) {
+
+  static ProxyType constructCollective(
+    std::string const& label, IndexType idx
+  ) {
     return theCollection()->constructCollective<ColT>(
-      idx,[=](IndexType my_idx) {
+      label, idx, [=](IndexType my_idx) {
         return std::make_unique<ColT>();
       }
     );
@@ -106,14 +109,14 @@ TYPED_TEST_SUITE_P(TestConstruct);
 TYPED_TEST_SUITE_P(TestConstructDist);
 
 template<typename ColType>
-void test_construct_1() {
+void test_construct_1(std::string const& label) {
   using MsgType   = typename ColType::MsgType;
 
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const& col_size = 32;
     auto rng = TestIndex(col_size);
-    auto proxy = ConstructParams<ColType>::construct(rng);
+    auto proxy = ConstructParams<ColType>::construct(label, rng);
     proxy.template broadcast<
       MsgType,
       ConstructHandlers::handler<ColType,MsgType>
@@ -127,7 +130,9 @@ void test_construct_distributed_1() {
 
   auto const& col_size = 32;
   auto rng = TestIndex(col_size);
-  auto proxy = ConstructParams<ColType>::constructCollective(rng);
+  auto proxy = ConstructParams<ColType>::constructCollective(
+    "test_construct_distributed_1", rng
+  );
   proxy.template broadcast<
     MsgType,
     ConstructHandlers::handler<ColType,MsgType>

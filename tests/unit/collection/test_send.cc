@@ -54,7 +54,7 @@
 namespace vt { namespace tests { namespace unit { namespace send {
 
 TYPED_TEST_P(TestCollectionSend, test_collection_send_basic_1) {
-  test_collection_send_1<TypeParam>();
+  test_collection_send_1<TypeParam>("test_collection_send_basic_1");
 }
 
 TYPED_TEST_P(TestCollectionSendSz, test_collection_send_sz_basic_1) {
@@ -62,7 +62,7 @@ TYPED_TEST_P(TestCollectionSendSz, test_collection_send_sz_basic_1) {
 }
 
 TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_basic_1) {
-  test_collection_send_ptm_1<TypeParam>();
+  test_collection_send_ptm_1<TypeParam>("test_collection_send_ptm_basic_1");
 }
 
 REGISTER_TYPED_TEST_SUITE_P(TestCollectionSend, test_collection_send_basic_1);

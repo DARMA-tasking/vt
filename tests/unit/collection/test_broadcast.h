@@ -119,7 +119,7 @@ struct TestBroadcast : TestParallelHarness {};
 TYPED_TEST_SUITE_P(TestBroadcast);
 
 template<typename ColType>
-void test_broadcast_1(){
+void test_broadcast_1(std::string const& label) {
   using MsgType = typename ColType::MsgType;
   using TestParamType = typename ColType::ParamType;
 
@@ -128,7 +128,7 @@ void test_broadcast_1(){
     auto const& col_size = 32;
     auto range = TestIndex(col_size);
     TestParamType args = ConstructTuple<TestParamType>::construct();
-    auto proxy = theCollection()->construct<ColType>(range);
+    auto proxy = theCollection()->construct<ColType>(label, range);
 
     proxy.template broadcast<
       MsgType,

@@ -130,7 +130,9 @@ struct TestLB : TestParallelHarness { };
 TEST_F(TestLB, test_lb_1) {
   auto const& this_node = theContext()->getNode();
   auto const& range = Index1D(32);
-  auto proxy = theCollection()->constructCollective<LBTest>(range);
+  auto proxy = theCollection()->constructCollective<LBTest>(
+    "test_lb_1", range
+  );
 
   for (int i = 0; i < num_iter; i++) {
     auto cur_time = vt::timing::getCurrentTime();

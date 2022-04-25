@@ -72,11 +72,12 @@ public:
    * \param[in] in_map_object the map object
    * \param[in] in_has_bounds whether it has bounds
    * \param[in] in_bounds the bounds
+   * \param[in] label collection label
    */
   CollectionHolder(
     HandlerType const in_map_fn, bool const in_has_dynamic_membership,
     ObjGroupProxyType in_map_object, bool const in_has_bounds,
-    IndexT const in_bounds
+    IndexT const in_bounds, std::string const& label
   );
 
   virtual ~CollectionHolder() {}
@@ -93,6 +94,7 @@ public:
   bool has_bounds = false;                     /**< Whether it as bounds */
   IndexT bounds = {};                          /**< The bounds */
   Holder<IndexT> holder_;                      /**< Inner holder of elements */
+  std::string label_;                          /**< Collection label */
 };
 
 }}} /* end namespace vt::vrt::collection */

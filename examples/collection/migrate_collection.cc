@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
   }
 
   auto range = vt::Index1D(num_elms);
-  auto proxy = vt::makeCollection<Hello>()
+  auto proxy = vt::makeCollection<Hello>("examples_migrate_collection")
     .bounds(range)
     .bulkInsert()
     .wait();

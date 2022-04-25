@@ -274,7 +274,7 @@ void doReduce(MyMsg*, MyCol* col) {
 // ColT -> ColT, expected communication edge on receive side
 TEST_F(TestLBDataComm, test_lb_data_comm_col_to_col_send) {
   auto range = vt::Index1D{dim1};
-  auto proxy = vt::makeCollection<MyCol>()
+  auto proxy = vt::makeCollection<MyCol>("test_lb_stats_comm_col_to_col_send")
     .bounds(range)
     .bulkInsert()
     .wait();
@@ -330,7 +330,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_col_send) {
 // ColT -> ObjGroup, expected communication edge on send side
 TEST_F(TestLBDataComm, test_lb_data_comm_col_to_objgroup_send) {
   auto range = vt::Index1D{dim1};
-  auto proxy = vt::makeCollection<MyCol>()
+  auto proxy = vt::makeCollection<MyCol>("test_lb_stats_comm_col_to_objgroup_send")
     .bounds(range)
     .bulkInsert()
     .wait();
@@ -393,7 +393,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_objgroup_send) {
 // ObjGroup -> ColT, expected communication edge on receive side
 TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_col_send) {
   auto range = vt::Index1D{dim1};
-  auto proxy = vt::makeCollection<MyCol>()
+  auto proxy = vt::makeCollection<MyCol>("test_lb_stats_comm_objgroup_to_col_send")
     .bounds(range)
     .bulkInsert()
     .wait();
@@ -502,7 +502,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_objgroup_send) {
 // Handler -> ColT, expected communication edge on receive side
 TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_col_send) {
   auto range = vt::Index1D{dim1};
-  auto proxy = vt::makeCollection<MyCol>()
+  auto proxy = vt::makeCollection<MyCol>("test_lb_stats_comm_handler_to_col_send")
     .bounds(range)
     .bulkInsert()
     .wait();
@@ -562,7 +562,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_col_send) {
 // ColT -> Handler, expected communication edge on send side
 TEST_F(TestLBDataComm, test_lb_data_comm_col_to_handler_send) {
   auto range = vt::Index1D{dim1};
-  auto proxy = vt::makeCollection<MyCol>()
+  auto proxy = vt::makeCollection<MyCol>("test_lb_stats_comm_col_to_handler_send")
     .bounds(range)
     .bulkInsert()
     .wait();

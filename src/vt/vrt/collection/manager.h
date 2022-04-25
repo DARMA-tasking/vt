@@ -173,6 +173,7 @@ struct CollectionManager
    * \brief Construct a new virtual context collection with an explicit,
    * pre-registered map handler
    *
+   * \param[in] label collection label
    * \param[in] range index range for the collection
    * \param[in] map pre-registered map handler
    *
@@ -180,11 +181,15 @@ struct CollectionManager
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
-  constructMap(typename ColT::IndexType range, HandlerType const map);
+  constructMap(
+    std::string const& label, typename ColT::IndexType range,
+    HandlerType const map
+  );
 
   /**
    * \brief Construct a new virtual context collection with templated map
    *
+   * \param[in] label collection label
    * \param[in] range index range for the collection
    *
    * \return proxy to the new collection
@@ -193,7 +198,9 @@ struct CollectionManager
     typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
-  construct(typename ColT::IndexType range);
+  construct(
+    std::string const& label, typename ColT::IndexType range
+  );
 
   /**
    * \brief Construct a new virtual context collection using the default map for
@@ -202,13 +209,16 @@ struct CollectionManager
    * The default map is found by looking up the
    *  \c vrt::collection::DefaultMap<...> specialization on the Index type.
    *
+   * \param[in] label collection label
    * \param[in] range index range for the collection
    *
    * \return proxy to the new collection
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
-  construct(typename ColT::IndexType range);
+  construct(
+    std::string const& label, typename ColT::IndexType range
+  );
 
   /**
    * \brief Collectively construct a new virtual context collection with
@@ -218,6 +228,7 @@ struct CollectionManager
    *  method enables distributed SPMD construction of the virtual context
    *  collection where each index is mapped with the \c MapFnT.
    *
+   * \param[in] label collection label
    * \param[in] range index range for the collection
    *
    * \return proxy to the new collection
@@ -226,7 +237,7 @@ struct CollectionManager
     typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   IsDefaultConstructableType<ColT> constructCollective(
-    typename ColT::IndexType range
+    std::string const& label, typename ColT::IndexType range
   );
 
   /**
@@ -239,6 +250,7 @@ struct CollectionManager
    *  function for every index in the system based on the where each index is
    *  mapped with the \c MapFnT.
    *
+   * \param[in] label collection label
    * \param[in] range index range for the collection
    * \param[in] cons_fn construct function to create an element on each node
    *
@@ -248,7 +260,8 @@ struct CollectionManager
     typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   CollectionProxyWrapType<ColT> constructCollective(
-    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn
+    std::string const& label, typename ColT::IndexType range,
+    DistribConstructFn<ColT> cons_fn
   );
 
   /**
@@ -259,13 +272,14 @@ struct CollectionManager
    *  method enables distributed SPMD construction of the virtual context
    *  collection where each index is mapped with the default mapping function.
    *
+   * \param[in] label collection label
    * \param[in] range index range for the collection
    *
    * \return proxy to the new collection
    */
   template <typename ColT>
   IsDefaultConstructableType<ColT> constructCollective(
-    typename ColT::IndexType range
+    std::string const& label, typename ColT::IndexType range
   );
 
   /**
@@ -278,6 +292,7 @@ struct CollectionManager
    *  function for every index in the system based on the where each index is
    *  mapped with the default mapping function for this index type selected.
    *
+   * \param[in] label collection label
    * \param[in] range index range for the collection
    * \param[in] cons_fn construct function to create an element on each node
    *
@@ -285,7 +300,8 @@ struct CollectionManager
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollective(
-    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn
+    std::string const& label, typename ColT::IndexType range,
+    DistribConstructFn<ColT> cons_fn
   );
 
   /**
@@ -298,6 +314,7 @@ struct CollectionManager
    *  will invoke that function for every index in the system based on the where
    *  each index is mapped with the registered map function.
    *
+   * \param[in] label collection label
    * \param[in] range index range for the collection
    * \param[in] cons_fn construct function to create an element on each node
    * \param[in] map_han the registered map function
@@ -306,8 +323,8 @@ struct CollectionManager
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollectiveMap(
-    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
-    HandlerType const map_han
+    std::string const& label, typename ColT::IndexType range,
+    DistribConstructFn<ColT> cons_fn, HandlerType const map_han
   );
 
   /**
@@ -1625,6 +1642,7 @@ public:
    *
    * \note Resets the phase to 0 for every element.
    *
+   * \param[in] label collection label
    * \param[in] range the range of the collection to restart
    * \param[in] file_base the base file name for the files to read
    *
@@ -1632,7 +1650,8 @@ public:
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> restoreFromFile(
-    typename ColT::IndexType range, std::string const& file_base
+    std::string const& label, typename ColT::IndexType range,
+    std::string const& file_base
   );
 
   /**

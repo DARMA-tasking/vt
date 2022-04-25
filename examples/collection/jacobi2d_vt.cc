@@ -497,7 +497,7 @@ int main(int argc, char** argv) {
     static_cast<BaseIndexType>(numY_objs)
   );
 
-  auto col_proxy = vt::makeCollection<LinearPb2DJacobi>()
+  auto col_proxy = vt::makeCollection<LinearPb2DJacobi>("examples_jacobi2d")
     .bounds(range)
     .bulkInsert()
     .wait();

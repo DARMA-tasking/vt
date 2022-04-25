@@ -104,7 +104,9 @@ TYPED_TEST_P(TestCollectionIndexTypes, test_collection_index_1) {
   if (this_node == 0) {
     auto const& col_size = 32;
     auto range = IndexType(static_cast<BaseIndexType>(col_size));
-    auto proxy = theCollection()->construct<ColType>(range);
+    auto proxy = theCollection()->construct<ColType>(
+      "test_collection_index_1", range
+    );
     for (BaseIndexType i = 0; i < static_cast<BaseIndexType>(col_size); i++) {
       auto msg = makeMessage<MsgType>(34);
       if (i % 2 == 0) {

@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
   }
 
   auto obj = vt::theObjGroup()->makeCollective<MyObj>();
-  auto col = vt::makeCollection<MyCol>()
+  auto col = vt::makeCollection<MyCol>("examples_callback")
     .bounds(vt::Index1D(8))
     .bulkInsert()
     .wait();

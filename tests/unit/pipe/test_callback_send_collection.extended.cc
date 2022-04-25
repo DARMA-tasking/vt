@@ -132,7 +132,9 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_1) {
   vt::CollectionProxy<TestCol, vt::Index1D> proxy;
 
   if (this_node == 0) {
-    proxy = theCollection()->construct<TestCol>(range);
+    proxy = theCollection()->construct<TestCol>(
+      "test_callback_send_collection_1", range
+    );
   }
 
   runInEpochCollective([this_node, proxy]{
@@ -171,7 +173,9 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_2) {
   vt::CollectionProxy<TestCol, vt::Index1D> proxy;
 
   if (this_node == 0) {
-    proxy = theCollection()->construct<TestCol>(range);
+    proxy = theCollection()->construct<TestCol>(
+      "test_callback_send_collection_2", range
+    );
   }
 
   runInEpochCollective([this_node, num_nodes, proxy]{
@@ -207,7 +211,9 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_3) {
   vt::CollectionProxy<TestCol, vt::Index1D> proxy;
 
   if (this_node == 0) {
-    proxy = theCollection()->construct<TestCol>(range);
+    proxy = theCollection()->construct<TestCol>(
+      "test_callback_send_collection_3", range
+    );
   }
 
   runInEpochCollective([this_node, proxy]{

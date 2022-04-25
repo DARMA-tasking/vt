@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  auto proxy = vt::makeCollection<Hello>()
+  auto proxy = vt::makeCollection<Hello>("examples_hello_world_collection_staged_insert")
     .bounds(range)
     .listInsertHere(std::move(elms))
     .wait();

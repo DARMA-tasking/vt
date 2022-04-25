@@ -184,7 +184,7 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
     }
   });
 
-  auto proxy = vt::makeCollection<ColType>()
+  auto proxy = vt::makeCollection<ColType>("test_custom_mapping_1")
     .bulkInsert(range)
     .mapperObjGroup(my_proxy)
     .wait();
@@ -196,7 +196,7 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
   EXPECT_EQ(counter, num_work);
   num_work = 0;
 
-  auto proxy2 = vt::makeCollection<ColType>()
+  auto proxy2 = vt::makeCollection<ColType>("test_custom_mapping_1")
     .bulkInsert(range)
     .template mapperObjGroupConstruct<MapperType>()
     .wait();

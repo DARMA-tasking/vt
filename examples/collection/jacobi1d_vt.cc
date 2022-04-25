@@ -373,7 +373,7 @@ int main(int argc, char** argv) {
   using BaseIndexType = typename vt::Index1D::DenseIndexType;
   auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
-  auto col_proxy = vt::makeCollection<LinearPb1DJacobi>()
+  auto col_proxy = vt::makeCollection<LinearPb1DJacobi>("examples_jacobi1d")
     .bounds(range)
     .bulkInsert()
     .wait();

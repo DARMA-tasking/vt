@@ -65,7 +65,7 @@ using CollectionTestTypes = testing::Types<default_::TestCol>;
 using CollectionTestDistTypes = testing::Types<default_::TestCol>;
 
 TYPED_TEST_P(TestConstruct, test_construct_basic_1) {
-  test_construct_1<TypeParam>();
+  test_construct_1<TypeParam>("test_construct_basic_1");
 }
 
 TYPED_TEST_P(TestConstructDist, test_construct_distributed_basic_1) {

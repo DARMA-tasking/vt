@@ -122,7 +122,9 @@ TEST_F(TestCollectionGroup, test_collection_group_1) {
   auto const num_nodes = theContext()->getNumNodes();
   if (my_node == 0) {
     auto const range = Index1D(std::max(num_nodes / 2, 1));
-    auto const proxy = theCollection()->construct<ColA>(range);
+    auto const proxy = theCollection()->construct<ColA>(
+      "test_collection_group_1", range
+    );
     proxy.broadcast<ColA::TestMsg,&ColA::doReduce>();
   }
 }
@@ -131,8 +133,8 @@ TEST_F(TestCollectionGroup, test_collection_group_2) {
   auto const my_node = theContext()->getNode();
 
   auto const range = Index1D(8);
-  auto const proxy =
-    theCollection()->constructCollective<ColA>(range, [](vt::Index1D idx){
+  auto const proxy = theCollection()->constructCollective<ColA>(
+    "test_collection_group_2", range, [](vt::Index1D idx) {
       ++elem_counter;
       return std::make_unique<ColA>();
     }
@@ -172,8 +174,8 @@ TEST_F(TestCollectionGroup, test_collection_group_3) {
   auto const my_node = theContext()->getNode();
 
   auto const range = Index1D(8);
-  auto const proxy =
-    theCollection()->constructCollective<ColA>(range, [](vt::Index1D idx){
+  auto const proxy = theCollection()->constructCollective<ColA>(
+    "test_collection_group_3", range, [](vt::Index1D idx) {
       ++elem_counter;
       return std::make_unique<ColA>();
     }
@@ -277,7 +279,10 @@ struct TestCollection : Collection<TestCollection, Index1D> {
 TEST_F(TestCollectionGroup, test_collection_group_serialize_when_broadcast) {
   auto const range = Index1D{static_cast<int>(theContext()->getNumNodes())};
   auto const proxy =
-    makeCollection<TestCollection>().bounds(range).bulkInsert().wait();
+    makeCollection<TestCollection>("test_collection_group_serialize_when_broadcast")
+      .bounds(range)
+      .bulkInsert()
+      .wait();
 
   // Broadcast from each node
   runInEpochCollective([proxy] {
@@ -292,7 +297,10 @@ TEST_F(TestCollectionGroup, test_collection_group_serialize_when_broadcast) {
 
 TEST_F(TestCollectionGroup, test_collection_group_dont_serialize_when_invoke) {
   auto const range = Index1D{static_cast<int>(theContext()->getNumNodes())};
-  auto const proxy = makeCollection<TestCollection>().bounds(range).bulkInsert().wait();
+  auto const proxy = makeCollection<TestCollection>("test_collection_group_dont_serialize_when_invoke")
+    .bounds(range)
+    .bulkInsert()
+    .wait();
 
   runInEpochCollective([proxy] {
     auto const this_node = theContext()->getNode();

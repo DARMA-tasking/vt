@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
   }
 
   auto range = vt::Index1D(num_elms);
-  auto proxy = vt::makeCollection<Hello>()
+  auto proxy = vt::makeCollection<Hello>("hello_world_collection_reduce")
     .bounds(range)
     .bulkInsert()
     .wait();

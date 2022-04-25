@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
   }
 
   auto range = vt::Index1D(num_elms);
-  auto proxy = vt::makeCollection<IterCol>()
+  auto proxy = vt::makeCollection<IterCol>("examples_lb_iter")
     .bounds(range)
     .bulkInsert()
     .wait();

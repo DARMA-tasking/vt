@@ -57,7 +57,7 @@ TEST_P(TestReduceCollection, test_reduce_op) {
     auto reduce_case = GetParam();
     auto size = (reduce_case == 5 ? collect_size * 4 : collect_size);
     auto const& range = Index1D(size);
-    auto proxy = theCollection()->construct<MyCol>(range);
+    auto proxy = theCollection()->construct<MyCol>("test_reduce_op", range);
 
     switch (reduce_case) {
     case 0: proxy.broadcast<ColMsg, colHanBasic>(my_node); break;

@@ -53,12 +53,13 @@ template <typename IndexT>
 CollectionHolder<IndexT>::CollectionHolder(
   HandlerType const in_map_fn, bool const in_has_dynamic_membership,
   ObjGroupProxyType in_map_object, bool const in_has_bounds,
-  IndexT const in_bounds
+  IndexT const in_bounds, std::string const& label
 ) : map_fn(in_map_fn),
     has_dynamic_membership_(in_has_dynamic_membership),
     map_object(in_map_object),
     has_bounds(in_has_bounds),
-    bounds(in_bounds)
+    bounds(in_bounds),
+    label_(label)
 { }
 
 template <typename IndexT>
