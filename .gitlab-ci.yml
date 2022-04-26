@@ -29,7 +29,6 @@ intel19:
     - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
   only:
     refs:
-      - 1737-establish-gitlab-pipeline
       - develop
   tags:
     - intel19_batch
@@ -47,7 +46,6 @@ nvcc_wrapper-vortex:
     - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_nvcc_wrapper
   only:
     refs:
-      - 1737-establish-gitlab-pipeline
       - develop
   tags:
     - ppc64le 
@@ -66,7 +64,6 @@ arm-stria:
     - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_gcc
   only:
     refs:
-      - 1737-establish-gitlab-pipeline
       - develop
   tags:
     - aarch64 
