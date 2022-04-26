@@ -86,7 +86,7 @@ set(
         vrt/collection/balance/greedylb
         vrt/collection/balance/rotatelb
         vrt/collection/balance/temperedlb
-        vrt/collection/balance/statsmaplb
+        vrt/collection/balance/offlinelb
         vrt/collection/balance/zoltanlb
         vrt/collection/balance/randomlb
         vrt/collection/balance/lb_invoke

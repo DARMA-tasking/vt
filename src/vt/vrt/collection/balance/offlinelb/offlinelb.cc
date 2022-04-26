@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                statsmaplb.cc
+//                                 offlinelb.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -44,7 +44,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/node_lb_data.h"
-#include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
+#include "vt/vrt/collection/balance/offlinelb/offlinelb.h"
 #include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/context/context.h"
 

@@ -54,7 +54,7 @@
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
-#include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
+#include "vt/vrt/collection/balance/offlinelb/offlinelb.h"
 #include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 #include "vt/vrt/collection/balance/randomlb/randomlb.h"

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 statsmaplb.h
+//                                 offlinelb.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATSMAPLB_STATSMAPLB_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATSMAPLB_STATSMAPLB_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_OFFLINELB_OFFLINELB_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_OFFLINELB_OFFLINELB_H
 
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 
@@ -74,4 +74,4 @@ private:
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATSMAPLB_STATSMAPLB_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_OFFLINELB_OFFLINELB_H*/
