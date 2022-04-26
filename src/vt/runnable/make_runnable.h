@@ -186,15 +186,15 @@ struct RunnableMaker {
   }
 
   /**
-   * \brief Add LB data for instrumentation directly with element ID and stats
+   * \brief Add LB data for instrumentation directly with element ID and LB data
    *
-   * \param[in] stats the stats
+   * \param[in] lb_data the LB data
    * \param[in] elm_id the element ID
    */
-  template <typename StatsT, typename T>
-  RunnableMaker&& withLBData(StatsT* stats, T elm_id) {
+  template <typename LBDataT, typename T>
+  RunnableMaker&& withLBData(LBDataT* lb_data, T elm_id) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBData>(stats, elm_id);
+    impl_->template addContext<ctx::LBData>(lb_data, elm_id);
 #endif
     return std::move(*this);
   }
