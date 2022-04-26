@@ -110,10 +110,6 @@ add_subdirectory(src)
 #
 option(VT_BUILD_TESTS "Build VT tests" ON)
 
-message("VT_BUILD_TESTS is: $VT_BUILD_TESTS")
-message("CMAKE_PROJECT_NAME is: $CMAKE_PROJECT_NAME")
-message("CMAKE_PROJECT_NAME is: $CMAKE_PROJECT_NAME")
-
 if (VT_BUILD_TESTS
    AND "${CMAKE_PROJECT_NAME}" STREQUAL "${PROJECT_NAME}")
   # CTest implies enable_testing() and defines the BUILD_TESTING option.
