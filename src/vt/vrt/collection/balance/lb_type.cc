@@ -58,7 +58,7 @@ static std::unordered_map<LBType,std::string> lb_names_ = {
   {LBType::HierarchicalLB, std::string{"HierarchicalLB"}},
   {LBType::RotateLB,       std::string{"RotateLB"      }},
   {LBType::TemperedLB,     std::string{"TemperedLB"    }},
-  {LBType::StatsMapLB,     std::string{"StatsMapLB"    }},
+  {LBType::OfflineLB,     std::string{"OfflineLB"    }},
   {LBType::RandomLB,       std::string{"RandomLB"      }},
 };
 

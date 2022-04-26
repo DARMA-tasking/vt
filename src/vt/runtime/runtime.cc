@@ -392,7 +392,7 @@ bool Runtime::needLBDataRestartReader() {
   #if vt_check_enabled(lblite)
     if (arg_config_->config_.vt_lb_data) {
       auto lbNames = vrt::collection::balance::get_lb_names();
-      auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
+      auto mapLB = vrt::collection::balance::LBType::OfflineLB;
       if (arg_config_->config_.vt_lb_name == lbNames[mapLB]) {
         return true;
       }

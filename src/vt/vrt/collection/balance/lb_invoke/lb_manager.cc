@@ -106,7 +106,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   }
 
   //--- User-specified map without any change, thus do not run
-  if ((theConfig()->vt_lb_name == get_lb_names()[LBType::StatsMapLB]) and
+  if ((theConfig()->vt_lb_name == get_lb_names()[LBType::OfflineLB]) and
       not theLBDataReader()->needsLB(phase)) {
     return LBType::NoLB;
   }
@@ -273,7 +273,7 @@ void LBManager::startLB(
   case LBType::GreedyLB:       lb_instances_["chosen"] = makeLB<lb::GreedyLB>();       break;
   case LBType::RotateLB:       lb_instances_["chosen"] = makeLB<lb::RotateLB>();       break;
   case LBType::TemperedLB:     lb_instances_["chosen"] = makeLB<lb::TemperedLB>();     break;
-  case LBType::StatsMapLB:     lb_instances_["chosen"] = makeLB<lb::StatsMapLB>();     break;
+  case LBType::OfflineLB:     lb_instances_["chosen"] = makeLB<lb::OfflineLB>();     break;
   case LBType::RandomLB:       lb_instances_["chosen"] = makeLB<lb::RandomLB>();       break;
 #   if vt_check_enabled(zoltan)
   case LBType::ZoltanLB:       lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();       break;
@@ -320,8 +320,8 @@ void LBManager::printLBArgsHelp(LBType lb) {
   case LBType::RandomLB:
     help = lb::RandomLB::getInputKeysWithHelp();
     break;
-  case LBType::StatsMapLB:
-    help = lb::StatsMapLB::getInputKeysWithHelp();
+  case LBType::OfflineLB:
+    help = lb::OfflineLB::getInputKeysWithHelp();
     break;
 # if vt_check_enabled(zoltan)
   case LBType::ZoltanLB:

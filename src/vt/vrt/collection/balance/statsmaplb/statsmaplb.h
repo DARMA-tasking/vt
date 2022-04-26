@@ -52,15 +52,15 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct BaseLB;
 
-struct StatsMapLB : BaseLB {
-  StatsMapLB() = default;
-  StatsMapLB(StatsMapLB const &) = delete;
-  StatsMapLB(StatsMapLB &&) noexcept = default;
-  StatsMapLB &operator=(StatsMapLB const &) = delete;
-  StatsMapLB &operator=(StatsMapLB &&) noexcept = default;
-  virtual ~StatsMapLB() = default;
+struct OfflineLB : BaseLB {
+  OfflineLB() = default;
+  OfflineLB(OfflineLB const &) = delete;
+  OfflineLB(OfflineLB &&) noexcept = default;
+  OfflineLB &operator=(OfflineLB const &) = delete;
+  OfflineLB &operator=(OfflineLB &&) noexcept = default;
+  virtual ~OfflineLB() = default;
 
-  void init(objgroup::proxy::Proxy<StatsMapLB> in_proxy);
+  void init(objgroup::proxy::Proxy<OfflineLB> in_proxy);
   void runLB(TimeType) override;
   void inputParams(balance::SpecEntry* spec) override { }
 
@@ -69,7 +69,7 @@ struct StatsMapLB : BaseLB {
   }
 
 private:
-  objgroup::proxy::Proxy<StatsMapLB> proxy_ = {};
+  objgroup::proxy::Proxy<OfflineLB> proxy_ = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

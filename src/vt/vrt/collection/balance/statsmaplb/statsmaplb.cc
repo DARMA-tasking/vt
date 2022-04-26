@@ -50,11 +50,11 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
+void OfflineLB::init(objgroup::proxy::Proxy<OfflineLB> in_proxy) {
   proxy_ = in_proxy;
 }
 
-void StatsMapLB::runLB(TimeType) {
+void OfflineLB::runLB(TimeType) {
   auto const& myNewList = theLBDataReader()->getMoveList(phase_);
   for (size_t in = 0; in < myNewList.size(); in += 2) {
     auto this_node = theContext()->getNode();
