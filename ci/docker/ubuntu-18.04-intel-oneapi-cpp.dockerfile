@@ -42,7 +42,7 @@ ENV CC=icx \
     CXX=icpx
 
 COPY ./ci/deps/mpich.sh mpich.sh
-RUN ./mpich.sh 3.3.2 -j4
+RUN ./mpich.sh 4.0.2 -j4
 
 ENV CC=mpicc \
     CXX=mpicxx \

@@ -1,8 +1,9 @@
 
-ARG compiler=icc-18
-FROM lifflander1/${compiler} as base
+ARG arch=amd64
+FROM ${arch}/ubuntu:22.04 as base
 
 ARG proxy=""
+ARG compiler=clang-11
 
 ENV https_proxy=${proxy} \
     http_proxy=${proxy}
@@ -12,28 +13,33 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
     ca-certificates \
-    less \
     curl \
+    less \
     git \
     wget \
+    ${compiler} \
     zlib1g \
     zlib1g-dev \
     ninja-build \
     valgrind \
     make-guile \
     libomp5 \
-    libunwind-dev \
+    libomp-dev \
+    llvm-11 \
+    python3 \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 RUN ln -s \
-    /opt/intel/install/bin/icpc \
-    /opt/intel/install/bin/g++
+    "$(which $(echo ${compiler}  | cut -d- -f1)++-$(echo ${compiler}  | cut -d- -f2))" \
+    /usr/bin/clang++
 
-RUN ln -s \
-    /opt/intel/install/bin/icc \
-    /opt/intel/install/bin/gcc
+ENV CC=${compiler} \
+    CXX=clang++
+
+COPY ./ci/deps/libunwind.sh libunwind.sh
+RUN ./libunwind.sh 1.6.2
 
 COPY ./ci/deps/cmake.sh cmake.sh
 RUN ./cmake.sh 3.18.4
@@ -42,14 +48,12 @@ ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
 
 COPY ./ci/deps/mpich.sh mpich.sh
-RUN ./mpich.sh 3.3.2 -j4
-
-ENV CC=/opt/intel/install/bin/icc \
-    CXX=/opt/intel/install/bin/icpc
+RUN ./mpich.sh 4.0.2 -j4
 
 ENV MPI_EXTRA_FLAGS="" \
+    CMAKE_PREFIX_PATH="/lib/x86_64-linux-gnu/" \
     PATH=/usr/lib/ccache/:$PATH \
-    LD_LIBRARY_PATH=/opt/intel/ld_library_path
+    CMAKE_EXE_LINKER_FLAGS="-pthread"
 
 FROM base as build
 COPY . /vt
