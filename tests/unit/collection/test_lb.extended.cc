@@ -49,6 +49,7 @@
 
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/json_appender.h"
 
@@ -150,6 +151,37 @@ TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_2) {
 TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_keep_last_elm) {
   vt::theConfig()->vt_lb_keep_last_elm = true;
   runTest(GetParam());
+}
+
+TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
+  runTest("TemperedWMin");
+
+  // auto proxy = theLBManager()->getLB();
+  // runInEpochCollective(
+  //   "test_make_graph_symmetric -> makeGraphSymmetric",
+  //   [phase, proxy] { vrt::collection::balance::makeGraphSymmetric(phase, proxy); }
+  // );
+
+  auto phase = num_phases - 1;
+  auto iter = theNodeStats()->getNodeComm()->find(phase);
+  ASSERT_NE(iter, theNodeStats()->getNodeComm()->end());
+
+  elm::CommMapType const& comm_data = iter->second;
+
+  fmt::print(
+    "\ntest_make_graph_symmetric: comm_map.size={}\n", comm_data.size()
+  );
+  for (auto&& elm : comm_data) {
+    if (
+      elm.first.commCategory() == elm::CommCategory::SendRecv and
+      not elm.first.selfEdge()
+    ) {
+      fmt::print(
+        "test_make_graph_symmetric: from={}, to={}\n", elm.first.fromObj(),
+        elm.first.toObj()
+      );
+    }
+  }
 }
 
 struct MyCol2 : vt::Collection<MyCol2,vt::Index1D> {};

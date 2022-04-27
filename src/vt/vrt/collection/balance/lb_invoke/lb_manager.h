@@ -97,6 +97,8 @@ struct LBManager : runtime::component::Component<LBManager> {
   static std::unique_ptr<LBManager> construct();
 
 public:
+  LBProxyType getLB() { return lb_instances_["chosen"]; }
+
   /**
    * \internal
    * \brief Decide which LB to invoke given a certain phase
