@@ -119,17 +119,6 @@ struct TestCol : vt::Collection<TestCol,vt::Index3D> {
     for (auto& elm : data2) { elm += 1.; }
   }
 
-  void migrateAwayFromRoot(NullMsg*) {
-    vt::NodeType this_node = vt::theContext()->getNode();
-    vt::NodeType num_nodes = vt::theContext()->getNumNodes();
-    vt::NodeType next_node = (this_node + 1) % num_nodes;
-
-    if(not (next_node==0)){
-      fmt::print("{}: migrateToNext: idx={}\n", this_node, this->getIndex());
-      this->migrate(next_node);
-    }
-  }
-
   void nullToken(NullMsg*) {
     token = nullptr;
   }
@@ -381,16 +370,13 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
   });
 }
 
+
 // Goals for Test:
 //  1. Create a collection and get it into a state where there is a rank with zero elements
 //      (either by  (A) setting it up that way initially or (B) migrating everything off one rank)
 //  2. Checkpoint the collection
 //  3. Restore the collection and validate it
 
-
-// vt::NodeType map(vt::Index1D* idx, vt::Index1D* max_idx, vt::NodeType num_nodes) {
-//   return (idx->x() % (num_nodes-1))+1;
-// }
 vt::NodeType map(vt::Index3D* idx, vt::Index3D* max_idx, vt::NodeType num_nodes) {
   return (idx->x() % (num_nodes-1))+1;
 }
@@ -400,52 +386,35 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
 
   auto this_node = vt::theContext()->getNode();
   auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
-  //TODO remove unneeded comments
-  //TODO how to create the collective with the map?
 
-
-  // int32_t num_elms = 8;
-  //objgroup_proxy = vt::theObjGroup()->makeCollective<MyObjGroup>();
-
-  // auto range = vt::Index3D(num_elms);
-  // auto const idx = col.getIndex().x();
-  // auto idx = getIndex();
   auto range = vt::Index3D(num_nodes, num_elms, 4);
   auto checkpoint_name = "test_null_elm_checkpoint_dir";
-  // auto map_han = auto_registry::makeAutoHandlerMap<Index3D, map>();
 
-  //  auto proxy = vt::makeCollection<TestCol::NullMsg>()
-  //    .bounds(range)
-  //    .mapperFunc<map>()
-  //    .bulkInsert()
-  //    .wait();
   {
-    // auto proxy = vt::theCollection()->constructCollectiveMap<TestCol>(range,map_han);
-    auto proxy = vt::theCollection()->constructCollective<TestCol>(range);
+    auto proxy = vt::makeCollection<TestCol>()
+      .bounds(range)
+      .mapperFunc<map>()
+      .bulkInsert()
+      .wait();
 
     vt::runInEpochCollective([&]{
       if (this_node == 0) {
-        proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
+        proxy.broadcast<TestCol::NullMsg, &TestCol::init>();
       }
     });
-
+    //this number of iterations is expected in the verify member function
     for (int i = 0; i < 5; i++) {
       vt::runInEpochCollective([&]{
-        if (this_node == 0) {
-          proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
+        if(this_node == 0) {
+          proxy.broadcast<TestCol::NullMsg, &TestCol::doIter>();
         }
       });
     }
-
-    vt::runInEpochCollective([&]{
-      if (this_node == 0) {
-        proxy.template broadcast<TestCol::NullMsg, &TestCol::migrateAwayFromRoot>();
-      }
-    });
-    //TODO: check that the number of elements on root node = 0
-    // how?
-
-
+    //verify that root node has no elements, by construction with map
+    if(this_node == 0) {
+      auto local_set = theCollection()->getLocalIndices(proxy);
+      EXPECT_EQ(local_set.size(), 0);
+    }
 
     vt_print(gen, "checkpointToFile\n");
     vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
@@ -462,7 +431,6 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
       // Wait for all checkpoints to complete
     vt::theCollective()->barrier();
   }
-
 
   auto proxy = vt::theCollection()->restoreFromFile<TestCol>(
     range, checkpoint_name
