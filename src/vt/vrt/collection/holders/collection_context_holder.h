@@ -53,7 +53,7 @@ namespace vt { namespace vrt { namespace collection {
 template <typename IndexT>
 struct CollectionContextHolder {
 
-  static void set(IndexT* const set_idx, VirtualProxyType const& set_proxy) {
+  static void set(const IndexT* set_idx, VirtualProxyType const& set_proxy) {
     ctx_idx = set_idx;
     ctx_proxy = set_proxy;
   }
@@ -63,7 +63,7 @@ struct CollectionContextHolder {
     ctx_proxy = no_vrt_proxy;
   }
 
-  static IndexT* index() {
+  static const IndexT* index() {
     return ctx_idx;
   }
 
@@ -76,12 +76,12 @@ struct CollectionContextHolder {
   }
 
 private:
-  static IndexT* ctx_idx;
+  static const IndexT* ctx_idx;
   static VirtualProxyType ctx_proxy;
 };
 
 template <typename IndexT>
-/*static*/ IndexT* CollectionContextHolder<IndexT>::ctx_idx = nullptr;
+/*static*/ const IndexT* CollectionContextHolder<IndexT>::ctx_idx = nullptr;
 
 template <typename IndexT>
 /*static*/ VirtualProxyType

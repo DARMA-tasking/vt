@@ -356,7 +356,7 @@ struct CollectionManager
    * \return the running index
    */
   template <typename IndexT>
-  static IndexT* queryIndexContext();
+  static  const IndexT* queryIndexContext();
 
   /**
    * \brief Query the current proxy context of the running handler
