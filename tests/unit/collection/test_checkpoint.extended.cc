@@ -399,7 +399,7 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
   auto checkpoint_name = "test_null_elm_checkpoint_dir";
 
   {
-    auto proxy = vt::makeCollection<TestCol>()
+    auto proxy = vt::makeCollection<TestCol>("test_checkpoint_no_elements_on_root_rank")
       .bounds(range)
       .mapperFunc<map>()
       .bulkInsert()
@@ -441,7 +441,7 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
   }
 
   auto proxy = vt::theCollection()->restoreFromFile<TestCol>(
-    range, checkpoint_name
+    "test_checkpoint_no_elements_on_root_rank", range, checkpoint_name
   );
 
   // Restoration should be done now
