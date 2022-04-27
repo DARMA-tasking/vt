@@ -5,7 +5,7 @@ stages:
   - build
 
 variables:
-  ASC_WCID: "fy150069"
+  ASC_WCID: "fy140001"
 
 # before_script:
 
@@ -20,12 +20,7 @@ intel19:
     SCHEDULER_PARAMETERS: "--account=${ASC_WCID} --partition=short,batch --time=1:00:00 --nodes=1"
   stage: build
   script:
-    - module load cde/v2/cmake/3.19.2
-    - module load cde/v2/ninja/1.10.1
-    - module unload intel/16.0
-    - module load cde/v2/compiler/intel/19.1.2
-    - module unload openmpi-intel/1.10
-    - module load cde/v2/intel/19.1.2/openmpi/4.0.5
+    - source /projects/empire/installs/chama/INTEL-RELEASE-OPENMP-SHARED/trilinos/latest-link/load_matching_env.sh
     - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
   only:
     refs:
@@ -40,8 +35,7 @@ nvcc_wrapper-vortex:
     OMPI_CXX: "nvcc_wrapper"
   stage: build
   script:
-    - module load sparc-dev/cuda-10.1.243_gcc-7.3.1_spmpi-rolling
-    - module load ninja/1.9.0
+    - source /projects/empire/installs/vortex/CUDA-10.1.243_GNU-7.3.1_SPMPI-ROLLING-RELEASE-CUDA-STATIC/trilinos/latest-link/load_matching_env.sh
     - mkdir -p /tmp/$USER
     - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_nvcc_wrapper
   only:
@@ -57,10 +51,7 @@ arm-stria:
     CXX: "c++"
   stage: build
   script:
-    - module unload devpack-gnu7
-    - module load devpack-arm
-    - module load cde/v2.1/ninja
-    - module swap cmake cmake/3.20.5
+    - source /projects/empire/installs/stria/ARM-20.1_OPENMPI-4.0.5-RELEASE-OPENMP-STATIC/trilinos/latest-link/load_matching_env.sh
     - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_gcc
   only:
     refs:
