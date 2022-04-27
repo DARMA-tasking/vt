@@ -242,7 +242,7 @@ int TraceSpec::eatWhitespace(std::ifstream& file) {
 }
 
 /*static*/ typename TraceSpec::ProxyType TraceSpec::construct() {
-  auto proxy = theObjGroup()->makeCollective<TraceSpec>();
+  auto proxy = theObjGroup()->makeCollective<TraceSpec>("TraceSpec::construct()");
   proxy.get()->init(proxy);
   return proxy;
 }

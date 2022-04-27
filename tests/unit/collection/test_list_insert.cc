@@ -117,7 +117,9 @@ TEST_F(TestListInsert, test_bounded_list_insert_1) {
 template <typename IndexT>
 struct MyMapper : vt::mapping::BaseMapper<IndexT> {
   static vt::ObjGroupProxyType construct() {
-    return vt::theObjGroup()->makeCollective<MyMapper<IndexT>>().getProxy();
+    return vt::theObjGroup()->makeCollective<MyMapper<IndexT>>(
+      "MyMapper::construct()"
+    ).getProxy();
   }
 
   vt::NodeType map(IndexT* idx, int ndim, vt::NodeType num_nodes) override {

@@ -54,7 +54,9 @@ PhaseManager::PhaseManager() {
 
 /*static*/ std::unique_ptr<PhaseManager> PhaseManager::construct() {
   auto ptr = std::make_unique<PhaseManager>();
-  auto proxy = theObjGroup()->makeCollective<PhaseManager>(ptr.get());
+  auto proxy = theObjGroup()->makeCollective<PhaseManager>(
+    "PhaseManager::construct()", ptr.get()
+  );
   proxy.get()->proxy_ = proxy.getProxy();;
   return ptr;
 }

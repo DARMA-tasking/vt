@@ -72,41 +72,41 @@ namespace vt { namespace objgroup {
 
 template <typename ObjT, typename... Args>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollective(Args&&... args) {
-  return makeCollective<ObjT>(std::make_unique<ObjT>(std::forward<Args>(args)...));
+ObjGroupManager::makeCollective(std::string const& label, Args&&... args) {
+  return makeCollective<ObjT>(label, std::make_unique<ObjT>(std::forward<Args>(args)...));
 }
 
 template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollective(ObjT* obj) {
+ObjGroupManager::makeCollective(std::string const& label, ObjT* obj) {
   vtAssert(obj !=  nullptr, "Must be a valid obj pointer");
   auto holder_base = std::make_unique<holder::HolderBasic<ObjT>>(obj);
-  return makeCollectiveObj<ObjT>(obj,std::move(holder_base));
+  return makeCollectiveObj<ObjT>(label, obj, std::move(holder_base));
 }
 
 template <template <typename> class UserPtr, typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollective(UserPtr<ObjT> obj) {
+ObjGroupManager::makeCollective(std::string const& label, UserPtr<ObjT> obj) {
   auto obj_ptr = *obj;
   vtAssert(obj_ptr !=  nullptr, "Must be a valid obj pointer");
   auto holder_base = std::make_unique<holder::HolderUser<UserPtr,ObjT>>(obj);
-  return makeCollectiveObj<ObjT>(obj_ptr,std::move(holder_base));
+  return makeCollectiveObj<ObjT>(label, obj_ptr, std::move(holder_base));
 }
 
 template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollective(std::unique_ptr<ObjT> obj) {
+ObjGroupManager::makeCollective(std::string const& label, std::unique_ptr<ObjT> obj) {
   vtAssert(obj !=  nullptr, "Must be a valid obj pointer");
   auto obj_ptr = obj.get();
   auto holder_base = std::make_unique<holder::Holder<ObjT>>(std::move(obj));
-  return makeCollectiveObj<ObjT>(obj_ptr,std::move(holder_base));
+  return makeCollectiveObj<ObjT>(label, obj_ptr, std::move(holder_base));
 }
 
 template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollectiveObj(ObjT* obj, HolderBasePtrType holder) {
+ObjGroupManager::makeCollectiveObj(std::string const& label, ObjT* obj, HolderBasePtrType holder) {
   auto const obj_ptr = reinterpret_cast<void*>(obj);
-  auto const proxy = makeCollectiveImpl(std::move(holder), obj_ptr);
+  auto const proxy = makeCollectiveImpl(label, std::move(holder), obj_ptr);
   auto iter = objs_.find(proxy);
   vtAssert(iter != objs_.end(), "Obj must exist on this node");
   HolderBaseType* h = iter->second.get();
@@ -122,9 +122,9 @@ ObjGroupManager::makeCollectiveObj(ObjT* obj, HolderBasePtrType holder) {
 
 template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollective(MakeFnType<ObjT> fn) {
+ObjGroupManager::makeCollective(std::string const& label, MakeFnType<ObjT> fn) {
   auto obj = fn();
-  return makeCollective<ObjT>(std::move(obj));
+  return makeCollective<ObjT>(label, std::move(obj));
 }
 
 template <typename ObjT>
@@ -349,6 +349,14 @@ typename ObjGroupManager::ProxyType<ObjT> ObjGroupManager::getProxy(ObjT* obj) {
 template <typename ObjT>
 typename ObjGroupManager::ProxyElmType<ObjT> ObjGroupManager::proxyElm(ObjT* obj) {
   return getProxy<ObjT>(obj).operator()(theContext()->getNode());
+}
+
+template <typename ObjT>
+std::string ObjGroupManager::getLabel(ObjGroupManager::ProxyType<ObjT> proxy) {
+  auto const proxy_bits = proxy.getProxy();
+  auto const iter = labels_.find(proxy_bits);
+  vtAssert(iter != labels_.end(), "Obj must exist on this node");
+  return iter->second;
 }
 
 }} /* end namespace vt::objgroup */

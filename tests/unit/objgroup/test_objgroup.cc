@@ -102,11 +102,11 @@ struct TestObjGroup : TestParallelHarness {
 TEST_F(TestObjGroup, test_construct) {
 
   // create object groups and retrieve proxies
-  auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
-  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>(1);
-  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjB>(new MyObjB(1));
+  auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>("test_construct");
+  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>("test_construct", 1);
+  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjB>("test_construct", new MyObjB(1));
   auto proxy4 = vt::theObjGroup()->makeCollective<MyObjB>(
-    std::make_unique<MyObjB>(1)
+    "test_construct", std::make_unique<MyObjB>(1)
   );
 
   // retrieve object group from proxies
@@ -126,7 +126,7 @@ TEST_F(TestObjGroup, test_construct) {
 TEST_F(TestObjGroup, test_proxy_object_getter) {
 
   // create a proxy to a object group
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_object_getter");
 
   // check the uniqueness of the stored instance.
   // both object getters should return a pointer to the same instance.
@@ -141,8 +141,8 @@ TEST_F(TestObjGroup, test_proxy_object_getter) {
 
   // check that creating multiple proxies from a same object group type
   // will actually create different instance of this object group.
-  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjA>();
-  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_object_getter");
+  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_object_getter");
   auto obj1 = obj_ori;
   auto obj2 = proxy2.get();
   auto obj3 = proxy3.get();
@@ -153,7 +153,7 @@ TEST_F(TestObjGroup, test_proxy_object_getter) {
 TEST_F(TestObjGroup, test_proxy_update) {
 
   // create a proxy to a object group
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_update");
   auto const obj1 = proxy.get();
   auto const obj1_id = obj1->id_;
   auto const node = vt::theContext()->getNode();
@@ -176,7 +176,7 @@ TEST_F(TestObjGroup, test_proxy_schedule) {
   auto my_node = vt::theContext()->getNode();
   auto num_nodes = vt::theContext()->getNumNodes();
   // create a proxy to a object group
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_schedule");
   MyObjA *obj = nullptr;
 
   runInEpochCollective([&]{
@@ -207,9 +207,9 @@ TEST_F(TestObjGroup, test_proxy_callbacks) {
 
   runInEpochCollective([&]{
     // create object groups and retrieve proxies
-    auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
-    auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>(1);
-    auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
+    auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_callbacks");
+    auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>("test_proxy_callbacks", 1);
+    auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_callbacks");
 
     if (my_node == 0) {
       proxy1[0].send<MyMsg, &MyObjA::handler>();
@@ -244,10 +244,10 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
 
   runInEpochCollective([&]{
     // create four proxy instances of a same object group type
-    auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
-    auto proxy2 = vt::theObjGroup()->makeCollective<MyObjA>();
-    auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
-    auto proxy4 = vt::theObjGroup()->makeCollective<MyObjA>();
+    auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_reduce");
+    auto proxy2 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_reduce");
+    auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_reduce");
+    auto proxy4 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_reduce");
 
     auto msg1 = vt::makeMessage<SysMsg>(my_node);
     auto msg2 = vt::makeMessage<SysMsg>(4);
@@ -275,7 +275,9 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
 TEST_F(TestObjGroup, test_proxy_invoke) {
   auto const& this_node = theContext()->getNode();
 
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>(
+    "test_proxy_invoke"
+  );
 
 
   // Message handler
@@ -390,7 +392,9 @@ struct MyTestObj {
 
 TEST_F(TestObjGroup, test_objgroup_serialize_when_broadcast) {
   runInEpochCollective([]{
-    auto const proxy = vt::theObjGroup()->makeCollective<MyTestObj>();
+    auto const proxy = vt::theObjGroup()->makeCollective<MyTestObj>(
+      "test_objgroup_serialize_when_broadcast"
+    );
     auto const this_node = theContext()->getNode();
     auto msg = ::vt::makeMessage<MyTestMsg>(this_node);
 
@@ -400,11 +404,25 @@ TEST_F(TestObjGroup, test_objgroup_serialize_when_broadcast) {
 
 TEST_F(TestObjGroup, test_objgroup_dont_serialize_when_invoke) {
   runInEpochCollective([]{
-    auto const proxy = vt::theObjGroup()->makeCollective<MyTestObj>();
+    auto const proxy = vt::theObjGroup()->makeCollective<MyTestObj>(
+      "test_objgroup_dont_serialize_when_invoke"
+    );
     auto const this_node = theContext()->getNode();
     auto msg = ::vt::makeMessage<MyTestMsg>(this_node);
 
     proxy[this_node].invoke<MyTestMsg, &MyTestObj::handleInvokeMsg>(this_node);
+  });
+}
+
+struct MyTestLabelObj {};
+
+TEST_F(TestObjGroup, test_objgroup_labels) {
+  runInEpochCollective([]{
+    std::string const label = "test_objgroup_labels";
+    auto const proxy = vt::theObjGroup()->makeCollective<MyTestLabelObj>(label);
+    auto const proxyLabel = vt::theObjGroup()->getLabel(proxy);
+
+    EXPECT_EQ(label, proxyLabel);
   });
 }
 

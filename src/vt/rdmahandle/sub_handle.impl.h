@@ -503,7 +503,9 @@ SubHandle<T,E,IndexT>::construct(
   bool in_is_migratable, IndexT in_range, bool in_dense_start_with_zero,
   vt::HandlerType map_han
 ) {
-  auto proxy = vt::theObjGroup()->makeCollective<SubHandle<T,E,IndexT>>();
+  auto proxy = vt::theObjGroup()->makeCollective<SubHandle<T,E,IndexT>>(
+    "SubHandle::construct()"
+  );
   proxy.get()->initialize(
     proxy, in_is_migratable, in_range, map_han, in_dense_start_with_zero
   );

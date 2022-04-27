@@ -76,7 +76,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/ std::unique_ptr<LBManager> LBManager::construct() {
   auto ptr = std::make_unique<LBManager>();
-  auto proxy = theObjGroup()->makeCollective<LBManager>(ptr.get());
+  auto proxy = theObjGroup()->makeCollective<LBManager>(
+    "LBManager::construct()", ptr.get()
+  );
   proxy.get()->setProxy(proxy);
 
   ptr->base_model_ = std::make_shared<balance::NaivePersistence>(
@@ -164,7 +166,7 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
 template <typename LB>
 LBManager::LBProxyType
 LBManager::makeLB() {
-  auto proxy = theObjGroup()->makeCollective<LB>();
+  auto proxy = theObjGroup()->makeCollective<LB>("LBManager::makeLB()");
   auto strat = proxy.get();
   strat->init(proxy);
   auto base_proxy = proxy.template castToBase<lb::BaseLB>();

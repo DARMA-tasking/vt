@@ -312,7 +312,9 @@ struct MyObjGroup {
   MyObjGroup() = default;
 
   void makeVT() {
-    frontend_proxy_ = vt::theObjGroup()->makeCollective(this);
+    frontend_proxy_ = vt::theObjGroup()->makeCollective(
+      "MyObjGroup::makeVT()", this
+    );
   }
 
   void makeColl(std::string const& label, NodeType num_nodes, int k) {
@@ -581,7 +583,9 @@ struct MergeObjGroup
   }
 
   void makeVT() {
-    frontend_proxy_ = vt::theObjGroup()->makeCollective(this);
+    frontend_proxy_ = vt::theObjGroup()->makeCollective(
+      "MergeObjGroup::makeVT()", this
+    );
   }
 
   void makeColl(std::string const& label, NodeType num_nodes, int k, double offset) {

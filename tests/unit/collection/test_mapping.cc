@@ -64,7 +64,9 @@ struct MappingTest : vt::Collection<MappingTest<IndexT>, IndexT> {
 template <typename IndexT>
 struct MyMapper : vt::mapping::BaseMapper<IndexT> {
   static vt::ObjGroupProxyType construct() {
-    return vt::theObjGroup()->makeCollective<MyMapper<IndexT>>().getProxy();
+    return vt::theObjGroup()->makeCollective<MyMapper<IndexT>>(
+      "MyMapper::construct()"
+    ).getProxy();
   }
 
   vt::NodeType map(IndexT* idx, int ndim, vt::NodeType num_nodes) override {
@@ -216,9 +218,11 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
 template <typename IndexT>
 struct MyDistMapper : vt::mapping::BaseMapper<IndexT> {
   static vt::ObjGroupProxyType construct() {
-    auto prox =  vt::theObjGroup()->makeCollective<MyDistMapper<IndexT>>();
-    prox.get()->proxy = prox;
-    return prox.getProxy();
+    auto madeProxy = vt::theObjGroup()->makeCollective<MyDistMapper<IndexT>>(
+      "MyDistMapper::construct()"
+    );
+    madeProxy.get()->proxy = proxy;
+    return madeProxy.getProxy();
   }
 
   MyDistMapper()
