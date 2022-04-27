@@ -59,16 +59,18 @@ struct TestPendingSend : TestParallelHarness {
     explicit TestMsg(vt::NodeType in_sender) : sender(in_sender) { }
     vt::NodeType sender = uninitialized_destination;
   };
-  static void handlerPong(TestMsg*) { vt_print(gen, "handlerPong\n"); delivered = true; }
+  static void handlerPong(TestMsg*) { delivered = true; }
   static void handlerPing(TestMsg* in_msg) {
     auto const this_node = theContext()->getNode();
-    auto const sender = in_msg->sender;
-    if (sender == uninitialized_destination or sender == this_node) {
-      vt_print(gen, "handlerPing\n");
-      auto const num_nodes = theContext()->getNumNodes();
-      auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
-      auto msg = vt::makeMessage<TestMsg>();
-      theMsg()->sendMsg<TestMsg, handlerPong>(prev, msg);
+    auto const num_nodes = theContext()->getNumNodes();
+    auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+    auto msg = vt::makeMessage<TestMsg>();
+    theMsg()->sendMsg<TestMsg, handlerPong>(prev, msg);
+  }
+  static void handlerLocal(TestMsg* msg) {
+    auto const this_node = theContext()->getNode();
+    if (msg->sender == this_node) {
+      delivered = true;
     }
   }
 
@@ -132,7 +134,7 @@ TEST_F(TestPendingSend, test_pending_broadcast_hold) {
 
   auto msg = vt::makeMessage<TestMsg>(theContext()->getNode());
   auto msg_hold = promoteMsg(msg.get());
-  pending.emplace_back(theMsg()->broadcastMsg<TestMsg, handlerPing>(msg));
+  pending.emplace_back(theMsg()->broadcastMsg<TestMsg, handlerLocal>(msg));
 
   // Must be stamped with the current epoch
   EXPECT_EQ(envelopeGetEpoch(msg_hold->env), ep);
