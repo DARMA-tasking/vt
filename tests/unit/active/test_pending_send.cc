@@ -45,6 +45,7 @@
 
 #include "vt/termination/termination.h"
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 #include "data_message.h"
 
 namespace vt { namespace tests { namespace unit {
@@ -99,6 +100,45 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   theSched()->runSchedulerWhile([&k, ep] {
     return !theTerm()->isEpochTerminated(ep) && (++k <= 10);
   });
+
+  // Epoch should not end with a valid pending send created in an live epoch
+  EXPECT_EQ(theTerm()->isEpochTerminated(ep), false);
+  EXPECT_EQ(delivered, false);
+
+  // Now we send the message off!
+  pending.clear();
+
+  vt::runSchedulerThrough(ep);
+
+  EXPECT_EQ(theTerm()->isEpochTerminated(ep), true);
+  EXPECT_EQ(delivered, true);
+}
+
+TEST_F(TestPendingSend, test_pending_broadcast_hold) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+  delivered = false;
+
+  std::vector<messaging::PendingSend> pending;
+  auto ep = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(ep);
+
+  auto msg = vt::makeMessage<TestMsg>();
+  auto msg_hold = promoteMsg(msg.get());
+  pending.emplace_back(theMsg()->broadcastMsg<TestMsg, handlerPing>(msg));
+
+  // Must be stamped with the current epoch
+  EXPECT_EQ(envelopeGetEpoch(msg_hold->env), ep);
+
+  theMsg()->popEpoch(ep);
+  theTerm()->finishedEpoch(ep);
+
+  // It should not break out of this loop because of
+  // !theTerm()->isEpochTermianted(ep), thus `k` is used to
+  // break out
+  int k = 0;
+
+  theSched()->runSchedulerWhile(
+    [&k, ep] { return !theTerm()->isEpochTerminated(ep) && (++k <= 10); });
 
   // Epoch should not end with a valid pending send created in an live epoch
   EXPECT_EQ(theTerm()->isEpochTerminated(ep), false);
