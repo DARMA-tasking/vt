@@ -54,14 +54,22 @@ using namespace vt;
 using namespace vt::tests::unit;
 
 struct TestPendingSend : TestParallelHarness {
-  struct TestMsg : vt::Message { };
-  static void handlerPong(TestMsg*) { delivered = true; }
-  static void handlerPing(TestMsg*) {
+  struct TestMsg : vt::Message {
+    TestMsg() = default;
+    explicit TestMsg(vt::NodeType in_sender) : sender(in_sender) { }
+    vt::NodeType sender = uninitialized_destination;
+  };
+  static void handlerPong(TestMsg*) { vt_print(gen, "handlerPong\n"); delivered = true; }
+  static void handlerPing(TestMsg* in_msg) {
     auto const this_node = theContext()->getNode();
-    auto const num_nodes = theContext()->getNumNodes();
-    auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
-    auto msg = vt::makeMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, handlerPong>(prev, msg);
+    auto const sender = in_msg->sender;
+    if (sender == uninitialized_destination or sender == this_node) {
+      vt_print(gen, "handlerPing\n");
+      auto const num_nodes = theContext()->getNumNodes();
+      auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+      auto msg = vt::makeMessage<TestMsg>();
+      theMsg()->sendMsg<TestMsg, handlerPong>(prev, msg);
+    }
   }
 
   static bool delivered;
@@ -122,7 +130,7 @@ TEST_F(TestPendingSend, test_pending_broadcast_hold) {
   auto ep = theTerm()->makeEpochCollective();
   theMsg()->pushEpoch(ep);
 
-  auto msg = vt::makeMessage<TestMsg>();
+  auto msg = vt::makeMessage<TestMsg>(theContext()->getNode());
   auto msg_hold = promoteMsg(msg.get());
   pending.emplace_back(theMsg()->broadcastMsg<TestMsg, handlerPing>(msg));
 
@@ -142,6 +150,7 @@ TEST_F(TestPendingSend, test_pending_broadcast_hold) {
 
   // Epoch should not end with a valid pending send created in an live epoch
   EXPECT_EQ(theTerm()->isEpochTerminated(ep), false);
+  vt_print(gen, "delivered={}\n", delivered);
   EXPECT_EQ(delivered, false);
 
   // Now we send the message off!
