@@ -1303,7 +1303,7 @@ template <typename ColT, typename ParamT, typename... Args>
 }
 
 template <typename IndexT>
-/*static*/ IndexT* CollectionManager::queryIndexContext() {
+/*static*/ IndexT const* CollectionManager::queryIndexContext() {
   using IdxContextHolder = CollectionContextHolder<IndexT>;
   return IdxContextHolder::index();
 }
