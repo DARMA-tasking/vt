@@ -507,9 +507,9 @@ struct TestDumpUserdefinedData : TestParallelHarnessParam<bool> { };
 
 std::string
 getJsonStringForPhase(
-  vt::PhaseType phase,  vt::vrt::collection::balance::StatsData in
+  vt::PhaseType phase, vt::vrt::collection::balance::LBDataHolder in
 ) {
-  using vt::vrt::collection::balance::StatsData;
+  using vt::vrt::collection::balance::LBDataHolder;
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
   auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), false);
@@ -533,13 +533,13 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
     proxy = vt::theCollection()->constructCollective<MyCol>(range);
   });
 
-  vt::vrt::collection::balance::StatsData sd;
+  vt::vrt::collection::balance::LBDataHolder lbdh;
   PhaseType write_phase = 0;
 
   {
     PhaseType phase = write_phase;
-    sd.node_data_[phase];
-    sd.node_comm_[phase];
+    lbdh.node_data_[phase];
+    lbdh.node_comm_[phase];
 
     vt::Index1D idx(this_node * 1);
     auto elm_ptr = proxy(idx).tryGetLocalPtr();
@@ -548,14 +548,14 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
       auto elm_id = elm_ptr->getElmID();
       elm_ptr->valInsert("hello", std::string("world"), should_dump);
       elm_ptr->valInsert("elephant", 123456789, should_dump);
-      sd.user_defined_json_[phase][elm_id] = std::make_shared<nlohmann::json>(
+      lbdh.user_defined_json_[phase][elm_id] = std::make_shared<nlohmann::json>(
         elm_ptr->toJson()
       );
-      sd.node_data_[phase][elm_id].whole_phase_load = 1.0;
+      lbdh.node_data_[phase][elm_id].whole_phase_load = 1.0;
     }
   }
 
-  auto json_str = getJsonStringForPhase(write_phase, sd);
+  auto json_str = getJsonStringForPhase(write_phase, lbdh);
   fmt::print("{}\n", json_str);
   if (should_dump) {
     EXPECT_NE(json_str.find("user_defined"), std::string::npos);

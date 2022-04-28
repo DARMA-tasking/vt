@@ -284,7 +284,7 @@ void NodeLBData::addNodeLBData(
   }
 
   if (storable) {
-    stats_->user_defined_json_[phase][id] = std::make_shared<nlohmann::json>(
+    lb_data_->user_defined_json_[phase][id] = std::make_shared<nlohmann::json>(
       storable->toJson()
     );
   }
