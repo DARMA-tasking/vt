@@ -254,8 +254,8 @@ void Runtime::printStartupBanner() {
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
       vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
     }
-    if (getAppConfig()->vt_lb_stats) {
-      auto f9 = warn_cr("--vt_lb_stats", "lblite");
+    if (getAppConfig()->vt_lb_data) {
+      auto f9 = warn_cr("--vt_lb_data", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
   #endif
@@ -327,43 +327,43 @@ void Runtime::printStartupBanner() {
     }
   }
 
-  if (getAppConfig()->vt_lb_stats) {
-    auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
+  if (getAppConfig()->vt_lb_data) {
+    auto f9 = opt_on("--vt_lb_data", "Load balancing data collection");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
 
-    if (getAppConfig()->vt_lb_stats_compress) {
-      auto f10 = opt_on("--vt_lb_stats_compress", "Compressing statistics files");
+    if (getAppConfig()->vt_lb_data_compress) {
+      auto f10 = opt_on("--vt_lb_data_compress", "Compressing data files");
       fmt::print("{}\t{}{}", vt_pre, f10, reset);
     } else {
-      auto f10 = opt_off("--vt_lb_stats_compress", "Not compressing statistics files");
+      auto f10 = opt_off("--vt_lb_data_compress", "Not compressing data files");
       fmt::print("{}\t{}{}", vt_pre, f10, reset);
     }
 
-    auto const fname = getAppConfig()->vt_lb_stats_file;
+    auto const fname = getAppConfig()->vt_lb_data_file;
     if (fname != "") {
-      auto f11 = fmt::format("LB stats file name \"{}\"", fname);
-      auto f12 = opt_on("--vt_lb_stats_file", f11);
+      auto f11 = fmt::format("LB data file name \"{}\"", fname);
+      auto f12 = opt_on("--vt_lb_data_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
-    auto const fdir = getAppConfig()->vt_lb_stats_dir;
+    auto const fdir = getAppConfig()->vt_lb_data_dir;
     if (fdir != "") {
-      auto f11 = fmt::format("LB stats directory \"{}\"", fdir);
-      auto f12 = opt_on("--vt_lb_stats_dir", f11);
+      auto f11 = fmt::format("LB data directory \"{}\"", fdir);
+      auto f12 = opt_on("--vt_lb_data_dir", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
-    auto const fnamein = getAppConfig()->vt_lb_stats_file_in;
+    auto const fnamein = getAppConfig()->vt_lb_data_file_in;
     if (fnamein != "") {
-      auto f11 = fmt::format("LB stats file name in \"{}\"", fnamein);
-      auto f12 = opt_on("--vt_lb_stats_file_in", f11);
+      auto f11 = fmt::format("LB data file name in \"{}\"", fnamein);
+      auto f12 = opt_on("--vt_lb_data_file_in", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
-    auto const fdirin = getAppConfig()->vt_lb_stats_dir_in;
+    auto const fdirin = getAppConfig()->vt_lb_data_dir_in;
     if (fdirin != "") {
-      auto f11 = fmt::format("LB stats directory in \"{}\"", fdirin);
-      auto f12 = opt_on("--vt_lb_stats_dir_in", f11);
+      auto f11 = fmt::format("LB data directory in \"{}\"", fdirin);
+      auto f12 = opt_on("--vt_lb_data_dir_in", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
   }

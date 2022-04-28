@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               col_stats.impl.h
+//                                lb_data.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,50 +41,28 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_IMPL_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_IMPL_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_IMPL_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/col_stats.h"
-#include "vt/vrt/collection/balance/phase_msg.h"
-#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/context/runnable_context/lb_data.h"
+#include "vt/messaging/active.h"
+#include "vt/elm/elm_lb_data.h"
 #include "vt/vrt/collection/manager.h"
-#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
-#include "vt/timing/timing.h"
 
-#include <cassert>
-#include <type_traits>
+#include <memory>
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace ctx {
 
-template <typename ColT>
-/*static*/
-void CollectionStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
-  auto& stats = col->stats_;
-
-  vt_debug_print(
-    normal, lb,
-    "ElementStats: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
-    "msg->getPhase()={}\n",
-    print_ptr(col), col->getIndex(), stats.getPhase(), msg->getPhase()
-  );
-
-  vtAssert(stats.getPhase() == msg->getPhase(), "Phases must match");
-
-  auto const proxy = col->getProxy();
-  auto const subphase = getFocusedSubPhase(proxy);
-  theNodeStats()->addNodeStats(col->elm_id_, &col->stats_, subphase);
-
-  std::vector<uint64_t> idx;
-  for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
-    idx.push_back(static_cast<uint64_t>(col->getIndex()[i]));
-  }
-
-  auto migrate = [col](NodeType node){ col->migrate(node); };
-  theNodeStats()->registerCollectionInfo(col->elm_id_, proxy, idx, migrate);
+template <typename ElmT, typename MsgT>
+LBData::LBData(ElmT* in_elm, MsgT* msg)
+  : lb_data_(&in_elm->getLBData()),
+    cur_elm_id_(in_elm->getElmID()),
+    should_instrument_(msg->lbLiteInstrument())
+{
+  // record the communication LB data right away!
+  theCollection()->recordLBData(in_elm, msg);
 }
 
-}}}} /* end namespace vt::vrt::collection::balance */
+}} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_IMPL_H*/

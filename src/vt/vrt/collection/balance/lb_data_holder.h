@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 col_stats.h
+//                               lb_data_holder.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,43 +41,80 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_HOLDER_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_HOLDER_H
 
 #include "vt/config.h"
-#include "vt/elm/elm_stats.h"
-#include "vt/elm/elm_comm.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/phase_msg.h"
-#include "vt/vrt/collection/balance/stats_msg.h"
-#include "vt/vrt/collection/types/migratable.fwd.h"
+#include "vt/elm/elm_comm.h"
 
-#include <cstdint>
-#include <vector>
-#include <tuple>
 #include <unordered_map>
+#include <memory>
+
+#include <nlohmann/json_fwd.hpp>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct CollectionStats : elm::ElementStats {
-  static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
-  static SubphaseType getFocusedSubPhase(VirtualProxyType collection);
+/**
+ * \struct LBDataHolder
+ *
+ * \brief Data structure that holds LB data for a set of phases. Can
+ * output them as JSON.
+ */
+struct LBDataHolder {
+  LBDataHolder() = default;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    elm::ElementStats::serialize(s);
+  /**
+   * \brief Create \c LBDataHolder from input JSON
+   *
+   * \param[in] j the json that contains the LB data
+   */
+  LBDataHolder(nlohmann::json const& j);
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | node_data_;
+    s | node_comm_;
+    s | node_subphase_comm_;
+    s | node_idx_;
   }
 
+  /**
+   * \brief Output a phase's LB data to JSON
+   *
+   * \param[in] phase the phase
+   *
+   * \return the json data structure
+   */
+  std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
+
+  /**
+   * \brief Clear all LB data
+   */
+  void clear();
+
+private:
+  /**
+   * \brief Output an entity to json
+   *
+   * \param[in] j the json
+   * \param[in] elm_id the element to output
+   */
+  void outputEntity(nlohmann::json& j, ElementIDStruct const& elm_id) const;
+
 public:
-  template <typename ColT>
-  static void syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col);
-
-  friend struct collection::Migratable;
-
-protected:
-  static std::unordered_map<VirtualProxyType, SubphaseType> focused_subphase_;
+  /// Node timings for each local object
+  std::unordered_map<PhaseType, LoadMapType> node_data_;
+  /// Node communication graph for each local object
+  std::unordered_map<PhaseType, CommMapType> node_comm_;
+  /// Node communication graph for each subphase
+  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
+  /// Node indices for each ID along with the proxy ID
+  std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
+  /// Map from id to objgroup proxy
+  std::unordered_map<ElementIDStruct, ObjGroupProxyType> node_objgroup_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_STATS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_HOLDER_H*/

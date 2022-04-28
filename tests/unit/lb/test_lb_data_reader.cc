@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           test_lb_stats_reader.cc
+//                            test_lb_data_reader.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -46,9 +46,9 @@
 #include <vector>
 
 #include <vt/elm/elm_id_bits.h>
-#include <vt/vrt/collection/balance/node_stats.h>
-#include <vt/vrt/collection/balance/stats_data.h>
-#include <vt/vrt/collection/balance/stats_restart_reader.h>
+#include <vt/vrt/collection/balance/node_lb_data.h>
+#include <vt/vrt/collection/balance/lb_data_holder.h>
+#include <vt/vrt/collection/balance/lb_data_restart_reader.h>
 #include <vt/utils/json/json_appender.h>
 
 #include "test_parallel_harness.h"
@@ -56,10 +56,10 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestLBStatsReader : TestParallelHarness { };
+struct TestLBDataReader : TestParallelHarness { };
 using ElementIDType = uint64_t;
 
-TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
+TEST_F(TestLBDataReader, test_lb_data_read_1) {
 
   // Iter 0
   // Node 0 -> [0, 1, 2, 3, 4] // local ID
@@ -95,8 +95,8 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   std::stringstream stream{std::ios_base::out | std::ios_base::in};
   auto ap = std::make_unique<JSONAppender>("phases", std::move(stream), true);
 
-  using vt::vrt::collection::balance::StatsData;
-  auto sd = std::make_unique<StatsData>();
+  using vt::vrt::collection::balance::LBDataHolder;
+  auto lbdh = std::make_unique<LBDataHolder>();
 
   PhaseType phase = 0;
   double tval = 0.0;
@@ -104,23 +104,23 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   //--- Iteration 0
   for (auto&& elmID : myElemList) {
     //--- Use a dummy time value as it is not used.
-    sd->node_data_[phase][elmID].whole_phase_load = tval;
+    lbdh->node_data_[phase][elmID].whole_phase_load = tval;
   }
 
   //--- Iteration 1
   phase += 1;
   if (this_node != num_nodes - 1) {
-    sd->node_data_[phase][myElemList[0]].whole_phase_load = tval;
+    lbdh->node_data_[phase][myElemList[0]].whole_phase_load = tval;
   } else {
     for (auto&& elmID : myElemList) {
-      sd->node_data_[phase][elmID].whole_phase_load = tval;
+      lbdh->node_data_[phase][elmID].whole_phase_load = tval;
     }
     for (NodeType in = 0; in+1 < num_nodes; ++in) {
       for (uint64_t elmID = 1; elmID < numElements; ++elmID) {
         auto permID = elm::ElmIDBits::createCollectionImpl(
           true, elmID+1, in, in
         );
-        sd->node_data_[phase][permID].whole_phase_load = tval;
+        lbdh->node_data_[phase][permID].whole_phase_load = tval;
       }
     }
   }
@@ -128,22 +128,22 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   //--- Iteration 2
   phase += 1;
   for (auto&& elmID : myElemList) {
-    sd->node_data_[phase][elmID].whole_phase_load = tval;
+    lbdh->node_data_[phase][elmID].whole_phase_load = tval;
   }
 
   phase += 1;
 
-  // Write the stats
+  // Write the LB data
   for (PhaseType p = 0; p < phase; p++) {
-    auto json = sd->toJson(p);
+    auto json = lbdh->toJson(p);
     ap->addElm(*json);
   }
 
   stream = ap->finish();
 
   //--- Start the testing
-  auto ptr = vrt::collection::balance::StatsRestartReader::construct();
-  ptr->readStatsFromStream(std::move(stream));
+  auto ptr = vrt::collection::balance::LBDataRestartReader::construct();
+  ptr->readLBDataFromStream(std::move(stream));
 
   //--- Spin here so the test does not end before the communications complete
   vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });

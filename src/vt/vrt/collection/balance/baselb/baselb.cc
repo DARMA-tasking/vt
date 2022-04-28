@@ -48,7 +48,7 @@
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/timing/timing.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
@@ -64,7 +64,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   objgroup::proxy::Proxy<BaseLB> proxy,
   balance::LoadModel* model,
   StatisticMapType const& in_stats,
-  ElementCommType const& in_comm_stats,
+  ElementCommType const& in_comm_lb_data,
   TimeType total_load
 ) {
   start_time_ = timing::getCurrentTime();
@@ -72,7 +72,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   proxy_ = proxy;
   load_model_ = model;
 
-  importProcessorData(in_stats, in_comm_stats);
+  importProcessorData(in_stats, in_comm_lb_data);
 
   runInEpochCollective("BaseLB::startLB -> runLB", [this,total_load]{
     getArgs(phase_);
@@ -94,7 +94,7 @@ void BaseLB::importProcessorData(
 ) {
   vt_debug_print(
     normal, lb,
-    "importProcessorData: load stats size={}, load comm size={}\n",
+    "importProcessorData: load data size={}, load comm size={}\n",
     load_model_->getNumObjects(), comm_in.size()
   );
 

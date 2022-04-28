@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 elm_stats.h
+//                                elm_lb_data.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_ELM_ELM_STATS_H
-#define INCLUDED_VT_ELM_ELM_STATS_H
+#if !defined INCLUDED_VT_ELM_ELM_LB_DATA_H
+#define INCLUDED_VT_ELM_ELM_LB_DATA_H
 
 #include "vt/elm/elm_id.h"
 #include "vt/elm/elm_comm.h"
@@ -50,16 +50,16 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct NodeStats;
+struct NodeLBData;
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
 namespace vt { namespace elm {
 
-struct ElementStats {
-  ElementStats() = default;
-  ElementStats(ElementStats const&) = default;
-  ElementStats(ElementStats&&) = default;
+struct ElementLBData {
+  ElementLBData() = default;
+  ElementLBData(ElementLBData const&) = default;
+  ElementLBData(ElementLBData&&) = default;
 
   void startTime();
   void stopTime();
@@ -116,11 +116,11 @@ struct ElementStats {
 
 protected:
   /**
-   * \internal \brief Release stats data from phases prior to lookback
+   * \internal \brief Release LB data from phases prior to lookback
    */
-  void releaseStatsFromUnneededPhases(PhaseType phase, unsigned int look_back);
+  void releaseLBDataFromUnneededPhases(PhaseType phase, unsigned int look_back);
 
-  friend struct vrt::collection::balance::NodeStats;
+  friend struct vrt::collection::balance::NodeLBData;
 
 protected:
   bool cur_time_started_ = false;
@@ -136,4 +136,4 @@ protected:
 
 }} /* end namespace vt::elm */
 
-#endif /*INCLUDED_VT_ELM_ELM_STATS_H*/
+#endif /*INCLUDED_VT_ELM_ELM_LB_DATA_H*/

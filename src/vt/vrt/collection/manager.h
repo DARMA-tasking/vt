@@ -71,7 +71,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/runnable/invoke.h"
-#include "vt/context/runnable_context/lb_stats.fwd.h"
+#include "vt/context/runnable_context/lb_data.fwd.h"
 #include "vt/vrt/collection/param/construct_params.h"
 #include "vt/vrt/collection/param/construct_params_msg.h"
 
@@ -634,7 +634,7 @@ struct CollectionManager
   static void collectionMsgTypedHandler(MsgT* msg);
 
   /**
-   * \internal \brief Record statistics for collection message handler when a
+   * \internal \brief Record LB data for collection message handler when a
    * message arrives for the element.
    *
    * Records where the message came from, size of message, and type of
@@ -644,7 +644,7 @@ struct CollectionManager
    * \param[in] msg the message to deliver
    */
   template <typename ColT, typename MsgT>
-  static void recordStats(ColT* col_ptr, MsgT* msg);
+  static void recordLBData(ColT* col_ptr, MsgT* msg);
 
   /**
    * \brief Invoke function 'f' (with copyable return type) inline without going
@@ -1489,9 +1489,9 @@ private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmDestroyAttorney;
 
-  friend struct balance::CollectionStats;
-  friend struct elm::ElementStats;
-  friend struct ctx::LBStats;
+  friend struct balance::CollectionLBData;
+  friend struct elm::ElementLBData;
+  friend struct ctx::LBData;
 
   template <typename ColT>
   friend struct param::ConstructParams;
@@ -1704,7 +1704,7 @@ public:
   void serialize(SerializerT& s) {
     s | cleanup_fns_
       | release_lb_
-      | collect_stats_for_lb_
+      | collect_lb_data_for_lb_
       | next_collective_id_
       | next_rooted_id_
       | typeless_holder_
@@ -1802,7 +1802,7 @@ private:
 
 private:
   CleanupListFnType cleanup_fns_;
-  std::unordered_map<VirtualProxyType,ActionType> collect_stats_for_lb_;
+  std::unordered_map<VirtualProxyType,ActionType> collect_lb_data_for_lb_;
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
   VirtualIDType next_collective_id_ = 0;
   VirtualIDType next_rooted_id_ = 0;
@@ -1824,14 +1824,14 @@ private:
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.impl.h"
 #include "vt/vrt/collection/broadcast/broadcastable.impl.h"
 #include "vt/vrt/collection/rdmaable/rdmaable.impl.h"
-#include "vt/vrt/collection/balance/col_stats.impl.h"
+#include "vt/vrt/collection/balance/col_lb_data.impl.h"
 #include "vt/vrt/collection/types/indexable.impl.h"
 #include "vt/vrt/collection/dispatch/dispatch.impl.h"
 #include "vt/vrt/collection/dispatch/registry.impl.h"
 #include "vt/vrt/collection/types/base.impl.h"
 #include "vt/rdmahandle/manager.collection.impl.h"
 #include "vt/vrt/proxy/collection_proxy.impl.h"
-#include "vt/context/runnable_context/lb_stats.impl.h"
+#include "vt/context/runnable_context/lb_data.impl.h"
 #include "vt/context/runnable_context/collection.impl.h"
 
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"

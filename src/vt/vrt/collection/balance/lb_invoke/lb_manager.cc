@@ -49,13 +49,13 @@
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
-#include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
-#include "vt/vrt/collection/balance/stats_restart_reader.h"
+#include "vt/vrt/collection/balance/offlinelb/offlinelb.h"
+#include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 #include "vt/vrt/collection/balance/randomlb/randomlb.h"
 #include "vt/vrt/collection/messages/system_create.h"
@@ -106,8 +106,8 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   }
 
   //--- User-specified map without any change, thus do not run
-  if ((theConfig()->vt_lb_name == get_lb_names()[LBType::StatsMapLB]) and
-      not theStatsReader()->needsLB(phase)) {
+  if ((theConfig()->vt_lb_name == get_lb_names()[LBType::OfflineLB]) and
+      not theLBDataReader()->needsLB(phase)) {
     return LBType::NoLB;
   }
 
@@ -152,9 +152,9 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 
 void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   model_ = model;
-  auto nstats = theNodeStats();
-  model_->setLoads(nstats->getNodeLoad(),
-                   nstats->getNodeComm());
+  auto nlb_data = theNodeLBData();
+  model_->setLoads(nlb_data->getNodeLoad(),
+                   nlb_data->getNodeComm());
 }
 
 template <typename LB>
@@ -212,8 +212,8 @@ LBManager::runLB(
 
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm = &empty_comm;
-  auto iter = theNodeStats()->getNodeComm()->find(phase);
-  if (iter != theNodeStats()->getNodeComm()->end()) {
+  auto iter = theNodeLBData()->getNodeComm()->find(phase);
+  if (iter != theNodeLBData()->getNodeComm()->end()) {
     comm = &iter->second;
   }
 
@@ -273,7 +273,7 @@ void LBManager::startLB(
   case LBType::GreedyLB:       lb_instances_["chosen"] = makeLB<lb::GreedyLB>();       break;
   case LBType::RotateLB:       lb_instances_["chosen"] = makeLB<lb::RotateLB>();       break;
   case LBType::TemperedLB:     lb_instances_["chosen"] = makeLB<lb::TemperedLB>();     break;
-  case LBType::StatsMapLB:     lb_instances_["chosen"] = makeLB<lb::StatsMapLB>();     break;
+  case LBType::OfflineLB:     lb_instances_["chosen"] = makeLB<lb::OfflineLB>();     break;
   case LBType::RandomLB:       lb_instances_["chosen"] = makeLB<lb::RandomLB>();       break;
 #   if vt_check_enabled(zoltan)
   case LBType::ZoltanLB:       lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();       break;
@@ -320,8 +320,8 @@ void LBManager::printLBArgsHelp(LBType lb) {
   case LBType::RandomLB:
     help = lb::RandomLB::getInputKeysWithHelp();
     break;
-  case LBType::StatsMapLB:
-    help = lb::StatsMapLB::getInputKeysWithHelp();
+  case LBType::OfflineLB:
+    help = lb::OfflineLB::getInputKeysWithHelp();
     break;
 # if vt_check_enabled(zoltan)
   case LBType::ZoltanLB:
@@ -384,8 +384,8 @@ void LBManager::finishedLB(PhaseType phase) {
     "finishedLB\n"
   );
 
-  theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
-  theNodeStats()->outputStatsForPhase(phase);
+  theNodeLBData()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
+  theNodeLBData()->outputLBDataForPhase(phase);
 
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {
@@ -476,8 +476,8 @@ void LBManager::computeStatistics(
 
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm_data = &empty_comm;
-  auto iter = theNodeStats()->getNodeComm()->find(phase);
-  if (iter != theNodeStats()->getNodeComm()->end()) {
+  auto iter = theNodeLBData()->getNodeComm()->find(phase);
+  if (iter != theNodeLBData()->getNodeComm()->end()) {
     comm_data = &iter->second;
   }
 

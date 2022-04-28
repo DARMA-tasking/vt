@@ -50,7 +50,7 @@
 #include "vt/context/runnable_context/from_node.h"
 #include "vt/context/runnable_context/set_context.h"
 #include "vt/context/runnable_context/collection.h"
-#include "vt/context/runnable_context/lb_stats.h"
+#include "vt/context/runnable_context/lb_data.h"
 #include "vt/context/runnable_context/continuation.h"
 #include "vt/registry/auto/auto_registry_common.h"
 
@@ -161,53 +161,53 @@ struct RunnableMaker {
   }
 
   /**
-   * \brief Add LB stats for instrumentation
+   * \brief Add LB data for instrumentation
    *
    * \param[in] elm the element
    * \param[in] msg the associated message (might be different than the already
    * captured one)
    */
   template <typename ElmT, typename MsgU>
-  RunnableMaker&& withLBStats(ElmT* elm, MsgU* msg) {
+  RunnableMaker&& withLBData(ElmT* elm, MsgU* msg) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBStats>(elm, msg);
+    impl_->template addContext<ctx::LBData>(elm, msg);
 #endif
     return std::move(*this);
   }
 
   /**
-   * \brief Add LB stats for instrumentation (without a message)
+   * \brief Add LB data for instrumentation (without a message)
    *
    * \param[in] elm the element
    */
   template <typename ElmT>
-  RunnableMaker&& withLBStatsVoidMsg(ElmT* elm) {
-    return withLBStats(&elm->getStats(), elm->getElmID());
+  RunnableMaker&& withLBDataVoidMsg(ElmT* elm) {
+    return withLBData(&elm->getLBData(), elm->getElmID());
   }
 
   /**
-   * \brief Add LB stats for instrumentation directly with element ID and stats
+   * \brief Add LB data for instrumentation directly with element ID and LB data
    *
-   * \param[in] stats the stats
+   * \param[in] lb_data the LB data
    * \param[in] elm_id the element ID
    */
-  template <typename StatsT, typename T>
-  RunnableMaker&& withLBStats(StatsT* stats, T elm_id) {
+  template <typename LBDataT, typename T>
+  RunnableMaker&& withLBData(LBDataT* lb_data, T elm_id) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBStats>(stats, elm_id);
+    impl_->template addContext<ctx::LBData>(lb_data, elm_id);
 #endif
     return std::move(*this);
   }
 
   /**
-   * \brief Add LB stats for instrumentation
+   * \brief Add LB data for instrumentation
    *
    * \param[in] elm the element
    */
   template <typename ElmT>
-  RunnableMaker&& withLBStats(ElmT* elm) {
+  RunnableMaker&& withLBData(ElmT* elm) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBStats>(elm, msg_.get());
+    impl_->template addContext<ctx::LBData>(elm, msg_.get());
 #endif
     return std::move(*this);
   }

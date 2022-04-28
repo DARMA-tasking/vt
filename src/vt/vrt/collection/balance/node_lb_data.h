@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 node_stats.h
+//                                node_lb_data.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,20 +41,20 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_LB_DATA_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_LB_DATA_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_comm.h"
-#include "vt/elm/elm_stats.fwd.h"
+#include "vt/elm/elm_lb_data.fwd.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/types/migratable.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/timing/timing.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/utils/json/base_appender.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 
 #include <string>
 #include <unordered_map>
@@ -63,44 +63,44 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
- * \struct NodeStats
+ * \struct NodeLBData
  *
  * \brief A VT component that backs the instrumentation of virtualized entities
  * on each node, such as the objects that the collection manager orchestrates,
  * to provide data to the load balancing framework. The actual instrumentation
- * occurs in \c vt::vrt:collection::balance::ElementStats which is composed into
+ * occurs in \c vt::vrt:collection::balance::ElementLBData which is composed into
  * the elements of a collection.
  *
- * Collects statistics/timings on active function/methods for objects and
+ * Collects LB data/timings on active function/methods for objects and
  * communication between them on each node. After collecting this data, passes
  * it to the load balancing framework, specifically the
  * \c * vt::vrt::collection::balance::LBManager
  */
-struct NodeStats : runtime::component::Component<NodeStats> {
+struct NodeLBData : runtime::component::Component<NodeLBData> {
   using MigrateFnType       = std::function<void(NodeType)>;
 
   /**
-   * \internal \brief System call to construct \c NodeStats
+   * \internal \brief System call to construct \c NodeLBData
    */
-  NodeStats() = default;
+  NodeLBData() = default;
 
-  std::string name() override { return "NodeStats"; }
+  std::string name() override { return "NodeLBData"; }
 
 private:
   /**
-   * \internal \brief Setup the proxy for \c NodeStats
+   * \internal \brief Setup the proxy for \c NodeLBData
    *
    * \param[in] in_proxy the objgroup proxy
    */
-  void setProxy(objgroup::proxy::Proxy<NodeStats> in_proxy);
+  void setProxy(objgroup::proxy::Proxy<NodeLBData> in_proxy);
 
 public:
   /**
-   * \internal \brief Construct the NodeStats component
+   * \internal \brief Construct the NodeLBData component
    *
    * \return pointer to the component
    */
-  static std::unique_ptr<NodeStats> construct();
+  static std::unique_ptr<NodeLBData> construct();
 
   /**
    * \internal \brief Add collection element info
@@ -124,21 +124,21 @@ public:
   void registerObjGroupInfo(ElementIDStruct id, ObjGroupProxyType proxy);
 
   /**
-   * \internal \brief Add statistics for element (non-collection)
+   * \internal \brief Add LB data for element (non-collection)
    *
    * \param[in] id the element ID
-   * \param[in] in the stats
+   * \param[in] in the LB data
    * \param[in] focused_subphase the focused subphase (optional)
    */
-  void addNodeStats(
-    ElementIDStruct id, elm::ElementStats* in,
-    SubphaseType focused_subphase = elm::ElementStats::no_subphase
+  void addNodeLBData(
+    ElementIDStruct id, elm::ElementLBData* in,
+    SubphaseType focused_subphase = elm::ElementLBData::no_subphase
   );
 
   /**
-   * \internal \brief Clear/reset all statistics and IDs on this node
+   * \internal \brief Clear/reset all LB data and IDs on this node
    */
-  void clearStats();
+  void clearLBData();
 
   /**
    * \internal \brief Cleanup after LB runs
@@ -146,13 +146,13 @@ public:
   void startIterCleanup(PhaseType phase, unsigned int look_back);
 
   /**
-   * \internal \brief Output stats file for given phase based on instrumented
+   * \internal \brief Output LB data file for given phase based on instrumented
    * data
    *
-   * This outputs statistics in JSON format that includes task timings,
+   * This outputs LB data in JSON format that includes task timings,
    * mappings, and communication.
    */
-  void outputStatsForPhase(PhaseType phase);
+  void outputLBDataForPhase(PhaseType phase);
 
   /**
    * \internal \brief Generate the next object element ID for LB
@@ -224,13 +224,13 @@ public:
   void fatalError() override;
 
   /**
-   * \brief Get the underlying stats data
+   * \brief Get the underlying LB data
    *
    * \warning For testing only!
    *
-   * \return the stats data
+   * \return the LB data
    */
-  StatsData* getStatsData() { return stats_.get(); }
+  LBDataHolder* getLBData() { return lb_data_.get(); }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -240,23 +240,23 @@ public:
       | node_objgroup_lookup_
       | next_elm_
       | created_dir_
-      | stats_;
+      | lb_data_;
   }
 
 private:
   /**
-   * \internal \brief Create the stats file
+   * \internal \brief Create the LB data file
    */
-  void createStatsFile();
+  void createLBDataFile();
 
   /**
-   * \internal \brief Close the stats file
+   * \internal \brief Close the LB data file
    */
-  void closeStatsFile();
+  void closeLBDataFile();
 
 private:
   /// Local proxy to objgroup
-  objgroup::proxy::Proxy<NodeStats> proxy_;
+  objgroup::proxy::Proxy<NodeLBData> proxy_;
   /// Local migration type-free lambdas for each object
   std::unordered_map<ElementIDStruct,MigrateFnType> node_migrate_;
   /// Map from element ID to the collection's virtual proxy (untyped)
@@ -265,20 +265,20 @@ private:
   std::unordered_map<ElementIDStruct,ObjGroupProxyType> node_objgroup_lookup_;
   /// The current element ID
   ElementIDType next_elm_ = 1;
-  /// Whether the stats directory has been created
+  /// Whether the LB data directory has been created
   bool created_dir_ = false;
-  /// The appender for outputting stat files in JSON format
-  std::unique_ptr<util::json::BaseAppender> stat_writer_ = nullptr;
-  /// The struct that holds all the statistic data
-  std::unique_ptr<StatsData> stats_ = nullptr;
+  /// The appender for outputting LB data files in JSON format
+  std::unique_ptr<util::json::BaseAppender> lb_data_writer_ = nullptr;
+  /// The struct that holds all the LB data
+  std::unique_ptr<LBDataHolder> lb_data_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
 namespace vt {
 
-extern vrt::collection::balance::NodeStats* theNodeStats();
+extern vrt::collection::balance::NodeLBData* theNodeLBData();
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_LB_DATA_H*/

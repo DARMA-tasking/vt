@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                statsmaplb.cc
+//                                 offlinelb.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,28 +41,37 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/baselb/baselb.h"
-#include "vt/vrt/collection/balance/node_stats.h"
-#include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
-#include "vt/vrt/collection/balance/stats_restart_reader.h"
-#include "vt/context/context.h"
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_OFFLINELB_OFFLINELB_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_OFFLINELB_OFFLINELB_H
+
+#include "vt/objgroup/proxy/proxy_objgroup.h"
+
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
-  proxy_ = in_proxy;
-}
+struct BaseLB;
 
-void StatsMapLB::runLB(TimeType) {
-  auto const& myNewList = theStatsReader()->getMoveList(phase_);
-  for (size_t in = 0; in < myNewList.size(); in += 2) {
-    auto this_node = theContext()->getNode();
-    ObjIDType id{myNewList[in], this_node};
-    migrateObjectTo(id, myNewList[in+1]);
+struct OfflineLB : BaseLB {
+  OfflineLB() = default;
+  OfflineLB(OfflineLB const &) = delete;
+  OfflineLB(OfflineLB &&) noexcept = default;
+  OfflineLB &operator=(OfflineLB const &) = delete;
+  OfflineLB &operator=(OfflineLB &&) noexcept = default;
+  virtual ~OfflineLB() = default;
+
+  void init(objgroup::proxy::Proxy<OfflineLB> in_proxy);
+  void runLB(TimeType) override;
+  void inputParams(balance::SpecEntry* spec) override { }
+
+  static std::unordered_map<std::string, std::string> getInputKeysWithHelp() {
+    return std::unordered_map<std::string, std::string>{};
   }
 
-  theStatsReader()->clearMoveList(phase_);
-}
+private:
+  objgroup::proxy::Proxy<OfflineLB> proxy_ = {};
+};
 
 }}}} /* end namespace vt::vrt::collection::lb */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_OFFLINELB_OFFLINELB_H*/

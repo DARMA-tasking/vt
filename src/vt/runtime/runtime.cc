@@ -67,7 +67,7 @@
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
-#include "vt/vrt/collection/balance/stats_restart_reader.h"
+#include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/timetrigger/time_trigger_manager.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/epoch/epoch_manip.h"
@@ -388,11 +388,11 @@ bool Runtime::tryFinalize(bool const disable_sig) {
   return finalize_now;
 }
 
-bool Runtime::needStatsRestartReader() {
+bool Runtime::needLBDataRestartReader() {
   #if vt_check_enabled(lblite)
-    if (arg_config_->config_.vt_lb_stats) {
+    if (arg_config_->config_.vt_lb_data) {
       auto lbNames = vrt::collection::balance::get_lb_names();
-      auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
+      auto mapLB = vrt::collection::balance::LBType::OfflineLB;
       if (arg_config_->config_.vt_lb_name == lbNames[mapLB]) {
         return true;
       }
@@ -659,7 +659,7 @@ void Runtime::initializeComponents() {
   using component::Deps;
 
   p_ = std::make_unique<ComponentPack>();
-  bool addStatsRestartReader = needStatsRestartReader();
+  bool addLBDataRestartReader = needLBDataRestartReader();
 # if vt_check_enabled(trace_enabled)
   std::string const prog_name = arg_config_->config_.prog_name;
 # endif
@@ -849,7 +849,7 @@ void Runtime::initializeComponents() {
       group::GroupManager,                 // For broadcasts
       sched::Scheduler,                    // For scheduling work
       location::LocationManager,           // For element location
-      vrt::collection::balance::NodeStats, // For stat collection
+      vrt::collection::balance::NodeLBData, // For LB data collection
       vrt::collection::balance::LBManager  // For load balancing
     >{}
   );
@@ -864,17 +864,17 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_->registerComponent<vrt::collection::balance::NodeStats>(
-    &theNodeStats, Deps<
+  p_->registerComponent<vrt::collection::balance::NodeLBData>(
+    &theNodeLBData, Deps<
       ctx::Context,                       // Everything depends on theContext
       phase::PhaseManager                 // For phase structure
     >{}
   );
 
-  p_->registerComponent<vrt::collection::balance::StatsRestartReader>(
-    &theStatsReader, Deps<
+  p_->registerComponent<vrt::collection::balance::LBDataRestartReader>(
+    &theLBDataReader, Deps<
       ctx::Context,                        // Everything depends on theContext
-      vrt::collection::balance::NodeStats  // Depends on node stats for input
+      vrt::collection::balance::NodeLBData  // Depends on node LB data for input
     >{}
   );
 
@@ -882,7 +882,7 @@ void Runtime::initializeComponents() {
     &theLBManager, Deps<
       ctx::Context,                        // Everything depends on theContext
       util::memory::MemoryUsage,           // Output mem usage on phase change
-      vrt::collection::balance::NodeStats, // For stat collection
+      vrt::collection::balance::NodeLBData, // For LB data collection
       phase::PhaseManager                  // For phase structure
     >{}
   );
@@ -930,13 +930,13 @@ void Runtime::initializeComponents() {
   p_->add<registry::Registry>();
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
-  p_->add<vrt::collection::balance::NodeStats>();
+  p_->add<vrt::collection::balance::NodeLBData>();
   p_->add<vrt::collection::balance::LBManager>();
   p_->add<timetrigger::TimeTriggerManager>();
   p_->add<phase::PhaseManager>();
 
-  if (addStatsRestartReader) {
-    p_->add<vrt::collection::balance::StatsRestartReader>();
+  if (addLBDataRestartReader) {
+    p_->add<vrt::collection::balance::LBDataRestartReader>();
   }
 
   #if vt_threading_enabled
@@ -1177,13 +1177,13 @@ void Runtime::printMemoryFootprint() const {
       printComponentFootprint(
         static_cast<util::memory::MemoryUsage*>(base)
       );
-    } else if (name == "NodeStats") {
+    } else if (name == "NodeLBData") {
       printComponentFootprint(
-        static_cast<vrt::collection::balance::NodeStats*>(base)
+        static_cast<vrt::collection::balance::NodeLBData*>(base)
       );
-    } else if (name == "StatsRestartReader") {
+    } else if (name == "LBDataRestartReader") {
       printComponentFootprint(
-        static_cast<vrt::collection::balance::StatsRestartReader*>(base)
+        static_cast<vrt::collection::balance::LBDataRestartReader*>(base)
       );
     } else if (name == "LBManager") {
       printComponentFootprint(

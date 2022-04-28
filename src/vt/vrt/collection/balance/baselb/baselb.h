@@ -105,7 +105,7 @@ struct BaseLB {
     objgroup::proxy::Proxy<BaseLB> proxy,
     balance::LoadModel *model,
     StatisticMapType const& in_stats,
-    ElementCommType const& in_comm_stats,
+    ElementCommType const& in_comm_lb_data,
     TimeType total_load
   );
 

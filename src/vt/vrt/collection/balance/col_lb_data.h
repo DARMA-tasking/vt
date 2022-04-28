@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 lb_stats.cc
+//                                col_lb_data.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,39 +41,43 @@
 //@HEADER
 */
 
-#include "vt/context/runnable_context/lb_stats.h"
-#include "vt/vrt/collection/manager.h"
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_H
 
-namespace vt { namespace ctx {
+#include "vt/config.h"
+#include "vt/elm/elm_lb_data.h"
+#include "vt/elm/elm_comm.h"
+#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/phase_msg.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
+#include "vt/vrt/collection/types/migratable.fwd.h"
 
-void LBStats::begin() {
-  // record start time
-  if (should_instrument_) {
-    stats_->startTime();
+#include <cstdint>
+#include <vector>
+#include <tuple>
+#include <unordered_map>
+
+namespace vt { namespace vrt { namespace collection { namespace balance {
+
+struct CollectionLBData : elm::ElementLBData {
+  static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
+  static SubphaseType getFocusedSubPhase(VirtualProxyType collection);
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    elm::ElementLBData::serialize(s);
   }
-}
 
-void LBStats::end() {
-  // record end time
-  if (should_instrument_) {
-    stats_->stopTime();
-  }
-}
+public:
+  template <typename ColT>
+  static void syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col);
 
-void LBStats::send(elm::ElementIDStruct dest, MsgSizeType bytes) {
-  stats_->sendToEntity(dest, cur_elm_id_, bytes);
-}
+  friend struct collection::Migratable;
 
-void LBStats::suspend() {
-  end();
-}
+protected:
+  static std::unordered_map<VirtualProxyType, SubphaseType> focused_subphase_;
+};
 
-void LBStats::resume() {
-  begin();
-}
+}}}} /* end namespace vt::vrt::collection::balance */
 
-typename LBStats::ElementIDStruct const& LBStats::getCurrentElementID() const {
-  return cur_elm_id_;
-}
-
-}} /* end namespace vt::ctx */
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_H*/

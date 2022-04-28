@@ -224,7 +224,7 @@ struct LoadModel
 
   /**
    * Object enumeration, to abstract away access to the underlying structures
-   * from NodeStats
+   * from NodeLBData
    *
    * The `updateLoads` method must have been called before any call to
    * this.
@@ -233,7 +233,7 @@ struct LoadModel
 
   /**
    * Object enumeration, to abstract away access to the underlying structures
-   * from NodeStats
+   * from NodeLBData
    *
    * The `updateLoads` method must have been called before any call to
    * this.
@@ -242,7 +242,7 @@ struct LoadModel
 
   /**
    * Object enumeration, to abstract away access to the underlying structures
-   * from NodeStats
+   * from NodeLBData
    *
    * The `updateLoads` method must have been called before any call to
    * this.

@@ -38,7 +38,7 @@ and passing it to `vt::initialize`:
 int main(int argc, char** argv) {
   arguments::AppConfig appConfig{};
   appConfig.vt_lb_name = "RotateLB";
-  appConfig.vt_lb_stats = true;
+  appConfig.vt_lb_data = true;
 
   vt::initialize(argc, argv, &appConfig);
    // program here
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 
   arguments::AppConfig appConfig{};
   appConfig.vt_lb_name = "RotateLB";
-  appConfig.vt_lb_stats = true;
+  appConfig.vt_lb_data = true;
 
   vt::initialize(argc, argv, &MPI_COMM_WORLD, &appConfig);
    // program here

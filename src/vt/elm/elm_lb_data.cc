@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 elm_stats.cc
+//                                elm_lb_data.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,28 +41,28 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_ELM_ELM_STATS_CC
-#define INCLUDED_VT_ELM_ELM_STATS_CC
+#if !defined INCLUDED_VT_ELM_ELM_LB_DATA_CC
+#define INCLUDED_VT_ELM_ELM_LB_DATA_CC
 
-#include "vt/elm/elm_stats.h"
+#include "vt/elm/elm_lb_data.h"
 
 #include "vt/config.h"
 
 namespace vt { namespace elm {
 
-void ElementStats::startTime() {
+void ElementLBData::startTime() {
   TimeTypeWrapper const start_time = timing::getCurrentTime();
   cur_time_ = start_time.seconds();
   cur_time_started_ = true;
 
   vt_debug_print(
     verbose, lb,
-    "ElementStats: startTime: time={}\n",
+    "ElementLBData: startTime: time={}\n",
     start_time
   );
 }
 
-void ElementStats::stopTime() {
+void ElementLBData::stopTime() {
   TimeTypeWrapper const stop_time = timing::getCurrentTime();
   TimeTypeWrapper const total_time = stop_time.seconds() - cur_time_;
   //vtAssert(cur_time_started_, "Must have started time");
@@ -74,25 +74,25 @@ void ElementStats::stopTime() {
 
   vt_debug_print(
     verbose, lb,
-    "ElementStats: stopTime: time={}, total={}, started={}\n",
+    "ElementLBData: stopTime: time={}, total={}, started={}\n",
     stop_time, total_time, started
   );
 }
 
-void ElementStats::sendToEntity(
+void ElementLBData::sendToEntity(
   ElementIDStruct to, ElementIDStruct from, double bytes
 ) {
   elm::CommKey key(elm::CommKey::SendRecvTag{}, from, to, false);
   sendComm(key, bytes);
 }
 
-void ElementStats::sendComm(elm::CommKey key, double bytes) {
+void ElementLBData::sendComm(elm::CommKey key, double bytes) {
   phase_comm_[cur_phase_][key].sendMsg(bytes);
   subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
   subphase_comm_[cur_phase_].at(cur_subphase_)[key].sendMsg(bytes);
 }
 
-void ElementStats::recvComm(
+void ElementLBData::recvComm(
   elm::CommKey key, double bytes
 ) {
   phase_comm_[cur_phase_][key].receiveMsg(bytes);
@@ -100,7 +100,7 @@ void ElementStats::recvComm(
   subphase_comm_[cur_phase_].at(cur_subphase_)[key].receiveMsg(bytes);
 }
 
-void ElementStats::recvObjData(
+void ElementLBData::recvObjData(
   ElementIDStruct pto,
   ElementIDStruct pfrom, double bytes, bool bcast
 ) {
@@ -108,7 +108,7 @@ void ElementStats::recvObjData(
   recvComm(key, bytes);
 }
 
-void ElementStats::recvFromNode(
+void ElementLBData::recvFromNode(
   ElementIDStruct pto, NodeType from,
   double bytes, bool bcast
 ) {
@@ -116,7 +116,7 @@ void ElementStats::recvFromNode(
   recvComm(key, bytes);
 }
 
-void ElementStats::recvToNode(
+void ElementLBData::recvToNode(
   NodeType to, ElementIDStruct pfrom,
   double bytes, bool bcast
 ) {
@@ -124,7 +124,7 @@ void ElementStats::recvToNode(
   recvComm(key, bytes);
 }
 
-void ElementStats::addTime(TimeTypeWrapper const& time) {
+void ElementLBData::addTime(TimeTypeWrapper const& time) {
   phase_timings_[cur_phase_] += time.seconds();
 
   subphase_timings_[cur_phase_].resize(cur_subphase_ + 1);
@@ -132,16 +132,16 @@ void ElementStats::addTime(TimeTypeWrapper const& time) {
 
   vt_debug_print(
     verbose,lb,
-    "ElementStats: addTime: time={}, cur_load={}\n",
+    "ElementLBData: addTime: time={}, cur_load={}\n",
     time,
     TimeTypeWrapper(phase_timings_[cur_phase_])
   );
 }
 
-void ElementStats::updatePhase(PhaseType const& inc) {
+void ElementLBData::updatePhase(PhaseType const& inc) {
   vt_debug_print(
     verbose, lb,
-    "ElementStats: updatePhase: cur_phase_={}, inc={}\n",
+    "ElementLBData: updatePhase: cur_phase_={}, inc={}\n",
     cur_phase_, inc
   );
 
@@ -155,22 +155,22 @@ void ElementStats::updatePhase(PhaseType const& inc) {
   subphase_comm_[cur_phase_];
 }
 
-void ElementStats::resetPhase() {
+void ElementLBData::resetPhase() {
   cur_phase_ = fst_lb_phase;
 }
 
-PhaseType ElementStats::getPhase() const {
+PhaseType ElementLBData::getPhase() const {
   return cur_phase_;
 }
 
-TimeType ElementStats::getLoad(PhaseType const& phase) const {
+TimeType ElementLBData::getLoad(PhaseType const& phase) const {
   auto iter = phase_timings_.find(phase);
   if (iter != phase_timings_.end()) {
     TimeTypeWrapper const total_load = phase_timings_.at(phase);
 
     vt_debug_print(
       verbose, lb,
-      "ElementStats: getLoad: load={}, phase={}, size={}\n",
+      "ElementLBData: getLoad: load={}, phase={}, size={}\n",
       total_load, phase, phase_timings_.size()
     );
 
@@ -180,7 +180,7 @@ TimeType ElementStats::getLoad(PhaseType const& phase) const {
   }
 }
 
-TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
+TimeType ElementLBData::getLoad(PhaseType phase, SubphaseType subphase) const {
   if (subphase == no_subphase)
     return getLoad(phase);
 
@@ -191,52 +191,52 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
 
   vt_debug_print(
     verbose, lb,
-    "ElementStats: getLoad: load={}, phase={}, subphase={}\n",
+    "ElementLBData: getLoad: load={}, phase={}, subphase={}\n",
     total_load, phase, subphase
   );
 
   return total_load.seconds();
 }
 
-std::vector<TimeType> const& ElementStats::getSubphaseTimes(PhaseType phase) {
+std::vector<TimeType> const& ElementLBData::getSubphaseTimes(PhaseType phase) {
   return subphase_timings_[phase];
 }
 
 CommMapType const&
-ElementStats::getComm(PhaseType const& phase) {
+ElementLBData::getComm(PhaseType const& phase) {
   auto const& phase_comm = phase_comm_[phase];
 
   vt_debug_print(
     verbose, lb,
-    "ElementStats: getComm: comm size={}, phase={}\n",
+    "ElementLBData: getComm: comm size={}, phase={}\n",
     phase_comm.size(), phase
   );
 
   return phase_comm;
 }
 
-std::vector<CommMapType> const& ElementStats::getSubphaseComm(PhaseType phase) {
+std::vector<CommMapType> const& ElementLBData::getSubphaseComm(PhaseType phase) {
   auto const& subphase_comm = subphase_comm_[phase];
 
   vt_debug_print(
     verbose, lb,
-    "ElementStats: getSubphaseComm: comm size={}, phase={}\n",
+    "ElementLBData: getSubphaseComm: comm size={}, phase={}\n",
     subphase_comm.size(), phase
   );
 
   return subphase_comm;
 }
 
-void ElementStats::setSubPhase(SubphaseType subphase) {
+void ElementLBData::setSubPhase(SubphaseType subphase) {
   vtAssert(subphase < no_subphase, "subphase must be less than sentinel");
   cur_subphase_ = subphase;
 }
 
-SubphaseType ElementStats::getSubPhase() const {
+SubphaseType ElementLBData::getSubPhase() const {
   return cur_subphase_;
 }
 
-void ElementStats::releaseStatsFromUnneededPhases(PhaseType phase, unsigned int look_back) {
+void ElementLBData::releaseLBDataFromUnneededPhases(PhaseType phase, unsigned int look_back) {
   if (phase >= look_back) {
     phase_timings_.erase(phase - look_back);
     subphase_timings_.erase(phase - look_back);
@@ -245,22 +245,22 @@ void ElementStats::releaseStatsFromUnneededPhases(PhaseType phase, unsigned int 
   }
 }
 
-std::size_t ElementStats::getLoadPhaseCount() const {
+std::size_t ElementLBData::getLoadPhaseCount() const {
   return phase_timings_.size();
 }
 
-std::size_t ElementStats::getCommPhaseCount() const {
+std::size_t ElementLBData::getCommPhaseCount() const {
   return phase_comm_.size();
 }
 
-std::size_t ElementStats::getSubphaseLoadPhaseCount() const {
+std::size_t ElementLBData::getSubphaseLoadPhaseCount() const {
   return subphase_timings_.size();
 }
 
-std::size_t ElementStats::getSubphaseCommPhaseCount() const {
+std::size_t ElementLBData::getSubphaseCommPhaseCount() const {
   return subphase_comm_.size();
 }
 
 }} /* end namespace vt::elm */
 
-#endif /*INCLUDED_VT_ELM_ELM_STATS_CC*/
+#endif /*INCLUDED_VT_ELM_ELM_LB_DATA_CC*/

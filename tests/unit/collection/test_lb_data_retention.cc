@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          test_lbstats_retention.cc
+//                          test_lb_data_retention.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include <vt/vrt/collection/balance/col_stats.h>
+#include <vt/vrt/collection/balance/col_lb_data.h>
 #include <vt/vrt/collection/balance/model/persistence_median_last_n.h>
 #include <vt/vrt/collection/balance/model/load_model.h>
 #include <vt/vrt/collection/balance/lb_invoke/lb_manager.h>
@@ -66,11 +66,11 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
 
   static void colHandler(MyMsg<TestCol>* msg, TestCol* col) {
 
-    auto& stats = col->stats_;
-    auto load_phase_count = stats.getLoadPhaseCount();
-    auto comm_phase_count = stats.getCommPhaseCount();
-    auto sp_load_phase_count = stats.getSubphaseLoadPhaseCount();
-    auto sp_comm_phase_count = stats.getSubphaseCommPhaseCount();
+    auto& lb_data = col->lb_data_;
+    auto load_phase_count = lb_data.getLoadPhaseCount();
+    auto comm_phase_count = lb_data.getCommPhaseCount();
+    auto sp_load_phase_count = lb_data.getSubphaseLoadPhaseCount();
+    auto sp_comm_phase_count = lb_data.getSubphaseCommPhaseCount();
 
     #if vt_check_enabled(lblite)
       auto phase = col->prevCalls();
@@ -105,14 +105,14 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
   }
 };
 
-using TestLBstatsRetention = TestParallelHarness;
+using TestLBDataRetention = TestParallelHarness;
 
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::PersistenceMedianLastN;
 
 static constexpr int32_t const num_elms = 16;
 
-TEST_F(TestLBstatsRetention, test_lbstats_retention_last1) {
+TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
   static constexpr int const num_phases = 5;
 
   // We must have more or equal number of elements than nodes for this test to
@@ -148,7 +148,7 @@ TEST_F(TestLBstatsRetention, test_lbstats_retention_last1) {
   }
 }
 
-TEST_F(TestLBstatsRetention, test_lbstats_retention_last2) {
+TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
   static constexpr int const num_phases = 6;
 
   // We must have more or equal number of elements than nodes for this test to
@@ -184,7 +184,7 @@ TEST_F(TestLBstatsRetention, test_lbstats_retention_last2) {
   }
 }
 
-TEST_F(TestLBstatsRetention, test_lbstats_retention_last4) {
+TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
   static constexpr int const num_phases = 8;
 
   // We must have more or equal number of elements than nodes for this test to

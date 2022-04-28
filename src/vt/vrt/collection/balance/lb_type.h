@@ -58,7 +58,7 @@ enum struct LBType : int8_t {
   , HierarchicalLB   = 2
   , RotateLB         = 3
   , TemperedLB       = 4
-  , StatsMapLB       = 5
+  , OfflineLB        = 5
 # if vt_check_enabled(zoltan)
   , ZoltanLB         = 6
 # endif

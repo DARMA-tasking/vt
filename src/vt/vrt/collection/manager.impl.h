@@ -66,7 +66,7 @@
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/holders/collection_context_holder.h"
 #include "vt/vrt/collection/collection_directory.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 #include "vt/registry/auto/collection/auto_registry_collection.h"
@@ -223,7 +223,7 @@ CollectionManager::collectionAutoMsgDeliver(
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
-    .withLBStats(base, msg)
+    .withLBData(base, msg)
     .runOrEnqueue(immediate);
 }
 
@@ -246,7 +246,7 @@ CollectionManager::collectionAutoMsgDeliver(
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
-    .withLBStats(base)
+    .withLBData(base)
     .runOrEnqueue(immediate);
 }
 
@@ -354,7 +354,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 }
 
 template <typename ColT, typename MsgT>
-/*static*/ void CollectionManager::recordStats(ColT* col_ptr, MsgT* msg) {
+/*static*/ void CollectionManager::recordLBData(ColT* col_ptr, MsgT* msg) {
   auto const pfrom = msg->getSenderElm();
 
   if (pfrom.id == elm::no_element_id) {
@@ -362,12 +362,12 @@ template <typename ColT, typename MsgT>
   }
 
   auto const pto = col_ptr->getElmID();
-  auto& stats = col_ptr->getStats();
+  auto& lb_data = col_ptr->getLBData();
   auto const msg_size = serialization::MsgSizer<MsgT>::get(msg);
   auto const cat = msg->getCat();
   vt_debug_print(
     normal, vrt_coll,
-    "recordStats: receive msg: elm(to={}, from={}),"
+    "recordLBData: receive msg: elm(to={}, from={}),"
     " no={}, size={}, category={}\n",
     pto, pfrom, elm::no_element_id, msg_size,
     static_cast<typename std::underlying_type<elm::CommCategory>::type>(cat)
@@ -377,14 +377,14 @@ template <typename ColT, typename MsgT>
     cat == elm::CommCategory::Broadcast
   ) {
     bool bcast = cat == elm::CommCategory::SendRecv ? false : true;
-    stats.recvObjData(pto, pfrom, msg_size, bcast);
+    lb_data.recvObjData(pto, pfrom, msg_size, bcast);
   } else if (
     cat == elm::CommCategory::NodeToCollection or
     cat == elm::CommCategory::NodeToCollectionBcast
   ) {
     bool bcast = cat == elm::CommCategory::NodeToCollection ? false : true;
     auto nfrom = msg->getFromNode();
-    stats.recvFromNode(pto, nfrom, msg_size, bcast);
+    lb_data.recvFromNode(pto, nfrom, msg_size, bcast);
   }
 }
 
@@ -419,7 +419,7 @@ util::Copyable<Type> CollectionManager::invoke(
 
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
-    .withLBStatsVoidMsg(ptr)
+    .withLBDataVoidMsg(ptr)
     .withExplicitTask([&]{
       result = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
     })
@@ -439,7 +439,7 @@ util::NotCopyable<Type> CollectionManager::invoke(
 
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
-    .withLBStatsVoidMsg(ptr)
+    .withLBDataVoidMsg(ptr)
     .withExplicitTask([&]{
       auto&& ret = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
       result = std::move(ret);
@@ -459,7 +459,7 @@ util::IsVoidReturn<Type> CollectionManager::invoke(
 
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
-    .withLBStatsVoidMsg(ptr)
+    .withLBDataVoidMsg(ptr)
     .withExplicitTask([&]{
       runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
     })
@@ -1119,7 +1119,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 # endif
 
   // set bit so it isn't recorded as it routes through bare handlers
-  envelopeSetCommStatsRecordedAboveBareHandler(msg->env, true);
+  envelopeSetCommLBDataRecordedAboveBareHandler(msg->env, true);
 
 # if vt_check_enabled(trace_enabled)
   // Create the trace creation event here to connect it a higher semantic
@@ -1342,14 +1342,14 @@ void CollectionManager::insertMetaCollection(
 
   /**
    * Type-erase some lambdas for doing the collective broadcast that collects up
-   * the statistics on each node for each collection element
+   * the LB data on each node for each collection element
    */
-  collect_stats_for_lb_[proxy] = [bits=proxy]{
+  collect_lb_data_for_lb_[proxy] = [bits=proxy]{
     using namespace balance;
     using MsgType = CollectStatsMsg<ColT>;
     auto const phase = thePhase()->getCurrentPhase();
     CollectionProxyWrapType<ColT> p{bits};
-    p.template broadcastCollective<MsgType,CollectionStats::syncNextPhase<ColT>>(
+    p.template broadcastCollective<MsgType,CollectionLBData::syncNextPhase<ColT>>(
       phase
     );
   };
@@ -1696,7 +1696,7 @@ void CollectionManager::insert(
 
     auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
     auto raw_ptr = elm_holder->lookup(idx).getRawPtr();
-    raw_ptr->getStats().updatePhase(thePhase()->getCurrentPhase());
+    raw_ptr->getLBData().updatePhase(thePhase()->getCurrentPhase());
   } else if (insert_node != this_node) {
     auto msg = makeMessage<InsertMsg<ColT, MsgT>>(
       proxy, idx, insert_node, mapped_node, modify_epoch, insert_msg
@@ -2263,7 +2263,7 @@ void CollectionManager::restoreFromFileInPlace(
 
     auto ptr = elm_holder->lookup(idx).getRawPtr();
     checkpoint::deserializeInPlaceFromFile<ColT>(file_name, static_cast<ColT*>(ptr));
-    ptr->stats_.resetPhase();
+    ptr->lb_data_.resetPhase();
   }
 }
 
@@ -2306,7 +2306,7 @@ CollectionManager::restoreFromFile(
     // @todo: error check the file read with bytes in directory
 
     auto col_ptr = checkpoint::deserializeFromFile<ColT>(file_name);
-    col_ptr->stats_.resetPhase();
+    col_ptr->lb_data_.resetPhase();
     elms.emplace_back(std::make_tuple(idx, std::move(col_ptr)));
   }
 

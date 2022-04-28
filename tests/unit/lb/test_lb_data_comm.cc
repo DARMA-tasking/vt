@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            test_lb_stats_comm.cc
+//                             test_lb_data_comm.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -68,23 +68,23 @@ namespace vt { namespace tests { namespace unit { namespace comm {
  *  --------------------------------------
  */
 
-using TestLBStatsComm = TestParallelHarness;
-using StatsData = vt::vrt::collection::balance::StatsData;
+using TestLBDataComm = TestParallelHarness;
+using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
 
-StatsData getStatsDataForPhase(vt::PhaseType phase) {
+LBDataHolder getLBDataForPhase(vt::PhaseType phase) {
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
   using vt::util::json::DecompressionInputContainer;
-  using vt::vrt::collection::balance::StatsData;
+  using vt::vrt::collection::balance::LBDataHolder;
   using json = nlohmann::json;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
   auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), true);
-  auto j = vt::theNodeStats()->getStatsData()->toJson(phase);
+  auto j = vt::theNodeLBData()->getLBData()->toJson(phase);
   ap->addElm(*j);
   ss = ap->finish();
   auto c = DecompressionInputContainer{
     DecompressionInputContainer::AnyStreamTag{}, std::move(ss)
   };
-  return StatsData{json::parse(c)};
+  return LBDataHolder{json::parse(c)};
 }
 
 namespace {
@@ -270,7 +270,7 @@ void doReduce(MyMsg*, MyCol* col) {
 }
 
 // ColT -> ColT, expected communication edge on receive side
-TEST_F(TestLBStatsComm, test_lb_stats_comm_col_to_col_send) {
+TEST_F(TestLBDataComm, test_lb_data_comm_col_to_col_send) {
   auto range = vt::Index1D{dim1};
   auto proxy = vt::makeCollection<MyCol>()
     .bounds(range)
@@ -296,8 +296,8 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_col_to_col_send) {
   });
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   // Check that communication exists on the receive side as expected
   for (int i = 0; i < dim1; i++) {
@@ -326,7 +326,7 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_col_to_col_send) {
 }
 
 // ColT -> ObjGroup, expected communication edge on send side
-TEST_F(TestLBStatsComm, test_lb_stats_comm_col_to_objgroup_send) {
+TEST_F(TestLBDataComm, test_lb_data_comm_col_to_objgroup_send) {
   auto range = vt::Index1D{dim1};
   auto proxy = vt::makeCollection<MyCol>()
     .bounds(range)
@@ -354,8 +354,8 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_col_to_objgroup_send) {
   });
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -389,7 +389,7 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_col_to_objgroup_send) {
 }
 
 // ObjGroup -> ColT, expected communication edge on receive side
-TEST_F(TestLBStatsComm, test_lb_stats_comm_objgroup_to_col_send) {
+TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_col_send) {
   auto range = vt::Index1D{dim1};
   auto proxy = vt::makeCollection<MyCol>()
     .bounds(range)
@@ -400,7 +400,7 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_objgroup_to_col_send) {
 
   vt::runInEpochCollective("simulateObjGroupColTSends", [&]{
     auto node = theContext()->getNode();
-    // @note: .invoke does not work here because it doesn't create the LBStats
+    // @note: .invoke does not work here because it doesn't create the LBData
     // context!
     obj_proxy(node).send<ColProxyMsg, &MyObj::simulateObjGroupColTSends>(proxy);
   });
@@ -416,8 +416,8 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_objgroup_to_col_send) {
   });
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -450,13 +450,13 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_objgroup_to_col_send) {
 }
 
 // ObjGroup -> ObjGroup, expected communication edge on send side
-TEST_F(TestLBStatsComm, test_lb_stats_comm_objgroup_to_objgroup_send) {
+TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_objgroup_send) {
   auto obj_proxy_a = vt::theObjGroup()->makeCollective<MyObj>();
   auto obj_proxy_b = vt::theObjGroup()->makeCollective<MyObj>();
 
   vt::runInEpochCollective("simulateObjGroupObjGroupSends", [&]{
     auto node = theContext()->getNode();
-    // @note: .invoke does not work here because it doesn't create the LBStats
+    // @note: .invoke does not work here because it doesn't create the LBData
     // context!
     obj_proxy_a(node).send<ProxyMsg, &MyObj::simulateObjGroupObjGroupSends>(
       obj_proxy_b
@@ -466,8 +466,8 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_objgroup_to_objgroup_send) {
   vt::thePhase()->nextPhaseCollective();
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -498,7 +498,7 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_objgroup_to_objgroup_send) {
 }
 
 // Handler -> ColT, expected communication edge on receive side
-TEST_F(TestLBStatsComm, test_lb_stats_comm_handler_to_col_send) {
+TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_col_send) {
   auto range = vt::Index1D{dim1};
   auto proxy = vt::makeCollection<MyCol>()
     .bounds(range)
@@ -524,8 +524,8 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_handler_to_col_send) {
   });
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -558,7 +558,7 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_handler_to_col_send) {
 
 
 // ColT -> Handler, expected communication edge on send side
-TEST_F(TestLBStatsComm, test_lb_stats_comm_col_to_handler_send) {
+TEST_F(TestLBDataComm, test_lb_data_comm_col_to_handler_send) {
   auto range = vt::Index1D{dim1};
   auto proxy = vt::makeCollection<MyCol>()
     .bounds(range)
@@ -584,8 +584,8 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_col_to_handler_send) {
   });
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -618,12 +618,12 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_col_to_handler_send) {
 }
 
 // ObjGroup -> Handler, expected communication edge on send side
-TEST_F(TestLBStatsComm, test_lb_stats_comm_objgroup_to_handler_send) {
+TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_handler_send) {
   auto obj_proxy_a = vt::theObjGroup()->makeCollective<MyObj>();
 
   vt::runInEpochCollective("simulateObjGroupHandlerSends", [&]{
     auto node = theContext()->getNode();
-    // @note: .invoke does not work here because it doesn't create the LBStats
+    // @note: .invoke does not work here because it doesn't create the LBData
     // context!
     obj_proxy_a(node).send<MyMsg, &MyObj::simulateObjGroupHandlerSends>();
   });
@@ -632,8 +632,8 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_objgroup_to_handler_send) {
   vt::thePhase()->nextPhaseCollective();
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -661,7 +661,7 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_objgroup_to_handler_send) {
 }
 
 // Handler -> ObjGroup, expected communication edge on send side
-TEST_F(TestLBStatsComm, test_lb_stats_comm_handler_to_objgroup_send) {
+TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_objgroup_send) {
   auto obj_proxy_a = vt::theObjGroup()->makeCollective<MyObj>();
 
   vt::runInEpochCollective("simulateHandlerObjGroupSends", [&]{
@@ -675,8 +675,8 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_handler_to_objgroup_send) {
   vt::thePhase()->nextPhaseCollective();
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -704,7 +704,7 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_handler_to_objgroup_send) {
 }
 
 // Handler -> Handler, expected communication edge on send side
-TEST_F(TestLBStatsComm, test_lb_stats_comm_handler_to_handler_send) {
+TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_handler_send) {
   vt::runInEpochCollective("simulateHandlerHandlerSends", [&]{
     auto this_node = theContext()->getNode();
     auto num_nodes = theContext()->getNumNodes();
@@ -716,8 +716,8 @@ TEST_F(TestLBStatsComm, test_lb_stats_comm_handler_to_handler_send) {
   vt::thePhase()->nextPhaseCollective();
 
   vt::PhaseType phase = 0;
-  auto sd = getStatsDataForPhase(phase);
-  auto& comm = sd.node_comm_;
+  auto lbdh = getLBDataForPhase(phase);
+  auto& comm = lbdh.node_comm_;
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();

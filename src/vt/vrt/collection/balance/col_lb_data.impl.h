@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 stats_data.h
+//                              col_lb_data.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,80 +41,50 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DATA_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DATA_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_IMPL_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/elm/elm_comm.h"
+#include "vt/vrt/collection/balance/col_lb_data.h"
+#include "vt/vrt/collection/balance/phase_msg.h"
+#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/manager.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
+#include "vt/timing/timing.h"
 
-#include <unordered_map>
-#include <memory>
-
-#include <nlohmann/json_fwd.hpp>
+#include <cassert>
+#include <type_traits>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/**
- * \struct StatsData
- *
- * \brief Data structure that holds LB statistics for a set of phases. Can
- * output them as JSON.
- */
-struct StatsData {
-  StatsData() = default;
+template <typename ColT>
+/*static*/
+void CollectionLBData::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
+  auto& lb_data = col->lb_data_;
 
-  /**
-   * \brief Create \c StatsData from input JSON
-   *
-   * \param[in] j the json that contains the stats
-   */
-  StatsData(nlohmann::json const& j);
+  vt_debug_print(
+    normal, lb,
+    "ElementLBData: syncNextPhase ({}) (idx={}): lb_data.getPhase()={}, "
+    "msg->getPhase()={}\n",
+    print_ptr(col), col->getIndex(), lb_data.getPhase(), msg->getPhase()
+  );
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | node_data_;
-    s | node_comm_;
-    s | node_subphase_comm_;
-    s | node_idx_;
+  vtAssert(lb_data.getPhase() == msg->getPhase(), "Phases must match");
+
+  auto const proxy = col->getProxy();
+  auto const subphase = getFocusedSubPhase(proxy);
+  theNodeLBData()->addNodeLBData(col->elm_id_, &col->lb_data_, subphase);
+
+  std::vector<uint64_t> idx;
+  for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
+    idx.push_back(static_cast<uint64_t>(col->getIndex()[i]));
   }
 
-  /**
-   * \brief Output a phase's stats to JSON
-   *
-   * \param[in] phase the phase
-   *
-   * \return the json data structure
-   */
-  std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
-
-  /**
-   * \brief Clear all statistics
-   */
-  void clear();
-
-private:
-  /**
-   * \brief Output an entity to json
-   *
-   * \param[in] j the json
-   * \param[in] elm_id the element to output
-   */
-  void outputEntity(nlohmann::json& j, ElementIDStruct const& elm_id) const;
-
-public:
-  /// Node timings for each local object
-  std::unordered_map<PhaseType, LoadMapType> node_data_;
-  /// Node communication graph for each local object
-  std::unordered_map<PhaseType, CommMapType> node_comm_;
-  /// Node communication graph for each subphase
-  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
-  /// Node indices for each ID along with the proxy ID
-  std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
-  /// Map from id to objgroup proxy
-  std::unordered_map<ElementIDStruct, ObjGroupProxyType> node_objgroup_;
-};
+  auto migrate = [col](NodeType node){ col->migrate(node); };
+  theNodeLBData()->registerCollectionInfo(col->elm_id_, proxy, idx, migrate);
+}
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DATA_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_COL_LB_DATA_IMPL_H*/

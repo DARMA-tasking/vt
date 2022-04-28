@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           stats_restart_reader.cc
+//                          lb_data_restart_reader.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,13 +41,13 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_CC
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_CC
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_CC
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_CC
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/stats_restart_reader.h"
+#include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/objgroup/manager.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/decompression_input_container.h"
 #include "vt/utils/json/input_iterator.h"
@@ -58,37 +58,37 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void StatsRestartReader::setProxy(
-  objgroup::proxy::Proxy<StatsRestartReader> in_proxy
+void LBDataRestartReader::setProxy(
+  objgroup::proxy::Proxy<LBDataRestartReader> in_proxy
 ) {
   proxy_ = in_proxy;
 }
 
-/*static*/ std::unique_ptr<StatsRestartReader> StatsRestartReader::construct() {
-  auto ptr = std::make_unique<StatsRestartReader>();
-  auto proxy = theObjGroup()->makeCollective<StatsRestartReader>(ptr.get());
+/*static*/ std::unique_ptr<LBDataRestartReader> LBDataRestartReader::construct() {
+  auto ptr = std::make_unique<LBDataRestartReader>();
+  auto proxy = theObjGroup()->makeCollective<LBDataRestartReader>(ptr.get());
   proxy.get()->setProxy(proxy);
   return ptr;
 }
 
-void StatsRestartReader::startup() {
-  auto const file_name = theConfig()->getLBStatsFileIn();
-  readStats(file_name);
+void LBDataRestartReader::startup() {
+  auto const file_name = theConfig()->getLBDataFileIn();
+  readLBData(file_name);
 }
 
 std::vector<ElementIDType> const&
-StatsRestartReader::getMoveList(PhaseType phase) const {
+LBDataRestartReader::getMoveList(PhaseType phase) const {
   vtAssert(proc_move_list_.size() > phase, "Phase must exist");
   return proc_move_list_.at(phase);
 }
 
-void StatsRestartReader::clearMoveList(PhaseType phase) {
+void LBDataRestartReader::clearMoveList(PhaseType phase) {
   if (proc_move_list_.size() > phase) {
     proc_move_list_.at(phase).clear();
   }
 }
 
-bool StatsRestartReader::needsLB(PhaseType phase) const {
+bool LBDataRestartReader::needsLB(PhaseType phase) const {
   if (proc_phase_runs_LB_.size() > phase) {
     return proc_phase_runs_LB_.at(phase);
   } else {
@@ -97,17 +97,17 @@ bool StatsRestartReader::needsLB(PhaseType phase) const {
 }
 
 std::deque<std::vector<ElementIDType>> const&
-StatsRestartReader::getMigrationList() const {
+LBDataRestartReader::getMigrationList() const {
   return proc_move_list_;
 }
 
-std::deque<std::set<ElementIDType>> StatsRestartReader::readIntoElementHistory(
-  StatsData const& sd
+std::deque<std::set<ElementIDType>> LBDataRestartReader::readIntoElementHistory(
+  LBDataHolder const& lbdh
 ) {
   std::deque<std::set<ElementIDType>> element_history;
-  for (PhaseType phase = 0; phase < sd.node_data_.size(); phase++) {
+  for (PhaseType phase = 0; phase < lbdh.node_data_.size(); phase++) {
     std::set<ElementIDType> buffer;
-    for (auto const& obj : sd.node_data_.at(phase)) {
+    for (auto const& obj : lbdh.node_data_.at(phase)) {
       if (obj.first.isMigratable()) {
         buffer.insert(obj.first.id);
       }
@@ -117,28 +117,28 @@ std::deque<std::set<ElementIDType>> StatsRestartReader::readIntoElementHistory(
   return element_history;
 }
 
-void StatsRestartReader::readStatsFromStream(std::stringstream stream) {
+void LBDataRestartReader::readLBDataFromStream(std::stringstream stream) {
   using vt::util::json::DecompressionInputContainer;
-  using vt::vrt::collection::balance::StatsData;
+  using vt::vrt::collection::balance::LBDataHolder;
   using json = nlohmann::json;
 
   auto c = DecompressionInputContainer(
     DecompressionInputContainer::AnyStreamTag{}, std::move(stream)
   );
   json j = json::parse(c);
-  auto sd = StatsData(j);
+  auto lbdh = LBDataHolder(j);
 
-  auto element_history = readIntoElementHistory(sd);
+  auto element_history = readIntoElementHistory(lbdh);
   constructMoveList(std::move(element_history));
 }
 
-void StatsRestartReader::readStats(std::string const& fileName) {
+void LBDataRestartReader::readLBData(std::string const& fileName) {
   // Read the input files
-  auto elements_history = inputStatsFile(fileName);
+  auto elements_history = inputLBDataFile(fileName);
   constructMoveList(std::move(elements_history));
 }
 
-void StatsRestartReader::constructMoveList(
+void LBDataRestartReader::constructMoveList(
   std::deque<std::set<ElementIDType>> element_history
 ) {
   if (element_history.empty()) {
@@ -160,18 +160,18 @@ void StatsRestartReader::constructMoveList(
 }
 
 std::deque<std::set<ElementIDType>>
-StatsRestartReader::inputStatsFile(std::string const& fileName) {
+LBDataRestartReader::inputLBDataFile(std::string const& fileName) {
   using vt::util::json::Reader;
-  using vt::vrt::collection::balance::StatsData;
+  using vt::vrt::collection::balance::LBDataHolder;
 
   Reader r{fileName};
   auto json = r.readFile();
-  auto sd = StatsData(*json);
+  auto lbdh = LBDataHolder(*json);
 
-  return readIntoElementHistory(sd);
+  return readIntoElementHistory(lbdh);
 }
 
-void StatsRestartReader::createMigrationInfo(
+void LBDataRestartReader::createMigrationInfo(
   std::deque<std::set<ElementIDType>>& element_history
 ) {
   const auto num_iters = element_history.size() - 1;
@@ -207,7 +207,7 @@ void StatsRestartReader::createMigrationInfo(
     //
     // Create a message storing the vector
     //
-    proxy_[0].send<VecMsg, &StatsRestartReader::gatherMsgs>(myList);
+    proxy_[0].send<VecMsg, &LBDataRestartReader::gatherMsgs>(myList);
     //
     // Clear old distribution of elements
     //
@@ -216,7 +216,7 @@ void StatsRestartReader::createMigrationInfo(
 
 }
 
-void StatsRestartReader::gatherMsgs(VecMsg *msg) {
+void LBDataRestartReader::gatherMsgs(VecMsg *msg) {
   auto sentVec = msg->getTransfer();
   vtAssert(sentVec.size() % 3 == 1, "Expecting vector of length 3n+1");
   ElementIDType const phaseID = sentVec[0];
@@ -266,7 +266,7 @@ void StatsRestartReader::gatherMsgs(VecMsg *msg) {
       }
     }
     if (in > 0) {
-      proxy_[in].send<VecMsg, &StatsRestartReader::scatterMsgs>(toMove);
+      proxy_[in].send<VecMsg, &LBDataRestartReader::scatterMsgs>(toMove);
     } else {
       proc_phase_runs_LB_[phaseID] = (!migrate.empty());
       auto& myList = proc_move_list_[phaseID];
@@ -278,7 +278,7 @@ void StatsRestartReader::gatherMsgs(VecMsg *msg) {
   migrate.clear();
 }
 
-void StatsRestartReader::scatterMsgs(VecMsg *msg) {
+void LBDataRestartReader::scatterMsgs(VecMsg *msg) {
   const size_t header = 2;
   auto recvVec = msg->getTransfer();
   vtAssert((recvVec.size() -header) % 2 == 0,
@@ -299,4 +299,4 @@ void StatsRestartReader::scatterMsgs(VecMsg *msg) {
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_CC*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_CC*/

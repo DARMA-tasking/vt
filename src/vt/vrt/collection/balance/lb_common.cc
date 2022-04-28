@@ -44,7 +44,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -95,7 +95,7 @@ void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reass
                      obj_id.id, obj_id.getHomeNode(), from, to
                      );
 
-      theNodeStats()->migrateObjTo(obj_id, to);
+      theNodeLBData()->migrateObjTo(obj_id, to);
     }
   });
 }

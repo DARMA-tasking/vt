@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 statsmaplb.h
+//                                 offlinelb.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,37 +41,28 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATSMAPLB_STATSMAPLB_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATSMAPLB_STATSMAPLB_H
-
-#include "vt/objgroup/proxy/proxy_objgroup.h"
-
-#include <unordered_map>
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
+#include "vt/vrt/collection/balance/offlinelb/offlinelb.h"
+#include "vt/vrt/collection/balance/lb_data_restart_reader.h"
+#include "vt/context/context.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct BaseLB;
+void OfflineLB::init(objgroup::proxy::Proxy<OfflineLB> in_proxy) {
+  proxy_ = in_proxy;
+}
 
-struct StatsMapLB : BaseLB {
-  StatsMapLB() = default;
-  StatsMapLB(StatsMapLB const &) = delete;
-  StatsMapLB(StatsMapLB &&) noexcept = default;
-  StatsMapLB &operator=(StatsMapLB const &) = delete;
-  StatsMapLB &operator=(StatsMapLB &&) noexcept = default;
-  virtual ~StatsMapLB() = default;
-
-  void init(objgroup::proxy::Proxy<StatsMapLB> in_proxy);
-  void runLB(TimeType) override;
-  void inputParams(balance::SpecEntry* spec) override { }
-
-  static std::unordered_map<std::string, std::string> getInputKeysWithHelp() {
-    return std::unordered_map<std::string, std::string>{};
+void OfflineLB::runLB(TimeType) {
+  auto const& myNewList = theLBDataReader()->getMoveList(phase_);
+  for (size_t in = 0; in < myNewList.size(); in += 2) {
+    auto this_node = theContext()->getNode();
+    ObjIDType id{myNewList[in], this_node};
+    migrateObjectTo(id, myNewList[in+1]);
   }
 
-private:
-  objgroup::proxy::Proxy<StatsMapLB> proxy_ = {};
-};
+  theLBDataReader()->clearMoveList(phase_);
+}
 
 }}}} /* end namespace vt::vrt::collection::lb */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATSMAPLB_STATSMAPLB_H*/

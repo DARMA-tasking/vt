@@ -51,13 +51,13 @@
 #include "vt/vrt/collection/types/migratable.fwd.h"
 #include "vt/vrt/collection/types/storage/storable.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/col_stats.h"
+#include "vt/vrt/collection/balance/col_lb_data.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 // Forward declaration for friend declaration below
 namespace balance {
-  struct NodeStats;
+  struct NodeLBData;
 }
 
 struct Migratable : MigrateHookBase, storage::Storable {
@@ -106,11 +106,11 @@ protected:
   void serialize(Serializer& s);
 
 protected:
-  friend struct balance::CollectionStats;
-  friend struct balance::NodeStats;
-  balance::CollectionStats stats_;
+  friend struct balance::CollectionLBData;
+  friend struct balance::NodeLBData;
+  balance::CollectionLBData lb_data_;
 public:
-  balance::CollectionStats& getStats() { return stats_; }
+  balance::CollectionLBData& getLBData() { return lb_data_; }
 protected:
   balance::ElementIDStruct elm_id_ = {};
 };

@@ -45,14 +45,14 @@
 #include "vt/utils/bits/bits_common.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/proxy/proxy_bits.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 
 namespace vt { namespace elm {
 
 /*static*/ ElementIDStruct ElmIDBits::createCollection(
   bool migratable, NodeType curr_node
 ) {
-  auto const seq_id = theNodeStats()->getNextElm();
+  auto const seq_id = theNodeLBData()->getNextElm();
   auto const home_node = theContext()->getNode();
   return createCollectionImpl(migratable, seq_id, home_node, curr_node);
 }

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 col_stats.cc
+//                                  lb_data.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,32 +41,39 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/col_stats.h"
-#include "vt/timing/timing.h"
+#include "vt/context/runnable_context/lb_data.h"
+#include "vt/vrt/collection/manager.h"
 
-#include <cassert>
+namespace vt { namespace ctx {
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
-
-/*static*/
-void CollectionStats::setFocusedSubPhase(
-  VirtualProxyType collection, SubphaseType subphase
-) {
-  focused_subphase_[collection] = subphase;
+void LBData::begin() {
+  // record start time
+  if (should_instrument_) {
+    lb_data_->startTime();
+  }
 }
 
-/*static*/
-SubphaseType CollectionStats::getFocusedSubPhase(VirtualProxyType collection) {
-  auto i = focused_subphase_.find(collection);
-  if (i != focused_subphase_.end())
-    return i->second;
-  else
-    return no_subphase;
+void LBData::end() {
+  // record end time
+  if (should_instrument_) {
+    lb_data_->stopTime();
+  }
 }
 
-/*static*/
-std::unordered_map<VirtualProxyType,SubphaseType>
-CollectionStats::focused_subphase_;
+void LBData::send(elm::ElementIDStruct dest, MsgSizeType bytes) {
+  lb_data_->sendToEntity(dest, cur_elm_id_, bytes);
+}
 
-}}}} /* end namespace vt::vrt::collection::balance */
+void LBData::suspend() {
+  end();
+}
+
+void LBData::resume() {
+  begin();
+}
+
+typename LBData::ElementIDStruct const& LBData::getCurrentElementID() const {
+  return cur_elm_id_;
+}
+
+}} /* end namespace vt::ctx */

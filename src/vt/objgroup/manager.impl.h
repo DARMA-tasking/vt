@@ -195,7 +195,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::send(ProxyElmType<ObjT> proxy,
 
   // set bit so it isn't recorded as it routes through bare
   // handlers
-  envelopeSetCommStatsRecordedAboveBareHandler(msg->env, true);
+  envelopeSetCommLBDataRecordedAboveBareHandler(msg->env, true);
 
   if (theContext()->getTask() != nullptr) {
     auto dest_elm_id = elm::ElmIDBits::createObjGroup(proxy_bits, dest_node);

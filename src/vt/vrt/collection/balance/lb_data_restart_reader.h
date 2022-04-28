@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            stats_restart_reader.h
+//                           lb_data_restart_reader.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,15 +41,15 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 
 #include <deque>
 #include <map>
@@ -59,38 +59,38 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
- * \struct StatsRestartReader
+ * \struct LBDataRestartReader
  *
  * \brief A VT component for reading a user-input mapping file for object to
  * node.
  *
  * A common flow is for the LBAF (Load Balancing Analysis Framework) to generate
- * a new load distribution offline, producing LB stats file, which are then read
+ * a new load distribution offline, producing LB data file, which are then read
  * by this component to follow the LB distribution described in those mapping
  * files.
  */
-struct StatsRestartReader : runtime::component::Component<StatsRestartReader> {
+struct LBDataRestartReader : runtime::component::Component<LBDataRestartReader> {
   using VecMsg = lb::TransferMsg<std::vector<balance::ElementIDType> >;
 
 public:
-  StatsRestartReader() = default;
+  LBDataRestartReader() = default;
 
-  void setProxy(objgroup::proxy::Proxy<StatsRestartReader> in_proxy);
+  void setProxy(objgroup::proxy::Proxy<LBDataRestartReader> in_proxy);
 
-  static std::unique_ptr<StatsRestartReader> construct();
+  static std::unique_ptr<LBDataRestartReader> construct();
 
-  std::string name() override { return "StatsRestartReader"; }
+  std::string name() override { return "LBDataRestartReader"; }
 
   void startup() override;
 
-  void readStatsFromStream(std::stringstream stream);
+  void readLBDataFromStream(std::stringstream stream);
 
   void constructMoveList(std::deque<std::set<ElementIDType>> element_history);
 
-  void readStats(std::string const& fileName);
+  void readLBData(std::string const& fileName);
 
   std::deque<std::set<ElementIDType>> readIntoElementHistory(
-    StatsData const& sd
+    LBDataHolder const& lbdh
   );
 
   std::vector<ElementIDType> const& getMoveList(PhaseType phase) const;
@@ -111,7 +111,7 @@ public:
   }
 
 private:
-  std::deque<std::set<ElementIDType>> inputStatsFile(
+  std::deque<std::set<ElementIDType>> inputLBDataFile(
     std::string const& fileName
   );
 
@@ -133,7 +133,7 @@ private:
   std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>> totalMove;
 
   /// \brief Proxy for communicating the migration information
-  objgroup::proxy::Proxy<StatsRestartReader> proxy_;
+  objgroup::proxy::Proxy<LBDataRestartReader> proxy_;
 
   /// \brief Queue of migrations for each iteration.
   /// \note At each iteration, a vector of length 2 times (# of migrations)
@@ -150,8 +150,8 @@ private:
 
 namespace vt {
 
-extern vrt::collection::balance::StatsRestartReader* theStatsReader();
+extern vrt::collection::balance::LBDataRestartReader* theLBDataReader();
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_RESTART_READER_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_DATA_RESTART_READER_H*/

@@ -226,7 +226,7 @@ Default: false
 Description:
   Whether to make migration choices deterministic. This will only lead to
   reproducibility when paired with deterministic object loads, for example when
-  using a driver that feeds the load balancer object loads read from vt stats
+  using a driver that feeds the load balancer object loads read from LB data
   files.  Enabling this requires choosing options for inform and ordering that
   are themselves deterministic.
 )"

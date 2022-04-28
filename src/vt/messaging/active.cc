@@ -55,7 +55,7 @@
 #include "vt/runtime/mpi_access.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/runnable/make_runnable.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/elm/elm_id_bits.h"
 
@@ -154,14 +154,14 @@ ActiveMessenger::ActiveMessenger()
 
 void ActiveMessenger::startup() {
   auto const this_node = theContext()->getNode();
-  bare_handler_dummy_elm_id_for_lb_stats_ =
+  bare_handler_dummy_elm_id_for_lb_data_ =
     elm::ElmIDBits::createBareHandler(this_node);
 
 #if vt_check_enabled(lblite)
-  // Hook to collect statistics about objgroups
+  // Hook to collect LB data about objgroups
   thePhase()->registerHookCollective(phase::PhaseHook::End, [this]{
-    theNodeStats()->addNodeStats(
-      bare_handler_dummy_elm_id_for_lb_stats_, &bare_handler_stats_
+    theNodeLBData()->addNodeLBData(
+      bare_handler_dummy_elm_id_for_lb_data_, &bare_handler_lb_data_
     );
   });
 #endif
@@ -448,7 +448,7 @@ EventType ActiveMessenger::sendMsgBytes(
     theTerm()->hangDetectSend();
   }
 
-  recordLbStatsCommForSend(dest, base, msg_size);
+  recordLBDataCommForSend(dest, base, msg_size);
 
   return event_id;
 }
@@ -512,11 +512,11 @@ EventType ActiveMessenger::doMessageSend(
     if (dest != this_node) {
       sendMsgBytesWithPut(dest, base, send_tag);
     } else {
-      recordLbStatsCommForSend(dest, base, base.size());
+      recordLBDataCommForSend(dest, base, base.size());
 
       runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
         .withTDEpochFromMsg(is_term)
-        .withLBStats(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
+        .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
         .enqueue();
     }
     return no_event;
@@ -888,17 +888,17 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
   }
 }
 
-void ActiveMessenger::recordLbStatsCommForSend(
+void ActiveMessenger::recordLBDataCommForSend(
   NodeType const dest, MsgSharedPtr<BaseMsgType> const& base,
   MsgSizeType const msg_size
 ) {
   if (theContext()->getTask() != nullptr) {
-    auto lb = theContext()->getTask()->get<ctx::LBStats>();
+    auto lb = theContext()->getTask()->get<ctx::LBData>();
 
     if (lb) {
       auto const& msg = base.get();
       auto const already_recorded =
-        envelopeCommStatsRecordedAboveBareHandler(msg->env);
+        envelopeCommLBDataRecordedAboveBareHandler(msg->env);
 
       if (not already_recorded) {
         auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);
@@ -998,7 +998,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
       .withContinuation(cont)
       .withTag(tag)
       .withTDEpochFromMsg(is_term)
-      .withLBStats(&bare_handler_stats_, bare_handler_dummy_elm_id_for_lb_stats_)
+      .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
       .enqueue();
 
     if (is_term) {

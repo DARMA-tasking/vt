@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               lb_stats.impl.h
+//                                  lb_data.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,28 +41,80 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_H
 
-#include "vt/context/runnable_context/lb_stats.h"
-#include "vt/messaging/active.h"
-#include "vt/elm/elm_stats.h"
-#include "vt/vrt/collection/manager.h"
-
-#include <memory>
+#include "vt/context/runnable_context/base.h"
+#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/elm/elm_lb_data.fwd.h"
 
 namespace vt { namespace ctx {
 
-template <typename ElmT, typename MsgT>
-LBStats::LBStats(ElmT* in_elm, MsgT* msg)
-  : stats_(&in_elm->getStats()),
-    cur_elm_id_(in_elm->getElmID()),
-    should_instrument_(msg->lbLiteInstrument())
-{
-  // record the communication stats right away!
-  theCollection()->recordStats(in_elm, msg);
-}
+/**
+ * \struct LBData
+ *
+ * \brief Context for collection of LB data when a task runs
+ */
+struct LBData final : Base {
+  using ElementIDStruct = elm::ElementIDStruct;
+  using ElementLBData    = elm::ElementLBData;
+
+  /**
+   * \brief Construct a \c LBData
+   *
+   * \param[in] in_elm the collection element
+   * \param[in] msg the incoming message (used for communication LB data)
+   */
+  template <typename ElmT, typename MsgT>
+  LBData(ElmT* in_elm, MsgT* msg);
+
+  /**
+   * \brief Construct a \c LBData
+   *
+   * \param[in] in_lb_data the LB data
+   * \param[in] in_elm_id the element ID
+   */
+  LBData(ElementLBData* in_lb_data, ElementIDStruct const& in_elm_id)
+    : lb_data_(in_lb_data),
+      cur_elm_id_(in_elm_id),
+      should_instrument_(true)
+  { }
+
+  /**
+   * \brief Set the context and timing for a collection task
+   */
+  void begin() final override;
+
+  /**
+   * \brief Remove the context and store timing for a collection task
+   */
+  void end() final override;
+
+  /**
+   * \brief Record LB data whenever a message is sent and a collection
+   * element is running.
+   *
+   * \param[in] dest the destination of the message
+   * \param[in] size the size of the message
+   */
+  void send(elm::ElementIDStruct dest, MsgSizeType bytes) final override;
+
+  void suspend() final override;
+  void resume() final override;
+
+  /**
+   * \brief Get the current element ID struct for the running context
+   *
+   * \return the current element ID
+   */
+  ElementIDStruct const& getCurrentElementID() const;
+
+private:
+  ElementLBData* lb_data_ = nullptr;     /**< Element LB data */
+  ElementIDStruct cur_elm_id_ = {};   /**< Current element ID  */
+  bool should_instrument_ = false;    /**< Whether we are instrumenting */
+};
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_H*/
