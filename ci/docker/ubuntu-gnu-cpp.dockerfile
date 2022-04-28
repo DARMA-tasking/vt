@@ -4,6 +4,7 @@ FROM ${arch}/ubuntu:${ubuntu} as base
 
 ARG proxy=""
 ARG compiler=gcc-9
+ARG ubuntu
 
 ENV https_proxy=${proxy} \
     http_proxy=${proxy}
@@ -58,7 +59,10 @@ ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
 
 COPY ./ci/deps/mpich.sh mpich.sh
-RUN ./mpich.sh 4.0.2 -j4
+RUN if [ "$ubuntu" = "18.04" ]; then \
+      ./mpich.sh 3.3.2 -j4; else \
+      ./mpich.sh 4.0.2 -j4; \
+    fi
 
 ENV MPI_EXTRA_FLAGS="" \
     PATH=/usr/lib/ccache/:$PATH
