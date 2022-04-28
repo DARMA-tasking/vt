@@ -94,7 +94,7 @@ void BaseLB::importProcessorData(
 ) {
   vt_debug_print(
     normal, lb,
-    "importProcessorData: load stats size={}, load comm size={}\n",
+    "importProcessorData: load data size={}, load comm size={}\n",
     load_model_->getNumObjects(), comm_in.size()
   );
 
