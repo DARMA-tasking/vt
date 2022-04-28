@@ -295,7 +295,6 @@ TEST_F(TestObjGroup, test_proxy_invoke) {
 
 TEST_F(TestObjGroup, test_pending_send) {
   auto my_node = vt::theContext()->getNode();
-  auto num_nodes = vt::theContext()->getNumNodes();
   // create a proxy to a object group
   auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
   auto obj = proxy.get();
@@ -309,12 +308,12 @@ TEST_F(TestObjGroup, test_pending_send) {
     runInEpochCollective([&]{ pending.release(); } );
     EXPECT_EQ(obj->recv_, 1 );
 
-    auto pending2 = proxy.broadcast<MyMsg, &MyObjA::handler>();
+    auto pending2 = proxy.broadcast<MyMsg, &MyObjA::handlerOnlyFromSelf>();
 
     EXPECT_EQ(obj->recv_, 1 );
 
     runInEpochCollective([&]{ pending2.release(); } );
-    EXPECT_EQ(obj->recv_, num_nodes + 1 );
+    EXPECT_EQ(obj->recv_, 2);
   });
 
   // check state to ensure all expected events executed
