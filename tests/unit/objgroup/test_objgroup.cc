@@ -293,6 +293,36 @@ TEST_F(TestObjGroup, test_proxy_invoke) {
   EXPECT_EQ(proxy.get()->recv_, 2);
 }
 
+TEST_F(TestObjGroup, test_pending_send) {
+  auto my_node = vt::theContext()->getNode();
+  // create a proxy to a object group
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto obj = proxy.get();
+
+  runInEpochCollective([&]{
+    // self-send a message and then broadcast
+    auto pending = proxy[my_node].send<MyMsg, &MyObjA::handler>();
+
+    EXPECT_EQ(obj->recv_, 0);
+
+    runInEpochCollective([&]{ pending.release(); } );
+    EXPECT_EQ(obj->recv_, 1 );
+
+    auto pending2 = proxy.broadcast<MyMsg, &MyObjA::handlerOnlyFromSelf>();
+
+    EXPECT_EQ(obj->recv_, 1 );
+
+    runInEpochCollective([&]{ pending2.release(); } );
+    EXPECT_EQ(obj->recv_, 2);
+  });
+
+  // check state to ensure all expected events executed
+  vt_debug_print(
+    normal, objgroup,
+    "obj->recv:{} after term\n", obj->recv_
+  );
+}
+
 struct MyTestMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required();

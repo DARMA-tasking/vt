@@ -45,6 +45,7 @@
 
 #include "vt/termination/termination.h"
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 #include "data_message.h"
 
 namespace vt { namespace tests { namespace unit {
@@ -53,14 +54,24 @@ using namespace vt;
 using namespace vt::tests::unit;
 
 struct TestPendingSend : TestParallelHarness {
-  struct TestMsg : vt::Message { };
+  struct TestMsg : vt::Message {
+    TestMsg() = default;
+    explicit TestMsg(vt::NodeType in_sender) : sender(in_sender) { }
+    vt::NodeType sender = uninitialized_destination;
+  };
   static void handlerPong(TestMsg*) { delivered = true; }
-  static void handlerPing(TestMsg*) {
+  static void handlerPing(TestMsg* in_msg) {
     auto const this_node = theContext()->getNode();
     auto const num_nodes = theContext()->getNumNodes();
     auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
     auto msg = vt::makeMessage<TestMsg>();
     theMsg()->sendMsg<TestMsg, handlerPong>(prev, msg);
+  }
+  static void handlerLocal(TestMsg* msg) {
+    auto const this_node = theContext()->getNode();
+    if (msg->sender == this_node) {
+      delivered = true;
+    }
   }
 
   static bool delivered;
@@ -102,6 +113,46 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
 
   // Epoch should not end with a valid pending send created in an live epoch
   EXPECT_EQ(theTerm()->isEpochTerminated(ep), false);
+  EXPECT_EQ(delivered, false);
+
+  // Now we send the message off!
+  pending.clear();
+
+  vt::runSchedulerThrough(ep);
+
+  EXPECT_EQ(theTerm()->isEpochTerminated(ep), true);
+  EXPECT_EQ(delivered, true);
+}
+
+TEST_F(TestPendingSend, test_pending_broadcast_hold) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+  delivered = false;
+
+  std::vector<messaging::PendingSend> pending;
+  auto ep = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(ep);
+
+  auto msg = vt::makeMessage<TestMsg>(theContext()->getNode());
+  auto msg_hold = promoteMsg(msg.get());
+  pending.emplace_back(theMsg()->broadcastMsg<TestMsg, handlerLocal>(msg));
+
+  // Must be stamped with the current epoch
+  EXPECT_EQ(envelopeGetEpoch(msg_hold->env), ep);
+
+  theMsg()->popEpoch(ep);
+  theTerm()->finishedEpoch(ep);
+
+  // It should not break out of this loop because of
+  // !theTerm()->isEpochTermianted(ep), thus `k` is used to
+  // break out
+  int k = 0;
+
+  theSched()->runSchedulerWhile(
+    [&k, ep] { return !theTerm()->isEpochTerminated(ep) && (++k <= 10); });
+
+  // Epoch should not end with a valid pending send created in an live epoch
+  EXPECT_EQ(theTerm()->isEpochTerminated(ep), false);
+  vt_print(gen, "delivered={}\n", delivered);
   EXPECT_EQ(delivered, false);
 
   // Now we send the message off!

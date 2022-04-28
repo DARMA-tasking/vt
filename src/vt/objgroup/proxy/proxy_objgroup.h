@@ -124,7 +124,7 @@ public:
    * \param[in] msg the message
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  void broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const;
+  PendingSendType broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const;
 
   /**
    * \brief Broadcast a message to all nodes to be delivered to the local object
@@ -133,7 +133,7 @@ public:
    * \param[in] args args to pass to the message constructor
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
-  void broadcast(Args&&... args) const;
+  PendingSendType broadcast(Args&&... args) const;
 
   /**
    * \brief Reduce over the objgroup instances on each node with a callback

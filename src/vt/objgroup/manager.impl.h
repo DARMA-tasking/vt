@@ -187,7 +187,7 @@ void ObjGroupManager::setTraceName(
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
+ObjGroupManager::PendingSendType ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const proxy_bits = proxy.getProxy();
   auto const dest_node = proxy.getNode();
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
@@ -209,7 +209,7 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
     proxy_bits, dest_node, ctrl, han
   );
 
-  send<MsgT>(msg,han,dest_node);
+  return send<MsgT>(msg,han,dest_node);
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
@@ -249,7 +249,7 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
 
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
+ObjGroupManager::PendingSendType ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const proxy_bits = proxy.getProxy();
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
@@ -260,11 +260,11 @@ void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
     proxy_bits, ctrl, han
   );
 
-  broadcast<MsgT>(msg, han);
+  return broadcast<MsgT>(msg, han);
 }
 
 template <typename MsgT>
-void ObjGroupManager::send(
+ObjGroupManager::PendingSendType ObjGroupManager::send(
   MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node
 ) {
   return objgroup::send(msg,han,dest_node);
@@ -278,7 +278,7 @@ void ObjGroupManager::invoke(
 }
 
 template <typename MsgT>
-void ObjGroupManager::broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
+ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
   return objgroup::broadcast(msg,han);
 }
 
