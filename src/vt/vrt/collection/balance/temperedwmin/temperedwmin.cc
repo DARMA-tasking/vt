@@ -90,7 +90,7 @@ void TemperedWMin::inputParams(balance::SpecEntry* spec) {
   gamma_         = spec->getOrDefault<double>("gamma", gamma_);
 }
 
-TimeType TemperedWMin::getTotalWork(const elm::ElementIDStruct& obj) {
+TimeType TemperedWMin::getModeledWork(const elm::ElementIDStruct& obj) {
   balance::PhaseOffset when =
       {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
 

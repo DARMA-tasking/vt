@@ -61,7 +61,7 @@ public:
   void inputParams(balance::SpecEntry* spec) override;
 
 protected:
-  TimeType getTotalWork(const elm::ElementIDStruct& obj) override;
+  TimeType getModeledWork(const elm::ElementIDStruct& obj) override;
 
 private:
   double alpha_ = 1.0;
