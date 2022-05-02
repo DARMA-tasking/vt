@@ -74,7 +74,7 @@ void CollectionLBData::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
 
   auto const proxy = col->getProxy();
   auto const subphase = getFocusedSubPhase(proxy);
-  theNodeLBData()->addNodeLBData(col->elm_id_, &col->lb_data_, subphase);
+  theNodeLBData()->addNodeLBData(col->elm_id_, &col->lb_data_, col, subphase);
 
   std::vector<uint64_t> idx;
   for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {

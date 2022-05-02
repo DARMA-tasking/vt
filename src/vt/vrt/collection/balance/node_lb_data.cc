@@ -56,6 +56,7 @@
 #include <unordered_map>
 #include <cstdio>
 #include <sys/stat.h>
+#include <memory>
 
 #include <fmt/core.h>
 
@@ -245,7 +246,8 @@ void NodeLBData::registerObjGroupInfo(
 }
 
 void NodeLBData::addNodeLBData(
-  ElementIDStruct id, elm::ElementLBData* in, SubphaseType focused_subphase
+  ElementIDStruct id, elm::ElementLBData* in, StorableType *storable,
+  SubphaseType focused_subphase
 ) {
   vt_debug_print(
     normal, lb,
@@ -279,6 +281,12 @@ void NodeLBData::addNodeLBData(
     for (auto& sp : subphase_comm[i]) {
       subphase_comm_data[i][sp.first] += sp.second;
     }
+  }
+
+  if (storable) {
+    lb_data_->user_defined_json_[phase][id] = std::make_shared<nlohmann::json>(
+      storable->toJson()
+    );
   }
 
   in->updatePhase(1);

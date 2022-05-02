@@ -55,6 +55,7 @@
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/utils/json/base_appender.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
+#include "vt/vrt/collection/types/storage/storable.h"
 
 #include <string>
 #include <unordered_map>
@@ -78,6 +79,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct NodeLBData : runtime::component::Component<NodeLBData> {
   using MigrateFnType       = std::function<void(NodeType)>;
+  using StorableType = vt::vrt::collection::storage::Storable;
 
   /**
    * \internal \brief System call to construct \c NodeLBData
@@ -131,7 +133,7 @@ public:
    * \param[in] focused_subphase the focused subphase (optional)
    */
   void addNodeLBData(
-    ElementIDStruct id, elm::ElementLBData* in,
+    ElementIDStruct id, elm::ElementLBData* in, StorableType *storable,
     SubphaseType focused_subphase = elm::ElementLBData::no_subphase
   );
 

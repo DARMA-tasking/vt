@@ -67,6 +67,19 @@ void Storable::valInsert(std::string const& str, U&& u) {
 }
 
 template <typename U>
+void Storable::valInsert(std::string const& str, U&& u, bool dump_to_json) {
+  map_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(str),
+    std::forward_as_tuple(
+      std::make_unique<StoreElm<typename std::decay<U>::type>>(
+        std::forward<U>(u), dump_to_json
+      )
+    )
+  );
+}
+
+template <typename U>
 U& Storable::valGet(std::string const& str) {
   vtAssert(valExists(str), "Key must exist in map");
   auto iter = map_.find(str);

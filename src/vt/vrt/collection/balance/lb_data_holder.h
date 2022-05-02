@@ -76,6 +76,7 @@ struct LBDataHolder {
     s | node_data_;
     s | node_comm_;
     s | node_subphase_comm_;
+    s | user_defined_json_;
     s | node_idx_;
   }
 
@@ -109,6 +110,10 @@ public:
   std::unordered_map<PhaseType, CommMapType> node_comm_;
   /// Node communication graph for each subphase
   std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
+  /// User-defined data from each phase
+  std::unordered_map<PhaseType, std::unordered_map<
+    ElementIDStruct, std::shared_ptr<nlohmann::json>
+  >> user_defined_json_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy
