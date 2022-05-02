@@ -43,7 +43,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/workload_replay.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/utils/json/json_reader.h"
 
@@ -58,7 +58,7 @@ void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run
 ) {
   // read in object loads from json files
-  auto const filename = theConfig()->getLBStatsFileIn();
+  auto const filename = theConfig()->getLBDataFileIn();
   auto workloads = readInWorkloads(filename);
 
   replayWorkloads(initial_phase, phases_to_run, workloads);
@@ -66,7 +66,7 @@ void replayWorkloads(
 
 void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run,
-  std::shared_ptr<StatsData> workloads
+  std::shared_ptr<LBDataHolder> workloads
 ) {
   using ObjIDType = elm::ElementIDStruct;
 
@@ -222,13 +222,13 @@ void replayWorkloads(
   }
 }
 
-std::shared_ptr<StatsData>
+std::shared_ptr<LBDataHolder>
 readInWorkloads(const std::string &filename) {
   using util::json::Reader;
 
   Reader r{filename};
   auto json = r.readFile();
-  auto sd = std::make_shared<StatsData>(*json);
+  auto sd = std::make_shared<LBDataHolder>(*json);
 
   for (auto &phase_data : sd->node_data_) {
     vt_debug_print(
@@ -329,7 +329,7 @@ WorkloadDataMigrator::relocateMisplacedWorkloadsHome(
 ) {
   std::shared_ptr<ProposedReassignment> move_home_model = nullptr;
 
-  runInEpochCollective("WorkloadDataMigrator -> migrateStatsDataHome", [&] {
+  runInEpochCollective("WorkloadDataMigrator -> migrateLBDataHome", [&] {
     auto norm_lb_proxy = WorkloadDataMigrator::construct(model_base);
     auto normalizer = norm_lb_proxy.get();
     move_home_model = normalizer->createModelToMoveWorkloadsHome(
@@ -349,7 +349,7 @@ WorkloadDataMigrator::relocateMisplacedWorkloadsHere(
 ) {
   std::shared_ptr<ProposedReassignment> move_here_model = nullptr;
 
-  runInEpochCollective("WorkloadDataMigrator -> migrateStatsDataHere", [&] {
+  runInEpochCollective("WorkloadDataMigrator -> migrateLBDataHere", [&] {
     auto norm_lb_proxy = WorkloadDataMigrator::construct(model_base);
     auto normalizer = norm_lb_proxy.get();
     move_here_model = normalizer->createModelToMoveWorkloadsHere(
@@ -372,7 +372,7 @@ WorkloadDataMigrator::createModelToMoveWorkloadsHome(
     "constructing load model to get loads from file location to home\n"
   );
 
-  runInEpochCollective("WorkloadDataMigrator -> transferStatsHome", [&] {
+  runInEpochCollective("WorkloadDataMigrator -> transferLBDataHome", [&] {
     for (auto workload_id : *model_base) {
       if (workload_id.isMigratable()) {
         // if the object belongs here, do nothing; otherwise, "transfer" it to
@@ -408,7 +408,7 @@ WorkloadDataMigrator::createModelToMoveWorkloadsHere(
     "constructing load model to get loads from home to here\n"
   );
 
-  runInEpochCollective("WorkloadDataMigrator -> transferStatsHere", [&] {
+  runInEpochCollective("WorkloadDataMigrator -> transferLBDataHere", [&] {
     for (auto workload_id : migratable_objects_here) {
       // if the object is already here, do nothing; otherwise, "transfer" it
       // from the home rank so that we will have the needed workload data

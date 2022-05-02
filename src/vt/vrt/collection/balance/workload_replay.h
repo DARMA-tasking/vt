@@ -46,7 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/elm/elm_id.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/model/proposed_reassignment.h"
@@ -65,8 +65,8 @@ namespace balance { namespace replay {
  * \param[in] initial_phase the first phase to replay
  * \param[in] phases_to_run how many phases to replay
  *
- * The json files specified by the command-line arguments --vt_lb_stats_file_in
- * and --vt_lb_stats_dir_in will be imported and the LB data contained within
+ * The json files specified by the command-line arguments --vt_lb_data_file_in
+ * and --vt_lb_data_dir_in will be imported and the LB data contained within
  * will be fed through the load balancer(s) specified on the vt command-line
  * on each requested phase, allowing new load balancing decisions to happen.
  * There is no requirement to colocate the LB data on the same rank as the
@@ -91,17 +91,17 @@ void replayWorkloads(
  */
 void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run,
-  std::shared_ptr<StatsData> workloads
+  std::shared_ptr<LBDataHolder> workloads
 );
 
 /**
- * \brief Build a StatsData object from the LB data in a json file
+ * \brief Build a LBDataHolder object from the LB data in a json file
  *
  * \param[in] filename read in LB data from the specified json file
  *
- * \return the StatsData object built from the LB data
+ * \return the LBDataHolder object built from the LB data
  */
-std::shared_ptr<StatsData>
+std::shared_ptr<LBDataHolder>
 readInWorkloads(const std::string &filename);
 
 

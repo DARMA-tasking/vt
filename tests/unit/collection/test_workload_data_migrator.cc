@@ -49,7 +49,7 @@
 #include "vt/elm/elm_id.h"
 #include "vt/elm/elm_id_bits.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/workload_replay.h"
 #include "vt/vrt/collection/balance/model/proposed_reassignment.h"
@@ -60,7 +60,7 @@ namespace vt { namespace tests { namespace unit { namespace replay {
 
 using namespace vt::tests::unit;
 
-using vt::vrt::collection::balance::StatsData;
+using vt::vrt::collection::balance::LBDataHolder;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ProposedReassignment;
 using vt::vrt::collection::balance::ReassignmentMsg;
@@ -68,7 +68,7 @@ using vt::vrt::collection::balance::replay::WorkloadDataMigrator;
 
 struct TestWorkloadDataMigrator : TestParallelHarness { };
 
-std::shared_ptr<StatsData>
+std::shared_ptr<LBDataHolder>
 setupWorkloads(PhaseType phase, size_t numElements) {
   auto const& this_node = vt::theContext()->getNode();
 
@@ -82,24 +82,24 @@ setupWorkloads(PhaseType phase, size_t numElements) {
     );
   }
 
-  auto sd = std::make_shared<StatsData>();
+  auto lbdh = std::make_shared<LBDataHolder>();
 
   for (auto&& elmID : myElemList) {
     double tval = elmID.id * 2;
-    sd->node_data_[phase][elmID].whole_phase_load = tval;
-    auto &subphase_loads = sd->node_data_[phase][elmID].subphase_loads;
+    lbdh->node_data_[phase][elmID].whole_phase_load = tval;
+    auto &subphase_loads = lbdh->node_data_[phase][elmID].subphase_loads;
     subphase_loads.push_back(elmID.id % 2 ? tval : 0);
     subphase_loads.push_back(elmID.id % 2 ? 0 : tval);
   }
 
-  return sd;
+  return lbdh;
 }
 
 std::shared_ptr<LoadModel>
-setupBaseModel(PhaseType phase, std::shared_ptr<StatsData> sd) {
+setupBaseModel(PhaseType phase, std::shared_ptr<LBDataHolder> lbdh) {
   auto base_load_model = vt::theLBManager()->getBaseLoadModel();
   // force it to use our json workloads, not anything it may have collected
-  base_load_model->setLoads(&sd->node_data_, &sd->node_comm_);
+  base_load_model->setLoads(&lbdh->node_data_, &lbdh->node_comm_);
 
   vt::runInEpochCollective("updateLoads", [&]{
     base_load_model->updateLoads(phase);
@@ -172,8 +172,8 @@ TEST_F(TestWorkloadDataMigrator, test_normalize_call) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  auto sd = setupWorkloads(phase, numElements);
-  auto base_load_model = setupBaseModel(phase, sd);
+  auto lbdh = setupWorkloads(phase, numElements);
+  auto base_load_model = setupBaseModel(phase, lbdh);
 
   vt::objgroup::proxy::Proxy<WorkloadDataMigrator> norm_lb_proxy;
   std::shared_ptr<ProposedReassignment> new_model = nullptr;
@@ -231,8 +231,8 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_home) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  auto sd = setupWorkloads(phase, numElements);
-  auto base_load_model = setupBaseModel(phase, sd);
+  auto lbdh = setupWorkloads(phase, numElements);
+  auto base_load_model = setupBaseModel(phase, lbdh);
 
   // move everything off the home node
   std::shared_ptr<ProposedReassignment> not_home_model = shiftObjectsRight(
@@ -280,8 +280,8 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_home) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  auto sd = setupWorkloads(phase, numElements);
-  auto base_load_model = setupBaseModel(phase, sd);
+  auto lbdh = setupWorkloads(phase, numElements);
+  auto base_load_model = setupBaseModel(phase, lbdh);
 
   // move everything off the home node
   std::shared_ptr<ProposedReassignment> not_home_model = shiftObjectsRight(
@@ -342,8 +342,8 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_home) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  auto sd = setupWorkloads(phase, numElements);
-  auto base_load_model = setupBaseModel(phase, sd);
+  auto lbdh = setupWorkloads(phase, numElements);
+  auto base_load_model = setupBaseModel(phase, lbdh);
 
   // move everything off the home node
   std::shared_ptr<ProposedReassignment> not_home_model = shiftObjectsRight(
@@ -394,8 +394,8 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_here_from_home) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  auto sd = setupWorkloads(phase, numElements);
-  auto base_load_model = setupBaseModel(phase, sd);
+  auto lbdh = setupWorkloads(phase, numElements);
+  auto base_load_model = setupBaseModel(phase, lbdh);
 
   // move everything off the home node
   std::shared_ptr<ProposedReassignment> not_home_model = shiftObjectsRight(
@@ -456,8 +456,8 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_1) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  auto sd = setupWorkloads(phase, numElements);
-  auto base_load_model = setupBaseModel(phase, sd);
+  auto lbdh = setupWorkloads(phase, numElements);
+  auto base_load_model = setupBaseModel(phase, lbdh);
 
   // shift the workloads to not be home
   std::shared_ptr<ProposedReassignment> workloads_not_home_model =
@@ -510,8 +510,8 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_2) {
   PhaseType phase = 0;
   const size_t numElements = 5;
 
-  auto sd = setupWorkloads(phase, numElements);
-  auto base_load_model = setupBaseModel(phase, sd);
+  auto lbdh = setupWorkloads(phase, numElements);
+  auto base_load_model = setupBaseModel(phase, lbdh);
 
   // put the workloads whereever
   std::shared_ptr<ProposedReassignment> workloads_whereever_model =
@@ -558,7 +558,7 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_2) {
   }
 }
 
-std::shared_ptr<StatsData>
+std::shared_ptr<LBDataHolder>
 setupManyWorkloads(
   PhaseType initial_phase, PhaseType num_phases, size_t numElements
 ) {
@@ -574,24 +574,24 @@ setupManyWorkloads(
     );
   }
 
-  auto sd = std::make_shared<StatsData>();
+  auto lbdh = std::make_shared<LBDataHolder>();
 
   PhaseType stop_phase = initial_phase + num_phases;
   for (PhaseType phase = initial_phase; phase < stop_phase; ++phase) {
     for (size_t ii = 0; ii < numElements; ++ii) {
       auto elmID = myElemList[ii];
       double tval = this_node + (ii + 10) * 2;
-      sd->node_data_[phase][elmID].whole_phase_load = tval + phase;
-      auto &subphase_loads = sd->node_data_[phase][elmID].subphase_loads;
+      lbdh->node_data_[phase][elmID].whole_phase_load = tval + phase;
+      auto &subphase_loads = lbdh->node_data_[phase][elmID].subphase_loads;
       subphase_loads.push_back(elmID.id % 2 ? tval : phase);
       subphase_loads.push_back(elmID.id % 2 ? phase : tval);
     }
   }
 
-  auto scrambled_sd = std::make_shared<StatsData>();
+  auto scrambled_lbdh = std::make_shared<LBDataHolder>();
 
   for (PhaseType phase = initial_phase; phase < stop_phase; ++phase) {
-    auto base_load_model = setupBaseModel(phase, sd);
+    auto base_load_model = setupBaseModel(phase, lbdh);
 
     std::shared_ptr<ProposedReassignment> not_home_model =
       shiftObjectsRight(base_load_model, phase);
@@ -613,20 +613,20 @@ setupManyWorkloads(
     for (auto it = here_model->begin(); it.isValid(); ++it) {
       auto obj_id = *it;
       using vt::vrt::collection::balance::PhaseOffset;
-      scrambled_sd->node_data_[phase][obj_id].whole_phase_load =
+      scrambled_lbdh->node_data_[phase][obj_id].whole_phase_load =
         here_model->getWork(
           obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
         );
-      scrambled_sd->node_data_[phase][*it].subphase_loads.push_back(
+      scrambled_lbdh->node_data_[phase][*it].subphase_loads.push_back(
         here_model->getWork(obj_id, {PhaseOffset::NEXT_PHASE, 0})
       );
-      scrambled_sd->node_data_[phase][*it].subphase_loads.push_back(
+      scrambled_lbdh->node_data_[phase][*it].subphase_loads.push_back(
         here_model->getWork(obj_id, {PhaseOffset::NEXT_PHASE, 1})
       );
     }
   }
 
-  return scrambled_sd;
+  return scrambled_lbdh;
 }
 
 struct TestWorkloadReplay : TestParallelHarness {
@@ -645,11 +645,11 @@ TEST_F(TestWorkloadReplay, test_run_replay_no_verify) {
   const size_t numElements = 5;
 
   // first set up the workloads to replay, moving them around by phase
-  auto sd = setupManyWorkloads(initial_phase, num_phases, numElements);
+  auto lbdh = setupManyWorkloads(initial_phase, num_phases, numElements);
 
   // then replay them but allow the lb to place objects differently
   vt::vrt::collection::balance::replay::replayWorkloads(
-    initial_phase, num_phases, sd
+    initial_phase, num_phases, lbdh
   );
 }
 

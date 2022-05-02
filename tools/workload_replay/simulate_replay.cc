@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     argc != 3,
     "Must have two app-specific arguments: <initial phase> <phases to run>\n"
     "The json workload files needs to be specified using\n"
-    "--vt_lb_stats_file_in and --vt_lb_stats_dir_in"
+    "--vt_lb_data_file_in and --vt_lb_data_dir_in"
   );
 
   // initial phase to simulate
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
   PhaseType phases_to_run = atoi(argv[2]);
 
   // the workloads used will be those specified with the command-line arguments
-  // --vt_lb_stats_file_in and --vt_lb_stats_dir_in
+  // --vt_lb_data_file_in and --vt_lb_data_dir_in
   vt::vrt::collection::balance::replay::replayWorkloads(
     initial_phase, phases_to_run
   );
