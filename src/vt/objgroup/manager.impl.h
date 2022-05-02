@@ -352,10 +352,10 @@ typename ObjGroupManager::ProxyElmType<ObjT> ObjGroupManager::proxyElm(ObjT* obj
 }
 
 template <typename ObjT>
-std::string ObjGroupManager::getLabel(ObjGroupManager::ProxyType<ObjT> proxy) {
+std::string ObjGroupManager::getLabel(ObjGroupManager::ProxyType<ObjT> proxy) const {
   auto const proxy_bits = proxy.getProxy();
   auto const iter = labels_.find(proxy_bits);
-  vtAssert(iter != labels_.end(), "Obj must exist on this node");
+  vtAssert(iter != labels_.end(), "Obj label does not exist");
   return iter->second;
 }
 

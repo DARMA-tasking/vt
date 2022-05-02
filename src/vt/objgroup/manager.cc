@@ -126,11 +126,7 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
     std::forward_as_tuple(proxy),
     std::forward_as_tuple(std::move(base))
   );
-  labels_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(proxy),
-    std::forward_as_tuple(label)
-  );
+  labels_.emplace(proxy, label);
 
   return proxy;
 }

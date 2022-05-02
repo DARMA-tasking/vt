@@ -320,7 +320,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   ProxyElmType<ObjT> proxyElm(ObjT* obj);
 
   /**
-   * \brief Get label of object group
+   * \brief Get object group label
    *
    * \param[in] proxy indexed proxy to the object group (must be the current
    * node)
@@ -328,7 +328,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \return label of the Object Group
    */
   template <typename ObjT>
-  std::string getLabel(ProxyType<ObjT> proxy);
+  std::string getLabel(ProxyType<ObjT> proxy) const;
 
   /*
    * Dispatch to a live obj group pointer with a handler
