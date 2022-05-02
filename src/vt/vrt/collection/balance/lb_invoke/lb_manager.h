@@ -166,6 +166,8 @@ public:
    */
   static void printLBArgsHelp(std::string lb);
 
+  void destroyLB();
+
 protected:
   /**
    * \internal
