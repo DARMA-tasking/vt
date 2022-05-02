@@ -459,8 +459,6 @@ void LBManager::finishedLB(PhaseType phase) {
 void LBManager::statsHandler(StatsMsgType* msg) {
   auto in_stat_vec = msg->getConstVal();
 
-  //vt_print(lb, "before_lb_stats_={}\n", before_lb_stats_);
-
   // use the raw loads if they were computed, otherwise fall back on model loads
   lb::Statistic rank_statistic = lb::Statistic::Rank_load_modeled;
   lb::Statistic obj_statistic  = lb::Statistic::Object_load_modeled;
