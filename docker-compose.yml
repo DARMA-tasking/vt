@@ -99,6 +99,7 @@ volumes:
   amd64-alpine-clang-8-cache:
   amd64-alpine-clang-9-cache:
   amd64-alpine-clang-10-cache:
+  amd64-alpine-clang-11-cache:
   amd64-alpine-gcc-5-cache:
   amd64-alpine-gcc-6-cache:
   amd64-alpine-gcc-7-cache:
@@ -172,13 +173,15 @@ services:
     build:
       context: .
       target: base
-      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-cpp.dockerfile
+      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
       args: &default-args
         arch: ${ARCH}
         proxy: ${PROXY}
         compiler: ${COMPILER}
+        ubuntu: ${UBUNTU}
+        ubsan_enabled: ${VT_UBSAN:-0}
         zoltan_enabled: ${VT_ZOLTAN:-0}
     ulimits: &ulimits
       core: ${ULIMIT_CORE}
@@ -205,7 +208,7 @@ services:
     build:
       context: .
       target: base
-      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-cpp.dockerfile
+      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
       args: *default-args
@@ -232,7 +235,7 @@ services:
     build:
       context: .
       target: base
-      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-cpp.dockerfile
+      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
       args: *default-args
@@ -262,7 +265,7 @@ services:
     build:
       context: .
       target: base
-      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-cpp.dockerfile
+      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
       args: *default-args
@@ -323,7 +326,7 @@ services:
     build:
       context: .
       target: build
-      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-cpp.dockerfile
+      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
       args:
