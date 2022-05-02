@@ -83,4 +83,21 @@ INSTANTIATE_TYPED_TEST_SUITE_P(
   test_construct_distributed_simple, TestConstructDist, CollectionTestDistTypes, DEFAULT_NAME_GEN
 );
 
+struct TestConstructLabel : TestParallelHarness {};
+
+TEST_F(TestConstructLabel, test_labels) {
+  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+  auto const range = Index1D(num_nodes);
+  std::string const label = "test_labels";
+
+  auto proxy = makeCollection<default_::TestCol>(label)
+    .bounds(range)
+    .bulkInsert()
+    .wait();
+
+  auto const proxyLabel = theCollection()->getLabel(proxy);
+
+  EXPECT_EQ(label, proxyLabel);
+}
+
 }}} // end namespace vt::tests::unit
