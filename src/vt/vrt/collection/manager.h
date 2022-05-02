@@ -346,12 +346,13 @@ struct CollectionManager
   /**
    * \internal \brief Insert meta-data for this collection on this node
    *
+   * \param[in] label the collection label
    * \param[in] proxy the collection proxy
    * \param[in] inner_holder_args arguments to construct the inner holder
    */
   template <typename ColT, typename... Args>
   void insertMetaCollection(
-    VirtualProxyType const& proxy, Args&&... inner_holder_args
+    std::string const& label, VirtualProxyType const proxy, Args&&... inner_holder_args
   );
 
   /**
@@ -1719,6 +1720,15 @@ public:
     std::string const& file_base
   );
 
+  /**
+   * \brief Get collection label
+   *
+   * \param[in] proxy Collection proxy
+   * \return collection lable
+   */
+  template <typename ColT>
+  std::string getLabel(CollectionProxyWrapType<ColT> const proxy) const;
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cleanup_fns_
@@ -1727,7 +1737,8 @@ public:
       | next_collective_id_
       | next_rooted_id_
       | typeless_holder_
-      | reduce_stamp_;
+      | reduce_stamp_
+      | labels_;
   }
 
 private:
@@ -1827,6 +1838,7 @@ private:
   VirtualIDType next_rooted_id_ = 0;
   TypelessHolder typeless_holder_;
   std::unordered_map<VirtualProxyType, SequentialIDType> reduce_stamp_;
+  std::unordered_map<VirtualProxyType, std::string> labels_;
 };
 
 }}} /* end namespace vt::vrt::collection */

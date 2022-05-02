@@ -142,7 +142,7 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
   // Insert the typed meta-data for this new collection, along with creating
   // the meta-data collection holder for elements
   insertMetaCollection<ColT>(
-    proxy, map_han, has_dynamic_membership, map_object, has_bounds, bounds, label
+    label, proxy, map_han, has_dynamic_membership, map_object, has_bounds, bounds, label
   );
 
   std::size_t global_constructed_elms = 0;
