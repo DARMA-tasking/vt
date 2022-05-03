@@ -378,6 +378,14 @@ void LBManager::startup() {
   });
 }
 
+void LBManager::destroyLB() {
+  // Destruct the objgroup that was used for LB
+  if (destroy_lb_ != nullptr) {
+    destroy_lb_();
+    destroy_lb_ = nullptr;
+  }
+}
+
 void LBManager::finishedLB(PhaseType phase) {
   vt_debug_print(
     normal, lb,
@@ -387,11 +395,7 @@ void LBManager::finishedLB(PhaseType phase) {
   theNodeLBData()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
   theNodeLBData()->outputLBDataForPhase(phase);
 
-  // Destruct the objgroup that was used for LB
-  if (destroy_lb_ != nullptr) {
-    destroy_lb_();
-    destroy_lb_ = nullptr;
-  }
+  destroyLB();
 }
 
 void LBManager::statsHandler(StatsMsgType* msg) {
