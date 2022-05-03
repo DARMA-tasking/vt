@@ -233,7 +233,7 @@ protected:
 
   void defaultPostLBWork(ReassignmentMsg* r);
 
-private:
+public:
   /**
    * \brief Compute statistics given a load model
    *
@@ -248,6 +248,8 @@ private:
   );
 
   void statsHandler(StatsMsgType* msg);
+
+private:
   bool isCollectiveComm(elm::CommCategory cat) const;
 
 private:
