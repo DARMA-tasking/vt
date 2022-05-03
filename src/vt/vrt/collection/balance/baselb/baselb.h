@@ -152,7 +152,7 @@ protected:
   // Observer only - LBManager owns the instance
   balance::LoadModel* load_model_                 = nullptr;
 
-private:
+protected:
   /**
    * \brief Normalizes the reassignment graph by setting up in/out edges on both
    * sides regardless of how they are passed to \c migrateObjectTo
@@ -161,6 +161,7 @@ private:
    */
   std::shared_ptr<const balance::Reassignment> normalizeReassignments();
 
+private:
   TransferVecType transfers_                      = {};
   TransferType off_node_migrate_                  = {};
   int32_t local_migration_count_                  = 0;
