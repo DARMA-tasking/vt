@@ -428,6 +428,7 @@ void LBManager::destroyLB() {
     destroy_lb_();
     destroy_lb_ = nullptr;
   }
+}
 
 void LBManager::initialize() {
 #if vt_check_enabled(lblite)
@@ -706,7 +707,7 @@ void LBManager::createStatisticsFile() {
 
     if (not statistics_writer_) {
       statistics_writer_ = std::make_unique<JSONAppender>(
-        "phases", file_name, compress
+        "phases", "LBStatsfile", file_name, compress
       );
     }
   }

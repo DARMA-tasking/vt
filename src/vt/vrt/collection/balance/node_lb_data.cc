@@ -164,7 +164,9 @@ void NodeLBData::createLBDataFile() {
   using JSONAppender = util::json::Appender<std::ofstream>;
 
   if (not lb_data_writer_) {
-    lb_data_writer_ = std::make_unique<JSONAppender>("phases", file_name, compress);
+    lb_data_writer_ = std::make_unique<JSONAppender>(
+      "phases", "LBDatafile", file_name, compress
+    );
   }
 }
 

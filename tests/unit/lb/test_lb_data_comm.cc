@@ -77,7 +77,9 @@ LBDataHolder getLBDataForPhase(vt::PhaseType phase) {
   using vt::vrt::collection::balance::LBDataHolder;
   using json = nlohmann::json;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
-  auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), true);
+  auto ap = std::make_unique<JSONAppender>(
+    "phases", "LBDatafile", std::move(ss), true
+  );
   auto j = vt::theNodeLBData()->getLBData()->toJson(phase);
   ap->addElm(*j);
   ss = ap->finish();
