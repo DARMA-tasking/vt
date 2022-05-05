@@ -6,6 +6,8 @@ stages:
 
 variables:
   ASC_WCID: "fy140001"
+  http_proxy: http://proxy.sandia.gov:80
+  https_proxy: http://proxy.sandia.gov:80
 
 # before_script:
 
@@ -22,6 +24,7 @@ intel19:
   script:
     - source /projects/empire/installs/chama/INTEL-RELEASE-OPENMP-SHARED/trilinos/latest-link/load_matching_env.sh
     - VT_RDMA_TESTS_ENABLED=0 ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
+    - ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
   only:
     refs:
       - develop

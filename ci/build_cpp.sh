@@ -49,10 +49,10 @@ else
     if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
     then
         cd "${source_dir}/lib"
-        git clone -b "${detector_rev}" --depth 1 git@github.com:DARMA-tasking/detector.git
+        git clone -b "${detector_rev}" --depth 1 https://github.com/DARMA-tasking/detector.git
         cd -
     else
-      git clone -b "${detector_rev}" --depth 1 git@github.com:DARMA-tasking/detector.git
+      git clone -b "${detector_rev}" --depth 1 https://github.com/DARMA-tasking/detector.git
       export DETECTOR=$PWD/detector
       export DETECTOR_BUILD=${build_dir}/detector
       mkdir -p "$DETECTOR_BUILD"
@@ -73,10 +73,10 @@ else
     if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
     then
         cd "${source_dir}/lib"
-        git clone -b "${checkpoint_rev}" --depth 1 git@github.com:DARMA-tasking/checkpoint.git
+        git clone -b "${checkpoint_rev}" --depth 1 https://github.com/DARMA-tasking/checkpoint.git
         cd -
     else
-        git clone -b "${checkpoint_rev}" --depth 1 git@github.com:DARMA-tasking/checkpoint.git
+        git clone -b "${checkpoint_rev}" --depth 1 https://github.com/DARMA-tasking/checkpoint.git
         export CHECKPOINT=$PWD/checkpoint
         export CHECKPOINT_BUILD=${build_dir}/checkpoint
         mkdir -p "$CHECKPOINT_BUILD"
