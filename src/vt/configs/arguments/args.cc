@@ -776,9 +776,7 @@ std::tuple<int, std::string> ArgConfig::parseToConfig(
 }
 
 namespace {
-static std::string buildFile(
-  std::string const& file, std::string const& dir, bool add_br_extension
-) {
+static std::string buildRankFile(std::string const& file) {
   std::string name = file;
   std::size_t rank = name.find("%p");
   auto str_rank = std::to_string(theContext()->getNode());
@@ -787,22 +785,37 @@ static std::string buildFile(
   } else {
     name.replace(rank, 2, str_rank);
   }
-  if (add_br_extension) {
-    if (name.substr(name.length()-3, 3) != ".br") {
-      name = name + ".br";
-    }
+  return name;
+}
+
+static std::string buildFile(
+  std::string const& file, std::string const& dir
+) {
+  auto const name = buildRankFile(file);
+  return dir + "/" + name;
+}
+
+static std::string buildFileWithBrExtension(
+  std::string const& file, std::string const& dir
+) {
+  auto name = buildRankFile(file);
+  if (name.substr(name.length()-3, 3) != ".br") {
+    name = name + ".br";
   }
   return dir + "/" + name;
-
 }
 } /* end anon namespace */
 
 std::string AppConfig::getLBStatsFileOut() const {
-  return buildFile(vt_lb_stats_file, vt_lb_stats_dir, vt_lb_stats_compress);
+  if (vt_lb_stats_compress) {
+    return buildFileWithBrExtension(vt_lb_stats_file, vt_lb_stats_dir);
+  } else {
+    return buildFile(vt_lb_stats_file, vt_lb_stats_dir);
+  }
 }
 
 std::string AppConfig::getLBStatsFileIn() const {
-  return buildFile(vt_lb_stats_file_in, vt_lb_stats_dir_in, false);
+  return buildFile(vt_lb_stats_file_in, vt_lb_stats_dir_in);
 }
 
 }} /* end namespace vt::arguments */
