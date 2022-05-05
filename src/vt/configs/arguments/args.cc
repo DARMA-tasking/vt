@@ -806,16 +806,16 @@ static std::string buildFileWithBrExtension(
 }
 } /* end anon namespace */
 
-std::string AppConfig::getLBStatsFileOut() const {
-  if (vt_lb_stats_compress) {
-    return buildFileWithBrExtension(vt_lb_stats_file, vt_lb_stats_dir);
+std::string AppConfig::getLBDataFileOut() const {
+  if (vt_lb_data_compress) {
+    return buildFileWithBrExtension(vt_lb_data_file, vt_lb_data_dir);
   } else {
-    return buildFile(vt_lb_stats_file, vt_lb_stats_dir);
+    return buildFile(vt_lb_data_file, vt_lb_data_dir);
   }
 }
 
-std::string AppConfig::getLBStatsFileIn() const {
-  return buildFile(vt_lb_stats_file_in, vt_lb_stats_dir_in);
+std::string AppConfig::getLBDataFileIn() const {
+  return buildFile(vt_lb_data_file_in, vt_lb_data_dir_in);
 }
 
 }} /* end namespace vt::arguments */
