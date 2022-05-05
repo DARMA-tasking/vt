@@ -449,7 +449,7 @@ void CollectionManager::invokeCollectiveMsg(
   auto untyped_proxy = proxy.getProxy();
   auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
   elm_holder->foreach([&](IndexType const& idx, Indexable<IndexType>*) {
-    invokeMsgImpl<ColT, MsgT>(proxy(idx), msg, true);
+    invokeMsgImpl<ColT, MsgT>(proxy(idx), msgPtr, true);
   });
 }
 
@@ -526,7 +526,7 @@ void CollectionManager::invokeMsg(
     auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>()
   );
 
-  invokeMsgImpl<ColT, MsgT>(proxy, msg, instrument);
+  invokeMsgImpl<ColT, MsgT>(proxy, msgPtr, instrument);
 }
 
 template <
@@ -545,7 +545,7 @@ void CollectionManager::invokeMsg(
     auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>()
   );
 
-  invokeMsgImpl<ColT, MsgT>(proxy, msg, instrument);
+  invokeMsgImpl<ColT, MsgT>(proxy, msgPtr, instrument);
 }
 
 template <typename ColT, typename MsgT>
