@@ -68,6 +68,7 @@ PhaseManager::registerHookCollective(PhaseHook type, ActionType trigger) {
   );
 
   bool const is_collective = true;
+  bool const is_rooted = false;
   auto const type_bits = static_cast<HookIDType>(type);
   auto const hook_id = next_collective_hook_id_++;
   collective_hooks_[type_bits][hook_id] = trigger;
@@ -78,7 +79,7 @@ PhaseManager::registerHookCollective(PhaseHook type, ActionType trigger) {
     type_bits, hook_id
   );
 
-  return PhaseHookID{type, hook_id, is_collective};
+  return PhaseHookID{type, hook_id, is_collective, is_rooted};
 }
 
 PhaseHookID
@@ -88,6 +89,7 @@ PhaseManager::registerHookRooted(PhaseHook type, ActionType trigger) {
   );
 
   bool const is_collective = false;
+  bool const is_rooted = true;
   auto const type_bits = static_cast<HookIDType>(type);
   auto const hook_id = next_rooted_hook_id_++;
   rooted_hooks_[type_bits][hook_id] = trigger;
@@ -98,7 +100,28 @@ PhaseManager::registerHookRooted(PhaseHook type, ActionType trigger) {
     type_bits, hook_id
   );
 
-  return PhaseHookID{type, hook_id, is_collective};
+  return PhaseHookID{type, hook_id, is_collective, is_rooted};
+}
+
+PhaseHookID
+PhaseManager::registerHookUnsynchronized(PhaseHook type, ActionType trigger) {
+  vtAssertNot(
+    in_next_phase_collective_, "Must not be in next phase to register"
+  );
+
+  bool const is_collective = false;
+  bool const is_rooted = false;
+  auto const type_bits = static_cast<HookIDType>(type);
+  auto const hook_id = next_unsync_hook_id_++;
+  unsync_hooks_[type_bits][hook_id] = trigger;
+
+  vt_debug_print(
+    verbose, phase,
+    "PhaseManager::registerHookUnsynchronized: type={}, hook_id={}\n",
+    type_bits, hook_id
+  );
+
+  return PhaseHookID{type, hook_id, is_collective, is_rooted};
 }
 
 void PhaseManager::unregisterHook(PhaseHookID hook) {
@@ -109,14 +132,17 @@ void PhaseManager::unregisterHook(PhaseHookID hook) {
   auto const type = static_cast<HookIDType>(hook.getType());
   auto const id = hook.getID();
   auto const is_collective = hook.getIsCollective();
+  auto const is_rooted = hook.getIsRooted();
 
   vt_debug_print(
     verbose, phase,
-    "PhaseManager::unregisterHook: type={}, id={}, is_collective={}\n",
-    type, id, is_collective
+    "PhaseManager::unregisterHook: type={}, id={}, is_collective={}, "
+    "is_rooted={}\n",
+    type, id, is_collective, is_rooted
   );
 
-  auto& hooks = is_collective ? collective_hooks_ : rooted_hooks_;
+  auto& hooks = is_collective ? collective_hooks_ :
+    (is_rooted ? rooted_hooks_ : unsync_hooks_);
   auto iter = hooks[type].find(id);
   if (iter != hooks[type].end()) {
     hooks[type].erase(iter);
@@ -162,6 +188,7 @@ void PhaseManager::nextPhaseCollective() {
     "hooks\n", cur_phase_
   );
 
+  runHooksTogether(PhaseHook::DataCollection);
   runHooks(PhaseHook::End);
   runHooks(PhaseHook::EndPostMigration);
 
@@ -194,6 +221,38 @@ void PhaseManager::nextPhaseDone(NextMsg* msg) {
   reduce_finished_ = true;
 }
 
+void PhaseManager::runHooksTogether(PhaseHook type) {
+  auto const type_bits = static_cast<HookIDType>(type);
+
+  // start out running all rooted hooks of a particular type
+  runInEpochCollective("PhaseManager::runHooksTogether", [&]{
+    {
+      auto iter = rooted_hooks_.find(type_bits);
+      if (iter != rooted_hooks_.end()) {
+        for (auto&& fn : iter->second) {
+          fn.second();
+        }
+      }
+    }
+    {
+      auto iter = collective_hooks_.find(type_bits);
+      if (iter != collective_hooks_.end()) {
+        for (auto&& fn : iter->second) {
+          fn.second();
+        }
+      }
+    }
+    {
+      auto iter = unsync_hooks_.find(type_bits);
+      if (iter != unsync_hooks_.end()) {
+        for (auto&& fn : iter->second) {
+          fn.second();
+        }
+      }
+    }
+  });
+}
+
 void PhaseManager::runHooks(PhaseHook type) {
   auto const type_bits = static_cast<HookIDType>(type);
 
@@ -214,6 +273,17 @@ void PhaseManager::runHooks(PhaseHook type) {
       // note, this second is a map, so they are ordered across nodes
       for (auto&& fn : iter->second) {
         runInEpochCollective("PhaseManager::runHooks", [=]{ fn.second(); });
+      }
+    }
+  }
+
+  // then, run the unsync'ed hooks
+  {
+    auto iter = unsync_hooks_.find(type_bits);
+    if (iter != unsync_hooks_.end()) {
+      // note, this second is a map, so they are ordered across nodes
+      for (auto&& fn : iter->second) {
+        fn.second();
       }
     }
   }

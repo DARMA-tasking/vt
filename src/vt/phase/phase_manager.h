@@ -136,6 +136,16 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
   PhaseHookID registerHookRooted(PhaseHook type, ActionType trigger);
 
   /**
+   * \brief Register an unsynchronized phase hook
+   *
+   * \param[in] type the type of trigger to register
+   * \param[in] trigger the action to trigger
+   *
+   * \return registered ID that can be used to unregister the hook
+   */
+  PhaseHookID registerHookUnsynchronized(PhaseHook type, ActionType trigger);
+
+  /**
    * \brief Unregister an existing hook
    *
    * \warning For collective hooks, they must all be unregistered across all
@@ -191,6 +201,14 @@ private:
    */
   void runHooks(PhaseHook type);
 
+  /**
+   * \internal \brief Run all the hooks registered here of a certain variety in
+   * the same epoch
+   *
+   * \param[in] type type of hook to run designated by the enum \c PhaseHook
+   */
+  void runHooksTogether(PhaseHook type);
+
 public:
   /**
    * \brief Run hooks manually
@@ -206,6 +224,7 @@ public:
       | proxy_
       | collective_hooks_
       | rooted_hooks_
+      | unsync_hooks_
       | next_collective_hook_id_
       | next_rooted_hook_id_
       | in_next_phase_collective_
@@ -219,8 +238,10 @@ private:
   ObjGroupProxyType proxy_ = no_obj_group;  /**< Objgroup proxy  */
   HookIDMapType collective_hooks_;          /**< Collective regisstered hooks */
   HookIDMapType rooted_hooks_;              /**< Rooted regisstered hooks  */
+  HookIDMapType unsync_hooks_;              /**< Unsync'ed regisstered hooks  */
   std::size_t next_collective_hook_id_ = 1; /**< Next ID for collective hooks */
   std::size_t next_rooted_hook_id_ = 1;     /**< Next ID for rooted hooks */
+  std::size_t next_unsync_hook_id_ = 1;     /**< Next ID for unsync'ed hooks */
   bool in_next_phase_collective_ = false;   /**< Whether blocked in next phase */
   bool reduce_next_phase_done_ = false;     /**< Whether reduce is complete */
   bool reduce_finished_ = false;            /**< Whether next phase is done */
