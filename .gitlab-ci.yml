@@ -26,7 +26,7 @@ intel19:
     refs:
       - develop
   tags:
-    - intel19_batch
+    - intel19_usr
 
 nvcc_wrapper-vortex:
   variables:
