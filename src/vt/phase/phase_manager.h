@@ -227,6 +227,7 @@ public:
       | unsync_hooks_
       | next_collective_hook_id_
       | next_rooted_hook_id_
+      | next_unsync_hook_id_
       | in_next_phase_collective_
       | reduce_next_phase_done_
       | reduce_finished_
