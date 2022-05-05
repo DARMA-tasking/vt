@@ -48,6 +48,8 @@
 
 namespace vt { namespace tests { namespace unit {
 
+#if vt_check_enabled(rdma_tests)
+
 using RDMATestTypesBasic = testing::Types<int>;
 
 TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_basic_1) {
@@ -83,5 +85,7 @@ INSTANTIATE_TYPED_TEST_SUITE_P(
   test_rdma_handle_basic, TestRDMAHandle, RDMATestTypesBasic,
   DEFAULT_NAME_GEN
 );
+
+#endif /*vt_check_enabled(rdma_tests)*/
 
 }}} /* end namespace vt::tests::unit */
