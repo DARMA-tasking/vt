@@ -2,7 +2,6 @@
 
 macro(set_darma_compiler_flags vt_target)
 
-set(CMAKE_CXX_EXTENSIONS OFF)
 if (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
   # 4.9.3 complains about std::min not being constexpr
   if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 5))

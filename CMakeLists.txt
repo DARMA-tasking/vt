@@ -44,12 +44,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   add_compile_options(-fcolor-diagnostics)
 endif()
 
-# Code coverage option of VT
 option(CODE_COVERAGE "Enable coverage reporting" OFF)
-# OPTION(CODE_COVERAGE_ENABLED FALSE)
-# if(CODE_COVERAGE_ENABLED)
-#     include(cmake/code_coverage.cmake)
-# endif(CODE_COVERAGE_ENABLED)
 
 set(MPI_EXTRA_FLAGS "" CACHE STRING "Flags to pass to mpirun/mpiexec")
 string(REPLACE " " ";" MPI_EXTRA_FLAGS_LIST "${MPI_EXTRA_FLAGS}")
