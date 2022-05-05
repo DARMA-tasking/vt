@@ -172,6 +172,29 @@ struct Broadcastable : BaseProxyT {
     typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
   >
   messaging::PendingSend broadcastCollective(Args&&... args) const;
+
+  /**
+   * \brief Invoke member message handler on all collection elements
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] args arguments for creating the message
+   */
+  template <
+    typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
+  >
+  void invokeCollective(Args&&... args) const;
+
+  /**
+   * \brief Invoke message handler on all collection elements
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] args arguments for creating the message
+   */
+  template <
+    typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f,
+    typename... Args
+  >
+  void invokeCollective(Args&&... args) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

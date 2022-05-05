@@ -408,6 +408,51 @@ ColT* CollectionManager::getCollectionPtrForInvoke(
   return static_cast<ColT*>(inner_holder.getRawPtr());
 }
 
+template <
+  typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
+>
+void CollectionManager::invokeCollectiveMsg(
+  CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+  messaging::MsgPtrThief<MsgT> msg
+) {
+  using ColT = typename MsgT::CollectionType;
+  using IndexType = typename ColT::IndexType;
+
+  auto& msgPtr = msg.msg_;
+  msgPtr->setVrtHandler(
+    auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>()
+  );
+
+  auto untyped_proxy = proxy.getProxy();
+  auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
+  elm_holder->foreach([&](IndexType const& idx, Indexable<IndexType>*) {
+    invokeMsgImpl<ColT, MsgT>(proxy(idx), msgPtr, true);
+  });
+}
+
+template <
+  typename MsgT,
+  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+>
+void CollectionManager::invokeCollectiveMsg(
+  CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+  messaging::MsgPtrThief<MsgT> msg
+) {
+  using ColT = typename MsgT::CollectionType;
+  using IndexType = typename ColT::IndexType;
+
+  auto& msgPtr = msg.msg_;
+  msgPtr->setVrtHandler(
+    auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>()
+  );
+
+  auto untyped_proxy = proxy.getProxy();
+  auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
+  elm_holder->foreach([&](IndexType const& idx, Indexable<IndexType>*) {
+    invokeMsgImpl<ColT, MsgT>(proxy(idx), msg, true);
+  });
+}
+
 template <typename ColT, typename Type, Type f, typename... Args>
 util::Copyable<Type> CollectionManager::invoke(
   VirtualElmProxyType<ColT> const& proxy, Args... args
@@ -505,12 +550,11 @@ void CollectionManager::invokeMsg(
 
 template <typename ColT, typename MsgT>
 void CollectionManager::invokeMsgImpl(
-  VirtualElmProxyType<ColT> const& proxy, messaging::MsgPtrThief<MsgT> msg,
+  VirtualElmProxyType<ColT> const& proxy, MsgSharedPtr<MsgT> msg,
   bool instrument
 )
 {
   using IndexT = typename ColT::IndexType;
-  auto& msgPtr = msg.msg_;
 
   auto idx = proxy.getElementProxy().getIndex();
   auto elm_holder =
@@ -536,34 +580,34 @@ void CollectionManager::invokeMsgImpl(
   );
 
   if (elm_id.id != elm::no_element_id) {
-    msgPtr->setSenderElm(elm_id);
-    msgPtr->setCat(elm::CommCategory::LocalInvoke);
+    msg->setSenderElm(elm_id);
+    msg->setCat(elm::CommCategory::LocalInvoke);
   }
 #endif
 
-  auto const cur_epoch = theMsg()->setupEpochMsg(msgPtr);
+  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
   auto& inner_holder = elm_holder->lookup(idx);
   auto const col_ptr = inner_holder.getRawPtr();
   auto const from = theContext()->getNode();
 
-  msgPtr->setFromNode(from);
-  msgPtr->setProxy(proxy);
+  msg->setFromNode(from);
+  msg->setProxy(proxy);
 
   theMsg()->pushEpoch(cur_epoch);
 
-  auto const han = msgPtr->getVrtHandler();
+  auto const han = msg->getVrtHandler();
 
   trace::TraceEventIDType trace_event = trace::no_trace_event;
 #if vt_check_enabled(trace_enabled)
 
-  auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msgPtr.get());
+  auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   const bool is_bcast = false;
 
   trace_event = theMsg()->makeTraceCreationSend(han, msg_size, is_bcast);
 #endif
 
   collectionAutoMsgDeliver<ColT, IndexT, MsgT, typename MsgT::UserMsgType>(
-    msgPtr.get(), col_ptr, han, from, trace_event, true
+    msg.get(), col_ptr, han, from, trace_event, true
   );
 
   theMsg()->popEpoch(cur_epoch);
@@ -1356,7 +1400,7 @@ void CollectionManager::insertMetaCollection(
     using MsgType = CollectStatsMsg<ColT>;
     auto const phase = thePhase()->getCurrentPhase();
     CollectionProxyWrapType<ColT> p{bits};
-    p.template broadcastCollective<MsgType,CollectionLBData::syncNextPhase<ColT>>(
+    p.template invokeCollective<MsgType,CollectionLBData::syncNextPhase<ColT>>(
       phase
     );
   };

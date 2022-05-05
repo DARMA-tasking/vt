@@ -698,6 +698,37 @@ struct CollectionManager
   invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
 
   /**
+   * \brief Invoke message action function handler without going through
+   * scheduler for all elements
+   *
+   * \param[in] proxy the whole collection proxy
+   * \param[in] msg the msg
+   */
+  template <
+    typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
+  >
+  void invokeCollectiveMsg(
+    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    messaging::MsgPtrThief<MsgT> msg
+  );
+
+  /**
+   * \brief Invoke message action function handler without going through
+   * scheduler for all elements
+   *
+   * \param[in] proxy the whole collection proxy
+   * \param[in] msg the msg
+   */
+  template <
+    typename MsgT,
+    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+  >
+  void invokeCollectiveMsg(
+    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    messaging::MsgPtrThief<MsgT> msg
+  );
+
+  /**
    * \brief Invoke message action function handler without going through scheduler
    *
    * \param[in] proxy the collection proxy
@@ -740,7 +771,7 @@ struct CollectionManager
    */
   template <typename ColT, typename MsgT>
   void invokeMsgImpl(
-    VirtualElmProxyType<ColT> const& proxy, messaging::MsgPtrThief<MsgT> msg,
+    VirtualElmProxyType<ColT> const& proxy, MsgSharedPtr<MsgT> msg,
     bool instrument
   );
 
