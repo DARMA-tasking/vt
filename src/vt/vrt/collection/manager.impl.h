@@ -583,6 +583,8 @@ void CollectionManager::invokeMsgImpl(
     msg->setSenderElm(elm_id);
     msg->setCat(elm::CommCategory::LocalInvoke);
   }
+
+  msg->setLBLiteInstrument(instrument);
 #endif
 
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
