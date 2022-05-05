@@ -111,7 +111,7 @@ add_subdirectory(src)
 option(VT_BUILD_TESTS "Build VT tests" ON)
 
 if (VT_BUILD_TESTS
-   AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+   AND "${CMAKE_PROJECT_NAME}" STREQUAL "${PROJECT_NAME}")
   # CTest implies enable_testing() and defines the BUILD_TESTING option.
   # The default of BUILD_TESTING is ON.
   # Testing is only enabled if the actual project being built is VT.

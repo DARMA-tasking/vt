@@ -1,0 +1,60 @@
+# This runs testing for intel 19 and platforms which are not available
+# in the github testing environment
+
+stages:
+  - build
+
+variables:
+  ASC_WCID: "fy140001"
+
+# before_script:
+
+intel19:
+  variables:
+    OMPI_FC: "ifort"
+    FC: "ifort"
+    OMPI_CC: "icc"
+    CC: "icc"
+    OMPI_CXX: "icpc"
+    CXX: "icpc"
+    SCHEDULER_PARAMETERS: "--account=${ASC_WCID} --partition=short,batch --time=1:00:00 --nodes=1"
+  stage: build
+  script:
+    - source /projects/empire/installs/chama/INTEL-RELEASE-OPENMP-SHARED/trilinos/latest-link/load_matching_env.sh
+    - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
+  only:
+    refs:
+      - develop
+  tags:
+    - intel19_batch
+
+nvcc_wrapper-vortex:
+  variables:
+    OMPI_FC: "gfortran"
+    OMPI_CC: "gcc"
+    OMPI_CXX: "nvcc_wrapper"
+  stage: build
+  script:
+    - source /projects/empire/installs/vortex/CUDA-10.1.243_GNU-7.3.1_SPMPI-ROLLING-RELEASE-CUDA-STATIC/trilinos/latest-link/load_matching_env.sh
+    - mkdir -p /tmp/$USER
+    - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_nvcc_wrapper
+  only:
+    refs:
+      - develop
+  tags:
+    - ppc64le 
+
+
+arm-stria:
+  variables:
+    CC: "gcc"
+    CXX: "c++"
+  stage: build
+  script:
+    - source /projects/empire/installs/stria/ARM-20.1_OPENMPI-4.0.5-RELEASE-OPENMP-STATIC/trilinos/latest-link/load_matching_env.sh
+    - ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_gcc
+  only:
+    refs:
+      - develop
+  tags:
+    - aarch64 
