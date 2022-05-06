@@ -318,7 +318,6 @@ install(
 )
 
 set_darma_compiler_flags(${FMT_LIBRARY})
-set(FMT_LIBRARY_EXPORT ${FMT_LIBRARY})
 install(TARGETS ${FMT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 
 set_darma_compiler_flags(${ENG_FORMAT_LIBRARY})
@@ -331,27 +330,24 @@ install(TARGETS ${JSON_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 
 if (vt_mimalloc_enabled)
   set_darma_compiler_flags(${MIMALLOC_LIBRARY})
-  set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
 endif()
 
 if (vt_libfort_enabled)
   set_darma_compiler_flags(${FORT_LIBRARY})
-  set(FORT_LIBRARY_EXPORT ${FORT_LIBRARY})
   install(TARGETS ${FORT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 endif()
 
 if (vt_fcontext_enabled)
   set_darma_compiler_flags(${FCONTEXT_LIBRARY})
-  set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
 endif()
 
 # Export to build directory
 export(
   TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
-                            ${FCONTEXT_LIBRARY_EXPORT}
-                            ${MIMALLOC_LIBRARY_EXPORT}
-                            ${FORT_LIBRARY_EXPORT}
-                            ${FMT_LIBRARY_EXPORT}
+                            ${FCONTEXT_LIBRARY}
+                            ${MIMALLOC_LIBRARY}
+                            ${FORT_LIBRARY}
+                            ${FMT_LIBRARY}
                             ${ENG_FORMAT_LIBRARY}
                             ${JSON_LIBRARY}
                             ${BROTLI_LIBRARY}
