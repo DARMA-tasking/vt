@@ -77,7 +77,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /*static*/ std::unique_ptr<LBManager> LBManager::construct() {
   auto ptr = std::make_unique<LBManager>();
   auto proxy = theObjGroup()->makeCollective<LBManager>(
-    "LBManager::construct()", ptr.get()
+    ptr.get(), "LBManager::construct()"
   );
   proxy.get()->setProxy(proxy);
 

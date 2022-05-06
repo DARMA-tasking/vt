@@ -73,12 +73,12 @@ namespace vt { namespace objgroup {
 template <typename ObjT, typename... Args>
 ObjGroupManager::ProxyType<ObjT>
 ObjGroupManager::makeCollective(std::string const& label, Args&&... args) {
-  return makeCollective<ObjT>(label, std::make_unique<ObjT>(std::forward<Args>(args)...));
+  return makeCollective<ObjT>(std::make_unique<ObjT>(std::forward<Args>(args)...), label);
 }
 
 template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollective(std::string const& label, ObjT* obj) {
+ObjGroupManager::makeCollective(ObjT* obj, std::string const& label) {
   vtAssert(obj !=  nullptr, "Must be a valid obj pointer");
   auto holder_base = std::make_unique<holder::HolderBasic<ObjT>>(obj);
   return makeCollectiveObj<ObjT>(label, obj, std::move(holder_base));
@@ -86,7 +86,7 @@ ObjGroupManager::makeCollective(std::string const& label, ObjT* obj) {
 
 template <template <typename> class UserPtr, typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollective(std::string const& label, UserPtr<ObjT> obj) {
+ObjGroupManager::makeCollective(UserPtr<ObjT> obj, std::string const& label) {
   auto obj_ptr = *obj;
   vtAssert(obj_ptr !=  nullptr, "Must be a valid obj pointer");
   auto holder_base = std::make_unique<holder::HolderUser<UserPtr,ObjT>>(obj);
@@ -95,7 +95,7 @@ ObjGroupManager::makeCollective(std::string const& label, UserPtr<ObjT> obj) {
 
 template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollective(std::string const& label, std::unique_ptr<ObjT> obj) {
+ObjGroupManager::makeCollective(std::unique_ptr<ObjT> obj, std::string const& label) {
   vtAssert(obj !=  nullptr, "Must be a valid obj pointer");
   auto obj_ptr = obj.get();
   auto holder_base = std::make_unique<holder::Holder<ObjT>>(std::move(obj));
@@ -122,9 +122,9 @@ ObjGroupManager::makeCollectiveObj(std::string const& label, ObjT* obj, HolderBa
 
 template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
-ObjGroupManager::makeCollective(std::string const& label, MakeFnType<ObjT> fn) {
+ObjGroupManager::makeCollective(MakeFnType<ObjT> fn, std::string const& label) {
   auto obj = fn();
-  return makeCollective<ObjT>(label, std::move(obj));
+  return makeCollective<ObjT>(std::move(obj), label);
 }
 
 template <typename ObjT>

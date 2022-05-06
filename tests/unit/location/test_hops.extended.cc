@@ -137,7 +137,7 @@ TEST_F(TestHops, test_hops_1) {
 
   auto const& range = vt::Index2D((int)num_nodes, (int)num_elms);
   auto proxy = theCollection()->constructCollective<TestColl>(
-    "test_hops_1", range
+    range, "test_hops_1"
   );
 
   for (int i = 0; i < 100; i++) {

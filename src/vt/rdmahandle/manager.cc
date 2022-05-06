@@ -63,7 +63,7 @@ void Manager::setup(ProxyType in_proxy) {
 /*static*/ std::unique_ptr<Manager> Manager::construct() {
   auto ptr = std::make_unique<Manager>();
   auto proxy = vt::theObjGroup()->makeCollective<Manager>(
-    "Manager::construct()", ptr.get()
+     ptr.get(), "Manager::construct()"
   );
   proxy.get()->setup(proxy);
   return ptr;

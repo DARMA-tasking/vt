@@ -67,7 +67,7 @@ void LBDataRestartReader::setProxy(
 /*static*/ std::unique_ptr<LBDataRestartReader> LBDataRestartReader::construct() {
   auto ptr = std::make_unique<LBDataRestartReader>();
   auto proxy = theObjGroup()->makeCollective<LBDataRestartReader>(
-    "LBDataRestartReader::construct()", ptr.get()
+    ptr.get(), "LBDataRestartReader::construct()"
   );
   proxy.get()->setProxy(proxy);
   return ptr;

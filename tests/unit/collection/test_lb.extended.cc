@@ -123,7 +123,7 @@ void runTest(std::string const& lb_name, std::string const& label) {
 
   // Construct a collection
   runInEpochCollective([&]{
-    proxy = vt::theCollection()->constructCollective<MyCol>(label, range);
+    proxy = vt::theCollection()->constructCollective<MyCol>(range, label);
   });
 
   for (int phase = 0; phase < num_phases; phase++) {
@@ -229,8 +229,8 @@ TEST_F(TestLoadBalancerNoWork, test_load_balancer_no_work) {
   auto const num_nodes = theContext()->getNumNodes();
   auto const range = Index1D(num_nodes * 8);
   theCollection()->constructCollective<MyCol2>(
-    "test_load_balancer_no_work", range,
-    [](vt::Index1D) { return std::make_unique<MyCol2>(); }
+    range, [](vt::Index1D) { return std::make_unique<MyCol2>(); },
+    "test_load_balancer_no_work"
   );
 
   vt::theConfig()->vt_lb = true;
@@ -306,7 +306,7 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
   // Construct a collection
   runInEpochCollective([&] {
     proxy = vt::theCollection()->constructCollective<MyCol>(
-      "test_node_stats_dumping_with_interval", range
+      range, "test_node_stats_dumping_with_interval"
     );
   });
 
@@ -421,7 +421,7 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
   // Construct a collection
   runInEpochCollective([&] {
     proxy = vt::theCollection()->constructCollective<MyCol>(
-      "test_restore_stats_data_1", range
+      range, "test_restore_stats_data_1"
     );
   });
 
@@ -612,7 +612,9 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
 
   // Construct a collection
   runInEpochCollective([&] {
-    proxy = vt::theCollection()->constructCollective<MyCol>(range);
+    proxy = vt::theCollection()->constructCollective<MyCol>(
+      range, "test_dump_userdefined_json"
+    );
   });
 
   vt::vrt::collection::balance::LBDataHolder lbdh;

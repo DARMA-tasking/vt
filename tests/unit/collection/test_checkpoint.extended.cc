@@ -176,7 +176,7 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
 
   {
     auto proxy = vt::theCollection()->constructCollective<TestCol>(
-      "test_checkpoint_1", range
+      range, "test_checkpoint_1"
     );
 
     vt::runInEpochCollective([&]{
@@ -219,7 +219,7 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
 
   {
     auto proxy = vt::theCollection()->restoreFromFile<TestCol>(
-      "test_checkpoint_1", range, checkpoint_name
+      range, checkpoint_name, "test_checkpoint_1"
     );
 
     // Restoration should be done now
@@ -249,7 +249,7 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
   auto range = vt::Index3D(num_nodes, num_elms, 4);
   auto checkpoint_name = "test_checkpoint_dir";
   auto proxy = vt::theCollection()->constructCollective<TestCol>(
-    "test_checkpoint_in_place_2", range
+    range, "test_checkpoint_in_place_2"
   );
 
   theConfig()->vt_lb = true;
@@ -321,7 +321,7 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
   auto range = vt::Index3D(num_nodes, num_elms, 4);
   auto checkpoint_name = "test_checkpoint_dir_2";
   auto proxy = vt::theCollection()->constructCollective<TestCol>(
-    "test_checkpoint_in_place_3", range
+    range, "test_checkpoint_in_place_3"
   );
 
   theConfig()->vt_lb = true;
@@ -361,7 +361,7 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
   });
 
   auto proxy_new = vt::theCollection()->constructCollective<TestCol>(
-    "test_checkpoint_in_place_3", range
+    range, "test_checkpoint_in_place_3"
   );
 
   vt::runInEpochCollective([&]{
@@ -441,7 +441,7 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
   }
 
   auto proxy = vt::theCollection()->restoreFromFile<TestCol>(
-    "test_checkpoint_no_elements_on_root_rank", range, checkpoint_name
+    range, checkpoint_name, "test_checkpoint_no_elements_on_root_rank"
   );
 
   // Restoration should be done now

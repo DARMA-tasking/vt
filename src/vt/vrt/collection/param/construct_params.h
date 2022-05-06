@@ -455,7 +455,7 @@ namespace vt {
  */
 template <typename ColT>
 vrt::collection::param::ConstructParams<ColT> makeCollection(
-  const std::string& label
+  const std::string& label = {}
 ) {
   bool const is_collective = true;
   return vrt::collection::param::makeCollectionImpl<ColT>(label, is_collective);
@@ -471,7 +471,7 @@ vrt::collection::param::ConstructParams<ColT> makeCollection(
  */
 template <typename ColT>
 vrt::collection::param::ConstructParams<ColT> makeCollectionRooted(
-  const std::string& label
+  const std::string& label = {}
 ) {
   bool const is_collective = false;
   return vrt::collection::param::makeCollectionImpl<ColT>(label, is_collective);

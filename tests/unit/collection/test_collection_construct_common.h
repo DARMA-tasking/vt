@@ -95,12 +95,12 @@ struct ConstructParams {
   }
 
   static ProxyType constructCollective(
-    std::string const& label, IndexType idx
+    IndexType idx, std::string const& label
   ) {
     return theCollection()->constructCollective<ColT>(
-      label, idx, [=](IndexType my_idx) {
+      idx, [=](IndexType my_idx) {
         return std::make_unique<ColT>();
-      }
+      }, label
     );
   }
 };
@@ -131,7 +131,7 @@ void test_construct_distributed_1() {
   auto const& col_size = 32;
   auto rng = TestIndex(col_size);
   auto proxy = ConstructParams<ColType>::constructCollective(
-    "test_construct_distributed_1", rng
+    rng, "test_construct_distributed_1"
   );
   proxy.template broadcast<
     MsgType,

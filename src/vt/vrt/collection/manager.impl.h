@@ -1235,7 +1235,7 @@ bool CollectionManager::insertCollectionElement(
 template <typename ColT>
 CollectionManager::IsDefaultConstructableType<ColT>
 CollectionManager::constructCollective(
-  std::string const& label, typename ColT::IndexType range
+  typename ColT::IndexType range, std::string const& label
 ) {
   auto const map_han = getDefaultMap<ColT>();
   auto cons_fn = [](typename ColT::IndexType) { return std::make_unique<ColT>(); };
@@ -1245,8 +1245,8 @@ CollectionManager::constructCollective(
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::constructCollective(
-  std::string const& label, typename ColT::IndexType range,
-  DistribConstructFn<ColT> cons_fn
+  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+  std::string const& label
 ) {
   auto const map_han = getDefaultMap<ColT>();
   return constructCollectiveMap<ColT>(label, range, cons_fn, map_han);
@@ -1257,7 +1257,7 @@ template <
 >
 CollectionManager::IsDefaultConstructableType<ColT, typename ColT::IndexType>
 CollectionManager::constructCollective(
-  std::string const& label, typename ColT::IndexType range
+  typename ColT::IndexType range, std::string const& label
 ) {
   using IndexT = typename ColT::IndexType;
   auto cons_fn = [](typename ColT::IndexType){return std::make_unique<ColT>();};
@@ -1270,8 +1270,8 @@ template <
 >
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
 CollectionManager::constructCollective(
-  std::string const& label, typename ColT::IndexType range,
-  DistribConstructFn<ColT> cons_fn
+  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+  std::string const& label
 ) {
   using IndexT = typename ColT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
@@ -2281,8 +2281,8 @@ void CollectionManager::restoreFromFileInPlace(
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::restoreFromFile(
-  std::string const& label, typename ColT::IndexType range,
-  std::string const& file_base
+  typename ColT::IndexType range, std::string const& file_base,
+  std::string const& label
 ) {
   using IndexType = typename ColT::IndexType;
   using DirectoryType = CollectionDirectory<IndexType>;

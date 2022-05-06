@@ -313,16 +313,15 @@ struct MyObjGroup {
 
   void makeVT() {
     frontend_proxy_ = vt::theObjGroup()->makeCollective(
-      "MyObjGroup::makeVT()", this
+      this, "MyObjGroup::makeVT()"
     );
   }
 
   void makeColl(std::string const& label, NodeType num_nodes, int k) {
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
     backend_proxy_ = vt::theCollection()->constructCollective<MyCol>(
-      label, range, [=](vt::Index2D idx) {
-        return std::make_unique<MyCol>(num_nodes, k);
-      }
+      range, [=](vt::Index2D idx) { return std::make_unique<MyCol>(num_nodes, k); },
+      label
     );
 
     chains_ = std::make_unique<vt::messaging::CollectionChainSet<vt::Index2D>>(
@@ -584,7 +583,7 @@ struct MergeObjGroup
 
   void makeVT() {
     frontend_proxy_ = vt::theObjGroup()->makeCollective(
-      "MergeObjGroup::makeVT()", this
+      this, "MergeObjGroup::makeVT()"
     );
   }
 
@@ -592,9 +591,9 @@ struct MergeObjGroup
     auto const node = theContext()->getNode();
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
     backend_proxy_ = vt::theCollection()->constructCollective<MergeCol>(
-      label, range, [=](vt::Index2D idx) {
+      range, [=](vt::Index2D idx) {
         return std::make_unique<MergeCol>(num_nodes, offset);
-      }
+      }, label
     );
 
     chains_ = std::make_unique<vt::messaging::CollectionChainSet<vt::Index2D>>();

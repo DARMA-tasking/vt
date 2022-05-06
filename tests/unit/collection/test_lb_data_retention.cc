@@ -126,7 +126,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
   // Construct two collections
   runInEpochCollective([&]{
     proxy = vt::theCollection()->constructCollective<TestCol>(
-      "test_lbstats_retention_last1", range
+      range, "test_lbstats_retention_last1"
     );
   });
 
@@ -164,7 +164,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
   // Construct two collections
   runInEpochCollective([&]{
     proxy = vt::theCollection()->constructCollective<TestCol>(
-      "test_lbstats_retention_last2", range
+      range, "test_lbstats_retention_last2"
     );
   });
 
@@ -202,7 +202,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
   // Construct two collections
   runInEpochCollective([&]{
     proxy = vt::theCollection()->constructCollective<TestCol>(
-      "test_lbstats_retention_last4", range
+      range, "test_lbstats_retention_last4"
     );
   });
 

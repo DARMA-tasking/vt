@@ -109,10 +109,10 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
   // Construct two collections
   runInEpochCollective([&]{
     proxy1 = vt::theCollection()->constructCollective<TestCol1>(
-      "test_model_per_collection_1", range
+      range, "test_model_per_collection_1"
     );
     proxy2 = vt::theCollection()->constructCollective<TestCol2>(
-      "test_model_per_collection_1", range
+      range, "test_model_per_collection_1"
     );
   });
 

@@ -128,30 +128,38 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    */
   template <typename ObjT, typename... Args>
   ProxyType<ObjT> makeCollective(std::string const& label, Args&&... args);
+  // `label` should have a default value. In this case, when followed by
+  // a parameter pack, it is still perfectly legal, according to
+  // the standard.
+  //
+  // Some of the compilers report compilation error though :- (
+  //
+  // template <typename ObjT, typename... Args>
+  // ProxyType<ObjT> makeCollective(std::string const& label = {}, Args&&... args);
 
   /**
    * \brief Collectively construct a new object group from a existing unique
    * pointer to the local object
    *
-   * \param[in] label object group label
    * \param[in] obj the std::unique_ptr<ObjT> to the local object
+   * \param[in] label object group label
    *
    * \return proxy to the object group
    */
   template <typename ObjT>
-  ProxyType<ObjT> makeCollective(std::string const& label, std::unique_ptr<ObjT> obj);
+  ProxyType<ObjT> makeCollective(std::unique_ptr<ObjT> obj, std::string const& label = {});
 
   /**
    * \brief Collectively construct a new object group with a callback to provide
    * a unique pointer on each node.
    *
-   * \param[in] label object group label
    * \param[in] fn callback function to construct
+   * \param[in] label object group label
    *
    * \return proxy to the object group
    */
   template <typename ObjT>
-  ProxyType<ObjT> makeCollective(std::string const& label, MakeFnType<ObjT> fn);
+  ProxyType<ObjT> makeCollective(MakeFnType<ObjT> fn, std::string const& label = {});
 
   /**
    * \brief Collectively construct a new object group from a raw pointer to the
@@ -161,26 +169,26 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * object. Do not allow the object to be deallocated before the object group
    * is destroyed.
    *
-   * \param[in] label object group label
    * \param[in] obj raw pointer to the object
+   * \param[in] label object group label
    *
    * \return proxy to the object group
    */
   template <typename ObjT>
-  ProxyType<ObjT> makeCollective(std::string const& label, ObjT* obj);
+  ProxyType<ObjT> makeCollective(ObjT* obj, std::string const& label = {});
 
   /**
    * \brief Collectively construct a new object group from a smart-pointer-like
    * handle.
    *
-   * \param[in] label object group label
    * \param[in] obj the smart-pointer-like handle that the system holds until
    * destruction
+   * \param[in] label object group label
    *
    * \return proxy to the object group
    */
   template <template <typename> class UserPtr, typename ObjT>
-  ProxyType<ObjT> makeCollective(std::string const& label, UserPtr<ObjT> obj);
+  ProxyType<ObjT> makeCollective(UserPtr<ObjT> obj, std::string const& label = {});
 
   /**
    * \brief Collectively destroy an object group across the whole system

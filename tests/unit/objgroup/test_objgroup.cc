@@ -104,9 +104,9 @@ TEST_F(TestObjGroup, test_construct) {
   // create object groups and retrieve proxies
   auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>("test_construct");
   auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>("test_construct", 1);
-  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjB>("test_construct", new MyObjB(1));
+  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjB>(new MyObjB(1), "test_construct");
   auto proxy4 = vt::theObjGroup()->makeCollective<MyObjB>(
-    "test_construct", std::make_unique<MyObjB>(1)
+    std::make_unique<MyObjB>(1), "test_construct"
   );
 
   // retrieve object group from proxies
@@ -298,7 +298,7 @@ TEST_F(TestObjGroup, test_proxy_invoke) {
 TEST_F(TestObjGroup, test_pending_send) {
   auto my_node = vt::theContext()->getNode();
   // create a proxy to a object group
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>("test_pending_send");
   auto obj = proxy.get();
 
   runInEpochCollective([&]{
