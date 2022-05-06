@@ -45,66 +45,128 @@
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/context/context.h"
 
-#define UNW_LOCAL_ONLY
-#include <libunwind.h>
 #include <cxxabi.h>
+
+#if defined(vt_has_libunwind_h)
+# define UNW_LOCAL_ONLY
+# include <libunwind.h>
+#elif defined(vt_has_execinfo_h)
+# include <execinfo.h>
+# include <dlfcn.h>
+#endif
 
 namespace vt { namespace debug { namespace stack {
 
 DumpStackType dumpStack(int skip) {
   DumpStackType stack;
+  #if defined(vt_has_libunwind_h)
 
-  unw_cursor_t cursor;
-  unw_context_t context;
+    unw_cursor_t cursor;
+    unw_context_t context;
 
-  // Initialize cursor to current frame for local unwinding.
-  if (unw_getcontext(&context) or unw_init_local(&cursor, &context)) {
-    stack.emplace_back(
-      std::forward_as_tuple(
-        0, 0, "Unwinding error: unable to get stack backtrace", 0)
-    );
-    return stack;
-  }
-
-  // Unwind frames one by one, going up the frame stack.
-  do {
-    if (skip-- > 0) {
-      continue;
+    // Initialize cursor to current frame for local unwinding.
+    if (unw_getcontext(&context) or unw_init_local(&cursor, &context)) {
+      stack.emplace_back(
+        std::forward_as_tuple(
+          0, 0, "Unwinding error: unable to get stack backtrace", 0)
+      );
+      return stack;
     }
 
-    unw_word_t offset, pc;
-    if (unw_get_reg(&cursor, UNW_REG_IP, &pc) != 0) {
-      continue;
-    }
-    if (pc == 0) {
-      break;
-    }
-
-    char sym[256];
-    if (unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) == 0) {
-      char* nameptr = sym;
-      int status;
-      char* demangled = abi::__cxa_demangle(sym, nullptr, nullptr, &status);
-      if (status == 0) {
-        nameptr = demangled;
+    // Unwind frames one by one, going up the frame stack.
+    do {
+      if (skip-- > 0) {
+        continue;
       }
 
-      stack.emplace_back(
-        std::forward_as_tuple(
-          static_cast<int>(2 + sizeof(void*) * 2), pc, nameptr, offset)
-      );
+      unw_word_t offset, pc;
+      if (unw_get_reg(&cursor, UNW_REG_IP, &pc) != 0) {
+        continue;
+      }
+      if (pc == 0) {
+        break;
+      }
 
-      std::free(demangled);
-    } else {
-      stack.emplace_back(
-        std::forward_as_tuple(
-          0, 0, "Unwinding error: unable to obtain symbol name for this frame", 0)
-      );
+      char sym[256];
+      if (unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) == 0) {
+        char* nameptr = sym;
+        int status;
+        char* demangled = abi::__cxa_demangle(sym, nullptr, nullptr, &status);
+        if (status == 0) {
+          nameptr = demangled;
+        }
+
+        stack.emplace_back(
+          std::forward_as_tuple(
+            static_cast<int>(2 + sizeof(void*) * 2), pc, nameptr, offset)
+        );
+
+        std::free(demangled);
+      } else {
+        stack.emplace_back(
+          std::forward_as_tuple(
+            0, 0, "Unwinding error: unable to obtain symbol name for this frame", 0)
+        );
+      }
     }
-  }
-  while (unw_step(&cursor) > 0);
+    while (unw_step(&cursor) > 0);
+    return stack;
 
-  return stack;
+  #elif defined(vt_has_execinfo_h)
+
+    void* callstack[128];
+    int const max_frames = sizeof(callstack) / sizeof(callstack[0]);
+    int num_frames = backtrace(callstack, max_frames);
+    char** symbols = backtrace_symbols(callstack, num_frames);
+
+    for (auto i = skip; i < num_frames; i++) {
+      //printf("%s\n", symbols[i]);
+
+      std::string str = "";
+      Dl_info info;
+      if (dladdr(callstack[i], &info) && info.dli_sname) {
+        char *demangled = nullptr;
+        int status = -1;
+        if (info.dli_sname[0] == '_') {
+          demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+        }
+        auto const call = status == 0 ?
+          demangled : info.dli_sname == 0 ? symbols[i] : info.dli_sname;
+
+        stack.emplace_back(
+          std::forward_as_tuple(
+            static_cast<int>(2 + sizeof(void*) * 2), reinterpret_cast<long>(callstack[i]), call,
+            static_cast<char*>(callstack[i]) - static_cast<char*>(info.dli_saddr)
+          )
+        );
+
+        auto const& t = stack.back();
+        str = fmt::format(
+          "{:<4} {:<4} {:<15} {} + {}\n",
+          i, std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t)
+        );
+
+        std::free(demangled);
+      } else {
+        stack.emplace_back(
+          std::forward_as_tuple(
+            static_cast<int>(2 + sizeof(void*) * 2), reinterpret_cast<long>(callstack[i]), symbols[i], 0
+          )
+        );
+
+        auto const& t = stack.back();
+        str = fmt::format(
+          "{:10} {} {} {}\n", i, std::get<0>(t), std::get<1>(t), std::get<2>(t)
+        );
+      }
+
+    }
+    std::free(symbols);
+
+    return stack;
+  #else //neither libnunwind.h or libexecinfo.h is available
+    return stack;
+  #endif
 }
 
 std::string prettyPrintStack(DumpStackType const& stack) {

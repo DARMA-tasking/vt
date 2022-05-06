@@ -49,28 +49,30 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestStackDumping : TestParallelHarness {};
+#if defined(vt_has_libunwind_h) || defined(vt_has_execinfo_h)
 
-TEST_F(TestStackDumping, find_function_names) {
-  auto stack = debug::stack::dumpStack();
-  auto stack_pretty = debug::stack::prettyPrintStack(stack);
+  struct TestStackDumping : TestParallelHarness {};
 
-  fmt::print("{}", stack_pretty);
+  TEST_F(TestStackDumping, find_function_names) {
+    auto stack = debug::stack::dumpStack();
+    auto stack_pretty = debug::stack::prettyPrintStack(stack);
 
-  EXPECT_NE(stack_pretty.find("Dump Stack Backtrace"), std::string::npos);
-  EXPECT_NE(stack_pretty.find("vt::debug::stack::dumpStack"), std::string::npos);
-  EXPECT_NE(stack_pretty.find("vt::tests::unit::TestStackDumping"), std::string::npos);
-}
+    fmt::print("{}", stack_pretty);
 
-TEST_F(TestStackDumping, skip_first_function) {
-  auto stack = debug::stack::dumpStack(1);
-  auto stack_pretty = debug::stack::prettyPrintStack(stack);
+    EXPECT_NE(stack_pretty.find("Dump Stack Backtrace"), std::string::npos);
+    EXPECT_NE(stack_pretty.find("vt::debug::stack::dumpStack"), std::string::npos);
+    EXPECT_NE(stack_pretty.find("vt::tests::unit::TestStackDumping"), std::string::npos);
+  }
 
-  fmt::print("{}", stack_pretty);
+  TEST_F(TestStackDumping, skip_first_function) {
+    auto stack = debug::stack::dumpStack(1);
+    auto stack_pretty = debug::stack::prettyPrintStack(stack);
 
-  EXPECT_NE(stack_pretty.find("Dump Stack Backtrace"), std::string::npos);
-  EXPECT_EQ(stack_pretty.find("vt::debug::stack::dumpStack"), std::string::npos);
-  EXPECT_NE(stack_pretty.find("vt::tests::unit::TestStackDumping"), std::string::npos);
-}
+    fmt::print("{}", stack_pretty);
 
+    EXPECT_NE(stack_pretty.find("Dump Stack Backtrace"), std::string::npos);
+    EXPECT_EQ(stack_pretty.find("vt::debug::stack::dumpStack"), std::string::npos);
+    EXPECT_NE(stack_pretty.find("vt::tests::unit::TestStackDumping"), std::string::npos);
+  }
+#endif
 }}} // end namespace vt::tests::unit
