@@ -17,7 +17,6 @@ get_directory_property(hasParent PARENT_DIRECTORY)
 include(cmake/check_system_functions.cmake)
 
 set(VIRTUAL_TRANSPORT_LIBRARY vt CACHE INTERNAL "" FORCE )
-set(FCONTEXT_LIBRARY fcontext)
 
 # Set the local module path so custom cmake scripts can be located automatically
 set(
