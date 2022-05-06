@@ -263,7 +263,7 @@ void BaseLB::finalize(CountMsg* msg) {
 
 void BaseLB::recvSharedEdges(CommMsg* msg) {
   auto phase = thePhase()->getCurrentPhase();
-  auto comm_map = theNodeStats()->getNodeComm(phase);
+  auto comm_map = theNodeLBData()->getNodeComm(phase);
 
   if (comm_map != nullptr) {
     auto& comm = msg->comm_;

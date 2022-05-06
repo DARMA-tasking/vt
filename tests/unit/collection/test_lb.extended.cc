@@ -49,6 +49,7 @@
 
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/json_appender.h"
@@ -163,8 +164,8 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   // );
 
   auto phase = num_phases - 1;
-  auto iter = theNodeStats()->getNodeComm()->find(phase);
-  ASSERT_NE(iter, theNodeStats()->getNodeComm()->end());
+  auto iter = theNodeLBData()->getNodeComm()->find(phase);
+  ASSERT_NE(iter, theNodeLBData()->getNodeComm()->end());
 
   elm::CommMapType const& comm_data = iter->second;
 

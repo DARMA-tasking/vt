@@ -732,8 +732,8 @@ void makeGraphSymmetric(
   PhaseType phase, objgroup::proxy::Proxy<lb::BaseLB> proxy
 ) {
   auto const this_node = theContext()->getNode();
-  auto iter = theNodeStats()->getNodeComm()->find(phase);
-  if (iter == theNodeStats()->getNodeComm()->end()) {
+  auto iter = theNodeLBData()->getNodeComm()->find(phase);
+  if (iter == theNodeLBData()->getNodeComm()->end()) {
     return;
   }
 
