@@ -44,13 +44,15 @@
 #if !defined INCLUDED_VT_GROUP_REGION_GROUP_LIST_H
 #define INCLUDED_VT_GROUP_REGION_GROUP_LIST_H
 
+#include "vt/group/region/group_region.h"
+
 namespace vt { namespace group { namespace region {
 
 struct List : Region {
   explicit List(ListType const& in_list);
   explicit List(ListType&& in_list);
   List(List const& in_other, BoundType in_remove_extent);
-  List(BoundType const* const list, SizeType const& size, bool const& is_sorted);
+  List(BoundType const* const list, SizeType const size, bool const is_sorted);
 
   List(List const&) = default;
   List(List&&) = default;
