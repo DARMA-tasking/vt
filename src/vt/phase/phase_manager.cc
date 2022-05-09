@@ -263,49 +263,112 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
       return (t1 - t2) / t1 * 100.0;
     };
 
+    auto grain_percent_improvement = compute_percent_improvement(
+      last_phase_info->max_load, last_phase_info->max_obj
+    );
+
     if (not last_phase_info->ran_lb) {
-      auto speedup = compute_speedup(
-        last_phase_info->max_load, last_phase_info->avg_load
-      );
       auto percent_improvement = compute_percent_improvement(
         last_phase_info->max_load, last_phase_info->avg_load
       );
-      // @todo: where should we cut off this print?
-      // if (percent_improvement > 3.0) {
+      if (percent_improvement > 3.0 and cur_phase_ > 0) {
+        if (grain_percent_improvement < 0.5) {
+          // grain size is blocking improvement
+          vt_print(
+            phase,
+            "Due to the large object grain size, no further speedup is "
+            "possible\n"
+          );
+          auto speedup = compute_speedup(
+            last_phase_info->max_load, last_phase_info->avg_load
+          );
+          vt_print(
+            phase,
+            "With a smaller object grain size, up to a {:.2f}x speedup "
+            "(or {:.2f}% decrease in execution time) might have been "
+            "possible\n",
+            speedup, percent_improvement
+          );
+        } else {
+          auto grain_speedup = compute_speedup(
+            last_phase_info->max_load, last_phase_info->max_obj
+          );
+          if (grain_percent_improvement >= percent_improvement - 1.0) {
+            // grain size might have some impact, but not catastrophic
+            auto pct_improvement_limit = std::min(
+              percent_improvement, grain_percent_improvement
+            );
+            auto speedup = compute_speedup(
+              last_phase_info->max_load, last_phase_info->avg_load
+            );
+            auto speedup_limit = std::min(speedup, grain_speedup);
+            vt_print(
+              phase,
+              "Up to a {:.2f}x speedup (or {:.2f}% decrease in execution "
+              "time) may be possible by running LB\n",
+              speedup_limit, pct_improvement_limit
+            );
+          } else {
+            // grain size significantly limits speedup
+            vt_print(
+              phase,
+              "Due to the large object grain size, only up to a {:.2f}x "
+              "speedup (or {:.2f}% decrease in execution time) may be "
+              "possible by running LB\n",
+              grain_speedup, grain_percent_improvement
+            );
+            auto speedup = compute_speedup(
+              last_phase_info->max_load, last_phase_info->avg_load
+            );
+            vt_print(
+              phase,
+              "With a smaller object grain size, up to a {:.2f}x speedup "
+              "(or {:.2f}% decrease in execution time) might have been "
+              "possible\n",
+              speedup, percent_improvement
+            );
+          }
+        }
+      }
+    } else if (cur_phase_ == 0) {
+       // ran the lb on a phase that may have included initialization costs
+       vt_print(
+         phase,
+         "Consider skipping LB on phase 0 if it is not representative of "
+         "future phases\n"
+       );
+    } else if (last_phase_info->ran_lb) {
+      if (last_phase_info->migration_count > 0) {
+        auto speedup = compute_speedup(
+          last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
+        );
+        auto percent_improvement = compute_percent_improvement(
+          last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
+        );
         vt_print(
           phase,
-          "Ideal load balance would run {:.2f}x faster "
-          "(or take {:.2f}% less time)\n",
+          "After load balancing, expected execution should get a {:.2f}x speedup"
+          " (or take {:.2f}% less time)\n",
           speedup, percent_improvement
         );
-      // }
-    } else if (last_phase_info->ran_lb and last_phase_info->migration_count > 0)  {
-      auto speedup = compute_speedup(
+      }
+
+      auto additional_percent_improvement = compute_percent_improvement(
         last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
       );
-      auto percent_improvement = compute_percent_improvement(
-        last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
+      auto additional_grain_percent_improvement = compute_percent_improvement(
+        last_phase_info->max_load_post_lb, last_phase_info->max_obj_post_lb
       );
-      vt_print(
-        phase,
-        "After load balancing, expected execution should get a {:.2f}x speedup"
-        " (or take {:.2f}% less time)\n",
-        speedup, percent_improvement
-      );
-    }
-    if (last_phase_info->max_obj > last_phase_info->avg_load) {
-      auto speedup = compute_speedup(
-        last_phase_info->max_load, last_phase_info->max_obj
-      );
-      auto percent_improvement = compute_percent_improvement(
-        last_phase_info->max_load, last_phase_info->max_obj
-      );
-      vt_print(
-        phase,
-        "Largest grain object limits load balancing improvement to a "
-        "{:.2f}x speedup (or take {:.2f}% less time)\n",
-        speedup, percent_improvement
-      );
+      if (
+        additional_percent_improvement > 3.0 and
+        additional_grain_percent_improvement < 0.5
+      ) {
+        // grain size is blocking improvement
+        vt_print(
+          phase,
+          "Due to the large object grain size, no further speedup is possible\n"
+        );
+      }
     }
     fflush(stdout);
   }
