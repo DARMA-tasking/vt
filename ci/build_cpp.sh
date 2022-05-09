@@ -96,6 +96,11 @@ then
     export Zoltan_DIR=${ZOLTAN_DIR:-""}
 fi
 
+if test "${VT_CI_BUILD:-0}" -eq 1
+then
+    git config --global --add safe.directory "${source_dir}"
+fi
+
 export VT=${source_dir}
 export VT_BUILD=${build_dir}/vt
 mkdir -p "$VT_BUILD"
