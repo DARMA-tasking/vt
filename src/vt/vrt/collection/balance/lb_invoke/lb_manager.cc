@@ -282,6 +282,9 @@ void LBManager::startLB(
     );
   }
 
+  last_phase_info_->phase = phase;
+  last_phase_info_->lb_type = lb;
+
   if (lb == LBType::NoLB) {
     last_phase_info_->migration_count = 0;
     last_phase_info_->ran_lb = false;

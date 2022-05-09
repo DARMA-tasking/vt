@@ -45,10 +45,13 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_PHASE_INFO_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_type.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct PhaseInfo {
+  PhaseType phase = 0;
+  balance::LBType lb_type = balance::LBType::NoLB;
   double max_load = 0, avg_load = 0, imb_load = 0;
   double max_obj = 0;
   double max_load_post_lb = 0, avg_load_post_lb = 0, imb_load_post_lb = 0;

@@ -227,18 +227,22 @@ void PhaseManager::setStartTime() {
 
 void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info) {
   if (theContext()->getNode() == 0) {
+    auto lb_name = vrt::collection::balance::get_lb_names()[
+      last_phase_info->lb_type
+    ];
     TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
     vt_print(
       phase,
       "phase={}, duration={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.3f}, "
-      "grain_max_time={}, migration count={}\n",
+      "grain_max_time={}, migration count={}, lb_name={}\n",
       cur_phase_,
       total_time,
       TimeTypeWrapper(last_phase_info->max_load),
       TimeTypeWrapper(last_phase_info->avg_load),
       last_phase_info->imb_load,
       TimeTypeWrapper(last_phase_info->max_obj),
-      last_phase_info->migration_count
+      last_phase_info->migration_count,
+      lb_name
     );
     // vt_print(
     //   phase,
