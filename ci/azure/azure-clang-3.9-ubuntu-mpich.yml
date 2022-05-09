@@ -11,6 +11,7 @@ trigger:
       - 1.0.0*
 
 pr:
+  autoCancel: true
   branches:
    include:
      - '*'

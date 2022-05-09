@@ -11,6 +11,7 @@ trigger:
       - 1.0.0*
 
 pr:
+  autoCancel: true
   branches:
    include:
      - '*'
@@ -69,7 +70,7 @@ stages:
   - job: Build
     displayName: Build
     pool:
-      vmImage: 'ubuntu-18.04'
+      name: 'vt-agent-pool'
     timeoutInMinutes: 180
     steps:
       - task: Bash@3
@@ -77,7 +78,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            echo setup
+            source /etc/docker-setup.sh
       - task: Bash@3
         displayName: Build timestamp for caching
         continueOnError: true
@@ -134,14 +135,14 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean-noinstall'
+          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean'
       - task: DockerCompose@0
         displayName: Build container
         inputs:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'run ubuntu-cpp-clean-noinstall'
+          dockerComposeCommand: 'run ubuntu-cpp-clean'
         env:
           CODECOV_TOKEN: $(codecov_token)
       - task: Bash@3
@@ -172,7 +173,7 @@ stages:
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'push ubuntu-cpp-clean-noinstall'
+          dockerComposeCommand: 'push ubuntu-cpp-clean'
       - task: Bash@3
         displayName: Create artifacts
         continueOnError: true
