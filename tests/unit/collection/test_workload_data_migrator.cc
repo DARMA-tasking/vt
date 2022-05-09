@@ -48,6 +48,7 @@
 
 #include "vt/elm/elm_id.h"
 #include "vt/elm/elm_id_bits.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
@@ -71,6 +72,10 @@ struct TestWorkloadDataMigrator : TestParallelHarness { };
 std::shared_ptr<LBDataHolder>
 setupWorkloads(PhaseType phase, size_t numElements) {
   auto const& this_node = vt::theContext()->getNode();
+
+  if (this_node == 0) {
+    vt_print(replay, "Generating workloads to replay...\n");
+  }
 
   using vt::vrt::collection::balance::ElementIDStruct;
 
@@ -564,6 +569,10 @@ setupManyWorkloads(
 ) {
   auto const& this_node = vt::theContext()->getNode();
 
+  if (this_node == 0) {
+    vt_print(replay, "Generating workloads to replay...\n");
+  }
+
   using vt::vrt::collection::balance::ElementIDStruct;
 
   std::vector<ElementIDStruct> myElemList(numElements);
@@ -634,22 +643,29 @@ struct TestWorkloadReplay : TestParallelHarness {
   void addAdditionalArgs() override {
     static char vt_lb[]{"--vt_lb"};
     static char vt_lb_name[]{"--vt_lb_name=RandomLB"};
-    addArgs(vt_lb, vt_lb_name);
+    static char vt_lb_interval[]{"--vt_lb_interval=2"};
+    addArgs(vt_lb, vt_lb_name, vt_lb_interval);
   }
 #endif
 };
 
 TEST_F(TestWorkloadReplay, test_run_replay_no_verify) {
   PhaseType initial_phase = 1;
-  PhaseType num_phases = 3;
+  PhaseType num_phases = 5;
   const size_t numElements = 5;
 
   // first set up the workloads to replay, moving them around by phase
   auto lbdh = setupManyWorkloads(initial_phase, num_phases, numElements);
 
+  using LBManager = vt::vrt::collection::balance::LBManager;
+  using NodeStatsMsg = vt::vrt::collection::balance::NodeStatsMsg;
+  auto stats_cb = vt::theCB()->makeBcast<
+    LBManager, NodeStatsMsg, &LBManager::statsHandler
+  >(vt::theLBManager()->getProxy());
+
   // then replay them but allow the lb to place objects differently
   vt::vrt::collection::balance::replay::replayWorkloads(
-    initial_phase, num_phases, lbdh
+    initial_phase, num_phases, lbdh, stats_cb
   );
 }
 

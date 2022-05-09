@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/elm/elm_id.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
@@ -91,7 +92,8 @@ void replayWorkloads(
  */
 void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run,
-  std::shared_ptr<LBDataHolder> workloads
+  std::shared_ptr<LBDataHolder> workloads,
+  Callback<balance::NodeStatsMsg> stats_cb
 );
 
 /**

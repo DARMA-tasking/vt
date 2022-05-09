@@ -61,12 +61,18 @@ void replayWorkloads(
   auto const filename = theConfig()->getLBDataFileIn();
   auto workloads = readInWorkloads(filename);
 
-  replayWorkloads(initial_phase, phases_to_run, workloads);
+  // use the default stats handler
+  auto stats_cb = vt::theCB()->makeBcast<
+    LBManager, balance::NodeStatsMsg, &LBManager::statsHandler
+  >(theLBManager()->getProxy());
+
+  replayWorkloads(initial_phase, phases_to_run, workloads, stats_cb);
 }
 
 void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run,
-  std::shared_ptr<LBDataHolder> workloads
+  std::shared_ptr<LBDataHolder> workloads,
+  Callback<balance::NodeStatsMsg> stats_cb
 ) {
   using ObjIDType = elm::ElementIDStruct;
 
@@ -202,9 +208,6 @@ void replayWorkloads(
           "Number of objects after LB: {}\n", migratable_objects_here.size()
         );
         runInEpochCollective("postLBWorkForReplay -> computeStats", [=] {
-          auto stats_cb = vt::theCB()->makeBcast<
-            LBManager, balance::NodeStatsMsg, &LBManager::statsHandler
-          >(theLBManager()->getProxy());
           theLBManager()->computeStatistics(
             proposed_model, false, phase, stats_cb
           );
