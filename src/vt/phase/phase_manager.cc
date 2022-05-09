@@ -284,7 +284,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
       );
       vt_print(
         phase,
-        "After load balancing, expected execution should get a {:.2f}%x speedup"
+        "After load balancing, expected execution should get a {:.2f}x speedup"
         " (or take {:.2f}% less time)\n",
         speedup, percent_improvement
       );
