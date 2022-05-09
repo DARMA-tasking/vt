@@ -567,7 +567,10 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
     return;
   }
 
-  vt_print(lb, "LBManager::outputStatisticsForPhase: phase={}\n", phase);
+  vt_debug_print(
+    terse, lb,
+    "LBManager::outputStatisticsForPhase: phase={}\n", phase
+  );
 
   nlohmann::json j;
   j["id"] = phase;

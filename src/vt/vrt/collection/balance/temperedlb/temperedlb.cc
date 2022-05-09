@@ -572,8 +572,8 @@ void TemperedLB::doLBStages(TimeType start_imb) {
     }
 
     if (this_node == 0) {
-      vt_print(
-        temperedlb,
+      vt_debug_print(
+        terse, temperedlb,
         "TemperedLB::doLBStages: trial={} {} imb={:0.4f}\n",
         trial_, rollback_ ? "best" : "final", best_imb_this_trial
       );
@@ -591,15 +591,15 @@ void TemperedLB::doLBStages(TimeType start_imb) {
     new_imbalance_ = best_imb;
 
     if (this_node == 0) {
-      vt_print(
-        temperedlb,
+      vt_debug_print(
+        terse, temperedlb,
         "TemperedLB::doLBStages: chose trial={} with imb={:0.4f}\n",
         best_trial, new_imbalance_
       );
     }
   } else if (this_node == 0) {
-    vt_print(
-      temperedlb,
+    vt_debug_print(
+      terse, temperedlb,
       "TemperedLB::doLBStages: rejected all trials because they would increase imbalance\n"
     );
   }
