@@ -84,6 +84,7 @@ void replayWorkloads(
  * \param[in] initial_phase the first phase to replay
  * \param[in] phases_to_run how many phases to replay
  * \param[in] workloads the workload data to simulate
+ * \param[in] stats_cb callback for post-lb statistics
  *
  * LB data passed in will be fed through the load balancer(s) specified on the
  * vt command-line on each requested phase, allowing new load balancing
