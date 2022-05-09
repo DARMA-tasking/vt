@@ -1007,7 +1007,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
     amHandlerCount.increment(1);
 
     if (not is_term) {
-      theTerm()->consume(epoch,1,from_node);
+      theTerm()->consume(epoch,1,in_from_node);
       theTerm()->hangDetectRecv();
     }
   } else {
