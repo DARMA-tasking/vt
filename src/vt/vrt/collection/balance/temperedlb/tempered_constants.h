@@ -48,7 +48,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-static constexpr double const run_temperedlb_tolerance = 0.05f;
+static constexpr double const run_temperedlb_tolerance = 0.03f;
 static constexpr double const temperedlb_load_threshold = 1.0f;
 
 }}}} /* end namespace vt::vrt::collection::lb */
