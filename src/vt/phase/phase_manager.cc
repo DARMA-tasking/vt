@@ -345,12 +345,19 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
         auto percent_improvement = compute_percent_improvement(
           last_phase_info->max_load, last_phase_info->max_load_post_lb
         );
-        vt_print(
-          phase,
-          "After load balancing, expected execution should get a {:.2f}x speedup"
-          " (or take {:.1f}% less time)\n",
-          speedup, percent_improvement
-        );
+        if (speedup >= 1.005) {
+          vt_print(
+            phase,
+            "After load balancing, expected execution should get a {:.2f}x speedup"
+            " (or take {:.1f}% less time)\n",
+            speedup, percent_improvement
+          );
+        } else {
+          vt_print(
+            phase,
+            "After load balancing, negligible or no speedup is expected\n"
+          );
+        }
       }
 
       auto additional_percent_improvement = compute_percent_improvement(
