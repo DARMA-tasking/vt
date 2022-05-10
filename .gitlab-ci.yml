@@ -61,7 +61,7 @@ nvcc_wrapper-vortex:
     - module swap gcc gcc/8.3.1
     - mkdir -p /tmp/$USER
     - http_proxy=http://proxy.sandia.gov:80 https_proxy=http://proxy.sandia.gov:80 VT_RDMA_TESTS_ENABLED=0 ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_nvcc_wrapper
-    - ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_nvcc_wrapper
+    - bsub -nnodes 1 -W 45 -eptl 3:00 ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_nvcc_wrapper
   only:
     refs:
       - develop
