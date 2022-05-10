@@ -385,8 +385,9 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
           "With a smaller object grain size, up to {:.2f}x {}speedup "
           "(or {:.1f}% decrease in execution time) might have been "
           "possible\n",
+          additional_speedup,
           last_phase_info->migration_count > 0 ? "more " : "",
-          additional_speedup, additional_percent_improvement
+          additional_percent_improvement
         );
       }
     }
