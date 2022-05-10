@@ -340,10 +340,10 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
     } else if (last_phase_info->ran_lb) {
       if (last_phase_info->migration_count > 0) {
         auto speedup = compute_speedup(
-          last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
+          last_phase_info->max_load, last_phase_info->max_load_post_lb
         );
         auto percent_improvement = compute_percent_improvement(
-          last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
+          last_phase_info->max_load, last_phase_info->max_load_post_lb
         );
         vt_print(
           phase,
