@@ -88,6 +88,12 @@ void TemperedWMin::inputParams(balance::SpecEntry* spec) {
   alpha_         = spec->getOrDefault<double>("alpha", alpha_);
   beta_          = spec->getOrDefault<double>("beta", beta_);
   gamma_         = spec->getOrDefault<double>("gamma", gamma_);
+
+  vt_debug_print(
+    normal, temperedwmin,
+    "TemperedWMin::inputParams: alpha={}, beta={}, gamma={}\n",
+    alpha_, beta_, gamma_
+  );
 }
 
 TimeType TemperedWMin::getModeledWork(const elm::ElementIDStruct& obj) {

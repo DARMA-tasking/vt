@@ -742,6 +742,11 @@ void makeGraphSymmetric(
   elm::CommMapType const& comm_data = iter->second;
   std::unordered_map<NodeType, lb::BaseLB::ElementCommType> shared_edges;
 
+  vt_debug_print(
+    verbose, temperedwmin, "makeGraphSymmetric: comm size={}\n",
+    comm_data.size()
+  );
+
   for (auto&& elm : comm_data) {
     if (
       elm.first.commCategory() == elm::CommCategory::SendRecv and
@@ -759,7 +764,8 @@ void makeGraphSymmetric(
       );
 
       vt_debug_print(
-        verbose, lb, "makeGraphSymmetric: from={}, to={}\n", from, to
+        verbose, temperedwmin, "makeGraphSymmetric: elm: from={}, to={}\n",
+        from, to
       );
 
       if (from_node != this_node) {

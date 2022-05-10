@@ -270,8 +270,8 @@ void BaseLB::recvSharedEdges(CommMsg* msg) {
     for (auto&& elm : comm) {
       comm_map->insert(elm);
       vt_debug_print(
-        verbose, lb, "recv shared edge: from={}, to={}\n", elm.first.fromObj(),
-        elm.first.toObj()
+        verbose, temperedwmin, "recvSharedEdges: from={}, to={}\n",
+        elm.first.fromObj(), elm.first.toObj()
       );
     }
   }

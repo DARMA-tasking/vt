@@ -47,6 +47,7 @@
 #include "test_collection_common.h"
 #include "data_message.h"
 
+#include "vt/phase/phase_manager.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/balance/node_lb_data.h"
@@ -90,7 +91,7 @@ void colHandler(MyMsg*, MyCol* col) {
 struct TestLoadBalancerOther : TestParallelHarnessParam<std::string> { };
 struct TestLoadBalancerGreedy : TestParallelHarnessParam<std::string> { };
 
-void runTest(std::string lb_name) {
+void runTest(std::string const& lb_name, const int phases = num_phases) {
   vt::theConfig()->vt_lb = true;
   vt::theConfig()->vt_lb_name = lb_name;
   if (vt::theContext()->getNode() == 0) {
@@ -124,7 +125,7 @@ void runTest(std::string lb_name) {
     proxy = vt::theCollection()->constructCollective<MyCol>(range);
   });
 
-  for (int phase = 0; phase < num_phases; phase++) {
+  for (int phase = 0; phase < phases; phase++) {
     // Do some work.
     runInEpochCollective([&]{
       proxy.broadcastCollective<MyMsg, colHandler>();
@@ -155,7 +156,7 @@ TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_keep_last_elm) {
 }
 
 TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
-  runTest("TemperedWMin");
+  runTest("TemperedWMin", 2);
 
   // auto proxy = theLBManager()->getLB();
   // runInEpochCollective(
@@ -163,23 +164,25 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   //   [phase, proxy] { vrt::collection::balance::makeGraphSymmetric(phase, proxy); }
   // );
 
-  auto phase = num_phases - 1;
-  auto iter = theNodeLBData()->getNodeComm()->find(phase);
+  auto phase = thePhase()->getCurrentPhase();
+  auto iter = theNodeLBData()->getNodeComm()->find(phase - 1);
   ASSERT_NE(iter, theNodeLBData()->getNodeComm()->end());
 
   elm::CommMapType const& comm_data = iter->second;
 
-  fmt::print(
-    "\ntest_make_graph_symmetric: comm_map.size={}\n", comm_data.size()
+  vt_debug_print(
+    verbose, temperedwmin, "test_make_graph_symmetric: comm size={}\n",
+    comm_data.size()
   );
   for (auto&& elm : comm_data) {
     if (
       elm.first.commCategory() == elm::CommCategory::SendRecv and
       not elm.first.selfEdge()
     ) {
-      fmt::print(
-        "test_make_graph_symmetric: from={}, to={}\n", elm.first.fromObj(),
-        elm.first.toObj()
+      vt_debug_print(
+        verbose, temperedwmin,
+        "test_make_graph_symmetric: elm: from={}, to={}\n",
+        elm.first.fromObj(), elm.first.toObj()
       );
     }
   }
