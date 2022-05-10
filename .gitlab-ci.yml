@@ -17,7 +17,7 @@ intel18:
     CC: "icc"
     OMPI_CXX: "icpc"
     CXX: "icpc"
-    SCHEDULER_PARAMETERS: "--account=${ASC_WCID} --partition=short,batch --time=1:00:00 --nodes=1"
+    SCHEDULER_PARAMETERS: "--account=${ASC_WCID} --partition=short,batch --time=1:30:00 --nodes=1"
   stage: build
   script:
     - source /projects/empire/installs/chama/INTEL-RELEASE-OPENMP-SHARED/trilinos/latest-link/load_matching_env.sh
@@ -37,7 +37,7 @@ intel19:
     CC: "icc"
     OMPI_CXX: "icpc"
     CXX: "icpc"
-    SCHEDULER_PARAMETERS: "--account=${ASC_WCID} --partition=short,batch --time=1:00:00 --nodes=1"
+    SCHEDULER_PARAMETERS: "--account=${ASC_WCID} --partition=short,batch --time=1:30:00 --nodes=1"
   stage: build
   script:
     - source /projects/empire/installs/chama/INTEL-RELEASE-OPENMP-SHARED/trilinos/latest-link/load_matching_env.sh
