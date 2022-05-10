@@ -276,8 +276,8 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
           // grain size is blocking improvement
           vt_print(
             phase,
-            "Due to the large object grain size, no further speedup is "
-            "possible\n"
+            "Due to the large object grain size, no speedup is "
+            "possible by running LB\n"
           );
           auto speedup = compute_speedup(
             last_phase_info->max_load, last_phase_info->avg_load
@@ -373,7 +373,20 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
         // grain size is blocking improvement
         vt_print(
           phase,
-          "Due to the large object grain size, no further speedup is possible\n"
+          "Due to the large object grain size, no {}speedup is possible\n",
+          last_phase_info->migration_count > 0 ? "further " : ""
+        );
+
+        auto additional_speedup = compute_speedup(
+          last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
+        );
+        vt_print(
+          phase,
+          "With a smaller object grain size, up to {:.2f}x {}speedup "
+          "(or {:.1f}% decrease in execution time) might have been "
+          "possible\n",
+          last_phase_info->migration_count > 0 ? "more " : "",
+          additional_speedup, additional_percent_improvement
         );
       }
     }
