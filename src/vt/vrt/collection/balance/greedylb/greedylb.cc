@@ -169,14 +169,20 @@ void GreedyLB::loadStats() {
   }
 
   if (this_node == 0) {
-    vt_print(
-      lb,
+    vt_debug_print(
+      terse, lb,
       "loadStats: load={}, total={}, avg={}, I={:.2f},"
       "should_lb={}, auto={}, threshold={}\n",
       TimeTypeWrapper(this_load / 1000), TimeTypeWrapper(total_load / 1000),
       TimeTypeWrapper(avg_load / 1000), I, should_lb, auto_threshold,
       TimeTypeWrapper(this_threshold / 1000)
     );
+    if (!should_lb) {
+      vt_print(
+        lb,
+        "GreedyLB decided to skip rebalancing due to low imbalance\n"
+      );
+    }
     fflush(stdout);
   }
 

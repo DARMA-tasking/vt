@@ -67,8 +67,8 @@ void RotateLB::runLB(TimeType) {
   auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
 
   if (this_node == 0) {
-    vt_print(
-      lb,
+    vt_debug_print(
+      terse, lb,
       "RotateLB: runLB: next_node={}\n",
       next_node
     );

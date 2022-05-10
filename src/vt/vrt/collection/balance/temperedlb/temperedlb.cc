@@ -460,6 +460,13 @@ void TemperedLB::runLB(TimeType total_load) {
       TimeTypeWrapper(avg), TimeTypeWrapper(max), TimeTypeWrapper(pole), imb,
       TimeTypeWrapper(load), should_lb
     );
+
+    if (!should_lb) {
+      vt_print(
+        lb,
+        "TemperedLB decided to skip rebalancing due to low imbalance\n"
+      );
+    }
   }
 
   if (should_lb) {
