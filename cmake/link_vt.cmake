@@ -96,13 +96,15 @@ function(link_target_with_vt)
   endif()
 
   if (NOT DEFINED ARG_LINK_UNWIND AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_UNWIND)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: unwind=${ARG_LINK_UNWIND}")
-    endif()
-    if (NOT DEFINED APPLE)
-      target_link_libraries(
-        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} unwind
-      )
+    if (vt_has_libunwind_h)
+      if (${ARG_DEBUG_LINK})
+        message(STATUS "link_target_with_vt: unwind=${ARG_LINK_UNWIND}")
+      endif()
+      if (NOT DEFINED APPLE)
+        target_link_libraries(
+          ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} unwind
+        )
+      endif()
     endif()
   endif()
 
