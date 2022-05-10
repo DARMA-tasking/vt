@@ -285,7 +285,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
           vt_print(
             phase,
             "With a smaller object grain size, up to a {:.2f}x speedup "
-            "(or {:.2f}% decrease in execution time) might have been "
+            "(or {:.1f}% decrease in execution time) might have been "
             "possible\n",
             speedup, percent_improvement
           );
@@ -304,7 +304,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
             auto speedup_limit = std::min(speedup, grain_speedup);
             vt_print(
               phase,
-              "Up to a {:.2f}x speedup (or {:.2f}% decrease in execution "
+              "Up to a {:.2f}x speedup (or {:.1f}% decrease in execution "
               "time) may be possible by running LB\n",
               speedup_limit, pct_improvement_limit
             );
@@ -313,7 +313,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
             vt_print(
               phase,
               "Due to the large object grain size, only up to a {:.2f}x "
-              "speedup (or {:.2f}% decrease in execution time) may be "
+              "speedup (or {:.1f}% decrease in execution time) may be "
               "possible by running LB\n",
               grain_speedup, grain_percent_improvement
             );
@@ -323,7 +323,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
             vt_print(
               phase,
               "With a smaller object grain size, up to a {:.2f}x speedup "
-              "(or {:.2f}% decrease in execution time) might have been "
+              "(or {:.1f}% decrease in execution time) might have been "
               "possible\n",
               speedup, percent_improvement
             );
@@ -348,7 +348,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
         vt_print(
           phase,
           "After load balancing, expected execution should get a {:.2f}x speedup"
-          " (or take {:.2f}% less time)\n",
+          " (or take {:.1f}% less time)\n",
           speedup, percent_improvement
         );
       }
