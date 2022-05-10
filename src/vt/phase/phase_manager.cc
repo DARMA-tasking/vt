@@ -337,7 +337,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
          "Consider skipping LB on phase 0 if it is not representative of "
          "future phases\n"
        );
-    } else if (last_phase_info->ran_lb) {
+    } else {
       if (last_phase_info->migration_count > 0) {
         auto speedup = compute_speedup(
           last_phase_info->max_load, last_phase_info->max_load_post_lb
