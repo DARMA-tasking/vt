@@ -97,7 +97,7 @@ List::List(List const& in_other, BoundType in_remove_extent) {
 }
 
 List::List(
-  BoundType const* const list, SizeType const& size, bool const& is_sorted
+  BoundType const* const list, SizeType const size, bool const is_sorted
 ) {
   ListType new_list;
   for (SizeType elm = 0; elm < size; elm++) {
@@ -128,7 +128,7 @@ List::List(
 }
 
 /*virtual*/ List::SplitRegionType List::split() const {
-  auto const& size = getSize();
+  auto const size = getSize();
   vtAssert(
     size >= 2, "Size must be at least 2 to split"
   );
@@ -153,12 +153,12 @@ List::List(
 }
 
 /*virtual*/ void List::splitN(int nsplits, ApplyFnType apply) const {
-  auto const& size = static_cast<int>(getSize());
-  auto const& num_splits = std::min(nsplits, size);
+  auto const size = static_cast<int>(getSize());
+  auto const num_splits = std::min(nsplits, size);
   int cur_idx = 0;
   for (auto split = 0; split < num_splits; split++) {
-    auto const& child_size = size / num_splits;
-    auto const& cur_max = split == num_splits - 1 ?
+    auto const child_size = size / num_splits;
+    auto const cur_max = split == num_splits - 1 ?
       size : std::min(size, cur_idx + child_size);
     ListType list;
     for (int i = cur_idx; i < cur_max; i++) {
