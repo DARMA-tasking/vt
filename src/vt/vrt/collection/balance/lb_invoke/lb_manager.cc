@@ -728,22 +728,15 @@ void LBManager::closeStatisticsFile() {
   statistics_writer_ = nullptr;
 }
 
-void makeGraphSymmetric(
-  PhaseType phase, objgroup::proxy::Proxy<lb::BaseLB> proxy
-) {
+// Go through the comm graph and extract out paired SendRecv edges that are
+// not self-send and have a non-local edge
+std::unordered_map<NodeType, lb::BaseLB::ElementCommType>
+getSharedEdges(elm::CommMapType const& comm_data) {
   auto const this_node = theContext()->getNode();
-  auto iter = theNodeLBData()->getNodeComm()->find(phase);
-  if (iter == theNodeLBData()->getNodeComm()->end()) {
-    return;
-  }
-
-  // Go through the comm graph and extract out paired SendRecv edges that are
-  // not self-send and have a non-local edge
-  elm::CommMapType const& comm_data = iter->second;
   std::unordered_map<NodeType, lb::BaseLB::ElementCommType> shared_edges;
 
   vt_debug_print(
-    verbose, temperedwmin, "makeGraphSymmetric: comm size={}\n",
+    verbose, temperedwmin, "getSharedEdges: comm size={}\n",
     comm_data.size()
   );
 
@@ -764,7 +757,7 @@ void makeGraphSymmetric(
       );
 
       vt_debug_print(
-        verbose, temperedwmin, "makeGraphSymmetric: elm: from={}, to={}\n",
+        verbose, temperedwmin, "getSharedEdges: elm: from={}, to={}\n",
         from, to
       );
 
@@ -775,6 +768,19 @@ void makeGraphSymmetric(
       }
     }
   }
+
+  return shared_edges;
+}
+
+void makeGraphSymmetric(
+  PhaseType phase, objgroup::proxy::Proxy<lb::BaseLB> proxy
+) {
+  auto iter = theNodeLBData()->getNodeComm()->find(phase);
+  if (iter == theNodeLBData()->getNodeComm()->end()) {
+    return;
+  }
+
+  auto shared_edges = getSharedEdges(iter->second);
 
   for (auto&& elm : shared_edges) {
     proxy[elm.first].send<lb::CommMsg, &lb::BaseLB::recvSharedEdges>(
