@@ -442,7 +442,7 @@ void TemperedLB::runLB(TimeType total_load) {
   }
 
   if (avg > 0.0000000001) {
-    should_lb = max > run_temperedlb_tolerance * target_max_load_;
+    should_lb = max > (run_temperedlb_tolerance + 1.0) * target_max_load_;
   }
 
   if (theContext()->getNode() == 0) {
