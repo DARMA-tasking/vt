@@ -82,6 +82,7 @@
 #cmakedefine vt_has_pclose
 #cmakedefine vt_has_sbrk
 #cmakedefine vt_has_mallinfo
+#cmakedefine vt_has_mallinfo2
 #cmakedefine vt_has_getrusage
 #cmakedefine vt_has_sysinfo
 #cmakedefine vt_has_mach_task_self

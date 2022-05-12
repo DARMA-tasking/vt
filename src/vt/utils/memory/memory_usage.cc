@@ -145,13 +145,17 @@ std::string PS::getName() {
 }
 
 std::size_t Mallinfo::getUsage() {
-# if defined(vt_has_mallinfo) && defined(vt_has_malloc_h) && !vt_check_enabled(mimalloc)
-    struct mallinfo mi = mallinfo();
-    unsigned int blocks = mi.uordblks;
-    return static_cast<std::size_t>(blocks);
-# else
-    return 0;
-# endif
+#if vt_check_enabled(mimalloc) || \
+  !defined(vt_has_mallinfo) && !defined(vt_has_mallinfo2)
+  return 0;
+#else
+#if defined(vt_has_mallinfo2)
+  auto mi = mallinfo2();
+#elif defined(vt_has_mallinfo)
+  auto mi = mallinfo();
+#endif
+  return static_cast<std::size_t>(mi.uordblks);
+#endif
 }
 
 std::string Mallinfo::getName() {
