@@ -76,6 +76,12 @@ void runInEpochCollective(Callable&& fn);
 template <typename Callable>
 void runInEpochCollective(std::string const& label, Callable&& fn);
 
+template <typename Callable>
+void runSubphaseCollective(Callable&& fn);
+
+template <typename Callable>
+void runSubphaseCollective(std::string const& label, Callable&& fn);
+
 namespace messaging {
 
 template <typename T>

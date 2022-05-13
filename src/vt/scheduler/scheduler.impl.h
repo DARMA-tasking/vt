@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/messaging/active.h"
 #include "vt/termination/termination.h"
+#include "vt/phase/phase_manager.h"
 
 namespace vt {
 
@@ -69,6 +70,20 @@ void runInEpochCollective(Callable&& fn) {
 template <typename Callable>
 void runInEpochCollective(std::string const& label, Callable&& fn) {
   auto ep = theTerm()->makeEpochCollective(label);
+  runInEpoch(ep, std::forward<Callable>(fn));
+}
+
+template <typename Callable>
+void runSubphaseCollective(Callable&& fn) {
+  runSubphaseCollective("UNLABELED", std::forward<Callable>(fn));
+}
+
+template <typename Callable>
+void runSubphaseCollective(std::string const& label, Callable&& fn) {
+  auto ep = theTerm()->makeEpochCollective(label);
+  theTerm()->addActionEpoch(ep, [=]{
+    thePhase()->advanceSubphase();
+  });
   runInEpoch(ep, std::forward<Callable>(fn));
 }
 
