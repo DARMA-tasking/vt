@@ -21,7 +21,10 @@ if(NOT DEFINED VT_WARNING_FLAGS)
   add_cxx_compiler_flag_if_supported("-Wno-unknown-pragmas")
   add_cxx_compiler_flag_if_supported("-Wsign-compare")
   # Not really a warning, is still diagnostic related..
-  add_cxx_compiler_flag_if_supported("-ftemplate-backtrace-limit=100")
+  if (NOT CMAKE_CXX_COMPILER_ID STREQUAL Intel OR
+      NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 2021)
+    add_cxx_compiler_flag_if_supported("-ftemplate-backtrace-limit=100")
+  endif()
 
   if (vt_werror_enabled)   # Treat warning as errors
   add_cxx_compiler_flag_if_supported("-Werror")
