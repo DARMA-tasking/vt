@@ -61,20 +61,22 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 template <typename ColT>
 /*static*/
 void CollectionLBData::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
-  auto& lb_data = col->lb_data_;
+  auto const phase = thePhase()->getCurrentPhase();
 
   vt_debug_print(
     normal, lb,
-    "ElementLBData: syncNextPhase ({}) (idx={}): lb_data.getPhase()={}, "
+    "ElementLBData: syncNextPhase ({}) (idx={}): phase()={}, "
     "msg->getPhase()={}\n",
-    print_ptr(col), col->getIndex(), lb_data.getPhase(), msg->getPhase()
+    print_ptr(col), col->getIndex(), phase, msg->getPhase()
   );
 
-  vtAssert(lb_data.getPhase() == msg->getPhase(), "Phases must match");
+  vtAssert(phase == msg->getPhase(), "Phases must match");
 
   auto const proxy = col->getProxy();
   auto const subphase = getFocusedSubPhase(proxy);
-  theNodeLBData()->addNodeLBData(col->elm_id_, &col->lb_data_, col, subphase);
+  theNodeLBData()->addNodeLBData(
+    col->elm_id_, &col->lb_data_, col, phase, subphase
+  );
 
   std::vector<uint64_t> idx;
   for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {

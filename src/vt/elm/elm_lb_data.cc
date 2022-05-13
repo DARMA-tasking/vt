@@ -88,19 +88,21 @@ void ElementLBData::sendToEntity(
 }
 
 void ElementLBData::sendComm(elm::CommKey key, double bytes) {
+  auto cur_phase = thePhase()->getCurrentPhase();
   auto cur_subphase = thePhase()->getCurrentSubphase();
-  phase_comm_[cur_phase_][key].sendMsg(bytes);
-  subphase_comm_[cur_phase_].resize(cur_subphase + 1);
-  subphase_comm_[cur_phase_].at(cur_subphase)[key].sendMsg(bytes);
+  phase_comm_[cur_phase][key].sendMsg(bytes);
+  subphase_comm_[cur_phase].resize(cur_subphase + 1);
+  subphase_comm_[cur_phase].at(cur_subphase)[key].sendMsg(bytes);
 }
 
 void ElementLBData::recvComm(
   elm::CommKey key, double bytes
 ) {
+  auto cur_phase = thePhase()->getCurrentPhase();
   auto cur_subphase = thePhase()->getCurrentSubphase();
-  phase_comm_[cur_phase_][key].receiveMsg(bytes);
-  subphase_comm_[cur_phase_].resize(cur_subphase + 1);
-  subphase_comm_[cur_phase_].at(cur_subphase)[key].receiveMsg(bytes);
+  phase_comm_[cur_phase][key].receiveMsg(bytes);
+  subphase_comm_[cur_phase].resize(cur_subphase + 1);
+  subphase_comm_[cur_phase].at(cur_subphase)[key].receiveMsg(bytes);
 }
 
 void ElementLBData::recvObjData(
@@ -128,43 +130,34 @@ void ElementLBData::recvToNode(
 }
 
 void ElementLBData::addTime(TimeTypeWrapper const& time) {
-  phase_timings_[cur_phase_] += time.seconds();
+  auto cur_phase = thePhase()->getCurrentPhase();
+  phase_timings_[cur_phase] += time.seconds();
 
   auto cur_subphase = thePhase()->getCurrentSubphase();
-  subphase_timings_[cur_phase_].resize(cur_subphase + 1);
-  subphase_timings_[cur_phase_].at(cur_subphase) += time.seconds();
+  subphase_timings_[cur_phase].resize(cur_subphase + 1);
+  subphase_timings_[cur_phase].at(cur_subphase) += time.seconds();
 
   vt_debug_print(
     verbose,lb,
     "ElementLBData: addTime: time={}, cur_load={}\n",
     time,
-    TimeTypeWrapper(phase_timings_[cur_phase_])
+    TimeTypeWrapper(phase_timings_[cur_phase])
   );
 }
 
-void ElementLBData::updatePhase(PhaseType const& inc) {
+void ElementLBData::updatePhase(PhaseType const& cur_phase) {
   vt_debug_print(
     verbose, lb,
-    "ElementLBData: updatePhase: cur_phase_={}, inc={}\n",
-    cur_phase_, inc
+    "ElementLBData: updatePhase: new_phase={}\n",
+    cur_phase
   );
-
-  cur_phase_ += inc;
 
   // Access all table entries for current phase, to ensure presence even
   // if they're left empty
-  phase_timings_[cur_phase_];
-  subphase_timings_[cur_phase_];
-  phase_comm_[cur_phase_];
-  subphase_comm_[cur_phase_];
-}
-
-void ElementLBData::resetPhase() {
-  cur_phase_ = fst_lb_phase;
-}
-
-PhaseType ElementLBData::getPhase() const {
-  return cur_phase_;
+  phase_timings_[cur_phase];
+  subphase_timings_[cur_phase];
+  phase_comm_[cur_phase];
+  subphase_comm_[cur_phase];
 }
 
 TimeType ElementLBData::getLoad(PhaseType const& phase) const {

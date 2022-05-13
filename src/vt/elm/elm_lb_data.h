@@ -81,9 +81,7 @@ struct ElementLBData {
     NodeType to, ElementIDStruct from_perm,
     double bytes, bool bcast
   );
-  void updatePhase(PhaseType const& inc = 1);
-  void resetPhase();
-  PhaseType getPhase() const;
+  void updatePhase(PhaseType const& phase);
   TimeType getLoad(PhaseType const& phase) const;
   TimeType getLoad(PhaseType phase, SubphaseType subphase) const;
 
@@ -101,7 +99,6 @@ struct ElementLBData {
   void serialize(Serializer& s) {
     s | cur_time_started_;
     s | cur_time_;
-    s | cur_phase_;
     s | phase_timings_;
     s | phase_comm_;
     s | subphase_timings_;
@@ -122,7 +119,6 @@ protected:
 protected:
   bool cur_time_started_ = false;
   TimeType cur_time_ = 0.0;
-  PhaseType cur_phase_ = fst_lb_phase;
   std::unordered_map<PhaseType, TimeType> phase_timings_ = {};
   std::unordered_map<PhaseType, CommMapType> phase_comm_ = {};
 

@@ -60,6 +60,7 @@ void ObjGroupManager::startup() {
 #if vt_check_enabled(lblite)
   // Hook to collect LB data about objgroups
   thePhase()->registerHookCollective(phase::PhaseHook::End, []{
+    auto const phase = thePhase()->getCurrentPhase();
     auto& objs = theObjGroup()->objs_;
     for (auto&& obj : objs) {
       auto holder = obj.second.get();
@@ -68,7 +69,9 @@ void ObjGroupManager::startup() {
         auto proxy = elm::ElmIDBits::getObjGroupProxy(elm_id.id, false);
         vtAssertExpr(proxy == obj.first);
         theNodeLBData()->registerObjGroupInfo(elm_id, obj.first);
-        theNodeLBData()->addNodeLBData(elm_id, &holder->getLBData(), nullptr);
+        theNodeLBData()->addNodeLBData(
+          elm_id, &holder->getLBData(), nullptr, phase
+        );
       }
     }
   });

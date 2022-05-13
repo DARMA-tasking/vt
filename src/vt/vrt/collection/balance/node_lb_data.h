@@ -134,6 +134,7 @@ public:
    */
   void addNodeLBData(
     ElementIDStruct id, elm::ElementLBData* in, StorableType *storable,
+    PhaseType phase,
     SubphaseType focused_subphase = elm::ElementLBData::no_subphase
   );
 
