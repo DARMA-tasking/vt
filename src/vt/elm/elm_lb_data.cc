@@ -45,6 +45,7 @@
 #define INCLUDED_VT_ELM_ELM_LB_DATA_CC
 
 #include "vt/elm/elm_lb_data.h"
+#include "vt/phase/phase_manager.h"
 
 #include "vt/config.h"
 
@@ -87,17 +88,19 @@ void ElementLBData::sendToEntity(
 }
 
 void ElementLBData::sendComm(elm::CommKey key, double bytes) {
+  auto cur_subphase = thePhase()->getCurrentSubphase();
   phase_comm_[cur_phase_][key].sendMsg(bytes);
-  subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
-  subphase_comm_[cur_phase_].at(cur_subphase_)[key].sendMsg(bytes);
+  subphase_comm_[cur_phase_].resize(cur_subphase + 1);
+  subphase_comm_[cur_phase_].at(cur_subphase)[key].sendMsg(bytes);
 }
 
 void ElementLBData::recvComm(
   elm::CommKey key, double bytes
 ) {
+  auto cur_subphase = thePhase()->getCurrentSubphase();
   phase_comm_[cur_phase_][key].receiveMsg(bytes);
-  subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
-  subphase_comm_[cur_phase_].at(cur_subphase_)[key].receiveMsg(bytes);
+  subphase_comm_[cur_phase_].resize(cur_subphase + 1);
+  subphase_comm_[cur_phase_].at(cur_subphase)[key].receiveMsg(bytes);
 }
 
 void ElementLBData::recvObjData(
@@ -127,8 +130,9 @@ void ElementLBData::recvToNode(
 void ElementLBData::addTime(TimeTypeWrapper const& time) {
   phase_timings_[cur_phase_] += time.seconds();
 
-  subphase_timings_[cur_phase_].resize(cur_subphase_ + 1);
-  subphase_timings_[cur_phase_].at(cur_subphase_) += time.seconds();
+  auto cur_subphase = thePhase()->getCurrentSubphase();
+  subphase_timings_[cur_phase_].resize(cur_subphase + 1);
+  subphase_timings_[cur_phase_].at(cur_subphase) += time.seconds();
 
   vt_debug_print(
     verbose,lb,
@@ -199,6 +203,8 @@ TimeType ElementLBData::getLoad(PhaseType phase, SubphaseType subphase) const {
 }
 
 std::vector<TimeType> const& ElementLBData::getSubphaseTimes(PhaseType phase) {
+  auto cur_subphase = thePhase()->getCurrentSubphase();
+  subphase_timings_[phase].resize(cur_subphase + 1);
   return subphase_timings_[phase];
 }
 
@@ -216,6 +222,8 @@ ElementLBData::getComm(PhaseType const& phase) {
 }
 
 std::vector<CommMapType> const& ElementLBData::getSubphaseComm(PhaseType phase) {
+  auto cur_subphase = thePhase()->getCurrentSubphase();
+  subphase_comm_[phase].resize(cur_subphase + 1);
   auto const& subphase_comm = subphase_comm_[phase];
 
   vt_debug_print(
@@ -225,15 +233,6 @@ std::vector<CommMapType> const& ElementLBData::getSubphaseComm(PhaseType phase) 
   );
 
   return subphase_comm;
-}
-
-void ElementLBData::setSubPhase(SubphaseType subphase) {
-  vtAssert(subphase < no_subphase, "subphase must be less than sentinel");
-  cur_subphase_ = subphase;
-}
-
-SubphaseType ElementLBData::getSubPhase() const {
-  return cur_subphase_;
 }
 
 void ElementLBData::releaseLBDataFromUnneededPhases(PhaseType phase, unsigned int look_back) {

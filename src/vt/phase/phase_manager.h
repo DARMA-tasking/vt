@@ -106,6 +106,18 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
   PhaseType getCurrentPhase() const { return cur_phase_; }
 
   /**
+   * \brief Get the current subphase
+   *
+   * \return the current subphase
+   */
+  SubphaseType getCurrentSubphase() const { return cur_subphase_; }
+
+  /**
+   * \brief Advance subphase
+   */
+  void advanceSubphase() { ++cur_subphase_; }
+
+  /**
    * \brief Collectively register a phase hook that triggers depending on the
    * type of hook
    *
@@ -200,6 +212,7 @@ public:
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_phase_
+      | cur_subphase_
       | proxy_
       | collective_hooks_
       | rooted_hooks_
@@ -213,6 +226,7 @@ public:
 
 private:
   PhaseType cur_phase_ = 0;                 /**< Current phase */
+  SubphaseType cur_subphase_ = 0;           /**< Current subphase */
   ObjGroupProxyType proxy_ = no_obj_group;  /**< Objgroup proxy  */
   HookIDMapType collective_hooks_;          /**< Collective regisstered hooks */
   HookIDMapType rooted_hooks_;              /**< Rooted regisstered hooks  */

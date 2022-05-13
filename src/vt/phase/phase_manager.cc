@@ -160,6 +160,7 @@ void PhaseManager::nextPhaseCollective() {
   runHooks(PhaseHook::EndPostMigration);
 
   cur_phase_++;
+  cur_subphase_ = 0;
 
   vt_debug_print(
     normal, phase,

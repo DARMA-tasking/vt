@@ -90,8 +90,6 @@ struct ElementLBData {
   CommMapType const& getComm(PhaseType const& phase);
   std::vector<CommMapType> const& getSubphaseComm(PhaseType phase);
   std::vector<TimeType> const& getSubphaseTimes(PhaseType phase);
-  void setSubPhase(SubphaseType subphase);
-  SubphaseType getSubPhase() const;
 
   // these are just for unit testing
   std::size_t getLoadPhaseCount() const;
@@ -106,7 +104,6 @@ struct ElementLBData {
     s | cur_phase_;
     s | phase_timings_;
     s | phase_comm_;
-    s | cur_subphase_;
     s | subphase_timings_;
     s | subphase_comm_;
   }
@@ -129,7 +126,6 @@ protected:
   std::unordered_map<PhaseType, TimeType> phase_timings_ = {};
   std::unordered_map<PhaseType, CommMapType> phase_comm_ = {};
 
-  SubphaseType cur_subphase_ = 0;
   std::unordered_map<PhaseType, std::vector<TimeType>> subphase_timings_ = {};
   std::unordered_map<PhaseType, std::vector<CommMapType>> subphase_comm_ = {};
 };
