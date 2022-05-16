@@ -132,6 +132,8 @@ struct Pool : runtime::component::Component<Pool> {
    */
   SizeType remainingSize(void* const buf);
 
+  SizeType allocatedSize(void* const buf);
+
   /**
    * \brief Whether the pool is enabled at compile-time
    *

@@ -67,7 +67,7 @@ Pool::Pool()
 Pool::ePoolSize Pool::getPoolType(
   size_t const& num_bytes, size_t const& oversize
 ) {
-  auto const& total_bytes = num_bytes + oversize;
+  auto const& total_bytes = num_bytes + oversize + sizeof(HeaderType);
   if (total_bytes <= static_cast<size_t>(small_msg->getNumBytes())) {
     return ePoolSize::Small;
   } else if (total_bytes <= static_cast<size_t>(medium_msg->getNumBytes())) {
@@ -164,14 +164,6 @@ void Pool::defaultDealloc(void* const ptr) {
 }
 
 void* Pool::alloc(size_t const& num_bytes, size_t oversize) {
-  /*
-   * Padding for the extra handler typically required for oversize serialized
-   * sends
-   */
-  if (oversize != 0) {
-    oversize += 16;
-  }
-
   void* ret = nullptr;
 
   #if vt_check_enabled(memory_pool)
@@ -250,6 +242,15 @@ Pool::SizeType Pool::remainingSize(void* const buf) {
   #else
     return 0;
   #endif
+}
+
+Pool::SizeType Pool::allocatedSize(void* const buf) {
+#if vt_check_enabled(memory_pool)
+  auto buf_char = static_cast<char*>(buf);
+  return HeaderManagerType::getHeaderBytes(buf_char) + HeaderManagerType::getHeaderOversizeBytes(buf_char);
+#else
+  return 0;
+#endif
 }
 
 void Pool::initWorkerPools(WorkerCountType const& num_workers) {
