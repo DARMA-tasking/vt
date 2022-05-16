@@ -143,6 +143,11 @@ void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   if (obj_iter != objs_.end()) {
     objs_.erase(obj_iter);
   }
+
+  auto label_iter = labels_.find(proxy_bits);
+  if (label_iter != labels_.end()) {
+    labels_.erase(label_iter);
+  }
 }
 
 template <typename ObjT>
