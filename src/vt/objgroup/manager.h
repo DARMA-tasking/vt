@@ -128,14 +128,6 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    */
   template <typename ObjT, typename... Args>
   ProxyType<ObjT> makeCollective(std::string const& label, Args&&... args);
-  // `label` should have a default value. In this case, when followed by
-  // a parameter pack, it is still perfectly legal, according to
-  // the standard.
-  //
-  // Some of the compilers report compilation error though :- (
-  //
-  // template <typename ObjT, typename... Args>
-  // ProxyType<ObjT> makeCollective(std::string const& label = {}, Args&&... args);
 
   /**
    * \brief Collectively construct a new object group from a existing unique

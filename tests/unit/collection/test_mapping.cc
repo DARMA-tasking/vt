@@ -221,7 +221,7 @@ struct MyDistMapper : vt::mapping::BaseMapper<IndexT> {
     auto madeProxy = vt::theObjGroup()->makeCollective<MyDistMapper<IndexT>>(
       "MyDistMapper::construct()"
     );
-    madeProxy.get()->proxy = proxy;
+    madeProxy.get()->proxy = madeProxy;
     return madeProxy.getProxy();
   }
 

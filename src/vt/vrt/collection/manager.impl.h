@@ -1239,7 +1239,7 @@ CollectionManager::constructCollective(
 ) {
   auto const map_han = getDefaultMap<ColT>();
   auto cons_fn = [](typename ColT::IndexType) { return std::make_unique<ColT>(); };
-  return constructCollectiveMap<ColT>(label, range, cons_fn, map_han);
+  return constructCollectiveMap<ColT>(range, cons_fn, map_han, label);
 }
 
 template <typename ColT>
@@ -1249,7 +1249,7 @@ CollectionManager::constructCollective(
   std::string const& label
 ) {
   auto const map_han = getDefaultMap<ColT>();
-  return constructCollectiveMap<ColT>(label, range, cons_fn, map_han);
+  return constructCollectiveMap<ColT>(range, cons_fn, map_han, label);
 }
 
 template <
@@ -1262,7 +1262,7 @@ CollectionManager::constructCollective(
   using IndexT = typename ColT::IndexType;
   auto cons_fn = [](typename ColT::IndexType){return std::make_unique<ColT>();};
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return constructCollectiveMap<ColT>(label, range, cons_fn, map_han);
+  return constructCollectiveMap<ColT>(range, cons_fn, map_han, label);
 }
 
 template <
@@ -1275,14 +1275,14 @@ CollectionManager::constructCollective(
 ) {
   using IndexT = typename ColT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return constructCollectiveMap<ColT>(label, range, cons_fn, map_han);
+  return constructCollectiveMap<ColT>(range, cons_fn, map_han, label);
 }
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::constructCollectiveMap(
-  std::string const& label, typename ColT::IndexType range,
-  DistribConstructFn<ColT> user_construct_fn, HandlerType const map_han
+  typename ColT::IndexType range, DistribConstructFn<ColT> user_construct_fn,
+  HandlerType const map_han, std::string const& label
 ) {
   return vt::makeCollection<ColT>(label)
     .bounds(range)
@@ -1389,7 +1389,7 @@ CollectionManager::construct(
   typename ColT::IndexType range, std::string const& label
 ) {
   auto const map_han = getDefaultMap<ColT>();
-  return constructMap<ColT>(label, range, map_han);
+  return constructMap<ColT>(range, map_han, label);
 }
 
 template <
@@ -1401,14 +1401,14 @@ CollectionManager::construct(
 ) {
   using IndexT = typename ColT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return constructMap<ColT>(label, range, map_han);
+  return constructMap<ColT>(range, map_han, label);
 }
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
 CollectionManager::constructMap(
-  std::string const& label, typename ColT::IndexType range,
-  HandlerType const map_handler
+  typename ColT::IndexType range, HandlerType const map_handler,
+  std::string const& label
 ) {
   return vt::makeCollection<ColT>(label)
     .bounds(range)

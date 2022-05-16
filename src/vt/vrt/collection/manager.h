@@ -173,17 +173,17 @@ struct CollectionManager
    * \brief Construct a new virtual context collection with an explicit,
    * pre-registered map handler
    *
-   * \param[in] label collection label
    * \param[in] range index range for the collection
    * \param[in] map pre-registered map handler
+   * \param[in] label collection label
    *
    * \return proxy to the new collection
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
   constructMap(
-    std::string const& label, typename ColT::IndexType range,
-    HandlerType const map
+    typename ColT::IndexType range, HandlerType const map,
+    std::string const& label = {}
   );
 
   /**
@@ -314,17 +314,17 @@ struct CollectionManager
    *  will invoke that function for every index in the system based on the where
    *  each index is mapped with the registered map function.
    *
-   * \param[in] label collection label
    * \param[in] range index range for the collection
    * \param[in] cons_fn construct function to create an element on each node
    * \param[in] map_han the registered map function
+   * \param[in] label collection label
    *
    * \return proxy to new collection
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollectiveMap(
-    std::string const& label, typename ColT::IndexType range,
-    DistribConstructFn<ColT> cons_fn, HandlerType const map_han
+    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+    HandlerType const map_hanm, std::string const& label = {}
   );
 
   /**
