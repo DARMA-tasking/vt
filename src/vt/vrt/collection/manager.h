@@ -1726,8 +1726,9 @@ public:
    * \param[in] proxy Collection proxy
    * \return collection lable
    */
-  template <typename ColT>
-  std::string getLabel(CollectionProxyWrapType<ColT> const proxy) const;
+  std::string getLabel(VirtualProxyType const proxy) const {
+    return typeless_holder_.getLabel(proxy);
+  }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -1737,8 +1738,7 @@ public:
       | next_collective_id_
       | next_rooted_id_
       | typeless_holder_
-      | reduce_stamp_
-      | labels_;
+      | reduce_stamp_;
   }
 
 private:
@@ -1838,7 +1838,6 @@ private:
   VirtualIDType next_rooted_id_ = 0;
   TypelessHolder typeless_holder_;
   std::unordered_map<VirtualProxyType, SequentialIDType> reduce_stamp_;
-  std::unordered_map<VirtualProxyType, std::string> labels_;
 };
 
 }}} /* end namespace vt::vrt::collection */

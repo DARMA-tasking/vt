@@ -1339,8 +1339,8 @@ void CollectionManager::insertMetaCollection(
   MetaHolderType::insert(proxy,holder);
   typeless_holder_.insertCollectionInfo(proxy, holder, [proxy]{
     theCollection()->constructGroup<ColT>(proxy);
-  });
-  labels_.emplace(proxy, label);
+  }, label);
+
   /*
    *  This is to ensure that the collection LM instance gets created so that
    *  messages can be forwarded properly
@@ -2346,16 +2346,6 @@ messaging::PendingSend CollectionManager::schedule(
       schedule(fn);
     }
   });
-}
-
-template <typename ColT>
-std::string CollectionManager::getLabel(
-  CollectionManager::CollectionProxyWrapType<ColT> const proxy
-) const {
-  auto const proxy_bits = proxy.getProxy();
-  auto const iter = labels_.find(proxy_bits);
-  vtAssert(iter != labels_.cend(), "Label does not exist");
-  return iter->second;
 }
 
 }}} /* end namespace vt::vrt::collection */

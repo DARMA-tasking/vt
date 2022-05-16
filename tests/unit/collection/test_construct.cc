@@ -95,7 +95,7 @@ TEST_F(TestConstructLabel, test_labels) {
     .bulkInsert()
     .wait();
 
-  auto const proxyLabel = theCollection()->getLabel(proxy);
+  auto const proxyLabel = theCollection()->getLabel(proxy.getProxy());
 
   EXPECT_EQ(label, proxyLabel);
 }
