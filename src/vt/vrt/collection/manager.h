@@ -1645,14 +1645,12 @@ public:
    *
    * \param[in] range the range of the collection to restart
    * \param[in] file_base the base file name for the files to read
-   * \param[in] label collection label
    *
    * \return proxy to the new collection
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> restoreFromFile(
-    typename ColT::IndexType range, std::string const& file_base,
-    std::string const& label = {}
+    typename ColT::IndexType range, std::string const& file_base
   );
 
   /**

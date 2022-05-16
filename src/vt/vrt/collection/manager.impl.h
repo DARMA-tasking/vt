@@ -2179,6 +2179,8 @@ void CollectionManager::checkpointToFile(
     checkpoint::serializeToFile(*static_cast<ColT*>(elm), name);
   });
 
+  directory.label_ = getLabel(proxy_bits);
+
   auto const directory_name = makeMetaFilename<IndexT>(file_base, make_sub_dirs);
   checkpoint::serializeToFile(directory, directory_name);
 }
@@ -2280,8 +2282,7 @@ void CollectionManager::restoreFromFileInPlace(
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::restoreFromFile(
-  typename ColT::IndexType range, std::string const& file_base,
-  std::string const& label
+  typename ColT::IndexType range, std::string const& file_base
 ) {
   using IndexType = typename ColT::IndexType;
   using DirectoryType = CollectionDirectory<IndexType>;
@@ -2321,7 +2322,7 @@ CollectionManager::restoreFromFile(
     elms.emplace_back(std::make_tuple(idx, std::move(col_ptr)));
   }
 
-  return vt::makeCollection<ColT>(label)
+  return vt::makeCollection<ColT>(directory->label_)
     .bounds(range)
     .collective(true)
     .listInsertHere(std::move(elms))

@@ -172,11 +172,12 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
   auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 
   auto range = vt::Index3D(num_nodes, num_elms, 4);
-  auto checkpoint_name = "test_checkpoint_dir";
+  std::string const checkpoint_name{"test_checkpoint_dir"};
+  std::string const expected_label{"test_checkpoint_1"};
 
   {
     auto proxy = vt::theCollection()->constructCollective<TestCol>(
-      range, "test_checkpoint_1"
+      range, expected_label
     );
 
     vt::runInEpochCollective([&]{
@@ -219,15 +220,18 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
 
   {
     auto proxy = vt::theCollection()->restoreFromFile<TestCol>(
-      range, checkpoint_name, "test_checkpoint_1"
+      range, checkpoint_name
     );
 
     // Restoration should be done now
     vt::theCollective()->barrier();
 
-    runInEpochCollective([&]{
+    runInEpochCollective([&] {
+      auto const got_label = vt::theCollection()->getLabel(proxy.getProxy());
+      EXPECT_EQ(got_label, expected_label);
+
       if (this_node == 0) {
-        proxy.broadcast<TestCol::NullMsg,&TestCol::verify>();
+        proxy.broadcast<TestCol::NullMsg, &TestCol::verify>();
       }
     });
 
@@ -441,7 +445,7 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
   }
 
   auto proxy = vt::theCollection()->restoreFromFile<TestCol>(
-    range, checkpoint_name, "test_checkpoint_no_elements_on_root_rank"
+    range, checkpoint_name
   );
 
   // Restoration should be done now
