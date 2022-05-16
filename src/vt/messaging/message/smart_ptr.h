@@ -152,7 +152,7 @@ struct MsgSharedPtr final {
   MsgSharedPtr<U> to() const {
     return MsgSharedPtr<U>(
       reinterpret_cast<U*>(ptr_),
-      size_, // retain ORIGINAL size
+      no_byte,
       /*N.B. retain ORIGINAL-type implementation*/ impl_);
   }
 
@@ -209,7 +209,10 @@ struct MsgSharedPtr final {
     vtAssert(
       ptr_, "Access attempted of invalid MsgPtr."
     );
-    return size_;
+
+    // Obtain the size of the message from the block allocated by the
+    // memory pool allocator
+    return thePool()->allocatedSize( ptr_ );
   }
 
   /**
@@ -245,7 +248,6 @@ struct MsgSharedPtr final {
 
       // skip footprinting of members, we rely on message size estimate instead
       s.skip(impl_);
-      s.skip(size_);
       s.skip(ptr_);
     }
   }
@@ -264,7 +266,6 @@ private:
     assert("given impl" && impl);
 
     ptr_ = msgPtr;
-    size_ = size;
     impl_ = impl;
 
     // Could be moved to type-erased impl..
@@ -288,7 +289,6 @@ private:
   /// Move. Must be invoked on fresh/clear state.
   void moveFrom(MsgSharedPtr<T>&& in) {
     ptr_ = in.ptr_;
-    size_ = in.size_;
     impl_ = in.impl_;
     // clean take - nullify/prevent other cleanup
     in.ptr_ = nullptr;
@@ -297,8 +297,6 @@ private:
 private:
   // Underlying raw message - access as correct type via get()
   BaseMsgType* ptr_ = nullptr;
-  // Message size preserved before type erasure
-  ByteType size_ = no_byte;
   // Type-erased implementation support.
   // Object has a STATIC LIFETIME / is not owned / should not be deleted.
   MsgPtrImplBase* impl_ = nullptr;

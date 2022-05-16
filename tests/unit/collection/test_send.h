@@ -62,9 +62,13 @@ using namespace vt::tests::unit;
 
 namespace send_col_ {
 template <typename... Args> struct ColMsg;
+template <typename PayloadT, typename... Args> struct ColSzMsg;
 template <typename... Args>
 struct TestCol : Collection<TestCol<Args...>,TestIndex> {
   using MsgType = ColMsg<Args...>;
+
+  template <typename PayloadT>
+  using MsgSzType = ColSzMsg<PayloadT, Args... >;
   using ParamType = std::tuple<Args...>;
   TestCol() = default;
   void testMethod(Args... args) {
@@ -95,6 +99,28 @@ struct ColMsg : CollectionMessage<TestCol<Args...>> {
   }
 
   TupleType tup;
+};
+
+template <typename PayloadT, typename... Args>
+struct ColSzMsg : CollectionMessage<TestCol<Args...>> {// : ColMsg<Args...> {
+  using MessageParentType = CollectionMessage<TestCol<Args...>>;//ColMsg<Args...>;
+  //using ColMsg<Args...>::ColMsg;
+  using TupleType = std::tuple<Args...>;
+
+  std::size_t buff_size = 0;
+
+  PayloadT *payload() {
+    return reinterpret_cast< PayloadT * >( this + 1 );
+  }
+
+  //vt_msg_serialize_if_needed_by_parent();
+  vt_msg_serialize_prohibited();
+
+//  template <typename SerializerT>
+//  void serialize(SerializerT& s) {
+//    s | buff_size;
+//    MessageParentType::serialize(s);
+//  }
 };
 
 template <typename... Args>
@@ -132,12 +158,35 @@ struct SendHandlers {
   }
 };
 
+template <
+  typename CollectionT,
+  typename PayloadT = typename CollectionT::MsgType::TupleType,
+  typename MessageT = typename CollectionT::template MsgSzType<PayloadT>,
+  typename TupleT   = typename MessageT::TupleType
+  >
+struct SendSzHandlers : SendHandlers<CollectionT, MessageT, TupleT> {
+  using BaseT = SendHandlers<CollectionT, MessageT, TupleT>;
+  static void handler(MessageT* msg, CollectionT* col) {
+    // Verify payload size is correct
+    EXPECT_EQ(msg->buff_size, sizeof(PayloadT));
+    auto smart_ptr = vt::MsgSharedPtr<MessageT>(msg);
+    EXPECT_EQ(smart_ptr.size(), sizeof(MessageT) + sizeof(PayloadT));
+
+    // Verify payload
+    BaseT::execute(col, *msg->payload());
+    //BaseT::execute(col,msg->tup);
+  }
+};
+
 template <typename CollectionT>
 struct TestCollectionSend : TestParallelHarness {};
+template <typename CollectionT>
+struct TestCollectionSendSz : TestParallelHarness {};
 template <typename CollectionT>
 struct TestCollectionSendMem : TestParallelHarness {};
 
 TYPED_TEST_SUITE_P(TestCollectionSend);
+TYPED_TEST_SUITE_P(TestCollectionSendSz);
 TYPED_TEST_SUITE_P(TestCollectionSendMem);
 
 template<typename ColType>
@@ -153,6 +202,7 @@ void test_collection_send_1() {
     auto proxy = theCollection()->construct<ColType>(range);
     for (int i = 0; i < col_size; i++) {
       auto msg = makeMessage<MsgType>(args);
+      EXPECT_EQ(msg.size(), sizeof(MsgType));
       //proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
       if (i % 2 == 0) {
         proxy[i].template sendMsg<MsgType,SendHandlers<ColType>::handler>(msg.get());
@@ -165,8 +215,30 @@ void test_collection_send_1() {
   }
 }
 
-template<typename ColType>
-void test_collection_send_ptm_1(){
+template <typename ColType>
+void test_collection_send_sz_1() {
+  using PayloadType = typename ColType::MsgType::TupleType;
+  using MsgType = typename ColType::template MsgSzType<PayloadType>;
+  using TestParamType = typename ColType::ParamType;
+
+  auto const& this_node = theContext()->getNode();
+  if (this_node == 0) {
+    auto const& col_size = 32;
+    auto range = TestIndex(col_size);
+    TestParamType args = ConstructTuple<TestParamType>::construct();
+    auto proxy = theCollection()->construct<ColType>(range);
+    for (int i = 0; i < col_size; i++) {
+      auto msg = makeMessageSz<MsgType>(sizeof(PayloadType));//, args);
+      EXPECT_EQ(msg.size(), sizeof(MsgType) + sizeof(PayloadType));
+      msg->buff_size = sizeof(PayloadType);
+      std::memcpy(msg->payload(), &args, msg->buff_size);
+      proxy[i].template sendMsg<MsgType,SendSzHandlers<ColType>::handler>(msg);
+    }
+  }
+}
+
+template <typename ColType>
+void test_collection_send_ptm_1() {
   using MsgType = typename ColType::MsgType;
   using TestParamType = typename ColType::ParamType;
 
