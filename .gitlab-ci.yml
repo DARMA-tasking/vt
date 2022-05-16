@@ -23,9 +23,10 @@ intel18:
     - source /projects/empire/installs/chama/INTEL-RELEASE-OPENMP-SHARED/trilinos/latest-link/load_matching_env.sh
     - http_proxy=http://proxy.sandia.gov:80 https_proxy=http://proxy.sandia.gov:80 VT_RDMA_TESTS_ENABLED=0 ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
     - ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
-  only:
-    refs:
-      - develop
+  rules:
+     - if: $CI_COMMIT_BRANCH == 'develop'
+       when: always
+     - when: manual
   tags:
     - intel19_usr
 
@@ -44,9 +45,10 @@ intel19:
     - module swap intel intel/19
     - http_proxy=http://proxy.sandia.gov:80 https_proxy=http://proxy.sandia.gov:80 VT_RDMA_TESTS_ENABLED=0 ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
     - ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
-  only:
-    refs:
-      - develop
+  rules:
+     - if: $CI_COMMIT_BRANCH == 'develop'
+       when: always
+     - when: manual
   tags:
     - intel19_usr
 
@@ -62,9 +64,10 @@ nvcc_wrapper-vortex:
     - mkdir -p /tmp/$USER
     - http_proxy=http://proxy.sandia.gov:80 https_proxy=http://proxy.sandia.gov:80 VT_RDMA_TESTS_ENABLED=0 ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_nvcc_wrapper
     - bsub -nnodes 1 -W 45 -eptl 3:00 -Is --shared-launch ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_nvcc_wrapper
-  only:
-    refs:
-      - develop
+  rules:
+     - if: $CI_COMMIT_BRANCH == 'develop'
+       when: always
+     - when: manual
   tags:
     - ppc64le
 
@@ -78,8 +81,9 @@ arm-stria:
     - source /projects/empire/installs/stria/ARM-20.1_OPENMPI-4.0.5-RELEASE-OPENMP-STATIC/trilinos/latest-link/load_matching_env.sh
     - http_proxy=http://proxy.sandia.gov:80 https_proxy=http://proxy.sandia.gov:80 VT_RDMA_TESTS_ENABLED=0 ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_gcc
     - ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_gcc
-  only:
-    refs:
-      - develop
+  rules:
+     - if: $CI_COMMIT_BRANCH == 'develop'
+       when: always
+     - when: manual
   tags:
     - aarch64
