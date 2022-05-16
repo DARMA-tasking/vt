@@ -24,7 +24,7 @@ intel18:
     - http_proxy=http://proxy.sandia.gov:80 https_proxy=http://proxy.sandia.gov:80 VT_RDMA_TESTS_ENABLED=0 ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
     - ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
   rules:
-     - if: $CI_COMMIT_BRANCH == 'develop'
+     - if: $CI_COMMIT_BRANCH == 'develop' && $CI_PIPELINE_SOURCE == 'push'
        when: always
      - when: manual
   tags:
@@ -46,7 +46,7 @@ intel19:
     - http_proxy=http://proxy.sandia.gov:80 https_proxy=http://proxy.sandia.gov:80 VT_RDMA_TESTS_ENABLED=0 ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
     - ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_intel19
   rules:
-     - if: $CI_COMMIT_BRANCH == 'develop'
+     - if: $CI_COMMIT_BRANCH == 'develop' && $CI_PIPELINE_SOURCE == 'push'
        when: always
      - when: manual
   tags:
@@ -65,7 +65,7 @@ nvcc_wrapper-vortex:
     - http_proxy=http://proxy.sandia.gov:80 https_proxy=http://proxy.sandia.gov:80 VT_RDMA_TESTS_ENABLED=0 ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_nvcc_wrapper
     - bsub -nnodes 1 -W 45 -eptl 3:00 -Is --shared-launch ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_nvcc_wrapper
   rules:
-     - if: $CI_COMMIT_BRANCH == 'develop'
+     - if: $CI_COMMIT_BRANCH == 'develop' && $CI_PIPELINE_SOURCE == 'push'
        when: always
      - when: manual
   tags:
@@ -82,7 +82,7 @@ arm-stria:
     - http_proxy=http://proxy.sandia.gov:80 https_proxy=http://proxy.sandia.gov:80 VT_RDMA_TESTS_ENABLED=0 ci/build_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_gcc
     - ci/test_cpp.sh $CI_PROJECT_DIR $CI_PROJECT_DIR/vt_build_gcc
   rules:
-     - if: $CI_COMMIT_BRANCH == 'develop'
+     - if: $CI_COMMIT_BRANCH == 'develop' && $CI_PIPELINE_SOURCE == 'push'
        when: always
      - when: manual
   tags:
