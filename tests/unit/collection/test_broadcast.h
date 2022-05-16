@@ -128,7 +128,7 @@ void test_broadcast_1(std::string const& label) {
     auto const& col_size = 32;
     auto range = TestIndex(col_size);
     TestParamType args = ConstructTuple<TestParamType>::construct();
-    auto proxy = theCollection()->construct<ColType>(label, range);
+    auto proxy = theCollection()->construct<ColType>(range, label);
 
     proxy.template broadcast<
       MsgType,

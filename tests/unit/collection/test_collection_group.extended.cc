@@ -123,7 +123,7 @@ TEST_F(TestCollectionGroup, test_collection_group_1) {
   if (my_node == 0) {
     auto const range = Index1D(std::max(num_nodes / 2, 1));
     auto const proxy = theCollection()->construct<ColA>(
-      "test_collection_group_1", range
+      range, "test_collection_group_1"
     );
     proxy.broadcast<ColA::TestMsg,&ColA::doReduce>();
   }

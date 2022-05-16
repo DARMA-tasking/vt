@@ -105,7 +105,7 @@ TYPED_TEST_P(TestCollectionIndexTypes, test_collection_index_1) {
     auto const& col_size = 32;
     auto range = IndexType(static_cast<BaseIndexType>(col_size));
     auto proxy = theCollection()->construct<ColType>(
-      "test_collection_index_1", range
+      range, "test_collection_index_1"
     );
     for (BaseIndexType i = 0; i < static_cast<BaseIndexType>(col_size); i++) {
       auto msg = makeMessage<MsgType>(34);

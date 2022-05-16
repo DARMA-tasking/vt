@@ -189,8 +189,8 @@ struct CollectionManager
   /**
    * \brief Construct a new virtual context collection with templated map
    *
-   * \param[in] label collection label
    * \param[in] range index range for the collection
+   * \param[in] label collection label
    *
    * \return proxy to the new collection
    */
@@ -199,7 +199,7 @@ struct CollectionManager
   >
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
   construct(
-    std::string const& label, typename ColT::IndexType range
+    typename ColT::IndexType range, std::string const& label = {}
   );
 
   /**
@@ -209,15 +209,15 @@ struct CollectionManager
    * The default map is found by looking up the
    *  \c vrt::collection::DefaultMap<...> specialization on the Index type.
    *
-   * \param[in] label collection label
    * \param[in] range index range for the collection
+   * \param[in] label collection label
    *
    * \return proxy to the new collection
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
   construct(
-    std::string const& label, typename ColT::IndexType range
+    typename ColT::IndexType range, std::string const& label = {}
   );
 
   /**

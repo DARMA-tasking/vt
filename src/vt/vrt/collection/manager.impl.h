@@ -1386,7 +1386,7 @@ void CollectionManager::constructGroup(VirtualProxyType const& proxy) {
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
 CollectionManager::construct(
-  std::string const& label, typename ColT::IndexType range
+  typename ColT::IndexType range, std::string const& label
 ) {
   auto const map_han = getDefaultMap<ColT>();
   return constructMap<ColT>(label, range, map_han);
@@ -1397,7 +1397,7 @@ template <
 >
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
 CollectionManager::construct(
-  std::string const& label, typename ColT::IndexType range
+  typename ColT::IndexType range, std::string const& label
 ) {
   using IndexT = typename ColT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
@@ -2093,7 +2093,6 @@ std::string CollectionManager::makeMetaFilename(
 ) {
   auto this_node = theContext()->getNode();
   if (make_sub_dirs) {
-
     int flag = 0;
     flag = mkdir(file_base.c_str(), S_IRWXU);
     if (flag < 0 && errno != EEXIST) {

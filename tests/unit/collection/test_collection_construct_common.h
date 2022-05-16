@@ -91,7 +91,7 @@ struct ConstructParams {
   using ProxyType = CollectionIndexProxy<ColT,IndexType>;
 
   static ProxyType construct(std::string const& label, IndexType idx) {
-    return theCollection()->construct<ColT>(label, idx);
+    return theCollection()->construct<ColT>(idx, label);
   }
 
   static ProxyType constructCollective(

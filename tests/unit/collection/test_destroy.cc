@@ -113,7 +113,7 @@ TEST_F(TestDestroy, test_destroy_1) {
     if (this_node == 0) {
       auto const& range = Index1D(num_nodes * num_elms_per_node);
       auto proxy = theCollection()->construct<DestroyTest>(
-        "test_destroy_1", range
+        range, "test_destroy_1"
       );
 
       // ::fmt::print("broadcasting proxy={:x}\n", proxy.getProxy());

@@ -136,7 +136,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
 
   if (this_node == 0) {
     proxy = theCollection()->construct<TestCol>(
-      "test_callback_bcast_collection_1", range
+      range, "test_callback_bcast_collection_1"
     );
   }
 
@@ -168,7 +168,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
 
   if (this_node == 0) {
     proxy = theCollection()->construct<TestCol>(
-      "test_callback_bcast_collection_2", range
+      range, "test_callback_bcast_collection_2"
     );
   }
 
@@ -202,7 +202,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
 
   if (this_node == 0) {
     proxy = theCollection()->construct<TestCol>(
-      "test_callback_bcast_collection_3", range
+      range, "test_callback_bcast_collection_3"
     );
   }
 
