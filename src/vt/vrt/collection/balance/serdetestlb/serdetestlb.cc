@@ -54,7 +54,7 @@ SerdeTestLB::getInputKeysWithHelp() {
 void SerdeTestLB::init(objgroup::proxy::Proxy<SerdeTestLB>) {
   vtAssert(
     theConfig()->vt_lb_self_migration,
-    "SerdeTestLB::init(): vt_lb_allow_self_migration flag must be set to use SerdeTestLB\n"
+    "SerdeTestLB::init(): vt_lb_self_migration flag must be set to use SerdeTestLB\n"
   );
 }
 
@@ -71,7 +71,7 @@ void SerdeTestLB::runLB(TimeType) {
     );
 
     if (obj.isMigratable()) {
-      migrateObjectToSelf(obj);
+      migrateObjectTo(obj, this_node);
     }
   }
 }

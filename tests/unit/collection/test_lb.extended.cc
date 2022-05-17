@@ -624,6 +624,7 @@ void serdeColHandler(SerdeTestMsg *, SerdeTestCol *col) {
 
 void runSerdeTest() {
   theConfig()->vt_lb = true;
+  theConfig()->vt_lb_self_migration = true;
   theConfig()->vt_lb_name = "SerdeTestLB";
   if (theContext()->getNode() == 0) {
     ::fmt::print("Testing LB: SerdeTestLB\n");
