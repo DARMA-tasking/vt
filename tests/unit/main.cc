@@ -42,6 +42,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <mpi.h>
 
 #include "test_harness.h"
 
@@ -72,5 +73,14 @@ int main(int argc, char** argv) {
 
   TestHarness::store_cmdline_args(test_argc, test_argv);
 
-  return RUN_ALL_TESTS();
+  auto ret = RUN_ALL_TESTS();
+
+  // if this was a parallel test, finalize MPI
+  int init = 0;
+  MPI_Initialized(&init);
+  if (init) {
+    MPI_Finalize();
+  }
+
+  return ret;
 }
