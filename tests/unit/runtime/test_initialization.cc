@@ -54,7 +54,7 @@ namespace vt { namespace tests { namespace unit {
 struct TestInitialization : TestParallelHarness { };
 
 TEST_F(TestInitialization, test_initialize_with_args) {
-  MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
+  MPI_Comm comm = MPI_COMM_WORLD;
 
   static char prog_name[]{"vt_program"};
   static char cli_argument[]{"--cli_argument=100"};
@@ -83,7 +83,7 @@ TEST_F(TestInitialization, test_initialize_with_args) {
 }
 
 TEST_F(TestInitialization, test_initialize_with_appconfig) {
-  MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
+  MPI_Comm comm = MPI_COMM_WORLD;
 
   static char prog_name[]{"vt_program"};
   static char cli_argument[]{"--cli_argument=100"};
@@ -120,7 +120,7 @@ TEST_F(TestInitialization, test_initialize_with_appconfig) {
 }
 
 TEST_F(TestInitialization, test_initialize_with_args_and_appconfig) {
-  MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
+  MPI_Comm comm = MPI_COMM_WORLD;
 
   static char prog_name[]{"vt_program"};
   static char cli_argument[]{"--cli_argument=100"};
@@ -164,7 +164,7 @@ TEST_F(TestInitialization, test_initialize_with_args_and_appconfig) {
 }
 
 TEST_F(TestInitialization, test_initialize_with_file_and_args) {
-  MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
+  MPI_Comm comm = MPI_COMM_WORLD;
 
   static char prog_name[]{"vt_program"};
   static char cli_argument[]{"--cli_argument=100"};
@@ -207,7 +207,7 @@ TEST_F(TestInitialization, test_initialize_with_file_and_args) {
 }
 
 TEST_F(TestInitialization, test_initialize_with_file_args_and_appconfig) {
-  MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
+  MPI_Comm comm = MPI_COMM_WORLD;
 
   static char prog_name[]{"vt_program"};
   static char cli_argument[]{"--cli_argument=100"};
