@@ -22,6 +22,7 @@ check_function_exists(sysconf vt_has_sysconf)
 
 set(CMAKE_REQUIRED_INCLUDES "malloc.h")
 check_function_exists(mallinfo vt_has_mallinfo)
+check_function_exists(mallinfo2 vt_has_mallinfo2)
 
 set(CMAKE_REQUIRED_INCLUDES "sys/resource.h")
 check_function_exists(getrusage vt_has_getrusage)
