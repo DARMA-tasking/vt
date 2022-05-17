@@ -146,7 +146,7 @@ std::string PS::getName() {
 
 std::size_t Mallinfo::getUsage() {
 #if vt_check_enabled(mimalloc) || \
-  !defined(vt_has_mallinfo) && !defined(vt_has_mallinfo2)
+  (!defined(vt_has_mallinfo) && !defined(vt_has_mallinfo2))
   return 0;
 #else
 #if defined(vt_has_mallinfo2)
