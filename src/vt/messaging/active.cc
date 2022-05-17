@@ -217,9 +217,10 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   TagType const& send_tag
 ) {
   auto msg = base.get();
-  auto const& is_term = envelopeIsTerm(msg->env);
-  auto const& is_put = envelopeIsPut(msg->env);
-  auto const& is_put_packed = envelopeIsPackedPutType(msg->env);
+  auto const is_term = envelopeIsTerm(msg->env);
+  auto const is_put = envelopeIsPut(msg->env);
+  auto const is_put_packed = envelopeIsPackedPutType(msg->env);
+  auto const is_bcast = envelopeIsBcast(msg->env);
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
@@ -228,6 +229,13 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
       base.size(), dest, print_bool(is_put), print_bool(is_put_packed)
     );
   }
+
+  vtWarnIf(
+    dest == theContext()->getNode() &&
+    not is_bcast &&
+    not theConfig()->vt_lb_self_migration,
+    fmt::format("Destination {} should != this node", dest)
+  );
 
   MsgSizeType new_msg_size = base.size();
 

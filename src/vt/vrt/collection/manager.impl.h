@@ -1801,96 +1801,104 @@ MigrateStatus CollectionManager::migrateOut(
     terse, vrt_coll, "migrating from {} to {}\n", this_node, dest
   );
 
-  auto const& proxy = CollectionProxy<ColT, IndexT>(col_proxy).operator()(
-    idx
-  );
-  auto elm_holder = findElmHolder<IndexT>(col_proxy);
-  vtAssert(
-    elm_holder != nullptr, "Element must be registered here"
-  );
+  if (this_node != dest || theConfig()->vt_lb_self_migration) {
+    auto const& proxy = CollectionProxy<ColT, IndexT>(col_proxy).operator()(
+      idx
+    );
+    auto elm_holder = findElmHolder<IndexT>(col_proxy);
+    vtAssert(
+      elm_holder != nullptr, "Element must be registered here"
+    );
 
 #if vt_check_enabled(runtime_checks)
-  {
-    bool const exists = elm_holder->exists(idx);
-    vtAssert(
-      exists, "Local element must exist here for migration to occur"
-    );
-  }
+    {
+      bool const exists = elm_holder->exists(idx);
+      vtAssert(
+        exists, "Local element must exist here for migration to occur"
+      );
+    }
 #endif
 
-  bool const exists = elm_holder->exists(idx);
-  if (!exists) {
-    return MigrateStatus::ElementNotLocal;
-  }
+    bool const exists = elm_holder->exists(idx);
+    if (!exists) {
+      return MigrateStatus::ElementNotLocal;
+    }
 
-  vt_debug_print(
-    verbose, vrt_coll,
-    "migrateOut: (before remove) holder numElements={}\n",
-    elm_holder->numElements()
-  );
-
-  if (elm_holder->numElements() == 1 and theConfig()->vt_lb_keep_last_elm) {
     vt_debug_print(
-      normal, vrt_coll,
-      "migrateOut: do not migrate last element\n"
+      verbose, vrt_coll,
+      "migrateOut: (before remove) holder numElements={}\n",
+      elm_holder->numElements()
     );
-    return MigrateStatus::ElementNotLocal;
+
+    if (elm_holder->numElements() == 1 and theConfig()->vt_lb_keep_last_elm) {
+      vt_debug_print(
+        normal, vrt_coll,
+        "migrateOut: do not migrate last element\n"
+      );
+      return MigrateStatus::ElementNotLocal;
+    }
+
+    auto col_unique_ptr = elm_holder->remove(idx);
+    auto& typed_col_ref = *static_cast<ColT*>(col_unique_ptr.get());
+
+    vt_debug_print(
+      verbose, vrt_coll,
+      "migrateOut: (after remove) holder numElements={}\n",
+      elm_holder->numElements()
+    );
+
+    /*
+    * Invoke the virtual prelude migrate out function
+    */
+    col_unique_ptr->preMigrateOut();
+
+    vt_debug_print(
+      verbose, vrt_coll,
+      "migrateOut: col_proxy={:x}, idx={}, dest={}: serializing collection elm\n",
+      col_proxy, print_index(idx), dest
+    );
+
+    using MigrateMsgType = MigrateMsg<ColT, IndexT>;
+
+    auto msg = makeMessage<MigrateMsgType>(proxy, this_node, dest, &typed_col_ref);
+
+    theMsg()->sendMsg<
+      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
+    >(dest, msg);
+
+    theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityEmigrated(idx, dest);
+
+    /*
+    * Invoke the virtual epilog migrate out function
+    */
+    col_unique_ptr->epiMigrateOut();
+
+    vt_debug_print(
+      verbose, vrt_coll,
+      "migrateOut: col_proxy={:x}, idx={}, dest={}: invoking destroy()\n",
+      col_proxy, print_index(idx), dest
+    );
+
+    /*
+    * Invoke the virtual destroy function and then null std::unique_ptr<ColT>,
+    * which should cause the destructor to fire
+    */
+    col_unique_ptr->destroy();
+    col_unique_ptr = nullptr;
+
+    auto const home_node = getMappedNode<IndexT>(col_proxy, idx);
+    elm_holder->applyListeners(
+      listener::ElementEventEnum::ElementMigratedOut, idx, home_node
+    );
+
+    return MigrateStatus::MigratedToRemote;
   }
 
-  auto col_unique_ptr = elm_holder->remove(idx);
-  auto& typed_col_ref = *static_cast<ColT*>(col_unique_ptr.get());
+#if vt_check_enabled(runtime_checks)
+  vtAssert(false, "Migration should only be called when to_node is != this_node");
+#endif
 
-  vt_debug_print(
-    verbose, vrt_coll,
-    "migrateOut: (after remove) holder numElements={}\n",
-    elm_holder->numElements()
-  );
-
-  /*
-  * Invoke the virtual prelude migrate out function
-  */
-  col_unique_ptr->preMigrateOut();
-
-  vt_debug_print(
-    verbose, vrt_coll,
-    "migrateOut: col_proxy={:x}, idx={}, dest={}: serializing collection elm\n",
-    col_proxy, print_index(idx), dest
-  );
-
-  using MigrateMsgType = MigrateMsg<ColT, IndexT>;
-
-  auto msg = makeMessage<MigrateMsgType>(proxy, this_node, dest, &typed_col_ref);
-
-  theMsg()->sendMsg<
-    MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
-  >(dest, msg);
-
-  theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityEmigrated(idx, dest);
-
-  /*
-  * Invoke the virtual epilog migrate out function
-  */
-  col_unique_ptr->epiMigrateOut();
-
-  vt_debug_print(
-    verbose, vrt_coll,
-    "migrateOut: col_proxy={:x}, idx={}, dest={}: invoking destroy()\n",
-    col_proxy, print_index(idx), dest
-  );
-
-  /*
-  * Invoke the virtual destroy function and then null std::unique_ptr<ColT>,
-  * which should cause the destructor to fire
-  */
-  col_unique_ptr->destroy();
-  col_unique_ptr = nullptr;
-
-  auto const home_node = getMappedNode<IndexT>(col_proxy, idx);
-  elm_holder->applyListeners(
-    listener::ElementEventEnum::ElementMigratedOut, idx, home_node
-  );
-
-  return MigrateStatus::MigratedToRemote;
+  return MigrateStatus::NoMigrationNecessary;
 }
 
 template <typename ColT, typename IndexT>

@@ -13,8 +13,10 @@ To enable load balancing, the cmake flag \code{.cmake} -Dvt_lb_enabled=1
 instrumentation of work and communication performed by collection elements.
 
 To run a load balancer at runtime:
-  - Pass `--vt_lb --vt_lb_name=<LB>` as a command line argument
-  - Write a LB specification file `--vt_lb --vt_lb_file_name=<FILE>`
+
+- Pass `--vt_lb --vt_lb_name=<LB>` as a command line argument
+- Write a LB specification file `--vt_lb --vt_lb_file_name=<FILE>`
+- One can also pass `--vt_lb_self_migration` as a command line argument to allow load balancer to migrate objects to the same node
 
 \section lb-specification-file LB Specification File
 

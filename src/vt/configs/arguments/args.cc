@@ -475,27 +475,28 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lb_data_file = "Load balancing data output file name";
   auto lb_data_dir_in  = "Load balancing data input directory";
   auto lb_data_file_in = "Load balancing data input file name";
+  auto lb_self_migration = "Allow load balancer to migrate objects to the same node";
   auto lbn = "NoLB";
   auto lbi = 1;
   auto lbf = "";
   auto lbd = "vt_lb_data";
   auto lbs = "data";
   auto lba = "";
-  auto s  = app.add_flag("--vt_lb",                 appConfig.vt_lb,             lb);
-  auto t1 = app.add_flag("--vt_lb_quiet",           appConfig.vt_lb_quiet,       lb_quiet);
-  auto u  = app.add_option("--vt_lb_file_name",     appConfig.vt_lb_file_name,   lb_file_name, lbf)
-    ->check(CLI::ExistingFile);
-  auto u1 = app.add_flag("--vt_lb_show_spec",       appConfig.vt_lb_show_spec,   lb_show_spec);
-  auto v  = app.add_option("--vt_lb_name",          appConfig.vt_lb_name,        lb_name,      lbn);
-  auto v1 = app.add_option("--vt_lb_args",          appConfig.vt_lb_args,        lb_args,      lba);
-  auto w  = app.add_option("--vt_lb_interval",      appConfig.vt_lb_interval,    lb_interval,  lbi);
-  auto wl = app.add_flag("--vt_lb_keep_last_elm",   appConfig.vt_lb_keep_last_elm, lb_keep_last_elm);
-  auto ww = app.add_flag("--vt_lb_data",           appConfig.vt_lb_data,       lb_data);
-  auto xz = app.add_flag("--vt_lb_data_compress",  appConfig.vt_lb_data_compress, lb_data_comp);
-  auto wx = app.add_option("--vt_lb_data_dir",     appConfig.vt_lb_data_dir,   lb_data_dir, lbd);
-  auto wy = app.add_option("--vt_lb_data_file",    appConfig.vt_lb_data_file,  lb_data_file,lbs);
-  auto xx = app.add_option("--vt_lb_data_dir_in",  appConfig.vt_lb_data_dir_in,  lb_data_dir_in, lbd);
-  auto xy = app.add_option("--vt_lb_data_file_in", appConfig.vt_lb_data_file_in, lb_data_file_in,lbs);
+  auto s  = app.add_flag("--vt_lb", appConfig.vt_lb, lb);
+  auto t1 = app.add_flag("--vt_lb_quiet", appConfig.vt_lb_quiet, lb_quiet);
+  auto u  = app.add_option("--vt_lb_file_name", appConfig.vt_lb_file_name, lb_file_name, lbf)->check(CLI::ExistingFile);
+  auto u1 = app.add_flag("--vt_lb_show_spec", appConfig.vt_lb_show_spec, lb_show_spec);
+  auto v  = app.add_option("--vt_lb_name", appConfig.vt_lb_name, lb_name, lbn);
+  auto v1 = app.add_option("--vt_lb_args", appConfig.vt_lb_args, lb_args, lba);
+  auto w  = app.add_option("--vt_lb_interval", appConfig.vt_lb_interval, lb_interval, lbi);
+  auto wl = app.add_flag("--vt_lb_keep_last_elm", appConfig.vt_lb_keep_last_elm, lb_keep_last_elm);
+  auto ww = app.add_flag("--vt_lb_data", appConfig.vt_lb_data, lb_data);
+  auto xz = app.add_flag("--vt_lb_data_compress", appConfig.vt_lb_data_compress, lb_data_comp);
+  auto wx = app.add_option("--vt_lb_data_dir", appConfig.vt_lb_data_dir, lb_data_dir, lbd);
+  auto wy = app.add_option("--vt_lb_data_file", appConfig.vt_lb_data_file, lb_data_file,lbs);
+  auto xx = app.add_option("--vt_lb_data_dir_in", appConfig.vt_lb_data_dir_in, lb_data_dir_in, lbd);
+  auto xy = app.add_option("--vt_lb_data_file_in", appConfig.vt_lb_data_file_in, lb_data_file_in, lbs);
+  auto lbasm = app.add_option("--vt_lb_self_migration", appConfig.vt_lb_self_migration, lb_self_migration);
 
   auto debugLB = "Load Balancing";
   s->group(debugLB);
@@ -512,6 +513,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   xx->group(debugLB);
   xy->group(debugLB);
   xz->group(debugLB);
+  lbasm->group(debugLB);
 
   // help options deliberately omitted from the debugLB group above so that
   // they appear grouped with --vt_help when --vt_help is used

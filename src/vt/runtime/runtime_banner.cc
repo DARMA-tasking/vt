@@ -290,9 +290,15 @@ void Runtime::printStartupBanner() {
   if (getAppConfig()->vt_lb) {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
+
+    auto f10 = opt_on("--vt_lb_self_migration", "Self migration enabled");
+    fmt::print("{}\t{}{}", vt_pre, f10, reset);
+
     if (getAppConfig()->vt_lb_file_name != "") {
-      auto f12 = fmt::format("Reading LB specification from file \"{}\"",
-        getAppConfig()->vt_lb_file_name);
+      auto f12 = fmt::format(
+        "Reading LB specification from file \"{}\"",
+        getAppConfig()->vt_lb_file_name
+      );
       auto f11 = opt_on("--vt_lb_file_name", f12);
       fmt::print("{}\t{}{}", vt_pre, f11, reset);
 

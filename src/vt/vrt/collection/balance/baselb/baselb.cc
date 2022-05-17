@@ -227,17 +227,9 @@ void BaseLB::notifyNewHostNodeOfObjectsArriving(
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
-  if (obj_id.curr_node != to) {
-    migrateObject(obj_id, to);
+  if (obj_id.curr_node != to || theConfig()->vt_lb_self_migration) {
+    transfers_.push_back(TransferDestType{obj_id, to});
   }
-}
-
-void BaseLB::migrateObjectToSelf(const ObjIDType obj_id) {
-  migrateObject(obj_id, obj_id.curr_node);
-}
-
-void BaseLB::migrateObject(const ObjIDType obj_id, const NodeType to) {
-  transfers_.push_back(TransferDestType{obj_id, to});
 }
 
 void BaseLB::finalize(CountMsg* msg) {

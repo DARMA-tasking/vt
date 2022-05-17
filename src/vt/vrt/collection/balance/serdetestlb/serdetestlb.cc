@@ -51,7 +51,12 @@ SerdeTestLB::getInputKeysWithHelp() {
   return std::unordered_map<std::string, std::string>{};
 }
 
-void SerdeTestLB::init(objgroup::proxy::Proxy<SerdeTestLB>) { }
+void SerdeTestLB::init(objgroup::proxy::Proxy<SerdeTestLB>) {
+  vtAssert(
+    theConfig()->vt_lb_self_migration,
+    "SerdeTestLB::init(): vt_lb_allow_self_migration flag must be set to use SerdeTestLB\n"
+  );
+}
 
 void SerdeTestLB::inputParams(balance::SpecEntry*) { }
 

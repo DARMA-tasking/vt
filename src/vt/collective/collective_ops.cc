@@ -137,6 +137,7 @@ void printOverwrittens(
   printIfOverwritten(vt_lb_data_file);
   printIfOverwritten(vt_lb_data_dir_in);
   printIfOverwritten(vt_lb_data_file_in);
+  printIfOverwritten(vt_lb_self_migration);
   printIfOverwritten(vt_help_lb_args);
   printIfOverwritten(vt_no_detect_hang);
   printIfOverwritten(vt_print_no_progress);
