@@ -751,14 +751,14 @@ getSharedEdges(elm::CommMapType const& comm_data) {
       auto from_node = from.curr_node;
       auto to_node = to.curr_node;
 
-      vtAssert(
-        from_node == this_node or to_node == this_node,
-        "One node must involve this node"
-      );
-
       vt_debug_print(
         verbose, temperedwmin, "getSharedEdges: elm: from={}, to={}\n",
         from, to
+      );
+
+      vtAssert(
+        from_node == this_node or to_node == this_node,
+        "One node must involve this node"
       );
 
       if (from_node != this_node) {

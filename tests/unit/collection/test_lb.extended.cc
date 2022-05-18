@@ -156,25 +156,41 @@ TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_keep_last_elm) {
 }
 
 TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
-  runTest("TemperedWMin", 2);
+  // setup
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const next_node = (this_node + 1) % num_nodes;
+  auto const phase = thePhase()->getCurrentPhase();
 
-  // auto proxy = theLBManager()->getLB();
-  // runInEpochCollective(
-  //   "test_make_graph_symmetric -> makeGraphSymmetric",
-  //   [phase, proxy] { vrt::collection::balance::makeGraphSymmetric(phase, proxy); }
-  // );
+  elm::ElementIDStruct id_from, id_to;
+  id_from.id        = this_node * 4 + 1;
+  id_from.curr_node = this_node;
+  id_to.id          = next_node * 4 + 1;
+  id_to.curr_node   = next_node;
 
-  auto phase = thePhase()->getCurrentPhase();
-  auto iter = theNodeLBData()->getNodeComm()->find(phase - 1);
-  ASSERT_NE(iter, theNodeLBData()->getNodeComm()->end());
+  elm::ElementLBData elm_data;
+  double const bytes = 10.0;
+  elm_data.sendToEntity(id_to, id_from, bytes);
+  theNodeLBData()->addNodeLBData(id_from, &elm_data, nullptr);
 
-  elm::CommMapType const& comm_data = iter->second;
+  // test
+  auto proxy = theLBManager()->getLB();
+  runInEpochCollective(
+    "test_make_graph_symmetric -> makeGraphSymmetric",
+    [phase, proxy] { vrt::collection::balance::makeGraphSymmetric(phase, proxy); }
+  );
 
+  // assert
+  auto comm_data = theNodeLBData()->getNodeComm(phase);
+  ASSERT_NE(comm_data, nullptr);
+
+  // TODO: assert that each node received appropriate element
+  // instead of just printing
   vt_debug_print(
     verbose, temperedwmin, "test_make_graph_symmetric: comm size={}\n",
-    comm_data.size()
+    comm_data->size()
   );
-  for (auto&& elm : comm_data) {
+  for (auto&& elm : *comm_data) {
     if (
       elm.first.commCategory() == elm::CommCategory::SendRecv and
       not elm.first.selfEdge()
