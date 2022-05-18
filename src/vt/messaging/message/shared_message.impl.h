@@ -121,7 +121,7 @@ MsgPtr<MsgT> makeMessage(Args&&... args) {
 template <typename MsgT, typename... Args>
 MsgPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args) {
   // RVO / copy-elision guaranteed
-  return MsgPtr<MsgT>{detail::makeMessageSzImpl<MsgT>(size, std::forward<Args>(args)...), size};
+  return MsgPtr<MsgT>{detail::makeMessageSzImpl<MsgT>(size, std::forward<Args>(args)...)};
 }
 
 } //end namespace vt

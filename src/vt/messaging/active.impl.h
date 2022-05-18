@@ -225,7 +225,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
-  MsgSharedPtr<MsgT> msgptr(msg.msg_, msg_size); // Note: use explicitly provided message size
+  MsgSharedPtr<MsgT> msgptr(msg.msg_); // Note: use explicitly provided message size
 
   setBroadcastType(msgptr->env, deliver_to_sender);
 
@@ -269,7 +269,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
-  MsgSharedPtr<MsgT> msgptr(msg.msg_, msg_size); // Note: use explicitly provided message size
+  MsgSharedPtr<MsgT> msgptr(msg.msg_);
   return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 

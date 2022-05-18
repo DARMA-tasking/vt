@@ -1121,8 +1121,9 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
 
   MessageType* msg = reinterpret_cast<MessageType*>(buf);
   envelopeInitRecv(msg->env);
-  // Derive the message size from the number of bytes actually received
-  MsgPtr<MessageType> base{msg, static_cast<ByteType>(num_probe_bytes)};
+  // The message size will already have the correct numbr of bytes
+  // because it will query the allocation size from the mempool
+  MsgPtr<MessageType> base{msg};
 
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_put = envelopeIsPut(msg->env);
@@ -1138,15 +1139,12 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
     );
   }
 
-  CountType msg_bytes = num_probe_bytes;
-
   if (is_put) {
     auto const put_tag = envelopeGetPutTag(msg->env);
     if (put_tag == PutPackedTag) {
       auto const put_size = envelopeGetPutSize(msg->env);
       auto const msg_size = num_probe_bytes - put_size;
       char* put_ptr = buf + msg_size;
-      msg_bytes = msg_size;
 
       if (!is_term || vt_check_enabled(print_term_msgs)) {
         vt_debug_print(
@@ -1171,7 +1169,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   }
 
   if (!is_put || put_finished) {
-    processActiveMsg(MsgPtr<MessageType>(base, msg_bytes), sender, true); // Note: use updated msg_bytes for message size
+    processActiveMsg(MsgPtr<MessageType>(base), sender, true); // Note: use updated msg_bytes for message size
   }
 }
 

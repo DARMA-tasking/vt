@@ -102,18 +102,18 @@ struct MsgSharedPtr final {
 
   MsgSharedPtr(std::nullptr_t) {}
 
-  MsgSharedPtr(T* in, ByteType size=no_byte) {
-    init(in, size == no_byte ? sizeof(T) : size, statics::Holder::getImpl<T>());
+  MsgSharedPtr(T* in) {
+    init(in, statics::Holder::getImpl<T>());
   }
 
   // Overload to retain ORIGINAL type-erased implementation.
-  MsgSharedPtr(T* in, ByteType size, MsgPtrImplBase* impl) {
-    init(in, size, impl);
+  MsgSharedPtr(T* in, MsgPtrImplBase* impl) {
+    init(in, impl);
   }
 
-  MsgSharedPtr(MsgSharedPtr<T> const& in, ByteType size=no_byte) {
+  MsgSharedPtr(MsgSharedPtr<T> const& in) {
     if (in != nullptr) {
-      init(in.get(), (size == no_byte ? in.size() : size), in.impl_);
+      init(in.get(), in.impl_);
     }
   }
 
@@ -128,7 +128,7 @@ struct MsgSharedPtr final {
 
   MsgSharedPtr<T>& operator=(MsgSharedPtr<T> const& in) {
     clear();
-    init(in.get(), in.size(), in.impl_);
+    init(in.get(), in.impl_);
     return *this;
   }
 
@@ -152,7 +152,6 @@ struct MsgSharedPtr final {
   MsgSharedPtr<U> to() const {
     return MsgSharedPtr<U>(
       reinterpret_cast<U*>(ptr_),
-      no_byte,
       /*N.B. retain ORIGINAL-type implementation*/ impl_);
   }
 
@@ -229,7 +228,7 @@ struct MsgSharedPtr final {
     auto nrefs = envelopeGetRef(m.get()->env);
     return os << "MsgSharedPtr("
               <<              m.ptr_    << ","
-              << "size=" << m.size_ << ","
+              << "size=" << m.size() << ","
               << "ref="    << nrefs
               << ")";
   }
@@ -257,7 +256,7 @@ private:
   /// Performs state-ownership, always taking an additional message ref.
   /// Should probably be called every constructor; must ONLY be
   /// called from fresh (zero-init member) or clear() state.
-  void init(T* msgPtr, ByteType size, MsgPtrImplBase* impl) {
+  void init(T* msgPtr, MsgPtrImplBase* impl) {
     vtAssert(
       msgPtr,
       "MsgPtr cannot wrap 'null' messages."

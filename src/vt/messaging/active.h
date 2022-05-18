@@ -564,6 +564,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the \c PendingSend for the send
    */
   template <typename MsgT>
+  [[deprecated("size must be set in makeMessageSz, use regular sendMsg")]]
   PendingSendType sendMsgSz(
     NodeType dest,
     HandlerType han,
@@ -724,6 +725,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the \c PendingSend for the send
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+  [[deprecated("size must be set in makeMessageSz, use regular sendMsg")]]
   PendingSendType sendMsgSz(
     NodeType dest,
     MsgPtrThief<MsgT> msg,
