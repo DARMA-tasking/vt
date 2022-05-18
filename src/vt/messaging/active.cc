@@ -199,7 +199,7 @@ trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   #endif
 }
 
-void ActiveMessenger::packMsg(
+MsgSizeType ActiveMessenger::packMsg(
   MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
 ) {
   vt_debug_print(
@@ -208,8 +208,17 @@ void ActiveMessenger::packMsg(
     size, ptr_bytes, print_ptr(ptr)
   );
 
+  auto const can_grow = thePool()->tryGrowAllocation(msg, ptr_bytes);
+  // Typically this should be checked by the caller in advance
+  vtAssert(can_grow, "not enough space to pack message" );
+
   char* const msg_buffer = reinterpret_cast<char*>(msg) + size;
   std::memcpy(msg_buffer, ptr, ptr_bytes);
+
+  envelopeSetPutTag(msg->env, PutPackedTag);
+  setPackedPutType(msg->env);
+
+  return size + ptr_bytes;
 }
 
 EventType ActiveMessenger::sendMsgBytesWithPut(
@@ -267,10 +276,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
       );
     }
     if (direct_buf_pack) {
-      packMsg(msg, base.size(), put_ptr, put_size);
-      new_msg_size += put_size;
-      envelopeSetPutTag(msg->env, PutPackedTag);
-      setPackedPutType(msg->env);
+      new_msg_size = packMsg(msg, base.size(), put_ptr, put_size);
     } else {
       auto const& env_tag = envelopeGetPutTag(msg->env);
       auto const& ret = sendData(
@@ -281,10 +287,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
         envelopeSetPutTag(msg->env, ret_tag);
       }
     }
-  } else if (is_put && is_put_packed) {
-    // Adjust size of the send for packed data
-    auto const& put_size = envelopeGetPutSize(msg->env);
-    new_msg_size += put_size;
   }
 
   sendMsgBytes(dest, base, new_msg_size, send_tag);

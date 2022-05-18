@@ -245,12 +245,20 @@ Pool::SizeType Pool::remainingSize(void* const buf) {
 }
 
 Pool::SizeType Pool::allocatedSize(void* const buf) {
-#if vt_check_enabled(memory_pool)
   auto buf_char = static_cast<char*>(buf);
   return HeaderManagerType::getHeaderBytes(buf_char) + HeaderManagerType::getHeaderOversizeBytes(buf_char);
-#else
-  return 0;
-#endif
+}
+
+bool
+Pool::tryGrowAllocation(void* buf, size_t grow_amount) {
+  // For non-pooled alloc, this condition will always be true
+  // since remainingSize(buf) would be 0
+  if ( remainingSize(buf) < grow_amount )
+    return false;
+  
+  auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(reinterpret_cast<char*>(buf)));
+  header->alloc_size += grow_amount;
+  return true;
 }
 
 void Pool::initWorkerPools(WorkerCountType const& num_workers) {

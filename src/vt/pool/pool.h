@@ -134,6 +134,8 @@ struct Pool : runtime::component::Component<Pool> {
 
   SizeType allocatedSize(void* const buf);
 
+  bool tryGrowAllocation(void* const buf, size_t grow_amount);
+
   /**
    * \brief Whether the pool is enabled at compile-time
    *

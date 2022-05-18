@@ -1150,8 +1150,9 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] size size of message
    * \param[in] ptr pointer to pack
    * \param[in] ptr_bytes bytes at pointer to pack
+   * \return the new size of the message
    */
-  void packMsg(
+  MsgSizeType packMsg(
     MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
   );
 
