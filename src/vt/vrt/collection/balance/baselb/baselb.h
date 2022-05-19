@@ -127,7 +127,6 @@ struct BaseLB {
   );
   void migrationDone();
   void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
-
   void transferSend(NodeType from, TransferVecType const& transfer);
   void transferMigrations(TransferMsg<TransferVecType>* msg);
   void finalize(CountMsg* msg);

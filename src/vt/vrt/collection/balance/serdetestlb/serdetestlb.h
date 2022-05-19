@@ -50,10 +50,7 @@
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/timing/timing.h"
 
-#include <memory>
-#include <list>
-#include <map>
-#include <cstdlib>
+#include <string>
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {

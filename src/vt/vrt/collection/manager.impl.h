@@ -1919,9 +1919,8 @@ MigrateStatus CollectionManager::migrateIn(
    */
   vc_raw_ptr->preMigrateIn();
 
-  auto const& this_node = theContext()->getNode();
-
   // Always update the element ID struct for LB statistic tracking
+  auto const& this_node = theContext()->getNode();
   vrt_elm_ptr->elm_id_.curr_node = this_node;
 
   auto home_node = getMappedNode<ColT>(proxy, idx);
