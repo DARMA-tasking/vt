@@ -255,7 +255,7 @@ Pool::tryGrowAllocation(void* buf, size_t grow_amount) {
   // since remainingSize(buf) would be 0
   if ( remainingSize(buf) < grow_amount )
     return false;
-  
+
   auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(reinterpret_cast<char*>(buf)));
   header->alloc_size += grow_amount;
   return true;
