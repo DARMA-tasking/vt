@@ -1906,11 +1906,10 @@ MigrateStatus CollectionManager::migrateIn(
   VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
   VirtualPtrType<IndexT> vrt_elm_ptr
 ) {
-  auto const this_node = theContext()->getNode();
   vt_debug_print(
     terse, vrt_coll,
-    "CollectionManager::migrateIn: proxy={:x}, idx={}, from={}, this_node={} ptr={}\n",
-    proxy, print_index(idx), from, this_node, print_ptr(vrt_elm_ptr.get())
+    "CollectionManager::migrateIn: proxy={:x}, idx={}, from={}, ptr={}\n",
+    proxy, print_index(idx), from, print_ptr(vrt_elm_ptr.get())
   );
 
   auto vc_raw_ptr = vrt_elm_ptr.get();
@@ -1919,6 +1918,8 @@ MigrateStatus CollectionManager::migrateIn(
    * Invoke the virtual prelude migrate-in function
    */
   vc_raw_ptr->preMigrateIn();
+
+  auto const& this_node = theContext()->getNode();
 
   // Always update the element ID struct for LB statistic tracking
   vrt_elm_ptr->elm_id_.curr_node = this_node;
