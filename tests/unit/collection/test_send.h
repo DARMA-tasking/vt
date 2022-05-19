@@ -231,7 +231,7 @@ void test_collection_send_sz_1() {
       auto msg = makeMessageSz<MsgType>(sizeof(PayloadType));//, args);
       EXPECT_EQ(msg.size(), sizeof(MsgType) + sizeof(PayloadType));
       msg->buff_size = sizeof(PayloadType);
-      std::memcpy(msg->payload(), &args, msg->buff_size);
+      std::memcpy(reinterpret_cast<void *>(msg->payload()), &args, msg->buff_size);
       proxy[i].template sendMsg<MsgType,SendSzHandlers<ColType>::handler>(msg);
     }
   }
