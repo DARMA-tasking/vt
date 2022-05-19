@@ -496,7 +496,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto wy = app.add_option("--vt_lb_data_file", appConfig.vt_lb_data_file, lb_data_file,lbs);
   auto xx = app.add_option("--vt_lb_data_dir_in", appConfig.vt_lb_data_dir_in, lb_data_dir_in, lbd);
   auto xy = app.add_option("--vt_lb_data_file_in", appConfig.vt_lb_data_file_in, lb_data_file_in, lbs);
-  auto lbasm = app.add_option("--vt_lb_self_migration", appConfig.vt_lb_self_migration, lb_self_migration);
+  auto lbasm = app.add_flag("--vt_lb_self_migration", appConfig.vt_lb_self_migration, lb_self_migration);
 
   auto debugLB = "Load Balancing";
   s->group(debugLB);
