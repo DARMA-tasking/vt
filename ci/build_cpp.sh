@@ -19,7 +19,7 @@ fi
 if [ -z ${4} ]; then
     dashj=""
 else
-    dashj="-j${4}"
+    dashj="-j ${4}"
 fi
 
 if hash ccache &>/dev/null
