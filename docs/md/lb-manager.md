@@ -18,6 +18,8 @@ To run a load balancer at runtime:
 - Write a LB specification file `--vt_lb --vt_lb_file_name=<FILE>`
 - One can also pass `--vt_lb_self_migration` as a command line argument to allow load balancer to migrate objects to the same node
 
+Note that one should use either `--vt_lb_name` or `--vt_lb_file_name` option, not both.
+
 \section lb-specification-file LB Specification File
 
 The LB specification file allows users to specify which load balancer along with
