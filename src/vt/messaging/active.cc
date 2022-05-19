@@ -316,12 +316,7 @@ private:
 }
 
 void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
-  auto buf =
-#if vt_check_enabled(memory_pool)
-    static_cast<char*>(thePool()->alloc(msg->getSize()));
-#else
-    static_cast<char*>(std::malloc(msg->getSize()));
-#endif
+  auto buf = static_cast<char*>(thePool()->alloc(msg->getSize()));
 
   auto const size = msg->getSize();
   auto const info = msg->getInfo();
@@ -715,16 +710,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
     if (flag == 1) {
       MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-      char* buf =
-        user_buf == nullptr ?
-
-    #if vt_check_enabled(memory_pool)
-        static_cast<char*>(thePool()->alloc(num_probe_bytes)) :
-    #else
-        static_cast<char*>(std::malloc(num_probe_bytes))      :
-    #endif
-
-        static_cast<char*>(user_buf);
+      char* buf = user_buf == nullptr ? static_cast<char*>(thePool()->alloc(num_probe_bytes)) : static_cast<char*>(user_buf);
 
       NodeType const sender = stat.MPI_SOURCE;
 
@@ -763,12 +749,7 @@ void ActiveMessenger::recvDataDirect(
   int nchunks, TagType const tag, NodeType const from, MsgSizeType len,
   ContinuationDeleterType next
 ) {
-  char* buf =
-    #if vt_check_enabled(memory_pool)
-      static_cast<char*>(thePool()->alloc(len));
-    #else
-      static_cast<char*>(std::malloc(len));
-    #endif
+  char* buf = static_cast<char*>(thePool()->alloc(len));
 
   recvDataDirect(
     nchunks, buf, tag, from, len, default_priority, nullptr, next, false
@@ -867,11 +848,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     );
 
     if (user_buf == nullptr) {
-      #if vt_check_enabled(memory_pool)
-        thePool()->dealloc(buf);
-      #else
-        std::free(buf);
-      #endif
+      thePool()->dealloc(buf);
     } else if (dealloc_user_buf != nullptr and user_buf != nullptr) {
       dealloc_user_buf();
     }
@@ -1051,11 +1028,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-    #if vt_check_enabled(memory_pool)
-      char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
-    #else
-      char* buf = static_cast<char*>(std::malloc(num_probe_bytes));
-    #endif
+    char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
 
     NodeType const sender = stat.MPI_SOURCE;
 
