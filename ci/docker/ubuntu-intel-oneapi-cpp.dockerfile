@@ -1,5 +1,5 @@
 
-FROM intel/oneapi:os-tools-ubuntu18.04 as base
+FROM intel/oneapi:os-tools-ubuntu20.04 as base
 
 ARG proxy=""
 ARG compiler=icpx
