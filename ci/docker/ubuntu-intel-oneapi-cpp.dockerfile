@@ -39,7 +39,11 @@ ENV CMAKE_PREFIX_PATH='/opt/intel/oneapi/tbb/latest/env/..' \
     PATH='/opt/intel/oneapi/dev-utilities/latest/bin:/opt/intel/oneapi/debugger/10.1.1/gdb/intel64/bin:/opt/intel/oneapi/compiler/latest/linux/lib/oclfpga/llvm/aocl-bin:/opt/intel/oneapi/compiler/latest/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/latest/linux/bin/intel64:/opt/intel/oneapi/compiler/latest/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
     TBBROOT='/opt/intel/oneapi/tbb/latest/env/..'
 
-ENV CC=${compiler//p} \
+RUN ln -s \
+    "$(which $(echo $compiler | sed 's/p//'))" \
+    /usr/bin/intel-cc
+
+ENV CC=intel-cc \
     CXX=${compiler}
 
 COPY ./ci/deps/mpich.sh mpich.sh
@@ -47,7 +51,7 @@ RUN ./mpich.sh 4.0.2 -j4
 
 ENV CC=mpicc \
     CXX=mpicxx \
-    MPICH_CC=${compiler//p} \
+    MPICH_CC=intel-cc \
     MPICH_CXX=${compiler} \
     MPI_EXTRA_FLAGS="" \
     LESSCHARSET=utf-8 \
