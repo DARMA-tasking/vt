@@ -14,8 +14,8 @@ pr:
   drafts: true
   autoCancel: true
   branches:
-   include:
-     - '*'
+    include:
+      - '*'
 
 
 resources:
