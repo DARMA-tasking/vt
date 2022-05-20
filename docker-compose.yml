@@ -88,6 +88,7 @@ volumes:
   amd64-ubuntu-20.04-gcc-9-cache:
   amd64-ubuntu-20.04-gcc-10-cache:
   amd64-ubuntu-18.04-icpx-cache:
+  amd64-ubuntu-18.04-icpc-cache:
   amd64-ubuntu-18.04-nvcc-10-cache:
   amd64-ubuntu-18.04-nvcc-10.2-cache:
   amd64-ubuntu-18.04-nvcc-11-cache:
@@ -110,6 +111,7 @@ volumes:
   amd64-alpine-icc-19-cache:
   amd64-alpine-icc-20-cache:
   amd64-alpine-icpx-cache:
+  amd64-alpine-icpc-cache:
   amd64-alpine-nvcc-10-cache:
   amd64-alpine-nvcc-10.2-cache:
   amd64-alpine-nvcc-11-cache:
