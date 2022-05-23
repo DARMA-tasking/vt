@@ -22,7 +22,7 @@ if(NOT DEFINED VT_WARNING_FLAGS)
   add_cxx_compiler_flag_if_supported("-Wsign-compare")
   # Not really a warning, is still diagnostic related..
   if (NOT CMAKE_CXX_COMPILER_ID STREQUAL Intel OR
-      NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 2021)
+      CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 2021)
     add_cxx_compiler_flag_if_supported("-ftemplate-backtrace-limit=100")
   endif()
 
