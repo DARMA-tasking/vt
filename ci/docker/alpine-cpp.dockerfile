@@ -1,9 +1,8 @@
 
 ARG arch=amd64
-FROM alpine:3.13 as base
+FROM alpine:3.16 as base
 
 ARG proxy=""
-ARG compiler=clang
 
 ENV https_proxy=${proxy} \
     http_proxy=${proxy}

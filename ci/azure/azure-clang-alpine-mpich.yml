@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (clang-10, alpine, mpich)
+name: PR tests (alpine, clang-13, mpich)
 
 trigger:
   branches:
@@ -25,7 +25,7 @@ variables:
   ARCH: amd64
 
   COMPILER_TYPE: clang
-  COMPILER: clang-10
+  COMPILER: clang-13
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0
@@ -53,7 +53,7 @@ variables:
   VT_BUILD_SHARED_LIBS: 0
   VT_INCLUSION: TPL
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: alpine-clang-10-cache
+  cache_name: alpine-clang-13-cache
   build_root: "$(CACHE)/$(ARCH)-alpine-$(COMPILER)-cache/"
   TS: 0
   TS_YEAR: 0
