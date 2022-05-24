@@ -67,7 +67,7 @@ Pool::Pool()
 Pool::ePoolSize Pool::getPoolType(
   size_t const& num_bytes, size_t const& oversize
 ) const {
-  // Header size is accounted for internal in MemoryPoolEqual
+  // Header size is accounted for internally in MemoryPoolEqual
   // Blocks will include header size, but getNumBytes won't so we shouldn't count
   // it here
   auto const& total_bytes = num_bytes + oversize;
