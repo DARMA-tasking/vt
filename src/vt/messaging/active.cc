@@ -1144,7 +1144,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   }
 
   if (!is_put || put_finished) {
-    processActiveMsg(MsgPtr<MessageType>(base), sender, true); // Note: use updated msg_bytes for message size
+    processActiveMsg(MsgPtr<MessageType>(base), sender, true);
   }
 }
 

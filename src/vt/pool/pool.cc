@@ -67,7 +67,7 @@ Pool::Pool()
 Pool::ePoolSize Pool::getPoolType(
   size_t const& num_bytes, size_t const& oversize
 ) {
-  // Header size is accounted for internall in MemoryPoolEqual
+  // Header size is accounted for internal in MemoryPoolEqual
   // Blocks will include header size, but getNumBytes won't wo we shouldn't count
   // it here
   auto const& total_bytes = num_bytes + oversize;
@@ -227,7 +227,7 @@ void Pool::dealloc(void* const buf) {
   }
 }
 
-Pool::SizeType Pool::remainingSize(void* const buf) {
+Pool::SizeType Pool::remainingSize(void* const buf) const {
   #if vt_check_enabled(memory_pool)
     auto buf_char = static_cast<char*>(buf);
     auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
@@ -247,7 +247,7 @@ Pool::SizeType Pool::remainingSize(void* const buf) {
   #endif
 }
 
-Pool::SizeType Pool::allocatedSize(void* const buf) {
+Pool::SizeType Pool::allocatedSize(void* const buf) const {
   auto buf_char = static_cast<char*>(buf);
   return HeaderManagerType::getHeaderBytes(buf_char) + HeaderManagerType::getHeaderOversizeBytes(buf_char);
 }

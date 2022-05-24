@@ -102,9 +102,8 @@ struct ColMsg : CollectionMessage<TestCol<Args...>> {
 };
 
 template <typename PayloadT, typename... Args>
-struct ColSzMsg : CollectionMessage<TestCol<Args...>> {// : ColMsg<Args...> {
-  using MessageParentType = CollectionMessage<TestCol<Args...>>;//ColMsg<Args...>;
-  //using ColMsg<Args...>::ColMsg;
+struct ColSzMsg : CollectionMessage<TestCol<Args...>> {
+  using MessageParentType = CollectionMessage<TestCol<Args...>>;
   using TupleType = std::tuple<Args...>;
 
   std::size_t buff_size = 0;
@@ -113,14 +112,7 @@ struct ColSzMsg : CollectionMessage<TestCol<Args...>> {// : ColMsg<Args...> {
     return reinterpret_cast< PayloadT * >( this + 1 );
   }
 
-  //vt_msg_serialize_if_needed_by_parent();
   vt_msg_serialize_prohibited();
-
-//  template <typename SerializerT>
-//  void serialize(SerializerT& s) {
-//    s | buff_size;
-//    MessageParentType::serialize(s);
-//  }
 };
 
 template <typename... Args>
@@ -174,7 +166,6 @@ struct SendSzHandlers : SendHandlers<CollectionT, MessageT, TupleT> {
 
     // Verify payload
     BaseT::execute(col, *msg->payload());
-    //BaseT::execute(col,msg->tup);
   }
 };
 
@@ -203,7 +194,6 @@ void test_collection_send_1() {
     for (int i = 0; i < col_size; i++) {
       auto msg = makeMessage<MsgType>(args);
       EXPECT_EQ(msg.size(), sizeof(MsgType));
-      //proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
       if (i % 2 == 0) {
         proxy[i].template sendMsg<MsgType,SendHandlers<ColType>::handler>(msg.get());
       } else {
@@ -228,7 +218,7 @@ void test_collection_send_sz_1() {
     TestParamType args = ConstructTuple<TestParamType>::construct();
     auto proxy = theCollection()->construct<ColType>(range);
     for (int i = 0; i < col_size; i++) {
-      auto msg = makeMessageSz<MsgType>(sizeof(PayloadType));//, args);
+      auto msg = makeMessageSz<MsgType>(sizeof(PayloadType));
       EXPECT_EQ(msg.size(), sizeof(MsgType) + sizeof(PayloadType));
       msg->buff_size = sizeof(PayloadType);
       std::memcpy(reinterpret_cast<void *>(msg->payload()), &args, msg->buff_size);
