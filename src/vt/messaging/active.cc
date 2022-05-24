@@ -710,7 +710,9 @@ bool ActiveMessenger::recvDataMsgBuffer(
     if (flag == 1) {
       MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-      char* buf = user_buf == nullptr ? static_cast<char*>(thePool()->alloc(num_probe_bytes)) : static_cast<char*>(user_buf);
+      char* buf = user_buf == nullptr ?
+        static_cast<char*>(thePool()->alloc(num_probe_bytes)) :
+        static_cast<char*>(user_buf);
 
       NodeType const sender = stat.MPI_SOURCE;
 
