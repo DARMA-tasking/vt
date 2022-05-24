@@ -134,26 +134,26 @@ struct Pool : runtime::component::Component<Pool> {
 
   /**
    * \internal \brief Get total allocated bytes for a pool allocation
-   * 
+   *
    * The result of this includes both the requested and oversize bytes.
-   * 
+   *
    * \param[in] buf the buffer allocated from the pool
-   * 
+   *
    * \return the total number of allocated bytes
    */
   SizeType allocatedSize(void* const buf) const;
 
   /**
    * \internal \brief Attempt to increase the size of an allocation without reallocating
-   * 
+   *
    * The allocation will only be grown if grow_amount is less than or equal to the remaining
    * size in the allocated block. If the grow_amount is too large, this function will return
    * false and the allocation size will not be increased. On success, the new size will be
    * reflected in the allocatedSize of the buffer.
-   * 
+   *
    * \param[in] buf the buffer allocated from the pool that should be grown
    * \param[in] grow_amount the amount to grow the buffer
-   * 
+   *
    * \return false if the grow_amount is too large for the allocated block, true if the operation
    * succeeded
    */
