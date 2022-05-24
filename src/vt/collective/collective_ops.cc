@@ -221,20 +221,17 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
 
   MPI_Comm resolved_comm = comm not_eq nullptr ? *comm : MPI_COMM_WORLD;
 
-#pragma sst global rt
   RuntimeInst<instance>::rt = std::make_unique<Runtime>(
     argc, argv, num_workers, is_interop, resolved_comm,
     eRuntimeInstance::DefaultInstance, appConfig
   );
 
-#pragma sst global rt
   auto rt_ptr = RuntimeInst<instance>::rt.get();
   if (instance == runtime::RuntimeInstType::DefaultInstance) {
     // Set global variable for default instance for backward compatibility
     ::vt::rt = rt_ptr;
     curRT = rt_ptr;
   }
-#pragma sst global rt
   RuntimeInst<instance>::rt->initialize();
 
   // If appConfig is not nullptr, compare CLI arguments with user-defined ones,
@@ -283,7 +280,6 @@ void CollectiveAnyOps<instance>::finalize(RuntimePtrType in_rt) {
   using vt::runtime::Runtime;
   using vt::runtime::eRuntimeInstance;
 
-#pragma sst global rt
   RuntimeInst<instance>::rt = nullptr;
 
   if (instance == runtime::RuntimeInstType::DefaultInstance) {

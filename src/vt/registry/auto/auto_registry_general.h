@@ -254,7 +254,6 @@ RegT& getAutoRegistryGen();
 
 template <typename RegT, typename>
 inline RegT& getAutoRegistryGen() {
-#pragma sst keep
   static RegT reg;
   return reg;
 }
