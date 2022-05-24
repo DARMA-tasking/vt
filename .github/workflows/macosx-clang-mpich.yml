@@ -7,7 +7,7 @@ on:
       - develop
       - 1.*
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, converted_to_draft, ready_for_review]
 
 jobs:
 
