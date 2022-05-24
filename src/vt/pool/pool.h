@@ -116,7 +116,7 @@ struct Pool : runtime::component::Component<Pool> {
    *
    * \return enum \c ePoolSize of which pool to target
    */
-  ePoolSize getPoolType(size_t const& num_bytes, size_t const& oversize);
+  ePoolSize getPoolType(size_t const& num_bytes, size_t const& oversize) const;
 
   /**
    * \internal \brief Get remaining bytes for a pool allocation
