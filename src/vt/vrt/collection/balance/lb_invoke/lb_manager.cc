@@ -58,7 +58,7 @@
 #include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 #include "vt/vrt/collection/balance/randomlb/randomlb.h"
-#include "vt/vrt/collection/balance/serdetestlb/serdetestlb.h"
+#include "vt/vrt/collection/balance/testserializationlb/testserializationlb.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/utils/memory/memory_usage.h"
@@ -270,16 +270,16 @@ void LBManager::startLB(
   }
 
   switch (lb) {
-  case LBType::HierarchicalLB: lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>(); break;
-  case LBType::GreedyLB:       lb_instances_["chosen"] = makeLB<lb::GreedyLB>();       break;
-  case LBType::RotateLB:       lb_instances_["chosen"] = makeLB<lb::RotateLB>();       break;
-  case LBType::TemperedLB:     lb_instances_["chosen"] = makeLB<lb::TemperedLB>();     break;
-  case LBType::OfflineLB:     lb_instances_["chosen"] = makeLB<lb::OfflineLB>();     break;
-  case LBType::RandomLB:       lb_instances_["chosen"] = makeLB<lb::RandomLB>();       break;
+  case LBType::HierarchicalLB:      lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>();      break;
+  case LBType::GreedyLB:            lb_instances_["chosen"] = makeLB<lb::GreedyLB>();            break;
+  case LBType::RotateLB:            lb_instances_["chosen"] = makeLB<lb::RotateLB>();            break;
+  case LBType::TemperedLB:          lb_instances_["chosen"] = makeLB<lb::TemperedLB>();          break;
+  case LBType::OfflineLB:           lb_instances_["chosen"] = makeLB<lb::OfflineLB>();           break;
+  case LBType::RandomLB:            lb_instances_["chosen"] = makeLB<lb::RandomLB>();            break;
 #   if vt_check_enabled(zoltan)
-  case LBType::ZoltanLB:       lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();       break;
+  case LBType::ZoltanLB:            lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();            break;
 #   endif
-  case LBType::SerdeTestLB:    lb_instances_["chosen"] = makeLB<lb::SerdeTestLB>();    break;
+  case LBType::TestSerializationLB: lb_instances_["chosen"] = makeLB<lb::TestSerializationLB>(); break;
   case LBType::NoLB:
     vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
     break;
@@ -330,8 +330,8 @@ void LBManager::printLBArgsHelp(LBType lb) {
     help = lb::ZoltanLB::getInputKeysWithHelp();
     break;
 # endif
-  case LBType::SerdeTestLB:
-    help = lb::SerdeTestLB::getInputKeysWithHelp();
+  case LBType::TestSerializationLB:
+    help = lb::TestSerializationLB::getInputKeysWithHelp();
     break;
   case LBType::NoLB:
     // deliberately skip retrieving arguments

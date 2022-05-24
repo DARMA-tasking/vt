@@ -578,9 +578,9 @@ INSTANTIATE_TEST_SUITE_P(
   DumpUserdefinedDataExplode, TestDumpUserdefinedData, booleans
 );
 
-struct SerdeTestCol : vt::Collection<SerdeTestCol, vt::Index1D> {
+struct SerializationTestCol : vt::Collection<SerializationTestCol, vt::Index1D> {
   template <typename SerializerT> void serialize(SerializerT &s) {
-    vt::Collection<SerdeTestCol, vt::Index1D>::serialize(s);
+    vt::Collection<SerializationTestCol, vt::Index1D>::serialize(s);
 
     if (s.isSizing()) {
       s | was_packed | was_unpacked | packed_on_node | unpacked_on_node;
@@ -609,9 +609,9 @@ struct SerdeTestCol : vt::Collection<SerdeTestCol, vt::Index1D> {
   int unpacked_on_node = -1;
 };
 
-using SerdeTestMsg = vt::CollectionMessage<SerdeTestCol>;
+using SerializationTestMsg = vt::CollectionMessage<SerializationTestCol>;
 
-void serdeColHandler(SerdeTestMsg *, SerdeTestCol *col) {
+void serializationColHandler(SerializationTestMsg *, SerializationTestCol *col) {
   auto const cur_phase = thePhase()->getCurrentPhase();
   if (cur_phase < 2) {
     return;
@@ -622,36 +622,36 @@ void serdeColHandler(SerdeTestMsg *, SerdeTestCol *col) {
   EXPECT_EQ(col->packed_on_node, col->unpacked_on_node);
 }
 
-void runSerdeTest() {
+void runSerializationTest() {
   theConfig()->vt_lb = true;
   theConfig()->vt_lb_self_migration = true;
-  theConfig()->vt_lb_name = "SerdeTestLB";
+  theConfig()->vt_lb_name = "TestSerializationLB";
   if (theContext()->getNode() == 0) {
-    ::fmt::print("Testing LB: SerdeTestLB\n");
+    ::fmt::print("Testing LB: TestSerializationLB\n");
   }
 
   theCollective()->barrier();
 
   auto range = Index1D{8};
-  vrt::collection::CollectionProxy<SerdeTestCol> proxy;
+  vrt::collection::CollectionProxy<SerializationTestCol> proxy;
 
   runInEpochCollective([&] {
-    proxy = theCollection()->constructCollective<SerdeTestCol>(range);
+    proxy = theCollection()->constructCollective<SerializationTestCol>(range);
   });
 
   for (int phase = 0; phase < num_phases; ++phase) {
     runInEpochCollective([&] {
-      proxy.broadcastCollective<SerdeTestMsg, serdeColHandler>();
+      proxy.broadcastCollective<SerializationTestMsg, serializationColHandler>();
     });
     thePhase()->nextPhaseCollective();
   }
 }
 
-struct TestLoadBalancerSerdeTestLB : TestParallelHarness {};
+struct TestLoadBalancerTestSerializationLB : TestParallelHarness {};
 
-TEST_F(TestLoadBalancerSerdeTestLB, test_SerdeTestLB_load_balancer) {
+TEST_F(TestLoadBalancerTestSerializationLB, test_TestSerializationLB_load_balancer) {
   theCollective()->barrier();
-  runSerdeTest();
+  runSerializationTest();
 }
 
 }}}} // end namespace vt::tests::unit::lb

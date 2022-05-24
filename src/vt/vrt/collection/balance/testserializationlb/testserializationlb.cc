@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                serdetestlb.cc
+//                            testserializationlb.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,32 +41,32 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/serdetestlb/serdetestlb.h"
+#include "vt/vrt/collection/balance/testserializationlb/testserializationlb.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 /*static*/ std::unordered_map<std::string, std::string>
-SerdeTestLB::getInputKeysWithHelp() {
+TestSerializationLB::getInputKeysWithHelp() {
   return std::unordered_map<std::string, std::string>{};
 }
 
-void SerdeTestLB::init(objgroup::proxy::Proxy<SerdeTestLB>) {
+void TestSerializationLB::init(objgroup::proxy::Proxy<TestSerializationLB>) {
   vtAssert(
     theConfig()->vt_lb_self_migration,
-    "SerdeTestLB::init(): vt_lb_self_migration flag must be set to use SerdeTestLB\n"
+    "TestSerializationLB::init(): vt_lb_self_migration flag must be set to use TestSerializationLB\n"
   );
 }
 
-void SerdeTestLB::inputParams(balance::SpecEntry*) { }
+void TestSerializationLB::inputParams(balance::SpecEntry*) { }
 
-void SerdeTestLB::runLB(TimeType) {
+void TestSerializationLB::runLB(TimeType) {
   auto const this_node = theContext()->getNode();
   for (auto obj : *load_model_) {
     TimeTypeWrapper const load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
     vt_debug_print(
       terse, lb,
-      "\t SerdeTestLB::migrating object to: obj={}, load={}, from_node={} to_node={}\n",
+      "\t TestSerializationLB::migrating object to: obj={}, load={}, from_node={} to_node={}\n",
       obj, load, this_node, this_node
     );
 

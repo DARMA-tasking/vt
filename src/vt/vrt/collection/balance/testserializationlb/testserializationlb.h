@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                serdetestlb.h
+//                            testserializationlb.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_SERDETESTLB_SERDETESTLB_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_SERDETESTLB_SERDETESTLB_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_TESTSERIALIZATIONLB_TESTSERIALIZATIONLB_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_TESTSERIALIZATIONLB_TESTSERIALIZATIONLB_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -55,11 +55,11 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct SerdeTestLB : BaseLB {
-  SerdeTestLB() = default;
-  virtual ~SerdeTestLB() {}
+struct TestSerializationLB : BaseLB {
+  TestSerializationLB() = default;
+  virtual ~TestSerializationLB() {}
 
-  void init(objgroup::proxy::Proxy<SerdeTestLB> in_proxy);
+  void init(objgroup::proxy::Proxy<TestSerializationLB> in_proxy);
   void runLB(TimeType) override;
   void inputParams(balance::SpecEntry* spec) override;
 
@@ -68,4 +68,4 @@ struct SerdeTestLB : BaseLB {
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_SERDETESTLB_SERDETESTLB_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_TESTSERIALIZATIONLB_TESTSERIALIZATIONLB_H*/

@@ -50,17 +50,17 @@ namespace vt { namespace vrt { namespace collection {
 namespace balance {
 
 static std::unordered_map<LBType,std::string> lb_names_ = {
-  {LBType::NoLB,           std::string{"NoLB"          }},
+  {LBType::NoLB,                std::string{"NoLB"               }},
 # if vt_check_enabled(zoltan)
-  {LBType::ZoltanLB,       std::string{"ZoltanLB"      }},
+  {LBType::ZoltanLB,            std::string{"ZoltanLB"           }},
 # endif
-  {LBType::GreedyLB,       std::string{"GreedyLB"      }},
-  {LBType::HierarchicalLB, std::string{"HierarchicalLB"}},
-  {LBType::RotateLB,       std::string{"RotateLB"      }},
-  {LBType::TemperedLB,     std::string{"TemperedLB"    }},
-  {LBType::OfflineLB,      std::string{"OfflineLB"    }},
-  {LBType::RandomLB,       std::string{"RandomLB"      }},
-  {LBType::SerdeTestLB,    std::string{"SerdeTestLB"   }},
+  {LBType::GreedyLB,            std::string{"GreedyLB"           }},
+  {LBType::HierarchicalLB,      std::string{"HierarchicalLB"     }},
+  {LBType::RotateLB,            std::string{"RotateLB"           }},
+  {LBType::TemperedLB,          std::string{"TemperedLB"         }},
+  {LBType::OfflineLB,           std::string{"OfflineLB"          }},
+  {LBType::RandomLB,            std::string{"RandomLB"           }},
+  {LBType::TestSerializationLB, std::string{"TestSerializationLB"}},
 };
 
 std::unordered_map<LBType, std::string>& get_lb_names() {

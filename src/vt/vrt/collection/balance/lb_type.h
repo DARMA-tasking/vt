@@ -53,17 +53,17 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 enum struct LBType : int8_t {
-    NoLB             = 0
-  , GreedyLB         = 1
-  , HierarchicalLB   = 2
-  , RotateLB         = 3
-  , TemperedLB       = 4
-  , OfflineLB        = 5
+    NoLB                = 0
+  , GreedyLB            = 1
+  , HierarchicalLB      = 2
+  , RotateLB            = 3
+  , TemperedLB          = 4
+  , OfflineLB           = 5
 # if vt_check_enabled(zoltan)
-  , ZoltanLB         = 6
+  , ZoltanLB            = 6
 # endif
-  , RandomLB         = 7
-  , SerdeTestLB      = 8
+  , RandomLB            = 7
+  , TestSerializationLB = 8
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

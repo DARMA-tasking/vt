@@ -55,16 +55,16 @@ To print LB specification during startup, use `--vt_lb_show_spec` command line f
 
 \section load-balancers Load balancers
 
-| Load Balancer  | Type                    | Description                                                                         | Reference                                 |
-| -------------- | ----------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------- |
-| RotateLB       | Testing                 | Rotate objects in a ring                                                            | `vt::vrt::collection::lb::RotateLB`       |
-| RandomLB       | Testing                 | Randomly migrate object with seed                                                   | `vt::vrt::collection::lb::RandomLB`       |
-| GreedyLB       | Centralized             | Gather to central node apply min/max heap                                           | `vt::vrt::collection::lb::GreedyLB`       |
-| TemperedLB     | Distributed             | Inspired by epidemic algorithms                                                     | `vt::vrt::collection::lb::TemperedLB`     |
-| HierarchicalLB | Hierarchical            | Build tree to move objects nodes                                                    | `vt::vrt::collection::lb::HierarchicalLB` |
-| ZoltanLB       | Hyper-graph Partitioner | Run Zoltan in hyper-graph mode to LB                                                | `vt::vrt::collection::lb::ZoltanLB`       |
-| OfflineLB      | User-specified          | Read file to determine mapping                                                      | `vt::vrt::collection::lb::OfflineLB`      |
-| SerdeTestLB    | Testing                 | Migrate objects to the same node, for testing serialization/deserialization purpose | `vt::vrt::collection::lb::SerdeTestLB`    |
+| Load Balancer       | Type                    | Description                                                                         | Reference                                      |
+| ------------------- | ----------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------- |
+| RotateLB            | Testing                 | Rotate objects in a ring                                                            | `vt::vrt::collection::lb::RotateLB`            |
+| RandomLB            | Testing                 | Randomly migrate object with seed                                                   | `vt::vrt::collection::lb::RandomLB`            |
+| GreedyLB            | Centralized             | Gather to central node apply min/max heap                                           | `vt::vrt::collection::lb::GreedyLB`            |
+| TemperedLB          | Distributed             | Inspired by epidemic algorithms                                                     | `vt::vrt::collection::lb::TemperedLB`          |
+| HierarchicalLB      | Hierarchical            | Build tree to move objects nodes                                                    | `vt::vrt::collection::lb::HierarchicalLB`      |
+| ZoltanLB            | Hyper-graph Partitioner | Run Zoltan in hyper-graph mode to LB                                                | `vt::vrt::collection::lb::ZoltanLB`            |
+| OfflineLB           | User-specified          | Read file to determine mapping                                                      | `vt::vrt::collection::lb::OfflineLB`           |
+| TestSerializationLB | Testing                 | Migrate objects to the same node, for testing serialization/deserialization purpose | `vt::vrt::collection::lb::TestSerializationLB` |
 
 \section load-models Object Load Models
 
