@@ -52,6 +52,7 @@
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
+#include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/json_appender.h"
 
@@ -160,47 +161,47 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
   auto const next_node = (this_node + 1) % num_nodes;
-  auto const phase = thePhase()->getCurrentPhase();
 
-  elm::ElementIDStruct id_from, id_to;
-  id_from.id        = this_node * 4 + 1;
-  id_from.curr_node = this_node;
-  id_to.id          = next_node * 4 + 1;
-  id_to.curr_node   = next_node;
+  auto id_from =
+    elm::ElmIDBits::createCollectionImpl(true, 1, this_node, this_node);
+  auto id_to =
+    elm::ElmIDBits::createCollectionImpl(true, 2, next_node, next_node);
 
   elm::ElementLBData elm_data;
   double const bytes = 10.0;
   elm_data.sendToEntity(id_to, id_from, bytes);
   theNodeLBData()->addNodeLBData(id_from, &elm_data, nullptr);
 
+  auto const phase = thePhase()->getCurrentPhase();
+  auto const comm_data = theNodeLBData()->getNodeComm(phase);
+  ASSERT_NE(comm_data, nullptr);
+  ASSERT_EQ(comm_data->size(), 1);
+
   // test
-  auto proxy = theLBManager()->getLB();
+  auto proxy = theLBManager()->makeLB<vt::vrt::collection::lb::TemperedWMin>();
   runInEpochCollective(
     "test_make_graph_symmetric -> makeGraphSymmetric",
     [phase, proxy] { vrt::collection::balance::makeGraphSymmetric(phase, proxy); }
   );
+  vt::theLBManager()->destroyLB();
 
   // assert
-  auto comm_data = theNodeLBData()->getNodeComm(phase);
-  ASSERT_NE(comm_data, nullptr);
-
-  // TODO: assert that each node received appropriate element
-  // instead of just printing
-  vt_debug_print(
-    verbose, temperedwmin, "test_make_graph_symmetric: comm size={}\n",
-    comm_data->size()
-  );
+  ASSERT_EQ(comm_data->size(), 2);
+  auto const prev_node = (this_node + num_nodes - 1) % num_nodes;
   for (auto&& elm : *comm_data) {
-    if (
-      elm.first.commCategory() == elm::CommCategory::SendRecv and
-      not elm.first.selfEdge()
-    ) {
-      vt_debug_print(
-        verbose, temperedwmin,
-        "test_make_graph_symmetric: elm: from={}, to={}\n",
-        elm.first.fromObj(), elm.first.toObj()
-      );
-    }
+    auto const& comm_key = elm.first;
+    auto const from_home_node = comm_key.fromObj().getHomeNode();
+    auto const to_home_node = comm_key.toObj().getHomeNode();
+
+    ASSERT_TRUE(
+      from_home_node == this_node and to_home_node == next_node or
+      from_home_node == prev_node and to_home_node == this_node
+    );
+
+    vt_debug_print(
+      verbose, temperedwmin, "test_make_graph_symmetric: elm: from={}, to={}\n",
+      comm_key.fromObj(), comm_key.toObj()
+    );
   }
 }
 
