@@ -2001,7 +2001,6 @@ template <typename IndexT>
 CollectionHolder<IndexT>* CollectionManager::findColHolder(
   VirtualProxyType const& proxy
 ) {
-  #pragma sst global proxy_container_
   auto& holder_container = EntireHolder<IndexT>::proxy_container_;
   auto holder_iter = holder_container.find(proxy);
   auto const& found_holder = holder_iter != holder_container.end();
