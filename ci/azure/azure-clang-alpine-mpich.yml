@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (alpine, clang-13, mpich)
+name: PR tests (clang-13, alpine, mpich)
 
 trigger:
   branches:
