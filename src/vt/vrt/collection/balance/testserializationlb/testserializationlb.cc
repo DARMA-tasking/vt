@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.cc
+//                            testserializationlb.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,51 +41,39 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/testserializationlb/testserializationlb.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-namespace balance {
-
-static std::unordered_map<LBType,std::string> lb_names_ = {
-  {LBType::NoLB,                std::string{"NoLB"               }},
-# if vt_check_enabled(zoltan)
-  {LBType::ZoltanLB,            std::string{"ZoltanLB"           }},
-# endif
-  {LBType::GreedyLB,            std::string{"GreedyLB"           }},
-  {LBType::HierarchicalLB,      std::string{"HierarchicalLB"     }},
-  {LBType::RotateLB,            std::string{"RotateLB"           }},
-  {LBType::TemperedLB,          std::string{"TemperedLB"         }},
-  {LBType::OfflineLB,           std::string{"OfflineLB"          }},
-  {LBType::RandomLB,            std::string{"RandomLB"           }},
-  {LBType::TestSerializationLB, std::string{"TestSerializationLB"}},
-};
-
-std::unordered_map<LBType, std::string>& get_lb_names() {
-  return lb_names_;
+/*static*/ std::unordered_map<std::string, std::string>
+TestSerializationLB::getInputKeysWithHelp() {
+  return std::unordered_map<std::string, std::string>{};
 }
 
-} /* end namespace balance */
-
-namespace lb {
-
-static std::unordered_map<Statistic,std::string> lb_stat_name_ = {
-  {Statistic::P_l,         std::string{"P_l"}},
-  {Statistic::P_c,         std::string{"P_c"}},
-  {Statistic::P_t,         std::string{"P_t"}},
-  {Statistic::O_l,         std::string{"O_l"}},
-  {Statistic::O_c,         std::string{"O_c"}},
-  {Statistic::O_t,         std::string{"O_t"}},
-  {Statistic::ObjectRatio, std::string{"ObjectRatio"}},
-  {Statistic::EdgeRatio,   std::string{"EdgeRatio"}}
-};
-
-std::unordered_map<Statistic, std::string>& get_lb_stat_name() {
-  return lb_stat_name_;
+void TestSerializationLB::init(objgroup::proxy::Proxy<TestSerializationLB>) {
+  vtAssert(
+    theConfig()->vt_lb_self_migration,
+    "TestSerializationLB::init(): vt_lb_self_migration flag must be set to use TestSerializationLB\n"
+  );
 }
 
-} /* end namespace lb */
+void TestSerializationLB::inputParams(balance::SpecEntry*) { }
 
-}}} /* end namespace vt::vrt::collection::balance */
+void TestSerializationLB::runLB(TimeType) {
+  auto const this_node = theContext()->getNode();
+  for (auto obj : *load_model_) {
+    TimeTypeWrapper const load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
+    vt_debug_print(
+      terse, lb,
+      "\t TestSerializationLB::migrating object to: obj={}, load={}, from_node={} to_node={}\n",
+      obj, load, this_node, this_node
+    );
+
+    if (obj.isMigratable()) {
+      migrateObjectTo(obj, this_node);
+    }
+  }
+}
+
+}}}} /* end namespace vt::vrt::collection::lb */

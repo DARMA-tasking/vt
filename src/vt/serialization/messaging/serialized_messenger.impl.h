@@ -405,9 +405,9 @@ template <typename MsgT, typename BaseT>
           "serialMsgHandler: local msg: handler={}\n", typed_handler
         );
 
-        auto base_msg = msg.template to<BaseMsgType>();
+        auto base_msg = user_msg.template to<BaseMsgType>();
         return messaging::PendingSend(base_msg, [=](MsgPtr<BaseMsgType> in) {
-          runnable::makeRunnable(msg, true, typed_handler, node)
+          runnable::makeRunnable(user_msg, true, typed_handler, node)
             .withTDEpochFromMsg()
             .enqueue();
         });

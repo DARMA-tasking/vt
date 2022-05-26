@@ -89,6 +89,7 @@ set(
         vrt/collection/balance/offlinelb
         vrt/collection/balance/zoltanlb
         vrt/collection/balance/randomlb
+        vrt/collection/balance/testserializationlb
         vrt/collection/balance/lb_invoke
         vrt/collection/balance/model
         vrt/collection/balance/proxy
