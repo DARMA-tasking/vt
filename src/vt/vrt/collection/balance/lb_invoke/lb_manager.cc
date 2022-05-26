@@ -736,8 +736,7 @@ getSharedEdges(elm::CommMapType const& comm_data) {
   std::unordered_map<NodeType, lb::BaseLB::ElementCommType> shared_edges;
 
   vt_debug_print(
-    verbose, temperedwmin, "getSharedEdges: comm size={}\n",
-    comm_data.size()
+    verbose, lb, "getSharedEdges: comm size={}\n", comm_data.size()
   );
 
   for (auto&& elm : comm_data) {
