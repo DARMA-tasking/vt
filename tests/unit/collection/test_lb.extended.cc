@@ -186,6 +186,11 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   vt::theLBManager()->destroyLB();
 
   // assert
+  if (num_nodes == 1) {
+    ASSERT_EQ(comm_data->size(), 1);
+    return;
+  }
+
   ASSERT_EQ(comm_data->size(), 2);
   auto const prev_node = (this_node + num_nodes - 1) % num_nodes;
   for (auto&& elm : *comm_data) {
