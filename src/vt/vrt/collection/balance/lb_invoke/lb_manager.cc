@@ -510,12 +510,8 @@ void LBManager::statsHandler(StatsMsgType* msg) {
         last_phase_info_->avg_load_post_lb = avg;
         last_phase_info_->imb_load_post_lb = imb;
       }
-    } else if (stat == obj_statistic) {
-      if (before_lb_stats_) {
-        last_phase_info_->max_obj = max;
-      } else {
-        last_phase_info_->max_obj_post_lb = max;
-      }
+    } else if (stat == obj_statistic and before_lb_stats_) {
+      last_phase_info_->max_obj = max;
     }
 
     if (theContext()->getNode() == 0) {

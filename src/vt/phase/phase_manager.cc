@@ -246,13 +246,12 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
     );
     // vt_print(
     //   phase,
-    //   "POST phase={}, total time={}, max_load={}, avg_load={}, imbalance={:.3f}, max_obj={}, migration count={}\n",
+    //   "POST phase={}, total time={}, max_load={}, avg_load={}, imbalance={:.3f}, migration count={}\n",
     //   cur_phase_,
     //   total_time,
     //   TimeTypeWrapper(last_phase_info->max_load_post_lb),
     //   TimeTypeWrapper(last_phase_info->avg_load_post_lb),
     //   last_phase_info->imb_load_post_lb,
-    //   TimeTypeWrapper(last_phase_info->max_obj_post_lb),
     //   last_phase_info->migration_count
     // );
 
@@ -364,7 +363,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
         last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
       );
       auto additional_grain_percent_improvement = compute_percent_improvement(
-        last_phase_info->max_load_post_lb, last_phase_info->max_obj_post_lb
+        last_phase_info->max_load_post_lb, last_phase_info->max_obj
       );
       if (
         additional_percent_improvement > 3.0 and
