@@ -199,8 +199,8 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
     auto const to_home_node = comm_key.toObj().getHomeNode();
 
     ASSERT_TRUE(
-      from_home_node == this_node and to_home_node == next_node or
-      from_home_node == prev_node and to_home_node == this_node
+      (from_home_node == this_node and to_home_node == next_node) or
+      (from_home_node == prev_node and to_home_node == this_node)
     );
 
     vt_debug_print(
