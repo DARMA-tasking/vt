@@ -47,22 +47,49 @@
 #include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/scheduler/scheduler.h"
 
+#include <nlohmann/json.hpp>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
-                           ElementIDStruct object, PhaseOffset when) {
+LoadSummary getObjectLoads(
+  std::shared_ptr<LoadModel> model, ElementIDStruct object, PhaseOffset when
+) {
   return getObjectLoads(model.get(), object, when);
 }
 
-LoadSummary getObjectLoads(LoadModel* model,
-                           ElementIDStruct object, PhaseOffset when)
-{
+LoadSummary getObjectLoads(
+  LoadModel* model, ElementIDStruct object, PhaseOffset when
+) {
   LoadSummary ret;
   ret.whole_phase_load = model->getWork(object, {when.phases, PhaseOffset::WHOLE_PHASE});
 
   unsigned int subphases = model->getNumSubphases();
   for (unsigned int i = 0; i < subphases; ++i)
     ret.subphase_loads.push_back(model->getWork(object, {when.phases, i}));
+
+  return ret;
+}
+
+LoadSummary getObjectRawLoads(
+  std::shared_ptr<LoadModel> model, ElementIDStruct object, PhaseOffset when
+) {
+  return getObjectRawLoads(model.get(), object, when);
+}
+
+LoadSummary getObjectRawLoads(
+  LoadModel* model, ElementIDStruct object, PhaseOffset when
+) {
+  LoadSummary ret;
+
+  if (model->hasRawLoad()) {
+    ret.whole_phase_load = model->getRawLoad(
+      object, {when.phases, PhaseOffset::WHOLE_PHASE}
+    );
+
+    unsigned int subphases = model->getNumSubphases();
+    for (unsigned int i = 0; i < subphases; ++i)
+      ret.subphase_loads.push_back(model->getRawLoad(object, {when.phases, i}));
+  }
 
   return ret;
 }
@@ -101,3 +128,38 @@ void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reass
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
+
+namespace vt { namespace vrt { namespace collection { namespace lb {
+
+NLOHMANN_JSON_SERIALIZE_ENUM(StatisticQuantity, {
+  {StatisticQuantity::min, "min"},
+  {StatisticQuantity::max, "max"},
+  {StatisticQuantity::avg, "avg"},
+  {StatisticQuantity::std, "std"},
+  {StatisticQuantity::var, "var"},
+  {StatisticQuantity::skw, "skw"},
+  {StatisticQuantity::kur, "kur"},
+  {StatisticQuantity::car, "car"},
+  {StatisticQuantity::imb, "imb"},
+  {StatisticQuantity::npr, "npr"},
+  {StatisticQuantity::sum, "sum"},
+})
+
+nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics) {
+  nlohmann::json j;
+
+  std::size_t i = 0;
+  for (auto &entry : statistics) {
+    auto &name = get_lb_stat_name()[entry.first];
+    nlohmann::json &this_stat = j[name];
+    for (auto &quant : entry.second) {
+      const nlohmann::json quant_name = quant.first;
+      this_stat[quant_name.get<std::string>()] = quant.second;
+    }
+    ++i;
+  }
+
+  return j;
+}
+
+}}}} /* end namespace vt::vrt::collection::lb */

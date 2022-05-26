@@ -93,7 +93,9 @@ TEST_F(TestLBDataReader, test_lb_data_read_1) {
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
 
   std::stringstream stream{std::ios_base::out | std::ios_base::in};
-  auto ap = std::make_unique<JSONAppender>("phases", std::move(stream), true);
+  auto ap = std::make_unique<JSONAppender>(
+    "phases", "LBDatafile", std::move(stream), true
+  );
 
   using vt::vrt::collection::balance::LBDataHolder;
   auto lbdh = std::make_unique<LBDataHolder>();

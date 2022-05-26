@@ -100,8 +100,8 @@ void RandomLB::runLB(TimeType) {
   auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 
   if (this_node == 0) {
-    vt_print(
-      lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
+    vt_debug_print(
+      terse, lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
       randomize_seed_, seed_
     );
     fflush(stdout);

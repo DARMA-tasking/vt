@@ -58,6 +58,7 @@ struct ProposedReassignment : public ComposedModel {
   ObjectIterator begin() override;
   int getNumObjects() override;
   TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
 
  private:
   std::shared_ptr<const Reassignment> reassignment_;

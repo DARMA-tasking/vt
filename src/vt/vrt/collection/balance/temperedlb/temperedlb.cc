@@ -426,10 +426,18 @@ void TemperedLB::runLB(TimeType total_load) {
   this_load = total_load;
   stats = *getStats();
 
-  auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
-  auto const max  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
-  auto const pole = stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max);
-  auto const imb  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
+  auto const avg  = stats.at(lb::Statistic::Rank_load_modeled).at(
+    lb::StatisticQuantity::avg
+  );
+  auto const max  = stats.at(lb::Statistic::Rank_load_modeled).at(
+    lb::StatisticQuantity::max
+  );
+  auto const pole = stats.at(lb::Statistic::Object_load_modeled).at(
+    lb::StatisticQuantity::max
+  );
+  auto const imb  = stats.at(lb::Statistic::Rank_load_modeled).at(
+    lb::StatisticQuantity::imb
+  );
   auto const load = this_load;
 
   if (target_pole_) {
@@ -452,6 +460,13 @@ void TemperedLB::runLB(TimeType total_load) {
       TimeTypeWrapper(avg), TimeTypeWrapper(max), TimeTypeWrapper(pole), imb,
       TimeTypeWrapper(load), should_lb
     );
+
+    if (!should_lb) {
+      vt_print(
+        lb,
+        "TemperedLB decided to skip rebalancing due to low imbalance\n"
+      );
+    }
   }
 
   if (should_lb) {
@@ -534,15 +549,15 @@ void TemperedLB::doLBStages(TimeType start_imb) {
       );
 
       if (rollback_ || theConfig()->vt_debug_temperedlb || (iter_ == num_iters_ - 1)) {
-        runInEpochCollective("TemperedLB::doLBStages -> P_l reduce", [=] {
+        runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
           using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
           auto cb = vt::theCB()->makeBcast<
             TemperedLB, StatsMsgType, &TemperedLB::loadStatsHandler
           >(this->proxy_);
-          // Perform the reduction for P_l -> processor load only
+          // Perform the reduction for Rank_load_modeled -> processor load only
           auto msg = makeMessage<StatsMsgType>(
             std::vector<balance::LoadData>{
-              {balance::LoadData{Statistic::P_l, this_new_load_}}
+              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}}
             }
           );
           this->proxy_.template reduce<ReduceOp>(msg,cb);
@@ -564,8 +579,8 @@ void TemperedLB::doLBStages(TimeType start_imb) {
     }
 
     if (this_node == 0) {
-      vt_print(
-        temperedlb,
+      vt_debug_print(
+        terse, temperedlb,
         "TemperedLB::doLBStages: trial={} {} imb={:0.4f}\n",
         trial_, rollback_ ? "best" : "final", best_imb_this_trial
       );
@@ -583,15 +598,15 @@ void TemperedLB::doLBStages(TimeType start_imb) {
     new_imbalance_ = best_imb;
 
     if (this_node == 0) {
-      vt_print(
-        temperedlb,
+      vt_debug_print(
+        terse, temperedlb,
         "TemperedLB::doLBStages: chose trial={} with imb={:0.4f}\n",
         best_trial, new_imbalance_
       );
     }
   } else if (this_node == 0) {
-    vt_print(
-      temperedlb,
+    vt_debug_print(
+      terse, temperedlb,
       "TemperedLB::doLBStages: rejected all trials because they would increase imbalance\n"
     );
   }
@@ -613,8 +628,9 @@ void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
       "avg={} pole={} imb={:0.4f}\n",
       trial_, iter_, TimeTypeWrapper(in.max()),
       TimeTypeWrapper(in.min()), TimeTypeWrapper(in.avg()),
-      TimeTypeWrapper(
-        stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max)),
+      TimeTypeWrapper(stats.at(
+        lb::Statistic::Object_load_modeled
+      ).at(lb::StatisticQuantity::max)),
       in.I()
     );
   }

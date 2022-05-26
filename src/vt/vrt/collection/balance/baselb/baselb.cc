@@ -186,7 +186,12 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
       auto const load_summary = getObjectLoads(
         load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
-      depart_map[dest].push_back(std::make_tuple(obj_id, load_summary));
+      auto const raw_load_summary = getObjectRawLoads(
+        load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      depart_map[dest].push_back(
+        std::make_tuple(obj_id, load_summary, raw_load_summary)
+      );
     }
 
     for (auto&& depart_list : depart_map) {
@@ -222,7 +227,10 @@ void BaseLB::notifyNewHostNodeOfObjectsArriving(
   for (auto&& arrival : arrival_list) {
     auto const obj_id = std::get<0>(arrival);
     auto const& load_summary = std::get<1>(arrival);
-    pending_reassignment_->arrive_[obj_id] = load_summary;
+    auto const& raw_load_summary = std::get<2>(arrival);
+    pending_reassignment_->arrive_[obj_id] = std::make_tuple(
+      load_summary, raw_load_summary
+    );
   }
 }
 
@@ -239,13 +247,14 @@ void BaseLB::finalize(CountMsg* msg) {
   }
 
   pending_reassignment_->global_migration_count = global_count;
+
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
-    vt_print(
-      lb,
-      "BaseLB::finalize: LB total time={}, total migration count={}\n",
-      total_time, global_count
+    vt_debug_print(
+      terse, lb,
+      "BaseLB::finalize: LB total time={}\n",
+      total_time
     );
     fflush(stdout);
   }

@@ -70,6 +70,7 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
 
   std::unordered_map<PhaseType, LoadMapType> proc_loads;
   test_model->setLoads(&proc_loads, nullptr);
+  EXPECT_TRUE(test_model->hasRawLoad());
 
   ElementIDStruct id1{1,this_node};
   ElementIDStruct id2{2,this_node};
@@ -105,6 +106,12 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
 
       auto sub_work_val = test_model->getWork(obj, PhaseOffset{-1, 0});
       EXPECT_EQ(sub_work_val, load_holder[iter][obj].subphase_loads[0]);
+
+      auto raw_load_val = test_model->getRawLoad(obj, PhaseOffset{-1, PhaseOffset::WHOLE_PHASE});
+      EXPECT_EQ(raw_load_val, load_holder[iter][obj].whole_phase_load);
+
+      auto sub_raw_load_val = test_model->getRawLoad(obj, PhaseOffset{-1, 0});
+      EXPECT_EQ(sub_raw_load_val, load_holder[iter][obj].subphase_loads[0]);
     }
     EXPECT_EQ(objects_seen, 2);
   }

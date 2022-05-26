@@ -326,7 +326,9 @@ getLBDataForPhase(
   using vt::vrt::collection::balance::LBDataHolder;
   using json = nlohmann::json;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
-  auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), false);
+  auto ap = std::make_unique<JSONAppender>(
+    "phases", "LBDatafile", std::move(ss), false
+  );
   auto j = in.toJson(phase);
   ap->addElm(*j);
   ss = ap->finish();
@@ -512,7 +514,9 @@ getJsonStringForPhase(
   using vt::vrt::collection::balance::LBDataHolder;
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
-  auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), false);
+  auto ap = std::make_unique<JSONAppender>(
+    "phases", "LBDatafile", std::move(ss), false
+  );
   auto j = in.toJson(phase);
   ap->addElm(*j);
   ss = ap->finish();

@@ -68,6 +68,7 @@
 #include "vt/vrt/collection/balance/model/proposed_reassignment.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/utils/json/json_appender.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -172,21 +173,34 @@ LBManager::makeLB() {
 }
 
 void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
-  auto r = msg->reassignment;
+  auto reassignment = msg->reassignment;
   auto phase = msg->phase;
-  auto proposed = std::make_shared<ProposedReassignment>(model_, r);
+  auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
     auto stats_cb = vt::theCB()->makeBcast<
       LBManager, StatsMsgType, &LBManager::statsHandler
     >(proxy_);
+    before_lb_stats_ = false;
     computeStatistics(proposed, false, phase, stats_cb);
   });
 
-  applyReassignment(r);
+  // Inform the collection manager to rebuild spanning trees if needed
+  if (reassignment->global_migration_count != 0) {
+    theCollection()->getTypelessHolder().invokeAllGroupConstructors();
+  }
+
+  last_phase_info_->migration_count = reassignment->global_migration_count;
+  last_phase_info_->ran_lb = true;
+  if (theContext()->getNode() == 0) {
+    stagePostLBStatistics(stats, last_phase_info_->migration_count);
+    commitPhaseStatistics(phase);
+  }
+
+  applyReassignment(reassignment);
 
   // Inform the collection manager to rebuild spanning trees if needed
-  if (r->global_migration_count != 0) {
+  if (reassignment->global_migration_count != 0) {
     theCollection()->getTypelessHolder().invokeAllGroupConstructors();
   }
 
@@ -208,9 +222,13 @@ LBManager::runLB(
     auto stats_cb = vt::theCB()->makeBcast<
       LBManager, StatsMsgType, &LBManager::statsHandler
     >(proxy_);
+    before_lb_stats_ = true;
     computeStatistics(model_, false, phase, stats_cb);
   });
 
+  if (theContext()->getNode() == 0) {
+    stagePreLBStatistics(stats);
+  }
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm = &empty_comm;
   auto iter = theNodeLBData()->getNodeComm()->find(phase);
@@ -222,7 +240,7 @@ LBManager::runLB(
 
   lb::BaseLB* strat = base_proxy.get();
   auto reassignment = strat->startLB(
-    phase, base_proxy, model_.get(), stats, *comm, total_load
+    phase, base_proxy, model_.get(), stats, *comm, total_load_from_model
   );
   cb.send(reassignment, phase);
 }
@@ -264,7 +282,29 @@ void LBManager::startLB(
     );
   }
 
+  last_phase_info_->phase = phase;
+  last_phase_info_->lb_type = lb;
+
   if (lb == LBType::NoLB) {
+    last_phase_info_->migration_count = 0;
+    last_phase_info_->ran_lb = false;
+
+    runInEpochCollective("LBManager::noLB -> updateLoads", [=] {
+      model_->updateLoads(phase);
+    });
+
+    runInEpochCollective("LBManager::noLB -> computeStats", [=] {
+      before_lb_stats_ = true;
+      auto stats_cb = vt::theCB()->makeBcast<
+        LBManager, StatsMsgType, &LBManager::statsHandler
+      >(proxy_);
+      before_lb_stats_ = true;
+      computeStatistics(model_, false, phase, stats_cb);
+    });
+    if (theContext()->getNode() == 0) {
+      stagePreLBStatistics(stats);
+      commitPhaseStatistics(phase);
+    }
     // nothing to do
     return;
   }
@@ -372,13 +412,15 @@ void LBManager::printLBArgsHelp(std::string lb_name) {
 }
 
 void LBManager::startup() {
+  last_phase_info_ = std::make_unique<lb::PhaseInfo>();
+
   thePhase()->registerHookRooted(phase::PhaseHook::Start, []{
     thePhase()->setStartTime();
   });
 
-  thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, []{
+  thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, [this]{
     auto const phase = thePhase()->getCurrentPhase();
-    thePhase()->printSummary();
+    thePhase()->printSummary(last_phase_info_.get());
     theLBManager()->finishedLB(phase);
   });
 }
@@ -389,6 +431,21 @@ void LBManager::destroyLB() {
     destroy_lb_();
     destroy_lb_ = nullptr;
   }
+}
+
+void LBManager::initialize() {
+#if vt_check_enabled(lblite)
+  createStatisticsFile();
+#endif
+}
+
+void LBManager::finalize() {
+  closeStatisticsFile();
+}
+
+void LBManager::fatalError() {
+  // make flush occur on all statistics collected immediately
+  closeStatisticsFile();
 }
 
 void LBManager::finishedLB(PhaseType phase) {
@@ -405,6 +462,16 @@ void LBManager::finishedLB(PhaseType phase) {
 
 void LBManager::statsHandler(StatsMsgType* msg) {
   auto in_stat_vec = msg->getConstVal();
+
+  // use the raw loads if they were computed, otherwise fall back on model loads
+  lb::Statistic rank_statistic = lb::Statistic::Rank_load_modeled;
+  lb::Statistic obj_statistic  = lb::Statistic::Object_load_modeled;
+  for (auto&& st : in_stat_vec) {
+    if (st.stat_ == lb::Statistic::Rank_load_raw) {
+      rank_statistic = lb::Statistic::Rank_load_raw;
+      obj_statistic = lb::Statistic::Object_load_raw;
+    }
+  }
 
   for (auto&& st : in_stat_vec) {
     auto stat     = st.stat_;
@@ -433,9 +500,23 @@ void LBManager::statsHandler(StatsMsgType* msg) {
     stats[stat][lb::StatisticQuantity::skw] = skew;
     stats[stat][lb::StatisticQuantity::kur] = krte;
 
+    if (stat == rank_statistic) {
+      if (before_lb_stats_) {
+        last_phase_info_->max_load = max;
+        last_phase_info_->avg_load = avg;
+        last_phase_info_->imb_load = imb;
+      } else {
+        last_phase_info_->max_load_post_lb = max;
+        last_phase_info_->avg_load_post_lb = avg;
+        last_phase_info_->imb_load_post_lb = imb;
+      }
+    } else if (stat == obj_statistic and before_lb_stats_) {
+      last_phase_info_->max_obj = max;
+    }
+
     if (theContext()->getNode() == 0) {
-      vt_print(
-        lb,
+      vt_debug_print(
+        normal, lb,
         "LBManager: Statistic={}: "
         " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
         " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
@@ -446,6 +527,57 @@ void LBManager::statsHandler(StatsMsgType* msg) {
       );
     }
   }
+}
+
+void LBManager::stagePreLBStatistics(const StatisticMapType &statistics) {
+  // Statistics output when LB is enabled and appropriate flag is enabled
+  if (!theConfig()->vt_lb_statistics) {
+    return;
+  }
+
+  nlohmann::json j;
+  j["pre-LB"] = lb::jsonifyPhaseStatistics(statistics);
+
+  using JSONAppender = util::json::Appender<std::ofstream>;
+  auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
+  writer->stageObject(j);
+}
+
+void LBManager::stagePostLBStatistics(
+  const StatisticMapType &statistics, int32_t migration_count
+) {
+  // Statistics output when LB is enabled and appropriate flag is enabled
+  if (!theConfig()->vt_lb_statistics) {
+    return;
+  }
+
+  nlohmann::json j;
+  j["post-LB"] = lb::jsonifyPhaseStatistics(statistics);
+  j["migration count"] = migration_count;
+
+  using JSONAppender = util::json::Appender<std::ofstream>;
+  auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
+  writer->stageObject(j);
+}
+
+void LBManager::commitPhaseStatistics(PhaseType phase) {
+  // Statistics output when LB is enabled and appropriate flag is enabled
+  if (!theConfig()->vt_lb_statistics) {
+    return;
+  }
+
+  vt_debug_print(
+    terse, lb,
+    "LBManager::outputStatisticsForPhase: phase={}\n", phase
+  );
+
+  nlohmann::json j;
+  j["id"] = phase;
+
+  using JSONAppender = util::json::Appender<std::ofstream>;
+  auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
+  writer->stageObject(j);
+  writer->commitStaged();
 }
 
 balance::LoadData reduceVec(
@@ -473,14 +605,30 @@ void LBManager::computeStatistics(
 
   using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
 
-  total_load = 0.;
-  std::vector<balance::LoadData> O_l;
+  total_load_from_model = 0.;
+  std::vector<balance::LoadData> obj_load_model;
   for (auto elm : *model) {
     auto work = model->getWork(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
-    O_l.emplace_back(LoadData{lb::Statistic::O_l, work});
-    total_load += work;
+    obj_load_model.emplace_back(
+      LoadData{lb::Statistic::Object_load_modeled, work}
+    );
+    total_load_from_model += work;
+  }
+
+  TimeType total_load_raw = 0.;
+  std::vector<balance::LoadData> obj_load_raw;
+  if (model->hasRawLoad()) {
+    for (auto elm : *model) {
+      auto raw_load = model->getRawLoad(
+        elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+      );
+      obj_load_raw.emplace_back(
+        LoadData{lb::Statistic::Object_load_raw, raw_load}
+      );
+      total_load_raw += raw_load;
+    }
   }
 
   elm::CommMapType empty_comm;
@@ -491,8 +639,21 @@ void LBManager::computeStatistics(
   }
 
   std::vector<LoadData> lstats;
-  lstats.emplace_back(LoadData{lb::Statistic::P_l, total_load});
-  lstats.emplace_back(reduceVec(lb::Statistic::O_l, std::move(O_l)));
+  lstats.emplace_back(
+    LoadData{lb::Statistic::Rank_load_modeled, total_load_from_model}
+  );
+  lstats.emplace_back(reduceVec(
+    lb::Statistic::Object_load_modeled, std::move(obj_load_model)
+  ));
+
+  if (model->hasRawLoad()) {
+    lstats.emplace_back(
+      LoadData{lb::Statistic::Rank_load_raw, total_load_raw}
+    );
+    lstats.emplace_back(reduceVec(
+      lb::Statistic::Object_load_raw, std::move(obj_load_raw)
+    ));
+  }
 
   double comm_load = 0.0;
   for (auto&& elm : *comm_data) {
@@ -506,17 +667,21 @@ void LBManager::computeStatistics(
     comm_load += elm.second.bytes;
   }
 
-  lstats.emplace_back(LoadData{lb::Statistic::P_c, comm_load});
+  lstats.emplace_back(LoadData{lb::Statistic::Rank_comm, comm_load});
 
-  std::vector<balance::LoadData> O_c;
+  std::vector<balance::LoadData> obj_comm;
   for (auto&& elm : *comm_data) {
-    // Only count object-to-object direct edges in the O_c statistics
+    // Only count object-to-object direct edges in the Object_comm statistics
     if (elm.first.cat_ == elm::CommCategory::SendRecv and not elm.first.selfEdge()) {
-      O_c.emplace_back(LoadData{lb::Statistic::O_c, elm.second.bytes});
+      obj_comm.emplace_back(
+        LoadData{lb::Statistic::Object_comm, elm.second.bytes}
+      );
     }
   }
 
-  lstats.emplace_back(reduceVec(lb::Statistic::O_c, std::move(O_c)));
+  lstats.emplace_back(reduceVec(
+    lb::Statistic::Object_comm, std::move(obj_comm)
+  ));
 
   auto msg = makeMessage<StatsMsgType>(std::move(lstats));
   proxy_.template reduce<ReduceOp>(msg,cb);
@@ -528,6 +693,30 @@ bool LBManager::isCollectiveComm(elm::CommCategory cat) const {
     cat == elm::CommCategory::CollectionToNodeBcast or
     cat == elm::CommCategory::NodeToCollectionBcast;
   return is_collective;
+}
+
+void LBManager::createStatisticsFile() {
+  if (theConfig()->vt_lb_statistics and theContext()->getNode() == 0) {
+    auto const file_name = theConfig()->getLBStatisticsFile();
+    auto const compress = theConfig()->vt_lb_statistics_compress;
+
+    vt_debug_print(
+      normal, lb,
+      "LBManager::createStatsFile: file={}\n", file_name
+    );
+
+    using JSONAppender = util::json::Appender<std::ofstream>;
+
+    if (not statistics_writer_) {
+      statistics_writer_ = std::make_unique<JSONAppender>(
+        "phases", "LBStatsfile", file_name, compress
+      );
+    }
+  }
+}
+
+void LBManager::closeStatisticsFile() {
+  statistics_writer_ = nullptr;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

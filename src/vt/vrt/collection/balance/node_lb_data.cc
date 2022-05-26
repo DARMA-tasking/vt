@@ -164,12 +164,14 @@ void NodeLBData::createLBDataFile() {
   using JSONAppender = util::json::Appender<std::ofstream>;
 
   if (not lb_data_writer_) {
-    lb_data_writer_ = std::make_unique<JSONAppender>("phases", file_name, compress);
+    lb_data_writer_ = std::make_unique<JSONAppender>(
+      "phases", "LBDatafile", file_name, compress
+    );
   }
 }
 
 void NodeLBData::finalize() {
-  lb_data_writer_ = nullptr;
+  closeLBDataFile();
 
   // If LB data are enabled, close output file and clear LB data
 #if vt_check_enabled(lblite)
@@ -181,10 +183,11 @@ void NodeLBData::finalize() {
 
 void NodeLBData::fatalError() {
   // make flush occur on all LB data collected immediately
-  lb_data_writer_ = nullptr;
+  closeLBDataFile();
 }
 
 void NodeLBData::closeLBDataFile() {
+  lb_data_writer_ = nullptr;
 }
 
 std::pair<ElementIDType, ElementIDType>

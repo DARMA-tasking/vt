@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               per_collection.h
+//                                 phase_info.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,52 +41,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_PER_COLLECTION_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_PER_COLLECTION_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_PHASE_INFO_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_PHASE_INFO_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/model/composed_model.h"
-#include <unordered_map>
+#include "vt/vrt/collection/balance/lb_type.h"
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-/**
- * \brief Selects an underlying model to call corresponding to the
- * collection containing the queried object
- */
-struct PerCollection : public ComposedModel
-{
-  using CollectionID = VirtualProxyType;
+struct PhaseInfo {
+  PhaseType phase = 0;
+  balance::LBType lb_type = balance::LBType::NoLB;
+  double max_load = 0, avg_load = 0, imb_load = 0;
+  double max_obj = 0;
+  double max_load_post_lb = 0, avg_load_post_lb = 0, imb_load_post_lb = 0;
+  bool ran_lb = false;
+  int32_t migration_count = 0;
+};
 
-  /**
-   * \param[in] base The underlying default model. Used to give loads
-   * for objects in unspecified collections, and for object and
-   * subphase enumeration
-   */
-  explicit PerCollection(std::shared_ptr<LoadModel> base);
+}}}} /* end namespace vt::vrt::collection::lb */
 
-  /**
-   * \brief Add a model for objects in a specific collection
-   *
-   * \param[in] proxy the virtual proxy of the collection
-   * \param[in] model the associated model for the particular collection
-   */
-  void addModel(CollectionID proxy, std::shared_ptr<LoadModel> model);
-
-  void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
-
-  void updateLoads(PhaseType last_completed_phase) override;
-
-  TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
-  bool hasRawLoad() const override;
-  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
-
-private:
-  std::unordered_map<CollectionID, std::shared_ptr<LoadModel>> models_;
-}; // class PerCollection
-
-}}}} // namespaces
-
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_PHASE_INFO_H*/

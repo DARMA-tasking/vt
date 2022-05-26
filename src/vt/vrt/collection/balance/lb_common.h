@@ -50,8 +50,11 @@
 #include "vt/timing/timing_type.h"
 #include "vt/messaging/message/message.h"
 
+#include <nlohmann/json_fwd.hpp>
+
 #include <vector>
 #include <unordered_map>
+#include <tuple>
 
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
@@ -119,7 +122,9 @@ struct Reassignment {
   // distributed structures need to be rebuilt
   int32_t global_migration_count;
   std::unordered_map<ElementIDStruct, NodeType> depart_;
-  std::unordered_map<ElementIDStruct, LoadSummary> arrive_;
+  std::unordered_map<
+    ElementIDStruct, std::tuple<LoadSummary, LoadSummary>
+  > arrive_;
 };
 
 struct ReassignmentMsg : vt::Message {
@@ -147,11 +152,21 @@ void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reass
 
 struct LoadModel;
 
-LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
-                           ElementIDStruct object, PhaseOffset when);
+LoadSummary getObjectLoads(
+  std::shared_ptr<LoadModel> model, ElementIDStruct object, PhaseOffset when
+);
 
-LoadSummary getObjectLoads(LoadModel* model,
-                           ElementIDStruct object, PhaseOffset when);
+LoadSummary getObjectLoads(
+  LoadModel* model, ElementIDStruct object, PhaseOffset when
+);
+
+LoadSummary getObjectRawLoads(
+  std::shared_ptr<LoadModel> model, ElementIDStruct object, PhaseOffset when
+);
+
+LoadSummary getObjectRawLoads(
+  LoadModel* model, ElementIDStruct object, PhaseOffset when
+);
 
 LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when);
 
@@ -164,8 +179,8 @@ enum struct StatisticQuantity : int8_t {
 };
 
 enum struct Statistic : int8_t {
-  P_l, P_c, P_t,
-  O_l, O_c, O_t,
+  Rank_load_modeled, Rank_load_raw, Rank_comm, Rank_work_modeled,
+  Object_load_modeled, Object_load_raw, Object_comm, Object_work_modeled,
   // W_l_min, W_l_max, W_l_avg, W_l_std, W_l_var, W_l_skewness, W_l_kurtosis,
   // W_c_min, W_c_max, W_c_avg, W_c_std, W_c_var, W_c_skewness, W_c_kurtosis,
   // W_t_min, W_t_max, W_t_avg, W_t_std, W_t_var, W_t_skewness, W_t_kurtosis,
@@ -176,6 +191,11 @@ enum struct Statistic : int8_t {
   // ExternalEdgesCardinality,
   // InternalEdgesCardinality
 };
+
+using StatisticQuantityMap = std::map<StatisticQuantity, double>;
+using StatisticMap = std::unordered_map<Statistic, StatisticQuantityMap>;
+
+nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics);
 
 } /* end namespace lb */
 

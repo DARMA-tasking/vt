@@ -78,6 +78,27 @@ TimeType PerCollection::getWork(ElementIDStruct object, PhaseOffset when) {
   return ComposedModel::getWork(object, when);
 }
 
+bool PerCollection::hasRawLoad() const {
+  // Only return true if all possible paths lead to true
+  bool has_raw_load = true;
+
+  for (auto it = models_.begin(); it != models_.end(); ++it) {
+    has_raw_load = has_raw_load and it->second->hasRawLoad();
+  }
+
+  return has_raw_load and ComposedModel::hasRawLoad();
+}
+
+TimeType PerCollection::getRawLoad(ElementIDStruct object, PhaseOffset when) {
+  // See if some specific model has been given for the object in question
+  auto mi = models_.find(theNodeLBData()->getCollectionProxyForElement(object));
+  if (mi != models_.end())
+    return mi->second->getRawLoad(object, when);
+
+  // Otherwise, default to the given base model
+  return ComposedModel::getRawLoad(object, when);
+}
+
 unsigned int PerCollection::getNumPastPhasesNeeded(unsigned int look_back)
 {
   unsigned int needed = ComposedModel::getNumPastPhasesNeeded(look_back);

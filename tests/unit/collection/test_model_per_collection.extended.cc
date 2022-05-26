@@ -115,6 +115,7 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
   // Get the base model, assert it's valid
   auto base = theLBManager()->getBaseLoadModel();
   EXPECT_NE(base, nullptr);
+  EXPECT_TRUE(base->hasRawLoad());
 
   // Create a new PerCollection model
   auto per_col = std::make_shared<PerCollection>(base);
@@ -129,6 +130,7 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
   per_col->addModel(
     proxy2_untyped, std::make_shared<ConstantTestModel>(base, proxy2_untyped)
   );
+  EXPECT_TRUE(per_col->hasRawLoad());
 
   // Set the new model
   theLBManager()->setLoadModel(per_col);
@@ -154,6 +156,12 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
       auto work_val = model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
       if (id_proxy_map.find(obj) != id_proxy_map.end()) {
         EXPECT_DOUBLE_EQ(work_val, static_cast<TimeType>(id_proxy_map[obj]));
+      }
+      if (model->hasRawLoad()) {
+        auto raw_load_val = model->getRawLoad(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
+        if (id_proxy_map.find(obj) != id_proxy_map.end()) {
+          EXPECT_NE(raw_load_val, work_val);
+        }
       }
       //fmt::print("{:x} {}\n", obj, work_val);
     }
