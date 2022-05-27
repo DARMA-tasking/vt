@@ -199,7 +199,7 @@ trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   #endif
 }
 
-void ActiveMessenger::packMsg(
+MsgSizeType ActiveMessenger::packMsg(
   MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
 ) {
   vt_debug_print(
@@ -208,8 +208,17 @@ void ActiveMessenger::packMsg(
     size, ptr_bytes, print_ptr(ptr)
   );
 
+  auto const can_grow = thePool()->tryGrowAllocation(msg, ptr_bytes);
+  // Typically this should be checked by the caller in advance
+  vtAssert(can_grow, "not enough space to pack message" );
+
   char* const msg_buffer = reinterpret_cast<char*>(msg) + size;
   std::memcpy(msg_buffer, ptr, ptr_bytes);
+
+  envelopeSetPutTag(msg->env, PutPackedTag);
+  setPackedPutType(msg->env);
+
+  return size + ptr_bytes;
 }
 
 EventType ActiveMessenger::sendMsgBytesWithPut(
@@ -267,10 +276,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
       );
     }
     if (direct_buf_pack) {
-      packMsg(msg, base.size(), put_ptr, put_size);
-      new_msg_size += put_size;
-      envelopeSetPutTag(msg->env, PutPackedTag);
-      setPackedPutType(msg->env);
+      new_msg_size = packMsg(msg, base.size(), put_ptr, put_size);
     } else {
       auto const& env_tag = envelopeGetPutTag(msg->env);
       auto const& ret = sendData(
@@ -281,10 +287,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
         envelopeSetPutTag(msg->env, ret_tag);
       }
     }
-  } else if (is_put && is_put_packed) {
-    // Adjust size of the send for packed data
-    auto const& put_size = envelopeGetPutSize(msg->env);
-    new_msg_size += put_size;
   }
 
   sendMsgBytes(dest, base, new_msg_size, send_tag);
@@ -314,12 +316,7 @@ private:
 }
 
 void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
-  auto buf =
-#if vt_check_enabled(memory_pool)
-    static_cast<char*>(thePool()->alloc(msg->getSize()));
-#else
-    static_cast<char*>(std::malloc(msg->getSize()));
-#endif
+  auto buf = static_cast<char*>(thePool()->alloc(msg->getSize()));
 
   auto const size = msg->getSize();
   auto const info = msg->getInfo();
@@ -713,15 +710,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
     if (flag == 1) {
       MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-      char* buf =
-        user_buf == nullptr ?
-
-    #if vt_check_enabled(memory_pool)
+      char* buf = user_buf == nullptr ?
         static_cast<char*>(thePool()->alloc(num_probe_bytes)) :
-    #else
-        static_cast<char*>(std::malloc(num_probe_bytes))      :
-    #endif
-
         static_cast<char*>(user_buf);
 
       NodeType const sender = stat.MPI_SOURCE;
@@ -761,12 +751,7 @@ void ActiveMessenger::recvDataDirect(
   int nchunks, TagType const tag, NodeType const from, MsgSizeType len,
   ContinuationDeleterType next
 ) {
-  char* buf =
-    #if vt_check_enabled(memory_pool)
-      static_cast<char*>(thePool()->alloc(len));
-    #else
-      static_cast<char*>(std::malloc(len));
-    #endif
+  char* buf = static_cast<char*>(thePool()->alloc(len));
 
   recvDataDirect(
     nchunks, buf, tag, from, len, default_priority, nullptr, next, false
@@ -865,11 +850,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     );
 
     if (user_buf == nullptr) {
-      #if vt_check_enabled(memory_pool)
-        thePool()->dealloc(buf);
-      #else
-        std::free(buf);
-      #endif
+      thePool()->dealloc(buf);
     } else if (dealloc_user_buf != nullptr and user_buf != nullptr) {
       dealloc_user_buf();
     }
@@ -1049,11 +1030,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-    #if vt_check_enabled(memory_pool)
-      char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
-    #else
-      char* buf = static_cast<char*>(std::malloc(num_probe_bytes));
-    #endif
+    char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
 
     NodeType const sender = stat.MPI_SOURCE;
 
@@ -1121,8 +1098,9 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
 
   MessageType* msg = reinterpret_cast<MessageType*>(buf);
   envelopeInitRecv(msg->env);
-  // Derive the message size from the number of bytes actually received
-  MsgPtr<MessageType> base{msg, static_cast<ByteType>(num_probe_bytes)};
+  // The message size will already have the correct numbr of bytes
+  // because it will query the allocation size from the mempool
+  MsgPtr<MessageType> base{msg};
 
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_put = envelopeIsPut(msg->env);
@@ -1138,15 +1116,12 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
     );
   }
 
-  CountType msg_bytes = num_probe_bytes;
-
   if (is_put) {
     auto const put_tag = envelopeGetPutTag(msg->env);
     if (put_tag == PutPackedTag) {
       auto const put_size = envelopeGetPutSize(msg->env);
       auto const msg_size = num_probe_bytes - put_size;
       char* put_ptr = buf + msg_size;
-      msg_bytes = msg_size;
 
       if (!is_term || vt_check_enabled(print_term_msgs)) {
         vt_debug_print(
@@ -1171,7 +1146,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   }
 
   if (!is_put || put_finished) {
-    processActiveMsg(MsgPtr<MessageType>(base, msg_bytes), sender, true); // Note: use updated msg_bytes for message size
+    processActiveMsg(MsgPtr<MessageType>(base), sender, true);
   }
 }
 
