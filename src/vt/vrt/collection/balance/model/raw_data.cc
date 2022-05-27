@@ -95,7 +95,6 @@ int RawData::getNumSubphases() {
 }
 
 TimeType RawData::getModeledLoad(ElementIDStruct object, PhaseOffset offset) {
-{
   return getRawLoad(object, offset);
 }
 
