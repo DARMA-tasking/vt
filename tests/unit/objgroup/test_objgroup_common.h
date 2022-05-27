@@ -82,6 +82,15 @@ struct MyObjA {
     recv_++;
   }
 
+  void handlerOnlyFromSelf(MyMsg* msg) {
+    vt_debug_print(
+      normal, objgroup,
+      "MyObjA: received message from:{} for group:{}, next_id:{}\n", msg->from_,
+      id_, next_id);
+    if (msg->from_ == ::vt::theContext()->getNode())
+      recv_++;
+  }
+
   int accumulateVec(const std::vector<int32_t>& vec) {
     recv_++;
 

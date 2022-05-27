@@ -52,6 +52,8 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/lb_invoke/phase_info.h"
+#include "vt/utils/json/base_appender.h"
 
 #include <functional>
 #include <map>
@@ -74,8 +76,8 @@ struct NodeStatsMsg;
 struct LBManager : runtime::component::Component<LBManager> {
   using LBProxyType      = objgroup::proxy::Proxy<lb::BaseLB>;
   using StatsMsgType     = balance::NodeStatsMsg;
-  using QuantityType     = std::map<lb::StatisticQuantity, double>;
-  using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
+  using QuantityType     = lb::StatisticQuantityMap;
+  using StatisticMapType = lb::StatisticMap;
 
   /**
    * \internal \brief System call to construct a \c LBManager
@@ -88,6 +90,9 @@ struct LBManager : runtime::component::Component<LBManager> {
   std::string name() override { return "LBManager"; }
 
   void startup() override;
+  void initialize() override;
+  void finalize() override;
+  void fatalError() override;
 
   static std::unique_ptr<LBManager> construct();
 
@@ -128,6 +133,15 @@ public:
    * \brief Collectively start load balancing after deciding which to run
    *
    * \param[in] phase the phase
+   * \param[in] cb the callback for delivering the reassignment
+   */
+  void selectStartLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb);
+
+  /**
+   * \internal
+   * \brief Collectively start load balancing after deciding which to run
+   *
+   * \param[in] phase the phase
    */
   void selectStartLB(PhaseType phase);
 
@@ -137,8 +151,9 @@ public:
    *
    * \param[in] phase the phase
    * \param[in] lb the load balancer to run
+   * \param[in] cb the callback for delivering the reassignment
    */
-  void startLB(PhaseType phase, LBType lb);
+  void startLB(PhaseType phase, LBType lb, vt::Callback<ReassignmentMsg> cb);
 
   /**
    * \internal
@@ -155,6 +170,8 @@ public:
    * \param[in] lb the load balancer in use
    */
   static void printLBArgsHelp(std::string lb);
+
+  void destroyLB();
 
 protected:
   /**
@@ -198,6 +215,12 @@ public:
       | stats;
   }
 
+  void stagePreLBStatistics(const StatisticMapType &statistics);
+  void stagePostLBStatistics(
+    const StatisticMapType &statistics, int32_t migration_count
+  );
+  void commitPhaseStatistics(PhaseType phase);
+
 protected:
   /**
    * \internal \brief Collectively construct a new load balancer
@@ -209,14 +232,49 @@ protected:
   template <typename LB>
   LBProxyType makeLB();
 
-  void runLB(LBProxyType base_proxy, PhaseType phase);
+  /**
+   * \internal
+   * \brief Run the load balancer
+   *
+   * \param[in] base_proxy the base proxy for the LB
+   * \param[in] phase the phase
+   * \param[in] cb the callback for delivering the reassignment
+   */
+  void runLB(
+    LBProxyType base_proxy, PhaseType phase, vt::Callback<ReassignmentMsg> cb
+  );
+
+  void defaultPostLBWork(ReassignmentMsg* r);
+
+public:
+  /**
+   * \brief Compute statistics given a load model
+   *
+   * \param[in] model the load model
+   * \param[in] comm_collectives whether to consider collective communication
+   * \param[in] phase the phase
+   * \param[in] cb the callback to receive the statistics
+   */
+  void computeStatistics(
+    std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase,
+    vt::Callback<StatsMsgType> cb
+  );
+
+  void statsHandler(StatsMsgType* msg);
 
 private:
-  void computeStatistics(
-    std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase
-  );
-  void statsHandler(StatsMsgType* msg);
   bool isCollectiveComm(elm::CommCategory cat) const;
+
+private:
+  /**
+   * \internal \brief Create the statistics file
+   */
+  void createStatisticsFile();
+
+  /**
+   * \internal \brief Close the statistics file
+   */
+  void closeStatisticsFile();
 
 private:
   PhaseType cached_phase_                  = no_lb_phase;
@@ -227,7 +285,11 @@ private:
   std::shared_ptr<LoadModel> model_;
   std::unordered_map<std::string, LBProxyType> lb_instances_;
   StatisticMapType stats;
-  TimeType total_load = 0.;
+  TimeType total_load_from_model = 0.;
+  std::unique_ptr<lb::PhaseInfo> last_phase_info_ = nullptr;
+  bool before_lb_stats_ = true;
+  /// The appender for outputting statistics in JSON format
+  std::unique_ptr<util::json::BaseAppender> statistics_writer_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

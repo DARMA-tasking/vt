@@ -66,6 +66,8 @@
 #define vt_feature_cmake_libfort             @vt_feature_cmake_libfort@
 #define vt_feature_cmake_production_build    @vt_feature_cmake_production_build@
 #define vt_feature_cmake_debug_verbose       @vt_feature_cmake_debug_verbose@
+#define vt_feature_cmake_rdma_tests          @vt_feature_cmake_rdma_tests@
+
 
 #define vt_detected_max_num_nodes @cmake_detected_max_num_nodes@
 
@@ -80,6 +82,7 @@
 #cmakedefine vt_has_pclose
 #cmakedefine vt_has_sbrk
 #cmakedefine vt_has_mallinfo
+#cmakedefine vt_has_mallinfo2
 #cmakedefine vt_has_getrusage
 #cmakedefine vt_has_sysinfo
 #cmakedefine vt_has_mach_task_self
@@ -88,3 +91,5 @@
 #cmakedefine vt_has_unistd_h
 #cmakedefine vt_has_inttypes_h
 #cmakedefine vt_has_sysconf
+#cmakedefine vt_has_libunwind_h
+#cmakedefine vt_has_execinfo_h

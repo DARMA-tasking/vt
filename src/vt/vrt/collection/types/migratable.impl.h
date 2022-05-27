@@ -53,7 +53,7 @@ template <typename Serializer>
 void Migratable::serialize(Serializer& s) {
   MigrateHookBase::serialize(s);
   storage::Storable::serialize(s);
-  s | stats_;
+  s | lb_data_;
   s | elm_id_;
 }
 

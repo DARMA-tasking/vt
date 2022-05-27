@@ -114,6 +114,9 @@ TEST_F(TestModelNorm, test_model_norm_1) {
   test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
+  // ONLY because this is built on top of the StubModel do we expect false
+  EXPECT_FALSE(test_model->hasRawLoad());
+
   for (unsigned int iter = 0; iter < num_subphases; ++iter) {
     int objects_seen = 0;
     for (auto&& obj : *test_model) {

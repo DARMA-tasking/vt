@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# An example hook script to apply formatting style defined in .clang-format
+# on committed changes. Copy this to `.git/hooks/` to have it run after
+# every commit.
+# Prints the resulting changes if there are any.
+
+output=$(git clang-format HEAD~1)
+
+if [ "$output" != "" ]
+then
+    git diff
+fi

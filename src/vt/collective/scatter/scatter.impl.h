@@ -93,8 +93,8 @@ void Scatter::scatter(
   auto const& this_node = theContext()->getNode();
   scatter_msg->user_han = handler;
   if (this_node != root_node) {
-    theMsg()->sendMsgSz<ScatterMsg, scatterHandler>(
-      root_node, scatter_msg, sizeof(ScatterMsg) + combined_size
+    theMsg()->sendMsg<ScatterMsg, scatterHandler>(
+      root_node, scatter_msg
     );
   } else {
     scatterIn(scatter_msg.get());

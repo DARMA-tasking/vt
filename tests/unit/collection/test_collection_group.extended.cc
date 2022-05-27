@@ -207,4 +207,99 @@ TEST_F(TestCollectionGroup, test_collection_group_3) {
   EXPECT_EQ(elem_counter, -2 * numElems);
 }
 
+template <typename ColT>
+struct TestCollectionMsg : CollectionMessage<ColT> {
+  using MessageParentType = CollectionMessage<ColT>;
+  vt_msg_serialize_required();
+
+  explicit TestCollectionMsg(NodeType const node): node_{node} {
+    ::fmt::print("Creating TestCollectionMsg on node: {}\n", node_);
+  }
+
+  TestCollectionMsg() = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+
+    s | node_;
+
+    if (s.isPacking() || s.isUnpacking()) {
+      was_serialized_ = true;
+    }
+  }
+
+  NodeType fromNode() const { return node_; }
+
+  bool wasSerialized() const { return was_serialized_; }
+
+private:
+  NodeType node_{-1};
+  bool was_serialized_{false};
+};
+
+struct TestCollection : Collection<TestCollection, Index1D> {
+  void handleBroadcastMsg(TestCollectionMsg<TestCollection>* msg) {
+    auto const from_node = msg->fromNode();
+    auto const to_node = theContext()->getNode();
+    auto const was_serialized = msg->wasSerialized();
+
+    ::fmt::print(
+      "handleBroadcastMsg(): from node: {}, to node: {}, msg was serialized: {}\n",
+      from_node, to_node, was_serialized
+    );
+
+    // Even if msg was sent locally, it is still serialized,
+    // and the handler gots a fresh copy of it.
+    if (from_node == to_node) {
+      EXPECT_TRUE(was_serialized);
+    }
+  }
+
+  void handleInvokeMsg(TestCollectionMsg<TestCollection>* msg) {
+    auto const from_node = msg->fromNode();
+    auto const to_node = theContext()->getNode();
+    auto const index = getIndex();
+    auto const was_serialized = msg->wasSerialized();
+
+    ::fmt::print(
+      "handleInvokeMsg(): from node: {}, to node: {}, index: {}, msg was serialized: {}\n",
+      from_node, to_node, index, was_serialized
+    );
+
+    // invoke() shouldn't serialize message.
+    if (from_node == to_node) {
+      EXPECT_FALSE(was_serialized);
+    }
+  }
+};
+
+TEST_F(TestCollectionGroup, test_collection_group_serialize_when_broadcast) {
+  auto const range = Index1D{static_cast<int>(theContext()->getNumNodes())};
+  auto const proxy =
+    makeCollection<TestCollection>().bounds(range).bulkInsert().wait();
+
+  // Broadcast from each node
+  runInEpochCollective([proxy] {
+    auto const this_node = theContext()->getNode();
+    auto msg = ::vt::makeMessage<TestCollectionMsg<TestCollection>>(this_node);
+
+    proxy.broadcastMsg<
+      TestCollectionMsg<TestCollection>, &TestCollection::handleBroadcastMsg
+    >(msg.get());
+  });
+}
+
+TEST_F(TestCollectionGroup, test_collection_group_dont_serialize_when_invoke) {
+  auto const range = Index1D{static_cast<int>(theContext()->getNumNodes())};
+  auto const proxy = makeCollection<TestCollection>().bounds(range).bulkInsert().wait();
+
+  runInEpochCollective([proxy] {
+    auto const this_node = theContext()->getNode();
+    proxy[this_node].invoke<
+      TestCollectionMsg<TestCollection>, &TestCollection::handleInvokeMsg
+    >(this_node);
+  });
+}
+
 }}} // end namespace vt::tests::unit

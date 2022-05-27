@@ -153,7 +153,9 @@ void GreedyLB::loadStats() {
   auto const& this_node = theContext()->getNode();
   auto avg_load = getAvgLoad();
   auto total_load = getSumLoad();
-  auto I = getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
+  auto I = getStats()->at(lb::Statistic::Rank_load_modeled).at(
+    lb::StatisticQuantity::imb
+  );
 
   bool should_lb = false;
   this_load_begin = this_load;
@@ -167,14 +169,20 @@ void GreedyLB::loadStats() {
   }
 
   if (this_node == 0) {
-    vt_print(
-      lb,
+    vt_debug_print(
+      terse, lb,
       "loadStats: load={}, total={}, avg={}, I={:.2f},"
       "should_lb={}, auto={}, threshold={}\n",
       TimeTypeWrapper(this_load / 1000), TimeTypeWrapper(total_load / 1000),
       TimeTypeWrapper(avg_load / 1000), I, should_lb, auto_threshold,
       TimeTypeWrapper(this_threshold / 1000)
     );
+    if (!should_lb) {
+      vt_print(
+        lb,
+        "GreedyLB decided to skip rebalancing due to low imbalance\n"
+      );
+    }
     fflush(stdout);
   }
 
@@ -380,15 +388,21 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
 }
 
 double GreedyLB::getAvgLoad() const {
-  return getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
+  return getStats()->at(lb::Statistic::Rank_load_modeled).at(
+    lb::StatisticQuantity::avg
+  );
 }
 
 double GreedyLB::getMaxLoad() const {
-  return getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
+  return getStats()->at(lb::Statistic::Rank_load_modeled).at(
+    lb::StatisticQuantity::max
+  );
 }
 
 double GreedyLB::getSumLoad() const {
-  return getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::sum);
+  return getStats()->at(lb::Statistic::Rank_load_modeled).at(
+    lb::StatisticQuantity::sum
+  );
 }
 
 void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {

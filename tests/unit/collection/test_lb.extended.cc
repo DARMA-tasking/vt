@@ -48,11 +48,12 @@
 #include "data_message.h"
 
 #include "vt/vrt/collection/manager.h"
-#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/json_appender.h"
 
 #include <nlohmann/json.hpp>
+#include <memory>
 
 #include <dirent.h>
 
@@ -196,31 +197,31 @@ INSTANTIATE_TEST_SUITE_P(
   LoadBalancerExplodeGreedy, TestLoadBalancerGreedy, balancers_greedy
 );
 
-struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
+struct TestParallelHarnessWithLBDataDumping : TestParallelHarnessParam<int> {
   virtual void addAdditionalArgs() override {
-    static char vt_lb_stats[]{"--vt_lb_stats"};
-    static char vt_lb_stats_dir[]{"--vt_lb_stats_dir=test_stats_dir"};
-    static char vt_lb_stats_file[]{"--vt_lb_stats_file=test_stats_outfile.%p.json"};
+    static char vt_lb_data[]{"--vt_lb_data"};
+    static char vt_lb_data_dir[]{"--vt_lb_data_dir=test_data_dir"};
+    static char vt_lb_data_file[]{"--vt_lb_data_file=test_data_outfile.%p.json"};
 
-    addArgs(vt_lb_stats, vt_lb_stats_dir, vt_lb_stats_file);
+    addArgs(vt_lb_data, vt_lb_data_dir, vt_lb_data_file);
   }
 };
 
-struct TestNodeStatsDumper : TestParallelHarnessWithStatsDumping {};
+struct TestNodeLBDataDumper : TestParallelHarnessWithLBDataDumping {};
 
-void closeNodeStatsFile(char const* file_path);
-int countCreatedStatsFiles(char const* path);
-void removeStatsOutputDir(char const* path);
-std::map<int, int> getPhasesFromStatsFile(const char* file_path);
+void closeNodeLBDataFile(char const* file_path);
+int countCreatedLBDataFiles(char const* path);
+void removeLBDataOutputDir(char const* path);
+std::map<int, int> getPhasesFromLBDataFile(const char* file_path);
 
-TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
+TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
   vt::theConfig()->vt_lb = true;
   vt::theConfig()->vt_lb_name = "GreedyLB";
   vt::theConfig()->vt_lb_interval = GetParam();
 
   if (vt::theContext()->getNode() == 0) {
     fmt::print(
-      "Testing dumping Node Stats with LB interval {}\n",
+      "Testing dumping Node LB data with LB interval {}\n",
       vt::theConfig()->vt_lb_interval
     );
   }
@@ -244,12 +245,12 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
   }
 
   // Finalize to get data output
-  theNodeStats()->finalize();
+  theNodeLBData()->finalize();
 
   using vt::util::json::Reader;
 
   vt::runInEpochCollective([=]{
-    Reader r(theConfig()->getLBStatsFileOut());
+    Reader r(theConfig()->getLBDataFileOut());
     auto json_ptr = r.readFile();
     auto& json = *json_ptr;
 
@@ -258,15 +259,15 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
   });
 
   if (vt::theContext()->getNode() == 0) {
-    removeStatsOutputDir(vt::theConfig()->vt_lb_stats_dir.c_str());
+    removeLBDataOutputDir(vt::theConfig()->vt_lb_data_dir.c_str());
   }
 
-  // Prevent NodeStats from closing files during finalize()
+  // Prevent NodeLBData from closing files during finalize()
   // All the tmp files are removed already
-  vt::theConfig()->vt_lb_stats = false;
+  vt::theConfig()->vt_lb_data = false;
 }
 
-int countCreatedStatsFiles(char const* path) {
+int countCreatedLBDataFiles(char const* path) {
   int files_counter = 0;
   if (auto* dir = opendir(path)) {
     while (auto* dir_ent = readdir(dir)) {
@@ -290,7 +291,7 @@ int countCreatedStatsFiles(char const* path) {
   return files_counter;
 }
 
-void removeStatsOutputDir(char const* path) {
+void removeLBDataOutputDir(char const* path) {
   if (auto* dir = opendir(path)) {
     while (auto* dir_ent = readdir(dir)) {
       if (
@@ -312,37 +313,31 @@ void removeStatsOutputDir(char const* path) {
 auto const intervals = ::testing::Values(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
 INSTANTIATE_TEST_SUITE_P(
-  NodeStatsDumperExplode, TestNodeStatsDumper, intervals
+  NodeLBDataDumperExplode, TestNodeLBDataDumper, intervals
 );
 
-using TestRestoreStatsData = TestParallelHarness;
+using TestRestoreLBData = TestParallelHarness;
 
-vt::vrt::collection::balance::StatsData
-getStatsDataForPhase(
-  vt::PhaseType phase,  vt::vrt::collection::balance::StatsData in
+vt::vrt::collection::balance::LBDataHolder
+getLBDataForPhase(
+  vt::PhaseType phase,  vt::vrt::collection::balance::LBDataHolder in
 ) {
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
-  using vt::vrt::collection::balance::StatsData;
+  using vt::vrt::collection::balance::LBDataHolder;
   using json = nlohmann::json;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
-  auto ap = std::make_unique<JSONAppender>("phases", std::move(ss), false);
+  auto ap = std::make_unique<JSONAppender>(
+    "phases", "LBDatafile", std::move(ss), false
+  );
   auto j = in.toJson(phase);
   ap->addElm(*j);
   ss = ap->finish();
   //fmt::print("{}\n", ss.str());
-  return StatsData{json::parse(ss)};
+  return LBDataHolder{json::parse(ss)};
 }
 
-TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
+TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
   auto this_node = vt::theContext()->getNode();
-  std::string out_file_name = "test_restore_stats_data_1.%p.json";
-  std::size_t rank = out_file_name.find("%p");
-  auto str_rank = std::to_string(this_node);
-  if (rank == std::string::npos) {
-    out_file_name = out_file_name + str_rank;
-  } else {
-    out_file_name.replace(rank, 2, str_rank);
-  }
 
   vt::vrt::collection::CollectionProxy<MyCol> proxy;
   auto const range = vt::Index1D(num_elms);
@@ -352,7 +347,7 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
     proxy = vt::theCollection()->constructCollective<MyCol>(range);
   });
 
-  vt::vrt::collection::balance::StatsData sd;
+  vt::vrt::collection::balance::LBDataHolder lbdh;
   PhaseType write_phase = 0;
 
   using CommKey = vt::elm::CommKey;
@@ -363,8 +358,8 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
 
   {
     PhaseType phase = write_phase;
-    sd.node_data_[phase];
-    sd.node_comm_[phase];
+    lbdh.node_data_[phase];
+    lbdh.node_comm_[phase];
 
     for (int i=0; i<num_elms; ++i) {
       vt::Index1D idx(i);
@@ -381,51 +376,51 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
 
         std::vector<TimeType> dur_vec(2);
         dur_vec[i % 2] = dur;
-        sd.node_data_[phase][elm_id].whole_phase_load = dur;
-        sd.node_data_[phase][elm_id].subphase_loads = dur_vec;
+        lbdh.node_data_[phase][elm_id].whole_phase_load = dur;
+        lbdh.node_data_[phase][elm_id].subphase_loads = dur_vec;
 
         CommKey ntockey(
           CommKey::NodeToCollectionTag{}, this_node, elm_id, false
         );
         CommVolume ntocvol{ntoc, ntocm};
-        sd.node_comm_[phase][ntockey] = ntocvol;
-        sd.node_subphase_comm_[phase][i % 2][ntockey] = ntocvol;
+        lbdh.node_comm_[phase][ntockey] = ntocvol;
+        lbdh.node_subphase_comm_[phase][i % 2][ntockey] = ntocvol;
 
         CommKey ctonkey(
           CommKey::CollectionToNodeTag{}, elm_id, this_node, false
         );
         CommVolume ctonvol{cton, ctonm};
-        sd.node_comm_[phase][ctonkey] = ctonvol;
-        sd.node_subphase_comm_[phase][(i + 1) % 2][ctonkey] = ctonvol;
+        lbdh.node_comm_[phase][ctonkey] = ctonvol;
+        lbdh.node_subphase_comm_[phase][(i + 1) % 2][ctonkey] = ctonvol;
 
         std::vector<uint64_t> arr;
         arr.push_back(idx.x());
-        sd.node_idx_[elm_id] = std::make_tuple(proxy.getProxy(), arr);
+        lbdh.node_idx_[elm_id] = std::make_tuple(proxy.getProxy(), arr);
       }
     }
   }
 
-  auto sd_read = getStatsDataForPhase(write_phase, sd);
+  auto lbdh_read = getLBDataForPhase(write_phase, lbdh);
 
   // whole-phase loads
-  EXPECT_EQ(sd_read.node_data_.size(), sd.node_data_.size());
-  if (sd_read.node_data_.size() != sd.node_data_.size()) {
+  EXPECT_EQ(lbdh_read.node_data_.size(), lbdh.node_data_.size());
+  if (lbdh_read.node_data_.size() != lbdh.node_data_.size()) {
     fmt::print(
       "Wrote {} phases of whole-phase load data but read in {} phases",
-      sd.node_data_.size(), sd_read.node_data_.size()
+      lbdh.node_data_.size(), lbdh_read.node_data_.size()
     );
   } else {
     // compare the whole-phase load data in detail
-    for (auto &phase_data : sd.node_data_) {
+    for (auto &phase_data : lbdh.node_data_) {
       auto phase = phase_data.first;
-      EXPECT_FALSE(sd_read.node_data_.find(phase) == sd_read.node_data_.end());
-      if (sd_read.node_data_.find(phase) == sd_read.node_data_.end()) {
+      EXPECT_FALSE(lbdh_read.node_data_.find(phase) == lbdh_read.node_data_.end());
+      if (lbdh_read.node_data_.find(phase) == lbdh_read.node_data_.end()) {
         fmt::print(
           "Phase {} in whole-phase loads were not read in",
           phase
         );
       } else {
-        auto &read_load_map = sd_read.node_data_[phase];
+        auto &read_load_map = lbdh_read.node_data_[phase];
         auto &orig_load_map = phase_data.second;
         for (auto &entry : read_load_map) {
           auto read_elm_id = entry.first;
@@ -465,25 +460,25 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
   }
 
   // element id to index mapping
-  EXPECT_EQ(sd_read.node_idx_.size(), sd.node_idx_.size());
-  if (sd_read.node_idx_.size() != sd.node_idx_.size()) {
+  EXPECT_EQ(lbdh_read.node_idx_.size(), lbdh.node_idx_.size());
+  if (lbdh_read.node_idx_.size() != lbdh.node_idx_.size()) {
     fmt::print(
       "Wrote index mapping for {} elements but read in {}",
-      sd.node_idx_.size(), sd_read.node_idx_.size()
+      lbdh.node_idx_.size(), lbdh_read.node_idx_.size()
     );
   } else {
     // detailed comparison of element id to index mapping
-    for (auto &entry : sd_read.node_idx_) {
+    for (auto &entry : lbdh_read.node_idx_) {
       auto read_elm_id = entry.first;
-      EXPECT_FALSE(sd.node_idx_.find(read_elm_id) == sd.node_idx_.end());
-      if (sd.node_idx_.find(read_elm_id) == sd.node_idx_.end()) {
+      EXPECT_FALSE(lbdh.node_idx_.find(read_elm_id) == lbdh.node_idx_.end());
+      if (lbdh.node_idx_.find(read_elm_id) == lbdh.node_idx_.end()) {
         fmt::print(
           "Unexpected element ID read in index mapping: "
           "id={}, home={}, curr={}",
           read_elm_id.id, read_elm_id.getHomeNode(), read_elm_id.curr_node
         );
       } else {
-        auto orig_idx = sd.node_idx_[read_elm_id];
+        auto orig_idx = lbdh.node_idx_[read_elm_id];
         auto read_idx = entry.second;
         EXPECT_EQ(orig_idx, read_idx);
         if (orig_idx != read_idx) {
@@ -497,19 +492,170 @@ TEST_F(TestRestoreStatsData, test_restore_stats_data_1) {
   }
 
   // whole-phase communication
-  EXPECT_EQ(sd_read.node_comm_.size(), sd.node_comm_.size());
-  if (sd_read.node_comm_.size() != sd.node_comm_.size()) {
+  EXPECT_EQ(lbdh_read.node_comm_.size(), lbdh.node_comm_.size());
+  if (lbdh_read.node_comm_.size() != lbdh.node_comm_.size()) {
     fmt::print(
       "Wrote {} phases of whole-phase comm data but read in {} phases",
-      sd.node_comm_.size(), sd_read.node_comm_.size()
+      lbdh.node_comm_.size(), lbdh_read.node_comm_.size()
     );
   }
   // @todo: detailed comparison of whole-phase comm data
 
   // @todo: compare subphase comm when writing/reading is implemented
   // @todo: detailed comparison of subphase comm data
+}
 
-  // @todo: clean up files
+struct TestDumpUserdefinedData : TestParallelHarnessParam<bool> { };
+
+std::string
+getJsonStringForPhase(
+  vt::PhaseType phase, vt::vrt::collection::balance::LBDataHolder in
+) {
+  using vt::vrt::collection::balance::LBDataHolder;
+  using JSONAppender = vt::util::json::Appender<std::stringstream>;
+  std::stringstream ss{std::ios_base::out | std::ios_base::in};
+  auto ap = std::make_unique<JSONAppender>(
+    "phases", "LBDatafile", std::move(ss), false
+  );
+  auto j = in.toJson(phase);
+  ap->addElm(*j);
+  ss = ap->finish();
+  return ss.str();
+}
+
+TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
+  bool should_dump = GetParam();
+
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
+
+  vt::vrt::collection::CollectionProxy<MyCol> proxy;
+  auto const range = vt::Index1D(num_nodes * 1);
+
+  // Construct a collection
+  runInEpochCollective([&] {
+    proxy = vt::theCollection()->constructCollective<MyCol>(range);
+  });
+
+  vt::vrt::collection::balance::LBDataHolder lbdh;
+  PhaseType write_phase = 0;
+
+  {
+    PhaseType phase = write_phase;
+    lbdh.node_data_[phase];
+    lbdh.node_comm_[phase];
+
+    vt::Index1D idx(this_node * 1);
+    auto elm_ptr = proxy(idx).tryGetLocalPtr();
+    EXPECT_NE(elm_ptr, nullptr);
+    if (elm_ptr != nullptr) {
+      auto elm_id = elm_ptr->getElmID();
+      elm_ptr->valInsert("hello", std::string("world"), should_dump);
+      elm_ptr->valInsert("elephant", 123456789, should_dump);
+      lbdh.user_defined_json_[phase][elm_id] = std::make_shared<nlohmann::json>(
+        elm_ptr->toJson()
+      );
+      lbdh.node_data_[phase][elm_id].whole_phase_load = 1.0;
+    }
+  }
+
+  auto json_str = getJsonStringForPhase(write_phase, lbdh);
+  fmt::print("{}\n", json_str);
+  if (should_dump) {
+    EXPECT_NE(json_str.find("user_defined"), std::string::npos);
+    EXPECT_NE(json_str.find("hello"), std::string::npos);
+    EXPECT_NE(json_str.find("world"), std::string::npos);
+    EXPECT_NE(json_str.find("elephant"), std::string::npos);
+    EXPECT_NE(json_str.find("123456789"), std::string::npos);
+  } else {
+    EXPECT_EQ(json_str.find("user_defined"), std::string::npos);
+    EXPECT_EQ(json_str.find("hello"), std::string::npos);
+    EXPECT_EQ(json_str.find("world"), std::string::npos);
+    EXPECT_EQ(json_str.find("elephant"), std::string::npos);
+    EXPECT_EQ(json_str.find("123456789"), std::string::npos);
+  }
+}
+
+auto const booleans = ::testing::Values(false, true);
+
+INSTANTIATE_TEST_SUITE_P(
+  DumpUserdefinedDataExplode, TestDumpUserdefinedData, booleans
+);
+
+struct SerializationTestCol : vt::Collection<SerializationTestCol, vt::Index1D> {
+  template <typename SerializerT> void serialize(SerializerT &s) {
+    vt::Collection<SerializationTestCol, vt::Index1D>::serialize(s);
+
+    if (s.isSizing()) {
+      s | was_packed | was_unpacked | packed_on_node | unpacked_on_node;
+      return;
+    }
+
+    was_packed = was_unpacked = false;
+    packed_on_node = unpacked_on_node = -1;
+
+    if (s.isPacking()) {
+      was_packed = true;
+      packed_on_node = theContext()->getNode();
+    }
+
+    s | was_packed | was_unpacked | packed_on_node | unpacked_on_node;
+
+    if (s.isUnpacking()) {
+      was_unpacked = true;
+      unpacked_on_node = theContext()->getNode();
+    }
+  }
+
+  bool was_packed = false;
+  bool was_unpacked = false;
+  int packed_on_node = -1;
+  int unpacked_on_node = -1;
+};
+
+using SerializationTestMsg = vt::CollectionMessage<SerializationTestCol>;
+
+void serializationColHandler(SerializationTestMsg *, SerializationTestCol *col) {
+  auto const cur_phase = thePhase()->getCurrentPhase();
+  if (cur_phase < 2) {
+    return;
+  }
+
+  EXPECT_TRUE(col->was_packed);
+  EXPECT_TRUE(col->was_unpacked);
+  EXPECT_EQ(col->packed_on_node, col->unpacked_on_node);
+}
+
+void runSerializationTest() {
+  theConfig()->vt_lb = true;
+  theConfig()->vt_lb_self_migration = true;
+  theConfig()->vt_lb_name = "TestSerializationLB";
+  if (theContext()->getNode() == 0) {
+    ::fmt::print("Testing LB: TestSerializationLB\n");
+  }
+
+  theCollective()->barrier();
+
+  auto range = Index1D{8};
+  vrt::collection::CollectionProxy<SerializationTestCol> proxy;
+
+  runInEpochCollective([&] {
+    proxy = theCollection()->constructCollective<SerializationTestCol>(range);
+  });
+
+  for (int phase = 0; phase < num_phases; ++phase) {
+    runInEpochCollective([&] {
+      proxy.broadcastCollective<SerializationTestMsg, serializationColHandler>();
+    });
+    thePhase()->nextPhaseCollective();
+  }
+}
+
+struct TestLoadBalancerTestSerializationLB : TestParallelHarness {};
+
+TEST_F(TestLoadBalancerTestSerializationLB, test_TestSerializationLB_load_balancer) {
+  theCollective()->barrier();
+  runSerializationTest();
 }
 
 }}}} // end namespace vt::tests::unit::lb

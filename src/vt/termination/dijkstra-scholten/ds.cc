@@ -274,9 +274,9 @@ void TermDS<CommType>::tryLast() {
 
   vt_debug_print(
     normal, termds,
-    "tryLast: parent={}, D={}, C={}, emc={}, reqedParent={}, "
+    "tryLast: epoch={:x}, parent={}, D={}, C={}, emc={}, reqedParent={}, "
     "ackedParent={}, engageEq={}\n",
-    parent, D, C, engagementMessageCount, reqedParent, ackedParent,
+    epoch_, parent, D, C, engagementMessageCount, reqedParent, ackedParent,
     engageEq
   );
 
@@ -293,8 +293,8 @@ void TermDS<CommType>::tryLast() {
 
     vt_debug_print(
       normal, termds,
-      "successful tryLast: parent={}, emc={}, a.pred={}\n",
-      parent, engagementMessageCount, a.pred
+      "successful tryLast: epoch={:x}, parent={}, emc={}, a.pred={}\n",
+      epoch_, parent, engagementMessageCount, a.pred
     );
 
     if (a.pred == self) {

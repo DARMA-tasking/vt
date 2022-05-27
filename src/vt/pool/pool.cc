@@ -66,7 +66,10 @@ Pool::Pool()
 
 Pool::ePoolSize Pool::getPoolType(
   size_t const& num_bytes, size_t const& oversize
-) {
+) const {
+  // Header size is accounted for internally in MemoryPoolEqual
+  // Blocks will include header size, but getNumBytes won't so we shouldn't count
+  // it here
   auto const& total_bytes = num_bytes + oversize;
   if (total_bytes <= static_cast<size_t>(small_msg->getNumBytes())) {
     return ePoolSize::Small;
@@ -164,14 +167,6 @@ void Pool::defaultDealloc(void* const ptr) {
 }
 
 void* Pool::alloc(size_t const& num_bytes, size_t oversize) {
-  /*
-   * Padding for the extra handler typically required for oversize serialized
-   * sends
-   */
-  if (oversize != 0) {
-    oversize += 16;
-  }
-
   void* ret = nullptr;
 
   #if vt_check_enabled(memory_pool)
@@ -232,7 +227,7 @@ void Pool::dealloc(void* const buf) {
   }
 }
 
-Pool::SizeType Pool::remainingSize(void* const buf) {
+Pool::SizeType Pool::remainingSize(void* const buf) const {
   #if vt_check_enabled(memory_pool)
     auto buf_char = static_cast<char*>(buf);
     auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
@@ -250,6 +245,23 @@ Pool::SizeType Pool::remainingSize(void* const buf) {
   #else
     return 0;
   #endif
+}
+
+Pool::SizeType Pool::allocatedSize(void* const buf) const {
+  auto buf_char = static_cast<char*>(buf);
+  return HeaderManagerType::getHeaderBytes(buf_char) + HeaderManagerType::getHeaderOversizeBytes(buf_char);
+}
+
+bool
+Pool::tryGrowAllocation(void* buf, size_t grow_amount) {
+  // For non-pooled alloc, this condition will always be true
+  // since remainingSize(buf) would be 0
+  if ( remainingSize(buf) < grow_amount )
+    return false;
+
+  auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(reinterpret_cast<char*>(buf)));
+  header->alloc_size += grow_amount;
+  return true;
 }
 
 void Pool::initWorkerPools(WorkerCountType const& num_workers) {

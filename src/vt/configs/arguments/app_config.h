@@ -135,21 +135,25 @@ struct AppConfig {
   bool vt_trace_event_polling     = false;
   bool vt_trace_irecv_polling     = false;
 
-  bool vt_lb                  = false;
-  bool vt_lb_show_spec        = false;
-  bool vt_lb_quiet            = false;
-  std::string vt_lb_file_name = "";
-  std::string vt_lb_name      = "NoLB";
-  std::string vt_lb_args      = "";
-  int32_t vt_lb_interval      = 1;
-  bool vt_lb_keep_last_elm    = false;
-  bool vt_lb_stats            = false;
-  bool vt_lb_stats_compress   = true;
-  std::string vt_lb_stats_dir     = "vt_lb_stats";
-  std::string vt_lb_stats_file    = "stats.%p.json";
-  std::string vt_lb_stats_dir_in  = "vt_lb_stats_in";
-  std::string vt_lb_stats_file_in = "stats.%p.json";
-  bool vt_help_lb_args        = false;
+  bool vt_lb                     = false;
+  bool vt_lb_show_spec           = false;
+  bool vt_lb_quiet               = false;
+  std::string vt_lb_file_name    = "";
+  std::string vt_lb_name         = "NoLB";
+  std::string vt_lb_args         = "";
+  int32_t vt_lb_interval         = 1;
+  bool vt_lb_keep_last_elm       = false;
+  bool vt_lb_data                = false;
+  bool vt_lb_data_compress       = true;
+  std::string vt_lb_data_dir     = "vt_lb_data";
+  std::string vt_lb_data_file    = "data.%p.json";
+  std::string vt_lb_data_dir_in  = "vt_lb_data_in";
+  std::string vt_lb_data_file_in = "data.%p.json";
+  bool vt_lb_statistics           = true;
+  bool vt_lb_statistics_compress  = true;
+  std::string vt_lb_statistics_file = "vt_lb_statistics.%t.json";
+  bool vt_help_lb_args           = false;
+  bool vt_lb_self_migration      = false;
 
   bool vt_no_detect_hang       = false;
   bool vt_print_no_progress    = true;
@@ -245,8 +249,9 @@ struct AppConfig {
   /// Does not include argv[0]. Original char* objects.
   std::vector<char*> passthru_args;
 
-  std::string getLBStatsFileOut() const;
-  std::string getLBStatsFileIn() const;
+  std::string getLBDataFileOut() const;
+  std::string getLBDataFileIn() const;
+  std::string getLBStatisticsFile() const;
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -307,13 +312,17 @@ struct AppConfig {
       | vt_lb_name
       | vt_lb_args
       | vt_lb_interval
-      | vt_lb_stats
-      | vt_lb_stats_compress
-      | vt_lb_stats_dir
-      | vt_lb_stats_file
-      | vt_lb_stats_dir_in
-      | vt_lb_stats_file_in
+      | vt_lb_data
+      | vt_lb_data_compress
+      | vt_lb_data_dir
+      | vt_lb_data_file
+      | vt_lb_data_dir_in
+      | vt_lb_data_file_in
+      | vt_lb_statistics
+      | vt_lb_statistics_compress
+      | vt_lb_statistics_file
       | vt_help_lb_args
+      | vt_lb_self_migration
 
       | vt_no_detect_hang
       | vt_print_no_progress

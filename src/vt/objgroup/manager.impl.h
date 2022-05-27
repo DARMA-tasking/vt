@@ -105,17 +105,16 @@ ObjGroupManager::makeCollective(std::unique_ptr<ObjT> obj) {
 template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
 ObjGroupManager::makeCollectiveObj(ObjT* obj, HolderBasePtrType holder) {
-  auto const obj_type_idx = registry::makeObjIdx<ObjT>();
   auto const obj_ptr = reinterpret_cast<void*>(obj);
-  auto const proxy = makeCollectiveImpl(std::move(holder),obj_type_idx,obj_ptr);
+  auto const proxy = makeCollectiveImpl(std::move(holder), obj_ptr);
   auto iter = objs_.find(proxy);
   vtAssert(iter != objs_.end(), "Obj must exist on this node");
   HolderBaseType* h = iter->second.get();
   h->setElmID(getNextElm(proxy));
   vt_debug_print(
     terse, objgroup,
-    "makeCollectiveObj: obj_type_idx={}, proxy={:x}\n",
-    obj_type_idx, proxy
+    "makeCollectiveObj: proxy={:x}\n",
+    proxy
   );
   regObjProxy<ObjT>(obj, proxy);
   return ProxyType<ObjT>{proxy};
@@ -131,22 +130,6 @@ ObjGroupManager::makeCollective(MakeFnType<ObjT> fn) {
 template <typename ObjT>
 void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   auto const proxy_bits = proxy.getProxy();
-  auto derived_iter = derived_to_bases_.find(proxy_bits);
-  vt_debug_print(
-    terse, objgroup,
-    "destroyCollective: proxy={:x}, num bases={}\n", proxy_bits,
-    derived_iter != derived_to_bases_.end() ? derived_iter->second.size() : 0
-  );
-  if (derived_iter != derived_to_bases_.end()) {
-    auto base_set = derived_iter->second;
-    for (auto&& base_proxy : base_set) {
-      auto iter = dispatch_.find(base_proxy);
-      if (iter != dispatch_.end()) {
-        dispatch_.erase(iter);
-      }
-    }
-    derived_to_bases_.erase(derived_iter);
-  }
   auto iter = dispatch_.find(proxy_bits);
   if (iter != dispatch_.end()) {
     auto ptr = iter->second->objPtr();
@@ -193,56 +176,6 @@ void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
   }
 }
 
-
-template <typename ObjT, typename BaseT>
-void ObjGroupManager::registerBaseCollective(ProxyType<ObjT> proxy) {
-  auto const derived = proxy.getProxy();
-  auto base_proxy = derived;
-  auto const base_idx = registry::makeObjIdx<BaseT>();
-  proxy::ObjGroupProxy::setTypeIdx(base_proxy, base_idx);
-  vt_debug_print(
-    normal, objgroup,
-    "ObjGroupManager::registerBaseCollective: derived={:x}, base={:x}\n",
-    derived, base_proxy
-  );
-  derived_to_bases_[derived].insert(base_proxy);
-  auto iter = dispatch_.find(derived);
-  vtAssertExpr(iter != dispatch_.end());
-  if (iter != dispatch_.end()) {
-    void* obj_ptr = iter->second->objPtr();
-    auto ptr = static_cast<BaseT*>(obj_ptr);
-    DispatchBasePtrType b = std::make_unique<dispatch::Dispatch<BaseT>>(base_proxy,ptr);
-    dispatch_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(base_proxy),
-      std::forward_as_tuple(std::move(b))
-    );
-  }
-}
-
-template <typename ObjT, typename BaseT>
-void ObjGroupManager::downcast(ProxyType<ObjT> proxy) {
-  auto const derived = proxy.getProxy();
-  auto base_proxy = derived;
-  auto const base_idx = registry::makeObjIdx<BaseT>();
-  proxy::ObjGroupProxy::setTypeIdx(base_proxy, base_idx);
-  vt_debug_print(
-    verbose, objgroup,
-    "ObjGroupManager::downcast: derived={:x}, base={:x}\n",
-    derived, base_proxy
-  );
-  auto iter = derived_to_bases_[derived].find(base_proxy);
-  if (iter == derived_to_bases_[derived].end()) {
-    vtAssert(
-      false, "Invoke registerBaseCollective on base class before downcast"
-    );
-  }
-}
-
-template <typename ObjT, typename DerivedT>
-void ObjGroupManager::upcast(ProxyType<ObjT> proxy) {
-}
-
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
 void ObjGroupManager::setTraceName(
   ProxyType<ObjT> proxy, std::string const& name, std::string const& parent
@@ -254,7 +187,7 @@ void ObjGroupManager::setTraceName(
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
+ObjGroupManager::PendingSendType ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const proxy_bits = proxy.getProxy();
   auto const dest_node = proxy.getNode();
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
@@ -262,7 +195,7 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
 
   // set bit so it isn't recorded as it routes through bare
   // handlers
-  envelopeSetCommStatsRecordedAboveBareHandler(msg->env, true);
+  envelopeSetCommLBDataRecordedAboveBareHandler(msg->env, true);
 
   if (theContext()->getTask() != nullptr) {
     auto dest_elm_id = elm::ElmIDBits::createObjGroup(proxy_bits, dest_node);
@@ -276,7 +209,7 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
     proxy_bits, dest_node, ctrl, han
   );
 
-  send<MsgT>(msg,han,dest_node);
+  return send<MsgT>(msg,han,dest_node);
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
@@ -316,7 +249,7 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
 
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
+ObjGroupManager::PendingSendType ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const proxy_bits = proxy.getProxy();
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
@@ -327,11 +260,11 @@ void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
     proxy_bits, ctrl, han
   );
 
-  broadcast<MsgT>(msg, han);
+  return broadcast<MsgT>(msg, han);
 }
 
 template <typename MsgT>
-void ObjGroupManager::send(
+ObjGroupManager::PendingSendType ObjGroupManager::send(
   MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node
 ) {
   return objgroup::send(msg,han,dest_node);
@@ -345,7 +278,7 @@ void ObjGroupManager::invoke(
 }
 
 template <typename MsgT>
-void ObjGroupManager::broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
+ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
   return objgroup::broadcast(msg,han);
 }
 

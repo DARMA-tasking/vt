@@ -106,7 +106,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
     }
     sub_proxy = SubType::construct(true, range, true, map_han);
     // Register the migration listener
-    ListenerType fn = [=](ElementListener event, IndexT lidx) {
+    ListenerType fn = [=](ElementListener event, IndexT lidx, NodeType) {
       if (event == ElementListener::ElementMigratedOut) {
         sub_proxy.get()->migratedOutIndex(lidx);
       } else if (event == ElementListener::ElementMigratedIn) {

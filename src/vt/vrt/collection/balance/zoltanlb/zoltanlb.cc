@@ -134,7 +134,7 @@ void ZoltanLB::runLB(TimeType total_load) {
   this_load = loadMilli(total_load);
 
   if (this_node == 0) {
-    vt_print(lb, "ZoltanLB: runLB: edges={}\n", do_edges_);
+    vt_debug_print(terse, lb, "ZoltanLB: runLB: edges={}\n", do_edges_);
     fflush(stdout);
   }
 

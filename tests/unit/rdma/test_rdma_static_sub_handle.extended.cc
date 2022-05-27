@@ -49,6 +49,8 @@
 
 namespace vt { namespace tests { namespace unit {
 
+#if vt_check_enabled(rdma_tests)
+
 struct TestObjGroupExt {
   using ProxyType = vt::objgroup::proxy::Proxy<TestObjGroupExt>;
 
@@ -389,5 +391,7 @@ INSTANTIATE_TYPED_TEST_SUITE_P(
   test_rdma_handle_set, TestRDMAHandleSet, RDMASetTestTypes,
   DEFAULT_NAME_GEN
 );
+
+#endif /*vt_check_enabled(rdma_tests)*/
 
 }}} /* end namespace vt::tests::unit */

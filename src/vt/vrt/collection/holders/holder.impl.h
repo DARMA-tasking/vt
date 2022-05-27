@@ -195,17 +195,20 @@ int Holder<IndexT>::addListener(listener::ListenFnType<IndexT> fn) {
 
 template <typename IndexT>
 void Holder<IndexT>::removeListener(int element) {
-  vtAssert(event_listeners_.size() > element, "Listener must exist");
+  vtAssert(
+    event_listeners_.size() > static_cast<size_t>(element),
+    "Listener must exist"
+  );
   event_listeners_[element] = nullptr;
 }
 
 template <typename IndexT>
 void Holder<IndexT>::applyListeners(
-  listener::ElementEventEnum event, IndexT const& idx
+  listener::ElementEventEnum event, IndexT const& idx, NodeType home_node
 ) {
   for (auto&& l : event_listeners_) {
     if (l) {
-      l(event, idx);
+      l(event, idx, home_node);
     }
   }
 }

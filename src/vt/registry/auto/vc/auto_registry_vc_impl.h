@@ -63,7 +63,8 @@ inline HandlerType makeAutoHandlerVC() {
 
   auto const id =
     RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
-  return HandlerManager::makeHandler(false, false, id);
+  constexpr auto reg_type = RegistryTypeEnum::RegVrt;
+  return HandlerManager::makeHandler(false, false, id, reg_type);
 }
 
 inline AutoActiveVCType const& getAutoHandlerVC(HandlerType const handler) {

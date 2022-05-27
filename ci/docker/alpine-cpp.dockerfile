@@ -1,9 +1,8 @@
 
 ARG arch=amd64
-FROM alpine:3.13 as base
+FROM alpine:3.16 as base
 
 ARG proxy=""
-ARG compiler=clang
 
 ENV https_proxy=${proxy} \
     http_proxy=${proxy}
@@ -20,7 +19,7 @@ RUN apk add --no-cache \
         cmake \
         dpkg \
         libdwarf-dev \
-        libexecinfo-dev \
+        libunwind-dev \
         libtool \
         linux-headers \
         m4 \
@@ -47,8 +46,7 @@ ENV CC=clang \
 COPY ./ci/deps/mpich.sh mpich.sh
 RUN ./mpich.sh 3.3.2 -j4
 
-ENV CMAKE_EXE_LINKER_FLAGS="-lexecinfo" \
-    CC=mpicc \
+ENV CC=mpicc \
     CXX=mpicxx \
     PATH=/usr/lib/ccache/:$PATH
 

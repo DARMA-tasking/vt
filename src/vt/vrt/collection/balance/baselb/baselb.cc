@@ -48,7 +48,7 @@
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/timing/timing.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
@@ -64,7 +64,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   objgroup::proxy::Proxy<BaseLB> proxy,
   balance::LoadModel* model,
   StatisticMapType const& in_stats,
-  ElementCommType const& in_comm_stats,
+  ElementCommType const& in_comm_lb_data,
   TimeType total_load
 ) {
   start_time_ = timing::getCurrentTime();
@@ -72,7 +72,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   proxy_ = proxy;
   load_model_ = model;
 
-  importProcessorData(in_stats, in_comm_stats);
+  importProcessorData(in_stats, in_comm_lb_data);
 
   runInEpochCollective("BaseLB::startLB -> runLB", [this,total_load]{
     getArgs(phase_);
@@ -94,7 +94,7 @@ void BaseLB::importProcessorData(
 ) {
   vt_debug_print(
     normal, lb,
-    "importProcessorData: load stats size={}, load comm size={}\n",
+    "importProcessorData: load data size={}, load comm size={}\n",
     load_model_->getNumObjects(), comm_in.size()
   );
 
@@ -142,11 +142,10 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
     auto const new_node = std::get<1>(transfer);
     auto const current_node = obj_id.curr_node;
 
-    // self-migration
     if (current_node == new_node) {
-      // Filter out self-migrations entirely
-      continue;
-      // vtAbort("Not currently implemented -- self-migration");
+      vt_debug_print(
+        verbose, lb, "BaseLB::normalizeReassignments(): self migration\n"
+       );
     }
 
     // the object lives here, so it's departing.
@@ -187,7 +186,12 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
       auto const load_summary = getObjectLoads(
         load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
-      depart_map[dest].push_back(std::make_tuple(obj_id, load_summary));
+      auto const raw_load_summary = getObjectRawLoads(
+        load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      depart_map[dest].push_back(
+        std::make_tuple(obj_id, load_summary, raw_load_summary)
+      );
     }
 
     for (auto&& depart_list : depart_map) {
@@ -223,12 +227,15 @@ void BaseLB::notifyNewHostNodeOfObjectsArriving(
   for (auto&& arrival : arrival_list) {
     auto const obj_id = std::get<0>(arrival);
     auto const& load_summary = std::get<1>(arrival);
-    pending_reassignment_->arrive_[obj_id] = load_summary;
+    auto const& raw_load_summary = std::get<2>(arrival);
+    pending_reassignment_->arrive_[obj_id] = std::make_tuple(
+      load_summary, raw_load_summary
+    );
   }
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
-  if (obj_id.curr_node != to) {
+  if (obj_id.curr_node != to || theConfig()->vt_lb_self_migration) {
     transfers_.push_back(TransferDestType{obj_id, to});
   }
 }
@@ -240,13 +247,14 @@ void BaseLB::finalize(CountMsg* msg) {
   }
 
   pending_reassignment_->global_migration_count = global_count;
+
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
-    vt_print(
-      lb,
-      "BaseLB::finalize: LB total time={}, total migration count={}\n",
-      total_time, global_count
+    vt_debug_print(
+      terse, lb,
+      "BaseLB::finalize: LB total time={}\n",
+      total_time
     );
     fflush(stdout);
   }

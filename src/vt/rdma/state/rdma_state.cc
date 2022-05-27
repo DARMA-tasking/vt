@@ -256,9 +256,7 @@ void State::getData(
       ::vt::HandlerType const reg_han =
         tag == no_tag or get_any_tag ? this_get_handler :
         std::get<2>(get_tag_holder.find(tag)->second);
-      trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
-        reg_han, auto_registry::RegistryTypeEnum::RegRDMAGet
-      );
+      trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(reg_han);
       trace::TraceEventIDType event = theContext()->getTraceEventCurrentTask();
       size_t msg_size = info.num_bytes;
 
@@ -325,9 +323,7 @@ void State::putData(
       ::vt::HandlerType const reg_han =
         tag == no_tag or put_any_tag ? this_put_handler :
         std::get<2>(put_tag_holder.find(tag)->second);
-      trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
-        reg_han, auto_registry::RegistryTypeEnum::RegRDMAPut
-      );
+      trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(reg_han);
       trace::TraceEventIDType event = theContext()->getTraceEventCurrentTask();
       size_t msg_size = info.num_bytes;
 

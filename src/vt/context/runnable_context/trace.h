@@ -60,8 +60,6 @@ namespace vt { namespace ctx {
  */
 struct Trace final : Base {
 
-  using RegistryEnumType = auto_registry::RegistryTypeEnum;
-
   /**
    * \brief Construct a new trace context (basic processing event)
    *
@@ -72,8 +70,7 @@ struct Trace final : Base {
    */
   template <typename MsgT>
   Trace(
-    MsgT const& msg, HandlerType const in_handler, NodeType const in_from_node,
-    RegistryEnumType in_han_type
+    MsgT const& msg, HandlerType const in_handler, NodeType const in_from_node
   );
 
   /**
@@ -93,8 +90,7 @@ struct Trace final : Base {
   Trace(
     MsgT const& msg, trace::TraceEventIDType const in_trace_event,
     HandlerType const in_handler, NodeType const in_from_node,
-    RegistryEnumType in_han_type, uint64_t in_idx1, uint64_t in_idx2,
-    uint64_t in_idx3, uint64_t in_idx4
+    uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
   );
 
   /**
@@ -120,8 +116,6 @@ private:
   bool is_traced_ = false;
   /// The from node
   NodeType from_node_ = uninitialized_destination;
-  /// The registry handler type enum
-  RegistryEnumType han_type_;
   /// The active handler for extracting trace info
   HandlerType handler_ = uninitialized_handler;
   /// The collection indices

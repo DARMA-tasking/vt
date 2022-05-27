@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/messaging/pending_send.fwd.h"
 
 namespace vt { namespace objgroup {
 
@@ -62,11 +63,11 @@ holder::HolderBase* getHolderBase(HandlerType handler);
 void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
 
 template <typename MsgT>
-void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
+messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
 template <typename MsgT>
 void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType node);
 template <typename MsgT>
-void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
+messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 
 }} /* end namespace vt::objgroup */
 

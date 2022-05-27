@@ -1,5 +1,6 @@
-
 # Bundled dependencies
+
+include(SetCXXCompilerFlags)
 
 # Export a minimum version flag for any bundled libraries that don't set their own
 set(CMAKE_CXX_STANDARD 14)
@@ -9,11 +10,14 @@ if (vt_libfort_enabled)
   set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
   add_subdirectory(${PROJECT_LIB_DIR}/libfort)
   set(FORT_LIBRARY fort)
+  set_darma_compiler_flags(${FORT_LIBRARY})
 endif()
 
 # Optionally include fcontext
 if (vt_fcontext_enabled)
+  set(FCONTEXT_LIBRARY fcontext)
   add_subdirectory(${PROJECT_LIB_DIR}/context)
+  set_darma_compiler_flags(${FCONTEXT_LIBRARY})
 endif()
 
 # CLI11 always included in the build
@@ -22,10 +26,12 @@ add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 # fmt always included in the build
 set(FMT_LIBRARY fmt)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
+set_darma_compiler_flags(${FMT_LIBRARY})
 
 # EngFormat-Cpp always included in the build
 set(ENG_FORMAT_LIBRARY EngFormat-Cpp)
 add_subdirectory(${PROJECT_LIB_DIR}/EngFormat-Cpp)
+set_darma_compiler_flags(${ENG_FORMAT_LIBRARY})
 
 # json library always included in the build
 set(JSON_BuildTests OFF)
@@ -40,6 +46,7 @@ set(BROTLI_BUNDLED_MODE OFF)
 set(BROTLI_BUILD_PORTABLE ON)
 set(BROTLI_LIBRARY brotlicommon-static brotlienc-static brotlidec-static)
 add_subdirectory(${PROJECT_LIB_DIR}/brotli)
+set_darma_compiler_flags(${BROTLI_LIBRARY})
 
 # Optionally include mimalloc (alternative memory allocator)
 if (vt_mimalloc_enabled)
@@ -49,6 +56,7 @@ if (vt_mimalloc_enabled)
   else()
     set(MIMALLOC_LIBRARY mimalloc)
   endif()
+  set_darma_compiler_flags(${MIMALLOC_LIBRARY})
 endif()
 
 # Check if sanitizers can be enabled

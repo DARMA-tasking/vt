@@ -160,11 +160,12 @@ struct State {
       | pending_tag_puts
       | user_state_get_msg_
       | user_state_put_msg_
-      | rdma_get_fn
-      | rdma_put_fn
       | no_rdma_handle
       | no_rdma_ptr
       | no_byte;
+
+    s.countBytes(rdma_get_fn);
+    s.countBytes(rdma_put_fn);
   }
 
   bool using_default_put_handler = false;

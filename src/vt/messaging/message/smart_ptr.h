@@ -102,18 +102,18 @@ struct MsgSharedPtr final {
 
   MsgSharedPtr(std::nullptr_t) {}
 
-  MsgSharedPtr(T* in, ByteType size=no_byte) {
-    init(in, size == no_byte ? sizeof(T) : size, statics::Holder::getImpl<T>());
+  MsgSharedPtr(T* in) {
+    init(in, statics::Holder::getImpl<T>());
   }
 
   // Overload to retain ORIGINAL type-erased implementation.
-  MsgSharedPtr(T* in, ByteType size, MsgPtrImplBase* impl) {
-    init(in, size, impl);
+  MsgSharedPtr(T* in, MsgPtrImplBase* impl) {
+    init(in, impl);
   }
 
-  MsgSharedPtr(MsgSharedPtr<T> const& in, ByteType size=no_byte) {
+  MsgSharedPtr(MsgSharedPtr<T> const& in) {
     if (in != nullptr) {
-      init(in.get(), (size == no_byte ? in.size() : size), in.impl_);
+      init(in.get(), in.impl_);
     }
   }
 
@@ -128,7 +128,7 @@ struct MsgSharedPtr final {
 
   MsgSharedPtr<T>& operator=(MsgSharedPtr<T> const& in) {
     clear();
-    init(in.get(), in.size(), in.impl_);
+    init(in.get(), in.impl_);
     return *this;
   }
 
@@ -152,7 +152,6 @@ struct MsgSharedPtr final {
   MsgSharedPtr<U> to() const {
     return MsgSharedPtr<U>(
       reinterpret_cast<U*>(ptr_),
-      size_, // retain ORIGINAL size
       /*N.B. retain ORIGINAL-type implementation*/ impl_);
   }
 
@@ -209,7 +208,10 @@ struct MsgSharedPtr final {
     vtAssert(
       ptr_, "Access attempted of invalid MsgPtr."
     );
-    return size_;
+
+    // Obtain the size of the message from the block allocated by the
+    // memory pool allocator
+    return thePool()->allocatedSize(ptr_);
   }
 
   /**
@@ -226,7 +228,7 @@ struct MsgSharedPtr final {
     auto nrefs = envelopeGetRef(m.get()->env);
     return os << "MsgSharedPtr("
               <<              m.ptr_    << ","
-              << "size=" << m.size_ << ","
+              << "size=" << m.size() << ","
               << "ref="    << nrefs
               << ")";
   }
@@ -245,7 +247,6 @@ struct MsgSharedPtr final {
 
       // skip footprinting of members, we rely on message size estimate instead
       s.skip(impl_);
-      s.skip(size_);
       s.skip(ptr_);
     }
   }
@@ -255,7 +256,7 @@ private:
   /// Performs state-ownership, always taking an additional message ref.
   /// Should probably be called every constructor; must ONLY be
   /// called from fresh (zero-init member) or clear() state.
-  void init(T* msgPtr, ByteType size, MsgPtrImplBase* impl) {
+  void init(T* msgPtr, MsgPtrImplBase* impl) {
     vtAssert(
       msgPtr,
       "MsgPtr cannot wrap 'null' messages."
@@ -264,7 +265,6 @@ private:
     assert("given impl" && impl);
 
     ptr_ = msgPtr;
-    size_ = size;
     impl_ = impl;
 
     // Could be moved to type-erased impl..
@@ -288,7 +288,6 @@ private:
   /// Move. Must be invoked on fresh/clear state.
   void moveFrom(MsgSharedPtr<T>&& in) {
     ptr_ = in.ptr_;
-    size_ = in.size_;
     impl_ = in.impl_;
     // clean take - nullify/prevent other cleanup
     in.ptr_ = nullptr;
@@ -297,8 +296,6 @@ private:
 private:
   // Underlying raw message - access as correct type via get()
   BaseMsgType* ptr_ = nullptr;
-  // Message size preserved before type erasure
-  ByteType size_ = no_byte;
   // Type-erased implementation support.
   // Object has a STATIC LIFETIME / is not owned / should not be deleted.
   MsgPtrImplBase* impl_ = nullptr;

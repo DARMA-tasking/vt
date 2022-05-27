@@ -17,7 +17,6 @@ get_directory_property(hasParent PARENT_DIRECTORY)
 include(cmake/check_system_functions.cmake)
 
 set(VIRTUAL_TRANSPORT_LIBRARY vt CACHE INTERNAL "" FORCE )
-set(FCONTEXT_LIBRARY fcontext)
 
 # Set the local module path so custom cmake scripts can be located automatically
 set(
@@ -38,18 +37,7 @@ endif()
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  add_compile_options(-fdiagnostics-color=always)
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  add_compile_options(-fcolor-diagnostics)
-endif()
-
-# Code coverage option of VT
 option(CODE_COVERAGE "Enable coverage reporting" OFF)
-# OPTION(CODE_COVERAGE_ENABLED FALSE)
-# if(CODE_COVERAGE_ENABLED)
-#     include(cmake/code_coverage.cmake)
-# endif(CODE_COVERAGE_ENABLED)
 
 set(MPI_EXTRA_FLAGS "" CACHE STRING "Flags to pass to mpirun/mpiexec")
 string(REPLACE " " ";" MPI_EXTRA_FLAGS_LIST "${MPI_EXTRA_FLAGS}")
@@ -111,7 +99,7 @@ add_subdirectory(src)
 option(VT_BUILD_TESTS "Build VT tests" ON)
 
 if (VT_BUILD_TESTS
-   AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+   AND "${CMAKE_PROJECT_NAME}" STREQUAL "${PROJECT_NAME}")
   # CTest implies enable_testing() and defines the BUILD_TESTING option.
   # The default of BUILD_TESTING is ON.
   # Testing is only enabled if the actual project being built is VT.

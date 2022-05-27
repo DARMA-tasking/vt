@@ -216,9 +216,9 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
 template <typename IndexT>
 struct MyDistMapper : vt::mapping::BaseMapper<IndexT> {
   static vt::ObjGroupProxyType construct() {
-    auto proxy =  vt::theObjGroup()->makeCollective<MyDistMapper<IndexT>>();
-    proxy.get()->proxy = proxy;
-    return proxy.getProxy();
+    auto prox =  vt::theObjGroup()->makeCollective<MyDistMapper<IndexT>>();
+    prox.get()->proxy = prox;
+    return prox.getProxy();
   }
 
   MyDistMapper()

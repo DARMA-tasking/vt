@@ -100,9 +100,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
 #if vt_check_enabled(trace_enabled)
   trace::TraceProcessingTag processing_tag;
   {
-    trace::TraceEntryIDType ep = auto_registry::handlerTraceID(
-      msg->sub_han, auto_registry::RegistryTypeEnum::RegGeneral
-    );
+    trace::TraceEntryIDType ep = auto_registry::handlerTraceID(msg->sub_han);
     trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);
 
     size_t msg_size = sizeof(*msg);

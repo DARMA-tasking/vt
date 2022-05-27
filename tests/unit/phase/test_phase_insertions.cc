@@ -75,7 +75,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index1D> {
     s | val;
   }
 
-  vt::PhaseType getPhase() { return this->getStats().getPhase(); }
+  vt::PhaseType getPhase() { return this->getLBData().getPhase(); }
 
   double val = 0.0;
 };

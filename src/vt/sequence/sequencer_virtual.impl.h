@@ -57,7 +57,6 @@ namespace vt { namespace seq {
 template <typename SeqTag, template <typename> class SeqTrigger>
 /*virtual*/ typename TaggedSequencerVrt<SeqTag, SeqTrigger>::SeqType
 TaggedSequencerVrt<SeqTag, SeqTrigger>::getNextID() {
-#pragma sst global seq_manager
   return this->seq_manager->nextSeqID(true);
 }
 

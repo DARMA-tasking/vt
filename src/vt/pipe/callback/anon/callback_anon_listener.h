@@ -63,7 +63,7 @@ struct AnonListener : CallbackBase<SignalT> {
   AnonListener() = default;
   AnonListener(AnonListener const&) = default;
   AnonListener(AnonListener&&) = default;
-  AnonListener(CallbackFnType const& in_fn, bool is_persist, RefType refs = -1);
+  AnonListener(CallbackFnType const& in_fn, bool is_persist, PipeRefType refs = -1);
   explicit AnonListener(CallbackFnType const& in_fn);
 
 private:

@@ -46,6 +46,8 @@
 
 #include "vt/config.h"
 
+#include <nlohmann/json.hpp>
+
 #include <checkpoint/checkpoint.h>
 
 #include <type_traits>
@@ -62,9 +64,22 @@ struct StoreElmBase {
   /// uses polymorphic serialization
   checkpoint_virtual_serialize_root()
 
+  using json = nlohmann::json;
+
   StoreElmBase() = default;
 
+  StoreElmBase(bool dump_to_json)
+    : dump_to_json_(dump_to_json)
+  {}
+
   virtual ~StoreElmBase() {}
+
+  /**
+   * \brief Generate the json if applicable
+   *
+   * \return the json
+   */
+  virtual nlohmann::json toJson() = 0;
 
   /**
    * \brief Get the value as \c T
@@ -88,7 +103,49 @@ struct StoreElmBase {
    * \param[in] s the serializer
    */
   template <typename SerializerT>
-  void serialize(SerializerT& s) { }
+  void serialize(SerializerT& s) {
+    s | dump_to_json_;
+  }
+
+  /**
+   * \brief Whether the value should be dumped to the json LB data file
+   *
+   * \return whether to dump
+   */
+  bool shouldJson() const { return dump_to_json_; }
+
+  /**
+   * \brief Generate the json because it is jsonable
+   *
+   * \param[in] u the data to convert to json
+   */
+  template <typename U>
+  static json maybeGenerateJson(
+    const U& u, typename std::enable_if<
+      nlohmann::detail::has_to_json<json,U>::value
+    >::type* = nullptr
+  ) {
+    json j(u);
+    return j;
+  }
+
+  /**
+   * \brief Abort because it is not jsonable
+   *
+   * \param[in] u the data that cannot be converted to json
+   */
+  template <typename U>
+  static json maybeGenerateJson(
+    const U& u, typename std::enable_if<
+      not nlohmann::detail::has_to_json<json,U>::value
+    >::type* = nullptr
+  ) {
+    vtAbort("Instantiated maybeGenerateJson on non-jsonable type");
+    return json{};
+  }
+
+protected:
+  bool dump_to_json_ = false;
 };
 
 /**
@@ -126,6 +183,22 @@ struct StoreElm<
   { }
 
   /**
+   * \brief Construct with value
+   *
+   * \param[in] u the value
+   * \param[in] dump_to_json whether to dump this to json LB data file
+   */
+  template <typename U>
+  StoreElm(
+    U&& u, bool dump_to_json, typename std::enable_if<
+      nlohmann::detail::has_to_json<nlohmann::json,U>::value
+    >::type* = nullptr
+  )
+    : StoreElmBase(dump_to_json),
+      elm_(std::forward<U>(u))
+  { }
+
+  /**
    * \brief Serialization re-constructor
    *
    * \param[in] SERIALIZE_CONSTRUCT_TAG tag
@@ -155,6 +228,16 @@ struct StoreElm<
    * \return the value
    */
   T const& get() const { return elm_; }
+
+  /**
+   * \brief Generate the json if jsonable
+   *
+   * \return the json
+   */
+  nlohmann::json toJson() override
+  {
+    return StoreElm::maybeGenerateJson<T>(elm_);
+  }
 
 private:
   T elm_ = {};                  /**< The stored value */
@@ -223,6 +306,22 @@ struct StoreElm<
   { }
 
   /**
+   * \brief Construct with value
+   *
+   * \param[in] u the value
+   * \param[in] dump_to_json whether to dump this to json LB data file
+   */
+  template <typename U>
+  StoreElm(
+    U&& u, bool dump_to_json, typename std::enable_if<
+      nlohmann::detail::has_to_json<nlohmann::json,U>::value
+    >::type* = nullptr
+  )
+    : StoreElmBase(dump_to_json),
+      wrapper_(detail::ByteWrapper<T>{std::forward<U>(u)})
+  { }
+
+  /**
    * \brief Serialization re-constructor
    *
    * \param[in] SERIALIZE_CONSTRUCT_TAG tag
@@ -252,6 +351,16 @@ struct StoreElm<
    * \return the value
    */
   T const& get() const { return wrapper_.elm_; }
+
+  /**
+   * \brief Generate the json if jsonable
+   *
+   * \return the json
+   */
+  nlohmann::json toJson() override
+  {
+    return StoreElm::maybeGenerateJson<T>(wrapper_.elm_);
+  }
 
 private:
   detail::ByteWrapper<T> wrapper_ = {}; /**< The byte-copyable value wrapper */

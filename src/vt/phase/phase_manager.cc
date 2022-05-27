@@ -48,6 +48,10 @@
 
 namespace vt { namespace phase {
 
+PhaseManager::PhaseManager() {
+  setStartTime();
+}
+
 /*static*/ std::unique_ptr<PhaseManager> PhaseManager::construct() {
   auto ptr = std::make_unique<PhaseManager>();
   auto proxy = theObjGroup()->makeCollective<PhaseManager>(ptr.get());
@@ -221,13 +225,172 @@ void PhaseManager::setStartTime() {
   start_time_ = timing::getCurrentTime();
 }
 
-void PhaseManager::printSummary() {
-  if (theContext()->getNode() == 0 and cur_phase_ != 0) {
-    TimeTypeWrapper const time = timing::getCurrentTime() - start_time_;
+void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info) {
+  if (theContext()->getNode() == 0) {
+    auto lb_name = vrt::collection::balance::get_lb_names()[
+      last_phase_info->lb_type
+    ];
+    TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
     vt_print(
-      phase, "PhaseManager::printSummary, phase={}, time={}\n",
-      cur_phase_, time
+      phase,
+      "phase={}, duration={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.3f}, "
+      "grain_max_time={}, migration count={}, lb_name={}\n",
+      cur_phase_,
+      total_time,
+      TimeTypeWrapper(last_phase_info->max_load),
+      TimeTypeWrapper(last_phase_info->avg_load),
+      last_phase_info->imb_load,
+      TimeTypeWrapper(last_phase_info->max_obj),
+      last_phase_info->migration_count,
+      lb_name
     );
+    // vt_print(
+    //   phase,
+    //   "POST phase={}, total time={}, max_load={}, avg_load={}, imbalance={:.3f}, migration count={}\n",
+    //   cur_phase_,
+    //   total_time,
+    //   TimeTypeWrapper(last_phase_info->max_load_post_lb),
+    //   TimeTypeWrapper(last_phase_info->avg_load_post_lb),
+    //   last_phase_info->imb_load_post_lb,
+    //   last_phase_info->migration_count
+    // );
+
+    auto compute_speedup = [](double t1, double t2) -> double {
+       return t1 / t2;
+    };
+    auto compute_percent_improvement = [&](double t1, double t2) -> double {
+      return (t1 - t2) / t1 * 100.0;
+    };
+
+    auto grain_percent_improvement = compute_percent_improvement(
+      last_phase_info->max_load, last_phase_info->max_obj
+    );
+
+    if (not last_phase_info->ran_lb) {
+      auto percent_improvement = compute_percent_improvement(
+        last_phase_info->max_load, last_phase_info->avg_load
+      );
+      if (percent_improvement > 3.0 and cur_phase_ > 0) {
+        if (grain_percent_improvement < 0.5) {
+          // grain size is blocking improvement
+          vt_print(
+            phase,
+            "Due to the large object grain size, no speedup is "
+            "possible by running LB\n"
+          );
+          auto speedup = compute_speedup(
+            last_phase_info->max_load, last_phase_info->avg_load
+          );
+          vt_print(
+            phase,
+            "With a smaller object grain size, up to a {:.2f}x speedup "
+            "(or {:.1f}% decrease in execution time) might have been "
+            "possible\n",
+            speedup, percent_improvement
+          );
+        } else {
+          auto grain_speedup = compute_speedup(
+            last_phase_info->max_load, last_phase_info->max_obj
+          );
+          if (grain_percent_improvement >= percent_improvement - 1.0) {
+            // grain size might have some impact, but not catastrophic
+            auto pct_improvement_limit = std::min(
+              percent_improvement, grain_percent_improvement
+            );
+            auto speedup = compute_speedup(
+              last_phase_info->max_load, last_phase_info->avg_load
+            );
+            auto speedup_limit = std::min(speedup, grain_speedup);
+            vt_print(
+              phase,
+              "Up to a {:.2f}x speedup (or {:.1f}% decrease in execution "
+              "time) may be possible by running LB\n",
+              speedup_limit, pct_improvement_limit
+            );
+          } else {
+            // grain size significantly limits speedup
+            vt_print(
+              phase,
+              "Due to the large object grain size, only up to a {:.2f}x "
+              "speedup (or {:.1f}% decrease in execution time) may be "
+              "possible by running LB\n",
+              grain_speedup, grain_percent_improvement
+            );
+            auto speedup = compute_speedup(
+              last_phase_info->max_load, last_phase_info->avg_load
+            );
+            vt_print(
+              phase,
+              "With a smaller object grain size, up to a {:.2f}x speedup "
+              "(or {:.1f}% decrease in execution time) might have been "
+              "possible\n",
+              speedup, percent_improvement
+            );
+          }
+        }
+      }
+    } else if (cur_phase_ == 0) {
+       // ran the lb on a phase that may have included initialization costs
+       vt_print(
+         phase,
+         "Consider skipping LB on phase 0 if it is not representative of "
+         "future phases\n"
+       );
+    } else {
+      if (last_phase_info->migration_count > 0) {
+        auto speedup = compute_speedup(
+          last_phase_info->max_load, last_phase_info->max_load_post_lb
+        );
+        auto percent_improvement = compute_percent_improvement(
+          last_phase_info->max_load, last_phase_info->max_load_post_lb
+        );
+        if (speedup >= 1.005) {
+          vt_print(
+            phase,
+            "After load balancing, expected execution should get a {:.2f}x speedup"
+            " (or take {:.1f}% less time)\n",
+            speedup, percent_improvement
+          );
+        } else {
+          vt_print(
+            phase,
+            "After load balancing, negligible or no speedup is expected\n"
+          );
+        }
+      }
+
+      auto additional_percent_improvement = compute_percent_improvement(
+        last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
+      );
+      auto additional_grain_percent_improvement = compute_percent_improvement(
+        last_phase_info->max_load_post_lb, last_phase_info->max_obj
+      );
+      if (
+        additional_percent_improvement > 3.0 and
+        additional_grain_percent_improvement < 0.5
+      ) {
+        // grain size is blocking improvement
+        vt_print(
+          phase,
+          "Due to the large object grain size, no {}speedup is possible\n",
+          last_phase_info->migration_count > 0 ? "further " : ""
+        );
+
+        auto additional_speedup = compute_speedup(
+          last_phase_info->max_load_post_lb, last_phase_info->avg_load_post_lb
+        );
+        vt_print(
+          phase,
+          "With a smaller object grain size, up to {:.2f}x {}speedup "
+          "(or {:.1f}% decrease in execution time) might have been "
+          "possible\n",
+          additional_speedup,
+          last_phase_info->migration_count > 0 ? "more " : "",
+          additional_percent_improvement
+        );
+      }
+    }
+    fflush(stdout);
   }
 }
 

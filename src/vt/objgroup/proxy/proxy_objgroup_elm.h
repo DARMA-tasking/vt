@@ -50,6 +50,7 @@
 #include "vt/objgroup/active_func/active_func.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/activefn/activefn.h"
+#include "vt/messaging/pending_send.fwd.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -69,6 +70,8 @@ static struct ObjGroupReconstructTagType { } ObjGroupReconstructTag { };
  */
 template <typename ObjT>
 struct ProxyElm {
+
+  using PendingSendType = messaging::PendingSend;
 
   ProxyElm() = default;
   ProxyElm(ProxyElm const&) = default;
@@ -115,7 +118,7 @@ struct ProxyElm {
    * \param[in] msg the message
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  void sendMsg(messaging::MsgPtrThief<MsgT> msg) const;
+  PendingSendType sendMsg(messaging::MsgPtrThief<MsgT> msg) const;
 
   /**
    * \brief Send a message to the node/element indexed by this proxy to be
@@ -124,7 +127,7 @@ struct ProxyElm {
    * \param[in] args args to pass to the message constructor
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
-  void send(Args&&... args) const;
+  PendingSendType send(Args&&... args) const;
 
   /**
    * \brief Invoke locally a message handler on the node/element indexed by this proxy.

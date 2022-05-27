@@ -44,6 +44,7 @@
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 #include "vt/vrt/collection/manager.h"
 
 #include <memory>
@@ -367,6 +368,83 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
   vt::runInEpochCollective([&]{
     proxy_new.broadcastCollective<TestCol::NullMsg,&TestCol::checkNode>();
   });
+}
+
+
+// Goals for Test:
+//  1. Create a collection and get it into a state where there is a rank with zero elements
+//      (either by  (A) setting it up that way initially or (B) migrating everything off one rank)
+//  2. Checkpoint the collection
+//  3. Restore the collection and validate it
+
+vt::NodeType map(vt::Index3D* idx, vt::Index3D* max_idx, vt::NodeType num_nodes) {
+  return (idx->x() % (num_nodes-1))+1;
+}
+
+TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+
+  auto range = vt::Index3D(num_nodes, num_elms, 4);
+  auto checkpoint_name = "test_null_elm_checkpoint_dir";
+
+  {
+    auto proxy = vt::makeCollection<TestCol>()
+      .bounds(range)
+      .mapperFunc<map>()
+      .bulkInsert()
+      .wait();
+
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.broadcast<TestCol::NullMsg, &TestCol::init>();
+      }
+    });
+    //this number of iterations is expected in the verify member function
+    for (int i = 0; i < 5; i++) {
+      vt::runInEpochCollective([&]{
+        if(this_node == 0) {
+          proxy.broadcast<TestCol::NullMsg, &TestCol::doIter>();
+        }
+      });
+    }
+    //verify that root node has no elements, by construction with map
+    if(this_node == 0) {
+      auto local_set = theCollection()->getLocalIndices(proxy);
+      EXPECT_EQ(local_set.size(), 0);
+    }
+
+    vt_print(gen, "checkpointToFile\n");
+    vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
+
+    // Wait for all checkpoints to complete
+    vt::theCollective()->barrier();
+
+    // Destroy the collection
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.destroy();
+      }
+    });
+      // Wait for all checkpoints to complete
+    vt::theCollective()->barrier();
+  }
+
+  auto proxy = vt::theCollection()->restoreFromFile<TestCol>(
+    range, checkpoint_name
+  );
+
+  // Restoration should be done now
+  vt::theCollective()->barrier();
+
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      proxy.broadcast<TestCol::NullMsg,&TestCol::verify>();
+    }
+  });
+
 }
 
 }}} // end namespace vt::tests::unit
