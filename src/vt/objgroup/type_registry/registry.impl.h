@@ -51,7 +51,6 @@
 namespace vt { namespace objgroup { namespace registry {
 
 inline RegistryType& getRegistry() {
-  #pragma sst keep
   static RegistryType reg;
   return reg;
 }

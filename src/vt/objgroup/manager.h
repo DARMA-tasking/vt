@@ -61,9 +61,7 @@
 #include <memory>
 #include <functional>
 #include <unordered_map>
-#include <deque>
 #include <vector>
-#include <set>
 
 namespace vt { namespace objgroup {
 
@@ -94,7 +92,6 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   using DispatchBaseType    = dispatch::DispatchBase;
   using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
   using MsgContainerType    = std::vector<MsgSharedPtr<ShortMessage>>;
-  using BaseProxyListType   = std::set<ObjGroupProxyType>;
   using PendingSendType     = messaging::PendingSend;
 
   /**
@@ -215,7 +212,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] msg message to send
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  void send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
+  PendingSendType send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
   /**
    * \internal \brief Invoke message handler on an element of the object group
@@ -241,10 +238,10 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \internal \brief Broadcast a message to all nodes in object group
    *
    * \param[in] proxy proxy to the object group
-   * \param[in] msg message to send
+   * \param[in] msg message to broadcast
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  void broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
+  PendingSendType broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
   /**
    * \brief Change the traced name of the object group
@@ -336,7 +333,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] node node to send message
    */
   template <typename MsgT>
-  void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
+  PendingSendType send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
 
   /**
    * \internal \brief Invoke a message handler on an objgroup
@@ -356,40 +353,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] han handler to invoke
    */
   template <typename MsgT>
-  void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-
-  /**
-   * \brief Downcast a proxy
-   *
-   * \warning Do not call these. Use \c registerBaseCollective to get a proxy
-   * to the base.
-   *
-   * \param[in] proxy proxy to downcast
-   */
-  template <typename ObjT, typename BaseT>
-  void downcast(ProxyType<ObjT> proxy);
-
-  /**
-   * \brief Upcast a proxy
-   *
-   * \warning Do not call this---unimplemented. Use \c registerBaseCollective
-   * to get a proxy to the base.
-   *
-   * \param[in] proxy proxy to upcast
-   */
-  template <typename ObjT, typename DerivedT>
-  void upcast(ProxyType<ObjT> proxy);
-
-  /**
-   * \brief Register the base class for a live objgroup
-   *
-   * If one wants messages delivered to a base class pointer, register the base
-   * class.
-   *
-   * \param[in] proxy the current, derived proxy
-   */
-  template <typename ObjT, typename BaseT>
-  void registerBaseCollective(ProxyType<ObjT> proxy);
+  PendingSendType broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 
   /**
    * \internal \brief Get the proxy, identity function
@@ -406,8 +370,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
       | dispatch_
       | objs_
       | obj_to_proxy_
-      | pending_
-      | derived_to_bases_;
+      | pending_;
   }
 
   // Friend function to access the holder without including this header file
@@ -418,14 +381,11 @@ private:
    * \internal \brief Untyped system call to make a new collective objgroup
    *
    * \param[in] b the base holder
-   * \param[in] idx registered type idx for the objgroup
    * \param[in] obj_ptr type-erased pointer to the object
    *
    * \return a new untyped proxy
    */
-  ObjGroupProxyType makeCollectiveImpl(
-    HolderBasePtrType b, ObjTypeIdxType idx, void* obj_ptr
-  );
+  ObjGroupProxyType makeCollectiveImpl(HolderBasePtrType b, void* obj_ptr);
 
   /**
    * \internal \brief Typed system class to make a new collective objgroup
@@ -457,7 +417,7 @@ private:
   HolderBaseType* getHolderBase(HandlerType han);
 
   /**
-   * \internal \brief Get the next element ID from \c NodeStats
+   * \internal \brief Get the next element ID from \c NodeLBData
    *
    * \param[in] proxy the objgroup proxy
    *
@@ -467,7 +427,7 @@ private:
 
 private:
   /// The current obj ID, sequential on each node for collective construction
-  std::unordered_map<ObjTypeIdxType,ObjGroupIDType> cur_obj_id_;
+  ObjGroupIDType cur_obj_id_ = fst_obj_group_id;
   /// Function to dispatch to the base class for type-erasure to run handler
   std::unordered_map<ObjGroupProxyType,DispatchBasePtrType> dispatch_;
   /// Type-erased pointers to the objects held on this node
@@ -476,8 +436,6 @@ private:
   std::unordered_map<void*,ObjGroupProxyType> obj_to_proxy_;
   /// Messages that are pending creation for delivery
   std::unordered_map<ObjGroupProxyType,MsgContainerType> pending_;
-  /// Map from base class type proxies to registered derived proxy
-  std::unordered_map<ObjGroupProxyType,BaseProxyListType> derived_to_bases_;
 };
 
 }} /* end namespace vt::objgroup */

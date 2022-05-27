@@ -143,6 +143,15 @@ else()
     set(vt_feature_cmake_debug_verbose "0")
 endif()
 
+option(vt_rdma_tests_enabled "Build VT with RDMA tests enabled" ON)
+if(vt_rdma_tests_enabled)
+    message(STATUS "RDMA tests enabled")
+    set(vt_feature_cmake_rdma_tests "1")
+else()
+    message(STATUS "RDMA tests disabled")
+    set(vt_feature_cmake_rdma_tests "0")
+endif()
+
 option(
         vt_diagnostics_runtime_enabled
         "Build VT with performance metrics/stats enabled at runtime by default" OFF

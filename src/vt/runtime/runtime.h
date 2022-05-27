@@ -224,7 +224,7 @@ struct Runtime {
    *
    * \warning Do not call this. It does an unsafe \c MPI_Barrier
    *
-   * \todo Remove this and fix the single one callsite in \c NodeStats
+   * \todo Remove this and fix the single one callsite in \c NodeLBData
    */
   void systemSync();
 
@@ -300,11 +300,11 @@ protected:
   void initializeWorkers(WorkerCountType const num_workers);
 
   /**
-   * \internal \brief Check if we should create a stats restart reader component
+   * \internal \brief Check if we should create a LB data restart reader component
    *
    * \return whether we should create it
    */
-  bool needStatsRestartReader();
+  bool needLBDataRestartReader();
 
   /**
    * \internal \brief Perform setup actions, such as registering a termination
@@ -411,8 +411,8 @@ public:
   ComponentPtrType<objgroup::ObjGroupManager> theObjGroup = nullptr;
   ComponentPtrType<util::memory::MemoryUsage> theMemUsage = nullptr;
   ComponentPtrType<rdma::Manager> theHandleRDMA = nullptr;
-  ComponentPtrType<vrt::collection::balance::NodeStats> theNodeStats = nullptr;
-  ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader = nullptr;
+  ComponentPtrType<vrt::collection::balance::NodeLBData> theNodeLBData = nullptr;
+  ComponentPtrType<vrt::collection::balance::LBDataRestartReader> theLBDataReader = nullptr;
   ComponentPtrType<vrt::collection::balance::LBManager> theLBManager = nullptr;
   ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger = nullptr;
   ComponentPtrType<phase::PhaseManager> thePhase = nullptr;

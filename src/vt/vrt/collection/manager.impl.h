@@ -66,7 +66,7 @@
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/holders/collection_context_holder.h"
 #include "vt/vrt/collection/collection_directory.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 #include "vt/registry/auto/collection/auto_registry_collection.h"
@@ -219,16 +219,11 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
 
-  auto const member = HandlerManager::isHandlerMember(han);
-  auto reg = member ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-
-  runnable::makeRunnable(user_msg, true, han, from, reg)
+  runnable::makeRunnable(user_msg, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
-    .withLBStats(base, msg)
+    .withLBData(base, msg)
     .runOrEnqueue(immediate);
 }
 
@@ -246,17 +241,12 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
 
-  auto const member = HandlerManager::isHandlerMember(han);
-  auto reg = member ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-
   auto m = promoteMsg(msg);
-  runnable::makeRunnable(m, true, han, from, reg)
+  runnable::makeRunnable(m, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
-    .withLBStats(base)
+    .withLBData(base)
     .runOrEnqueue(immediate);
 }
 
@@ -364,7 +354,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 }
 
 template <typename ColT, typename MsgT>
-/*static*/ void CollectionManager::recordStats(ColT* col_ptr, MsgT* msg) {
+/*static*/ void CollectionManager::recordLBData(ColT* col_ptr, MsgT* msg) {
   auto const pfrom = msg->getSenderElm();
 
   if (pfrom.id == elm::no_element_id) {
@@ -372,12 +362,12 @@ template <typename ColT, typename MsgT>
   }
 
   auto const pto = col_ptr->getElmID();
-  auto& stats = col_ptr->getStats();
+  auto& lb_data = col_ptr->getLBData();
   auto const msg_size = serialization::MsgSizer<MsgT>::get(msg);
   auto const cat = msg->getCat();
   vt_debug_print(
     normal, vrt_coll,
-    "recordStats: receive msg: elm(to={}, from={}),"
+    "recordLBData: receive msg: elm(to={}, from={}),"
     " no={}, size={}, category={}\n",
     pto, pfrom, elm::no_element_id, msg_size,
     static_cast<typename std::underlying_type<elm::CommCategory>::type>(cat)
@@ -387,14 +377,14 @@ template <typename ColT, typename MsgT>
     cat == elm::CommCategory::Broadcast
   ) {
     bool bcast = cat == elm::CommCategory::SendRecv ? false : true;
-    stats.recvObjData(pto, pfrom, msg_size, bcast);
+    lb_data.recvObjData(pto, pfrom, msg_size, bcast);
   } else if (
     cat == elm::CommCategory::NodeToCollection or
     cat == elm::CommCategory::NodeToCollectionBcast
   ) {
     bool bcast = cat == elm::CommCategory::NodeToCollection ? false : true;
     auto nfrom = msg->getFromNode();
-    stats.recvFromNode(pto, nfrom, msg_size, bcast);
+    lb_data.recvFromNode(pto, nfrom, msg_size, bcast);
   }
 }
 
@@ -429,7 +419,7 @@ util::Copyable<Type> CollectionManager::invoke(
 
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
-    .withLBStatsVoidMsg(ptr)
+    .withLBDataVoidMsg(ptr)
     .withExplicitTask([&]{
       result = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
     })
@@ -449,7 +439,7 @@ util::NotCopyable<Type> CollectionManager::invoke(
 
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
-    .withLBStatsVoidMsg(ptr)
+    .withLBDataVoidMsg(ptr)
     .withExplicitTask([&]{
       auto&& ret = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
       result = std::move(ret);
@@ -469,7 +459,7 @@ util::IsVoidReturn<Type> CollectionManager::invoke(
 
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
-    .withLBStatsVoidMsg(ptr)
+    .withLBDataVoidMsg(ptr)
     .withExplicitTask([&]{
       runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
     })
@@ -566,15 +556,10 @@ void CollectionManager::invokeMsgImpl(
   trace::TraceEventIDType trace_event = trace::no_trace_event;
 #if vt_check_enabled(trace_enabled)
 
-  auto reg_type = HandlerManager::isHandlerMember(han) ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msgPtr.get());
+  auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msgPtr.get());
   const bool is_bcast = false;
 
-  trace_event = theMsg()->makeTraceCreationSend(
-    han, reg_type, msg_size, is_bcast
-  );
+  trace_event = theMsg()->makeTraceCreationSend(han, msg_size, is_bcast);
 #endif
 
   collectionAutoMsgDeliver<ColT, IndexT, MsgT, typename MsgT::UserMsgType>(
@@ -694,15 +679,10 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
   // Create the trace creation event for the broadcast here to connect it a
   // higher semantic level
   auto const han = msg->getVrtHandler();
-  auto reg_type = HandlerManager::isHandlerMember(han) ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+  auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   const bool is_bcast = true;
 
-  auto event = theMsg()->makeTraceCreationSend(
-    han, reg_type, msg_size, is_bcast
-  );
+  auto event = theMsg()->makeTraceCreationSend(han, msg_size, is_bcast);
   msg->setFromTraceEvent(event);
 #endif
 
@@ -852,15 +832,9 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 # if vt_check_enabled(trace_enabled)
   // Create the trace creation event for the broadcast here to connect it a
   // higher semantic level
-  auto reg_type = HandlerManager::isHandlerMember(handler) ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+  auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   const bool is_bcast = true;
-
-  auto event = theMsg()->makeTraceCreationSend(
-    handler, reg_type, msg_size, is_bcast
-  );
+  auto event = theMsg()->makeTraceCreationSend(handler, msg_size, is_bcast);
   msg->setFromTraceEvent(event);
 # endif
 
@@ -1145,22 +1119,16 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 # endif
 
   // set bit so it isn't recorded as it routes through bare handlers
-  envelopeSetCommStatsRecordedAboveBareHandler(msg->env, true);
+  envelopeSetCommLBDataRecordedAboveBareHandler(msg->env, true);
 
 # if vt_check_enabled(trace_enabled)
   // Create the trace creation event here to connect it a higher semantic
   // level. Do it in the imm_context so we see the send event when the user
   // actually invokes send on the proxy (not outside the event that actually
   // sent it)
-  auto reg_type = HandlerManager::isHandlerMember(handler) ?
-    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-    auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
-  const bool is_bcast = false;
-
-  auto event = theMsg()->makeTraceCreationSend(
-    handler, reg_type, msg_size, is_bcast
-  );
+  auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+  bool const is_bcast = false;
+  auto const event = theMsg()->makeTraceCreationSend(handler,  msg_size, is_bcast);
   msg->setFromTraceEvent(event);
 #endif
 
@@ -1242,7 +1210,7 @@ bool CollectionManager::insertCollectionElement(
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
       elm_holder->applyListeners(
-        listener::ElementEventEnum::ElementMigratedIn, idx
+        listener::ElementEventEnum::ElementMigratedIn, idx, home_node
       );
     } else {
       theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
@@ -1250,7 +1218,7 @@ bool CollectionManager::insertCollectionElement(
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
       elm_holder->applyListeners(
-        listener::ElementEventEnum::ElementCreated, idx
+        listener::ElementEventEnum::ElementCreated, idx, home_node
       );
     }
     return true;
@@ -1335,7 +1303,7 @@ template <typename ColT, typename ParamT, typename... Args>
 }
 
 template <typename IndexT>
-/*static*/ IndexT* CollectionManager::queryIndexContext() {
+/*static*/ IndexT const* CollectionManager::queryIndexContext() {
   using IdxContextHolder = CollectionContextHolder<IndexT>;
   return IdxContextHolder::index();
 }
@@ -1374,14 +1342,14 @@ void CollectionManager::insertMetaCollection(
 
   /**
    * Type-erase some lambdas for doing the collective broadcast that collects up
-   * the statistics on each node for each collection element
+   * the LB data on each node for each collection element
    */
-  collect_stats_for_lb_[proxy] = [bits=proxy]{
+  collect_lb_data_for_lb_[proxy] = [bits=proxy]{
     using namespace balance;
     using MsgType = CollectStatsMsg<ColT>;
     auto const phase = thePhase()->getCurrentPhase();
     CollectionProxyWrapType<ColT> p{bits};
-    p.template broadcastCollective<MsgType,CollectionStats::syncNextPhase<ColT>>(
+    p.template broadcastCollective<MsgType,CollectionLBData::syncNextPhase<ColT>>(
       phase
     );
   };
@@ -1728,7 +1696,7 @@ void CollectionManager::insert(
 
     auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
     auto raw_ptr = elm_holder->lookup(idx).getRawPtr();
-    raw_ptr->getStats().updatePhase(thePhase()->getCurrentPhase());
+    raw_ptr->getLBData().updatePhase(thePhase()->getCurrentPhase());
   } else if (insert_node != this_node) {
     auto msg = makeMessage<InsertMsg<ColT, MsgT>>(
       proxy, idx, insert_node, mapped_node, modify_epoch, insert_msg
@@ -1821,115 +1789,116 @@ template <typename ColT, typename IndexT>
 MigrateStatus CollectionManager::migrateOut(
   VirtualProxyType const& col_proxy, IndexT const& idx, NodeType const& dest
 ) {
- auto const& this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNode();
 
- vt_debug_print(
-   terse, vrt_coll,
-   "migrateOut: col_proxy={:x}, this_node={}, dest={}, "
-   "idx={}\n",
-   col_proxy, this_node, dest, print_index(idx)
- );
+  vt_debug_print(
+    terse, vrt_coll,
+    "migrateOut: col_proxy={:x}, this_node={}, dest={}, idx={}\n",
+    col_proxy, this_node, dest, print_index(idx)
+  );
 
- if (this_node != dest) {
-   auto const& proxy = CollectionProxy<ColT, IndexT>(col_proxy).operator()(
-     idx
-   );
-   auto elm_holder = findElmHolder<IndexT>(col_proxy);
-   vtAssert(
-     elm_holder != nullptr, "Element must be registered here"
-   );
+  vt_debug_print(
+    terse, vrt_coll, "migrating from {} to {}\n", this_node, dest
+  );
 
-   #if vt_check_enabled(runtime_checks)
-   {
-     bool const exists = elm_holder->exists(idx);
-     vtAssert(
-       exists, "Local element must exist here for migration to occur"
-     );
-   }
-   #endif
+  if (this_node != dest || theConfig()->vt_lb_self_migration) {
+    auto const& proxy = CollectionProxy<ColT, IndexT>(col_proxy).operator()(
+      idx
+    );
+    auto elm_holder = findElmHolder<IndexT>(col_proxy);
+    vtAssert(
+      elm_holder != nullptr, "Element must be registered here"
+    );
 
-   bool const exists = elm_holder->exists(idx);
-   if (!exists) {
-     return MigrateStatus::ElementNotLocal;
-   }
+#if vt_check_enabled(runtime_checks)
+    {
+      bool const exists = elm_holder->exists(idx);
+      vtAssert(
+        exists, "Local element must exist here for migration to occur"
+      );
+    }
+#endif
 
-   vt_debug_print(
-     verbose, vrt_coll,
-     "migrateOut: (before remove) holder numElements={}\n",
-     elm_holder->numElements()
-   );
+    bool const exists = elm_holder->exists(idx);
+    if (!exists) {
+      return MigrateStatus::ElementNotLocal;
+    }
 
-   if (elm_holder->numElements() == 1 and theConfig()->vt_lb_keep_last_elm) {
-     vt_debug_print(
-       normal, vrt_coll,
-       "migrateOut: do not migrate last element\n"
-     );
-     return MigrateStatus::ElementNotLocal;
-   }
+    vt_debug_print(
+      verbose, vrt_coll,
+      "migrateOut: (before remove) holder numElements={}\n",
+      elm_holder->numElements()
+    );
 
-   auto col_unique_ptr = elm_holder->remove(idx);
-   auto& typed_col_ref = *static_cast<ColT*>(col_unique_ptr.get());
+    if (elm_holder->numElements() == 1 and theConfig()->vt_lb_keep_last_elm) {
+      vt_debug_print(
+        normal, vrt_coll,
+        "migrateOut: do not migrate last element\n"
+      );
+      return MigrateStatus::ElementNotLocal;
+    }
 
-   vt_debug_print(
-     verbose, vrt_coll,
-     "migrateOut: (after remove) holder numElements={}\n",
-     elm_holder->numElements()
-   );
+    auto col_unique_ptr = elm_holder->remove(idx);
+    auto& typed_col_ref = *static_cast<ColT*>(col_unique_ptr.get());
 
-   /*
+    vt_debug_print(
+      verbose, vrt_coll,
+      "migrateOut: (after remove) holder numElements={}\n",
+      elm_holder->numElements()
+    );
+
+    /*
     * Invoke the virtual prelude migrate out function
     */
-   col_unique_ptr->preMigrateOut();
+    col_unique_ptr->preMigrateOut();
 
-   vt_debug_print(
-     verbose, vrt_coll,
-     "migrateOut: col_proxy={:x}, idx={}, dest={}: serializing collection elm\n",
-     col_proxy, print_index(idx), dest
-   );
+    vt_debug_print(
+      verbose, vrt_coll,
+      "migrateOut: col_proxy={:x}, idx={}, dest={}: serializing collection elm\n",
+      col_proxy, print_index(idx), dest
+    );
 
-   using MigrateMsgType = MigrateMsg<ColT, IndexT>;
+    using MigrateMsgType = MigrateMsg<ColT, IndexT>;
 
-   auto msg = makeMessage<MigrateMsgType>(proxy, this_node, dest, &typed_col_ref);
+    auto msg = makeMessage<MigrateMsgType>(proxy, this_node, dest, &typed_col_ref);
 
-   theMsg()->sendMsg<
-     MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
-   >(dest, msg);
+    theMsg()->sendMsg<
+      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
+    >(dest, msg);
 
-   theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityEmigrated(idx, dest);
+    theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityEmigrated(idx, dest);
 
-   /*
+    /*
     * Invoke the virtual epilog migrate out function
     */
-   col_unique_ptr->epiMigrateOut();
+    col_unique_ptr->epiMigrateOut();
 
-   vt_debug_print(
-     verbose, vrt_coll,
-     "migrateOut: col_proxy={:x}, idx={}, dest={}: invoking destroy()\n",
-     col_proxy, print_index(idx), dest
-   );
+    vt_debug_print(
+      verbose, vrt_coll,
+      "migrateOut: col_proxy={:x}, idx={}, dest={}: invoking destroy()\n",
+      col_proxy, print_index(idx), dest
+    );
 
-   /*
+    /*
     * Invoke the virtual destroy function and then null std::unique_ptr<ColT>,
     * which should cause the destructor to fire
     */
-   col_unique_ptr->destroy();
-   col_unique_ptr = nullptr;
+    col_unique_ptr->destroy();
+    col_unique_ptr = nullptr;
 
-   elm_holder->applyListeners(
-     listener::ElementEventEnum::ElementMigratedOut, idx
-   );
+    auto const home_node = getMappedNode<IndexT>(col_proxy, idx);
+    elm_holder->applyListeners(
+      listener::ElementEventEnum::ElementMigratedOut, idx, home_node
+    );
 
-   return MigrateStatus::MigratedToRemote;
- } else {
-   #if vt_check_enabled(runtime_checks)
-     vtAssert(
-       false, "Migration should only be called when to_node is != this_node"
-     );
-   #else
-     // Do nothing
-   #endif
-   return MigrateStatus::NoMigrationNecessary;
- }
+    return MigrateStatus::MigratedToRemote;
+  }
+
+#if vt_check_enabled(runtime_checks)
+  vtAssert(false, "Migration should only be called when to_node is != this_node");
+#endif
+
+  return MigrateStatus::NoMigrationNecessary;
 }
 
 template <typename ColT, typename IndexT>
@@ -2012,8 +1981,9 @@ void CollectionManager::destroyMatching(
   auto elm_holder = findElmHolder<IndexT>(untyped_proxy);
   if (elm_holder) {
     elm_holder->foreach([&](IndexT const& idx, Indexable<IndexT>*) {
+      auto const home = getMappedNode<IndexT>(untyped_proxy, idx);
       elm_holder->applyListeners(
-        listener::ElementEventEnum::ElementDestroyed, idx
+        listener::ElementEventEnum::ElementDestroyed, idx, home
       );
     });
     elm_holder->destroyAll();
@@ -2031,7 +2001,6 @@ template <typename IndexT>
 CollectionHolder<IndexT>* CollectionManager::findColHolder(
   VirtualProxyType const& proxy
 ) {
-  #pragma sst global proxy_container_
   auto& holder_container = EntireHolder<IndexT>::proxy_container_;
   auto holder_iter = holder_container.find(proxy);
   auto const& found_holder = holder_iter != holder_container.end();
@@ -2113,8 +2082,14 @@ std::string CollectionManager::makeMetaFilename(
   auto this_node = theContext()->getNode();
   if (make_sub_dirs) {
 
+    int flag = 0;
+    flag = mkdir(file_base.c_str(), S_IRWXU);
+    if (flag < 0 && errno != EEXIST) {
+      throw std::runtime_error("Failed to create directory: " + file_base);
+    }
+
     auto subdir = fmt::format("{}/directory-{}", file_base, this_node);
-    int flag = mkdir(subdir.c_str(), S_IRWXU);
+    flag = mkdir(subdir.c_str(), S_IRWXU);
     if (flag < 0 && errno != EEXIST) {
       throw std::runtime_error("Failed to create directory: " + subdir);
     }
@@ -2287,7 +2262,7 @@ void CollectionManager::restoreFromFileInPlace(
 
     auto ptr = elm_holder->lookup(idx).getRawPtr();
     checkpoint::deserializeInPlaceFromFile<ColT>(file_name, static_cast<ColT*>(ptr));
-    ptr->stats_.resetPhase();
+    ptr->lb_data_.resetPhase();
   }
 }
 
@@ -2330,7 +2305,7 @@ CollectionManager::restoreFromFile(
     // @todo: error check the file read with bytes in directory
 
     auto col_ptr = checkpoint::deserializeFromFile<ColT>(file_name);
-    col_ptr->stats_.resetPhase();
+    col_ptr->lb_data_.resetPhase();
     elms.emplace_back(std::make_tuple(idx, std::move(col_ptr)));
   }
 

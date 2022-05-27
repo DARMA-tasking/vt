@@ -54,8 +54,7 @@ namespace vt { namespace ctx {
 
 template <typename MsgT>
 Trace::Trace(
-  MsgT const& msg, HandlerType const in_handler, NodeType const in_from_node,
-  RegistryEnumType in_han_type
+  MsgT const& msg, HandlerType const in_handler, NodeType const in_from_node
 ) : is_collection_(false),
     event_(envelopeGetTraceEvent(msg->env)),
     msg_size_(
@@ -63,7 +62,6 @@ Trace::Trace(
     ),
     is_traced_(HandlerManager::isHandlerTrace(in_handler)),
     from_node_(in_from_node),
-    han_type_(in_han_type),
     handler_(in_handler)
 { }
 
@@ -71,8 +69,7 @@ template <typename MsgT>
 Trace::Trace(
   MsgT const& msg, trace::TraceEventIDType const in_trace_event,
   HandlerType const in_handler, NodeType const in_from_node,
-  RegistryEnumType in_han_type, uint64_t in_idx1, uint64_t in_idx2,
-  uint64_t in_idx3, uint64_t in_idx4
+  uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
 ) : is_collection_(true),
     event_(in_trace_event),
     msg_size_(
@@ -80,7 +77,6 @@ Trace::Trace(
     ),
     is_traced_(HandlerManager::isHandlerTrace(in_handler)),
     from_node_(in_from_node),
-    han_type_(in_han_type),
     handler_(in_handler),
     idx1_(in_idx1),
     idx2_(in_idx2),

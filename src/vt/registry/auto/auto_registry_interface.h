@@ -64,9 +64,7 @@ AutoActiveType const& getAutoHandler(HandlerType const handler);
 AutoActiveFunctorType const& getAutoHandlerFunctor(HandlerType const handler);
 
 #if vt_check_enabled(trace_enabled)
-  trace::TraceEntryIDType handlerTraceID(
-    HandlerType const handler, RegistryTypeEnum reg_type
-  );
+  trace::TraceEntryIDType handlerTraceID(HandlerType const handler);
 #endif
 
 }} // end namespace vt::auto_registry

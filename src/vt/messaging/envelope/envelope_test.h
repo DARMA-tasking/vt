@@ -138,12 +138,12 @@ inline bool envelopeIsLocked(Env& env);
 
 /**
  * \brief Test if an envelope indicates that bare handlers shouldn't record LB
- * comm stats
+ * comm LB data
  *
  * \param[in] env the envelope
  */
 template <typename Env>
-inline bool envelopeCommStatsRecordedAboveBareHandler(Env& env);
+inline bool envelopeCommLBDataRecordedAboveBareHandler(Env& env);
 
 }} //end namespace vt::messaging
 

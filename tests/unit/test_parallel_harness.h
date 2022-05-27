@@ -45,10 +45,10 @@
 #define INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H
 
 #include <vector>
+#include <mpi.h>
 
 #include "test_config.h"
 #include "test_harness.h"
-#include "mpi_singleton.h"
 
 #include "vt/collective/collective_ops.h"
 #include "vt/scheduler/scheduler.h"
@@ -73,8 +73,13 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     static char throw_on_abort[]{"--vt_throw_on_abort=1"};
     addArgs(throw_on_abort);
 
-    // communicator is duplicated.
-    MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
+    // initialize MPI if it hasn't already happened
+    int init = 0;
+    MPI_Initialized(&init);
+    if (!init) {
+      MPI_Init(&test_argc, &test_argv);
+    }
+    MPI_Comm comm = MPI_COMM_WORLD;
     auto const new_args = injectAdditionalArgs(test_argc, test_argv);
     auto custom_argc = new_args.first;
     auto custom_argv = new_args.second;
@@ -82,6 +87,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
       custom_argv[custom_argc] == nullptr,
       "The value of argv[argc] should always be 0"
     );
+    // communicator is duplicated.
     CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true, &comm);
 
 #if DEBUG_TEST_HARNESS_PRINT
@@ -146,13 +152,13 @@ private:
    * needed arguments to `additional_args_` vector.
    *
    * Example:
-   * struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
+   * struct TestParallelHarnessWithLBDataDumping : TestParallelHarnessParam<int> {
    *   virtual void addAdditionalArgs() override {
-   *     static char vt_lb_stats[]{"--vt_lb_stats"};
-   *     static char vt_lb_stats_dir[]{"--vt_lb_stats_dir=test_stats_dir"};
-   *     static char vt_lb_stats_file[]{"--vt_lb_stats_file=test_stats_outfile"};
+   *     static char vt_lb_data[]{"--vt_lb_data"};
+   *     static char vt_lb_data_dir[]{"--vt_lb_data_dir=test_data_dir"};
+   *     static char vt_lb_data_file[]{"--vt_lb_data_file=test_data_outfile"};
    *
-   *     addArgs(vt_lb_stats, vt_lb_stats_dir, vt_lb_stats_file);
+   *     addArgs(vt_lb_data, vt_lb_data_dir, vt_lb_data_file);
    *   }
    * };
    */

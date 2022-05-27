@@ -49,6 +49,8 @@
 
 namespace vt { namespace tests { namespace unit {
 
+#if vt_check_enabled(rdma_tests)
+
 bool triggered_lb = false;
 
 template <typename T>
@@ -191,5 +193,7 @@ INSTANTIATE_TYPED_TEST_SUITE_P(
   test_rdma_handle_collection, TestRDMAHandleCollection, RDMACollectionTestTypes,
   DEFAULT_NAME_GEN
 );
+
+#endif /*vt_check_enabled(rdma_tests)*/
 
 }}} /* end namespace vt::tests::unit */

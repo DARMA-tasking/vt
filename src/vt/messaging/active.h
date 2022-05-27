@@ -63,7 +63,7 @@
 #include "vt/utils/static_checks/functor.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/elm/elm_id.h"
-#include "vt/elm/elm_stats.h"
+#include "vt/elm/elm_lb_data.h"
 
 #if vt_check_enabled(trace_enabled)
   #include "vt/trace/trace_headers.h"
@@ -398,8 +398,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   void setTagMessage(MsgT* msg, TagType tag);
 
   trace::TraceEventIDType makeTraceCreationSend(
-    HandlerType const handler, auto_registry::RegistryTypeEnum type,
-    ByteType serialized_msg_size, bool is_bcast
+    HandlerType const handler, ByteType serialized_msg_size, bool is_bcast
   );
 
   // With serialization, the correct method is resolved via SFINAE.
@@ -565,6 +564,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the \c PendingSend for the send
    */
   template <typename MsgT>
+  [[deprecated("size must be set in makeMessageSz, use regular sendMsg")]]
   PendingSendType sendMsgSz(
     NodeType dest,
     HandlerType han,
@@ -725,6 +725,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the \c PendingSend for the send
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+  [[deprecated("size must be set in makeMessageSz, use regular sendMsg")]]
   PendingSendType sendMsgSz(
     NodeType dest,
     MsgPtrThief<MsgT> msg,
@@ -1149,8 +1150,9 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] size size of message
    * \param[in] ptr pointer to pack
    * \param[in] ptr_bytes bytes at pointer to pack
+   * \return the new size of the message
    */
-  void packMsg(
+  MsgSizeType packMsg(
     MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
   );
 
@@ -1725,6 +1727,18 @@ private:
    */
   void finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv);
 
+  /**
+   * @brief Record LB's data for sending a message
+   *
+   * \param[in] dest the destination of the message
+   * \param[in] base the message base pointer
+   * \param[in] msg_size the size of the message being sent
+   */
+  void recordLBDataCommForSend(
+    NodeType const dest, MsgSharedPtr<BaseMsgType> const& base,
+    MsgSizeType const msg_size
+  );
+
 private:
 # if vt_check_enabled(trace_enabled)
   trace::UserEventIDType trace_irecv             = trace::no_user_event_id;
@@ -1769,8 +1783,8 @@ private:
   diagnostic::CounterGauge amForwardCounterGauge;
 
 private:
-  elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_stats_ = {};
-  elm::ElementStats bare_handler_stats_;
+  elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_data_ = {};
+  elm::ElementLBData bare_handler_lb_data_;
 };
 
 }} // end namespace vt::messaging

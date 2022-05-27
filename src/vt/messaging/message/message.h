@@ -103,8 +103,6 @@ struct ActiveMsg : BaseMsg {
     );
   }
 
-  #if vt_check_enabled(memory_pool) && \
-     !vt_check_enabled(no_pool_alloc_env)
   /**
    * \brief Overload of the new operator to use the memory pool to construct a
    * new message
@@ -175,48 +173,6 @@ struct ActiveMsg : BaseMsg {
 
     return mem;
   }
-  #else
-  static void* operator new(std::size_t sz) {
-    auto ptr = std::malloc(sz);
-
-    vt_debug_print(
-      verbose, gen,
-      "Message::new (malloc) of size={}, ptr={}\n", sz, print_ptr(ptr)
-    );
-
-    return ptr;
-  }
-
-  static void* operator new(std::size_t sz, std::size_t oversize) {
-    auto ptr = std::malloc(sz + oversize);
-
-    vt_debug_print(
-      verbose, gen,
-      "Message::new (malloc) of size={}, oversize={}, ptr={}\n",
-      sz, oversize, print_ptr(ptr)
-    );
-
-    return ptr;
-  }
-
-  static void operator delete(void* ptr) {
-    vt_debug_print(
-      verbose, gen,
-      "Message::delete (free) ptr={}\n", print_ptr(ptr)
-    );
-
-    std::free(ptr);
-  }
-
-  static void* operator new(std::size_t, void* mem) {
-    vt_debug_print(
-      verbose, gen,
-      "Message::new (in-place) ptr={}\n", print_ptr(mem)
-    );
-
-    return mem;
-  }
-  #endif
 
   /**
    * \brief Explicitly serialize this message.

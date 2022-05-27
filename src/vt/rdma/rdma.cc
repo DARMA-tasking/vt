@@ -669,8 +669,8 @@ void RDMAManager::putData(
             envelopeSetTag(msg->env, tag);
           }
 
-          theMsg()->sendMsgSz<PutMessage,putRecvMsg>(
-            put_node, msg, sizeof(PutMessage) + num_bytes, no_tag
+          theMsg()->sendMsg<PutMessage,putRecvMsg>(
+            put_node, msg, no_tag
           );
 
           vt_debug_print(

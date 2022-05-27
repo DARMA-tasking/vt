@@ -44,11 +44,14 @@
 #if !defined INCLUDED_UNIT_TEST_HELPERS_H
 #define INCLUDED_UNIT_TEST_HELPERS_H
 
-#include "mpi_singleton.h"
 #include "vt/context/context.h"
+#include <mpi.h>
 #include <gtest/gtest.h>
 
 namespace vt { namespace tests { namespace unit {
+
+extern int test_argc;
+extern char** test_argv;
 
 /**
  * Maximum number of ranks/nodes detected by CMake on this machine.
@@ -61,7 +64,15 @@ constexpr NodeType CMAKE_DETECTED_MAX_NUM_NODES = vt_detected_max_num_nodes;
  * This is using MPI because it can be used before vt initializes.
  */
 inline bool isOversubscribed() {
-  return MPISingletonMultiTest::Get()->getNumRanks() > CMAKE_DETECTED_MAX_NUM_NODES;
+  // be sure to only call this from parallel tests
+  int init = 0;
+  MPI_Initialized(&init);
+  if (!init) {
+    MPI_Init(&test_argc, &test_argv);
+  }
+  int num_ranks = 0;
+  MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+  return num_ranks > CMAKE_DETECTED_MAX_NUM_NODES;
 }
 
 /**

@@ -255,19 +255,6 @@ using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = HandlerType;
 using NumArgsType = int16_t;
 
-enum struct RegistryTypeEnum {
-  RegGeneral = 1,
-  RegMap,
-  RegVrt,
-  RegSeed,
-  RegVrtCollection,
-  RegVrtCollectionMember,
-  RegRDMAGet,
-  RegRDMAPut,
-  RegIndex,
-  RegObjGroup
-};
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 static struct NumArgsTagType { } NumArgsTag { };

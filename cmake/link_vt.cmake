@@ -24,6 +24,7 @@ function(link_target_with_vt)
     LINK_ATOMIC
     LINK_MPI
     LINK_FMT
+    LINK_UNWIND
     LINK_ENG_FORMAT
     LINK_ZLIB
     LINK_FCONTEXT
@@ -92,6 +93,19 @@ function(link_target_with_vt)
       message(STATUS "link_target_with_vt: gtest=${ARG_LINK_GTEST}")
     endif()
     target_link_libraries(${ARG_TARGET} PRIVATE gtest)
+  endif()
+
+  if (NOT DEFINED ARG_LINK_UNWIND AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_UNWIND)
+    if (vt_has_libunwind_h)
+      if (${ARG_DEBUG_LINK})
+        message(STATUS "link_target_with_vt: unwind=${ARG_LINK_UNWIND}")
+      endif()
+      if (NOT DEFINED APPLE)
+        target_link_libraries(
+          ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} unwind
+        )
+      endif()
+    endif()
   endif()
 
   if (NOT ARG_LINK_VT_LIB)

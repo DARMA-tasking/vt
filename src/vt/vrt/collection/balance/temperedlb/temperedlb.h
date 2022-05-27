@@ -139,7 +139,7 @@ private:
    *
    * This will only lead to reproducibility when paired with deterministic
    * object loads, for example when using a driver that feeds the load balancer
-   * object loads read from vt stats files.
+   * object loads read from vt LB data files.
    */
   bool deterministic_                               = false;
   /**

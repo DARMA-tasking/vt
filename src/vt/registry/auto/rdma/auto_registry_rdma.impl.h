@@ -67,7 +67,8 @@ inline HandlerType makeAutoHandlerRDMAPut() {
 
   auto const id =
     RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
-  return HandlerManager::makeHandler(false, false, id);
+  constexpr auto reg_type = RegistryTypeEnum::RegRDMAPut;
+  return HandlerManager::makeHandler(false, false, id, reg_type);
 }
 
 inline AutoActiveRDMAGetType getAutoHandlerRDMAGet(HandlerType const handler) {
@@ -86,7 +87,8 @@ inline HandlerType makeAutoHandlerRDMAGet() {
 
   auto const id =
     RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
-  return HandlerManager::makeHandler(false, false, id);
+  constexpr auto reg_type = RegistryTypeEnum::RegRDMAGet;
+  return HandlerManager::makeHandler(false, false, id, reg_type);
 }
 
 }} /* end namespace vt::auto_registry */

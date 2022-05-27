@@ -64,6 +64,10 @@ namespace vt { namespace ctx {
  * is running in suspends the stack mid-execution (typically waiting for a
  * dependency). Thus, any context is expected to save all state in suspend and
  * then return that state back during resume when the ULT is resumed.
+ *
+ * \warning Note that contexts should not hold on to a message pointer and read
+ * values from the message after the \c begin() method is called as the user
+ * might modify the message or forward it.
  */
 struct Base {
 
@@ -94,7 +98,6 @@ struct Base {
    *
    * \param[in] dest the destination of the message
    * \param[in] size the size of the message
-   * \param[in] bcast whether the message is being broadcast or sent
    */
   virtual void send(elm::ElementIDStruct dest, MsgSizeType bytes) { }
 };

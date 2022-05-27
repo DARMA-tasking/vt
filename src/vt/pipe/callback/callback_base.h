@@ -78,12 +78,12 @@ struct CallbackBase {
     : reference_counted_(true),
       refs_(1)
   { }
-  CallbackBase(CallbackMultiUseTagType, RefType const& in_num_refs)
+  CallbackBase(CallbackMultiUseTagType, PipeRefType const& in_num_refs)
     : reference_counted_(true),
       refs_(in_num_refs)
   { }
   CallbackBase(
-    CallbackExplicitTagType, bool const& persist, RefType const& in_refs = -1
+    CallbackExplicitTagType, bool const& persist, PipeRefType const& in_refs = -1
   ) : reference_counted_(!persist), refs_(in_refs)
   { }
 
@@ -134,8 +134,8 @@ public:
 
 private:
   bool reference_counted_ = true;
-  RefType triggered_      = 0;
-  RefType refs_           = 1;
+  PipeRefType triggered_      = 0;
+  PipeRefType refs_           = 1;
 };
 
 }}} /* end namespace vt::pipe::callback */

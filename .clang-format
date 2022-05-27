@@ -4,9 +4,9 @@ UseTab: Never
 
 AccessModifierOffset: -2
 AlignAfterOpenBracket: AlwaysBreak
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
-AlignConsecutiveMacros: false
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignConsecutiveMacros: None
 AlignEscapedNewlines: Left
 AlignOperands: false
 AlignTrailingComments: true
@@ -60,7 +60,7 @@ FixNamespaceComments: true
 IncludeBlocks: Preserve
 IndentCaseLabels: false
 IndentGotoLabels: false
-IndentPPDirectives: PPDIS_None
+IndentPPDirectives: None
 IndentWidth: 2
 IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
@@ -69,7 +69,7 @@ NamespaceIndentation: None
 PenaltyReturnTypeOnItsOwnLine: 100
 PointerAlignment: Left
 ReflowComments: false
-SortIncludes: false
+SortIncludes: Never
 SortUsingDeclarations: false
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false

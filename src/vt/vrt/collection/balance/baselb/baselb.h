@@ -76,7 +76,9 @@ struct BaseLB {
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
   using LoadSummary      = balance::LoadSummary;
-  using ObjLoadListType  = std::vector<std::tuple<ObjIDType, LoadSummary>>;
+  using ObjLoadListType  = std::vector<
+    std::tuple<ObjIDType, LoadSummary, LoadSummary>
+  >;
   using ObjDestinationListType = std::vector<std::tuple<ObjIDType, NodeType>>;
 
   explicit BaseLB()
@@ -105,7 +107,7 @@ struct BaseLB {
     objgroup::proxy::Proxy<BaseLB> proxy,
     balance::LoadModel *model,
     StatisticMapType const& in_stats,
-    ElementCommType const& in_comm_stats,
+    ElementCommType const& in_comm_lb_data,
     TimeType total_load
   );
 
@@ -152,7 +154,7 @@ protected:
   // Observer only - LBManager owns the instance
   balance::LoadModel* load_model_                 = nullptr;
 
-private:
+protected:
   /**
    * \brief Normalizes the reassignment graph by setting up in/out edges on both
    * sides regardless of how they are passed to \c migrateObjectTo
@@ -161,6 +163,7 @@ private:
    */
   std::shared_ptr<const balance::Reassignment> normalizeReassignments();
 
+private:
   TransferVecType transfers_                      = {};
   TransferType off_node_migrate_                  = {};
   int32_t local_migration_count_                  = 0;

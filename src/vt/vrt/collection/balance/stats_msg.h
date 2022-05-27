@@ -164,7 +164,7 @@ struct LoadData {
   TimeType M4_  = 0.0;
   int32_t  N_ = 0;
   int32_t  P_ = 0;
-  lb::Statistic stat_ = lb::Statistic::P_l;
+  lb::Statistic stat_ = lb::Statistic::Rank_load_modeled;
 };
 
 static_assert(

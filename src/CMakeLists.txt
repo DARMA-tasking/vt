@@ -86,9 +86,10 @@ set(
         vrt/collection/balance/greedylb
         vrt/collection/balance/rotatelb
         vrt/collection/balance/temperedlb
-        vrt/collection/balance/statsmaplb
+        vrt/collection/balance/offlinelb
         vrt/collection/balance/zoltanlb
         vrt/collection/balance/randomlb
+        vrt/collection/balance/testserializationlb
         vrt/collection/balance/lb_invoke
         vrt/collection/balance/model
         vrt/collection/balance/proxy
@@ -289,8 +290,7 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   message(STATUS "VT: enabling code coverage generation")
   # Add required flags (GCC & LLVM/Clang)
   target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-    -O0        # no optimization
-    -g         # generate debug info
+    -Og
     --coverage # sets all required flags
   )
   target_link_options(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE --coverage)
@@ -318,33 +318,22 @@ install(
   COMPONENT                 runtime
 )
 
-set(FMT_LIBRARY_EXPORT ${FMT_LIBRARY})
-install(TARGETS ${FMT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-install(TARGETS ${ENG_FORMAT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-
-install(TARGETS ${JSON_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 install(TARGETS ${BROTLI_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-
-if (vt_mimalloc_enabled)
-  set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
-endif()
+install(TARGETS ${ENG_FORMAT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+install(TARGETS ${FMT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+install(TARGETS ${JSON_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 
 if (vt_libfort_enabled)
-  set(FORT_LIBRARY_EXPORT ${FORT_LIBRARY})
   install(TARGETS ${FORT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-endif()
-
-if (vt_fcontext_enabled)
-  set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
 endif()
 
 # Export to build directory
 export(
   TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
-                            ${FCONTEXT_LIBRARY_EXPORT}
-                            ${MIMALLOC_LIBRARY_EXPORT}
-                            ${FORT_LIBRARY_EXPORT}
-                            ${FMT_LIBRARY_EXPORT}
+                            ${FCONTEXT_LIBRARY}
+                            ${MIMALLOC_LIBRARY}
+                            ${FORT_LIBRARY}
+                            ${FMT_LIBRARY}
                             ${ENG_FORMAT_LIBRARY}
                             ${JSON_LIBRARY}
                             ${BROTLI_LIBRARY}

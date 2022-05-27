@@ -137,7 +137,7 @@ void PipeManagerBase::registerCallback(
 template <typename MsgT, typename ListenerT>
 PipeType PipeManagerBase::makeCallbackAny(
   bool const& persist, ListenerT&& listener, bool const& dispatch,
-  RefType num_signals, RefType num_listeners
+  PipeRefType num_signals, PipeRefType num_listeners
 ) {
   using SignalType = signal::Signal<MsgT>;
 
@@ -170,7 +170,7 @@ PipeType PipeManagerBase::makeCallbackAny(
 template <typename MsgT>
 PipeType PipeManagerBase::makeCallbackFunc(
   bool const& persist, FuncMsgType<MsgT> fn, bool const& dispatch,
-  RefType num_signals, RefType num_listeners
+  PipeRefType num_signals, PipeRefType num_listeners
 ) {
   using SignalType = signal::Signal<MsgT>;
   vtAssert(num_listeners > 0, "Number of listeners must be positive");

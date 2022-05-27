@@ -66,7 +66,10 @@ inline HandlerType makeAutoHandlerFunctor() {
 
   constexpr bool is_auto = true;
   constexpr bool is_functor = true;
-  return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
+  constexpr auto reg_type = RegistryTypeEnum::RegGeneral;
+  return HandlerManagerType::makeHandler(
+    is_auto, is_functor, RunType::idx, reg_type
+  );
 }
 
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>

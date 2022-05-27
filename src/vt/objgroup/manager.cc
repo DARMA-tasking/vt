@@ -50,7 +50,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/runnable/make_runnable.h"
 #include "vt/elm/elm_id.h"
-#include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/elm/elm_id_bits.h"
 
@@ -58,7 +58,7 @@ namespace vt { namespace objgroup {
 
 void ObjGroupManager::startup() {
 #if vt_check_enabled(lblite)
-  // Hook to collect statistics about objgroups
+  // Hook to collect LB data about objgroups
   thePhase()->registerHookCollective(phase::PhaseHook::End, []{
     auto& objs = theObjGroup()->objs_;
     for (auto&& obj : objs) {
@@ -67,8 +67,8 @@ void ObjGroupManager::startup() {
       if (elm_id.id != elm::no_element_id) {
         auto proxy = elm::ElmIDBits::getObjGroupProxy(elm_id.id, false);
         vtAssertExpr(proxy == obj.first);
-        theNodeStats()->registerObjGroupInfo(elm_id, obj.first);
-        theNodeStats()->addNodeStats(elm_id, &holder->getStats());
+        theNodeLBData()->registerObjGroupInfo(elm_id, obj.first);
+        theNodeLBData()->addNodeLBData(elm_id, &holder->getLBData(), nullptr);
       }
     }
   });
@@ -86,18 +86,17 @@ ObjGroupProxyType ObjGroupManager::getProxy(ObjGroupProxyType proxy) {
 void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
   // Extract the control-bit sequence from the handler
   auto const ctrl = HandlerManager::getHandlerControl(han);
-  auto const type_idx = auto_registry::getAutoHandlerObjTypeIdx(han);
   vt_debug_print(
     verbose, objgroup,
-    "dispatch: type_idx={:x}, ctrl={:x}, han={:x}\n", type_idx, ctrl, han
+    "dispatch: ctrl={:x}, han={:x}\n", ctrl, han
   );
   auto const node = 0;
-  auto const proxy = proxy::ObjGroupProxy::create(ctrl,type_idx,node,true);
+  auto const proxy = proxy::ObjGroupProxy::create(ctrl, node, true);
   auto dispatch_iter = dispatch_.find(proxy);
   vt_debug_print(
     normal, objgroup,
-    "dispatch: try type_idx={:x}, ctrl={:x}, han={:x}, has dispatch={}\n",
-    type_idx, ctrl, han, dispatch_iter != dispatch_.end()
+    "dispatch: try ctrl={:x}, han={:x}, has dispatch={}\n",
+    ctrl, han, dispatch_iter != dispatch_.end()
   );
   if (dispatch_iter == dispatch_.end()) {
     auto const epoch = envelopeGetEpoch(msg->env);
@@ -111,18 +110,12 @@ void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) 
 }
 
 ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
-  HolderBasePtrType base, ObjTypeIdxType idx, void* obj_ptr
+  HolderBasePtrType base, void* obj_ptr
 ) {
-  auto iter = cur_obj_id_.find(idx);
-  if (iter == cur_obj_id_.end()) {
-    cur_obj_id_[idx] = fst_obj_group_id;
-    iter = cur_obj_id_.find(idx);
-  }
-  vtAssert(iter != cur_obj_id_.end(), "Must have valid type idx lookup");
-  auto const id = iter->second++;
+  auto const id = cur_obj_id_++;
   auto const node = theContext()->getNode();
   auto const is_collective = true;
-  auto const proxy = proxy::ObjGroupProxy::create(id, idx, node, is_collective);
+  auto const proxy = proxy::ObjGroupProxy::create(id, node, is_collective);
 
   obj_to_proxy_[obj_ptr] = proxy;
 
@@ -138,29 +131,16 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
 
 ObjGroupManager::HolderBaseType* ObjGroupManager::getHolderBase(HandlerType han) {
   auto const ctrl = HandlerManager::getHandlerControl(han);
-  auto const type_idx = auto_registry::getAutoHandlerObjTypeIdx(han);
   auto const node = 0;
-  auto const proxy = proxy::ObjGroupProxy::create(ctrl, type_idx, node, true);
+  auto const proxy = proxy::ObjGroupProxy::create(ctrl, node, true);
   vt_debug_print(
     normal, objgroup,
-    "getHolderBase: type_idx={:x}, ctrl={:x}, han={:x}, proxy={:x}\n",
-    type_idx, ctrl, han, proxy
+    "getHolderBase: ctrl={:x}, han={:x}, proxy={:x}\n",
+    ctrl, han, proxy
   );
   auto iter = objs_.find(proxy);
   if (iter != objs_.end()) {
     return iter->second.get();
-  } else {
-    for (auto&& elm : derived_to_bases_) {
-      for (auto&& base : elm.second) {
-        if (base == proxy) {
-          auto const derived = elm.first;
-          auto iter2 = objs_.find(derived);
-          if (iter2 != objs_.end()) {
-            return iter2->second.get();
-          }
-        }
-      }
-    }
   }
   return nullptr;
 }
@@ -173,7 +153,7 @@ holder::HolderBase* getHolderBase(HandlerType handler) {
 
 elm::ElementIDStruct ObjGroupManager::getNextElm(ObjGroupProxyType proxy) {
   // Avoid startup races
-  if (theNodeStats()) {
+  if (theNodeLBData()) {
     auto const this_node = theContext()->getNode();
     return elm::ElmIDBits::createObjGroup(proxy, this_node);
   } else {

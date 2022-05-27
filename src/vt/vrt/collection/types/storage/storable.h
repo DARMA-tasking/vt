@@ -79,6 +79,16 @@ struct Storable {
   void valInsert(std::string const& str, U&& u);
 
   /**
+   * \brief Insert a new key/value pair
+   *
+   * \param[in] str the key
+   * \param[in] u the value
+   * \param[in] dump_to_json whether to include in json file
+   */
+  template <typename U>
+  void valInsert(std::string const& str, U&& u, bool dump_to_json);
+
+  /**
    * \brief Get the value from a key
    *
    * \param[in] str the key
@@ -113,6 +123,13 @@ struct Storable {
    * \param[in] str the key
    */
   void valRemove(std::string const& str);
+
+  /**
+   * \brief Generate the json if applicable
+   *
+   * \return the json
+   */
+  nlohmann::json toJson();
 
 private:
   /// Map of type-erased, stored values

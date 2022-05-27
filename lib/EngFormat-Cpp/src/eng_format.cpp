@@ -23,7 +23,6 @@
 #include "EngFormat-Cpp/eng_format.hpp"
 
 #include <cctype>
-#include <cfloat>
 #include <cmath>
 #include <iomanip>
 #include <limits>
@@ -86,7 +85,7 @@ int precision( double const scaled, int const digits )
     // g++ 4.8.1: ok with -1 * DBL_EPSILON
 
     return is_zero( scaled ) ?
-        digits - 1 : digits - std::log10( std::fabs( scaled ) ) - 2 * DBL_EPSILON;
+        digits - 1 : digits - std::log10( std::fabs( scaled ) ) - 2 * std::numeric_limits<double>::epsilon();
 }
 
 std::string prefix_or_exponent( bool const exponential, int const degree, std::string separator )

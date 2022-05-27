@@ -53,7 +53,6 @@
 namespace vt { namespace vrt { namespace collection {
 
 inline RegistryTLType& getTLRegistry() {
-  #pragma sst keep
   static RegistryTLType reg;
   return reg;
 }

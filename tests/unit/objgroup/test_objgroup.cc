@@ -293,4 +293,119 @@ TEST_F(TestObjGroup, test_proxy_invoke) {
   EXPECT_EQ(proxy.get()->recv_, 2);
 }
 
+TEST_F(TestObjGroup, test_pending_send) {
+  auto my_node = vt::theContext()->getNode();
+  // create a proxy to a object group
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+  auto obj = proxy.get();
+
+  runInEpochCollective([&]{
+    // self-send a message and then broadcast
+    auto pending = proxy[my_node].send<MyMsg, &MyObjA::handler>();
+
+    EXPECT_EQ(obj->recv_, 0);
+
+    runInEpochCollective([&]{ pending.release(); } );
+    EXPECT_EQ(obj->recv_, 1 );
+
+    auto pending2 = proxy.broadcast<MyMsg, &MyObjA::handlerOnlyFromSelf>();
+
+    EXPECT_EQ(obj->recv_, 1 );
+
+    runInEpochCollective([&]{ pending2.release(); } );
+    EXPECT_EQ(obj->recv_, 2);
+  });
+
+  // check state to ensure all expected events executed
+  vt_debug_print(
+    normal, objgroup,
+    "obj->recv:{} after term\n", obj->recv_
+  );
+}
+
+struct MyTestMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_required();
+
+  explicit MyTestMsg(NodeType const node) : node_{node} {
+    ::fmt::print("Creating MyTestMsg on node: {}\n", node_);
+  }
+
+  MyTestMsg() = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+
+    s | node_;
+
+    if (s.isPacking() || s.isUnpacking()) {
+      was_serialized_ = true;
+    }
+  }
+
+  NodeType fromNode() const { return node_; }
+
+  bool wasSerialized() const { return was_serialized_; }
+
+private:
+  NodeType node_{-1};
+  bool was_serialized_{false};
+};
+
+struct MyTestObj {
+  void handleBroadcastMsg(MyTestMsg* msg) {
+    auto const from_node = msg->fromNode();
+    auto const to_node = theContext()->getNode();
+    auto const was_serialized = msg->wasSerialized();
+
+    ::fmt::print(
+      "handleBroadcastMsg(): from node: {}, to node: {}, msg was serialized: {}\n",
+      from_node, to_node, was_serialized
+    );
+
+    // Even if msg was sent locally, it is still serialized,
+    // and the handler gots a fresh copy of it.
+    if (from_node == to_node) {
+      EXPECT_TRUE(was_serialized);
+    }
+  }
+
+  void handleInvokeMsg(MyTestMsg* msg) {
+    auto const from_node = msg->fromNode();
+    auto const to_node = theContext()->getNode();
+    auto const was_serialized = msg->wasSerialized();
+
+    ::fmt::print(
+      "handleInvokeMsg(): from node: {}, to node: {}, msg was serialized: {}\n",
+      from_node, to_node, was_serialized
+    );
+
+    // invoke() shouldn't serialize message.
+    if (from_node == to_node) {
+      EXPECT_FALSE(was_serialized);
+    }
+  }
+};
+
+TEST_F(TestObjGroup, test_objgroup_serialize_when_broadcast) {
+  runInEpochCollective([]{
+    auto const proxy = vt::theObjGroup()->makeCollective<MyTestObj>();
+    auto const this_node = theContext()->getNode();
+    auto msg = ::vt::makeMessage<MyTestMsg>(this_node);
+
+    proxy.broadcastMsg<MyTestMsg, &MyTestObj::handleBroadcastMsg>(msg);
+  });
+}
+
+TEST_F(TestObjGroup, test_objgroup_dont_serialize_when_invoke) {
+  runInEpochCollective([]{
+    auto const proxy = vt::theObjGroup()->makeCollective<MyTestObj>();
+    auto const this_node = theContext()->getNode();
+    auto msg = ::vt::makeMessage<MyTestMsg>(this_node);
+
+    proxy[this_node].invoke<MyTestMsg, &MyTestObj::handleInvokeMsg>(this_node);
+  });
+}
+
 }}} // end namespace vt::tests::unit

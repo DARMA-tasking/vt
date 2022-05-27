@@ -64,6 +64,17 @@ struct ColMsg : CollectionMessage<TestCol> { };
 using CollectionTestTypes = testing::Types<default_::TestCol>;
 using CollectionTestDistTypes = testing::Types<default_::TestCol>;
 
+TYPED_TEST_P(TestConstruct, test_construct_basic_1) {
+  test_construct_1<TypeParam>();
+}
+
+TYPED_TEST_P(TestConstructDist, test_construct_distributed_basic_1) {
+  test_construct_distributed_1<TypeParam>();
+}
+
+REGISTER_TYPED_TEST_SUITE_P(TestConstruct,     test_construct_basic_1);
+REGISTER_TYPED_TEST_SUITE_P(TestConstructDist, test_construct_distributed_basic_1);
+
 INSTANTIATE_TYPED_TEST_SUITE_P(
   test_construct_simple, TestConstruct, CollectionTestTypes, DEFAULT_NAME_GEN
 );

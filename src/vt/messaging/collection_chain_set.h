@@ -55,6 +55,17 @@ namespace vt { namespace messaging {
 /** \file */
 
 /**
+ * \enum ChainSetLayout
+ *
+ * \brief Used to specify the layout for automatically managing dependency
+ * chains for a given collection.
+ */
+enum ChainSetLayout {
+  Local,                     /**< Track dependencies where element is located */
+  Home                       /**< Track dependencies on the home node */
+};
+
+/**
  * \struct CollectionChainSet collection_chain_set.h vt/messaging/collection_chain_set.h
  *
  * \brief A set of chains to maintain a sequence for a set of collection
@@ -65,13 +76,63 @@ namespace vt { namespace messaging {
  * node (either is valid). This enables the user to enqueue sequences of tasks
  * on each object and coordinate data dependencies.
  */
-template <class Index>
+template <typename Index>
 class CollectionChainSet final {
   public:
   CollectionChainSet() = default;
   CollectionChainSet(const CollectionChainSet&) = delete;
   CollectionChainSet(CollectionChainSet&&) = delete;
 
+  /**
+   * \brief Construct with a collection proxy to track indices on each node
+   * depending on the layout specified. Tracking dependencies on the local node
+   * may be better for performance as it may reduce the number of messages that
+   * must be sent.
+   *
+   * \note This constructor is a collective invocation.
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] layout the location the chain set tracks each element
+   */
+  template <typename ProxyT, typename IndexT = typename ProxyT::IndexType>
+  explicit CollectionChainSet(ProxyT proxy, ChainSetLayout layout = Local);
+
+  ~CollectionChainSet() {
+    if (deallocator_) {
+      deallocator_();
+    }
+  }
+
+private:
+  /**
+   * \internal \struct IdxMsg
+   *
+   * \brief Message that contains an index sent to remove or add remotely
+   */
+  struct IdxMsg : vt::Message {
+    explicit IdxMsg(Index in_idx) : idx_(in_idx) {}
+    Index idx_;
+  };
+
+  /**
+   * \internal brief Add an index remotely
+   *
+   * \param[in] msg index message
+   */
+  void addIndexHan(IdxMsg* msg) {
+    addIndex(msg->idx_);
+  }
+
+  /**
+   * \internal \brief Remove an index remotely
+   *
+   * \param[in] msg index message
+   */
+  void removeIndexHan(IdxMsg* msg) {
+    removeIndex(msg->idx_);
+  }
+
+public:
   /**
    * \brief Add an index to the set
    *
@@ -287,10 +348,15 @@ class CollectionChainSet final {
     }
   }
 
-  private:
+private:
+  /// Set of \c DependentSendChain managed on this node for indices
   std::unordered_map<Index, DependentSendChain> chains_;
+  /// Deallocator that type erases element listener de-registration
+  std::function<void()> deallocator_;
 };
 
 }} /* end namespace vt::messaging */
+
+#include "vt/messaging/collection_chain_set.impl.h"
 
 #endif /*INCLUDED_VT_MESSAGING_COLLECTION_CHAIN_SET_H*/

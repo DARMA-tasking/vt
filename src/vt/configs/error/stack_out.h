@@ -45,23 +45,22 @@
 #define INCLUDED_VT_CONFIGS_ERROR_STACK_OUT_H
 
 #include <cstdlib>
-#include <vector>
-#include <tuple>
 #include <string>
+#include <tuple>
+#include <vector>
 
 namespace vt { namespace debug { namespace stack {
 
-using StackTupleType = std::tuple<int32_t, void *, std::string, std::size_t>;
-using StackVectorType = std::vector<StackTupleType>;
-using DumpStackType = std::tuple<std::string, StackVectorType>;
+using StackTupleType  = std::tuple<int32_t,uint64_t,std::string,std::size_t>;
+using DumpStackType   = std::vector<StackTupleType>;
 
 /*
- * This function automatically produce a backtrace of the stack with demangled
+ * This function automatically produces a backtrace of the stack with demangled
  * function names and method name.
  */
 DumpStackType dumpStack(int skip = 0);
 
-std::string prettyPrintStack(StackVectorType const& stack);
+std::string prettyPrintStack(DumpStackType const& stack);
 
 }}} /* end namespace vt::debug::stack */
 

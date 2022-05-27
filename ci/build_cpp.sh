@@ -16,6 +16,12 @@ else
     target=${3:-install}
 fi
 
+if [ -z ${4} ]; then
+    dashj=""
+else
+    dashj="-j ${4}"
+fi
+
 if hash ccache &>/dev/null
 then
     use_ccache=true
@@ -62,7 +68,7 @@ else
       cmake -G "${CMAKE_GENERATOR:-Ninja}" \
             -DCMAKE_INSTALL_PREFIX="$DETECTOR_BUILD/install" \
             "$DETECTOR"
-      cmake --build . --target install
+      cmake --build . ${dashj} --target install
     fi
 fi
 
@@ -87,13 +93,18 @@ else
               -DCMAKE_INSTALL_PREFIX="$CHECKPOINT_BUILD/install" \
               -Ddetector_DIR="$DETECTOR_BUILD/install" \
               "$CHECKPOINT"
-        cmake --build . --target install
+        cmake --build . ${dashj} --target install
     fi
 fi
 
 if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1
 then
     export Zoltan_DIR=${ZOLTAN_DIR:-""}
+fi
+
+if test "${VT_CI_BUILD:-0}" -eq 1
+then
+    git config --global --add safe.directory "${source_dir}"
 fi
 
 export VT=${source_dir}
@@ -121,6 +132,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_diagnostics_runtime_enabled="${VT_DIAGNOSTICS_RUNTIME_ENABLED:-0}" \
       -Dvt_fcontext_enabled="${VT_FCONTEXT_ENABLED:-0}" \
       -Dvt_fcontext_build_tests_examples="${VT_FCONTEXT_BUILD_TESTS_EXAMPLES:-0}" \
+      -Dvt_rdma_tests_enabled="${VT_RDMA_TESTS_ENABLED:-1}" \
       -DUSE_OPENMP="${VT_USE_OPENMP:-0}" \
       -DUSE_STD_THREAD="${VT_USE_STD_THREAD:-0}" \
       -DCODE_COVERAGE="${CODE_COVERAGE:-0}" \
@@ -185,7 +197,7 @@ then
         # To easily tell if compilation of given file succeeded special progress bar is used
         # (controlled by variable NINJA_STATUS)
         export NINJA_STATUS="[ninja][%f/%t] "
-        time cmake --build . --target "${target}" | tee "$OUTPUT_TMP"
+        time cmake --build . ${dashj} --target "${target}" | tee "$OUTPUT_TMP"
         compilation_ret=${PIPESTATUS[0]}
         sed -i '/ninja: build stopped:/d' "$OUTPUT_TMP"
 
@@ -194,7 +206,7 @@ then
     elif test "$GENERATOR" = "Unix Makefiles"
     then
         # Gcc outputs warnings and errors to stderr, so there's not much to do
-        time cmake --build . --target "${target}" 2> >(tee "$OUTPUT_TMP")
+        time cmake --build . ${dashj} --target "${target}" 2> >(tee "$OUTPUT_TMP")
         compilation_ret=$?
         WARNS_ERRS=$(cat "$OUTPUT_TMP")
     fi
@@ -203,7 +215,7 @@ then
     WARNS_ERRS=${WARNS_ERRS//$'\n'/$DELIMITER}
     echo "$WARNS_ERRS" > "$OUTPUT"
 else
-    time cmake --build . --target "${target}"
+    time cmake --build . ${dashj} --target "${target}"
     compilation_ret=$?
 fi
 

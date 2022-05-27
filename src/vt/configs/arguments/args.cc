@@ -49,6 +49,7 @@
 #include <vector>
 #include <sstream>
 #include <tuple>
+#include <ctime>
 
 #include "CLI/CLI11.hpp"
 
@@ -469,33 +470,41 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lb_name       = "Name of the load balancer to use";
   auto lb_interval   = "Load balancing interval";
   auto lb_keep_last_elm = "Do not migrate last element in collection";
-  auto lb_stats      = "Enable load balancing statistics";
-  auto lb_stats_comp = "Compress load balancing statistics output with brotli";
-  auto lb_stats_dir  = "Load balancing statistics output directory";
-  auto lb_stats_file = "Load balancing statistics output file name";
-  auto lb_stats_dir_in  = "Load balancing statistics input directory";
-  auto lb_stats_file_in = "Load balancing statistics input file name";
+  auto lb_data      = "Enable load balancing data";
+  auto lb_data_comp = "Compress load balancing data output with brotli";
+  auto lb_data_dir  = "Load balancing data output directory";
+  auto lb_data_file = "Load balancing data output file name";
+  auto lb_data_dir_in  = "Load balancing data input directory";
+  auto lb_data_file_in = "Load balancing data input file name";
+  auto lb_statistics = "Dump load balancing statistics to file";
+  auto lb_statistics_comp = "Compress load balancing statistics file with brotli";
+  auto lb_statistics_file = "Load balancing statistics output file name";
+  auto lb_self_migration = "Allow load balancer to migrate objects to the same node";
   auto lbn = "NoLB";
   auto lbi = 1;
   auto lbf = "";
-  auto lbd = "vt_lb_stats";
-  auto lbs = "stats";
+  auto lbd = "vt_lb_data";
+  auto lbs = "data";
   auto lba = "";
-  auto s  = app.add_flag("--vt_lb",                 appConfig.vt_lb,             lb);
-  auto t1 = app.add_flag("--vt_lb_quiet",           appConfig.vt_lb_quiet,       lb_quiet);
-  auto u  = app.add_option("--vt_lb_file_name",     appConfig.vt_lb_file_name,   lb_file_name, lbf)
-    ->check(CLI::ExistingFile);
-  auto u1 = app.add_flag("--vt_lb_show_spec",       appConfig.vt_lb_show_spec,   lb_show_spec);
-  auto v  = app.add_option("--vt_lb_name",          appConfig.vt_lb_name,        lb_name,      lbn);
-  auto v1 = app.add_option("--vt_lb_args",          appConfig.vt_lb_args,        lb_args,      lba);
-  auto w  = app.add_option("--vt_lb_interval",      appConfig.vt_lb_interval,    lb_interval,  lbi);
-  auto wl = app.add_flag("--vt_lb_keep_last_elm",   appConfig.vt_lb_keep_last_elm, lb_keep_last_elm);
-  auto ww = app.add_flag("--vt_lb_stats",           appConfig.vt_lb_stats,       lb_stats);
-  auto xz = app.add_flag("--vt_lb_stats_compress",  appConfig.vt_lb_stats_compress, lb_stats_comp);
-  auto wx = app.add_option("--vt_lb_stats_dir",     appConfig.vt_lb_stats_dir,   lb_stats_dir, lbd);
-  auto wy = app.add_option("--vt_lb_stats_file",    appConfig.vt_lb_stats_file,  lb_stats_file,lbs);
-  auto xx = app.add_option("--vt_lb_stats_dir_in",  appConfig.vt_lb_stats_dir_in,  lb_stats_dir_in, lbd);
-  auto xy = app.add_option("--vt_lb_stats_file_in", appConfig.vt_lb_stats_file_in, lb_stats_file_in,lbs);
+  auto lbq = "vt_lb_statistics.%t.json";
+  auto s  = app.add_flag("--vt_lb", appConfig.vt_lb, lb);
+  auto t1 = app.add_flag("--vt_lb_quiet", appConfig.vt_lb_quiet, lb_quiet);
+  auto u  = app.add_option("--vt_lb_file_name", appConfig.vt_lb_file_name, lb_file_name, lbf)->check(CLI::ExistingFile);
+  auto u1 = app.add_flag("--vt_lb_show_spec", appConfig.vt_lb_show_spec, lb_show_spec);
+  auto v  = app.add_option("--vt_lb_name", appConfig.vt_lb_name, lb_name, lbn);
+  auto v1 = app.add_option("--vt_lb_args", appConfig.vt_lb_args, lb_args, lba);
+  auto w  = app.add_option("--vt_lb_interval", appConfig.vt_lb_interval, lb_interval, lbi);
+  auto wl = app.add_flag("--vt_lb_keep_last_elm", appConfig.vt_lb_keep_last_elm, lb_keep_last_elm);
+  auto ww = app.add_flag("--vt_lb_data", appConfig.vt_lb_data, lb_data);
+  auto xz = app.add_flag("--vt_lb_data_compress", appConfig.vt_lb_data_compress, lb_data_comp);
+  auto wx = app.add_option("--vt_lb_data_dir", appConfig.vt_lb_data_dir, lb_data_dir, lbd);
+  auto wy = app.add_option("--vt_lb_data_file", appConfig.vt_lb_data_file, lb_data_file,lbs);
+  auto xx = app.add_option("--vt_lb_data_dir_in", appConfig.vt_lb_data_dir_in, lb_data_dir_in, lbd);
+  auto xy = app.add_option("--vt_lb_data_file_in", appConfig.vt_lb_data_file_in, lb_data_file_in, lbs);
+  auto yx = app.add_flag("--vt_lb_statistics",          appConfig.vt_lb_statistics,          lb_statistics);
+  auto yy = app.add_flag("--vt_lb_statistics_compress", appConfig.vt_lb_statistics_compress, lb_statistics_comp);
+  auto yz = app.add_option("--vt_lb_statistics_file",   appConfig.vt_lb_statistics_file,     lb_statistics_file,lbq);
+  auto lbasm = app.add_flag("--vt_lb_self_migration", appConfig.vt_lb_self_migration, lb_self_migration);
 
   auto debugLB = "Load Balancing";
   s->group(debugLB);
@@ -512,6 +521,10 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   xx->group(debugLB);
   xy->group(debugLB);
   xz->group(debugLB);
+  yx->group(debugLB);
+  yy->group(debugLB);
+  yz->group(debugLB);
+  lbasm->group(debugLB);
 
   // help options deliberately omitted from the debugLB group above so that
   // they appear grouped with --vt_help when --vt_help is used
@@ -776,7 +789,7 @@ std::tuple<int, std::string> ArgConfig::parseToConfig(
 }
 
 namespace {
-static std::string buildFile(std::string const& file, std::string const& dir) {
+static std::string buildRankFile(std::string const& file) {
   std::string name = file;
   std::size_t rank = name.find("%p");
   auto str_rank = std::to_string(theContext()->getNode());
@@ -785,17 +798,53 @@ static std::string buildFile(std::string const& file, std::string const& dir) {
   } else {
     name.replace(rank, 2, str_rank);
   }
-  return dir + "/" + name;
+  return name;
+}
 
+static std::string buildFile(
+  std::string const& file, std::string const& dir
+) {
+  auto const name = buildRankFile(file);
+  return dir + "/" + name;
+}
+
+static std::string buildFileWithBrExtension(
+  std::string const& file, std::string const& dir
+) {
+  auto name = buildRankFile(file);
+  if (name.substr(name.length()-3, 3) != ".br") {
+    name = name + ".br";
+  }
+  return dir + "/" + name;
 }
 } /* end anon namespace */
 
-std::string AppConfig::getLBStatsFileOut() const {
-  return buildFile(vt_lb_stats_file, vt_lb_stats_dir);
+std::string AppConfig::getLBDataFileOut() const {
+  if (vt_lb_data_compress) {
+    return buildFileWithBrExtension(vt_lb_data_file, vt_lb_data_dir);
+  } else {
+    return buildFile(vt_lb_data_file, vt_lb_data_dir);
+  }
 }
 
-std::string AppConfig::getLBStatsFileIn() const {
-  return buildFile(vt_lb_stats_file_in, vt_lb_stats_dir_in);
+std::string AppConfig::getLBDataFileIn() const {
+  return buildFile(vt_lb_data_file_in, vt_lb_data_dir_in);
+}
+
+std::string AppConfig::getLBStatisticsFile() const {
+  std::string name = vt_lb_statistics_file;
+  std::size_t timestamp = name.find("%t");
+  if (timestamp != std::string::npos) {
+    std::time_t t = std::time(nullptr);
+    std::tm tm = *std::localtime(&t);
+    std::stringstream ss;
+    ss << std::put_time(&tm, "%Y-%m-%d-%H-%M-%S");
+    name.replace(timestamp, 2, ss.str());
+  }
+  if (vt_lb_statistics_compress and name.substr(name.length()-3, 3) != ".br") {
+    name = name + ".br";
+  }
+  return name;
 }
 
 }} /* end namespace vt::arguments */

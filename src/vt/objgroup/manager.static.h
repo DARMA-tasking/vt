@@ -53,25 +53,26 @@
 namespace vt { namespace objgroup {
 
 template <typename MsgT>
-void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
+messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
   auto const num_nodes = theContext()->getNumNodes();
   auto const this_node = theContext()->getNode();
   vtAssert(dest_node < num_nodes, "Invalid node (must be < num_nodes)");
   if (dest_node != this_node) {
-    theMsg()->sendMsg<MsgT>(dest_node, han,msg, no_tag);
+    return theMsg()->sendMsg<MsgT>(dest_node, han,msg, no_tag);
   } else {
     // Get the current epoch for the message
     auto const cur_epoch = theMsg()->setupEpochMsg(msg);
 
-    auto holder = detail::getHolderBase(han);
-    auto const& elm_id = holder->getElmID();
-    auto stats = &holder->getStats();
-    auto han_type = auto_registry::RegistryTypeEnum::RegObjGroup;
+    return messaging::PendingSend{cur_epoch, [msg, han, cur_epoch, this_node](){
+      auto holder = detail::getHolderBase(han);
+      auto const& elm_id = holder->getElmID();
+      auto lb_data = &holder->getLBData();
 
-    runnable::makeRunnable(msg, true, han, this_node, han_type)
-      .withTDEpoch(cur_epoch)
-      .withLBStats(stats, elm_id)
-      .enqueue();
+      runnable::makeRunnable(msg, true, han, this_node)
+        .withTDEpoch(cur_epoch)
+        .withLBData(lb_data, elm_id)
+        .enqueue();
+    }};
   }
 }
 
@@ -88,15 +89,14 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
   );
 
   // this is a local invocation.. no thread required
-  auto han_type = auto_registry::RegistryTypeEnum::RegObjGroup;
-  runnable::makeRunnable(msg.msg_, false, han, this_node, han_type)
+  runnable::makeRunnable(msg.msg_, false, han, this_node)
     .withTDEpochFromMsg()
     .run();
 }
 
 template <typename MsgT>
-void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
-  theMsg()->broadcastMsg<MsgT>(han, msg);
+messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
+  return theMsg()->broadcastMsg<MsgT>(han, msg);
 }
 
 }} /* end namespace vt::objgroup */

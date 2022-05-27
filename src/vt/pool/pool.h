@@ -116,7 +116,7 @@ struct Pool : runtime::component::Component<Pool> {
    *
    * \return enum \c ePoolSize of which pool to target
    */
-  ePoolSize getPoolType(size_t const& num_bytes, size_t const& oversize);
+  ePoolSize getPoolType(size_t const& num_bytes, size_t const& oversize) const;
 
   /**
    * \internal \brief Get remaining bytes for a pool allocation
@@ -130,7 +130,34 @@ struct Pool : runtime::component::Component<Pool> {
    *
    * \return number of extra bytes
    */
-  SizeType remainingSize(void* const buf);
+  SizeType remainingSize(void* const buf) const;
+
+  /**
+   * \internal \brief Get total allocated bytes for a pool allocation
+   *
+   * The result of this includes both the requested and oversize bytes.
+   *
+   * \param[in] buf the buffer allocated from the pool
+   *
+   * \return the total number of allocated bytes
+   */
+  SizeType allocatedSize(void* const buf) const;
+
+  /**
+   * \internal \brief Attempt to increase the size of an allocation without reallocating
+   *
+   * The allocation will only be grown if grow_amount is less than or equal to the remaining
+   * size in the allocated block. If the grow_amount is too large, this function will return
+   * false and the allocation size will not be increased. On success, the new size will be
+   * reflected in the allocatedSize of the buffer.
+   *
+   * \param[in] buf the buffer allocated from the pool that should be grown
+   * \param[in] grow_amount the amount to grow the buffer
+   *
+   * \return false if the grow_amount is too large for the allocated block, true if the operation
+   * succeeded
+   */
+  bool tryGrowAllocation(void* const buf, size_t grow_amount);
 
   /**
    * \brief Whether the pool is enabled at compile-time

@@ -13,7 +13,7 @@ the nodes that the collection is currently mapped to. This group makes
 broadcasts efficient and allows reductions to make progress without waiting for
 nodes that do not have collection elements.
 
-The \ref proc-stats component stores the statistics for live collections that
+The \ref node-lb-data component stores the LB data for live collections that
 then passes the instrumented data to the \ref lb-manager component to apply load
 balancing strategies. You can use `--vt_lb_keep_last_elm` flag to prohibit load
 balancer from migrating last element in collection.
