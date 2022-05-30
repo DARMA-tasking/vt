@@ -92,7 +92,7 @@ void colHandler(MyMsg*, MyCol* col) {
 struct TestLoadBalancerOther : TestParallelHarnessParam<std::string> { };
 struct TestLoadBalancerGreedy : TestParallelHarnessParam<std::string> { };
 
-void runTest(std::string const& lb_name, const int phases = num_phases) {
+void runTest(std::string const& lb_name) {
   vt::theConfig()->vt_lb = true;
   vt::theConfig()->vt_lb_name = lb_name;
   if (vt::theContext()->getNode() == 0) {
@@ -126,7 +126,7 @@ void runTest(std::string const& lb_name, const int phases = num_phases) {
     proxy = vt::theCollection()->constructCollective<MyCol>(range);
   });
 
-  for (int phase = 0; phase < phases; phase++) {
+  for (int phase = 0; phase < num_phases; phase++) {
     // Do some work.
     runInEpochCollective([&]{
       proxy.broadcastCollective<MyMsg, colHandler>();
