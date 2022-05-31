@@ -179,22 +179,6 @@ private:
   std::shared_ptr<balance::Reassignment> pending_reassignment_ = nullptr;
 };
 
-struct CommMsg : vt::Message {
-  using MessageParentType = vt::Message;
-  vt_msg_serialize_required();
-
-  CommMsg() = default;
-  explicit CommMsg(lb::BaseLB::ElementCommType in_comm) : comm_(in_comm) { }
-
-  lb::BaseLB::ElementCommType comm_;
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-    s | comm_;
-  }
-};
-
 }}}} // namespace vt::vrt::collection::lb
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_H*/

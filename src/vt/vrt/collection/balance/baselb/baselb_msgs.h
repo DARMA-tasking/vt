@@ -82,6 +82,22 @@ struct CountMsg : vt::collective::ReduceTMsg<int32_t> {
   {}
 };
 
+struct CommMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_required();
+
+  CommMsg() = default;
+  explicit CommMsg(elm::CommMapType const& in_comm) : comm_(in_comm) { }
+
+  elm::CommMapType comm_;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | comm_;
+  }
+};
+
 }}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_MSGS_H*/
