@@ -67,9 +67,7 @@ struct TestObjGroup {
   }
 
   static ProxyType construct() {
-    auto proxy = vt::theObjGroup()->makeCollective<TestObjGroup>(
-      "TestObjGroup::construct()"
-    );
+    auto proxy = vt::theObjGroup()->makeCollective<TestObjGroup>("TestObjGroup");
     proxy.get()->initialize(proxy);
     return proxy;
   }

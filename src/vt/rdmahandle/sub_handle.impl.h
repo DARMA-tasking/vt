@@ -504,7 +504,7 @@ SubHandle<T,E,IndexT>::construct(
   vt::HandlerType map_han
 ) {
   auto proxy = vt::theObjGroup()->makeCollective<SubHandle<T,E,IndexT>>(
-    "SubHandle::construct()"
+    "RDMASubHandle"
   );
   proxy.get()->initialize(
     proxy, in_is_migratable, in_range, map_han, in_dense_start_with_zero

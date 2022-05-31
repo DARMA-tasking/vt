@@ -77,7 +77,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /*static*/ std::unique_ptr<LBManager> LBManager::construct() {
   auto ptr = std::make_unique<LBManager>();
   auto proxy = theObjGroup()->makeCollective<LBManager>(
-    ptr.get(), "LBManager::construct()"
+    ptr.get(), "LBManager"
   );
   proxy.get()->setProxy(proxy);
 
@@ -165,8 +165,8 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
 
 template <typename LB>
 LBManager::LBProxyType
-LBManager::makeLB() {
-  auto proxy = theObjGroup()->makeCollective<LB>("LBManager::makeLB()");
+LBManager::makeLB(std::string const& lb_name) {
+  auto proxy = theObjGroup()->makeCollective<LB>(lb_name);
   auto strat = proxy.get();
   strat->init(proxy);
   auto base_proxy = proxy.template castToBase<lb::BaseLB>();
@@ -322,17 +322,17 @@ void LBManager::startLB(
   }
 
   switch (lb) {
-  case LBType::HierarchicalLB:      lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>();      break;
-  case LBType::GreedyLB:            lb_instances_["chosen"] = makeLB<lb::GreedyLB>();            break;
-  case LBType::RotateLB:            lb_instances_["chosen"] = makeLB<lb::RotateLB>();            break;
-  case LBType::TemperedLB:          lb_instances_["chosen"] = makeLB<lb::TemperedLB>();          break;
-  case LBType::OfflineLB:           lb_instances_["chosen"] = makeLB<lb::OfflineLB>();           break;
-  case LBType::RandomLB:            lb_instances_["chosen"] = makeLB<lb::RandomLB>();            break;
+  case LBType::HierarchicalLB:      lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>("HierarchicalLB");           break;
+  case LBType::GreedyLB:            lb_instances_["chosen"] = makeLB<lb::GreedyLB>("GreedyLB");                       break;
+  case LBType::RotateLB:            lb_instances_["chosen"] = makeLB<lb::RotateLB>("RotateLB");                       break;
+  case LBType::TemperedLB:          lb_instances_["chosen"] = makeLB<lb::TemperedLB>("TemperedLB");                   break;
+  case LBType::OfflineLB:           lb_instances_["chosen"] = makeLB<lb::OfflineLB>("OfflineLB");                     break;
+  case LBType::RandomLB:            lb_instances_["chosen"] = makeLB<lb::RandomLB>("RandomLB");                       break;
 #   if vt_check_enabled(zoltan)
-  case LBType::ZoltanLB:            lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();            break;
+  case LBType::ZoltanLB:            lb_instances_["chosen"] = makeLB<lb::ZoltanLB>("ZoltanLB");                       break;
 #   endif
-  case LBType::TestSerializationLB: lb_instances_["chosen"] = makeLB<lb::TestSerializationLB>(); break;
-  case LBType::TemperedWMin:        lb_instances_["chosen"] = makeLB<lb::TemperedWMin>();        break;
+  case LBType::TestSerializationLB: lb_instances_["chosen"] = makeLB<lb::TestSerializationLB>("TestSerializationLB"); break;
+  case LBType::TemperedWMin:        lb_instances_["chosen"] = makeLB<lb::TemperedWMin>("TemperedWMin");               break;
   case LBType::NoLB:
     vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
     break;

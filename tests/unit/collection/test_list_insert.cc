@@ -118,7 +118,7 @@ template <typename IndexT>
 struct MyMapper : vt::mapping::BaseMapper<IndexT> {
   static vt::ObjGroupProxyType construct() {
     return vt::theObjGroup()->makeCollective<MyMapper<IndexT>>(
-      "MyMapper::construct()"
+      "MyMapper"
     ).getProxy();
   }
 

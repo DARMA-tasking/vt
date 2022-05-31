@@ -339,9 +339,7 @@ void PerfTestHarness::StopTimer(std::string const& name) {
 }
 
 void PerfTestHarness::SyncResults() {
-  auto proxy = theObjGroup()->makeCollective<TestNodeObj>(
-    "PerfTestHarness::SyncResults()", this
-  );
+  auto proxy = theObjGroup()->makeCollective<TestNodeObj>("TestNodeObj", this);
 
   // Root node will be responsible for generating the final output
   // so every other node sends its results to it (at the end of test runs)

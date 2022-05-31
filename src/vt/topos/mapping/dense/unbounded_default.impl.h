@@ -60,7 +60,7 @@ NodeType UnboundedDefaultMap<IdxT>::map(IdxT* idx, int ndim, NodeType num_nodes)
 template <typename IdxT>
 /*static*/ ObjGroupProxyType UnboundedDefaultMap<IdxT>::construct() {
   auto proxy = theObjGroup()->makeCollective<UnboundedDefaultMap<IdxT>>(
-    "UnboundedDefaultMap::construct()"
+    "UnboundedDefaultMap"
   );
   return proxy.getProxy();
 }

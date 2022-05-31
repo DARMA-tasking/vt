@@ -69,7 +69,7 @@ void NodeLBData::setProxy(objgroup::proxy::Proxy<NodeLBData> in_proxy) {
 /*static*/ std::unique_ptr<NodeLBData> NodeLBData::construct() {
   auto ptr = std::make_unique<NodeLBData>();
   auto proxy = theObjGroup()->makeCollective<NodeLBData>(
-    ptr.get(), "NodeLBData::construct()"
+    ptr.get(), "NodeLBData"
   );
   proxy.get()->setProxy(proxy);
   return ptr;

@@ -63,7 +63,7 @@ CollectionChainSet<Index>::CollectionChainSet(
 
   // Make this chain set an objgroup instance so we can send updates
   auto p = theObjGroup()->makeCollective<CollectionChainSet<Index>>(
-    this, "CollectionChainSet::CollectionChainSet()"
+    this, "CollectionChainSet"
   );
 
   auto const this_node = theContext()->getNode();

@@ -80,7 +80,7 @@ struct TestObjGroupExt {
 
   static ProxyType construct() {
     auto proxy = vt::theObjGroup()->makeCollective<TestObjGroupExt>(
-      "TestObjGroupExt::construct()"
+      "TestObjGroupExt"
     );
     proxy.get()->initialize(proxy);
     return proxy;

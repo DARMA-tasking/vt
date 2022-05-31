@@ -225,11 +225,12 @@ public:
    * \internal \brief Collectively construct a new load balancer
    *
    * \param[in] LB the type of strategy to instantiate
+   * \param[in] lb_name optional name of the load balancer
    *
    * \return objgroup proxy to the new load balancer
    */
   template <typename LB>
-  LBProxyType makeLB();
+  LBProxyType makeLB(std::string const& lb_name = {});
 
 protected:
   /**
