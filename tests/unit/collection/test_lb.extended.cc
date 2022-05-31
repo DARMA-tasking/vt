@@ -193,21 +193,32 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
 
   ASSERT_EQ(comm_data->size(), 2);
   auto const prev_node = (this_node + num_nodes - 1) % num_nodes;
+  bool this_to_next = false, prev_to_this = false;
+
   for (auto&& elm : *comm_data) {
     auto const& comm_key = elm.first;
+    auto const& comm_vol = elm.second;
     auto const from_home_node = comm_key.fromObj().getHomeNode();
     auto const to_home_node = comm_key.toObj().getHomeNode();
 
-    ASSERT_TRUE(
-      (from_home_node == this_node and to_home_node == next_node) or
-      (from_home_node == prev_node and to_home_node == this_node)
-    );
+    if (from_home_node == this_node) {
+      ASSERT_EQ(to_home_node, next_node);
+      this_to_next = true;
+    } else if (from_home_node == prev_node) {
+      ASSERT_EQ(to_home_node, this_node);
+      prev_to_this = true;
+    }
+    ASSERT_EQ(comm_vol.bytes, bytes);
 
     vt_debug_print(
       verbose, temperedwmin, "test_make_graph_symmetric: elm: from={}, to={}\n",
       comm_key.fromObj(), comm_key.toObj()
     );
   }
+
+  // make sure that both (distinct) comms are present
+  ASSERT_TRUE(this_to_next);
+  ASSERT_TRUE(prev_to_this);
 }
 
 struct MyCol2 : vt::Collection<MyCol2,vt::Index1D> {};
