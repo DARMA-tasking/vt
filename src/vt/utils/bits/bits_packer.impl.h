@@ -117,7 +117,9 @@ BitPacker::setFieldDynamic(
 ) {
   auto const nbits = (sizeof(BitField) * 8) - len;
   field = field & ~(gen_bit_mask(len) << start);
-  field = field | (((static_cast<BitField>(segment) << nbits) >> nbits) << start);
+  using UnsignedBitField = std::make_unsigned_t<BitField>;
+  auto bits = static_cast<BitField>(((static_cast<UnsignedBitField>(segment) << nbits) >> nbits) << start);
+  field = field | bits;
 }
 
 template <FieldType start, FieldType len, typename BitField>
