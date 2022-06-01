@@ -125,8 +125,10 @@ BitPacker::setFieldDynamic(
   UnsignedBitField seg;
   // Static cast will not work for negative types if we end up with that
   std::memcpy(&seg, &segment, sizeof(UnsignedBitField));
-  auto bits = static_cast<BitField>(((seg << nbits) >> nbits) << start);
-  field = field | bits;
+  auto bits = ((seg << nbits) >> nbits) << start;
+  BitField field_bits;
+  std::memcpy(&field_bits, &bits, sizeof(BitField));
+  field = field | field_bits;
 }
 
 template <FieldType start, FieldType len, typename BitField>
