@@ -321,18 +321,19 @@ void LBManager::startLB(
     return;
   }
 
+  std::string const lb_name = get_lb_names()[lb];
   switch (lb) {
-  case LBType::HierarchicalLB:      lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>("HierarchicalLB");           break;
-  case LBType::GreedyLB:            lb_instances_["chosen"] = makeLB<lb::GreedyLB>("GreedyLB");                       break;
-  case LBType::RotateLB:            lb_instances_["chosen"] = makeLB<lb::RotateLB>("RotateLB");                       break;
-  case LBType::TemperedLB:          lb_instances_["chosen"] = makeLB<lb::TemperedLB>("TemperedLB");                   break;
-  case LBType::OfflineLB:           lb_instances_["chosen"] = makeLB<lb::OfflineLB>("OfflineLB");                     break;
-  case LBType::RandomLB:            lb_instances_["chosen"] = makeLB<lb::RandomLB>("RandomLB");                       break;
+  case LBType::HierarchicalLB:      lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>(lb_name);      break;
+  case LBType::GreedyLB:            lb_instances_["chosen"] = makeLB<lb::GreedyLB>(lb_name);            break;
+  case LBType::RotateLB:            lb_instances_["chosen"] = makeLB<lb::RotateLB>(lb_name);            break;
+  case LBType::TemperedLB:          lb_instances_["chosen"] = makeLB<lb::TemperedLB>(lb_name);          break;
+  case LBType::OfflineLB:           lb_instances_["chosen"] = makeLB<lb::OfflineLB>(lb_name);           break;
+  case LBType::RandomLB:            lb_instances_["chosen"] = makeLB<lb::RandomLB>(lb_name);            break;
 #   if vt_check_enabled(zoltan)
-  case LBType::ZoltanLB:            lb_instances_["chosen"] = makeLB<lb::ZoltanLB>("ZoltanLB");                       break;
+  case LBType::ZoltanLB:            lb_instances_["chosen"] = makeLB<lb::ZoltanLB>(lb_name);            break;
 #   endif
-  case LBType::TestSerializationLB: lb_instances_["chosen"] = makeLB<lb::TestSerializationLB>("TestSerializationLB"); break;
-  case LBType::TemperedWMin:        lb_instances_["chosen"] = makeLB<lb::TemperedWMin>("TemperedWMin");               break;
+  case LBType::TestSerializationLB: lb_instances_["chosen"] = makeLB<lb::TestSerializationLB>(lb_name); break;
+  case LBType::TemperedWMin:        lb_instances_["chosen"] = makeLB<lb::TemperedWMin>(lb_name);        break;
   case LBType::NoLB:
     vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
     break;
