@@ -44,6 +44,7 @@
 #include <vt/vrt/collection/balance/lb_common.h>
 #include <vt/vrt/collection/balance/baselb/baselb.h>
 #include <vt/vrt/collection/balance/temperedlb/temperedlb.h>
+#include <vt/vrt/collection/balance/temperedwmin/temperedwmin.h>
 
 #include "test_harness.h"
 
@@ -75,14 +76,15 @@ TimeType setupProblem(
 
 void orderAndVerify(
   ObjectOrdering order,
-  const std::unordered_map<ElementIDStruct, TimeType> &cur_objs,
+  const std::unordered_map<ElementIDStruct, TimeType>& cur_objs,
   TimeType my_load, TimeType target_load,
-  const std::vector<ElementIDType> &soln
-) {
+  const std::vector<ElementIDType>& soln, bool use_tempered_wmin) {
   // have TemperedLB order the objects
-  auto ordered_objs = vt::vrt::collection::lb::TemperedLB::orderObjects(
-    order, cur_objs, my_load, target_load
-  );
+  auto ordered_objs = use_tempered_wmin ?
+    vt::vrt::collection::lb::TemperedWMin::orderObjects(
+      order, cur_objs, my_load, target_load) :
+    vt::vrt::collection::lb::TemperedLB::orderObjects(
+      order, cur_objs, my_load, target_load);
 
   // verify correctness of the returned ordering
   int i = 0;
@@ -93,24 +95,28 @@ void orderAndVerify(
 
 void orderUsingOverloadAndVerify(
   ObjectOrdering order, TimeType over_avg_sec /* my_load-target_load */,
-  const std::vector<ElementIDType> &soln
+  const std::vector<ElementIDType> &soln, bool use_temperd_wmin = false
 ) {
   std::unordered_map<ElementIDStruct, TimeType> cur_objs;
   TimeType my_load = setupProblem(cur_objs);
   TimeType target_load = my_load - over_avg_sec;
 
-  orderAndVerify(order, cur_objs, my_load, target_load, soln);
+  orderAndVerify(
+    order, cur_objs, my_load, target_load, soln, use_temperd_wmin
+  );
 }
 
 void orderUsingTargetLoadAndVerify(
   ObjectOrdering order, TimeType target_load_sec,
-  const std::vector<ElementIDType> &soln
+  const std::vector<ElementIDType> &soln, bool use_temperd_wmin = false
 ) {
   std::unordered_map<ElementIDStruct, TimeType> cur_objs;
   TimeType my_load = setupProblem(cur_objs);
   TimeType target_load = target_load_sec;
 
-  orderAndVerify(order, cur_objs, my_load, target_load, soln);
+  orderAndVerify(
+    order, cur_objs, my_load, target_load, soln, use_temperd_wmin
+  );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -197,6 +203,27 @@ TEST_F(TestTemperedLB, test_temperedlb_ordering_largestobjects) {
   std::vector<ElementIDType> soln = {2, 1, 5, 3, 4, 0};
 
   orderUsingOverloadAndVerify(order, over_avg, soln);
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+TEST_F(TestTemperedLB, test_temperedwmin_ordering_elmid) {
+  ObjectOrdering order = ObjectOrdering::ElmID;
+  TimeType over_avg = 4.5;
+  // result will be independent of over_avg
+  std::vector<ElementIDType> soln = {0, 1, 2, 3, 4, 5};
+
+  orderUsingOverloadAndVerify(order, over_avg, soln, true);
+}
+
+TEST_F(TestTemperedLB, test_temperedwmin_ordering_smallobjects_largest) {
+  ObjectOrdering order = ObjectOrdering::SmallObjects;
+  TimeType target_load = 0.5;
+  // marginal_obj_load will be 9.0
+  // load order will be 9.0, 6.0, 5.0, 4.0, 3.0, 2.0
+  std::vector<ElementIDType> soln = {2, 1, 5, 3, 4, 0};
+
+  orderUsingTargetLoadAndVerify(order, target_load, soln, true);
 }
 
 }}} // end namespace vt::tests::unit

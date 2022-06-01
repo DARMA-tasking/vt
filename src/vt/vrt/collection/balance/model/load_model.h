@@ -45,6 +45,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_LOAD_MODEL_H
 
 #include "vt/config.h"
+#include "vt/timing/timing_type.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_comm.h"
 
@@ -206,7 +207,7 @@ struct LoadModel
    *
    * This would typically be called by LBManager collectively inside
    * an epoch that can be used for global communication in advance of
-   * any calls to getWork()
+   * any calls to getModeledLoad()
    *
    * The `setLoads` method must have been called before any call to
    * this.
@@ -224,7 +225,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual TimeType getWork(ElementIDStruct object, PhaseOffset when) = 0;
+  virtual TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) = 0;
 
   /**
    * \brief Whether or not the model is based on the RawData model
@@ -238,9 +239,6 @@ struct LoadModel
    * \param[in] when The interval in which the raw load is desired
    *
    * \return How much computation time the object required
-   *
-   * The `updateLoads` method must have been called before any call to
-   * this.
    */
   virtual TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) {
     vtAbort(
@@ -248,6 +246,22 @@ struct LoadModel
     );
     return 0.0;
   };
+
+  /**
+   * \brief Provide an estimate of the communication cost for a given object
+   * during a specified interval
+   *
+   * \param[in] object The object whose communication is desired
+   * \param[in] when The interval in which the communication takes place
+   *
+   * \return How much communication time the object is estimated to require
+   *
+   * The `updateLoads` method must have been called before any call to
+   * this.
+   */
+  virtual TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) {
+    return {};
+  }
 
   /**
    * \brief Compute how many phases of past load statistics need to be

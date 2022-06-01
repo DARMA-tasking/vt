@@ -120,6 +120,7 @@ struct CommKey {
   ElementIDType fromNode()     const { return nfrom_; }
   ElementIDType toNode()       const { return nto_; }
   ElementIDStruct edgeID()     const { return edge_id_; }
+  CommCategory commCategory()  const { return cat_; }
 
   bool selfEdge() const { return cat_ == CommCategory::SendRecv and from_ == to_; }
   bool offNode() const {

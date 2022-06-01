@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   norm.cc
+//                               temperedwmin.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,46 +41,67 @@
 //@HEADER
 */
 
+#include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 
-#include "vt/vrt/collection/balance/model/norm.h"
-#include <cmath>
+#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-Norm::Norm(std::shared_ptr<balance::LoadModel> base, double power)
-  : ComposedModel(base)
-  , power_(power)
-{
-  vtAssert(not std::isnan(power), "Power must have a real value");
-  vtAssert(power >= 0.0, "Reciprocal loads make no sense");
+void TemperedWMin::init(objgroup::proxy::Proxy<TemperedWMin> in_proxy) {
+  auto proxy_bits = in_proxy.getProxy();
+  auto proxy = objgroup::proxy::Proxy<TemperedLB>(proxy_bits);
+  auto strat = proxy.get();
+  strat->init(proxy);
 }
 
-TimeType Norm::getModeledLoad(ElementIDStruct object, PhaseOffset offset) {
-  if (offset.subphase != PhaseOffset::WHOLE_PHASE)
-    return ComposedModel::getModeledLoad(object, offset);
-
-  if (std::isfinite(power_)) {
-    double sum = 0.0;
-
-    for (int i = 0; i < getNumSubphases(); ++i) {
-      offset.subphase = i;
-      auto t = ComposedModel::getModeledLoad(object, offset);
-      sum += std::pow(t, power_);
-    }
-
-    return std::pow(sum, 1.0/power_);
-  } else {
-    // l-infinity implies a max norm
-    double max = 0.0;
-
-    for (int i = 0; i < getNumSubphases(); ++i) {
-      offset.subphase = i;
-      auto t = ComposedModel::getModeledLoad(object, offset);
-      max = std::max(max, t);
-    }
-
-    return max;
-  }
+/*static*/ std::unordered_map<std::string, std::string>
+TemperedWMin::getInputKeysWithHelp() {
+  auto map = TemperedLB::getInputKeysWithHelp();
+  map["alpha"] =
+    R"(
+Values: <double>
+Default: 1.0
+Description:
+  Load part coefficient in affine combination of load and communication.
+)";
+  map["beta"] =
+    R"(
+Values: <double>
+Default: 0.0
+Description:
+  Communication part coefficient in affine combination of load and communication.
+)";
+  map["gamma"] =
+    R"(
+Values: <double>
+Default: 0.0
+Description:
+  Unspecified constant cost.
+)";
+  return map;
 }
 
-}}}}
+void TemperedWMin::inputParams(balance::SpecEntry* spec) {
+  TemperedLB::inputParams(spec);
+
+  alpha_         = spec->getOrDefault<double>("alpha", alpha_);
+  beta_          = spec->getOrDefault<double>("beta", beta_);
+  gamma_         = spec->getOrDefault<double>("gamma", gamma_);
+
+  vt_debug_print(
+    normal, temperedwmin,
+    "TemperedWMin::inputParams: alpha={}, beta={}, gamma={}\n",
+    alpha_, beta_, gamma_
+  );
+}
+
+TimeType TemperedWMin::getModeledWork(const elm::ElementIDStruct& obj) {
+  balance::PhaseOffset when =
+      {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
+
+  return alpha_ * load_model_->getModeledLoad(obj, when) +
+    beta_ * load_model_->getModeledComm(obj, when) + gamma_;
+}
+
+}}}} // namespace vt::vrt::collection::lb

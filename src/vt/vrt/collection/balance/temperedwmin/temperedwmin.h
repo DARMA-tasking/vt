@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   norm.cc
+//                                temperedwmin.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,46 +41,34 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDWMIN_TEMPEREDWMIN_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDWMIN_TEMPEREDWMIN_H
 
-#include "vt/vrt/collection/balance/model/norm.h"
-#include <cmath>
+#include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-Norm::Norm(std::shared_ptr<balance::LoadModel> base, double power)
-  : ComposedModel(base)
-  , power_(power)
-{
-  vtAssert(not std::isnan(power), "Power must have a real value");
-  vtAssert(power >= 0.0, "Reciprocal loads make no sense");
-}
+struct TemperedWMin : TemperedLB {
+  TemperedWMin() { comm_aware_ = true; }
+  TemperedWMin(TemperedWMin const&) = delete;
 
-TimeType Norm::getModeledLoad(ElementIDStruct object, PhaseOffset offset) {
-  if (offset.subphase != PhaseOffset::WHOLE_PHASE)
-    return ComposedModel::getModeledLoad(object, offset);
+  virtual ~TemperedWMin() { }
 
-  if (std::isfinite(power_)) {
-    double sum = 0.0;
+public:
+  void init(objgroup::proxy::Proxy<TemperedWMin> in_proxy);
+  static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 
-    for (int i = 0; i < getNumSubphases(); ++i) {
-      offset.subphase = i;
-      auto t = ComposedModel::getModeledLoad(object, offset);
-      sum += std::pow(t, power_);
-    }
+  void inputParams(balance::SpecEntry* spec) override;
 
-    return std::pow(sum, 1.0/power_);
-  } else {
-    // l-infinity implies a max norm
-    double max = 0.0;
+protected:
+  TimeType getModeledWork(const elm::ElementIDStruct& obj) override;
 
-    for (int i = 0; i < getNumSubphases(); ++i) {
-      offset.subphase = i;
-      auto t = ComposedModel::getModeledLoad(object, offset);
-      max = std::max(max, t);
-    }
+private:
+  double alpha_ = 1.0;
+  double beta_  = 0.0;
+  double gamma_ = 0.0;
+};
 
-    return max;
-  }
-}
+}}}} /* end namespace vt::vrt::collection::lb */
 
-}}}}
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDWMIN_TEMPEREDWMIN_H*/

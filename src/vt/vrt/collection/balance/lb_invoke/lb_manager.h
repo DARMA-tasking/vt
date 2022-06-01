@@ -221,7 +221,6 @@ public:
   );
   void commitPhaseStatistics(PhaseType phase);
 
-protected:
   /**
    * \internal \brief Collectively construct a new load balancer
    *
@@ -232,6 +231,7 @@ protected:
   template <typename LB>
   LBProxyType makeLB();
 
+protected:
   /**
    * \internal
    * \brief Run the load balancer
@@ -291,6 +291,10 @@ private:
   /// The appender for outputting statistics in JSON format
   std::unique_ptr<util::json::BaseAppender> statistics_writer_ = nullptr;
 };
+
+void makeGraphSymmetric(
+  PhaseType phase, objgroup::proxy::Proxy<lb::BaseLB> proxy
+);
 
 }}}} /* end namespace vt::vrt::collection::balance */
 

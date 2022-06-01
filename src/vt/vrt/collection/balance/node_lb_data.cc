@@ -103,6 +103,11 @@ std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> con
   return &lb_data_->node_subphase_comm_;
 }
 
+CommMapType* NodeLBData::getNodeComm(PhaseType phase) {
+  auto iter = lb_data_->node_comm_.find(phase);
+  return (iter != lb_data_->node_comm_.end()) ? &iter->second : nullptr;
+}
+
 void NodeLBData::clearLBData() {
   lb_data_->clear();
   node_migrate_.clear();

@@ -45,6 +45,7 @@
 #include "vt/configs/arguments/app_config.h"
 #include "vt/context/context.h"
 #include "vt/phase/phase_hook_enum.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
@@ -54,6 +55,7 @@
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
+#include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 #include "vt/vrt/collection/balance/offlinelb/offlinelb.h"
 #include "vt/vrt/collection/balance/lb_data_restart_reader.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
@@ -218,6 +220,15 @@ LBManager::runLB(
     model_->updateLoads(phase);
   });
 
+  lb::BaseLB* strat = base_proxy.get();
+  auto proxy = lb_instances_["chosen"];
+  if (strat->isCommAware()) {
+    runInEpochCollective(
+      "LBManager::runLB -> makeGraphSymmetric",
+      [phase, proxy] { makeGraphSymmetric(phase, proxy); }
+    );
+  }
+
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
     auto stats_cb = vt::theCB()->makeBcast<
       LBManager, StatsMsgType, &LBManager::statsHandler
@@ -238,7 +249,6 @@ LBManager::runLB(
 
   vt_debug_print(terse, lb, "LBManager: running strategy\n");
 
-  lb::BaseLB* strat = base_proxy.get();
   auto reassignment = strat->startLB(
     phase, base_proxy, model_.get(), stats, *comm, total_load_from_model
   );
@@ -320,6 +330,7 @@ void LBManager::startLB(
   case LBType::ZoltanLB:            lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();            break;
 #   endif
   case LBType::TestSerializationLB: lb_instances_["chosen"] = makeLB<lb::TestSerializationLB>(); break;
+  case LBType::TemperedWMin:        lb_instances_["chosen"] = makeLB<lb::TemperedWMin>();        break;
   case LBType::NoLB:
     vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
     break;
@@ -358,6 +369,9 @@ void LBManager::printLBArgsHelp(LBType lb) {
     break;
   case LBType::TemperedLB:
     help = lb::TemperedLB::getInputKeysWithHelp();
+    break;
+  case LBType::TemperedWMin:
+    help = lb::TemperedWMin::getInputKeysWithHelp();
     break;
   case LBType::RandomLB:
     help = lb::RandomLB::getInputKeysWithHelp();
@@ -608,7 +622,7 @@ void LBManager::computeStatistics(
   total_load_from_model = 0.;
   std::vector<balance::LoadData> obj_load_model;
   for (auto elm : *model) {
-    auto work = model->getWork(
+    auto work = model->getModeledLoad(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
     obj_load_model.emplace_back(
@@ -656,7 +670,13 @@ void LBManager::computeStatistics(
   }
 
   double comm_load = 0.0;
+  std::vector<balance::LoadData> obj_comm;
   for (auto&& elm : *comm_data) {
+    // Only count object-to-object direct edges in the Object_comm statistics
+    if (elm.first.cat_ == elm::CommCategory::SendRecv and not elm.first.selfEdge()) {
+      obj_comm.emplace_back(LoadData{lb::Statistic::Object_comm, elm.second.bytes});
+    }
+
     if (not comm_collectives and isCollectiveComm(elm.first.cat_)) {
       continue;
     }
@@ -668,17 +688,6 @@ void LBManager::computeStatistics(
   }
 
   lstats.emplace_back(LoadData{lb::Statistic::Rank_comm, comm_load});
-
-  std::vector<balance::LoadData> obj_comm;
-  for (auto&& elm : *comm_data) {
-    // Only count object-to-object direct edges in the Object_comm statistics
-    if (elm.first.cat_ == elm::CommCategory::SendRecv and not elm.first.selfEdge()) {
-      obj_comm.emplace_back(
-        LoadData{lb::Statistic::Object_comm, elm.second.bytes}
-      );
-    }
-  }
-
   lstats.emplace_back(reduceVec(
     lb::Statistic::Object_comm, std::move(obj_comm)
   ));
@@ -717,6 +726,66 @@ void LBManager::createStatisticsFile() {
 
 void LBManager::closeStatisticsFile() {
   statistics_writer_ = nullptr;
+}
+
+// Go through the comm graph and extract out paired SendRecv edges that are
+// not self-send and have a non-local edge
+std::unordered_map<NodeType, lb::BaseLB::ElementCommType>
+getSharedEdges(elm::CommMapType const& comm_data) {
+  auto const this_node = theContext()->getNode();
+  std::unordered_map<NodeType, lb::BaseLB::ElementCommType> shared_edges;
+
+  vt_debug_print(
+    verbose, lb, "getSharedEdges: comm size={}\n", comm_data.size()
+  );
+
+  for (auto&& elm : comm_data) {
+    if (
+      elm.first.commCategory() == elm::CommCategory::SendRecv and
+      not elm.first.selfEdge()
+    ) {
+      auto from = elm.first.fromObj();
+      auto to = elm.first.toObj();
+
+      auto from_node = from.curr_node;
+      auto to_node = to.curr_node;
+
+      vt_debug_print(
+        verbose, temperedwmin, "getSharedEdges: elm: from={}, to={}\n",
+        from, to
+      );
+
+      vtAssert(
+        from_node == this_node or to_node == this_node,
+        "One node must involve this node"
+      );
+
+      if (from_node != this_node) {
+        shared_edges[from_node][elm.first] = elm.second;
+      } else if (to_node != this_node) {
+        shared_edges[to_node][elm.first] = elm.second;
+      }
+    }
+  }
+
+  return shared_edges;
+}
+
+void makeGraphSymmetric(
+  PhaseType phase, objgroup::proxy::Proxy<lb::BaseLB> proxy
+) {
+  auto iter = theNodeLBData()->getNodeComm()->find(phase);
+  if (iter == theNodeLBData()->getNodeComm()->end()) {
+    return;
+  }
+
+  auto shared_edges = getSharedEdges(iter->second);
+
+  for (auto&& elm : shared_edges) {
+    proxy[elm.first].send<lb::CommMsg, &lb::BaseLB::recvSharedEdges>(
+      elm.second
+    );
+  }
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

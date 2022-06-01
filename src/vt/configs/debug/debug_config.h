@@ -82,7 +82,8 @@ enum CatEnum : uint64_t {
   temperedlb   = 1ull<<30,
   phase        = 1ull<<31,
   context      = 1ull<<32,
-  epoch        = 1ull<<33
+  epoch        = 1ull<<33,
+  temperedwmin = 1ull<<34
 };
 
 enum CtxEnum : uint64_t {
@@ -129,6 +130,7 @@ vt_option_category_pretty_print(group,        "group")
 vt_option_category_pretty_print(handler,      "handler")
 vt_option_category_pretty_print(hierlb,       "HierarchicalLB")
 vt_option_category_pretty_print(temperedlb,   "TemperedLB")
+vt_option_category_pretty_print(temperedwmin, "TemperedWMin")
 vt_option_category_pretty_print(lb,           "lb")
 vt_option_category_pretty_print(location,     "location")
 vt_option_category_pretty_print(objgroup,     "objgroup")
