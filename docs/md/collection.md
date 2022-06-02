@@ -74,7 +74,7 @@ definition (shown for a 1-dimensional collection):
 
 \code{.cpp}
 vt::NodeType my_map(vt::Index1D* idx, vt::Index1D* bounds, vt::NodeType num_nodes) {
-    return idx->x() % num_nodes;
+  return idx->x() % num_nodes;
 }
 \endcode
 
@@ -149,7 +149,7 @@ membership. This is performed in the following way (note that this is a
 collective interface):
 
 \code{.cpp}
-  auto proxy = vt::makeCollection<MyCollection>()
+  auto proxy = vt::makeCollection<MyCollection>("collection_label")
     .dynamicMembership(true)
     .collective(true)
     .wait();
@@ -158,7 +158,7 @@ collective interface):
   auto token = proxy.beginModification();
   for (int i = 0; i < range.x() / 2; i++) {
     if (i % num_nodes == this_node) {
-        proxy[i].insertAt(token, i % 2);
+      proxy[i].insertAt(token, i % 2);
     }
   }
   proxy.finishModification(std::move(token));

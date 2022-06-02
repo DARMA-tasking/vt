@@ -145,7 +145,7 @@ struct MyObjGroup {
 
 TEST_F(TestAsyncOpThreads, test_async_op_threads_1) {
   auto const this_node = theContext()->getNode();
-  auto p = theObjGroup()->makeCollective<MyObjGroup>();
+  auto p = theObjGroup()->makeCollective<MyObjGroup>("test_async_op_threads_1");
   auto ep = theTerm()->makeEpochRooted(term::UseDS{true});
 
   // When this returns all the MPI requests should be done

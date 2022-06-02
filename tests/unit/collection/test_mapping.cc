@@ -64,7 +64,9 @@ struct MappingTest : vt::Collection<MappingTest<IndexT>, IndexT> {
 template <typename IndexT>
 struct MyMapper : vt::mapping::BaseMapper<IndexT> {
   static vt::ObjGroupProxyType construct() {
-    return vt::theObjGroup()->makeCollective<MyMapper<IndexT>>().getProxy();
+    return vt::theObjGroup()->makeCollective<MyMapper<IndexT>>(
+      "MyMapper"
+    ).getProxy();
   }
 
   vt::NodeType map(IndexT* idx, int ndim, vt::NodeType num_nodes) override {
@@ -184,7 +186,7 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
     }
   });
 
-  auto proxy = vt::makeCollection<ColType>()
+  auto proxy = vt::makeCollection<ColType>("test_custom_mapping_1")
     .bulkInsert(range)
     .mapperObjGroup(my_proxy)
     .wait();
@@ -196,7 +198,7 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
   EXPECT_EQ(counter, num_work);
   num_work = 0;
 
-  auto proxy2 = vt::makeCollection<ColType>()
+  auto proxy2 = vt::makeCollection<ColType>("test_custom_mapping_1")
     .bulkInsert(range)
     .template mapperObjGroupConstruct<MapperType>()
     .wait();
@@ -216,9 +218,11 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
 template <typename IndexT>
 struct MyDistMapper : vt::mapping::BaseMapper<IndexT> {
   static vt::ObjGroupProxyType construct() {
-    auto prox =  vt::theObjGroup()->makeCollective<MyDistMapper<IndexT>>();
-    prox.get()->proxy = prox;
-    return prox.getProxy();
+    auto madeProxy = vt::theObjGroup()->makeCollective<MyDistMapper<IndexT>>(
+      "MyDistMapper"
+    );
+    madeProxy.get()->proxy = madeProxy;
+    return madeProxy.getProxy();
   }
 
   MyDistMapper()

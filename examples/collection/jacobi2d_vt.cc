@@ -488,7 +488,7 @@ int main(int argc, char** argv) {
 
   // Object group of all nodes that take part in computation
   // Used to determine whether the computation is finished
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>();
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>("examples_jacobi2d");
 
   // Create the decomposition into objects
   using BaseIndexType = typename vt::Index2D::DenseIndexType;
@@ -497,7 +497,7 @@ int main(int argc, char** argv) {
     static_cast<BaseIndexType>(numY_objs)
   );
 
-  auto col_proxy = vt::makeCollection<LinearPb2DJacobi>()
+  auto col_proxy = vt::makeCollection<LinearPb2DJacobi>("examples_jacobi2d")
     .bounds(range)
     .bulkInsert()
     .wait();

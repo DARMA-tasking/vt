@@ -92,7 +92,7 @@ void colHandler(MyMsg*, MyCol* col) {
 struct TestLoadBalancerOther : TestParallelHarnessParam<std::string> { };
 struct TestLoadBalancerGreedy : TestParallelHarnessParam<std::string> { };
 
-void runTest(std::string const& lb_name) {
+void runTest(std::string const& lb_name, std::string const& label) {
   vt::theConfig()->vt_lb = true;
   vt::theConfig()->vt_lb_name = lb_name;
   if (vt::theContext()->getNode() == 0) {
@@ -123,7 +123,7 @@ void runTest(std::string const& lb_name) {
 
   // Construct a collection
   runInEpochCollective([&]{
-    proxy = vt::theCollection()->constructCollective<MyCol>(range);
+    proxy = vt::theCollection()->constructCollective<MyCol>(range, label);
   });
 
   for (int phase = 0; phase < num_phases; phase++) {
@@ -139,21 +139,21 @@ void runTest(std::string const& lb_name) {
 }
 
 TEST_P(TestLoadBalancerOther, test_load_balancer_other_1) {
-  runTest(GetParam());
+  runTest(GetParam(), "test_load_balancer_other_1");
 }
 
 TEST_P(TestLoadBalancerOther, test_load_balancer_other_keep_last_elm) {
   vt::theConfig()->vt_lb_keep_last_elm = true;
-  runTest(GetParam());
+  runTest(GetParam(), "test_load_balancer_other_keep_last_elm");
 }
 
 TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_2) {
-  runTest(GetParam());
+  runTest(GetParam(), "test_load_balancer_greedy_2");
 }
 
 TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_keep_last_elm) {
   vt::theConfig()->vt_lb_keep_last_elm = true;
-  runTest(GetParam());
+  runTest(GetParam(), "test_load_balancer_greedy_keep_last_elm");
 }
 
 TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
@@ -229,7 +229,8 @@ TEST_F(TestLoadBalancerNoWork, test_load_balancer_no_work) {
   auto const num_nodes = theContext()->getNumNodes();
   auto const range = Index1D(num_nodes * 8);
   theCollection()->constructCollective<MyCol2>(
-    range, [](vt::Index1D) { return std::make_unique<MyCol2>(); }
+    range, [](vt::Index1D) { return std::make_unique<MyCol2>(); },
+    "test_load_balancer_no_work"
   );
 
   vt::theConfig()->vt_lb = true;
@@ -304,7 +305,9 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
 
   // Construct a collection
   runInEpochCollective([&] {
-    proxy = vt::theCollection()->constructCollective<MyCol>(range);
+    proxy = vt::theCollection()->constructCollective<MyCol>(
+      range, "test_node_stats_dumping_with_interval"
+    );
   });
 
   for (int phase = 0; phase < num_phases; phase++) {
@@ -417,7 +420,9 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
 
   // Construct a collection
   runInEpochCollective([&] {
-    proxy = vt::theCollection()->constructCollective<MyCol>(range);
+    proxy = vt::theCollection()->constructCollective<MyCol>(
+      range, "test_restore_stats_data_1"
+    );
   });
 
   vt::vrt::collection::balance::LBDataHolder lbdh;
@@ -607,7 +612,9 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
 
   // Construct a collection
   runInEpochCollective([&] {
-    proxy = vt::theCollection()->constructCollective<MyCol>(range);
+    proxy = vt::theCollection()->constructCollective<MyCol>(
+      range, "test_dump_userdefined_json"
+    );
   });
 
   vt::vrt::collection::balance::LBDataHolder lbdh;

@@ -139,7 +139,9 @@ void NodeObj::finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
 }
 
 VT_PERF_TEST(MyTest, test_ping_pong) {
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(this);
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
+    "test_ping_pong", this
+  );
   grp_proxy[my_node_]
     .invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 

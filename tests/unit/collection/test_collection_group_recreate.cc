@@ -81,9 +81,8 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   // the reduction to finish properly
   auto const range = Index1D(std::max(num_nodes / 2, 1));
   auto const proxy = theCollection()->constructCollective<MyCol>(
-    range, [](vt::Index1D) {
-      return std::make_unique<MyCol>();
-    }
+    range, [](vt::Index1D) { return std::make_unique<MyCol>(); },
+    "test_collection_group_recreate_1"
   );
 
   int cb_counter = 0;

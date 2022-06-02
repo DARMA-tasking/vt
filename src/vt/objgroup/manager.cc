@@ -110,7 +110,7 @@ void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) 
 }
 
 ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
-  HolderBasePtrType base, void* obj_ptr
+  std::string const& label, HolderBasePtrType base, void* obj_ptr
 ) {
   auto const id = cur_obj_id_++;
   auto const node = theContext()->getNode();
@@ -126,6 +126,8 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
     std::forward_as_tuple(proxy),
     std::forward_as_tuple(std::move(base))
   );
+  labels_.emplace(proxy, label);
+
   return proxy;
 }
 

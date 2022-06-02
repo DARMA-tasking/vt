@@ -53,7 +53,7 @@
 namespace vt { namespace tests { namespace unit { namespace bcast {
 
 TYPED_TEST_P(TestBroadcast, test_broadcast_extended_1) {
-  test_broadcast_1<TypeParam>();
+  test_broadcast_1<TypeParam>("test_broadcast_extended_1");
 }
 
 REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_extended_1);

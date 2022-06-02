@@ -62,7 +62,9 @@ int main(int argc, char** argv) {
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjGroup>();
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjGroup>(
+    "examples_hello_world"
+  );
 
   if (this_node == 0) {
     proxy[0].send<MyMsg,&MyObjGroup::handler>(5,10);

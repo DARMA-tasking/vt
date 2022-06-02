@@ -70,10 +70,11 @@ struct CollectionDirectory {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | elements_;
+    s | elements_ | label_;
   }
 
   std::vector<Element> elements_;
+  std::string label_;
 };
 
 }}} /* end namespace vt::vrt::collection */

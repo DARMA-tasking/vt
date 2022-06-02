@@ -101,10 +101,12 @@ TEST_F(TestReduce, test_reduce_with_no_elements_on_root_rank) {
 
   int32_t num_elms = 16;
 
-  objgroup_proxy = vt::theObjGroup()->makeCollective<MyObjGroup>();
+  objgroup_proxy = vt::theObjGroup()->makeCollective<MyObjGroup>(
+    "test_reduce_with_no_elements_on_root_rank"
+  );
 
   auto range = vt::Index1D(num_elms);
-  auto proxy = vt::makeCollection<Hello>()
+  auto proxy = vt::makeCollection<Hello>("test_reduce_with_no_elements_on_root_rank")
     .bounds(range)
     .mapperFunc<map>()
     .bulkInsert()

@@ -95,7 +95,7 @@ TEST_F(TestInsert, test_insert_dense_1) {
   auto const num_nodes = theContext()->getNumNodes();
 
   auto const range = Index1D(num_nodes * num_elms_per_node);
-  auto proxy = vt::makeCollection<InsertTest>()
+  auto proxy = vt::makeCollection<InsertTest>("test_insert_dense_1")
     .collective(true)
     .dynamicMembership(true)
     .bounds(range)
@@ -136,7 +136,7 @@ TEST_F(TestInsert, test_insert_sparse_1) {
   auto const num_nodes = theContext()->getNumNodes();
 
   auto const range = Index1D(num_nodes * num_elms_per_node * 16);
-  auto proxy = vt::makeCollection<InsertTest>()
+  auto proxy = vt::makeCollection<InsertTest>("test_insert_sparse_1")
     .collective(true)
     .dynamicMembership(true)
     .bounds(range)
@@ -161,7 +161,7 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
   auto const num_nodes = theContext()->getNumNodes();
 
   auto const range = Index1D(num_nodes * num_elms_per_node);
-  auto proxy = vt::makeCollection<InsertTest>()
+  auto proxy = vt::makeCollection<InsertTest>("test_insert_dense_node_1")
     .collective(true)
     .dynamicMembership(true)
     .bounds(range)
@@ -188,7 +188,7 @@ TEST_F(TestInsert, test_insert_sparse_node_1) {
   auto const num_nodes = theContext()->getNumNodes();
 
   auto const range = Index1D(num_nodes * num_elms_per_node * 16);
-  auto proxy = vt::makeCollection<InsertTest>()
+  auto proxy = vt::makeCollection<InsertTest>("test_insert_sparse_node_1")
     .collective(true)
     .dynamicMembership(true)
     .bounds(range)
@@ -215,7 +215,7 @@ TEST_F(TestInsert, test_insert_send_dense_node_1) {
   auto const num_nodes = theContext()->getNumNodes();
 
   auto const range = Index1D(num_nodes * num_elms_per_node);
-  auto proxy = vt::makeCollection<InsertTest>()
+  auto proxy = vt::makeCollection<InsertTest>("test_insert_send_dense_node_1")
     .collective(true)
     .dynamicMembership(true)
     .bounds(range)
@@ -253,7 +253,7 @@ TEST_F(TestInsert, test_insert_send_sparse_node_1) {
   auto const num_nodes = theContext()->getNumNodes();
 
   auto const range = Index1D(num_nodes * num_elms_per_node * 16);
-  auto proxy = vt::makeCollection<InsertTest>()
+  auto proxy = vt::makeCollection<InsertTest>("test_insert_send_sparse_node_1")
     .collective(true)
     .dynamicMembership(true)
     .bounds(range)

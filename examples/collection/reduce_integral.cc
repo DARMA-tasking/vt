@@ -227,7 +227,7 @@ int main(int argc, char** argv) {
   using BaseIndexType = typename vt::Index1D::DenseIndexType;
   auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
-  auto proxy = vt::makeCollection<Integration1D>()
+  auto proxy = vt::makeCollection<Integration1D>("examples_reduce_integral")
     .bounds(range)
     .bulkInsert()
     .wait();

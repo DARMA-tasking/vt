@@ -114,7 +114,9 @@ TEST_F(TestCollectionStorage, test_collection_storage_1) {
 
   using MsgType = typename TestCol::TestMsg;
 
-  auto proxy = theCollection()->constructCollective<TestCol>(num_elms);
+  auto proxy = theCollection()->constructCollective<TestCol>(
+    num_elms, "test_collection_storage_1"
+  );
 
   runInEpochCollective([=]{
     proxy.broadcastCollective<MsgType, &TestCol::testHandler>();

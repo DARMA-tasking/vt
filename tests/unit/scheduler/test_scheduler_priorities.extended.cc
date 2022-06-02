@@ -234,7 +234,9 @@ private:
 TEST_F(TestSchedPriorities, test_scheduler_priorities_4) {
 # if vt_check_enabled(priorities)
 
-  auto proxy = vt::theObjGroup()->makeCollective<ObjGroup>();
+  auto proxy = vt::theObjGroup()->makeCollective<ObjGroup>(
+    "test_scheduler_priorities_4"
+  );
 
   PriorityType p = vt::min_priority;
   PriorityLevelType l = 0;

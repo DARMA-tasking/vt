@@ -67,6 +67,12 @@ void TypelessHolder::destroyCollection(VirtualProxyType const proxy) {
       group_constructors_.erase(iter);
     }
   }
+   {
+    auto iter = labels_.find(proxy);
+    if (iter != labels_.end()) {
+      labels_.erase(iter);
+    }
+  }
 }
 
 void TypelessHolder::invokeAllGroupConstructors() {
@@ -81,10 +87,11 @@ void TypelessHolder::invokeAllGroupConstructors() {
 
 void TypelessHolder::insertCollectionInfo(
   VirtualProxyType const proxy, std::shared_ptr<BaseHolder> ptr,
-  std::function<void()> group_constructor
+  std::function<void()> group_constructor, std::string const& label
 ) {
   live_[proxy] = ptr;
   group_constructors_[proxy] = group_constructor;
+  labels_[proxy] = label;
 }
 
 void TypelessHolder::insertMap(
@@ -97,6 +104,12 @@ HandlerType TypelessHolder::getMap(VirtualProxyType const proxy) {
   auto map_iter = map_.find(proxy);
   vtAssert(map_iter != map_.end(), "Map must exist");
   return map_iter->second;
+}
+
+std::string TypelessHolder::getLabel(VirtualProxyType const proxy) const {
+  auto const iter = labels_.find(proxy);
+  vtAssert(iter != labels_.cend(), "Label does not exist");
+  return iter->second;
 }
 
 }}} /* end namespace vt::vrt::collection */

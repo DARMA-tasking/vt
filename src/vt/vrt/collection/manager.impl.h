@@ -1234,30 +1234,35 @@ bool CollectionManager::insertCollectionElement(
 
 template <typename ColT>
 CollectionManager::IsDefaultConstructableType<ColT>
-CollectionManager::constructCollective(typename ColT::IndexType range) {
+CollectionManager::constructCollective(
+  typename ColT::IndexType range, std::string const& label
+) {
   auto const map_han = getDefaultMap<ColT>();
-  auto cons_fn = [](typename ColT::IndexType){return std::make_unique<ColT>();};
-  return constructCollectiveMap<ColT>(range,cons_fn,map_han);
+  auto cons_fn = [](typename ColT::IndexType) { return std::make_unique<ColT>(); };
+  return constructCollectiveMap<ColT>(range, cons_fn, map_han, label);
 }
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::constructCollective(
-  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn
+  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+  std::string const& label
 ) {
   auto const map_han = getDefaultMap<ColT>();
-  return constructCollectiveMap<ColT>(range,cons_fn,map_han);
+  return constructCollectiveMap<ColT>(range, cons_fn, map_han, label);
 }
 
 template <
   typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
 >
 CollectionManager::IsDefaultConstructableType<ColT, typename ColT::IndexType>
-CollectionManager::constructCollective(typename ColT::IndexType range) {
+CollectionManager::constructCollective(
+  typename ColT::IndexType range, std::string const& label
+) {
   using IndexT = typename ColT::IndexType;
   auto cons_fn = [](typename ColT::IndexType){return std::make_unique<ColT>();};
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return constructCollectiveMap<ColT>(range,cons_fn,map_han);
+  return constructCollectiveMap<ColT>(range, cons_fn, map_han, label);
 }
 
 template <
@@ -1265,20 +1270,21 @@ template <
 >
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
 CollectionManager::constructCollective(
-  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn
+  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+  std::string const& label
 ) {
   using IndexT = typename ColT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return constructCollectiveMap<ColT>(range,cons_fn,map_han);
+  return constructCollectiveMap<ColT>(range, cons_fn, map_han, label);
 }
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::constructCollectiveMap(
   typename ColT::IndexType range, DistribConstructFn<ColT> user_construct_fn,
-  HandlerType const map_han
+  HandlerType const map_han, std::string const& label
 ) {
-  return vt::makeCollection<ColT>()
+  return vt::makeCollection<ColT>(label)
     .bounds(range)
     .bulkInsert()
     .mapperHandler(map_han)
@@ -1322,7 +1328,7 @@ template <typename IndexT>
 
 template <typename ColT, typename... Args>
 void CollectionManager::insertMetaCollection(
-  VirtualProxyType const& proxy, Args&&... args
+  std::string const& label, VirtualProxyType const proxy, Args&&... args
 ) {
   using IndexType      = typename ColT::IndexType;
   using MetaHolderType = EntireHolder<IndexType>;
@@ -1333,7 +1339,8 @@ void CollectionManager::insertMetaCollection(
   MetaHolderType::insert(proxy,holder);
   typeless_holder_.insertCollectionInfo(proxy, holder, [proxy]{
     theCollection()->constructGroup<ColT>(proxy);
-  });
+  }, label);
+
   /*
    *  This is to ensure that the collection LM instance gets created so that
    *  messages can be forwarded properly
@@ -1378,27 +1385,32 @@ void CollectionManager::constructGroup(VirtualProxyType const& proxy) {
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
-CollectionManager::construct(typename ColT::IndexType range) {
+CollectionManager::construct(
+  typename ColT::IndexType range, std::string const& label
+) {
   auto const map_han = getDefaultMap<ColT>();
-  return constructMap<ColT>(range,map_han);
+  return constructMap<ColT>(range, map_han, label);
 }
 
 template <
   typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
 >
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
-CollectionManager::construct(typename ColT::IndexType range) {
+CollectionManager::construct(
+  typename ColT::IndexType range, std::string const& label
+) {
   using IndexT = typename ColT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return constructMap<ColT>(range, map_han);
+  return constructMap<ColT>(range, map_han, label);
 }
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
 CollectionManager::constructMap(
-  typename ColT::IndexType range, HandlerType const map_handler
+  typename ColT::IndexType range, HandlerType const map_handler,
+  std::string const& label
 ) {
-  return vt::makeCollection<ColT>()
+  return vt::makeCollection<ColT>(label)
     .bounds(range)
     .bulkInsert()
     .collective(false)
@@ -2081,7 +2093,6 @@ std::string CollectionManager::makeMetaFilename(
 ) {
   auto this_node = theContext()->getNode();
   if (make_sub_dirs) {
-
     int flag = 0;
     flag = mkdir(file_base.c_str(), S_IRWXU);
     if (flag < 0 && errno != EEXIST) {
@@ -2167,6 +2178,8 @@ void CollectionManager::checkpointToFile(
 
     checkpoint::serializeToFile(*static_cast<ColT*>(elm), name);
   });
+
+  directory.label_ = getLabel(proxy_bits);
 
   auto const directory_name = makeMetaFilename<IndexT>(file_base, make_sub_dirs);
   checkpoint::serializeToFile(directory, directory_name);
@@ -2309,7 +2322,7 @@ CollectionManager::restoreFromFile(
     elms.emplace_back(std::make_tuple(idx, std::move(col_ptr)));
   }
 
-  return vt::makeCollection<ColT>()
+  return vt::makeCollection<ColT>(directory->label_)
     .bounds(range)
     .collective(true)
     .listInsertHere(std::move(elms))

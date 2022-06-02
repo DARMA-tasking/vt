@@ -88,7 +88,7 @@ static inline void collection() {
 
   // Construct the collection (collective variant): invoked by all nodes. By
   // default, the elements will be block mapped to the nodes
-  auto proxy = vt::makeCollection<MyCol>()
+  auto proxy = vt::makeCollection<MyCol>("tutorial_collection")
     .bounds(range)    // Set the bounds for the collection
     .bulkInsert()     // Bulk insert all the elements within the bounds
     .wait();          // Wait for construction and get the proxy back

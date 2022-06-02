@@ -65,7 +65,7 @@ using CollectionTestTypes = testing::Types<default_::TestCol>;
 using CollectionTestDistTypes = testing::Types<default_::TestCol>;
 
 TYPED_TEST_P(TestConstruct, test_construct_basic_1) {
-  test_construct_1<TypeParam>();
+  test_construct_1<TypeParam>("test_construct_basic_1");
 }
 
 TYPED_TEST_P(TestConstructDist, test_construct_distributed_basic_1) {
@@ -82,5 +82,22 @@ INSTANTIATE_TYPED_TEST_SUITE_P(
 INSTANTIATE_TYPED_TEST_SUITE_P(
   test_construct_distributed_simple, TestConstructDist, CollectionTestDistTypes, DEFAULT_NAME_GEN
 );
+
+struct TestConstructLabel : TestParallelHarness {};
+
+TEST_F(TestConstructLabel, test_labels) {
+  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+  auto const range = Index1D(num_nodes);
+  std::string const label = "test_labels";
+
+  auto proxy = makeCollection<default_::TestCol>(label)
+    .bounds(range)
+    .bulkInsert()
+    .wait();
+
+  auto const proxyLabel = theCollection()->getLabel(proxy.getProxy());
+
+  EXPECT_EQ(label, proxyLabel);
+}
 
 }}} // end namespace vt::tests::unit

@@ -62,7 +62,9 @@ CollectionChainSet<Index>::CollectionChainSet(
   static_assert(std::is_same<IndexT, Index>::value, "Must match index type");
 
   // Make this chain set an objgroup instance so we can send updates
-  auto p = theObjGroup()->makeCollective<CollectionChainSet<Index>>(this);
+  auto p = theObjGroup()->makeCollective<CollectionChainSet<Index>>(
+    this, "CollectionChainSet"
+  );
 
   auto const this_node = theContext()->getNode();
   auto const proxy_bits = proxy.getProxy();

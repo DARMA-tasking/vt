@@ -99,7 +99,7 @@ TEST_F(TestListInsert, test_bounded_list_insert_1) {
     list_insert.emplace_back(Index1D{i});
   }
 
-  auto proxy = vt::makeCollection<ListInsertTest>()
+  auto proxy = vt::makeCollection<ListInsertTest>("test_bounded_list_insert_1")
     .collective(true)
     .bounds(range)
     .listInsert(list_insert)
@@ -117,7 +117,9 @@ TEST_F(TestListInsert, test_bounded_list_insert_1) {
 template <typename IndexT>
 struct MyMapper : vt::mapping::BaseMapper<IndexT> {
   static vt::ObjGroupProxyType construct() {
-    return vt::theObjGroup()->makeCollective<MyMapper<IndexT>>().getProxy();
+    return vt::theObjGroup()->makeCollective<MyMapper<IndexT>>(
+      "MyMapper"
+    ).getProxy();
   }
 
   vt::NodeType map(IndexT* idx, int ndim, vt::NodeType num_nodes) override {
@@ -137,7 +139,7 @@ TEST_F(TestListInsert, test_unbounded_list_insert_2) {
     list_insert.emplace_back(Index1D{i});
   }
 
-  auto proxy = vt::makeCollection<ListInsertTest>()
+  auto proxy = vt::makeCollection<ListInsertTest>("test_unbounded_list_insert_2")
     .collective(true)
     .listInsert(list_insert)
     .template mapperObjGroupConstruct<MyMapper<Index1D>>()
@@ -171,7 +173,7 @@ TEST_F(TestListInsert, test_bounded_list_insert_here_3) {
     }
   }
 
-  auto proxy = vt::makeCollection<ListInsertTest>()
+  auto proxy = vt::makeCollection<ListInsertTest>("test_bounded_list_insert_here_3")
     .collective(true)
     .bounds(range)
     .listInsertHere(std::move(elms))
@@ -205,7 +207,7 @@ TEST_F(TestListInsert, test_unbounded_list_insert_here_4) {
     }
   }
 
-  auto proxy = vt::makeCollection<ListInsertTest>()
+  auto proxy = vt::makeCollection<ListInsertTest>("test_unbounded_list_insert_here_4")
     .collective(true)
     .listInsertHere(std::move(elms))
     .template mapperObjGroupConstruct<MyMapper<Index1D>>()
