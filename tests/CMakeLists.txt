@@ -45,6 +45,8 @@ set(BUILD_GMOCK OFF CACHE BOOL "Builds the googlemock subproject" FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Enable installation of googletest. (Projects embedding googletest may want to turn this OFF.)" FORCE)
 
 add_subdirectory(extern/googletest)
+set(GOOGLETEST_LIBRARY gtest)
+set_darma_compiler_flags(${GOOGLETEST_LIBRARY})
 
 # Hide various options from UI-based property editors
 mark_as_advanced(
