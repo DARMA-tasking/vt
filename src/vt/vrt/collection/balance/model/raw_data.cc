@@ -124,8 +124,14 @@ TimeType RawData::getModeledComm(ElementIDStruct object, PhaseOffset when) {
     }
   }
 
-  // TODO: consider subphases (?)
-  return std::max(incoming, outgoing);
+  auto modeled_comm = std::max(incoming, outgoing);
+  if (when.subphase == PhaseOffset::WHOLE_PHASE) {
+    return modeled_comm;
+  } else {
+    // we don't record comm costs for each subphase - split it proportionally
+    return modeled_comm *
+      1.0 /* (when.subphase / number of subphases in phase) */;
+  }
 }
 
 unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back)
