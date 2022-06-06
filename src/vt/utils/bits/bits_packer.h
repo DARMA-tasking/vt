@@ -46,8 +46,26 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
 
 namespace vt { namespace utils {
+
+// Non-constexpr C++14 version of bit_cast
+// See: https://en.cppreference.com/w/cpp/numeric/bit_cast
+template<typename Dst, typename Src>
+std::enable_if_t<
+  sizeof(Dst) == sizeof(Src)
+  && std::is_trivially_copyable<Dst>::value
+  && std::is_trivially_copyable<Src>::value
+  && std::is_trivially_constructible<Dst>::value,
+  Dst
+>
+bit_cast(const Src &src) {
+  Dst dst;
+  std::memcpy(&dst, &src, sizeof(Dst));
+  return dst;
+}
+
 
 struct BitPacker {
   using FieldType         = int64_t;
