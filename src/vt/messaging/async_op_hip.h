@@ -53,7 +53,7 @@ namespace vt { namespace messaging {
 /**
  * \struct AsyncOpHIP
  *
- * \brief A asynchronous HIP event that VT can poll completion for.
+ * \brief An asynchronous HIP event on which VT can poll completion.
  */
 struct AsyncOpHIP : AsyncOp {
 
