@@ -78,8 +78,8 @@ private:
   // observer pointer to the underlying comm data
   std::unordered_map<PhaseType, CommMapType> const* proc_comm_;
 
-  TimeType per_msg_weight_ = 1.0;  /**< Cost per message */
-  TimeType per_byte_weight_ = 1.0; /**< Cost per bytes */
+  TimeType per_msg_weight_  = 0.001;
+  TimeType per_byte_weight_ = 0.000001;
 };
 
 }}}} // namespace vt::vrt::collection::balance
