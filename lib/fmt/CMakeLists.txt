@@ -14,6 +14,7 @@ set(FMT_SOURCES src/format.cc)
 
 add_library(fmt ${FMT_SOURCES} ${FMT_HEADERS})
 add_library(fmt::fmt ALIAS fmt)
+set_target_properties(fmt PROPERTIES OUTPUT_NAME fmt-vt)
 
 target_include_directories(fmt SYSTEM PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
