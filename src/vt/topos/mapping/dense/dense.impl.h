@@ -95,7 +95,7 @@ NodeType dense3DRoundRobinMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType nx) {
 
 template <typename T, int8_t N>
 NodeType denseNDRoundRobinMap(IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType nx) {
-  using IndexElmType = typename IdxTypeND<T, N>::DenseIndexType;
+  using IndexElmType = typename IdxType<T, N>::DenseIndexType;
   auto const& lin_idx = linearizeDenseIndexColMajor<IndexElmType, N>(idx, max);
   return lin_idx % nx;
 }
@@ -118,7 +118,7 @@ NodeType dense3DBlockMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType nx) {
 
 template <typename T, int8_t N>
 NodeType denseNDBlockMap(IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType nx) {
-  return denseBlockMap<IdxTypeND<T,N>, N>(idx, max, nx);
+  return denseBlockMap<IdxType<T,N>, N>(idx, max, nx);
 }
 
 template <typename IndexElmType, typename PhysicalType>

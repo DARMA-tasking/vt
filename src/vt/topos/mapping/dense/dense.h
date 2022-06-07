@@ -74,7 +74,7 @@ using IdxPtr = Index*;
 template <typename T = IdxBase> using Idx1DPtr = IdxType1D<T>*;
 template <typename T = IdxBase> using Idx2DPtr = IdxType2D<T>*;
 template <typename T = IdxBase> using Idx3DPtr = IdxType3D<T>*;
-template <typename T, int8_t N> using IdxNDPtr = vt::index::IdxType<T, N>*;
+template <typename T, int8_t N> using IdxNDPtr = IdxType<T, N>*;
 
 template <typename Idx, index::NumDimensionsType ndim>
 NodeType denseBlockMap(IdxPtr<Idx> idx, IdxPtr<Idx> max_idx, NodeType nnodes);
@@ -109,7 +109,7 @@ NodeType denseNDBlockMap(       IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType n
 template <typename T = IdxBase>   using i1D   = IdxType1D<T>;
 template <typename T = IdxBase>   using i2D   = IdxType2D<T>;
 template <typename T = IdxBase>   using i3D   = IdxType3D<T>;
-template <typename T, int8_t N>   using iND   = IdxTypeND<T,N>;
+template <typename T, int8_t N>   using iND   = IdxType<T,N>;
 
 template <typename F, F* f, typename IndexT>
 using Adapt = MapFunctorAdapt<F, f, IndexT>;

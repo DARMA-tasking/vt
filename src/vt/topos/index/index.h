@@ -83,7 +83,6 @@ template <typename T, int8_t N> using IdxType   = index::IdxType<T, N>;
 template <typename T>           using IdxType1D = index::Index1D<T>;
 template <typename T>           using IdxType2D = index::Index2D<T>;
 template <typename T>           using IdxType3D = index::Index3D<T>;
-template <typename T, int8_t N> using IdxTypeND = index::IdxType<T, N>;
 
 }  // end namespace vt
 
