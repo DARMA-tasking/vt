@@ -1,0 +1,16 @@
+name: Check Workflow Generation
+
+on: pull_request
+
+jobs:
+  check-workflow-generation:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -yq cpanm && cpanm Template::Tiny Config::Simple
+
+    - name: Check workflows
+      shell: bash
+      run: ./scripts/check_workflow_generation.sh $(pwd)
