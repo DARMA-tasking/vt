@@ -50,7 +50,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit { namespace comm {
+namespace vt { namespace tests { namespace unit { namespace comm { namespace model {
 
 using TestModelCommModel = TestHarness;
 
@@ -173,4 +173,4 @@ TEST_F(TestModelCommModel, test_comm_model) {
   }
 }
 
-}}}} // end namespace vt::tests::unit::comm
+}}}}} // end namespace vt::tests::unit::comm::model
