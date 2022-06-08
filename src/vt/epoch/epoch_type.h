@@ -108,7 +108,7 @@ struct hash<vt::epoch::EpochType> {
 
 } /* end namespace std */
 
-#include <fmt/format.h>
+#include <fmt-vt/format.h>
 
 namespace fmt {
 

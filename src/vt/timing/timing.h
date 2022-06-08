@@ -47,7 +47,7 @@
 #include <string>
 
 #include <EngFormat-Cpp/eng_format.hpp>
-#include <fmt/core.h>
+#include <fmt-vt/core.h>
 
 #include "vt/timing/timing_type.h"
 

@@ -3721,7 +3721,7 @@ arg_join<detail::iterator_t<Range>, detail::sentinel_t<Range>, wchar_t> join(
 
   **Example**::
 
-    #include <fmt/format.h>
+    #include <fmt-vt/format.h>
 
     std::string answer = fmt::to_string(42);
   \endrst

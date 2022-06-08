@@ -52,7 +52,7 @@
 #include <cmath>
 #include <algorithm>
 
-#include <fmt/core.h>
+#include <fmt-vt/core.h>
 
 namespace vt { namespace util { namespace adt {
 

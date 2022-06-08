@@ -48,7 +48,7 @@
 
 #include <ostream>
 
-#include <fmt/ostream.h>
+#include <fmt-vt/ostream.h>
 
 namespace vt { namespace term { namespace interval {
 

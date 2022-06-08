@@ -47,8 +47,8 @@
 #include <vt/topos/index/index.h>
 #include <vt/context/context.h>
 
-#include <fmt/core.h>
-#include <fmt/ostream.h>
+#include <fmt-vt/core.h>
+#include <fmt-vt/ostream.h>
 
 #include <gtest/gtest.h>
 

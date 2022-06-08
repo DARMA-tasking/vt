@@ -3,7 +3,7 @@ project(FMT CXX)
 function(add_headers VAR)
   set(headers ${${VAR}})
   foreach (header ${ARGN})
-    set(headers ${headers} include/fmt/${header})
+    set(headers ${headers} include/fmt-vt/${header})
   endforeach()
   set(${VAR} ${headers} PARENT_SCOPE)
 endfunction()
@@ -26,7 +26,7 @@ set_target_properties(fmt PROPERTIES
   DEBUG_POSTFIX "${FMT_DEBUG_POSTFIX}")
 
 install(
-  DIRECTORY                include/fmt
+  DIRECTORY                include/fmt-vt
   DESTINATION              include
   CONFIGURATIONS           ${build_type_list}
   FILES_MATCHING PATTERN   "*"

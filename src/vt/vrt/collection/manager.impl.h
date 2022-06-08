@@ -89,8 +89,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <fmt/core.h>
-#include <fmt/ostream.h>
+#include <fmt-vt/core.h>
+#include <fmt-vt/ostream.h>
 
 namespace vt { namespace vrt { namespace collection {
 

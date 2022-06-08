@@ -49,8 +49,8 @@
 #include "vt/vrt/collection/manager.h"
 #include "data_message.h"
 
-#include <fmt/core.h>
-#include <fmt/ostream.h>
+#include <fmt-vt/core.h>
+#include <fmt-vt/ostream.h>
 
 #include <gtest/gtest.h>
 

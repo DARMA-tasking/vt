@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include <fmt/core.h>
+#include <fmt-vt/core.h>
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"

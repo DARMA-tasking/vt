@@ -53,7 +53,7 @@
 #include <string>
 #include <vector>
 
-#include <fmt/core.h>
+#include <fmt-vt/core.h>
 
 namespace vt { namespace util { namespace error {
 

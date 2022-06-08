@@ -50,7 +50,7 @@
 #include <string>
 #include <unistd.h> // gethostname
 
-#include <fmt/core.h>
+#include <fmt-vt/core.h>
 
 namespace vt { namespace debug {
 
