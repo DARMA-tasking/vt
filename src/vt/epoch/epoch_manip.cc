@@ -49,7 +49,7 @@
 #include "vt/utils/bits/bits_packer.h"
 #include "vt/termination/term_common.h"
 
-#include <fmt/ostream.h>
+#include <fmt-vt/ostream.h>
 
 namespace vt { namespace epoch {
 

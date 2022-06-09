@@ -2064,7 +2064,7 @@ FMT_INLINE std::basic_string<Char> vformat(
 
   **Example**::
 
-    #include <fmt/core.h>
+    #include <fmt-vt/core.h>
     std::string message = fmt::format("The answer is {}", 42);
   \endrst
 */

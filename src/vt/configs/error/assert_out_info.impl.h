@@ -57,7 +57,7 @@
 #include <string>
 #include <sstream>
 
-#include <fmt/core.h>
+#include <fmt-vt/core.h>
 
 namespace vt { namespace debug { namespace assert {
 

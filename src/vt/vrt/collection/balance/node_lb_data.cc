@@ -58,7 +58,7 @@
 #include <sys/stat.h>
 #include <memory>
 
-#include <fmt/core.h>
+#include <fmt-vt/core.h>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 

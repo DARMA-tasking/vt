@@ -45,7 +45,7 @@
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
 
-#include <fmt/core.h>
+#include <fmt-vt/core.h>
 
 using namespace vt;
 using namespace vt::tests::perf::common;
