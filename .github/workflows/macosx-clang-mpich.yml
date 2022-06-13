@@ -9,8 +9,9 @@ on:
   pull_request:
     types: [opened, reopened, synchronize, converted_to_draft, ready_for_review]
 
-concurrency: ${{ github.event.repository.name }}-${{ github.ref }}-${{ github.workflow }}
-cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+concurrency:
+  group: ${{ github.event.repository.name }}-${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
