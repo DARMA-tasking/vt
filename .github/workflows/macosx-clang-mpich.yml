@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: macos-10.15
 
-    if: github.event.pull_request.draft == true
+    if: github.event.pull_request.draft == false
 
     strategy:
       fail-fast: false
