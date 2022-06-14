@@ -68,6 +68,11 @@ NodeType defaultDenseIndex3DMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType nx) {
   return dense3DBlockMap<T>(idx, max, nx);
 }
 
+template <typename T, int8_t N>
+NodeType defaultDenseIndexNDMap(IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType nx) {
+  return denseNDBlockMap<T>(idx, max, nx);
+}
+
 // Default round robin mappings
 template <typename T>
 NodeType dense1DRoundRobinMap(Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType nx) {
@@ -88,6 +93,13 @@ NodeType dense3DRoundRobinMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType nx) {
   return lin_idx % nx;
 }
 
+template <typename T, int8_t N>
+NodeType denseNDRoundRobinMap(IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType nx) {
+  using IndexElmType = typename IdxType<T, N>::DenseIndexType;
+  auto const& lin_idx = linearizeDenseIndexColMajor<IndexElmType, N>(idx, max);
+  return lin_idx % nx;
+}
+
 // Default block mappings
 template <typename T>
 NodeType dense1DBlockMap(Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType nx) {
@@ -102,6 +114,11 @@ NodeType dense2DBlockMap(Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeType nx) {
 template <typename T>
 NodeType dense3DBlockMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType nx) {
   return denseBlockMap<IdxType3D<T>, 3>(idx, max, nx);
+}
+
+template <typename T, int8_t N>
+NodeType denseNDBlockMap(IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType nx) {
+  return denseBlockMap<IdxType<T,N>, N>(idx, max, nx);
 }
 
 template <typename IndexElmType, typename PhysicalType>

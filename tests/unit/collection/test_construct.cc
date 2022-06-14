@@ -53,16 +53,26 @@
 namespace vt { namespace tests { namespace unit {
 
 namespace default_ {
-struct ColMsg;
-struct TestCol : Collection<TestCol,vt::Index1D> {
-  using MsgType = ColMsg;
+struct Col1DMsg;
+struct Col4DMsg;
+
+struct TestCol1D : Collection<TestCol1D, vt::Index1D> {
+  using MsgType = Col1DMsg;
 };
 
-struct ColMsg : CollectionMessage<TestCol> { };
+struct TestCol4D : Collection<TestCol4D, vt::IndexND<4>> {
+  using MsgType = Col4DMsg;
+};
+
+struct Col1DMsg : CollectionMessage<TestCol1D> { };
+struct Col4DMsg : CollectionMessage<TestCol4D> { };
 } /* end namespace default_ */
 
-using CollectionTestTypes = testing::Types<default_::TestCol>;
-using CollectionTestDistTypes = testing::Types<default_::TestCol>;
+using CollectionTestTypes =
+  testing::Types<default_::TestCol1D, default_::TestCol4D>;
+
+using CollectionTestDistTypes =
+  testing::Types<default_::TestCol1D, default_::TestCol4D>;
 
 TYPED_TEST_P(TestConstruct, test_construct_basic_1) {
   test_construct_1<TypeParam>("test_construct_basic_1");
@@ -90,7 +100,7 @@ TEST_F(TestConstructLabel, test_labels) {
   auto const range = Index1D(num_nodes);
   std::string const label = "test_labels";
 
-  auto proxy = makeCollection<default_::TestCol>(label)
+  auto proxy = makeCollection<default_::TestCol1D>(label)
     .bounds(range)
     .bulkInsert()
     .wait();
