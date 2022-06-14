@@ -717,6 +717,13 @@ void LBManager::createStatisticsFile() {
       "LBManager::createStatsFile: file={}\n", file_name
     );
 
+    auto const dir = theConfig()->vt_lb_statistics_dir;
+    // Node 0 creates the directory
+    if (not created_lbstats_dir_ and theContext()->getNode() == 0) {
+      mkdir(dir.c_str(), S_IRWXU);
+      created_lbstats_dir_ = true;
+    }
+
     using JSONAppender = util::json::Appender<std::ofstream>;
 
     if (not statistics_writer_) {
