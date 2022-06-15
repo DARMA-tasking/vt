@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                comm_model.cc
+//                             weighted_messages.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,42 +41,47 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/model/comm_model.h"
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_MESSAGES_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_MESSAGES_H
+
+#include "vt/vrt/collection/balance/model/composed_model.h"
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-TimeType CommModel::getModeledComm(ElementIDStruct object, PhaseOffset when) {
-  auto phase = getNumCompletedPhases() + when.phases;
-  auto& comm = proc_comm_->at(phase);
+struct WeightedMessages : public ComposedModel {
+  /**
+   * \brief Constructor
+   *
+   * \param[in] base: the underlying source of object work loads
+   * \param[in] in_per_msg_weight weight to add per message received
+   * \param[in] in_per_byte_weight weight to add per byte received
+   */
+  explicit WeightedMessages(
+    std::shared_ptr<balance::LoadModel> base,
+    TimeType in_per_msg_weight, TimeType in_per_byte_weight
+  ) : ComposedModel(base),
+      per_msg_weight_(in_per_msg_weight),
+      per_byte_weight_(in_per_byte_weight) { }
 
-  TimeType incoming = 0., outgoing = 0.;
-  for (auto&& c : comm) {
-    if (
-      c.first.commCategory() == elm::CommCategory::SendRecv and
-      c.first.offNode()) {
-      if (c.first.toObj() == object) {
-        incoming += per_msg_weight_ * c.second.messages;
-        incoming += per_byte_weight_ * c.second.bytes;
-      } else if (c.first.fromObj() == object) {
-        outgoing += per_msg_weight_ * c.second.messages;
-        outgoing += per_byte_weight_ * c.second.bytes;
-      }
-    }
+  void setLoads(
+    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+    std::unordered_map<PhaseType, CommMapType> const* proc_comm
+  ) override {
+    proc_comm_ = proc_comm;
+    ComposedModel::setLoads(proc_load, proc_comm);
   }
 
-  auto modeled_comm =
-    ComposedModel::getModeledComm(object, when) + std::max(incoming, outgoing);
+  TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) override;
 
-  if (when.subphase == PhaseOffset::WHOLE_PHASE) {
-    return modeled_comm;
-  } else {
-    // we don't record comm costs for each subphase - split it proportionally
-    auto load = ComposedModel::getModeledLoad(object, when);
-    auto whole_phase_load = ComposedModel::getModeledLoad(
-      object, PhaseOffset{when.phases, PhaseOffset::WHOLE_PHASE});
+private:
+  // observer pointer to the underlying comm data
+  std::unordered_map<PhaseType, CommMapType> const* proc_comm_;
 
-    return modeled_comm * load / whole_phase_load;
-  }
-}
+  TimeType per_msg_weight_  = 0.001;
+  TimeType per_byte_weight_ = 0.000001;
+};
 
 }}}} // namespace vt::vrt::collection::balance
+
+#endif

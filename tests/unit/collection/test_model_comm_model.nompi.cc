@@ -42,7 +42,7 @@
 */
 
 #include <vt/vrt/collection/balance/model/load_model.h>
-#include <vt/vrt/collection/balance/model/comm_model.h>
+#include <vt/vrt/collection/balance/model/weighted_messages.h>
 
 #include <gtest/gtest.h>
 
@@ -52,13 +52,13 @@
 
 namespace vt { namespace tests { namespace unit { namespace comm { namespace model {
 
-using TestModelCommModel = TestHarness;
+using TestModelWeightedMessages = TestHarness;
 
 using vt::elm::CommKeyType;
 using vt::elm::CommMapType;
 using vt::elm::CommVolume;
 using vt::elm::ElementIDStruct;
-using vt::vrt::collection::balance::CommModel;
+using vt::vrt::collection::balance::WeightedMessages;
 using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ObjectIterator;
@@ -107,7 +107,7 @@ private:
   ProcLoadMap const* proc_load_ = nullptr;
 };
 
-TEST_F(TestModelCommModel, test_comm_model) {
+TEST_F(TestModelWeightedMessages, test_model) {
 
   // For simplicity's sake, the elements are on the home node
   // Element 1 (home node == 1)
@@ -146,7 +146,7 @@ TEST_F(TestModelCommModel, test_comm_model) {
   constexpr auto per_msg_weight = 3.0;
   constexpr auto per_byte_weight = 5.0;
 
-  auto test_model = std::make_shared<CommModel>(
+  auto test_model = std::make_shared<WeightedMessages>(
     std::make_shared<StubModel>(), per_msg_weight, per_byte_weight
   );
   test_model->setLoads(&proc_load, &proc_comm);
