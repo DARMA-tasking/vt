@@ -723,7 +723,10 @@ void LBManager::createStatisticsFile() {
       theContext()->getNode() == 0 and
       not dir.empty() and not created_lbstats_dir_
     ) {
-      mkdir(dir.c_str(), S_IRWXU);
+      int flag = mkdir(dir.c_str(), S_IRWXU);
+      if (flag < 0 && errno != EEXIST) {
+        throw std::runtime_error("Failed to create directory: " + dir);
+      }
       created_lbstats_dir_ = true;
     }
 
