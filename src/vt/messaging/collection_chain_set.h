@@ -257,6 +257,55 @@ public:
   }
 
   /**
+   * \brief The next collective step to execute for each index that is added
+   * to the CollectionChainSet on each node.
+   *
+   * Should be used for steps with internal recursive communication and global
+   * inter-dependence. Creates a global (on the communicator), collective epoch
+   * to track all the casually related messages and collectively wait for
+   * termination of all of the recursive sends. Advances the subphase at
+   * termination.
+   *
+   * \param[in] label Label for the epoch created for debugging
+   * \param[in] step_action the next step to execute, returning a \c PendingSend
+   */
+  void nextStepCollectiveSubphase(
+    std::string const& label, std::function<PendingSend(Index)> step_action) {
+    auto epoch = theTerm()->makeEpochCollective(label);
+
+    theTerm()->addActionEpoch(epoch, [=]{
+      thePhase()->advanceSubphase();
+    });
+
+    vt::theMsg()->pushEpoch(epoch);
+
+    for (auto& entry : chains_) {
+      auto& idx = entry.first;
+      auto& chain = entry.second;
+      chain.add(epoch, step_action(idx));
+    }
+
+    vt::theMsg()->popEpoch(epoch);
+    theTerm()->finishedEpoch(epoch);
+  }
+
+  /**
+   * \brief The next collective step to execute for each index that is added
+   * to the CollectionChainSet on each node.
+   *
+   * Should be used for steps with internal recursive communication and global
+   * inter-dependence. Creates a global (on the communicator), collective epoch
+   * to track all the casually related messages and collectively wait for
+   * termination of all of the recursive sends. Advances the subphase at
+   * termination.
+   *
+   * \param[in] step_action the next step to execute, returning a \c PendingSend
+   */
+  void nextStepCollectiveSubphase(std::function<PendingSend(Index)> step_action) {
+    return nextStepCollectiveSubphase("", step_action);
+  }
+
+  /**
    * \brief The next collective step of both CollectionChainSets
    * to execute over all shared indices of the CollectionChainSets over all
    * nodes.

@@ -257,14 +257,13 @@ void NodeLBData::registerObjGroupInfo(
 
 void NodeLBData::addNodeLBData(
   ElementIDStruct id, elm::ElementLBData* in, StorableType *storable,
-  SubphaseType focused_subphase
+  PhaseType phase, SubphaseType focused_subphase
 ) {
   vt_debug_print(
     normal, lb,
     "NodeLBData::addNodeLBData: id={}\n", id
   );
 
-  auto const phase = in->getPhase();
   auto const& total_load = in->getLoad(phase, focused_subphase);
 
   auto &phase_data = lb_data_->node_data_[phase];
@@ -299,7 +298,7 @@ void NodeLBData::addNodeLBData(
     );
   }
 
-  in->updatePhase(1);
+  in->updatePhase(phase + 1);
 
   auto model = theLBManager()->getLoadModel();
   in->releaseLBDataFromUnneededPhases(phase, model->getNumPastPhasesNeeded());
