@@ -841,7 +841,7 @@ std::string AppConfig::getLBDataFileIn() const {
 std::string AppConfig::getLBStatisticsFile() const {
   std::string name = vt_lb_statistics_file;
   std::string dir = vt_lb_statistics_dir;
-  if (dir.size() > 0) {
+  if (not dir.empty()) {
     name = dir + "/" + name;
   }
   std::size_t timestamp = name.find("%t");

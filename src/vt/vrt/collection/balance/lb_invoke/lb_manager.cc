@@ -719,7 +719,10 @@ void LBManager::createStatisticsFile() {
 
     auto const dir = theConfig()->vt_lb_statistics_dir;
     // Node 0 creates the directory
-    if (not created_lbstats_dir_ and theContext()->getNode() == 0) {
+    if (
+      theContext()->getNode() == 0 and
+      not dir.empty() and not created_lbstats_dir_
+    ) {
       mkdir(dir.c_str(), S_IRWXU);
       created_lbstats_dir_ = true;
     }
