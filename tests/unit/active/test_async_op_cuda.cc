@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               test_async_op.cc
+//                            test_async_op_cuda.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
