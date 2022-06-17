@@ -94,6 +94,15 @@ protected:
   void informSync();
   void decide();
   void migrate();
+  void clearDataStructures();
+
+  virtual bool canMigrate() const {  return is_overloaded_; }
+  /**
+   * \brief Decides whether the rank can initiate information propagation stage
+   *
+   * TemperedLB restricts this to underloaded ranks
+   */
+  virtual bool canPropagate() const {  return is_underloaded_; }
 
   void propagateRound(uint8_t k_cur_async, bool sync, EpochType epoch = no_epoch);
   void propagateIncomingAsync(LoadMsgAsync* msg);
@@ -164,7 +173,6 @@ private:
   objgroup::proxy::Proxy<TemperedLB> proxy_         = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
-  std::unordered_set<NodeType> selected_            = {};
   std::unordered_set<NodeType> underloaded_         = {};
   std::unordered_set<NodeType> new_underloaded_     = {};
   std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};

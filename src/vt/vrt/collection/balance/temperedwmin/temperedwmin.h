@@ -66,6 +66,11 @@ public:
 protected:
   TimeType getModeledValue(const elm::ElementIDStruct& obj) override;
 
+  /**
+   * All ranks are allowed to initiate the information propagation stage
+   */
+  bool canPropagate() const override { return true; }
+
 private:
   std::shared_ptr<balance::LoadModel> total_work_model_ = nullptr;
   balance::LoadModel* load_model_ptr = nullptr;

@@ -42,6 +42,8 @@
 */
 
 #include "vt/config.h"
+#include "vt/configs/types/types_sentinels.h"
+#include "vt/configs/types/types_type.h"
 #include "vt/timing/timing.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
@@ -474,6 +476,12 @@ void TemperedLB::runLB(TimeType total_load) {
   }
 }
 
+void TemperedLB::clearDataStructures() {
+  underloaded_.clear();
+  load_info_.clear();
+  is_overloaded_ = is_underloaded_ = false;
+}
+
 void TemperedLB::doLBStages(TimeType start_imb) {
   decltype(this->cur_objs_) best_objs;
   LoadType best_load = 0;
@@ -483,11 +491,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
   auto this_node = theContext()->getNode();
 
   for (trial_ = 0; trial_ < num_trials_; ++trial_) {
-    // Clear out data structures
-    selected_.clear();
-    underloaded_.clear();
-    load_info_.clear();
-    is_overloaded_ = is_underloaded_ = false;
+    clearDataStructures();
 
     TimeType best_imb_this_trial = start_imb + 10;
 
@@ -504,11 +508,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         }
         this_new_load_ = this_load;
       } else {
-        // Clear out data structures from previous iteration
-        selected_.clear();
-        underloaded_.clear();
-        load_info_.clear();
-        is_overloaded_ = is_underloaded_ = false;
+        clearDataStructures();
       }
 
       vt_debug_print(
@@ -667,7 +667,7 @@ void TemperedLB::informAsync() {
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
 
   auto const this_node = theContext()->getNode();
-  if (is_underloaded_) {
+  if (canPropagate()) {
     underloaded_.insert(this_node);
   }
 
@@ -682,7 +682,7 @@ void TemperedLB::informAsync() {
   auto propagate_epoch = theTerm()->makeEpochCollective("TemperedLB: informAsync");
 
   // Underloaded start the round
-  if (is_underloaded_) {
+  if (canPropagate()) {
     uint8_t k_cur_async = 0;
     propagateRound(k_cur_async, false, propagate_epoch);
   }
@@ -718,11 +718,11 @@ void TemperedLB::informSync() {
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
 
   auto const this_node = theContext()->getNode();
-  if (is_underloaded_) {
+  if (canPropagate()) {
     underloaded_.insert(this_node);
   }
 
-  auto propagate_this_round = is_underloaded_;
+  auto propagate_this_round = canPropagate();
   propagate_next_round_ = false;
   new_underloaded_ = underloaded_;
   new_load_info_ = load_info_;
@@ -793,8 +793,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     gen_propagate_.seed(seed_());
   }
 
-  auto& selected = selected_;
-  selected = underloaded_;
+  auto& selected = underloaded_;
   if (selected.find(this_node) == selected.end()) {
     selected.insert(this_node);
   }
@@ -1203,7 +1202,7 @@ void TemperedLB::decide() {
 
   int n_transfers = 0, n_rejected = 0;
 
-  if (is_overloaded_) {
+  if (canMigrate()) {
     std::vector<NodeType> under = makeUnderloaded();
     std::unordered_map<NodeType, ObjsType> migrate_objs;
 
