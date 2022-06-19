@@ -180,6 +180,17 @@ private:
 };
 
 TEST_F(TestAsyncOp, test_async_op_cuda) {
+  int driverVer;
+  if (
+    (cudaDriverGetVersion(&driverVer) == cudaErrorInvalidValue) or
+    (driverVer == 0)) {
+    vtWarn(
+      "Trying to run test_async_op_cuda but CUDA driver is not present!\n"
+    );
+
+    return;
+  }
+
   auto const this_node = theContext()->getNode();
   auto p = theObjGroup()->makeCollective<CUDAGroup>("test_async_op_cuda");
   auto ep = theTerm()->makeEpochRooted(term::UseDS{true});
