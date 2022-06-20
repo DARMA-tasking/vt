@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                        test_model_comm_model.nompi.cc
+//                    test_model_weighted_messages.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -50,7 +50,8 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit { namespace comm { namespace model {
+namespace vt { namespace tests { namespace unit { namespace comm {
+namespace model {
 
 using TestModelWeightedMessages = TestHarness;
 
@@ -71,17 +72,14 @@ using ProcCommMap = std::unordered_map<PhaseType, CommMapType>;
 static auto num_phases = 0;
 
 struct StubModel : LoadModel {
-
   StubModel() = default;
   virtual ~StubModel() = default;
 
-  void setLoads(
-    ProcLoadMap const* proc_load,
-    ProcCommMap const*) override {
+  void setLoads(ProcLoadMap const* proc_load, ProcCommMap const*) override {
     proc_load_ = proc_load;
   }
 
-  void updateLoads(PhaseType) override {}
+  void updateLoads(PhaseType) override { }
 
   TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) override {
     const auto work = proc_load_->at(0).at(id).whole_phase_load;
@@ -94,21 +92,24 @@ struct StubModel : LoadModel {
   }
 
   ObjectIterator begin() override {
-    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(0).begin(), proc_load_->at(0).end())};
+    return {std::make_unique<LoadMapObjectIterator>(
+      proc_load_->at(0).begin(), proc_load_->at(0).end()
+    )};
   }
 
   unsigned int getNumCompletedPhases() override { return num_phases; }
 
   // Not used in this test
   int getNumSubphases() override { return 0; }
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override {
+    return look_back;
+  }
 
 private:
   ProcLoadMap const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelWeightedMessages, test_model) {
-
   // For simplicity's sake, the elements are on the home node
   // Element 1 (home node == 1)
   ElementIDStruct const elem1 = {1, 1};
@@ -126,17 +127,14 @@ TEST_F(TestModelWeightedMessages, test_model) {
      CommMapType{// Node 1 -> Node 2
                  {{CommKeyType::CollectionTag{}, elem1, elem2, false},
                   CommVolume{20.0, 2}},
-
                  // Node 3 -> Node 2
                  {{CommKeyType::CollectionTag{}, elem3, elem2, false},
                   CommVolume{5.0, 5}}}
     },
     {1,
-     CommMapType{
-                 // Node 3 -> Node 2
+     CommMapType{// Node 3 -> Node 2
                  {{CommKeyType::CollectionTag{}, elem3, elem2, false},
                   CommVolume{500.0, 50}},
-
                  // Node 1 -> Node 2
                  {{CommKeyType::CollectionTag{}, elem1, elem2, false},
                   CommVolume{25.0, 10}}}
