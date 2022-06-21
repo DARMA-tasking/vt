@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 raw_data.cc
+//                             weighted_messages.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,74 +41,43 @@
 //@HEADER
 */
 
-
-#include "vt/vrt/collection/balance/model/raw_data.h"
+#include "vt/vrt/collection/balance/model/weighted_messages.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void RawData::updateLoads(PhaseType last_completed_phase) {
-  last_completed_phase_ = last_completed_phase;
-}
+TimeType
+WeightedMessages::getModeledComm(ElementIDStruct object, PhaseOffset when) {
+  auto phase = getNumCompletedPhases() + when.phases;
+  auto& comm = proc_comm_->at(phase);
 
-void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                       std::unordered_map<PhaseType, CommMapType> const* proc_comm)
-{
-  proc_load_ = proc_load;
-  proc_comm_ = proc_comm;
-}
-
-ObjectIterator RawData::begin() {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return {std::make_unique<LoadMapObjectIterator>(iter->second.cbegin(),
-                                                    iter->second.cend())};
-  } else {
-    return {nullptr};
-  }
-}
-
-int RawData::getNumObjects() {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return iter->second.size();
-  } else {
-    return 0;
-  }
-}
-
-unsigned int RawData::getNumCompletedPhases() {
-  return last_completed_phase_ + 1;
-}
-
-int RawData::getNumSubphases() {
-  const auto& last_phase = proc_load_->at(last_completed_phase_);
-
-  // @todo: this workaround is O(#objects) and should be removed when we finish
-  // the new subphase API
-  int subphases = 0;
-  for (auto &obj : last_phase) {
-    if (obj.second.subphase_loads.size() > static_cast<size_t>(subphases)) {
-      subphases = obj.second.subphase_loads.size();
+  TimeType incoming = 0., outgoing = 0.;
+  for (auto&& c : comm) {
+    if (
+      c.first.commCategory() == elm::CommCategory::SendRecv and
+      c.first.offNode()) {
+      if (c.first.toObj() == object) {
+        incoming += per_msg_weight_ * c.second.messages;
+        incoming += per_byte_weight_ * c.second.bytes;
+      } else if (c.first.fromObj() == object) {
+        outgoing += per_msg_weight_ * c.second.messages;
+        outgoing += per_byte_weight_ * c.second.bytes;
+      }
     }
   }
-  return subphases;
+
+  auto modeled_comm =
+    ComposedModel::getModeledComm(object, when) + std::max(incoming, outgoing);
+
+  if (when.subphase == PhaseOffset::WHOLE_PHASE) {
+    return modeled_comm;
+  } else {
+    // we don't record comm costs for each subphase - split it proportionally
+    auto load = ComposedModel::getModeledLoad(object, when);
+    auto whole_phase_load = ComposedModel::getModeledLoad(
+      object, PhaseOffset{when.phases, PhaseOffset::WHOLE_PHASE});
+
+    return modeled_comm * load / whole_phase_load;
+  }
 }
 
-TimeType RawData::getModeledLoad(ElementIDStruct object, PhaseOffset offset) {
-  return getRawLoad(object, offset);
-}
-
-TimeType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) {
-  vtAssert(offset.phases < 0,
-           "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
-
-  auto phase = getNumCompletedPhases() + offset.phases;
-  return proc_load_->at(phase).at(object).get(offset);
-}
-
-unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back)
-{
-  return look_back;
-}
-
-}}}}
+}}}} // namespace vt::vrt::collection::balance

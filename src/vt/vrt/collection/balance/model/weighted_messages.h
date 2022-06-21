@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 raw_data.cc
+//                             weighted_messages.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,74 +41,47 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_MESSAGES_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_MESSAGES_H
 
-#include "vt/vrt/collection/balance/model/raw_data.h"
+#include "vt/vrt/collection/balance/model/composed_model.h"
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void RawData::updateLoads(PhaseType last_completed_phase) {
-  last_completed_phase_ = last_completed_phase;
-}
+struct WeightedMessages : public ComposedModel {
+  /**
+   * \brief Constructor
+   *
+   * \param[in] base: the underlying source of object work loads
+   * \param[in] in_per_msg_weight weight to add per message received
+   * \param[in] in_per_byte_weight weight to add per byte received
+   */
+  explicit WeightedMessages(
+    std::shared_ptr<balance::LoadModel> base,
+    TimeType in_per_msg_weight, TimeType in_per_byte_weight
+  ) : ComposedModel(base),
+      per_msg_weight_(in_per_msg_weight),
+      per_byte_weight_(in_per_byte_weight) { }
 
-void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                       std::unordered_map<PhaseType, CommMapType> const* proc_comm)
-{
-  proc_load_ = proc_load;
-  proc_comm_ = proc_comm;
-}
-
-ObjectIterator RawData::begin() {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return {std::make_unique<LoadMapObjectIterator>(iter->second.cbegin(),
-                                                    iter->second.cend())};
-  } else {
-    return {nullptr};
+  void setLoads(
+    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+    std::unordered_map<PhaseType, CommMapType> const* proc_comm
+  ) override {
+    proc_comm_ = proc_comm;
+    ComposedModel::setLoads(proc_load, proc_comm);
   }
-}
 
-int RawData::getNumObjects() {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return iter->second.size();
-  } else {
-    return 0;
-  }
-}
+  TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) override;
 
-unsigned int RawData::getNumCompletedPhases() {
-  return last_completed_phase_ + 1;
-}
+private:
+  // observer pointer to the underlying comm data
+  std::unordered_map<PhaseType, CommMapType> const* proc_comm_;
 
-int RawData::getNumSubphases() {
-  const auto& last_phase = proc_load_->at(last_completed_phase_);
+  TimeType per_msg_weight_  = 0.0;
+  TimeType per_byte_weight_ = 1.0;
+};
 
-  // @todo: this workaround is O(#objects) and should be removed when we finish
-  // the new subphase API
-  int subphases = 0;
-  for (auto &obj : last_phase) {
-    if (obj.second.subphase_loads.size() > static_cast<size_t>(subphases)) {
-      subphases = obj.second.subphase_loads.size();
-    }
-  }
-  return subphases;
-}
+}}}} // namespace vt::vrt::collection::balance
 
-TimeType RawData::getModeledLoad(ElementIDStruct object, PhaseOffset offset) {
-  return getRawLoad(object, offset);
-}
-
-TimeType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) {
-  vtAssert(offset.phases < 0,
-           "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
-
-  auto phase = getNumCompletedPhases() + offset.phases;
-  return proc_load_->at(phase).at(object).get(offset);
-}
-
-unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back)
-{
-  return look_back;
-}
-
-}}}}
+#endif
