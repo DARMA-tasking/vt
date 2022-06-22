@@ -212,7 +212,8 @@ public:
       | base_model_
       | model_
       | lb_instances_
-      | stats;
+      | stats
+      | created_lbstats_dir_;
   }
 
   void stagePreLBStatistics(const StatisticMapType &statistics);
@@ -291,6 +292,8 @@ private:
   bool before_lb_stats_ = true;
   /// The appender for outputting statistics in JSON format
   std::unique_ptr<util::json::BaseAppender> statistics_writer_ = nullptr;
+  /// Whether the LB statistics directory has been created
+  bool created_lbstats_dir_ = false;
 };
 
 void makeGraphSymmetric(

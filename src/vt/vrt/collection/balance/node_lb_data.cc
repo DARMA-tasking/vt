@@ -155,7 +155,10 @@ void NodeLBData::createLBDataFile() {
   auto const dir = theConfig()->vt_lb_data_dir;
   // Node 0 creates the directory
   if (not created_dir_ and theContext()->getNode() == 0) {
-    mkdir(dir.c_str(), S_IRWXU);
+    int flag = mkdir(dir.c_str(), S_IRWXU);
+    if (flag < 0 && errno != EEXIST) {
+      throw std::runtime_error("Failed to create directory: " + dir);
+    }
     created_dir_ = true;
   }
 
