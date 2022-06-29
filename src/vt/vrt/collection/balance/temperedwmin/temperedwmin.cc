@@ -110,6 +110,17 @@ void TemperedWMin::inputParams(balance::ConfigEntry* config) {
   load_model_ptr = theLBManager()->getLoadModel().get();
 }
 
+std::vector<NodeType> TemperedWMin::getPotentialRecipients() const {
+  std::vector<NodeType> nodes = {};
+  for (auto&& elm : load_info_) {
+    nodes.push_back(elm.first);
+  }
+  if (isDeterministic()) {
+    std::sort(nodes.begin(), nodes.end());
+  }
+  return nodes;
+}
+
 TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
   vtAssert(
     theLBManager()->getLoadModel().get() == load_model_ptr,

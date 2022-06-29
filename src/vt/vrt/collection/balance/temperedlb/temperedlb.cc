@@ -42,8 +42,6 @@
 */
 
 #include "vt/config.h"
-#include "vt/configs/types/types_sentinels.h"
-#include "vt/configs/types/types_type.h"
 #include "vt/timing/timing.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
@@ -995,7 +993,7 @@ NodeType TemperedLB::sampleFromCMF(
   return selected_node;
 }
 
-std::vector<NodeType> TemperedLB::makeUnderloaded() const {
+std::vector<NodeType> TemperedLB::getPotentialRecipients() const {
   std::vector<NodeType> under = {};
   for (auto&& elm : load_info_) {
     if (isUnderloaded(elm.second)) {
@@ -1203,10 +1201,10 @@ void TemperedLB::decide() {
   int n_transfers = 0, n_rejected = 0;
 
   if (canMigrate()) {
-    std::vector<NodeType> under = makeUnderloaded();
+    auto potential_recipients = getPotentialRecipients();
     std::unordered_map<NodeType, ObjsType> migrate_objs;
 
-    if (under.size() > 0) {
+    if (potential_recipients.size() > 0) {
       std::vector<ObjIDType> ordered_obj_ids = orderObjects(
         obj_ordering_, cur_objs_, this_new_load_, target_max_load_
       );
@@ -1218,24 +1216,24 @@ void TemperedLB::decide() {
 
         if (cmf_type_ == CMFTypeEnum::Original) {
           // Rebuild the relaxed underloaded set based on updated load of this node
-          under = makeUnderloaded();
-          if (under.size() == 0) {
+          potential_recipients = getPotentialRecipients();
+          if (potential_recipients.size() == 0) {
             break;
           }
         } else if (cmf_type_ == CMFTypeEnum::NormByMaxExcludeIneligible) {
           // Rebuild the underloaded set and eliminate processors that will
           // fail the Criterion for this object
-          under = makeSufficientlyUnderloaded(obj_load);
-          if (under.size() == 0) {
+          potential_recipients = makeSufficientlyUnderloaded(obj_load);
+          if (potential_recipients.size() == 0) {
             ++n_rejected;
             iter++;
             continue;
           }
         }
         // Rebuild the CMF with the new loads taken into account
-        auto cmf = createCMF(under);
+        auto cmf = createCMF(potential_recipients);
         // Select a node using the CMF
-        auto const selected_node = sampleFromCMF(under, cmf);
+        auto const selected_node = sampleFromCMF(potential_recipients, cmf);
 
         vt_debug_print(
           verbose, temperedlb,
@@ -1255,13 +1253,13 @@ void TemperedLB::decide() {
 
         vt_debug_print(
           verbose, temperedlb,
-          "TemperedLB::decide: trial={}, iter={}, under.size()={}, "
-          "selected_node={}, selected_load={:e}, obj_id={:x}, home={}, "
-          "obj_load={}, target_max_load={}, this_new_load_={}, "
-          "criterion={}\n",
+          "TemperedLB::decide: trial={}, iter={}, "
+          "potential_recipients.size()={}, selected_node={}, "
+          "selected_load={:e}, obj_id={:x}, home={}, obj_load={}, "
+          "target_max_load={}, this_new_load_={}, criterion={}\n",
           trial_,
           iter_,
-          under.size(),
+          potential_recipients.size(),
           selected_node,
           selected_load,
           obj_id.id,

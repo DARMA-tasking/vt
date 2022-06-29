@@ -71,6 +71,8 @@ protected:
    */
   bool canPropagate() const override { return true; }
 
+  std::vector<NodeType> getPotentialRecipients() const override;
+
 private:
   std::shared_ptr<balance::LoadModel> total_work_model_ = nullptr;
   balance::LoadModel* load_model_ptr = nullptr;
