@@ -1,0 +1,18 @@
+name: Allow merging
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, converted_to_draft, ready_for_review, labeled, unlabeled]
+
+jobs:
+  allow-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if PR is ready to merge
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const labels = ${{ toJSON(github.event.pull_request.labels) }}
+            if (!labels.some((l) => l.name === "ready-to-merge")) {
+              core.setFailed("PR is not ready to merge");
+            }
