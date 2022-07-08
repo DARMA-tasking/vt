@@ -111,13 +111,20 @@ void TemperedWMin::inputParams(balance::ConfigEntry* config) {
 }
 
 std::vector<NodeType> TemperedWMin::getPotentialRecipients() const {
+  auto const this_node = theContext()->getNode();
   std::vector<NodeType> nodes = {};
+
   for (auto&& elm : load_info_) {
-    nodes.push_back(elm.first);
+    auto const node = elm.first;
+    if (node != this_node) {
+      nodes.push_back(node);
+    }
   }
+
   if (isDeterministic()) {
     std::sort(nodes.begin(), nodes.end());
   }
+
   return nodes;
 }
 
