@@ -16,12 +16,12 @@ else
     target=${3:-install}
 fi
 
-    parallel_level=4
+    export parallel_level=4
 if [ -z ${4} ]; then
-    dashj=""
+    export dashj=""
 else
-    parallel_level=${4}
-    dashj="-j ${4}"
+    export parallel_level=${4}
+    export dashj="-j ${4}"
 fi
 
 if hash ccache &>/dev/null
@@ -115,75 +115,13 @@ mkdir -p "$VT_BUILD"
 cd "$VT_BUILD"
 rm -Rf ./*
 
-ctest -M Continuous --build-and-test "$VT" "$VT_BUILD" \
-      --build-generator "${CMAKE_GENERATOR:-Ninja}" ${dashj} \
-      --build-options \
-      -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
-      -Dvt_test_trace_runtime_enabled="${VT_TRACE_RUNTIME_ENABLED:-0}" \
-      -Dvt_lb_enabled="${VT_LB_ENABLED:-1}" \
-      -Dvt_trace_enabled="${VT_TRACE_ENABLED:-0}" \
-      -Dvt_trace_only="${VT_BUILD_TRACE_ONLY:-0}" \
-      -Dvt_doxygen_enabled="${VT_DOXYGEN_ENABLED:-0}" \
-      -Dvt_mimalloc_enabled="${VT_MIMALLOC_ENABLED:-0}" \
-      -Dvt_asan_enabled="${VT_ASAN_ENABLED:-0}" \
-      -Dvt_ubsan_enabled="${VT_UBSAN_ENABLED:-0}" \
-      -Dvt_werror_enabled="${VT_WERROR_ENABLED:-0}" \
-      -Dvt_pool_enabled="${VT_POOL_ENABLED:-1}" \
-      -Dvt_build_extended_tests="${VT_EXTENDED_TESTS_ENABLED:-1}" \
-      -Dvt_zoltan_enabled="${VT_ZOLTAN_ENABLED:-0}" \
-      -Dvt_production_build_enabled="${VT_PRODUCTION_BUILD_ENABLED:-0}" \
-      -Dvt_unity_build_enabled="${VT_UNITY_BUILD_ENABLED:-0}" \
-      -Dvt_diagnostics_enabled="${VT_DIAGNOSTICS_ENABLED:-1}" \
-      -Dvt_diagnostics_runtime_enabled="${VT_DIAGNOSTICS_RUNTIME_ENABLED:-0}" \
-      -Dvt_fcontext_enabled="${VT_FCONTEXT_ENABLED:-0}" \
-      -Dvt_fcontext_build_tests_examples="${VT_FCONTEXT_BUILD_TESTS_EXAMPLES:-0}" \
-      -Dvt_rdma_tests_enabled="${VT_RDMA_TESTS_ENABLED:-1}" \
-      -DUSE_OPENMP="${VT_USE_OPENMP:-0}" \
-      -DUSE_STD_THREAD="${VT_USE_STD_THREAD:-0}" \
-      -DCODE_COVERAGE="${CODE_COVERAGE:-0}" \
-      -DMI_INTERPOSE:BOOL=ON \
-      -DMI_OVERRIDE:BOOL=ON \
-      -Dvt_mpi_guards="${VT_MPI_GUARD_ENABLED:-0}" \
-      -DMPI_EXTRA_FLAGS="${MPI_EXTRA_FLAGS:-}" \
-      -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
-      -DMPI_C_COMPILER="${MPICC:-mpicc}" \
-      -DMPI_CXX_COMPILER="${MPICXX:-mpicxx}" \
-      -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
-      -DCMAKE_C_COMPILER="${CC:-cc}" \
-      -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS:-}" \
-      -Ddetector_DIR="$DETECTOR_BUILD/install" \
-      -Dcheckpoint_DIR="$CHECKPOINT_BUILD/install" \
-      -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}" \
-      -DCMAKE_INSTALL_PREFIX="$VT_BUILD/install" \
-      -Dvt_ci_build="${VT_CI_BUILD:-0}" \
-      -Dvt_debug_verbose="${VT_DEBUG_VERBOSE:-}" \
-      -Dvt_tests_num_nodes="${VT_TESTS_NUM_NODES:-}" \
-      -Dvt_no_color_enabled="${VT_NO_COLOR_ENABLED:-0}" \
-      -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS:-0}" \
-      "-DCMAKE_JOB_POOLS=default_pool=${parallel_level}" \
-      -DCMAKE_JOB_POOL_COMPILE="default_pool" \
-      -DCMAKE_JOB_POOL_LINK="default_pool"
-build_ret=$?
+ctest -S $VT/ci/ctest_job_script.cmake
 
-ctest -M Continuous -T Test -L 'unit_test|example' 
-test_ret=$?
-
-ctest -M Continuous -T Submit
-submit_ret=$?
+ctest_ret=$?
 
 # Exit with error code if there was any
-if test "$build_ret" -ne 0
+if test "$ctest_ret" -ne 0
 then
-    echo "There was an error during CTest Build"
-    exit "$build_ret"
-fi
-if test "$test_ret" -ne 0
-then
-    echo "There was an error during CTest Test"
-    exit "$test_ret"
-fi
-if test "$submit_ret" -ne 0
-then
-    echo "There was an error during CTest Submission"
-    exit "$submit_ret"
+    echo "There was an error during CTest"
+    exit "$ctest_ret"
 fi
