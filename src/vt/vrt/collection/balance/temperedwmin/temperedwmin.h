@@ -74,6 +74,10 @@ protected:
    * All ranks are allowed to initiate the information propagation stage
    */
   bool canPropagate() const override { return true; }
+  /**
+   * TemperedWMin does not care about underloaded
+   */
+  bool isUnderloaded(LoadType load) const override { return true; }
 
   std::vector<NodeType> getPotentialRecipients() const override;
 

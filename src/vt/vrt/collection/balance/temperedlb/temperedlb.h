@@ -111,7 +111,7 @@ protected:
   void propagateRound(uint8_t k_cur_async, bool sync, EpochType epoch = no_epoch);
   void propagateIncomingAsync(LoadMsgAsync* msg);
   void propagateIncomingSync(LoadMsgSync* msg);
-  bool isUnderloaded(LoadType load) const;
+  virtual bool isUnderloaded(LoadType load) const;
   bool isUnderloadedRelaxed(LoadType over, LoadType under) const;
   bool isOverloaded(LoadType load) const;
 
