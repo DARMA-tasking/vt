@@ -11,9 +11,11 @@ trigger:
       - 1.0.0*
 
 pr:
+  drafts: true
+  autoCancel: true
   branches:
-   include:
-     - '*'
+    include:
+      - '*'
 
 
 resources:
