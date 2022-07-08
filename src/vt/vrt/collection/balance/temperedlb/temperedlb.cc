@@ -475,7 +475,7 @@ void TemperedLB::runLB(TimeType total_load) {
 }
 
 void TemperedLB::clearDataStructures() {
-  underloaded_.clear();
+  potential_recipients_.clear();
   load_info_.clear();
   is_overloaded_ = is_underloaded_ = false;
 }
@@ -666,7 +666,7 @@ void TemperedLB::informAsync() {
 
   auto const this_node = theContext()->getNode();
   if (canPropagate()) {
-    underloaded_.insert(this_node);
+    potential_recipients_.insert(this_node);
   }
 
   setup_done_ = false;
@@ -693,7 +693,7 @@ void TemperedLB::informAsync() {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::informAsync: trial={}, iter={}, known underloaded={}\n",
-      trial_, iter_, underloaded_.size()
+      trial_, iter_, potential_recipients_.size()
     );
   }
 
@@ -717,12 +717,12 @@ void TemperedLB::informSync() {
 
   auto const this_node = theContext()->getNode();
   if (canPropagate()) {
-    underloaded_.insert(this_node);
+    potential_recipients_.insert(this_node);
   }
 
   auto propagate_this_round = canPropagate();
   propagate_next_round_ = false;
-  new_underloaded_ = underloaded_;
+  new_potential_recipients_ = potential_recipients_;
   new_load_info_ = load_info_;
 
   setup_done_ = false;
@@ -752,7 +752,7 @@ void TemperedLB::informSync() {
 
     propagate_this_round = propagate_next_round_;
     propagate_next_round_ = false;
-    underloaded_ = new_underloaded_;
+    potential_recipients_ = new_potential_recipients_;
     load_info_ = new_load_info_;
   }
 
@@ -760,7 +760,7 @@ void TemperedLB::informSync() {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::informSync: trial={}, iter={}, known underloaded={}\n",
-      trial_, iter_, underloaded_.size()
+      trial_, iter_, potential_recipients_.size()
     );
   }
 
@@ -791,7 +791,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     gen_propagate_.seed(seed_());
   }
 
-  auto& selected = underloaded_;
+  auto& selected = potential_recipients_;
   if (selected.find(this_node) == selected.end()) {
     selected.insert(this_node);
   }
@@ -868,7 +868,7 @@ void TemperedLB::propagateIncomingAsync(LoadMsgAsync* msg) {
       load_info_[elm.first] = elm.second;
 
       if (isUnderloaded(elm.second)) {
-        underloaded_.insert(elm.first);
+        potential_recipients_.insert(elm.first);
       }
     }
   }
@@ -902,7 +902,7 @@ void TemperedLB::propagateIncomingSync(LoadMsgSync* msg) {
       new_load_info_[elm.first] = elm.second;
 
       if (isUnderloaded(elm.second)) {
-        new_underloaded_.insert(elm.first);
+        new_potential_recipients_.insert(elm.first);
       }
     }
   }
@@ -1204,7 +1204,7 @@ void TemperedLB::decide() {
     auto potential_recipients = getPotentialRecipients();
     std::unordered_map<NodeType, ObjsType> migrate_objs;
 
-    if (potential_recipients.size() > 0) {
+    if (not potential_recipients.empty()) {
       std::vector<ObjIDType> ordered_obj_ids = orderObjects(
         obj_ordering_, cur_objs_, this_new_load_, target_max_load_
       );

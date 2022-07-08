@@ -67,6 +67,10 @@ protected:
   TimeType getModeledValue(const elm::ElementIDStruct& obj) override;
 
   /**
+   * Allow migration when there are objects to migrate and other ranks are known
+   */
+  bool canMigrate() const override;
+  /**
    * All ranks are allowed to initiate the information propagation stage
    */
   bool canPropagate() const override { return true; }

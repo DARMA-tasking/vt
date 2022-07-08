@@ -96,6 +96,9 @@ protected:
   void migrate();
   void clearDataStructures();
 
+  /**
+   * \brief Decides whether the rank can perform the migration
+   */
   virtual bool canMigrate() const {  return is_overloaded_; }
   /**
    * \brief Decides whether the rank can initiate information propagation stage
@@ -132,6 +135,7 @@ protected:
   void setupDone(ReduceMsgType* msg);
 
   std::unordered_map<NodeType, LoadType> load_info_ = {};
+  std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
 
 private:
   uint16_t f_                                       = 0;
@@ -175,9 +179,8 @@ private:
   objgroup::proxy::Proxy<TemperedLB> proxy_         = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
-  std::unordered_set<NodeType> underloaded_         = {};
-  std::unordered_set<NodeType> new_underloaded_     = {};
-  std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
+  std::unordered_set<NodeType> potential_recipients_      = {};
+  std::unordered_set<NodeType> new_potential_recipients_  = {};
   LoadType this_new_load_                           = 0.0;
   TimeType new_imbalance_                           = 0.0;
   TimeType target_max_load_                         = 0.0;
