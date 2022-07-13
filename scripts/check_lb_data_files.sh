@@ -5,16 +5,10 @@ set -exo pipefail
 path_to_vt_build_dir=${1}
 cd "$path_to_vt_build_dir" || exit 1
 
-if [ ! -d ../LBAF ]
-then
-    git clone -b "develop" --depth 1 https://github.com/DARMA-tasking/LB-analysis-framework.git LBAF
-    mv LBAF ../
-fi
-
 function run_schema_validator() {
     file=$1
     echo "Running schema validator on: $file"
-    if python3 ../LBAF/src/lbaf/Utils/JSON_data_files_validator.py --file_path="$file"
+    if python3 JSON_data_files_validator.py --file_path="$file"
     then
         echo "Valid file"
     else
