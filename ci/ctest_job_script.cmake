@@ -143,19 +143,23 @@ set(configureOpts
     "-DCMAKE_JOB_POOL_COMPILE='default_pool'"
     "-DCMAKE_JOB_POOL_LINK='default_pool'"
 )
-ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
+#ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
 ctest_start(Continuous)
-ctest_configure(OPTIONS "${configureOpts}")
+ctest_configure(OPTIONS "${configureOpts}" RETURN_VALUE ret_conf)
 ctest_submit(PARTS Start Configure)
-ctest_build()
-ctest_submit(PARTS Build)
+if (NOT ret_conf)
+  ctest_build(RETURN_VALUE ret_build)
+  ctest_submit(PARTS Build)
 # ctest_upload(FILES
 #     ${CTEST_BINARY_DIRECTORY}/mytest.log
 #     ${CTEST_BINARY_DIRECTORY}/anotherFile.txt
 # )
 # ctest_submit(PARTS Upload Submit)
-ctest_test(PARALLEL_LEVEL $ENV{parallel_level})
-ctest_submit(PARTS Test)
+  if (NOT ret_build)
+    ctest_test(PARALLEL_LEVEL $ENV{parallel_level})
+    ctest_submit(PARTS Test)
+  endif()
+endif()
 if(NOT CMAKE_VERSION VERSION_LESS "3.14")
     ctest_submit(PARTS Done)
 endif()
