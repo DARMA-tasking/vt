@@ -44,7 +44,7 @@
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
 
-#include "vt/config.h"
+#include "vt/configs/features/features_defines.h"
 
 #include <unordered_map>
 #include <string>
@@ -64,6 +64,7 @@ enum struct LBType : int8_t {
 # endif
   , RandomLB            = 7
   , TestSerializationLB = 8
+  , TemperedWMin        = 9
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

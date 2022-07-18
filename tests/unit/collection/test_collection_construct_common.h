@@ -49,8 +49,8 @@
 #include "vt/vrt/collection/manager.h"
 #include "data_message.h"
 
-#include <fmt/core.h>
-#include <fmt/ostream.h>
+#include <fmt-vt/core.h>
+#include <fmt-vt/ostream.h>
 
 #include <gtest/gtest.h>
 
@@ -90,14 +90,17 @@ struct ConstructParams {
   using IndexType = typename ColT::IndexType;
   using ProxyType = CollectionIndexProxy<ColT,IndexType>;
 
-  static ProxyType construct(IndexType idx) {
-    return theCollection()->construct<ColT>(idx);
+  static ProxyType construct(std::string const& label, IndexType idx) {
+    return theCollection()->construct<ColT>(idx, label);
   }
-  static ProxyType constructCollective(IndexType idx) {
+
+  static ProxyType constructCollective(
+    IndexType idx, std::string const& label
+  ) {
     return theCollection()->constructCollective<ColT>(
-      idx,[=](IndexType my_idx) {
+      idx, [=](IndexType my_idx) {
         return std::make_unique<ColT>();
-      }
+      }, label
     );
   }
 };
@@ -105,15 +108,26 @@ struct ConstructParams {
 TYPED_TEST_SUITE_P(TestConstruct);
 TYPED_TEST_SUITE_P(TestConstructDist);
 
+template <typename ColT, uint8_t N>
+typename ColT::IndexType CreateRange(typename ColT::IndexType::DenseIndexType range) {
+  std::array<typename ColT::IndexType::DenseIndexType, N> arr;
+  std::fill(arr.begin(), arr.end(), range);
+
+  return arr;
+}
+
 template<typename ColType>
-void test_construct_1() {
+void test_construct_1(std::string const& label) {
   using MsgType   = typename ColType::MsgType;
 
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
-    auto const& col_size = 32;
-    auto rng = TestIndex(col_size);
-    auto proxy = ConstructParams<ColType>::construct(rng);
+    // We don't want too many elements for 4 dimensions
+    auto constexpr num_dims = ColType::IndexType::ndims();
+    auto constexpr col_size = 8 / num_dims;
+
+    auto rng = CreateRange<ColType, num_dims>(col_size);
+    auto proxy = ConstructParams<ColType>::construct(label, rng);
     proxy.template broadcast<
       MsgType,
       ConstructHandlers::handler<ColType,MsgType>
@@ -125,9 +139,14 @@ template<typename ColType>
 void test_construct_distributed_1() {
   using MsgType   = typename ColType::MsgType;
 
-  auto const& col_size = 32;
-  auto rng = TestIndex(col_size);
-  auto proxy = ConstructParams<ColType>::constructCollective(rng);
+  // We don't want too many elements for 4 dimensions
+  auto constexpr num_dims = ColType::IndexType::ndims();
+  auto constexpr col_size = 8 / num_dims;
+
+  auto rng = CreateRange<ColType, num_dims>(col_size);
+  auto proxy = ConstructParams<ColType>::constructCollective(
+    rng, "test_construct_distributed_1"
+  );
   proxy.template broadcast<
     MsgType,
     ConstructHandlers::handler<ColType,MsgType>

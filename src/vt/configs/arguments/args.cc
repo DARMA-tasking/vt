@@ -360,6 +360,7 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto pap = "Enable debug_handler      = \"" debug_pp(handler)      "\"";
   auto qap = "Enable debug_hierlb       = \"" debug_pp(hierlb)       "\"";
   auto qbp = "Enable debug_temperedlb   = \"" debug_pp(temperedlb)   "\"";
+  auto qcp = "Enable debug_temperedwmin = \"" debug_pp(temperedwmin) "\"";
   auto rap = "Enable debug_scatter      = \"" debug_pp(scatter)      "\"";
   auto sap = "Enable debug_sequence     = \"" debug_pp(sequence)     "\"";
   auto tap = "Enable debug_sequence_vrt = \"" debug_pp(sequence_vrt) "\"";
@@ -398,6 +399,7 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto pa = app.add_flag("--vt_debug_handler",      appConfig.vt_debug_handler,      pap);
   auto qa = app.add_flag("--vt_debug_hierlb",       appConfig.vt_debug_hierlb,       qap);
   auto qb = app.add_flag("--vt_debug_temperedlb",   appConfig.vt_debug_temperedlb,   qbp);
+  auto qc = app.add_flag("--vt_debug_temperedwmin", appConfig.vt_debug_temperedwmin, qcp);
   auto ra = app.add_flag("--vt_debug_scatter",      appConfig.vt_debug_scatter,      rap);
   auto sa = app.add_flag("--vt_debug_sequence",     appConfig.vt_debug_sequence,     sap);
   auto ta = app.add_flag("--vt_debug_sequence_vrt", appConfig.vt_debug_sequence_vrt, tap);
@@ -436,6 +438,7 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   pa->group(debugGroup);
   qa->group(debugGroup);
   qb->group(debugGroup);
+  qc->group(debugGroup);
   ra->group(debugGroup);
   sa->group(debugGroup);
   ta->group(debugGroup);
@@ -479,6 +482,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lb_statistics = "Dump load balancing statistics to file";
   auto lb_statistics_comp = "Compress load balancing statistics file with brotli";
   auto lb_statistics_file = "Load balancing statistics output file name";
+  auto lb_statistics_dir  = "Load balancing statistics output directory name";
   auto lb_self_migration = "Allow load balancer to migrate objects to the same node";
   auto lbn = "NoLB";
   auto lbi = 1;
@@ -487,6 +491,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lbs = "data";
   auto lba = "";
   auto lbq = "vt_lb_statistics.%t.json";
+  auto lbqq = "";
   auto s  = app.add_flag("--vt_lb", appConfig.vt_lb, lb);
   auto t1 = app.add_flag("--vt_lb_quiet", appConfig.vt_lb_quiet, lb_quiet);
   auto u  = app.add_option("--vt_lb_file_name", appConfig.vt_lb_file_name, lb_file_name, lbf)->check(CLI::ExistingFile);
@@ -504,6 +509,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto yx = app.add_flag("--vt_lb_statistics",          appConfig.vt_lb_statistics,          lb_statistics);
   auto yy = app.add_flag("--vt_lb_statistics_compress", appConfig.vt_lb_statistics_compress, lb_statistics_comp);
   auto yz = app.add_option("--vt_lb_statistics_file",   appConfig.vt_lb_statistics_file,     lb_statistics_file,lbq);
+  auto zz = app.add_option("--vt_lb_statistics_dir",    appConfig.vt_lb_statistics_dir,      lb_statistics_dir,lbqq);
   auto lbasm = app.add_flag("--vt_lb_self_migration", appConfig.vt_lb_self_migration, lb_self_migration);
 
   auto debugLB = "Load Balancing";
@@ -524,6 +530,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   yx->group(debugLB);
   yy->group(debugLB);
   yz->group(debugLB);
+  zz->group(debugLB);
   lbasm->group(debugLB);
 
   // help options deliberately omitted from the debugLB group above so that
@@ -833,6 +840,10 @@ std::string AppConfig::getLBDataFileIn() const {
 
 std::string AppConfig::getLBStatisticsFile() const {
   std::string name = vt_lb_statistics_file;
+  std::string dir = vt_lb_statistics_dir;
+  if (not dir.empty()) {
+    name = dir + "/" + name;
+  }
   std::size_t timestamp = name.find("%t");
   if (timestamp != std::string::npos) {
     std::time_t t = std::time(nullptr);

@@ -76,6 +76,8 @@ using IdxBase    = index::IdxBase;
 using Index1D  = index::Index1D<index::IdxBase>;
 using Index2D  = index::Index2D<index::IdxBase>;
 using Index3D  = index::Index3D<index::IdxBase>;
+template <int8_t N>
+using IndexND  = index::IdxType<index::IdxBase, N>;
 
 template <typename T, int8_t N> using IdxType   = index::IdxType<T, N>;
 template <typename T>           using IdxType1D = index::Index1D<T>;

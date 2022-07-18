@@ -61,6 +61,7 @@ static std::unordered_map<LBType,std::string> lb_names_ = {
   {LBType::OfflineLB,           std::string{"OfflineLB"          }},
   {LBType::RandomLB,            std::string{"RandomLB"           }},
   {LBType::TestSerializationLB, std::string{"TestSerializationLB"}},
+  {LBType::TemperedWMin,        std::string{"TemperedWMin"       }},
 };
 
 std::unordered_map<LBType, std::string>& get_lb_names() {

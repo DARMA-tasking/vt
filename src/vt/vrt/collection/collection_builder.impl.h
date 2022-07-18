@@ -115,6 +115,7 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
   auto const this_node = theContext()->getNode();
   auto const has_bounds = po.has_bounds_;
   auto const bounds = has_bounds ? po.bounds_ : IndexType{};
+  auto const label = po.label_;
 
   // Setup a proper default map if none is explicitly specified by the user
   if (po.map_han_ == uninitialized_handler and po.map_object_ == no_obj_group) {
@@ -141,7 +142,7 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
   // Insert the typed meta-data for this new collection, along with creating
   // the meta-data collection holder for elements
   insertMetaCollection<ColT>(
-    proxy, map_han, has_dynamic_membership, map_object, has_bounds, bounds
+    label, proxy, map_han, has_dynamic_membership, map_object, has_bounds, bounds
   );
 
   std::size_t global_constructed_elms = 0;

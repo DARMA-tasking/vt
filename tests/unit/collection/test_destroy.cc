@@ -112,7 +112,9 @@ TEST_F(TestDestroy, test_destroy_1) {
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
       auto const& range = Index1D(num_nodes * num_elms_per_node);
-      auto proxy = theCollection()->construct<DestroyTest>(range);
+      auto proxy = theCollection()->construct<DestroyTest>(
+        range, "test_destroy_1"
+      );
 
       // ::fmt::print("broadcasting proxy={:x}\n", proxy.getProxy());
       proxy.broadcast<WorkMsg,DestroyTest::work>();

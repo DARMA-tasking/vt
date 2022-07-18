@@ -58,7 +58,7 @@
 #include <sys/stat.h>
 #include <memory>
 
-#include <fmt/core.h>
+#include <fmt-vt/core.h>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -68,7 +68,9 @@ void NodeLBData::setProxy(objgroup::proxy::Proxy<NodeLBData> in_proxy) {
 
 /*static*/ std::unique_ptr<NodeLBData> NodeLBData::construct() {
   auto ptr = std::make_unique<NodeLBData>();
-  auto proxy = theObjGroup()->makeCollective<NodeLBData>(ptr.get());
+  auto proxy = theObjGroup()->makeCollective<NodeLBData>(
+    ptr.get(), "NodeLBData"
+  );
   proxy.get()->setProxy(proxy);
   return ptr;
 }
@@ -101,6 +103,11 @@ std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() cons
 
 std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
   return &lb_data_->node_subphase_comm_;
+}
+
+CommMapType* NodeLBData::getNodeComm(PhaseType phase) {
+  auto iter = lb_data_->node_comm_.find(phase);
+  return (iter != lb_data_->node_comm_.end()) ? &iter->second : nullptr;
 }
 
 void NodeLBData::clearLBData() {
@@ -148,7 +155,10 @@ void NodeLBData::createLBDataFile() {
   auto const dir = theConfig()->vt_lb_data_dir;
   // Node 0 creates the directory
   if (not created_dir_ and theContext()->getNode() == 0) {
-    mkdir(dir.c_str(), S_IRWXU);
+    int flag = mkdir(dir.c_str(), S_IRWXU);
+    if (flag < 0 && errno != EEXIST) {
+      throw std::runtime_error("Failed to create directory: " + dir);
+    }
     created_dir_ = true;
   }
 

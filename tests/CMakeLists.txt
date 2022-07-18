@@ -45,6 +45,8 @@ set(BUILD_GMOCK OFF CACHE BOOL "Builds the googlemock subproject" FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Enable installation of googletest. (Projects embedding googletest may want to turn this OFF.)" FORCE)
 
 add_subdirectory(extern/googletest)
+set(GOOGLETEST_LIBRARY gtest)
+set_darma_compiler_flags(${GOOGLETEST_LIBRARY})
 
 # Hide various options from UI-based property editors
 mark_as_advanced(
@@ -103,6 +105,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
       set_tests_properties(
         ${${CUR_TEST_LIST}}
         PROPERTIES TIMEOUT 60
+        PROCESSORS ${PROC}
         FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
         PASS_REGULAR_EXPRESSION "PASSED"
         SKIP_REGULAR_EXPRESSION "SKIPPED"
@@ -121,6 +124,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
     set_tests_properties(
       ${${CUR_TEST_LIST}}
       PROPERTIES TIMEOUT 60
+      PROCESSORS 1
       FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
       PASS_REGULAR_EXPRESSION "PASSED"
       SKIP_REGULAR_EXPRESSION "SKIPPED"
@@ -253,6 +257,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
   set_tests_properties(
     ${TEST_NAME}
     PROPERTIES
+    PROCESSORS ${MPI_NUMPROC_FLAG}
     TIMEOUT 300
     LABELS "perf_test"
   )

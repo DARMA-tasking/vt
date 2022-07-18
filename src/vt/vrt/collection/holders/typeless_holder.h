@@ -56,25 +56,28 @@ struct TypelessHolder {
 
   void insertCollectionInfo(
     VirtualProxyType const proxy, std::shared_ptr<BaseHolder> ptr,
-    std::function<void()> group_constructor
+    std::function<void()> group_constructor, std::string const& label = {}
   );
   void insertMap(VirtualProxyType const proxy, HandlerType const map_han);
   HandlerType getMap(VirtualProxyType const proxy);
   void invokeAllGroupConstructors();
   void destroyAllLive();
   void destroyCollection(VirtualProxyType const proxy);
+  std::string getLabel(VirtualProxyType const proxy) const;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | live_
       | map_
-      | group_constructors_;
+      | group_constructors_
+      | labels_;
   }
 
 private:
-  std::unordered_map<VirtualProxyType,std::shared_ptr<BaseHolder>> live_;
-  std::unordered_map<VirtualProxyType,HandlerType> map_;
-  std::unordered_map<VirtualProxyType,std::function<void()>> group_constructors_;
+  std::unordered_map<VirtualProxyType, std::shared_ptr<BaseHolder>> live_;
+  std::unordered_map<VirtualProxyType, HandlerType> map_;
+  std::unordered_map<VirtualProxyType, std::function<void()>> group_constructors_;
+  std::unordered_map<VirtualProxyType, std::string> labels_;
 };
 
 }}} /* end namespace vt::vrt::collection */

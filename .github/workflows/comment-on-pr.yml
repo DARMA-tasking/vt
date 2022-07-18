@@ -4,6 +4,8 @@ on:
   repository_dispatch:
     types: comment-pr
 
+concurrency: ${{ github.event.repository.name }}-${{ github.ref }}
+
 jobs:
   comment-on-pr:
     runs-on: ubuntu-latest

@@ -102,7 +102,7 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   DenseIndexArray(std::array<IndexType, ndim> in_array);
   DenseIndexArray(DenseIndexArraySingleInitTag, IndexType const& init_value);
 
-  NumDimensionsType ndims() const { return ndim; }
+  static constexpr NumDimensionsType ndims() { return ndim; }
 
   IndexType& operator[](IndexType const& index);
   IndexType const& operator[](IndexType const& index) const;

@@ -121,34 +121,37 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \brief Collectively construct a new object group. Allocates and constructs
    * the object on each node by forwarding constructor arguments.
    *
+   * \param[in] label object group label
    * \param[in] args args to pass to the object's constructor on each node
    *
    * \return proxy to the object group
    */
   template <typename ObjT, typename... Args>
-  ProxyType<ObjT> makeCollective(Args&&... args);
+  ProxyType<ObjT> makeCollective(std::string const& label, Args&&... args);
 
   /**
    * \brief Collectively construct a new object group from a existing unique
    * pointer to the local object
    *
    * \param[in] obj the std::unique_ptr<ObjT> to the local object
+   * \param[in] label object group label
    *
    * \return proxy to the object group
    */
   template <typename ObjT>
-  ProxyType<ObjT> makeCollective(std::unique_ptr<ObjT> obj);
+  ProxyType<ObjT> makeCollective(std::unique_ptr<ObjT> obj, std::string const& label = {});
 
   /**
    * \brief Collectively construct a new object group with a callback to provide
    * a unique pointer on each node.
    *
    * \param[in] fn callback function to construct
+   * \param[in] label object group label
    *
    * \return proxy to the object group
    */
   template <typename ObjT>
-  ProxyType<ObjT> makeCollective(MakeFnType<ObjT> fn);
+  ProxyType<ObjT> makeCollective(MakeFnType<ObjT> fn, std::string const& label = {});
 
   /**
    * \brief Collectively construct a new object group from a raw pointer to the
@@ -159,11 +162,12 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * is destroyed.
    *
    * \param[in] obj raw pointer to the object
+   * \param[in] label object group label
    *
    * \return proxy to the object group
    */
   template <typename ObjT>
-  ProxyType<ObjT> makeCollective(ObjT* obj);
+  ProxyType<ObjT> makeCollective(ObjT* obj, std::string const& label = {});
 
   /**
    * \brief Collectively construct a new object group from a smart-pointer-like
@@ -171,11 +175,12 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    *
    * \param[in] obj the smart-pointer-like handle that the system holds until
    * destruction
+   * \param[in] label object group label
    *
    * \return proxy to the object group
    */
   template <template <typename> class UserPtr, typename ObjT>
-  ProxyType<ObjT> makeCollective(UserPtr<ObjT> obj);
+  ProxyType<ObjT> makeCollective(UserPtr<ObjT> obj, std::string const& label = {});
 
   /**
    * \brief Collectively destroy an object group across the whole system
@@ -314,6 +319,17 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   template <typename ObjT>
   ProxyElmType<ObjT> proxyElm(ObjT* obj);
 
+  /**
+   * \brief Get object group label
+   *
+   * \param[in] proxy indexed proxy to the object group (must be the current
+   * node)
+   *
+   * \return label of the Object Group
+   */
+  template <typename ObjT>
+  std::string getLabel(ProxyType<ObjT> proxy) const;
+
   /*
    * Dispatch to a live obj group pointer with a handler
    */
@@ -370,7 +386,8 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
       | dispatch_
       | objs_
       | obj_to_proxy_
-      | pending_;
+      | pending_
+      | labels_;
   }
 
   // Friend function to access the holder without including this header file
@@ -380,23 +397,29 @@ private:
   /**
    * \internal \brief Untyped system call to make a new collective objgroup
    *
+   * \param[in] label object group label
    * \param[in] b the base holder
    * \param[in] obj_ptr type-erased pointer to the object
    *
    * \return a new untyped proxy
    */
-  ObjGroupProxyType makeCollectiveImpl(HolderBasePtrType b, void* obj_ptr);
+  ObjGroupProxyType makeCollectiveImpl(
+    std::string const& label, HolderBasePtrType b, void* obj_ptr
+  );
 
   /**
    * \internal \brief Typed system class to make a new collective objgroup
    *
+   * \param[in] label
    * \param[in] obj pointer to the object instance
    * \param[in] base_holder the base holder
    *
    * \return the new typed proxy
    */
   template <typename ObjT>
-  ProxyType<ObjT> makeCollectiveObj(ObjT* obj, HolderBasePtrType base_holder);
+  ProxyType<ObjT> makeCollectiveObj(
+    std::string const& label, ObjT* obj, HolderBasePtrType base_holder
+  );
 
   /**
    * \internal \brief Register a new objgroup with proxy
@@ -429,13 +452,15 @@ private:
   /// The current obj ID, sequential on each node for collective construction
   ObjGroupIDType cur_obj_id_ = fst_obj_group_id;
   /// Function to dispatch to the base class for type-erasure to run handler
-  std::unordered_map<ObjGroupProxyType,DispatchBasePtrType> dispatch_;
+  std::unordered_map<ObjGroupProxyType, DispatchBasePtrType> dispatch_;
   /// Type-erased pointers to the objects held on this node
-  std::unordered_map<ObjGroupProxyType,HolderBasePtrType> objs_;
+  std::unordered_map<ObjGroupProxyType, HolderBasePtrType> objs_;
   /// Reverse lookup map from an object pointer to the proxy
-  std::unordered_map<void*,ObjGroupProxyType> obj_to_proxy_;
+  std::unordered_map<void*, ObjGroupProxyType> obj_to_proxy_;
   /// Messages that are pending creation for delivery
-  std::unordered_map<ObjGroupProxyType,MsgContainerType> pending_;
+  std::unordered_map<ObjGroupProxyType, MsgContainerType> pending_;
+  /// Map of object groups' labels
+  std::unordered_map<ObjGroupProxyType, std::string> labels_;
 };
 
 }} /* end namespace vt::objgroup */

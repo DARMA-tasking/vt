@@ -129,8 +129,8 @@ int main(int argc, char** argv) {
     return vt::rerror("requires at least 2 nodes");
   }
 
-  auto obj = vt::theObjGroup()->makeCollective<MyObj>();
-  auto col = vt::makeCollection<MyCol>()
+  auto obj = vt::theObjGroup()->makeCollective<MyObj>("examples_callback");
+  auto col = vt::makeCollection<MyCol>("examples_callback")
     .bounds(vt::Index1D(8))
     .bulkInsert()
     .wait();

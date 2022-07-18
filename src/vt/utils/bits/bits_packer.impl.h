@@ -115,9 +115,16 @@ template <typename BitType, typename BitField>
 BitPacker::setFieldDynamic(
   FieldType start, FieldType len, BitField& field, BitType const& segment
 ) {
+  // make_unsigned UB before C++20 for non-integral or bool types (ill-formed after C++20)
+  static_assert(std::is_integral<BitField>::value && !std::is_same<BitField, bool>::value,
+                "BitField must be non-bool integral type");
+  // sizeof(UnsignedBitField) is guaranteed to be the same as sizeof(BitField)
+  using UnsignedBitField = std::make_unsigned_t<BitField>;
   auto const nbits = (sizeof(BitField) * 8) - len;
   field = field & ~(gen_bit_mask(len) << start);
-  field = field | (((static_cast<BitField>(segment) << nbits) >> nbits) << start);
+  auto seg = bit_cast<UnsignedBitField>(static_cast<BitField>(segment));
+  UnsignedBitField bits = ((seg << nbits) >> nbits) << start;
+  field = field | bit_cast<BitField>( bits );
 }
 
 template <FieldType start, FieldType len, typename BitField>

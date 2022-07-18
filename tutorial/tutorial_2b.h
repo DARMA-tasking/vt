@@ -119,7 +119,7 @@ static inline void collectionReduce() {
 
     // Construct the collection in a rooted manner. By default, the elements
     // will be block mapped to the nodes
-    auto proxy = vt::makeCollectionRooted<ReduceCol>()
+    auto proxy = vt::makeCollectionRooted<ReduceCol>("tutorial_collection_reduce")
       .bounds(range)     // Set the bounds for the collection
       .bulkInsert()      // Bulk insert all the elements within the bounds
       .wait();           // Wait for construction and get the proxy back

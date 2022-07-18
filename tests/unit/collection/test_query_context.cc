@@ -77,7 +77,9 @@ TEST_F(TestQueryContext, test_query_context_broadcast_1) {
   auto const& num_nodes = theContext()->getNumNodes();
   if (this_node == 0) {
     auto const& range = Index1D(num_nodes * num_elms_per_node);
-    auto proxy = theCollection()->construct<QueryTest>(range);
+    auto proxy = theCollection()->construct<QueryTest>(
+      range, "test_query_context_broadcast_1"
+    );
     for (int i = 0; i < 10; i++) {
       proxy.broadcast<WorkMsg,&QueryTest::work>();
     }
@@ -89,7 +91,9 @@ TEST_F(TestQueryContext, test_query_context_send_1) {
   auto const& num_nodes = theContext()->getNumNodes();
   if (this_node == 0) {
     auto const& range = Index1D(num_nodes * num_elms_per_node);
-    auto proxy = theCollection()->construct<QueryTest>(range);
+    auto proxy = theCollection()->construct<QueryTest>(
+      range, "test_query_context_send_1"
+    );
     for (int i = 0; i < num_nodes * num_elms_per_node; i++) {
       proxy[i].send<WorkMsg,&QueryTest::work>();
     }

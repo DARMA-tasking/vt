@@ -180,8 +180,8 @@ TYPED_TEST_SUITE_P(TestCollectionSend);
 TYPED_TEST_SUITE_P(TestCollectionSendSz);
 TYPED_TEST_SUITE_P(TestCollectionSendMem);
 
-template<typename ColType>
-void test_collection_send_1() {
+template <typename ColType>
+void test_collection_send_1(std::string const& label) {
   using MsgType = typename ColType::MsgType;
   using TestParamType = typename ColType::ParamType;
 
@@ -190,7 +190,7 @@ void test_collection_send_1() {
     auto const& col_size = 32;
     auto range = TestIndex(col_size);
     TestParamType args = ConstructTuple<TestParamType>::construct();
-    auto proxy = theCollection()->construct<ColType>(range);
+    auto proxy = theCollection()->construct<ColType>(range, label);
     for (int i = 0; i < col_size; i++) {
       auto msg = makeMessage<MsgType>(args);
       EXPECT_EQ(msg.size(), sizeof(MsgType));
@@ -228,7 +228,7 @@ void test_collection_send_sz_1() {
 }
 
 template <typename ColType>
-void test_collection_send_ptm_1() {
+void test_collection_send_ptm_1(std::string const& label) {
   using MsgType = typename ColType::MsgType;
   using TestParamType = typename ColType::ParamType;
 
@@ -237,7 +237,7 @@ void test_collection_send_ptm_1() {
     auto const& col_size = 32;
     auto range = TestIndex(col_size);
     TestParamType args = ConstructTuple<TestParamType>::construct();
-    auto proxy = theCollection()->construct<ColType>(range);
+    auto proxy = theCollection()->construct<ColType>(range, label);
     for (int i = 0; i < col_size; i++) {
       auto msg = makeMessage<MsgType>(args);
       //proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);

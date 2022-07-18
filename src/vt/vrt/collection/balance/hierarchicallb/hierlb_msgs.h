@@ -74,7 +74,7 @@ struct LBTreeUpMsg : HierLBTypes, ::vt::Message {
 
   LoadType getChildLoad() const { return child_load_; }
   NodeType getChild() const { return child_; }
-  ObjSampleType const& getLoad() const { return load_; }
+  ObjSampleType const& getModeledLoad() const { return load_; }
   ObjSampleType&& getLoadMove() { return std::move(load_); }
   NodeType getChildSize() const { return child_size_; }
 

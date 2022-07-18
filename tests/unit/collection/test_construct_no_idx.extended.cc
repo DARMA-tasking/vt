@@ -63,7 +63,7 @@ struct ColMsg : CollectionMessage<TestCol> {};
 using CollectionTestTypes = testing::Types<multi_param_no_idx_::TestCol>;
 
 TYPED_TEST_P(TestConstruct, test_construct_no_idx_extended_1) {
-  test_construct_1<TypeParam>();
+  test_construct_1<TypeParam>("test_construct_no_idx_extended_1");
 }
 
 TYPED_TEST_P(TestConstructDist, test_construct_distributed_no_idx_extended_1) {

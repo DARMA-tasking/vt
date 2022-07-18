@@ -367,13 +367,13 @@ int main(int argc, char** argv) {
 
   // Object group of all nodes that take part in computation
   // Used to determine whether the computation is finished
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>();
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>("examples_jacobi1d");
 
   // Create the decomposition into objects
   using BaseIndexType = typename vt::Index1D::DenseIndexType;
   auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
-  auto col_proxy = vt::makeCollection<LinearPb1DJacobi>()
+  auto col_proxy = vt::makeCollection<LinearPb1DJacobi>("examples_jacobi1d")
     .bounds(range)
     .bulkInsert()
     .wait();

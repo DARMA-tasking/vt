@@ -45,7 +45,7 @@
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
 
-#include <fmt/core.h>
+#include <fmt-vt/core.h>
 
 using namespace vt;
 using namespace vt::tests::perf::common;
@@ -139,7 +139,9 @@ void NodeObj::finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
 }
 
 VT_PERF_TEST(MyTest, test_ping_pong) {
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(this);
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
+    "test_ping_pong", this
+  );
   grp_proxy[my_node_]
     .invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 

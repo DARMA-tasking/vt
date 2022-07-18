@@ -67,7 +67,7 @@ struct TestObjGroup {
   }
 
   static ProxyType construct() {
-    auto proxy = vt::theObjGroup()->makeCollective<TestObjGroup>();
+    auto proxy = vt::theObjGroup()->makeCollective<TestObjGroup>("TestObjGroup");
     proxy.get()->initialize(proxy);
     return proxy;
   }
@@ -82,7 +82,7 @@ struct TestRDMAHandle : TestParallelHarness { };
 TYPED_TEST_SUITE_P(TestRDMAHandle);
 
 template<typename TypeParam>
-void test_rdma_handle_1(){
+void test_rdma_handle_1() {
   std::size_t size = 10;
 
   using T = TypeParam;
@@ -124,7 +124,7 @@ void test_rdma_handle_1(){
 }
 
 template<typename TypeParam>
-void test_rdma_handle_2(){
+void test_rdma_handle_2() {
   std::size_t size = 10;
 
   using T = TypeParam;
@@ -179,7 +179,7 @@ void test_rdma_handle_2(){
 }
 
 template<typename TypeParam>
-void test_rdma_handle_3(){
+void test_rdma_handle_3() {
   std::size_t size = 10;
 
   using T = TypeParam;
@@ -221,7 +221,7 @@ void test_rdma_handle_3(){
 }
 
 template<typename TypeParam>
-void test_rdma_handle_4(){
+void test_rdma_handle_4() {
   auto rank = vt::theContext()->getNode();
   std::size_t per_size = 10;
   std::size_t size = per_size * (rank + 1);
@@ -245,7 +245,7 @@ void test_rdma_handle_4(){
 }
 
 template<typename TypeParam>
-void test_rdma_handle_5(){
+void test_rdma_handle_5() {
   std::size_t size = 10;
 
   using T = TypeParam;

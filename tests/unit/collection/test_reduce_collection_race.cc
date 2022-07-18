@@ -75,7 +75,9 @@ TEST_P(TestReduceCollectionRace, test_reduce_race_1) {
 
   multipler = GetParam();
   auto const range = Index1D(multipler * num_nodes);
-  auto proxy = theCollection()->constructCollective<MyCol>(range);
+  auto proxy = theCollection()->constructCollective<MyCol>(
+    range, "test_reduce_race_1"
+  );
 
   proxy.broadcastCollective<TestMsg, &handler>();
   proxy.broadcastCollective<TestMsg, &handler>();

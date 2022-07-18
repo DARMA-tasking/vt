@@ -312,15 +312,14 @@ struct MyObjGroup {
   MyObjGroup() = default;
 
   void makeVT() {
-    frontend_proxy_ = vt::theObjGroup()->makeCollective(this);
+    frontend_proxy_ = vt::theObjGroup()->makeCollective(this, "MyObjGroup");
   }
 
-  void makeColl(NodeType num_nodes, int k) {
+  void makeColl(std::string const& label, NodeType num_nodes, int k) {
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
     backend_proxy_ = vt::theCollection()->constructCollective<MyCol>(
-      range, [=](vt::Index2D idx) {
-        return std::make_unique<MyCol>(num_nodes, k);
-      }
+      range, [=](vt::Index2D idx) { return std::make_unique<MyCol>(num_nodes, k); },
+      label
     );
 
     chains_ = std::make_unique<vt::messaging::CollectionChainSet<vt::Index2D>>(
@@ -475,7 +474,7 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
   auto local = std::make_unique<MyObjGroup>();
   local->startup();
   local->makeVT();
-  local->makeColl(num_nodes,k);
+  local->makeColl("test_term_dep_send_chain", num_nodes, k);
 
   // Must have barrier here so op4Impl does not bounce early (invalid proxy)!
   vt::theCollective()->barrier();
@@ -581,16 +580,16 @@ struct MergeObjGroup
   }
 
   void makeVT() {
-    frontend_proxy_ = vt::theObjGroup()->makeCollective(this);
+    frontend_proxy_ = vt::theObjGroup()->makeCollective(this, "MergeObjGroup");
   }
 
-  void makeColl(NodeType num_nodes, int k, double offset) {
+  void makeColl(std::string const& label, NodeType num_nodes, int k, double offset) {
     auto const node = theContext()->getNode();
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
     backend_proxy_ = vt::theCollection()->constructCollective<MergeCol>(
       range, [=](vt::Index2D idx) {
         return std::make_unique<MergeCol>(num_nodes, offset);
-      }
+      }, label
     );
 
     chains_ = std::make_unique<vt::messaging::CollectionChainSet<vt::Index2D>>();
@@ -675,12 +674,12 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain_merge) {
   auto obj_a = std::make_unique<MergeObjGroup>();
   obj_a->startup();
   obj_a->makeVT();
-  obj_a->makeColl(num_nodes,k, 0.0);
+  obj_a->makeColl("test_term_dep_send_chain_merge", num_nodes, k, 0.0);
 
   auto obj_b = std::make_unique<MergeObjGroup>();
   obj_b->startup();
   obj_b->makeVT();
-  obj_b->makeColl(num_nodes,k, 1000.0);
+  obj_b->makeColl("test_term_dep_send_chain_merge", num_nodes, k, 1000.0);
 
   // Must have barrier here so op4Impl does not bounce early (invalid proxy)!
   vt::theCollective()->barrier();

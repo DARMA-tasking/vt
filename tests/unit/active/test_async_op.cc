@@ -108,7 +108,7 @@ struct MyObjGroup {
 
 TEST_F(TestAsyncOp, test_async_op_1) {
   auto const this_node = theContext()->getNode();
-  auto p = theObjGroup()->makeCollective<MyObjGroup>();
+  auto p = theObjGroup()->makeCollective<MyObjGroup>("test_async_op_1");
   auto ep = theTerm()->makeEpochRooted(term::UseDS{true});
   // When this returns all the MPI requests should be done
   runInEpoch(ep, [p, this_node]{

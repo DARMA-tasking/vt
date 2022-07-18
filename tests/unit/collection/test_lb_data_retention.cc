@@ -125,7 +125,9 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
 
   // Construct two collections
   runInEpochCollective([&]{
-    proxy = vt::theCollection()->constructCollective<TestCol>(range);
+    proxy = vt::theCollection()->constructCollective<TestCol>(
+      range, "test_lbstats_retention_last1"
+    );
   });
 
   // Get the base model, assert it's valid
@@ -161,7 +163,9 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
 
   // Construct two collections
   runInEpochCollective([&]{
-    proxy = vt::theCollection()->constructCollective<TestCol>(range);
+    proxy = vt::theCollection()->constructCollective<TestCol>(
+      range, "test_lbstats_retention_last2"
+    );
   });
 
   // Get the base model, assert it's valid
@@ -197,7 +201,9 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
 
   // Construct two collections
   runInEpochCollective([&]{
-    proxy = vt::theCollection()->constructCollective<TestCol>(range);
+    proxy = vt::theCollection()->constructCollective<TestCol>(
+      range, "test_lbstats_retention_last4"
+    );
   });
 
   // Get the base model, assert it's valid

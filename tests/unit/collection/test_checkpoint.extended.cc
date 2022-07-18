@@ -172,10 +172,13 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
   auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 
   auto range = vt::Index3D(num_nodes, num_elms, 4);
-  auto checkpoint_name = "test_checkpoint_dir";
+  std::string const checkpoint_name{"test_checkpoint_dir"};
+  std::string const expected_label{"test_checkpoint_1"};
 
   {
-    auto proxy = vt::theCollection()->constructCollective<TestCol>(range);
+    auto proxy = vt::theCollection()->constructCollective<TestCol>(
+      range, expected_label
+    );
 
     vt::runInEpochCollective([&]{
       if (this_node == 0) {
@@ -223,9 +226,12 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
     // Restoration should be done now
     vt::theCollective()->barrier();
 
-    runInEpochCollective([&]{
+    runInEpochCollective([&] {
+      auto const got_label = vt::theCollection()->getLabel(proxy.getProxy());
+      EXPECT_EQ(got_label, expected_label);
+
       if (this_node == 0) {
-        proxy.broadcast<TestCol::NullMsg,&TestCol::verify>();
+        proxy.broadcast<TestCol::NullMsg, &TestCol::verify>();
       }
     });
 
@@ -246,7 +252,9 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
 
   auto range = vt::Index3D(num_nodes, num_elms, 4);
   auto checkpoint_name = "test_checkpoint_dir";
-  auto proxy = vt::theCollection()->constructCollective<TestCol>(range);
+  auto proxy = vt::theCollection()->constructCollective<TestCol>(
+    range, "test_checkpoint_in_place_2"
+  );
 
   theConfig()->vt_lb = true;
   theConfig()->vt_lb_name = "TemperedLB";
@@ -316,7 +324,9 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
 
   auto range = vt::Index3D(num_nodes, num_elms, 4);
   auto checkpoint_name = "test_checkpoint_dir_2";
-  auto proxy = vt::theCollection()->constructCollective<TestCol>(range);
+  auto proxy = vt::theCollection()->constructCollective<TestCol>(
+    range, "test_checkpoint_in_place_3"
+  );
 
   theConfig()->vt_lb = true;
   theConfig()->vt_lb_name = "TemperedLB";
@@ -354,7 +364,9 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
     }
   });
 
-  auto proxy_new = vt::theCollection()->constructCollective<TestCol>(range);
+  auto proxy_new = vt::theCollection()->constructCollective<TestCol>(
+    range, "test_checkpoint_in_place_3"
+  );
 
   vt::runInEpochCollective([&]{
     // Now, restore from the previous distribution
@@ -391,7 +403,7 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
   auto checkpoint_name = "test_null_elm_checkpoint_dir";
 
   {
-    auto proxy = vt::makeCollection<TestCol>()
+    auto proxy = vt::makeCollection<TestCol>("test_checkpoint_no_elements_on_root_rank")
       .bounds(range)
       .mapperFunc<map>()
       .bulkInsert()

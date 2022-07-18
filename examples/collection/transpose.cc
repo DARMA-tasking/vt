@@ -333,7 +333,7 @@ int main(int argc, char** argv) {
   vt::NodeType this_node = vt::theContext()->getNode();
 
   auto range = vt::Index1D(num_pieces);
-  auto proxy = vt::makeCollection<Block>()
+  auto proxy = vt::makeCollection<Block>("examples_transpose")
     .bounds(range)
     .bulkInsert()
     .mapperFunc<my_map>()

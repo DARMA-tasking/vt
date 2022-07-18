@@ -107,7 +107,7 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
   auto num_nodes = theContext()->getNumNodes();
   int insert_counter = range.x() / 2;
 
-  auto proxy = vt::makeCollection<MyCol>()
+  auto proxy = vt::makeCollection<MyCol>("test_phase_insertions_1")
     .bounds(range)
     .mapperFunc<map_fn>()
     .collective(true)

@@ -64,6 +64,8 @@ struct LoadModel;
 
 namespace lb {
 
+struct CommMsg;
+
 struct BaseLB {
   using ObjIDType        = balance::ElementIDStruct;
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
@@ -81,8 +83,9 @@ struct BaseLB {
   >;
   using ObjDestinationListType = std::vector<std::tuple<ObjIDType, NodeType>>;
 
-  explicit BaseLB()
-    : pending_reassignment_(std::make_shared<balance::Reassignment>())
+  explicit BaseLB(bool in_comm_aware = false)
+    : comm_aware_(in_comm_aware),
+      pending_reassignment_(std::make_shared<balance::Reassignment>())
   { }
 
   BaseLB(BaseLB const &) = delete;
@@ -142,6 +145,9 @@ struct BaseLB {
 
   TransferVecType& getTransfers() { return transfers_; }
 
+  bool isCommAware() const { return comm_aware_; }
+  void recvSharedEdges(CommMsg* msg);
+
 protected:
   void getArgs(PhaseType phase);
 
@@ -153,6 +159,7 @@ protected:
   std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
   // Observer only - LBManager owns the instance
   balance::LoadModel* load_model_                 = nullptr;
+  bool comm_aware_                                = false;
 
 protected:
   /**
@@ -172,6 +179,6 @@ private:
   std::shared_ptr<balance::Reassignment> pending_reassignment_ = nullptr;
 };
 
-}}}} /* end namespace vt::vrt::collection::lb */
+}}}} // namespace vt::vrt::collection::lb
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_H*/

@@ -50,6 +50,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 
 #include <checkpoint/checkpoint.h>
 
@@ -67,7 +68,9 @@ struct ConstructParams;
 
 /// fwd-declare the builder helper function
 template <typename ColT>
-ConstructParams<ColT> makeCollectionImpl(bool const is_collective);
+ConstructParams<ColT> makeCollectionImpl(
+  std::string const& label, bool const is_collective
+);
 
 /**
  * \struct ConstructParams
@@ -89,11 +92,11 @@ struct ConstructParams {
 private:
   struct BuilderTag{};
 
-  ConstructParams(BuilderTag, bool const in_is_collective)
-    : collective_(in_is_collective)
+  ConstructParams(BuilderTag, std::string const& label, bool const in_is_collective)
+    : collective_(in_is_collective), label_(label)
   {}
 
-  friend ThisType makeCollectionImpl<ColT>(bool const);
+  friend ThisType makeCollectionImpl<ColT>(std::string const&, bool const);
 
 public:
   ConstructParams() = default;
@@ -111,7 +114,8 @@ public:
       migratable_(x.migratable_),
       map_han_(x.map_han_),
       proxy_bits_(x.proxy_bits_),
-      map_object_(x.map_object_)
+      map_object_(x.map_object_),
+      label_(x.label_)
   {
     vtAssert(
       not collective_,
@@ -403,7 +407,8 @@ public:
       | migratable_
       | map_han_
       | proxy_bits_
-      | map_object_;
+      | map_object_
+      | label_;
     s.skip(list_inserts_);
     s.skip(list_insert_here_);
     s.skip(cons_fn_);
@@ -424,13 +429,16 @@ private:
   HandlerType map_han_                             = uninitialized_handler;
   VirtualProxyType proxy_bits_                     = no_vrt_proxy;
   ObjGroupProxyType map_object_                    = no_obj_group;
+  std::string label_                               = "";
 };
 
 template <typename ColT>
-ConstructParams<ColT> makeCollectionImpl(bool const is_collective) {
+ConstructParams<ColT> makeCollectionImpl(
+  std::string const& label, bool const is_collective
+) {
   using ConsType = ConstructParams<ColT>;
   using TagType  = typename ConsType::BuilderTag;
-  return ConsType{TagType{}, is_collective};
+  return ConsType{TagType{}, label, is_collective};
 }
 
 }}}} /* end namespace vt::vrt::collection::param */
@@ -441,28 +449,32 @@ namespace vt {
  * \brief Collectively construct a new collection with the parameter object
  * builder
  *
- * \param[in] bounds the bounds for the collection (optional)
+ * \param[in] label collection label
  *
  * \return the parameter configuration object
  */
 template <typename ColT>
-vrt::collection::param::ConstructParams<ColT> makeCollection() {
+vrt::collection::param::ConstructParams<ColT> makeCollection(
+  const std::string& label = {}
+) {
   bool const is_collective = true;
-  return vrt::collection::param::makeCollectionImpl<ColT>(is_collective);
+  return vrt::collection::param::makeCollectionImpl<ColT>(label, is_collective);
 }
 
 /**
  * \brief Construct a new collection (from a single node) with the parameter
  * object builder
  *
- * \param[in] bounds the bounds for the collection (optional)
+ * \param[in] label collection label
  *
  * \return the parameter configuration object
  */
 template <typename ColT>
-vrt::collection::param::ConstructParams<ColT> makeCollectionRooted() {
+vrt::collection::param::ConstructParams<ColT> makeCollectionRooted(
+  const std::string& label = {}
+) {
   bool const is_collective = false;
-  return vrt::collection::param::makeCollectionImpl<ColT>(is_collective);
+  return vrt::collection::param::makeCollectionImpl<ColT>(label, is_collective);
 }
 
 } /* end namespace vt */

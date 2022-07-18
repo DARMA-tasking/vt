@@ -8,12 +8,13 @@
 # * puts a comment with both reports in PR thread on GitHub
 #
 #
-# Why max_comment_size=64450 ?
+# Why max_comment_size=3000 ?
 #
 # Maximum length of the comment body is 65536 characters.
 # https://github.community/t/maximum-length-for-the-comment-body-in-issues-and-pr/148867
 #
 # Minus some decorations, comment's title, and additional description gives about 64.5k characters.
+# There are 21 pipelines, so 64.5k/21 gives about 3k characters per pipeline.
 #
 #
 # What's going on with delimiter="-=-=-=-" and strange "%0D%0A"?
@@ -94,7 +95,7 @@ fi
 
 # Concatenate both reports into one
 val="$warnings_errors""$delimiter""$delimiter""$tests_failures"
-max_comment_size=64450
+max_comment_size=3000
 if test ${#val} -gt "$max_comment_size"
 then
     val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read log. <=="

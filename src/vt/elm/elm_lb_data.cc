@@ -180,7 +180,8 @@ TimeType ElementLBData::getLoad(PhaseType const& phase) const {
   }
 }
 
-TimeType ElementLBData::getLoad(PhaseType phase, SubphaseType subphase) const {
+TimeType
+ElementLBData::getLoad(PhaseType phase, SubphaseType subphase) const {
   if (subphase == no_subphase)
     return getLoad(phase);
 

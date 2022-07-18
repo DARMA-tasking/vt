@@ -212,7 +212,8 @@ public:
       | base_model_
       | model_
       | lb_instances_
-      | stats;
+      | stats
+      | created_lbstats_dir_;
   }
 
   void stagePreLBStatistics(const StatisticMapType &statistics);
@@ -221,17 +222,18 @@ public:
   );
   void commitPhaseStatistics(PhaseType phase);
 
-protected:
   /**
    * \internal \brief Collectively construct a new load balancer
    *
    * \param[in] LB the type of strategy to instantiate
+   * \param[in] lb_name optional name of the load balancer
    *
    * \return objgroup proxy to the new load balancer
    */
   template <typename LB>
-  LBProxyType makeLB();
+  LBProxyType makeLB(std::string const& lb_name = {});
 
+protected:
   /**
    * \internal
    * \brief Run the load balancer
@@ -290,7 +292,13 @@ private:
   bool before_lb_stats_ = true;
   /// The appender for outputting statistics in JSON format
   std::unique_ptr<util::json::BaseAppender> statistics_writer_ = nullptr;
+  /// Whether the LB statistics directory has been created
+  bool created_lbstats_dir_ = false;
 };
+
+void makeGraphSymmetric(
+  PhaseType phase, objgroup::proxy::Proxy<lb::BaseLB> proxy
+);
 
 }}}} /* end namespace vt::vrt::collection::balance */
 

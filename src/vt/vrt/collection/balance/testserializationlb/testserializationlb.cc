@@ -63,7 +63,9 @@ void TestSerializationLB::inputParams(balance::SpecEntry*) { }
 void TestSerializationLB::runLB(TimeType) {
   auto const this_node = theContext()->getNode();
   for (auto obj : *load_model_) {
-    TimeTypeWrapper const load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
+    auto const load = load_model_->getModeledLoad(
+      obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+    );
     vt_debug_print(
       terse, lb,
       "\t TestSerializationLB::migrating object to: obj={}, load={}, from_node={} to_node={}\n",

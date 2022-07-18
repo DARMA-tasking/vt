@@ -147,7 +147,9 @@ TYPED_TEST_P(TestRDMAHandleCollection, test_rdma_handle_collection_1) {
 
   runInEpochCollective([&]{
     auto range = vt::Index2D(8,8);
-    proxy = theCollection()->constructCollective<ColType>(range);
+    proxy = theCollection()->constructCollective<ColType>(
+      range, "test_rdma_handle_collection_1"
+    );
   });
 
   runInEpochCollective([=]{

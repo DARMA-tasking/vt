@@ -152,6 +152,7 @@ struct AppConfig {
   bool vt_lb_statistics           = true;
   bool vt_lb_statistics_compress  = true;
   std::string vt_lb_statistics_file = "vt_lb_statistics.%t.json";
+  std::string vt_lb_statistics_dir = "";
   bool vt_help_lb_args           = false;
   bool vt_lb_self_migration      = false;
 
@@ -205,6 +206,7 @@ struct AppConfig {
   bool vt_debug_handler      = false;
   bool vt_debug_hierlb       = false;
   bool vt_debug_temperedlb   = false;
+  bool vt_debug_temperedwmin = false;
   bool vt_debug_scatter      = false;
   bool vt_debug_sequence     = false;
   bool vt_debug_sequence_vrt = false;
@@ -321,6 +323,7 @@ struct AppConfig {
       | vt_lb_statistics
       | vt_lb_statistics_compress
       | vt_lb_statistics_file
+      | vt_lb_statistics_dir
       | vt_help_lb_args
       | vt_lb_self_migration
 
@@ -365,6 +368,7 @@ struct AppConfig {
       | vt_debug_handler
       | vt_debug_hierlb
       | vt_debug_temperedlb
+      | vt_debug_temperedwmin
       | vt_debug_scatter
       | vt_debug_sequence
       | vt_debug_sequence_vrt
