@@ -114,6 +114,7 @@ struct LoadData {
     a1.sum_ += a2.sum_;
     a1.P_   += a2.P_;
     a1.stat_ = a2.stat_;
+    a1.lb_hist_.mergeIn(a2.lb_hist_);
 
     return a1;
   }
@@ -149,6 +150,7 @@ struct LoadData {
   TimeType I() const { return avg() > 0.0 ? (max() / avg()) - 1.0f : 0.0; }
   TimeType stdv() const { return std::sqrt(var()); }
   int32_t  npr() const { return P_; }
+  adt::HistogramApprox<double, int64_t> lbhist() const {return lb_hist_; }
 
   static_assert(
     std::is_same<TimeType, double>::value == true,
