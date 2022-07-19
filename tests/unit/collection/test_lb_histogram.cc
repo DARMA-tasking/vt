@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          test_lb_histogram.cc
+//                             test_lb_histogram.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -126,7 +126,6 @@ TEST_F(TestLBHistogram, test_lbhistogram) {
 
   auto this_node = vt::theContext()->getNode();
   auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
-  
 
 
   // We must have more or equal number of elements than nodes for this test to
