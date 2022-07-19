@@ -175,7 +175,7 @@ LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when);
 namespace lb {
 
 enum struct StatisticQuantity : int8_t {
-  min, max, avg, std, var, skw, kur, car, imb, npr, sum
+  min, max, avg, std, var, skw, kur, car, imb, npr, sum, lbh
 };
 
 enum struct Statistic : int8_t {
@@ -188,6 +188,7 @@ enum struct Statistic : int8_t {
   ObjectRatio,
   // EdgeCardinality,
   EdgeRatio,
+  LBHist,
   // ExternalEdgesCardinality,
   // InternalEdgesCardinality
 };
