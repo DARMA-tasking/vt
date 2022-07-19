@@ -193,7 +193,12 @@ enum struct Statistic : int8_t {
   // InternalEdgesCardinality
 };
 
-using StatisticQuantityMap = std::map<StatisticQuantity, double>;
+using UnionValueType = vt::adt::SafeUnion<
+    double,
+    adt::HistogramApprox<double, int64_t>
+  >;
+
+using StatisticQuantityMap = std::map<StatisticQuantity, UnionValueType>;
 using StatisticMap = std::unordered_map<Statistic, StatisticQuantityMap>;
 
 nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics);
