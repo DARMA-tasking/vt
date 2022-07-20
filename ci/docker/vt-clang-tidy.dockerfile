@@ -87,6 +87,4 @@ ENV BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
     VT_USE_STD_THREAD=${VT_USE_STD_THREAD} \
     VT_WERROR_ENABLED=${VT_WERROR_ENABLED}
 
-# Without build there is no `vt_git_revision.cc` which causes clang-tidy to exit with error
-RUN /vt/ci/build_cpp.sh /vt /build
-RUN /vt/ci/clang_tidy_cpp.sh /build
+RUN /vt/ci/clang_tidy_cpp.sh /vt /build
