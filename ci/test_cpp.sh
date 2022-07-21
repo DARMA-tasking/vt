@@ -23,7 +23,7 @@ then
     popd
 fi
 
-if test "${TEST_LB_SCHEMA:-1}" -eq 1
+if test "${TEST_LB_SCHEMA:-0}" -eq 1
 then
     "${VT}/scripts/check_lb_data_files.sh"
 fi
