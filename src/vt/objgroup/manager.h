@@ -157,9 +157,12 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \brief Collectively construct a new object group from a raw pointer to the
    * object.
    *
-   * \warning This overload requires the caller to manage the lifetime of the
-   * object. Do not allow the object to be deallocated before the object group
-   * is destroyed.
+   * \note When \c obj is \c nullptr this overload constructs the objgroup with
+   * the default constructor.
+   *
+   * \warning This overload (when not \c nullptr ) requires the caller to manage
+   * the lifetime of the object. Do not allow the object to be deallocated
+   * before the object group is destroyed.
    *
    * \param[in] obj raw pointer to the object
    * \param[in] label object group label
@@ -167,7 +170,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \return proxy to the object group
    */
   template <typename ObjT>
-  ProxyType<ObjT> makeCollective(ObjT* obj, std::string const& label = {});
+  ProxyType<ObjT> makeCollective(ObjT* obj = nullptr, std::string const& label = {});
 
   /**
    * \brief Collectively construct a new object group from a smart-pointer-like
