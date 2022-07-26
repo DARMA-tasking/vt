@@ -206,7 +206,7 @@ void test_collection_send_1(std::string const& label) {
 }
 
 template <typename ColType>
-void test_collection_send_sz_1() {
+void test_collection_send_sz_1(std::string const& label) {
   using PayloadType = typename ColType::MsgType::TupleType;
   using MsgType = typename ColType::template MsgSzType<PayloadType>;
   using TestParamType = typename ColType::ParamType;
@@ -216,7 +216,7 @@ void test_collection_send_sz_1() {
     auto const& col_size = 32;
     auto range = TestIndex(col_size);
     TestParamType args = ConstructTuple<TestParamType>::construct();
-    auto proxy = theCollection()->construct<ColType>(range);
+    auto proxy = theCollection()->construct<ColType>(range, label);
     for (int i = 0; i < col_size; i++) {
       auto msg = makeMessageSz<MsgType>(sizeof(PayloadType));
       EXPECT_EQ(msg.size(), sizeof(MsgType) + sizeof(PayloadType));
