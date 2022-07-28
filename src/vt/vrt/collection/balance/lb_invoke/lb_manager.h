@@ -90,7 +90,6 @@ struct LBManager : runtime::component::Component<LBManager> {
   std::string name() override { return "LBManager"; }
 
   void startup() override;
-  void initialize() override;
   void finalize() override;
   void fatalError() override;
 

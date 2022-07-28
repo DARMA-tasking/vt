@@ -450,12 +450,6 @@ void LBManager::destroyLB() {
   }
 }
 
-void LBManager::initialize() {
-#if vt_check_enabled(lblite)
-  createStatisticsFile();
-#endif
-}
-
 void LBManager::finalize() {
   closeStatisticsFile();
 }
@@ -548,12 +542,16 @@ void LBManager::statsHandler(StatsMsgType* msg) {
 
 void LBManager::stagePreLBStatistics(const StatisticMapType &statistics) {
   // Statistics output when LB is enabled and appropriate flag is enabled
-  if (!theConfig()->vt_lb_statistics) {
+  if (theContext()->getNode() != 0 or !theConfig()->vt_lb_statistics) {
     return;
   }
 
   nlohmann::json j;
   j["pre-LB"] = lb::jsonifyPhaseStatistics(statistics);
+
+  if (!statistics_writer_) {
+    createStatisticsFile();
+  }
 
   using JSONAppender = util::json::Appender<std::ofstream>;
   auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
@@ -564,13 +562,17 @@ void LBManager::stagePostLBStatistics(
   const StatisticMapType &statistics, int32_t migration_count
 ) {
   // Statistics output when LB is enabled and appropriate flag is enabled
-  if (!theConfig()->vt_lb_statistics) {
+  if (theContext()->getNode() != 0 or !theConfig()->vt_lb_statistics) {
     return;
   }
 
   nlohmann::json j;
   j["post-LB"] = lb::jsonifyPhaseStatistics(statistics);
   j["migration count"] = migration_count;
+
+  if (!statistics_writer_) {
+    createStatisticsFile();
+  }
 
   using JSONAppender = util::json::Appender<std::ofstream>;
   auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
@@ -579,7 +581,7 @@ void LBManager::stagePostLBStatistics(
 
 void LBManager::commitPhaseStatistics(PhaseType phase) {
   // Statistics output when LB is enabled and appropriate flag is enabled
-  if (!theConfig()->vt_lb_statistics) {
+  if (theContext()->getNode() != 0 or !theConfig()->vt_lb_statistics) {
     return;
   }
 
@@ -590,6 +592,10 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
 
   nlohmann::json j;
   j["id"] = phase;
+
+  if (!statistics_writer_) {
+    createStatisticsFile();
+  }
 
   using JSONAppender = util::json::Appender<std::ofstream>;
   auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
