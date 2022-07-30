@@ -132,4 +132,4 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS:-0}" \
       "$VT"
 
-run-clang-tidy -checks='-*, bugprone-*'
+run-clang-tidy -checks='-*, bugprone-*, misc-redundant-const-refs'
