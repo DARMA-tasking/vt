@@ -141,6 +141,9 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
    * \param[in] type the type of trigger to register
    * \param[in] trigger the action to trigger
    *
+   * \warning All unsynchronized hooks have no barrier after them so the phase
+   * manager might begin the transition before all nodes have executed them.
+   *
    * \return registered ID that can be used to unregister the hook
    */
   PhaseHookID registerHookUnsynchronized(PhaseHook type, ActionType trigger);
