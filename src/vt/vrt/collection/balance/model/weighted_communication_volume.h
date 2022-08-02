@@ -68,6 +68,8 @@ public:
       beta_(beta),
       gamma_(gamma) { }
 
+  TimeType getModeledWork(ElementIDStruct object, PhaseOffset when) override;
+
 private:
   double alpha_;
   double beta_;
