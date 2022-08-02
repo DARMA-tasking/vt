@@ -42,7 +42,15 @@
 */
 
 #include "vt/vrt/collection/balance/model/weighted_communication_volume.h"
+#include "vt/vrt/collection/balance/model/composed_model.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
+
+TimeType WeightedCommunicationVolume::getModeledWork(
+    ElementIDStruct object, PhaseOffset when
+) {
+  return alpha_ * ComposedModel::getModeledLoad(object, when) +
+    beta_ * ComposedModel::getModeledComm(object, when) + gamma_;
+}
 
 }}}} // namespace vt::vrt::collection::balance
