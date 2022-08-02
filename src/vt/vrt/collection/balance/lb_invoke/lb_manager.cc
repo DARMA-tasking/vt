@@ -435,7 +435,7 @@ void LBManager::startup() {
     thePhase()->setStartTime();
   });
 
-  thePhase()->registerHookUnsynchronized(phase::PhaseHook::EndPostMigration, []{
+  thePhase()->registerHookUnsynchronized(phase::PhaseHook::EndPostMigration, [this]{
     auto const phase = thePhase()->getCurrentPhase();
     thePhase()->printSummary(last_phase_info_.get());
     theLBManager()->finishedLB(phase);
