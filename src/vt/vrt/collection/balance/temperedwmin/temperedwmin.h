@@ -56,17 +56,6 @@ struct TemperedWMin : TemperedLB {
 
 public:
   void init(objgroup::proxy::Proxy<TemperedWMin> in_proxy);
-  static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
-
-  void inputParams(balance::SpecEntry* spec) override;
-
-protected:
-  TimeType getModeledWork(const elm::ElementIDStruct& obj) override;
-
-private:
-  double alpha_ = 1.0;
-  double beta_  = 0.0;
-  double gamma_ = 0.0;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

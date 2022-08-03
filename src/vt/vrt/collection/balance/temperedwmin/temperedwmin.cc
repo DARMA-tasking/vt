@@ -43,9 +43,6 @@
 
 #include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
-
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 void TemperedWMin::init(objgroup::proxy::Proxy<TemperedWMin> in_proxy) {
@@ -53,55 +50,6 @@ void TemperedWMin::init(objgroup::proxy::Proxy<TemperedWMin> in_proxy) {
   auto proxy = objgroup::proxy::Proxy<TemperedLB>(proxy_bits);
   auto strat = proxy.get();
   strat->init(proxy);
-}
-
-/*static*/ std::unordered_map<std::string, std::string>
-TemperedWMin::getInputKeysWithHelp() {
-  auto map = TemperedLB::getInputKeysWithHelp();
-  map["alpha"] =
-    R"(
-Values: <double>
-Default: 1.0
-Description:
-  Load part coefficient in affine combination of load and communication.
-)";
-  map["beta"] =
-    R"(
-Values: <double>
-Default: 0.0
-Description:
-  Communication part coefficient in affine combination of load and communication.
-)";
-  map["gamma"] =
-    R"(
-Values: <double>
-Default: 0.0
-Description:
-  Unspecified constant cost.
-)";
-  return map;
-}
-
-void TemperedWMin::inputParams(balance::SpecEntry* spec) {
-  TemperedLB::inputParams(spec);
-
-  alpha_         = spec->getOrDefault<double>("alpha", alpha_);
-  beta_          = spec->getOrDefault<double>("beta", beta_);
-  gamma_         = spec->getOrDefault<double>("gamma", gamma_);
-
-  vt_debug_print(
-    normal, temperedwmin,
-    "TemperedWMin::inputParams: alpha={}, beta={}, gamma={}\n",
-    alpha_, beta_, gamma_
-  );
-}
-
-TimeType TemperedWMin::getModeledWork(const elm::ElementIDStruct& obj) {
-  balance::PhaseOffset when =
-      {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
-
-  return alpha_ * load_model_->getModeledLoad(obj, when) +
-    beta_ * load_model_->getModeledComm(obj, when) + gamma_;
 }
 
 }}}} // namespace vt::vrt::collection::lb
