@@ -499,7 +499,11 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         cur_objs_.clear();
         for (auto obj : *load_model_) {
           if (obj.isMigratable()) {
-            cur_objs_[obj] = getModeledWork(obj);
+            cur_objs_[obj] = load_model_->getModeledWork(
+              obj,
+              {balance::PhaseOffset::NEXT_PHASE,
+               balance::PhaseOffset::WHOLE_PHASE}
+            );
           }
         }
         this_new_load_ = this_load;
@@ -1359,12 +1363,6 @@ void TemperedLB::lazyMigrateObjsTo(
 
 void TemperedLB::migrate() {
   vtAssertExpr(false);
-}
-
-TimeType TemperedLB::getModeledWork(const elm::ElementIDStruct& obj) {
-  return load_model_->getModeledLoad(
-    obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-  );
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
