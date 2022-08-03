@@ -68,10 +68,6 @@ void CollectionManager::startup() {
       // this will trigger all the data collection required for LB
       elm.second();
     }
-  });
-
-  // Second hook, select and then potentially start the LB
-  thePhase()->registerHookCollective(phase::PhaseHook::End, []{
     auto const cur_phase = thePhase()->getCurrentPhase();
     theLBManager()->selectStartLB(cur_phase);
   });

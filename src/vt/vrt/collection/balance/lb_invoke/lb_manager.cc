@@ -431,11 +431,11 @@ void LBManager::printLBArgsHelp(std::string lb_name) {
 void LBManager::startup() {
   last_phase_info_ = std::make_unique<lb::PhaseInfo>();
 
-  thePhase()->registerHookRooted(phase::PhaseHook::Start, []{
+  thePhase()->registerHookUnsynchronized(phase::PhaseHook::Start, []{
     thePhase()->setStartTime();
   });
 
-  thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, [this]{
+  thePhase()->registerHookUnsynchronized(phase::PhaseHook::EndPostMigration, [this]{
     auto const phase = thePhase()->getCurrentPhase();
     thePhase()->printSummary(last_phase_info_.get());
     theLBManager()->finishedLB(phase);

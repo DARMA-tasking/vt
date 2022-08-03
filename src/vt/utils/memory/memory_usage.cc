@@ -368,7 +368,7 @@ void MemoryUsage::initialize() {
       std::to_string(this_node) == theConfig()->vt_print_memory_node
     ) {
       if (theMemUsage()->hasWorkingReporter()) {
-        thePhase()->registerHookRooted(
+        thePhase()->registerHookUnsynchronized(
           phase::PhaseHook::EndPostMigration, []{
             auto cur_phase = thePhase()->getCurrentPhase();
             auto memory_usage_str = fmt::format(

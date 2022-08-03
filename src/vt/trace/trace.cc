@@ -105,11 +105,11 @@ void Trace::startup() /*override*/ {
     sched::SchedulerEvent::EndIdle, [this]{ endIdle(); }
   );
 
-  thePhase()->registerHookRooted(phase::PhaseHook::End, [] {
+  thePhase()->registerHookUnsynchronized(phase::PhaseHook::End, [] {
     auto const phase = thePhase()->getCurrentPhase();
     theTrace()->setTraceEnabledCurrentPhase(phase + 1);
   });
-  thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, [] {
+  thePhase()->registerHookUnsynchronized(phase::PhaseHook::EndPostMigration, [] {
     theTrace()->flushTracesFile(false);
   });
 #endif

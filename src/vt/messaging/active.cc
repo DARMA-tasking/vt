@@ -159,7 +159,7 @@ void ActiveMessenger::startup() {
 
 #if vt_check_enabled(lblite)
   // Hook to collect LB data about objgroups
-  thePhase()->registerHookCollective(phase::PhaseHook::End, [this]{
+  thePhase()->registerHookCollective(phase::PhaseHook::DataCollection, [this]{
     theNodeLBData()->addNodeLBData(
       bare_handler_dummy_elm_id_for_lb_data_, &bare_handler_lb_data_, nullptr
     );
