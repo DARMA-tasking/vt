@@ -161,6 +161,9 @@ private:
    *     addArgs(vt_lb_data, vt_lb_data_dir, vt_lb_data_file);
    *   }
    * };
+   *
+   * Make sure all filenames used will be unique across all tests,
+   * parameterizations, and MPI rank counts.
    */
   virtual void addAdditionalArgs() {}
 

@@ -47,6 +47,7 @@
 #include "vt/context/context.h"
 #include <mpi.h>
 #include <gtest/gtest.h>
+#include <sstream>
 
 namespace vt { namespace tests { namespace unit {
 
@@ -73,6 +74,31 @@ inline bool isOversubscribed() {
   int num_ranks = 0;
   MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
   return num_ranks > CMAKE_DETECTED_MAX_NUM_NODES;
+}
+
+/**
+ * Get a unique filename based on the unit test name.
+ */
+inline std::string getUniqueFilename(const std::string& ext = "") {
+  std::stringstream ss;
+  ss << testing::UnitTest::GetInstance()->current_test_info()->test_suite_name()
+     << "_" << testing::UnitTest::GetInstance()->current_test_info()->name()
+     << ext;
+  std::string str(ss.str());
+  std::replace(str.begin(), str.end(), '/', '_');
+  return str;
+}
+
+/**
+ * Construct a filename containing the number of ranks so that
+ * concurrently-running tests will not cause file system race conditions.
+ * Do not call this from .nompi.cc tests or from addAdditionalArgs().
+ */
+inline std::string getUniqueFilenameWithRanks(const std::string& ext = "") {
+  auto ranks = theContext()->getNumNodes();
+  std::stringstream ss;
+  ss << getUniqueFilename() << "_" << ranks << ext;
+  return ss.str();
 }
 
 /**
