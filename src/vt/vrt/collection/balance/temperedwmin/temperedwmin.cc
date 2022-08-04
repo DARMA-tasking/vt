@@ -43,6 +43,8 @@
 
 #include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 
+#include "vt/vrt/collection/balance/model/load_model.h"
+
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 void TemperedWMin::init(objgroup::proxy::Proxy<TemperedWMin> in_proxy) {
@@ -50,6 +52,13 @@ void TemperedWMin::init(objgroup::proxy::Proxy<TemperedWMin> in_proxy) {
   auto proxy = objgroup::proxy::Proxy<TemperedLB>(proxy_bits);
   auto strat = proxy.get();
   strat->init(proxy);
+}
+
+TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
+  balance::PhaseOffset when =
+      {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
+
+  return load_model_->getModeledWork(obj, when);
 }
 
 }}}} // namespace vt::vrt::collection::lb
