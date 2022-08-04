@@ -56,6 +56,9 @@ struct TemperedWMin : TemperedLB {
 
 public:
   void init(objgroup::proxy::Proxy<TemperedWMin> in_proxy);
+
+protected:
+  TimeType getModeledValue(const elm::ElementIDStruct& obj) override;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
