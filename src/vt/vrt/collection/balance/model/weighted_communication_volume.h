@@ -44,7 +44,6 @@
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_COMMUNICATION_VOLUME_H
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_COMMUNICATION_VOLUME_H
 
-#include "vt/config.h"
 #include "vt/vrt/collection/balance/model/composed_model.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
