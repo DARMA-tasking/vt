@@ -47,7 +47,6 @@
 #include "vt/runnable/runnable.h"
 #include "vt/context/runnable_context/td.h"
 #include "vt/context/runnable_context/trace.h"
-#include "vt/context/runnable_context/from_node.h"
 #include "vt/context/runnable_context/set_context.h"
 #include "vt/context/runnable_context/collection.h"
 #include "vt/context/runnable_context/lb_data.h"
@@ -324,8 +323,7 @@ RunnableMaker<U> makeRunnable(
       han_type == auto_registry::RegistryTypeEnum::RegObjGroup) {
     r->template addContext<ctx::Trace>(msg, handler, from);
   }
-  r->template addContext<ctx::FromNode>(from);
-  r->template addContext<ctx::SetContext>(r.get());
+  r->template addContext<ctx::SetContext>(r.get(), from);
   return RunnableMaker<U>{std::move(r), msg, handler, from};
 }
 
@@ -344,8 +342,7 @@ inline RunnableMaker<BaseMsgType> makeRunnableVoid(
   // These are currently only types of registry entries that can be void
   auto r = std::make_unique<RunnableNew>(is_threaded);
   // @todo: figure out how to trace this?
-  r->template addContext<ctx::FromNode>(from);
-  r->template addContext<ctx::SetContext>(r.get());
+  r->template addContext<ctx::SetContext>(r.get(), from);
   return RunnableMaker<BaseMsgType>{std::move(r), nullptr, handler, from};
 }
 

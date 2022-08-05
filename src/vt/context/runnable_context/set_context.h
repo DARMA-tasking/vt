@@ -62,10 +62,20 @@ struct SetContext final : Base {
    * \brief Construct a \c SetContext
    *
    * \param[in] in_nonowning_cur_task the current task (non-owning ptr held)
+   * \param[in] in_from_node the from node on the message that caused a task to
+   * run
    */
-  explicit SetContext(runnable::RunnableNew* in_cur_task)
-    : cur_task_(in_cur_task)
+  SetContext(runnable::RunnableNew* in_cur_task, NodeType in_from_node)
+    : cur_task_(in_cur_task),
+      node_(in_from_node)
   {}
+
+  /**
+   * \brief Get the node that instigated the current task
+   *
+   * \return the node
+   */
+  NodeType get() const { return node_; }
 
   /**
    * \brief Preserve the existing task and replace with a new one
@@ -86,6 +96,7 @@ private:
   util::ObserverPtr<runnable::RunnableNew> prev_task_ = nullptr;
   /// The new runnable that is replacing it
   util::ObserverPtr<runnable::RunnableNew> cur_task_ = nullptr;
+  NodeType node_ = uninitialized_destination; /**< The from node */
 };
 
 }} /* end namespace vt::ctx */
