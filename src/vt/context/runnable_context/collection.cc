@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              collection.impl.h
+//                                collection.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,29 +41,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_IMPL_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_IMPL_H
-
 #include "vt/context/runnable_context/collection.h"
-#include "vt/vrt/collection/types/indexable.h"
-#include "vt/vrt/collection/holders/collection_context_holder.h"
 
 namespace vt { namespace ctx {
 
-template <typename IndexT>
-/*explicit*/ Collection::Collection(
-  vrt::collection::Indexable<IndexT>* elm
-) {
-  auto idx_ = elm->getIndex();
-  auto proxy_ = elm->getProxy();
-  set_ = [=]{
-    vrt::collection::CollectionContextHolder<IndexT>::set(&idx_, proxy_);
-  };
-  clear_ = []{
-    vrt::collection::CollectionContextHolder<IndexT>::clear();
-  };
+void Collection::begin() {
+  set_();
+}
+
+void Collection::end() {
+  clear_();
+}
+
+void Collection::suspend() {
+  end();
+}
+
+void Collection::resume() {
+  begin();
 }
 
 }} /* end namespace vt::ctx */
-
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_IMPL_H*/
