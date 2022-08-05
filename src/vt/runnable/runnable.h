@@ -48,7 +48,6 @@
 #include "vt/context/runnable_context/base.h"
 #include "vt/context/runnable_context/td.h"
 #include "vt/context/runnable_context/trace.h"
-#include "vt/context/runnable_context/from_node.h"
 #include "vt/context/runnable_context/set_context.h"
 #include "vt/context/runnable_context/collection.h"
 #include "vt/context/runnable_context/lb_data.h"
@@ -93,7 +92,6 @@ constexpr std::size_t runnable_context_array[] = {
   sizeof(ctx::Trace),
 #endif
   sizeof(ctx::Continuation),
-  sizeof(ctx::FromNode),
   sizeof(ctx::LBData),
   sizeof(ctx::SetContext),
   sizeof(ctx::TD),
