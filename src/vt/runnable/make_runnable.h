@@ -145,7 +145,7 @@ struct RunnableMaker {
    */
   template <typename ElmT, typename IdxT = typename ElmT::IndexType>
   RunnableMaker&& withCollection(ElmT* elm) {
-    impl_->template addContext<ctx::Collection<IdxT>>(elm);
+    impl_->template addContext<ctx::Collection>(elm);
     set_handler_ = true;
 
     if (handler_ != uninitialized_handler) {
