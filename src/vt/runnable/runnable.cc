@@ -50,6 +50,7 @@
 #include "vt/configs/debug/debug_var_unused.h"
 #include "vt/configs/arguments/app_config.h"
 #include "vt/scheduler/thread_manager.h"
+#include "vt/pool/static_sized/memory_pool_equal.h"
 
 namespace vt { namespace runnable {
 
@@ -199,33 +200,38 @@ void RunnableNew::run() {
 }
 
 void RunnableNew::begin() {
-  for (auto&& ctx : contexts_) {
-    ctx->begin();
+  for (int i = 0; i < ci_; i++) {
+    contexts_[i]->begin();
   }
 }
 
 void RunnableNew::end() {
-  for (auto&& ctx : contexts_) {
-    ctx->end();
+  for (int i = 0; i < ci_; i++) {
+    contexts_[i]->end();
   }
 }
 
 void RunnableNew::suspend() {
-  for (auto&& ctx : contexts_) {
-    ctx->suspend();
+  for (int i = 0; i < ci_; i++) {
+    contexts_[i]->suspend();
   }
 }
 
 void RunnableNew::resume() {
-  for (auto&& ctx : contexts_) {
-    ctx->resume();
+  for (int i = 0; i < ci_; i++) {
+    contexts_[i]->resume();
   }
 }
 
 void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
-  for (auto&& ctx : contexts_) {
-    ctx->send(elm, bytes);
+  for (int i = 0; i < ci_; i++) {
+    contexts_[i]->send(elm, bytes);
   }
 }
+
+/*static*/ std::unique_ptr<
+  pool::MemoryPoolEqual<detail::runnable_context_max_size>
+> RunnableNew::up_pool =
+  std::make_unique<pool::MemoryPoolEqual<detail::runnable_context_max_size>>();
 
 }} /* end namespace vt::runnable */

@@ -44,6 +44,7 @@
 #include "vt/config.h"
 #include "vt/pool/static_sized/memory_pool_equal.h"
 #include "vt/pool/header/pool_header.h"
+#include "vt/runnable/runnable.h"
 
 #include <vector>
 #include <cstdint>
@@ -146,3 +147,9 @@ template struct MemoryPoolEqual<memory_size_small>;
 template struct MemoryPoolEqual<memory_size_medium>;
 
 }} //end namespace vt::pool
+
+namespace vt { namespace pool {
+
+template struct MemoryPoolEqual<vt::runnable::detail::runnable_context_max_size>;
+
+}} /* end namespace vt::pool */

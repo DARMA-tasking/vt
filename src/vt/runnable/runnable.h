@@ -46,7 +46,15 @@
 
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/context/runnable_context/base.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/trace.h"
+#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
+#include "vt/context/runnable_context/collection.h"
+#include "vt/context/runnable_context/lb_data.h"
+#include "vt/context/runnable_context/continuation.h"
 #include "vt/elm/elm_id.h"
+#include "vt/utils/ptr/unique_fixed.h"
 
 // fwd-declarations for the element types
 namespace vt { namespace vrt {
@@ -61,6 +69,41 @@ struct UntypedCollection;
 
 namespace vt { namespace runnable {
 
+namespace detail {
+
+template <typename T>
+constexpr T& constexprMax(T& a, T& b) {
+  return a > b ? a : b;
+}
+
+template <typename T>
+constexpr T& arrayMaxImpl(T* begin, T* end) {
+  return begin + 1 == end
+    ? *begin
+    : constexprMax(*begin, arrayMaxImpl(begin + 1, end));
+}
+
+template <typename T, std::size_t N>
+constexpr T& arrayMax(T(&arr)[N]) {
+  return arrayMaxImpl(arr, arr + N);
+}
+
+constexpr std::size_t runnable_context_array[] = {
+#if vt_check_enabled(trace_enabled)
+  sizeof(ctx::Trace),
+#endif
+  sizeof(ctx::Continuation),
+  sizeof(ctx::FromNode),
+  sizeof(ctx::LBData),
+  sizeof(ctx::SetContext),
+  sizeof(ctx::TD),
+  sizeof(ctx::Collection)
+};
+
+constexpr std::size_t runnable_context_max_size = arrayMax(runnable_context_array);
+
+} /* end namespace detail */
+
 /**
  * \struct RunnableNew
  *
@@ -68,7 +111,7 @@ namespace vt { namespace runnable {
  * with it to run it independently of the where in the stack it was created.
  */
 struct RunnableNew {
-  using CtxBasePtr = std::unique_ptr<ctx::Base>;
+  using CtxBasePtr = vt::util::ptr::unique_ptr_fixed<ctx::Base>;
 
   template <typename... Args>
   using FnParamType = void(*)(Args...);
@@ -107,9 +150,7 @@ public:
    * \c T
    */
   template <typename T, typename... Args>
-  void addContext(Args&&... args) {
-    contexts_.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-  }
+  void addContext(Args&&... args);
 
   /**
    * \brief Set up a handler to run on an collection object
@@ -241,10 +282,16 @@ public:
     task_ = task_in;
   }
 
+  /// Memory pool for fixed sized unique pointer allocation
+  static std::unique_ptr<
+    pool::MemoryPoolEqual<detail::runnable_context_max_size>
+  > up_pool;
+
 private:
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
   bool is_threaded_ = false;                /**< Whether ULTs are supported */
-  std::vector<CtxBasePtr> contexts_;        /**< Vector of contexts */
+  std::array<CtxBasePtr, 8> contexts_;      /**< Array of contexts */
+  int ci_ = 0;                              /**< Current index of contexts */
   ActionType task_ = nullptr;               /**< The runnable's task  */
   bool done_ = false;                       /**< Whether task is complete */
   bool suspended_ = false;                  /**< Whether task is suspended */
