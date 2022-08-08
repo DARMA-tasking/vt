@@ -44,7 +44,10 @@
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDWMIN_TEMPEREDWMIN_H
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDWMIN_TEMPEREDWMIN_H
 
+#include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
+
+#include <memory>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -64,6 +67,8 @@ protected:
   TimeType getModeledValue(const elm::ElementIDStruct& obj) override;
 
 private:
+  std::unique_ptr<balance::LoadModel> total_work_model_ = nullptr;
+
   double alpha_ = 1.0;
   double beta_  = 0.0;
   double gamma_ = 0.0;
