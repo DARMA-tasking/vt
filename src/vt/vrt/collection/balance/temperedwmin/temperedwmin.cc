@@ -43,7 +43,9 @@
 
 #include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
+#include "vt/vrt/collection/balance/model/weighted_communication_volume.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -93,13 +95,17 @@ void TemperedWMin::inputParams(balance::SpecEntry* spec) {
     "TemperedWMin::inputParams: alpha={}, beta={}, gamma={}\n",
     alpha_, beta_, gamma_
   );
+
+  total_work_model_ = std::make_unique<balance::WeightedCommunicationVolume>(
+    theLBManager()->getLoadModel(), alpha_, beta_, gamma_
+  );
 }
 
 TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
   balance::PhaseOffset when =
       {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
 
-  return load_model_->getModeledWork(obj, when);
+  return total_work_model_->getModeledWork(obj, when);
 }
 
 }}}} // namespace vt::vrt::collection::lb
