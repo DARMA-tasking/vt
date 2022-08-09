@@ -43,6 +43,7 @@
 
 #include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 
+#include "vt/configs/error/config_assert.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/model/weighted_communication_volume.h"
@@ -99,9 +100,14 @@ void TemperedWMin::inputParams(balance::SpecEntry* spec) {
   total_work_model_ = std::make_unique<balance::WeightedCommunicationVolume>(
     theLBManager()->getLoadModel(), alpha_, beta_, gamma_
   );
+  load_model_ptr = theLBManager()->getLoadModel().get();
 }
 
 TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
+  vtAssert(
+    theLBManager()->getLoadModel().get() == load_model_ptr,
+    "Load model must not change"
+  );
   balance::PhaseOffset when =
       {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
 
