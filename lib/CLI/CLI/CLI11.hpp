@@ -8140,9 +8140,9 @@ class App {
                     break;
                 }
                 if(validate_optional_arguments_) {
-                    std::string optarg = args.back();
-                    optarg = op->_validate(optarg, 0);
-                    if(!optarg.empty()) {
+                    std::string cli_optarg = args.back();
+                    cli_optarg = op->_validate(cli_optarg, 0);
+                    if(!cli_optarg.empty()) {
                         break;
                     }
                 }
