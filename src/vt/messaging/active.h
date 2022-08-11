@@ -1785,6 +1785,7 @@ private:
 private:
   elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_data_ = {};
   elm::ElementLBData bare_handler_lb_data_;
+  MPI_Comm comm_ = MPI_COMM_NULL;
 };
 
 }} // end namespace vt::messaging

@@ -221,7 +221,7 @@ private:
   NodeType thisNode_ = uninitialized_destination;
   NodeType numNodes_ = uninitialized_destination;
   WorkerCountType numWorkers_ = no_workers;
-  MPI_Comm communicator_ = MPI_COMM_WORLD;
+  MPI_Comm communicator_ = MPI_COMM_NULL;
   DeclareClassInsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
   runnable::RunnableNew* cur_task_ = nullptr;
 };
