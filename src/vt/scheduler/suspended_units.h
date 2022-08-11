@@ -46,6 +46,7 @@
 
 #include "vt/configs/types/types_type.h"
 #include "vt/scheduler/priority.h"
+#include "vt/scheduler/base_unit.h"
 #include "vt/runnable/runnable.fwd.h"
 
 #include <unordered_map>
@@ -62,7 +63,7 @@ namespace detail {
  * until is ready to resume
  */
 struct SuspendedRunnable {
-  using RunnablePtrType = std::unique_ptr<runnable::RunnableNew>;
+  using RunnablePtrType = BaseUnit::RunnablePtrType;
 
   /**
    * \brief Construct a new suspended runnable
@@ -90,7 +91,7 @@ struct SuspendedRunnable {
  * calls \c resumeRunnable on it with the appropriate thread ID.
  */
 struct SuspendedUnits {
-  using RunnablePtrType = std::unique_ptr<runnable::RunnableNew>;
+  using RunnablePtrType = BaseUnit::RunnablePtrType;
 
   /**
    * \brief Add a suspended runnable that is running in a thread

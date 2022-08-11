@@ -48,31 +48,39 @@
 
 namespace vt { namespace util { namespace ptr {
 
-template <typename T>
-using unique_ptr_fixed = std::unique_ptr<T, std::function<void(T*)>>;
+template <int64_t num_bytes>
+struct UniquePtrDestructor {
+
+  UniquePtrDestructor() = default;
+  explicit UniquePtrDestructor(pool::MemoryPoolEqual<num_bytes>& in_pool)
+    : pool(&in_pool)
+  { }
+
+  template <typename T>
+  void operator()(T* t) {
+    t->~T();
+    pool->dealloc(static_cast<void*>(t));
+  }
+
+  pool::MemoryPoolEqual<num_bytes>* pool = nullptr;
+};
+
+template <typename T, int64_t num_bytes = sizeof(T)>
+using unique_ptr_fixed = std::unique_ptr<T, UniquePtrDestructor<num_bytes>>;
 
 template <typename T, int64_t num_bytes, typename... Args>
-unique_ptr_fixed<T> make_unique_fixed(pool::MemoryPoolEqual<num_bytes>& pool, Args&&... args) {
+unique_ptr_fixed<T, num_bytes> make_unique_fixed(pool::MemoryPoolEqual<num_bytes>& pool, Args&&... args) {
   vtAssert(sizeof(T) <= num_bytes, "Must fit in pool");
   T* ptr = new (static_cast<T*>(pool.alloc(sizeof(T), 0))) T{std::forward<Args>(args)...};
-  auto deleter = [&pool](T* p) {
-    p->~T();
-    pool.dealloc(static_cast<void*>(p));
-  };
-  return std::unique_ptr<T, std::function<void(T*)>>(ptr, deleter);
+  return unique_ptr_fixed<T, num_bytes>(ptr, UniquePtrDestructor<num_bytes>{pool});
 }
 
 template <typename B, int64_t num_bytes, typename T>
-unique_ptr_fixed<B> unique_fixed_to_base(
-  pool::MemoryPoolEqual<num_bytes>& pool, unique_ptr_fixed<T>&& up
+unique_ptr_fixed<B, num_bytes> unique_fixed_to_base(
+  pool::MemoryPoolEqual<num_bytes>& pool, unique_ptr_fixed<T, num_bytes>&& up
 ) {
   auto t = up.release();
-  auto deleter = [&pool](B* p) {
-    auto x = static_cast<T*>(p);
-    x->~T();
-    pool.dealloc(static_cast<void*>(p));
-  };
-  return std::unique_ptr<B, std::function<void(B*)>>(t, deleter);
+  return unique_ptr_fixed<B, num_bytes>(t, UniquePtrDestructor<num_bytes>{pool});
 }
 
 }}} /* end namespace vt::util::ptr */

@@ -52,6 +52,7 @@
 #include "vt/context/runnable_context/lb_data.h"
 #include "vt/context/runnable_context/continuation.h"
 #include "vt/registry/auto/auto_registry_common.h"
+#include "vt/utils/ptr/unique_fixed.h"
 
 namespace vt { namespace runnable {
 
@@ -73,7 +74,7 @@ struct RunnableMaker {
    * \param[in] in_from_node the from node for the runnable
    */
   RunnableMaker(
-    std::unique_ptr<RunnableNew> in_impl, MsgSharedPtr<MsgT> const& in_msg,
+    util::ptr::unique_ptr_fixed<RunnableNew> in_impl, MsgSharedPtr<MsgT> const& in_msg,
     HandlerType in_handler, NodeType in_from_node
   ) : impl_(std::move(in_impl)),
       msg_(in_msg),
@@ -290,8 +291,10 @@ private:
     }
   }
 
+public:
+  util::ptr::unique_ptr_fixed<RunnableNew> impl_ = nullptr;
+
 private:
-  std::unique_ptr<RunnableNew> impl_ = nullptr;
   MsgSharedPtr<MsgT> msg_ = nullptr;
   HandlerType handler_ = uninitialized_handler;
   bool set_handler_ = false;
@@ -300,6 +303,10 @@ private:
   NodeType from_node_ = uninitialized_destination;
   bool is_done_ = false;
 };
+
+extern std::unique_ptr<
+  pool::MemoryPoolEqual<sizeof(RunnableNew)>
+> runnable_pool;
 
 /**
  * \brief Make a new runnable with a message
@@ -314,9 +321,10 @@ private:
  */
 template <typename U>
 RunnableMaker<U> makeRunnable(
-  MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler, NodeType from
+  MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler, NodeType from, bool add_context = true
 ) {
-  auto r = std::make_unique<RunnableNew>(msg, is_threaded);
+  auto r = util::ptr::make_unique_fixed<RunnableNew>(*runnable_pool, msg, is_threaded);
+  r->addContexts = add_context;
   auto const han_type = HandlerManager::getHandlerRegistryType(handler);
   if (han_type == auto_registry::RegistryTypeEnum::RegVrt or
       han_type == auto_registry::RegistryTypeEnum::RegGeneral or
@@ -340,7 +348,7 @@ inline RunnableMaker<BaseMsgType> makeRunnableVoid(
   bool is_threaded, HandlerType handler, NodeType from
 ) {
   // These are currently only types of registry entries that can be void
-  auto r = std::make_unique<RunnableNew>(is_threaded);
+  auto r = util::ptr::make_unique_fixed<RunnableNew>(*runnable_pool, is_threaded);
   // @todo: figure out how to trace this?
   r->template addContext<ctx::SetContext>(r.get(), from);
   return RunnableMaker<BaseMsgType>{std::move(r), nullptr, handler, from};

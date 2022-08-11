@@ -53,6 +53,7 @@
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/messaging/async_op_wrapper.fwd.h"
+#include "vt/utils/ptr/unique_fixed.h"
 
 #include <cassert>
 #include <vector>
@@ -114,7 +115,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
-  using RunnablePtrType      = std::unique_ptr<runnable::RunnableNew>;
+  using RunnablePtrType      = BaseUnit::RunnablePtrType;
 
   struct SchedulerLoopGuard {
     SchedulerLoopGuard(Scheduler* scheduler);

@@ -45,7 +45,8 @@
 #define INCLUDED_VT_SCHEDULER_BASE_UNIT_H
 
 #include "vt/config.h"
-#include "vt/runnable/runnable.fwd.h"
+#include "vt/runnable/runnable.h"
+#include "vt/utils/ptr/unique_fixed.h"
 
 #include <memory>
 
@@ -58,7 +59,7 @@ namespace vt { namespace sched {
  * to a runnable or contains a general lambda to execute.
  */
 struct BaseUnit {
-  using RunnablePtrType = std::unique_ptr<runnable::RunnableNew>;
+  using RunnablePtrType = util::ptr::unique_ptr_fixed<runnable::RunnableNew>;
 
   /**
    * \brief Construct with a runnable

@@ -160,3 +160,17 @@ namespace vt { namespace pool {
 template struct MemoryPoolEqual<vt::runnable::detail::runnable_context_max_size>;
 
 }} /* end namespace vt::pool */
+
+namespace vt { namespace runnable {
+
+std::unique_ptr<
+  pool::MemoryPoolEqual<sizeof(RunnableNew)>
+> runnable_pool = std::make_unique<pool::MemoryPoolEqual<sizeof(RunnableNew)>>(1000, false);
+
+}}
+
+namespace vt { namespace pool {
+
+template struct MemoryPoolEqual<sizeof(runnable::RunnableNew)>;
+
+}} /* end namespace vt::pool */

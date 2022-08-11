@@ -109,7 +109,7 @@ constexpr std::size_t runnable_context_max_size = arrayMax(runnable_context_arra
  * with it to run it independently of the where in the stack it was created.
  */
 struct RunnableNew {
-  using CtxBasePtr = vt::util::ptr::unique_ptr_fixed<ctx::Base>;
+  using CtxBasePtr = vt::util::ptr::unique_ptr_fixed<ctx::Base, detail::runnable_context_max_size>;
 
   template <typename... Args>
   using FnParamType = void(*)(Args...);
@@ -284,6 +284,8 @@ public:
   static std::unique_ptr<
     pool::MemoryPoolEqual<detail::runnable_context_max_size>
   > up_pool;
+
+  bool addContexts = true;
 
 private:
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */

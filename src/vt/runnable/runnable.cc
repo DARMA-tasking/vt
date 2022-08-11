@@ -232,6 +232,6 @@ void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
 /*static*/ std::unique_ptr<
   pool::MemoryPoolEqual<detail::runnable_context_max_size>
 > RunnableNew::up_pool =
-  std::make_unique<pool::MemoryPoolEqual<detail::runnable_context_max_size>>();
+  std::make_unique<pool::MemoryPoolEqual<detail::runnable_context_max_size>>(10000, false);
 
 }} /* end namespace vt::runnable */

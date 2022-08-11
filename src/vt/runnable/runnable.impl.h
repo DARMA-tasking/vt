@@ -63,12 +63,18 @@ T* RunnableNew::get() {
 
 template <typename T, typename... Args>
 void RunnableNew::addContext(Args&&... args) {
-  auto c = vt::util::ptr::make_unique_fixed<
-    T, detail::runnable_context_max_size
-  >(*up_pool.get(), std::forward<Args>(args)...);
-  contexts_[ci_++] = vt::util::ptr::unique_fixed_to_base<ctx::Base, detail::runnable_context_max_size>(
-    *up_pool.get(), std::move(c)
-  );
+  if (addContexts) {
+    auto c = vt::util::ptr::make_unique_fixed<
+      T, detail::runnable_context_max_size
+    >(*up_pool.get(), std::forward<Args>(args)...);
+    contexts_[ci_++] = vt::util::ptr::unique_fixed_to_base<ctx::Base, detail::runnable_context_max_size>(
+      *up_pool.get(), std::move(c)
+    );
+  } else {
+    auto c = vt::util::ptr::make_unique_fixed<
+      T, detail::runnable_context_max_size
+    >(*up_pool.get(), std::forward<Args>(args)...);
+  }
 }
 
 }} /* end namespace vt::runnable */
