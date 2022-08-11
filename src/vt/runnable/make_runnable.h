@@ -331,7 +331,7 @@ extern std::unique_ptr<
  * \return the maker for further customization
  */
 template <typename U>
-RunnableMaker<U> makeRunnable(
+inline RunnableMaker<U> makeRunnable(
   MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler, NodeType from, bool add_context = true
 ) {
   auto r = util::ptr::make_unique_fixed<RunnableNew>(*runnable_pool, msg, is_threaded);
