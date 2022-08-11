@@ -74,7 +74,7 @@ struct MemoryPoolEqual {
   static constexpr SlotType const fst_pool_slot = 0;
   static constexpr SlotType const default_pool_size = 1024;
 
-  MemoryPoolEqual(SlotType const in_pool_size = default_pool_size);
+  MemoryPoolEqual(SlotType const in_pool_size = default_pool_size, bool in_use_header = true);
 
   virtual ~MemoryPoolEqual();
 
@@ -100,6 +100,7 @@ private:
   SlotType cur_slot_ = fst_pool_slot;
 
   ContainerType holder_;
+  bool use_header_ = true;
 };
 
 }} //end namespace vt::pool
