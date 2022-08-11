@@ -656,6 +656,10 @@ bool ActiveMessenger::recvDataMsg(
 }
 
 bool ActiveMessenger::tryProcessDataMsgRecv() {
+  if (pending_recvs_.size() == 0) {
+    return false;
+  }
+
   bool erase = false;
   auto iter = pending_recvs_.begin();
 
