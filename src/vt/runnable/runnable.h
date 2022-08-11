@@ -179,6 +179,8 @@ public:
     HandlerType handler, bool is_void = false, TagType tag = no_tag
   );
 
+  void runHandler();
+
   /**
    * \brief Run the task!
    *
@@ -277,7 +279,7 @@ public:
    * \param[in] task_in the task
    */
   void setExplicitTask(ActionType task_in) {
-    task_ = task_in;
+    //task_ = task_in;
   }
 
   /// Memory pool for fixed sized unique pointer allocation
@@ -292,10 +294,12 @@ private:
   bool is_threaded_ = false;                /**< Whether ULTs are supported */
   std::array<CtxBasePtr, 8> contexts_;      /**< Array of contexts */
   int ci_ = 0;                              /**< Current index of contexts */
-  ActionType task_ = nullptr;               /**< The runnable's task  */
   bool done_ = false;                       /**< Whether task is complete */
   bool suspended_ = false;                  /**< Whether task is suspended */
   ThreadIDType tid_ = no_thread_id;         /**< The thread ID for the task */
+  HandlerType handler_;
+  bool is_void_;
+  TagType tag_;
 };
 
 }} /* end namespace vt::runnable */
