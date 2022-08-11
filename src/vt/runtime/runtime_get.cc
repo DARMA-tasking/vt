@@ -94,7 +94,7 @@ static runtime::Runtime* no_rt = nullptr;
 #define IS_COMM_THREAD curRT->theContext->getWorker() == worker_id_comm_thread
 #define CUR_RT_SAFE (IS_COMM_THREAD ? curRT : no_rt)
 #define CUR_RT_TS curRT
-#define CUR_RT CUR_RT_SAFE
+#define CUR_RT curRT
 
 #define CHECK_THD                                                       \
   do {                                                                  \
