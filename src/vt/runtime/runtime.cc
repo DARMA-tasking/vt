@@ -1027,22 +1027,23 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     // Without workers running on the node, the termination detector should
     // enable/disable the global collective epoch based on the state of the
     // scheduler; register listeners to activate/deactivate that epoch
+    auto td = vt::theTerm();
     theSched->registerTrigger(
-      sched::SchedulerEvent::BeginIdleMinusTerm, []{
+      sched::SchedulerEvent::BeginIdleMinusTerm, [td]{
         vt_debug_print(
           normal, runtime,
           "setLocalTerminated: BeginIdle: true\n"
         );
-        vt::theTerm()->setLocalTerminated(true, false);
+        td->setLocalTerminated(true, false);
       }
     );
     theSched->registerTrigger(
-      sched::SchedulerEvent::EndIdleMinusTerm, []{
+      sched::SchedulerEvent::EndIdleMinusTerm, [td]{
         vt_debug_print(
           normal, runtime,
           "setLocalTerminated: EndIdle: false\n"
         );
-        vt::theTerm()->setLocalTerminated(false, false);
+        td->setLocalTerminated(false, false);
       }
     );
   }
