@@ -1193,7 +1193,7 @@ bool ActiveMessenger::testPendingAsyncOps() {
 int ActiveMessenger::progress() {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
-  processMaybeReadyHanTag();
+  //processMaybeReadyHanTag();
   bool const received_active_msg = testPendingActiveMsgAsyncRecv();
   bool const received_data_msg = testPendingDataMsgAsyncRecv();
   bool const general_async = testPendingAsyncOps();
@@ -1203,13 +1203,13 @@ int ActiveMessenger::progress() {
 }
 
 void ActiveMessenger::processMaybeReadyHanTag() {
-  decltype(maybe_ready_tag_han_) maybe_ready = maybe_ready_tag_han_;
-  // Clear first so clearing doesn't happen after new entries may be added by an
-  // active message arriving
-  maybe_ready_tag_han_.clear();
-  for (auto&& x : maybe_ready) {
-    deliverPendingMsgsHandler(std::get<0>(x), std::get<1>(x));
-  }
+  // decltype(maybe_ready_tag_han_) maybe_ready = maybe_ready_tag_han_;
+  // // Clear first so clearing doesn't happen after new entries may be added by an
+  // // active message arriving
+  // maybe_ready_tag_han_.clear();
+  // for (auto&& x : maybe_ready) {
+  //   deliverPendingMsgsHandler(std::get<0>(x), std::get<1>(x));
+  // }
 }
 
 HandlerType ActiveMessenger::registerNewHandler(
