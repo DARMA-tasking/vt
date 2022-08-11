@@ -753,11 +753,12 @@ private:
    */
   static void epochContinueHandler(TermMsg* msg);
 
-private:
+public:
   // global termination state
   TermStateType any_epoch_state_;
   // hang detector termination state
   TermStateType hang_;
+private:
   // epoch termination state
   EpochContainerType<TermStateType> epoch_state_        = {};
   // ready epoch list (misnomer: finishedEpoch was invoked)
