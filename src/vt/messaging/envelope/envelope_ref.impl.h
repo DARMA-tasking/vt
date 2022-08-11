@@ -67,9 +67,7 @@ template <typename Env>
 inline RefType envelopeDeref(Env& env) {
   Envelope* envp = reinterpret_cast<Envelope*>(&env);
 
-  if(not (envp->ref >= 1)){
-    vtAbort("Bad ref-count on message ref-decrement.");
-  }
+  vtAssert(envp->ref >= 1, "Bad ref-count on message ref-decrement.");
 
   return --(envp->ref);
 }
