@@ -53,8 +53,9 @@
 namespace vt { namespace pool {
 
 template <int64_t num_bytes_t>
-MemoryPoolEqual<num_bytes_t>::MemoryPoolEqual(SlotType const in_pool_size)
-  : pool_size_(in_pool_size)
+MemoryPoolEqual<num_bytes_t>::MemoryPoolEqual(SlotType const in_pool_size, bool in_use_header)
+  : pool_size_(in_pool_size),
+    use_header_(in_use_header)
 {
   resizePool();
 }
@@ -93,9 +94,12 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(
 
   auto const& slot = cur_slot_;
   void* const ptr = holder_[slot];
-  void* const ptr_ret = HeaderManagerType::setHeader(
-    sz, oversize, static_cast<char*>(ptr)
-  );
+  void* ptr_ret = ptr;
+  if (use_header_) {
+    ptr_ret = HeaderManagerType::setHeader(
+      sz, oversize, static_cast<char*>(ptr)
+    );
+  }
 
   vt_debug_print(
     normal, pool,
@@ -120,7 +124,10 @@ void MemoryPoolEqual<num_bytes_t>::dealloc(void* const t) {
   );
 
   auto t_char = static_cast<char*>(t);
-  void* const ptr_actual = HeaderManagerType::getHeaderPtr(t_char);
+  void* ptr_actual = t;
+  if (use_header_) {
+    ptr_actual = HeaderManagerType::getHeaderPtr(t_char);
+  }
 
   holder_[--cur_slot_] = ptr_actual;
 }
@@ -133,7 +140,7 @@ void MemoryPoolEqual<num_bytes_t>::resizePool() {
   holder_.resize(new_size);
 
   for (auto i = cur_size; i < new_size; i++) {
-    holder_[i] = static_cast<void*>(malloc(num_full_bytes_));
+    holder_[i] = static_cast<void*>(malloc(use_header_ ? num_full_bytes_ : num_bytes_t));
   }
 }
 
