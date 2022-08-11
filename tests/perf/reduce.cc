@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 ping_pong.cc
+//                                 reduce.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -50,116 +50,58 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
-static constexpr int64_t const min_bytes = 1;
-static constexpr int64_t const max_bytes = 16777216;
-
-static constexpr int64_t num_pings = 10;
-
-static constexpr NodeType const ping_node = 0;
-static constexpr NodeType const pong_node = 1;
-
-vt::EpochType the_epoch = vt::no_epoch;
+static constexpr int num_iters = 10;
 
 struct MyTest : PerfTestHarness { };
 
 struct NodeObj {
-  template <int64_t num_bytes>
-  struct PingMsg : Message {
-    int64_t count = 0;
-    std::array<char, num_bytes> payload_;
-
-    PingMsg() : Message() { }
-    explicit PingMsg(int64_t const in_count) : Message(), count(in_count) { }
-  };
-
-  template <int64_t num_bytes>
-  struct FinishedPingMsg : Message {
-    int64_t prev_bytes = 0;
-
-    FinishedPingMsg(int64_t const in_prev_bytes)
-      : Message(),
-        prev_bytes(in_prev_bytes) { }
-  };
+  struct ReduceMsg : vt::collective::ReduceNoneMsg { };
 
   explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
   void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
 
-  void addPerfStats(int64_t const& num_bytes) {
-    test_obj_->StopTimer(fmt::format("{} Bytes", num_bytes));
+  struct MyMsg : vt::Message {};
+
+  void reduceComplete(ReduceMsg* msg) {
+    reduce_counter_++;
+    test_obj_->StopTimer(fmt::format("{} reduce", i));
     test_obj_->GetMemoryUsage();
-    test_obj_->StartTimer(fmt::format("{} Bytes", num_bytes * 2));
-  }
-
-  template <int64_t num_bytes>
-  void finishedPing(FinishedPingMsg<num_bytes>* msg) {
-    // End of iteration for node 0
-    addPerfStats(num_bytes);
-
-    if (num_bytes != max_bytes) {
-      constexpr auto new_num_bytes = num_bytes * 2;
-      test_obj_->StartTimer(fmt::format("{} Bytes", new_num_bytes));
-
-      proxy_[pong_node]
-        .send<
-          NodeObj::PingMsg<new_num_bytes>, &NodeObj::pingPong<new_num_bytes>
-        >();
-    } else {
+    if (i < num_iters) {
+      i++;
+      auto this_node = theContext()->getNode();
+      proxy_[this_node].send<MyMsg, &NodeObj::perfReduce>();
+    } else if (theContext()->getNode() == 0) {
+      theTerm()->any_epoch_state_.decrementDependency();
     }
   }
-
-  template <int64_t num_bytes>
-  void pingPong(PingMsg<num_bytes>* in_msg) {
-    auto const& cnt = in_msg->count;
-
-    if (cnt >= num_pings) {
-      // End of iteration for node 1
-      addPerfStats(num_bytes);
-
-      proxy_[0]
-        .send<
-          NodeObj::FinishedPingMsg<num_bytes>,
-          &NodeObj::finishedPing<num_bytes>>(num_bytes);
-    } else {
-      NodeType const next =
-        theContext()->getNode() == ping_node ? pong_node : ping_node;
-
-      auto msg = vt::makeMessage<NodeObj::PingMsg<num_bytes>>(cnt + 1);
-      proxy_[next]
-        .sendMsg<NodeObj::PingMsg<num_bytes>, &NodeObj::pingPong<num_bytes>>(
-          msg
-        );
-    }
+  
+  void perfReduce(MyMsg* in_msg) {
+    test_obj_->StartTimer(fmt::format("{} reduce", i));
+    auto cb = theCB()->makeBcast<NodeObj, ReduceMsg, &NodeObj::reduceComplete>(proxy_);
+    auto msg = makeMessage<ReduceMsg>();
+    proxy_.reduce(msg.get(), cb);
   }
 
 private:
   MyTest* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
+  int reduce_counter_ = -1;
+  int i = 0;
 };
-
-template <>
-void NodeObj::finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
-  addPerfStats(max_bytes);
-
-  theTerm()->any_epoch_state_.decrementDependency();
-}
 
 VT_PERF_TEST(MyTest, test_ping_pong) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
-    "test_ping_pong", this
+    "test_reduce", this
   );
-  grp_proxy[my_node_]
-    .invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 
   if (theContext()->getNode() == 0) {
     theTerm()->any_epoch_state_.incrementDependency();
   }
 
-  StartTimer(fmt::format("{} Bytes", min_bytes));
+  grp_proxy[my_node_].invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 
-  if (my_node_ == 0) {
-    grp_proxy[pong_node]
-      .send<NodeObj::PingMsg<min_bytes>, &NodeObj::pingPong<min_bytes>>();
-  }
+  using MsgType = typename NodeObj::MyMsg;
+  grp_proxy[my_node_].send<MsgType, &NodeObj::perfReduce>();
 }
 
 VT_PERF_TEST_MAIN()
