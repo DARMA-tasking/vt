@@ -327,12 +327,14 @@ RunnableMaker<U> makeRunnable(
 ) {
   auto r = util::ptr::make_unique_fixed<RunnableNew>(*runnable_pool, msg, is_threaded);
   r->addContexts = add_context;
-  auto const han_type = HandlerManager::getHandlerRegistryType(handler);
-  if (han_type == auto_registry::RegistryTypeEnum::RegVrt or
-      han_type == auto_registry::RegistryTypeEnum::RegGeneral or
-      han_type == auto_registry::RegistryTypeEnum::RegObjGroup) {
-    r->template addContext<ctx::Trace>(msg, handler, from);
-  }
+  #if vt_check_enabled(trace_enabled)
+    auto const han_type = HandlerManager::getHandlerRegistryType(handler);
+    if (han_type == auto_registry::RegistryTypeEnum::RegVrt or
+        han_type == auto_registry::RegistryTypeEnum::RegGeneral or
+        han_type == auto_registry::RegistryTypeEnum::RegObjGroup) {
+      r->template addContext<ctx::Trace>(msg, handler, from);
+    }
+  #endif
   r->template addContext<ctx::SetContext>(r.get(), from);
   return RunnableMaker<U>{std::move(r), msg, handler, from};
 }
