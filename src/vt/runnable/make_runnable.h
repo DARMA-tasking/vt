@@ -53,6 +53,7 @@
 #include "vt/context/runnable_context/continuation.h"
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/utils/ptr/unique_fixed.h"
+#include "vt/termination/term_common.h"
 
 namespace vt { namespace runnable {
 
@@ -123,7 +124,15 @@ struct RunnableMaker {
    */
   RunnableMaker&& withTDEpochFromMsg(bool is_term = false) {
     if (not is_term) {
-      impl_->template addContext<ctx::TD>(msg_);
+      auto const msg_is_term = envelopeIsTerm(msg_->env);
+      if (not msg_is_term) {
+	auto ep_ = envelopeIsEpochType(msg_->env) ?
+	  envelopeGetEpoch(msg_->env) : term::any_epoch_sentinel;
+	if (ep_ == no_epoch) {
+	  ep_ = term::any_epoch_sentinel;
+	}
+	impl_->template addContext<ctx::TD>(ep_);
+      }
     }
     return std::move(*this);
   }

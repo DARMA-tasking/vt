@@ -75,15 +75,6 @@ struct TD final : Base {
   virtual ~TD();
 
   /**
-   * \brief Construct with a message to extract the epoch; produce on that
-   * epoch.
-   *
-   * \param[in] msg the message to extract the epoch from
-   */
-  template <typename MsgPtrT>
-  explicit TD(MsgPtrT msg);
-
-  /**
    * \brief During begin \c TD will capture the epoch stack size and push \c ep_
    */
   void begin() final override;
@@ -114,7 +105,5 @@ private:
 };
 
 }} /* end namespace vt::ctx */
-
-#include "vt/context/runnable_context/td.impl.h"
 
 #endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H*/
