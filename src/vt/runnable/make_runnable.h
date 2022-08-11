@@ -97,7 +97,9 @@ struct RunnableMaker {
    * \param[in] cont the continuation
    */
   RunnableMaker&& withContinuation(ActionType cont) {
-    impl_->template addContext<ctx::Continuation>(cont);
+    if (cont) {
+      impl_->template addContext<ctx::Continuation>(cont);
+    }
     return std::move(*this);
   }
 
