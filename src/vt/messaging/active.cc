@@ -152,12 +152,14 @@ ActiveMessenger::ActiveMessenger()
   };
 }
 
+void ActiveMessenger::initialize() {
+  comm_ = theContext()->getComm();
+}
+
 void ActiveMessenger::startup() {
   auto const this_node = theContext()->getNode();
   bare_handler_dummy_elm_id_for_lb_data_ =
     elm::ElmIDBits::createBareHandler(this_node);
-
-  comm_ = theContext()->getComm();
 
 #if vt_check_enabled(lblite)
   // Hook to collect LB data about objgroups

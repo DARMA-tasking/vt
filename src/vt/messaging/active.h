@@ -341,6 +341,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   std::string name() override { return "ActiveMessenger"; }
 
   void startup() override;
+  void initialize() override;
 
   /**
    * \brief Mark a message as a termination message.
