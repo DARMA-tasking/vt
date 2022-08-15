@@ -172,7 +172,7 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
   auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 
   auto range = vt::Index3D(num_nodes, num_elms, 4);
-  std::string const checkpoint_name{"test_checkpoint_dir"};
+  std::string const checkpoint_name(getUniqueFilenameWithRanks());
   std::string const expected_label{"test_checkpoint_1"};
 
   {
@@ -251,7 +251,7 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
   auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 
   auto range = vt::Index3D(num_nodes, num_elms, 4);
-  auto checkpoint_name = "test_checkpoint_dir";
+  std::string const checkpoint_name(getUniqueFilenameWithRanks());
   auto proxy = vt::theCollection()->constructCollective<TestCol>(
     range, "test_checkpoint_in_place_2"
   );
@@ -323,7 +323,7 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
   auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 
   auto range = vt::Index3D(num_nodes, num_elms, 4);
-  auto checkpoint_name = "test_checkpoint_dir_2";
+  std::string const checkpoint_name(getUniqueFilenameWithRanks());
   auto proxy = vt::theCollection()->constructCollective<TestCol>(
     range, "test_checkpoint_in_place_3"
   );
@@ -400,7 +400,7 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
   auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 
   auto range = vt::Index3D(num_nodes, num_elms, 4);
-  auto checkpoint_name = "test_null_elm_checkpoint_dir";
+  std::string const checkpoint_name(getUniqueFilenameWithRanks());
 
   {
     auto proxy = vt::makeCollection<TestCol>("test_checkpoint_no_elements_on_root_rank")

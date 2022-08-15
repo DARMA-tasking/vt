@@ -47,6 +47,7 @@
 #include <vt/trace/file_spec/spec.h>
 
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 
 #include <fstream>
 
@@ -57,7 +58,7 @@ using TestTraceSpec = TestParallelHarness;
 TEST_F(TestTraceSpec, test_trace_spec_1) {
   using Spec = vt::trace::file_spec::TraceSpec;
 
-  std::string file_name = "test_trace_spec_1.txt";
+  std::string const file_name(getUniqueFilenameWithRanks(".txt"));
   if (theContext()->getNode() == 0) {
     std::ofstream out(file_name);
     out << ""
@@ -88,7 +89,7 @@ TEST_F(TestTraceSpec, test_trace_spec_1) {
 TEST_F(TestTraceSpec, test_trace_spec_2) {
   using Spec = vt::trace::file_spec::TraceSpec;
 
-  std::string file_name = "test_trace_spec_2.txt";
+  std::string const file_name(getUniqueFilenameWithRanks(".txt"));
   if (theContext()->getNode() == 0) {
     std::ofstream out(file_name);
     out << ""
@@ -122,7 +123,7 @@ TEST_F(TestTraceSpec, test_trace_spec_2) {
 TEST_F(TestTraceSpec, test_trace_spec_3) {
   using Spec = vt::trace::file_spec::TraceSpec;
 
-  std::string file_name = "test_trace_spec_3.txt";
+  std::string const file_name(getUniqueFilenameWithRanks(".txt"));
   if (theContext()->getNode() == 0) {
     std::ofstream out(file_name);
     out << ""
@@ -167,7 +168,7 @@ TEST_F(TestTraceSpec, test_trace_spec_3) {
 TEST_F(TestTraceSpec, test_trace_spec_4) {
   using Spec = vt::trace::file_spec::TraceSpec;
 
-  std::string file_name = "test_trace_spec_4.txt";
+  std::string const file_name(getUniqueFilenameWithRanks(".txt"));
   if (theContext()->getNode() == 0) {
     std::ofstream out(file_name);
     out << ""
