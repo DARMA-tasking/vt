@@ -46,7 +46,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-TimeType WeightedCommunicationVolume::getModeledWork(
+TimeType WeightedCommunicationVolume::getModeledLoad(
     ElementIDStruct object, PhaseOffset when
 ) {
   return alpha_ * ComposedModel::getModeledLoad(object, when) +
