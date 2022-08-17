@@ -111,7 +111,7 @@ TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
   balance::PhaseOffset when =
       {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
 
-  return total_work_model_->getModeledWork(obj, when);
+  return total_work_model_->getModeledLoad(obj, when);
 }
 
 }}}} // namespace vt::vrt::collection::lb

@@ -641,7 +641,9 @@ void LBManager::computeStatistics(
     );
     total_load_from_model += load;
 
-    auto work = model->getModeledWork(
+    // FIXME: this is only TemperedWMin specific and requires composed
+    // WeightedCommunicationVolume model
+    auto work = model->getModeledLoad(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
     obj_work_model.emplace_back(

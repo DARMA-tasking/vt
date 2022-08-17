@@ -263,22 +263,6 @@ struct LoadModel
     return {};
   }
 
- /**
-   * \brief Provide an estimate of the given object's work during a specified
-   * interval
-   *
-   * \param[in] object The object whose work is requested
-   * \param[in] when The interval in which the estimated work is requested
-   *
-   * \return How much work the object is estimated to require
-   *
-   * The `updateLoads` method must have been called before any call to
-   * this.
-   */
-  virtual TimeType getModeledWork(ElementIDStruct object, PhaseOffset when) {
-    return {};
-  }
-
   /**
    * \brief Compute how many phases of past load statistics need to be
    * kept availble for the model to use
