@@ -186,13 +186,15 @@ void CharmLB::loadStats() {
   for (const auto obj : *load_model_) {
     if (obj.isMigratable()) {
       // Get LoadSummary object for this object containing all subphase loads
-      // (note: 0 is an unused value)
       auto load = balance::getObjectLoads(
-          load_model_, obj, {balance::PhaseOffset::NEXT_PHASE, 0});
+          load_model_, obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
 
       this_load -= loadMilli(load.whole_phase_load);
 
-      obj_loads.push_back(std::make_tuple(obj, load));
+      auto raw_load = balance::getObjectRawLoads(
+          load_model_, obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
+
+      obj_loads.push_back(std::make_tuple(obj, load, raw_load));
     }
   }
 
