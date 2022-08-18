@@ -158,7 +158,7 @@ void CharmLB::loadStats() {
   auto const& this_node = theContext()->getNode();
   auto avg_load = getAvgLoad();
   auto total_load = getSumLoad();
-  auto I = getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
+  auto I = getStats()->at(lb::Statistic::Rank_load_modeled).at(lb::StatisticQuantity::imb);
 
   bool should_lb = false;
   this_load_begin = this_load;
@@ -403,15 +403,15 @@ void CharmLB::transferObjs(std::vector<CharmDecision>&& in_decision) {
 }
 
 double CharmLB::getAvgLoad() const {
-  return getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
+  return getStats()->at(lb::Statistic::Rank_load_modeled).at(lb::StatisticQuantity::avg);
 }
 
 double CharmLB::getMaxLoad() const {
-  return getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
+  return getStats()->at(lb::Statistic::Rank_load_modeled).at(lb::StatisticQuantity::max);
 }
 
 double CharmLB::getSumLoad() const {
-  return getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::sum);
+  return getStats()->at(lb::Statistic::Rank_load_modeled).at(lb::StatisticQuantity::sum);
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
