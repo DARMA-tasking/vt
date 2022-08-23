@@ -150,6 +150,8 @@ struct Component : BaseComponent {
   /**
    * \brief Empty default overridden progress method
    *
+   * \param[in] current_time current time
+   *
    * \return no units processed
    */
   virtual int progress(TimeType current_time) override { return 0; }
