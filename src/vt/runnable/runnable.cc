@@ -200,38 +200,121 @@ void RunnableNew::run() {
 }
 
 void RunnableNew::begin() {
-  for (int i = 0; i < ci_; i++) {
-    contexts_[i]->begin();
-  }
+#if vt_check_enabled(trace_enabled)
+  if(ctx_trace_) ctx_trace_->begin();
+#endif
+  if(ctx_continuation_) ctx_continuation_->begin();
+  if(ctx_lbdata_) ctx_lbdata_->begin();
+  if(ctx_setcontext_) ctx_setcontext_->begin();
+  if(ctx_td_) ctx_td_->begin();
+  if(ctx_collection_) ctx_collection_->begin();
 }
 
 void RunnableNew::end() {
-  for (int i = 0; i < ci_; i++) {
-    contexts_[i]->end();
-  }
+#if vt_check_enabled(trace_enabled)
+  if(ctx_trace_) ctx_trace_->end();
+#endif
+  if(ctx_continuation_) ctx_continuation_->end();
+  if(ctx_lbdata_) ctx_lbdata_->end();
+  if(ctx_setcontext_) ctx_setcontext_->end();
+  if(ctx_td_) ctx_td_->end();
+  if(ctx_collection_) ctx_collection_->end();
 }
 
 void RunnableNew::suspend() {
-  for (int i = 0; i < ci_; i++) {
-    contexts_[i]->suspend();
-  }
+#if vt_check_enabled(trace_enabled)
+  if(ctx_trace_) ctx_trace_->suspend();
+#endif
+  if(ctx_continuation_) ctx_continuation_->suspend();
+  if(ctx_lbdata_) ctx_lbdata_->suspend();
+  if(ctx_setcontext_) ctx_setcontext_->suspend();
+  if(ctx_td_) ctx_td_->suspend();
+  if(ctx_collection_) ctx_collection_->suspend();
 }
 
 void RunnableNew::resume() {
-  for (int i = 0; i < ci_; i++) {
-    contexts_[i]->resume();
-  }
+#if vt_check_enabled(trace_enabled)
+  if(ctx_trace_) ctx_trace_->resume();
+#endif
+  if(ctx_continuation_) ctx_continuation_->resume();
+  if(ctx_lbdata_) ctx_lbdata_->resume();
+  if(ctx_setcontext_) ctx_setcontext_->resume();
+  if(ctx_td_) ctx_td_->resume();
+  if(ctx_collection_) ctx_collection_->resume();
 }
 
 void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
-  for (int i = 0; i < ci_; i++) {
-    contexts_[i]->send(elm, bytes);
-  }
+#if vt_check_enabled(trace_enabled)
+  if(ctx_trace_) ctx_trace_->send(elm, bytes);
+#endif
+  if(ctx_continuation_) ctx_continuation_->send(elm, bytes);
+  if(ctx_lbdata_) ctx_lbdata_->send(elm, bytes);
+  if(ctx_setcontext_) ctx_setcontext_->send(elm, bytes);
+  if(ctx_td_) ctx_td_->send(elm, bytes);
+  if(ctx_collection_) ctx_collection_->send(elm, bytes);
 }
 
 /*static*/ std::unique_ptr<
   pool::MemoryPoolEqual<detail::runnable_context_max_size>
 > RunnableNew::up_pool =
   std::make_unique<pool::MemoryPoolEqual<detail::runnable_context_max_size>>();
+
+#if vt_check_enabled(trace_enabled)
+void RunnableNew::addContext(CtxTracePtr&& ptr) {
+  ctx_trace_ = std::move(ptr);
+}
+#endif
+
+void RunnableNew::addContext(CtxContinuationPtr&& ptr) {
+  ctx_continuation_ = std::move(ptr);
+}
+
+void RunnableNew::addContext(CtxLBDataPtr&& ptr) {
+  ctx_lbdata_ = std::move(ptr);
+}
+
+void RunnableNew::addContext(CtxSetContextPtr&& ptr) {
+  ctx_setcontext_ = std::move(ptr);
+}
+
+void RunnableNew::addContext(CtxTDPtr&& ptr) {
+  ctx_td_ = std::move(ptr);
+}
+
+void RunnableNew::addContext(CtxCollectionPtr&& ptr) {
+  ctx_collection_ = std::move(ptr);
+}
+
+#if vt_check_enabled(trace_enabled)
+template<>
+ctx::Trace* RunnableNew::get<ctx::Trace>() {
+  return ctx_trace_.get();
+}
+#endif
+
+template<>
+ctx::Continuation* RunnableNew::get<ctx::Continuation>() {
+  return ctx_continuation_.get();
+}
+
+template<>
+ctx::LBData* RunnableNew::get<ctx::LBData>() {
+  return ctx_lbdata_.get();
+}
+
+template<>
+ctx::SetContext* RunnableNew::get<ctx::SetContext>() {
+  return ctx_setcontext_.get();
+}
+
+template<>
+ctx::TD* RunnableNew::get<ctx::TD>() {
+  return ctx_td_.get();
+}
+
+template<>
+ctx::Collection* RunnableNew::get<ctx::Collection>() {
+  return ctx_collection_.get();
+}
 
 }} /* end namespace vt::runnable */

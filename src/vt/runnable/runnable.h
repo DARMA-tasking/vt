@@ -109,7 +109,14 @@ constexpr std::size_t runnable_context_max_size = arrayMax(runnable_context_arra
  * with it to run it independently of the where in the stack it was created.
  */
 struct RunnableNew {
-  using CtxBasePtr = vt::util::ptr::unique_ptr_fixed<ctx::Base>;
+#if vt_check_enabled(trace_enabled)
+  using CtxTracePtr = vt::util::ptr::unique_ptr_fixed<ctx::Trace>;
+#endif
+  using CtxContinuationPtr = vt::util::ptr::unique_ptr_fixed<ctx::Continuation>;
+  using CtxLBDataPtr = vt::util::ptr::unique_ptr_fixed<ctx::LBData>;
+  using CtxSetContextPtr = vt::util::ptr::unique_ptr_fixed<ctx::SetContext>;
+  using CtxTDPtr = vt::util::ptr::unique_ptr_fixed<ctx::TD>;
+  using CtxCollectionPtr = vt::util::ptr::unique_ptr_fixed<ctx::Collection>;
 
   template <typename... Args>
   using FnParamType = void(*)(Args...);
@@ -286,14 +293,35 @@ public:
   > up_pool;
 
 private:
+
+  /**
+   * \internal \brief Store context passed in as parameter in a private member
+   */
+#if vt_check_enabled(trace_enabled)
+  void addContext(CtxTracePtr&& ptr);
+#endif
+  void addContext(CtxContinuationPtr&& ptr);
+  void addContext(CtxLBDataPtr&& ptr);
+  void addContext(CtxSetContextPtr&& ptr);
+  void addContext(CtxTDPtr&& ptr);
+  void addContext(CtxCollectionPtr&& ptr);
+
+private:
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
   bool is_threaded_ = false;                /**< Whether ULTs are supported */
-  std::array<CtxBasePtr, 8> contexts_;      /**< Array of contexts */
-  int ci_ = 0;                              /**< Current index of contexts */
   ActionType task_ = nullptr;               /**< The runnable's task  */
   bool done_ = false;                       /**< Whether task is complete */
   bool suspended_ = false;                  /**< Whether task is suspended */
   ThreadIDType tid_ = no_thread_id;         /**< The thread ID for the task */
+
+#if vt_check_enabled(trace_enabled)
+  CtxTracePtr ctx_trace_ = nullptr;               /**< The Trace context */
+#endif
+  CtxContinuationPtr ctx_continuation_ = nullptr; /**< The Continuation context */
+  CtxLBDataPtr ctx_lbdata_ = nullptr;             /**< The LB Data context */
+  CtxSetContextPtr ctx_setcontext_ = nullptr;     /**< The SetContext context */
+  CtxTDPtr ctx_td_ = nullptr;                     /**< The TD context */
+  CtxCollectionPtr ctx_collection_ = nullptr;     /**< The Collection context */
 };
 
 }} /* end namespace vt::runnable */

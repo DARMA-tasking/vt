@@ -50,25 +50,15 @@
 
 namespace vt { namespace runnable {
 
-template <typename T>
-T* RunnableNew::get() {
-  for (int i = 0; i < ci_; i++) {
-    auto t = dynamic_cast<T*>(contexts_[i].get());
-    if (t) {
-      return t;
-    }
-  }
-  return nullptr;
-}
-
 template <typename T, typename... Args>
 void RunnableNew::addContext(Args&&... args) {
   auto c = vt::util::ptr::make_unique_fixed<
     T, detail::runnable_context_max_size
   >(*up_pool.get(), std::forward<Args>(args)...);
-  contexts_[ci_++] = vt::util::ptr::unique_fixed_to_base<ctx::Base, detail::runnable_context_max_size>(
+
+  addContext(vt::util::ptr::unique_fixed_to_base<T, detail::runnable_context_max_size>(
     *up_pool.get(), std::move(c)
-  );
+  ));
 }
 
 }} /* end namespace vt::runnable */
