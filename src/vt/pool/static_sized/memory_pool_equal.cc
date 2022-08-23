@@ -145,11 +145,6 @@ MemoryPoolEqual<num_bytes_t>::getNumBytes() {
 
 template struct MemoryPoolEqual<memory_size_small>;
 template struct MemoryPoolEqual<memory_size_medium>;
-
-}} //end namespace vt::pool
-
-namespace vt { namespace pool {
-
 template struct MemoryPoolEqual<vt::runnable::detail::runnable_context_max_size>;
 
 }} /* end namespace vt::pool */
