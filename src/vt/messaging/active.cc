@@ -1192,7 +1192,7 @@ bool ActiveMessenger::testPendingAsyncOps() {
   );
 }
 
-int ActiveMessenger::progress() {
+int ActiveMessenger::progress(TimeType current_time) {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   processMaybeReadyHanTag();

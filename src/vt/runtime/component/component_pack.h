@@ -112,7 +112,7 @@ public:
    *
    * \return the number of work units processed
    */
-  int progress();
+  int progress(TimeType current_time);
 
   /**
    * \internal \brief Extract the first component from a running pack that

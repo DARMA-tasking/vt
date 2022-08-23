@@ -102,10 +102,10 @@ void ComponentPack::destruct() {
   }
 }
 
-int ComponentPack::progress() {
+int ComponentPack::progress(TimeType current_time) {
   int total = 0;
   for (auto&& pollable : pollable_components_) {
-    total += pollable->progress();
+    total += pollable->progress(current_time);
   }
   return total;
 }

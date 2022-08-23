@@ -59,7 +59,7 @@ struct Progressable {
    *
    * \return the number of units executed---zero if no progress was made
    */
-  virtual int progress() = 0;
+  virtual int progress(TimeType current_time) = 0;
 };
 
 }}} /* end namespace vt::runtime::component */

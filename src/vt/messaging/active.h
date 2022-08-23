@@ -1351,7 +1351,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return whether any action was taken (progress was made)
    */
-  int progress() override;
+  int progress(TimeType current_time) override;
 
   /**
    * \internal
