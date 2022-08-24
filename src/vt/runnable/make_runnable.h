@@ -211,6 +211,7 @@ struct RunnableMaker {
     return std::move(*this);
   }
 
+#if vt_check_enabled(trace_enabled)
   /**
    * \brief Add a trace index (for collection elements)
    *
@@ -229,6 +230,7 @@ struct RunnableMaker {
     );
     return std::move(*this);
   }
+#endif
 
   /**
    * \brief Add a tag to the handler
@@ -317,12 +319,14 @@ RunnableMaker<U> makeRunnable(
   MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler, NodeType from
 ) {
   auto r = std::make_unique<RunnableNew>(msg, is_threaded);
+#if vt_check_enabled(trace_enabled)
   auto const han_type = HandlerManager::getHandlerRegistryType(handler);
   if (han_type == auto_registry::RegistryTypeEnum::RegVrt or
       han_type == auto_registry::RegistryTypeEnum::RegGeneral or
       han_type == auto_registry::RegistryTypeEnum::RegObjGroup) {
     r->template addContext<ctx::Trace>(msg, handler, from);
   }
+#endif
   r->template addContext<ctx::SetContext>(r.get(), from);
   return RunnableMaker<U>{std::move(r), msg, handler, from};
 }

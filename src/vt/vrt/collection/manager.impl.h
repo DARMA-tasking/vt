@@ -211,6 +211,7 @@ CollectionManager::collectionAutoMsgDeliver(
 ) {
   auto user_msg = makeMessage<UserMsgT>(std::move(msg->getMsg()));
 
+#if vt_check_enabled(trace_enabled)
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
   auto idx = base->getIndex();
@@ -218,11 +219,14 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+#endif
 
   runnable::makeRunnable(user_msg, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
+#if vt_check_enabled(trace_enabled)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
+#endif
     .withLBData(base, msg)
     .runOrEnqueue(immediate);
 }
@@ -233,6 +237,7 @@ CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
   trace::TraceEventIDType event, bool immediate
 ) {
+#if vt_check_enabled(trace_enabled)
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
   auto idx = base->getIndex();
@@ -240,12 +245,15 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+#endif
 
   auto m = promoteMsg(msg);
   runnable::makeRunnable(m, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
+#if vt_check_enabled(trace_enabled)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
+#endif
     .withLBData(base)
     .runOrEnqueue(immediate);
 }
