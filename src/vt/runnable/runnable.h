@@ -207,33 +207,33 @@ public:
 
 private:
   /**
-   * \internal \brief Loop through all the contexts associated with this
-   * runnable and invoke \c begin() on them.
+   * \internal \brief Call \c begin() on all contexts associated with this
+   * runnable
    */
   void begin();
 
   /**
-   * \internal \brief Loop through all the contexts associated with this
-   * runnable and invoke \c end() on them.
+   * \internal \brief Call \c end() on all contexts associated with this
+   * runnable
    */
   void end();
 
   /**
-   * \internal \brief Loop through all the contexts associated with this
-   * runnable and invoke \c suspend() on them.
+   * \internal \brief Call \c suspend() on all contexts associated with this
+   * runnable
    */
   void suspend();
 
   /**
-   * \internal \brief Loop through all the contexts associated with this
-   * runnable and invoke \c resume() on them.
+   * \internal \brief Call \c resume() on all contexts associated with this
+   * runnable
    */
   void resume();
 
 public:
   /**
-   * \brief Loop through all contexts add run the \c send() method associated
-   * with this runnable
+   * \brief Call \c send() on all contexts associated with this
+   * runnable
    *
    * \param[in] dest the destination element for the send
    * \param[in] bytes the message size
@@ -294,16 +294,48 @@ public:
 
 private:
 
-  /**
-   * \internal \brief Store context passed in as parameter in a private member
-   */
 #if vt_check_enabled(trace_enabled)
+  /**
+   * \internal \brief Store the context pointer in a private member
+   *
+   * \param[in] ptr the Trace context
+   */
   void addContext(CtxTracePtr&& ptr);
 #endif
+
+  /**
+   * \internal \brief Store the context pointer in a private member
+   *
+   * \param[in] ptr the Continuation context
+   */
   void addContext(CtxContinuationPtr&& ptr);
+
+  /**
+   * \internal \brief Store the context pointer in a private member
+   *
+   * \param[in] ptr the LB data context
+   */
   void addContext(CtxLBDataPtr&& ptr);
+
+  /**
+   * \internal \brief Store the context pointer in a private member
+   *
+   * \param[in] ptr the SetContext context
+   */
   void addContext(CtxSetContextPtr&& ptr);
+
+  /**
+   * \internal \brief Store the context pointer in a private member
+   *
+   * \param[in] ptr the TD context
+   */
   void addContext(CtxTDPtr&& ptr);
+
+  /**
+   * \internal \brief Store the context pointer in a private member
+   *
+   * \param[in] ptr the Collection context
+   */
   void addContext(CtxCollectionPtr&& ptr);
 
 private:
