@@ -85,7 +85,7 @@
 
 #if vt_check_enabled(production_build)
 #define vt_debug_print_impl(force, inconfig, inmode, cat, ctx, ...)     \
-  vt_force_use(__VA_ARGS__)
+  do { if (false) vt_force_use(__VA_ARGS__); } while (false);
 #else
 #define vt_debug_print_impl(force, inconfig, inmode, cat, ctx, ...)     \
   vt::config::ApplyOp<                                                  \
