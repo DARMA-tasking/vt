@@ -56,9 +56,10 @@ void RunnableNew::addContext(Args&&... args) {
     T, detail::runnable_context_max_size
   >(*up_pool.get(), std::forward<Args>(args)...);
 
-  addContext(vt::util::ptr::unique_fixed_to_base<T, detail::runnable_context_max_size>(
-    *up_pool.get(), std::move(c)
-  ));
+  addContext(
+    vt::util::ptr::unique_fixed_to_base<T, detail::runnable_context_max_size>(
+      *up_pool.get(), std::move(c)
+    ));
 }
 
 }} /* end namespace vt::runnable */

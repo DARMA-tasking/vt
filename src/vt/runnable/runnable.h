@@ -293,7 +293,6 @@ public:
   > up_pool;
 
 private:
-
 #if vt_check_enabled(trace_enabled)
   /**
    * \internal \brief Store the context pointer in a private member
@@ -347,13 +346,14 @@ private:
   ThreadIDType tid_ = no_thread_id;         /**< The thread ID for the task */
 
 #if vt_check_enabled(trace_enabled)
-  CtxTracePtr ctx_trace_ = nullptr;               /**< The Trace context */
+  CtxTracePtr ctx_trace_ = nullptr; /**< The Trace context */
 #endif
-  CtxContinuationPtr ctx_continuation_ = nullptr; /**< The Continuation context */
-  CtxLBDataPtr ctx_lbdata_ = nullptr;             /**< The LB Data context */
-  CtxSetContextPtr ctx_setcontext_ = nullptr;     /**< The SetContext context */
-  CtxTDPtr ctx_td_ = nullptr;                     /**< The TD context */
-  CtxCollectionPtr ctx_collection_ = nullptr;     /**< The Collection context */
+  CtxContinuationPtr ctx_continuation_ =
+    nullptr;                                  /**< The Continuation context */
+  CtxLBDataPtr ctx_lbdata_ = nullptr;         /**< The LB Data context */
+  CtxSetContextPtr ctx_setcontext_ = nullptr; /**< The SetContext context */
+  CtxTDPtr ctx_td_ = nullptr;                 /**< The TD context */
+  CtxCollectionPtr ctx_collection_ = nullptr; /**< The Collection context */
 };
 
 }} /* end namespace vt::runnable */

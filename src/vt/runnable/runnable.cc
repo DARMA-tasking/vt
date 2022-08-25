@@ -201,57 +201,87 @@ void RunnableNew::run() {
 
 void RunnableNew::begin() {
 #if vt_check_enabled(trace_enabled)
-  if(ctx_trace_) ctx_trace_->begin();
+  if (ctx_trace_)
+    ctx_trace_->begin();
 #endif
-  if(ctx_continuation_) ctx_continuation_->begin();
-  if(ctx_lbdata_) ctx_lbdata_->begin();
-  if(ctx_setcontext_) ctx_setcontext_->begin();
-  if(ctx_td_) ctx_td_->begin();
-  if(ctx_collection_) ctx_collection_->begin();
+  if (ctx_continuation_)
+    ctx_continuation_->begin();
+  if (ctx_lbdata_)
+    ctx_lbdata_->begin();
+  if (ctx_setcontext_)
+    ctx_setcontext_->begin();
+  if (ctx_td_)
+    ctx_td_->begin();
+  if (ctx_collection_)
+    ctx_collection_->begin();
 }
 
 void RunnableNew::end() {
 #if vt_check_enabled(trace_enabled)
-  if(ctx_trace_) ctx_trace_->end();
+  if (ctx_trace_)
+    ctx_trace_->end();
 #endif
-  if(ctx_continuation_) ctx_continuation_->end();
-  if(ctx_lbdata_) ctx_lbdata_->end();
-  if(ctx_setcontext_) ctx_setcontext_->end();
-  if(ctx_td_) ctx_td_->end();
-  if(ctx_collection_) ctx_collection_->end();
+  if (ctx_continuation_)
+    ctx_continuation_->end();
+  if (ctx_lbdata_)
+    ctx_lbdata_->end();
+  if (ctx_setcontext_)
+    ctx_setcontext_->end();
+  if (ctx_td_)
+    ctx_td_->end();
+  if (ctx_collection_)
+    ctx_collection_->end();
 }
 
 void RunnableNew::suspend() {
 #if vt_check_enabled(trace_enabled)
-  if(ctx_trace_) ctx_trace_->suspend();
+  if (ctx_trace_)
+    ctx_trace_->suspend();
 #endif
-  if(ctx_continuation_) ctx_continuation_->suspend();
-  if(ctx_lbdata_) ctx_lbdata_->suspend();
-  if(ctx_setcontext_) ctx_setcontext_->suspend();
-  if(ctx_td_) ctx_td_->suspend();
-  if(ctx_collection_) ctx_collection_->suspend();
+  if (ctx_continuation_)
+    ctx_continuation_->suspend();
+  if (ctx_lbdata_)
+    ctx_lbdata_->suspend();
+  if (ctx_setcontext_)
+    ctx_setcontext_->suspend();
+  if (ctx_td_)
+    ctx_td_->suspend();
+  if (ctx_collection_)
+    ctx_collection_->suspend();
 }
 
 void RunnableNew::resume() {
 #if vt_check_enabled(trace_enabled)
-  if(ctx_trace_) ctx_trace_->resume();
+  if (ctx_trace_)
+    ctx_trace_->resume();
 #endif
-  if(ctx_continuation_) ctx_continuation_->resume();
-  if(ctx_lbdata_) ctx_lbdata_->resume();
-  if(ctx_setcontext_) ctx_setcontext_->resume();
-  if(ctx_td_) ctx_td_->resume();
-  if(ctx_collection_) ctx_collection_->resume();
+  if (ctx_continuation_)
+    ctx_continuation_->resume();
+  if (ctx_lbdata_)
+    ctx_lbdata_->resume();
+  if (ctx_setcontext_)
+    ctx_setcontext_->resume();
+  if (ctx_td_)
+    ctx_td_->resume();
+  if (ctx_collection_)
+    ctx_collection_->resume();
 }
 
 void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
 #if vt_check_enabled(trace_enabled)
-  if(ctx_trace_) ctx_trace_->send(elm, bytes);
+  if (ctx_trace_)
+    ctx_trace_->send(elm, bytes);
 #endif
-  if(ctx_continuation_) ctx_continuation_->send(elm, bytes);
-  if(ctx_lbdata_) ctx_lbdata_->send(elm, bytes);
-  if(ctx_setcontext_) ctx_setcontext_->send(elm, bytes);
-  if(ctx_td_) ctx_td_->send(elm, bytes);
-  if(ctx_collection_) ctx_collection_->send(elm, bytes);
+  if (ctx_continuation_)
+    ctx_continuation_->send(elm, bytes);
+  if (ctx_lbdata_)
+    ctx_lbdata_->send(elm, bytes);
+  if (ctx_setcontext_)
+    ctx_setcontext_->send(elm, bytes);
+  if (ctx_td_)
+    ctx_td_->send(elm, bytes);
+  if (ctx_collection_)
+    ctx_collection_->send(elm, bytes);
 }
 
 /*static*/ std::unique_ptr<
@@ -286,33 +316,33 @@ void RunnableNew::addContext(CtxCollectionPtr&& ptr) {
 }
 
 #if vt_check_enabled(trace_enabled)
-template<>
+template <>
 ctx::Trace* RunnableNew::get<ctx::Trace>() {
   return ctx_trace_.get();
 }
 #endif
 
-template<>
+template <>
 ctx::Continuation* RunnableNew::get<ctx::Continuation>() {
   return ctx_continuation_.get();
 }
 
-template<>
+template <>
 ctx::LBData* RunnableNew::get<ctx::LBData>() {
   return ctx_lbdata_.get();
 }
 
-template<>
+template <>
 ctx::SetContext* RunnableNew::get<ctx::SetContext>() {
   return ctx_setcontext_.get();
 }
 
-template<>
+template <>
 ctx::TD* RunnableNew::get<ctx::TD>() {
   return ctx_td_.get();
 }
 
-template<>
+template <>
 ctx::Collection* RunnableNew::get<ctx::Collection>() {
   return ctx_collection_.get();
 }
