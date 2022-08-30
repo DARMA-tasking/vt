@@ -83,6 +83,10 @@
 #define vt_debug_argument_option(opt)                                   \
   ::vt::debug::preConfig()->vt_debug_ ## opt
 
+#if vt_check_enabled(production_build)
+#define vt_debug_print_impl(force, inconfig, inmode, cat, ctx, ...)     \
+  do { if (false) vt_force_use(__VA_ARGS__); } while (false)
+#else
 #define vt_debug_print_impl(force, inconfig, inmode, cat, ctx, ...)     \
   vt::config::ApplyOp<                                                  \
     vt::config::DebugPrintOp,                                           \
@@ -91,6 +95,7 @@
     vt::config::CtxEnum::ctx,                                           \
     vt::config::ModeEnum::inmode                                        \
   >::apply(vt_debug_argument_option(cat) or force, __VA_ARGS__)
+#endif
 
 #define vt_debug_print(type, feature, ...)                              \
   vt_debug_print_impl(                                                  \
