@@ -341,6 +341,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   std::string name() override { return "ActiveMessenger"; }
 
   void startup() override;
+  void initialize() override;
 
   /**
    * \brief Mark a message as a termination message.
@@ -1785,6 +1786,7 @@ private:
 private:
   elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_data_ = {};
   elm::ElementLBData bare_handler_lb_data_;
+  MPI_Comm comm_ = MPI_COMM_NULL;
 };
 
 }} // end namespace vt::messaging

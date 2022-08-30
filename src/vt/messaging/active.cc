@@ -152,6 +152,10 @@ ActiveMessenger::ActiveMessenger()
   };
 }
 
+void ActiveMessenger::initialize() {
+  comm_ = theContext()->getComm();
+}
+
 void ActiveMessenger::startup() {
   auto const this_node = theContext()->getNode();
   bare_handler_dummy_elm_id_for_lb_data_ =
@@ -370,7 +374,7 @@ EventType ActiveMessenger::sendMsgMPI(
       #endif
       int const ret = MPI_Isend(
         untyped_msg, small_msg_size, MPI_BYTE, dest, send_tag,
-        theContext()->getComm(), mpi_event->getRequest()
+        comm_, mpi_event->getRequest()
       );
       vtAssertMPISuccess(ret, "MPI_Isend");
 
@@ -606,7 +610,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
 
       VT_ALLOW_MPI_CALLS;
       int const ret = MPI_Isend(
-        ptr, subsize, MPI_BYTE, dest, tag, theContext()->getComm(),
+        ptr, subsize, MPI_BYTE, dest, tag, comm_,
         mpi_event->getRequest()
       );
       vtAssertMPISuccess(ret, "MPI_Isend");
@@ -706,7 +710,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       VT_ALLOW_MPI_CALLS;
       const int probe_ret = MPI_Iprobe(
         node == uninitialized_destination ? MPI_ANY_SOURCE : node,
-        tag, theContext()->getComm(), &flag, &stat
+        tag, comm_, &flag, &stat
       );
       vtAssertMPISuccess(probe_ret, "MPI_Iprobe");
     }
@@ -791,7 +795,7 @@ void ActiveMessenger::recvDataDirect(
       VT_ALLOW_MPI_CALLS;
       int const ret = MPI_Irecv(
         cbuf+(i*max_per_send), sublen, MPI_BYTE, from, tag,
-        theContext()->getComm(), &reqs[i]
+        comm_, &reqs[i]
       );
       vtAssertMPISuccess(ret, "MPI_Irecv");
     }
@@ -1027,7 +1031,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
     MPI_Iprobe(
       MPI_ANY_SOURCE, static_cast<MPI_TagType>(MPITag::ActiveMsgTag),
-      theContext()->getComm(), &flag, &stat
+      comm_, &flag, &stat
     );
   }
 
@@ -1051,7 +1055,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
       VT_ALLOW_MPI_CALLS;
       MPI_Irecv(
         buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
-        theContext()->getComm(), &req
+        comm_, &req
       );
 
       amPostedCounterGauge.incrementUpdate(num_probe_bytes, 1);
