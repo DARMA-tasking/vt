@@ -150,9 +150,11 @@ struct Component : BaseComponent {
   /**
    * \brief Empty default overridden progress method
    *
+   * \param[in] current_time current time
+   *
    * \return no units processed
    */
-  virtual int progress() override { return 0; }
+  virtual int progress(TimeType current_time) override { return 0; }
 
   /**
    * \brief Empty default diagnostic dump state
@@ -186,7 +188,7 @@ struct PollableComponent : Component<T> {
    *
    * \return number of units processed---zero
    */
-  virtual int progress() override {
+  virtual int progress(TimeType current_time) override {
     vtAbort("PollableComponent should override the empty progress function");
     return 0;
   }

@@ -83,7 +83,7 @@ struct WorkerGroupAny
   void spawnWorkers();
   void spawnWorkersBlock(WorkerCommFnType fn);
   void joinWorkers();
-  int progress() override;
+  int progress(TimeType current_time = 0.0) override;
 
   bool commScheduler();
   void enqueueCommThread(WorkUnitType const& work_unit);

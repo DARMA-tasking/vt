@@ -1349,9 +1349,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \internal
    * \brief Call into the progress engine
    *
+   * \param[in] current_time current time
+   *
    * \return whether any action was taken (progress was made)
    */
-  int progress() override;
+  int progress(TimeType current_time) override;
 
   /**
    * \internal

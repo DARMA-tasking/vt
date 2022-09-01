@@ -121,9 +121,11 @@ struct Runtime {
   /**
    * \brief Invoke all the progress functions
    *
+   * \param[in] current_time current time
+   *
    * \return returns an unspecified value
    */
-  int progress() { if (p_) return p_->progress(); else return 0; }
+  int progress(TimeType current_time) { if (p_) return p_->progress(current_time); else return 0; }
 
   /**
    * \brief Check if runtime has terminated

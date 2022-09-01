@@ -174,8 +174,10 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    *
    * \param[in] msg_only whether to only make progress on the core active
    * messenger
+   *
+   * \param[in] current_time current time
    */
-  void runProgress(bool msg_only = false);
+  void runProgress(bool msg_only = false, TimeType current_time = 0.0 );
 
   /**
    * \brief Runs the scheduler until a condition is met.
@@ -362,16 +364,20 @@ private:
   /**
    * \internal \brief Make progress on active message only
    *
+   * \param[in] current_time current time
+   *
    * \return whether progress was made
    */
-  bool progressMsgOnlyImpl();
+  bool progressMsgOnlyImpl(TimeType current_time);
 
   /**
    * \internal \brief Make progress
    *
+   * \param[in] current_time current time
+   *
    * \return whether progress was made
    */
-  bool progressImpl();
+  bool progressImpl(TimeType current_time);
 
 private:
 

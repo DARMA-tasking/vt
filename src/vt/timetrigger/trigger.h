@@ -108,6 +108,8 @@ struct Trigger {
   /**
    * \brief Check if the trigger is ready to be fired
    *
+   * \param[in] current_time current time
+   *
    * \return whether the trigger can be run already
    */
   bool ready(TimeType current_time) const {

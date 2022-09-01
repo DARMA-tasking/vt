@@ -146,8 +146,8 @@ void Scheduler::runWorkUnit(UnitType& work) {
 }
 
 /*private*/
-bool Scheduler::progressImpl() {
-  int const total = curRT->progress();
+bool Scheduler::progressImpl(TimeType current_time) {
+  int const total = curRT->progress(current_time);
 
   checkTermSingleNode();
 
@@ -155,8 +155,8 @@ bool Scheduler::progressImpl() {
 }
 
 /*private*/
-bool Scheduler::progressMsgOnlyImpl() {
-  return theMsg()->progress() or theEvent()->progress();
+bool Scheduler::progressMsgOnlyImpl(TimeType current_time) {
+  return theMsg()->progress(current_time) or theEvent()->progress(current_time);
 }
 
 bool Scheduler::shouldCallProgress(
@@ -211,7 +211,7 @@ void Scheduler::printMemoryUsage() {
   }
 }
 
-void Scheduler::runProgress(bool msg_only) {
+void Scheduler::runProgress(bool msg_only, TimeType current_time) {
   /*
    * Run through the progress functions `num_iter` times, making forward
    * progress on MPI
@@ -221,9 +221,9 @@ void Scheduler::runProgress(bool msg_only) {
     if (msg_only) {
       // This is a special case used only during startup when other components
       // are not ready and progress should not be called on them.
-      progressMsgOnlyImpl();
+      progressMsgOnlyImpl(current_time);
     } else {
-      progressImpl();
+      progressImpl(current_time);
     }
     progressCount.increment(1);
   }
@@ -235,16 +235,19 @@ void Scheduler::runProgress(bool msg_only) {
   // Reset count of processed handlers since the last time progress was invoked
   processed_after_last_progress_ = 0;
   last_progress_time_ = timing::getCurrentTime();
+
 }
 
 void Scheduler::runSchedulerOnceImpl(bool msg_only) {
-  auto time_since_last_progress = timing::getCurrentTime() - last_progress_time_;
+  auto current_time = timing::getCurrentTime();
+  auto time_since_last_progress = current_time - last_progress_time_;
   if (
     work_queue_.empty() or
     shouldCallProgress(processed_after_last_progress_, time_since_last_progress)
   ) {
-    runProgress(msg_only);
+    runProgress(msg_only, current_time);
   }
+
 
   if (not work_queue_.empty()) {
     queueSizeGauge.update(work_queue_.size());

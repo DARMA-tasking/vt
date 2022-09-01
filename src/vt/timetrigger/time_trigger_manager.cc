@@ -87,9 +87,8 @@ void TimeTriggerManager::triggerReady(TimeType cur_time) {
   }
 }
 
-int TimeTriggerManager::progress() {
-  auto const cur_time = timing::getCurrentTime();
-  triggerReady(cur_time);
+int TimeTriggerManager::progress(TimeType current_time) {
+  triggerReady(current_time);
   return 0;
 }
 

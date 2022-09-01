@@ -80,7 +80,7 @@ bool WorkerGroupOMP::commScheduler() {
   return WorkerGroupComm::schedulerComm(finished_fn_);
 }
 
-int WorkerGroupOMP::progress() {
+int WorkerGroupOMP::progress(TimeType /*current_time*/) {
   WorkerGroupCounter::progress();
   return 0;
 }
