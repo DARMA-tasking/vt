@@ -197,8 +197,6 @@ TEST_F(TestAsyncOp, test_async_op_cuda) {
     p[this_node].send<MyMsg, &CUDAGroup::cudaHandler>();
   });
 
-  cudaDeviceSynchronize();
-
   p[this_node].get()->check();
 }
 #endif // __CUDACC__
