@@ -5,7 +5,15 @@ set(CTEST_CUSTOM_MAXIMUM_FAILED_TEST_OUTPUT_SIZE "512000" )
 set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_ERRORS "50" )
 set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS "50")
 
-site_name(CTEST_SITE)
+if(COMMAND cmake_host_system_information)
+  cmake_host_system_information(RESULT HOSTNAME QUERY HOSTNAME)
+  string(REGEX REPLACE "^([^0-9]+)[0-9]+$" "\\1" SIMPLE_CTEST_SITE "${HOSTNAME}")
+  message("Hostname is ${HOSTNAME}; site name has been set to ${SIMPLE_CTEST_SITE}")
+  set(CTEST_SITE "${SIMPLE_CTEST_SITE}")
+else()
+  site_name(CTEST_SITE)
+endif()
+
 set(CTEST_BUILD_NAME
     "${CMAKE_HOST_SYSTEM_NAME}-$ENV{CI_JOB_NAME}-$ENV{CI_COMMIT_REF_NAME}"
 )
