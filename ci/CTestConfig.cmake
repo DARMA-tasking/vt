@@ -13,3 +13,5 @@ set(CTEST_DROP_METHOD "https")
 set(CTEST_DROP_SITE "darma-cdash.sandia.gov")
 set(CTEST_DROP_LOCATION "/submit.php?project=VT")
 set(CTEST_DROP_SITE_CDASH TRUE)
+
+set(CTEST_SUBMIT_INACTIVITY_TIMEOUT 120)
