@@ -60,7 +60,7 @@ struct Queue {
 
   void emplace(T&& elm) { impl_.emplace(std::forward<T>(elm)); }
 
-  T pop() { auto elm = impl_.front(); impl_.pop(); return elm; }
+  T pop() { auto elm = std::move(impl_.front()); impl_.pop(); return elm; }
 
   T const& top() { return impl_.front(); }
 
