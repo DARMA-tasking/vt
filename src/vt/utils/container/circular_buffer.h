@@ -105,6 +105,13 @@ public:
   bool full() const { return numFree() == 0; }
   int len() const { return size - 1 - numFree(); }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | head_;
+    s | tail_;
+    s | elms_; // this is inefficient, but it's use is footprinting
+  }
+
 private:
   int head_ = 0;
   int tail_ = 0;
