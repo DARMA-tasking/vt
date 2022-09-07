@@ -248,4 +248,18 @@ void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
   if (contexts_.has_lb) contexts_.lb.send(elm, bytes);
 }
 
+/*static*/ void* RunnableNew::operator new(std::size_t sz) {
+  return RunnableNewAlloc::runnable->alloc(sz,0);
+}
+
+/*static*/ void RunnableNew::operator delete(void* ptr) {
+  RunnableNewAlloc::runnable->dealloc(ptr);
+}
+
+/*static*/
+std::unique_ptr<pool::MemoryPoolEqual<sizeof(RunnableNew)>>
+RunnableNewAlloc::runnable = std::make_unique<
+  pool::MemoryPoolEqual<sizeof(RunnableNew)>
+>(256);
+
 }} /* end namespace vt::runnable */
