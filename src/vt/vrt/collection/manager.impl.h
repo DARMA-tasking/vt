@@ -213,16 +213,20 @@ CollectionManager::collectionAutoMsgDeliver(
 
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
+#if vt_check_enabled(trace_enabled)
   auto idx = base->getIndex();
   uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+#endif
 
   runnable::makeRunnable(user_msg, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
+#if vt_check_enabled(trace_enabled)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
+#endif
     .withLBData(base, msg)
     .runOrEnqueue(immediate);
 }
@@ -235,17 +239,21 @@ CollectionManager::collectionAutoMsgDeliver(
 ) {
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
+#if vt_check_enabled(trace_enabled)
   auto idx = base->getIndex();
   uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+#endif
 
   auto m = promoteMsg(msg);
   runnable::makeRunnable(m, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
+#if vt_check_enabled(trace_enabled)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
+#endif
     .withLBData(base)
     .runOrEnqueue(immediate);
 }

@@ -55,6 +55,8 @@ namespace vt { namespace ctx {
  */
 struct Continuation final : Base {
 
+  Continuation() = default;
+
   /**
    * \brief Construct a \c Continuation
    *

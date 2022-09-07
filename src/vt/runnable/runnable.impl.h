@@ -50,16 +50,55 @@
 
 namespace vt { namespace runnable {
 
-template <typename T>
-T* RunnableNew::get() {
-  for (auto&& ctx : contexts_) {
-    auto t = dynamic_cast<T*>(ctx.get());
-    if (t) {
-      return t;
-    }
-  }
-  return nullptr;
+template <>
+inline ctx::SetContext* RunnableNew::get<ctx::SetContext>() {
+  return &contexts_.setcontext;
 }
+
+template <>
+inline ctx::LBData* RunnableNew::get<ctx::LBData>() {
+  if (contexts_.has_lb)
+    return &contexts_.lb;
+  else
+    return nullptr;
+}
+
+template <typename... Args>
+void RunnableNew::addContextSetContext(Args&&... args) {
+  contexts_.setcontext = ctx::SetContext{std::forward<Args>(args)...};
+}
+
+template <typename... Args>
+void RunnableNew::addContextTD(Args&&... args) {
+  contexts_.td = ctx::TD{std::forward<Args>(args)...};
+  contexts_.has_td = true;
+}
+
+template <typename... Args>
+void RunnableNew::addContextCont(Args&&... args) {
+  contexts_.cont = ctx::Continuation{std::forward<Args>(args)...};
+  contexts_.has_cont = true;
+}
+
+template <typename... Args>
+void RunnableNew::addContextCol(Args&&... args) {
+  contexts_.col = ctx::Collection{std::forward<Args>(args)...};
+  contexts_.has_col = true;
+}
+
+template <typename... Args>
+void RunnableNew::addContextLB(Args&&... args) {
+  contexts_.lb = ctx::LBData{std::forward<Args>(args)...};
+  contexts_.has_lb = true;
+}
+
+#if vt_check_enabled(trace_enabled)
+template <typename... Args>
+void RunnableNew::addContextTrace(Args&&... args) {
+  contexts_.trace = ctx::Trace{std::forward<Args>(args)...};
+  contexts_.has_trace = true;
+}
+#endif
 
 }} /* end namespace vt::runnable */
 

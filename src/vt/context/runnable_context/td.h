@@ -62,6 +62,8 @@ namespace vt { namespace ctx {
  */
 struct TD final : Base {
 
+  TD() = default;
+
   /**
    * \brief Construct with a given epoch; produce on that epoch.
    *
