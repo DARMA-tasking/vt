@@ -51,6 +51,7 @@
 #include "vt/context/runnable_context/collection.h"
 #include "vt/context/runnable_context/lb_data.h"
 #include "vt/context/runnable_context/continuation.h"
+#include "vt/pool/static_sized/memory_pool_equal.h"
 #include "vt/elm/elm_id.h"
 
 // fwd-declarations for the element types
@@ -309,6 +310,22 @@ public:
     task_ = task_in;
   }
 
+  /**
+   * \internal \brief Operator new for runnables targeting pool
+   *
+   * \param[in] sz the allocation size
+   *
+   * \return the new allocation
+   */
+  static void* operator new(std::size_t sz);
+
+  /**
+   * \internal \brief Operator develop for runnables
+   *
+   * \param[in] ptr the pointer
+   */
+  static void operator delete(void* ptr);
+
 private:
   detail::Contexts contexts_;               /**< The contexts  */
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
@@ -317,6 +334,10 @@ private:
   bool done_ = false;                       /**< Whether task is complete */
   bool suspended_ = false;                  /**< Whether task is suspended */
   ThreadIDType tid_ = no_thread_id;         /**< The thread ID for the task */
+};
+
+struct RunnableNewAlloc {
+  static std::unique_ptr<pool::MemoryPoolEqual<sizeof(RunnableNew)>> runnable;
 };
 
 }} /* end namespace vt::runnable */
