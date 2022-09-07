@@ -23,7 +23,7 @@ list(APPEND CMAKE_MESSAGE_INDENT "Building VT with ")
 
 option(vt_lb_enabled "Build VT with load balancing enabled" ON)
 option(vt_trace_enabled "Build VT with trace enabled" OFF)
-option(vt_priorities_enabled "Build VT with message priorities enabled" ON)
+option(vt_priorities_enabled "Build VT with message priorities enabled" OFF)
 option(
         vt_test_trace_runtime_enabled
         "Build VT with runtime tracing enabled (for testing)" OFF
