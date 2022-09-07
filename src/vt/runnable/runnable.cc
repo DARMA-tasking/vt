@@ -199,33 +199,53 @@ void RunnableNew::run() {
 }
 
 void RunnableNew::begin() {
-  for (auto&& ctx : contexts_) {
-    ctx->begin();
-  }
+  contexts_.setcontext.begin();
+  if (contexts_.has_td) contexts_.td.begin();
+  if (contexts_.has_col) contexts_.col.begin();
+  if (contexts_.has_lb) contexts_.lb.begin();
+#if vt_check_enabled(trace_enabled)
+  if (contexts_.has_trace) contexts_.trace.begin();
+#endif
 }
 
 void RunnableNew::end() {
-  for (auto&& ctx : contexts_) {
-    ctx->end();
-  }
+  contexts_.setcontext.end();
+  if (contexts_.has_td) contexts_.td.end();
+  if (contexts_.has_col) contexts_.col.end();
+  if (contexts_.has_lb) contexts_.lb.end();
+#if vt_check_enabled(trace_enabled)
+  if (contexts_.has_trace) contexts_.trace.end();
+#endif
 }
 
 void RunnableNew::suspend() {
-  for (auto&& ctx : contexts_) {
-    ctx->suspend();
-  }
+#if vt_check_enabled(fcontext)
+  contexts_.setcontext.suspend();
+  if (contexts_.has_td) contexts_.td.suspend();
+  if (contexts_.has_col) contexts_.col.suspend();
+  if (contexts_.has_lb) contexts_.lb.suspend();
+
+# if vt_check_enabled(trace_enabled)
+    if (contexts_.has_trace) contexts_.trace.suspend();
+# endif
+#endif
 }
 
 void RunnableNew::resume() {
-  for (auto&& ctx : contexts_) {
-    ctx->resume();
-  }
+#if vt_check_enabled(fcontext)
+  contexts_.setcontext.resume();
+  if (contexts_.has_td) contexts_.td.resume();
+  if (contexts_.has_col) contexts_.col.resume();
+  if (contexts_.has_lb) contexts_.lb.resume();
+
+# if vt_check_enabled(trace_enabled)
+    if (contexts_.has_trace) contexts_.trace.resume();
+# endif
+#endif
 }
 
 void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
-  for (auto&& ctx : contexts_) {
-    ctx->send(elm, bytes);
-  }
+  if (contexts_.has_lb) contexts_.lb.send(elm, bytes);
 }
 
 }} /* end namespace vt::runnable */

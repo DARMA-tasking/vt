@@ -58,6 +58,8 @@ namespace vt { namespace ctx {
  */
 struct SetContext final : Base {
 
+  SetContext() = default;
+
   /**
    * \brief Construct a \c SetContext
    *

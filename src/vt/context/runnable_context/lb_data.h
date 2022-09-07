@@ -59,6 +59,8 @@ struct LBData final : Base {
   using ElementIDStruct = elm::ElementIDStruct;
   using ElementLBData    = elm::ElementLBData;
 
+  LBData() = default;
+
   /**
    * \brief Construct a \c LBData
    *

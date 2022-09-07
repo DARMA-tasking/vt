@@ -65,6 +65,8 @@ namespace vt { namespace ctx {
  */
 struct Collection final : Base {
 
+  Collection() = default;
+
   /**
    * \brief Construct a \c Collection
    *

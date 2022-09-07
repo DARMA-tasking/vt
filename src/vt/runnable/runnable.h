@@ -46,6 +46,12 @@
 
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/context/runnable_context/base.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/trace.h"
+#include "vt/context/runnable_context/set_context.h"
+#include "vt/context/runnable_context/collection.h"
+#include "vt/context/runnable_context/lb_data.h"
+#include "vt/context/runnable_context/continuation.h"
 #include "vt/elm/elm_id.h"
 
 // fwd-declarations for the element types
@@ -61,6 +67,26 @@ struct UntypedCollection;
 
 namespace vt { namespace runnable {
 
+namespace detail {
+
+struct Contexts {
+  ctx::SetContext setcontext;
+  bool has_td = false;
+  ctx::TD td;
+  bool has_cont = false;
+  ctx::Continuation cont;
+  bool has_col = false;
+  ctx::Collection col;
+  bool has_lb = false;
+  ctx::LBData lb;
+#if vt_check_enabled(trace_enabled)
+  bool has_trace = false;
+  ctx::Trace trace;
+#endif
+};
+
+} /* end namespace detail */
+
 /**
  * \struct RunnableNew
  *
@@ -68,8 +94,6 @@ namespace vt { namespace runnable {
  * with it to run it independently of the where in the stack it was created.
  */
 struct RunnableNew {
-  using CtxBasePtr = std::unique_ptr<ctx::Base>;
-
   template <typename... Args>
   using FnParamType = void(*)(Args...);
 
@@ -101,15 +125,60 @@ struct RunnableNew {
 
 public:
   /**
-   * \brief Add a new context for this handler
+   * \brief Add a new \c SetContext for this handler
    *
    * \param[in] args arguments to build the context, forwarded to constructor of
    * \c T
    */
-  template <typename T, typename... Args>
-  void addContext(Args&&... args) {
-    contexts_.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-  }
+  template <typename... Args>
+  void addContextSetContext(Args&&... args);
+
+  /**
+   * \brief Add a new \c TD for this handler
+   *
+   * \param[in] args arguments to build the context, forwarded to constructor of
+   * \c T
+   */
+  template <typename... Args>
+  void addContextTD(Args&&... args);
+
+  /**
+   * \brief Add a new \c Cont for this handler
+   *
+   * \param[in] args arguments to build the context, forwarded to constructor of
+   * \c T
+   */
+  template <typename... Args>
+  void addContextCont(Args&&... args);
+
+  /**
+   * \brief Add a new \c Col for this handler
+   *
+   * \param[in] args arguments to build the context, forwarded to constructor of
+   * \c T
+   */
+  template <typename... Args>
+  void addContextCol(Args&&... args);
+
+  /**
+   * \brief Add a new \c LB for this handler
+   *
+   * \param[in] args arguments to build the context, forwarded to constructor of
+   * \c T
+   */
+  template <typename... Args>
+  void addContextLB(Args&&... args);
+
+#if vt_check_enabled(trace_enabled)
+  /**
+   * \brief Add a new \c Trace for this handler
+   *
+   * \param[in] args arguments to build the context, forwarded to constructor of
+   * \c T
+   */
+  template <typename... Args>
+  void addContextTrace(Args&&... args);
+#endif
 
   /**
    * \brief Set up a handler to run on an collection object
@@ -242,9 +311,9 @@ public:
   }
 
 private:
+  detail::Contexts contexts_;               /**< The contexts  */
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
   bool is_threaded_ = false;                /**< Whether ULTs are supported */
-  std::vector<CtxBasePtr> contexts_;        /**< Vector of contexts */
   ActionType task_ = nullptr;               /**< The runnable's task  */
   bool done_ = false;                       /**< Whether task is complete */
   bool suspended_ = false;                  /**< Whether task is suspended */

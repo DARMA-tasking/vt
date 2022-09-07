@@ -60,6 +60,8 @@ namespace vt { namespace ctx {
  */
 struct Trace final : Base {
 
+  Trace() = default;
+
   /**
    * \brief Construct a new trace context (basic processing event)
    *

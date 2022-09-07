@@ -96,7 +96,7 @@ struct RunnableMaker {
    * \param[in] cont the continuation
    */
   RunnableMaker&& withContinuation(ActionType cont) {
-    impl_->template addContext<ctx::Continuation>(cont);
+    impl_->addContextCont(cont);
     return std::move(*this);
   }
 
@@ -108,7 +108,7 @@ struct RunnableMaker {
    */
   RunnableMaker&& withTDEpoch(EpochType ep, bool is_term = false) {
     if (not is_term) {
-      impl_->template addContext<ctx::TD>(ep);
+      impl_->addContextTD(ep);
     }
     return std::move(*this);
   }
@@ -120,7 +120,7 @@ struct RunnableMaker {
    */
   RunnableMaker&& withTDEpochFromMsg(bool is_term = false) {
     if (not is_term) {
-      impl_->template addContext<ctx::TD>(msg_);
+      impl_->addContextTD(msg_);
     }
     return std::move(*this);
   }
@@ -144,7 +144,7 @@ struct RunnableMaker {
    */
   template <typename ElmT, typename IdxT = typename ElmT::IndexType>
   RunnableMaker&& withCollection(ElmT* elm) {
-    impl_->template addContext<ctx::Collection<IdxT>>(elm);
+    impl_->addContextCol(elm);
     set_handler_ = true;
 
     if (handler_ != uninitialized_handler) {
@@ -169,7 +169,7 @@ struct RunnableMaker {
   template <typename ElmT, typename MsgU>
   RunnableMaker&& withLBData(ElmT* elm, MsgU* msg) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBData>(elm, msg);
+    impl_->addContextLB(elm, msg);
 #endif
     return std::move(*this);
   }
@@ -193,7 +193,7 @@ struct RunnableMaker {
   template <typename LBDataT, typename T>
   RunnableMaker&& withLBData(LBDataT* lb_data, T elm_id) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBData>(lb_data, elm_id);
+    impl_->addContextLB(lb_data, elm_id);
 #endif
     return std::move(*this);
   }
@@ -206,11 +206,12 @@ struct RunnableMaker {
   template <typename ElmT>
   RunnableMaker&& withLBData(ElmT* elm) {
 #if vt_check_enabled(lblite)
-    impl_->template addContext<ctx::LBData>(elm, msg_.get());
+    impl_->addContextLB(elm, msg_.get());
 #endif
     return std::move(*this);
   }
 
+#if vt_check_enabled(trace_enabled)
   /**
    * \brief Add a trace index (for collection elements)
    *
@@ -224,11 +225,12 @@ struct RunnableMaker {
     trace::TraceEventIDType trace_event,
     uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
   ) {
-    impl_->template addContext<ctx::Trace>(
+    impl_->addContextTrace(
       msg_, trace_event, handler_, from_node_, idx1, idx2, idx3, idx4
     );
     return std::move(*this);
   }
+#endif
 
   /**
    * \brief Add a tag to the handler
@@ -317,13 +319,15 @@ RunnableMaker<U> makeRunnable(
   MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler, NodeType from
 ) {
   auto r = std::make_unique<RunnableNew>(msg, is_threaded);
+#if vt_check_enabled(trace_enabled)
   auto const han_type = HandlerManager::getHandlerRegistryType(handler);
   if (han_type == auto_registry::RegistryTypeEnum::RegVrt or
       han_type == auto_registry::RegistryTypeEnum::RegGeneral or
       han_type == auto_registry::RegistryTypeEnum::RegObjGroup) {
-    r->template addContext<ctx::Trace>(msg, handler, from);
+    r->addContextTrace(msg, handler, from);
   }
-  r->template addContext<ctx::SetContext>(r.get(), from);
+#endif
+  r->addContextSetContext(r.get(), from);
   return RunnableMaker<U>{std::move(r), msg, handler, from};
 }
 
@@ -342,7 +346,7 @@ inline RunnableMaker<BaseMsgType> makeRunnableVoid(
   // These are currently only types of registry entries that can be void
   auto r = std::make_unique<RunnableNew>(is_threaded);
   // @todo: figure out how to trace this?
-  r->template addContext<ctx::SetContext>(r.get(), from);
+  r->addContextSetContext(r.get(), from);
   return RunnableMaker<BaseMsgType>{std::move(r), nullptr, handler, from};
 }
 
