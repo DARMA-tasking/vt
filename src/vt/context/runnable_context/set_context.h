@@ -44,7 +44,6 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H
 
-#include "vt/context/runnable_context/base.h"
 #include "vt/runnable/runnable.fwd.h"
 #include "vt/utils/ptr/observer.h"
 
@@ -56,7 +55,7 @@ namespace vt { namespace ctx {
  * \brief Set the context of the current running task for query by other
  * components or users.
  */
-struct SetContext final : Base {
+struct SetContext {
 
   SetContext() = default;
 
@@ -82,16 +81,16 @@ struct SetContext final : Base {
   /**
    * \brief Preserve the existing task and replace with a new one
    */
-  void begin() final override;
+  void begin();
 
   /**
    * \brief Restore the previous existing task to the context (if there was one)
    */
-  void end() final override;
+  void end();
 
-  void suspend() final override;
+  void suspend();
 
-  void resume() final override;
+  void resume();
 
 private:
   /// The previous runnable that was in the context

@@ -44,7 +44,6 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_H
 
-#include "vt/context/runnable_context/base.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_lb_data.fwd.h"
 
@@ -55,7 +54,7 @@ namespace vt { namespace ctx {
  *
  * \brief Context for collection of LB data when a task runs
  */
-struct LBData final : Base {
+struct LBData {
   using ElementIDStruct = elm::ElementIDStruct;
   using ElementLBData    = elm::ElementLBData;
 
@@ -85,12 +84,12 @@ struct LBData final : Base {
   /**
    * \brief Set the context and timing for a collection task
    */
-  void begin() final override;
+  void begin();
 
   /**
    * \brief Remove the context and store timing for a collection task
    */
-  void end() final override;
+  void end();
 
   /**
    * \brief Record LB data whenever a message is sent and a collection
@@ -99,10 +98,10 @@ struct LBData final : Base {
    * \param[in] dest the destination of the message
    * \param[in] size the size of the message
    */
-  void send(elm::ElementIDStruct dest, MsgSizeType bytes) final override;
+  void send(elm::ElementIDStruct dest, MsgSizeType bytes);
 
-  void suspend() final override;
-  void resume() final override;
+  void suspend();
+  void resume();
 
   /**
    * \brief Get the current element ID struct for the running context
