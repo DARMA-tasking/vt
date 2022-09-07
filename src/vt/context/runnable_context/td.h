@@ -72,11 +72,6 @@ struct TD final : Base {
   explicit TD(EpochType in_ep);
 
   /**
-   * \brief When destroyed, consume the epoch held by the context.
-   */
-  virtual ~TD();
-
-  /**
    * \brief Construct with a message to extract the epoch; produce on that
    * epoch.
    *

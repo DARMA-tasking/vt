@@ -50,15 +50,7 @@ namespace vt { namespace ctx {
 TD::TD(EpochType in_ep)
   : ep_(in_ep == no_epoch ? term::any_epoch_sentinel : in_ep)
 {
-  if (ep_ != no_epoch) {
-    theTerm()->produce(ep_);
-  }
-}
-
-/*virtual*/ TD::~TD() {
-  if (ep_ != no_epoch) {
-    theTerm()->consume(ep_);
-  }
+  theTerm()->produce(ep_);
 }
 
 void TD::begin() {
@@ -84,6 +76,7 @@ void TD::end() {
   }
 
   theTerm()->popEpoch(ep_);
+  theTerm()->consume(ep_);
 }
 
 void TD::suspend() {
