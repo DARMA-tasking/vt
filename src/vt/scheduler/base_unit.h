@@ -58,7 +58,7 @@ namespace vt { namespace sched {
  * to a runnable or contains a general lambda to execute.
  */
 struct BaseUnit {
-  using RunnablePtrType = std::unique_ptr<runnable::RunnableNew>;
+  using RunnablePtrType = runnable::RunnableNew*;
 
   BaseUnit() = default;
 
@@ -69,7 +69,7 @@ struct BaseUnit {
    * \param[in] in_r the runnable moved in
    */
   BaseUnit(bool in_is_term, RunnablePtrType in_r)
-    : r_(std::move(in_r)),
+    : r_(in_r),
       is_term_(in_is_term)
   { }
 
