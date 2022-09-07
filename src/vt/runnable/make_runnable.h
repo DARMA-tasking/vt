@@ -73,9 +73,9 @@ struct RunnableMaker {
    * \param[in] in_from_node the from node for the runnable
    */
   RunnableMaker(
-    std::unique_ptr<RunnableNew> in_impl, MsgSharedPtr<MsgT> const& in_msg,
+    RunnableNew* in_impl, MsgSharedPtr<MsgT> const& in_msg,
     HandlerType in_handler, NodeType in_from_node
-  ) : impl_(std::move(in_impl)),
+  ) : impl_(in_impl),
       msg_(in_msg),
       handler_(in_handler),
       is_void_(in_msg == nullptr),
@@ -262,6 +262,8 @@ struct RunnableMaker {
   void run() {
     setup();
     impl_->run();
+    delete impl_;
+    impl_ = nullptr;
     is_done_ = true;
   }
 
@@ -293,7 +295,7 @@ private:
   }
 
 private:
-  std::unique_ptr<RunnableNew> impl_ = nullptr;
+  RunnableNew* impl_ = nullptr;
   MsgSharedPtr<MsgT> msg_ = nullptr;
   HandlerType handler_ = uninitialized_handler;
   bool set_handler_ = false;
@@ -318,7 +320,7 @@ template <typename U>
 RunnableMaker<U> makeRunnable(
   MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler, NodeType from
 ) {
-  auto r = std::make_unique<RunnableNew>(msg, is_threaded);
+  auto r = new RunnableNew(msg, is_threaded);
 #if vt_check_enabled(trace_enabled)
   auto const han_type = HandlerManager::getHandlerRegistryType(handler);
   if (han_type == auto_registry::RegistryTypeEnum::RegVrt or
@@ -327,8 +329,8 @@ RunnableMaker<U> makeRunnable(
     r->addContextTrace(msg, handler, from);
   }
 #endif
-  r->addContextSetContext(r.get(), from);
-  return RunnableMaker<U>{std::move(r), msg, handler, from};
+  r->addContextSetContext(r, from);
+  return RunnableMaker<U>{r, msg, handler, from};
 }
 
 /**
@@ -344,10 +346,10 @@ inline RunnableMaker<BaseMsgType> makeRunnableVoid(
   bool is_threaded, HandlerType handler, NodeType from
 ) {
   // These are currently only types of registry entries that can be void
-  auto r = std::make_unique<RunnableNew>(is_threaded);
+  auto r = new RunnableNew(is_threaded);
   // @todo: figure out how to trace this?
-  r->addContextSetContext(r.get(), from);
-  return RunnableMaker<BaseMsgType>{std::move(r), nullptr, handler, from};
+  r->addContextSetContext(r, from);
+  return RunnableMaker<BaseMsgType>{r, nullptr, handler, from};
 }
 
 }} /* end namespace vt::runnable */

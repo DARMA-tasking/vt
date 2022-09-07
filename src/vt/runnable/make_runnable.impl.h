@@ -53,9 +53,9 @@ template <typename MsgT>
 void RunnableMaker<MsgT>::enqueue() {
   setup();
   if (msg_ != nullptr) {
-    theSched()->enqueue(msg_, std::move(impl_));
+    theSched()->enqueue(msg_, impl_);
   } else {
-    theSched()->enqueue(std::move(impl_));
+    theSched()->enqueue(impl_);
   }
   is_done_ = true;
 }
