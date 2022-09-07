@@ -44,8 +44,6 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_CONTINUATION_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_CONTINUATION_H
 
-#include "vt/context/runnable_context/base.h"
-
 namespace vt { namespace ctx {
 
 /**
@@ -53,7 +51,7 @@ namespace vt { namespace ctx {
  *
  * \brief A continuation that runs after a task is complete.
  */
-struct Continuation final : Base {
+struct Continuation {
 
   Continuation() = default;
 
@@ -69,7 +67,7 @@ struct Continuation final : Base {
   /**
    * \brief After the task runs, invoke the continuation if non-null
    */
-  void end() final override {
+  void end() {
     if (cont_) {
       cont_();
     }

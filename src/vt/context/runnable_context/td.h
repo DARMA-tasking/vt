@@ -44,7 +44,6 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H
 
-#include "vt/context/runnable_context/base.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
 #include "vt/epoch/epoch_type.h"
@@ -60,7 +59,7 @@ namespace vt { namespace ctx {
  * the epoch stack  associated with running tasks. Produces and consumes in the
  * constructor and destructor to ensure termination is not detected early.
  */
-struct TD final : Base {
+struct TD {
 
   TD() = default;
 
@@ -83,26 +82,26 @@ struct TD final : Base {
   /**
    * \brief During begin \c TD will capture the epoch stack size and push \c ep_
    */
-  void begin() final override;
+  void begin();
 
   /**
    * \brief During end \c TD will pop all epochs off of the stack down to the
    * size in captured in \c begin()
    */
-  void end() final override;
+  void end();
 
   /**
    * \brief When suspended, \c TD will preserve any epochs pushed on the stack
    * after begin and restore the stack back to the state before begin was
    * invoked
    */
-  void suspend() final override;
+  void suspend();
 
   /**
    * \brief When resumed, \c TD will restore the stack back from when it was
    * suspended
    */
-  void resume() final override;
+  void resume();
 
 private:
   EpochType ep_ = no_epoch;                    /**< The epoch for the task */

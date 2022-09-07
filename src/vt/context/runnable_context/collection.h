@@ -44,8 +44,6 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H
 
-#include "vt/context/runnable_context/base.h"
-
 #include <functional>
 
 namespace vt { namespace vrt { namespace collection {
@@ -63,7 +61,7 @@ namespace vt { namespace ctx {
  * \brief Context for a collection element that is running. Includes the index
  * and proxy for the collection.
  */
-struct Collection final : Base {
+struct Collection {
 
   Collection() = default;
 
@@ -78,15 +76,15 @@ struct Collection final : Base {
   /**
    * \brief Set the collection context
    */
-  void begin() final override;
+  void begin();
 
   /**
    * \brief Remove the collection context
    */
-  void end() final override;
+  void end();
 
-  void suspend() final override;
-  void resume() final override;
+  void suspend();
+  void resume();
 
 private:
   std::function<void()> set_;   /**< Set context function */

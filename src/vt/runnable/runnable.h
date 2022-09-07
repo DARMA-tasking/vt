@@ -45,7 +45,6 @@
 #define INCLUDED_VT_RUNNABLE_RUNNABLE_H
 
 #include "vt/messaging/message/smart_ptr.h"
-#include "vt/context/runnable_context/base.h"
 #include "vt/context/runnable_context/td.h"
 #include "vt/context/runnable_context/trace.h"
 #include "vt/context/runnable_context/set_context.h"
