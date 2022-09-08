@@ -298,21 +298,21 @@ public:
     // of t
     if (i == j)
     {
-      if (r->data[i] < t->data[i])
-      {
-        const auto p = split(t->left, r);
-        t->left = p.second;
-        const int splitSize = (p.first == nullptr) ? 0 : p.first->size;
-        t->size -= splitSize;
-        return std::make_pair(p.first, t);
-      }
-      else
+      if (t->data[i] < r->data[i])
       {
         const auto p = split(t->right, r);
         t->right = p.first;
         const int splitSize = (p.second == nullptr) ? 0 : p.second->size;
         t->size -= splitSize;
         return std::make_pair(t, p.second);
+      }
+      else
+      {
+        const auto p = split(t->left, r);
+        t->left = p.second;
+        const int splitSize = (p.first == nullptr) ? 0 : p.first->size;
+        t->size -= splitSize;
+        return std::make_pair(p.first, t);
       }
     }
     // t and r discriminate on different dimensions, so recursively split both subtrees of
@@ -321,17 +321,7 @@ public:
     {
       const auto L = split(t->left, r);
       const auto R = split(t->right, r);
-      if (r->data[i] < t->data[i])
-      {
-        t->left = L.second;
-        t->right = R.second;
-        const int splitSize = ((L.first == nullptr) ? 0 : L.first->size) +
-                              ((R.first == nullptr) ? 0 : R.first->size);
-        t->size -= splitSize;
-
-        return std::make_pair(join(L.first, R.first, j), t);
-      }
-      else
+      if (t->data[i] < r->data[i])
       {
         t->left = L.first;
         t->right = R.first;
@@ -340,6 +330,16 @@ public:
         t->size -= splitSize;
 
         return std::make_pair(t, join(L.second, R.second, j));
+      }
+      else
+      {
+        t->left = L.second;
+        t->right = R.second;
+        const int splitSize = ((L.first == nullptr) ? 0 : L.first->size) +
+                              ((R.first == nullptr) ? 0 : R.first->size);
+        t->size -= splitSize;
+
+        return std::make_pair(join(L.first, R.first, j), t);
       }
     }
   }
