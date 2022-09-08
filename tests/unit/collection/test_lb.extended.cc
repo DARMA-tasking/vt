@@ -229,12 +229,12 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
 }
 
 TEST_P(TestLoadBalancerCharm, test_load_balancer_charm_2) {
-  runTest(GetParam());
+  runTest(GetParam(), "test_load_balancer_charm");
 }
 
 TEST_P(TestLoadBalancerCharm, test_load_balancer_charm_keep_last_elm) {
   vt::theConfig()->vt_lb_keep_last_elm = true;
-  runTest(GetParam());
+  runTest(GetParam(), "test_load_balancer_charm_keep_last_elm");
 }
 
 struct MyCol2 : vt::Collection<MyCol2,vt::Index1D> {};
