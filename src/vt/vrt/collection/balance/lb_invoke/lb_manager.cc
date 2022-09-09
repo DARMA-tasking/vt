@@ -629,27 +629,15 @@ void LBManager::computeStatistics(
   using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
 
   total_load_from_model = 0.;
-  TimeType total_work_from_model = 0.;
   std::vector<balance::LoadData> obj_load_model;
-  std::vector<balance::LoadData> obj_work_model;
   for (auto elm : *model) {
-    auto load = model->getModeledLoad(
-      elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-    );
-    obj_load_model.emplace_back(
-      LoadData{lb::Statistic::Object_load_modeled, load}
-    );
-    total_load_from_model += load;
-
-    // FIXME: this is only TemperedWMin specific and requires composed
-    // WeightedCommunicationVolume model
     auto work = model->getModeledLoad(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
-    obj_work_model.emplace_back(
-      LoadData{lb::Statistic::Object_work_modeled, work}
+    obj_load_model.emplace_back(
+      LoadData{lb::Statistic::Object_load_modeled, work}
     );
-    total_work_from_model += work;
+    total_load_from_model += work;
   }
 
   TimeType total_load_raw = 0.;
@@ -677,14 +665,8 @@ void LBManager::computeStatistics(
   lstats.emplace_back(
     LoadData{lb::Statistic::Rank_load_modeled, total_load_from_model}
   );
-  lstats.emplace_back(
-    LoadData{lb::Statistic::Rank_work_modeled, total_work_from_model}
-  );
   lstats.emplace_back(reduceVec(
     lb::Statistic::Object_load_modeled, std::move(obj_load_model)
-  ));
-  lstats.emplace_back(reduceVec(
-    lb::Statistic::Object_work_modeled, std::move(obj_work_model)
   ));
 
   if (model->hasRawLoad()) {
