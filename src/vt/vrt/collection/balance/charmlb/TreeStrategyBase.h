@@ -14,6 +14,9 @@
 #include <random>
 #include <unordered_map>
 
+#include <sstream>
+#include <string>
+
 using LoadFloatType = double;
 
 namespace TreeStrategy
@@ -439,6 +442,21 @@ class Dummy : public Strategy<O, P, S>
   }  // do nothing
 };
 
+template <typename It>
+std::string join(It begin, It end, const std::string& separator = ", ") {
+  std::ostringstream output;
+
+  if (begin != end) {
+    output << *begin++;
+  }
+
+  while (begin != end) {
+    output << separator;
+    output << *begin++;
+  }
+
+  return output.str();
+}
 }  // namespace TreeStrategy
 
 #endif /* TREESTRATEGYBASE_H */
