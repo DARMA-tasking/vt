@@ -197,8 +197,6 @@ TEST_F(TestAsyncOp, test_async_op_hip) {
     p[this_node].send<MyMsg, &hipGroup::hipHandler>();
   });
 
-  hipDeviceSynchronize();
-
   p[this_node].get()->check();
 }
 #endif // __HIPCC__
