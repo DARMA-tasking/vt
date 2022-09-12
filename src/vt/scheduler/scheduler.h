@@ -114,7 +114,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
-  using RunnablePtrType      = std::unique_ptr<runnable::RunnableNew>;
+  using RunnablePtrType      = runnable::RunnableNew*;
 
   struct SchedulerLoopGuard {
     SchedulerLoopGuard(Scheduler* scheduler);

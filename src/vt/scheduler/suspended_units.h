@@ -62,7 +62,7 @@ namespace detail {
  * until is ready to resume
  */
 struct SuspendedRunnable {
-  using RunnablePtrType = std::unique_ptr<runnable::RunnableNew>;
+  using RunnablePtrType = runnable::RunnableNew*;
 
   /**
    * \brief Construct a new suspended runnable
@@ -90,7 +90,7 @@ struct SuspendedRunnable {
  * calls \c resumeRunnable on it with the appropriate thread ID.
  */
 struct SuspendedUnits {
-  using RunnablePtrType = std::unique_ptr<runnable::RunnableNew>;
+  using RunnablePtrType = runnable::RunnableNew*;
 
   /**
    * \brief Add a suspended runnable that is running in a thread
