@@ -47,7 +47,6 @@
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/registry/auto/auto_registry_general.h"
-#include "vt/registry/registry.h"
 #include "vt/registry/auto/index/auto_registry_index.h"
 #include "vt/registry/auto/index/auto_registry_index_reg.h"
 
