@@ -395,7 +395,6 @@ public:
 
 public:
   ComponentPtrType<arguments::ArgConfig> theArgConfig = nullptr;
-  ComponentPtrType<registry::Registry> theRegistry = nullptr;
   ComponentPtrType<messaging::ActiveMessenger> theMsg = nullptr;
   ComponentPtrType<ctx::Context> theContext = nullptr;
   ComponentPtrType<event::AsyncEvent> theEvent = nullptr;

@@ -75,7 +75,7 @@ void RunnableNew::setupHandler(HandlerType handler, bool is_void, TagType tag) {
         }
 
         return;
-      } else if (is_auto) {
+      } else {
         bool const is_base_msg_derived =
           HandlerManagerType::isHandlerBaseMsgDerived(handler);
         if (is_base_msg_derived) {
@@ -86,10 +86,6 @@ void RunnableNew::setupHandler(HandlerType handler, bool is_void, TagType tag) {
 
         auto const& func = auto_registry::getScatterAutoHandler(handler);
         task_ = [=, &func] { func->dispatch(msg_.get(), nullptr); };
-        return;
-      } else {
-        auto typed_func = theRegistry()->getHandler(handler, tag);
-        task_ = [=] { typed_func(msg_.get()); };
         return;
       }
     }

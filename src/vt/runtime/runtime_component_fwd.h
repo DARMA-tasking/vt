@@ -52,9 +52,6 @@ namespace vt {
 namespace arguments {
 struct ArgConfig;
 }
-namespace registry {
-struct Registry;
-}
 namespace messaging {
 struct ActiveMessenger;
 }
