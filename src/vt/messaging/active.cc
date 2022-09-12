@@ -950,10 +950,8 @@ void ActiveMessenger::prepareActiveMsgToRun(
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
       normal, active,
-      "prepareActiveMsgToRun: msg={}, handler={:x}"
-      "is_obj_group={}, has_handler={}, insert={}\n",
-      print_ptr(msg), handler, is_obj,
-      has_handler, insert
+      "prepareActiveMsgToRun: msg={}, handler={:x}, insert={}\n",
+      print_ptr(msg), handler, insert
     );
   }
 
