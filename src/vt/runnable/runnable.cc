@@ -53,7 +53,7 @@
 
 namespace vt { namespace runnable {
 
-void RunnableNew::setupHandler(HandlerType handler, bool is_void, TagType tag) {
+void RunnableNew::setupHandler(HandlerType handler, bool is_void) {
   using HandlerManagerType = HandlerManager;
   bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
 

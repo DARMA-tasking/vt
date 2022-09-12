@@ -936,8 +936,6 @@ void ActiveMessenger::prepareActiveMsgToRun(
   auto const handler = envelopeGetHandler(msg->env);
   auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const is_tag = envelopeIsTagType(msg->env);
-  auto const tag = is_tag ? envelopeGetTag(msg->env) : no_tag;
   auto const from_node = is_bcast ? dest : in_from_node;
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
@@ -952,16 +950,15 @@ void ActiveMessenger::prepareActiveMsgToRun(
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
       normal, active,
-      "prepareActiveMsgToRun: msg={}, handler={:x}, tag={}, is_auto={}, "
+      "prepareActiveMsgToRun: msg={}, handler={:x}"
       "is_obj_group={}, has_handler={}, insert={}\n",
-      print_ptr(msg), handler, tag, is_auto, is_obj,
+      print_ptr(msg), handler, is_obj,
       has_handler, insert
     );
   }
 
   runnable::makeRunnable(base, not is_term, handler, from_node)
     .withContinuation(cont)
-    .withTag(tag)
     .withTDEpochFromMsg(is_term)
     .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
     .enqueue();

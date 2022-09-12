@@ -233,16 +233,6 @@ struct RunnableMaker {
 #endif
 
   /**
-   * \brief Add a tag to the handler
-   *
-   * \param[in] tag the tag
-   */
-  RunnableMaker&& withTag(TagType tag) {
-    tag_ = tag;
-    return std::move(*this);
-  }
-
-  /**
    * \brief Run or enqueue the runnable depending on argument
    *
    * \param[in] should_run whether it should be run (if false, it will be
@@ -289,7 +279,7 @@ private:
    */
   void setup() {
     if (not set_handler_) {
-      impl_->setupHandler(handler_, is_void_, tag_);
+      impl_->setupHandler(handler_, is_void_);
       set_handler_ = true;
     }
   }
@@ -299,7 +289,6 @@ private:
   MsgSharedPtr<MsgT> msg_ = nullptr;
   HandlerType handler_ = uninitialized_handler;
   bool set_handler_ = false;
-  TagType tag_ = no_tag;
   bool is_void_ = false;
   NodeType from_node_ = uninitialized_destination;
   bool is_done_ = false;

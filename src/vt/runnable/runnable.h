@@ -203,11 +203,8 @@ public:
    *
    * \param[in] handler the handler ID bits
    * \param[in] is_void whether it's a void handler w/o an associated message
-   * \param[in] tag an optional tag
    */
-  void setupHandler(
-    HandlerType handler, bool is_void = false, TagType tag = no_tag
-  );
+  void setupHandler(HandlerType handler, bool is_void = false);
 
   /**
    * \brief Run the task!
