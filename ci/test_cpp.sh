@@ -9,8 +9,6 @@ export VT=${source_dir}
 export VT_BUILD=${build_dir}/vt
 pushd "$VT_BUILD"
 
-echo "Running test_cpp.sh with TEST_LB_SCHEMA=${TEST_LB_SCHEMA}..."
-
 # Don't run performance tests here (use label 'unit_test' or 'example')
 ctest --output-on-failure -L 'unit_test|example' | tee cmake-output.log
 
@@ -28,7 +26,7 @@ fi
 if test "${TEST_LB_SCHEMA:-0}" -eq 1
 then
     echo "Validating schema of json files..."
-    "${VT}/scripts/check_lb_data_files.sh"
+    "${VT}/scripts/check_lb_data_files.sh" "${VT_BUILD}" "${VT}"
 fi
 
 popd
