@@ -52,7 +52,6 @@
 #include "vt/pool/pool.h"
 #include "vt/rdma/rdma_headers.h"
 #include "vt/parameterization/parameterization.h"
-#include "vt/sequence/sequencer_headers.h"
 #include "vt/pipe/pipe_manager.h"
 #include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
@@ -812,21 +811,6 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_->registerComponent<seq::Sequencer>(
-    &theSeq, Deps<
-      ctx::Context,              // Everything depends on theContext
-      messaging::ActiveMessenger // Depends on active messenger for sequencing
-    >{}
-  );
-
-  p_->registerComponent<seq::SequencerVirtual>(
-    &theVirtualSeq, Deps<
-      ctx::Context,               // Everything depends on theContext
-      messaging::ActiveMessenger, // Depends on active messenger for sequencing
-      vrt::VirtualContextManager  // Depends on virtual manager
-    >{}
-  );
-
   p_->registerComponent<location::LocationManager>(
     &theLocMan, Deps<
       ctx::Context,               // Everything depends on theContext
@@ -921,8 +905,6 @@ void Runtime::initializeComponents() {
   p_->add<pipe::PipeManager>();
   p_->add<rdma::RDMAManager>();
   p_->add<param::Param>();
-  p_->add<seq::Sequencer>();
-  p_->add<seq::SequencerVirtual>();
   p_->add<location::LocationManager>();
   p_->add<vrt::VirtualContextManager>();
   p_->add<vrt::collection::CollectionManager>();
@@ -1137,14 +1119,6 @@ void Runtime::printMemoryFootprint() const {
     } else if (name == "Scheduler") {
       printComponentFootprint(
         static_cast<sched::Scheduler*>(base)
-      );
-    } else if (name == "Sequencer") {
-      printComponentFootprint(
-        static_cast<seq::Sequencer*>(base)
-      );
-    } else if (name == "VirtualSequencer") {
-      printComponentFootprint(
-        static_cast<seq::SequencerVirtual*>(base)
       );
     } else if (name == "TerminationDetector") {
       printComponentFootprint(

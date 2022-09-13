@@ -46,7 +46,6 @@
 
 #include "vt/config.h"
 #include "vt/termination/term_common.h"
-#include "vt/sequence/sequencer_fwd.h"
 
 namespace vt {
 

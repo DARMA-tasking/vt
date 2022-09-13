@@ -151,7 +151,6 @@ set(
 # List of unit test files that should be excluded
 set(
   EXCLUDED_UNIT_TEST_FILES
-  ${PROJECT_TEST_UNIT_DIR}/sequencer/test_sequencer_extensive.extended.cc
 )
 
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})

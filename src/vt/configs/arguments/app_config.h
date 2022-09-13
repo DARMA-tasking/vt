@@ -208,8 +208,6 @@ struct AppConfig {
   bool vt_debug_temperedlb   = false;
   bool vt_debug_temperedwmin = false;
   bool vt_debug_scatter      = false;
-  bool vt_debug_sequence     = false;
-  bool vt_debug_sequence_vrt = false;
   bool vt_debug_serial_msg   = false;
   bool vt_debug_trace        = false;
   bool vt_debug_location     = false;
@@ -370,8 +368,6 @@ struct AppConfig {
       | vt_debug_temperedlb
       | vt_debug_temperedwmin
       | vt_debug_scatter
-      | vt_debug_sequence
-      | vt_debug_sequence_vrt
       | vt_debug_serial_msg
       | vt_debug_trace
       | vt_debug_location

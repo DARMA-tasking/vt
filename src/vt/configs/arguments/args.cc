@@ -362,8 +362,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto qbp = "Enable debug_temperedlb   = \"" debug_pp(temperedlb)   "\"";
   auto qcp = "Enable debug_temperedwmin = \"" debug_pp(temperedwmin) "\"";
   auto rap = "Enable debug_scatter      = \"" debug_pp(scatter)      "\"";
-  auto sap = "Enable debug_sequence     = \"" debug_pp(sequence)     "\"";
-  auto tap = "Enable debug_sequence_vrt = \"" debug_pp(sequence_vrt) "\"";
   auto uap = "Enable debug_serial_msg   = \"" debug_pp(serial_msg)   "\"";
   auto vap = "Enable debug_trace        = \"" debug_pp(trace)        "\"";
   auto wap = "Enable debug_location     = \"" debug_pp(location)     "\"";
@@ -401,8 +399,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto qb = app.add_flag("--vt_debug_temperedlb",   appConfig.vt_debug_temperedlb,   qbp);
   auto qc = app.add_flag("--vt_debug_temperedwmin", appConfig.vt_debug_temperedwmin, qcp);
   auto ra = app.add_flag("--vt_debug_scatter",      appConfig.vt_debug_scatter,      rap);
-  auto sa = app.add_flag("--vt_debug_sequence",     appConfig.vt_debug_sequence,     sap);
-  auto ta = app.add_flag("--vt_debug_sequence_vrt", appConfig.vt_debug_sequence_vrt, tap);
   auto ua = app.add_flag("--vt_debug_serial_msg",   appConfig.vt_debug_serial_msg,   uap);
   auto va = app.add_flag("--vt_debug_trace",        appConfig.vt_debug_trace,        vap);
   auto wa = app.add_flag("--vt_debug_location",     appConfig.vt_debug_location,     wap);
@@ -440,8 +436,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   qb->group(debugGroup);
   qc->group(debugGroup);
   ra->group(debugGroup);
-  sa->group(debugGroup);
-  ta->group(debugGroup);
   ua->group(debugGroup);
   va->group(debugGroup);
   xa->group(debugGroup);

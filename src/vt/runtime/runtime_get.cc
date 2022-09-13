@@ -57,7 +57,6 @@
 #include "vt/pool/pool.h"
 #include "vt/rdma/rdma.h"
 #include "vt/parameterization/parameterization.h"
-#include "vt/sequence/sequencer_headers.h"
 #include "vt/trace/trace.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
@@ -122,8 +121,6 @@ param::Param*               theParam()              { return CUR_RT->theParam;  
 rdma::RDMAManager*          theRDMA()               { return CUR_RT->theRDMA;           }
 registry::Registry*         theRegistry()           { return CUR_RT->theRegistry;       }
 sched::Scheduler*           theSched()              { return CUR_RT->theSched;          }
-seq::Sequencer*             theSeq()                { return CUR_RT->theSeq;            }
-seq::SequencerVirtual*      theVirtualSeq()         { return CUR_RT->theVirtualSeq;     }
 term::TerminationDetector*  theTerm()               { return CUR_RT->theTerm;           }
 location::LocationManager*  theLocMan()             { return CUR_RT->theLocMan;         }
 CollectionManagerType*      theCollection()         { return CUR_RT->theCollection;     }

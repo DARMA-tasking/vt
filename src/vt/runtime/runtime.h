@@ -402,8 +402,6 @@ public:
   ComponentPtrType<pool::Pool> thePool = nullptr;
   ComponentPtrType<rdma::RDMAManager> theRDMA = nullptr;
   ComponentPtrType<param::Param> theParam = nullptr;
-  ComponentPtrType<seq::Sequencer> theSeq = nullptr;
-  ComponentPtrType<seq::SequencerVirtual> theVirtualSeq = nullptr;
   ComponentPtrType<sched::Scheduler> theSched = nullptr;
   ComponentPtrType<location::LocationManager> theLocMan = nullptr;
   ComponentPtrType<vrt::VirtualContextManager> theVirtualManager = nullptr;
