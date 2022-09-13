@@ -3,12 +3,13 @@
 set -exo pipefail
 
 path_to_vt_build_dir=${1}
+path_to_vt_src_dir=${2}
 cd "$path_to_vt_build_dir" || exit 1
 
 function run_schema_validator() {
     file=$1
     echo "Running schema validator on: $file"
-    if python3 JSON_data_files_validator.py --file_path="$file"
+    if python3 "${path_to_vt_src_dir}/scripts/JSON_data_files_validator.py" --file_path="$file"
     then
         echo "Valid file"
     else
