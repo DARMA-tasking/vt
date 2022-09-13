@@ -64,6 +64,10 @@
 
 namespace vt { namespace runtime {
 
+namespace component {
+struct ComponentPack;
+} /* end namespace component */
+
 /**
  * \struct Runtime
  *
