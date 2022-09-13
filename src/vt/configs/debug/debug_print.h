@@ -250,8 +250,6 @@ vt_declare_debug_scoped_modifiers(handler);
 vt_declare_debug_scoped_modifiers(hierlb);
 vt_declare_debug_scoped_modifiers(temperedlb);
 vt_declare_debug_scoped_modifiers(scatter);
-vt_declare_debug_scoped_modifiers(sequence);
-vt_declare_debug_scoped_modifiers(sequence_vrt);
 vt_declare_debug_scoped_modifiers(serial_msg);
 vt_declare_debug_scoped_modifiers(trace);
 vt_declare_debug_scoped_modifiers(location);

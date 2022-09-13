@@ -910,8 +910,6 @@ void Runtime::printStartupBanner() {
   vt_runtime_debug_warn_compile(temperedlb)
   vt_runtime_debug_warn_compile(temperedwmin)
   vt_runtime_debug_warn_compile(scatter)
-  vt_runtime_debug_warn_compile(sequence)
-  vt_runtime_debug_warn_compile(sequence_vrt)
   vt_runtime_debug_warn_compile(serial_msg)
   vt_runtime_debug_warn_compile(trace)
   vt_runtime_debug_warn_compile(location)
