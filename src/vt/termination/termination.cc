@@ -63,8 +63,9 @@ namespace vt { namespace term {
 
 TerminationDetector::TerminationDetector()
   : collective::tree::Tree(collective::tree::tree_cons_tag_t),
-  any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
-  hang_(no_epoch, true, false, getNumChildren())
+    any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
+    hang_(no_epoch, true, false, getNumChildren()),
+    this_node_(theContext()->getNode())
 { }
 
 /*static*/ void TerminationDetector::makeRootedHandler(TermMsg* msg) {
@@ -112,7 +113,7 @@ void TerminationDetector::setLocalTerminated(
   any_epoch_state_.notifyLocalTerminated(local_terminated);
 
   if (local_terminated && !no_propagate) {
-    theTerm()->maybePropagate();
+    maybePropagate();
   }
 }
 
