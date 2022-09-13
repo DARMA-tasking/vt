@@ -48,6 +48,7 @@
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_component_fwd.h"
 #include "vt/worker/worker_headers.h"
+#include "vt/timing/timing_type.h"
 
 // Optional components
 #if vt_check_enabled(trace_enabled)
