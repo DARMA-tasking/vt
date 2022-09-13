@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_component_fwd.h"
+#include "vt/runtime/component/component_pack.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/timing/timing_type.h"
 
@@ -63,10 +64,6 @@
 #include <mpi.h>
 
 namespace vt { namespace runtime {
-
-namespace component {
-struct ComponentPack;
-} /* end namespace component */
 
 /**
  * \struct Runtime
