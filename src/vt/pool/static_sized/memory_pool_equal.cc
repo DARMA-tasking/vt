@@ -51,16 +51,15 @@
 
 namespace vt { namespace pool {
 
-template <int64_t num_bytes_t>
-MemoryPoolEqual<num_bytes_t>::MemoryPoolEqual(SlotType const in_pool_size, bool in_use_header)
-  : pool_size_(in_pool_size),
-    use_header_(in_use_header)
+template <int64_t num_bytes_t, bool use_header>
+MemoryPoolEqual<num_bytes_t, use_header>::MemoryPoolEqual(SlotType const in_pool_size)
+  : pool_size_(in_pool_size)
 {
   resizePool();
 }
 
-template <int64_t num_bytes_t>
-/*virtual*/ MemoryPoolEqual<num_bytes_t>::~MemoryPoolEqual() {
+template <int64_t num_bytes_t, bool use_header>
+/*virtual*/ MemoryPoolEqual<num_bytes_t, use_header>::~MemoryPoolEqual() {
   vt_debug_print(
     normal, pool,
     "cur_slot_={}\n", cur_slot_
@@ -78,8 +77,8 @@ template <int64_t num_bytes_t>
   }
 }
 
-template <int64_t num_bytes_t>
-void* MemoryPoolEqual<num_bytes_t>::alloc(
+template <int64_t num_bytes_t, bool use_header>
+void* MemoryPoolEqual<num_bytes_t, use_header>::alloc(
   size_t const& sz, size_t const& oversize
 ) {
   if (static_cast<size_t>(cur_slot_ + 1) >= holder_.size()) {
@@ -94,7 +93,7 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(
   auto const& slot = cur_slot_;
   void* const ptr = holder_[slot];
   void* ptr_ret = ptr;
-  if (use_header_) {
+  if (use_header) {
     ptr_ret = HeaderManagerType::setHeader(
       sz, oversize, static_cast<char*>(ptr)
     );
@@ -111,8 +110,8 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(
   return ptr_ret;
 }
 
-template <int64_t num_bytes_t>
-void MemoryPoolEqual<num_bytes_t>::dealloc(void* const t) {
+template <int64_t num_bytes_t, bool use_header>
+void MemoryPoolEqual<num_bytes_t, use_header>::dealloc(void* const t) {
   vt_debug_print(
     normal, pool,
     "dealloc t={}, cur_slot={}\n", t, cur_slot_
@@ -124,32 +123,32 @@ void MemoryPoolEqual<num_bytes_t>::dealloc(void* const t) {
 
   auto t_char = static_cast<char*>(t);
   void* ptr_actual = t;
-  if (use_header_) {
+  if (use_header) {
     ptr_actual = HeaderManagerType::getHeaderPtr(t_char);
   }
 
   holder_[--cur_slot_] = ptr_actual;
 }
 
-template <int64_t num_bytes_t>
-void MemoryPoolEqual<num_bytes_t>::resizePool() {
+template <int64_t num_bytes_t, bool use_header>
+void MemoryPoolEqual<num_bytes_t, use_header>::resizePool() {
   SlotType const cur_size = holder_.size();
   SlotType const new_size = cur_size == 0 ? pool_size_ : cur_size * 2;
 
   holder_.resize(new_size);
 
   for (auto i = cur_size; i < new_size; i++) {
-    holder_[i] = static_cast<void*>(malloc(use_header_ ? num_full_bytes_ : num_bytes_t));
+    holder_[i] = static_cast<void*>(malloc(use_header ? num_full_bytes_ : num_bytes_t));
   }
 }
 
-template <int64_t num_bytes_t>
-typename MemoryPoolEqual<num_bytes_t>::SlotType
-MemoryPoolEqual<num_bytes_t>::getNumBytes() {
+template <int64_t num_bytes_t, bool use_header>
+typename MemoryPoolEqual<num_bytes_t, use_header>::SlotType
+MemoryPoolEqual<num_bytes_t, use_header>::getNumBytes() {
   return num_bytes_;
 }
 
-template struct MemoryPoolEqual<memory_size_small>;
-template struct MemoryPoolEqual<memory_size_medium>;
+template struct MemoryPoolEqual<memory_size_small, true>;
+template struct MemoryPoolEqual<memory_size_medium, true>;
 
 }} //end namespace vt::pool

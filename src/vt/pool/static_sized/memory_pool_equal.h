@@ -64,7 +64,7 @@ static constexpr size_t const medium_msg_size_buf =
 static constexpr size_t const memory_size_medium =
   sizeof(EpochTagEnvelope) + medium_msg_size_buf;
 
-template <int64_t num_bytes_t>
+template <int64_t num_bytes_t, bool use_header = true>
 struct MemoryPoolEqual {
   using ContainerType = std::vector<void*>;
   using SlotType = int64_t;
@@ -74,7 +74,7 @@ struct MemoryPoolEqual {
   static constexpr SlotType const fst_pool_slot = 0;
   static constexpr SlotType const default_pool_size = 1024;
 
-  MemoryPoolEqual(SlotType const in_pool_size = default_pool_size, bool in_use_header = true);
+  MemoryPoolEqual(SlotType const in_pool_size = default_pool_size);
 
   virtual ~MemoryPoolEqual();
 
@@ -100,7 +100,6 @@ private:
   SlotType cur_slot_ = fst_pool_slot;
 
   ContainerType holder_;
-  bool use_header_ = true;
 };
 
 }} //end namespace vt::pool
