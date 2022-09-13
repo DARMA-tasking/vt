@@ -180,8 +180,6 @@ void printOverwrittens(
   printIfOverwritten(vt_debug_hierlb);
   printIfOverwritten(vt_debug_temperedlb);
   printIfOverwritten(vt_debug_scatter);
-  printIfOverwritten(vt_debug_sequence);
-  printIfOverwritten(vt_debug_sequence_vrt);
   printIfOverwritten(vt_debug_serial_msg);
   printIfOverwritten(vt_debug_trace);
   printIfOverwritten(vt_debug_location);

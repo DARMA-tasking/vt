@@ -67,23 +67,21 @@ enum CatEnum : uint64_t {
   handler      = 1ull<<15,
   hierlb       = 1ull<<16,
   scatter      = 1ull<<17,
-  sequence     = 1ull<<18,
-  sequence_vrt = 1ull<<19,
-  serial_msg   = 1ull<<20,
-  trace        = 1ull<<21,
-  location     = 1ull<<22,
-  lb           = 1ull<<23,
-  vrt          = 1ull<<24,
-  vrt_coll     = 1ull<<25,
-  worker       = 1ull<<26,
-  group        = 1ull<<27,
-  broadcast    = 1ull<<28,
-  objgroup     = 1ull<<29,
-  temperedlb   = 1ull<<30,
-  phase        = 1ull<<31,
-  context      = 1ull<<32,
-  epoch        = 1ull<<33,
-  temperedwmin = 1ull<<34
+  serial_msg   = 1ull<<18,
+  trace        = 1ull<<19,
+  location     = 1ull<<20,
+  lb           = 1ull<<21,
+  vrt          = 1ull<<22,
+  vrt_coll     = 1ull<<23,
+  worker       = 1ull<<24,
+  group        = 1ull<<25,
+  broadcast    = 1ull<<26,
+  objgroup     = 1ull<<27,
+  temperedlb   = 1ull<<28,
+  phase        = 1ull<<29,
+  context      = 1ull<<30,
+  epoch        = 1ull<<31,
+  temperedwmin = 1ull<<32
 };
 
 enum CtxEnum : uint64_t {
@@ -144,8 +142,6 @@ vt_option_category_pretty_print(rdma_channel, "RDMA Channel")
 vt_option_category_pretty_print(rdma_state,   "RDMA State")
 vt_option_category_pretty_print(runtime,      "runtime")
 vt_option_category_pretty_print(scatter,      "scatter")
-vt_option_category_pretty_print(sequence,     "sequencer")
-vt_option_category_pretty_print(sequence_vrt, "sequencer-vrt")
 vt_option_category_pretty_print(serial_msg,   "serialized-msg")
 vt_option_category_pretty_print(term,         "termination")
 vt_option_category_pretty_print(termds,       "dijkstra-scholten-TD")

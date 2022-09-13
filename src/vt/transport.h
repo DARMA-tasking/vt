@@ -62,7 +62,6 @@
 #include "vt/termination/termination.h"
 #include "vt/rdma/rdma_headers.h"
 #include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/sequence/sequencer_headers.h"
 #include "vt/trace/trace_headers.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
