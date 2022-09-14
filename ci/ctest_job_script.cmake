@@ -109,6 +109,14 @@ if ( NOT DEFINED ENV{CMAKE_GENERATOR} )
   set(ENV{CMAKE_GENERATOR} "Ninja")
 endif()
 
+if ( NOT "$ENV{CMAKE_GENERATOR}" STREQUAL "Ninja" )
+  if ( NOT DEFINED ENV{CMAKE_BUILD_PARALLEL_LEVEL} )
+    if ( DEFINED ENV{parallel_level} )
+      set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} "$ENV{parallel_level}")
+    endif()
+  endif()
+endif()
+
 set(CTEST_CMAKE_GENERATOR    $ENV{CMAKE_GENERATOR} )
 set(CTEST_CONFIGURATION_TYPE $ENV{CMAKE_BUILD_TYPE} )
 
