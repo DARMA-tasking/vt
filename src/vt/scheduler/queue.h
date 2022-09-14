@@ -83,7 +83,7 @@ struct Queue {
   }
 
   std::size_t size() const {
-    return buf_.len() + impl_.size();
+    return buf_.size() + impl_.size();
   }
 
   bool empty() const {
