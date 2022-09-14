@@ -9,7 +9,8 @@ except Exception as e:
     raise SystemExit(1)
 
 import argparse
-from collections import Counter, Iterable
+from collections import Counter
+from collections.abc import Iterable
 import json
 
 import brotli
