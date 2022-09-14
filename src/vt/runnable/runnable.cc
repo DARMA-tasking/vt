@@ -133,6 +133,7 @@ void RunnableNew::setupHandlerElement(
 }
 
 void RunnableNew::run() {
+#if vt_check_enabled(fcontext)
   vtAbortIf(
     done_ and not suspended_,
     "Runnable task must either be not done (finished execution) or suspended"
@@ -143,12 +144,17 @@ void RunnableNew::run() {
     "start running task={}, done={}, suspended={}\n",
     print_ptr(this), done_, suspended_
   );
+#endif
 
+#if vt_check_enabled(fcontext)
   if (suspended_) {
     resume();
   } else {
     begin();
   }
+#else
+  begin();
+#endif
 
   vtAssert(task_ != nullptr, "Must have a valid task to run");
 
@@ -174,24 +180,36 @@ void RunnableNew::run() {
   } else
 #endif
   {
+#if vt_check_enabled(fcontext)
     // force use this for when fcontext is disabled to avoid compiler warning
     vt_force_use(is_threaded_, tid_)
+#endif
+
     task_();
+
+#if vt_check_enabled(fcontext)
     done_ = true;
+#endif
   }
 
+#if vt_check_enabled(fcontext)
   if (done_) {
     end();
   } else {
     suspended_ = true;
     suspend();
   }
+#else
+  end();
+#endif
 
+#if vt_check_enabled(fcontext)
   vt_debug_print(
     terse, context,
     "done running task={}, done={}, suspended={}\n",
     print_ptr(this), done_, suspended_
   );
+#endif
 }
 
 void RunnableNew::begin() {
