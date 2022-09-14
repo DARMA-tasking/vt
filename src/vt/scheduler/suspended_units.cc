@@ -60,6 +60,8 @@ void SuspendedUnits::addSuspended(
       detail::SuspendedRunnable{std::move(runnable), p}
     )
   );
+#else
+  vtAssert(false, "Invalid code path");
 #endif
 }
 
@@ -71,6 +73,8 @@ void SuspendedUnits::resumeRunnable(ThreadIDType tid) {
   auto p = iter->second.priority_;
   theSched()->enqueue(p, std::move(r));
   units_.erase(iter);
+#else
+  vtAssert(false, "Invalid code path");
 #endif
 }
 
