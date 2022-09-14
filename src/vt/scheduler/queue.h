@@ -74,6 +74,7 @@ struct Queue {
   }
 
   T pop() {
+    vtAssert(not buf_.empty(), "Must have at least one element");
     auto t = buf_.pop();
     if (not impl_.empty()) {
       buf_.push(std::move(impl_.front()));
