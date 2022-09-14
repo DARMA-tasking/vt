@@ -44,6 +44,7 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H
 
+#include "vt/config.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
 #include "vt/epoch/epoch_type.h"
@@ -105,8 +106,10 @@ struct TD {
 
 private:
   EpochType ep_ = no_epoch;                    /**< The epoch for the task */
+#if vt_check_enabled(fcontext)
   std::size_t base_epoch_stack_size_ = 0;      /**< Epoch stack size at start  */
   std::vector<EpochType> suspended_epochs_;    /**< Suspended epoch stack */
+#endif
 };
 
 }} /* end namespace vt::ctx */
