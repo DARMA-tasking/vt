@@ -87,6 +87,14 @@ void runInEpochRooted(std::string const& label, Callable&& fn) {
 
 namespace vt { namespace sched {
 
+template <typename RunT>
+void Scheduler::enqueue(bool is_term, RunT r) {
+  if (is_term) {
+    num_term_msgs_++;
+  }
+  work_queue_.emplace(UnitType(is_term, r));
+}
+
 template <typename MsgT, typename RunT>
 void Scheduler::enqueue(MsgT* msg, RunT r) {
   bool const is_term = envelopeIsTerm(msg->env);
@@ -104,7 +112,8 @@ void Scheduler::enqueue(MsgT* msg, RunT r) {
 }
 
 template <typename MsgT, typename RunT>
-void Scheduler::enqueue(MsgSharedPtr<MsgT> msg, RunT r) {
+void Scheduler::enqueue(MsgSharedPtr<MsgT> const& msg, RunT r) {
+# if vt_check_enabled(priorities)
   //
   // Assume that MsgSharedPtr<MsgT> is already captured in the action.
   //
@@ -112,6 +121,10 @@ void Scheduler::enqueue(MsgSharedPtr<MsgT> msg, RunT r) {
   // could be dispatched directly based on type/state-bits
   //
   enqueue<MsgT>(msg.get(), std::move(r));
+#else
+  bool const is_term = envelopeIsTerm(msg->env);
+  enqueue<RunT>(is_term, r);
+#endif
 }
 
 template <typename RunT>
