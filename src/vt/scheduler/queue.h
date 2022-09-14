@@ -74,18 +74,22 @@ struct Queue {
   }
 
   T pop() {
-    if (buf_.empty()) {
-      auto elm = std::move(impl_.front()); impl_.pop(); return elm;
-    } else {
-      return buf_.pop();
+    auto t = buf_.pop();
+    if (not impl_.empty()) {
+      buf_.push(std::move(impl_.front()));
+      impl_.pop();
     }
+    return t;
   }
 
   std::size_t size() const {
     return buf_.len() + impl_.size();
   }
 
-  bool empty() const { return impl_.empty() and buf_.empty(); }
+  bool empty() const {
+    vtAssert(not buf_.empty() or impl_.empty(), "Buf empty implies queue empty");
+    return buf_.empty();
+  }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
