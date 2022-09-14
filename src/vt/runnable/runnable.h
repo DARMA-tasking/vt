@@ -105,8 +105,10 @@ struct RunnableNew {
    */
   template <typename U>
   RunnableNew(MsgSharedPtr<U> const& in_msg, bool in_is_threaded)
-    : msg_(in_msg.template to<BaseMsgType>()),
-      is_threaded_(in_is_threaded)
+    : msg_(in_msg.template to<BaseMsgType>())
+#if vt_check_enabled(fcontext)
+    , is_threaded_(in_is_threaded)
+#endif
   { }
 
   /**
@@ -115,7 +117,9 @@ struct RunnableNew {
    * \param[in] in_is_threaded whether the handler can be run with a thread
    */
   explicit RunnableNew(bool in_is_threaded)
+#if vt_check_enabled(fcontext)
     : is_threaded_(in_is_threaded)
+#endif
   { }
 
   RunnableNew(RunnableNew&&) = default;
@@ -215,6 +219,7 @@ public:
    */
   void run();
 
+#if vt_check_enabled(fcontext)
   /**
    * \brief Get the thread ID associated with the runnable.
    *
@@ -224,6 +229,7 @@ public:
    * \return the thread ID
    */
   ThreadIDType getThreadID() const { return tid_; }
+#endif
 
 private:
   /**
@@ -279,6 +285,7 @@ public:
    */
   BaseMsgType* getMsg() const { return msg_.get(); }
 
+#if vt_check_enabled(fcontext)
   /**
    * \brief Check if this runnable is complete or not
    *
@@ -297,6 +304,7 @@ public:
    * \return return if it is suspended
    */
   bool isSuspended() const { return suspended_; }
+#endif
 
   /**
    * \brief Set an explicit task for the runnable bypassing the handler
@@ -326,11 +334,13 @@ public:
 private:
   detail::Contexts contexts_;               /**< The contexts  */
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
-  bool is_threaded_ = false;                /**< Whether ULTs are supported */
   ActionType task_ = nullptr;               /**< The runnable's task  */
+#if vt_check_enabled(fcontext)
+  bool is_threaded_ = false;                /**< Whether ULTs are supported */
   bool done_ = false;                       /**< Whether task is complete */
   bool suspended_ = false;                  /**< Whether task is suspended */
   ThreadIDType tid_ = no_thread_id;         /**< The thread ID for the task */
+#endif
 };
 
 struct RunnableNewAlloc {
