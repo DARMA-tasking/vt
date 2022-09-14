@@ -275,7 +275,7 @@ void Scheduler::runSchedulerOnceImpl(bool msg_only) {
      */
     UnitType work = work_queue_.pop();
     runWorkUnit(work);
-
+  } else {
     // Enter idle state immediately after processing if relevant.
     if (not is_idle_minus_term and num_term_msgs_ == work_queue_.size()) {
       is_idle_minus_term = true;
