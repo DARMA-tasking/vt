@@ -64,7 +64,17 @@ static constexpr size_t const medium_msg_size_buf =
 static constexpr size_t const memory_size_medium =
   sizeof(EpochTagEnvelope) + medium_msg_size_buf;
 
-template <int64_t num_bytes_t>
+
+
+
+/**
+ * \struct MemoryPoolEqual
+ *
+ * \brief Memory pool based on size and whether to use the header.
+ *        The header contains additional information about messages
+ *        that may not always be needed.
+ */
+template <int64_t num_bytes_t, bool use_header = true>
 struct MemoryPoolEqual {
   using ContainerType = std::vector<void*>;
   using SlotType = int64_t;
@@ -73,7 +83,11 @@ struct MemoryPoolEqual {
 
   static constexpr SlotType const fst_pool_slot = 0;
   static constexpr SlotType const default_pool_size = 1024;
-
+  /**
+   * \brief Construct a memory pool
+   *
+   * \param[in] in_pool_size the size of the pool in bytes
+   */
   MemoryPoolEqual(SlotType const in_pool_size = default_pool_size);
 
   virtual ~MemoryPoolEqual();
