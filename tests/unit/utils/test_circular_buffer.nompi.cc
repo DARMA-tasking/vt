@@ -57,13 +57,13 @@ TEST_F(TestCircularBuffer, test_circular_buffer_1) {
 
   EXPECT_TRUE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 0);
+  EXPECT_EQ(buf.size(), 0);
 
   buf.push(10);
 
   EXPECT_FALSE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 1);
+  EXPECT_EQ(buf.size(), 1);
 
   buf.push(20);
   buf.push(30);
@@ -71,55 +71,55 @@ TEST_F(TestCircularBuffer, test_circular_buffer_1) {
 
   EXPECT_FALSE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 4);
+  EXPECT_EQ(buf.size(), 4);
 
   EXPECT_EQ(buf.pop(), 10);
 
   EXPECT_FALSE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 3);
+  EXPECT_EQ(buf.size(), 3);
 
   EXPECT_EQ(buf.pop(), 20);
 
   EXPECT_FALSE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 2);
+  EXPECT_EQ(buf.size(), 2);
 
   EXPECT_EQ(buf.pop(), 30);
 
   EXPECT_FALSE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 1);
+  EXPECT_EQ(buf.size(), 1);
 
   buf.push(50);
 
   EXPECT_FALSE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 2);
+  EXPECT_EQ(buf.size(), 2);
 
   EXPECT_EQ(buf.pop(), 40);
 
   EXPECT_FALSE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 1);
+  EXPECT_EQ(buf.size(), 1);
 
   EXPECT_EQ(buf.pop(), 50);
 
   EXPECT_TRUE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 0);
+  EXPECT_EQ(buf.size(), 0);
 
   buf.push(10);
 
   EXPECT_FALSE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 1);
+  EXPECT_EQ(buf.size(), 1);
 
   EXPECT_EQ(buf.pop(), 10);
 
   EXPECT_TRUE(buf.empty());
   EXPECT_FALSE(buf.full());
-  EXPECT_EQ(buf.len(), 0);
+  EXPECT_EQ(buf.size(), 0);
 }
 
 }}} /* end namespace vt::tests::unit */
