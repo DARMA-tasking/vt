@@ -286,7 +286,7 @@ private:
 
 private:
   RunnableNew* impl_ = nullptr;
-  MsgSharedPtr<MsgT> msg_ = nullptr;
+  MsgSharedPtr<MsgT> const& msg_;
   HandlerType handler_ = uninitialized_handler;
   bool set_handler_ = false;
   bool is_void_ = false;
