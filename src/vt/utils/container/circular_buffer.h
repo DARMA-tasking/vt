@@ -48,7 +48,7 @@
 
 namespace vt { namespace util { namespace container {
 
-template <typename T, int size>
+template <typename T, int capacity>
 struct CircularBuffer {
 
   CircularBuffer() = default;
@@ -56,7 +56,7 @@ struct CircularBuffer {
 private:
   int getNextEntry() const {
     int next_entry = head_ + 1;
-    if (next_entry == size) {
+    if (next_entry == capacity) {
       next_entry = 0;
     }
     return next_entry;
@@ -85,7 +85,7 @@ public:
   T pop() {
     T elm = std::move(elms_[tail_]);
     ++tail_;
-    if (tail_ == size) {
+    if (tail_ == capacity) {
       tail_ = 0;
     }
     return elm;
@@ -93,29 +93,29 @@ public:
 
   int numFree() const {
     if (head_ == tail_) {
-      return size - 1;
+      return capacity - 1;
     } else if (head_ < tail_) {
       return tail_ - head_ - 1;
     } else {
-      return size + tail_ - head_ - 1;
+      return capacity + tail_ - head_ - 1;
     }
   }
 
   bool empty() const { return head_ == tail_; }
   bool full() const { return numFree() == 0; }
-  int len() const { return size - 1 - numFree(); }
+  int size() const { return capacity - 1 - numFree(); }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | head_;
     s | tail_;
-    s | elms_; // this is inefficient, but it's use is footprinting
+    s | elms_; // this is inefficient, but its use is footprinting
   }
 
 private:
   int head_ = 0;
   int tail_ = 0;
-  std::array<T, size> elms_;
+  std::array<T, capacity> elms_;
 };
 
 }}} /* end namespace vt::util::container */
