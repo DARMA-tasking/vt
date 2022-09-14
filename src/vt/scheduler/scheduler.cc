@@ -128,9 +128,15 @@ void Scheduler::runWorkUnit(UnitType& work) {
 
   workUnitCount.increment(1);
 
+#if vt_check_enabled(mpi_access_guards)
   ++action_depth_;
+#endif
+
   work();
+
+#if vt_check_enabled(mpi_access_guards)
   --action_depth_;
+#endif
 
 #if vt_check_enabled(mpi_access_guards)
   if (action_depth_ == 0) {

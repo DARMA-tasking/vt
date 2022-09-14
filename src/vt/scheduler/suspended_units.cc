@@ -50,6 +50,7 @@ namespace vt { namespace sched {
 void SuspendedUnits::addSuspended(
   ThreadIDType tid, RunnablePtrType runnable, PriorityType p
 ) {
+#if vt_check_enabled(fcontext)
   vtAssert(runnable->isSuspended(), "Runnable must be suspended to add");
 
   units_.emplace(
@@ -59,15 +60,18 @@ void SuspendedUnits::addSuspended(
       detail::SuspendedRunnable{std::move(runnable), p}
     )
   );
+#endif
 }
 
 void SuspendedUnits::resumeRunnable(ThreadIDType tid) {
+#if vt_check_enabled(fcontext)
   auto iter = units_.find(tid);
   vtAbortIf(iter == units_.end(), "Must have valid thread ID to resume");
   auto r = std::move(iter->second.runnable_);
   auto p = iter->second.priority_;
   theSched()->enqueue(p, std::move(r));
   units_.erase(iter);
+#endif
 }
 
 }} /* end namespace vt::sched */
