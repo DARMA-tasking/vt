@@ -78,7 +78,7 @@ struct TD {
    * \param[in] msg the message to extract the epoch from
    */
   template <typename MsgPtrT>
-  explicit TD(MsgPtrT msg);
+  explicit TD(MsgPtrT const& msg);
 
   /**
    * \brief During begin \c TD will capture the epoch stack size and push \c ep_
