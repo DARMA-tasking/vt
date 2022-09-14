@@ -142,26 +142,6 @@ TerminationDetector::findOrCreateState(EpochType const& epoch, bool is_ready) {
   return epoch_iter->second;
 }
 
-void TerminationDetector::produceConsumeState(
-  TermStateType& state, TermCounterType const num_units, bool produce,
-  NodeType node
-) {
-  auto& counter = produce ? state.l_prod : state.l_cons;
-  counter += num_units;
-
-  vt_debug_print(
-    verbose, term,
-    "produceConsumeState: epoch={:x}, event_count={}, l_prod={}, l_cons={}, "
-    "num_units={}, produce={}, node={}\n",
-    state.getEpoch(), state.getRecvChildCount(), state.l_prod, state.l_cons, num_units,
-    print_bool(produce), node
-  );
-
-  if (state.readySubmitParent()) {
-    propagateEpoch(state);
-  }
-}
-
 TerminationDetector::TermStateDSType*
 TerminationDetector::getDSTerm(EpochType epoch, bool is_root) {
   vt_debug_print(
@@ -186,38 +166,6 @@ TerminationDetector::getDSTerm(EpochType epoch, bool is_root) {
     return &iter->second;
   } else {
     return nullptr;
-  }
-}
-
-void TerminationDetector::produceConsume(
-  EpochType epoch, TermCounterType num_units, bool produce, NodeType node
-) {
-  vt_debug_print(
-    normal, term,
-    "produceConsume: epoch={:x}, rooted={}, ds={}, count={}, produce={}, "
-    "node={}\n",
-    epoch, isRooted(epoch), isDS(epoch), num_units, produce, node
-  );
-
-  // If a node is not passed, use the current node (self-prod/cons)
-  if (node == uninitialized_destination) {
-    node = theContext()->getNode();
-  }
-
-  produceConsumeState(any_epoch_state_, num_units, produce, node);
-
-  if (epoch != any_epoch_sentinel) {
-    if (isDS(epoch)) {
-      auto ds_term = getDSTerm(epoch);
-      if (produce) {
-        ds_term->msgSent(node,num_units);
-      } else {
-        ds_term->msgProcessed(node,num_units);
-      }
-    } else {
-      auto& state = findOrCreateState(epoch, false);
-      produceConsumeState(state, num_units, produce, node);
-    }
   }
 }
 
