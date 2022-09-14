@@ -107,6 +107,7 @@ struct RunnableMaker {
    * \param[in] is_term whether it's a termination message
    */
   RunnableMaker&& withTDEpoch(EpochType ep, bool is_term = false) {
+    is_term_ = is_term;
     if (not is_term) {
       impl_->addContextTD(ep);
     }
@@ -119,6 +120,7 @@ struct RunnableMaker {
    * \param[in] is_term whether it's a termination message
    */
   RunnableMaker&& withTDEpochFromMsg(bool is_term = false) {
+    is_term_ = is_term;
     if (not is_term) {
       impl_->addContextTD(msg_);
     }
@@ -292,6 +294,7 @@ private:
   bool is_void_ = false;
   NodeType from_node_ = uninitialized_destination;
   bool is_done_ = false;
+  bool is_term_ = false;
 };
 
 /**

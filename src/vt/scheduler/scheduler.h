@@ -248,6 +248,15 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   void printMemoryUsage();
 
   /**
+   * \brief Enqueue an action without a message.
+   *
+   * \param[in] is_term whether it is a termination message or not
+   * \param[in] r the runnable
+   */
+  template <typename RunT>
+  void enqueue(bool is_term, RunT r);
+
+  /**
    * \brief Enqueue an action associated with a prioritized message. The action
    * will be enqueued with the priority found on the message.
    *
@@ -265,7 +274,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * \param[in] r the runnable to execute later
    */
   template <typename MsgT, typename RunT>
-  void enqueue(messaging::MsgSharedPtr<MsgT> msg, RunT r);
+  void enqueue(messaging::MsgSharedPtr<MsgT> const& msg, RunT r);
 
   /**
    * \brief Get the work queue size

@@ -53,7 +53,11 @@ template <typename MsgT>
 void RunnableMaker<MsgT>::enqueue() {
   setup();
   if (msg_ != nullptr) {
+#if vt_check_enabled(priorities)
     theSched()->enqueue(msg_, impl_);
+#else
+    theSched()->enqueue(is_term_, impl_);
+#endif
   } else {
     theSched()->enqueue(impl_);
   }
