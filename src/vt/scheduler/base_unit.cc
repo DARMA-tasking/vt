@@ -56,8 +56,6 @@ void BaseUnit::execute() {
         theSched()->suspend(tid, std::move(r_));
       }
     #endif
-    delete r_;
-    r_ = nullptr;
   } else if (work_) {
     work_();
   }
