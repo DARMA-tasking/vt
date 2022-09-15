@@ -164,6 +164,7 @@ x-vtopts: &vtopts
   BUILD_SHARED_LIBS: ${VT_BUILD_SHARED_LIBS:-0}
   VT_INCLUSION_TYPE: ${VT_INCLUSION:-TPL}
   CODECOV_TOKEN: ${CODECOV_TOKEN:-}
+  TEST_LB_SCHEMA: ${TEST_LB_SCHEMA:-0}
 
 services:
   ##############################################################################

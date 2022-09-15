@@ -31,7 +31,11 @@ RUN apt-get update -y -q && \
     valgrind \
     wget \
     zlib1g \
-    zlib1g-dev && \
+    zlib1g-dev \
+    brotli \
+    python3 \
+    python3-brotli \
+    python3-pip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -80,6 +84,8 @@ RUN apt-get update -y -q && \
     lcov && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install schema
 
 FROM base as build
 COPY . /vt
