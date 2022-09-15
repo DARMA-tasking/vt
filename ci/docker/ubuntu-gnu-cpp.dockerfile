@@ -35,8 +35,7 @@ RUN apt-get update -y -q && \
     brotli \
     python3 \
     python3-brotli \
-    python3-pip \
-    ccache && \
+    python3-pip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
