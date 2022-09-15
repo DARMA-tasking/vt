@@ -42,6 +42,7 @@ variables:
   VT_NO_COLOR: [% vt_no_color %]
   VT_BUILD_SHARED_LIBS: [% vt_build_shared_libs %]
   VT_INCLUSION: [% vt_inclusion %]
+  TEST_LB_SCHEMA: [% test_lb_schema %]
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: [% cache_name %]
   build_root: "$(CACHE)/[% build_root %]/"
