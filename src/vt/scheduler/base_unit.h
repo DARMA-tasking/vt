@@ -60,6 +60,8 @@ namespace vt { namespace sched {
 struct BaseUnit {
   using RunnablePtrType = std::unique_ptr<runnable::RunnableNew>;
 
+  BaseUnit() = default;
+
   /**
    * \brief Construct with a runnable
    *
