@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -exo pipefail
+set -xo pipefail
 
 path_to_vt_build_dir=${1}
 path_to_vt_src_dir=${2}
@@ -18,12 +18,12 @@ function run_schema_validator() {
     fi
 }
 
-for i in $(find . -iname "*.json" | grep -v "compile_commands")
+find . -iname "*.json" | grep -v "compile_commands" | while read f
 do
-    run_schema_validator "$i"
+    run_schema_validator "$f"
 done
 
-for i in $(find . -iname "*.json.br")
+find . -iname "*.json.br" | while read f
 do
-    run_schema_validator "$i"
+    run_schema_validator "$f"
 done
