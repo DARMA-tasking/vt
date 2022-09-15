@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   queue.h
+//                        test_circular_buffer.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,69 +41,85 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_SCHEDULER_QUEUE_H
-#define INCLUDED_VT_SCHEDULER_QUEUE_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
-#include "vt/utils/container/circular_buffer.h"
+#include <vt/utils/container/circular_buffer.h>
+#include "test_harness.h"
 
-#include <queue>
+#include <vector>
 
-namespace vt { namespace sched {
+namespace vt { namespace tests { namespace unit {
 
-template <typename T>
-struct Queue {
-  Queue() = default;
-  Queue(Queue const&) = default;
-  Queue(Queue&&) = default;
+using TestCircularBuffer = TestHarness;
 
-  void push(T elm) {
-    if (buf_.full()) {
-      impl_.push(elm);
-    } else {
-      buf_.push(elm);
-    }
-  }
+TEST_F(TestCircularBuffer, test_circular_buffer_1) {
+  util::container::CircularBuffer<int, 64> buf;
 
-  void emplace(T&& elm) {
-    if (buf_.full()) {
-      impl_.emplace(std::move(elm));
-    } else {
-      buf_.push(std::move(elm));
-    }
-  }
+  EXPECT_TRUE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 0);
 
-  T pop() {
-    vtAssert(not buf_.empty(), "Must have at least one element");
-    bool const full_buf = buf_.full();
-    auto t = buf_.pop();
-    if (full_buf and not impl_.empty()) {
-      buf_.push(std::move(impl_.front()));
-      impl_.pop();
-    }
-    return t;
-  }
+  buf.push(10);
 
-  std::size_t size() const {
-    return buf_.size() + impl_.size();
-  }
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 1);
 
-  bool empty() const {
-    vtAssert(not buf_.empty() or impl_.empty(), "Buf empty implies queue empty");
-    return buf_.empty();
-  }
+  buf.push(20);
+  buf.push(30);
+  buf.push(40);
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | impl_;
-    s | buf_;
-  }
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 4);
 
-private:
-  util::container::CircularBuffer<T, 64> buf_;
-  std::queue<T, std::deque<T>> impl_;
-};
+  EXPECT_EQ(buf.pop(), 10);
 
-}} /* end namespace vt::sched */
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 3);
 
-#endif /*INCLUDED_VT_SCHEDULER_QUEUE_H*/
+  EXPECT_EQ(buf.pop(), 20);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 2);
+
+  EXPECT_EQ(buf.pop(), 30);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 1);
+
+  buf.push(50);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 2);
+
+  EXPECT_EQ(buf.pop(), 40);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 1);
+
+  EXPECT_EQ(buf.pop(), 50);
+
+  EXPECT_TRUE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 0);
+
+  buf.push(10);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 1);
+
+  EXPECT_EQ(buf.pop(), 10);
+
+  EXPECT_TRUE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 0);
+}
+
+}}} /* end namespace vt::tests::unit */

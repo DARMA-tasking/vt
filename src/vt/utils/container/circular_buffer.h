@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   queue.h
+//                              circular_buffer.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,69 +41,83 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_SCHEDULER_QUEUE_H
-#define INCLUDED_VT_SCHEDULER_QUEUE_H
+#if !defined INCLUDED_VT_UTILS_CONTAINER_CIRCULAR_BUFFER_H
+#define INCLUDED_VT_UTILS_CONTAINER_CIRCULAR_BUFFER_H
 
 #include "vt/config.h"
-#include "vt/utils/container/circular_buffer.h"
 
-#include <queue>
+namespace vt { namespace util { namespace container {
 
-namespace vt { namespace sched {
+template <typename T, int capacity>
+struct CircularBuffer {
 
-template <typename T>
-struct Queue {
-  Queue() = default;
-  Queue(Queue const&) = default;
-  Queue(Queue&&) = default;
+  CircularBuffer() = default;
 
-  void push(T elm) {
-    if (buf_.full()) {
-      impl_.push(elm);
-    } else {
-      buf_.push(elm);
+private:
+  int getNextEntry() const {
+    int next_entry = head_ + 1;
+    if (next_entry == capacity) {
+      next_entry = 0;
     }
+    return next_entry;
   }
 
-  void emplace(T&& elm) {
-    if (buf_.full()) {
-      impl_.emplace(std::move(elm));
-    } else {
-      buf_.push(std::move(elm));
-    }
+public:
+  template <typename... Args>
+  void emplace(Args&&... args) {
+    int const next_entry = getNextEntry();
+    elms_[head_] = T{std::forward<Args>(args)...};
+    head_ = next_entry;
+  }
+
+  void push(T&& t) {
+    int const next_entry = getNextEntry();
+    elms_[head_] = std::move(t);
+    head_ = next_entry;
+  }
+
+  void push(T const& t) {
+    int const next_entry = getNextEntry();
+    elms_[head_] = t;
+    head_ = next_entry;
   }
 
   T pop() {
-    vtAssert(not buf_.empty(), "Must have at least one element");
-    bool const full_buf = buf_.full();
-    auto t = buf_.pop();
-    if (full_buf and not impl_.empty()) {
-      buf_.push(std::move(impl_.front()));
-      impl_.pop();
+    T elm = std::move(elms_[tail_]);
+    ++tail_;
+    if (tail_ == capacity) {
+      tail_ = 0;
     }
-    return t;
+    return elm;
   }
 
-  std::size_t size() const {
-    return buf_.size() + impl_.size();
+  int numFree() const {
+    if (head_ == tail_) {
+      return capacity - 1;
+    } else if (head_ < tail_) {
+      return tail_ - head_ - 1;
+    } else {
+      return capacity + tail_ - head_ - 1;
+    }
   }
 
-  bool empty() const {
-    vtAssert(not buf_.empty() or impl_.empty(), "Buf empty implies queue empty");
-    return buf_.empty();
-  }
+  bool empty() const { return head_ == tail_; }
+  bool full() const { return numFree() == 0; }
+  int size() const { return capacity - 1 - numFree(); }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | impl_;
-    s | buf_;
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | head_;
+    s | tail_;
+    s | elms_; // this is inefficient, but its use is footprinting
   }
 
 private:
-  util::container::CircularBuffer<T, 64> buf_;
-  std::queue<T, std::deque<T>> impl_;
+  int head_ = 0;
+  int tail_ = 0;
+  std::array<T, capacity> elms_;
 };
 
-}} /* end namespace vt::sched */
+}}} /* end namespace vt::util::container */
 
-#endif /*INCLUDED_VT_SCHEDULER_QUEUE_H*/
+#endif /*INCLUDED_VT_UTILS_CONTAINER_CIRCULAR_BUFFER_H*/
