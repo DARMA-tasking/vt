@@ -50,10 +50,12 @@ namespace vt { namespace sched {
 void BaseUnit::execute() {
   if (r_) {
     r_->run();
-    if (not r_->isDone()) {
-      auto tid = r_->getThreadID();
-      theSched()->suspend(tid, std::move(r_));
-    }
+    #if vt_check_enabled(fcontext)
+      if (not r_->isDone()) {
+        auto tid = r_->getThreadID();
+        theSched()->suspend(tid, std::move(r_));
+      }
+    #endif
   } else if (work_) {
     work_();
   }
