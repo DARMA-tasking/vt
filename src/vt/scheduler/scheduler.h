@@ -137,7 +137,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   void preDiagnostic() override;
 
   /**
-   * \internal \brief Check for termination when running on a since node
+   * \internal \brief Check for termination when running on a single node
    */
   static void checkTermSingleNode();
 
