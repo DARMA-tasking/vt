@@ -151,8 +151,6 @@ void ActiveMessenger::initialize() {
 }
 
 void ActiveMessenger::startup() {
-  pushEpoch(term::any_epoch_sentinel);
-
   auto const this_node = theContext()->getNode();
   bare_handler_dummy_elm_id_for_lb_data_ =
     elm::ElmIDBits::createBareHandler(this_node);

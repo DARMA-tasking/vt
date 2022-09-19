@@ -66,7 +66,9 @@ TerminationDetector::TerminationDetector()
     any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
     hang_(no_epoch, true, false, getNumChildren()),
     this_node_(theContext()->getNode())
-{ }
+{
+  pushEpoch(term::any_epoch_sentinel);
+}
 
 /*static*/ void TerminationDetector::makeRootedHandler(TermMsg* msg) {
   theTerm()->makeRootedHan(msg->new_epoch, false);
