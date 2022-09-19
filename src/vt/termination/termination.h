@@ -648,7 +648,7 @@ public:
    * \brief Disable termination detection on an epoch. Local counting is still
    * enabled, but any non-local progress is halted until it is enabled
    *
-   * \warning Does not work with DS epochs
+   * \warning Does not work with DS epochs. It must be a wave based epoch.
    *
    * \param[in] in_epoch the epoch
    */
@@ -657,7 +657,7 @@ public:
   /**
    * \brief Enable termination detection on an epoch.
    *
-   * \warning Does not work with DS epochs
+   * \warning Does not work with DS epochs. It must be a wave based epoch.
    *
    * \param[in] in_epoch the epoch
    */
