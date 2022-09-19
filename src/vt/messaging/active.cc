@@ -75,12 +75,6 @@ ActiveMessenger::ActiveMessenger()
 # endif
   this_node_(theContext()->getNode())
 {
-  /*
-   * Push the default epoch into the stack so it is always at the bottom of the
-   * stack during execution until the AM's destructor is invoked
-   */
-  pushEpoch(term::any_epoch_sentinel);
-
   // Register counters for AM/DM message sends and number of bytes
   amSentCounterGauge = diagnostic::CounterGauge{
     registerCounter("AM_sent", "active messages sent"),
