@@ -785,7 +785,6 @@ private:
 
 public:
   inline EpochType getEpoch() const;
-  inline EpochType getGlobalEpoch() const;
   inline void pushEpoch(EpochType const& epoch);
   inline EpochType popEpoch(EpochType const& epoch = no_epoch);
 

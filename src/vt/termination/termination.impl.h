@@ -135,14 +135,13 @@ inline void TerminationDetector::produceConsume(
   }
 }
 
-inline EpochType TerminationDetector::getGlobalEpoch() const {
+inline EpochType TerminationDetector::getEpoch() const {
   vtAssertInfo(
     epoch_stack_.size() > 0, "Epoch stack size must be greater than zero",
     epoch_stack_.size()
   );
   return epoch_stack_.size() ? EpochType{epoch_stack_.top()} : term::any_epoch_sentinel;
 }
-
  inline void TerminationDetector::pushEpoch(EpochType const& epoch) {
   /*
    * pushEpoch(epoch) pushes any epoch onto the local stack iff epoch !=
@@ -181,9 +180,6 @@ inline EpochType TerminationDetector::popEpoch(EpochType const& epoch) {
   }
 }
 
-inline EpochType TerminationDetector::getEpoch() const {
-  return getGlobalEpoch();
-}
 
 }} /* end namespace vt::term */
 
