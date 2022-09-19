@@ -644,6 +644,25 @@ public:
    */
   void addDependency(EpochType predecessor, EpochType successoor);
 
+  /**
+   * \brief Disable termination detection on an epoch. Local counting is still
+   * enabled, but any non-local progress is halted until it is enabled
+   *
+   * \warning Does not work with DS epochs
+   *
+   * \param[in] in_epoch the epoch
+   */
+  void disableTD(EpochType in_epoch = any_epoch_sentinel);
+
+  /**
+   * \brief Enable termination detection on an epoch.
+   *
+   * \warning Does not work with DS epochs
+   *
+   * \param[in] in_epoch the epoch
+   */
+  void enableTD(EpochType in_epoch = any_epoch_sentinel);
+
 public:
   // Methods for testing state of TD from unit tests
   EpochContainerType<TermStateType> const& getEpochState() { return epoch_state_; }
