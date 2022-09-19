@@ -77,7 +77,7 @@ struct EpochStack {
   void push(DataType in) { stack_[cur_++] = in; }
   DataType top() const { return stack_[cur_-1]; }
   void pop() { cur_--; }
-  int size() const { return cur_; }
+  unsigned int size() const { return cur_; }
 
   int cur_ = 0;
   std::array<DataType, 64> stack_;

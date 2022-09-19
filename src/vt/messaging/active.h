@@ -325,7 +325,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   using ReadyHanTagType      = std::tuple<HandlerType, TagType>;
   using MaybeReadyType       = std::vector<ReadyHanTagType>;
   using HandlerManagerType   = HandlerManager;
-  using EpochStackType       = std::stack<EpochType>;
   using PendingSendType      = PendingSend;
 
   /**
@@ -1518,17 +1517,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
-   * \brief Get the current global epoch
-   *
-   * \c Returns the top epoch on the stack iff \c epoch_stack.size() > 0, else it
-   * returns \c vt::no_epoch
-   *
-   * \return the current global epoch
-   */
-  inline EpochType getGlobalEpoch() const;
-
-  /**
-   * \internal
    * \brief Push an epoch on the stack
    *
    * Pushes any epoch onto the local stack iff epoch != no_epoch; the epoch
@@ -1562,12 +1550,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the epoch on the top of the stack
    */
   inline EpochType getEpoch() const;
-
-  /**
-   * \internal
-   * \brief Access the epoch stack
-   */
-  inline EpochStackType& getEpochStack() { return epoch_stack_; }
 
   /**
    * \internal
@@ -1644,7 +1626,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       | pending_handler_msgs_
       | pending_recvs_
       | cur_direct_buffer_tag_
-      | epoch_stack_
       | in_progress_active_msg_irecv
       | in_progress_data_irecv
       | in_progress_ops
@@ -1755,7 +1736,6 @@ private:
   ContWaitType pending_handler_msgs_                      = {};
   ContainerPendingType pending_recvs_                     = {};
   TagType cur_direct_buffer_tag_                          = starting_direct_buffer_tag;
-  EpochStackType epoch_stack_;
   RequestHolder<InProgressIRecv> in_progress_active_msg_irecv;
   RequestHolder<InProgressDataIRecv> in_progress_data_irecv;
   RequestHolder<AsyncOpWrapper> in_progress_ops;
