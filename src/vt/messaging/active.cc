@@ -173,7 +173,7 @@ void ActiveMessenger::startup() {
 #endif
 }
 
-/*virtual*/ ActiveMessenger::~ActiveMessenger() {};
+/*virtual*/ ActiveMessenger::~ActiveMessenger() {}
 
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   HandlerType const handler, ByteType serialized_msg_size, bool is_bcast
