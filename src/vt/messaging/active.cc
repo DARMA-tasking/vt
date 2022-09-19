@@ -157,6 +157,8 @@ void ActiveMessenger::initialize() {
 }
 
 void ActiveMessenger::startup() {
+  pushEpoch(term::any_epoch_sentinel);
+
   auto const this_node = theContext()->getNode();
   bare_handler_dummy_elm_id_for_lb_data_ =
     elm::ElmIDBits::createBareHandler(this_node);
@@ -171,20 +173,7 @@ void ActiveMessenger::startup() {
 #endif
 }
 
-/*virtual*/ ActiveMessenger::~ActiveMessenger() {
-  // Pop all extraneous epochs off the stack greater than 1
-  auto stack_size = epoch_stack_.size();
-  while (stack_size > 1) {
-    stack_size = (epoch_stack_.pop(), epoch_stack_.size());
-  }
-  // Pop off the last epoch: term::any_epoch_sentinel
-  auto const ret_epoch = popEpoch(term::any_epoch_sentinel);
-  vtAssertInfo(
-    ret_epoch == term::any_epoch_sentinel, "Last pop must be any epoch",
-    ret_epoch, term::any_epoch_sentinel, epoch_stack_.size()
-  );
-  vtAssertExpr(epoch_stack_.size() == 0);
-}
+/*virtual*/ ActiveMessenger::~ActiveMessenger() {};
 
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   HandlerType const handler, ByteType serialized_msg_size, bool is_bcast
