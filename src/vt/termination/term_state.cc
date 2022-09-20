@@ -121,15 +121,14 @@ TermCounterType TermState::decrementDependency() {
   return --deps_;
 }
 
-bool TermState::readySubmitParent(bool const needs_active) const {
+bool TermState::readySubmitParent() const {
   vtAssert(
     num_children_ != uninitialized_destination, "Children must be valid"
   );
 
-  auto const ret = (epoch_active_ or not needs_active) and
-    recv_child_count_ == num_children_ and local_terminated_ and
-    submitted_wave_ == cur_wave_ - 1 and not term_detected_ and
-    deps_ == 0;
+  auto const ret = epoch_active_ and local_terminated_ and
+    deps_ == 0 and recv_child_count_ == num_children_ and
+    submitted_wave_ == cur_wave_ - 1 and not term_detected_;
 
   vt_debug_print(
     verbose, term,
