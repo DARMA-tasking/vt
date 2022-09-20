@@ -63,6 +63,17 @@ inline ctx::LBData* RunnableNew::get<ctx::LBData>() {
     return nullptr;
 }
 
+#if vt_check_enabled(trace_enabled)
+template <>
+inline ctx::Trace* RunnableNew::get<ctx::Trace>() {
+  if (contexts_.has_trace)
+    return &contexts_.trace;
+  else
+    return nullptr;
+}
+#endif
+
+
 template <typename... Args>
 void RunnableNew::addContextSetContext(Args&&... args) {
   contexts_.setcontext = ctx::SetContext{std::forward<Args>(args)...};
