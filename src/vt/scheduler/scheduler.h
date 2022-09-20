@@ -135,6 +135,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   std::string name() override { return "Scheduler"; }
 
   void preDiagnostic() override;
+  void startup() override;
 
   /**
    * \internal \brief Check for termination when running on a single node
@@ -422,6 +423,8 @@ private:
   std::size_t last_threshold_memory_usage_ = 0;
   std::size_t threshold_memory_usage_ = 0;
   std::size_t last_memory_usage_poll_ = 0;
+
+  bool special_progress_ = false; /**< time-based/k-handler progress enabled */
 
   // Access to triggerEvent.
   template <typename Callable>
