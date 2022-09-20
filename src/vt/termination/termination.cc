@@ -1233,4 +1233,18 @@ std::size_t TerminationDetector::getNumTerminatedCollectiveEpochs() const {
   return window->getTotalTerminated();
 }
 
+void TerminationDetector::disableTD(EpochType in_epoch) {
+  vtAssert(not isDS(in_epoch), "Must be a wave based epoch");
+  auto& state = in_epoch == any_epoch_sentinel ?
+    any_epoch_state_ : findOrCreateState(in_epoch, false);
+  state.incrementDependency();
+}
+
+void TerminationDetector::enableTD(EpochType in_epoch) {
+  vtAssert(not isDS(in_epoch), "Must be a wave based epoch");
+  auto& state = in_epoch == any_epoch_sentinel ?
+    any_epoch_state_ : findOrCreateState(in_epoch, false);
+  state.decrementDependency();
+}
+
 }} // end namespace vt::term
