@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 reduce.cc
+//                               ping_pong_am.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -40,6 +40,7 @@
 // *****************************************************************************
 //@HEADER
 */
+
 #include "common/test_harness.h"
 #include <vt/collective/collective_ops.h>
 #include <vt/objgroup/manager.h>
@@ -50,24 +51,21 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
-static constexpr int num_iters = 1000;
-//static constexpr int num_iters = 1000000;
+static constexpr int num_iters = 10000;
 static int i = 0;
 
 struct MyTest : PerfTestHarness { };
 
 struct MyMsg : vt::Message {};
 
-std::vector<MsgSharedPtr<MyMsg>> msgs;
-
 struct NodeObj;
+
 vt::objgroup::proxy::Proxy<NodeObj> global_proxy;
+
 void handlerFinished(MyMsg* msg);
+
 void handler(MyMsg* in_msg) {
-  //fmt::print("{} handler\n", theContext()->getNode());
   auto msg = makeMessage<MyMsg>();
-  // auto msg = msgs.back();
-  // msgs.pop_back();
   theMsg()->sendMsg<MyMsg, &handlerFinished>(0, msg);
 }
 
@@ -75,19 +73,19 @@ struct NodeObj {
   struct ReduceMsg : vt::collective::ReduceNoneMsg { };
 
   explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
-  void initialize() { proxy_ = global_proxy = vt::theObjGroup()->getProxy<NodeObj>(this); }
+
+  void initialize() {
+    proxy_ = global_proxy = vt::theObjGroup()->getProxy<NodeObj>(this);
+  }
 
   void complete() {
-    fmt::print("{} complete\n", theContext()->getNode());
     test_obj_->StopTimer(fmt::format("{} ping-pong", i));
     if (theContext()->getNode() == 0) {
-      theTerm()->any_epoch_state_.decrementDependency();
+      theTerm()->enableTD();
     }
-    msgs.clear();
   }
-  
+
   void perfPingPong(MyMsg* in_msg) {
-    fmt::print("{} perfPingPong\n", theContext()->getNode());
     test_obj_->StartTimer(fmt::format("{} ping-pong", i));
     auto msg = makeMessage<MyMsg>();
     theMsg()->sendMsg<MyMsg, &handler>(1, msg);
@@ -101,14 +99,11 @@ private:
 };
 
 void handlerFinished(MyMsg* msg) {
-  //fmt::print("{} handlerFinished i={}\n", theContext()->getNode(), i);
   if (i >= num_iters) {
     global_proxy[0].invoke<decltype(&NodeObj::complete), &NodeObj::complete>();
   } else {
     i++;
     auto msg = makeMessage<MyMsg>();
-    // auto msg = msgs.back();
-    // msgs.pop_back();
     theMsg()->sendMsg<MyMsg, &handler>(1, msg);
   }
 }
@@ -119,13 +114,9 @@ VT_PERF_TEST(MyTest, test_ping_pong) {
   );
 
   if (theContext()->getNode() == 0) {
-    theTerm()->any_epoch_state_.incrementDependency();
+    theTerm()->disableTD();
   }
 
-  // for (int x = 0; x < num_iters+1; x++) {
-  //   msgs.emplace_back(makeMessage<MyMsg>());
-  // }
-  
   grp_proxy[my_node_].invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 
   if (theContext()->getNode() == 0) {

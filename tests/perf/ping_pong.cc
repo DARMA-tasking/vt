@@ -139,8 +139,7 @@ private:
 template <>
 void NodeObj::finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
   addPerfStats(max_bytes);
-
-  theTerm()->any_epoch_state_.decrementDependency();
+  theTerm()->enableTD();
 }
 
 VT_PERF_TEST(MyTest, test_ping_pong) {
@@ -151,7 +150,7 @@ VT_PERF_TEST(MyTest, test_ping_pong) {
     .invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 
   if (theContext()->getNode() == 0) {
-    theTerm()->any_epoch_state_.incrementDependency();
+    theTerm()->disableTD();
   }
 
   StartTimer(fmt::format("{} Bytes", min_bytes));

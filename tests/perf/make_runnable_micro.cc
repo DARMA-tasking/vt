@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 reduce.cc
+//                            make_runnable_micro.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -40,6 +40,7 @@
 // *****************************************************************************
 //@HEADER
 */
+
 #include "common/test_harness.h"
 #include <vt/collective/collective_ops.h>
 #include <vt/objgroup/manager.h>
@@ -68,9 +69,6 @@ struct NodeObj {
     proxy_ = global_proxy = vt::theObjGroup()->getProxy<NodeObj>(this);
   }
 
-  void complete() {
-  }
-  
   void perfMakeRunnable(MyMsg* in_msg) {
     for (int i = 0; i < num_iters; i++) {
       msgs.emplace_back(makeMessage<MyMsg>());
@@ -78,25 +76,21 @@ struct NodeObj {
 
     han = auto_registry::makeAutoHandler<MyMsg, &dummyHandler>();
 
-    theTerm()->any_epoch_state_.incrementDependency();
+    theTerm()->disableTD();
 
     test_obj_->StartTimer(fmt::format("makeRunnable {}", num_iters));
     perfRunBenchmark();
     test_obj_->StopTimer(fmt::format("makeRunnable {}", num_iters));
 
-    theTerm()->any_epoch_state_.decrementDependency();
+    theTerm()->enableTD();
   }
 
   void perfRunBenchmark() {
     for (int i = 0; i < num_iters; i++) {
-      {
-	bool add_context = true;
-	auto r = runnable::makeRunnable(msgs[i], false, han, 0, add_context)
-	  .withContinuation(nullptr)
-	  .withTag(TagType{0})
-	  .withTDEpochFromMsg(false);
-	r.enqueue();
-      }
+      auto r = runnable::makeRunnable(msgs[i], false, han, 0)
+        .withContinuation(nullptr)
+        .withTDEpochFromMsg(false);
+      r.enqueue();
       vt::theSched()->runSchedulerOnceImpl();
     }
   }

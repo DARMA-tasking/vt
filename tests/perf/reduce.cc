@@ -50,7 +50,7 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
-static constexpr int num_iters = 10;
+static constexpr int num_iters = 100;
 
 struct MyTest : PerfTestHarness { };
 
@@ -58,6 +58,7 @@ struct NodeObj {
   struct ReduceMsg : vt::collective::ReduceNoneMsg { };
 
   explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
+
   void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
 
   struct MyMsg : vt::Message {};
@@ -71,10 +72,10 @@ struct NodeObj {
       auto this_node = theContext()->getNode();
       proxy_[this_node].send<MyMsg, &NodeObj::perfReduce>();
     } else if (theContext()->getNode() == 0) {
-      theTerm()->any_epoch_state_.decrementDependency();
+      theTerm()->enableTD();
     }
   }
-  
+
   void perfReduce(MyMsg* in_msg) {
     test_obj_->StartTimer(fmt::format("{} reduce", i));
     auto cb = theCB()->makeBcast<NodeObj, ReduceMsg, &NodeObj::reduceComplete>(proxy_);
@@ -95,7 +96,7 @@ VT_PERF_TEST(MyTest, test_ping_pong) {
   );
 
   if (theContext()->getNode() == 0) {
-    theTerm()->any_epoch_state_.incrementDependency();
+    theTerm()->disableTD();
   }
 
   grp_proxy[my_node_].invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
