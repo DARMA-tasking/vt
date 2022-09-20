@@ -117,6 +117,13 @@ public:
   int progress(TimeType current_time);
 
   /**
+   * \internal \brief Needs current time
+   *
+   * \return whether any component needs the current time on the progress call
+   */
+  bool needsCurrentTime();
+
+  /**
    * \internal \brief Extract the first component from a running pack that
    * matches \c name.
    *
