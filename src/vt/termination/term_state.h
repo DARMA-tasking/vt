@@ -66,7 +66,7 @@ struct TermState : EpochDependency, EpochLabel {
   void notifyLocalTerminated(bool const terminated = true);
   void submitToParent(bool const is_root, bool const setup = false);
   void receiveContinueSignal(TermWaveType const& wave);
-  bool readySubmitParent(bool const needs_active = true) const;
+  bool readySubmitParent() const;
   EventCountType getRecvChildCount() const;
   EpochType getEpoch() const;
   TermWaveType getCurWave() const;
@@ -75,6 +75,8 @@ struct TermState : EpochDependency, EpochLabel {
   bool noLocalUnits() const;
   void incrementDependency();
   TermCounterType decrementDependency();
+
+  inline bool isActive() const { return epoch_active_; }
 
   TermState(
     EpochType const& in_epoch, bool const in_local_terminated, bool const active,
