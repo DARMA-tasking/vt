@@ -52,7 +52,6 @@ void SuspendedUnits::addSuspended(
 ) {
 #if vt_check_enabled(fcontext)
   vtAssert(runnable->isSuspended(), "Runnable must be suspended to add");
-#endif
 
   units_.emplace(
     std::piecewise_construct,
