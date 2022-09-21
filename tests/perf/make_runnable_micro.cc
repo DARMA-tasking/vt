@@ -51,7 +51,7 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
-static constexpr int num_iters = 1000000;
+static constexpr int num_iters = 100000;
 
 struct MyTest : PerfTestHarness { };
 struct MyMsg : vt::Message {};
