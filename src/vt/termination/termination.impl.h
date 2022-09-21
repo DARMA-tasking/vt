@@ -142,7 +142,7 @@ inline EpochType TerminationDetector::getEpoch() const {
   );
   return epoch_stack_.size() ? EpochType{epoch_stack_.top()} : term::any_epoch_sentinel;
 }
- inline void TerminationDetector::pushEpoch(EpochType const& epoch) {
+ inline void TerminationDetector::pushEpoch(EpochType epoch) {
   /*
    * pushEpoch(epoch) pushes any epoch onto the local stack iff epoch !=
    * no_epoch; the epoch stack includes all locally pushed epochs and the
@@ -159,7 +159,7 @@ inline EpochType TerminationDetector::getEpoch() const {
   }
 }
 
-inline EpochType TerminationDetector::popEpoch(EpochType const& epoch) {
+inline EpochType TerminationDetector::popEpoch(EpochType epoch) {
   /*
    * popEpoch(epoch) shall remove the top entry from epoch_size_, iif the size
    * is non-zero and the `epoch' passed, if `epoch != no_epoch', is equal to the

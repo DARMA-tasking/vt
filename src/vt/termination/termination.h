@@ -797,13 +797,13 @@ private:
 
 public:
   inline EpochType getEpoch() const;
-  inline void pushEpoch(EpochType const& epoch);
-  inline EpochType popEpoch(EpochType const& epoch = no_epoch);
+  inline void pushEpoch(EpochType epoch);
+  inline EpochType popEpoch(EpochType epoch = no_epoch);
 
   inline void pushEpochFast(EpochType epoch) {
     epoch_stack_.push(epoch.get());
   }
-  inline void popEpochFast(EpochType epoch) {
+  inline void popEpochFast() {
     epoch_stack_.pop();
   }
 
