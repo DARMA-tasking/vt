@@ -123,9 +123,9 @@ struct TerminationDetector :
 
   virtual ~TerminationDetector() {
     //Pop all extraneous epochs off the stack greater than 1
-      while (epoch_stack_.size() > 1) {
-        epoch_stack_.pop();
-       }
+    while (epoch_stack_.size() > 1) {
+      epoch_stack_.pop();
+    }
     // Pop off the last epoch: term::any_epoch_sentinel
     auto const ret_epoch = popEpoch(term::any_epoch_sentinel);
     vtAssertInfo(
