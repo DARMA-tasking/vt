@@ -97,7 +97,7 @@ set(
     serialization
       serialization/messaging serialization/traits serialization/auto_dispatch
       serialization/sizing
-    utils/demangle utils/container utils/bits utils/mutex
+    utils/demangle utils/container utils/bits utils/mutex utils/file_spec
     utils/hash utils/atomic utils/tls utils/static_checks utils/string
     utils/memory utils/mpi_limits utils/compress utils/json utils/strong
     registry/auto
@@ -107,7 +107,6 @@ set(
       objgroup/proxy objgroup/holder objgroup/active_func objgroup/dispatch
       objgroup/type_registry
     trace
-      trace/file_spec
 )
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
 
