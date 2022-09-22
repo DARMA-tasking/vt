@@ -445,54 +445,16 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   );
 }
 
-inline EpochType ActiveMessenger::getGlobalEpoch() const {
-  vtAssertInfo(
-    epoch_stack_.size() > 0, "Epoch stack size must be greater than zero",
-    epoch_stack_.size()
-  );
-  return epoch_stack_.size() ? epoch_stack_.top() : term::any_epoch_sentinel;
-}
-
 inline void ActiveMessenger::pushEpoch(EpochType const& epoch) {
-  /*
-   * pushEpoch(epoch) pushes any epoch onto the local stack iff epoch !=
-   * no_epoch; the epoch stack includes all locally pushed epochs and the
-   * current contexts pushed, transitively causally related active message
-   * handlers.
-   */
-  vtAssertInfo(
-    epoch != no_epoch, "Do not push no_epoch onto the epoch stack",
-    epoch, no_epoch, epoch_stack_.size(),
-    epoch_stack_.size() > 0 ? epoch_stack_.top() : no_epoch
-  );
-  if (epoch != no_epoch) {
-    epoch_stack_.push(epoch);
-  }
+  return theTerm()->pushEpoch(epoch);
 }
 
 inline EpochType ActiveMessenger::popEpoch(EpochType const& epoch) {
-  /*
-   * popEpoch(epoch) shall remove the top entry from epoch_size_, iif the size
-   * is non-zero and the `epoch' passed, if `epoch != no_epoch', is equal to the
-   * top of the `epoch_stack_.top()'; else, it shall remove any entry from the
-   * top of the stack.
-   */
-  auto const& non_zero = epoch_stack_.size() > 0;
-  vtAssertExprInfo(
-    non_zero and (epoch_stack_.top() == epoch or epoch == no_epoch),
-    epoch, non_zero, epoch_stack_.top()
-  );
-  if (epoch == no_epoch) {
-    return non_zero ? epoch_stack_.pop(),epoch_stack_.top() : no_epoch;
-  } else {
-    return non_zero && epoch == epoch_stack_.top() ?
-      epoch_stack_.pop(),epoch :
-      no_epoch;
-  }
+  return theTerm()->popEpoch(epoch);
 }
 
 inline EpochType ActiveMessenger::getEpoch() const {
-  return getGlobalEpoch();
+  return theTerm()->getEpoch();
 }
 
 template <typename MsgT>
