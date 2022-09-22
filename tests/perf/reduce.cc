@@ -90,7 +90,7 @@ private:
   int i = 0;
 };
 
-VT_PERF_TEST(MyTest, test_ping_pong) {
+VT_PERF_TEST(MyTest, test_reduce) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
     "test_reduce", this
   );
