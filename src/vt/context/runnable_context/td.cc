@@ -91,6 +91,7 @@ void TD::suspend() {
   }
 
   theTerm()->popEpoch(ep_);
+#endif
 }
 
 void TD::resume() {
