@@ -83,6 +83,104 @@ inline bool TerminationDetector::isDS(EpochType epoch) {
   }
 }
 
+inline void TerminationDetector::produceConsumeState(
+  TermStateType& state, TermCounterType const num_units, bool produce
+) {
+  auto& counter = produce ? state.l_prod : state.l_cons;
+  counter += num_units;
+
+  vt_debug_print(
+    verbose, term,
+    "produceConsumeState: epoch={:x}, event_count={}, l_prod={}, l_cons={}, "
+    "num_units={}, produce={}\n",
+    state.getEpoch(), state.getRecvChildCount(), state.l_prod, state.l_cons, num_units,
+    print_bool(produce)
+  );
+
+  if (state.readySubmitParent()) {
+    propagateEpoch(state);
+  }
+}
+
+inline void TerminationDetector::produceConsume(
+  EpochType epoch, TermCounterType num_units, bool produce, NodeType node
+) {
+  vt_debug_print(
+    normal, term,
+    "produceConsume: epoch={:x}, rooted={}, ds={}, count={}, produce={}, "
+    "node={}\n",
+    epoch, isRooted(epoch), isDS(epoch), num_units, produce, node
+  );
+
+  produceConsumeState(any_epoch_state_, num_units, produce);
+
+  if (epoch != any_epoch_sentinel) {
+    if (isDS(epoch)) {
+      auto ds_term = getDSTerm(epoch);
+
+      // If a node is not passed, use the current node (self-prod/cons)
+      if (node == uninitialized_destination) {
+	node = this_node_;
+      }
+
+      if (produce) {
+        ds_term->msgSent(node,num_units);
+      } else {
+        ds_term->msgProcessed(node,num_units);
+      }
+    } else {
+      auto& state = findOrCreateState(epoch, false);
+      produceConsumeState(state, num_units, produce);
+    }
+  }
+}
+
+inline EpochType TerminationDetector::getEpoch() const {
+  vtAssertInfo(
+    epoch_stack_.size() > 0, "Epoch stack size must be greater than zero",
+    epoch_stack_.size()
+  );
+  return epoch_stack_.size() ? EpochType{epoch_stack_.top()} : term::any_epoch_sentinel;
+}
+ inline void TerminationDetector::pushEpoch(EpochType epoch) {
+  /*
+   * pushEpoch(epoch) pushes any epoch onto the local stack iff epoch !=
+   * no_epoch; the epoch stack includes all locally pushed epochs and the
+   * current contexts pushed, transitively causally related active message
+   * handlers.
+   */
+  vtAssertInfo(
+    epoch != no_epoch, "Do not push no_epoch onto the epoch stack",
+    epoch, no_epoch, epoch_stack_.size(),
+    epoch_stack_.size() > 0 ? EpochType{epoch_stack_.top()} : no_epoch
+  );
+  if (epoch != no_epoch) {
+    epoch_stack_.push(epoch.get());
+  }
+}
+
+inline EpochType TerminationDetector::popEpoch(EpochType epoch) {
+  /*
+   * popEpoch(epoch) shall remove the top entry from epoch_size_, iif the size
+   * is non-zero and the `epoch' passed, if `epoch != no_epoch', is equal to the
+   * top of the `epoch_stack_.top()'; else, it shall remove any entry from the
+   * top of the stack.
+   */
+  auto const& non_zero = epoch_stack_.size() > 0;
+  vtAssertExprInfo(
+    non_zero and (epoch_stack_.top() == epoch.get() or epoch == no_epoch),
+    epoch, non_zero, non_zero ? EpochType{epoch_stack_.top()} : no_epoch
+  );
+  if (epoch == no_epoch) {
+    return non_zero ? epoch_stack_.pop(),EpochType{epoch_stack_.top()} : no_epoch;
+  } else {
+    return non_zero && epoch == EpochType{epoch_stack_.top()} ?
+      epoch_stack_.pop(),epoch :
+      no_epoch;
+  }
+}
+
+
 }} /* end namespace vt::term */
 
 #endif /*INCLUDED_VT_TERMINATION_TERMINATION_IMPL_H*/

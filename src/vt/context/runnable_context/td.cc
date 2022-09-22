@@ -62,29 +62,17 @@ TD::TD(EpochType in_ep)
 }
 
 void TD::begin() {
-  theMsg()->pushEpoch(ep_);
+  theTerm()->pushEpoch(ep_);
 
-  auto& epoch_stack = theMsg()->getEpochStack();
+  auto& epoch_stack = theTerm()->getEpochStack();
 
-  vt_debug_print(
-    verbose, context,
-    "TD::begin: top={:x}, size={}\n",
-    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
-    epoch_stack.size()
-  );
 
   base_epoch_stack_size_ = epoch_stack.size();
 }
 
 void TD::end() {
-  auto& epoch_stack = theMsg()->getEpochStack();
+  auto& epoch_stack = theTerm()->getEpochStack();
 
-  vt_debug_print(
-    verbose, context,
-    "TD::end: top={:x}, size={}, base_size={}\n",
-    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
-    epoch_stack.size(), base_epoch_stack_size_
-  );
 
   vtAssert(
     base_epoch_stack_size_ <= epoch_stack.size(),
@@ -92,47 +80,35 @@ void TD::end() {
   );
 
   while (epoch_stack.size() > base_epoch_stack_size_) {
-    theMsg()->popEpoch();
+    theTerm()->popEpoch();
   }
 
-  theMsg()->popEpoch(ep_);
+  theTerm()->popEpoch(ep_);
 }
 
 void TD::suspend() {
-  auto& epoch_stack = theMsg()->getEpochStack();
+  auto& epoch_stack = theTerm()->getEpochStack();
 
-  vt_debug_print(
-    verbose, context,
-    "TD::suspend: top={:x}, size={}, base_size={}\n",
-    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
-    epoch_stack.size(), base_epoch_stack_size_
-  );
 
   while (epoch_stack.size() > base_epoch_stack_size_) {
-    suspended_epochs_.push_back(theMsg()->getEpoch());
-    theMsg()->popEpoch();
+    suspended_epochs_.push_back(theTerm()->getEpoch());
+    theTerm()->popEpoch();
   }
 
-  theMsg()->popEpoch(ep_);
+  theTerm()->popEpoch(ep_);
 }
 
 void TD::resume() {
-  theMsg()->pushEpoch(ep_);
+  theTerm()->pushEpoch(ep_);
 
-  auto& epoch_stack = theMsg()->getEpochStack();
+  auto& epoch_stack = theTerm()->getEpochStack();
   base_epoch_stack_size_ = epoch_stack.size();
 
-  vt_debug_print(
-    verbose, context,
-    "TD::resume: top={:x}, size={}, base_size={}\n",
-    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
-    epoch_stack.size(), base_epoch_stack_size_
-  );
 
   for (auto it = suspended_epochs_.rbegin();
        it != suspended_epochs_.rend();
        ++it) {
-    theMsg()->pushEpoch(*it);
+    theTerm()->pushEpoch(*it);
   }
 
   suspended_epochs_.clear();
