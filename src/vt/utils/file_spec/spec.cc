@@ -42,65 +42,82 @@
 */
 
 #include "vt/config.h"
-#include "vt/trace/file_spec/spec.h"
+#include "vt/utils/file_spec/spec.h"
 #include "vt/objgroup/manager.h"
 
 #include <fstream>
 
-namespace vt { namespace trace { namespace file_spec {
+namespace vt { namespace utils { namespace file_spec {
 
-void TraceSpec::init(ProxyType in_proxy) {
+void FileSpec::init(ProxyType in_proxy, FileSpecType in_type) {
   proxy_ = in_proxy;
+  type_ = in_type;
 }
 
-bool TraceSpec::checkTraceEnabled(SpecIndex in_phase) {
+bool FileSpec::checkEnabled(SpecIndex in_phase) {
   vtAssertExpr(has_spec_);
 
   for (auto&& elm : spec_mod_) {
-    if (elm.second.testTraceEnabledFor(in_phase)) {
+    if (elm.second.testEnabledFor(in_phase)) {
       return true;
     }
   }
   for (auto&& elm : spec_exact_) {
-    if (elm.second.testTraceEnabledFor(in_phase)) {
+    if (elm.second.testEnabledFor(in_phase)) {
       return true;
     }
   }
   return false;
 }
 
-bool TraceSpec::hasSpec() {
-  if (theConfig()->vt_trace_spec) {
-    if (theConfig()->vt_trace_spec_file == "") {
-      vtAbort(
-        "--vt_trace_spec enabled but no file name is specified:"
-        " --vt_trace_spec_file"
-      );
-      return false;
-    } else {
-      auto& filename = theConfig()->vt_trace_spec_file;
-      std::ifstream file(filename);
-      if (not file.good()) {
-        auto str = fmt::format(
-          "--vt_trace_spec_file={} is not a valid file", filename
-        );
-        vtAbort(str);
+bool FileSpec::hasSpec() {
+  auto checkSpecFile = [](
+                         bool spec_enabled, std::string const& spec_file,
+                         std::string const& spec_type) {
+    if (spec_enabled) {
+      if (spec_file == "") {
+        vtAbort(fmt::format(
+          "--vt_{}_spec enabled but no file name is specified:"
+          " --vt_{}_spec_file",
+          spec_type, spec_type));
         return false;
       } else {
-        return true;
+        std::ifstream file(spec_file);
+        if (not file.good()) {
+          auto str = fmt::format(
+            "--vt_{}_spec_file={} is not a valid file", spec_type, spec_file);
+          vtAbort(str);
+          return false;
+        } else {
+          return true;
+        }
       }
+    } else {
+      return false;
     }
-  } else {
+  };
+
+  if (type_ == FileSpecType::TRACE) {
+    return checkSpecFile(
+      theConfig()->vt_trace_spec, theConfig()->vt_trace_spec_file, "trace");
+  } else if (type_ == FileSpecType::LB) {
+    return checkSpecFile(
+      theConfig()->vt_lb_spec, theConfig()->vt_lb_spec_file, "lb");
+  }
+  else{
+    vtAbort("Unknown Spec Type");
     return false;
   }
 }
 
-void TraceSpec::parse() {
+void FileSpec::parse() {
   if (not hasSpec()) {
     return;
   }
 
-  auto& filename = theConfig()->vt_trace_spec_file;
+  auto& filename = type_ == FileSpecType::TRACE ?
+    theConfig()->vt_trace_spec_file :
+    theConfig()->vt_lb_spec_file;
   std::ifstream file(filename);
   vtAssertExpr(file.good());
 
@@ -182,7 +199,7 @@ void TraceSpec::parse() {
 
     vt_debug_print(
       verbose, trace,
-      "TraceSpec::parser: is_mod={}, phase={}, neg={}, pos={}\n",
+      "FileSpec::parser: is_mod={}, phase={}, neg={}, pos={}\n",
       is_mod, phase, phase_negative_offset, phase_positive_offset
     );
 
@@ -196,14 +213,14 @@ void TraceSpec::parse() {
   has_spec_ = true;
 }
 
-void TraceSpec::broadcastSpec() {
+void FileSpec::broadcastSpec() {
   auto root = theContext()->getNode();
-  proxy_.template broadcast<SpecMsg, &TraceSpec::transferSpec>(
+  proxy_.template broadcast<SpecMsg, &FileSpec::transferSpec>(
     spec_mod_, spec_exact_, root
   );
 }
 
-void TraceSpec::transferSpec(SpecMsg* msg) {
+void FileSpec::transferSpec(SpecMsg* msg) {
   // The broadcast will hit all nodes, so the node that it exists on will
   // ignore it
   if (not has_spec_) {
@@ -213,7 +230,7 @@ void TraceSpec::transferSpec(SpecMsg* msg) {
   }
 }
 
-void TraceSpec::insertSpec(
+void FileSpec::insertSpec(
   SpecIndex phase, SpecIndex neg, SpecIndex pos, bool is_mod, SpecMapType& map
 ) {
   vtAbortIf(
@@ -222,7 +239,7 @@ void TraceSpec::insertSpec(
       "Parsing file \"{}\" error: multiple lines start with the same {}:"
       " value \"{}{}\"",
       is_mod ? "mod phase" : "phase",
-      theConfig()->vt_trace_spec_file,
+      type_ == FileSpecType::TRACE ? theConfig()->vt_trace_spec_file : theConfig()->vt_lb_spec_file,
       is_mod ? "%" : "",
       phase
     )
@@ -234,17 +251,17 @@ void TraceSpec::insertSpec(
   );
 }
 
-int TraceSpec::eatWhitespace(std::ifstream& file) {
+int FileSpec::eatWhitespace(std::ifstream& file) {
   while (not file.eof() and std::isspace(file.peek()) and file.peek() != '\n') {
     file.get();
   }
   return file.eof() ? 0 : file.peek();
 }
 
-/*static*/ typename TraceSpec::ProxyType TraceSpec::construct() {
-  auto proxy = theObjGroup()->makeCollective<TraceSpec>("TraceSpec");
-  proxy.get()->init(proxy);
+/*static*/ typename FileSpec::ProxyType FileSpec::construct(FileSpecType type) {
+  auto proxy = theObjGroup()->makeCollective<FileSpec>(GetSpecName(type));
+  proxy.get()->init(proxy, type);
   return proxy;
 }
 
-}}} /* end namespace vt::trace::file_spec */
+}}} /* end namespace vt::utils::file_spec */
