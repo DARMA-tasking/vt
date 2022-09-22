@@ -56,6 +56,7 @@
 #include "vt/utils/json/base_appender.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/types/storage/storable.h"
+#include "vt/utils/file_spec/spec.h"
 
 #include <string>
 #include <unordered_map>
@@ -146,6 +147,11 @@ public:
    * \internal \brief Cleanup after LB runs
    */
   void startIterCleanup(PhaseType phase, unsigned int look_back);
+
+  /**
+   * \internal \brief Load and broadcast the LB specification file
+   */
+  void loadAndBroadcastSpec();
 
   /**
    * \internal \brief Output LB data file for given phase based on instrumented
@@ -246,11 +252,13 @@ public:
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | proxy_
+      | spec_proxy_
       | node_migrate_
       | node_collection_lookup_
       | node_objgroup_lookup_
       | next_elm_
       | created_dir_
+      | lb_data_writer_
       | lb_data_;
   }
 
@@ -268,6 +276,8 @@ private:
 private:
   /// Local proxy to objgroup
   objgroup::proxy::Proxy<NodeLBData> proxy_;
+  /// Proxy to objgroup for sending spec file
+  ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
   /// Local migration type-free lambdas for each object
   std::unordered_map<ElementIDStruct,MigrateFnType> node_migrate_;
   /// Map from element ID to the collection's virtual proxy (untyped)
