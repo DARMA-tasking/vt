@@ -128,7 +128,7 @@ CollectionManager::runConstructor(Args&&... args) {
 
 template <typename ColT>
 void CollectionManager::addCleanupFn(VirtualProxyType proxy) {
-  cleanup_fns_[proxy].push_back([=]{
+  cleanup_fns_[proxy].push_back([=, this]{
     CollectionProxyWrapType<ColT> typed_proxy(proxy);
     destroyMatching(typed_proxy);
   });
@@ -1833,7 +1833,7 @@ MigrateStatus CollectionManager::migrate(
 
   auto const epoch = theMsg()->getEpoch();
   theTerm()->produce(epoch);
-  schedule([=]{
+  schedule([=, this]{
     theMsg()->pushEpoch(epoch);
     migrateOut<ColT,IndexT>(col_proxy, idx, dest);
     theMsg()->popEpoch(epoch);
@@ -2380,7 +2380,7 @@ messaging::PendingSend CollectionManager::schedule(
   MsgT msg, bool execute_now, EpochType cur_epoch, ActionType action
 ) {
   theTerm()->produce(cur_epoch);
-  return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
+  return messaging::PendingSend(msg, [=, this](MsgVirtualPtr<BaseMsgType> inner_msg){
     auto fn = [=]{
       theMsg()->pushEpoch(cur_epoch);
       action();

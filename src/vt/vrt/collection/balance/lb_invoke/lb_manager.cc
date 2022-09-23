@@ -181,7 +181,7 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
   auto phase = msg->phase;
   auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
 
-  runInEpochCollective("LBManager::runLB -> computeStats", [=] {
+  runInEpochCollective("LBManager::runLB -> computeStats", [=, this] {
     auto stats_cb = vt::theCB()->makeBcast<
       LBManager, StatsMsgType, &LBManager::statsHandler
     >(proxy_);
@@ -218,7 +218,7 @@ void
 LBManager::runLB(
   LBProxyType base_proxy, PhaseType phase, vt::Callback<ReassignmentMsg> cb
 ) {
-  runInEpochCollective("LBManager::runLB -> updateLoads", [=] {
+  runInEpochCollective("LBManager::runLB -> updateLoads", [=, this] {
     model_->updateLoads(phase);
   });
 
@@ -231,7 +231,7 @@ LBManager::runLB(
     );
   }
 
-  runInEpochCollective("LBManager::runLB -> computeStats", [=] {
+  runInEpochCollective("LBManager::runLB -> computeStats", [=, this] {
     auto stats_cb = vt::theCB()->makeBcast<
       LBManager, StatsMsgType, &LBManager::statsHandler
     >(proxy_);
@@ -301,11 +301,11 @@ void LBManager::startLB(
     last_phase_info_->migration_count = 0;
     last_phase_info_->ran_lb = false;
 
-    runInEpochCollective("LBManager::noLB -> updateLoads", [=] {
+    runInEpochCollective("LBManager::noLB -> updateLoads", [=, this] {
       model_->updateLoads(phase);
     });
 
-    runInEpochCollective("LBManager::noLB -> computeStats", [=] {
+    runInEpochCollective("LBManager::noLB -> computeStats", [=, this] {
       before_lb_stats_ = true;
       auto stats_cb = vt::theCB()->makeBcast<
         LBManager, StatsMsgType, &LBManager::statsHandler

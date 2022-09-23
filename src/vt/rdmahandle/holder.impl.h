@@ -150,7 +150,7 @@ RequestHolder Holder<T,E>::rget(
   auto mpi_type_str = TypeMPI<T>::getTypeStr();
   RequestHolder r;
   if (mpi2_) {
-    r.add([=]{
+    r.add([=, this]{
       LockMPI _scope_lock(l, node, data_window_);
       vt_debug_print(
         verbose, rdma,
@@ -188,7 +188,7 @@ RequestHolder Holder<T,E>::rput(
   auto mpi_type_str = TypeMPI<T>::getTypeStr();
   RequestHolder r;
   if (mpi2_) {
-    r.add([=]{
+    r.add([=, this]{
       LockMPI _scope_lock(l, node, data_window_);
       vt_debug_print(
         verbose, rdma,
@@ -245,7 +245,7 @@ RequestHolder Holder<T,E>::raccum(
   auto mpi_type_str = TypeMPI<T>::getTypeStr();
   RequestHolder r;
   if (mpi2_) {
-    r.add([=]{
+    r.add([=, this]{
       LockMPI _scope_lock(l, node, data_window_);
       vt_debug_print(
         verbose, rdma,

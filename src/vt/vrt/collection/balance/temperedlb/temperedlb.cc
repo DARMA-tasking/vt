@@ -547,7 +547,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
       );
 
       if (rollback_ || theConfig()->vt_debug_temperedlb || (iter_ == num_iters_ - 1)) {
-        runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
+        runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=, this] {
           using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
           auto cb = vt::theCB()->makeBcast<
             TemperedLB, StatsMsgType, &TemperedLB::loadStatsHandler
@@ -1312,7 +1312,7 @@ void TemperedLB::decide() {
 
   if (theConfig()->vt_debug_temperedlb) {
     // compute rejection rate because it will be printed
-    runInEpochCollective("TemperedLB::decide -> compute rejection", [=] {
+    runInEpochCollective("TemperedLB::decide -> compute rejection", [=, this] {
       using ReduceOp = collective::PlusOp<balance::RejectionStats>;
       auto cb = vt::theCB()->makeBcast<
         TemperedLB, RejectionMsgType, &TemperedLB::rejectionStatsHandler

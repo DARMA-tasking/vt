@@ -59,7 +59,7 @@ void RunnableNew::setupHandler(HandlerType handler, bool is_void, TagType tag) {
 
   if (not is_void) {
     if (is_obj) {
-      task_ = [=] { objgroup::dispatchObjGroup(msg_, handler); };
+      task_ = [=, this] { objgroup::dispatchObjGroup(msg_, handler); };
       return;
     } else {
       bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
@@ -69,9 +69,9 @@ void RunnableNew::setupHandler(HandlerType handler, bool is_void, TagType tag) {
         auto const& func = auto_registry::getAutoHandlerFunctor(handler);
         auto const num_args = auto_registry::getAutoHandlerFunctorArgs(handler);
         if (num_args == 0) {
-          task_ = [=, &func] { func->dispatch(nullptr, nullptr); };
+          task_ = [&func] { func->dispatch(nullptr, nullptr); };
         } else {
-          task_ = [=, &func] { func->dispatch(msg_.get(), nullptr); };
+          task_ = [this, &func] { func->dispatch(msg_.get(), nullptr); };
         }
 
         return;
@@ -80,16 +80,16 @@ void RunnableNew::setupHandler(HandlerType handler, bool is_void, TagType tag) {
           HandlerManagerType::isHandlerBaseMsgDerived(handler);
         if (is_base_msg_derived) {
           auto const& func = auto_registry::getAutoHandler(handler);
-          task_ = [=, &func] { func->dispatch(msg_.get(), nullptr); };
+          task_ = [this, &func] { func->dispatch(msg_.get(), nullptr); };
           return;
         }
 
         auto const& func = auto_registry::getScatterAutoHandler(handler);
-        task_ = [=, &func] { func->dispatch(msg_.get(), nullptr); };
+        task_ = [this, &func] { func->dispatch(msg_.get(), nullptr); };
         return;
       } else {
         auto typed_func = theRegistry()->getHandler(handler, tag);
-        task_ = [=] { typed_func(msg_.get()); };
+        task_ = [typed_func, this] { typed_func(msg_.get()); };
         return;
       }
     }
@@ -106,12 +106,12 @@ void RunnableNew::setupHandler(HandlerType handler, bool is_void, TagType tag) {
         HandlerManagerType::isHandlerBaseMsgDerived(handler);
       if (is_base_msg_derived) {
         auto const& func = auto_registry::getAutoHandler(handler);
-        task_ = [=, &func] { func->dispatch(msg_.get(), nullptr); };
+        task_ = [this, &func] { func->dispatch(msg_.get(), nullptr); };
         return;
       }
 
       auto const& func = auto_registry::getScatterAutoHandler(handler);
-      task_ = [=, &func] { func->dispatch(msg_.get(), nullptr); };
+      task_ = [this, &func] { func->dispatch(msg_.get(), nullptr); };
       return;
     } else {
       vtAbort("Must be auto/functor for a void handler");
@@ -126,14 +126,14 @@ void RunnableNew::setupHandlerElement(
   auto const& func = member ?
     auto_registry::getAutoHandlerCollectionMem(handler) :
     auto_registry::getAutoHandlerCollection(handler);
-  task_ = [=, &func] { func->dispatch(msg_.get(), elm); };
+  task_ = [this, elm, &func] { func->dispatch(msg_.get(), elm); };
 }
 
 void RunnableNew::setupHandlerElement(
   vrt::VirtualContext* elm, HandlerType handler
 ) {
   auto const& func = auto_registry::getAutoHandlerVC(handler);
-  task_ = [=, &func] { func->dispatch(msg_.get(), elm); };
+  task_ = [this, elm, &func] { func->dispatch(msg_.get(), elm); };
 }
 
 void RunnableNew::run() {
