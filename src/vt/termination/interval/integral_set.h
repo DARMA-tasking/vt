@@ -378,9 +378,7 @@ public:
   // using reference         = DomainT&;
 
   template <typename Impl>
-  struct IntervalSetIter :
-    std::iterator<std::bidirectional_iterator_tag, DomainT, DomainT>
-  {
+  struct IntervalSetIter {
     using Iter              = IntervalSetIter;
     using iterator_category = std::bidirectional_iterator_tag;
     using difference_type   = DomainT;
