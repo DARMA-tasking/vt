@@ -104,19 +104,19 @@ using EpochEnvelope    = messaging::EpochActiveEnvelope;
 using TagEnvelope      = messaging::TagActiveEnvelope;
 using EpochTagEnvelope = messaging::EpochTagActiveEnvelope;
 
-static_assert(std::is_pod<EpochEnvelope>(),    "EpochEnvelope must be POD");
-static_assert(std::is_pod<TagEnvelope>(),      "TagEnvelope must be POD");
-static_assert(std::is_pod<EpochTagEnvelope>(), "EpochTagEnvelope must be POD");
+static_assert(std::is_standard_layout<EpochEnvelope>::value,    "EpochEnvelope must be standard layout");
+static_assert(std::is_standard_layout<TagEnvelope>::value,      "TagEnvelope must be standard layout");
+static_assert(std::is_standard_layout<EpochTagEnvelope>::value, "EpochTagEnvelope must be standard layout");
 static_assert(
-  std::is_trivially_destructible<EpochEnvelope>(),
+  std::is_trivial<EpochEnvelope>::value,
   "EpochEnvelope must be trivial"
 );
 static_assert(
-  std::is_trivially_destructible<TagEnvelope>(),
+  std::is_trivial<TagEnvelope>::value,
   "TagEnvelope must be trivial"
 );
 static_assert(
-  std::is_trivially_destructible<EpochTagEnvelope>(),
+  std::is_trivial<EpochTagEnvelope>::value,
   "EpochTagEnvelope must be trivial"
 );
 
