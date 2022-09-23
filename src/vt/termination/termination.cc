@@ -176,7 +176,7 @@ void TerminationDetector::maybePropagate() {
     propagateEpoch(any_epoch_state_);
   }
 
-  if (hang_.readySubmitParent()) {
+  if (hang_.isActive() and hang_.readySubmitParent()) {
     propagateEpoch(hang_);
   }
 
