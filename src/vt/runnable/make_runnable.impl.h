@@ -52,7 +52,7 @@ namespace vt { namespace runnable {
 template <typename MsgT>
 void RunnableMaker<MsgT>::enqueue() {
   setup();
-  if (msg_ != nullptr) {
+  if (has_msg_) {
 #if vt_check_enabled(priorities)
     theSched()->enqueue(msg_, impl_);
 #else
