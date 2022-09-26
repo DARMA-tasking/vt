@@ -65,8 +65,8 @@ struct PersistenceMedianLastN : public ComposedModel
    */
   PersistenceMedianLastN(std::shared_ptr<LoadModel> base, unsigned int n);
 
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) override;
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
 
 private:
   const unsigned int n_;

@@ -46,7 +46,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 TimeType
-WeightedMessages::getModeledComm(ElementIDStruct object, PhaseOffset when) {
+WeightedMessages::getModeledComm(ElementIDStruct object, PhaseOffset when) const {
   auto phase = getNumCompletedPhases() + when.phases;
   auto& comm = proc_comm_->at(phase);
 

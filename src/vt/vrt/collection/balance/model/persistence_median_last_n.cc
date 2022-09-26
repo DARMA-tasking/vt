@@ -56,7 +56,7 @@ PersistenceMedianLastN::PersistenceMedianLastN(std::shared_ptr<LoadModel> base, 
 
 TimeType PersistenceMedianLastN::getModeledLoad(
   ElementIDStruct object, PhaseOffset when
-) {
+) const {
   // Retrospective queries don't call for a prospective calculation
   if (when.phases < 0)
     return ComposedModel::getModeledLoad(object, when);
@@ -77,7 +77,7 @@ TimeType PersistenceMedianLastN::getModeledLoad(
     return (times[phases / 2 - 1] + times[phases / 2]) / 2;
 }
 
-unsigned int PersistenceMedianLastN::getNumPastPhasesNeeded(unsigned int look_back)
+unsigned int PersistenceMedianLastN::getNumPastPhasesNeeded(unsigned int look_back) const
 {
   return ComposedModel::getNumPastPhasesNeeded(std::max(n_, look_back));
 }
