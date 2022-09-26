@@ -226,6 +226,7 @@ void RunnableNew::end() {
   contexts_.setcontext.end();
   if (contexts_.has_td) contexts_.td.end();
   if (contexts_.has_col) contexts_.col.end();
+  if (contexts_.has_cont) contexts_.cont.end();
   if (contexts_.has_lb) contexts_.lb.end();
 #if vt_check_enabled(trace_enabled)
   if (contexts_.has_trace) contexts_.trace.end();
