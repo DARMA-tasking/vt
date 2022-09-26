@@ -69,8 +69,8 @@ struct LinearModel : ComposedModel {
       past_len_(in_past_len)
   { }
 
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) override;
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
 
 private:
   const unsigned int past_len_ = 0;

@@ -61,7 +61,7 @@ void CommOverhead::setLoads(std::unordered_map<PhaseType, LoadMapType> const* pr
 }
 
 TimeType
-CommOverhead::getModeledLoad(ElementIDStruct object, PhaseOffset offset) {
+CommOverhead::getModeledLoad(ElementIDStruct object, PhaseOffset offset) const {
   auto work = ComposedModel::getModeledLoad(object, offset);
 
   auto phase = getNumCompletedPhases() + offset.phases;

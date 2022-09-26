@@ -63,7 +63,7 @@ ProposedReassignment::ProposedReassignment(
   // arrive ^ (present \ depart) == 0
 }
 
-ObjectIterator ProposedReassignment::begin()
+ObjectIterator ProposedReassignment::begin() const
 {
   return {
     std::make_unique<ConcatenatedIterator>(
@@ -83,7 +83,7 @@ ObjectIterator ProposedReassignment::begin()
   )};
 }
 
-int ProposedReassignment::getNumObjects()
+int ProposedReassignment::getNumObjects() const
 {
   int base = ComposedModel::getNumObjects();
   int departing = reassignment_->depart_.size();
@@ -94,7 +94,7 @@ int ProposedReassignment::getNumObjects()
 }
 
 TimeType
-ProposedReassignment::getModeledLoad(ElementIDStruct object, PhaseOffset when) {
+ProposedReassignment::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
   auto a = reassignment_->arrive_.find(object);
   if (a != reassignment_->arrive_.end()) {
     return std::get<0>(a->second).get(when);
@@ -107,7 +107,7 @@ ProposedReassignment::getModeledLoad(ElementIDStruct object, PhaseOffset when) {
   return ComposedModel::getModeledLoad(object, when);
 }
 
-TimeType ProposedReassignment::getRawLoad(ElementIDStruct object, PhaseOffset when)
+TimeType ProposedReassignment::getRawLoad(ElementIDStruct object, PhaseOffset when) const
 {
   auto a = reassignment_->arrive_.find(object);
   if (a != reassignment_->arrive_.end()) {

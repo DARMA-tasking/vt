@@ -81,19 +81,19 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) override {
+  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     EXPECT_LE(phase.phases, -1);
     return proc_load_->at(getIndexFromPhase(phase.phases)).at(id).whole_phase_load;
   }
 
-  virtual ObjectIterator begin() override {
+  virtual ObjectIterator begin() const override {
     return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(3).begin(), proc_load_->at(3).end())};
   }
 
   // Not used in this test
-  virtual unsigned int getNumCompletedPhases() override { return 1; }
-  virtual int getNumSubphases() override { return 1; }
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
+  virtual unsigned int getNumCompletedPhases() const override { return 1; }
+  virtual int getNumSubphases() const override { return 1; }
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
   std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;

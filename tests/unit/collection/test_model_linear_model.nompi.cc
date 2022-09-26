@@ -79,18 +79,18 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) override {
+  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     // Most recent phase will be at the end of vector
     return proc_load_->at(num_phases + phase.phases).at(id).whole_phase_load;
   }
 
-  virtual ObjectIterator begin() override {
+  virtual ObjectIterator begin() const override {
     return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(0).begin(), proc_load_->at(0).end())};
   }
 
-  virtual unsigned int getNumCompletedPhases() override { return num_phases; }
-  virtual int getNumSubphases() override { return 1; }
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
+  virtual unsigned int getNumCompletedPhases() const override { return num_phases; }
+  virtual int getNumSubphases() const override { return 1; }
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
   std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;

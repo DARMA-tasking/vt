@@ -225,7 +225,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) = 0;
+  virtual TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const = 0;
 
   /**
    * \brief Whether or not the model is based on the RawData model
@@ -240,7 +240,7 @@ struct LoadModel
    *
    * \return How much computation time the object required
    */
-  virtual TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) {
+  virtual TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) const {
     vtAbort(
       "LoadModel::getRawLoad() called on a model that does not implement it"
     );
@@ -259,7 +259,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) {
+  virtual TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) const {
     return {};
   }
 
@@ -273,7 +273,7 @@ struct LoadModel
    * \return How many phases of past load statistics will be needed to
    * satisfy the requested history
    */
-  virtual unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) = 0;
+  virtual unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const = 0;
 
   /**
    * Object enumeration, to abstract away access to the underlying structures
@@ -282,7 +282,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual ObjectIterator begin() = 0;
+  virtual ObjectIterator begin() const = 0;
 
   /**
    * Object enumeration, to abstract away access to the underlying structures
@@ -291,7 +291,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  ObjectIterator end() { return ObjectIterator{nullptr}; }
+  ObjectIterator end() const { return ObjectIterator{nullptr}; }
 
   /**
    * Object enumeration, to abstract away access to the underlying structures
@@ -300,7 +300,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual int getNumObjects() {
+  virtual int getNumObjects() const {
     int count = 0;
     for (auto it = begin(); it != end(); ++it, ++count) {}
     return count;
@@ -312,7 +312,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual unsigned int getNumCompletedPhases() = 0;
+  virtual unsigned int getNumCompletedPhases() const = 0;
 
   /**
    * Returns the number of subphases recorded in the most recent
@@ -321,7 +321,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual int getNumSubphases() = 0;
+  virtual int getNumSubphases() const = 0;
 
   template <typename Serializer>
   void serialize(Serializer& s) {}
