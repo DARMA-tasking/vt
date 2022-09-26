@@ -79,7 +79,8 @@ struct RunnableMaker {
       msg_(in_msg),
       handler_(in_handler),
       is_void_(in_msg == nullptr),
-      from_node_(in_from_node)
+      from_node_(in_from_node),
+      has_msg_(in_msg != nullptr)
   { }
   RunnableMaker(RunnableMaker const&) = delete;
   RunnableMaker(RunnableMaker&&) = default;
@@ -295,6 +296,7 @@ private:
   NodeType from_node_ = uninitialized_destination;
   bool is_done_ = false;
   bool is_term_ = false;
+  bool has_msg_ = true;
 };
 
 /**
