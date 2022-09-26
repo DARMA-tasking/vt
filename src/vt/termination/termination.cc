@@ -791,7 +791,7 @@ TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
   }
 
   vt_debug_print(
-    normal, term,
+    verbose, term,
     "testEpochTerminated: epoch={:x}, pending={}, terminated={}, remote={}\n",
     epoch, status == TermStatusEnum::Pending, status == TermStatusEnum::Terminated,
     status == TermStatusEnum::Remote
