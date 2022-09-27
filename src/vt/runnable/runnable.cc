@@ -53,7 +53,7 @@
 
 namespace vt { namespace runnable {
 
-void RunnableNew::setupHandler(HandlerType handler, bool is_void, TagType tag) {
+void RunnableNew::setupHandler(HandlerType handler, bool is_void) {
   using HandlerManagerType = HandlerManager;
   bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
 
@@ -75,7 +75,7 @@ void RunnableNew::setupHandler(HandlerType handler, bool is_void, TagType tag) {
         }
 
         return;
-      } else if (is_auto) {
+      } else {
         bool const is_base_msg_derived =
           HandlerManagerType::isHandlerBaseMsgDerived(handler);
         if (is_base_msg_derived) {
@@ -86,10 +86,6 @@ void RunnableNew::setupHandler(HandlerType handler, bool is_void, TagType tag) {
 
         auto const& func = auto_registry::getScatterAutoHandler(handler);
         task_ = [=, &func] { func->dispatch(msg_.get(), nullptr); };
-        return;
-      } else {
-        auto typed_func = theRegistry()->getHandler(handler, tag);
-        task_ = [=] { typed_func(msg_.get()); };
         return;
       }
     }
@@ -137,6 +133,7 @@ void RunnableNew::setupHandlerElement(
 }
 
 void RunnableNew::run() {
+#if vt_check_enabled(fcontext)
   vtAbortIf(
     done_ and not suspended_,
     "Runnable task must either be not done (finished execution) or suspended"
@@ -147,12 +144,17 @@ void RunnableNew::run() {
     "start running task={}, done={}, suspended={}\n",
     print_ptr(this), done_, suspended_
   );
+#endif
 
+#if vt_check_enabled(fcontext)
   if (suspended_) {
     resume();
   } else {
     begin();
   }
+#else
+  begin();
+#endif
 
   vtAssert(task_ != nullptr, "Must have a valid task to run");
 
@@ -178,54 +180,103 @@ void RunnableNew::run() {
   } else
 #endif
   {
+#if vt_check_enabled(fcontext)
     // force use this for when fcontext is disabled to avoid compiler warning
     vt_force_use(is_threaded_, tid_)
+#endif
+
     task_();
+
+#if vt_check_enabled(fcontext)
     done_ = true;
+#endif
   }
 
+#if vt_check_enabled(fcontext)
   if (done_) {
     end();
   } else {
     suspended_ = true;
     suspend();
   }
+#else
+  end();
+#endif
 
+#if vt_check_enabled(fcontext)
   vt_debug_print(
     terse, context,
     "done running task={}, done={}, suspended={}\n",
     print_ptr(this), done_, suspended_
   );
+#endif
 }
 
 void RunnableNew::begin() {
-  for (auto&& ctx : contexts_) {
-    ctx->begin();
-  }
+  contexts_.setcontext.begin();
+  if (contexts_.has_td) contexts_.td.begin();
+  if (contexts_.has_col) contexts_.col.begin();
+  if (contexts_.has_lb) contexts_.lb.begin();
+#if vt_check_enabled(trace_enabled)
+  if (contexts_.has_trace) contexts_.trace.begin();
+#endif
 }
 
 void RunnableNew::end() {
-  for (auto&& ctx : contexts_) {
-    ctx->end();
-  }
+  contexts_.setcontext.end();
+  if (contexts_.has_td) contexts_.td.end();
+  if (contexts_.has_col) contexts_.col.end();
+  if (contexts_.has_cont) contexts_.cont.end();
+  if (contexts_.has_lb) contexts_.lb.end();
+#if vt_check_enabled(trace_enabled)
+  if (contexts_.has_trace) contexts_.trace.end();
+#endif
 }
 
 void RunnableNew::suspend() {
-  for (auto&& ctx : contexts_) {
-    ctx->suspend();
-  }
+#if vt_check_enabled(fcontext)
+  contexts_.setcontext.suspend();
+  if (contexts_.has_td) contexts_.td.suspend();
+  if (contexts_.has_col) contexts_.col.suspend();
+  if (contexts_.has_lb) contexts_.lb.suspend();
+
+# if vt_check_enabled(trace_enabled)
+    if (contexts_.has_trace) contexts_.trace.suspend();
+# endif
+#endif
 }
 
 void RunnableNew::resume() {
-  for (auto&& ctx : contexts_) {
-    ctx->resume();
-  }
+#if vt_check_enabled(fcontext)
+  contexts_.setcontext.resume();
+  if (contexts_.has_td) contexts_.td.resume();
+  if (contexts_.has_col) contexts_.col.resume();
+  if (contexts_.has_lb) contexts_.lb.resume();
+
+# if vt_check_enabled(trace_enabled)
+    if (contexts_.has_trace) contexts_.trace.resume();
+# endif
+#endif
 }
 
 void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
-  for (auto&& ctx : contexts_) {
-    ctx->send(elm, bytes);
-  }
+  if (contexts_.has_lb) contexts_.lb.send(elm, bytes);
 }
 
+/*static*/ void* RunnableNew::operator new(std::size_t sz) {
+  return RunnableNewAlloc::runnable->alloc(sz,0);
+}
+
+/*static*/ void RunnableNew::operator delete(void* ptr) {
+  RunnableNewAlloc::runnable->dealloc(ptr);
+}
+
+/*static*/
+std::unique_ptr<pool::MemoryPoolEqual<sizeof(RunnableNew)>>
+RunnableNewAlloc::runnable = std::make_unique<
+  pool::MemoryPoolEqual<sizeof(RunnableNew)>
+>(256);
+
 }} /* end namespace vt::runnable */
+
+#include "vt/pool/static_sized/memory_pool_equal.cc"

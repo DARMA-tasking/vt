@@ -49,7 +49,6 @@
 #include "vt/utils/tls/tls.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/context/context.h"
-#include "vt/registry/registry.h"
 #include "vt/messaging/active.h"
 #include "vt/event/event.h"
 #include "vt/termination/term_headers.h"
@@ -119,7 +118,6 @@ event::AsyncEvent*          theEvent()              { return CUR_RT->theEvent;  
 messaging::ActiveMessenger* theMsg()                { return CUR_RT->theMsg;            }
 param::Param*               theParam()              { return CUR_RT->theParam;          }
 rdma::RDMAManager*          theRDMA()               { return CUR_RT->theRDMA;           }
-registry::Registry*         theRegistry()           { return CUR_RT->theRegistry;       }
 sched::Scheduler*           theSched()              { return CUR_RT->theSched;          }
 term::TerminationDetector*  theTerm()               { return CUR_RT->theTerm;           }
 location::LocationManager*  theLocMan()             { return CUR_RT->theLocMan;         }

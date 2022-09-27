@@ -46,7 +46,6 @@
 
 #include "vt/config.h"
 #include "vt/collective/collective_alg.h"
-#include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/messaging/active.h"
 #include "vt/messaging/message.h"

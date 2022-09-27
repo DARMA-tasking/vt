@@ -44,11 +44,10 @@
 #if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_COMMON_H
 #define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_COMMON_H
 
-#include "vt/trace/trace_event.h"
-
 #include "vt/config.h"
+#include "vt/handler/handler.h"
+#include "vt/trace/trace_event.h"
 #include "vt/activefn/activefn.h"
-#include "vt/registry/registry.h"
 #include "vt/trace/trace.h"
 #include "vt/vrt/context/context_vrt_funcs.h"
 #include "vt/vrt/collection/active/active_funcs.h"

@@ -54,7 +54,11 @@ void BaseUnit::execute() {
       if (not r_->isDone()) {
         auto tid = r_->getThreadID();
         theSched()->suspend(tid, std::move(r_));
+      } else {
+        delete r_;
       }
+    #else
+      delete r_;
     #endif
   } else if (work_) {
     work_();

@@ -60,7 +60,7 @@ namespace {
  * \return the associated epoch
  */
 template <typename MsgPtrT>
-static EpochType extractEpochMsg(MsgPtrT msg) {
+static EpochType extractEpochMsg(MsgPtrT const& msg) {
   auto const is_term = envelopeIsTerm(msg->env);
   if (not is_term) {
     auto ep_ = envelopeIsEpochType(msg->env) ?
@@ -77,7 +77,7 @@ static EpochType extractEpochMsg(MsgPtrT msg) {
 } /* end anon namespace */
 
 template <typename MsgPtrT>
-/*explicit*/ TD::TD(MsgPtrT msg)
+/*explicit*/ TD::TD(MsgPtrT const& msg)
   : TD(extractEpochMsg(msg))
 { }
 

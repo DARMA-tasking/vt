@@ -47,7 +47,6 @@
 #include "vt/config.h"
 #include "vt/context/context.h"
 #include "vt/runtime/runtime_headers.h"
-#include "vt/registry/registry.h"
 
 #include <string>
 
@@ -77,8 +76,6 @@ struct CollectiveAnyOps {
     bool error = false, bool decorate = true, bool formatted = false,
     bool abort_out = false
   );
-
-  static HandlerType registerHandler(ActiveClosureFnType fn);
 };
 
 using CollectiveOps = CollectiveAnyOps<collective_default_inst>;

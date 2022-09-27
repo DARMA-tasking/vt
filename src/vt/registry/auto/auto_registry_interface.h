@@ -46,7 +46,6 @@
 
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/config.h"
-#include "vt/registry/registry.h"
 
 namespace vt { namespace auto_registry {
 

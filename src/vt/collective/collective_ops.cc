@@ -334,11 +334,6 @@ void CollectiveAnyOps<instance>::output(
   }
 }
 
-template <runtime::RuntimeInstType instance>
-HandlerType CollectiveAnyOps<instance>::registerHandler(ActiveClosureFnType fn) {
-  return theRegistry()->registerActiveHandler(fn);
-}
-
 template struct CollectiveAnyOps<collective_default_inst>;
 
 } /* end namespace vt */

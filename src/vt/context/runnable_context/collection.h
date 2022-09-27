@@ -44,7 +44,7 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H
 
-#include "vt/context/runnable_context/base.h"
+#include <functional>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -61,32 +61,34 @@ namespace vt { namespace ctx {
  * \brief Context for a collection element that is running. Includes the index
  * and proxy for the collection.
  */
-template <typename IndexT>
-struct Collection final : Base {
+struct Collection {
+
+  Collection() = default;
 
   /**
    * \brief Construct a \c Collection
    *
    * \param[in] elm the collection element to extract the index and proxy
    */
+  template <typename IndexT>
   explicit Collection(vrt::collection::Indexable<IndexT>* elm);
 
   /**
    * \brief Set the collection context
    */
-  void begin() final override;
+  void begin();
 
   /**
    * \brief Remove the collection context
    */
-  void end() final override;
+  void end();
 
-  void suspend() final override;
-  void resume() final override;
+  void suspend();
+  void resume();
 
 private:
-  IndexT idx_ = {};                         /**< the collection element index */
-  VirtualProxyType proxy_ = no_vrt_proxy;   /**< the collection proxy */
+  std::function<void()> set_;   /**< Set context function */
+  std::function<void()> clear_; /**< Clear context function */
 };
 
 }} /* end namespace vt::ctx */

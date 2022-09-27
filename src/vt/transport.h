@@ -55,7 +55,6 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/collective.h"
 #include "vt/event/event.h"
-#include "vt/registry/registry.h"
 #include "vt/messaging/active.h"
 #include "vt/parameterization/parameterization.h"
 #include "vt/event/event_msgs.h"

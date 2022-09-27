@@ -44,7 +44,7 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H
 
-#include "vt/context/runnable_context/base.h"
+#include "vt/config.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
 #include "vt/epoch/epoch_type.h"
@@ -60,7 +60,9 @@ namespace vt { namespace ctx {
  * the epoch stack  associated with running tasks. Produces and consumes in the
  * constructor and destructor to ensure termination is not detected early.
  */
-struct TD final : Base {
+struct TD {
+
+  TD() = default;
 
   /**
    * \brief Construct with a given epoch; produce on that epoch.
@@ -70,47 +72,44 @@ struct TD final : Base {
   explicit TD(EpochType in_ep);
 
   /**
-   * \brief When destroyed, consume the epoch held by the context.
-   */
-  virtual ~TD();
-
-  /**
    * \brief Construct with a message to extract the epoch; produce on that
    * epoch.
    *
    * \param[in] msg the message to extract the epoch from
    */
   template <typename MsgPtrT>
-  explicit TD(MsgPtrT msg);
+  explicit TD(MsgPtrT const& msg);
 
   /**
    * \brief During begin \c TD will capture the epoch stack size and push \c ep_
    */
-  void begin() final override;
+  void begin();
 
   /**
    * \brief During end \c TD will pop all epochs off of the stack down to the
    * size in captured in \c begin()
    */
-  void end() final override;
+  void end();
 
   /**
    * \brief When suspended, \c TD will preserve any epochs pushed on the stack
    * after begin and restore the stack back to the state before begin was
    * invoked
    */
-  void suspend() final override;
+  void suspend();
 
   /**
    * \brief When resumed, \c TD will restore the stack back from when it was
    * suspended
    */
-  void resume() final override;
+  void resume();
 
 private:
   EpochType ep_ = no_epoch;                    /**< The epoch for the task */
+#if vt_check_enabled(fcontext)
   std::size_t base_epoch_stack_size_ = 0;      /**< Epoch stack size at start  */
   std::vector<EpochType> suspended_epochs_;    /**< Suspended epoch stack */
+#endif
 };
 
 }} /* end namespace vt::ctx */
