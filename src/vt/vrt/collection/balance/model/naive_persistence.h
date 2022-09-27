@@ -60,9 +60,9 @@ struct NaivePersistence : public ComposedModel {
    * \param[in] base: The source of underlying load numbers to return; must not be null
    */
   explicit NaivePersistence(std::shared_ptr<balance::LoadModel> base);
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) override;
-  TimeType getRawLoad(ElementIDStruct object, PhaseOffset offset) override;
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
+  TimeType getRawLoad(ElementIDStruct object, PhaseOffset offset) const override;
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
 }; // class NaivePersistence
 
 }}}} // end namespace

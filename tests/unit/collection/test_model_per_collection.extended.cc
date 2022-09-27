@@ -74,7 +74,7 @@ struct ConstantTestModel : ComposedModel {
       proxy_(in_proxy)
   { }
 
-  TimeType getModeledLoad(ElementIDStruct, PhaseOffset) override {
+  TimeType getModeledLoad(ElementIDStruct, PhaseOffset) const override {
     return static_cast<TimeType>(proxy_);
   }
 
