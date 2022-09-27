@@ -91,7 +91,7 @@ inline void envelopeInitEmpty(PutShortEnvelope& env) {
   env.put_data_tag_ = no_tag;
 }
 
-static_assert(std::is_pod<PutShortEnvelope>(), "PutShortEnvelope must be POD");
+static_assert(std::is_standard_layout<PutShortEnvelope>::value && std::is_trivial<PutShortEnvelope>::value, "PutShortEnvelope must be standard layout and trivial");
 
 /**
  * \brief Get the put pointer
