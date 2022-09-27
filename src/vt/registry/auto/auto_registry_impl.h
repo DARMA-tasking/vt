@@ -54,7 +54,7 @@
 
 namespace vt { namespace auto_registry {
 
-inline AutoActiveObjGroupType getAutoHandlerObjGroup(HandlerType han) {
+inline AutoActiveObjGroupType const& getAutoHandlerObjGroup(HandlerType han) {
   using ContainerType = AutoActiveObjGroupContainerType;
 
   auto const id = HandlerManagerType::getHandlerIdentifier(han);
@@ -71,7 +71,7 @@ inline AutoHandlerType getAutoHandlerObjTypeIdx(HandlerType han) {
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
 inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
   using AdapterT =
-    FunctorAdapterMember<objgroup::ActiveObjType<MsgT, ObjT>, f, ObjT>;
+    FunctorAdapterMember<objgroup::ActiveObjType<MsgT, ObjT>, f, ObjT, MsgT>;
   using ContainerType = AutoActiveObjGroupContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveObjGroupType>;
   using FuncType = objgroup::ActiveObjAnyType;

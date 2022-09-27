@@ -955,11 +955,17 @@ void ActiveMessenger::prepareActiveMsgToRun(
     );
   }
 
-  runnable::makeRunnable(base, not is_term, handler, from_node)
-    .withContinuation(cont)
-    .withTDEpochFromMsg(is_term)
-    .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
-    .enqueue();
+  bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
+  if (is_obj) {
+    vtAbortIf(cont != nullptr, "Must be nullptr");
+    objgroup::dispatchObjGroup(base, handler);
+  } else {
+    runnable::makeRunnable(base, not is_term, handler, from_node)
+      .withContinuation(cont)
+      .withTDEpochFromMsg(is_term)
+      .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
+      .enqueue();
+  }
 
   if (is_term) {
     tdRecvCount.increment(1);

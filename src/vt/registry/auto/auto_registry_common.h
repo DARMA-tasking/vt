@@ -241,6 +241,7 @@ using AutoActiveFunctorType       = BaseHandlersDispatcherPtr;
 using AutoActiveVCType            = BaseHandlersDispatcherPtr;
 using AutoActiveCollectionType    = BaseHandlersDispatcherPtr;
 using AutoActiveCollectionMemType = BaseHandlersDispatcherPtr;
+using AutoActiveObjGroupType      = BaseHandlersDispatcherPtr;
 using AutoActiveMapType           = BaseMapsDispatcherPtr;
 using AutoActiveMapFunctorType    = BaseMapsDispatcherPtr;
 
@@ -248,7 +249,6 @@ using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;
 using AutoActiveRDMAGetType       = ActiveRDMAGetFnPtrType;
 using AutoActiveRDMAPutType       = ActiveRDMAPutFnPtrType;
 using AutoActiveIndexType         = std::size_t;
-using AutoActiveObjGroupType      = objgroup::ActiveObjAnyType;
 
 using HandlerManagerType = vt::HandlerManager;
 using AutoHandlerType = HandlerType;

@@ -78,7 +78,6 @@ struct RunnableMaker {
   ) : impl_(in_impl),
       msg_(in_msg),
       handler_(in_handler),
-      is_void_(in_msg == nullptr),
       from_node_(in_from_node),
       has_msg_(in_msg != nullptr)
   { }
@@ -159,6 +158,20 @@ struct RunnableMaker {
       impl_->setupHandlerElement(ptr, handler_);
     }
 
+    return std::move(*this);
+  }
+
+  /**
+   * \brief Add an objgroup; sets up the handler
+   *
+   * \param[in] elm the collection element pointer
+   */
+  template <typename ElmT>
+  RunnableMaker&& withObjGroup(ElmT* elm) {
+    set_handler_ = true;
+    if (handler_ != uninitialized_handler) {
+      impl_->setupHandlerObjGroup(elm, handler_);
+    }
     return std::move(*this);
   }
 
@@ -261,20 +274,20 @@ struct RunnableMaker {
   }
 
   /**
+   * \brief Run the runnable immediately with a lambda
+   */
+  void runLambda(ActionType action) {
+    setup();
+    impl_->runLambda(action);
+    delete impl_;
+    impl_ = nullptr;
+    is_done_ = true;
+  }
+
+  /**
    * \brief Enqueue the runnable in the scheduler for execution later
    */
   void enqueue();
-
-  /**
-   * \brief Set an explicit task for this runnable (not going through normal
-   * handler)
-   *
-   * \param[in] task_ the task to execute
-   */
-  RunnableMaker&& withExplicitTask(ActionType task_) {
-    impl_->setExplicitTask(task_);
-    return std::move(*this);
-  }
 
 private:
   /**
@@ -282,7 +295,7 @@ private:
    */
   void setup() {
     if (not set_handler_) {
-      impl_->setupHandler(handler_, is_void_);
+      impl_->setupHandler(handler_);
       set_handler_ = true;
     }
   }
@@ -292,7 +305,6 @@ private:
   MsgSharedPtr<MsgT> const& msg_;
   HandlerType handler_ = uninitialized_handler;
   bool set_handler_ = false;
-  bool is_void_ = false;
   NodeType from_node_ = uninitialized_destination;
   bool is_done_ = false;
   bool is_term_ = false;

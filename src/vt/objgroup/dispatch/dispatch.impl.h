@@ -52,20 +52,15 @@ namespace vt { namespace objgroup { namespace dispatch {
 
 template <typename ObjT>
 void Dispatch<ObjT>::run(HandlerType han, BaseMessage* msg) {
-  using ActiveFnType = void(ObjT::*)(vt::BaseMessage*);
+  //using ActiveFnType = void(ObjT::*)(vt::BaseMessage*);
   vtAssert(obj_ != nullptr, "Must have a valid object");
-  // Consume if there is an epoch for this message
+
   auto tmsg = static_cast<vt::Message*>(msg);
-  auto cur_epoch = envelopeGetEpoch(tmsg->env);
-  if (cur_epoch != no_epoch) {
-    theMsg()->pushEpoch(cur_epoch);
-  }
-  auto base_func = auto_registry::getAutoHandlerObjGroup(han);
-  auto type_func = reinterpret_cast<ActiveFnType>(base_func);
-  (obj_->*type_func)(msg);
-  if (cur_epoch != no_epoch) {
-    theMsg()->popEpoch(cur_epoch);
-  }
+  auto m = promoteMsg(tmsg);
+  runnable::makeRunnable(m, true, han, theContext()->getNode())
+    .withObjGroup(obj_)
+    .withTDEpochFromMsg()
+    .enqueue();
 }
 
 }}} /* end namespace vt::objgroup::dispatch */
