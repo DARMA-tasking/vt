@@ -668,7 +668,22 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
 # endif
 
   msg->setHandler(handler);
-  return routeMsg<MessageT>(id,home_node,msg);
+
+  if (local_registered_.find(id) == local_registered_.end()) {
+    return routeMsg<MessageT>(id,home_node,msg);
+  } else {
+    return routeMsgHandlerLocal(msg);
+  }
+}
+
+template <typename EntityID>
+template <typename MessageT>
+void EntityLocationCoord<EntityID>::routeMsgHandlerLocal(
+  MsgSharedPtr<MessageT> const& msg
+) {
+  runnable::makeRunnable(msg, true, msg->getHandler(), theContext()->getNode())
+    .withTDEpochFromMsg()
+    .run();
 }
 
 template <typename EntityID>

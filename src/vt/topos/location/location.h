@@ -238,6 +238,14 @@ struct EntityLocationCoord : LocationCoord {
   );
 
   /**
+   * \brief Route a message with a custom handler where the element is local
+   *
+   * \param[in] m message shared pointer
+   */
+  template <typename MessageT>
+  void routeMsgHandlerLocal(MsgSharedPtr<MessageT> const& msg);
+
+  /**
    * \brief Route a message to the default handler
    *
    * \param[in] id the entity ID
