@@ -289,8 +289,7 @@ struct IsSerializable<
   MsgT,
   typename std::enable_if_t<true
     and ::vt::messaging::msg_defines_serialize_mode<MsgT>::value
-    and (::vt::messaging::msg_serialization_mode<MsgT>::supported
-         or ::vt::messaging::msg_serialization_mode<MsgT>::required)
+    and ::vt::messaging::msg_serialization_mode<MsgT>::required
   >
 >
 {
