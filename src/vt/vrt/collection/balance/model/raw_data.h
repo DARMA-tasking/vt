@@ -59,19 +59,19 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 struct RawData : public LoadModel {
   RawData() = default;
   void updateLoads(PhaseType last_completed_phase) override;
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   bool hasRawLoad() const override { return true; }
-  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
 
-  ObjectIterator begin() override;
+  ObjectIterator begin() const override;
 
-  int getNumObjects() override;
-  unsigned int getNumCompletedPhases() override;
-  int getNumSubphases() override;
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+  int getNumObjects() const override;
+  unsigned int getNumCompletedPhases() const override;
+  int getNumSubphases() const override;
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
 
   // Observer pointers to the underlying data. In operation, these would be owned by NodeLBData
   std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;

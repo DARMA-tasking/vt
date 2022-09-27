@@ -55,7 +55,7 @@ void ComposedModel::updateLoads(PhaseType last_completed_phase) {
 }
 
 TimeType
-ComposedModel::getModeledLoad(ElementIDStruct object, PhaseOffset when) {
+ComposedModel::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
   return base_->getModeledLoad(object, when);
 }
 
@@ -63,28 +63,28 @@ bool ComposedModel::hasRawLoad() const {
   return base_->hasRawLoad();
 }
 
-TimeType ComposedModel::getRawLoad(ElementIDStruct object, PhaseOffset when) {
+TimeType ComposedModel::getRawLoad(ElementIDStruct object, PhaseOffset when) const {
   return base_->getRawLoad(object, when);
 }
 
-unsigned int ComposedModel::getNumPastPhasesNeeded(unsigned int look_back)
+unsigned int ComposedModel::getNumPastPhasesNeeded(unsigned int look_back) const
 {
   return base_->getNumPastPhasesNeeded(look_back);
 }
 
-ObjectIterator ComposedModel::begin() {
+ObjectIterator ComposedModel::begin() const {
   return base_->begin();
 }
 
-int ComposedModel::getNumObjects() {
+int ComposedModel::getNumObjects() const {
   return base_->getNumObjects();
 }
 
-unsigned int ComposedModel::getNumCompletedPhases() {
+unsigned int ComposedModel::getNumCompletedPhases() const {
   return base_->getNumCompletedPhases();
 }
 
-int ComposedModel::getNumSubphases() {
+int ComposedModel::getNumSubphases() const {
   return base_->getNumSubphases();
 }
 

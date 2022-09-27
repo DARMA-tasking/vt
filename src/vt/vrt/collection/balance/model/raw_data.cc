@@ -57,7 +57,7 @@ void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_lo
   proc_comm_ = proc_comm;
 }
 
-ObjectIterator RawData::begin() {
+ObjectIterator RawData::begin() const {
   auto iter = proc_load_->find(last_completed_phase_);
   if (iter != proc_load_->end()) {
     return {std::make_unique<LoadMapObjectIterator>(iter->second.cbegin(),
@@ -67,7 +67,7 @@ ObjectIterator RawData::begin() {
   }
 }
 
-int RawData::getNumObjects() {
+int RawData::getNumObjects() const {
   auto iter = proc_load_->find(last_completed_phase_);
   if (iter != proc_load_->end()) {
     return iter->second.size();
@@ -76,11 +76,11 @@ int RawData::getNumObjects() {
   }
 }
 
-unsigned int RawData::getNumCompletedPhases() {
+unsigned int RawData::getNumCompletedPhases() const {
   return last_completed_phase_ + 1;
 }
 
-int RawData::getNumSubphases() {
+int RawData::getNumSubphases() const {
   const auto& last_phase = proc_load_->at(last_completed_phase_);
 
   // @todo: this workaround is O(#objects) and should be removed when we finish
@@ -94,11 +94,11 @@ int RawData::getNumSubphases() {
   return subphases;
 }
 
-TimeType RawData::getModeledLoad(ElementIDStruct object, PhaseOffset offset) {
+TimeType RawData::getModeledLoad(ElementIDStruct object, PhaseOffset offset) const {
   return getRawLoad(object, offset);
 }
 
-TimeType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) {
+TimeType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) const {
   vtAssert(offset.phases < 0,
            "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
@@ -106,7 +106,7 @@ TimeType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) {
   return proc_load_->at(phase).at(object).get(offset);
 }
 
-unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back)
+unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back) const
 {
   return look_back;
 }
