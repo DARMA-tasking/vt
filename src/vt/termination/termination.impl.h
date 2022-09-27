@@ -97,7 +97,7 @@ inline void TerminationDetector::produceConsumeState(
     print_bool(produce)
   );
 
-  if (state.readySubmitParent()) {
+  if (state.isActive() and state.readySubmitParent()) {
     propagateEpoch(state);
   }
 }
