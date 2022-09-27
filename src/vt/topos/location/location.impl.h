@@ -301,7 +301,9 @@ struct IsSerializable<
 
 template <typename EntityID>
 template <typename MessageT>
-bool EntityLocationCoord<EntityID>::useEagerProtocol(MsgSharedPtr<MessageT> msg) const {
+bool EntityLocationCoord<EntityID>::useEagerProtocol(
+  MsgSharedPtr<MessageT> const& msg
+) const {
   if (detail::IsSerializable<MessageT>::is_ser) {
     return false;
   } else {
@@ -335,7 +337,8 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
-  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg
+  EntityID const& id, NodeType const& home_node,
+  MsgSharedPtr<MessageT> const& msg
 ) {
   auto const& this_node = theContext()->getNode();
   NodeType route_to_node = uninitialized_destination;
@@ -503,7 +506,7 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
   EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-  MsgSharedPtr<MessageT> msg
+  MsgSharedPtr<MessageT> const& msg
 ) {
   auto const& this_node = theContext()->getNode();
   auto const epoch = theMsg()->getEpochContextMsg(msg);
@@ -533,8 +536,9 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     // set the instance on the message to deliver to the correct manager
     msg->setLocInst(this_inst);
 
+    auto m = msg;
     // send to the node discovered by the location manager
-    theMsg()->sendMsg<MessageT, routedHandler>(to_node, msg);
+    theMsg()->sendMsg<MessageT, routedHandler>(to_node, m);
   } else {
     vt_debug_print(
       normal, location,
@@ -651,7 +655,8 @@ void EntityLocationCoord<EntityID>::routeNonEagerAction(
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandler(
-  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg
+  EntityID const& id, NodeType const& home_node,
+  MsgSharedPtr<MessageT> const& msg
 ) {
   using auto_registry::HandlerManagerType;
 
@@ -670,8 +675,8 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
-  EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
-  NodeType from_node
+  EntityID const& id, NodeType const& home_node,
+  MsgSharedPtr<MessageT> const& msg, NodeType from_node
 ) {
   auto const from =
     from_node == uninitialized_destination ? theContext()->getNode() :
