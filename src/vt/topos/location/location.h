@@ -233,7 +233,8 @@ struct EntityLocationCoord : LocationCoord {
    */
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routeMsgHandler(
-    EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg
+    EntityID const& id, NodeType const& home_node,
+    MsgSharedPtr<MessageT> const& msg
   );
 
   /**
@@ -246,7 +247,8 @@ struct EntityLocationCoord : LocationCoord {
    */
   template <typename MessageT>
   void routeMsg(
-    EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
+    EntityID const& id, NodeType const& home_node,
+    MsgSharedPtr<MessageT> const& msg,
     NodeType from_node = uninitialized_destination
   );
 
@@ -331,7 +333,7 @@ struct EntityLocationCoord : LocationCoord {
    * \return whether it is of eager size
    */
   template <typename MessageT>
-  bool useEagerProtocol(MsgSharedPtr<MessageT> msg) const;
+  bool useEagerProtocol(MsgSharedPtr<MessageT> const& msg) const;
 
 private:
   /**
@@ -372,7 +374,8 @@ private:
    */
   template <typename MessageT>
   void routeMsgEager(
-    EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg
+    EntityID const& id, NodeType const& home_node,
+    MsgSharedPtr<MessageT> const& msg
   );
 
   /**
@@ -386,7 +389,7 @@ private:
   template <typename MessageT>
   void routeMsgNode(
     EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-    MsgSharedPtr<MessageT> msg
+    MsgSharedPtr<MessageT> const& msg
   );
 
   /**
