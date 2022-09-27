@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 from_node.h
+//                                collection.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,41 +41,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_FROM_NODE_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_FROM_NODE_H
-
-#include "vt/context/runnable_context/base.h"
+#include "vt/context/runnable_context/collection.h"
 
 namespace vt { namespace ctx {
 
-/**
- * \struct FromNode
- *
- * \brief Get the node that instigated the current task running. Typically the
- * logical node that caused an handler or event to run.
- */
-struct FromNode final : Base {
+void Collection::begin() {
+  set_();
+}
 
-  /**
-   * \brief Construct a \c FromNode
-   *
-   * \param[in] in_node the node
-   */
-  explicit FromNode(NodeType const in_node)
-    : node_(in_node)
-  { }
+void Collection::end() {
+  clear_();
+}
 
-  /**
-   * \brief Get the node that instigated the current task
-   *
-   * \return the node
-   */
-  NodeType get() const { return node_; }
+void Collection::suspend() {
+  end();
+}
 
-private:
-  NodeType node_ = uninitialized_destination; /**< The from node */
-};
+void Collection::resume() {
+  begin();
+}
 
 }} /* end namespace vt::ctx */
-
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_FROM_NODE_H*/

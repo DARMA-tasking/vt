@@ -47,7 +47,6 @@
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/registry/auto/auto_registry_general.h"
-#include "vt/registry/registry.h"
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/context/context_vrt_funcs.h"
 

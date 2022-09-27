@@ -51,30 +51,17 @@
 namespace vt { namespace ctx {
 
 template <typename IndexT>
-/*explicit*/ Collection<IndexT>::Collection(
+/*explicit*/ Collection::Collection(
   vrt::collection::Indexable<IndexT>* elm
-) : idx_(elm->getIndex()),
-    proxy_(elm->getProxy())
-{ }
-
-template <typename IndexT>
-void Collection<IndexT>::begin() {
-  vrt::collection::CollectionContextHolder<IndexT>::set(&idx_, proxy_);
-}
-
-template <typename IndexT>
-void Collection<IndexT>::end() {
-  vrt::collection::CollectionContextHolder<IndexT>::clear();
-}
-
-template <typename IndexT>
-void Collection<IndexT>::suspend() {
-  end();
-}
-
-template <typename IndexT>
-void Collection<IndexT>::resume() {
-  begin();
+) {
+  auto idx_ = elm->getIndex();
+  auto proxy_ = elm->getProxy();
+  set_ = [=]{
+    vrt::collection::CollectionContextHolder<IndexT>::set(&idx_, proxy_);
+  };
+  clear_ = []{
+    vrt::collection::CollectionContextHolder<IndexT>::clear();
+  };
 }
 
 }} /* end namespace vt::ctx */

@@ -44,7 +44,6 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H
 
-#include "vt/context/runnable_context/base.h"
 #include "vt/runnable/runnable.fwd.h"
 #include "vt/utils/ptr/observer.h"
 
@@ -56,36 +55,49 @@ namespace vt { namespace ctx {
  * \brief Set the context of the current running task for query by other
  * components or users.
  */
-struct SetContext final : Base {
+struct SetContext {
+
+  SetContext() = default;
 
   /**
    * \brief Construct a \c SetContext
    *
    * \param[in] in_nonowning_cur_task the current task (non-owning ptr held)
+   * \param[in] in_from_node the from node on the message that caused a task to
+   * run
    */
-  explicit SetContext(runnable::RunnableNew* in_cur_task)
-    : cur_task_(in_cur_task)
+  SetContext(runnable::RunnableNew* in_cur_task, NodeType in_from_node)
+    : cur_task_(in_cur_task),
+      node_(in_from_node)
   {}
+
+  /**
+   * \brief Get the node that instigated the current task
+   *
+   * \return the node
+   */
+  NodeType get() const { return node_; }
 
   /**
    * \brief Preserve the existing task and replace with a new one
    */
-  void begin() final override;
+  void begin();
 
   /**
    * \brief Restore the previous existing task to the context (if there was one)
    */
-  void end() final override;
+  void end();
 
-  void suspend() final override;
+  void suspend();
 
-  void resume() final override;
+  void resume();
 
 private:
   /// The previous runnable that was in the context
   util::ObserverPtr<runnable::RunnableNew> prev_task_ = nullptr;
   /// The new runnable that is replacing it
   util::ObserverPtr<runnable::RunnableNew> cur_task_ = nullptr;
+  NodeType node_ = uninitialized_destination; /**< The from node */
 };
 
 }} /* end namespace vt::ctx */

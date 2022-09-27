@@ -50,29 +50,22 @@ namespace vt { namespace ctx {
 TD::TD(EpochType in_ep)
   : ep_(in_ep == no_epoch ? term::any_epoch_sentinel : in_ep)
 {
-  if (ep_ != no_epoch) {
-    theTerm()->produce(ep_);
-  }
-}
-
-/*virtual*/ TD::~TD() {
-  if (ep_ != no_epoch) {
-    theTerm()->consume(ep_);
-  }
+  theTerm()->produce(ep_);
 }
 
 void TD::begin() {
   theTerm()->pushEpoch(ep_);
 
+#if vt_check_enabled(fcontext)
   auto& epoch_stack = theTerm()->getEpochStack();
 
-
   base_epoch_stack_size_ = epoch_stack.size();
+#endif
 }
 
 void TD::end() {
+#if vt_check_enabled(fcontext)
   auto& epoch_stack = theTerm()->getEpochStack();
-
 
   vtAssert(
     base_epoch_stack_size_ <= epoch_stack.size(),
@@ -82,13 +75,15 @@ void TD::end() {
   while (epoch_stack.size() > base_epoch_stack_size_) {
     theTerm()->popEpoch();
   }
+#endif
 
   theTerm()->popEpoch(ep_);
+  theTerm()->consume(ep_);
 }
 
 void TD::suspend() {
+#if vt_check_enabled(fcontext)
   auto& epoch_stack = theTerm()->getEpochStack();
-
 
   while (epoch_stack.size() > base_epoch_stack_size_) {
     suspended_epochs_.push_back(theTerm()->getEpoch());
@@ -96,14 +91,15 @@ void TD::suspend() {
   }
 
   theTerm()->popEpoch(ep_);
+#endif
 }
 
 void TD::resume() {
+#if vt_check_enabled(fcontext)
   theTerm()->pushEpoch(ep_);
 
   auto& epoch_stack = theTerm()->getEpochStack();
   base_epoch_stack_size_ = epoch_stack.size();
-
 
   for (auto it = suspended_epochs_.rbegin();
        it != suspended_epochs_.rend();
@@ -112,6 +108,7 @@ void TD::resume() {
   }
 
   suspended_epochs_.clear();
+#endif
 }
 
 }} /* end namespace vt::ctx */

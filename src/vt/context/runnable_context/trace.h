@@ -44,7 +44,6 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_H
 
-#include "vt/context/runnable_context/base.h"
 #include "vt/trace/trace_common.h"
 #include "vt/messaging/envelope/envelope_get.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -58,7 +57,9 @@ namespace vt { namespace ctx {
  *
  * \brief Manages tracing a task's execution for outputting logs
  */
-struct Trace final : Base {
+struct Trace {
+
+  Trace() = default;
 
   /**
    * \brief Construct a new trace context (basic processing event)
@@ -100,10 +101,10 @@ struct Trace final : Base {
    */
   trace::TraceEventIDType getEvent() const { return event_; }
 
-  void begin() final override;
-  void end() final override;
-  void suspend() final override;
-  void resume() final override;
+  void begin();
+  void end();
+  void suspend();
+  void resume();
 
 private:
   /// Whether it's a collection or not
@@ -126,7 +127,7 @@ private:
 
 #else
 
-struct Trace : Base {
+struct Trace {
 
   template <typename... Args>
   Trace(Args&&... args) {}

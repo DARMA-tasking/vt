@@ -45,7 +45,6 @@
 #include "vt/runtime/runtime.h"
 #include "vt/context/context.h"
 #include "vt/context/context_attorney.h"
-#include "vt/registry/registry.h"
 #include "vt/messaging/active.h"
 #include "vt/event/event.h"
 #include "vt/termination/termination.h"
@@ -680,10 +679,6 @@ void Runtime::initializeComponents() {
     phase::PhaseManager // For outputting memory at phase boundaries
   >{});
 
-  p_->registerComponent<registry::Registry>(&theRegistry, Deps<
-    ctx::Context // Everything depends on theContext
-  >{});
-
   p_->registerComponent<pool::Pool>(&thePool, Deps<
     ctx::Context // Everything depends on theContext
   >{});
@@ -730,8 +725,7 @@ void Runtime::initializeComponents() {
 #     endif
       ctx::Context,      // Everything depends on theContext
       event::AsyncEvent, // Depends on event to send messages
-      pool::Pool,        // Depends on pool for message allocation
-      registry::Registry // Depends on registry for handlers
+      pool::Pool         // Depends on pool for message allocation
     >{}
   );
 
@@ -887,7 +881,6 @@ void Runtime::initializeComponents() {
   p_->add<arguments::ArgConfig>();
   p_->add<ctx::Context>();
   p_->add<util::memory::MemoryUsage>();
-  p_->add<registry::Registry>();
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
 # if vt_check_enabled(trace_enabled)
@@ -909,7 +902,6 @@ void Runtime::initializeComponents() {
   p_->add<vrt::VirtualContextManager>();
   p_->add<vrt::collection::CollectionManager>();
   p_->add<rdma::Manager>();
-  p_->add<registry::Registry>();
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
   p_->add<vrt::collection::balance::NodeLBData>();
@@ -1111,10 +1103,6 @@ void Runtime::printMemoryFootprint() const {
     } else if (name == "RDMAManager") {
       printComponentFootprint(
         static_cast<rdma::RDMAManager*>(base)
-      );
-    } else if (name == "Registry") {
-      printComponentFootprint(
-        static_cast<registry::Registry*>(base)
       );
     } else if (name == "Scheduler") {
       printComponentFootprint(
