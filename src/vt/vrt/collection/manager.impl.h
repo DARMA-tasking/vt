@@ -473,10 +473,9 @@ util::Copyable<Type> CollectionManager::invoke(
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
     .withLBDataVoidMsg(ptr)
-    .withExplicitTask([&]{
+    .runLambda([&]{
       result = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-    })
-    .runOrEnqueue(true);
+    });
 
   return result;
 }
@@ -493,11 +492,10 @@ util::NotCopyable<Type> CollectionManager::invoke(
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
     .withLBDataVoidMsg(ptr)
-    .withExplicitTask([&]{
+    .runLambda([&]{
       auto&& ret = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
       result = std::move(ret);
-    })
-    .runOrEnqueue(true);
+    });
 
   return std::move(result);
 }
@@ -513,10 +511,9 @@ util::IsVoidReturn<Type> CollectionManager::invoke(
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
     .withLBDataVoidMsg(ptr)
-    .withExplicitTask([&]{
+    .runLambda([&]{
       runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-    })
-    .runOrEnqueue(true);
+    });
 }
 
 template <
