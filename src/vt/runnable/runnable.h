@@ -70,6 +70,10 @@ namespace vt { namespace runnable {
 namespace detail {
 
 struct Contexts {
+#if vt_check_enabled(trace_enabled)
+  bool has_trace = false;
+  ctx::Trace trace;
+#endif
   ctx::SetContext setcontext;
   bool has_td = false;
   ctx::TD td;
@@ -79,10 +83,6 @@ struct Contexts {
   ctx::Collection col;
   bool has_lb = false;
   ctx::LBData lb;
-#if vt_check_enabled(trace_enabled)
-  bool has_trace = false;
-  ctx::Trace trace;
-#endif
 };
 
 } /* end namespace detail */
