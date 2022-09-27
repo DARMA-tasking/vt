@@ -169,7 +169,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
             innermsg->setProxy(toProxy);
             theLocMan()->vrtContextLoc->routeMsgHandler<
               SerialMsgT, SerializedMessenger::payloadMsgHandler
-            >(toProxy, home_node, innermsg.get());
+            >(toProxy, home_node, innermsg);
             return messaging::PendingSend(nullptr);
           },
           // custom data transfer lambda if above the eager threshold
