@@ -130,6 +130,13 @@ struct Runtime {
   int progress(TimeType current_time) { if (p_) return p_->progress(current_time); else return 0; }
 
   /**
+   * \brief Check if any pollable components needs the current time
+   *
+   * \return whether it needs the current time
+   */
+  bool needsCurrentTime() { if (p_) return p_->needsCurrentTime(); else return false; }
+
+  /**
    * \brief Check if runtime has terminated
    *
    * \return whether it has terminated

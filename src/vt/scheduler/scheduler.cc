@@ -109,6 +109,11 @@ Scheduler::Scheduler()
 # endif
 }
 
+void Scheduler::startup() {
+  special_progress_ =
+    theConfig()->vt_sched_progress_han != 0 or progress_time_enabled_;
+}
+
 void Scheduler::preDiagnostic() {
   vtLiveTime.stop();
 }
@@ -236,22 +241,27 @@ void Scheduler::runProgress(bool msg_only, TimeType current_time) {
     printMemoryUsage();
   }
 
-  // Reset count of processed handlers since the last time progress was invoked
-  processed_after_last_progress_ = 0;
-  last_progress_time_ = timing::getCurrentTime();
-
+  if (special_progress_) {
+    // Reset count of processed handlers since the last time progress was invoked
+    processed_after_last_progress_ = 0;
+    last_progress_time_ = timing::getCurrentTime();
+  }
 }
 
 void Scheduler::runSchedulerOnceImpl(bool msg_only) {
-  auto current_time = timing::getCurrentTime();
-  auto time_since_last_progress = current_time - last_progress_time_;
-  if (
-    work_queue_.empty() or
-    shouldCallProgress(processed_after_last_progress_, time_since_last_progress)
-  ) {
-    runProgress(msg_only, current_time);
+  if (special_progress_) {
+    auto current_time = timing::getCurrentTime();
+    auto time_since_last_progress = current_time - last_progress_time_;
+    if (shouldCallProgress(processed_after_last_progress_, time_since_last_progress)) {
+      runProgress(msg_only, current_time);
+    }
+  } else if (work_queue_.empty()) {
+    if (curRT->needsCurrentTime()) {
+      runProgress(msg_only, timing::getCurrentTime());
+    } else {
+      runProgress(msg_only, TimeType{0});
+    }
   }
-
 
   if (not work_queue_.empty()) {
     queueSizeGauge.update(work_queue_.size());

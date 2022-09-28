@@ -92,4 +92,8 @@ int TimeTriggerManager::progress(TimeType current_time) {
   return 0;
 }
 
+bool TimeTriggerManager::needsCurrentTime() {
+  return queue_.size() != 0;
+}
+
 }} /* end namespace vt::timetrigger */
