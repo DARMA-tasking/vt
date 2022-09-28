@@ -172,16 +172,16 @@ TerminationDetector::getDSTerm(EpochType epoch, bool is_root) {
 }
 
 void TerminationDetector::maybePropagate() {
-  if (any_epoch_state_.readySubmitParent()) {
+  if (any_epoch_state_.isActive() and any_epoch_state_.readySubmitParent()) {
     propagateEpoch(any_epoch_state_);
   }
 
-  if (hang_.readySubmitParent()) {
+  if (hang_.isActive() and hang_.readySubmitParent()) {
     propagateEpoch(hang_);
   }
 
   for (auto&& state : epoch_state_) {
-    if (state.second.readySubmitParent()) {
+    if (state.second.isActive() and state.second.readySubmitParent()) {
       propagateEpoch(state.second);
     }
   }
@@ -202,7 +202,7 @@ void TerminationDetector::propagateEpochExternalState(
 
   state.notifyChildReceive();
 
-  if (state.readySubmitParent()) {
+  if (state.isActive() and state.readySubmitParent()) {
     propagateEpoch(state);
   }
 }
