@@ -167,15 +167,13 @@ void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
   );
   auto pending_iter = pending_.find(proxy);
   if (pending_iter != pending_.end()) {
-    for (auto&& msg : pending_iter->second) {
-      theSched()->enqueue([msg]{
-        auto const handler = envelopeGetHandler(msg->env);
-        auto const epoch = envelopeGetEpoch(msg->env);
-        theObjGroup()->dispatch(msg,handler);
-        if (epoch != no_epoch) {
-          theTerm()->consume(epoch);
-        }
-      });
+    for (auto&& pending : pending_iter->second) {
+      auto const& msg = pending.msg_;
+      auto const epoch = envelopeGetEpoch(msg->env);
+      dispatch(msg, pending.han_, pending.from_node_, pending.cont_);
+      if (epoch != no_epoch) {
+        theTerm()->consume(epoch);
+      }
     }
     pending_.erase(pending_iter);
   }

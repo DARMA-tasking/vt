@@ -83,7 +83,10 @@ ObjGroupProxyType ObjGroupManager::getProxy(ObjGroupProxyType proxy) {
   return proxy;
 }
 
-void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
+void ObjGroupManager::dispatch(
+  MsgSharedPtr<ShortMessage> msg, HandlerType han, NodeType from_node,
+  ActionType cont
+) {
   // Extract the control-bit sequence from the handler
   auto const ctrl = HandlerManager::getHandlerControl(han);
   vt_debug_print(
@@ -103,9 +106,9 @@ void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) 
     if (epoch != no_epoch and epoch != term::any_epoch_sentinel) {
       theTerm()->produce(epoch);
     }
-    pending_[proxy].push_back(msg);
+    pending_[proxy].emplace_back(msg, from_node, cont, han);
   } else {
-    dispatch_iter->second->run(han,msg.get());
+    dispatch_iter->second->run(han, msg.get(), from_node, cont);
   }
 }
 
@@ -163,12 +166,15 @@ elm::ElementIDStruct ObjGroupManager::getNextElm(ObjGroupProxyType proxy) {
   }
 }
 
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
+void dispatchObjGroup(
+  MsgSharedPtr<ShortMessage> msg, HandlerType han, NodeType from_node,
+  ActionType cont
+) {
   vt_debug_print(
     verbose, objgroup,
     "dispatchObjGroup: han={:x}\n", han
   );
-  return theObjGroup()->dispatch(msg,han);
+  return theObjGroup()->dispatch(msg, han, from_node, cont);
 }
 
 }} /* end namespace vt::objgroup */

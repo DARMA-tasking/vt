@@ -91,8 +91,28 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   using HolderBasePtrType   = std::unique_ptr<HolderBaseType>;
   using DispatchBaseType    = dispatch::DispatchBase;
   using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
-  using MsgContainerType    = std::vector<MsgSharedPtr<ShortMessage>>;
   using PendingSendType     = messaging::PendingSend;
+
+private:
+  struct PendingRecv {
+    PendingRecv(
+      MsgSharedPtr<ShortMessage> in_msg, NodeType in_from_node,
+      ActionType in_cont, HandlerType in_han
+    ) : msg_(in_msg),
+        from_node_(in_from_node),
+        cont_(in_cont),
+        han_(in_han)
+    { }
+
+    MsgSharedPtr<ShortMessage> msg_;
+    NodeType from_node_ = uninitialized_destination;
+    ActionType cont_ = nullptr;
+    HandlerType han_ = uninitialized_handler;
+  };
+
+public:
+  using MsgContainerType    = std::vector<PendingRecv>;
+
 
   /**
    * \internal \brief Construct the ObjGroupManager
@@ -338,8 +358,13 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    *
    * \param[in] msg the message
    * \param[in] han the handler to invoke
+   * \param[in] from_node the node it was from
+   * \param[in] cont optional continuation to execute after
    */
-  void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+  void dispatch(
+    MsgSharedPtr<ShortMessage> msg, HandlerType han, NodeType from_node,
+    ActionType cont
+  );
 
   /**
    * \internal \brief Send a message to an objgroup

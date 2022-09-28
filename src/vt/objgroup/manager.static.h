@@ -66,9 +66,11 @@ messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType de
     return messaging::PendingSend{cur_epoch, [msg, han, cur_epoch, this_node](){
       auto holder = detail::getHolderBase(han);
       auto const& elm_id = holder->getElmID();
+      auto elm = holder->getPtr();
       auto lb_data = &holder->getLBData();
 
       runnable::makeRunnable(msg, true, han, this_node)
+        .withObjGroup(elm)
         .withTDEpoch(cur_epoch)
         .withLBData(lb_data, elm_id)
         .enqueue();
@@ -89,8 +91,14 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
   );
 
   // this is a local invocation.. no thread required
+  auto holder = detail::getHolderBase(han);
+  auto const& elm_id = holder->getElmID();
+  auto elm = holder->getPtr();
+  auto lb_data = &holder->getLBData();
   runnable::makeRunnable(msg.msg_, false, han, this_node)
+    .withObjGroup(elm)
     .withTDEpochFromMsg()
+    .withLBData(lb_data, elm_id)
     .run();
 }
 

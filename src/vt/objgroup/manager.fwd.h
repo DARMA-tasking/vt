@@ -60,7 +60,10 @@ namespace detail {
 holder::HolderBase* getHolderBase(HandlerType handler);
 } /* end namespace detail */
 
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+void dispatchObjGroup(
+  MsgSharedPtr<ShortMessage> msg, HandlerType han, NodeType from_node,
+  ActionType cont
+);
 
 template <typename MsgT>
 messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);

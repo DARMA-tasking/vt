@@ -51,13 +51,15 @@
 namespace vt { namespace objgroup { namespace dispatch {
 
 template <typename ObjT>
-void Dispatch<ObjT>::run(HandlerType han, BaseMessage* msg) {
-  //using ActiveFnType = void(ObjT::*)(vt::BaseMessage*);
+void Dispatch<ObjT>::run(
+  HandlerType han, BaseMessage* msg, NodeType from_node, ActionType cont
+) {
   vtAssert(obj_ != nullptr, "Must have a valid object");
 
   auto tmsg = static_cast<vt::Message*>(msg);
   auto m = promoteMsg(tmsg);
-  runnable::makeRunnable(m, true, han, theContext()->getNode())
+  runnable::makeRunnable(m, true, han, from_node)
+    .withContinuation(cont)
     .withObjGroup(obj_)
     .withTDEpochFromMsg()
     .enqueue();

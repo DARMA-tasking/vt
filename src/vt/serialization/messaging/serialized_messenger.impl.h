@@ -53,6 +53,7 @@
 #include "vt/serialization/messaging/serialized_messenger.h"
 #include "vt/messaging/envelope/envelope_set.h" // envelopeSetRef
 #include "vt/runnable/make_runnable.h"
+#include "vt/objgroup/manager.fwd.h"
 
 #include <tuple>
 #include <type_traits>
@@ -88,9 +89,16 @@ template <typename UserMsgT>
   auto msg_data = ptr_offset;
   auto user_msg = deserializeFullMessage<UserMsgT>(msg_data);
 
-  runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
-    .withTDEpochFromMsg()
-    .enqueue();
+  bool const is_obj = HandlerManager::isHandlerObjGroup(handler);
+  if (is_obj) {
+    objgroup::dispatchObjGroup(
+      user_msg.template to<BaseMsgType>(), handler, sys_msg->from_node, nullptr
+    );
+  } else {
+    runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
+      .withTDEpochFromMsg()
+      .enqueue();
+  }
 }
 
 template <typename UserMsgT>
@@ -132,10 +140,17 @@ template <typename UserMsgT>
         handler, recv_tag, envelopeGetEpoch(msg->env)
       );
 
-      runnable::makeRunnable(msg, true, handler, node)
-        .withTDEpoch(epoch, not is_valid_epoch)
-        .withContinuation(action)
-        .enqueue();
+      bool const is_obj = HandlerManager::isHandlerObjGroup(handler);
+      if (is_obj) {
+        objgroup::dispatchObjGroup(
+          msg.template to<BaseMsgType>(), handler, node, action
+        );
+      } else {
+        runnable::makeRunnable(msg, true, handler, node)
+          .withTDEpoch(epoch, not is_valid_epoch)
+          .withContinuation(action)
+          .enqueue();
+      }
 
       if (is_valid_epoch) {
         theTerm()->consume(epoch);
@@ -174,9 +189,16 @@ template <typename UserMsgT, typename BaseEagerMsgT>
     print_ptr(user_msg.get()), envelopeGetEpoch(sys_msg->env)
   );
 
-  runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
-    .withTDEpochFromMsg()
-    .enqueue();
+  bool const is_obj = HandlerManager::isHandlerObjGroup(handler);
+  if (is_obj) {
+    objgroup::dispatchObjGroup(
+      user_msg.template to<BaseMsgType>(), handler, sys_msg->from_node, nullptr
+    );
+  } else {
+    runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
+      .withTDEpochFromMsg()
+      .enqueue();
+  }
 }
 
 template <typename MsgT, typename BaseT>
@@ -407,9 +429,16 @@ template <typename MsgT, typename BaseT>
 
         auto base_msg = user_msg.template to<BaseMsgType>();
         return messaging::PendingSend(base_msg, [=](MsgPtr<BaseMsgType> in) {
-          runnable::makeRunnable(user_msg, true, typed_handler, node)
-            .withTDEpochFromMsg()
-            .enqueue();
+          bool const is_obj = HandlerManager::isHandlerObjGroup(typed_handler);
+          if (is_obj) {
+            objgroup::dispatchObjGroup(
+              user_msg.template to<BaseMsgType>(), typed_handler, node, nullptr
+            );
+          } else {
+            runnable::makeRunnable(user_msg, true, typed_handler, node)
+              .withTDEpochFromMsg()
+              .enqueue();
+          }
         });
       }
     };

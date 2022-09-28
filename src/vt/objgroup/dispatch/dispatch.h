@@ -63,7 +63,9 @@ struct Dispatch final : DispatchBase {
 
   virtual ~Dispatch() = default;
 
-  void run(HandlerType han, BaseMessage* msg) override;
+  void run(
+    HandlerType han, BaseMessage* msg, NodeType from_node, ActionType cont
+  ) override;
   void* objPtr() const override  { return obj_; }
 
 private:
