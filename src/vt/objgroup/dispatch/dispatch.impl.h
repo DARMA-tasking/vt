@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 #include "vt/registry/auto/auto_registry.h"
+#include "vt/objgroup/holder/holder_base.h"
 
 namespace vt { namespace objgroup { namespace dispatch {
 
@@ -58,9 +59,14 @@ void Dispatch<ObjT>::run(
 
   auto tmsg = static_cast<vt::Message*>(msg);
   auto m = promoteMsg(tmsg);
+  auto holder = detail::getHolderBase(han);
+  auto const& elm_id = holder->getElmID();
+  auto lb_data = &holder->getLBData();
+
   runnable::makeRunnable(m, true, han, from_node)
     .withContinuation(cont)
     .withObjGroup(obj_)
+    .withLBData(lb_data, elm_id)
     .withTDEpochFromMsg()
     .enqueue();
 }

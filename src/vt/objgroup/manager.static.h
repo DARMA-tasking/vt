@@ -60,20 +60,15 @@ messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType de
   if (dest_node != this_node) {
     return theMsg()->sendMsg<MsgT>(dest_node, han,msg, no_tag);
   } else {
-    // Get the current epoch for the message
-    auto const cur_epoch = theMsg()->setupEpochMsg(msg);
-
-    return messaging::PendingSend{cur_epoch, [msg, han, cur_epoch, this_node](){
-      auto holder = detail::getHolderBase(han);
-      auto const& elm_id = holder->getElmID();
-      auto elm = holder->getPtr();
-      auto lb_data = &holder->getLBData();
-
-      runnable::makeRunnable(msg, true, han, this_node)
-        .withObjGroup(elm)
-        .withTDEpoch(cur_epoch)
-        .withLBData(lb_data, elm_id)
-        .enqueue();
+    theMsg()->setupEpochMsg(msg);
+    envelopeSetHandler(msg->env, han);
+    return messaging::PendingSend{msg, [](MsgSharedPtr<BaseMsgType>& inner_msg){
+      dispatchObjGroup(
+        inner_msg.template to<ShortMessage>(),
+        envelopeGetHandler(inner_msg->env),
+        theContext()->getNode(),
+        nullptr
+      );
     }};
   }
 }
