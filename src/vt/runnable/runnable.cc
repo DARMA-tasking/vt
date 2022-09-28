@@ -56,6 +56,9 @@ namespace vt { namespace runnable {
 void RunnableNew::setupHandler(HandlerType handler) {
   using HandlerManagerType = HandlerManager;
 
+  bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
+  vtAssert(not is_obj, "Must not be object");
+
   bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
   bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
 

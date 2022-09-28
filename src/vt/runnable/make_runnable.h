@@ -91,7 +91,9 @@ struct RunnableMaker {
    * \param[in] cont the continuation
    */
   RunnableMaker&& withContinuation(ActionType cont) {
-    impl_->addContextCont(cont);
+    if (cont != nullptr) {
+      impl_->addContextCont(cont);
+    }
     return std::move(*this);
   }
 
