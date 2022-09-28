@@ -52,7 +52,6 @@
 #include "vt/objgroup/holder/holder.h"
 #include "vt/objgroup/holder/holder_user.h"
 #include "vt/objgroup/holder/holder_basic.h"
-#include "vt/objgroup/dispatch/dispatch.h"
 #include "vt/messaging/message/message.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
@@ -89,11 +88,9 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   using MakeFnType          = std::function<std::unique_ptr<ObjT>()>;
   using HolderBaseType      = holder::HolderBase;
   using HolderBasePtrType   = std::unique_ptr<HolderBaseType>;
-  using DispatchBaseType    = dispatch::DispatchBase;
-  using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
-  using MsgContainerType    = std::vector<MsgSharedPtr<ShortMessage>>;
   using PendingSendType     = messaging::PendingSend;
 
+public:
   /**
    * \internal \brief Construct the ObjGroupManager
    */
@@ -330,17 +327,6 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   template <typename ObjT>
   std::string getLabel(ProxyType<ObjT> proxy) const;
 
-  /*
-   * Dispatch to a live obj group pointer with a handler
-   */
-  /**
-   * \internal \brief Dispatch message to objgroup
-   *
-   * \param[in] msg the message
-   * \param[in] han the handler to invoke
-   */
-  void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han);
-
   /**
    * \internal \brief Send a message to an objgroup
    *
@@ -383,7 +369,6 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_obj_id_
-      | dispatch_
       | objs_
       | obj_to_proxy_
       | pending_
@@ -392,6 +377,8 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
 
   // Friend function to access the holder without including this header file
   friend holder::HolderBase* detail::getHolderBase(HandlerType handler);
+  friend std::unordered_map<ObjGroupProxyType, HolderBasePtrType>& getObjs();
+  friend std::unordered_map<ObjGroupProxyType, std::vector<ActionType>>& getPending();
 
 private:
   /**
@@ -451,14 +438,12 @@ private:
 private:
   /// The current obj ID, sequential on each node for collective construction
   ObjGroupIDType cur_obj_id_ = fst_obj_group_id;
-  /// Function to dispatch to the base class for type-erasure to run handler
-  std::unordered_map<ObjGroupProxyType, DispatchBasePtrType> dispatch_;
   /// Type-erased pointers to the objects held on this node
   std::unordered_map<ObjGroupProxyType, HolderBasePtrType> objs_;
   /// Reverse lookup map from an object pointer to the proxy
   std::unordered_map<void*, ObjGroupProxyType> obj_to_proxy_;
   /// Messages that are pending creation for delivery
-  std::unordered_map<ObjGroupProxyType, MsgContainerType> pending_;
+  std::unordered_map<ObjGroupProxyType, std::vector<ActionType>> pending_;
   /// Map of object groups' labels
   std::unordered_map<ObjGroupProxyType, std::string> labels_;
 };

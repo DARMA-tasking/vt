@@ -60,7 +60,13 @@ namespace detail {
 holder::HolderBase* getHolderBase(HandlerType handler);
 } /* end namespace detail */
 
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
+template <typename MsgT>
+void dispatchObjGroup(
+  MsgSharedPtr<MsgT> msg, HandlerType han, NodeType from_node, ActionType cont
+);
+
+std::unordered_map<ObjGroupProxyType, std::unique_ptr<holder::HolderBase>>& getObjs();
+std::unordered_map<ObjGroupProxyType, std::vector<ActionType>>& getPending();
 
 template <typename MsgT>
 messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
