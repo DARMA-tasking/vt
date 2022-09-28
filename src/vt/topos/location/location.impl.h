@@ -741,7 +741,7 @@ void EntityLocationCoord<EntityID>::routePreparedMsg(
     getLocation(msg->getEntity(), msg->getHomeNode(), [=](NodeType node) {
       theMsg()->pushEpoch(epoch);
       routeMsgNode<MessageT>(
-        msg->getEntity(), msg->getHomeNode(), msg->getLocFromNode(), msg
+        msg->getEntity(), msg->getHomeNode(), node, msg
       );
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);
