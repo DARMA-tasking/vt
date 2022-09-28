@@ -45,14 +45,12 @@
 #include "vt/runtime/runtime.h"
 #include "vt/context/context.h"
 #include "vt/context/context_attorney.h"
-#include "vt/registry/registry.h"
 #include "vt/messaging/active.h"
 #include "vt/event/event.h"
 #include "vt/termination/termination.h"
 #include "vt/pool/pool.h"
 #include "vt/rdma/rdma_headers.h"
 #include "vt/parameterization/parameterization.h"
-#include "vt/sequence/sequencer_headers.h"
 #include "vt/pipe/pipe_manager.h"
 #include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
@@ -681,10 +679,6 @@ void Runtime::initializeComponents() {
     phase::PhaseManager // For outputting memory at phase boundaries
   >{});
 
-  p_->registerComponent<registry::Registry>(&theRegistry, Deps<
-    ctx::Context // Everything depends on theContext
-  >{});
-
   p_->registerComponent<pool::Pool>(&thePool, Deps<
     ctx::Context // Everything depends on theContext
   >{});
@@ -731,8 +725,7 @@ void Runtime::initializeComponents() {
 #     endif
       ctx::Context,      // Everything depends on theContext
       event::AsyncEvent, // Depends on event to send messages
-      pool::Pool,        // Depends on pool for message allocation
-      registry::Registry // Depends on registry for handlers
+      pool::Pool         // Depends on pool for message allocation
     >{}
   );
 
@@ -812,21 +805,6 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_->registerComponent<seq::Sequencer>(
-    &theSeq, Deps<
-      ctx::Context,              // Everything depends on theContext
-      messaging::ActiveMessenger // Depends on active messenger for sequencing
-    >{}
-  );
-
-  p_->registerComponent<seq::SequencerVirtual>(
-    &theVirtualSeq, Deps<
-      ctx::Context,               // Everything depends on theContext
-      messaging::ActiveMessenger, // Depends on active messenger for sequencing
-      vrt::VirtualContextManager  // Depends on virtual manager
-    >{}
-  );
-
   p_->registerComponent<location::LocationManager>(
     &theLocMan, Deps<
       ctx::Context,               // Everything depends on theContext
@@ -903,7 +881,6 @@ void Runtime::initializeComponents() {
   p_->add<arguments::ArgConfig>();
   p_->add<ctx::Context>();
   p_->add<util::memory::MemoryUsage>();
-  p_->add<registry::Registry>();
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
 # if vt_check_enabled(trace_enabled)
@@ -921,13 +898,10 @@ void Runtime::initializeComponents() {
   p_->add<pipe::PipeManager>();
   p_->add<rdma::RDMAManager>();
   p_->add<param::Param>();
-  p_->add<seq::Sequencer>();
-  p_->add<seq::SequencerVirtual>();
   p_->add<location::LocationManager>();
   p_->add<vrt::VirtualContextManager>();
   p_->add<vrt::collection::CollectionManager>();
   p_->add<rdma::Manager>();
-  p_->add<registry::Registry>();
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
   p_->add<vrt::collection::balance::NodeLBData>();
@@ -1027,22 +1001,23 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     // Without workers running on the node, the termination detector should
     // enable/disable the global collective epoch based on the state of the
     // scheduler; register listeners to activate/deactivate that epoch
+    auto td = vt::theTerm();
     theSched->registerTrigger(
-      sched::SchedulerEvent::BeginIdleMinusTerm, []{
+      sched::SchedulerEvent::BeginIdleMinusTerm, [td]{
         vt_debug_print(
           normal, runtime,
           "setLocalTerminated: BeginIdle: true\n"
         );
-        vt::theTerm()->setLocalTerminated(true, false);
+        td->setLocalTerminated(true, false);
       }
     );
     theSched->registerTrigger(
-      sched::SchedulerEvent::EndIdleMinusTerm, []{
+      sched::SchedulerEvent::EndIdleMinusTerm, [td]{
         vt_debug_print(
           normal, runtime,
           "setLocalTerminated: EndIdle: false\n"
         );
-        vt::theTerm()->setLocalTerminated(false, false);
+        td->setLocalTerminated(false, false);
       }
     );
   }
@@ -1129,21 +1104,9 @@ void Runtime::printMemoryFootprint() const {
       printComponentFootprint(
         static_cast<rdma::RDMAManager*>(base)
       );
-    } else if (name == "Registry") {
-      printComponentFootprint(
-        static_cast<registry::Registry*>(base)
-      );
     } else if (name == "Scheduler") {
       printComponentFootprint(
         static_cast<sched::Scheduler*>(base)
-      );
-    } else if (name == "Sequencer") {
-      printComponentFootprint(
-        static_cast<seq::Sequencer*>(base)
-      );
-    } else if (name == "VirtualSequencer") {
-      printComponentFootprint(
-        static_cast<seq::SequencerVirtual*>(base)
       );
     } else if (name == "TerminationDetector") {
       printComponentFootprint(

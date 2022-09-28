@@ -46,15 +46,11 @@
 
 #include "vt/config.h"
 #include "vt/termination/term_common.h"
-#include "vt/sequence/sequencer_fwd.h"
 
 namespace vt {
 
 namespace arguments {
 struct ArgConfig;
-}
-namespace registry {
-struct Registry;
 }
 namespace messaging {
 struct ActiveMessenger;

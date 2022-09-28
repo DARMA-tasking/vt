@@ -23,4 +23,10 @@ then
     popd
 fi
 
+if test "${TEST_LB_SCHEMA:-0}" -eq 1
+then
+    echo "Validating schema of json files..."
+    "${VT}/scripts/check_lb_data_files.sh" "${VT_BUILD}" "${VT}"
+fi
+
 popd

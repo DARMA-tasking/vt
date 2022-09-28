@@ -85,7 +85,7 @@ struct WorkerGroupOMP
   void spawnWorkers();
   void spawnWorkersBlock(WorkerCommFnType fn);
   void joinWorkers();
-  int progress() override;
+  int progress(TimeType current_time = 0.0) override;
   bool commScheduler();
 
   // non-thread-safe comm and worker thread enqueue

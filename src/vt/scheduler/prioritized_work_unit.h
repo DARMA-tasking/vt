@@ -50,12 +50,12 @@ namespace vt { namespace sched {
 
 struct PriorityUnit : BaseUnit {
   PriorityUnit(bool in_is_term, RunnablePtrType in_ptr, PriorityType in_priority)
-    : BaseUnit(std::move(in_ptr), in_is_term),
+    : BaseUnit(in_is_term, std::move(in_ptr)),
       priority_(in_priority)
   { }
 
   PriorityUnit(bool in_is_term, ActionType in_work, PriorityType in_priority)
-    : BaseUnit(in_work, in_is_term),
+    : BaseUnit(in_is_term, in_work),
       priority_(in_priority)
   { }
 

@@ -151,7 +151,6 @@ set(
 # List of unit test files that should be excluded
 set(
   EXCLUDED_UNIT_TEST_FILES
-  ${PROJECT_TEST_UNIT_DIR}/sequencer/test_sequencer_extensive.extended.cc
 )
 
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
@@ -264,6 +263,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     ${TEST_NAME}
     PROPERTIES
     PROCESSORS ${PERF_TEST_NUMPROC}
+    RUN_SERIAL TRUE  # do not run in parallel with any other tests
     TIMEOUT 300
     LABELS "perf_test"
   )

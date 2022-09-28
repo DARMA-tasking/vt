@@ -55,6 +55,7 @@ namespace vt { namespace phase {
 enum struct PhaseHook : int8_t {
   Start,                        /**< Before a phase starts */
   End,                          /**< After a phase ends  */
+  DataCollection,               /**< Data collection for when a phase ends */
   EndPostMigration              /**< After a phase ends after all migrations */
 };
 

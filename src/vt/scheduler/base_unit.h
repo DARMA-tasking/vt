@@ -58,26 +58,28 @@ namespace vt { namespace sched {
  * to a runnable or contains a general lambda to execute.
  */
 struct BaseUnit {
-  using RunnablePtrType = std::unique_ptr<runnable::RunnableNew>;
+  using RunnablePtrType = runnable::RunnableNew*;
+
+  BaseUnit() = default;
 
   /**
    * \brief Construct with a runnable
    *
-   * \param[in] in_r the runnable moved in
    * \param[in] in_is_term whether it's a termination task
+   * \param[in] in_r the runnable moved in
    */
-  BaseUnit(RunnablePtrType in_r, bool in_is_term)
-    : r_(std::move(in_r)),
+  BaseUnit(bool in_is_term, RunnablePtrType in_r)
+    : r_(in_r),
       is_term_(in_is_term)
   { }
 
   /**
    * \brief Construct with a general lambda
    *
-   * \param[in] in_work the action to execute
    * \param[in] in_is_term whether it's a termination task
+   * \param[in] in_work the action to execute
    */
-  BaseUnit(ActionType in_work, bool in_is_term)
+  BaseUnit(bool in_is_term, ActionType in_work)
     : work_(in_work),
       is_term_(in_is_term)
   { }

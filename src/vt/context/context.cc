@@ -42,7 +42,7 @@
 */
 
 #include "vt/context/context.h"
-#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
 
 #if vt_check_enabled(trace_only)
 namespace vt { namespace runnable {
@@ -111,7 +111,7 @@ void Context::setTask(runnable::RunnableNew* in_task) {
 NodeType Context::getFromNodeCurrentTask() const {
 #if !vt_check_enabled(trace_only)
   if (getTask() != nullptr) {
-    auto from = getTask()->get<ctx::FromNode>();
+    auto from = getTask()->get<ctx::SetContext>();
     if (from != nullptr) {
       return from->get();
     }

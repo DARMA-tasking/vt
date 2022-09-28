@@ -53,7 +53,7 @@ namespace vt {
 using PutPtrType = void*;
 using PutPtrConstType = void const*;
 using PutEnvSizeType = size_t;
-using PutUnderEnvelopeT = Envelope;
+using PutUnderEnvelopeT = EpochTagEnvelope;
 
 /**
  * \struct PutEnvelope
@@ -75,8 +75,7 @@ struct PutEnvelope {
   TagType put_data_tag_;        /**< The put tag */
 };
 
-//using PutBasicEnvelope = PutEnvelope<EpochTagEnvelope, size_t>;
-using PutShortEnvelope = PutEnvelope<Envelope, size_t>;
+using PutShortEnvelope = PutEnvelope<EpochTagEnvelope, size_t>;
 using eEnvType = messaging::eEnvelopeType;
 
 /**
@@ -92,7 +91,7 @@ inline void envelopeInitEmpty(PutShortEnvelope& env) {
   env.put_data_tag_ = no_tag;
 }
 
-static_assert(std::is_pod<PutShortEnvelope>(), "PutShortEnvelope must be POD");
+static_assert(std::is_standard_layout<PutShortEnvelope>::value && std::is_trivial<PutShortEnvelope>::value, "PutShortEnvelope must be standard layout and trivial");
 
 /**
  * \brief Get the put pointer

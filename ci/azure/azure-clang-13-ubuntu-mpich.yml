@@ -54,6 +54,7 @@ variables:
   VT_NO_COLOR: 1
   VT_BUILD_SHARED_LIBS: 0
   VT_INCLUSION: TPL
+  TEST_LB_SCHEMA: 0
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-clang-13-cache
   build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
@@ -71,7 +72,7 @@ stages:
   - job: Build
     displayName: Build
     pool:
-      vmImage: 'ubuntu-18.04'
+      vmImage: 'ubuntu-22.04'
     timeoutInMinutes: 180
     steps:
       - task: Bash@3

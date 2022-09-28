@@ -83,11 +83,11 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) override {
+  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     return proc_load_->at(0).at(id).subphase_loads.at(phase.subphase);
   }
 
-  ObjectIterator begin() override {
+  ObjectIterator begin() const override {
     return {
       std::make_unique<LoadMapObjectIterator>(
         proc_load_->at(0).begin(), proc_load_->at(0).end()
@@ -95,11 +95,11 @@ struct StubModel : LoadModel {
     };
   }
 
-  int getNumSubphases() override { return num_subphases; }
+  int getNumSubphases() const override { return num_subphases; }
 
   // Not used in this test
-  unsigned int getNumCompletedPhases() override { return 0; }
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override {
+  unsigned int getNumCompletedPhases() const override { return 0; }
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override {
     return look_back;
   }
 

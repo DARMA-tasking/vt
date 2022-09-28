@@ -127,10 +127,17 @@ struct ReduceMsg : SerializeRequired<
       )
   { }
 
+#if defined(__INTEL_COMPILER)
+#pragma warning(push)
+#pragma warning(disable : 177)
+#endif
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     MessageParentType::serialize(s);
   }
+#if defined(__INTEL_COMPILER)
+#pragma warning(pop)
+#endif
 };
 struct ColProxyMsg : vt::Message {
   using ProxyType = vt::CollectionProxy<MyCol>;

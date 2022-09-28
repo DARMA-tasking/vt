@@ -46,8 +46,6 @@
 #include "vt/messaging/active.h"
 #include "vt/event/event.h"
 #include "vt/termination/termination.h"
-#include "vt/sequence/sequencer.h"
-#include "vt/sequence/sequencer_virtual.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/objgroup/manager.fwd.h"
@@ -111,6 +109,11 @@ Scheduler::Scheduler()
 # endif
 }
 
+void Scheduler::startup() {
+  special_progress_ =
+    theConfig()->vt_sched_progress_han != 0 or progress_time_enabled_;
+}
+
 void Scheduler::preDiagnostic() {
   vtLiveTime.stop();
 }
@@ -130,9 +133,15 @@ void Scheduler::runWorkUnit(UnitType& work) {
 
   workUnitCount.increment(1);
 
+#if vt_check_enabled(mpi_access_guards)
   ++action_depth_;
+#endif
+
   work();
+
+#if vt_check_enabled(mpi_access_guards)
   --action_depth_;
+#endif
 
 #if vt_check_enabled(mpi_access_guards)
   if (action_depth_ == 0) {
@@ -146,8 +155,8 @@ void Scheduler::runWorkUnit(UnitType& work) {
 }
 
 /*private*/
-bool Scheduler::progressImpl() {
-  int const total = curRT->progress();
+bool Scheduler::progressImpl(TimeType current_time) {
+  int const total = curRT->progress(current_time);
 
   checkTermSingleNode();
 
@@ -155,8 +164,8 @@ bool Scheduler::progressImpl() {
 }
 
 /*private*/
-bool Scheduler::progressMsgOnlyImpl() {
-  return theMsg()->progress() or theEvent()->progress();
+bool Scheduler::progressMsgOnlyImpl(TimeType current_time) {
+  return theMsg()->progress(current_time) or theEvent()->progress(current_time);
 }
 
 bool Scheduler::shouldCallProgress(
@@ -211,7 +220,7 @@ void Scheduler::printMemoryUsage() {
   }
 }
 
-void Scheduler::runProgress(bool msg_only) {
+void Scheduler::runProgress(bool msg_only, TimeType current_time) {
   /*
    * Run through the progress functions `num_iter` times, making forward
    * progress on MPI
@@ -221,9 +230,9 @@ void Scheduler::runProgress(bool msg_only) {
     if (msg_only) {
       // This is a special case used only during startup when other components
       // are not ready and progress should not be called on them.
-      progressMsgOnlyImpl();
+      progressMsgOnlyImpl(current_time);
     } else {
-      progressImpl();
+      progressImpl(current_time);
     }
     progressCount.increment(1);
   }
@@ -232,18 +241,26 @@ void Scheduler::runProgress(bool msg_only) {
     printMemoryUsage();
   }
 
-  // Reset count of processed handlers since the last time progress was invoked
-  processed_after_last_progress_ = 0;
-  last_progress_time_ = timing::getCurrentTime();
+  if (special_progress_) {
+    // Reset count of processed handlers since the last time progress was invoked
+    processed_after_last_progress_ = 0;
+    last_progress_time_ = timing::getCurrentTime();
+  }
 }
 
 void Scheduler::runSchedulerOnceImpl(bool msg_only) {
-  auto time_since_last_progress = timing::getCurrentTime() - last_progress_time_;
-  if (
-    work_queue_.empty() or
-    shouldCallProgress(processed_after_last_progress_, time_since_last_progress)
-  ) {
-    runProgress(msg_only);
+  if (special_progress_) {
+    auto current_time = timing::getCurrentTime();
+    auto time_since_last_progress = current_time - last_progress_time_;
+    if (shouldCallProgress(processed_after_last_progress_, time_since_last_progress)) {
+      runProgress(msg_only, current_time);
+    }
+  } else if (work_queue_.empty()) {
+    if (curRT->needsCurrentTime()) {
+      runProgress(msg_only, timing::getCurrentTime());
+    } else {
+      runProgress(msg_only, TimeType{0});
+    }
   }
 
   if (not work_queue_.empty()) {
@@ -268,7 +285,7 @@ void Scheduler::runSchedulerOnceImpl(bool msg_only) {
      */
     UnitType work = work_queue_.pop();
     runWorkUnit(work);
-
+  } else {
     // Enter idle state immediately after processing if relevant.
     if (not is_idle_minus_term and num_term_msgs_ == work_queue_.size()) {
       is_idle_minus_term = true;

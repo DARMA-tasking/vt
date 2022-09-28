@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             seq_action_virtual.h
+//                        test_circular_buffer.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,31 +41,85 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_SEQUENCE_SEQ_ACTION_VIRTUAL_H
-#define INCLUDED_VT_SEQUENCE_SEQ_ACTION_VIRTUAL_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
-#include "vt/sequence/seq_common.h"
-#include "vt/termination/termination.h"
+#include <vt/utils/container/circular_buffer.h>
+#include "test_harness.h"
 
-namespace vt { namespace seq {
+#include <vector>
 
-template <typename MessageT, typename VcT>
-struct ActionVirtual {
-  using ActionType = std::function<void(MessageT*, VcT*)>;
-  using CallableType = std::function<bool()>;
+namespace vt { namespace tests { namespace unit {
 
-  SeqType const seq_id;
-  ActionType const action;
+using TestCircularBuffer = TestHarness;
 
-  ActionVirtual(SeqType const& in_seq_id, ActionType const& in_action);
+TEST_F(TestCircularBuffer, test_circular_buffer_1) {
+  util::container::CircularBuffer<int, 64> buf;
 
-  void runAction(VcT* vc, MessageT* msg, bool const consume = true) const;
-  CallableType generateCallable(MessageT* msg, VcT* vc) const;
-};
+  EXPECT_TRUE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 0);
 
-}} //end namespace vt::seq
+  buf.push(10);
 
-#include "vt/sequence/seq_action_virtual.impl.h"
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 1);
 
-#endif /* INCLUDED_VT_SEQUENCE_SEQ_ACTION_VIRTUAL_H*/
+  buf.push(20);
+  buf.push(30);
+  buf.push(40);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 4);
+
+  EXPECT_EQ(buf.pop(), 10);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 3);
+
+  EXPECT_EQ(buf.pop(), 20);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 2);
+
+  EXPECT_EQ(buf.pop(), 30);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 1);
+
+  buf.push(50);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 2);
+
+  EXPECT_EQ(buf.pop(), 40);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 1);
+
+  EXPECT_EQ(buf.pop(), 50);
+
+  EXPECT_TRUE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 0);
+
+  buf.push(10);
+
+  EXPECT_FALSE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 1);
+
+  EXPECT_EQ(buf.pop(), 10);
+
+  EXPECT_TRUE(buf.empty());
+  EXPECT_FALSE(buf.full());
+  EXPECT_EQ(buf.size(), 0);
+}
+
+}}} /* end namespace vt::tests::unit */

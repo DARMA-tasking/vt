@@ -72,6 +72,8 @@ bool msgIncPriorityLevel(MsgT old_msg, MsgU new_msg) {
   } else {
     return false;
   }
+# else
+  return false;
 # endif
 }
 

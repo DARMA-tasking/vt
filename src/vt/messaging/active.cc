@@ -75,12 +75,6 @@ ActiveMessenger::ActiveMessenger()
 # endif
   this_node_(theContext()->getNode())
 {
-  /*
-   * Push the default epoch into the stack so it is always at the bottom of the
-   * stack during execution until the AM's destructor is invoked
-   */
-  pushEpoch(term::any_epoch_sentinel);
-
   // Register counters for AM/DM message sends and number of bytes
   amSentCounterGauge = diagnostic::CounterGauge{
     registerCounter("AM_sent", "active messages sent"),
@@ -152,6 +146,10 @@ ActiveMessenger::ActiveMessenger()
   };
 }
 
+void ActiveMessenger::initialize() {
+  comm_ = theContext()->getComm();
+}
+
 void ActiveMessenger::startup() {
   auto const this_node = theContext()->getNode();
   bare_handler_dummy_elm_id_for_lb_data_ =
@@ -159,7 +157,7 @@ void ActiveMessenger::startup() {
 
 #if vt_check_enabled(lblite)
   // Hook to collect LB data about objgroups
-  thePhase()->registerHookCollective(phase::PhaseHook::End, [this]{
+  thePhase()->registerHookCollective(phase::PhaseHook::DataCollection, [this]{
     theNodeLBData()->addNodeLBData(
       bare_handler_dummy_elm_id_for_lb_data_, &bare_handler_lb_data_, nullptr
     );
@@ -167,20 +165,7 @@ void ActiveMessenger::startup() {
 #endif
 }
 
-/*virtual*/ ActiveMessenger::~ActiveMessenger() {
-  // Pop all extraneous epochs off the stack greater than 1
-  auto stack_size = epoch_stack_.size();
-  while (stack_size > 1) {
-    stack_size = (epoch_stack_.pop(), epoch_stack_.size());
-  }
-  // Pop off the last epoch: term::any_epoch_sentinel
-  auto const ret_epoch = popEpoch(term::any_epoch_sentinel);
-  vtAssertInfo(
-    ret_epoch == term::any_epoch_sentinel, "Last pop must be any epoch",
-    ret_epoch, term::any_epoch_sentinel, epoch_stack_.size()
-  );
-  vtAssertExpr(epoch_stack_.size() == 0);
-}
+/*virtual*/ ActiveMessenger::~ActiveMessenger() {}
 
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   HandlerType const handler, ByteType serialized_msg_size, bool is_bcast
@@ -370,7 +355,7 @@ EventType ActiveMessenger::sendMsgMPI(
       #endif
       int const ret = MPI_Isend(
         untyped_msg, small_msg_size, MPI_BYTE, dest, send_tag,
-        theContext()->getComm(), mpi_event->getRequest()
+        comm_, mpi_event->getRequest()
       );
       vtAssertMPISuccess(ret, "MPI_Isend");
 
@@ -606,7 +591,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
 
       VT_ALLOW_MPI_CALLS;
       int const ret = MPI_Isend(
-        ptr, subsize, MPI_BYTE, dest, tag, theContext()->getComm(),
+        ptr, subsize, MPI_BYTE, dest, tag, comm_,
         mpi_event->getRequest()
       );
       vtAssertMPISuccess(ret, "MPI_Isend");
@@ -654,6 +639,10 @@ bool ActiveMessenger::recvDataMsg(
 }
 
 bool ActiveMessenger::tryProcessDataMsgRecv() {
+  if (pending_recvs_.size() == 0) {
+    return false;
+  }
+
   bool erase = false;
   auto iter = pending_recvs_.begin();
 
@@ -702,7 +691,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       VT_ALLOW_MPI_CALLS;
       const int probe_ret = MPI_Iprobe(
         node == uninitialized_destination ? MPI_ANY_SOURCE : node,
-        tag, theContext()->getComm(), &flag, &stat
+        tag, comm_, &flag, &stat
       );
       vtAssertMPISuccess(probe_ret, "MPI_Iprobe");
     }
@@ -787,7 +776,7 @@ void ActiveMessenger::recvDataDirect(
       VT_ALLOW_MPI_CALLS;
       int const ret = MPI_Irecv(
         cbuf+(i*max_per_send), sublen, MPI_BYTE, from, tag,
-        theContext()->getComm(), &reqs[i]
+        comm_, &reqs[i]
       );
       vtAssertMPISuccess(ret, "MPI_Irecv");
     }
@@ -901,7 +890,7 @@ bool ActiveMessenger::recvDataMsg(
   );
 }
 
-bool ActiveMessenger::processActiveMsg(
+void ActiveMessenger::processActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
   bool insert, ActionType cont
 ) {
@@ -924,18 +913,17 @@ bool ActiveMessenger::processActiveMsg(
   }
 
   if (deliver) {
-    return prepareActiveMsgToRun(base,from,insert,cont);
+    prepareActiveMsgToRun(base,from,insert,cont);
   } else {
     amForwardCounterGauge.incrementUpdate(base.size(), 1);
 
     if (cont != nullptr) {
       cont();
     }
-    return false;
   }
 }
 
-bool ActiveMessenger::prepareActiveMsgToRun(
+void ActiveMessenger::prepareActiveMsgToRun(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& in_from_node,
   bool insert, ActionType cont
 ) {
@@ -948,8 +936,6 @@ bool ActiveMessenger::prepareActiveMsgToRun(
   auto const handler = envelopeGetHandler(msg->env);
   auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const is_tag = envelopeIsTagType(msg->env);
-  auto const tag = is_tag ? envelopeGetTag(msg->env) : no_tag;
   auto const from_node = is_bcast ? dest : in_from_node;
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
@@ -961,56 +947,29 @@ bool ActiveMessenger::prepareActiveMsgToRun(
     );
   }
 
-  bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
-  bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
-  bool has_handler =
-    (is_obj or is_auto) or theRegistry()->getHandler(handler, tag) != nullptr;
-
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
       normal, active,
-      "prepareActiveMsgToRun: msg={}, handler={:x}, tag={}, is_auto={}, "
-      "is_obj_group={}, has_handler={}, insert={}\n",
-      print_ptr(msg), handler, tag, is_auto, is_obj,
-      has_handler, insert
+      "prepareActiveMsgToRun: msg={}, handler={:x}, insert={}\n",
+      print_ptr(msg), handler, insert
     );
   }
 
-  if (has_handler) {
-    runnable::makeRunnable(base, not is_term, handler, from_node)
-      .withContinuation(cont)
-      .withTag(tag)
-      .withTDEpochFromMsg(is_term)
-      .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
-      .enqueue();
+  runnable::makeRunnable(base, not is_term, handler, from_node)
+    .withContinuation(cont)
+    .withTDEpochFromMsg(is_term)
+    .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
+    .enqueue();
 
-    if (is_term) {
-      tdRecvCount.increment(1);
-    }
-    amHandlerCount.increment(1);
-
-    if (not is_term) {
-      theTerm()->consume(epoch,1,in_from_node);
-      theTerm()->hangDetectRecv();
-    }
-  } else {
-    if (insert) {
-      auto iter = pending_handler_msgs_.find(handler);
-      if (iter == pending_handler_msgs_.end()) {
-        pending_handler_msgs_.emplace(
-          std::piecewise_construct,
-          std::forward_as_tuple(handler),
-          std::forward_as_tuple(
-            MsgContType{BufferedMsgType{base,from_node,cont}}
-          )
-        );
-      } else {
-        iter->second.push_back(BufferedMsgType{base,from_node,cont});
-      }
-    }
+  if (is_term) {
+    tdRecvCount.increment(1);
   }
+  amHandlerCount.increment(1);
 
-  return has_handler;
+  if (not is_term) {
+    theTerm()->consume(epoch,1,in_from_node);
+    theTerm()->hangDetectRecv();
+  }
 }
 
 bool ActiveMessenger::tryProcessIncomingActiveMsg() {
@@ -1023,7 +982,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
     MPI_Iprobe(
       MPI_ANY_SOURCE, static_cast<MPI_TagType>(MPITag::ActiveMsgTag),
-      theContext()->getComm(), &flag, &stat
+      comm_, &flag, &stat
     );
   }
 
@@ -1047,7 +1006,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
       VT_ALLOW_MPI_CALLS;
       MPI_Irecv(
         buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
-        theContext()->getComm(), &req
+        comm_, &req
       );
 
       amPostedCounterGauge.incrementUpdate(num_probe_bytes, 1);
@@ -1184,111 +1143,15 @@ bool ActiveMessenger::testPendingAsyncOps() {
   );
 }
 
-int ActiveMessenger::progress() {
+int ActiveMessenger::progress(TimeType current_time) {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
-  processMaybeReadyHanTag();
   bool const received_active_msg = testPendingActiveMsgAsyncRecv();
   bool const received_data_msg = testPendingDataMsgAsyncRecv();
   bool const general_async = testPendingAsyncOps();
 
   return started_irecv_active_msg or started_irecv_data_msg or
          received_active_msg or received_data_msg or general_async;
-}
-
-void ActiveMessenger::processMaybeReadyHanTag() {
-  decltype(maybe_ready_tag_han_) maybe_ready = maybe_ready_tag_han_;
-  // Clear first so clearing doesn't happen after new entries may be added by an
-  // active message arriving
-  maybe_ready_tag_han_.clear();
-  for (auto&& x : maybe_ready) {
-    deliverPendingMsgsHandler(std::get<0>(x), std::get<1>(x));
-  }
-}
-
-HandlerType ActiveMessenger::registerNewHandler(
-  ActiveClosureFnType fn, TagType const& tag
-) {
-  return theRegistry()->registerNewHandler(fn, tag);
-}
-
-HandlerType ActiveMessenger::collectiveRegisterHandler(
-  ActiveClosureFnType fn, TagType const& tag
-) {
-  return theRegistry()->registerActiveHandler(fn, tag);
-}
-
-void ActiveMessenger::swapHandlerFn(
-  HandlerType const han, ActiveClosureFnType fn, TagType const& tag
-) {
-  vt_debug_print(
-    verbose, active,
-    "swapHandlerFn: han={}, tag={}\n", han, tag
-  );
-
-  theRegistry()->swapHandler(han, fn, tag);
-
-  if (fn != nullptr) {
-    maybe_ready_tag_han_.push_back(ReadyHanTagType{han,tag});
-  }
-}
-
-void ActiveMessenger::deliverPendingMsgsHandler(
-  HandlerType const han, TagType const& tag
-) {
-  vt_debug_print(
-    normal, active,
-    "deliverPendingMsgsHandler: han={}, tag={}\n", han, tag
-  );
-  auto iter = pending_handler_msgs_.find(han);
-  if (iter != pending_handler_msgs_.end()) {
-    if (iter->second.size() > 0) {
-      for (auto cur = iter->second.begin(); cur != iter->second.end(); ) {
-        vt_debug_print(
-          verbose, active,
-          "deliverPendingMsgsHandler: msg={}, from={}\n",
-          print_ptr(cur->buffered_msg.get()), cur->from_node
-        );
-        if (
-          prepareActiveMsgToRun(
-            cur->buffered_msg, cur->from_node, false, cur->cont
-          )
-        ) {
-          cur = iter->second.erase(cur);
-        } else {
-          ++cur;
-        }
-      }
-    } else {
-      pending_handler_msgs_.erase(iter);
-    }
-  }
-}
-
-void ActiveMessenger::registerHandlerFn(
-  HandlerType const han, ActiveClosureFnType fn, TagType const& tag
-) {
-  vt_debug_print(
-    verbose, active,
-    "registerHandlerFn: han={}, tag={}\n", han, tag
-  );
-
-  swapHandlerFn(han, fn, tag);
-
-  if (fn != nullptr) {
-    maybe_ready_tag_han_.push_back(ReadyHanTagType{han,tag});
-  }
-}
-
-void ActiveMessenger::unregisterHandlerFn(
-  HandlerType const han, TagType const& tag
-) {
-  vt_debug_print(
-    verbose, active,
-    "unregisterHandlerFn: han={}, tag={}\n", han, tag
-  );
-
-  return theRegistry()->unregisterHandlerFn(han, tag);
 }
 
 void ActiveMessenger::registerAsyncOp(std::unique_ptr<AsyncOp> in) {

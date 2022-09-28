@@ -102,12 +102,20 @@ void ComponentPack::destruct() {
   }
 }
 
-int ComponentPack::progress() {
+int ComponentPack::progress(TimeType current_time) {
   int total = 0;
   for (auto&& pollable : pollable_components_) {
-    total += pollable->progress();
+    total += pollable->progress(current_time);
   }
   return total;
+}
+
+bool ComponentPack::needsCurrentTime() {
+  bool needs_time = false;
+  for (auto&& pollable : pollable_components_) {
+    needs_time = needs_time || pollable->needsCurrentTime();
+  }
+  return needs_time;
 }
 
 std::list<int> ComponentPack::topoSort() {

@@ -57,7 +57,6 @@
 #include "vt/messaging/send_info.h"
 #include "vt/messaging/async_op_wrapper.h"
 #include "vt/event/event.h"
-#include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/trace/trace_common.h"
 #include "vt/utils/static_checks/functor.h"
@@ -320,12 +319,8 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   using SendFnType           = std::function<SendInfo(PtrLenPairType,NodeType,TagType)>;
   using UserSendFnType       = std::function<void(SendFnType)>;
   using ContainerPendingType = std::unordered_map<TagType,PendingRecvType>;
-  using MsgContType          = std::list<BufferedMsgType>;
-  using ContWaitType         = std::unordered_map<HandlerType, MsgContType>;
   using ReadyHanTagType      = std::tuple<HandlerType, TagType>;
-  using MaybeReadyType       = std::vector<ReadyHanTagType>;
   using HandlerManagerType   = HandlerManager;
-  using EpochStackType       = std::stack<EpochType>;
   using PendingSendType      = PendingSend;
 
   /**
@@ -341,6 +336,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   std::string name() override { return "ActiveMessenger"; }
 
   void startup() override;
+  void initialize() override;
 
   /**
    * \brief Mark a message as a termination message.
@@ -1348,68 +1344,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \internal
    * \brief Call into the progress engine
    *
+   * \param[in] current_time current time
+   *
    * \return whether any action was taken (progress was made)
    */
-  int progress() override;
-
-  /**
-   * \internal
-   * \brief Register a bare handler
-   *
-   * \param[in] fn the function to register
-   * \param[in] tag the tag this handler will accept (\c vt::no_tag means any)
-   *
-   * \return the handler ID
-   */
-  HandlerType registerNewHandler(
-    ActiveClosureFnType fn, TagType const& tag = no_tag
-  );
-
-  /**
-   * \internal
-   * \brief Swap the underlying handler function pointer
-   *
-   * \param[in] han the handler to swap function pointers
-   * \param[in] fn the new function pointer
-   * \param[in] tag the tag this handler will accept (\c vt::no_tag means any)
-   */
-  void swapHandlerFn(
-    HandlerType const han, ActiveClosureFnType fn, TagType const& tag = no_tag
-  );
-
-  /**
-   * \internal
-   * \brief Un-register a bare handler
-   *
-   * \param[in] han the handler to de-register
-   * \param[in] tag the tag this handler will accept (\c vt::no_tag means any)
-   */
-  void unregisterHandlerFn(HandlerType const han, TagType const& tag = no_tag);
-
-  /**
-   * \internal
-   * \brief Register a handler function for existing handler
-   *
-   * \param[in] han the handler to swap function pointers
-   * \param[in] fn the new function pointer
-   * \param[in] tag the tag this handler will accept (\c vt::no_tag means any)
-   */
-  void registerHandlerFn(
-    HandlerType const han, ActiveClosureFnType fn, TagType const& tag = no_tag
-  );
-
-  /**
-   * \internal
-   * \brief Register an active handler (collective)
-   *
-   * \param[in] fn the function pointer for the handler
-   * \param[in] tag the tag this handler will accept (\c vt::no_tag means any)
-   *
-   * \return the handler ID
-   */
-  HandlerType collectiveRegisterHandler(
-    ActiveClosureFnType fn, TagType const& tag = no_tag
-  );
+  int progress(TimeType current_time) override;
 
   /**
    * \internal
@@ -1423,10 +1362,8 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] sender the sender of the message
    * \param[in] insert whether to insert the message if handler does not exist
    * \param[in] cont continuation after message is processed
-   *
-   * \return whether it was delivered locally
    */
-  bool processActiveMsg(
+  void processActiveMsg(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
     bool insert, ActionType cont = nullptr
   );
@@ -1439,31 +1376,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] from_node the node the message came from
    * \param[in] insert whether to insert the message if handler does not exist
    * \param[in] cont continuation after message is processed
-   *
-   * \return whether the message was delivered, false when handler does not exist
    */
-  bool prepareActiveMsgToRun(
+  void prepareActiveMsgToRun(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& from_node,
     bool insert, ActionType cont
   );
-
-  /**
-   * \internal
-   * \brief Deliver pending messaging waiting for a handler to be registered
-   *
-   * \param[in] han the handler that will now accept
-   * \param[in] tag the tag for that handler
-   */
-  void deliverPendingMsgsHandler(
-    HandlerType const han, TagType const& tag = no_tag
-  );
-
-  /**
-   * \internal
-   * \brief Process any messages that might be ready now (handler is now
-   * registered)
-   */
-  void processMaybeReadyHanTag();
 
   /**
    * \internal
@@ -1515,17 +1432,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
-   * \brief Get the current global epoch
-   *
-   * \c Returns the top epoch on the stack iff \c epoch_stack.size() > 0, else it
-   * returns \c vt::no_epoch
-   *
-   * \return the current global epoch
-   */
-  inline EpochType getGlobalEpoch() const;
-
-  /**
-   * \internal
    * \brief Push an epoch on the stack
    *
    * Pushes any epoch onto the local stack iff epoch != no_epoch; the epoch
@@ -1559,12 +1465,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the epoch on the top of the stack
    */
   inline EpochType getEpoch() const;
-
-  /**
-   * \internal
-   * \brief Access the epoch stack
-   */
-  inline EpochStackType& getEpochStack() { return epoch_stack_; }
 
   /**
    * \internal
@@ -1637,11 +1537,8 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | maybe_ready_tag_han_
-      | pending_handler_msgs_
-      | pending_recvs_
+    s | pending_recvs_
       | cur_direct_buffer_tag_
-      | epoch_stack_
       | in_progress_active_msg_irecv
       | in_progress_data_irecv
       | in_progress_ops
@@ -1748,11 +1645,8 @@ private:
   trace::UserEventIDType trace_asyncop           = trace::no_user_event_id;
 # endif
 
-  MaybeReadyType maybe_ready_tag_han_                     = {};
-  ContWaitType pending_handler_msgs_                      = {};
   ContainerPendingType pending_recvs_                     = {};
   TagType cur_direct_buffer_tag_                          = starting_direct_buffer_tag;
-  EpochStackType epoch_stack_;
   RequestHolder<InProgressIRecv> in_progress_active_msg_irecv;
   RequestHolder<InProgressDataIRecv> in_progress_data_irecv;
   RequestHolder<AsyncOpWrapper> in_progress_ops;
@@ -1785,6 +1679,7 @@ private:
 private:
   elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_data_ = {};
   elm::ElementLBData bare_handler_lb_data_;
+  MPI_Comm comm_ = MPI_COMM_NULL;
 };
 
 }} // end namespace vt::messaging

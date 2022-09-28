@@ -180,8 +180,6 @@ void printOverwrittens(
   printIfOverwritten(vt_debug_hierlb);
   printIfOverwritten(vt_debug_temperedlb);
   printIfOverwritten(vt_debug_scatter);
-  printIfOverwritten(vt_debug_sequence);
-  printIfOverwritten(vt_debug_sequence_vrt);
   printIfOverwritten(vt_debug_serial_msg);
   printIfOverwritten(vt_debug_trace);
   printIfOverwritten(vt_debug_location);
@@ -334,11 +332,6 @@ void CollectiveAnyOps<instance>::output(
   if (error and abort_out) {
     vt::abort("Assertion Failed", 129);
   }
-}
-
-template <runtime::RuntimeInstType instance>
-HandlerType CollectiveAnyOps<instance>::registerHandler(ActiveClosureFnType fn) {
-  return theRegistry()->registerActiveHandler(fn);
 }
 
 template struct CollectiveAnyOps<collective_default_inst>;

@@ -1,8 +1,21 @@
 include(${CTEST_SCRIPT_DIRECTORY}/CTestConfig.cmake)
 
-site_name(CTEST_SITE)
+set(CTEST_CUSTOM_MAXIMUM_PASSED_TEST_OUTPUT_SIZE "102400" )
+set(CTEST_CUSTOM_MAXIMUM_FAILED_TEST_OUTPUT_SIZE "512000" )
+set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_ERRORS "50" )
+set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS "50")
+
+if(COMMAND cmake_host_system_information)
+  cmake_host_system_information(RESULT HOSTNAME QUERY HOSTNAME)
+  string(REGEX REPLACE "^([^0-9]+)[0-9]+$" "\\1" SIMPLE_CTEST_SITE "${HOSTNAME}")
+  message("Hostname is ${HOSTNAME}; site name has been set to ${SIMPLE_CTEST_SITE}")
+  set(CTEST_SITE "${SIMPLE_CTEST_SITE}")
+else()
+  site_name(CTEST_SITE)
+endif()
+
 set(CTEST_BUILD_NAME
-    "${CMAKE_HOST_SYSTEM_NAME}-$ENV{CI_JOB_NAME}"
+    "${CMAKE_HOST_SYSTEM_NAME}-$ENV{CI_JOB_NAME}-$ENV{CI_COMMIT_REF_NAME}"
 )
 set(CTEST_SOURCE_DIRECTORY
     "$ENV{VT}"
@@ -92,8 +105,19 @@ endif()
 if ( NOT DEFINED ENV{BUILD_SHARED_LIBS:} )
   set(ENV{BUILD_SHARED_LIBS} "0")
 endif()
+if ( NOT DEFINED ENV{CMAKE_GENERATOR} )
+  set(ENV{CMAKE_GENERATOR} "Ninja")
+endif()
 
-set(CTEST_CMAKE_GENERATOR    Ninja)
+if ( NOT "$ENV{CMAKE_GENERATOR}" STREQUAL "Ninja" )
+  if ( NOT DEFINED ENV{CMAKE_BUILD_PARALLEL_LEVEL} )
+    if ( DEFINED ENV{parallel_level} )
+      set(ENV{CMAKE_BUILD_PARALLEL_LEVEL} "$ENV{parallel_level}")
+    endif()
+  endif()
+endif()
+
+set(CTEST_CMAKE_GENERATOR    $ENV{CMAKE_GENERATOR} )
 set(CTEST_CONFIGURATION_TYPE $ENV{CMAKE_BUILD_TYPE} )
 
 set(configureOpts
@@ -146,20 +170,20 @@ set(configureOpts
 #ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
 ctest_start(Continuous)
 ctest_configure(OPTIONS "${configureOpts}" RETURN_VALUE ret_conf)
-ctest_submit(PARTS Start Configure)
+ctest_submit(PARTS Start Configure RETRY_COUNT 6 RETRY_DELAY 10)
 if (NOT ret_conf)
   ctest_build(RETURN_VALUE ret_build)
-  ctest_submit(PARTS Build)
+  ctest_submit(PARTS Build RETRY_COUNT 6 RETRY_DELAY 10)
 # ctest_upload(FILES
 #     ${CTEST_BINARY_DIRECTORY}/mytest.log
 #     ${CTEST_BINARY_DIRECTORY}/anotherFile.txt
 # )
-# ctest_submit(PARTS Upload Submit)
+# ctest_submit(PARTS Upload Submit RETRY_COUNT 6 RETRY_DELAY 10)
   if (NOT ret_build)
     ctest_test(PARALLEL_LEVEL $ENV{parallel_level})
-    ctest_submit(PARTS Test)
+    ctest_submit(PARTS Test RETRY_COUNT 6 RETRY_DELAY 10)
   endif()
 endif()
 if(NOT CMAKE_VERSION VERSION_LESS "3.14")
-    ctest_submit(PARTS Done)
+    ctest_submit(PARTS Done RETRY_COUNT 6 RETRY_DELAY 10)
 endif()

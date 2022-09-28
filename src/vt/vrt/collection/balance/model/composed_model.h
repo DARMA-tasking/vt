@@ -69,16 +69,16 @@ public:
 
   void updateLoads(PhaseType last_completed_phase) override;
 
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   bool hasRawLoad() const override;
-  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
 
-  ObjectIterator begin() override;
+  ObjectIterator begin() const override;
 
-  int getNumObjects() override;
-  unsigned int getNumCompletedPhases() override;
-  int getNumSubphases() override;
+  int getNumObjects() const override;
+  unsigned int getNumCompletedPhases() const override;
+  int getNumSubphases() const override;
 
 private:
   std::shared_ptr<LoadModel> base_;

@@ -70,7 +70,7 @@ struct MyObjGroup {
     }
 
     // get the epoch stack and store the original size
-    auto& epoch_stack = theMsg()->getEpochStack();
+    auto& epoch_stack = theTerm()->getEpochStack();
     std::size_t original_epoch_size = epoch_stack.size();
 
     auto comm = theContext()->getComm();
@@ -95,7 +95,7 @@ struct MyObjGroup {
         done_ = true;
         // stack should be the size before running this method since we haven't
         // resumed the thread yet!
-        EXPECT_EQ(theMsg()->getEpochStack().size(), original_epoch_size - 2);
+        EXPECT_EQ(theTerm()->getEpochStack().size(), original_epoch_size - 2);
       }
     );
 

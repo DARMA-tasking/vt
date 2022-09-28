@@ -44,7 +44,6 @@
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/registry/registry.h"
 
 #include <cassert>
 

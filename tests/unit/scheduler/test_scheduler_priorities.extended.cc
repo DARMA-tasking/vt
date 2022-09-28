@@ -171,6 +171,7 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_3) {
 # endif
 }
 
+# if vt_check_enabled(priorities)
 struct ObjGroup;
 
 struct TestMsg : vt::Message {
@@ -230,6 +231,7 @@ struct ObjGroup {
 private:
   std::unique_ptr<vt::sched::Scheduler> testSched = nullptr;
 };
+# endif
 
 TEST_F(TestSchedPriorities, test_scheduler_priorities_4) {
 # if vt_check_enabled(priorities)

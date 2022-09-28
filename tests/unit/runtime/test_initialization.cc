@@ -44,6 +44,7 @@
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 
 #include <vt/collective/startup.h>
 
@@ -170,13 +171,16 @@ TEST_F(TestInitialization, test_initialize_with_file_and_args) {
   static char cli_argument[]{"--cli_argument=100"};
   static char vt_no_terminate[]{"--vt_no_terminate"};
   static char vt_lb_name[]{"--vt_lb_name=RotateLB"};
-  static char vt_input_config[]{"--vt_input_config=test_cfg.toml"};
+
+  std::string config_file(getUniqueFilenameWithRanks(".toml"));
+  std::string config_flag("--vt_input_config=");
+  std::string vt_input_config = config_flag + config_file;
 
   std::vector<char *> custom_args;
   custom_args.emplace_back(prog_name);
   custom_args.emplace_back(cli_argument);
   custom_args.emplace_back(vt_no_terminate);
-  custom_args.emplace_back(vt_input_config);
+  custom_args.emplace_back(strdup(vt_input_config.c_str()));
   custom_args.emplace_back(vt_lb_name);
   custom_args.emplace_back(nullptr);
 
@@ -188,7 +192,7 @@ TEST_F(TestInitialization, test_initialize_with_file_and_args) {
   int this_rank;
   MPI_Comm_rank(comm, &this_rank);
   if (this_rank == 0) {
-    std::ofstream cfg_file_{"test_cfg.toml", std::ofstream::out | std::ofstream::trunc};
+    std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
     cfg_file_ << "vt_lb_name = RandomLB\n";
     cfg_file_.close();
   }
@@ -213,13 +217,16 @@ TEST_F(TestInitialization, test_initialize_with_file_args_and_appconfig) {
   static char cli_argument[]{"--cli_argument=100"};
   static char vt_no_terminate[]{"--vt_no_terminate"};
   static char vt_lb_name[]{"--vt_lb_name=RotateLB"};
-  static char vt_input_config[]{"--vt_input_config=test_cfg.toml"};
+
+  std::string config_file(getUniqueFilenameWithRanks(".toml"));
+  std::string config_flag("--vt_input_config=");
+  std::string vt_input_config = config_flag + config_file;
 
   std::vector<char*> custom_args;
   custom_args.emplace_back(prog_name);
   custom_args.emplace_back(cli_argument);
   custom_args.emplace_back(vt_no_terminate);
-  custom_args.emplace_back(vt_input_config);
+  custom_args.emplace_back(strdup(vt_input_config.c_str()));
   custom_args.emplace_back(vt_lb_name);
   custom_args.emplace_back(nullptr);
 
@@ -234,7 +241,7 @@ TEST_F(TestInitialization, test_initialize_with_file_args_and_appconfig) {
   int this_rank;
   MPI_Comm_rank(comm, &this_rank);
   if (this_rank == 0) {
-    std::ofstream cfg_file_{"test_cfg.toml", std::ofstream::out | std::ofstream::trunc};
+    std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
     cfg_file_ << "vt_lb_name = RandomLB\n";
     cfg_file_.close();
   }

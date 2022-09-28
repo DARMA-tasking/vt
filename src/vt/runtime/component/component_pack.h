@@ -110,9 +110,18 @@ public:
   /**
    * \internal \brief Invoke the progress function on all pollable components
    *
+   * \param[in] current_time current time
+   *
    * \return the number of work units processed
    */
-  int progress();
+  int progress(TimeType current_time);
+
+  /**
+   * \internal \brief Needs current time
+   *
+   * \return whether any component needs the current time on the progress call
+   */
+  bool needsCurrentTime();
 
   /**
    * \internal \brief Extract the first component from a running pack that

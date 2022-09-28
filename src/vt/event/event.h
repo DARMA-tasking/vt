@@ -178,7 +178,7 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
   EventStateType testEventComplete(EventType const& event);
   EventType attachAction(EventType const& event, ActionType callable);
   void testEventsTrigger(int const& num_events = num_check_actions);
-  int progress() override;
+  int progress(TimeType current_time) override;
   bool isLocalTerm();
 
   static void eventFinished(EventFinishedMsg* msg);

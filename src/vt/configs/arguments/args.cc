@@ -230,13 +230,13 @@ void addMemUsageArgs(CLI::App& app, AppConfig& appConfig) {
   auto mem_thresh    = "The threshold increments to print memory usage: \"<value> {GiB,MiB,KiB,B}\"";
   auto mem_sched     = "The frequency to query the memory threshold check (some memory reporters might be expensive)";
   auto mem_footprint = "Print live components' memory footprint after initialization and before shutdown";
-  auto mm = app.add_option("--vt_memory_reporters",          appConfig.vt_memory_reporters, mem_desc, true);
+  auto mm = app.add_option("--vt_memory_reporters",          appConfig.vt_memory_reporters, mem_desc)->capture_default_str();
   auto mn = app.add_flag("--vt_print_memory_each_phase",     appConfig.vt_print_memory_each_phase, mem_phase);
-  auto mo = app.add_option("--vt_print_memory_node",         appConfig.vt_print_memory_node, mem_node, true);
+  auto mo = app.add_option("--vt_print_memory_node",         appConfig.vt_print_memory_node, mem_node)->capture_default_str();
   auto mp = app.add_flag("--vt_allow_memory_report_with_ps", appConfig.vt_allow_memory_report_with_ps, mem_ps);
   auto mq = app.add_flag("--vt_print_memory_at_threshold",   appConfig.vt_print_memory_at_threshold, mem_at_thresh);
-  auto mr = app.add_option("--vt_print_memory_threshold",    appConfig.vt_print_memory_threshold, mem_thresh, true);
-  auto ms = app.add_option("--vt_print_memory_sched_poll",   appConfig.vt_print_memory_sched_poll, mem_sched, true);
+  auto mr = app.add_option("--vt_print_memory_threshold",    appConfig.vt_print_memory_threshold, mem_thresh)->capture_default_str();
+  auto ms = app.add_option("--vt_print_memory_sched_poll",   appConfig.vt_print_memory_sched_poll, mem_sched)->capture_default_str();
   auto mf = app.add_flag("--vt_print_memory_footprint",      appConfig.vt_print_memory_footprint, mem_footprint);
   auto memoryGroup = "Memory Usage Reporting";
   mm->group(memoryGroup);
@@ -264,9 +264,9 @@ void addStackDumpArgs(CLI::App& app, AppConfig& appConfig) {
   auto h = app.add_flag("--vt_no_assert_stack", appConfig.vt_no_assert_stack, assert);
   auto i = app.add_flag("--vt_no_abort_stack",  appConfig.vt_no_abort_stack,  abort);
   auto j = app.add_flag("--vt_no_stack",        appConfig.vt_no_stack,        stack);
-  auto k = app.add_option("--vt_stack_file",    appConfig.vt_stack_file,      file, "");
-  auto l = app.add_option("--vt_stack_dir",     appConfig.vt_stack_dir,       dir,  "");
-  auto m = app.add_option("--vt_stack_mod",     appConfig.vt_stack_mod,       mod,  1);
+  auto k = app.add_option("--vt_stack_file",    appConfig.vt_stack_file,      file)->capture_default_str();
+  auto l = app.add_option("--vt_stack_dir",     appConfig.vt_stack_dir,       dir)->capture_default_str();
+  auto m = app.add_option("--vt_stack_mod",     appConfig.vt_stack_mod,       mod)->capture_default_str();
   auto stackGroup = "Dump Stack Backtrace";
   g->group(stackGroup);
   h->group(stackGroup);
@@ -302,10 +302,10 @@ void addTraceArgs(CLI::App& app, AppConfig& appConfig) {
   auto n  = app.add_flag("--vt_trace",                   appConfig.vt_trace,                   trace);
   auto nm = app.add_option("--vt_trace_mpi",             arg_trace_mpi,                      trace_mpi)
     ->check(CLI::IsMember({"internal", "external"}));
-  auto o  = app.add_option("--vt_trace_file",            appConfig.vt_trace_file,              tfile,     "");
-  auto p  = app.add_option("--vt_trace_dir",             appConfig.vt_trace_dir,               tdir,      "");
-  auto q  = app.add_option("--vt_trace_mod",             appConfig.vt_trace_mod,               tmod,      1);
-  auto qf = app.add_option("--vt_trace_flush_size",      appConfig.vt_trace_flush_size,        tflushmod, 0);
+  auto o  = app.add_option("--vt_trace_file",            appConfig.vt_trace_file,              tfile)->capture_default_str();
+  auto p  = app.add_option("--vt_trace_dir",             appConfig.vt_trace_dir,               tdir)->capture_default_str();
+  auto q  = app.add_option("--vt_trace_mod",             appConfig.vt_trace_mod,               tmod)->capture_default_str();
+  auto qf = app.add_option("--vt_trace_flush_size",      appConfig.vt_trace_flush_size,        tflushmod)->capture_default_str();
   auto qg = app.add_flag("--vt_trace_gzip_finish_flush", appConfig.vt_trace_gzip_finish_flush, zflush);
   auto qt = app.add_flag("--vt_trace_sys_all",           appConfig.vt_trace_sys_all,           tsysall);
   auto qw = app.add_flag("--vt_trace_sys_term",          appConfig.vt_trace_sys_term,          tsysTD);
@@ -313,7 +313,7 @@ void addTraceArgs(CLI::App& app, AppConfig& appConfig) {
   auto qy = app.add_flag("--vt_trace_sys_collection",    appConfig.vt_trace_sys_collection,    tsyscoll);
   auto qz = app.add_flag("--vt_trace_sys_serial_msg",    appConfig.vt_trace_sys_serial_msg,    tsyssmsg);
   auto qza = app.add_flag("--vt_trace_spec",             appConfig.vt_trace_spec,              tspec);
-  auto qzb = app.add_option("--vt_trace_spec_file",      appConfig.vt_trace_spec_file,         tspecfile, "");
+  auto qzb = app.add_option("--vt_trace_spec_file",      appConfig.vt_trace_spec_file,         tspecfile)->capture_default_str();
   auto qzc = app.add_flag("--vt_trace_memory_usage",     appConfig.vt_trace_memory_usage,      tmemusage);
   auto qzd = app.add_flag("--vt_trace_event_polling",    appConfig.vt_trace_event_polling,     tpolled);
   auto qze = app.add_flag("--vt_trace_irecv_polling",    appConfig.vt_trace_irecv_polling,     tirecv);
@@ -362,8 +362,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto qbp = "Enable debug_temperedlb   = \"" debug_pp(temperedlb)   "\"";
   auto qcp = "Enable debug_temperedwmin = \"" debug_pp(temperedwmin) "\"";
   auto rap = "Enable debug_scatter      = \"" debug_pp(scatter)      "\"";
-  auto sap = "Enable debug_sequence     = \"" debug_pp(sequence)     "\"";
-  auto tap = "Enable debug_sequence_vrt = \"" debug_pp(sequence_vrt) "\"";
   auto uap = "Enable debug_serial_msg   = \"" debug_pp(serial_msg)   "\"";
   auto vap = "Enable debug_trace        = \"" debug_pp(trace)        "\"";
   auto wap = "Enable debug_location     = \"" debug_pp(location)     "\"";
@@ -401,8 +399,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto qb = app.add_flag("--vt_debug_temperedlb",   appConfig.vt_debug_temperedlb,   qbp);
   auto qc = app.add_flag("--vt_debug_temperedwmin", appConfig.vt_debug_temperedwmin, qcp);
   auto ra = app.add_flag("--vt_debug_scatter",      appConfig.vt_debug_scatter,      rap);
-  auto sa = app.add_flag("--vt_debug_sequence",     appConfig.vt_debug_sequence,     sap);
-  auto ta = app.add_flag("--vt_debug_sequence_vrt", appConfig.vt_debug_sequence_vrt, tap);
   auto ua = app.add_flag("--vt_debug_serial_msg",   appConfig.vt_debug_serial_msg,   uap);
   auto va = app.add_flag("--vt_debug_trace",        appConfig.vt_debug_trace,        vap);
   auto wa = app.add_flag("--vt_debug_location",     appConfig.vt_debug_location,     wap);
@@ -440,8 +436,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   qb->group(debugGroup);
   qc->group(debugGroup);
   ra->group(debugGroup);
-  sa->group(debugGroup);
-  ta->group(debugGroup);
   ua->group(debugGroup);
   va->group(debugGroup);
   xa->group(debugGroup);
@@ -484,32 +478,24 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lb_statistics_file = "Load balancing statistics output file name";
   auto lb_statistics_dir  = "Load balancing statistics output directory name";
   auto lb_self_migration = "Allow load balancer to migrate objects to the same node";
-  auto lbn = "NoLB";
-  auto lbi = 1;
-  auto lbf = "";
-  auto lbd = "vt_lb_data";
-  auto lbs = "data";
-  auto lba = "";
-  auto lbq = "vt_lb_statistics.%t.json";
-  auto lbqq = "";
   auto s  = app.add_flag("--vt_lb", appConfig.vt_lb, lb);
   auto t1 = app.add_flag("--vt_lb_quiet", appConfig.vt_lb_quiet, lb_quiet);
-  auto u  = app.add_option("--vt_lb_file_name", appConfig.vt_lb_file_name, lb_file_name, lbf)->check(CLI::ExistingFile);
+  auto u  = app.add_option("--vt_lb_file_name", appConfig.vt_lb_file_name, lb_file_name)->capture_default_str()->check(CLI::ExistingFile);
   auto u1 = app.add_flag("--vt_lb_show_spec", appConfig.vt_lb_show_spec, lb_show_spec);
-  auto v  = app.add_option("--vt_lb_name", appConfig.vt_lb_name, lb_name, lbn);
-  auto v1 = app.add_option("--vt_lb_args", appConfig.vt_lb_args, lb_args, lba);
-  auto w  = app.add_option("--vt_lb_interval", appConfig.vt_lb_interval, lb_interval, lbi);
+  auto v  = app.add_option("--vt_lb_name", appConfig.vt_lb_name, lb_name)->capture_default_str();
+  auto v1 = app.add_option("--vt_lb_args", appConfig.vt_lb_args, lb_args)->capture_default_str();
+  auto w  = app.add_option("--vt_lb_interval", appConfig.vt_lb_interval, lb_interval)->capture_default_str();
   auto wl = app.add_flag("--vt_lb_keep_last_elm", appConfig.vt_lb_keep_last_elm, lb_keep_last_elm);
   auto ww = app.add_flag("--vt_lb_data", appConfig.vt_lb_data, lb_data);
   auto xz = app.add_flag("--vt_lb_data_compress", appConfig.vt_lb_data_compress, lb_data_comp);
-  auto wx = app.add_option("--vt_lb_data_dir", appConfig.vt_lb_data_dir, lb_data_dir, lbd);
-  auto wy = app.add_option("--vt_lb_data_file", appConfig.vt_lb_data_file, lb_data_file,lbs);
-  auto xx = app.add_option("--vt_lb_data_dir_in", appConfig.vt_lb_data_dir_in, lb_data_dir_in, lbd);
-  auto xy = app.add_option("--vt_lb_data_file_in", appConfig.vt_lb_data_file_in, lb_data_file_in, lbs);
+  auto wx = app.add_option("--vt_lb_data_dir", appConfig.vt_lb_data_dir, lb_data_dir)->capture_default_str();
+  auto wy = app.add_option("--vt_lb_data_file", appConfig.vt_lb_data_file, lb_data_file)->capture_default_str();
+  auto xx = app.add_option("--vt_lb_data_dir_in", appConfig.vt_lb_data_dir_in, lb_data_dir_in)->capture_default_str();
+  auto xy = app.add_option("--vt_lb_data_file_in", appConfig.vt_lb_data_file_in, lb_data_file_in)->capture_default_str();
   auto yx = app.add_flag("--vt_lb_statistics",          appConfig.vt_lb_statistics,          lb_statistics);
   auto yy = app.add_flag("--vt_lb_statistics_compress", appConfig.vt_lb_statistics_compress, lb_statistics_comp);
-  auto yz = app.add_option("--vt_lb_statistics_file",   appConfig.vt_lb_statistics_file,     lb_statistics_file,lbq);
-  auto zz = app.add_option("--vt_lb_statistics_dir",    appConfig.vt_lb_statistics_dir,      lb_statistics_dir,lbqq);
+  auto yz = app.add_option("--vt_lb_statistics_file",   appConfig.vt_lb_statistics_file,     lb_statistics_file)->capture_default_str();
+  auto zz = app.add_option("--vt_lb_statistics_dir",    appConfig.vt_lb_statistics_dir,      lb_statistics_dir)->capture_default_str();
   auto lbasm = app.add_flag("--vt_lb_self_migration", appConfig.vt_lb_self_migration, lb_self_migration);
 
   auto debugLB = "Load Balancing";
@@ -571,14 +557,13 @@ void addTerminationArgs(CLI::App& app, AppConfig& appConfig) {
   auto graph_on     = "Output epoch graph to file (DOT) when hang is detected";
   auto terse        = "Output epoch graph to file in terse mode";
   auto progress     = "Print termination counts when progress is stalled";
-  auto hfd          = 1024;
   auto x  = app.add_flag("--vt_no_detect_hang",        appConfig.vt_no_detect_hang,       hang);
   auto x1 = app.add_flag("--vt_term_rooted_use_ds",    appConfig.vt_term_rooted_use_ds,   ds);
   auto x2 = app.add_flag("--vt_term_rooted_use_wave",  appConfig.vt_term_rooted_use_wave, wave);
-  auto x3 = app.add_option("--vt_epoch_graph_on_hang", appConfig.vt_epoch_graph_on_hang,  graph_on, true);
+  auto x3 = app.add_option("--vt_epoch_graph_on_hang", appConfig.vt_epoch_graph_on_hang,  graph_on)->capture_default_str();
   auto x4 = app.add_flag("--vt_epoch_graph_terse",     appConfig.vt_epoch_graph_terse,    terse);
-  auto x5 = app.add_option("--vt_print_no_progress",   appConfig.vt_print_no_progress,    progress, true);
-  auto y = app.add_option("--vt_hang_freq",            appConfig.vt_hang_freq,      hang_freq, hfd);
+  auto x5 = app.add_option("--vt_print_no_progress",   appConfig.vt_print_no_progress,    progress)->capture_default_str();
+  auto y = app.add_option("--vt_hang_freq",            appConfig.vt_hang_freq,            hang_freq)->capture_default_str();
   auto debugTerm = "Termination";
   x->group(debugTerm);
   x1->group(debugTerm);
@@ -609,12 +594,12 @@ void addUserArgs(CLI::App& app, AppConfig& appConfig) {
   auto u1  = app.add_flag("--vt_user_1",       appConfig.vt_user_1, user1);
   auto u2  = app.add_flag("--vt_user_2",       appConfig.vt_user_2, user2);
   auto u3  = app.add_flag("--vt_user_3",       appConfig.vt_user_3, user3);
-  auto ui1 = app.add_option("--vt_user_int_1", appConfig.vt_user_int_1, userint1, 0);
-  auto ui2 = app.add_option("--vt_user_int_2", appConfig.vt_user_int_2, userint2, 0);
-  auto ui3 = app.add_option("--vt_user_int_3", appConfig.vt_user_int_3, userint3, 0);
-  auto us1 = app.add_option("--vt_user_str_1", appConfig.vt_user_str_1, userstr1, "");
-  auto us2 = app.add_option("--vt_user_str_2", appConfig.vt_user_str_2, userstr2, "");
-  auto us3 = app.add_option("--vt_user_str_3", appConfig.vt_user_str_3, userstr3, "");
+  auto ui1 = app.add_option("--vt_user_int_1", appConfig.vt_user_int_1, userint1)->capture_default_str();
+  auto ui2 = app.add_option("--vt_user_int_2", appConfig.vt_user_int_2, userint2)->capture_default_str();
+  auto ui3 = app.add_option("--vt_user_int_3", appConfig.vt_user_int_3, userint3)->capture_default_str();
+  auto us1 = app.add_option("--vt_user_str_1", appConfig.vt_user_str_1, userstr1)->capture_default_str();
+  auto us2 = app.add_option("--vt_user_str_2", appConfig.vt_user_str_2, userstr2)->capture_default_str();
+  auto us3 = app.add_option("--vt_user_str_3", appConfig.vt_user_str_3, userstr3)->capture_default_str();
   auto userOpts = "User Options";
   u1->group(userOpts);
   u2->group(userOpts);
@@ -631,9 +616,9 @@ void addSchedulerArgs(CLI::App& app, AppConfig& appConfig) {
   auto nsched = "Number of times to run the progress function in scheduler";
   auto ksched = "Run the MPI progress function at least every k handlers that run";
   auto ssched = "Run the MPI progress function at least every s seconds";
-  auto sca = app.add_option("--vt_sched_num_progress", appConfig.vt_sched_num_progress, nsched, 2);
-  auto hca = app.add_option("--vt_sched_progress_han", appConfig.vt_sched_progress_han, ksched, 0);
-  auto kca = app.add_option("--vt_sched_progress_sec", appConfig.vt_sched_progress_sec, ssched, 0.0);
+  auto sca = app.add_option("--vt_sched_num_progress", appConfig.vt_sched_num_progress, nsched)->capture_default_str();
+  auto hca = app.add_option("--vt_sched_progress_han", appConfig.vt_sched_progress_han, ksched)->capture_default_str();
+  auto kca = app.add_option("--vt_sched_progress_sec", appConfig.vt_sched_progress_sec, ssched)->capture_default_str();
   auto schedulerGroup = "Scheduler Configuration";
   sca->group(schedulerGroup);
   hca->group(schedulerGroup);
@@ -645,7 +630,7 @@ void addConfigFileArgs(CLI::App& app, AppConfig& appConfig) {
   auto configname = "Name of configuration file to output";
 
   auto a1 = app.add_flag("--vt_output_config",        appConfig.vt_output_config, doconfig);
-  auto a2 = app.add_option("--vt_output_config_file", appConfig.vt_output_config_file, configname, true);
+  auto a2 = app.add_option("--vt_output_config_file", appConfig.vt_output_config_file, configname)->capture_default_str();
 
   auto configGroup = "Configuration File";
   a1->group(configGroup);
@@ -660,8 +645,8 @@ void addRuntimeArgs(CLI::App& app, AppConfig& appConfig) {
 
 
   auto a1 = app.add_option(
-    "--vt_max_mpi_send_size", appConfig.vt_max_mpi_send_size, max_size, true
-  );
+    "--vt_max_mpi_send_size", appConfig.vt_max_mpi_send_size, max_size
+  )->capture_default_str();
   auto a2 = app.add_flag(
     "--vt_no_assert_fail", appConfig.vt_no_assert_fail, assert
   );
@@ -685,8 +670,8 @@ void addThreadingArgs(CLI::App& app, AppConfig& appConfig) {
     "--vt_ult_disable", appConfig.vt_ult_disable, ult_disable
   );
   auto a2 = app.add_option(
-    "--vt_ult_stack_size", appConfig.vt_ult_stack_size, stack_size, true
-  );
+    "--vt_ult_stack_size", appConfig.vt_ult_stack_size, stack_size
+  )->capture_default_str();
 
   auto configThreads = "Threads";
   a1->group(configThreads);

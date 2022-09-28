@@ -78,10 +78,10 @@ struct PerCollection : public ComposedModel
 
   void updateLoads(PhaseType last_completed_phase) override;
 
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   bool hasRawLoad() const override;
-  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) override;
-  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
 
 private:
   std::unordered_map<CollectionID, std::shared_ptr<LoadModel>> models_;

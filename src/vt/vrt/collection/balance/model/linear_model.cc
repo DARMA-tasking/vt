@@ -48,7 +48,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-TimeType LinearModel::getModeledLoad(ElementIDStruct object, PhaseOffset when) {
+TimeType LinearModel::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
   using util::stats::LinearRegression;
 
   // Retrospective queries don't call for a prediction
@@ -73,7 +73,7 @@ TimeType LinearModel::getModeledLoad(ElementIDStruct object, PhaseOffset when) {
   return regression.predict(when.phases);
 }
 
-unsigned int LinearModel::getNumPastPhasesNeeded(unsigned int look_back)
+unsigned int LinearModel::getNumPastPhasesNeeded(unsigned int look_back) const
 {
   return ComposedModel::getNumPastPhasesNeeded(std::max(past_len_, look_back));
 }

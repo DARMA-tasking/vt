@@ -154,6 +154,29 @@ Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(Args&&... args) con
   return broadcastCollectiveMsg<MsgT, f>(makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
+>
+void
+Broadcastable<ColT, IndexT, BaseProxyT>::invokeCollective(Args&&... args) const {
+  auto proxy = this->getProxy();
+  auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+  return theCollection()->invokeCollectiveMsg<MsgT, f>(proxy, msg);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <
+  typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f,
+  typename... Args
+>
+void
+Broadcastable<ColT, IndexT, BaseProxyT>::invokeCollective(Args&&... args) const {
+  auto proxy = this->getProxy();
+  auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+  return theCollection()->invokeCollectiveMsg<MsgT, f>(proxy, msg);
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BROADCAST_BROADCASTABLE_IMPL_H*/

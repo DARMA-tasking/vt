@@ -73,7 +73,9 @@ struct TimeTriggerManager
 
   std::string name() override { return "TimeTriggerManager"; }
 
-  int progress() override;
+  int progress(TimeType current_time) override;
+
+  bool needsCurrentTime() override;
 
   /**
    * \brief Register a time-based trigger with a specific period

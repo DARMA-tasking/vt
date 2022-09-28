@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 seq_state.h
+//                              circular_buffer.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,58 +41,83 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_SEQUENCE_SEQ_STATE_H
-#define INCLUDED_VT_SEQUENCE_SEQ_STATE_H
-
-#include <list>
-#include <unordered_map>
+#if !defined INCLUDED_VT_UTILS_CONTAINER_CIRCULAR_BUFFER_H
+#define INCLUDED_VT_UTILS_CONTAINER_CIRCULAR_BUFFER_H
 
 #include "vt/config.h"
-#include "vt/sequence/seq_common.h"
-#include "vt/sequence/seq_action.h"
 
-namespace vt { namespace seq {
+namespace vt { namespace util { namespace container {
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-struct SeqMsgState {
-  using ActionType = Action<MessageT>;
+template <typename T, int capacity>
+struct CircularBuffer {
 
-  template <typename T>
-  using TagContainerType = std::unordered_map<TagType, T>;
+  CircularBuffer() = default;
 
-  template <typename T>
-  using ContainerType = std::list<T>;
+private:
+  int getNextEntry() const {
+    int next_entry = head_ + 1;
+    if (next_entry == capacity) {
+      next_entry = 0;
+    }
+    return next_entry;
+  }
 
-  using ActionContainerType = ContainerType<ActionType>;
-  using TaggedActionContainerType = TagContainerType<ActionContainerType>;
+public:
+  template <typename... Args>
+  void emplace(Args&&... args) {
+    int const next_entry = getNextEntry();
+    elms_[head_] = T{std::forward<Args>(args)...};
+    head_ = next_entry;
+  }
 
-  using MsgContainerType = ContainerType<MsgSharedPtr<MessageT>>;
-  using TaggedMsgContainerType = TagContainerType<std::list<MsgSharedPtr<MessageT>>>;
+  void push(T&& t) {
+    int const next_entry = getNextEntry();
+    elms_[head_] = std::move(t);
+    head_ = next_entry;
+  }
 
-  // waiting actions on matching message arrival
-  static ActionContainerType seq_action;
-  static TaggedActionContainerType seq_action_tagged;
+  void push(T const& t) {
+    int const next_entry = getNextEntry();
+    elms_[head_] = t;
+    head_ = next_entry;
+  }
 
-  // waiting messages on matching action arrival
-  static MsgContainerType seq_msg;
-  static TaggedMsgContainerType seq_msg_tagged;
+  T pop() {
+    T elm = std::move(elms_[tail_]);
+    ++tail_;
+    if (tail_ == capacity) {
+      tail_ = 0;
+    }
+    return elm;
+  }
+
+  int numFree() const {
+    if (head_ == tail_) {
+      return capacity - 1;
+    } else if (head_ < tail_) {
+      return tail_ - head_ - 1;
+    } else {
+      return capacity + tail_ - head_ - 1;
+    }
+  }
+
+  bool empty() const { return head_ == tail_; }
+  bool full() const { return numFree() == 0; }
+  int size() const { return capacity - 1 - numFree(); }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | head_;
+    s | tail_;
+    s | elms_; // this is inefficient, but its use is footprinting
+  }
+
+private:
+  int head_ = 0;
+  int tail_ = 0;
+  std::array<T, capacity> elms_;
 };
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-using SeqStateType = SeqMsgState<MessageT, f>;
+}}} /* end namespace vt::util::container */
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-typename SeqMsgState<MessageT, f>::ActionContainerType SeqMsgState<MessageT, f>::seq_action;
-
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-typename SeqMsgState<MessageT, f>::TaggedActionContainerType SeqMsgState<MessageT, f>::seq_action_tagged;
-
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-typename SeqMsgState<MessageT, f>::MsgContainerType SeqMsgState<MessageT, f>::seq_msg;
-
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-typename SeqMsgState<MessageT, f>::TaggedMsgContainerType SeqMsgState<MessageT, f>::seq_msg_tagged;
-
-}} //end namespace vt::seq
-
-#endif /* INCLUDED_VT_SEQUENCE_SEQ_STATE_H*/
+#endif /*INCLUDED_VT_UTILS_CONTAINER_CIRCULAR_BUFFER_H*/

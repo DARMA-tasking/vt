@@ -87,10 +87,13 @@ void TimeTriggerManager::triggerReady(TimeType cur_time) {
   }
 }
 
-int TimeTriggerManager::progress() {
-  auto const cur_time = timing::getCurrentTime();
-  triggerReady(cur_time);
+int TimeTriggerManager::progress(TimeType current_time) {
+  triggerReady(current_time);
   return 0;
+}
+
+bool TimeTriggerManager::needsCurrentTime() {
+  return queue_.size() != 0;
 }
 
 }} /* end namespace vt::timetrigger */

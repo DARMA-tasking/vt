@@ -52,10 +52,14 @@ namespace vt { namespace runnable {
 template <typename MsgT>
 void RunnableMaker<MsgT>::enqueue() {
   setup();
-  if (msg_ != nullptr) {
-    theSched()->enqueue(msg_, std::move(impl_));
+  if (has_msg_) {
+#if vt_check_enabled(priorities)
+    theSched()->enqueue(msg_, impl_);
+#else
+    theSched()->enqueue(is_term_, impl_);
+#endif
   } else {
-    theSched()->enqueue(std::move(impl_));
+    theSched()->enqueue(impl_);
   }
   is_done_ = true;
 }

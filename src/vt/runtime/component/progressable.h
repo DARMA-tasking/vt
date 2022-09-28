@@ -57,9 +57,18 @@ struct Progressable {
   /**
    * \brief Progress function for incremental polling
    *
+   * \param[in] current_time current time
+   *
    * \return the number of units executed---zero if no progress was made
    */
-  virtual int progress() = 0;
+  virtual int progress(TimeType current_time) = 0;
+
+  /**
+   * \brief Whether the component needs the current time
+   *
+   * \return whether it needs time
+   */
+  virtual bool needsCurrentTime() { return false; }
 };
 
 }}} /* end namespace vt::runtime::component */

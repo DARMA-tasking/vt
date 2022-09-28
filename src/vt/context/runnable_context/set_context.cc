@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/context/context.h"
 #include "vt/context/runnable_context/set_context.h"
 #include "vt/context/context_attorney.h"
 

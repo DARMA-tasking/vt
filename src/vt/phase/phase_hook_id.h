@@ -65,11 +65,16 @@ private:
    *
    * \param[in] in_type the type of hook
    * \param[in] in_id the registered ID
+   * \param[in] in_is_collective whether it is collective
+   * \param[in] in_is_rooted whether it is rooted
    */
-  PhaseHookID(PhaseHook in_type, std::size_t in_id, bool in_is_collective)
-    : type_(in_type),
+  PhaseHookID(
+    PhaseHook in_type, std::size_t in_id, bool in_is_collective,
+    bool in_is_rooted
+  ) : type_(in_type),
       id_(in_id),
-      is_collective_(in_is_collective)
+      is_collective_(in_is_collective),
+      is_rooted_(in_is_rooted)
   { }
 
   friend struct PhaseManager;
@@ -96,10 +101,18 @@ public:
    */
   std::size_t getIsCollective() const { return is_collective_; }
 
+  /**
+   * \brief Get whether the hook is rooted or not
+   *
+   * \return whether it is rooted
+   */
+  std::size_t getIsRooted() const { return is_rooted_; }
+
 private:
   PhaseHook type_;
   std::size_t id_ = 0;
   bool is_collective_ = false;
+  bool is_rooted_ = false;
 };
 
 }} /* end namespace vt::phase */

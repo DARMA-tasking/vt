@@ -45,6 +45,7 @@
 #define INCLUDED_VT_SCHEDULER_QUEUE_H
 
 #include "vt/config.h"
+#include "vt/utils/container/circular_buffer.h"
 
 #include <queue>
 
@@ -56,24 +57,50 @@ struct Queue {
   Queue(Queue const&) = default;
   Queue(Queue&&) = default;
 
-  void push(T elm) { impl_.push(elm); }
+  void push(T elm) {
+    if (buf_.full()) {
+      impl_.push(elm);
+    } else {
+      buf_.push(elm);
+    }
+  }
 
-  void emplace(T&& elm) { impl_.emplace(std::forward<T>(elm)); }
+  void emplace(T&& elm) {
+    if (buf_.full()) {
+      impl_.emplace(std::move(elm));
+    } else {
+      buf_.push(std::move(elm));
+    }
+  }
 
-  T pop() { auto elm = impl_.front(); impl_.pop(); return elm; }
+  T pop() {
+    vtAssert(not buf_.empty(), "Must have at least one element");
+    bool const full_buf = buf_.full();
+    auto t = buf_.pop();
+    if (full_buf and not impl_.empty()) {
+      buf_.push(std::move(impl_.front()));
+      impl_.pop();
+    }
+    return t;
+  }
 
-  T const& top() { return impl_.front(); }
+  std::size_t size() const {
+    return buf_.size() + impl_.size();
+  }
 
-  std::size_t size() const { return impl_.size(); }
-
-  bool empty() const { return impl_.empty(); }
+  bool empty() const {
+    vtAssert(not buf_.empty() or impl_.empty(), "Buf empty implies queue empty");
+    return buf_.empty();
+  }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | impl_;
+    s | buf_;
   }
 
 private:
+  util::container::CircularBuffer<T, 64> buf_;
   std::queue<T, std::deque<T>> impl_;
 };
 

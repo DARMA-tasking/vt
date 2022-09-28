@@ -114,7 +114,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
-  using RunnablePtrType      = std::unique_ptr<runnable::RunnableNew>;
+  using RunnablePtrType      = runnable::RunnableNew*;
 
   struct SchedulerLoopGuard {
     SchedulerLoopGuard(Scheduler* scheduler);
@@ -135,9 +135,10 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   std::string name() override { return "Scheduler"; }
 
   void preDiagnostic() override;
+  void startup() override;
 
   /**
-   * \internal \brief Check for termination when running on a since node
+   * \internal \brief Check for termination when running on a single node
    */
   static void checkTermSingleNode();
 
@@ -174,8 +175,10 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    *
    * \param[in] msg_only whether to only make progress on the core active
    * messenger
+   *
+   * \param[in] current_time current time
    */
-  void runProgress(bool msg_only = false);
+  void runProgress(bool msg_only = false, TimeType current_time = 0.0 );
 
   /**
    * \brief Runs the scheduler until a condition is met.
@@ -246,6 +249,15 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   void printMemoryUsage();
 
   /**
+   * \brief Enqueue an action without a message.
+   *
+   * \param[in] is_term whether it is a termination message or not
+   * \param[in] r the runnable
+   */
+  template <typename RunT>
+  void enqueue(bool is_term, RunT r);
+
+  /**
    * \brief Enqueue an action associated with a prioritized message. The action
    * will be enqueued with the priority found on the message.
    *
@@ -263,7 +275,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * \param[in] r the runnable to execute later
    */
   template <typename MsgT, typename RunT>
-  void enqueue(messaging::MsgSharedPtr<MsgT> msg, RunT r);
+  void enqueue(messaging::MsgSharedPtr<MsgT> const& msg, RunT r);
 
   /**
    * \brief Get the work queue size
@@ -362,16 +374,20 @@ private:
   /**
    * \internal \brief Make progress on active message only
    *
+   * \param[in] current_time current time
+   *
    * \return whether progress was made
    */
-  bool progressMsgOnlyImpl();
+  bool progressMsgOnlyImpl(TimeType current_time);
 
   /**
    * \internal \brief Make progress
    *
+   * \param[in] current_time current time
+   *
    * \return whether progress was made
    */
-  bool progressImpl();
+  bool progressImpl(TimeType current_time);
 
 private:
 
@@ -407,6 +423,8 @@ private:
   std::size_t last_threshold_memory_usage_ = 0;
   std::size_t threshold_memory_usage_ = 0;
   std::size_t last_memory_usage_poll_ = 0;
+
+  bool special_progress_ = false; /**< time-based/k-handler progress enabled */
 
   // Access to triggerEvent.
   template <typename Callable>

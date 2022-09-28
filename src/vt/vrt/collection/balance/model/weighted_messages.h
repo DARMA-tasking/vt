@@ -72,7 +72,7 @@ struct WeightedMessages : public ComposedModel {
     ComposedModel::setLoads(proc_load, proc_comm);
   }
 
-  TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) override;
+  TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) const override;
 
 private:
   // observer pointer to the underlying comm data

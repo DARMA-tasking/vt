@@ -47,7 +47,9 @@
 #include "vt/config.h"
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_component_fwd.h"
+#include "vt/runtime/component/component_pack.h"
 #include "vt/worker/worker_headers.h"
+#include "vt/timing/timing_type.h"
 
 // Optional components
 #if vt_check_enabled(trace_enabled)
@@ -121,9 +123,18 @@ struct Runtime {
   /**
    * \brief Invoke all the progress functions
    *
+   * \param[in] current_time current time
+   *
    * \return returns an unspecified value
    */
-  int progress() { if (p_) return p_->progress(); else return 0; }
+  int progress(TimeType current_time) { if (p_) return p_->progress(current_time); else return 0; }
+
+  /**
+   * \brief Check if any pollable components needs the current time
+   *
+   * \return whether it needs the current time
+   */
+  bool needsCurrentTime() { if (p_) return p_->needsCurrentTime(); else return false; }
 
   /**
    * \brief Check if runtime has terminated
@@ -391,7 +402,6 @@ public:
 
 public:
   ComponentPtrType<arguments::ArgConfig> theArgConfig = nullptr;
-  ComponentPtrType<registry::Registry> theRegistry = nullptr;
   ComponentPtrType<messaging::ActiveMessenger> theMsg = nullptr;
   ComponentPtrType<ctx::Context> theContext = nullptr;
   ComponentPtrType<event::AsyncEvent> theEvent = nullptr;
@@ -400,8 +410,6 @@ public:
   ComponentPtrType<pool::Pool> thePool = nullptr;
   ComponentPtrType<rdma::RDMAManager> theRDMA = nullptr;
   ComponentPtrType<param::Param> theParam = nullptr;
-  ComponentPtrType<seq::Sequencer> theSeq = nullptr;
-  ComponentPtrType<seq::SequencerVirtual> theVirtualSeq = nullptr;
   ComponentPtrType<sched::Scheduler> theSched = nullptr;
   ComponentPtrType<location::LocationManager> theLocMan = nullptr;
   ComponentPtrType<vrt::VirtualContextManager> theVirtualManager = nullptr;

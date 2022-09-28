@@ -133,7 +133,7 @@ void WorkerGroupAny<WorkerT>::enqueueAllWorkers(WorkUnitType const& work_unit) {
 }
 
 template <typename WorkerT>
-int WorkerGroupAny<WorkerT>::progress() {
+int WorkerGroupAny<WorkerT>::progress(TimeType /* current_time */) {
   for (auto&& elm : workers_) {
     elm->progress();
   }

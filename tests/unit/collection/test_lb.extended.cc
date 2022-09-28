@@ -44,6 +44,7 @@
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 #include "test_collection_common.h"
 #include "data_message.h"
 
@@ -58,6 +59,7 @@
 
 #include <nlohmann/json.hpp>
 #include <memory>
+#include <sstream>
 
 #include <dirent.h>
 
@@ -274,8 +276,23 @@ INSTANTIATE_TEST_SUITE_P(
 struct TestParallelHarnessWithLBDataDumping : TestParallelHarnessParam<int> {
   virtual void addAdditionalArgs() override {
     static char vt_lb_data[]{"--vt_lb_data"};
-    static char vt_lb_data_dir[]{"--vt_lb_data_dir=test_data_dir"};
-    static char vt_lb_data_file[]{"--vt_lb_data_file=test_data_outfile.%p.json"};
+
+    std::string lb_dir_file(getUniqueFilename("_dir"));
+    std::string lb_dir_flag("--vt_lb_data_dir=");
+    std::string lb_dir_arg = lb_dir_flag + lb_dir_file;
+    char *vt_lb_data_dir = strdup(lb_dir_arg.c_str());
+
+    std::stringstream ss;
+    ss << "--vt_lb_data_file=test_data_outfile";
+    int init = 0;
+    MPI_Initialized(&init);
+    if (init) {
+      int num_ranks = 0;
+      MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+      ss << "_" << num_ranks;
+    }
+    ss << ".%p.json";
+    char *vt_lb_data_file = strdup(ss.str().c_str());
 
     addArgs(vt_lb_data, vt_lb_data_dir, vt_lb_data_file);
   }
