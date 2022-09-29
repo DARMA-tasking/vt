@@ -56,6 +56,7 @@
 #include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/json_appender.h"
+#include "vt/utils/file_spec/spec.h"
 
 #include <nlohmann/json.hpp>
 #include <memory>
@@ -305,6 +306,71 @@ int countCreatedLBDataFiles(char const* path);
 void removeLBDataOutputDir(char const* path);
 std::map<int, int> getPhasesFromLBDataFile(const char* file_path);
 
+TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_spec_file) {
+  using namespace ::vt::utils::file_spec;
+
+  vt::theConfig()->vt_lb = true;
+  vt::theConfig()->vt_lb_name = "GreedyLB";
+
+  std::string const file_name(getUniqueFilenameWithRanks(".txt"));
+  if (theContext()->getNode() == 0) {
+    std::ofstream out(file_name);
+    out << ""
+      "0 0 3\n"
+      "%5 -1 1\n";
+    out.close();
+  }
+  theCollective()->barrier();
+
+  theConfig()->vt_lb_spec = true;
+  theConfig()->vt_lb_spec_file = file_name;
+  theNodeLBData()->loadAndBroadcastSpec();
+
+  vt::vrt::collection::CollectionProxy<MyCol> proxy;
+  auto const range = vt::Index1D(num_elms);
+
+  // Construct a collection
+  runInEpochCollective([&] {
+    proxy = vt::theCollection()->constructCollective<MyCol>(
+      range, "test_node_lb_data_dumping_with_spec_file"
+    );
+  });
+
+  for (int phase = 0; phase < num_phases; phase++) {
+    // Do some work
+    runInEpochCollective([&] {
+      proxy.broadcastCollective<MyMsg, colHandler>();
+    });
+
+    // Go to the next phase
+    vt::thePhase()->nextPhaseCollective();
+  }
+
+  // Finalize to get data output
+  theNodeLBData()->finalize();
+
+  using vt::util::json::Reader;
+
+  vt::runInEpochCollective([=]{
+    Reader r(theConfig()->getLBDataFileOut());
+    auto json_ptr = r.readFile();
+    auto& json = *json_ptr;
+
+    EXPECT_TRUE(json.find("phases") != json.end());
+
+    // All phases expect 7 and 8 should be added to json
+    EXPECT_EQ(json["phases"].size(), num_phases - 2);
+  });
+
+  if (vt::theContext()->getNode() == 0) {
+    removeLBDataOutputDir(vt::theConfig()->vt_lb_data_dir.c_str());
+  }
+
+  // Prevent NodeLBData from closing files during finalize()
+  // All the tmp files are removed already
+  vt::theConfig()->vt_lb_data = false;
+}
+
 TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
   vt::theConfig()->vt_lb = true;
   vt::theConfig()->vt_lb_name = "GreedyLB";
@@ -402,6 +468,7 @@ void removeLBDataOutputDir(char const* path) {
     rmdir(path);
   }
 }
+
 
 auto const intervals = ::testing::Values(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
