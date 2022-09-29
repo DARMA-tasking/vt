@@ -95,7 +95,7 @@ struct MyObjGroup {
         done_ = true;
         // stack should be the size before running this method since we haven't
         // resumed the thread yet!
-        EXPECT_EQ(theTerm()->getEpochStack().size(), original_epoch_size - 2);
+        EXPECT_EQ(theTerm()->getEpochStack().size(), original_epoch_size - 1);
       }
     );
 
