@@ -43,6 +43,8 @@
 
 #include <gtest/gtest.h>
 
+#include "nlohmann/detail/meta/is_sax.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include "test_parallel_harness.h"
 #include "test_helpers.h"
 #include "test_collection_common.h"
@@ -316,7 +318,7 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_spec_file) {
   if (theContext()->getNode() == 0) {
     std::ofstream out(file_name);
     out << ""
-      "0 0 3\n"
+      "0 0 2\n"
       "%5 -1 1\n";
     out.close();
   }
@@ -358,8 +360,16 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_spec_file) {
 
     EXPECT_TRUE(json.find("phases") != json.end());
 
-    // All phases expect 7 and 8 should be added to json
-    EXPECT_EQ(json["phases"].size(), num_phases - 2);
+    // Expected phases for given spec file
+    // All phases except 3, 7 and 8 should be added to json
+    nlohmann::json expected_phases = R"(
+    [{"id":0}, {"id":1}, {"id":2}, {"id":4}, {"id":5}, {"id":6}, {"id":9}])"_json;
+
+    EXPECT_EQ(json["phases"].size(), expected_phases.size());
+
+    for (decltype(expected_phases.size()) i = 0; i < expected_phases.size(); ++i) {
+      EXPECT_EQ(expected_phases.at(i)["id"], json["phases"].at(i)["id"]);
+    }
   });
 
   if (vt::theContext()->getNode() == 0) {
