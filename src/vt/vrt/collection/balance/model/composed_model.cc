@@ -60,7 +60,7 @@ ComposedModel::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
 }
 
 TimeType
-ComposedModel::getModeledComm(ElementIDStruct object, PhaseOffset when) {
+ComposedModel::getModeledComm(ElementIDStruct object, PhaseOffset when) const {
   return base_->getModeledComm(object, when);
 }
 
