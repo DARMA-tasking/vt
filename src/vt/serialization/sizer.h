@@ -62,9 +62,7 @@ struct MsgSizer<
   MsgT,
   typename std::enable_if_t<true
     and ::vt::messaging::msg_defines_serialize_mode<MsgT>::value
-    and (::vt::messaging::msg_serialization_mode<MsgT>::supported
-         or ::vt::messaging::msg_serialization_mode<MsgT>::required)
-    //    ::vt::messaging::has_own_serialize<MsgT>
+    and ::vt::messaging::msg_serialization_mode<MsgT>::required
   >
 > {
   static std::size_t get(MsgT* msg) {
