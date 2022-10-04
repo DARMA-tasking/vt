@@ -302,13 +302,14 @@ struct TestParallelHarnessWithLBDataDumping : TestParallelHarnessParam<int> {
 };
 
 struct TestNodeLBDataDumper : TestParallelHarnessWithLBDataDumping {};
+struct TestLBSpecFile : TestParallelHarnessWithLBDataDumping {};
 
 void closeNodeLBDataFile(char const* file_path);
 int countCreatedLBDataFiles(char const* path);
 void removeLBDataOutputDir(char const* path);
 std::map<int, int> getPhasesFromLBDataFile(const char* file_path);
 
-TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_spec_file) {
+TEST_P(TestLBSpecFile, test_node_lb_data_dumping_with_spec_file) {
   using namespace ::vt::utils::file_spec;
 
   vt::theConfig()->vt_lb = true;
@@ -484,6 +485,10 @@ auto const intervals = ::testing::Values(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
 INSTANTIATE_TEST_SUITE_P(
   NodeLBDataDumperExplode, TestNodeLBDataDumper, intervals
+);
+
+INSTANTIATE_TEST_SUITE_P(
+  LBSpecFile, TestLBSpecFile, ::testing::Values(0)
 );
 
 using TestRestoreLBData = TestParallelHarness;
