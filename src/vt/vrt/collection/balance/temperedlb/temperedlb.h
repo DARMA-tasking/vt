@@ -111,7 +111,7 @@ protected:
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
-  virtual TimeType getModeledWork(const elm::ElementIDStruct& obj);
+  virtual TimeType getModeledValue(const elm::ElementIDStruct& obj);
 
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);

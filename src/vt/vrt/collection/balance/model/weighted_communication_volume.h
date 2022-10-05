@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             weighted_messages.h
+//                       weighted_communication_volume.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,45 +41,38 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_MESSAGES_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_MESSAGES_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_COMMUNICATION_VOLUME_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_COMMUNICATION_VOLUME_H
 
 #include "vt/vrt/collection/balance/model/composed_model.h"
-#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct WeightedMessages : public ComposedModel {
+/**
+ * \brief Models work as an affine combination of load and communication.
+ */
+class WeightedCommunicationVolume : public ComposedModel {
+public:
   /**
-   * \brief Constructor
-   *
-   * \param[in] base: the underlying source of object work loads
-   * \param[in] in_per_msg_weight weight to add per message received
-   * \param[in] in_per_byte_weight weight to add per byte received
+   * \param[in] base underlying source of object work loads
+   * \param[in] alpha load part coefficient
+   * \param[in] beta communication part coefficient
+   * \param[in] gamma unspecified constant cost
    */
-  explicit WeightedMessages(
-    std::shared_ptr<balance::LoadModel> base,
-    TimeType in_per_msg_weight = 0.0, TimeType in_per_byte_weight = 1.0
-  ) : ComposedModel(base),
-      per_msg_weight_(in_per_msg_weight),
-      per_byte_weight_(in_per_byte_weight) { }
+  WeightedCommunicationVolume(
+    std::shared_ptr<LoadModel> base,
+    double alpha = 1.0, double beta = 0.0, double gamma = 0.0)
+    : ComposedModel(base),
+      alpha_(alpha),
+      beta_(beta),
+      gamma_(gamma) { }
 
-  void setLoads(
-    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const* proc_comm
-  ) override {
-    proc_comm_ = proc_comm;
-    ComposedModel::setLoads(proc_load, proc_comm);
-  }
-
-  TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) const override;
+  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
 
 private:
-  // observer pointer to the underlying comm data
-  std::unordered_map<PhaseType, CommMapType> const* proc_comm_;
-
-  TimeType per_msg_weight_;
-  TimeType per_byte_weight_;
+  double alpha_;
+  double beta_;
+  double gamma_;
 };
 
 }}}} // namespace vt::vrt::collection::balance
