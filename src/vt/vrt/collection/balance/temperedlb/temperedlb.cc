@@ -1358,7 +1358,7 @@ void TemperedLB::migrate() {
   vtAssertExpr(false);
 }
 
-TimeType TemperedLB::getModeledValue(const elm::ElementIDStruct& obj) {
+TimeType TemperedLB::getModeledValue(const elm::ElementIDStruct& obj) const {
   return load_model_->getModeledLoad(
     obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
   );

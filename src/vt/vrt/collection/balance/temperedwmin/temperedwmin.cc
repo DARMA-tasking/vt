@@ -130,7 +130,7 @@ std::vector<NodeType> TemperedWMin::getPotentialRecipients() const {
   return nodes;
 }
 
-TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
+TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) const {
   vtAssert(
     theLBManager()->getLoadModel().get() == load_model_ptr,
     "Load model must not change"

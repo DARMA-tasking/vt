@@ -64,8 +64,6 @@ public:
   void inputParams(balance::ConfigEntry* config) override;
 
 protected:
-  TimeType getModeledValue(const elm::ElementIDStruct& obj) override;
-
   /**
    * Allow migration when there are objects to migrate and other ranks are known
    */
@@ -79,6 +77,7 @@ protected:
    */
   bool isUnderloaded(LoadType load) const override { return true; }
 
+  TimeType getModeledValue(const elm::ElementIDStruct& obj) const override;
   std::vector<NodeType> getPotentialRecipients() const override;
 
 private:
