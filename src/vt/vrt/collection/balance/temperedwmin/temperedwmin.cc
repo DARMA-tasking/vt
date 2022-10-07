@@ -84,12 +84,12 @@ Description:
   return map;
 }
 
-void TemperedWMin::inputParams(balance::SpecEntry* spec) {
-  TemperedLB::inputParams(spec);
+void TemperedWMin::inputParams(balance::ConfigEntry* config) {
+  TemperedLB::inputParams(config);
 
-  alpha_         = spec->getOrDefault<double>("alpha", alpha_);
-  beta_          = spec->getOrDefault<double>("beta", beta_);
-  gamma_         = spec->getOrDefault<double>("gamma", gamma_);
+  alpha_         = config->getOrDefault<double>("alpha", alpha_);
+  beta_          = config->getOrDefault<double>("beta", beta_);
+  gamma_         = config->getOrDefault<double>("gamma", gamma_);
 
   vt_debug_print(
     normal, temperedwmin,

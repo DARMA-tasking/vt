@@ -92,7 +92,7 @@ ZoltanLB::getInputKeysWithHelp() {
   return keys_help;
 }
 
-void ZoltanLB::inputParams(balance::SpecEntry* spec) {
+void ZoltanLB::inputParams(balance::ConfigEntry* config) {
   zoltan_config_ = {
     {"LB_APPROACH",                   "REPARTITION" },
     {"DEBUG_LEVEL",                   "0"           },
@@ -120,12 +120,12 @@ void ZoltanLB::inputParams(balance::SpecEntry* spec) {
   for (auto& c : zoltan_config_) {
     allowed.push_back(c.first);
   }
-  spec->checkAllowedKeys(allowed);
+  config->checkAllowedKeys(allowed);
 
-  do_edges_ = spec->getOrDefault<bool>("edges", do_edges_);
+  do_edges_ = config->getOrDefault<bool>("edges", do_edges_);
 
   for (auto& c : zoltan_config_) {
-    c.second = spec->getOrDefault<std::string>(c.first, c.second);
+    c.second = config->getOrDefault<std::string>(c.first, c.second);
   }
 }
 

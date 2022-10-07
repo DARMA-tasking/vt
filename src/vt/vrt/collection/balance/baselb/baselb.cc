@@ -77,7 +77,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
 
   runInEpochCollective("BaseLB::startLB -> runLB", [this,total_load]{
     getArgs(phase_);
-    inputParams(spec_entry_.get());
+    inputParams(config_entry_.get());
     runLB(total_load);
   });
 
@@ -106,18 +106,18 @@ void BaseLB::importProcessorData(
 void BaseLB::getArgs(PhaseType phase) {
   using namespace balance;
 
-  bool has_spec = ReadLBSpec::openSpec(theConfig()->vt_lb_file_name);
-  if (has_spec) {
-    auto spec = ReadLBSpec::entry(phase);
-    if (spec) {
-      spec_entry_ = std::make_unique<SpecEntry>(*spec);
+  bool has_config = ReadLBConfig::openConfig(theConfig()->vt_lb_file_name);
+  if (has_config) {
+    auto config = ReadLBConfig::entry(phase);
+    if (config) {
+      config_entry_ = std::make_unique<ConfigEntry>(*config);
     } else {
-      vtAssert(false, "Error no spec found, which must exist");
+      vtAssert(false, "Error no config found, which must exist");
     }
   } else {
     auto const args = theConfig()->vt_lb_args;
-    spec_entry_ = std::make_unique<SpecEntry>(
-      ReadLBSpec::makeSpecFromParams(args)
+    config_entry_ = std::make_unique<ConfigEntry>(
+      ReadLBConfig::makeConfigFromParams(args)
     );
   }
 }

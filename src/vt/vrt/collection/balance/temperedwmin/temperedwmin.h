@@ -61,7 +61,7 @@ public:
   void init(objgroup::proxy::Proxy<TemperedWMin> in_proxy);
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 
-  void inputParams(balance::SpecEntry* spec) override;
+  void inputParams(balance::ConfigEntry* config) override;
 
 protected:
   TimeType getModeledValue(const elm::ElementIDStruct& obj) override;

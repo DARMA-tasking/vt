@@ -136,7 +136,7 @@ struct BaseLB {
   void transferMigrations(TransferMsg<TransferVecType>* msg);
   void finalize(CountMsg* msg);
 
-  virtual void inputParams(balance::SpecEntry* spec) = 0;
+  virtual void inputParams(balance::ConfigEntry* config) = 0;
   virtual void runLB(TimeType total_load) = 0;
 
   StatisticMapType const* getStats() const {
@@ -152,14 +152,14 @@ protected:
   void getArgs(PhaseType phase);
 
 protected:
-  double start_time_                              = 0.0f;
-  ElementCommType const* comm_data                = nullptr;
-  objgroup::proxy::Proxy<BaseLB> proxy_           = {};
-  PhaseType phase_                                = 0;
-  std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
+  double start_time_                                  = 0.0f;
+  ElementCommType const* comm_data                    = nullptr;
+  objgroup::proxy::Proxy<BaseLB> proxy_               = {};
+  PhaseType phase_                                    = 0;
+  std::unique_ptr<balance::ConfigEntry> config_entry_ = nullptr;
   // Observer only - LBManager owns the instance
-  balance::LoadModel* load_model_                 = nullptr;
-  bool comm_aware_                                = false;
+  balance::LoadModel* load_model_                     = nullptr;
+  bool comm_aware_                                    = false;
 
 protected:
   /**

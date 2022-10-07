@@ -56,32 +56,32 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/*static*/ std::string ReadLBSpec::open_filename_ = {};
-/*static*/ typename ReadLBSpec::SpecMapType ReadLBSpec::spec_mod_ = {};
-/*static*/ typename ReadLBSpec::SpecMapType ReadLBSpec::spec_exact_ = {};
-/*static*/ std::vector<SpecIndex> ReadLBSpec::spec_prec_ = {};
-/*static*/ bool ReadLBSpec::read_complete_ = false;
+/*static*/ std::string ReadLBConfig::open_filename_ = {};
+/*static*/ typename ReadLBConfig::ConfigMapType ReadLBConfig::config_mod_ = {};
+/*static*/ typename ReadLBConfig::ConfigMapType ReadLBConfig::config_exact_ = {};
+/*static*/ std::vector<ConfigIndex> ReadLBConfig::config_prec_ = {};
+/*static*/ bool ReadLBConfig::read_complete_ = false;
 
-/*static*/ bool ReadLBSpec::openSpec(std::string const& filename) {
+/*static*/ bool ReadLBConfig::openConfig(std::string const& filename) {
   // No-op if no file specified. Can't be used to clear.
   if (filename.empty()) {
     return false;
   }
 
-  // Ignore attempt to open same spec.
+  // Ignore attempt to open same config.
   if (not open_filename_.empty() and open_filename_ == filename) {
     return true;
   }
 
   vtAssert(
     open_filename_.empty(),
-    "Spec already opened. Use clear first to load again."
+    "Config already opened. Use clear first to load again."
   );
 
   // Ensure file can be opened.
   std::ifstream file(filename);
   if (not file.good()) {
-    auto str = fmt::format("Unable to open spec file: {}", filename);
+    auto str = fmt::format("Unable to open config file: {}", filename);
     vtAbort(str);
   }
 
@@ -93,7 +93,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   return true;
 }
 
-/*static*/ LBType ReadLBSpec::getLB(SpecIndex const& idx) {
+/*static*/ LBType ReadLBConfig::getLB(ConfigIndex const& idx) {
   auto const lb = entry(idx);
   if (lb) {
     return lb->getLB();
@@ -102,22 +102,22 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   }
 }
 
-/*static*/ SpecEntry* ReadLBSpec::entry(SpecIndex const& idx) {
-  // First, search the exact iter spec for this iteration: it has the highest
+/*static*/ ConfigEntry* ReadLBConfig::entry(ConfigIndex const& idx) {
+  // First, search the exact iter config for this iteration: it has the highest
   // precedence
-  auto spec_iter = spec_exact_.find(idx);
-  if (spec_iter != spec_exact_.end()) {
-    return &spec_iter->second;
+  auto config_iter = config_exact_.find(idx);
+  if (config_iter != config_exact_.end()) {
+    return &config_iter->second;
   }
 
-  // Second, walk through the spec precedence map for the mod overloads
-  for (auto mod : spec_prec_) {
-    auto iter = spec_mod_.find(mod);
-    if (iter != spec_mod_.end()) {
+  // Second, walk through the config precedence map for the mod overloads
+  for (auto mod : config_prec_) {
+    auto iter = config_mod_.find(mod);
+    if (iter != config_mod_.end()) {
       // Check if this mod is applicable to the idx
       if (idx % mod == 0) {
-        auto iter_mod = spec_mod_.find(mod);
-        if (iter_mod != spec_mod_.end()) {
+        auto iter_mod = config_mod_.find(mod);
+        if (iter_mod != config_mod_.end()) {
           return &iter_mod->second;
         }
       }
@@ -135,7 +135,7 @@ int eatWhitespace(std::ifstream& file) {
   return file.eof() ? 0 : file.peek();
 }
 
-/*static*/ void ReadLBSpec::readFile(std::string const& filename) {
+/*static*/ void ReadLBConfig::readFile(std::string const& filename) {
   std::ifstream file(filename);
   vtAssert(file.good(), "must be valid");
 
@@ -213,15 +213,15 @@ int eatWhitespace(std::ifstream& file) {
      * If the line is specified as a mod '%' or not line is specified (assume
      * mod 1)
      */
-    SpecMapType* map = nullptr;
+    ConfigMapType* map = nullptr;
     if (is_mod or mod == -1) {
       if (mod == -1) {
         mod = 1;
       }
-      spec_prec_.push_back(mod);
-      map = &spec_mod_;
+      config_prec_.push_back(mod);
+      map = &config_mod_;
     } else {
-      map = &spec_exact_;
+      map = &config_exact_;
     }
 
     if (map->find(mod) != map->end()) {
@@ -234,23 +234,23 @@ int eatWhitespace(std::ifstream& file) {
     map->emplace(
       std::piecewise_construct,
       std::forward_as_tuple(mod),
-      std::forward_as_tuple(SpecEntry{mod, lb_name, param_map})
+      std::forward_as_tuple(ConfigEntry{mod, lb_name, param_map})
     );
   }
 
   read_complete_ = true;
 }
 
-/*static*/ void ReadLBSpec::clear() {
+/*static*/ void ReadLBConfig::clear() {
   read_complete_ = false;
   open_filename_ = "";
-  spec_mod_.clear();
-  spec_exact_.clear();
-  spec_prec_.clear();
+  config_mod_.clear();
+  config_exact_.clear();
+  config_prec_.clear();
 }
 
-/*static*/ typename ReadLBSpec::ParamMapType
-ReadLBSpec::parseParams(std::vector<std::string> params) {
+/*static*/ typename ReadLBConfig::ParamMapType
+ReadLBConfig::parseParams(std::vector<std::string> params) {
   ParamMapType param_map;
 
   /*
@@ -279,7 +279,7 @@ ReadLBSpec::parseParams(std::vector<std::string> params) {
   return param_map;
 }
 
-/*static*/ SpecEntry ReadLBSpec::makeSpecFromParams(std::string param_str) {
+/*static*/ ConfigEntry ReadLBConfig::makeConfigFromParams(std::string param_str) {
   std::istringstream stream(param_str);
   std::vector<std::string> params;
   while (not stream.eof()) {
@@ -290,7 +290,7 @@ ReadLBSpec::parseParams(std::vector<std::string> params) {
 
   auto param_map = parseParams(params);
 
-  return SpecEntry{0, "", param_map};
+  return ConfigEntry{0, "", param_map};
 }
 
 auto param_str = [](
@@ -312,13 +312,13 @@ auto param_str = [](
   return ss.str();
 };
 
-auto excluded_str = [](SpecIndex idx) -> std::string {
+auto excluded_str = [](ConfigIndex idx) -> std::string {
   std::stringstream ss;
-  auto exact_entries = ReadLBSpec::getExactEntries();
+  auto exact_entries = ReadLBConfig::getExactEntries();
   auto max_idx = exact_entries.empty() ? 0 : exact_entries.rbegin()->first;
 
   for (auto k = 1; k*idx <= max_idx; k++) {
-    auto next_entry = ReadLBSpec::entry(k*idx);
+    auto next_entry = ReadLBConfig::entry(k*idx);
     if (next_entry != nullptr and next_entry->getIdx() != idx) {
       ss << fmt::format("{}, ", debug::emph(std::to_string(k*idx)));
     }
@@ -327,17 +327,17 @@ auto excluded_str = [](SpecIndex idx) -> std::string {
   return s.empty() ? s : s.substr(0, s.size() - 2);
 };
 
-/*static*/ std::string ReadLBSpec::toString() {
+/*static*/ std::string ReadLBConfig::toString() {
   std::stringstream ss;
 
   if (open_filename_.empty()) {
-    return "[No LB Spec open]";
+    return "[No LB Config open]";
   }
 
-  if (not ReadLBSpec::getExactEntries().empty()) {
-    ss << fmt::format("{}\tExact specification lines:\n", vt::debug::vtPre());
+  if (not ReadLBConfig::getExactEntries().empty()) {
+    ss << fmt::format("{}\tExact config lines:\n", vt::debug::vtPre());
   }
-  for (auto const& exact_entry : ReadLBSpec::getExactEntries()) {
+  for (auto const& exact_entry : ReadLBConfig::getExactEntries()) {
     ss << fmt::format("{}\tRun `{}` on phase {}{}",
       vt::debug::vtPre(),
       vt::debug::emph(exact_entry.second.getName()),
@@ -346,12 +346,12 @@ auto excluded_str = [](SpecIndex idx) -> std::string {
     ss << '\n';
   }
 
-  if (not ReadLBSpec::getModEntries().empty()) {
+  if (not ReadLBConfig::getModEntries().empty()) {
     ss << fmt::format(
-      "{}\tMod (%) specification lines:\n", vt::debug::vtPre()
+      "{}\tMod (%) config lines:\n", vt::debug::vtPre()
     );
   }
-  for (auto const& mod_entry : ReadLBSpec::getModEntries()) {
+  for (auto const& mod_entry : ReadLBConfig::getModEntries()) {
     ss << fmt::format("{}\tRun `{}` every {} phases{}",
       vt::debug::vtPre(),
       vt::debug::emph(mod_entry.second.getName()),

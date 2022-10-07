@@ -121,17 +121,17 @@ Description:
   return keys_help;
 }
 
-void GreedyLB::inputParams(balance::SpecEntry* spec) {
+void GreedyLB::inputParams(balance::ConfigEntry* config) {
   auto keys_help = getInputKeysWithHelp();
 
   std::vector<std::string> allowed;
   for (auto&& elm : keys_help) {
     allowed.push_back(elm.first);
   }
-  spec->checkAllowedKeys(allowed);
-  min_threshold = spec->getOrDefault<double>("min", greedy_threshold_p);
-  max_threshold = spec->getOrDefault<double>("max", greedy_max_threshold_p);
-  auto_threshold = spec->getOrDefault<bool>("auto", greedy_auto_threshold_p);
+  config->checkAllowedKeys(allowed);
+  min_threshold = config->getOrDefault<double>("min", greedy_threshold_p);
+  max_threshold = config->getOrDefault<double>("max", greedy_max_threshold_p);
+  auto_threshold = config->getOrDefault<bool>("auto", greedy_auto_threshold_p);
 
   balance::LBArgsEnumConverter<DataDistStrategy> strategy_converter_(
     "strategy", "DataDistStrategy", {
@@ -140,7 +140,7 @@ void GreedyLB::inputParams(balance::SpecEntry* spec) {
       {DataDistStrategy::bcast,   "bcast"}
     }
   );
-  strat_ = strategy_converter_.getFromSpec(spec, strat_);
+  strat_ = strategy_converter_.getFromConfig(config, strat_);
 }
 
 void GreedyLB::runLB(TimeType total_load) {
