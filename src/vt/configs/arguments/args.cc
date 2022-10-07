@@ -459,11 +459,11 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   /*
    * Flags for enabling load balancing and configuring it
    */
-  auto lb            = "Enable load balancing";
-  auto lb_args       = "Arguments pass to LB: \"x=0 y=1\"; try --vt_help_lb_args";
-  auto lb_quiet      = "Silence load balancing output";
-  auto lb_file_name  = "LB specification file to read";
-  auto lb_show_spec  = "Show LB specification during startup";
+  auto lb             = "Enable load balancing";
+  auto lb_args        = "Arguments pass to LB: \"x=0 y=1\"; try --vt_help_lb_args";
+  auto lb_quiet       = "Silence load balancing output";
+  auto lb_file_name   = "LB config file to read";
+  auto lb_show_config = "Show LB config during startup";
   auto lb_name       = "Name of the load balancer to use";
   auto lb_interval   = "Load balancing interval";
   auto lb_keep_last_elm = "Do not migrate last element in collection";
@@ -483,7 +483,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto s  = app.add_flag("--vt_lb", appConfig.vt_lb, lb);
   auto t1 = app.add_flag("--vt_lb_quiet", appConfig.vt_lb_quiet, lb_quiet);
   auto u  = app.add_option("--vt_lb_file_name", appConfig.vt_lb_file_name, lb_file_name)->capture_default_str()->check(CLI::ExistingFile);
-  auto u1 = app.add_flag("--vt_lb_show_spec", appConfig.vt_lb_show_spec, lb_show_spec);
+  auto u1 = app.add_flag("--vt_lb_show_config", appConfig.vt_lb_show_config, lb_show_config);
   auto v  = app.add_option("--vt_lb_name", appConfig.vt_lb_name, lb_name)->capture_default_str();
   auto v1 = app.add_option("--vt_lb_args", appConfig.vt_lb_args, lb_args)->capture_default_str();
   auto w  = app.add_option("--vt_lb_interval", appConfig.vt_lb_interval, lb_interval)->capture_default_str();

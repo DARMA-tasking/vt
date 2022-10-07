@@ -125,19 +125,19 @@ Description:
   return keys_help;
 }
 
-void HierarchicalLB::inputParams(balance::SpecEntry* spec) {
+void HierarchicalLB::inputParams(balance::ConfigEntry* config) {
   auto keys_help = getInputKeysWithHelp();
 
   std::vector<std::string> allowed;
   for (auto&& elm : keys_help) {
     allowed.push_back(elm.first);
   }
-  spec->checkAllowedKeys(allowed);
-  min_threshold = spec->getOrDefault<double>("min", hierlb_threshold_p);
-  max_threshold = spec->getOrDefault<double>("max", hierlb_max_threshold_p);
-  auto_threshold = spec->getOrDefault<bool>("auto", hierlb_auto_threshold_p);
+  config->checkAllowedKeys(allowed);
+  min_threshold = config->getOrDefault<double>("min", hierlb_threshold_p);
+  max_threshold = config->getOrDefault<double>("max", hierlb_max_threshold_p);
+  auto_threshold = config->getOrDefault<bool>("auto", hierlb_auto_threshold_p);
 
-  std::string extract = spec->getOrDefault<std::string>(
+  std::string extract = config->getOrDefault<std::string>(
     "strategy", "LoadOverLessThan"
   );
   if (extract.compare("LoadOverLessThan") == 0) {

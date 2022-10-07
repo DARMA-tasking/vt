@@ -58,7 +58,7 @@ void TestSerializationLB::init(objgroup::proxy::Proxy<TestSerializationLB>) {
   );
 }
 
-void TestSerializationLB::inputParams(balance::SpecEntry*) { }
+void TestSerializationLB::inputParams(balance::ConfigEntry*) { }
 
 void TestSerializationLB::runLB(TimeType) {
   auto const this_node = theContext()->getNode();

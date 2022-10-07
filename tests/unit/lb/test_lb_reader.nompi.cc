@@ -59,47 +59,47 @@ TEST_F(TestLBReader, test_lb_read_1) {
     "%10 HierarchicalLB\n";
   out.close();
 
-  using Spec       = vt::vrt::collection::balance::ReadLBSpec;
-  using SpecIdx    = vt::vrt::collection::balance::SpecIndex;
-  using SpecLBType = vt::vrt::collection::balance::LBType;
+  using Config       = vt::vrt::collection::balance::ReadLBConfig;
+  using ConfigIdx    = vt::vrt::collection::balance::ConfigIndex;
+  using ConfigLBType = vt::vrt::collection::balance::LBType;
 
-  Spec::clear();
-  Spec::openSpec(file_name);
+  Config::clear();
+  Config::openConfig(file_name);
 
-  EXPECT_EQ(Spec::numEntries(), 3);
-  EXPECT_EQ(Spec::getExactEntries().size(), 2);
-  EXPECT_EQ(Spec::getModEntries().size(), 1);
+  EXPECT_EQ(Config::numEntries(), 3);
+  EXPECT_EQ(Config::getExactEntries().size(), 2);
+  EXPECT_EQ(Config::getModEntries().size(), 1);
 
-  for (SpecIdx i = 0; i < 21; i++) {
-    auto entry = Spec::entry(i);
+  for (ConfigIdx i = 0; i < 21; i++) {
+    auto entry = Config::entry(i);
     switch (i) {
     case 0:
       EXPECT_TRUE(entry != nullptr);
-      EXPECT_TRUE(entry->getLB() == SpecLBType::NoLB);
+      EXPECT_TRUE(entry->getLB() == ConfigLBType::NoLB);
       EXPECT_EQ(entry->getName(), "NoLB");
       break;
     case 1:
       EXPECT_TRUE(entry != nullptr);
-      EXPECT_TRUE(entry->getLB() == SpecLBType::HierarchicalLB);
+      EXPECT_TRUE(entry->getLB() == ConfigLBType::HierarchicalLB);
       EXPECT_EQ(entry->getName(), "HierarchicalLB");
       break;
     case 10:
     case 20:
       EXPECT_TRUE(entry != nullptr);
-      EXPECT_TRUE(entry->getLB() == SpecLBType::HierarchicalLB);
+      EXPECT_TRUE(entry->getLB() == ConfigLBType::HierarchicalLB);
       break;
     default:
       EXPECT_TRUE(entry == nullptr);
     }
   }
 
-  std::string expected_spec =
-    "vt: \tExact specification lines:\n"
+  std::string expected_config =
+    "vt: \tExact config lines:\n"
     "vt: \tRun `NoLB` on phase 0\n"
     "vt: \tRun `HierarchicalLB` on phase 1\n"
-    "vt: \tMod (%) specification lines:\n"
+    "vt: \tMod (%) config lines:\n"
     "vt: \tRun `HierarchicalLB` every 10 phases\n";
-  EXPECT_EQ(Spec::toString(), expected_spec);
+  EXPECT_EQ(Config::toString(), expected_config);
 }
 
 TEST_F(TestLBReader, test_lb_read_2) {
@@ -114,25 +114,25 @@ TEST_F(TestLBReader, test_lb_read_2) {
     "120 HierarchicalLB test_xyz=3\n";
   out.close();
 
-  using Spec       = vt::vrt::collection::balance::ReadLBSpec;
-  using SpecIdx    = vt::vrt::collection::balance::SpecIndex;
-  using SpecLBType = vt::vrt::collection::balance::LBType;
-  Spec::clear();
-  Spec::openSpec(file_name);
+  using Config       = vt::vrt::collection::balance::ReadLBConfig;
+  using ConfigIdx    = vt::vrt::collection::balance::ConfigIndex;
+  using ConfigLBType = vt::vrt::collection::balance::LBType;
+  Config::clear();
+  Config::openConfig(file_name);
 
-  EXPECT_EQ(Spec::numEntries(), 5);
-  for (SpecIdx i = 0; i < 121; i++) {
-    auto entry = Spec::entry(i);
+  EXPECT_EQ(Config::numEntries(), 5);
+  for (ConfigIdx i = 0; i < 121; i++) {
+    auto entry = Config::entry(i);
     switch (i) {
     case 0:
       EXPECT_TRUE(entry != nullptr);
-      EXPECT_TRUE(entry->getLB() == SpecLBType::NoLB);
+      EXPECT_TRUE(entry->getLB() == ConfigLBType::NoLB);
       EXPECT_TRUE(entry->getParams().empty());
       EXPECT_EQ(entry->getIdx(), 0);
       break;
     case 1:
       EXPECT_TRUE(entry != nullptr);
-      EXPECT_TRUE(entry->getLB() == SpecLBType::HierarchicalLB);
+      EXPECT_TRUE(entry->getLB() == ConfigLBType::HierarchicalLB);
       EXPECT_TRUE(entry->getOrDefault<double>("min", 0.) == 0.9);
       EXPECT_TRUE(entry->getOrDefault<double>("max", 0.) == 1.1);
       EXPECT_TRUE(entry->getOrDefault<bool>("auto", true) == false);
@@ -150,7 +150,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
     case 100:
     case 110:
       EXPECT_TRUE(entry != nullptr);
-      EXPECT_TRUE(entry->getLB() == SpecLBType::TemperedLB);
+      EXPECT_TRUE(entry->getLB() == ConfigLBType::TemperedLB);
       EXPECT_TRUE(entry->getOrDefault<int32_t>("c", 0) == 1);
       EXPECT_TRUE(entry->getOrDefault<int32_t>("k", 0) == 5);
       EXPECT_TRUE(entry->getOrDefault<int32_t>("f", 0) == 2);
@@ -170,13 +170,13 @@ TEST_F(TestLBReader, test_lb_read_2) {
     case 105:
     case 115:
       EXPECT_TRUE(entry != nullptr);
-      EXPECT_TRUE(entry->getLB() == SpecLBType::GreedyLB);
+      EXPECT_TRUE(entry->getLB() == ConfigLBType::GreedyLB);
       EXPECT_TRUE(entry->getOrDefault<double>("min", 0.) == 1.0);
       EXPECT_EQ(entry->getParams().at("min"), "1.0");
       break;
     case 120:
       EXPECT_TRUE(entry != nullptr);
-      EXPECT_TRUE(entry->getLB() == SpecLBType::HierarchicalLB);
+      EXPECT_TRUE(entry->getLB() == ConfigLBType::HierarchicalLB);
       EXPECT_TRUE(entry->getOrDefault<int32_t>("test_xyz", 0) == 3);
       break;
     default:
@@ -184,15 +184,15 @@ TEST_F(TestLBReader, test_lb_read_2) {
     }
   }
 
-  std::string expected_spec =
-    "vt: \tExact specification lines:\n"
+  std::string expected_config =
+    "vt: \tExact config lines:\n"
     "vt: \tRun `NoLB` on phase 0\n"
     "vt: \tRun `HierarchicalLB` on phase 1 with arguments `auto=false max=1.1 min=0.9`\n"
     "vt: \tRun `HierarchicalLB` on phase 120 with arguments `test_xyz=3`\n"
-    "vt: \tMod (%) specification lines:\n"
+    "vt: \tMod (%) config lines:\n"
     "vt: \tRun `GreedyLB` every 5 phases with arguments `min=1.0` excluding phases 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120\n"
     "vt: \tRun `TemperedLB` every 10 phases with arguments `c=1 f=2 i=10 k=5` excluding phases 120\n";
-  EXPECT_EQ(Spec::toString(), expected_spec);
+  EXPECT_EQ(Config::toString(), expected_config);
 }
 
 }}} // end namespace vt::tests::unit

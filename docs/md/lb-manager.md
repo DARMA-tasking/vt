@@ -15,19 +15,19 @@ instrumentation of work and communication performed by collection elements.
 To run a load balancer at runtime:
 
 - Pass `--vt_lb --vt_lb_name=<LB>` as a command line argument
-- Write a LB specification file `--vt_lb --vt_lb_file_name=<FILE>`
+- Write a LB config file `--vt_lb --vt_lb_file_name=<FILE>`
 - One can also pass `--vt_lb_self_migration` as a command line argument to allow load balancer to migrate objects to the same node
 
 Note that one should use either `--vt_lb_name` or `--vt_lb_file_name` option, not both.
 
-\section lb-specification-file LB Specification File
+\section lb-config-file LB Config File
 
-The LB specification file allows users to specify which load balancer along with
+The LB config file allows users to specify which load balancer along with
 which LB-specific configuration parameters are passed to the load balancer
 instance for any given phase. The order of the LB phase specification lines in
 the file disambiguates lines---higher precedence for earlier lines.
 
-The format of the LB specification file is:
+The format of the LB config file is:
 
 \code
 [%] <$phase> <$lbname> [$LB-specific-arg-1] ... [$LB-specific-arg-N]
@@ -42,7 +42,7 @@ balancer are allowed to customize how the load balancer is run with the format
 of `key=value`. These arguments are the equivalent of passing
 `--vt_lb_args="A=test B=test2"` on the command line.
 
-The following is an example LB specification:
+The following is an example LB config:
 
 \code
 %10 TemperedLB c=1 k=5 f=2 i=10
@@ -51,7 +51,7 @@ The following is an example LB specification:
 120 GreedyLB c=0 k=2 f=3 i=3
 \endcode
 
-To print LB specification during startup, use `--vt_lb_show_spec` command line flag.
+To print LB config during startup, use `--vt_lb_show_config` command line flag.
 
 \section load-balancers Load balancers
 

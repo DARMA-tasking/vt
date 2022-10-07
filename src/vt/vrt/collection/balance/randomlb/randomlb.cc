@@ -83,16 +83,16 @@ Description:
   return keys_help;
 }
 
-void RandomLB::inputParams(balance::SpecEntry* spec) {
+void RandomLB::inputParams(balance::ConfigEntry* config) {
   auto keys_help = getInputKeysWithHelp();
 
   std::vector<std::string> allowed;
   for (auto&& elm : keys_help) {
     allowed.push_back(elm.first);
   }
-  spec->checkAllowedKeys(allowed);
-  seed_ = spec->getOrDefault<int32_t>("seed", seed_);
-  randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
+  config->checkAllowedKeys(allowed);
+  seed_ = config->getOrDefault<int32_t>("seed", seed_);
+  randomize_seed_ = config->getOrDefault<bool>("randomize_seed", randomize_seed_);
 }
 
 void RandomLB::runLB(TimeType) {

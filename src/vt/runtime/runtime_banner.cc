@@ -306,10 +306,10 @@ void Runtime::printStartupBanner() {
       auto f11 = opt_on("--vt_lb_file_name", f12);
       fmt::print("{}\t{}{}", vt_pre, f11, reset);
 
-      if (getAppConfig()->vt_lb_show_spec) {
-        auto s = opt_on("--vt_lb_show_spec", "Showing LB specification");
+      if (getAppConfig()->vt_lb_show_config) {
+        auto s = opt_on("--vt_lb_show_config", "Showing LB specification");
         fmt::print("{}\t{}", vt_pre, s);
-        fmt::print(vrt::collection::balance::ReadLBSpec::toString());
+        fmt::print(vrt::collection::balance::ReadLBConfig::toString());
       }
     } else {
       auto a3 = fmt::format("Load balancer name: \"{}\"", getAppConfig()->vt_lb_name);
