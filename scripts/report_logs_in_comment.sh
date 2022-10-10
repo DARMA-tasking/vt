@@ -103,8 +103,9 @@ fi
 
 # Build comment
 commit_sha="$(git log --skip=1 -1  --pretty=format:%H)"
+commit_date="$(git show -s --format=%cD "$commit_sha")"
 build_link='[Build log](https://dev.azure.com/DARMA-tasking/DARMA/_build/results?buildId='"$build_id"'&view=logs&j='"$job_id"'&t='"$task_id)"
-comment_body="Build for $commit_sha\n\n"'```'"\n$val\n"'```'"\n\n$build_link"
+comment_body="Build for $commit_sha ($commit_date)\n\n"'```'"\n$val\n"'```'"\n\n$build_link"
 
 # Fix new lines
 new_line="\n"
