@@ -78,7 +78,7 @@ struct TemperedLB : BaseLB {
 public:
   void init(objgroup::proxy::Proxy<TemperedLB> in_proxy);
   void runLB(TimeType total_load) override;
-  void inputParams(balance::SpecEntry* spec) override;
+  void inputParams(balance::ConfigEntry* config) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 

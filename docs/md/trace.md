@@ -19,4 +19,4 @@ In order to customize when tracing is enabled and disabled, a trace
 specification file can be passed to \vt via a command-line flag:
 `--vt_trace_spec --vt_trace_spec_file=filename.spec`.
 
-For details about vt's Specification File see \subpage vt-spec-file
+For details about vt's Specification File see \ref spec-file
