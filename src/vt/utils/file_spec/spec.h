@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TRACE_FILE_SPEC_SPEC_H
-#define INCLUDED_VT_TRACE_FILE_SPEC_SPEC_H
+#if !defined INCLUDED_VT_UTILS_FILE_SPEC_SPEC_H
+#define INCLUDED_VT_UTILS_FILE_SPEC_SPEC_H
 
 #include "vt/config.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
@@ -50,12 +50,26 @@
 
 #include <unordered_map>
 
-namespace vt { namespace trace { namespace file_spec {
+namespace vt { namespace utils { namespace file_spec {
 
+enum class FileSpecType { TRACE, LB };
+
+inline std::string GetSpecName(FileSpecType type) {
+  switch (type) {
+  case FileSpecType::TRACE:
+    return "TraceSpec";
+    break;
+  case FileSpecType::LB:
+    return "LbSpec";
+    break;
+  default:
+    return "UnknownSpec";
+  }
+}
 /**
- * \struct TraceSpec spec.h vt/trace/file_spec/spec.h
+ * \struct FileSpec spec.h vt/utils/file_spec/spec.h
  *
- * \brief Parses trace spec file when available and tests when its enabled. A
+ * \brief Parses spec file when available and tests when its enabled. A
  * single node parses the specification; all others receive the spec from a
  * broadcast.
  *
@@ -66,7 +80,7 @@ namespace vt { namespace trace { namespace file_spec {
  * 200 -5 5
  * """
  *
- * This specifies that tracing will be enabled on the following phases:
+ * This specifies that tracing/lb will be enabled on the following phases:
  * {
  *   [0,10], # phase 0 with offsets 0,+10 (subsumes [0,3] from %100 -3 3)
  *   [97,103] # any phase % 100 with offset -3,+3
@@ -80,10 +94,10 @@ namespace vt { namespace trace { namespace file_spec {
  * start with "%100" or two entries that start with "100" would be invalid and
  * trigger a parsing error. But having a "%100" and "100" entry is valid.
  *
- * Whether tracing is enabled is calculated as an OR across all specification
+ * Whether tracing/lb is enabled is calculated as an OR across all specification
  * entries. Thus, if a given phase is contained in any spec line, it is
  * enabled. Note that 0 % 100 = 0. Therefore, if the above example did not
- * contain the first line, tracing would be enabled as:
+ * contain the first line, tracing/lb would be enabled as:
  *
  * {
  *   [0,3], # any phase mod 100 from -3,+3
@@ -93,8 +107,8 @@ namespace vt { namespace trace { namespace file_spec {
  *  }
  *
  */
-struct TraceSpec {
-  using ProxyType    = vt::objgroup::proxy::Proxy<TraceSpec>;
+struct FileSpec {
+  using ProxyType    = vt::objgroup::proxy::Proxy<FileSpec>;
   using SpecIndex    = int64_t;
   using DoneMsg      = collective::ReduceNoneMsg;
 
@@ -128,7 +142,7 @@ private:
      *
      * \return whether tracing is enabled based on this entry
      */
-    bool testTraceEnabledFor(SpecIndex in_idx) const {
+    bool testEnabledFor(SpecIndex in_idx) const {
       if (is_mod_) {
         // Check if mod idx_ is within range, by dividing out idx_ we get the
         // pos/neg offset from that mod value
@@ -160,28 +174,29 @@ private:
 
 private:
   /**
-   * \brief Initialize the \c TraceSpec objgroup
+   * \brief Initialize the \c FileSpec objgroup
    *
    * \param[in] in_proxy the objgroup proxy
+   * \param[in] in_type type of Spec
    */
-  void init(ProxyType in_proxy);
+  void init(ProxyType in_proxy, FileSpecType in_type);
 
 public:
   /**
-   * \brief Construct a new \c TraceSpec objgroup
+   * \brief Construct a new \c FileSpec objgroup
    *
    * \return the proxy
    */
-  static ProxyType construct();
+  static ProxyType construct(FileSpecType type);
 
   /**
-   * \brief Check entire spec to see if tracing is enabled on any of the entries
+   * \brief Check entire spec to see if it is enabled on any of the entries
    *
    * \param[in] in_phase the phase to check
    *
-   * \return whether tracing is enabled
+   * \return whether it is enabled
    */
-  bool checkTraceEnabled(SpecIndex in_phase);
+  bool checkEnabled(SpecIndex in_phase);
 
   /**
    * \brief Check if a specification is enabled, file specified, and file
@@ -269,9 +284,10 @@ private:
   ProxyType proxy_;
   SpecMapType spec_mod_;
   SpecMapType spec_exact_;
+  FileSpecType type_;
   bool has_spec_ = false;
 };
 
-}}} /* end namespace vt::trace::file_spec */
+}}} /* end namespace vt::utils::file_spec */
 
-#endif /*INCLUDED_VT_TRACE_FILE_SPEC_SPEC_H*/
+#endif /*INCLUDED_VT_UTILS_FILE_SPEC_SPEC_H*/

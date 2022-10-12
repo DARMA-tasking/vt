@@ -47,7 +47,7 @@
 #include "vt/timing/timing.h"
 #include "vt/trace/trace.h"
 #include "vt/trace/trace_user.h"
-#include "vt/trace/file_spec/spec.h"
+#include "vt/utils/file_spec/spec.h"
 #include "vt/objgroup/headers.h"
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/phase/phase_manager.h"
@@ -122,8 +122,10 @@ void Trace::finalize() /*override*/ {
 }
 
 void Trace::loadAndBroadcastSpec() {
+  using namespace ::vt::utils::file_spec;
+
   if (theConfig()->vt_trace_spec) {
-    auto spec_proxy = file_spec::TraceSpec::construct();
+    auto spec_proxy = FileSpec::construct(FileSpecType::TRACE);
 
     theTerm()->produce();
     if (theContext()->getNode() == 0) {
@@ -501,9 +503,9 @@ TraceEventIDType Trace::messageRecv(
 void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
   if (spec_proxy_ != vt::no_obj_group) {
     // SpecIndex is signed due to negative/positive, phase is not signed
-    auto spec_index = static_cast<file_spec::TraceSpec::SpecIndex>(cur_phase);
-    vt::objgroup::proxy::Proxy<file_spec::TraceSpec> proxy(spec_proxy_);
-    bool ret = proxy.get()->checkTraceEnabled(spec_index);
+    auto spec_index = static_cast<::vt::utils::file_spec::FileSpec::SpecIndex>(cur_phase);
+    vt::objgroup::proxy::Proxy<utils::file_spec::FileSpec> proxy(spec_proxy_);
+    bool ret = proxy.get()->checkEnabled(spec_index);
 
     if (trace_enabled_cur_phase_ != ret) {
       // N.B. Future endProcessing calls are required to close the current

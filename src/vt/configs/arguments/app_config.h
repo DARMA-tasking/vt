@@ -155,6 +155,9 @@ struct AppConfig {
   std::string vt_lb_statistics_dir = "";
   bool vt_help_lb_args           = false;
   bool vt_lb_self_migration      = false;
+  bool vt_lb_spec                = false;
+  std::string vt_lb_spec_file    = "";
+
 
   bool vt_no_detect_hang       = false;
   bool vt_print_no_progress    = true;

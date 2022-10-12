@@ -43,6 +43,8 @@
 
 #include <gtest/gtest.h>
 
+#include "nlohmann/detail/meta/is_sax.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include "test_parallel_harness.h"
 #include "test_helpers.h"
 #include "test_collection_common.h"
@@ -56,6 +58,7 @@
 #include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/json_appender.h"
+#include "vt/utils/file_spec/spec.h"
 
 #include <nlohmann/json.hpp>
 #include <memory>
@@ -299,11 +302,85 @@ struct TestParallelHarnessWithLBDataDumping : TestParallelHarnessParam<int> {
 };
 
 struct TestNodeLBDataDumper : TestParallelHarnessWithLBDataDumping {};
+struct TestLBSpecFile : TestParallelHarnessWithLBDataDumping {};
 
 void closeNodeLBDataFile(char const* file_path);
 int countCreatedLBDataFiles(char const* path);
 void removeLBDataOutputDir(char const* path);
 std::map<int, int> getPhasesFromLBDataFile(const char* file_path);
+
+TEST_P(TestLBSpecFile, test_node_lb_data_dumping_with_spec_file) {
+  using namespace ::vt::utils::file_spec;
+
+  vt::theConfig()->vt_lb = true;
+  vt::theConfig()->vt_lb_name = "GreedyLB";
+
+  std::string const file_name(getUniqueFilenameWithRanks(".txt"));
+  if (theContext()->getNode() == 0) {
+    std::ofstream out(file_name);
+    out << ""
+      "0 0 2\n"
+      "%5 -1 1\n";
+    out.close();
+  }
+  theCollective()->barrier();
+
+  theConfig()->vt_lb_spec = true;
+  theConfig()->vt_lb_spec_file = file_name;
+  theNodeLBData()->loadAndBroadcastSpec();
+
+  vt::vrt::collection::CollectionProxy<MyCol> proxy;
+  auto const range = vt::Index1D(num_elms);
+
+  // Construct a collection
+  runInEpochCollective([&] {
+    proxy = vt::theCollection()->constructCollective<MyCol>(
+      range, "test_node_lb_data_dumping_with_spec_file"
+    );
+  });
+
+  for (int phase = 0; phase < num_phases; phase++) {
+    // Do some work
+    runInEpochCollective([&] {
+      proxy.broadcastCollective<MyMsg, colHandler>();
+    });
+
+    // Go to the next phase
+    vt::thePhase()->nextPhaseCollective();
+  }
+
+  // Finalize to get data output
+  theNodeLBData()->finalize();
+
+  using vt::util::json::Reader;
+
+  vt::runInEpochCollective([=]{
+    Reader r(theConfig()->getLBDataFileOut());
+    auto json_ptr = r.readFile();
+    auto& json = *json_ptr;
+
+    EXPECT_TRUE(json.find("phases") != json.end());
+
+    // Expected phases for given spec file
+    // All phases except 3, 7 and 8 should be added to json
+    nlohmann::json expected_phases = R"(
+    [{"id":0}, {"id":1}, {"id":2}, {"id":4}, {"id":5}, {"id":6}, {"id":9}])"_json;
+
+    EXPECT_EQ(json["phases"].size(), expected_phases.size());
+
+    for (decltype(expected_phases.size()) i = 0; i < expected_phases.size(); ++i) {
+      EXPECT_EQ(expected_phases.at(i)["id"], json["phases"].at(i)["id"]);
+    }
+  });
+
+  if (vt::theContext()->getNode() == 0) {
+    removeLBDataOutputDir(vt::theConfig()->vt_lb_data_dir.c_str());
+  }
+
+  // Prevent NodeLBData from closing files during finalize()
+  // All the tmp files are removed already
+  vt::theConfig()->vt_lb_data = false;
+}
 
 TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
   vt::theConfig()->vt_lb = true;
@@ -403,10 +480,15 @@ void removeLBDataOutputDir(char const* path) {
   }
 }
 
+
 auto const intervals = ::testing::Values(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
 INSTANTIATE_TEST_SUITE_P(
   NodeLBDataDumperExplode, TestNodeLBDataDumper, intervals
+);
+
+INSTANTIATE_TEST_SUITE_P(
+  LBSpecFile, TestLBSpecFile, ::testing::Values(0)
 );
 
 using TestRestoreLBData = TestParallelHarness;
