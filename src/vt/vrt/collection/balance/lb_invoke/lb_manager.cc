@@ -529,7 +529,7 @@ void LBManager::statsHandler(StatsMsgType* msg) {
         " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
         " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
         " npr={}, imb={:.2f}, num_stats={}\n",
-        lb::get_lb_stat_name()[stat],
+        lb::get_lb_stat_names()[stat],
         max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
         stats.size()
       );
