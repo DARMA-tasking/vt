@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 
@@ -72,7 +71,7 @@ std::unordered_map<LBType, std::string>& get_lb_names() {
 
 namespace lb {
 
-static std::unordered_map<Statistic,std::string> lb_stat_name_ = {
+static std::unordered_map<Statistic,std::string> lb_stat_names_ = {
   {Statistic::Rank_load_modeled,   std::string{"Rank_load_modeled"}},
   {Statistic::Rank_load_raw,       std::string{"Rank_load_raw"}},
   {Statistic::Rank_comm,           std::string{"Rank_comm"}},
@@ -85,8 +84,8 @@ static std::unordered_map<Statistic,std::string> lb_stat_name_ = {
   {Statistic::EdgeRatio,           std::string{"EdgeRatio"}}
 };
 
-std::unordered_map<Statistic, std::string>& get_lb_stat_name() {
-  return lb_stat_name_;
+std::unordered_map<Statistic, std::string>& get_lb_stat_names() {
+  return lb_stat_names_;
 }
 
 } /* end namespace lb */

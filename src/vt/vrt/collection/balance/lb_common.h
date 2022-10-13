@@ -217,7 +217,7 @@ struct hash<vt::vrt::collection::lb::Statistic> {
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-std::unordered_map<Statistic, std::string>& get_lb_stat_name();
+std::unordered_map<Statistic, std::string>& get_lb_stat_names();
 
 }}}} /* end namespace vt::vrt::collection::lb */
 

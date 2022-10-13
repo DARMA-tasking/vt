@@ -46,9 +46,9 @@
 
 #include "vt/configs/features/features_defines.h"
 
-#include <unordered_map>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -67,6 +67,8 @@ enum struct LBType : int8_t {
   , TemperedWMin        = 9
 };
 
+std::unordered_map<LBType, std::string>& get_lb_names();
+
 }}}} /* end namespace vt::vrt::collection::balance */
 
 namespace std {
@@ -82,11 +84,5 @@ struct hash<vt::vrt::collection::balance::LBType> {
 };
 
 } /* end namespace std */
-
-namespace vt { namespace vrt { namespace collection { namespace balance {
-
-std::unordered_map<LBType, std::string>& get_lb_names();
-
-}}}} /* end namespace vt::vrt::collection::balance */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H*/
