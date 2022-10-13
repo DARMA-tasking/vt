@@ -215,19 +215,17 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
 }
 
 void
-LBManager::runLB(
-  LBProxyType base_proxy, PhaseType phase, vt::Callback<ReassignmentMsg> cb
-) {
+LBManager::runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb) {
   runInEpochCollective("LBManager::runLB -> updateLoads", [=] {
     model_->updateLoads(phase);
   });
 
+  auto base_proxy = lb_instances_["chosen"];
   lb::BaseLB* strat = base_proxy.get();
-  auto proxy = lb_instances_["chosen"];
   if (strat->isCommAware()) {
     runInEpochCollective(
       "LBManager::runLB -> makeGraphSymmetric",
-      [phase, proxy] { makeGraphSymmetric(phase, proxy); }
+      [phase, base_proxy] { makeGraphSymmetric(phase, base_proxy); }
     );
   }
 
@@ -342,8 +340,7 @@ void LBManager::startLB(
     break;
   }
 
-  LBProxyType base_proxy = lb_instances_["chosen"];
-  runLB(base_proxy, phase, cb);
+  runLB(phase, cb);
 }
 
 /*static*/
