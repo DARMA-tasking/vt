@@ -235,15 +235,12 @@ public:
 protected:
   /**
    * \internal
-   * \brief Run the load balancer
+   * \brief Run the currently chosen load balancer
    *
-   * \param[in] base_proxy the base proxy for the LB
    * \param[in] phase the phase
    * \param[in] cb the callback for delivering the reassignment
    */
-  void runLB(
-    LBProxyType base_proxy, PhaseType phase, vt::Callback<ReassignmentMsg> cb
-  );
+  void runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb);
 
   void defaultPostLBWork(ReassignmentMsg* r);
 
