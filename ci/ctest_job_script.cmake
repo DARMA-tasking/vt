@@ -23,6 +23,8 @@ set(CTEST_SOURCE_DIRECTORY
 set(CTEST_BINARY_DIRECTORY
     "$ENV{VT_BUILD}"
 )
+set(CTEST_GIT_COMMAND "git")
+set(CTEST_UPDATE_VERSION_ONLY 1)
 
 if ( NOT DEFINED ENV{VT_TRACE_RUNTIME_ENABLED} )
   set(ENV{VT_TRACE_RUNTIME_ENABLED} "0")
@@ -169,8 +171,10 @@ set(configureOpts
 )
 #ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
 ctest_start(Continuous)
+ctest_update()
+ctest_submit(PARTS Start Update RETRY_COUNT 6 RETRY_DELAY 10)
 ctest_configure(OPTIONS "${configureOpts}" RETURN_VALUE ret_conf)
-ctest_submit(PARTS Start Configure RETRY_COUNT 6 RETRY_DELAY 10)
+ctest_submit(PARTS Configure RETRY_COUNT 6 RETRY_DELAY 10)
 if (NOT ret_conf)
   ctest_build(RETURN_VALUE ret_build)
   ctest_submit(PARTS Build RETRY_COUNT 6 RETRY_DELAY 10)
