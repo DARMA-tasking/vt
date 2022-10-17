@@ -146,7 +146,7 @@ public:
   /**
    * \internal \brief Cleanup after LB runs
    */
-  void startIterCleanup(PhaseType phase, unsigned int look_back);
+  void startIterCleanup(PhaseType phase);
 
   /**
    * \internal \brief Load and broadcast the LB specification file
@@ -270,6 +270,20 @@ public:
    */
   LBDataHolder* getLBData() { return lb_data_.get(); }
 
+  /**
+   * \brief Set the minimal amount of historical LB data which should be retained
+   *
+   * \param[in] hist_len the minimal amount of LB data to hold
+   */
+  void setMinLBDataHistory(uint32_t hist_len) { min_hist_lb_data_ = hist_len; }
+
+  /**
+   * \brief Trim the cached LB Data
+   *
+   * \param[in] phase the current phase
+   */
+  void trimLBDataHistory(PhaseType phase);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | proxy_
@@ -280,7 +294,8 @@ public:
       | next_elm_
       | created_dir_
       | lb_data_writer_
-      | lb_data_;
+      | lb_data_
+      | min_hist_lb_data_;
   }
 
 private:
@@ -313,6 +328,8 @@ private:
   std::unique_ptr<util::json::BaseAppender> lb_data_writer_ = nullptr;
   /// The struct that holds all the LB data
   std::unique_ptr<LBDataHolder> lb_data_ = nullptr;
+  //// The minimal amount of historical LB data to hold
+  uint32_t min_hist_lb_data_ = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

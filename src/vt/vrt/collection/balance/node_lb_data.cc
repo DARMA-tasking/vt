@@ -143,6 +143,26 @@ void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
   node_objgroup_lookup_.clear();
 }
 
+void NodeLBData::trimLBDataHistory(PhaseType phase) {
+  if (phase != no_lb_phase && phase > min_hist_lb_data_) {
+    auto phaseToLookFor = phase - min_hist_lb_data_ - 1;
+
+    // Trim all maps to have 'min_hist_lb_data_ + 1' phases of data
+    auto fromData = lb_data_->node_data_.find(phaseToLookFor);
+    lb_data_->node_data_.erase(fromData, lb_data_->node_data_.end());
+
+    auto fromComm = lb_data_->node_comm_.find(phaseToLookFor);
+    lb_data_->node_comm_.erase(fromComm, lb_data_->node_comm_.end());
+
+    auto fromSub = lb_data_->node_subphase_comm_.find(phaseToLookFor);
+    lb_data_->node_subphase_comm_.erase(fromSub, lb_data_->node_subphase_comm_.end());
+
+    NodeLBData::node_migrate_.clear();
+    node_collection_lookup_.clear();
+    node_objgroup_lookup_.clear();
+  }
+}
+
 ElementIDType NodeLBData::getNextElm() {
   return next_elm_++;
 }
@@ -376,7 +396,7 @@ void NodeLBData::addNodeLBData(
   in->updatePhase(1);
 
   auto model = theLBManager()->getLoadModel();
-  in->releaseLBDataFromUnneededPhases(phase, model->getNumPastPhasesNeeded());
+  in->releaseLBDataFromUnneededPhases(phase, min_hist_lb_data_);
 }
 
 VirtualProxyType NodeLBData::getCollectionProxyForElement(

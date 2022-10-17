@@ -174,8 +174,12 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 }
 
 void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
-  model_ = model;
   auto nlb_data = theNodeLBData();
+  min_hist_lb_data_ = std::max(model->getNumPastPhasesNeeded(), theConfig()->vt_lb_data_retention);
+  nlb_data->setMinLBDataHistory(min_hist_lb_data_);
+  nlb_data->trimLBDataHistory(cached_phase_);
+
+  model_ = model;
   model_->setLoads(nlb_data->getNodeLoad(),
                    nlb_data->getNodeComm(),
                    nlb_data->getUserData());
@@ -539,7 +543,7 @@ void LBManager::finishedLB(PhaseType phase) {
     "finishedLB\n"
   );
 
-  theNodeLBData()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
+  theNodeLBData()->startIterCleanup(phase);
   theNodeLBData()->outputLBDataForPhase(phase);
 
   destroyLB();
