@@ -58,6 +58,19 @@
 
 namespace vt { namespace tests { namespace unit {
 
+void checkNodeLBData(int expected_phases_amount) {
+  #if vt_check_enabled(lblite)
+    EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->node_comm_.size());
+    EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->node_data_.size());
+    EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->node_subphase_comm_.size());
+  #else
+    (void)expected_phases_amount;
+    EXPECT_EQ(0, theNodeLBData()->getLBData()->node_comm_.size());
+    EXPECT_EQ(0, theNodeLBData()->getLBData()->node_data_.size());
+    EXPECT_EQ(0, theNodeLBData()->getLBData()->node_subphase_comm_.size());
+  #endif
+}
+
 struct TestCol : vt::Collection<TestCol,vt::Index1D> {
   unsigned int prev_calls_ = thePhase()->getCurrentPhase();
 
@@ -74,7 +87,7 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
     #if vt_check_enabled(lblite)
       auto phase = col->prevCalls();
       auto model = theLBManager()->getLoadModel();
-      auto phases_needed = model->getNumPastPhasesNeeded();
+      auto phases_needed = std::max(model->getNumPastPhasesNeeded(), theConfig()->vt_lb_data_retention);
       if (phase > phases_needed) {
         // updatePhase will have caused entries to be added for the
         // next phase already
@@ -102,6 +115,29 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
       EXPECT_EQ(sp_comm_phase_count, 0);
     #endif
   }
+
+  static void expect7PhasesOfData(TestCol* col) {
+    auto& lb_data = col->lb_data_;
+    auto load_phase_count = lb_data.getLoadPhaseCount();
+    auto comm_phase_count = lb_data.getCommPhaseCount();
+    auto sp_load_phase_count = lb_data.getSubphaseLoadPhaseCount();
+    auto sp_comm_phase_count = lb_data.getSubphaseCommPhaseCount();
+
+    #if vt_check_enabled(lblite)
+      auto phases_needed = 7;
+      EXPECT_EQ(load_phase_count,    phases_needed);
+      EXPECT_EQ(sp_load_phase_count, phases_needed);
+      EXPECT_EQ(comm_phase_count,    phases_needed);
+      EXPECT_EQ(sp_comm_phase_count, phases_needed);
+    #else
+      EXPECT_EQ(load_phase_count,    0);
+      EXPECT_EQ(sp_load_phase_count, 0);
+      EXPECT_EQ(comm_phase_count,    0);
+      EXPECT_EQ(sp_comm_phase_count, 0);
+    #endif
+  }
+
+  static void emptyColHandler(TestCol*) { }
 };
 
 static constexpr int32_t const num_elms = 16;
@@ -154,6 +190,8 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
   static constexpr int const num_phases = 6;
+  // Minimum retention lower than the amount of phases needed by model - will be ignored
+  theConfig()->vt_lb_data_retention = 2;
 
   auto range = vt::Index1D(num_elms);
 
@@ -188,6 +226,8 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
   static constexpr int const num_phases = 8;
+  // Minimum retention equal to the amount of phases needed by model
+  theConfig()->vt_lb_data_retention = 4;
 
   auto range = vt::Index1D(num_elms);
 
@@ -218,6 +258,160 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
   }
+}
+
+TEST_F(TestLBDataRetention, test_lbdata_config_retention_higher) {
+  // Minimum retention higher than the amount of phases needed by model
+  theConfig()->vt_lb_data_retention = 140;
+
+  // We must have more or equal number of elements than nodes for this test to
+  // work properly
+  EXPECT_GE(num_elms, vt::theContext()->getNumNodes());
+
+  auto range = vt::Index1D(num_elms);
+
+  vt::vrt::collection::CollectionProxy<TestCol> proxy;
+
+  // Construct two collections
+  runInEpochCollective([&]{
+    proxy = vt::theCollection()->constructCollective<TestCol>(
+      range, "test_lbdata_config_retention_higher"
+    );
+  });
+
+  // Get the base model, assert it's valid
+  auto base = theLBManager()->getBaseLoadModel();
+  EXPECT_NE(base, nullptr);
+
+  // Create a new model
+  auto persist = std::make_shared<PersistenceMedianLastN>(base, 4U);
+
+  // Set the new model
+  theLBManager()->setLoadModel(persist);
+
+  for (uint32_t i=0; i<theConfig()->vt_lb_data_retention; ++i) {
+    runInEpochCollective([&]{
+      // Do some work.
+      proxy.broadcastCollective<TestCol::colHandler>();
+    });
+    // Go to the next phase.
+    vt::thePhase()->nextPhaseCollective();
+  }
+}
+
+TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
+  static constexpr int const first_stage_num_phases = 11;
+  theConfig()->vt_lb_data_retention = 0;
+
+  // We must have more or equal number of elements than nodes for this test to
+  // work properly
+  EXPECT_GE(num_elms, vt::theContext()->getNumNodes());
+  auto range = vt::Index1D(num_elms);
+  vt::vrt::collection::CollectionProxy<TestCol> proxy;
+
+  // Construct two collections
+  runInEpochCollective([&]{
+    proxy = vt::theCollection()->constructCollective<TestCol>(
+      range, "test_lbdata_retention_model_switch_1"
+    );
+  });
+
+  // Get the base model, assert it's valid
+  auto base = theLBManager()->getBaseLoadModel();
+  EXPECT_NE(base, nullptr);
+
+  // Create a new models
+  auto model_10_phases = std::make_shared<PersistenceMedianLastN>(base, 10U);
+  auto model_1_phase = std::make_shared<PersistenceMedianLastN>(base, 1U);
+
+  // Set model which needs 10 phases of data
+  theLBManager()->setLoadModel(model_10_phases);
+
+  for (uint32_t i=0; i<first_stage_num_phases; ++i) {
+    runInEpochCollective([&]{
+      // Do some work.
+      proxy.broadcastCollective<TestCol::colHandler>();
+    });
+    // Go to the next phase.
+    vt::thePhase()->nextPhaseCollective();
+  }
+
+  // Set model which needs only 1 phase of data
+  theLBManager()->setLoadModel(model_1_phase);
+
+  // Check amount of phase data in the node
+  checkNodeLBData(2);
+
+  for (uint32_t i=0; i<first_stage_num_phases; ++i) {
+    runInEpochCollective([&]{
+      // Do some work.
+      proxy.broadcastCollective<TestCol::emptyColHandler>();
+    });
+    // Go to the next phase.
+    vt::thePhase()->nextPhaseCollective();
+  }
+
+  // Check amount of phase data in the node
+  checkNodeLBData(2);
+}
+
+TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
+  static constexpr int const first_stage_num_phases = 6;
+  theConfig()->vt_lb_data_retention = 0;
+
+  // We must have more or equal number of elements than nodes for this test to
+  // work properly
+  EXPECT_GE(num_elms, vt::theContext()->getNumNodes());
+  auto range = vt::Index1D(num_elms);
+  vt::vrt::collection::CollectionProxy<TestCol> proxy;
+
+  // Construct two collections
+  runInEpochCollective([&]{
+    proxy = vt::theCollection()->constructCollective<TestCol>(
+      range, "test_lbdata_retention_model_switch_2"
+    );
+  });
+
+  // Get the base model, assert it's valid
+  auto base = theLBManager()->getBaseLoadModel();
+  EXPECT_NE(base, nullptr);
+
+  // Create and set model which needs 10 phases of data
+  auto model_10_phases = std::make_shared<PersistenceMedianLastN>(base, 10U);
+  theLBManager()->setLoadModel(model_10_phases);
+
+  // Do only 6 phases of work
+  for (uint32_t i=0; i<first_stage_num_phases; ++i) {
+    runInEpochCollective([&]{
+      // Do some work.
+      proxy.broadcastCollective<TestCol::colHandler>();
+    });
+    // Go to the next phase.
+    vt::thePhase()->nextPhaseCollective();
+  }
+
+  // Check amount of phase data in the node
+  checkNodeLBData(6);
+
+  // Set model which needs only 1 phase of data
+  auto model_1_phase = std::make_shared<PersistenceMedianLastN>(base, 1U);
+  theLBManager()->setLoadModel(model_1_phase);
+
+  // Check amount of phase data in the node
+  checkNodeLBData(2);
+
+  // Check that amount of the retained data in TestCol is not changed and still contains 7 phases of data
+  for (uint32_t i=0; i<10; ++i) {
+    runInEpochCollective([&]{
+      // Do some work.
+      proxy.broadcastCollective<TestCol::expect7PhasesOfData>();
+    });
+    // Go to the next phase.
+    vt::thePhase()->nextPhaseCollective();
+  }
+
+  // Check amount of phase data in the node
+  checkNodeLBData(2);
 }
 
 }}} // end namespace vt::tests::unit

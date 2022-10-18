@@ -273,7 +273,7 @@ public:
   /**
    * \brief Set the minimal amount of historical LB data which should be retained
    *
-   * \param[in] hist_len the minimal amount of LB data to hold
+   * \param[in] hist_len the minimal amount of LB data to retain
    */
   void setMinLBDataHistory(uint32_t hist_len) { min_hist_lb_data_ = hist_len; }
 
