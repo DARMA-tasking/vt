@@ -154,12 +154,11 @@ TerminationDetector::getDSTerm(EpochType epoch, bool is_root) {
   if (isDS(epoch)) {
     auto iter = term_.find(epoch);
     if (iter == term_.end()) {
-      auto const this_node = theContext()->getNode();
       term_.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(epoch),
         std::forward_as_tuple(
-          TerminatorType{epoch,is_root,this_node}
+          TerminatorType{epoch,is_root,this_node_}
         )
       );
       iter = term_.find(epoch);
@@ -278,11 +277,11 @@ std::shared_ptr<TerminationDetector::EpochGraph> TerminationDetector::makeGraph(
     auto root = std::make_shared<EpochGraph>(any_epoch_state_.getEpoch(), glabel);
     // Collect non-rooted epochs, just collective, excluding DS or other rooted
     // epochs (info about them is localized on the creation node)
-    auto const this_node = theContext()->getNode();
+
     for (auto const& elm : epoch_state_) {
       auto const ep = elm.first;
       bool const rooted = epoch::EpochManip::isRooted(ep);
-      if (not rooted or (rooted and epoch::EpochManip::node(ep) == this_node)) {
+      if (not rooted or (rooted and epoch::EpochManip::node(ep) == this_node_)) {
         if (not isEpochTerminated(elm.first)) {
           auto label = elm.second.getLabel();
           live_epochs[ep] = std::make_shared<EpochGraph>(ep, label);
@@ -292,7 +291,7 @@ std::shared_ptr<TerminationDetector::EpochGraph> TerminationDetector::makeGraph(
     for (auto const& elm : term_) {
       // Only include DS epochs that are created here. Other nodes do not have
       // proper successor info about the rooted, DS epochs
-      if (epoch::EpochManip::node(elm.first) == this_node) {
+      if (epoch::EpochManip::node(elm.first) == this_node_) {
         if (not isEpochTerminated(elm.first)) {
           auto label = elm.second.getLabel();
           live_epochs[elm.first] = std::make_shared<EpochGraph>(
@@ -668,13 +667,12 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
 
   // Matching consume on global epoch once a nested epoch terminates
   if (epoch != any_epoch_sentinel) {
-    auto const this_node = theContext()->getNode();
     bool const is_rooted = isRooted(epoch);
     bool const is_ds = isDS(epoch);
     if (
       not is_rooted or
       is_ds or
-      (is_rooted and epoch::EpochManip::node(epoch) == this_node)
+      (is_rooted and epoch::EpochManip::node(epoch) == this_node_)
     ) {
       consumeOnGlobal(epoch);
     }
@@ -686,10 +684,9 @@ void TerminationDetector::inquireTerminated(
 ) {
   auto const& is_rooted = epoch::EpochManip::isRooted(epoch);
   auto const& epoch_root_node = epoch::EpochManip::node(epoch);
-  auto const& this_node = theContext()->getNode();
 
   vtAssertInfo(
-    !is_rooted || epoch_root_node == this_node,
+    !is_rooted || epoch_root_node == this_node_,
     "Must be not rooted or this is root node",
     is_rooted, epoch_root_node, epoch, from
   );
@@ -757,9 +754,8 @@ TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
   if (theEpoch()->getTerminatedWindow(epoch)->isTerminated(epoch)) {
     status = TermStatusEnum::Terminated;
   } else if (is_rooted_epoch) {
-    auto const& this_node = theContext()->getNode();
     auto const& root = epoch::EpochManip::node(epoch);
-    if (root == this_node) {
+    if (root == this_node_) {
       /*
        * The idea here is that if this is executed on the root, it must have
        * valid info on whether the rooted live or terminated
@@ -776,7 +772,7 @@ TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
          * Send a message to the root node to find out whether this epoch is
          * terminated or not
          */
-        auto msg = makeMessage<TermTerminatedMsg>(epoch,this_node);
+        auto msg = makeMessage<TermTerminatedMsg>(epoch,this_node_);
         theMsg()->sendMsg<TermTerminatedMsg,inquireEpochTerminated>(root, msg);
         epoch_wait_status_.insert(epoch);
       }
@@ -1123,8 +1119,7 @@ void TerminationDetector::activateEpoch(EpochType const& epoch) {
       "activateEpoch: epoch={:x}\n", epoch
     );
 
-    auto const this_node = theContext()->getNode();
-    if (isRooted(epoch) and epoch::EpochManip::node(epoch) == this_node) {
+    if (isRooted(epoch) and epoch::EpochManip::node(epoch) == this_node_) {
       produceOnGlobal(epoch);
     }
 
