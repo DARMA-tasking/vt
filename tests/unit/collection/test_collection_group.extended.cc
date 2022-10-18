@@ -54,7 +54,6 @@
 namespace vt { namespace tests { namespace unit {
 
 static int32_t elem_counter = 0;
-static bool handler_executed = false;
 
 struct MyReduceMsg : collective::ReduceTMsg<int> {
   explicit MyReduceMsg(int const in_num)
@@ -87,7 +86,6 @@ struct ColA : Collection<ColA,Index1D> {
   void memberHandler(TestDataMsg* msg) {
     EXPECT_EQ(msg->value_, theContext()->getNode());
     --elem_counter;
-    handler_executed = true;
   }
 
   virtual ~ColA() {
@@ -104,12 +102,10 @@ struct ColA : Collection<ColA,Index1D> {
 void colHanlder(
   ColA::TestDataMsg* msg, typename ColA::TestDataMsg::CollectionType* type) {
   --elem_counter;
-  handler_executed = true;
 }
 
 template <typename f>
 void runBcastTestHelper(f&& func) {
-  handler_executed = false;
   runInEpochCollective([=]{
     func();
   });
