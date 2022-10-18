@@ -127,17 +127,10 @@ struct ReduceMsg : SerializeRequired<
       )
   { }
 
-#if defined(__INTEL_COMPILER)
-#pragma warning(push)
-#pragma warning(disable : 177)
-#endif
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     MessageParentType::serialize(s);
   }
-#if defined(__INTEL_COMPILER)
-#pragma warning(pop)
-#endif
 };
 struct ColProxyMsg : vt::Message {
   using ProxyType = vt::CollectionProxy<MyCol>;
@@ -762,6 +755,9 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_handler_send) {
     }
   }
   EXPECT_TRUE(found);
+
+  // Suppress warnings about that method being "declared but never referenced" from Intel icpc and Nvidia nvcc
+  (void)&ReduceMsg::serialize<checkpoint::Serializer>;
 }
 
 } /* end anon namespace */
