@@ -151,9 +151,8 @@ void ActiveMessenger::initialize() {
 }
 
 void ActiveMessenger::startup() {
-  auto const this_node = theContext()->getNode();
   bare_handler_dummy_elm_id_for_lb_data_ =
-    elm::ElmIDBits::createBareHandler(this_node);
+    elm::ElmIDBits::createBareHandler(this_node_);
 
 #if vt_check_enabled(lblite)
   // Hook to collect LB data about objgroups
@@ -225,7 +224,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   }
 
   vtWarnIf(
-    dest == theContext()->getNode() &&
+    dest == this_node_ &&
     not is_bcast &&
     not theConfig()->vt_lb_self_migration,
     fmt::format("Destination {} should != this node", dest)
@@ -375,7 +374,6 @@ EventType ActiveMessenger::sendMsgMPI(
       "sendMsgMPI: (multi): size={}\n", msg_size
     );
     auto tag = allocateNewTag();
-    auto this_node = theContext()->getNode();
 
     // Send the actual data in multiple chunks
     PtrLenPairType tup = std::make_tuple(untyped_msg, msg_size);
@@ -387,7 +385,7 @@ EventType ActiveMessenger::sendMsgMPI(
     mpi_event->setManagedMessage(base.to<ShortMessage>());
 
     // Send the control message to receive the multiple chunks of data
-    auto m = makeMessage<MultiMsg>(info, this_node, msg_size);
+    auto m = makeMessage<MultiMsg>(info, this_node_, msg_size);
     sendMsg<MultiMsg, chunkedMultiMsg>(dest, m);
 
     return event_id;
@@ -491,9 +489,8 @@ EventType ActiveMessenger::doMessageSend(
   );
 
   // Don't go through MPI with self-send, schedule the message locally instead
-  auto const this_node = theContext()->getNode();
   if (deliver) {
-    if (dest != this_node) {
+    if (dest != this_node_) {
       sendMsgBytesWithPut(dest, base, send_tag);
     } else {
       recordLBDataCommForSend(dest, base, base.size());
@@ -611,7 +608,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
   }
 
   if (events.size() > 1) {
-    ret_event = theEvent()->createParentEvent(theContext()->getNode());
+    ret_event = theEvent()->createParentEvent(this_node_);
     auto& holder = theEvent()->getEventHolder(ret_event);
     for (auto&& child_event : events) {
       holder.get_event()->addEventToList(child_event);
@@ -864,8 +861,9 @@ void ActiveMessenger::recordLBDataCommForSend(
   NodeType const dest, MsgSharedPtr<BaseMsgType> const& base,
   MsgSizeType const msg_size
 ) {
-  if (theContext()->getTask() != nullptr) {
-    auto lb = theContext()->getTask()->get<ctx::LBData>();
+  auto the_task = theContext()->getTask();
+  if (the_task != nullptr) {
+    auto lb = the_task->get<ctx::LBData>();
 
     if (lb) {
       auto const& msg = base.get();
@@ -874,7 +872,7 @@ void ActiveMessenger::recordLBDataCommForSend(
 
       if (not already_recorded) {
         auto dest_elm_id = elm::ElmIDBits::createBareHandler(dest);
-        theContext()->getTask()->send(dest_elm_id, msg_size);
+        the_task->send(dest_elm_id, msg_size);
       }
     }
   }
