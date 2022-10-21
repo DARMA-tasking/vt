@@ -1,6 +1,6 @@
 #! /bin/sh
 
-GTEST_BRANCHTAG=release-1.11.0
+GTEST_BRANCHTAG=release-1.12.1
 
 # Fetch googletest from Github.
 # GitHub does not support git-archive - however this endpoint works (MAR 2020)
