@@ -57,14 +57,18 @@ using TestAsyncOp = TestParallelHarness;
 
 using MyMsg = Message;
 
+inline void checkCudaErrors(
+  cudaError_t err, std::string const& additionalInfo,
+  bool skipOnFailure = false
+) {
+  auto errorMsg = fmt::format(
+    "{} failed with error -> {}\n", additionalInfo, cudaGetErrorString(err));
 
-inline void checkCudaErrors(cudaError_t err, std::string const& additionalInfo) {
-  vtAbortIf(
-    cudaSuccess != err,
-    fmt::format(
-      "{} failed with error -> {}\n", additionalInfo, cudaGetErrorString(err)
-    )
-  );
+  if (cudaSuccess != err and skipOnFailure) {
+    GTEST_SKIP() << errorMsg;
+  }
+
+  vtAbortIf(cudaSuccess != err, errorMsg);
 }
 
 __global__ void kernel(double* dst, double setVal) {
@@ -79,9 +83,11 @@ struct CUDAGroup {
   CUDAGroup() {
     auto const nBytes = dataSize_ * sizeof(double);
 
+    // If first malloc fails, there's probably something wrong with CUDA env
+    // so call GTEST_SKIP instead of failing the test
     checkCudaErrors(
       cudaMalloc((void**)&dataDevicePointer1_, nBytes),
-      "cudaMalloc(dataDevicePointer1_)"
+      "cudaMalloc(dataDevicePointer1_)", true
     );
 
     checkCudaErrors(
