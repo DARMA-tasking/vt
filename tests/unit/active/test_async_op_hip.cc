@@ -58,13 +58,18 @@ using TestAsyncOp = TestParallelHarness;
 using MyMsg = Message;
 
 
-inline void checkHipErrors(hipError_t err, std::string const& additionalInfo) {
-  vtAbortIf(
-    hipSuccess != err,
-    fmt::format(
-      "{} failed with error -> {}\n", additionalInfo, hipGetErrorString(err)
-    )
-  );
+inline void checkHipErrors(
+  hipError_t err, std::string const& additionalInfo,
+  bool skipOnFailure = false
+) {
+  auto errorMsg = fmt::format(
+    "{} failed with error -> {}\n", additionalInfo, hipGetErrorString(err));
+
+  if (hipSuccess != err and skipOnFailure) {
+    GTEST_SKIP() << errorMsg;
+  }
+
+  vtAbortIf(hipSuccess != err, errorMsg);
 }
 
 __global__ void kernel(double* dst, double setVal) {
@@ -79,9 +84,11 @@ struct hipGroup {
   hipGroup() {
     auto const nBytes = dataSize_ * sizeof(double);
 
+    // If first malloc fails, there's probably something wrong with HIP env
+    // so call GTEST_SKIP instead of failing the test
     checkHipErrors(
       hipMalloc((void**)&dataDevicePointer1_, nBytes),
-      "hipMalloc(dataDevicePointer1_)"
+      "hipMalloc(dataDevicePointer1_)", true
     );
 
     checkHipErrors(
