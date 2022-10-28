@@ -234,15 +234,15 @@ public:
 private:
   /**
    * \internal \brief Loop through all the contexts associated with this
-   * runnable and invoke \c begin() on them.
+   * runnable and invoke \c start() on them.
    */
-  void begin();
+  void start();
 
   /**
    * \internal \brief Loop through all the contexts associated with this
-   * runnable and invoke \c end() on them.
+   * runnable and invoke \c finish() on them.
    */
-  void end();
+  void finish();
 
   /**
    * \internal \brief Loop through all the contexts associated with this

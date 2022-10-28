@@ -76,12 +76,12 @@ struct Collection {
   /**
    * \brief Set the collection context
    */
-  void begin();
+  void start();
 
   /**
    * \brief Remove the collection context
    */
-  void end();
+  void finish();
 
   void suspend();
   void resume();
