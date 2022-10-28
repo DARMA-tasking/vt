@@ -45,20 +45,20 @@
 
 namespace vt { namespace ctx {
 
-void Collection::begin() {
+void Collection::start() {
   set_();
 }
 
-void Collection::end() {
+void Collection::finish() {
   clear_();
 }
 
 void Collection::suspend() {
-  end();
+  finish();
 }
 
 void Collection::resume() {
-  begin();
+  start();
 }
 
 }} /* end namespace vt::ctx */

@@ -101,8 +101,8 @@ struct Trace {
    */
   trace::TraceEventIDType getEvent() const { return event_; }
 
-  void begin();
-  void end();
+  void start();
+  void finish();
   void suspend();
   void resume();
 

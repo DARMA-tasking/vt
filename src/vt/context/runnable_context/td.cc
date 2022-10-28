@@ -53,7 +53,7 @@ TD::TD(EpochType in_ep)
   theTerm()->produce(ep_);
 }
 
-void TD::begin() {
+void TD::start() {
   theTerm()->pushEpoch(ep_);
 
 #if vt_check_enabled(fcontext)
@@ -63,7 +63,7 @@ void TD::begin() {
 #endif
 }
 
-void TD::end() {
+void TD::finish() {
 #if vt_check_enabled(fcontext)
   auto& epoch_stack = theTerm()->getEpochStack();
 

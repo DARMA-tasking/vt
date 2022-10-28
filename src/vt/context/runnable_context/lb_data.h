@@ -84,12 +84,12 @@ struct LBData {
   /**
    * \brief Set the context and timing for a collection task
    */
-  void begin();
+  void start();
 
   /**
    * \brief Remove the context and store timing for a collection task
    */
-  void end();
+  void finish();
 
   /**
    * \brief Record LB data whenever a message is sent and a collection
