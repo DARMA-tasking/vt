@@ -51,9 +51,10 @@ struct ColMsg;
 struct Hello : vt::Collection<Hello, vt::Index1D> {
   checkpoint_virtual_serialize_root()
 
-  Hello(InitialConsTag) {}
-
+  explicit Hello(InitialConsTag) {}
   explicit Hello(checkpoint::SERIALIZE_CONSTRUCT_TAG) {}
+
+  virtual ~Hello() {}
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -61,7 +62,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
     s | test_val;
   }
 
-  void doWork(ColMsg* msg);
+  virtual void doWork(ColMsg* msg);
 
   double test_val = 0.0;
 };
@@ -78,11 +79,12 @@ template <typename T>
 struct HelloTyped : Hello {
   checkpoint_virtual_serialize_derived_from(Hello)
 
-  HelloTyped(InitialConsTag);
-
-  HelloTyped(checkpoint::SERIALIZE_CONSTRUCT_TAG)
+  explicit HelloTyped(InitialConsTag);
+  explicit HelloTyped(checkpoint::SERIALIZE_CONSTRUCT_TAG)
     : Hello(checkpoint::SERIALIZE_CONSTRUCT_TAG{})
   {}
+
+  virtual void doWork(ColMsg* msg) override;
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -91,6 +93,18 @@ struct HelloTyped : Hello {
 
   std::vector<T> my_vec;
 };
+
+template <>
+void HelloTyped<int>::doWork(ColMsg* msg) {
+  fmt::print("correctly doing this -- int!\n");
+  Hello::doWork(msg);
+}
+
+template <>
+void HelloTyped<double>::doWork(ColMsg* msg) {
+  Hello::doWork(msg);
+  fmt::print("correctly doing this -- double!\n");
+}
 
 template <>
 HelloTyped<int>::HelloTyped(InitialConsTag)
@@ -146,6 +160,7 @@ int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   int32_t num_elms = default_num_elms;
   if (argc > 1) {
@@ -155,13 +170,15 @@ int main(int argc, char** argv) {
   auto range = vt::Index1D(num_elms);
 
   std::vector<std::tuple<vt::Index1D, std::unique_ptr<Hello>>> elms;
+  vtAbortIf(num_elms % num_nodes != 0, "Must be even number of elements per rank");
+  auto const num_per = num_elms / num_nodes;
   if (this_node % 2 == 0) {
-    for (int i = 0; i < num_elms/2; i++) {
+    for (int i = this_node*num_per; i < (this_node+1)*num_per; i++) {
       vt::Index1D idx{i};
       elms.emplace_back(idx, std::make_unique<HelloTyped<int>>(InitialConsTag{}));
     }
-  } else {
-    for (int i = num_elms/2; i < num_elms; i++) {
+  } else if (this_node % 2 == 1) {
+    for (int i = this_node*num_per; i < (this_node+1)*num_per; i++) {
       vt::Index1D idx{i};
       elms.emplace_back(idx, std::make_unique<HelloTyped<double>>(InitialConsTag{}));
     }
