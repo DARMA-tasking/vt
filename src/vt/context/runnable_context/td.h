@@ -87,7 +87,7 @@ struct TD {
 
   /**
    * \brief During finish \c TD will pop all epochs off of the stack down to the
-   * size in captured in \c start()
+   * size it captured in \c start()
    */
   void finish();
 
