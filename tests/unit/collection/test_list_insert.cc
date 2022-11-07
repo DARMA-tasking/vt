@@ -399,4 +399,44 @@ TEST_F(TestListInsert, test_bounded_bulk_insert_no_default_constructor) {
   EXPECT_EQ(num_work, num_elms_per_node * num_nodes);
 }
 
+TEST_F(TestListInsert, test_bounded_mix_list_insert_no_default_constructor) {
+  num_inserted = 0;
+  num_work = 0;
+
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const range = Index1D(num_nodes * num_elms_per_node);
+
+  std::vector<Index1D> list_insert;
+  for (int i = 0; i < range.x() / 2; i++) {
+    list_insert.emplace_back(Index1D{i});
+  }
+
+  std::vector<std::tuple<vt::Index1D, std::unique_ptr<NonDefaultConstructibleStruct>>> elms;
+  for (int i = range.x() / 2; i < range.x(); i++) {
+    if (i % num_nodes == 0) {
+      Index1D ix{i};
+      elms.emplace_back(
+        std::make_tuple(ix, std::make_unique<NonDefaultConstructibleStruct>(0))
+      );
+    }
+  }
+
+  auto proxy = vt::makeCollection<NonDefaultConstructibleStruct>("test_bounded_mix_list_insert_no_default_constructor")
+    .collective(true)
+    .bounds(range)
+    .listInsert(list_insert)
+    .listInsertHere(std::move(elms))
+    .elementConstructor(NonDefaultConstructibleStruct::getConstructor())
+    .template mapperObjGroupConstruct<MyMapper<Index1D>>()
+    .wait();
+
+  EXPECT_EQ(num_inserted, num_elms_per_node);
+  num_inserted = 0;
+
+  runInEpochCollective([&]{
+    proxy.broadcast<WorkMsgNDC, &NonDefaultConstructibleStruct::work>();
+  });
+  EXPECT_EQ(num_work, num_elms_per_node * num_nodes);
+}
+
 }}}} // end namespace vt::tests::unit::list_insert
