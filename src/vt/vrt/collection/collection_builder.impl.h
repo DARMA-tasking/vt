@@ -162,7 +162,7 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
     po.bulk_inserts_.push_back(po.bounds_);
   }
 
-  if (po.list_insert_here_.empty()) {
+  if (!po.bulk_inserts_.empty() || !po.list_inserts_.empty()) {
     auto cons_fn = po.template getConsFn<ColT>();
 
     // Do all bulk insertions
