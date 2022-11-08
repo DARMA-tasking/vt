@@ -55,7 +55,7 @@ struct TemperedWMin : TemperedLB {
   TemperedWMin() { comm_aware_ = true; }
   TemperedWMin(TemperedWMin const&) = delete;
 
-  virtual ~TemperedWMin() { }
+  virtual ~TemperedWMin();
 
 public:
   void init(objgroup::proxy::Proxy<TemperedWMin> in_proxy);
