@@ -623,14 +623,14 @@ void LBManager::computeStatistics(
     "computeStatistics\n"
   );
 
-  using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
+  const balance::PhaseOffset when = {
+    balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE
+  };
 
   total_load_from_model = 0.;
   std::vector<balance::LoadData> obj_load_model;
   for (auto elm : *model) {
-    auto work = model->getModeledLoad(
-      elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-    );
+    auto work = model->getModeledLoad(elm, when);
     obj_load_model.emplace_back(
       LoadData{lb::Statistic::Object_load_modeled, work}
     );
@@ -641,9 +641,7 @@ void LBManager::computeStatistics(
   std::vector<balance::LoadData> obj_load_raw;
   if (model->hasRawLoad()) {
     for (auto elm : *model) {
-      auto raw_load = model->getRawLoad(
-        elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-      );
+      auto raw_load = model->getRawLoad(elm, when);
       obj_load_raw.emplace_back(
         LoadData{lb::Statistic::Object_load_raw, raw_load}
       );
@@ -670,9 +668,7 @@ void LBManager::computeStatistics(
     auto total_work_from_model = 0.;
     std::vector<balance::LoadData> obj_work_model;
     for (auto elm : *custom_model_) {
-      auto work = custom_model_->getModeledLoad(
-        elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-      );
+      auto work = custom_model_->getModeledLoad(elm, when);
       obj_work_model.emplace_back(
         LoadData{lb::Statistic::Object_load_modeled, work}
       );
@@ -719,6 +715,7 @@ void LBManager::computeStatistics(
     lb::Statistic::Object_comm, std::move(obj_comm)
   ));
 
+  using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
   auto msg = makeMessage<StatsMsgType>(std::move(lstats));
   proxy_.template reduce<ReduceOp>(msg,cb);
 }
