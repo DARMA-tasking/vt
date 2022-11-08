@@ -65,8 +65,12 @@ public:
    *
    * \param[in] base: The source of underlying load numbers to return; must not be null
    * \param[in] subphases: The set of subphases to expose to callers
+   * \param[in] label (optional) model label
    */
-  SelectSubphases(std::shared_ptr<LoadModel> base, std::vector<unsigned int> subphases);
+  SelectSubphases(
+    std::shared_ptr<LoadModel> base, std::vector<unsigned int> subphases,
+    const std::string& label = ""
+  );
 
   TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   int getNumSubphases() const override;

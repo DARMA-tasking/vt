@@ -111,4 +111,8 @@ unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back) const
   return look_back;
 }
 
+std::string RawData::getLabel() const {
+  return label_;
+}
+
 }}}}

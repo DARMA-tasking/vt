@@ -47,10 +47,12 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-Norm::Norm(std::shared_ptr<balance::LoadModel> base, double power)
-  : ComposedModel(base)
-  , power_(power)
-{
+Norm::Norm(
+  std::shared_ptr<balance::LoadModel> base, double power,
+  const std::string& label
+)
+  : ComposedModel(base, label),
+    power_(power) {
   vtAssert(not std::isnan(power), "Power must have a real value");
   vtAssert(power >= 0.0, "Reciprocal loads make no sense");
 }

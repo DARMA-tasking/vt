@@ -76,6 +76,7 @@ static auto num_phases = 0;
 struct StubModel : LoadModel {
 
   StubModel() = default;
+  StubModel(const std::string& label) : label_(label) {}
   virtual ~StubModel() = default;
 
   void setLoads(
@@ -102,12 +103,15 @@ struct StubModel : LoadModel {
 
   unsigned int getNumCompletedPhases() const override { return num_phases; }
 
+  std::string getLabel() const override { return label_; }
+
   // Not used in this test
   int getNumSubphases() const override { return 0; }
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
   ProcLoadMap const* proc_load_ = nullptr;
+  std::string label_;
 };
 
 TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
@@ -150,8 +154,13 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   constexpr auto per_byte_weight = 5.0;
 
   auto test_model = std::make_shared<CommOverhead>(
-    std::make_shared<StubModel>(), per_msg_weight, per_byte_weight
+    std::make_shared<StubModel>("TestStubModel"), per_msg_weight,
+    per_byte_weight, "TestCommOverhead"
   );
+
+  const std::string model_label = test_model->getLabel();
+  EXPECT_EQ(model_label, std::string{"TestCommOverhead TestStubModel"});
+
   test_model->setLoads(&proc_load, &proc_comm);
 
   std::unordered_map<PhaseType, TimeType> expected_work = {

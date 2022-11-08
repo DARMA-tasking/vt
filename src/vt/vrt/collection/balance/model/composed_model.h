@@ -62,7 +62,13 @@ class ComposedModel : public LoadModel
 {
 public:
   // \param[in] base must not be null
-  explicit ComposedModel(std::shared_ptr<LoadModel> base) : base_(base) {}
+  // \param[in] label (optional) model label
+  explicit ComposedModel(
+    std::shared_ptr<LoadModel> base, const std::string& label = ""
+  )
+    : base_(base),
+      label_(label)
+    { }
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
@@ -80,9 +86,11 @@ public:
   int getNumObjects() const override;
   unsigned int getNumCompletedPhases() const override;
   int getNumSubphases() const override;
+  std::string getLabel() const override;
 
 private:
   std::shared_ptr<LoadModel> base_;
+  std::string label_;
 }; // class ComposedModel
 
 }}}} // namespaces

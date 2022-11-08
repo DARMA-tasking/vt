@@ -58,6 +58,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct RawData : public LoadModel {
   RawData() = default;
+  explicit RawData(const std::string& label) : label_(label) { }
   void updateLoads(PhaseType last_completed_phase) override;
   TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   bool hasRawLoad() const override { return true; }
@@ -72,11 +73,13 @@ struct RawData : public LoadModel {
   unsigned int getNumCompletedPhases() const override;
   int getNumSubphases() const override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
+  std::string getLabel() const override;
 
   // Observer pointers to the underlying data. In operation, these would be owned by NodeLBData
   std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;
   std::unordered_map<PhaseType, CommMapType>         const* proc_comm_;
   PhaseType last_completed_phase_ = ~0;
+  std::string label_;
 }; // class RawData
 
 }}}} // end namespace

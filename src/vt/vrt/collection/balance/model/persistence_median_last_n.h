@@ -62,8 +62,11 @@ struct PersistenceMedianLastN : public ComposedModel
   /**
    * \param[in] base The underlying model
    * \param[in] n the number of preceding phases to use in making a prediction
+   * \param[in] label (optional) model label
    */
-  PersistenceMedianLastN(std::shared_ptr<LoadModel> base, unsigned int n);
+  PersistenceMedianLastN(
+    std::shared_ptr<LoadModel> base, unsigned int n, const std::string& label = ""
+  );
 
   TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;

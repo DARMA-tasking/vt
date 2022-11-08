@@ -93,4 +93,8 @@ int ComposedModel::getNumSubphases() const {
   return base_->getNumSubphases();
 }
 
+std::string ComposedModel::getLabel() const {
+  return label_ + " " + base_->getLabel();
+}
+
 }}}}

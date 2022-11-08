@@ -62,8 +62,11 @@ struct PerCollection : public ComposedModel
    * \param[in] base The underlying default model. Used to give loads
    * for objects in unspecified collections, and for object and
    * subphase enumeration
+   * \param[in] label (optional) model label
    */
-  explicit PerCollection(std::shared_ptr<LoadModel> base);
+  explicit PerCollection(
+    std::shared_ptr<LoadModel> base, const std::string& label = ""
+  );
 
   /**
    * \brief Add a model for objects in a specific collection

@@ -58,11 +58,13 @@ public:
    * \param[in] alpha load part coefficient
    * \param[in] beta communication part coefficient
    * \param[in] gamma unspecified constant cost
+   * \param[in] label (optional) model label
    */
   WeightedCommunicationVolume(
-    std::shared_ptr<LoadModel> base,
-    double alpha = 1.0, double beta = 0.0, double gamma = 0.0)
-    : ComposedModel(base),
+    std::shared_ptr<LoadModel> base, double alpha = 1.0, double beta = 0.0,
+    double gamma = 0.0, const std::string& label = ""
+  )
+    : ComposedModel(base, label),
       alpha_(alpha),
       beta_(beta),
       gamma_(gamma) { }

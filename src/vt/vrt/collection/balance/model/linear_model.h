@@ -62,12 +62,15 @@ struct LinearModel : ComposedModel {
    *
    * \param[in] base the base model
    * \param[in] in_past_len (optional) the past number of phases for prediction
+   * \param[in] label (optional) model label
    */
   explicit LinearModel(
-    std::shared_ptr<balance::LoadModel> base, unsigned int in_past_len = default_past_len
-  ) : ComposedModel(base),
+    std::shared_ptr<balance::LoadModel> base,
+    unsigned int in_past_len = default_past_len, const std::string& label = ""
+  )
+    : ComposedModel(base, label),
       past_len_(in_past_len)
-  { }
+    { }
 
   TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;

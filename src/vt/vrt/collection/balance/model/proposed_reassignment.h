@@ -52,7 +52,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 struct ProposedReassignment : public ComposedModel {
   ProposedReassignment(
     std::shared_ptr<balance::LoadModel> base,
-    std::shared_ptr<const Reassignment> reassignment
+    std::shared_ptr<const Reassignment> reassignment, const std::string& label = ""
   );
 
   ObjectIterator begin() const override;

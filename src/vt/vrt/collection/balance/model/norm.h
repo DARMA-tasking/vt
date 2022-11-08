@@ -59,10 +59,15 @@ public:
   /**
    * \brief Constructor
    *
+   * \param[in] base: the underlying source of object work loads
    * \param[in] power The power to use in computing the norms. Must be
    * >0. Pass +infinity for a `max` over subphases
+   * \param[in] label (optional) model label
    */
-  Norm(std::shared_ptr<balance::LoadModel> base, double power);
+  Norm(
+    std::shared_ptr<balance::LoadModel> base, double power,
+    const std::string& label = ""
+  );
 
   TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
 

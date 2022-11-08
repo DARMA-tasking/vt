@@ -72,12 +72,15 @@ struct MultiplePhases : ComposedModel {
    *
    * \param[in] in_future_phase_block_size how many phases to predict
    * as each single queried phase
+   * \param[in] label (optional) model label
    */
   explicit MultiplePhases(
-    std::shared_ptr<balance::LoadModel> base, int in_future_phase_block_size)
-    : ComposedModel(base)
-    , future_phase_block_size_(in_future_phase_block_size)
-  { }
+    std::shared_ptr<balance::LoadModel> base, int in_future_phase_block_size,
+    const std::string& label = ""
+  )
+    : ComposedModel(base, label),
+      future_phase_block_size_(in_future_phase_block_size)
+    { }
 
   TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
 

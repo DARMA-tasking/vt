@@ -48,12 +48,14 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 ProposedReassignment::ProposedReassignment(
   std::shared_ptr<balance::LoadModel> base,
-  std::shared_ptr<const Reassignment> reassignment
-) : ComposedModel(base)
-  , reassignment_(reassignment)
-{
-  vtAssert(reassignment_->node_ == vt::theContext()->getNode(),
-           "ProposedReassignment model needs to be applied to the present node's data");
+  std::shared_ptr<const Reassignment> reassignment, const std::string& label
+)
+  : ComposedModel(base, label),
+    reassignment_(reassignment) {
+  vtAssert(
+    reassignment_->node_ == vt::theContext()->getNode(),
+    "ProposedReassignment model needs to be applied to the present node's data"
+  );
 
   // Check invariants?
 

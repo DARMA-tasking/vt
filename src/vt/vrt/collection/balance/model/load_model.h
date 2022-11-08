@@ -323,6 +323,11 @@ struct LoadModel
    */
   virtual int getNumSubphases() const = 0;
 
+  /**
+   * Returns label
+   */
+  virtual std::string getLabel() const = 0;
+
   template <typename Serializer>
   void serialize(Serializer& s) {}
 }; // struct LoadModel

@@ -56,11 +56,13 @@ struct WeightedMessages : public ComposedModel {
    * \param[in] base: the underlying source of object work loads
    * \param[in] in_per_msg_weight weight to add per message received
    * \param[in] in_per_byte_weight weight to add per byte received
+   * \param[in] label (optional) model label
    */
   explicit WeightedMessages(
-    std::shared_ptr<balance::LoadModel> base,
-    TimeType in_per_msg_weight = 0.0, TimeType in_per_byte_weight = 1.0
-  ) : ComposedModel(base),
+    std::shared_ptr<balance::LoadModel> base, TimeType in_per_msg_weight = 0.0,
+    TimeType in_per_byte_weight = 1.0, const std::string& label = ""
+  )
+    : ComposedModel(base, label),
       per_msg_weight_(in_per_msg_weight),
       per_byte_weight_(in_per_byte_weight) { }
 

@@ -45,12 +45,16 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-SelectSubphases::SelectSubphases(std::shared_ptr<LoadModel> base, std::vector<unsigned int> subphases)
-  : ComposedModel(base)
-  , subphases_(subphases)
-{
+SelectSubphases::SelectSubphases(
+  std::shared_ptr<LoadModel> base, std::vector<unsigned int> subphases,
+  const std::string& label
+ )
+  : ComposedModel(base, label),
+    subphases_(subphases) {
   for (auto s : subphases) {
-    vtAssert(s != PhaseOffset::WHOLE_PHASE, "Selecting WHOLE_PHASE as a subphase makes no sense");
+    vtAssert(
+      s != PhaseOffset::WHOLE_PHASE,
+      "Selecting WHOLE_PHASE as a subphase makes no sense");
   }
   // Don't check that the 'select' subphases are a smaller set than
   // the base - allow multiple counting or other potential cleverness

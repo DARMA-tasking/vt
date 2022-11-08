@@ -46,9 +46,10 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-PerCollection::PerCollection(std::shared_ptr<LoadModel> base)
-  : ComposedModel(base)
-{ }
+PerCollection::PerCollection(
+  std::shared_ptr<LoadModel> base, const std::string& label
+)
+  : ComposedModel(base, label) { }
 
 void PerCollection::addModel(CollectionID proxy, std::shared_ptr<LoadModel> model)
 {

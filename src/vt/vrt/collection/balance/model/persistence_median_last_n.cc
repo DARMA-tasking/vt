@@ -47,10 +47,11 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-PersistenceMedianLastN::PersistenceMedianLastN(std::shared_ptr<LoadModel> base, unsigned int n)
-  : ComposedModel(base)
-  , n_(n)
-{
+PersistenceMedianLastN::PersistenceMedianLastN(
+  std::shared_ptr<LoadModel> base, unsigned int n, const std::string& label
+)
+  : ComposedModel(base, label),
+    n_(n) {
   vtAssert(n > 0, "Cannot take a median over no phases");
 }
 

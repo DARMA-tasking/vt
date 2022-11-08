@@ -46,9 +46,11 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-NaivePersistence::NaivePersistence(std::shared_ptr<balance::LoadModel> base)
-  : ComposedModel(base)
-{ }
+NaivePersistence::NaivePersistence(
+  std::shared_ptr<balance::LoadModel> base, const std::string& label
+)
+  : ComposedModel(base, label)
+  { }
 
 TimeType
 NaivePersistence::getModeledLoad(ElementIDStruct object, PhaseOffset offset) const {

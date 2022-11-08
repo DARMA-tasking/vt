@@ -48,11 +48,12 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 CommOverhead::CommOverhead(
   std::shared_ptr<balance::LoadModel> base, TimeType in_per_msg_weight,
-  TimeType in_per_byte_weight
-) : ComposedModel(base),
+  TimeType in_per_byte_weight, const std::string& label
+)
+  : ComposedModel(base, label),
     per_msg_weight_(in_per_msg_weight),
     per_byte_weight_(in_per_byte_weight)
-{ }
+  { }
 
 void CommOverhead::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                             std::unordered_map<PhaseType, CommMapType> const* proc_comm) {

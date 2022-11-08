@@ -59,10 +59,11 @@ struct CommOverhead : public ComposedModel {
    * \param[in] base: the underlying source of object work loads
    * \param[in] in_per_msg_weight weight to add per message received
    * \param[in] in_per_byte_weight weight to add per byte received
+   * \param[in] label (optional) model label
    */
   explicit CommOverhead(
     std::shared_ptr<balance::LoadModel> base, TimeType in_per_msg_weight,
-    TimeType in_per_byte_weight
+    TimeType in_per_byte_weight, const std::string& label = ""
   );
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,

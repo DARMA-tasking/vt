@@ -97,6 +97,7 @@ struct StubModel : LoadModel {
   // Not used in this test
   unsigned int getNumCompletedPhases() const override { return 0; }
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
+  std::string getLabel() const override { return ""; }
 
 private:
   ProcLoadMap const* proc_load_ = nullptr;
