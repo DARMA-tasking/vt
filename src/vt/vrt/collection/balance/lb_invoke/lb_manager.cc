@@ -666,6 +666,27 @@ void LBManager::computeStatistics(
     lb::Statistic::Object_load_modeled, std::move(obj_load_model)
   ));
 
+  if (custom_model_) {
+    auto total_work_from_model = 0.;
+    std::vector<balance::LoadData> obj_work_model;
+    for (auto elm : *custom_model_) {
+      auto work = custom_model_->getModeledLoad(
+        elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+      );
+      obj_work_model.emplace_back(
+        LoadData{lb::Statistic::Object_load_modeled, work}
+      );
+      total_work_from_model += work;
+    }
+
+    lstats.emplace_back(
+      LoadData{lb::Statistic::Rank_work_modeled, total_work_from_model}
+    );
+    lstats.emplace_back(reduceVec(
+      lb::Statistic::Object_work_modeled, std::move(obj_work_model)
+    ));
+  }
+
   if (model->hasRawLoad()) {
     lstats.emplace_back(
       LoadData{lb::Statistic::Rank_load_raw, total_load_raw}

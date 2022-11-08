@@ -193,6 +193,10 @@ public:
    */
   void setLoadModel(std::shared_ptr<LoadModel> model);
 
+  void setCustomLoadModel(std::shared_ptr<LoadModel> model) {
+    custom_model_ = model;
+  }
+
   /**
    * \brief Get the system-set basic model of object load
    */
@@ -281,6 +285,7 @@ private:
   objgroup::proxy::Proxy<LBManager> proxy_;
   std::shared_ptr<LoadModel> base_model_;
   std::shared_ptr<LoadModel> model_;
+  std::shared_ptr<LoadModel> custom_model_;
   std::unordered_map<std::string, LBProxyType> lb_instances_;
   StatisticMapType stats;
   TimeType total_load_from_model = 0.;
