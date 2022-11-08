@@ -50,6 +50,10 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+TemperedWMin::~TemperedWMin() {
+  theLBManager()->setCustomLoadModel(nullptr);
+}
+
 void TemperedWMin::init(objgroup::proxy::Proxy<TemperedWMin> in_proxy) {
   auto proxy_bits = in_proxy.getProxy();
   auto proxy = objgroup::proxy::Proxy<TemperedLB>(proxy_bits);
