@@ -67,7 +67,7 @@ protected:
   TimeType getModeledValue(const elm::ElementIDStruct& obj) override;
 
 private:
-  std::unique_ptr<balance::LoadModel> total_work_model_ = nullptr;
+  std::shared_ptr<balance::LoadModel> total_work_model_ = nullptr;
   balance::LoadModel* load_model_ptr = nullptr;
 
   double alpha_ = 1.0;

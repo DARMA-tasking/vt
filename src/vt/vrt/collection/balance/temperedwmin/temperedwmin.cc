@@ -97,9 +97,12 @@ void TemperedWMin::inputParams(balance::ConfigEntry* config) {
     alpha_, beta_, gamma_
   );
 
-  total_work_model_ = std::make_unique<balance::WeightedCommunicationVolume>(
+  total_work_model_ = std::make_shared<balance::WeightedCommunicationVolume>(
     theLBManager()->getLoadModel(), alpha_, beta_, gamma_
   );
+  theLBManager()->setCustomLoadModel(total_work_model_);
+
+  // for later assertion only
   load_model_ptr = theLBManager()->getLoadModel().get();
 }
 
