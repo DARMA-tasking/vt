@@ -197,3 +197,10 @@ The type of communication lines up with the enum
 
 For all the broadcast-like edges, the communication logging will occur on the
 receive of the broadcast side (one entry per broadcast recipient).
+
+\section lb-spec-file LB Specification File
+In order to customize when LB output is enabled and disabled, a LB
+specification file can be passed to \vt via a command-line flag:
+`--vt_lb_spec --vt_lb_spec_file=filename.spec`.
+
+For details about vt's Specification File see \ref spec-file

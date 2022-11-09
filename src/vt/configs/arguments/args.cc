@@ -313,7 +313,7 @@ void addTraceArgs(CLI::App& app, AppConfig& appConfig) {
   auto qy = app.add_flag("--vt_trace_sys_collection",    appConfig.vt_trace_sys_collection,    tsyscoll);
   auto qz = app.add_flag("--vt_trace_sys_serial_msg",    appConfig.vt_trace_sys_serial_msg,    tsyssmsg);
   auto qza = app.add_flag("--vt_trace_spec",             appConfig.vt_trace_spec,              tspec);
-  auto qzb = app.add_option("--vt_trace_spec_file",      appConfig.vt_trace_spec_file,         tspecfile)->capture_default_str();
+  auto qzb = app.add_option("--vt_trace_spec_file",      appConfig.vt_trace_spec_file,         tspecfile)->capture_default_str()->check(CLI::ExistingFile);
   auto qzc = app.add_flag("--vt_trace_memory_usage",     appConfig.vt_trace_memory_usage,      tmemusage);
   auto qzd = app.add_flag("--vt_trace_event_polling",    appConfig.vt_trace_event_polling,     tpolled);
   auto qze = app.add_flag("--vt_trace_irecv_polling",    appConfig.vt_trace_irecv_polling,     tirecv);
@@ -459,11 +459,11 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   /*
    * Flags for enabling load balancing and configuring it
    */
-  auto lb            = "Enable load balancing";
-  auto lb_args       = "Arguments pass to LB: \"x=0 y=1\"; try --vt_help_lb_args";
-  auto lb_quiet      = "Silence load balancing output";
-  auto lb_file_name  = "LB specification file to read";
-  auto lb_show_spec  = "Show LB specification during startup";
+  auto lb             = "Enable load balancing";
+  auto lb_args        = "Arguments pass to LB: \"x=0 y=1\"; try --vt_help_lb_args";
+  auto lb_quiet       = "Silence load balancing output";
+  auto lb_file_name   = "LB config file to read";
+  auto lb_show_config = "Show LB config during startup";
   auto lb_name       = "Name of the load balancer to use";
   auto lb_interval   = "Load balancing interval";
   auto lb_keep_last_elm = "Do not migrate last element in collection";
@@ -478,10 +478,12 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lb_statistics_file = "Load balancing statistics output file name";
   auto lb_statistics_dir  = "Load balancing statistics output directory name";
   auto lb_self_migration = "Allow load balancer to migrate objects to the same node";
+  auto lb_spec      = "Enable LB spec file (defines which phases output LB data)";
+  auto lb_spec_file = "File containing LB spec; --vt_lb_spec to enable";
   auto s  = app.add_flag("--vt_lb", appConfig.vt_lb, lb);
   auto t1 = app.add_flag("--vt_lb_quiet", appConfig.vt_lb_quiet, lb_quiet);
   auto u  = app.add_option("--vt_lb_file_name", appConfig.vt_lb_file_name, lb_file_name)->capture_default_str()->check(CLI::ExistingFile);
-  auto u1 = app.add_flag("--vt_lb_show_spec", appConfig.vt_lb_show_spec, lb_show_spec);
+  auto u1 = app.add_flag("--vt_lb_show_config", appConfig.vt_lb_show_config, lb_show_config);
   auto v  = app.add_option("--vt_lb_name", appConfig.vt_lb_name, lb_name)->capture_default_str();
   auto v1 = app.add_option("--vt_lb_args", appConfig.vt_lb_args, lb_args)->capture_default_str();
   auto w  = app.add_option("--vt_lb_interval", appConfig.vt_lb_interval, lb_interval)->capture_default_str();
@@ -496,7 +498,9 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto yy = app.add_flag("--vt_lb_statistics_compress", appConfig.vt_lb_statistics_compress, lb_statistics_comp);
   auto yz = app.add_option("--vt_lb_statistics_file",   appConfig.vt_lb_statistics_file,     lb_statistics_file)->capture_default_str();
   auto zz = app.add_option("--vt_lb_statistics_dir",    appConfig.vt_lb_statistics_dir,      lb_statistics_dir)->capture_default_str();
-  auto lbasm = app.add_flag("--vt_lb_self_migration", appConfig.vt_lb_self_migration, lb_self_migration);
+  auto lbasm = app.add_flag("--vt_lb_self_migration",   appConfig.vt_lb_self_migration,      lb_self_migration);
+  auto lbspec = app.add_flag("--vt_lb_spec",            appConfig.vt_lb_spec,                lb_spec);
+  auto lbspecfile = app.add_option("--vt_lb_spec_file", appConfig.vt_lb_spec_file,           lb_spec_file)->capture_default_str()->check(CLI::ExistingFile);
 
   auto debugLB = "Load Balancing";
   s->group(debugLB);
@@ -518,6 +522,8 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   yz->group(debugLB);
   zz->group(debugLB);
   lbasm->group(debugLB);
+  lbspec->group(debugLB);
+  lbspecfile->group(debugLB);
 
   // help options deliberately omitted from the debugLB group above so that
   // they appear grouped with --vt_help when --vt_help is used

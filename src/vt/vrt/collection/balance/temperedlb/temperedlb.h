@@ -78,7 +78,7 @@ struct TemperedLB : BaseLB {
 public:
   void init(objgroup::proxy::Proxy<TemperedLB> in_proxy);
   void runLB(TimeType total_load) override;
-  void inputParams(balance::SpecEntry* spec) override;
+  void inputParams(balance::ConfigEntry* config) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 
@@ -111,7 +111,7 @@ protected:
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
-  virtual TimeType getModeledWork(const elm::ElementIDStruct& obj);
+  virtual TimeType getModeledValue(const elm::ElementIDStruct& obj);
 
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);

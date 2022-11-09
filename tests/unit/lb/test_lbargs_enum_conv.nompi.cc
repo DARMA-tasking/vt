@@ -118,7 +118,7 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_mapping) {
   );
 }
 
-TEST_F(TestLBArgsEnumConverter, test_enum_converter_spec) {
+TEST_F(TestLBArgsEnumConverter, test_enum_converter_config) {
   vrt::collection::balance::LBArgsEnumConverter<DummyEnum> dummy_(
     "dummy", "DummyEnum", {
       {DummyEnum::One,   "One"},
@@ -127,7 +127,7 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_spec) {
     }
   );
   // normally this wouldn't reuse the same enum, but we're just testing
-  // spec-related stuff here so it's fine
+  // config-related stuff here so it's fine
   vrt::collection::balance::LBArgsEnumConverter<DummyEnum> count_(
     "count", "DummyEnum", {
       {DummyEnum::One,   "One"},
@@ -136,27 +136,27 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_spec) {
     }
   );
 
-  std::string spec_string("dummy=Two");  // deliberately omit 'count='
-  auto spec = vrt::collection::balance::ReadLBSpec::makeSpecFromParams(
-    spec_string
+  std::string config_string("dummy=Two");  // deliberately omit 'count='
+  auto config = vrt::collection::balance::ReadLBConfig::makeConfigFromParams(
+    config_string
   );
 
   // explicitly specified should return specified value
-  EXPECT_EQ(dummy_.getFromSpec(&spec, DummyEnum::One), DummyEnum::Two);
+  EXPECT_EQ(dummy_.getFromConfig(&config, DummyEnum::One), DummyEnum::Two);
   // unspecified should return default value
-  EXPECT_EQ(count_.getFromSpec(&spec, DummyEnum::One), DummyEnum::One);
+  EXPECT_EQ(count_.getFromConfig(&config, DummyEnum::One), DummyEnum::One);
 
-  std::string bad_spec_string("dummy=Four");
-  auto bad_spec = vrt::collection::balance::ReadLBSpec::makeSpecFromParams(
-    bad_spec_string
+  std::string bad_config_string("dummy=Four");
+  auto bad_config = vrt::collection::balance::ReadLBConfig::makeConfigFromParams(
+    bad_config_string
   );
 
   ASSERT_THROW(
-    dummy_.getFromSpec(&bad_spec, DummyEnum::One),
+    dummy_.getFromConfig(&bad_config, DummyEnum::One),
     std::runtime_error
   );
   ASSERT_THROW(
-    dummy_.getFromSpec(&spec, static_cast<DummyEnum>(0)),
+    dummy_.getFromConfig(&config, static_cast<DummyEnum>(0)),
     std::runtime_error
   );
 }

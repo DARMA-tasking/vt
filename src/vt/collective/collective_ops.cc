@@ -125,7 +125,7 @@ void printOverwrittens(
   printIfOverwritten(vt_trace_event_polling);
   printIfOverwritten(vt_trace_irecv_polling);
   printIfOverwritten(vt_lb);
-  printIfOverwritten(vt_lb_show_spec);
+  printIfOverwritten(vt_lb_show_config);
   printIfOverwritten(vt_lb_quiet);
   printIfOverwritten(vt_lb_file_name);
   printIfOverwritten(vt_lb_name);

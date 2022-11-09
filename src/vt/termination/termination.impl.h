@@ -97,7 +97,7 @@ inline void TerminationDetector::produceConsumeState(
     print_bool(produce)
   );
 
-  if (state.readySubmitParent()) {
+  if (state.isActive() and state.readySubmitParent()) {
     propagateEpoch(state);
   }
 }
@@ -120,7 +120,7 @@ inline void TerminationDetector::produceConsume(
 
       // If a node is not passed, use the current node (self-prod/cons)
       if (node == uninitialized_destination) {
-	node = this_node_;
+        node = this_node_;
       }
 
       if (produce) {

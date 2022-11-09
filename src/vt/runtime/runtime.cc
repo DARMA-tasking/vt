@@ -642,6 +642,7 @@ void Runtime::setup() {
 # if vt_check_enabled(trace_enabled)
   theTrace->loadAndBroadcastSpec();
 # endif
+  theNodeLBData->loadAndBroadcastSpec();
 
   if (theConfig()->vt_pause) {
     pauseForDebugger();

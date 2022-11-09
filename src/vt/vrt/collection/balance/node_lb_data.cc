@@ -143,6 +143,26 @@ void NodeLBData::initialize() {
 #endif
 }
 
+void NodeLBData::loadAndBroadcastSpec() {
+  using namespace ::vt::utils::file_spec;
+
+  if (theConfig()->vt_lb_spec) {
+    auto spec_proxy = FileSpec::construct(FileSpecType::LB);
+
+    theTerm()->produce();
+    if (theContext()->getNode() == 0) {
+      auto spec_ptr = spec_proxy.get();
+      spec_ptr->parse();
+      spec_ptr->broadcastSpec();
+    }
+    theSched()->runSchedulerWhile(
+      [&spec_proxy] { return not spec_proxy.get()->specReceived(); });
+    theTerm()->consume();
+
+    spec_proxy_ = spec_proxy.getProxy();
+  }
+}
+
 void NodeLBData::createLBDataFile() {
   auto const file_name = theConfig()->getLBDataFileOut();
   auto const compress = theConfig()->vt_lb_data_compress;
@@ -227,8 +247,14 @@ getRecvSendDirection(elm::CommKeyType const& comm) {
 }
 
 void NodeLBData::outputLBDataForPhase(PhaseType phase) {
+  bool enabled_for_phase = true;
+  if(spec_proxy_ != vt::no_obj_group){
+    vt::objgroup::proxy::Proxy<utils::file_spec::FileSpec> proxy(spec_proxy_);
+    enabled_for_phase = proxy.get()->checkEnabled(phase);
+  }
+
   // LB data output when LB is enabled and appropriate flag is enabled
-  if (!theConfig()->vt_lb_data) {
+  if (!theConfig()->vt_lb_data or not enabled_for_phase) {
     return;
   }
 

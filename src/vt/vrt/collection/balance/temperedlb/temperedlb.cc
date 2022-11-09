@@ -256,18 +256,18 @@ Description:
   return keys_help;
 }
 
-void TemperedLB::inputParams(balance::SpecEntry* spec) {
+void TemperedLB::inputParams(balance::ConfigEntry* config) {
   auto keys_help = getInputKeysWithHelp();
 
   std::vector<std::string> allowed;
   for (auto&& elm : keys_help) {
     allowed.push_back(elm.first);
   }
-  spec->checkAllowedKeys(allowed);
+  config->checkAllowedKeys(allowed);
 
   // the following options interact with each other, so we need to know
   // which were defaulted and which were explicitly specified
-  auto params = spec->getParams();
+  auto params = config->getParams();
   bool specified_knowledge = params.find("knowledge") != params.end();
   bool specified_fanout    = params.find("fanout")    != params.end();
   bool specified_rounds    = params.find("rounds")    != params.end();
@@ -279,7 +279,7 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
       {KnowledgeEnum::Log,         "Log"}
     }
   );
-  knowledge_ = knowledge_converter_.getFromSpec(spec, knowledge_);
+  knowledge_ = knowledge_converter_.getFromConfig(config, knowledge_);
 
   vtAbortIf(
     specified_knowledge && knowledge_ == KnowledgeEnum::Log &&
@@ -310,13 +310,13 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
   if (knowledge_ == KnowledgeEnum::Log) {
     if (specified_fanout) {
       // set the rounds based on the chosen fanout: k=log_f(p)
-      f_ = spec->getOrDefault<int32_t>("fanout", f_);
+      f_ = config->getOrDefault<int32_t>("fanout", f_);
       k_max_ = static_cast<uint8_t>(
         std::ceil(std::log(num_nodes)/std::log(f_))
       );
     } else if (specified_rounds) {
       // set the fanout based on the chosen rounds: f=p^(1/k)
-      k_max_ = spec->getOrDefault<int32_t>("rounds", k_max_);
+      k_max_ = config->getOrDefault<int32_t>("rounds", k_max_);
       f_ = static_cast<uint16_t>(std::ceil(std::pow(num_nodes, 1.0/k_max_)));
     } else {
       // set both the fanout and the rounds
@@ -331,8 +331,8 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
   } else { // knowledge_ == KnowledgeEnum::UserDefined
     // if either of these was omitted, a default will be used, which probably
     // isn't desirable
-    f_     = spec->getOrDefault<int32_t>("fanout", f_);
-    k_max_ = spec->getOrDefault<int32_t>("rounds", k_max_);
+    f_     = config->getOrDefault<int32_t>("fanout", f_);
+    k_max_ = config->getOrDefault<int32_t>("rounds", k_max_);
   }
 
   if (f_ < 1) {
@@ -350,12 +350,12 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
     vtAbort(s);
   }
 
-  num_iters_     = spec->getOrDefault<int32_t>("iters", num_iters_);
-  num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
+  num_iters_     = config->getOrDefault<int32_t>("iters", num_iters_);
+  num_trials_    = config->getOrDefault<int32_t>("trials", num_trials_);
 
-  deterministic_ = spec->getOrDefault<bool>("deterministic", deterministic_);
-  rollback_      = spec->getOrDefault<bool>("rollback", rollback_);
-  target_pole_   = spec->getOrDefault<bool>("targetpole", target_pole_);
+  deterministic_ = config->getOrDefault<bool>("deterministic", deterministic_);
+  rollback_      = config->getOrDefault<bool>("rollback", rollback_);
+  target_pole_   = config->getOrDefault<bool>("targetpole", target_pole_);
 
   balance::LBArgsEnumConverter<CriterionEnum> criterion_converter_(
     "criterion", "CriterionEnum", {
@@ -363,7 +363,7 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
       {CriterionEnum::ModifiedGrapevine, "ModifiedGrapevine"}
     }
   );
-  criterion_ = criterion_converter_.getFromSpec(spec, criterion_);
+  criterion_ = criterion_converter_.getFromConfig(config, criterion_);
 
   balance::LBArgsEnumConverter<InformTypeEnum> inform_type_converter_(
     "inform", "InformTypeEnum", {
@@ -371,7 +371,7 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
       {InformTypeEnum::AsyncInform, "AsyncInform"}
     }
   );
-  inform_type_ = inform_type_converter_.getFromSpec(spec, inform_type_);
+  inform_type_ = inform_type_converter_.getFromConfig(config, inform_type_);
 
   balance::LBArgsEnumConverter<ObjectOrderEnum> obj_ordering_converter_(
     "ordering", "ObjectOrderEnum", {
@@ -382,7 +382,7 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
       {ObjectOrderEnum::LargestObjects,   "LargestObjects"}
     }
   );
-  obj_ordering_ = obj_ordering_converter_.getFromSpec(spec, obj_ordering_);
+  obj_ordering_ = obj_ordering_converter_.getFromConfig(config, obj_ordering_);
 
   balance::LBArgsEnumConverter<CMFTypeEnum> cmf_type_converter_(
     "cmf", "CMFTypeEnum", {
@@ -392,7 +392,7 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
       {CMFTypeEnum::NormByMaxExcludeIneligible, "NormByMaxExcludeIneligible"}
     }
   );
-  cmf_type_ = cmf_type_converter_.getFromSpec(spec, cmf_type_);
+  cmf_type_ = cmf_type_converter_.getFromConfig(config, cmf_type_);
 
   vtAbortIf(
     inform_type_ == InformTypeEnum::AsyncInform && deterministic_,
@@ -499,7 +499,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         cur_objs_.clear();
         for (auto obj : *load_model_) {
           if (obj.isMigratable()) {
-            cur_objs_[obj] = getModeledWork(obj);
+            cur_objs_[obj] = getModeledValue(obj);
           }
         }
         this_new_load_ = this_load;
@@ -1361,7 +1361,7 @@ void TemperedLB::migrate() {
   vtAssertExpr(false);
 }
 
-TimeType TemperedLB::getModeledWork(const elm::ElementIDStruct& obj) {
+TimeType TemperedLB::getModeledValue(const elm::ElementIDStruct& obj) {
   return load_model_->getModeledLoad(
     obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
   );

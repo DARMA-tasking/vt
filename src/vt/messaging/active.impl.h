@@ -169,7 +169,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   }
 
   if (is_bcast) {
-    dest = theContext()->getNode();
+    dest = this_node_;
   }
   if (tag != no_tag) {
     envelopeSetTag(rawMsg->env, tag);

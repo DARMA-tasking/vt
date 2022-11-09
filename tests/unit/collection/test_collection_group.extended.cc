@@ -54,7 +54,6 @@
 namespace vt { namespace tests { namespace unit {
 
 static int32_t elem_counter = 0;
-static bool handler_executed = false;
 
 struct MyReduceMsg : collective::ReduceTMsg<int> {
   explicit MyReduceMsg(int const in_num)
@@ -87,7 +86,6 @@ struct ColA : Collection<ColA,Index1D> {
   void memberHandler(TestDataMsg* msg) {
     EXPECT_EQ(msg->value_, theContext()->getNode());
     --elem_counter;
-    handler_executed = true;
   }
 
   virtual ~ColA() {
@@ -101,15 +99,13 @@ struct ColA : Collection<ColA,Index1D> {
   bool reduce_test = false;
 };
 
-void colHanlder(
+void colHandler(
   ColA::TestDataMsg* msg, typename ColA::TestDataMsg::CollectionType* type) {
   --elem_counter;
-  handler_executed = true;
 }
 
 template <typename f>
 void runBcastTestHelper(f&& func) {
-  handler_executed = false;
   runInEpochCollective([=]{
     func();
   });
@@ -186,7 +182,7 @@ TEST_F(TestCollectionGroup, test_collection_group_3) {
   // raw msg pointer case
   runBcastTestHelper([proxy, my_node]{
     auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
-    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, colHanlder>(msg.get());
+    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, colHandler>(msg.get());
   });
 
   EXPECT_EQ(elem_counter, 0);
@@ -194,14 +190,14 @@ TEST_F(TestCollectionGroup, test_collection_group_3) {
   // smart msg pointer case
   runBcastTestHelper([proxy, my_node]{
     auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
-    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, colHanlder>(msg);
+    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, colHandler>(msg);
   });
 
   EXPECT_EQ(elem_counter, -numElems);
 
   // msg constructed on the fly case
   runBcastTestHelper([proxy, my_node]{
-    proxy.broadcastCollective<ColA::TestDataMsg, colHanlder, ColA::TestDataMsg>(
+    proxy.broadcastCollective<ColA::TestDataMsg, colHandler, ColA::TestDataMsg>(
       my_node
     );
   });

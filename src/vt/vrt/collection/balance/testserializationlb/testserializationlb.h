@@ -61,7 +61,7 @@ struct TestSerializationLB : BaseLB {
 
   void init(objgroup::proxy::Proxy<TestSerializationLB> in_proxy);
   void runLB(TimeType) override;
-  void inputParams(balance::SpecEntry* spec) override;
+  void inputParams(balance::ConfigEntry* config) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 };

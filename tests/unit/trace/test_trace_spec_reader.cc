@@ -44,7 +44,7 @@
 #include <vt/termination/termination.h>
 #include <vt/collective/collective_alg.h>
 #include <vt/objgroup/manager.h>
-#include <vt/trace/file_spec/spec.h>
+#include <vt/utils/file_spec/spec.h>
 
 #include "test_parallel_harness.h"
 #include "test_helpers.h"
@@ -56,7 +56,7 @@ namespace vt { namespace tests { namespace unit {
 using TestTraceSpec = TestParallelHarness;
 
 TEST_F(TestTraceSpec, test_trace_spec_1) {
-  using Spec = vt::trace::file_spec::TraceSpec;
+  using Spec = vt::utils::file_spec::FileSpec;
 
   std::string const file_name(getUniqueFilenameWithRanks(".txt"));
   if (theContext()->getNode() == 0) {
@@ -71,7 +71,7 @@ TEST_F(TestTraceSpec, test_trace_spec_1) {
   theConfig()->vt_trace_spec = true;
   theConfig()->vt_trace_spec_file = file_name;
 
-  auto proxy = Spec::construct();
+  auto proxy = Spec::construct(vt::utils::file_spec::FileSpecType::TRACE);
   theTerm()->produce();
   if (theContext()->getNode() == 0) {
     proxy.get()->parse();
@@ -81,13 +81,13 @@ TEST_F(TestTraceSpec, test_trace_spec_1) {
   theTerm()->consume();
 
   for (typename Spec::SpecIndex i = 0; i < 1000; i++) {
-    bool is_enabled = proxy.get()->checkTraceEnabled(i);
+    bool is_enabled = proxy.get()->checkEnabled(i);
     EXPECT_EQ(is_enabled, i < 4 or i % 5 == 0 or i % 5 == 1 or i % 5 == 4);
   }
 }
 
 TEST_F(TestTraceSpec, test_trace_spec_2) {
-  using Spec = vt::trace::file_spec::TraceSpec;
+  using Spec = vt::utils::file_spec::FileSpec;
 
   std::string const file_name(getUniqueFilenameWithRanks(".txt"));
   if (theContext()->getNode() == 0) {
@@ -105,7 +105,7 @@ TEST_F(TestTraceSpec, test_trace_spec_2) {
   theConfig()->vt_trace_spec = true;
   theConfig()->vt_trace_spec_file = file_name;
 
-  auto proxy = Spec::construct();
+  auto proxy = Spec::construct(vt::utils::file_spec::FileSpecType::TRACE);
   theTerm()->produce();
   if (theContext()->getNode() == 0) {
     proxy.get()->parse();
@@ -115,13 +115,13 @@ TEST_F(TestTraceSpec, test_trace_spec_2) {
   theTerm()->consume();
 
   for (typename Spec::SpecIndex i = 0; i < 1000; i++) {
-    bool is_enabled = proxy.get()->checkTraceEnabled(i);
+    bool is_enabled = proxy.get()->checkEnabled(i);
     EXPECT_EQ(is_enabled, i % 10 == 0 or i % 10 == 1);
   }
 }
 
 TEST_F(TestTraceSpec, test_trace_spec_3) {
-  using Spec = vt::trace::file_spec::TraceSpec;
+  using Spec = vt::utils::file_spec::FileSpec;
 
   std::string const file_name(getUniqueFilenameWithRanks(".txt"));
   if (theContext()->getNode() == 0) {
@@ -141,7 +141,7 @@ TEST_F(TestTraceSpec, test_trace_spec_3) {
   theConfig()->vt_trace_spec = true;
   theConfig()->vt_trace_spec_file = file_name;
 
-  auto proxy = Spec::construct();
+  auto proxy = Spec::construct(vt::utils::file_spec::FileSpecType::TRACE);
   theTerm()->produce();
   if (theContext()->getNode() == 0) {
     proxy.get()->parse();
@@ -154,7 +154,7 @@ TEST_F(TestTraceSpec, test_trace_spec_3) {
   theTerm()->consume();
 
   for (typename Spec::SpecIndex i = 0; i < 1000; i++) {
-    bool is_enabled = proxy.get()->checkTraceEnabled(i);
+    bool is_enabled = proxy.get()->checkEnabled(i);
     EXPECT_EQ(
       is_enabled,
       i == 0 or i == 1 or
@@ -166,7 +166,7 @@ TEST_F(TestTraceSpec, test_trace_spec_3) {
 }
 
 TEST_F(TestTraceSpec, test_trace_spec_4) {
-  using Spec = vt::trace::file_spec::TraceSpec;
+  using Spec = vt::utils::file_spec::FileSpec;
 
   std::string const file_name(getUniqueFilenameWithRanks(".txt"));
   if (theContext()->getNode() == 0) {
@@ -185,7 +185,7 @@ TEST_F(TestTraceSpec, test_trace_spec_4) {
   theConfig()->vt_trace_spec = true;
   theConfig()->vt_trace_spec_file = file_name;
 
-  auto proxy = Spec::construct();
+  auto proxy = Spec::construct(vt::utils::file_spec::FileSpecType::TRACE);
   theTerm()->produce();
   if (theContext()->getNode() == 0) {
     proxy.get()->parse();
@@ -195,7 +195,7 @@ TEST_F(TestTraceSpec, test_trace_spec_4) {
   theTerm()->consume();
 
   for (typename Spec::SpecIndex i = 0; i < 1000; i++) {
-    bool is_enabled = proxy.get()->checkTraceEnabled(i);
+    bool is_enabled = proxy.get()->checkEnabled(i);
     EXPECT_EQ(
       is_enabled,
       i == 1 or i == 2 or i == 3 or

@@ -54,7 +54,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-using SpecIndex = int64_t;
+using ConfigIndex = int64_t;
 
 template <typename T>
 struct Converter {
@@ -107,16 +107,16 @@ struct Converter<std::string> {
   }
 };
 
-struct SpecEntry {
+struct ConfigEntry {
   using ParamMapType = std::map<std::string, std::string>;
 
-  SpecEntry(
-    SpecIndex const in_idx, std::string const in_name,
+  ConfigEntry(
+    ConfigIndex const in_idx, std::string const in_name,
     ParamMapType in_params
   ) : idx_(in_idx), lb_name_(in_name), params_(in_params)
   {}
 
-  SpecIndex getIdx() const { return idx_; }
+  ConfigIndex getIdx() const { return idx_; }
   std::string getName() const { return lb_name_; }
   ParamMapType getParams() const { return params_; }
   LBType getLB() const {
@@ -161,13 +161,13 @@ struct SpecEntry {
   }
 
 private:
-  SpecIndex idx_;
+  ConfigIndex idx_;
   std::string lb_name_;
   ParamMapType params_;
 };
 
 /*
- * Reads the following file format for LB spec---example:
+ * Reads the following file format for LB config---example:
  *
  *     %10 TemperedLB c=1 k=5 f=2 i=10
  *     0 HierarchicalLB min=0.9 max=1.1 auto=false
@@ -176,31 +176,31 @@ private:
  *
  */
 
-struct ReadLBSpec {
-  using SpecMapType  = std::map<SpecIndex,SpecEntry>;
+struct ReadLBConfig {
+  using ConfigMapType  = std::map<ConfigIndex,ConfigEntry>;
   using ParamMapType = std::map<std::string, std::string>;
 
   /**
-   * \brief Opens and reads the spec file, if it exists.
+   * \brief Opens and reads the config file, if it exists.
    *
    * This method MUST be called before the other access methods.
    *
    * \param[in] filename The path to the file to read.
    *
-   * \pre A different spec file is not currently open.
-   * \pre The filename refers to a valid spec file.
+   * \pre A different config file is not currently open.
+   * \pre The filename refers to a valid config file.
    *
-   * \return True if the spec was opened and can be used.
+   * \return True if the config was opened and can be used.
    */
-  static bool openSpec(std::string const& filename);
+  static bool openConfig(std::string const& filename);
 
-  static SpecIndex numEntries() { return spec_mod_.size() + spec_exact_.size(); }
-  static SpecEntry* entry(SpecIndex const& idx);
-  static LBType getLB(SpecIndex const& idx);
-  static SpecMapType getModEntries() { return spec_mod_; };
-  static SpecMapType getExactEntries() {return spec_exact_; };
+  static ConfigIndex numEntries() { return config_mod_.size() + config_exact_.size(); }
+  static ConfigEntry* entry(ConfigIndex const& idx);
+  static LBType getLB(ConfigIndex const& idx);
+  static ConfigMapType getModEntries() { return config_mod_; };
+  static ConfigMapType getExactEntries() {return config_exact_; };
   static ParamMapType parseParams(std::vector<std::string> params);
-  static SpecEntry makeSpecFromParams(std::string params);
+  static ConfigEntry makeConfigFromParams(std::string params);
   static std::string toString();
   static void clear();
 
@@ -209,9 +209,9 @@ private:
 
   static bool read_complete_;
   static std::string open_filename_;
-  static SpecMapType spec_mod_;
-  static SpecMapType spec_exact_;
-  static std::vector<SpecIndex> spec_prec_;
+  static ConfigMapType config_mod_;
+  static ConfigMapType config_exact_;
+  static std::vector<ConfigIndex> config_prec_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

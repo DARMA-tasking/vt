@@ -43,8 +43,10 @@
 
 #include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 
-#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/configs/error/config_assert.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
+#include "vt/vrt/collection/balance/model/weighted_communication_volume.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -82,26 +84,34 @@ Description:
   return map;
 }
 
-void TemperedWMin::inputParams(balance::SpecEntry* spec) {
-  TemperedLB::inputParams(spec);
+void TemperedWMin::inputParams(balance::ConfigEntry* config) {
+  TemperedLB::inputParams(config);
 
-  alpha_         = spec->getOrDefault<double>("alpha", alpha_);
-  beta_          = spec->getOrDefault<double>("beta", beta_);
-  gamma_         = spec->getOrDefault<double>("gamma", gamma_);
+  alpha_         = config->getOrDefault<double>("alpha", alpha_);
+  beta_          = config->getOrDefault<double>("beta", beta_);
+  gamma_         = config->getOrDefault<double>("gamma", gamma_);
 
   vt_debug_print(
     normal, temperedwmin,
     "TemperedWMin::inputParams: alpha={}, beta={}, gamma={}\n",
     alpha_, beta_, gamma_
   );
+
+  total_work_model_ = std::make_unique<balance::WeightedCommunicationVolume>(
+    theLBManager()->getLoadModel(), alpha_, beta_, gamma_
+  );
+  load_model_ptr = theLBManager()->getLoadModel().get();
 }
 
-TimeType TemperedWMin::getModeledWork(const elm::ElementIDStruct& obj) {
+TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
+  vtAssert(
+    theLBManager()->getLoadModel().get() == load_model_ptr,
+    "Load model must not change"
+  );
   balance::PhaseOffset when =
       {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
 
-  return alpha_ * load_model_->getModeledLoad(obj, when) +
-    beta_ * load_model_->getModeledComm(obj, when) + gamma_;
+  return total_work_model_->getModeledLoad(obj, when);
 }
 
 }}}} // namespace vt::vrt::collection::lb
