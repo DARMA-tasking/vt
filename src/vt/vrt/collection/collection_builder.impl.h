@@ -162,26 +162,28 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
     po.bulk_inserts_.push_back(po.bounds_);
   }
 
-  auto cons_fn = po.template getConsFn<ColT>();
+  if (!po.bulk_inserts_.empty() || !po.list_inserts_.empty()) {
+    auto cons_fn = po.template getConsFn<ColT>();
 
-  // Do all bulk insertions
-  for (auto&& range : po.bulk_inserts_) {
-    range.foreach([&](IndexType idx) {
-      if (elementMappedHere(map_han, map_object, idx, bounds)) {
-        makeCollectionElement<ColT>(proxy, idx, this_node, cons_fn);
-      }
-      global_constructed_elms++;
-    });
-  }
+    // Do all bulk insertions
+    for (auto&& range : po.bulk_inserts_) {
+      range.foreach([&](IndexType idx) {
+        if (elementMappedHere(map_han, map_object, idx, bounds)) {
+          makeCollectionElement<ColT>(proxy, idx, this_node, cons_fn);
+        }
+        global_constructed_elms++;
+      });
+    }
 
-  // Do all list insertions
-  for (auto&& list_fn : po.list_inserts_) {
-    list_fn([&](IndexType idx) {
-      if (elementMappedHere(map_han, map_object, idx, bounds)) {
-        makeCollectionElement<ColT>(proxy, idx, this_node, cons_fn);
-      }
-      global_constructed_elms++;
-    });
+    // Do all list insertions
+    for (auto&& list_fn : po.list_inserts_) {
+      list_fn([&](IndexType idx) {
+        if (elementMappedHere(map_han, map_object, idx, bounds)) {
+          makeCollectionElement<ColT>(proxy, idx, this_node, cons_fn);
+        }
+        global_constructed_elms++;
+      });
+    }
   }
 
   // Do all 'here' insertions
