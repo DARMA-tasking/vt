@@ -670,7 +670,7 @@ void LBManager::computeStatistics(
     for (auto elm : *custom_model_) {
       auto work = custom_model_->getModeledLoad(elm, when);
       obj_work_model.emplace_back(
-        LoadData{lb::Statistic::Object_load_modeled, work}
+        LoadData{lb::Statistic::Object_work_modeled, work}
       );
       total_work_from_model += work;
     }
