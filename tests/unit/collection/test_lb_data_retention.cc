@@ -51,6 +51,7 @@
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 
 #include <memory>
 
@@ -105,19 +106,23 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
   }
 };
 
-using TestLBDataRetention = TestParallelHarness;
+static constexpr int32_t const num_elms = 16;
+
+struct TestLBDataRetention : TestParallelHarness {
+  virtual void SetUp() {
+    TestParallelHarness::SetUp();
+
+    // We must have more or equal number of elements than nodes for this test to
+    // work properly
+    SET_MAX_NUM_NODES_CONSTRAINT(num_elms);
+  }
+};
 
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::PersistenceMedianLastN;
 
-static constexpr int32_t const num_elms = 16;
-
 TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
   static constexpr int const num_phases = 5;
-
-  // We must have more or equal number of elements than nodes for this test to
-  // work properly
-  EXPECT_GE(num_elms, vt::theContext()->getNumNodes());
 
   auto range = vt::Index1D(num_elms);
 
@@ -153,10 +158,6 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
 TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
   static constexpr int const num_phases = 6;
 
-  // We must have more or equal number of elements than nodes for this test to
-  // work properly
-  EXPECT_GE(num_elms, vt::theContext()->getNumNodes());
-
   auto range = vt::Index1D(num_elms);
 
   vt::vrt::collection::CollectionProxy<TestCol> proxy;
@@ -190,10 +191,6 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
   static constexpr int const num_phases = 8;
-
-  // We must have more or equal number of elements than nodes for this test to
-  // work properly
-  EXPECT_GE(num_elms, vt::theContext()->getNumNodes());
 
   auto range = vt::Index1D(num_elms);
 
