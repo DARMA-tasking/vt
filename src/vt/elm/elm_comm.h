@@ -185,15 +185,6 @@ using CommMapType   = std::unordered_map<CommKeyType,CommVolume>;
 namespace std {
 
 template <>
-struct hash<vt::elm::CommCategory> {
-  size_t operator()(vt::elm::CommCategory const& in) const {
-    using LBUnderType = std::underlying_type<vt::elm::CommCategory>::type;
-    auto const val = static_cast<LBUnderType>(in);
-    return std::hash<LBUnderType>()(val);
-  }
-};
-
-template <>
 struct hash<vt::elm::CommKey> {
   size_t operator()(vt::elm::CommKey const& in) const {
     return std::hash<uint64_t>()(

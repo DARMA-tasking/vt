@@ -127,17 +127,4 @@ private:
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-namespace std {
-
-template <>
-struct hash<vt::vrt::collection::lb::DataDistStrategy> {
-  size_t operator()(vt::vrt::collection::lb::DataDistStrategy const& in) const {
-    using UnderType =
-      std::underlying_type<vt::vrt::collection::lb::DataDistStrategy>::type;
-    return std::hash<UnderType>()(static_cast<UnderType>(in));
-  }
-};
-
-} /* end namespace std */
-
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_H*/
