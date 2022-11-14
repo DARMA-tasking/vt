@@ -51,7 +51,7 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 TemperedWMin::~TemperedWMin() {
-  theLBManager()->setCustomLoadModel(nullptr);
+  setStrategySpecificModel(nullptr);
 }
 
 void TemperedWMin::init(objgroup::proxy::Proxy<TemperedWMin> in_proxy) {
@@ -104,7 +104,7 @@ void TemperedWMin::inputParams(balance::ConfigEntry* config) {
   total_work_model_ = std::make_shared<balance::WeightedCommunicationVolume>(
     theLBManager()->getLoadModel(), alpha_, beta_, gamma_
   );
-  theLBManager()->setCustomLoadModel(total_work_model_);
+  setStrategySpecificModel(total_work_model_);
 
   // for later assertion only
   load_model_ptr = theLBManager()->getLoadModel().get();

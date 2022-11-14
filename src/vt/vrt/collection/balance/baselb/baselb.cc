@@ -277,6 +277,12 @@ void BaseLB::recvSharedEdges(CommMsg* msg) {
   }
 }
 
+void BaseLB::setStrategySpecificModel(
+  std::shared_ptr<balance::LoadModel> model
+) {
+  theLBManager()->setStrategySpecificModel(model);
+}
+
 }}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_CC*/
