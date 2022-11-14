@@ -71,18 +71,4 @@ std::unordered_map<LBType, std::string>& get_lb_names();
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-namespace std {
-
-template <>
-struct hash<vt::vrt::collection::balance::LBType> {
-  size_t operator()(vt::vrt::collection::balance::LBType const& in) const {
-    using LBUnderType =
-      std::underlying_type<vt::vrt::collection::balance::LBType>::type;
-    auto const val = static_cast<LBUnderType>(in);
-    return std::hash<LBUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
-
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H*/
