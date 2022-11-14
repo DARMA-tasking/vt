@@ -56,10 +56,6 @@ enum struct DummyEnum : uint8_t {
   Three = 3
 };
 
-}}} // end namespace vt::tests::unit
-
-namespace vt { namespace tests { namespace unit {
-
 template <typename E>
 void checkEnum(vrt::collection::balance::LBArgsEnumConverter<E> &conv, E e) {
   EXPECT_EQ(conv.getEnum(conv.getString(e)), e);

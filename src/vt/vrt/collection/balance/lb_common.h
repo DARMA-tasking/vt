@@ -197,12 +197,6 @@ using StatisticMap = std::unordered_map<Statistic, StatisticQuantityMap>;
 
 nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics);
 
-} /* end namespace lb */
-
-}}} /* end namespace vt::vrt::collection */
-
-namespace vt { namespace vrt { namespace collection { namespace lb {
-
 std::unordered_map<Statistic, std::string>& get_lb_stat_names();
 
 }}}} /* end namespace vt::vrt::collection::lb */
