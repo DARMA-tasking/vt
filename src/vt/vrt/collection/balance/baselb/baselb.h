@@ -148,6 +148,10 @@ struct BaseLB {
   bool isCommAware() const { return comm_aware_; }
   void recvSharedEdges(CommMsg* msg);
 
+  static void setStrategySpecificModel(
+    std::shared_ptr<balance::LoadModel> model
+  );
+
 protected:
   void getArgs(PhaseType phase);
 
