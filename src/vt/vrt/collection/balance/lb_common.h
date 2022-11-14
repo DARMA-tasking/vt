@@ -201,20 +201,6 @@ nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics);
 
 }}} /* end namespace vt::vrt::collection */
 
-namespace std {
-
-template <>
-struct hash<vt::vrt::collection::lb::Statistic> {
-  size_t operator()(vt::vrt::collection::lb::Statistic const& in) const {
-    using StatisticUnderType =
-      std::underlying_type<vt::vrt::collection::lb::Statistic>::type;
-    auto const val = static_cast<StatisticUnderType>(in);
-    return std::hash<StatisticUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
-
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 std::unordered_map<Statistic, std::string>& get_lb_stat_names();

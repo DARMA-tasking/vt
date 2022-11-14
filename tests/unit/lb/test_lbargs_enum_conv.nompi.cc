@@ -58,17 +58,6 @@ enum struct DummyEnum : uint8_t {
 
 }}} // end namespace vt::tests::unit
 
-namespace std {
-
-template <>
-struct hash<::vt::tests::unit::DummyEnum> {
-  size_t operator()(::vt::tests::unit::DummyEnum const& in) const {
-    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
-  }
-};
-
-} // end namespace std
-
 namespace vt { namespace tests { namespace unit {
 
 template <typename E>
