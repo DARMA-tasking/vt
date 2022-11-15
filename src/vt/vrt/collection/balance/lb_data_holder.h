@@ -104,6 +104,7 @@ private:
   void outputEntity(nlohmann::json& j, ElementIDStruct const& elm_id) const;
 
 public:
+  vt::NodeType rank_ = uninitialized_destination;
   /// Node timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;
   /// Node communication graph for each local object
@@ -118,6 +119,7 @@ public:
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy
   std::unordered_map<ElementIDStruct, ObjGroupProxyType> node_objgroup_;
+  std::unordered_map<PhaseType, std::unordered_map<ElementIDStruct, std::unordered_map<std::string, double>>> user_defined_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
