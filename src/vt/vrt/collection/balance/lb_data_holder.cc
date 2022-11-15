@@ -183,6 +183,8 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j) {
           auto etype = task["entity"]["type"];
           vtAssertExpr(time.is_number());
           vtAssertExpr(node.is_number());
+          rank_ = node;
+          //vtAssertExpr(node == this_node);
 
           if (etype == "object") {
             auto object = task["entity"]["id"];
@@ -201,6 +203,15 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j) {
                 std::vector<uint64_t> arr = idx;
                 auto proxy = static_cast<VirtualProxyType>(cid);
                 this->node_idx_[elm] = std::make_tuple(proxy, arr);
+              }
+            }
+
+            if (task.find("user_defined") != task.end()) {
+              auto user_defined = task["user_defined"];
+              for (auto&& u : user_defined.items()) {
+                auto str = u.key();
+                auto val = u.value();
+                user_defined_[id][elm][str] = val;
               }
             }
 
