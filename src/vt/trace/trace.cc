@@ -335,9 +335,9 @@ void Trace::addMemoryEvent(std::size_t memory, double time) {
 TraceProcessingTag Trace::beginProcessing(
   TraceEntryIDType const ep, TraceMsgLenType const len,
   TraceEventIDType const event, NodeType const from_node,
+  TimeType const time,
   uint64_t const idx1, uint64_t const idx2,
-  uint64_t const idx3, uint64_t const idx4,
-  double const time
+  uint64_t const idx3, uint64_t const idx4
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return TraceProcessingTag{};
@@ -449,7 +449,7 @@ void Trace::endSchedulerLoop() {
   // Start an event representing time outside of top-level scheduler.
   if (event_holds_.size() == 1) {
     between_sched_event_ = beginProcessing(
-      between_sched_event_type_, 0, trace::no_trace_event, 0
+      between_sched_event_type_, 0, trace::no_trace_event, 0, timing::getCurrentTime()
     );
   }
 }

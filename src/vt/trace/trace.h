@@ -147,9 +147,9 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
   TraceProcessingTag beginProcessing(
      TraceEntryIDType const ep, TraceMsgLenType const len,
      TraceEventIDType const event, NodeType const from_node,
+     TimeType const time,
      uint64_t const idx1 = 0, uint64_t const idx2 = 0,
-     uint64_t const idx3 = 0, uint64_t const idx4 = 0,
-     double const time = getCurrentTime()
+     uint64_t const idx3 = 0, uint64_t const idx4 = 0
   );
 
   /**

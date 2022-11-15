@@ -261,7 +261,7 @@ void State::getData(
       size_t msg_size = info.num_bytes;
 
       processing_tag =
-        theTrace()->beginProcessing(trace_id, msg_size, event, from_node);
+        theTrace()->beginProcessing(trace_id, msg_size, event, from_node, timing::getCurrentTime());
     }
 #endif
 
@@ -328,7 +328,7 @@ void State::putData(
       size_t msg_size = info.num_bytes;
 
       processing_tag =
-        theTrace()->beginProcessing(trace_id, msg_size, event, from_node);
+        theTrace()->beginProcessing(trace_id, msg_size, event, from_node, timing::getCurrentTime());
     }
 #endif
 
