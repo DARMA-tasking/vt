@@ -67,7 +67,7 @@ struct Continuation {
   /**
    * \brief After the task runs, invoke the continuation if non-null
    */
-  void end() {
+  void finish() {
     if (cont_) {
       cont_();
     }

@@ -81,12 +81,12 @@ struct SetContext {
   /**
    * \brief Preserve the existing task and replace with a new one
    */
-  void begin();
+  void start();
 
   /**
    * \brief Restore the previous existing task to the context (if there was one)
    */
-  void end();
+  void finish();
 
   void suspend();
 

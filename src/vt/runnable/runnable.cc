@@ -150,10 +150,10 @@ void RunnableNew::run() {
   if (suspended_) {
     resume();
   } else {
-    begin();
+    start();
   }
 #else
-  begin();
+  start();
 #endif
 
   vtAssert(task_ != nullptr, "Must have a valid task to run");
@@ -194,13 +194,13 @@ void RunnableNew::run() {
 
 #if vt_check_enabled(fcontext)
   if (done_) {
-    end();
+    finish();
   } else {
     suspended_ = true;
     suspend();
   }
 #else
-  end();
+  finish();
 #endif
 
 #if vt_check_enabled(fcontext)
@@ -212,24 +212,24 @@ void RunnableNew::run() {
 #endif
 }
 
-void RunnableNew::begin() {
-  contexts_.setcontext.begin();
-  if (contexts_.has_td) contexts_.td.begin();
-  if (contexts_.has_col) contexts_.col.begin();
-  if (contexts_.has_lb) contexts_.lb.begin();
+void RunnableNew::start() {
+  contexts_.setcontext.start();
+  if (contexts_.has_td) contexts_.td.start();
+  if (contexts_.has_col) contexts_.col.start();
+  if (contexts_.has_lb) contexts_.lb.start();
 #if vt_check_enabled(trace_enabled)
-  if (contexts_.has_trace) contexts_.trace.begin();
+  if (contexts_.has_trace) contexts_.trace.start();
 #endif
 }
 
-void RunnableNew::end() {
-  contexts_.setcontext.end();
-  if (contexts_.has_td) contexts_.td.end();
-  if (contexts_.has_col) contexts_.col.end();
-  if (contexts_.has_cont) contexts_.cont.end();
-  if (contexts_.has_lb) contexts_.lb.end();
+void RunnableNew::finish() {
+  contexts_.setcontext.finish();
+  if (contexts_.has_td) contexts_.td.finish();
+  if (contexts_.has_col) contexts_.col.finish();
+  if (contexts_.has_cont) contexts_.cont.finish();
+  if (contexts_.has_lb) contexts_.lb.finish();
 #if vt_check_enabled(trace_enabled)
-  if (contexts_.has_trace) contexts_.trace.end();
+  if (contexts_.has_trace) contexts_.trace.finish();
 #endif
 }
 

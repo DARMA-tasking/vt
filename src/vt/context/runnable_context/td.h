@@ -81,15 +81,15 @@ struct TD {
   explicit TD(MsgPtrT const& msg);
 
   /**
-   * \brief During begin \c TD will capture the epoch stack size and push \c ep_
+   * \brief During start \c TD will capture the epoch stack size and push \c ep_
    */
-  void begin();
+  void start();
 
   /**
-   * \brief During end \c TD will pop all epochs off of the stack down to the
-   * size in captured in \c begin()
+   * \brief During finish \c TD will pop all epochs off of the stack down to the
+   * size it captured in \c start()
    */
-  void end();
+  void finish();
 
   /**
    * \brief When suspended, \c TD will preserve any epochs pushed on the stack

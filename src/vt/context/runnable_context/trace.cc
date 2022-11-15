@@ -54,7 +54,7 @@
 
 namespace vt { namespace ctx {
 
-void Trace::begin() {
+void Trace::start() {
   if (not is_traced_) {
     return;
   }
@@ -76,7 +76,7 @@ void Trace::begin() {
   }
 }
 
-void Trace::end() {
+void Trace::finish() {
   if (not is_traced_) {
     return;
   }
@@ -85,12 +85,12 @@ void Trace::end() {
 }
 
 void Trace::suspend() {
-  end();
+  finish();
 }
 
 void Trace::resume() {
   // @todo: connect up the last event to this new one after suspension
-  begin();
+  start();
 }
 
 }} /* end namespace vt::ctx */
