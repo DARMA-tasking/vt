@@ -162,7 +162,8 @@ int main(int argc, char** argv) {
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
-  int32_t num_elms = default_num_elms;
+  auto num_elms = std::max(static_cast<int32_t>(num_nodes), default_num_elms);
+
   if (argc > 1) {
     num_elms = atoi(argv[1]);
   }
