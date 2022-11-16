@@ -102,9 +102,9 @@ void RunnableNew::setupHandlerElement(
 }
 
 void RunnableNew::runLambda(ActionType action) {
-  begin();
+  start();
   action();
-  end();
+  finish();
 }
 
 void RunnableNew::run() {
