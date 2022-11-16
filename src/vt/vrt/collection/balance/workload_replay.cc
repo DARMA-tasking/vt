@@ -256,7 +256,9 @@ readInWorkloads(const std::string &filename) {
 /*static*/
 objgroup::proxy::Proxy<WorkloadDataMigrator>
 WorkloadDataMigrator::construct(std::shared_ptr<LoadModel> model_base) {
-  auto my_proxy = theObjGroup()->makeCollective<WorkloadDataMigrator>();
+  auto my_proxy = theObjGroup()->makeCollective<WorkloadDataMigrator>(
+    "WorkloadDataMigrator"
+  );
   auto strat = my_proxy.get();
   auto base_proxy = my_proxy.template castToBase<lb::BaseLB>();
   vt_debug_print(
@@ -271,7 +273,7 @@ WorkloadDataMigrator::construct(std::shared_ptr<LoadModel> model_base) {
 
 void WorkloadDataMigrator::runLB(TimeType) { }
 
-void WorkloadDataMigrator::inputParams(SpecEntry* spec) { }
+void WorkloadDataMigrator::inputParams(ConfigEntry* spec) { }
 
 std::unordered_map<std::string, std::string>
 WorkloadDataMigrator::getInputKeysWithHelp() {

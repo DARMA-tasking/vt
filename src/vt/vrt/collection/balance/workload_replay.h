@@ -134,7 +134,7 @@ struct WorkloadDataMigrator : lb::BaseLB {
 
   void runLB(TimeType) override;
 
-  void inputParams(SpecEntry* spec) override;
+  void inputParams(ConfigEntry* spec) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 
