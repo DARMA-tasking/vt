@@ -116,7 +116,7 @@ std::vector<Rank> ranks;
 std::unordered_map<SharedID, double> shared_mem;
 double memory_limit = 8000000000;
 double I_limit = 0.1;
-std::size_t max_shared_ids = 4; //@todo fix this
+std::size_t max_shared_ids = 5; //@todo fix this
 
 std::tuple<double, int> calculateMemoryForRank(NodeType rank) {
   auto& r = ranks[rank];
@@ -247,6 +247,8 @@ void balanceLoad() {
         std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
         Rank* min_rank = min_ranks.back();
         min_ranks.pop_back();
+
+        fmt::print("min_rank={}, load={}, shared_ids={}\n", min_rank->rank_, min_rank->cur_load_, min_rank->shared_ids_.size());
 
         auto const selected_load = objects[o].load_;
         if (
