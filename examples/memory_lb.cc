@@ -171,7 +171,6 @@ void balanceLoad() {
     std::vector<Rank*> max_ranks, min_ranks;
     for (auto& r : ranks) {
       max_ranks.push_back(&r);
-      min_ranks.push_back(&r);
     }
 
     auto s = computeStats();
@@ -182,12 +181,14 @@ void balanceLoad() {
       return r1->cur_load_ > r2->cur_load_;
     };
     std::make_heap(max_ranks.begin(), max_ranks.end(), comp_rank_max);
-    std::make_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
 
     std::pop_heap(max_ranks.begin(), max_ranks.end(), comp_rank_max);
     Rank* max_rank = max_ranks.back();
     max_ranks.pop_back();
-    fmt::print("max_rank={} load={}\n", max_rank->rank_, max_rank->cur_load_);
+
+    auto stats = computeStats();
+    fmt::print("avg={}, max={}, I={}, max_rank={} load={}\n", stats.avg_load_, stats.max_load_, stats.I(), max_rank->rank_, max_rank->cur_load_);
+
     auto diff = max_rank->cur_load_ - s.avg_load_;
     fmt::print("diff={}\n", diff);
     std::map<SharedID, double> shared_map;
@@ -239,16 +240,33 @@ void balanceLoad() {
       auto gid = std::get<1>(groupings[i]);
       fmt::print("try bin: {}, size={}, id={}\n", i, std::get<0>(groupings[i]), gid);
 
+      min_ranks.clear();
+      for (auto& r : ranks) {
+        min_ranks.push_back(&r);
+      }
+      std::make_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+
+      Rank* min_rank = nullptr;
+
       for (auto&& o : obj_shared_map[gid]) {
         if (min_ranks.size() == 0) {
           fmt::print("reached condition where no ranks could take the element\n");
           break;
         }
-        std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
-        Rank* min_rank = min_ranks.back();
-        min_ranks.pop_back();
+
+        if (min_rank == nullptr) {
+          std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+          min_rank = min_ranks.back();
+          min_ranks.pop_back();
+        }
 
         fmt::print("min_rank={}, load={}, shared_ids={}\n", min_rank->rank_, min_rank->cur_load_, min_rank->shared_ids_.size());
+
+        if (min_rank->shared_ids_.size() >= max_shared_ids and not min_rank->hasSharedID(gid)) {
+          std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+          min_rank = min_ranks.back();
+          min_ranks.pop_back();
+        }
 
         auto const selected_load = objects[o].load_;
         if (
@@ -261,23 +279,48 @@ void balanceLoad() {
           min_rank->addObj(obj_ptr);
           made_assignment = true;
 
-          min_ranks.push_back(min_rank);
-          std::push_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
-
           fmt::print("id={}: load={}: reassign to {}\n", o, objects[o].load_, min_rank->rank_);
         } else {
-          fmt::print("id={}: load={}: skipping\n", o, objects[o].load_);
+
+          if (min_rank->shared_ids_.size() >= max_shared_ids and not min_rank->hasSharedID(gid)) {
+            // don't put it back on the heap
+          } else {
+            min_ranks.push_back(min_rank);
+            std::push_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+          }
+
+          fmt::print(
+            "id={}: load={}: skipping; has_id={}, size={}, new load={}\n",
+            o, objects[o].load_, min_rank->hasSharedID(gid),
+            min_rank->shared_ids_.size(), min_rank->cur_load_ + selected_load
+          );
         }
       }
     }
 
-    auto stats = computeStats();
-    fmt::print("avg={}, max={}, I={}\n", stats.avg_load_, stats.max_load_, stats.I());
-
     max_ranks.push_back(max_rank);
     std::push_heap(max_ranks.begin(), max_ranks.end(), comp_rank_max);
-
   } while (made_assignment);
+
+  for (int i = 0; i < static_cast<int>(ranks.size()); i++) {
+    std::tuple<double, int> total_mem = calculateMemoryForRank(i);
+    fmt::print(
+      "rank={}: total_memory={} B {} MiB, num shared blocks={}\n",
+      i, std::get<0>(total_mem), std::get<0>(total_mem)/1024/1024, std::get<1>(total_mem)
+    );
+  }
+
+  std::unordered_map<SharedID, std::set<int>> counter;
+  for (auto&& r : ranks) {
+    for (auto&& s : r.shared_ids_) {
+      auto id = s.first;
+      auto rank = r.rank_;
+      counter[id].insert(rank);
+    }
+  }
+  for (auto&& c : counter) {
+    fmt::print("shared id={}, num ranks={}\n", c.first, c.second.size());
+  }
 }
 
 std::unique_ptr<LBDataHolder> readInData(std::string const& file_name) {
