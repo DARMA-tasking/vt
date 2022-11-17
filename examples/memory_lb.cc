@@ -155,18 +155,18 @@ Stats computeStats() {
 }
 
 void balanceLoad() {
-  bool made_assignment = false;
+  int made_no_assignments = 0;
 
   do {
-    made_assignment = false;
-
-    // for (auto&& r : ranks) {
-    //   //auto const rank = r.rank_;
-    //   // fmt::print(
-    //   //   "rank={}: total_load={}, rank_working_bytes={}\n",
-    //   //   rank, r.cur_load_, std::get<0>(calculateMemoryForRank(rank))
-    //   // );
-    // }
+#if 0
+    for (auto&& r : ranks) {
+      auto const rank = r.rank_;
+      fmt::print(
+        "rank={}: total_load={}, rank_working_bytes={}\n",
+        rank, r.cur_load_, std::get<0>(calculateMemoryForRank(rank))
+      );
+    }
+#endif
 
     std::vector<Rank*> max_ranks, min_ranks;
     for (auto& r : ranks) {
@@ -236,12 +236,17 @@ void balanceLoad() {
     int pick_lower = pick_upper-1;
     while (groupings_sum[pick_upper] - groupings_sum[pick_lower] < diff) pick_lower--;
     fmt::print("pick=[{},{}]\n", pick_lower, pick_upper);
+
+    bool made_assignment = false;
+
     for (int i = pick_lower+1; i < pick_upper+1; i++) {
       auto gid = std::get<1>(groupings[i]);
 
       min_ranks.clear();
       for (auto& r : ranks) {
-        min_ranks.push_back(&r);
+        if (r.hasSharedID(gid) or r.shared_ids_.size() < max_shared_ids) {
+          min_ranks.push_back(&r);
+        }
       }
       std::make_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
 
@@ -299,8 +304,8 @@ void balanceLoad() {
 
 #if 0
           fmt::print(
-            "id={}: load={}: skipping; has_id={}, size={}, new load={}\n",
-            o, objects[o].load_, min_rank->hasSharedID(gid),
+            "id={}: load={}: skipping; rank={}, has_id={}, size={}, new load={}\n",
+            o, objects[o].load_, min_rank->rank_, min_rank->hasSharedID(gid),
             min_rank->shared_ids_.size(), min_rank->cur_load_ + selected_load
           );
 #endif
@@ -316,7 +321,12 @@ void balanceLoad() {
 
     max_ranks.push_back(max_rank);
     std::push_heap(max_ranks.begin(), max_ranks.end(), comp_rank_max);
-  } while (made_assignment);
+
+    if (not made_assignment) {
+      made_no_assignments++;
+    }
+
+  } while (made_no_assignments < 3);
 
 #if 0
   for (int i = 0; i < static_cast<int>(ranks.size()); i++) {
@@ -326,7 +336,9 @@ void balanceLoad() {
       i, std::get<0>(total_mem), std::get<0>(total_mem)/1024/1024, std::get<1>(total_mem)
     );
   }
+#endif
 
+#if 1
   std::unordered_map<SharedID, std::set<int>> counter;
   for (auto&& r : ranks) {
     for (auto&& s : r.shared_ids_) {
@@ -335,8 +347,14 @@ void balanceLoad() {
       counter[id].insert(rank);
     }
   }
+  std::unordered_map<int, int> histogram;
   for (auto&& c : counter) {
-    fmt::print("shared id={}, num ranks={}\n", c.first, c.second.size());
+    //fmt::print("shared id={}, num ranks={}\n", c.first, c.second.size());
+    histogram[c.second.size()]++;
+  }
+
+  for (auto&& h : histogram) {
+    fmt::print("Histogram: bin={}, occur={}\n", h.first, h.second);
   }
 #endif
 }
@@ -464,7 +482,11 @@ int main(int argc, char** argv) {
   vt::balanceLoad();
   lb_time = vt::timing::getCurrentTime() - t1;
 
-  fmt::print("Timings: {:0.2f}s read, {:0.2f}s collate, {:0.2f}s LB\n", read_time, collate_time, lb_time);
+  auto stats = vt::computeStats();
+  fmt::print(
+    "Result: avg={}, max={}, I={}, {:0.2f}s read, {:0.2f}s collate, {:0.2f}s LB\n",
+    stats.avg_load_, stats.max_load_, stats.I(), read_time, collate_time, lb_time
+  );
 
   vt::finalize();
   return 0;
