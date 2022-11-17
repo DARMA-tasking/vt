@@ -160,13 +160,13 @@ void balanceLoad() {
   do {
     made_assignment = false;
 
-    for (auto&& r : ranks) {
-      auto const rank = r.rank_;
-      fmt::print(
-        "rank={}: total_load={}, rank_working_bytes={}\n",
-        rank, r.cur_load_, std::get<0>(calculateMemoryForRank(rank))
-      );
-    }
+    // for (auto&& r : ranks) {
+    //   //auto const rank = r.rank_;
+    //   // fmt::print(
+    //   //   "rank={}: total_load={}, rank_working_bytes={}\n",
+    //   //   rank, r.cur_load_, std::get<0>(calculateMemoryForRank(rank))
+    //   // );
+    // }
 
     std::vector<Rank*> max_ranks, min_ranks;
     for (auto& r : ranks) {
@@ -197,7 +197,7 @@ void balanceLoad() {
     std::vector<std::tuple<double, SharedID>> groupings;
     std::vector<double> groupings_sum;
     for (auto&& o : max_rank->objs_) {
-      fmt::print("object load={}, shared_id={}\n", o->load_, o->shared_id_);
+      //fmt::print("object load={}, shared_id={}\n", o->load_, o->shared_id_);
       shared_map[o->shared_id_] += o->load_;
       obj_shared_map[o->shared_id_].push_back(o->elm_);
     }
@@ -238,7 +238,6 @@ void balanceLoad() {
     fmt::print("pick=[{},{}]\n", pick_lower, pick_upper);
     for (int i = pick_lower+1; i < pick_upper+1; i++) {
       auto gid = std::get<1>(groupings[i]);
-      fmt::print("try bin: {}, size={}, id={}\n", i, std::get<0>(groupings[i]), gid);
 
       min_ranks.clear();
       for (auto& r : ranks) {
@@ -247,6 +246,9 @@ void balanceLoad() {
       std::make_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
 
       Rank* min_rank = nullptr;
+
+      int tally_assigned = 0;
+      int tally_rejected = 0;
 
       for (auto&& o : obj_shared_map[gid]) {
         if (min_ranks.size() == 0) {
@@ -260,7 +262,7 @@ void balanceLoad() {
           min_ranks.pop_back();
         }
 
-        fmt::print("min_rank={}, load={}, shared_ids={}\n", min_rank->rank_, min_rank->cur_load_, min_rank->shared_ids_.size());
+        //fmt::print("min_rank={}, load={}, shared_ids={}\n", min_rank->rank_, min_rank->cur_load_, min_rank->shared_ids_.size());
 
         if (min_rank->shared_ids_.size() >= max_shared_ids and not min_rank->hasSharedID(gid)) {
           std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
@@ -279,7 +281,11 @@ void balanceLoad() {
           min_rank->addObj(obj_ptr);
           made_assignment = true;
 
+          tally_assigned++;
+
+#if 0
           fmt::print("id={}: load={}: reassign to {}\n", o, objects[o].load_, min_rank->rank_);
+#endif
         } else {
 
           if (min_rank->shared_ids_.size() >= max_shared_ids and not min_rank->hasSharedID(gid)) {
@@ -289,19 +295,30 @@ void balanceLoad() {
             std::push_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
           }
 
+          tally_rejected++;
+
+#if 0
           fmt::print(
             "id={}: load={}: skipping; has_id={}, size={}, new load={}\n",
             o, objects[o].load_, min_rank->hasSharedID(gid),
             min_rank->shared_ids_.size(), min_rank->cur_load_ + selected_load
           );
+#endif
         }
       }
+
+      fmt::print(
+        "try bin: {}, size={}, id={}; assigned={}, rejected={}\n",
+        i, std::get<0>(groupings[i]), gid,
+        tally_assigned, tally_rejected
+      );
     }
 
     max_ranks.push_back(max_rank);
     std::push_heap(max_ranks.begin(), max_ranks.end(), comp_rank_max);
   } while (made_assignment);
 
+#if 0
   for (int i = 0; i < static_cast<int>(ranks.size()); i++) {
     std::tuple<double, int> total_mem = calculateMemoryForRank(i);
     fmt::print(
@@ -321,6 +338,7 @@ void balanceLoad() {
   for (auto&& c : counter) {
     fmt::print("shared id={}, num ranks={}\n", c.first, c.second.size());
   }
+#endif
 }
 
 std::unique_ptr<LBDataHolder> readInData(std::string const& file_name) {
@@ -410,9 +428,9 @@ void collateLBData(std::vector<LBDataHolder> lb_data) {
     );
   }
 
-  for (auto&& o : objects) {
-    fmt::print("elm={}, load={}\n", o.first, o.second.load_);
-  }
+  // for (auto&& o : objects) {
+  //   fmt::print("elm={}, load={}\n", o.first, o.second.load_);
+  // }
 }
 
 } /* end namespace vt */
@@ -436,7 +454,10 @@ int main(int argc, char** argv) {
 
   vt::collateLBData(std::move(lb_data));
 
+  auto t1 = vt::timing::getCurrentTime();
   vt::balanceLoad();
+  auto t2 = vt::timing::getCurrentTime();
+  fmt::print("took {} seconds to LB\n", t2-t1);
 
   vt::finalize();
   return 0;
