@@ -445,19 +445,26 @@ int main(int argc, char** argv) {
     vt::memory_limit, vt::memory_limit/1024/1024
   );
 
+  double read_time = 0, collate_time = 0, lb_time = 0;
+
+  auto t1 = vt::timing::getCurrentTime();
   for (int i = 1; i < argc; i++) {
     std::string const filename = std::string{argv[i]};
     fmt::print("Reading in filename={}\n", filename);
     auto p = vt::readInData(filename);
     lb_data.push_back(*p);
   }
+  read_time = vt::timing::getCurrentTime() - t1;
 
+  t1 = vt::timing::getCurrentTime();
   vt::collateLBData(std::move(lb_data));
+  collate_time = vt::timing::getCurrentTime() - t1;
 
-  auto t1 = vt::timing::getCurrentTime();
+  t1 = vt::timing::getCurrentTime();
   vt::balanceLoad();
-  auto t2 = vt::timing::getCurrentTime();
-  fmt::print("took {} seconds to LB\n", t2-t1);
+  lb_time = vt::timing::getCurrentTime() - t1;
+
+  fmt::print("Timings: {:0.2f}s read, {:0.2f}s collate, {:0.2f}s LB\n", read_time, collate_time, lb_time);
 
   vt::finalize();
   return 0;
