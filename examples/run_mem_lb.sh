@@ -7,7 +7,7 @@ for dir in $root_dir/challenging_*
 do
     if [ -d "$dir" ]
     then
-        result=$($bin $dir/*json | grep 'Final:')
+        result=$($bin $dir/*json | grep 'Result:')
         problem=$(basename $dir)
         echo "Problem: $problem; $result"
     fi
