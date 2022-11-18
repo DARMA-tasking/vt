@@ -173,15 +173,14 @@ void balanceLoad() {
       max_ranks.push_back(&r);
     }
 
-    auto s = computeStats();
     auto comp_rank_max = [](Rank* r1, Rank* r2) {
       return r1->cur_load_ < r2->cur_load_;
     };
     auto comp_rank_min = [](Rank* r1, Rank* r2) {
       return r1->cur_load_ > r2->cur_load_;
     };
-    std::make_heap(max_ranks.begin(), max_ranks.end(), comp_rank_max);
 
+    std::make_heap(max_ranks.begin(), max_ranks.end(), comp_rank_max);
     std::pop_heap(max_ranks.begin(), max_ranks.end(), comp_rank_max);
     Rank* max_rank = max_ranks.back();
     max_ranks.pop_back();
@@ -191,11 +190,12 @@ void balanceLoad() {
 
     auto diff = max_rank->cur_load_ - s.avg_load_;
     fmt::print("diff={}\n", diff);
+
     std::map<SharedID, double> shared_map;
     std::unordered_map<SharedID, std::vector<ElementIDStruct>> obj_shared_map;
-    //std::vector<int> grouping_ids;
     std::vector<std::tuple<double, SharedID>> groupings;
     std::vector<double> groupings_sum;
+
     for (auto&& o : max_rank->objs_) {
       //fmt::print("object load={}, shared_id={}\n", o->load_, o->shared_id_);
       shared_map[o->shared_id_] += o->load_;
@@ -235,7 +235,7 @@ void balanceLoad() {
     if (groupings_sum[pick_upper-1] >= diff * 1.05f) pick_upper--;
     int pick_lower = pick_upper-1;
     while (groupings_sum[pick_upper] - groupings_sum[pick_lower] < diff) pick_lower--;
-    fmt::print("pick=[{},{}]\n", pick_lower, pick_upper);
+    fmt::print("pick=({},{}]\n", pick_lower, pick_upper);
 
     bool made_assignment = false;
 
