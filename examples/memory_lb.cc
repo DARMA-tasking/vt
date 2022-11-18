@@ -114,9 +114,7 @@ struct Rank {
 std::unordered_map<ElementIDStruct, Object> objects;
 std::vector<Rank> ranks;
 std::unordered_map<SharedID, double> shared_mem;
-double memory_limit = 8000000000;
-double I_limit = 0.1;
-std::size_t max_shared_ids = 5; //@todo fix this
+std::size_t max_shared_ids = 0;
 
 std::tuple<double, int> calculateMemoryForRank(NodeType rank) {
   auto& r = ranks[rank];
@@ -135,6 +133,8 @@ std::tuple<double, int> calculateMemoryForRank(NodeType rank) {
   for (auto&& id : r.shared_ids_) {
     total += shared_mem[id.first];
   }
+
+  max_shared_ids = std::max(r.shared_ids_.size(), max_shared_ids);
   return std::make_tuple(total, static_cast<int>(r.shared_ids_.size()));
 }
 
@@ -440,8 +440,12 @@ void collateLBData(std::vector<LBDataHolder> lb_data) {
     );
   }
 
+  max_shared_ids += 1;
   auto stats = computeStats();
-  fmt::print("avg={}, max={}, I={}\n", stats.avg_load_, stats.max_load_, stats.I());
+  fmt::print(
+    "avg={}, max={}, I={}, max_shared_ids={}\n",
+    stats.avg_load_, stats.max_load_, stats.I(), max_shared_ids
+  );
 
   for (auto&& sm : shared_mem) {
     fmt::print(
@@ -461,11 +465,6 @@ int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   std::vector<LBDataHolder> lb_data;
-
-  fmt::print(
-    "Running with memory limit: {} B {} MiB\n",
-    vt::memory_limit, vt::memory_limit/1024/1024
-  );
 
   double read_time = 0, collate_time = 0, lb_time = 0;
 
