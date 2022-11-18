@@ -186,9 +186,13 @@ void balanceLoad() {
     max_ranks.pop_back();
 
     auto stats = computeStats();
-    fmt::print("avg={}, max={}, I={}, max_rank={} load={}\n", stats.avg_load_, stats.max_load_, stats.I(), max_rank->rank_, max_rank->cur_load_);
+    fmt::print(
+      "avg={}, max={}, I={}, max_rank={} load={}\n",
+      stats.avg_load_, stats.max_load_, stats.I(),
+      max_rank->rank_, max_rank->cur_load_
+    );
 
-    auto diff = max_rank->cur_load_ - s.avg_load_;
+    auto diff = max_rank->cur_load_ - stats.avg_load_;
     fmt::print("diff={}\n", diff);
 
     std::map<SharedID, double> shared_map;
