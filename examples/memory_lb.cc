@@ -154,6 +154,23 @@ Stats computeStats() {
   return s;
 }
 
+auto comp_rank_max = [](Rank* r1, Rank* r2) {
+  return r1->cur_load_ < r2->cur_load_;
+};
+auto comp_rank_min = [](Rank* r1, Rank* r2) {
+  return r1->cur_load_ > r2->cur_load_;
+};
+
+bool tryBin(
+  Rank* max_rank, int bin, double size, int gid,
+  std::unordered_map<SharedID, std::vector<ElementIDStruct>>& objs
+);
+
+bool tryBinFully(
+  Rank* max_rank, int bin, double size, int gid,
+  std::unordered_map<SharedID, std::vector<ElementIDStruct>>& objs
+);
+
 void balanceLoad() {
   int made_no_assignments = 0;
 
@@ -172,13 +189,6 @@ void balanceLoad() {
     for (auto& r : ranks) {
       max_ranks.push_back(&r);
     }
-
-    auto comp_rank_max = [](Rank* r1, Rank* r2) {
-      return r1->cur_load_ < r2->cur_load_;
-    };
-    auto comp_rank_min = [](Rank* r1, Rank* r2) {
-      return r1->cur_load_ > r2->cur_load_;
-    };
 
     std::make_heap(max_ranks.begin(), max_ranks.end(), comp_rank_max);
     std::pop_heap(max_ranks.begin(), max_ranks.end(), comp_rank_max);
@@ -243,84 +253,22 @@ void balanceLoad() {
 
     bool made_assignment = false;
 
-    for (int i = pick_lower+1; i < pick_upper+1; i++) {
-      auto gid = std::get<1>(groupings[i]);
+    if (made_no_assignments > 0) {
+      for (int i = 0; i < static_cast<int>(groupings.size()); i++) {
+        auto size = std::get<0>(groupings[i]);
+        auto gid = std::get<1>(groupings[i]);
 
-      min_ranks.clear();
-      for (auto& r : ranks) {
-        if (r.hasSharedID(gid) or r.shared_ids_.size() < max_shared_ids) {
-          min_ranks.push_back(&r);
-        }
+        bool ret = tryBinFully(max_rank, i, size, gid, obj_shared_map);
+        made_assignment = made_assignment or ret;
       }
-      std::make_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+    } else {
+      for (int i = pick_lower+1; i < pick_upper+1; i++) {
+        auto size = std::get<0>(groupings[i]);
+        auto gid = std::get<1>(groupings[i]);
 
-      Rank* min_rank = nullptr;
-
-      int tally_assigned = 0;
-      int tally_rejected = 0;
-
-      for (auto&& o : obj_shared_map[gid]) {
-        if (min_ranks.size() == 0) {
-          fmt::print("reached condition where no ranks could take the element\n");
-          break;
-        }
-
-        if (min_rank == nullptr) {
-          std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
-          min_rank = min_ranks.back();
-          min_ranks.pop_back();
-        }
-
-        //fmt::print("min_rank={}, load={}, shared_ids={}\n", min_rank->rank_, min_rank->cur_load_, min_rank->shared_ids_.size());
-
-        if (min_rank->shared_ids_.size() >= max_shared_ids and not min_rank->hasSharedID(gid)) {
-          std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
-          min_rank = min_ranks.back();
-          min_ranks.pop_back();
-        }
-
-        auto const selected_load = objects[o].load_;
-        if (
-          (min_rank->hasSharedID(gid) or min_rank->shared_ids_.size() < max_shared_ids) and
-          min_rank->cur_load_ + selected_load < max_rank->cur_load_
-        ) {
-          //reassign object
-          Object* obj_ptr = &objects[o];
-          max_rank->removeObj(obj_ptr);
-          min_rank->addObj(obj_ptr);
-          made_assignment = true;
-
-          tally_assigned++;
-
-#if 0
-          fmt::print("id={}: load={}: reassign to {}\n", o, objects[o].load_, min_rank->rank_);
-#endif
-        } else {
-
-          if (min_rank->shared_ids_.size() >= max_shared_ids and not min_rank->hasSharedID(gid)) {
-            // don't put it back on the heap
-          } else {
-            min_ranks.push_back(min_rank);
-            std::push_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
-          }
-
-          tally_rejected++;
-
-#if 0
-          fmt::print(
-            "id={}: load={}: skipping; rank={}, has_id={}, size={}, new load={}\n",
-            o, objects[o].load_, min_rank->rank_, min_rank->hasSharedID(gid),
-            min_rank->shared_ids_.size(), min_rank->cur_load_ + selected_load
-          );
-#endif
-        }
+        bool ret = tryBin(max_rank, i, size, gid, obj_shared_map);
+        made_assignment = made_assignment or ret;
       }
-
-      fmt::print(
-        "try bin: {}, size={}, id={}; assigned={}, rejected={}\n",
-        i, std::get<0>(groupings[i]), gid,
-        tally_assigned, tally_rejected
-      );
     }
 
     max_ranks.push_back(max_rank);
@@ -361,6 +309,162 @@ void balanceLoad() {
     fmt::print("Histogram: bin={}, occur={}\n", h.first, h.second);
   }
 #endif
+}
+
+bool tryBin(
+  Rank* max_rank, int bin, double size, int gid,
+  std::unordered_map<SharedID, std::vector<ElementIDStruct>>& objs
+) {
+  bool made_assignment = false;
+
+  std::vector<Rank*> min_ranks;
+  for (auto& r : ranks) {
+    if (r.hasSharedID(gid) or r.shared_ids_.size() < max_shared_ids) {
+      min_ranks.push_back(&r);
+    }
+  }
+  std::make_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+
+  Rank* min_rank = nullptr;
+
+  int tally_assigned = 0;
+  int tally_rejected = 0;
+
+  for (auto&& o : objs[gid]) {
+    if (min_ranks.size() == 0) {
+      fmt::print("reached condition where no ranks could take the element\n");
+      break;
+    }
+
+    if (min_rank == nullptr) {
+      std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+      min_rank = min_ranks.back();
+      min_ranks.pop_back();
+    }
+
+    if (min_rank->shared_ids_.size() >= max_shared_ids and not min_rank->hasSharedID(gid)) {
+      std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+      min_rank = min_ranks.back();
+      min_ranks.pop_back();
+    }
+
+    //fmt::print("min_rank={}, load={}, shared_ids={}\n", min_rank->rank_, min_rank->cur_load_, min_rank->shared_ids_.size());
+
+    auto const selected_load = objects[o].load_;
+    if (
+      (min_rank->hasSharedID(gid) or min_rank->shared_ids_.size() < max_shared_ids) and
+      min_rank->cur_load_ + selected_load < max_rank->cur_load_
+    ) {
+      //reassign object
+      Object* obj_ptr = &objects[o];
+      max_rank->removeObj(obj_ptr);
+      min_rank->addObj(obj_ptr);
+      made_assignment = true;
+
+      tally_assigned++;
+
+#if 0
+      fmt::print("id={}: load={}: reassign to {}\n", o, objects[o].load_, min_rank->rank_);
+#endif
+    } else {
+
+      if (min_rank->shared_ids_.size() >= max_shared_ids and not min_rank->hasSharedID(gid)) {
+        // don't put it back on the heap
+      } else {
+        min_ranks.push_back(min_rank);
+        std::push_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+      }
+
+      tally_rejected++;
+
+#if 0
+      fmt::print(
+        "id={}: load={}: skipping; rank={}, has_id={}, size={}, new load={}\n",
+        o, objects[o].load_, min_rank->rank_, min_rank->hasSharedID(gid),
+        min_rank->shared_ids_.size(), min_rank->cur_load_ + selected_load
+      );
+#endif
+    }
+  }
+
+  fmt::print(
+    "try bin: {}, size={}, id={}; assigned={}, rejected={}\n",
+    bin, size, gid, tally_assigned, tally_rejected
+  );
+
+  return made_assignment;
+}
+
+bool tryBinFully(
+  Rank* max_rank, int bin, double size, int gid,
+  std::unordered_map<SharedID, std::vector<ElementIDStruct>>& objs
+) {
+  bool made_assignment = false;
+
+  int tally_assigned = 0;
+  int tally_rejected = 0;
+
+  for (auto&& o : objs[gid]) {
+    std::vector<Rank*> min_ranks;
+    for (auto& r : ranks) {
+      if (r.hasSharedID(gid) or r.shared_ids_.size() < max_shared_ids) {
+        min_ranks.push_back(&r);
+      }
+    }
+    std::make_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+
+    while (min_ranks.size() > 0) {
+      Rank* min_rank = nullptr;
+
+      if (min_rank == nullptr) {
+        std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+        min_rank = min_ranks.back();
+        min_ranks.pop_back();
+      }
+
+      if (min_rank->rank_ == max_rank->rank_) {
+        continue;
+      }
+
+      //fmt::print("min_rank={}, load={}, shared_ids={}\n", min_rank->rank_, min_rank->cur_load_, min_rank->shared_ids_.size());
+
+      auto const selected_load = objects[o].load_;
+      if (
+        (min_rank->hasSharedID(gid) or min_rank->shared_ids_.size() < max_shared_ids) and
+        min_rank->cur_load_ + selected_load < max_rank->cur_load_
+      ) {
+        tally_assigned++;
+
+        //reassign object
+        Object* obj_ptr = &objects[o];
+        max_rank->removeObj(obj_ptr);
+        min_rank->addObj(obj_ptr);
+        made_assignment = true;
+
+#if 0
+        fmt::print("id={}: load={}: reassign to {}\n", o, objects[o].load_, min_rank->rank_);
+#endif
+        break;
+      } else {
+        tally_rejected++;
+
+#if 0
+        fmt::print(
+          "id={}: load={}: skipping; rank={}, has_id={}, size={}, new load={}\n",
+          o, objects[o].load_, min_rank->rank_, min_rank->hasSharedID(gid),
+          min_rank->shared_ids_.size(), min_rank->cur_load_ + selected_load
+        );
+#endif
+      }
+    }
+  }
+
+  fmt::print(
+    "try bin fully: {}, size={}, id={}; assigned={}, rejected={}\n",
+    bin, size, gid, tally_assigned, tally_rejected
+  );
+
+  return made_assignment;
 }
 
 std::unique_ptr<LBDataHolder> readInData(std::string const& file_name) {
