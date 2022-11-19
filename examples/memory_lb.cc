@@ -591,7 +591,7 @@ int main(int argc, char** argv) {
 
   auto stats = vt::computeStats();
   fmt::print(
-    "Result: avg={}, max={}, I={}, {:0.2f}s read, {:0.2f}s collate, {:0.4f}s LB\n",
+    "Result: avg={}, max={}, I={:0.2f}, {:0.2f}s read, {:0.2f}s collate, {:0.4f}s LB\n",
     stats.avg_load_, stats.max_load_, stats.I(), read_time, collate_time, lb_time
   );
 
