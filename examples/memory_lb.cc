@@ -299,7 +299,7 @@ void balanceLoad() {
       counter[id].insert(rank);
     }
   }
-  std::unordered_map<int, int> histogram;
+  std::map<int, int> histogram;
   for (auto&& c : counter) {
     //fmt::print("shared id={}, num ranks={}\n", c.first, c.second.size());
     histogram[c.second.size()]++;
