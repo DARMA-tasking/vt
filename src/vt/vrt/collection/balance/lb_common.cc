@@ -151,7 +151,6 @@ NLOHMANN_JSON_SERIALIZE_ENUM(StatisticQuantity, {
 nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics) {
   nlohmann::json j;
 
-  std::size_t i = 0;
   for (auto &entry : statistics) {
     auto &name = get_lb_stat_name()[entry.first];
     nlohmann::json &this_stat = j[name];
@@ -159,7 +158,6 @@ nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics) {
       const nlohmann::json quant_name = quant.first;
       this_stat[quant_name.get<std::string>()] = quant.second;
     }
-    ++i;
   }
 
   return j;
