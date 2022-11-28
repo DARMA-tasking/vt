@@ -148,14 +148,9 @@ struct BaseLB {
   bool isCommAware() const { return comm_aware_; }
   void recvSharedEdges(CommMsg* msg);
 
-  static void setStrategySpecificModel(
-    std::shared_ptr<balance::LoadModel> model
-  );
-
 protected:
   void getArgs(PhaseType phase);
 
-protected:
   double start_time_                                  = 0.0f;
   ElementCommType const* comm_data                    = nullptr;
   objgroup::proxy::Proxy<BaseLB> proxy_               = {};
@@ -165,7 +160,6 @@ protected:
   balance::LoadModel* load_model_                     = nullptr;
   bool comm_aware_                                    = false;
 
-protected:
   /**
    * \brief Normalizes the reassignment graph by setting up in/out edges on both
    * sides regardless of how they are passed to \c migrateObjectTo
@@ -173,6 +167,10 @@ protected:
    * \return A normalized reassignment
    */
   std::shared_ptr<const balance::Reassignment> normalizeReassignments();
+
+  static void setStrategySpecificModel(
+    std::shared_ptr<balance::LoadModel> model
+  );
 
 private:
   TransferVecType transfers_                      = {};

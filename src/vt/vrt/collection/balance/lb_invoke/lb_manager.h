@@ -79,6 +79,8 @@ struct LBManager : runtime::component::Component<LBManager> {
   using QuantityType     = lb::StatisticQuantityMap;
   using StatisticMapType = lb::StatisticMap;
 
+  friend lb::BaseLB;
+
   /**
    * \internal \brief System call to construct a \c LBManager
    */
@@ -276,9 +278,6 @@ private:
   void setStrategySpecificModel(std::shared_ptr<LoadModel> model) {
     strategy_specific_model_ = model;
   }
-  friend void lb::BaseLB::setStrategySpecificModel(
-    std::shared_ptr<balance::LoadModel> model
-  );
 
   PhaseType cached_phase_                  = no_lb_phase;
   LBType cached_lb_                        = LBType::NoLB;
