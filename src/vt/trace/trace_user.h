@@ -218,7 +218,20 @@ struct TraceScopedEvent final {
       event_(event)
   { }
 
+  TraceScopedEvent(TraceScopedEvent const&) = delete;
+  TraceScopedEvent(TraceScopedEvent &&other) noexcept
+  {
+    std::swap(begin_, other.begin_);
+    std::swap(event_, other.event_);
+  }
+
   TraceScopedEvent& operator=(TraceScopedEvent const&) = delete;
+  TraceScopedEvent& operator=(TraceScopedEvent &&other) noexcept
+  {
+    std::swap(begin_, other.begin_);
+    std::swap(event_, other.event_);
+    return *this;
+  }
 
   ~TraceScopedEvent() { end(); }
 
@@ -263,7 +276,22 @@ struct TraceScopedNote final {
       note_(in_note)
   { }
 
+  TraceScopedNote(TraceScopedNote const&) = delete;
+  TraceScopedNote(TraceScopedNote &&other) noexcept
+  {
+    std::swap(begin_, other.begin_);
+    std::swap(event_, other.event_);
+    std::swap(note_, other.note_);
+  }
+
   TraceScopedNote& operator=(TraceScopedNote const&) = delete;
+  TraceScopedNote& operator=(TraceScopedNote &&other) noexcept
+  {
+    std::swap(begin_, other.begin_);
+    std::swap(event_, other.event_);
+    std::swap(note_, other.note_);
+    return *this;
+  }
 
   ~TraceScopedNote() { end(); }
 
