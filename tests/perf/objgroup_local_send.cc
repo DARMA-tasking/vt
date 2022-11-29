@@ -107,9 +107,9 @@ private:
   int i = 0;
 };
 
-VT_PERF_TEST(MyTest, test_collection_local_send) {
+VT_PERF_TEST(MyTest, test_objgroup_local_send) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
-    "test_collection_local_send", this
+    "test_objgroup_local_send", this
   );
 
   grp_proxy[my_node_].invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
