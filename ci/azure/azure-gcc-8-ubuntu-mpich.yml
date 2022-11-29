@@ -54,6 +54,7 @@ variables:
   VT_NO_COLOR: 1
   VT_BUILD_SHARED_LIBS: 0
   VT_INCLUSION: TPL
+  CMAKE_CXX_STANDARD: 14
   TEST_LB_SCHEMA: 0
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-gcc-8-cache
