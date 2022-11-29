@@ -110,7 +110,7 @@ void handlerFinished(MyMsg* msg) {
 
 VT_PERF_TEST(MyTest, test_ping_pong_am) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
-    "test_reduce", this
+    "test_ping_pong_am", this
   );
 
   if (theContext()->getNode() == 0) {

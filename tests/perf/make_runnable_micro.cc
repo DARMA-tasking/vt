@@ -106,7 +106,7 @@ private:
 
 VT_PERF_TEST(MyTest, test_make_runnable_micro) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
-    "test_reduce", this
+    "test_make_runnable_micro", this
   );
 
   grp_proxy[my_node_].invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
