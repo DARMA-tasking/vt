@@ -46,9 +46,9 @@
 #include <vt/messaging/async_op_mpi.h>
 #include <vt/messaging/active.h>
 #include <vt/objgroup/headers.h>
+#include <vt/transport.h>
 
 #include <gtest/gtest.h>
-
 
 #if vt_check_enabled(fcontext)
 
@@ -56,9 +56,11 @@ namespace vt { namespace tests { namespace unit { namespace threads {
 
 using TestAsyncOpThreads = TestParallelHarness;
 
-using MyMsg = Message;
+static std::size_t stack_before = 0;
 
-struct MyObjGroup {
+struct MyCol : vt::Collection<MyCol, vt::Index1D> {
+
+  using MyMsg = vt::CollectionMessage<MyCol>;
 
   void handler(MyMsg* msg) {
     auto const this_node = theContext()->getNode();
@@ -71,7 +73,6 @@ struct MyObjGroup {
 
     // get the epoch stack and store the original size
     auto& epoch_stack = theTerm()->getEpochStack();
-    std::size_t original_epoch_size = epoch_stack.size();
 
     auto comm = theContext()->getComm();
     int const tag = 299999;
@@ -91,11 +92,11 @@ struct MyObjGroup {
     }
     auto op2 = std::make_unique<messaging::AsyncOpMPI>(
       req2,
-      [this,original_epoch_size]{
+      [this]{
         done_ = true;
         // stack should be the size before running this method since we haven't
         // resumed the thread yet!
-        EXPECT_EQ(theTerm()->getEpochStack().size(), original_epoch_size - 2);
+        EXPECT_EQ(theTerm()->getEpochStack().size(), stack_before);
       }
     );
 
@@ -104,7 +105,7 @@ struct MyObjGroup {
     theMsg()->pushEpoch(cur_ep);
     theMsg()->pushEpoch(cur_ep);
 
-    EXPECT_EQ(epoch_stack.size(), original_epoch_size + 2);
+    auto const previous_stack_size = epoch_stack.size();
 
     // Register these async operations to block the user-level thread until
     // completion of the MPI request; since these operations are enclosed in an
@@ -114,13 +115,13 @@ struct MyObjGroup {
     theMsg()->blockOnAsyncOp(std::move(op1));
     vt_print(gen, "done with op1\n");
 
-    EXPECT_EQ(epoch_stack.size(), original_epoch_size + 2);
+    EXPECT_EQ(epoch_stack.size(), previous_stack_size);
 
     vt_print(gen, "call blockOnAsyncOp(op2)\n");
     theMsg()->blockOnAsyncOp(std::move(op2));
     vt_print(gen, "done with op2\n");
 
-    EXPECT_EQ(epoch_stack.size(), original_epoch_size + 2);
+    EXPECT_EQ(epoch_stack.size(), previous_stack_size);
 
     check();
 
@@ -128,6 +129,57 @@ struct MyObjGroup {
     theMsg()->popEpoch(cur_ep);
     theMsg()->popEpoch(cur_ep);
   }
+
+  void handlerInvoke(MyMsg* msg) {
+    auto const this_node = theContext()->getNode();
+    auto const num_nodes = theContext()->getNumNodes();
+    auto const to_node = (this_node + 1) % num_nodes;
+    from_node_ = this_node - 1;
+    if (from_node_ < 0) {
+      from_node_ = num_nodes - 1;
+    }
+
+    auto comm = theContext()->getComm();
+    int const tag = 299999;
+
+    MPI_Request req1;
+    send_val_ = this_node;
+    {
+      VT_ALLOW_MPI_CALLS; // MPI_Isend
+      MPI_Issend(&send_val_, 1, MPI_INT, to_node, tag, comm, &req1);
+    }
+    auto op1 = std::make_unique<messaging::AsyncOpMPI>(req1);
+
+    MPI_Request req2;
+    {
+      VT_ALLOW_MPI_CALLS; // MPI_Irecv
+      MPI_Irecv(&recv_val_, 1, MPI_INT, from_node_, tag, comm, &req2);
+    }
+    auto op2 = std::make_unique<messaging::AsyncOpMPI>(
+      req2,
+      [this]{ done_ = true; }
+    );
+
+    auto p = getCollectionProxy();
+    p[this_node].invoke<decltype(&MyCol::handlerToInvoke), &MyCol::handlerToInvoke>(std::move(op1),std::move(op2));
+  }
+
+  void handlerToInvoke(
+    std::unique_ptr<messaging::AsyncOpMPI> op1,
+    std::unique_ptr<messaging::AsyncOpMPI> op2
+  ) {
+
+    vt_print(gen, "call blockOnAsyncOp(op1) inside invoke\n");
+    theMsg()->blockOnAsyncOp(std::move(op1));
+    vt_print(gen, "done with op1 inside invoke\n");
+
+    vt_print(gen, "call blockOnAsyncOp(op2)  inside invoke\n");
+    theMsg()->blockOnAsyncOp(std::move(op2));
+    vt_print(gen, "done with op2 inside invoke\n");
+
+    check();
+  }
+
 
   void check() {
     vt_print(gen, "running check method\n");
@@ -145,17 +197,46 @@ struct MyObjGroup {
 
 TEST_F(TestAsyncOpThreads, test_async_op_threads_1) {
   auto const this_node = theContext()->getNode();
-  auto p = theObjGroup()->makeCollective<MyObjGroup>("test_async_op_threads_1");
+
+  stack_before = theTerm()->getEpochStack().size();
+
+  vt::Index1D range(static_cast<int>(theContext()->getNumNodes()));
+  auto p = vt::makeCollection<MyCol>("test_async_op_threads_invoke")
+    .bounds(range)
+    .bulkInsert()
+    .wait();
+
   auto ep = theTerm()->makeEpochRooted(term::UseDS{true});
 
   // When this returns all the MPI requests should be done
   runInEpoch(ep, [p, this_node]{
-    p[this_node].send<MyMsg, &MyObjGroup::handler>();
+    p[this_node].send<typename MyCol::MyMsg, &MyCol::handler>();
   });
 
   // Ensure the check method actually ran.
-  EXPECT_TRUE(p[this_node].get()->check_done_);
+  EXPECT_TRUE(p[this_node].tryGetLocalPtr()->check_done_);
 }
+
+TEST_F(TestAsyncOpThreads, test_async_op_threads_invoke_2) {
+  auto const this_node = theContext()->getNode();
+
+  vt::Index1D range(static_cast<int>(theContext()->getNumNodes()));
+  auto p = vt::makeCollection<MyCol>("test_async_op_threads_invoke")
+    .bounds(range)
+    .bulkInsert()
+    .wait();
+
+  auto ep = theTerm()->makeEpochRooted(term::UseDS{true});
+
+  // When this returns all the MPI requests should be done
+  runInEpoch(ep, [p, this_node]{
+    p[this_node].send<typename MyCol::MyMsg, &MyCol::handlerInvoke>();
+  });
+
+  // Ensure the check method actually ran.
+  EXPECT_TRUE(p[this_node].tryGetLocalPtr()->check_done_);
+}
+
 
 }}}} // end namespace vt::tests::unit::threads
 
