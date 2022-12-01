@@ -72,7 +72,13 @@ ThreadAction::~ThreadAction() {
 
 void ThreadAction::run() {
   ctx_ = make_fcontext_stack(stack_, runFnImpl);
+
+  auto prev_running = cur_running_;
+  cur_running_ = this;
+
   transfer_in_ = jump_fcontext(ctx_, static_cast<void*>(this));
+
+  cur_running_ = prev_running;
 }
 
 void ThreadAction::resume() {
@@ -85,8 +91,12 @@ void ThreadAction::resume() {
     return;
   }
 
+  auto prev_running = cur_running_;
   cur_running_ = this;
+
   transfer_in_ = jump_fcontext(transfer_in_.ctx, nullptr);
+
+  cur_running_ = prev_running;
 }
 
 void ThreadAction::runUntilDone() {
@@ -104,10 +114,8 @@ void ThreadAction::runUntilDone() {
 
   auto ta = static_cast<ThreadAction*>(t.data);
   if (ta->action_) {
-    cur_running_ = ta;
     ta->transfer_out_ = t;
     ta->action_();
-    cur_running_ = nullptr;
   }
 
   vt_debug_print(
@@ -122,7 +130,6 @@ void ThreadAction::runUntilDone() {
 /*static*/ void ThreadAction::suspend() {
   if (cur_running_ != nullptr) {
     auto x = cur_running_;
-    cur_running_ = nullptr;
     vt_debug_print(
       normal, gen,
       "suspend\n"
