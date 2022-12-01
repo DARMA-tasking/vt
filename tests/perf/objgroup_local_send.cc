@@ -74,7 +74,7 @@ struct NodeObj {
 
   void complete() {
   }
-  
+
   void perfMakeRunnable(MyMsg* in_msg) {
     for (int i = 0; i < num_iters; i++) {
       msgs.emplace_back(makeMessage<MyMsg>());

@@ -80,7 +80,7 @@ struct NodeObj {
 
   void complete() {
   }
-  
+
   void perfMakeRunnable(MyMsg* in_msg) {
     theTerm()->disableTD();
 
