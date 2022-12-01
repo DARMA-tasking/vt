@@ -45,15 +45,20 @@
 #include <vt/vrt/collection/balance/node_lb_data.h>
 #include <vt/vrt/collection/balance/lb_data_holder.h>
 #include <vt/utils/json/json_reader.h>
+#include <vt/utils/json/json_appender.h>
 
 #include <string>
 #include <vector>
 #include <numeric>
+#include <memory>
 
 using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
 using ElementIDStruct = vt::vrt::collection::balance::ElementIDStruct;
+using LoadSummary = vt::vrt::collection::balance::LoadSummary;
 
 namespace vt {
+
+bool split_more_blocks = false;
 
 using SharedID = int;
 
@@ -253,7 +258,7 @@ void balanceLoad() {
 
     bool made_assignment = false;
 
-    if (made_no_assignments > 0) {
+    if (made_no_assignments > 0 and split_more_blocks) {
       for (int i = 0; i < static_cast<int>(groupings.size()); i++) {
         auto size = std::get<0>(groupings[i]);
         auto gid = std::get<1>(groupings[i]);
@@ -563,6 +568,25 @@ void collateLBData(std::vector<LBDataHolder> lb_data) {
   // }
 }
 
+void outputNewBalancedLoad(std::string const& name) {
+  for (int i = 0; i < static_cast<int>(ranks.size()); i++) {
+    fmt::print("Outputting file for rank {}\n", i);
+    LBDataHolder dh;
+    auto& r = vt::ranks[i];
+    for (auto&& o : r.objs_) {
+      dh.node_data_[0][o->elm_] = LoadSummary{o->load_};
+    }
+    auto j = dh.toJson(0);
+
+    using JSONAppender = util::json::Appender<std::ofstream>;
+    auto w = std::make_unique<JSONAppender>(
+      "phases", "LBDatafile", fmt::format("{}.{}.json", name, r.rank_), false
+    );
+    w->addElm(*j);
+    w = nullptr;
+  }
+}
+
 } /* end namespace vt */
 
 int main(int argc, char** argv) {
@@ -594,6 +618,12 @@ int main(int argc, char** argv) {
     "Result: avg={}, max={}, I={:0.2f}, {:0.2f}s read, {:0.2f}s collate, {:0.4f}s LB\n",
     stats.avg_load_, stats.max_load_, stats.I(), read_time, collate_time, lb_time
   );
+
+  bool output_new_distribution = true;
+
+  if (output_new_distribution) {
+    vt::outputNewBalancedLoad("out");
+  }
 
   vt::finalize();
   return 0;
