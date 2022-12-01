@@ -85,11 +85,6 @@ struct RunnableMaker {
   RunnableMaker(RunnableMaker const&) = delete;
   RunnableMaker(RunnableMaker&&) = default;
 
-  ~RunnableMaker() {
-    if (impl_ != nullptr and not is_done_) {
-      vtAbort("A runnable was created but never executed or enqueued!")
-    }
-  }
 
   /**
    * \brief Add a continuation
