@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           collection_local_send.cc
+//                           collection_local_send_prealloc.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -81,7 +81,12 @@ struct NodeObj {
   void complete() {
   }
   
-  void perfMakeRunnable(MyMsg* in_msg) {
+
+  void perfMakeRunnablePreAllocate(MyMsg* in_msg) {
+    for (int i = 0; i < num_iters; i++) {
+      msgs.emplace_back(makeMessage<TestCol::ColMsg>());
+    }
+
     theTerm()->disableTD();
 
     test_obj_->StartTimer(fmt::format("colSend {}", num_iters));
@@ -90,10 +95,9 @@ struct NodeObj {
 
     theTerm()->enableTD();
   }
-
   void perfRunBenchmark() {
     for (int i = 0; i < num_iters; i++) {
-      auto m = makeMessage<TestCol::ColMsg>();
+      auto m = msgs[i];
       col_proxy[0].template sendMsg<TestCol::ColMsg, &TestCol::han>(m);
       vt::theSched()->runSchedulerOnceImpl();
     }
@@ -109,15 +113,15 @@ private:
   int i = 0;
 };
 
-VT_PERF_TEST(MyTest, test_collection_local_send) {
+VT_PERF_TEST(MyTest, test_collection_local_send_preallocate) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
-    "test_collection_local_send", this
+    "test_collection_local_send_preallocate", this
   );
 
   grp_proxy[my_node_].invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 
   if (theContext()->getNode() == 0) {
-    grp_proxy[my_node_].send<MyMsg, &NodeObj::perfMakeRunnable>();
+    grp_proxy[my_node_].send<MyMsg, &NodeObj::perfMakeRunnablePreAllocate>();
   }
 }
 
