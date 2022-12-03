@@ -83,8 +83,7 @@ void SetContext::suspend() {
   // Get the innermost task, that actually called for this thread to block
   suspended_task_ = theContext()->getTask();
 
-  if (suspended_task_ != nullptr)
-    vtAssert(prev_task_ == nullptr, "There should be no prev_task");
+  vtAssert(prev_task_ == nullptr, "There should be no prev_task");
 
   ContextAttorney::setTask(prev_task_);
 }
