@@ -7,6 +7,7 @@ set(
   PROJECT_EXAMPLES_LIST
   tutorial
   memory_lb
+  simulate_lb
 )
 
 include(turn_on_warnings)

@@ -485,7 +485,7 @@ std::unique_ptr<LBDataHolder> readInData(std::string const& file_name) {
   return d;
 }
 
-void collateLBData(std::vector<LBDataHolder> lb_data) {
+void collateLBData(std::vector<LBDataHolder>& lb_data) {
   ranks.resize(lb_data.size()); //num ranks == lb_data.size()
 
   for (auto&& d : lb_data) {
@@ -568,21 +568,23 @@ void collateLBData(std::vector<LBDataHolder> lb_data) {
   // }
 }
 
-void outputNewBalancedLoad(std::string const& name) {
+void outputNewBalancedLoad(std::string const& name, std::vector<LBDataHolder>& lb_data) {
   for (int i = 0; i < static_cast<int>(ranks.size()); i++) {
     fmt::print("Outputting file for rank {}\n", i);
     LBDataHolder dh;
     auto& r = vt::ranks[i];
     for (auto&& o : r.objs_) {
-      dh.node_data_[0][o->elm_] = LoadSummary{o->load_};
+      dh.node_data_[1][o->elm_] = LoadSummary{o->load_};
     }
-    auto j = dh.toJson(0);
+    auto j2 = dh.toJson(1);
+    auto j1 = lb_data[i].toJson(0);
 
     using JSONAppender = util::json::Appender<std::ofstream>;
     auto w = std::make_unique<JSONAppender>(
       "phases", "LBDatafile", fmt::format("{}.{}.json", name, r.rank_), false
     );
-    w->addElm(*j);
+    w->addElm(*j1);
+    w->addElm(*j2);
     w = nullptr;
   }
 }
@@ -606,7 +608,7 @@ int main(int argc, char** argv) {
   read_time = vt::timing::getCurrentTime() - t1;
 
   t1 = vt::timing::getCurrentTime();
-  vt::collateLBData(std::move(lb_data));
+  vt::collateLBData(lb_data);
   collate_time = vt::timing::getCurrentTime() - t1;
 
   t1 = vt::timing::getCurrentTime();
@@ -622,7 +624,7 @@ int main(int argc, char** argv) {
   bool output_new_distribution = true;
 
   if (output_new_distribution) {
-    vt::outputNewBalancedLoad("out");
+    vt::outputNewBalancedLoad("out", lb_data);
   }
 
   vt::finalize();
