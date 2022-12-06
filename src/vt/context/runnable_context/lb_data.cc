@@ -46,30 +46,32 @@
 
 namespace vt { namespace ctx {
 
-void LBData::begin() {
+void LBData::begin(TimeType time) {
   // record start time
   if (should_instrument_) {
-    lb_data_->startTime();
+    lb_data_->start(time);
   }
 }
 
-void LBData::end() {
+void LBData::end(TimeType time) {
   // record end time
   if (should_instrument_) {
-    lb_data_->stopTime();
+    lb_data_->finish(time);
   }
 }
 
 void LBData::send(elm::ElementIDStruct dest, MsgSizeType bytes) {
-  lb_data_->sendToEntity(dest, cur_elm_id_, bytes);
+  if (should_instrument_) {
+    lb_data_->sendToEntity(dest, cur_elm_id_, bytes);
+  }
 }
 
-void LBData::suspend() {
-  end();
+void LBData::suspend(TimeType time) {
+  end(time);
 }
 
-void LBData::resume() {
-  begin();
+void LBData::resume(TimeType time) {
+  begin(time);
 }
 
 typename LBData::ElementIDStruct const& LBData::getCurrentElementID() const {

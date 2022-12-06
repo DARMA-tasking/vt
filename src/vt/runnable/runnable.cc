@@ -146,15 +146,17 @@ void RunnableNew::run() {
   );
 #endif
 
+  bool needs_time = needsTime();
+  TimeType start_time = needs_time ? theSched()->getRecentTime() : nan;
+
 #if vt_check_enabled(fcontext)
   if (suspended_) {
-    resume();
-  } else {
-    begin();
-  }
-#else
-  begin();
+    resume(start_time);
+  } else
 #endif
+  {
+    begin(start_time);
+  }
 
   vtAssert(task_ != nullptr, "Must have a valid task to run");
 
@@ -192,12 +194,14 @@ void RunnableNew::run() {
 #endif
   }
 
+  TimeType end_time = needs_time ? theSched()->getCurrentTime() : nan;
+
 #if vt_check_enabled(fcontext)
   if (done_) {
-    end();
+    end(end_time);
   } else {
     suspended_ = true;
-    suspend();
+    suspend(end_time);
   }
 #else
   end();
@@ -212,28 +216,28 @@ void RunnableNew::run() {
 #endif
 }
 
-void RunnableNew::begin() {
+void RunnableNew::begin(TimeType time) {
   contexts_.setcontext.begin();
   if (contexts_.has_td) contexts_.td.begin();
   if (contexts_.has_col) contexts_.col.begin();
-  if (contexts_.has_lb) contexts_.lb.begin();
+  if (contexts_.has_lb) contexts_.lb.begin(time);
 #if vt_check_enabled(trace_enabled)
-  if (contexts_.has_trace) contexts_.trace.begin();
+  if (contexts_.has_trace) contexts_.trace.begin(time);
 #endif
 }
 
-void RunnableNew::end() {
+void RunnableNew::end(TimeType time) {
   contexts_.setcontext.end();
   if (contexts_.has_td) contexts_.td.end();
   if (contexts_.has_col) contexts_.col.end();
   if (contexts_.has_cont) contexts_.cont.end();
-  if (contexts_.has_lb) contexts_.lb.end();
+  if (contexts_.has_lb) contexts_.lb.end(time);
 #if vt_check_enabled(trace_enabled)
-  if (contexts_.has_trace) contexts_.trace.end();
+  if (contexts_.has_trace) contexts_.trace.end(time);
 #endif
 }
 
-void RunnableNew::suspend() {
+void RunnableNew::suspend(TimeType time) {
 #if vt_check_enabled(fcontext)
   contexts_.setcontext.suspend();
   if (contexts_.has_td) contexts_.td.suspend();
@@ -246,7 +250,7 @@ void RunnableNew::suspend() {
 #endif
 }
 
-void RunnableNew::resume() {
+void RunnableNew::resume(TimeType time) {
 #if vt_check_enabled(fcontext)
   contexts_.setcontext.resume();
   if (contexts_.has_td) contexts_.td.resume();

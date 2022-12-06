@@ -81,6 +81,8 @@ struct LBData {
       should_instrument_(true)
   { }
 
+  bool needsTime() const { return should_instrument_; }
+
   /**
    * \brief Set the context and timing for a collection task
    */
