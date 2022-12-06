@@ -103,7 +103,12 @@ TimeType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) const {
            "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
   auto phase = getNumCompletedPhases() + offset.phases;
-  return proc_load_->at(phase).at(object).get(offset);
+  auto& phase_data = proc_load_->at(phase);
+  if (phase_data.find(object) != phase_data.end()) {
+    return phase_data.at(object).get(offset);
+  } else {
+    return 0;
+  }
 }
 
 unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back) const

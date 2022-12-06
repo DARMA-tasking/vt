@@ -112,9 +112,12 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   }
 
   //--- User-specified map without any change, thus do not run
-  if ((theConfig()->vt_lb_name == get_lb_names()[LBType::OfflineLB]) and
-      not theLBDataReader()->needsLB(phase)) {
-    return LBType::NoLB;
+  if (theConfig()->vt_lb_name == get_lb_names()[LBType::OfflineLB]) {
+    if (theLBDataReader()->needsLB(phase)) {
+      return LBType::OfflineLB;
+    } else {
+      return LBType::NoLB;
+    }
   }
 
   auto& spec_file = theConfig()->vt_lb_file_name;
