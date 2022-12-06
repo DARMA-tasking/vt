@@ -18,7 +18,7 @@ jobs:
       ARCH: amd64
       UBUNTU: 18.04
       COMPILER_TYPE: gnu
-      COMPILER: gcc-5
+      COMPILER: gcc-7
       BUILD_TYPE: release
       ULIMIT_CORE: 0
       VT_LB: 1

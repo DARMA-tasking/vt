@@ -150,8 +150,8 @@ which `docker-compose` will read.
 # Variables:
 #   ARCH={amd64, arm64v8, ...}
 #   COMPILER_TYPE={gnu, clang, intel, nvidia}
-#   COMPILER={gcc-5, gcc-6, gcc-7, gcc-8, gcc-9, gcc-10,
-#             clang-3.9, clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
+#   COMPILER={gcc-7, gcc-8, gcc-9, gcc-10,
+#             clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
 #             clang-9, clang-10,
 #             icc-18, icc-19,
 #             nvcc-10, nvcc-11}
