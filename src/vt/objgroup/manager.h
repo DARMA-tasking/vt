@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/utils/static_checks/function_ret_check.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/manager.fwd.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
@@ -234,7 +235,27 @@ public:
    * \param[in] args function arguments
    */
   template <typename ObjT, typename Type, Type f, typename... Args>
-  decltype(auto) invoke(ProxyElmType<ObjT> proxy, Args&&... args);
+  util::NotCopyable<Type> invoke(ProxyElmType<ObjT> proxy, Args&&... args);
+
+  /**
+   * \internal \brief Invoke function 'f' on an element of the object group
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] args function arguments
+   */
+  template <typename ObjT, typename Type, Type f, typename... Args>
+  util::Copyable<Type> invoke(ProxyElmType<ObjT> proxy, Args&&... args);
+
+  /**
+   * \internal \brief Invoke function 'f' on an element of the object group
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] args function arguments
+   */
+  template <typename ObjT, typename Type, Type f, typename... Args>
+  util::IsVoidReturn<Type> invoke(ProxyElmType<ObjT> proxy, Args&&... args);
 
   /**
    * \internal \brief Broadcast a message to all nodes in object group

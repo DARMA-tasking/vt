@@ -211,7 +211,27 @@ void ObjGroupManager::invoke(
 }
 
 template <typename ObjT, typename Type, Type f, typename... Args>
-decltype(auto)
+util::IsVoidReturn<Type>
+ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
+  auto const dest_node = proxy.getNode();
+  auto const this_node = theContext()->getNode();
+
+  auto ptr = get(proxy);
+  vtAssert(
+    dest_node == this_node,
+    fmt::format(
+      "Attempting to invoke handler on node:{} instead of node:{}!\n",
+      this_node, dest_node));
+
+  runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+    .withExplicitTask([&]{
+      runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
+    })
+    .run();
+}
+
+template <typename ObjT, typename Type, Type f, typename... Args>
+util::Copyable<Type>
 ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   auto const dest_node = proxy.getNode();
   auto const this_node = theContext()->getNode();
@@ -224,7 +244,41 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
     )
   );
 
-  return runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
+  util::Copyable<Type> result;
+
+  runnable::makeRunnableVoid(false, uninitialized_handler, dest_node)
+    .withExplicitTask([&] {
+      result = runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
+    })
+    .run();
+
+  return result;
+}
+
+template <typename ObjT, typename Type, Type f, typename... Args>
+util::NotCopyable<Type>
+ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
+  auto const dest_node = proxy.getNode();
+  auto const this_node = theContext()->getNode();
+
+  vtAssert(
+    dest_node == this_node,
+    fmt::format(
+      "Attempting to invoke handler on node:{} instead of node:{}!\n", this_node,
+      dest_node
+    )
+  );
+
+  util::NotCopyable<Type>* result;
+
+  runnable::makeRunnableVoid(false, uninitialized_handler, dest_node)
+    .withExplicitTask([&] {
+      auto&& ret = runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
+      *result = std::move(ret);
+    })
+    .run();
+
+  return std::move(*result);
 }
 
 
