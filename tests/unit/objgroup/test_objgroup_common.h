@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include <memory>
 #if !defined INCLUDED_UNIT_OBJGROUP_TEST_OBJGROUP_COMMON_H
 #define INCLUDED_UNIT_OBJGROUP_TEST_OBJGROUP_COMMON_H
 
@@ -62,6 +63,16 @@ struct SysMsg : vt::collective::ReduceTMsg<int> {
   explicit SysMsg(int in_num)
     : vt::collective::ReduceTMsg<int>(in_num)
   {}
+};
+
+struct NonCopyableStruct {
+  NonCopyableStruct(const NonCopyableStruct&) = delete;
+  NonCopyableStruct& operator=(const NonCopyableStruct&) = delete;
+
+  NonCopyableStruct(NonCopyableStruct&&) = default;
+  NonCopyableStruct& operator=(NonCopyableStruct&&) = default;
+
+  int val = 20;
 };
 
 struct MyObjA {
@@ -95,6 +106,13 @@ struct MyObjA {
     recv_++;
 
     return std::accumulate(std::begin(vec), std::end(vec), 0);
+  }
+
+  NonCopyableStruct modifyNonCopyableStruct(NonCopyableStruct i) {
+    recv_++;
+    i.val = 10;
+
+    return i;
   }
 
   int id_ = -1;
