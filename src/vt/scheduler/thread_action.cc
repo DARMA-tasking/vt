@@ -73,11 +73,16 @@ ThreadAction::~ThreadAction() {
 void ThreadAction::run() {
   ctx_ = make_fcontext_stack(stack_, runFnImpl);
 
+  // `jump_fcontext` transfers control to the fcontext thread indicated by `ctx_`
+  // that we just set up.  Control will 'return' from `jump_fcontext` to here when
+  // that thread eventually suspends or completes
   auto prev_running = cur_running_;
   cur_running_ = this;
 
   transfer_in_ = jump_fcontext(ctx_, static_cast<void*>(this));
 
+  // reset the current running thread ID after we finish or suspend the current
+  // thread
   cur_running_ = prev_running;
 }
 
@@ -91,6 +96,7 @@ void ThreadAction::resume() {
     return;
   }
 
+  // the same logic in run() applies here
   auto prev_running = cur_running_;
   cur_running_ = this;
 
