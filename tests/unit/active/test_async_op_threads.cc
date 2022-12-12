@@ -56,7 +56,7 @@ namespace vt { namespace tests { namespace unit { namespace threads {
 
 using TestAsyncOpThreads = TestParallelHarness;
 
-static std::size_t stack_before = 0;
+static std::size_t stack_size_before_running_handler = 0;
 
 struct MyCol : vt::Collection<MyCol, vt::Index1D> {
 
@@ -71,7 +71,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
       from_node_ = num_nodes - 1;
     }
 
-    // get the epoch stack and store the original size
+    // save a reference to the epoch stack
     auto& epoch_stack = theTerm()->getEpochStack();
 
     auto comm = theContext()->getComm();
@@ -96,7 +96,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
         done_ = true;
         // stack should be the size before running this method since we haven't
         // resumed the thread yet!
-        EXPECT_EQ(theTerm()->getEpochStack().size(), stack_before);
+        EXPECT_EQ(theTerm()->getEpochStack().size(), size_stack_before_running_handler);
       }
     );
 
@@ -105,7 +105,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
     theMsg()->pushEpoch(cur_ep);
     theMsg()->pushEpoch(cur_ep);
 
-    auto const previous_stack_size = epoch_stack.size();
+    auto const stack_size_after_push = epoch_stack.size();
 
     // Register these async operations to block the user-level thread until
     // completion of the MPI request; since these operations are enclosed in an
@@ -115,13 +115,13 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
     theMsg()->blockOnAsyncOp(std::move(op1));
     vt_print(gen, "done with op1\n");
 
-    EXPECT_EQ(epoch_stack.size(), previous_stack_size);
+    EXPECT_EQ(epoch_stack.size(), stack_size_after_push);
 
     vt_print(gen, "call blockOnAsyncOp(op2)\n");
     theMsg()->blockOnAsyncOp(std::move(op2));
     vt_print(gen, "done with op2\n");
 
-    EXPECT_EQ(epoch_stack.size(), previous_stack_size);
+    EXPECT_EQ(epoch_stack.size(), stack_size_after_push);
 
     check();
 
@@ -198,7 +198,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
 TEST_F(TestAsyncOpThreads, test_async_op_threads_1) {
   auto const this_node = theContext()->getNode();
 
-  stack_before = theTerm()->getEpochStack().size();
+  stack_size_before_running_handler = theTerm()->size_getEpochStack().size();
 
   vt::Index1D range(static_cast<int>(theContext()->getNumNodes()));
   auto p = vt::makeCollection<MyCol>("test_async_op_threads_invoke")
