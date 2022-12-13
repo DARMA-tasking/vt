@@ -665,21 +665,23 @@ void LBManager::computeStatistics(
   ));
 
   if (strategy_specific_model_) {
-    auto rank_work_modeled = 0.;
-    std::vector<balance::LoadData> obj_work_modeled;
+    auto rank_strat_specific_load = 0.;
+    std::vector<balance::LoadData> obj_strat_specific_load;
     for (auto elm : *strategy_specific_model_) {
       auto work = strategy_specific_model_->getModeledLoad(elm, when);
-      obj_work_modeled.emplace_back(
-        LoadData{lb::Statistic::Object_work_modeled, work}
+      obj_strat_specific_load.emplace_back(
+        LoadData{lb::Statistic::Object_strategy_specific_load_modeled, work}
       );
-      rank_work_modeled += work;
+      rank_strat_specific_load += work;
     }
 
     lstats.emplace_back(
-      LoadData{lb::Statistic::Rank_work_modeled, rank_work_modeled}
+      LoadData{lb::Statistic::Rank_strategy_specific_load_modeled,
+      rank_strat_specific_load}
     );
     lstats.emplace_back(reduceVec(
-      lb::Statistic::Object_work_modeled, std::move(obj_work_modeled)
+      lb::Statistic::Object_strategy_specific_load_modeled,
+      std::move(obj_strat_specific_load)
     ));
   }
 
