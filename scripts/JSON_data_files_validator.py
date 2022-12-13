@@ -146,7 +146,7 @@ class SchemaValidator:
                                 "sum": float,
                                 "var": float
                             },
-                            Optional("Object_work_modeled"): {
+                            Optional("Object_strategy_specific_load_modeled"): {
                                 "avg": float,
                                 "car": float,
                                 "imb": float,
@@ -198,7 +198,7 @@ class SchemaValidator:
                                 "sum": float,
                                 "var": float
                             },
-                            Optional("Rank_work_modeled"): {
+                            Optional("Rank_strategy_specific_load_modeled"): {
                                 "avg": float,
                                 "car": float,
                                 "imb": float,
@@ -252,7 +252,7 @@ class SchemaValidator:
                                 "sum": float,
                                 "var": float
                             },
-                            Optional("Object_work_modeled"): {
+                            Optional("Object_strategy_specific_load_modeled"): {
                                 "avg": float,
                                 "car": float,
                                 "imb": float,
@@ -304,7 +304,7 @@ class SchemaValidator:
                                 "sum": float,
                                 "var": float
                             },
-                            Optional("Rank_work_modeled"): {
+                            Optional("Rank_strategy_specific_load_modeled"): {
                                 "avg": float,
                                 "car": float,
                                 "imb": float,
