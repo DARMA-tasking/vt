@@ -537,7 +537,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
     auto m = msg;
     // send to the node discovered by the location manager
-    theMsg()->sendMsg<MessageT, routedHandler>(to_node, m);
+    theMsg()->sendMsg<MessageT, &EntityLocationCoord<EntityID>::routedHandler>(to_node, m);
   } else {
     vt_debug_print(
       normal, location,
@@ -863,7 +863,7 @@ template <typename EntityID>
         );
         msg2->setResolvedNode(node);
         theMsg()->markAsLocationMessage(msg2);
-        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2);
+        theMsg()->sendMsg<LocMsgType, &EntityLocationCoord<EntityID>::updateLocation>(ask_node, msg2);
       });
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);
