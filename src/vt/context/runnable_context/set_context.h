@@ -97,6 +97,7 @@ private:
   util::ObserverPtr<runnable::RunnableNew> prev_task_ = nullptr;
   /// The new runnable that is replacing it
   util::ObserverPtr<runnable::RunnableNew> cur_task_ = nullptr;
+  util::ObserverPtr<runnable::RunnableNew> suspended_task_ = nullptr;
   NodeType node_ = uninitialized_destination; /**< The from node */
 };
 

@@ -80,7 +80,12 @@ void SetContext::suspend() {
     print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
   );
 
-  finish();
+  // Get the innermost task, that actually called for this thread to block
+  suspended_task_ = theContext()->getTask();
+
+  vtAssert(prev_task_ == nullptr, "There should be no prev_task");
+
+  ContextAttorney::setTask(prev_task_);
 }
 
 void SetContext::resume() {
@@ -90,7 +95,9 @@ void SetContext::resume() {
     print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
   );
 
-  start();
+  prev_task_ = theContext()->getTask();
+  ContextAttorney::setTask(suspended_task_);
+  suspended_task_ = nullptr;
 }
 
 }} /* end namespace vt::ctx */
