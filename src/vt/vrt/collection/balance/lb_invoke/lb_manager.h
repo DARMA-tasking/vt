@@ -79,6 +79,8 @@ struct LBManager : runtime::component::Component<LBManager> {
   using QuantityType     = lb::StatisticQuantityMap;
   using StatisticMapType = lb::StatisticMap;
 
+  friend lb::BaseLB;
+
   /**
    * \internal \brief System call to construct a \c LBManager
    */
@@ -235,15 +237,12 @@ public:
 protected:
   /**
    * \internal
-   * \brief Run the load balancer
+   * \brief Run the currently chosen load balancer
    *
-   * \param[in] base_proxy the base proxy for the LB
    * \param[in] phase the phase
    * \param[in] cb the callback for delivering the reassignment
    */
-  void runLB(
-    LBProxyType base_proxy, PhaseType phase, vt::Callback<ReassignmentMsg> cb
-  );
+  void runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb);
 
   void defaultPostLBWork(ReassignmentMsg* r);
 
@@ -266,7 +265,6 @@ public:
 private:
   bool isCollectiveComm(elm::CommCategory cat) const;
 
-private:
   /**
    * \internal \brief Create the statistics file
    */
@@ -277,13 +275,17 @@ private:
    */
   void closeStatisticsFile();
 
-private:
+  void setStrategySpecificModel(std::shared_ptr<LoadModel> model) {
+    strategy_specific_model_ = model;
+  }
+
   PhaseType cached_phase_                  = no_lb_phase;
   LBType cached_lb_                        = LBType::NoLB;
   std::function<void()> destroy_lb_        = nullptr;
   objgroup::proxy::Proxy<LBManager> proxy_;
   std::shared_ptr<LoadModel> base_model_;
   std::shared_ptr<LoadModel> model_;
+  std::shared_ptr<LoadModel> strategy_specific_model_;
   std::unordered_map<std::string, LBProxyType> lb_instances_;
   StatisticMapType stats;
   TimeType total_load_from_model = 0.;

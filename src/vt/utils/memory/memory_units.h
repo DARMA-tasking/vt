@@ -68,18 +68,4 @@ std::tuple<std::string, double> getBestMemoryUnit(std::size_t bytes);
 
 }}} /* end namespace vt::util::memory */
 
-namespace std {
-
-template <>
-struct hash<vt::util::memory::MemoryUnitEnum> {
-  size_t operator()(vt::util::memory::MemoryUnitEnum const& in) const {
-    using MemoryUnitUnderType =
-      std::underlying_type<vt::util::memory::MemoryUnitEnum>::type;
-    auto const val = static_cast<MemoryUnitUnderType>(in);
-    return std::hash<MemoryUnitUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
-
 #endif /*INCLUDED_VT_UTILS_MEMORY_MEMORY_UNITS_H*/

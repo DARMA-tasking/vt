@@ -152,7 +152,7 @@ nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics) {
   nlohmann::json j;
 
   for (auto &entry : statistics) {
-    auto &name = get_lb_stat_name()[entry.first];
+    auto &name = get_lb_stat_names()[entry.first];
     nlohmann::json &this_stat = j[name];
     for (auto &quant : entry.second) {
       const nlohmann::json quant_name = quant.first;

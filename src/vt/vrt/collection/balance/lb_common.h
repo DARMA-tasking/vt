@@ -179,8 +179,8 @@ enum struct StatisticQuantity : int8_t {
 };
 
 enum struct Statistic : int8_t {
-  Rank_load_modeled, Rank_load_raw, Rank_comm, Rank_work_modeled,
-  Object_load_modeled, Object_load_raw, Object_comm, Object_work_modeled,
+  Rank_load_modeled, Rank_load_raw, Rank_comm, Rank_strategy_specific_load_modeled,
+  Object_load_modeled, Object_load_raw, Object_comm, Object_strategy_specific_load_modeled,
   // W_l_min, W_l_max, W_l_avg, W_l_std, W_l_var, W_l_skewness, W_l_kurtosis,
   // W_c_min, W_c_max, W_c_avg, W_c_std, W_c_var, W_c_skewness, W_c_kurtosis,
   // W_t_min, W_t_max, W_t_avg, W_t_std, W_t_var, W_t_skewness, W_t_kurtosis,
@@ -197,27 +197,7 @@ using StatisticMap = std::unordered_map<Statistic, StatisticQuantityMap>;
 
 nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics);
 
-} /* end namespace lb */
-
-}}} /* end namespace vt::vrt::collection */
-
-namespace std {
-
-template <>
-struct hash<vt::vrt::collection::lb::Statistic> {
-  size_t operator()(vt::vrt::collection::lb::Statistic const& in) const {
-    using StatisticUnderType =
-      std::underlying_type<vt::vrt::collection::lb::Statistic>::type;
-    auto const val = static_cast<StatisticUnderType>(in);
-    return std::hash<StatisticUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
-
-namespace vt { namespace vrt { namespace collection { namespace lb {
-
-std::unordered_map<Statistic, std::string>& get_lb_stat_name();
+std::unordered_map<Statistic, std::string>& get_lb_stat_names();
 
 }}}} /* end namespace vt::vrt::collection::lb */
 

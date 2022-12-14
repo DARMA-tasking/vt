@@ -146,6 +146,19 @@ class SchemaValidator:
                                 "sum": float,
                                 "var": float
                             },
+                            Optional("Object_strategy_specific_load_modeled"): {
+                                "avg": float,
+                                "car": float,
+                                "imb": float,
+                                "kur": float,
+                                "max": float,
+                                "min": float,
+                                "npr": float,
+                                "skw": float,
+                                "std": float,
+                                "sum": float,
+                                "var": float
+                            },
                             "Rank_comm": {
                                 "avg": float,
                                 "car": float,
@@ -173,6 +186,19 @@ class SchemaValidator:
                                 "var": float
                             },
                             "Rank_load_raw": {
+                                "avg": float,
+                                "car": float,
+                                "imb": float,
+                                "kur": float,
+                                "max": float,
+                                "min": float,
+                                "npr": float,
+                                "skw": float,
+                                "std": float,
+                                "sum": float,
+                                "var": float
+                            },
+                            Optional("Rank_strategy_specific_load_modeled"): {
                                 "avg": float,
                                 "car": float,
                                 "imb": float,
@@ -226,6 +252,19 @@ class SchemaValidator:
                                 "sum": float,
                                 "var": float
                             },
+                            Optional("Object_strategy_specific_load_modeled"): {
+                                "avg": float,
+                                "car": float,
+                                "imb": float,
+                                "kur": float,
+                                "max": float,
+                                "min": float,
+                                "npr": float,
+                                "skw": float,
+                                "std": float,
+                                "sum": float,
+                                "var": float
+                            },
                             "Rank_comm": {
                                 "avg": float,
                                 "car": float,
@@ -253,6 +292,19 @@ class SchemaValidator:
                                 "var": float
                             },
                             "Rank_load_raw": {
+                                "avg": float,
+                                "car": float,
+                                "imb": float,
+                                "kur": float,
+                                "max": float,
+                                "min": float,
+                                "npr": float,
+                                "skw": float,
+                                "std": float,
+                                "sum": float,
+                                "var": float
+                            },
+                            Optional("Rank_strategy_specific_load_modeled"): {
                                 "avg": float,
                                 "car": float,
                                 "imb": float,
