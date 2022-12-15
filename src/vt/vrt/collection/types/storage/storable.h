@@ -61,6 +61,14 @@ struct Storable {
 
   Storable() = default;
 
+  // Workaround for nvcc from CUDA 11.7 - in spite of the absence of
+  // any ODR-use of this copy constructor, it tries to generate it
+  // implicitly. In doing so, it requires that the unique_ptr elements
+  // of map_ be copyable, which they are not, and so compilation
+  // fails. Explicitly deleting the copy constructor suppresses that
+  // misbehavior.
+  Storable(Storable const&) = delete;
+
   /**
    * \brief Serializer
    *
