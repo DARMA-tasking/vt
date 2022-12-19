@@ -53,7 +53,6 @@
 #include "vt/utils/container/process_ready_buffer.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
-#include "vt/worker/worker_headers.h"
 
 #include <memory>
 #include <cassert>

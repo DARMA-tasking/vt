@@ -48,7 +48,6 @@
 #include "vt/context/context.h"
 #include "vt/collective/collective_ops.h"
 #include "vt/runtime/runtime_headers.h"
-#include "vt/worker/worker_headers.h"
 
 #include <cassert>
 #include <functional>
@@ -90,11 +89,6 @@ int vt_main(
 
   if (workers == no_workers or !vt_threading_enabled) {
     comm_fn();
-  } else {
-    #if vt_threading_enabled
-    vtAssert(theWorkerGrp() != nullptr, "Must have valid worker group");
-    theWorkerGrp()->spawnWorkersBlock(comm_fn);
-    #endif
   }
 
   vt_debug_print(verbose, gen, "vt_main: auto finalize workers={}\n", workers);

@@ -48,7 +48,6 @@
 #include "vt/utils/atomic/atomic.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/messaging/message.h"
 #include "vt/runnable/make_runnable.h"
 
@@ -79,14 +78,8 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
   );
 
   msg_buffer_.attach([this](VirtualMessage* msg){
-    #if vt_threading_enabled
-    theWorkerGrp()->enqueueCommThread([this,msg]{
-      enqueueWorkUnit(msg);
-    });
-    #else
     (void)this;
     enqueueWorkUnit(msg);
-    #endif
   });
 }
 
@@ -113,17 +106,7 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
   bool const has_workers = theContext()->hasWorkers();
 
   if (has_workers) {
-    #if vt_threading_enabled
-    bool const execute_comm = msg->getExecuteCommThread();
-    if (hasCoreMap() && !execute_comm) {
-      auto const core = getCore();
-      theWorkerGrp()->enqueueForWorker(core, work_unit);
-    } else {
-      theWorkerGrp()->enqueueCommThread(work_unit);
-    }
-    #else
     work_unit();
-    #endif
     return true;
   } else {
     work_unit();

@@ -264,15 +264,7 @@ void CollectiveAnyOps<instance>::scheduleThenFinalize(
     theSched()->runSchedulerWhile([rt_use]{ return not rt_use->isTerminated(); });
   };
 
-  if (workers == no_workers) {
-    sched_fn();
-  } else {
-    #if vt_threading_enabled
-    theWorkerGrp()->spawnWorkersBlock(sched_fn);
-    #else
-    sched_fn();
-    #endif
-  }
+  sched_fn();
 
   CollectiveAnyOps<instance>::finalize(has_rt ? std::move(in_rt) : nullptr);
 }
