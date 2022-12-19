@@ -44,7 +44,6 @@
 #include "vt/config.h"
 #include "vt/context/context.h"
 #include "vt/context/context_attorney.h"
-#include "vt/worker/worker_common.h"
 
 namespace vt { namespace ctx {
 

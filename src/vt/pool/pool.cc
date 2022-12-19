@@ -43,7 +43,6 @@
 
 #include "vt/config.h"
 #include "vt/pool/pool.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/pool/static_sized/memory_pool_equal.h"
 
 #include <cstdlib>
@@ -206,13 +205,7 @@ void Pool::dealloc(void* const buf) {
   );
 
   if (pool_type != ePoolSize::Malloc && alloc_worker != worker) {
-    #if vt_threading_enabled
-    theWorkerGrp()->enqueueForWorker(worker, [buf]{
-      thePool()->dealloc(buf);
-    });
-    #else
     thePool()->dealloc(buf);
-    #endif
     return;
   }
 

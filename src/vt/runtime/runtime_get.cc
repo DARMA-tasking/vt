@@ -60,7 +60,6 @@
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/collection/collection_headers.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/group/group_headers.h"
 #include "vt/pipe/pipe_headers.h"
 #include "vt/objgroup/headers.h"
@@ -108,9 +107,6 @@ using CollectionManagerType = vrt::collection::CollectionManager;
 ctx::Context*               theContext()            { return CUR_RT_TS->theContext;        }
 pool::Pool*                 thePool()               { return CUR_RT_TS->thePool;           }
 vrt::VirtualContextManager* theVirtualManager()     { return CUR_RT_TS->theVirtualManager; }
-#if vt_threading_enabled
-worker::WorkerGroupType*    theWorkerGrp()          { return CUR_RT_TS->theWorkerGrp;      }
-#endif
 
 // Non thread-safe runtime components
 collective::CollectiveAlg*  theCollective()         { return CUR_RT->theCollective;     }
