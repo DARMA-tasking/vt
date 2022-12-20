@@ -155,7 +155,7 @@ x-vtopts: &vtopts
   VT_INCLUSION_TYPE: ${VT_INCLUSION:-TPL}
   CODECOV_TOKEN: ${CODECOV_TOKEN:-}
   TEST_LB_SCHEMA: ${TEST_LB_SCHEMA:-0}
-  CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD:-14}
+  CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD:-17}
 
 services:
   ##############################################################################
