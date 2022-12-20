@@ -3,7 +3,7 @@
 include(SetCXXCompilerFlags)
 
 # Export a minimum version flag for any bundled libraries that don't set their own
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 # Optionally include libfort which is used by diagnostics
 if (vt_libfort_enabled)
