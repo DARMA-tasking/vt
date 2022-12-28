@@ -77,12 +77,6 @@ stages:
     timeoutInMinutes: 180
     steps:
       - task: Bash@3
-        displayName: Job setup
-        inputs:
-          targetType: 'inline'
-          script: |
-            echo setup
-      - task: Bash@3
         displayName: Build timestamp for caching
         continueOnError: true
         inputs:
