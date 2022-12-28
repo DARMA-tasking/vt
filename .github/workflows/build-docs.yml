@@ -1,8 +1,6 @@
 name: Build Documentation
 
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the master branch
   push:
     branches:
       - develop
@@ -31,6 +29,6 @@ jobs:
       TOKEN: ${{ secrets.GH_PAT }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker-compose run ubuntu-docs
