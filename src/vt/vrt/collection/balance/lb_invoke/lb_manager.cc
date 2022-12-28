@@ -215,19 +215,17 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
 }
 
 void
-LBManager::runLB(
-  LBProxyType base_proxy, PhaseType phase, vt::Callback<ReassignmentMsg> cb
-) {
+LBManager::runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb) {
   runInEpochCollective("LBManager::runLB -> updateLoads", [=] {
     model_->updateLoads(phase);
   });
 
+  auto base_proxy = lb_instances_["chosen"];
   lb::BaseLB* strat = base_proxy.get();
-  auto proxy = lb_instances_["chosen"];
   if (strat->isCommAware()) {
     runInEpochCollective(
       "LBManager::runLB -> makeGraphSymmetric",
-      [phase, proxy] { makeGraphSymmetric(phase, proxy); }
+      [phase, base_proxy] { makeGraphSymmetric(phase, base_proxy); }
     );
   }
 
@@ -342,8 +340,7 @@ void LBManager::startLB(
     break;
   }
 
-  LBProxyType base_proxy = lb_instances_["chosen"];
-  runLB(base_proxy, phase, cb);
+  runLB(phase, cb);
 }
 
 /*static*/
@@ -532,7 +529,7 @@ void LBManager::statsHandler(StatsMsgType* msg) {
         " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
         " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
         " npr={}, imb={:.2f}, num_stats={}\n",
-        lb::get_lb_stat_name()[stat],
+        lb::get_lb_stat_names()[stat],
         max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
         stats.size()
       );
@@ -626,14 +623,14 @@ void LBManager::computeStatistics(
     "computeStatistics\n"
   );
 
-  using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
+  const balance::PhaseOffset when = {
+    balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE
+  };
 
   total_load_from_model = 0.;
   std::vector<balance::LoadData> obj_load_model;
   for (auto elm : *model) {
-    auto work = model->getModeledLoad(
-      elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-    );
+    auto work = model->getModeledLoad(elm, when);
     obj_load_model.emplace_back(
       LoadData{lb::Statistic::Object_load_modeled, work}
     );
@@ -644,9 +641,7 @@ void LBManager::computeStatistics(
   std::vector<balance::LoadData> obj_load_raw;
   if (model->hasRawLoad()) {
     for (auto elm : *model) {
-      auto raw_load = model->getRawLoad(
-        elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-      );
+      auto raw_load = model->getRawLoad(elm, when);
       obj_load_raw.emplace_back(
         LoadData{lb::Statistic::Object_load_raw, raw_load}
       );
@@ -668,6 +663,27 @@ void LBManager::computeStatistics(
   lstats.emplace_back(reduceVec(
     lb::Statistic::Object_load_modeled, std::move(obj_load_model)
   ));
+
+  if (strategy_specific_model_) {
+    auto rank_strat_specific_load = 0.;
+    std::vector<balance::LoadData> obj_strat_specific_load;
+    for (auto elm : *strategy_specific_model_) {
+      auto work = strategy_specific_model_->getModeledLoad(elm, when);
+      obj_strat_specific_load.emplace_back(
+        LoadData{lb::Statistic::Object_strategy_specific_load_modeled, work}
+      );
+      rank_strat_specific_load += work;
+    }
+
+    lstats.emplace_back(
+      LoadData{lb::Statistic::Rank_strategy_specific_load_modeled,
+      rank_strat_specific_load}
+    );
+    lstats.emplace_back(reduceVec(
+      lb::Statistic::Object_strategy_specific_load_modeled,
+      std::move(obj_strat_specific_load)
+    ));
+  }
 
   if (model->hasRawLoad()) {
     lstats.emplace_back(
@@ -701,6 +717,7 @@ void LBManager::computeStatistics(
     lb::Statistic::Object_comm, std::move(obj_comm)
   ));
 
+  using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
   auto msg = makeMessage<StatsMsgType>(std::move(lstats));
   proxy_.template reduce<ReduceOp>(msg,cb);
 }

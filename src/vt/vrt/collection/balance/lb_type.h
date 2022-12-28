@@ -46,9 +46,9 @@
 
 #include "vt/configs/features/features_defines.h"
 
-#include <unordered_map>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -66,24 +66,6 @@ enum struct LBType : int8_t {
   , TestSerializationLB = 8
   , TemperedWMin        = 9
 };
-
-}}}} /* end namespace vt::vrt::collection::balance */
-
-namespace std {
-
-template <>
-struct hash<vt::vrt::collection::balance::LBType> {
-  size_t operator()(vt::vrt::collection::balance::LBType const& in) const {
-    using LBUnderType =
-      std::underlying_type<vt::vrt::collection::balance::LBType>::type;
-    auto const val = static_cast<LBUnderType>(in);
-    return std::hash<LBUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
-
-namespace vt { namespace vrt { namespace collection { namespace balance {
 
 std::unordered_map<LBType, std::string>& get_lb_names();
 

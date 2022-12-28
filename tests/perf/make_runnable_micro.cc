@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                continuation.h
+//                            make_runnable_micro.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,42 +41,79 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_CONTINUATION_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_CONTINUATION_H
+#include "common/test_harness.h"
+#include <vt/collective/collective_ops.h>
+#include <vt/objgroup/manager.h>
+#include <vt/messaging/active.h>
 
-namespace vt { namespace ctx {
+#include <fmt-vt/core.h>
 
-/**
- * \struct Continuation
- *
- * \brief A continuation that runs after a task is complete.
- */
-struct Continuation {
+using namespace vt;
+using namespace vt::tests::perf::common;
 
-  Continuation() = default;
+static constexpr int num_iters = 100000;
 
-  /**
-   * \brief Construct a \c Continuation
-   *
-   * \param[in] in_cont the continuation
-   */
-  explicit Continuation(ActionType in_cont)
-    : cont_(in_cont)
-  { }
+struct MyTest : PerfTestHarness { };
+struct MyMsg : vt::Message {};
 
-  /**
-   * \brief After the task runs, invoke the continuation if non-null
-   */
-  void finish() {
-    if (cont_) {
-      cont_();
+struct NodeObj;
+vt::objgroup::proxy::Proxy<NodeObj> global_proxy;
+
+void dummyHandler(MyMsg*) {}
+
+struct NodeObj {
+  struct ReduceMsg : vt::collective::ReduceNoneMsg { };
+
+  explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
+  void initialize() {
+    proxy_ = global_proxy = vt::theObjGroup()->getProxy<NodeObj>(this);
+  }
+
+  void perfMakeRunnable(MyMsg* in_msg) {
+    for (int i = 0; i < num_iters; i++) {
+      msgs.emplace_back(makeMessage<MyMsg>());
+    }
+
+    han = auto_registry::makeAutoHandler<MyMsg, &dummyHandler>();
+
+    theTerm()->disableTD();
+
+    test_obj_->StartTimer(fmt::format("makeRunnable {}", num_iters));
+    perfRunBenchmark();
+    test_obj_->StopTimer(fmt::format("makeRunnable {}", num_iters));
+
+    theTerm()->enableTD();
+  }
+
+  void perfRunBenchmark() {
+    for (int i = 0; i < num_iters; i++) {
+      auto r = runnable::makeRunnable(msgs[i], false, han, 0)
+        .withContinuation(nullptr)
+        .withTDEpochFromMsg(false);
+      r.enqueue();
+      vt::theSched()->runSchedulerOnceImpl();
     }
   }
 
 private:
-  ActionType cont_ = nullptr;   /**< the continuation */
+  std::vector<MsgSharedPtr<MyMsg>> msgs;
+  HandlerType han;
+  MyTest* test_obj_ = nullptr;
+  vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
+  int reduce_counter_ = -1;
+  int i = 0;
 };
 
-}} /* end namespace vt::ctx */
+VT_PERF_TEST(MyTest, test_make_runnable_micro) {
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
+    "test_make_runnable_micro", this
+  );
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_CONTINUATION_H*/
+  grp_proxy[my_node_].invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
+
+  if (theContext()->getNode() == 0) {
+    grp_proxy[my_node_].send<MyMsg, &NodeObj::perfMakeRunnable>();
+  }
+}
+
+VT_PERF_TEST_MAIN()

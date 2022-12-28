@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-10.15
+    runs-on: macos-latest
 
     if: github.event.pull_request.draft == false
 
@@ -29,6 +29,7 @@ jobs:
       VT_USE_OPENMP: 0
       VT_USE_STD_THREAD: 0
       VT_WERROR: 1
+      CMAKE_CXX_STANDARD: 17
       CMAKE_GENERATOR: "Unix Makefiles"
       CMAKE_BUILD_PARALLEL_LEVEL: 4
 

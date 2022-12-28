@@ -53,10 +53,12 @@ using namespace vt::tests::perf::common;
 static constexpr int64_t const min_bytes = 1;
 static constexpr int64_t const max_bytes = 16777216;
 
-static constexpr int64_t num_pings = 20;
+static constexpr int64_t num_pings = 10;
 
 static constexpr NodeType const ping_node = 0;
 static constexpr NodeType const pong_node = 1;
+
+vt::EpochType the_epoch = vt::no_epoch;
 
 struct MyTest : PerfTestHarness { };
 
@@ -101,6 +103,7 @@ struct NodeObj {
         .send<
           NodeObj::PingMsg<new_num_bytes>, &NodeObj::pingPong<new_num_bytes>
         >();
+    } else {
     }
   }
 
@@ -136,6 +139,7 @@ private:
 template <>
 void NodeObj::finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
   addPerfStats(max_bytes);
+  theTerm()->enableTD();
 }
 
 VT_PERF_TEST(MyTest, test_ping_pong) {
@@ -145,14 +149,16 @@ VT_PERF_TEST(MyTest, test_ping_pong) {
   grp_proxy[my_node_]
     .invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 
-  vt::runInEpochCollective([this, grp_proxy] {
-    StartTimer(fmt::format("{} Bytes", min_bytes));
+  if (theContext()->getNode() == 0) {
+    theTerm()->disableTD();
+  }
 
-    if (my_node_ == 0) {
-      grp_proxy[pong_node]
-        .send<NodeObj::PingMsg<min_bytes>, &NodeObj::pingPong<min_bytes>>();
-    }
-  });
+  StartTimer(fmt::format("{} Bytes", min_bytes));
+
+  if (my_node_ == 0) {
+    grp_proxy[pong_node]
+      .send<NodeObj::PingMsg<min_bytes>, &NodeObj::pingPong<min_bytes>>();
+  }
 }
 
 VT_PERF_TEST_MAIN()

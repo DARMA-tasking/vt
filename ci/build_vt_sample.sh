@@ -51,6 +51,7 @@ then
       -Dvt_trace_only="1" \
       -DVT_BUILD_EXAMPLES="0" \
       -DVT_BUILD_TESTS="0" \
+      -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-14}" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
       -DCMAKE_CXX_COMPILER="${CXX:-c++}" \

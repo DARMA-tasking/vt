@@ -5,6 +5,7 @@ set(
   jacobi1d_vt
   jacobi2d_vt
   migrate_collection
+  polymorphic_collection
   insertable_collection
   reduce_integral
   transpose

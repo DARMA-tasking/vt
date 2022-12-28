@@ -102,24 +102,6 @@ private:
   void reduceCount(ReduceMsg* msg);
   void allocateShareEdgeGIDs();
 
-  struct CommMsg : vt::Message {
-    using MessageParentType = vt::Message;
-    vt_msg_serialize_required(); // comm_
-
-    CommMsg() = default;
-    explicit CommMsg(ElementCommType in_comm)
-      : comm_(in_comm)
-    { }
-
-    ElementCommType comm_;
-
-    template <typename SerializerT>
-    void serialize(SerializerT& s) {
-      MessageParentType::serialize(s);
-      s | comm_;
-    }
-  };
-
   void recvSharedEdges(CommMsg* msg);
 
 private:

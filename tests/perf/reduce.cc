@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                continuation.h
+//                                  reduce.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -40,43 +40,69 @@
 // *****************************************************************************
 //@HEADER
 */
+#include "common/test_harness.h"
+#include <vt/collective/collective_ops.h>
+#include <vt/objgroup/manager.h>
+#include <vt/messaging/active.h>
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_CONTINUATION_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_CONTINUATION_H
+#include <fmt-vt/core.h>
 
-namespace vt { namespace ctx {
+using namespace vt;
+using namespace vt::tests::perf::common;
 
-/**
- * \struct Continuation
- *
- * \brief A continuation that runs after a task is complete.
- */
-struct Continuation {
+static constexpr int num_iters = 100;
 
-  Continuation() = default;
+struct MyTest : PerfTestHarness { };
 
-  /**
-   * \brief Construct a \c Continuation
-   *
-   * \param[in] in_cont the continuation
-   */
-  explicit Continuation(ActionType in_cont)
-    : cont_(in_cont)
-  { }
+struct NodeObj {
+  struct ReduceMsg : vt::collective::ReduceNoneMsg { };
 
-  /**
-   * \brief After the task runs, invoke the continuation if non-null
-   */
-  void finish() {
-    if (cont_) {
-      cont_();
+  explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
+
+  void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
+
+  struct MyMsg : vt::Message {};
+
+  void reduceComplete(ReduceMsg* msg) {
+    reduce_counter_++;
+    test_obj_->StopTimer(fmt::format("{} reduce", i));
+    test_obj_->GetMemoryUsage();
+    if (i < num_iters) {
+      i++;
+      auto this_node = theContext()->getNode();
+      proxy_[this_node].send<MyMsg, &NodeObj::perfReduce>();
+    } else if (theContext()->getNode() == 0) {
+      theTerm()->enableTD();
     }
   }
 
+  void perfReduce(MyMsg* in_msg) {
+    test_obj_->StartTimer(fmt::format("{} reduce", i));
+    auto cb = theCB()->makeBcast<NodeObj, ReduceMsg, &NodeObj::reduceComplete>(proxy_);
+    auto msg = makeMessage<ReduceMsg>();
+    proxy_.reduce(msg.get(), cb);
+  }
+
 private:
-  ActionType cont_ = nullptr;   /**< the continuation */
+  MyTest* test_obj_ = nullptr;
+  vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
+  int reduce_counter_ = -1;
+  int i = 0;
 };
 
-}} /* end namespace vt::ctx */
+VT_PERF_TEST(MyTest, test_reduce) {
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
+    "test_reduce", this
+  );
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_CONTINUATION_H*/
+  if (theContext()->getNode() == 0) {
+    theTerm()->disableTD();
+  }
+
+  grp_proxy[my_node_].invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
+
+  using MsgType = typename NodeObj::MyMsg;
+  grp_proxy[my_node_].send<MsgType, &NodeObj::perfReduce>();
+}
+
+VT_PERF_TEST_MAIN()

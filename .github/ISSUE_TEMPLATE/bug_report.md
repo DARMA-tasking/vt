@@ -25,7 +25,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Platform (please complete the following information):**
  - Supercomputer or desktop [e.g., Trinity, Sierra)
- - Compiler environment [e.g., clang-3.9, gcc8]
+ - Compiler environment [e.g., clang-4.0, gcc8]
  - Libraries [e.g., mpich-2, openmpi)
  - Commit ID or release of VT [e.g., vt-1.0.0]
 
