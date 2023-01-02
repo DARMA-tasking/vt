@@ -46,7 +46,6 @@
 #include "vt/context/context.h"
 #include "vt/runtime/runtime.h"
 #include "vt/runtime/runtime_inst.h"
-#include "vt/utils/tls/tls.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
@@ -88,7 +87,7 @@ namespace vt {
 
 static runtime::Runtime* no_rt = nullptr;
 
-#define IS_COMM_THREAD curRT->theContext->getWorker() == worker_id_comm_thread
+#define IS_COMM_THREAD true
 #define CUR_RT_SAFE (IS_COMM_THREAD ? curRT : no_rt)
 #define CUR_RT_TS curRT
 #define CUR_RT CUR_RT_SAFE

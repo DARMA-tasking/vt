@@ -103,15 +103,8 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
       .run();
   };
 
-  bool const has_workers = theContext()->hasWorkers();
-
-  if (has_workers) {
-    work_unit();
-    return true;
-  } else {
-    work_unit();
-    return false;
-  }
+  work_unit();
+  return false;
 }
 
 void VirtualInfo::tryEnqueueWorkUnit(VirtualMessage* msg) {

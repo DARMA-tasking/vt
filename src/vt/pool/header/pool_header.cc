@@ -54,7 +54,7 @@ namespace vt { namespace pool {
   view.buffer = buffer;
   view.layout->prealloc.alloc_size = num_bytes;
   view.layout->prealloc.oversize = oversize;
-  view.layout->prealloc.alloc_worker = theContext()->getWorker();
+  view.layout->prealloc.alloc_worker = worker_id_comm_thread;
   auto buf_start = buffer + sizeof(Header);
   return buf_start;
 }

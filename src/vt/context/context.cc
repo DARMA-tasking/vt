@@ -90,19 +90,11 @@ Context::Context(bool const is_interop, MPI_Comm comm) {
   communicator_ = comm;
   numNodes_ = static_cast<NodeType>(numNodesLocal);
   thisNode_ = static_cast<NodeType>(thisNodeLocal);
-
-  setDefaultWorker();
 }
 
 Context::~Context() {
   MPI_Comm_free(&communicator_);
 }
-
-void Context::setDefaultWorker() {
-  setWorker(worker_id_comm_thread);
-}
-
-DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
 
 void Context::setTask(runnable::RunnableNew* in_task) {
   cur_task_ = in_task;
