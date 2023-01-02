@@ -134,7 +134,6 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_fcontext_build_tests_examples="${VT_FCONTEXT_BUILD_TESTS_EXAMPLES:-0}" \
       -Dvt_rdma_tests_enabled="${VT_RDMA_TESTS_ENABLED:-1}" \
       -DUSE_OPENMP="${VT_USE_OPENMP:-0}" \
-      -DUSE_STD_THREAD="${VT_USE_STD_THREAD:-0}" \
       -DCODE_COVERAGE="${CODE_COVERAGE:-0}" \
       -DMI_INTERPOSE:BOOL=ON \
       -DMI_OVERRIDE:BOOL=ON \
