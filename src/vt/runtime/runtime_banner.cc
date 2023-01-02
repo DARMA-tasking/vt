@@ -89,10 +89,6 @@ void Runtime::printStartupBanner() {
     std::string(
       #if vt_check_enabled(openmp)
         "OpenMP"
-      #elif vt_check_enabled(stdthread)
-        "std::thread"
-      #else
-        ""
       #endif
    );
   std::string cnt = !has_workers ? std::string("") :
@@ -134,9 +130,6 @@ void Runtime::printStartupBanner() {
 #endif
 #if vt_check_enabled(fcontext)
   features.push_back(vt_feature_str_fcontext);
-#endif
-#if vt_check_enabled(stdthread)
-  features.push_back(vt_feature_str_stdthread);
 #endif
 #if vt_check_enabled(mpi_rdma)
   features.push_back(vt_feature_str_mpi_rdma);

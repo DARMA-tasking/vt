@@ -48,10 +48,6 @@
 
 #if vt_check_enabled(openmp)
   #include "vt/utils/atomic/omp_atomic.h"
-#elif vt_check_enabled(stdthread)
-  #include "vt/utils/atomic/std_atomic.h"
-#else
-  #include "vt/utils/atomic/null_atomic.h"
 #endif
 
 namespace vt { namespace util { namespace atomic {
@@ -59,12 +55,6 @@ namespace vt { namespace util { namespace atomic {
 #if vt_check_enabled(openmp)
   template <typename T>
   using AtomicType = AtomicOMP<T>;
-#elif vt_check_enabled(stdthread)
-  template <typename T>
-  using AtomicType = AtomicSTD<T>;
-#else
-  template <typename T>
-  using AtomicType = AtomicNull<T>;
 #endif
 
 }}} /* end namespace vt::util::atomic */

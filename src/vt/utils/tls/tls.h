@@ -46,18 +46,8 @@
 
 #include "vt/config.h"
 
-#define backend_null_tls 1
-
 #if vt_check_enabled(openmp)
   #include "vt/utils/tls/omp_tls.h"
-#elif vt_check_enabled(stdthread)
-  #include "vt/utils/tls/std_tls.h"
-#else
-  #include "vt/utils/tls/null_tls.h"
-#endif
-
-#if backend_null_tls
-  #include "vt/utils/tls/null_tls.h"
 #endif
 
 namespace vt { namespace util { namespace tls {
@@ -68,26 +58,6 @@ namespace vt { namespace util { namespace tls {
 
   template <typename T, char const* tag, T val>
   using ThreadLocalInitType = ThreadLocalInitOMP<T,tag,val>;
-#elif vt_check_enabled(stdthread)
-  template <typename T, char const* tag>
-  using ThreadLocalType = ThreadLocalSTD<T,tag>;
-
-  template <typename T, char const* tag, T val>
-  using ThreadLocalInitType = ThreadLocalInitSTD<T,tag,val>;
-#else
-  template <typename T, char const* tag>
-  using ThreadLocalType = ThreadLocalNull<T,tag>;
-
-  template <typename T, char const* tag, T val>
-  using ThreadLocalInitType = ThreadLocalInitNull<T,tag,val>;
-#endif
-
-#if backend_null_tls
-  template <typename T, char const* tag>
-  using ThreadLocalNullType = ThreadLocalNull<T,tag>;
-
-  template <typename T, char const* tag, T val>
-  using ThreadLocalNullInitType = ThreadLocalInitNull<T,tag,val>;
 #endif
 
 // Declare and extern TLS variable with initializer
