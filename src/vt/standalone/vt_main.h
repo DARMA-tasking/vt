@@ -86,10 +86,7 @@ int vt_main(
   vt_debug_print(verbose, gen, "vt_main: initialized workers={}\n", workers);
 
   auto comm_fn = vrCommThreadWork<VrtContextT>;
-
-  if (workers == no_workers or !vt_threading_enabled) {
-    comm_fn();
-  }
+  comm_fn();
 
   vt_debug_print(verbose, gen, "vt_main: auto finalize workers={}\n", workers);
   return 0;
