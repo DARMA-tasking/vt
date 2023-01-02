@@ -72,8 +72,6 @@ void Runtime::printStartupBanner() {
   }
 
   NodeType const nodes = theContext->getNumNodes();
-  WorkerCountType const workers = theContext->getNumWorkers();
-  bool const has_workers = theContext->hasWorkers();
 
   std::string is_interop_str =
     is_interop_ ?
@@ -84,17 +82,8 @@ void Runtime::printStartupBanner() {
   std::string mode_type =
     std::string(num_workers_ == no_workers ? "single" : "multi") +
     std::string("-thread per rank");
-  std::string thd = !has_workers ? std::string("") :
-    std::string(", worker threading: ") +
-    std::string(
-      #if vt_check_enabled(openmp)
-        "OpenMP"
-      #endif
-   );
-  std::string cnt = !has_workers ? std::string("") :
-    (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
   std::string node_str = nodes == 1 ? "node" : "nodes";
-  std::string all_node = std::to_string(nodes) + " " + node_str + cnt;
+  std::string all_node = std::to_string(nodes) + " " + node_str;
 
   char hostname[1024];
   gethostname(hostname, 1024);
@@ -171,7 +160,7 @@ void Runtime::printStartupBanner() {
   std::array< std::string, 11 > info_lines = {
       fmt::format("{}Version: {}\n", green, emph(vt_version_string)),
 
-      fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd)),
+      fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type)),
       fmt::format("{}Program: {} ({})\n", green,
                              emph(getAppConfig()->prog_name), emph(getAppConfig()->argv_prog_name)),
       fmt::format("{}Running on: {}\n", green, emph(all_node)),

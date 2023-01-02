@@ -106,29 +106,19 @@ bool Pool::tryPooledDealloc(void* const buf) {
 void* Pool::pooledAlloc(
   size_t const& num_bytes, size_t const& oversize, ePoolSize const pool_type
 ) {
-  auto const worker = theContext()->getWorker();
-  bool const comm_thread = worker == worker_id_comm_thread;
   void* ret = nullptr;
 
   vt_debug_print(
     normal, pool,
-    "Pool::pooled_alloc of size={}, type={}, ret={}, worker={}\n",
-    num_bytes, print_pool_type(pool_type), ret, worker
+    "Pool::pooled_alloc of size={}, type={}, ret={}\n",
+    num_bytes, print_pool_type(pool_type), ret
   );
 
   if (pool_type == ePoolSize::Small) {
-    auto pool = comm_thread ? small_msg.get() : s_msg_worker_[worker].get();
-    vtAssert(
-      (comm_thread || s_msg_worker_.size() > static_cast<size_t>(worker)),
-      "Must have worker pool"
-    );
+    auto pool = small_msg.get();
     ret = pool->alloc(num_bytes, oversize);
   } else if (pool_type == ePoolSize::Medium) {
-    auto pool = comm_thread ? medium_msg.get() : m_msg_worker_[worker].get();
-    vtAssert(
-      (comm_thread || m_msg_worker_.size() > static_cast<size_t>(worker)),
-      "Must have worker pool"
-    );
+    auto pool = medium_msg.get();
     ret = pool->alloc(num_bytes, oversize);
   } else {
     vtAssert(0, "Pool must be valid");
@@ -193,7 +183,6 @@ void Pool::dealloc(void* const buf) {
   auto const& alloc_worker = HeaderManagerType::getHeaderWorker(buf_char);
   auto const& ptr_actual = HeaderManagerType::getHeaderPtr(buf_char);
   auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf_char);
-  auto const worker = theContext()->getWorker();
 
   ePoolSize const pool_type = getPoolType(actual_alloc_size, oversize);
 
@@ -204,7 +193,7 @@ void Pool::dealloc(void* const buf) {
     print_ptr(ptr_actual)
   );
 
-  if (pool_type != ePoolSize::Malloc && alloc_worker != worker) {
+  if (pool_type != ePoolSize::Malloc && alloc_worker != worker_id_comm_thread) {
     thePool()->dealloc(buf);
     return;
   }

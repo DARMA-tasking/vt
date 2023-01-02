@@ -70,10 +70,6 @@ struct ContextAttorney {
   friend ctx::SetContext;
 
 private:
-  /// Allow internal runtime to set the worker
-  static void setWorker(WorkerIDType const worker);
-  /// Allow internal runtime to set the number of workers
-  static void setNumWorkers(WorkerCountType const worker_count);
   /// Allow setting the current running task
   static void setTask(runnable::RunnableNew* in_task);
 };

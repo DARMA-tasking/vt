@@ -117,7 +117,7 @@ private:
     if (process_fn_ && isProcessWorker()) { apply(process_fn_, has_lock); }
   }
   inline bool isProcessWorker() const {
-    return worker_ == no_worker_id || worker_ == ::vt::theContext()->getWorker();
+    return worker_ == no_worker_id || worker_ == worker_id_comm_thread;
   }
   inline MutexType* getMutex() { return needs_lock_ ? &mutex_: nullptr; }
 

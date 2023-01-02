@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  omp_tls.h
+//                                 null_mutex.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,59 +41,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_UTILS_TLS_OMP_TLS_H
-#define INCLUDED_VT_UTILS_TLS_OMP_TLS_H
+#if !defined INCLUDED_VT_UTILS_MUTEX_NULL_MUTEX_H
+#define INCLUDED_VT_UTILS_MUTEX_NULL_MUTEX_H
 
 #include "vt/config.h"
 
-#if vt_check_enabled(openmp)
-#include <omp.h>
+namespace vt { namespace util { namespace mutex {
 
-namespace vt { namespace util { namespace tls {
+struct NullMutex {
+  NullMutex() = default;
+  NullMutex(NullMutex const&) = delete;
 
-template <typename T, char const* tag, T val>
-struct ThreadLocalInitOMP {
-  T& get() { access_++; return value_; }
-  int64_t numAccess() const { return access_; }
-private:
-  #if defined(__GNUC__)
-    static thread_local T value_;
-  #else
-    static T value_;
-    #pragma omp threadprivate (value_)
-  #endif
-  int64_t access_ = 0;
+  virtual ~NullMutex() = default;
+
+  void lock() { }
+  void unlock() { }
+  bool try_lock() { return true; }
 };
 
-template <typename T, char const* tag>
-struct ThreadLocalOMP {
-  T& get() { access_++; return value_; }
-  int64_t numAccess() const { return access_; }
-private:
-  #if defined(__GNUC__)
-    static thread_local T value_;
-  #else
-    static T value_;
-    #pragma omp threadprivate (value_)
-  #endif
-  int64_t access_ = 0;
-};
+}}} /* end namespace vt::util::mutex */
 
-#if defined(__GNUC__)
-  template <typename T, char const* tag, T val>
-  T thread_local ThreadLocalInitOMP<T,tag,val>::value_ = val;
-
-  template <typename T, char const* tag>
-  T thread_local ThreadLocalOMP<T,tag>::value_;
-#else
-  template <typename T, char const* tag, T val>
-  T ThreadLocalInitOMP<T,tag,val>::value_ = val;
-
-  template <typename T, char const* tag>
-  T ThreadLocalOMP<T,tag>::value_;
-#endif
-
-}}} /* end namespace vt::util::tls */
-
-#endif /*vt_check_enabled(openmp)*/
-#endif /*INCLUDED_VT_UTILS_TLS_OMP_TLS_H*/
+#endif /*INCLUDED_VT_UTILS_MUTEX_NULL_MUTEX_H*/
