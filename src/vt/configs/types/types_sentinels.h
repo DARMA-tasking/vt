@@ -51,7 +51,6 @@ namespace vt {
 
 // Physical identifier sentinel values (nodes, cores, workers, etc.)
 static constexpr NodeType const uninitialized_destination          = static_cast<NodeType>(0xFFFF);
-static constexpr WorkerCountType const no_workers                  = static_cast<WorkerCountType>(0xFFFF);
 static constexpr WorkerIDType const no_worker_id                   = static_cast<WorkerIDType>(0xFFFE);
 static constexpr WorkerIDType const worker_id_comm_thread          = static_cast<WorkerIDType>(0xFEED);
 static constexpr WorkerIDType const comm_debug_print               = static_cast<WorkerIDType>(-1);

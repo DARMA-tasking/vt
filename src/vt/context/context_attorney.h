@@ -59,13 +59,10 @@ namespace vt {  namespace ctx {
  *
  * \brief Used by VT internals for write access to the Context
  *
- * Attorney pattern to Context for setting number of workers and current worker
+ * Attorney pattern to Context for setting the running task
  * by the runtime and other components
  */
 struct ContextAttorney {
-  /// Allow the runtime to set the number of workers
-  friend runtime::Runtime;
-
   /// Allow \c ctx::SetContext to modify the running task
   friend ctx::SetContext;
 

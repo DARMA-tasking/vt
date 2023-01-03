@@ -175,15 +175,6 @@ struct Pool : runtime::component::Component<Pool> {
   bool active_env() const;
 
   /**
-   * \brief Initialize worker-specific pools due to the lack of thread-safety of
-   * the memory allocator. This will create distinct memory pool instances for
-   * each worker thread to access
-   *
-   * \param[in] num_workers number of workers on this node
-   */
-  void initWorkerPools(WorkerCountType const& num_workers);
-
-  /**
    * \brief Cleanup/free the memory pools
    */
   void finalize() override;

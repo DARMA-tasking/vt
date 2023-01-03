@@ -92,14 +92,12 @@ struct Runtime {
    *
    * \param[in] argc argument count (modified after VT extracts)
    * \param[in] argv arguments  (modified after VT extracts)
-   * \param[in] in_num_workers number of worker threads to initialize
    * \param[in] interop_mode whether running in interoperability mode
    * \param[in] in_comm the MPI communicator (if in interoperability mode)
    * \param[in] in_instance the runtime instance to set
    */
   Runtime(
     int& argc, char**& argv,
-    WorkerCountType in_num_workers = no_workers,
     bool const interop_mode = false,
     MPI_Comm in_comm = MPI_COMM_WORLD,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance,
@@ -304,10 +302,8 @@ protected:
 
   /**
    * \internal \brief Initialize workers
-   *
-   * \param[in] num_workers number of workers to create
    */
-  void initializeWorkers(WorkerCountType const num_workers);
+  void initializeWorkers();
 
   /**
    * \internal \brief Check if we should create a LB data restart reader component
@@ -441,7 +437,6 @@ protected:
   bool runtime_active_ = false;
   bool is_interop_ = false;
   bool sig_handlers_disabled_ = false;
-  WorkerCountType num_workers_ = no_workers;
   //< Communicator to be given to theContext creation; don't use otherwise.
   MPI_Comm initial_communicator_ = MPI_COMM_NULL;
   std::unique_ptr<component::ComponentPack> p_;

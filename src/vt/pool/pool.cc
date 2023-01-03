@@ -182,7 +182,6 @@ void Pool::dealloc(void* const buf) {
   auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
   auto const& alloc_worker = HeaderManagerType::getHeaderWorker(buf_char);
   auto const& ptr_actual = HeaderManagerType::getHeaderPtr(buf_char);
-  auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf_char);
 
   ePoolSize const pool_type = getPoolType(actual_alloc_size, oversize);
 
@@ -244,15 +243,6 @@ Pool::tryGrowAllocation(void* buf, size_t grow_amount) {
   auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(reinterpret_cast<char*>(buf)));
   header->alloc_size += grow_amount;
   return true;
-}
-
-void Pool::initWorkerPools(WorkerCountType const& num_workers) {
-  #if vt_check_enabled(memory_pool)
-    for (auto i = 0; i < num_workers; i++) {
-      s_msg_worker_.emplace_back(initSPool());
-      m_msg_worker_.emplace_back(initMPool());
-    }
-  #endif
 }
 
 void Pool::finalize() {

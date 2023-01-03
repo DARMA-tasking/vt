@@ -79,9 +79,7 @@ void Runtime::printStartupBanner() {
       std::string("");
   std::string init = "Runtime Initializing:" + is_interop_str;
   std::string mode = std::string("mode: ");
-  std::string mode_type =
-    std::string(num_workers_ == no_workers ? "single" : "multi") +
-    std::string("-thread per rank");
+  std::string mode_type = std::string("single-thread per rank");
   std::string node_str = nodes == 1 ? "node" : "nodes";
   std::string all_node = std::to_string(nodes) + " " + node_str;
 
