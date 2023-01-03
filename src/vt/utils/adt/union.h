@@ -724,7 +724,7 @@ private:
 
   template <typename U>
   void staticAssertCorrectness() const {
-    detail::AllUnique<T, Ts...>{};
+    vt_force_use(detail::AllUnique<T, Ts...>{});
     static_assert(
       detail::MustBe<U, T, Ts...>::is_same, "Must be the valid type in union"
     );
