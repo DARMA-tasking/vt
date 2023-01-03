@@ -72,7 +72,7 @@ TEST_F(TestInitialization, test_initialize_with_args) {
 
   EXPECT_EQ(custom_argc, 3);
 
-  vt::initialize(custom_argc, custom_argv, no_workers, true, &comm);
+  vt::initialize(custom_argc, custom_argv, &comm);
 
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
   EXPECT_EQ(theConfig()->vt_no_terminate, true);
@@ -104,7 +104,7 @@ TEST_F(TestInitialization, test_initialize_with_appconfig) {
   appConfig.vt_lb_name = "RotateLB";
   appConfig.vt_lb_data = true;
 
-  vt::initialize(custom_argc, custom_argv, no_workers, true, &comm, &appConfig);
+  vt::initialize(custom_argc, custom_argv, &comm, &appConfig);
 
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
   EXPECT_EQ(theConfig()->vt_epoch_graph_on_hang, false);
@@ -147,7 +147,7 @@ TEST_F(TestInitialization, test_initialize_with_args_and_appconfig) {
   appConfig.vt_lb_data = true;
   appConfig.vt_no_detect_hang = false;
 
-  vt::initialize(custom_argc, custom_argv, no_workers, true, &comm, &appConfig);
+  vt::initialize(custom_argc, custom_argv, &comm, &appConfig);
 
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
   EXPECT_EQ(theConfig()->vt_color, false);
@@ -198,7 +198,7 @@ TEST_F(TestInitialization, test_initialize_with_file_and_args) {
   }
   MPI_Barrier(comm);
 
-  vt::initialize(custom_argc, custom_argv, no_workers, true, &comm);
+  vt::initialize(custom_argc, custom_argv, &comm);
 
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
   EXPECT_EQ(theConfig()->vt_no_terminate, true);
@@ -247,7 +247,7 @@ TEST_F(TestInitialization, test_initialize_with_file_args_and_appconfig) {
   }
   MPI_Barrier(comm);
 
-  vt::initialize(custom_argc, custom_argv, no_workers, true, &comm, &appConfig);
+  vt::initialize(custom_argc, custom_argv, &comm, &appConfig);
 
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
   EXPECT_EQ(theConfig()->vt_no_terminate, true);

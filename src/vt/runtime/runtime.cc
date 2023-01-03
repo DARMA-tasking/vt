@@ -95,11 +95,9 @@ namespace vt { namespace runtime {
 /*static*/ bool volatile Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
-  int& argc, char**& argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm in_comm, RuntimeInstType const in_instance,
-  arguments::AppConfig const* appConfig
+  int& argc, char**& argv, bool const interop_mode, MPI_Comm in_comm,
+  RuntimeInstType const in_instance, arguments::AppConfig const* appConfig
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
-     num_workers_(in_num_workers),
      initial_communicator_(in_comm),
      arg_config_(std::make_unique<arguments::ArgConfig>()),
      app_config_(&arg_config_->config_)
@@ -943,7 +941,7 @@ void Runtime::initializeOptionalComponents() {
     "begin: initializeOptionalComponents\n"
   );
 
-  initializeWorkers(num_workers_);
+  initializeWorkers();
 
   vt_debug_print(
     verbose, runtime,
@@ -951,41 +949,36 @@ void Runtime::initializeOptionalComponents() {
   );
 }
 
-void Runtime::initializeWorkers(WorkerCountType const num_workers) {
+void Runtime::initializeWorkers() {
   using ::vt::ctx::ContextAttorney;
 
   vt_debug_print(
     normal, runtime,
-    "begin: initializeWorkers: workers={}\n",
-    num_workers
+    "begin: initializeWorkers\n"
   );
 
-  bool const has_workers = num_workers != no_workers;
-
-  if (!has_workers) {
-    // Without workers running on the node, the termination detector should
-    // enable/disable the global collective epoch based on the state of the
-    // scheduler; register listeners to activate/deactivate that epoch
-    auto td = vt::theTerm();
-    theSched->registerTrigger(
-      sched::SchedulerEvent::BeginIdleMinusTerm, [td]{
-        vt_debug_print(
-          normal, runtime,
-          "setLocalTerminated: BeginIdle: true\n"
-        );
-        td->setLocalTerminated(true, false);
-      }
-    );
-    theSched->registerTrigger(
-      sched::SchedulerEvent::EndIdleMinusTerm, [td]{
-        vt_debug_print(
-          normal, runtime,
-          "setLocalTerminated: EndIdle: false\n"
-        );
-        td->setLocalTerminated(false, false);
-      }
-    );
-  }
+  // Without workers running on the node, the termination detector should
+  // enable/disable the global collective epoch based on the state of the
+  // scheduler; register listeners to activate/deactivate that epoch
+  auto td = vt::theTerm();
+  theSched->registerTrigger(
+    sched::SchedulerEvent::BeginIdleMinusTerm, [td]{
+      vt_debug_print(
+        normal, runtime,
+        "setLocalTerminated: BeginIdle: true\n"
+      );
+      td->setLocalTerminated(true, false);
+    }
+  );
+  theSched->registerTrigger(
+    sched::SchedulerEvent::EndIdleMinusTerm, [td]{
+      vt_debug_print(
+        normal, runtime,
+        "setLocalTerminated: EndIdle: false\n"
+      );
+      td->setLocalTerminated(false, false);
+    }
+  );
 
   vt_debug_print(
     normal, runtime,

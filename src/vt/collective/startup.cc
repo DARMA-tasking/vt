@@ -51,20 +51,11 @@ namespace vt {
 
 // vt::{initialize,finalize} for main ::vt namespace
 RuntimePtrType initialize(
-  int& argc, char**& argv, WorkerCountType const num_workers,
-  bool is_interop, MPI_Comm* comm, arguments::AppConfig const* appConfig
-) {
-  return CollectiveOps::initialize(
-    argc, argv, num_workers, is_interop, comm, appConfig
-  );
-}
-
-RuntimePtrType initialize(
   int& argc, char**& argv, MPI_Comm* comm, arguments::AppConfig const* appConfig
 ) {
   bool const is_interop = comm != nullptr;
   return CollectiveOps::initialize(
-    argc, argv, no_workers, is_interop, comm, appConfig
+    argc, argv, is_interop, comm, appConfig
   );
 }
 
@@ -72,7 +63,7 @@ RuntimePtrType initialize(MPI_Comm* comm) {
   int argc = 0;
   char** argv = nullptr;
   bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(argc,argv,no_workers,is_interop,comm);
+  return CollectiveOps::initialize(argc,argv,is_interop,comm);
 }
 
 RuntimePtrType initialize(
