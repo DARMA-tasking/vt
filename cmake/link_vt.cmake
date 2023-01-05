@@ -17,8 +17,6 @@ function(link_target_with_vt)
     singleValArg
     TARGET
     BUILD_TYPE
-    LINK_OPENMP
-    LINK_STDTHREAD
     LINK_GTEST
     # the following linking options are enabled by default
     LINK_ATOMIC
@@ -212,25 +210,6 @@ function(link_target_with_vt)
     target_include_directories(${ARG_TARGET} PUBLIC
       $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/CLI>
       $<INSTALL_INTERFACE:include/CLI>
-    )
-  endif()
-
-  if (NOT DEFINED ARG_LINK_OPENMP AND DEFAULT_THREADING STREQUAL openmp OR ARG_LINK_OPENMP)
-    if (${ARG_DEBUG_LINK})
-      message(
-        STATUS
-        "link_target_with_vt: dt=${DEFAULT_THREADING}, omp=${ARG_LINK_OPENMP}"
-      )
-    endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} OpenMP::OpenMP_CXX
-    )
-  elseif (NOT DEFINED ARG_LINK_STDTHREAD AND DEFAULT_THREADING STREQUAL stdthread OR ARG_LINK_STDTHREAD)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt(..): stdthread=${ARG_LINK_STDTHREAD}")
-    endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} Threads::Threads
     )
   endif()
 
