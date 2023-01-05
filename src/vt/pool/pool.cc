@@ -236,13 +236,6 @@ Pool::tryGrowAllocation(void* buf, size_t grow_amount) {
   return true;
 }
 
-void Pool::finalize() {
-  #if vt_check_enabled(memory_pool)
-    s_msg_worker_.clear();
-    m_msg_worker_.clear();
-  #endif
-}
-
 bool Pool::active() const {
   return vt_check_enabled(memory_pool);
 }

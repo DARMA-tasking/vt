@@ -20,7 +20,7 @@ set(TOP_LEVEL_SUBDIRS
   activefn
   # Add single-directory components
   context event handler parameterization sequence termination
-  scheduler worker standalone runtime trace timing demangle rdmahandle
+  scheduler standalone runtime trace timing demangle rdmahandle
 )
 set(
   PROJECT_SUBDIRS_LIST
@@ -98,7 +98,7 @@ set(
       serialization/messaging serialization/traits serialization/auto_dispatch
       serialization/sizing
     utils/demangle utils/container utils/bits utils/mutex utils/file_spec
-    utils/hash utils/atomic utils/tls utils/static_checks utils/string
+    utils/hash utils/atomic utils/static_checks utils/string
     utils/memory utils/mpi_limits utils/compress utils/json utils/strong
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection

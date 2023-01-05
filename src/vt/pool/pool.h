@@ -174,17 +174,10 @@ struct Pool : runtime::component::Component<Pool> {
    */
   bool active_env() const;
 
-  /**
-   * \brief Cleanup/free the memory pools
-   */
-  void finalize() override;
-
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | small_msg
-      | medium_msg
-      | s_msg_worker_
-      | m_msg_worker_;
+      | medium_msg;
   }
 
 private:
@@ -256,9 +249,6 @@ private:
 private:
   MemPoolSType small_msg = nullptr;
   MemPoolMType medium_msg = nullptr;
-
-  std::vector<MemPoolSType> s_msg_worker_;
-  std::vector<MemPoolMType> m_msg_worker_;
 };
 
 }} //end namespace vt::pool
