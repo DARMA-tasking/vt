@@ -324,6 +324,8 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   void resume(ThreadIDType tid);
 
+  TimeType getRecentTime() {return recent_time_;}
+
 #if vt_check_enabled(fcontext)
   /**
    * \brief Get the thread manager
@@ -354,6 +356,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
       | threshold_memory_usage_
       | last_memory_usage_poll_
       | special_progress_
+      | recent_time_
       | progressCount
       | workUnitCount
       | queueSizeGauge
@@ -426,6 +429,7 @@ private:
   std::size_t last_memory_usage_poll_ = 0;
 
   bool special_progress_ = false; /**< time-based/k-handler progress enabled */
+  TimeType recent_time_;
 
   // Access to triggerEvent.
   template <typename Callable>
