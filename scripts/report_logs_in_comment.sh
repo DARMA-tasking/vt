@@ -134,6 +134,7 @@ echo "}"
 
 # Send GitHub request to post a PR comment
 curl                                                                    \
+    --include                                                           \
     --request POST                                                      \
     --url https://api.github.com/repos/"$repository_name"/dispatches    \
     --header "Accept: application/vnd.github.everest-preview+json"      \
