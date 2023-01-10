@@ -353,6 +353,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
       | last_threshold_memory_usage_
       | threshold_memory_usage_
       | last_memory_usage_poll_
+      | special_progress_
       | progressCount
       | workUnitCount
       | queueSizeGauge
