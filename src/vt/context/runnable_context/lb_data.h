@@ -82,14 +82,19 @@ struct LBData {
   { }
 
   /**
+   * \brief Return whether time is required
+   */
+  bool needsTime() const { return should_instrument_; }
+
+  /**
    * \brief Set the context and timing for a collection task
    */
-  void start();
+  void start(TimeType time);
 
   /**
    * \brief Remove the context and store timing for a collection task
    */
-  void finish();
+  void finish(TimeType time);
 
   /**
    * \brief Record LB data whenever a message is sent and a collection
@@ -100,8 +105,8 @@ struct LBData {
    */
   void send(elm::ElementIDStruct dest, MsgSizeType bytes);
 
-  void suspend();
-  void resume();
+  void suspend(TimeType time);
+  void resume(TimeType time);
 
   /**
    * \brief Get the current element ID struct for the running context
