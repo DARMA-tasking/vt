@@ -132,13 +132,17 @@ echo "  }"
 echo "}"
 } >> data.json
 
+cat data.json
+
+echo "url = https://api.github.com/repos/$repository_name/dispatches"
+
 # Send GitHub request to post a PR comment
 curl                                                                    \
     --include                                                           \
     --request POST                                                      \
     --url https://api.github.com/repos/"$repository_name"/dispatches    \
-    --header "Accept: application/vnd.github.everest-preview+json"      \
-    --header "Authorization: token $github_pat"                         \
+    --header "Accept: application/vnd.github+json"                      \
+    --header "Authorization: Bearer $github_pat"                        \
     --data "@data.json"
 
 # Clean up
