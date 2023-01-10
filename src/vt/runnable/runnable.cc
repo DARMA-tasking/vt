@@ -185,49 +185,49 @@ void RunnableNew::run() {
 #endif
 }
 
-void RunnableNew::start() {
+void RunnableNew::start(TimeType time) {
   contexts_.setcontext.start();
   if (contexts_.has_td) contexts_.td.start();
   if (contexts_.has_col) contexts_.col.start();
-  if (contexts_.has_lb) contexts_.lb.start();
+  if (contexts_.has_lb) contexts_.lb.start(time);
 #if vt_check_enabled(trace_enabled)
-  if (contexts_.has_trace) contexts_.trace.start();
+  if (contexts_.has_trace) contexts_.trace.start(time);
 #endif
 }
 
-void RunnableNew::finish() {
+void RunnableNew::finish(TimeType time) {
   contexts_.setcontext.finish();
   if (contexts_.has_td) contexts_.td.finish();
   if (contexts_.has_col) contexts_.col.finish();
   if (contexts_.has_cont) contexts_.cont.finish();
-  if (contexts_.has_lb) contexts_.lb.finish();
+  if (contexts_.has_lb) contexts_.lb.finish(time);
 #if vt_check_enabled(trace_enabled)
-  if (contexts_.has_trace) contexts_.trace.finish();
+  if (contexts_.has_trace) contexts_.trace.finish(time);
 #endif
 }
 
-void RunnableNew::suspend() {
+void RunnableNew::suspend(TimeType time) {
 #if vt_check_enabled(fcontext)
   contexts_.setcontext.suspend();
   if (contexts_.has_td) contexts_.td.suspend();
   if (contexts_.has_col) contexts_.col.suspend();
-  if (contexts_.has_lb) contexts_.lb.suspend();
+  if (contexts_.has_lb) contexts_.lb.suspend(time);
 
 # if vt_check_enabled(trace_enabled)
-    if (contexts_.has_trace) contexts_.trace.suspend();
+    if (contexts_.has_trace) contexts_.trace.suspend(time);
 # endif
 #endif
 }
 
-void RunnableNew::resume() {
+void RunnableNew::resume(TimeType time) {
 #if vt_check_enabled(fcontext)
   contexts_.setcontext.resume();
   if (contexts_.has_td) contexts_.td.resume();
   if (contexts_.has_col) contexts_.col.resume();
-  if (contexts_.has_lb) contexts_.lb.resume();
+  if (contexts_.has_lb) contexts_.lb.resume(time);
 
 # if vt_check_enabled(trace_enabled)
-    if (contexts_.has_trace) contexts_.trace.resume();
+    if (contexts_.has_trace) contexts_.trace.resume(time);
 # endif
 #endif
 }

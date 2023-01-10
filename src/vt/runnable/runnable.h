@@ -261,25 +261,25 @@ private:
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c start() on them.
    */
-  void start();
+  void start(TimeType time);
 
   /**
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c finish() on them.
    */
-  void finish();
+  void finish(TimeType time);
 
   /**
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c suspend() on them.
    */
-  void suspend();
+  void suspend(TimeType time);
 
   /**
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c resume() on them.
    */
-  void resume();
+  void resume(TimeType time);
 
 public:
   /**
