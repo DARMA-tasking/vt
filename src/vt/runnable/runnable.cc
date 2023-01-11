@@ -115,15 +115,25 @@ void RunnableNew::run() {
   );
 #endif
 
+  bool needs_time = false;
+#if vt_check_enabled(trace_enabled)
+  if (contexts_.has_trace) needs_time = true;
+  else
+#endif
+  if (contexts_.has_lb)
+  {
+    needs_time = contexts_.lb.needsTime();
+  }
+  TimeType start_time = needs_time ? theSched()->getRecentTime() : NAN;
+
 #if vt_check_enabled(fcontext)
   if (suspended_) {
-    resume();
-  } else {
-    start();
-  }
-#else
-  start();
+    resume(start_time);
+  } else
 #endif
+  {
+    start(start_time);
+  }
 
 #if vt_check_enabled(fcontext)
   if (is_threaded_ and not theConfig()->vt_ult_disable) {
@@ -164,16 +174,20 @@ void RunnableNew::run() {
     done_ = true;
 #endif
   }
+  theSched()->setRecentTimeToStale();
+  TimeType end_time = needs_time ? theSched()->getRecentTime() : NAN;
+
+
 
 #if vt_check_enabled(fcontext)
   if (done_) {
-    finish();
+    finish(end_time);
   } else {
     suspended_ = true;
-    suspend();
+    suspend(end_time);
   }
 #else
-  finish();
+  finish(end_time);
 #endif
 
 #if vt_check_enabled(fcontext)
