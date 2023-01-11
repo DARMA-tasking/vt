@@ -324,7 +324,24 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   void resume(ThreadIDType tid);
 
-  TimeType getRecentTime() {return recent_time_;}
+  /**
+   * \brief Return a valid recent time, after checking whether an update is needed
+   *
+   * \return a valid recent time
+   */
+  TimeType getRecentTime(){
+    if(is_recent_time_stale_){
+      recent_time_ = timing::getCurrentTime();
+      is_recent_time_stale_ = false;
+    }
+    return recent_time_;
+  }
+
+  /**
+   * \brief Set the flag so that recent_time_ will be updated at next get request
+   *
+   */
+  void setRecentTimeToStale() { is_recent_time_stale_ = true; }
 
 #if vt_check_enabled(fcontext)
   /**
@@ -357,6 +374,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
       | last_memory_usage_poll_
       | special_progress_
       | recent_time_
+      | is_recent_time_stale_
       | progressCount
       | workUnitCount
       | queueSizeGauge
@@ -430,6 +448,7 @@ private:
 
   bool special_progress_ = false; /**< time-based/k-handler progress enabled */
   TimeType recent_time_;
+  bool is_recent_time_stale_ = true;
 
   // Access to triggerEvent.
   template <typename Callable>
