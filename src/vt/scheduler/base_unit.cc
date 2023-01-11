@@ -62,6 +62,7 @@ void BaseUnit::execute() {
     #endif
   } else if (work_) {
     work_();
+    theSched()->setRecentTimeToStale();
   }
 }
 
