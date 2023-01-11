@@ -329,8 +329,8 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    *
    * \return a valid recent time
    */
-  TimeType getRecentTime(){
-    if(is_recent_time_stale_){
+  TimeType getRecentTime() {
+    if(is_recent_time_stale_) {
       recent_time_ = timing::getCurrentTime();
       is_recent_time_stale_ = false;
     }
