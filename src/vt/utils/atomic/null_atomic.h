@@ -46,8 +46,6 @@
 
 #include "vt/config.h"
 
-#if backend_no_threading
-
 // Needed for memory order
 #include <atomic>
 
@@ -98,7 +96,5 @@ private:
 };
 
 }}} /* end namespace vt::util::atomic */
-
-#endif /*backend_no_threading*/
 
 #endif /*INCLUDED_VT_UTILS_ATOMIC_NULL_ATOMIC_H*/

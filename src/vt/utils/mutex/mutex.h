@@ -50,20 +50,11 @@
 
 #include <mutex>
 
-#if vt_check_enabled(openmp)
-  #include "vt/utils/mutex/omp_mutex.h"
-#else
-  #include "vt/utils/mutex/null_mutex.h"
-#endif
+#include "vt/utils/mutex/null_mutex.h"
 
 namespace vt { namespace util { namespace mutex {
 
-#if vt_check_enabled(openmp)
-  using MutexType = OMPMutex;
-#else
-  using MutexType = NullMutex;
-#endif
-
+using MutexType = NullMutex;
 using NullMutexType = NullMutex;
 
 using LockGuardType = LockGuardAnyType<MutexType>;

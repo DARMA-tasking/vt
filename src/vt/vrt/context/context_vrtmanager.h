@@ -140,13 +140,12 @@ private:
   VirtualProxyType makeVirtualPlaceholder();
 
   void setupMappedVirutalContext(
-    VirtualProxyType const& proxy, SeedType const& seed, CoreType const& core,
-    HandlerType const map_handle
+    VirtualProxyType const& proxy, SeedType const& seed
   );
 
   template <typename VrtContextT, typename... Args>
   VirtualProxyType makeVirtualMapComm(
-    SeedType const& seed, HandlerType const map_handle, Args&& ... args
+    SeedType const& seed, Args&& ... args
   );
 
   template <typename VrtContextT, typename... Args>

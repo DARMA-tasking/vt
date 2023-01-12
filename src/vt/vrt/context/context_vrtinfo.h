@@ -86,21 +86,15 @@ struct VirtualInfo {
 
   bool isConstructed() const { return is_constructed_.load(); }
   VirtualProxyType getProxy() const { return proxy_; }
-  CoreType getCore() const { return default_core_; }
   NodeType getNode() const { return default_node_; }
 
-  void mapToCore(CoreType const& core) { default_core_ = core; }
-  void setCoreMap(HandlerType const han) { core_map_handle_ = han; }
   void setNodeMap(HandlerType const han) { node_map_handle_ = han; }
-  bool hasCoreMap() const { return core_map_handle_ != uninitialized_handler; }
   bool hasNodeMap() const { return node_map_handle_ != uninitialized_handler; }
   void setSeed(SeedType const seed) { seed_ = seed; }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | core_map_handle_
-      | node_map_handle_
-      | default_core_
+    s | node_map_handle_
       | default_node_
       | proxy_
       | is_constructed_
@@ -111,10 +105,7 @@ struct VirtualInfo {
   }
 
  private:
-  HandlerType core_map_handle_ = uninitialized_handler;
   HandlerType node_map_handle_ = uninitialized_handler;
-
-  CoreType default_core_ = uninitialized_destination;
   NodeType default_node_ = uninitialized_destination;
   VirtualProxyType proxy_ = no_vrt_proxy;
   AtomicType<bool> is_constructed_ = {false};

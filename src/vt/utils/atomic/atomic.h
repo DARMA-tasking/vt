@@ -46,21 +46,12 @@
 
 #include "vt/config.h"
 
-#if vt_check_enabled(openmp)
-  #include "vt/utils/atomic/omp_atomic.h"
-#else
-  #include "vt/utils/atomic/null_atomic.h"
-#endif
+#include "vt/utils/atomic/null_atomic.h"
 
 namespace vt { namespace util { namespace atomic {
 
-#if vt_check_enabled(openmp)
-  template <typename T>
-  using AtomicType = AtomicOMP<T>;
-#else
-  template <typename T>
-  using AtomicType = AtomicNull<T>;
-#endif
+template <typename T>
+using AtomicType = AtomicNull<T>;
 
 }}} /* end namespace vt::util::atomic */
 
