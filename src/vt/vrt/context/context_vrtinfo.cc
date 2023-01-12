@@ -77,10 +77,9 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
     print_ptr(in_vrt_ptr.get())
   );
 
-  msg_buffer_.attach([this](VirtualMessage* msg){
-    (void)this;
+  for(auto && msg : msg_buffer_) {
     enqueueWorkUnit(msg);
-  });
+  }
 }
 
 bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
@@ -118,7 +117,7 @@ void VirtualInfo::tryEnqueueWorkUnit(VirtualMessage* msg) {
   if (is_constructed) {
     enqueueWorkUnit(msg);
   } else {
-    msg_buffer_.push(msg);
+    msg_buffer_.push_back(msg);
   }
 }
 

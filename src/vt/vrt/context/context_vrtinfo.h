@@ -50,7 +50,6 @@
 #include "vt/vrt/context/context_vrt_fwd.h"
 #include "vt/utils/mutex/mutex.h"
 #include "vt/utils/atomic/atomic.h"
-#include "vt/utils/container/process_ready_buffer.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 
@@ -61,10 +60,9 @@
 namespace vt { namespace vrt {
 
 using ::vt::util::atomic::AtomicType;
-using ::vt::util::container::ProcessBuffer;
 
 struct VirtualInfo {
-  using MsgBufferContainerType = ProcessBuffer<VirtualMessage*>;
+  using MsgBufferContainerType = std::vector<VirtualMessage*>;
   using VirtualPtrType = std::unique_ptr<VirtualContext>;
 
   VirtualInfo(
