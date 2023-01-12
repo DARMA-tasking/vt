@@ -941,7 +941,7 @@ void Runtime::initializeOptionalComponents() {
     "begin: initializeOptionalComponents\n"
   );
 
-  initializeWorkers();
+  initializeTDCallbacks();
 
   vt_debug_print(
     verbose, runtime,
@@ -949,12 +949,12 @@ void Runtime::initializeOptionalComponents() {
   );
 }
 
-void Runtime::initializeWorkers() {
+void Runtime::initializeTDCallbacks() {
   using ::vt::ctx::ContextAttorney;
 
   vt_debug_print(
     normal, runtime,
-    "begin: initializeWorkers\n"
+    "begin: initializeTDCallbacks\n"
   );
 
   // Without workers running on the node, the termination detector should
@@ -982,7 +982,7 @@ void Runtime::initializeWorkers() {
 
   vt_debug_print(
     normal, runtime,
-    "end: initializeWorkers\n"
+    "end: initializeTDCallbacks\n"
   );
 }
 

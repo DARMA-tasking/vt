@@ -78,7 +78,4 @@ using VTPrintConfig = Configuration<
 
 }} /* end namespace vt::config */
 
-#define vt_threading_enabled                                             \
-  vt_check_enabled(fcontext)
-
 #endif /*INCLUDED_VT_CONFIGS_DEBUG_DEBUG_MASTERCONFIG_H*/
