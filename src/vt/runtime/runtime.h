@@ -301,9 +301,9 @@ protected:
   void initializeOptionalComponents();
 
   /**
-   * \internal \brief Initialize workers
+   * \internal \brief Initialize TD callbacks
    */
-  void initializeWorkers();
+  void initializeTDCallbacks();
 
   /**
    * \internal \brief Check if we should create a LB data restart reader component
