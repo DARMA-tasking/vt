@@ -42,6 +42,7 @@
 */
 
 #include <vt/transport.h>
+#include <vt/vrt/collection/balance/lb_data_restart_reader.h>
 
 #include <fstream>
 
