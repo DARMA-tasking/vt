@@ -106,9 +106,6 @@ void Runtime::printStartupBanner() {
 #if vt_check_enabled(lblite)
   features.push_back(vt_feature_str_lblite);
 #endif
-#if vt_check_enabled(openmp)
-  features.push_back(vt_feature_str_openmp);
-#endif
 #if vt_check_enabled(production_build)
   features.push_back(vt_feature_str_production_build);
 #endif

@@ -48,11 +48,7 @@
 #include "vt/utils/atomic/atomic.h"
 #include "vt/utils/mutex/mutex.h"
 
-#if vt_check_enabled(openmp)
-  #include <omp.h>
-#else
-  #include <thread>
-#endif
+#include <thread>
 
 namespace vt { namespace tests { namespace unit {
 
@@ -100,99 +96,6 @@ TEST_F(TestAtomic, basic_atomic_fetch_sub_single_thd) {
     auto val = test1.fetch_sub(1);
     EXPECT_EQ(val, -i);
   }
-}
-
-using ::vt::util::mutex::MutexType;
-
-static constexpr WorkerCountType const num_workers = 8;
-static MutexType test_mutex = {};
-static AtomicType<int> atomic_test_val = {0};
-static AtomicType<int> atomic_num = {0};
-static std::vector<bool> count(num_workers);
-
-#if vt_check_enabled(openmp) or vt_check_enabled(stdthread)
-static void testAtomicMulti() {
-  auto val = atomic_test_val.fetch_add(1);
-  //fmt::print("val={}\n", val);
-  EXPECT_LE(val, num_workers);
-  test_mutex.lock();
-  bool const cur_count_value = count[val];
-  count[val] = true;
-  EXPECT_EQ(cur_count_value, false);
-  test_mutex.unlock();
-  if (val == num_workers - 1) {
-    auto val2 = atomic_num.fetch_add(1);
-    EXPECT_EQ(val2, 0);
-  }
-}
-#endif /* vt_check_enabled(openmp) or vt_check_enabled(stdthread) */
-
-static AtomicType<int> atomic_test_cas = {0};
-static AtomicType<int> atomic_test_slot = {0};
-
-#if vt_check_enabled(openmp) or vt_check_enabled(stdthread)
-static void testAtomicMultiCAS() {
-  int expected = atomic_test_slot.fetch_add(1);
-  int desired = expected + 1;
-
-  //fmt::print("begin: expected={}, desired={}\n", expected, desired);
-
-  bool result = false;
-  do {
-    result = atomic_test_cas.compare_exchange_strong(expected, desired);
-  } while (!result);
-
-  //fmt::print("finished: expected={}, desired={}\n", expected, desired);
-}
-#endif /* vt_check_enabled(openmp) or vt_check_enabled(stdthread) */
-
-TEST_F(TestAtomic, basic_atomic_fetch_add_multi_thd) {
-  count.resize(num_workers);
-
-  #if vt_check_enabled(openmp)
-    #pragma omp parallel num_threads(num_workers)
-    testAtomicMulti();
-  #elif vt_check_enabled(stdthread)
-    std::vector<std::thread> thds;
-    for (auto i = 0; i < num_workers; i++) {
-      thds.emplace_back(std::thread(testAtomicMulti));
-    }
-    for (auto i = 0; i < num_workers; i++) {
-      thds[i].join();
-    }
-  #endif
-
-  #if !backend_no_threading
-  test_mutex.lock();
-  for (auto&& elm : count) {
-    EXPECT_EQ(elm, true);
-  }
-  EXPECT_EQ(atomic_num.load(), 1);
-  EXPECT_EQ(atomic_test_val.load(), num_workers);
-  test_mutex.unlock();
-  #endif
-}
-
-TEST_F(TestAtomic, basic_atomic_cas_multi_thd) {
-  count.resize(num_workers);
-
-  #if vt_check_enabled(openmp)
-    #pragma omp parallel num_threads(num_workers)
-    testAtomicMultiCAS();
-  #elif vt_check_enabled(stdthread)
-    std::vector<std::thread> thds;
-    for (auto i = 0; i < num_workers; i++) {
-      thds.emplace_back(std::thread(testAtomicMultiCAS));
-    }
-    for (auto i = 0; i < num_workers; i++) {
-      thds[i].join();
-    }
-  #endif
-
-  #if !backend_no_threading
-  EXPECT_EQ(atomic_test_slot.load(), num_workers);
-  EXPECT_EQ(atomic_test_cas.load(), num_workers);
-  #endif
 }
 
 }}} // end namespace vt::tests::unit

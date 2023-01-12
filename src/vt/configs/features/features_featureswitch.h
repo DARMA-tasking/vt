@@ -58,7 +58,6 @@
 #define vt_feature_str_mpi_rdma           "Native RDMA with MPI"
 #define vt_feature_str_no_feature         "No feature"
 #define vt_feature_str_no_pool_alloc_env  "No memory pool envelope"
-#define vt_feature_str_openmp             "OpenMP Threading"
 #define vt_feature_str_print_term_msgs    "Print Termination Control Messages"
 #define vt_feature_str_priorities         "Message priorities"
 #define vt_feature_str_production_build   "Production Build (assertions and " \

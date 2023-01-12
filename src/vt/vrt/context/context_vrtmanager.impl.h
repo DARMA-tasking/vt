@@ -224,33 +224,34 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
 }
 
 inline void VirtualContextManager::setupMappedVirutalContext(
-  VirtualProxyType const& proxy, SeedType const& seed, CoreType const& core,
-  HandlerType const map_handle
+  VirtualProxyType const& proxy, SeedType const& seed
 ) {
   auto vrt_info = getVirtualInfoByProxy(proxy);
   vrt_info->setSeed(seed);
-  vrt_info->setCoreMap(map_handle);
-  vrt_info->mapToCore(core);
 }
 
 template <typename VrtContextT, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualMapComm(
-  SeedType const& seed, HandlerType const map_handle, Args&& ... args
+  SeedType const& seed, Args&& ... args
 ) {
   auto const& proxy = makeVirtual<VrtContextT, Args...>(
     std::forward<Args>(args)...
   );
-  setupMappedVirutalContext(proxy, seed, worker_id_comm_thread, map_handle);
+  setupMappedVirutalContext(proxy, seed);
   return proxy;
 }
 
 template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
   SeedType next_seed = no_seed;
-  HandlerType core_map_handle = uninitialized_handler;
+
+  vt_debug_print(
+    normal, vrt,
+    "makeVirtualMap\n"
+  );
 
   return makeVirtualMapComm<VrtContextT>(
-    next_seed, core_map_handle, std::forward<Args>(args)...
+    next_seed, std::forward<Args>(args)...
   );
 }
 

@@ -180,22 +180,13 @@ void* Pool::alloc(size_t const& num_bytes, size_t oversize) {
 void Pool::dealloc(void* const buf) {
   auto buf_char = static_cast<char*>(buf);
   auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
-  auto const& alloc_worker = HeaderManagerType::getHeaderWorker(buf_char);
   auto const& ptr_actual = HeaderManagerType::getHeaderPtr(buf_char);
-
-  ePoolSize const pool_type = getPoolType(actual_alloc_size, oversize);
 
   vt_debug_print(
     normal, pool,
-    "Pool::dealloc of buf={}, type={}, alloc_size={}, worker={}, ptr={}\n",
-    buf, print_pool_type(pool_type), actual_alloc_size, alloc_worker,
-    print_ptr(ptr_actual)
+    "Pool::dealloc of buf={}, alloc_size={}, ptr={}\n",
+    buf, actual_alloc_size, print_ptr(ptr_actual)
   );
-
-  if (pool_type != ePoolSize::Malloc && alloc_worker != worker_id_comm_thread) {
-    thePool()->dealloc(buf);
-    return;
-  }
 
   bool success = false;
 

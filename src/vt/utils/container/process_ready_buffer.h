@@ -72,10 +72,9 @@ struct ProcessBuffer {
     progressEngine(true);
   }
 
-  void attach(ProcessFnType fn, WorkerIDType worker = no_worker_id) {
+  void attach(ProcessFnType fn) {
     LockGuardPtrType lock(getMutex());
     process_fn_ = fn;
-    worker_ = worker;
     progressEngine(true);
   }
 
@@ -85,7 +84,6 @@ struct ProcessBuffer {
   void serialize(Serializer& s) {
     s | buffer_
       | needs_lock_
-      | worker_
       | process_fn_
       | mutex_;
   }
@@ -114,10 +112,7 @@ private:
 
 private:
   inline void progressEngine(bool has_lock) {
-    if (process_fn_ && isProcessWorker()) { apply(process_fn_, has_lock); }
-  }
-  inline bool isProcessWorker() const {
-    return worker_ == no_worker_id || worker_ == worker_id_comm_thread;
+    if (process_fn_) { apply(process_fn_, has_lock); }
   }
   inline MutexType* getMutex() { return needs_lock_ ? &mutex_: nullptr; }
 
@@ -125,7 +120,6 @@ private:
   std::list<T> buffer_;
   bool needs_lock_ = true;
   MutexType mutex_{};
-  WorkerIDType worker_ = no_worker_id;
   ProcessFnType process_fn_ = nullptr;
 };
 
