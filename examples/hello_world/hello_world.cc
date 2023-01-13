@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
 
   if (this_node == 0) {
     auto msg = vt::makeMessage<HelloMsg>(this_node);
-    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
+    vt::theMsg()->broadcastMsg<hello_world>(msg);
   }
 
   vt::finalize();
