@@ -686,6 +686,37 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     TagType tag = no_tag
   );
 
+  template <typename ReturnT, typename... Args>
+  struct FunctionTraits;
+
+  template <typename ReturnT, typename T>
+  struct FunctionTraits<ReturnT(*)(T*)> {
+    using MsgT = T;
+    using ReturnType = ReturnT;
+  };
+
+
+  /**
+   * \brief Broadcast a message (message type not required).
+   *
+   * \note Takes ownership of the supplied message.
+   *
+   * \param[in] msg the message to broadcast
+   * \param[in] deliver_to_sender whether msg should be delivered to sender
+   * \param[in] tag the tag to put on the message
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <auto f>
+  PendingSendType broadcastMsg(
+    MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg,
+    bool deliver_to_sender = true,
+    TagType tag = no_tag
+  ) {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return broadcastMsg<MsgT, f>(msg, deliver_to_sender, tag);
+  }
+
   /**
    * \brief Send a message.
    *
@@ -704,12 +735,24 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     TagType tag = no_tag
   );
 
-  template <auto f, typename MsgT>
+  /**
+   * \brief Send a message (message type not required).
+   *
+   * \note Takes ownership of the supplied message.
+   *
+   * \param[in] dest the destination node to send the message to
+   * \param[in] msg the message to send
+   * \param[in] tag the tag to put on the message
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <auto f>
   PendingSendType sendMsg(
     NodeType dest,
-    MsgPtrThief<MsgT> msg,
+    MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg,
     TagType tag = no_tag
   ) {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
     return sendMsg<MsgT, f>(dest, msg, tag);
   }
 
