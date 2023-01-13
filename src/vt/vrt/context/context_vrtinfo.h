@@ -48,7 +48,6 @@
 #include "vt/vrt/context/context_vrt.h"
 #include "vt/vrt/context/context_vrtmessage.h"
 #include "vt/vrt/context/context_vrt_fwd.h"
-#include "vt/utils/mutex/mutex.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 
