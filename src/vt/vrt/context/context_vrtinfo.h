@@ -49,7 +49,6 @@
 #include "vt/vrt/context/context_vrtmessage.h"
 #include "vt/vrt/context/context_vrt_fwd.h"
 #include "vt/utils/mutex/mutex.h"
-#include "vt/utils/atomic/atomic.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 
@@ -58,8 +57,6 @@
 #include <vector>
 
 namespace vt { namespace vrt {
-
-using ::vt::util::atomic::AtomicType;
 
 struct VirtualInfo {
   using MsgBufferContainerType = std::vector<VirtualMessage*>;
@@ -82,7 +79,6 @@ struct VirtualInfo {
 
   VirtualContext *get() const;
 
-  bool isConstructed() const { return is_constructed_.load(); }
   VirtualProxyType getProxy() const { return proxy_; }
   NodeType getNode() const { return default_node_; }
 
@@ -95,7 +91,6 @@ struct VirtualInfo {
     s | node_map_handle_
       | default_node_
       | proxy_
-      | is_constructed_
       | vrt_ptr_
       | needs_lock_
       | seed_
@@ -106,7 +101,6 @@ struct VirtualInfo {
   HandlerType node_map_handle_ = uninitialized_handler;
   NodeType default_node_ = uninitialized_destination;
   VirtualProxyType proxy_ = no_vrt_proxy;
-  AtomicType<bool> is_constructed_ = {false};
   VirtualPtrType vrt_ptr_ = nullptr;
   bool needs_lock_ = false;
   SeedType seed_ = no_seed;
