@@ -43,6 +43,7 @@
 
 #include <vt/transport.h>
 #include <vt/vrt/collection/balance/lb_data_restart_reader.h>
+#include <vt/utils/json/json_appender.h>
 
 #include <fstream>
 
@@ -137,7 +138,9 @@ TEST_F(TestOfflineLB, test_offlinelb_1) {
     .wait();
 
   for (PhaseType i = 0; i < num_phases; i++) {
-    proxy.broadcastCollective<typename SimCol::Msg, &SimCol::handler>(i);
+    runInEpochCollective("run handler", [&]{
+      proxy.broadcastCollective<typename SimCol::Msg, &SimCol::handler>(i);
+    });
     thePhase()->nextPhaseCollective();
   }
 }
