@@ -704,6 +704,15 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     TagType tag = no_tag
   );
 
+  template <auto f, typename MsgT>
+  PendingSendType sendMsg(
+    NodeType dest,
+    MsgPtrThief<MsgT> msg,
+    TagType tag = no_tag
+  ) {
+    return sendMsg<MsgT, f>(dest, msg, tag);
+  }
+
   /**
    * \brief Send a message with explicit size.
    *
