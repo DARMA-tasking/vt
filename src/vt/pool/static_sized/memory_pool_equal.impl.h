@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             memory_pool_equal.cc
+//                           memory_pool_equal.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -40,6 +40,9 @@
 // *****************************************************************************
 //@HEADER
 */
+
+#if !defined INCLUDED_VT_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_IMPL_H
+#define INCLUDED_VT_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_IMPL_H
 
 #include "vt/config.h"
 #include "vt/pool/static_sized/memory_pool_equal.h"
@@ -152,3 +155,5 @@ template struct MemoryPoolEqual<memory_size_small, true>;
 template struct MemoryPoolEqual<memory_size_medium, true>;
 
 }} //end namespace vt::pool
+
+#endif /*INCLUDED_VT_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_IMPL_H*/
