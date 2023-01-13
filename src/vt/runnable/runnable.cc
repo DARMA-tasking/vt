@@ -279,4 +279,4 @@ RunnableNewAlloc::runnable = std::make_unique<
 
 }} /* end namespace vt::runnable */
 
-#include "vt/pool/static_sized/memory_pool_equal.cc"
+#include "vt/pool/static_sized/memory_pool_equal.impl.h"
