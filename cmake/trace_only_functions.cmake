@@ -156,7 +156,7 @@ function(set_trace_only_config)
   # since the scope is local to this function
   set(vt_feature_cmake_trace_enabled "1")
   set(vt_feature_cmake_trace_only "1")
-  config_no_threading()
+  set(vt_fcontext_enabled "0" PARENT_SCOPE)
 
   configure_file(
     ${PROJECT_BASE_DIR}/cmake_config.h.in
