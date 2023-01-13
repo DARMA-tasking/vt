@@ -45,7 +45,6 @@
 #include "vt/vrt/context/context_vrtinfo.h"
 #include "vt/vrt/context/context_vrtmessage.h"
 #include "vt/utils/mutex/mutex.h"
-#include "vt/utils/atomic/atomic.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 #include "vt/messaging/message.h"
@@ -60,8 +59,7 @@ namespace vt { namespace vrt {
 VirtualInfo::VirtualInfo(
   VirtualPtrType in_vrt_ptr, VirtualProxyType const& proxy_in, bool needs_lock
 ) : proxy_(proxy_in),
-    is_constructed_(in_vrt_ptr != nullptr),
-    vrt_ptr_(is_constructed_ ? std::move(in_vrt_ptr) : nullptr),
+    vrt_ptr_(in_vrt_ptr != nullptr ? std::move(in_vrt_ptr) : nullptr),
     needs_lock_(needs_lock)
 { }
 
@@ -69,7 +67,6 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
   vtAssert(in_vrt_ptr != nullptr, "Must have a valid vrt ptr");
 
   vrt_ptr_ = std::move(in_vrt_ptr);
-  is_constructed_ = true;
 
   vt_debug_print(
     verbose, vrt,
@@ -107,14 +104,12 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
 }
 
 void VirtualInfo::tryEnqueueWorkUnit(VirtualMessage* msg) {
-  bool const is_constructed = is_constructed_.load();
-
   vt_debug_print(
     verbose, vrt,
-    "tryEnqueueWorkUnit is_cons={}\n", print_bool(is_constructed)
+    "tryEnqueueWorkUnit \n"
   );
 
-  if (is_constructed) {
+  if (vrt_ptr_ != nullptr) {
     enqueueWorkUnit(msg);
   } else {
     msg_buffer_.push_back(msg);
