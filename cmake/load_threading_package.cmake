@@ -10,11 +10,9 @@ if(vt_fcontext_enabled)
     STATUS
     "Using fcontext for worker threading"
   )
-  set(vt_fcontext_enabled "1")
 else()
   message(
     STATUS
     "Threading disabled"
   )
-  set(vt_fcontext_enabled "0")
 endif()

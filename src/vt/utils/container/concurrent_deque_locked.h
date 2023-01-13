@@ -55,8 +55,6 @@
 
 namespace vt { namespace util { namespace container {
 
-using ::vt::util::mutex::MutexType;
-
 /*
  * Implement a very simple concurrent deque that just uses std::mutex for access
  * control... obviously this should be greatly improved and made lock free but
@@ -110,11 +108,11 @@ struct ConcurrentDequeLocked {
   }
 
 private:
-  MutexType* getMutex();
+  std::mutex* getMutex();
 
 private:
   bool needs_lock_ = true;
-  MutexType container_mutex_{};
+  std::mutex container_mutex_{};
   ContainerType container_;
 };
 
