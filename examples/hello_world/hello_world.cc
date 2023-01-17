@@ -57,7 +57,9 @@ void helloWorld(int a, int b, float c) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
+  vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+
   if (num_nodes == 1) {
     return vt::rerror("requires at least 2 nodes");
   }
