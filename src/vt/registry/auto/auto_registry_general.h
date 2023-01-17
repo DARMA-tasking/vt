@@ -159,7 +159,7 @@ template <typename F, F f, typename... Params>
 struct FunctorAdapterParam {
   using FunctionPtrType = F;
   using ObjType = SentinelObject;
-  using MsgType = messaging::ParamMsg<std::tuple<Params...>>;
+  using MsgType = messaging::ParamMsg<messaging::DecayTuple<std::tuple<Params...>>>;
 
   static constexpr FunctionPtrType getFunction() { return f; }
 
