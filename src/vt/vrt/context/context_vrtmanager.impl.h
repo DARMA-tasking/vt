@@ -53,7 +53,6 @@
 #include "vt/topos/location/manager.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
-#include "vt/worker/worker_headers.h"
 
 #include <cassert>
 #include <memory>
@@ -139,66 +138,50 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
 ) {
   auto base_msg = promoteMsg(msg).template to<BaseMsgType>();
 
-  if (theContext()->getWorker() == worker_id_comm_thread) {
-    NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
-    // register the user's handler
-    HandlerType const han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>();
-    // save the user's handler in the message
-    msg->setVrtHandler(han);
-    msg->setProxy(toProxy);
+  NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
+  // register the user's handler
+  HandlerType const han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>();
+  // save the user's handler in the message
+  msg->setVrtHandler(han);
+  msg->setProxy(toProxy);
 
-    vt_debug_print(
-      normal, vrt,
-      "sending serialized msg to VC: msg={}, han={}, home_node={}, toProxy={}\n",
-      print_ptr(msg), han, home_node, toProxy
-    );
+  vt_debug_print(
+    normal, vrt,
+    "sending serialized msg to VC: msg={}, han={}, home_node={}, toProxy={}\n",
+    print_ptr(msg), han, home_node, toProxy
+  );
 
-    using SerialMsgT = SerializedEagerMsg<MsgT, VirtualMessage>;
+  using SerialMsgT = SerializedEagerMsg<MsgT, VirtualMessage>;
 
-    // route the message to the destination using the location manager
-    messaging::PendingSend pending(
-      base_msg, [=](MsgPtr<BaseMsgType> mymsg){
-        // Uses special implementation overload not exposed in theMsg..
-        MsgT* typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
-        auto sendSerialHan = auto_registry::makeAutoHandler<MsgT,virtualTypedMsgHandler<MsgT>>();
-        SerializedMessenger::sendSerialMsgSendImpl<MsgT, VirtualMessage>(
-          typed_msg,
-          sendSerialHan,
-          // custom send lambda to route the message
-          [=](MsgSharedPtr<SerialMsgT> innermsg) -> messaging::PendingSend {
-            innermsg->setProxy(toProxy);
-            theLocMan()->vrtContextLoc->routeMsgHandler<
-              SerialMsgT, SerializedMessenger::payloadMsgHandler
-            >(toProxy, home_node, innermsg);
-            return messaging::PendingSend(nullptr);
-          },
-          // custom data transfer lambda if above the eager threshold
-          [=](ActionNodeSendType action) -> messaging::PendingSend {
-            auto captured_action = [=](NodeType node){ action(node); };
-            theLocMan()->vrtContextLoc->routeNonEagerAction(
-              toProxy, home_node, captured_action
-            );
-            return messaging::PendingSend(nullptr);
-          }
-        );
-      }
-    );
-    return pending;
-  } else {
-    return messaging::PendingSend(
-      base_msg, [=](MsgPtr<BaseMsgType> mymsg) {
-        #if vt_threading_enabled
-        theWorkerGrp()->enqueueCommThread([=]{
-          auto typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
-          theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, typed_msg);
-        });
-        #else
-        auto typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
-        theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, typed_msg);
-        #endif
-      }
-    );
-  }
+  // route the message to the destination using the location manager
+  messaging::PendingSend pending(
+    base_msg, [=](MsgPtr<BaseMsgType> mymsg){
+      // Uses special implementation overload not exposed in theMsg..
+      MsgT* typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
+      auto sendSerialHan = auto_registry::makeAutoHandler<MsgT,virtualTypedMsgHandler<MsgT>>();
+      SerializedMessenger::sendSerialMsgSendImpl<MsgT, VirtualMessage>(
+        typed_msg,
+        sendSerialHan,
+        // custom send lambda to route the message
+        [=](MsgSharedPtr<SerialMsgT> innermsg) -> messaging::PendingSend {
+          innermsg->setProxy(toProxy);
+          theLocMan()->vrtContextLoc->routeMsgHandler<
+            SerialMsgT, SerializedMessenger::payloadMsgHandler
+          >(toProxy, home_node, innermsg);
+          return messaging::PendingSend(nullptr);
+        },
+        // custom data transfer lambda if above the eager threshold
+        [=](ActionNodeSendType action) -> messaging::PendingSend {
+          auto captured_action = [=](NodeType node){ action(node); };
+          theLocMan()->vrtContextLoc->routeNonEagerAction(
+            toProxy, home_node, captured_action
+          );
+          return messaging::PendingSend(nullptr);
+        }
+      );
+    }
+  );
+  return pending;
 }
 
 template <typename VrtContextT, typename... Args>
@@ -241,75 +224,34 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
 }
 
 inline void VirtualContextManager::setupMappedVirutalContext(
-  VirtualProxyType const& proxy, SeedType const& seed, CoreType const& core,
-  HandlerType const map_handle
+  VirtualProxyType const& proxy, SeedType const& seed
 ) {
   auto vrt_info = getVirtualInfoByProxy(proxy);
   vrt_info->setSeed(seed);
-  vrt_info->setCoreMap(map_handle);
-  vrt_info->mapToCore(core);
 }
 
 template <typename VrtContextT, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualMapComm(
-  SeedType const& seed, HandlerType const map_handle, Args&& ... args
+  SeedType const& seed, Args&& ... args
 ) {
   auto const& proxy = makeVirtual<VrtContextT, Args...>(
     std::forward<Args>(args)...
   );
-  setupMappedVirutalContext(proxy, seed, worker_id_comm_thread, map_handle);
+  setupMappedVirutalContext(proxy, seed);
   return proxy;
 }
 
 template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
   SeedType next_seed = no_seed;
-  HandlerType core_map_handle = uninitialized_handler;
-  bool const& has_workers = theContext()->hasWorkers();
 
   vt_debug_print(
     normal, vrt,
-    "makeVirtualMap: has_workers={}\n", print_bool(has_workers)
+    "makeVirtualMap\n"
   );
 
-  if (has_workers) {
-    next_seed = cur_seed_++;
-    core_map_handle = auto_registry::makeAutoHandlerSeedMap<fn>();
-
-    auto const& num_workers = theContext()->getNumWorkers();
-    auto const& mapped_core = fn(next_seed, num_workers);
-
-    vt_debug_print(
-      verbose, vrt,
-      "seed={}, mapped_core={}, num_workers={}\n",
-      next_seed, mapped_core, num_workers
-    );
-
-    if (mapped_core != worker_id_comm_thread) {
-      using TupleType = std::tuple<Args...>;
-
-      auto proxy = makeVirtualPlaceholder();
-      auto vrt_info = getVirtualInfoByProxy(proxy);
-      setupMappedVirutalContext(proxy, next_seed, mapped_core, core_map_handle);
-
-      auto cl = new VirtualMakeClosure<VrtContextT, Args...>(
-        TupleType{std::forward<Args>(args)...}, proxy, vrt_info
-      );
-
-      // work to defer to the worker thread
-      auto work_unit = [=]{ cl->make(); delete cl; };
-      #if vt_threading_enabled
-      theWorkerGrp()->enqueueForWorker(mapped_core, work_unit);
-      #else
-      work_unit();
-      #endif
-
-      return proxy;
-    }
-  }
-
   return makeVirtualMapComm<VrtContextT>(
-    next_seed, core_map_handle, std::forward<Args>(args)...
+    next_seed, std::forward<Args>(args)...
   );
 }
 

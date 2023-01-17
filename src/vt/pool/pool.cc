@@ -43,7 +43,6 @@
 
 #include "vt/config.h"
 #include "vt/pool/pool.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/pool/static_sized/memory_pool_equal.h"
 
 #include <cstdlib>
@@ -107,29 +106,19 @@ bool Pool::tryPooledDealloc(void* const buf) {
 void* Pool::pooledAlloc(
   size_t const& num_bytes, size_t const& oversize, ePoolSize const pool_type
 ) {
-  auto const worker = theContext()->getWorker();
-  bool const comm_thread = worker == worker_id_comm_thread;
   void* ret = nullptr;
 
   vt_debug_print(
     normal, pool,
-    "Pool::pooled_alloc of size={}, type={}, ret={}, worker={}\n",
-    num_bytes, print_pool_type(pool_type), ret, worker
+    "Pool::pooled_alloc of size={}, type={}, ret={}\n",
+    num_bytes, print_pool_type(pool_type), ret
   );
 
   if (pool_type == ePoolSize::Small) {
-    auto pool = comm_thread ? small_msg.get() : s_msg_worker_[worker].get();
-    vtAssert(
-      (comm_thread || s_msg_worker_.size() > static_cast<size_t>(worker)),
-      "Must have worker pool"
-    );
+    auto pool = small_msg.get();
     ret = pool->alloc(num_bytes, oversize);
   } else if (pool_type == ePoolSize::Medium) {
-    auto pool = comm_thread ? medium_msg.get() : m_msg_worker_[worker].get();
-    vtAssert(
-      (comm_thread || m_msg_worker_.size() > static_cast<size_t>(worker)),
-      "Must have worker pool"
-    );
+    auto pool = medium_msg.get();
     ret = pool->alloc(num_bytes, oversize);
   } else {
     vtAssert(0, "Pool must be valid");
@@ -191,30 +180,13 @@ void* Pool::alloc(size_t const& num_bytes, size_t oversize) {
 void Pool::dealloc(void* const buf) {
   auto buf_char = static_cast<char*>(buf);
   auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
-  auto const& alloc_worker = HeaderManagerType::getHeaderWorker(buf_char);
   auto const& ptr_actual = HeaderManagerType::getHeaderPtr(buf_char);
-  auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf_char);
-  auto const worker = theContext()->getWorker();
-
-  ePoolSize const pool_type = getPoolType(actual_alloc_size, oversize);
 
   vt_debug_print(
     normal, pool,
-    "Pool::dealloc of buf={}, type={}, alloc_size={}, worker={}, ptr={}\n",
-    buf, print_pool_type(pool_type), actual_alloc_size, alloc_worker,
-    print_ptr(ptr_actual)
+    "Pool::dealloc of buf={}, alloc_size={}, ptr={}\n",
+    buf, actual_alloc_size, print_ptr(ptr_actual)
   );
-
-  if (pool_type != ePoolSize::Malloc && alloc_worker != worker) {
-    #if vt_threading_enabled
-    theWorkerGrp()->enqueueForWorker(worker, [buf]{
-      thePool()->dealloc(buf);
-    });
-    #else
-    thePool()->dealloc(buf);
-    #endif
-    return;
-  }
 
   bool success = false;
 
@@ -262,22 +234,6 @@ Pool::tryGrowAllocation(void* buf, size_t grow_amount) {
   auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(reinterpret_cast<char*>(buf)));
   header->alloc_size += grow_amount;
   return true;
-}
-
-void Pool::initWorkerPools(WorkerCountType const& num_workers) {
-  #if vt_check_enabled(memory_pool)
-    for (auto i = 0; i < num_workers; i++) {
-      s_msg_worker_.emplace_back(initSPool());
-      m_msg_worker_.emplace_back(initMPool());
-    }
-  #endif
-}
-
-void Pool::finalize() {
-  #if vt_check_enabled(memory_pool)
-    s_msg_worker_.clear();
-    m_msg_worker_.clear();
-  #endif
 }
 
 bool Pool::active() const {

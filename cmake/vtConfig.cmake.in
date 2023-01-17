@@ -14,7 +14,6 @@ endif()
 
 include(CMakeFindDependencyMacro)
 
-@THREADS_DEPENDENCY@
 @ZOLTAN_DEPENDENCY@
 
 find_dependency(MPI REQUIRED)

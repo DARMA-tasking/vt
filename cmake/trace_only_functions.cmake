@@ -50,8 +50,7 @@ function(create_trace_only_target)
     vt/utils/demangle/demangle.h vt/utils/bits/bits_counter.h
     vt/utils/bits/bits_common.h vt/utils/bits/bits_packer.h
     vt/utils/bits/bits_packer.impl.h vt/utils/adt/union.h
-    vt/utils/tls/tls.h vt/utils/tls/std_tls.h vt/utils/tls/null_tls.h
-    vt/utils/tls/tls.impl.h vt/utils/adt/histogram_approx.h
+    vt/utils/adt/histogram_approx.h
 
     # vt/collective
     vt/collective/basic.h
@@ -157,7 +156,7 @@ function(set_trace_only_config)
   # since the scope is local to this function
   set(vt_feature_cmake_trace_enabled "1")
   set(vt_feature_cmake_trace_only "1")
-  config_no_threading()
+  set(vt_fcontext_enabled "0" PARENT_SCOPE)
 
   configure_file(
     ${PROJECT_BASE_DIR}/cmake_config.h.in

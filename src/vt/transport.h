@@ -69,8 +69,6 @@
 #include "vt/vrt/context/context_vrtheaders.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/standalone/vt_main.h"
-#include "vt/utils/tls/tls.h"
-#include "vt/utils/atomic/atomic.h"
 #include "vt/group/group_headers.h"
 #include "vt/epoch/epoch_headers.h"
 #include "vt/pipe/pipe_headers.h"

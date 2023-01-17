@@ -59,7 +59,6 @@
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/error/stack_out.h"
 #include "vt/utils/memory/memory_usage.h"
@@ -96,11 +95,9 @@ namespace vt { namespace runtime {
 /*static*/ bool volatile Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
-  int& argc, char**& argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm in_comm, RuntimeInstType const in_instance,
-  arguments::AppConfig const* appConfig
+  int& argc, char**& argv, bool const interop_mode, MPI_Comm in_comm,
+  RuntimeInstType const in_instance, arguments::AppConfig const* appConfig
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
-     num_workers_(in_num_workers),
      initial_communicator_(in_comm),
      arg_config_(std::make_unique<arguments::ArgConfig>()),
      app_config_(&arg_config_->config_)
@@ -755,17 +752,6 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  #if vt_threading_enabled
-  p_->registerComponent<worker::WorkerGroupType>(
-    &theWorkerGrp, Deps<
-      ctx::Context,               // Everything depends on theContext
-      messaging::ActiveMessenger, // Depends on active messenger to send msgs
-      sched::Scheduler,           // Depends on scheduler
-      term::TerminationDetector   // Depends on TD for idle callbacks
-    >{}
-  );
-  #endif
-
   p_->registerComponent<collective::CollectiveAlg>(
     &theCollective, Deps<
       ctx::Context,              // Everything depends on theContext
@@ -914,13 +900,6 @@ void Runtime::initializeComponents() {
     p_->add<vrt::collection::balance::LBDataRestartReader>();
   }
 
-  #if vt_threading_enabled
-  bool const has_workers = num_workers_ != no_workers;
-  if (has_workers) {
-    p_->add<worker::WorkerGroupType>();
-  }
-  #endif
-
   p_->construct();
 
   vt_debug_print(
@@ -962,7 +941,7 @@ void Runtime::initializeOptionalComponents() {
     "begin: initializeOptionalComponents\n"
   );
 
-  initializeWorkers(num_workers_);
+  initializeTDCallbacks();
 
   vt_debug_print(
     verbose, runtime,
@@ -970,62 +949,40 @@ void Runtime::initializeOptionalComponents() {
   );
 }
 
-void Runtime::initializeWorkers(WorkerCountType const num_workers) {
+void Runtime::initializeTDCallbacks() {
   using ::vt::ctx::ContextAttorney;
 
   vt_debug_print(
     normal, runtime,
-    "begin: initializeWorkers: workers={}\n",
-    num_workers
+    "begin: initializeTDCallbacks\n"
   );
 
-  bool const has_workers = num_workers != no_workers;
-
-  if (has_workers) {
-    #if vt_threading_enabled
-    ContextAttorney::setNumWorkers(num_workers);
-
-    // Initialize individual memory pool for each worker
-    thePool->initWorkerPools(num_workers);
-
-    auto localTermFn = [](worker::eWorkerGroupEvent event){
-      bool const no_local_workers = false;
-      bool const is_idle = event == worker::eWorkerGroupEvent::WorkersIdle;
-      bool const is_busy = event == worker::eWorkerGroupEvent::WorkersBusy;
-      if (is_idle || is_busy) {
-        ::vt::theTerm()->setLocalTerminated(is_idle, no_local_workers);
-      }
-    };
-    theWorkerGrp->registerIdleListener(localTermFn);
-    #endif
-  } else {
-    // Without workers running on the node, the termination detector should
-    // enable/disable the global collective epoch based on the state of the
-    // scheduler; register listeners to activate/deactivate that epoch
-    auto td = vt::theTerm();
-    theSched->registerTrigger(
-      sched::SchedulerEvent::BeginIdleMinusTerm, [td]{
-        vt_debug_print(
-          normal, runtime,
-          "setLocalTerminated: BeginIdle: true\n"
-        );
-        td->setLocalTerminated(true, false);
-      }
-    );
-    theSched->registerTrigger(
-      sched::SchedulerEvent::EndIdleMinusTerm, [td]{
-        vt_debug_print(
-          normal, runtime,
-          "setLocalTerminated: EndIdle: false\n"
-        );
-        td->setLocalTerminated(false, false);
-      }
-    );
-  }
+  // Without workers running on the node, the termination detector should
+  // enable/disable the global collective epoch based on the state of the
+  // scheduler; register listeners to activate/deactivate that epoch
+  auto td = vt::theTerm();
+  theSched->registerTrigger(
+    sched::SchedulerEvent::BeginIdleMinusTerm, [td]{
+      vt_debug_print(
+        normal, runtime,
+        "setLocalTerminated: BeginIdle: true\n"
+      );
+      td->setLocalTerminated(true, false);
+    }
+  );
+  theSched->registerTrigger(
+    sched::SchedulerEvent::EndIdleMinusTerm, [td]{
+      vt_debug_print(
+        normal, runtime,
+        "setLocalTerminated: EndIdle: false\n"
+      );
+      td->setLocalTerminated(false, false);
+    }
+  );
 
   vt_debug_print(
     normal, runtime,
-    "end: initializeWorkers\n"
+    "end: initializeTDCallbacks\n"
   );
 }
 
@@ -1079,12 +1036,6 @@ void Runtime::printMemoryFootprint() const {
       printComponentFootprint(
         static_cast<vrt::VirtualContextManager*>(base)
       );
-    } else if (name == "WorkerGroupOMP" || name == "WorkerGroup") {
-      #if vt_threading_enabled
-      printComponentFootprint(
-        static_cast<worker::WorkerGroupType*>(base)
-      );
-      #endif
     } else if (name == "Collective") {
       printComponentFootprint(
         static_cast<collective::CollectiveAlg*>(base)

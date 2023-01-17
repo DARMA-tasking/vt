@@ -44,11 +44,8 @@
 #include "vt/config.h"
 #include "vt/vrt/context/context_vrtinfo.h"
 #include "vt/vrt/context/context_vrtmessage.h"
-#include "vt/utils/mutex/mutex.h"
-#include "vt/utils/atomic/atomic.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/messaging/message.h"
 #include "vt/runnable/make_runnable.h"
 
@@ -61,8 +58,7 @@ namespace vt { namespace vrt {
 VirtualInfo::VirtualInfo(
   VirtualPtrType in_vrt_ptr, VirtualProxyType const& proxy_in, bool needs_lock
 ) : proxy_(proxy_in),
-    is_constructed_(in_vrt_ptr != nullptr),
-    vrt_ptr_(is_constructed_ ? std::move(in_vrt_ptr) : nullptr),
+    vrt_ptr_(in_vrt_ptr != nullptr ? std::move(in_vrt_ptr) : nullptr),
     needs_lock_(needs_lock)
 { }
 
@@ -70,7 +66,6 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
   vtAssert(in_vrt_ptr != nullptr, "Must have a valid vrt ptr");
 
   vrt_ptr_ = std::move(in_vrt_ptr);
-  is_constructed_ = true;
 
   vt_debug_print(
     verbose, vrt,
@@ -78,16 +73,9 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
     print_ptr(in_vrt_ptr.get())
   );
 
-  msg_buffer_.attach([this](VirtualMessage* msg){
-    #if vt_threading_enabled
-    theWorkerGrp()->enqueueCommThread([this,msg]{
-      enqueueWorkUnit(msg);
-    });
-    #else
-    (void)this;
+  for(auto && msg : msg_buffer_) {
     enqueueWorkUnit(msg);
-    #endif
-  });
+  }
 }
 
 bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
@@ -110,39 +98,20 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
       .run();
   };
 
-  bool const has_workers = theContext()->hasWorkers();
-
-  if (has_workers) {
-    #if vt_threading_enabled
-    bool const execute_comm = msg->getExecuteCommThread();
-    if (hasCoreMap() && !execute_comm) {
-      auto const core = getCore();
-      theWorkerGrp()->enqueueForWorker(core, work_unit);
-    } else {
-      theWorkerGrp()->enqueueCommThread(work_unit);
-    }
-    #else
-    work_unit();
-    #endif
-    return true;
-  } else {
-    work_unit();
-    return false;
-  }
+  work_unit();
+  return false;
 }
 
 void VirtualInfo::tryEnqueueWorkUnit(VirtualMessage* msg) {
-  bool const is_constructed = is_constructed_.load();
-
   vt_debug_print(
     verbose, vrt,
-    "tryEnqueueWorkUnit is_cons={}\n", print_bool(is_constructed)
+    "tryEnqueueWorkUnit \n"
   );
 
-  if (is_constructed) {
+  if (vrt_ptr_ != nullptr) {
     enqueueWorkUnit(msg);
   } else {
-    msg_buffer_.push(msg);
+    msg_buffer_.push_back(msg);
   }
 }
 
