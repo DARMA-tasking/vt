@@ -56,6 +56,7 @@
 #include "vt/messaging/request_holder.h"
 #include "vt/messaging/send_info.h"
 #include "vt/messaging/async_op_wrapper.h"
+#include "vt/messaging/param_msg.h"
 #include "vt/event/event.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/trace/trace_common.h"
@@ -754,6 +755,23 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   ) {
     using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
     return sendMsg<MsgT, f>(dest, msg, tag);
+  }
+
+  /**
+   * \brief Send parameters to a handler in a message
+   *
+   * \param[in] dest the destination node to send the message to
+   * \param[in] params the parameters
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <auto f, typename... Params>
+  PendingSendType send(NodeType dest, Params&&... params) {
+    using Tuple = typename std::decay<std::tuple<Params...>>::type;
+    using MsgT = ParamMsg<Tuple>;
+    auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
+    auto han = auto_registry::makeAutoHandlerParam<decltype(f),f,Params...>();
+    return sendMsg<MsgT>(dest, han, msg, no_tag);
   }
 
   /**

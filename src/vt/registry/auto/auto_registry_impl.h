@@ -144,9 +144,9 @@ inline BaseScatterDispatcherPtr const& getScatterAutoHandler(HandlerType const h
   return getAutoRegistryGen<ScatterContainerType>().at(han_id).getFun();
 }
 
-template <typename T, T value>
+template <typename T, T value, typename... Params>
 inline HandlerType makeAutoHandlerParam() {
-  using AdapterT = FunctorAdapterParam<T, value>;
+  using AdapterT = FunctorAdapterParam<T, value, Params...>;
   using ContainerType = AutoActiveContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
   using FuncType = ActiveFnPtrType;

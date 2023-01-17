@@ -133,6 +133,21 @@ private:
     }
   };
 
+  template <typename T>
+  struct DispatchImpl<
+    T,
+    std::enable_if_t<
+      std::is_same<ObjT, SentinelObject>::value and
+      not std::is_same<T, ActiveVoidFnType*>::value and
+      not std::is_same<T, ActiveTypedFnType<MsgT>*>::value
+    >
+  > {
+    static void run(MsgT* msg, void*, HandlerT han) {
+      std::apply(han, msg->params);
+    }
+  };
+
+
 public:
   void dispatch(messaging::BaseMsg* msg, void* object) const override {
     DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                hello_world.cc
+//                                 param_msg.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,32 +41,32 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
+#if !defined INCLUDED_VT_MESSAGING_PARAM_MSG_H
+#define INCLUDED_VT_MESSAGING_PARAM_MSG_H
 
-struct HelloMsg : vt::Message {
-  HelloMsg(vt::NodeType in_from) : from(in_from) { }
+#include "vt/messaging/message/message_serialize.h"
 
-  vt::NodeType from = 0;
+namespace vt { namespace messaging {
+
+template <typename Tuple>
+struct ParamMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_if_needed_by_parent_or_type1(Tuple); // by tup
+
+  template <typename... Params>
+  explicit ParamMsg(Params&&... in_params)
+    : params(std::forward<Params>(in_params)...)
+  { }
+
+  Tuple params;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | params;
+  }
 };
 
-void helloWorld(int a, int b, float c) {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  fmt::print("{}: Hello from node vals = {} {} {}\n", this_node, a, b, c);
-}
+}} /* end namespace vt::messaging */
 
-int main(int argc, char** argv) {
-  vt::initialize(argc, argv);
-
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
-  if (num_nodes == 1) {
-    return vt::rerror("requires at least 2 nodes");
-  }
-
-  if (this_node == 0) {
-    vt::theMsg()->send<helloWorld>(1, 10, 20, 11.3f);
-  }
-
-  vt::finalize();
-
-  return 0;
-}
+#endif /*INCLUDED_VT_MESSAGING_PARAM_MSG_H*/
