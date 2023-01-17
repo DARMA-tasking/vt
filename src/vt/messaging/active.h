@@ -767,7 +767,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <auto f, typename... Params>
   PendingSendType send(NodeType dest, Params&&... params) {
-    using Tuple = typename std::decay<std::tuple<Params...>>::type;
+    using Tuple = DecayTuple<std::tuple<Params...>>;
     using MsgT = ParamMsg<Tuple>;
     auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerParam<decltype(f),f,Params...>();

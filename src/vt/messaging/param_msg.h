@@ -67,6 +67,14 @@ struct ParamMsg : vt::Message {
   }
 };
 
+
+template <typename... Params>
+constexpr auto decayTypes(std::tuple<Params...> const&)
+  -> std::tuple<std::remove_cv_t<std::remove_reference_t<Params>>...>;
+
+template <typename T>
+using DecayTuple = decltype(decayTypes(std::declval<T>()));
+
 }} /* end namespace vt::messaging */
 
 #endif /*INCLUDED_VT_MESSAGING_PARAM_MSG_H*/
