@@ -51,6 +51,8 @@
 
 namespace vt { namespace tests { namespace unit { namespace lb {
 
+#if vt_check_enabled(lblite)
+
 using TestOfflineLB = TestParallelHarness;
 
 struct SimCol : vt::Collection<SimCol, vt::Index1D> {
@@ -144,5 +146,7 @@ TEST_F(TestOfflineLB, test_offlinelb_1) {
     thePhase()->nextPhaseCollective();
   }
 }
+
+#endif
 
 }}}} /* end namespace vt::tests::unit::lb */
