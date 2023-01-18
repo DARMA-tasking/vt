@@ -58,6 +58,8 @@ using NodeType                = PhysicalResourceType;
 /// Used to hold a core ID
 using CoreType                = PhysicalResourceType;
 
+using WorkerCountType [[deprecated]] = PhysicalResourceType;
+
 // Runtime system entity types
 /// Used to hold a handler ID which identifier a function pointer/context
 using HandlerType             = int64_t;

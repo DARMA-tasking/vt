@@ -64,6 +64,14 @@ struct CollectiveAnyOps {
     int& argc, char**& argv, bool is_interop = false, MPI_Comm* comm = nullptr,
     arguments::AppConfig const* appConfig = nullptr
   );
+  [[deprecated]] static RuntimePtrType initialize(
+    int& argc, char**& argv, WorkerCountType const /* num_workers */,
+    bool is_interop = false, MPI_Comm* comm = nullptr,
+    arguments::AppConfig const* appConfig = nullptr
+    )
+  {
+    return initialize(argc, argv, is_interop, comm, appConfig);
+  }
   static void finalize(RuntimePtrType in_rt = nullptr);
   static void scheduleThenFinalize(RuntimePtrType in_rt = nullptr);
   static void setCurrentRuntimeTLS(RuntimeUnsafePtrType in_rt = nullptr);
