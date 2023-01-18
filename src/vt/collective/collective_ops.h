@@ -65,7 +65,7 @@ struct CollectiveAnyOps {
     arguments::AppConfig const* appConfig = nullptr
   );
   [[deprecated]] static RuntimePtrType initialize(
-    int& argc, char**& argv, WorkerCountType const /* num_workers */,
+    int& argc, char**& argv, PhysicalResourceType const /* num_workers */,
     bool is_interop = false, MPI_Comm* comm = nullptr,
     arguments::AppConfig const* appConfig = nullptr
     )
