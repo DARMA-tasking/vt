@@ -696,7 +696,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     using ReturnType = ReturnT;
   };
 
-
   /**
    * \brief Broadcast a message (message type not required).
    *
@@ -757,6 +756,15 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     return sendMsg<MsgT, f>(dest, msg, tag);
   }
 
+  template <typename ReturnT, typename... Args>
+  struct FunctionTraitsArgs;
+
+  template <typename ReturnT, typename... Args>
+  struct FunctionTraitsArgs<ReturnT(*)(Args...)> {
+    using TupleType = std::tuple<std::decay_t<Args>...>;
+    using ReturnType = ReturnT;
+  };
+
   /**
    * \brief Send parameters to a handler in a message
    *
@@ -767,11 +775,27 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <auto f, typename... Params>
   PendingSendType send(NodeType dest, Params&&... params) {
-    using Tuple = DecayTuple<std::tuple<Params...>>;
+    using Tuple = typename FunctionTraitsArgs<decltype(f)>::TupleType;
     using MsgT = ParamMsg<Tuple>;
     auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
-    auto han = auto_registry::makeAutoHandlerParam<decltype(f),f,Params...>();
+    auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
     return sendMsg<MsgT>(dest, han, msg, no_tag);
+  }
+
+  /**
+   * \brief Broadcast parameters to a handler in a message
+   *
+   * \param[in] params the parameters
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <auto f, typename... Params>
+  PendingSendType broadcast(Params&&... params) {
+    using Tuple = typename FunctionTraitsArgs<decltype(f)>::TupleType;
+    using MsgT = ParamMsg<Tuple>;
+    auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
+    auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
+    return broadcastMsg<MsgT>(han, msg, true, no_tag);
   }
 
   /**

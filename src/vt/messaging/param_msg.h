@@ -48,10 +48,15 @@
 
 namespace vt { namespace messaging {
 
+template <typename Tuple, typename enabled = void>
+struct ParamMsg;
+
 template <typename Tuple>
-struct ParamMsg : vt::Message {
-  using MessageParentType = vt::Message;
-  vt_msg_serialize_if_needed_by_parent_or_type1(Tuple); // by tup
+struct ParamMsg<
+  Tuple, std::enable_if_t<is_byte_copyable_t<Tuple>::value>
+> : vt::Message
+{
+  ParamMsg() = default;
 
   template <typename... Params>
   explicit ParamMsg(Params&&... in_params)
@@ -59,6 +64,27 @@ struct ParamMsg : vt::Message {
   { }
 
   Tuple params;
+  Tuple& getTuple() { return params; }
+};
+
+template <typename Tuple>
+struct ParamMsg<
+  Tuple, std::enable_if_t<not is_byte_copyable_t<Tuple>::value>
+> : vt::Message
+{
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_if_needed_by_parent_or_type1(Tuple); // by tup
+
+  ParamMsg() = default;
+
+  template <typename... Params>
+  explicit ParamMsg(Params&&... in_params)
+    : params(std::make_unique<Tuple>(std::forward<Params>(in_params)...))
+  { }
+
+  std::unique_ptr<Tuple> params;
+
+  Tuple& getTuple() { return *params.get(); }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -66,14 +92,6 @@ struct ParamMsg : vt::Message {
     s | params;
   }
 };
-
-
-template <typename... Params>
-constexpr auto decayTypes(std::tuple<Params...> const&)
-  -> std::tuple<std::remove_cv_t<std::remove_reference_t<Params>>...>;
-
-template <typename T>
-using DecayTuple = decltype(decayTypes(std::declval<T>()));
 
 }} /* end namespace vt::messaging */
 
