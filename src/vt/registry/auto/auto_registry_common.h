@@ -143,7 +143,7 @@ private:
     >
   > {
     static void run(MsgT* msg, void*, HandlerT han) {
-      std::apply(han, msg->params);
+      std::apply(han, msg->getTuple());
     }
   };
 
