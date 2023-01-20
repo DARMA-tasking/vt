@@ -58,7 +58,7 @@ using LoadSummary = vt::vrt::collection::balance::LoadSummary;
 
 namespace vt {
 
-bool split_more_blocks = false;
+bool split_more_blocks = true;
 
 using SharedID = int;
 
@@ -176,6 +176,11 @@ bool tryBinFully(
   std::unordered_map<SharedID, std::vector<ElementIDStruct>>& objs
 );
 
+bool considerSwaps(
+  Rank* max_rank, int bin, double size, int gid, double diff,
+  std::unordered_map<SharedID, std::vector<ElementIDStruct>>& objs
+);
+
 void balanceLoad() {
   int made_no_assignments = 0;
 
@@ -263,8 +268,9 @@ void balanceLoad() {
         auto size = std::get<0>(groupings[i]);
         auto gid = std::get<1>(groupings[i]);
 
-        bool ret = tryBinFully(max_rank, i, size, gid, obj_shared_map);
+        bool ret = considerSwaps(max_rank, i, size, gid, diff, obj_shared_map);
         made_assignment = made_assignment or ret;
+        if (ret) break;
       }
     } else {
       for (int i = pick_lower+1; i < pick_upper+1; i++) {
@@ -400,6 +406,115 @@ bool tryBin(
   return made_assignment;
 }
 
+void outputBinInfo(Rank* r1) {
+  std::unordered_map<SharedID, std::set<Object*>> binned;
+  for (auto&& o : r1->objs_) {
+    binned[o->shared_id_].insert(o);
+  }
+  for (auto&& bin : binned) {
+    auto b = bin.first;
+    auto& objs = bin.second;
+    double load_sum = 0.;
+    for (auto x : objs) {
+      load_sum += x->load_;
+    }
+    fmt::print("Rank {}: bin={}, total load={}\n", r1->rank_, b, load_sum);
+  }
+}
+
+bool considerSwaps(
+  Rank* max_rank, int bin, double size, int gid, double diff,
+  std::unordered_map<SharedID, std::vector<ElementIDStruct>>& objs
+) {
+  bool made_assignment = false;
+
+  fmt::print("considerSwaps: bin={}, size={}, diff={}\n", bin, size, diff);
+
+  if (size > diff*0.3/* and size < diff*1.1*/) {
+    fmt::print("considerSwaps (continuing): bin={}, size={}, diff={}\n", bin, size, diff);
+  } else {
+    return false;
+  }
+
+  std::vector<Rank*> min_ranks;
+  for (auto& r : ranks) {
+    min_ranks.push_back(&r);
+  }
+
+  while (min_ranks.size() > 0) {
+    Rank* min_rank = nullptr;
+
+    std::pop_heap(min_ranks.begin(), min_ranks.end(), comp_rank_min);
+    min_rank = min_ranks.back();
+    min_ranks.pop_back();
+
+    if (min_rank->rank_ == max_rank->rank_) {
+      continue;
+    }
+
+    std::unordered_map<SharedID, std::set<Object*>> binned;
+    for (auto&& o : min_rank->objs_) {
+      binned[o->shared_id_].insert(o);
+    }
+    SharedID pick = -1;
+    for (auto&& y : binned) {
+      auto b = y.first;
+      auto& os = y.second;
+      double load_sum = 0.;
+      for (auto&& x : os) {
+        load_sum += x->load_;
+      }
+
+      double const cur_max = max_rank->cur_load_;
+      if (min_rank->cur_load_ + size - load_sum < cur_max and max_rank->cur_load_ - size + load_sum < cur_max) {
+        fmt::print(
+          "considerSwaps: continue testing: cur_max={}, new min={}, new max={}\n",
+          cur_max,
+          min_rank->cur_load_ + size - load_sum,
+          max_rank->cur_load_ - size + load_sum
+        );
+      } else {
+        fmt::print(
+          "considerSwaps: would make situation worse: cur_max={}, new min={}, new max={}\n",
+          cur_max,
+          min_rank->cur_load_ + size - load_sum,
+          max_rank->cur_load_ - size + load_sum
+        );
+        continue;
+      }
+
+      fmt::print("considerSwaps: min={} size={}, diff={}, bin={}, load_sum={}\n", min_rank->rank_, size, diff, b, load_sum);
+      if (load_sum*1.1 < diff) {
+        pick = b;
+        break;
+      }
+    }
+
+    if (pick != -1) {
+      fmt::print("considerSwaps: swapping pick={} rank={}\n", pick, min_rank->rank_);
+      for (auto&& o : binned[pick]) {
+        max_rank->addObj(o);
+        min_rank->removeObj(o);
+      }
+      for (auto&& o : objs[gid]) {
+        auto xx = &objects[o];
+        min_rank->addObj(xx);
+        max_rank->removeObj(xx);
+      }
+      fmt::print("considerSwaps: min/max num ids= {} {}\n", min_rank->shared_ids_.size(), max_rank->shared_ids_.size());
+      if (min_rank->shared_ids_.size() > max_shared_ids) {
+        vtAbort("Failure\n");
+      }
+      if (max_rank->shared_ids_.size() > max_shared_ids) {
+        vtAbort("Failure\n");
+      }
+      return true;
+    }
+  }
+
+  return made_assignment;
+}
+
 bool tryBinFully(
   Rank* max_rank, int bin, double size, int gid,
   std::unordered_map<SharedID, std::vector<ElementIDStruct>>& objs
@@ -431,6 +546,7 @@ bool tryBinFully(
         continue;
       }
 
+      //outputBinInfo(min_rank);
       //fmt::print("min_rank={}, load={}, shared_ids={}\n", min_rank->rank_, min_rank->cur_load_, min_rank->shared_ids_.size());
 
       auto const selected_load = objects[o].load_;
