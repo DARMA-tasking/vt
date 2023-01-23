@@ -119,6 +119,7 @@ struct Rank {
 std::unordered_map<ElementIDStruct, Object> objects;
 std::vector<Rank> ranks;
 std::unordered_map<SharedID, double> shared_mem;
+std::unordered_map<SharedID, int> shared_mem_initial_rank;
 std::size_t max_shared_ids = 0;
 
 std::tuple<double, int> calculateMemoryForRank(NodeType rank) {
@@ -302,14 +303,27 @@ void balanceLoad() {
 #endif
 
 #if 1
+  std::set<SharedID> off_home;
   std::unordered_map<SharedID, std::set<int>> counter;
   for (auto&& r : ranks) {
     for (auto&& s : r.shared_ids_) {
       auto id = s.first;
       auto rank = r.rank_;
       counter[id].insert(rank);
+      if (rank != shared_mem_initial_rank[id]) {
+        off_home.insert(id);
+      }
     }
   }
+
+  int count_off_home = 0;
+  for (auto&& c : counter) {
+    if (c.second.size() == 1 and off_home.find(c.first) != off_home.end()) {
+      count_off_home++;
+    }
+  }
+  fmt::print("Histogram: count off home={}\n", count_off_home);
+
   std::map<int, int> histogram;
   for (auto&& c : counter) {
     //fmt::print("shared id={}, num ranks={}\n", c.first, c.second.size());
@@ -318,6 +332,36 @@ void balanceLoad() {
 
   for (auto&& h : histogram) {
     fmt::print("Histogram: bin={}, occur={}\n", h.first, h.second);
+  }
+
+  for (int i = 0; i < static_cast<int>(ranks.size()); i++) {
+    auto& r = ranks[i];
+    std::set<int> local;
+    std::set<int> remote;
+    std::set<int> split;
+    for (auto&& x : r.shared_ids_) {
+      auto id = x.first;
+      if (counter[id].size() != 1) {
+        split.insert(id);
+      } else if (shared_mem_initial_rank[id] != r.rank_) {
+        remote.insert(id);
+      } else {
+        local.insert(id);
+      }
+    }
+    fmt::print("Rank {}: count={}: local=[", r.rank_, r.shared_ids_.size());
+    for (auto&& x : local) {
+      fmt::print("{} ", x);
+    }
+    fmt::print("] remote: [");
+    for (auto&& x : remote) {
+      fmt::print("{} ", x);
+    }
+    fmt::print("] split: [");
+    for (auto&& x : split) {
+      fmt::print("{}(home={}) ", x, shared_mem_initial_rank[x]);
+    }
+    fmt::print("]\n");
   }
 #endif
 }
@@ -428,10 +472,10 @@ bool considerSwaps(
 ) {
   bool made_assignment = false;
 
-  fmt::print("considerSwaps: bin={}, size={}, diff={}\n", bin, size, diff);
+  // fmt::print("considerSwaps: bin={}, size={}, diff={}\n", bin, size, diff);
 
   if (size > diff*0.3/* and size < diff*1.1*/) {
-    fmt::print("considerSwaps (continuing): bin={}, size={}, diff={}\n", bin, size, diff);
+    // fmt::print("considerSwaps (continuing): bin={}, size={}, diff={}\n", bin, size, diff);
   } else {
     return false;
   }
@@ -452,7 +496,7 @@ bool considerSwaps(
       continue;
     }
 
-    std::unordered_map<SharedID, std::set<Object*>> binned;
+    std::map<SharedID, std::set<Object*>> binned;
     for (auto&& o : min_rank->objs_) {
       binned[o->shared_id_].insert(o);
     }
@@ -467,23 +511,23 @@ bool considerSwaps(
 
       double const cur_max = max_rank->cur_load_;
       if (min_rank->cur_load_ + size - load_sum < cur_max and max_rank->cur_load_ - size + load_sum < cur_max) {
-        fmt::print(
-          "considerSwaps: continue testing: cur_max={}, new min={}, new max={}\n",
-          cur_max,
-          min_rank->cur_load_ + size - load_sum,
-          max_rank->cur_load_ - size + load_sum
-        );
+        // fmt::print(
+        //   "considerSwaps: continue testing: cur_max={}, new min={}, new max={}\n",
+        //   cur_max,
+        //   min_rank->cur_load_ + size - load_sum,
+        //   max_rank->cur_load_ - size + load_sum
+        // );
       } else {
-        fmt::print(
-          "considerSwaps: would make situation worse: cur_max={}, new min={}, new max={}\n",
-          cur_max,
-          min_rank->cur_load_ + size - load_sum,
-          max_rank->cur_load_ - size + load_sum
-        );
+        // fmt::print(
+        //   "considerSwaps: would make situation worse: cur_max={}, new min={}, new max={}\n",
+        //   cur_max,
+        //   min_rank->cur_load_ + size - load_sum,
+        //   max_rank->cur_load_ - size + load_sum
+        // );
         continue;
       }
 
-      fmt::print("considerSwaps: min={} size={}, diff={}, bin={}, load_sum={}\n", min_rank->rank_, size, diff, b, load_sum);
+      // fmt::print("considerSwaps: min={} size={}, diff={}, bin={}, load_sum={}\n", min_rank->rank_, size, diff, b, load_sum);
       if (load_sum*1.1 < diff) {
         pick = b;
         break;
@@ -491,7 +535,7 @@ bool considerSwaps(
     }
 
     if (pick != -1) {
-      fmt::print("considerSwaps: swapping pick={} rank={}\n", pick, min_rank->rank_);
+      // fmt::print("considerSwaps: swapping pick={} rank={}\n", pick, min_rank->rank_);
       for (auto&& o : binned[pick]) {
         max_rank->addObj(o);
         min_rank->removeObj(o);
@@ -501,7 +545,7 @@ bool considerSwaps(
         min_rank->addObj(xx);
         max_rank->removeObj(xx);
       }
-      fmt::print("considerSwaps: min/max num ids= {} {}\n", min_rank->shared_ids_.size(), max_rank->shared_ids_.size());
+      // fmt::print("considerSwaps: min/max num ids= {} {}\n", min_rank->shared_ids_.size(), max_rank->shared_ids_.size());
       if (min_rank->shared_ids_.size() > max_shared_ids) {
         vtAbort("Failure\n");
       }
@@ -643,6 +687,7 @@ void collateLBData(std::vector<LBDataHolder>& lb_data) {
       }
       if (shared_id != -1) {
         shared_mem[shared_id] = shared_bytes;
+        shared_mem_initial_rank[shared_id] = d.rank_;
       }
     }
     auto const rank = d.rank_;

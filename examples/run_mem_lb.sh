@@ -18,6 +18,14 @@ do
     fi
 done
 
+for dir in $root_dir/*subblks*
+do
+    if [ -d "$dir" ]
+    then
+        runLB $dir
+    fi
+done
+
 for dir in $root_dir/challenging_*
 do
     if [ -d "$dir" ]
@@ -25,3 +33,4 @@ do
         runLB $dir
     fi
 done
+
