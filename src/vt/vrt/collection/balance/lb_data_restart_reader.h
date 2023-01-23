@@ -119,6 +119,7 @@ public:
   void serialize(Serializer& s) {
     s | proxy_
       | changed_distro_
+      | history_
       | num_phases_;
   }
 
