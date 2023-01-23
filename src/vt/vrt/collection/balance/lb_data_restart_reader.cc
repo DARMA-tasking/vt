@@ -80,18 +80,18 @@ void LBDataRestartReader::startup() {
 
 void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
   num_phases_ = lbdh.node_data_.size();
-  PhaseType prev_known_phase = 0;
   for (PhaseType phase = 0; phase < num_phases_; phase++) {
     auto iter = lbdh.node_data_.find(phase);
-    if (iter == lbdh.node_data_.end()) {
-      history_[phase] = history_[prev_known_phase];
-    } else {
-      prev_known_phase = phase;
+    if (iter != lbdh.node_data_.end()) {
       for (auto const& obj : iter->second) {
         if (obj.first.isMigratable()) {
           history_[phase].insert(obj.first);
         }
       }
+    } else {
+      // We assume that all phases are dense all fully specified even if they
+      // don't change
+      vtAbort("Could not find data: phases must all be specified");
     }
   }
 }

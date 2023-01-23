@@ -131,6 +131,7 @@ public:
    */
   std::set<ElementIDStruct> const& getDistro(PhaseType phase) {
     auto iter = history_.find(phase);
+    vtAssert(iter != history_.end(), "Must have a valid phase");
     return iter->second;
   }
 
