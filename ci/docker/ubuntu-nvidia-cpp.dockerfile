@@ -70,15 +70,15 @@ RUN if test ${compiler} = "nvcc-10"; then \
     else \
       wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-ubuntu1804.pin && \
       mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600 && \
-      wget https://developer.download.nvidia.com/compute/cuda/11.4.0/local_installers/cuda-repo-ubuntu1804-11-4-local_11.4.0-470.42.01-1_amd64.deb && \
-      dpkg -i cuda-repo-ubuntu1804-11-4-local_11.4.0-470.42.01-1_amd64.deb && \
-      apt-key add /var/cuda-repo-ubuntu1804-11-4-local/7fa2af80.pub && \
+      wget https://developer.download.nvidia.com/compute/cuda/11.2.0/local_installers/cuda-repo-ubuntu1804-11-2-local_11.2.0-460.27.04-1_amd64.deb && \
+      dpkg -i cuda-repo-ubuntu1804-11-2-local_11.2.0-460.27.04-1_amd64.deb && \
+      apt-key add /var/cuda-repo-ubuntu1804-11-2-local/7fa2af80.pub && \
       apt-get update && \
-      apt-get -y install cuda-nvcc-11-4 && \
+      apt-get -y install cuda-nvcc-11-2 && \
       apt-get clean && \
       rm -rf /var/lib/apt/lists/* && \
-      rm -rf cuda-repo-ubuntu1804-11-4-local_11.4.0-470.42.01-1_amd64.deb && \
-      ln -s /usr/local/cuda-11.4 /usr/local/cuda-versioned; \
+      rm -rf cuda-repo-ubuntu1804-11-2-local_11.2.0-460.27.04-1_amd64.deb && \
+      ln -s /usr/local/cuda-11.2 /usr/local/cuda-versioned; \
     fi
 
 ENV CC=gcc \

@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (nvidia cuda 11.4, ubuntu, mpich)
+name: PR tests (nvidia cuda 11.2, ubuntu, mpich)
 
 trigger:
   branches:
@@ -27,7 +27,7 @@ variables:
   ARCH: amd64
   UBUNTU: 18.04
   COMPILER_TYPE: nvidia
-  COMPILER: nvcc-11.4
+  COMPILER: nvcc-11.2
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0
@@ -55,7 +55,7 @@ variables:
   CMAKE_CXX_STANDARD: 17
   TEST_LB_SCHEMA: 0
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: ubuntu-nvidia-11.4-cache
+  cache_name: ubuntu-nvidia-11.2-cache
   build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
   TS: 0
   TS_YEAR: 0
