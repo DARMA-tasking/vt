@@ -136,6 +136,14 @@ cat data.json
 
 echo "url = https://api.github.com/repos/$repository_name/dispatches"
 
+curl \
+  -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer $github_pat"\
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/"$repository_name"/pulls/2060/comments \
+  -d '{"body":"Great stuff!","commit_id":"a90ca7f7f4ab1f5b97bf62f569c1cbec3264f331","path":"scripts/report_logs_in_comment.sh","start_line":139,"start_side":"RIGHT","line":140,"side":"RIGHT"}'
+
 # Send GitHub request to post a PR comment
 curl                                                                    \
     --include                                                           \
