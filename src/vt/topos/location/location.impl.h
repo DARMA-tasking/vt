@@ -719,7 +719,7 @@ void EntityLocationCoord<EntityID>::routePreparedMsg(
   vt_debug_print(
     verbose, location,
     "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}, "
-    "msg{}, msg from={}, epoch={:x}\n",
+    "msg={}, from={}, epoch={:x}\n",
     this_inst, msg->getHomeNode(), msg_size, msg_size > small_msg_max_size, use_eager,
     print_ptr(msg.get()), msg->getLocFromNode(),
     epoch
