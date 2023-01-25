@@ -660,12 +660,6 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
   setupMessageForRouting<MessageT, f>(id, home_node, msg);
 
   routePreparedMsgHandler(msg);
-
-  if (local_registered_.find(id) == local_registered_.end()) {
-    return routeMsg<MessageT>(id,home_node,msg);
-  } else {
-    return routeMsgHandlerLocal(msg);
-  }
 }
 
 template <typename EntityID>
