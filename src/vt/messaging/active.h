@@ -64,6 +64,7 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/elm/elm_id.h"
 #include "vt/elm/elm_lb_data.h"
+#include "vt/utils/strong/strong_type.h"
 
 #if vt_check_enabled(trace_enabled)
   #include "vt/trace/trace_headers.h"
@@ -87,7 +88,12 @@ using ContinuationDeleterType =
 
 } /* end namespace vt */
 
-namespace vt { namespace messaging {
+namespace vt {
+
+struct StrongNodeType { };
+using Node = Strong<NodeType, uninitialized_destination, StrongNodeType>;
+
+namespace messaging {
 
 /** \file */
 
@@ -774,7 +780,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the \c PendingSend for the sent message
    */
   template <auto f, typename... Params>
-  PendingSendType send(NodeType dest, Params&&... params) {
+  PendingSendType send(Node dest, Params&&... params) {
     using Tuple = typename FunctionTraitsArgs<decltype(f)>::TupleType;
     using MsgT = ParamMsg<Tuple>;
     auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);

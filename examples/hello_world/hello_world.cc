@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
   }
 
   if (this_node == 0) {
-    vt::theMsg()->send<helloWorld>(1, 10, 20, 11.3f);
+    vt::theMsg()->send<helloWorld>(vt::Node{1}, 10, 20, 11.3f);
   }
 
   vt::finalize();
