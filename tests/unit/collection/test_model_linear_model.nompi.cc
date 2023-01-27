@@ -95,7 +95,7 @@ struct StubModel : LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
-  std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
+  std::map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
 };
 
 TEST_F(TestLinearModel, test_model_linear_model_1) {
