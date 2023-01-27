@@ -63,11 +63,13 @@ void checkNodeLBData(int expected_phases_amount) {
     EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->node_comm_.size());
     EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->node_data_.size());
     EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->node_subphase_comm_.size());
+    EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->user_defined_json_.size());
   #else
     (void)expected_phases_amount;
     EXPECT_EQ(0, theNodeLBData()->getLBData()->node_comm_.size());
     EXPECT_EQ(0, theNodeLBData()->getLBData()->node_data_.size());
     EXPECT_EQ(0, theNodeLBData()->getLBData()->node_subphase_comm_.size());
+    EXPECT_EQ(0, theNodeLBData()->getLBData()->user_defined_json_.size());
   #endif
 }
 
@@ -186,6 +188,9 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
   }
+
+  // Check amount of phase data in the node
+  checkNodeLBData(1);
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
@@ -222,6 +227,9 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
   }
+
+  // Check amount of phase data in the node
+  checkNodeLBData(2);
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
@@ -258,6 +266,9 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
   }
+
+  // Check amount of phase data in the node
+  checkNodeLBData(4);
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_config_retention_higher) {
@@ -297,6 +308,9 @@ TEST_F(TestLBDataRetention, test_lbdata_config_retention_higher) {
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
   }
+
+  // Check amount of phase data in the node
+  checkNodeLBData(140);
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
@@ -340,7 +354,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
   theLBManager()->setLoadModel(model_1_phase);
 
   // Check amount of phase data in the node
-  checkNodeLBData(2);
+  checkNodeLBData(1 + 1);
 
   for (uint32_t i=0; i<first_stage_num_phases; ++i) {
     runInEpochCollective([&]{
@@ -352,7 +366,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
   }
 
   // Check amount of phase data in the node
-  checkNodeLBData(2);
+  checkNodeLBData(1 + 1);
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
@@ -398,7 +412,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   theLBManager()->setLoadModel(model_1_phase);
 
   // Check amount of phase data in the node
-  checkNodeLBData(2);
+  checkNodeLBData(1 + 1);
 
   // Check that amount of the retained data in TestCol is not changed and still contains 7 phases of data
   for (uint32_t i=0; i<10; ++i) {
@@ -411,7 +425,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   }
 
   // Check amount of phase data in the node
-  checkNodeLBData(2);
+  checkNodeLBData(1 + 1);
 }
 
 }}} // end namespace vt::tests::unit

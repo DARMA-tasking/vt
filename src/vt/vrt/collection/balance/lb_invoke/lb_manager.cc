@@ -177,7 +177,7 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   auto nlb_data = theNodeLBData();
   min_hist_lb_data_ = std::max(model->getNumPastPhasesNeeded(), theConfig()->vt_lb_data_retention);
   nlb_data->setMinLBDataHistory(min_hist_lb_data_);
-  nlb_data->trimLBDataHistory(cached_phase_);
+  nlb_data->trimLBDataHistory();
 
   model_ = model;
   model_->setLoads(nlb_data->getNodeLoad(),

@@ -184,13 +184,13 @@ public:
   /// Node attributes for the current rank
   ElmUserDataType rank_attributes_;
   /// Node timings for each local object
-  std::unordered_map<PhaseType, LoadMapType> node_data_;
+  std::map<PhaseType, LoadMapType> node_data_;
   /// Node communication graph for each local object
-  std::unordered_map<PhaseType, CommMapType> node_comm_;
+  std::map<PhaseType, CommMapType> node_comm_;
   /// Node communication graph for each subphase
-  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
-  /// User-defined data from each phase for JSON output
-  std::unordered_map<PhaseType, std::unordered_map<
+  std::map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
+  /// User-defined data from each phase
+  std::map<PhaseType, std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
 

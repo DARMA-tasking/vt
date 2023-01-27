@@ -95,7 +95,7 @@ struct StubModel : LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
-  std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
+  std::map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) {
@@ -105,7 +105,7 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
   auto test_model =
     std::make_shared<PersistenceMedianLastN>(std::make_shared<StubModel>(), 4);
 
-  std::unordered_map<PhaseType, LoadMapType> proc_loads(num_total_phases);
+  std::map<PhaseType, LoadMapType> proc_loads;
 
   test_model->setLoads(&proc_loads, nullptr, nullptr);
 

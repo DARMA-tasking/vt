@@ -172,14 +172,14 @@ public:
    *
    * \return an observer pointer to the load map
    */
-  std::unordered_map<PhaseType, LoadMapType> const* getNodeLoad() const;
+  std::map<PhaseType, LoadMapType> const* getNodeLoad() const;
 
   /**
    * \internal \brief Get stored object comm graph
    *
    * \return an observer pointer to the comm graph
    */
-  std::unordered_map<PhaseType, CommMapType> const* getNodeComm() const;
+  std::map<PhaseType, CommMapType> const* getNodeComm() const;
 
   /**
    * \internal \brief Get the user-defined LB data
@@ -209,7 +209,7 @@ public:
    *
    * \return an observer pointer to the comm subphase graph
    */
-  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
+  std::map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
 
   /**
    * \internal \brief Get stored node attributes
@@ -278,11 +278,9 @@ public:
   void setMinLBDataHistory(uint32_t hist_len) { min_hist_lb_data_ = hist_len; }
 
   /**
-   * \brief Trim the cached LB Data
-   *
-   * \param[in] phase the current phase
+   * \brief Trim the cached LB Data to it's minimum retention size
    */
-  void trimLBDataHistory(PhaseType phase);
+  void trimLBDataHistory();
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {

@@ -57,6 +57,7 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <memory>
+#include <iterator>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -90,7 +91,7 @@ bool NodeLBData::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
   return true;
 }
 
-std::unordered_map<PhaseType, LoadMapType> const*
+std::map<PhaseType, LoadMapType> const*
 NodeLBData::getNodeLoad() const {
   return &lb_data_->node_data_;
 }
@@ -109,7 +110,7 @@ std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() cons
   return &lb_data_->node_comm_;
 }
 
-std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
+std::map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
   return &lb_data_->node_subphase_comm_;
 }
 
@@ -143,24 +144,22 @@ void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
   node_objgroup_lookup_.clear();
 }
 
-void NodeLBData::trimLBDataHistory(PhaseType phase) {
-  if (phase != no_lb_phase && phase > min_hist_lb_data_) {
-    auto phaseToLookFor = phase - min_hist_lb_data_ - 1;
+void NodeLBData::trimLBDataHistory() {
+  auto trim_data = [this](auto& map){
+    if(map.size() > min_hist_lb_data_ + 1) {
+      auto target = map.lower_bound(map.rbegin()->first - min_hist_lb_data_);
+      map.erase(map.begin(), target);
+    }
+  };
 
-    // Trim all maps to have 'min_hist_lb_data_ + 1' phases of data
-    auto fromData = lb_data_->node_data_.find(phaseToLookFor);
-    lb_data_->node_data_.erase(fromData, lb_data_->node_data_.end());
+  trim_data(lb_data_->node_data_);
+  trim_data(lb_data_->node_comm_);
+  trim_data(lb_data_->node_subphase_comm_);
+  trim_data(lb_data_->user_defined_json_);
 
-    auto fromComm = lb_data_->node_comm_.find(phaseToLookFor);
-    lb_data_->node_comm_.erase(fromComm, lb_data_->node_comm_.end());
-
-    auto fromSub = lb_data_->node_subphase_comm_.find(phaseToLookFor);
-    lb_data_->node_subphase_comm_.erase(fromSub, lb_data_->node_subphase_comm_.end());
-
-    NodeLBData::node_migrate_.clear();
-    node_collection_lookup_.clear();
-    node_objgroup_lookup_.clear();
-  }
+  NodeLBData::node_migrate_.clear();
+  node_collection_lookup_.clear();
+  node_objgroup_lookup_.clear();
 }
 
 ElementIDType NodeLBData::getNextElm() {
@@ -394,8 +393,6 @@ void NodeLBData::addNodeLBData(
   }
 
   in->updatePhase(1);
-
-  auto model = theLBManager()->getLoadModel();
   in->releaseLBDataFromUnneededPhases(phase, min_hist_lb_data_);
 }
 
