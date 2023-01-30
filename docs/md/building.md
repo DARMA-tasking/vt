@@ -145,7 +145,7 @@ which `docker-compose` will read.
 #             clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
 #             clang-9, clang-10,
 #             icc-18, icc-19,
-#             nvcc-10, nvcc-11}
+#             nvcc-10, nvcc-11, nvcc-11.2}
 #   REPO=lifflander1/vt
 #   UBUNTU={18.04, 20.04}
 #   ULIMIT_CORE=0
