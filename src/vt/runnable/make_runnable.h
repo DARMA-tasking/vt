@@ -273,9 +273,9 @@ struct RunnableMaker {
   /**
    * \brief Run the runnable immediately with a lambda
    */
-  void runLambda(ActionType action) {
+  void runLambda(ActionType&& action) {
     setup();
-    impl_->runLambda(action);
+    impl_->runLambda(std::move(action));
     delete impl_;
     impl_ = nullptr;
     is_done_ = true;
