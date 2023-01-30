@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
-    intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic \
+    intel-oneapi-compiler-dpcpp-cpp-runtime-2023.0.0 \
     ca-certificates \
     less \
     curl \
