@@ -117,7 +117,7 @@ void Trace::startup() /*override*/ {
 
 void Trace::finalize() /*override*/ {
   // Always end any between-loop event left open.
-  endProcessing(between_sched_event_);
+  endProcessing(between_sched_event_, timing::getCurrentTime());
   between_sched_event_ = TraceProcessingTag{};
 }
 
@@ -367,7 +367,7 @@ TraceProcessingTag Trace::beginProcessing(
 
 void Trace::endProcessing(
   TraceProcessingTag const& processing_tag,
-  double const time
+  TimeType const time
 ) {
   // End event honored even if tracing is disabled in this phase.
   // This ensures proper stack unwinding in all contexts.
@@ -420,13 +420,13 @@ void Trace::endProcessing(
 
 void Trace::pendingSchedulerLoop() {
   // Always end between-loop event.
-  endProcessing(between_sched_event_);
+  endProcessing(between_sched_event_, timing::getCurrentTime());
   between_sched_event_ = TraceProcessingTag{};
 }
 
 void Trace::beginSchedulerLoop() {
   // Always end between-loop event. The pending case is not always triggered.
-  endProcessing(between_sched_event_);
+  endProcessing(between_sched_event_, timing::getCurrentTime());
   between_sched_event_ = TraceProcessingTag{};
 
   // Capture the current open event depth.

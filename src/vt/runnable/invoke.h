@@ -145,7 +145,7 @@ static trace::TraceProcessingTag BeginProcessingInvokeEvent() {
 
 template <typename Callable, Callable f, typename... Args>
 static void EndProcessingInvokeEvent(trace::TraceProcessingTag processing_tag) {
-  theTrace()->endProcessing(processing_tag);
+  theTrace()->endProcessing(processing_tag, timing::getCurrentTime());
 
   const auto trace_id = CallableWrapper<Callable, f>::GetTraceID();
   theTrace()->messageCreation(trace_id, 0);

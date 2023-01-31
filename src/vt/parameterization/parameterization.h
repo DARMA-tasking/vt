@@ -121,7 +121,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   }
 
 #if vt_check_enabled(trace_enabled)
-  theTrace()->endProcessing(processing_tag);
+  theTrace()->endProcessing(processing_tag, timing::getCurrentTime());
 #endif
 }
 
