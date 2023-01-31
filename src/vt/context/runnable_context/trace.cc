@@ -54,7 +54,7 @@
 
 namespace vt { namespace ctx {
 
-void Trace::start() {
+void Trace::start(TimeType time) {
   if (not is_traced_) {
     return;
   }
@@ -67,30 +67,30 @@ void Trace::start() {
       from_node_ != uninitialized_destination ? from_node_ : cur_node;
 
     processing_tag_ = theTrace()->beginProcessing(
-      trace_id, msg_size_, event_, from_node, idx1_, idx2_, idx3_, idx4_
+      trace_id, msg_size_, event_, from_node, idx1_, idx2_, idx3_, idx4_, time
     );
   } else {
     processing_tag_ = theTrace()->beginProcessing(
-      trace_id, msg_size_, event_, from_node_
+      trace_id, msg_size_, event_, from_node_, time
     );
   }
 }
 
-void Trace::finish() {
+void Trace::finish(TimeType time) {
   if (not is_traced_) {
     return;
   }
 
-  theTrace()->endProcessing(processing_tag_);
+  theTrace()->endProcessing(processing_tag_, time);
 }
 
-void Trace::suspend() {
-  finish();
+void Trace::suspend(TimeType time) {
+  finish(time);
 }
 
-void Trace::resume() {
+void Trace::resume(TimeType time) {
   // @todo: connect up the last event to this new one after suspension
-  start();
+  start(time);
 }
 
 }} /* end namespace vt::ctx */
