@@ -280,7 +280,7 @@ void State::getData(
     }
 
 #if vt_check_enabled(trace_enabled)
-    theTrace()->endProcessing(processing_tag);
+    theTrace()->endProcessing(processing_tag, timing::getCurrentTime());
 #endif
   } else {
     pending_tag_gets[tag].push_back(info);
@@ -346,7 +346,7 @@ void State::putData(
     }
 
 #if vt_check_enabled(trace_enabled)
-    theTrace()->endProcessing(processing_tag);
+    theTrace()->endProcessing(processing_tag, timing::getCurrentTime());
 #endif
   } else {
     pending_tag_puts[tag].push_back(info);
