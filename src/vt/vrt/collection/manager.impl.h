@@ -473,10 +473,9 @@ util::Copyable<Type> CollectionManager::invoke(
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
     .withLBDataVoidMsg(ptr)
-    .withExplicitTask([&]{
+    .runLambda([&]{
       result = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-    })
-    .runOrEnqueue(true);
+    });
 
   return result;
 }
@@ -493,11 +492,10 @@ util::NotCopyable<Type> CollectionManager::invoke(
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
     .withLBDataVoidMsg(ptr)
-    .withExplicitTask([&]{
+    .runLambda([&]{
       auto&& ret = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
       result = std::move(ret);
-    })
-    .runOrEnqueue(true);
+    });
 
   return std::move(result);
 }
@@ -513,10 +511,9 @@ util::IsVoidReturn<Type> CollectionManager::invoke(
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
     .withLBDataVoidMsg(ptr)
-    .withExplicitTask([&]{
+    .runLambda([&]{
       runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-    })
-    .runOrEnqueue(true);
+    });
 }
 
 template <
@@ -1190,6 +1187,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   msg->setFromNode(theContext()->getNode());
   msg->setVrtHandler(handler);
   msg->setProxy(toProxy);
+  theMsg()->markAsCollectionMessage(msg);
 
   auto idx = elm_proxy.getIndex();
   vt_debug_print(
@@ -1199,18 +1197,19 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     col_proxy, cur_epoch, idx, handler, imm_context
   );
 
+  auto home_node = theCollection()->getMappedNode<ColT>(col_proxy, idx);
+  // route the message to the destination using the location manager
+  auto lm = theLocMan()->getCollectionLM<IdxT>(col_proxy);
+  vtAssert(lm != nullptr, "LM must exist");
+  lm->template setupMessageForRouting<
+    MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
+  >(idx, home_node, msg);
+
   return messaging::PendingSend{
-    msg, [=](MsgSharedPtr<BaseMsgType>& inner_msg){
-      theMsg()->pushEpoch(cur_epoch);
-      auto home_node = theCollection()->getMappedNode<ColT>(col_proxy, idx);
-      // route the message to the destination using the location manager
-      auto lm = theLocMan()->getCollectionLM<IdxT>(col_proxy);
-      vtAssert(lm != nullptr, "LM must exist");
-      theMsg()->markAsCollectionMessage(msg);
-      lm->template routeMsgHandler<
-        MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
-      >(idx, home_node, msg);
-      theMsg()->popEpoch(cur_epoch);
+    msg, [](MsgSharedPtr<BaseMsgType>& inner_msg){
+      auto typed_msg = inner_msg.template to<MsgT>();
+      auto lm2 = theLocMan()->getCollectionLM<IdxT>(typed_msg->getLocInst());
+      lm2->template routePreparedMsgHandler<MsgT>(typed_msg);
     }
   };
 }

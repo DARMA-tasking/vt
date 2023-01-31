@@ -87,8 +87,9 @@ struct Collection {
   void resume();
 
 private:
-  std::function<void()> set_;   /**< Set context function */
-  std::function<void()> clear_; /**< Clear context function */
+  std::function<void(void* in_elm)> set_;   /**< Set context function */
+  std::function<void()> clear_;             /**< Clear context function */
+  void* elm_ = nullptr;                     /**< The element (untyped) */
 };
 
 }} /* end namespace vt::ctx */

@@ -495,10 +495,16 @@ EventType ActiveMessenger::doMessageSend(
     } else {
       recordLBDataCommForSend(dest, base, base.size());
 
-      runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
-        .withTDEpochFromMsg(is_term)
-        .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
-        .enqueue();
+      auto han = envelopeGetHandler(msg->env);
+      bool const is_obj = HandlerManagerType::isHandlerObjGroup(han);
+      if (is_obj) {
+        objgroup::dispatchObjGroup(base, han, dest, nullptr);
+      } else {
+        runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
+          .withTDEpochFromMsg(is_term)
+          .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
+          .enqueue();
+      }
     }
     return no_event;
   }
@@ -953,11 +959,16 @@ void ActiveMessenger::prepareActiveMsgToRun(
     );
   }
 
-  runnable::makeRunnable(base, not is_term, handler, from_node)
-    .withContinuation(cont)
-    .withTDEpochFromMsg(is_term)
-    .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
-    .enqueue();
+  bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
+  if (is_obj) {
+    objgroup::dispatchObjGroup(base, handler, from_node, cont);
+  } else {
+    runnable::makeRunnable(base, not is_term, handler, from_node)
+      .withContinuation(cont)
+      .withTDEpochFromMsg(is_term)
+      .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
+      .enqueue();
+  }
 
   if (is_term) {
     tdRecvCount.increment(1);

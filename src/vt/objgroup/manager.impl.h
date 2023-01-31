@@ -52,7 +52,6 @@
 #include "vt/objgroup/holder/holder.h"
 #include "vt/objgroup/holder/holder_user.h"
 #include "vt/objgroup/holder/holder_basic.h"
-#include "vt/objgroup/dispatch/dispatch.h"
 #include "vt/objgroup/type_registry/registry.h"
 #include "vt/registry/auto/auto_registry.h"
 #include "vt/collective/collective_alg.h"
@@ -130,15 +129,6 @@ ObjGroupManager::makeCollective(MakeFnType<ObjT> fn, std::string const& label) {
 template <typename ObjT>
 void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   auto const proxy_bits = proxy.getProxy();
-  auto iter = dispatch_.find(proxy_bits);
-  if (iter != dispatch_.end()) {
-    auto ptr = iter->second->objPtr();
-    auto obj_iter = obj_to_proxy_.find(ptr);
-    if (obj_iter != obj_to_proxy_.end()) {
-      obj_to_proxy_.erase(obj_iter);
-    }
-    dispatch_.erase(iter);
-  }
   auto obj_iter = objs_.find(proxy_bits);
   if (obj_iter != objs_.end()) {
     objs_.erase(obj_iter);
@@ -152,30 +142,15 @@ void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
 
 template <typename ObjT>
 void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
-  auto iter = dispatch_.find(proxy);
-  vtAssertExpr(iter == dispatch_.end());
   vt_debug_print(
     normal, objgroup,
     "regObjProxy: obj={}, proxy={:x}\n",
     print_ptr(obj), proxy
   );
-  DispatchBasePtrType b = std::make_unique<dispatch::Dispatch<ObjT>>(proxy,obj);
-  dispatch_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(proxy),
-    std::forward_as_tuple(std::move(b))
-  );
   auto pending_iter = pending_.find(proxy);
   if (pending_iter != pending_.end()) {
-    for (auto&& msg : pending_iter->second) {
-      theSched()->enqueue([msg]{
-        auto const handler = envelopeGetHandler(msg->env);
-        auto const epoch = envelopeGetEpoch(msg->env);
-        theObjGroup()->dispatch(msg,handler);
-        if (epoch != no_epoch) {
-          theTerm()->consume(epoch);
-        }
-      });
+    for (auto&& pending : pending_iter->second) {
+      pending();
     }
     pending_.erase(pending_iter);
   }

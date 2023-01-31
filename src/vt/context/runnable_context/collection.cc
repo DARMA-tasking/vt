@@ -46,7 +46,7 @@
 namespace vt { namespace ctx {
 
 void Collection::start() {
-  set_();
+  set_(elm_);
 }
 
 void Collection::finish() {
