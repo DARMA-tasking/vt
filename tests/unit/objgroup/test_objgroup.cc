@@ -294,14 +294,14 @@ TEST_F(TestObjGroup, test_proxy_invoke) {
   EXPECT_EQ(accumulate_result, 11);
   EXPECT_EQ(proxy.get()->recv_, 2);
 
-  // Non-copyable (and without default constructor)
-  NonCopyableStruct s{20};
+  // Non-copyable
+  MyObjA s{};
   auto const result = proxy[this_node]
                         .invoke<
                           decltype(&MyObjA::modifyNonCopyableStruct),
                           &MyObjA::modifyNonCopyableStruct>(std::move(s));
 
-  EXPECT_EQ(result.val, 10);
+  EXPECT_EQ(result.id_, 10);
   EXPECT_EQ(proxy.get()->recv_, 3);
 }
 

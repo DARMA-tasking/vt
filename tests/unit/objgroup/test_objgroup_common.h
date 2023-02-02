@@ -64,16 +64,6 @@ struct SysMsg : vt::collective::ReduceTMsg<int> {
   {}
 };
 
-struct NonCopyableStruct {
-  NonCopyableStruct(const NonCopyableStruct&) = delete;
-  NonCopyableStruct& operator=(const NonCopyableStruct&) = delete;
-
-  NonCopyableStruct(NonCopyableStruct&&) = default;
-  NonCopyableStruct& operator=(NonCopyableStruct&&) = default;
-
-  int val = 20;
-};
-
 struct MyObjA {
 
   MyObjA() : id_(++next_id) {}
@@ -107,11 +97,11 @@ struct MyObjA {
     return std::accumulate(std::begin(vec), std::end(vec), 0);
   }
 
-  NonCopyableStruct modifyNonCopyableStruct(NonCopyableStruct i) {
+  MyObjA modifyNonCopyableStruct(MyObjA&& i) {
     recv_++;
-    i.val = 10;
+    i.id_ = 10;
 
-    return i;
+    return std::move(i);
   }
 
   int id_ = -1;
