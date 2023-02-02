@@ -60,6 +60,7 @@
 #include "vt/elm/elm_id_bits.h"
 
 #include <memory>
+#include <cstdlib>
 
 namespace vt { namespace objgroup {
 
@@ -216,7 +217,6 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   auto const dest_node = proxy.getNode();
   auto const this_node = theContext()->getNode();
 
-  auto ptr = get(proxy);
   vtAssert(
     dest_node == this_node,
     fmt::format(
@@ -224,10 +224,10 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
       this_node, dest_node));
 
   runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
-    .withExplicitTask([&]{
-      runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-    })
-    .run();
+    .withObjGroup(get(proxy))
+    .runLambda([&] {
+      runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
+    });
 }
 
 template <typename ObjT, typename Type, Type f, typename... Args>
@@ -247,10 +247,10 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   util::Copyable<Type> result;
 
   runnable::makeRunnableVoid(false, uninitialized_handler, dest_node)
-    .withExplicitTask([&] {
+    .withObjGroup(get(proxy))
+    .runLambda([&] {
       result = runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
-    })
-    .run();
+    });
 
   return result;
 }
@@ -269,16 +269,16 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
     )
   );
 
-  util::NotCopyable<Type>* result;
+  util::NotCopyable<Type> result;
 
   runnable::makeRunnableVoid(false, uninitialized_handler, dest_node)
-    .withExplicitTask([&] {
+    .withObjGroup(get(proxy))
+    .runLambda([&] {
       auto&& ret = runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
-      *result = std::move(ret);
-    })
-    .run();
+      result = std::move(ret);
+    });
 
-  return std::move(*result);
+  return result;
 }
 
 
