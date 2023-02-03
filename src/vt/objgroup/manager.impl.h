@@ -60,7 +60,6 @@
 #include "vt/elm/elm_id_bits.h"
 
 #include <memory>
-#include <cstdlib>
 
 namespace vt { namespace objgroup {
 
@@ -212,7 +211,7 @@ void ObjGroupManager::invoke(
 }
 
 template <typename ObjT, typename Type, Type f, typename... Args>
-util::IsVoidReturn<Type>
+auto
 ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   auto const dest_node = proxy.getNode();
   auto const this_node = theContext()->getNode();
@@ -223,62 +222,34 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
       "Attempting to invoke handler on node:{} instead of node:{}!\n",
       this_node, dest_node));
 
-  runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
-    .withObjGroup(get(proxy))
-    .runLambda([&] {
-      runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
-    });
-}
+  using Ret = typename util::FunctionWrapper<Type>::ReturnType;
+  constexpr bool is_void = std::is_same<Ret, void>::value;
+  constexpr bool copyable = std::is_copy_constructible<Ret>::value;
 
-template <typename ObjT, typename Type, Type f, typename... Args>
-util::Copyable<Type>
-ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
-  auto const dest_node = proxy.getNode();
-  auto const this_node = theContext()->getNode();
+  if constexpr (not is_void) {
+    Ret result;
 
-  vtAssert(
-    dest_node == this_node,
-    fmt::format(
-      "Attempting to invoke handler on node:{} instead of node:{}!\n", this_node,
-      dest_node
-    )
-  );
+    runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+      .withObjGroup(get(proxy))
+      .runLambda([&] {
+        if constexpr (copyable) {
+          result =
+            runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
+        } else {
+          auto&& ret =
+            runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
+          result = std::move(ret);
+        }
+      });
 
-  util::Copyable<Type> result;
-
-  runnable::makeRunnableVoid(false, uninitialized_handler, dest_node)
-    .withObjGroup(get(proxy))
-    .runLambda([&] {
-      result = runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
-    });
-
-  return result;
-}
-
-template <typename ObjT, typename Type, Type f, typename... Args>
-util::NotCopyable<Type>
-ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
-  auto const dest_node = proxy.getNode();
-  auto const this_node = theContext()->getNode();
-
-  vtAssert(
-    dest_node == this_node,
-    fmt::format(
-      "Attempting to invoke handler on node:{} instead of node:{}!\n", this_node,
-      dest_node
-    )
-  );
-
-  util::NotCopyable<Type> result;
-
-  runnable::makeRunnableVoid(false, uninitialized_handler, dest_node)
-    .withObjGroup(get(proxy))
-    .runLambda([&] {
-      auto&& ret = runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
-      result = std::move(ret);
-    });
-
-  return result;
+    return result;
+  } else {
+    runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+      .withObjGroup(get(proxy))
+      .runLambda([&] {
+        runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
+      });
+  }
 }
 
 
