@@ -97,11 +97,11 @@ struct MyObjA {
     return std::accumulate(std::begin(vec), std::end(vec), 0);
   }
 
-  MyObjA modifyNonCopyableStruct(MyObjA&& i) {
+  std::unique_ptr<int32_t> modifyNonCopyableStruct(std::unique_ptr<int32_t> i) {
     recv_++;
-    i.id_ = 10;
+    i = std::make_unique<int32_t>(10);
 
-    return std::move(i);
+    return i;
   }
 
   int id_ = -1;
