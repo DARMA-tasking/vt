@@ -223,16 +223,14 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
       this_node, dest_node));
 
   using Ret = typename util::FunctionWrapper<Type>::ReturnType;
-  constexpr bool is_void = std::is_same<Ret, void>::value;
-  constexpr bool copyable = std::is_copy_constructible<Ret>::value;
 
-  if constexpr (not is_void) {
+  if constexpr (not std::is_same_v<Ret, void>) {
     Ret result;
 
     runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
       .withObjGroup(get(proxy))
       .runLambda([&] {
-        if constexpr (copyable) {
+        if constexpr (std::is_copy_constructible_v<Ret>) {
           result =
             runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
         } else {
