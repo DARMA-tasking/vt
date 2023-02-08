@@ -92,8 +92,8 @@ struct hipGroup {
     );
 
     checkHipErrors(
-      hipMallocHost((void**)&dataHostPointer1_, nBytes),
-      "hipMallocHost(dataHostPointer1_)"
+      hipHostMalloc((void**)&dataHostPointer1_, nBytes),
+      "hipHostMalloc(dataHostPointer1_)"
     );
 
     checkHipErrors(
@@ -102,8 +102,8 @@ struct hipGroup {
     );
 
     checkHipErrors(
-      hipMallocHost((void**)&dataHostPointer2_, nBytes),
-      "hipMallocHost(dataHostPointer2_)"
+      hipHostMalloc((void**)&dataHostPointer2_, nBytes),
+      "hipHostMalloc(dataHostPointer2_)"
     );
   }
 
@@ -116,10 +116,10 @@ struct hipGroup {
     );
 
     checkHipErrors(
-      hipFreeHost(dataHostPointer1_), "hipFreeHost(dataHostPointer1_)"
+      hipHostFree(dataHostPointer1_), "hipHostFree(dataHostPointer1_)"
     );
     checkHipErrors(
-      hipFreeHost(dataHostPointer2_), "hipFreeHost(dataHostPointer2_)"
+      hipHostFree(dataHostPointer2_), "hipHostFree(dataHostPointer2_)"
     );
 
     checkHipErrors(hipStreamDestroy(stream1_), "hipStreamDestroy(stream1_)");
