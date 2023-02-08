@@ -146,8 +146,7 @@ VT_PERF_TEST(MyTest, test_ping_pong) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
     "test_ping_pong", this
   );
-  grp_proxy[my_node_]
-    .invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
+  grp_proxy[my_node_].invoke<&NodeObj::initialize>();
 
   if (theContext()->getNode() == 0) {
     theTerm()->disableTD();

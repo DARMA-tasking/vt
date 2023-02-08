@@ -665,37 +665,13 @@ struct CollectionManager
   static void recordLBData(ColT* col_ptr, MsgT* msg);
 
   /**
-   * \brief Invoke function 'f' (with copyable return type) inline without going
-   * through scheduler
+   * \brief Invoke function 'f' inline without going through scheduler
    *
    * \param[in] proxy the collection proxy
    * \param[in] args function params
    */
-  template <typename ColT, typename Type, Type f, typename... Args>
-  util::Copyable<Type>
-  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
-
-  /**
-   * \brief Invoke function 'f' (with non-copyable return type) inline without
-   * going through scheduler
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] args function params
-   */
-  template <typename ColT, typename Type, Type f, typename... Args>
-  util::NotCopyable<Type>
-  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
-
-  /**
-   * \brief Invoke function 'f' (with void return type) inline without going
-   * through scheduler
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] args function params
-   */
-  template <typename ColT, typename Type, Type f, typename... Args>
-  util::IsVoidReturn<Type>
-  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
+  template <typename ColT, auto f, typename... Args>
+  auto invoke(VirtualElmProxyType<ColT> const& proxy, Args&&... args);
 
   /**
    * \brief Invoke message action function handler without going through

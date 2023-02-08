@@ -287,12 +287,22 @@ TEST_F(TestObjGroup, test_proxy_invoke) {
 
   // Non-message function
   auto const accumulate_result =
-    proxy[this_node]
-      .invoke<decltype(&MyObjA::accumulateVec), &MyObjA::accumulateVec>(
-        std::vector<int32_t>{2, 4, 5});
+    proxy[this_node].invoke<&MyObjA::accumulateVec>(
+      std::vector<int32_t>{2, 4, 5}
+    );
 
   EXPECT_EQ(accumulate_result, 11);
   EXPECT_EQ(proxy.get()->recv_, 2);
+
+  // Non-copyable
+  std::unique_ptr<int32_t> s{};
+  auto result = proxy[this_node].invoke<&MyObjA::modifyNonCopyableStruct>(
+    std::move(s)
+  );
+
+  EXPECT_TRUE(result);
+  EXPECT_EQ(*result, 10);
+  EXPECT_EQ(proxy.get()->recv_, 3);
 }
 
 TEST_F(TestObjGroup, test_pending_send) {

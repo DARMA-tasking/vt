@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/utils/static_checks/function_ret_check.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/manager.fwd.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
@@ -233,8 +234,8 @@ public:
    * \param[in] proxy proxy to the object group
    * \param[in] args function arguments
    */
-  template <typename ObjT, typename Type, Type f, typename... Args>
-  decltype(auto) invoke(ProxyElmType<ObjT> proxy, Args&&... args);
+  template <typename ObjT, auto f, typename... Args>
+  auto invoke(ProxyElmType<ObjT> proxy, Args&&... args);
 
   /**
    * \internal \brief Broadcast a message to all nodes in object group

@@ -210,8 +210,8 @@ void ObjGroupManager::invoke(
   invoke<MsgT>(msg, han, dest_node);
 }
 
-template <typename ObjT, typename Type, Type f, typename... Args>
-decltype(auto)
+template <typename ObjT, auto f, typename... Args>
+auto
 ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   auto const dest_node = proxy.getNode();
   auto const this_node = theContext()->getNode();
@@ -219,12 +219,12 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   vtAssert(
     dest_node == this_node,
     fmt::format(
-      "Attempting to invoke handler on node:{} instead of node:{}!\n", this_node,
-      dest_node
-    )
-  );
+      "Attempting to invoke handler on node:{} instead of node:{}!\n",
+      this_node, dest_node));
 
-  return runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
+  return runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+    .withObjGroup(get(proxy))
+    .runLambda(f, get(proxy), std::forward<Args>(args)...);
 }
 
 

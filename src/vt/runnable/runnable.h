@@ -231,7 +231,18 @@ public:
   /**
    * \brief Run the task as a lambda!
    */
-  void runLambda(ActionType action);
+  template <typename Callable, typename... Args>
+  decltype(auto) runLambda(Callable&& c, Args&&... args) {
+    start();
+    if constexpr(std::is_void_v<std::invoke_result_t<Callable, Args...>>) {
+      std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...);
+      finish();
+    } else {
+      decltype(auto) r{std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...)};
+      finish();
+      return r;
+    }
+  }
 
 #if vt_check_enabled(fcontext)
   /**
