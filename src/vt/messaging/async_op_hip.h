@@ -46,6 +46,10 @@
 
 #include "vt/messaging/async_op.h"
 
+#if __HIPCC__
+#include <hip/hip_runtime.h>
+#endif
+
 namespace vt { namespace messaging {
 
 #if __HIPCC__
