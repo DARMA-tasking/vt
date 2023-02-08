@@ -55,7 +55,7 @@ void sendMsg(vt::NodeType dst, int count, vt::EpochType ep) {
   if (ep != vt::no_epoch) {
     vt::envelopeSetEpoch(msg->env,ep);
   }
-  vt::theMsg()->sendMsg<Msg,handler>(dst, msg);
+  vt::theMsg()->sendMsg<handler>(dst, msg);
 }
 
 // note: only for basic messages,
@@ -68,7 +68,7 @@ void broadcast(int count, vt::EpochType ep) {
   if (ep != vt::no_epoch) {
     vt::envelopeSetEpoch(msg->env,ep);
   }
-  vt::theMsg()->broadcastMsg<BasicMsg,handler>(msg);
+  vt::theMsg()->broadcastMsg<handler>(msg);
 
   for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;

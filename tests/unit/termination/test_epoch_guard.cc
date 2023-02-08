@@ -74,7 +74,7 @@ struct TestEpochGuard : TestParallelHarness {
       EXPECT_EQ(theMsg()->getEpoch(), ep);
       auto node = theContext()->getNode();
       if (0 == node) {
-        theMsg()->sendMsg<TestMsg, test_guarded_msg_recv>(1, msg);
+        theMsg()->sendMsg<test_guarded_msg_recv>(1, msg);
       }
     }
 
@@ -91,7 +91,7 @@ struct TestEpochGuard : TestParallelHarness {
     EXPECT_EQ(theMsg()->getEpoch(), ep);
     auto node = theContext()->getNode();
     if (0 == node) {
-      theMsg()->sendMsg<TestMsg, test_guarded_msg_recv>(1, msg);
+      theMsg()->sendMsg<test_guarded_msg_recv>(1, msg);
     }
 
     guard.pop();

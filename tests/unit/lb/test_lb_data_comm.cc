@@ -205,7 +205,7 @@ void simulateColTHandlerSends(MyMsg* msg, MyCol* col) {
   auto next = (this_node + 1) % num_nodes;
   for (int i = 0; i < num_sends; i++) {
     auto msg2 = makeMessage<MyObjMsg>();
-    vt::theMsg()->sendMsg<MyObjMsg, bareDummyHandler>(next, msg2);
+    vt::theMsg()->sendMsg<bareDummyHandler>(next, msg2);
   }
 }
 
@@ -215,7 +215,7 @@ void MyObj::simulateObjGroupHandlerSends(MyMsg* msg) {
   auto next = (this_node + 1) % num_nodes;
   for (int i = 0; i < num_sends; i++) {
     auto msg2 = makeMessage<MyObjMsg>();
-    vt::theMsg()->sendMsg<MyObjMsg, bareDummyHandler>(next, msg2);
+    vt::theMsg()->sendMsg<bareDummyHandler>(next, msg2);
   }
 }
 
@@ -251,7 +251,7 @@ void simulateHandlerHandlerSends(MyMsg* msg) {
   auto next = (this_node + 1) % num_nodes;
   for (int i = 0; i < num_sends; i++) {
     auto msg2 = makeMessage<MyObjMsg>();
-    vt::theMsg()->sendMsg<MyObjMsg, bareDummyHandler>(next, msg2);
+    vt::theMsg()->sendMsg<bareDummyHandler>(next, msg2);
   }
 }
 
@@ -520,7 +520,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_col_send) {
     auto num_nodes = theContext()->getNumNodes();
     auto next = (this_node + 1) % num_nodes;
     auto msg = makeMessage<ColProxyMsg>(proxy);
-    theMsg()->sendMsg<ColProxyMsg, simulateHandlerColTSends>(next, msg);
+    theMsg()->sendMsg<simulateHandlerColTSends>(next, msg);
   });
 
   vt::thePhase()->nextPhaseCollective();
@@ -683,7 +683,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_objgroup_send) {
     auto num_nodes = theContext()->getNumNodes();
     auto next = (this_node + 1) % num_nodes;
     auto msg = makeMessage<ProxyMsg>(obj_proxy_a);
-    theMsg()->sendMsg<ProxyMsg, simulateHandlerObjGroupSends>(next, msg);
+    theMsg()->sendMsg<simulateHandlerObjGroupSends>(next, msg);
   });
 
   vt::thePhase()->nextPhaseCollective();
@@ -724,7 +724,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_handler_send) {
     auto num_nodes = theContext()->getNumNodes();
     auto next = (this_node + 1) % num_nodes;
     auto msg = makeMessage<MyMsg>();
-    theMsg()->sendMsg<MyMsg, simulateHandlerHandlerSends>(next, msg);
+    theMsg()->sendMsg<simulateHandlerHandlerSends>(next, msg);
   });
 
   vt::thePhase()->nextPhaseCollective();

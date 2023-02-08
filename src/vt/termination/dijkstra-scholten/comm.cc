@@ -66,7 +66,7 @@ namespace vt { namespace term { namespace ds {
   vtAssertExpr(successor != node);
   auto msg = makeMessage<AckMsg>(epoch,node,successor,count);
   theMsg()->markAsTermMessage(msg);
-  theMsg()->sendMsg<AckMsg,requestAckHan>(successor, msg);
+  theMsg()->sendMsg<requestAckHan>(successor, msg);
 }
 
 /*static*/ void StateDS::acknowledge(
@@ -81,7 +81,7 @@ namespace vt { namespace term { namespace ds {
   vtAssertExpr(predecessor != node);
   auto msg = makeMessage<AckMsg>(epoch,node,predecessor,count);
   theMsg()->markAsTermMessage(msg);
-  theMsg()->sendMsg<AckMsg,acknowledgeHan>(predecessor, msg);
+  theMsg()->sendMsg<acknowledgeHan>(predecessor, msg);
 }
 
 /*static*/ void StateDS::rootTerminated(EpochType epoch) {

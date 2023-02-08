@@ -116,7 +116,7 @@ inline ProxyElm<void>::ProxyElm(NodeType in_node) : node_{in_node} {}
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
 void ProxyElm<void>::send(Args&&... args) const {
-  vt::theMsg()->sendMsg<MsgT, f>(
+  vt::theMsg()->sendMsg<f>(
     node_, vt::makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 

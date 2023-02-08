@@ -65,7 +65,7 @@ void CallbackAnonTypeless::triggerVoid(PipeType const& pipe) {
     theCB()->triggerPipe(pipe);
   } else {
     auto msg = makeMessage<CallbackMsg>(pipe,true);
-    theMsg()->sendMsg<CallbackMsg,PipeManager::triggerCallbackHan>(pipe_node, msg);
+    theMsg()->sendMsg<PipeManager::triggerCallbackHan>(pipe_node, msg);
   }
 }
 

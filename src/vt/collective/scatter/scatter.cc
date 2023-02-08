@@ -112,7 +112,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
     );
     std::memcpy(ptr, in_ptr, child_bytes_size);
     in_ptr += child_bytes_size;
-    theMsg()->sendMsg<ScatterMsg, scatterHandler>(
+    theMsg()->sendMsg<scatterHandler>(
       child, child_msg
     );
   });

@@ -113,21 +113,21 @@ static inline void activeMessageCallback() {
     {
       auto cb = ::vt::theCB()->makeFunc(vt::pipe::LifetimeEnum::Once, void_fn);
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node, msg);
+      ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
     }
 
     // Example of active message handler callback with send node
     {
       auto cb = ::vt::theCB()->makeSend<DataMsg,callbackHandler>(cb_node);
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node, msg);
+      ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
     }
 
     // Example of active message handler callback with broadcast
     {
       auto cb = ::vt::theCB()->makeBcast<DataMsg,callbackBcastHandler>();
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node, msg);
+      ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
     }
 
     // Example of context callback
@@ -136,7 +136,7 @@ static inline void activeMessageCallback() {
         vt::pipe::LifetimeEnum::Once, &ctx, callbackCtx
       );
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node, msg);
+      ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
     }
   }
 }
