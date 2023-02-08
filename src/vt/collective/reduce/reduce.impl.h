@@ -128,7 +128,7 @@ Reduce::PendingSendType Reduce::reduce(
 ) {
   auto msg_ptr = promoteMsg(msg);
   return PendingSendType{theMsg()->getEpochContextMsg(msg_ptr), [=](){
-                           reduceImmediate<MsgT, f>(root, msg_ptr.get(), id, num_contrib);
+                           reduceImmediate<f>(root, msg_ptr.get(), id, num_contrib);
                          } };
 }
 

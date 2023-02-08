@@ -959,7 +959,7 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
     r = theCollective()->getReducerVrtProxy(col_proxy);
   }
 
-  r->reduceImmediate<MsgT,f>(root_node, msg.get(), cur_stamp, num_elms);
+  r->reduceImmediate<f>(root_node, msg.get(), cur_stamp, num_elms);
 
   vt_debug_print(
     normal, vrt_coll,
