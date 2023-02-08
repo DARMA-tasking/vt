@@ -234,7 +234,7 @@ public:
    * \param[in] proxy proxy to the object group
    * \param[in] args function arguments
    */
-  template <typename ObjT, typename Type, Type f, typename... Args>
+  template <typename ObjT, auto f, typename... Args>
   auto invoke(ProxyElmType<ObjT> proxy, Args&&... args);
 
   /**

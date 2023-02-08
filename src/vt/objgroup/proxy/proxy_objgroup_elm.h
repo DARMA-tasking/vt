@@ -144,7 +144,7 @@ struct ProxyElm {
    *
    * \param[in] args function arguments
    */
-  template <typename Type, Type f, typename... Args>
+  template <auto f, typename... Args>
   decltype(auto) invoke(Args&&... args) const;
 
   /**

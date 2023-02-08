@@ -101,12 +101,6 @@ void RunnableNew::setupHandlerElement(
   obj_ = elm;
 }
 
-void RunnableNew::runLambda(ActionType action) {
-  start();
-  action();
-  finish();
-}
-
 void RunnableNew::run() {
 #if vt_check_enabled(fcontext)
   vtAbortIf(

@@ -461,59 +461,18 @@ void CollectionManager::invokeCollectiveMsg(
   });
 }
 
-template <typename ColT, typename Type, Type f, typename... Args>
-util::Copyable<Type> CollectionManager::invoke(
-  VirtualElmProxyType<ColT> const& proxy, Args... args
-) {
-  auto ptr = getCollectionPtrForInvoke(proxy);
-
-  auto const this_node = theContext()->getNode();
-  util::Copyable<Type> result;
-
-  runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
-    .withCollection(ptr)
-    .withLBDataVoidMsg(ptr)
-    .runLambda([&]{
-      result = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-    });
-
-  return result;
-}
-
-template <typename ColT, typename Type, Type f, typename... Args>
-util::NotCopyable<Type> CollectionManager::invoke(
-  VirtualElmProxyType<ColT> const& proxy, Args... args
-) {
-  auto ptr = getCollectionPtrForInvoke(proxy);
-
-  auto const this_node = theContext()->getNode();
-  util::NotCopyable<Type> result;
-
-  runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
-    .withCollection(ptr)
-    .withLBDataVoidMsg(ptr)
-    .runLambda([&]{
-      auto&& ret = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-      result = std::move(ret);
-    });
-
-  return std::move(result);
-}
-
-template <typename ColT, typename Type, Type f, typename... Args>
-util::IsVoidReturn<Type> CollectionManager::invoke(
-  VirtualElmProxyType<ColT> const& proxy, Args... args
+template <typename ColT, auto f, typename... Args>
+auto CollectionManager::invoke(
+  VirtualElmProxyType<ColT> const& proxy, Args&&... args
 ) {
   auto ptr = getCollectionPtrForInvoke(proxy);
 
   auto const this_node = theContext()->getNode();
 
-  runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+  return runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
     .withLBDataVoidMsg(ptr)
-    .runLambda([&]{
-      runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-    });
+    .runLambda(f, ptr, std::forward<Args>(args)...);
 }
 
 template <
