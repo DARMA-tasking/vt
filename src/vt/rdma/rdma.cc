@@ -187,7 +187,7 @@ RDMAManager::RDMAManager()
         );
         if (send_back != uninitialized_destination) {
           auto new_msg = makeMessage<PutBackMessage>(op_id);
-          theMsg()->sendMsg<PutBackMessage, putBackMsg>(send_back, new_msg);
+          theMsg()->sendMsg<putBackMsg>(send_back, new_msg);
         }
       }, false, recv_node
     );
@@ -228,7 +228,7 @@ RDMAManager::RDMAManager()
               );
               if (send_back != uninitialized_destination) {
                 auto new_msg = makeMessage<PutBackMessage>(op_id);
-                theMsg()->sendMsg<PutBackMessage, putBackMsg>(
+                theMsg()->sendMsg<putBackMsg>(
                   send_back, new_msg
                 );
               }
@@ -250,7 +250,7 @@ RDMAManager::RDMAManager()
           );
           if (send_back) {
             auto new_msg = makeMessage<PutBackMessage>(op_id);
-            theMsg()->sendMsg<PutBackMessage, putBackMsg>(
+            theMsg()->sendMsg<putBackMsg>(
               send_back, new_msg
             );
           }
@@ -669,7 +669,7 @@ void RDMAManager::putData(
             envelopeSetTag(msg->env, tag);
           }
 
-          theMsg()->sendMsg<PutMessage,putRecvMsg>(
+          theMsg()->sendMsg<putRecvMsg>(
             put_node, msg, no_tag
           );
 
@@ -965,7 +965,7 @@ void RDMAManager::getDataIntoBuf(
         if (tag != no_tag) {
           envelopeSetTag(msg->env, tag);
         }
-        theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg);
+        theMsg()->sendMsg<getRDMAMsg>(getNode, msg);
 
         pending_ops_.emplace(
           std::piecewise_construct,
@@ -1002,7 +1002,7 @@ void RDMAManager::getData(
     if (tag != no_tag) {
       envelopeSetTag(msg->env, tag);
     }
-    theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg);
+    theMsg()->sendMsg<getRDMAMsg>(getNode, msg);
 
     pending_ops_.emplace(
       std::piecewise_construct,
@@ -1095,7 +1095,7 @@ void RDMAManager::setupChannelWithRemote(
     auto msg = makeMessage<ChannelMessage>(
       type, han, num_bytes, tag, cb, dest, override_target
     );
-    theMsg()->sendMsg<ChannelMessage, remoteChannel>(other_node, msg);
+    theMsg()->sendMsg<remoteChannel>(other_node, msg);
 
     return createDirectChannelInternal(
       type, han, dest, nullptr, target, tag, num_bytes
@@ -1295,7 +1295,7 @@ void RDMAManager::createDirectChannelInternal(
     auto msg = makeMessage<CreateChannel>(
       type, han, unique_channel_tag, target, this_node, cb
     );
-    theMsg()->sendMsg<CreateChannel, setupChannel>(target, msg);
+    theMsg()->sendMsg<setupChannel>(target, msg);
   } else {
     return createDirectChannelFinish(
       type, han, non_target, action, channel_tag, is_target, num_bytes,
@@ -1337,7 +1337,7 @@ void RDMAManager::removeDirectChannel(
     auto msg = makeMessage<DestroyChannel>(
       RDMA_TypeType::Get, han, no_byte, no_tag, cb
     );
-    theMsg()->sendMsg<DestroyChannel, removeChannel>(target, msg);
+    theMsg()->sendMsg<removeChannel>(target, msg);
   } else {
     auto iter = channels_.find(
       makeChannelLookup(han,RDMA_TypeType::Get,target,this_node)

@@ -143,7 +143,7 @@ TEST_F(TestMemoryLifetime, test_active_bcast_serial_lifetime) {
   runInEpochCollective([&]{
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeMessage<SerialTestMsg>();
-      theMsg()->broadcastMsg<SerialTestMsg, serialHan>(msg);
+      theMsg()->broadcastMsg<serialHan>(msg);
     }
   });
 
@@ -165,7 +165,7 @@ TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_msgptr) {
     EXPECT_EQ(envelopeGetRef(msg->env), 1);
     auto msg_hold = promoteMsg(msg.get());
     EXPECT_EQ(envelopeGetRef(msg_hold->env), 2);
-    theMsg()->sendMsg<NormalTestMsg, normalHan>(next_node, msg);
+    theMsg()->sendMsg<normalHan>(next_node, msg);
     theTerm()->addAction([msg_hold]{
       // Call event cleanup all pending MPI requests to clear
       theEvent()->finalize();
@@ -190,7 +190,7 @@ TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_msgptr) {
     EXPECT_EQ(envelopeGetRef(msg->env), 1);
     auto msg_hold = promoteMsg(msg.get());
     EXPECT_EQ(envelopeGetRef(msg_hold->env), 2);
-    theMsg()->broadcastMsg<NormalTestMsg, normalHan>(msg);
+    theMsg()->broadcastMsg<normalHan>(msg);
     theTerm()->addAction([msg_hold]{
       // Call event cleanup all pending MPI requests to clear
       theEvent()->finalize();
@@ -227,7 +227,7 @@ TEST_F(TestMemoryLifetime, test_active_send_callback_lifetime_1) {
   for (int i = 0; i < num_msgs_sent; i++) {
     auto msg = makeMessage<CallbackMsg<NormalTestMsg>>(cb);
     auto msg_hold = promoteMsg(msg.get());
-    theMsg()->broadcastMsg<CallbackMsg<NormalTestMsg>, callbackHan>(msg);
+    theMsg()->broadcastMsg<callbackHan>(msg);
     theTerm()->addAction([msg_hold]{
       // Call event cleanup all pending MPI requests to clear
       theEvent()->finalize();

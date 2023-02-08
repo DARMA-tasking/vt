@@ -174,7 +174,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
       );
       msg->setResolvedNode(this_node);
       theMsg()->markAsLocationMessage(msg);
-      theMsg()->sendMsg<LocMsgType, &EntityLocationCoord<EntityID>::updateLocation>(home, msg);
+      theMsg()->sendMsg<&EntityLocationCoord<EntityID>::updateLocation>(home, msg);
     }
   }
 }
@@ -424,7 +424,7 @@ void EntityLocationCoord<EntityID>::getLocation(
           this_inst, id, event_id, this_node, home_node
         );
         theMsg()->markAsLocationMessage(msg);
-        theMsg()->sendMsg<LocMsgType, &EntityLocationCoord<EntityID>::getLocationHandler>(home_node, msg);
+        theMsg()->sendMsg<&EntityLocationCoord<EntityID>::getLocationHandler>(home_node, msg);
         // save a pending action when information about location arrives
         pending_actions_.emplace(
           std::piecewise_construct,
@@ -497,7 +497,7 @@ void EntityLocationCoord<EntityID>::sendEagerUpdate(
     auto msg = makeMessage<LocMsgType>(
       this_inst, id, ask_node, home_node, deliver_node
     );
-    theMsg()->sendMsg<LocMsgType, &EntityLocationCoord<EntityID>::recvEagerUpdate>(ask_node, msg);
+    theMsg()->sendMsg<&EntityLocationCoord<EntityID>::recvEagerUpdate>(ask_node, msg);
   }
 }
 
@@ -892,7 +892,7 @@ template <typename EntityID>
         );
         msg2->setResolvedNode(node);
         theMsg()->markAsLocationMessage(msg2);
-        theMsg()->sendMsg<LocMsgType, &EntityLocationCoord<EntityID>::updateLocation>(ask_node, msg2);
+        theMsg()->sendMsg<&EntityLocationCoord<EntityID>::updateLocation>(ask_node, msg2);
       });
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);

@@ -117,7 +117,7 @@ static inline void activeMessageNode() {
   if (this_node == 0) {
     NodeType const to_node = 1;
     auto msg = ::vt::makeMessage<MyMsg>(29,32);
-    ::vt::theMsg()->sendMsg<MyMsg,msgHandlerA>(to_node, msg);
+    ::vt::theMsg()->sendMsg<msgHandlerA>(to_node, msg);
   }
 }
 

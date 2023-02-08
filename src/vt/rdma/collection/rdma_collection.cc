@@ -125,7 +125,7 @@ namespace vt { namespace rdma {
     if (tag != no_tag) {
       envelopeSetTag(msg->env, tag);
     }
-    theMsg()->sendMsg<GetMessage, RDMAManager::getRDMAMsg>(
+    theMsg()->sendMsg<RDMAManager::getRDMAMsg>(
       default_node, msg
     );
 

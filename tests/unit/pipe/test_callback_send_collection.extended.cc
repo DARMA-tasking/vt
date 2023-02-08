@@ -186,12 +186,12 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_2) {
           auto cb =
             theCB()->makeSend<TestCol, DataMsg, &TestCol::cb1>(proxy(i));
           auto msg = makeMessage<CallbackDataMsg>(cb);
-          theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+          theMsg()->sendMsg<testHandler>(next, msg);
         } else {
           auto cb =
             theCB()->makeSend<TestCol, DataMsg, &TestCol::cb2>(proxy(i));
           auto msg = makeMessage<CallbackDataMsg>(cb);
-          theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+          theMsg()->sendMsg<testHandler>(next, msg);
         }
       }
     }

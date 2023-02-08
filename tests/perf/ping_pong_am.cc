@@ -66,7 +66,7 @@ void handlerFinished(MyMsg* msg);
 
 void handler(MyMsg* in_msg) {
   auto msg = makeMessage<MyMsg>();
-  theMsg()->sendMsg<MyMsg, &handlerFinished>(0, msg);
+  theMsg()->sendMsg<&handlerFinished>(0, msg);
 }
 
 struct NodeObj {
@@ -88,7 +88,7 @@ struct NodeObj {
   void perfPingPong(MyMsg* in_msg) {
     test_obj_->StartTimer(fmt::format("{} ping-pong", i));
     auto msg = makeMessage<MyMsg>();
-    theMsg()->sendMsg<MyMsg, &handler>(1, msg);
+    theMsg()->sendMsg<&handler>(1, msg);
   }
 
 private:
@@ -104,7 +104,7 @@ void handlerFinished(MyMsg* msg) {
   } else {
     i++;
     auto msg = makeMessage<MyMsg>();
-    theMsg()->sendMsg<MyMsg, &handler>(1, msg);
+    theMsg()->sendMsg<&handler>(1, msg);
   }
 }
 
