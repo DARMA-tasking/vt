@@ -322,7 +322,7 @@ public:
 
 bool isWorkDone( vt::objgroup::proxy::Proxy<NodeObj> const& proxy){
   auto const this_node = vt::theContext()->getNode();
-  return proxy[this_node].invoke<decltype(&NodeObj::isWorkFinished), &NodeObj::isWorkFinished>();
+  return proxy[this_node].invoke<&NodeObj::isWorkFinished>();
 }
 
 int main(int argc, char** argv) {

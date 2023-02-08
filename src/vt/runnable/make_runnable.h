@@ -273,12 +273,21 @@ struct RunnableMaker {
   /**
    * \brief Run the runnable immediately with a lambda
    */
-  void runLambda(ActionType&& action) {
+  template <typename Callable, typename... Args>
+  auto runLambda(Callable&& c, Args&&... args) {
     setup();
-    impl_->runLambda(std::move(action));
-    delete impl_;
-    impl_ = nullptr;
-    is_done_ = true;
+    if constexpr(std::is_void_v<std::invoke_result_t<Callable, Args...>>) {
+      std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...);
+      delete impl_;
+      impl_ = nullptr;
+      is_done_ = true;
+    } else {
+      decltype(auto) r{impl_->runLambda(std::forward<Callable>(c), std::forward<Args>(args)...)};
+      delete impl_;
+      impl_ = nullptr;
+      is_done_ = true;
+      return r;
+    }
   }
 
   /**

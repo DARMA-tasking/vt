@@ -86,13 +86,13 @@ void Invokable<ColT, IndexT, BaseProxyT>::invoke(Args&&... args) const
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-template <typename Type, Type f, typename... Args>
+template <auto f, typename... Args>
 decltype(auto)
 Invokable<ColT, IndexT, BaseProxyT>::invoke(Args&&... args) const {
   auto const& proxy = VrtElmProxy<ColT, IndexT>(
     this->getCollectionProxy(), this->getElementProxy());
 
-  return theCollection()->invoke<ColT, Type, f, Args...>(
+  return theCollection()->invoke<ColT, f, Args...>(
     proxy, std::forward<Args>(args)...
   );
 }

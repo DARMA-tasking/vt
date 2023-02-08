@@ -161,7 +161,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
     );
 
     auto p = getCollectionProxy();
-    p[this_node].invoke<decltype(&MyCol::handlerToInvoke), &MyCol::handlerToInvoke>(std::move(op1),std::move(op2));
+    p[this_node].invoke<&MyCol::handlerToInvoke>(std::move(op1),std::move(op2));
   }
 
   void handlerToInvoke(

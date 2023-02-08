@@ -210,7 +210,7 @@ void ObjGroupManager::invoke(
   invoke<MsgT>(msg, han, dest_node);
 }
 
-template <typename ObjT, typename Type, Type f, typename... Args>
+template <typename ObjT, auto f, typename... Args>
 auto
 ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   auto const dest_node = proxy.getNode();
@@ -222,32 +222,9 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
       "Attempting to invoke handler on node:{} instead of node:{}!\n",
       this_node, dest_node));
 
-  using Ret = typename util::FunctionWrapper<Type>::ReturnType;
-
-  if constexpr (not std::is_same_v<Ret, void>) {
-    Ret result;
-
-    runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
-      .withObjGroup(get(proxy))
-      .runLambda([&] {
-        if constexpr (std::is_copy_constructible_v<Ret>) {
-          result =
-            runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
-        } else {
-          auto&& ret =
-            runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
-          result = std::move(ret);
-        }
-      });
-
-    return result;
-  } else {
-    runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
-      .withObjGroup(get(proxy))
-      .runLambda([&] {
-        runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
-      });
-  }
+  return runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+    .withObjGroup(get(proxy))
+    .runLambda(f, get(proxy), std::forward<Args>(args)...);
 }
 
 

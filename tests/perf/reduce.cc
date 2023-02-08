@@ -99,7 +99,7 @@ VT_PERF_TEST(MyTest, test_reduce) {
     theTerm()->disableTD();
   }
 
-  grp_proxy[my_node_].invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
+  grp_proxy[my_node_].invoke<&NodeObj::initialize>();
 
   using MsgType = typename NodeObj::MyMsg;
   grp_proxy[my_node_].send<MsgType, &NodeObj::perfReduce>();

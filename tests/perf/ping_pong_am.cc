@@ -100,7 +100,7 @@ private:
 
 void handlerFinished(MyMsg* msg) {
   if (i >= num_iters) {
-    global_proxy[0].invoke<decltype(&NodeObj::complete), &NodeObj::complete>();
+    global_proxy[0].invoke<&NodeObj::complete>();
   } else {
     i++;
     auto msg = makeMessage<MyMsg>();
@@ -117,7 +117,7 @@ VT_PERF_TEST(MyTest, test_ping_pong_am) {
     theTerm()->disableTD();
   }
 
-  grp_proxy[my_node_].invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
+  grp_proxy[my_node_].invoke<&NodeObj::initialize>();
 
   if (theContext()->getNode() == 0) {
     grp_proxy[my_node_].send<MyMsg, &NodeObj::perfPingPong>();

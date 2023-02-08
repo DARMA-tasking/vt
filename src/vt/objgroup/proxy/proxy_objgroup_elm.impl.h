@@ -87,14 +87,10 @@ void ProxyElm<ObjT>::invoke(Args&&... args) const {
 }
 
 template <typename ObjT>
-template <typename Type, Type f, typename... Args>
-decltype(auto) ProxyElm<ObjT>::invoke(
-  Args&&... args
-) const
-{
+template <auto f, typename... Args>
+decltype(auto) ProxyElm<ObjT>::invoke(Args&&... args) const {
   auto proxy = ProxyElm<ObjT>(*this);
-  return theObjGroup()->invoke<ObjT, Type, f>(
-    proxy, std::forward<Args>(args)...);
+  return theObjGroup()->invoke<ObjT, f>(proxy, std::forward<Args>(args)...);
 }
 
 template <typename ObjT>
