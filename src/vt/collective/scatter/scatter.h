@@ -89,6 +89,35 @@ struct Scatter : virtual collective::tree::Tree {
     FuncSizeType size_fn, FuncDataType data_fn
   );
 
+  template <typename ReturnT, typename... Args>
+  struct FunctionTraits;
+
+  template <typename ReturnT, typename T>
+  struct FunctionTraits<ReturnT(*)(T*)> {
+    using MessageT = T;
+    using ReturnType = ReturnT;
+  };
+
+  /**
+   * \brief Scatter data to all nodes
+   *
+   * The functions passed to scatter through the arguments \c size_fn and
+   * \c data_fn will not be retained after this call returns.
+   *
+   * \param[in] total_size total size of data to scatter
+   * \param[in] max_proc_size max data to be scattered to any node
+   * \param[in] size_fn callback to get size for each node
+   * \param[in] data_fn callback to get data for each node
+   */
+  template <auto f>
+  void scatter(
+    std::size_t const& total_size, std::size_t const& max_proc_size,
+    FuncSizeType size_fn, FuncDataType data_fn
+  ) {
+    using MessageT = typename FunctionTraits<decltype(f)>::MessageT;
+    return scatter<MessageT, f>(total_size, max_proc_size, size_fn, data_fn);
+  }
+
 protected:
   /**
    * \internal \brief Receive scattered data down the spanning tree
