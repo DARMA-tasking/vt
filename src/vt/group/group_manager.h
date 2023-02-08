@@ -193,6 +193,24 @@ struct GroupManager : runtime::component::Component<GroupManager> {
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   void sendMsg(GroupType const group, MsgT* msg);
 
+  template <typename ReturnT, typename... Args>
+  struct FunctionTraits;
+
+  template <typename ReturnT, typename T>
+  struct FunctionTraits<ReturnT(*)(T*)> {
+    using MsgT = T;
+    using ReturnType = ReturnT;
+  };
+
+  template <auto f>
+  void sendMsg(
+    GroupType const group,
+    typename FunctionTraits<decltype(f)>::MsgT* msg
+  ) {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return sendMsg<MsgT, f>(group, msg);
+  }
+
   friend struct Info;
   friend struct InfoColl;
   friend struct FinishedWork;
