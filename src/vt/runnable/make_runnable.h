@@ -276,18 +276,10 @@ struct RunnableMaker {
   template <typename Callable, typename... Args>
   auto runLambda(Callable&& c, Args&&... args) {
     setup();
-    if constexpr(std::is_void_v<std::invoke_result_t<Callable, Args...>>) {
-      std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...);
-      delete impl_;
-      impl_ = nullptr;
-      is_done_ = true;
-    } else {
-      decltype(auto) r{impl_->runLambda(std::forward<Callable>(c), std::forward<Args>(args)...)};
-      delete impl_;
-      impl_ = nullptr;
-      is_done_ = true;
-      return r;
-    }
+    auto local_impl = std::unique_ptr<RunnableNew>(impl_);
+    impl_ = nullptr;
+    is_done_ = true;
+    return local_impl->runLambda(std::forward<Callable>(c), std::forward<Args>(args)...);
   }
 
   /**
