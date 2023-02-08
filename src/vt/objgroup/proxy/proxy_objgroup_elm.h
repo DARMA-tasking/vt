@@ -213,6 +213,27 @@ struct ProxyElm<void> {
   template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
   void send(Args&&... args) const;
 
+  template <typename ReturnT, typename... Args>
+  struct FunctionTraits;
+
+  template <typename ReturnT, typename T>
+  struct FunctionTraits<ReturnT(*)(T*)> {
+    using MsgT = T;
+    using ReturnType = ReturnT;
+  };
+
+  /**
+   * \brief Send a message to the node indexed by this proxy to be
+   * delivered to the local object instance
+   *
+   * \param[in] args args to pass to the message constructor
+   */
+  template <auto f, typename... Args>
+  void send(Args&&... args) const {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    send<MsgT, f>(std::forward<Args>(args)...);
+  }
+
 private:
   NodeType node_ = uninitialized_destination; /**< The indexed node */
 };

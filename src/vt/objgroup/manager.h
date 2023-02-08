@@ -273,6 +273,34 @@ public:
     collective::reduce::ReduceStamp const& stamp
   );
 
+  template <typename ReturnT, typename... Args>
+  struct FunctionTraits;
+
+  template <typename ReturnT, typename T>
+  struct FunctionTraits<ReturnT(*)(T*)> {
+    using MsgT = T;
+    using ReturnType = ReturnT;
+  };
+
+  /**
+   * \brief Perform a reduction over an objgroup
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg reduction message
+   * \param[in] stamp stamp to identify reduction across nodes
+   *
+   * \return the PendingSend corresponding to the reduce
+   */
+  template <typename ObjT, auto f>
+  PendingSendType reduce(
+    ProxyType<ObjT> proxy,
+    messaging::MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg,
+    collective::reduce::ReduceStamp const& stamp
+  ) {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return reduce<ObjT, MsgT, f>(proxy, msg, stamp);
+  }
+
   /**
    * \brief Get a pointer to the local objgroup instance. Returns null if the
    * object doesn't exist.
