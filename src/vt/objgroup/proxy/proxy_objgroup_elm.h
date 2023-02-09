@@ -120,6 +120,30 @@ struct ProxyElm {
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   PendingSendType sendMsg(messaging::MsgPtrThief<MsgT> msg) const;
 
+ template <typename Return, typename... Args>
+  struct FunctionTraits;
+
+  template <typename Return, typename Msg>
+  struct FunctionTraits<Return(ObjT::*)(Msg*)> {
+    using MsgT = Msg;
+    using ReturnT = Return;
+  };
+
+  /**
+   * \brief Send a message to the node/element indexed by this proxy to be
+   * delivered to the local object instance
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   */
+  template <auto fn>
+  decltype(auto) sendMsg(
+    messaging::MsgPtrThief<typename FunctionTraits<decltype(fn)>::MsgT> msg
+  ) const {
+    using MsgT = typename FunctionTraits<decltype(fn)>::MsgT;
+    return sendMsg<MsgT, fn>(msg);
+  }
+
   /**
    * \brief Send a message to the node/element indexed by this proxy to be
    * delivered to the local object instance
@@ -128,6 +152,18 @@ struct ProxyElm {
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
   PendingSendType send(Args&&... args) const;
+
+  /**
+   * \brief Send a message to the node/element indexed by this proxy to be
+   * delivered to the local object instance
+   *
+   * \param[in] args args to pass to the message constructor
+   */
+  template <auto fn, typename... Args>
+  decltype(auto) send(Args&&... args) const {
+    using MsgT = typename FunctionTraits<decltype(fn)>::MsgT;
+    return send<MsgT, fn>(std::forward<Args>(args)...);
+  }
 
   /**
    * \brief Invoke locally a message handler on the node/element indexed by this proxy.
