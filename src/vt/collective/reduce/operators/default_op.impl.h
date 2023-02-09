@@ -49,6 +49,8 @@
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
+struct NoCombine {};
+
 template <typename T>
 template <typename MsgT, typename Op, typename ActOp>
 /*static*/ void ReduceCombine<T>::msgHandler(MsgT* msg) {
@@ -61,8 +63,12 @@ template <typename MsgT, typename Op, typename ActOp>
     if (cb.valid()) {
       envelopeUnlockForForwarding(msg->env);
       cb.template send<MsgT>(msg);
+    } else if (msg->root_handler_ != uninitialized_handler) {
+      auto_registry::getAutoHandler(msg->root_handler_)->dispatch(msg, nullptr);
     } else {
-      ActOp()(msg);
+      if constexpr (not std::is_same_v<ActOp, NoCombine>) {
+        ActOp()(msg);
+      }
     }
   } else {
     MsgT* fst_msg = msg;

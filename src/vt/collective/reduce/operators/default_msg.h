@@ -80,6 +80,7 @@ struct ReduceDataMsg : SerializeIfNeeded<
     : MessageParentType(), ReduceCombine<void>(), val_(in_val)
   { }
 
+  DataType& getTuple() { return val_; }
   DataType const& getConstVal() const { return val_; }
   DataType& getVal() { return val_; }
   DataType&& getMoveVal() { return std::move(val_); }

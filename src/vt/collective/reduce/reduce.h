@@ -168,6 +168,41 @@ struct Reduce : virtual collective::tree::Tree {
     return reduce<MsgT, f>(root, msg, id, num_contrib);
   }
 
+  //////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////
+  template <typename ReturnT, typename... Args>
+  struct FunctionTraitsArgs;
+
+  template <typename ReturnT, typename... Args>
+  struct FunctionTraitsArgs<ReturnT(*)(Args...)> {
+    using TupleType = std::tuple<std::decay_t<Args>...>;
+    using ReturnType = ReturnT;
+  };
+
+  template <template<typename Arg> class Op, auto f, typename... Params>
+  PendingSendType reduce(Node root, Params&&... params) {
+    using Tuple = typename FunctionTraitsArgs<decltype(f)>::TupleType;
+    using OpT = Op<Tuple>;
+    return reduce<OpT, f>(root, std::forward<Params>(params)...);
+  }
+
+  template <typename Op, auto f, typename... Params>
+  PendingSendType reduce(Node root, Params&&... params) {
+    using Tuple = typename FunctionTraitsArgs<decltype(f)>::TupleType;
+    using MsgT = ReduceTMsg<Tuple>;
+
+    auto msg = vt::makeMessage<MsgT>(std::tuple{std::forward<Params>(params)...});
+    auto id = detail::ReduceStamp{};
+    auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
+    msg->root_handler_ = han;
+
+    return reduce<Op, operators::NoCombine, MsgT>(root.get(), msg.get(), id, 1);
+  }
+  //////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////
+
   /**
    * \brief Reduce a message up the tree
    *
@@ -243,7 +278,7 @@ struct Reduce : virtual collective::tree::Tree {
         &MsgT::template msgHandler<
           MsgT,
           OpT,
-          collective::reduce::operators::ReduceCallback<MsgT>
+          operators::NoCombine
           >
         >(root, msg, cb, id, num_contrib);
     }
@@ -308,7 +343,7 @@ struct Reduce : virtual collective::tree::Tree {
       &MsgT::template msgHandler<
         MsgT,
         OpT,
-        collective::reduce::operators::ReduceCallback<MsgT>
+        operators::NoCombine
         >
       >(root, msg, cb, id, num_contrib);
   }
