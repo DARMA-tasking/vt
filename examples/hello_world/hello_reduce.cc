@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 reduce_msg.h
+//                               hello_reduce.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,63 +41,22 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MSG_H
-#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MSG_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
-#include "vt/collective/reduce/reduce.fwd.h"
-#include "vt/collective/reduce/reduce_scope.h"
-#include "vt/messaging/message.h"
+void reduceResult(int result, double result2) {
+  auto num_nodes = vt::theContext()->getNumNodes();
+  fmt::print("reduction value={}, {}\n", result, result2);
+  vtAssert(num_nodes * 50 == result, "Must be equal");
+}
 
-#include <cstdlib>
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
 
-namespace vt { namespace collective { namespace reduce {
+  vt::NodeType const root = 0;
 
-struct ReduceMsg;
+  auto r = vt::theCollective()->global();
+  r->reduce<vt::collective::PlusOp, reduceResult>(vt::Node{root}, 50, 52.334);
 
-struct ReduceLink {
-  using MsgCountType = uint16_t;
-
-  template <typename T>
-  T* getNext() const { return static_cast<T*>(next_); }
-
-  bool isRoot() const { return is_root_; }
-  MsgCountType getCount() const { return count_; }
-
-  friend struct Reduce;
-
-private:
-  bool is_root_ = false;
-  ReduceMsg* next_ = nullptr;
-  MsgCountType count_ = 0;
-};
-
-struct ReduceMsg : SerializeSupported<
-  ::vt::Message,
-  ReduceMsg
->, ReduceLink
-{
-  using MessageParentType = SerializeSupported<
-    ::vt::Message,
-    ReduceMsg
-  >;
-
-  ReduceStamp const& stamp() const { return reduce_id_.stamp(); }
-  detail::ReduceScope const& scope() const { return reduce_id_.scope(); }
-
-  NodeType reduce_root_ = uninitialized_destination;
-  detail::ReduceIDImpl reduce_id_;
-  HandlerType combine_handler_ = uninitialized_handler;
-  HandlerType root_handler_ = uninitialized_handler;
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-    s | reduce_root_ | reduce_id_;
-    s | combine_handler_ | root_handler_;
-  }
-};
-
-}}} /* end namespace vt::collective::reduce */
-
-#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MSG_H*/
+  vt::finalize();
+  return 0;
+}
