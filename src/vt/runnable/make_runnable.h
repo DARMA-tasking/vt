@@ -287,6 +287,15 @@ struct RunnableMaker {
    */
   void enqueue();
 
+  /**
+   * \brief Return the underlying \c RunnableNew
+   *
+   * \warning This is for testing only
+   *
+   * \return the underlying runnable
+   */
+  RunnableNew* getRunnableImpl() { return impl_; }
+
 private:
   /**
    * \internal \brief Setup for running or enqueuing
