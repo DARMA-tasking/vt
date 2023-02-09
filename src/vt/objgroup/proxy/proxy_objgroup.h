@@ -126,6 +126,30 @@ public:
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   PendingSendType broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const;
 
+  template <typename Return, typename... Args>
+  struct FunctionTraits;
+
+  template <typename Return, typename Msg>
+  struct FunctionTraits<Return(ObjT::*)(Msg*)> {
+    using MsgT = Msg;
+    using ReturnT = Return;
+  };
+
+  /**
+   * \brief Broadcast a message to all nodes to be delivered to the local object
+   * instance
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   */
+  template <auto fn>
+  PendingSendType broadcastMsg(
+    messaging::MsgPtrThief<typename FunctionTraits<decltype(fn)>::MsgT> msg
+  ) const {
+    using MsgType = typename FunctionTraits<decltype(fn)>::MsgT;
+    return broadcastMsg<MsgType, fn>(msg);
+  }
+
   /**
    * \brief Broadcast a message to all nodes to be delivered to the local object
    * instance
@@ -134,6 +158,18 @@ public:
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
   PendingSendType broadcast(Args&&... args) const;
+
+  /**
+   * \brief Broadcast a message to all nodes to be delivered to the local object
+   * instance
+   *
+   * \param[in] args args to pass to the message constructor
+   */
+  template <auto fn, typename... Args>
+  PendingSendType broadcast(Args&&... args) const {
+    using MsgType = typename FunctionTraits<decltype(fn)>::MsgT;
+    return broadcast<MsgType, fn>(std::forward<Args>(args)...);
+  }
 
   /**
    * \brief Reduce over the objgroup instances on each node with a callback
@@ -370,6 +406,30 @@ struct Proxy<void> {
   template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
   messaging::PendingSend broadcast(Args&&... args) const;
 
+  template <typename Return, typename... Args>
+  struct FunctionTraits;
+
+  template <typename Return, typename Msg>
+  struct FunctionTraits<Return(*)(Msg*)> {
+    using MsgT = Msg;
+    using ReturnT = Return;
+  };
+
+  /**
+   * \brief Broadcast a message.
+   *
+   * \note Creates message from given args
+   *
+   * \param[in] args the arguments used to make a message
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <auto f, typename... Args>
+  messaging::PendingSend broadcast(Args&&... args) const {
+    using MsgType = typename FunctionTraits<decltype(f)>::MsgT;
+    return broadcast<MsgType, f>(std::forward<Args>(args)...);
+  }
+
   /**
    * \brief Broadcast a message.
    *
@@ -383,6 +443,25 @@ struct Proxy<void> {
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   messaging::PendingSend
   broadcastMsg(messaging::MsgPtrThief<MsgT> msg, TagType tag = no_tag) const;
+
+  /**
+   * \brief Broadcast a message.
+   *
+   * \note Takes ownership of the supplied message.
+   *
+   * \param[in] msg the message to broadcast
+   * \param[in] tag the tag to put on the message
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <auto f>
+  messaging::PendingSend broadcastMsg(
+    messaging::MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg,
+    TagType tag = no_tag
+  ) const {
+    using MsgType = typename FunctionTraits<decltype(f)>::MsgT;
+    return broadcastMsg<MsgType, f>(msg, tag);
+  }
 
   /**
    * \brief Reduce a message up the tree, possibly delayed through a pending

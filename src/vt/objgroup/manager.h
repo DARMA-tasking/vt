@@ -217,6 +217,32 @@ public:
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   PendingSendType send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
+  template <typename Return, typename... Args>
+  struct FunctionTraits;
+
+  template <typename Return, typename Obj, typename Msg>
+  struct FunctionTraits<Return(*)(Obj*, Msg*)> {
+    using ObjT = Obj;
+    using MsgT = Msg;
+    using ReturnT = Return;
+  };
+
+  /**
+   * \internal \brief Send a message to an element of the object group
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg message to send
+   */
+  template <auto fn>
+  PendingSendType send(
+    ProxyElmType<typename FunctionTraits<decltype(fn)>::ObjT> proxy,
+    MsgSharedPtr<typename FunctionTraits<decltype(fn)>::MsgT> msg
+  ) {
+    using ObjType = typename FunctionTraits<decltype(fn)>::ObjT;
+    using MsgType = typename FunctionTraits<decltype(fn)>::MsgT;
+    return send<ObjType, MsgType, fn>(proxy, msg);
+  }
+
   /**
    * \internal \brief Invoke message handler on an element of the object group
    * The message handler will be invoked inline without going through scheduler
@@ -245,6 +271,22 @@ public:
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   PendingSendType broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
+
+  /**
+   * \internal \brief Broadcast a message to all nodes in object group
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg message to broadcast
+   */
+  template <auto fn>
+  PendingSendType broadcast(
+    ProxyType<typename FunctionTraits<decltype(fn)>::ObjT> proxy,
+    MsgSharedPtr<typename FunctionTraits<decltype(fn)>::MsgT> msg
+  ) {
+    using ObjType = typename FunctionTraits<decltype(fn)>::ObjT;
+    using MsgType = typename FunctionTraits<decltype(fn)>::MsgT;
+    return broadcast<ObjType, MsgType, fn>(proxy, msg);
+  }
 
   /**
    * \brief Change the traced name of the object group
