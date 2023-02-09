@@ -499,6 +499,10 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lbspec = app.add_flag("--vt_lb_spec",            appConfig.vt_lb_spec,                lb_spec);
   auto lbspecfile = app.add_option("--vt_lb_spec_file", appConfig.vt_lb_spec_file,           lb_spec_file)->capture_default_str()->check(CLI::ExistingFile);
 
+  // --vt_lb_name excludes --vt_lb_file_name, and vice versa
+  v->excludes(u);
+  u->excludes(v);
+
   auto debugLB = "Load Balancing";
   s->group(debugLB);
   t1->group(debugLB);
