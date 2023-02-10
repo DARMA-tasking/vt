@@ -131,13 +131,12 @@ void test_broadcast_1(std::string const& label) {
     auto proxy = theCollection()->construct<ColType>(range, label);
 
     proxy.template broadcast<
-      MsgType,
       BroadcastHandlers<ColType>::handler
     >(args);
 
     auto msg = makeMessage<MsgType>(args);
     theCollection()->broadcastMsg<
-      MsgType,BroadcastHandlers<ColType>::handler
+      BroadcastHandlers<ColType>::handler
     >(proxy, msg.get());
   }
 }

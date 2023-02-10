@@ -493,6 +493,40 @@ struct CollectionManager
     VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
   );
 
+  template <typename Return, typename... Args>
+  struct FunctionTraits;
+
+  template <typename Return, typename Msg, typename Col>
+  struct FunctionTraits<Return(*)(Msg*, Col*)> {
+    using MsgT = Msg;
+    using ColT = Col;
+    using ReturnT = Return;
+  };
+
+  template <typename Return, typename Msg, typename Col>
+  struct FunctionTraits<Return(Col::*)(Msg*)> {
+    using ColT = Col;
+    using MsgT = Msg;
+    using ReturnT = Return;
+  };
+
+  /**
+   * \brief Send collection element a message from active function handler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <auto f>
+  messaging::PendingSend sendMsg(
+    VirtualElmProxyType<typename FunctionTraits<decltype(f)>::MsgT::CollectionType> const& proxy,
+    typename FunctionTraits<decltype(f)>::MsgT *msg
+  ) {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return sendMsg<MsgT, f>(proxy, msg);
+  }
+
   /**
    * \brief Send collection element a message from active member handler
    *
@@ -964,6 +998,26 @@ struct CollectionManager
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     MsgT *msg, bool instrument = true
   );
+
+  /**
+   * \brief Broadcast a message with action function handler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   *
+   * \return a pending send
+   */
+  template < auto f>
+  messaging::PendingSend broadcastMsg(
+    CollectionProxyWrapType<typename FunctionTraits<decltype(f)>::MsgT::CollectionType> const& proxy,
+    typename FunctionTraits<decltype(f)>::MsgT *msg,
+    bool instrument = true
+  ) {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return broadcastMsg<MsgT, f>(proxy, msg, instrument);
+  }
 
   /**
    * \brief Broadcast a message with action member handler

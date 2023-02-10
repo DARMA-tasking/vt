@@ -195,9 +195,9 @@ void test_collection_send_1(std::string const& label) {
       auto msg = makeMessage<MsgType>(args);
       EXPECT_EQ(msg.size(), sizeof(MsgType));
       if (i % 2 == 0) {
-        proxy[i].template sendMsg<MsgType,SendHandlers<ColType>::handler>(msg.get());
+        proxy[i].template sendMsg<SendHandlers<ColType>::handler>(msg.get());
       } else {
-        theCollection()->sendMsg<MsgType,SendHandlers<ColType>::handler>(
+        theCollection()->sendMsg<SendHandlers<ColType>::handler>(
           proxy[i], msg.get()
         );
       }
@@ -222,7 +222,7 @@ void test_collection_send_sz_1() {
       EXPECT_EQ(msg.size(), sizeof(MsgType) + sizeof(PayloadType));
       msg->buff_size = sizeof(PayloadType);
       std::memcpy(reinterpret_cast<void *>(msg->payload()), &args, msg->buff_size);
-      proxy[i].template sendMsg<MsgType,SendSzHandlers<ColType>::handler>(msg);
+      proxy[i].template sendMsg<SendSzHandlers<ColType>::handler>(msg);
     }
   }
 }
@@ -242,9 +242,9 @@ void test_collection_send_ptm_1(std::string const& label) {
       auto msg = makeMessage<MsgType>(args);
       //proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
       if (i % 2 == 0) {
-        proxy[i].template sendMsg<MsgType,&ColType::handler>(msg.get());
+        proxy[i].template sendMsg<&ColType::handler>(msg.get());
       } else {
-        theCollection()->sendMsg<MsgType,&ColType::handler>(
+        theCollection()->sendMsg<&ColType::handler>(
           proxy[i], msg.get()
         );
       }

@@ -121,6 +121,51 @@ struct Sendable : BaseProxyT {
     typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
   >
   messaging::PendingSend send(Args&&... args) const;
+
+
+  template <typename Return, typename... Args>
+  struct FunctionTraits;
+
+  template <typename Return, typename Msg>
+  struct FunctionTraits<Return(*)(Msg*, ColT*)> {
+    using MsgT = Msg;
+    using ReturnT = Return;
+  };
+
+  template <typename Return, typename Msg>
+  struct FunctionTraits<Return(ColT::*)(Msg*)> {
+    using MsgT = Msg;
+    using ReturnT = Return;
+  };
+
+  /**
+   * \brief Create message (with action function handler) and send to collection element
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <auto f>
+  messaging::PendingSend sendMsg(
+    messaging::MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg
+  ) const {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return sendMsg<MsgT, f>(msg);
+  }
+
+  /**
+   * \brief Create message (with action function handler) and send to collection element
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <auto f, typename... Args>
+  messaging::PendingSend send(Args&&... args) const {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return send<MsgT, f>(std::forward<Args>(args)...);
+  }
+
 };
 
 }}} /* end namespace vt::vrt::collection */

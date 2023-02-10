@@ -195,6 +195,94 @@ struct Broadcastable : BaseProxyT {
     typename... Args
   >
   void invokeCollective(Args&&... args) const;
+
+
+  template <typename Return, typename... Args>
+  struct FunctionTraits;
+
+  template <typename Return, typename Msg>
+  struct FunctionTraits<Return(*)(Msg*, ColT*)> {
+    using MsgT = Msg;
+    using ReturnT = Return;
+  };
+
+  template <typename Return, typename Msg>
+  struct FunctionTraits<Return(ColT::*)(Msg*)> {
+    using MsgT = Msg;
+    using ReturnT = Return;
+  };
+
+  /**
+   * \brief Rooted broadcast with action function handler
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <auto f>
+  messaging::PendingSend broadcastMsg(
+    messaging::MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg
+  ) const {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return broadcastMsg<MsgT, f>(msg);
+  }
+
+  /**
+   * \brief Rooted broadcast with action function handler
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <auto f, typename... Args>
+  messaging::PendingSend broadcast(Args&&... args) const {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return broadcast<MsgT, f>(std::forward<Args>(args)...);
+  }
+
+  /**
+   * \brief Collective broadcast with action function handler
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <auto f>
+  messaging::PendingSend broadcastCollectiveMsg(
+    messaging::MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg
+  ) const {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return broadcastCollectiveMsg<MsgT, f>(msg);
+  }
+
+  /**
+   * \brief Create message (with action function handler) and broadcast it in a
+   * collective manner to the collection
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <auto f, typename... Args>
+  messaging::PendingSend broadcastCollective(Args&&... args) const {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return broadcastCollectiveMsg<MsgT, f>(std::forward<Args>(args)...);
+  }
+
+  /**
+   * \brief Invoke member message handler on all collection elements
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] args arguments for creating the message
+   */
+  template <auto f, typename... Args>
+  void invokeCollective(Args&&... args) const {
+    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    return invokeCollective<MsgT, f>(std::forward<Args>(args)...);
+  }
+
 };
 
 }}} /* end namespace vt::vrt::collection */
