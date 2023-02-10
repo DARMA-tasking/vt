@@ -1,8 +1,8 @@
 
 ARG compiler=11.0.3
 ARG arch=amd64
-# Works with 18.04, 20.04 and 22.04
-ARG ubuntu=18.04
+# Works with 20.04 and 22.04
+ARG ubuntu=20.04
 FROM --platform=${arch} nvidia/cuda:${compiler}-devel-ubuntu${ubuntu} as base
 
 ARG proxy=""
@@ -48,8 +48,8 @@ RUN mkdir -p /nvcc_wrapper/build && \
     chmod +x /nvcc_wrapper/build/nvcc_wrapper
 
 ENV MPI_EXTRA_FLAGS="" \
-    CXX=/nvcc_wrapper/build/nvcc_wrapper \
-    PATH=/usr/lib/ccache/:$PATH
+    PATH=/usr/lib/ccache/:/nvcc_wrapper/build:$PATH \
+    CXX=nvcc_wrapper
 
 FROM base as build
 COPY . /vt
