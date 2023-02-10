@@ -101,8 +101,8 @@ TEST_F(TestOfflineLB, test_offlinelb_1) {
   }
 
   for (int i = 0; i < len; i++) {
-    auto pid = elm::ElmIDBits::createCollectionImpl(true, i+1, prev_node, prev_node);
-    auto nid = elm::ElmIDBits::createCollectionImpl(true, i+1, next_node, next_node);
+    auto pid = elm::ElmIDBits::createCollectionImpl(true, i+1, prev_node, this_node);
+    auto nid = elm::ElmIDBits::createCollectionImpl(true, i+1, next_node, this_node);
     ids[1].push_back(pid);
     ids[2].push_back(pid);
     ids[4].push_back(nid);
