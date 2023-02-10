@@ -121,13 +121,68 @@ void LBDataRestartReader::readLBData(std::string const& file) {
   determinePhasesToMigrate();
 }
 
+void LBDataRestartReader::departing(DepartMsg* msg) {
+  auto m = promoteMsg(msg);
+  coordinate_[msg->phase][msg->elm].depart = m;
+  checkBothEnds(coordinate_[msg->phase][msg->elm]);
+}
+
+void LBDataRestartReader::arriving(ArriveMsg* msg) {
+  auto m = promoteMsg(msg);
+  coordinate_[msg->phase][msg->elm].arrive = m;
+  checkBothEnds(coordinate_[msg->phase][msg->elm]);
+}
+
+void LBDataRestartReader::update(UpdateMsg* msg) {
+  auto iter = history_[msg->phase].find(msg->elm);
+  vtAssert(iter != history_[msg->phase].end(), "Must exist");
+  auto elm = *iter;
+  elm.curr_node = msg->curr_node;
+  history_[msg->phase].erase(iter);
+  history_[msg->phase].insert(elm);
+}
+
+void LBDataRestartReader::checkBothEnds(Coord& coord) {
+  if (coord.arrive != nullptr and coord.depart != nullptr) {
+    proxy_[coord.arrive->arrive_node].send<
+      UpdateMsg, &LBDataRestartReader::update
+    >(coord.depart->depart_node, coord.arrive->phase, coord.arrive->elm);
+  }
+}
+
 void LBDataRestartReader::determinePhasesToMigrate() {
   std::vector<bool> local_changed_distro;
   local_changed_distro.resize(num_phases_ - 1);
 
-  for (PhaseType i = 0; i < num_phases_ - 1; ++i) {
-    local_changed_distro[i] = history_[i] != history_[i+1];
-  }
+  auto const this_node = theContext()->getNode();
+
+  runInEpochCollective("LBDataRestartReader::updateLocations", [&]{
+    for (PhaseType i = 0; i < num_phases_ - 1; ++i) {
+      local_changed_distro[i] = history_[i] != history_[i+1];
+      if (local_changed_distro[i]) {
+        std::set<ElementIDStruct> departing, arriving;
+
+        std::set_difference(
+          history_[i+1].begin(), history_[i+1].end(),
+          history_[i].begin(),   history_[i].end(),
+          std::inserter(arriving, arriving.begin())
+        );
+
+        std::set_difference(
+          history_[i].begin(),   history_[i].end(),
+          history_[i+1].begin(), history_[i+1].end(),
+          std::inserter(departing, departing.begin())
+        );
+
+        for (auto&& d : departing) {
+          proxy_[d.getHomeNode()].send<DepartMsg, &LBDataRestartReader::departing>(this_node, i+1, d);
+        }
+        for (auto&& a : arriving) {
+          proxy_[a.getHomeNode()].send<ArriveMsg, &LBDataRestartReader::arriving>(this_node, i+1, a);
+        }
+      }
+    }
+  });
 
   runInEpochCollective("LBDataRestartReader::computeDistributionChanges", [&]{
     auto cb = theCB()->makeBcast<
