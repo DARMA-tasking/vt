@@ -122,24 +122,29 @@ void LBDataRestartReader::readLBData(std::string const& file) {
 }
 
 void LBDataRestartReader::departing(DepartMsg* msg) {
-  coordinate_[msg->phase][msg->elm].arrive = promoteMsg(msg);
+  auto m = promoteMsg(msg);
+  coordinate_[msg->phase][msg->elm].depart = m;
   checkBothEnds(coordinate_[msg->phase][msg->elm]);
 }
 
 void LBDataRestartReader::arriving(ArriveMsg* msg) {
-  coordinate_[msg->phase][msg->elm].depart = promoteMsg(msg);
+  auto m = promoteMsg(msg);
+  coordinate_[msg->phase][msg->elm].arrive = m;
   checkBothEnds(coordinate_[msg->phase][msg->elm]);
 }
 
 void LBDataRestartReader::update(UpdateMsg* msg) {
-  auto iter = history[msg->phase].find(msg->elm);
-  vtAssert(iter != history[msg->phase].end(), "Must exist");
-  iter->second.curr_node = msg->curr_node;
+  auto iter = history_[msg->phase].find(msg->elm);
+  vtAssert(iter != history_[msg->phase].end(), "Must exist");
+  auto elm = *iter;
+  elm.curr_node = msg->curr_node;
+  history_[msg->phase].erase(iter);
+  history_[msg->phase].insert(elm);
 }
 
 void LBDataRestartReader::checkBothEnds(Coord& coord) {
   if (coord.arrive != nullptr and coord.depart != nullptr) {
-    proxy[coord.arrive->arrive_node].send<
+    proxy_[coord.arrive->arrive_node].send<
       UpdateMsg, &LBDataRestartReader::update
     >(coord.depart->depart_node, coord.arrive->phase, coord.arrive->elm);
   }
@@ -148,6 +153,8 @@ void LBDataRestartReader::checkBothEnds(Coord& coord) {
 void LBDataRestartReader::determinePhasesToMigrate() {
   std::vector<bool> local_changed_distro;
   local_changed_distro.resize(num_phases_ - 1);
+
+  auto const this_node = theContext()->getNode();
 
   runInEpochCollective("LBDataRestartReader::updateLocations", [&]{
     for (PhaseType i = 0; i < num_phases_ - 1; ++i) {
@@ -168,10 +175,10 @@ void LBDataRestartReader::determinePhasesToMigrate() {
         );
 
         for (auto&& d : departing) {
-          proxy[d.getHomeNode()].send<DepartMsg, &LBDataRestartReader::departing>(this_node, i+1, d);
+          proxy_[d.getHomeNode()].send<DepartMsg, &LBDataRestartReader::departing>(this_node, i+1, d);
         }
         for (auto&& a : arriving) {
-          proxy[d.getHomeNode()].send<ArriveMsg, &LBDataRestartReader::arriving>(this_node, i+1, a);
+          proxy_[a.getHomeNode()].send<ArriveMsg, &LBDataRestartReader::arriving>(this_node, i+1, a);
         }
       }
     }
