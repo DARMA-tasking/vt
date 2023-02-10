@@ -147,7 +147,7 @@ struct AppConfig {
   bool vt_lb_data_compress       = true;
   std::string vt_lb_data_dir     = "vt_lb_data";
   std::string vt_lb_data_file    = "data.%p.json";
-  std::string vt_lb_data_dir_in  = "vt_lb_data_in";
+  std::string vt_lb_data_dir_in  = "";
   std::string vt_lb_data_file_in = "data.%p.json";
   bool vt_lb_statistics           = true;
   bool vt_lb_statistics_compress  = true;
