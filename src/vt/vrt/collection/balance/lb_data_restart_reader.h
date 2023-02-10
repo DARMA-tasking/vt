@@ -180,7 +180,7 @@ private:
     { }
 
     NodeType depart_node = uninitialized_destination;
-    PhaseType phase = no_phase;
+    PhaseType phase = no_lb_phase;
     ElementIDStruct elm;
   };
 
@@ -192,7 +192,7 @@ private:
     { }
 
     NodeType arrive_node = uninitialized_destination;
-    PhaseType phase = no_phase;
+    PhaseType phase = no_lb_phase;
     ElementIDStruct elm;
   };
 
@@ -204,7 +204,7 @@ private:
     { }
 
     NodeType curr_node = uninitialized_destination;
-    PhaseType phase = no_phase;
+    PhaseType phase = no_lb_phase;
     ElementIDStruct elm;
   };
 
@@ -214,7 +214,8 @@ private:
   };
 
   void departing(DepartMsg* msg);
-  void arrive(ArriveMsg* msg);
+  void arriving(ArriveMsg* msg);
+  void update(UpdateMsg* msg);
   void checkBothEnds(Coord& coord);
 
   std::unordered_map<
