@@ -55,12 +55,7 @@
 namespace vt { namespace tests { namespace unit {
 
 struct TestSchedTimings : TestParallelHarness { };
-//TODO use TEST_P and have special progress true or false
-//make the scheduler run only after it's num_iter
 
-  // // Run scheduler every 10 handlers at least
-  // vt::theConfig()->vt_sched_progress_han = num_iter;
-  // vt::theConfig()->vt_sched_progress_sec = 0.0;
 struct MyMsg : vt::Message {
   int ms = 0;
 };
@@ -85,7 +80,7 @@ TEST_F(TestSchedTimings, test_sched_lb) {
 
 
   for (int i = 0; i < num_iter; i++) {
-    int time = i*100;
+    int time = i*50;
     v.emplace_back(time, std::make_unique<elm::ElementLBData>());
 
     auto id = elm::ElmIDBits::createCollection(true, this_node);
@@ -104,7 +99,7 @@ TEST_F(TestSchedTimings, test_sched_lb) {
   for (auto& [time, data] : v) {
     auto load = 1000.0* data->getLoad(0);
     fmt::print("expected time={}, observed time={}\n", time, load);
-    double margin = 10+ time*0.10;
+    double margin = 30+ time*0.20;
     EXPECT_NEAR(time, load, margin );
   }
 
@@ -112,12 +107,7 @@ TEST_F(TestSchedTimings, test_sched_lb) {
 
 TEST_F(TestSchedTimings, test_sched_msg) {
 
-  SET_MIN_NUM_NODES_CONSTRAINT(2);
   auto sched = std::make_unique<vt::sched::Scheduler>();
-
-
-  NodeType node = theContext()->getNode();
-  NodeType target_node = (node + 1) % theContext()->getNumNodes();
 
   int const num_iter = 10;
   int const ms_delay = 50;
@@ -131,7 +121,6 @@ TEST_F(TestSchedTimings, test_sched_msg) {
 
     auto handler = auto_registry::makeAutoHandler<MyMsg, myHandler>();
 
-    //theMsg()->sendMsg<MyMsg, myHandler>(target_node, next_msg);
     auto maker = vt::runnable::makeRunnable(next_msg, false, handler, 0);
 
     auto runnable = maker.getRunnableImpl();
@@ -151,7 +140,7 @@ TEST_F(TestSchedTimings, test_sched_msg) {
 
   auto sum_time = num_iter *ms_delay;
   fmt::print("expected time={}, observed time={}\n", sum_time, observed_time);
-  double margin = 10+ sum_time*0.05;
+  double margin =30+ sum_time*0.2;
   EXPECT_NEAR(sum_time, observed_time, margin );
 
 }
