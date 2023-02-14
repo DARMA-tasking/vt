@@ -5,7 +5,7 @@ bin=$2
 
 function runLB() {
     dir=$1
-    result=$($bin $dir/*json | grep 'Result:')
+    result=$($bin $($root_dir/get_file_pattern.pl $dir/*json) | grep 'Result:')
     problem=$(basename $dir)
     echo "Problem: $problem; $result"
 }
