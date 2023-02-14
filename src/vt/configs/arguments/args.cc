@@ -465,6 +465,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lb_interval   = "Load balancing interval";
   auto lb_keep_last_elm = "Do not migrate last element in collection";
   auto lb_data      = "Enable load balancing data";
+  auto lb_data_in   = "Enable load balancing data input";
   auto lb_data_comp = "Compress load balancing data output with brotli";
   auto lb_data_dir  = "Load balancing data output directory";
   auto lb_data_file = "Load balancing data output file name";
@@ -486,6 +487,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto w  = app.add_option("--vt_lb_interval", appConfig.vt_lb_interval, lb_interval)->capture_default_str();
   auto wl = app.add_flag("--vt_lb_keep_last_elm", appConfig.vt_lb_keep_last_elm, lb_keep_last_elm);
   auto ww = app.add_flag("--vt_lb_data", appConfig.vt_lb_data, lb_data);
+  auto za = app.add_flag("--vt_lb_data_in", appConfig.vt_lb_data_in, lb_data_in);
   auto xz = app.add_flag("--vt_lb_data_compress", appConfig.vt_lb_data_compress, lb_data_comp);
   auto wx = app.add_option("--vt_lb_data_dir", appConfig.vt_lb_data_dir, lb_data_dir)->capture_default_str();
   auto wy = app.add_option("--vt_lb_data_file", appConfig.vt_lb_data_file, lb_data_file)->capture_default_str();
@@ -514,6 +516,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   wl->group(debugLB);
   ww->group(debugLB);
   wx->group(debugLB);
+  za->group(debugLB);
   wy->group(debugLB);
   xx->group(debugLB);
   xy->group(debugLB);

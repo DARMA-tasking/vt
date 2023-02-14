@@ -385,7 +385,7 @@ bool Runtime::tryFinalize(bool const disable_sig) {
 bool Runtime::needLBDataRestartReader() {
   #if vt_check_enabled(lblite)
   if (true) {
-    return arg_config_->config_.vt_lb_data_in != "";
+    return arg_config_->config_.vt_lb_data_in;
   } else
   #endif
     return false;
