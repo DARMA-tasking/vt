@@ -233,13 +233,16 @@ public:
    */
   template <typename Callable, typename... Args>
   decltype(auto) runLambda(Callable&& c, Args&&... args) {
-    start();
+    auto start_time = timing::getCurrentTime();
+    start(start_time);
     if constexpr(std::is_void_v<std::invoke_result_t<Callable, Args...>>) {
       std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...);
-      finish();
+      auto finish_time = timing::getCurrentTime();
+      finish(finish_time);
     } else {
       decltype(auto) r{std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...)};
-      finish();
+      auto finish_time = timing::getCurrentTime();
+      finish(finish_time);
       return r;
     }
   }
