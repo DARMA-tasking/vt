@@ -663,14 +663,14 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
 }
 
 template <typename EntityID>
-template <typename MessageT>
+template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routePreparedMsgHandler(
   MsgSharedPtr<MessageT> const& msg
 ) {
   if (local_registered_.find(msg->getEntity()) == local_registered_.end()) {
     return routePreparedMsg(msg);
   } else {
-    return routeMsgHandlerLocal(msg);
+    return routeMsgHandlerLocal<MessageT, f>(msg);
   }
 }
 
@@ -698,7 +698,7 @@ void EntityLocationCoord<EntityID>::setupMessageForRouting(
 }
 
 template <typename EntityID>
-template <typename MessageT>
+template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandlerLocal(
   MsgSharedPtr<MessageT> const& msg
 ) {

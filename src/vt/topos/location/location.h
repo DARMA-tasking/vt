@@ -248,7 +248,7 @@ struct EntityLocationCoord : LocationCoord {
    *
    * \param[in] m message shared pointer
    */
-  template <typename MessageT>
+  template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routePreparedMsgHandler(MsgSharedPtr<MessageT> const& msg);
 
   /**
@@ -264,7 +264,7 @@ struct EntityLocationCoord : LocationCoord {
    *
    * \param[in] m message shared pointer
    */
-  template <typename MessageT>
+  template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routeMsgHandlerLocal(MsgSharedPtr<MessageT> const& msg);
 
   /**

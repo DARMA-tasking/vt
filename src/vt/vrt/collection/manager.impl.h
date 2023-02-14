@@ -1135,7 +1135,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     msg, [](MsgSharedPtr<BaseMsgType>& inner_msg){
       auto typed_msg = inner_msg.template to<MsgT>();
       auto lm2 = theLocMan()->getCollectionLM<IdxT>(typed_msg->getLocInst());
-      lm2->template routePreparedMsgHandler<MsgT>(typed_msg);
+      lm2->template routePreparedMsgHandler<MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>>(typed_msg);
     }
   };
 }
