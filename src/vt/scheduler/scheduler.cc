@@ -262,7 +262,6 @@ void Scheduler::runSchedulerOnceImpl(bool msg_only) {
     }
   }
 
-
   if (not work_queue_.empty()) {
     queueSizeGauge.update(work_queue_.size());
 
