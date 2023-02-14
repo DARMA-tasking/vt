@@ -759,13 +759,36 @@ int main(int argc, char** argv) {
 
   double read_time = 0, collate_time = 0, lb_time = 0;
 
+  vtAssert(argc == 2, "Must have one argument: \"x.%p.json\"");
+
   auto t1 = vt::timing::getCurrentTime();
-  for (int i = 1; i < argc; i++) {
-    std::string const filename = std::string{argv[i]};
+
+  std::string file_pattern{argv[1]};
+
+  int f = 0;
+  bool found = true;
+  std::size_t rank = file_pattern.find("%p");
+  while (found) {
+    std::string filename = file_pattern;
+    auto str_rank = std::to_string(f);
+    if (rank == std::string::npos) {
+      filename = filename + str_rank;
+    } else {
+      filename.replace(rank, 2, str_rank);
+    }
+
+    std::fstream fs{filename};
+    if (not fs.good()) {
+      found = false;
+      break;
+    }
+
     fmt::print("Reading in filename={}\n", filename);
     auto p = vt::readInData(filename);
     lb_data.push_back(*p);
-  }
+    f++;
+  };
+
   read_time = vt::timing::getCurrentTime() - t1;
 
   t1 = vt::timing::getCurrentTime();
