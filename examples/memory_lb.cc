@@ -699,7 +699,9 @@ void collateLBData(std::vector<LBDataHolder>& lb_data) {
   }
 
   for (auto&& o : objects) {
-    ranks[o.first.getHomeNode()].addObj(&o.second);
+    if (o.first.isMigratable()) {
+      ranks[o.first.getHomeNode()].addObj(&o.second);
+    }
   }
 
   for (int i = 0; i < static_cast<int>(ranks.size()); i++) {
