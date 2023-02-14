@@ -702,9 +702,7 @@ template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandlerLocal(
   MsgSharedPtr<MessageT> const& msg
 ) {
-  runnable::makeRunnable(msg, true, msg->getHandler(), theContext()->getNode())
-    .withTDEpochFromMsg()
-    .run();
+  f(msg.get());
 }
 
 template <typename EntityID>
