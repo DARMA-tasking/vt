@@ -47,6 +47,7 @@
 #include "vt/elm/elm_id_bits.h"
 
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 
 #include <memory>
 #include <thread>
@@ -54,7 +55,12 @@
 namespace vt { namespace tests { namespace unit {
 
 struct TestSchedTimings : TestParallelHarness { };
+//TODO use TEST_P and have special progress true or false
+//make the scheduler run only after it's num_iter
 
+  // // Run scheduler every 10 handlers at least
+  // vt::theConfig()->vt_sched_progress_han = num_iter;
+  // vt::theConfig()->vt_sched_progress_sec = 0.0;
 struct MyMsg : vt::Message {
   int ms = 0;
 };
@@ -77,8 +83,9 @@ TEST_F(TestSchedTimings, test_sched_lb) {
 
   int const num_iter = 10;
 
+
   for (int i = 0; i < num_iter; i++) {
-    int time = i*50;
+    int time = i*100;
     v.emplace_back(time, std::make_unique<elm::ElementLBData>());
 
     auto id = elm::ElmIDBits::createCollection(true, this_node);
@@ -95,10 +102,59 @@ TEST_F(TestSchedTimings, test_sched_lb) {
   sched->runSchedulerWhile([&]{ return count < num_iter; });
 
   for (auto& [time, data] : v) {
-    auto load = data->getLoad(0);
+    auto load = 1000.0* data->getLoad(0);
     fmt::print("expected time={}, observed time={}\n", time, load);
+    double margin = 10+ time*0.10;
+    EXPECT_NEAR(time, load, margin );
   }
 
 }
+
+TEST_F(TestSchedTimings, test_sched_msg) {
+
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+  auto sched = std::make_unique<vt::sched::Scheduler>();
+
+
+  NodeType node = theContext()->getNode();
+  NodeType target_node = (node + 1) % theContext()->getNumNodes();
+
+  int const num_iter = 10;
+  int const ms_delay = 50;
+  count = 0;
+  auto start_time = vt::timing::getCurrentTime();
+
+  for (int i = 0; i < num_iter; i++) {
+
+    auto next_msg = vt::makeMessage<MyMsg>();
+    next_msg->ms = ms_delay;
+
+    auto handler = auto_registry::makeAutoHandler<MyMsg, myHandler>();
+
+    //theMsg()->sendMsg<MyMsg, myHandler>(target_node, next_msg);
+    auto maker = vt::runnable::makeRunnable(next_msg, false, handler, 0);
+
+    auto runnable = maker.getRunnableImpl();
+    runnable->setupHandler(handler);
+    sched->enqueue(false, runnable);
+  }
+
+  sched->runSchedulerWhile([&]{ return count < num_iter; });
+  double const fudge = 0.8;
+  auto observed_time = 1000.0 *(vt::timing::getCurrentTime() - start_time);
+
+  // This ought to take close to a second (with ms_delay = 100)
+  EXPECT_GT(
+    observed_time,
+    vt::theConfig()->vt_sched_progress_sec * fudge
+  );
+
+  auto sum_time = num_iter *ms_delay;
+  fmt::print("expected time={}, observed time={}\n", sum_time, observed_time);
+  double margin = 10+ sum_time*0.05;
+  EXPECT_NEAR(sum_time, observed_time, margin );
+
+}
+
 
 }}} /* vt::tests::unit */
