@@ -95,7 +95,7 @@ template <typename EntityID>
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(
   EntityID const& id, NodeType const& home, LocMsgActionType msg_action,
-  bool const& migrated
+  bool const& migrated, void* obj
 ) {
   auto const& this_node = theContext()->getNode();
   auto reg_iter = local_registered_.find(id);
@@ -112,7 +112,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
     this_inst, home, migrated, id
   );
 
-  local_registered_.insert(id);
+  local_registered_[id] = obj;
 
   recs_.insert(id, home, LocRecType{id, eLocState::Local, this_node});
 
@@ -260,11 +260,11 @@ void EntityLocationCoord<EntityID>::entityEmigrated(
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityImmigrated(
   EntityID const& id, NodeType const& home_node, NodeType const& from,
-  LocMsgActionType msg_action
+  LocMsgActionType msg_action, void* obj
 ) {
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future
-  return registerEntity(id, home_node, msg_action, true);
+  return registerEntity(id, home_node, msg_action, true, obj);
 }
 
 template <typename EntityID>
@@ -562,9 +562,11 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           hid, from, handler, envelopeGetRef(msg->env)
         );
 
+	obj_context_ = local_registered_.find(hid)->second;
         runnable::makeRunnable(msg, true, handler, from)
           .withTDEpochFromMsg()
           .run();
+	obj_context_ = nullptr;
       } else {
         auto reg_han_iter = local_registered_msg_han_.find(hid);
         vtAssert(
@@ -667,10 +669,11 @@ template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routePreparedMsgHandler(
   MsgSharedPtr<MessageT> const& msg
 ) {
-  if (local_registered_.find(msg->getEntity()) == local_registered_.end()) {
+  auto iter = local_registered_.find(msg->getEntity());
+  if (iter == local_registered_.end()) {
     return routePreparedMsg(msg);
   } else {
-    return routeMsgHandlerLocal<MessageT, f>(msg);
+    return routeMsgHandlerLocal<MessageT, f>(msg, iter->second);
   }
 }
 
@@ -700,9 +703,11 @@ void EntityLocationCoord<EntityID>::setupMessageForRouting(
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandlerLocal(
-  MsgSharedPtr<MessageT> const& msg
+  MsgSharedPtr<MessageT> const& msg, void* obj
 ) {
+  obj_context_ = obj;
   f(msg.get());
+  obj_context_ = nullptr;
 }
 
 template <typename EntityID>

@@ -292,32 +292,16 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto const& col = entity_proxy.getCollectionProxy();
   auto const& elm = entity_proxy.getElementProxy();
   auto const& idx = elm.getIndex();
-  auto elm_holder = theCollection()->findElmHolder<IndexT>(col);
-
-  bool const exists = elm_holder->exists(idx);
+  auto const sub_handler = col_msg->getVrtHandler();
 
   vt_debug_print(
     terse, vrt_coll,
-    "collectionMsgTypedHandler: exists={}, idx={}, cur_epoch={:x}\n",
-    exists, idx, cur_epoch
+    "collectionMsgTypedHandler: idx={}, cur_epoch={:x}, sub_handler={}\n",
+    idx, cur_epoch, sub_handler
   );
 
-  vtAssertInfo(exists, "Proxy must exist", cur_epoch, idx);
-
-  auto& inner_holder = elm_holder->lookup(idx);
-
-  auto const sub_handler = col_msg->getVrtHandler();
-  auto const col_ptr = inner_holder.getRawPtr();
-
-  vt_debug_print(
-    verbose, vrt_coll,
-    "collectionMsgTypedHandler: sub_handler={}\n", sub_handler
-  );
-
-  vtAssertInfo(
-    col_ptr != nullptr, "Must be valid pointer",
-    sub_handler, HandlerManager::isHandlerMember(sub_handler), cur_epoch, idx, exists
-  );
+  auto lm = theLocMan()->getCollectionLM<IndexT>(col);
+  auto obj = reinterpret_cast<Indexable<IndexT>*>(lm->getObjContext());
 
   // Dispatch the handler after pushing the contextual epoch
   theMsg()->pushEpoch(cur_epoch);
@@ -328,7 +312,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     trace_event = col_msg->getFromTraceEvent();
   #endif
   collectionAutoMsgDeliver<ColT,IndexT,MsgT>(
-    msg, col_ptr, sub_handler, from, trace_event, false
+    msg, obj, sub_handler, from, trace_event, false
   );
   theMsg()->popEpoch(cur_epoch);
 }
@@ -1179,6 +1163,7 @@ bool CollectionManager::insertCollectionElement(
   );
 
   if (!destroyed) {
+    void* obj_ptr = vc.get();
     elm_holder->insert(idx, typename Holder<IndexT>::InnerHolder{
       std::move(vc)
     });
@@ -1186,7 +1171,8 @@ bool CollectionManager::insertCollectionElement(
     if (is_migrated_in) {
       theLocMan()->getCollectionLM<IndexT>(proxy)->entityImmigrated(
         idx, home_node, migrated_from,
-        CollectionManager::collectionMsgHandler<ColT, IndexT>
+        CollectionManager::collectionMsgHandler<ColT, IndexT>,
+	obj_ptr
       );
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementMigratedIn, idx, home_node
@@ -1194,7 +1180,8 @@ bool CollectionManager::insertCollectionElement(
     } else {
       theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
         idx, home_node,
-        CollectionManager::collectionMsgHandler<ColT, IndexT>
+        CollectionManager::collectionMsgHandler<ColT, IndexT>,
+	false, obj_ptr
       );
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementCreated, idx, home_node
