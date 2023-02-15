@@ -107,7 +107,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
     NodeType const& from_node = theContext()->getFromNodeCurrentTask();
 
     processing_tag =
-      theTrace()->beginProcessing(ep, msg_size, event, from_node);
+      theTrace()->beginProcessing(ep, msg_size, event, from_node, timing::getCurrentTime());
   }
 #endif
 
@@ -121,7 +121,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   }
 
 #if vt_check_enabled(trace_enabled)
-  theTrace()->endProcessing(processing_tag);
+  theTrace()->endProcessing(processing_tag, timing::getCurrentTime());
 #endif
 }
 

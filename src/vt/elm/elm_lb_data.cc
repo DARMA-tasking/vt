@@ -50,8 +50,8 @@
 
 namespace vt { namespace elm {
 
-void ElementLBData::startTime() {
-  TimeTypeWrapper const start_time = timing::getCurrentTime();
+void ElementLBData::start(TimeType time) {
+  TimeTypeWrapper const start_time = time;
   cur_time_ = start_time.seconds();
   cur_time_started_ = true;
 
@@ -62,8 +62,8 @@ void ElementLBData::startTime() {
   );
 }
 
-void ElementLBData::stopTime() {
-  TimeTypeWrapper const stop_time = timing::getCurrentTime();
+void ElementLBData::stop(TimeType time) {
+  TimeTypeWrapper const stop_time = time;
   TimeTypeWrapper const total_time = stop_time.seconds() - cur_time_;
   //vtAssert(cur_time_started_, "Must have started time");
   auto const started = cur_time_started_;

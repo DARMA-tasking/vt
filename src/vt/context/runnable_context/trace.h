@@ -101,10 +101,10 @@ struct Trace {
    */
   trace::TraceEventIDType getEvent() const { return event_; }
 
-  void start();
-  void finish();
-  void suspend();
-  void resume();
+  void start(TimeType time);
+  void finish(TimeType time);
+  void suspend(TimeType time);
+  void resume(TimeType time);
 
 private:
   /// Whether it's a collection or not

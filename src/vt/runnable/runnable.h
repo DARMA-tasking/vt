@@ -233,13 +233,16 @@ public:
    */
   template <typename Callable, typename... Args>
   decltype(auto) runLambda(Callable&& c, Args&&... args) {
-    start();
+    auto start_time = timing::getCurrentTime();
+    start(start_time);
     if constexpr(std::is_void_v<std::invoke_result_t<Callable, Args...>>) {
       std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...);
-      finish();
+      auto finish_time = timing::getCurrentTime();
+      finish(finish_time);
     } else {
       decltype(auto) r{std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...)};
-      finish();
+      auto finish_time = timing::getCurrentTime();
+      finish(finish_time);
       return r;
     }
   }
@@ -261,25 +264,25 @@ private:
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c start() on them.
    */
-  void start();
+  void start(TimeType time);
 
   /**
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c finish() on them.
    */
-  void finish();
+  void finish(TimeType time);
 
   /**
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c suspend() on them.
    */
-  void suspend();
+  void suspend(TimeType time);
 
   /**
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c resume() on them.
    */
-  void resume();
+  void resume(TimeType time);
 
 public:
   /**

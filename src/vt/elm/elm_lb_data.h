@@ -61,8 +61,8 @@ struct ElementLBData {
   ElementLBData(ElementLBData const&) = default;
   ElementLBData(ElementLBData&&) = default;
 
-  void startTime();
-  void stopTime();
+  void start(TimeType time);
+  void stop(TimeType time);
   void addTime(TimeTypeWrapper const& time);
 
   void sendToEntity(ElementIDStruct to, ElementIDStruct from, double bytes);

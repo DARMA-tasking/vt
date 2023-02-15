@@ -117,7 +117,7 @@ void Trace::startup() /*override*/ {
 
 void Trace::finalize() /*override*/ {
   // Always end any between-loop event left open.
-  endProcessing(between_sched_event_);
+  endProcessing(between_sched_event_, timing::getCurrentTime());
   between_sched_event_ = TraceProcessingTag{};
 }
 
@@ -335,9 +335,9 @@ void Trace::addMemoryEvent(std::size_t memory, double time) {
 TraceProcessingTag Trace::beginProcessing(
   TraceEntryIDType const ep, TraceMsgLenType const len,
   TraceEventIDType const event, NodeType const from_node,
+  TimeType const time,
   uint64_t const idx1, uint64_t const idx2,
-  uint64_t const idx3, uint64_t const idx4,
-  double const time
+  uint64_t const idx3, uint64_t const idx4
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return TraceProcessingTag{};
@@ -367,7 +367,7 @@ TraceProcessingTag Trace::beginProcessing(
 
 void Trace::endProcessing(
   TraceProcessingTag const& processing_tag,
-  double const time
+  TimeType const time
 ) {
   // End event honored even if tracing is disabled in this phase.
   // This ensures proper stack unwinding in all contexts.
@@ -420,13 +420,13 @@ void Trace::endProcessing(
 
 void Trace::pendingSchedulerLoop() {
   // Always end between-loop event.
-  endProcessing(between_sched_event_);
+  endProcessing(between_sched_event_, timing::getCurrentTime());
   between_sched_event_ = TraceProcessingTag{};
 }
 
 void Trace::beginSchedulerLoop() {
   // Always end between-loop event. The pending case is not always triggered.
-  endProcessing(between_sched_event_);
+  endProcessing(between_sched_event_, timing::getCurrentTime());
   between_sched_event_ = TraceProcessingTag{};
 
   // Capture the current open event depth.
@@ -449,7 +449,7 @@ void Trace::endSchedulerLoop() {
   // Start an event representing time outside of top-level scheduler.
   if (event_holds_.size() == 1) {
     between_sched_event_ = beginProcessing(
-      between_sched_event_type_, 0, trace::no_trace_event, 0
+      between_sched_event_type_, 0, trace::no_trace_event, 0, timing::getCurrentTime()
     );
   }
 }
