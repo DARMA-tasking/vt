@@ -123,7 +123,7 @@ void routeTestHandler(EntityMsg* msg) {
   );
   // route message
   vt::theLocMan()->virtual_loc->routeMsg<MsgT>(
-    msg->entity_, msg->home_, test_msg
+    msg->entity_, msg->home_, std::move(test_msg)
   );
 }
 
@@ -152,7 +152,7 @@ void verifyCacheConsistency(
     runInEpochCollective([&]{
       if (my_node not_eq home) {
         // route entity message
-        vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg);
+        vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, std::move(msg));
       }
     });
 
