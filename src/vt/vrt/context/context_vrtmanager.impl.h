@@ -167,7 +167,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
           innermsg->setProxy(toProxy);
           theLocMan()->vrtContextLoc->routeMsgHandler<
             SerialMsgT, SerializedMessenger::payloadMsgHandler
-          >(toProxy, home_node, innermsg);
+	  >(toProxy, home_node, std::move(innermsg));
           return messaging::PendingSend(nullptr);
         },
         // custom data transfer lambda if above the eager threshold
@@ -279,7 +279,7 @@ messaging::PendingSend VirtualContextManager::sendMsg(
     [=](MsgPtr<BaseMsgType> mymsg){
       // route the message to the destination using the location manager
       auto msg_shared = promoteMsg(reinterpret_cast<MsgT*>(mymsg.get()));
-      theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg_shared);
+      theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, std::move(msg_shared));
     }
   );
 }
