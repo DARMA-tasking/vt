@@ -28,6 +28,7 @@ variables:
   UBUNTU: 22.04
   COMPILER_TYPE: gnu
   COMPILER: gcc-12
+
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0

@@ -1,10 +1,10 @@
 
-ARG cuda=10.1
 ARG arch=amd64
-FROM ${arch}/ubuntu:18.04 as base
+FROM ${arch}/ubuntu:22.04 as base
 
 ARG proxy=""
 ARG compiler=nvcc-11
+ARG host_compiler=gcc-11
 
 ENV https_proxy=${proxy} \
     http_proxy=${proxy}
@@ -14,7 +14,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
     ca-certificates \
-    g++-7 \
+    g++-$(echo ${host_compiler} | cut -d- -f2) \
     curl \
     less \
     git \
@@ -83,6 +83,7 @@ ENV MPI_EXTRA_FLAGS="" \
 FROM base as build
 COPY . /vt
 
+ARG HOST_COMPILER
 ARG VT_LB_ENABLED
 ARG VT_TRACE_ENABLED
 ARG VT_TRACE_RUNTIME_ENABLED

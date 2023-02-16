@@ -217,23 +217,7 @@ endif()
 
 target_compile_features(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-  cxx_std_14
-  cxx_variadic_templates
-  cxx_auto_type
-  cxx_constexpr
-  cxx_decltype
-  cxx_defaulted_functions
-  cxx_deleted_functions
-  cxx_defaulted_move_initializers
-  cxx_delegating_constructors
-  cxx_lambdas
-  cxx_nonstatic_member_init
-  cxx_nullptr
-  cxx_override
-  cxx_range_for
-  cxx_right_angle_brackets
-  cxx_uniform_initialization
-  cxx_alias_templates
+  cxx_std_17
 )
 
 include(turn_on_warnings)

@@ -38,6 +38,11 @@ fi
 mkdir -p "${build_dir}"
 pushd "${build_dir}"
 
+if [ $CXX == "/nvcc_wrapper/build/nvcc_wrapper" ]
+then
+    export NVCC_WRAPPER_DEFAULT_COMPILER=$(which g++-$(echo ${HOST_COMPILER} | cut -d- -f2))
+fi
+
 if test -d "detector"
 then
     rm -Rf detector

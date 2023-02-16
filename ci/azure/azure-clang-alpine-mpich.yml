@@ -28,6 +28,7 @@ variables:
 
   COMPILER_TYPE: clang
   COMPILER: clang-13
+
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0
