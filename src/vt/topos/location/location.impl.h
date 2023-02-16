@@ -661,7 +661,7 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
 ) {
   setupMessageForRouting<MessageT, f>(id, home_node, msg);
 
-  routePreparedMsgHandler(msg);
+  routePreparedMsgHandler<MessageT, f>(msg);
 }
 
 template <typename EntityID>
