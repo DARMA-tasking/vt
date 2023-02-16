@@ -93,7 +93,7 @@ decltype(auto) invoke(
   auto const& elm_id = holder->getElmID();
   auto elm = holder->getPtr();
   auto lb_data = &holder->getLBData();
-  return runnable::makeRunnableVoid(false, han, this_node)
+  runnable::makeRunnable(std::move(msg.msg_), false, han, this_node)
     .withObjGroup(elm)
     .withLBData(lb_data, elm_id)
     .runLambda(f, static_cast<ObjT*>(elm), msg.get());
@@ -108,13 +108,13 @@ namespace detail {
 
 template <typename MsgT, typename ObjT>
 void dispatchImpl(
-  MsgSharedPtr<MsgT> const& msg, HandlerType han, NodeType from_node,
+  MsgSharedPtr<MsgT> msg, HandlerType han, NodeType from_node,
   ActionType cont, ObjT* obj
 ) {
   auto holder = detail::getHolderBase(han);
   auto const& elm_id = holder->getElmID();
   auto lb_data = &holder->getLBData();
-  runnable::makeRunnable(msg, true, han, from_node)
+  runnable::makeRunnable(std::move(msg), true, han, from_node)
     .withContinuation(cont)
     .withObjGroup(obj)
     .withLBData(lb_data, elm_id)

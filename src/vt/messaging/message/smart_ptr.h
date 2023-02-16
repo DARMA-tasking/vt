@@ -155,6 +155,11 @@ struct MsgSharedPtr final {
       /*N.B. retain ORIGINAL-type implementation*/ impl_);
   }
 
+  template <typename U>
+  MsgSharedPtr<U>* reinterpretAs() {
+    return reinterpret_cast<MsgSharedPtr<U>*>(this);
+  }
+
   /// [obsolete] Use to() as MsgVirtualPtr <-> MsgSharedPtr.
   /// Both methods are equivalent in function.
   template <typename U>

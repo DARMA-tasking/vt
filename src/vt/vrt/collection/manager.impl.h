@@ -219,8 +219,7 @@ template <typename ColT, typename IndexT, typename MsgT>
 #endif
 
   auto m = promoteMsg(msg);
-
-  runnable::makeRunnable(m, true, han, from)
+  runnable::makeRunnable(std::move(m), true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
 #if vt_check_enabled(trace_enabled)
@@ -1116,10 +1115,10 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   >(idx, home_node, msg);
 
   return messaging::PendingSend{
-    msg, [](MsgSharedPtr<BaseMsgType>& inner_msg){
-      auto typed_msg = inner_msg.template to<MsgT>();
-      auto lm2 = theLocMan()->getCollectionLM<IdxT>(typed_msg->getLocInst());
-      lm2->template routePreparedMsgHandler<MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>>(typed_msg);
+    std::move(*(msg.template reinterpretAs<BaseMsgType>())), [](MsgSharedPtr<BaseMsgType>&& inner_msg){
+      MsgSharedPtr<MsgT>* typed_msg = inner_msg.template reinterpretAs<MsgT>();
+      auto lm2 = theLocMan()->getCollectionLM<IdxT>((*typed_msg)->getLocInst());
+      lm2->template routePreparedMsgHandler<MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>>(std::move(*typed_msg));
     }
   };
 }

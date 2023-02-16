@@ -500,7 +500,7 @@ EventType ActiveMessenger::doMessageSend(
       if (is_obj) {
         objgroup::dispatchObjGroup(base, han, dest, nullptr);
       } else {
-        runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
+        runnable::makeRunnable(std::move(base), true, envelopeGetHandler(msg->env), dest)
           .withTDEpochFromMsg(is_term)
           .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
           .enqueue();
@@ -963,7 +963,8 @@ void ActiveMessenger::prepareActiveMsgToRun(
   if (is_obj) {
     objgroup::dispatchObjGroup(base, handler, from_node, cont);
   } else {
-    runnable::makeRunnable(base, not is_term, handler, from_node)
+    auto m = base;
+    runnable::makeRunnable(std::move(m), not is_term, handler, from_node)
       .withContinuation(cont)
       .withTDEpochFromMsg(is_term)
       .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)

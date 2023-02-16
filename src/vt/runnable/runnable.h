@@ -106,8 +106,8 @@ struct RunnableNew {
    * \param[in] in_is_threaded whether the handler can be run with a thread
    */
   template <typename U>
-  RunnableNew(MsgSharedPtr<U> const& in_msg, bool in_is_threaded)
-    : msg_(in_msg.template to<BaseMsgType>())
+  RunnableNew(MsgSharedPtr<U>&& in_msg, bool in_is_threaded)
+    :  msg_(std::move(*in_msg.template reinterpretAs<BaseMsgType>()))
 #if vt_check_enabled(fcontext)
     , is_threaded_(in_is_threaded)
 #endif
@@ -130,6 +130,8 @@ struct RunnableNew {
   RunnableNew& operator=(RunnableNew&&) = default;
 
 public:
+  MsgSharedPtr<BaseMsgType> const& getMsg() { return msg_; }
+
   /**
    * \brief Add a new \c SetContext for this handler
    *

@@ -71,7 +71,7 @@ void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   );
   auto pmsg = promoteMsg(msg);
   if (this_node == send_node_) {
-    runnable::makeRunnable(pmsg, true, handler_, this_node)
+    runnable::makeRunnable(std::move(pmsg), true, handler_, this_node)
       .withTDEpochFromMsg()
       .enqueue();
   } else {

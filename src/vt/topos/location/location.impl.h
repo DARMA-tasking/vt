@@ -337,7 +337,7 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
   EntityID const& id, NodeType const& home_node,
-  MsgSharedPtr<MessageT> const& msg
+  MsgSharedPtr<MessageT>&& msg
 ) {
   auto const& this_node = theContext()->getNode();
   NodeType route_to_node = uninitialized_destination;
@@ -387,7 +387,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
     home_node, route_to_node, id
   );
 
-  return routeMsgNode<MessageT>(id, home_node, route_to_node, msg);
+  return routeMsgNode<MessageT>(id, home_node, route_to_node, std::move(msg));
 }
 
 template <typename EntityID>
@@ -505,7 +505,7 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
   EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-  MsgSharedPtr<MessageT> const& msg
+  MsgSharedPtr<MessageT>&& msg
 ) {
   auto const& this_node = theContext()->getNode();
   auto const epoch = theMsg()->getEpochContextMsg(msg);
@@ -549,7 +549,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
     theTerm()->produce(epoch);
 
-    auto trigger_msg_handler_action = [=](EntityID const& hid) {
+    auto trigger_msg_handler_action = [=](EntityID const& hid, MsgSharedPtr<MessageT>&& m) mutable {
       bool const& has_handler = msg->hasHandler();
       auto const& from = msg->getLocFromNode();
       if (has_handler) {
@@ -563,7 +563,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         );
 
 	obj_context_ = local_registered_.find(hid)->second;
-        runnable::makeRunnable(msg, true, handler, from)
+        runnable::makeRunnable(std::move(m), true, handler, from)
           .withTDEpochFromMsg()
           .run();
 	obj_context_ = nullptr;
@@ -577,10 +577,10 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           verbose, location,
           "EntityLocationCoord: no direct handler: id={}\n", hid
         );
-        reg_han_iter->second.applyRegisteredActionMsg(msg.get());
+        reg_han_iter->second.applyRegisteredActionMsg(m.get());
       }
 
-      auto ask_node = msg->getAskNode();
+      auto ask_node = m->getAskNode();
 
       if (ask_node != uninitialized_destination) {
         auto delivered_node = theContext()->getNode();
@@ -604,7 +604,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       );
 
       theMsg()->pushEpoch(epoch);
-      trigger_msg_handler_action(id);
+      trigger_msg_handler_action(id, std::move(msg));
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);
     } else {
@@ -616,7 +616,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
       EntityID id_ = id;
       // buffer the message here, the entity will be registered in the future
-      insertPendingEntityAction(id_, [=](NodeType resolved) {
+      insertPendingEntityAction(id_, [=](NodeType resolved) mutable {
         auto const& my_node = theContext()->getNode();
 
         vt_debug_print(
@@ -628,14 +628,14 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
         theMsg()->pushEpoch(epoch);
         if (resolved == my_node) {
-          trigger_msg_handler_action(id_);
+          trigger_msg_handler_action(id_, std::move(msg));
         } else {
           /*
            *  Recurse with the new updated node information. This occurs
            *  typically when an non-migrated registration occurs off the home
            *  node and messages are buffered, awaiting forwarding information.
            */
-          routeMsgNode<MessageT>(id_, home_node, resolved,msg);
+          routeMsgNode<MessageT>(id_, home_node, resolved, std::move(msg));
         }
         theMsg()->popEpoch(epoch);
         theTerm()->consume(epoch);
@@ -657,23 +657,23 @@ template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandler(
   EntityID const& id, NodeType const& home_node,
-  MsgSharedPtr<MessageT> const& msg
+  MsgSharedPtr<MessageT>&& msg
 ) {
   setupMessageForRouting<MessageT, f>(id, home_node, msg);
 
-  routePreparedMsgHandler<MessageT, f>(msg);
+  routePreparedMsgHandler<MessageT, f>(std::move(msg));
 }
 
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routePreparedMsgHandler(
-  MsgSharedPtr<MessageT> const& msg
+  MsgSharedPtr<MessageT>&& msg
 ) {
   auto iter = local_registered_.find(msg->getEntity());
   if (iter == local_registered_.end()) {
-    return routePreparedMsg(msg);
+    return routePreparedMsg(std::move(msg));
   } else {
-    return routeMsgHandlerLocal<MessageT, f>(msg, iter->second);
+    return routeMsgHandlerLocal<MessageT, f>(std::move(msg), iter->second);
   }
 }
 
@@ -703,7 +703,7 @@ void EntityLocationCoord<EntityID>::setupMessageForRouting(
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandlerLocal(
-  MsgSharedPtr<MessageT> const& msg, void* obj
+  MsgSharedPtr<MessageT>&& msg, void* obj
 ) {
   obj_context_ = obj;
   f(msg.get());
@@ -713,7 +713,7 @@ void EntityLocationCoord<EntityID>::routeMsgHandlerLocal(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routePreparedMsg(
-  MsgSharedPtr<MessageT> const& msg
+  MsgSharedPtr<MessageT>&& msg
 ) {
   auto const msg_size = sizeof(*msg);
   bool const use_eager = useEagerProtocol(msg);
@@ -730,15 +730,15 @@ void EntityLocationCoord<EntityID>::routePreparedMsg(
 
   if (use_eager) {
     theMsg()->pushEpoch(epoch);
-    routeMsgEager<MessageT>(msg->getEntity(), msg->getHomeNode(), msg);
+    routeMsgEager<MessageT>(msg->getEntity(), msg->getHomeNode(), std::move(msg));
     theMsg()->popEpoch(epoch);
   } else {
     theTerm()->produce(epoch);
     // non-eager protocol: get location first then send message after resolution
-    getLocation(msg->getEntity(), msg->getHomeNode(), [=](NodeType node) {
+    getLocation(msg->getEntity(), msg->getHomeNode(), [this, epoch, m = std::move(msg)](NodeType node) mutable {
       theMsg()->pushEpoch(epoch);
       routeMsgNode<MessageT>(
-        msg->getEntity(), msg->getHomeNode(), node, msg
+        m->getEntity(), m->getHomeNode(), node, std::move(m)
       );
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);
@@ -750,7 +750,7 @@ template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
   EntityID const& id, NodeType const& home_node,
-  MsgSharedPtr<MessageT> const& msg, NodeType from_node
+  MsgSharedPtr<MessageT>&& msg, NodeType from_node
 ) {
   auto const from =
     from_node == uninitialized_destination ? theContext()->getNode() :
@@ -761,7 +761,7 @@ void EntityLocationCoord<EntityID>::routeMsg(
   msg->setHomeNode(home_node);
   msg->setLocFromNode(from);
 
-  routePreparedMsg(msg);
+  routePreparedMsg(std::move(msg));
 }
 
 template <typename EntityID>
@@ -845,9 +845,9 @@ template <typename MessageT>
 
   theTerm()->produce(epoch);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
-    inst, [=](EntityLocationCoord<EntityID>* loc) {
+    inst, [=](EntityLocationCoord<EntityID>* loc) mutable {
       theMsg()->pushEpoch(epoch);
-      loc->routeMsg(entity_id, home_node, msg, from_node);
+      loc->routeMsg(entity_id, home_node, std::move(msg), from_node);
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);
     }

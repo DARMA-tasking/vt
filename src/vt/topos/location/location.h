@@ -244,7 +244,7 @@ struct EntityLocationCoord : LocationCoord {
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routeMsgHandler(
     EntityID const& id, NodeType const& home_node,
-    MsgSharedPtr<MessageT> const& msg
+    MsgSharedPtr<MessageT>&& msg
   );
 
   /**
@@ -253,7 +253,7 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] m message shared pointer
    */
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
-  void routePreparedMsgHandler(MsgSharedPtr<MessageT> const& msg);
+  void routePreparedMsgHandler(MsgSharedPtr<MessageT>&& msg);
 
   /**
    * \brief Route a message with a custom handler
@@ -261,7 +261,7 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] m message shared pointer
    */
   template <typename MessageT>
-  void routePreparedMsg(MsgSharedPtr<MessageT> const& msg);
+  void routePreparedMsg(MsgSharedPtr<MessageT>&& msg);
 
   /**
    * \brief Route a message with a custom handler where the element is local
@@ -270,7 +270,7 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] obj the object pointer
    */
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
-  void routeMsgHandlerLocal(MsgSharedPtr<MessageT> const& msg, void* obj);
+  void routeMsgHandlerLocal(MsgSharedPtr<MessageT>&& msg, void* obj);
 
   /**
    * \brief Route a message to the default handler
@@ -283,7 +283,7 @@ struct EntityLocationCoord : LocationCoord {
   template <typename MessageT>
   void routeMsg(
     EntityID const& id, NodeType const& home_node,
-    MsgSharedPtr<MessageT> const& msg,
+    MsgSharedPtr<MessageT>&& msg,
     NodeType from_node = uninitialized_destination
   );
 
@@ -410,7 +410,7 @@ private:
   template <typename MessageT>
   void routeMsgEager(
     EntityID const& id, NodeType const& home_node,
-    MsgSharedPtr<MessageT> const& msg
+    MsgSharedPtr<MessageT>&& msg
   );
 
   /**
@@ -424,7 +424,7 @@ private:
   template <typename MessageT>
   void routeMsgNode(
     EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-    MsgSharedPtr<MessageT> const& msg
+    MsgSharedPtr<MessageT>&& msg
   );
 
   /**

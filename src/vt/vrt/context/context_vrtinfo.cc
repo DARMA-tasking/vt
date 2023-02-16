@@ -92,7 +92,7 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
     // @todo: fix the from node
     auto const& from_node = 0;
     auto m = promoteMsg(raw_msg);
-    runnable::makeRunnable(m, false, sub_handler, from_node)
+    runnable::makeRunnable(std::move(m), false, sub_handler, from_node)
       .withTDEpochFromMsg()
       .withElementHandler(vc_ptr)
       .run();

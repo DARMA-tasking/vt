@@ -70,6 +70,7 @@ namespace vt { namespace messaging {
 struct PendingSend final {
   /// Function for complex action on send---takes a message to operate on
   using SendActionType = std::function<void(MsgSharedPtr<BaseMsgType>&)>;
+  using SendActionMoveType = std::function<void(MsgSharedPtr<BaseMsgType>&&)>;
   using EpochActionType = std::function<void()>;
 
   /**
@@ -87,6 +88,21 @@ struct PendingSend final {
     SendActionType in_action = nullptr
   ) : msg_(in_msg)
     , send_action_(in_action)
+  {
+    produceMsg();
+  }
+
+  /**
+   * \brief Construct a pending send.
+   *
+   * \param[in] in_msg the message to send
+   * \param[in] in_move_action the action to run, where the msg is moved.
+   */
+  PendingSend(
+    MsgSharedPtr<BaseMsgType>&& in_msg,
+    SendActionMoveType in_move_action = nullptr
+  ) : msg_(std::move(in_msg))
+    , send_move_action_(in_move_action)
   {
     produceMsg();
   }
@@ -182,6 +198,7 @@ private:
 private:
   MsgPtr<BaseMsgType> msg_ = nullptr;
   SendActionType send_action_ = {};
+  SendActionMoveType send_move_action_ = {};
   EpochActionType epoch_action_ = {};
   EpochType epoch_produced_ = no_epoch;
 };
