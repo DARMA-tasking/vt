@@ -126,10 +126,33 @@ private:
   >;
 
   template <typename T>
-  struct DispatchImpl<T, isActiveColMemberTypedFnType<T>> {
+  struct DispatchImpl<
+    T,
+    std::enable_if_t<
+      not std::is_same<ObjT, SentinelObject>::value and
+      std::is_same<T, vrt::collection::ActiveColMemberTypedFnType<MsgT, ObjT>>::value
+    >
+  > {
     static void run(MsgT* msg, void* object, HandlerT han) {
       auto elm = static_cast<ObjT*>(object);
       (elm->*han)(msg);
+    }
+  };
+
+  template <typename T>
+  struct DispatchImpl<
+    T,
+    std::enable_if_t<
+      not std::is_same<ObjT, SentinelObject>::value and
+      not std::is_same<T, vrt::collection::ActiveColMemberTypedFnType<MsgT, ObjT>>::value and
+      not std::is_same<T, vrt::collection::ActiveColTypedFnType<MsgT, ObjT>*>::value and
+      not std::is_same<T, ActiveVoidFnType*>::value and
+      not std::is_same<T, ActiveTypedFnType<MsgT>*>::value
+    >
+  > {
+    static void run(MsgT* msg, void* object, HandlerT han) {
+      auto elm = static_cast<ObjT*>(object);
+      std::apply(han, std::tuple_cat(std::make_tuple(elm), msg->getTuple()));
     }
   };
 
