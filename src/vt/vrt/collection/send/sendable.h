@@ -122,21 +122,49 @@ struct Sendable : BaseProxyT {
   >
   messaging::PendingSend send(Args&&... args) const;
 
+  struct NoMsg {};
 
-  template <typename Return, typename... Args>
+  template <typename enabled, typename... Args>
   struct FunctionTraits;
 
   template <typename Return, typename Msg>
-  struct FunctionTraits<Return(*)(Msg*, ColT*)> {
+  struct FunctionTraits<
+    std::enable_if_t<std::is_convertible<Msg, vt::Message>::value>,
+    Return(*)(Msg*, ColT*)
+  > {
     using MsgT = Msg;
     using ReturnT = Return;
   };
 
   template <typename Return, typename Msg>
-  struct FunctionTraits<Return(ColT::*)(Msg*)> {
+  struct FunctionTraits<
+    std::enable_if_t<std::is_convertible<Msg, vt::Message>::value>,
+    Return(ColT::*)(Msg*)
+  > {
     using MsgT = Msg;
     using ReturnT = Return;
   };
+
+  template <typename ReturnT>
+  struct FunctionTraits<
+    std::true_type,
+    ReturnT(ColT::*)()
+  > {
+    using MsgT = NoMsg;
+    using TupleType = std::tuple<>;
+    using ReturnType = ReturnT;
+  };
+
+  template <typename ReturnT, typename Arg, typename... Args>
+  struct FunctionTraits<
+    std::enable_if_t<not std::is_convertible<Arg, vt::Message*>::value>,
+    ReturnT(ColT::*)(Arg, Args...)
+  > {
+    using MsgT = NoMsg;
+    using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
+    using ReturnType = ReturnT;
+  };
+
 
   /**
    * \brief Create message (with action function handler) and send to collection element
@@ -147,9 +175,9 @@ struct Sendable : BaseProxyT {
    */
   template <auto f>
   messaging::PendingSend sendMsg(
-    messaging::MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg
+    messaging::MsgPtrThief<typename FunctionTraits<void,decltype(f)>::MsgT> msg
   ) const {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FunctionTraits<void,decltype(f)>::MsgT;
     return sendMsg<MsgT, f>(msg);
   }
 
@@ -161,11 +189,7 @@ struct Sendable : BaseProxyT {
    * \return a pending send
    */
   template <auto f, typename... Args>
-  messaging::PendingSend send(Args&&... args) const {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
-    return send<MsgT, f>(std::forward<Args>(args)...);
-  }
-
+  messaging::PendingSend send(Args&&... args) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
