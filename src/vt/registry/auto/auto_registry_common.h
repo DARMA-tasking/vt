@@ -89,12 +89,7 @@ public:
       fp(msg, elm);
     } else {
       if constexpr (std::is_same_v<ObjT, SentinelObject>) {
-
-        if constexpr (not std::is_same_v<T, ActiveVoidFnType*> and
-                      not std::is_same_v<T, ActiveTypedFnType<MsgT>*>) {
-          std::apply(fp, msg->getTuple());
-        }
-
+        std::apply(fp, msg->getTuple());
       } else {
         if constexpr (std::is_same_v<T, ColMemberTypedFnType>) {
           (elm->*fp)(msg);
