@@ -462,6 +462,25 @@ void CollectionManager::invokeCollectiveMsg(
 }
 
 template <typename ColT, auto f, typename... Args>
+void CollectionManager::invokeCollective(
+  CollectionProxyWrapType<ColT> const& proxy, Args&&... args
+) {
+  using IndexType = typename ColT::IndexType;
+
+  auto untyped_proxy = proxy.getProxy();
+  auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
+  auto const this_node = theContext()->getNode();
+
+  elm_holder->foreach([&](IndexType const& idx, Indexable<IndexType>* ptr) {
+    // be careful not to forward here as we are reusing args
+    runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+      .withCollection(ptr)
+      .withLBDataVoidMsg(ptr)
+      .runLambda(f, ptr, args...);
+  });
+}
+
+template <typename ColT, auto f, typename... Args>
 auto CollectionManager::invoke(
   VirtualElmProxyType<ColT> const& proxy, Args&&... args
 ) {
