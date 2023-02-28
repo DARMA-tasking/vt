@@ -48,6 +48,7 @@
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -122,50 +123,6 @@ struct Sendable : BaseProxyT {
   >
   messaging::PendingSend send(Args&&... args) const;
 
-  struct NoMsg {};
-
-  template <typename enabled, typename... Args>
-  struct FunctionTraits;
-
-  template <typename Return, typename Msg>
-  struct FunctionTraits<
-    std::enable_if_t<std::is_convertible<Msg, vt::Message>::value>,
-    Return(*)(Msg*, ColT*)
-  > {
-    using MsgT = Msg;
-    using ReturnT = Return;
-  };
-
-  template <typename Return, typename Msg>
-  struct FunctionTraits<
-    std::enable_if_t<std::is_convertible<Msg, vt::Message>::value>,
-    Return(ColT::*)(Msg*)
-  > {
-    using MsgT = Msg;
-    using ReturnT = Return;
-  };
-
-  template <typename ReturnT>
-  struct FunctionTraits<
-    std::true_type,
-    ReturnT(ColT::*)()
-  > {
-    using MsgT = NoMsg;
-    using TupleType = std::tuple<>;
-    using ReturnType = ReturnT;
-  };
-
-  template <typename ReturnT, typename Arg, typename... Args>
-  struct FunctionTraits<
-    std::enable_if_t<not std::is_convertible<Arg, vt::Message*>::value>,
-    ReturnT(ColT::*)(Arg, Args...)
-  > {
-    using MsgT = NoMsg;
-    using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
-    using ReturnType = ReturnT;
-  };
-
-
   /**
    * \brief Create message (with action function handler) and send to collection element
    *
@@ -175,9 +132,9 @@ struct Sendable : BaseProxyT {
    */
   template <auto f>
   messaging::PendingSend sendMsg(
-    messaging::MsgPtrThief<typename FunctionTraits<void,decltype(f)>::MsgT> msg
+    messaging::MsgPtrThief<typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT> msg
   ) const {
-    using MsgT = typename FunctionTraits<void,decltype(f)>::MsgT;
+    using MsgT = typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT;
     return sendMsg<MsgT, f>(msg);
   }
 

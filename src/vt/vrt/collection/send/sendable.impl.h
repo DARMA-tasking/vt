@@ -133,9 +133,9 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) co
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <auto f, typename... Params>
 messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Params&&... params) const {
-  using MsgT = typename FunctionTraits<void,decltype(f)>::MsgT;
+  using MsgT = typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT;
   if constexpr (std::is_same_v<MsgT, NoMsg>) {
-    using Tuple = typename FunctionTraits<void,decltype(f)>::TupleType;
+    using Tuple = typename ObjFuncTraits<void, ColT, decltype(f)>::TupleType;
     using SendMsgT = ParamColMsg<Tuple, ColT>;
     auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerCollectionMemParam<ColT, decltype(f), f, SendMsgT>();
