@@ -723,6 +723,18 @@ struct CollectionManager
   );
 
   /**
+   * \brief Invoke function handler without going through scheduler for all
+   * elements
+   *
+   * \param[in] proxy the whole collection proxy
+   * \param[in] args the arguments
+   */
+  template <typename ColT, auto f, typename... Args>
+  void invokeCollective(
+    CollectionProxyWrapType<ColT> const& proxy, Args&&... args
+  );
+
+  /**
    * \brief Invoke message action function handler without going through
    * scheduler for all elements
    *

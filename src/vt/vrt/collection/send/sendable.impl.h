@@ -138,11 +138,15 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Params&&... params
     using Tuple = typename ObjFuncTraits<void, ColT, decltype(f)>::TupleType;
     using SendMsgT = ParamColMsg<Tuple, ColT>;
     auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
-    auto han = auto_registry::makeAutoHandlerCollectionMemParam<ColT, decltype(f), f, SendMsgT>();
+    auto han = auto_registry::makeAutoHandlerCollectionMemParam<
+      ColT, decltype(f), f, SendMsgT
+    >();
     auto col_proxy = this->getCollectionProxy();
     auto elm_proxy = this->getElementProxy();
     auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy, elm_proxy);
-    return theCollection()->sendMsgUntypedHandler<SendMsgT, ColT, IndexT>(proxy, msg.get(), han);
+    return theCollection()->sendMsgUntypedHandler<SendMsgT, ColT, IndexT>(
+      proxy, msg.get(), han
+    );
   } else {
     auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
     return sendMsg<MsgT, f>(msg);
