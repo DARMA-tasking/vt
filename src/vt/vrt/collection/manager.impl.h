@@ -2219,28 +2219,24 @@ void CollectionManager::checkpointToFile(
 namespace detail {
 template <typename ColT>
 inline void restoreOffHomeElement(
-  ColT*, CollectionManager::RestoreMigrateColMsg<ColT>* msg
+  ColT*, NodeType node, typename ColT::IndexType idx,
+  CollectionProxy<ColT> proxy
 ) {
-  auto idx = msg->idx_;
-  auto node = msg->to_node_;
-  auto proxy = msg->proxy_;
   theCollection()->migrate(proxy(idx), node);
 }
 } /* end namespace detail */
 
 template <typename ColT>
 /*static*/ void CollectionManager::migrateToRestoreLocation(
-  RestoreMigrateMsg<ColT>* msg
+  NodeType node, typename ColT::IndexType idx,
+  CollectionProxyWrapType<ColT> proxy
 ) {
-  auto idx = msg->idx_;
-  auto node = msg->to_node_;
-  auto proxy = msg->proxy_;
   if (proxy(idx).tryGetLocalPtr() != nullptr) {
     theCollection()->migrate(proxy(idx), node);
   } else {
-    proxy(idx).template send<
-      RestoreMigrateColMsg<ColT>, detail::restoreOffHomeElement<ColT>
-    >(node, idx, proxy);
+    proxy(idx).template send<detail::restoreOffHomeElement<ColT>>(
+      node, idx, proxy
+    );
   }
 }
 
@@ -2279,14 +2275,12 @@ void CollectionManager::restoreFromFileInPlace(
         vtAssertExpr(mapped_node != uninitialized_destination);
         auto this_node = theContext()->getNode();
 
-        using MsgType = RestoreMigrateMsg<ColT>;
-        auto msg = makeMessage<MsgType>(this_node, idx, proxy);
         if (mapped_node != this_node) {
-          theMsg()->sendMsg<MsgType, migrateToRestoreLocation<ColT>>(
-            mapped_node, msg
+          theMsg()->send<migrateToRestoreLocation<ColT>>(
+            vt::Node{mapped_node}, this_node, idx, proxy
           );
         } else {
-          migrateToRestoreLocation<ColT>(msg.get());
+          migrateToRestoreLocation<ColT>(this_node, idx, proxy);
         }
       }
     }

@@ -1727,54 +1727,17 @@ public:
   );
 
   /**
-   * \internal \struct RestoreMigrateMsg
-   *
-   * \brief Migrate elements to restore where it belongs based on the checkpoint
-   */
-  template <
-    typename ColT,
-    typename MsgT = vt::Message,
-    typename IdxT = typename ColT::IndexType
-  >
-  struct RestoreMigrateMsg : MsgT {
-    RestoreMigrateMsg() = default;
-    RestoreMigrateMsg(
-      NodeType in_to_node, IdxT in_idx, CollectionProxyWrapType<ColT> in_proxy
-    ) : to_node_(in_to_node),
-        idx_(in_idx),
-        proxy_(in_proxy)
-    { }
-
-    NodeType to_node_ = uninitialized_destination;
-    IdxT idx_;
-    CollectionProxyWrapType<ColT> proxy_;
-  };
-
-  /**
-   * \internal \struct RestoreMigrateColMsg
-   *
-   * \brief Migrate collection element to restore where it belongs
-   */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
-  struct RestoreMigrateColMsg
-    : RestoreMigrateMsg<ColT, CollectionMessage<ColT>, IdxT>
-  {
-    RestoreMigrateColMsg() = default;
-    RestoreMigrateColMsg(
-      NodeType in_to_node, IdxT in_idx, CollectionProxyWrapType<ColT> in_proxy
-    ) : RestoreMigrateMsg<ColT, CollectionMessage<ColT>, IdxT>(
-          in_to_node, in_idx, in_proxy
-        )
-    { }
-  };
-
-  /**
    * \internal \brief Migrate element to restore location from checkpoint
    *
-   * \param[in] msg the migrate message
+   * \param[in] node the node
+   * \param[in] idx the element index
+   * \param[in] proxy the collection proxy
    */
   template <typename ColT>
-  static void migrateToRestoreLocation(RestoreMigrateMsg<ColT>* msg);
+  static void migrateToRestoreLocation(
+    NodeType node, typename ColT::IndexType idx,
+    CollectionProxyWrapType<ColT> proxy
+  );
 
   /**
    * \brief Restore the collection (collective) from file on top of an existing
