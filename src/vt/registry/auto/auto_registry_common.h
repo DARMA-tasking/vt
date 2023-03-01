@@ -87,16 +87,12 @@ public:
       fp(msg);
     } else if constexpr (std::is_same_v<T, ColTypedFnType*>) {
       fp(elm, msg);
+    } else if constexpr (std::is_same_v<T, ColMemberTypedFnType>) {
+      (elm->*fp)(msg);
+    } else if constexpr (std::is_same_v<ObjT, SentinelObject>) {
+      std::apply(fp, msg->getTuple());
     } else {
-      if constexpr (std::is_same_v<ObjT, SentinelObject>) {
-        std::apply(fp, msg->getTuple());
-      } else {
-        if constexpr (std::is_same_v<T, ColMemberTypedFnType>) {
-          (elm->*fp)(msg);
-        } else {
-          std::apply(fp, std::tuple_cat(std::make_tuple(elm), msg->getTuple()));
-        }
-      }
+      std::apply(fp, std::tuple_cat(std::make_tuple(elm), msg->getTuple()));
     }
   }
 
