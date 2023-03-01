@@ -1786,7 +1786,7 @@ void CollectionManager::destroyElm(
   } else {
     // Otherwise, we send a destroy message that will be routed (eventually
     // arriving) where the element resides
-    proxy(idx).template send<DestroyElmMsg<ColT>, destroyElmHandler<ColT>>(
+    proxy(idx).template send<destroyElmHandler<ColT>>(
       untyped_proxy, idx, modify_epoch
     );
   }
@@ -1796,7 +1796,7 @@ void CollectionManager::destroyElm(
 
 template <typename ColT>
 /*static*/ void CollectionManager::destroyElmHandler(
-  DestroyElmMsg<ColT>* msg, ColT*
+  ColT*, DestroyElmMsg<ColT>* msg
 ) {
   CollectionProxyWrapType<ColT> proxy{msg->proxy_};
   ModifierToken token{msg->modifier_epoch_};
@@ -2219,7 +2219,7 @@ void CollectionManager::checkpointToFile(
 namespace detail {
 template <typename ColT>
 inline void restoreOffHomeElement(
-  CollectionManager::RestoreMigrateColMsg<ColT>* msg, ColT*
+  ColT*, CollectionManager::RestoreMigrateColMsg<ColT>* msg
 ) {
   auto idx = msg->idx_;
   auto node = msg->to_node_;

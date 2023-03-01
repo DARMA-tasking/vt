@@ -55,9 +55,34 @@ template <typename ObjT, typename Return, typename Msg>
 struct ObjFuncTraits<
   std::enable_if_t<std::is_convertible<Msg, vt::Message>::value>,
   ObjT,
-  Return(*)(Msg*, ObjT*)
+  Return(*)(ObjT*, Msg*)
 > {
+  static constexpr bool is_member = false;
   using MsgT = Msg;
+  using ReturnT = Return;
+};
+
+template <typename ObjT, typename Return>
+struct ObjFuncTraits<
+  std::enable_if_t<std::is_same_v<void, void>>,
+  ObjT,
+  Return(*)(ObjT*)
+> {
+  static constexpr bool is_member = false;
+  using MsgT = NoMsg;
+  using ReturnT = Return;
+  using TupleType = std::tuple<>;
+};
+
+template <typename ObjT, typename Return, typename Arg, typename... Args>
+struct ObjFuncTraits<
+  std::enable_if_t<not std::is_convertible<Arg, vt::Message*>::value>,
+  ObjT,
+  Return(*)(ObjT*, Arg, Args...)
+> {
+  static constexpr bool is_member = false;
+  using MsgT = NoMsg;
+  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
   using ReturnT = Return;
 };
 
@@ -67,6 +92,7 @@ struct ObjFuncTraits<
   ObjT,
   Return(ObjT::*)(Msg*)
 > {
+  static constexpr bool is_member = true;
   using MsgT = Msg;
   using ReturnT = Return;
 };
@@ -77,6 +103,7 @@ struct ObjFuncTraits<
   ObjT,
   Return(ObjT::*)()
 > {
+  static constexpr bool is_member = true;
   using MsgT = NoMsg;
   using TupleType = std::tuple<>;
   using ReturnT = Return;
@@ -88,6 +115,7 @@ struct ObjFuncTraits<
   ObjT,
   Return(ObjT::*)(Arg, Args...)
 > {
+  static constexpr bool is_member = true;
   using MsgT = NoMsg;
   using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
   using ReturnT = Return;

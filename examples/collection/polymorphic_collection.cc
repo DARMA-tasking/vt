@@ -147,7 +147,7 @@ void Hello::doWork(ColMsg* msg) {
 }
 
 
-static void migrateToNext(ColMsg* msg, Hello* col) {
+static void migrateToNext(Hello* col, ColMsg* msg) {
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
   vt::NodeType next_node = (this_node + 1) % num_nodes;
@@ -192,19 +192,19 @@ int main(int argc, char** argv) {
 
   for (int p = 0; p < 10; p++) {
     vt::runInEpochCollective([&]{
-      proxy.broadcastCollective<ColMsg, &Hello::doWork>(this_node);
+      proxy.broadcastCollective<&Hello::doWork>(this_node);
     });
     vt::runInEpochCollective([&]{
-      proxy.broadcastCollective<ColMsg, migrateToNext>(this_node);
+      proxy.broadcastCollective<migrateToNext>(this_node);
     });
     vt::runInEpochCollective([&]{
-      proxy.broadcastCollective<ColMsg, &Hello::doWork>(this_node);
+      proxy.broadcastCollective<&Hello::doWork>(this_node);
     });
   }
 
   for (int p = 0; p < 10; p++) {
     vt::runInEpochCollective([&]{
-      proxy.broadcastCollective<ColMsg, &Hello::doWork>(this_node);
+      proxy.broadcastCollective<&Hello::doWork>(this_node);
     });
     vt::thePhase()->nextPhaseCollective();
   }

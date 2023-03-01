@@ -150,7 +150,7 @@ struct ProxyMsg : vt::CollectionMessage<MyCol> {
   ProxyType obj_proxy;
 };
 
-void handler2(MyMsg* msg, MyCol* col) {}
+void handler2(MyCol* col, MyMsg*) {}
 
 void MyObj::simulateObjGroupColTSends(ColProxyMsg* msg) {
   auto proxy = msg->proxy;
@@ -162,7 +162,7 @@ void MyObj::simulateObjGroupColTSends(ColProxyMsg* msg) {
     auto node = vt::theCollection()->getMappedNode(proxy, idx);
     if (node == next) {
       for (int j = 0; j < num_sends; j++) {
-        proxy(idx).template send<MyMsg, handler2>();
+        proxy(idx).template send<handler2>();
       }
     }
   }
@@ -178,16 +178,16 @@ void MyObj::simulateObjGroupObjGroupSends(ProxyMsg* msg) {
   }
 }
 
-void simulateColTColTSends(MyMsg* msg, MyCol* col) {
+void simulateColTColTSends(MyCol* col) {
   auto proxy = col->getCollectionProxy();
   auto index = col->getIndex();
   auto next = (index.x() + 1) % dim1;
   for (int i = 0; i < num_sends; i++) {
-    proxy(next).template send<MyMsg, handler2>();
+    proxy(next).template send<handler2>();
   }
 }
 
-void simulateColTObjGroupSends(ProxyMsg* msg, MyCol* col) {
+void simulateColTObjGroupSends(MyCol* col, ProxyMsg* msg) {
   auto obj_proxy = msg->obj_proxy;
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -199,7 +199,7 @@ void simulateColTObjGroupSends(ProxyMsg* msg, MyCol* col) {
 
 void bareDummyHandler(MyObjMsg* msg) {}
 
-void simulateColTHandlerSends(MyMsg* msg, MyCol* col) {
+void simulateColTHandlerSends(MyCol* col) {
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
   auto next = (this_node + 1) % num_nodes;
@@ -229,7 +229,7 @@ void simulateHandlerColTSends(ColProxyMsg* msg) {
     auto node = vt::theCollection()->getMappedNode(proxy, idx);
     if (node == next) {
       for (int j = 0; j < num_sends; j++) {
-        proxy(idx).template send<MyMsg, handler2>();
+        proxy(idx).template send<handler2>();
       }
     }
   }
@@ -263,7 +263,7 @@ auto idxToElmID = [](vt::Index1D i) -> vt::elm::ElementIDType {
 
 void recvElementIDs(ReduceMsg* msg) { all_elms = msg->getVal().elms; }
 
-void doReduce(MyMsg*, MyCol* col) {
+void doReduce(MyCol* col) {
   auto proxy = col->getCollectionProxy();
   auto index = col->getIndex();
   auto cb = theCB()->makeBcast<ReduceMsg, recvElementIDs>();
@@ -282,7 +282,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_col_send) {
   vt::runInEpochCollective("simulateColTColTSends", [&]{
     for (int i = 0; i < dim1; i++) {
       if (proxy(i).tryGetLocalPtr()) {
-        proxy(i).invoke<MyMsg, simulateColTColTSends>();
+        proxy(i).invoke<simulateColTColTSends>();
       }
     }
   });
@@ -292,7 +292,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_col_send) {
   vt::runInEpochCollective("doReduce", [&]{
     for (int i = 0; i < dim1; i++) {
       if (proxy(i).tryGetLocalPtr()) {
-        proxy(i).invoke<MyMsg, doReduce>();
+        proxy(i).invoke<doReduce>();
       }
     }
   });
@@ -342,7 +342,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_objgroup_send) {
   vt::runInEpochCollective("simulateColTObjGroupSends", [&]{
     for (int i = 0; i < dim1; i++) {
       if (proxy(i).tryGetLocalPtr()) {
-        proxy(i).invoke<ProxyMsg, simulateColTObjGroupSends>(obj_proxy);
+        proxy(i).invoke<simulateColTObjGroupSends>(obj_proxy);
       }
     }
   });
@@ -352,7 +352,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_objgroup_send) {
   vt::runInEpochCollective("doReduce", [&]{
     for (int i = 0; i < dim1; i++) {
       if (proxy(i).tryGetLocalPtr()) {
-        proxy(i).invoke<MyMsg, doReduce>();
+        proxy(i).invoke<doReduce>();
       }
     }
   });
@@ -416,7 +416,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_col_send) {
   vt::runInEpochCollective("doReduce", [&]{
     for (int i = 0; i < dim1; i++) {
       if (proxy(i).tryGetLocalPtr()) {
-        proxy(i).invoke<MyMsg, doReduce>();
+        proxy(i).invoke<doReduce>();
       }
     }
   });
@@ -528,7 +528,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_col_send) {
   vt::runInEpochCollective("doReduce", [&]{
     for (int i = 0; i < dim1; i++) {
       if (proxy(i).tryGetLocalPtr()) {
-        proxy(i).invoke<MyMsg, doReduce>();
+        proxy(i).invoke<doReduce>();
       }
     }
   });
@@ -578,7 +578,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_handler_send) {
   vt::runInEpochCollective("simulateColTHandlerSends", [&]{
     for (int i = 0; i < dim1; i++) {
       if (proxy(i).tryGetLocalPtr()) {
-        proxy(i).invoke<MyMsg, simulateColTHandlerSends>();
+        proxy(i).invoke<simulateColTHandlerSends>();
       }
     }
   });
@@ -588,7 +588,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_handler_send) {
   vt::runInEpochCollective("doReduce", [&]{
     for (int i = 0; i < dim1; i++) {
       if (proxy(i).tryGetLocalPtr()) {
-        proxy(i).invoke<MyMsg, doReduce>();
+        proxy(i).invoke<doReduce>();
       }
     }
   });

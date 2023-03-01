@@ -135,7 +135,7 @@ template <
   typename TupleT   = typename MessageT::TupleType
 >
 struct SendHandlers {
-  static void handler(MessageT* msg, CollectionT* col) {
+  static void handler(CollectionT* col, MessageT* msg) {
     return execute(col,msg->tup);
   }
   template <typename... Args>
@@ -158,7 +158,7 @@ template <
   >
 struct SendSzHandlers : SendHandlers<CollectionT, MessageT, TupleT> {
   using BaseT = SendHandlers<CollectionT, MessageT, TupleT>;
-  static void handler(MessageT* msg, CollectionT* col) {
+  static void handler(CollectionT* col, MessageT* msg) {
     // Verify payload size is correct
     EXPECT_EQ(msg->buff_size, sizeof(PayloadT));
     auto smart_ptr = vt::MsgSharedPtr<MessageT>(msg);
@@ -196,10 +196,6 @@ void test_collection_send_1(std::string const& label) {
       EXPECT_EQ(msg.size(), sizeof(MsgType));
       if (i % 2 == 0) {
         proxy[i].template sendMsg<SendHandlers<ColType>::handler>(msg.get());
-      } else {
-        theCollection()->sendMsg<SendHandlers<ColType>::handler>(
-          proxy[i], msg.get()
-        );
       }
     }
   }
@@ -241,13 +237,7 @@ void test_collection_send_ptm_1(std::string const& label) {
     for (int i = 0; i < col_size; i++) {
       auto msg = makeMessage<MsgType>(args);
       //proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
-      if (i % 2 == 0) {
-        proxy[i].template sendMsg<&ColType::handler>(msg.get());
-      } else {
-        theCollection()->sendMsg<&ColType::handler>(
-          proxy[i], msg.get()
-        );
-      }
+      proxy[i].template sendMsg<&ColType::handler>(msg.get());
     }
   }
 }
