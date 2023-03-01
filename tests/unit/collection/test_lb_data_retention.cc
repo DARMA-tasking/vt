@@ -57,15 +57,12 @@
 
 namespace vt { namespace tests { namespace unit {
 
-template <typename ColT>
-struct MyMsg : vt::CollectionMessage<ColT> { };
-
 struct TestCol : vt::Collection<TestCol,vt::Index1D> {
   unsigned int prev_calls_ = 0;
 
   unsigned int prevCalls() { return prev_calls_++; }
 
-  static void colHandler(MyMsg<TestCol>* msg, TestCol* col) {
+  static void colHandler(TestCol* col) {
 
     auto& lb_data = col->lb_data_;
     auto load_phase_count = lb_data.getLoadPhaseCount();
@@ -148,7 +145,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
   for (int i=0; i<num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<MyMsg<TestCol>, TestCol::colHandler>();
+      proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
@@ -182,7 +179,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
   for (int i=0; i<num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<MyMsg<TestCol>, TestCol::colHandler>();
+      proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
@@ -216,7 +213,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
   for (int i=0; i<num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<MyMsg<TestCol>, TestCol::colHandler>();
+      proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();

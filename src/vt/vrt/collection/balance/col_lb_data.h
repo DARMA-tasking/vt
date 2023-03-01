@@ -70,7 +70,7 @@ struct CollectionLBData : elm::ElementLBData {
 
 public:
   template <typename ColT>
-  static void syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col);
+  static void syncNextPhase(ColT* col, CollectStatsMsg<ColT>* msg);
 
   friend struct collection::Migratable;
 

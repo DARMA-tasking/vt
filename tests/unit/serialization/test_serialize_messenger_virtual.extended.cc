@@ -94,7 +94,7 @@ struct DataMsg : vt::vrt::VirtualMessage {
 struct TestSerialMessengerVirtual : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 
-  static void testHandler(DataMsg* msg, TestCtx* ctx) {
+  static void testHandler(TestCtx* ctx, DataMsg* msg) {
     msg->check();
   }
 };

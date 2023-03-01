@@ -51,10 +51,10 @@ namespace vt { namespace vrt {
 
 struct VirtualContext;
 
-using ActiveVirtualFnPtrType = void(*)(BaseMessage *, VirtualContext*);
+using ActiveVirtualFnPtrType = void(*)(VirtualContext*, BaseMessage*);
 
 template <typename MessageT, typename VirtualContextT>
-using ActiveVrtTypedFnType = void(MessageT*, VirtualContextT*);
+using ActiveVrtTypedFnType = void(VirtualContextT*, MessageT*);
 
 }} /* end namespace vt::context */
 

@@ -79,13 +79,10 @@ struct MyMapper : vt::mapping::BaseMapper<IndexT> {
   }
 };
 
-template <typename IndexT>
-struct WorkMsg : CollectionMessage<MappingTest<IndexT>> {};
-
 static int32_t num_work = 0;
 
 template <typename IndexT>
-void work(WorkMsg<IndexT>* msg, MappingTest<IndexT>* elm) {
+void work(MappingTest<IndexT>* elm) {
   fmt::print(
     "node={}: num_work={}, idx={}\n", theContext()->getNode(), num_work,
     elm->getIndex()
@@ -192,7 +189,7 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
     .wait();
 
   vt::runInEpochCollective([&]{
-    proxy.template broadcastCollective<WorkMsg<IndexType>, work<IndexType>>();
+    proxy.template broadcastCollective<work<IndexType>>();
   });
 
   EXPECT_EQ(counter, num_work);
@@ -204,7 +201,7 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
     .wait();
 
   vt::runInEpochCollective([&]{
-    proxy2.template broadcastCollective<WorkMsg<IndexType>, work<IndexType>>();
+    proxy2.template broadcastCollective<work<IndexType>>();
   });
 
   EXPECT_EQ(counter, num_work);

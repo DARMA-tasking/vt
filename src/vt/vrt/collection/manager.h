@@ -1547,7 +1547,7 @@ public:
    * \param[in] msg the destroy message
    */
   template <typename ColT>
-  static void destroyElmHandler(DestroyElmMsg<ColT>* msg, ColT*);
+  static void destroyElmHandler(ColT*, DestroyElmMsg<ColT>* msg);
 
   /**
    * \brief Try to get a pointer to a collection element

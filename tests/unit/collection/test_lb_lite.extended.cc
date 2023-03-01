@@ -87,7 +87,7 @@ struct LBTest : Collection<LBTest,Index1D> {
     s | val1 | val2 | val3 | data_2;
   }
 
-  static void iterWork(IterMsg* msg, LBTest* col);
+  static void iterWork(LBTest* col, IterMsg* msg);
 
 public:
   double data_2 = 1.0;
@@ -103,7 +103,7 @@ using ColProxyType = CollectionIndexProxy<LBTest,Index1D>;
 static double weight = 1.0f;
 static int32_t num_iter = 8;
 
-/*static*/ void LBTest::iterWork(IterMsg* msg, LBTest* col) {
+/*static*/ void LBTest::iterWork(LBTest* col, IterMsg* msg) {
   double val = 0.1f;
   double val4 = 0.4f;
   auto const idx = col->getIndex().x();

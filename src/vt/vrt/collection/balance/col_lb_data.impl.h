@@ -60,7 +60,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 template <typename ColT>
 /*static*/
-void CollectionLBData::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
+void CollectionLBData::syncNextPhase(ColT* col, CollectStatsMsg<ColT>* msg) {
   auto& lb_data = col->lb_data_;
 
   vt_debug_print(

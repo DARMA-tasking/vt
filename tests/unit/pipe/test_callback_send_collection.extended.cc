@@ -116,7 +116,7 @@ public:
   int32_t val = 17;
 };
 
-static void cb3(DataMsg* msg, TestCol* col) {
+static void cb3(TestCol* col, DataMsg* msg) {
   EXPECT_EQ(msg->a, 8);
   EXPECT_EQ(msg->b, 9);
   EXPECT_EQ(msg->c, 10);

@@ -67,7 +67,7 @@ struct MyVC : vt::vrt::VirtualContext {
   { }
 };
 
-static void my_han(TestMsg* msg, MyVC* vc) {
+static void my_han(MyVC* vc, TestMsg* msg) {
   auto this_node = vt::theContext()->getNode();
   fmt::print(
     "{}: vc={}: msg->from={}, vc->my_data={}\n",
