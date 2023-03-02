@@ -58,6 +58,7 @@
 #include "vt/rdmahandle/handle.fwd.h"
 #include "vt/rdmahandle/handle_set.fwd.h"
 #include "vt/messaging/pending_send.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -126,15 +127,6 @@ public:
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   PendingSendType broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const;
 
-  template <typename Return, typename... Args>
-  struct FunctionTraits;
-
-  template <typename Return, typename Msg>
-  struct FunctionTraits<Return(ObjT::*)(Msg*)> {
-    using MsgT = Msg;
-    using ReturnT = Return;
-  };
-
   /**
    * \brief Broadcast a message to all nodes to be delivered to the local object
    * instance
@@ -144,9 +136,9 @@ public:
    */
   template <auto fn>
   PendingSendType broadcastMsg(
-    messaging::MsgPtrThief<typename FunctionTraits<decltype(fn)>::MsgT> msg
+    messaging::MsgPtrThief<typename ObjFuncTraits<decltype(fn)>::MsgT> msg
   ) const {
-    using MsgType = typename FunctionTraits<decltype(fn)>::MsgT;
+    using MsgType = typename ObjFuncTraits<decltype(fn)>::MsgT;
     return broadcastMsg<MsgType, fn>(msg);
   }
 
@@ -167,7 +159,7 @@ public:
    */
   template <auto fn, typename... Args>
   PendingSendType broadcast(Args&&... args) const {
-    using MsgType = typename FunctionTraits<decltype(fn)>::MsgT;
+    using MsgType = typename ObjFuncTraits<decltype(fn)>::MsgT;
     return broadcast<MsgType, fn>(std::forward<Args>(args)...);
   }
 
@@ -406,15 +398,6 @@ struct Proxy<void> {
   template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
   messaging::PendingSend broadcast(Args&&... args) const;
 
-  template <typename Return, typename... Args>
-  struct FunctionTraits;
-
-  template <typename Return, typename Msg>
-  struct FunctionTraits<Return(*)(Msg*)> {
-    using MsgT = Msg;
-    using ReturnT = Return;
-  };
-
   /**
    * \brief Broadcast a message.
    *
@@ -426,7 +409,7 @@ struct Proxy<void> {
    */
   template <auto f, typename... Args>
   messaging::PendingSend broadcast(Args&&... args) const {
-    using MsgType = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgType = typename FuncTraits<decltype(f)>::MsgT;
     return broadcast<MsgType, f>(std::forward<Args>(args)...);
   }
 
@@ -456,10 +439,10 @@ struct Proxy<void> {
    */
   template <auto f>
   messaging::PendingSend broadcastMsg(
-    messaging::MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg,
+    messaging::MsgPtrThief<typename FuncTraits<decltype(f)>::MsgT> msg,
     TagType tag = no_tag
   ) const {
-    using MsgType = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgType = typename FuncTraits<decltype(f)>::MsgT;
     return broadcastMsg<MsgType, f>(msg, tag);
   }
 

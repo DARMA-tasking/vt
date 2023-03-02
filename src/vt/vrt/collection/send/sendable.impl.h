@@ -133,7 +133,7 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) co
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <auto f, typename... Params>
 messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Params&&... params) const {
-  using FnTrait = ObjFuncTraits<void, ColT, decltype(f)>;
+  using FnTrait = ObjFuncTraits<decltype(f)>;
 
   using MsgT = typename FnTrait::MsgT;
   if constexpr (std::is_same_v<MsgT, NoMsg>) {

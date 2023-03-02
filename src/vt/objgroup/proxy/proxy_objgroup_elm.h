@@ -51,6 +51,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/pending_send.fwd.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -120,15 +121,6 @@ struct ProxyElm {
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   PendingSendType sendMsg(messaging::MsgPtrThief<MsgT> msg) const;
 
- template <typename Return, typename... Args>
-  struct FunctionTraits;
-
-  template <typename Return, typename Msg>
-  struct FunctionTraits<Return(ObjT::*)(Msg*)> {
-    using MsgT = Msg;
-    using ReturnT = Return;
-  };
-
   /**
    * \brief Send a message to the node/element indexed by this proxy to be
    * delivered to the local object instance
@@ -138,9 +130,9 @@ struct ProxyElm {
    */
   template <auto fn>
   decltype(auto) sendMsg(
-    messaging::MsgPtrThief<typename FunctionTraits<decltype(fn)>::MsgT> msg
+    messaging::MsgPtrThief<typename ObjFuncTraits<decltype(fn)>::MsgT> msg
   ) const {
-    using MsgT = typename FunctionTraits<decltype(fn)>::MsgT;
+    using MsgT = typename ObjFuncTraits<decltype(fn)>::MsgT;
     return sendMsg<MsgT, fn>(msg);
   }
 
@@ -161,7 +153,7 @@ struct ProxyElm {
    */
   template <auto fn, typename... Args>
   decltype(auto) send(Args&&... args) const {
-    using MsgT = typename FunctionTraits<decltype(fn)>::MsgT;
+    using MsgT = typename ObjFuncTraits<decltype(fn)>::MsgT;
     return send<MsgT, fn>(std::forward<Args>(args)...);
   }
 
@@ -249,15 +241,6 @@ struct ProxyElm<void> {
   template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
   void send(Args&&... args) const;
 
-  template <typename ReturnT, typename... Args>
-  struct FunctionTraits;
-
-  template <typename ReturnT, typename T>
-  struct FunctionTraits<ReturnT(*)(T*)> {
-    using MsgT = T;
-    using ReturnType = ReturnT;
-  };
-
   /**
    * \brief Send a message to the node indexed by this proxy to be
    * delivered to the local object instance
@@ -266,7 +249,7 @@ struct ProxyElm<void> {
    */
   template <auto f, typename... Args>
   void send(Args&&... args) const {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     send<MsgT, f>(std::forward<Args>(args)...);
   }
 

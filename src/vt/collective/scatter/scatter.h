@@ -49,6 +49,7 @@
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/message.h"
 #include "vt/collective/tree/tree.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <functional>
 #include <cstdlib>
@@ -89,15 +90,6 @@ struct Scatter : virtual collective::tree::Tree {
     FuncSizeType size_fn, FuncDataType data_fn
   );
 
-  template <typename ReturnT, typename... Args>
-  struct FunctionTraits;
-
-  template <typename ReturnT, typename T>
-  struct FunctionTraits<ReturnT(*)(T*)> {
-    using MessageT = T;
-    using ReturnType = ReturnT;
-  };
-
   /**
    * \brief Scatter data to all nodes
    *
@@ -114,8 +106,8 @@ struct Scatter : virtual collective::tree::Tree {
     std::size_t const& total_size, std::size_t const& max_proc_size,
     FuncSizeType size_fn, FuncDataType data_fn
   ) {
-    using MessageT = typename FunctionTraits<decltype(f)>::MessageT;
-    return scatter<MessageT, f>(total_size, max_proc_size, size_fn, data_fn);
+    using MsgT = std::remove_pointer_t<typename FuncTraits<decltype(f)>::Arg1>;
+    return scatter<MsgT, f>(total_size, max_proc_size, size_fn, data_fn);
   }
 
 protected:

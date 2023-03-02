@@ -207,9 +207,9 @@ struct Broadcastable : BaseProxyT {
    */
   template <auto f>
   messaging::PendingSend broadcastMsg(
-    messaging::MsgPtrThief<typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT> msg
+    messaging::MsgPtrThief<typename ObjFuncTraits<decltype(f)>::MsgT> msg
   ) const {
-    using MsgT = typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT;
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
     return broadcastMsg<MsgT, f>(msg);
   }
 
@@ -233,9 +233,9 @@ struct Broadcastable : BaseProxyT {
    */
   template <auto f>
   messaging::PendingSend broadcastCollectiveMsg(
-    messaging::MsgPtrThief<typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT> msg
+    messaging::MsgPtrThief<typename ObjFuncTraits<decltype(f)>::MsgT> msg
   ) const {
-    using MsgT = typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT;
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
     return broadcastCollectiveMsg<MsgT, f>(msg);
   }
 

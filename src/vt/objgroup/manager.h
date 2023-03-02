@@ -57,6 +57,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
 #include "vt/elm/elm_id.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <memory>
 #include <functional>
@@ -217,16 +218,6 @@ public:
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   PendingSendType send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
-  template <typename Return, typename... Args>
-  struct FunctionTraits;
-
-  template <typename Return, typename Obj, typename Msg>
-  struct FunctionTraits<Return(*)(Obj*, Msg*)> {
-    using ObjT = Obj;
-    using MsgT = Msg;
-    using ReturnT = Return;
-  };
-
   /**
    * \internal \brief Send a message to an element of the object group
    *
@@ -235,11 +226,11 @@ public:
    */
   template <auto fn>
   PendingSendType send(
-    ProxyElmType<typename FunctionTraits<decltype(fn)>::ObjT> proxy,
-    MsgSharedPtr<typename FunctionTraits<decltype(fn)>::MsgT> msg
+    ProxyElmType<typename ObjFuncTraits<decltype(fn)>::ObjT> proxy,
+    MsgSharedPtr<typename ObjFuncTraits<decltype(fn)>::MsgT> msg
   ) {
-    using ObjType = typename FunctionTraits<decltype(fn)>::ObjT;
-    using MsgType = typename FunctionTraits<decltype(fn)>::MsgT;
+    using ObjType = typename ObjFuncTraits<decltype(fn)>::ObjT;
+    using MsgType = typename ObjFuncTraits<decltype(fn)>::MsgT;
     return send<ObjType, MsgType, fn>(proxy, msg);
   }
 
@@ -280,11 +271,11 @@ public:
    */
   template <auto fn>
   PendingSendType broadcast(
-    ProxyType<typename FunctionTraits<decltype(fn)>::ObjT> proxy,
-    MsgSharedPtr<typename FunctionTraits<decltype(fn)>::MsgT> msg
+    ProxyType<typename ObjFuncTraits<decltype(fn)>::ObjT> proxy,
+    MsgSharedPtr<typename ObjFuncTraits<decltype(fn)>::MsgT> msg
   ) {
-    using ObjType = typename FunctionTraits<decltype(fn)>::ObjT;
-    using MsgType = typename FunctionTraits<decltype(fn)>::MsgT;
+    using ObjType = typename ObjFuncTraits<decltype(fn)>::ObjT;
+    using MsgType = typename ObjFuncTraits<decltype(fn)>::MsgT;
     return broadcast<ObjType, MsgType, fn>(proxy, msg);
   }
 
@@ -315,15 +306,6 @@ public:
     collective::reduce::ReduceStamp const& stamp
   );
 
-  template <typename ReturnT, typename... Args>
-  struct FunctionTraits;
-
-  template <typename ReturnT, typename T>
-  struct FunctionTraits<ReturnT(*)(T*)> {
-    using MsgT = T;
-    using ReturnType = ReturnT;
-  };
-
   /**
    * \brief Perform a reduction over an objgroup
    *
@@ -336,10 +318,10 @@ public:
   template <typename ObjT, auto f>
   PendingSendType reduce(
     ProxyType<ObjT> proxy,
-    messaging::MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg,
+    messaging::MsgPtrThief<typename FuncTraits<decltype(f)>::MsgT> msg,
     collective::reduce::ReduceStamp const& stamp
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     return reduce<ObjT, MsgT, f>(proxy, msg, stamp);
   }
 

@@ -44,29 +44,131 @@
 #if !defined INCLUDED_VT_UTILS_FNTRAITS_FNTRAITS_H
 #define INCLUDED_VT_UTILS_FNTRAITS_FNTRAITS_H
 
-namespace vt {
+namespace vt::util::fntraits::detail {
 
 struct NoMsg {};
 
-template <typename enabled, typename ObjT, typename... Args>
-struct ObjFuncTraits;
+template <typename enabled, typename... Args>
+struct ObjFuncTraitsImpl;
 
-template <typename ObjT, typename Return, typename Msg>
-struct ObjFuncTraits<
-  std::enable_if_t<std::is_convertible<Msg, vt::Message>::value>,
-  ObjT,
-  Return(*)(ObjT*, Msg*)
+template <typename Obj, typename Return, typename Msg>
+struct ObjFuncTraitsImpl<
+  std::enable_if_t<
+    std::is_convertible<Msg, vt::Message>::value or
+    std::is_convertible<Msg, vt::ShortMessage>::value or
+    std::is_convertible<Msg, vt::EpochMessage>::value or
+    std::is_convertible<Msg, vt::PayloadMessage>::value
+  >,
+  Return(*)(Obj*, Msg*)
+> {
+  static constexpr bool is_member = false;
+  using ObjT = Obj;
+  using MsgT = Msg;
+  using ReturnT = Return;
+};
+
+template <typename Obj, typename Return>
+struct ObjFuncTraitsImpl<
+  std::enable_if_t<std::is_same_v<void, void>>,
+  Return(*)(Obj*)
+> {
+  static constexpr bool is_member = false;
+  using ObjT = Obj;
+  using MsgT = NoMsg;
+  using ReturnT = Return;
+  using TupleType = std::tuple<>;
+};
+
+template <typename Obj, typename Return, typename Arg, typename... Args>
+struct ObjFuncTraitsImpl<
+  std::enable_if_t<
+    not (
+      std::is_convertible<Arg, vt::Message*>::value or
+      std::is_convertible<Arg, vt::ShortMessage*>::value or
+      std::is_convertible<Arg, vt::EpochMessage*>::value or
+      std::is_convertible<Arg, vt::PayloadMessage*>::value
+    )
+  >,
+  Return(*)(Obj*, Arg, Args...)
+> {
+  static constexpr bool is_member = false;
+  using ObjT = Obj;
+  using MsgT = NoMsg;
+  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using ReturnT = Return;
+};
+
+template <typename Obj, typename Return, typename Msg>
+struct ObjFuncTraitsImpl<
+  std::enable_if_t<
+    std::is_convertible<Msg, vt::Message>::value or
+    std::is_convertible<Msg, vt::ShortMessage>::value or
+    std::is_convertible<Msg, vt::EpochMessage>::value or
+    std::is_convertible<Msg, vt::PayloadMessage>::value
+  >,
+  Return(Obj::*)(Msg*)
+> {
+  static constexpr bool is_member = true;
+  using ObjT = Obj;
+  using MsgT = Msg;
+  using ReturnT = Return;
+};
+
+template <typename Obj, typename Return>
+struct ObjFuncTraitsImpl<
+  std::enable_if_t<std::is_same_v<void, void>>,
+  Return(Obj::*)()
+> {
+  static constexpr bool is_member = true;
+  using ObjT = Obj;
+  using MsgT = NoMsg;
+  using TupleType = std::tuple<>;
+  using ReturnT = Return;
+};
+
+template <typename Obj, typename Return, typename Arg, typename... Args>
+struct ObjFuncTraitsImpl<
+  std::enable_if_t<
+    not (
+      std::is_convertible<Arg, vt::Message*>::value or
+      std::is_convertible<Arg, vt::ShortMessage*>::value or
+      std::is_convertible<Arg, vt::EpochMessage*>::value or
+      std::is_convertible<Arg, vt::PayloadMessage*>::value
+    )
+  >,
+  Return(Obj::*)(Arg, Args...)
+> {
+  static constexpr bool is_member = true;
+  using ObjT = Obj;
+  using MsgT = NoMsg;
+  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using ReturnT = Return;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename enabled, typename... Args>
+struct FuncTraitsImpl;
+
+template <typename Return, typename Msg>
+struct FuncTraitsImpl<
+  std::enable_if_t<
+    std::is_convertible<Msg, vt::Message>::value or
+    std::is_convertible<Msg, vt::ShortMessage>::value or
+    std::is_convertible<Msg, vt::EpochMessage>::value or
+    std::is_convertible<Msg, vt::PayloadMessage>::value
+  >,
+  Return(*)(Msg*)
 > {
   static constexpr bool is_member = false;
   using MsgT = Msg;
   using ReturnT = Return;
 };
 
-template <typename ObjT, typename Return>
-struct ObjFuncTraits<
+template <typename Return>
+struct FuncTraitsImpl<
   std::enable_if_t<std::is_same_v<void, void>>,
-  ObjT,
-  Return(*)(ObjT*)
+  Return(*)()
 > {
   static constexpr bool is_member = false;
   using MsgT = NoMsg;
@@ -74,52 +176,38 @@ struct ObjFuncTraits<
   using TupleType = std::tuple<>;
 };
 
-template <typename ObjT, typename Return, typename Arg, typename... Args>
-struct ObjFuncTraits<
-  std::enable_if_t<not std::is_convertible<Arg, vt::Message*>::value>,
-  ObjT,
-  Return(*)(ObjT*, Arg, Args...)
+template <typename Return, typename Arg, typename... Args>
+struct FuncTraitsImpl<
+  std::enable_if_t<
+    not (
+      std::is_convertible<Arg, vt::Message*>::value or
+      std::is_convertible<Arg, vt::ShortMessage*>::value or
+      std::is_convertible<Arg, vt::EpochMessage*>::value or
+      std::is_convertible<Arg, vt::PayloadMessage*>::value
+    )
+  >,
+  Return(*)(Arg, Args...)
 > {
   static constexpr bool is_member = false;
   using MsgT = NoMsg;
+  using Arg1 = Arg;
   using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
   using ReturnT = Return;
 };
 
-template <typename ObjT, typename Return, typename Msg>
-struct ObjFuncTraits<
-  std::enable_if_t<std::is_convertible<Msg, vt::Message>::value>,
-  ObjT,
-  Return(ObjT::*)(Msg*)
-> {
-  static constexpr bool is_member = true;
-  using MsgT = Msg;
-  using ReturnT = Return;
-};
+} /* end namespace vt::util::fntraits::detail */
 
-template <typename ObjT, typename Return>
-struct ObjFuncTraits<
-  std::enable_if_t<std::is_same_v<void, void>>,
-  ObjT,
-  Return(ObjT::*)()
-> {
-  static constexpr bool is_member = true;
-  using MsgT = NoMsg;
-  using TupleType = std::tuple<>;
-  using ReturnT = Return;
-};
+///////////////////////////////////////////////////////////////////////////////
 
-template <typename ObjT, typename Return, typename Arg, typename... Args>
-struct ObjFuncTraits<
-  std::enable_if_t<not std::is_convertible<Arg, vt::Message*>::value>,
-  ObjT,
-  Return(ObjT::*)(Arg, Args...)
-> {
-  static constexpr bool is_member = true;
-  using MsgT = NoMsg;
-  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
-  using ReturnT = Return;
-};
+namespace vt {
+
+template <typename... Args>
+struct ObjFuncTraits : util::fntraits::detail::ObjFuncTraitsImpl<void, Args...> {};
+
+template <typename... Args>
+struct FuncTraits : util::fntraits::detail::FuncTraitsImpl<void, Args...> {};
+
+using NoMsg = util::fntraits::detail::NoMsg;
 
 } /* end namespace vt */
 
