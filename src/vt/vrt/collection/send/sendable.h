@@ -132,9 +132,9 @@ struct Sendable : BaseProxyT {
    */
   template <auto f>
   messaging::PendingSend sendMsg(
-    messaging::MsgPtrThief<typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT> msg
+    messaging::MsgPtrThief<typename ObjFuncTraits<decltype(f)>::MsgT> msg
   ) const {
-    using MsgT = typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT;
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
     return sendMsg<MsgT, f>(msg);
   }
 

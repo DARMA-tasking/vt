@@ -181,9 +181,9 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 template <auto f, typename... Params>
 messaging::PendingSend
 Broadcastable<ColT, IndexT, BaseProxyT>::broadcast(Params&&... params) const {
-  using MsgT = typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT;
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
   if constexpr (std::is_same_v<MsgT, NoMsg>) {
-    using Tuple = typename ObjFuncTraits<void, ColT, decltype(f)>::TupleType;
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
     using SendMsgT = ParamColMsg<Tuple, ColT>;
     auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerCollectionMemParam<
@@ -203,9 +203,9 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 template <auto f, typename... Params>
 messaging::PendingSend
 Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(Params&&... params) const {
-  using MsgT = typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT;
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
   if constexpr (std::is_same_v<MsgT, NoMsg>) {
-    using Tuple = typename ObjFuncTraits<void, ColT, decltype(f)>::TupleType;
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
     using SendMsgT = ParamColMsg<Tuple, ColT>;
     auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerCollectionMemParam<
@@ -226,7 +226,7 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 template <auto f, typename... Params>
 void
 Broadcastable<ColT, IndexT, BaseProxyT>::invokeCollective(Params&&... params) const {
-  using MsgT = typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT;
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
     auto proxy = this->getProxy();
   if constexpr (std::is_same_v<MsgT, NoMsg>) {
     theCollection()->invokeCollective<ColT, f>(

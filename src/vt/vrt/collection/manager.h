@@ -74,6 +74,7 @@
 #include "vt/context/runnable_context/lb_data.fwd.h"
 #include "vt/vrt/collection/param/construct_params.h"
 #include "vt/vrt/collection/param/construct_params_msg.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <memory>
 #include <vector>
@@ -493,23 +494,6 @@ struct CollectionManager
     VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
   );
 
-  template <typename Return, typename... Args>
-  struct FunctionTraits;
-
-  template <typename Return, typename Msg, typename Col>
-  struct FunctionTraits<Return(*)(Msg*, Col*)> {
-    using MsgT = Msg;
-    using ColT = Col;
-    using ReturnT = Return;
-  };
-
-  template <typename Return, typename Msg, typename Col>
-  struct FunctionTraits<Return(Col::*)(Msg*)> {
-    using ColT = Col;
-    using MsgT = Msg;
-    using ReturnT = Return;
-  };
-
   /**
    * \brief Send collection element a message from active function handler
    *
@@ -520,10 +504,12 @@ struct CollectionManager
    */
   template <auto f>
   messaging::PendingSend sendMsg(
-    VirtualElmProxyType<typename FunctionTraits<decltype(f)>::MsgT::CollectionType> const& proxy,
-    typename FunctionTraits<decltype(f)>::MsgT *msg
+    VirtualElmProxyType<
+      typename ObjFuncTraits<decltype(f)>::MsgT::CollectionType
+    > const& proxy,
+    typename ObjFuncTraits<decltype(f)>::MsgT *msg
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
     return sendMsg<MsgT, f>(proxy, msg);
   }
 
@@ -1021,13 +1007,15 @@ struct CollectionManager
    *
    * \return a pending send
    */
-  template < auto f>
+  template <auto f>
   messaging::PendingSend broadcastMsg(
-    CollectionProxyWrapType<typename FunctionTraits<decltype(f)>::MsgT::CollectionType> const& proxy,
-    typename FunctionTraits<decltype(f)>::MsgT *msg,
+    CollectionProxyWrapType<
+      typename ObjFuncTraits<decltype(f)>::MsgT::CollectionType
+    > const& proxy,
+    typename ObjFuncTraits<decltype(f)>::MsgT *msg,
     bool instrument = true
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
     return broadcastMsg<MsgT, f>(proxy, msg, instrument);
   }
 

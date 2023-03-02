@@ -58,6 +58,7 @@
 #include "vt/collective/tree/tree.h"
 #include "vt/utils/hash/hash_tuple.h"
 #include "vt/messaging/pending_send.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <tuple>
 #include <unordered_map>
@@ -146,15 +147,6 @@ struct Reduce : virtual collective::tree::Tree {
     ReduceNumType num_contrib = 1
   );
 
-  template <typename ReturnT, typename... Args>
-  struct FunctionTraits;
-
-  template <typename ReturnT, typename T>
-  struct FunctionTraits<ReturnT(*)(T*)> {
-    using MsgT = T;
-    using ReturnType = ReturnT;
-  };
-
   /**
    * \brief Reduce a message up the tree, possibly delayed through a pending send
    *
@@ -168,11 +160,11 @@ struct Reduce : virtual collective::tree::Tree {
   template <auto f>
   PendingSendType reduce(
     NodeType root,
-    typename FunctionTraits<decltype(f)>::MsgT* const msg,
+    typename FuncTraits<decltype(f)>::MsgT* const msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType num_contrib = 1
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     return reduce<MsgT, f>(root, msg, id, num_contrib);
   }
 
@@ -206,11 +198,11 @@ struct Reduce : virtual collective::tree::Tree {
   template <auto f>
   detail::ReduceStamp reduceImmediate(
     NodeType root,
-    typename FunctionTraits<decltype(f)>::MsgT* const msg,
+    typename FuncTraits<decltype(f)>::MsgT* const msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType num_contrib = 1
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     return reduceImmediate<MsgT, f>(root, msg, id, num_contrib);
   }
 
@@ -270,12 +262,12 @@ struct Reduce : virtual collective::tree::Tree {
   template <typename OpT, auto f>
   PendingSendType reduce(
     NodeType const& root,
-    typename FunctionTraits<decltype(f)>::MsgT* msg,
-    Callback<typename FunctionTraits<decltype(f)>::MsgT> cb,
+    typename FuncTraits<decltype(f)>::MsgT* msg,
+    Callback<typename FuncTraits<decltype(f)>::MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     return reduce<OpT, MsgT, f>(root, msg, cb, id, num_contrib);
   }
 
@@ -335,12 +327,12 @@ struct Reduce : virtual collective::tree::Tree {
   template <typename OpT, auto f>
   detail::ReduceStamp reduceImmediate(
     NodeType const& root,
-    typename FunctionTraits<decltype(f)>::MsgT* msg,
-    Callback<typename FunctionTraits<decltype(f)>::MsgT> cb,
+    typename FuncTraits<decltype(f)>::MsgT* msg,
+    Callback<typename FuncTraits<decltype(f)>::MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     return reduceImmediate<OpT, MsgT, f>(root, msg, cb, id, num_contrib);
   }
 
@@ -401,11 +393,11 @@ struct Reduce : virtual collective::tree::Tree {
   >
   PendingSendType reduce(
     NodeType const& root,
-    typename FunctionTraits<decltype(f)>::MsgT* msg,
+    typename FuncTraits<decltype(f)>::MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     return reduce<OpT, FunctorT, MsgT, f>(root, msg, id, num_contrib);
   }
 
@@ -466,11 +458,11 @@ struct Reduce : virtual collective::tree::Tree {
   >
   detail::ReduceStamp reduceImmediate(
     NodeType const& root,
-    typename FunctionTraits<decltype(f)>::MsgT* msg,
+    typename FuncTraits<decltype(f)>::MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     return reduceImmediate<OpT, FunctorT, MsgT, f>(root, msg, id, num_contrib);
   }
 

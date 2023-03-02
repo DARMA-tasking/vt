@@ -93,7 +93,7 @@ Invokable<ColT, IndexT, BaseProxyT>::invoke(Args&&... args) const {
   auto const& proxy = VrtElmProxy<ColT, IndexT>(
     this->getCollectionProxy(), this->getElementProxy());
 
-  using MsgT = typename ObjFuncTraits<void, ColT, decltype(f)>::MsgT;
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
   if constexpr (std::is_same_v<MsgT, NoMsg>) {
     return theCollection()->invoke<ColT, f, Args...>(
       proxy, std::forward<Args>(args)...

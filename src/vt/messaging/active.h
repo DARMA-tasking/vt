@@ -65,6 +65,7 @@
 #include "vt/elm/elm_id.h"
 #include "vt/elm/elm_lb_data.h"
 #include "vt/utils/strong/strong_type.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #if vt_check_enabled(trace_enabled)
   #include "vt/trace/trace_headers.h"
@@ -693,15 +694,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     TagType tag = no_tag
   );
 
-  template <typename ReturnT, typename... Args>
-  struct FunctionTraits;
-
-  template <typename ReturnT, typename T>
-  struct FunctionTraits<ReturnT(*)(T*)> {
-    using MsgT = T;
-    using ReturnType = ReturnT;
-  };
-
   /**
    * \brief Broadcast a message (message type not required).
    *
@@ -715,11 +707,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <auto f>
   PendingSendType broadcastMsg(
-    MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg,
+    MsgPtrThief<typename FuncTraits<decltype(f)>::MsgT> msg,
     bool deliver_to_sender = true,
     TagType tag = no_tag
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     return broadcastMsg<MsgT, f>(msg, deliver_to_sender, tag);
   }
 
@@ -755,21 +747,12 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <auto f>
   PendingSendType sendMsg(
     NodeType dest,
-    MsgPtrThief<typename FunctionTraits<decltype(f)>::MsgT> msg,
+    MsgPtrThief<typename FuncTraits<decltype(f)>::MsgT> msg,
     TagType tag = no_tag
   ) {
-    using MsgT = typename FunctionTraits<decltype(f)>::MsgT;
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     return sendMsg<MsgT, f>(dest, msg, tag);
   }
-
-  template <typename ReturnT, typename... Args>
-  struct FunctionTraitsArgs;
-
-  template <typename ReturnT, typename... Args>
-  struct FunctionTraitsArgs<ReturnT(*)(Args...)> {
-    using TupleType = std::tuple<std::decay_t<Args>...>;
-    using ReturnType = ReturnT;
-  };
 
   /**
    * \brief Send parameters to a handler in a message
@@ -781,7 +764,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <auto f, typename... Params>
   PendingSendType send(Node dest, Params&&... params) {
-    using Tuple = typename FunctionTraitsArgs<decltype(f)>::TupleType;
+    using Tuple = typename FuncTraits<decltype(f)>::TupleType;
     using MsgT = ParamMsg<Tuple>;
     auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
@@ -797,7 +780,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <auto f, typename... Params>
   PendingSendType broadcast(Params&&... params) {
-    using Tuple = typename FunctionTraitsArgs<decltype(f)>::TupleType;
+    using Tuple = typename FuncTraits<decltype(f)>::TupleType;
     using MsgT = ParamMsg<Tuple>;
     auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
