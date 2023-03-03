@@ -78,10 +78,30 @@ typename ProxyElm<ObjT>::PendingSendType ProxyElm<ObjT>::send(Args&&... args) co
 }
 
 template <typename ObjT>
-template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
-void ProxyElm<ObjT>::invoke(Args&&... args) const {
+template <auto f, typename... Params>
+typename ProxyElm<ObjT>::PendingSendType
+ProxyElm<ObjT>::send(Params&&... params) const {
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
+    using SendMsgT = messaging::ParamMsg<Tuple>;
+    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto const ctrl = proxy::ObjGroupProxy::getID(proxy_);
+    auto const han = auto_registry::makeAutoHandlerObjGroupParam<
+      ObjT, decltype(f), f, SendMsgT
+    >(ctrl);
+    return theObjGroup()->send(msg, han, node_);
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return sendMsg<MsgT, f>(msg);
+  }
+}
+
+template <typename ObjT>
+template <typename MsgT, ActiveObjType<MsgT, ObjT> f, typename... Args>
+decltype(auto) ProxyElm<ObjT>::invoke(Args&&... args) const {
   auto proxy = ProxyElm<ObjT>(*this);
-  theObjGroup()->invoke<ObjT, MsgT, fn>(
+  return theObjGroup()->invoke<ObjT, MsgT, f>(
     proxy, makeMessage<MsgT>(std::forward<Args>(args)...)
   );
 }
@@ -90,7 +110,13 @@ template <typename ObjT>
 template <auto f, typename... Args>
 decltype(auto) ProxyElm<ObjT>::invoke(Args&&... args) const {
   auto proxy = ProxyElm<ObjT>(*this);
-  return theObjGroup()->invoke<ObjT, f>(proxy, std::forward<Args>(args)...);
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    return theObjGroup()->invoke<ObjT, f>(proxy, std::forward<Args>(args)...);
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+    return theObjGroup()->invoke<ObjT, MsgT, f>(proxy, msg);
+  }
 }
 
 template <typename ObjT>

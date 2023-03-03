@@ -52,6 +52,8 @@
 #include "vt/collective/reduce/operators/default_op.h"
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
 #include "vt/rdmahandle/manager.h"
+#include "vt/messaging/param_msg.h"
+#include "vt/objgroup/proxy/proxy_bits.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -80,6 +82,26 @@ template <typename ObjT>
 template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
 typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::broadcast(Args&&... args) const {
   return broadcastMsg<MsgT,fn>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+template <typename ObjT>
+template <auto f, typename... Params>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::broadcast(Params&&... params) const {
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
+    using SendMsgT = messaging::ParamMsg<Tuple>;
+    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto const ctrl = proxy::ObjGroupProxy::getID(proxy_);
+    auto const han = auto_registry::makeAutoHandlerObjGroupParam<
+      ObjT, decltype(f), f, SendMsgT
+    >(ctrl);
+    return theObjGroup()->broadcast(msg, han);
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return broadcastMsg<MsgT, f>(msg);
+  }
 }
 
 template <typename ObjT>

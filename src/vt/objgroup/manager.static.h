@@ -74,8 +74,10 @@ messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType de
   }
 }
 
-template <typename MsgT>
-void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_node) {
+template <typename ObjT, typename MsgT, auto f>
+decltype(auto) invoke(
+  messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_node
+) {
   auto const this_node = theContext()->getNode();
 
   vtAssert(
@@ -91,11 +93,12 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
   auto const& elm_id = holder->getElmID();
   auto elm = holder->getPtr();
   auto lb_data = &holder->getLBData();
-  runnable::makeRunnable(msg.msg_, false, han, this_node)
+  auto msg2 = msg.msg_;
+  return runnable::makeRunnableVoid(false, han, this_node)
     .withObjGroup(elm)
     .withTDEpochFromMsg()
     .withLBData(lb_data, elm_id)
-    .run();
+    .runLambda(f, static_cast<ObjT*>(elm), msg2.get());
 }
 
 template <typename MsgT>
