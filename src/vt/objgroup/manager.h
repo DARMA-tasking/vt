@@ -242,7 +242,7 @@ public:
    * \param[in] msg message
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  void invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg);
+  decltype(auto) invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg);
 
   /**
    * \internal \brief Invoke function 'f' on an element of the object group
@@ -252,7 +252,7 @@ public:
    * \param[in] args function arguments
    */
   template <typename ObjT, auto f, typename... Args>
-  auto invoke(ProxyElmType<ObjT> proxy, Args&&... args);
+  decltype(auto) invoke(ProxyElmType<ObjT> proxy, Args&&... args);
 
   /**
    * \internal \brief Broadcast a message to all nodes in object group
@@ -398,8 +398,10 @@ public:
    * \param[in] han handler to invoke
    * \param[in] node node to invoke the handler on
    */
-  template <typename MsgT>
-  void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType node);
+  template <typename ObjT, typename MsgT, auto f>
+  decltype(auto) invoke(
+    messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType node
+  );
 
   /**
    * \internal \brief Broadcast message to an objgroup

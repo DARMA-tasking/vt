@@ -152,10 +152,7 @@ struct ProxyElm {
    * \param[in] args args to pass to the message constructor
    */
   template <auto fn, typename... Args>
-  decltype(auto) send(Args&&... args) const {
-    using MsgT = typename ObjFuncTraits<decltype(fn)>::MsgT;
-    return send<MsgT, fn>(std::forward<Args>(args)...);
-  }
+  PendingSendType send(Args&&... args) const;
 
   /**
    * \brief Invoke locally a message handler on the node/element indexed by this proxy.
@@ -164,7 +161,7 @@ struct ProxyElm {
    * \param[in] args args to pass to the message constructor
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
-  void invoke(Args&&... args) const;
+  decltype(auto) invoke(Args&&... args) const;
 
   /**
    * \brief Invoke locally a function 'f' on the node/element indexed by this proxy.

@@ -158,10 +158,7 @@ public:
    * \param[in] args args to pass to the message constructor
    */
   template <auto fn, typename... Args>
-  PendingSendType broadcast(Args&&... args) const {
-    using MsgType = typename ObjFuncTraits<decltype(fn)>::MsgT;
-    return broadcast<MsgType, fn>(std::forward<Args>(args)...);
-  }
+  PendingSendType broadcast(Args&&... args) const;
 
   /**
    * \brief Reduce over the objgroup instances on each node with a callback
@@ -182,6 +179,7 @@ public:
   PendingSendType reduce(
     MsgPtrT msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
   ) const;
+
   template <
     typename OpT = collective::None,
     typename MsgPtrT,
@@ -189,16 +187,15 @@ public:
   >
   PendingSendType reduce(
     MsgPtrT msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
-  ) const
-  {
+  ) const {
     return reduce<
       OpT,
       MsgPtrT,
       MsgT,
       &MsgT::template msgHandler<
         MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
-        >
-      >(msg, cb, stamp);
+      >
+    >(msg, cb, stamp);
   }
 
   /**
