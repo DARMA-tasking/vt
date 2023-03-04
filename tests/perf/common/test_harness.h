@@ -44,7 +44,7 @@
 #if !defined INCLUDED_PERF_COMMON_TEST_HARNESS_H
 #define INCLUDED_PERF_COMMON_TEST_HARNESS_H
 
-#include "timers.h"
+#include "test_harness_base.h"
 #include "test_harness_macros.h"
 
 #include <vt/configs/types/types_type.h>
@@ -64,9 +64,9 @@ struct TestResultHolder {
   T max_ = {};
 };
 
-struct PerfTestHarness {
+struct PerfTestHarness : TestHarnessBase {
   using TestName = std::string;
-  using TestResult = std::pair<TestName, TimeType>;
+
   using FinalTestResult = std::pair<TestName, TestResultHolder<TimeType>>;
   using TestResults = std::vector<std::vector<TestResult>>;
   using PerNodeResults =
@@ -78,10 +78,8 @@ struct PerfTestHarness {
   using CombinedMemoryUse =
     std::unordered_map<NodeType, std::vector<TestResultHolder<std::size_t>>>;
 
-  virtual ~PerfTestHarness() = default;
-
-  virtual void SetUp();
-  virtual void TearDown();
+  void SetUp() override;
+  void TearDown() override;
 
   /**
    * \brief Initialize internal variables and parse args
@@ -98,14 +96,14 @@ struct PerfTestHarness {
    *
    * \return name
    */
-  std::string GetName() const;
+  std::string GetName() const override;
 
   /**
    * \brief Get the number of runs that this test will run
    *
    * \return Number of runs
    */
-  uint32_t GetNumRuns() const;
+  uint32_t GetNumRuns() const override;
 
   /**
    * \brief Dump the test results to stdout and CSV files.
@@ -114,14 +112,14 @@ struct PerfTestHarness {
    *
    * This is called at the end of running test suite.
    */
-  void DumpResults();
+  void DumpResults() override;
 
   /**
    * \brief Add a single test result (name-time pair)
    *
    * \param[in] test_result name-time pair of test result
    */
-  void AddResult(TestResult const& test_result);
+  void AddResult(TestResult const& test_result) override;
 
   /**
    * \brief Add and start a timer with name \c name
@@ -142,7 +140,7 @@ struct PerfTestHarness {
    * \brief Send the tests' results to root node.
    * This is called after each test run.
    */
-  void SyncResults();
+  void SyncResults() override;
 
   /**
    * \brief Copies the test results into combined structures.
