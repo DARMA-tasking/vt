@@ -83,16 +83,22 @@ struct PerfTestRegistry{
   inline static std::vector<TestHarnessBase*> tests_ = {};
 };
 
-#define VT_PERF_TEST(StructName, TestName)               \
-  struct StructName##TestName : StructName {             \
-    StructName##TestName() {                             \
-      PerfTestRegistry::AddTest(this);                   \
-      name_ = #TestName; }                               \
-    void SetUp() override { StructName::SetUp(); }       \
-    void TearDown() override { StructName::TearDown(); } \
-    void TestFunc() override;                            \
-  };                                                     \
+#define VT_PERF_TEST(StructName, TestName)                  \
+  struct StructName##TestName : StructName {                \
+    StructName##TestName() {                                \
+      name_ = #TestName; }                                  \
+    void SetUp() override { StructName::SetUp(); }          \
+    void TearDown() override { StructName::TearDown(); }    \
+    void TestFunc() override;                               \
+  };                                                        \
+                                                            \
+  static struct StructName##TestName##_registerer_t {       \
+    StructName##TestName##_registerer_t() {                 \
+      PerfTestRegistry::AddTest(new StructName##TestName());\
+    }                                                       \
+  } StructName##TestName##_registerer;                      \
   void StructName##TestName::TestFunc()
+
 
 #define VT_PERF_TEST_MAIN()                                                      \
   int main(int argc, char** argv) {                                              \
@@ -100,7 +106,9 @@ struct PerfTestRegistry{
     MPI_Init(&argc, &argv);                                                      \
     int rank;                                                                    \
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                        \
-    for (const auto& test : PerfTestRegistry::GetTests()) {                      \
+    for (const auto& test_base : PerfTestRegistry::GetTests()) {                 \
+      auto* test = dynamic_cast<PerfTestHarness*>(test_base);                    \
+      test->Initialize(argc, argv);                                              \
       auto const num_runs = test->GetNumRuns();                                  \
       StopWatch timer;                                                           \
       if (rank == 0) {                                                           \
@@ -108,15 +116,18 @@ struct PerfTestRegistry{
           vt::debug::bold(), vt::debug::reset(), vt::debug::reg(test->GetName()),\
           vt::debug::reg(fmt::format("{}", num_runs)));                          \
       }                                                                          \
-      for (uint32_t j = 1; j <= num_runs; ++j) {                                 \
+      for (uint32_t run_num = 1; run_num <= num_runs; ++run_num) {               \
         test->SetUp();                                                           \
+                                                                                 \
         timer.Start();                                                           \
         test->TestFunc();                                                        \
         PerfTestHarness::SpinScheduler();                                        \
         test->AddResult({test->GetName(), timer.Stop()});                        \
-        if (j == num_runs) {                                                     \
+                                                                                 \
+        if (run_num == num_runs) {                                               \
           test->SyncResults();                                                   \
         }                                                                        \
+                                                                                 \
         test->TearDown();                                                        \
       }                                                                          \
       test->DumpResults();                                                       \

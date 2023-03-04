@@ -67,8 +67,9 @@ struct NodeObj {
   struct ReduceMsg : vt::collective::ReduceNoneMsg { };
 
   explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
-  void initialize() {
+  void initialize(bool preallocate) {
     proxy_ = global_proxy = vt::theObjGroup()->getProxy<NodeObj>(this);
+    preallocate_ = preallocate;
 
     auto range = vt::Index1D(8);
     col_proxy = vt::makeCollection<TestCol>("test")
@@ -79,6 +80,20 @@ struct NodeObj {
   }
 
   void complete() {
+  }
+
+  void perfMakeRunnablePreAllocate(MyMsg* in_msg) {
+    for (int i = 0; i < num_iters; i++) {
+      msgs.emplace_back(makeMessage<TestCol::ColMsg>());
+    }
+
+    theTerm()->disableTD();
+
+    test_obj_->StartTimer(fmt::format("colSend {}", num_iters));
+    perfRunBenchmark();
+    test_obj_->StopTimer(fmt::format("colSend {}", num_iters));
+
+    theTerm()->enableTD();
   }
 
   void perfMakeRunnable(MyMsg* in_msg) {
@@ -93,7 +108,7 @@ struct NodeObj {
 
   void perfRunBenchmark() {
     for (int i = 0; i < num_iters; i++) {
-      auto m = makeMessage<TestCol::ColMsg>();
+      auto m = preallocate_ ? msgs[i] : makeMessage<TestCol::ColMsg>();
       col_proxy[0].template sendMsg<&TestCol::han>(m);
       vt::theSched()->runSchedulerOnceImpl();
     }
@@ -107,6 +122,7 @@ private:
   vt::CollectionProxy<TestCol> col_proxy;
   int reduce_counter_ = -1;
   int i = 0;
+  bool preallocate_ = false;
 };
 
 VT_PERF_TEST(MyTest, test_collection_local_send) {
@@ -114,10 +130,22 @@ VT_PERF_TEST(MyTest, test_collection_local_send) {
     "test_collection_local_send", this
   );
 
-  grp_proxy[my_node_].invoke<&NodeObj::initialize>();
+  grp_proxy[my_node_].invoke<&NodeObj::initialize>(false);
 
   if (theContext()->getNode() == 0) {
     grp_proxy[my_node_].send<&NodeObj::perfMakeRunnable>();
+  }
+}
+
+VT_PERF_TEST(MyTest, test_collection_local_send_preallocate) {
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
+    "test_collection_local_send_preallocate", this
+  );
+
+  grp_proxy[my_node_].invoke<&NodeObj::initialize>(true);
+
+  if (theContext()->getNode() == 0) {
+    grp_proxy[my_node_].send<MyMsg, &NodeObj::perfMakeRunnablePreAllocate>();
   }
 }
 

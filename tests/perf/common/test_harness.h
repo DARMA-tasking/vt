@@ -44,6 +44,7 @@
 #if !defined INCLUDED_PERF_COMMON_TEST_HARNESS_H
 #define INCLUDED_PERF_COMMON_TEST_HARNESS_H
 
+#include "timers.h"
 #include "test_harness_base.h"
 #include "test_harness_macros.h"
 
@@ -66,6 +67,7 @@ struct TestResultHolder {
 
 struct PerfTestHarness : TestHarnessBase {
   using TestName = std::string;
+  using TestResult = std::pair<TestName, TimeType>;
 
   using FinalTestResult = std::pair<TestName, TestResultHolder<TimeType>>;
   using TestResults = std::vector<std::vector<TestResult>>;
@@ -78,8 +80,8 @@ struct PerfTestHarness : TestHarnessBase {
   using CombinedMemoryUse =
     std::unordered_map<NodeType, std::vector<TestResultHolder<std::size_t>>>;
 
-  void SetUp() override;
-  void TearDown() override;
+  virtual void SetUp();
+  virtual void TearDown();
 
   /**
    * \brief Initialize internal variables and parse args
@@ -96,14 +98,14 @@ struct PerfTestHarness : TestHarnessBase {
    *
    * \return name
    */
-  std::string GetName() const override;
+  std::string GetName() const;
 
   /**
    * \brief Get the number of runs that this test will run
    *
    * \return Number of runs
    */
-  uint32_t GetNumRuns() const override;
+  uint32_t GetNumRuns() const;
 
   /**
    * \brief Dump the test results to stdout and CSV files.
@@ -112,14 +114,14 @@ struct PerfTestHarness : TestHarnessBase {
    *
    * This is called at the end of running test suite.
    */
-  void DumpResults() override;
+  void DumpResults();
 
   /**
    * \brief Add a single test result (name-time pair)
    *
    * \param[in] test_result name-time pair of test result
    */
-  void AddResult(TestResult const& test_result) override;
+  void AddResult(TestResult const& test_result);
 
   /**
    * \brief Add and start a timer with name \c name
@@ -140,7 +142,7 @@ struct PerfTestHarness : TestHarnessBase {
    * \brief Send the tests' results to root node.
    * This is called after each test run.
    */
-  void SyncResults() override;
+  void SyncResults();
 
   /**
    * \brief Copies the test results into combined structures.
