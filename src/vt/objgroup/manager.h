@@ -400,7 +400,7 @@ public:
    */
   template <typename ObjT, typename MsgT, auto f>
   decltype(auto) invoke(
-    messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType node
+    messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node
   );
 
   /**
