@@ -76,7 +76,7 @@ messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType de
 
 template <typename ObjT, typename MsgT, auto f>
 decltype(auto) invoke(
-  messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_node
+  messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node
 ) {
   auto const this_node = theContext()->getNode();
 
@@ -93,12 +93,11 @@ decltype(auto) invoke(
   auto const& elm_id = holder->getElmID();
   auto elm = holder->getPtr();
   auto lb_data = &holder->getLBData();
-  auto msg2 = msg.msg_;
   return runnable::makeRunnableVoid(false, han, this_node)
     .withObjGroup(elm)
     .withTDEpochFromMsg()
     .withLBData(lb_data, elm_id)
-    .runLambda(f, static_cast<ObjT*>(elm), msg2.get());
+    .runLambda(f, static_cast<ObjT*>(elm), msg.get());
 }
 
 template <typename MsgT>

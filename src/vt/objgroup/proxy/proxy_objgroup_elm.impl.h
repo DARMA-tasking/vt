@@ -101,9 +101,8 @@ template <typename ObjT>
 template <typename MsgT, ActiveObjType<MsgT, ObjT> f, typename... Args>
 decltype(auto) ProxyElm<ObjT>::invoke(Args&&... args) const {
   auto proxy = ProxyElm<ObjT>(*this);
-  return theObjGroup()->invoke<ObjT, MsgT, f>(
-    proxy, makeMessage<MsgT>(std::forward<Args>(args)...)
-  );
+  auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+  return theObjGroup()->invoke<ObjT, MsgT, f>(proxy, msg);
 }
 
 template <typename ObjT>
