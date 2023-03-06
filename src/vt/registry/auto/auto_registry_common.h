@@ -127,6 +127,8 @@ public:
         static_cast<IndexT*>(range_ptr),
         num_nodes
       );
+    } else {
+      static_assert(false, "Invalid function type for map handler");
     }
   }
 
@@ -149,6 +151,8 @@ public:
 
     if constexpr (std::is_same_v<T, ActiveTypedFnType<MsgT>*>) {
       fp(static_cast<MsgT*>(msg));
+    } else {
+      static_assert(false, "Invalid function type for scatter handler");
     }
   }
 
