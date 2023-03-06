@@ -50,7 +50,6 @@ management.
 | \subpage location           | `vt::theLocMan()`      | \copybrief location         | @m_class{m-label m-success} **Core**           |
 | \subpage mem-usage          | `vt::theMemUsage()`    | \copybrief mem-usage        | @m_class{m-label m-warning} **Optional**       |
 | \subpage objgroup           | `vt::theObjGroup()`    | \copybrief objgroup         | @m_class{m-label m-success} **Core**           |
-| \subpage param              | `vt::theParam()`       | \copybrief param            | @m_class{m-label m-danger} **Experimental**    |
 | \subpage pipe               | `vt::theCB()`          | \copybrief pipe             | @m_class{m-label m-success} **Core**           |
 | \subpage node-lb-data         | `vt::theNodeLBData()`   | \copybrief node-lb-data       | @m_class{m-label m-warning} **Optional**       |
 | \subpage phase              | `vt::thePhase()`       | \copybrief phase            | @m_class{m-label m-success} **Core**           |

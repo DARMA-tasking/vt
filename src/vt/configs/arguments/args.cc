@@ -356,7 +356,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto lap = "Enable debug_rdma         = \"" debug_pp(rdma)         "\"";
   auto map = "Enable debug_rdma_channel = \"" debug_pp(rdma_channel) "\"";
   auto nap = "Enable debug_rdma_state   = \"" debug_pp(rdma_state)   "\"";
-  auto oap = "Enable debug_param        = \"" debug_pp(param)        "\"";
   auto pap = "Enable debug_handler      = \"" debug_pp(handler)      "\"";
   auto qap = "Enable debug_hierlb       = \"" debug_pp(hierlb)       "\"";
   auto qbp = "Enable debug_temperedlb   = \"" debug_pp(temperedlb)   "\"";
@@ -393,7 +392,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto la = app.add_flag("--vt_debug_rdma",         appConfig.vt_debug_rdma,         lap);
   auto ma = app.add_flag("--vt_debug_rdma_channel", appConfig.vt_debug_rdma_channel, map);
   auto na = app.add_flag("--vt_debug_rdma_state",   appConfig.vt_debug_rdma_state,   nap);
-  auto oa = app.add_flag("--vt_debug_param",        appConfig.vt_debug_param,        oap);
   auto pa = app.add_flag("--vt_debug_handler",      appConfig.vt_debug_handler,      pap);
   auto qa = app.add_flag("--vt_debug_hierlb",       appConfig.vt_debug_hierlb,       qap);
   auto qb = app.add_flag("--vt_debug_temperedlb",   appConfig.vt_debug_temperedlb,   qbp);
@@ -430,7 +428,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   la->group(debugGroup);
   ma->group(debugGroup);
   na->group(debugGroup);
-  oa->group(debugGroup);
   pa->group(debugGroup);
   qa->group(debugGroup);
   qb->group(debugGroup);

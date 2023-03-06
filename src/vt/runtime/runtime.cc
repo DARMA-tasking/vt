@@ -50,7 +50,6 @@
 #include "vt/termination/termination.h"
 #include "vt/pool/pool.h"
 #include "vt/rdma/rdma_headers.h"
-#include "vt/parameterization/parameterization.h"
 #include "vt/pipe/pipe_manager.h"
 #include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
@@ -785,13 +784,6 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_->registerComponent<param::Param>(
-    &theParam, Deps<
-      ctx::Context,              // Everything depends on theContext
-      messaging::ActiveMessenger // Depends on active messenger sending
-    >{}
-  );
-
   p_->registerComponent<location::LocationManager>(
     &theLocMan, Deps<
       ctx::Context,               // Everything depends on theContext
@@ -884,7 +876,6 @@ void Runtime::initializeComponents() {
   p_->add<group::GroupManager>();
   p_->add<pipe::PipeManager>();
   p_->add<rdma::RDMAManager>();
-  p_->add<param::Param>();
   p_->add<location::LocationManager>();
   p_->add<vrt::VirtualContextManager>();
   p_->add<vrt::collection::CollectionManager>();
@@ -1047,10 +1038,6 @@ void Runtime::printMemoryFootprint() const {
     } else if (name == "ActiveMessenger") {
       printComponentFootprint(
         static_cast<messaging::ActiveMessenger*>(base)
-      );
-    } else if (name == "Param") {
-      printComponentFootprint(
-        static_cast<param::Param*>(base)
       );
     } else if (name == "RDMAManager") {
       printComponentFootprint(
