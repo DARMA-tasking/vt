@@ -404,7 +404,6 @@ public:
   ComponentPtrType<collective::CollectiveAlg> theCollective = nullptr;
   ComponentPtrType<pool::Pool> thePool = nullptr;
   ComponentPtrType<rdma::RDMAManager> theRDMA = nullptr;
-  ComponentPtrType<param::Param> theParam = nullptr;
   ComponentPtrType<sched::Scheduler> theSched = nullptr;
   ComponentPtrType<location::LocationManager> theLocMan = nullptr;
   ComponentPtrType<vrt::VirtualContextManager> theVirtualManager = nullptr;

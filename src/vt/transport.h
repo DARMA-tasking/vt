@@ -56,7 +56,6 @@
 #include "vt/collective/collective.h"
 #include "vt/event/event.h"
 #include "vt/messaging/active.h"
-#include "vt/parameterization/parameterization.h"
 #include "vt/event/event_msgs.h"
 #include "vt/termination/termination.h"
 #include "vt/rdma/rdma_headers.h"

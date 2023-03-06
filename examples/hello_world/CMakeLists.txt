@@ -10,7 +10,6 @@ set(
   hello_world_virtual_context
   hello_world_virtual_context_remote
   ring
-  param
   objgroup
 )
 
