@@ -95,7 +95,6 @@ decltype(auto) invoke(
   auto lb_data = &holder->getLBData();
   return runnable::makeRunnableVoid(false, han, this_node)
     .withObjGroup(elm)
-    .withTDEpochFromMsg()
     .withLBData(lb_data, elm_id)
     .runLambda(f, static_cast<ObjT*>(elm), msg.get());
 }
