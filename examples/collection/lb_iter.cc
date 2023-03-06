@@ -47,22 +47,7 @@ static constexpr int32_t const default_num_elms = 64;
 static int32_t num_iter = 8;
 
 struct IterCol : vt::Collection<IterCol, vt::Index1D> {
-  IterCol() = default;
-
-  struct IterMsg : vt::CollectionMessage<IterCol> {
-    IterMsg() = default;
-    IterMsg(
-      int64_t const in_work_amt, int64_t const in_iter, int64_t const subphase
-    )
-      : iter_(in_iter), work_amt_(in_work_amt), subphase_(subphase)
-    { }
-
-    int64_t iter_ = 0;
-    int64_t work_amt_ = 0;
-    int64_t subphase_ = 0;
-  };
-
-  void iterWork(IterMsg* msg);
+  void iterWork(int64_t work_amt, int64_t iter, int subphase);
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -76,10 +61,10 @@ private:
 
 static double weight = 1.0f;
 
-void IterCol::iterWork(IterMsg* msg) {
-  this->lb_data_.setSubPhase(msg->subphase_);
+void IterCol::iterWork(int64_t work_amt, int64_t iter, int subphase) {
+  this->lb_data_.setSubPhase(subphase);
   double val = 0.1f;
-  double val2 = 0.4f * msg->work_amt_;
+  double val2 = 0.4f * work_amt;
   auto const idx = getIndex().x();
   int64_t const max_work = 1000 * weight;
   int64_t const mid_work = 100 * weight;
@@ -131,13 +116,13 @@ int main(int argc, char** argv) {
     auto cur_time = vt::timing::getCurrentTime();
 
     vt::runInEpochCollective([=]{
-      proxy.broadcastCollective<IterCol::IterMsg,&IterCol::iterWork>(10, i, 0);
+      proxy.broadcastCollective<&IterCol::iterWork>(10, i, 0);
     });
     vt::runInEpochCollective([=]{
-      proxy.broadcastCollective<IterCol::IterMsg,&IterCol::iterWork>(5,  i, 1);
+      proxy.broadcastCollective<&IterCol::iterWork>(5,  i, 1);
     });
     vt::runInEpochCollective([=]{
-      proxy.broadcastCollective<IterCol::IterMsg,&IterCol::iterWork>(15, i, 2);
+      proxy.broadcastCollective<&IterCol::iterWork>(15, i, 2);
     });
 
     auto total_time = vt::timing::getCurrentTime() - cur_time;
