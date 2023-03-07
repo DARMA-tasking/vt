@@ -25,9 +25,9 @@ variables:
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
-  UBUNTU: 18.04
+  UBUNTU: 20.04
   COMPILER_TYPE: nvidia
-  COMPILER: nvcc-11
+  COMPILER: 11.0.3
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0
