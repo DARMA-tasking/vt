@@ -80,27 +80,27 @@ void PipeManager::triggerSendBack(PipeType const& pipe, MsgT* data) {
 }
 
 template <typename C>
-Callback<PipeManager::Void> PipeManager::makeFunc(
+Callback<> PipeManager::makeFunc(
   LifetimeEnum life, C* ctx, FuncCtxType<C> fn
 ) {
-  return makeCallbackSingleAnon<C,Callback<Void>>(life,ctx,fn);
+  return makeCallbackSingleAnon<C>(life,ctx,fn);
 }
 
 template <typename MsgT, typename C>
 Callback<MsgT> PipeManager::makeFunc(
   LifetimeEnum life, C* ctx, FuncMsgCtxType<MsgT, C> fn
 ) {
-  return makeCallbackSingleAnon<MsgT,C,Callback<MsgT>>(life,ctx,fn);
+  return makeCallbackSingleAnon<MsgT,C>(life,ctx,fn);
 }
 
 template <typename MsgT>
 Callback<MsgT> PipeManager::makeFunc(LifetimeEnum life, FuncMsgType<MsgT> fn) {
-  return makeCallbackSingleAnon<MsgT,Callback<MsgT>>(life,fn);
+  return makeCallbackSingleAnon<MsgT>(life,fn);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 Callback<MsgT> PipeManager::makeSend(NodeType const& node) {
-  return makeCallbackSingleSend<MsgT,f>(node);
+  return makeCallbackSingle<f, false>(node);
 }
 
 template <typename FunctorT, typename MsgT>
@@ -109,28 +109,28 @@ Callback<MsgT> PipeManager::makeSend(NodeType const& node) {
 }
 
 template <typename FunctorT, typename not_used_>
-Callback<PipeManager::Void> PipeManager::makeSend(NodeType const& node) {
+Callback<> PipeManager::makeSend(NodeType const& node) {
   return makeCallbackFunctorSendVoid<FunctorT>(node);
 }
 
 template <typename ColT, typename MsgT, PipeManager::ColHanType<ColT,MsgT>* f>
 Callback<MsgT> PipeManager::makeSend(typename ColT::ProxyType proxy) {
-  return makeCallbackSingleProxySend<ColT,MsgT,f>(proxy);
+  return makeCallbackProxy<f, false>(proxy);
 }
 
 template <typename ColT, typename MsgT, PipeManager::ColMemType<ColT,MsgT> f>
 Callback<MsgT> PipeManager::makeSend(typename ColT::ProxyType proxy) {
-  return makeCallbackSingleProxySend<ColT,MsgT,f>(proxy);
+  return makeCallbackProxy<f, false>(proxy);
 }
 
 template <typename ObjT, typename MsgT, PipeManager::ObjMemType<ObjT,MsgT> f>
 Callback<MsgT> PipeManager::makeSend(objgroup::proxy::ProxyElm<ObjT> proxy) {
-  return makeCallbackObjGrpSend<ObjT,MsgT,f>(proxy);
+  return makeCallbackProxy<f, false>(proxy);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 Callback<MsgT> PipeManager::makeBcast() {
-  return makeCallbackSingleBcast<MsgT,f>();
+  return makeCallbackSingle<f, true>();
 }
 
 template <typename FunctorT, typename MsgT>
@@ -139,23 +139,23 @@ Callback<MsgT> PipeManager::makeBcast() {
 }
 
 template <typename FunctorT, typename not_used_>
-Callback<PipeManager::Void> PipeManager::makeBcast() {
+Callback<> PipeManager::makeBcast() {
   return makeCallbackFunctorBcastVoid<FunctorT>();
 }
 
 template <typename ColT, typename MsgT, PipeManager::ColHanType<ColT,MsgT>* f>
 Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
-  return makeCallbackSingleProxyBcastDirect<ColT,MsgT,f>(proxy);
+  return makeCallbackProxy<f, true>(proxy);
 }
 
 template <typename ColT, typename MsgT, PipeManager::ColMemType<ColT,MsgT> f>
 Callback<MsgT> PipeManager::makeBcast(ColProxyType<ColT> proxy) {
-  return makeCallbackSingleProxyBcastDirect<ColT,MsgT,f>(proxy);
+  return makeCallbackProxy<f, true>(proxy);
 }
 
 template <typename ObjT, typename MsgT, PipeManager::ObjMemType<ObjT,MsgT> f>
 Callback<MsgT> PipeManager::makeBcast(objgroup::proxy::Proxy<ObjT> proxy) {
-  return makeCallbackObjGrpBcast<ObjT,MsgT,f>(proxy);
+  return makeCallbackProxy<f, true>(proxy);
 }
 
 template <typename MsgT>

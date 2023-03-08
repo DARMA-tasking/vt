@@ -169,7 +169,7 @@ struct PipeManager
    * \return a new callback
    */
   template <typename ContextT>
-  Callback<Void> makeFunc(
+  Callback<> makeFunc(
     LifetimeEnum life, ContextT* ctx, FuncCtxType<ContextT> fn
   );
 
@@ -218,7 +218,7 @@ struct PipeManager
    *
    * \return the new callback
    */
-  Callback<Void> makeFunc(LifetimeEnum life, FuncVoidType fn);
+  Callback<> makeFunc(LifetimeEnum life, FuncVoidType fn);
 
   /**
    * \brief Make a callback to a active message handler to be invoked on a
@@ -254,7 +254,7 @@ struct PipeManager
     typename FunctorT,
     typename = std::enable_if_t<FunctorTraits<FunctorT>::has_no_msg_type>
   >
-  Callback<Void> makeSend(NodeType const& node);
+  Callback<> makeSend(NodeType const& node);
 
   /**
    * \brief Make a callback to a particular collection element invoking a
@@ -317,7 +317,7 @@ struct PipeManager
     typename FunctorT,
     typename = std::enable_if_t<FunctorTraits<FunctorT>::has_no_msg_type>
   >
-  Callback<Void> makeBcast();
+  Callback<> makeBcast();
 
   /**
    * \brief Make a callback to a whole collection invoking a non-intrusive

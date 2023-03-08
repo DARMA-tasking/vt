@@ -65,6 +65,8 @@ struct ObjFuncTraitsImpl<
   using ObjT = Obj;
   using MsgT = Msg;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<MsgT>;
 };
 
 template <typename Obj, typename Return>
@@ -77,6 +79,9 @@ struct ObjFuncTraitsImpl<
   using MsgT = NoMsg;
   using ReturnT = Return;
   using TupleType = std::tuple<>;
+  template <template <typename...> class U>
+  using WrapType = U<>;
+
 };
 
 template <typename Obj, typename Return, typename Arg, typename... Args>
@@ -94,8 +99,10 @@ struct ObjFuncTraitsImpl<
   static constexpr bool is_member = false;
   using ObjT = Obj;
   using MsgT = NoMsg;
-  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using TupleType = WrapType<std::tuple>;
 };
 
 template <typename Obj, typename Return, typename Msg>
@@ -112,6 +119,8 @@ struct ObjFuncTraitsImpl<
   using ObjT = Obj;
   using MsgT = Msg;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<MsgT>;
 };
 
 template <typename Obj, typename Return>
@@ -124,6 +133,8 @@ struct ObjFuncTraitsImpl<
   using MsgT = NoMsg;
   using TupleType = std::tuple<>;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<>;
 };
 
 template <typename Obj, typename Return, typename Arg, typename... Args>
@@ -141,8 +152,10 @@ struct ObjFuncTraitsImpl<
   static constexpr bool is_member = true;
   using ObjT = Obj;
   using MsgT = NoMsg;
-  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using TupleType = WrapType<std::tuple>;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -163,6 +176,8 @@ struct FuncTraitsImpl<
   static constexpr bool is_member = false;
   using MsgT = Msg;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<MsgT>;
 };
 
 template <typename Return>
@@ -173,6 +188,8 @@ struct FuncTraitsImpl<
   static constexpr bool is_member = false;
   using MsgT = NoMsg;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<>;
   using TupleType = std::tuple<>;
 };
 
@@ -191,9 +208,55 @@ struct FuncTraitsImpl<
   static constexpr bool is_member = false;
   using MsgT = NoMsg;
   using Arg1 = Arg;
-  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using TupleType = WrapType<std::tuple>;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename enabled, typename... Args>
+struct CBTraitsImpl;
+
+template <typename Msg>
+struct CBTraitsImpl<
+  std::enable_if_t<
+    std::is_convertible<Msg, vt::Message>::value or
+    std::is_convertible<Msg, vt::ShortMessage>::value or
+    std::is_convertible<Msg, vt::EpochMessage>::value or
+    std::is_convertible<Msg, vt::PayloadMessage>::value
+  >,
+  Msg
+> {
+  using MsgT = std::remove_pointer_t<Msg>;
+};
+
+template <>
+struct CBTraitsImpl<
+  std::enable_if_t<std::is_same_v<void, void>>
+> {
+  using MsgT = NoMsg;
+  using TupleType = std::tuple<>;
+};
+
+template <typename Arg, typename... Args>
+struct CBTraitsImpl<
+  std::enable_if_t<
+    not (
+      std::is_convertible<Arg, vt::Message>::value or
+      std::is_convertible<Arg, vt::ShortMessage>::value or
+      std::is_convertible<Arg, vt::EpochMessage>::value or
+      std::is_convertible<Arg, vt::PayloadMessage>::value
+    )
+  >,
+  Arg,
+  Args...
+> {
+  using MsgT = NoMsg;
+  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
+};
+
 
 } /* end namespace vt::util::fntraits::detail */
 
@@ -206,6 +269,9 @@ struct ObjFuncTraits : util::fntraits::detail::ObjFuncTraitsImpl<void, Args...> 
 
 template <typename... Args>
 struct FuncTraits : util::fntraits::detail::FuncTraitsImpl<void, Args...> {};
+
+template <typename... Args>
+struct CBTraits : util::fntraits::detail::CBTraitsImpl<void, Args...> {};
 
 using NoMsg = util::fntraits::detail::NoMsg;
 
