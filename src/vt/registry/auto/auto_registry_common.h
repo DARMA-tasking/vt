@@ -128,7 +128,7 @@ public:
         num_nodes
       );
     } else {
-      vtAssert(false, "Invalid function type for map handler");
+      vtAbort("Invalid function type for map handler");
       return uninitialized_destination;
     }
   }
@@ -153,7 +153,7 @@ public:
     if constexpr (std::is_same_v<T, ActiveTypedFnType<MsgT>*>) {
       fp(static_cast<MsgT*>(msg));
     } else {
-      vtAssert(false, "Invalid function type for scatter handler");
+      vtAbort("Invalid function type for scatter handler");
     }
   }
 
