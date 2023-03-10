@@ -784,7 +784,8 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     using MsgT = ParamMsg<Tuple>;
     auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
-    return broadcastMsg<MsgT>(han, msg, true, no_tag);
+    constexpr bool deliver_to_sender = true;
+    return broadcastMsg<MsgT>(han, msg, deliver_to_sender, no_tag);
   }
 
   /**
