@@ -988,25 +988,6 @@ struct CollectionManager
    *
    * \return a pending send
    */
-  template <
-    typename MsgT,
-    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
-  >
-  messaging::PendingSend broadcastMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-    MsgT *msg, bool instrument = true
-  );
-
-  /**
-   * \brief Broadcast a message with action function handler
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast for load
-   * balancing (some system calls use this to disable instrumentation)
-   *
-   * \return a pending send
-   */
   template <auto f>
   messaging::PendingSend broadcastMsg(
     CollectionProxyWrapType<
@@ -1018,25 +999,6 @@ struct CollectionManager
     using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
     return broadcastMsg<MsgT, f>(proxy, msg, instrument);
   }
-
-  /**
-   * \brief Broadcast a message with action member handler
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast for load
-   * balancing (some system calls use this to disable instrumentation)
-   *
-   * \return a pending send
-   */
-  template <
-    typename MsgT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
-  >
-  messaging::PendingSend broadcastMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-    MsgT *msg, bool instrument = true
-  );
 
   /**
    * \brief Broadcast a message with action function handler with collection
