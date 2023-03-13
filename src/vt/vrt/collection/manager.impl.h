@@ -209,7 +209,9 @@ CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
   trace::TraceEventIDType event, bool immediate
 ) {
-  auto user_msg = makeMessage<UserMsgT>(std::move(msg->getMsg()));
+  // Reference because it's a inner message that should *never* be deallocated
+  messageRef(&msg->getMsg());
+  MsgSharedPtr<UserMsgT> user_msg{&msg->getMsg()};
 
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
@@ -724,30 +726,6 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
   collectionBcastHandler<ColT, IndexT, MsgT>(msg.get());
 
   return messaging::PendingSend{nullptr};
-}
-
-template <
-  typename MsgT,
-  ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
->
-messaging::PendingSend CollectionManager::broadcastMsg(
-  CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-  MsgT *msg, bool instrument
-) {
-  using ColT = typename MsgT::CollectionType;
-  return broadcastMsg<MsgT,ColT,f>(proxy,msg,instrument);
-}
-
-template <
-  typename MsgT,
-  ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
->
-messaging::PendingSend CollectionManager::broadcastMsg(
-  CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-  MsgT *msg, bool instrument
-) {
-  using ColT = typename MsgT::CollectionType;
-  return broadcastMsg<MsgT,ColT,f>(proxy,msg,instrument);
 }
 
 template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
