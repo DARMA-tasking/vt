@@ -76,11 +76,15 @@ volumes:
   amd64-ubuntu-18.04-gcc-8-cache:
   amd64-ubuntu-20.04-gcc-9-cache:
   amd64-ubuntu-20.04-gcc-10-cache:
-  amd64-ubuntu-22.04-gcc-12-cache:
+  amd64-ubuntu-20.04-gcc-11-cache:
   amd64-ubuntu-18.04-icpx-cache:
   amd64-ubuntu-18.04-icpc-cache:
-  amd64-ubuntu-18.04-nvcc-11-cache:
-  amd64-ubuntu-18.04-nvcc-11.2-cache:
+  amd64-ubuntu-20.04-11.0.3-cache:
+  amd64-ubuntu-20.04-11.2.0-cache:
+  amd64-alpine-clang-4.0-cache:
+  amd64-alpine-clang-5.0-cache:
+  amd64-alpine-clang-6.0-cache:
+  amd64-alpine-clang-7-cache:
   amd64-alpine-clang-8-cache:
   amd64-alpine-clang-9-cache:
   amd64-alpine-clang-10-cache:
@@ -89,11 +93,16 @@ volumes:
   amd64-alpine-gcc-8-cache:
   amd64-alpine-gcc-9-cache:
   amd64-alpine-gcc-10-cache:
-  amd64-alpine-gcc-12-cache:
+  amd64-alpine-gcc-11-cache:
+  amd64-alpine-icc-18-cache:
+  amd64-alpine-icc-19-cache:
+  amd64-alpine-icc-20-cache:
   amd64-alpine-icpx-cache:
   amd64-alpine-icpc-cache:
-  amd64-alpine-nvcc-11-cache:
-  amd64-alpine-nvcc-11.2-cache:
+  amd64-alpine-11.0.3-cache:
+  amd64-alpine-11.2.0-cache:
+  arm64v8-ubuntu-18.04-gcc-7-cache:
+  arm64v8-alpine-gcc-7-cache:
 
 # Define basic rules for ccache used across multiple services. The beauty of
 # docker compose with cached volumes is that similarly configured builds will
@@ -141,6 +150,7 @@ x-vtopts: &vtopts
   CODECOV_TOKEN: ${CODECOV_TOKEN:-}
   TEST_LB_SCHEMA: ${TEST_LB_SCHEMA:-0}
   CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD:-17}
+  HOST_COMPILER: ${HOST_COMPILER}
 
 services:
   ##############################################################################
@@ -159,6 +169,7 @@ services:
         arch: ${ARCH}
         proxy: ${PROXY}
         compiler: ${COMPILER}
+        host_compiler: ${HOST_COMPILER}
         ubuntu: ${UBUNTU}
         ubsan_enabled: ${VT_UBSAN:-0}
         zoltan_enabled: ${VT_ZOLTAN:-0}
