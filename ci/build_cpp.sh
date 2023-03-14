@@ -37,6 +37,13 @@ fi
 mkdir -p "${build_dir}"
 pushd "${build_dir}"
 
+# Match `nvcc_wrapper` and also a path ending with 'nvcc_wrapper'
+case $CXX in
+    *nvcc_wrapper)
+        NVCC_WRAPPER_DEFAULT_COMPILER="$(which g++-"$(echo "${HOST_COMPILER}" | cut -d- -f2)")" \
+        && export NVCC_WRAPPER_DEFAULT_COMPILER;;
+esac
+
 if test -d "checkpoint"
 then
     rm -Rf checkpoint
