@@ -28,6 +28,7 @@ variables:
   UBUNTU: 20.04
   COMPILER_TYPE: gnu
   COMPILER: gcc-9
+
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0

@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (nvidia cuda 11.2, ubuntu, mpich)
+name: PR tests (nvidia cuda 11.2, gcc-9, ubuntu, mpich)
 
 trigger:
   branches:
@@ -28,6 +28,7 @@ variables:
   UBUNTU: 20.04
   COMPILER_TYPE: nvidia
   COMPILER: 11.2.0
+  HOST_COMPILER: gcc-9
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0
