@@ -239,6 +239,7 @@ public:
       std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...);
       auto finish_time = timing::getCurrentTime();
       finish(finish_time);
+      return;
     } else {
       decltype(auto) r{std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...)};
       auto finish_time = timing::getCurrentTime();
