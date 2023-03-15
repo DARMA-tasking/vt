@@ -58,6 +58,13 @@
 #include <cstdlib>
 #include <functional>
 
+namespace vt::vrt::collection {
+
+template <typename ColT, typename UserMsgT, typename BaseMsgT>
+struct ColMsgWrap;
+
+} /* end namespace vt::vrt::collection */
+
 namespace vt { namespace auto_registry {
 
 struct SentinelObject {};
@@ -74,6 +81,18 @@ struct HandlersDispatcher final : BaseHandlersDispatcher {
 
   explicit HandlersDispatcher(HandlerT in_fn_ptr) : fp(in_fn_ptr) { }
 
+  template <typename U>
+  using ColMsgTrait = typename U::IsCollectionMessage;
+  template <typename U>
+  using IsColMsgTrait =
+    detection::is_detected_convertible<std::true_type, ColMsgTrait, U>;
+
+  template <typename U>
+  using ColTrait = typename U::IsCollectionType;
+  template <typename U>
+  using IsColTrait =
+    detection::is_detected_convertible<std::true_type, ColTrait, U>;
+
 public:
   void dispatch(messaging::BaseMsg* base_msg, void* object) const override {
     using T = HandlerT;
@@ -86,9 +105,23 @@ public:
     } else if constexpr (std::is_same_v<T, ActiveTypedFnType<MsgT>*>) {
       fp(msg);
     } else if constexpr (std::is_same_v<T, ColTypedFnType*>) {
-      fp(elm, msg);
+      if constexpr (IsColMsgTrait<MsgT>::value or not IsColTrait<ObjT>::value) {
+        fp(elm, msg);
+      } else {
+        auto wrap_msg = static_cast<
+          vrt::collection::ColMsgWrap<ObjT, MsgT, vt::Message>*
+        >(base_msg);
+        fp(elm, &wrap_msg->getMsg());
+      }
     } else if constexpr (std::is_same_v<T, ColMemberTypedFnType>) {
-      (elm->*fp)(msg);
+      if constexpr (IsColMsgTrait<MsgT>::value or not IsColTrait<ObjT>::value) {
+        (elm->*fp)(msg);
+      } else {
+        auto wrap_msg = static_cast<
+          vrt::collection::ColMsgWrap<ObjT, MsgT, vt::Message>*
+        >(base_msg);
+        (elm->*fp)(&wrap_msg->getMsg());
+      }
     } else if constexpr (std::is_same_v<ObjT, SentinelObject>) {
       std::apply(fp, msg->getTuple());
     } else {

@@ -203,39 +203,8 @@ GroupType CollectionManager::createGroupCollection(
   return group_id;
 }
 
-template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-/*static*/ CollectionManager::IsWrapType<ColT, UserMsgT, MsgT>
-CollectionManager::collectionAutoMsgDeliver(
-  MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
-  trace::TraceEventIDType event, bool immediate
-) {
-  // Reference because it's a inner message that should *never* be deallocated
-  messageRef(&msg->getMsg());
-  MsgSharedPtr<UserMsgT> user_msg{&msg->getMsg()};
-
-  // Expand out the index for tracing purposes; Projections takes up to
-  // 4-dimensions
-#if vt_check_enabled(trace_enabled)
-  auto idx = base->getIndex();
-  uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
-  uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
-  uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
-  uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
-#endif
-
-  runnable::makeRunnable(user_msg, true, han, from)
-    .withTDEpoch(theMsg()->getEpochContextMsg(msg))
-    .withCollection(base)
-#if vt_check_enabled(trace_enabled)
-    .withTraceIndex(event, idx1, idx2, idx3, idx4)
-#endif
-    .withLBData(base, msg)
-    .runOrEnqueue(immediate);
-}
-
-template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-/*static*/ CollectionManager::IsNotWrapType<ColT, UserMsgT, MsgT>
-CollectionManager::collectionAutoMsgDeliver(
+template <typename ColT, typename IndexT, typename MsgT>
+/*static*/ void CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
   trace::TraceEventIDType event, bool immediate
 ) {
@@ -250,6 +219,7 @@ CollectionManager::collectionAutoMsgDeliver(
 #endif
 
   auto m = promoteMsg(msg);
+
   runnable::makeRunnable(m, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
@@ -294,7 +264,7 @@ template <typename ColT, typename IndexT, typename MsgT>
       #if vt_check_enabled(trace_enabled)
         trace_event = col_msg->getFromTraceEvent();
       #endif
-      collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
+      collectionAutoMsgDeliver<ColT,IndexT,MsgT>(
         msg, base, handler, from, trace_event, false
       );
     });
@@ -357,7 +327,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   #if vt_check_enabled(trace_enabled)
     trace_event = col_msg->getFromTraceEvent();
   #endif
-  collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
+  collectionAutoMsgDeliver<ColT,IndexT,MsgT>(
     msg, col_ptr, sub_handler, from, trace_event, false
   );
   theMsg()->popEpoch(cur_epoch);
@@ -593,7 +563,7 @@ void CollectionManager::invokeMsgImpl(
   trace_event = theMsg()->makeTraceCreationSend(han, msg_size, is_bcast);
 #endif
 
-  collectionAutoMsgDeliver<ColT, IndexT, MsgT, typename MsgT::UserMsgType>(
+  collectionAutoMsgDeliver<ColT, IndexT, MsgT>(
     msg.get(), col_ptr, han, from, trace_event, true
   );
 
