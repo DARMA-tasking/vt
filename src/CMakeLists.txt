@@ -19,7 +19,7 @@ set(TOP_LEVEL_SUBDIRS
   runnable
   activefn
   # Add single-directory components
-  context event handler parameterization sequence termination
+  context event handler sequence termination
   scheduler standalone runtime trace timing demangle rdmahandle
 )
 set(

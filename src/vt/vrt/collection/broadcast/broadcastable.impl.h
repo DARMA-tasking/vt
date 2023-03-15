@@ -177,6 +177,67 @@ Broadcastable<ColT, IndexT, BaseProxyT>::invokeCollective(Args&&... args) const 
   return theCollection()->invokeCollectiveMsg<MsgT, f>(proxy, msg);
 }
 
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <auto f, typename... Params>
+messaging::PendingSend
+Broadcastable<ColT, IndexT, BaseProxyT>::broadcast(Params&&... params) const {
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
+    using SendMsgT = ParamColMsg<Tuple, ColT>;
+    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto han = auto_registry::makeAutoHandlerCollectionMemParam<
+      ColT, decltype(f), f, SendMsgT
+    >();
+    auto proxy = this->getProxy();
+    return theCollection()->broadcastMsgUntypedHandler<SendMsgT, ColT, IndexT>(
+      proxy, msg.get(), han, true
+    );
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return broadcastMsg<MsgT, f>(msg);
+  }
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <auto f, typename... Params>
+messaging::PendingSend
+Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(Params&&... params) const {
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
+    using SendMsgT = ParamColMsg<Tuple, ColT>;
+    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto han = auto_registry::makeAutoHandlerCollectionMemParam<
+      ColT, decltype(f), f, SendMsgT
+    >();
+    auto proxy = this->getProxy();
+    msg->setVrtHandler(han);
+    return theCollection()->broadcastCollectiveMsgImpl<SendMsgT, ColT>(
+      proxy, msg, true
+    );
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return broadcastCollectiveMsg<MsgT, f>(msg);
+  }
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <auto f, typename... Params>
+void
+Broadcastable<ColT, IndexT, BaseProxyT>::invokeCollective(Params&&... params) const {
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+    auto proxy = this->getProxy();
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    theCollection()->invokeCollective<ColT, f>(
+      proxy, std::forward<Params>(params)...
+    );
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return theCollection()->invokeCollectiveMsg<MsgT, f>(proxy, msg);
+  }
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BROADCAST_BROADCASTABLE_IMPL_H*/

@@ -65,7 +65,7 @@ struct TestPendingSend : TestParallelHarness {
     auto const num_nodes = theContext()->getNumNodes();
     auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
     auto msg = vt::makeMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, handlerPong>(prev, msg);
+    theMsg()->sendMsg<handlerPong>(prev, msg);
   }
   static void handlerLocal(TestMsg* msg) {
     auto const this_node = theContext()->getNode();
@@ -93,7 +93,7 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   auto msg = vt::makeMessage<TestMsg>();
   auto msg_hold = promoteMsg(msg.get());
   pending.emplace_back(
-    theMsg()->sendMsg<TestMsg, handlerPing>(next, msg)
+    theMsg()->sendMsg<handlerPing>(next, msg)
   );
 
   // Must be stamped with the current epoch
@@ -134,7 +134,7 @@ TEST_F(TestPendingSend, test_pending_broadcast_hold) {
 
   auto msg = vt::makeMessage<TestMsg>(theContext()->getNode());
   auto msg_hold = promoteMsg(msg.get());
-  pending.emplace_back(theMsg()->broadcastMsg<TestMsg, handlerLocal>(msg));
+  pending.emplace_back(theMsg()->broadcastMsg<handlerLocal>(msg));
 
   // Must be stamped with the current epoch
   EXPECT_EQ(envelopeGetEpoch(msg_hold->env), ep);

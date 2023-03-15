@@ -98,7 +98,7 @@ struct NodeObj {
   void perfRunBenchmark() {
     for (int i = 0; i < num_iters; i++) {
       auto m = msgs[i];
-      col_proxy[0].template sendMsg<TestCol::ColMsg, &TestCol::han>(m);
+      col_proxy[0].template sendMsg<&TestCol::han>(m);
       vt::theSched()->runSchedulerOnceImpl();
     }
   }

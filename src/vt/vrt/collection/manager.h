@@ -74,6 +74,7 @@
 #include "vt/context/runnable_context/lb_data.fwd.h"
 #include "vt/vrt/collection/param/construct_params.h"
 #include "vt/vrt/collection/param/construct_params_msg.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <memory>
 #include <vector>
@@ -494,6 +495,25 @@ struct CollectionManager
   );
 
   /**
+   * \brief Send collection element a message from active function handler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <auto f>
+  messaging::PendingSend sendMsg(
+    VirtualElmProxyType<
+      typename ObjFuncTraits<decltype(f)>::MsgT::CollectionType
+    > const& proxy,
+    typename ObjFuncTraits<decltype(f)>::MsgT *msg
+  ) {
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+    return sendMsg<MsgT, f>(proxy, msg);
+  }
+
+  /**
    * \brief Send collection element a message from active member handler
    *
    * \param[in] proxy the collection proxy
@@ -686,6 +706,18 @@ struct CollectionManager
   void invokeCollectiveMsg(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     messaging::MsgPtrThief<MsgT> msg
+  );
+
+  /**
+   * \brief Invoke function handler without going through scheduler for all
+   * elements
+   *
+   * \param[in] proxy the whole collection proxy
+   * \param[in] args the arguments
+   */
+  template <typename ColT, auto f, typename... Args>
+  void invokeCollective(
+    CollectionProxyWrapType<ColT> const& proxy, Args&&... args
   );
 
   /**
@@ -964,6 +996,28 @@ struct CollectionManager
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     MsgT *msg, bool instrument = true
   );
+
+  /**
+   * \brief Broadcast a message with action function handler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   *
+   * \return a pending send
+   */
+  template <auto f>
+  messaging::PendingSend broadcastMsg(
+    CollectionProxyWrapType<
+      typename ObjFuncTraits<decltype(f)>::MsgT::CollectionType
+    > const& proxy,
+    typename ObjFuncTraits<decltype(f)>::MsgT *msg,
+    bool instrument = true
+  ) {
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+    return broadcastMsg<MsgT, f>(proxy, msg, instrument);
+  }
 
   /**
    * \brief Broadcast a message with action member handler
@@ -1481,7 +1535,7 @@ public:
    * \param[in] msg the destroy message
    */
   template <typename ColT>
-  static void destroyElmHandler(DestroyElmMsg<ColT>* msg, ColT*);
+  static void destroyElmHandler(ColT*, DestroyElmMsg<ColT>* msg);
 
   /**
    * \brief Try to get a pointer to a collection element
@@ -1661,54 +1715,17 @@ public:
   );
 
   /**
-   * \internal \struct RestoreMigrateMsg
-   *
-   * \brief Migrate elements to restore where it belongs based on the checkpoint
-   */
-  template <
-    typename ColT,
-    typename MsgT = vt::Message,
-    typename IdxT = typename ColT::IndexType
-  >
-  struct RestoreMigrateMsg : MsgT {
-    RestoreMigrateMsg() = default;
-    RestoreMigrateMsg(
-      NodeType in_to_node, IdxT in_idx, CollectionProxyWrapType<ColT> in_proxy
-    ) : to_node_(in_to_node),
-        idx_(in_idx),
-        proxy_(in_proxy)
-    { }
-
-    NodeType to_node_ = uninitialized_destination;
-    IdxT idx_;
-    CollectionProxyWrapType<ColT> proxy_;
-  };
-
-  /**
-   * \internal \struct RestoreMigrateColMsg
-   *
-   * \brief Migrate collection element to restore where it belongs
-   */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
-  struct RestoreMigrateColMsg
-    : RestoreMigrateMsg<ColT, CollectionMessage<ColT>, IdxT>
-  {
-    RestoreMigrateColMsg() = default;
-    RestoreMigrateColMsg(
-      NodeType in_to_node, IdxT in_idx, CollectionProxyWrapType<ColT> in_proxy
-    ) : RestoreMigrateMsg<ColT, CollectionMessage<ColT>, IdxT>(
-          in_to_node, in_idx, in_proxy
-        )
-    { }
-  };
-
-  /**
    * \internal \brief Migrate element to restore location from checkpoint
    *
-   * \param[in] msg the migrate message
+   * \param[in] node the node
+   * \param[in] idx the element index
+   * \param[in] proxy the collection proxy
    */
   template <typename ColT>
-  static void migrateToRestoreLocation(RestoreMigrateMsg<ColT>* msg);
+  static void migrateToRestoreLocation(
+    NodeType node, typename ColT::IndexType idx,
+    CollectionProxyWrapType<ColT> proxy
+  );
 
   /**
    * \brief Restore the collection (collective) from file on top of an existing

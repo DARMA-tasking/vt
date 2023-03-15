@@ -49,9 +49,9 @@ struct HelloMsg : vt::Message {
   vt::NodeType from = 0;
 };
 
-static void hello_world(HelloMsg* msg) {
+void hello_world(int a, int b, float c) {
   vt::NodeType this_node = vt::theContext()->getNode();
-  fmt::print("{}: Hello from node {}\n", this_node, msg->from);
+  fmt::print("{}: Hello from node vals = {} {} {}\n", this_node, a, b, c);
 }
 
 int main(int argc, char** argv) {
@@ -65,8 +65,7 @@ int main(int argc, char** argv) {
   }
 
   if (this_node == 0) {
-    auto msg = vt::makeMessage<HelloMsg>(this_node);
-    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
+    vt::theMsg()->send<hello_world>(vt::Node{1}, 10, 20, 11.3f);
   }
 
   vt::finalize();

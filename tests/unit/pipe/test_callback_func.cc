@@ -93,7 +93,7 @@ TEST_F(TestCallbackFunc, test_callback_func_2) {
         vt::pipe::LifetimeEnum::Once, []{ called = 400; }
       );
       auto msg = makeMessage<CallbackMsg>(cb);
-      theMsg()->sendMsg<CallbackMsg, test_handler>(1, msg);
+      theMsg()->sendMsg<test_handler>(1, msg);
     }
   });
 

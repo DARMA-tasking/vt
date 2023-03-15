@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 
   if (this_node == 0) {
     auto msg = vt::makeMessage<HelloMsg>(this_node);
-    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
+    vt::theMsg()->broadcastMsg<hello_world>(msg);
 
     using RangeType = vt::group::region::Range;
     auto list = std::make_unique<RangeType>(num_nodes / 2, num_nodes);
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
     vt::theGroup()->newGroup(std::move(list), [=](vt::GroupType group){
       auto gmsg = vt::makeMessage<HelloMsg>(this_node);
       vt::envelopeSetGroup(gmsg->env, group);
-      vt::theMsg()->broadcastMsg<HelloMsg, hello_group_handler>(gmsg);
+      vt::theMsg()->broadcastMsg<hello_group_handler>(gmsg);
     });
   }
 

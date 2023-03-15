@@ -57,6 +57,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
 #include "vt/elm/elm_id.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <memory>
 #include <functional>
@@ -218,6 +219,22 @@ public:
   PendingSendType send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
   /**
+   * \internal \brief Send a message to an element of the object group
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg message to send
+   */
+  template <auto fn>
+  PendingSendType send(
+    ProxyElmType<typename ObjFuncTraits<decltype(fn)>::ObjT> proxy,
+    MsgSharedPtr<typename ObjFuncTraits<decltype(fn)>::MsgT> msg
+  ) {
+    using ObjType = typename ObjFuncTraits<decltype(fn)>::ObjT;
+    using MsgType = typename ObjFuncTraits<decltype(fn)>::MsgT;
+    return send<ObjType, MsgType, fn>(proxy, msg);
+  }
+
+  /**
    * \internal \brief Invoke message handler on an element of the object group
    * The message handler will be invoked inline without going through scheduler
    *
@@ -225,7 +242,7 @@ public:
    * \param[in] msg message
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  void invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg);
+  decltype(auto) invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg);
 
   /**
    * \internal \brief Invoke function 'f' on an element of the object group
@@ -235,7 +252,7 @@ public:
    * \param[in] args function arguments
    */
   template <typename ObjT, auto f, typename... Args>
-  auto invoke(ProxyElmType<ObjT> proxy, Args&&... args);
+  decltype(auto) invoke(ProxyElmType<ObjT> proxy, Args&&... args);
 
   /**
    * \internal \brief Broadcast a message to all nodes in object group
@@ -245,6 +262,22 @@ public:
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   PendingSendType broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
+
+  /**
+   * \internal \brief Broadcast a message to all nodes in object group
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg message to broadcast
+   */
+  template <auto fn>
+  PendingSendType broadcast(
+    ProxyType<typename ObjFuncTraits<decltype(fn)>::ObjT> proxy,
+    MsgSharedPtr<typename ObjFuncTraits<decltype(fn)>::MsgT> msg
+  ) {
+    using ObjType = typename ObjFuncTraits<decltype(fn)>::ObjT;
+    using MsgType = typename ObjFuncTraits<decltype(fn)>::MsgT;
+    return broadcast<ObjType, MsgType, fn>(proxy, msg);
+  }
 
   /**
    * \brief Change the traced name of the object group
@@ -272,6 +305,25 @@ public:
     ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg,
     collective::reduce::ReduceStamp const& stamp
   );
+
+  /**
+   * \brief Perform a reduction over an objgroup
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg reduction message
+   * \param[in] stamp stamp to identify reduction across nodes
+   *
+   * \return the PendingSend corresponding to the reduce
+   */
+  template <typename ObjT, auto f>
+  PendingSendType reduce(
+    ProxyType<ObjT> proxy,
+    messaging::MsgPtrThief<typename FuncTraits<decltype(f)>::MsgT> msg,
+    collective::reduce::ReduceStamp const& stamp
+  ) {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    return reduce<ObjT, MsgT, f>(proxy, msg, stamp);
+  }
 
   /**
    * \brief Get a pointer to the local objgroup instance. Returns null if the
@@ -346,8 +398,10 @@ public:
    * \param[in] han handler to invoke
    * \param[in] node node to invoke the handler on
    */
-  template <typename MsgT>
-  void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType node);
+  template <typename ObjT, typename MsgT, auto f>
+  decltype(auto) invoke(
+    messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node
+  );
 
   /**
    * \internal \brief Broadcast message to an objgroup

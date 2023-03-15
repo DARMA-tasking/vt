@@ -49,6 +49,7 @@
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/message.h"
 #include "vt/collective/tree/tree.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <functional>
 #include <cstdlib>
@@ -88,6 +89,26 @@ struct Scatter : virtual collective::tree::Tree {
     std::size_t const& total_size, std::size_t const& max_proc_size,
     FuncSizeType size_fn, FuncDataType data_fn
   );
+
+  /**
+   * \brief Scatter data to all nodes
+   *
+   * The functions passed to scatter through the arguments \c size_fn and
+   * \c data_fn will not be retained after this call returns.
+   *
+   * \param[in] total_size total size of data to scatter
+   * \param[in] max_proc_size max data to be scattered to any node
+   * \param[in] size_fn callback to get size for each node
+   * \param[in] data_fn callback to get data for each node
+   */
+  template <auto f>
+  void scatter(
+    std::size_t const& total_size, std::size_t const& max_proc_size,
+    FuncSizeType size_fn, FuncDataType data_fn
+  ) {
+    using MsgT = std::remove_pointer_t<typename FuncTraits<decltype(f)>::Arg1>;
+    return scatter<MsgT, f>(total_size, max_proc_size, size_fn, data_fn);
+  }
 
 protected:
   /**

@@ -51,7 +51,7 @@
 
 namespace vt { namespace tests { namespace unit { namespace reduce {
 
-void colHanBasic(ColMsg* msg, MyCol* col) {
+void colHanBasic(MyCol* col) {
 
   auto const& idx = col->getIndex();
   vt_debug_print(
@@ -71,7 +71,7 @@ void colHanBasic(ColMsg* msg, MyCol* col) {
   >(proxy, reduce_msg.get());
 }
 
-void colHanVec(ColMsg* msg, MyCol* col) {
+void colHanVec(MyCol* col) {
   auto const& idx = col->getIndex();
   vt_debug_print(
     normal, reduce,
@@ -93,7 +93,7 @@ void colHanVec(ColMsg* msg, MyCol* col) {
   >(proxy, reduce_msg.get());
 }
 
-void colHanVecProxy(ColMsg* msg, MyCol* col) {
+void colHanVecProxy(MyCol* col) {
   auto const& idx = col->getIndex();
   vt_debug_print(
     normal, reduce,
@@ -110,7 +110,7 @@ void colHanVecProxy(ColMsg* msg, MyCol* col) {
   proxy.reduce<vt::collective::PlusOp<VectorPayload>, CheckVec>(reduce_msg.get());
 }
 
-void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
+void colHanVecProxyCB(MyCol* col) {
   auto const& idx = col->getIndex();
   vt_debug_print(
     normal, reduce,
@@ -130,7 +130,7 @@ void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
   proxy.reduce<vt::collective::PlusOp<VectorPayload>>(reduce_msg.get(),cb);
 }
 
-void colHanNoneCB(ColMsg* msg, MyCol* col) {
+void colHanNoneCB(MyCol* col) {
   auto const& idx = col->getIndex();
   vt_debug_print(
     normal, reduce,
@@ -148,7 +148,7 @@ void colHanNoneCB(ColMsg* msg, MyCol* col) {
 // Using reduceExpr with callback is broken and has fundamental flaws.
 // These tests are disabled for now.
 #if ENABLE_REDUCE_EXPR_CALLBACK
-void colHanPartial(ColMsg* msg, MyCol* col) {
+void colHanPartial(MyCol* col) {
   auto const& idx = col->getIndex();
 
   vt_debug_print(
@@ -172,7 +172,7 @@ void colHanPartial(ColMsg* msg, MyCol* col) {
   );
 }
 
-void colHanPartialMulti(ColMsg* msg, MyCol* col) {
+void colHanPartialMulti(MyCol* col) {
   auto const& idx = col->getIndex();
   auto const& grouping = idx.x() % index_tresh;
 
@@ -204,7 +204,7 @@ void colHanPartialMulti(ColMsg* msg, MyCol* col) {
   );
 }
 
-void colHanPartialProxy(ColMsg* msg, MyCol* col) {
+void colHanPartialProxy(MyCol* col) {
   auto const& idx = col->getIndex();
 
   vt_debug_print(

@@ -65,20 +65,12 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   double test_val = 0.0;
 };
 
-struct ColMsg : vt::CollectionMessage<Hello> {
-  explicit ColMsg(vt::NodeType const& in_from_node)
-    : from_node(in_from_node)
-  { }
-
-  vt::NodeType from_node = vt::uninitialized_destination;
-};
-
-static void doWork(ColMsg* msg, Hello* col) {
+static void doWork(Hello* col) {
   vt::NodeType this_node = vt::theContext()->getNode();
   fmt::print("{}: idx={}: val={}\n", this_node, col->getIndex(), col->test_val);
 }
 
-static void migrateToNext(ColMsg* msg, Hello* col) {
+static void migrateToNext(Hello* col) {
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
   vt::NodeType next_node = (this_node + 1) % num_nodes;
@@ -109,13 +101,9 @@ int main(int argc, char** argv) {
     .wait();
 
   if (this_node == 0) {
-    vt::runInEpochRooted([=] { proxy.broadcast<ColMsg, doWork>(this_node); });
-
-    vt::runInEpochRooted(
-      [=] { proxy.broadcast<ColMsg, migrateToNext>(this_node); }
-    );
-
-    vt::runInEpochRooted([=] { proxy.broadcast<ColMsg, doWork>(this_node); });
+    vt::runInEpochRooted([=] { proxy.broadcast<doWork>(); });
+    vt::runInEpochRooted([=] { proxy.broadcast<migrateToNext>(); });
+    vt::runInEpochRooted([=] { proxy.broadcast<doWork>(); });
   }
 
   vt::finalize();

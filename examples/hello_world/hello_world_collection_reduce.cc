@@ -51,9 +51,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
     fmt::print("Reduce complete at {} value {}\n", this->getIndex(), msg->getVal());
   }
 
-  using TestMsg = vt::CollectionMessage<Hello>;
-
-  void doWork(TestMsg* msg) {
+  void doWork() {
     fmt::print("Hello from {}\n", this->getIndex());
 
     // Get the proxy for the collection
@@ -85,7 +83,7 @@ int main(int argc, char** argv) {
     .wait();
 
   if (this_node == 0) {
-    proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
+    proxy.broadcast<&Hello::doWork>();
   }
 
   vt::finalize();

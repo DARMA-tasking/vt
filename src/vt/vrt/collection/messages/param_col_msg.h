@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             parameterization.cc
+//                               param_col_msg.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,61 @@
 //@HEADER
 */
 
-#include "vt/parameterization/parameterization.h"
+#if !defined INCLUDED_VT_VRT_COLLECTION_MESSAGES_PARAM_COL_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_MESSAGES_PARAM_COL_MSG_H
 
-namespace vt { namespace param {
+#include "vt/vrt/collection/messages/user.h"
+#include "vt/messaging/message/message_serialize.h"
 
-}} //end namespace vt::param
+namespace vt { namespace vrt { namespace collection {
+
+template <typename Tuple, typename ColT, typename enabled = void>
+struct ParamColMsg;
+
+template <typename Tuple, typename ColT>
+struct ParamColMsg<
+  Tuple,
+  ColT,
+  std::enable_if_t<messaging::is_byte_copyable_t<Tuple>::value>
+> : CollectionMessage<ColT, vt::Message> {
+  ParamColMsg() = default;
+
+  template <typename... Params>
+  explicit ParamColMsg(Params&&... in_params)
+    : params(std::forward<Params>(in_params)...)
+  { }
+
+  Tuple params;
+  Tuple& getTuple() { return params; }
+};
+
+template <typename Tuple, typename ColT>
+struct ParamColMsg<
+  Tuple,
+  ColT,
+  std::enable_if_t<not messaging::is_byte_copyable_t<Tuple>::value>
+> : CollectionMessage<ColT, vt::Message> {
+  using MessageParentType = CollectionMessage<ColT, vt::Message>;
+  vt_msg_serialize_if_needed_by_parent_or_type1(Tuple); // by params
+
+  ParamColMsg() = default;
+
+  template <typename... Params>
+  explicit ParamColMsg(Params&&... in_params)
+    : params(std::make_unique<Tuple>(std::forward<Params>(in_params)...))
+  { }
+
+  std::unique_ptr<Tuple> params;
+
+  Tuple& getTuple() { return *params.get(); }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | params;
+  }
+};
+
+}}} /* end namespace vt::vrt::collection */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_MESSAGES_PARAM_COL_MSG_H*/

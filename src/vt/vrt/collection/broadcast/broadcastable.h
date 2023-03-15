@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -195,6 +196,69 @@ struct Broadcastable : BaseProxyT {
     typename... Args
   >
   void invokeCollective(Args&&... args) const;
+
+  /**
+   * \brief Rooted broadcast with action function handler
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <auto f>
+  messaging::PendingSend broadcastMsg(
+    messaging::MsgPtrThief<typename ObjFuncTraits<decltype(f)>::MsgT> msg
+  ) const {
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+    return broadcastMsg<MsgT, f>(msg);
+  }
+
+  /**
+   * \brief Rooted broadcast with action function handler
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <auto f, typename... Args>
+  messaging::PendingSend broadcast(Args&&... args) const;
+
+  /**
+   * \brief Collective broadcast with action function handler
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <auto f>
+  messaging::PendingSend broadcastCollectiveMsg(
+    messaging::MsgPtrThief<typename ObjFuncTraits<decltype(f)>::MsgT> msg
+  ) const {
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+    return broadcastCollectiveMsg<MsgT, f>(msg);
+  }
+
+  /**
+   * \brief Create message (with action function handler) and broadcast it in a
+   * collective manner to the collection
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <auto f, typename... Args>
+  messaging::PendingSend broadcastCollective(Args&&... args) const;
+
+  /**
+   * \brief Invoke member message handler on all collection elements
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] args arguments for creating the message
+   */
+  template <auto f, typename... Args>
+  void invokeCollective(Args&&... args) const;
+
 };
 
 }}} /* end namespace vt::vrt::collection */

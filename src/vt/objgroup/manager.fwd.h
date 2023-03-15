@@ -70,8 +70,8 @@ std::unordered_map<ObjGroupProxyType, std::vector<ActionType>>& getPending();
 
 template <typename MsgT>
 messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
-template <typename MsgT>
-void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType node);
+template <typename ObjT, typename MsgT, auto f>
+decltype(auto) invoke(messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
 template <typename MsgT>
 messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 

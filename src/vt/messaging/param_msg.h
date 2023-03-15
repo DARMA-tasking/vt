@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   param.cc
+//                                 param_msg.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,60 +41,58 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
+#if !defined INCLUDED_VT_MESSAGING_PARAM_MSG_H
+#define INCLUDED_VT_MESSAGING_PARAM_MSG_H
 
-#define VT_COMPILE_PARAM_EXAMPLE 0
+#include "vt/messaging/message/message_serialize.h"
 
-#if VT_COMPILE_PARAM_EXAMPLE
+namespace vt { namespace messaging {
 
-static void fnTest(int a, int b, bool x) {
-  fmt::print("fn: a={}, b={}, x={}\n", a, b, x ? "true" : "false");
-}
+template <typename Tuple, typename enabled = void>
+struct ParamMsg;
 
-static void fnTest2(int x, int y) {
-  fmt::print("fn2: x={},y={}\n",x,y);
-}
+template <typename Tuple>
+struct ParamMsg<
+  Tuple, std::enable_if_t<is_byte_copyable_t<Tuple>::value>
+> : vt::Message
+{
+  ParamMsg() = default;
 
-static void fnTest3(int x, double y) {
-  fmt::print("fn3: x={},y={}\n",x,y);
-}
+  template <typename... Params>
+  explicit ParamMsg(Params&&... in_params)
+    : params(std::forward<Params>(in_params)...)
+  { }
 
-struct FunctorTest1 {
-  void operator()(int x, double y) const {
-    fmt::print("FunctorTest1: x={},y={}\n",x,y);
+  Tuple params;
+  Tuple& getTuple() { return params; }
+};
+
+template <typename Tuple>
+struct ParamMsg<
+  Tuple, std::enable_if_t<not is_byte_copyable_t<Tuple>::value>
+> : vt::Message
+{
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_if_needed_by_parent_or_type1(Tuple); // by tup
+
+  ParamMsg() = default;
+
+  template <typename... Params>
+  explicit ParamMsg(Params&&... in_params)
+    : params(std::make_unique<Tuple>(std::forward<Params>(in_params)...))
+  { }
+
+  std::unique_ptr<Tuple> params;
+
+  Tuple& getTuple() { return *params.get(); }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | params;
   }
 };
 
-#endif
+}} /* end namespace vt::messaging */
 
-int main(int argc, char** argv) {
-  vt::initialize(argc, argv);
-
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
-
-  if (num_nodes == 1) {
-    return vt::rerror("requires at least 2 nodes");
-  }
-
-#if VT_COMPILE_PARAM_EXAMPLE
-  vt::NodeType this_node = vt::theContext()->getNode();
-
-  if (this_node == 0) {
-    vt::theParam()->sendData(1, vt::buildData(10, 20, false), PARAM_FUNCTION_RHS(fnTest));
-    vt::theParam()->sendData(1, PARAM_FUNCTION_RHS(fnTest), 50, 29, false);
-    vt::theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, vt::buildData(10, 20, false));
-    vt::theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, 45, 23, true);
-
-    vt::theParam()->sendData<PARAM_FUNCTION(fnTest2)>(1, 20, 10);
-    vt::theParam()->sendData<PARAM_FUNCTION(fnTest3)>(1, 20, 50.0);
-
-    vt::theParam()->sendData<FunctorTest1>(1, vt::buildData(20, 50.0));
-    vt::theParam()->sendData<FunctorTest1>(1, 20, 100.0);
-    vt::theParam()->sendData<FunctorTest1>(1, vt::buildData(10, 70.0));
-  }
-#endif
-
-  vt::finalize();
-
-  return 0;
-}
+#endif /*INCLUDED_VT_MESSAGING_PARAM_MSG_H*/

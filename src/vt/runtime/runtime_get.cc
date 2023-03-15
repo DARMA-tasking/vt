@@ -54,7 +54,6 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/pool/pool.h"
 #include "vt/rdma/rdma.h"
-#include "vt/parameterization/parameterization.h"
 #include "vt/trace/trace.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
@@ -100,7 +99,6 @@ vrt::VirtualContextManager* theVirtualManager()     { return curRT->theVirtualMa
 collective::CollectiveAlg*  theCollective()         { return curRT->theCollective;     }
 event::AsyncEvent*          theEvent()              { return curRT->theEvent;          }
 messaging::ActiveMessenger* theMsg()                { return curRT->theMsg;            }
-param::Param*               theParam()              { return curRT->theParam;          }
 rdma::RDMAManager*          theRDMA()               { return curRT->theRDMA;           }
 sched::Scheduler*           theSched()              { return curRT->theSched;          }
 term::TerminationDetector*  theTerm()               { return curRT->theTerm;           }

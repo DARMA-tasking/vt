@@ -193,7 +193,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::send(ProxyElmType<ObjT> proxy,
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-void ObjGroupManager::invoke(
+decltype(auto) ObjGroupManager::invoke(
   ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg
 ) {
   auto const proxy_bits = proxy.getProxy();
@@ -207,11 +207,12 @@ void ObjGroupManager::invoke(
     proxy_bits, dest_node, ctrl, han
   );
 
-  invoke<MsgT>(msg, han, dest_node);
+  auto& msg_ptr = msg.msg_;
+  return invoke<ObjT, MsgT, fn>(msg_ptr, han, dest_node);
 }
 
 template <typename ObjT, auto f, typename... Args>
-auto
+decltype(auto)
 ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   auto const dest_node = proxy.getNode();
   auto const this_node = theContext()->getNode();
@@ -250,11 +251,11 @@ ObjGroupManager::PendingSendType ObjGroupManager::send(
   return objgroup::send(msg,han,dest_node);
 }
 
-template <typename MsgT>
-void ObjGroupManager::invoke(
-  messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_node
+template <typename ObjT, typename MsgT, auto f>
+decltype(auto) ObjGroupManager::invoke(
+  messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node
 ) {
-  objgroup::invoke(msg, han, dest_node);
+  return objgroup::invoke<ObjT, MsgT, f>(msg, han, dest_node);
 }
 
 template <typename MsgT>
@@ -271,7 +272,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::reduce(
   auto const objgroup = proxy.getProxy();
 
   auto r = theCollective()->getReducerObjGroup(objgroup);
-  return r->template reduce<MsgT,f>(root, msg.get(), stamp);
+  return r->template reduce<f>(root, msg.get(), stamp);
 }
 
 template <typename ObjT>

@@ -116,7 +116,7 @@ public:
   int32_t val = 17;
 };
 
-static void cb3(DataMsg* msg, TestCol* col) {
+static void cb3(TestCol* col, DataMsg* msg) {
   EXPECT_EQ(msg->a, 8);
   EXPECT_EQ(msg->b, 9);
   EXPECT_EQ(msg->c, 10);
@@ -186,12 +186,12 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_2) {
           auto cb =
             theCB()->makeSend<TestCol, DataMsg, &TestCol::cb1>(proxy(i));
           auto msg = makeMessage<CallbackDataMsg>(cb);
-          theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+          theMsg()->sendMsg<testHandler>(next, msg);
         } else {
           auto cb =
             theCB()->makeSend<TestCol, DataMsg, &TestCol::cb2>(proxy(i));
           auto msg = makeMessage<CallbackDataMsg>(cb);
-          theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+          theMsg()->sendMsg<testHandler>(next, msg);
         }
       }
     }

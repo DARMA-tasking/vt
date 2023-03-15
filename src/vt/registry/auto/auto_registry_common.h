@@ -69,77 +69,35 @@ struct BaseHandlersDispatcher {
 
 template <typename MsgT, typename HandlerT, typename ObjT>
 struct HandlersDispatcher final : BaseHandlersDispatcher {
-  explicit HandlersDispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) { }
+  using ColTypedFnType       = vrt::collection::ActiveColTypedFnType<MsgT, ObjT>;
+  using ColMemberTypedFnType = vrt::collection::ActiveColMemberTypedFnType<MsgT, ObjT>;
 
-private:
-  template <typename T, typename = void>
-  struct DispatchImpl;
-
-  template <typename T>
-  using isActiveVoidFnType = std::enable_if_t<
-    std::is_same<
-      T,
-      ActiveVoidFnType*
-    >::value
-  >;
-
-  template <typename T>
-  struct DispatchImpl<T, isActiveVoidFnType<T>> {
-    static void run(MsgT*, void*, HandlerT han) { han(); }
-  };
-
-  template <typename T>
-  using isActiveTypedFnType = std::enable_if_t<
-    std::is_same<
-      T,
-      ActiveTypedFnType<MsgT>*
-    >::value
-  >;
-
-  template <typename T>
-  struct DispatchImpl<T, isActiveTypedFnType<T>> {
-    static void run(MsgT* msg, void*, HandlerT han) { han(msg); }
-  };
-
-  template <typename T>
-  using isActiveColTypedFnType = std::enable_if_t<
-    std::is_same<
-      T,
-      vrt::collection::ActiveColTypedFnType<MsgT, ObjT>*
-    >::value
-  >;
-
-  template <typename T>
-  struct DispatchImpl<T, isActiveColTypedFnType<T>> {
-    static void run(MsgT* msg, void* object, HandlerT han) {
-      auto elm = static_cast<ObjT*>(object);
-      han(msg, elm);
-    }
-  };
-
-  template <typename T>
-  using isActiveColMemberTypedFnType = std::enable_if_t<
-    std::is_same<
-      T,
-      vrt::collection::ActiveColMemberTypedFnType<MsgT, ObjT>
-    >::value
-  >;
-
-  template <typename T>
-  struct DispatchImpl<T, isActiveColMemberTypedFnType<T>> {
-    static void run(MsgT* msg, void* object, HandlerT han) {
-      auto elm = static_cast<ObjT*>(object);
-      (elm->*han)(msg);
-    }
-  };
+  explicit HandlersDispatcher(HandlerT in_fn_ptr) : fp(in_fn_ptr) { }
 
 public:
-  void dispatch(messaging::BaseMsg* msg, void* object) const override {
-    DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
+  void dispatch(messaging::BaseMsg* base_msg, void* object) const override {
+    using T = HandlerT;
+
+    [[maybe_unused]] auto msg = static_cast<MsgT*>(base_msg);
+    [[maybe_unused]] auto elm = static_cast<ObjT*>(object);
+
+    if constexpr (std::is_same_v<T, ActiveVoidFnType*>) {
+      fp();
+    } else if constexpr (std::is_same_v<T, ActiveTypedFnType<MsgT>*>) {
+      fp(msg);
+    } else if constexpr (std::is_same_v<T, ColTypedFnType*>) {
+      fp(elm, msg);
+    } else if constexpr (std::is_same_v<T, ColMemberTypedFnType>) {
+      (elm->*fp)(msg);
+    } else if constexpr (std::is_same_v<ObjT, SentinelObject>) {
+      std::apply(fp, msg->getTuple());
+    } else {
+      std::apply(fp, std::tuple_cat(std::make_tuple(elm), msg->getTuple()));
+    }
   }
 
 private:
-  HandlerT fn_ptr_ = nullptr;
+  HandlerT fp = nullptr;
 };
 
 struct BaseMapsDispatcher {
@@ -153,31 +111,7 @@ struct BaseMapsDispatcher {
 
 template <typename IndexT, typename HandlerT>
 struct MapsDispatcher final : BaseMapsDispatcher {
-  explicit MapsDispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) { }
-
-private:
-  template <typename T, typename = void>
-  struct DispatchImpl;
-
-  template <typename T>
-  using isActiveMapFnPtrType = std::enable_if_t<
-    std::is_same<
-      T,
-      vt::mapping::ActiveMapTypedFnType<IndexT>*
-    >::value
-  >;
-
-  template <typename T>
-  struct DispatchImpl<T, isActiveMapFnPtrType<T>> {
-    static NodeType run(
-      IndexT* cur_idx_ptr,
-      IndexT* range_ptr,
-      NodeType num_nodes,
-      HandlerT han
-    ) {
-      return han(cur_idx_ptr, range_ptr, num_nodes);
-    }
-  };
+  explicit MapsDispatcher(HandlerT in_fn_ptr) : fp(in_fn_ptr) { }
 
 public:
   NodeType dispatch(
@@ -185,16 +119,22 @@ public:
     index::BaseIndex* range_ptr,
     NodeType num_nodes
   ) const override {
-    return DispatchImpl<HandlerT>::run(
-      static_cast<IndexT*>(cur_idx_ptr),
-      static_cast<IndexT*>(range_ptr),
-      num_nodes,
-      fn_ptr_
-    );
+    using T = HandlerT;
+
+    if constexpr (std::is_same_v<T, vt::mapping::ActiveMapTypedFnType<IndexT>*>) {
+      return fp(
+        static_cast<IndexT*>(cur_idx_ptr),
+        static_cast<IndexT*>(range_ptr),
+        num_nodes
+      );
+    } else {
+      vtAbort("Invalid function type for map handler");
+      return uninitialized_destination;
+    }
   }
 
 private:
-  HandlerT fn_ptr_ = nullptr;
+  HandlerT fp = nullptr;
 };
 
 struct BaseScatterDispatcher {
@@ -204,32 +144,21 @@ struct BaseScatterDispatcher {
 
 template <typename MsgT, typename HandlerT, typename ObjT>
 struct ScatterDispatcher final : BaseScatterDispatcher {
-  explicit ScatterDispatcher(HandlerT in_fn_ptr) : fn_ptr_(in_fn_ptr) {}
-
-private:
-  template <typename T, typename = void>
-  struct DispatchImpl;
-
-  template <typename T>
-  using isActiveTypedFnType = std::enable_if_t<
-    std::is_same<
-      T,
-      ActiveTypedFnType<MsgT>*
-    >::value
-  >;
-
-  template <typename T>
-  struct DispatchImpl<T, isActiveTypedFnType<T>> {
-    static void run(MsgT* msg, void*, HandlerT han) { han(msg); }
-  };
+  explicit ScatterDispatcher(HandlerT in_fn_ptr) : fp(in_fn_ptr) {}
 
 public:
-  void dispatch(void* msg, void* object) const override {
-    DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
+  void dispatch(void* msg, void*) const override {
+    using T = HandlerT;
+
+    if constexpr (std::is_same_v<T, ActiveTypedFnType<MsgT>*>) {
+      fp(static_cast<MsgT*>(msg));
+    } else {
+      vtAbort("Invalid function type for scatter handler");
+    }
   }
 
 private:
-  HandlerT fn_ptr_ = nullptr;
+  HandlerT fp = nullptr;
 };
 
 using BaseHandlersDispatcherPtr = std::unique_ptr<BaseHandlersDispatcher>;

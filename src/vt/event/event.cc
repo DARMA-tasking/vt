@@ -123,7 +123,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
       event, event_id, static_cast<int>(event_state), this_node
     );
 
-    theMsg()->sendMsg<EventCheckFinishedMsg, checkEventFinished>(
+    theMsg()->sendMsg<checkEventFinished>(
       owning_node, msg
     );
 
@@ -162,7 +162,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     vtAssertExpr(send_back == msg->sent_from_node_);
 
     auto msg_send = makeMessage<EventFinishedMsg>(event, msg->event_back_);
-    theMsg()->sendMsg<EventFinishedMsg, eventFinished>(
+    theMsg()->sendMsg<eventFinished>(
       send_back, msg_send
     );
   };

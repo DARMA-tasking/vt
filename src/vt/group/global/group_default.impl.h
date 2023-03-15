@@ -65,7 +65,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* handler>
   } else {
     auto msg = makeMessage<MsgT>();
     envelopeSetTag(msg->env, phase);
-    theMsg()->sendMsg<MsgT, handler>(node, msg);
+    theMsg()->sendMsg<handler>(node, msg);
   }
 }
 

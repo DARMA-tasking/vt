@@ -462,6 +462,25 @@ void CollectionManager::invokeCollectiveMsg(
 }
 
 template <typename ColT, auto f, typename... Args>
+void CollectionManager::invokeCollective(
+  CollectionProxyWrapType<ColT> const& proxy, Args&&... args
+) {
+  using IndexType = typename ColT::IndexType;
+
+  auto untyped_proxy = proxy.getProxy();
+  auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
+  auto const this_node = theContext()->getNode();
+
+  elm_holder->foreach([&](IndexType const& idx, Indexable<IndexType>* ptr) {
+    // be careful not to forward here as we are reusing args
+    runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+      .withCollection(ptr)
+      .withLBDataVoidMsg(ptr)
+      .runLambda(f, ptr, args...);
+  });
+}
+
+template <typename ColT, auto f, typename... Args>
 auto CollectionManager::invoke(
   VirtualElmProxyType<ColT> const& proxy, Args&&... args
 ) {
@@ -959,7 +978,7 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
     r = theCollective()->getReducerVrtProxy(col_proxy);
   }
 
-  r->reduceImmediate<MsgT,f>(root_node, msg.get(), cur_stamp, num_elms);
+  r->reduceImmediate<f>(root_node, msg.get(), cur_stamp, num_elms);
 
   vt_debug_print(
     normal, vrt_coll,
@@ -1767,7 +1786,7 @@ void CollectionManager::destroyElm(
   } else {
     // Otherwise, we send a destroy message that will be routed (eventually
     // arriving) where the element resides
-    proxy(idx).template send<DestroyElmMsg<ColT>, destroyElmHandler<ColT>>(
+    proxy(idx).template send<destroyElmHandler<ColT>>(
       untyped_proxy, idx, modify_epoch
     );
   }
@@ -1777,7 +1796,7 @@ void CollectionManager::destroyElm(
 
 template <typename ColT>
 /*static*/ void CollectionManager::destroyElmHandler(
-  DestroyElmMsg<ColT>* msg, ColT*
+  ColT*, DestroyElmMsg<ColT>* msg
 ) {
   CollectionProxyWrapType<ColT> proxy{msg->proxy_};
   ModifierToken token{msg->modifier_epoch_};
@@ -2200,28 +2219,24 @@ void CollectionManager::checkpointToFile(
 namespace detail {
 template <typename ColT>
 inline void restoreOffHomeElement(
-  CollectionManager::RestoreMigrateColMsg<ColT>* msg, ColT*
+  ColT*, NodeType node, typename ColT::IndexType idx,
+  CollectionProxy<ColT> proxy
 ) {
-  auto idx = msg->idx_;
-  auto node = msg->to_node_;
-  auto proxy = msg->proxy_;
   theCollection()->migrate(proxy(idx), node);
 }
 } /* end namespace detail */
 
 template <typename ColT>
 /*static*/ void CollectionManager::migrateToRestoreLocation(
-  RestoreMigrateMsg<ColT>* msg
+  NodeType node, typename ColT::IndexType idx,
+  CollectionProxyWrapType<ColT> proxy
 ) {
-  auto idx = msg->idx_;
-  auto node = msg->to_node_;
-  auto proxy = msg->proxy_;
   if (proxy(idx).tryGetLocalPtr() != nullptr) {
     theCollection()->migrate(proxy(idx), node);
   } else {
-    proxy(idx).template send<
-      RestoreMigrateColMsg<ColT>, detail::restoreOffHomeElement<ColT>
-    >(node, idx, proxy);
+    proxy(idx).template send<detail::restoreOffHomeElement<ColT>>(
+      node, idx, proxy
+    );
   }
 }
 
@@ -2260,14 +2275,12 @@ void CollectionManager::restoreFromFileInPlace(
         vtAssertExpr(mapped_node != uninitialized_destination);
         auto this_node = theContext()->getNode();
 
-        using MsgType = RestoreMigrateMsg<ColT>;
-        auto msg = makeMessage<MsgType>(this_node, idx, proxy);
         if (mapped_node != this_node) {
-          theMsg()->sendMsg<MsgType, migrateToRestoreLocation<ColT>>(
-            mapped_node, msg
+          theMsg()->send<migrateToRestoreLocation<ColT>>(
+            vt::Node{mapped_node}, this_node, idx, proxy
           );
         } else {
-          migrateToRestoreLocation<ColT>(msg.get());
+          migrateToRestoreLocation<ColT>(this_node, idx, proxy);
         }
       }
     }

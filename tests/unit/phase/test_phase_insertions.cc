@@ -83,7 +83,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index1D> {
 using MyMsg = vt::CollectionMessage<MyCol>;
 
 // A dummy kernel that does some work depending on the index
-void colHandler(MyMsg*, MyCol* col) {
+void colHandler(MyCol* col) {
   fmt::print("running colHandler: idx={}, phase={}\n", col->getIndex(), col->getPhase());
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < col->getIndex().x() * 20; j++) {
@@ -130,7 +130,7 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
     // Do some work.
     runInEpochCollective([&]{
       if (this_node == 0) {
-        proxy.broadcast<MyMsg, colHandler>();
+        proxy.broadcast<colHandler>();
       }
     });
 

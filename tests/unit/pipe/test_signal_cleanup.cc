@@ -86,7 +86,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
       }
     );
     auto msg = makeMessage<CallbackMsg>(cb);
-    theMsg()->sendMsg<CallbackMsg, bounce>(1, msg);
+    theMsg()->sendMsg<bounce>(1, msg);
   }
 
   // run until termination
@@ -113,7 +113,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
       }
     );
     auto msg = makeMessage<CallbackMsg>(cb);
-    theMsg()->sendMsg<CallbackMsg, bounce>(1, msg);
+    theMsg()->sendMsg<bounce>(1, msg);
   }
 
   // run until termination

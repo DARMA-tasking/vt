@@ -163,7 +163,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
         auto msg = makeMessage<TestMsg>();
         auto msg_hold = promoteMsg(msg.get());
 
-        theMsg()->sendMsg<TestMsg, test_handler>(to_node, msg);
+        theMsg()->sendMsg<test_handler>(to_node, msg);
         EXPECT_TRUE(envelopeIsLocked(msg_hold->env)) << "Should be locked on send";
       }
     }
@@ -194,7 +194,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_small_put) {
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
-      theMsg()->sendMsg<PutTestMessage, test_handler_small_put>(to_node, msg);
+      theMsg()->sendMsg<test_handler_small_put>(to_node, msg);
     }
   }
 
@@ -219,7 +219,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
-      theMsg()->sendMsg<PutTestMessage, test_handler_large_put>(to_node, msg);
+      theMsg()->sendMsg<test_handler_large_put>(to_node, msg);
     }
   }
 
@@ -235,7 +235,7 @@ TEST_F(TestActiveSend, test_active_message_serialization) {
       auto msg = vt::makeMessage<DataMsg>();
       msg->data.resize(serialization::serialized_msg_eager_size);
 
-      theMsg()->sendMsg<DataMsg, msgSerialA>(this_node, msg);
+      theMsg()->sendMsg<msgSerialA>(this_node, msg);
     }
   });
 

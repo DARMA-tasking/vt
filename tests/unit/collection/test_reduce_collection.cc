@@ -60,16 +60,16 @@ TEST_P(TestReduceCollection, test_reduce_op) {
     auto proxy = theCollection()->construct<MyCol>(range, "test_reduce_op");
 
     switch (reduce_case) {
-    case 0: proxy.broadcast<ColMsg, colHanBasic>(my_node); break;
-    case 1: proxy.broadcast<ColMsg, colHanVec>(my_node); break;
-    case 2: proxy.broadcast<ColMsg, colHanVecProxy>(my_node); break;
-    case 3: proxy.broadcast<ColMsg, colHanVecProxyCB>(my_node); break;
-    case 4: proxy.broadcast<ColMsg, colHanNoneCB>(my_node); break;
+    case 0: proxy.broadcast<colHanBasic>(); break;
+    case 1: proxy.broadcast<colHanVec>(); break;
+    case 2: proxy.broadcast<colHanVecProxy>(); break;
+    case 3: proxy.broadcast<colHanVecProxyCB>(); break;
+    case 4: proxy.broadcast<colHanNoneCB>(); break;
 
       #if ENABLE_REDUCE_EXPR_CALLBACK
-    case 5: proxy.broadcast<ColMsg, colHanPartial>(my_node); break;
-    case 6: proxy.broadcast<ColMsg, colHanPartialMulti>(my_node); break;
-    case 7: proxy.broadcast<ColMsg, colHanPartialProxy>(my_node); break;
+    case 5: proxy.broadcast<colHanPartial>(); break;
+    case 6: proxy.broadcast<colHanPartialMulti>(); break;
+    case 7: proxy.broadcast<colHanPartialProxy>(); break;
       #endif
       default: vtAbort("Failure: should not be reached");
     }
