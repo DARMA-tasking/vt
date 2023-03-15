@@ -83,8 +83,9 @@ TEST_F(TestCollectionPromoteMsg, test_collection_promote_1) {
   auto proxy = theCollection()->constructCollective<Hello>(
     num_elems, "test_collection_promote_1"
   );
-  proxy.broadcast<TestMsg,&Hello::doWork>("hello there");
-
+  if (this_node == 0) {
+    proxy.broadcast<TestMsg,&Hello::doWork>("hello there");
+  }
 }
 
 }}}} // end namespace vt::tests::unit::invoke

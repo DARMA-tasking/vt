@@ -135,15 +135,6 @@ struct CollectionManager
     std::is_default_constructible<ColT>::value, CollectionProxyWrapType<ColT, IndexT>
   >;
 
-  template <typename ColT, typename UserMsgT, typename T, typename U=void>
-  using IsWrapType = std::enable_if_t<
-    std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
-  >;
-  template <typename ColT, typename UserMsgT, typename T, typename U=void>
-  using IsNotWrapType = std::enable_if_t<
-    !std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
-  >;
-
   /**
    * \internal \brief System call to construct a collection manager
    */
@@ -623,36 +614,6 @@ struct CollectionManager
   >
   messaging::PendingSend sendMsgImpl(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
-  );
-
-  /**
-   * \internal \brief Deliver a message to a collection element with a promoted
-   * collection message that wrapped the user's non-collection message.
-   *
-   * \param[in] msg the message
-   * \param[in] col pointer to collection element
-   * \param[in] han the handler to invoke
-   * \param[in] from node that sent the message
-   */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsWrapType<ColT, UserMsgT, MsgT> collectionMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from
-  );
-
-  /**
-   * \internal \brief Deliver a message to a collection element with a normal
-   * collection message
-   *
-   * \param[in] msg the message
-   * \param[in] col pointer to collection element
-   * \param[in] han the handler to invoke
-   * \param[in] from node that sent the message
-   */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsNotWrapType<ColT, UserMsgT, MsgT> collectionMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from
   );
 
   /**
@@ -1152,7 +1113,7 @@ public:
 
 public:
   /**
-   * \internal \brief Deliver a promoted/wrapped message to a collection element
+   * \internal \brief Deliver a message to a collection element
    *
    * \param[in] msg the message
    * \param[in] col the collection element pointer
@@ -1160,24 +1121,8 @@ public:
    * \param[in] from the node that sent it
    * \param[in] event the associated trace event
    */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-    MsgT* msg, Indexable<IndexT>* col, HandlerType han,
-    NodeType from, trace::TraceEventIDType event, bool immediate
-  );
-
-  /**
-   * \internal \brief Deliver a regular collection message to a collection
-   * element
-   *
-   * \param[in] msg the message
-   * \param[in] col the collection element pointer
-   * \param[in] han the handler to invoke
-   * \param[in] from the node that sent it
-   * \param[in] event the associated trace event
-   */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsNotWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
+  template <typename ColT, typename IndexT, typename MsgT>
+  static void collectionAutoMsgDeliver(
     MsgT* msg, Indexable<IndexT>* col, HandlerType han,
     NodeType from, trace::TraceEventIDType event, bool immediate
   );

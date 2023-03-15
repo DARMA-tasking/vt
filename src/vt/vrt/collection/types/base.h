@@ -58,6 +58,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct CollectionBase : Indexable<IndexT> {
+  using IsCollectionType = std::true_type;
   using ProxyType = VirtualElmProxyType<ColT, IndexT>;
   using CollectionProxyType = CollectionProxy<ColT, IndexT>;
 
