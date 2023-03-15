@@ -235,17 +235,19 @@ public:
   decltype(auto) runLambda(Callable&& c, Args&&... args) {
     auto start_time = timing::getCurrentTime();
     start(start_time);
-    if constexpr(std::is_void_v<std::invoke_result_t<Callable, Args...>>) {
-      std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...);
-      auto finish_time = timing::getCurrentTime();
-      finish(finish_time);
-      return;
-    } else {
-      decltype(auto) r{std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...)};
-      auto finish_time = timing::getCurrentTime();
-      finish(finish_time);
-      return r;
-    }
+
+    // Arrange a scope guard to call finish() without any sort of dynamic allocation
+    struct finisher {
+      RunnableNew* r;
+      finisher(RunnableNew* in_r) : r(in_r){};
+      ~finisher() {
+        auto finish_time = timing::getCurrentTime();
+        r->finish(finish_time);
+      }
+    };
+    finisher f(this);
+
+    return std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...);
   }
 
 #if vt_check_enabled(fcontext)
