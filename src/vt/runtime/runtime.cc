@@ -201,6 +201,44 @@ Runtime::Runtime(
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
+
+  if (arg_config_->config_.vt_lb_data) {
+    determinePhysicalNodeIDs();
+  }
+}
+
+void Runtime::determinePhysicalNodeIDs() {
+  MPI_Comm i_comm = initial_communicator_;
+
+  MPI_Comm shm_comm;
+  MPI_Comm_split_type(i_comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &shm_comm);
+  int shm_rank = -1;
+  int node_size = -1;
+  MPI_Comm_rank(shm_comm, &shm_rank);
+  MPI_Comm_size(shm_comm, &node_size);
+
+  int num_nodes = -1;
+  int is_rank_0 = (shm_rank == 0) ? 1 : 0;
+  MPI_Allreduce(&is_rank_0, &num_nodes, 1, MPI_INT, MPI_SUM, i_comm);
+
+  int starting_rank = -1;
+  MPI_Comm_rank(i_comm, &starting_rank);
+
+  MPI_Comm node_number_comm;
+  MPI_Comm_split(i_comm, shm_rank, starting_rank, &node_number_comm);
+
+  int node_id = -1;
+  if (shm_rank == 0) {
+    MPI_Comm_rank(node_number_comm, &node_id);
+  }
+  MPI_Bcast(&node_id, 1, MPI_INT, 0, shm_comm);
+
+  MPI_Comm_free(&shm_comm);
+  MPI_Comm_free(&node_number_comm);
+  fmt::print(
+    "rank={}, node_size={}, num_nodes={}, node_id={}\n",
+    shm_rank, node_size, num_nodes, node_id
+  );
 }
 
 bool Runtime::hasSchedRun() const {
