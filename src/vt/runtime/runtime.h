@@ -269,6 +269,11 @@ private:
    */
   static void writeToFile(std::string const& str);
 
+  /**
+   * \internal \brief Determine the physical node IDs for LB data files
+   */
+  void determinePhysicalNodeIDs();
+
 protected:
   /**
    * \internal \brief Try to initialize
