@@ -43,6 +43,13 @@ class SchemaValidator:
             {
                 'type': And(str, lambda a: a in allowed_types,
                             error=f"{self.get_error_message(allowed_types)} must be chosen"),
+                Optional('rank'): int,
+                Optional('shared_node'): {
+                    'id': int,
+                    'size': int,
+                    'rank': int,
+                    'num_nodes': int,
+                },
                 'phases': [
                     {
                         'id': int,

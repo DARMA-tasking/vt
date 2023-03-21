@@ -435,6 +435,12 @@ public:
 
   static bool volatile sig_user_1_;
 
+  bool has_physical_node_info = false;
+  int physical_node_id = -1;
+  int physical_num_nodes = -1;
+  int physical_node_size = -1;
+  int physical_node_rank = -1;
+
 protected:
   bool finalize_on_term_ = false;
   bool initialized_ = false, finalized_ = false, aborted_ = false;
