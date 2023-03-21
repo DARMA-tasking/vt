@@ -194,8 +194,25 @@ void NodeLBData::createLBDataFile() {
   using JSONAppender = util::json::Appender<std::ofstream>;
 
   if (not lb_data_writer_) {
+    auto prefix = fmt::format(
+      "\"type\":\"{}\","
+      "\"rank\":\"{}\","
+      "\"shared_node\":{{"
+        "\"id\":{},"
+        "\"size\":{},"
+        "\"rank\":{},"
+        "\"num_nodes\":{}"
+      "}},",
+      "LBDatafile",
+      theContext()->getNode(),
+      curRT->physical_node_id,
+      curRT->physical_node_size,
+      curRT->physical_node_rank,
+      curRT->physical_num_nodes
+    );
+
     lb_data_writer_ = std::make_unique<JSONAppender>(
-      "phases", "LBDatafile", file_name, compress
+      "phases", prefix, file_name, compress
     );
   }
 }

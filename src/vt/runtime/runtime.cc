@@ -235,10 +235,12 @@ void Runtime::determinePhysicalNodeIDs() {
 
   MPI_Comm_free(&shm_comm);
   MPI_Comm_free(&node_number_comm);
-  fmt::print(
-    "rank={}, node_size={}, num_nodes={}, node_id={}\n",
-    shm_rank, node_size, num_nodes, node_id
-  );
+
+  has_physical_node_info = true;
+  physical_node_id = node_id;
+  physical_num_nodes = num_nodes;
+  physical_node_size = node_size;
+  physical_node_rank = shm_rank;
 }
 
 bool Runtime::hasSchedRun() const {
