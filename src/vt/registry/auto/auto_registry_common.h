@@ -105,22 +105,22 @@ public:
     } else if constexpr (std::is_same_v<T, ActiveTypedFnType<MsgT>*>) {
       fp(msg);
     } else if constexpr (std::is_same_v<T, ColTypedFnType*>) {
-      if constexpr (IsColMsgTrait<MsgT>::value or not IsColTrait<ObjT>::value) {
-        fp(elm, msg);
-      } else {
+      if constexpr (IsColTrait<ObjT>::value and not IsColMsgTrait<MsgT>::value) {
         auto wrap_msg = static_cast<
           vrt::collection::ColMsgWrap<ObjT, MsgT, vt::Message>*
         >(base_msg);
         fp(elm, &wrap_msg->getMsg());
+      } else {
+        fp(elm, msg);
       }
     } else if constexpr (std::is_same_v<T, ColMemberTypedFnType>) {
-      if constexpr (IsColMsgTrait<MsgT>::value or not IsColTrait<ObjT>::value) {
-        (elm->*fp)(msg);
-      } else {
+      if constexpr (IsColTrait<ObjT>::value and not IsColMsgTrait<MsgT>::value) {
         auto wrap_msg = static_cast<
           vrt::collection::ColMsgWrap<ObjT, MsgT, vt::Message>*
         >(base_msg);
         (elm->*fp)(&wrap_msg->getMsg());
+      } else {
+        (elm->*fp)(msg);
       }
     } else if constexpr (std::is_same_v<ObjT, SentinelObject>) {
       std::apply(fp, msg->getTuple());
