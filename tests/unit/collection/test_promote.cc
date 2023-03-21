@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                               test_promote.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,40 +41,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_BASE_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_BASE_H
+#include "test_parallel_harness.h"
 
-#include "vt/config.h"
-#include "vt/vrt/vrt_common.h"
-#include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
-#include "vt/vrt/collection/types/base.fwd.h"
-#include "vt/vrt/collection/types/indexable.h"
-#include "vt/vrt/collection/types/untyped.h"
-#include "vt/vrt/collection/manager.fwd.h"
-#include "vt/vrt/proxy/collection_proxy.h"
-#include "vt/collective/reduce/scoping/strong_types.h"
+#include "vt/vrt/collection/manager.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <gtest/gtest.h>
 
-template <typename ColT, typename IndexT>
-struct CollectionBase : Indexable<IndexT> {
-  using IsCollectionType = std::true_type;
-  using ProxyType = VirtualElmProxyType<ColT, IndexT>;
-  using CollectionProxyType = CollectionProxy<ColT, IndexT>;
+namespace vt { namespace tests { namespace unit { namespace invoke {
 
-  CollectionBase() = default;
+struct TestMsg : vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // for string
 
-  virtual ~CollectionBase();
+  TestMsg() = default;
+  explicit TestMsg(std::string in_str)
+    : str(in_str)
+  { }
 
-  ProxyType getElementProxy(IndexT const& idx) const;
-  CollectionProxyType getCollectionProxy() const;
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | str;
+  }
 
-  virtual void migrate(NodeType const& node) override;
-
-  template <typename Serializer>
-  void serialize(Serializer& s);
+  std::string str;
 };
 
-}}} /* end namespace vt::vrt::collection */
+struct Hello : vt::Collection<Hello, vt::Index1D> {
+  void doWork(TestMsg* msg) {
+    EXPECT_EQ(msg->str, "hello there");
+  }
+};
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_BASE_H*/
+struct TestCollectionPromoteMsg : TestParallelHarness {};
+
+TEST_F(TestCollectionPromoteMsg, test_collection_promote_1) {
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_elems = Index1D{static_cast<int>(num_nodes*4)};
+
+  auto proxy = theCollection()->constructCollective<Hello>(
+    num_elems, "test_collection_promote_1"
+  );
+  if (this_node == 0) {
+    proxy.broadcast<TestMsg,&Hello::doWork>("hello there");
+  }
+}
+
+}}}} // end namespace vt::tests::unit::invoke
