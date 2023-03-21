@@ -51,8 +51,10 @@ namespace vt { namespace tests { namespace unit {
 
 struct TestPreconfig : TestHarness { };
 
-#if not vt_check_enabled(production_build)
 TEST_F(TestPreconfig, test_vt_assert) {
+#if vt_check_enabled(production_build) or defined(__INTEL_COMPILER)
+  GTEST_SKIP();
+#else
   EXPECT_EQ(vt::debug::preConfig()->vt_throw_on_abort, true)
     << "vt_throw_on_abort should be enabled by default";
 
@@ -60,8 +62,8 @@ TEST_F(TestPreconfig, test_vt_assert) {
     vtAssert(false, "Should throw."),
     std::runtime_error
   );
-}
 #endif
+}
 
 TEST_F(TestPreconfig, test_vt_abort) {
   EXPECT_EQ(vt::debug::preConfig()->vt_throw_on_abort, true)
