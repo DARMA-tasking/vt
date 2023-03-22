@@ -69,7 +69,7 @@ struct Appender : BaseAppender {
    * \brief Construct a JSON appender for a specific array with a filename
    *
    * \param[in] array the JSON array name
-   * \param[in] prefix the JSON prefix
+   * \param[in] metadata the JSON metadata
    * \param[in] filename the JSON filename
    * \param[in] compress whether to compress the output
    */
@@ -84,7 +84,7 @@ struct Appender : BaseAppender {
    * \brief Construct a JSON appender for a specific array with a stream
    *
    * \param[in] array the JSON array name
-   * \param[in] prefix the JSON prefix
+   * \param[in] metadata the JSON metadata
    * \param[in] in_os the output stream
    * \param[in] compress whether to compress the output
    */
