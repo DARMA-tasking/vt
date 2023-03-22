@@ -759,8 +759,10 @@ void LBManager::createStatisticsFile() {
     using JSONAppender = util::json::Appender<std::ofstream>;
 
     if (not statistics_writer_) {
+      nlohmann::json metadata;
+      metadata["type"] = "LBStatsfile";
       statistics_writer_ = std::make_unique<JSONAppender>(
-        "phases", "LBStatsfile", file_name, compress
+        "phases", metadata, file_name, compress
       );
     }
   }
