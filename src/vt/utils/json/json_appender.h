@@ -74,10 +74,10 @@ struct Appender : BaseAppender {
    * \param[in] compress whether to compress the output
    */
   Appender(
-    std::string const& array, std::string const& prefix,
+    std::string const& array, jsonlib const& metadata,
     std::string const& filename, bool compress
   )
-    : Appender(array, prefix, StreamLike{filename}, compress)
+    : Appender(array, metadata, StreamLike{filename}, compress)
   { }
 
   /**
@@ -89,15 +89,16 @@ struct Appender : BaseAppender {
    * \param[in] compress whether to compress the output
    */
   Appender(
-    std::string const& array, std::string const& prefix, StreamLike in_os,
+    std::string const& array, jsonlib const& metadata, StreamLike in_os,
     bool compress
   )
     : os_(std::move(in_os)),
       oa_(std::make_shared<AdaptorType>(os_, compress))
   {
-    oa_->write_character('{');
-    oa_->write_characters(prefix.c_str(), prefix.length());
-    auto str = fmt::format("\"{}\":[", array);
+    oa_->write_characters("{\"metadata\":", 12);
+    SerializerType s(oa_, ' ', jsonlib::error_handler_t::strict);
+    s.dump(metadata, false, true, 0);
+    auto str = fmt::format(",\"{}\":[", array);
     oa_->write_characters(str.c_str(), str.length());
   }
 
