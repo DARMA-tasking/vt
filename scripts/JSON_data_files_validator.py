@@ -38,11 +38,11 @@ class SchemaValidator:
     def _get_valid_schema(self) -> Schema:
         """ Returns representation of a valid schema
         """
-        allowed_types = ("LBDatafile", "LBStatsfile")
+        allowed_types_data = ("LBDatafile")
         valid_schema_data = Schema(
             {
-                'type': And(str, lambda a: a in allowed_types,
-                            error=f"{self.get_error_message(allowed_types)} must be chosen"),
+                'type': And(str, lambda a: a in allowed_types_data,
+                            error=f"{self.get_error_message(allowed_types_data)} must be chosen"),
                 Optional('rank'): int,
                 Optional('shared_node'): {
                     'id': int,
@@ -105,10 +105,11 @@ class SchemaValidator:
                 ]
             }
         )
+        allowed_types_stats = ("LBStatsfile")
         valid_schema_stats = Schema(
             {
-                'type': And(str, lambda a: a in allowed_types,
-                            error=f"{self.get_error_message(allowed_types)} must be chosen"),
+                'type': And(str, lambda a: a in allowed_types_stats,
+                            error=f"{self.get_error_message(allowed_types_stats)} must be chosen"),
                 'phases': [
                     {
                         "id": int,
