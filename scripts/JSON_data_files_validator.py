@@ -41,16 +41,18 @@ class SchemaValidator:
         allowed_types_data = ("LBDatafile")
         valid_schema_data = Schema(
             {
-                'metadata': {
-                  'type': And(str, lambda a: a in allowed_types_data,
-                              error=f"{self.get_error_message(allowed_types_data)} must be chosen"),
-                  Optional('rank'): int,
-                  Optional('shared_node'): {
-                      'id': int,
-                      'size': int,
-                      'rank': int,
-                      'num_nodes': int,
-                  },
+                Optional('type'): And(str, lambda a: a in allowed_types_data,
+                                      error=f"{self.get_error_message(allowed_types_data)} must be chosen"),
+                Optional('metadata'): {
+                    Optional('type'): And(str, lambda a: a in allowed_types_data,
+                                          error=f"{self.get_error_message(allowed_types_data)} must be chosen"),
+                    Optional('rank'): int,
+                    Optional('shared_node'): {
+                        'id': int,
+                        'size': int,
+                        'rank': int,
+                        'num_nodes': int,
+                    },
                 },
                 'phases': [
                     {
@@ -110,9 +112,11 @@ class SchemaValidator:
         allowed_types_stats = ("LBStatsfile")
         valid_schema_stats = Schema(
             {
-                'metadata': {
-                  'type': And(str, lambda a: a in allowed_types_stats,
-                              error=f"{self.get_error_message(allowed_types_stats)} must be chosen"),
+                Optional('type'): And(str, lambda a: a in allowed_types_stats,
+                                      error=f"{self.get_error_message(allowed_types_stats)} must be chosen"),
+                Optional('metadata'): {
+                    Optional('type'): And(str, lambda a: a in allowed_types_stats,
+                                          error=f"{self.get_error_message(allowed_types_stats)} must be chosen"),
                 },
                 'phases': [
                     {
@@ -429,23 +433,22 @@ class JSONDataFilesValidator:
                 decompressed_dict = json.loads(compr_bytes.decode("utf-8"))
 
         # Extracting type from JSON data
+        schema_type = None
         if decompressed_dict.get("metadata") is not None:
             schema_type = decompressed_dict.get("metadata").get("type")
-            if schema_type is not None:
-                # Validate schema
-                if SchemaValidator(schema_type=schema_type).is_valid(schema_to_validate=decompressed_dict):
-                    print(f"Valid JSON schema in {file_path}")
-                else:
-                    print(f"Invalid JSON schema in {file_path}")
-                    SchemaValidator(schema_type=schema_type).validate(schema_to_validate=decompressed_dict)
-            else:
-                print(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
         else:
             if decompressed_dict.get("type") is not None:
-                print(f"Invalid JSON schema in {file_path}")
-                print(f"Schema was outdated (schema type was found in an outdated position).");
+                schema_type = decompressed_dict.get("type")
+
+        if schema_type is not None:
+            # Validate schema
+            if SchemaValidator(schema_type=schema_type).is_valid(schema_to_validate=decompressed_dict):
+                print(f"Valid JSON schema in {file_path}")
             else:
-                print(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
+                print(f"Invalid JSON schema in {file_path}")
+                SchemaValidator(schema_type=schema_type).validate(schema_to_validate=decompressed_dict)
+        else:
+            print(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
 
     def main(self):
         if self.__file_path is not None:
