@@ -153,6 +153,9 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Params&&... params
     auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
     return sendMsg<MsgT, f>(msg);
   }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return messaging::PendingSend{std::nullptr_t{}};
 }
 
 
