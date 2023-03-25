@@ -95,6 +95,9 @@ ProxyElm<ObjT>::send(Params&&... params) const {
     auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
     return sendMsg<MsgT, f>(msg);
   }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return ProxyElm<ObjT>::PendingSendType{std::nullptr_t{}};
 }
 
 template <typename ObjT>

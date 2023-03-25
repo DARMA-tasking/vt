@@ -102,6 +102,9 @@ Proxy<ObjT>::broadcast(Params&&... params) const {
     auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
     return broadcastMsg<MsgT, f>(msg);
   }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return typename Proxy<ObjT>::PendingSendType{std::nullptr_t{}};
 }
 
 template <typename ObjT>
