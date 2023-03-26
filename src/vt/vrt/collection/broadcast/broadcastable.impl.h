@@ -197,6 +197,9 @@ Broadcastable<ColT, IndexT, BaseProxyT>::broadcast(Params&&... params) const {
     auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
     return broadcastMsg<MsgT, f>(msg);
   }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return messaging::PendingSend{std::nullptr_t{}};
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -220,6 +223,9 @@ Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(Params&&... params)
     auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
     return broadcastCollectiveMsg<MsgT, f>(msg);
   }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return messaging::PendingSend{std::nullptr_t{}};
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
