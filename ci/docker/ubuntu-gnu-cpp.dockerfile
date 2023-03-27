@@ -57,7 +57,7 @@ ENV CC=gcc \
     CXX=g++
 
 COPY ./ci/deps/cmake.sh cmake.sh
-RUN ./cmake.sh 3.18.4
+RUN ./cmake.sh 3.23.4
 
 ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
