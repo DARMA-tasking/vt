@@ -1,4 +1,4 @@
-name: PR tests (clang-8, macosx, mpich)
+name: PR tests (clang-14, macosx, mpich)
 
 # Trigger the workflow on push or pull request
 on:
