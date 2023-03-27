@@ -39,7 +39,7 @@ ENV MPI_EXTRA_FLAGS="" \
     PATH=/usr/lib/ccache/:$PATH
 
 COPY ./ci/deps/cmake.sh cmake.sh
-RUN ./cmake.sh 3.18.4
+RUN ./cmake.sh 3.23.4
 
 ENV PATH=/cmake/bin/:$PATH
 
