@@ -384,15 +384,11 @@ bool Runtime::tryFinalize(bool const disable_sig) {
 
 bool Runtime::needLBDataRestartReader() {
   #if vt_check_enabled(lblite)
-    if (arg_config_->config_.vt_lb_data) {
-      auto lbNames = vrt::collection::balance::get_lb_names();
-      auto mapLB = vrt::collection::balance::LBType::OfflineLB;
-      if (arg_config_->config_.vt_lb_name == lbNames[mapLB]) {
-        return true;
-      }
-    }
+  if (true) {
+    return arg_config_->config_.vt_lb_data_in;
+  } else
   #endif
-  return false;
+    return false;
 }
 
 bool Runtime::initialize(bool const force_now) {

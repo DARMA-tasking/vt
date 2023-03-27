@@ -339,6 +339,11 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_lb_data_dir", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+  }
+
+  if (getAppConfig()->vt_lb_data_in) {
+    auto f9 = opt_on("--vt_lb_data_in", "Load balancing data input");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
 
     auto const fnamein = getAppConfig()->vt_lb_data_file_in;
     if (fnamein != "") {
