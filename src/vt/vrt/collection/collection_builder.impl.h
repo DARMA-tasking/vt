@@ -131,7 +131,8 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
 
   // Invoke getCollectionLM() to create a new location manager instance for
   // this collection
-  theLocMan()->getCollectionLM<IndexType>(proxy);
+  auto lm = theLocMan()->getCollectionLM<IndexType>(proxy);
+  lm->setDynamicMembership(has_dynamic_membership);
 
   // Insert action on cleanup for this collection
   addCleanupFn<ColT>(proxy);

@@ -114,6 +114,13 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   local_registered_.insert(id);
 
+  if (not migrated and not hasDynamicMembership()) {
+    vtAssert(
+      not recs_.exists(id),
+      "Duplicate insertion of the same entity is not allowed"
+    );
+  }
+
   recs_.insert(id, home, LocRecType{id, eLocState::Local, this_node});
 
   if (msg_action != nullptr) {
@@ -788,6 +795,11 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
 
     pending_actions_.erase(pending_iter);
   } else {
+    vtAssert(
+      not recs_.exists(id),
+      "Duplicate insertion of the same entity is not allowed"
+    );
+
     recs_.insert(id, home_node, LocRecType{id, eLocState::Remote, node});
 
     // trigger any pending actions upon registration
