@@ -320,6 +320,7 @@ struct AppConfig {
       | vt_lb_data_compress
       | vt_lb_data_dir
       | vt_lb_data_file
+      | vt_lb_data_in
       | vt_lb_data_dir_in
       | vt_lb_data_file_in
       | vt_lb_statistics
