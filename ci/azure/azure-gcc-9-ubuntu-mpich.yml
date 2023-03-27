@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (gcc-9, ubuntu, mpich, zoltan)
+name: PR tests (gcc-9, ubuntu, mpich, zoltan, json schema test)
 
 trigger:
   branches:
@@ -53,7 +53,7 @@ variables:
   VT_BUILD_SHARED_LIBS: 0
   VT_INCLUSION: TPL
   CMAKE_CXX_STANDARD: 17
-  TEST_LB_SCHEMA: 0
+  TEST_LB_SCHEMA: 1
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-gcc-9-cache
   build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
