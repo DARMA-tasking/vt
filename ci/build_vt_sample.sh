@@ -20,8 +20,8 @@ if test "$is_alpine" -eq 0 && test "${VT_CI_BUILD:-0}" -eq 1
 then
     export VT=${source_dir}
     export VT_BUILD=${build_dir}/vt
-    export VT_INSTALL=${VT_BUILD}/install
-    export CHECKPOINT=${VT}/lib/checkpoint
+    export VT_INSTALL=${VT_BUILD}/install/cmake
+    export CHECKPOINT=${build_dir}/checkpoint
 
     cd "$VT_BUILD"
 
@@ -34,7 +34,7 @@ then
 
     if test "$VT_INCLUSION_TYPE" = "EXT_LIB"
     then
-        export vt_DIR="$VT_INSTALL"
+        VT="$VT_INSTALL"
         CHECKPOINT=""
     fi
 
