@@ -38,11 +38,22 @@ class SchemaValidator:
     def _get_valid_schema(self) -> Schema:
         """ Returns representation of a valid schema
         """
-        allowed_types = ("LBDatafile", "LBStatsfile")
+        allowed_types_data = ("LBDatafile")
         valid_schema_data = Schema(
             {
-                'type': And(str, lambda a: a in allowed_types,
-                            error=f"{self.get_error_message(allowed_types)} must be chosen"),
+                Optional('type'): And(str, lambda a: a in allowed_types_data,
+                                      error=f"{self.get_error_message(allowed_types_data)} must be chosen"),
+                Optional('metadata'): {
+                    Optional('type'): And(str, lambda a: a in allowed_types_data,
+                                          error=f"{self.get_error_message(allowed_types_data)} must be chosen"),
+                    Optional('rank'): int,
+                    Optional('shared_node'): {
+                        'id': int,
+                        'size': int,
+                        'rank': int,
+                        'num_nodes': int,
+                    },
+                },
                 'phases': [
                     {
                         'id': int,
@@ -98,10 +109,15 @@ class SchemaValidator:
                 ]
             }
         )
+        allowed_types_stats = ("LBStatsfile")
         valid_schema_stats = Schema(
             {
-                'type': And(str, lambda a: a in allowed_types,
-                            error=f"{self.get_error_message(allowed_types)} must be chosen"),
+                Optional('type'): And(str, lambda a: a in allowed_types_stats,
+                                      error=f"{self.get_error_message(allowed_types_stats)} must be chosen"),
+                Optional('metadata'): {
+                    Optional('type'): And(str, lambda a: a in allowed_types_stats,
+                                          error=f"{self.get_error_message(allowed_types_stats)} must be chosen"),
+                },
                 'phases': [
                     {
                         "id": int,
@@ -417,7 +433,13 @@ class JSONDataFilesValidator:
                 decompressed_dict = json.loads(compr_bytes.decode("utf-8"))
 
         # Extracting type from JSON data
-        schema_type = decompressed_dict.get("type")
+        schema_type = None
+        if decompressed_dict.get("metadata") is not None:
+            schema_type = decompressed_dict.get("metadata").get("type")
+        else:
+            if decompressed_dict.get("type") is not None:
+                schema_type = decompressed_dict.get("type")
+
         if schema_type is not None:
             # Validate schema
             if SchemaValidator(schema_type=schema_type).is_valid(schema_to_validate=decompressed_dict):

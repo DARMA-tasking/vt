@@ -118,8 +118,10 @@ TEST_F(TestOfflineLB, test_offlinelb_1) {
 
   using JSONAppender = util::json::Appender<std::stringstream>;
   std::stringstream stream{std::ios_base::out | std::ios_base::in};
+  nlohmann::json metadata;
+  metadata["type"] = "LBDatafile";
   auto w = std::make_unique<JSONAppender>(
-    "phases", "LBDatafile", std::move(stream), true
+    "phases", metadata, std::move(stream), true
   );
   for (PhaseType i = 0; i < num_phases; i++) {
     auto j = dh.toJson(i);

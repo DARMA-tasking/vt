@@ -69,36 +69,36 @@ struct Appender : BaseAppender {
    * \brief Construct a JSON appender for a specific array with a filename
    *
    * \param[in] array the JSON array name
-   * \param[in] schema_name the JSON schema name
+   * \param[in] metadata the JSON metadata
    * \param[in] filename the JSON filename
    * \param[in] compress whether to compress the output
    */
   Appender(
-    std::string const& array, std::string const& schema_name,
+    std::string const& array, jsonlib const& metadata,
     std::string const& filename, bool compress
   )
-    : Appender(array, schema_name, StreamLike{filename}, compress)
+    : Appender(array, metadata, StreamLike{filename}, compress)
   { }
 
   /**
    * \brief Construct a JSON appender for a specific array with a stream
    *
    * \param[in] array the JSON array name
-   * \param[in] schema_name the JSON schema name
+   * \param[in] metadata the JSON metadata
    * \param[in] in_os the output stream
    * \param[in] compress whether to compress the output
    */
   Appender(
-    std::string const& array, std::string const& schema_name, StreamLike in_os,
+    std::string const& array, jsonlib const& metadata, StreamLike in_os,
     bool compress
   )
     : os_(std::move(in_os)),
       oa_(std::make_shared<AdaptorType>(os_, compress))
   {
-    oa_->write_character('{');
-    auto schema_str = fmt::format("\"type\":\"{}\",", schema_name);
-    oa_->write_characters(schema_str.c_str(), schema_str.length());
-    auto str = fmt::format("\"{}\":[", array);
+    oa_->write_characters("{\"metadata\":", 12);
+    SerializerType s(oa_, ' ', jsonlib::error_handler_t::strict);
+    s.dump(metadata, false, true, 0);
+    auto str = fmt::format(",\"{}\":[", array);
     oa_->write_characters(str.c_str(), str.length());
   }
 

@@ -269,6 +269,11 @@ private:
    */
   static void writeToFile(std::string const& str);
 
+  /**
+   * \internal \brief Determine the physical node IDs for LB data files
+   */
+  void determinePhysicalNodeIDs();
+
 protected:
   /**
    * \internal \brief Try to initialize
@@ -429,6 +434,12 @@ public:
   #endif
 
   static bool volatile sig_user_1_;
+
+  bool has_physical_node_info = false;
+  int physical_node_id = -1;
+  int physical_num_nodes = -1;
+  int physical_node_size = -1;
+  int physical_node_rank = -1;
 
 protected:
   bool finalize_on_term_ = false;
