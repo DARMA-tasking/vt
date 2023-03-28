@@ -795,10 +795,12 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
 
     pending_actions_.erase(pending_iter);
   } else {
-    vtAssert(
-      not recs_.exists(id),
-      "Duplicate insertion of the same entity is not allowed"
-    );
+    if (not hasDynamicMembership()) {
+      vtAssert(
+        not recs_.exists(id),
+        "Duplicate insertion of the same entity is not allowed"
+      );
+    }
 
     recs_.insert(id, home_node, LocRecType{id, eLocState::Remote, node});
 
