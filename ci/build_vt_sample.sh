@@ -21,7 +21,7 @@ then
     export VT=${source_dir}
     export VT_BUILD=${build_dir}/vt
     export VT_INSTALL=${VT_BUILD}/install
-    export CHECKPOINT=${build_dir}/checkpoint/install
+    export CHECKPOINT=${VT}/lib/checkpoint
 
     cd "$VT_BUILD"
 
@@ -35,6 +35,7 @@ then
     if test "$VT_INCLUSION_TYPE" = "EXT_LIB"
     then
         export vt_DIR="$VT_INSTALL"
+        CHECKPOINT=""
     fi
 
     git clone https://github.com/DARMA-tasking/vt-sample-project
