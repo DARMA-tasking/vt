@@ -21,8 +21,7 @@ then
     export VT=${source_dir}
     export VT_BUILD=${build_dir}/vt
     export VT_INSTALL=${VT_BUILD}/install
-    export DETECTOR=${build_dir}/detector
-    export CHECKPOINT=${DETECTOR}/build/checkpoint
+    export CHECKPOINT=${build_dir}/checkpoint/install
 
     cd "$VT_BUILD"
 
@@ -45,7 +44,6 @@ then
     cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_DIR="${VT}" \
       -Dcheckpoint_DIR="${CHECKPOINT}" \
-      -Ddetector_DIR="${DETECTOR}" \
       -Dkokkos_DISABLE:BOOL=1 \
       -Dkokkos_kernels_DISABLE:BOOL=1 \
       -Dvt_trace_only="1" \
