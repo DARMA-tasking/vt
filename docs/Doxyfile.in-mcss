@@ -14,7 +14,7 @@ M_LINKS_NAVBAR1 = \
 M_LINKS_NAVBAR2 = \
   "annotated" \
   "files" \
-  "<a href=\"https://github.com/DARMA-tasking/vt\">GitHub</a> <a href=\"https://github.com/DARMA-tasking/checkpoint\">Checkpoint</a> <a href=\"https://github.com/DARMA-tasking/detector\">Detector</a> <a href=\"https://github.com/DARMA-tasking/LB-analysis-framework\">LBAF</a> <a href=\"https://github.com/DARMA-tasking/checkpoint-member-analyzer\">Checkpoint Analyzer</a> <a href=\"https://github.com/DARMA-tasking/DARMA-tasking.github.io\">Documentation</a>"
+  "<a href=\"https://github.com/DARMA-tasking/vt\">GitHub</a> <a href=\"https://github.com/DARMA-tasking/checkpoint\">Checkpoint</a> <a href=\"https://github.com/DARMA-tasking/LB-analysis-framework\">LBAF</a> <a href=\"https://github.com/DARMA-tasking/checkpoint-member-analyzer\">Checkpoint Analyzer</a> <a href=\"https://github.com/DARMA-tasking/DARMA-tasking.github.io\">Documentation</a>"
 
 
 ALIASES += \

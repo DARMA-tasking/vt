@@ -1,6 +1,6 @@
 get_directory_property(projHasParent PARENT_DIRECTORY)
 
-# Local packages that VT depends on (detector/checkpoint)
+# Local packages that VT depends on: checkpoint
 include(cmake/load_local_packages.cmake)
 
 # MPI package
