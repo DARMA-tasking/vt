@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
 file(READ "VERSION" _vt_version_str)
 string(STRIP "${_vt_version_str}" _vt_version_str)
