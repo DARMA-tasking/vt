@@ -74,6 +74,8 @@ stages:
       vmImage: 'ubuntu-22.04'
     timeoutInMinutes: 180
     steps:
+      - checkout: self
+        fetchDepth: 0
       - task: Bash@3
         displayName: Build timestamp for caching
         continueOnError: true
