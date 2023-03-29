@@ -46,7 +46,7 @@
 
 #include "vt/config.h"
 
-#include "detector_headers.h"
+#include "checkpoint/detector.h"
 
 namespace vt { namespace vrt { namespace collection {
 

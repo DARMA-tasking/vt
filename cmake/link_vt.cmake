@@ -27,7 +27,6 @@ function(link_target_with_vt)
     LINK_ZLIB
     LINK_FCONTEXT
     LINK_CHECKPOINT
-    LINK_DETECTOR
     LINK_CLI11
     LINK_DL
     LINK_ZOLTAN
@@ -191,15 +190,6 @@ function(link_target_with_vt)
     endif()
     target_link_libraries(
       ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${CHECKPOINT_LIBRARY}
-    )
-  endif()
-
-  if (NOT DEFINED ARG_LINK_DETECTOR AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_DETECTOR)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: detector=${ARG_LINK_DETECTOR}")
-    endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} vt::lib::detector
     )
   endif()
 

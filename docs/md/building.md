@@ -9,21 +9,19 @@ external dependencies come bundled with \vt for ease of compiling.
 To build \vt, one must obtain the following dependencies:
 
 \subsection required-deps Required
-  - detector,   (*vt* ecosystem)
   - checkpoint, (*vt* ecosystem)
   - MPI         (mpich/openmpi/mvapich/IBM Spectrum MPI/Cray MPICH/etc.)
 
 \subsection automatic-build-deps Automatically build dependencies
 
-Assuming MPI is installed and accessible via CC/CXX, the only other dependencies
-that are required are checkpoint and detector. The easiest way to get these
-built are to clone them inside `vt/lib`:
+Assuming MPI is installed and accessible via CC/CXX, the only other dependency
+that is required is checkpoint. The easiest way to get these
+built are to clone it inside `vt/lib`:
 
 ```bash
 $ git clone git@github.com:DARMA-tasking/vt
 $ cd vt/lib
 $ git clone git@github.com:DARMA-tasking/checkpoint
-$ git clone git@github.com:DARMA-tasking/detector
 ```
 
 With these in `vt/lib`, cmake will automatically build them and stitch them into
@@ -31,7 +29,7 @@ With these in `vt/lib`, cmake will automatically build them and stitch them into
 
 \subsection use-cmake-directly-vars Using cmake directly
 
-One may use `cmake` as normal on *vt*, with checkpoint and detector cloned in
+One may use `cmake` as normal on *vt*, with checkpoint cloned in
 `vt/lib` to compile them all together as explained above. The following are some
 custom configuration build options that can be provided to `cmake` to change the
 build configuration:
