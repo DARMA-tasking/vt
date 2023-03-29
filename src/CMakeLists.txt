@@ -340,3 +340,10 @@ export(
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
+
+if (EXISTS "${PROJECT_LIB_DIR}/checkpoint")
+  install(
+    TARGETS                 checkpoint
+    EXPORT                  ${VIRTUAL_TRANSPORT_LIBRARY}
+  )
+endif()
