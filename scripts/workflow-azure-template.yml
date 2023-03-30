@@ -62,6 +62,8 @@ stages:
       [% workflow_runs_on %]
     timeoutInMinutes: 180
     steps:
+      - checkout: self
+        fetchDepth: 0
       - task: Bash@3
         displayName: Build timestamp for caching
         continueOnError: true
