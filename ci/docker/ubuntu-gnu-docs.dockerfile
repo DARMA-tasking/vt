@@ -2,7 +2,7 @@ ARG arch=amd64
 FROM ${arch}/ubuntu:18.04 as base
 
 ARG proxy=""
-ARG compiler=gcc-7
+ARG compiler=gcc-8
 ARG token
 
 ENV https_proxy=${proxy} \

@@ -1,11 +1,11 @@
-ARG compiler=gcc-7
+ARG compiler=gcc-12
 ARG arch=amd64
-ARG ubuntu=18.04
+ARG ubuntu=22.04
 
 FROM lifflander1/vt:${arch}-ubuntu-${ubuntu}-${compiler}-cpp
 
 # All ARGs are invalidated after FROM instruction, so it has to be redefined
-ARG compiler=gcc-7
+ARG compiler=gcc-12
 
 ARG proxy=""
 ENV https_proxy=${proxy} \
