@@ -8,7 +8,7 @@ trigger:
   branches:
     include:
       - develop
-      - 1.0.0*
+      - main
 
 pr:
   drafts: false
