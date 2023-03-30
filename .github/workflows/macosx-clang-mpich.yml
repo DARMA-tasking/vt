@@ -36,14 +36,14 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.ccache
-          key: ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}-${{ hashFiles('**/*') }}
+          key: ${{ runner.os }}-macosx-clang-14-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}-${{ hashFiles('**/*') }}
           restore-keys: |
-            ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}
+            ${{ runner.os }}-macosx-clang-14-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}
       - uses: actions/cache@v3
         id: mpich-cache
         with:
           path: ~/.mpich
-          key: ${{ runner.os }}-macosx-clang-8-mpich-${{ hashFiles('**/.github/workflows/macosx-clang-mpich.yml', '**/ci/deps/mpich.sh') }}
+          key: ${{ runner.os }}-macosx-clang-14-mpich-${{ hashFiles('**/.github/workflows/macosx-clang-mpich.yml', '**/ci/deps/mpich.sh') }}
       - name: Install Dependencies
         shell: bash
         run: brew bundle --file=ci/Brewfile
