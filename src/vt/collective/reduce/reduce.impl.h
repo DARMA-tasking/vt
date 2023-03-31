@@ -128,7 +128,7 @@ Reduce::PendingSendType Reduce::reduce(
 ) {
   auto msg_ptr = promoteMsg(msg);
   return PendingSendType{theMsg()->getEpochContextMsg(msg_ptr), [=](){
-                           reduceImmediate<MsgT, f>(root, msg_ptr.get(), id, num_contrib);
+                           reduceImmediate<f>(root, msg_ptr.get(), id, num_contrib);
                          } };
 }
 
@@ -282,7 +282,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
           scope_.str(), detail::stringizeStamp(id), root, this_node
         );
 
-        theMsg()->sendMsg<MsgT,ReduceManager::reduceRootRecv<MsgT>>(root, typed_msg);
+        theMsg()->sendMsg<ReduceManager::reduceRootRecv<MsgT>>(root, typed_msg);
       } else {
         vt_debug_print(
           normal, reduce,
@@ -300,7 +300,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
         scope_.str(), detail::stringizeStamp(id), parent
       );
 
-      theMsg()->sendMsg<MsgT,ReduceManager::reduceUpHan<MsgT>>(parent, typed_msg);
+      theMsg()->sendMsg<ReduceManager::reduceUpHan<MsgT>>(parent, typed_msg);
     }
   }
 }

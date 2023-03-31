@@ -54,7 +54,6 @@ namespace vt { namespace pool {
   view.buffer = buffer;
   view.layout->prealloc.alloc_size = num_bytes;
   view.layout->prealloc.oversize = oversize;
-  view.layout->prealloc.alloc_worker = theContext()->getWorker();
   auto buf_start = buffer + sizeof(Header);
   return buf_start;
 }
@@ -69,12 +68,6 @@ namespace vt { namespace pool {
   AllocView view;
   view.buffer = buffer - sizeof(Header);
   return view.layout->prealloc.oversize;
-}
-
-/*static*/ WorkerIDType HeaderManager::getHeaderWorker(char* buffer) {
-  AllocView view;
-  view.buffer = buffer - sizeof(Header);
-  return view.layout->prealloc.alloc_worker;
 }
 
 /*static*/ char* HeaderManager::getHeaderPtr(char* buffer) {

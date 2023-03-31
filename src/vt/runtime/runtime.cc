@@ -50,7 +50,6 @@
 #include "vt/termination/termination.h"
 #include "vt/pool/pool.h"
 #include "vt/rdma/rdma_headers.h"
-#include "vt/parameterization/parameterization.h"
 #include "vt/pipe/pipe_manager.h"
 #include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
@@ -59,7 +58,6 @@
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/error/stack_out.h"
 #include "vt/utils/memory/memory_usage.h"
@@ -96,11 +94,9 @@ namespace vt { namespace runtime {
 /*static*/ bool volatile Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
-  int& argc, char**& argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm in_comm, RuntimeInstType const in_instance,
-  arguments::AppConfig const* appConfig
+  int& argc, char**& argv, bool const interop_mode, MPI_Comm in_comm,
+  RuntimeInstType const in_instance, arguments::AppConfig const* appConfig
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
-     num_workers_(in_num_workers),
      initial_communicator_(in_comm),
      arg_config_(std::make_unique<arguments::ArgConfig>()),
      app_config_(&arg_config_->config_)
@@ -205,6 +201,46 @@ Runtime::Runtime(
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
+
+  if (arg_config_->config_.vt_lb_data) {
+    determinePhysicalNodeIDs();
+  }
+}
+
+void Runtime::determinePhysicalNodeIDs() {
+  MPI_Comm i_comm = initial_communicator_;
+
+  MPI_Comm shm_comm;
+  MPI_Comm_split_type(i_comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &shm_comm);
+  int shm_rank = -1;
+  int node_size = -1;
+  MPI_Comm_rank(shm_comm, &shm_rank);
+  MPI_Comm_size(shm_comm, &node_size);
+
+  int num_nodes = -1;
+  int is_rank_0 = (shm_rank == 0) ? 1 : 0;
+  MPI_Allreduce(&is_rank_0, &num_nodes, 1, MPI_INT, MPI_SUM, i_comm);
+
+  int starting_rank = -1;
+  MPI_Comm_rank(i_comm, &starting_rank);
+
+  MPI_Comm node_number_comm;
+  MPI_Comm_split(i_comm, shm_rank, starting_rank, &node_number_comm);
+
+  int node_id = -1;
+  if (shm_rank == 0) {
+    MPI_Comm_rank(node_number_comm, &node_id);
+  }
+  MPI_Bcast(&node_id, 1, MPI_INT, 0, shm_comm);
+
+  MPI_Comm_free(&shm_comm);
+  MPI_Comm_free(&node_number_comm);
+
+  has_physical_node_info = true;
+  physical_node_id = node_id;
+  physical_num_nodes = num_nodes;
+  physical_node_size = node_size;
+  physical_node_rank = shm_rank;
 }
 
 bool Runtime::hasSchedRun() const {
@@ -388,15 +424,11 @@ bool Runtime::tryFinalize(bool const disable_sig) {
 
 bool Runtime::needLBDataRestartReader() {
   #if vt_check_enabled(lblite)
-    if (arg_config_->config_.vt_lb_data) {
-      auto lbNames = vrt::collection::balance::get_lb_names();
-      auto mapLB = vrt::collection::balance::LBType::OfflineLB;
-      if (arg_config_->config_.vt_lb_name == lbNames[mapLB]) {
-        return true;
-      }
-    }
+  if (true) {
+    return arg_config_->config_.vt_lb_data_in;
+  } else
   #endif
-  return false;
+    return false;
 }
 
 bool Runtime::initialize(bool const force_now) {
@@ -755,17 +787,6 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  #if vt_threading_enabled
-  p_->registerComponent<worker::WorkerGroupType>(
-    &theWorkerGrp, Deps<
-      ctx::Context,               // Everything depends on theContext
-      messaging::ActiveMessenger, // Depends on active messenger to send msgs
-      sched::Scheduler,           // Depends on scheduler
-      term::TerminationDetector   // Depends on TD for idle callbacks
-    >{}
-  );
-  #endif
-
   p_->registerComponent<collective::CollectiveAlg>(
     &theCollective, Deps<
       ctx::Context,              // Everything depends on theContext
@@ -796,13 +817,6 @@ void Runtime::initializeComponents() {
       ctx::Context,                 // Everything depends on theContext
       messaging::ActiveMessenger,   // Depends on active messenger for RDMA
       collective::CollectiveAlg     // Depends on collective scope
-    >{}
-  );
-
-  p_->registerComponent<param::Param>(
-    &theParam, Deps<
-      ctx::Context,              // Everything depends on theContext
-      messaging::ActiveMessenger // Depends on active messenger sending
     >{}
   );
 
@@ -898,7 +912,6 @@ void Runtime::initializeComponents() {
   p_->add<group::GroupManager>();
   p_->add<pipe::PipeManager>();
   p_->add<rdma::RDMAManager>();
-  p_->add<param::Param>();
   p_->add<location::LocationManager>();
   p_->add<vrt::VirtualContextManager>();
   p_->add<vrt::collection::CollectionManager>();
@@ -913,13 +926,6 @@ void Runtime::initializeComponents() {
   if (addLBDataRestartReader) {
     p_->add<vrt::collection::balance::LBDataRestartReader>();
   }
-
-  #if vt_threading_enabled
-  bool const has_workers = num_workers_ != no_workers;
-  if (has_workers) {
-    p_->add<worker::WorkerGroupType>();
-  }
-  #endif
 
   p_->construct();
 
@@ -962,7 +968,7 @@ void Runtime::initializeOptionalComponents() {
     "begin: initializeOptionalComponents\n"
   );
 
-  initializeWorkers(num_workers_);
+  initializeTDCallbacks();
 
   vt_debug_print(
     verbose, runtime,
@@ -970,62 +976,40 @@ void Runtime::initializeOptionalComponents() {
   );
 }
 
-void Runtime::initializeWorkers(WorkerCountType const num_workers) {
+void Runtime::initializeTDCallbacks() {
   using ::vt::ctx::ContextAttorney;
 
   vt_debug_print(
     normal, runtime,
-    "begin: initializeWorkers: workers={}\n",
-    num_workers
+    "begin: initializeTDCallbacks\n"
   );
 
-  bool const has_workers = num_workers != no_workers;
-
-  if (has_workers) {
-    #if vt_threading_enabled
-    ContextAttorney::setNumWorkers(num_workers);
-
-    // Initialize individual memory pool for each worker
-    thePool->initWorkerPools(num_workers);
-
-    auto localTermFn = [](worker::eWorkerGroupEvent event){
-      bool const no_local_workers = false;
-      bool const is_idle = event == worker::eWorkerGroupEvent::WorkersIdle;
-      bool const is_busy = event == worker::eWorkerGroupEvent::WorkersBusy;
-      if (is_idle || is_busy) {
-        ::vt::theTerm()->setLocalTerminated(is_idle, no_local_workers);
-      }
-    };
-    theWorkerGrp->registerIdleListener(localTermFn);
-    #endif
-  } else {
-    // Without workers running on the node, the termination detector should
-    // enable/disable the global collective epoch based on the state of the
-    // scheduler; register listeners to activate/deactivate that epoch
-    auto td = vt::theTerm();
-    theSched->registerTrigger(
-      sched::SchedulerEvent::BeginIdleMinusTerm, [td]{
-        vt_debug_print(
-          normal, runtime,
-          "setLocalTerminated: BeginIdle: true\n"
-        );
-        td->setLocalTerminated(true, false);
-      }
-    );
-    theSched->registerTrigger(
-      sched::SchedulerEvent::EndIdleMinusTerm, [td]{
-        vt_debug_print(
-          normal, runtime,
-          "setLocalTerminated: EndIdle: false\n"
-        );
-        td->setLocalTerminated(false, false);
-      }
-    );
-  }
+  // Without workers running on the node, the termination detector should
+  // enable/disable the global collective epoch based on the state of the
+  // scheduler; register listeners to activate/deactivate that epoch
+  auto td = vt::theTerm();
+  theSched->registerTrigger(
+    sched::SchedulerEvent::BeginIdleMinusTerm, [td]{
+      vt_debug_print(
+        normal, runtime,
+        "setLocalTerminated: BeginIdle: true\n"
+      );
+      td->setLocalTerminated(true, false);
+    }
+  );
+  theSched->registerTrigger(
+    sched::SchedulerEvent::EndIdleMinusTerm, [td]{
+      vt_debug_print(
+        normal, runtime,
+        "setLocalTerminated: EndIdle: false\n"
+      );
+      td->setLocalTerminated(false, false);
+    }
+  );
 
   vt_debug_print(
     normal, runtime,
-    "end: initializeWorkers\n"
+    "end: initializeTDCallbacks\n"
   );
 }
 
@@ -1079,12 +1063,6 @@ void Runtime::printMemoryFootprint() const {
       printComponentFootprint(
         static_cast<vrt::VirtualContextManager*>(base)
       );
-    } else if (name == "WorkerGroupOMP" || name == "WorkerGroup") {
-      #if vt_threading_enabled
-      printComponentFootprint(
-        static_cast<worker::WorkerGroupType*>(base)
-      );
-      #endif
     } else if (name == "Collective") {
       printComponentFootprint(
         static_cast<collective::CollectiveAlg*>(base)
@@ -1096,10 +1074,6 @@ void Runtime::printMemoryFootprint() const {
     } else if (name == "ActiveMessenger") {
       printComponentFootprint(
         static_cast<messaging::ActiveMessenger*>(base)
-      );
-    } else if (name == "Param") {
-      printComponentFootprint(
-        static_cast<param::Param*>(base)
       );
     } else if (name == "RDMAManager") {
       printComponentFootprint(

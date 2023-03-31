@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               worker_common.h
+//                               test_promote.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,39 +41,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_WORKER_WORKER_COMMON_H
-#define INCLUDED_VT_WORKER_WORKER_COMMON_H
+#include "test_parallel_harness.h"
 
-#include "vt/config.h"
+#include "vt/vrt/collection/manager.h"
 
-#include <cstdint>
-#include <functional>
+#include <gtest/gtest.h>
 
-namespace vt { namespace worker {
+namespace vt { namespace tests { namespace unit { namespace invoke {
 
-static constexpr WorkerCountType const num_default_workers = 4;
-static constexpr WorkerCountType const num_default_comm = 1;
+struct TestMsg : vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // for string
 
-using WorkerCommFnType = std::function<void()>;
+  TestMsg() = default;
+  explicit TestMsg(std::string in_str)
+    : str(in_str)
+  { }
 
-using WorkUnitCountType = int64_t;
-static constexpr WorkUnitCountType const no_work_units = 1;
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | str;
+  }
 
-enum eWorkerGroupEvent {
-  WorkersIdle = 1,
-  WorkersBusy = 2,
-  InvalidEvent = -1
+  std::string str;
 };
 
-#define WORKER_GROUP_EVENT_STR(EVT)                                     \
-  EVT == eWorkerGroupEvent::WorkersIdle ? "WorkersIdle" : (             \
-    EVT == eWorkerGroupEvent::WorkersBusy ? "WorkersBusy" :  (          \
-      EVT == eWorkerGroupEvent::InvalidEvent ? "InvalidEvent" : "Error" \
-    )                                                                   \
-  )                                                                     \
+struct Hello : vt::Collection<Hello, vt::Index1D> {
+  void doWork(TestMsg* msg) {
+    EXPECT_EQ(msg->str, "hello there");
+  }
+};
 
-using WorkerFinishedFnType = std::function<void(WorkerIDType, WorkUnitCountType)>;
+struct TestCollectionPromoteMsg : TestParallelHarness {};
 
-}} /* end namespace vt::worker */
+TEST_F(TestCollectionPromoteMsg, test_collection_promote_1) {
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_elems = Index1D{static_cast<int>(num_nodes*4)};
 
-#endif /*INCLUDED_VT_WORKER_WORKER_COMMON_H*/
+  auto proxy = theCollection()->constructCollective<Hello>(
+    num_elems, "test_collection_promote_1"
+  );
+  if (this_node == 0) {
+    proxy.broadcast<TestMsg,&Hello::doWork>("hello there");
+  }
+}
+
+}}}} // end namespace vt::tests::unit::invoke

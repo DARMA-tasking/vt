@@ -54,7 +54,7 @@
 
 namespace vt { namespace auto_registry {
 
-inline AutoActiveObjGroupType getAutoHandlerObjGroup(HandlerType han) {
+inline AutoActiveObjGroupType const& getAutoHandlerObjGroup(HandlerType han) {
   using ContainerType = AutoActiveObjGroupContainerType;
 
   auto const id = HandlerManagerType::getHandlerIdentifier(han);
@@ -68,10 +68,30 @@ inline AutoHandlerType getAutoHandlerObjTypeIdx(HandlerType han) {
   return getAutoRegistryGen<ContainerType>().at(id).getObjIdx();
 }
 
+template <typename ObjT, typename T, T value, typename MsgT>
+inline HandlerType makeAutoHandlerObjGroupParam(HandlerControlType ctrl) {
+  using AdapterT = FunctorAdapterMember<T, value, ObjT, MsgT>;
+  using ContainerType = AutoActiveObjGroupContainerType;
+  using RegInfoType = AutoRegInfoType<AutoActiveObjGroupType>;
+  using FuncType = T;
+  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
+
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = false;
+  auto const idx = RunType::idx;
+  constexpr auto reg_type = RegistryTypeEnum::RegObjGroup;
+  auto const han = HandlerManagerType::makeHandler(
+    is_auto, is_functor, idx, reg_type, ctrl
+  );
+  auto obj_idx = objgroup::registry::makeObjIdx<ObjT>();
+  getAutoRegistryGen<ContainerType>().at(idx).setObjIdx(obj_idx);
+  return han;
+}
+
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
 inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
   using AdapterT =
-    FunctorAdapterMember<objgroup::ActiveObjType<MsgT, ObjT>, f, ObjT>;
+    FunctorAdapterMember<objgroup::ActiveObjType<MsgT, ObjT>, f, ObjT, MsgT>;
   using ContainerType = AutoActiveObjGroupContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveObjGroupType>;
   using FuncType = objgroup::ActiveObjAnyType;
@@ -144,9 +164,9 @@ inline BaseScatterDispatcherPtr const& getScatterAutoHandler(HandlerType const h
   return getAutoRegistryGen<ScatterContainerType>().at(han_id).getFun();
 }
 
-template <typename T, T value>
+template <typename T, T value, typename MsgT>
 inline HandlerType makeAutoHandlerParam() {
-  using AdapterT = FunctorAdapterParam<T, value>;
+  using AdapterT = FunctorAdapterParam<T, value, MsgT>;
   using ContainerType = AutoActiveContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
   using FuncType = ActiveFnPtrType;

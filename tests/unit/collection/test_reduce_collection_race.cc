@@ -49,7 +49,6 @@ namespace vt { namespace tests { namespace unit { namespace race {
 using TestReduceCollectionRace = TestParallelHarnessParam<int>;
 
 struct MyCol : vt::Collection<MyCol, vt::Index1D> {};
-struct TestMsg : vt::CollectionMessage<MyCol> {};
 using ReduceMsg = vt::collective::ReduceTMsg<int>;
 
 static int multipler = 0;
@@ -63,7 +62,7 @@ struct ReduceFunctor {
   }
 };
 
-static void handler(TestMsg*, MyCol* col) {
+static void handler(MyCol* col) {
   auto proxy = col->getCollectionProxy();
   auto msg = vt::makeMessage<ReduceMsg>(static_cast<int>(col->getIndex().x()));
   auto cb = vt::theCB()->makeSend<ReduceFunctor>(0);
@@ -79,11 +78,11 @@ TEST_P(TestReduceCollectionRace, test_reduce_race_1) {
     range, "test_reduce_race_1"
   );
 
-  proxy.broadcastCollective<TestMsg, &handler>();
-  proxy.broadcastCollective<TestMsg, &handler>();
-  proxy.broadcastCollective<TestMsg, &handler>();
-  proxy.broadcastCollective<TestMsg, &handler>();
-  proxy.broadcastCollective<TestMsg, &handler>();
+  proxy.broadcastCollective<&handler>();
+  proxy.broadcastCollective<&handler>();
+  proxy.broadcastCollective<&handler>();
+  proxy.broadcastCollective<&handler>();
+  proxy.broadcastCollective<&handler>();
 }
 
 INSTANTIATE_TEST_SUITE_P(

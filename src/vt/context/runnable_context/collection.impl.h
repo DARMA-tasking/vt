@@ -54,9 +54,11 @@ template <typename IndexT>
 /*explicit*/ Collection::Collection(
   vrt::collection::Indexable<IndexT>* elm
 ) {
-  auto idx_ = elm->getIndex();
-  auto proxy_ = elm->getProxy();
-  set_ = [=]{
+  elm_ = elm;
+  set_ = [](void* in_elm){
+    auto e = static_cast<vrt::collection::Indexable<IndexT>*>(in_elm);
+    auto& idx_ = e->getIndex();
+    auto proxy_ = e->getProxy();
     vrt::collection::CollectionContextHolder<IndexT>::set(&idx_, proxy_);
   };
   clear_ = []{

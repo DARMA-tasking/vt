@@ -227,7 +227,7 @@ void InfoColl::setupCollective() {
     auto msg = makeMessage<GroupCollectiveMsg>(
       group_, up_tree_cont_, in_group, size, child
     );
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(parent, msg);
+    theMsg()->sendMsg<upHan>(parent, msg);
   }
 }
 
@@ -336,7 +336,7 @@ void InfoColl::upTree() {
       auto msg = makeMessage<GroupCollectiveMsg>(
         group,new_root_cont_,true,subtree_zero,root_node,0,extra
       );
-      theMsg()->sendMsg<GroupCollectiveMsg,newRootHan>(root_node, msg);
+      theMsg()->sendMsg<newRootHan>(root_node, msg);
 
       for (std::size_t i = 1; i < msg_list.size(); i++) {
         vt_debug_print(
@@ -347,7 +347,7 @@ void InfoColl::upTree() {
 
         msg_list[i]->setOpID(down_tree_cont_);
         auto pmsg = promoteMsg(msg_list[i]);
-        theMsg()->sendMsg<GroupCollectiveMsg,downHan>(root_node, pmsg);
+        theMsg()->sendMsg<downHan>(root_node, pmsg);
         ++send_down_;
       }
       in_phase_two_ = true;
@@ -377,7 +377,7 @@ void InfoColl::upTree() {
     auto cmsg = makeMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,level
     );
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, cmsg);
+    theMsg()->sendMsg<upHan>(p, cmsg);
 
     for (auto&& msg : msg_in_group) {
       span_children_.push_back(msg->getChild());
@@ -406,14 +406,14 @@ void InfoColl::upTree() {
     auto msg = makeMessage<GroupCollectiveMsg>(
       group,op,is_in_group,static_cast<NodeType>(subtree_),child,0,extra
     );
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
+    theMsg()->sendMsg<upHan>(p, msg);
     /*
      *  Forward all the children messages up the tree (up to 2 of them)
      */
     for (std::size_t i = 0; i < msg_in_group.size(); i++) {
       // new MsgPtr to avoid thief of original in collection
       auto msg_out = promoteMsg(msg_in_group[i].get());
-      theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_out);
+      theMsg()->sendMsg<upHan>(p, msg_out);
     }
   } else if (is_in_group && msg_in_group.size() == 1) {
     /*
@@ -438,10 +438,10 @@ void InfoColl::upTree() {
     auto msg = makeMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,0,extra
     );
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
+    theMsg()->sendMsg<upHan>(p, msg);
     // new MsgPtr to avoid thief of original in collection
     auto msg_out = promoteMsg(msg_in_group[0].get());
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_out);
+    theMsg()->sendMsg<upHan>(p, msg_out);
   } else {
     vtAssertExpr(msg_in_group.size() > 2);
 
@@ -478,7 +478,7 @@ void InfoColl::upTree() {
     auto msg = makeMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,0,extra
     );
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
+    theMsg()->sendMsg<upHan>(p, msg);
 
     vt_debug_print(
       verbose, group,
@@ -494,7 +494,7 @@ void InfoColl::upTree() {
       GroupCollectiveMsg* tmsg = *iter;
       c[i] = tmsg->getChild();
       auto pmsg = promoteMsg(tmsg);
-      theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, pmsg);
+      theMsg()->sendMsg<upHan>(p, pmsg);
       iter++;
     }
 
@@ -503,7 +503,7 @@ void InfoColl::upTree() {
       GroupCollectiveMsg* tmsg = *iter;
       tmsg->setOpID(down_tree_cont_);
       auto pmsg = promoteMsg(tmsg);
-      theMsg()->sendMsg<GroupCollectiveMsg,downHan>(c[i % extra], pmsg);
+      theMsg()->sendMsg<downHan>(c[i % extra], pmsg);
       ++send_down_;
       ++iter;
     }
@@ -639,13 +639,13 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
     auto const& num = collective_->span_children_.size();
     auto const& child = collective_->span_children_[msg->getChild() % num];
     auto nmsg = makeMessage<GroupCollectiveMsg>(*msg);
-    theMsg()->sendMsg<GroupCollectiveMsg,downHan>(child, nmsg);
+    theMsg()->sendMsg<downHan>(child, nmsg);
     ++send_down_;
   }
 
   auto const& group_ = getGroupID();
   auto nmsg = makeMessage<GroupOnlyMsg>(group_,down_tree_fin_cont_);
-  theMsg()->sendMsg<GroupOnlyMsg,downFinishedHan>(from, nmsg);
+  theMsg()->sendMsg<downFinishedHan>(from, nmsg);
 }
 
 void InfoColl::newTree(NodeType const& parent) {
@@ -686,7 +686,7 @@ void InfoColl::sendDownNewTree() {
       group_, c
     );
     auto msg = makeMessage<GroupOnlyMsg>(group_,new_tree_cont_);
-    theMsg()->sendMsg<GroupOnlyMsg,newTreeHan>(c, msg);
+    theMsg()->sendMsg<newTreeHan>(c, msg);
   }
 }
 
@@ -727,7 +727,7 @@ void InfoColl::finalize() {
       auto msg = makeMessage<GroupOnlyMsg>(
         group_,finalize_cont_,known_root_node_,is_default_group_
       );
-      theMsg()->sendMsg<GroupOnlyMsg,finalizeHan>(c, msg);
+      theMsg()->sendMsg<finalizeHan>(c, msg);
     }
 
     if (!is_in_group) {

@@ -136,20 +136,20 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    * \param[in] len size of message in bytes
    * \param[in] event the associated trace event
    * \param[in] from_node which node instigated this processing
+   * \param[in] time the time this occurred
    * \param[in] idx1 (optional) if collection, dimension 1
    * \param[in] idx2 (optional) if collection, dimension 2
    * \param[in] idx3 (optional) if collection, dimension 3
    * \param[in] idx4 (optional) if collection, dimension 4
-   * \param[in] time the time this occurred
    *
    * \return a tag to close this processing event
    */
   TraceProcessingTag beginProcessing(
      TraceEntryIDType const ep, TraceMsgLenType const len,
      TraceEventIDType const event, NodeType const from_node,
+     TimeType const time,
      uint64_t const idx1 = 0, uint64_t const idx2 = 0,
-     uint64_t const idx3 = 0, uint64_t const idx4 = 0,
-     double const time = getCurrentTime()
+     uint64_t const idx3 = 0, uint64_t const idx4 = 0
   );
 
   /**
@@ -162,7 +162,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   void endProcessing(
     TraceProcessingTag const& processing_tag,
-    double const time = getCurrentTime()
+    TimeType const time
   );
 
   /**

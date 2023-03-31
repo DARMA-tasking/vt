@@ -58,6 +58,7 @@
 #include "vt/collective/tree/tree.h"
 #include "vt/utils/hash/hash_tuple.h"
 #include "vt/messaging/pending_send.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <tuple>
 #include <unordered_map>
@@ -147,6 +148,27 @@ struct Reduce : virtual collective::tree::Tree {
   );
 
   /**
+   * \brief Reduce a message up the tree, possibly delayed through a pending send
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the pending send corresponding to the reduce
+   */
+  template <auto f>
+  PendingSendType reduce(
+    NodeType root,
+    typename FuncTraits<decltype(f)>::MsgT* const msg,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType num_contrib = 1
+  ) {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    return reduce<MsgT, f>(root, msg, id, num_contrib);
+  }
+
+  /**
    * \brief Reduce a message up the tree
    *
    * \param[in] root the root node where the final handler provides the result
@@ -162,6 +184,27 @@ struct Reduce : virtual collective::tree::Tree {
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType num_contrib = 1
   );
+
+  /**
+   * \brief Reduce a message up the tree
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the next reduction stamp
+   */
+  template <auto f>
+  detail::ReduceStamp reduceImmediate(
+    NodeType root,
+    typename FuncTraits<decltype(f)>::MsgT* const msg,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType num_contrib = 1
+  ) {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    return reduceImmediate<MsgT, f>(root, msg, id, num_contrib);
+  }
 
   /**
    * \brief Reduce a message up the tree
@@ -216,6 +259,29 @@ struct Reduce : virtual collective::tree::Tree {
    *
    * \return the next reduction stamp
    */
+  template <typename OpT, auto f>
+  PendingSendType reduce(
+    NodeType const& root,
+    typename FuncTraits<decltype(f)>::MsgT* msg,
+    Callback<typename FuncTraits<decltype(f)>::MsgT> cb,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
+  ) {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    return reduce<OpT, MsgT, f>(root, msg, cb, id, num_contrib);
+  }
+
+  /**
+   * \brief Reduce a message up the tree
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] cb the callback to trigger on the root node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the next reduction stamp
+   */
   template <
     typename OpT,
     typename MsgT,
@@ -245,6 +311,29 @@ struct Reduce : virtual collective::tree::Tree {
         collective::reduce::operators::ReduceCallback<MsgT>
         >
       >(root, msg, cb, id, num_contrib);
+  }
+
+  /**
+   * \brief Reduce a message up the tree
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] cb the callback to trigger on the root node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the next reduction stamp
+   */
+  template <typename OpT, auto f>
+  detail::ReduceStamp reduceImmediate(
+    NodeType const& root,
+    typename FuncTraits<decltype(f)>::MsgT* msg,
+    Callback<typename FuncTraits<decltype(f)>::MsgT> cb,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
+  ) {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    return reduceImmediate<OpT, MsgT, f>(root, msg, cb, id, num_contrib);
   }
 
   /**
@@ -300,6 +389,31 @@ struct Reduce : virtual collective::tree::Tree {
   template <
     typename OpT,
     typename FunctorT,
+    auto f
+  >
+  PendingSendType reduce(
+    NodeType const& root,
+    typename FuncTraits<decltype(f)>::MsgT* msg,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
+  ) {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    return reduce<OpT, FunctorT, MsgT, f>(root, msg, id, num_contrib);
+  }
+
+  /**
+   * \brief Reduce a message up the tree with a target function on the root node
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the next reduction stamp
+   */
+  template <
+    typename OpT,
+    typename FunctorT,
     typename MsgT,
     ActiveTypedFnType<MsgT> *f
   >
@@ -325,6 +439,31 @@ struct Reduce : virtual collective::tree::Tree {
       MsgT,
       &MsgT::template msgHandler<MsgT, OpT, FunctorT>
       >(root, msg, id, num_contrib);
+  }
+
+  /**
+   * \brief Reduce a message up the tree with a target function on the root node
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the next reduction stamp
+   */
+  template <
+    typename OpT,
+    typename FunctorT,
+    auto f
+  >
+  detail::ReduceStamp reduceImmediate(
+    NodeType const& root,
+    typename FuncTraits<decltype(f)>::MsgT* msg,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
+  ) {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    return reduceImmediate<OpT, FunctorT, MsgT, f>(root, msg, id, num_contrib);
   }
 
   /**

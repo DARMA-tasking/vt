@@ -14,15 +14,9 @@ endif()
 
 include(CMakeFindDependencyMacro)
 
-@THREADS_DEPENDENCY@
 @ZOLTAN_DEPENDENCY@
 
 find_dependency(MPI REQUIRED)
-
-if (@detector_PACKAGE_LOADED@)
-  set (detector_DIR @detector_DIR@)
-  find_dependency(detector REQUIRED HINTS @detector_DIR@)
-endif()
 
 if (@checkpoint_PACKAGE_LOADED@)
   set (checkpoint_DIR @checkpoint_DIR@)

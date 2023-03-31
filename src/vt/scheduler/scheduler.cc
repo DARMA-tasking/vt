@@ -46,7 +46,6 @@
 #include "vt/messaging/active.h"
 #include "vt/event/event.h"
 #include "vt/termination/termination.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/objgroup/manager.fwd.h"
 #include "vt/configs/arguments/app_config.h"
@@ -240,24 +239,24 @@ void Scheduler::runProgress(bool msg_only, TimeType current_time) {
   if (theConfig()->vt_print_memory_at_threshold) {
     printMemoryUsage();
   }
-
+  is_recent_time_stale_ = true;
   if (special_progress_) {
     // Reset count of processed handlers since the last time progress was invoked
     processed_after_last_progress_ = 0;
-    last_progress_time_ = timing::getCurrentTime();
+    last_progress_time_ = getRecentTime();
   }
 }
 
 void Scheduler::runSchedulerOnceImpl(bool msg_only) {
   if (special_progress_) {
-    auto current_time = timing::getCurrentTime();
+    auto current_time = getRecentTime();
     auto time_since_last_progress = current_time - last_progress_time_;
     if (shouldCallProgress(processed_after_last_progress_, time_since_last_progress)) {
       runProgress(msg_only, current_time);
     }
   } else if (work_queue_.empty()) {
     if (curRT->needsCurrentTime()) {
-      runProgress(msg_only, timing::getCurrentTime());
+      runProgress(msg_only, getRecentTime());
     } else {
       runProgress(msg_only, TimeType{0});
     }

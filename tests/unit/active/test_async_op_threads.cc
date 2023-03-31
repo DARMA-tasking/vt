@@ -96,7 +96,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
         done_ = true;
         // stack should be the size before running this method since we haven't
         // resumed the thread yet!
-        EXPECT_EQ(theTerm()->getEpochStack().size(), size_stack_before_running_handler);
+        EXPECT_EQ(theTerm()->getEpochStack().size(), stack_size_before_running_handler);
       }
     );
 
@@ -161,7 +161,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
     );
 
     auto p = getCollectionProxy();
-    p[this_node].invoke<decltype(&MyCol::handlerToInvoke), &MyCol::handlerToInvoke>(std::move(op1),std::move(op2));
+    p[this_node].invoke<&MyCol::handlerToInvoke>(std::move(op1),std::move(op2));
   }
 
   void handlerToInvoke(
@@ -198,7 +198,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
 TEST_F(TestAsyncOpThreads, test_async_op_threads_1) {
   auto const this_node = theContext()->getNode();
 
-  stack_size_before_running_handler = theTerm()->size_getEpochStack().size();
+  stack_size_before_running_handler = theTerm()->getEpochStack().size();
 
   vt::Index1D range(static_cast<int>(theContext()->getNumNodes()));
   auto p = vt::makeCollection<MyCol>("test_async_op_threads_invoke")

@@ -86,7 +86,7 @@ TEST_F(TestScatter, test_scatter_1) {
   if (this_node == 0) {
     auto const& elm_size = sizeof(int) * num_elms;
     auto const& total_size = elm_size * num_nodes;
-    theCollective()->scatter<int,scatterHan>(
+    theCollective()->scatter<scatterHan>(
       total_size,elm_size,nullptr,[](NodeType node, void* ptr){
         auto ptr_out = reinterpret_cast<int*>(ptr);
         for (std::size_t i = 0; i < num_elms; i++) {

@@ -84,7 +84,7 @@ static inline void activeMessageGroupCollective() {
       if (my_node == 1) {
         auto msg = makeMessage<MySimpleMsg2>();
         envelopeSetGroup(msg->env, group_id);
-        theMsg()->broadcastMsg<MySimpleMsg2,msgHandlerGroupB>(msg);
+        theMsg()->broadcastMsg<msgHandlerGroupB>(msg);
       }
     }
   );

@@ -56,9 +56,7 @@
 #define vt_feature_trace_enabled       0 || vt_feature_cmake_trace_enabled
 #define vt_feature_trace_only          0 || vt_feature_cmake_trace_only
 #define vt_feature_lblite              0 || vt_feature_cmake_lblite
-#define vt_feature_openmp              0 || vt_feature_cmake_openmp
 #define vt_feature_production          0 || vt_feature_cmake_production
-#define vt_feature_stdthread           0 || vt_feature_cmake_stdthread
 #define vt_feature_mpi_rdma            0 || vt_feature_cmake_mpi_rdma
 #define vt_feature_print_term_msgs     0 || vt_feature_cmake_print_term_msgs
 #define vt_feature_no_pool_alloc_env   0 || vt_feature_cmake_no_pool_alloc_env

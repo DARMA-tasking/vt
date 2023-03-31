@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/send/sendable.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/vrt/collection/messages/param_col_msg.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -127,6 +128,34 @@ template <
 >
 messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) const {
   return sendMsg<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <auto f, typename... Params>
+messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Params&&... params) const {
+  using FnTrait = ObjFuncTraits<decltype(f)>;
+
+  using MsgT = typename FnTrait::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename FnTrait::TupleType;
+    using SendMsgT = ParamColMsg<Tuple, ColT>;
+    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto han = auto_registry::makeAutoHandlerCollectionMemParam<
+      ColT, decltype(f), f, SendMsgT
+    >();
+    auto col_proxy = this->getCollectionProxy();
+    auto elm_proxy = this->getElementProxy();
+    auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy, elm_proxy);
+    return theCollection()->sendMsgUntypedHandler<SendMsgT, ColT, IndexT>(
+      proxy, msg.get(), han
+    );
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return sendMsg<MsgT, f>(msg);
+  }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return messaging::PendingSend{std::nullptr_t{}};
 }
 
 

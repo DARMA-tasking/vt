@@ -78,45 +78,22 @@ void LBDataRestartReader::startup() {
   readLBData(file_name);
 }
 
-std::vector<ElementIDType> const&
-LBDataRestartReader::getMoveList(PhaseType phase) const {
-  vtAssert(proc_move_list_.size() > phase, "Phase must exist");
-  return proc_move_list_.at(phase);
-}
-
-void LBDataRestartReader::clearMoveList(PhaseType phase) {
-  if (proc_move_list_.size() > phase) {
-    proc_move_list_.at(phase).clear();
-  }
-}
-
-bool LBDataRestartReader::needsLB(PhaseType phase) const {
-  if (proc_phase_runs_LB_.size() > phase) {
-    return proc_phase_runs_LB_.at(phase);
-  } else {
-    return false;
-  }
-}
-
-std::deque<std::vector<ElementIDType>> const&
-LBDataRestartReader::getMigrationList() const {
-  return proc_move_list_;
-}
-
-std::deque<std::set<ElementIDType>> LBDataRestartReader::readIntoElementHistory(
-  LBDataHolder const& lbdh
-) {
-  std::deque<std::set<ElementIDType>> element_history;
-  for (PhaseType phase = 0; phase < lbdh.node_data_.size(); phase++) {
-    std::set<ElementIDType> buffer;
-    for (auto const& obj : lbdh.node_data_.at(phase)) {
-      if (obj.first.isMigratable()) {
-        buffer.insert(obj.first.id);
+void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
+  num_phases_ = lbdh.node_data_.size();
+  for (PhaseType phase = 0; phase < num_phases_; phase++) {
+    auto iter = lbdh.node_data_.find(phase);
+    if (iter != lbdh.node_data_.end()) {
+      for (auto const& obj : iter->second) {
+        if (obj.first.isMigratable()) {
+          history_[phase].insert(obj.first);
+        }
       }
+    } else {
+      // We assume that all phases are dense all fully specified even if they
+      // don't change
+      vtAbort("Could not find data: phases must all be specified");
     }
-    element_history.emplace_back(std::move(buffer));
   }
-  return element_history;
 }
 
 void LBDataRestartReader::readLBDataFromStream(std::stringstream stream) {
@@ -129,174 +106,95 @@ void LBDataRestartReader::readLBDataFromStream(std::stringstream stream) {
   );
   json j = json::parse(c);
   auto lbdh = LBDataHolder(j);
-
-  auto element_history = readIntoElementHistory(lbdh);
-  constructMoveList(std::move(element_history));
+  readHistory(lbdh);
+  determinePhasesToMigrate();
 }
 
-void LBDataRestartReader::readLBData(std::string const& fileName) {
-  // Read the input files
-  auto elements_history = inputLBDataFile(fileName);
-  constructMoveList(std::move(elements_history));
-}
-
-void LBDataRestartReader::constructMoveList(
-  std::deque<std::set<ElementIDType>> element_history
-) {
-  if (element_history.empty()) {
-    vtWarn("No element history provided");
-    return;
-  }
-
-  auto const num_iters = element_history.size() - 1;
-  proc_move_list_.resize(num_iters);
-  proc_phase_runs_LB_.resize(num_iters, true);
-
-  if (theContext()->getNode() == 0) {
-    msgsReceived.resize(num_iters, 0);
-    totalMove.resize(num_iters);
-  }
-
-  // Communicate the migration information
-  createMigrationInfo(element_history);
-}
-
-std::deque<std::set<ElementIDType>>
-LBDataRestartReader::inputLBDataFile(std::string const& fileName) {
+void LBDataRestartReader::readLBData(std::string const& file) {
   using vt::util::json::Reader;
   using vt::vrt::collection::balance::LBDataHolder;
 
-  Reader r{fileName};
+  Reader r{file};
   auto json = r.readFile();
   auto lbdh = LBDataHolder(*json);
-
-  return readIntoElementHistory(lbdh);
+  readHistory(lbdh);
+  determinePhasesToMigrate();
 }
 
-void LBDataRestartReader::createMigrationInfo(
-  std::deque<std::set<ElementIDType>>& element_history
-) {
-  const auto num_iters = element_history.size() - 1;
-  const auto myNodeID = static_cast<ElementIDType>(theContext()->getNode());
-
-  for (size_t ii = 0; ii < num_iters; ++ii) {
-    auto& elms = element_history[ii];
-    auto& elmsNext = element_history[ii + 1];
-    std::set<ElementIDType> diff;
-    std::set_difference(elmsNext.begin(), elmsNext.end(), elms.begin(),
-                        elms.end(), std::inserter(diff, diff.begin()));
-    const size_t qi = diff.size();
-    const size_t pi = elms.size() - (elmsNext.size() - qi);
-    auto& myList = proc_move_list_[ii];
-    myList.reserve(3 * (pi + qi) + 1);
-    //--- Store the iteration number
-    myList.push_back(static_cast<ElementIDType>(ii));
-    //--- Store partial migration information (i.e. nodes moving in)
-    for (auto iEle : diff) {
-      myList.push_back(iEle);  //--- permID to receive
-      myList.push_back(no_element_id); // node moving from
-      myList.push_back(myNodeID); // node moving to
-    }
-    diff.clear();
-    //--- Store partial migration information (i.e. nodes moving out)
-    std::set_difference(elms.begin(), elms.end(), elmsNext.begin(),
-                        elmsNext.end(), std::inserter(diff, diff.begin()));
-    for (auto iEle : diff) {
-      myList.push_back(iEle);  //--- permID to send
-      myList.push_back(myNodeID); // node migrating from
-      myList.push_back(no_element_id); // node migrating to
-    }
-    //
-    // Create a message storing the vector
-    //
-    proxy_[0].send<VecMsg, &LBDataRestartReader::gatherMsgs>(myList);
-    //
-    // Clear old distribution of elements
-    //
-    elms.clear();
-  }
-
+void LBDataRestartReader::departing(DepartMsg* msg) {
+  auto m = promoteMsg(msg);
+  coordinate_[msg->phase][msg->elm].depart = m;
+  checkBothEnds(coordinate_[msg->phase][msg->elm]);
 }
 
-void LBDataRestartReader::gatherMsgs(VecMsg *msg) {
-  auto sentVec = msg->getTransfer();
-  vtAssert(sentVec.size() % 3 == 1, "Expecting vector of length 3n+1");
-  ElementIDType const phaseID = sentVec[0];
-  //
-  // --- Combine the different pieces of information
-  //
-  msgsReceived[phaseID] += 1;
-  auto& migrate = totalMove[phaseID];
-  for (size_t ii = 1; ii < sentVec.size(); ii += 3) {
-    auto const permID = sentVec[ii];
-    auto const nodeFrom = static_cast<NodeType>(sentVec[ii + 1]);
-    auto const nodeTo = static_cast<NodeType>(sentVec[ii + 2]);
-    auto iptr = migrate.find(permID);
-    if (iptr == migrate.end()) {
-      migrate.insert(std::make_pair(permID, std::make_pair(nodeFrom, nodeTo)));
-    }
-    else {
-      auto &nodePair = iptr->second;
-      nodePair.first = std::max(nodePair.first, nodeFrom);
-      nodePair.second = std::max(nodePair.second, nodeTo);
-    }
+void LBDataRestartReader::arriving(ArriveMsg* msg) {
+  auto m = promoteMsg(msg);
+  coordinate_[msg->phase][msg->elm].arrive = m;
+  checkBothEnds(coordinate_[msg->phase][msg->elm]);
+}
+
+void LBDataRestartReader::update(UpdateMsg* msg) {
+  auto iter = history_[msg->phase].find(msg->elm);
+  vtAssert(iter != history_[msg->phase].end(), "Must exist");
+  auto elm = *iter;
+  elm.curr_node = msg->curr_node;
+  history_[msg->phase].erase(iter);
+  history_[msg->phase].insert(elm);
+}
+
+void LBDataRestartReader::checkBothEnds(Coord& coord) {
+  if (coord.arrive != nullptr and coord.depart != nullptr) {
+    proxy_[coord.arrive->arrive_node].send<
+      UpdateMsg, &LBDataRestartReader::update
+    >(coord.depart->depart_node, coord.arrive->phase, coord.arrive->elm);
   }
-  //
-  // --- Check whether all the messages have been received
-  //
-  const NodeType numNodes = theContext()->getNumNodes();
-  if (msgsReceived[phaseID] < static_cast<std::size_t>(numNodes))
-    return;
-  //
-  //--- Distribute the information when everything has been received
-  //
-  size_t const header = 2;
-  for (NodeType in = 0; in < numNodes; ++in) {
-    size_t iCount = 0;
-    for (auto iNode : migrate) {
-      if (iNode.second.first == in)
-        iCount += 1;
-    }
-    std::vector<ElementIDType> toMove(2 * iCount + header);
-    iCount = 0;
-    toMove[iCount++] = phaseID;
-    toMove[iCount++] = static_cast<ElementIDType>(migrate.size());
-    for (auto iNode : migrate) {
-      if (iNode.second.first == in) {
-        toMove[iCount++] = iNode.first;
-        toMove[iCount++] = static_cast<ElementIDType>(iNode.second.second);
+}
+
+void LBDataRestartReader::determinePhasesToMigrate() {
+  std::vector<bool> local_changed_distro;
+  local_changed_distro.resize(num_phases_ - 1);
+
+  auto const this_node = theContext()->getNode();
+
+  runInEpochCollective("LBDataRestartReader::updateLocations", [&]{
+    for (PhaseType i = 0; i < num_phases_ - 1; ++i) {
+      local_changed_distro[i] = history_[i] != history_[i+1];
+      if (local_changed_distro[i]) {
+        std::set<ElementIDStruct> departing, arriving;
+
+        std::set_difference(
+          history_[i+1].begin(), history_[i+1].end(),
+          history_[i].begin(),   history_[i].end(),
+          std::inserter(arriving, arriving.begin())
+        );
+
+        std::set_difference(
+          history_[i].begin(),   history_[i].end(),
+          history_[i+1].begin(), history_[i+1].end(),
+          std::inserter(departing, departing.begin())
+        );
+
+        for (auto&& d : departing) {
+          proxy_[d.getHomeNode()].send<DepartMsg, &LBDataRestartReader::departing>(this_node, i+1, d);
+        }
+        for (auto&& a : arriving) {
+          proxy_[a.getHomeNode()].send<ArriveMsg, &LBDataRestartReader::arriving>(this_node, i+1, a);
+        }
       }
     }
-    if (in > 0) {
-      proxy_[in].send<VecMsg, &LBDataRestartReader::scatterMsgs>(toMove);
-    } else {
-      proc_phase_runs_LB_[phaseID] = (!migrate.empty());
-      auto& myList = proc_move_list_[phaseID];
-      myList.resize(toMove.size() - header);
-      std::copy(&toMove[header], toMove.data() + toMove.size(),
-                myList.begin());
-    }
-  }
-  migrate.clear();
+  });
+
+  runInEpochCollective("LBDataRestartReader::computeDistributionChanges", [&]{
+    auto cb = theCB()->makeBcast<
+      LBDataRestartReader,ReduceMsg,&LBDataRestartReader::reduceDistroChanges
+    >(proxy_);
+    auto msg = makeMessage<ReduceMsg>(std::move(local_changed_distro));
+    proxy_.reduce<collective::OrOp<std::vector<bool>>>(msg, cb);
+  });
 }
 
-void LBDataRestartReader::scatterMsgs(VecMsg *msg) {
-  const size_t header = 2;
-  auto recvVec = msg->getTransfer();
-  vtAssert((recvVec.size() -header) % 2 == 0,
-    "Expecting vector of length 2n+2");
-  //--- Get the iteration number associated with the message
-  const ElementIDType phaseID = recvVec[0];
-  //--- Check whether some migration will be done
-  proc_phase_runs_LB_[phaseID] = static_cast<bool>(recvVec[1] > 0);
-  auto &myList = proc_move_list_[phaseID];
-  if (!proc_phase_runs_LB_[phaseID]) {
-    myList.clear();
-    return;
-  }
-  //--- Copy the migration information
-  myList.resize(recvVec.size() - header);
-  std::copy(&recvVec[header], recvVec.data()+recvVec.size(), myList.begin());
+void LBDataRestartReader::reduceDistroChanges(ReduceMsg* msg) {
+  changed_distro_ = std::move(msg->getMoveVal());
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

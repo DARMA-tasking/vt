@@ -46,7 +46,6 @@
 
 #include "vt/config.h"
 #include "vt/runtime/runtime_common.h"
-#include "vt/utils/tls/tls.h"
 
 #include <memory>
 

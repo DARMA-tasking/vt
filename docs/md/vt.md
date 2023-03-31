@@ -29,7 +29,7 @@ management.
   - RDMA using MPI one-sided for data transfer
   - Asynchronous Collectives across nodes/groups (scatter, async barrier, reduce, ...)
   - General scheduler with prioritization
-  - Built-in interoperability with MPI and threading libraries (Kokkos, OpenMP, ...)
+  - Built-in interoperability with MPI and threading libraries (e.g. Kokkos, fcontext)
   - Object groups for node-level encapsulation
   - Virtual contexts for migratable virtualization and dispatch
   - Abstractions for multi-dimensional indices, mapping, and linearization
@@ -50,7 +50,6 @@ management.
 | \subpage location           | `vt::theLocMan()`      | \copybrief location         | @m_class{m-label m-success} **Core**           |
 | \subpage mem-usage          | `vt::theMemUsage()`    | \copybrief mem-usage        | @m_class{m-label m-warning} **Optional**       |
 | \subpage objgroup           | `vt::theObjGroup()`    | \copybrief objgroup         | @m_class{m-label m-success} **Core**           |
-| \subpage param              | `vt::theParam()`       | \copybrief param            | @m_class{m-label m-danger} **Experimental**    |
 | \subpage pipe               | `vt::theCB()`          | \copybrief pipe             | @m_class{m-label m-success} **Core**           |
 | \subpage node-lb-data         | `vt::theNodeLBData()`   | \copybrief node-lb-data       | @m_class{m-label m-warning} **Optional**       |
 | \subpage phase              | `vt::thePhase()`       | \copybrief phase            | @m_class{m-label m-success} **Core**           |

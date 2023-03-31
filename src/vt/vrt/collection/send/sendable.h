@@ -48,6 +48,7 @@
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -120,6 +121,31 @@ struct Sendable : BaseProxyT {
   template <
     typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
   >
+  messaging::PendingSend send(Args&&... args) const;
+
+  /**
+   * \brief Create message (with action function handler) and send to collection element
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <auto f>
+  messaging::PendingSend sendMsg(
+    messaging::MsgPtrThief<typename ObjFuncTraits<decltype(f)>::MsgT> msg
+  ) const {
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+    return sendMsg<MsgT, f>(msg);
+  }
+
+  /**
+   * \brief Create message (with action function handler) and send to collection element
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <auto f, typename... Args>
   messaging::PendingSend send(Args&&... args) const;
 };
 

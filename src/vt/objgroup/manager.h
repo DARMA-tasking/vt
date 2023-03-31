@@ -46,17 +46,18 @@
 
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/utils/static_checks/function_ret_check.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/manager.fwd.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/objgroup/holder/holder.h"
 #include "vt/objgroup/holder/holder_user.h"
 #include "vt/objgroup/holder/holder_basic.h"
-#include "vt/objgroup/dispatch/dispatch.h"
 #include "vt/messaging/message/message.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
 #include "vt/elm/elm_id.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <memory>
 #include <functional>
@@ -89,11 +90,9 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   using MakeFnType          = std::function<std::unique_ptr<ObjT>()>;
   using HolderBaseType      = holder::HolderBase;
   using HolderBasePtrType   = std::unique_ptr<HolderBaseType>;
-  using DispatchBaseType    = dispatch::DispatchBase;
-  using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
-  using MsgContainerType    = std::vector<MsgSharedPtr<ShortMessage>>;
   using PendingSendType     = messaging::PendingSend;
 
+public:
   /**
    * \internal \brief Construct the ObjGroupManager
    */
@@ -220,6 +219,22 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   PendingSendType send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
   /**
+   * \internal \brief Send a message to an element of the object group
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg message to send
+   */
+  template <auto fn>
+  PendingSendType send(
+    ProxyElmType<typename ObjFuncTraits<decltype(fn)>::ObjT> proxy,
+    MsgSharedPtr<typename ObjFuncTraits<decltype(fn)>::MsgT> msg
+  ) {
+    using ObjType = typename ObjFuncTraits<decltype(fn)>::ObjT;
+    using MsgType = typename ObjFuncTraits<decltype(fn)>::MsgT;
+    return send<ObjType, MsgType, fn>(proxy, msg);
+  }
+
+  /**
    * \internal \brief Invoke message handler on an element of the object group
    * The message handler will be invoked inline without going through scheduler
    *
@@ -227,7 +242,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] msg message
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  void invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg);
+  decltype(auto) invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg);
 
   /**
    * \internal \brief Invoke function 'f' on an element of the object group
@@ -236,7 +251,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] proxy proxy to the object group
    * \param[in] args function arguments
    */
-  template <typename ObjT, typename Type, Type f, typename... Args>
+  template <typename ObjT, auto f, typename... Args>
   decltype(auto) invoke(ProxyElmType<ObjT> proxy, Args&&... args);
 
   /**
@@ -247,6 +262,22 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   PendingSendType broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
+
+  /**
+   * \internal \brief Broadcast a message to all nodes in object group
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg message to broadcast
+   */
+  template <auto fn>
+  PendingSendType broadcast(
+    ProxyType<typename ObjFuncTraits<decltype(fn)>::ObjT> proxy,
+    MsgSharedPtr<typename ObjFuncTraits<decltype(fn)>::MsgT> msg
+  ) {
+    using ObjType = typename ObjFuncTraits<decltype(fn)>::ObjT;
+    using MsgType = typename ObjFuncTraits<decltype(fn)>::MsgT;
+    return broadcast<ObjType, MsgType, fn>(proxy, msg);
+  }
 
   /**
    * \brief Change the traced name of the object group
@@ -274,6 +305,25 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
     ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg,
     collective::reduce::ReduceStamp const& stamp
   );
+
+  /**
+   * \brief Perform a reduction over an objgroup
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg reduction message
+   * \param[in] stamp stamp to identify reduction across nodes
+   *
+   * \return the PendingSend corresponding to the reduce
+   */
+  template <typename ObjT, auto f>
+  PendingSendType reduce(
+    ProxyType<ObjT> proxy,
+    messaging::MsgPtrThief<typename FuncTraits<decltype(f)>::MsgT> msg,
+    collective::reduce::ReduceStamp const& stamp
+  ) {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    return reduce<ObjT, MsgT, f>(proxy, msg, stamp);
+  }
 
   /**
    * \brief Get a pointer to the local objgroup instance. Returns null if the
@@ -330,17 +380,6 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   template <typename ObjT>
   std::string getLabel(ProxyType<ObjT> proxy) const;
 
-  /*
-   * Dispatch to a live obj group pointer with a handler
-   */
-  /**
-   * \internal \brief Dispatch message to objgroup
-   *
-   * \param[in] msg the message
-   * \param[in] han the handler to invoke
-   */
-  void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han);
-
   /**
    * \internal \brief Send a message to an objgroup
    *
@@ -359,8 +398,10 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] han handler to invoke
    * \param[in] node node to invoke the handler on
    */
-  template <typename MsgT>
-  void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType node);
+  template <typename ObjT, typename MsgT, auto f>
+  decltype(auto) invoke(
+    messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node
+  );
 
   /**
    * \internal \brief Broadcast message to an objgroup
@@ -383,7 +424,6 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_obj_id_
-      | dispatch_
       | objs_
       | obj_to_proxy_
       | pending_
@@ -392,6 +432,8 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
 
   // Friend function to access the holder without including this header file
   friend holder::HolderBase* detail::getHolderBase(HandlerType handler);
+  friend std::unordered_map<ObjGroupProxyType, HolderBasePtrType>& getObjs();
+  friend std::unordered_map<ObjGroupProxyType, std::vector<ActionType>>& getPending();
 
 private:
   /**
@@ -451,14 +493,12 @@ private:
 private:
   /// The current obj ID, sequential on each node for collective construction
   ObjGroupIDType cur_obj_id_ = fst_obj_group_id;
-  /// Function to dispatch to the base class for type-erasure to run handler
-  std::unordered_map<ObjGroupProxyType, DispatchBasePtrType> dispatch_;
   /// Type-erased pointers to the objects held on this node
   std::unordered_map<ObjGroupProxyType, HolderBasePtrType> objs_;
   /// Reverse lookup map from an object pointer to the proxy
   std::unordered_map<void*, ObjGroupProxyType> obj_to_proxy_;
   /// Messages that are pending creation for delivery
-  std::unordered_map<ObjGroupProxyType, MsgContainerType> pending_;
+  std::unordered_map<ObjGroupProxyType, std::vector<ActionType>> pending_;
   /// Map of object groups' labels
   std::unordered_map<ObjGroupProxyType, std::string> labels_;
 };

@@ -70,7 +70,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * files.
  */
 struct LBDataRestartReader : runtime::component::Component<LBDataRestartReader> {
-  using VecMsg = lb::TransferMsg<std::vector<balance::ElementIDType> >;
+  using ReduceMsg = collective::ReduceTMsg<std::vector<bool>>;
 
 public:
   LBDataRestartReader() = default;
@@ -83,67 +83,147 @@ public:
 
   void startup() override;
 
+  /**
+   * \brief Read LB data from a string stream
+   *
+   * \param[in] stream the input stream
+   */
   void readLBDataFromStream(std::stringstream stream);
 
-  void constructMoveList(std::deque<std::set<ElementIDType>> element_history);
-
+  /**
+   * \brief Read LB data from the file specified
+   *
+   * \param[in] file the file
+   */
   void readLBData(std::string const& fileName);
 
-  std::deque<std::set<ElementIDType>> readIntoElementHistory(
-    LBDataHolder const& lbdh
-  );
+  /**
+   * \brief Read the element history from an LB holder
+   *
+   * \param[in] lbdh the LB data holder
+   */
+  void readHistory(LBDataHolder const& lbdh);
 
-  std::vector<ElementIDType> const& getMoveList(PhaseType phase) const;
-
-  std::deque<std::vector<ElementIDType>> const& getMigrationList() const;
-
-  void clearMoveList(PhaseType phase);
-
-  bool needsLB(PhaseType phase) const;
+  /**
+   * \brief Return whether a phase needs LB
+   *
+   * \param[in] phase the phase
+   *
+   * \return whether it needs LB
+   */
+  bool needsLB(PhaseType phase) const {
+    return changed_distro_.size() > phase ? changed_distro_.at(phase) : false;
+  }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | msgsReceived
-      | totalMove
-      | proxy_
-      | proc_move_list_
-      | proc_phase_runs_LB_;
+    s | proxy_
+      | changed_distro_
+      | history_
+      | num_phases_;
+  }
+
+  /**
+   * \brief Get the elements assigned for a given phase
+   *
+   * \param[in] phase the phase
+   *
+   * \return element assigned to this node
+   */
+  std::set<ElementIDStruct> const& getDistro(PhaseType phase) {
+    auto iter = history_.find(phase);
+    vtAssert(iter != history_.end(), "Must have a valid phase");
+    return iter->second;
+  }
+
+  /**
+   * \brief Clear history for a given phase
+   *
+   * \param[in] phase the phase to clear
+   */
+  void clearDistro(PhaseType phase) {
+    auto iter = history_.find(phase);
+    if (iter != history_.end()) {
+      history_.erase(iter);
+    }
   }
 
 private:
-  std::deque<std::set<ElementIDType>> inputLBDataFile(
-    std::string const& fileName
-  );
+  /**
+   * \brief Reduce distribution changes globally to find where migrations need
+   * to occur
+   *
+   * \param[in] msg the reduction message
+   */
+  void reduceDistroChanges(ReduceMsg* msg);
 
-  void createMigrationInfo(
-    std::deque<std::set<ElementIDType>>& element_history
-  );
-
-  void gatherMsgs(VecMsg *msg);
-
-  void scatterMsgs(VecMsg *msg);
+  /**
+   * \brief Determine which phases migrations must happen to follow the
+   * distribution
+   */
+  void determinePhasesToMigrate();
 
 private:
-  /// \brief Vector counting the received messages per iteration
-  /// \note Only node 0 will use this vector.
-  std::vector<size_t> msgsReceived;
+  objgroup::proxy::Proxy<LBDataRestartReader> proxy_; /**< Objgroup proxy */
 
-  /// \brief Queue for storing all the migrations per iteration.
-  /// \note Only node 0 will use this queue.
-  std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>> totalMove;
+  /// Whether the distribution changed for a given phase and thus needs LB
+  std::vector<bool> changed_distro_;
 
-  /// \brief Proxy for communicating the migration information
-  objgroup::proxy::Proxy<LBDataRestartReader> proxy_;
+  /// History of mapping that was read in from the data files
+  std::unordered_map<PhaseType, std::set<ElementIDStruct>> history_;
 
-  /// \brief Queue of migrations for each iteration.
-  /// \note At each iteration, a vector of length 2 times (# of migrations)
-  /// is specified. The vector contains the "permanent" ID of the element
-  /// to migrate followed by the node ID to migrate to.
-  std::deque<std::vector<ElementIDType>> proc_move_list_;
+  struct DepartMsg : vt::Message {
+    DepartMsg(NodeType in_depart_node, PhaseType in_phase, ElementIDStruct in_elm)
+      : depart_node(in_depart_node),
+        phase(in_phase),
+        elm(in_elm)
+    { }
 
-  /// \brief Vector of booleans to indicate whether the user-specified
-  /// map migrates elements for a specific iteration.
-  std::vector<bool> proc_phase_runs_LB_;
+    NodeType depart_node = uninitialized_destination;
+    PhaseType phase = no_lb_phase;
+    ElementIDStruct elm;
+  };
+
+  struct ArriveMsg : vt::Message {
+    ArriveMsg(NodeType in_arrive_node, PhaseType in_phase, ElementIDStruct in_elm)
+      : arrive_node(in_arrive_node),
+        phase(in_phase),
+        elm(in_elm)
+    { }
+
+    NodeType arrive_node = uninitialized_destination;
+    PhaseType phase = no_lb_phase;
+    ElementIDStruct elm;
+  };
+
+  struct UpdateMsg : vt::Message {
+    UpdateMsg(NodeType in_curr_node, PhaseType in_phase, ElementIDStruct in_elm)
+      : curr_node(in_curr_node),
+        phase(in_phase),
+        elm(in_elm)
+    { }
+
+    NodeType curr_node = uninitialized_destination;
+    PhaseType phase = no_lb_phase;
+    ElementIDStruct elm;
+  };
+
+  struct Coord {
+    MsgSharedPtr<ArriveMsg> arrive = nullptr;
+    MsgSharedPtr<DepartMsg> depart = nullptr;
+  };
+
+  void departing(DepartMsg* msg);
+  void arriving(ArriveMsg* msg);
+  void update(UpdateMsg* msg);
+  void checkBothEnds(Coord& coord);
+
+  std::unordered_map<
+    PhaseType, std::unordered_map<ElementIDStruct, Coord>
+  > coordinate_;
+
+  /// Number of phases read in
+  std::size_t num_phases_ = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

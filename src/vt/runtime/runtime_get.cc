@@ -46,7 +46,6 @@
 #include "vt/context/context.h"
 #include "vt/runtime/runtime.h"
 #include "vt/runtime/runtime_inst.h"
-#include "vt/utils/tls/tls.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
@@ -55,12 +54,10 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/pool/pool.h"
 #include "vt/rdma/rdma.h"
-#include "vt/parameterization/parameterization.h"
 #include "vt/trace/trace.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/collection/collection_headers.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/group/group_headers.h"
 #include "vt/pipe/pipe_headers.h"
 #include "vt/objgroup/headers.h"
@@ -87,64 +84,45 @@ namespace vt {
  *
  */
 
-static runtime::Runtime* no_rt = nullptr;
-
-#define IS_COMM_THREAD curRT->theContext->getWorker() == worker_id_comm_thread
-#define CUR_RT_SAFE (IS_COMM_THREAD ? curRT : no_rt)
-#define CUR_RT_TS curRT
-#define CUR_RT CUR_RT_SAFE
-
-#define CHECK_THD                                                       \
-  do {                                                                  \
-    bool const check = IS_COMM_THREAD;                                  \
-    std::string str("Only comm thread can access this component");      \
-    vtAssertExpr(check && str.c_str());                                       \
-    if (!check) { CUR_RT->abort(str, 29); }                             \
-  } while (0);
-
 using CollectionManagerType = vrt::collection::CollectionManager;
+using NodeLBDataType = vrt::collection::balance::NodeLBData;
+using LBDataRestartReaderType = vrt::collection::balance::LBDataRestartReader;
+using LBManagerType = vrt::collection::balance::LBManager;
+using TimeTriggerManagerType = timetrigger::TimeTriggerManager;
 
 // Thread-safe runtime components
-ctx::Context*               theContext()            { return CUR_RT_TS->theContext;        }
-pool::Pool*                 thePool()               { return CUR_RT_TS->thePool;           }
-vrt::VirtualContextManager* theVirtualManager()     { return CUR_RT_TS->theVirtualManager; }
-#if vt_threading_enabled
-worker::WorkerGroupType*    theWorkerGrp()          { return CUR_RT_TS->theWorkerGrp;      }
-#endif
+ctx::Context*               theContext()            { return curRT->theContext;        }
+pool::Pool*                 thePool()               { return curRT->thePool;           }
+vrt::VirtualContextManager* theVirtualManager()     { return curRT->theVirtualManager; }
 
 // Non thread-safe runtime components
-collective::CollectiveAlg*  theCollective()         { return CUR_RT->theCollective;     }
-event::AsyncEvent*          theEvent()              { return CUR_RT->theEvent;          }
-messaging::ActiveMessenger* theMsg()                { return CUR_RT->theMsg;            }
-param::Param*               theParam()              { return CUR_RT->theParam;          }
-rdma::RDMAManager*          theRDMA()               { return CUR_RT->theRDMA;           }
-sched::Scheduler*           theSched()              { return CUR_RT->theSched;          }
-term::TerminationDetector*  theTerm()               { return CUR_RT->theTerm;           }
-location::LocationManager*  theLocMan()             { return CUR_RT->theLocMan;         }
-CollectionManagerType*      theCollection()         { return CUR_RT->theCollection;     }
-group::GroupManager*        theGroup()              { return CUR_RT->theGroup;          }
-pipe::PipeManager*          theCB()                 { return CUR_RT->theCB;             }
-objgroup::ObjGroupManager*  theObjGroup()           { return CUR_RT->theObjGroup;       }
-rdma::Manager*              theHandleRDMA()         { return CUR_RT->theHandleRDMA;     }
-util::memory::MemoryUsage*  theMemUsage()           { return CUR_RT->theMemUsage;       }
-vrt::collection::balance::NodeLBData* theNodeLBData() { return CUR_RT->theNodeLBData;      }
-vrt::collection::balance::LBDataRestartReader* theLBDataReader() { return CUR_RT->theLBDataReader;      }
-vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
-timetrigger::TimeTriggerManager* theTimeTrigger()   { return CUR_RT->theTimeTrigger;    }
-vt::arguments::AppConfig*   theConfig()             { return &CUR_RT->theArgConfig->config_;      }
-vt::phase::PhaseManager*   thePhase()               { return CUR_RT->thePhase;          }
-epoch::EpochManip*          theEpoch()              { return CUR_RT->theEpoch;          }
+collective::CollectiveAlg*  theCollective()         { return curRT->theCollective;     }
+event::AsyncEvent*          theEvent()              { return curRT->theEvent;          }
+messaging::ActiveMessenger* theMsg()                { return curRT->theMsg;            }
+rdma::RDMAManager*          theRDMA()               { return curRT->theRDMA;           }
+sched::Scheduler*           theSched()              { return curRT->theSched;          }
+term::TerminationDetector*  theTerm()               { return curRT->theTerm;           }
+location::LocationManager*  theLocMan()             { return curRT->theLocMan;         }
+CollectionManagerType*      theCollection()         { return curRT->theCollection;     }
+group::GroupManager*        theGroup()              { return curRT->theGroup;          }
+pipe::PipeManager*          theCB()                 { return curRT->theCB;             }
+objgroup::ObjGroupManager*  theObjGroup()           { return curRT->theObjGroup;       }
+rdma::Manager*              theHandleRDMA()         { return curRT->theHandleRDMA;     }
+util::memory::MemoryUsage*  theMemUsage()           { return curRT->theMemUsage;       }
+NodeLBDataType*             theNodeLBData()         { return curRT->theNodeLBData;     }
+LBDataRestartReaderType*    theLBDataReader()       { return curRT->theLBDataReader;   }
+LBManagerType*              theLBManager()          { return curRT->theLBManager;      }
+TimeTriggerManagerType*     theTimeTrigger()        { return curRT->theTimeTrigger;    }
+vt::arguments::AppConfig*   theConfig()             { return &curRT->theArgConfig->config_;      }
+vt::phase::PhaseManager*    thePhase()              { return curRT->thePhase;          }
+epoch::EpochManip*          theEpoch()              { return curRT->theEpoch;          }
 
 #if vt_check_enabled(trace_enabled)
-trace::Trace*               theTrace()              { return CUR_RT->theTrace;          }
+trace::Trace*               theTrace()              { return curRT->theTrace;          }
 #endif
 #if vt_check_enabled(mpi_access_guards)
-pmpi::PMPIComponent*        thePMPI()               { return CUR_RT->thePMPI;           }
+pmpi::PMPIComponent*        thePMPI()               { return curRT->thePMPI;           }
 #endif
-
-#undef CUR_RT
-#undef CUR_RT_SAFE
-#undef IS_COMM_THREAD
 
 } /* end namespace vt */
 

@@ -72,8 +72,6 @@ void Runtime::printStartupBanner() {
   }
 
   NodeType const nodes = theContext->getNumNodes();
-  WorkerCountType const workers = theContext->getNumWorkers();
-  bool const has_workers = theContext->hasWorkers();
 
   std::string is_interop_str =
     is_interop_ ?
@@ -81,24 +79,9 @@ void Runtime::printStartupBanner() {
       std::string("");
   std::string init = "Runtime Initializing:" + is_interop_str;
   std::string mode = std::string("mode: ");
-  std::string mode_type =
-    std::string(num_workers_ == no_workers ? "single" : "multi") +
-    std::string("-thread per rank");
-  std::string thd = !has_workers ? std::string("") :
-    std::string(", worker threading: ") +
-    std::string(
-      #if vt_check_enabled(openmp)
-        "OpenMP"
-      #elif vt_check_enabled(stdthread)
-        "std::thread"
-      #else
-        ""
-      #endif
-   );
-  std::string cnt = !has_workers ? std::string("") :
-    (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
+  std::string mode_type = std::string("single-thread per rank");
   std::string node_str = nodes == 1 ? "node" : "nodes";
-  std::string all_node = std::to_string(nodes) + " " + node_str + cnt;
+  std::string all_node = std::to_string(nodes) + " " + node_str;
 
   char hostname[1024];
   gethostname(hostname, 1024);
@@ -123,9 +106,6 @@ void Runtime::printStartupBanner() {
 #if vt_check_enabled(lblite)
   features.push_back(vt_feature_str_lblite);
 #endif
-#if vt_check_enabled(openmp)
-  features.push_back(vt_feature_str_openmp);
-#endif
 #if vt_check_enabled(production_build)
   features.push_back(vt_feature_str_production_build);
 #endif
@@ -134,9 +114,6 @@ void Runtime::printStartupBanner() {
 #endif
 #if vt_check_enabled(fcontext)
   features.push_back(vt_feature_str_fcontext);
-#endif
-#if vt_check_enabled(stdthread)
-  features.push_back(vt_feature_str_stdthread);
 #endif
 #if vt_check_enabled(mpi_rdma)
   features.push_back(vt_feature_str_mpi_rdma);
@@ -178,7 +155,7 @@ void Runtime::printStartupBanner() {
   std::array< std::string, 11 > info_lines = {
       fmt::format("{}Version: {}\n", green, emph(vt_version_string)),
 
-      fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd)),
+      fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type)),
       fmt::format("{}Program: {} ({})\n", green,
                              emph(getAppConfig()->prog_name), emph(getAppConfig()->argv_prog_name)),
       fmt::format("{}Running on: {}\n", green, emph(all_node)),
@@ -362,6 +339,11 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_lb_data_dir", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+  }
+
+  if (getAppConfig()->vt_lb_data_in) {
+    auto f9 = opt_on("--vt_lb_data_in", "Load balancing data input");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
 
     auto const fnamein = getAppConfig()->vt_lb_data_file_in;
     if (fnamein != "") {

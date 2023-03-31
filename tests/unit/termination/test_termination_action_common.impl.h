@@ -170,7 +170,7 @@ inline void add(vt::EpochType const& epoch, int order){
         EXPECT_TRUE(channel::hasEnded(epoch));
         channel::ok = true;
         auto msg = vt::makeMessage<vt::Message>();
-        vt::theMsg()->broadcastMsg<vt::Message, &setOk>(msg);
+        vt::theMsg()->broadcastMsg<&setOk>(msg);
       });
     }
   }

@@ -78,7 +78,7 @@ static void handler(PingMsg*) {
   count++;
   if (count == pings) {
     auto msg = vt::makeMessage<PingMsg>(1);
-    vt::theMsg()->sendMsg<PingMsg,done>(0, msg);
+    vt::theMsg()->sendMsg<done>(0, msg);
     count = 0;
   }
 }
@@ -88,7 +88,7 @@ void sender() {
   auto start = vt::timing::getCurrentTime();
   for (int i = 0; i < pings; i++) {
     auto msg = vt::makeMessage<PingMsg>(bytes);
-    vt::theMsg()->sendMsg<PingMsg,handler>(1, msg);
+    vt::theMsg()->sendMsg<handler>(1, msg);
   }
 
   vt::theSched()->runSchedulerWhile([]{return !is_done; });

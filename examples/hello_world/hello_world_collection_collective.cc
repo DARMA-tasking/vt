@@ -52,11 +52,11 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
     vtAssert(counter_ == num_nodes, "Should receive # nodes broadcasts");
   }
 
-  using TestMsg = vt::CollectionMessage<Hello>;
-
-  void doWork(TestMsg* msg) {
+  void doWork(int val) {
     counter_++;
-    fmt::print("Hello from {}, counter_={}\n", this->getIndex().x(), counter_);
+    fmt::print(
+      "Hello from {}, val={}, counter_={}\n", getIndex(), val, counter_
+    );
   }
 
 private:
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     .wait();
 
   // All nodes send a broadcast to all elements
-  proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
+  proxy.broadcast<&Hello::doWork>(29);
 
   vt::finalize();
 

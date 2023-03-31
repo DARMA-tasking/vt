@@ -63,25 +63,24 @@ enum CatEnum : uint64_t {
   rdma         = 1ull<<11,
   rdma_channel = 1ull<<12,
   rdma_state   = 1ull<<13,
-  param        = 1ull<<14,
-  handler      = 1ull<<15,
-  hierlb       = 1ull<<16,
-  scatter      = 1ull<<17,
-  serial_msg   = 1ull<<18,
-  trace        = 1ull<<19,
-  location     = 1ull<<20,
-  lb           = 1ull<<21,
-  vrt          = 1ull<<22,
-  vrt_coll     = 1ull<<23,
-  worker       = 1ull<<24,
-  group        = 1ull<<25,
-  broadcast    = 1ull<<26,
-  objgroup     = 1ull<<27,
-  temperedlb   = 1ull<<28,
-  phase        = 1ull<<29,
-  context      = 1ull<<30,
-  epoch        = 1ull<<31,
-  temperedwmin = 1ull<<32
+  handler      = 1ull<<14,
+  hierlb       = 1ull<<15,
+  scatter      = 1ull<<16,
+  serial_msg   = 1ull<<17,
+  trace        = 1ull<<18,
+  location     = 1ull<<19,
+  lb           = 1ull<<20,
+  vrt          = 1ull<<21,
+  vrt_coll     = 1ull<<22,
+  worker       = 1ull<<23,
+  group        = 1ull<<24,
+  broadcast    = 1ull<<25,
+  objgroup     = 1ull<<26,
+  temperedlb   = 1ull<<27,
+  phase        = 1ull<<28,
+  context      = 1ull<<29,
+  epoch        = 1ull<<30,
+  temperedwmin = 1ull<<31
 };
 
 enum CtxEnum : uint64_t {
@@ -132,7 +131,6 @@ vt_option_category_pretty_print(temperedwmin, "TemperedWMin")
 vt_option_category_pretty_print(lb,           "lb")
 vt_option_category_pretty_print(location,     "location")
 vt_option_category_pretty_print(objgroup,     "objgroup")
-vt_option_category_pretty_print(param,        "parameterization")
 vt_option_category_pretty_print(phase,        "phase")
 vt_option_category_pretty_print(pipe,         "pipe")
 vt_option_category_pretty_print(pool,         "pool")

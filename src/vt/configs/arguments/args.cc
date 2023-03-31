@@ -356,7 +356,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto lap = "Enable debug_rdma         = \"" debug_pp(rdma)         "\"";
   auto map = "Enable debug_rdma_channel = \"" debug_pp(rdma_channel) "\"";
   auto nap = "Enable debug_rdma_state   = \"" debug_pp(rdma_state)   "\"";
-  auto oap = "Enable debug_param        = \"" debug_pp(param)        "\"";
   auto pap = "Enable debug_handler      = \"" debug_pp(handler)      "\"";
   auto qap = "Enable debug_hierlb       = \"" debug_pp(hierlb)       "\"";
   auto qbp = "Enable debug_temperedlb   = \"" debug_pp(temperedlb)   "\"";
@@ -393,7 +392,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto la = app.add_flag("--vt_debug_rdma",         appConfig.vt_debug_rdma,         lap);
   auto ma = app.add_flag("--vt_debug_rdma_channel", appConfig.vt_debug_rdma_channel, map);
   auto na = app.add_flag("--vt_debug_rdma_state",   appConfig.vt_debug_rdma_state,   nap);
-  auto oa = app.add_flag("--vt_debug_param",        appConfig.vt_debug_param,        oap);
   auto pa = app.add_flag("--vt_debug_handler",      appConfig.vt_debug_handler,      pap);
   auto qa = app.add_flag("--vt_debug_hierlb",       appConfig.vt_debug_hierlb,       qap);
   auto qb = app.add_flag("--vt_debug_temperedlb",   appConfig.vt_debug_temperedlb,   qbp);
@@ -430,7 +428,6 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   la->group(debugGroup);
   ma->group(debugGroup);
   na->group(debugGroup);
-  oa->group(debugGroup);
   pa->group(debugGroup);
   qa->group(debugGroup);
   qb->group(debugGroup);
@@ -468,6 +465,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lb_interval   = "Load balancing interval";
   auto lb_keep_last_elm = "Do not migrate last element in collection";
   auto lb_data      = "Enable load balancing data";
+  auto lb_data_in   = "Enable load balancing data input";
   auto lb_data_comp = "Compress load balancing data output with brotli";
   auto lb_data_dir  = "Load balancing data output directory";
   auto lb_data_file = "Load balancing data output file name";
@@ -489,6 +487,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto w  = app.add_option("--vt_lb_interval", appConfig.vt_lb_interval, lb_interval)->capture_default_str();
   auto wl = app.add_flag("--vt_lb_keep_last_elm", appConfig.vt_lb_keep_last_elm, lb_keep_last_elm);
   auto ww = app.add_flag("--vt_lb_data", appConfig.vt_lb_data, lb_data);
+  auto za = app.add_flag("--vt_lb_data_in", appConfig.vt_lb_data_in, lb_data_in);
   auto xz = app.add_flag("--vt_lb_data_compress", appConfig.vt_lb_data_compress, lb_data_comp);
   auto wx = app.add_option("--vt_lb_data_dir", appConfig.vt_lb_data_dir, lb_data_dir)->capture_default_str();
   auto wy = app.add_option("--vt_lb_data_file", appConfig.vt_lb_data_file, lb_data_file)->capture_default_str();
@@ -502,6 +501,10 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lbspec = app.add_flag("--vt_lb_spec",            appConfig.vt_lb_spec,                lb_spec);
   auto lbspecfile = app.add_option("--vt_lb_spec_file", appConfig.vt_lb_spec_file,           lb_spec_file)->capture_default_str()->check(CLI::ExistingFile);
 
+  // --vt_lb_name excludes --vt_lb_file_name, and vice versa
+  v->excludes(u);
+  u->excludes(v);
+
   auto debugLB = "Load Balancing";
   s->group(debugLB);
   t1->group(debugLB);
@@ -513,6 +516,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   wl->group(debugLB);
   ww->group(debugLB);
   wx->group(debugLB);
+  za->group(debugLB);
   wy->group(debugLB);
   xx->group(debugLB);
   xy->group(debugLB);

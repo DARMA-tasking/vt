@@ -178,7 +178,7 @@ void OutputToFile(std::string const& name, std::string const& content) {
 void PerfTestHarness::SetUp() {
   auto custom_argv = custom_args_.data();
   auto custom_argc = static_cast<int32_t>(custom_args_.size());
-  CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true);
+  CollectiveOps::initialize(custom_argc, custom_argv, true);
   my_node_ = theContext()->getNode();
   num_nodes_ = theContext()->getNumNodes();
 }

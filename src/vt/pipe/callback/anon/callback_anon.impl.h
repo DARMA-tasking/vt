@@ -80,7 +80,7 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
     triggerPipe(pid);
   } else {
     auto msg = makeMessage<CallbackMsg>(pid);
-    theMsg()->sendMsg<CallbackMsg,triggerCallbackHan>(pipe_node, msg);
+    theMsg()->sendMsg<triggerCallbackHan>(pipe_node, msg);
   }
 }
 
@@ -105,7 +105,7 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
      */
     setPipeType(data->env);
     envelopeSetGroup(data->env,pid);
-    theMsg()->sendMsg<T,triggerCallbackMsgHan>(pipe_node, data);
+    theMsg()->sendMsg<triggerCallbackMsgHan>(pipe_node, data);
   }
 }
 

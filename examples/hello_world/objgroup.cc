@@ -44,15 +44,10 @@
 #include <vt/transport.h>
 
 /// [Object group creation]
-struct MyMsg : vt::Message {
-  MyMsg(int in_a, int in_b) : a(in_a), b(in_b) { }
-  int a = 0, b = 0;
-};
-
 struct MyObjGroup {
-  void handler(MyMsg* msg) {
+  void handler(int a, int b) {
     auto node = vt::theContext()->getNode();
-    fmt::print("{}: MyObjGroup::handler on a={}, b={}\n", node, msg->a, msg->b);
+    fmt::print("{}: MyObjGroup::handler on a={}, b={}\n", node, a, b);
   }
 };
 
@@ -67,11 +62,11 @@ int main(int argc, char** argv) {
   );
 
   if (this_node == 0) {
-    proxy[0].send<MyMsg,&MyObjGroup::handler>(5,10);
+    proxy[0].send<&MyObjGroup::handler>(5,10);
     if (num_nodes > 1) {
-      proxy[1].send<MyMsg,&MyObjGroup::handler>(10,20);
+      proxy[1].send<&MyObjGroup::handler>(10,20);
     }
-    proxy.broadcast<MyMsg,&MyObjGroup::handler>(400,500);
+    proxy.broadcast<&MyObjGroup::handler>(400,500);
   }
 
   vt::finalize();

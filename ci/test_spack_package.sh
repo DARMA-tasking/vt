@@ -26,8 +26,6 @@ variables_map["diagnostics_enabled"]="${VT_DIAGNOSTICS_ENABLED:-0}"
 variables_map["diagnostics_runtime_enabled"]="${VT_DIAGNOSTICS_RUNTIME_ENABLED:-0}"
 variables_map["unity_build_enabled"]="${VT_UNITY_BUILD_ENABLED:-0}"
 variables_map["fcontext_enabled"]="${VT_FCONTEXT_ENABLED:-0}"
-variables_map["use_openmp"]="${VT_USE_OPENMP:-0}"
-variables_map["use_std_thread"]="${VT_USE_STD_THREAD:-0}"
 
 cmd_vars=()
 for flag in "${!variables_map[@]}"

@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
       if (this_node == 1) {
         auto msg = vt::makeMessage<HelloGroupMsg>();
         vt::envelopeSetGroup(msg->env, group);
-        vt::theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(msg);
+        vt::theMsg()->broadcastMsg<hello_group_handler>(msg);
       }
     }
   );

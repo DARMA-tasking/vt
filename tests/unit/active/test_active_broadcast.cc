@@ -104,7 +104,7 @@ TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
           auto msg = makeMessage<TestMsg>();
           auto msg_hold = promoteMsg(msg.get());
 
-          theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
+          theMsg()->broadcastMsg<test_handler>(msg);
           EXPECT_TRUE(envelopeIsLocked(msg_hold->env)) << "Should be locked on send";
         }
       }

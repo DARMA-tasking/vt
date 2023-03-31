@@ -82,13 +82,10 @@ private:
   VirtualProxyType proxy_ = 0;
 };
 
-template <typename ColT>
-struct MyMsg : vt::CollectionMessage<ColT> { };
-
 std::unordered_map<ElementIDStruct, VirtualProxyType> id_proxy_map;
 
 template <typename ColT>
-void colHandler(MyMsg<ColT>*, ColT* col) {
+void colHandler(ColT* col) {
   // do nothing, except setting up our map using the temp ID, which will hit
   // every node
   id_proxy_map[col->getElmID()] = col->getProxy();
@@ -141,8 +138,8 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
 
   // Do some work.
   runInEpochCollective([&]{
-    proxy1.broadcastCollective<MyMsg<TestCol1>, colHandler<TestCol1>>();
-    proxy2.broadcastCollective<MyMsg<TestCol2>, colHandler<TestCol2>>();
+    proxy1.broadcastCollective<colHandler<TestCol1>>();
+    proxy2.broadcastCollective<colHandler<TestCol2>>();
   });
 
   // Add a hook for after LB runs, but before instrumentation is cleared

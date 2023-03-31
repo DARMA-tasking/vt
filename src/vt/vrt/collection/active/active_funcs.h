@@ -51,12 +51,10 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-using ActiveColFnPtrType = void(*)(
-  ::vt::BaseMessage*, UntypedCollection*
-);
+using ActiveColFnPtrType = void(*)(UntypedCollection*, ::vt::BaseMessage*);
 
 template <typename MsgT, typename ColT>
-using ActiveColTypedFnType = void(MsgT*, ColT*);
+using ActiveColTypedFnType = void(ColT*, MsgT*);
 
 using ActiveColMemberFnPtrType =
   void(UntypedCollection::*)(::vt::BaseMessage*);

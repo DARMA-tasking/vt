@@ -88,7 +88,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
       "The value of argv[argc] should always be 0"
     );
     // communicator is duplicated.
-    CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true, &comm);
+    CollectiveOps::initialize(custom_argc, custom_argv, true, &comm);
 
 #if DEBUG_TEST_HARNESS_PRINT
     auto const& my_node = theContext()->getNode();

@@ -62,7 +62,7 @@ struct CallbackBcast : CallbackBase<signal::Signal<MsgT>> {
 
 private:
   void trigger_(SignalDataType* data) override {
-    theMsg()->broadcastMsg<MsgT,f>(data);
+    theMsg()->broadcastMsg<f>(data);
   }
 };
 

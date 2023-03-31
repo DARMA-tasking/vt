@@ -61,7 +61,7 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
 messaging::PendingSend Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
   auto proxy = this->getProxy();
-  return theCollection()->broadcastMsg<MsgT, f>(proxy,msg);
+  return theCollection()->broadcastMsg<MsgT, ColT, f>(proxy,msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -77,7 +77,7 @@ template <
   typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
 >
 messaging::PendingSend Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(Args&&... args) const {
-  return broadcastMsg<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  return broadcastMsg<MsgT, f>(makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -86,7 +86,7 @@ messaging::PendingSend
 Broadcastable<ColT, IndexT, BaseProxyT>::broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const {
   auto proxy = this->getProxy();
 
-  return theCollection()->broadcastMsg<MsgT, f>(proxy, msg.msg_.get());
+  return theCollection()->broadcastMsg<MsgT, ColT, f>(proxy, msg.msg_.get());
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -110,14 +110,14 @@ template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
 messaging::PendingSend
 Broadcastable<ColT, IndexT, BaseProxyT>::broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const {
   auto proxy = this->getProxy();
-  return theCollection()->broadcastMsg<MsgT, f>(proxy, msg.msg_.get());
+  return theCollection()->broadcastMsg<MsgT, ColT, f>(proxy, msg.msg_.get());
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
 messaging::PendingSend Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(MsgT* msg) const {
   auto proxy = this->getProxy();
-  return theCollection()->broadcastMsg<MsgT, f>(proxy, msg);
+  return theCollection()->broadcastMsg<MsgT, ColT, f>(proxy, msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -175,6 +175,73 @@ Broadcastable<ColT, IndexT, BaseProxyT>::invokeCollective(Args&&... args) const 
   auto proxy = this->getProxy();
   auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
   return theCollection()->invokeCollectiveMsg<MsgT, f>(proxy, msg);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <auto f, typename... Params>
+messaging::PendingSend
+Broadcastable<ColT, IndexT, BaseProxyT>::broadcast(Params&&... params) const {
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
+    using SendMsgT = ParamColMsg<Tuple, ColT>;
+    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto han = auto_registry::makeAutoHandlerCollectionMemParam<
+      ColT, decltype(f), f, SendMsgT
+    >();
+    auto proxy = this->getProxy();
+    return theCollection()->broadcastMsgUntypedHandler<SendMsgT, ColT, IndexT>(
+      proxy, msg.get(), han, true
+    );
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return broadcastMsg<MsgT, f>(msg);
+  }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return messaging::PendingSend{std::nullptr_t{}};
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <auto f, typename... Params>
+messaging::PendingSend
+Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(Params&&... params) const {
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
+    using SendMsgT = ParamColMsg<Tuple, ColT>;
+    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto han = auto_registry::makeAutoHandlerCollectionMemParam<
+      ColT, decltype(f), f, SendMsgT
+    >();
+    auto proxy = this->getProxy();
+    msg->setVrtHandler(han);
+    return theCollection()->broadcastCollectiveMsgImpl<SendMsgT, ColT>(
+      proxy, msg, true
+    );
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return broadcastCollectiveMsg<MsgT, f>(msg);
+  }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return messaging::PendingSend{std::nullptr_t{}};
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <auto f, typename... Params>
+void
+Broadcastable<ColT, IndexT, BaseProxyT>::invokeCollective(Params&&... params) const {
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+    auto proxy = this->getProxy();
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    theCollection()->invokeCollective<ColT, f>(
+      proxy, std::forward<Params>(params)...
+    );
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return theCollection()->invokeCollectiveMsg<MsgT, f>(proxy, msg);
+  }
 }
 
 }}} /* end namespace vt::vrt::collection */

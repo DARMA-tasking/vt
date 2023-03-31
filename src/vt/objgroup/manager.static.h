@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
+#include "vt/objgroup/proxy/proxy_bits.h"
 #include "vt/objgroup/holder/holder_base.h"
 #include "vt/messaging/active.h"
 #include "vt/runnable/make_runnable.h"
@@ -60,24 +61,23 @@ messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType de
   if (dest_node != this_node) {
     return theMsg()->sendMsg<MsgT>(dest_node, han,msg, no_tag);
   } else {
-    // Get the current epoch for the message
-    auto const cur_epoch = theMsg()->setupEpochMsg(msg);
-
-    return messaging::PendingSend{cur_epoch, [msg, han, cur_epoch, this_node](){
-      auto holder = detail::getHolderBase(han);
-      auto const& elm_id = holder->getElmID();
-      auto lb_data = &holder->getLBData();
-
-      runnable::makeRunnable(msg, true, han, this_node)
-        .withTDEpoch(cur_epoch)
-        .withLBData(lb_data, elm_id)
-        .enqueue();
+    theMsg()->setupEpochMsg(msg);
+    envelopeSetHandler(msg->env, han);
+    return messaging::PendingSend{msg, [](MsgSharedPtr<BaseMsgType>& inner_msg){
+      dispatchObjGroup(
+        inner_msg.template to<ShortMessage>(),
+        envelopeGetHandler(inner_msg->env),
+        theContext()->getNode(),
+        nullptr
+      );
     }};
   }
 }
 
-template <typename MsgT>
-void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_node) {
+template <typename ObjT, typename MsgT, auto f>
+decltype(auto) invoke(
+  messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node
+) {
   auto const this_node = theContext()->getNode();
 
   vtAssert(
@@ -89,14 +89,91 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
   );
 
   // this is a local invocation.. no thread required
-  runnable::makeRunnable(msg.msg_, false, han, this_node)
-    .withTDEpochFromMsg()
-    .run();
+  auto holder = detail::getHolderBase(han);
+  auto const& elm_id = holder->getElmID();
+  auto elm = holder->getPtr();
+  auto lb_data = &holder->getLBData();
+  return runnable::makeRunnableVoid(false, han, this_node)
+    .withObjGroup(elm)
+    .withLBData(lb_data, elm_id)
+    .runLambda(f, static_cast<ObjT*>(elm), msg.get());
 }
 
 template <typename MsgT>
 messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
   return theMsg()->broadcastMsg<MsgT>(han, msg);
+}
+
+namespace detail {
+
+template <typename MsgT, typename ObjT>
+void dispatchImpl(
+  MsgSharedPtr<MsgT> const& msg, HandlerType han, NodeType from_node,
+  ActionType cont, ObjT* obj
+) {
+  auto holder = detail::getHolderBase(han);
+  auto const& elm_id = holder->getElmID();
+  auto lb_data = &holder->getLBData();
+  runnable::makeRunnable(msg, true, han, from_node)
+    .withContinuation(cont)
+    .withObjGroup(obj)
+    .withLBData(lb_data, elm_id)
+    .withTDEpochFromMsg()
+    .enqueue();
+}
+
+template <typename MsgT>
+void dispatch(
+  MsgSharedPtr<MsgT> msg, HandlerType han, NodeType from_node,
+  ActionType cont
+) {
+  // Extract the control-bit sequence from the handler
+  auto const ctrl = HandlerManager::getHandlerControl(han);
+  vt_debug_print(
+    verbose, objgroup,
+    "dispatch: ctrl={:x}, han={:x}\n", ctrl, han
+  );
+  auto const node = 0;
+  auto const proxy = proxy::ObjGroupProxy::create(ctrl, node, true);
+  auto& objs = getObjs();
+  auto obj_iter = objs.find(proxy);
+  vt_debug_print(
+    normal, objgroup,
+    "dispatch: try ctrl={:x}, han={:x}, has dispatch={}\n",
+    ctrl, han, obj_iter != objs.end()
+  );
+  if (obj_iter == objs.end()) {
+    auto const epoch = envelopeGetEpoch(msg->env);
+    if (epoch != no_epoch) {
+      theTerm()->produce(epoch);
+    }
+    auto& pending = getPending();
+    pending[proxy].emplace_back([=]{
+      auto& objs2 = getObjs();
+      auto obj_iter2 = objs2.find(proxy);
+      vtAssert(obj_iter2 != objs2.end(), "Obj must exist");
+      detail::dispatchImpl(msg, han, from_node, cont, obj_iter2->second->getPtr());
+      if (epoch != no_epoch) {
+        theTerm()->consume(epoch);
+      }
+    });
+  } else {
+    detail::dispatchImpl(msg, han, from_node, cont, obj_iter->second->getPtr());
+  }
+}
+
+} /* end namespace detail */
+
+template <typename MsgT>
+void dispatchObjGroup(
+  MsgSharedPtr<MsgT> msg, HandlerType han, NodeType from_node,
+  ActionType cont
+) {
+  vt_debug_print(
+    verbose, objgroup,
+    "dispatchObjGroup: han={:x}\n", han
+  );
+  return detail::dispatch(msg, han, from_node, cont);
 }
 
 }} /* end namespace vt::objgroup */

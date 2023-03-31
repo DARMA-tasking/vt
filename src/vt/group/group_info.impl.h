@@ -115,7 +115,7 @@ template <typename MsgT>
     if (op_id != no_op_id) {
       // Send back message
       auto retmsg = makeMessage<GroupOnlyMsg>(group, op_id);
-      theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(
+      theMsg()->sendMsg<Info::groupTriggerHandler>(
         parent, retmsg
       );
     }
@@ -151,7 +151,7 @@ template <typename MsgT>
 
         auto contmsg = makeMessage<GroupOnlyMsg>(group, op_id);
         if (parent != this_node) {
-          theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(
+          theMsg()->sendMsg<Info::groupTriggerHandler>(
             parent, contmsg
           );
         } else {

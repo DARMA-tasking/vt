@@ -174,7 +174,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
       );
       msg->setResolvedNode(this_node);
       theMsg()->markAsLocationMessage(msg);
-      theMsg()->sendMsg<LocMsgType, &EntityLocationCoord<EntityID>::updateLocation>(home, msg);
+      theMsg()->sendMsg<&EntityLocationCoord<EntityID>::updateLocation>(home, msg);
     }
   }
 }
@@ -424,7 +424,7 @@ void EntityLocationCoord<EntityID>::getLocation(
           this_inst, id, event_id, this_node, home_node
         );
         theMsg()->markAsLocationMessage(msg);
-        theMsg()->sendMsg<LocMsgType, &EntityLocationCoord<EntityID>::getLocationHandler>(home_node, msg);
+        theMsg()->sendMsg<&EntityLocationCoord<EntityID>::getLocationHandler>(home_node, msg);
         // save a pending action when information about location arrives
         pending_actions_.emplace(
           std::piecewise_construct,
@@ -497,7 +497,7 @@ void EntityLocationCoord<EntityID>::sendEagerUpdate(
     auto msg = makeMessage<LocMsgType>(
       this_inst, id, ask_node, home_node, deliver_node
     );
-    theMsg()->sendMsg<LocMsgType, &EntityLocationCoord<EntityID>::recvEagerUpdate>(ask_node, msg);
+    theMsg()->sendMsg<&EntityLocationCoord<EntityID>::recvEagerUpdate>(ask_node, msg);
   }
 }
 
@@ -535,7 +535,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     // set the instance on the message to deliver to the correct manager
     msg->setLocInst(this_inst);
 
-    auto m = msg;
+    auto m = msg; //copy for msg thief
     // send to the node discovered by the location manager
     theMsg()->sendMsg<MessageT, &EntityLocationCoord<EntityID>::routedHandler>(to_node, m);
   } else {
@@ -657,6 +657,29 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
   EntityID const& id, NodeType const& home_node,
   MsgSharedPtr<MessageT> const& msg
 ) {
+  setupMessageForRouting<MessageT, f>(id, home_node, msg);
+
+  routePreparedMsgHandler(msg);
+}
+
+template <typename EntityID>
+template <typename MessageT>
+void EntityLocationCoord<EntityID>::routePreparedMsgHandler(
+  MsgSharedPtr<MessageT> const& msg
+) {
+  if (local_registered_.find(msg->getEntity()) == local_registered_.end()) {
+    return routePreparedMsg(msg);
+  } else {
+    return routeMsgHandlerLocal(msg);
+  }
+}
+
+template <typename EntityID>
+template <typename MessageT, ActiveTypedFnType<MessageT> *f>
+void EntityLocationCoord<EntityID>::setupMessageForRouting(
+  EntityID const& id, NodeType const& home_node,
+  MsgSharedPtr<MessageT> const& msg
+) {
   using auto_registry::HandlerManagerType;
 
   auto handler = auto_registry::makeAutoHandler<MessageT,f>();
@@ -668,12 +691,10 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
 # endif
 
   msg->setHandler(handler);
-
-  if (local_registered_.find(id) == local_registered_.end()) {
-    return routeMsg<MessageT>(id,home_node,msg);
-  } else {
-    return routeMsgHandlerLocal(msg);
-  }
+  msg->setEntity(id);
+  msg->setHomeNode(home_node);
+  msg->setLocFromNode(theContext()->getNode());
+  msg->setLocInst(this_inst);
 }
 
 template <typename EntityID>
@@ -684,6 +705,42 @@ void EntityLocationCoord<EntityID>::routeMsgHandlerLocal(
   runnable::makeRunnable(msg, true, msg->getHandler(), theContext()->getNode())
     .withTDEpochFromMsg()
     .run();
+}
+
+template <typename EntityID>
+template <typename MessageT>
+void EntityLocationCoord<EntityID>::routePreparedMsg(
+  MsgSharedPtr<MessageT> const& msg
+) {
+  auto const msg_size = sizeof(*msg);
+  bool const use_eager = useEagerProtocol(msg);
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
+
+  vt_debug_print(
+    verbose, location,
+    "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}, "
+    "msg={}, from={}, epoch={:x}\n",
+    this_inst, msg->getHomeNode(), msg_size, msg_size > small_msg_max_size, use_eager,
+    print_ptr(msg.get()), msg->getLocFromNode(),
+    epoch
+  );
+
+  if (use_eager) {
+    theMsg()->pushEpoch(epoch);
+    routeMsgEager<MessageT>(msg->getEntity(), msg->getHomeNode(), msg);
+    theMsg()->popEpoch(epoch);
+  } else {
+    theTerm()->produce(epoch);
+    // non-eager protocol: get location first then send message after resolution
+    getLocation(msg->getEntity(), msg->getHomeNode(), [=](NodeType node) {
+      theMsg()->pushEpoch(epoch);
+      routeMsgNode<MessageT>(
+        msg->getEntity(), msg->getHomeNode(), node, msg
+      );
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
+    });
+  }
 }
 
 template <typename EntityID>
@@ -701,35 +758,7 @@ void EntityLocationCoord<EntityID>::routeMsg(
   msg->setHomeNode(home_node);
   msg->setLocFromNode(from);
 
-  auto const msg_size = sizeof(*msg);
-  bool const use_eager = useEagerProtocol(msg);
-  auto const epoch = theMsg()->getEpochContextMsg(msg);
-
-  vt_debug_print(
-    verbose, location,
-    "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}, "
-    "in_from={}, from={}, msg{}, msg from={}, epoch={:x}\n",
-    this_inst, home_node, msg_size, msg_size > small_msg_max_size, use_eager,
-    from_node, from, print_ptr(msg.get()), msg->getLocFromNode(),
-    epoch
-  );
-
-  msg->setLocInst(this_inst);
-
-  if (use_eager) {
-    theMsg()->pushEpoch(epoch);
-    routeMsgEager<MessageT>(id, home_node, msg);
-    theMsg()->popEpoch(epoch);
-  } else {
-    theTerm()->produce(epoch);
-    // non-eager protocol: get location first then send message after resolution
-    getLocation(id, home_node, [=](NodeType node) {
-      theMsg()->pushEpoch(epoch);
-      routeMsgNode<MessageT>(id, home_node, node, msg);
-      theMsg()->popEpoch(epoch);
-      theTerm()->consume(epoch);
-    });
-  }
+  routePreparedMsg(msg);
 }
 
 template <typename EntityID>
@@ -863,7 +892,7 @@ template <typename EntityID>
         );
         msg2->setResolvedNode(node);
         theMsg()->markAsLocationMessage(msg2);
-        theMsg()->sendMsg<LocMsgType, &EntityLocationCoord<EntityID>::updateLocation>(ask_node, msg2);
+        theMsg()->sendMsg<&EntityLocationCoord<EntityID>::updateLocation>(ask_node, msg2);
       });
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);

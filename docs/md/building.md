@@ -9,26 +9,19 @@ external dependencies come bundled with \vt for ease of compiling.
 To build \vt, one must obtain the following dependencies:
 
 \subsection required-deps Required
-  - detector,   (*vt* ecosystem)
   - checkpoint, (*vt* ecosystem)
   - MPI         (mpich/openmpi/mvapich/IBM Spectrum MPI/Cray MPICH/etc.)
 
-\subsection optional-deps Optional (if threading enabled)
-
-  - OpenMP       _or_
-  - Default to `std::thread`
-
 \subsection automatic-build-deps Automatically build dependencies
 
-Assuming MPI is installed and accessible via CC/CXX, the only other dependencies
-that are required are checkpoint and detector. The easiest way to get these
-built are to clone them inside `vt/lib`:
+Assuming MPI is installed and accessible via CC/CXX, the only other dependency
+that is required is checkpoint. The easiest way to get these
+built are to clone it inside `vt/lib`:
 
 ```bash
 $ git clone git@github.com:DARMA-tasking/vt
 $ cd vt/lib
 $ git clone git@github.com:DARMA-tasking/checkpoint
-$ git clone git@github.com:DARMA-tasking/detector
 ```
 
 With these in `vt/lib`, cmake will automatically build them and stitch them into
@@ -36,7 +29,7 @@ With these in `vt/lib`, cmake will automatically build them and stitch them into
 
 \subsection use-cmake-directly-vars Using cmake directly
 
-One may use `cmake` as normal on *vt*, with checkpoint and detector cloned in
+One may use `cmake` as normal on *vt*, with checkpoint cloned in
 `vt/lib` to compile them all together as explained above. The following are some
 custom configuration build options that can be provided to `cmake` to change the
 build configuration:
@@ -65,8 +58,6 @@ build configuration:
 | `vt_fcontext_enabled`            | 0               | Force use of fcontext for threading                                                                |
 | `vt_tests_num_nodes`             | -               | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
 | `CODE_COVERAGE`                  | 0               | Enable code coverage for VT examples/tests                                                         |
-| `USE_OPENMP`                     | 0               | Force use of OpenMP for threading                                                                  |
-| `USE_STD_THREAD`                 | 0               | Force use of std::thread for threading                                                             |
 | `VT_BUILD_TESTS`                 | 1               | Build all VT tests                                                                                 |
 | `VT_BUILD_EXAMPLES`              | 1               | Build all VT examples                                                                              |
 | `vt_debug_verbose`               | 1 (not Release) | Enable VT verbose debug prints at compile-time                                                     |
@@ -95,8 +86,6 @@ parameters.
 | `VT_WERROR_ENABLED `             | 0             | Treat all warnings as errors                                                                       |
 | `VT_POOL_ENABLED `               | 1             | Use memory pool in *vt* for message allocation                                                     |
 | `VT_FCONTEXT_ENABLED`            | 0             | Force use of fcontext for threading                                                                |
-| `VT_USE_OPENMP`                  | 0             | Force use of OpenMP for threading                                                                  |
-| `VT_USE_STD_THREAD`              | 0             | Force use of std::thread for threading                                                             |
 | `VT_ZOLTAN_ENABLED `             | 0             | Build with Zoltan enabled for `ZoltanLB` support                                                   |
 | `ZOLTAN_DIR `                    | <empty>       | Directory pointing to Zoltan installation                                                          |
 | `VT_MPI_GUARD_ENABLED `          | 0             | Guards against mis-use of MPI calls in code using *vt*                                             |
@@ -150,13 +139,12 @@ which `docker-compose` will read.
 # Variables:
 #   ARCH={amd64, arm64v8, ...}
 #   COMPILER_TYPE={gnu, clang, intel, nvidia}
-#   COMPILER={gcc-7, gcc-8, gcc-9, gcc-10,
-#             clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
-#             clang-9, clang-10,
-#             icc-18, icc-19,
-#             nvcc-10, nvcc-11}
+#   COMPILER={gcc-8, gcc-9, gcc-10,
+#             clang-8, clang-9, clang-10,
+#             icpc, icpx,
+#             nvcc-11, nvcc-11.2}
 #   REPO=lifflander1/vt
-#   UBUNTU={18.04, 20.04}
+#   UBUNTU={18.04, 20.04, 22.04}
 #   ULIMIT_CORE=0
 #
 # DARMA/vt Configuration Variables:
@@ -172,8 +160,6 @@ which `docker-compose` will read.
 #   VT_ZOLTAN=0               # Build with Zoltan enabled
 #   VT_UNITY_BUILD=0          # Build with Unity/Jumbo mode enabled
 #   VT_FCONTEXT=0             # Force use of fcontext for threading
-#   VT_USE_OPENMP=0           # Force use of OpenMP for threading
-#   VT_USE_STD_THREAD=0       # Force use of std::thread for threading
 #   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics at runtime by default
 #   BUILD_TYPE=release        # CMake build type

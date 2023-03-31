@@ -140,12 +140,12 @@ static trace::TraceProcessingTag BeginProcessingInvokeEvent() {
   const auto trace_event = theTrace()->messageCreation(trace_id, 0);
   const auto from_node = theContext()->getNode();
 
-  return theTrace()->beginProcessing(trace_id, 0, trace_event, from_node);
+  return theTrace()->beginProcessing(trace_id, 0, trace_event, from_node, timing::getCurrentTime());
 }
 
 template <typename Callable, Callable f, typename... Args>
 static void EndProcessingInvokeEvent(trace::TraceProcessingTag processing_tag) {
-  theTrace()->endProcessing(processing_tag);
+  theTrace()->endProcessing(processing_tag, timing::getCurrentTime());
 
   const auto trace_id = CallableWrapper<Callable, f>::GetTraceID();
   theTrace()->messageCreation(trace_id, 0);

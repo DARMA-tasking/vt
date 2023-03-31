@@ -119,7 +119,7 @@ public:
   bool other = false;
 };
 
-static void cb3(DataMsg* msg, TestCol* col) {
+static void cb3(TestCol* col, DataMsg* msg) {
   EXPECT_EQ(msg->a, 8);
   EXPECT_EQ(msg->b, 9);
   EXPECT_EQ(msg->c, 10);
@@ -177,7 +177,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
       auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
       auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::cb2>(proxy);
       auto msg = makeMessage<CallbackDataMsg>(cb);
-      theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+      theMsg()->sendMsg<testHandler>(next, msg);
     }
   });
 
@@ -211,7 +211,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
       auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
       auto cb = theCB()->makeBcast<TestCol,DataMsg,cb3>(proxy);
       auto msg = makeMessage<CallbackDataMsg>(cb);
-      theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+      theMsg()->sendMsg<testHandler>(next, msg);
     }
   });
 

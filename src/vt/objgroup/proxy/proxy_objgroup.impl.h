@@ -52,6 +52,8 @@
 #include "vt/collective/reduce/operators/default_op.h"
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
 #include "vt/rdmahandle/manager.h"
+#include "vt/messaging/param_msg.h"
+#include "vt/objgroup/proxy/proxy_bits.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -80,6 +82,29 @@ template <typename ObjT>
 template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
 typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::broadcast(Args&&... args) const {
   return broadcastMsg<MsgT,fn>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+template <typename ObjT>
+template <auto f, typename... Params>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::broadcast(Params&&... params) const {
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
+    using SendMsgT = messaging::ParamMsg<Tuple>;
+    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto const ctrl = proxy::ObjGroupProxy::getID(proxy_);
+    auto const han = auto_registry::makeAutoHandlerObjGroupParam<
+      ObjT, decltype(f), f, SendMsgT
+    >(ctrl);
+    return theObjGroup()->broadcast(msg, han);
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return broadcastMsg<MsgT, f>(msg);
+  }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return typename Proxy<ObjT>::PendingSendType{std::nullptr_t{}};
 }
 
 template <typename ObjT>
@@ -217,7 +242,7 @@ messaging::PendingSend Proxy<void>::broadcast(Args&&... args) const {
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 messaging::PendingSend
 Proxy<void>::broadcastMsg(messaging::MsgPtrThief<MsgT> msg, TagType tag) const {
-  return theMsg()->broadcastMsg<MsgT, f>(msg, true, tag);
+  return theMsg()->broadcastMsg<f>(msg, true, tag);
 }
 
 template <typename OpT, typename FunctorT, typename MsgT, typename... Args>
