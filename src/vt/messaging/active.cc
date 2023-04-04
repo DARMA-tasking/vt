@@ -969,7 +969,6 @@ void ActiveMessenger::prepareActiveMsgToRun(
       .withLBData(&bare_handler_lb_data_, bare_handler_dummy_elm_id_for_lb_data_)
       .enqueue();
   }
-  amHandlerCount.increment(1);
 
   if (is_term) {
     tdRecvCount.increment(1);

@@ -228,7 +228,6 @@ public:
    */
   void run();
 
-#if vt_check_enabled(fcontext)
   /**
    * \brief Run the task as a lambda!
    */
@@ -337,22 +336,6 @@ public:
    */
   bool isSuspended() const { return suspended_; }
 #endif
-
-  /**
-   * \internal \brief Operator new for runnables targeting pool
-   *
-   * \param[in] sz the allocation size
-   *
-   * \return the new allocation
-   */
-  static void* operator new(std::size_t sz);
-
-  /**
-   * \internal \brief Operator develop for runnables
-   *
-   * \param[in] ptr the pointer
-   */
-  static void operator delete(void* ptr);
 
   /**
    * \internal \brief Operator new for runnables targeting pool
