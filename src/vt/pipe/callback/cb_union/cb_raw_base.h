@@ -248,7 +248,7 @@ struct CallbackTyped : CallbackRawBaseSingle {
     } else {
       using MsgT = typename Trait::MsgT;
       auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
-      sendMsg(msg);
+      sendMsg(msg.get());
     }
   }
 

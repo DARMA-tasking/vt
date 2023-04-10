@@ -85,7 +85,7 @@ void PipeManagerBase::triggerPipeTyped(PipeType const& pipe, MsgT* msg) {
   if (exists) {
     signal_holder_<SignalType>.deliverAll(pipe,msg);
   } else {
-    auto nmsg = makeMessage<MsgT>(*msg);
+    auto nmsg = makeMessage<MsgT>(std::move(*msg));
     triggerPipeUnknown<MsgT>(pipe,nmsg.get());
   }
   generalSignalTrigger(pipe);

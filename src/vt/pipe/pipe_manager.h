@@ -330,6 +330,12 @@ struct PipeManager
   template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
   Callback<MsgT> makeBcast(ColProxyType<ColT> proxy);
 
+  template <auto f, typename ProxyT>
+  auto makeBcast(ProxyT proxy);
+
+  template <auto f, typename ProxyT>
+  auto makeSend(ProxyT proxy);
+
   /**
    * \brief Make a callback to a whole collection invoking an intrusive
    * collection member handler.

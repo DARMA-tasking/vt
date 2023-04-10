@@ -780,7 +780,7 @@ messaging::PendingSend CollectionManager::broadcastNormalMsg(
   CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
   HandlerType const handler, bool instrument
 ) {
-  auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(*msg);
+  auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(std::move(*msg));
   return broadcastMsgUntypedHandler<ColMsgWrap<ColT, MsgT>, ColT>(
     proxy, wrap_msg.get(), handler, instrument
   );
@@ -986,7 +986,7 @@ messaging::PendingSend CollectionManager::sendNormalMsg(
   VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
   HandlerType const handler
 ) {
-  auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(*msg);
+  auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(std::move(*msg));
   return sendMsgUntypedHandler<ColMsgWrap<ColT, MsgT>, ColT>(
     proxy, wrap_msg.get(), handler
   );

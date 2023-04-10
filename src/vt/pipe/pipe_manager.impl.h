@@ -113,6 +113,11 @@ Callback<> PipeManager::makeSend(NodeType const& node) {
   return makeCallbackFunctorSendVoid<FunctorT>(node);
 }
 
+template <auto f, typename ProxyT>
+auto PipeManager::makeSend(ProxyT proxy) {
+  return makeCallbackProxy<f, false>(proxy);
+}
+
 template <typename ColT, typename MsgT, PipeManager::ColHanType<ColT,MsgT>* f>
 Callback<MsgT> PipeManager::makeSend(typename ColT::ProxyType proxy) {
   return makeCallbackProxy<f, false>(proxy);
@@ -126,6 +131,11 @@ Callback<MsgT> PipeManager::makeSend(typename ColT::ProxyType proxy) {
 template <typename ObjT, typename MsgT, PipeManager::ObjMemType<ObjT,MsgT> f>
 Callback<MsgT> PipeManager::makeSend(objgroup::proxy::ProxyElm<ObjT> proxy) {
   return makeCallbackProxy<f, false>(proxy);
+}
+
+template <auto f, typename ProxyT>
+auto PipeManager::makeBcast(ProxyT proxy) {
+  return makeCallbackProxy<f, true>(proxy);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>

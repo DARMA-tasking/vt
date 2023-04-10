@@ -157,12 +157,14 @@ auto PipeManagerTL::makeCallbackProxy(ProxyT proxy) {
   if constexpr (detection::is_detected<hasIdx_t, ProxyT>::value) {
     if constexpr (std::is_same_v<MsgT, NoMsg>) {
       using Tuple = typename Trait::TupleType;
+      using NormMsgT = messaging::ParamMsg<Tuple>;
+      using WrapMsgT = vrt::collection::ColMsgWrap<ObjT, NormMsgT, vt::Message>;
       using PMsgT = vrt::collection::ParamColMsg<Tuple, ObjT>;
       auto han = auto_registry::makeAutoHandlerCollectionMemParam<
-        ObjT, decltype(f), f, PMsgT
+        ObjT, decltype(f), f, WrapMsgT
       >();
       if constexpr (is_bcast) {
-        auto vrt_handler = vrt::collection::makeVrtDispatch<PMsgT, ObjT>();
+        auto vrt_handler = vrt::collection::makeVrtDispatch<NormMsgT, ObjT>();
         return RetType{
           callback::cbunion::RawBcastColDirTag, pipe_id, han, vrt_handler,
           proxy.getProxy()

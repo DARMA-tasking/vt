@@ -88,6 +88,12 @@ struct HandlersDispatcher final : BaseHandlersDispatcher {
     detection::is_detected_convertible<std::true_type, ColMsgTrait, U>;
 
   template <typename U>
+  using WrapMsgTrait = typename U::IsWrapMsg;
+  template <typename U>
+  using IsWrapMsgTrait =
+    detection::is_detected_convertible<std::true_type, WrapMsgTrait, U>;
+
+  template <typename U>
   using ColTrait = typename U::IsCollectionType;
   template <typename U>
   using IsColTrait =
@@ -125,7 +131,12 @@ public:
     } else if constexpr (std::is_same_v<ObjT, SentinelObject>) {
       std::apply(fp, msg->getTuple());
     } else {
-      std::apply(fp, std::tuple_cat(std::make_tuple(elm), msg->getTuple()));
+      if constexpr (IsColTrait<ObjT>::value and IsWrapMsgTrait<MsgT>::value) {
+        auto& m = msg->getMsg();
+        std::apply(fp, std::tuple_cat(std::make_tuple(elm), m.getTuple()));
+      } else {
+        std::apply(fp, std::tuple_cat(std::make_tuple(elm), msg->getTuple()));
+      }
     }
   }
 
