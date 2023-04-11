@@ -1,5 +1,6 @@
 ARG arch=amd64
-FROM ${arch}/ubuntu:18.04 as base
+ARG ubuntu=20.04
+FROM ${arch}/ubuntu:${ubuntu} as base
 
 ARG proxy=""
 ARG compiler=gcc-8
