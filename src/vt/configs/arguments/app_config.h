@@ -249,7 +249,7 @@ struct AppConfig {
   /// Original char* object.
   char* argv_prog_name {const_cast<char*>("vt_unknown")};
 
-  /// Arguments are being ref-returend as the result of parse(..).
+  /// Arguments are being ref-returned as the result of parse(..).
   /// Does not include argv[0]. Original char* objects.
   std::vector<char*> passthru_args;
 

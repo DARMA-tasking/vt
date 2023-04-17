@@ -45,7 +45,7 @@
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINTCONST_H
 
 /*
- * Specific convienence methods for printing
+ * Specific convenience methods for printing
  */
 
 #define print_bool(BOOL) ((BOOL) ? "true" : "false")
