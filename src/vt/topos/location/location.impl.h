@@ -119,7 +119,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
   if (msg_action != nullptr) {
     // vtAssert(
     //   local_registered_msg_han_.find(id) == local_registered_msg_han_.end(),
-    //   "Entitiy should not exist in local registered msg handler"
+    //   "Entity should not exist in local registered msg handler"
     // );
     local_registered_msg_han_.emplace(
       std::piecewise_construct,
