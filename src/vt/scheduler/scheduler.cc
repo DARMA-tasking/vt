@@ -269,7 +269,7 @@ void Scheduler::runSchedulerOnceImpl(bool msg_only) {
 
     // Leave idle states are before any potential processing.
     // True-idle must be the outer state to enter/leave to collect more
-    // accurate time and ensure that events are not emited while in idle.
+    // accurate time and ensure that events are not emitted while in idle.
     if (is_idle) {
       is_idle = false;
       triggerEvent(SchedulerEventType::EndIdle);
