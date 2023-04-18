@@ -183,7 +183,7 @@ struct Block : vt::Collection<Block, vt::Index1D> {
     initialize();
     // Wait for all initializations to complete
     auto proxy = this->getCollectionProxy();
-    auto cb = vt::theCB()->makeBcast<Block, InitMsg, &Block::doneInit>(proxy);
+    auto cb = vt::theCB()->makeBcast<&Block::doneInit>(proxy);
     auto empty = vt::makeMessage<InitMsg>();
     proxy.reduce(empty.get(), cb);
   }

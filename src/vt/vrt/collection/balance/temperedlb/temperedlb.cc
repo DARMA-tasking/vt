@@ -550,7 +550,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
           using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
           auto cb = vt::theCB()->makeBcast<
-            TemperedLB, StatsMsgType, &TemperedLB::loadStatsHandler
+            &TemperedLB::loadStatsHandler
           >(this->proxy_);
           // Perform the reduction for Rank_load_modeled -> processor load only
           auto msg = makeMessage<StatsMsgType>(
@@ -673,7 +673,7 @@ void TemperedLB::informAsync() {
 
   setup_done_ = false;
 
-  auto cb = theCB()->makeBcast<TemperedLB, ReduceMsgType, &TemperedLB::setupDone>(proxy_);
+  auto cb = theCB()->makeBcast<&TemperedLB::setupDone>(proxy_);
   auto msg = makeMessage<ReduceMsgType>();
   proxy_.reduce(msg.get(), cb);
 
@@ -729,7 +729,7 @@ void TemperedLB::informSync() {
 
   setup_done_ = false;
 
-  auto cb = theCB()->makeBcast<TemperedLB, ReduceMsgType, &TemperedLB::setupDone>(proxy_);
+  auto cb = theCB()->makeBcast<&TemperedLB::setupDone>(proxy_);
   auto msg = makeMessage<ReduceMsgType>();
   proxy_.reduce(msg.get(), cb);
 
@@ -1315,7 +1315,7 @@ void TemperedLB::decide() {
     runInEpochCollective("TemperedLB::decide -> compute rejection", [=] {
       using ReduceOp = collective::PlusOp<balance::RejectionStats>;
       auto cb = vt::theCB()->makeBcast<
-        TemperedLB, RejectionMsgType, &TemperedLB::rejectionStatsHandler
+        &TemperedLB::rejectionStatsHandler
       >(this->proxy_);
       auto msg = makeMessage<RejectionMsgType>(n_rejected, n_transfers);
       this->proxy_.template reduce<ReduceOp>(msg,cb);

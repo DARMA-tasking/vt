@@ -793,9 +793,7 @@ void HierarchicalLB::runLB(TimeType total_load) {
   buildHistogram();
   setupTree(min_threshold);
 
-  auto cb = vt::theCB()->makeBcast<
-    HierarchicalLB, SetupDoneMsg, &HierarchicalLB::setupDone
-  >(proxy);
+  auto cb = vt::theCB()->makeBcast<&HierarchicalLB::setupDone>(proxy);
   auto msg = makeMessage<SetupDoneMsg>();
   proxy.reduce(msg.get(),cb);
 }

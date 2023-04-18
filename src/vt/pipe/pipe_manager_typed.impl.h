@@ -117,7 +117,7 @@ PipeManagerTyped::makeCallbackSingleSendFunctorTyped(
 ) {
   auto const& new_pipe_id = makePipeID(is_persist,false);
   auto const& handler =
-    auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+    auto_registry::makeAutoHandlerFunctor<FunctorT, MsgT, true>();
   auto container = CallbackSendType<MsgT>(new_pipe_id,handler,send_to_node);
   return container;
 }
@@ -128,7 +128,7 @@ PipeManagerTyped::makeCallbackSingleSendFunctorVoidTyped(
   bool const is_persist, NodeType const& send_to_node
 ) {
   auto const& new_pipe_id = makePipeID(is_persist,false);
-  auto const& handler = auto_registry::makeAutoHandlerFunctor<FunctorT,true>();
+  auto const& handler = auto_registry::makeAutoHandlerFunctor<FunctorT, void, false>();
   auto container = CallbackSendVoidType(new_pipe_id,handler,send_to_node);
   return container;
 }
@@ -149,7 +149,7 @@ PipeManagerTyped::CallbackBcastType<MsgT>
 PipeManagerTyped::makeCallbackSingleBcastFunctorTyped(bool const inc) {
   auto const& new_pipe_id = makePipeID(true,false);
   auto const& handler =
-    auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+    auto_registry::makeAutoHandlerFunctor<FunctorT, MsgT, true>();
   auto container = CallbackBcastType<MsgT>(
     new_pipe_id,handler,inc
   );
@@ -160,7 +160,7 @@ template <typename FunctorT>
 PipeManagerTyped::CallbackBcastVoidType
 PipeManagerTyped::makeCallbackSingleBcastFunctorVoidTyped(bool const inc) {
   auto const& new_pipe_id = makePipeID(true,false);
-  auto const& handler = auto_registry::makeAutoHandlerFunctor<FunctorT,true>();
+  auto const& handler = auto_registry::makeAutoHandlerFunctor<FunctorT, void, false>();
   auto container = CallbackBcastVoidType(new_pipe_id,handler,inc);
   return container;
 }

@@ -185,9 +185,7 @@ void LBDataRestartReader::determinePhasesToMigrate() {
   });
 
   runInEpochCollective("LBDataRestartReader::computeDistributionChanges", [&]{
-    auto cb = theCB()->makeBcast<
-      LBDataRestartReader,ReduceMsg,&LBDataRestartReader::reduceDistroChanges
-    >(proxy_);
+    auto cb = theCB()->makeBcast<&LBDataRestartReader::reduceDistroChanges>(proxy_);
     auto msg = makeMessage<ReduceMsg>(std::move(local_changed_distro));
     proxy_.reduce<collective::OrOp<std::vector<bool>>>(msg, cb);
   });

@@ -365,7 +365,7 @@ struct MyObjGroup {
       auto num = vt::theContext()->getNumNodes();
       auto next = node + 1 < num ? node + 1 : 0;
       auto proxy = frontend_proxy_(next);
-      auto c = vt::theCB()->makeSend<MyObjGroup,OpIdxMsg,&MyObjGroup::op4Impl>(proxy);
+      auto c = vt::theCB()->makeSend<&MyObjGroup::op4Impl>(proxy);
       return backend_proxy_(idx).template send<ProxyMsg, &MyCol::op4>(c);
     });
   }

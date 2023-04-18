@@ -228,16 +228,6 @@ struct CallbackTyped : CallbackRawBaseSingle {
     return other.pipe_ == pipe_ && other.cb_ == cb_;
   }
 
-  // Conversion operators to typed from untyped
-  CallbackTyped(CallbackRawBaseSingle const& other) {
-    pipe_ = other.pipe_;
-    cb_   = other.cb_;
-  }
-  CallbackTyped(CallbackRawBaseSingle&& other) {
-    pipe_ = std::move(other.pipe_);
-    cb_   = std::move(other.cb_);
-  }
-
   template <typename... Params>
   void send(Params&&... params) {
     using Trait = CBTraits<Args...>;

@@ -94,25 +94,8 @@ struct PipeManagerTL : virtual PipeManagerBase {
   template <auto f, bool is_bcast>
   auto makeCallbackSingle(NodeType node = uninitialized_destination);
 
-  // Single active message functor-handler
-  template <
-    typename FunctorT,
-    typename T = typename util::FunctorExtractor<FunctorT>::MessageType
-  >
-  auto makeCallbackFunctorSend(NodeType const& node);
-
-  template <
-    typename FunctorT,
-    typename T = typename util::FunctorExtractor<FunctorT>::MessageType
-  >
-  auto makeCallbackFunctorBcast();
-
-  // Single active message functor-handler void param
-  template <typename FunctorT>
-  auto makeCallbackFunctorSendVoid(NodeType const& node);
-
-  template <typename FunctorT>
-  auto makeCallbackFunctorBcastVoid();
+  template <typename FunctorT, bool is_bcast>
+  auto makeCallbackFunctor(NodeType node = uninitialized_destination);
 
   // Single active message anon func-handler
   auto makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn);

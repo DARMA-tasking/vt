@@ -78,7 +78,7 @@ struct NodeObj {
 
   void perfReduce(MyMsg* in_msg) {
     test_obj_->StartTimer(fmt::format("{} reduce", i));
-    auto cb = theCB()->makeBcast<NodeObj, ReduceMsg, &NodeObj::reduceComplete>(proxy_);
+    auto cb = theCB()->makeBcast<&NodeObj::reduceComplete>(proxy_);
     auto msg = makeMessage<ReduceMsg>();
     proxy_.reduce(msg.get(), cb);
   }

@@ -217,6 +217,125 @@ struct FuncTraitsImpl<
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename enabled, typename... Args>
+struct FunctorTraitsImpl;
+
+template <typename FunctorT, typename Return, typename Msg>
+struct FunctorTraitsImpl<
+  std::enable_if_t<
+    std::is_convertible<Msg, vt::Message>::value or
+    std::is_convertible<Msg, vt::ShortMessage>::value or
+    std::is_convertible<Msg, vt::EpochMessage>::value or
+    std::is_convertible<Msg, vt::PayloadMessage>::value
+  >,
+  FunctorT,
+  Return(FunctorT::*)(Msg*)
+> {
+  static constexpr bool is_member = false;
+  using MsgT = Msg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<MsgT>;
+  using FuncPtrType = Return(*)(Msg*);
+};
+
+template <typename FunctorT, typename Return>
+struct FunctorTraitsImpl<
+  std::enable_if_t<std::is_same_v<void, void>>,
+  FunctorT,
+  Return(FunctorT::*)()
+> {
+  static constexpr bool is_member = false;
+  using MsgT = NoMsg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<>;
+  using TupleType = std::tuple<>;
+  using FuncPtrType = Return(*)();
+};
+
+template <typename FunctorT, typename Return, typename Arg, typename... Args>
+struct FunctorTraitsImpl<
+  std::enable_if_t<
+    not (
+      std::is_convertible<Arg, vt::Message*>::value or
+      std::is_convertible<Arg, vt::ShortMessage*>::value or
+      std::is_convertible<Arg, vt::EpochMessage*>::value or
+      std::is_convertible<Arg, vt::PayloadMessage*>::value
+    )
+  >,
+  FunctorT,
+  Return(FunctorT::*)(Arg, Args...)
+> {
+  static constexpr bool is_member = false;
+  using MsgT = NoMsg;
+  using Arg1 = Arg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using TupleType = WrapType<std::tuple>;
+  using FuncPtrType = Return(*)(Arg, Args...);
+};
+
+template <typename FunctorT, typename Return, typename Msg>
+struct FunctorTraitsImpl<
+  std::enable_if_t<
+    std::is_convertible<Msg, vt::Message>::value or
+    std::is_convertible<Msg, vt::ShortMessage>::value or
+    std::is_convertible<Msg, vt::EpochMessage>::value or
+    std::is_convertible<Msg, vt::PayloadMessage>::value
+  >,
+  FunctorT,
+  Return(FunctorT::*)(Msg*) const
+> {
+  static constexpr bool is_member = false;
+  using MsgT = Msg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<MsgT>;
+  using FuncPtrType = Return(*)(Msg*);
+};
+
+template <typename FunctorT, typename Return>
+struct FunctorTraitsImpl<
+  std::enable_if_t<std::is_same_v<void, void>>,
+  FunctorT,
+  Return(FunctorT::*)() const
+> {
+  static constexpr bool is_member = false;
+  using MsgT = NoMsg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<>;
+  using TupleType = std::tuple<>;
+  using FuncPtrType = Return(*)();
+};
+
+template <typename FunctorT, typename Return, typename Arg, typename... Args>
+struct FunctorTraitsImpl<
+  std::enable_if_t<
+    not (
+      std::is_convertible<Arg, vt::Message*>::value or
+      std::is_convertible<Arg, vt::ShortMessage*>::value or
+      std::is_convertible<Arg, vt::EpochMessage*>::value or
+      std::is_convertible<Arg, vt::PayloadMessage*>::value
+    )
+  >,
+  FunctorT,
+  Return(FunctorT::*)(Arg, Args...) const
+> {
+  static constexpr bool is_member = false;
+  using MsgT = NoMsg;
+  using Arg1 = Arg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using TupleType = WrapType<std::tuple>;
+  using FuncPtrType = Return(*)(Arg, Args...);
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename enabled, typename... Args>
 struct CBTraitsImpl;
 
 template <typename Msg>
@@ -269,6 +388,9 @@ struct ObjFuncTraits : util::fntraits::detail::ObjFuncTraitsImpl<void, Args...> 
 
 template <typename... Args>
 struct FuncTraits : util::fntraits::detail::FuncTraitsImpl<void, Args...> {};
+
+template <typename... Args>
+struct FunctorTraits : util::fntraits::detail::FunctorTraitsImpl<void, Args...> {};
 
 template <typename... Args>
 struct CBTraits : util::fntraits::detail::CBTraitsImpl<void, Args...> {};

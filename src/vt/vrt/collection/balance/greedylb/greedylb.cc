@@ -220,7 +220,7 @@ void GreedyLB::reduceCollect() {
     TimeTypeWrapper(this_load_begin / 1000), load_over.size()
   );
   using MsgType = GreedyCollectMsg;
-  auto cb = vt::theCB()->makeSend<GreedyLB, MsgType, &GreedyLB::collectHandler>(proxy[0]);
+  auto cb = vt::theCB()->makeSend<&GreedyLB::collectHandler>(proxy[0]);
   auto msg = makeMessage<MsgType>(load_over,this_load);
   proxy.template reduce<collective::PlusOp<GreedyPayload>>(msg.get(),cb);
 }

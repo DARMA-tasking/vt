@@ -55,8 +55,6 @@ namespace vt { namespace tests { namespace unit { namespace bcast {
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct TestColMsg;
-
 struct CallbackMsg : vt::Message {
   CallbackMsg() = default;
   explicit CallbackMsg(Callback<> in_cb) : cb_(in_cb) { }
@@ -91,11 +89,19 @@ struct TestCol : vt::Collection<TestCol, vt::Index1D> {
 
   virtual ~TestCol() = default;
 
-  void check(TestColMsg* msg) {
-    if (other) {
+  void check() {
+    if (which_cb == 1) {
       EXPECT_EQ(val, 29);
-    } else {
+    } else if (which_cb == 2) {
       EXPECT_EQ(val, 13);
+    } else if (which_cb == 3) {
+      EXPECT_EQ(val, 15);
+    } else if (which_cb == 4) {
+      EXPECT_EQ(val, 21);
+    } else if (which_cb == 5) {
+      EXPECT_EQ(val, 99);
+    } else {
+      vtAbort("Should be unreachable");
     }
   }
 
@@ -104,7 +110,7 @@ struct TestCol : vt::Collection<TestCol, vt::Index1D> {
     EXPECT_EQ(msg->b, 9);
     EXPECT_EQ(msg->c, 10);
     val = 29;
-    other = true;
+    which_cb = 1;
   }
 
   void cb2(DataMsg* msg) {
@@ -112,21 +118,35 @@ struct TestCol : vt::Collection<TestCol, vt::Index1D> {
     EXPECT_EQ(msg->b, 9);
     EXPECT_EQ(msg->c, 10);
     val = 13;
+    which_cb = 2;
+  }
+
+  void cb3(int a, int b) {
+    EXPECT_EQ(a, 8);
+    EXPECT_EQ(b, 9);
+    val = 15;
+    which_cb = 3;
+  }
+
+  void cb4(std::string str, int a) {
+    EXPECT_EQ(a, 8);
+    EXPECT_EQ(str, "hello");
+    val = 21;
+    which_cb = 4;
   }
 
 public:
   int32_t val = 17;
-  bool other = false;
+  int which_cb = 0;
 };
 
-static void cb3(TestCol* col, DataMsg* msg) {
+static void cb5(TestCol* col, DataMsg* msg) {
   EXPECT_EQ(msg->a, 8);
   EXPECT_EQ(msg->b, 9);
   EXPECT_EQ(msg->c, 10);
-  col->val = 13;
+  col->val = 99;
+  col->which_cb = 5;
 }
-
-struct TestColMsg : ::vt::CollectionMessage<TestCol> {};
 
 TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
   auto const& this_node = theContext()->getNode();
@@ -142,14 +162,14 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
 
   runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::cb1>(proxy);
+      auto cb = theCB()->makeBcast<&TestCol::cb1>(proxy);
       cb.send(8,9,10);
     }
   });
 
   runInEpochCollective([&]{
     if (this_node == 0) {
-      proxy.broadcast<TestColMsg, &TestCol::check>();
+      proxy.broadcast<&TestCol::check>();
     }
   });
 }
@@ -175,7 +195,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
   runInEpochCollective([&]{
     if (this_node == 0) {
       auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-      auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::cb2>(proxy);
+      auto cb = theCB()->makeBcast<&TestCol::cb2>(proxy);
       auto msg = makeMessage<CallbackDataMsg>(cb);
       theMsg()->sendMsg<testHandler>(next, msg);
     }
@@ -183,8 +203,46 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
 
   runInEpochCollective([&]{
     if (this_node == 0) {
-      proxy.broadcast<TestColMsg, &TestCol::check>();
+      proxy.broadcast<&TestCol::check>();
     }
+  });
+}
+
+TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_param_1) {
+  auto const this_node = theContext()->getNode();
+
+  auto proxy = makeCollection<TestCol>("test_callback_bcast_collection_param_1")
+    .bulkInsert(Index1D(32))
+    .wait();
+
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto cb = theCB()->makeBcast<&TestCol::cb3>(proxy);
+      cb.send(8, 9);
+    }
+  });
+
+  runInEpochCollective([&]{
+    proxy.broadcastCollective<&TestCol::check>();
+  });
+}
+
+TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_param_2) {
+  auto const this_node = theContext()->getNode();
+
+  auto proxy = makeCollection<TestCol>("test_callback_bcast_collection_param_2")
+    .bulkInsert(Index1D(32))
+    .wait();
+
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto cb = theCB()->makeBcast<&TestCol::cb4>(proxy);
+      cb.send("hello", 8);
+    }
+  });
+
+  runInEpochCollective([&]{
+    proxy.broadcastCollective<&TestCol::check>();
   });
 }
 
@@ -209,7 +267,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
   runInEpochCollective([&]{
     if (this_node == 0) {
       auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-      auto cb = theCB()->makeBcast<TestCol,DataMsg,cb3>(proxy);
+      auto cb = theCB()->makeBcast<cb5>(proxy);
       auto msg = makeMessage<CallbackDataMsg>(cb);
       theMsg()->sendMsg<testHandler>(next, msg);
     }
@@ -217,7 +275,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
 
   runInEpochCollective([&]{
     if (this_node == 0) {
-      proxy.broadcast<TestColMsg, &TestCol::check>();
+      proxy.broadcast<&TestCol::check>();
     }
   });
 }

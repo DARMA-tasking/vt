@@ -76,7 +76,7 @@ struct ColA : Collection<ColA,Index1D> {
 
   void doReduce() {
     auto const proxy = getCollectionProxy();
-    auto cb = theCB()->makeBcast<ColA, MyReduceMsg, &ColA::finishedReduce>(proxy);
+    auto cb = theCB()->makeBcast<&ColA::finishedReduce>(proxy);
     auto reduce_msg = makeMessage<MyReduceMsg>(getIndex().x());
     proxy.reduce<collective::PlusOp<int>>(reduce_msg.get(),cb);
     reduce_test = true;

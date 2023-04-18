@@ -105,27 +105,27 @@ static inline void activeMessageCallback() {
     NodeType const cb_node = 0;
 
     // Example lambda callback (void)
-    auto void_fn = [=]{
-      ::fmt::print("{}: triggering void function callback\n", this_node);
+    auto fn = [=](DataMsg* msg){
+      ::fmt::print("{}: triggering function callback\n", this_node);
     };
 
     // Example of a void lambda callback
     {
-      auto cb = ::vt::theCB()->makeFunc(vt::pipe::LifetimeEnum::Once, void_fn);
+      auto cb = ::vt::theCB()->makeFunc<DataMsg>(vt::pipe::LifetimeEnum::Once, fn);
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
       ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
     }
 
     // Example of active message handler callback with send node
     {
-      auto cb = ::vt::theCB()->makeSend<DataMsg,callbackHandler>(cb_node);
+      auto cb = ::vt::theCB()->makeSend<callbackHandler>(cb_node);
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
       ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
     }
 
     // Example of active message handler callback with broadcast
     {
-      auto cb = ::vt::theCB()->makeBcast<DataMsg,callbackBcastHandler>();
+      auto cb = ::vt::theCB()->makeBcast<callbackBcastHandler>();
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
       ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
     }

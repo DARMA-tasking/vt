@@ -129,7 +129,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
   pending_reassignment_->node_ = this_node;
 
   runInEpochCollective("Sum migrations", [&] {
-    auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);
+    auto cb = vt::theCB()->makeBcast<&BaseLB::finalize>(proxy_);
     int32_t local_migration_count = transfers_.size();
     auto msg = makeMessage<CountMsg>(local_migration_count);
     proxy_.template reduce<collective::PlusOp<int32_t>>(msg,cb);

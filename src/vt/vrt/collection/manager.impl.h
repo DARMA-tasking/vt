@@ -1284,7 +1284,7 @@ template <typename ColT, typename ParamT, typename... Args>
   std::tuple<Args...>
 ) {
   using MapT = typename DefaultMap<ColT>::MapType;
-  return auto_registry::makeAutoHandlerFunctorMap<MapT,Args...>();
+  return auto_registry::makeAutoHandlerFunctorMap<MapT>();
 }
 
 template <typename IndexT>
@@ -1553,9 +1553,7 @@ void CollectionManager::finishModification(
   NodeType collective_root = 0;
   auto stamp = makeStamp<StrongUserID>(untyped_proxy);
   auto msg = makeMessage<CollectionStampMsg>(untyped_proxy, min_seq);
-  auto cb = theCB()->makeBcast<
-    CollectionStampMsg,&CollectionManager::computeReduceStamp
-  >();
+  auto cb = theCB()->makeBcast<&CollectionManager::computeReduceStamp>();
   r->reduce<collective::MinOp<SeqType>>(collective_root, msg.get(), cb, stamp);
 
   theSched()->runSchedulerWhile([untyped_proxy]{

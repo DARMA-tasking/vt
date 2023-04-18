@@ -222,9 +222,7 @@ public:
     }
 
     auto proxy = this->getCollectionProxy();
-    auto cb = vt::theCB()->makeSend<
-      LinearPb2DJacobi,ReduxMsg,&LinearPb2DJacobi::checkCompleteCB
-    >(proxy(0,0));
+    auto cb = vt::theCB()->makeSend<&LinearPb2DJacobi::checkCompleteCB>(proxy(0,0));
     auto msg2 = vt::makeMessage<ReduxMsg>(maxNorm);
     proxy.reduce<vt::collective::MaxOp<double>>(msg2.get(),cb);
   }

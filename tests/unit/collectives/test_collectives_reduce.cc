@@ -82,7 +82,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
     auto proxy = this->getCollectionProxy();
 
     // Create a callback for when the reduction finishes
-    auto cb = vt::theCB()->makeBcast<MyObjGroup,ReduceMsg,&MyObjGroup::handler>(objgroup_proxy);
+    auto cb = vt::theCB()->makeBcast<&MyObjGroup::handler>(objgroup_proxy);
 
     // Create and send the reduction message holding an int
     auto red_msg = vt::makeMessage<ReduceMsg>(this->getIndex().x());

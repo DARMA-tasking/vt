@@ -336,7 +336,7 @@ void ZoltanLB::countEdges() {
     total_ids
   );
 
-  auto cb = theCB()->makeBcast<ZoltanLB,ReduceMsg,&ZoltanLB::reduceCount>(proxy);
+  auto cb = theCB()->makeBcast<&ZoltanLB::reduceCount>(proxy);
   auto msg = makeMessage<ReduceMsg>(total_ids);
   proxy.reduce<collective::MaxOp<int>>(msg.get(),cb);
 }

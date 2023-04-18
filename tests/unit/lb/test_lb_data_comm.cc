@@ -268,7 +268,7 @@ void recvElementIDs(ReduceMsg* msg) { all_elms = msg->getVal().elms; }
 void doReduce(MyCol* col) {
   auto proxy = col->getCollectionProxy();
   auto index = col->getIndex();
-  auto cb = theCB()->makeBcast<ReduceMsg, recvElementIDs>();
+  auto cb = theCB()->makeBcast<recvElementIDs>();
   auto msg = makeMessage<ReduceMsg>(index, col->getElmID());
   proxy.reduce<vt::collective::PlusOp<ElementInfo>>(msg.get(), cb);
 }

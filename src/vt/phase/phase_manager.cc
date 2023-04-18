@@ -175,7 +175,7 @@ void PhaseManager::nextPhaseCollective() {
   auto proxy = objgroup::proxy::Proxy<PhaseManager>(proxy_);
 
   // Start with a reduction to sure all nodes are ready for this
-  auto cb = theCB()->makeBcast<PhaseManager, NextMsg, &PhaseManager::nextPhaseReduce>(proxy);
+  auto cb = theCB()->makeBcast<&PhaseManager::nextPhaseReduce>(proxy);
   auto msg = makeMessage<NextMsg>();
   proxy.reduce(msg.get(), cb);
 
@@ -203,7 +203,7 @@ void PhaseManager::nextPhaseCollective() {
   runHooks(PhaseHook::Start);
 
   // Start with a reduction to sure all nodes are ready for this
-  auto cb2 = theCB()->makeBcast<PhaseManager, NextMsg, &PhaseManager::nextPhaseDone>(proxy);
+  auto cb2 = theCB()->makeBcast<&PhaseManager::nextPhaseDone>(proxy);
   auto msg2 = makeMessage<NextMsg>();
   proxy.reduce(msg2.get(), cb2);
 
