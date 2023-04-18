@@ -92,12 +92,12 @@ struct PipeManager
   /**
    * \brief Make callback to an active function, objgroup, or collection
    *
-   * \param[in] node the node to target
+   * \param[in] target the node or proxy to target
    *
    * \return a callback
    */
   template <auto f, typename Target>
-  auto makeSend(Target node);
+  auto makeSend(Target target);
 
   /**
    * \brief Make callback to a functor
