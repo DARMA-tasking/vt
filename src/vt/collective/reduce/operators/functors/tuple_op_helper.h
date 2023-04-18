@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 reduce_msg.h
+//                              tuple_op_helper.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,63 +41,30 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MSG_H
-#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MSG_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_TUPLE_OP_HELPER_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_TUPLE_OP_HELPER_H
 
-#include "vt/config.h"
-#include "vt/collective/reduce/reduce.fwd.h"
-#include "vt/collective/reduce/reduce_scope.h"
-#include "vt/messaging/message.h"
+#include <tuple>
 
-#include <cstdlib>
+namespace vt { namespace collective { namespace reduce { namespace operators {
 
-namespace vt { namespace collective { namespace reduce {
+template <
+  template <typename X> class Op,
+  typename... Ts, typename... Us, std::size_t... I
+>
+void opTuple(
+  std::tuple<Ts...>& t1, std::tuple<Us...> const& t2, std::index_sequence<I...>
+) {
+  std::forward_as_tuple(
+    (Op<std::decay_t<decltype(std::get<I>(t1))>>()(std::get<I>(t1),std::get<I>(t2)),0)...
+  );
+}
 
-struct ReduceMsg;
+template <template <typename X> class Op, typename... Ts, typename... Us>
+void opTuple(std::tuple<Ts...>& t1, std::tuple<Us...> const& t2) {
+  opTuple<Op>(t1, t2, std::make_index_sequence<sizeof...(Ts)>{});
+}
 
-struct ReduceLink {
-  using MsgCountType = uint16_t;
+}}}} /* end namespace vt::collective::reduce::operators */
 
-  template <typename T>
-  T* getNext() const { return static_cast<T*>(next_); }
-
-  bool isRoot() const { return is_root_; }
-  MsgCountType getCount() const { return count_; }
-
-  friend struct Reduce;
-
-private:
-  bool is_root_ = false;
-  ReduceMsg* next_ = nullptr;
-  MsgCountType count_ = 0;
-};
-
-struct ReduceMsg : SerializeSupported<
-  ::vt::Message,
-  ReduceMsg
->, ReduceLink
-{
-  using MessageParentType = SerializeSupported<
-    ::vt::Message,
-    ReduceMsg
-  >;
-
-  ReduceStamp const& stamp() const { return reduce_id_.stamp(); }
-  detail::ReduceScope const& scope() const { return reduce_id_.scope(); }
-
-  NodeType reduce_root_ = uninitialized_destination;
-  detail::ReduceIDImpl reduce_id_;
-  HandlerType combine_handler_ = uninitialized_handler;
-  HandlerType root_handler_ = uninitialized_handler;
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-    s | reduce_root_ | reduce_id_;
-    s | combine_handler_ | root_handler_;
-  }
-};
-
-}}} /* end namespace vt::collective::reduce */
-
-#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MSG_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_TUPLE_OP_HELPER_H*/
