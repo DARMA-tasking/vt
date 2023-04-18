@@ -205,6 +205,10 @@ void NodeLBData::createLBDataFile() {
     }
     metadata["type"] = "LBDatafile";
     metadata["rank"] = theContext()->getNode();
+    auto phasesMetadata = lb_data_->metadataToJson();
+    if(phasesMetadata) {
+       metadata["phases"] = *phasesMetadata;
+    }
     lb_data_writer_ = std::make_unique<JSONAppender>(
       "phases", metadata, file_name, compress
     );
