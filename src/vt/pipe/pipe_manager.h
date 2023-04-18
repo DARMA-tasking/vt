@@ -66,21 +66,6 @@
 namespace vt { namespace pipe {
 
 /**
- * \internal \struct PipeFunctorTraits
- *
- * \brief Extract acceptable message type from functor
- *
- * Used to automatically extract the message type from a functor endpoint
- */
-template <typename T>
-struct PipeFunctorTraits {
-  template <typename U>
-  using FunctorNoMsgArchType = decltype(std::declval<U>().operator()());
-  using FunctorNoMsgType = detection::is_detected<FunctorNoMsgArchType,T>;
-  static constexpr auto const has_no_msg_type = FunctorNoMsgType::value;
-};
-
-/**
  * \struct PipeManager
  *
  * \brief Core VT component that provides an interface to create type-erased
