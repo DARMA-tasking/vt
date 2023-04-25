@@ -58,8 +58,10 @@ struct OrOp {
 
 template <typename... Params>
 struct OrOp<std::tuple<Params...>> {
+  template <typename X>
+  using GetAsType = OrOp<X>;
   void operator()(std::tuple<Params...>& v1, std::tuple<Params...> const& v2) {
-    opTuple<OrOp>(v1, v2);
+    opTuple<OrOp<std::tuple<Params...>>>(v1, v2);
   }
 };
 

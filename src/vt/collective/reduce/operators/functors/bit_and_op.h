@@ -58,8 +58,10 @@ struct BitAndOp {
 
 template <typename... Params>
 struct BitAndOp<std::tuple<Params...>> {
+  template <typename X>
+  using GetAsType = BitAndOp<X>;
   void operator()(std::tuple<Params...>& v1, std::tuple<Params...> const& v2) {
-    opTuple<BitAndOp>(v1, v2);
+    opTuple<BitAndOp<std::tuple<Params...>>>(v1, v2);
   }
 };
 

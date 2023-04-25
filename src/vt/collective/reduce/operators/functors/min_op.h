@@ -60,8 +60,10 @@ struct MinOp {
 
 template <typename... Params>
 struct MinOp<std::tuple<Params...>> {
+  template <typename X>
+  using GetAsType = MinOp<X>;
   void operator()(std::tuple<Params...>& v1, std::tuple<Params...> const& v2) {
-    opTuple<MinOp>(v1, v2);
+    opTuple<MinOp<std::tuple<Params...>>>(v1, v2);
   }
 };
 

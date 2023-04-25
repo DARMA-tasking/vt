@@ -48,21 +48,45 @@
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
-template <
-  template <typename X> class Op,
-  typename... Ts, typename... Us, std::size_t... I
->
-void opTuple(
-  std::tuple<Ts...>& t1, std::tuple<Us...> const& t2, std::index_sequence<I...>
-) {
-  std::forward_as_tuple(
-    (Op<std::decay_t<decltype(std::get<I>(t1))>>()(std::get<I>(t1),std::get<I>(t2)),0)...
-  );
-}
+template <typename Op, int cur, int max, typename enabled_ = void>
+struct ApplyOp;
 
-template <template <typename X> class Op, typename... Ts, typename... Us>
-void opTuple(std::tuple<Ts...>& t1, std::tuple<Us...> const& t2) {
-  opTuple<Op>(t1, t2, std::make_index_sequence<sizeof...(Ts)>{});
+template <typename Op, int cur, int max>
+struct ApplyOp<Op, cur, max, std::enable_if_t<cur != max>> {
+  template <typename Tuple1, typename Tuple2>
+  static void apply(Tuple1& t1, Tuple2 const& t2) {
+    using CurType = std::decay_t<std::tuple_element_t<cur, Tuple1>>;
+    using OpType = typename Op::template GetAsType<CurType>;
+    OpType()(std::get<cur>(t1),std::get<cur>(t2));
+    ApplyOp<Op, cur+1, max>::apply(t1, t2);
+  }
+};
+
+template <typename Op, int cur, int max>
+struct ApplyOp<Op, cur, max, std::enable_if_t<cur == max>> {
+  template <typename Tuple1, typename Tuple2>
+  static void apply(Tuple1& t1, Tuple2 const& t2) { }
+};
+
+//
+// This is the cleaner way that is rejected by NVCC and Intel
+//
+// template <
+//   template <typename X> class Op,
+//   typename... Ts, typename... Us, std::size_t... I
+// >
+// void opTuple(
+//   std::tuple<Ts...>& t1, std::tuple<Us...> const& t2, std::index_sequence<I...>
+// ) {
+//   std::forward_as_tuple(
+//     (Op<std::decay_t<decltype(std::get<I>(t1))>>()(std::get<I>(t1),std::get<I>(t2)),0)...
+//   );
+// }
+
+template <typename Op, typename Tuple1, typename Tuple2>
+void opTuple(Tuple1& t1, Tuple2 const& t2) {
+  // opTuple<Op>(t1, t2, std::make_index_sequence<sizeof...(Ts)>{});
+  ApplyOp<Op, 0, std::tuple_size<Tuple1>{}>::apply(t1, t2);
 }
 
 }}}} /* end namespace vt::collective::reduce::operators */

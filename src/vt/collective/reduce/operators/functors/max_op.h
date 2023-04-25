@@ -60,8 +60,10 @@ struct MaxOp {
 
 template <typename... Params>
 struct MaxOp<std::tuple<Params...>> {
+  template <typename X>
+  using GetAsType = MaxOp<X>;
   void operator()(std::tuple<Params...>& v1, std::tuple<Params...> const& v2) {
-    opTuple<MaxOp>(v1, v2);
+    opTuple<MaxOp<std::tuple<Params...>>>(v1, v2);
   }
 };
 
