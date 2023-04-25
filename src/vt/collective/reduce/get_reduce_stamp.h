@@ -45,6 +45,11 @@
 #define INCLUDED_VT_COLLECTIVE_REDUCE_GET_REDUCE_STAMP_H
 
 #include "vt/config.h"
+#include "vt/collective/reduce/reduce_scope.h"
+#include "vt/messaging/message.h"
+
+#include <utility>
+#include <type_traits>
 
 namespace vt { namespace collective { namespace reduce {
 
