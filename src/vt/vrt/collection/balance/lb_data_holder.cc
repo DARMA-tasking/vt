@@ -365,6 +365,10 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
     }
   }
 
+  if (!count_) {
+    count_ = node_data_.size();
+  }
+
   // @todo: implement subphase communication de-serialization, no use for it
   // right now, so it will be ignored
 }
