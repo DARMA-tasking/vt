@@ -54,10 +54,10 @@ struct ObjFuncTraitsImpl;
 template <typename Obj, typename Return, typename Msg>
 struct ObjFuncTraitsImpl<
   std::enable_if_t<
-    (std::is_convertible<Msg, vt::Message>::value or
-    std::is_convertible<Msg, vt::ShortMessage>::value or
-    std::is_convertible<Msg, vt::EpochMessage>::value or
-    std::is_convertible<Msg, vt::PayloadMessage>::value)
+    (std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value)
     and
     std::is_pointer<Obj>::value
   >,
@@ -118,10 +118,10 @@ struct ObjFuncTraitsImpl<
 template <typename Obj, typename Return, typename Msg>
 struct ObjFuncTraitsImpl<
   std::enable_if_t<
-    std::is_convertible<Msg, vt::Message>::value or
-    std::is_convertible<Msg, vt::ShortMessage>::value or
-    std::is_convertible<Msg, vt::EpochMessage>::value or
-    std::is_convertible<Msg, vt::PayloadMessage>::value
+    std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value
   >,
   Return(Obj::*)(Msg*)
 > {
@@ -171,10 +171,10 @@ struct ObjFuncTraitsImpl<
 template <typename Return, typename Msg>
 struct ObjFuncTraitsImpl<
   std::enable_if_t<
-    std::is_convertible<Msg, vt::Message>::value or
-    std::is_convertible<Msg, vt::ShortMessage>::value or
-    std::is_convertible<Msg, vt::EpochMessage>::value or
-    std::is_convertible<Msg, vt::PayloadMessage>::value
+    std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value
   >,
   Return(*)(Msg*)
 > {
@@ -228,10 +228,10 @@ struct FunctorTraitsImpl;
 template <typename FunctorT, typename Return, typename Msg>
 struct FunctorTraitsImpl<
   std::enable_if_t<
-    std::is_convertible<Msg, vt::Message>::value or
-    std::is_convertible<Msg, vt::ShortMessage>::value or
-    std::is_convertible<Msg, vt::EpochMessage>::value or
-    std::is_convertible<Msg, vt::PayloadMessage>::value
+    std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value
   >,
   FunctorT,
   Return(FunctorT::*)(Msg*)
@@ -285,10 +285,10 @@ struct FunctorTraitsImpl<
 template <typename FunctorT, typename Return, typename Msg>
 struct FunctorTraitsImpl<
   std::enable_if_t<
-    std::is_convertible<Msg, vt::Message>::value or
-    std::is_convertible<Msg, vt::ShortMessage>::value or
-    std::is_convertible<Msg, vt::EpochMessage>::value or
-    std::is_convertible<Msg, vt::PayloadMessage>::value
+    std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value
   >,
   FunctorT,
   Return(FunctorT::*)(Msg*) const
@@ -347,10 +347,10 @@ struct CBTraitsImpl;
 template <typename Msg>
 struct CBTraitsImpl<
   std::enable_if_t<
-    std::is_convertible<Msg, vt::Message>::value or
-    std::is_convertible<Msg, vt::ShortMessage>::value or
-    std::is_convertible<Msg, vt::EpochMessage>::value or
-    std::is_convertible<Msg, vt::PayloadMessage>::value
+    std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value
   >,
   Msg
 > {
@@ -369,10 +369,10 @@ template <typename Arg, typename... Args>
 struct CBTraitsImpl<
   std::enable_if_t<
     not (
-      std::is_convertible<Arg, vt::Message>::value or
-      std::is_convertible<Arg, vt::ShortMessage>::value or
-      std::is_convertible<Arg, vt::EpochMessage>::value or
-      std::is_convertible<Arg, vt::PayloadMessage>::value
+      std::is_convertible<Arg*, vt::Message*>::value or
+      std::is_convertible<Arg*, vt::ShortMessage*>::value or
+      std::is_convertible<Arg*, vt::EpochMessage*>::value or
+      std::is_convertible<Arg*, vt::PayloadMessage*>::value
     )
   >,
   Arg,
