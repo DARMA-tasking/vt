@@ -161,6 +161,8 @@ protected:
 
 template <typename... Args>
 struct CallbackTyped : CallbackRawBaseSingle {
+  using TupleType = std::tuple<Args...>;
+
   CallbackTyped() = default;
   CallbackTyped(CallbackTyped const&) = default;
   CallbackTyped(CallbackTyped&&) = default;
@@ -226,6 +228,14 @@ struct CallbackTyped : CallbackRawBaseSingle {
   template <typename CallbackT>
   bool equal(CallbackT const& other) const {
     return other.pipe_ == pipe_ && other.cb_ == cb_;
+  }
+
+  template <typename... Params>
+  void sendTuple(std::tuple<Params...> tup) {
+    using Trait = CBTraits<Args...>;
+    using MsgT = messaging::ParamMsg<typename Trait::TupleType>;
+    auto msg = vt::makeMessage<MsgT>(std::move(tup));
+    CallbackRawBaseSingle::sendMsg<MsgT>(msg);
   }
 
   template <typename... Params>

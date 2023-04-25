@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             epoch_graph_reduce.h
+//                              get_reduce_stamp.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,39 +41,59 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TERMINATION_GRAPH_EPOCH_GRAPH_REDUCE_H
-#define INCLUDED_VT_TERMINATION_GRAPH_EPOCH_GRAPH_REDUCE_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_GET_REDUCE_STAMP_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_GET_REDUCE_STAMP_H
 
 #include "vt/config.h"
 
-namespace vt { namespace collective { namespace reduce { namespace operators {
+namespace vt { namespace collective { namespace reduce {
 
-template <typename T>
-struct ReduceDataMsg;
-
-}}}} /* end namespace vt::collective::reduce::operators */
-
-namespace vt { namespace termination { namespace graph {
-
-// Must be templated (where T = graph::EpochGraph) because of the circular
-// dependency between termination.h and reduce.h
-template <typename T>
-struct EpochGraphMsg : collective::reduce::operators::ReduceDataMsg<T> {
-  using MessageParentType = collective::reduce::operators::ReduceDataMsg<T>;
-  vt_msg_serialize_if_needed_by_parent();
-
-  EpochGraphMsg() = default;
-
-  explicit EpochGraphMsg(std::shared_ptr<T> const& graph)
-    : collective::reduce::operators::ReduceDataMsg<T>(*graph)
-  { }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
+template <typename enable = void, typename... Args>
+struct GetReduceStamp : std::false_type {
+  template <typename MsgT>
+  static auto getMsg(Args&&... args) {
+    return vt::makeMessage<MsgT>(std::tuple{std::forward<Args>(args)...});
   }
 };
 
-}}} /* end namespace vt::termination::graph */
+template <>
+struct GetReduceStamp<
+  std::enable_if_t<std::is_same_v<void, void>>
+> : std::false_type {
+  template <typename MsgT>
+  static auto getMsg() {
+    return vt::makeMessage<MsgT>(std::tuple<>{});
+  }
+};
 
-#endif /*INCLUDED_VT_TERMINATION_GRAPH_EPOCH_GRAPH_REDUCE_H*/
+template <typename... Args>
+struct GetReduceStamp<
+  std::enable_if_t<
+    std::is_same_v<
+      std::decay_t<std::tuple_element_t<sizeof...(Args) - 1, std::tuple<Args...>>>,
+      collective::reduce::ReduceStamp
+    >
+  >,
+  Args...
+> : std::true_type {
+  template <typename... Params, std::size_t... Is>
+  static constexpr auto getMsgHelper(
+    std::tuple<Params...> tp, std::index_sequence<Is...>
+  ) {
+    return std::tuple{std::get<Is>(tp)...};
+  }
+
+  template <typename MsgT>
+  static auto getMsg(Args&&... args) {
+    return vt::makeMessage<MsgT>(
+      getMsgHelper(
+        std::tie(std::forward<Args>(args)...),
+        std::make_index_sequence<sizeof...(Args) - 1>{}
+      )
+    );
+  }
+};
+
+}}} /* end namespace vt::collective::reduce */
+
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_GET_REDUCE_STAMP_H*/

@@ -793,12 +793,10 @@ void HierarchicalLB::runLB(TimeType total_load) {
   buildHistogram();
   setupTree(min_threshold);
 
-  auto cb = vt::theCB()->makeBcast<&HierarchicalLB::setupDone>(proxy);
-  auto msg = makeMessage<SetupDoneMsg>();
-  proxy.reduce(msg.get(),cb);
+  proxy.allreduce<&HierarchicalLB::setupDone>();
 }
 
-void HierarchicalLB::setupDone(SetupDoneMsg* msg) {
+void HierarchicalLB::setupDone() {
   loadStats();
 }
 

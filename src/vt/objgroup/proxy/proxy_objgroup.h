@@ -94,7 +94,6 @@ struct Proxy {
   { }
 
 public:
-
   /**
    * \brief Broadcast a message to all nodes to be delivered to the local object
    * instance
@@ -161,6 +160,64 @@ public:
   PendingSendType broadcast(Args&&... args) const;
 
   /**
+   * \brief All-reduce back to this objgroup. Performs a reduction using
+   * operator `Op` followed by a broadcast to `f` with the result.
+   *
+   * \param[in] args the arguments to reduce. \note The last argument optionally
+   * may be a `ReduceStamp`.
+   *
+   * \return a pending send
+   */
+  template <
+    auto f,
+    template <typename Arg> class Op = collective::NoneOp,
+    typename... Args
+  >
+  PendingSendType allreduce(
+    Args&&... args
+  ) const;
+
+  /**
+   * \brief Reduce back to a point target. Performs a reduction using operator
+   * `Op` followed by a send to `f` with the result.
+   *
+   * \param[in] args the arguments to reduce. \note The last argument optionally
+   * may be a `ReduceStamp`.
+   *
+   * \return a pending send
+   */
+  template <
+    auto f,
+    template <typename Arg> class Op = collective::NoneOp,
+    typename Target,
+    typename... Args
+  >
+  PendingSendType reduce(
+    Target target,
+    Args&&... args
+  ) const;
+
+  /**
+   * \brief Reduce back to an arbitrary callback. Performs a reduction using
+   * operator `Op` and then delivers the result to the callback `cb`.
+   *
+   * \param[in] cb the callback to trigger with the reduction result
+   * \param[in] args the arguments to reduce. \note The last argument optionally
+   * may be a `ReduceStamp`.
+   *
+   * \return a pending send
+   */
+  template <
+    template <typename Arg> class Op = collective::NoneOp,
+    typename... CBArgs,
+    typename... Args
+  >
+  PendingSendType reduce(
+    vt::Callback<CBArgs...> cb,
+    Args&&... args
+  ) const;
+
+  /**
    * \brief Reduce over the objgroup instances on each node with a callback
    * target.
    *
@@ -176,6 +233,7 @@ public:
     typename MsgT,
     ActiveTypedFnType<MsgT> *f
   >
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   PendingSendType reduce(
     MsgPtrT msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
   ) const;
@@ -185,6 +243,7 @@ public:
     typename MsgPtrT,
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType
   >
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   PendingSendType reduce(
     MsgPtrT msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
   ) const {
@@ -214,13 +273,16 @@ public:
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
     ActiveTypedFnType<MsgT> *f
   >
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   PendingSendType reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
+
   template <
     typename OpT = collective::None,
     typename FunctorT,
     typename MsgPtrT,
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType
   >
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   PendingSendType reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const
   {
     return reduce<
@@ -246,6 +308,7 @@ public:
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
     ActiveTypedFnType<MsgT> *f
   >
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   PendingSendType reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
 
   /**

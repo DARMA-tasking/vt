@@ -204,7 +204,7 @@ auto PipeManagerTL::makeCallbackProxy(ProxyT proxy) {
     HandlerType han = uninitialized_handler;
     if constexpr (std::is_same_v<MsgT, NoMsg>) {
       using Tuple = typename Trait::TupleType;
-      using PMsgT = messaging::ParamMsg<Tuple, ObjT>;
+      using PMsgT = messaging::ParamMsg<Tuple>;
       han = auto_registry::makeAutoHandlerObjGroupParam<
         ObjT, decltype(f), f, PMsgT
       >(ctrl);

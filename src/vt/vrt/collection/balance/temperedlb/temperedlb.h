@@ -65,8 +65,6 @@ struct TemperedLB : BaseLB {
   using NodeSetType    = std::vector<NodeType>;
   using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
-  using RejectionMsgType = balance::RejectionStatsMsg;
-  using StatsMsgType     = balance::NodeStatsMsg;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
 
@@ -115,11 +113,11 @@ protected:
 
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
-  void loadStatsHandler(StatsMsgType* msg);
-  void rejectionStatsHandler(RejectionMsgType* msg);
+  void loadStatsHandler(std::vector<balance::LoadData> const& vec);
+  void rejectionStatsHandler(int n_rejected, int n_transfers);
   void thunkMigrations();
 
-  void setupDone(ReduceMsgType* msg);
+  void setupDone();
 
 private:
   uint16_t f_                                       = 0;

@@ -57,9 +57,6 @@
 
 namespace vt { namespace phase {
 
-// fwd-decl for reduce message
-struct NextMsg;
-
 /**
  * \struct PhaseManager
  *
@@ -186,7 +183,7 @@ private:
    *
    * \param[in] msg the (empty) next phase message
    */
-  void nextPhaseReduce(NextMsg* msg);
+  void nextPhaseReduce();
 
   /**
    * \internal
@@ -194,7 +191,7 @@ private:
    *
    * \param[in] msg the (empty) next phase message
    */
-  void nextPhaseDone(NextMsg* msg);
+  void nextPhaseDone();
 
   /**
    * \internal

@@ -54,15 +54,17 @@ struct ObjFuncTraitsImpl;
 template <typename Obj, typename Return, typename Msg>
 struct ObjFuncTraitsImpl<
   std::enable_if_t<
-    std::is_convertible<Msg, vt::Message>::value or
+    (std::is_convertible<Msg, vt::Message>::value or
     std::is_convertible<Msg, vt::ShortMessage>::value or
     std::is_convertible<Msg, vt::EpochMessage>::value or
-    std::is_convertible<Msg, vt::PayloadMessage>::value
+    std::is_convertible<Msg, vt::PayloadMessage>::value)
+    and
+    std::is_pointer<Obj>::value
   >,
-  Return(*)(Obj*, Msg*)
+  Return(*)(Obj, Msg*)
 > {
   static constexpr bool is_member = false;
-  using ObjT = Obj;
+  using ObjT = std::remove_pointer_t<Obj>;
   using MsgT = Msg;
   using ReturnT = Return;
   template <template <typename...> class U>
@@ -71,17 +73,25 @@ struct ObjFuncTraitsImpl<
 
 template <typename Obj, typename Return>
 struct ObjFuncTraitsImpl<
-  std::enable_if_t<std::is_same_v<void, void>>,
-  Return(*)(Obj*)
+  std::enable_if_t<
+    not (
+      std::is_convertible<Obj, vt::Message*>::value or
+      std::is_convertible<Obj, vt::ShortMessage*>::value or
+      std::is_convertible<Obj, vt::EpochMessage*>::value or
+      std::is_convertible<Obj, vt::PayloadMessage*>::value
+    ) and
+    std::is_pointer<Obj>::value
+  >,
+  Return(*)(Obj)
 > {
   static constexpr bool is_member = false;
-  using ObjT = Obj;
+  using ObjT = std::remove_pointer_t<Obj>;
   using MsgT = NoMsg;
+  using Arg1 = Obj;
   using ReturnT = Return;
   using TupleType = std::tuple<>;
   template <template <typename...> class U>
   using WrapType = U<>;
-
 };
 
 template <typename Obj, typename Return, typename Arg, typename... Args>
@@ -158,13 +168,8 @@ struct ObjFuncTraitsImpl<
   using TupleType = WrapType<std::tuple>;
 };
 
-///////////////////////////////////////////////////////////////////////////////
-
-template <typename enabled, typename... Args>
-struct FuncTraitsImpl;
-
 template <typename Return, typename Msg>
-struct FuncTraitsImpl<
+struct ObjFuncTraitsImpl<
   std::enable_if_t<
     std::is_convertible<Msg, vt::Message>::value or
     std::is_convertible<Msg, vt::ShortMessage>::value or
@@ -181,7 +186,7 @@ struct FuncTraitsImpl<
 };
 
 template <typename Return>
-struct FuncTraitsImpl<
+struct ObjFuncTraitsImpl<
   std::enable_if_t<std::is_same_v<void, void>>,
   Return(*)()
 > {
@@ -194,14 +199,15 @@ struct FuncTraitsImpl<
 };
 
 template <typename Return, typename Arg, typename... Args>
-struct FuncTraitsImpl<
+struct ObjFuncTraitsImpl<
   std::enable_if_t<
     not (
       std::is_convertible<Arg, vt::Message*>::value or
       std::is_convertible<Arg, vt::ShortMessage*>::value or
       std::is_convertible<Arg, vt::EpochMessage*>::value or
       std::is_convertible<Arg, vt::PayloadMessage*>::value
-    )
+    ) and
+    not std::is_pointer<Arg>::value
   >,
   Return(*)(Arg, Args...)
 > {
@@ -387,7 +393,7 @@ template <typename... Args>
 struct ObjFuncTraits : util::fntraits::detail::ObjFuncTraitsImpl<void, Args...> {};
 
 template <typename... Args>
-struct FuncTraits : util::fntraits::detail::FuncTraitsImpl<void, Args...> {};
+struct FuncTraits : util::fntraits::detail::ObjFuncTraitsImpl<void, Args...> {};
 
 template <typename... Args>
 struct FunctorTraits : util::fntraits::detail::FunctorTraitsImpl<void, Args...> {};

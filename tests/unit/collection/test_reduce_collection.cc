@@ -55,35 +55,23 @@ TEST_P(TestReduceCollection, test_reduce_op) {
 
   if (my_node == root) {
     auto reduce_case = GetParam();
-    auto size = (reduce_case == 5 ? collect_size * 4 : collect_size);
+    auto size = collect_size;
     auto const& range = Index1D(size);
     auto proxy = theCollection()->construct<MyCol>(range, "test_reduce_op");
 
     switch (reduce_case) {
     case 0: proxy.broadcast<colHanBasic>(); break;
-    case 1: proxy.broadcast<colHanVec>(); break;
+    case 1: proxy.broadcast<colHanBasicAR>(); break;
     case 2: proxy.broadcast<colHanVecProxy>(); break;
-    case 3: proxy.broadcast<colHanVecProxyCB>(); break;
+    case 3: proxy.broadcast<colHanVecProxyAR>(); break;
     case 4: proxy.broadcast<colHanNoneCB>(); break;
-
-      #if ENABLE_REDUCE_EXPR_CALLBACK
-    case 5: proxy.broadcast<colHanPartial>(); break;
-    case 6: proxy.broadcast<colHanPartialMulti>(); break;
-    case 7: proxy.broadcast<colHanPartialProxy>(); break;
-      #endif
-      default: vtAbort("Failure: should not be reached");
+    default: vtAbort("Failure: should not be reached");
     }
   }
 }
 
-#if ENABLE_REDUCE_EXPR_CALLBACK
-  INSTANTIATE_TEST_SUITE_P(
-    InstantiationName, TestReduceCollection, ::testing::Range(0, 8)
-  );
-#else
-  INSTANTIATE_TEST_SUITE_P(
-    InstantiationName, TestReduceCollection, ::testing::Range(0, 5)
-  );
-#endif
+INSTANTIATE_TEST_SUITE_P(
+  InstantiationName, TestReduceCollection, ::testing::Range(0, 5)
+);
 
 }}} // end namespace vt::tests::unit

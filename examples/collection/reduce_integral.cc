@@ -101,21 +101,17 @@ public:
       numPartsPerObject_(default_nparts_object)
   { }
 
-  struct CheckIntegral {
-
-    void operator()(ReduceMsg* msg) {
-      fmt::print(" >> The integral over [0, 1] is {}\n", msg->getConstVal());
-      fmt::print(
-        " >> The absolute error is {}\n",
-        std::fabs(msg->getConstVal() - exactIntegral)
-      );
-      //
-      // Set the 'root_reduce_finished' variable to true.
-      //
-      root_reduce_finished = true;
-    }
-
-  };
+  void checkIntegral(double val) {
+    fmt::print(" >> The integral over [0, 1] is {}\n", val);
+    fmt::print(
+      " >> The absolute error is {}\n",
+      std::fabs(val - exactIntegral)
+    );
+    //
+    // Set the 'root_reduce_finished' variable to true.
+    //
+    root_reduce_finished = true;
+  }
 
   struct InitMsg : vt::CollectionMessage<Integration1D> {
 
@@ -177,9 +173,9 @@ public:
     //
 
     auto proxy = this->getCollectionProxy();
-    auto msgCB = vt::makeMessage<ReduceMsg>(quadsum);
-    auto cback = vt::theCB()->makeSend<CheckIntegral>(reduce_root_node);
-    proxy.reduce<vt::collective::PlusOp<double>>(msgCB.get(),cback);
+    proxy.reduce<&Integration1D::checkIntegral, vt::collective::PlusOp>(
+      proxy[0], quadsum
+    );
   }
 
 };
