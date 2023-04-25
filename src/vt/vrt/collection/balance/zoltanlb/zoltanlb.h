@@ -99,7 +99,7 @@ private:
   void combineEdges();
   void countEdges();
   void allocateEdges();
-  void reduceCount(ReduceMsg* msg);
+  void reduceCount(int max_edges_per_node);
   void allocateShareEdgeGIDs();
 
   void recvSharedEdges(CommMsg* msg);
