@@ -46,7 +46,7 @@
 /// [Hello world reduce collection]
 struct Hello : vt::Collection<Hello, vt::Index1D> {
   void done(int val, double val2) {
-    fmt::print("Reduce complete at {} value {} {}\n", getIndex(), val, val2);
+    fmt::print("Reduce complete at {} values {} {}\n", getIndex(), val, val2);
   }
 
   void doWork() {
