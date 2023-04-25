@@ -222,6 +222,9 @@ auto PipeManagerTL::makeCallbackProxy(ProxyT proxy) {
       };
     }
   }
+
+  // unnecessary, but to make nvcc happy
+  return RetType{};
 }
 
 template <auto f, bool is_bcast>
@@ -245,6 +248,9 @@ auto PipeManagerTL::makeCallbackSingle(NodeType node) {
   } else {
     return RetType{callback::cbunion::RawSendMsgTag, new_pipe_id, han, node};
   }
+
+  // unnecessary, but to make nvcc happy
+  return RetType{};
 }
 
 template <typename FunctorT, bool is_bcast>
@@ -269,6 +275,8 @@ auto PipeManagerTL::makeCallbackFunctor(NodeType node) {
     return RetType{callback::cbunion::RawSendMsgTag, new_pipe_id, han, node};
   }
 
+  // unnecessary, but to make nvcc happy
+  return RetType{};
 }
 
 inline auto PipeManagerTL::makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn) {
