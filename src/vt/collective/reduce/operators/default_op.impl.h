@@ -74,7 +74,7 @@ template <typename MsgT, typename Op, typename ActOp>
         // We need to force the type the the more specific one here
         auto cb = msg->getMsgCallback();
         auto typed_cb = reinterpret_cast<Callback<MsgT>*>(&cb);
-        typed_cb->send(msg);
+        typed_cb->sendMsg(msg);
       }
     } else if (msg->root_handler_ != uninitialized_handler) {
       auto_registry::getAutoHandler(msg->root_handler_)->dispatch(msg, nullptr);
