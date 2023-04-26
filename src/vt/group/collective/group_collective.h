@@ -71,8 +71,8 @@ struct GroupCollective {
   friend struct InfoColl;
 
 protected:
-  NodeType getInitialParent() const { return init_span_->getParent(); }
-  NodeType getInitialChildren() const { return init_span_->getNumChildren();  }
+  ::vt::NodeT getInitialParent() const { return init_span_->getParent(); }
+  size_t getInitialChildren() const { return init_span_->getNumChildren();  }
   bool isInitialRoot() const { return init_span_->isRoot();  }
   NodeListType const& getChildren() const { return init_span_->getChildren(); }
 
@@ -80,7 +80,7 @@ private:
   TreePtrType span_           = nullptr;
   TreePtrType init_span_      = nullptr;
   NodeListType span_children_ = {};
-  NodeType parent_            = uninitialized_destination;
+  ::vt::NodeT parent_            = {};
   ReducePtrType reduce_       = nullptr;
 };
 

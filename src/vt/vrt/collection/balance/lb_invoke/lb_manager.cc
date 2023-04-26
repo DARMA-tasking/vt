@@ -292,7 +292,7 @@ void LBManager::startLB(
 
   auto const& this_node = theContext()->getNode();
 
-  if (this_node == 0 and not theConfig()->vt_lb_quiet) {
+  if (this_node == vt::NodeT{0} and not theConfig()->vt_lb_quiet) {
     vt_debug_print(
       terse, lb,
       "LBManager::startLB: phase={}, balancer={}, name={}\n",
@@ -730,7 +730,7 @@ bool LBManager::isCollectiveComm(elm::CommCategory cat) const {
   bool is_collective =
     cat == elm::CommCategory::Broadcast or
     cat == elm::CommCategory::CollectionToNodeBcast or
-    cat == elm::CommCategory::NodeToCollectionBcast;
+    cat == elm::CommCategory::NodeCollectionBcast;
   return is_collective;
 }
 
@@ -745,7 +745,7 @@ void LBManager::createStatisticsFile() {
     );
 
     auto const dir = theConfig()->vt_lb_statistics_dir;
-    // Node 0 creates the directory
+    // NodeT 0 creates the directory
     if (
       theContext()->getNode() == 0 and
       not dir.empty() and not created_lbstats_dir_
@@ -775,10 +775,10 @@ void LBManager::closeStatisticsFile() {
 
 // Go through the comm graph and extract out paired SendRecv edges that are
 // not self-send and have a non-local edge
-std::unordered_map<NodeType, lb::BaseLB::ElementCommType>
+std::unordered_map<NodeT, lb::BaseLB::ElementCommType>
 getSharedEdges(elm::CommMapType const& comm_data) {
   auto const this_node = theContext()->getNode();
-  std::unordered_map<NodeType, lb::BaseLB::ElementCommType> shared_edges;
+  std::unordered_map<NodeT, lb::BaseLB::ElementCommType> shared_edges;
 
   vt_debug_print(
     verbose, lb, "getSharedEdges: comm size={}\n", comm_data.size()

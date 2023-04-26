@@ -62,16 +62,16 @@ holder::HolderBase* getHolderBase(HandlerType handler);
 
 template <typename MsgT>
 void dispatchObjGroup(
-  MsgSharedPtr<MsgT> msg, HandlerType han, NodeType from_node, ActionType cont
+  MsgSharedPtr<MsgT> msg, HandlerType han, NodeT from_node, ActionType cont
 );
 
 std::unordered_map<ObjGroupProxyType, std::unique_ptr<holder::HolderBase>>& getObjs();
 std::unordered_map<ObjGroupProxyType, std::vector<ActionType>>& getPending();
 
 template <typename MsgT>
-messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
+messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeT node);
 template <typename ObjT, typename MsgT, auto f>
-decltype(auto) invoke(messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
+decltype(auto) invoke(messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeT node);
 template <typename MsgT>
 messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 

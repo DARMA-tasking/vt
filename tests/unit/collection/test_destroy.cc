@@ -110,7 +110,7 @@ TEST_F(TestDestroy, test_destroy_1) {
   auto const& num_nodes = theContext()->getNumNodes();
 
   vt::runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       auto const& range = Index1D(num_nodes * num_elms_per_node);
       auto proxy = theCollection()->construct<DestroyTest>(
         range, "test_destroy_1"

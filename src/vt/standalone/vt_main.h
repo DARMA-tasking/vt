@@ -54,7 +54,7 @@
 
 namespace vt { namespace standalone {
 
-static constexpr NodeType const main_node = 0;
+static constexpr NodeT const main_node = NodeT{0};
 
 template <typename VrtContextT>
 inline void vrLaunchMainContext() {

@@ -74,13 +74,13 @@ struct DefaultGroup {
   // Interface for collection communication within the default group
 public:
   static EventType broadcast(
-    MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+    MsgSharedPtr<BaseMsgType> const& base, NodeT const& from,
     bool const is_root, bool* const deliver
   );
 
 private:
   template <typename MsgT, ActiveTypedFnType<MsgT>* handler>
-  static void sendPhaseMsg(PhaseType const& phase, NodeType const& node);
+  static void sendPhaseMsg(PhaseType const& phase, NodeT const& node);
 
   // Setup for default group
   static void setupDefaultTree();
@@ -97,7 +97,7 @@ private:
   bool finished_startup_ = false;
   PhaseType cur_phase_ = 0;
   CountType sync_count_[num_phases + 1] = { 0, 0, 0 };
-  NodeType this_node_ = uninitialized_destination;
+  NodeT this_node_ = {};
 };
 
 extern std::unique_ptr<DefaultGroup> default_group_;

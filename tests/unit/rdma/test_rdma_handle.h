@@ -99,7 +99,7 @@ void test_rdma_handle_1() {
   vt::theCollective()->barrier();
 
   auto num = vt::theContext()->getNumNodes();
-  for (vt::NodeType node = 0; node < num; node++) {
+  for (vt::NodeT node = 0; node < num; node++) {
     {
       auto ptr = std::make_unique<T[]>(size);
       handle.get(node, ptr.get(), size, 0, vt::Lock::Shared);
@@ -143,7 +143,7 @@ void test_rdma_handle_2() {
   auto num = vt::theContext()->getNumNodes();
   auto next = rank + 1 < num ? rank + 1 : 0;
   //auto prev = rank - 1 >= 0 ? rank - 1 : num-1;
-  for (vt::NodeType node = 0; node < num; node++) {
+  for (vt::NodeT node = 0; node < num; node++) {
     {
       auto ptr = std::make_unique<T[]>(size);
       handle.get(node, ptr.get(), size, 0, vt::Lock::Shared);
@@ -195,7 +195,7 @@ void test_rdma_handle_3() {
   vt::theCollective()->barrier();
 
   auto num = vt::theContext()->getNumNodes();
-  for (vt::NodeType node = 0; node < num; node++) {
+  for (vt::NodeT node = 0; node < num; node++) {
     {
       auto ptr = std::make_unique<T[]>(size);
       for (std::size_t i = 0; i < size; i++) {
@@ -208,7 +208,7 @@ void test_rdma_handle_3() {
   // Barrier to allow gets to finish
   vt::theCollective()->barrier();
 
-  for (vt::NodeType node = 0; node < num; node++) {
+  for (vt::NodeT node = 0; node < num; node++) {
     {
       auto ptr = std::make_unique<T[]>(size);
       handle.get(node, ptr.get(), size, 0, vt::Lock::Exclusive);
@@ -236,7 +236,7 @@ void test_rdma_handle_4() {
   vt::theCollective()->barrier();
 
   auto num = vt::theContext()->getNumNodes();
-  for (vt::NodeType node = 0; node < num; node++) {
+  for (vt::NodeT node = 0; node < num; node++) {
     EXPECT_EQ(handle.getCount(node), (node + 1) * per_size);
   }
 
@@ -261,7 +261,7 @@ void test_rdma_handle_5() {
   vt::theCollective()->barrier();
 
   auto num = vt::theContext()->getNumNodes();
-  for (vt::NodeType node = 0; node < num; node++) {
+  for (vt::NodeT node = 0; node < num; node++) {
     for (int i = 0; i < 10; i++) {
       handle.fetchOp(node, 1, i, MPI_SUM, vt::Lock::Shared);
     }
@@ -270,7 +270,7 @@ void test_rdma_handle_5() {
   // Barrier so all fetches complete
   vt::theCollective()->barrier();
 
-  for (vt::NodeType node = 0; node < num; node++) {
+  for (vt::NodeT node = 0; node < num; node++) {
     {
       auto ptr = std::make_unique<T[]>(size);
       handle.get(node, ptr.get(), size, 0, vt::Lock::Exclusive);

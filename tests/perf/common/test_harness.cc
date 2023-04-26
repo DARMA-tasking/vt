@@ -135,14 +135,14 @@ struct TestMsg : Message {
 
   TestMsg(
     PerfTestHarness::TestResults const& results,
-    PerfTestHarness::MemoryUsage const& memory, NodeType const from_node)
+    PerfTestHarness::MemoryUsage const& memory, NodeT const from_node)
     : results_(results),
       memory_load_(memory),
       from_node_(from_node) { }
 
   PerfTestHarness::TestResults results_ = {};
   PerfTestHarness::MemoryUsage memory_load_ = {};
-  NodeType from_node_ = {};
+  NodeT from_node_ = {};
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -344,7 +344,7 @@ void PerfTestHarness::SyncResults() {
   // Root node will be responsible for generating the final output
   // so every other node sends its results to it (at the end of test runs)
   runInEpochCollective([proxy, this] {
-    constexpr auto root_node = 0;
+    constexpr auto root_node = NodeT{0};
 
     if (my_node_ != root_node) {
       proxy[root_node].send<TestMsg, &TestNodeObj::RecvTestResult>(
@@ -358,7 +358,7 @@ void PerfTestHarness::SyncResults() {
 
 void PerfTestHarness::CopyTestData(
   PerfTestHarness::TestResults const& source_time,
-  PerfTestHarness::MemoryUsage const& source_memory, NodeType const node
+  PerfTestHarness::MemoryUsage const& source_memory, NodeT const node
 ) {
   auto time_use =
     ProcessInput<PerfTestHarness::TestResult, PerfTestHarness::FinalTestResult>(

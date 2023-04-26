@@ -92,15 +92,15 @@ void ReduceCol::reduceTarget(int value) {
 
 // Tutorial code to demonstrate reducing a collection
 static inline void collectionReduce() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const this_node = ::vt::theContext()->getNode();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
   (void)num_nodes;  // don't warn about unused variable
 
   /*
    * This is an example of reducing over a virtual context collection
    */
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     // Range of `number_of_elements` elements for the collection
     auto range = vt::Index1D(number_of_elements);
 

@@ -56,7 +56,7 @@ struct PendingLocationLookup {
     : entity_(in_entity), action_(in_act)
   { }
 
-  void applyNodeAction(NodeType const& node) {
+  void applyNodeAction(NodeT const& node) {
     action_(node);
   }
 

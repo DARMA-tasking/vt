@@ -146,10 +146,10 @@ private:
 
 struct BaseMapsDispatcher {
   virtual ~BaseMapsDispatcher() = default;
-  virtual NodeType dispatch(
+  virtual NodeT dispatch(
     index::BaseIndex* cur_idx_ptr,
     index::BaseIndex* range_ptr,
-    NodeType num_nodes
+    NodeT num_nodes
   ) const = 0;
 };
 
@@ -158,10 +158,10 @@ struct MapsDispatcher final : BaseMapsDispatcher {
   explicit MapsDispatcher(HandlerT in_fn_ptr) : fp(in_fn_ptr) { }
 
 public:
-  NodeType dispatch(
+  NodeT dispatch(
     index::BaseIndex* cur_idx_ptr,
     index::BaseIndex* range_ptr,
-    NodeType num_nodes
+    NodeT num_nodes
   ) const override {
     using T = HandlerT;
 
@@ -173,7 +173,7 @@ public:
       );
     } else {
       vtAbort("Invalid function type for map handler");
-      return uninitialized_destination;
+      return NodeT{};
     }
   }
 

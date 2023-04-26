@@ -168,7 +168,7 @@ void GreedyLB::loadStats() {
     this_threshold = std::min(std::max(1.0f - I, min_threshold), max_threshold);
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, lb,
       "loadStats: load={}, total={}, avg={}, I={:.2f},"
@@ -219,9 +219,16 @@ void GreedyLB::reduceCollect() {
     TimeTypeWrapper(this_load / 1000),
     TimeTypeWrapper(this_load_begin / 1000), load_over.size()
   );
+<<<<<<< HEAD
   proxy.reduce<&GreedyLB::collectHandler, collective::PlusOp>(
     proxy[0], GreedyPayload{load_over, this_load}
   );
+=======
+  using MsgType = GreedyCollectMsg;
+  auto cb = vt::theCB()->makeSend<GreedyLB, MsgType, &GreedyLB::collectHandler>(proxy[NodeT{0}]);
+  auto msg = makeMessage<MsgType>(load_over,this_load);
+  proxy.template reduce<collective::PlusOp<GreedyPayload>>(msg.get(),cb);
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
 }
 
 void GreedyLB::runBalancer(
@@ -247,7 +254,7 @@ void GreedyLB::runBalancer(
   }
   std::make_heap(recs.begin(), recs.end(), CompRecType());
   auto nodes = std::vector<GreedyProc>{};
-  for (NodeType n = 0; n < num_nodes; n++) {
+  for (NodeT n = NodeT{0}; n < num_nodes; n++) {
     auto iter = profile.find(n);
     vtAssert(iter != profile.end(), "Must have load profile");
     nodes.emplace_back(GreedyProc{n,iter->second});
@@ -283,7 +290,7 @@ void GreedyLB::runBalancer(
 }
 
 GreedyLB::ObjIDType GreedyLB::objSetNode(
-  NodeType const& node, ObjIDType const& id
+  NodeT const& node, ObjIDType const& id
 ) {
   auto new_id = id;
   new_id.curr_node = node;
@@ -363,7 +370,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       max_recs, max_bytes
     );
     theCollective()->scatter<GreedyLBTypes::ObjIDType,recvObjsHan>(
-      max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, void* ptr){
+      max_bytes*load.size(),max_bytes,nullptr,[&](NodeT node, void* ptr){
         auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
         auto const& proc = node_transfer[node];
         auto const& rec_size = proc.size();
@@ -374,7 +381,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       }
     );
   } else if (strat_ == DataDistStrategy::pt2pt) {
-    for (NodeType n = 0; n < theContext()->getNumNodes(); n++) {
+    for (NodeT n = NodeT{0}; n < theContext()->getNumNodes(); n++) {
       vtAssert(
         node_transfer.size() == static_cast<size_t>(theContext()->getNumNodes()),
         "Must contain all nodes"

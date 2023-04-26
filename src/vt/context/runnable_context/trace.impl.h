@@ -54,7 +54,7 @@ namespace vt { namespace ctx {
 
 template <typename MsgT>
 Trace::Trace(
-  MsgT const& msg, HandlerType const in_handler, NodeType const in_from_node
+  MsgT const& msg, HandlerType const in_handler, NodeT const in_from_node
 ) : is_collection_(false),
     event_(envelopeGetTraceEvent(msg->env)),
     msg_size_(
@@ -68,7 +68,7 @@ Trace::Trace(
 template <typename MsgT>
 Trace::Trace(
   MsgT const& msg, trace::TraceEventIDType const in_trace_event,
-  HandlerType const in_handler, NodeType const in_from_node,
+  HandlerType const in_handler, NodeT const in_from_node,
   uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
 ) : is_collection_(true),
     event_(in_trace_event),

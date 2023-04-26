@@ -153,7 +153,7 @@ struct TerminationDetector :
    */
   void produce(
     EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
-    NodeType node = uninitialized_destination
+    NodeT node = {}
   );
 
   /**
@@ -165,7 +165,7 @@ struct TerminationDetector :
    */
   void consume(
     EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
-    NodeType node = uninitialized_destination
+    NodeT node = {}
   );
 
   /**
@@ -447,7 +447,7 @@ private:
    */
   inline void produceConsume(
     EpochType epoch = any_epoch_sentinel, TermCounterType num_units = 1,
-    bool produce = true, NodeType node = uninitialized_destination
+    bool produce = true, NodeT node = {}
   );
 
   /**
@@ -502,7 +502,7 @@ private:
    * \param[in] epoch the epoch
    * \param[in] from_node the node inquiring
    */
-  void inquireTerminated(EpochType const& epoch, NodeType const& from_node);
+  void inquireTerminated(EpochType const& epoch, NodeT const& from_node);
 
   /**
    * \internal \brief Reply to a node whether an epoch has terminated
@@ -822,7 +822,7 @@ private:
   std::unordered_set<EpochType> epoch_wait_status_      = {};
   // has printed epoch graph during abort
   bool has_printed_epoch_graph                          = false;
-  NodeType this_node_ = uninitialized_destination;
+  NodeT this_node_ = {};
   EpochStackType epoch_stack_;
 };
 

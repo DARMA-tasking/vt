@@ -51,10 +51,10 @@ namespace vt {
 
 struct EventCheckFinishedMsg : ShortMessage {
   EventType event_ = 0, event_back_ = 0;
-  NodeType sent_from_node_ = 0;
+  NodeT sent_from_node_ = NodeT  {0};
 
   EventCheckFinishedMsg(
-    EventType const& event_in, NodeType const& in_sent_from_node,
+    EventType const& event_in, NodeT const& in_sent_from_node,
     EventType const& event_back_in
   )
     : ShortMessage(), event_(event_in), event_back_(event_back_in),

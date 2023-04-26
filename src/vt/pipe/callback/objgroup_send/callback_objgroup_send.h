@@ -55,7 +55,7 @@ namespace vt { namespace pipe { namespace callback {
 struct CallbackObjGroupSend : CallbackBaseTL<CallbackObjGroupSend> {
   CallbackObjGroupSend() = default;
   CallbackObjGroupSend(
-    HandlerType in_han, ObjGroupProxyType in_objgroup, NodeType in_node
+    HandlerType in_han, ObjGroupProxyType in_objgroup, ::vt::NodeT in_node
   ) : handler_(in_han), objgroup_(in_objgroup), node_(in_node)
   { }
 
@@ -77,7 +77,7 @@ public:
 private:
   HandlerType handler_        = uninitialized_handler;
   ObjGroupProxyType objgroup_ = no_obj_group;
-  NodeType node_              = uninitialized_destination;
+  ::vt::NodeT node_              = {};
 };
 
 }}} /* end namespace vt::pipe::callback */

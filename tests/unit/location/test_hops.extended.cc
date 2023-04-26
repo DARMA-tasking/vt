@@ -141,23 +141,23 @@ TEST_F(TestHops, test_hops_1) {
   );
 
   for (int i = 0; i < 100; i++) {
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       vt_print(gen, "Doing work stage 1 for iter={}\n", i);
     }
     runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>(false);
       }
     });
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       vt_print(gen, "Doing work stage 2 for iter={}\n", i);
     }
     runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>(true);
       }
     });
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       vt_print(gen, "Running LB for iter={}\n", i);
     }
 

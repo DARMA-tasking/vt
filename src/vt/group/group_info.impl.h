@@ -142,7 +142,7 @@ template <typename MsgT>
       );
 
       info->wait_count_--;
-      if (info->wait_count_ == 0 && parent != uninitialized_destination) {
+      if (info->wait_count_ == 0 && parent != ::vt::NodeT  {}) {
         vt_debug_print(
           verbose, group,
           "Info::parent continuation: sending to parent={}, op_id={}\n",
@@ -162,7 +162,7 @@ template <typename MsgT>
 
     range_tail->splitN(default_num_children, [&](RegionPtrType region){
       auto const& c = region->head();
-      auto const& c_size = static_cast<NodeType>(region->getSize());
+      auto const c_size = static_cast<NodeT>(region->getSize());
 
       local_nodes.push_back(c);
 

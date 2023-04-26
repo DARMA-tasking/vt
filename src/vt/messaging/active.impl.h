@@ -57,7 +57,7 @@
 
 namespace vt { namespace messaging {
 
-constexpr NodeType broadcast_dest = uninitialized_destination;
+constexpr NodeT broadcast_dest = {};
 
 template <typename MsgPtrT>
 void ActiveMessenger::markAsTermMessage(MsgPtrT const msg) {
@@ -103,7 +103,7 @@ void ActiveMessenger::setTagMessage(MsgT* msg, TagType tag) {
 
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
-  NodeType dest,
+  NodeT dest,
   HandlerType han,
   MsgSharedPtr<MsgT>& msg,
   TagType tag
@@ -139,7 +139,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
 
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
-  NodeType dest,
+  NodeT dest,
   HandlerType han,
   MsgSharedPtr<MsgT>& msg,
   TagType tag
@@ -185,7 +185,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
 
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType dest,
+  NodeT dest,
   HandlerType han,
   MsgPtrThief<MsgT> msg,
   TagType tag
@@ -196,7 +196,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
-  NodeType dest,
+  NodeT dest,
   HandlerType han,
   MsgPtrThief<MsgT> msg,
   ByteType msg_size,
@@ -208,7 +208,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
 
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
-  NodeType dest,
+  NodeT dest,
   HandlerType han,
   MsgPtrThief<MsgT> msg,
   TagType tag
@@ -252,7 +252,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType dest,
+  NodeT dest,
   MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
@@ -263,7 +263,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
-  NodeType dest,
+  NodeT dest,
   MsgPtrThief<MsgT> msg,
   ByteType msg_size,
   TagType tag
@@ -275,7 +275,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
-  NodeType dest,
+  NodeT dest,
   MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
@@ -312,7 +312,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 
 template <ActiveFnType* f, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType dest,
+  NodeT dest,
   MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
@@ -347,7 +347,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 
 template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType dest,
+  NodeT dest,
   MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
@@ -358,7 +358,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
 template <typename FunctorT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType dest,
+  NodeT dest,
   MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
   TagType tag
 ) {
@@ -380,7 +380,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
 
 template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
-  NodeType dest,
+  NodeT dest,
   MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
@@ -391,7 +391,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
 
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType dest,
+  NodeT dest,
   HandlerType han,
   MsgPtrThief<MsgT> msg,
   UserSendFnType send_payload_fn
@@ -411,7 +411,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType dest,
+  NodeT dest,
   MsgPtrThief<MsgT> msg,
   UserSendFnType send_payload_fn
 ) {

@@ -56,7 +56,7 @@
 namespace vt { namespace pipe { namespace callback {
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-CallbackSendHandler<MsgT,f>::CallbackSendHandler(NodeType const& in_send_node)
+CallbackSendHandler<MsgT,f>::CallbackSendHandler(NodeT const& in_send_node)
   : send_node_(in_send_node)
 { }
 

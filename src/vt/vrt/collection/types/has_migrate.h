@@ -49,7 +49,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 struct HasMigrate {
-  virtual void migrate(NodeType const& to_node) = 0;
+  virtual void migrate(NodeT const& to_node) = 0;
 };
 
 }}} /* end namespace vt::vrt::collection */

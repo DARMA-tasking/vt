@@ -54,7 +54,7 @@ namespace vt {
 // Physical identifier types (nodes, cores, workers, etc.)
 using PhysicalResourceType    = int16_t;
 /// Used to hold the current node/rank or the number of nodes
-using NodeType                = PhysicalResourceType;
+// using NodeT                = PhysicalResourceType;
 /// Used to hold a core ID
 using CoreType                = PhysicalResourceType;
 
@@ -123,8 +123,7 @@ using ThreadIDType            = uint64_t;
 using ActionType              = std::function<void()>;
 /// Used for generically store an action that requires a proxy
 using ActionProxyType         = std::function<void(VirtualProxyType)>;
-/// Used for generically store an action that requires a node
-using ActionNodeType          = std::function<void(NodeType)>;
+
 
 }  // end namespace vt
 

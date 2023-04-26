@@ -55,7 +55,7 @@ struct RangeData;
 
 struct Range : Region {
   Range(
-    BoundType const& in_lo, BoundType const& in_hi, BoundType const& stride = 1
+    BoundType const& in_lo, BoundType const& in_hi, BoundType const& stride = BoundType{1}
   );
   Range(Range const& in_other, BoundType in_remove_extent);
 
@@ -67,7 +67,7 @@ struct Range : Region {
 
   virtual SizeType getSize() const override;
   virtual void sort() override;
-  virtual bool contains(NodeType const& node) override;
+  virtual bool contains(NodeT const& node) override;
   virtual ListType const& makeList() override;
   virtual bool isList() const override;
   virtual BoundType head() const override;
@@ -79,9 +79,9 @@ struct Range : Region {
   friend struct RangeData;
 
 private:
-  BoundType const lo_ = uninitialized_destination;
-  BoundType const hi_ = uninitialized_destination;
-  BoundType const stride_ = 1;
+  BoundType const lo_ = BoundType{};
+  BoundType const hi_ = BoundType{};
+  BoundType const stride_ = BoundType{1};
   bool made_list_ = false;
   ListType list_;
 };
@@ -91,7 +91,7 @@ private:
  * virtualization and inheritance
  */
 struct RangeData {
-  using BoundType = NodeType;
+  using BoundType = NodeT  ;
   using ListType  = std::vector<BoundType>;
 
   RangeData() = default;
@@ -109,9 +109,9 @@ public:
   }
 
 private:
-  BoundType lo_ = uninitialized_destination;
-  BoundType hi_ = uninitialized_destination;
-  BoundType stride_ = 1;
+  BoundType lo_ = BoundType{};
+  BoundType hi_ = BoundType{};
+  BoundType stride_ = BoundType{1};
 };
 
 }}} /* end namespace vt::group::region */

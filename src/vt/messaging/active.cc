@@ -206,7 +206,7 @@ MsgSizeType ActiveMessenger::packMsg(
 }
 
 EventType ActiveMessenger::sendMsgBytesWithPut(
-  NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+  NodeT const& dest, MsgSharedPtr<BaseMsgType> const& base,
   TagType const& send_tag
 ) {
   auto msg = base.get();
@@ -279,19 +279,19 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
 }
 
 struct MultiMsg : vt::Message {
-  MultiMsg(SendInfo in_info, NodeType in_from, MsgSizeType in_size)
+  MultiMsg(SendInfo in_info, NodeT in_from, MsgSizeType in_size)
     : info(in_info),
       from(in_from),
       size(in_size)
   { }
 
   SendInfo getInfo() const { return info; }
-  NodeType getFrom() const { return from; }
+  NodeT getFrom() const { return from; }
   MsgSizeType getSize() const { return size; }
 
 private:
   SendInfo info;
-  NodeType from = uninitialized_destination;
+  NodeT from = {};
   MsgSizeType size = 0;
 };
 
@@ -322,7 +322,7 @@ void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
 }
 
 EventType ActiveMessenger::sendMsgMPI(
-  NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+  NodeT const& dest, MsgSharedPtr<BaseMsgType> const& base,
   MsgSizeType const& msg_size, TagType const& send_tag
 ) {
   BaseMsgType* base_typed_msg = base.get();
@@ -393,7 +393,7 @@ EventType ActiveMessenger::sendMsgMPI(
 }
 
 EventType ActiveMessenger::sendMsgBytes(
-  NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+  NodeT const& dest, MsgSharedPtr<BaseMsgType> const& base,
   MsgSizeType const& msg_size, TagType const& send_tag
 ) {
   auto const& msg = base.get();
@@ -442,7 +442,7 @@ EventType ActiveMessenger::doMessageSend(
 
   auto msg = base.get();
 
-  auto const dest = envelopeGetDest(msg->env);
+  auto const dest = NodeT{envelopeGetDest(msg->env)};
   auto const is_bcast = envelopeIsBcast(msg->env);
   auto const is_term = envelopeIsTerm(msg->env);
 
@@ -485,7 +485,7 @@ EventType ActiveMessenger::doMessageSend(
 
   bool deliver = false;
   EventType const ret_event = group::GroupActiveAttorney::groupHandler(
-    base, uninitialized_destination, true, &deliver
+    base, NodeT  {}, true, &deliver
   );
 
   // Don't go through MPI with self-send, schedule the message locally instead
@@ -524,7 +524,7 @@ MPI_TagType ActiveMessenger::allocateNewTag() {
 }
 
 SendInfo ActiveMessenger::sendData(
-  PtrLenPairType const& ptr, NodeType const& dest, TagType const& tag
+  PtrLenPairType const& ptr, NodeT const& dest, TagType const& tag
 ) {
   auto const& data_ptr = std::get<0>(ptr);
   auto const& num_bytes = std::get<1>(ptr);
@@ -562,7 +562,7 @@ SendInfo ActiveMessenger::sendData(
 }
 
 std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
-  PtrLenPairType const& payload, NodeType const& dest, TagType const& tag
+  PtrLenPairType const& payload, NodeT const& dest, TagType const& tag
 ) {
   auto ptr = static_cast<char*>(std::get<0>(payload));
   auto remainder = std::get<1>(payload);
@@ -628,14 +628,14 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
 }
 
 bool ActiveMessenger::recvDataMsgPriority(
-  int nchunks, PriorityType priority, TagType const& tag, NodeType const& node,
+  int nchunks, PriorityType priority, TagType const& tag, NodeT const& node,
   ContinuationDeleterType next
 ) {
   return recvDataMsg(nchunks, priority, tag, node, true, next);
 }
 
 bool ActiveMessenger::recvDataMsg(
-  int nchunks, TagType const& tag, NodeType const& node,
+  int nchunks, TagType const& tag, NodeT const& node,
   ContinuationDeleterType next
 ) {
   return recvDataMsg(nchunks, default_priority, tag, node, true, next);
@@ -671,7 +671,7 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 
 bool ActiveMessenger::recvDataMsgBuffer(
   int nchunks, void* const user_buf, TagType const& tag,
-  NodeType const& node, bool const& enqueue, ActionType dealloc,
+  NodeT const& node, bool const& enqueue, ActionType dealloc,
   ContinuationDeleterType next, bool is_user_buf
 ) {
   return recvDataMsgBuffer(
@@ -682,7 +682,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
 bool ActiveMessenger::recvDataMsgBuffer(
   int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
-  NodeType const& node, bool const& enqueue, ActionType dealloc_user_buf,
+  NodeT const& node, bool const& enqueue, ActionType dealloc_user_buf,
   ContinuationDeleterType next, bool is_user_buf
 ) {
   if (not enqueue) {
@@ -693,7 +693,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
     {
       VT_ALLOW_MPI_CALLS;
       const int probe_ret = MPI_Iprobe(
-        node == uninitialized_destination ? MPI_ANY_SOURCE : node,
+        node == NodeT{} ? NodeT{MPI_ANY_SOURCE} : node,
         tag, comm_, &flag, &stat
       );
       vtAssertMPISuccess(probe_ret, "MPI_Iprobe");
@@ -706,7 +706,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
         static_cast<char*>(thePool()->alloc(num_probe_bytes)) :
         static_cast<char*>(user_buf);
 
-      NodeType const sender = stat.MPI_SOURCE;
+      NodeT const sender = NodeT{stat.MPI_SOURCE};
 
       recvDataDirect(
         nchunks, buf, tag, sender, num_probe_bytes, priority, dealloc_user_buf,
@@ -740,7 +740,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 }
 
 void ActiveMessenger::recvDataDirect(
-  int nchunks, TagType const tag, NodeType const from, MsgSizeType len,
+  int nchunks, TagType const tag, NodeT const from, MsgSizeType len,
   ContinuationDeleterType next
 ) {
   char* buf = static_cast<char*>(thePool()->alloc(len));
@@ -751,7 +751,7 @@ void ActiveMessenger::recvDataDirect(
 }
 
 void ActiveMessenger::recvDataDirect(
-  int nchunks, void* const buf, TagType const tag, NodeType const from,
+  int nchunks, void* const buf, TagType const tag, NodeT const from,
   MsgSizeType len, PriorityType prio, ActionType dealloc,
   ContinuationDeleterType next, bool is_user_buf
 ) {
@@ -864,7 +864,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
 }
 
 void ActiveMessenger::recordLBDataCommForSend(
-  NodeType const dest, MsgSharedPtr<BaseMsgType> const& base,
+  NodeT const dest, MsgSharedPtr<BaseMsgType> const& base,
   MsgSizeType const msg_size
 ) {
   auto the_task = theContext()->getTask();
@@ -886,7 +886,7 @@ void ActiveMessenger::recordLBDataCommForSend(
 
 bool ActiveMessenger::recvDataMsg(
   int nchunks, PriorityType priority, TagType const& tag,
-  NodeType const& sender, bool const& enqueue,
+  NodeT const& sender, bool const& enqueue,
   ContinuationDeleterType next
 ) {
   return recvDataMsgBuffer(
@@ -895,7 +895,7 @@ bool ActiveMessenger::recvDataMsg(
 }
 
 void ActiveMessenger::processActiveMsg(
-  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+  MsgSharedPtr<BaseMsgType> const& base, NodeT const& from,
   bool insert, ActionType cont
 ) {
   using ::vt::group::GroupActiveAttorney;
@@ -928,7 +928,7 @@ void ActiveMessenger::processActiveMsg(
 }
 
 void ActiveMessenger::prepareActiveMsgToRun(
-  MsgSharedPtr<BaseMsgType> const& base, NodeType const& in_from_node,
+  MsgSharedPtr<BaseMsgType> const& base, NodeT const& in_from_node,
   bool insert, ActionType cont
 ) {
   using MsgType = ShortMessage;
@@ -936,7 +936,7 @@ void ActiveMessenger::prepareActiveMsgToRun(
 
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_bcast = envelopeIsBcast(msg->env);
-  auto const dest = envelopeGetDest(msg->env);
+  auto const dest = NodeT{envelopeGetDest(msg->env)};
   auto const handler = envelopeGetHandler(msg->env);
   auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
@@ -1000,7 +1000,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
     char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
 
-    NodeType const sender = stat.MPI_SOURCE;
+    NodeT const sender = NodeT{stat.MPI_SOURCE};
 
     MPI_Request req;
 

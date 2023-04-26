@@ -56,7 +56,7 @@
 namespace vt { namespace group { namespace region {
 
 struct Region {
-  using BoundType = NodeType;
+  using BoundType = NodeT;
   using SizeType = size_t;
   using RegionPtr = Region*;
   using RegionUPtrType = std::unique_ptr<Region>;
@@ -67,7 +67,7 @@ struct Region {
   virtual ~Region() = default;
   virtual SizeType getSize() const = 0;
   virtual void sort() = 0;
-  virtual bool contains(NodeType const& node) = 0;
+  virtual bool contains(NodeT const& node) = 0;
   virtual bool isList() const = 0;
   virtual ListType const& makeList() = 0;
   virtual RegionUPtrType copy() const = 0;

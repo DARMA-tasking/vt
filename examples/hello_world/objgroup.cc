@@ -70,12 +70,10 @@ int main(int argc, char** argv) {
 
   vt::theCollective()->barrier();
 
-  if (this_node == 0) {
-    // Send to object 0
-    proxy[0].send<&MyObjGroup::handler>(5, 10);
+  if (this_node == vt::NodeT{0}) {
+    proxy[vt::NodeT{0}].send<&MyObjGroup::handler>(5,10);
     if (num_nodes > 1) {
-      // Send to object 1
-      proxy[1].send<&MyObjGroup::handler>(10, 20);
+      proxy[vt::NodeT{1}].send<&MyObjGroup::handler>(10,20);
     }
 
     // Broadcast to all nodes

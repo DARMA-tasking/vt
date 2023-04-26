@@ -78,7 +78,7 @@ static void handler(PingMsg*) {
   count++;
   if (count == pings) {
     auto msg = vt::makeMessage<PingMsg>(1);
-    vt::theMsg()->sendMsg<done>(0, msg);
+    vt::theMsg()->sendMsg<done>(vt::NodeT{0}, msg);
     count = 0;
   }
 }
@@ -88,7 +88,7 @@ void sender() {
   auto start = vt::timing::getCurrentTime();
   for (int i = 0; i < pings; i++) {
     auto msg = vt::makeMessage<PingMsg>(bytes);
-    vt::theMsg()->sendMsg<handler>(1, msg);
+    vt::theMsg()->sendMsg<handler>(vt::NodeT{1}, msg);
   }
 
   vt::theSched()->runSchedulerWhile([]{return !is_done; });
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
     pings = 10;
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     fmt::print(
       "{:<8} {:<16} 0x{:<10} {:<22} {:<22}\n",
       "Pings", "Bytes", "Bytes", "Mb", "Time per"

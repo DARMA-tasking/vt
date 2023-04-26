@@ -46,16 +46,16 @@
 /// [Collective termination example]
 using TestMsg = vt::Message;
 
-vt::NodeType nextNode() {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
-  return (this_node + 1) % num_nodes;
+vt::NodeT nextNode() {
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
+  return (this_node + vt::NodeT{1}) % num_nodes;
 }
 
 static void test_handler(TestMsg* msg) {
   static int num = 3;
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   auto epoch = vt::envelopeGetEpoch(msg->env);
   fmt::print("{}: test_handler: num={}, epoch={:x}\n", this_node, num, epoch);
@@ -70,10 +70,10 @@ static void test_handler(TestMsg* msg) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     return vt::rerror("requires at least 2 nodes");
   }
 

@@ -61,12 +61,21 @@ RotateLB::getInputKeysWithHelp() {
 
 void RotateLB::inputParams(balance::ConfigEntry* config) { }
 
+<<<<<<< HEAD
 void RotateLB::runLB(LoadType) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
+=======
+void RotateLB::runLB(TimeType) {
+  NodeT const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const next_node = this_node + NodeT{1} > num_nodes - NodeT{1} ?
+    NodeT{0} :
+    this_node + NodeT{1};
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, lb,
       "RotateLB: runLB: next_node={}\n",

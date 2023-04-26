@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 types_size.h
+//                                 types_node.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,29 +41,27 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_TYPES_TYPES_SIZE_H
-#define INCLUDED_VT_CONFIGS_TYPES_TYPES_SIZE_H
+#if !defined INCLUDED_VT_CONFIGS_TYPES_TYPES_NODE_H
+#define INCLUDED_VT_CONFIGS_TYPES_TYPES_NODE_H
 
+#include "vt/utils/strong/strong_type.h"
 #include "vt/utils/bits/bits_counter.h"
-#include "vt/epoch/epoch_impl_type.h"
-
 namespace vt {
 
-static constexpr BitCountType const
-    handler_num_bits = utils::BitCounter<HandlerType>::value;
-static constexpr BitCountType const
-    ref_num_bits = utils::BitCounter<RefType>::value;
-static constexpr BitCountType const
-    epoch_num_bits = utils::BitCounter<vt::epoch::detail::EpochImplType>::value;
-static constexpr BitCountType const
-    tag_num_bits = utils::BitCounter<TagType>::value;
-static constexpr BitCountType const
-    group_num_bits = utils::BitCounter<GroupType>::value;
-static constexpr BitCountType const
-    priority_num_bits = utils::BitCounter<PriorityType>::value;
-static constexpr BitCountType const
-    priority_level_num_bits = utils::BitCounter<PriorityLevelType>::value;
+using BaseNodeType = int16_t;
+static constexpr BaseNodeType const uninitialized_destination =
+  static_cast<BaseNodeType>(0xFFFF);
+struct StrongType { };
 
-}  // end namespace vt
+struct StrongNodeType { };
+using NodeT = Strong<BaseNodeType, uninitialized_destination, StrongNodeType>;
 
-#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_SIZE_H*/
+/// Used for generically store an action that requires a node
+using ActionNodeType = std::function<void(NodeT)>;
+
+static constexpr BitCountType const
+    node_num_bits = utils::BitCounter<NodeT>::value;
+
+} // namespace vt
+
+#endif // INCLUDED_VT_CONFIGS_TYPES_TYPES_NODE_H

@@ -142,7 +142,7 @@ TEST_F(TestLB, test_lb_1) {
     });
 
     auto total_time = vt::timing::getCurrentTime() - cur_time;
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       fmt::print("iteration: iter={},time={}\n", i, total_time);
     }
 
@@ -187,7 +187,7 @@ TEST_F(TestLB, test_lb_phase_stats) {
 
 // TEST_F(TestLB, test_lb_multi_1) {
 //   auto const& this_node = theContext()->getNode();
-//   if (this_node == 0) {
+//   if (this_node == vt::NodeT{0}) {
 //     auto const& range = Index1D(64);
 //     auto proxy_1 = theCollection()->construct<LBTest>(range);
 //     auto proxy_2 = theCollection()->construct<LBTest>(range);
@@ -199,7 +199,7 @@ TEST_F(TestLB, test_lb_phase_stats) {
 
 // TEST_F(TestLB, test_lb_multi_2) {
 //   auto const& this_node = theContext()->getNode();
-//   if (this_node == 0) {
+//   if (this_node == vt::NodeT{0}) {
 //     auto const& range = Index1D(32);
 //     auto proxy_1 = theCollection()->construct<LBTest>(range);
 //     auto proxy_2 = theCollection()->construct<LBTest>(range);

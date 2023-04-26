@@ -53,7 +53,7 @@
 namespace vt { namespace term { namespace ds {
 
 struct StateDS {
-  using Endpoint = NodeType;
+  using Endpoint = NodeT  ;
   using TerminatorType = TermDS<StateDS>;
 
   StateDS() = default;

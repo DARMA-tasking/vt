@@ -199,7 +199,7 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
 template <typename ColT, typename Callable>
 void CollectionManager::makeCollectionElement(
   VirtualProxyType const proxy, typename ColT::IndexType idx,
-  NodeType const mapped_node, Callable&& cons_fn, bool zero_reduce_stamp
+  NodeT const mapped_node, Callable&& cons_fn, bool zero_reduce_stamp
 ) {
   using IndexType        = typename ColT::IndexType;
   using IdxContextHolder = CollectionContextHolder<IndexType>;
@@ -245,7 +245,7 @@ bool CollectionManager::elementMappedHere(
 }
 
 template <typename IdxT>
-NodeType CollectionManager::getElementMapping(
+NodeT CollectionManager::getElementMapping(
   HandlerType map_han, ObjGroupProxyType map_object, IdxT idx, IdxT bounds
 ) {
   if (map_han != uninitialized_handler) {
@@ -269,7 +269,7 @@ NodeType CollectionManager::getElementMapping(
   }
 
   vtAbort("No valid map fn or object group specified for the collection");
-  return uninitialized_destination;
+  return NodeT{};
 }
 
 }}} /* end namespace vt::vrt::collection */

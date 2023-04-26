@@ -68,7 +68,7 @@ template <typename T, HandleEnum E, typename IndexT>
 struct Handle<
   T, E, IndexT,
   typename std::enable_if_t<
-    not std::is_same<IndexT,vt::NodeType>::value
+    not std::is_same<IndexT,vt::NodeT  >::value
   >
 > : BaseTypedHandle<T, E, IndexT>
 {

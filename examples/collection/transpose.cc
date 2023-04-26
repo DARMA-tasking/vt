@@ -54,8 +54,8 @@ struct SolveMsg : vt::CollectionMessage<ColT> {};
 
 template <typename ColT>
 struct RequestDataMsg : vt::CollectionMessage<ColT> {
-  explicit RequestDataMsg(vt::NodeType in_node) : node_(in_node) { }
-  vt::NodeType node_;
+  explicit RequestDataMsg(vt::NodeT in_node) : node_(in_node) { }
+  vt::NodeT node_;
 };
 
 struct DataMsg : vt::Message {
@@ -188,17 +188,17 @@ private:
   std::vector<double> data_ = {};
 };
 
-//using ActiveMapTypedFnType = NodeType(IndexT*, IndexT*, NodeType);
+//using ActiveMapTypedFnType = NodeT(IndexT*, IndexT*, NodeT);
 template <typename IndexT>
-vt::NodeType my_map(IndexT* idx, IndexT* max_idx, vt::NodeType num_nodes) {
+vt::NodeT my_map(IndexT* idx, IndexT* max_idx, vt::NodeT num_nodes) {
   // simple round-robin for 1-d only.
-  return idx->x() % num_nodes;
+  return vt::NodeT{idx->x()} % num_nodes;
 }
 
 // group-targeted handler for the sub-solve
 /*static*/ void SubSolveInfo::subSolveHandler(SubSolveMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
   auto const group_id = vt::envelopeGetGroup(msg->env);
   MPI_Comm sub_comm = vt::theGroup()->getGroupComm(group_id);
@@ -284,7 +284,7 @@ vt::NodeType my_map(IndexT* idx, IndexT* max_idx, vt::NodeType num_nodes) {
   }
 }
 
-static void solveGroupSetup(vt::NodeType this_node, vt::VirtualProxyType coll_proxy) {
+static void solveGroupSetup(vt::NodeT this_node, vt::VirtualProxyType coll_proxy) {
   auto const& is_even_node = this_node % 2 == 0;
 
   // This is how you would explicitly create/get a new communicator for this
@@ -306,7 +306,7 @@ static void solveGroupSetup(vt::NodeType this_node, vt::VirtualProxyType coll_pr
   vt::theGroup()->newGroupCollective(
     is_even_node, [=](vt::GroupType group_id){
       fmt::print("{}: Group is created: id={:x}\n", this_node, group_id);
-      if (this_node == 1) {
+      if (this_node == vt::NodeT{1}) {
         auto msg = vt::makeMessage<SubSolveMsg>(coll_proxy);
         vt::envelopeSetGroup(msg->env, group_id);
         vt::theMsg()->broadcastMsg<SubSolveInfo::subSolveHandler>(msg);
@@ -317,7 +317,7 @@ static void solveGroupSetup(vt::NodeType this_node, vt::VirtualProxyType coll_pr
 }
 
 void SetupGroup::operator()(ProxyMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
   fmt::print("SetupGroup: node={}\n", this_node);
   // Example using the group collective
   solveGroupSetup(this_node, msg->proxy_);
@@ -326,7 +326,7 @@ void SetupGroup::operator()(ProxyMsg* msg) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   auto range = vt::Index1D(num_pieces);
   auto proxy = vt::makeCollection<Block>("examples_transpose")
@@ -335,7 +335,7 @@ int main(int argc, char** argv) {
     .mapperFunc<my_map>()
     .wait();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     proxy.broadcast<SolveMsg<Block>, &Block::solve>();
   }
 

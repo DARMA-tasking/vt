@@ -63,7 +63,7 @@ private:
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   int num_elms = 64;
 
@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
     num_elms = atoi(argv[1]);
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto range = vt::Index1D(num_elms);
     auto proxy = vt::makeCollectionRooted<Hello>("examples_hello_world_collection")
       .bounds(range)

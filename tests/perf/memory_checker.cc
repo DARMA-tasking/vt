@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
 
   auto this_node = vt::theContext()->getNode();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto usage = vt::theMemUsage();
     fmt::print("Initial: {}\n", usage->getUsageAll());
 

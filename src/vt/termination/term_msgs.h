@@ -62,16 +62,16 @@ struct TermMsg : vt::ShortMessage {
 struct TermTerminatedMsg : vt::Message {
 
   TermTerminatedMsg() = default;
-  TermTerminatedMsg(EpochType const& in_epoch, NodeType const& in_from_node)
+  TermTerminatedMsg(EpochType const& in_epoch, NodeT const& in_from_node)
     : epoch_(in_epoch), from_node_(in_from_node)
   { }
 
   EpochType getEpoch() const { return epoch_; }
-  NodeType getFromNode() const { return from_node_; }
+  NodeT getFromNode() const { return from_node_; }
 
 private:
   EpochType epoch_    = no_epoch;
-  NodeType from_node_ = uninitialized_destination;
+  NodeT from_node_ = {};
 };
 
 struct TermTerminatedReplyMsg : vt::Message {

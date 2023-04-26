@@ -83,11 +83,11 @@ TEST_F(TestScatter, test_scatter_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto const& elm_size = sizeof(int) * num_elms;
     auto const& total_size = elm_size * num_nodes;
     theCollective()->scatter<scatterHan>(
-      total_size,elm_size,nullptr,[](NodeType node, void* ptr){
+      total_size,elm_size,nullptr,[](NodeT node, void* ptr){
         auto ptr_out = reinterpret_cast<int*>(ptr);
         for (std::size_t i = 0; i < num_elms; i++) {
           *(ptr_out + i) = node * 10 + i;

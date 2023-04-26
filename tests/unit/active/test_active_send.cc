@@ -77,11 +77,11 @@ public:
 struct TestActiveSend : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 
-  static NodeType from_node;
-  static NodeType to_node;
+  static inline NodeT from_node = {};
+  static inline NodeT to_node = {};
 
-  static int handler_count;
-  static int num_msg_sent;
+  static inline int handler_count = {};
+  static inline int num_msg_sent = {};
 
   virtual void SetUp() {
     TestParallelHarness::SetUp();
@@ -89,8 +89,8 @@ struct TestActiveSend : TestParallelHarness {
     handler_count = 0;
     num_msg_sent = 16;
 
-    from_node = 0;
-    to_node = 1;
+    from_node = NodeT{0};
+    to_node = NodeT{1};
   }
 
   static void test_handler_small_put(PutTestMessage* msg) {
@@ -139,11 +139,6 @@ struct TestActiveSend : TestParallelHarness {
 
   static void msgSerialA(DataMsg*) { handler_count++; }
 };
-
-/*static*/ NodeType TestActiveSend::from_node;
-/*static*/ NodeType TestActiveSend::to_node;
-/*static*/ int TestActiveSend::handler_count;
-/*static*/ int TestActiveSend::num_msg_sent;
 
 TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
   SET_MIN_NUM_NODES_CONSTRAINT(2);

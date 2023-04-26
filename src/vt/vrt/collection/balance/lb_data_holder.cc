@@ -51,7 +51,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 void LBDataHolder::outputEntity(nlohmann::json& j, ElementIDStruct const& id) const {
   j["type"] = "object";
   j["id"] = id.id;
-  j["home"] = id.getHomeNode();
+  j["home"] = id.getHomeNode().get();
   j["migratable"] = id.isMigratable();
   if (node_idx_.find(id) != node_idx_.end()) {
     auto const& proxy_id = std::get<0>(node_idx_.find(id)->second);
@@ -137,7 +137,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       ElementIDStruct id = elm.first;
       LoadType time = elm.second.whole_phase_load;
       j["tasks"][i]["resource"] = "cpu";
-      j["tasks"][i]["node"] = id.getCurrNode();
+      j["tasks"][i]["node"] = id.getCurrNode().get();
       j["tasks"][i]["time"] = time;
       if (user_defined_json_.find(phase) != user_defined_json_.end()) {
         auto &user_def_this_phase = user_defined_json_.at(phase);
@@ -183,12 +183,12 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
         outputEntity(j["communications"][i]["to"], key.toObj());
         break;
       }
-      case elm::CommCategory::NodeToCollection:
-      case elm::CommCategory::NodeToCollectionBcast: {
-        if (key.cat_ == elm::CommCategory::NodeToCollection) {
-          j["communications"][i]["type"] = "NodeToCollection";
+      case elm::CommCategory::NodeCollection:
+      case elm::CommCategory::NodeCollectionBcast: {
+        if (key.cat_ == elm::CommCategory::NodeCollection) {
+          j["communications"][i]["type"] = "NodeCollection";
         } else {
-          j["communications"][i]["type"] = "NodeToCollectionBcast";
+          j["communications"][i]["type"] = "NodeCollectionBcast";
         }
 
         j["communications"][i]["from"]["type"] = "node";
@@ -258,7 +258,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
             auto object = task["entity"]["id"];
             vtAssertExpr(object.is_number());
 
-            auto elm = ElementIDStruct{object, node};
+            auto elm = ElementIDStruct{object, NodeT{node}};
             this->node_data_[id][elm].whole_phase_load = time;
 
             if (
@@ -340,7 +340,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               CommVolume vol{bytes, messages};
               this->node_comm_[id][key] = vol;
             } else if (
-              type == "NodeToCollection" || type == "NodeToCollectionBcast"
+              type == "NodeCollection" || type == "NodeCollectionBcast"
             ) {
               vtAssertExpr(comm["from"]["type"] == "node");
               vtAssertExpr(comm["to"]["type"] == "object");
@@ -354,8 +354,8 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
 
               CommKey key(
                 CommKey::NodeToCollectionTag{},
-                static_cast<NodeType>(from_node), to_elm,
-                type == "NodeToCollectionBcast"
+                static_cast <NodeT  >(from_node), to_elm,
+                type == "NodeCollectionBcast"
               );
               CommVolume vol{bytes, messages};
               this->node_comm_[id][key] = vol;
@@ -374,7 +374,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
 
               CommKey key(
                 CommKey::CollectionToNodeTag{},
-                from_elm, static_cast<NodeType>(to_node),
+                from_elm, static_cast <NodeT  >(to_node),
                 type == "CollectionToNodeBcast"
               );
               CommVolume vol{bytes, messages};

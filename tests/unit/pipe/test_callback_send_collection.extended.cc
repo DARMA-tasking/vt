@@ -126,7 +126,7 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_1) {
     .wait();
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       for (auto i = 0; i < 32; i++) {
         if (i % 2 == 0) {
           auto cb = theCB()->makeSend<&TestCol::cb1>(proxy(i));

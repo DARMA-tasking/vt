@@ -94,7 +94,7 @@ template <typename EntityID>
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(
-  EntityID const& id, NodeType const& home, LocMsgActionType msg_action,
+  EntityID const& id, NodeT const& home, LocMsgActionType msg_action,
   bool const& migrated
 ) {
   auto const& this_node = theContext()->getNode();
@@ -180,7 +180,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntityRemote(
-  EntityID const& id, NodeType const& home, NodeType const create_node,
+  EntityID const& id, NodeT const& home, NodeT const create_node,
   LocMsgActionType msg_action
 ) {
   auto reg_iter = local_registered_.find(id);
@@ -239,7 +239,7 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityEmigrated(
-  EntityID const& id, NodeType const& new_node
+  EntityID const& id, NodeT const& new_node
 ) {
   vt_debug_print(
     normal, location,
@@ -258,7 +258,7 @@ void EntityLocationCoord<EntityID>::entityEmigrated(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityImmigrated(
-  EntityID const& id, NodeType const& home_node, NodeType const& from,
+  EntityID const& id, NodeT const& home_node, NodeT const& from,
   LocMsgActionType msg_action
 ) {
   // @todo: currently `from' is unused, but is passed to this method in case we
@@ -335,11 +335,11 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgEager(
-  EntityID const& id, NodeType const& home_node,
+  EntityID const& id, NodeT const& home_node,
   MsgSharedPtr<MessageT> const& msg
 ) {
   auto const& this_node = theContext()->getNode();
-  NodeType route_to_node = uninitialized_destination;
+  auto route_to_node = NodeT{};
 
   auto reg_iter = local_registered_.find(id);
   bool const found = reg_iter != local_registered_.end();
@@ -375,8 +375,8 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   }
 
   vtAssert(
-    route_to_node != uninitialized_destination,
-    "Node to route to must be set by this point"
+    route_to_node != NodeT{},
+    "NodeT to route to must be set by this point"
   );
 
   vt_debug_print(
@@ -391,7 +391,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::getLocation(
-  EntityID const& id, NodeType const& home_node, NodeActionType const& action
+  EntityID const& id, NodeT const& home_node, NodeActionType const& action
 ) {
   auto const& this_node = theContext()->getNode();
 
@@ -454,11 +454,11 @@ void EntityLocationCoord<EntityID>::getLocation(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::handleEagerUpdate(
-  EntityID const& id, NodeType home_node, NodeType deliver_node
+  EntityID const& id, NodeT home_node, NodeT deliver_node
 ) {
   auto this_node = theContext()->getNode();
   vtAssert(this_node != deliver_node, "This should have been a forwarding node");
-  vtAssert(home_node != uninitialized_destination, "Home node should be valid");
+  vtAssert(home_node != NodeT{}, "Home node should be valid");
   vtAssert(home_node < theContext()->getNumNodes(), "Home node should be valid");
 
   vt_debug_print(
@@ -481,8 +481,8 @@ void EntityLocationCoord<EntityID>::handleEagerUpdate(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::sendEagerUpdate(
-  EntityID const& id, NodeType ask_node, NodeType home_node,
-  NodeType deliver_node
+  EntityID const& id, NodeT ask_node, NodeT home_node,
+  NodeT deliver_node
 ) {
   vt_debug_print(
     normal, location,
@@ -492,7 +492,7 @@ void EntityLocationCoord<EntityID>::sendEagerUpdate(
 
   auto this_node = theContext()->getNode();
   if (ask_node != this_node) {
-    vtAssert(ask_node != uninitialized_destination, "Ask node must be valid");
+    vtAssert(ask_node != NodeT{}, "Ask node must be valid");
     auto msg = makeMessage<LocMsgType>(
       this_inst, id, ask_node, home_node, deliver_node
     );
@@ -503,7 +503,7 @@ void EntityLocationCoord<EntityID>::sendEagerUpdate(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
-  EntityID const& id, NodeType const& home_node, NodeType const& to_node,
+  EntityID const& id, NodeT const& home_node, NodeT const& to_node,
   MsgSharedPtr<MessageT> const& msg
 ) {
   auto const& this_node = theContext()->getNode();
@@ -523,7 +523,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   if (to_node != this_node) {
     // Get the current ask node, which is the from node for the first hop
     auto ask_node = msg->getAskNode();
-    if (ask_node != uninitialized_destination) {
+    if (ask_node != NodeT{}) {
       // Insert into the ask list for a later update when information is known
       loc_asks_[id].insert(ask_node);
     }
@@ -579,7 +579,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
       auto ask_node = msg->getAskNode();
 
-      if (ask_node != uninitialized_destination) {
+      if (ask_node != NodeT{}) {
         auto delivered_node = theContext()->getNode();
         sendEagerUpdate(hid, ask_node, home_node, delivered_node);
       }
@@ -613,7 +613,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
       EntityID id_ = id;
       // buffer the message here, the entity will be registered in the future
-      insertPendingEntityAction(id_, [=](NodeType resolved) {
+      insertPendingEntityAction(id_, [=](NodeT resolved) {
         auto const& my_node = theContext()->getNode();
 
         vt_debug_print(
@@ -643,9 +643,9 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::routeNonEagerAction(
-  EntityID const& id, NodeType const& home_node, ActionNodeType action
+  EntityID const& id, NodeT const& home_node, ActionNodeType action
 ) {
-  getLocation(id, home_node, [=](NodeType node) {
+  getLocation(id, home_node, [=](NodeT node) {
     action(node);
   });
 }
@@ -653,7 +653,7 @@ void EntityLocationCoord<EntityID>::routeNonEagerAction(
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandler(
-  EntityID const& id, NodeType const& home_node,
+  EntityID const& id, NodeT const& home_node,
   MsgSharedPtr<MessageT> const& msg
 ) {
   setupMessageForRouting<MessageT, f>(id, home_node, msg);
@@ -676,7 +676,7 @@ void EntityLocationCoord<EntityID>::routePreparedMsgHandler(
 template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::setupMessageForRouting(
-  EntityID const& id, NodeType const& home_node,
+  EntityID const& id, NodeT const& home_node,
   MsgSharedPtr<MessageT> const& msg
 ) {
   using auto_registry::HandlerManagerType;
@@ -731,7 +731,7 @@ void EntityLocationCoord<EntityID>::routePreparedMsg(
   } else {
     theTerm()->produce(epoch);
     // non-eager protocol: get location first then send message after resolution
-    getLocation(msg->getEntity(), msg->getHomeNode(), [=](NodeType node) {
+    getLocation(msg->getEntity(), msg->getHomeNode(), [=](NodeT node) {
       theMsg()->pushEpoch(epoch);
       routeMsgNode<MessageT>(
         msg->getEntity(), msg->getHomeNode(), node, msg
@@ -745,11 +745,11 @@ void EntityLocationCoord<EntityID>::routePreparedMsg(
 template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsg(
-  EntityID const& id, NodeType const& home_node,
-  MsgSharedPtr<MessageT> const& msg, NodeType from_node
+  EntityID const& id, NodeT const& home_node,
+  MsgSharedPtr<MessageT> const& msg, NodeT from_node
 ) {
   auto const from =
-    from_node == uninitialized_destination ? theContext()->getNode() :
+    from_node == NodeT{} ? theContext()->getNode() :
     from_node;
 
   // set field for location routed message
@@ -763,7 +763,7 @@ void EntityLocationCoord<EntityID>::routeMsg(
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::updatePendingRequest(
   LocEventID const& event_id, EntityID const& id,
-  NodeType const& node, NodeType const& home_node
+  NodeT const& node, NodeT const& home_node
 ) {
 
   vt_debug_print(
@@ -879,7 +879,7 @@ template <typename EntityID>
         event_id, epoch
       );
 
-      loc->getLocation(entity, home_node, [=](NodeType node) {
+      loc->getLocation(entity, home_node, [=](NodeT node) {
         vt_debug_print(
           verbose, location,
           "getLocation: (action) event_id={}, epoch={:x}\n",

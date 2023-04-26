@@ -74,8 +74,8 @@ void MyCol::msgHandler(MyCollMsg* msg) {
 
 // Tutorial code to demonstrate creating a collection
 static inline void collection() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const this_node = ::vt::theContext()->getNode();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
   (void)num_nodes;  // don't warn about unused variable
 
   /*
@@ -93,7 +93,7 @@ static inline void collection() {
     .bulkInsert()     // Bulk insert all the elements within the bounds
     .wait();          // Wait for construction and get the proxy back
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     // Broadcast a message to the entire collection. The msgHandler will be
     // invoked on every element to the collection
     proxy.broadcast<MyCollMsg,&MyCol::msgHandler>();

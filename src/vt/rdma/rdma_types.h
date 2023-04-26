@@ -48,7 +48,7 @@
 
 namespace vt { namespace rdma {
 
-using UnderlyingNodeType = NodeType;
+using UnderlyingNodeType = NodeT  ;
 
 struct Endpoint {
   Endpoint(
@@ -64,7 +64,7 @@ struct Endpoint {
 
 private:
   bool is_target = false;
-  UnderlyingNodeType value = uninitialized_destination;
+  UnderlyingNodeType value = {};
 };
 
 struct Target : Endpoint {

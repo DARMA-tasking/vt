@@ -110,7 +110,7 @@ TEST_F(TestSerialMessenger, test_serial_messenger_1) {
       auto msg = makeMessage<MyDataMsg>();
       msg->init();
       auto han = auto_registry::makeAutoHandler<MyDataMsg,myDataMsgHan>();
-      SerializedMessenger::sendSerialMsg<MyDataMsg>(1, msg.get(), han);
+      SerializedMessenger::sendSerialMsg<MyDataMsg>(vt::NodeT{1}, msg.get(), han);
     }
   }
 }

@@ -54,16 +54,16 @@ namespace vt { namespace rdma {
 
 struct ChannelLookup {
   RDMA_HandleType handle = no_rdma_handle;
-  NodeType target = uninitialized_destination;
-  NodeType non_target = uninitialized_destination;
+  NodeT target = {};
+  NodeT non_target = {};
 
   ChannelLookup(
-    RDMA_HandleType const& han, NodeType const& in_target,
-    NodeType const& in_non_target
+    RDMA_HandleType const& han, NodeT const& in_target,
+    NodeT const& in_non_target
   ) : handle(han), target(in_target), non_target(in_non_target)
   {
-    vtAssertExpr(target != uninitialized_destination);
-    vtAssertExpr(non_target != uninitialized_destination);
+    vtAssertExpr(target != NodeT{});
+    vtAssertExpr(non_target != NodeT{});
   }
 
   ChannelLookup(ChannelLookup const&) = default;
@@ -90,8 +90,8 @@ template <>
 struct hash<vt::rdma::ChannelLookup> {
   size_t operator()(vt::rdma::ChannelLookup const& in) const {
     auto const& combined = std::hash<vt::RDMA_HandleType>()(in.handle) ^
-      std::hash<vt::NodeType>()(in.target) ^
-      std::hash<vt::NodeType>()(in.non_target);
+      std::hash<vt::NodeT  >()(in.target) ^
+      std::hash<vt::NodeT  >()(in.non_target);
     return combined;
   }
 };

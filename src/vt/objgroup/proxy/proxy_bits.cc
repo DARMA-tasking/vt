@@ -48,10 +48,10 @@
 namespace vt { namespace objgroup { namespace proxy {
 
 /*static*/ ObjGroupProxyType ObjGroupProxy::create(
-  ObjGroupIDType id, NodeType node, bool is_collective
+  ObjGroupIDType id, ::vt::NodeT node, bool is_collective
 ) {
-  constexpr NodeType const default_node = 0;
-  NodeType const target_node = is_collective ? default_node : node;
+  constexpr NodeT const default_node = NodeT{0};
+  NodeT const target_node = is_collective ? default_node : node;
   ObjGroupProxyType new_proxy = 0;
 
   setControl(new_proxy);
@@ -75,7 +75,7 @@ namespace vt { namespace objgroup { namespace proxy {
 }
 
 /*static*/ void ObjGroupProxy::setNode(
-  ObjGroupProxyType& proxy, NodeType const& node
+  ObjGroupProxyType& proxy, ::vt::NodeT const& node
 ) {
   BitPackerType::setField<eObjGroupProxyBits::Node, objgrp_node_num_bits>(
     proxy, node
@@ -98,9 +98,9 @@ namespace vt { namespace objgroup { namespace proxy {
   return BitPackerType::boolGetField<eObjGroupProxyBits::Collective>(proxy);
 }
 
-/*static*/ NodeType ObjGroupProxy::getNode(ObjGroupProxyType proxy) {
+/*static*/ ::vt::NodeT ObjGroupProxy::getNode(ObjGroupProxyType proxy) {
   return BitPackerType::getField<
-    eObjGroupProxyBits::Node, objgrp_node_num_bits, NodeType
+    eObjGroupProxyBits::Node, objgrp_node_num_bits, ::vt::NodeT
   >(proxy);
 }
 

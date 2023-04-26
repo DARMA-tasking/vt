@@ -260,7 +260,7 @@ void TraceLite::addUserEventBracketed(
     event, begin, end);
 
   auto const type = TraceConstantsType::UserEventPair;
-  NodeType const node = theContext()->getNode();
+  NodeT const node = theContext()->getNode();
 
   logEvent(LogType{begin, type, node, event, true});
   logEvent(LogType{end, type, node, event, false});
@@ -364,7 +364,7 @@ void TraceLite::beginIdle(TimeType const time) {
   );
 
   auto const type = TraceConstantsType::BeginIdle;
-  NodeType const node = theContext()->getNode();
+  NodeT const node = theContext()->getNode();
 
   emitTraceForTopProcessingEvent(time, TraceConstantsType::EndProcessing);
   logEvent(LogType{time, type, node});
@@ -386,7 +386,7 @@ void TraceLite::endIdle(TimeType const time) {
   );
 
   auto const type = TraceConstantsType::EndIdle;
-  NodeType const node = theContext()->getNode();
+  NodeT const node = theContext()->getNode();
 
   idle_begun_ = false; // must set BEFORE logEvent
   logEvent(LogType{time, type, node});
@@ -400,14 +400,14 @@ void TraceLite::emitTraceForTopProcessingEvent(
   }
 }
 
-/*static*/ bool TraceLite::traceWritingEnabled(NodeType node) {
+/*static*/ bool TraceLite::traceWritingEnabled(::vt::NodeT node) {
   return (
     theConfig()->vt_trace and
     (theConfig()->vt_trace_mod == 0 or
      (node % theConfig()->vt_trace_mod == 0)));
 }
 
-/*static*/ bool TraceLite::isStsOutputNode(NodeType node) {
+/*static*/ bool TraceLite::isStsOutputNode(::vt::NodeT node) {
   return (theConfig()->vt_trace and node == designated_root_node);
 }
 
@@ -714,7 +714,7 @@ void TraceLite::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void TraceLite::outputHeader(
-  vt_gzFile* file, NodeType const node, TimeType const start) {
+  vt_gzFile* file, ::vt::NodeT const node, TimeType const start) {
   gzFile gzfile = file->file_type;
   // Output header for projections file
   // '6' means COMPUTATION_BEGIN to Projections: this starts a trace
@@ -723,7 +723,7 @@ void TraceLite::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void TraceLite::outputFooter(
-  vt_gzFile* file, NodeType const node, TimeType const start) {
+  vt_gzFile* file, ::vt::NodeT const node, TimeType const start) {
   gzFile gzfile = file->file_type;
   // Output footer for projections file,
   // '7' means COMPUTATION_END to Projections

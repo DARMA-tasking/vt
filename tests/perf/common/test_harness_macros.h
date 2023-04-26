@@ -61,7 +61,7 @@ namespace vt { namespace tests { namespace perf { namespace common {
   * VT_PERF_TEST(MyTest, my_test_name) {
   *   if (my_node_ == 0) {
   *     auto m = makeMessage<MyTestMsg>();
-  *     theMsg()->sendMsg<MyTestMsg, TestHandler>(1, m);
+  *     theMsg()->sendMsg<MyTestMsg, TestHandler>(vt::NodeT{1}, m);
   *   }
   * }
   *

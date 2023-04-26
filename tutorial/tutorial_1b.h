@@ -94,8 +94,8 @@ struct MsgHandlerB {
 };
 
 static inline void activeMessageNode() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const this_node = ::vt::theContext()->getNode();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
   (void)num_nodes;  // don't warn about unused variable
 
   /*
@@ -114,8 +114,8 @@ static inline void activeMessageNode() {
    * msgHandlerA, which uses the functor style send.
    */
 
-  if (this_node == 0) {
-    NodeType const to_node = 1;
+  if (this_node == vt::NodeT{0}) {
+    NodeT const to_node = NodeT{1};
     auto msg = ::vt::makeMessage<MyMsg>(29,32);
     ::vt::theMsg()->sendMsg<msgHandlerA>(to_node, msg);
   }
@@ -150,7 +150,7 @@ static void msgHandlerA(MyMsg* msg) {
    *
    * A vtAssert will be raised if such an invalid use is detected.
    */
-  NodeType const to_node = 0;
+  NodeT const to_node = NodeT{0};
   auto msg2 = ::vt::makeMessage<MyMsg>(10,20);
 
   ::vt::theMsg()->sendMsg<MsgHandlerB>(to_node, msg2);

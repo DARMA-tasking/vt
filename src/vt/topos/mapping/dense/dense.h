@@ -54,7 +54,7 @@
 namespace vt { namespace mapping {
 
 template <typename IndexElmType, typename PhysicalType>
-NodeType blockMapDenseFlatIndex(
+NodeT blockMapDenseFlatIndex(
   IndexElmType* flat_idx, IndexElmType* num_elems, PhysicalType num_resources
 );
 
@@ -77,34 +77,34 @@ template <typename T = IdxBase> using Idx3DPtr = IdxType3D<T>*;
 template <typename T, int8_t N> using IdxNDPtr = IdxType<T, N>*;
 
 template <typename Idx, index::NumDimensionsType ndim>
-NodeType denseBlockMap(IdxPtr<Idx> idx, IdxPtr<Idx> max_idx, NodeType nnodes);
+NodeT denseBlockMap(IdxPtr<Idx> idx, IdxPtr<Idx> max_idx, NodeT nnodes);
 
 template <typename T = IdxBase>
-NodeType defaultDenseIndex1DMap(Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType n);
+NodeT defaultDenseIndex1DMap(Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeT n);
 template <typename T = IdxBase>
-NodeType defaultDenseIndex2DMap(Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeType n);
+NodeT defaultDenseIndex2DMap(Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeT n);
 template <typename T = IdxBase>
-NodeType defaultDenseIndex3DMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType n);
+NodeT defaultDenseIndex3DMap(Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeT n);
 template <typename T, int8_t N>
-NodeType defaultDenseIndexNDMap(IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType n);
+NodeT defaultDenseIndexNDMap(IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeT n);
 
 template <typename T = IdxBase>
-NodeType dense1DRoundRobinMap(  Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType n);
+NodeT dense1DRoundRobinMap(  Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeT n);
 template <typename T = IdxBase>
-NodeType dense2DRoundRobinMap(  Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeType n);
+NodeT dense2DRoundRobinMap(  Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeT n);
 template <typename T = IdxBase>
-NodeType dense3DRoundRobinMap(  Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType n);
+NodeT dense3DRoundRobinMap(  Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeT n);
 template <typename T, int8_t N>
-NodeType denseNDRoundRobinMap(  IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType n);
+NodeT denseNDRoundRobinMap(  IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeT n);
 
 template <typename T = IdxBase>
-NodeType dense1DBlockMap(       Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType n);
+NodeT dense1DBlockMap(       Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeT n);
 template <typename T = IdxBase>
-NodeType dense2DBlockMap(       Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeType n);
+NodeT dense2DBlockMap(       Idx2DPtr<T> idx, Idx2DPtr<T> max, NodeT n);
 template <typename T = IdxBase>
-NodeType dense3DBlockMap(       Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeType n);
+NodeT dense3DBlockMap(       Idx3DPtr<T> idx, Idx3DPtr<T> max, NodeT n);
 template <typename T, int8_t N>
-NodeType denseNDBlockMap(       IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType n);
+NodeT denseNDBlockMap(       IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeT n);
 
 template <typename T = IdxBase>   using i1D   = IdxType1D<T>;
 template <typename T = IdxBase>   using i2D   = IdxType2D<T>;

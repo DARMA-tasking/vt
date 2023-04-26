@@ -70,7 +70,7 @@ struct ActiveEnvelope {
   /// The envelope type bits: \c eEnvelopeType
   EnvelopeDataType type : envelope_num_bits;
   /// Destination node
-  NodeType dest         : node_num_bits;
+  BaseNodeType dest         : node_num_bits;
   /// Handler to execute on arrival
   HandlerType han       : handler_num_bits;
   /// Local reference count for the outer message to manage memory

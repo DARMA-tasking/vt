@@ -146,11 +146,18 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_1) {
   theCollective()->barrier();
 
   runInEpochCollective([&]{
+<<<<<<< HEAD
     NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeBcast<callbackFn>();
     theMsg()->send<applyCallbackMsg<DataMsg, int, int, int>>(
       vt::Node{next}, cb, 1, 2, 3
     );
+=======
+    auto next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
+    auto cb = theCB()->makeBcast<DataMsg,callbackFn>();
+    auto msg = makeMessage<CallbackDataMsg>(cb);
+    theMsg()->sendMsg<testHandler>(next, msg);
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
   });
 
   EXPECT_EQ(called, 100 * theContext()->getNumNodes());
@@ -165,7 +172,11 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_2) {
   theCollective()->barrier();
 
   runInEpochCollective([&]{
+<<<<<<< HEAD
     NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+=======
+    auto next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
     auto cb = theCB()->makeBcast<CallbackFunctor>();
     theMsg()->send<applyCallbackMsg<DataMsg, int, int, int>>(
       vt::Node{next}, cb, 1, 2, 3
@@ -184,7 +195,11 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_3) {
   theCollective()->barrier();
 
   runInEpochCollective([&]{
+<<<<<<< HEAD
     NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+=======
+    auto next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
     auto cb = theCB()->makeBcast<CallbackFunctorEmpty>();
     theMsg()->send<applyCallback<>>(vt::Node{next}, cb);
   });

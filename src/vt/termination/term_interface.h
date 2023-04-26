@@ -58,8 +58,8 @@ struct TermInterface {
     EpochType epoch = any_epoch_sentinel, TermCounterType const& num_units = 1
   );
   /// Interface for Dijkstra-Scholten termination
-  void send(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
-  void recv(NodeType const& node, EpochType const& epoch = any_epoch_sentinel);
+  void send(NodeT const& node, EpochType const& epoch = any_epoch_sentinel);
+  void recv(NodeT const& node, EpochType const& epoch = any_epoch_sentinel);
 };
 
 }} /* end namespace vt::term */

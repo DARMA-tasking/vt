@@ -65,7 +65,7 @@
 static constexpr std::size_t const default_nparts_object = 8;
 static constexpr std::size_t const default_num_objs = 4;
 static constexpr std::size_t const verbose = 1;
-static constexpr vt::NodeType const reduce_root_node = 0;
+static constexpr vt::NodeT const reduce_root_node = vt::NodeT{0};
 
 static bool root_reduce_finished = false;
 static double exactIntegral = 0.0;
@@ -190,11 +190,11 @@ int main(int argc, char** argv) {
 
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
   if (argc == 1) {
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       fmt::print(
         stderr, "{}: using default arguments since none provided\n", name
       );

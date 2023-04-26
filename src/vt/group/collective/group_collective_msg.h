@@ -67,16 +67,16 @@ struct GroupCollectiveInfoMsg : MsgT {
   GroupCollectiveInfoMsg() = default;
   GroupCollectiveInfoMsg(
     GroupType const& in_group, RemoteOperationIDType in_op, bool in_is_in_group,
-    NodeType const& in_subtree,
-    NodeType const& in_child_node = uninitialized_destination,
+    ::vt::NodeT const& in_subtree,
+    ::vt::NodeT const& in_child_node = {},
     CountType const& level = 0, CountType const& extra_nodes = 0
   ) : MsgT(in_group, in_op), is_in_group(in_is_in_group),
       child_node_(in_child_node), subtree_size_(in_subtree),
       extra_nodes_(extra_nodes), level_(level)
   { }
 
-  NodeType getChild() const { return child_node_; }
-  NodeType getSubtreeSize() const { return subtree_size_; }
+  ::vt::NodeT getChild() const { return child_node_; }
+  ::vt::NodeT getSubtreeSize() const { return subtree_size_; }
   bool isStatic() const { return is_static_; }
   bool isInGroup() const { return is_in_group; }
   CountType getExtraNodes() const { return extra_nodes_; }
@@ -85,8 +85,8 @@ struct GroupCollectiveInfoMsg : MsgT {
 private:
   bool is_in_group = false;
   bool is_static_ = true;
-  NodeType child_node_ = uninitialized_destination;
-  NodeType subtree_size_ = 0;
+  ::vt::NodeT child_node_ = {};
+  ::vt::NodeT subtree_size_ = 0;
   CountType extra_nodes_ = 0;
   CountType level_ = 0;
 };

@@ -52,7 +52,7 @@ namespace vt { namespace objgroup { namespace proxy {
 static constexpr BitCountType const objgrp_is_collective_num_bits = 1;
 static constexpr BitCountType const objgrp_control_num_bits = 1;
 static constexpr BitCountType const objgrp_node_num_bits =
-    BitCounterType<NodeType>::value;
+    BitCounterType <NodeT  >::value;
 static constexpr BitCountType const objgrp_id_num_bits =
     BitCounterType<ObjGroupIDType>::value;
 static constexpr BitCountType const objgrp_proxy_num_bits =
@@ -67,18 +67,18 @@ enum eObjGroupProxyBits {
 
 struct ObjGroupProxy {
   // Creation of a new proxy with properties
-  static ObjGroupProxyType create(ObjGroupIDType id, NodeType node, bool coll);
+  static ObjGroupProxyType create(ObjGroupIDType id, ::vt::NodeT node, bool coll);
 
   // Setters for mixing the proxy bits
   static void setControl(ObjGroupProxyType& proxy, bool is_objgroup = true);
   static void setIsCollective(ObjGroupProxyType& proxy, bool is_coll);
-  static void setNode(ObjGroupProxyType& proxy, NodeType const& node);
+  static void setNode(ObjGroupProxyType& proxy, ::vt::NodeT const& node);
   static void setID(ObjGroupProxyType& proxy, ObjGroupIDType id);
 
   // Getters for obtaining info about the bit-pattern in the obj-group proxy
   static bool isControl(ObjGroupProxyType proxy);
   static bool isCollective(ObjGroupProxyType proxy);
-  static NodeType getNode(ObjGroupProxyType proxy);
+  static ::vt::NodeT getNode(ObjGroupProxyType proxy);
   static ObjGroupIDType getID(ObjGroupProxyType proxy);
 };
 

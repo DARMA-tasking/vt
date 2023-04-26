@@ -69,13 +69,13 @@ struct MyMapper : vt::mapping::BaseMapper<IndexT> {
     ).getProxy();
   }
 
-  vt::NodeType map(IndexT* idx, int ndim, vt::NodeType num_nodes) override {
+  vt::NodeT map(IndexT* idx, int ndim, vt::NodeT num_nodes) override {
     uint64_t val = 0;
     for (int i = 0; i < ndim; i++) {
       auto dval = static_cast<uint64_t>(idx->get(i));
       val ^= dval << (i * 16);
     }
-    return val % num_nodes;
+    return NodeT{val} % num_nodes;
   }
 };
 
@@ -176,6 +176,8 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
   auto my_proxy_raw = MapperType::construct();
   objgroup::proxy::Proxy<MapperType> my_proxy{my_proxy_raw};
 
+  fmt::print("We in here 1\n");
+
   int counter = 0;
   range.foreach([&](IndexType test_idx) {
     if (my_proxy.get()->map(&test_idx, ndims, num_nodes) == this_node) {
@@ -183,10 +185,15 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
     }
   });
 
+  fmt::print("We in here 2\n");
+
   auto proxy = vt::makeCollection<ColType>("test_custom_mapping_1")
     .bulkInsert(range)
     .mapperObjGroup(my_proxy)
     .wait();
+
+
+  fmt::print("We in here 3\n");
 
   vt::runInEpochCollective([&]{
     proxy.template broadcastCollective<work<IndexType>>();
@@ -223,39 +230,39 @@ struct MyDistMapper : vt::mapping::BaseMapper<IndexT> {
   }
 
   MyDistMapper()
-    : my_state((theContext()->getNode() * 2993ull) << 5)
+    : my_state((theContext()->getNode().get() * 2993ull) << 5)
   { }
 
   struct GetMapMsg : vt::Message {
     GetMapMsg() = default;
-    GetMapMsg(IndexT in_idx, NodeType in_request_node)
+    GetMapMsg(IndexT in_idx, NodeT in_request_node)
       : idx_(in_idx),
         request_node_(in_request_node)
     { }
     IndexT idx_ = {};
-    NodeType request_node_ = uninitialized_destination;
+    NodeT request_node_ = {};
   };
 
   struct AnswerMsg : vt::Message {
     AnswerMsg() = default;
-    explicit AnswerMsg(NodeType in_answer)
+    explicit AnswerMsg(NodeT in_answer)
       : answer_(in_answer)
     { }
-    IndexT idx_ = {};
-    NodeType answer_ = uninitialized_destination;
+
+    NodeT answer_ = {};
   };
 
-  vt::NodeType map(IndexT* idx, int ndim, vt::NodeType num_nodes) override {
+  vt::NodeT map(IndexT* idx, int ndim, vt::NodeT num_nodes) override {
     uint64_t val = 0;
     for (int i = 0; i < ndim; i++) {
       auto dval = static_cast<uint64_t>(idx->get(i));
       val ^= dval << (i * 16);
     }
-    auto const owner = static_cast<NodeType>(val % num_nodes);
-    //vt_print(gen, "map: idx={}, ndim={}, owner={}\n", *idx, ndim, owner);
+    auto const owner = NodeT{val % num_nodes.get()};
+    vt_print(gen, "map: idx={}, ndim={}, owner={}\n", *idx, ndim, owner);
     if (owner == theContext()->getNode()) {
       /// get to decide the mapping
-      return (val ^ my_state) % num_nodes;
+      return NodeT{(val ^ my_state) % num_nodes.get()};
     } else {
       auto ep = theTerm()->makeEpochRooted("mapTest", term::UseDS{true});
       theMsg()->pushEpoch(ep);
@@ -265,29 +272,28 @@ struct MyDistMapper : vt::mapping::BaseMapper<IndexT> {
       theMsg()->popEpoch(ep);
       theTerm()->finishedEpoch(ep);
       vt::runSchedulerThrough(ep);
-      vtAssertExpr(cur_answer != uninitialized_destination);
+      vtAssertExpr(cur_answer != NodeT{});
       auto const ret = cur_answer;
-      cur_answer = uninitialized_destination;
+      cur_answer = NodeT{};
       return ret;
     }
   }
 
   void getMap(GetMapMsg* msg) {
-    //vt_print(gen, "getMap: idx={}, request_node={}\n", msg->idx_, msg->request_node_);
     auto node = map(&msg->idx_, msg->idx_.ndims(), theContext()->getNumNodes());
     auto r = msg->request_node_;
     proxy[r].template send<AnswerMsg, &MyDistMapper<IndexT>::answer>(node);
   }
 
   void answer(AnswerMsg* msg) {
-    //vt_print(gen, "answer: answer={}\n", msg->answer_);
-    vtAssertExpr(cur_answer == uninitialized_destination);
+    vt_print(gen, "answer: answer={}\n", msg->answer_);
+    vtAssertExpr(cur_answer == NodeT{});
     cur_answer = msg->answer_;
   }
 
 private:
   uint64_t my_state = 0;
-  NodeType cur_answer = uninitialized_destination;
+  NodeT cur_answer = {};
   objgroup::proxy::Proxy<MyDistMapper<IndexT>> proxy;
 };
 

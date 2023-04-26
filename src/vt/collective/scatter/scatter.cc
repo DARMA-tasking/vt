@@ -53,7 +53,7 @@ Scatter::Scatter()
 { }
 
 char* Scatter::applyScatterRecur(
-  NodeType node, char* ptr, std::size_t elm_size, FuncSizeType size_fn,
+  NodeT node, char* ptr, std::size_t elm_size, FuncSizeType size_fn,
   FuncDataType data_fn
 ) {
   // pre-order k-ary tree traversal for data layout
@@ -89,7 +89,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
     "parent children={}\n",
     user_handler, total_size, elm_size, in_ptr - in_base_ptr, total_children
   );
-  Tree::foreachChild([&](NodeType child) {
+  Tree::foreachChild([&](NodeT child) {
     auto const& num_children = getNumDescendants(child) + 1;
     auto const& child_bytes_size = num_children * elm_size;
     auto child_msg =

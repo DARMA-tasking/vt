@@ -80,7 +80,7 @@ void InfoRooted::setupRooted() {
     is_setup_ = true;
   } else {
     vtAssert(
-      size >= min_region_size,
+      size >= static_cast<region::Region::SizeType>(min_region_size),
       "Size of the region must be at least min_region_size"
     );
     auto const& this_node = theContext()->getNode();
@@ -89,7 +89,7 @@ void InfoRooted::setupRooted() {
     if (region_->isList() || size < max_region_list_size) {
       auto const& contains_this_node = region_->contains(this_node);
       region_list_ = region_->makeList();
-      if (size < min_spanning_tree_size && contains_this_node) {
+      if (size < static_cast<size_t>(min_spanning_tree_size) && contains_this_node) {
         this_node_included_ = true;
         default_spanning_tree_ = std::make_unique<TreeType>(region_list_);
         is_setup_ = true;
@@ -109,20 +109,20 @@ void InfoRooted::setupRooted() {
           normal, group,
           "Info::setupRooted: sending as list\n"
         );
-        auto const& low_node = region_list_[0];
+        ::vt::NodeT const low_node = region_list_[0];
         RemoteOperationIDType op = no_op_id;
         if (finished_setup_action_ != nullptr) {
           op = theGroup()->registerContinuation(finished_setup_action_);
         }
-        auto const& listsize = static_cast<NodeType>(region_list_.size());
+        ::vt::NodeT const listsize = static_cast< ::vt::NodeT >(region_list_.size());
         region::ShallowList lst(region_list_);
         auto msg = makeMessage<GroupListMsg>(
-          low_node, listsize, group_, op, listsize, this_node, &lst
+          low_node, NodeT{listsize}, group_, op, listsize, this_node, &lst
         );
         is_forward_ = true;
         forward_node_ = low_node;
         if (this_node != low_node) {
-          theMsg()->sendMsg<GroupListMsg, Info::groupSetupHandler>(low_node, msg);
+          theMsg()->sendMsg<GroupListMsg, Info::groupSetupHandler>(NodeT{low_node}, msg);
         } else {
           Info::groupSetupHandler(msg.get());
         }
@@ -137,7 +137,7 @@ void InfoRooted::setupRooted() {
       if (finished_setup_action_ != nullptr) {
         op = theGroup()->registerContinuation(finished_setup_action_);
       }
-      auto const& regsize = static_cast<NodeType>(region_->getSize());
+      auto const& regsize = static_cast<::vt::NodeT  >(region_->getSize());
       auto msg = makeMessage<GroupRangeMsg>(
         low_node, regsize, group_, op, regsize, this_node,
         static_cast<region::Range*>(region_.get())

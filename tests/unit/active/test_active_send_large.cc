@@ -127,14 +127,14 @@ TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
 
   using LargeMsgType = LargeMsg<nbytes, TagType>;
 
-  NodeType const this_node = theContext()->getNode();
-  NodeType const num_nodes = theContext()->getNumNodes();
+  NodeT const this_node = theContext()->getNode();
+  NodeT const num_nodes = theContext()->getNumNodes();
 
   int counter = 0;
   auto e = pipe::LifetimeEnum::Once;
   auto cb = theCB()->makeFunc<RecvMsg>(e, [&counter](RecvMsg*){ counter++; });
 
-  NodeType next_node = (this_node + 1) % num_nodes;
+  NodeT next_node = (this_node + vt::NodeT{1}) % num_nodes;
 
   vt::runInEpochCollective([&]{
     auto msg = makeMessage<LargeMsgType>();

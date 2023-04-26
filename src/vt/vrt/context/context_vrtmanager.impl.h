@@ -115,7 +115,7 @@ template <typename SysMsgT>
 
 template <typename VrtContextT, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualNode(
-  NodeType const& node, Args&& ... args
+  NodeT const& node, Args&& ... args
 ) {
   auto const& this_node = theContext()->getNode();
   if (node != this_node) {
@@ -138,7 +138,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
 ) {
   auto base_msg = promoteMsg(msg).template to<BaseMsgType>();
 
-  NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
+  NodeT const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
   // register the user's handler
   HandlerType const han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>();
   // save the user's handler in the message
@@ -172,7 +172,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
         },
         // custom data transfer lambda if above the eager threshold
         [=](ActionNodeSendType action) -> messaging::PendingSend {
-          auto captured_action = [=](NodeType node){ action(node); };
+          auto captured_action = [=](NodeT node){ action(node); };
           theLocMan()->vrtContextLoc->routeNonEagerAction(
             toProxy, home_node, captured_action
           );
@@ -186,7 +186,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
 
 template <typename VrtContextT, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualRemote(
-  NodeType const& dest, bool isImmediate, ActionProxyType action, Args&&... args
+  NodeT const& dest, bool isImmediate, ActionProxyType action, Args&&... args
 ) {
   using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
   using MsgType = VrtConstructMsg<RemoteVrtInfo, ArgsTupleType, VrtContextT>;

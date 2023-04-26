@@ -58,8 +58,8 @@ struct LBTreeUpMsg : HierLBTypes, ::vt::Message {
 
   LBTreeUpMsg() = default;
   LBTreeUpMsg(
-    LoadType const in_child_load, NodeType const in_child,
-    ObjSampleType in_load, NodeType const in_child_size
+    LoadType const in_child_load, NodeT const in_child,
+    ObjSampleType in_load, NodeT const in_child_size
   ) : child_load_(in_child_load), child_(in_child), load_(in_load),
       child_size_(in_child_size)
   { }
@@ -71,16 +71,16 @@ struct LBTreeUpMsg : HierLBTypes, ::vt::Message {
   }
 
   LoadType getChildLoad() const { return child_load_; }
-  NodeType getChild() const { return child_; }
+  NodeT getChild() const { return child_; }
   ObjSampleType const& getModeledLoad() const { return load_; }
   ObjSampleType&& getLoadMove() { return std::move(load_); }
-  NodeType getChildSize() const { return child_size_; }
+  NodeT getChildSize() const { return child_size_; }
 
 private:
   LoadType child_load_ = 0.0f;
-  NodeType child_ = uninitialized_destination;
+  NodeT child_ = {};
   ObjSampleType load_;
-  NodeType child_size_ = 0;
+  NodeT child_size_ = NodeT{0};
 };
 
 struct LBTreeDownMsg : HierLBTypes, ::vt::Message {
@@ -89,7 +89,7 @@ struct LBTreeDownMsg : HierLBTypes, ::vt::Message {
 
   LBTreeDownMsg() = default;
   LBTreeDownMsg(
-    NodeType const in_from, ObjSampleType in_excess, bool const in_final_child
+    NodeT const in_from, ObjSampleType in_excess, bool const in_final_child
   ) : from_(in_from), excess_(in_excess), final_child_(in_final_child)
   { }
 
@@ -99,13 +99,13 @@ struct LBTreeDownMsg : HierLBTypes, ::vt::Message {
     s | from_ | excess_ | final_child_;
   }
 
-  NodeType getFrom() const { return from_; }
+  NodeT getFrom() const { return from_; }
   ObjSampleType const& getExcess() const { return excess_; }
   ObjSampleType&& getExcessMove() { return std::move(excess_); }
   bool getFinalChild() const { return final_child_; }
 
 private:
-  NodeType from_ = uninitialized_destination;
+  NodeT from_ = {};
   ObjSampleType excess_;
   bool final_child_ = 0;
 };

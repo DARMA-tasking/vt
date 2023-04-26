@@ -142,7 +142,7 @@ messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
     normal, reduce,
     "Reducable: ptr={}\n", print_ptr(msg)
   );
-  auto const root_node = 0;
+  auto const root_node = NodeT{0};
   return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,stamp,root_node);
 }
 
@@ -152,14 +152,14 @@ messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
   MsgT *const msg, ReduceStamp stamp
 ) const {
   auto const proxy = this->getProxy();
-  auto const root_node = 0;
+  auto const root_node = NodeT{0};
   return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,stamp,root_node);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
 messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
-  MsgT *const msg, ReduceStamp stamp, NodeType const& node
+  MsgT *const msg, ReduceStamp stamp, ::vt::NodeT const& node
 ) const {
   auto const proxy = this->getProxy();
   return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,stamp,node);
@@ -168,7 +168,7 @@ messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
 messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
-  MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp, NodeType const& node
+  MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp, ::vt::NodeT const& node
 ) const {
   auto const proxy = this->getProxy();
   return theCollection()->reduceMsgExpr<ColT,MsgT,f>(proxy,msg,fn,stamp,node);

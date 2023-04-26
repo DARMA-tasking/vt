@@ -115,7 +115,7 @@ private:
 
   struct CollectiveMsg : vt::collective::ReduceNoneMsg {
     CollectiveMsg(
-      bool in_is_user_tag, TagType in_scope, TagType in_seq, NodeType in_root
+      bool in_is_user_tag, TagType in_scope, TagType in_seq, NodeT in_root
     ) : is_user_tag_(in_is_user_tag),
         scope_(in_scope),
         seq_(in_seq),
@@ -125,7 +125,7 @@ private:
     bool is_user_tag_ = false;
     TagType scope_ = no_tag;
     TagType seq_ = no_tag;
-    NodeType root_ = uninitialized_destination;
+    NodeT root_ = {};
   };
 
   static void runCollective(CollectiveMsg* msg);

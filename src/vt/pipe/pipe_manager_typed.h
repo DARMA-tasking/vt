@@ -93,7 +93,7 @@ struct PipeManagerTyped : virtual PipeManagerBase {
     typename RepeatNImpl<sizeof...(f),callback::CallbackSend<MsgT>>::ResultType
   >
   makeCallbackMultiSendTyped(
-    bool const is_persist, NodeType const& send_to_node
+    bool const is_persist, NodeT const& send_to_node
   );
 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
@@ -103,10 +103,10 @@ struct PipeManagerTyped : virtual PipeManagerBase {
   auto pushTargetBcast(CallbackT in, bool const& inc);
 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  auto pushTarget(NodeType const& send_to_node);
+  auto pushTarget(NodeT const& send_to_node);
 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
-  auto pushTarget(CallbackT in, NodeType const& send_to_node);
+  auto pushTarget(CallbackT in, NodeT const& send_to_node);
 
   template <typename CallbackT>
   auto buildMultiCB(CallbackT in);
@@ -117,7 +117,7 @@ struct PipeManagerTyped : virtual PipeManagerBase {
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   CallbackSendType<MsgT> makeCallbackSingleSendTyped(
-    bool const is_persist, NodeType const& send_to_node
+    bool const is_persist, NodeT const& send_to_node
   );
 
   template <
@@ -125,12 +125,12 @@ struct PipeManagerTyped : virtual PipeManagerBase {
     typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   CallbackSendType<MsgT> makeCallbackSingleSendFunctorTyped(
-    bool const is_persist, NodeType const& send_to_node
+    bool const is_persist, NodeT const& send_to_node
   );
 
   template <typename FunctorT>
   CallbackSendVoidType makeCallbackSingleSendFunctorVoidTyped(
-    bool const is_persist, NodeType const& send_to_node
+    bool const is_persist, NodeT const& send_to_node
   );
 
   /*

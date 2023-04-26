@@ -71,7 +71,7 @@ struct Trace {
    */
   template <typename MsgT>
   Trace(
-    MsgT const& msg, HandlerType const in_handler, NodeType const in_from_node
+    MsgT const& msg, HandlerType const in_handler, NodeT const in_from_node
   );
 
   /**
@@ -90,7 +90,7 @@ struct Trace {
   template <typename MsgT>
   Trace(
     MsgT const& msg, trace::TraceEventIDType const in_trace_event,
-    HandlerType const in_handler, NodeType const in_from_node,
+    HandlerType const in_handler, NodeT const in_from_node,
     uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
   );
 
@@ -116,7 +116,7 @@ private:
   /// Whether this is traced
   bool is_traced_ = false;
   /// The from node
-  NodeType from_node_ = uninitialized_destination;
+  NodeT from_node_ = {};
   /// The active handler for extracting trace info
   HandlerType handler_ = uninitialized_handler;
   /// The collection indices

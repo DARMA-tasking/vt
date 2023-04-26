@@ -139,9 +139,9 @@ void Hello::doWork() {
 
 
 static void migrateToNext(Hello* col) {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
-  vt::NodeType next_node = (this_node + 1) % num_nodes;
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
+  vt::NodeT next_node = (this_node + vt::NodeT{1}) % num_nodes;
 
   fmt::print("{}: migrateToNext: idx={}\n", this_node, col->getIndex());
   col->migrate(next_node);
@@ -150,8 +150,8 @@ static void migrateToNext(Hello* col) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
   auto num_elms = std::max(static_cast<int32_t>(num_nodes), default_num_elms);
 
@@ -165,12 +165,12 @@ int main(int argc, char** argv) {
   vtAbortIf(num_elms % num_nodes != 0, "Must be even number of elements per rank");
   auto const num_per = num_elms / num_nodes;
   if (this_node % 2 == 0) {
-    for (int i = this_node*num_per; i < (this_node+1)*num_per; i++) {
+    for (int i = this_node.get()*num_per; i < (this_node.get()+1)*num_per; i++) {
       vt::Index1D idx{i};
       elms.emplace_back(idx, std::make_unique<HelloTyped<int>>(InitialConsTag{}));
     }
   } else if (this_node % 2 == 1) {
-    for (int i = this_node*num_per; i < (this_node+1)*num_per; i++) {
+    for (int i = this_node.get()*num_per; i < (this_node.get()+1)*num_per; i++) {
       vt::Index1D idx{i};
       elms.emplace_back(idx, std::make_unique<HelloTyped<double>>(InitialConsTag{}));
     }

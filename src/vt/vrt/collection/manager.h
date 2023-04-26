@@ -760,7 +760,7 @@ struct CollectionManager
   messaging::PendingSend reduceMsg(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *const msg, ReduceStamp stamp = ReduceStamp{},
-    NodeType root_node = uninitialized_destination
+    NodeT root_node = {}
   );
 
   /**
@@ -799,7 +799,7 @@ struct CollectionManager
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
     ReduceStamp stamp = ReduceStamp{},
-    NodeType root_node = uninitialized_destination
+    NodeT root_node = {}
   );
 
   /**
@@ -1123,7 +1123,7 @@ public:
   template <typename ColT, typename IndexT, typename MsgT>
   static void collectionAutoMsgDeliver(
     MsgT* msg, Indexable<IndexT>* col, HandlerType han,
-    NodeType from, trace::TraceEventIDType event, bool immediate
+    NodeT from, trace::TraceEventIDType event, bool immediate
   );
 
   /**
@@ -1203,9 +1203,9 @@ public:
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   bool insertCollectionElement(
     VirtualPtrType<IndexT> vc, VirtualProxyType const proxy,
-    IndexT const& idx, NodeType const home_node,
+    IndexT const& idx, NodeT const home_node,
     bool const is_migrated_in = false,
-    NodeType const migrated_from  = uninitialized_destination
+    NodeT const migrated_from  = {}
   );
 
 private:
@@ -1322,7 +1322,7 @@ public:
    * \return the mapped node
    */
   template <typename ColT>
-  NodeType getMappedNode(
+  NodeT getMappedNode(
     CollectionProxyWrapType<ColT> const& proxy,
     typename ColT::IndexType const& idx
   );
@@ -1336,7 +1336,7 @@ public:
    * \return the mapped node
    */
   template <typename IdxT>
-  NodeType getMappedNode(VirtualProxyType proxy, IdxT const& idx);
+  NodeT getMappedNode(VirtualProxyType proxy, IdxT const& idx);
 
   /**
    * \brief Migrate element to a new node
@@ -1350,7 +1350,7 @@ public:
    */
   template <typename ColT>
   MigrateStatus migrate(
-    VrtElmProxy<ColT, typename ColT::IndexType> proxy, NodeType const& dest
+    VrtElmProxy<ColT, typename ColT::IndexType> proxy, NodeT const& dest
   );
 
   /**
@@ -1417,7 +1417,7 @@ public:
   template <typename ColT, typename MsgT>
   void insert(
     CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
-    NodeType const node, ModifierToken& token, MsgSharedPtr<MsgT> msg = nullptr,
+    NodeT const node, ModifierToken& token, MsgSharedPtr<MsgT> msg = nullptr,
     bool pinged_home_already = false
   );
 
@@ -1492,7 +1492,7 @@ private:
    */
   template <typename ColT, typename IndexT>
   MigrateStatus migrateOut(
-    VirtualProxyType const& proxy, IndexT const& idx, NodeType const& dest
+    VirtualProxyType const& proxy, IndexT const& idx, NodeT const& dest
   );
 
   /**
@@ -1507,7 +1507,7 @@ private:
    */
   template <typename ColT, typename IndexT>
   MigrateStatus migrateIn(
-    VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
+    VirtualProxyType const& proxy, IndexT const& idx, NodeT const& from,
     VirtualPtrType<IndexT> vrt_elm_ptr
   );
 
@@ -1629,7 +1629,7 @@ public:
    */
   template <typename ColT>
   static void migrateToRestoreLocation(
-    NodeType node, typename ColT::IndexType idx,
+    NodeT node, typename ColT::IndexType idx,
     CollectionProxyWrapType<ColT> proxy
   );
 
@@ -1722,7 +1722,7 @@ private:
   template <typename ColT, typename Callable>
   void makeCollectionElement(
     VirtualProxyType const proxy, typename ColT::IndexType idx,
-    NodeType const mapped_node, Callable&& cons_fn,
+    NodeT const mapped_node, Callable&& cons_fn,
     bool zero_reduce_stamp = false
   );
 
@@ -1752,7 +1752,7 @@ private:
    * \return the node where it is mapped
    */
   template <typename IdxT>
-  NodeType getElementMapping(
+  NodeT getElementMapping(
     HandlerType map_han, ObjGroupProxyType map_object, IdxT idx, IdxT bounds
   );
 

@@ -68,16 +68,16 @@ static void testHan(MyVC* vc, TestMsg* msg) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     return vt::rerror("requires at least 2 nodes");
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     // Create a virtual context remotely on node 1, getting a proxy to it
-    auto proxy = vt::theVirtualManager()->makeVirtualNode<MyVC>(1, 45);
+    auto proxy = vt::theVirtualManager()->makeVirtualNode<MyVC>(vt::NodeT{1}, 45);
     auto msg = vt::makeMessage<TestMsg>(this_node);
     vt::theVirtualManager()->sendMsg<MyVC, TestMsg, testHan>(proxy, msg.get());
   }

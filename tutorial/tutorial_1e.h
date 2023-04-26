@@ -56,8 +56,8 @@ static void msgHandlerGroupA(MySimpleMsg* msg);
 
 // Tutorial code to demonstrate rooted group creation and broadcast to that group
 static inline void activeMessageGroupRoot() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const this_node = ::vt::theContext()->getNode();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
 
   /*
    * This is an example of the rooted group creation and broadcast to that
@@ -67,9 +67,9 @@ static inline void activeMessageGroupRoot() {
    * broadcast will only arrive on the nodes in that group.
    */
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     // Create range for the group [1,num_nodes);
-    auto range = std::make_unique<::vt::group::region::Range>(1, num_nodes);
+    auto range = std::make_unique<::vt::group::region::Range>(vt::NodeT{1}, num_nodes);
     // The non-collective group is created by a single node based on a range or
     // list of nodes. The lambda is executed once the group is created. By
     // setting the group in the envelope of the message and broadcasting the

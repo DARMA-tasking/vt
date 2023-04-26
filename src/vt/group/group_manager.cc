@@ -151,7 +151,7 @@ GroupManager::ReducePtrType GroupManager::groupReducer(GroupType const group) {
   }
 }
 
-NodeType GroupManager::groupRoot(GroupType const group) const {
+NodeT GroupManager::groupRoot(GroupType const group) const {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& root = iter->second->getRoot();
@@ -262,7 +262,7 @@ void GroupManager::initializeLocalGroup(
 }
 
 /*static*/ EventType GroupManager::groupHandler(
-  MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
+  MsgSharedPtr<BaseMsgType> const& base, NodeT const from,
   bool const root, bool* const deliver
 ) {
   auto const& msg = reinterpret_cast<ShortMessage*>(base.get());
@@ -309,7 +309,7 @@ void GroupManager::initializeLocalGroup(
 }
 
 EventType GroupManager::sendGroupCollective(
-  MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
+  MsgSharedPtr<BaseMsgType> const& base, NodeT const from,
   bool const is_root,
   bool* const deliver
 ) {
@@ -336,9 +336,9 @@ EventType GroupManager::sendGroupCollective(
     auto const& root_node = info.getRoot();
     auto const& send_to_root = is_root && this_node != root_node;
     auto const& this_node_dest = dest == this_node;
-    auto const& first_send = from == uninitialized_destination;
+    auto const& first_send = from == NodeT{};
 
-    if (root_node == uninitialized_destination) {
+    if (root_node == NodeT{}) {
       return no_event;
     }
 
@@ -364,7 +364,7 @@ EventType GroupManager::sendGroupCollective(
     );
 
     if ((num_children > 0 || send_to_root) && (!this_node_dest || first_send)) {
-      info.getTree()->foreachChild([&](NodeType child){
+      info.getTree()->foreachChild([&](NodeT child){
         bool const& send = child != dest;
 
         vt_debug_print(
@@ -410,7 +410,7 @@ EventType GroupManager::sendGroupCollective(
   } else {
     auto const& root_node = info.getRoot();
 
-    if (root_node == uninitialized_destination) {
+    if (root_node == NodeT{}) {
       return no_event;
     }
 
@@ -433,7 +433,7 @@ EventType GroupManager::sendGroupCollective(
 }
 
 EventType GroupManager::sendGroup(
-  MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
+  MsgSharedPtr<BaseMsgType> const& base, NodeT const from,
   bool const is_root,
   bool* const deliver
 ) {
@@ -442,7 +442,7 @@ EventType GroupManager::sendGroup(
   auto const& group = envelopeGetGroup(msg->env);
   auto const& dest = envelopeGetDest(msg->env);
   auto const& this_node_dest = dest == this_node;
-  auto const& first_send = from == uninitialized_destination;
+  auto const& first_send = from == NodeT{};
 
   vt_debug_print(
     terse, group,
@@ -457,7 +457,7 @@ EventType GroupManager::sendGroup(
     !group_collective, "Collective groups are not supported"
   );
 
-  auto send_to_node = [&](NodeType node) -> EventType {
+  auto send_to_node = [&](NodeT node) -> EventType {
     auto const& send_tag = static_cast<messaging::MPI_TagType>(
       messaging::MPITag::ActiveMsgTag
     );
@@ -509,7 +509,7 @@ EventType GroupManager::sendGroup(
 
         // Send to child nodes in the group's spanning tree
         if (num_children > 0) {
-          info.default_spanning_tree_->foreachChild([&](NodeType child) {
+          info.default_spanning_tree_->foreachChild([&](NodeT child) {
             vt_debug_print(
               verbose, broadcast,
               "GroupManager::sendGroup: *send* size={}, from={}, child={}\n",
@@ -522,7 +522,7 @@ EventType GroupManager::sendGroup(
           });
         }
 
-        if (is_root && from == uninitialized_destination) {
+        if (is_root && from == NodeT{}) {
           *deliver = true;
         } else if (!is_root && dest == this_node) {
           *deliver = false;

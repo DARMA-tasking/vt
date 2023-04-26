@@ -107,7 +107,7 @@ EpochGraph::EpFormat EpochGraph::formatDOTEpoch(
   EpochType epoch, std::string label
 ) {
   if (epoch == term::any_epoch_sentinel) {
-    return std::make_tuple(epoch, static_cast<NodeType>(-1), true, "Global");
+    return std::make_tuple(epoch, static_cast <NodeT  >(-1), true, "Global");
   } else {
     std::string label_format = "";
     if (label != "") {
@@ -128,7 +128,7 @@ EpochGraph::EpFormat EpochGraph::formatDOTEpoch(
       }
     } else {
       auto str = fmt::format("{}{:x}-C", label_format, epoch);
-      return std::make_tuple(epoch, static_cast<NodeType>(-1), true, str);
+      return std::make_tuple(epoch, static_cast <NodeT  >(-1), true, str);
     }
   }
 }
@@ -178,7 +178,7 @@ std::string EpochGraph::outputDOT(bool verbose) {
   builder += "\t]\n";
   for (auto&& elm : eps) {
     EpochType ep = std::get<0>(elm.second);
-    NodeType node = std::get<1>(elm.second);
+    NodeT node = std::get<1>(elm.second);
     bool collective = std::get<2>(elm.second);
     std::string str = std::get<3>(elm.second);
     if (not theConfig()->vt_epoch_graph_terse or verbose) {

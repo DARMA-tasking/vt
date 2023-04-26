@@ -44,9 +44,9 @@
 #include <vt/transport.h>
 
 struct HelloMsg : vt::Message {
-  vt::NodeType from = vt::uninitialized_destination;
+  vt::NodeT from = {};
 
-  explicit HelloMsg(vt::NodeType const& in_from)
+  explicit HelloMsg(vt::NodeT const& in_from)
     : from(in_from)
   { }
 };
@@ -62,19 +62,19 @@ static void hello_group_handler(HelloMsg* msg) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     return vt::rerror("requires at least 2 nodes");
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto msg = vt::makeMessage<HelloMsg>(this_node);
     vt::theMsg()->broadcastMsg<hello_world>(msg);
 
     using RangeType = vt::group::region::Range;
-    auto list = std::make_unique<RangeType>(num_nodes / 2, num_nodes);
+    auto list = std::make_unique<RangeType>(num_nodes / vt::NodeT{2}, num_nodes);
 
     vt::theGroup()->newGroup(std::move(list), [=](vt::GroupType group){
       auto gmsg = vt::makeMessage<HelloMsg>(this_node);

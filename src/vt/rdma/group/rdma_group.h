@@ -73,7 +73,7 @@ struct Group {
     RDMA_ElmType hi = region.hi;
     RDMA_ElmType elm_hi = lo;
     RDMA_BlockType blk_lo;
-    NodeType cur_node;
+    NodeT cur_node;
 
     vtAssertExpr(map.elm_map != nullptr);
     vtAssertExpr(map.block_map != nullptr);
@@ -90,7 +90,7 @@ struct Group {
     }
   }
 
-  NodeType findDefaultNode(RDMA_ElmType const& elm);
+  NodeT findDefaultNode(RDMA_ElmType const& elm);
 
   template <typename Serializer>
   void serialize(Serializer& s) {

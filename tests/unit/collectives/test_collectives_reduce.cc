@@ -54,7 +54,7 @@ namespace vt { namespace tests { namespace unit {
 
 TEST_F(TestReduce, test_reduce_op) {
   auto const my_node = theContext()->getNode();
-  auto const root = 0;
+  auto const root = NodeT{0};
 
   auto msg = makeMessage<MyReduceMsg>(my_node);
   vt_debug_print(normal, reduce, "msg->num={}\n", msg->num);
@@ -81,14 +81,14 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   }
 };
 
-vt::NodeType map(vt::Index1D* idx, vt::Index1D* max_idx, vt::NodeType num_nodes) {
-  return (idx->x() % (num_nodes-1))+1;
+vt::NodeT map(vt::Index1D* idx, vt::Index1D* max_idx, vt::NodeT num_nodes) {
+  return NodeT{(idx->x() % (num_nodes.get()-1))+1};
 }
 
 TEST_F(TestReduce, test_reduce_with_no_elements_on_root_rank) {
   SET_MIN_NUM_NODES_CONSTRAINT(2);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeT this_node = vt::theContext()->getNode();
 
   int32_t num_elms = 16;
 
@@ -103,8 +103,13 @@ TEST_F(TestReduce, test_reduce_with_no_elements_on_root_rank) {
     .bulkInsert()
     .wait();
 
+<<<<<<< HEAD
   if (this_node == 0) {
     proxy.broadcast<&Hello::doWork>();
+=======
+  if (this_node == vt::NodeT{0}) {
+    proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
   }
 }
 

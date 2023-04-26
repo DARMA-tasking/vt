@@ -79,7 +79,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * \c * vt::vrt::collection::balance::LBManager
  */
 struct NodeLBData : runtime::component::Component<NodeLBData> {
-  using MigrateFnType       = std::function<void(NodeType)>;
+  using MigrateFnType       = std::function<void (NodeT  )>;
   using StorableType = vt::vrt::collection::storage::Storable;
 
   /**
@@ -221,7 +221,7 @@ public:
    *
    * \return whether this node has the object
    */
-  bool migrateObjTo(ElementIDStruct obj_id, NodeType to_node);
+  bool migrateObjTo(ElementIDStruct obj_id, NodeT to_node);
 
   /**
    * \internal \brief Get the collection proxy for a given element ID

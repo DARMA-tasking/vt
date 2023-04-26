@@ -57,13 +57,13 @@ struct LocRecord {
 
   LocRecord(
     EntityID const& in_id, LocStateType const& in_state,
-    NodeType const& in_node
+    NodeT const& in_node
   );
-  void updateNode(NodeType const& new_node);
+  void updateNode(NodeT const& new_node);
 
   bool isLocal() const;
   bool isRemote() const;
-  NodeType getRemoteNode() const;
+  NodeT getRemoteNode() const;
   EntityID getEntityID() const;
 
   template <typename U>
@@ -79,7 +79,7 @@ struct LocRecord {
 private:
   EntityID id_;
   LocStateType state_ = eLocState::Invalid;
-  NodeType cur_node_ = uninitialized_destination;
+  NodeT cur_node_ = {};
 };
 
 }}  // end namespace vt::location

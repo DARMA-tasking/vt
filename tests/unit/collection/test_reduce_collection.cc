@@ -51,7 +51,7 @@ TEST_P(TestReduceCollection, test_reduce_op) {
   using namespace reduce;
 
   auto const my_node = theContext()->getNode();
-  auto const root = 0;
+  auto const root = NodeT{0};
 
   if (my_node == root) {
     auto reduce_case = GetParam();

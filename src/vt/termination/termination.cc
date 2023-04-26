@@ -574,7 +574,7 @@ void TerminationDetector::startEpochGraphBuild() {
   auto str = graph->outputDOT();
   graph->writeToFile(str);
   auto msg = makeMessage<MsgType>(graph);
-  NodeType root = 0;
+  NodeT root = NodeT{0};
   auto cb = vt::theCB()->makeSend<epochGraphBuiltHandler>(root);
 
   auto r = theTerm()->reducer();
@@ -680,7 +680,7 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
 }
 
 void TerminationDetector::inquireTerminated(
-  EpochType const& epoch, NodeType const& from
+  EpochType const& epoch, NodeT const& from
 ) {
   auto const& is_rooted = epoch::EpochManip::isRooted(epoch);
   auto const& epoch_root_node = epoch::EpochManip::node(epoch);

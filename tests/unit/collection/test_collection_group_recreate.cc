@@ -78,7 +78,7 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
 
   // Create a range that only hits half of the node---this requires a group for
   // the reduction to finish properly
-  auto const range = Index1D(std::max(num_nodes / 2, 1));
+  auto const range = Index1D(std::max(num_nodes.get() / 2, 1));
   auto const proxy = theCollection()->constructCollective<MyCol>(
     range, [](vt::Index1D) { return std::make_unique<MyCol>(); },
     "test_collection_group_recreate_1"
@@ -86,6 +86,7 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
 
   /// Broadcast to do a reduction over the current group
   vt::runInEpochCollective([&]{
+<<<<<<< HEAD
     if (this_node == 0) {
       proxy.broadcast<&MyCol::doReduce>();
     }
@@ -94,6 +95,21 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   auto set = theCollection()->getLocalIndices(proxy);
   if (set.size() > 0) {
     EXPECT_EQ(proxy[*set.begin()].tryGetLocalPtr()->cb_counter, 1);
+=======
+    if (this_node == vt::NodeT{0}) {
+      auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
+        vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
+          cb_counter++;
+          fmt::print("at root: final num={}\n", m->getVal());
+        }
+      );
+      proxy.broadcast<MyCol::TestMsg,&MyCol::doReduce>(cb);
+    }
+  });
+
+  if (this_node == vt::NodeT{0}) {
+    EXPECT_EQ(cb_counter, 1);
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
   }
 
   /// Run RotateLB to make the previous group invalid!
@@ -109,6 +125,7 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
 
   // Try to do another reduction; should fail if group is not setup correctly
   vt::runInEpochCollective([&]{
+<<<<<<< HEAD
     if (this_node == 0) {
       proxy.broadcast<&MyCol::doReduce>();
     }
@@ -117,6 +134,21 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   set = theCollection()->getLocalIndices(proxy);
   if (set.size() > 0) {
     EXPECT_EQ(proxy[*set.begin()].tryGetLocalPtr()->cb_counter, 2);
+=======
+    if (this_node == vt::NodeT{0}) {
+      auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
+        vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
+          cb_counter++;
+          fmt::print("at root: final num={}\n", m->getVal());
+        }
+      );
+      proxy.broadcast<MyCol::TestMsg,&MyCol::doReduce>(cb);
+    }
+  });
+
+  if (this_node == vt::NodeT{0}) {
+    EXPECT_EQ(cb_counter, 2);
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
   }
 
   vt::runInEpochCollective([&]{
@@ -125,6 +157,7 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
 
   // Try to do another reduction; should fail if group is not setup correctly
   vt::runInEpochCollective([&]{
+<<<<<<< HEAD
     if (this_node == 0) {
       proxy.broadcast<&MyCol::doReduce>();
     }
@@ -133,6 +166,21 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   set = theCollection()->getLocalIndices(proxy);
   if (set.size() > 0) {
     EXPECT_EQ(proxy[*set.begin()].tryGetLocalPtr()->cb_counter, 3);
+=======
+    if (this_node == vt::NodeT{0}) {
+      auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
+        vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
+          cb_counter++;
+          fmt::print("at root: final num={}\n", m->getVal());
+        }
+      );
+      proxy.broadcast<MyCol::TestMsg,&MyCol::doReduce>(cb);
+    }
+  });
+
+  if (this_node == vt::NodeT{0}) {
+    EXPECT_EQ(cb_counter, 3);
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
   }
 
 }

@@ -62,7 +62,7 @@ EpochManip::EpochManip()
 { }
 
 /*static*/ EpochType EpochManip::generateEpoch(
-  bool const& is_rooted, NodeType const& root_node,
+  bool const& is_rooted, NodeT const& root_node,
   eEpochCategory const& category
 ) {
   EpochType new_epoch = makeEpochZero();
@@ -74,7 +74,7 @@ EpochManip::EpochManip()
   }
 
   if (is_rooted) {
-    vtAssertExpr(root_node != uninitialized_destination);
+    vtAssertExpr(root_node != NodeT{});
     EpochManip::setNode(new_epoch, root_node);
   }
 
@@ -95,7 +95,7 @@ EpochManip::EpochManip()
 EpochType EpochManip::getNextCollectiveEpoch(
   eEpochCategory const& category
 ) {
-  auto const no_dest = uninitialized_destination;
+  auto const no_dest = NodeT{};
   auto const arch_epoch = generateEpoch(false,no_dest,category);
   return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
 }
@@ -109,7 +109,7 @@ EpochType EpochManip::getNextRootedEpoch(
 }
 
 EpochType EpochManip::getNextRootedEpoch(
-  eEpochCategory const& category, NodeType const root_node
+  eEpochCategory const& category, NodeT const root_node
 ) {
   auto const arch_epoch = generateEpoch(true,root_node,category);
   return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
@@ -154,11 +154,11 @@ EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
   >(*epoch);
 }
 
-/*static*/ NodeType EpochManip::node(EpochType const& epoch) {
+/*static*/ NodeT EpochManip::node(EpochType const& epoch) {
   vtAssert(isRooted(epoch), "Must be rooted to manipulate the node");
 
   return BitPackerType::getField<
-    eEpochRoot::rEpochNode, node_num_bits, NodeType
+    eEpochRoot::rEpochNode, node_num_bits, NodeT
   >(*epoch);
 }
 
@@ -191,7 +191,7 @@ void EpochManip::setCategory(EpochType& epoch, eEpochCategory const cat) {
 }
 
 /*static*/
-void EpochManip::setNode(EpochType& epoch, NodeType const node) {
+void EpochManip::setNode(EpochType& epoch, NodeT const node) {
   vtAssert(isRooted(epoch), "Must be rooted to manipulate the node");
 
   BitPackerType::setField<eEpochRoot::rEpochNode, node_num_bits>(*epoch,node);

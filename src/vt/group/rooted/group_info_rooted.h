@@ -75,7 +75,7 @@ protected:
 protected:
   bool is_forward_                   = false;
   bool this_node_included_           = false;
-  NodeType forward_node_             = uninitialized_destination;
+  ::vt::NodeT forward_node_             = {};
   RegionPtrType region_              = nullptr;
   RegionType::SizeType total_size_   = 0;
   TreePtrType default_spanning_tree_ = nullptr;

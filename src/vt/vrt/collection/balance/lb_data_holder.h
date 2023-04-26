@@ -125,21 +125,25 @@ private:
   void readMetadata(nlohmann::json const& j);
 
 public:
-  /// Node timings for each local object
+  /// NodeT timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;
-  /// Node communication graph for each local object
+  /// NodeT communication graph for each local object
   std::unordered_map<PhaseType, CommMapType> node_comm_;
-  /// Node communication graph for each subphase
+  /// NodeT communication graph for each subphase
   std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// User-defined data from each phase for JSON output
   std::unordered_map<PhaseType, std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
+<<<<<<< HEAD
 
   std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
   /// User-defined data from each phase for LB
   std::unordered_map<PhaseType, DataMapType> user_defined_lb_info_;
   /// Node indices for each ID along with the proxy ID
+=======
+  /// NodeT indices for each ID along with the proxy ID
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy
   std::unordered_map<ElementIDStruct, ObjGroupProxyType> node_objgroup_;

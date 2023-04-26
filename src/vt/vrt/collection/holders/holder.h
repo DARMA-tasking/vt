@@ -216,14 +216,14 @@ struct Holder {
    *
    * \return the group root
    */
-  NodeType groupRoot() const { return group_root_; }
+  NodeT groupRoot() const { return group_root_; }
 
   /**
    * \brief Set the root of the group
    *
    * \param[in] root the root
    */
-  void setGroupRoot(NodeType const root) { group_root_ = root; }
+  void setGroupRoot(NodeT const root) { group_root_ = root; }
 
   /**
    * \brief Add element-specific listener
@@ -249,7 +249,7 @@ struct Holder {
    * \param[in] home the home node for the element
    */
   void applyListeners(
-    listener::ElementEventEnum event, IndexT const& idx, NodeType home_node
+    listener::ElementEventEnum event, IndexT const& idx, NodeT home_node
   );
 
   friend struct CollectionManager;
@@ -262,7 +262,7 @@ private:
   GroupType cur_group_                                            = no_group;
   bool use_group_                                                 = false;
   bool group_ready_                                               = false;
-  NodeType group_root_                                            = 0;
+  NodeT group_root_                                               = NodeT{0};
   CountType num_erased_not_removed_                               = 0;
   std::vector<listener::ListenFnType<IndexT>> event_listeners_    = {};
 };

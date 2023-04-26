@@ -58,7 +58,7 @@ namespace vt { namespace sched {
 
 /*static*/ void Scheduler::checkTermSingleNode() {
   auto const& num_nodes = theContext()->getNumNodes();
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     theTerm()->maybePropagate();
   }
 }

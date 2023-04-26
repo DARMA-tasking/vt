@@ -141,7 +141,7 @@ TEST_F(TestCallbackSend, test_callback_send_remote_1) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeType next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
     auto cb = theCB()->makeSend<callbackFn>(this_node);
     theMsg()->send<applyCallbackMsg<DataMsg, int, int, int>>(
       vt::Node{next}, cb, 1, 2, 3
@@ -158,7 +158,7 @@ TEST_F(TestCallbackSend, test_callback_send_remote_2) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeType next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
     auto cb = theCB()->makeSend<CallbackFunctor>(this_node);
     theMsg()->send<applyCallbackMsg<DataMsg, int, int, int>>(
       vt::Node{next}, cb, 1, 2, 3
@@ -175,7 +175,7 @@ TEST_F(TestCallbackSend, test_callback_send_remote_3) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeType next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
     auto cb = theCB()->makeSend<CallbackFunctorEmpty>(this_node);
     theMsg()->send<applyCallback<>>(vt::Node{next}, cb);
   });

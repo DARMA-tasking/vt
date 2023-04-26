@@ -44,28 +44,28 @@
 #include <vt/transport.h>
 
 struct HelloMsg : vt::Message {
-  HelloMsg(vt::NodeType in_from) : from(in_from) { }
+  HelloMsg(vt::NodeT in_from) : from(in_from) { }
 
-  vt::NodeType from = 0;
+  vt::NodeT from = vt::NodeT{0};
 };
 
 void hello_world(int a, int b, float c) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
   fmt::print("{}: Hello from node vals = {} {} {}\n", this_node, a, b, c);
 }
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     return vt::rerror("requires at least 2 nodes");
   }
 
-  if (this_node == 0) {
-    vt::theMsg()->send<hello_world>(vt::Node{1}, 10, 20, 11.3f);
+  if (this_node == vt::NodeT{0}) {
+    vt::theMsg()->send<hello_world>(vt::NodeT{1}, 10, 20, 11.3f);
   }
 
   vt::finalize();

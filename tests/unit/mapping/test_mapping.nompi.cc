@@ -60,7 +60,7 @@ TEST_F(TestMapping, test_mapping_block_1d) {
 
   static constexpr Index1D::DenseIndexType const val = 16;
   static constexpr Index1D::DenseIndexType const max = 256;
-  static constexpr NodeType const nnodes = 8;
+  static constexpr NodeT const nnodes = NodeT{8};
 
   Index1D idx(val);
   Index1D max_idx(max);
@@ -68,22 +68,22 @@ TEST_F(TestMapping, test_mapping_block_1d) {
   EXPECT_EQ(idx[0], val);
   EXPECT_EQ(max_idx[0], max);
 
-  std::vector<Index1D::IndexSizeType> map_cnt(nnodes);
+  std::vector<Index1D::IndexSizeType> map_cnt(nnodes.get());
 
-  EXPECT_EQ(max % nnodes, 0);
+  EXPECT_EQ(max % nnodes.get(), 0);
 
   for (int i = 0; i < max; i++) {
     Index1D idx_test(i);
     auto const& node = mapping::dense1DBlockMap(&idx_test, &max_idx, nnodes);
     //fmt::print("node={},idx val={}, idx max={}\n", node, idx_test[0], max_idx[0]);
-    map_cnt[node]++;
+    map_cnt[node.get()]++;
   }
 
-  EXPECT_EQ(map_cnt.size(), static_cast<size_t>(nnodes));
+  EXPECT_EQ(map_cnt.size(), static_cast<size_t>(nnodes.get()));
 
   Index1D::IndexSizeType map_count_fst = map_cnt[0];
 
-  for (int i = 1; i < nnodes; i++) {
+  for (int i = 1; i < nnodes.get(); i++) {
     EXPECT_EQ(map_cnt[i], map_count_fst);
   }
 }
@@ -91,7 +91,7 @@ TEST_F(TestMapping, test_mapping_block_1d) {
 TEST_F(TestMapping, test_mapping_block_2d) {
   using namespace vt;
 
-  static constexpr NodeType const nnodes = 8;
+  static constexpr NodeT const nnodes = NodeT{8};
 
   using IndexType = Index2D::DenseIndexType;
 
@@ -108,7 +108,7 @@ TEST_F(TestMapping, test_mapping_block_2d) {
     EXPECT_EQ(max_idx[0], max0);
     EXPECT_EQ(max_idx[1], max1);
 
-    std::vector<Index2D::IndexSizeType> map_cnt(nnodes);
+    std::vector<Index2D::IndexSizeType> map_cnt(nnodes.get());
 
     EXPECT_EQ((max0 * max1) % nnodes, 0);
 
@@ -120,15 +120,15 @@ TEST_F(TestMapping, test_mapping_block_2d) {
         //   "node={},idx val=[{},{}], idx max=[{},{}]\n",
         //   node, idx_test[0], idx_test[1], max_idx[0], max_idx[1]
         // );
-        map_cnt[node]++;
+        map_cnt[node.get()]++;
       }
     }
 
-    EXPECT_EQ(map_cnt.size(), static_cast<size_t>(nnodes));
+    EXPECT_EQ(map_cnt.size(), static_cast<size_t>(nnodes.get()));
 
     Index2D::IndexSizeType map_count_fst = map_cnt[0];
 
-    for (int i = 1; i < nnodes; i++) {
+    for (int i = 1; i < nnodes.get(); i++) {
       EXPECT_EQ(map_cnt[i], map_count_fst);
     }
   }
@@ -137,7 +137,7 @@ TEST_F(TestMapping, test_mapping_block_2d) {
 TEST_F(TestMapping, test_mapping_block_3d) {
   using namespace vt;
 
-  static constexpr NodeType const nnodes = 8;
+  static constexpr NodeT const nnodes = NodeT{8};
 
   using IndexType = Index2D::DenseIndexType;
 
@@ -160,23 +160,23 @@ TEST_F(TestMapping, test_mapping_block_3d) {
 
     std::vector<Index3D::IndexSizeType> map_cnt(nnodes);
 
-    EXPECT_EQ((max0 * max1 * max2) % nnodes, 0);
+    EXPECT_EQ((max0 * max1 * max2) % nnodes.get(), 0);
 
     for (int i = 0; i < max_idx[0]; i++) {
       for (int j = 0; j < max_idx[1]; j++) {
         for (int k = 0; k < max_idx[2]; k++) {
           Index3D idx_test(i, j, k);
           auto const& node = mapping::dense3DBlockMap(&idx_test, &max_idx, nnodes);
-          map_cnt[node]++;
+          map_cnt[node.get()]++;
         }
       }
     }
 
-    EXPECT_EQ(map_cnt.size(), static_cast<size_t>(nnodes));
+    EXPECT_EQ(map_cnt.size(), static_cast<size_t>(nnodes.get()));
 
     Index3D::IndexSizeType map_count_fst = map_cnt[0];
 
-    for (int i = 1; i < nnodes; i++) {
+    for (int i = 1; i < nnodes.get(); i++) {
       EXPECT_EQ(map_cnt[i], map_count_fst);
     }
   }

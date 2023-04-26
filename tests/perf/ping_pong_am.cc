@@ -66,7 +66,7 @@ void handlerFinished(MyMsg* msg);
 
 void handler(MyMsg* in_msg) {
   auto msg = makeMessage<MyMsg>();
-  theMsg()->sendMsg<&handlerFinished>(0, msg);
+  theMsg()->sendMsg<&handlerFinished>(vt::NodeT{0}, msg);
 }
 
 struct NodeObj {
@@ -80,7 +80,7 @@ struct NodeObj {
 
   void complete() {
     test_obj_->StopTimer(fmt::format("{} ping-pong", i));
-    if (theContext()->getNode() == 0) {
+    if (theContext()->getNode() == NodeT{0}) {
       theTerm()->enableTD();
     }
   }
@@ -88,7 +88,7 @@ struct NodeObj {
   void perfPingPong(MyMsg* in_msg) {
     test_obj_->StartTimer(fmt::format("{} ping-pong", i));
     auto msg = makeMessage<MyMsg>();
-    theMsg()->sendMsg<&handler>(1, msg);
+    theMsg()->sendMsg<&handler>(vt::NodeT{1}, msg);
   }
 
 private:
@@ -100,11 +100,11 @@ private:
 
 void handlerFinished(MyMsg* msg) {
   if (i >= num_iters) {
-    global_proxy[0].invoke<&NodeObj::complete>();
+    global_proxy[NodeT{0}].invoke<&NodeObj::complete>();
   } else {
     i++;
     auto msg = makeMessage<MyMsg>();
-    theMsg()->sendMsg<&handler>(1, msg);
+    theMsg()->sendMsg<&handler>(vt::NodeT{1}, msg);
   }
 }
 
@@ -113,13 +113,13 @@ VT_PERF_TEST(MyTest, test_ping_pong_am) {
     "test_ping_pong_am", this
   );
 
-  if (theContext()->getNode() == 0) {
+  if (theContext()->getNode() == NodeT{0}) {
     theTerm()->disableTD();
   }
 
   grp_proxy[my_node_].invoke<&NodeObj::initialize>();
 
-  if (theContext()->getNode() == 0) {
+  if (theContext()->getNode() == NodeT{0}) {
     grp_proxy[my_node_].send<MyMsg, &NodeObj::perfPingPong>();
   }
 }

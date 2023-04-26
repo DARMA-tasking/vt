@@ -183,7 +183,7 @@ TEST_F(TestObjGroup, test_proxy_schedule) {
     normal, objgroup,
     "obj->recv:{} after term\n", obj->recv_
   );
-  EXPECT_EQ(obj->recv_, num_nodes + 1);
+  EXPECT_EQ(obj->recv_, num_nodes.get() + 1);
 }
 
 TEST_F(TestObjGroup, test_proxy_callbacks) {
@@ -198,13 +198,13 @@ TEST_F(TestObjGroup, test_proxy_callbacks) {
     auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>("test_proxy_callbacks", 1);
     auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_callbacks");
 
-    if (my_node == 0) {
-      proxy1[0].send<&MyObjA::handler>();
-      proxy1[0].send<&MyObjA::handler>();
-      proxy1[1].send<&MyObjA::handler>();
-    } else if (my_node == 1) {
+    if (my_node == NodeT{0}) {
+      proxy1[NodeT{0}].send<&MyObjA::handler>();
+      proxy1[NodeT{0}].send<&MyObjA::handler>();
+      proxy1[NodeT{1}].send<&MyObjA::handler>();
+    } else if (my_node == NodeT{1}) {
       proxy2.broadcast<&MyObjB::handler>();
-      proxy3[0].send<&MyObjA::handler>();
+      proxy3[NodeT{0}].send<&MyObjA::handler>();
     }
 
     // check received messages for each group
@@ -219,7 +219,7 @@ TEST_F(TestObjGroup, test_proxy_callbacks) {
   default: EXPECT_EQ(obj1->recv_, 0); break;
   }
   EXPECT_EQ(obj2->recv_, 1);
-  EXPECT_EQ(obj3->recv_, my_node == 0 ? 1 : 0);
+  EXPECT_EQ(obj3->recv_, my_node.get() == 0 ? 1 : 0);
 }
 
 TEST_F(TestObjGroup, test_proxy_reduce) {
@@ -250,7 +250,7 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
     );
   });
 
-  auto const root_node = 0;
+  auto const root_node = vt::NodeT{0};
   if (my_node == root_node) {
     EXPECT_EQ(TestObjGroup::total_verify_expected_, 4);
   }
@@ -349,7 +349,7 @@ struct MyTestMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required();
 
-  explicit MyTestMsg(NodeType const node) : node_{node} {
+  explicit MyTestMsg(NodeT const node) : node_{node} {
     ::fmt::print("Creating MyTestMsg on node: {}\n", node_);
   }
 
@@ -366,12 +366,12 @@ struct MyTestMsg : vt::Message {
     }
   }
 
-  NodeType fromNode() const { return node_; }
+  NodeT fromNode() const { return node_; }
 
   bool wasSerialized() const { return was_serialized_; }
 
 private:
-  NodeType node_{-1};
+  NodeT node_{-1};
   bool was_serialized_{false};
 };
 

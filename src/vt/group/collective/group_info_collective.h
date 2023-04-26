@@ -86,7 +86,7 @@ private:
 
 public:
   ReducePtrType getReduce() const;
-  NodeType getRoot() const;
+  ::vt::NodeT getRoot() const;
   bool isGroupDefault() const;
   TreeType* getTree() const;
   bool inGroup() const;
@@ -118,7 +118,7 @@ private:
   void finalizeTree(GroupOnlyMsg* msg);
   void finalize();
   void sendDownNewTree();
-  void newTree(NodeType const& parent);
+  void newTree(::vt::NodeT const& parent);
   RemoteOperationIDType makeCollectiveContinuation(GroupType const group_);
 
 protected:
@@ -133,7 +133,7 @@ protected:
   uint32_t extra_arrived_count_          = 0;
   uint32_t send_down_                    = 0;
   uint32_t send_down_finished_           = 0;
-  NodeType known_root_node_              = uninitialized_destination;
+  ::vt::NodeT known_root_node_              = {};
   bool is_new_root_                      = false;
   bool has_root_                         = false;
   bool is_default_group_                 = false;

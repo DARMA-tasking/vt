@@ -108,7 +108,7 @@ using RDMA_RecvType = std::function<void(void* ptr, size_t num_bytes)>;
 
 using RDMA_NumElemsType = int64_t;
 using RDMA_BlockElmRangeType = std::tuple<RDMA_BlockType,RDMA_ElmType,RDMA_ElmType>;
-using RDMA_BlockMapType = std::function<NodeType(RDMA_BlockType,RDMA_BlockType)>;
+using RDMA_BlockMapType = std::function<NodeT(RDMA_BlockType,RDMA_BlockType)>;
 using RDMA_ElmMapType = std::function<RDMA_BlockElmRangeType(RDMA_ElmType,RDMA_ElmType,RDMA_BlockType)>;
 
 static constexpr Type uninitialized_rdma_type = Type::Uninitialized;

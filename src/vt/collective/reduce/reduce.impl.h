@@ -109,7 +109,7 @@ Reduce::PendingSendType Reduce::reduce(Node root, Params&&... params) {
 
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 Reduce::PendingSendType Reduce::reduce(
-  NodeType const& root, MsgT* msg, Callback<MsgT> cb, detail::ReduceStamp id,
+  NodeT const& root, MsgT* msg, Callback<MsgT> cb, detail::ReduceStamp id,
   ReduceNumType const& num_contrib
 ) {
   msg->setCallback(cb);
@@ -118,7 +118,7 @@ Reduce::PendingSendType Reduce::reduce(
 
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 detail::ReduceStamp Reduce::reduceImmediate(
-  NodeType const& root, MsgT* msg, Callback<MsgT> cb, detail::ReduceStamp id,
+  NodeT const& root, MsgT* msg, Callback<MsgT> cb, detail::ReduceStamp id,
   ReduceNumType const& num_contrib
 ) {
   msg->setCallback(cb);
@@ -129,7 +129,7 @@ template <
   typename OpT, typename FunctorT, typename MsgT, ActiveTypedFnType<MsgT> *f
 >
 Reduce::PendingSendType Reduce::reduce(
-  NodeType const& root, MsgT* msg, detail::ReduceStamp id,
+  NodeT const& root, MsgT* msg, detail::ReduceStamp id,
   ReduceNumType const& num_contrib
 ) {
   return reduce<MsgT,f>(root,msg,id,num_contrib);
@@ -139,7 +139,7 @@ template <
   typename OpT, typename FunctorT, typename MsgT, ActiveTypedFnType<MsgT> *f
 >
 detail::ReduceStamp Reduce::reduceImmediate(
-  NodeType const& root, MsgT* msg, detail::ReduceStamp id,
+  NodeT const& root, MsgT* msg, detail::ReduceStamp id,
   ReduceNumType const& num_contrib
 ) {
   return reduceImmediate<MsgT,f>(root,msg,id,num_contrib);
@@ -147,7 +147,7 @@ detail::ReduceStamp Reduce::reduceImmediate(
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 Reduce::PendingSendType Reduce::reduce(
-  NodeType root, MsgT* const msg, detail::ReduceStamp id,
+  NodeT root, MsgT* const msg, detail::ReduceStamp id,
   ReduceNumType num_contrib
 ) {
   auto msg_ptr = promoteMsg(msg);
@@ -158,7 +158,7 @@ Reduce::PendingSendType Reduce::reduce(
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 detail::ReduceStamp Reduce::reduceImmediate(
-  NodeType root, MsgT* const msg, detail::ReduceStamp id,
+  NodeT root, MsgT* const msg, detail::ReduceStamp id,
   ReduceNumType num_contrib
 ) {
   if (std::holds_alternative<detail::StrongGroup>(scope_.get())) {
@@ -292,7 +292,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
     MsgPtr<MsgT> typed_msg = msg.template to<MsgT>();
     state.msgs.clear();
     state.num_contrib_ = 1;
-    NodeType const root = state.reduce_root_;
+    NodeT const root = state.reduce_root_;
 
     // Must erase this before invoking the root function/callback because it
     // might be re-entrant

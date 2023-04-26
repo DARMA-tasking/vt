@@ -63,7 +63,7 @@ template <typename MsgT, typename BaseEagerMsgT>
 using ActionEagerSend = std::function<messaging::PendingSend(
   MsgSharedPtr<SerializedEagerMsg<MsgT,BaseEagerMsgT>> msg
 )>;
-using ActionNodeSendType = std::function<messaging::PendingSend(NodeType)>;
+using ActionNodeSendType = std::function<messaging::PendingSend (NodeT  )>;
 using ActionDataSend = std::function<messaging::PendingSend(ActionNodeSendType)>;
 
 struct SerializedMessenger {
@@ -87,7 +87,7 @@ struct SerializedMessenger {
 
   template <typename MsgT, typename BaseT = Message>
   static messaging::PendingSend sendSerialMsg(
-    NodeType dest, MsgT* msg, HandlerType han,
+    NodeT dest, MsgT* msg, HandlerType han,
     ActionEagerSend<MsgT, BaseT> eager = nullptr
   );
 

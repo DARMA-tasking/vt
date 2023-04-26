@@ -62,7 +62,7 @@ struct SerializedDataMsgAny : MessageT {
   ByteType ptr_size = 0;
   HandlerType handler = uninitialized_handler;
   TagType data_recv_tag = no_tag;
-  NodeType from_node = uninitialized_destination;
+  NodeT from_node = {};
   int nchunks = 0;
 };
 

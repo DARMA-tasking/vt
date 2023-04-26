@@ -54,7 +54,7 @@ struct TestLocationRoute : TestLocation {};
 TEST_F(TestLocation, test_register_and_get_entity) /* NOLINT */ {
 
   auto const my_node = vt::theContext()->getNode();
-  auto const home    = 0;
+  auto const home    = NodeT{0};
   auto const entity  = location::default_entity;
 
   // Register the entity on the node 0
@@ -64,7 +64,7 @@ TEST_F(TestLocation, test_register_and_get_entity) /* NOLINT */ {
 
   bool success = false;
   vt::theLocMan()->virtual_loc->getLocation(
-    entity, home, [home,&success](vt::NodeType node) {
+    entity, home, [home,&success](vt::NodeT node) {
       EXPECT_EQ(home, node);
       success = true;
     }
@@ -93,17 +93,17 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities)  /* NOLINT */ {
   int check_sum = 0;
   bool success;
 
-  for (auto i = 0; i < nb_nodes; ++i) {
+  for (auto i = 0; i < nb_nodes.get(); ++i) {
     success = false;
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      location::default_entity + i, i,
-      [i, &success, &check_sum, my_node](vt::NodeType node) {
+      location::default_entity + i, NodeT{i},
+      [i, &success, &check_sum, my_node](vt::NodeT node) {
         auto const cur = vt::theContext()->getNode();
         // let p: i == my_node and q: cur == node
         // we have: p implies q == not(p) or q
-        EXPECT_TRUE(i != my_node or cur == node);
-        EXPECT_EQ(i, node);
+        EXPECT_TRUE(NodeT{i} != my_node or cur == node);
+        EXPECT_EQ(NodeT{i}, node);
         success = true;
         check_sum++;
       }
@@ -113,7 +113,7 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities)  /* NOLINT */ {
 
     vt::theCollective()->barrier();
 
-    if (i == my_node) {
+    if (NodeT{i} == my_node) {
       EXPECT_TRUE(success);
       EXPECT_EQ(check_sum, i + 1);
     }
@@ -132,10 +132,10 @@ TEST_F(TestLocation, test_unregister_multiple_entities) /* NOLINT */ {
   // Wait for every nodes to be registered and unregister
   vt::theCollective()->barrier();
 
-  for (auto i = 0; i < nb_nodes; ++i) {
+  for (auto i = 0; i < nb_nodes.get(); ++i) {
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      location::default_entity + i, i, [](vt::NodeType node) {
+      location::default_entity + i, NodeT{i}, [](vt::NodeT node) {
         // This lambda should not be executed if the unregisterEntity works
         // correctly
         FAIL() << "entity should have been yet unregistered";
@@ -149,11 +149,11 @@ TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
   auto const nb_nodes = vt::theContext()->getNumNodes();
 
   // cannot perform entity migration if less than 3 nodes
-  if (nb_nodes > 2) {
+  if (nb_nodes.get() > 2) {
     auto const my_node  = vt::theContext()->getNode();
     auto const entity   = location::default_entity;
-    auto const old_home = 0;
-    auto const new_home = 1;
+    auto const old_home = NodeT{0};
+    auto const new_home = NodeT{1};
 
     // Register the entity on the node 0
     if (my_node == old_home) {
@@ -162,7 +162,7 @@ TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
 
     bool done = false;
     vt::theLocMan()->virtual_loc->getLocation(
-      entity, old_home, [old_home,&done](vt::NodeType node) {
+      entity, old_home, [old_home,&done](vt::NodeT node) {
         EXPECT_EQ(old_home, node);
         done = true;
       }
@@ -182,9 +182,9 @@ TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
 
     vt::theCollective()->barrier();
 
-    if (my_node > 1) {
+    if (my_node > NodeT{1}) {
       vt::theLocMan()->virtual_loc->getLocation(
-        entity, old_home, [=](vt::NodeType node) {
+        entity, old_home, [=](vt::NodeT node) {
           // Edit: the expected node can be either 0 (initial) or 1 (migrated)
           // The protocol may actually eagerly update other nodes
           EXPECT_TRUE(node == old_home or node == new_home);
@@ -199,11 +199,11 @@ TEST_F(TestLocation, test_migrate_entity_expire_cache) /* NOLINT */ {
   auto const nb_nodes = vt::theContext()->getNumNodes();
 
   // cannot perform entity migration if less than 3 nodes
-  if (nb_nodes > 2) {
+  if (nb_nodes.get() > 2) {
     auto const my_node  = vt::theContext()->getNode();
     auto const entity   = location::default_entity;
-    auto const home_node = 0;
-    auto const migrate_to_node = 1;
+    auto const home_node = NodeT{0};
+    auto const migrate_to_node = NodeT{1};
 
     // Register the entity on the node 0
     if (my_node == home_node) {
@@ -229,7 +229,7 @@ TEST_F(TestLocation, test_migrate_entity_expire_cache) /* NOLINT */ {
 
     bool executed = false;
     vt::theLocMan()->virtual_loc->getLocation(
-      entity, home_node, [=,&executed](vt::NodeType resident_node) {
+      entity, home_node, [=,&executed](vt::NodeT resident_node) {
         // With a clear cache, the result should always be accurate/up-to-date
         EXPECT_TRUE(resident_node == migrate_to_node);
         executed = true;
@@ -251,11 +251,13 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
   auto const nb_nodes = vt::theContext()->getNumNodes();
 
   // cannot perform entity migration if less than 3 nodes
-  if (nb_nodes > 2) {
+  if (nb_nodes.get() > 2) {
     auto const my_node   = vt::theContext()->getNode();
-    auto const next_node = (my_node + 1) % nb_nodes;
-    auto const prev_home = (my_node - 1) >= 0 ? my_node - 1 : nb_nodes-1;
-    auto const entity    = location::default_entity + my_node;
+    auto const next_node = (my_node + NodeT{1}) % nb_nodes;
+    auto const prev_home = (my_node - NodeT{1}) >= NodeT{0} ?
+      my_node - NodeT{1} :
+      nb_nodes - NodeT{1};
+    auto const entity    = location::default_entity + my_node.get();
 
     // register the entity on the current node
     vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
@@ -265,9 +267,9 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
     vt::theLocMan()->virtual_loc->entityEmigrated(entity, next_node);
 
     auto prev_node = (
-      my_node == 0 ?
-      location::default_entity + nb_nodes - 1 :
-      location::default_entity + my_node - 1
+      my_node == NodeT{0} ?
+      NodeT{location::default_entity + nb_nodes.get() - 1} :
+      NodeT{location::default_entity + my_node.get() - 1}
     );
     vt::theLocMan()->virtual_loc->entityImmigrated(
       prev_node, prev_home, my_node
@@ -277,14 +279,14 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
     int check_sum = 0;
     bool success;
 
-    for (auto i = 0; i < nb_nodes; ++i) {
+    for (auto i = 0; i < nb_nodes.get(); ++i) {
       success = false;
       // The entity can be located on the node where it has been registered
       vt::theLocMan()->virtual_loc->getLocation(
-        location::default_entity + i, i,
-        [i, &success, &check_sum, nb_nodes](vt::NodeType found) {
+        location::default_entity + i, NodeT{i},
+        [i, &success, &check_sum, nb_nodes](vt::NodeT found) {
 
-          auto expected = (i + 1) % nb_nodes;
+          auto expected = NodeT{(i + 1) % nb_nodes.get()};
           EXPECT_EQ(expected, found);
           success = true;
           check_sum++;
@@ -303,7 +305,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
 
       // this test can only be done for cases where getLocation is synchronous ->
       // local or cache
-      if (i == my_node || i + 1 == my_node) {
+      if (NodeT{i} == my_node || NodeT{i + 1} == my_node) {
         EXPECT_TRUE(success);
         EXPECT_EQ(check_sum, i + 1);
       }
@@ -318,7 +320,7 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
   auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
   auto const entity   = location::default_entity;
-  auto const home     = 0;
+  auto const home     = NodeT{0};
 
   // Register the entity on the node 0
   if (my_node == home) {
@@ -359,7 +361,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits) /* NOLINT */ {
   auto const nb_nodes  = vt::theContext()->getNumNodes();
   auto const my_node   = vt::theContext()->getNode();
   auto const entity    = location::default_entity;
-  auto const home      = 0;
+  auto const home      = NodeT{0};
   auto const nb_rounds = 3;
   auto nb_received     = 0;
 
@@ -377,7 +379,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits) /* NOLINT */ {
 
   // finalize
   if (my_node == home) {
-    EXPECT_EQ(nb_received, (nb_nodes - 1) * nb_rounds);
+    EXPECT_EQ(nb_received, (nb_nodes.get() - 1) * nb_rounds);
   }
 }
 
@@ -386,22 +388,22 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
   auto const nb_nodes  = vt::theContext()->getNumNodes();
 
   // cannot perform entity migration if less than 3 nodes
-  if (nb_nodes > 2) {
+  if (nb_nodes.get() > 2) {
     auto const my_node   = vt::theContext()->getNode();
     auto const entity    = location::default_entity;
-    auto const home      = 0;
-    auto const new_home  = 3;
+    auto const home      = NodeT{0};
+    auto const new_home  = NodeT{3};
     auto const nb_rounds = 5;
     auto nb_received     = 0;
 
-    ::vt::runInEpochCollective([my_node, entity] {
+    ::vt::runInEpochCollective([my_node, entity, home] {
       // register entity
       if (my_node == home) {
         vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
       }
     });
 
-    ::vt::runInEpochCollective([my_node, entity, &nb_received] {
+    ::vt::runInEpochCollective([my_node, home, new_home, entity, &nb_received] {
       if (my_node == home) {
         // migrate entity: unregister it but keep its id in cache
         vt::theLocMan()->virtual_loc->entityEmigrated(entity, new_home);
@@ -429,7 +431,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
 
     // finalize
     if (my_node == new_home) {
-      auto const min_expected_ack = (nb_nodes - 2) * nb_rounds;
+      auto const min_expected_ack = (nb_nodes.get() - 2) * nb_rounds;
       EXPECT_TRUE(nb_received >= min_expected_ack);
     }
   }

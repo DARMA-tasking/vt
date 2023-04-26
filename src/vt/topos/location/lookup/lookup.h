@@ -54,7 +54,7 @@ namespace vt { namespace location {
 template <typename KeyT, typename ValueT>
 struct LocLookup {
 
-  LocLookup(LocationSizeType const& in_max_cache_size, NodeType in_this_node)
+  LocLookup(LocationSizeType const& in_max_cache_size, NodeT in_this_node)
     : max_cache_size_(in_max_cache_size),
       cache_(in_max_cache_size),
       this_node_(in_this_node)
@@ -64,7 +64,7 @@ struct LocLookup {
   LocationSizeType getCacheSize() const;
   ValueT const& get(KeyT const& key);
   void remove(KeyT const& key);
-  void insert(KeyT const& key, NodeType const home, ValueT const& value);
+  void insert(KeyT const& key, NodeT const home, ValueT const& value);
   void update(KeyT const& key, ValueT const& value);
   void clearCache();
   void printCache() const;
@@ -81,7 +81,7 @@ private:
   LocationSizeType max_cache_size_ = 0;
   Directory<KeyT, ValueT> directory_;
   LocationCache<KeyT, ValueT> cache_;
-  NodeType this_node_ = uninitialized_destination;
+  NodeT this_node_ = {};
 };
 
 }} /* end namespace vt::location */

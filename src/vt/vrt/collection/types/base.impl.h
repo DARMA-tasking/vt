@@ -76,7 +76,7 @@ CollectionBase<ColT, IndexT>::getCollectionProxy() const {
 }
 
 template <typename ColT, typename IndexT>
-/*virtual*/ void CollectionBase<ColT, IndexT>::migrate(NodeType const& node) {
+/*virtual*/ void CollectionBase<ColT, IndexT>::migrate(NodeT const& node) {
   auto const proxy = this->getCollectionProxy();
   auto const index = this->getIndex();
   CollectionElmAttorney<ColT,IndexT>::migrate(proxy(index), node);

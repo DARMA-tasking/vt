@@ -69,7 +69,7 @@ struct CollectionBase : Indexable<IndexT> {
   ProxyType getElementProxy(IndexT const& idx) const;
   CollectionProxyType getCollectionProxy() const;
 
-  virtual void migrate(NodeType const& node) override;
+  virtual void migrate(NodeT const& node) override;
 
   template <typename Serializer>
   void serialize(Serializer& s);

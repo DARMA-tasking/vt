@@ -63,7 +63,7 @@ void InfoColl::CollSetupFinished::operator()(FinishedReduceMsg* msg) {
   auto info = iter->second.get();
   if (
     info->known_root_node_ != this_node and
-    info->known_root_node_ != uninitialized_destination
+    info->known_root_node_ != ::vt::NodeT  {}
   ) {
     auto nmsg = makeMessage<GroupOnlyMsg>(
       msg->getGroup(),info->new_tree_cont_
@@ -72,7 +72,7 @@ void InfoColl::CollSetupFinished::operator()(FinishedReduceMsg* msg) {
       info->known_root_node_, nmsg
     );
   } else {
-    info->newTree(-1);
+    info->newTree(::vt::NodeT  {-1});
   }
 }
 

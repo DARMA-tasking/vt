@@ -63,8 +63,8 @@ struct SimCol : vt::Collection<SimCol, vt::Index1D> {
   void handler(Msg* m) {
     auto const this_node = theContext()->getNode();
     auto const num_nodes = theContext()->getNumNodes();
-    auto const next_node = (this_node + 1) % num_nodes;
-    auto const prev_node = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+    auto const next_node = (this_node + vt::NodeT{1}) % num_nodes;
+    auto const prev_node = this_node - NodeT{1} >= 0 ? this_node - NodeT{1} : num_nodes - NodeT{1};
     vt_debug_print(terse, lb, "handler: idx={}: elm={}\n", getIndex(), getElmID());
     if (m->iter == 0 or m->iter == 3 or m->iter == 6) {
       EXPECT_EQ(getIndex().x() / 2, this_node);
@@ -84,8 +84,8 @@ TEST_F(TestOfflineLB, test_offlinelb_1) {
 
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
-  auto const next_node = (this_node + 1) % num_nodes;
-  auto const prev_node = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+  auto const next_node = (this_node + vt::NodeT{1}) % num_nodes;
+  auto const prev_node = this_node - NodeT{1} >= 0 ? this_node - NodeT{1} : num_nodes - NodeT{1};
 
   std::unordered_map<PhaseType, std::vector<ElementIDStruct>> ids;
   int len = 2;

@@ -54,15 +54,15 @@ struct RemoteVrtInfo {
   bool isImmediate = false;
   VirtualProxyType proxy = no_vrt_proxy;
   VirtualRequestIDType req_id = no_request_id;
-  NodeType from_node = uninitialized_destination;
+  NodeT from_node = {};
 
   RemoteVrtInfo() = default;
 
-  RemoteVrtInfo(NodeType const& node, VirtualRequestIDType const& in_req_id)
+  RemoteVrtInfo(NodeT const& node, VirtualRequestIDType const& in_req_id)
     : req_id(in_req_id), from_node(node)
   { }
 
-  RemoteVrtInfo(NodeType const& node, VirtualProxyType p)
+  RemoteVrtInfo(NodeT const& node, VirtualProxyType p)
     : isImmediate(true), proxy(p), from_node(node)
   { }
 

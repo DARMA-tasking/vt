@@ -64,7 +64,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   int32_t num_elms = 16;
   if (argc > 1) {
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
     .bulkInsert()
     .wait();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     proxy.broadcast<&Hello::doWork>();
   }
 

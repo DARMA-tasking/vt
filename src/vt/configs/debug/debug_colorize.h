@@ -46,6 +46,7 @@
 
 #include "vt/configs/arguments/app_config.h"
 #include "vt/configs/types/types_type.h"
+#include "vt/configs/types/types_node.h"
 
 #include <string>
 
@@ -82,7 +83,7 @@ inline std::string reg(std::string str) {
 inline std::string vtPre() {
   return bd_green() + std::string("vt") + reset() + ": ";
 }
-inline std::string proc(vt::NodeType const& node)  {
+inline std::string proc(vt::NodeT const& node)  {
   return blue() + "[" + std::to_string(node) + "]" + reset();
 }
 

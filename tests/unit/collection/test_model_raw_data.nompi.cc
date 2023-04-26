@@ -66,7 +66,7 @@ using vt::vrt::collection::balance::ElmUserDataType;
 using vt::vrt::collection::balance::DataMapType;
 
 TEST_F(TestRawData, test_model_raw_data_scalar) {
-  NodeType this_node = 0;
+  NodeT this_node = NodeT{0};
   auto test_model =
     std::make_shared<RawData>();
 

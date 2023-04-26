@@ -95,12 +95,12 @@ inline void compute(vt::EpochType const& epoch) {
   int rounds = dist_round(engine);
   if (channel::all > 2) {
     for (int k = 0; k < rounds; ++k) {
-      int dst = channel::node + dist_dest(engine);
-      int ttl = dist_ttl(engine);
+      auto dst = channel::node + NodeT{dist_dest(engine)};
+      auto ttl = dist_ttl(engine);
       channel::routeBasic(dst, ttl, epoch);
     }
   } else {
-    channel::broadcast<channel::basicHandler>(1, epoch);
+    channel::broadcast<channel::basicHandler>(vt::NodeT{1}, epoch);
   }
 }
 

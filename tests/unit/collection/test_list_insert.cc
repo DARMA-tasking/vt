@@ -183,8 +183,8 @@ struct MyMapper : vt::mapping::BaseMapper<IndexT> {
     ).getProxy();
   }
 
-  vt::NodeType map(IndexT* idx, int ndim, vt::NodeType num_nodes) override {
-    return idx->x() % num_nodes;
+  vt::NodeT map(IndexT* idx, int ndim, vt::NodeT num_nodes) override {
+    return NodeT{idx->x()} % num_nodes;
   }
 };
 
@@ -254,7 +254,7 @@ TEST_F(TestListInsert, test_bounded_list_insert_here_3) {
   std::vector<std::tuple<vt::Index1D, std::unique_ptr<ListInsertTest>>> elms;
 
   for (int i = 0; i < range.x(); i++) {
-    if (i % num_nodes == this_node) {
+    if (vt::NodeT{i} % num_nodes == this_node) {
       Index1D ix{i};
       elms.emplace_back(
         std::make_tuple(ix, std::make_unique<ListInsertTest>())
@@ -287,7 +287,7 @@ TEST_F(TestListInsert, test_bounded_list_insert_here_no_default_constructor) {
 
   std::vector<std::tuple<vt::Index1D, std::unique_ptr<NonDefaultConstructibleStruct>>> elms;
   for (int i = 0; i < range.x(); i++) {
-    if (i % num_nodes == this_node) {
+    if (vt::NodeT{i} % num_nodes == this_node) {
       Index1D ix{i};
       elms.emplace_back(
         std::make_tuple(ix, std::make_unique<NonDefaultConstructibleStruct>(0))
@@ -321,7 +321,7 @@ TEST_F(TestListInsert, test_unbounded_list_insert_here_4) {
   std::vector<std::tuple<vt::Index1D, std::unique_ptr<ListInsertTest>>> elms;
 
   for (int i = 0; i < range.x(); i++) {
-    if (i % num_nodes == this_node) {
+    if (vt::NodeT{i} % num_nodes == this_node) {
       Index1D ix{i};
       elms.emplace_back(
         std::make_tuple(ix, std::make_unique<ListInsertTest>())
@@ -354,7 +354,7 @@ TEST_F(TestListInsert, test_unbounded_list_insert_here_no_default_constructor) {
 
   std::vector<std::tuple<vt::Index1D, std::unique_ptr<NonDefaultConstructibleStruct>>> elms;
   for (int i = 0; i < range.x(); i++) {
-    if (i % num_nodes == this_node) {
+    if (vt::NodeT{i} % num_nodes == this_node) {
       Index1D ix{i};
       elms.emplace_back(
         std::make_tuple(ix, std::make_unique<NonDefaultConstructibleStruct>(0))
@@ -383,11 +383,11 @@ TEST_F(TestListInsert, test_unbounded_list_insert_here_no_default_constructor_em
 
   auto const num_nodes = theContext()->getNumNodes();
   auto const this_node = theContext()->getNode();
-  auto const range = Index1D((num_nodes - 1) * num_elms_per_node);
+  auto const range = Index1D((num_nodes.get() - 1) * num_elms_per_node);
 
   std::vector<std::tuple<vt::Index1D, std::unique_ptr<NonDefaultConstructibleStruct>>> elms;
   for (int i = 0; i < range.x(); i++) {
-    if (i % (num_nodes - 1) == this_node) {
+    if (i % (num_nodes - NodeT{1}) == this_node) {
       Index1D ix{i};
       elms.emplace_back(
         std::make_tuple(ix, std::make_unique<NonDefaultConstructibleStruct>(0))
@@ -403,7 +403,7 @@ TEST_F(TestListInsert, test_unbounded_list_insert_here_no_default_constructor_em
     .template mapperObjGroupConstruct<MyMapper<Index1D>>()
     .wait();
 
-  if (this_node < num_nodes - 1) {
+  if (this_node < num_nodes - NodeT{1}) {
     EXPECT_EQ(num_inserted, num_elms_per_node);
   } else {
     EXPECT_EQ(num_inserted, 0);
@@ -413,7 +413,7 @@ TEST_F(TestListInsert, test_unbounded_list_insert_here_no_default_constructor_em
   runInEpochCollective([&]{
     proxy.broadcast<WorkMsgNDC, &NonDefaultConstructibleStruct::work>();
   });
-  if (this_node < num_nodes - 1) {
+  if (this_node < num_nodes - NodeT{1}) {
     // all ranks broadcast to all other ranks
     EXPECT_EQ(num_work, num_elms_per_node * num_nodes);
   } else {
@@ -461,7 +461,7 @@ TEST_F(TestListInsert, test_bounded_mix_list_insert_no_default_constructor) {
 
   std::vector<std::tuple<vt::Index1D, std::unique_ptr<NonDefaultConstructibleStruct>>> elms;
   for (int i = range.x() / 2; i < range.x(); i++) {
-    if (i % num_nodes == this_node) {
+    if (vt::NodeT{i} % num_nodes == this_node) {
       Index1D ix{i};
       elms.emplace_back(
         std::make_tuple(ix, std::make_unique<NonDefaultConstructibleStruct>(0))

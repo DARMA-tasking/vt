@@ -61,8 +61,8 @@ static void recurHandler(ExampleMsg* msg);
 
 // Tutorial code to demonstrate using a callback
 static inline void activeMessageTerm() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const this_node = ::vt::theContext()->getNode();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
   (void)num_nodes;  // don't warn about unused variable
 
   /*
@@ -75,10 +75,10 @@ static inline void activeMessageTerm() {
   // Create a new epoch: this is a collective invocation
   auto const new_epoch = theTerm()->makeEpochCollective();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto msg = vt::makeMessage<ExampleMsg>(8);
     envelopeSetEpoch(msg->env, new_epoch);
-    vt::theMsg()->sendMsg<recurHandler>(this_node+1, msg);
+    vt::theMsg()->sendMsg<recurHandler>(this_node+NodeT{1}, msg);
   }
 
   // Any node that wishes to have a notification on termination for a given
@@ -98,8 +98,8 @@ static inline void activeMessageTerm() {
 
 // Message handler that recursively sends messages
 static void recurHandler(ExampleMsg* msg) {
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
-  NodeType const this_node = ::vt::theContext()->getNode();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const this_node = ::vt::theContext()->getNode();
 
   ::fmt::print(
     "{}: recurHandler: ttl={}, triggered\n", this_node, msg->ttl
@@ -108,7 +108,9 @@ static void recurHandler(ExampleMsg* msg) {
   if (msg->ttl > 0) {
     auto const num_send = static_cast<int32_t>(drand48() * 3);
     for (auto i = 0; i < num_send; i++) {
-      auto next_node = (this_node + 1 > num_nodes - 1) ? 0 : (this_node + 1);
+      auto next_node = (this_node + NodeT{1} > num_nodes - NodeT{1}) ?
+        NodeT{0} :
+        (this_node + NodeT{1});
 
       ::fmt::print(
         "{}: recurHandler: i={}, next_node={}, num_send={}\n",

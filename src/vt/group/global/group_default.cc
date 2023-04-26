@@ -79,7 +79,7 @@ namespace vt { namespace group { namespace global {
     "Must have valid tree when entering new phase"
   );
   if (default_group_->spanning_tree_->getNumChildren() > 0) {
-    default_group_->spanning_tree_->foreachChild([&](NodeType child) {
+    default_group_->spanning_tree_->foreachChild([&](NodeT child) {
       DefaultGroup::sendPhaseMsg<GroupSyncMsg, newPhaseHandler>(phase, child);
     });
   }
@@ -148,7 +148,7 @@ namespace vt { namespace group { namespace global {
 }
 
 /*static*/ EventType DefaultGroup::broadcast(
-  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
+  MsgSharedPtr<BaseMsgType> const& base, NodeT const& from,
   bool const is_root, bool* const deliver
 ) {
   // By default use the default_group_->spanning_tree_
@@ -156,14 +156,14 @@ namespace vt { namespace group { namespace global {
   // Destination is where the broadcast originated from
   auto const& dest = envelopeGetDest(msg->env);
   auto const& num_children = default_group_->spanning_tree_->getNumChildren();
-  auto const& node = theContext()->getNode();
-  NodeType const& root_node = 0;
+  auto const node = theContext()->getNode();
+  auto const root_node = NodeT  {0};
   auto const is_root_of_tree = node == root_node;
-  bool const& send_to_root = is_root && !is_root_of_tree;
+  bool const send_to_root = is_root && !is_root_of_tree;
   EventType event = no_event;
 
   auto const this_node_dest = dest == node;
-  auto const first_send = from == uninitialized_destination;
+  auto const first_send = from == NodeT  {};
 
   vt_debug_print(
     normal, broadcast,
@@ -178,7 +178,7 @@ namespace vt { namespace group { namespace global {
 
     // Send to child nodes in the spanning tree
     if (num_children > 0) {
-      default_group_->spanning_tree_->foreachChild([&](NodeType child) {
+      default_group_->spanning_tree_->foreachChild([&](NodeT child) {
         bool const& send = child != dest;
 
         vt_debug_print(

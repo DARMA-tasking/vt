@@ -61,7 +61,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   void doWork() {
     counter_++;
 
-    vt::NodeType this_node = vt::theContext()->getNode();
+    auto this_node = vt::theContext()->getNode();
     fmt::print("{}: Hello from {}: {}\n", this_node, this->getIndex(), in);
   }
 
@@ -73,10 +73,10 @@ private:
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if(num_nodes < 2){
+  if(num_nodes < vt::NodeT{2}){
     vt::finalize();
     return 0;
   }
@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
     .listInsertHere(std::move(elms))
     .wait();
 
-  if (this_node == 1) {
+  if (this_node == vt::NodeT{1}) {
     proxy.broadcast<&Hello::doWork>();
   }
 

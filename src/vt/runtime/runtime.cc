@@ -262,7 +262,7 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::sigHandlerINT(int sig) {
-  auto node      = vt::theContext() ? vt::theContext()->getNode() : -1;
+  auto node      = vt::theContext() ? vt::theContext()->getNode() : NodeT{-1};
   auto vt_pre    = debug::vtPre();
   auto node_str  = ::vt::debug::proc(node);
   auto prefix    = vt_pre + node_str + " ";
@@ -325,7 +325,7 @@ void Runtime::pauseForDebugger() {
 
 /*static*/ bool Runtime::nodeStackWrite() {
   auto const& node = debug::preNode();
-  if (node == uninitialized_destination) {
+  if (node == NodeT{}) {
     return true;
   } else if (vt::theConfig()->vt_stack_mod == 0) {
     return true;
@@ -586,7 +586,7 @@ void Runtime::output(
   std::string const abort_str, ErrorCodeType const code, bool error,
   bool decorate, bool formatted
 ) {
-  auto node      = theContext ? theContext->getNode() : -1;
+  auto node      = theContext ? theContext->getNode() : NodeT{-1};
   auto green     = debug::green();
   auto byellow   = debug::byellow();
   auto red       = debug::red();
@@ -602,7 +602,7 @@ void Runtime::output(
   if (decorate) {
     if (error) {
       auto f1 = fmt::format(" Runtime Error: System Aborting! ");
-      auto const info = ::fmt::format(" Fatal Error on Node {} ", node);
+      auto const info = ::fmt::format(" Fatal Error on NodeT {} ", node);
       // fmt::print(stderr, "{}", space);
       fmt::print(stderr, "{}", separator);
       fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, bred, f1, reset);
@@ -610,7 +610,7 @@ void Runtime::output(
       fmt::print(stderr, "{}", separator);
     } else {
       auto f1 = fmt::format(" Runtime Warning ");
-      auto const info = ::fmt::format(" Warning on Node {} ", node);
+      auto const info = ::fmt::format(" Warning on NodeT {} ", node);
       // fmt::print(stderr, "{}", space);
       fmt::print(stderr, "{}", warn_sep);
       fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, byellow, f1,   reset);

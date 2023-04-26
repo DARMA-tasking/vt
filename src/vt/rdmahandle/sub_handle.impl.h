@@ -152,7 +152,7 @@ SubHandle<T,E,IndexT>::linearize(IndexT idx) {
 }
 
 template <typename T, HandleEnum E, typename IndexT>
-NodeType SubHandle<T, E, IndexT>::getHomeNode(IndexT const& idx) {
+NodeT SubHandle<T, E, IndexT>::getHomeNode(IndexT const& idx) {
   auto const& fn = auto_registry::getHandlerMap(map_han_);
   auto const num_nodes = theContext()->getNumNodes();
   auto idx_p = idx;
@@ -160,7 +160,7 @@ NodeType SubHandle<T, E, IndexT>::getHomeNode(IndexT const& idx) {
 }
 
 template <typename T, HandleEnum E, typename IndexT>
-int SubHandle<T, E, IndexT>::getOrderedOffset(IndexT idx, NodeType home_node) {
+int SubHandle<T, E, IndexT>::getOrderedOffset(IndexT idx, NodeT home_node) {
   auto iter = ordered_local_offset_.find(idx);
   int found_offset = 0;
   if (iter == ordered_local_offset_.end()) {
@@ -185,7 +185,7 @@ int SubHandle<T, E, IndexT>::getOrderedOffset(IndexT idx, NodeType home_node) {
 
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::updateInfo(
-  IndexT const& idx, IndexInfo info, NodeType home
+  IndexT const& idx, IndexInfo info, NodeT home
 ) {
   vtAssertExpr(not ordered_opt_);
   vtAssertExpr(is_migratable_);

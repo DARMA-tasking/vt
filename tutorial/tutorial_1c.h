@@ -122,8 +122,8 @@ static void msgSerialA(ParticleMsg* msg);
 
 // Tutorial code to demonstrate serialization in active message sends
 static inline void activeMessageSerialization() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const this_node = ::vt::theContext()->getNode();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
   (void)num_nodes;  // don't warn about unused variable
 
   /*
@@ -132,8 +132,8 @@ static inline void activeMessageSerialization() {
    * message as if it is sent directly the sendMsg.
    */
 
-  if (this_node == 0) {
-    NodeType const to_node = 1;
+  if (this_node == vt::NodeT{0}) {
+    NodeT const to_node = NodeT{1};
     auto msg = ::vt::makeMessage<ParticleMsg>(1,2,3);
     msg->particles.push_back(Particle{10,11,12});
     msg->particles.push_back(Particle{13,14,15});

@@ -48,7 +48,7 @@
 
 namespace vt { namespace vrt {
 
-static constexpr NodeType const default_collection_reduce_root_node = 0;
+static constexpr ::vt::NodeT const default_collection_reduce_root_node = ::vt::NodeT  {0};
 
 }} /* end namespace vt::vrt */
 

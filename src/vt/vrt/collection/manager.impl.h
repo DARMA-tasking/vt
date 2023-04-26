@@ -204,7 +204,7 @@ GroupType CollectionManager::createGroupCollection(
 
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionAutoMsgDeliver(
-  MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
+  MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeT from,
   trace::TraceEventIDType event, bool immediate
 ) {
   // Expand out the index for tracing purposes; Projections takes up to
@@ -358,10 +358,10 @@ template <typename ColT, typename MsgT>
     bool bcast = cat == elm::CommCategory::SendRecv ? false : true;
     lb_data.recvObjData(pto, pfrom, msg_size, bcast);
   } else if (
-    cat == elm::CommCategory::NodeToCollection or
-    cat == elm::CommCategory::NodeToCollectionBcast
+    cat == elm::CommCategory::NodeCollection or
+    cat == elm::CommCategory::NodeCollectionBcast
   ) {
-    bool bcast = cat == elm::CommCategory::NodeToCollection ? false : true;
+    bool bcast = cat == elm::CommCategory::NodeCollection ? false : true;
     auto nfrom = msg->getFromNode();
     lb_data.recvFromNode(pto, nfrom, msg_size, bcast);
   }
@@ -867,7 +867,7 @@ template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 messaging::PendingSend CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT> const& proxy,
   MsgT *const raw_msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-  ReduceStamp stamp, NodeType root
+  ReduceStamp stamp, NodeT root
 ) {
   using IndexT = typename ColT::IndexType;
 
@@ -903,7 +903,7 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
   }
 
   auto const root_node =
-    root == uninitialized_destination ? default_collection_reduce_root_node :
+    root == NodeT{} ? default_collection_reduce_root_node :
     root;
 
   auto const group_ready = elm_holder->groupReady();
@@ -940,7 +940,7 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 messaging::PendingSend CollectionManager::reduceMsg(
   CollectionProxyWrapType<ColT> const& proxy,
-  MsgT *const msg, ReduceStamp stamp, NodeType root
+  MsgT *const msg, ReduceStamp stamp, NodeT root
 ) {
   return reduceMsgExpr<ColT,MsgT,f>(proxy,msg,nullptr,stamp,root);
 }
@@ -1142,8 +1142,8 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 template <typename ColT, typename IndexT>
 bool CollectionManager::insertCollectionElement(
   VirtualPtrType<IndexT> vc, VirtualProxyType const proxy,
-  IndexT const& idx, NodeType const home_node, bool const is_migrated_in,
-  NodeType const migrated_from
+  IndexT const& idx, NodeT const home_node, bool const is_migrated_in,
+  NodeT const migrated_from
 ) {
   auto holder = findColHolder<IndexT>(proxy);
 
@@ -1454,7 +1454,7 @@ template <typename ColT, typename MsgT>
 }
 
 template <typename IdxT>
-NodeType CollectionManager::getMappedNode(
+NodeT CollectionManager::getMappedNode(
   VirtualProxyType proxy, IdxT const& idx
 ) {
   auto col_holder = findColHolder<IdxT>(proxy);
@@ -1465,7 +1465,7 @@ NodeType CollectionManager::getMappedNode(
 }
 
 template <typename ColT>
-NodeType CollectionManager::getMappedNode(
+NodeT CollectionManager::getMappedNode(
   CollectionProxyWrapType<ColT> const& proxy,
   typename ColT::IndexType const& idx
 ) {
@@ -1552,7 +1552,7 @@ void CollectionManager::finishModification(
   using collective::reduce::makeStamp;
   using collective::reduce::StrongUserID;
 
-  NodeType collective_root = 0;
+  NodeT collective_root = NodeT{0};
   auto stamp = makeStamp<StrongUserID>(untyped_proxy);
   auto msg = makeMessage<CollectionStampMsg>(untyped_proxy, min_seq);
   auto cb = theCB()->makeBcast<&CollectionManager::computeReduceStamp>();
@@ -1618,7 +1618,7 @@ struct InsertMsgDispatcher<
 template <typename ColT, typename MsgT>
 void CollectionManager::insert(
   CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
-  NodeType const node, ModifierToken& token, MsgSharedPtr<MsgT> insert_msg,
+  NodeT const node, ModifierToken& token, MsgSharedPtr<MsgT> insert_msg,
   bool pinged_home_already
 ) {
   using IndexType = typename ColT::IndexType;
@@ -1636,7 +1636,7 @@ void CollectionManager::insert(
   theMsg()->pushEpoch(modify_epoch);
 
   auto const mapped_node = getMappedNode<ColT>(proxy, idx);
-  auto const has_explicit_node = node != uninitialized_destination;
+  auto const has_explicit_node = node != NodeT{};
   auto const insert_node = has_explicit_node ? node : mapped_node;
   auto const this_node = theContext()->getNode();
 
@@ -1753,7 +1753,7 @@ template <typename ColT>
 
 template <typename ColT>
 MigrateStatus CollectionManager::migrate(
-  VrtElmProxy<ColT, typename ColT::IndexType> proxy, NodeType const& dest
+  VrtElmProxy<ColT, typename ColT::IndexType> proxy, NodeT const& dest
 ) {
   using IndexT = typename ColT::IndexType;
   auto const col_proxy = proxy.getCollectionProxy();
@@ -1774,7 +1774,7 @@ MigrateStatus CollectionManager::migrate(
 
 template <typename ColT, typename IndexT>
 MigrateStatus CollectionManager::migrateOut(
-  VirtualProxyType const& col_proxy, IndexT const& idx, NodeType const& dest
+  VirtualProxyType const& col_proxy, IndexT const& idx, NodeT const& dest
 ) {
   auto const this_node = theContext()->getNode();
 
@@ -1890,7 +1890,7 @@ MigrateStatus CollectionManager::migrateOut(
 
 template <typename ColT, typename IndexT>
 MigrateStatus CollectionManager::migrateIn(
-  VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
+  VirtualProxyType const& proxy, IndexT const& idx, NodeT const& from,
   VirtualPtrType<IndexT> vrt_elm_ptr
 ) {
   vt_debug_print(
@@ -2163,7 +2163,7 @@ void CollectionManager::checkpointToFile(
 namespace detail {
 template <typename ColT>
 inline void restoreOffHomeElement(
-  ColT*, NodeType node, typename ColT::IndexType idx,
+  ColT*, NodeT node, typename ColT::IndexType idx,
   CollectionProxy<ColT> proxy
 ) {
   theCollection()->migrate(proxy(idx), node);
@@ -2172,7 +2172,7 @@ inline void restoreOffHomeElement(
 
 template <typename ColT>
 /*static*/ void CollectionManager::migrateToRestoreLocation(
-  NodeType node, typename ColT::IndexType idx,
+  NodeT node, typename ColT::IndexType idx,
   CollectionProxyWrapType<ColT> proxy
 ) {
   if (proxy(idx).tryGetLocalPtr() != nullptr) {
@@ -2216,12 +2216,12 @@ void CollectionManager::restoreFromFileInPlace(
 
       if (proxy(idx).tryGetLocalPtr() == nullptr) {
         auto mapped_node = getMappedNode<ColT>(proxy, idx);
-        vtAssertExpr(mapped_node != uninitialized_destination);
+        vtAssertExpr(mapped_node != NodeT{});
         auto this_node = theContext()->getNode();
 
         if (mapped_node != this_node) {
           theMsg()->send<migrateToRestoreLocation<ColT>>(
-            vt::Node{mapped_node}, this_node, idx, proxy
+            vt::NodeT  {mapped_node}, this_node, idx, proxy
           );
         } else {
           migrateToRestoreLocation<ColT>(this_node, idx, proxy);

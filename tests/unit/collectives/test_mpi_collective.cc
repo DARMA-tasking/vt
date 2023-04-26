@@ -255,7 +255,7 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
   EXPECT_EQ(reduce_val_out, num_nodes);
 
   // Broadcast out node 0's order to confirm with all other nodes
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto msg = makeMessage<OrderMsg>(run_order);
     theMsg()->broadcastMsg<orderHan>(msg);
   }

@@ -77,11 +77,11 @@ struct TestGroup : TestParallelHarness {
 TEST_F(TestGroup, test_group_range_construct_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  NodeType const lo = 0;
-  NodeType const hi = num_nodes / 2;
+  NodeT const lo = NodeT{0};
+  NodeT const hi = num_nodes / NodeT{2};
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       auto list = std::make_unique<region::Range>(lo,hi);
       theGroup()->newGroup(
         std::move(list), [](GroupType group){
@@ -105,13 +105,13 @@ TEST_F(TestGroup, test_group_range_construct_1) {
 TEST_F(TestGroup, test_group_range_construct_2) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  NodeType const lo = 1;
-  NodeType const max_val = 5;
-  NodeType const hi = std::min<NodeType>(num_nodes,max_val);
+  NodeT const lo = NodeT{1};
+  NodeT const max_val = NodeT{5};
+  NodeT const hi = std::min<NodeT>(num_nodes,max_val);
 
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       auto list = std::make_unique<region::Range>(lo,hi);
       theGroup()->newGroup(
         std::move(list), [](GroupType group){

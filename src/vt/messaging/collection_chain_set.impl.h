@@ -69,7 +69,7 @@ CollectionChainSet<Index>::CollectionChainSet(
   auto const this_node = theContext()->getNode();
   auto const proxy_bits = proxy.getProxy();
 
-  ListenerType l = [=](ElementEventEnum event, IndexT idx, NodeType home) {
+  ListenerType l = [=](ElementEventEnum event, IndexT idx, NodeT home) {
     switch (event) {
     case ElementEventEnum::ElementCreated:
     case ElementEventEnum::ElementMigratedIn:

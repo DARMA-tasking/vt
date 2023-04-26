@@ -59,11 +59,11 @@ struct Map {
     : block_map(in_block_map), elm_map(in_elm_map)
   { }
 
-  static NodeType defaultBlockMap(
+  static NodeT defaultBlockMap(
     RDMA_BlockType block, RDMA_BlockType __attribute__((unused)) num_blocks
   ) {
     auto const& num_nodes = theContext()->getNumNodes();
-    return block % num_nodes;
+    return NodeT{block % num_nodes};
   };
 
   static RDMA_BlockElmRangeType defaultElmMap(

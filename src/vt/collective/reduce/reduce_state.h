@@ -65,7 +65,7 @@ struct ReduceState {
   ReduceNumType num_contrib_       = 1;
   ReduceNumType num_local_contrib_ = 0;
   HandlerType combine_handler_     = uninitialized_handler;
-  NodeType reduce_root_            = uninitialized_destination;
+  NodeT reduce_root_            = {};
 };
 
 }}} /* end namespace vt::collective::reduce */

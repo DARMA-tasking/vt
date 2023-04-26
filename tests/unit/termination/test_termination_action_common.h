@@ -57,9 +57,9 @@ using namespace vt::tests::unit;
 namespace vt { namespace tests { namespace unit { namespace channel {
 
 // set channel counting ranks
-extern vt::NodeType root;
-extern vt::NodeType node;
-extern vt::NodeType all;
+extern vt::NodeT root;
+extern vt::NodeT node;
+extern vt::NodeT all;
 extern std::unordered_map<vt::EpochType,channel::Data> data;
 extern bool ok;
 
@@ -81,7 +81,7 @@ struct BaseFixture : Base {
     // explicit inheritance
     Base::SetUp();
     // set channel counting ranks
-    channel::root = 0;
+    channel::root = vt::NodeT{0};
     channel::node = vt::theContext()->getNode();
     channel::all  = vt::theContext()->getNumNodes();
     SET_MIN_NUM_NODES_CONSTRAINT(2);
@@ -111,7 +111,7 @@ struct SimpleFixture : TestParallelHarness {
     // explicit inheritance
     TestParallelHarness::SetUp();
     // set channel counting ranks
-    channel::root = 0;
+    channel::root = vt::NodeT{0};
     channel::node = vt::theContext()->getNode();
     channel::all  = vt::theContext()->getNumNodes();
     SET_MIN_NUM_NODES_CONSTRAINT(2);

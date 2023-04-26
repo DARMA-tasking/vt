@@ -52,7 +52,7 @@
 namespace vt { namespace mapping {
 
 CoreType randomSeedMapCore(SeedType seed, CoreType ncores);
-NodeType randomSeedMapNode(SeedType seed, NodeType nnodes);
+NodeT randomSeedMapNode(SeedType seed, NodeT nnodes);
 
 }} /* end namespace vt::mapping */
 

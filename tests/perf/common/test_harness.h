@@ -71,13 +71,15 @@ struct PerfTestHarness : TestHarnessBase {
   using FinalTestResult = std::pair<TestName, TestResultHolder<TimeType::TimeTypeInternal>>;
   using TestResults = std::vector<std::vector<TestResult>>;
   using PerNodeResults =
-    std::unordered_map<NodeType, TestResultHolder<TimeType::TimeTypeInternal>>;
+    std::unordered_map<NodeT, TestResultHolder<TimeType::TimeTypeInternal>>;
   using CombinedResults = std::vector<std::pair<TestName, PerNodeResults>>;
 
   // Memory use at the end of test iteration (i.e. phase)
   using MemoryUsage = std::vector<std::vector<std::size_t>>;
   using CombinedMemoryUse =
     std::unordered_map<NodeType, std::vector<TestResultHolder<std::size_t>>>;
+
+  virtual ~PerfTestHarness() = default;
 
   virtual void SetUp();
   virtual void TearDown();
@@ -153,7 +155,7 @@ struct PerfTestHarness : TestHarnessBase {
    */
   void CopyTestData(
     PerfTestHarness::TestResults const& timers,
-    PerfTestHarness::MemoryUsage const& memory_usage, NodeType const from_node
+    PerfTestHarness::MemoryUsage const& memory_usage, NodeT const from_node
   );
 
   /**
@@ -178,8 +180,8 @@ protected:
   uint32_t current_run_ = 0;
   std::vector<char*> custom_args_ = {};
 
-  NodeType my_node_ = uninitialized_destination;
-  NodeType num_nodes_ = uninitialized_destination;
+  NodeT my_node_ = NodeT{};
+  NodeT num_nodes_ = NodeT{};
   std::string name_ = {};
 
   // Memory usage (in bytes) per iteration

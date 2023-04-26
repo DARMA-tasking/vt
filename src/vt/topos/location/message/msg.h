@@ -58,27 +58,27 @@ struct LocationMsg : vt::Message {
   LocInstType loc_man_inst = 0;
   EntityID entity{};
   LocEventID loc_event = no_location_event_id;
-  NodeType ask_node = uninitialized_destination;
-  NodeType home_node = uninitialized_destination;
-  NodeType resolved_node = uninitialized_destination;
+  NodeT ask_node = {};
+  NodeT home_node = {};
+  NodeT resolved_node = {};
 
   LocationMsg(
     LocInstType const& in_loc_man_inst, EntityID const& in_entity,
-    LocEventID const& in_loc_event, NodeType const& in_ask_node,
-    NodeType in_home_node
+    LocEventID const& in_loc_event, NodeT const& in_ask_node,
+    NodeT in_home_node
   ) : loc_man_inst(in_loc_man_inst), entity(in_entity), loc_event(in_loc_event),
       ask_node(in_ask_node), home_node(in_home_node)
   { }
 
   LocationMsg(
     LocInstType const& in_loc_man_inst, EntityID const& in_entity,
-    NodeType const& in_ask_node, NodeType const& in_home_node,
-    NodeType in_resolved
+    NodeT const& in_ask_node, NodeT const& in_home_node,
+    NodeT in_resolved
   ) : loc_man_inst(in_loc_man_inst), entity(in_entity), ask_node(in_ask_node),
       home_node(in_home_node), resolved_node(in_resolved)
   { }
 
-  void setResolvedNode(NodeType const& node) {
+  void setResolvedNode(NodeT const& node) {
     resolved_node = node;
   }
 };
@@ -89,16 +89,16 @@ struct EntityMsg : ActiveMessageT {
   vt_msg_serialize_if_needed_by_parent();
 
   EntityMsg() = default;
-  EntityMsg(EntityID const& in_entity_id, NodeType const& in_home_node)
+  EntityMsg(EntityID const& in_entity_id, NodeT const& in_home_node)
     : ActiveMessageT(), entity_id_(in_entity_id), home_node_(in_home_node)
   { }
 
   void setEntity(EntityID const& entity) { entity_id_ = entity; }
   EntityID getEntity() const { return entity_id_; }
-  void setHomeNode(NodeType const& node) { home_node_ = node; }
-  NodeType getHomeNode() const { return home_node_; }
-  void setLocFromNode(NodeType const& node) { loc_from_node_ = node; }
-  NodeType getLocFromNode() const { return loc_from_node_; }
+  void setHomeNode(NodeT const& node) { home_node_ = node; }
+  NodeT getHomeNode() const { return home_node_; }
+  void setLocFromNode(NodeT const& node) { loc_from_node_ = node; }
+  NodeT getLocFromNode() const { return loc_from_node_; }
   void setLocInst(LocInstType const& inst) { loc_man_inst_ = inst; }
   LocInstType getLocInst() const { return loc_man_inst_;  }
   bool hasHandler() const { return handler_ != uninitialized_handler; }
@@ -106,8 +106,8 @@ struct EntityMsg : ActiveMessageT {
   HandlerType getHandler() const { return handler_; }
   void incHops() { hops_ += 1; }
   int16_t getHops() const { return hops_; }
-  void setAskNode(NodeType const& node) { ask_node_ = node; }
-  NodeType getAskNode() const { return ask_node_; }
+  void setAskNode(NodeT const& node) { ask_node_ = node; }
+  NodeT getAskNode() const { return ask_node_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -123,12 +123,12 @@ struct EntityMsg : ActiveMessageT {
 
 private:
   EntityID entity_id_{};
-  NodeType home_node_ = uninitialized_destination;
-  NodeType loc_from_node_ = uninitialized_destination;
+  NodeT home_node_ = {};
+  NodeT loc_from_node_ = {};
   LocInstType loc_man_inst_ = no_loc_inst;
   HandlerType handler_ = uninitialized_handler;
   int16_t hops_ = 0;
-  NodeType ask_node_ =  uninitialized_destination;
+  NodeT ask_node_ =  NodeT  {};
 };
 
 }}  // end namespace vt::location

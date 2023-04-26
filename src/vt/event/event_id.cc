@@ -47,7 +47,7 @@
 namespace vt { namespace event {
 
 /*static*/ EventType EventIDManager::makeEvent(
-  EventIdentifierType const& id, NodeType const& node
+  EventIdentifierType const& id, ::vt::NodeT const& node
 ) {
   EventType new_event_id = 0;
   EventIDManager::setEventNode(new_event_id, node);
@@ -61,14 +61,14 @@ namespace vt { namespace event {
   return new_event_id;
 }
 
-/*static*/ NodeType EventIDManager::getEventNode(EventType const& event) {
+/*static*/ ::vt::NodeT EventIDManager::getEventNode(EventType const& event) {
   return BitPackerType::getField<
-    EventIDBitsType::Node, node_num_bits, NodeType
+    EventIDBitsType::Node, node_num_bits, ::vt::NodeT
   >(event);
 }
 
 /*static*/ void EventIDManager::setEventNode(
-  EventType& event, NodeType const& node
+  EventType& event, ::vt::NodeT const& node
 ) {
   BitPackerType::setField<EventIDBitsType::Node, node_num_bits>(event, node);
 }

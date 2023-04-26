@@ -87,7 +87,7 @@ struct CallbackRawBaseSingle {
   // Constructors for different types of callbacks
   CallbackRawBaseSingle(
     RawSendMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
-    NodeType const& in_node
+    ::vt::NodeT const& in_node
   );
   CallbackRawBaseSingle(
     RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const in_handler
@@ -111,7 +111,7 @@ struct CallbackRawBaseSingle {
   );
   CallbackRawBaseSingle(
     RawSendObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
-    ObjGroupProxyType in_proxy, NodeType in_node
+    ObjGroupProxyType in_proxy, ::vt::NodeT in_node
   );
 
   template <typename MsgT>
@@ -171,7 +171,7 @@ struct CallbackTyped : CallbackRawBaseSingle {
   // Forwarding constructors for different types of callbacks
   CallbackTyped(
     RawSendMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
-    NodeType const& in_node
+    ::vt::NodeT const& in_node
   ) : CallbackRawBaseSingle(RawSendMsgTag,in_pipe,in_handler,in_node)
   { }
   CallbackTyped(
@@ -212,7 +212,7 @@ struct CallbackTyped : CallbackRawBaseSingle {
   { }
   CallbackTyped(
     RawSendObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
-    ObjGroupProxyType in_proxy, NodeType in_node
+    ObjGroupProxyType in_proxy, ::vt::NodeT in_node
   )  : CallbackRawBaseSingle(
         RawSendObjGrpTag,in_pipe,in_handler,in_proxy,in_node
       )

@@ -57,7 +57,7 @@ struct HierLBChild : HierLBTypes {
   bool is_live = false;
   double cur_load = 0.0;
   int32_t node_size = 0;
-  NodeType node = uninitialized_destination;
+  NodeT node = {};
   bool final_child = false;
   std::size_t recs_size = 0;
   ObjSampleType recs;

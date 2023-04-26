@@ -75,7 +75,7 @@ void LocLookup<KeyT, ValueT>::remove(KeyT const& key) {
 
 template <typename KeyT, typename ValueT>
 void LocLookup<KeyT, ValueT>::insert(
-  KeyT const& key, NodeType const home, ValueT const& value
+  KeyT const& key, NodeT const home, ValueT const& value
 ) {
   // If this node is the home, maintain location in permanent directory,
   // otherwise, insert/update in local cache of locations

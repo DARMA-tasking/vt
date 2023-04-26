@@ -77,7 +77,7 @@ TYPED_TEST_P(TestMemoryActive, test_memory_remote_send) {
   auto const& num_nodes = theContext()->getNumNodes();
 
   bool const run_test = num_nodes > 1;
-  NodeType const to_node = 1;
+  NodeT const to_node = NodeT{1};
 
   std::vector<MsgSharedPtr<MsgType>> msgs;
 

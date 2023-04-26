@@ -54,9 +54,9 @@ struct HandleMsg : vt::Message {
 };
 
 static void tellHandle(HandleMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
-  if (this_node != 0) {
+  if (this_node != vt::NodeT{0}) {
     fmt::print("{}: handle={}, requesting data\n", this_node, msg->han);
     int const num_elm = 2;
     vt::theRDMA()->getTypedDataInfoBuf(
@@ -72,16 +72,16 @@ static void tellHandle(HandleMsg* msg) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   my_data = std::make_unique<double[]>(my_data_len);
 
   // initialize my_data buffer, all but node 0 get -1.0
   for (auto i = 0; i < my_data_len; i++) {
-    my_data[i] = this_node == 0 ? (this_node+1)*i+1 : -1.0;
+    my_data[i] = this_node == vt::NodeT{0} ? (this_node.get()+1)*i+1 : -1.0;
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     vt::RDMA_HandleType my_handle =
       vt::theRDMA()->registerNewTypedRdmaHandler(my_data.get(), my_data_len);
 

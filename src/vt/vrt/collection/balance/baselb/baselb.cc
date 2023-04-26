@@ -135,7 +135,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
     proxy_.allreduce<&BaseLB::finalize, collective::PlusOp>(local_migration_count);
   });
 
-  std::map<NodeType, ObjDestinationListType> migrate_other;
+  std::map<NodeT, ObjDestinationListType> migrate_other;
 
   // Do local setup of reassignment data structure
   for (auto&& transfer : transfers_) {
@@ -179,7 +179,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
     // Notify all potential recipients for this reassignment that they have an
     // arriving object
     using DepartMsgType = TransferMsg<ObjLoadListType>;
-    std::map<NodeType, ObjLoadListType> depart_map;
+    std::map<NodeT, ObjLoadListType> depart_map;
 
     for (auto&& departing : pending_reassignment_->depart_) {
       auto const obj_id = std::get<0>(departing);
@@ -240,7 +240,7 @@ void BaseLB::notifyNewHostNodeOfObjectsArriving(
   }
 }
 
-void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
+void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeT const to) {
   if (obj_id.curr_node != to || theConfig()->vt_lb_self_migration) {
     transfers_.push_back(TransferDestType{obj_id, to});
   }
@@ -254,8 +254,13 @@ void BaseLB::finalize(int32_t global_count) {
   pending_reassignment_->global_migration_count = global_count;
 
   auto const& this_node = theContext()->getNode();
+<<<<<<< HEAD
   if (this_node == 0) {
     auto const total_time = timing::getCurrentTime() - start_time_;
+=======
+  if (this_node == vt::NodeT{0}) {
+    TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
     vt_debug_print(
       terse, lb,
       "BaseLB::finalize: LB total time={}\n",

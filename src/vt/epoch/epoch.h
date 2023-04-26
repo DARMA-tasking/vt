@@ -64,13 +64,13 @@ namespace vt { namespace epoch {
  *      *where*    h = epoch_header_num_bits,  |                           \
  *                 c = epoch_category_num_bits,|                            \
  *                 w = sizeof(EpochType) * 8   |                             \
- *                 n = sizeof(NodeType)        ^  16  ^ 5 ^   [remainder]     ^
+ *                 n = sizeof (NodeT  )        ^  16  ^ 5 ^   [remainder]     ^
  *                                            /                               |
  *                                           /                                |
  *                                   _______                                  |
  *                                  /                                          \
  *                                  | .... n .... | ..........................|
- *                                    <NodeType>          <SeqEpochID>
+ *                                     <NodeT  >          <SeqEpochID>
  *
  *  +++++++++++++++++++++++++++++++++++++++++++  Rooted Extended Layout ++
  *
@@ -162,7 +162,7 @@ enum eEpochRoot {
 };
 
 /// The default epoch node used for non-rooted epochs
-static constexpr NodeType const default_epoch_node = uninitialized_destination;
+static constexpr NodeT const default_epoch_node = {};
 
 /// The default epoch category
 static constexpr eEpochCategory const default_epoch_category =

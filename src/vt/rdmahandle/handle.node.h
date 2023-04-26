@@ -69,11 +69,11 @@ template <typename T, HandleEnum E, typename IndexT>
 struct Handle<
   T, E, IndexT,
   typename std::enable_if_t<
-    std::is_same<IndexT,vt::NodeType>::value
+    std::is_same<IndexT,vt::NodeT  >::value
   >
-> : BaseTypedHandle<T, E, vt::NodeType>
+> : BaseTypedHandle<T, E, vt::NodeT  >
 {
-  using RequestType = typename BaseTypedHandle<T, E, vt::NodeType>::RequestType;
+  using RequestType = typename BaseTypedHandle<T, E, vt::NodeT  >::RequestType;
 
   friend struct Manager;
   friend struct SubHandle<T, E, IndexT>;
@@ -100,7 +100,7 @@ private:
     NodeTagType,
     HandleKey in_key, std::size_t in_count, std::size_t in_hoff = 0,
     std::shared_ptr<LockMPI> in_lock = nullptr
-  ) : BaseTypedHandle<T, E, vt::NodeType>(
+  ) : BaseTypedHandle<T, E, vt::NodeT  >(
         in_count,
         in_hoff,
         in_lock
@@ -121,7 +121,7 @@ public:
    *
    * \return the node
    */
-  vt::NodeType getNode() const { return vt::theContext()->getNode(); }
+  vt::NodeT getNode() const { return vt::theContext()->getNode(); }
 
   /**
    * \brief Check if the handle is ready to be used; implies that all MPI
@@ -176,7 +176,7 @@ public:
    * \param[in] l lock to apply
    * \param[in] node which node to lock
    */
-  void lock(Lock l, vt::NodeType node);
+  void lock(Lock l, vt::NodeT node);
 
   /**
    * \brief Unlock the handle
@@ -217,13 +217,13 @@ public:
    * \brief Perform a window flush on the data window \c MPI_Win_flush for a
    * certain node
    */
-  void flush(vt::NodeType node);
+  void flush(vt::NodeT node);
 
   /**
    * \brief Perform a local window flush on the data window \c
    * MPI_Win_flush_local for a certain node
    */
-  void flushLocal(vt::NodeType node);
+  void flushLocal(vt::NodeT node);
 
   /**
    * \brief Perform a window flush on the data window \c MPI_Win_flush_all for
@@ -245,7 +245,7 @@ public:
    * \param[in] l the lock to apply for the get
    */
   void get(
-    vt::NodeType node, std::size_t len, int offset, Lock l = Lock::None
+    vt::NodeT node, std::size_t len, int offset, Lock l = Lock::None
   );
 
   /**
@@ -259,7 +259,7 @@ public:
    * \param[in] l the lock to apply for the get
    */
   void get(
-    vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l = Lock::None
+    vt::NodeT node, T* ptr, std::size_t len, int offset, Lock l = Lock::None
   );
 
   /**
@@ -273,7 +273,7 @@ public:
    * \param[in] l the lock to apply for the put
    */
   void put(
-    vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l = Lock::None
+    vt::NodeT node, T* ptr, std::size_t len, int offset, Lock l = Lock::None
   );
 
   /**
@@ -288,7 +288,7 @@ public:
    * \param[in] l the lock to apply for the accumulate
    */
   void accum(
-    vt::NodeType node, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None
+    vt::NodeT node, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None
   );
 
   /**
@@ -308,7 +308,7 @@ public:
    * \return the request holder to wait on
    */
   RequestType rget(
-    vt::NodeType no, std::size_t len, int offset, Lock l = Lock::None
+    vt::NodeT no, std::size_t len, int offset, Lock l = Lock::None
   );
 
   /**
@@ -327,7 +327,7 @@ public:
    * \return the request holder to wait on
    */
   RequestType rget(
-    vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l = Lock::None
+    vt::NodeT node, T* ptr, std::size_t len, int offset, Lock l = Lock::None
   );
 
   /**
@@ -344,7 +344,7 @@ public:
    * \param[in] l the lock to apply for the put
    */
   RequestType rput(
-    vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l = Lock::None
+    vt::NodeT node, T* ptr, std::size_t len, int offset, Lock l = Lock::None
   );
 
   /**
@@ -362,7 +362,7 @@ public:
    * \param[in] l the lock to apply for the accumulate
    */
   RequestType raccum(
-    vt::NodeType node, T* ptr, std::size_t len, int offset, MPI_Op op,
+    vt::NodeT node, T* ptr, std::size_t len, int offset, MPI_Op op,
     Lock l = Lock::None
   );
 
@@ -379,7 +379,7 @@ public:
    * \return the value fetched
    */
   T fetchOp(
-    vt::NodeType node, T val, int offset, MPI_Op op, Lock l = Lock::None
+    vt::NodeT node, T val, int offset, MPI_Op op, Lock l = Lock::None
   );
 
   /**
@@ -390,7 +390,7 @@ public:
    *
    * \return the length of the handle's data
    */
-  std::size_t getCount(vt::NodeType node);
+  std::size_t getCount(vt::NodeT node);
 
   /**
    * \brief Serializer for the handle
@@ -400,7 +400,7 @@ public:
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | key_;
-    BaseTypedHandle<T, E, vt::NodeType>::serialize(s);
+    BaseTypedHandle<T, E, vt::NodeT  >::serialize(s);
   }
 
 protected:

@@ -324,11 +324,11 @@ int main(int argc, char** argv) {
 
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
   if (argc == 1) {
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       fmt::print(
         stderr, "{}: using default arguments since none provided\n", name
       );

@@ -75,7 +75,7 @@ TEST_F(TestTermCleanup, test_termination_cleanup_1) {
     EpochType const epoch = theTerm()->makeEpochCollective();
     //fmt::print("global collective epoch {:x}\n", epoch);
 
-    NodeType const next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT const next = NodeT{this_node.get() + 1 < num_nodes.get() ? this_node.get() + 1 : 0};
 
     auto msg = makeMessage<TestMsgType>();
     envelopeSetEpoch(msg->env, epoch);
@@ -118,7 +118,7 @@ TEST_F(TestTermCleanup, test_termination_cleanup_2) {
     );
     //fmt::print("global collective epoch {:x}\n", epoch);
 
-    NodeType const next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT const next = NodeT{this_node.get() + 1 < num_nodes.get() ? this_node.get() + 1 : 0};
 
     for (int j = 0; j < 5; j++) {
       auto msg = makeMessage<TestMsgType>();

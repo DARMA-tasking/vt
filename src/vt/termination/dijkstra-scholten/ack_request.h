@@ -51,9 +51,9 @@
 namespace vt { namespace term { namespace ds {
 
 struct AckRequest {
-  AckRequest(NodeType p, int64_t c) : pred(p), count(c) { }
+  AckRequest(NodeT p, int64_t c) : pred(p), count(c) { }
 
-  NodeType pred = uninitialized_destination;
+  NodeT pred = {};
   int64_t count = 0;
 };
 

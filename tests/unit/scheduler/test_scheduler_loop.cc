@@ -83,7 +83,7 @@ static void message_handler_with_nested_loop(TestMsg* msg) {
   }
 
   // Pass message around the ring..
-  NodeType target_node = (theContext()->getNode() + 1) % theContext()->getNumNodes();
+  NodeT target_node = (theContext()->getNode() + NodeT{1}) % theContext()->getNumNodes();
   int next_depth = depth + 1;
 
   auto next_msg = vt::makeMessage<TestMsg>();
@@ -112,8 +112,8 @@ TEST_F(TestSchedulerLoop, test_scheduler_loop_nesting_1) {
 
   SET_MIN_NUM_NODES_CONSTRAINT(2);
 
-  NodeType node = theContext()->getNode();
-  NodeType target_node = (node + 1) % theContext()->getNumNodes();
+  NodeT node = theContext()->getNode();
+  NodeT target_node = (node + NodeT{1}) % theContext()->getNumNodes();
 
   auto msg = vt::makeMessage<TestMsg>();
   msg->action_ = 1;

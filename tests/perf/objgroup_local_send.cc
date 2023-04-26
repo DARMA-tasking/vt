@@ -92,7 +92,7 @@ struct NodeObj {
   void perfRunBenchmark() {
     for (int i = 0; i < num_iters; i++) {
       auto m = msgs[i];
-      obj_proxy[0].template sendMsg<MyMsg, &TestObj::han>(m);
+      obj_proxy[NodeT{0}].template sendMsg<MyMsg, &TestObj::han>(m);
       vt::theSched()->runSchedulerOnceImpl();
     }
   }
@@ -114,7 +114,7 @@ VT_PERF_TEST(MyTest, test_objgroup_local_send) {
 
   grp_proxy[my_node_].invoke<&NodeObj::initialize>();
 
-  if (theContext()->getNode() == 0) {
+  if (theContext()->getNode() == NodeT{0}) {
     grp_proxy[my_node_].send<MyMsg, &NodeObj::perfMakeRunnable>();
   }
 }

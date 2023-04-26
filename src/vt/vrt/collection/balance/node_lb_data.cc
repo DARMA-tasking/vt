@@ -80,7 +80,7 @@ bool NodeLBData::hasObjectToMigrate(ElementIDStruct obj_id) const {
   return iter != node_migrate_.end();
 }
 
-bool NodeLBData::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
+bool NodeLBData::migrateObjTo(ElementIDStruct obj_id, NodeT to_node) {
   auto iter = node_migrate_.find(obj_id);
   if (iter == node_migrate_.end()) {
     return false;
@@ -179,7 +179,7 @@ void NodeLBData::createLBDataFile() {
   );
 
   auto const dir = theConfig()->vt_lb_data_dir;
-  // Node 0 creates the directory
+  // NodeT 0 creates the directory
   if (not created_dir_ and theContext()->getNode() == 0) {
     int flag = mkdir(dir.c_str(), S_IRWXU);
     if (flag < 0 && errno != EEXIST) {
@@ -210,11 +210,15 @@ void NodeLBData::createLBDataFile() {
       metadata["shared_node"] = node_metadata;
     }
     metadata["type"] = "LBDatafile";
+<<<<<<< HEAD
     metadata["rank"] = theContext()->getNode();
     auto phasesMetadata = lb_data_->metadataToJson();
     if(phasesMetadata) {
        metadata["phases"] = *phasesMetadata;
     }
+=======
+    metadata["rank"] = theContext()->getNode().get();
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
     lb_data_writer_ = std::make_unique<JSONAppender>(
       "phases", metadata, file_name, compress
     );
@@ -248,8 +252,8 @@ getRecvSendDirection(elm::CommKeyType const& comm) {
   case elm::CommCategory::Broadcast:
     return std::make_pair(comm.toObj().id, comm.fromObj().id);
 
-  case elm::CommCategory::NodeToCollection:
-  case elm::CommCategory::NodeToCollectionBcast:
+  case elm::CommCategory::NodeCollection:
+  case elm::CommCategory::NodeCollectionBcast:
     return std::make_pair(comm.toObj().id, comm.fromNode());
 
   case elm::CommCategory::CollectionToNode:

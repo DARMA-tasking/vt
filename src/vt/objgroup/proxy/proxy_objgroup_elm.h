@@ -85,7 +85,7 @@ struct ProxyElm {
    * \param[in] in_proxy the proxy ID
    * \param[in] in_node the node selected
    */
-  ProxyElm(ObjGroupProxyType in_proxy, NodeType in_node)
+  ProxyElm(ObjGroupProxyType in_proxy, ::vt::NodeT in_node)
     : proxy_(in_proxy), node_(in_node)
   { }
 
@@ -209,7 +209,7 @@ struct ProxyElm {
    *
    * \return the node indexed
    */
-  NodeType getNode() const { return node_; }
+  ::vt::NodeT getNode() const { return node_; }
 
 public:
   /**
@@ -222,12 +222,12 @@ public:
 
 private:
   ObjGroupProxyType proxy_ = no_obj_group;              /**< The raw proxy ID bits */
-  NodeType node_           = uninitialized_destination; /**< The indexed node */
+  ::vt::NodeT node_           = {}; /**< The indexed node */
 };
 
 template <>
 struct ProxyElm<void> {
-  explicit ProxyElm(NodeType in_node);
+  explicit ProxyElm(::vt::NodeT in_node);
 
   /**
    * \brief Send a message to the node indexed by this proxy to be
@@ -251,7 +251,7 @@ struct ProxyElm<void> {
   }
 
 private:
-  NodeType node_ = uninitialized_destination; /**< The indexed node */
+  ::vt::NodeT node_ = {}; /**< The indexed node */
 };
 
 using DefaultProxyElm = ProxyElm<void>;

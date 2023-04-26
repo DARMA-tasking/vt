@@ -55,11 +55,11 @@
 namespace vt { namespace trace {
 
 UserEventIDType UserEventRegistry::createEvent(
-  bool user, bool rooted, NodeType in_node, UserSpecEventIDType id,
+  bool user, bool rooted, ::vt::NodeT in_node, UserSpecEventIDType id,
   bool hash
 ) {
-  constexpr NodeType const default_node = 0;
-  NodeType const node = rooted ? in_node : default_node;
+  constexpr NodeT const default_node = NodeT  {0};
+  NodeT const node = rooted ? in_node : default_node;
   UserEventIDType event = no_user_event_id;
   BitPackerType::boolSetField<eUserEventLayoutBits::Manu>(event, user);
   BitPackerType::boolSetField<eUserEventLayoutBits::Root>(event, rooted);
@@ -85,9 +85,9 @@ UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
   auto inserted = std::get<1>(ret);
   if (inserted) {
     auto const node  = theContext()->getNode();
-    if (node != 0) {
+    if (node != NodeT{0}) {
       auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
-      theMsg()->sendMsg<newEventHan>(0, msg);
+      theMsg()->sendMsg<newEventHan>(NodeT{0}, msg);
     }
   }
   return id;
@@ -97,9 +97,9 @@ UserEventIDType UserEventRegistry::rooted(std::string const& in_event_name) {
   auto ret = newEventImpl(false, true, in_event_name, cur_root_event_++);
   auto id = std::get<0>(ret);
   auto const node  = theContext()->getNode();
-  if (node != 0) {
+  if (node != NodeT{0}) {
     auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
-    theMsg()->sendMsg<newEventHan>(0, msg);
+    theMsg()->sendMsg<newEventHan>(NodeT{0}, msg);
   }
   return id;
 }
@@ -110,9 +110,9 @@ UserEventIDType UserEventRegistry::user(
   auto ret = newEventImpl(true, false, in_event_name, seq);
   auto id = std::get<0>(ret);
   auto const node  = theContext()->getNode();
-  if (node != 0) {
+  if (node != NodeT{0}) {
     auto msg = makeMessage<NewUserEventMsg>(true, id, in_event_name);
-    theMsg()->sendMsg<newEventHan>(0, msg);
+    theMsg()->sendMsg<newEventHan>(NodeT{0}, msg);
   }
   return id;
 }

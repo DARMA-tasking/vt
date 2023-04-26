@@ -65,7 +65,7 @@ static constexpr BitCountType const user_bits = BitCounterType<UserEventIDType>:
 static constexpr BitCountType const root_bits = 1;
 static constexpr BitCountType const manu_bits = 1;
 static constexpr BitCountType const hash_bits = 1;
-static constexpr BitCountType const node_bits = BitCounterType<NodeType>::value;
+static constexpr BitCountType const node_bits = BitCounterType <NodeT  >::value;
 static constexpr BitCountType const spec_bits = user_bits - (root_bits + node_bits);
 
 enum eUserEventLayoutBits {
@@ -73,7 +73,7 @@ enum eUserEventLayoutBits {
   Root  = eUserEventLayoutBits::Manu + manu_bits,
   Hash  = eUserEventLayoutBits::Root + root_bits,
   Node  = eUserEventLayoutBits::Hash + hash_bits,
-  ID    = eUserEventLayoutBits::Node + node_bits
+  ID    = eUserEventLayoutBits::Node  + node_bits
 };
 
 void insertNewUserEvent(UserEventIDType event, std::string const& name);
@@ -104,7 +104,7 @@ struct UserEventRegistry {
 #endif
 
   UserEventIDType createEvent(
-    bool user, bool rooted, NodeType in_node, UserSpecEventIDType id,
+    bool user, bool rooted, ::vt::NodeT in_node, UserSpecEventIDType id,
     bool hash = false
   );
   UserEventIDType collective(std::string const& in_event_name);

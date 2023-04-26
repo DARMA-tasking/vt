@@ -190,7 +190,7 @@ namespace vt { namespace rdma {
 
     auto msg = makeMessage<PutMessage>(
       new_op, num_bytes, elm, tag, rdma_handle,
-      action_after_put ? this_node : uninitialized_destination,
+      action_after_put ? this_node : NodeT  {},
       this_node
     );
 

@@ -90,12 +90,12 @@ struct Migratable : MigrateHookBase, storage::Storable {
   /*
     @todo: migrate interface is through base class HasMigrate to insert lower in
            the hierarchy
-     virtual void migrate(NodeType const& node);
+     virtual void migrate(NodeT const& node);
   */
 
   /*
    * The system invokes this when the destructor is about to be called on the
-   * VCC element due a migrate(NodeType const&) invocation
+   * VCC element due a migrate(NodeT const&) invocation
    */
   virtual void destroy();
 

@@ -89,11 +89,11 @@ public:
 
   typename IndexT::DenseIndexType linearize(IndexT idx);
 
-  NodeType getHomeNode(IndexT const& idx);
+  NodeT getHomeNode(IndexT const& idx);
 
   IndexInfo fetchInfo(IndexT const& idx);
 
-  void updateInfo(IndexT const& idx, IndexInfo info, NodeType home);
+  void updateInfo(IndexT const& idx, IndexInfo info, NodeT home);
 
   IndexInfo resolveLocation(IndexT const& idx);
 
@@ -130,7 +130,7 @@ public:
 
   Handle<T, E, IndexT> addLocalIndex(IndexT index, uint64_t count);
 
-  int getOrderedOffset(IndexT idx, NodeType home_node);
+  int getOrderedOffset(IndexT idx, NodeT home_node);
 
   void stageLocalIndex(IndexT index, uint64_t count);
 

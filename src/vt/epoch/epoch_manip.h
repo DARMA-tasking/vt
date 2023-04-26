@@ -105,7 +105,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \return the node (arbitrator) for the \c epoch
    */
-  static NodeType node(EpochType const& epoch);
+  static NodeT node(EpochType const& epoch);
 
   /**
    * \brief Gets the sequential ID for an epoch
@@ -142,7 +142,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \param[in,out] epoch the epoch to modify
    * \param[in] node whether to set the epoch as rooted or not
    */
-  static void setNode(EpochType& epoch, NodeType const node);
+  static void setNode(EpochType& epoch, NodeT const node);
 
   /**
    * \brief Set the sequential ID for an \c epoch
@@ -179,7 +179,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    */
   static EpochType generateEpoch(
     bool           const& is_rooted  = false,
-    NodeType       const& root_node  = default_epoch_node,
+    NodeT       const& root_node  = default_epoch_node,
     eEpochCategory const& category   = default_epoch_category
   );
 
@@ -209,7 +209,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \return the newly created epoch
    */
   EpochType getNextRootedEpoch(
-    eEpochCategory const& category, NodeType const root_node
+    eEpochCategory const& category, NodeT const root_node
   );
 
   /**

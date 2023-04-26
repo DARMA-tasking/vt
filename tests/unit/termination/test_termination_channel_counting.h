@@ -56,9 +56,9 @@
 namespace vt { namespace tests { namespace unit { namespace channel {
 
 // ranks
-extern vt::NodeType node;
-extern vt::NodeType root;
-extern vt::NodeType all;
+extern vt::NodeT node;
+extern vt::NodeT root;
+extern vt::NodeT all;
 
 // data per rank and epoch
 struct Data {
@@ -72,7 +72,7 @@ struct Data {
     : degree_(0),
       activator_(0)
   {
-    for (vt::NodeType dst = 0; dst < all; ++dst) {
+    for (vt::NodeT dst = NodeT{0}; dst < all; ++dst) {
       count_[dst] = {0, 0, 0};
     }
   }
@@ -80,8 +80,8 @@ struct Data {
   ~Data() { count_.clear(); }
 
   int degree_ = 0;
-  vt::NodeType activator_ = 0;
-  std::unordered_map<vt::NodeType,Counters> count_;
+  vt::NodeT activator_ = NodeT{0};
+  std::unordered_map<vt::NodeT,Counters> count_;
 };
 
 // channel counters per epoch and per rank
@@ -89,15 +89,15 @@ extern std::unordered_map<vt::EpochType,Data> data;
 
 // send any kind of message
 template <typename Msg, vt::ActiveTypedFnType<Msg>* handler>
-void sendMsg(vt::NodeType dst, int count, vt::EpochType ep);
+void sendMsg(vt::NodeT dst, int count, vt::EpochType ep);
 // broadcast basic message
 template <vt::ActiveTypedFnType<BasicMsg>* handler>
 void broadcast(int count, vt::EpochType ep);
 
 // route basic message, send control messages
-inline void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep);
-inline void sendPing(vt::NodeType dst, int count, vt::EpochType ep);
-inline void sendEcho(vt::NodeType dst, int count, vt::EpochType ep);
+inline void routeBasic(vt::NodeT dst, int ttl, vt::EpochType ep);
+inline void sendPing(vt::NodeT dst, int count, vt::EpochType ep);
+inline void sendEcho(vt::NodeT dst, int count, vt::EpochType ep);
 
 // on receipt of a basic message.
 inline void basicHandler(BasicMsg* msg);

@@ -245,14 +245,14 @@ ObjGroupManager::PendingSendType ObjGroupManager::broadcast(ProxyType<ObjT> prox
 
 template <typename MsgT>
 ObjGroupManager::PendingSendType ObjGroupManager::send(
-  MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node
+  MsgSharedPtr<MsgT> msg, HandlerType han, NodeT dest_node
 ) {
   return objgroup::send(msg,han,dest_node);
 }
 
 template <typename ObjT, typename MsgT, auto f>
 decltype(auto) ObjGroupManager::invoke(
-  messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node
+  messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeT dest_node
 ) {
   return objgroup::invoke<ObjT, MsgT, f>(msg, han, dest_node);
 }
@@ -267,7 +267,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::reduce(
   ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg,
   collective::reduce::ReduceStamp const& stamp
 ) {
-  auto const root = 0;
+  auto const root = ::vt::NodeT{0};
   auto const objgroup = proxy.getProxy();
 
   auto r = theCollective()->getReducerObjGroup(objgroup);

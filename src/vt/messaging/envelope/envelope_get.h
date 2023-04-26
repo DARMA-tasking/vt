@@ -72,7 +72,7 @@ inline HandlerType envelopeGetHandler(Env const& env);
  * \return the destination node in the envelope
  */
 template <typename Env>
-inline NodeType envelopeGetDest(Env const& env);
+inline BaseNodeType envelopeGetDest(Env const& env);
 
 /**
  * \brief Check whether bcast should be delivered to sender

@@ -80,18 +80,18 @@ struct TermDS : EpochDependency, EpochLabel {
   using CountType = int64_t;
   using AckReqListType = std::list<AckRequest>;
 
-  TermDS(EpochType in_epoch, bool isRoot_, NodeType self_);
+  TermDS(EpochType in_epoch, bool isRoot_, NodeT self_);
   TermDS(TermDS&&) = default;
   TermDS(TermDS const&) = delete;
 
   virtual ~TermDS() = default;
 
   void setRoot(bool isRoot);
-  void msgSent(NodeType successor, CountType count);
+  void msgSent(NodeT successor, CountType count);
   void gotAck(CountType count);
   void doneSending();
-  void msgProcessed(NodeType predecessor, CountType count);
-  void needAck(NodeType const predecessor, CountType const count);
+  void msgProcessed(NodeT predecessor, CountType count);
+  void needAck(NodeT const predecessor, CountType const count);
   void tryAck();
   void terminated();
   bool hasParent();
@@ -102,8 +102,8 @@ private:
   void tryLast();
 
 protected:
-  NodeType parent                   = uninitialized_destination;
-  NodeType self                     = uninitialized_destination;
+  NodeT parent                   = {};
+  NodeT self                     = {};
   CountType C                       = 0;
   CountType ackedArbitrary          = 0;
   CountType ackedParent             = 0;

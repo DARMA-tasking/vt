@@ -45,6 +45,7 @@
 #define INCLUDED_VT_TRACE_TRACE_COMMON_H
 
 #include "vt/configs/types/types_type.h"
+#include "vt/configs/types/types_node.h"
 
 #include <cstdint>
 #include <cstddef>
@@ -68,7 +69,7 @@ static constexpr TraceEventIDType const no_trace_event = 0;
 static constexpr BitCountType const trace_event_num_bits = 32;
 static constexpr UserEventIDType const no_user_event_id = 0;
 
-static constexpr NodeType const designated_root_node = 0;
+static constexpr NodeT const designated_root_node = NodeT{0};
 
 }} //end namespace vt::trace
 

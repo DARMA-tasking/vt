@@ -62,10 +62,10 @@ struct MyObjGroup {
   void handler(MyMsg* msg) {
     auto const this_node = theContext()->getNode();
     auto const num_nodes = theContext()->getNumNodes();
-    auto const to_node = (this_node + 1) % num_nodes;
-    from_node_ = this_node - 1;
-    if (from_node_ < 0) {
-      from_node_ = num_nodes - 1;
+    auto const to_node = (this_node + vt::NodeT{1}) % num_nodes;
+    from_node_ = this_node - vt::NodeT{1};
+    if (from_node_ < vt::NodeT{0}) {
+      from_node_ = num_nodes - vt::NodeT{1};
     }
 
     auto comm = theContext()->getComm();
@@ -103,7 +103,7 @@ struct MyObjGroup {
   int send_val_ = 0;
   int recv_val_ = -1000;
   bool done_ = false;
-  NodeType from_node_ = 0;
+  NodeT from_node_ = NodeT{0};
 };
 
 TEST_F(TestAsyncOp, test_async_op_1) {

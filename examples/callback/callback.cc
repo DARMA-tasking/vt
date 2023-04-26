@@ -84,7 +84,7 @@ void hello_world(HelloMsg* msg) {
 }
 
 void printOutput(TestMsg* msg, std::string type) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
   fmt::print("{}: cb {}: val={}, str={}\n", this_node, type, msg->val_, msg->s_);
 }
 
@@ -116,16 +116,16 @@ void colHan(MyCol* col, TestMsg* msg) {
 
 void bounceCallback(vt::Callback<TestMsg> cb) {
   auto msg = vt::makeMessage<HelloMsg>(cb);
-  vt::theMsg()->sendMsg<hello_world>(1, msg);
+  vt::theMsg()->sendMsg<hello_world>(vt::NodeT{1}, msg);
 }
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     return vt::rerror("requires at least 2 nodes");
   }
 
@@ -135,8 +135,8 @@ int main(int argc, char** argv) {
     .bulkInsert()
     .wait();
 
-  if (this_node == 0) {
-    vt::NodeType dest = num_nodes > 2 ? 2 : 0;
+  if (this_node == vt::NodeT{0}) {
+    vt::NodeT dest = num_nodes > vt::NodeT{2} ? vt::NodeT{2} : vt::NodeT{0};
 
     auto cb_functor = vt::theCB()->makeSend<CallbackFunctor>(dest);
     bounceCallback(cb_functor);

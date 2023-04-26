@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_node.h"
 #include "vt/config.h"
 #include "vt/group/group_common.h"
 #include "vt/group/id/group_id.h"
@@ -49,7 +50,7 @@
 namespace vt { namespace group {
 
 /*static*/ GroupType GroupIDBuilder::createGroupID(
-  GroupIDType const& id, NodeType const& node, bool const& is_collective,
+  GroupIDType const& id, ::vt::NodeT const& node, bool const& is_collective,
   bool const& is_static
 ) {
   auto const& set_node = !is_collective ? node : group_collective_node;
@@ -76,7 +77,7 @@ namespace vt { namespace group {
 }
 
 /*static*/ void GroupIDBuilder::setNode(
-  GroupType& group, NodeType const& node
+  GroupType& group, ::vt::NodeT const& node
 ) {
   BitPackerType::setField<eGroupIDBits::Node, group_node_num_bits>(group, node);
 }
@@ -95,9 +96,9 @@ namespace vt { namespace group {
   return BitPackerType::boolGetField<eGroupIDBits::Static>(group);
 }
 
-/*static*/ NodeType GroupIDBuilder::getNode(GroupType const& group) {
+/*static*/ ::vt::NodeT GroupIDBuilder::getNode(GroupType const& group) {
   return BitPackerType::getField<
-    eGroupIDBits::Node, group_node_num_bits, NodeType
+    eGroupIDBits::Node, group_node_num_bits, ::vt::NodeT
   >(group);
 }
 

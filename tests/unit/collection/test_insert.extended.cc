@@ -103,7 +103,7 @@ TEST_F(TestInsert, test_insert_dense_1) {
 
   {
     auto token = proxy.beginModification();
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       for (auto i = 0; i < range.x(); i++) {
         proxy[i].insert(token);
       }
@@ -116,7 +116,7 @@ TEST_F(TestInsert, test_insert_dense_1) {
 
   {
     auto token = proxy.beginModification();
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       for (auto i = 0; i < range.x(); i++/*=2*/) {
         proxy[i].destroy(token);
       }
@@ -143,7 +143,7 @@ TEST_F(TestInsert, test_insert_sparse_1) {
     .wait();
 
   auto token = proxy.beginModification();
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     for (auto i = 0; i < range.x(); i+=16) {
       proxy[i].insert(token);
     }
@@ -168,7 +168,7 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
     .wait();
 
   auto token = proxy.beginModification();
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     for (auto i = 0; i < range.x(); i++) {
       proxy[i].insertAt(token, this_node);
     }
@@ -177,7 +177,7 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
 
   /// ::fmt::print("num inserted={}\n", num_inserted);
   // Relies on default mapping equally distributing
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     EXPECT_EQ(num_inserted, num_elms_per_node * num_nodes);
   }
   num_inserted = 0;
@@ -195,7 +195,7 @@ TEST_F(TestInsert, test_insert_sparse_node_1) {
     .wait();
 
   auto token = proxy.beginModification();
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     for (auto i = 0; i < range.x(); i+=16) {
       proxy[i].insertAt(token, this_node);
     }
@@ -204,7 +204,7 @@ TEST_F(TestInsert, test_insert_sparse_node_1) {
 
   /// ::fmt::print("num inserted={}\n", num_inserted);
   // Relies on default mapping equally distributing
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     EXPECT_EQ(num_inserted, num_elms_per_node * num_nodes);
   }
   num_inserted = 0;
@@ -222,16 +222,16 @@ TEST_F(TestInsert, test_insert_send_dense_node_1) {
     .wait();
 
   auto token = proxy.beginModification();
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     for (auto i = 0; i < range.x(); i++) {
-      proxy[i].insertAt(token, (this_node + 1) % num_nodes);
+      proxy[i].insertAt(token, (this_node + vt::NodeT{1}) % num_nodes);
       // ::fmt::print("sending to {}\n", i);
     }
   }
   proxy.finishModification(std::move(token));
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       for (auto i = 0; i < range.x(); i++) {
         proxy[i].send<WorkMsg,&InsertTest::work>();
       }
@@ -240,7 +240,7 @@ TEST_F(TestInsert, test_insert_send_dense_node_1) {
 
   /// ::fmt::print("num inserted={}\n", num_inserted);
   // Relies on default mapping equally distributing
-  if (this_node == 1 || (this_node == 0 && num_nodes == 1)) {
+  if (this_node == vt::NodeT{1} || (this_node == vt::NodeT{0} && num_nodes == vt::NodeT{1})) {
     EXPECT_EQ(num_inserted, num_elms_per_node * num_nodes);
     EXPECT_EQ(num_work, num_elms_per_node * num_nodes);
   }
@@ -260,15 +260,15 @@ TEST_F(TestInsert, test_insert_send_sparse_node_1) {
     .wait();
 
   auto token = proxy.beginModification();
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     for (auto i = 0; i < range.x(); i+=16) {
-      proxy[i].insertAt(token, (this_node + 1) % num_nodes);
+      proxy[i].insertAt(token, (this_node + vt::NodeT{1}) % num_nodes);
     }
   }
   proxy.finishModification(std::move(token));
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       for (auto i = 0; i < range.x(); i+=16) {
         proxy[i].send<WorkMsg,&InsertTest::work>();
       }
@@ -277,7 +277,7 @@ TEST_F(TestInsert, test_insert_send_sparse_node_1) {
 
   /// ::fmt::print("num inserted={}\n", num_inserted);
   // Relies on default mapping equally distributing
-  if (this_node == 1 || (this_node == 0 && num_nodes == 1)) {
+  if (this_node == vt::NodeT{1} || (this_node == vt::NodeT{0} && num_nodes == vt::NodeT{1})) {
     EXPECT_EQ(num_inserted, num_elms_per_node * num_nodes);
     EXPECT_EQ(num_work, num_elms_per_node * num_nodes);
   }

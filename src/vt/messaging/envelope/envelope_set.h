@@ -133,7 +133,7 @@ inline void envelopeSetHandler(Env& env, HandlerType const handler);
  * \param[in] dest the destination if set or root if (non-group) broadcast
  */
 template <typename Env>
-inline void envelopeSetDest(Env& env, NodeType const& dest);
+inline void envelopeSetDest(Env& env, NodeT const& dest);
 
 /**
  * \brief Set reference count on envelope.

@@ -70,9 +70,14 @@ struct BaseLB {
   using ObjIDType        = balance::ElementIDStruct;
   using ElementLoadType  = std::unordered_map<ObjIDType,LoadType>;
   using ElementCommType  = elm::CommMapType;
-  using TransferDestType = std::tuple<ObjIDType,NodeType>;
+  using TransferDestType = std::tuple<ObjIDType,NodeT>;
   using TransferVecType  = std::vector<TransferDestType>;
+<<<<<<< HEAD
   using TransferType     = std::map<NodeType, TransferVecType>;
+=======
+  using TransferType     = std::map<NodeT, TransferVecType>;
+  using LoadType         = double;
+>>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
   using MigrationCountCB = std::function<void(int32_t)>;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
@@ -80,7 +85,7 @@ struct BaseLB {
   using ObjLoadListType  = std::vector<
     std::tuple<ObjIDType, LoadSummary, LoadSummary, balance::ElmUserDataType>
   >;
-  using ObjDestinationListType = std::vector<std::tuple<ObjIDType, NodeType>>;
+  using ObjDestinationListType = std::vector<std::tuple<ObjIDType, NodeT>>;
 
   explicit BaseLB(bool in_comm_aware = false)
     : comm_aware_(in_comm_aware),
@@ -147,8 +152,8 @@ struct BaseLB {
     TransferVecType const& transfers, MigrationCountCB migration_count_callback
   );
   void migrationDone();
-  void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
-  void transferSend(NodeType from, TransferVecType const& transfer);
+  void migrateObjectTo(ObjIDType const obj_id, NodeT const node);
+  void transferSend(NodeT from, TransferVecType const& transfer);
   void transferMigrations(TransferMsg<TransferVecType>* msg);
   void finalize(int32_t global_count);
 

@@ -60,11 +60,11 @@ static void msgHandlerGroup(MySimpleMsg* msg) {
 
 // demonstrate collective group creation and broadcast to that group
 static inline void activeMessageGroupCollective() {
-  NodeType const this_node = ::vt::theContext()->getNode();
+  auto const this_node = ::vt::theContext()->getNode();
 
   auto const is_even_node = this_node % 2 == 0;
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     int val = 10;
     std::this_thread::sleep_for(std::chrono::seconds(2));
     vt::theSched()->runSchedulerWhile(

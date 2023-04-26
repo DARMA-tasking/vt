@@ -221,7 +221,7 @@ bool State::testReadyPutData(TagType const& tag) {
 
 void State::getData(
   GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info,
-  NodeType const& from_node
+  NodeT const& from_node
 ) {
   auto const& tag = info.tag;
 
@@ -289,7 +289,7 @@ void State::getData(
 
 void State::putData(
   PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info,
-  NodeType const& from_node
+  NodeT const& from_node
 ) {
   auto const& tag = info.tag;
 
@@ -387,7 +387,7 @@ void State::processPendingGet(TagType const& tag) {
 // }
 
 
-// NodeType
+// NodeT
 // State::getNode(RDMA_ElmType const& elm) {
 //   vtAssert(
 //     collective_map != vtAullptr, RDMA_HandleManagerType::is_collective(handle)

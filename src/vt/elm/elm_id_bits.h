@@ -46,6 +46,7 @@
 
 #include "vt/configs/types/types_type.h"
 #include "vt/utils/bits/bits_common.h"
+#include "vt/configs/types/types_node.h"
 #include "vt/elm/elm_id.h"
 
 namespace vt { namespace elm {
@@ -67,31 +68,31 @@ enum eElmIDProxyBitsObjGroup {
 enum eElmIDProxyBitsNonObjGroup {
   Control2   = 0,
   Node       = num_control_bits,
-  ID         = eElmIDProxyBitsNonObjGroup::Node + BitCounterType<NodeType>::value
+  ID         = eElmIDProxyBitsNonObjGroup::Node + node_num_bits
 };
 
 static constexpr BitCountType const elm_id_num_bits =
-  BitCounterType<ElementIDType>::value - (2 + BitCounterType<NodeType>::value);
+  BitCounterType<ElementIDType>::value - (2 + node_num_bits);
 
 struct ElmIDBits {
-  static ElementIDStruct createCollection(bool migratable, NodeType curr_node);
-  static ElementIDStruct createObjGroup(ObjGroupProxyType proxy, NodeType node);
-  static ElementIDStruct createBareHandler(NodeType node);
+  static ElementIDStruct createCollection(bool migratable, NodeT curr_node);
+  static ElementIDStruct createObjGroup(ObjGroupProxyType proxy, NodeT node);
+  static ElementIDStruct createBareHandler(NodeT node);
 
   static ElementIDStruct createCollectionImpl(
-    bool migratable, ElementIDType seq_id, NodeType home_node, NodeType curr_node
+    bool migratable, ElementIDType seq_id, NodeT home_node, NodeT curr_node
   );
 
   static void setObjGroup(
-    ElementIDType& id, ObjGroupProxyType proxy, NodeType node
+    ElementIDType& id, ObjGroupProxyType proxy, NodeT node
   );
   static void setCollectionID(
-    ElementIDType& id, bool migratable, ElementIDType seq_id, NodeType node
+    ElementIDType& id, bool migratable, ElementIDType seq_id, NodeT node
   );
 
   static eElmIDControlBits getControlBits(ElementIDType id);
   static bool isMigratable(ElementIDType id);
-  static NodeType getNode(ElementIDType id);
+  static NodeT getNode(ElementIDType id);
   static ObjGroupProxyType getObjGroupProxy(ElementIDType id, bool include_node);
 };
 

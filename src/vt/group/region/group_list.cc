@@ -68,7 +68,7 @@ List::List(ListType&& in_list) : list_(std::move(in_list)) { }
   }
 }
 
-/*virtual*/ bool List::contains(NodeType const& node) {
+/*virtual*/ bool List::contains(NodeT const& node) {
   if (is_sorted_) {
     return std::binary_search(list_.begin(), list_.end(), node);
   } else {

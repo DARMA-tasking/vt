@@ -61,8 +61,8 @@ CoreType randomSeedMapCore(SeedType seed, CoreType ncores) {
   return randomSeedMap(seed, ncores);
 }
 
-NodeType randomSeedMapNode(SeedType seed, NodeType nnodes) {
-  return randomSeedMap(seed, nnodes);
+NodeT randomSeedMapNode(SeedType seed, NodeT nnodes) {
+  return NodeT{randomSeedMap(seed, nnodes)};
 }
 
 }} /* end namespace vt::mapping */

@@ -58,10 +58,10 @@ static inline void context() {
    */
 
   // Equivalent to: MPI_Comm_rank(...)
-  NodeType const this_node = ::vt::theContext()->getNode();
+  auto const this_node = ::vt::theContext()->getNode();
 
   // Equivalent to: MPI_Comm_size(...)
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
 
   // The header-only library fmt is used for printing throughout VT. You can use
   // it because the headers are included by default

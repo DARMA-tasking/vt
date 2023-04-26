@@ -51,11 +51,11 @@ struct HandleMsg : vt::Message {
 };
 
 static void tell_handle(HandleMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   fmt::print("{}: handle={}\n", this_node, msg->han);
 
-  if (this_node == 1 || this_node == 2) {
+  if (this_node == vt::NodeT{1} || this_node == vt::NodeT{2}) {
     fmt::print("{}: requesting data\n", this_node);
     vt::theRDMA()->getData(
       msg->han, this_node, sizeof(double)*3, vt::no_byte,
@@ -80,7 +80,7 @@ static vt::RDMA_GetType test_get_fn(
   vt::BaseMessage*, vt::ByteType num_bytes, vt::ByteType offset, vt::TagType tag,
   bool
 ) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
   fmt::print(
     "{}: running test_get_fn: num_bytes={}, tag={}\n",
     this_node, num_bytes, tag
@@ -93,9 +93,9 @@ static vt::RDMA_GetType test_get_fn(
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto const len = 64;
     my_data = std::make_unique<double[]>(len);
 

@@ -67,8 +67,8 @@ static struct DefaultTreeConstructTag { } tree_cons_tag_t { };
  * tree on each node.
  */
 struct Tree {
-  using NodeListType = std::vector<NodeType>;
-  using OperationType = std::function<void(NodeType)>;
+  using NodeListType = std::vector <NodeT  >;
+  using OperationType = std::function<void (NodeT  )>;
   using NumLevelsType = int32_t;
 
   /**
@@ -98,7 +98,7 @@ struct Tree {
    * \param[in] in_children the list of children
    */
   Tree(
-    bool const in_is_root, NodeType const& parent,
+    bool const in_is_root, NodeT const& parent,
     NodeListType const& in_children
   );
 
@@ -112,14 +112,14 @@ struct Tree {
    *
    * \return the parent node
    */
-  NodeType getParent() const;
+  NodeT getParent() const;
 
   /**
    * \internal \brief Get the number of children nodes
    *
    * \return the number of children nodes
    */
-  NodeType getNumChildren() const;
+  NodeT getNumChildren() const;
 
   /**
    * \internal \brief Get whether this node is the root
@@ -140,7 +140,7 @@ struct Tree {
    *
    * \return list of children
    */
-  NodeListType getChildren(NodeType node) const;
+  NodeListType getChildren(NodeT node) const;
 
   /**
    * \internal \brief Apply function (foreach) across all children
@@ -175,7 +175,7 @@ struct Tree {
    *
    * \return number of descendants
    */
-  std::size_t getNumDescendants(NodeType child) const;
+  std::size_t getNumDescendants(NodeT child) const;
 
   /**
    * \internal \brief Get total number of descendants in the tree.
@@ -186,7 +186,7 @@ struct Tree {
 
 private:
   bool set_up_tree_ = false;
-  NodeType parent_ = uninitialized_destination;
+  NodeT parent_ = {};
   bool is_root_ = false;
   NodeListType children_;
 };

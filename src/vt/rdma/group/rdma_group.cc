@@ -59,7 +59,7 @@ Group::get_map() const {
   return map;
 }
 
-NodeType
+NodeT
 Group::findDefaultNode(RDMA_ElmType const& elm) {
   auto const& elms = num_total_elems;
   auto const& default_node = map.block_map(elm, elms);

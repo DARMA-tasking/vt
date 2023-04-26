@@ -52,7 +52,7 @@
 namespace vt { namespace term {
 
 inline void TerminationDetector::produce(
-  EpochType epoch, TermCounterType num_units, NodeType node
+  EpochType epoch, TermCounterType num_units, NodeT node
 ) {
   vt_debug_print(verbose, term, "produce: epoch={:x}, node={}\n", epoch, node);
   auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
@@ -60,7 +60,7 @@ inline void TerminationDetector::produce(
 }
 
 inline void TerminationDetector::consume(
-  EpochType epoch, TermCounterType num_units, NodeType node
+  EpochType epoch, TermCounterType num_units, NodeT node
 ) {
   vt_debug_print(verbose, term, "consume: epoch={:x}, node={}\n", epoch, node);
   auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
@@ -103,7 +103,7 @@ inline void TerminationDetector::produceConsumeState(
 }
 
 inline void TerminationDetector::produceConsume(
-  EpochType epoch, TermCounterType num_units, bool produce, NodeType node
+  EpochType epoch, TermCounterType num_units, bool produce, NodeT node
 ) {
   vt_debug_print(
     normal, term,
@@ -119,7 +119,7 @@ inline void TerminationDetector::produceConsume(
       auto ds_term = getDSTerm(epoch);
 
       // If a node is not passed, use the current node (self-prod/cons)
-      if (node == uninitialized_destination) {
+      if (node.get() == uninitialized_destination) {
         node = this_node_;
       }
 

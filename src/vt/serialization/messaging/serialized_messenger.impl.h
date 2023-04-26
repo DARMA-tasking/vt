@@ -203,7 +203,7 @@ template <typename UserMsgT, typename BaseEagerMsgT>
 
 template <typename MsgT, typename BaseT>
 /*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsg(
-  NodeType dest, MsgT* msg, HandlerType handler,
+  NodeT dest, MsgT* msg, HandlerType handler,
   ActionEagerSend<MsgT, BaseT> eager_sender
 ) {
   auto eager_default_send =
@@ -387,7 +387,7 @@ template <typename MsgT, typename BaseT>
 
     vtAssertExpr(payload_msg == nullptr && data_sender != nullptr);
 
-    auto send_data = [=](NodeType dest) -> messaging::PendingSend {
+    auto send_data = [=](NodeT dest) -> messaging::PendingSend {
       auto const& node = theContext()->getNode();
       if (node != dest) {
         auto sys_msg = makeMessage<SerialWrapperMsgType<MsgT>>();

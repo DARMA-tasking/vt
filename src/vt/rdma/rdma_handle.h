@@ -67,11 +67,11 @@ struct HandleManager {
   static void setOpType(
     RDMA_UniversalIdType& handle, RDMA_TypeType const& rdma_type
   );
-  static void setRdmaNode(RDMA_UniversalIdType& handle, NodeType const& node);
+  static void setRdmaNode(RDMA_UniversalIdType& handle, NodeT const& node);
   static void setRdmaIdentifier(
     RDMA_UniversalIdType& handle, RDMA_IdentifierType const& ident
   );
-  static NodeType getRdmaNode(RDMA_UniversalIdType const& handle);
+  static NodeT getRdmaNode(RDMA_UniversalIdType const& handle);
   static RDMA_IdentifierType getRdmaIdentifier(RDMA_UniversalIdType const& handle);
   static bool isSized(RDMA_UniversalIdType const& handle);
   static bool isCollective(RDMA_UniversalIdType const& handle);

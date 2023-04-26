@@ -224,7 +224,7 @@ void addMemUsageArgs(CLI::App& app, AppConfig& appConfig) {
    */
   auto mem_desc  = "List of memory reporters to query in order of precedence";
   auto mem_phase = "Print memory usage each new phase";
-  auto mem_node  = "Node to print memory usage from or \"all\"";
+  auto mem_node  = "NodeT to print memory usage from or \"all\"";
   auto mem_ps    = "Enable memory reporting with PS (warning: forking to query 'ps' may not be scalable)";
   auto mem_at_thresh = "Print memory usage from scheduler when reaches a threshold increment";
   auto mem_thresh    = "The threshold increments to print memory usage: \"<value> {GiB,MiB,KiB,B}\"";

@@ -49,7 +49,7 @@ namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
 CallbackRawBaseSingle::CallbackRawBaseSingle(
   RawSendMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
-  NodeType const& in_node
+  ::vt::NodeT const& in_node
 ) : pipe_(in_pipe), cb_(SendMsgCB{in_handler,in_node})
 { }
 
@@ -87,7 +87,7 @@ CallbackRawBaseSingle::CallbackRawBaseSingle(
 
 CallbackRawBaseSingle::CallbackRawBaseSingle(
   RawSendObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
-  ObjGroupProxyType in_proxy, NodeType in_node
+  ObjGroupProxyType in_proxy, ::vt::NodeT in_node
 ) : pipe_(in_pipe),  cb_(SendObjGrpCB{in_handler,in_proxy,in_node})
 { }
 

@@ -105,7 +105,7 @@ TEST_F(TestDiagnosticValue, test_diagnostic_value_1) {
   auto num_nodes = theContext()->getNumNodes();
   auto this_node = theContext()->getNode();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
 
     fmt::print("avg={}\n", out.avg_);
     EXPECT_TRUE(std::holds_alternative<ValueType>(out.min_));
@@ -142,7 +142,7 @@ TEST_F(TestDiagnosticValue, test_diagnostic_value_2) {
     return;
   }
 
-  double num_to_set = this_node == 0 ? 100 : 175;
+  double num_to_set = this_node == vt::NodeT{0} ? 100 : 175;
 
   DiagnosticValue<ValueType> val{
     test_key,
@@ -172,7 +172,7 @@ TEST_F(TestDiagnosticValue, test_diagnostic_value_2) {
     val.reduceOver(diag.get(), &out, snapshot);
   });
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     EXPECT_TRUE(std::holds_alternative<ValueType>(out.min_));
     EXPECT_TRUE(std::holds_alternative<ValueType>(out.max_));
     EXPECT_TRUE(std::holds_alternative<ValueType>(out.sum_));

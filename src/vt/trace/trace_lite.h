@@ -304,7 +304,7 @@ protected:
    * \param[in] start the start time
    */
   static void outputHeader(
-    vt_gzFile* file, NodeType const node, TimeType const start
+    vt_gzFile* file, ::vt::NodeT const node, TimeType const start
   );
 
   /**
@@ -315,7 +315,7 @@ protected:
    * \param[in] start the start time
    */
   static void outputFooter(
-    vt_gzFile* file, NodeType const node, TimeType const start
+    vt_gzFile* file, ::vt::NodeT const node, TimeType const start
   );
 
   /**
@@ -340,7 +340,7 @@ protected:
    *
    * \return whether it is enabled
    */
-  static bool traceWritingEnabled(NodeType node);
+  static bool traceWritingEnabled(::vt::NodeT node);
 
   /**
    * \brief Check if a node will output the sts file
@@ -349,7 +349,7 @@ protected:
    *
    * \return whether it will output
    */
-  static bool isStsOutputNode(NodeType node);
+  static bool isStsOutputNode(::vt::NodeT node);
 
   /**
    * \brief Log an event, returning a trace event ID if accepted

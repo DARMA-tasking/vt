@@ -133,7 +133,7 @@ void ZoltanLB::runLB(LoadType total_load) {
   auto const& this_node = theContext()->getNode();
   this_load = total_load;
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     vt_debug_print(terse, lb, "ZoltanLB: runLB: edges={}\n", do_edges_);
     fflush(stdout);
   }
@@ -200,11 +200,11 @@ void ZoltanLB::runLB(LoadType total_load) {
 
     auto const obj_id = export_global_ids[i];
     auto iter = load_objs.find(
-      ObjIDType{obj_id, uninitialized_destination}
+      ObjIDType{obj_id, NodeT  {}}
     );
     vtAssert(iter != load_objs.end(), "Object must exist here");
 
-    migrateObjectTo(*iter, static_cast<NodeType>(to_node));
+    migrateObjectTo(*iter, static_cast <NodeT  >(to_node));
   }
 
   Zoltan_LB_Free_Part(
@@ -222,7 +222,7 @@ void ZoltanLB::makeGraphSymmetric() {
 
   // Go through the comm graph and extract out paired SendRecv edges that are
   // not self-send and have a non-local edge
-  std::unordered_map<NodeType, ElementCommType> shared_edges;
+  std::unordered_map<NodeT, ElementCommType> shared_edges;
 
   for (auto&& elm : *comm_data) {
     if (
@@ -350,7 +350,7 @@ void ZoltanLB::reduceCount(int max_edges_per_node) {
 }
 
 void ZoltanLB::allocateShareEdgeGIDs() {
-  std::unordered_map<NodeType, ElementCommType> shared_edges;
+  std::unordered_map<NodeT, ElementCommType> shared_edges;
 
   auto const this_node = theContext()->getNode();
   for (auto&& elm : load_comm_symm) {

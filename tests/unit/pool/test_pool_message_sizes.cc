@@ -59,8 +59,8 @@ using namespace vt::tests::unit;
 static constexpr int64_t const min_bytes = 1;
 static constexpr int64_t const max_bytes = 16384;
 static constexpr int const max_test_count = 1024;
-static constexpr NodeType const from_node = 0;
-static constexpr NodeType const to_node = 1;
+static constexpr NodeT const from_node = NodeT{0};
+static constexpr NodeT const to_node = NodeT{1};
 
 struct TestPoolMessageSizes : TestParallelHarness {
   static int count;
@@ -96,7 +96,7 @@ void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
 
   count++;
 
-  NodeType const next =
+  NodeT const next =
     this_node == from_node ? to_node : from_node;
 
   if (count < max_test_count) {

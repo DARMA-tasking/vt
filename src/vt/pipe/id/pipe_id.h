@@ -53,7 +53,7 @@ namespace vt { namespace pipe {
 static constexpr BitCountType const pipe_send_back_num_bits = 1;
 static constexpr BitCountType const pipe_persist_num_bits = 1;
 static constexpr BitCountType const pipe_node_num_bits =
-    BitCounterType<NodeType>::value;
+    BitCounterType <NodeT  >::value;
 static constexpr BitCountType const pipe_id_num_bits =
     BitCounterType<PipeIDType>::value;
 
@@ -66,17 +66,17 @@ enum ePipeIDBits {
 
 struct PipeIDBuilder {
   static PipeType createPipeID(
-    PipeIDType const& id, NodeType const& node,
+    PipeIDType const& id, ::vt::NodeT const& node,
     bool const& is_send_back = false, bool const& is_persist = true
   );
 
   static void setIsSendback(PipeType& pipe, bool const& is_send_back);
   static void setIsPersist(PipeType& pipe, bool const& is_persist);
-  static void setNode(PipeType& pipe, NodeType const& node);
+  static void setNode(PipeType& pipe, ::vt::NodeT const& node);
   static void setID(PipeType& pipe, PipeIDType const& id);
   static bool isSendback(PipeType const& pipe);
   static bool isPersist(PipeType const& pipe);
-  static NodeType getNode(PipeType const& pipe);
+  static ::vt::NodeT getNode(PipeType const& pipe);
   static PipeIDType getPipeID(PipeType const& pipe);
 };
 

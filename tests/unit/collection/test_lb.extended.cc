@@ -163,7 +163,7 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   // setup
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
-  auto const next_node = (this_node + 1) % num_nodes;
+  auto const next_node = (this_node + vt::NodeT{1}) % num_nodes;
 
   auto id_from =
     elm::ElmIDBits::createCollectionImpl(true, 1, this_node, this_node);
@@ -189,13 +189,13 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   vt::theLBManager()->destroyLB();
 
   // assert
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     ASSERT_EQ(comm_data->size(), 1);
     return;
   }
 
   ASSERT_EQ(comm_data->size(), 2);
-  auto const prev_node = (this_node + num_nodes - 1) % num_nodes;
+  auto const prev_node = (this_node + num_nodes - NodeT{1}) % num_nodes;
   bool this_to_next = false, prev_to_this = false;
 
   for (auto&& elm : *comm_data) {

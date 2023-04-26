@@ -61,10 +61,10 @@ struct Print {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes < 2) {
+  if (num_nodes < vt::NodeT{2}) {
     return vt::rerror("requires at least 2 nodes");
   }
 
@@ -74,10 +74,10 @@ int main(int argc, char** argv) {
 
   vt::GroupType new_group = vt::theGroup()->newGroupCollective(
     odd_node_filter, [=](vt::GroupType group){
-      auto const& root = 0;
-      auto const& in_group = vt::theGroup()->inGroup(group);
-      auto const& root_node = vt::theGroup()->groupRoot(group);
-      auto const& is_default_group = vt::theGroup()->isGroupDefault(group);
+      auto const root = vt::NodeT{0};
+      auto const in_group = vt::theGroup()->inGroup(group);
+      auto const root_node = vt::theGroup()->groupRoot(group);
+      auto const is_default_group = vt::theGroup()->isGroupDefault(group);
       fmt::print(
         "{}: Group is created: group={:x}, in_group={}, root={}, "
         "is_default_group={}\n",
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
         auto msg = vt::makeMessage<ReduceMsg>(1);
         vt::theGroup()->groupReducer(group)->reduce<Op, Print>(root, msg.get());
       }
-      if (this_node == 1) {
+      if (this_node == vt::NodeT{1}) {
         auto msg = vt::makeMessage<HelloGroupMsg>();
         vt::envelopeSetGroup(msg->env, group);
         vt::theMsg()->broadcastMsg<hello_group_handler>(msg);

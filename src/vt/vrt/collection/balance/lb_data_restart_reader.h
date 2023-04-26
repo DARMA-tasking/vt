@@ -173,37 +173,37 @@ private:
   std::unordered_map<PhaseType, std::set<ElementIDStruct>> history_;
 
   struct DepartMsg : vt::Message {
-    DepartMsg(NodeType in_depart_node, PhaseType in_phase, ElementIDStruct in_elm)
+    DepartMsg(NodeT in_depart_node, PhaseType in_phase, ElementIDStruct in_elm)
       : depart_node(in_depart_node),
         phase(in_phase),
         elm(in_elm)
     { }
 
-    NodeType depart_node = uninitialized_destination;
+    NodeT depart_node = {};
     PhaseType phase = no_lb_phase;
     ElementIDStruct elm;
   };
 
   struct ArriveMsg : vt::Message {
-    ArriveMsg(NodeType in_arrive_node, PhaseType in_phase, ElementIDStruct in_elm)
+    ArriveMsg(NodeT in_arrive_node, PhaseType in_phase, ElementIDStruct in_elm)
       : arrive_node(in_arrive_node),
         phase(in_phase),
         elm(in_elm)
     { }
 
-    NodeType arrive_node = uninitialized_destination;
+    NodeT arrive_node = {};
     PhaseType phase = no_lb_phase;
     ElementIDStruct elm;
   };
 
   struct UpdateMsg : vt::Message {
-    UpdateMsg(NodeType in_curr_node, PhaseType in_phase, ElementIDStruct in_elm)
+    UpdateMsg(NodeT in_curr_node, PhaseType in_phase, ElementIDStruct in_elm)
       : curr_node(in_curr_node),
         phase(in_phase),
         elm(in_elm)
     { }
 
-    NodeType curr_node = uninitialized_destination;
+    NodeT curr_node = {};
     PhaseType phase = no_lb_phase;
     ElementIDStruct elm;
   };

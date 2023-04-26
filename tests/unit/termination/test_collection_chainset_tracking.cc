@@ -72,10 +72,10 @@ TEST_F(TestCollectionChainsetTracking, test_local_chainset_tracking) {
 
   theCollective()->barrier();
 
-  auto getNthPosition = [&](Index3D idx, int n) -> NodeType {
+  auto getNthPosition = [&](Index3D idx, int n) -> NodeT {
     auto const home = theCollection()->getMappedNode(proxy, idx);
     auto num = vt::theContext()->getNumNodes();
-    return (home + n) % num;
+    return (home + NodeT{n}) % num;
   };
 
   for (int i = 1; i < num_nodes + 1; i++) {
@@ -115,10 +115,10 @@ TEST_F(TestCollectionChainsetTracking, test_home_chainset_tracking) {
 
   theCollective()->barrier();
 
-  auto getNthPosition = [&](Index3D idx, int n) -> NodeType {
+  auto getNthPosition = [&](Index3D idx, int n) -> NodeT {
     auto const home = theCollection()->getMappedNode(proxy, idx);
     auto num = vt::theContext()->getNumNodes();
-    return (home + n) % num;
+    return (home + NodeT{n}) % num;
   };
 
   for (int i = 1; i < num_nodes + 1; i++) {

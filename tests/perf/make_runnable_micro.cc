@@ -87,7 +87,7 @@ struct NodeObj {
 
   void perfRunBenchmark() {
     for (int i = 0; i < num_iters; i++) {
-      auto r = runnable::makeRunnable(msgs[i], false, han, 0)
+      auto r = runnable::makeRunnable(msgs[i], false, han, NodeT{0})
         .withContinuation(nullptr)
         .withTDEpochFromMsg(false);
       r.enqueue();

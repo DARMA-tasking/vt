@@ -154,7 +154,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   auto const& node = theEvent()->getOwningNode(event);
 
   vtAssert(
-    node == theContext()->getNode(), "Node must be identical"
+    node == theContext()->getNode(), "NodeT must be identical"
   );
 
   auto send_back_fun = [=]{
@@ -207,7 +207,7 @@ bool AsyncEvent::isLocalTerm() {
   return event_container_.size() == 0;
 }
 
-NodeType AsyncEvent::getOwningNode(EventType const& event) {
+::vt::NodeT AsyncEvent::getOwningNode(EventType const& event) {
   return EventManagerType::getEventNode(event);
 }
 
@@ -217,7 +217,7 @@ bool AsyncEvent::needsPolling(EventRecordTypeType const& type) {
 }
 
 EventType AsyncEvent::createEvent(
-  EventRecordTypeType const& type, NodeType const& node
+  EventRecordTypeType const& type, ::vt::NodeT const& node
 ) {
   EventType const event = EventManagerType::makeEvent(cur_event_, node);
   cur_event_++;
@@ -238,15 +238,15 @@ EventType AsyncEvent::createEvent(
   return event;
 }
 
-EventType AsyncEvent::createMPIEvent(NodeType const& node) {
+EventType AsyncEvent::createMPIEvent(::vt::NodeT const& node) {
   return createEvent(EventRecordTypeType::MPI_EventRecord, node);
 }
 
-EventType AsyncEvent::createNormalEvent(NodeType const& node) {
+EventType AsyncEvent::createNormalEvent(::vt::NodeT const& node) {
   return createEvent(EventRecordTypeType::NormalEventRecord, node);
 }
 
-EventType AsyncEvent::createParentEvent(NodeType const& node) {
+EventType AsyncEvent::createParentEvent(::vt::NodeT const& node) {
   return createEvent(EventRecordTypeType::ParentEventRecord, node);
 }
 

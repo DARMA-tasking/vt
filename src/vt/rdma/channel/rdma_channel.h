@@ -68,8 +68,8 @@ struct Channel {
 
   Channel(
     RDMA_HandleType const& in_rdma_handle, RDMA_TypeType const& in_op_type,
-    NodeType const& in_target, TagType const& in_channel_group_tag,
-    NodeType const& in_non_target = uninitialized_destination,
+    NodeT const& in_target, TagType const& in_channel_group_tag,
+    NodeT const& in_non_target = {},
     RDMA_PtrType const& in_ptr = nullptr, ByteType const& in_num_bytes = no_byte
   );
 
@@ -86,8 +86,8 @@ struct Channel {
     RDMA_PtrType const& ptr, ByteType const& ptr_num_bytes, ByteType const& offset
   );
 
-  NodeType getTarget() const;
-  NodeType getNonTarget() const;
+  NodeT getTarget() const;
+  NodeT getNonTarget() const;
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -118,8 +118,8 @@ private:
   RDMA_HandleType const rdma_handle_ = no_rdma_handle;
   RDMA_GroupPosType target_pos_ = no_group_pos;
   RDMA_GroupPosType non_target_pos_ = no_group_pos;
-  NodeType target_ = uninitialized_destination;
-  NodeType non_target_ = uninitialized_destination;
+  NodeT target_ = {};
+  NodeT non_target_ = {};
   ByteType num_bytes_ = no_byte;
   RDMA_PtrType ptr_ = no_rdma_ptr;
   RDMA_TypeType op_type_ = uninitialized_rdma_type;

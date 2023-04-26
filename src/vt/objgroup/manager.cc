@@ -107,7 +107,7 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
 
 ObjGroupManager::HolderBaseType* ObjGroupManager::getHolderBase(HandlerType han) {
   auto const ctrl = HandlerManager::getHandlerControl(han);
-  auto const node = 0;
+  auto const node = NodeT{0};
   auto const proxy = proxy::ObjGroupProxy::create(ctrl, node, true);
   vt_debug_print(
     normal, objgroup,

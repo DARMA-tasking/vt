@@ -54,13 +54,13 @@ namespace vt { namespace tests { namespace unit { namespace channel {
 struct BasicMsg : vt::Message {
 
   int           ttl_   = 0; // time to live for message routing
-  vt::NodeType  src_   = vt::uninitialized_destination;
-  vt::NodeType  dst_   = vt::uninitialized_destination;
+  vt::NodeT  src_   = vt::NodeT{};
+  vt::NodeT  dst_   = vt::NodeT{};
   vt::EpochType epoch_ = vt::no_epoch;
 
   BasicMsg() = default;
   BasicMsg(
-    vt::NodeType in_src, vt::NodeType in_dst,
+    vt::NodeT in_src, vt::NodeT in_dst,
     int in_ttl = 1, vt::EpochType in_epoch = vt::no_epoch
   ) : ttl_  (in_ttl - 1),
       src_  (in_src),
@@ -75,13 +75,13 @@ struct BasicMsg : vt::Message {
 struct CtrlMsg : vt::Message {
 
   int           count_ = 0; // incoming/outgoing basic message count
-  vt::NodeType  src_   = vt::uninitialized_destination;
-  vt::NodeType  dst_   = vt::uninitialized_destination;
+  vt::NodeT  src_   = vt::NodeT{};
+  vt::NodeT  dst_   = vt::NodeT{};
   vt::EpochType epoch_ = vt::no_epoch;
 
   CtrlMsg() = default;
   CtrlMsg(
-    vt::NodeType in_src, vt::NodeType in_dst,
+    vt::NodeT in_src, vt::NodeT in_dst,
     int in_nb = 0, vt::EpochType in_epoch = vt::no_epoch
   ) : count_(in_nb),
       src_  (in_src),

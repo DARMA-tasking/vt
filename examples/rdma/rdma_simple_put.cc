@@ -53,11 +53,11 @@ struct HandleMsg : vt::Message {
 static std::unique_ptr<double[]> my_data = nullptr;
 
 static void read_data_fn(HandleMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   fmt::print("{}: read_data_fn: handle={}\n", this_node, msg->han);
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     int const len = 10;
     for (auto i = 0; i < len; i++) {
       fmt::print("\t: my_data[{}] = {}\n", i, my_data[i]);
@@ -66,18 +66,18 @@ static void read_data_fn(HandleMsg* msg) {
 }
 
 static void put_data_fn(HandleMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
   vt::RDMA_HandleType handle = msg->han;
 
   fmt::print("{}: put_data_fn: handle={}\n", this_node, handle);
 
-  if (this_node < 4) {
+  if (this_node < vt::NodeT{4}) {
     fmt::print("{}: putting data\n", this_node);
 
     int const local_data_len = 3;
     double* local_data = new double[local_data_len];
     for (auto i = 0; i < local_data_len; i++) {
-      local_data[i] = (i+1)*1000*(this_node+1);
+      local_data[i] = (i+1)*1000*(this_node.get()+1);
     }
 
     vt::theRDMA()->putData(
@@ -88,7 +88,7 @@ static void put_data_fn(HandleMsg* msg) {
         fmt::print("{}: after put: sending msg back to 0\n", this_node);
         auto msg2 = vt::makeMessage<HandleMsg>(this_node);
         msg2->han = handle;
-        vt::theMsg()->sendMsg<read_data_fn>(0, msg2);
+        vt::theMsg()->sendMsg<read_data_fn>(vt::NodeT{0}, msg2);
       }
     );
   }
@@ -98,7 +98,7 @@ static void put_handler_fn(
   vt::BaseMessage*, vt::RDMA_PtrType in_ptr, vt::ByteType in_num_bytes,
   vt::ByteType offset, vt::TagType tag, bool
 ) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   fmt::print(
     "{}: put_handler_fn: my_data={}, in_ptr={}, in_num_bytes={}, tag={}, "
@@ -121,14 +121,14 @@ static void put_handler_fn(
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes != 4) {
+  if (num_nodes != vt::NodeT{4}) {
     return vt::rerror("requires exactly 4 nodes");
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto const len = 64;
     my_data = std::make_unique<double[]>(len);
 

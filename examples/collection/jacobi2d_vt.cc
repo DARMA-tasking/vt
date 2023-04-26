@@ -429,10 +429,10 @@ int main(int argc, char** argv) {
 
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   if (argc == 1) {
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       fmt::print(
         stderr, "{}: using default arguments since none provided\n", name
       );
@@ -458,7 +458,7 @@ int main(int argc, char** argv) {
 
   /* --- Print information about the simulation */
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     fmt::print(
       stdout, "\n - Solve the linear system for the Laplacian with homogeneous Dirichlet"
       " on [0, 1] x [0, 1]\n"

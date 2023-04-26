@@ -55,7 +55,7 @@ namespace vt { namespace group { namespace global {
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* handler>
 /*static*/ void DefaultGroup::sendPhaseMsg(
-  PhaseType const& phase, NodeType const& node
+  PhaseType const& phase, NodeT const& node
 ) {
   auto const& this_node = theContext()->getNode();
   if (this_node == node) {

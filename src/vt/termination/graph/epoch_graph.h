@@ -57,7 +57,7 @@
 namespace vt { namespace termination { namespace graph {
 
 struct EpochGraph {
-  using EpFormat = std::tuple<EpochType, NodeType, bool, std::string>;
+  using EpFormat = std::tuple<EpochType, NodeT  , bool, std::string>;
 
   EpochGraph() = default;
   EpochGraph(EpochGraph&&) = default;
