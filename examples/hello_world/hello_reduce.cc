@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   vt::NodeType const root = 0;
 
   auto r = vt::theCollective()->global();
-  r->reduce<vt::collective::PlusOp, reduceResult>(vt::Node{root}, 50, 52.334);
+  r->reduce<reduceResult, vt::collective::PlusOp>(vt::Node{root}, 50, 52.334);
 
   vt::finalize();
   return 0;

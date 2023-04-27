@@ -83,6 +83,20 @@ void Reduce::reduceRootRecv(MsgT* msg) {
     .run();
 }
 
+template <typename Op, auto f, typename... Params>
+Reduce::PendingSendType Reduce::reduce(Node root, Params&&... params) {
+  using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+  using MsgT = ReduceTMsg<Tuple>;
+
+  auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
+  auto id = detail::ReduceStamp{};
+  auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
+  msg->root_handler_ = han;
+
+  return reduce<Op, operators::NoCombine, MsgT>(root.get(), msg.get(), id, 1);
+}
+
+
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 Reduce::PendingSendType Reduce::reduce(
   NodeType const& root, MsgT* msg, Callback<MsgT> cb, detail::ReduceStamp id,

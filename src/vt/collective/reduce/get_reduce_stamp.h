@@ -48,6 +48,7 @@
 #include "vt/collective/reduce/reduce_scope.h"
 #include "vt/messaging/message.h"
 
+#include <tuple>
 #include <utility>
 #include <type_traits>
 

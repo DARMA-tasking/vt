@@ -168,10 +168,19 @@ struct Reduce : virtual collective::tree::Tree {
     return reduce<MsgT, f>(root, msg, id, num_contrib);
   }
 
-  //////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////
-  template <template<typename Arg> class Op, auto f, typename... Params>
+  /**
+   * \brief Perform a reduction without a message
+   *
+   * \param[in] root the root node to target
+   * \param[in] params parameters to reduce
+   *
+   * \return a pending send
+   */
+  template <
+    auto f,
+    template <typename Arg> class Op = NoneOp,
+    typename... Params
+  >
   PendingSendType reduce(Node root, Params&&... params) {
     using Tuple = typename FuncTraits<decltype(f)>::TupleType;
     using OpT = Op<Tuple>;
@@ -179,20 +188,7 @@ struct Reduce : virtual collective::tree::Tree {
   }
 
   template <typename Op, auto f, typename... Params>
-  PendingSendType reduce(Node root, Params&&... params) {
-    using Tuple = typename FuncTraits<decltype(f)>::TupleType;
-    using MsgT = ReduceTMsg<Tuple>;
-
-    auto msg = vt::makeMessage<MsgT>(std::tuple{std::forward<Params>(params)...});
-    auto id = detail::ReduceStamp{};
-    auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
-    msg->root_handler_ = han;
-
-    return reduce<Op, operators::NoCombine, MsgT>(root.get(), msg.get(), id, 1);
-  }
-  //////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////
+  PendingSendType reduce(Node root, Params&&... params);
 
   /**
    * \brief Reduce a message up the tree
