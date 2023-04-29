@@ -59,9 +59,9 @@ void Scatter::scatter(
   std::size_t const& total_size, std::size_t const& max_proc_size,
   FuncSizeType size_fn, FuncDataType data_fn
 ) {
-  auto const& num_nodes = theContext()->getNumNodes();
-  auto const& elm_size = max_proc_size;
-  auto const& combined_size = num_nodes * elm_size;
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const elm_size = max_proc_size;
+  auto const combined_size = static_cast<size_t>(num_nodes * elm_size);
   auto scatter_msg =
     makeMessageSz<ScatterMsg>(combined_size, combined_size, elm_size);
   vtAssert(total_size == combined_size, "Sizes must be consistent");

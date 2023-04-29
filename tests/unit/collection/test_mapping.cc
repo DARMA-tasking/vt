@@ -100,20 +100,20 @@ std::vector<T> kFactors(T n, int8_t k) {
   T const orig_n = n;
   std::vector<T> factors;
   while (n % 2 == 0) {
-    factors.push_back(2);
+    factors.push_back(T{2});
     n /= 2;
   }
-  for (T i = 3; i*i <= n; i += 2) {
+  for (T i = T{3}; i*i <= n; i += 2) {
     while (n % i == 0) {
-      factors.push_back(i);
+      factors.push_back(T{i});
       n /= i;
     }
   }
   if (n > 2) {
-    factors.push_back(n);
+    factors.push_back(T{n});
   }
   while (factors.size() < static_cast<std::size_t>(k)) {
-    factors.push_back(1);
+    factors.push_back(T{1});
   }
 
   std::vector<T> output = factors;
@@ -133,7 +133,7 @@ std::vector<T> kFactors(T n, int8_t k) {
     output = compressed;
   }
 
-  T total = 1;
+  T total = T{1};
   std::string buf = "";
   for (auto&& elm : output) {
     buf += fmt::format("{}, ", elm);

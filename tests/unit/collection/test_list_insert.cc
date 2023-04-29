@@ -124,7 +124,7 @@ TEST_F(TestListInsert, test_bounded_list_insert_1) {
   num_inserted = 0;
   num_work = 0;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   auto const range = Index1D(num_nodes * num_elms_per_node);
   std::vector<Index1D> list_insert;
@@ -151,7 +151,7 @@ TEST_F(TestListInsert, test_bounded_list_insert_no_default_constructor) {
   num_inserted = 0;
   num_work = 0;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   auto const range = Index1D(num_nodes * num_elms_per_node);
   std::vector<Index1D> list_insert;
@@ -192,7 +192,7 @@ TEST_F(TestListInsert, test_unbounded_list_insert_2) {
   num_inserted = 0;
   num_work = 0;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   auto const range = Index1D(num_nodes * num_elms_per_node);
   std::vector<Index1D> list_insert;
@@ -219,7 +219,7 @@ TEST_F(TestListInsert, test_unbounded_list_insert_no_default_constructor) {
   num_inserted = 0;
   num_work = 0;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   auto const range = Index1D(num_nodes * num_elms_per_node);
   std::vector<Index1D> list_insert;
@@ -247,7 +247,7 @@ TEST_F(TestListInsert, test_bounded_list_insert_here_3) {
   num_inserted = 0;
   num_work = 0;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
   auto const this_node = theContext()->getNode();
   auto const range = Index1D(num_nodes * num_elms_per_node);
 
@@ -281,7 +281,7 @@ TEST_F(TestListInsert, test_bounded_list_insert_here_no_default_constructor) {
   num_inserted = 0;
   num_work = 0;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
   auto const this_node = theContext()->getNode();
   auto const range = Index1D(num_nodes * num_elms_per_node);
 
@@ -314,7 +314,7 @@ TEST_F(TestListInsert, test_unbounded_list_insert_here_4) {
   num_inserted = 0;
   num_work = 0;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
   auto const this_node = theContext()->getNode();
   auto const range = Index1D(num_nodes * num_elms_per_node);
 
@@ -348,7 +348,7 @@ TEST_F(TestListInsert, test_unbounded_list_insert_here_no_default_constructor) {
   num_inserted = 0;
   num_work = 0;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
   auto const this_node = theContext()->getNode();
   auto const range = Index1D(num_nodes * num_elms_per_node);
 
@@ -426,7 +426,7 @@ TEST_F(TestListInsert, test_bounded_bulk_insert_no_default_constructor) {
   num_inserted = 0;
   num_work = 0;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
   auto const range = Index1D(num_nodes * num_elms_per_node);
 
   auto proxy = vt::makeCollection<NonDefaultConstructibleStruct>("test_bounded_bulk_insert_no_default_constructor")
@@ -450,7 +450,7 @@ TEST_F(TestListInsert, test_bounded_mix_list_insert_no_default_constructor) {
   num_inserted = 0;
   num_work = 0;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
   auto const this_node = theContext()->getNode();
   auto const range = Index1D(num_nodes * num_elms_per_node);
 

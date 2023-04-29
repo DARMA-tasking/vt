@@ -92,7 +92,7 @@ static constexpr int32_t const num_elms_per_node = 8;
 
 TEST_F(TestInsert, test_insert_dense_1) {
   auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   auto const range = Index1D(num_nodes * num_elms_per_node);
   auto proxy = vt::makeCollection<InsertTest>("test_insert_dense_1")
@@ -133,7 +133,7 @@ TEST_F(TestInsert, test_insert_dense_1) {
 
 TEST_F(TestInsert, test_insert_sparse_1) {
   auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   auto const range = Index1D(num_nodes * num_elms_per_node * 16);
   auto proxy = vt::makeCollection<InsertTest>("test_insert_sparse_1")
@@ -158,7 +158,7 @@ TEST_F(TestInsert, test_insert_sparse_1) {
 
 TEST_F(TestInsert, test_insert_dense_node_1) {
   auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   auto const range = Index1D(num_nodes * num_elms_per_node);
   auto proxy = vt::makeCollection<InsertTest>("test_insert_dense_node_1")
@@ -185,7 +185,7 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
 
 TEST_F(TestInsert, test_insert_sparse_node_1) {
   auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   auto const range = Index1D(num_nodes * num_elms_per_node * 16);
   auto proxy = vt::makeCollection<InsertTest>("test_insert_sparse_node_1")
@@ -212,7 +212,7 @@ TEST_F(TestInsert, test_insert_sparse_node_1) {
 
 TEST_F(TestInsert, test_insert_send_dense_node_1) {
   auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   auto const range = Index1D(num_nodes * num_elms_per_node);
   auto proxy = vt::makeCollection<InsertTest>("test_insert_send_dense_node_1")
@@ -250,7 +250,7 @@ TEST_F(TestInsert, test_insert_send_dense_node_1) {
 
 TEST_F(TestInsert, test_insert_send_sparse_node_1) {
   auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   auto const range = Index1D(num_nodes * num_elms_per_node * 16);
   auto proxy = vt::makeCollection<InsertTest>("test_insert_send_sparse_node_1")

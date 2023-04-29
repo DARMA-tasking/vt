@@ -206,6 +206,89 @@ struct Strong {
   }
 
   /**
+   * \brief Addition assignment operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType& operator+=(const OtherType& in) {
+    v_ += static_cast<Type>(in);
+    return *this;
+  }
+
+  /**
+   * \brief Division assignment operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType& operator/=(const OtherType& in) {
+    v_ /= static_cast<Type>(in);
+    return *this;
+  }
+
+  /**
+   * \brief Multiplication assignment operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType& operator*=(const OtherType& in) {
+    v_ *= static_cast<Type>(in);
+    return *this;
+  }
+
+  /**
+   * \brief Addition operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType operator+(const OtherType& in) const {
+    return ThisType{v_ + static_cast<Type>(in)};
+  }
+
+  /**
+   * \brief Subtraction operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType operator-(const OtherType& in) const {
+    return ThisType{v_ - static_cast<Type>(in)};
+  }
+
+  /**
+   * \brief Modulo operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType operator%(const OtherType& in) const {
+    return ThisType{v_ % static_cast<Type>(in)};
+  }
+
+  /**
+   * \brief Multiplication operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType operator*(const OtherType& in) const {
+    return ThisType{v_ * static_cast<Type>(in)};
+  }
+
+  /**
+   * \brief Division operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType operator/(const OtherType& in) const {
+    return ThisType{v_ / static_cast<Type>(in)};
+  }
+
+  /**
    * \brief Pre-increment operator
    */
   ThisType& operator++() {

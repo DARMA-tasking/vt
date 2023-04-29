@@ -109,7 +109,7 @@ struct TestCollectionStorage : TestParallelHarness {
 };
 
 TEST_F(TestCollectionStorage, test_collection_storage_1) {
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
   auto const num_elms = Index1D{num_nodes*16};
 
   using MsgType = typename TestCol::TestMsg;

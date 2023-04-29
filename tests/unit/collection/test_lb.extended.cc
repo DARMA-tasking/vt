@@ -229,7 +229,7 @@ struct MyCol2 : vt::Collection<MyCol2,vt::Index1D> {};
 using TestLoadBalancerNoWork = TestParallelHarness;
 
 TEST_F(TestLoadBalancerNoWork, test_load_balancer_no_work) {
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
   auto const range = Index1D(num_nodes * 8);
   theCollection()->constructCollective<MyCol2>(
     range, [](vt::Index1D) { return std::make_unique<MyCol2>(); },
@@ -719,8 +719,8 @@ getJsonStringForPhase(
 TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
   bool should_dump = GetParam();
 
-  auto this_node = vt::theContext()->getNode();
-  auto num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode().get();
+  auto num_nodes = vt::theContext()->getNumNodes().get();
 
   vt::vrt::collection::CollectionProxy<MyCol> proxy;
   auto const range = vt::Index1D(num_nodes * 1);

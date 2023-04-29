@@ -76,7 +76,7 @@ TEST_F(TestQueryContext, test_query_context_broadcast_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   if (this_node == vt::NodeT{0}) {
-    auto const& range = Index1D(num_nodes * num_elms_per_node);
+    auto const& range = Index1D(num_nodes.get() * num_elms_per_node);
     auto proxy = theCollection()->construct<QueryTest>(
       range, "test_query_context_broadcast_1"
     );
@@ -88,7 +88,7 @@ TEST_F(TestQueryContext, test_query_context_broadcast_1) {
 
 TEST_F(TestQueryContext, test_query_context_send_1) {
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& num_nodes = theContext()->getNumNodes().get();
   if (this_node == vt::NodeT{0}) {
     auto const& range = Index1D(num_nodes * num_elms_per_node);
     auto proxy = theCollection()->construct<QueryTest>(
