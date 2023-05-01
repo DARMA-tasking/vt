@@ -50,6 +50,12 @@ namespace vt { namespace vrt {
 
 static constexpr NodeType const default_collection_reduce_root_node = 0;
 
+//Used to indicate that a serialized proxy should include proxy bits + data
+struct CheckpointTrait {};
+//Used to indicate that data is being serialized for a proxy checkpoint
+//without checkpointing all nested proxies.
+struct CheckpointInternalTrait {};
+
 }} /* end namespace vt::vrt */
 
 #endif /*INCLUDED_VT_VRT_VRT_COMMON_H*/

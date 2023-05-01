@@ -370,6 +370,16 @@ public:
   ProxyElmType<ObjT> proxyElm(ObjT* obj);
 
   /**
+   * \brief Get the group that a proxy element is a member of.
+   *
+   * \param[in] proxy_elm an element of an object group
+   *
+   * \return de-indexed proxy to the object group
+   */
+  template <typename ObjT>
+  ProxyType<ObjT> proxyGroup(ProxyElmType<ObjT> proxy_elm);
+
+  /**
    * \brief Get object group label
    *
    * \param[in] proxy indexed proxy to the object group (must be the current
