@@ -83,18 +83,21 @@ struct VrtElmProxy : ProxyCollectionElmTraits<ColT, IndexT> {
            other.elm_proxy_ == this->elm_proxy_;
   }
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    ProxyCollectionElmTraits<ColT, IndexT>::serialize(s);
-  }
+  friend struct CollectionManager;
 
   template <typename ColU, typename IndexU>
   friend std::ostream& operator<<(
     std::ostream& os, VrtElmProxy<ColU,IndexU> const& vrt
   );
 
-  friend struct CollectionManager;
+  template <typename Ser>
+  void serialize(DefaultSerializer<Ser>& s);
+  template <typename Ser> 
+  void serialize(CheckpointSerializer<Ser>& s);
+  template <typename Ser>
+  std::unique_ptr<ColT> deserializeToElm(Ser& s);
 };
+
 
 template <typename ColT, typename IndexT>
 std::ostream& operator<<(

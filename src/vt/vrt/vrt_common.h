@@ -44,11 +44,20 @@
 #if !defined INCLUDED_VT_VRT_VRT_COMMON_H
 #define INCLUDED_VT_VRT_VRT_COMMON_H
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 
 namespace vt { namespace vrt {
 
 static constexpr NodeType const default_collection_reduce_root_node = 0;
+
+struct CheckpointTrait {};
+template<typename SerializerT>
+using CheckpointSerializer = typename checkpoint::with_traits<SerializerT, CheckpointTrait>;
+
+template<typename SerializerT>
+using DefaultSerializer = typename checkpoint::without_traits<SerializerT, CheckpointTrait>;
 
 }} /* end namespace vt::vrt */
 

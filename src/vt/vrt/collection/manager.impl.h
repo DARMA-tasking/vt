@@ -1369,6 +1369,50 @@ void CollectionManager::insertMetaCollection(
   };
 }
 
+template<typename IndexT>
+VirtualProxyType CollectionManager::makeCollectionProxy(
+  bool is_collective, bool is_migratable, VirtualProxyType requested
+) {
+
+  if(requested != no_vrt_proxy){
+    auto conflicting_holder = findColHolder<IndexT>(requested);
+
+    if(conflicting_holder == nullptr){
+      VirtualIDType const req_id = VirtualProxyBuilder::getVirtualID(requested);
+
+      if(is_collective) next_collective_id_ = std::max(next_collective_id_, req_id+1);
+      else next_rooted_id_ = std::max(next_rooted_id_, req_id+1);
+
+      vt_debug_print(
+        verbose, vrt_coll,
+        "makeCollectionProxy: node={}, new_dist_id={}, proxy={:x} (by request)\n",
+        theContext()->getNode(), req_id, requested
+      );
+      return requested;
+    } // else ignore request, make as normal
+  };
+
+  VirtualIDType const new_id = is_collective ?
+    next_collective_id_++ :
+    next_rooted_id_++;
+
+  auto const this_node = theContext()->getNode();
+  bool const is_collection = true;
+
+  // Create the new proxy with the `new_dist_id`
+  auto const proxy = VirtualProxyBuilder::createProxy(
+    new_id, this_node, is_collection, is_migratable, is_collective
+  );
+
+  vt_debug_print(
+    verbose, vrt_coll,
+    "makeCollectionProxy: node={}, new_dist_id={}, proxy={:x}\n",
+    this_node, new_id, proxy
+  );
+
+  return proxy;
+}
+
 template <typename ColT>
 void CollectionManager::constructGroup(VirtualProxyType const& proxy) {
   /*
@@ -2088,6 +2132,12 @@ IndexT CollectionManager::getRange(VirtualProxyType proxy) {
 }
 
 template <typename ColT, typename IndexT>
+bool CollectionManager::getDynamicMembership(VirtualProxyType proxy) {
+  auto col_holder = findColHolder<IndexT>(proxy);
+  return col_holder->has_dynamic_membership_;
+}
+
+template <typename ColT, typename IndexT>
 std::set<IndexT> CollectionManager::getLocalIndices(
   CollectionProxyWrapType<ColT> proxy
 ) {
@@ -2199,27 +2249,41 @@ void CollectionManager::checkpointToFile(
 
 namespace detail {
 template <typename ColT>
-inline void restoreOffHomeElement(
-  ColT*, NodeType node, typename ColT::IndexType idx,
-  CollectionProxy<ColT> proxy
+inline void MigrateRequestHandler (
+  CollectionManager::MigrateRequestMsg<ColT>* msg, ColT*
 ) {
-  theCollection()->migrate(proxy(idx), node);
+  auto node = msg->to_node_;
+  auto proxy_elm = msg->proxy_elm_;
+  theCollection()->migrate(proxy_elm, node);
 }
 } /* end namespace detail */
 
 template <typename ColT>
-/*static*/ void CollectionManager::migrateToRestoreLocation(
-  NodeType node, typename ColT::IndexType idx,
-  CollectionProxyWrapType<ColT> proxy
+EpochType CollectionManager::requestMigrateDeferred(
+  VrtElmProxy<ColT, typename ColT::IndexType> proxy_elem, NodeType destination
 ) {
-  if (proxy(idx).tryGetLocalPtr() != nullptr) {
-    theCollection()->migrate(proxy(idx), node);
-  } else {
-    proxy(idx).template send<detail::restoreOffHomeElement<ColT>>(
-      node, idx, proxy
-    );
-  }
+  auto ep = theTerm()->makeEpochRooted(
+      "Request element migration", term::UseDS{true}
+  );
+  theMsg()->pushEpoch(ep);
+
+  proxy_elem.template send<
+    MigrateRequestMsg<ColT>, detail::MigrateRequestHandler<ColT>
+  >(proxy_elem, destination);
+
+  theMsg()->popEpoch(ep);
+  theTerm()->finishedEpoch(ep);
+  return ep;
 }
+
+template <typename ColT>
+void CollectionManager::requestMigrate(
+  VrtElmProxy<ColT, typename ColT::IndexType> proxy_elem, NodeType destination
+) {
+   auto ep = requestMigrateDeferred(proxy_elem, destination);
+   vt::runSchedulerThrough(ep);
+}
+
 
 template <typename ColT>
 void CollectionManager::restoreFromFileInPlace(
@@ -2247,23 +2311,14 @@ void CollectionManager::restoreFromFileInPlace(
     metadata_file_name
   );
 
+  //Everyone shuffles any elements not where their data is
   runInEpochCollective([&]{
     for (auto&& elm : directory->elements_) {
       auto idx = elm.idx_;
       auto file_name = elm.file_name_;
 
       if (proxy(idx).tryGetLocalPtr() == nullptr) {
-        auto mapped_node = getMappedNode<ColT>(proxy, idx);
-        vtAssertExpr(mapped_node != uninitialized_destination);
-        auto this_node = theContext()->getNode();
-
-        if (mapped_node != this_node) {
-          theMsg()->send<migrateToRestoreLocation<ColT>>(
-            vt::Node{mapped_node}, this_node, idx, proxy
-          );
-        } else {
-          migrateToRestoreLocation<ColT>(this_node, idx, proxy);
-        }
+        requestMigrateDeferred(proxy(idx), theContext()->getNode());
       }
     }
   });
