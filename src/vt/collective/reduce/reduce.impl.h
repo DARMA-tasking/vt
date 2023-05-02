@@ -88,7 +88,7 @@ Reduce::PendingSendType Reduce::reduce(Node root, Params&&... params) {
   using Tuple = typename FuncTraits<decltype(f)>::TupleType;
   using MsgT = ReduceTMsg<Tuple>;
 
-  auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
+  auto msg = vt::makeMessage<MsgT>(std::tuple{std::forward<Params>(params)...});
   auto id = detail::ReduceStamp{};
   auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
   msg->root_handler_ = han;
