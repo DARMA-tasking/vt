@@ -155,7 +155,7 @@ private:
    *
    * \param[in] vec the vector of booleans
    */
-  void reduceDistroChanges(std::vector<bool> vec);
+  void reduceDistroChanges(std::vector<bool> const& vec);
 
   /**
    * \brief Determine which phases migrations must happen to follow the

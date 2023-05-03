@@ -191,7 +191,7 @@ void LBDataRestartReader::determinePhasesToMigrate() {
   });
 }
 
-void LBDataRestartReader::reduceDistroChanges(std::vector<bool> vec) {
+void LBDataRestartReader::reduceDistroChanges(std::vector<bool> const& vec) {
   changed_distro_ = std::move(vec);
 }
 
