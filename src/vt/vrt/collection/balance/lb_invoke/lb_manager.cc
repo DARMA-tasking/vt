@@ -465,7 +465,7 @@ void LBManager::finishedLB(PhaseType phase) {
   destroyLB();
 }
 
-void LBManager::statsHandler(std::vector<balance::LoadData> in_stat_vec) {
+void LBManager::statsHandler(std::vector<balance::LoadData> const& in_stat_vec) {
   // use the raw loads if they were computed, otherwise fall back on model loads
   lb::Statistic rank_statistic = lb::Statistic::Rank_load_modeled;
   lb::Statistic obj_statistic  = lb::Statistic::Object_load_modeled;

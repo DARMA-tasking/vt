@@ -259,7 +259,7 @@ public:
     vt::Callback<std::vector<balance::LoadData>> cb
   );
 
-  void statsHandler(std::vector<balance::LoadData> in_stat_vec);
+  void statsHandler(std::vector<balance::LoadData> const& in_stat_vec);
 
 private:
   bool isCollectiveComm(elm::CommCategory cat) const;
