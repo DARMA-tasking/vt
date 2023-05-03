@@ -55,15 +55,13 @@ static constexpr int num_iters = 100;
 struct MyTest : PerfTestHarness { };
 
 struct NodeObj {
-  struct ReduceMsg : vt::collective::ReduceNoneMsg { };
-
   explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
 
   void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
 
   struct MyMsg : vt::Message {};
 
-  void reduceComplete(ReduceMsg* msg) {
+  void reduceComplete() {
     reduce_counter_++;
     test_obj_->StopTimer(fmt::format("{} reduce", i));
     test_obj_->GetMemoryUsage();
@@ -78,9 +76,7 @@ struct NodeObj {
 
   void perfReduce(MyMsg* in_msg) {
     test_obj_->StartTimer(fmt::format("{} reduce", i));
-    auto cb = theCB()->makeBcast<&NodeObj::reduceComplete>(proxy_);
-    auto msg = makeMessage<ReduceMsg>();
-    proxy_.reduce(msg.get(), cb);
+    proxy_.allreduce<&NodeObj::reduceComplete>();
   }
 
 private:
