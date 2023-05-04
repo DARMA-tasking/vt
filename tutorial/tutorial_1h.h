@@ -46,25 +46,12 @@
 namespace vt { namespace tutorial {
 
 /// [Tutorial1H]
-//                       Reduce Message VT Base Class
-//                 \--------------------------------------------/
-//                  \                                          /
-//                   \                            Reduce Data /
-//                    \                          \-----------/
-//                     \                          \         /
-struct ReduceDataMsg : ::vt::collective::ReduceTMsg<int32_t> {};
-
-
-// Functor that is the target of the reduction
-struct ReduceResult {
-  void operator()(ReduceDataMsg* msg) {
-    NodeType const num_nodes = ::vt::theContext()->getNumNodes();
-    fmt::print("reduction value={}\n", msg->getConstVal());
-    assert(num_nodes * 50 == msg->getConstVal());
-    (void)num_nodes;  // don't warn about unused value when not debugging
-  }
-};
-
+void reduceResult(int result) {
+  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  (void)num_nodes;  // don't warn about possibly unused variable
+  fmt::print("reduction value={}\n", result);
+  assert(num_nodes * 50 == result);
+}
 
 // Tutorial code to demonstrate using reduction on all nodes
 static inline void activeMessageReduce() {
@@ -76,23 +63,10 @@ static inline void activeMessageReduce() {
   /*
    * Perform reduction over all the nodes.
    */
-
-  // This is the type of the reduction (uses the plus operator over the data
-  // type). Once can implement their own data type and overload the plus
-  // operator for the combine during the reduce
-  using ReduceOp = ::vt::collective::PlusOp<int32_t>;
-
   NodeType const root_reduce_node = 0;
 
-  auto reduce_msg = ::vt::makeMessage<ReduceDataMsg>();
-
-  // Get a reference to the value to set it in this reduce msg
-  reduce_msg->getVal() = 50;
-
-  auto const default_proxy = theObjGroup()->getDefault();
-  default_proxy.reduceMsg<ReduceOp, ReduceResult>(
-    root_reduce_node, reduce_msg.get()
-  );
+  auto r = vt::theCollective()->global();
+  r->reduce<reduceResult, collective::PlusOp>(vt::Node{root_reduce_node}, 50);
 }
 /// [Tutorial1H]
 
