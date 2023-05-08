@@ -550,24 +550,26 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     theTerm()->produce(epoch);
 
     auto trigger_msg_handler_action = [=](EntityID const& hid, MsgSharedPtr<MessageT>&& m) mutable {
-      bool const& has_handler = msg->hasHandler();
-      auto const& from = msg->getLocFromNode();
+      bool const& has_handler = m->hasHandler();
+      auto const& from = m->getLocFromNode();
+      auto ask_node = m->getAskNode();
       if (has_handler) {
-        auto const handler = msg->getHandler();
+        auto const handler = m->getHandler();
 
         vt_debug_print(
           verbose, location,
           "EntityLocationCoord: apply direct handler action: "
           "id={}, from={}, handler={}, ref={}\n",
-          hid, from, handler, envelopeGetRef(msg->env)
+          hid, from, handler, envelopeGetRef(m->env)
         );
 
-	obj_context_ = local_registered_.find(hid)->second;
+        obj_context_ = local_registered_.find(hid)->second;
         runnable::makeRunnable(std::move(m), true, handler, from)
           .withTDEpochFromMsg()
           .run();
-	obj_context_ = nullptr;
-      } else {
+        obj_context_ = nullptr;
+      }
+      else {
         auto reg_han_iter = local_registered_msg_han_.find(hid);
         vtAssert(
           reg_han_iter != local_registered_msg_han_.end(),
@@ -579,8 +581,6 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         );
         reg_han_iter->second.applyRegisteredActionMsg(m.get());
       }
-
-      auto ask_node = m->getAskNode();
 
       if (ask_node != uninitialized_destination) {
         auto delivered_node = theContext()->getNode();

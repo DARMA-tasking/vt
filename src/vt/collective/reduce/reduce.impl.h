@@ -216,6 +216,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
   );
 
   if (ready) {
+    auto saved_msg=state.msgs[0];
     // Combine messages
     if (state.msgs.size() > 1) {
       auto size = state.msgs.size();
@@ -263,7 +264,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
 
     // Send to parent
     // Collection is of MsgPtr<ReduceMsg>, re-type and drop collection owner.
-    auto msg = state.msgs[0];
+    auto msg = saved_msg;
     MsgPtr<MsgT> typed_msg = msg.template to<MsgT>();
     state.msgs.clear();
     state.num_contrib_ = 1;
