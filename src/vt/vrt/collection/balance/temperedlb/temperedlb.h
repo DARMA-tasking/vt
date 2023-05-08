@@ -94,24 +94,37 @@ protected:
   void informSync();
   void decide();
   void migrate();
+  void clearDataStructures();
+
+  /**
+   * \brief Decides whether the rank can perform the migration
+   */
+  virtual bool canMigrate() const {  return is_overloaded_; }
+  /**
+   * \brief Decides whether the rank can initiate information propagation stage
+   *
+   * TemperedLB restricts this to underloaded ranks
+   */
+  virtual bool canPropagate() const {  return is_underloaded_; }
+  bool isDeterministic() const { return deterministic_; }
 
   void propagateRound(uint8_t k_cur_async, bool sync, EpochType epoch = no_epoch);
   void propagateIncomingAsync(LoadMsgAsync* msg);
   void propagateIncomingSync(LoadMsgSync* msg);
-  bool isUnderloaded(LoadType load) const;
+  virtual bool isUnderloaded(LoadType load) const;
   bool isUnderloadedRelaxed(LoadType over, LoadType under) const;
   bool isOverloaded(LoadType load) const;
 
   std::vector<double> createCMF(NodeSetType const& under);
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
-  std::vector<NodeType> makeUnderloaded() const;
+  virtual std::vector<NodeType> getPotentialRecipients() const;
   std::vector<NodeType> makeSufficientlyUnderloaded(
     LoadType load_to_accommodate
   ) const;
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
-  virtual TimeType getModeledValue(const elm::ElementIDStruct& obj);
+  virtual TimeType getModeledValue(const elm::ElementIDStruct& obj) const;
 
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
@@ -120,6 +133,9 @@ protected:
   void thunkMigrations();
 
   void setupDone(ReduceMsgType* msg);
+
+  std::unordered_map<NodeType, LoadType> load_info_ = {};
+  std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
 
 private:
   uint16_t f_                                       = 0;
@@ -159,15 +175,12 @@ private:
    */
   bool target_pole_                                 = false;
   std::random_device seed_;
-  std::unordered_map<NodeType, LoadType> load_info_ = {};
   std::unordered_map<NodeType, LoadType> new_load_info_ = {};
   objgroup::proxy::Proxy<TemperedLB> proxy_         = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
-  std::unordered_set<NodeType> selected_            = {};
-  std::unordered_set<NodeType> underloaded_         = {};
-  std::unordered_set<NodeType> new_underloaded_     = {};
-  std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
+  std::unordered_set<NodeType> potential_recipients_      = {};
+  std::unordered_set<NodeType> new_potential_recipients_  = {};
   LoadType this_new_load_                           = 0.0;
   TimeType new_imbalance_                           = 0.0;
   TimeType target_max_load_                         = 0.0;

@@ -474,6 +474,12 @@ void TemperedLB::runLB(TimeType total_load) {
   }
 }
 
+void TemperedLB::clearDataStructures() {
+  potential_recipients_.clear();
+  load_info_.clear();
+  is_overloaded_ = is_underloaded_ = false;
+}
+
 void TemperedLB::doLBStages(TimeType start_imb) {
   decltype(this->cur_objs_) best_objs;
   LoadType best_load = 0;
@@ -483,11 +489,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
   auto this_node = theContext()->getNode();
 
   for (trial_ = 0; trial_ < num_trials_; ++trial_) {
-    // Clear out data structures
-    selected_.clear();
-    underloaded_.clear();
-    load_info_.clear();
-    is_overloaded_ = is_underloaded_ = false;
+    clearDataStructures();
 
     TimeType best_imb_this_trial = start_imb + 10;
 
@@ -504,11 +506,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         }
         this_new_load_ = this_load;
       } else {
-        // Clear out data structures from previous iteration
-        selected_.clear();
-        underloaded_.clear();
-        load_info_.clear();
-        is_overloaded_ = is_underloaded_ = false;
+        clearDataStructures();
       }
 
       vt_debug_print(
@@ -667,8 +665,8 @@ void TemperedLB::informAsync() {
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
 
   auto const this_node = theContext()->getNode();
-  if (is_underloaded_) {
-    underloaded_.insert(this_node);
+  if (canPropagate()) {
+    potential_recipients_.insert(this_node);
   }
 
   setup_done_ = false;
@@ -682,7 +680,7 @@ void TemperedLB::informAsync() {
   auto propagate_epoch = theTerm()->makeEpochCollective("TemperedLB: informAsync");
 
   // Underloaded start the round
-  if (is_underloaded_) {
+  if (canPropagate()) {
     uint8_t k_cur_async = 0;
     propagateRound(k_cur_async, false, propagate_epoch);
   }
@@ -695,7 +693,7 @@ void TemperedLB::informAsync() {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::informAsync: trial={}, iter={}, known underloaded={}\n",
-      trial_, iter_, underloaded_.size()
+      trial_, iter_, potential_recipients_.size()
     );
   }
 
@@ -718,13 +716,13 @@ void TemperedLB::informSync() {
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
 
   auto const this_node = theContext()->getNode();
-  if (is_underloaded_) {
-    underloaded_.insert(this_node);
+  if (canPropagate()) {
+    potential_recipients_.insert(this_node);
   }
 
-  auto propagate_this_round = is_underloaded_;
+  auto propagate_this_round = canPropagate();
   propagate_next_round_ = false;
-  new_underloaded_ = underloaded_;
+  new_potential_recipients_ = potential_recipients_;
   new_load_info_ = load_info_;
 
   setup_done_ = false;
@@ -754,7 +752,7 @@ void TemperedLB::informSync() {
 
     propagate_this_round = propagate_next_round_;
     propagate_next_round_ = false;
-    underloaded_ = new_underloaded_;
+    potential_recipients_ = new_potential_recipients_;
     load_info_ = new_load_info_;
   }
 
@@ -762,7 +760,7 @@ void TemperedLB::informSync() {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::informSync: trial={}, iter={}, known underloaded={}\n",
-      trial_, iter_, underloaded_.size()
+      trial_, iter_, potential_recipients_.size()
     );
   }
 
@@ -793,8 +791,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     gen_propagate_.seed(seed_());
   }
 
-  auto& selected = selected_;
-  selected = underloaded_;
+  auto& selected = potential_recipients_;
   if (selected.find(this_node) == selected.end()) {
     selected.insert(this_node);
   }
@@ -871,7 +868,7 @@ void TemperedLB::propagateIncomingAsync(LoadMsgAsync* msg) {
       load_info_[elm.first] = elm.second;
 
       if (isUnderloaded(elm.second)) {
-        underloaded_.insert(elm.first);
+        potential_recipients_.insert(elm.first);
       }
     }
   }
@@ -905,7 +902,7 @@ void TemperedLB::propagateIncomingSync(LoadMsgSync* msg) {
       new_load_info_[elm.first] = elm.second;
 
       if (isUnderloaded(elm.second)) {
-        new_underloaded_.insert(elm.first);
+        new_potential_recipients_.insert(elm.first);
       }
     }
   }
@@ -996,7 +993,7 @@ NodeType TemperedLB::sampleFromCMF(
   return selected_node;
 }
 
-std::vector<NodeType> TemperedLB::makeUnderloaded() const {
+std::vector<NodeType> TemperedLB::getPotentialRecipients() const {
   std::vector<NodeType> under = {};
   for (auto&& elm : load_info_) {
     if (isUnderloaded(elm.second)) {
@@ -1203,11 +1200,11 @@ void TemperedLB::decide() {
 
   int n_transfers = 0, n_rejected = 0;
 
-  if (is_overloaded_) {
-    std::vector<NodeType> under = makeUnderloaded();
+  if (canMigrate()) {
+    auto potential_recipients = getPotentialRecipients();
     std::unordered_map<NodeType, ObjsType> migrate_objs;
 
-    if (under.size() > 0) {
+    if (not potential_recipients.empty()) {
       std::vector<ObjIDType> ordered_obj_ids = orderObjects(
         obj_ordering_, cur_objs_, this_new_load_, target_max_load_
       );
@@ -1219,24 +1216,24 @@ void TemperedLB::decide() {
 
         if (cmf_type_ == CMFTypeEnum::Original) {
           // Rebuild the relaxed underloaded set based on updated load of this node
-          under = makeUnderloaded();
-          if (under.size() == 0) {
+          potential_recipients = getPotentialRecipients();
+          if (potential_recipients.size() == 0) {
             break;
           }
         } else if (cmf_type_ == CMFTypeEnum::NormByMaxExcludeIneligible) {
           // Rebuild the underloaded set and eliminate processors that will
           // fail the Criterion for this object
-          under = makeSufficientlyUnderloaded(obj_load);
-          if (under.size() == 0) {
+          potential_recipients = makeSufficientlyUnderloaded(obj_load);
+          if (potential_recipients.size() == 0) {
             ++n_rejected;
             iter++;
             continue;
           }
         }
         // Rebuild the CMF with the new loads taken into account
-        auto cmf = createCMF(under);
+        auto cmf = createCMF(potential_recipients);
         // Select a node using the CMF
-        auto const selected_node = sampleFromCMF(under, cmf);
+        auto const selected_node = sampleFromCMF(potential_recipients, cmf);
 
         vt_debug_print(
           verbose, temperedlb,
@@ -1256,13 +1253,13 @@ void TemperedLB::decide() {
 
         vt_debug_print(
           verbose, temperedlb,
-          "TemperedLB::decide: trial={}, iter={}, under.size()={}, "
-          "selected_node={}, selected_load={:e}, obj_id={:x}, home={}, "
-          "obj_load={}, target_max_load={}, this_new_load_={}, "
-          "criterion={}\n",
+          "TemperedLB::decide: trial={}, iter={}, "
+          "potential_recipients.size()={}, selected_node={}, "
+          "selected_load={:e}, obj_id={:x}, home={}, obj_load={}, "
+          "target_max_load={}, this_new_load_={}, criterion={}\n",
           trial_,
           iter_,
-          under.size(),
+          potential_recipients.size(),
           selected_node,
           selected_load,
           obj_id.id,
@@ -1361,7 +1358,7 @@ void TemperedLB::migrate() {
   vtAssertExpr(false);
 }
 
-TimeType TemperedLB::getModeledValue(const elm::ElementIDStruct& obj) {
+TimeType TemperedLB::getModeledValue(const elm::ElementIDStruct& obj) const {
   return load_model_->getModeledLoad(
     obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
   );

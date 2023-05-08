@@ -48,6 +48,8 @@
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/model/weighted_communication_volume.h"
 
+#include <algorithm>
+
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 TemperedWMin::~TemperedWMin() {
@@ -110,7 +112,25 @@ void TemperedWMin::inputParams(balance::ConfigEntry* config) {
   load_model_ptr = theLBManager()->getLoadModel().get();
 }
 
-TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
+std::vector<NodeType> TemperedWMin::getPotentialRecipients() const {
+  auto const this_node = theContext()->getNode();
+  std::vector<NodeType> nodes = {};
+
+  for (auto&& elm : load_info_) {
+    auto const node = elm.first;
+    if (node != this_node) {
+      nodes.push_back(node);
+    }
+  }
+
+  if (isDeterministic()) {
+    std::sort(nodes.begin(), nodes.end());
+  }
+
+  return nodes;
+}
+
+TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) const {
   vtAssert(
     theLBManager()->getLoadModel().get() == load_model_ptr,
     "Load model must not change"
@@ -119,6 +139,15 @@ TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
       {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
 
   return total_work_model_->getModeledLoad(obj, when);
+}
+
+bool TemperedWMin::canMigrate() const {
+  auto const this_node    = theContext()->getNode();
+  auto const another_rank = std::find_if(
+    load_info_.begin(), load_info_.end(),
+    [this_node](auto const& elm) { return elm.first != this_node; }
+  );
+  return (not cur_objs_.empty()) and (another_rank != load_info_.end());
 }
 
 }}}} // namespace vt::vrt::collection::lb

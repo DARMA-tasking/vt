@@ -64,7 +64,21 @@ public:
   void inputParams(balance::ConfigEntry* config) override;
 
 protected:
-  TimeType getModeledValue(const elm::ElementIDStruct& obj) override;
+  /**
+   * Allow migration when there are objects to migrate and other ranks are known
+   */
+  bool canMigrate() const override;
+  /**
+   * All ranks are allowed to initiate the information propagation stage
+   */
+  bool canPropagate() const override { return true; }
+  /**
+   * TemperedWMin does not care about underloaded
+   */
+  bool isUnderloaded(LoadType load) const override { return true; }
+
+  TimeType getModeledValue(const elm::ElementIDStruct& obj) const override;
+  std::vector<NodeType> getPotentialRecipients() const override;
 
 private:
   std::shared_ptr<balance::LoadModel> total_work_model_ = nullptr;
