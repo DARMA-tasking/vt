@@ -9,9 +9,9 @@ function(set_darma_compiler_flags vt_target)
     if (APPLE)
       list(APPEND TARGET_PUBLIC_CXX_FLAGS -stdlib=libc++)
     endif ()
-  elseif (CMAKE_CXX_COMPILER_ID STREQUAL IntelLLVM AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 2021.3.0)
+  elseif (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 2021.3.0)
     list(APPEND TARGET_PRIVATE_CXX_FLAGS -fhonor-infinites -fhonor-nans)
-  elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
+  elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     # Intel classic (icpc)
     # Set as PUBLIC because we want to propagate it to "derived" targets
     # gtest-main links with gtest, while VT's tests link with base VT
