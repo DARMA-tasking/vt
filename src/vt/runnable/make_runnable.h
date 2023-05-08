@@ -218,7 +218,7 @@ struct RunnableMaker {
   template <typename ElmT>
   RunnableMaker&& withLBData(ElmT* elm) {
 #if vt_check_enabled(lblite)
-    impl_->addContextLB(elm, impl_->getMsg().get());
+    impl_->addContextLB(elm, reinterpret_cast<MsgT*>(impl_->getMsg().get()));
 #endif
     return std::move(*this);
   }

@@ -93,7 +93,7 @@ decltype(auto) invoke(
   auto const& elm_id = holder->getElmID();
   auto elm = holder->getPtr();
   auto lb_data = &holder->getLBData();
-  runnable::makeRunnable(std::move(msg.msg_), false, han, this_node)
+  runnable::makeRunnableVoid(false, han, this_node)
     .withObjGroup(elm)
     .withLBData(lb_data, elm_id)
     .runLambda(f, static_cast<ObjT*>(elm), msg.get());
