@@ -4,7 +4,7 @@ on:
   repository_dispatch:
     types: comment-pr
 
-concurrency: ${{ github.event.repository.name }}-${{ github.ref }}
+concurrency: ${{ github.event.repository.name }}-${{ github.event.client_payload.pr_number }}
 
 jobs:
   comment-on-pr:
