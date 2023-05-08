@@ -106,8 +106,8 @@ struct TestDestroy : TestParallelHarness { };
 static constexpr int32_t const num_elms_per_node = 8;
 
 TEST_F(TestDestroy, test_destroy_1) {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes().get();
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes().get();
 
   vt::runInEpochCollective([&]{
     if (this_node == vt::NodeT{0}) {
