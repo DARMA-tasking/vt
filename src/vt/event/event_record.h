@@ -130,7 +130,7 @@ private:
   // the union for storing payload of event depending on type
   EventPayloadType event_union_;
 
-  // the unqiue event identifier
+  // the unique event identifier
   EventType event_id_ = no_event;
 
   // the type of the event record to access the union properly
