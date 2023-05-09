@@ -79,19 +79,28 @@ void LBDataRestartReader::startup() {
 }
 
 void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
-  num_phases_ = lbdh.node_data_.size();
+  PhaseType last_found_phase = 0;
+  num_phases_ = lbdh.count_;
   for (PhaseType phase = 0; phase < num_phases_; phase++) {
     auto iter = lbdh.node_data_.find(phase);
     if (iter != lbdh.node_data_.end()) {
+      last_found_phase = phase;
       for (auto const& obj : iter->second) {
         if (obj.first.isMigratable()) {
           history_[phase].insert(obj.first);
         }
       }
-    } else {
-      // We assume that all phases are dense all fully specified even if they
-      // don't change
-      vtAbort("Could not find data: phases must all be specified");
+    } else if(lbdh.identical_phases_.find(phase) != lbdh.identical_phases_.end()) {
+      // Phase is identical to previous one, fill with data from previous phase
+      auto last_iter = lbdh.node_data_.find(last_found_phase);
+      for (auto const& obj : last_iter->second) {
+        if (obj.first.isMigratable()) {
+          history_[phase].insert(obj.first);
+        }
+      }
+    } else if(lbdh.skipped_phases_.find(phase) == lbdh.skipped_phases_.end()) {
+      // Phases which are not present must be specified in metadata of the file
+      vtAbort("Could not find data: Unspecified phases needs to be present in skipped section of the file metadata");
     }
   }
 }
@@ -155,32 +164,40 @@ void LBDataRestartReader::determinePhasesToMigrate() {
   local_changed_distro.resize(num_phases_ - 1);
 
   auto const this_node = theContext()->getNode();
-
   runInEpochCollective("LBDataRestartReader::updateLocations", [&]{
-    for (PhaseType i = 0; i < num_phases_ - 1; ++i) {
-      local_changed_distro[i] = history_[i] != history_[i+1];
-      if (local_changed_distro[i]) {
+    PhaseType curr = 0, next;
+    for (;curr < num_phases_ - 1;) {
+      // find number of next Phase
+      for(next = curr + 1; next < num_phases_; ++next) {
+        if(history_.find(next) != history_.end()) {
+          break;
+        }
+      }
+
+      local_changed_distro[curr] = history_[curr] != history_[next];
+      if (local_changed_distro[curr]) {
         std::set<ElementIDStruct> departing, arriving;
 
         std::set_difference(
-          history_[i+1].begin(), history_[i+1].end(),
-          history_[i].begin(),   history_[i].end(),
+          history_[next].begin(), history_[next].end(),
+          history_[curr].begin(), history_[curr].end(),
           std::inserter(arriving, arriving.begin())
         );
 
         std::set_difference(
-          history_[i].begin(),   history_[i].end(),
-          history_[i+1].begin(), history_[i+1].end(),
+          history_[curr].begin(),  history_[curr].end(),
+          history_[next].begin(),  history_[next].end(),
           std::inserter(departing, departing.begin())
         );
 
         for (auto&& d : departing) {
-          proxy_[d.getHomeNode()].send<DepartMsg, &LBDataRestartReader::departing>(this_node, i+1, d);
+          proxy_[d.getHomeNode()].send<DepartMsg, &LBDataRestartReader::departing>(this_node, next, d);
         }
         for (auto&& a : arriving) {
-          proxy_[a.getHomeNode()].send<ArriveMsg, &LBDataRestartReader::arriving>(this_node, i+1, a);
+          proxy_[a.getHomeNode()].send<ArriveMsg, &LBDataRestartReader::arriving>(this_node, next, a);
         }
       }
+      curr = next;
     }
   });
 
