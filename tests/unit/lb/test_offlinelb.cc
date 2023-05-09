@@ -74,6 +74,10 @@ struct SimCol : vt::Collection<SimCol, vt::Index1D> {
       EXPECT_EQ(getIndex().x() / 2, next_node);
     }
   }
+
+  void sparseHandler(Msg* m){
+    // TODO
+  }
 };
 
 TEST_F(TestOfflineLB, test_offlinelb_1) {
@@ -144,6 +148,89 @@ TEST_F(TestOfflineLB, test_offlinelb_1) {
   for (PhaseType i = 0; i < num_phases; i++) {
     runInEpochCollective("run handler", [&]{
       proxy.broadcastCollective<typename SimCol::Msg, &SimCol::handler>(i);
+    });
+    thePhase()->nextPhaseCollective();
+  }
+}
+
+TEST_F(TestOfflineLB, test_offlinelb_2) {
+  using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
+  using ElementIDStruct = vt::vrt::collection::balance::ElementIDStruct;
+  using LoadSummary = vt::vrt::collection::balance::LoadSummary;
+  using LBDataRestartReader = vt::vrt::collection::balance::LBDataRestartReader;
+
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const next_node = (this_node + 1) % num_nodes;
+  auto const prev_node = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+
+  std::unordered_map<PhaseType, std::vector<ElementIDStruct>> ids;
+  int len = 2;
+  PhaseType num_phases = 7;
+  for (int i = 0; i < len; i++) {
+    auto id = elm::ElmIDBits::createCollectionImpl(true, i+1, this_node, this_node);
+    id.curr_node = this_node;
+    ids[0].push_back(id);
+    id.curr_node = next_node;
+    ids[3].push_back(id);
+    id.curr_node = prev_node;
+    ids[6].push_back(id);
+  }
+
+  for (int i = 0; i < len; i++) {
+    auto pid = elm::ElmIDBits::createCollectionImpl(true, i+1, prev_node, this_node);
+    auto nid = elm::ElmIDBits::createCollectionImpl(true, i+1, next_node, this_node);
+    ids[1].push_back(pid);
+    ids[2].push_back(pid);
+    ids[4].push_back(nid);
+    ids[5].push_back(nid);
+  }
+
+  LBDataHolder dh;
+  for (PhaseType i = 0; i < num_phases; i++) {
+    for (auto&& elm : ids[i]) {
+      dh.node_data_[i][elm] = LoadSummary{3};
+    }
+  }
+
+  using JSONAppender = util::json::Appender<std::stringstream>;
+  std::stringstream stream{std::ios_base::out | std::ios_base::in};
+  nlohmann::json metadata, phasesMetadata;
+  phasesMetadata["count"] = num_phases;
+  phasesMetadata["skipped"]["list"] = {2};
+  phasesMetadata["skipped"]["range"] = {{2,3}};
+  phasesMetadata["identical_to_previous"]["list"] = {1};
+  phasesMetadata["identical_to_previous"]["range"] = {{5,6}};
+  metadata["type"] = "LBDatafile";
+  metadata["phases"] = phasesMetadata;
+
+  auto w = std::make_unique<JSONAppender>(
+    "phases", metadata, std::move(stream), true
+  );
+  for (PhaseType i = 0; i < num_phases; i++) {
+    // ignore skipped and identical phases
+    if(i != 1 && i != 2 && i != 3 && i != 5 && i != 6) {
+      auto j = dh.toJson(i);
+      w->addElm(*j);
+    }
+  }
+  stream = w->finish();
+
+  theConfig()->vt_lb = true;
+  theConfig()->vt_lb_name = "OfflineLB";
+  auto up = LBDataRestartReader::construct();
+  curRT->theLBDataReader = up.get();
+  theLBDataReader()->readLBDataFromStream(std::move(stream));
+
+  vt::Index1D range{2*num_nodes};
+  auto proxy = vt::makeCollection<SimCol>("simcol")
+    .bounds(range)
+    .bulkInsert()
+    .wait();
+
+  for (PhaseType i = 0; i < num_phases; i++) {
+    runInEpochCollective("run sparseHandler", [&]{
+      proxy.broadcastCollective<typename SimCol::Msg, &SimCol::sparseHandler>(i);
     });
     thePhase()->nextPhaseCollective();
   }
