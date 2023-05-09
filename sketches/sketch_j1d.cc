@@ -1,8 +1,8 @@
 
-// sketched out example interface to VirutalContextCollection, just for
+// sketched out example interface to VirtualContextCollection, just for
 // pedagogical purposes
 template <typename Idx>
-struct VirutalContextCollection {
+struct VirtualContextCollection {
   Idx index();
   Idx min_index();
   Idx max_index();
@@ -32,7 +32,7 @@ struct FinishedMsg : vt::Message {
 };
 
 // the virtual context for a Jacobi1D block
-struct Jacobi1D : VirutalContextCollection<Index1D<int>> {
+struct Jacobi1D : VirtualContextCollection<Index1D<int>> {
   double* v1 = nullptr, *v2 = nullptr;
   double lb = 0.0, rb = 0.0;
   int size = 0;

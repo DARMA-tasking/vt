@@ -103,7 +103,7 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   theTerm()->finishedEpoch(ep);
 
   // It should not break out of this loop because of
-  // !theTerm()->isEpochTermianted(ep), thus `k` is used to
+  // !theTerm()->isEpochTerminated(ep), thus `k` is used to
   // break out
   int k = 0;
 
@@ -143,7 +143,7 @@ TEST_F(TestPendingSend, test_pending_broadcast_hold) {
   theTerm()->finishedEpoch(ep);
 
   // It should not break out of this loop because of
-  // !theTerm()->isEpochTermianted(ep), thus `k` is used to
+  // !theTerm()->isEpochTerminated(ep), thus `k` is used to
   // break out
   int k = 0;
 
