@@ -116,7 +116,7 @@ struct Component : BaseComponent {
    *
    * \param[in] args the arguments to forward to the component's constructor
    *
-   * \return unique pointer to the the component
+   * \return unique pointer to the component
    */
   template <typename... Args>
   static std::unique_ptr<T> staticInit(Args&&... args) {
