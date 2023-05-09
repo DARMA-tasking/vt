@@ -56,7 +56,7 @@ namespace vt { namespace auto_registry {
 
 template <typename FunctorT, bool msg, typename... Args>
 inline HandlerType makeAutoHandlerFunctor() {
-  // Arg (overload) differentiaton in adapter.
+  // Arg (overload) differentiation in adapter.
   using AdapterType = FunctorAdapterArgs<FunctorT, Args...>;
   using ContainerType = AutoActiveFunctorContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveFunctorType>;

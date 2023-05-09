@@ -41,7 +41,7 @@
 //@HEADER
 */
 ##
-## The functions here were copied and sanatized from the MPI 3.1 manual
+## The functions here were copied and sanitized from the MPI 3.1 manual
 ##
 ## I have commented the MPI_T_* calls and fortran-related bindings
 ##

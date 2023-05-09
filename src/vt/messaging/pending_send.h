@@ -75,7 +75,7 @@ struct PendingSend final {
   /**
    * \brief Construct a pending send.
    *
-   * This is the prefered form, especially for internal constructs.
+   * This is the preferred form, especially for internal constructs.
    * If an action is specified it will be run. Otherwise the default
    * internal message-sending action is applied.
    *
@@ -94,7 +94,7 @@ struct PendingSend final {
   /**
    * \brief Construct a pending send that invokes a callback.
    *
-   * \note This form does not implictly send a message. The callback
+   * \note This form does not implicitly send a message. The callback
    * action is responsible for all further work. It is a useful
    * construct to delay the callback and ensure an epoch is produced.
    *
@@ -119,7 +119,7 @@ struct PendingSend final {
   /**
    * \brief Construct a pending send to push an epoch.
    *
-   * \note This form does not implictly send a message.
+   * \note This form does not implicitly send a message.
    *
    * \param[in] in_msg the message to send
    * \param[in] in_action the "send" action to run

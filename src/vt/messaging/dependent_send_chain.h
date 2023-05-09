@@ -122,7 +122,7 @@ class DependentSendChain final {
    * \brief Add a task to the chain for work
    *
    * Add a task to the chain of work to be run in the specified epoch,
-   * with subsequent tasks dependent on all work occuring in the
+   * with subsequent tasks dependent on all work occurring in the
    * specified epoch
    *
    * \param[in] new_epoch the epoch the task is being added to

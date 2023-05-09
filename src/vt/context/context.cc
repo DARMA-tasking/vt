@@ -47,7 +47,7 @@
 #if vt_check_enabled(trace_only)
 namespace vt { namespace runnable {
 struct RunnableNew {};
-}} /* end namespact vt::runnable */
+}} /* end namespace vt::runnable */
 #else
 # include "vt/runtime/runtime.h"
 # include "vt/runnable/runnable.h"
