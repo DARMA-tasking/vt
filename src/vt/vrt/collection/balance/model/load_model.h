@@ -265,7 +265,7 @@ struct LoadModel
 
   /**
    * \brief Compute how many phases of past load statistics need to be
-   * kept availble for the model to use
+   * kept available for the model to use
    *
    * \param[in] look_back How many phases into the past the caller
    * intends to query

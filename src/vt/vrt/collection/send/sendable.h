@@ -75,7 +75,7 @@ struct Sendable : BaseProxyT {
   /**
    * \brief Create message (with action function handler) and send to collection element
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */
@@ -85,7 +85,7 @@ struct Sendable : BaseProxyT {
   /**
    * \brief Create message (with action function handler) and send to collection element
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */
@@ -104,7 +104,7 @@ struct Sendable : BaseProxyT {
   /**
    * \brief Create message (with action member handler) and send to collection element
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */
@@ -114,7 +114,7 @@ struct Sendable : BaseProxyT {
   /**
    * \brief Create message (with action member handler) and send to collection element
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */
@@ -126,7 +126,7 @@ struct Sendable : BaseProxyT {
   /**
    * \brief Create message (with action function handler) and send to collection element
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */
@@ -141,7 +141,7 @@ struct Sendable : BaseProxyT {
   /**
    * \brief Create message (with action function handler) and send to collection element
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */

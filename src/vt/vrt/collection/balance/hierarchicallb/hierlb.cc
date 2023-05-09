@@ -501,7 +501,7 @@ void HierarchicalLB::lbTreeUp(
 
       if (bin.second.size() > 0) {
         // splice in the new list to accumulated work units that fall in a
-        // common histrogram bin
+        // common histogram bin
         auto given_iter = given_objs.find(bin.first);
 
         if (given_iter == given_objs.end()) {
@@ -565,7 +565,7 @@ void HierarchicalLB::lbTreeUp(
       );
       sendDownTree();
     } else {
-      distributeAmoungChildren();
+      distributeAmongChildren();
     }
   }
 }
@@ -691,12 +691,12 @@ void HierarchicalLB::sendDownTree() {
   }
 }
 
-void HierarchicalLB::distributeAmoungChildren() {
+void HierarchicalLB::distributeAmongChildren() {
   auto const& this_node = theContext()->getNode();
 
   vt_debug_print(
     normal, hierlb,
-    "distributeAmoungChildren: parent={}\n", parent
+    "distributeAmongChildren: parent={}\n", parent
   );
 
   auto cIter = given_objs.rbegin();
@@ -756,7 +756,7 @@ void HierarchicalLB::distributeAmoungChildren() {
     auto const& is_live = child.second->is_live;
     vt_debug_print(
       verbose, hierlb,
-      "distributeAmoungChildren: parent={}, child={}. is_live={}, size={}, "
+      "distributeAmongChildren: parent={}, child={}. is_live={}, size={}, "
       "load={}\n",
       parent, node, is_live, node_size, TimeTypeWrapper(load / 1000)
     );

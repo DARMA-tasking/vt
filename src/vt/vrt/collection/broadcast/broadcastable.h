@@ -85,7 +85,7 @@ struct Broadcastable : BaseProxyT {
   /**
    * \brief Rooted broadcast with action function handler
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */
@@ -117,7 +117,7 @@ struct Broadcastable : BaseProxyT {
   /**
    * \brief Rooted broadcast with action member handler
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */
@@ -141,7 +141,7 @@ struct Broadcastable : BaseProxyT {
    * \brief Create message (with action function handler) and broadcast it in a
    * collective manner to the collection
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */
@@ -165,7 +165,7 @@ struct Broadcastable : BaseProxyT {
    * \brief Create message (with action member handler) and broadcast it in a
    * collective manner to the collection
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */
@@ -216,7 +216,7 @@ struct Broadcastable : BaseProxyT {
   /**
    * \brief Rooted broadcast with action function handler
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */
@@ -243,7 +243,7 @@ struct Broadcastable : BaseProxyT {
    * \brief Create message (with action function handler) and broadcast it in a
    * collective manner to the collection
    *
-   * \param[in] args arguments needed for creteating the message
+   * \param[in] args arguments needed for creating the message
    *
    * \return a pending send
    */

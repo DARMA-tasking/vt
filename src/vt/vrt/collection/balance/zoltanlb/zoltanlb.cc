@@ -438,7 +438,7 @@ void ZoltanLB::setParams() {
 
 std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   // Insert local load objs into a std::set to get a deterministic order to
-  // traverse them for building the graph consistenly
+  // traverse them for building the graph consistently
   std::set<ObjIDType> load_objs;
   for (auto obj : *load_model_) {
     if (obj.isMigratable()) {
