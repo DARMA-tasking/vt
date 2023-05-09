@@ -162,7 +162,7 @@ endfunction()
 transform_sources_list("scripts/sources.lst" "${CMAKE_CURRENT_BINARY_DIR}/sources.lst.cmake")
 include("${CMAKE_CURRENT_BINARY_DIR}/sources.lst.cmake")
 
-if(BROTLI_EMSCRIPTEN)
+if(BROTLI_EMSCRIPTEN OR NOT BROTLI_BUILD_SHARED_LIBS)
   set(BROTLI_SHARED_LIBS "")
 else()
   set(BROTLI_SHARED_LIBS brotlicommon brotlidec brotlienc)
@@ -206,7 +206,7 @@ foreach(lib IN LISTS BROTLI_SHARED_LIBS BROTLI_STATIC_LIBS)
   # set_property(TARGET ${lib} APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${BROTLI_INCLUDE_DIRS}")
 endforeach()
 
-if(NOT BROTLI_EMSCRIPTEN)
+if(NOT BROTLI_EMSCRIPTEN AND BROTLI_BUILD_SHARED_LIBS)
 target_link_libraries(brotlidec brotlicommon)
 target_link_libraries(brotlienc brotlicommon)
 endif()
@@ -230,7 +230,7 @@ add_executable(brotli ${BROTLI_CLI_C})
 target_link_libraries(brotli ${BROTLI_LIBRARIES_STATIC})
 
 # Installation
-if(NOT BROTLI_EMSCRIPTEN)
+if(NOT BROTLI_EMSCRIPTEN AND BROTLI_BUILD_SHARED_LIBS)
 if(NOT BROTLI_BUNDLED_MODE)
   install(
     TARGETS brotli
