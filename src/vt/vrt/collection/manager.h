@@ -1151,7 +1151,7 @@ public:
    *
    * \param[in] proxy the collection proxy bits
    *
-   * \return number of local elmeents
+   * \return number of local elements
    */
   template <typename ColT>
   std::size_t groupElementCount(VirtualProxyType const& proxy);
@@ -1778,7 +1778,7 @@ private:
 #include "vt/vrt/collection/reducable/reducable.impl.h"
 #include "vt/vrt/collection/invoke/invokable.impl.h"
 #include "vt/vrt/collection/insert/insertable.impl.h"
-#include "vt/vrt/collection/insert/modifyable.impl.h"
+#include "vt/vrt/collection/insert/modifiable.impl.h"
 #include "vt/vrt/collection/destroy/destroyable.impl.h"
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.impl.h"
 #include "vt/vrt/collection/broadcast/broadcastable.impl.h"

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              modifyable.impl.h
+//                              modifiable.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,24 +41,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFIABLE_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFIABLE_IMPL_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/insert/modifyable.h"
+#include "vt/vrt/collection/insert/modifiable.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-Modifyable<ColT,IndexT,BaseProxyT>::Modifyable(
+Modifiable<ColT,IndexT,BaseProxyT>::Modifiable(
   VirtualProxyType const in_proxy
 ) : BaseProxyT(in_proxy)
 { }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-ModifierToken Modifyable<ColT,IndexT,BaseProxyT>::beginModification(
+ModifierToken Modifiable<ColT,IndexT,BaseProxyT>::beginModification(
   std::string const& label
 ) const {
   auto const col_proxy = this->getProxy();
@@ -66,7 +66,7 @@ ModifierToken Modifyable<ColT,IndexT,BaseProxyT>::beginModification(
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-void Modifyable<ColT,IndexT,BaseProxyT>::finishModification(
+void Modifiable<ColT,IndexT,BaseProxyT>::finishModification(
   ModifierToken&& token
 ) const {
   auto const col_proxy = this->getProxy();
@@ -75,4 +75,4 @@ void Modifyable<ColT,IndexT,BaseProxyT>::finishModification(
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFIABLE_IMPL_H*/
