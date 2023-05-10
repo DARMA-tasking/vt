@@ -52,7 +52,7 @@
 
 // backend features, add any new ones to this list
 #define vt_feature_no_feature          0 || vt_feature_cmake_no_feature
-#define vt_feature_bit_check_overflow  0 || vt_feature_cmake_bit_check_overflo
+#define vt_feature_bit_check_overflow  0 || vt_feature_cmake_bit_check_overflow
 #define vt_feature_trace_enabled       0 || vt_feature_cmake_trace_enabled
 #define vt_feature_trace_only          0 || vt_feature_cmake_trace_only
 #define vt_feature_lblite              0 || vt_feature_cmake_lblite

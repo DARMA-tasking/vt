@@ -1,4 +1,4 @@
-# This file is intented to be run with cmake -P
+# This file is intended to be run with cmake -P
 
 # Derived from
 # Original Author:

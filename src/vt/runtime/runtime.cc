@@ -594,7 +594,7 @@ void Runtime::output(
   auto bred      = debug::bred();
   auto node_str  = ::vt::debug::proc(node);
   auto prefix    = vt_pre + node_str + " ";
-  auto seperator = fmt::format("{}{}{:-^120}{}\n", prefix, bred, "", reset);
+  auto separator = fmt::format("{}{}{:-^120}{}\n", prefix, bred, "", reset);
   auto warn_sep  = fmt::format("{}{}{:-^120}{}\n", prefix, byellow, "", reset);
   // auto space     = fmt::format("{}\n", prefix);
 
@@ -603,10 +603,10 @@ void Runtime::output(
       auto f1 = fmt::format(" Runtime Error: System Aborting! ");
       auto const info = ::fmt::format(" Fatal Error on Node {} ", node);
       // fmt::print(stderr, "{}", space);
-      fmt::print(stderr, "{}", seperator);
+      fmt::print(stderr, "{}", separator);
       fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, bred, f1, reset);
       fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, bred, info, reset);
-      fmt::print(stderr, "{}", seperator);
+      fmt::print(stderr, "{}", separator);
     } else {
       auto f1 = fmt::format(" Runtime Warning ");
       auto const info = ::fmt::format(" Warning on Node {} ", node);

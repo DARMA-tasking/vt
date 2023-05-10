@@ -94,7 +94,7 @@ public:
   void add();
 
   /**
-   * \internal \brief Construct all added components along with dependences
+   * \internal \brief Construct all added components along with dependencies
    * transitively.
    */
   void construct();
@@ -146,16 +146,16 @@ public:
 private:
   /**
    * \internal \brief Topologically sort all the registered components to find a
-   * valid activation order based on registered dependences.
+   * valid activation order based on registered dependencies.
    *
    * \return list of handlers representing a valid total ordering that does not
-   * break dependences
+   * break dependencies
    */
   std::list<int> topoSort();
 
   /**
    * \internal \brief Topologically sort all the registered components to find a
-   * valid activation order based on registered dependences.
+   * valid activation order based on registered dependencies.
    *
    * \param[in] v current vertex
    * \param[in] order topological order derived so far

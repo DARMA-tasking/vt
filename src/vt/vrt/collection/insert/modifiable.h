@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 modifyable.h
+//                                 modifiable.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_H
-#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFIABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFIABLE_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/insert/modify_token.h"
@@ -51,12 +51,12 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-struct Modifyable : BaseProxyT {
-  Modifyable() = default;
-  Modifyable(Modifyable const&) = default;
-  Modifyable(Modifyable&&) = default;
-  explicit Modifyable(VirtualProxyType const in_proxy);
-  Modifyable& operator=(Modifyable const&) = default;
+struct Modifiable : BaseProxyT {
+  Modifiable() = default;
+  Modifiable(Modifiable const&) = default;
+  Modifiable(Modifiable&&) = default;
+  explicit Modifiable(VirtualProxyType const in_proxy);
+  Modifiable& operator=(Modifiable const&) = default;
 
 public:
   /**
@@ -78,4 +78,4 @@ public:
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFIABLE_H*/

@@ -54,7 +54,7 @@
 namespace vt { namespace runnable {
 
 template <typename FunctionType, FunctionType f>
-static std::string CreatetEventTypeCStyleFunc() {
+static std::string CreateEventTypeCStyleFunc() {
   using TE = vt::util::demangle::TemplateExtract;
   using DU = vt::util::demangle::DemanglerUtils;
 
@@ -66,7 +66,7 @@ static std::string CreatetEventTypeCStyleFunc() {
 }
 
 template <typename Class>
-static std::string CreatetEventTypeMemberFunc() {
+static std::string CreateEventTypeMemberFunc() {
   using TE = vt::util::demangle::TemplateExtract;
   using DU = vt::util::demangle::DemanglerUtils;
 
@@ -98,7 +98,7 @@ struct CallableWrapper<Ret(*)(Args...), f> {
   using Type = Ret(*)(Args...);
 
   static std::string GetEventTypeName() {
-    return CreatetEventTypeCStyleFunc<Type, f>();
+    return CreateEventTypeCStyleFunc<Type, f>();
   }
 
   static std::string GetEventName() {
@@ -119,7 +119,7 @@ struct CallableWrapper<Ret (Class::*)(Args...), f> {
   using Type = Ret (Class::*)(Args...);
 
   static std::string GetEventTypeName() {
-    return CreatetEventTypeMemberFunc<Class>();
+    return CreateEventTypeMemberFunc<Class>();
   }
 
   static std::string GetEventName() {

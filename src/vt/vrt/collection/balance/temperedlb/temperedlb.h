@@ -146,7 +146,7 @@ private:
   /**
    * \brief Whether to roll back to the best iteration
    *
-   * If the final iteration of a trial has a worse imbalance than any earier
+   * If the final iteration of a trial has a worse imbalance than any earlier
    * iteration, it will roll back to the best iteration.
    */
   bool rollback_                                    = true;

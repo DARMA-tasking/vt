@@ -130,7 +130,7 @@ TEST_F(TestTimeTrigger, test_time_trigger_manager_trigger_ready) {
   trigger_manager->triggerReady(current_time + trigger_period_s + 0.01);
   EXPECT_EQ(triggered, 2);
 
-  // test unregisteration of triggers
+  // test unregistration of triggers
   auto prev_triggered = triggered;
   trigger_manager->removeTrigger(id);
   trigger_manager->triggerReady(current_time + trigger_period_s + 0.01);

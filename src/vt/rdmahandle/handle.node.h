@@ -297,7 +297,7 @@ public:
    *
    * If MPI 3 is not enabled, it attaches a regular \c MPI_Get to the
    * \c RequestHolder that is dispatched when waited on. This variant of \c get
-   * fetches into the buffer that is associated with the the handle. See \c
+   * fetches into the buffer that is associated with the handle. See \c
    * setBuffer and \c getBuffer
    *
    * \param[in] node the process/node to target

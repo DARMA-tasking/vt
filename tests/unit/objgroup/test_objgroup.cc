@@ -377,7 +377,7 @@ struct MyTestObj {
     );
 
     // Even if msg was sent locally, it is still serialized,
-    // and the handler gots a fresh copy of it.
+    // and the handler gets a fresh copy of it.
     if (from_node == to_node) {
       EXPECT_TRUE(was_serialized);
     }

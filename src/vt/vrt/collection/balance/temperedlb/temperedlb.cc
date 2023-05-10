@@ -155,7 +155,7 @@ Description:
 Values: {SyncInform, AsyncInform}
 Default: AsyncInform
 Description:
-  Approach used to track rounds in the information propagatation step. Options
+  Approach used to track rounds in the information propagation step. Options
   are:
     SyncInform: synchronous sharing of underloaded processor loads. The round
       number is defined at the processor level. This approach propagates known
@@ -237,7 +237,7 @@ Description:
 Values: {true, false}
 Default: true
 Description:
-  If the final iteration of a trial has a worse imbalance than any earier
+  If the final iteration of a trial has a worse imbalance than any earlier
   iteration, it will roll back to the iteration with the best imbalance.
 )"
     },

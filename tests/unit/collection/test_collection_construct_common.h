@@ -74,7 +74,7 @@ struct ConstructHandlers {
   static void handler(CollectionT* col, MessageT* msg) {
     // fmt::print(
     //   "{}: constructed TestCol: idx.x()={}\n",
-    //   theContext()->getNode(), col->getInex().x(), print_ptr(col)
+    //   theContext()->getNode(), col->getIndex().x(), print_ptr(col)
     // );
   }
 };

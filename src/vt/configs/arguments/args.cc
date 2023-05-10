@@ -93,7 +93,7 @@ std::tuple<int, std::string> parseArguments(
 
   std::vector<char*> vt_args;
 
-  // Load up vectors (has curious ability to altnerate vt/mpi/passthru)
+  // Load up vectors (has curious ability to alternate vt/mpi/passthru)
   std::vector<char*>* rargs = nullptr;
   for (int i = 1; i < argc; i++) {
     char* c = argv[i];
@@ -256,7 +256,7 @@ void addStackDumpArgs(CLI::App& app, AppConfig& appConfig) {
   auto stack  = "Do not dump stack traces";
   auto warn   = "Do not dump stack traces when vtWarn(..) is invoked";
   auto assert = "Do not dump stack traces when vtAssert(..) is invoked";
-  auto abort  = "Do not dump stack traces when vtAabort(..) is invoked";
+  auto abort  = "Do not dump stack traces when vtAbort(..) is invoked";
   auto file   = "Dump stack traces to file instead of stdout";
   auto dir    = "Name of directory to write stack files";
   auto mod    = "Write stack dump if (node % config_.vt_stack_mod) == 0";

@@ -147,7 +147,7 @@ using ComponentDiagnosticMap = std::map<
 
 void foreachDiagnosticValue(
   std::map<std::string, ComponentDiagnosticMap> const& vals,
-  std::function<void(bool first, std::string const& conponent)> sep,
+  std::function<void(bool first, std::string const& component)> sep,
   std::function<void(
     std::string const& component, component::detail::DiagnosticBase*,
     component::DiagnosticErasedValue*

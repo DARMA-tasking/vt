@@ -215,7 +215,7 @@ void VirtualContextManager::destroyVirtualByID(
   holder.erase(iter);
 }
 
-void VirtualContextManager::destoryVirtualByProxy(
+void VirtualContextManager::destroyVirtualByProxy(
     VirtualProxyType const& proxy
 ) {
   auto const& is_remote = VirtualProxyBuilder::isRemote(proxy);

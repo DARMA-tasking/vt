@@ -109,7 +109,7 @@ private:
   );
 
   void sendDownTree();
-  void distributeAmoungChildren();
+  void distributeAmongChildren();
   void clearObj(ObjSampleType& objs);
   HierLBChild* findMinChild();
   void startMigrations();

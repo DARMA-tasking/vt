@@ -419,7 +419,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   // and do NOT define their own serialization function are required
   // to be byte-transmittable. This covers basic byte-copyable
   // messages directly inheriting from ActiveMsg. ActivMsg implements
-  // a serialize function which is implictly inherited..
+  // a serialize function which is implicitly inherited..
   template <
     typename MsgT,
     std::enable_if_t<true

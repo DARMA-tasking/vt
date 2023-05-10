@@ -109,7 +109,7 @@ struct VirtualContextManager
 
   VirtualContext* getVirtualByProxy(VirtualProxyType const& proxy);
   VirtualInfoType* getVirtualInfoByProxy(VirtualProxyType const& proxy);
-  void destoryVirtualByProxy(VirtualProxyType const& proxy);
+  void destroyVirtualByProxy(VirtualProxyType const& proxy);
 
   template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   messaging::PendingSend sendMsg(
@@ -139,7 +139,7 @@ private:
   // until the worker executes it
   VirtualProxyType makeVirtualPlaceholder();
 
-  void setupMappedVirutalContext(
+  void setupMappedVirtualContext(
     VirtualProxyType const& proxy, SeedType const& seed
   );
 

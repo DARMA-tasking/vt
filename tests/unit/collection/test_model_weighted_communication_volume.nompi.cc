@@ -179,4 +179,4 @@ TEST_F(TestModelWeightedCommunicationVolume, test_model) {
   }
 }
 
-}}}}} // end namespace vt::tests::unit::veighted::volume
+}}}}} // end namespace vt::tests::unit::weighted::volume

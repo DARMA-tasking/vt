@@ -236,7 +236,7 @@ struct Log final {
     }
   }
 
-  // No default constructor. Seems wierd? Copy+move all the way..
+  // No default constructor. Seems weird? Copy+move all the way..
   // (Copy-constructible and copy-assignable required for dequeue.)
   Log() = delete;
   Log(Log const& in) = default;

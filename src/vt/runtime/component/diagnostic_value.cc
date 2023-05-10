@@ -95,7 +95,7 @@ void reduceHelper(
  * for diagnostic values and including this file would require a dependency
  * between every component and reduce/pipe for the reduction/callback.
  */
-#define DIAGNOSIC_VALUE_INSTANCE(TYPE)                                  \
+#define DIAGNOSTIC_VALUE_INSTANCE(TYPE)                                  \
   template <>                                                           \
   void DiagnosticValue<TYPE>::reduceOver(                               \
     Diagnostic* diagnostic, DiagnosticErasedValue* out, int snapshot    \
@@ -108,15 +108,15 @@ void reduceHelper(
   }                                                                     \
 
 
-DIAGNOSIC_VALUE_INSTANCE(int64_t)
-DIAGNOSIC_VALUE_INSTANCE(int32_t)
-DIAGNOSIC_VALUE_INSTANCE(int16_t)
-DIAGNOSIC_VALUE_INSTANCE(int8_t)
-DIAGNOSIC_VALUE_INSTANCE(uint64_t)
-DIAGNOSIC_VALUE_INSTANCE(uint32_t)
-DIAGNOSIC_VALUE_INSTANCE(uint16_t)
-DIAGNOSIC_VALUE_INSTANCE(uint8_t)
-DIAGNOSIC_VALUE_INSTANCE(double)
-DIAGNOSIC_VALUE_INSTANCE(float)
+DIAGNOSTIC_VALUE_INSTANCE(int64_t)
+DIAGNOSTIC_VALUE_INSTANCE(int32_t)
+DIAGNOSTIC_VALUE_INSTANCE(int16_t)
+DIAGNOSTIC_VALUE_INSTANCE(int8_t)
+DIAGNOSTIC_VALUE_INSTANCE(uint64_t)
+DIAGNOSTIC_VALUE_INSTANCE(uint32_t)
+DIAGNOSTIC_VALUE_INSTANCE(uint16_t)
+DIAGNOSTIC_VALUE_INSTANCE(uint8_t)
+DIAGNOSTIC_VALUE_INSTANCE(double)
+DIAGNOSTIC_VALUE_INSTANCE(float)
 
 }}}} /* end namespace vt::runtime::component::detail */

@@ -603,7 +603,7 @@ private:
   bool propagateEpoch(TermStateType& state);
 
   /**
-   * \internal \brief Notfiy that an epoch has terminated
+   * \internal \brief Notify that an epoch has terminated
    *
    * \param[in] epoch the epoch
    * \param[in] from the caller
@@ -663,9 +663,9 @@ public:
    * \internal \brief Make a dependency between two epochs
    *
    * \param[in] predecessor the predecessor epoch
-   * \param[in] successoor the successoor epoch
+   * \param[in] successor the successor epoch
    */
-  void addDependency(EpochType predecessor, EpochType successoor);
+  void addDependency(EpochType predecessor, EpochType successor);
 
   /**
    * \brief Disable termination detection on an epoch. Local counting is still

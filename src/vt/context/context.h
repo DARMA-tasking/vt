@@ -93,7 +93,7 @@ struct Context : runtime::component::Component<Context> {
   ~Context();
 
   /**
-   * \brief Gets the current node (analagous to MPI's rank) currently being
+   * \brief Gets the current node (analogous to MPI's rank) currently being
    * used.
    *
    * \see \c vt::NodeType
@@ -103,7 +103,7 @@ struct Context : runtime::component::Component<Context> {
   inline NodeType getNode() const { return thisNode_; }
 
   /**
-   * \brief Get the number of nodes (analagous to MPI's num ranks) being used
+   * \brief Get the number of nodes (analogous to MPI's num ranks) being used
    *
    * \see \c vt::NodeType
    *

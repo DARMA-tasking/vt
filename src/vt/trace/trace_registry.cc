@@ -65,7 +65,7 @@ TraceRegistry::registerEventHashed(
     std::string const& event_type_name, std::string const& event_name
 ) {
   // Trace registration (mostly) happens during initialization
-  // of templates from the auto-registy.
+  // of templates from the auto-registry.
   // This occurs BEFORE the underling 'go' flags are enabled in VT.
   // Not printing ANYTHING for the most consistent NOTHING.
   // vt_debug_print(

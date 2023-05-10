@@ -357,7 +357,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
   /**
    * \brief Check if trace is in a idle event
    *
-   * \return whether in an idle eveent
+   * \return whether in an idle event
    */
   bool inIdleEvent() const;
 
