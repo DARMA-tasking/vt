@@ -16,6 +16,7 @@ variables:
 [% linux_env %]
   COMPILER_TYPE: [% compiler_type %]
   COMPILER: [% compiler %]
+[% host_compiler_line %]
   BUILD_TYPE: [% build_type %]
   ULIMIT_CORE: [% ulimit_core %]
   CODE_COVERAGE: [% code_coverage %]
