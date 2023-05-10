@@ -87,13 +87,7 @@ struct NodeObj {
       msgs.emplace_back(makeMessage<TestCol::ColMsg>());
     }
 
-    theTerm()->disableTD();
-
-    test_obj_->StartTimer(fmt::format("colSend {}", num_iters));
-    perfRunBenchmark();
-    test_obj_->StopTimer(fmt::format("colSend {}", num_iters));
-
-    theTerm()->enableTD();
+    perfMakeRunnable(in_msg);
   }
 
   void perfMakeRunnable(MyMsg* in_msg) {
