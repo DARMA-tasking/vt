@@ -68,6 +68,63 @@ void LBDataHolder::outputEntity(nlohmann::json& j, ElementIDStruct const& id) co
   }
 }
 
+std::unique_ptr<nlohmann::json> LBDataHolder::metadataToJson() const {
+  // Find last element of a range for which it's values are incremented by 1
+  auto find_last_of_range = [](
+                              const std::set<PhaseType>& notEmptySet,
+                              std::set<PhaseType>::iterator fromIt) {
+    vtAssert(!notEmptySet.empty(), "Input Set must be not empty");
+
+    do {
+      auto next = std::next(fromIt);
+      // end of a set or range
+      if (next == notEmptySet.end() || *fromIt + 1 != *next) {
+        break;
+      }
+      ++fromIt;
+    } while (fromIt != notEmptySet.end());
+
+    return fromIt;
+  };
+
+  nlohmann::json j;
+  j["count"] = count_;
+
+  // Generate list and ranges of skipped phases
+  std::set<PhaseType> skipped_list;
+  std::vector<std::pair<PhaseType, PhaseType>> skipped_ranges;
+  for (auto it = skipped_phases_.begin(); it != skipped_phases_.end(); it++) {
+    auto endOfRange = find_last_of_range(skipped_phases_, it);
+    if (it == endOfRange) {
+      skipped_list.insert(*it);
+    } else {
+      skipped_ranges.emplace_back(*it, *endOfRange);
+      it = endOfRange;
+    }
+  }
+
+  // Generate list and ranges of identical phases
+  std::set<PhaseType> identical_list;
+  std::vector<std::pair<PhaseType, PhaseType>> identical_ranges;
+  for (auto it = identical_phases_.begin(); it != identical_phases_.end();
+       it++) {
+    auto endOfRange = find_last_of_range(identical_phases_, it);
+    if (it == endOfRange) {
+      identical_list.insert(*it);
+    } else {
+      identical_ranges.emplace_back(*it, *endOfRange);
+      it = endOfRange;
+    }
+  }
+
+  // Save metadata
+  j["skipped"]["list"] = skipped_list;
+  j["skipped"]["range"] = skipped_ranges;
+  j["identical_to_previous"]["list"] = identical_list;
+  j["identical_to_previous"]["range"] = identical_ranges;
+  return std::make_unique<nlohmann::json>(std::move(j));
+}
+
 std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   using json = nlohmann::json;
 
@@ -164,8 +221,13 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   return std::make_unique<json>(std::move(j));
 }
 
-LBDataHolder::LBDataHolder(nlohmann::json const& j) {
+LBDataHolder::LBDataHolder(nlohmann::json const& j)
+  : count_(0)
+{
   auto this_node = theContext()->getNode();
+
+  // read metadata for skipped and identical phases
+  readMetadata(j);
 
   auto phases = j["phases"];
   if (phases.is_array()) {
@@ -303,8 +365,54 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j) {
     }
   }
 
+  if (!count_) {
+    count_ = node_data_.size();
+  }
+
   // @todo: implement subphase communication de-serialization, no use for it
   // right now, so it will be ignored
+}
+
+void LBDataHolder::readMetadata(nlohmann::json const& j) {
+  auto metadata = j["metadata"];
+  if (metadata.find("phases") != metadata.end()) {
+    auto phases = metadata["phases"];
+    // load count
+    vtAssertExpr(phases["count"].is_number());
+    count_ = phases["count"];
+    // load all skipped phases
+    auto sl = phases["skipped"]["list"];
+    if(sl.is_array()) {
+      for(PhaseType skipped : sl) {
+        skipped_phases_.insert(skipped);
+      }
+    }
+    auto sr = phases["skipped"]["range"];
+    if(sr.is_array()) {
+      for(auto const& pair : sr) {
+        vtAssertExpr(pair.is_array());
+        for(PhaseType i = pair[0]; i <= pair[1]; i++){
+          skipped_phases_.insert(i);
+        }
+      }
+    }
+    // load all identical phases
+    auto il = phases["identical_to_previous"]["list"];
+    if(il.is_array()) {
+      for(PhaseType identical : il) {
+        identical_phases_.insert(identical);
+      }
+    }
+    auto ir = phases["identical_to_previous"]["range"];
+    if(ir.is_array()) {
+      for(auto const& pair : ir) {
+        vtAssertExpr(pair.is_array());
+        for(PhaseType i = pair[0]; i <= pair[1]; i++){
+          identical_phases_.insert(i);
+        }
+      }
+    }
+  }
 }
 
 void LBDataHolder::clear() {
@@ -312,6 +420,9 @@ void LBDataHolder::clear() {
   node_data_.clear();
   node_subphase_comm_.clear();
   node_idx_.clear();
+  count_ = 0;
+  skipped_phases_.clear();
+  identical_phases_.clear();
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
