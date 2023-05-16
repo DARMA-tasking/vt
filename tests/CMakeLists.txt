@@ -66,7 +66,7 @@ set_target_properties(gtest_main PROPERTIES FOLDER extern)
 include(GoogleTest)
 include(turn_on_warnings)
 
-function(add_unit_test unit_test_name unit_test_files uses_mpi)
+function(add_unit_test unit_test_name unit_test_files uses_mpi additional_args)
   add_executable(
     ${unit_test_name}
     ${TEST_SOURCE_FILES}
@@ -95,6 +95,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
     foreach(PROC ${PROC_TEST_LIST})
       gtest_add_tests(
         TARGET                 ${unit_test_name}
+        EXTRA_ARGS             ${additional_args}
         WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
         TEST_SUFFIX            _proc_${PROC}
         TEST_PREFIX            vt:
@@ -115,6 +116,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
   else()
     gtest_add_tests(
       TARGET                 ${unit_test_name}
+      EXTRA_ARGS             ${additional_args}
       WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
       TEST_SUFFIX            _no_mpi
       TEST_PREFIX            vt:
@@ -167,6 +169,7 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
   set(UNIT_LIST_EXTENDED "")
   set(UNIT_LIST_BASIC "")
   set(UNIT_LIST_NOMPI "")
+  set(ADDITIONAL_ARGS "")
 
   foreach (unit_test_file ${${SUB_DIR}_UNIT_TEST_SOURCE_FILES})
     #message(STATUS "Considering ${unit_test_file}")
@@ -200,11 +203,15 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
     endif()
   endforeach()
 
-  add_unit_test("${SUB_DIR}_basic" UNIT_LIST_BASIC ON)
-  add_unit_test("${SUB_DIR}_nompi" UNIT_LIST_NOMPI OFF)
+  if (SUB_DIR STREQUAL "trace")
+    list(APPEND ADDITIONAL_ARGS "--vt_trace")
+  endif()
+
+  add_unit_test("${SUB_DIR}_basic" UNIT_LIST_BASIC ON "${ADDITIONAL_ARGS}")
+  add_unit_test("${SUB_DIR}_nompi" UNIT_LIST_NOMPI OFF "${ADDITIONAL_ARGS}")
 
   if (vt_build_extended_tests)
-    add_unit_test("${SUB_DIR}_extended" UNIT_LIST_EXTENDED ON)
+    add_unit_test("${SUB_DIR}_extended" UNIT_LIST_EXTENDED ON "${ADDITIONAL_ARGS}")
   endif()
 endforeach()
 
