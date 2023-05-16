@@ -2250,26 +2250,24 @@ void CollectionManager::checkpointToFile(
 namespace detail {
 template <typename ColT>
 inline void MigrateRequestHandler (
-  CollectionManager::MigrateRequestMsg<ColT>* msg, ColT*
+  ColT*, VrtElmProxy<ColT, typename ColT::IndexType> proxy_elm, NodeType dest
 ) {
-  auto node = msg->to_node_;
-  auto proxy_elm = msg->proxy_elm_;
-  theCollection()->migrate(proxy_elm, node);
+  theCollection()->migrate(proxy_elm, dest);
 }
 } /* end namespace detail */
 
 template <typename ColT>
 EpochType CollectionManager::requestMigrateDeferred(
-  VrtElmProxy<ColT, typename ColT::IndexType> proxy_elem, NodeType destination
+  VrtElmProxy<ColT, typename ColT::IndexType> proxy_elm, NodeType destination
 ) {
   auto ep = theTerm()->makeEpochRooted(
       "Request element migration", term::UseDS{true}
   );
   theMsg()->pushEpoch(ep);
 
-  proxy_elem.template send<
-    MigrateRequestMsg<ColT>, detail::MigrateRequestHandler<ColT>
-  >(proxy_elem, destination);
+  proxy_elm.template send<detail::MigrateRequestHandler<ColT>>(
+      proxy_elm, destination
+  );
 
   theMsg()->popEpoch(ep);
   theTerm()->finishedEpoch(ep);

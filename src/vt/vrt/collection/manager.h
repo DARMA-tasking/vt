@@ -62,6 +62,7 @@
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/listener/listen_events.h"
 #include "vt/vrt/proxy/collection_proxy.h"
+#include "vt/vrt/proxy/collection_elm_proxy.h"
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/messaging/message.h"
 #include "vt/messaging/pending_send.h"
@@ -1638,23 +1639,6 @@ public:
    *
    * \brief Migrate local element, potentially requested by remote location
    */
-  template <
-    typename ColT,
-    typename MsgT = vt::Message
-  >
-  struct MigrateRequestMsg : MsgT {
-    using ElmT = VrtElmProxy<ColT, typename ColT::IndexType>;
-
-    MigrateRequestMsg() = default;
-    MigrateRequestMsg(
-      ElmT proxy_elm, NodeType to_node
-    ) : to_node_(to_node),
-        proxy_elm_(proxy_elm)
-    { }
-
-    NodeType to_node_ = uninitialized_destination;
-    ElmT proxy_elm_;
-  };
 
   /**
    * \brief Migrate a remote proxy element to a node, by messaging that
@@ -1841,6 +1825,7 @@ private:
 #include "vt/vrt/collection/types/base.impl.h"
 #include "vt/rdmahandle/manager.collection.impl.h"
 #include "vt/vrt/proxy/collection_proxy.impl.h"
+#include "vt/vrt/proxy/collection_elm_proxy.impl.h"
 #include "vt/context/runnable_context/lb_data.impl.h"
 #include "vt/context/runnable_context/collection.impl.h"
 

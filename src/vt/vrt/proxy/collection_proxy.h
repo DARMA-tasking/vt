@@ -118,15 +118,7 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   
   //Serialize normally
   template <typename SerializerT>
-  using DefaultSerializer = vt::vrt::DefaultSerializer<SerializerT>;
-  template <typename T>
-  void serialize(typename DefaultSerializer<T>::type& s);
-  
-  //Serialize for checkpoint/recovery
-  template <typename SerializerT>
-  using CheckpointSerializer = vt::vrt::CheckpointSerializer<SerializerT>;
-  template <typename T>
-  void serialize(typename CheckpointSerializer<T>::type& s);
+  void serialize(SerializerT& s);
 };
 
 }}} /* end namespace vt::vrt::collection */

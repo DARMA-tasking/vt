@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/send/sendable.h"
 #include "vt/vrt/collection/insert/insertable.h"
 #include "vt/vrt/proxy/base_elm_proxy.h"
+#include "vt/vrt/vrt_common.h"
 
 #include <iosfwd>
 
@@ -90,12 +91,16 @@ struct VrtElmProxy : ProxyCollectionElmTraits<ColT, IndexT> {
     std::ostream& os, VrtElmProxy<ColU,IndexU> const& vrt
   );
 
-  template <typename Ser>
-  void serialize(DefaultSerializer<Ser>& s);
-  template <typename Ser> 
-  void serialize(CheckpointSerializer<Ser>& s);
-  template <typename Ser>
-  std::unique_ptr<ColT> deserializeToElm(Ser& s);
+  
+  
+  template <typename SerT, typename SerT::has_not_traits_t<CheckpointTrait>* = nullptr>
+  void serialize(SerT& s);
+  
+  template <typename SerT, typename SerT::has_traits_t<CheckpointTrait>* = nullptr>
+  void serialize(SerT& s);
+  
+  template <typename SerT>
+  std::unique_ptr<ColT> deserializeToElm(SerT& s);
 };
 
 

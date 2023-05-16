@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_PROXY_COLLECTION_ELM_PROXY_H
-#define INCLUDED_VT_VRT_PROXY_COLLECTION_ELM_PROXY_H
+#if !defined INCLUDED_VT_VRT_PROXY_COLLECTION_ELM_PROXY_IMPL_H
+#define INCLUDED_VT_VRT_PROXY_COLLECTION_ELM_PROXY_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/manager.h"
@@ -52,57 +52,76 @@ namespace vt { namespace vrt { namespace collection {
 
 //Standard serialize, just pass along to base.
 template <typename ColT, typename IndexT>
-template <typename Ser>
-void VrtElmProxy<ColT, IndexT>::serialize(DefaultSerializer<Ser>& s) {
+template <typename SerT, typename SerT::has_not_traits_t<CheckpointTrait>*>
+void VrtElmProxy<ColT, IndexT>::serialize(SerT& s) {
   ProxyCollectionElmTraits<ColT, IndexT>::serialize(s);
 }
 
 //Checkpoint serialize, actually serialize the element itself.
 template <typename ColT, typename IndexT>
-template <typename Ser> 
-void VrtElmProxy<ColT, IndexT>::serialize(CheckpointSerializer<Ser>& s) {
+template <typename SerT, typename SerT::has_traits_t<CheckpointTrait>*>
+void VrtElmProxy<ColT, IndexT>::serialize(SerT& s) {
   ProxyCollectionElmTraits<ColT, IndexT>::serialize(s);
   
-  //Make sure proxies within the element don't also try recovering
-  auto elm_serializer = checkpoint::withoutTrait<vt::vrt::CheckpointTrait>(s);
-
   auto local_elm_ptr = this->tryGetLocalPtr();
-  if(local_elm_ptr != nullptr){
-    local_elm_ptr | elm_serializer;
-  } else {
-    //The element is somewhere else so we'll need to request a migration to here.
-    vtAssert(!s.isUnpacking(), "Must serialize elements from the node they are at");
+  vtAssert(local_elm_ptr != nullptr || s.isUnpacking(), "Must serialize/size elements from the node they are at");
+  
+  //Traits for nested serialize/deserialize
+  using CheckpointlessTraits = typename SerT::Traits::without<CheckpointTrait>::with<CheckpointInternalTrait>;
+  
+  //Weird nested serialization to enable asynchronous deserializing w/o changing semantics.
+  if(!(s.isPacking() || s.isUnpacking())){
+    int size = checkpoint::getSize(*local_elm_ptr);
+    s.contiguousBytes(nullptr, 1, size);
+  } else if(s.isPacking()){
+    auto serialized_elm = checkpoint::serialize<CheckpointlessTraits>(*local_elm_ptr);
+    int size = serialized_elm->getSize();
+    s | size;
+    s.contiguousBytes(serialized_elm->getBuffer(), 1, size);
+  } else if(s.isUnpacking()){
+    int size;
+    s | size;
 
-    //Avoid delaying the serializer though, we want to enable asynchronous progress.
-    std::unique_ptr<ColT> new_elm_ptr;
-    new_elm_ptr | elm_serializer;
+    auto buf = std::make_unique<char[]>(size);
+    s.contiguousBytes(buf.get(), 1, size);
+    
+    if(local_elm_ptr != nullptr){
+      checkpoint::deserializeInPlace<CheckpointlessTraits>(buf.get(), local_elm_ptr);
+    } else {
+      //The element is somewhere else so we'll need to request a migration to here.
+      auto ep = theCollection()->requestMigrateDeferred(*this, theContext()->getNode());
 
-    auto ep = theCollection()->requestMigrateDeferred(*this, theContext()->getNode());
-
-    theTerm()->addAction(ep, [*this, new_elm_ptr = std::move(new_elm_ptr)]{
-      auto local_elm_ptr = *this.tryGetLocalPtr();
-      assert(local_elm_ptr != nullptr);
-      local_elm_ptr = std::move(new_elm_ptr);
-    });
+      theTerm()->addActionUnique(ep, std::move([elm_proxy = *this, buffer = std::move(buf)]{
+        auto elm_ptr = elm_proxy.tryGetLocalPtr();
+        assert(elm_ptr != nullptr);
+        checkpoint::deserializeInPlace<CheckpointlessTraits>(buffer.get(), elm_ptr);
+      }));
+    }
   }
 }
 
 //Deserialize without placing values into the runtime, 
 //just return the element pointer.
 template <typename ColT, typename IndexT>
-template <typename Ser>
+template <typename SerT>
 std::unique_ptr<ColT> 
-VrtElmProxy<ColT, IndexT>::deserializeToElm(Ser& s) {
-  //Still have to hit data in order.
+VrtElmProxy<ColT, IndexT>::deserializeToElm(SerT& s) {
+  //Still have to hit data in the same order.
   ProxyCollectionElmTraits<ColT, IndexT>::serialize(s);
   
-  //Make sure proxies within the element don't also try recovering
-  auto elm_serializer = checkpoint::withoutTrait<vt::vrt::CheckpointTrait>(s);
+  int size;
+  s | size;
+  auto buf = std::make_unique<char[]>(size);
+  s.contiguousBytes(buf.get(), 1, size);
+
+  std::unique_ptr<ColT> elm(new ColT());
   
-  std::unique_ptr<ColT> elm;
-  elm | elm_serializer;
+  using CheckpointlessTraits = typename SerT::Traits::without<CheckpointTrait>::with<CheckpointInternalTrait>;
+  checkpoint::deserializeInPlace<CheckpointlessTraits>(buf.get(), elm.get());
+  
   return elm;
 }
 
 }}} /* end namespace vt::vrt::collection */
 
+#endif /*INCLUDED_VT_VRT_PROXY_COLLECTION_ELM_PROXY_IMPL_H*/

@@ -107,27 +107,23 @@ CollectionProxy<ColT, IndexT>::setFocusedSubPhase(SubphaseType subphase) {
 }
 
 template <typename ColT, typename IndexT>
-template <typename T>
+template <typename SerializerT>
 void CollectionProxy<ColT, IndexT>::serialize(
-    typename DefaultSerializer<T>::type& s
+    SerializerT& s
 ){
-  ProxyCollectionTraits<ColT, IndexT>::serialize(s);
-}
-
-template <typename ColT, typename IndexT>
-template <typename T>
-void CollectionProxy<ColT, IndexT>::serialize(
-    typename CheckpointSerializer<T>::type& s
-){
-  
   //Save the proxy info we had before, to detect when 
-  //we need to create the proxy while unpacking.
+  //we need to create the proxy while unpacking a checkpoint.
   VirtualProxyType oldProxy = this->getProxy();
+
+  ProxyCollectionTraits<ColT, IndexT>::serialize(s);
+
+  //If not a checkpoint, we only serialize our reference info.
+  if constexpr( !s.hasTraits(CheckpointTrait()) ) {
+    return;
+  }
+     
   vtAssert(oldProxy != no_vrt_proxy || !s.isPacking(),
            "Proxy must be instantiated to checkpoint");
-
-  //Serialize parent class info, which handles proxy bits.
-  ProxyCollectionTraits<ColT, IndexT>::serialize(s);
   VirtualProxyType proxy = this->getProxy();
 
   std::string label;
@@ -159,8 +155,6 @@ void CollectionProxy<ColT, IndexT>::serialize(
   //TODO: chkpt location manager so we don't have to message back and forth so much?
   //auto lm = theLocMan()->getCollectionLM<IndexType>(proxy.getProxy());
 
- 
-
   //If unpacking, we may need to make the collection to unpack into.
   if(s.isUnpacking() && oldProxy != proxy){
     vtAssert(oldProxy == no_vrt_proxy,
@@ -168,32 +162,28 @@ void CollectionProxy<ColT, IndexT>::serialize(
     
     //The checkpointed proxy doesn't exist, we need to create it 
     //First get all of the element unique_ptrs to hand off to the constructor
-    std::vector<std::tuple<IndexT, ElmProxyType>> localElms;
+    std::vector<std::tuple<IndexT, std::unique_ptr<ColT>>> localElms;
     for(auto& idx : localElmSet){
       //Tell elements not to try verifying placement/migrating.
       localElms.emplace_back(std::make_tuple(idx, 
-                          std::move(ElmProxyType::deserializeToElm(s))));
+                          std::move(ElmProxyType().deserializeToElm(s))));
     }
     
-    bool is_collective = !VirtualProxyBuilder::isRemote(proxy);
-    vtAssert(is_collective, "VT requires collective collections to enable \
-             list inserting and custom constructing, cannot recover a rooted \
-             collection.");
-
     vt::makeCollection<ColT>(label)
       .bounds(bounds)
       .dynamicMembership(isDynamic)
       .proxyBits(proxy)
       .listInsertHere(std::move(localElms))
-      .deferWithEpoch([=](VirtualProxyType assigned_proxy){
-            vtAssert(assigned_proxy == proxy, "Proxy must be assigned as expected (for now)");
+      .deferWithEpoch([=](CollectionProxy<ColT, IndexT> assigned_proxy){
+            vtAssert(assigned_proxy.getProxy() == proxy, "Proxy must be assigned as expected (for now)");
       });
   } else {
-    //We're serializing/deserializing in-place
+    //We're serializing or in-place deserializing
     //Serialize each element itself, the elements will handle
     //requesting migrations as needed.
     for(auto& elm_idx : localElmSet){
-      s | (*this)(elm_idx);
+      auto elm = (*this)(elm_idx);
+      s | elm;
     }
   }
 }

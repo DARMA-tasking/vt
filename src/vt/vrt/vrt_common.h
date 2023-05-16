@@ -53,11 +53,7 @@ namespace vt { namespace vrt {
 static constexpr NodeType const default_collection_reduce_root_node = 0;
 
 struct CheckpointTrait {};
-template<typename SerializerT>
-using CheckpointSerializer = typename checkpoint::with_traits<SerializerT, CheckpointTrait>;
-
-template<typename SerializerT>
-using DefaultSerializer = typename checkpoint::without_traits<SerializerT, CheckpointTrait>;
+struct CheckpointInternalTrait {};
 
 }} /* end namespace vt::vrt */
 
