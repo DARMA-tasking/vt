@@ -102,6 +102,15 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   }
 }
 
+/*static*/ bool ReadLBConfig::hasOfflineLB() {
+  for(auto&& ele : config_exact_) {
+    if(getLB(ele.first) == LBType::OfflineLB) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /*static*/ ConfigEntry* ReadLBConfig::entry(ConfigIndex const& idx) {
   // First, search the exact iter config for this iteration: it has the highest
   // precedence
