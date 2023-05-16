@@ -735,7 +735,9 @@ void EntityLocationCoord<EntityID>::routePreparedMsg(
   } else {
     theTerm()->produce(epoch);
     // non-eager protocol: get location first then send message after resolution
-    getLocation(msg->getEntity(), msg->getHomeNode(), [this, epoch, m = std::move(msg)](NodeType node) mutable {
+    auto entity = msg->getEntity();
+    auto home_node = msg->getHomeNode();
+    getLocation(entity, home_node, [this, epoch, m = std::move(msg)](NodeType node) mutable {
       theMsg()->pushEpoch(epoch);
       routeMsgNode<MessageT>(
         m->getEntity(), m->getHomeNode(), node, std::move(m)
