@@ -147,6 +147,9 @@ void verifyCacheConsistency(
     // create an entity message to route
     auto msg = vt::makeMessage<MsgT>(entity, my_node);
 
+    // check the routing protocol to be used by the manager.
+    bool is_eager = theLocMan()->virtual_loc->useEagerProtocol(msg);
+
     // perform the checks only after all entity messages have been
     // correctly delivered
     runInEpochCollective([&]{
@@ -157,8 +160,6 @@ void verifyCacheConsistency(
     });
 
     if (my_node not_eq home) {
-      // check the routing protocol to be used by the manager.
-      bool is_eager = theLocMan()->virtual_loc->useEagerProtocol(msg);
 
       // check for cache updates
       bool is_entity_cached = isCached(entity);
