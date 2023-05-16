@@ -197,6 +197,7 @@ struct ReadLBConfig {
   static ConfigIndex numEntries() { return config_mod_.size() + config_exact_.size(); }
   static ConfigEntry* entry(ConfigIndex const& idx);
   static LBType getLB(ConfigIndex const& idx);
+  static bool hasOfflineLB();
   static ConfigMapType getModEntries() { return config_mod_; };
   static ConfigMapType getExactEntries() {return config_exact_; };
   static ParamMapType parseParams(std::vector<std::string> params);
