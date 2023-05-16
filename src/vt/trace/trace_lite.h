@@ -252,10 +252,20 @@ struct TraceLite  {
     return static_cast<TimeIntegerType>(time * 1e6);
   }
 
+  /**
+   * \brief Get the number of recorded trace events
+   *
+   * \return the number of trace events
+   */
   std::size_t getNumTraceEvents() const {
     return traces_.size();
   }
 
+  /**
+   * @brief Get the last recorded trace event
+   *
+   * @return the last recorded trace event
+   */
   const LogType* getLastTraceEvent() const noexcept {
     return traces_.empty() ? nullptr : &traces_.back();
   }
