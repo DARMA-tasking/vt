@@ -349,7 +349,7 @@ protected:
    *
    * \return computed bytes used for tracing (lower bound)
    */
-  std::size_t getTracesSize() const {
+  std::size_t getTracesSize() const noexcept {
     return traces_.size() * sizeof(Log);
   }
 
