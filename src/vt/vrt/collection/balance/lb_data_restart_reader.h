@@ -124,6 +124,24 @@ public:
   }
 
   /**
+   * \brief Find the next phase
+   *
+   * \param phase the current phase
+   *
+   * \return the next phase
+   */
+  PhaseType findNextPhase(PhaseType phase) const {
+    auto next = phase + 1;
+    for(; next < num_phases_; ++next) {
+      if(history_.find(next) != history_.end()) {
+        return next;
+      }
+    }
+    vtAssert(history_.find(next) != history_.end(), "Must have a valid phase");
+    return next;
+  }
+
+  /**
    * \brief Get the elements assigned for a given phase
    *
    * \param[in] phase the phase
@@ -131,12 +149,6 @@ public:
    * \return element assigned to this node
    */
   std::set<ElementIDStruct> const& getDistro(PhaseType phase) {
-    for(; phase < num_phases_; ++phase) {
-      if(history_.find(phase) != history_.end()) {
-        break;
-      }
-    }
-
     auto iter = history_.find(phase);
     vtAssert(iter != history_.end(), "Must have a valid phase");
     return iter->second;
@@ -148,12 +160,6 @@ public:
    * \param[in] phase the phase to clear
    */
   void clearDistro(PhaseType phase) {
-    for(; phase < num_phases_; ++phase) {
-      if(history_.find(phase) != history_.end()) {
-        break;
-      }
-    }
-
     auto iter = history_.find(phase);
     if (iter != history_.end()) {
       history_.erase(iter);
