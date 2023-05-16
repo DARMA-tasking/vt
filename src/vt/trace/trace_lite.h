@@ -252,6 +252,14 @@ struct TraceLite  {
     return static_cast<TimeIntegerType>(time * 1e6);
   }
 
+  std::size_t getNumTraceEvents() const {
+    return traces_.size();
+  }
+
+  const LogType* getLastTraceEvent() const noexcept {
+    return traces_.empty() ? nullptr : &traces_.back();
+  }
+
 protected:
   /**
    * \brief Emit a 'stop' trace for previous open event or a '[re]start' trace
