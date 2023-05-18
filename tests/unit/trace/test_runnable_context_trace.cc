@@ -68,7 +68,7 @@ TEST_F(TestRunnableContextTrace, runnable_context_trace_test_1) {
 
   HandlerManager::setHandlerTrace(handler, true);
 
-  // Give some nonesense parameters but Trace shouldn't touch them
+  // Give some nonsense parameters but Trace shouldn't touch them
   auto t = ctx::Trace( msg, /* in_trace_event */ 7,
                   handler, /* in_from_node */ 3,
                   5, 9, 3, 2 );
