@@ -61,6 +61,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /*static*/ typename ReadLBConfig::ConfigMapType ReadLBConfig::config_exact_ = {};
 /*static*/ std::vector<ConfigIndex> ReadLBConfig::config_prec_ = {};
 /*static*/ bool ReadLBConfig::read_complete_ = false;
+/*static*/ bool ReadLBConfig::has_offline_lb_ = false;
 
 /*static*/ bool ReadLBConfig::openConfig(std::string const& filename) {
   // No-op if no file specified. Can't be used to clear.
@@ -100,15 +101,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   } else {
     return LBType::NoLB;
   }
-}
-
-/*static*/ bool ReadLBConfig::hasOfflineLB() {
-  for(auto&& ele : config_exact_) {
-    if(getLB(ele.first) == LBType::OfflineLB) {
-      return true;
-    }
-  }
-  return false;
 }
 
 /*static*/ ConfigEntry* ReadLBConfig::entry(ConfigIndex const& idx) {
@@ -240,6 +232,10 @@ int eatWhitespace(std::ifstream& file) {
       vtAbort(err_msg);
     }
 
+    if (lb_name == get_lb_names()[LBType::OfflineLB]) {
+      has_offline_lb_ = true;
+    }
+
     map->emplace(
       std::piecewise_construct,
       std::forward_as_tuple(mod),
@@ -252,6 +248,7 @@ int eatWhitespace(std::ifstream& file) {
 
 /*static*/ void ReadLBConfig::clear() {
   read_complete_ = false;
+  has_offline_lb_ = false;
   open_filename_ = "";
   config_mod_.clear();
   config_exact_.clear();

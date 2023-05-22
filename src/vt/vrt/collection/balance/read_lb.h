@@ -197,7 +197,7 @@ struct ReadLBConfig {
   static ConfigIndex numEntries() { return config_mod_.size() + config_exact_.size(); }
   static ConfigEntry* entry(ConfigIndex const& idx);
   static LBType getLB(ConfigIndex const& idx);
-  static bool hasOfflineLB();
+  static bool hasOfflineLB() { return has_offline_lb_; };
   static ConfigMapType getModEntries() { return config_mod_; };
   static ConfigMapType getExactEntries() {return config_exact_; };
   static ParamMapType parseParams(std::vector<std::string> params);
@@ -209,6 +209,7 @@ private:
   static void readFile(std::string const& filename);
 
   static bool read_complete_;
+  static bool has_offline_lb_;
   static std::string open_filename_;
   static ConfigMapType config_mod_;
   static ConfigMapType config_exact_;
