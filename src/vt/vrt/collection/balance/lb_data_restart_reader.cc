@@ -87,20 +87,17 @@ void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
       last_found_phase = phase;
       for (auto const& obj : iter->second) {
         if (obj.first.isMigratable()) {
-          history_[phase].insert(obj.first);
+          if (history_[phase] == nullptr) {
+            history_[phase] = std::make_shared<std::set<ElementIDStruct>>();
+          }
+          history_[phase]->insert(obj.first);
         }
       }
     } else if(lbdh.identical_phases_.find(phase) != lbdh.identical_phases_.end()) {
-      // Phase is identical to previous one, fill with data from previous phase
-      auto last_iter = lbdh.node_data_.find(last_found_phase);
-      for (auto const& obj : last_iter->second) {
-        if (obj.first.isMigratable()) {
-          history_[phase].insert(obj.first);
-        }
-      }
+      // Phase is identical to previous one, use the shared pointer to data from previous phase
+      addIdenticalPhase(phase, last_found_phase);
     } else if(lbdh.skipped_phases_.find(phase) == lbdh.skipped_phases_.end()) {
-      // Phases which are not present must be specified in metadata of the file
-      vtAbort("Could not find data: Unspecified phases needs to be present in skipped section of the file metadata");
+      vtAbort("Could not find data: Skipped phases needs to be listed in file metadata.");
     }
   }
 }
@@ -143,12 +140,12 @@ void LBDataRestartReader::arriving(ArriveMsg* msg) {
 }
 
 void LBDataRestartReader::update(UpdateMsg* msg) {
-  auto iter = history_[msg->phase].find(msg->elm);
-  vtAssert(iter != history_[msg->phase].end(), "Must exist");
+  auto iter = history_[msg->phase]->find(msg->elm);
+  vtAssert(iter != history_[msg->phase]->end(), "Must exist");
   auto elm = *iter;
   elm.curr_node = msg->curr_node;
-  history_[msg->phase].erase(iter);
-  history_[msg->phase].insert(elm);
+  history_[msg->phase]->erase(iter);
+  history_[msg->phase]->insert(elm);
 }
 
 void LBDataRestartReader::checkBothEnds(Coord& coord) {
@@ -167,26 +164,21 @@ void LBDataRestartReader::determinePhasesToMigrate() {
   runInEpochCollective("LBDataRestartReader::updateLocations", [&]{
     PhaseType curr = 0, next;
     for (;curr < num_phases_ - 1;) {
-      // find number of next Phase
-      for(next = curr + 1; next < num_phases_; ++next) {
-        if(history_.find(next) != history_.end()) {
-          break;
-        }
-      }
+      next = findNextPhase(curr);
 
-      local_changed_distro[curr] = history_[curr] != history_[next];
+      local_changed_distro[curr] = *history_[curr] != *history_[next];
       if (local_changed_distro[curr]) {
         std::set<ElementIDStruct> departing, arriving;
 
         std::set_difference(
-          history_[next].begin(), history_[next].end(),
-          history_[curr].begin(), history_[curr].end(),
+          history_[next]->begin(), history_[next]->end(),
+          history_[curr]->begin(), history_[curr]->end(),
           std::inserter(arriving, arriving.begin())
         );
 
         std::set_difference(
-          history_[curr].begin(),  history_[curr].end(),
-          history_[next].begin(),  history_[next].end(),
+          history_[curr]->begin(),  history_[curr]->end(),
+          history_[next]->begin(),  history_[next]->end(),
           std::inserter(departing, departing.begin())
         );
 
