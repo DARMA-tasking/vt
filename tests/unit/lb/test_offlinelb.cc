@@ -76,7 +76,6 @@ struct SimCol : vt::Collection<SimCol, vt::Index1D> {
   }
 
   void sparseHandler(Msg* m){
-    // TODO
   }
 };
 
@@ -198,7 +197,7 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
   nlohmann::json metadata, phasesMetadata;
   phasesMetadata["count"] = num_phases;
   phasesMetadata["skipped"]["list"] = {2};
-  phasesMetadata["skipped"]["range"] = {{2,3}};
+  phasesMetadata["skipped"]["range"] = {{3,3}};
   phasesMetadata["identical_to_previous"]["list"] = {1};
   phasesMetadata["identical_to_previous"]["range"] = {{5,6}};
   metadata["type"] = "LBDatafile";
