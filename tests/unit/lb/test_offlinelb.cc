@@ -76,6 +76,15 @@ struct SimCol : vt::Collection<SimCol, vt::Index1D> {
   }
 
   void sparseHandler(Msg* m){
+    auto const this_node = theContext()->getNode();
+    auto const num_nodes = theContext()->getNumNodes();
+    auto const next_node = (this_node + 1) % num_nodes;
+    vt_debug_print(terse, lb, "sparseHandler: idx={}: elm={}\n", getIndex(), getElmID());
+    if (m->iter == 0 or m->iter == 1) {
+      EXPECT_EQ(getIndex().x() / 2, this_node);
+    } else if (m->iter == 2 or m->iter == 3 or m->iter == 4 or m->iter == 5 or m->iter == 6) {
+      EXPECT_EQ(getIndex().x() / 2, next_node);
+    }
   }
 };
 
