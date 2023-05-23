@@ -252,6 +252,24 @@ struct TraceLite  {
     return static_cast<TimeIntegerType>(time * 1e6);
   }
 
+  /**
+   * \brief Get the number of recorded trace events
+   *
+   * \return the number of trace events
+   */
+  std::size_t getNumTraceEvents() const {
+    return traces_.size();
+  }
+
+  /**
+   * @brief Get the last recorded trace event
+   *
+   * @return the last recorded trace event
+   */
+  const LogType* getLastTraceEvent() const noexcept {
+    return traces_.empty() ? nullptr : &traces_.back();
+  }
+
 protected:
   /**
    * \brief Emit a 'stop' trace for previous open event or a '[re]start' trace
@@ -349,7 +367,7 @@ protected:
    *
    * \return computed bytes used for tracing (lower bound)
    */
-  std::size_t getTracesSize() const {
+  std::size_t getTracesSize() const noexcept {
     return traces_.size() * sizeof(Log);
   }
 

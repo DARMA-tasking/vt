@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   trace.cc
+//                        test_runnable_context_trace.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,59 +41,59 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_CC
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_CC
+#include <vt/context/runnable_context/trace.h>
 
-#include "vt/config.h"
+#include "test_parallel_harness.h"
+#include "test_helpers.h"
 
 #if vt_check_enabled(trace_enabled)
 
-#include "vt/context/runnable_context/trace.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/messaging/active.h"
+namespace vt { namespace tests { namespace unit {
 
-namespace vt { namespace ctx {
+using TestRunnableContextTrace = TestParallelHarness;
 
-void Trace::start(TimeType time) {
-  if (not is_traced_) {
-    return;
-  }
+struct TraceMsg : ::vt::Message {
+};
 
-  auto const trace_id = auto_registry::handlerTraceID(handler_);
+void handler_func( TraceMsg * )
+{}
 
-  if (is_collection_) {
-    auto const cur_node = theContext()->getFromNodeCurrentTask();
-    auto const from_node =
-      from_node_ != uninitialized_destination ? from_node_ : cur_node;
+TEST_F(TestRunnableContextTrace, runnable_context_trace_test_1) {
+  if (!theTrace()->checkDynamicRuntimeEnabled())
+    GTEST_SKIP() << "trace tests require --vt_trace to be set";
 
-    processing_tag_ = theTrace()->beginProcessing(
-      trace_id, msg_size_, event_, from_node, time, idx1_, idx2_, idx3_, idx4_
-    );
-  } else {
-    processing_tag_ = theTrace()->beginProcessing(
-      trace_id, msg_size_, event_, from_node_, time
-    );
-  }
+  auto msg = makeMessage< TraceMsg >();
+
+  auto handler = auto_registry::makeAutoHandler< TraceMsg, handler_func >();
+
+  HandlerManager::setHandlerTrace(handler, true);
+
+  // Give some nonsense parameters but Trace shouldn't touch them
+  auto t = ctx::Trace( msg, /* in_trace_event */ 7,
+                  handler, /* in_from_node */ 3,
+                  5, 9, 3, 2 );
+
+  // One event for the trace, one for the top open event, third if mem usage tracing is enabled
+  const int add_num_events = theConfig()->vt_trace_memory_usage ? 3 : 2;
+
+  auto num_events = theTrace()->getNumTraceEvents();
+  t.start(TimeType{3});
+  EXPECT_EQ(num_events + add_num_events, theTrace()->getNumTraceEvents());
+  auto *last_trace = theTrace()->getLastTraceEvent();
+  EXPECT_NE(last_trace, nullptr);
+  EXPECT_EQ(last_trace->type, theConfig()->vt_trace_memory_usage ? trace::eTraceConstants::MemoryUsageCurrent : trace::eTraceConstants::BeginProcessing);
+  EXPECT_EQ(last_trace->time, TimeType{3});
+
+  num_events = theTrace()->getNumTraceEvents();
+  t.finish(TimeType{7});
+  EXPECT_EQ(num_events + add_num_events, theTrace()->getNumTraceEvents());
+  last_trace = theTrace()->getLastTraceEvent();
+  EXPECT_NE(last_trace, nullptr);
+  // Counterintuitive, but we restart the open event as the last action
+  EXPECT_EQ(last_trace->type, trace::eTraceConstants::BeginProcessing);
+  EXPECT_EQ(last_trace->time, TimeType{7}); // Time should still match though
 }
 
-void Trace::finish(TimeType time) {
-  if (not is_traced_) {
-    return;
-  }
+}}} // end namespace vt::tests::unit
 
-  theTrace()->endProcessing(processing_tag_, time);
-}
-
-void Trace::suspend(TimeType time) {
-  finish(time);
-}
-
-void Trace::resume(TimeType time) {
-  // @todo: connect up the last event to this new one after suspension
-  start(time);
-}
-
-}} /* end namespace vt::ctx */
-
-#endif /*vt_check_enabled(trace_enabled)*/
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_CC*/
+#endif // vt_check_enabled(trace_enabled)

@@ -359,7 +359,7 @@ TraceProcessingTag Trace::beginProcessing(
   );
 
   if (theConfig()->vt_trace_memory_usage) {
-    addMemoryEvent(theMemUsage()->getFirstUsage());
+    addMemoryEvent(theMemUsage()->getFirstUsage(), time);
   }
 
   return TraceProcessingTag{ep, loggedEvent};
@@ -404,7 +404,7 @@ void Trace::endProcessing(
   );
 
   if (theConfig()->vt_trace_memory_usage) {
-    addMemoryEvent(theMemUsage()->getFirstUsage());
+    addMemoryEvent(theMemUsage()->getFirstUsage(), time);
   }
 
   // Final event is same as original with a few .. tweaks.
