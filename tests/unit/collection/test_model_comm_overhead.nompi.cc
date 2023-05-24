@@ -48,6 +48,7 @@
 #include <gtest/gtest.h>
 
 #include "test_harness.h"
+#include "vt/timing/timing_type.h"
 
 #include <memory>
 
@@ -146,8 +147,8 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
     }
   };
 
-  constexpr auto per_msg_weight = 3.0;
-  constexpr auto per_byte_weight = 5.0;
+  constexpr auto per_msg_weight = TimeType{3.0};
+  constexpr auto per_byte_weight = TimeType{5.0};
 
   auto test_model = std::make_shared<CommOverhead>(
     std::make_shared<StubModel>(), per_msg_weight, per_byte_weight

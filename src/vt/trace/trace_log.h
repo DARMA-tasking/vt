@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_constants.h"
+#include "vt/timing/timing_type.h"
 
 #include <cstdint>
 #include <vector>
@@ -246,7 +247,7 @@ struct Log final {
 
   // User event
   Log(
-    double const in_begin_time, double const in_end_time,
+    TimeType const in_begin_time, TimeType const in_end_time,
     TraceConstantsType const in_type, std::string const& in_note,
     TraceEventIDType const in_event
   ) : time(in_begin_time), end_time(in_end_time),
@@ -257,7 +258,7 @@ struct Log final {
 
   // User event
   Log(
-      double const in_time, TraceConstantsType const in_type,
+      TimeType const in_time, TraceConstantsType const in_type,
       std::string const& in_note, UserDataType in_data
   ) : time(in_time), type(in_type),
       data(Data::UserData{in_note, 0, 0, false})
@@ -266,7 +267,7 @@ struct Log final {
 
   // User event
   Log(
-    double const in_time, TraceConstantsType const in_type,
+    TimeType const in_time, TraceConstantsType const in_type,
     NodeType in_node,
     UserEventIDType in_user_event, bool in_user_start
   ) : time(in_time), type(in_type),
@@ -277,7 +278,7 @@ struct Log final {
 
   // Used for idle
   Log(
-    double const in_time, TraceConstantsType const in_type,
+    TimeType const in_time, TraceConstantsType const in_type,
     NodeType in_node
   ) : time(in_time), type(in_type),
       node(in_node),
@@ -287,7 +288,7 @@ struct Log final {
 
   // Used for messages
   Log(
-    double const in_time, TraceEntryIDType const in_ep, TraceConstantsType const in_type,
+    TimeType const in_time, TraceEntryIDType const in_ep, TraceConstantsType const in_type,
     NodeType in_node,
     TraceMsgLenType const in_msg_len
   ) : time(in_time), type(in_type), ep(in_ep),
@@ -299,7 +300,7 @@ struct Log final {
   // Generate paired begin/end logs (copies with few changes)
   // NOT VALID FOR USER EVENTS
   Log(
-    Log const& in, double in_time, TraceConstantsType in_type
+    Log const& in, TimeType in_time, TraceConstantsType in_type
   ) : time(in_time), type(in_type), ep(in.ep), event(in.event),
       node(in.node),
       data(in.sys_data())
@@ -307,7 +308,7 @@ struct Log final {
   }
 
   Log(
-    double in_time, TraceEntryIDType in_ep, TraceConstantsType in_type,
+    TimeType in_time, TraceEntryIDType in_ep, TraceConstantsType in_type,
     TraceEventIDType in_event, TraceMsgLenType in_msg_len, NodeType in_node,
     uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
   ) : time(in_time), type(in_type), ep(in_ep), event(in_event),
@@ -319,7 +320,7 @@ struct Log final {
   // Memory usage event, could create another union type here, but hardly seems
   // worth it; re-use SysData
   Log(
-    double in_time, TraceConstantsType in_type, std::size_t in_memory_bytes
+    TimeType in_time, TraceConstantsType in_type, std::size_t in_memory_bytes
   ) : time(in_time), type(in_type),
       data(Data::SysData{in_memory_bytes})
   { }
@@ -350,10 +351,10 @@ public:
   // Excluding sys/user-specific data, expected ~24 bytes
 
   // Time of the event - all events need a time.
-  double time = 0.0;
+  TimeType time = TimeType{0.0};
   // If a duration can be expressed in a single event.
   // (Currently only for user-events.. could elim explicit end events.)
-  double end_time = 0.0;
+  TimeType end_time = TimeType{0.0};
 
   TraceConstantsType type = TraceConstantsType::InvalidTraceType;
   TraceEntryIDType ep = no_trace_entry_id;

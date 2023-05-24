@@ -47,6 +47,7 @@
 #include "vt/collective/reduce/operators/default_msg.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/pipe/pipe_manager.h"
+#include "vt/timing/timing_type.h"
 
 #include <limits>
 
@@ -80,7 +81,7 @@ void reduceHelper(
       if (update == DiagnosticUpdate::Min) {
         out->is_valid_value_ = reduced_val.min() != std::numeric_limits<T>::max();
       } else {
-        out->is_valid_value_ = reduced_val.sum() != 0;
+        out->is_valid_value_ = reduced_val.sum() != T{0};
       }
     }
   );
@@ -110,5 +111,6 @@ void reduceHelper(
 
 DIAGNOSTIC_VALUE_INSTANCE(int64_t)
 DIAGNOSTIC_VALUE_INSTANCE(double)
+DIAGNOSTIC_VALUE_INSTANCE(TimeType)
 
 }}}} /* end namespace vt::runtime::component::detail */

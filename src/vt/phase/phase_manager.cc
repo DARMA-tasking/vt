@@ -296,17 +296,17 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
     auto lb_name = vrt::collection::balance::get_lb_names()[
       last_phase_info->lb_type
     ];
-    TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
+    auto const total_time = timing::getCurrentTime() - start_time_;
     vt_print(
       phase,
       "phase={}, duration={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.3f}, "
       "grain_max_time={}, migration count={}, lb_name={}\n",
       cur_phase_,
       total_time,
-      TimeTypeWrapper(last_phase_info->max_load),
-      TimeTypeWrapper(last_phase_info->avg_load),
+      TimeType(last_phase_info->max_load),
+      TimeType(last_phase_info->avg_load),
       last_phase_info->imb_load,
-      TimeTypeWrapper(last_phase_info->max_obj),
+      TimeType(last_phase_info->max_obj),
       last_phase_info->migration_count,
       lb_name
     );
@@ -315,8 +315,8 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
     //   "POST phase={}, total time={}, max_load={}, avg_load={}, imbalance={:.3f}, migration count={}\n",
     //   cur_phase_,
     //   total_time,
-    //   TimeTypeWrapper(last_phase_info->max_load_post_lb),
-    //   TimeTypeWrapper(last_phase_info->avg_load_post_lb),
+    //   TimeType(last_phase_info->max_load_post_lb),
+    //   TimeType(last_phase_info->avg_load_post_lb),
     //   last_phase_info->imb_load_post_lb,
     //   last_phase_info->migration_count
     // );

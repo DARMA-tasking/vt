@@ -93,15 +93,15 @@ struct DiagnosticValueWrapper {
       N_(in_N),
       min_(updated ? in_value : std::numeric_limits<T>::max()),
       max_(updated ? in_value : std::numeric_limits<T>::lowest()),
-      sum_(updated ? in_value : 0),
-      avg_(updated ? in_value : 0),
+      sum_(updated ? in_value : T{0}),
+      avg_(updated ? static_cast<double>(in_value) : 0),
       M2_(0.),
       M3_(0.),
       M4_(0.),
       hist_(16)
   {
     // add to histogram when starting the reduction
-    hist_.add(value_);
+    hist_.add(static_cast<double>(value_));
   }
 
   /**
@@ -168,7 +168,7 @@ struct DiagnosticValueWrapper {
    *
    * \return the max value
    */
-  T max() const { return N_ == 0 ? 0 : max_; }
+  T max() const { return N_ == 0 ? T{0} : max_; }
 
   /**
    * \internal \brief Get sum of values (use after reduction)
@@ -182,7 +182,7 @@ struct DiagnosticValueWrapper {
    *
    * \return the min value
    */
-  T min() const { return N_ == 0 ? 0 : min_; }
+  T min() const { return N_ == 0 ? T{0} : min_; }
 
   /**
    * \internal \brief Get the arithmetic mean value (use after reduction)
@@ -280,7 +280,7 @@ struct DiagnosticValueWrapper {
 private:
   T value_;                     /**< The raw value */
   std::size_t N_ = 0;           /**< The cardinality */
-  T min_ = {}, max_ = {}, sum_ = {}; /**< The min/max/sum for reduction */
+  T min_ = T{}, max_ = T{}, sum_ = T{}; /**< The min/max/sum for reduction */
   /**
    * The avg and 2/3/4 moments for reduction
    */

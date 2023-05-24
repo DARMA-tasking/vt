@@ -178,7 +178,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    *
    * \param[in] current_time current time
    */
-  void runProgress(bool msg_only = false, TimeType current_time = 0.0 );
+  void runProgress(bool msg_only = false, TimeType current_time = TimeType{0.0} );
 
   /**
    * \brief Runs the scheduler until a condition is met.
@@ -438,7 +438,7 @@ private:
   EventTriggerContType event_triggers;
   EventTriggerContType event_triggers_once;
 
-  TimeType last_progress_time_ = 0.0;
+  TimeType last_progress_time_ = TimeType{0.0};
   bool progress_time_enabled_ = false;
   int32_t processed_after_last_progress_ = 0;
 

@@ -63,7 +63,7 @@ struct ElementLBData {
 
   void start(TimeType time);
   void stop(TimeType time);
-  void addTime(TimeTypeWrapper const& time);
+  void addTime(TimeType const& time);
 
   void sendToEntity(ElementIDStruct to, ElementIDStruct from, double bytes);
   void sendComm(elm::CommKey key, double bytes);
@@ -124,7 +124,7 @@ protected:
 
 protected:
   bool cur_time_started_ = false;
-  TimeType cur_time_ = 0.0;
+  TimeType cur_time_ = TimeType{0.0};
   PhaseType cur_phase_ = fst_lb_phase;
   std::unordered_map<PhaseType, TimeType> phase_timings_ = {};
   std::unordered_map<PhaseType, CommMapType> phase_comm_ = {};

@@ -64,22 +64,22 @@ LoadType Norm::getModeledLoad(ElementIDStruct object, PhaseOffset offset) const 
 
     for (int i = 0; i < getNumSubphases(); ++i) {
       offset.subphase = i;
-      auto t = ComposedModel::getModeledLoad(object, offset);
+      auto t = ComposedModel::getModeledLoad(object, offset).seconds();
       sum += std::pow(t, power_);
     }
 
-    return std::pow(sum, 1.0/power_);
+    return TimeType{std::pow(sum, 1.0/power_)};
   } else {
     // l-infinity implies a max norm
     double max = 0.0;
 
     for (int i = 0; i < getNumSubphases(); ++i) {
       offset.subphase = i;
-      auto t = ComposedModel::getModeledLoad(object, offset);
+      auto t = ComposedModel::getModeledLoad(object, offset).seconds();
       max = std::max(max, t);
     }
 
-    return max;
+    return TimeType{max};
   }
 }
 

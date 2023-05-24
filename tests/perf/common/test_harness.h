@@ -67,12 +67,11 @@ struct TestResultHolder {
 
 struct PerfTestHarness : TestHarnessBase {
   using TestName = std::string;
-  using TestResult = std::pair<TestName, TimeType>;
-
-  using FinalTestResult = std::pair<TestName, TestResultHolder<TimeType>>;
+  using TestResult = std::pair<TestName, TimeType::TimeTypeInternal>;
+  using FinalTestResult = std::pair<TestName, TestResultHolder<TimeType::TimeTypeInternal>>;
   using TestResults = std::vector<std::vector<TestResult>>;
   using PerNodeResults =
-    std::unordered_map<NodeType, TestResultHolder<TimeType>>;
+    std::unordered_map<NodeType, TestResultHolder<TimeType::TimeTypeInternal>>;
   using CombinedResults = std::vector<std::pair<TestName, PerNodeResults>>;
 
   // Memory use at the end of test iteration (i.e. phase)

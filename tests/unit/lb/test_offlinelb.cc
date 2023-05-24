@@ -112,7 +112,7 @@ TEST_F(TestOfflineLB, test_offlinelb_1) {
   LBDataHolder dh;
   for (PhaseType i = 0; i < num_phases; i++) {
     for (auto&& elm : ids[i]) {
-      dh.node_data_[i][elm] = LoadSummary{3};
+      dh.node_data_[i][elm] = LoadSummary{TimeType{3}};
     }
   }
 

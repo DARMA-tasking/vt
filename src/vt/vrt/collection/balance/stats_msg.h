@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/timing/timing_type.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_MSG_H
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_MSG_H
 
@@ -84,18 +85,18 @@ struct LoadData {
     );
 
     int32_t N            = a1.N_ + a2.N_;
-    double delta         = a2.avg_ - a1.avg_;
-    double delta_sur_N   = delta / static_cast<double>(N);
-    double delta2_sur_N2 = delta_sur_N * delta_sur_N;
+    TimeType delta         = a2.avg_ - a1.avg_;
+    TimeType delta_sur_N   = delta / static_cast<double>(N);
+    TimeType delta2_sur_N2 = delta_sur_N * delta_sur_N;
     int32_t n2           = a1.N_ * a1.N_;
     int32_t n_c2         = a2.N_ * a2.N_;
     int32_t prod_n       = a1.N_ * a2.N_;
     int32_t n_c          = a2.N_;
     int32_t n            = a1.N_;
-    double M2            = a1.M2_;
-    double M2_c          = a2.M2_;
-    double M3            = a1.M3_;
-    double M3_c          = a2.M3_;
+    TimeType M2            = a1.M2_;
+    TimeType M2_c          = a2.M2_;
+    TimeType M3            = a1.M3_;
+    TimeType M3_c          = a2.M3_;
 
     a1.M4_ += a2.M4_
         + prod_n * ( n2 - prod_n + n_c2 ) * delta * delta_sur_N * delta2_sur_N2
@@ -126,13 +127,13 @@ struct LoadData {
   LoadType skew() const {
     static const double min_sqrt = std::sqrt(std::numeric_limits<double>::min());
     if (N_ == 1 or M2_ < min_sqrt) { // 1.e-150
-      return 0.0;
+      return TimeType{0.0};
     } else {
       double nm1 = N_ - 1;
       double inv_n = 1. / N_;
-      double var_inv = nm1 / M2_;
-      double nvar_inv = var_inv * inv_n;
-      return nvar_inv * std::sqrt( var_inv ) * M3_;
+      TimeType var_inv = nm1 / M2_;
+      TimeType nvar_inv = var_inv * inv_n;
+      return nvar_inv * std::sqrt( var_inv.seconds() ) * M3_;
     }
   }
   LoadType krte() const {
@@ -141,9 +142,9 @@ struct LoadData {
     } else {
       double nm1 = N_ - 1;
       double inv_n = 1. / N_;
-      double var_inv = nm1 / M2_;
-      double nvar_inv = var_inv * inv_n;
-      return nvar_inv * var_inv * M4_ - 3.;
+      TimeType var_inv = nm1 / M2_;
+      TimeType nvar_inv = var_inv * inv_n;
+      return nvar_inv * var_inv * M4_ - TimeType{3.};
     }
   }
   LoadType I() const { return avg() > 0.0 ? (max() / avg()) - 1.0f : 0.0; }

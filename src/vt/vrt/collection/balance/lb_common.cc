@@ -102,7 +102,7 @@ LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when)
   LoadSummary ret;
 
   auto subphases = model->getNumSubphases();
-  ret.subphase_loads.resize(subphases, 0.0);
+  ret.subphase_loads.resize(subphases, TimeType{0.0});
 
   for (auto obj : *model) {
     ret += getObjectLoads(model, obj, when);

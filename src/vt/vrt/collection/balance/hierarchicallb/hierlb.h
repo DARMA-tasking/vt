@@ -77,7 +77,7 @@ struct HierarchicalLB : LoadSamplerBaseLB {
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 
-  void setupTree(TimeTypeWrapper const threshold);
+  void setupTree(TimeType const threshold);
   void calcLoadOver(HeapExtractEnum const extract);
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
   void procDataIn(ElementLoadType const& data_in);

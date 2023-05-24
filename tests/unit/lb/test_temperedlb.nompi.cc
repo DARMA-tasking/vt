@@ -82,9 +82,9 @@ void orderAndVerify(
   // have TemperedLB order the objects
   auto ordered_objs = use_tempered_wmin ?
     vt::vrt::collection::lb::TemperedWMin::orderObjects(
-      order, cur_objs, my_load, target_load) :
+      order, cur_objs, my_load.seconds(), target_load) :
     vt::vrt::collection::lb::TemperedLB::orderObjects(
-      order, cur_objs, my_load, target_load);
+      order, cur_objs, my_load.seconds(), target_load);
 
   // verify correctness of the returned ordering
   int i = 0;

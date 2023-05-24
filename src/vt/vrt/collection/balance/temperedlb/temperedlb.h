@@ -104,7 +104,7 @@ protected:
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
   std::vector<NodeType> makeUnderloaded() const;
   std::vector<NodeType> makeSufficientlyUnderloaded(
-    LoadType load_to_accommodate
+    TimeType load_to_accommodate
   ) const;
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available

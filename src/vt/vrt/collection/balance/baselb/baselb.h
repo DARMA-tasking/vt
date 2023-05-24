@@ -167,7 +167,7 @@ struct BaseLB {
 protected:
   void getArgs(PhaseType phase);
 
-  double start_time_                                  = 0.0f;
+  TimeType start_time_                                = TimeType{0.0};
   ElementCommType const* comm_data                    = nullptr;
   balance::DataMapType const* user_data_              = nullptr;
   objgroup::proxy::Proxy<BaseLB> proxy_               = {};

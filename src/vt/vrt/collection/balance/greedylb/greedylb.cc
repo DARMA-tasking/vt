@@ -414,7 +414,7 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
 
   auto const& obj_time_milli = loadMilli(load_model_->getModeledLoad(
     obj_id, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-  ));
+  ).seconds());
 
   this_load -= obj_time_milli;
 

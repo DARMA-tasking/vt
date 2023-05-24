@@ -499,31 +499,31 @@ void LBManager::statsHandler(std::vector<balance::LoadData> const& in_stat_vec) 
     auto skew     = st.skew();
     auto krte     = st.krte();
 
-    stats[stat][lb::StatisticQuantity::max] = max;
-    stats[stat][lb::StatisticQuantity::min] = min;
-    stats[stat][lb::StatisticQuantity::avg] = avg;
-    stats[stat][lb::StatisticQuantity::sum] = sum;
+    stats[stat][lb::StatisticQuantity::max] = max.seconds();
+    stats[stat][lb::StatisticQuantity::min] = min.seconds();
+    stats[stat][lb::StatisticQuantity::avg] = avg.seconds();
+    stats[stat][lb::StatisticQuantity::sum] = sum.seconds();
     stats[stat][lb::StatisticQuantity::npr] = npr;
     stats[stat][lb::StatisticQuantity::car] = car;
-    stats[stat][lb::StatisticQuantity::var] = var;
+    stats[stat][lb::StatisticQuantity::var] = var.seconds();
     stats[stat][lb::StatisticQuantity::npr] = npr;
-    stats[stat][lb::StatisticQuantity::imb] = imb;
-    stats[stat][lb::StatisticQuantity::std] = stdv;
-    stats[stat][lb::StatisticQuantity::skw] = skew;
-    stats[stat][lb::StatisticQuantity::kur] = krte;
+    stats[stat][lb::StatisticQuantity::imb] = imb.seconds();
+    stats[stat][lb::StatisticQuantity::std] = stdv.seconds();
+    stats[stat][lb::StatisticQuantity::skw] = skew.seconds();
+    stats[stat][lb::StatisticQuantity::kur] = krte.seconds();
 
     if (stat == rank_statistic) {
       if (before_lb_stats_) {
-        last_phase_info_->max_load = max;
-        last_phase_info_->avg_load = avg;
-        last_phase_info_->imb_load = imb;
+        last_phase_info_->max_load = max.seconds();
+        last_phase_info_->avg_load = avg.seconds();
+        last_phase_info_->imb_load = imb.seconds();
       } else {
-        last_phase_info_->max_load_post_lb = max;
-        last_phase_info_->avg_load_post_lb = avg;
-        last_phase_info_->imb_load_post_lb = imb;
+        last_phase_info_->max_load_post_lb = max.seconds();
+        last_phase_info_->avg_load_post_lb = avg.seconds();
+        last_phase_info_->imb_load_post_lb = imb.seconds();
       }
     } else if (stat == obj_statistic and before_lb_stats_) {
-      last_phase_info_->max_obj = max;
+      last_phase_info_->max_obj = max.seconds();
     }
 
     if (theContext()->getNode() == 0) {
@@ -607,7 +607,7 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
 balance::LoadData reduceVec(
   lb::Statistic stat, std::vector<balance::LoadData>&& vec
 ) {
-  balance::LoadData reduce_ld(stat, 0.0f);
+  balance::LoadData reduce_ld(stat, TimeType{0.0});
   if (vec.size() == 0) {
     return reduce_ld;
   } else {
@@ -631,7 +631,7 @@ void LBManager::computeStatistics(
     balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE
   };
 
-  total_load_from_model = 0.;
+  total_load_from_model = TimeType{0.};
   std::vector<balance::LoadData> obj_load_model;
   for (auto elm : *model) {
     auto work = model->getModeledLoad(elm, when);
@@ -669,7 +669,7 @@ void LBManager::computeStatistics(
   ));
 
   if (strategy_specific_model_) {
-    auto rank_strat_specific_load = 0.;
+    TimeType rank_strat_specific_load = TimeType{0.};
     std::vector<balance::LoadData> obj_strat_specific_load;
     for (auto elm : *strategy_specific_model_) {
       auto work = strategy_specific_model_->getModeledLoad(elm, when);
@@ -703,7 +703,7 @@ void LBManager::computeStatistics(
   for (auto&& elm : *comm_data) {
     // Only count object-to-object direct edges in the Object_comm statistics
     if (elm.first.cat_ == elm::CommCategory::SendRecv and not elm.first.selfEdge()) {
-      obj_comm.emplace_back(LoadData{lb::Statistic::Object_comm, elm.second.bytes});
+      obj_comm.emplace_back(LoadData{lb::Statistic::Object_comm, TimeType{elm.second.bytes}});
     }
 
     if (not comm_collectives and isCollectiveComm(elm.first.cat_)) {
@@ -716,7 +716,7 @@ void LBManager::computeStatistics(
     comm_load += elm.second.bytes;
   }
 
-  lstats.emplace_back(LoadData{lb::Statistic::Rank_comm, comm_load});
+  lstats.emplace_back(LoadData{lb::Statistic::Rank_comm, TimeType{comm_load}});
   lstats.emplace_back(reduceVec(
     lb::Statistic::Object_comm, std::move(obj_comm)
   ));

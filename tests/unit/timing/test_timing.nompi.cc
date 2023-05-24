@@ -53,37 +53,37 @@ using TestTiming = TestHarness;
 
 TEST_F(TestTiming, test_time_formatting) {
   {
-    TimeTypeWrapper const t = 15664645.400691890716;
+    TimeType const t = TimeType{15664645.400691890716};
     EXPECT_EQ(fmt::format("{}", t), "15.7e6 s");
   }
 
   {
-    TimeTypeWrapper const t = 4.0006918907165527344;
+    TimeType const t = TimeType{4.0006918907165527344};
     EXPECT_EQ(fmt::format("{}", t), "4.00e0 s");
   }
 
   {
-    TimeTypeWrapper const t = 0.0691890716552734423;
+    TimeType const t = TimeType{0.0691890716552734423};
     EXPECT_EQ(fmt::format("{}", t), "69.2e-3 s");
   }
 
   {
-    TimeTypeWrapper const t = -0.0691890716552734423;
+    TimeType const t = TimeType{-0.0691890716552734423};
     EXPECT_EQ(fmt::format("{}", t), "-69.2e-3 s");
   }
 
   {
-    TimeTypeWrapper const t = 0.0006918907165527344;
+    TimeType const t = TimeType{0.0006918907165527344};
     EXPECT_EQ(fmt::format("{}", t), "692e-6 s");
   }
 
   {
-    TimeTypeWrapper const t = 0.0000006918907165527;
+    TimeType const t = TimeType{0.0000006918907165527};
     EXPECT_EQ(fmt::format("{}", t), "692e-9 s");
   }
 
   {
-    TimeTypeWrapper const t = 3.14;
+    TimeType const t = TimeType{3.14};
     EXPECT_EQ(fmt::format("{}", t), "3.14e0 s");
   }
 }

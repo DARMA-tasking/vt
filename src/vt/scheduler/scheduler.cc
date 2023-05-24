@@ -179,7 +179,7 @@ bool Scheduler::shouldCallProgress(
     processed_since_last_progress >= theConfig()->vt_sched_progress_han;
   bool enough_time_passed =
     progress_time_enabled_ and
-    time_since_last_progress > theConfig()->vt_sched_progress_sec;
+    time_since_last_progress > TimeType{theConfig()->vt_sched_progress_sec};
 
   return
     (not progress_time_enabled_ and not k_handler_enabled) or
