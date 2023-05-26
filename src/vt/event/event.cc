@@ -304,7 +304,7 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
 void AsyncEvent::testEventsTrigger(int const& num_events) {
 # if vt_check_enabled(trace_enabled)
   int32_t num_completed  = 0;
-  TimeType tr_begin = 0.0;
+  auto tr_begin = TimeType{0.0};
 
   if (theConfig()->vt_trace_event_polling) {
     tr_begin = timing::getCurrentTime();

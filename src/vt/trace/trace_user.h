@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/trace/trace_common.h"
+#include "vt/timing/timing_type.h"
 
 #include <string>
 
@@ -127,7 +128,7 @@ void addUserData(int32_t data);
  * \param[in] event the event ID to log
  */
 void addUserBracketedNote(
-  double const begin, double const end, std::string const& note,
+  TimeType const begin, TimeType const end, std::string const& note,
   TraceEventIDType const event = no_trace_event
 );
 
@@ -184,7 +185,7 @@ struct TraceScopedEventHash final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      double end = TraceLite::getCurrentTime();
+      auto end = TraceLite::getCurrentTime();
       theTrace()->addUserEventBracketed(event_, begin_, end);
 
       event_ = no_user_event_id;
@@ -192,7 +193,7 @@ struct TraceScopedEventHash final {
   }
 
 private:
-  double begin_          = 0.0;
+  TimeType begin_        = TimeType{0.0};
   std::string str_       = "";
   UserEventIDType event_ = no_user_event_id;
 };
@@ -214,7 +215,7 @@ struct TraceScopedEvent final {
    * \c registerEventCollective )
    */
   explicit TraceScopedEvent(UserEventIDType event)
-    : begin_(event != no_user_event_id ? TraceLite::getCurrentTime() : 0),
+    : begin_(event != no_user_event_id ? TraceLite::getCurrentTime() : TimeType{0.}),
       event_(event)
   { }
 
@@ -240,7 +241,7 @@ struct TraceScopedEvent final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      double end = TraceLite::getCurrentTime();
+      auto end = TraceLite::getCurrentTime();
       theTrace()->addUserEventBracketed(event_, begin_, end);
 
       event_ = no_user_event_id;
@@ -248,7 +249,7 @@ struct TraceScopedEvent final {
   }
 
 private:
-  double begin_          = 0.0;
+  TimeType begin_        = TimeType{0.0};
   UserEventIDType event_ = no_user_event_id;
 };
 
@@ -271,7 +272,7 @@ struct TraceScopedNote final {
    */
   TraceScopedNote(
     std::string const& in_note, TraceEventIDType const in_event = no_trace_event
-  ) : begin_(in_event != no_trace_event ? TraceLite::getCurrentTime() : 0),
+  ) : begin_(in_event != no_trace_event ? TraceLite::getCurrentTime() : TimeType{0.}),
       event_(in_event),
       note_(in_note)
   { }
@@ -300,7 +301,7 @@ struct TraceScopedNote final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      double end = TraceLite::getCurrentTime();
+      auto end = TraceLite::getCurrentTime();
       theTrace()->addUserBracketedNote(begin_, end, note_, event_);
 
       event_ = no_user_event_id;
@@ -312,7 +313,7 @@ struct TraceScopedNote final {
   }
 
 private:
-  double begin_           = 0.0;
+  TimeType begin_         = TimeType{0.0};
   TraceEventIDType event_ = no_trace_event;
   std::string note_       = "";
 };
