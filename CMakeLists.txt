@@ -32,7 +32,7 @@ if (ccache_binary)
     STATUS
     "VT: Found ccache binary: ${ccache_binary}; adding launch rule"
   )
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${ccache_binary}")
+  set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "${ccache_binary}")
 endif()
 
 set(CMAKE_CXX_EXTENSIONS OFF)
