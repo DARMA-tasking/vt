@@ -63,7 +63,7 @@
 #
 
 # Need verision >= 3.5 for the features in use
-version: '3.5'
+version: '3.8'
 
 # Named volumes must be predefined according the docker compose rules. Many
 # combinations have already been added, but if a needed configuration is missing
@@ -167,8 +167,7 @@ services:
     ulimits: &ulimits
       core: ${ULIMIT_CORE}
     environment:
-      <<: *ccache
-      <<: *vtopts
+      <<: [*ccache, *vtopts]
     volumes: &ubuntu-volumes
       - .:/vt:delegated
       - ${CACHE}${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cache:/build:delegated
@@ -195,8 +194,7 @@ services:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     ulimits: *ulimits
     environment:
-      <<: *ccache
-      <<: *vtopts
+      <<: [*ccache, *vtopts]
     volumes: *ubuntu-volumes
     command: &vt-build-test-clean-cpp-command >
       /bin/bash -c "
@@ -222,8 +220,7 @@ services:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     ulimits: *ulimits
     environment:
-      <<: *ccache
-      <<: *vtopts
+      <<: [*ccache, *vtopts]
     volumes: *ubuntu-volumes
     command: &vt-build-test-clean-noinstall-cpp-command >
       /bin/bash -c "
@@ -252,8 +249,7 @@ services:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     ulimits: *ulimits
     environment:
-      <<: *ccache
-      <<: *vtopts
+      <<: [*ccache, *vtopts]
     volumes: *ubuntu-volumes
 
   ##############################################################################
@@ -274,8 +270,7 @@ services:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-openmpi-cpp
     ulimits: *ulimits
     environment:
-      <<: *ccache
-      <<: *vtopts
+      <<: [*ccache, *vtopts]
       OMPI_MCA_btl: "^vader"
     volumes: *ubuntu-volumes
     command: *vt-build-test-clean-cpp-command
@@ -294,8 +289,7 @@ services:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-openmpi-cpp
     ulimits: *ulimits
     environment:
-      <<: *ccache
-      <<: *vtopts
+      <<: [*ccache, *vtopts]
       OMPI_MCA_btl: "^vader"
     volumes: *ubuntu-volumes
 
@@ -309,14 +303,12 @@ services:
       target: build
       dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
       args:
-        <<: *default-args
-        <<: *vtopts
+        <<: [*default-args, *vtopts]
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     ulimits: *ulimits
     environment:
-      <<: *ccache
-      <<: *vtopts
+      <<: [*ccache, *vtopts]
     volumes: *ubuntu-volumes
     command: &cpp-command >
       /bin/bash -c "
@@ -405,8 +397,7 @@ services:
         - ${REPO}:${ARCH}-alpine-${HOST_COMPILER}-${COMPILER}-cpp
     ulimits: *ulimits
     environment:
-      <<: *ccache
-      <<: *vtopts
+      <<: [*ccache, *vtopts]
     volumes: &alpine-volumes
       - .:/vt:delegated
       - ${CACHE}${ARCH}-alpine-${HOST_COMPILER}-${COMPILER}-cache:/build:delegated
@@ -426,7 +417,6 @@ services:
         - ${REPO}:${ARCH}-alpine-${HOST_COMPILER}-${COMPILER}-cpp
     ulimits: *ulimits
     environment:
-      <<: *ccache
-      <<: *vtopts
+      <<: [*ccache, *vtopts]
     volumes: *alpine-volumes
     command: *vt-build-test-clean-cpp-command
