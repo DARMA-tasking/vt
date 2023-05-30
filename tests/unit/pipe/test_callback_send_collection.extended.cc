@@ -55,34 +55,13 @@ namespace vt { namespace tests { namespace unit { namespace send {
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct CallbackMsg : vt::Message {
-  CallbackMsg() = default;
-  explicit CallbackMsg(Callback<> in_cb) : cb_(in_cb) { }
-
-  Callback<> cb_;
-};
-
 struct DataMsg : vt::Message {
   DataMsg() = default;
   DataMsg(int in_a, int in_b, int in_c) : a(in_a), b(in_b), c(in_c) { }
   int a = 0, b = 0, c = 0;
 };
 
-struct CallbackDataMsg : vt::Message {
-  CallbackDataMsg() = default;
-  explicit CallbackDataMsg(Callback<DataMsg> in_cb) : cb_(in_cb) { }
-
-  Callback<DataMsg> cb_;
-};
-
-struct TestCallbackSendCollection : TestParallelHarness {
-  static void testHandler(CallbackDataMsg* msg) {
-    msg->cb_.send(8,9,10);
-  }
-  static void testHandlerEmpty(CallbackMsg* msg) {
-    msg->cb_.send();
-  }
-};
+using TestCallbackSendCollection = TestParallelHarness;
 
 struct TestCol : vt::Collection<TestCol, vt::Index1D> {
   TestCol() = default;
