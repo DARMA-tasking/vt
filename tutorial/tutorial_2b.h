@@ -82,9 +82,11 @@ void ReduceCol::reduceHandler() {
   proxy.allreduce<&ReduceCol::reduceTarget>(val);
 }
 
+int number_of_elements = 32;
+
 void ReduceCol::reduceTarget(int value) {
   fmt::print("collection reduce value={}\n", value);
-  assert(32 * 100 == value);
+  assert(number_of_elements * 100 == value);
 
 }
 
@@ -99,8 +101,8 @@ static inline void collectionReduce() {
    */
 
   if (this_node == 0) {
-    // Range of 32 elements for the collection
-    auto range = vt::Index1D(32);
+    // Range of `number_of_elements` elements for the collection
+    auto range = vt::Index1D(number_of_elements);
 
     // Construct the collection in a rooted manner. By default, the elements
     // will be block mapped to the nodes
