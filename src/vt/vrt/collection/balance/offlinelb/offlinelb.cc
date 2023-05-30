@@ -55,14 +55,11 @@ void OfflineLB::init(objgroup::proxy::Proxy<OfflineLB> in_proxy) {
 }
 
 void OfflineLB::runLB(TimeType) {
-  auto const& myNewList = theLBDataReader()->getMoveList(phase_);
-  for (size_t in = 0; in < myNewList.size(); in += 2) {
-    auto this_node = theContext()->getNode();
-    ObjIDType id{myNewList[in], this_node};
-    migrateObjectTo(id, myNewList[in+1]);
+  auto const& distro = theLBDataReader()->getDistro(phase_ + 1);
+  for (auto&& elm : distro) {
+    migrateObjectTo(elm, theContext()->getNode());
   }
-
-  theLBDataReader()->clearMoveList(phase_);
+  theLBDataReader()->clearDistro(phase_ + 1);
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

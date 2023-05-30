@@ -51,6 +51,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/pending_send.fwd.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -123,10 +124,34 @@ struct ProxyElm {
   /**
    * \brief Send a message to the node/element indexed by this proxy to be
    * delivered to the local object instance
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   */
+  template <auto fn>
+  decltype(auto) sendMsg(
+    messaging::MsgPtrThief<typename ObjFuncTraits<decltype(fn)>::MsgT> msg
+  ) const {
+    using MsgT = typename ObjFuncTraits<decltype(fn)>::MsgT;
+    return sendMsg<MsgT, fn>(msg);
+  }
+
+  /**
+   * \brief Send a message to the node/element indexed by this proxy to be
+   * delivered to the local object instance
    *
    * \param[in] args args to pass to the message constructor
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
+  PendingSendType send(Args&&... args) const;
+
+  /**
+   * \brief Send a message to the node/element indexed by this proxy to be
+   * delivered to the local object instance
+   *
+   * \param[in] args args to pass to the message constructor
+   */
+  template <auto fn, typename... Args>
   PendingSendType send(Args&&... args) const;
 
   /**
@@ -136,7 +161,7 @@ struct ProxyElm {
    * \param[in] args args to pass to the message constructor
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
-  void invoke(Args&&... args) const;
+  decltype(auto) invoke(Args&&... args) const;
 
   /**
    * \brief Invoke locally a function 'f' on the node/element indexed by this proxy.
@@ -144,7 +169,7 @@ struct ProxyElm {
    *
    * \param[in] args function arguments
    */
-  template <typename Type, Type f, typename... Args>
+  template <auto f, typename... Args>
   decltype(auto) invoke(Args&&... args) const;
 
   /**
@@ -212,6 +237,18 @@ struct ProxyElm<void> {
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
   void send(Args&&... args) const;
+
+  /**
+   * \brief Send a message to the node indexed by this proxy to be
+   * delivered to the local object instance
+   *
+   * \param[in] args args to pass to the message constructor
+   */
+  template <auto f, typename... Args>
+  void send(Args&&... args) const {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    send<MsgT, f>(std::forward<Args>(args)...);
+  }
 
 private:
   NodeType node_ = uninitialized_destination; /**< The indexed node */

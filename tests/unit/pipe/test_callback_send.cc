@@ -155,7 +155,7 @@ TEST_F(TestCallbackSend, test_callback_send_remote_1) {
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<DataMsg, callbackFn>(this_node);
     auto msg = makeMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+    theMsg()->sendMsg<testHandler>(next, msg);
   });
 
   EXPECT_EQ(called, 100);
@@ -171,7 +171,7 @@ TEST_F(TestCallbackSend, test_callback_send_remote_2) {
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<CallbackFunctor>(this_node);
     auto msg = makeMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+    theMsg()->sendMsg<testHandler>(next, msg);
   });
 
   EXPECT_EQ(called, 200);
@@ -187,7 +187,7 @@ TEST_F(TestCallbackSend, test_callback_send_remote_3) {
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<CallbackFunctorEmpty>(this_node);
     auto msg = makeMessage<CallbackMsg>(cb);
-    theMsg()->sendMsg<CallbackMsg, testHandlerEmpty>(next, msg);
+    theMsg()->sendMsg<testHandlerEmpty>(next, msg);
   });
 
   EXPECT_EQ(called, 300);

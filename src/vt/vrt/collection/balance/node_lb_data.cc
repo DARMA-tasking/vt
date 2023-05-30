@@ -194,8 +194,19 @@ void NodeLBData::createLBDataFile() {
   using JSONAppender = util::json::Appender<std::ofstream>;
 
   if (not lb_data_writer_) {
+    nlohmann::json metadata;
+    if (curRT->has_physical_node_info) {
+      nlohmann::json node_metadata;
+      node_metadata["id"] = curRT->physical_node_id;
+      node_metadata["size"] = curRT->physical_node_size;
+      node_metadata["rank"] = curRT->physical_node_rank;
+      node_metadata["num_nodes"] = curRT->physical_num_nodes;
+      metadata["shared_node"] = node_metadata;
+    }
+    metadata["type"] = "LBDatafile";
+    metadata["rank"] = theContext()->getNode();
     lb_data_writer_ = std::make_unique<JSONAppender>(
-      "phases", "LBDatafile", file_name, compress
+      "phases", metadata, file_name, compress
     );
   }
 }

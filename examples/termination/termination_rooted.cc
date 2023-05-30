@@ -63,7 +63,7 @@ static void test_handler(TestMsg* msg) {
   num--;
   if (num > 0) {
     auto msg_send = vt::makeMessage<TestMsg>();
-    vt::theMsg()->sendMsg<TestMsg, test_handler>(nextNode(), msg_send);
+    vt::theMsg()->sendMsg<test_handler>(nextNode(), msg_send);
   }
 }
 
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
 
     auto msg = vt::makeMessage<TestMsg>();
     vt::envelopeSetEpoch(msg->env, epoch);
-    vt::theMsg()->sendMsg<TestMsg, test_handler>(nextNode(), msg);
+    vt::theMsg()->sendMsg<test_handler>(nextNode(), msg);
     vt::theTerm()->finishedEpoch(epoch);
   }
 

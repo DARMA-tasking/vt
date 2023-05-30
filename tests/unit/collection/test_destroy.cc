@@ -69,7 +69,7 @@ struct DestroyTest : Collection<DestroyTest,Index1D> {
     num_destroyed++;
   }
 
-  static void work(WorkMsg* msg, DestroyTest* col);
+  static void work(DestroyTest* col);
 };
 
 struct WorkMsg : CollectionMessage<DestroyTest> {};
@@ -88,7 +88,7 @@ struct FinishedWork {
   }
 };
 
-/*static*/ void DestroyTest::work(WorkMsg* msg, DestroyTest* col) {
+/*static*/ void DestroyTest::work(DestroyTest* col) {
   auto proxy = col->getCollectionProxy();
   // ::fmt::print("work idx={}, proxy={:x}\n", col->getIndex(), proxy.getProxy());
   auto reduce_msg = makeMessage<CollReduceMsg>(proxy);
@@ -117,7 +117,7 @@ TEST_F(TestDestroy, test_destroy_1) {
       );
 
       // ::fmt::print("broadcasting proxy={:x}\n", proxy.getProxy());
-      proxy.broadcast<WorkMsg,DestroyTest::work>();
+      proxy.broadcast<DestroyTest::work>();
     }
   });
     // ::fmt::print("num destroyed={}\n", num_destroyed);

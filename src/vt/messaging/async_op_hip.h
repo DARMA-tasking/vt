@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              worker_stdthread.h
+//                                async_op_hip.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,76 +41,80 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_WORKER_WORKER_STDTHREAD_H
-#define INCLUDED_VT_WORKER_WORKER_STDTHREAD_H
+#if !defined INCLUDED_VT_MESSAGING_ASYNC_OP_HIP_H
+#define INCLUDED_VT_MESSAGING_ASYNC_OP_HIP_H
 
-#include "vt/config.h"
+#include "vt/messaging/async_op.h"
 
-#if vt_check_enabled(stdthread)
+#if __HIPCC__
+#include <hip/hip_runtime.h>
+#endif
 
-#include "vt/worker/worker_common.h"
-#include "vt/worker/worker_types.h"
-#include "vt/utils/container/concurrent_deque.h"
+namespace vt { namespace messaging {
 
-#include <thread>
-#include <functional>
-#include <memory>
-#include <atomic>
+#if __HIPCC__
 
-namespace vt { namespace worker {
+/**
+ * \struct AsyncOpHIP
+ *
+ * \brief An asynchronous HIP event on which VT can poll completion.
+ */
+struct AsyncOpHIP : AsyncOp {
 
-struct StdThreadWorker {
-  using WorkerFunType = std::function<void()>;
-  using ThreadType = std::thread;
-  using ThreadPtrType = std::unique_ptr<ThreadType>;
-  using WorkUnitContainerType = util::container::ConcurrentDeque<WorkUnitType>;
+  /**
+   * \brief Construct with stream
+   *
+   * \param[in] in_stream the HIP stream to generate an event from
+   * \param[in] in_cont the action to execute when event completes
+   */
+  AsyncOpHIP(hipStream_t in_stream, ActionType in_cont = nullptr)
+    : cont_(in_cont)
+  {
+    vtAbortIf(hipSuccess != hipEventCreate(&event_), "Failed to create event");
+    vtAbortIf(hipSuccess != hipEventRecord(event_, in_stream), "Failed to record event");
+  }
 
-  StdThreadWorker(
-    WorkerIDType const& in_worker_id_, WorkerCountType const&,
-    WorkerFinishedFnType finished_fn
-  );
-  StdThreadWorker(StdThreadWorker const&) = delete;
+  /**
+   * \brief Construct with an event
+   *
+   * \param[in] in_event the HIP event to poll
+   * \param[in] in_cont the action to execute when event completes
+   */
+  AsyncOpHIP(hipEvent_t in_event, ActionType in_cont = nullptr)
+    : event_(in_event),
+      cont_(in_cont)
+  { }
 
-  void spawn();
-  void join();
-  void dispatch(WorkerFunType fun);
-  void enqueue(WorkUnitType const& work_unit);
-  void sendTerminateSignal();
-  void progress();
+  /**
+   * \brief Poll completion of the HIP event
+   *
+   * \return whether the HIP event is complete
+   */
+  bool poll() override {
+    auto ret = hipEventQuery(event_);
+    if (hipSuccess != ret && hipErrorNotReady != ret) {
+      vtAbort(fmt::format("Failure on stream event: {}: {}", hipGetErrorName(ret), hipGetErrorString(ret)));
+    }
+    return ret == hipSuccess;
+  }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | should_terminate_
-      | worker_id_
-      | work_queue_
-      | thd_
-      | finished_fn_;
+  /**
+   * \brief Trigger continuation after completion
+   */
+  void done() override {
+    vtAbortIf(hipSuccess != hipEventDestroy(event_), "Failed to destroy event");
+    if (cont_) {
+      cont_();
+    }
   }
 
 private:
-  void scheduler();
-
-private:
-  std::atomic<bool> should_terminate_ = {false};
-  WorkerIDType worker_id_ = no_worker_id;
-  WorkUnitContainerType work_queue_;
-  ThreadPtrType thd_ = nullptr;
-  WorkerFinishedFnType finished_fn_ = nullptr;
+  hipEvent_t event_ = {};        /**< The HIP event being tested */
+  ActionType cont_ = nullptr;     /**< The continuation after event completes */
 };
 
-}} /* end namespace vt::worker */
+#endif /* __HIPCC__ */
 
-#include "vt/worker/worker_traits.h"
+}} /* end namespace vt::messaging */
 
-namespace vt { namespace worker {
-
-static_assert(
-  WorkerTraits<StdThreadWorker>::is_worker,
-  "vt::worker::Worker must follow the Worker concept"
-);
-
-}} /* end namespace vt::worker */
-
-#endif /*vt_check_enabled(stdthread)*/
-
-#endif /*INCLUDED_VT_WORKER_WORKER_STDTHREAD_H*/
+#endif /*INCLUDED_VT_MESSAGING_ASYNC_OP_HIP_H*/

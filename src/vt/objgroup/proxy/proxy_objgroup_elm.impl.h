@@ -78,23 +78,47 @@ typename ProxyElm<ObjT>::PendingSendType ProxyElm<ObjT>::send(Args&&... args) co
 }
 
 template <typename ObjT>
-template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
-void ProxyElm<ObjT>::invoke(Args&&... args) const {
-  auto proxy = ProxyElm<ObjT>(*this);
-  theObjGroup()->invoke<ObjT, MsgT, fn>(
-    proxy, makeMessage<MsgT>(std::forward<Args>(args)...)
-  );
+template <auto f, typename... Params>
+typename ProxyElm<ObjT>::PendingSendType
+ProxyElm<ObjT>::send(Params&&... params) const {
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
+    using SendMsgT = messaging::ParamMsg<Tuple>;
+    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto const ctrl = proxy::ObjGroupProxy::getID(proxy_);
+    auto const han = auto_registry::makeAutoHandlerObjGroupParam<
+      ObjT, decltype(f), f, SendMsgT
+    >(ctrl);
+    return theObjGroup()->send(msg, han, node_);
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    return sendMsg<MsgT, f>(msg);
+  }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return ProxyElm<ObjT>::PendingSendType{std::nullptr_t{}};
 }
 
 template <typename ObjT>
-template <typename Type, Type f, typename... Args>
-decltype(auto) ProxyElm<ObjT>::invoke(
-  Args&&... args
-) const
-{
+template <typename MsgT, ActiveObjType<MsgT, ObjT> f, typename... Args>
+decltype(auto) ProxyElm<ObjT>::invoke(Args&&... args) const {
   auto proxy = ProxyElm<ObjT>(*this);
-  return theObjGroup()->invoke<ObjT, Type, f>(
-    proxy, std::forward<Args>(args)...);
+  auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+  return theObjGroup()->invoke<ObjT, MsgT, f>(proxy, msg);
+}
+
+template <typename ObjT>
+template <auto f, typename... Args>
+decltype(auto) ProxyElm<ObjT>::invoke(Args&&... args) const {
+  auto proxy = ProxyElm<ObjT>(*this);
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    return theObjGroup()->invoke<ObjT, f>(proxy, std::forward<Args>(args)...);
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+    return theObjGroup()->invoke<ObjT, MsgT, f>(proxy, msg);
+  }
 }
 
 template <typename ObjT>
@@ -120,7 +144,7 @@ inline ProxyElm<void>::ProxyElm(NodeType in_node) : node_{in_node} {}
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
 void ProxyElm<void>::send(Args&&... args) const {
-  vt::theMsg()->sendMsg<MsgT, f>(
+  vt::theMsg()->sendMsg<f>(
     node_, vt::makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 

@@ -62,7 +62,6 @@ struct MyReduceMsg : collective::ReduceTMsg<int> {
 };
 
 struct ColA : Collection<ColA,Index1D> {
-  struct TestMsg : CollectionMessage<ColA> { };
 
   struct TestDataMsg : CollectionMessage<ColA> {
     TestDataMsg(int32_t value) : value_(value) {}
@@ -75,7 +74,7 @@ struct ColA : Collection<ColA,Index1D> {
     finished = true;
   }
 
-  void doReduce(TestMsg* msg) {
+  void doReduce() {
     auto const proxy = getCollectionProxy();
     auto cb = theCB()->makeBcast<ColA, MyReduceMsg, &ColA::finishedReduce>(proxy);
     auto reduce_msg = makeMessage<MyReduceMsg>(getIndex().x());
@@ -99,8 +98,7 @@ struct ColA : Collection<ColA,Index1D> {
   bool reduce_test = false;
 };
 
-void colHandler(
-  ColA::TestDataMsg* msg, typename ColA::TestDataMsg::CollectionType* type) {
+void colHandler(typename ColA::TestDataMsg::CollectionType* type, ColA::TestDataMsg*) {
   --elem_counter;
 }
 
@@ -121,7 +119,7 @@ TEST_F(TestCollectionGroup, test_collection_group_1) {
     auto const proxy = theCollection()->construct<ColA>(
       range, "test_collection_group_1"
     );
-    proxy.broadcast<ColA::TestMsg,&ColA::doReduce>();
+    proxy.broadcast<&ColA::doReduce>();
   }
 }
 

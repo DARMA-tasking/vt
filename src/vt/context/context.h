@@ -50,7 +50,6 @@
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/context/context_attorney_fwd.h"
-#include "vt/utils/tls/tls.h"
 
 #if vt_check_enabled(trace_only)
 namespace vt { namespace runnable {
@@ -120,35 +119,6 @@ struct Context : runtime::component::Component<Context> {
    */
   inline MPI_Comm getComm() const { return communicator_; }
 
-  /**
-   * \brief Relevant only in threaded mode (e.g., \c std::thread, or OpenMP
-   * threads), gets the number of worker threads being used on a given node
-   *
-   * \see \c vt::WorkerCountType
-   *
-   * \return the number of worker threads
-   */
-  inline WorkerCountType getNumWorkers() const { return numWorkers_; }
-
-  /**
-   * \brief Informs whether VT is running threaded mode
-   *
-   * \return whether the VT runtime has workers enabled on a given node
-   */
-  inline bool hasWorkers() const { return numWorkers_ != no_workers; }
-
-  /**
-   * \brief Relevant only in threaded mode (e.g., \c std::thread, or OpenMP
-   * threads), gets the current worker thread being used to execute a handler
-   *
-   * \see \c vt::WorkerIDType
-   *
-   * \return whether the worker thread ID being used, sequentially numbered
-   */
-  inline WorkerIDType getWorker() const {
-    return AccessClassTLS(Context, thisWorker_);
-  }
-
   /// Used to manage protected access for other VT runtime components
   friend struct ContextAttorney;
 
@@ -158,7 +128,6 @@ struct Context : runtime::component::Component<Context> {
   void serialize(SerializerT& s) {
     s | thisNode_
       | numNodes_
-      | numWorkers_
       | communicator_;
   }
 
@@ -204,25 +173,10 @@ protected:
    */
   void setTask(runnable::RunnableNew* in_task);
 
-  /// Set the number of workers through the attorney (internal)
-  void setNumWorkers(WorkerCountType const worker_count) {
-    numWorkers_ = worker_count;
-  }
-  /// Set the worker through the attorney (internal)
-  void setWorker(WorkerIDType const worker) {
-    AccessClassTLS(Context, thisWorker_) = worker;
-  }
-
-private:
-  /// Set the default worker that runs in threaded mode
-  void setDefaultWorker();
-
 private:
   NodeType thisNode_ = uninitialized_destination;
   NodeType numNodes_ = uninitialized_destination;
-  WorkerCountType numWorkers_ = no_workers;
   MPI_Comm communicator_ = MPI_COMM_NULL;
-  DeclareClassInsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
   runnable::RunnableNew* cur_task_ = nullptr;
 };
 

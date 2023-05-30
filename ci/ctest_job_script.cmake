@@ -83,12 +83,6 @@ endif()
 if ( NOT DEFINED ENV{VT_RDMA_TESTS_ENABLED} )
   set(ENV{VT_RDMA_TESTS_ENABLED} "1")
 endif()
-if ( NOT DEFINED ENV{VT_USE_OPENMP} )
-  set(ENV{VT_USE_OPENMP} "0")
-endif()
-if ( NOT DEFINED ENV{VT_USE_STD_THREAD} )
-  set(ENV{VT_USE_STD_THREAD} "0")
-endif()
 if ( NOT DEFINED ENV{CODE_COVERAGE} )
   set(ENV{CODE_COVERAGE} "0")
 endif()
@@ -143,8 +137,6 @@ set(configureOpts
     "-Dvt_fcontext_enabled=$ENV{VT_FCONTEXT_ENABLED}"
     "-Dvt_fcontext_build_tests_examples=$ENV{VT_FCONTEXT_BUILD_TESTS_EXAMPLES}"
     "-Dvt_rdma_tests_enabled=$ENV{VT_RDMA_TESTS_ENABLED}"
-    "-DUSE_OPENMP=$ENV{VT_USE_OPENMP}"
-    "-DUSE_STD_THREAD=$ENV{VT_USE_STD_THREAD}"
     "-DCODE_COVERAGE=$ENV{CODE_COVERAGE}"
     "-DMI_INTERPOSE:BOOL=ON"
     "-DMI_OVERRIDE:BOOL=ON"
@@ -156,7 +148,6 @@ set(configureOpts
     "-DCMAKE_CXX_COMPILER=$ENV{CXX}"
     "-DCMAKE_C_COMPILER=$ENV{CC}"
     "-DCMAKE_EXE_LINKER_FLAGS=$ENV{CMAKE_EXE_LINKER_FLAGS}"
-    "-Ddetector_DIR=$ENV{DETECTOR_BUILD}/install"
     "-Dcheckpoint_DIR=$ENV{CHECKPOINT_BUILD}/install"
     "-DCMAKE_PREFIX_PATH=$ENV{CMAKE_PREFIX_PATH}"
     "-DCMAKE_INSTALL_PREFIX=$ENV{VT_BUILD}/install"

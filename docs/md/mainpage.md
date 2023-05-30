@@ -27,7 +27,6 @@ supercomputer architectures. The main public repositories are:
 | ---------------------------------- | -------------------------------------------------------------- | -------------------------- |
 | HPC Runtime                        | @m_span{m-text m-success} DARMA/vt @m_endspan (Virtual Transport)                                   | [Github](https://github.com/DARMA-tasking/vt) |
 | HPC Serialization                  | @m_span{m-text m-success} DARMA/checkpoint @m_endspan (Checkpointing and Serialization Library)     | [Github](https://github.com/DARMA-tasking/checkpoint) |
-| C++ trait detection and checking   | @m_span{m-text m-success} DARMA/detector @m_endspan (C++ trait detector)                            | [Github](https://github.com/DARMA-tasking/detector) |
 | HPC LB Simulator                   | @m_span{m-text m-success} DARMA/LBAF @m_endspan (Load Balancing Analysis Framework)                 | [Github](https://github.com/DARMA-tasking/LB-analysis-framework) |
 | HPC Serializer compiler analyzer   | @m_span{m-text m-success} DARMA/checkpoint-analyzer @m_endspan (Static verification of serializers) | [Github](https://github.com/DARMA-tasking/checkpoint-member-analyzer) |
 | Toolkit documentation              | @m_span{m-text m-success} DARMA/docs @m_endspan                                                     | [Docs](https://github.com/DARMA-tasking/DARMA-tasking.github.io) |

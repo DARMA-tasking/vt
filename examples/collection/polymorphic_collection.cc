@@ -46,7 +46,6 @@
 /// [Polymorphic collection example]
 static constexpr int32_t const default_num_elms = 16;
 struct InitialConsTag{};
-struct ColMsg;
 
 struct Hello : vt::Collection<Hello, vt::Index1D> {
   checkpoint_virtual_serialize_root()
@@ -62,17 +61,9 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
     s | test_val;
   }
 
-  virtual void doWork(ColMsg* msg);
+  virtual void doWork();
 
   double test_val = 0.0;
-};
-
-struct ColMsg : vt::CollectionMessage<Hello> {
-  explicit ColMsg(vt::NodeType const& in_from_node)
-    : from_node(in_from_node)
-  { }
-
-  vt::NodeType from_node = vt::uninitialized_destination;
 };
 
 template <typename T>
@@ -84,7 +75,7 @@ struct HelloTyped : Hello {
     : Hello(checkpoint::SERIALIZE_CONSTRUCT_TAG{})
   {}
 
-  virtual void doWork(ColMsg* msg) override;
+  virtual void doWork() override;
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -95,14 +86,14 @@ struct HelloTyped : Hello {
 };
 
 template <>
-void HelloTyped<int>::doWork(ColMsg* msg) {
+void HelloTyped<int>::doWork() {
   fmt::print("correctly doing this -- int!\n");
-  Hello::doWork(msg);
+  Hello::doWork();
 }
 
 template <>
-void HelloTyped<double>::doWork(ColMsg* msg) {
-  Hello::doWork(msg);
+void HelloTyped<double>::doWork() {
+  Hello::doWork();
   fmt::print("correctly doing this -- double!\n");
 }
 
@@ -124,7 +115,7 @@ HelloTyped<double>::HelloTyped(InitialConsTag)
   }
 }
 
-void Hello::doWork(ColMsg* msg) {
+void Hello::doWork() {
   vt_print(
     gen, "idx={}: val={}, type={}\n",
     getIndex(), test_val, typeid(*this).name()
@@ -147,7 +138,7 @@ void Hello::doWork(ColMsg* msg) {
 }
 
 
-static void migrateToNext(ColMsg* msg, Hello* col) {
+static void migrateToNext(Hello* col) {
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
   vt::NodeType next_node = (this_node + 1) % num_nodes;
@@ -191,21 +182,13 @@ int main(int argc, char** argv) {
     .wait();
 
   for (int p = 0; p < 10; p++) {
-    vt::runInEpochCollective([&]{
-      proxy.broadcastCollective<ColMsg, &Hello::doWork>(this_node);
-    });
-    vt::runInEpochCollective([&]{
-      proxy.broadcastCollective<ColMsg, migrateToNext>(this_node);
-    });
-    vt::runInEpochCollective([&]{
-      proxy.broadcastCollective<ColMsg, &Hello::doWork>(this_node);
-    });
+    vt::runInEpochCollective([&]{ proxy.broadcastCollective<&Hello::doWork>(); });
+    vt::runInEpochCollective([&]{ proxy.broadcastCollective<migrateToNext>(); });
+    vt::runInEpochCollective([&]{ proxy.broadcastCollective<&Hello::doWork>(); });
   }
 
   for (int p = 0; p < 10; p++) {
-    vt::runInEpochCollective([&]{
-      proxy.broadcastCollective<ColMsg, &Hello::doWork>(this_node);
-    });
+    vt::runInEpochCollective([&]{ proxy.broadcastCollective<&Hello::doWork>(); });
     vt::thePhase()->nextPhaseCollective();
   }
 

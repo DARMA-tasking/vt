@@ -224,6 +224,12 @@ struct EntityLocationCoord : LocationCoord {
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
   );
 
+  template <typename MessageT, ActiveTypedFnType<MessageT> *f>
+  void setupMessageForRouting(
+    EntityID const& id, NodeType const& home_node,
+    MsgSharedPtr<MessageT> const& msg
+  );
+
   /**
    * \brief Route a message with a custom handler
    *
@@ -236,6 +242,22 @@ struct EntityLocationCoord : LocationCoord {
     EntityID const& id, NodeType const& home_node,
     MsgSharedPtr<MessageT> const& msg
   );
+
+  /**
+   * \brief Route a message with a custom handler
+   *
+   * \param[in] m message shared pointer
+   */
+  template <typename MessageT>
+  void routePreparedMsgHandler(MsgSharedPtr<MessageT> const& msg);
+
+  /**
+   * \brief Route a message with a custom handler
+   *
+   * \param[in] m message shared pointer
+   */
+  template <typename MessageT>
+  void routePreparedMsg(MsgSharedPtr<MessageT> const& msg);
 
   /**
    * \brief Route a message with a custom handler where the element is local

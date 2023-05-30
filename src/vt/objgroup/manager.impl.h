@@ -52,7 +52,6 @@
 #include "vt/objgroup/holder/holder.h"
 #include "vt/objgroup/holder/holder_user.h"
 #include "vt/objgroup/holder/holder_basic.h"
-#include "vt/objgroup/dispatch/dispatch.h"
 #include "vt/objgroup/type_registry/registry.h"
 #include "vt/registry/auto/auto_registry.h"
 #include "vt/collective/collective_alg.h"
@@ -130,15 +129,6 @@ ObjGroupManager::makeCollective(MakeFnType<ObjT> fn, std::string const& label) {
 template <typename ObjT>
 void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   auto const proxy_bits = proxy.getProxy();
-  auto iter = dispatch_.find(proxy_bits);
-  if (iter != dispatch_.end()) {
-    auto ptr = iter->second->objPtr();
-    auto obj_iter = obj_to_proxy_.find(ptr);
-    if (obj_iter != obj_to_proxy_.end()) {
-      obj_to_proxy_.erase(obj_iter);
-    }
-    dispatch_.erase(iter);
-  }
   auto obj_iter = objs_.find(proxy_bits);
   if (obj_iter != objs_.end()) {
     objs_.erase(obj_iter);
@@ -152,30 +142,15 @@ void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
 
 template <typename ObjT>
 void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
-  auto iter = dispatch_.find(proxy);
-  vtAssertExpr(iter == dispatch_.end());
   vt_debug_print(
     normal, objgroup,
     "regObjProxy: obj={}, proxy={:x}\n",
     print_ptr(obj), proxy
   );
-  DispatchBasePtrType b = std::make_unique<dispatch::Dispatch<ObjT>>(proxy,obj);
-  dispatch_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(proxy),
-    std::forward_as_tuple(std::move(b))
-  );
   auto pending_iter = pending_.find(proxy);
   if (pending_iter != pending_.end()) {
-    for (auto&& msg : pending_iter->second) {
-      theSched()->enqueue([msg]{
-        auto const handler = envelopeGetHandler(msg->env);
-        auto const epoch = envelopeGetEpoch(msg->env);
-        theObjGroup()->dispatch(msg,handler);
-        if (epoch != no_epoch) {
-          theTerm()->consume(epoch);
-        }
-      });
+    for (auto&& pending : pending_iter->second) {
+      pending();
     }
     pending_.erase(pending_iter);
   }
@@ -218,7 +193,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::send(ProxyElmType<ObjT> proxy,
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-void ObjGroupManager::invoke(
+decltype(auto) ObjGroupManager::invoke(
   ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg
 ) {
   auto const proxy_bits = proxy.getProxy();
@@ -232,10 +207,11 @@ void ObjGroupManager::invoke(
     proxy_bits, dest_node, ctrl, han
   );
 
-  invoke<MsgT>(msg, han, dest_node);
+  auto& msg_ptr = msg.msg_;
+  return invoke<ObjT, MsgT, fn>(msg_ptr, han, dest_node);
 }
 
-template <typename ObjT, typename Type, Type f, typename... Args>
+template <typename ObjT, auto f, typename... Args>
 decltype(auto)
 ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   auto const dest_node = proxy.getNode();
@@ -244,12 +220,12 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   vtAssert(
     dest_node == this_node,
     fmt::format(
-      "Attempting to invoke handler on node:{} instead of node:{}!\n", this_node,
-      dest_node
-    )
-  );
+      "Attempting to invoke handler on node:{} instead of node:{}!\n",
+      this_node, dest_node));
 
-  return runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
+  return runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+    .withObjGroup(get(proxy))
+    .runLambda(f, get(proxy), std::forward<Args>(args)...);
 }
 
 
@@ -275,11 +251,11 @@ ObjGroupManager::PendingSendType ObjGroupManager::send(
   return objgroup::send(msg,han,dest_node);
 }
 
-template <typename MsgT>
-void ObjGroupManager::invoke(
-  messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_node
+template <typename ObjT, typename MsgT, auto f>
+decltype(auto) ObjGroupManager::invoke(
+  messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node
 ) {
-  objgroup::invoke(msg, han, dest_node);
+  return objgroup::invoke<ObjT, MsgT, f>(msg, han, dest_node);
 }
 
 template <typename MsgT>
@@ -296,7 +272,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::reduce(
   auto const objgroup = proxy.getProxy();
 
   auto r = theCollective()->getReducerObjGroup(objgroup);
-  return r->template reduce<MsgT,f>(root, msg.get(), stamp);
+  return r->template reduce<f>(root, msg.get(), stamp);
 }
 
 template <typename ObjT>

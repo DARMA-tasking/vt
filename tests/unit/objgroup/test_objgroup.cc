@@ -181,8 +181,8 @@ TEST_F(TestObjGroup, test_proxy_schedule) {
 
   runInEpochCollective([&]{
     // self-send a message and then broadcast
-    proxy[my_node].send<MyMsg, &MyObjA::handler>();
-    proxy.broadcast<MyMsg, &MyObjA::handler>();
+    proxy[my_node].send<&MyObjA::handler>();
+    proxy.broadcast<&MyObjA::handler>();
 
     obj = proxy.get();
     vt_debug_print(
@@ -212,12 +212,12 @@ TEST_F(TestObjGroup, test_proxy_callbacks) {
     auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_callbacks");
 
     if (my_node == 0) {
-      proxy1[0].send<MyMsg, &MyObjA::handler>();
-      proxy1[0].send<MyMsg, &MyObjA::handler>();
-      proxy1[1].send<MyMsg, &MyObjA::handler>();
+      proxy1[0].send<&MyObjA::handler>();
+      proxy1[0].send<&MyObjA::handler>();
+      proxy1[1].send<&MyObjA::handler>();
     } else if (my_node == 1) {
-      proxy2.broadcast<MyMsg, &MyObjB::handler>();
-      proxy3[0].send<MyMsg, &MyObjA::handler>();
+      proxy2.broadcast<&MyObjB::handler>();
+      proxy3[0].send<&MyObjA::handler>();
     }
 
     // check received messages for each group
@@ -287,12 +287,22 @@ TEST_F(TestObjGroup, test_proxy_invoke) {
 
   // Non-message function
   auto const accumulate_result =
-    proxy[this_node]
-      .invoke<decltype(&MyObjA::accumulateVec), &MyObjA::accumulateVec>(
-        std::vector<int32_t>{2, 4, 5});
+    proxy[this_node].invoke<&MyObjA::accumulateVec>(
+      std::vector<int32_t>{2, 4, 5}
+    );
 
   EXPECT_EQ(accumulate_result, 11);
   EXPECT_EQ(proxy.get()->recv_, 2);
+
+  // Non-copyable
+  std::unique_ptr<int32_t> s{};
+  auto result = proxy[this_node].invoke<&MyObjA::modifyNonCopyableStruct>(
+    std::move(s)
+  );
+
+  EXPECT_TRUE(result);
+  EXPECT_EQ(*result, 10);
+  EXPECT_EQ(proxy.get()->recv_, 3);
 }
 
 TEST_F(TestObjGroup, test_pending_send) {
@@ -303,14 +313,14 @@ TEST_F(TestObjGroup, test_pending_send) {
 
   runInEpochCollective([&]{
     // self-send a message and then broadcast
-    auto pending = proxy[my_node].send<MyMsg, &MyObjA::handler>();
+    auto pending = proxy[my_node].send<&MyObjA::handler>();
 
     EXPECT_EQ(obj->recv_, 0);
 
     runInEpochCollective([&]{ pending.release(); } );
     EXPECT_EQ(obj->recv_, 1 );
 
-    auto pending2 = proxy.broadcast<MyMsg, &MyObjA::handlerOnlyFromSelf>();
+    auto pending2 = proxy.broadcast<&MyObjA::handlerOnlyFromSelf>();
 
     EXPECT_EQ(obj->recv_, 1 );
 

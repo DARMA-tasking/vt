@@ -96,6 +96,8 @@ struct Contexts {
 struct RunnableNew {
   template <typename... Args>
   using FnParamType = void(*)(Args...);
+  using DispatcherType = auto_registry::BaseHandlersDispatcherPtr::pointer;
+  using DispatcherScatterType = auto_registry::BaseScatterDispatcherPtr::pointer;
 
   /**
    * \brief Construct a new \c RunnableNew with a message
@@ -195,6 +197,14 @@ public:
   );
 
   /**
+   * \brief Set up a handler to run on an object group
+   *
+   * \param[in] elm the object pointer
+   * \param[in] handler the handler ID bits
+   */
+  void setupHandlerObjGroup(void* obj, HandlerType handler);
+
+  /**
    * \brief Set up a handler to run on an non-collection object
    *
    * \param[in] elm the object pointer
@@ -206,9 +216,8 @@ public:
    * \brief Set up a basic handler to run
    *
    * \param[in] handler the handler ID bits
-   * \param[in] is_void whether it's a void handler w/o an associated message
    */
-  void setupHandler(HandlerType handler, bool is_void = false);
+  void setupHandler(HandlerType handler);
 
   /**
    * \brief Run the task!
@@ -218,6 +227,28 @@ public:
    * more work to complete.
    */
   void run();
+
+  /**
+   * \brief Run the task as a lambda!
+   */
+  template <typename Callable, typename... Args>
+  decltype(auto) runLambda(Callable&& c, Args&&... args) {
+    auto start_time = timing::getCurrentTime();
+    start(start_time);
+
+    // Arrange a scope guard to call finish() without any sort of dynamic allocation
+    struct finisher {
+      RunnableNew* r;
+      finisher(RunnableNew* in_r) : r(in_r){};
+      ~finisher() {
+        auto finish_time = timing::getCurrentTime();
+        r->finish(finish_time);
+      }
+    };
+    finisher f(this);
+
+    return std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...);
+  }
 
 #if vt_check_enabled(fcontext)
   /**
@@ -236,25 +267,25 @@ private:
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c start() on them.
    */
-  void start();
+  void start(TimeType time);
 
   /**
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c finish() on them.
    */
-  void finish();
+  void finish(TimeType time);
 
   /**
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c suspend() on them.
    */
-  void suspend();
+  void suspend(TimeType time);
 
   /**
    * \internal \brief Loop through all the contexts associated with this
    * runnable and invoke \c resume() on them.
    */
-  void resume();
+  void resume(TimeType time);
 
 public:
   /**
@@ -307,15 +338,6 @@ public:
 #endif
 
   /**
-   * \brief Set an explicit task for the runnable bypassing the handler
-   *
-   * \param[in] task_in the task
-   */
-  void setExplicitTask(ActionType task_in) {
-    task_ = task_in;
-  }
-
-  /**
    * \internal \brief Operator new for runnables targeting pool
    *
    * \param[in] sz the allocation size
@@ -334,7 +356,12 @@ public:
 private:
   detail::Contexts contexts_;               /**< The contexts  */
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
-  ActionType task_ = nullptr;               /**< The runnable's task  */
+  void* obj_ = nullptr;                     /**< Object pointer */
+  union {
+    DispatcherType func_;
+    DispatcherScatterType func_scat_;
+  } f_;
+  bool is_scatter_ = false;
 #if vt_check_enabled(fcontext)
   bool is_threaded_ = false;                /**< Whether ULTs are supported */
   bool done_ = false;                       /**< Whether task is complete */

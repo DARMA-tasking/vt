@@ -97,6 +97,13 @@ struct MyObjA {
     return std::accumulate(std::begin(vec), std::end(vec), 0);
   }
 
+  std::unique_ptr<int32_t> modifyNonCopyableStruct(std::unique_ptr<int32_t> i) {
+    recv_++;
+    i = std::make_unique<int32_t>(10);
+
+    return i;
+  }
+
   int id_ = -1;
   int recv_ = 0;
   static int next_id;

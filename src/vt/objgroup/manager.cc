@@ -83,32 +83,6 @@ ObjGroupProxyType ObjGroupManager::getProxy(ObjGroupProxyType proxy) {
   return proxy;
 }
 
-void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
-  // Extract the control-bit sequence from the handler
-  auto const ctrl = HandlerManager::getHandlerControl(han);
-  vt_debug_print(
-    verbose, objgroup,
-    "dispatch: ctrl={:x}, han={:x}\n", ctrl, han
-  );
-  auto const node = 0;
-  auto const proxy = proxy::ObjGroupProxy::create(ctrl, node, true);
-  auto dispatch_iter = dispatch_.find(proxy);
-  vt_debug_print(
-    normal, objgroup,
-    "dispatch: try ctrl={:x}, han={:x}, has dispatch={}\n",
-    ctrl, han, dispatch_iter != dispatch_.end()
-  );
-  if (dispatch_iter == dispatch_.end()) {
-    auto const epoch = envelopeGetEpoch(msg->env);
-    if (epoch != no_epoch and epoch != term::any_epoch_sentinel) {
-      theTerm()->produce(epoch);
-    }
-    pending_[proxy].push_back(msg);
-  } else {
-    dispatch_iter->second->run(han,msg.get());
-  }
-}
-
 ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
   std::string const& label, HolderBasePtrType base, void* obj_ptr
 ) {
@@ -163,12 +137,12 @@ elm::ElementIDStruct ObjGroupManager::getNextElm(ObjGroupProxyType proxy) {
   }
 }
 
-void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
-  vt_debug_print(
-    verbose, objgroup,
-    "dispatchObjGroup: han={:x}\n", han
-  );
-  return theObjGroup()->dispatch(msg,han);
+std::unordered_map<ObjGroupProxyType, std::unique_ptr<holder::HolderBase>>& getObjs() {
+  return theObjGroup()->objs_;
+}
+
+std::unordered_map<ObjGroupProxyType, std::vector<ActionType>>& getPending() {
+  return theObjGroup()->pending_;
 }
 
 }} /* end namespace vt::objgroup */

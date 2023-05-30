@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             parameterization.cc
+//                                 param_msg.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,58 @@
 //@HEADER
 */
 
-#include "vt/parameterization/parameterization.h"
+#if !defined INCLUDED_VT_MESSAGING_PARAM_MSG_H
+#define INCLUDED_VT_MESSAGING_PARAM_MSG_H
 
-namespace vt { namespace param {
+#include "vt/messaging/message/message_serialize.h"
 
-}} //end namespace vt::param
+namespace vt { namespace messaging {
+
+template <typename Tuple, typename enabled = void>
+struct ParamMsg;
+
+template <typename Tuple>
+struct ParamMsg<
+  Tuple, std::enable_if_t<is_byte_copyable_t<Tuple>::value>
+> : vt::Message
+{
+  ParamMsg() = default;
+
+  template <typename... Params>
+  explicit ParamMsg(Params&&... in_params)
+    : params(std::forward<Params>(in_params)...)
+  { }
+
+  Tuple params;
+  Tuple& getTuple() { return params; }
+};
+
+template <typename Tuple>
+struct ParamMsg<
+  Tuple, std::enable_if_t<not is_byte_copyable_t<Tuple>::value>
+> : vt::Message
+{
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_if_needed_by_parent_or_type1(Tuple); // by tup
+
+  ParamMsg() = default;
+
+  template <typename... Params>
+  explicit ParamMsg(Params&&... in_params)
+    : params(std::make_unique<Tuple>(std::forward<Params>(in_params)...))
+  { }
+
+  std::unique_ptr<Tuple> params;
+
+  Tuple& getTuple() { return *params.get(); }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | params;
+  }
+};
+
+}} /* end namespace vt::messaging */
+
+#endif /*INCLUDED_VT_MESSAGING_PARAM_MSG_H*/

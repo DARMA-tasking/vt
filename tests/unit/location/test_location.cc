@@ -341,7 +341,7 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
     using MsgType = location::EntityMsg;
     bool is_long = std::is_same<TypeParam,location::LongMsg>::value;
     auto msg = vt::makeMessage<MsgType>(entity, my_node, is_long);
-    vt::theMsg()->broadcastMsg<MsgType, location::routeTestHandler<TypeParam>>(msg);
+    vt::theMsg()->broadcastMsg<location::routeTestHandler<TypeParam>>(msg);
 
     vt::theSched()->runSchedulerWhile([&msg_count, nb_nodes]{ return msg_count < nb_nodes; });
 

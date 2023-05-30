@@ -98,7 +98,7 @@ template <
   typename TupleT   = typename MessageT::TupleType
 >
 struct BroadcastHandlers {
-  static void handler(MessageT* msg, CollectionT* col) {
+  static void handler(CollectionT* col, MessageT* msg) {
     return execute(col,msg->tup);
   }
   template <typename... Args>
@@ -131,14 +131,13 @@ void test_broadcast_1(std::string const& label) {
     auto proxy = theCollection()->construct<ColType>(range, label);
 
     proxy.template broadcast<
-      MsgType,
       BroadcastHandlers<ColType>::handler
     >(args);
 
     auto msg = makeMessage<MsgType>(args);
-    theCollection()->broadcastMsg<
-      MsgType,BroadcastHandlers<ColType>::handler
-    >(proxy, msg.get());
+    proxy.template broadcastMsg<
+      BroadcastHandlers<ColType>::handler
+    >(msg);
   }
 }
 

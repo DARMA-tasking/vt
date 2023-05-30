@@ -165,7 +165,7 @@ struct Block : vt::Collection<Block, vt::Index1D> {
     );
     auto const from_idx = getIndex().x();
     auto data_msg = vt::makeMessage<DataMsg>(data_,from_idx);
-    vt::theMsg()->sendMsg<DataMsg,SubSolveInfo::solveDataIncoming>(
+    vt::theMsg()->sendMsg<SubSolveInfo::solveDataIncoming>(
       requesting_node, data_msg
     );
   }
@@ -313,7 +313,7 @@ static void solveGroupSetup(vt::NodeType this_node, vt::VirtualProxyType coll_pr
       if (this_node == 1) {
         auto msg = vt::makeMessage<SubSolveMsg>(coll_proxy);
         vt::envelopeSetGroup(msg->env, group_id);
-        vt::theMsg()->broadcastMsg<SubSolveMsg,SubSolveInfo::subSolveHandler>(msg);
+        vt::theMsg()->broadcastMsg<SubSolveInfo::subSolveHandler>(msg);
       }
     }, true
   );

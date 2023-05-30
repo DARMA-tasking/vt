@@ -88,7 +88,7 @@ static void put_data_fn(HandleMsg* msg) {
         fmt::print("{}: after put: sending msg back to 0\n", this_node);
         auto msg2 = vt::makeMessage<HandleMsg>(this_node);
         msg2->han = handle;
-        vt::theMsg()->sendMsg<HandleMsg,read_data_fn>(0, msg2);
+        vt::theMsg()->sendMsg<read_data_fn>(0, msg2);
       }
     );
   }
@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
 
     auto msg = vt::makeMessage<HandleMsg>(this_node);
     msg->han = my_handle;
-    vt::theMsg()->broadcastMsg<HandleMsg,put_data_fn>(msg, false);
+    vt::theMsg()->broadcastMsg<put_data_fn>(msg, false);
   }
 
   vt::finalize();

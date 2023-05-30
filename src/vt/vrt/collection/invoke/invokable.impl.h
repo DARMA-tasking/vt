@@ -46,6 +46,7 @@
 
 #include "vt/vrt/collection/invoke/invokable.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -86,15 +87,21 @@ void Invokable<ColT, IndexT, BaseProxyT>::invoke(Args&&... args) const
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-template <typename Type, Type f, typename... Args>
+template <auto f, typename... Args>
 decltype(auto)
 Invokable<ColT, IndexT, BaseProxyT>::invoke(Args&&... args) const {
   auto const& proxy = VrtElmProxy<ColT, IndexT>(
     this->getCollectionProxy(), this->getElementProxy());
 
-  return theCollection()->invoke<ColT, Type, f, Args...>(
-    proxy, std::forward<Args>(args)...
-  );
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    return theCollection()->invoke<ColT, f, Args...>(
+      proxy, std::forward<Args>(args)...
+    );
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+    return theCollection()->invokeMsg<MsgT, f>(proxy, msg, true);
+  }
 }
 
 }}} /* end namespace vt::vrt::collection */

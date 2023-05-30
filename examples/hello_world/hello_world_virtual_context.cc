@@ -67,7 +67,7 @@ struct MyVC : vt::vrt::VirtualContext {
   { }
 };
 
-static void my_han(TestMsg* msg, MyVC* vc) {
+static void my_han(MyVC* vc, TestMsg* msg) {
   auto this_node = vt::theContext()->getNode();
   fmt::print(
     "{}: vc={}: msg->from={}, vc->my_data={}\n",
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 
     // send out the proxy to all the nodes
     auto msg = vt::makeMessage<HelloMsg>(proxy);
-    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
+    vt::theMsg()->broadcastMsg<hello_world>(msg);
   }
 
   vt::finalize();

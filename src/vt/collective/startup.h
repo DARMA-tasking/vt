@@ -50,11 +50,6 @@
 namespace vt {
 
 RuntimePtrType initialize(
-  int& argc, char**& argv, WorkerCountType const num_workers,
-  bool is_interop = false, MPI_Comm* comm = nullptr,
-  arguments::AppConfig const* appConfig = nullptr
-);
-RuntimePtrType initialize(
   int& argc, char**& argv, MPI_Comm* comm = nullptr,
   arguments::AppConfig const* appConfig = nullptr
 );

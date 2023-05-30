@@ -46,7 +46,6 @@
 #include "vt/runtime/runtime.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/runtime/runtime_inst.h"
-#include "vt/utils/tls/tls.h"
 
 #include <memory>
 #include <cstdlib>
@@ -215,8 +214,8 @@ void printOverwrittens(
 
 template <runtime::RuntimeInstType instance>
 RuntimePtrType CollectiveAnyOps<instance>::initialize(
-  int& argc, char**& argv, WorkerCountType const num_workers,
-  bool is_interop, MPI_Comm* comm, arguments::AppConfig const* appConfig
+  int& argc, char**& argv, bool is_interop, MPI_Comm* comm,
+  arguments::AppConfig const* appConfig
 ) {
   using vt::runtime::RuntimeInst;
   using vt::runtime::Runtime;
@@ -225,7 +224,7 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
   MPI_Comm resolved_comm = comm not_eq nullptr ? *comm : MPI_COMM_WORLD;
 
   RuntimeInst<instance>::rt = std::make_unique<Runtime>(
-    argc, argv, num_workers, is_interop, resolved_comm,
+    argc, argv, is_interop, resolved_comm,
     eRuntimeInstance::DefaultInstance, appConfig
   );
 
@@ -254,9 +253,7 @@ void CollectiveAnyOps<instance>::setCurrentRuntimeTLS(RuntimeUnsafePtrType in) {
 }
 
 template <runtime::RuntimeInstType instance>
-void CollectiveAnyOps<instance>::scheduleThenFinalize(
-  RuntimePtrType in_rt, WorkerCountType const workers
-) {
+void CollectiveAnyOps<instance>::scheduleThenFinalize(RuntimePtrType in_rt) {
   bool const has_rt = in_rt != nullptr;
   auto rt_use = has_rt ? in_rt.unsafe() : curRT;
 
@@ -264,15 +261,7 @@ void CollectiveAnyOps<instance>::scheduleThenFinalize(
     theSched()->runSchedulerWhile([rt_use]{ return not rt_use->isTerminated(); });
   };
 
-  if (workers == no_workers) {
-    sched_fn();
-  } else {
-    #if vt_threading_enabled
-    theWorkerGrp()->spawnWorkersBlock(sched_fn);
-    #else
-    sched_fn();
-    #endif
-  }
+  sched_fn();
 
   CollectiveAnyOps<instance>::finalize(has_rt ? std::move(in_rt) : nullptr);
 }

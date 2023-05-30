@@ -49,7 +49,6 @@
 
 namespace vt {
 
-//DeclareInitTLS(runtime::Runtime*, curRT, nullptr);
 runtime::Runtime* curRT = nullptr;
 ::vt::runtime::Runtime* rt = nullptr;
 

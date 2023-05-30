@@ -48,7 +48,6 @@
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_component_fwd.h"
 #include "vt/runtime/component/component_pack.h"
-#include "vt/worker/worker_headers.h"
 #include "vt/timing/timing_type.h"
 
 // Optional components
@@ -93,14 +92,12 @@ struct Runtime {
    *
    * \param[in] argc argument count (modified after VT extracts)
    * \param[in] argv arguments  (modified after VT extracts)
-   * \param[in] in_num_workers number of worker threads to initialize
    * \param[in] interop_mode whether running in interoperability mode
    * \param[in] in_comm the MPI communicator (if in interoperability mode)
    * \param[in] in_instance the runtime instance to set
    */
   Runtime(
     int& argc, char**& argv,
-    WorkerCountType in_num_workers = no_workers,
     bool const interop_mode = false,
     MPI_Comm in_comm = MPI_COMM_WORLD,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance,
@@ -272,6 +269,11 @@ private:
    */
   static void writeToFile(std::string const& str);
 
+  /**
+   * \internal \brief Determine the physical node IDs for LB data files
+   */
+  void determinePhysicalNodeIDs();
+
 protected:
   /**
    * \internal \brief Try to initialize
@@ -304,11 +306,9 @@ protected:
   void initializeOptionalComponents();
 
   /**
-   * \internal \brief Initialize workers
-   *
-   * \param[in] num_workers number of workers to create
+   * \internal \brief Initialize TD callbacks
    */
-  void initializeWorkers(WorkerCountType const num_workers);
+  void initializeTDCallbacks();
 
   /**
    * \internal \brief Check if we should create a LB data restart reader component
@@ -409,7 +409,6 @@ public:
   ComponentPtrType<collective::CollectiveAlg> theCollective = nullptr;
   ComponentPtrType<pool::Pool> thePool = nullptr;
   ComponentPtrType<rdma::RDMAManager> theRDMA = nullptr;
-  ComponentPtrType<param::Param> theParam = nullptr;
   ComponentPtrType<sched::Scheduler> theSched = nullptr;
   ComponentPtrType<location::LocationManager> theLocMan = nullptr;
   ComponentPtrType<vrt::VirtualContextManager> theVirtualManager = nullptr;
@@ -426,11 +425,6 @@ public:
   ComponentPtrType<phase::PhaseManager> thePhase = nullptr;
   ComponentPtrType<epoch::EpochManip> theEpoch = nullptr;
 
-  // Node-level worker-based components for vt (these are optional)
-  #if vt_threading_enabled
-  ComponentPtrType<worker::WorkerGroupType> theWorkerGrp = nullptr;
-  #endif
-
   // Optional components
   #if vt_check_enabled(trace_enabled)
     ComponentPtrType<trace::Trace> theTrace = nullptr;
@@ -441,13 +435,18 @@ public:
 
   static bool volatile sig_user_1_;
 
+  bool has_physical_node_info = false;
+  int physical_node_id = -1;
+  int physical_num_nodes = -1;
+  int physical_node_size = -1;
+  int physical_node_rank = -1;
+
 protected:
   bool finalize_on_term_ = false;
   bool initialized_ = false, finalized_ = false, aborted_ = false;
   bool runtime_active_ = false;
   bool is_interop_ = false;
   bool sig_handlers_disabled_ = false;
-  WorkerCountType num_workers_ = no_workers;
   //< Communicator to be given to theContext creation; don't use otherwise.
   MPI_Comm initial_communicator_ = MPI_COMM_NULL;
   std::unique_ptr<component::ComponentPack> p_;

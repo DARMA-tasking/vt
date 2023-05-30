@@ -57,10 +57,6 @@ using PhysicalResourceType    = int16_t;
 using NodeType                = PhysicalResourceType;
 /// Used to hold a core ID
 using CoreType                = PhysicalResourceType;
-/// Used to hold the number of workers on a node
-using WorkerCountType         = PhysicalResourceType;
-/// Used to hold the ID of a worker on a node
-using WorkerIDType            = PhysicalResourceType;
 
 // Runtime system entity types
 /// Used to hold a handler ID which identifier a function pointer/context

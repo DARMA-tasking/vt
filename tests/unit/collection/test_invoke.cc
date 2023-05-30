@@ -104,10 +104,9 @@ TEST_F(TestCollectionInvoke, test_collection_invoke_1) {
   // Non-message function
   {
     auto const accumulate_result =
-      proxy[dest_elem]
-        .invoke<decltype(&TestCol::accumulateVec), &TestCol::accumulateVec>(
-          dest_elem, std::vector<int32_t>{2, 4, 5}
-        );
+      proxy[dest_elem].invoke<&TestCol::accumulateVec>(
+        dest_elem, std::vector<int32_t>{2, 4, 5}
+      );
 
     EXPECT_EQ(accumulate_result, 11);
     EXPECT_EQ(handler_invoked, true);

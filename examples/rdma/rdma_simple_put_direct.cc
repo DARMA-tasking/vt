@@ -84,7 +84,7 @@ static void putDataFn(HandleMsg* msg) {
       );
 
       auto back = vt::makeMessage<HandleMsg>(han);
-      vt::theMsg()->sendMsg<HandleMsg, readDataFn>(0, back);
+      vt::theMsg()->sendMsg<readDataFn>(0, back);
     });
   }
 }
@@ -117,8 +117,8 @@ int main(int argc, char** argv) {
 
     auto msg1 = vt::makeMessage<HandleMsg>(my_handle);
     auto msg2 = vt::makeMessage<HandleMsg>(my_handle);
-    vt::theMsg()->sendMsg<HandleMsg, putDataFn>(1, msg1);
-    vt::theMsg()->sendMsg<HandleMsg, putDataFn>(2, msg2);
+    vt::theMsg()->sendMsg<putDataFn>(1, msg1);
+    vt::theMsg()->sendMsg<putDataFn>(2, msg2);
   }
 
   vt::finalize();

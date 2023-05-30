@@ -74,6 +74,7 @@
 #include "vt/context/runnable_context/lb_data.fwd.h"
 #include "vt/vrt/collection/param/construct_params.h"
 #include "vt/vrt/collection/param/construct_params_msg.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <memory>
 #include <vector>
@@ -132,15 +133,6 @@ struct CollectionManager
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using IsDefaultConstructableType = std::enable_if_t<
     std::is_default_constructible<ColT>::value, CollectionProxyWrapType<ColT, IndexT>
-  >;
-
-  template <typename ColT, typename UserMsgT, typename T, typename U=void>
-  using IsWrapType = std::enable_if_t<
-    std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
-  >;
-  template <typename ColT, typename UserMsgT, typename T, typename U=void>
-  using IsNotWrapType = std::enable_if_t<
-    !std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
   >;
 
   /**
@@ -494,6 +486,25 @@ struct CollectionManager
   );
 
   /**
+   * \brief Send collection element a message from active function handler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <auto f>
+  messaging::PendingSend sendMsg(
+    VirtualElmProxyType<
+      typename ObjFuncTraits<decltype(f)>::MsgT::CollectionType
+    > const& proxy,
+    typename ObjFuncTraits<decltype(f)>::MsgT *msg
+  ) {
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+    return sendMsg<MsgT, f>(proxy, msg);
+  }
+
+  /**
    * \brief Send collection element a message from active member handler
    *
    * \param[in] proxy the collection proxy
@@ -606,36 +617,6 @@ struct CollectionManager
   );
 
   /**
-   * \internal \brief Deliver a message to a collection element with a promoted
-   * collection message that wrapped the user's non-collection message.
-   *
-   * \param[in] msg the message
-   * \param[in] col pointer to collection element
-   * \param[in] han the handler to invoke
-   * \param[in] from node that sent the message
-   */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsWrapType<ColT, UserMsgT, MsgT> collectionMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from
-  );
-
-  /**
-   * \internal \brief Deliver a message to a collection element with a normal
-   * collection message
-   *
-   * \param[in] msg the message
-   * \param[in] col pointer to collection element
-   * \param[in] han the handler to invoke
-   * \param[in] from node that sent the message
-   */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsNotWrapType<ColT, UserMsgT, MsgT> collectionMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from
-  );
-
-  /**
    * \internal \brief Base collection message handler
    *
    * \param[in] msg the message
@@ -665,37 +646,13 @@ struct CollectionManager
   static void recordLBData(ColT* col_ptr, MsgT* msg);
 
   /**
-   * \brief Invoke function 'f' (with copyable return type) inline without going
-   * through scheduler
+   * \brief Invoke function 'f' inline without going through scheduler
    *
    * \param[in] proxy the collection proxy
    * \param[in] args function params
    */
-  template <typename ColT, typename Type, Type f, typename... Args>
-  util::Copyable<Type>
-  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
-
-  /**
-   * \brief Invoke function 'f' (with non-copyable return type) inline without
-   * going through scheduler
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] args function params
-   */
-  template <typename ColT, typename Type, Type f, typename... Args>
-  util::NotCopyable<Type>
-  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
-
-  /**
-   * \brief Invoke function 'f' (with void return type) inline without going
-   * through scheduler
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] args function params
-   */
-  template <typename ColT, typename Type, Type f, typename... Args>
-  util::IsVoidReturn<Type>
-  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
+  template <typename ColT, auto f, typename... Args>
+  auto invoke(VirtualElmProxyType<ColT> const& proxy, Args&&... args);
 
   /**
    * \brief Invoke message action function handler without going through
@@ -710,6 +667,18 @@ struct CollectionManager
   void invokeCollectiveMsg(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     messaging::MsgPtrThief<MsgT> msg
+  );
+
+  /**
+   * \brief Invoke function handler without going through scheduler for all
+   * elements
+   *
+   * \param[in] proxy the whole collection proxy
+   * \param[in] args the arguments
+   */
+  template <typename ColT, auto f, typename... Args>
+  void invokeCollective(
+    CollectionProxyWrapType<ColT> const& proxy, Args&&... args
   );
 
   /**
@@ -980,33 +949,17 @@ struct CollectionManager
    *
    * \return a pending send
    */
-  template <
-    typename MsgT,
-    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
-  >
+  template <auto f>
   messaging::PendingSend broadcastMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-    MsgT *msg, bool instrument = true
-  );
-
-  /**
-   * \brief Broadcast a message with action member handler
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast for load
-   * balancing (some system calls use this to disable instrumentation)
-   *
-   * \return a pending send
-   */
-  template <
-    typename MsgT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
-  >
-  messaging::PendingSend broadcastMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-    MsgT *msg, bool instrument = true
-  );
+    CollectionProxyWrapType<
+      typename ObjFuncTraits<decltype(f)>::MsgT::CollectionType
+    > const& proxy,
+    typename ObjFuncTraits<decltype(f)>::MsgT *msg,
+    bool instrument = true
+  ) {
+    using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+    return broadcastMsg<MsgT, f>(proxy, msg, instrument);
+  }
 
   /**
    * \brief Broadcast a message with action function handler with collection
@@ -1160,7 +1113,7 @@ public:
 
 public:
   /**
-   * \internal \brief Deliver a promoted/wrapped message to a collection element
+   * \internal \brief Deliver a message to a collection element
    *
    * \param[in] msg the message
    * \param[in] col the collection element pointer
@@ -1168,24 +1121,8 @@ public:
    * \param[in] from the node that sent it
    * \param[in] event the associated trace event
    */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-    MsgT* msg, Indexable<IndexT>* col, HandlerType han,
-    NodeType from, trace::TraceEventIDType event, bool immediate
-  );
-
-  /**
-   * \internal \brief Deliver a regular collection message to a collection
-   * element
-   *
-   * \param[in] msg the message
-   * \param[in] col the collection element pointer
-   * \param[in] han the handler to invoke
-   * \param[in] from the node that sent it
-   * \param[in] event the associated trace event
-   */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsNotWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
+  template <typename ColT, typename IndexT, typename MsgT>
+  static void collectionAutoMsgDeliver(
     MsgT* msg, Indexable<IndexT>* col, HandlerType han,
     NodeType from, trace::TraceEventIDType event, bool immediate
   );
@@ -1505,7 +1442,7 @@ public:
    * \param[in] msg the destroy message
    */
   template <typename ColT>
-  static void destroyElmHandler(DestroyElmMsg<ColT>* msg, ColT*);
+  static void destroyElmHandler(ColT*, DestroyElmMsg<ColT>* msg);
 
   /**
    * \brief Try to get a pointer to a collection element
@@ -1685,54 +1622,17 @@ public:
   );
 
   /**
-   * \internal \struct RestoreMigrateMsg
-   *
-   * \brief Migrate elements to restore where it belongs based on the checkpoint
-   */
-  template <
-    typename ColT,
-    typename MsgT = vt::Message,
-    typename IdxT = typename ColT::IndexType
-  >
-  struct RestoreMigrateMsg : MsgT {
-    RestoreMigrateMsg() = default;
-    RestoreMigrateMsg(
-      NodeType in_to_node, IdxT in_idx, CollectionProxyWrapType<ColT> in_proxy
-    ) : to_node_(in_to_node),
-        idx_(in_idx),
-        proxy_(in_proxy)
-    { }
-
-    NodeType to_node_ = uninitialized_destination;
-    IdxT idx_;
-    CollectionProxyWrapType<ColT> proxy_;
-  };
-
-  /**
-   * \internal \struct RestoreMigrateColMsg
-   *
-   * \brief Migrate collection element to restore where it belongs
-   */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
-  struct RestoreMigrateColMsg
-    : RestoreMigrateMsg<ColT, CollectionMessage<ColT>, IdxT>
-  {
-    RestoreMigrateColMsg() = default;
-    RestoreMigrateColMsg(
-      NodeType in_to_node, IdxT in_idx, CollectionProxyWrapType<ColT> in_proxy
-    ) : RestoreMigrateMsg<ColT, CollectionMessage<ColT>, IdxT>(
-          in_to_node, in_idx, in_proxy
-        )
-    { }
-  };
-
-  /**
    * \internal \brief Migrate element to restore location from checkpoint
    *
-   * \param[in] msg the migrate message
+   * \param[in] node the node
+   * \param[in] idx the element index
+   * \param[in] proxy the collection proxy
    */
   template <typename ColT>
-  static void migrateToRestoreLocation(RestoreMigrateMsg<ColT>* msg);
+  static void migrateToRestoreLocation(
+    NodeType node, typename ColT::IndexType idx,
+    CollectionProxyWrapType<ColT> proxy
+  );
 
   /**
    * \brief Restore the collection (collective) from file on top of an existing

@@ -61,7 +61,7 @@ struct MyVC : vt::vrt::VirtualContext {
   }
 };
 
-static void testHan(TestMsg* msg, MyVC* vc) {
+static void testHan(MyVC* vc, TestMsg* msg) {
   fmt::print("testHan: msg->from={}, my_data={}\n", msg->from, vc->my_data);
 }
 

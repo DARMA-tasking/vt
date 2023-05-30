@@ -45,6 +45,7 @@
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
+#include "vt/messaging/param_msg.h"
 
 #include "vt/utils/demangle/demangle.h"
 
@@ -154,10 +155,11 @@ struct FunctorAdapterArgs<ObjTypeT, MsgT> {
 
 // Need to provide a non-pointer overload for parameterization auto-registered
 // functions for GCC
-template <typename F, F f>
+template <typename F, F f, typename MsgT>
 struct FunctorAdapterParam {
   using FunctionPtrType = F;
-  using ObjType = void;
+  using ObjType = SentinelObject;
+  using MsgType = MsgT;
 
   static constexpr FunctionPtrType getFunction() { return f; }
 

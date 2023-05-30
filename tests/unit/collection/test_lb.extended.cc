@@ -83,10 +83,8 @@ struct MyCol : vt::Collection<MyCol,vt::Index1D> {
   double val = 0.0;
 };
 
-using MyMsg = vt::CollectionMessage<MyCol>;
-
 // A dummy kernel that does some work depending on the index
-void colHandler(MyMsg*, MyCol* col) {
+void colHandler(MyCol* col) {
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < col->getIndex().x() * 20; j++) {
       col->val += (i*29+j*2)-4;
@@ -134,7 +132,7 @@ void runTest(std::string const& lb_name, std::string const& label) {
   for (int phase = 0; phase < num_phases; phase++) {
     // Do some work.
     runInEpochCollective([&]{
-      proxy.broadcastCollective<MyMsg, colHandler>();
+      proxy.broadcastCollective<colHandler>();
     });
 
     // Go to the next phase.
@@ -342,7 +340,7 @@ TEST_P(TestLBSpecFile, test_node_lb_data_dumping_with_spec_file) {
   for (int phase = 0; phase < num_phases; phase++) {
     // Do some work
     runInEpochCollective([&] {
-      proxy.broadcastCollective<MyMsg, colHandler>();
+      proxy.broadcastCollective<colHandler>();
     });
 
     // Go to the next phase
@@ -407,7 +405,7 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
   for (int phase = 0; phase < num_phases; phase++) {
     // Do some work
     runInEpochCollective([&] {
-      proxy.broadcastCollective<MyMsg, colHandler>();
+      proxy.broadcastCollective<colHandler>();
     });
 
     // Go to the next phase
@@ -501,8 +499,10 @@ getLBDataForPhase(
   using vt::vrt::collection::balance::LBDataHolder;
   using json = nlohmann::json;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
+  nlohmann::json metadata;
+  metadata["type"] = "LBDatafile";
   auto ap = std::make_unique<JSONAppender>(
-    "phases", "LBDatafile", std::move(ss), false
+    "phases", metadata, std::move(ss), false
   );
   auto j = in.toJson(phase);
   ap->addElm(*j);
@@ -691,8 +691,10 @@ getJsonStringForPhase(
   using vt::vrt::collection::balance::LBDataHolder;
   using JSONAppender = vt::util::json::Appender<std::stringstream>;
   std::stringstream ss{std::ios_base::out | std::ios_base::in};
+  nlohmann::json metadata;
+  metadata["type"] = "LBDatafile";
   auto ap = std::make_unique<JSONAppender>(
-    "phases", "LBDatafile", std::move(ss), false
+    "phases", metadata, std::move(ss), false
   );
   auto j = in.toJson(phase);
   ap->addElm(*j);
@@ -792,9 +794,7 @@ struct SerializationTestCol : vt::Collection<SerializationTestCol, vt::Index1D> 
   int unpacked_on_node = -1;
 };
 
-using SerializationTestMsg = vt::CollectionMessage<SerializationTestCol>;
-
-void serializationColHandler(SerializationTestMsg *, SerializationTestCol *col) {
+void serializationColHandler(SerializationTestCol *col) {
   auto const cur_phase = thePhase()->getCurrentPhase();
   if (cur_phase < 2) {
     return;
@@ -824,7 +824,7 @@ void runSerializationTest() {
 
   for (int phase = 0; phase < num_phases; ++phase) {
     runInEpochCollective([&] {
-      proxy.broadcastCollective<SerializationTestMsg, serializationColHandler>();
+      proxy.broadcastCollective<serializationColHandler>();
     });
     thePhase()->nextPhaseCollective();
   }

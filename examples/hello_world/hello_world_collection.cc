@@ -51,10 +51,8 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
     vtAssert(counter_ == 1, "Must be equal");
   }
 
-  using TestMsg = vt::CollectionMessage<Hello>;
-
-  void doWork(TestMsg* msg) {
-    fmt::print("Hello from {}\n", this->getIndex());
+  void doWork(int val) {
+    fmt::print("Hello from {}: val={}\n", this->getIndex(), val);
     counter_++;
   }
 
@@ -79,7 +77,7 @@ int main(int argc, char** argv) {
       .bounds(range)
       .bulkInsert()
       .wait();
-    proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
+    proxy.broadcast<&Hello::doWork>(10);
   }
 
   vt::finalize();

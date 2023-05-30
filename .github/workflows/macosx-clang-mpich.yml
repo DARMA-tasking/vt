@@ -1,11 +1,11 @@
-name: PR tests (clang-8, macosx, mpich)
+name: PR tests (clang-14, macosx, mpich)
 
 # Trigger the workflow on push or pull request
 on:
   push:
     branches:
       - develop
-      - 1.*
+      - main
   pull_request:
     types: [opened, reopened, synchronize, converted_to_draft, ready_for_review]
 
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-12
 
     if: github.event.pull_request.draft == false
 
@@ -26,26 +26,24 @@ jobs:
       CMAKE_BUILD_TYPE: release
       VT_LB_ENABLED: 1
       VT_TRACE_ENABLED: 1
-      VT_USE_OPENMP: 0
-      VT_USE_STD_THREAD: 0
       VT_WERROR: 1
       CMAKE_CXX_STANDARD: 17
       CMAKE_GENERATOR: "Unix Makefiles"
       CMAKE_BUILD_PARALLEL_LEVEL: 4
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
         with:
           path: ~/.ccache
-          key: ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}-${{ hashFiles('**/*') }}
+          key: ${{ runner.os }}-macosx-clang-14-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}-${{ hashFiles('**/*') }}
           restore-keys: |
-            ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}
-      - uses: actions/cache@v2
+            ${{ runner.os }}-macosx-clang-14-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}
+      - uses: actions/cache@v3
         id: mpich-cache
         with:
           path: ~/.mpich
-          key: ${{ runner.os }}-macosx-clang-8-mpich-${{ hashFiles('**/.github/workflows/macosx-clang-mpich.yml', '**/ci/deps/mpich.sh') }}
+          key: ${{ runner.os }}-macosx-clang-14-mpich-${{ hashFiles('**/.github/workflows/macosx-clang-mpich.yml', '**/ci/deps/mpich.sh') }}
       - name: Install Dependencies
         shell: bash
         run: brew bundle --file=ci/Brewfile

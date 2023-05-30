@@ -61,14 +61,19 @@ template <runtime::RuntimeInstType instance = collective_default_inst>
 struct CollectiveAnyOps {
   // The general methods that interact with the managed runtime holder
   static RuntimePtrType initialize(
-    int& argc, char**& argv, WorkerCountType const num_workers = no_workers,
-    bool is_interop = false, MPI_Comm* comm = nullptr,
+    int& argc, char**& argv, bool is_interop = false, MPI_Comm* comm = nullptr,
     arguments::AppConfig const* appConfig = nullptr
   );
+  [[deprecated]] static RuntimePtrType initialize(
+    int& argc, char**& argv, PhysicalResourceType const /* num_workers */,
+    bool is_interop = false, MPI_Comm* comm = nullptr,
+    arguments::AppConfig const* appConfig = nullptr
+    )
+  {
+    return initialize(argc, argv, is_interop, comm, appConfig);
+  }
   static void finalize(RuntimePtrType in_rt = nullptr);
-  static void scheduleThenFinalize(
-    RuntimePtrType in_rt = nullptr, WorkerCountType const workers = no_workers
-  );
+  static void scheduleThenFinalize(RuntimePtrType in_rt = nullptr);
   static void setCurrentRuntimeTLS(RuntimeUnsafePtrType in_rt = nullptr);
   static void abort(std::string const str = "", ErrorCodeType const code = 0);
   static void output(

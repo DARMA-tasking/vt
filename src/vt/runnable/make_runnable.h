@@ -78,7 +78,6 @@ struct RunnableMaker {
   ) : impl_(in_impl),
       msg_(in_msg),
       handler_(in_handler),
-      is_void_(in_msg == nullptr),
       from_node_(in_from_node),
       has_msg_(in_msg != nullptr)
   { }
@@ -92,7 +91,9 @@ struct RunnableMaker {
    * \param[in] cont the continuation
    */
   RunnableMaker&& withContinuation(ActionType cont) {
-    impl_->addContextCont(cont);
+    if (cont != nullptr) {
+      impl_->addContextCont(cont);
+    }
     return std::move(*this);
   }
 
@@ -154,6 +155,20 @@ struct RunnableMaker {
       impl_->setupHandlerElement(ptr, handler_);
     }
 
+    return std::move(*this);
+  }
+
+  /**
+   * \brief Add an objgroup; sets up the handler
+   *
+   * \param[in] elm the collection element pointer
+   */
+  template <typename ElmT>
+  RunnableMaker&& withObjGroup(ElmT* elm) {
+    set_handler_ = true;
+    if (handler_ != uninitialized_handler) {
+      impl_->setupHandlerObjGroup(elm, handler_);
+    }
     return std::move(*this);
   }
 
@@ -256,20 +271,30 @@ struct RunnableMaker {
   }
 
   /**
+   * \brief Run the runnable immediately with a lambda
+   */
+  template <typename Callable, typename... Args>
+  auto runLambda(Callable&& c, Args&&... args) {
+    setup();
+    auto local_impl = std::unique_ptr<RunnableNew>(impl_);
+    impl_ = nullptr;
+    is_done_ = true;
+    return local_impl->runLambda(std::forward<Callable>(c), std::forward<Args>(args)...);
+  }
+
+  /**
    * \brief Enqueue the runnable in the scheduler for execution later
    */
   void enqueue();
 
   /**
-   * \brief Set an explicit task for this runnable (not going through normal
-   * handler)
+   * \brief Return the underlying \c RunnableNew
    *
-   * \param[in] task_ the task to execute
+   * \warning This is for testing only
+   *
+   * \return the underlying runnable
    */
-  RunnableMaker&& withExplicitTask(ActionType task_) {
-    impl_->setExplicitTask(task_);
-    return std::move(*this);
-  }
+  RunnableNew* getRunnableImpl() { return impl_; }
 
 private:
   /**
@@ -277,7 +302,7 @@ private:
    */
   void setup() {
     if (not set_handler_) {
-      impl_->setupHandler(handler_, is_void_);
+      impl_->setupHandler(handler_);
       set_handler_ = true;
     }
   }
@@ -287,7 +312,6 @@ private:
   MsgSharedPtr<MsgT> const& msg_;
   HandlerType handler_ = uninitialized_handler;
   bool set_handler_ = false;
-  bool is_void_ = false;
   NodeType from_node_ = uninitialized_destination;
   bool is_done_ = false;
   bool is_term_ = false;

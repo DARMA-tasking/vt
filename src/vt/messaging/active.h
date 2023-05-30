@@ -56,6 +56,7 @@
 #include "vt/messaging/request_holder.h"
 #include "vt/messaging/send_info.h"
 #include "vt/messaging/async_op_wrapper.h"
+#include "vt/messaging/param_msg.h"
 #include "vt/event/event.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/trace/trace_common.h"
@@ -63,6 +64,8 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/elm/elm_id.h"
 #include "vt/elm/elm_lb_data.h"
+#include "vt/utils/strong/strong_type.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #if vt_check_enabled(trace_enabled)
   #include "vt/trace/trace_headers.h"
@@ -86,7 +89,12 @@ using ContinuationDeleterType =
 
 } /* end namespace vt */
 
-namespace vt { namespace messaging {
+namespace vt {
+
+struct StrongNodeType { };
+using Node = Strong<NodeType, uninitialized_destination, StrongNodeType>;
+
+namespace messaging {
 
 /** \file */
 
@@ -687,6 +695,27 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   );
 
   /**
+   * \brief Broadcast a message (message type not required).
+   *
+   * \note Takes ownership of the supplied message.
+   *
+   * \param[in] msg the message to broadcast
+   * \param[in] deliver_to_sender whether msg should be delivered to sender
+   * \param[in] tag the tag to put on the message
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <auto f>
+  PendingSendType broadcastMsg(
+    MsgPtrThief<typename FuncTraits<decltype(f)>::MsgT> msg,
+    bool deliver_to_sender = true,
+    TagType tag = no_tag
+  ) {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    return broadcastMsg<MsgT, f>(msg, deliver_to_sender, tag);
+  }
+
+  /**
    * \brief Send a message.
    *
    * \note Takes ownership of the supplied message.
@@ -703,6 +732,61 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
+
+  /**
+   * \brief Send a message (message type not required).
+   *
+   * \note Takes ownership of the supplied message.
+   *
+   * \param[in] dest the destination node to send the message to
+   * \param[in] msg the message to send
+   * \param[in] tag the tag to put on the message
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <auto f>
+  PendingSendType sendMsg(
+    NodeType dest,
+    MsgPtrThief<typename FuncTraits<decltype(f)>::MsgT> msg,
+    TagType tag = no_tag
+  ) {
+    using MsgT = typename FuncTraits<decltype(f)>::MsgT;
+    return sendMsg<MsgT, f>(dest, msg, tag);
+  }
+
+  /**
+   * \brief Send parameters to a handler in a message
+   *
+   * \param[in] dest the destination node to send the message to
+   * \param[in] params the parameters
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <auto f, typename... Params>
+  PendingSendType send(Node dest, Params&&... params) {
+    using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+    using MsgT = ParamMsg<Tuple>;
+    auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
+    auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
+    return sendMsg<MsgT>(dest.get(), han, msg, no_tag);
+  }
+
+  /**
+   * \brief Broadcast parameters to a handler in a message
+   *
+   * \param[in] params the parameters
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <auto f, typename... Params>
+  PendingSendType broadcast(Params&&... params) {
+    using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+    using MsgT = ParamMsg<Tuple>;
+    auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
+    auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
+    constexpr bool deliver_to_sender = true;
+    return broadcastMsg<MsgT>(han, msg, deliver_to_sender, no_tag);
+  }
 
   /**
    * \brief Send a message with explicit size.

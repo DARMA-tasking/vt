@@ -2,13 +2,13 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (gcc-9, ubuntu, mpich, zoltan)
+name: PR tests (gcc-9, ubuntu, mpich, zoltan, json schema test)
 
 trigger:
   branches:
     include:
       - develop
-      - 1.0.0*
+      - main
 
 pr:
   drafts: false
@@ -46,16 +46,14 @@ variables:
   VT_UNITY_BUILD: 1
   VT_PRODUCTION_BUILD: 0
   VT_FCONTEXT: 0
-  VT_USE_OPENMP: 0
-  VT_USE_STD_THREAD: 0
   VT_ZOLTAN: 1
   VT_CI_BUILD: 1
   VT_DIAGNOSTICS: 1
   VT_NO_COLOR: 1
   VT_BUILD_SHARED_LIBS: 0
   VT_INCLUSION: TPL
-  CMAKE_CXX_STANDARD: 14
-  TEST_LB_SCHEMA: 0
+  CMAKE_CXX_STANDARD: 17
+  TEST_LB_SCHEMA: 1
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-gcc-9-cache
   build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
@@ -76,12 +74,8 @@ stages:
       vmImage: 'ubuntu-22.04'
     timeoutInMinutes: 180
     steps:
-      - task: Bash@3
-        displayName: Job setup
-        inputs:
-          targetType: 'inline'
-          script: |
-            echo setup
+      - checkout: self
+        fetchDepth: 0
       - task: Bash@3
         displayName: Build timestamp for caching
         continueOnError: true

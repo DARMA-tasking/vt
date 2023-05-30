@@ -58,9 +58,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
     vtAssert(counter_ == 1, "Must be equal");
   }
 
-  using TestMsg = vt::CollectionMessage<Hello>;
-
-  void doWork(TestMsg* msg) {
+  void doWork() {
     counter_++;
 
     vt::NodeType this_node = vt::theContext()->getNode();
@@ -107,7 +105,7 @@ int main(int argc, char** argv) {
     .wait();
 
   if (this_node == 1) {
-    proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
+    proxy.broadcast<&Hello::doWork>();
   }
 
   vt::finalize();
