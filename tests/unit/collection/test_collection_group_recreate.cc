@@ -58,7 +58,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index1D> {
 
   void checkVal(int val) {
     cb_counter++;
-    fmt::print("at root: final num={} cb_counter={}\n", val, cb_counter);
+    fmt::print("final num={} cb_counter={}\n", val, cb_counter);
   }
 
   template <typename SerializerT>
