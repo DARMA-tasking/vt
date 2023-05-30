@@ -54,7 +54,7 @@ static int multiplier = 0;
 
 static void reduceTarget(MyCol* col, int val) {
   auto const num_nodes = theContext()->getNumNodes();
-  auto const num_elems = num_nodes * multipler;
+  auto const num_elems = num_nodes * multiplier;
   fmt::print("reduce finished: val={}, num_elems={}\n", val, num_elems);
   EXPECT_EQ(val, (num_elems * (num_elems-1))/2);
 }
