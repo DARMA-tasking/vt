@@ -71,7 +71,7 @@ template <typename MsgT, typename Op, typename ActOp>
           msg->getParamCallback().sendTuple(std::move(msg->getVal()));
         }
       } else {
-        // We need to force the type the the more specific one here
+        // We need to force the type the more specific one here
         auto cb = msg->getMsgCallback();
         auto typed_cb = reinterpret_cast<Callback<MsgT>*>(&cb);
         typed_cb->sendMsg(msg);
