@@ -124,12 +124,7 @@ Proxy<ObjT>::allreduce(
   using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
   auto cb = theCB()->makeBcast<f>(*this);
 
-  ReduceStamp stamp{};
-  if constexpr (GetReduceStamp::value) {
-    stamp = std::get<sizeof...(Args) - 1>(std::tie(std::forward<Args>(args)...));
-  }
-
-  auto msg = GetReduceStamp::template getMsg<MsgT>(std::forward<Args>(args)...);
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
   msg->setCallback(cb);
   auto proxy = Proxy<ObjT>(*this);
   return theObjGroup()->reduce<
@@ -158,12 +153,7 @@ Proxy<ObjT>::reduce(
   using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
   auto cb = theCB()->makeSend<f>(target);
 
-  ReduceStamp stamp{};
-  if constexpr (GetReduceStamp::value ) {
-    stamp = std::get<sizeof...(Args) - 1>(std::tie(std::forward<Args>(args)...));
-  }
-
-  auto msg = GetReduceStamp::template getMsg<MsgT>(std::forward<Args>(args)...);
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
   msg->setCallback(cb);
   auto proxy = Proxy<ObjT>(*this);
   return theObjGroup()->reduce<
@@ -191,12 +181,7 @@ Proxy<ObjT>::reduce(
   using MsgT = collective::ReduceTMsg<Tuple>;
   using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
 
-  ReduceStamp stamp{};
-  if constexpr (GetReduceStamp::value ) {
-    stamp = std::get<sizeof...(Args) - 1>(std::tie(std::forward<Args>(args)...));
-  }
-
-  auto msg = GetReduceStamp::template getMsg<MsgT>(std::forward<Args>(args)...);
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
   msg->setCallback(cb);
   auto proxy = Proxy<ObjT>(*this);
   return theObjGroup()->reduce<

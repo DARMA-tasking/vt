@@ -181,11 +181,7 @@ struct Reduce : virtual collective::tree::Tree {
     template <typename Arg> class Op = NoneOp,
     typename... Params
   >
-  PendingSendType reduce(Node root, Params&&... params) {
-    using Tuple = typename FuncTraits<decltype(f)>::TupleType;
-    using OpT = Op<Tuple>;
-    return reduce<OpT, f>(root, std::forward<Params>(params)...);
-  }
+  PendingSendType reduce(Node root, Params&&... params);
 
   template <typename Op, auto f, typename... Params>
   PendingSendType reduce(Node root, Params&&... params);

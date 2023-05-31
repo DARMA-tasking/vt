@@ -57,8 +57,12 @@ namespace vt { namespace collective { namespace reduce {
 template <typename enable = void, typename... Args>
 struct GetReduceStamp : std::false_type {
   template <typename MsgT>
-  static auto getMsg(Args&&... args) {
-    return vt::makeMessage<MsgT>(std::tuple{std::forward<Args>(args)...});
+  static auto getStampMsg(Args&&... args) {
+    return
+      std::make_tuple(
+	collective::reduce::ReduceStamp{},
+	vt::makeMessage<MsgT>(std::tuple{std::forward<Args>(args)...})
+      );
   }
 };
 
@@ -67,8 +71,11 @@ struct GetReduceStamp<
   std::enable_if_t<std::is_same_v<void, void>>
 > : std::false_type {
   template <typename MsgT>
-  static auto getMsg() {
-    return vt::makeMessage<MsgT>(std::tuple<>{});
+  static auto getStampMsg() {
+    return std::make_tuple(
+      collective::reduce::ReduceStamp{},
+      vt::makeMessage<MsgT>(std::tuple<>{})
+    );
   }
 };
 
@@ -90,13 +97,17 @@ struct GetReduceStamp<
   }
 
   template <typename MsgT>
-  static auto getMsg(Args&&... args) {
-    return vt::makeMessage<MsgT>(
-      getMsgHelper(
-        std::tie(std::forward<Args>(args)...),
-        std::make_index_sequence<sizeof...(Args) - 1>{}
-      )
-    );
+  static auto getStampMsg(Args&&... args) {
+    auto tp = std::make_tuple(std::forward<Args>(args)...);
+    return
+      std::make_tuple(
+        std::get<sizeof...(Args) - 1>(tp),
+	vt::makeMessage<MsgT>(
+          getMsgHelper(
+            std::move(tp), std::make_index_sequence<sizeof...(Args) - 1>{}
+          )
+	)
+      );
   }
 };
 
