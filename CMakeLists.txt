@@ -25,7 +25,7 @@ set(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
 )
 
-if (NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER)
   # Try to find ccache to speed up compilation
   find_program(ccache_binary ccache)
   if (ccache_binary)
