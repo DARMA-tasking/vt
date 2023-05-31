@@ -149,7 +149,8 @@ void verifyCacheConsistency(
 
     // check the routing protocol to be used by the manager.
     bool is_eager = theLocMan()->virtual_loc->useEagerProtocol(msg);
-
+    auto msg_from = msg->from_;
+    auto sizeof_msg = sizeof(*msg);
     // perform the checks only after all entity messages have been
     // correctly delivered
     runInEpochCollective([&]{
@@ -168,7 +169,7 @@ void verifyCacheConsistency(
         normal, location,
         "verifyCacheConsistency: iter={}, entityID={}, home={}, bytes={}, "
         "in cache={}\n",
-        iter, entity, msg->from_, sizeof(*msg), is_entity_cached
+        iter, entity, msg_from, sizeof_msg, is_entity_cached
       );
 
       if (not is_eager) {
