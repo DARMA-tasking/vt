@@ -25,14 +25,16 @@ set(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
 )
 
-# Try to find ccache to speed up compilation
-find_program(ccache_binary ccache)
-if (ccache_binary)
-  message(
-    STATUS
-    "VT: Found ccache binary: ${ccache_binary}; adding launch rule"
-  )
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${ccache_binary}")
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER)
+  # Try to find ccache to speed up compilation
+  find_program(ccache_binary ccache)
+  if (ccache_binary)
+    message(
+      STATUS
+      "VT: Found ccache binary: ${ccache_binary}; adding launch rule"
+    )
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${ccache_binary})
+  endif()
 endif()
 
 set(CMAKE_CXX_EXTENSIONS OFF)
