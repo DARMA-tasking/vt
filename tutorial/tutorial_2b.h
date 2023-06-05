@@ -79,7 +79,7 @@ void ReduceCol::reduceHandler() {
   int val = 100;
 
   // Invoke the reduce!
-  proxy.allreduce<&ReduceCol::reduceTarget>(val);
+  proxy.allreduce<&ReduceCol::reduceTarget, collective::PlusOp>(val);
 }
 
 int number_of_elements = 32;
