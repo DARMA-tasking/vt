@@ -201,12 +201,6 @@ struct ObjFuncTraitsImpl<
 template <typename Return, typename Arg, typename... Args>
 struct ObjFuncTraitsImpl<
   std::enable_if_t<
-    not (
-      std::is_convertible<Arg, vt::Message*>::value or
-      std::is_convertible<Arg, vt::ShortMessage*>::value or
-      std::is_convertible<Arg, vt::EpochMessage*>::value or
-      std::is_convertible<Arg, vt::PayloadMessage*>::value
-    ) and
     not std::is_pointer<Arg>::value
   >,
   Return(*)(Arg, Args...)
