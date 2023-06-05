@@ -127,8 +127,6 @@ TEST_F(TestCollectionGroup, test_collection_group_2) {
     }, "test_collection_group_2"
   );
 
-  auto const numElems = elem_counter;
-
   // msg constructed on the fly case
   runBcastTestHelper([proxy, my_node]{
     proxy.broadcastCollective<&ColA::memberHandler>(my_node);
