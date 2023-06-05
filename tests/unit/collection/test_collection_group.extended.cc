@@ -129,26 +129,12 @@ TEST_F(TestCollectionGroup, test_collection_group_2) {
 
   auto const numElems = elem_counter;
 
-  // raw msg pointer case
+  // msg constructed on the fly case
   runBcastTestHelper([proxy, my_node]{
     proxy.broadcastCollective<&ColA::memberHandler>(my_node);
   });
 
   EXPECT_EQ(elem_counter, 0);
-
-  // smart msg pointer case
-  runBcastTestHelper([proxy, my_node]{
-    proxy.broadcastCollective<&ColA::memberHandler>(my_node);
-  });
-
-  EXPECT_EQ(elem_counter, -numElems);
-
-  // msg constructed on the fly case
-  runBcastTestHelper([proxy, my_node] {
-    proxy.broadcastCollective<&ColA::memberHandler>(my_node);
-  });
-
-  EXPECT_EQ(elem_counter, -2 * numElems);
 }
 
 TEST_F(TestCollectionGroup, test_collection_group_3) {
