@@ -52,6 +52,11 @@ using NoneType = char;
 
 template <typename T>
 struct None {
+  static_assert(
+    std::is_same_v<T, char> or std::is_same_v<T, std::tuple<>>,
+    "Must be empty data"
+  );
+
   void operator()(T& v1, T const& v2) {}
 };
 
