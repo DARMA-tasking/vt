@@ -98,12 +98,12 @@ NodeLBData::getNodeLoad() const {
   return &lb_data_->node_data_;
 }
 
-std::unordered_map<PhaseType, DataMapType> const*
+std::map<PhaseType, DataMapType> const*
 NodeLBData::getUserData() const {
   return &lb_data_->user_defined_lb_info_;
 }
 
-std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() const {
+std::map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() const {
   return &lb_data_->node_comm_;
 }
 
@@ -127,6 +127,7 @@ void NodeLBData::startIterCleanup(PhaseType phase) {
     lb_data_->node_data_.erase(phase - min_hist_lb_data_);
     lb_data_->node_comm_.erase(phase - min_hist_lb_data_);
     lb_data_->node_subphase_comm_.erase(phase - min_hist_lb_data_);
+    lb_data_->user_defined_lb_info_.erase(phase - min_hist_lb_data_);
     lb_data_->user_defined_json_.erase(phase - min_hist_lb_data_);
   }
 
@@ -138,8 +139,8 @@ void NodeLBData::startIterCleanup(PhaseType phase) {
 
 void NodeLBData::trimLBDataHistory() {
   auto trim_data = [this](auto& map){
-    if(map.size() > min_hist_lb_data_ + 1) {
-      auto target = map.lower_bound(map.rbegin()->first - min_hist_lb_data_);
+    if(map.size() > min_hist_lb_data_) {
+      auto target = map.upper_bound(map.rbegin()->first - min_hist_lb_data_);
       map.erase(map.begin(), target);
     }
   };
@@ -147,6 +148,7 @@ void NodeLBData::trimLBDataHistory() {
   trim_data(lb_data_->node_data_);
   trim_data(lb_data_->node_comm_);
   trim_data(lb_data_->node_subphase_comm_);
+  trim_data(lb_data_->user_defined_lb_info_);
   trim_data(lb_data_->user_defined_json_);
 
   NodeLBData::node_migrate_.clear();

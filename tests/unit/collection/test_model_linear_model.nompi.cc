@@ -107,7 +107,7 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
 
   // For linear regression there needs to be at least 2 phases completed
   // so we begin with 1 phase already done
-  std::unordered_map<PhaseType, LoadMapType> proc_loads{{0, LoadMapType{
+  std::map<PhaseType, LoadMapType> proc_loads{{0, LoadMapType{
         {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
         {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}
     }}};
