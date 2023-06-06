@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/proxy_traits/proxy_elm_traits.h"
+#include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/vrt/collection/send/sendable.h"
 #include "vt/vrt/collection/insert/insertable.h"
@@ -91,7 +92,9 @@ struct VrtElmProxy : ProxyCollectionElmTraits<ColT, IndexT> {
     std::ostream& os, VrtElmProxy<ColU,IndexU> const& vrt
   );
 
-  
+  IndexT getIndex(){
+    return this->getElementProxy().getIndex();
+  }
   
   template <typename SerT, typename SerT::has_not_traits_t<CheckpointTrait>* = nullptr>
   void serialize(SerT& s);
