@@ -330,7 +330,7 @@ services:
     build:
       context: .
       target: base
-      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-docs.dockerfile
+      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-docs.dockerfile
       args:
         <<: *default-args
         token: ${TOKEN}
