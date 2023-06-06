@@ -51,6 +51,7 @@
 
 #include <type_traits>
 #include <functional>
+#include <utility>
 
 namespace vt { namespace runnable {
 
@@ -132,29 +133,6 @@ static void EndProcessingInvokeEvent(trace::TraceProcessingTag processing_tag) {
 }
 #endif
 
-template <
-  typename Fn, typename Type, typename T1,
-  typename std::enable_if_t<std::is_pointer<std::decay_t<T1>>::value, int> = 0,
-  typename... Args
->
-decltype(auto) invokeImpl(Type Fn::*f, T1&& obj, Args&&... args) {
-  return ((*std::forward<T1>(obj)).*f)(std::forward<Args>(args)...);
-}
-
-template <
-  typename Fn, typename Type, typename T1,
-  typename std::enable_if_t<!std::is_pointer<std::decay_t<T1>>::value, int> = 0,
-  typename... Args
->
-decltype(auto) invokeImpl(Type Fn::*f, T1&& obj, Args&&... args) {
-  return (std::forward<T1>(obj).*f)(std::forward<Args>(args)...);
-}
-
-template <typename Callable, typename... Args>
-decltype(auto) invokeImpl(Callable&& f, Args&&... args) {
-  return std::forward<Callable>(f)(std::forward<Args>(args)...);
-}
-
 template <typename Callable, Callable f, typename... Args>
 util::Copyable<Callable> invoke(Args&&... args) {
 #if vt_check_enabled(trace_enabled)
@@ -162,7 +140,7 @@ util::Copyable<Callable> invoke(Args&&... args) {
     BeginProcessingInvokeEvent<Callable, f>();
 #endif
 
-  const auto& returnVal = invokeImpl(f, std::forward<Args>(args)...);
+  const auto& returnVal = std::invoke(std::forward<Callable>(f), std::forward<Args>(args)...);
 
 #if vt_check_enabled(trace_enabled)
   EndProcessingInvokeEvent<Callable, f>(processing_tag);
@@ -178,7 +156,7 @@ util::NotCopyable<Callable> invoke(Args&&... args) {
     BeginProcessingInvokeEvent<Callable, f>();
 #endif
 
-  auto&& returnVal = invokeImpl(f, std::forward<Args>(args)...);
+  auto&& returnVal = std::invoke(std::forward<Callable>(f), std::forward<Args>(args)...);
 
 #if vt_check_enabled(trace_enabled)
   EndProcessingInvokeEvent<Callable, f>(processing_tag);
@@ -194,7 +172,7 @@ util::IsVoidReturn<Callable> invoke(Args&&... args) {
     BeginProcessingInvokeEvent<Callable, f>();
 #endif
 
-  invokeImpl(f, std::forward<Args>(args)...);
+  std::invoke(std::forward<Callable>(f), std::forward<Args>(args)...);
 
 #if vt_check_enabled(trace_enabled)
   EndProcessingInvokeEvent<Callable, f>(processing_tag);
