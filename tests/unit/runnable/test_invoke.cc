@@ -82,14 +82,14 @@ std::unique_ptr<A> nonCopyableFun() {
 }
 
 TEST_F(TestInvoke, test_invoke_call) {
-  vt::runnable::invoke<decltype(&voidWithArg), &voidWithArg>(10);
+  vt::runnable::invoke<&voidWithArg>(10);
   EXPECT_EQ(test_value, 10);
 
-  auto b = vt::runnable::invoke<decltype(&nonCopyableFun), &nonCopyableFun>();
+  auto b = vt::runnable::invoke<&nonCopyableFun>();
   EXPECT_EQ(test_value, 20);
 
   auto accumulate_result =
-    vt::runnable::invoke<decltype(&A::memberFunc), &A::memberFunc>(
+    vt::runnable::invoke<&A::memberFunc>(
       b.get(), std::vector<int32_t>{10, 20, 30}
     );
   EXPECT_EQ(accumulate_result, 60);
