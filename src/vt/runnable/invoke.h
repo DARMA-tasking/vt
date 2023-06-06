@@ -45,15 +45,21 @@
 #define INCLUDED_VT_RUNNABLE_INVOKE_H
 
 #include "vt/config.h"
+
+#if vt_check_enabled(trace_enabled)
 #include "vt/utils/demangle/demangle.h"
 #include "vt/utils/static_checks/function_ret_check.h"
 #include "vt/trace/trace_registry.h"
 
 #include <type_traits>
 #include <functional>
+#endif
+
 #include <utility>
 
 namespace vt { namespace runnable {
+
+#if vt_check_enabled(trace_enabled)
 
 template <typename FunctionType, FunctionType f>
 static std::string CreateEventTypeCStyleFunc() {
@@ -114,69 +120,41 @@ struct CallableWrapper {
   }
 };
 
-#if vt_check_enabled(trace_enabled)
-template <typename Callable, Callable f, typename... Args>
-static trace::TraceProcessingTag BeginProcessingInvokeEvent() {
-  const auto trace_id = CallableWrapper<Callable, f>::GetTraceID();
-  const auto trace_event = theTrace()->messageCreation(trace_id, 0);
-  const auto from_node = theContext()->getNode();
+template <auto f, typename... Args>
+struct ScopedInvokeEvent {
+  ScopedInvokeEvent() {
+    const auto trace_id = CallableWrapper<f>::GetTraceID();
+    const auto trace_event = theTrace()->messageCreation(trace_id, 0);
+    const auto from_node = theContext()->getNode();
 
-  return theTrace()->beginProcessing(trace_id, 0, trace_event, from_node, timing::getCurrentTime());
+    tag_ = theTrace()->beginProcessing(
+      trace_id, 0, trace_event, from_node, timing::getCurrentTime()
+    );
+  }
+
+  ~ScopedInvokeEvent() {
+    theTrace()->endProcessing(tag_, timing::getCurrentTime());
+    theTrace()->messageCreation(CallableWrapper<f>::GetTraceID(), 0);
+  }
+
+private:
+  trace::TraceProcessingTag tag_ = {};
+};
+
+#endif // vt_check_enabled(trace_enabled)
+
+template <auto f, typename... Args>
+auto invoke(Args&&... args){
+#if vt_check_enabled(trace_enabled)
+    ScopedInvokeEvent<f> e;
+#endif
+
+  return std::invoke(std::forward<decltype(f)>(f), std::forward<Args>(args)...);
 }
 
 template <typename Callable, Callable f, typename... Args>
-static void EndProcessingInvokeEvent(trace::TraceProcessingTag processing_tag) {
-  theTrace()->endProcessing(processing_tag, timing::getCurrentTime());
-
-  const auto trace_id = CallableWrapper<Callable, f>::GetTraceID();
-  theTrace()->messageCreation(trace_id, 0);
-}
-#endif
-
-template <typename Callable, Callable f, typename... Args>
-util::Copyable<Callable> invoke(Args&&... args) {
-#if vt_check_enabled(trace_enabled)
-  const auto processing_tag =
-    BeginProcessingInvokeEvent<Callable, f>();
-#endif
-
-  const auto& returnVal = std::invoke(std::forward<Callable>(f), std::forward<Args>(args)...);
-
-#if vt_check_enabled(trace_enabled)
-  EndProcessingInvokeEvent<Callable, f>(processing_tag);
-#endif
-
-  return returnVal;
-}
-
-template <typename Callable, Callable f, typename... Args>
-util::NotCopyable<Callable> invoke(Args&&... args) {
-#if vt_check_enabled(trace_enabled)
-  const auto processing_tag =
-    BeginProcessingInvokeEvent<Callable, f>();
-#endif
-
-  auto&& returnVal = std::invoke(std::forward<Callable>(f), std::forward<Args>(args)...);
-
-#if vt_check_enabled(trace_enabled)
-  EndProcessingInvokeEvent<Callable, f>(processing_tag);
-#endif
-
-  return std::move(returnVal);
-}
-
-template <typename Callable, Callable f, typename... Args>
-util::IsVoidReturn<Callable> invoke(Args&&... args) {
-#if vt_check_enabled(trace_enabled)
-  const auto processing_tag =
-    BeginProcessingInvokeEvent<Callable, f>();
-#endif
-
-  std::invoke(std::forward<Callable>(f), std::forward<Args>(args)...);
-
-#if vt_check_enabled(trace_enabled)
-  EndProcessingInvokeEvent<Callable, f>(processing_tag);
-#endif
+auto invoke(Args&&... args) {
+  return invoke<f>(std::forward<Args>(args)...);
 }
 
 }} // namespace vt::runnable
