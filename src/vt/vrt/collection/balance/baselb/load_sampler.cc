@@ -52,7 +52,7 @@ void LoadSamplerBaseLB::buildHistogram() {
     TimeType load = load_model_->getModeledLoad(
       obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
-    auto const& load_milli = loadMilli(load.seconds());
+    auto const& load_milli = load.milliseconds();
     auto const& bin = histogramSample(load_milli);
     if (obj.isMigratable()) {
       obj_sample[bin].push_back(obj);

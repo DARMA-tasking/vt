@@ -131,7 +131,7 @@ void ZoltanLB::inputParams(balance::ConfigEntry* config) {
 
 void ZoltanLB::runLB(LoadType total_load) {
   auto const& this_node = theContext()->getNode();
-  this_load = loadMilli(total_load);
+  this_load = total_load.milliseconds();
 
   if (this_node == 0) {
     vt_debug_print(terse, lb, "ZoltanLB: runLB: edges={}\n", do_edges_);
@@ -485,7 +485,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
         obj,
         {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
       );
-      auto time = static_cast<int>(loadMilli(load));
+      auto time = load.milliseconds();
       graph->vertex_weight[idx++] = time;
     }
   }

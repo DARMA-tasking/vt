@@ -134,8 +134,6 @@ struct BaseLB {
     balance::DataMapType const& in_data_map
   );
 
-  static LoadType loadMilli(LoadType const& load);
-
   void notifyCurrentHostNodeOfObjectsDeparting(
     TransferMsg<ObjDestinationListType>* msg
   );
