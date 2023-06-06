@@ -58,23 +58,39 @@
 
 namespace vt { namespace tests { namespace unit {
 
-void checkNodeLBData(int expected_phases_amount) {
+void validatePersistedPhases(std::vector<PhaseType> expected_phases) {
   #if vt_check_enabled(lblite)
-    EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->node_comm_.size());
-    EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->node_data_.size());
-    EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->node_subphase_comm_.size());
-    EXPECT_EQ(expected_phases_amount, theNodeLBData()->getLBData()->user_defined_json_.size());
+    // Check maps size
+    EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->node_comm_.size());
+    EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->node_data_.size());
+    EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->node_subphase_comm_.size());
+    EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->user_defined_json_.size());
+    EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->user_defined_lb_info_.size());
+    // Check if each phase is present
+    for(auto&& phase : expected_phases) {
+      EXPECT_EQ(1, theNodeLBData()->getLBData()->node_comm_.count(phase));
+      EXPECT_EQ(1, theNodeLBData()->getLBData()->node_data_.count(phase));
+      EXPECT_EQ(1, theNodeLBData()->getLBData()->node_subphase_comm_.count(phase));
+      EXPECT_EQ(1, theNodeLBData()->getLBData()->user_defined_json_.count(phase));
+      EXPECT_EQ(1, theNodeLBData()->getLBData()->user_defined_lb_info_.count(phase));
+    }
   #else
-    (void)expected_phases_amount;
+    (void)expected_phases;
     EXPECT_EQ(0, theNodeLBData()->getLBData()->node_comm_.size());
     EXPECT_EQ(0, theNodeLBData()->getLBData()->node_data_.size());
     EXPECT_EQ(0, theNodeLBData()->getLBData()->node_subphase_comm_.size());
     EXPECT_EQ(0, theNodeLBData()->getLBData()->user_defined_json_.size());
+    EXPECT_EQ(0, theNodeLBData()->getLBData()->user_defined_lb_info_.size());
   #endif
 }
 
 struct TestCol : vt::Collection<TestCol,vt::Index1D> {
   unsigned int prev_calls_ = thePhase()->getCurrentPhase();
+
+  TestCol() {
+    // Insert dummy lb info data
+    valInsert("foo", 10, true, true);
+  }
 
   unsigned int prevCalls() { return prev_calls_++; }
 
@@ -190,13 +206,13 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
   }
 
   // Check amount of phase data in the node
-  checkNodeLBData(1);
+  validatePersistedPhases({4});
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
   static constexpr int const num_phases = 6;
   // Minimum retention lower than the amount of phases needed by model - will be ignored
-  theConfig()->vt_lb_data_retention = 2;
+  theConfig()->vt_lb_data_retention = 1;
 
   auto range = vt::Index1D(num_elms);
 
@@ -229,7 +245,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
   }
 
   // Check amount of phase data in the node
-  checkNodeLBData(2);
+  validatePersistedPhases({4,5});
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
@@ -268,12 +284,12 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
   }
 
   // Check amount of phase data in the node
-  checkNodeLBData(4);
+  validatePersistedPhases({4,5,6,7});
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_config_retention_higher) {
   // Minimum retention higher than the amount of phases needed by model
-  theConfig()->vt_lb_data_retention = 140;
+  theConfig()->vt_lb_data_retention = 6;
 
   // We must have more or equal number of elements than nodes for this test to
   // work properly
@@ -300,7 +316,7 @@ TEST_F(TestLBDataRetention, test_lbdata_config_retention_higher) {
   // Set the new model
   theLBManager()->setLoadModel(persist);
 
-  for (uint32_t i=0; i<theConfig()->vt_lb_data_retention; ++i) {
+  for (uint32_t i=0; i<theConfig()->vt_lb_data_retention * 2; ++i) {
     runInEpochCollective([&]{
       // Do some work.
       proxy.broadcastCollective<TestCol::colHandler>();
@@ -310,7 +326,7 @@ TEST_F(TestLBDataRetention, test_lbdata_config_retention_higher) {
   }
 
   // Check amount of phase data in the node
-  checkNodeLBData(140);
+  validatePersistedPhases({6,7,8,9,10,11});
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
@@ -354,7 +370,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
   theLBManager()->setLoadModel(model_1_phase);
 
   // Check amount of phase data in the node
-  checkNodeLBData(1 + 1);
+  validatePersistedPhases({10});
 
   for (uint32_t i=0; i<first_stage_num_phases; ++i) {
     runInEpochCollective([&]{
@@ -366,7 +382,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
   }
 
   // Check amount of phase data in the node
-  checkNodeLBData(1 + 1);
+  validatePersistedPhases({21});
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
@@ -405,14 +421,14 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   }
 
   // Check amount of phase data in the node
-  checkNodeLBData(6);
+  validatePersistedPhases({0,1,2,3,4,5});
 
   // Set model which needs only 1 phase of data
   auto model_1_phase = std::make_shared<PersistenceMedianLastN>(base, 1U);
   theLBManager()->setLoadModel(model_1_phase);
 
   // Check amount of phase data in the node
-  checkNodeLBData(1 + 1);
+  validatePersistedPhases({5});
 
   // Check that amount of the retained data in TestCol is not changed and still contains 7 phases of data
   for (uint32_t i=0; i<10; ++i) {
@@ -425,7 +441,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   }
 
   // Check amount of phase data in the node
-  checkNodeLBData(1 + 1);
+  validatePersistedPhases({15});
 }
 
 }}} // end namespace vt::tests::unit

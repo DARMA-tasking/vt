@@ -189,7 +189,7 @@ public:
   std::map<PhaseType, CommMapType> node_comm_;
   /// Node communication graph for each subphase
   std::map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
-  /// User-defined data from each phase
+  /// User-defined data from each phase for JSON output
   std::map<PhaseType, std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;

@@ -186,7 +186,7 @@ public:
    *
    * \return an observer pointer to the user-defined LB data
    */
-  std::unordered_map<PhaseType, DataMapType> const* getUserData() const;
+  std::map<PhaseType, DataMapType> const* getUserData() const;
 
   /**
    * \internal \brief Get the user-defined attributes
