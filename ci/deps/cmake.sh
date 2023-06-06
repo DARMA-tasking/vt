@@ -21,6 +21,11 @@ then
     arch=aarch64
 fi
 
+if test "${arch}" = "amd64"
+then
+    arch=x86_64
+fi
+
 cmake_tar_name=cmake-${cmake_version}-linux-$arch.tar.gz
 
 echo "${cmake_version}"
