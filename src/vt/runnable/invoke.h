@@ -50,6 +50,7 @@
 #include "vt/trace/trace_registry.h"
 
 #include <type_traits>
+#include <functional>
 
 namespace vt { namespace runnable {
 
@@ -90,46 +91,25 @@ static std::string CreateEventName() {
   return DU::removeSpaces(barename + "(" + argsV + ")");
 }
 
-template <typename FunctionType, FunctionType f>
-struct CallableWrapper;
-
-template <typename Ret, typename... Args, Ret (*f)(Args...)>
-struct CallableWrapper<Ret(*)(Args...), f> {
-  using Type = Ret(*)(Args...);
+template <auto f>
+struct CallableWrapper {
+  using Type = decltype(f);
 
   static std::string GetEventTypeName() {
-    return CreateEventTypeCStyleFunc<Type, f>();
+    if constexpr (std::is_member_function_pointer_v<Type>) {
+      return CreateEventTypeMemberFunc<util::FunctionWrapper<Type>>();
+    } else {
+      return CreateEventTypeCStyleFunc<Type, f>();
+    }
   }
 
   static std::string GetEventName() {
-    return CreateEventName<Type, f, Args...>();
+    return CreateEventName<Type, f>();
   }
 
   static trace::TraceEntryIDType GetTraceID() {
     return trace::TraceRegistry::registerEventHashed(
-      GetEventTypeName(), GetEventName()
-    );
-  }
-};
-
-template <
-  typename Ret, typename Class, typename... Args, Ret (Class::*f)(Args...)
->
-struct CallableWrapper<Ret (Class::*)(Args...), f> {
-  using Type = Ret (Class::*)(Args...);
-
-  static std::string GetEventTypeName() {
-    return CreateEventTypeMemberFunc<Class>();
-  }
-
-  static std::string GetEventName() {
-    return CreateEventName<Type, f, Args...>();
-  }
-
-  static trace::TraceEntryIDType GetTraceID() {
-    return trace::TraceRegistry::registerEventHashed(
-      GetEventTypeName(), GetEventName()
-    );
+      GetEventTypeName(), GetEventName());
   }
 };
 
