@@ -4,12 +4,29 @@ set -exo pipefail
 
 if test $# -lt 1
 then
-    echo "usage: ./$0 <cmake-version>"
+    echo "usage: ./$0 <cmake-version> <arch>"
     exit 1
 fi
 
 cmake_version=$1
-cmake_tar_name=cmake-${cmake_version}-Linux-x86_64.tar.gz
+arch=x86_64
+
+if test $# -gt 1
+then
+    arch=$2
+fi
+
+if test "${arch}" = "arm64v8"
+then
+    arch=aarch64
+fi
+
+if test "${arch}" = "amd64"
+then
+    arch=x86_64
+fi
+
+cmake_tar_name=cmake-${cmake_version}-linux-$arch.tar.gz
 
 echo "${cmake_version}"
 echo "${cmake_tar_name}"

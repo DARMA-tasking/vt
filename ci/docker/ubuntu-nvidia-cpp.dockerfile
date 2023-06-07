@@ -40,8 +40,10 @@ RUN apt-get update -y && \
 ENV CC=gcc \
     CXX=g++
 
+ARG arch
+
 COPY ./ci/deps/cmake.sh cmake.sh
-RUN ./cmake.sh 3.23.4
+RUN ./cmake.sh 3.23.4 ${arch}
 
 ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
