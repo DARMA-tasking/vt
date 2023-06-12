@@ -124,19 +124,6 @@ public:
   }
 
   /**
-   * \brief Find the next phase
-   *
-   * \param phase the current phase
-   *
-   * \return the next phase
-   */
-  PhaseType findNextPhase(PhaseType phase) const {
-    auto iter = history_.upper_bound(phase);
-    vtAssert(iter != history_.end(), "Must have a valid phase");
-    return iter->first;
-  }
-
-  /**
    * \brief Get the elements assigned for a given phase
    *
    * \param[in] phase the phase
@@ -186,6 +173,19 @@ public:
   }
 
 private:
+  /**
+   * \brief Find the next specified phase or an identical one
+   *
+   * \param phase the current phase
+   *
+   * \return the next phase
+   */
+  PhaseType findNextPhase(PhaseType phase) const {
+    auto iter = history_.upper_bound(phase);
+    vtAssert(iter != history_.end(), "Must have a valid phase");
+    return iter->first;
+  }
+
   /**
    * \brief Reduce distribution changes globally to find where migrations need
    * to occur

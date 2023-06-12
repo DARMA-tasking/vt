@@ -177,8 +177,8 @@ void LBDataRestartReader::determinePhasesToMigrate() {
         );
 
         std::set_difference(
-          history_[curr]->begin(),  history_[curr]->end(),
-          history_[next]->begin(),  history_[next]->end(),
+          history_[curr]->begin(), history_[curr]->end(),
+          history_[next]->begin(), history_[next]->end(),
           std::inserter(departing, departing.begin())
         );
 
