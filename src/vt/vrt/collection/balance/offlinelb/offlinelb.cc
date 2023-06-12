@@ -59,7 +59,7 @@ void OfflineLB::runLB(LoadType) {
   for (auto&& elm : distro) {
     migrateObjectTo(elm, theContext()->getNode());
   }
-  theLBDataReader()->clearDistro(nextPhase);
+  theLBDataReader()->clearDistro(phase_ + 1);
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

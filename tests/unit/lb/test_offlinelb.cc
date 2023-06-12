@@ -80,9 +80,9 @@ struct SimCol : vt::Collection<SimCol, vt::Index1D> {
     auto const num_nodes = theContext()->getNumNodes();
     auto const next_node = (this_node + 1) % num_nodes;
     vt_debug_print(terse, lb, "sparseHandler: idx={}: elm={}\n", getIndex(), getElmID());
-    if (m->iter == 0 or m->iter == 1) {
+    if (m->iter == 0 or m->iter == 1 or m->iter == 2 or m->iter == 3 or m->iter == 4) {
       EXPECT_EQ(getIndex().x() / 2, this_node);
-    } else if (m->iter == 2 or m->iter == 3 or m->iter == 4 or m->iter == 5 or m->iter == 6) {
+    } else if (m->iter == 5 or m->iter == 6) {
       EXPECT_EQ(getIndex().x() / 2, next_node);
     }
   }
@@ -224,8 +224,22 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
   }
   stream = w->finish();
 
+  // Preapre configuration file
+  std::string file_name = "test_offlinelb_2.txt";
+  std::ofstream out(file_name);
+  out << ""
+    "0 OfflineLB\n"
+    "1 NoLB\n"
+    "2 NoLB\n"
+    "3 NoLB\n"
+    "4 OfflineLB\n"
+    "5 OfflineLB\n"
+    "6 NoLB\n";
+  out.close();
+
   theConfig()->vt_lb = true;
-  theConfig()->vt_lb_name = "OfflineLB";
+  theConfig()->vt_lb_file_name = "test_offlinelb_2.txt";
+
   auto up = LBDataRestartReader::construct();
   curRT->theLBDataReader = up.get();
   theLBDataReader()->readLBDataFromStream(std::move(stream));
