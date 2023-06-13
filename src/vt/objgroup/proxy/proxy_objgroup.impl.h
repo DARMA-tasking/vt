@@ -54,6 +54,7 @@
 #include "vt/rdmahandle/manager.h"
 #include "vt/messaging/param_msg.h"
 #include "vt/objgroup/proxy/proxy_bits.h"
+#include "vt/collective/reduce/get_reduce_stamp.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -105,6 +106,91 @@ Proxy<ObjT>::broadcast(Params&&... params) const {
 
   // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
   return typename Proxy<ObjT>::PendingSendType{std::nullptr_t{}};
+}
+
+
+template <typename ObjT>
+template <
+  auto f,
+  template <typename Arg> class Op,
+  typename... Args
+>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::allreduce(
+  Args&&... args
+) const {
+  using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+  using MsgT = collective::ReduceTMsg<Tuple>;
+  using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
+  auto cb = theCB()->makeBcast<f>(*this);
+
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
+  msg->setCallback(cb);
+  auto proxy = Proxy<ObjT>(*this);
+  return theObjGroup()->reduce<
+    ObjT,
+    MsgT,
+    &MsgT::template msgHandler<
+      MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >(proxy, msg.get(), stamp);
+}
+
+template <typename ObjT>
+template <
+  auto f,
+  template <typename Arg> class Op,
+  typename Target,
+  typename... Args
+>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::reduce(
+  Target target,
+  Args&&... args
+) const {
+  using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+  using MsgT = collective::ReduceTMsg<Tuple>;
+  using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
+  auto cb = theCB()->makeSend<f>(target);
+
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
+  msg->setCallback(cb);
+  auto proxy = Proxy<ObjT>(*this);
+  return theObjGroup()->reduce<
+    ObjT,
+    MsgT,
+    &MsgT::template msgHandler<
+      MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >(proxy, msg.get(), stamp);
+}
+
+template <typename ObjT>
+template <
+  template <typename Arg> class Op,
+  typename... CBArgs,
+  typename... Args
+>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::reduce(
+  vt::Callback<CBArgs...> cb,
+  Args&&... args
+) const {
+  using CallbackT = vt::Callback<CBArgs...>;
+  using Tuple = typename CallbackT::TupleType;
+  using MsgT = collective::ReduceTMsg<Tuple>;
+  using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
+
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
+  msg->setCallback(cb);
+  auto proxy = Proxy<ObjT>(*this);
+  return theObjGroup()->reduce<
+    ObjT,
+    MsgT,
+    &MsgT::template msgHandler<
+      MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >(proxy, msg.get(), stamp);
 }
 
 template <typename ObjT>

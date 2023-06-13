@@ -134,7 +134,7 @@ struct BaseLB {
   void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
   void transferSend(NodeType from, TransferVecType const& transfer);
   void transferMigrations(TransferMsg<TransferVecType>* msg);
-  void finalize(CountMsg* msg);
+  void finalize(int32_t global_count);
 
   virtual void inputParams(balance::ConfigEntry* config) = 0;
   virtual void runLB(TimeType total_load) = 0;

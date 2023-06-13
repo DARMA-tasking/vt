@@ -67,18 +67,79 @@ struct Reducable : BaseProxyT {
   explicit Reducable(VirtualProxyType const in_proxy);
   Reducable& operator=(Reducable const&) = default;
 
+  /**
+   * \brief All-reduce back to this collection. Performs a reduction using
+   * operator `Op` followed by a broadcast to `f` with the result.
+   *
+   * \param[in] args the arguments to reduce. \note The last argument optionally
+   * may be a `ReduceStamp`.
+   *
+   * \return a pending send
+   */
+  template <
+    auto f,
+    template <typename Arg> class Op = collective::NoneOp,
+    typename... Args
+  >
+  messaging::PendingSend allreduce(
+    Args&&... args
+  ) const;
+
+  /**
+   * \brief Reduce back to a point target. Performs a reduction using operator
+   * `Op` followed by a send to `f` with the result.
+   *
+   * \param[in] args the arguments to reduce. \note The last argument optionally
+   * may be a `ReduceStamp`.
+   *
+   * \return a pending send
+   */
+  template <
+    auto f,
+    template <typename Arg> class Op = collective::NoneOp,
+    typename Target,
+    typename... Args
+  >
+  messaging::PendingSend reduce(
+    Target target,
+    Args&&... args
+  ) const;
+
+  /**
+   * \brief Reduce back to an arbitrary callback. Performs a reduction using
+   * operator `Op` and then delivers the result to the callback `cb`.
+   *
+   * \param[in] cb the callback to trigger with the reduction result
+   * \param[in] args the arguments to reduce. \note The last argument optionally
+   * may be a `ReduceStamp`.
+   *
+   * \return a pending send
+   */
+  template <
+    template <typename Arg> class Op = collective::NoneOp,
+    typename... CBArgs,
+    typename... Args
+  >
+  messaging::PendingSend reduce(
+    vt::Callback<CBArgs...> cb,
+    Args&&... args
+  ) const;
+
   template <
     typename OpT = collective::None,
     typename MsgT,
     ActiveTypedFnType<MsgT> *f
   >
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   messaging::PendingSend reduce(
     MsgT *const msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
   ) const;
+
   template <
     typename OpT = collective::None,
     typename MsgT
   >
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   messaging::PendingSend reduce(
     MsgT *const msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
   ) const
@@ -98,12 +159,15 @@ struct Reducable : BaseProxyT {
     typename MsgT,
     ActiveTypedFnType<MsgT> *f
   >
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   messaging::PendingSend reduce(MsgT *const msg, ReduceStamp stamp = ReduceStamp{}) const;
+
   template <
     typename OpT,
     typename FunctorT,
     typename MsgT
   >
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   messaging::PendingSend reduce(MsgT *const msg, ReduceStamp stamp = ReduceStamp{}) const
   {
     return reduce<
@@ -115,21 +179,25 @@ struct Reducable : BaseProxyT {
   }
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   messaging::PendingSend reduce(
     MsgT *const msg, ReduceStamp stamp = ReduceStamp{},
     NodeType const& node = uninitialized_destination
   ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   messaging::PendingSend reduceExpr(
     MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp = ReduceStamp{},
     NodeType const& node = uninitialized_destination
   ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   messaging::PendingSend reduce(MsgT *const msg, ReduceStamp stamp, IndexT const& idx) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
+  [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   messaging::PendingSend reduceExpr(
     MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp, IndexT const& idx
   ) const;

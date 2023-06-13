@@ -172,27 +172,6 @@ static_assert(
   "Must be trivially copyable to avoid serialization."
 );
 
-struct NodeStatsMsg : SerializeRequired<
-  collective::ReduceTMsg<std::vector<LoadData>>,
-  NodeStatsMsg
->
-{
-  using MessageParentType = SerializeRequired<
-    collective::ReduceTMsg<std::vector<LoadData>>,
-    NodeStatsMsg
-  >;
-
-  NodeStatsMsg() = default;
-  explicit NodeStatsMsg(std::vector<LoadData> ld)
-    : MessageParentType(std::move(ld))
-  { }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-  }
-};
-
 }}}} /* end namespace vt::vrt::collection::balance */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_MSG_H*/

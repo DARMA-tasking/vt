@@ -64,6 +64,9 @@
 #include "vt/registry/auto/collection/auto_registry_collection.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/objgroup/proxy/proxy_bits.h"
+#include "vt/utils/fntraits/fntraits.h"
+#include "vt/messaging/param_msg.h"
+#include "vt/vrt/collection/messages/param_col_msg.h"
 
 #include <memory>
 
@@ -106,7 +109,7 @@ void PipeManagerTL::addListenerFunctor(
   CallbackT const& cb, NodeType const& node
 ) {
   using MsgT = typename util::FunctorExtractor<FunctorT>::MessageType;
-  auto const& han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  auto const& han = auto_registry::makeAutoHandlerFunctor<FunctorT, MsgT, true>();
   addListenerAny<MsgT>(
     cb.getPipe(), std::make_unique<callback::CallbackSend<MsgT>>(han,node)
   );
@@ -116,7 +119,7 @@ template <typename FunctorT, typename CallbackT>
 void PipeManagerTL::addListenerFunctorVoid(
   CallbackT const& cb, NodeType const& node
 ) {
-  auto const& han = auto_registry::makeAutoHandlerFunctor<FunctorT,true>();
+  auto const& han = auto_registry::makeAutoHandlerFunctor<FunctorT, void, false>();
   addListenerAny<signal::SigVoidType>(
     cb.getPipe(), std::make_unique<callback::CallbackSend<signal::SigVoidType>>(
       han,node
@@ -129,192 +132,161 @@ void PipeManagerTL::addListenerFunctorBcast(
   CallbackT const& cb
 ) {
   using MsgT = typename util::FunctorExtractor<FunctorT>::MessageType;
-  auto const& han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  auto const& han = auto_registry::makeAutoHandlerFunctor<FunctorT, MsgT, true>();
   addListenerAny<MsgT>(
     cb.getPipe(), std::make_unique<callback::CallbackBcast<MsgT>>(han)
   );
 }
 
-template <
-  typename ColT, typename MsgT, PipeManagerTL::ColHanType<ColT,MsgT>* f,
-  typename CallbackT
->
-CallbackT
-PipeManagerTL::makeCallbackSingleProxySend(typename ColT::ProxyType proxy) {
+template <typename U>
+using hasIdx_t = typename U::IndexType;
+
+template <auto f, bool is_bcast, typename ProxyT>
+auto PipeManagerTL::makeCallbackProxy(ProxyT proxy) {
   bool const persist = true;
   bool const send_back = false;
   bool const dispatch = true;
-  auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
-  auto cb = CallbackT(callback::cbunion::RawSendColMsgTag,pipe_id);
-  auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
-  addListenerAny<MsgT>(
-    cb.getPipe(),
-    std::make_unique<callback::CallbackProxySend<ColT, MsgT>>(handler, proxy)
-  );
-  return cb;
+  auto const pipe_id = makePipeID(persist, send_back);
+  newPipeState(pipe_id, persist, dispatch, -1, -1, 0);
+
+  using Trait = ObjFuncTraits<decltype(f)>;
+  using ObjT = typename Trait::ObjT;
+  using MsgT = typename Trait::MsgT;
+  using RetType = typename Trait::template WrapType<CallbackRetType>;
+
+  if constexpr (detection::is_detected<hasIdx_t, ProxyT>::value) {
+    if constexpr (std::is_same_v<MsgT, NoMsg>) {
+      using Tuple = typename Trait::TupleType;
+      using NormMsgT = messaging::ParamMsg<Tuple>;
+      using WrapMsgT = vrt::collection::ColMsgWrap<ObjT, NormMsgT, vt::Message>;
+      auto han = auto_registry::makeAutoHandlerCollectionMemParam<
+        ObjT, decltype(f), f, WrapMsgT
+      >();
+      if constexpr (is_bcast) {
+        auto vrt_handler = vrt::collection::makeVrtDispatch<NormMsgT, ObjT>();
+        return RetType{
+          callback::cbunion::RawBcastColDirTag, pipe_id, han, vrt_handler,
+          proxy.getProxy()
+        };
+      } else {
+        auto cb = RetType(callback::cbunion::RawSendColMsgTag, pipe_id);
+        addListenerAny<NormMsgT>(
+          cb.getPipe(),
+          std::make_unique<callback::CallbackProxySend<ObjT, NormMsgT>>(han, proxy)
+        );
+        return cb;
+      }
+    } else {
+      HandlerType han = uninitialized_handler;
+      if constexpr (Trait::is_member) {
+        han = auto_registry::makeAutoHandlerCollectionMem<ObjT, MsgT, f>();
+      } else {
+        han = auto_registry::makeAutoHandlerCollection<ObjT, MsgT, f>();
+      }
+      if constexpr (is_bcast) {
+        auto vrt_handler = vrt::collection::makeVrtDispatch<MsgT, ObjT>();
+        return RetType{
+          callback::cbunion::RawBcastColDirTag, pipe_id, han, vrt_handler,
+          proxy.getProxy()
+        };
+      } else {
+        auto cb = RetType(callback::cbunion::RawSendColMsgTag, pipe_id);
+        addListenerAny<MsgT>(
+          cb.getPipe(),
+          std::make_unique<callback::CallbackProxySend<ObjT, MsgT>>(han, proxy)
+        );
+        return cb;
+      }
+    }
+  } else {
+    auto const proxy_bits = proxy.getProxy();
+    auto const ctrl = objgroup::proxy::ObjGroupProxy::getID(proxy_bits);
+    HandlerType han = uninitialized_handler;
+    if constexpr (std::is_same_v<MsgT, NoMsg>) {
+      using Tuple = typename Trait::TupleType;
+      using PMsgT = messaging::ParamMsg<Tuple>;
+      han = auto_registry::makeAutoHandlerObjGroupParam<
+        ObjT, decltype(f), f, PMsgT
+      >(ctrl);
+    } else {
+      han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,f>(ctrl);
+    }
+    if constexpr (is_bcast) {
+      return RetType{
+        callback::cbunion::RawBcastObjGrpTag, pipe_id, han, proxy_bits
+      };
+    } else {
+      auto const dest_node = proxy.getNode();
+      return RetType{
+        callback::cbunion::RawSendObjGrpTag, pipe_id, han, proxy_bits, dest_node
+      };
+    }
+  }
+
+  // unnecessary, but to make nvcc happy
+  return RetType{};
 }
 
-template <
-  typename ColT, typename MsgT, PipeManagerTL::ColMemType<ColT,MsgT> f,
-  typename CallbackT
->
-CallbackT
-PipeManagerTL::makeCallbackSingleProxySend(typename ColT::ProxyType proxy) {
-  bool const persist = true;
-  bool const send_back = false;
-  bool const dispatch = true;
-  auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
-  auto cb = CallbackT(callback::cbunion::RawSendColMsgTag,pipe_id);
-  auto const& handler =
-    auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
-  addListenerAny<MsgT>(
-    cb.getPipe(),
-    std::make_unique<callback::CallbackProxySend<ColT, MsgT>>(handler, proxy)
-  );
-  return cb;
+template <auto f, bool is_bcast>
+auto PipeManagerTL::makeCallbackSingle(NodeType node) {
+  auto const new_pipe_id = makePipeID(true,false);
+
+  using Trait = FuncTraits<decltype(f)>;
+  using MsgT = typename Trait::MsgT;
+
+  HandlerType han = uninitialized_handler;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using SendMsgT = messaging::ParamMsg<typename Trait::TupleType>;
+    han = auto_registry::makeAutoHandlerParam<decltype(f), f, SendMsgT>();
+  } else {
+    han = auto_registry::makeAutoHandler<MsgT,f>();
+  }
+
+  using RetType = typename Trait::template WrapType<CallbackRetType>;
+  if constexpr (is_bcast) {
+    return RetType{callback::cbunion::RawBcastMsgTag, new_pipe_id, han};
+  } else {
+    return RetType{callback::cbunion::RawSendMsgTag, new_pipe_id, han, node};
+  }
+
+  // unnecessary, but to make nvcc happy
+  return RetType{};
 }
 
-template <
-  typename ObjT, typename MsgT, PipeManagerTL::ObjMemType<ObjT,MsgT> fn,
-  typename CallbackT
->
-CallbackT
-PipeManagerTL::makeCallbackObjGrpSend(objgroup::proxy::ProxyElm<ObjT> proxy) {
-  bool const persist = true;
-  bool const send_back = false;
-  auto const& pipe_id = makePipeID(persist,send_back);
-  auto const proxy_bits = proxy.getProxy();
-  auto const dest_node = proxy.getNode();
-  auto const ctrl = objgroup::proxy::ObjGroupProxy::getID(proxy_bits);
-  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
-  auto cb = CallbackT(
-    callback::cbunion::RawSendObjGrpTag,pipe_id,han,proxy_bits,dest_node
-  );
-  return cb;
+template <typename FunctorT, bool is_bcast>
+auto PipeManagerTL::makeCallbackFunctor(NodeType node) {
+  auto const new_pipe_id = makePipeID(true,false);
+
+  using Trait = FunctorTraits<FunctorT, decltype(&FunctorT::operator())>;
+  using MsgT = typename Trait::MsgT;
+
+  HandlerType han = uninitialized_handler;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using SendMsgT = messaging::ParamMsg<typename Trait::TupleType>;
+    han = auto_registry::makeAutoHandlerFunctor<FunctorT, SendMsgT, false>();
+  } else {
+    han = auto_registry::makeAutoHandlerFunctor<FunctorT, MsgT, true>();
+  }
+
+  using RetType = typename Trait::template WrapType<CallbackRetType>;
+  if constexpr (is_bcast) {
+    return RetType{callback::cbunion::RawBcastMsgTag, new_pipe_id, han};
+  } else {
+    return RetType{callback::cbunion::RawSendMsgTag, new_pipe_id, han, node};
+  }
+
+  // unnecessary, but to make nvcc happy
+  return RetType{};
 }
 
-template <
-  typename ObjT, typename MsgT, PipeManagerTL::ObjMemType<ObjT,MsgT> fn,
-  typename CallbackT
->
-CallbackT
-PipeManagerTL::makeCallbackObjGrpBcast(objgroup::proxy::Proxy<ObjT> proxy) {
-  bool const persist = true;
-  bool const send_back = false;
-  auto const& pipe_id = makePipeID(persist,send_back);
-  auto const proxy_bits = proxy.getProxy();
-  auto const ctrl = objgroup::proxy::ObjGroupProxy::getID(proxy_bits);
-  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
-  auto cb = CallbackT(
-    callback::cbunion::RawBcastObjGrpTag,pipe_id,han,proxy_bits
-  );
-  return cb;
-}
-
-
-// Single active message collection proxy bcast
-template <
-  typename ColT, typename MsgT, PipeManagerTL::ColHanType<ColT,MsgT>* f,
-  typename CallbackT
->
-CallbackT
-PipeManagerTL::makeCallbackSingleProxyBcast(ColProxyType<ColT> proxy) {
-  bool const persist = true;
-  bool const send_back = false;
-  bool const dispatch = true;
-  auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
-  auto cb = CallbackT(callback::cbunion::RawBcastColMsgTag,pipe_id);
-  auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
-  addListenerAny<MsgT>(
-    cb.getPipe(),
-    std::make_unique<callback::CallbackProxyBcast<ColT,MsgT>>(handler,proxy)
-  );
-  return cb;
-}
-
-template <
-  typename ColT, typename MsgT, PipeManagerTL::ColHanType<ColT,MsgT>* f,
-  typename CallbackT
->
-CallbackT
-PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
-  bool const persist = true;
-  bool const send_back = false;
-  auto const& pipe_id = makePipeID(persist,send_back);
-  auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
-  auto const& vrt_handler = vrt::collection::makeVrtDispatch<MsgT,ColT>();
-  auto cb = CallbackT(
-    callback::cbunion::RawBcastColDirTag, pipe_id, handler, vrt_handler,
-    proxy.getProxy()
-  );
-  return cb;
-}
-
-template <
-  typename ColT, typename MsgT, PipeManagerTL::ColMemType<ColT,MsgT> f,
-  typename CallbackT
->
-CallbackT
-PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
-  bool const persist = true;
-  bool const send_back = false;
-  auto const& pipe_id = makePipeID(persist,send_back);
-  auto const& handler =
-    auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
-  auto const& vrt_handler = vrt::collection::makeVrtDispatch<MsgT,ColT>();
-  auto cb = CallbackT(
-    callback::cbunion::RawBcastColDirTag, pipe_id, handler, vrt_handler,
-    proxy.getProxy()
-  );
-  return cb;
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
-CallbackT
-PipeManagerTL::makeCallbackSingleSend(NodeType const& send_to_node) {
-  auto const& new_pipe_id = makePipeID(true,false);
-  auto const& handler = auto_registry::makeAutoHandler<MsgT,f>();
-  auto cb = CallbackT(
-    callback::cbunion::RawSendMsgTag,new_pipe_id,handler,send_to_node
-  );
-  return cb;
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
-CallbackT
- PipeManagerTL::makeCallbackSingleSendT(NodeType const& send_to_node) {
-  auto const& new_pipe_id = makePipeID(true,false);
-  auto const& handler = auto_registry::makeAutoHandler<MsgT,f>();
-  auto cb = CallbackT(
-    callback::cbunion::RawSendMsgTag,new_pipe_id,handler,send_to_node
-  );
-  return cb;
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
-CallbackT
-PipeManagerTL::makeCallbackSingleBcast() {
-  auto const& new_pipe_id = makePipeID(true,false);
-  auto const& handler = auto_registry::makeAutoHandler<MsgT,f>();
-  auto cb = CallbackT(
-    callback::cbunion::RawBcastMsgTag,new_pipe_id,handler
-  );
-  return cb;
-}
-
-template <typename CallbackT>
-CallbackT
-PipeManagerTL::makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn) {
+inline auto PipeManagerTL::makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn) {
   PipeType new_pipe_id = no_pipe;
   if (life == LifetimeEnum::Once) {
     new_pipe_id = makeCallbackFuncVoid(false,fn,true,1,1);
   } else {
     new_pipe_id = makeCallbackFuncVoid(true,fn,true);
   }
-  auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
+  auto cb = CallbackRetType<>(callback::cbunion::RawAnonTag,new_pipe_id);
 
   vt_debug_print(
     normal, pipe,
@@ -325,9 +297,8 @@ PipeManagerTL::makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn) {
   return cb;
 }
 
-template <typename C, typename CallbackT>
-CallbackT
-PipeManagerTL::makeCallbackSingleAnon(
+template <typename C>
+auto PipeManagerTL::makeCallbackSingleAnon(
   LifetimeEnum life, C* ctx, FuncCtxType<C> fn
 ) {
   auto fn_closure = [ctx,fn] { fn(ctx); };
@@ -340,9 +311,8 @@ PipeManagerTL::makeCallbackSingleAnon(
   return makeCallbackSingleAnonVoid(life,fn_closure);
 }
 
-template <typename MsgT, typename C, typename CallbackT>
-CallbackT
-PipeManagerTL::makeCallbackSingleAnon(
+template <typename MsgT, typename C>
+auto PipeManagerTL::makeCallbackSingleAnon(
   LifetimeEnum life, C* ctx, FuncMsgCtxType<MsgT, C> fn
 ) {
   auto fn_closure = [ctx,fn](MsgT* msg) { fn(msg, ctx); };
@@ -352,12 +322,11 @@ PipeManagerTL::makeCallbackSingleAnon(
     "makeCallbackSingleAnon: created closure\n"
   );
 
-  return makeCallbackSingleAnon<MsgT,CallbackT>(life,fn_closure);
+  return makeCallbackSingleAnon<MsgT>(life,fn_closure);
 }
 
-template <typename MsgT, typename CallbackT>
-CallbackT
-PipeManagerTL::makeCallbackSingleAnon(LifetimeEnum life, FuncMsgType<MsgT> fn) {
+template <typename MsgT>
+auto PipeManagerTL::makeCallbackSingleAnon(LifetimeEnum life, FuncMsgType<MsgT> fn) {
   PipeType new_pipe_id = no_pipe;
   if (life == LifetimeEnum::Once) {
     new_pipe_id = makeCallbackFunc<MsgT>(false,fn,true,1,1);
@@ -365,7 +334,7 @@ PipeManagerTL::makeCallbackSingleAnon(LifetimeEnum life, FuncMsgType<MsgT> fn) {
     new_pipe_id = makeCallbackFunc<MsgT>(true,fn,true);
   }
 
-  auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
+  auto cb = CallbackRetType<MsgT>(callback::cbunion::RawAnonTag,new_pipe_id);
 
   vt_debug_print(
     normal, pipe,
@@ -373,54 +342,6 @@ PipeManagerTL::makeCallbackSingleAnon(LifetimeEnum life, FuncMsgType<MsgT> fn) {
     true, new_pipe_id
   );
 
-  return cb;
-}
-
-template <typename FunctorT, typename T, typename CallbackT>
-CallbackT
-PipeManagerTL::makeCallbackFunctorSend(NodeType const& send_to_node) {
-  using MsgT = typename util::FunctorExtractor<FunctorT>::MessageType;
-  auto const& new_pipe_id = makePipeID(true,false);
-  auto const& handler =
-    auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
-  auto cb = CallbackT(
-    callback::cbunion::RawSendMsgTag,new_pipe_id,handler,send_to_node
-  );
-  return cb;
-}
-
-template <typename FunctorT, typename T, typename CallbackT>
-CallbackT
-PipeManagerTL::makeCallbackFunctorBcast() {
-  using MsgT = typename util::FunctorExtractor<FunctorT>::MessageType;
-  auto const& new_pipe_id = makePipeID(true,false);
-  auto const& handler =
-    auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
-  auto cb = CallbackT(
-    callback::cbunion::RawBcastMsgTag,new_pipe_id,handler
-  );
-  return cb;
-}
-
-template <typename FunctorT, typename CallbackT>
-CallbackT
-PipeManagerTL::makeCallbackFunctorSendVoid(NodeType const& send_to_node) {
-  auto const& new_pipe_id = makePipeID(true,false);
-  auto const& handler = auto_registry::makeAutoHandlerFunctor<FunctorT,true>();
-  auto cb = CallbackT(
-    callback::cbunion::RawSendMsgTag,new_pipe_id,handler,send_to_node
-  );
-  return cb;
-}
-
-template <typename FunctorT, typename CallbackT>
-CallbackT
-PipeManagerTL::makeCallbackFunctorBcastVoid() {
-  auto const& new_pipe_id = makePipeID(true,false);
-  auto const& handler = auto_registry::makeAutoHandlerFunctor<FunctorT,true>();
-  auto cb = CallbackT(
-    callback::cbunion::RawBcastMsgTag,new_pipe_id,handler
-  );
   return cb;
 }
 

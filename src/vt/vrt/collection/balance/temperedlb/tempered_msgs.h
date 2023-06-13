@@ -142,46 +142,6 @@ private:
   ObjsType objs_  = {};
 };
 
-struct RejectionStats {
-  RejectionStats() = default;
-  RejectionStats(int n_rejected, int n_transfers)
-    : n_rejected_(n_rejected), n_transfers_(n_transfers) { }
-
-  friend RejectionStats operator+(RejectionStats a1, RejectionStats const& a2) {
-    a1.n_rejected_ += a2.n_rejected_;
-    a1.n_transfers_ += a2.n_transfers_;
-
-    return a1;
-  }
-
-  int n_rejected_ = 0;
-  int n_transfers_ = 0;
-};
-
-static_assert(
-  vt::messaging::is_byte_copyable_t<RejectionStats>::value,
-  "Must be trivially copyable to avoid serialization."
-);
-
-struct RejectionStatsMsg : NonSerialized<
-  collective::ReduceTMsg<RejectionStats>,
-  RejectionStatsMsg
->
-{
-  using MessageParentType = NonSerialized<
-    collective::ReduceTMsg<RejectionStats>,
-    RejectionStatsMsg
-  >;
-
-  RejectionStatsMsg() = default;
-  RejectionStatsMsg(int n_rejected, int n_transfers)
-    : MessageParentType(RejectionStats(n_rejected, n_transfers))
-  { }
-  RejectionStatsMsg(RejectionStats&& rs)
-    : MessageParentType(std::move(rs))
-  { }
-};
-
 }}}} /* end namespace vt::vrt::collection::balance */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_MSGS_H*/

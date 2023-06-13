@@ -90,7 +90,7 @@ private:
 
   void downTreeHandler(LBTreeDownMsg* msg);
   void lbTreeUpHandler(LBTreeUpMsg* msg);
-  void setupDone(SetupDoneMsg* msg);
+  void setupDone();
 
   void downTreeSend(
     NodeType const node, NodeType const from, ObjSampleType const& excess,

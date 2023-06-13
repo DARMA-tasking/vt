@@ -62,7 +62,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct LoadModel;
-struct NodeStatsMsg;
+struct LoadData;
 
 /**
  * \struct LBManager
@@ -75,7 +75,6 @@ struct NodeStatsMsg;
  */
 struct LBManager : runtime::component::Component<LBManager> {
   using LBProxyType      = objgroup::proxy::Proxy<lb::BaseLB>;
-  using StatsMsgType     = balance::NodeStatsMsg;
   using QuantityType     = lb::StatisticQuantityMap;
   using StatisticMapType = lb::StatisticMap;
 
@@ -257,10 +256,10 @@ public:
    */
   void computeStatistics(
     std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase,
-    vt::Callback<StatsMsgType> cb
+    vt::Callback<std::vector<balance::LoadData>> cb
   );
 
-  void statsHandler(StatsMsgType* msg);
+  void statsHandler(std::vector<balance::LoadData> const& in_stat_vec);
 
 private:
   bool isCollectiveComm(elm::CommCategory cat) const;

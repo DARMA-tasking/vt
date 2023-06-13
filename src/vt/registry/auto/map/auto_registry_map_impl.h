@@ -62,13 +62,13 @@ using namespace mapping;
  * Functor map variants
  */
 
-template <typename FunctorT, typename... Args>
+template <typename FunctorT>
 inline HandlerType makeAutoHandlerFunctorMap() {
   using ContainerType = AutoActiveMapFunctorContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveMapFunctorType>;
   using FuncType = ActiveMapFnPtrType;
   using RunnableT = RunnableFunctor<
-    FunctorT, ContainerType, RegInfoType, FuncType, true, Args...
+    FunctorT, ContainerType, RegInfoType, FuncType, void
   >;
 
   constexpr bool is_auto = true;

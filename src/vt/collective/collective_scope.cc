@@ -83,7 +83,7 @@ TagType CollectiveScope::mpiCollectiveAsync(ActionType action) {
   NodeType collective_root = 0;
 
   using CollectiveMsg = CollectiveAlg::CollectiveMsg;
-  auto cb = theCB()->makeBcast<CollectiveMsg,&CollectiveAlg::runCollective>();
+  auto cb = theCB()->makeBcast<&CollectiveAlg::runCollective>();
   auto msg = makeMessage<CollectiveMsg>(is_user_tag_, scope_, tag, collective_root);
 
   // The tag for the reduce is a combination of the scope and seq tag.

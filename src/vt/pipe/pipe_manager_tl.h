@@ -76,6 +76,9 @@ struct PipeManagerTL : virtual PipeManagerBase {
   template <typename MsgT>
   using CallbackMsgType = callback::cbunion::CallbackTyped<MsgT>;
 
+  template <typename... Args>
+  using CallbackRetType = callback::cbunion::CallbackTyped<Args...>;
+
   template <typename MsgT>
   using FnType = ActiveTypedFnType<MsgT>;
 
@@ -87,94 +90,28 @@ struct PipeManagerTL : virtual PipeManagerBase {
   /*
    *  Untyped variants of callbacks: uses union to dispatch
    */
-
-
-  template <typename T, FnType<T>* f, typename CbkT = DefType<T>>
-  CbkT makeCallbackSingleSendT(NodeType const& node);
-
   // Single active message function-handler
-  template <typename T, FnType<T>* f, typename CbkT = DefType<T>>
-  CbkT makeCallbackSingleSend(NodeType const& node);
+  template <auto f, bool is_bcast>
+  auto makeCallbackSingle(NodeType node = uninitialized_destination);
 
-  template <typename T, FnType<T>* f, typename CbkT = DefType<T>>
-  CbkT makeCallbackSingleBcast();
-
-  // Single active message functor-handler
-  template <
-    typename FunctorT,
-    typename T = typename util::FunctorExtractor<FunctorT>::MessageType,
-    typename CbkT = DefType<T>
-  >
-  CbkT makeCallbackFunctorSend(NodeType const& node);
-
-  template <
-    typename FunctorT,
-    typename T = typename util::FunctorExtractor<FunctorT>::MessageType,
-    typename CbkT = DefType<T>
-  >
-  CbkT makeCallbackFunctorBcast();
-
-  // Single active message functor-handler void param
-  template <typename FunctorT, typename CbkT = DefType<V>>
-  CbkT makeCallbackFunctorSendVoid(NodeType const& node);
-
-  template <typename FunctorT, typename CbkT = DefType<V>>
-  CbkT makeCallbackFunctorBcastVoid();
+  template <typename FunctorT, bool is_bcast>
+  auto makeCallbackFunctor(NodeType node = uninitialized_destination);
 
   // Single active message anon func-handler
-  template <typename CbkT = DefType<V>>
-  CbkT makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn);
+  auto makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn);
 
-  template <typename T, typename CbkT = DefType<T>>
-  CbkT makeCallbackSingleAnon(LifetimeEnum life, FuncMsgType<T> fn);
+  template <typename T>
+  auto makeCallbackSingleAnon(LifetimeEnum life, FuncMsgType<T> fn);
 
-  template <typename T, typename U, typename CbkT = DefType<T>>
-  CbkT makeCallbackSingleAnon(LifetimeEnum life, U* u, FuncMsgCtxType<T, U> fn);
+  template <typename T, typename U>
+  auto makeCallbackSingleAnon(LifetimeEnum life, U* u, FuncMsgCtxType<T, U> fn);
 
-  template <typename U, typename CbkT = DefType<V>>
-  CbkT makeCallbackSingleAnon(LifetimeEnum life, U* u, FuncCtxType<U> fn);
+  template <typename U>
+  auto makeCallbackSingleAnon(LifetimeEnum life, U* u, FuncCtxType<U> fn);
 
-  // Single active message collection proxy send
-  template <
-    typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
-  >
-  CbkT makeCallbackSingleProxySend(typename ColT::ProxyType proxy);
-
-  template <
-    typename ColT, typename T, ColMemType<ColT,T> f, typename CbkT = DefType<T>
-  >
-  CbkT makeCallbackSingleProxySend(typename ColT::ProxyType proxy);
-
-  // Obj group send callback
-  template <
-    typename ObjT, typename T, ObjMemType<ObjT,T> f, typename CbkT = DefType<T>
-  >
-  CbkT makeCallbackObjGrpSend(objgroup::proxy::ProxyElm<ObjT> proxy);
-
-  // Obj group bcast callback
-  template <
-    typename ObjT, typename T, ObjMemType<ObjT,T> f, typename CbkT = DefType<T>
-  >
-  CbkT makeCallbackObjGrpBcast(objgroup::proxy::Proxy<ObjT> proxy);
-
-
-  // Single active message collection proxy bcast
-  template <
-    typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
-  >
-  CbkT makeCallbackSingleProxyBcast(ColProxyType<ColT> proxy);
-
-  // Single active message collection proxy bcast direct
-  template <
-    typename ColT, typename T, ColHanType<ColT,T>* f, typename CbkT = DefType<T>
-  >
-  CbkT makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy);
-
-  // Single active message collection proxy bcast direct (member)
-  template <
-    typename ColT, typename T, ColMemType<ColT,T> f, typename CbkT = DefType<T>
-  >
-  CbkT makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy);
+  // Proxy callback
+  template <auto f, bool is_bcast, typename ProxyT>
+  auto makeCallbackProxy(ProxyT proxy);
 
   // Multi-staged callback
   template <typename=void>

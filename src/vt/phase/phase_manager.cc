@@ -156,8 +156,6 @@ void PhaseManager::startup() {
   runHooks(PhaseHook::Start);
 }
 
-struct NextMsg : collective::ReduceNoneMsg {};
-
 void PhaseManager::nextPhaseCollective() {
   vtAbortIf(
     in_next_phase_collective_,
@@ -175,9 +173,7 @@ void PhaseManager::nextPhaseCollective() {
   auto proxy = objgroup::proxy::Proxy<PhaseManager>(proxy_);
 
   // Start with a reduction to sure all nodes are ready for this
-  auto cb = theCB()->makeBcast<PhaseManager, NextMsg, &PhaseManager::nextPhaseReduce>(proxy);
-  auto msg = makeMessage<NextMsg>();
-  proxy.reduce(msg.get(), cb);
+  proxy.allreduce<&PhaseManager::nextPhaseReduce>();
 
   theSched()->runSchedulerWhile([this]{ return not reduce_next_phase_done_; });
   reduce_next_phase_done_ = false;
@@ -203,9 +199,7 @@ void PhaseManager::nextPhaseCollective() {
   runHooks(PhaseHook::Start);
 
   // Start with a reduction to sure all nodes are ready for this
-  auto cb2 = theCB()->makeBcast<PhaseManager, NextMsg, &PhaseManager::nextPhaseDone>(proxy);
-  auto msg2 = makeMessage<NextMsg>();
-  proxy.reduce(msg2.get(), cb2);
+  proxy.allreduce<&PhaseManager::nextPhaseDone>();
 
   theSched()->runSchedulerWhile([this]{ return not reduce_finished_; });
   reduce_finished_ = false;
@@ -213,11 +207,11 @@ void PhaseManager::nextPhaseCollective() {
   in_next_phase_collective_ = false;
 }
 
-void PhaseManager::nextPhaseReduce(NextMsg* msg) {
+void PhaseManager::nextPhaseReduce() {
   reduce_next_phase_done_ = true;
 }
 
-void PhaseManager::nextPhaseDone(NextMsg* msg) {
+void PhaseManager::nextPhaseDone() {
   reduce_finished_ = true;
 }
 

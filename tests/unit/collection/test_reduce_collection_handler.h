@@ -47,12 +47,9 @@
 #include "test_reduce_collection_common.h"
 #include "test_parallel_harness.h"
 
-#define ENABLE_REDUCE_EXPR_CALLBACK 0
-
 namespace vt { namespace tests { namespace unit { namespace reduce {
 
 void colHanBasic(MyCol* col) {
-
   auto const& idx = col->getIndex();
   vt_debug_print(
     normal, reduce,
@@ -60,18 +57,13 @@ void colHanBasic(MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = vt::makeMessage<MyReduceMsg>(idx.x());
-  auto proxy = col->getProxy();
-  vt_debug_print(normal, reduce, "msg->num={}\n", reduce_msg->num);
+  auto proxy = col->getCollectionProxy();
 
-  int const expected = collect_size * (collect_size - 1) / 2;
-
-  vt::theCollection()->reduceMsg<
-    MyCol, MyReduceMsg, reducePlus<expected>
-  >(proxy, reduce_msg.get());
+  int val = idx.x();
+  proxy.reduce<&MyCol::checkNum, collective::PlusOp>(proxy[0], val);
 }
 
-void colHanVec(MyCol* col) {
+void colHanBasicAR(MyCol* col) {
   auto const& idx = col->getIndex();
   vt_debug_print(
     normal, reduce,
@@ -79,18 +71,9 @@ void colHanVec(MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = vt::makeMessage<SysMsgVec>(static_cast<double>(idx.x()));
-  auto proxy = col->getProxy();
-  vt_debug_print(
-    normal, reduce,
-    "msg->vec.size={}\n", reduce_msg->getConstVal().vec.size()
-  );
-
-  vt::theCollection()->reduceMsg<
-    MyCol,
-    SysMsgVec,
-    SysMsgVec::msgHandler<SysMsgVec, vt::collective::PlusOp<VectorPayload>, CheckVec>
-  >(proxy, reduce_msg.get());
+  auto proxy = col->getCollectionProxy();
+  int val = idx.x();
+  proxy.allreduce<&MyCol::checkNum, collective::PlusOp>(val);
 }
 
 void colHanVecProxy(MyCol* col) {
@@ -101,16 +84,13 @@ void colHanVecProxy(MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = vt::makeMessage<SysMsgVec>(static_cast<double>(idx.x()));
   auto proxy = col->getCollectionProxy();
-  vt_debug_print(
-    normal, reduce,
-    "msg->vec.size={}\n", reduce_msg->getConstVal().vec.size()
-  );
-  proxy.reduce<vt::collective::PlusOp<VectorPayload>, CheckVec>(reduce_msg.get());
+
+  VectorPayload vp{static_cast<double>(idx.x())};
+  proxy.reduce<&MyCol::checkVec, vt::collective::PlusOp>(proxy[0], vp);
 }
 
-void colHanVecProxyCB(MyCol* col) {
+void colHanVecProxyAR(MyCol* col) {
   auto const& idx = col->getIndex();
   vt_debug_print(
     normal, reduce,
@@ -118,16 +98,10 @@ void colHanVecProxyCB(MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = vt::makeMessage<SysMsgVec>(static_cast<double>(idx.x()));
   auto proxy = col->getCollectionProxy();
-  vt_debug_print(
-    normal, reduce,
-    "msg->vec.size={}\n", reduce_msg->getConstVal().vec.size()
-  );
 
-  auto cb = vt::theCB()->makeSend<CheckVec>(0);
-  vtAssertExpr(cb.valid());
-  proxy.reduce<vt::collective::PlusOp<VectorPayload>>(reduce_msg.get(),cb);
+  VectorPayload vp{static_cast<double>(idx.x())};
+  proxy.allreduce<&MyCol::checkVec, vt::collective::PlusOp>(vp);
 }
 
 void colHanNoneCB(MyCol* col) {
@@ -138,92 +112,9 @@ void colHanNoneCB(MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto rmsg = vt::makeMessage<MyReduceNoneMsg>();
   auto proxy = col->getCollectionProxy();
-  auto cb = vt::theCB()->makeSend<NoneReduce>(0);
-  vtAssertExpr(cb.valid());
-  proxy.reduce(rmsg.get(),cb);
+  proxy.reduce<&MyCol::noneReduce>(proxy[0]);
 }
-
-// Using reduceExpr with callback is broken and has fundamental flaws.
-// These tests are disabled for now.
-#if ENABLE_REDUCE_EXPR_CALLBACK
-void colHanPartial(MyCol* col) {
-  auto const& idx = col->getIndex();
-
-  vt_debug_print(
-    normal, reduce,
-    "colHanPartial: received: ptr={}, idx={}, getIndex={}\n",
-    print_ptr(col), idx.x(), col->getIndex().x()
-  );
-
-  auto reduce_msg = makeMessage<MyReduceMsg>(idx.x());
-  auto proxy = col->getProxy();
-  vt_debug_print(normal, reduce, "msg->num={}\n", reduce_msg->num);
-
-  int const expected = index_tresh * (index_tresh - 1) / 2;
-
-  theCollection()->reduceMsgExpr<
-    MyCol, MyReduceMsg, reducePlus<expected>
-  >(
-    proxy,reduce_msg.get(), [](Index1D const idx) -> bool {
-      return idx.x() < index_tresh;
-    }
-  );
-}
-
-void colHanPartialMulti(MyCol* col) {
-  auto const& idx = col->getIndex();
-  auto const& grouping = idx.x() % index_tresh;
-
-  vt_debug_print(
-    normal, reduce,
-    "colHanPartialMulti: received: ptr={}, idx={}, getIndex={}\n",
-    print_ptr(col), idx.x(), col->getIndex().x()
-  );
-
-  auto reduce_msg = makeMessage<MyReduceMsg>(idx.x());
-  auto proxy = col->getProxy();
-  vt_debug_print(normal, reduce, "msg->num={}\n", reduce_msg->num);
-
-//  template parameters deduction fails within 'reduceMsgExpr'
-//  if 'expected' is not resolved at compile-time.
-//  So just disable expected value checking for now.
-
-//  int expected = 0;
-//  for (int value = grouping; value < collect_size; value += index_tresh) {
-//    expected += value;
-//  }
-
-  theCollection()->reduceMsgExpr<
-    MyCol, MyReduceMsg, reducePlus<collect_size,false>
-  >(
-    proxy,reduce_msg.get(), [=](Index1D const idx) -> bool {
-      return idx.x() % index_tresh == grouping;
-    }, no_epoch, grouping
-  );
-}
-
-void colHanPartialProxy(MyCol* col) {
-  auto const& idx = col->getIndex();
-
-  vt_debug_print(
-    normal, reduce,
-    "colHanPartialProxy: received: ptr={}, idx={}, getIndex={}\n",
-    print_ptr(col), idx.x(), col->getIndex().x()
-  );
-
-  auto reduce_msg = makeMessage<MyReduceMsg>(idx.x());
-  auto proxy = col->getCollectionProxy();
-  vt_debug_print(normal, reduce, "msg->num={}\n", reduce_msg->num);
-
-  proxy.reduceExpr< MyReduceMsg, reducePlus<index_tresh> >(
-    reduce_msg.get(), [](Index1D const& idx) -> bool {
-      return idx.x() < index_tresh;
-    }
-  );
-}
-#endif
 
 }}}} // end namespace vt::tests::unit::reduce
 #endif /*INCLUDED_UNIT_COLLECTION_TEST_REDUCE_COLLECTION_HANDLER_H*/

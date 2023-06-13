@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  reduce.cc
+//                               hello_reduce.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -40,65 +40,23 @@
 // *****************************************************************************
 //@HEADER
 */
-#include "common/test_harness.h"
-#include <vt/collective/collective_ops.h>
-#include <vt/objgroup/manager.h>
-#include <vt/messaging/active.h>
 
-#include <fmt-vt/core.h>
+#include <vt/transport.h>
 
-using namespace vt;
-using namespace vt::tests::perf::common;
-
-static constexpr int num_iters = 100;
-
-struct MyTest : PerfTestHarness { };
-
-struct NodeObj {
-  explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
-
-  void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
-
-  struct MyMsg : vt::Message {};
-
-  void reduceComplete() {
-    reduce_counter_++;
-    test_obj_->StopTimer(fmt::format("{} reduce", i));
-    test_obj_->GetMemoryUsage();
-    if (i < num_iters) {
-      i++;
-      auto this_node = theContext()->getNode();
-      proxy_[this_node].send<MyMsg, &NodeObj::perfReduce>();
-    } else if (theContext()->getNode() == 0) {
-      theTerm()->enableTD();
-    }
-  }
-
-  void perfReduce(MyMsg* in_msg) {
-    test_obj_->StartTimer(fmt::format("{} reduce", i));
-    proxy_.allreduce<&NodeObj::reduceComplete>();
-  }
-
-private:
-  MyTest* test_obj_ = nullptr;
-  vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
-  int reduce_counter_ = -1;
-  int i = 0;
-};
-
-VT_PERF_TEST(MyTest, test_reduce) {
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
-    "test_reduce", this
-  );
-
-  if (theContext()->getNode() == 0) {
-    theTerm()->disableTD();
-  }
-
-  grp_proxy[my_node_].invoke<&NodeObj::initialize>();
-
-  using MsgType = typename NodeObj::MyMsg;
-  grp_proxy[my_node_].send<MsgType, &NodeObj::perfReduce>();
+void reduceResult(int result, double result2) {
+  auto num_nodes = vt::theContext()->getNumNodes();
+  fmt::print("reduction value={}, {}\n", result, result2);
+  vtAssert(num_nodes * 50 == result, "Must be equal");
 }
 
-VT_PERF_TEST_MAIN()
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
+
+  vt::NodeType const root = 0;
+
+  auto r = vt::theCollective()->global();
+  r->reduce<reduceResult, vt::collective::PlusOp>(vt::Node{root}, 50, 52.334);
+
+  vt::finalize();
+  return 0;
+}

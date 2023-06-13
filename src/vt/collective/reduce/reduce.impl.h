@@ -50,6 +50,7 @@
 #include "vt/messaging/active.h"
 #include "vt/messaging/message.h"
 #include "vt/runnable/make_runnable.h"
+#include "vt/collective/reduce/get_reduce_stamp.h"
 
 namespace vt { namespace collective { namespace reduce {
 
@@ -81,6 +82,29 @@ void Reduce::reduceRootRecv(MsgT* msg) {
   runnable::makeRunnable(m, false, handler, from_node)
     .withTDEpochFromMsg()
     .run();
+}
+
+template <
+  auto f,
+  template <typename Arg> class Op,
+  typename... Params
+>
+Reduce::PendingSendType Reduce::reduce(Node root, Params&&... params) {
+  using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+  using OpT = Op<Tuple>;
+  return reduce<OpT, f>(root, std::forward<Params>(params)...);
+}
+
+template <typename Op, auto f, typename... Params>
+Reduce::PendingSendType Reduce::reduce(Node root, Params&&... params) {
+  using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+  using MsgT = ReduceTMsg<Tuple>;
+  using GetReduceStamp = collective::reduce::GetReduceStamp<void, Params...>;
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Params>(params)...);
+  auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
+  msg->root_handler_ = han;
+
+  return reduce<Op, operators::NoCombine, MsgT>(root.get(), msg.get(), stamp, 1);
 }
 
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>

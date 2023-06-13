@@ -98,7 +98,7 @@ CallbackRawBaseSingle::CallbackRawBaseSingle(
 // ) : pipe_(in_pipe), cb_(SendColDirCB{in_handler,in_vrt_handler,in_index})
 //  { }
 
-void CallbackRawBaseSingle::send() {
+void CallbackRawBaseSingle::sendVoid() {
   switch (cb_.active_) {
   case CallbackEnum::SendMsgCB:
     cb_.u_.send_msg_cb_.triggerVoid(pipe_);

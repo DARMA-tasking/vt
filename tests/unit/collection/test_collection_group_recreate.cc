@@ -49,26 +49,25 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct MyReduceMsg : vt::collective::ReduceTMsg<int> {
-  explicit MyReduceMsg(int const in_num)
-    : vt::collective::ReduceTMsg<int>(in_num)
-  { }
-};
-
 struct MyCol : vt::Collection<MyCol,vt::Index1D> {
-  struct TestMsg : vt::CollectionMessage<MyCol> {
-    explicit TestMsg(vt::Callback<MyReduceMsg> in_cb) : cb(in_cb) { }
-    vt::Callback<MyReduceMsg> cb;
-  };
-  struct TestMsg2 : vt::CollectionMessage<MyCol> {};
-
-  void doWork(TestMsg2* msg) {}
-
-  void doReduce(TestMsg* msg) {
+  void doReduce() {
     auto const proxy = getCollectionProxy();
-    auto reduce_msg = makeMessage<MyReduceMsg>(getIndex().x());
-    proxy.reduce<collective::PlusOp<int>>(reduce_msg.get(),msg->cb);
+    int val = getIndex().x();
+    proxy.allreduce<&MyCol::checkVal, collective::PlusOp>(val);
   }
+
+  void checkVal(int val) {
+    cb_counter++;
+    fmt::print("final num={} cb_counter={}\n", val, cb_counter);
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    Collection<MyCol,vt::Index1D>::serialize(s);
+    s | cb_counter;
+  }
+
+  int cb_counter = 0;
 };
 
 struct TestCollectionGroupRecreate : TestParallelHarness { };
@@ -85,23 +84,16 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
     "test_collection_group_recreate_1"
   );
 
-  int cb_counter = 0;
-
   /// Broadcast to do a reduction over the current group
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
-        vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
-          cb_counter++;
-          fmt::print("at root: final num={}\n", m->getVal());
-        }
-      );
-      proxy.broadcast<MyCol::TestMsg,&MyCol::doReduce>(cb);
+      proxy.broadcast<&MyCol::doReduce>();
     }
   });
 
-  if (this_node == 0) {
-    EXPECT_EQ(cb_counter, 1);
+  auto set = theCollection()->getLocalIndices(proxy);
+  if (set.size() > 0) {
+    EXPECT_EQ(proxy[*set.begin()].tryGetLocalPtr()->cb_counter, 1);
   }
 
   /// Run RotateLB to make the previous group invalid!
@@ -118,18 +110,13 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   // Try to do another reduction; should fail if group is not setup correctly
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
-        vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
-          cb_counter++;
-          fmt::print("at root: final num={}\n", m->getVal());
-        }
-      );
-      proxy.broadcast<MyCol::TestMsg,&MyCol::doReduce>(cb);
+      proxy.broadcast<&MyCol::doReduce>();
     }
   });
 
-  if (this_node == 0) {
-    EXPECT_EQ(cb_counter, 2);
+  set = theCollection()->getLocalIndices(proxy);
+  if (set.size() > 0) {
+    EXPECT_EQ(proxy[*set.begin()].tryGetLocalPtr()->cb_counter, 2);
   }
 
   vt::runInEpochCollective([&]{
@@ -139,18 +126,13 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   // Try to do another reduction; should fail if group is not setup correctly
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
-        vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
-          cb_counter++;
-          fmt::print("at root: final num={}\n", m->getVal());
-        }
-      );
-      proxy.broadcast<MyCol::TestMsg,&MyCol::doReduce>(cb);
+      proxy.broadcast<&MyCol::doReduce>();
     }
   });
 
-  if (this_node == 0) {
-    EXPECT_EQ(cb_counter, 3);
+  set = theCollection()->getLocalIndices(proxy);
+  if (set.size() > 0) {
+    EXPECT_EQ(proxy[*set.begin()].tryGetLocalPtr()->cb_counter, 3);
   }
 
 }

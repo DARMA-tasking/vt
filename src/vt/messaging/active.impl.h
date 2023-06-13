@@ -327,7 +327,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
   bool deliver_to_sender,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT, MsgT, true>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   setBroadcastType(msgptr->env, deliver_to_sender);
   return sendMsgImpl<MsgT>(
@@ -351,7 +351,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT, MsgT, true>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
@@ -371,7 +371,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT, MsgT, true>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   return sendMsgImpl<MsgT>(
     broadcast_dest, han, msgptr, tag
@@ -384,7 +384,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT, MsgT, true>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }

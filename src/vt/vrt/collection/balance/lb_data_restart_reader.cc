@@ -185,16 +185,14 @@ void LBDataRestartReader::determinePhasesToMigrate() {
   });
 
   runInEpochCollective("LBDataRestartReader::computeDistributionChanges", [&]{
-    auto cb = theCB()->makeBcast<
-      LBDataRestartReader,ReduceMsg,&LBDataRestartReader::reduceDistroChanges
-    >(proxy_);
-    auto msg = makeMessage<ReduceMsg>(std::move(local_changed_distro));
-    proxy_.reduce<collective::OrOp<std::vector<bool>>>(msg, cb);
+    proxy_.allreduce<
+      &LBDataRestartReader::reduceDistroChanges, collective::OrOp
+    >(std::move(local_changed_distro));
   });
 }
 
-void LBDataRestartReader::reduceDistroChanges(ReduceMsg* msg) {
-  changed_distro_ = std::move(msg->getMoveVal());
+void LBDataRestartReader::reduceDistroChanges(std::vector<bool> const& vec) {
+  changed_distro_ = std::move(vec);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -49,17 +49,17 @@
 namespace vt { namespace util {
 
 template <typename FunctorT>
-struct FunctorTraits;
+struct SimpleFunctorTraits;
 
 template <typename FunctorT, typename ReturnT, typename MsgT>
-struct FunctorTraits<ReturnT(FunctorT::*)(MsgT*)> {
+struct SimpleFunctorTraits<ReturnT(FunctorT::*)(MsgT*)> {
   using FunctorType = FunctorT;
   using MessageType = MsgT;
   using ReturnType  = ReturnT;
 };
 
 template <typename FunctorT, typename ReturnT, typename MsgT>
-struct FunctorTraits<ReturnT(FunctorT::*)(MsgT*) const> {
+struct SimpleFunctorTraits<ReturnT(FunctorT::*)(MsgT*) const> {
   using FunctorType = FunctorT;
   using MessageType = MsgT;
   using ReturnType  = ReturnT;
@@ -68,7 +68,7 @@ struct FunctorTraits<ReturnT(FunctorT::*)(MsgT*) const> {
 template <
   typename FunctorT,
   typename FunctorFnT = decltype(&FunctorT::operator()),
-  typename Traits = FunctorTraits<FunctorFnT>,
+  typename Traits = SimpleFunctorTraits<FunctorFnT>,
   typename MessageT = typename Traits::MessageType
 >
 struct FunctorExtractor {

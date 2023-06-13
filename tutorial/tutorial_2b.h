@@ -57,7 +57,8 @@ struct ColRedMsg;
 //                \                          \       /
 struct ReduceCol : ::vt::Collection<ReduceCol,Index1D> {
 
-  void reduceHandler(ColRedMsg* msg);
+  void reduceHandler();
+  void reduceTarget(int value);
 
 };
 
@@ -66,24 +67,7 @@ struct ReduceCol : ::vt::Collection<ReduceCol,Index1D> {
 //                \                                 /
 struct ColRedMsg : ::vt::CollectionMessage<ReduceCol> { };
 
-//                    Reduce Message VT Base Class
-//              \-------------------------------------------/
-//               \                                         /
-//                \                           Reduce Type /
-//                 \                          \----------/
-//                  \                          \        /
-struct ReduceMsg : ::vt::collective::ReduceTMsg<int32_t> {};
-
-// Functor that is the target of the collection reduction
-struct PrintReduceResult {
-  void operator()(ReduceMsg* msg) {
-    fmt::print("collection reduce value={}\n", msg->getConstVal());
-    assert(32 * 100 == msg->getConstVal());
-  }
-};
-
-
-void ReduceCol::reduceHandler(ColRedMsg* msg) {
+void ReduceCol::reduceHandler() {
   auto cur_node = theContext()->getNode();
   (void)cur_node;  // don't warn about unused variable
   auto idx = this->getIndex();
@@ -91,16 +75,19 @@ void ReduceCol::reduceHandler(ColRedMsg* msg) {
 
   //::fmt::print("MyCol::reduceHandler index={}, node={}\n", idx.x(), cur_node);
 
-  using ReduceOp = vt::collective::PlusOp<int32_t>;
-
   auto proxy = getCollectionProxy();
-  auto reduce_msg = makeMessage<ReduceMsg>();
-
-  // Get a reference to the value to set it in this reduce msg
-  reduce_msg->getVal() = 100;
+  int val = 100;
 
   // Invoke the reduce!
-  proxy.reduce<ReduceOp,PrintReduceResult>(reduce_msg.get());
+  proxy.allreduce<&ReduceCol::reduceTarget, collective::PlusOp>(val);
+}
+
+int number_of_elements = 32;
+
+void ReduceCol::reduceTarget(int value) {
+  fmt::print("collection reduce value={}\n", value);
+  assert(number_of_elements * 100 == value);
+
 }
 
 // Tutorial code to demonstrate reducing a collection
@@ -114,8 +101,8 @@ static inline void collectionReduce() {
    */
 
   if (this_node == 0) {
-    // Range of 32 elements for the collection
-    auto range = vt::Index1D(32);
+    // Range of `number_of_elements` elements for the collection
+    auto range = vt::Index1D(number_of_elements);
 
     // Construct the collection in a rooted manner. By default, the elements
     // will be block mapped to the nodes
@@ -126,7 +113,7 @@ static inline void collectionReduce() {
 
     // Broadcast a message to the entire collection. The reduceHandler will be
     // invoked on every element to the collection
-    proxy.broadcast<ColRedMsg,&ReduceCol::reduceHandler>();
+    proxy.broadcast<&ReduceCol::reduceHandler>();
   }
 }
 /// [Tutorial2B]

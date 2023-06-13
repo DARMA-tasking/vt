@@ -72,16 +72,6 @@ private:
   Transfer transfer_;
 };
 
-struct CountMsg : vt::collective::ReduceTMsg<int32_t> {
-  using MessageParentType = vt::collective::ReduceTMsg<int32_t>;
-  vt_msg_serialize_prohibited();
-
-  CountMsg() = delete;
-  explicit CountMsg(int32_t in_num)
-    : vt::collective::ReduceTMsg<int32_t>(in_num)
-  {}
-};
-
 struct CommMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required();

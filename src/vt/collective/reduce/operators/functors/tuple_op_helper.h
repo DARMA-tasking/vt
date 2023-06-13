@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  reduce.cc
+//                              tuple_op_helper.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -40,65 +40,55 @@
 // *****************************************************************************
 //@HEADER
 */
-#include "common/test_harness.h"
-#include <vt/collective/collective_ops.h>
-#include <vt/objgroup/manager.h>
-#include <vt/messaging/active.h>
 
-#include <fmt-vt/core.h>
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_TUPLE_OP_HELPER_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_TUPLE_OP_HELPER_H
 
-using namespace vt;
-using namespace vt::tests::perf::common;
+#include <tuple>
 
-static constexpr int num_iters = 100;
+namespace vt { namespace collective { namespace reduce { namespace operators {
 
-struct MyTest : PerfTestHarness { };
+template <typename Op, int cur, int max, typename enabled_ = void>
+struct ApplyOp;
 
-struct NodeObj {
-  explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
-
-  void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
-
-  struct MyMsg : vt::Message {};
-
-  void reduceComplete() {
-    reduce_counter_++;
-    test_obj_->StopTimer(fmt::format("{} reduce", i));
-    test_obj_->GetMemoryUsage();
-    if (i < num_iters) {
-      i++;
-      auto this_node = theContext()->getNode();
-      proxy_[this_node].send<MyMsg, &NodeObj::perfReduce>();
-    } else if (theContext()->getNode() == 0) {
-      theTerm()->enableTD();
-    }
+template <typename Op, int cur, int max>
+struct ApplyOp<Op, cur, max, std::enable_if_t<cur != max>> {
+  template <typename Tuple1, typename Tuple2>
+  static void apply(Tuple1& t1, Tuple2 const& t2) {
+    using CurType = std::decay_t<std::tuple_element_t<cur, Tuple1>>;
+    using OpType = typename Op::template GetAsType<CurType>;
+    OpType()(std::get<cur>(t1),std::get<cur>(t2));
+    ApplyOp<Op, cur+1, max>::apply(t1, t2);
   }
-
-  void perfReduce(MyMsg* in_msg) {
-    test_obj_->StartTimer(fmt::format("{} reduce", i));
-    proxy_.allreduce<&NodeObj::reduceComplete>();
-  }
-
-private:
-  MyTest* test_obj_ = nullptr;
-  vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
-  int reduce_counter_ = -1;
-  int i = 0;
 };
 
-VT_PERF_TEST(MyTest, test_reduce) {
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
-    "test_reduce", this
-  );
+template <typename Op, int cur, int max>
+struct ApplyOp<Op, cur, max, std::enable_if_t<cur == max>> {
+  template <typename Tuple1, typename Tuple2>
+  static void apply(Tuple1& t1, Tuple2 const& t2) { }
+};
 
-  if (theContext()->getNode() == 0) {
-    theTerm()->disableTD();
-  }
+//
+// This is the cleaner way that is rejected by NVCC and Intel
+//
+// template <
+//   template <typename X> class Op,
+//   typename... Ts, typename... Us, std::size_t... I
+// >
+// void opTuple(
+//   std::tuple<Ts...>& t1, std::tuple<Us...> const& t2, std::index_sequence<I...>
+// ) {
+//   std::forward_as_tuple(
+//     (Op<std::decay_t<decltype(std::get<I>(t1))>>()(std::get<I>(t1),std::get<I>(t2)),0)...
+//   );
+// }
 
-  grp_proxy[my_node_].invoke<&NodeObj::initialize>();
-
-  using MsgType = typename NodeObj::MyMsg;
-  grp_proxy[my_node_].send<MsgType, &NodeObj::perfReduce>();
+template <typename Op, typename Tuple1, typename Tuple2>
+void opTuple(Tuple1& t1, Tuple2 const& t2) {
+  // opTuple<Op>(t1, t2, std::make_index_sequence<sizeof...(Ts)>{});
+  ApplyOp<Op, 0, std::tuple_size<Tuple1>{}>::apply(t1, t2);
 }
 
-VT_PERF_TEST_MAIN()
+}}}} /* end namespace vt::collective::reduce::operators */
+
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_TUPLE_OP_HELPER_H*/

@@ -49,6 +49,7 @@
 #include "vt/vrt/proxy/base_collection_proxy.h"
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/collective/reduce/get_reduce_stamp.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -56,6 +57,79 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 Reducable<ColT,IndexT,BaseProxyT>::Reducable(VirtualProxyType const in_proxy)
   : BaseProxyT(in_proxy)
 { }
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <auto f, template <typename Arg> class Op, typename... Args>
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::allreduce(
+  Args&&... args
+) const {
+  using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+  using MsgT = collective::ReduceTMsg<Tuple>;
+  using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
+  auto cb = theCB()->makeBcast<f>(*this);
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
+  msg->setCallback(cb);
+  auto const root_node = 0;
+  auto const proxy = this->getProxy();
+  return theCollection()->reduceMsg<
+    ColT,
+    MsgT,
+    &MsgT::template msgHandler<
+      MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >(proxy, msg.get(), stamp, root_node);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <auto f, template <typename Arg> class Op, typename Target, typename... Args>
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
+  Target target,
+  Args&&... args
+) const {
+  using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+  using MsgT = collective::ReduceTMsg<Tuple>;
+  using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
+
+  auto cb = theCB()->makeSend<f>(target);
+
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
+  msg->setCallback(cb);
+  auto const root_node = 0;
+  auto const proxy = this->getProxy();
+
+  return theCollection()->reduceMsg<
+    ColT,
+    MsgT,
+    &MsgT::template msgHandler<
+      MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >(proxy, msg.get(), stamp, root_node);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <template <typename Arg> class Op, typename... CBArgs, typename... Args>
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
+  vt::Callback<CBArgs...> cb,
+  Args&&... args
+) const {
+  using CallbackT = vt::Callback<CBArgs...>;
+  using Tuple = typename CallbackT::TupleType;
+  using MsgT = collective::ReduceTMsg<Tuple>;
+  using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
+
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
+  msg->setCallback(cb);
+  auto const root_node = 0;
+  auto const proxy = this->getProxy();
+
+  return theCollection()->reduceMsg<
+    ColT,
+    MsgT,
+    &MsgT::template msgHandler<
+      MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >(proxy, msg.get(), stamp, root_node);
+}
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
@@ -66,8 +140,7 @@ messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
   msg->setCallback(cb);
   vt_debug_print(
     normal, reduce,
-    "Reducable: valid={} {}, ptr={}\n", cb.valid(), msg->getCallback().valid(),
-    print_ptr(msg)
+    "Reducable: ptr={}\n", print_ptr(msg)
   );
   auto const root_node = 0;
   return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,stamp,root_node);

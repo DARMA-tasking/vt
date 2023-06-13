@@ -49,7 +49,7 @@
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
 template <typename T>
-struct ReduceTMsg;
+struct ReduceDataMsg;
 
 }}}} /* end namespace vt::collective::reduce::operators */
 
@@ -58,14 +58,14 @@ namespace vt { namespace termination { namespace graph {
 // Must be templated (where T = graph::EpochGraph) because of the circular
 // dependency between termination.h and reduce.h
 template <typename T>
-struct EpochGraphMsg : collective::reduce::operators::ReduceTMsg<T> {
-  using MessageParentType = collective::reduce::operators::ReduceTMsg<T>;
+struct EpochGraphMsg : collective::reduce::operators::ReduceDataMsg<T> {
+  using MessageParentType = collective::reduce::operators::ReduceDataMsg<T>;
   vt_msg_serialize_if_needed_by_parent();
 
   EpochGraphMsg() = default;
 
   explicit EpochGraphMsg(std::shared_ptr<T> const& graph)
-    : collective::reduce::operators::ReduceTMsg<T>(*graph)
+    : collective::reduce::operators::ReduceDataMsg<T>(*graph)
   { }
 
   template <typename SerializerT>

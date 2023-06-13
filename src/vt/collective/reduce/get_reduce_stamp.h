@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  reduce.cc
+//                              get_reduce_stamp.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -40,65 +40,77 @@
 // *****************************************************************************
 //@HEADER
 */
-#include "common/test_harness.h"
-#include <vt/collective/collective_ops.h>
-#include <vt/objgroup/manager.h>
-#include <vt/messaging/active.h>
 
-#include <fmt-vt/core.h>
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_GET_REDUCE_STAMP_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_GET_REDUCE_STAMP_H
 
-using namespace vt;
-using namespace vt::tests::perf::common;
+#include "vt/config.h"
+#include "vt/collective/reduce/reduce_scope.h"
+#include "vt/messaging/message.h"
 
-static constexpr int num_iters = 100;
+#include <tuple>
+#include <utility>
+#include <type_traits>
 
-struct MyTest : PerfTestHarness { };
+namespace vt { namespace collective { namespace reduce {
 
-struct NodeObj {
-  explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
-
-  void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
-
-  struct MyMsg : vt::Message {};
-
-  void reduceComplete() {
-    reduce_counter_++;
-    test_obj_->StopTimer(fmt::format("{} reduce", i));
-    test_obj_->GetMemoryUsage();
-    if (i < num_iters) {
-      i++;
-      auto this_node = theContext()->getNode();
-      proxy_[this_node].send<MyMsg, &NodeObj::perfReduce>();
-    } else if (theContext()->getNode() == 0) {
-      theTerm()->enableTD();
-    }
+template <typename enable = void, typename... Args>
+struct GetReduceStamp : std::false_type {
+  template <typename MsgT>
+  static auto getStampMsg(Args&&... args) {
+    return
+      std::make_tuple(
+	collective::reduce::ReduceStamp{},
+	vt::makeMessage<MsgT>(std::tuple{std::forward<Args>(args)...})
+      );
   }
-
-  void perfReduce(MyMsg* in_msg) {
-    test_obj_->StartTimer(fmt::format("{} reduce", i));
-    proxy_.allreduce<&NodeObj::reduceComplete>();
-  }
-
-private:
-  MyTest* test_obj_ = nullptr;
-  vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
-  int reduce_counter_ = -1;
-  int i = 0;
 };
 
-VT_PERF_TEST(MyTest, test_reduce) {
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
-    "test_reduce", this
-  );
+template <>
+struct GetReduceStamp<
+  std::enable_if_t<std::is_same_v<void, void>>
+> : std::false_type {
+  template <typename MsgT>
+  static auto getStampMsg() {
+    return std::make_tuple(
+      collective::reduce::ReduceStamp{},
+      vt::makeMessage<MsgT>(std::tuple<>{})
+    );
+  }
+};
 
-  if (theContext()->getNode() == 0) {
-    theTerm()->disableTD();
+template <typename... Args>
+struct GetReduceStamp<
+  std::enable_if_t<
+    std::is_same_v<
+      std::decay_t<std::tuple_element_t<sizeof...(Args) - 1, std::tuple<Args...>>>,
+      collective::reduce::ReduceStamp
+    >
+  >,
+  Args...
+> : std::true_type {
+  template <typename... Params, std::size_t... Is>
+  static constexpr auto getMsgHelper(
+    std::tuple<Params...> tp, std::index_sequence<Is...>
+  ) {
+    return std::tuple{std::get<Is>(tp)...};
   }
 
-  grp_proxy[my_node_].invoke<&NodeObj::initialize>();
+  template <typename MsgT>
+  static auto getStampMsg(Args&&... args) {
+    auto tp = std::make_tuple(std::forward<Args>(args)...);
+    return
+      std::make_tuple(
+        std::get<sizeof...(Args) - 1>(tp),
+	vt::makeMessage<MsgT>(
+          getMsgHelper(
+            std::move(tp), std::make_index_sequence<sizeof...(Args) - 1>{}
+          )
+	)
+      );
+  }
+};
 
-  using MsgType = typename NodeObj::MyMsg;
-  grp_proxy[my_node_].send<MsgType, &NodeObj::perfReduce>();
-}
+}}} /* end namespace vt::collective::reduce */
 
-VT_PERF_TEST_MAIN()
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_GET_REDUCE_STAMP_H*/

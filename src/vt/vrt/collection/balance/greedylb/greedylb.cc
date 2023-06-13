@@ -192,14 +192,14 @@ void GreedyLB::loadStats() {
   }
 }
 
-void GreedyLB::collectHandler(GreedyCollectMsg* msg) {
+void GreedyLB::collectHandler(GreedyPayload payload) {
   vt_debug_print(
     normal, lb,
     "GreedyLB::collectHandler: entries size={}\n",
-    msg->getConstVal().getSample().size()
+    payload.getSample().size()
   );
 
-  for (auto&& elm : msg->getConstVal().getSample()) {
+  for (auto&& elm : payload.getSample()) {
     vt_debug_print(
       verbose, lb,
       "\t collectHandler: bin={}, num={}\n",
@@ -207,8 +207,8 @@ void GreedyLB::collectHandler(GreedyCollectMsg* msg) {
     );
   }
 
-  auto objs = std::move(msg->getVal().getSampleMove());
-  auto profile = std::move(msg->getVal().getLoadProfileMove());
+  auto objs = std::move(payload.getSampleMove());
+  auto profile = std::move(payload.getLoadProfileMove());
   runBalancer(std::move(objs),std::move(profile));
 }
 
@@ -219,10 +219,9 @@ void GreedyLB::reduceCollect() {
     TimeTypeWrapper(this_load / 1000),
     TimeTypeWrapper(this_load_begin / 1000), load_over.size()
   );
-  using MsgType = GreedyCollectMsg;
-  auto cb = vt::theCB()->makeSend<GreedyLB, MsgType, &GreedyLB::collectHandler>(proxy[0]);
-  auto msg = makeMessage<MsgType>(load_over,this_load);
-  proxy.template reduce<collective::PlusOp<GreedyPayload>>(msg.get(),cb);
+  proxy.reduce<&GreedyLB::collectHandler, collective::PlusOp>(
+    proxy[0], GreedyPayload{load_over, this_load}
+  );
 }
 
 void GreedyLB::runBalancer(

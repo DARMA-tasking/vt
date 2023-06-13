@@ -56,36 +56,25 @@ namespace vt { namespace tests { namespace unit { namespace bcast {
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct CallbackMsg : vt::Message {
-  CallbackMsg() = default;
-  explicit CallbackMsg(Callback<> in_cb) : cb_(in_cb) { }
-
-  Callback<> cb_;
-};
-
 struct DataMsg : vt::Message {
   DataMsg() = default;
   DataMsg(int in_a, int in_b, int in_c) : a(in_a), b(in_b), c(in_c) { }
   int a = 0, b = 0, c = 0;
 };
 
-struct CallbackDataMsg : vt::Message {
-  CallbackDataMsg() = default;
-  explicit CallbackDataMsg(Callback<DataMsg> in_cb) : cb_(in_cb) { }
-
-  Callback<DataMsg> cb_;
-};
-
 static int32_t called = 0;
 
-struct TestCallbackBcast : TestParallelHarness {
-  static void testHandler(CallbackDataMsg* msg) {
-    msg->cb_.send(1,2,3);
-  }
-  static void testHandlerEmpty(CallbackMsg* msg) {
-    msg->cb_.send();
-  }
-};
+template <typename... Ts>
+void applyCallback(vt::Callback<Ts...> cb, Ts... ts) {
+  cb.send(ts...);
+}
+
+template <typename MsgT, typename... Ts>
+void applyCallbackMsg(vt::Callback<MsgT> cb, Ts... ts) {
+  cb.send(ts...);
+}
+
+using TestCallbackBcast = TestParallelHarness;
 
 static void callbackFn(DataMsg* msg) {
   EXPECT_EQ(msg->a, 1);
@@ -115,7 +104,7 @@ TEST_F(TestCallbackBcast, test_callback_bcast_1) {
   theCollective()->barrier();
 
   runInEpochCollective([&]{
-    auto cb = theCB()->makeBcast<DataMsg,callbackFn>();
+    auto cb = theCB()->makeBcast<callbackFn>();
     cb.send(1,2,3);
   });
 
@@ -157,10 +146,11 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_1) {
   theCollective()->barrier();
 
   runInEpochCollective([&]{
-    auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-    auto cb = theCB()->makeBcast<DataMsg,callbackFn>();
-    auto msg = makeMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<testHandler>(next, msg);
+    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeBcast<callbackFn>();
+    theMsg()->send<applyCallbackMsg<DataMsg, int, int, int>>(
+      vt::Node{next}, cb, 1, 2, 3
+    );
   });
 
   EXPECT_EQ(called, 100 * theContext()->getNumNodes());
@@ -175,10 +165,11 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_2) {
   theCollective()->barrier();
 
   runInEpochCollective([&]{
-    auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeBcast<CallbackFunctor>();
-    auto msg = makeMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<testHandler>(next, msg);
+    theMsg()->send<applyCallbackMsg<DataMsg, int, int, int>>(
+      vt::Node{next}, cb, 1, 2, 3
+    );
   });
 
   EXPECT_EQ(called, 200 * theContext()->getNumNodes());
@@ -193,14 +184,140 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_3) {
   theCollective()->barrier();
 
   runInEpochCollective([&]{
-    auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeBcast<CallbackFunctorEmpty>();
-    auto msg = makeMessage<CallbackMsg>(cb);
-    theMsg()->sendMsg<testHandlerEmpty>(next, msg);
+    theMsg()->send<applyCallback<>>(vt::Node{next}, cb);
   });
 
   EXPECT_EQ(called, 300 * theContext()->getNumNodes());
 }
 
+static void callbackVoidFn() {
+  called = 100;
+}
+
+static void callbackParamFn(int a, int b) {
+  EXPECT_EQ(a, 10);
+  EXPECT_EQ(b, 20);
+  called = 100;
+}
+
+static void callbackParamSerFn(std::string a, int b) {
+  EXPECT_EQ(a, "hello");
+  EXPECT_EQ(b, 20);
+  called = 100;
+}
+
+struct CallbackVoidFn {
+  void operator()() {
+    called = 100;
+  }
+};
+
+struct CallbackParamFn {
+  void operator()(int a, int b) {
+    EXPECT_EQ(a, 10);
+    EXPECT_EQ(b, 20);
+    called = 100;
+  }
+};
+
+struct CallbackParamSerFn {
+  void operator()(std::string a, int b) {
+    EXPECT_EQ(a, "hello");
+    EXPECT_EQ(b, 20);
+    called = 100;
+  }
+};
+
+TEST_F(TestCallbackBcast, test_callback_bcast_param_1) {
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  called = 0;
+
+  runInEpochCollective([this_node, num_nodes]{
+    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeBcast<callbackVoidFn>();
+    theMsg()->send<applyCallback<>>(vt::Node{next}, cb);
+  });
+
+  EXPECT_EQ(called, 100);
+}
+
+TEST_F(TestCallbackBcast, test_callback_bcast_param_2) {
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  called = 0;
+
+  runInEpochCollective([this_node, num_nodes]{
+    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeBcast<callbackParamFn>();
+    theMsg()->send<applyCallback<int, int>>(vt::Node{next}, cb, 10, 20);
+  });
+
+  EXPECT_EQ(called, 100);
+}
+
+TEST_F(TestCallbackBcast, test_callback_bcast_param_3) {
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  called = 0;
+
+  runInEpochCollective([this_node, num_nodes]{
+    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeBcast<callbackParamSerFn>();
+    theMsg()->send<applyCallback<std::string, int>>(vt::Node{next}, cb, "hello", 20);
+  });
+
+  EXPECT_EQ(called, 100);
+}
+
+TEST_F(TestCallbackBcast, test_callback_bcast_param_4) {
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  called = 0;
+
+  runInEpochCollective([this_node, num_nodes]{
+    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeBcast<CallbackVoidFn>();
+    theMsg()->send<applyCallback<>>(vt::Node{next}, cb);
+  });
+
+  EXPECT_EQ(called, 100);
+}
+
+TEST_F(TestCallbackBcast, test_callback_bcast_param_5) {
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  called = 0;
+
+  runInEpochCollective([this_node, num_nodes]{
+    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeBcast<CallbackParamFn>();
+    theMsg()->send<applyCallback<int, int>>(vt::Node{next}, cb, 10, 20);
+  });
+
+  EXPECT_EQ(called, 100);
+}
+
+TEST_F(TestCallbackBcast, test_callback_bcast_param_6) {
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  called = 0;
+
+  runInEpochCollective([this_node, num_nodes]{
+    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeBcast<CallbackParamSerFn>();
+    theMsg()->send<applyCallback<std::string, int>>(vt::Node{next}, cb, "hello", 20);
+  });
+
+  EXPECT_EQ(called, 100);
+}
 
 }}}} // end namespace vt::tests::unit::bcast

@@ -88,12 +88,13 @@ struct ReduceMsg : SerializeSupported<
   NodeType reduce_root_ = uninitialized_destination;
   detail::ReduceIDImpl reduce_id_;
   HandlerType combine_handler_ = uninitialized_handler;
+  HandlerType root_handler_ = uninitialized_handler;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     MessageParentType::serialize(s);
     s | reduce_root_ | reduce_id_;
-    s | combine_handler_;
+    s | combine_handler_ | root_handler_;
   }
 };
 

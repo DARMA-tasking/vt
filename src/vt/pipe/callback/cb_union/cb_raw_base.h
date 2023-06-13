@@ -48,6 +48,8 @@
 #include "vt/pipe/callback/cb_union/cb_raw.h"
 #include "vt/pipe/signal/signal.h"
 #include "vt/registry/auto/auto_registry_common.h"
+#include "vt/utils/fntraits/fntraits.h"
+#include "vt/messaging/param_msg.h"
 
 #include <cassert>
 #include <type_traits>
@@ -67,7 +69,7 @@ static struct RawSendObjGrpTagType  { } RawSendObjGrpTag  { };
 static struct RawBcastObjGrpTagType { } RawBcastObjGrpTag { };
 #pragma GCC diagnostic pop
 
-template <typename MsgT>
+template <typename... Args>
 struct CallbackTyped;
 
 struct CallbackRawBaseSingle {
@@ -126,23 +128,30 @@ struct CallbackRawBaseSingle {
   bool null()  const { return cb_.null();  }
   bool valid() const { return cb_.valid(); }
 
-  template <typename MsgT, typename... Args>
-  void send(Args... args);
+  template <typename MsgT>
+  void send(MsgT* msg) {
+    sendMsg<MsgT>(msg);
+  }
 
   template <typename MsgT>
-  void send(MsgT* msg);
+  void send(messaging::MsgPtrThief<MsgT> msg) {
+    return sendMsg(msg);
+  }
+
+  template <typename MsgT>
+  void sendMsg(MsgT* msg);
 
   template <typename MsgT>
   void sendMsg(messaging::MsgPtrThief<MsgT> msg);
 
-  void send();
+  void sendVoid();
 
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
   PipeType getPipe() const { return pipe_; }
 
-  template <typename MsgT>
+  template <typename... Args>
   friend struct CallbackTyped;
 
 protected:
@@ -150,13 +159,9 @@ protected:
   GeneralCallback cb_;
 };
 
-template <typename MsgT>
+template <typename... Args>
 struct CallbackTyped : CallbackRawBaseSingle {
-  using VoidSigType   = signal::SigVoidType;
-  template <typename T, typename U=void>
-  using IsVoidType    = std::enable_if_t<std::is_same<T,VoidSigType>::value,U>;
-  template <typename T, typename U=void>
-  using IsNotVoidType = std::enable_if_t<!std::is_same<T,VoidSigType>::value,U>;
+  using TupleType = std::tuple<Args...>;
 
   CallbackTyped() = default;
   CallbackTyped(CallbackTyped const&) = default;
@@ -213,7 +218,7 @@ struct CallbackTyped : CallbackRawBaseSingle {
       )
   { }
 
-  bool operator==(CallbackTyped<MsgT> const& other)   const {
+  bool operator==(CallbackTyped<Args...> const& other)   const {
     return equal(other);
   }
   bool operator==(CallbackRawBaseSingle const& other) const {
@@ -225,35 +230,52 @@ struct CallbackTyped : CallbackRawBaseSingle {
     return other.pipe_ == pipe_ && other.cb_ == cb_;
   }
 
-  // Conversion operators to typed from untyped
-  CallbackTyped(CallbackRawBaseSingle const& other) {
-    pipe_ = other.pipe_;
-    cb_   = other.cb_;
-  }
-  CallbackTyped(CallbackRawBaseSingle&& other) {
-    pipe_ = std::move(other.pipe_);
-    cb_   = std::move(other.cb_);
-  }
-
-  template <typename MsgU=MsgT, typename... Args>
-  void send(Args... args) {
-    static_assert(std::is_same<MsgT, MsgU>::value, "Required exact type match");
-    sendMsg(makeMessage<MsgU>(std::forward<Args>(args)...));
-  }
-
-  template <typename MsgU>
-  IsNotVoidType<MsgU> send(MsgU* m) {
-    static_assert(std::is_same<MsgT,MsgU>::value, "Required exact type match");
-    CallbackRawBaseSingle::send<MsgU>(m);
-  }
-
-  void sendMsg(messaging::MsgPtrThief<MsgT> msg) {
+  template <typename... Params>
+  void sendTuple(std::tuple<Params...> tup) {
+    using Trait = CBTraits<Args...>;
+    using MsgT = messaging::ParamMsg<typename Trait::TupleType>;
+    auto msg = vt::makeMessage<MsgT>(std::move(tup));
     CallbackRawBaseSingle::sendMsg<MsgT>(msg);
   }
 
-  template <typename T=void, typename=IsVoidType<MsgT,T>>
-  void send() {
-    CallbackRawBaseSingle::send();
+  template <typename... Params>
+  void send(Params&&... params) {
+    using Trait = CBTraits<Args...>;
+    if constexpr (std::is_same_v<typename Trait::MsgT, NoMsg>) {
+      using MsgT = messaging::ParamMsg<typename Trait::TupleType>;
+      auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
+      CallbackRawBaseSingle::sendMsg<MsgT>(msg);
+    } else {
+      using MsgT = typename Trait::MsgT;
+      auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+      sendMsg(msg.get());
+    }
+  }
+
+  void send(typename CBTraits<Args...>::MsgT* msg) {
+    using MsgT = typename CBTraits<Args...>::MsgT;
+    if constexpr (not std::is_same_v<MsgT, NoMsg>) {
+      CallbackRawBaseSingle::sendMsg<MsgT>(msg);
+    }
+  }
+
+  template <typename MsgT>
+  void send(messaging::MsgPtrThief<MsgT> msg) {
+    CallbackRawBaseSingle::sendMsg<MsgT>(msg);
+  }
+
+  void sendMsg(messaging::MsgPtrThief<typename CBTraits<Args...>::MsgT> msg) {
+    using MsgT = typename CBTraits<Args...>::MsgT;
+    if constexpr (not std::is_same_v<MsgT, NoMsg>) {
+      CallbackRawBaseSingle::sendMsg<MsgT>(msg);
+    }
+  }
+
+  void sendMsg(typename CBTraits<Args...>::MsgT* msg) {
+    using MsgT = typename CBTraits<Args...>::MsgT;
+    if constexpr (not std::is_same_v<MsgT, NoMsg>) {
+      CallbackRawBaseSingle::sendMsg<MsgT>(msg);
+    }
   }
 
   template <typename SerializerT>
@@ -266,10 +288,8 @@ struct CallbackTyped : CallbackRawBaseSingle {
 
 namespace vt {
 
-using VoidMsg = pipe::signal::SigVoidType;
-
-template <typename MsgT = VoidMsg>
-using Callback = pipe::callback::cbunion::CallbackTyped<MsgT>;
+template <typename... Args>
+using Callback = pipe::callback::cbunion::CallbackTyped<Args...>;
 
 using CallbackU = pipe::callback::cbunion::CallbackRawBaseSingle;
 

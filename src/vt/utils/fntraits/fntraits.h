@@ -54,29 +54,44 @@ struct ObjFuncTraitsImpl;
 template <typename Obj, typename Return, typename Msg>
 struct ObjFuncTraitsImpl<
   std::enable_if_t<
-    std::is_convertible<Msg, vt::Message>::value or
-    std::is_convertible<Msg, vt::ShortMessage>::value or
-    std::is_convertible<Msg, vt::EpochMessage>::value or
-    std::is_convertible<Msg, vt::PayloadMessage>::value
+    (std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value)
+    and
+    std::is_pointer<Obj>::value
   >,
-  Return(*)(Obj*, Msg*)
+  Return(*)(Obj, Msg*)
 > {
   static constexpr bool is_member = false;
-  using ObjT = Obj;
+  using ObjT = std::remove_pointer_t<Obj>;
   using MsgT = Msg;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<MsgT>;
 };
 
 template <typename Obj, typename Return>
 struct ObjFuncTraitsImpl<
-  std::enable_if_t<std::is_same_v<void, void>>,
-  Return(*)(Obj*)
+  std::enable_if_t<
+    not (
+      std::is_convertible<Obj, vt::Message*>::value or
+      std::is_convertible<Obj, vt::ShortMessage*>::value or
+      std::is_convertible<Obj, vt::EpochMessage*>::value or
+      std::is_convertible<Obj, vt::PayloadMessage*>::value
+    ) and
+    std::is_pointer<Obj>::value
+  >,
+  Return(*)(Obj)
 > {
   static constexpr bool is_member = false;
-  using ObjT = Obj;
+  using ObjT = std::remove_pointer_t<Obj>;
   using MsgT = NoMsg;
+  using Arg1 = Obj;
   using ReturnT = Return;
   using TupleType = std::tuple<>;
+  template <template <typename...> class U>
+  using WrapType = U<>;
 };
 
 template <typename Obj, typename Return, typename Arg, typename... Args>
@@ -94,17 +109,19 @@ struct ObjFuncTraitsImpl<
   static constexpr bool is_member = false;
   using ObjT = Obj;
   using MsgT = NoMsg;
-  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using TupleType = WrapType<std::tuple>;
 };
 
 template <typename Obj, typename Return, typename Msg>
 struct ObjFuncTraitsImpl<
   std::enable_if_t<
-    std::is_convertible<Msg, vt::Message>::value or
-    std::is_convertible<Msg, vt::ShortMessage>::value or
-    std::is_convertible<Msg, vt::EpochMessage>::value or
-    std::is_convertible<Msg, vt::PayloadMessage>::value
+    std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value
   >,
   Return(Obj::*)(Msg*)
 > {
@@ -112,6 +129,8 @@ struct ObjFuncTraitsImpl<
   using ObjT = Obj;
   using MsgT = Msg;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<MsgT>;
 };
 
 template <typename Obj, typename Return>
@@ -124,6 +143,8 @@ struct ObjFuncTraitsImpl<
   using MsgT = NoMsg;
   using TupleType = std::tuple<>;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<>;
 };
 
 template <typename Obj, typename Return, typename Arg, typename... Args>
@@ -141,43 +162,99 @@ struct ObjFuncTraitsImpl<
   static constexpr bool is_member = true;
   using ObjT = Obj;
   using MsgT = NoMsg;
-  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using TupleType = WrapType<std::tuple>;
 };
 
-///////////////////////////////////////////////////////////////////////////////
-
-template <typename enabled, typename... Args>
-struct FuncTraitsImpl;
-
 template <typename Return, typename Msg>
-struct FuncTraitsImpl<
+struct ObjFuncTraitsImpl<
   std::enable_if_t<
-    std::is_convertible<Msg, vt::Message>::value or
-    std::is_convertible<Msg, vt::ShortMessage>::value or
-    std::is_convertible<Msg, vt::EpochMessage>::value or
-    std::is_convertible<Msg, vt::PayloadMessage>::value
+    std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value
   >,
   Return(*)(Msg*)
 > {
   static constexpr bool is_member = false;
   using MsgT = Msg;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<MsgT>;
 };
 
 template <typename Return>
-struct FuncTraitsImpl<
+struct ObjFuncTraitsImpl<
   std::enable_if_t<std::is_same_v<void, void>>,
   Return(*)()
 > {
   static constexpr bool is_member = false;
   using MsgT = NoMsg;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<>;
   using TupleType = std::tuple<>;
 };
 
 template <typename Return, typename Arg, typename... Args>
-struct FuncTraitsImpl<
+struct ObjFuncTraitsImpl<
+  std::enable_if_t<
+    not std::is_pointer<Arg>::value
+  >,
+  Return(*)(Arg, Args...)
+> {
+  static constexpr bool is_member = false;
+  using MsgT = NoMsg;
+  using Arg1 = Arg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using TupleType = WrapType<std::tuple>;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename enabled, typename... Args>
+struct FunctorTraitsImpl;
+
+template <typename FunctorT, typename Return, typename Msg>
+struct FunctorTraitsImpl<
+  std::enable_if_t<
+    std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value
+  >,
+  FunctorT,
+  Return(FunctorT::*)(Msg*)
+> {
+  static constexpr bool is_member = false;
+  using MsgT = Msg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<MsgT>;
+  using FuncPtrType = Return(*)(Msg*);
+};
+
+template <typename FunctorT, typename Return>
+struct FunctorTraitsImpl<
+  std::enable_if_t<std::is_same_v<void, void>>,
+  FunctorT,
+  Return(FunctorT::*)()
+> {
+  static constexpr bool is_member = false;
+  using MsgT = NoMsg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<>;
+  using TupleType = std::tuple<>;
+  using FuncPtrType = Return(*)();
+};
+
+template <typename FunctorT, typename Return, typename Arg, typename... Args>
+struct FunctorTraitsImpl<
   std::enable_if_t<
     not (
       std::is_convertible<Arg, vt::Message*>::value or
@@ -186,14 +263,119 @@ struct FuncTraitsImpl<
       std::is_convertible<Arg, vt::PayloadMessage*>::value
     )
   >,
-  Return(*)(Arg, Args...)
+  FunctorT,
+  Return(FunctorT::*)(Arg, Args...)
 > {
   static constexpr bool is_member = false;
   using MsgT = NoMsg;
   using Arg1 = Arg;
-  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
   using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using TupleType = WrapType<std::tuple>;
+  using FuncPtrType = Return(*)(Arg, Args...);
 };
+
+template <typename FunctorT, typename Return, typename Msg>
+struct FunctorTraitsImpl<
+  std::enable_if_t<
+    std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value
+  >,
+  FunctorT,
+  Return(FunctorT::*)(Msg*) const
+> {
+  static constexpr bool is_member = false;
+  using MsgT = Msg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<MsgT>;
+  using FuncPtrType = Return(*)(Msg*);
+};
+
+template <typename FunctorT, typename Return>
+struct FunctorTraitsImpl<
+  std::enable_if_t<std::is_same_v<void, void>>,
+  FunctorT,
+  Return(FunctorT::*)() const
+> {
+  static constexpr bool is_member = false;
+  using MsgT = NoMsg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<>;
+  using TupleType = std::tuple<>;
+  using FuncPtrType = Return(*)();
+};
+
+template <typename FunctorT, typename Return, typename Arg, typename... Args>
+struct FunctorTraitsImpl<
+  std::enable_if_t<
+    not (
+      std::is_convertible<Arg, vt::Message*>::value or
+      std::is_convertible<Arg, vt::ShortMessage*>::value or
+      std::is_convertible<Arg, vt::EpochMessage*>::value or
+      std::is_convertible<Arg, vt::PayloadMessage*>::value
+    )
+  >,
+  FunctorT,
+  Return(FunctorT::*)(Arg, Args...) const
+> {
+  static constexpr bool is_member = false;
+  using MsgT = NoMsg;
+  using Arg1 = Arg;
+  using ReturnT = Return;
+  template <template <typename...> class U>
+  using WrapType = U<std::decay_t<Arg>, std::decay_t<Args>...>;
+  using TupleType = WrapType<std::tuple>;
+  using FuncPtrType = Return(*)(Arg, Args...);
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename enabled, typename... Args>
+struct CBTraitsImpl;
+
+template <typename Msg>
+struct CBTraitsImpl<
+  std::enable_if_t<
+    std::is_convertible<Msg*, vt::Message*>::value or
+    std::is_convertible<Msg*, vt::ShortMessage*>::value or
+    std::is_convertible<Msg*, vt::EpochMessage*>::value or
+    std::is_convertible<Msg*, vt::PayloadMessage*>::value
+  >,
+  Msg
+> {
+  using MsgT = std::remove_pointer_t<Msg>;
+};
+
+template <>
+struct CBTraitsImpl<
+  std::enable_if_t<std::is_same_v<void, void>>
+> {
+  using MsgT = NoMsg;
+  using TupleType = std::tuple<>;
+};
+
+template <typename Arg, typename... Args>
+struct CBTraitsImpl<
+  std::enable_if_t<
+    not (
+      std::is_convertible<Arg*, vt::Message*>::value or
+      std::is_convertible<Arg*, vt::ShortMessage*>::value or
+      std::is_convertible<Arg*, vt::EpochMessage*>::value or
+      std::is_convertible<Arg*, vt::PayloadMessage*>::value
+    )
+  >,
+  Arg,
+  Args...
+> {
+  using MsgT = NoMsg;
+  using TupleType = std::tuple<std::decay_t<Arg>, std::decay_t<Args>...>;
+};
+
 
 } /* end namespace vt::util::fntraits::detail */
 
@@ -205,7 +387,13 @@ template <typename... Args>
 struct ObjFuncTraits : util::fntraits::detail::ObjFuncTraitsImpl<void, Args...> {};
 
 template <typename... Args>
-struct FuncTraits : util::fntraits::detail::FuncTraitsImpl<void, Args...> {};
+struct FuncTraits : util::fntraits::detail::ObjFuncTraitsImpl<void, Args...> {};
+
+template <typename... Args>
+struct FunctorTraits : util::fntraits::detail::FunctorTraitsImpl<void, Args...> {};
+
+template <typename... Args>
+struct CBTraits : util::fntraits::detail::CBTraitsImpl<void, Args...> {};
 
 using NoMsg = util::fntraits::detail::NoMsg;
 

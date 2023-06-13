@@ -63,6 +63,8 @@ void CallbackSendTypeless::serialize(SerializerT& s) {
 
 template <typename MsgT>
 void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
+  static_assert(not std::is_same<MsgT, NoMsg>::value, "Must not be no msg");
+
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
     terse, pipe,

@@ -129,10 +129,8 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
   pending_reassignment_->node_ = this_node;
 
   runInEpochCollective("Sum migrations", [&] {
-    auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);
     int32_t local_migration_count = transfers_.size();
-    auto msg = makeMessage<CountMsg>(local_migration_count);
-    proxy_.template reduce<collective::PlusOp<int32_t>>(msg,cb);
+    proxy_.allreduce<&BaseLB::finalize, collective::PlusOp>(local_migration_count);
   });
 
   std::map<NodeType, ObjDestinationListType> migrate_other;
@@ -241,8 +239,7 @@ void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
   }
 }
 
-void BaseLB::finalize(CountMsg* msg) {
-  auto global_count = msg->getVal();
+void BaseLB::finalize(int32_t global_count) {
   if (migration_count_cb_) {
     migration_count_cb_(global_count);
   }

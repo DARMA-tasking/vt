@@ -103,7 +103,7 @@ private:
   void recvObjs(GreedySendMsg* msg);
   void recvObjsBcast(GreedyBcastMsg* msg);
   void finishedTransferExchange();
-  void collectHandler(GreedyCollectMsg* msg);
+  void collectHandler(GreedyPayload payload);
 
   // This must stay static due to limitations in the scatter implementation
   // (does not work with objgroups)
