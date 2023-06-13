@@ -128,7 +128,7 @@ public:
    *
    * \param[in] phase the phase
    *
-   * \return pointer to elements assigned to this node, guaranted to be not null
+   * \return pointer to elements assigned to this node, guaranteed to be not null
    */
   std::shared_ptr<const std::set<ElementIDStruct>> getDistro(PhaseType phase) const {
     auto iter = history_.find(phase);
@@ -173,19 +173,6 @@ public:
   }
 
 private:
-  /**
-   * \brief Find the next specified phase or an identical one
-   *
-   * \param phase the current phase
-   *
-   * \return the next phase
-   */
-  PhaseType findNextPhase(PhaseType phase) const {
-    auto iter = history_.upper_bound(phase);
-    vtAssert(iter != history_.end(), "Must have a valid phase");
-    return iter->first;
-  }
-
   /**
    * \brief Reduce distribution changes globally to find where migrations need
    * to occur
