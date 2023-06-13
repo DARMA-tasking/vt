@@ -374,41 +374,43 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
 }
 
 void LBDataHolder::readMetadata(nlohmann::json const& j) {
-  auto metadata = j["metadata"];
-  if (metadata.find("phases") != metadata.end()) {
-    auto phases = metadata["phases"];
-    // load count
-    vtAssertExpr(phases["count"].is_number());
-    count_ = phases["count"];
-    // load all skipped phases
-    auto sl = phases["skipped"]["list"];
-    if(sl.is_array()) {
-      for(PhaseType skipped : sl) {
-        skipped_phases_.insert(skipped);
-      }
-    }
-    auto sr = phases["skipped"]["range"];
-    if(sr.is_array()) {
-      for(auto const& pair : sr) {
-        vtAssertExpr(pair.is_array());
-        for(PhaseType i = pair[0]; i <= pair[1]; i++){
-          skipped_phases_.insert(i);
+  if (j.find("metadata") != j.end()) {
+    auto metadata = j["metadata"];
+    if (metadata.find("phases") != metadata.end()) {
+      auto phases = metadata["phases"];
+      // load count
+      vtAssertExpr(phases["count"].is_number());
+      count_ = phases["count"];
+      // load all skipped phases
+      auto sl = phases["skipped"]["list"];
+      if(sl.is_array()) {
+        for(PhaseType skipped : sl) {
+          skipped_phases_.insert(skipped);
         }
       }
-    }
-    // load all identical phases
-    auto il = phases["identical_to_previous"]["list"];
-    if(il.is_array()) {
-      for(PhaseType identical : il) {
-        identical_phases_.insert(identical);
+      auto sr = phases["skipped"]["range"];
+      if(sr.is_array()) {
+        for(auto const& pair : sr) {
+          vtAssertExpr(pair.is_array());
+          for(PhaseType i = pair[0]; i <= pair[1]; i++){
+            skipped_phases_.insert(i);
+          }
+        }
       }
-    }
-    auto ir = phases["identical_to_previous"]["range"];
-    if(ir.is_array()) {
-      for(auto const& pair : ir) {
-        vtAssertExpr(pair.is_array());
-        for(PhaseType i = pair[0]; i <= pair[1]; i++){
-          identical_phases_.insert(i);
+      // load all identical phases
+      auto il = phases["identical_to_previous"]["list"];
+      if(il.is_array()) {
+        for(PhaseType identical : il) {
+          identical_phases_.insert(identical);
+        }
+      }
+      auto ir = phases["identical_to_previous"]["range"];
+      if(ir.is_array()) {
+        for(auto const& pair : ir) {
+          vtAssertExpr(pair.is_array());
+          for(PhaseType i = pair[0]; i <= pair[1]; i++){
+            identical_phases_.insert(i);
+          }
         }
       }
     }

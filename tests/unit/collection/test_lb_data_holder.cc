@@ -90,6 +90,33 @@ void addPhasesDataToJson(nlohmann::json& json, PhaseType amountOfPhasesToAdd, st
   json["phases"] = phases;
 }
 
+TEST_F(TestOptionalPhasesMetadata, test_no_metadata) {
+  using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
+
+  nlohmann::json json;  
+  addPhasesDataToJson(json, num_phases, {});
+
+  LBDataHolder testObj(json);
+  EXPECT_EQ(testObj.count_, num_phases);
+  std::set<PhaseType> expectedSkipped = {};
+  EXPECT_EQ(testObj.skipped_phases_, expectedSkipped);
+  std::set<PhaseType> expectedIdentical = {};
+  EXPECT_EQ(testObj.identical_phases_, expectedIdentical);
+
+  auto outJsonPtr = testObj.metadataToJson();
+  ASSERT_TRUE(outJsonPtr != nullptr);
+
+  EXPECT_EQ((*outJsonPtr)["count"], num_phases);
+  std::vector<PhaseType> expectedSkippedList = {};
+  EXPECT_EQ((*outJsonPtr)["skipped"]["list"], expectedSkippedList);
+  std::vector<std::pair<PhaseType, PhaseType>> expectedSkippedRanges = {};
+  EXPECT_EQ((*outJsonPtr)["skipped"]["range"], expectedSkippedRanges);
+  std::vector<PhaseType> expectedIdenticalList = {};
+  EXPECT_EQ((*outJsonPtr)["identical_to_previous"]["list"], expectedIdenticalList);
+  std::vector<std::pair<PhaseType, PhaseType>> expectedIdenticalRanges = {};
+  EXPECT_EQ((*outJsonPtr)["identical_to_previous"]["range"], expectedIdenticalRanges);
+}
+
 TEST_F(TestOptionalPhasesMetadata, test_no_lb_phases_metadata) {
   using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
 
