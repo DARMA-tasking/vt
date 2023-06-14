@@ -333,6 +333,11 @@ typename ObjGroupManager::ProxyElmType<ObjT> ObjGroupManager::proxyElm(ObjT* obj
 }
 
 template <typename ObjT>
+typename ObjGroupManager::ProxyType<ObjT> ObjGroupManager::proxyGroup(ProxyElmType<ObjT> proxy_elm) {
+  return ProxyType<ObjT>(proxy_elm.getProxy());
+}
+
+template <typename ObjT>
 std::string ObjGroupManager::getLabel(ObjGroupManager::ProxyType<ObjT> proxy) const {
   auto const proxy_bits = proxy.getProxy();
   auto const iter = labels_.find(proxy_bits);

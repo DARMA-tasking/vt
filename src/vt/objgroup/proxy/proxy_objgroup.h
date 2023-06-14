@@ -60,6 +60,8 @@
 #include "vt/messaging/pending_send.h"
 #include "vt/utils/fntraits/fntraits.h"
 
+#include "vt/vrt/vrt_common.h"
+
 namespace vt { namespace objgroup { namespace proxy {
 
 /**
@@ -428,7 +430,27 @@ public:
 
   template <typename Serializer>
   void serialize(Serializer& s) {
+    auto old_proxy = proxy_;
     s | proxy_;
+
+    using vt::vrt::CheckpointTrait;
+    using vt::vrt::CheckpointInternalTrait;
+
+    if constexpr(s.hasTraits(CheckpointTrait())){
+      vtAssert(old_proxy != no_obj_group, "ObjGroups must be pre-instantiated to be checkpointed or restored");
+      vtAssert(old_proxy == proxy_, "The proxy ID bits of this ObjGroup do not match the ID found in the checkpoint!" \
+                                    " Varying IDs is not yet supported.");
+      auto objPtr = get();
+
+      bool null = objPtr == nullptr;
+      s | null;
+
+      if(!null){
+        auto newS = s.withoutTraits(CheckpointTrait())
+                     .withTraits(CheckpointInternalTrait());
+        newS | *objPtr;
+      }
+    } 
   }
 
 private:
