@@ -641,7 +641,7 @@ void LBManager::computeStatistics(
     total_load_from_model += work;
   }
 
-  TimeType total_load_raw = 0.;
+  LoadType total_load_raw = 0.;
   std::vector<balance::LoadData> obj_load_raw;
   if (model->hasRawLoad()) {
     for (auto elm : *model) {

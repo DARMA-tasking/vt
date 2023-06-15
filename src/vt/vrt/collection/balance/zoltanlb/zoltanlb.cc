@@ -129,7 +129,7 @@ void ZoltanLB::inputParams(balance::ConfigEntry* config) {
   }
 }
 
-void ZoltanLB::runLB(TimeType total_load) {
+void ZoltanLB::runLB(LoadType total_load) {
   auto const& this_node = theContext()->getNode();
   this_load = loadMilli(total_load);
 

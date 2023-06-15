@@ -68,7 +68,7 @@ void PerCollection::updateLoads(PhaseType last_completed_phase) {
   ComposedModel::updateLoads(last_completed_phase);
 }
 
-TimeType
+LoadType
 PerCollection::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
   // See if some specific model has been given for the object in question
   auto mi = models_.find(theNodeLBData()->getCollectionProxyForElement(object));
@@ -90,7 +90,7 @@ bool PerCollection::hasRawLoad() const {
   return has_raw_load and ComposedModel::hasRawLoad();
 }
 
-TimeType PerCollection::getRawLoad(ElementIDStruct object, PhaseOffset when) const {
+LoadType PerCollection::getRawLoad(ElementIDStruct object, PhaseOffset when) const {
   // See if some specific model has been given for the object in question
   auto mi = models_.find(theNodeLBData()->getCollectionProxyForElement(object));
   if (mi != models_.end())

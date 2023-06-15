@@ -94,11 +94,11 @@ int RawData::getNumSubphases() const {
   return subphases;
 }
 
-TimeType RawData::getModeledLoad(ElementIDStruct object, PhaseOffset offset) const {
+LoadType RawData::getModeledLoad(ElementIDStruct object, PhaseOffset offset) const {
   return getRawLoad(object, offset);
 }
 
-TimeType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) const {
+LoadType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) const {
   vtAssert(offset.phases < 0,
            "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 

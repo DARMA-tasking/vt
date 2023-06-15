@@ -93,7 +93,7 @@ int ProposedReassignment::getNumObjects() const
   return base - departing + arriving;
 }
 
-TimeType
+LoadType
 ProposedReassignment::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
   auto a = reassignment_->arrive_.find(object);
   if (a != reassignment_->arrive_.end()) {
@@ -107,7 +107,7 @@ ProposedReassignment::getModeledLoad(ElementIDStruct object, PhaseOffset when) c
   return ComposedModel::getModeledLoad(object, when);
 }
 
-TimeType ProposedReassignment::getRawLoad(ElementIDStruct object, PhaseOffset when) const
+LoadType ProposedReassignment::getRawLoad(ElementIDStruct object, PhaseOffset when) const
 {
   auto a = reassignment_->arrive_.find(object);
   if (a != reassignment_->arrive_.end()) {

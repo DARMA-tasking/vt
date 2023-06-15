@@ -68,12 +68,11 @@ struct CommMsg;
 
 struct BaseLB {
   using ObjIDType        = balance::ElementIDStruct;
-  using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
+  using ElementLoadType  = std::unordered_map<ObjIDType,LoadType>;
   using ElementCommType  = elm::CommMapType;
   using TransferDestType = std::tuple<ObjIDType,NodeType>;
   using TransferVecType  = std::vector<TransferDestType>;
   using TransferType     = std::map<NodeType, TransferVecType>;
-  using LoadType         = double;
   using MigrationCountCB = std::function<void(int32_t)>;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
@@ -119,7 +118,7 @@ struct BaseLB {
     balance::LoadModel *model,
     StatisticMapType const& in_stats,
     ElementCommType const& in_comm_lb_data,
-    TimeType total_load,
+    LoadType total_load,
     balance::DataMapType const& in_data_map
   );
 
@@ -154,7 +153,7 @@ struct BaseLB {
   void finalize(int32_t global_count);
 
   virtual void inputParams(balance::ConfigEntry* config) = 0;
-  virtual void runLB(TimeType total_load) = 0;
+  virtual void runLB(LoadType total_load) = 0;
 
   StatisticMapType const* getStats() const {
     return base_stats_;

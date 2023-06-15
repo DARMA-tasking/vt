@@ -225,7 +225,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const = 0;
+  virtual LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const = 0;
 
   /**
    * \brief Whether or not the model is based on the RawData model
@@ -240,7 +240,7 @@ struct LoadModel
    *
    * \return How much computation time the object required
    */
-  virtual TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) const {
+  virtual LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const {
     vtAbort(
       "LoadModel::getRawLoad() called on a model that does not implement it"
     );
@@ -259,7 +259,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) const {
+  virtual LoadType getModeledComm(ElementIDStruct object, PhaseOffset when) const {
     return {};
   }
 

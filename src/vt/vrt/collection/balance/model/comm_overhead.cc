@@ -47,8 +47,8 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 CommOverhead::CommOverhead(
-  std::shared_ptr<balance::LoadModel> base, TimeType in_per_msg_weight,
-  TimeType in_per_byte_weight
+  std::shared_ptr<balance::LoadModel> base, LoadType in_per_msg_weight,
+  LoadType in_per_byte_weight
 ) : ComposedModel(base),
     per_msg_weight_(in_per_msg_weight),
     per_byte_weight_(in_per_byte_weight)
@@ -60,14 +60,14 @@ void CommOverhead::setLoads(std::unordered_map<PhaseType, LoadMapType> const* pr
   ComposedModel::setLoads(proc_load, proc_comm);
 }
 
-TimeType
+LoadType
 CommOverhead::getModeledLoad(ElementIDStruct object, PhaseOffset offset) const {
   auto work = ComposedModel::getModeledLoad(object, offset);
 
   auto phase = getNumCompletedPhases() + offset.phases;
   auto& comm = proc_comm_->at(phase);
 
-  TimeType overhead = 0.;
+  LoadType overhead = 0.;
   for (auto&& c : comm) {
     // find messages that go off-node and are sent to this object
     if (c.first.offNode() and c.first.toObj() == object) {

@@ -85,10 +85,10 @@ struct PhaseOffset {
 };
 
 struct LoadSummary {
-  TimeType whole_phase_load = 0.0;
-  std::vector<TimeType> subphase_loads = {};
+  LoadType whole_phase_load = 0.0;
+  std::vector<LoadType> subphase_loads = {};
 
-  TimeType get(PhaseOffset when) const
+  LoadType get(PhaseOffset when) const
   {
     if (when.subphase == PhaseOffset::WHOLE_PHASE)
       return whole_phase_load;
@@ -113,7 +113,7 @@ struct LoadSummary {
 };
 
 using LoadMapType         = std::unordered_map<ElementIDStruct, LoadSummary>;
-using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<TimeType>>;
+using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<LoadType>>;
 
 /// User-defined LB values map
 using DataMapType         = std::unordered_map<

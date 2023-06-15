@@ -101,6 +101,8 @@ using GroupType               = uint64_t;
 using MsgSizeType             = int64_t;
 /// Used for hold a phase for load balancing
 using PhaseType               = uint64_t;
+/// LoadType used for load balancing
+using LoadType                = double;
 /// Used for hold a sub-phase for load balancing
 using SubphaseType            = uint16_t;
 /// Used for hold the identifier for a pipe (callbacks)

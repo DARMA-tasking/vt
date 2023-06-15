@@ -67,7 +67,7 @@ public:
       beta_(beta),
       gamma_(gamma) { }
 
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
+  LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
 
 private:
   double alpha_;

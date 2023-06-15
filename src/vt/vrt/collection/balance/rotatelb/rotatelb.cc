@@ -61,7 +61,7 @@ RotateLB::getInputKeysWithHelp() {
 
 void RotateLB::inputParams(balance::ConfigEntry* config) { }
 
-void RotateLB::runLB(TimeType) {
+void RotateLB::runLB(LoadType) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
@@ -76,7 +76,7 @@ void RotateLB::runLB(TimeType) {
   }
 
   for (auto obj : *load_model_) {
-    TimeTypeWrapper const load = load_model_->getModeledLoad(
+    LoadType const load = load_model_->getModeledLoad(
       obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
     vt_debug_print(
