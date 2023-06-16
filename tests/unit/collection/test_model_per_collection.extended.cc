@@ -74,8 +74,8 @@ struct ConstantTestModel : ComposedModel {
       proxy_(in_proxy)
   { }
 
-  TimeType getModeledLoad(ElementIDStruct, PhaseOffset) const override {
-    return static_cast<TimeType>(proxy_);
+  LoadType getModeledLoad(ElementIDStruct, PhaseOffset) const override {
+    return static_cast<LoadType>(proxy_);
   }
 
 private:
@@ -158,7 +158,7 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
         obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       if (id_proxy_map.find(obj) != id_proxy_map.end()) {
-        EXPECT_DOUBLE_EQ(work_val, static_cast<TimeType>(id_proxy_map[obj]));
+        EXPECT_DOUBLE_EQ(work_val, static_cast<LoadType>(id_proxy_map[obj]));
       }
       if (model->hasRawLoad()) {
         auto raw_load_val = model->getRawLoad(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});

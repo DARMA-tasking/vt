@@ -541,7 +541,7 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
     for (int i=0; i<num_elms; ++i) {
       vt::Index1D idx(i);
 
-      TimeType dur = (i % 10 + 1) * 0.1;
+      LoadType dur = (i % 10 + 1) * 0.1;
       uint64_t ntocm = (i+1) % 3 + 2;
       CommBytesType ntoc = (i+1) * 100;
       uint64_t ctonm = (i+1) % 2 + 1;
@@ -551,7 +551,7 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
       if (elm_ptr != nullptr) {
         auto elm_id = elm_ptr->getElmID();
 
-        std::vector<TimeType> dur_vec(2);
+        std::vector<LoadType> dur_vec(2);
         dur_vec[i % 2] = dur;
         lbdh.node_data_[phase][elm_id].whole_phase_load = dur;
         lbdh.node_data_[phase][elm_id].subphase_loads = dur_vec;

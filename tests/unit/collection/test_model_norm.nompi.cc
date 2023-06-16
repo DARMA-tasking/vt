@@ -84,7 +84,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
+  LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     return proc_load_->at(0).at(id).subphase_loads.at(phase.subphase);
   }
 
@@ -107,8 +107,8 @@ TEST_F(TestModelNorm, test_model_norm_1) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node}, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
-       {ElementIDStruct{2,this_node}, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
+       {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
+       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
 
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
   test_model->setLoads(&proc_load, nullptr);
@@ -138,16 +138,16 @@ TEST_F(TestModelNorm, test_model_norm_2) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node}, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
-       {ElementIDStruct{2,this_node}, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
+       {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
+       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
 
   // finite 'power' value
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
   test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
-  std::array<TimeType, 2> expected_norms = {
-    TimeType{33.019}, TimeType{73.986}};
+  std::array<LoadType, 2> expected_norms = {
+    LoadType{33.019}, LoadType{73.986}};
 
   int objects_seen = 0;
   for (auto&& obj : *test_model) {
@@ -167,8 +167,8 @@ TEST_F(TestModelNorm, test_model_norm_3) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDStruct{1,this_node}, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
-       {ElementIDStruct{2,this_node}, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
+       {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
+       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
 
   // infinite 'power' value
   auto test_model = std::make_shared<Norm>(
@@ -176,7 +176,7 @@ TEST_F(TestModelNorm, test_model_norm_3) {
   test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
-  std::array<TimeType, 2> expected_norms = {TimeType{30}, TimeType{60}};
+  std::array<LoadType, 2> expected_norms = {LoadType{30}, LoadType{60}};
 
   int objects_seen = 0;
   for (auto&& obj : *test_model) {
