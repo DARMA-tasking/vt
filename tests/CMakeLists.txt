@@ -271,7 +271,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     PROPERTIES
     PROCESSORS ${PERF_TEST_NUMPROC}
     RUN_SERIAL TRUE  # do not run in parallel with any other tests
-    TIMEOUT 300
+    TIMEOUT 500
     LABELS "perf_test"
   )
 endforeach()

@@ -44,6 +44,9 @@
 #if !defined INCLUDED_PERF_COMMON_TEST_HARNESS_MACROS_H
 #define INCLUDED_PERF_COMMON_TEST_HARNESS_MACROS_H
 
+#include "test_harness_base.h"
+
+#include <vector>
 namespace vt { namespace tests { namespace perf { namespace common {
 
 /**
@@ -65,60 +68,73 @@ namespace vt { namespace tests { namespace perf { namespace common {
   * VT_PERF_TEST_MAIN()
   */
 
-  #define VT_PERF_TEST(StructName, TestName)               \
-    struct StructName##TestName : StructName {             \
-      StructName##TestName() { name_ = #TestName; }        \
-      void SetUp() override { StructName::SetUp(); }       \
-      void TearDown() override { StructName::TearDown(); } \
-      void TestFunc();                                     \
-    };                                                     \
-    using TestType = StructName##TestName;                 \
-    void StructName##TestName::TestFunc()
 
-  #define VT_PERF_TEST_MAIN()                                 \
-    int main(int argc, char** argv) {                         \
-      using namespace vt::tests::perf::common;                \
-                                                              \
-      MPI_Init(&argc, &argv);                                 \
-                                                              \
-      int rank;                                               \
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);                   \
-                                                              \
-      TestType test;                                          \
-      test.Initialize(argc, argv);                            \
-      auto const num_runs = test.GetNumRuns();                \
-                                                              \
-      StopWatch timer;                                        \
-                                                              \
-      if (rank == 0) {                                        \
-        fmt::print(                                           \
-          "{}RUNNING TEST:{} {} (Number of runs = {}) ...\n", \
-          vt::debug::bold(), vt::debug::reset(),              \
-          vt::debug::reg(test.GetName()),                     \
-          vt::debug::reg(fmt::format("{}", num_runs))         \
-        );                                                    \
-      }                                                       \
-                                                              \
-      for (uint32_t i = 1; i <= num_runs; ++i) {              \
-        test.SetUp();                                         \
-                                                              \
-        timer.Start();                                        \
-        test.TestFunc();                                      \
-        PerfTestHarness::SpinScheduler();                     \
-        test.AddResult({test.GetName(), timer.Stop()});       \
-                                                              \
-        if (i == num_runs) {                                  \
-          test.SyncResults();                                 \
-        }                                                     \
-                                                              \
-        test.TearDown();                                      \
-      }                                                       \
-                                                              \
-      test.DumpResults();                                     \
-      MPI_Finalize();                                         \
-                                                              \
-      return 0;                                               \
-    }
+struct PerfTestRegistry{
+  static void AddTest(TestHarnessBase* test){
+    tests_.push_back(test);
+  }
+
+  static const std::vector<TestHarnessBase*>&
+  GetTests(){
+    return tests_;
+  }
+
+  private:
+  inline static std::vector<TestHarnessBase*> tests_ = {};
+};
+
+#define VT_PERF_TEST(StructName, TestName)                  \
+  struct StructName##TestName : StructName {                \
+    StructName##TestName() {                                \
+      name_ = #TestName; }                                  \
+    void SetUp() override { StructName::SetUp(); }          \
+    void TearDown() override { StructName::TearDown(); }    \
+    void TestFunc() override;                               \
+  };                                                        \
+                                                            \
+  static struct StructName##TestName##_registerer_t {       \
+    StructName##TestName##_registerer_t() {                 \
+      PerfTestRegistry::AddTest(new StructName##TestName());\
+    }                                                       \
+  } StructName##TestName##_registerer;                      \
+  void StructName##TestName::TestFunc()
+
+
+#define VT_PERF_TEST_MAIN()                                                      \
+  int main(int argc, char** argv) {                                              \
+    using namespace vt::tests::perf::common;                                     \
+    MPI_Init(&argc, &argv);                                                      \
+    int rank;                                                                    \
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                        \
+    for (const auto& test_base : PerfTestRegistry::GetTests()) {                 \
+      auto* test = dynamic_cast<PerfTestHarness*>(test_base);                    \
+      test->Initialize(argc, argv);                                              \
+      auto const num_runs = test->GetNumRuns();                                  \
+      StopWatch timer;                                                           \
+      if (rank == 0) {                                                           \
+        fmt::print("{}RUNNING TEST:{} {} (Number of runs = {}) ...\n",           \
+          vt::debug::bold(), vt::debug::reset(), vt::debug::reg(test->GetName()),\
+          vt::debug::reg(fmt::format("{}", num_runs)));                          \
+      }                                                                          \
+      for (uint32_t run_num = 1; run_num <= num_runs; ++run_num) {               \
+        test->SetUp();                                                           \
+                                                                                 \
+        timer.Start();                                                           \
+        test->TestFunc();                                                        \
+        PerfTestHarness::SpinScheduler();                                        \
+        test->AddResult({test->GetName(), timer.Stop()});                        \
+                                                                                 \
+        if (run_num == num_runs) {                                               \
+          test->SyncResults();                                                   \
+        }                                                                        \
+                                                                                 \
+        test->TearDown();                                                        \
+      }                                                                          \
+      test->DumpResults();                                                       \
+    }                                                                            \
+    MPI_Finalize();                                                              \
+    return 0;                                                                    \
+  }
 
 }}}} // namespace vt::tests::perf::common
 
