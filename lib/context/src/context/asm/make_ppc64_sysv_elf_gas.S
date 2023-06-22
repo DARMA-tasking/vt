@@ -105,25 +105,25 @@ make_fcontext:
 
     # reserve space for context-data on context-stack
     # including 64 byte of linkage + parameter area (R1 % 16 == 0)
-    subi  %r3, %r3, 248
+    subi  %r3, %r3, 392
 
     # third arg of make_fcontext() == address of context-function
     # entry point (ELFv2) or descriptor (ELFv1)
 #if _CALL_ELF == 2
     # save address of context-function entry point
-    std  %r5, 176(%r3)
+    std  %r5, 320(%r3)
 #else
     # save address of context-function entry point
     ld   %r4, 0(%r5)
-    std  %r4, 176(%r3)
+    std  %r4, 320(%r3)
     # save TOC of context-function
     ld   %r4, 8(%r5)
-    std  %r4, 0(%r3)
+    std  %r4, 152(%r3)
 #endif
 
     # set back-chain to zero
     li   %r0, 0
-    std  %r0, 184(%r3)
+    std  %r0, 328(%r3)
 
 #if _CALL_ELF != 2
     # zero in r3 indicates first jump to context-function
@@ -143,7 +143,7 @@ make_fcontext:
     mtlr  %r0
     # save address of finish as return-address for context-function
     # will be entered after context-function returns
-    std  %r4, 168(%r3)
+    std  %r4, 312(%r3)
 
     # restore return address from R6
     mtlr  %r6
