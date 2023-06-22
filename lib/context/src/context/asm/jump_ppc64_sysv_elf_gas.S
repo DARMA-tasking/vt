@@ -161,6 +161,7 @@ jump_fcontext:
 #else
     # restore RSP (pointing to context-data) from R4
     mr  %r1, %r4
+#endif
 
     lfd  %f14, 0(%r1)  # restore F14
     lfd  %f15, 8(%r1)  # restore F15
