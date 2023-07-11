@@ -77,7 +77,7 @@ struct AsyncOpCUDA : AsyncOp {
    * \param[in] in_cont the action to execute when event completes
    */
   AsyncOpCUDA(cudaEvent_t in_event, ActionType in_cont = nullptr)
-    : has_event_(true)
+    : has_event_(true),
       event_(in_event),
       cont_(in_cont)
   { }
