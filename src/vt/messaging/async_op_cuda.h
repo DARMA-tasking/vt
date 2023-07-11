@@ -53,7 +53,8 @@ namespace vt { namespace messaging {
 /**
  * \struct AsyncOpCUDA
  *
- * \brief A asynchronous CUDA event that VT can poll completion for.
+ * \brief A CUDA stream that VT can poll completion for to block a
+ * thread until it's ready.
  */
 struct AsyncOpCUDA : AsyncOp {
 
@@ -64,11 +65,10 @@ struct AsyncOpCUDA : AsyncOp {
    * \param[in] in_cont the action to execute when event completes
    */
   AsyncOpCUDA(cudaStream_t in_stream, ActionType in_cont = nullptr)
-    : cont_(in_cont)
-  {
-    vtAbortIf(cudaSuccess != cudaEventCreate(&event_), "Failed to create event");
-    vtAbortIf(cudaSuccess != cudaEventRecord(event_, in_stream), "Failed to record event");
-  }
+    : has_event_(false),
+      cont_(in_cont),
+      stream_(in_stream)
+  { }
 
   /**
    * \brief Construct with an event
@@ -77,17 +77,18 @@ struct AsyncOpCUDA : AsyncOp {
    * \param[in] in_cont the action to execute when event completes
    */
   AsyncOpCUDA(cudaEvent_t in_event, ActionType in_cont = nullptr)
-    : event_(in_event),
+    : has_event_(true),
+      event_(in_event),
       cont_(in_cont)
   { }
 
   /**
-   * \brief Poll completion of the CUDA event
+   * \brief Poll completion of the CUDA stream
    *
-   * \return whether the CUDA event is complete
+   * \return whether the CUDA stream is ready
    */
   bool poll() override {
-    auto ret = cudaEventQuery(event_);
+    auto ret = has_event_ ? cudaEventQuery(event_) : cudaStreamQuery(stream_);
     if (cudaSuccess != ret && cudaErrorNotReady != ret) {
       vtAbort(fmt::format("Failure on stream event: {}: {}", cudaGetErrorName(ret), cudaGetErrorString(ret)));
     }
@@ -98,15 +99,19 @@ struct AsyncOpCUDA : AsyncOp {
    * \brief Trigger continuation after completion
    */
   void done() override {
-    vtAbortIf(cudaSuccess != cudaEventDestroy(event_), "Failed to destroy event");
+    if (has_event_) {
+      vtAbortIf(cudaSuccess != cudaEventDestroy(event_), "Failed to destroy event");
+    }
     if (cont_) {
       cont_();
     }
   }
 
 private:
+  bool has_event_ = false;        /**< Whether we have an event */
   cudaEvent_t event_ = {};        /**< The CUDA event being tested */
   ActionType cont_ = nullptr;     /**< The continuation after event completes */
+  cudaStream_t stream_;           /**< The CUDA stream */
 };
 
 #endif /*__CUDACC__*/
