@@ -241,15 +241,24 @@ LBManager::runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb) {
   }
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm = &empty_comm;
-  auto iter = theNodeLBData()->getNodeComm()->find(phase);
-  if (iter != theNodeLBData()->getNodeComm()->end()) {
+
+  auto const& node_comm = theNodeLBData()->getNodeComm();
+  if (auto iter = node_comm->find(phase); iter != node_comm->end()) {
     comm = &iter->second;
+  }
+
+  balance::DataMapType empty_data_map;
+  balance::DataMapType const* data_map = &empty_data_map;
+  auto const& node_data_map = theNodeLBData()->getUserData();
+  if (auto iter = node_data_map->find(phase); iter != node_data_map->end()) {
+    data_map = &iter->second;
   }
 
   vt_debug_print(terse, lb, "LBManager: running strategy\n");
 
   auto reassignment = strat->startLB(
-    phase, base_proxy, model_.get(), stats, *comm, total_load_from_model
+    phase, base_proxy, model_.get(), stats, *comm, total_load_from_model,
+    *data_map
   );
   cb.send(reassignment, phase);
 }

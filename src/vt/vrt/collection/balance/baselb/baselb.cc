@@ -66,14 +66,15 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   balance::LoadModel* model,
   StatisticMapType const& in_stats,
   ElementCommType const& in_comm_lb_data,
-  TimeType total_load
+  TimeType total_load,
+  balance::DataMapType const& in_data_map
 ) {
   start_time_ = timing::getCurrentTime();
   phase_ = phase;
   proxy_ = proxy;
   load_model_ = model;
 
-  importProcessorData(in_stats, in_comm_lb_data);
+  importProcessorData(in_stats, in_comm_lb_data, in_data_map);
 
   runInEpochCollective("BaseLB::startLB -> runLB", [this,total_load]{
     getArgs(phase_);
@@ -91,7 +92,8 @@ BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) {
 }
 
 void BaseLB::importProcessorData(
-  StatisticMapType const& in_stats, ElementCommType const& comm_in
+  StatisticMapType const& in_stats, ElementCommType const& comm_in,
+  balance::DataMapType const& in_data_map
 ) {
   vt_debug_print(
     normal, lb,
@@ -101,6 +103,7 @@ void BaseLB::importProcessorData(
 
   comm_data = &comm_in;
   base_stats_ = &in_stats;
+  user_data_ = &in_data_map;
 }
 
 void BaseLB::getArgs(PhaseType phase) {

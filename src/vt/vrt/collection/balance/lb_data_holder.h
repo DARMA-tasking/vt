@@ -50,6 +50,8 @@
 
 #include <unordered_map>
 #include <memory>
+#include <variant>
+#include <string>
 
 #include <nlohmann/json_fwd.hpp>
 
@@ -81,6 +83,8 @@ struct LBDataHolder {
     s | count_;
     s | skipped_phases_;
     s | identical_phases_;
+    // @todo: We need serializer for variant
+    // s | user_defined_lb_info_;
   }
 
   /**
@@ -127,10 +131,12 @@ public:
   std::unordered_map<PhaseType, CommMapType> node_comm_;
   /// Node communication graph for each subphase
   std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
-  /// User-defined data from each phase
+  /// User-defined data from each phase for JSON output
   std::unordered_map<PhaseType, std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
+  /// User-defined data from each phase for LB
+  std::unordered_map<PhaseType, DataMapType> user_defined_lb_info_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy
