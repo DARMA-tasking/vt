@@ -78,13 +78,15 @@ struct TestDemanglerUtils : TestHarness {
     }
   };
 
-  template <typename A, typename B, typename F, F f>
+  template <typename A, typename B, auto f>
   struct SecondTestFunctor {
+    using FuncType = decltype(f);
+
     static std::string getPrettyName() {
-      return prettyFunctionForValue<F, f>();
+      return prettyFunctionForValue<FuncType, f>();
     }
     std::pair<std::string, std::string> operator()() {
-      return {getPrettyName(), getExpectedTypeName<F, f>()};
+      return {getPrettyName(), getExpectedTypeName<FuncType, f>()};
     }
   };
 };
@@ -160,15 +162,10 @@ TEST_F(TestDemanglerUtils, test_lastNamedPfType) {
   data.emplace_back(TestFunctor<helpers::someFunc_0>{}());
   data.emplace_back(TestFunctor<helpers::someFunc_1>{}());
   data.emplace_back(TestFunctor<helpers::someFunc_2<int, float>>{}());
+  data.emplace_back(SecondTestFunctor<int, float, helpers::someFunc_0>{}());
+  data.emplace_back(SecondTestFunctor<double, char, helpers::someFunc_1>{}());
   data.emplace_back(
-    SecondTestFunctor<
-      int, float, decltype(helpers::someFunc_0), helpers::someFunc_0>{}());
-  data.emplace_back(
-    SecondTestFunctor<
-      double, char, decltype(helpers::someFunc_1), helpers::someFunc_1>{}());
-  data.emplace_back(SecondTestFunctor<
-                    unsigned, int, decltype(helpers::someFunc_2<int, float>),
-                    helpers::someFunc_2<int, float>>{}());
+    SecondTestFunctor<unsigned, int, helpers::someFunc_2<int, float>>{}());
 
   for (auto& t : data) {
     std::string& spf = std::get<0>(t);
