@@ -52,13 +52,14 @@ struct TestDemanglerUtils : TestHarness {
   template <class MyType, MyType PF_VALUE_NAME>
   static std::string getExpectedTypeName() {
     std::string signature = __PRETTY_FUNCTION__;
-    auto typePos = signature.rfind("PF_VALUE_NAME");
+    auto labelPos = signature.rfind("PF_VALUE_NAME");
+    auto typePos = signature.find(" = ", labelPos);
     auto lastBracket = signature.rfind("]");
 
     assert(typePos != std::string::npos);
     assert(lastBracket != std::string::npos);
 
-    return signature.substr(typePos + 16, lastBracket - (typePos + 16));
+    return signature.substr(typePos + 3, lastBracket - (typePos + 3));
   }
 
   template <class T, T PF_VALUE_NAME>
