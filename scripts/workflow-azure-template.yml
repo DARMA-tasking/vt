@@ -16,7 +16,7 @@ variables:
 [% linux_env %]
   COMPILER_TYPE: [% compiler_type %]
   COMPILER: [% compiler %]
-[% host_compiler_line %]
+  HOST_COMPILER: [% IF host_compiler %][% host_compiler %][% ELSE %][% compiler %][% END %]
   BUILD_TYPE: [% build_type %]
   ULIMIT_CORE: [% ulimit_core %]
   CODE_COVERAGE: [% code_coverage %]
@@ -45,7 +45,7 @@ variables:
   TEST_LB_SCHEMA: [% test_lb_schema %]
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: [% cache_name %]
-  build_root: "$(CACHE)/[% build_root %]/"
+  build_root: "$(CACHE)[% build_root %]"
   TS: 0
   TS_YEAR: 0
   TS_MONTH: 0
