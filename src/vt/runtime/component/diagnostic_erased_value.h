@@ -45,10 +45,11 @@
 #define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_ERASED_VALUE_H
 
 #include "vt/runtime/component/diagnostic_types.h"
-#include "vt/utils/adt/union.h"
 #include "vt/utils/adt/histogram_approx.h"
+#include "vt/utils/strong/strong_type.h"
 
 #include <string>
+#include <variant>
 
 namespace vt { namespace runtime { namespace component {
 
@@ -61,11 +62,7 @@ namespace vt { namespace runtime { namespace component {
 struct DiagnosticErasedValue {
   /// These are the set of valid diagnostic value types after being erased from
   /// \c DiagnosticValue<T> get turned into this union for saving the value.
-  using UnionValueType = vt::adt::SafeUnion<
-    double, float,
-    int8_t,  int16_t,  int32_t,  int64_t,
-    uint8_t, uint16_t, uint32_t, uint64_t
-  >;
+  using UnionValueType = std::variant<double, int64_t>;
 
   // The trio (min, max, sum) save the actual type with the value to print it
   // correctly

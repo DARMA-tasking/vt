@@ -95,9 +95,9 @@ struct DiagnosticEraser {
    */
   static DiagnosticErasedValue get(DiagnosticValueWrapper<T> wrapper) {
     DiagnosticErasedValue eval;
-    eval.min_.template init<T>(wrapper.min());
-    eval.max_.template init<T>(wrapper.max());
-    eval.sum_.template init<T>(wrapper.sum());
+    eval.min_ = T{wrapper.min()};
+    eval.max_ = T{wrapper.max()};
+    eval.sum_ = T{wrapper.sum()};
     eval.avg_ = wrapper.avg();
     eval.std_ = wrapper.stdv();
     return eval;

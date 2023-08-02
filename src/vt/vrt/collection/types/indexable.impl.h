@@ -98,7 +98,7 @@ void Indexable<IndexT>::zeroReduceStamp() {
 template <typename IndexT>
 typename Indexable<IndexT>::ReduceStampType Indexable<IndexT>::getNextStamp() {
   ReduceStampType stamp;
-  stamp.init<ReduceSeqStampType>(reduce_stamp_);
+  stamp = ReduceSeqStampType{reduce_stamp_};
   *reduce_stamp_ = *reduce_stamp_ + 1;
   return stamp;
 }

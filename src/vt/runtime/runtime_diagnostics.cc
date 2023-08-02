@@ -89,9 +89,9 @@ struct FormatHelper {
     std::string default_format = is_decimal ? decimal_format : std::string{"{}"};
 
     if (base_) {
-      return fmt::format(default_format, eval.get<T>());
+      return fmt::format(default_format, std::get<T>(eval));
     } else {
-      return DF::getValueWithUnits(eval.get<T>(), unit_, default_format, align_);
+      return DF::getValueWithUnits(std::get<T>(eval), unit_, default_format, align_);
     }
   }
 
@@ -100,14 +100,6 @@ struct FormatHelper {
   bool base_ = false;
 };
 
-template <>
-std::string FormatHelper::apply<void>(
-  typename component::DiagnosticErasedValue::UnionValueType
-) {
-  vtAssert(false, "Failed to extract type from union");
-  return "";
-}
-
 std::string valueFormatHelper(
   typename component::DiagnosticErasedValue::UnionValueType eval,
   component::DiagnosticUnit unit,
@@ -115,7 +107,18 @@ std::string valueFormatHelper(
   bool base = false
 ) {
   FormatHelper fn(unit, align, base);
-  return eval.switchOn(fn);
+  std::string out = "";
+  std::visit([&](auto&& t){
+    using T = std::decay_t<decltype(t)>;
+    if constexpr (std::is_same_v<T, double>) {
+      out = fn.apply<double>(eval);
+    } else if constexpr (std::is_same_v<T, int64_t>) {
+      out = fn.apply<int64_t>(eval);
+    } else if constexpr (std::is_same_v<T, uint64_t>) {
+      out = fn.apply<uint64_t>(eval);
+    }
+  }, eval);
+  return out;
 }
 
 std::string valueFormatHelper(

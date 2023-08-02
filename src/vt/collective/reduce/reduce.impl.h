@@ -161,9 +161,10 @@ detail::ReduceStamp Reduce::reduceImmediate(
   NodeType root, MsgT* const msg, detail::ReduceStamp id,
   ReduceNumType num_contrib
 ) {
-  if (scope_.get().is<detail::StrongGroup>()) {
-    envelopeSetGroup(msg->env, scope_.get().get<detail::StrongGroup>().get());
+  if (std::holds_alternative<detail::StrongGroup>(scope_.get())) {
+    envelopeSetGroup(msg->env, std::get<detail::StrongGroup>(scope_.get()).get());
   }
+
   auto cur_id = id == detail::ReduceStamp{} ? generateNextID() : id;
 
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
