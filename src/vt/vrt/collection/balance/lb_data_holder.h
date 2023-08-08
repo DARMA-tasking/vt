@@ -83,8 +83,7 @@ struct LBDataHolder {
     s | count_;
     s | skipped_phases_;
     s | identical_phases_;
-    // @todo: We need serializer for variant
-    // s | user_defined_lb_info_;
+    s | user_defined_lb_info_;
   }
 
   /**
