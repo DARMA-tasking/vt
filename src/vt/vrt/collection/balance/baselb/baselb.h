@@ -96,12 +96,20 @@ struct BaseLB {
   virtual ~BaseLB() = default;
 
   /**
-   * This sets up and invokes the particular strategy implementations
+   * \brief This sets up and invokes the particular strategy implementations
    * through virtual methods `initParams` and `runLB`, and then
    * normalizes their output to a reassignment that can be evaluated
    * and applied
    *
    * This must be called collectively.
+   *
+   * \param[in] phase the phase we are load balancing
+   * \param[in] proxy the base proxy
+   * \param[in] model the load model
+   * \param[in] in_stats LB statistics
+   * \param[in] in_comm_lb_data comm map data
+   * \param[in] total_load total modeled load for this rank
+   * \param[in] in_data_map the user-defined data map
    *
    * \return A normalized reassignment
    */
@@ -111,11 +119,20 @@ struct BaseLB {
     balance::LoadModel *model,
     StatisticMapType const& in_stats,
     ElementCommType const& in_comm_lb_data,
-    TimeType total_load
+    TimeType total_load,
+    balance::DataMapType const& in_data_map
   );
 
+  /**
+   * \brief Import processor data to the base LB
+   *
+   *  \param[in] in_stats statistics
+   *  \param[in] cm the comm map
+   *  \param[in] in_data_map user-defined data
+   */
   void importProcessorData(
-    StatisticMapType const& in_stats, ElementCommType const& cm
+    StatisticMapType const& in_stats, ElementCommType const& cm,
+    balance::DataMapType const& in_data_map
   );
 
   static LoadType loadMilli(LoadType const& load);
@@ -153,6 +170,7 @@ protected:
 
   double start_time_                                  = 0.0f;
   ElementCommType const* comm_data                    = nullptr;
+  balance::DataMapType const* user_data_              = nullptr;
   objgroup::proxy::Proxy<BaseLB> proxy_               = {};
   PhaseType phase_                                    = 0;
   std::unique_ptr<balance::ConfigEntry> config_entry_ = nullptr;

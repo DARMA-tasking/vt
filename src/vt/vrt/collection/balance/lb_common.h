@@ -55,6 +55,7 @@
 #include <vector>
 #include <unordered_map>
 #include <tuple>
+#include <variant>
 
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
@@ -113,6 +114,12 @@ struct LoadSummary {
 
 using LoadMapType         = std::unordered_map<ElementIDStruct, LoadSummary>;
 using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<TimeType>>;
+
+/// User-defined LB values map
+using DataMapType         = std::unordered_map<
+  ElementIDStruct,
+  std::unordered_map<std::string, std::variant<int, double, std::string>>
+>;
 
 struct Reassignment {
   // Include the subject node so that these structures can be formed

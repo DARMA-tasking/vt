@@ -97,6 +97,11 @@ NodeLBData::getNodeLoad() const {
   return &lb_data_->node_data_;
 }
 
+std::unordered_map<PhaseType, DataMapType> const*
+NodeLBData::getUserData() const {
+  return &lb_data_->user_defined_lb_info_;
+}
+
 std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() const {
   return &lb_data_->node_comm_;
 }
@@ -121,6 +126,7 @@ void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
     lb_data_->node_data_.erase(phase - look_back);
     lb_data_->node_comm_.erase(phase - look_back);
     lb_data_->node_subphase_comm_.erase(phase - look_back);
+    lb_data_->user_defined_lb_info_.erase(phase - look_back);
   }
 
   // Clear migrate lambdas and proxy lookup since LB is complete
@@ -340,6 +346,11 @@ void NodeLBData::addNodeLBData(
   if (storable) {
     lb_data_->user_defined_json_[phase][id] = std::make_shared<nlohmann::json>(
       storable->toJson()
+    );
+    storable->foreachLB(
+      [&](std::string const& key, auto val) {
+        lb_data_->user_defined_lb_info_[phase][id][key] = val->toVariant();
+      }
     );
   }
 
