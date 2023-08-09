@@ -98,6 +98,14 @@ else()
     set(vt_feature_cmake_mimalloc "0")
 endif()
 
+if (TV_LIBRARY)
+  message(STATUS "vt-tv found and enabled")
+  set(vt_feature_cmake_tv "1")
+else()
+  message(STATUS "vt-tv not found")
+  set(vt_feature_cmake_tv "0")
+endif()
+
 option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" ON)
 
 if ((vt_mpi_guards OR vt_trace_only) AND PERL_FOUND)

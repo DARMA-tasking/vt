@@ -65,6 +65,7 @@
 #define vt_feature_cmake_production_build    @vt_feature_cmake_production_build@
 #define vt_feature_cmake_debug_verbose       @vt_feature_cmake_debug_verbose@
 #define vt_feature_cmake_rdma_tests          @vt_feature_cmake_rdma_tests@
+#define vt_feature_cmake_tv                  @vt_feature_cmake_tv@
 
 
 #define vt_detected_max_num_nodes @cmake_detected_max_num_nodes@
