@@ -44,6 +44,10 @@
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/context/context.h"
 
+#if vt_check_enabled(tv)
+#  include <vt-tv/api/info.h>
+#endif
+
 #include <nlohmann/json.hpp>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -220,6 +224,67 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 
   return std::make_unique<json>(std::move(j));
 }
+
+#if vt_check_enabled(tv)
+std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
+  using vt::tv::PhaseWork;
+  using vt::tv::ObjectWork;
+  using vt::tv::ObjectCommunicator;
+
+  std::unordered_map<ElementIDType, ObjectWork> objects;
+
+  if (node_data_.find(phase) != node_data_.end()) {
+    for (auto&& elm : node_data_.at(phase)) {
+      ElementIDStruct id = elm.first;
+      TimeType whole_phase_load = elm.second.whole_phase_load;
+      auto const& subphase_loads = elm.second.subphase_loads;
+
+      typename DataMapType::mapped_type user_defined;
+      if (
+        user_defined_lb_info_.find(phase) != user_defined_lb_info_.end() and
+        user_defined_lb_info_.at(phase).find(id) !=
+        user_defined_lb_info_.at(phase).end()
+      ) {
+        user_defined = user_defined_lb_info_.at(phase).at(id);
+      }
+      std::unordered_map<SubphaseType, double> subphase_map;
+      for (std::size_t i = 0; i < subphase_loads.size(); i++) {
+        subphase_map[i] = subphase_loads[i];
+      }
+      objects.try_emplace(
+        id.id,
+        id.id, whole_phase_load, std::move(subphase_map), std::move(user_defined)
+      );
+    }
+  }
+
+  if (node_comm_.find(phase) != node_comm_.end()) {
+    for (auto&& elm : node_comm_.at(phase)) {
+      auto const& key = elm.first;
+      auto const& volume = elm.second;
+      auto const& bytes = volume.bytes;
+      switch(key.cat_) {
+      case elm::CommCategory::SendRecv: {
+        auto from_id = key.fromObj();
+        auto to_id = key.toObj();
+
+        if (objects.find(from_id.id) != objects.end()) {
+          objects.at(from_id.id).addSentCommunications(to_id.id, bytes);
+        } else if (objects.find(to_id.id) != objects.end()) {
+          objects.at(to_id.id).addReceivedCommunications(from_id.id, bytes);
+        }
+        break;
+      }
+      default:
+        // skip all other communications for now
+        break;
+      }
+    }
+  }
+
+  return std::make_unique<PhaseWork>(phase, objects);;
+}
+#endif
 
 LBDataHolder::LBDataHolder(nlohmann::json const& j)
   : count_(0)
