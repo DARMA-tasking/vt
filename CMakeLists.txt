@@ -60,11 +60,6 @@ set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 # Import the linking macros for VT-related targets
 include(cmake/link_vt.cmake)
 
-# Load packages that are required for core VT build
-include(cmake/load_packages.cmake)
-
-include(cmake/check_compiler.cmake)
-
 option(vt_gold_linker_enabled "Build VT using the `gold' linker" ON)
 
 option(vt_unity_build_enabled "Build VT with Unity/Jumbo mode enabled" OFF)
@@ -92,6 +87,11 @@ option(vt_werror_enabled "Build VT with -Werror enabled" OFF)
 
 include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 include(cmake/load_bundled_libraries.cmake)
+
+# Load packages that are required for core VT build
+# We need to do this after bundled libraries so we avoid library duplication
+include(cmake/load_packages.cmake)
+include(cmake/check_compiler.cmake)
 
 option(vt_trace_only "Build VT with trace-only mode enabled" OFF)
 if (vt_trace_only)

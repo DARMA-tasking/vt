@@ -32,6 +32,11 @@ RUN apt-get update -y -q && \
     wget \
     zlib1g \
     zlib1g-dev \
+    libncurses5-dev \
+    m4 \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    mesa-common-dev \
     brotli \
     python3 \
     python3-brotli \
@@ -63,6 +68,11 @@ RUN ./cmake.sh 3.23.4 ${arch}
 
 ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
+
+COPY ./ci/deps/vtk.sh vtk.sh
+RUN if [ "$VT_TV_ENABLED" -eq 1]; then \
+      ./vtk.sh 9.2.2 /vtk-install \
+    fi
 
 COPY ./ci/deps/mpich.sh mpich.sh
 RUN if [ "$ubuntu" = "18.04" ]; then \
