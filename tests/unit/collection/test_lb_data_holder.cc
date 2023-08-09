@@ -97,7 +97,7 @@ TEST_F(TestOptionalPhasesMetadata, test_no_metadata) {
   addPhasesDataToJson(json, num_phases, {});
 
   LBDataHolder testObj(json);
-  EXPECT_EQ(testObj.count_, num_phases);
+  EXPECT_EQ(testObj.count_, static_cast<std::size_t>(num_phases));
   std::set<PhaseType> expectedSkipped = {};
   EXPECT_EQ(testObj.skipped_phases_, expectedSkipped);
   std::set<PhaseType> expectedIdentical = {};
@@ -126,7 +126,7 @@ TEST_F(TestOptionalPhasesMetadata, test_no_lb_phases_metadata) {
   addPhasesDataToJson(json, num_phases, {});
 
   LBDataHolder testObj(json);
-  EXPECT_EQ(testObj.count_, num_phases);
+  EXPECT_EQ(testObj.count_, static_cast<std::size_t>(num_phases));
   std::set<PhaseType> expectedSkipped = {};
   EXPECT_EQ(testObj.skipped_phases_, expectedSkipped);
   std::set<PhaseType> expectedIdentical = {};
@@ -162,7 +162,7 @@ TEST_F(TestOptionalPhasesMetadata, test_lb_phases_metadata_empty) {
   addPhasesDataToJson(json, num_phases, {});
 
   LBDataHolder testObj(json);
-  EXPECT_EQ(testObj.count_, num_phases);
+  EXPECT_EQ(testObj.count_, static_cast<std::size_t>(num_phases));
   std::set<PhaseType> expectedSkipped = {};
   EXPECT_EQ(testObj.skipped_phases_, expectedSkipped);
   std::set<PhaseType> expectedIdentical = {};
@@ -198,7 +198,7 @@ TEST_F(TestOptionalPhasesMetadata, test_lb_phases_metadata_filled) {
   addPhasesDataToJson(json, num_phases, {1,2,3,4,8,9});
 
   LBDataHolder testObj(json);
-  EXPECT_EQ(testObj.count_, num_phases);
+  EXPECT_EQ(testObj.count_, static_cast<std::size_t>(num_phases));
   std::set<PhaseType> expectedSkipped = {2, 3, 4};
   EXPECT_EQ(testObj.skipped_phases_, expectedSkipped);
   std::set<PhaseType> expectedIdentical = {1, 8, 9};
