@@ -228,6 +228,9 @@ struct AppConfig {
 
   bool vt_debug_print_flush = false;
 
+  bool vt_tv = false;
+  std::string vt_tv_config_file = "";
+
   bool vt_user_1 = false;
   bool vt_user_2 = false;
   bool vt_user_3 = false;
@@ -388,6 +391,9 @@ struct AppConfig {
       | vt_debug_epoch
 
       | vt_debug_print_flush
+
+      | vt_tv
+      | vt_tv_config_file
 
       | vt_user_1
       | vt_user_2
