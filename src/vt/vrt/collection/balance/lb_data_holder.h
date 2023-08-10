@@ -107,7 +107,16 @@ struct LBDataHolder {
    *
    * \return a \c vt::tv::PhaseWork data structure
    */
-  std::unique_ptr<vt::tv::PhaseWork> toTV(PhaseType phase) const;
+  std::unique_ptr<tv::PhaseWork> toTV(PhaseType phase) const;
+
+  /**
+   * \brief Get all object info mapped here for a given phase
+   *
+   * \return map with object info
+   */
+  std::unordered_map<ElementIDType, tv::ObjectInfo> getObjInfo(
+    PhaseType phase
+  ) const;
 #endif
 
   /**

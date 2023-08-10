@@ -284,6 +284,39 @@ std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
 
   return std::make_unique<PhaseWork>(phase, objects);;
 }
+
+std::unordered_map<ElementIDType, tv::ObjectInfo> LBDataHolder::getObjInfo(
+  PhaseType phase
+) const {
+  std::unordered_map<ElementIDType, tv::ObjectInfo> map;
+  if (node_data_.find(phase) != node_data_.end()) {
+    for (auto&& elm : node_data_.at(phase)) {
+      ElementIDStruct id = elm.first;
+
+      bool is_collection = false;
+      bool is_objgroup = false;
+
+      std::vector<uint64_t> idx;
+      if (node_idx_.find(id) != node_idx_.end()) {
+        is_collection = true;
+        idx = std::get<1>(node_idx_.find(id)->second);
+      }
+
+      if (node_objgroup_.find(id) != node_objgroup_.end()) {
+        is_objgroup = true;
+      }
+
+      tv::ObjectInfo oi{
+        id.id, id.getHomeNode(), id.isMigratable(), std::move(idx)
+      };
+      oi.setIsCollection(is_collection);
+      oi.setIsObjGroup(is_objgroup);
+      map[id.id] = std::move(oi);
+    }
+  }
+  return map;
+}
+
 #endif
 
 LBDataHolder::LBDataHolder(nlohmann::json const& j)
