@@ -47,6 +47,7 @@
 #include <vt/vrt/collection/balance/lb_invoke/lb_manager.h>
 #include <vt/vrt/collection/types/type_aliases.h>
 #include <vt/vrt/collection/manager.h>
+#include <vt/phase/phase_manager.h>
 
 #include <gtest/gtest.h>
 
@@ -58,7 +59,7 @@
 namespace vt { namespace tests { namespace unit {
 
 struct TestCol : vt::Collection<TestCol,vt::Index1D> {
-  unsigned int prev_calls_ = 0;
+  unsigned int prev_calls_ = thePhase()->getCurrentPhase();
 
   unsigned int prevCalls() { return prev_calls_++; }
 
