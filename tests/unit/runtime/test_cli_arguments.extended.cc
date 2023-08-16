@@ -46,6 +46,7 @@
 #include "test_parallel_harness.h"
 
 #include <vt/configs/arguments/app_config.h>
+#include <vt/configs/arguments/args.h>
 
 namespace vt { namespace tests { namespace unit {
 
@@ -68,6 +69,112 @@ TEST_F(TestCliArguments, test_assert_no_fail) {
 
   vtAssert(false, "Should not abort.");
   SUCCEED();
+}
+
+TEST_F(TestCliArguments, test_removing_supported_args_invalid_params) {
+  std::vector<char*> custom_args;
+  int argc = 0;
+  char** argv = custom_args.data();
+
+  EXPECT_EQ(argc, 0);
+  vt::arguments::removeSupportedArgs(argc, argv);
+  EXPECT_EQ(argc, 0);
+  EXPECT_EQ(argv[0], nullptr);
+}
+
+TEST_F(TestCliArguments, test_removing_supported_args_no_params) {
+  char program_name[] = "some_program";
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(program_name);
+  custom_args.emplace_back(nullptr);
+
+  int argc = custom_args.size() - 1;
+  char** argv = custom_args.data();
+
+  EXPECT_EQ(argc, 1);
+  vt::arguments::removeSupportedArgs(argc, argv);
+  EXPECT_EQ(argc, 0);
+  EXPECT_EQ(argv[0], nullptr);
+}
+
+TEST_F(TestCliArguments, test_removing_supported_args_non_vt_params) {
+  char program_name[] = "some_program";
+  char non_vt_1[] = "--non_vt_arg=123";
+  char non_vt_2[] = "--foo=bar";
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(program_name);
+  custom_args.emplace_back(non_vt_1);
+  custom_args.emplace_back(non_vt_2);
+  custom_args.emplace_back(nullptr);
+
+  int argc = custom_args.size() - 1;
+  char** argv = custom_args.data();
+
+  EXPECT_EQ(argc, 3);
+  vt::arguments::removeSupportedArgs(argc, argv);
+  EXPECT_EQ(argc, 2);
+  EXPECT_STREQ(argv[0], "--non_vt_arg=123");
+  EXPECT_STREQ(argv[1], "--foo=bar");
+  EXPECT_EQ(argv[2], nullptr);
+}
+
+TEST_F(TestCliArguments, test_removing_supported_args) {
+  char program_name[] = "vt";
+  char non_vt_1[] = "--non_vt_arg=123";
+  char vt_1[] = "--vt_debug_level";
+  char non_vt_2[] = "--foo=bar";
+  char vt_2[] = "!--vt_some_param=1000";
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(program_name);
+  custom_args.emplace_back(non_vt_1);
+  custom_args.emplace_back(vt_1);
+  custom_args.emplace_back(non_vt_2);
+  custom_args.emplace_back(vt_2);
+  custom_args.emplace_back(nullptr);
+
+  int argc = custom_args.size() - 1;
+  char** argv = custom_args.data();
+
+  EXPECT_EQ(argc, 5);
+
+  vt::arguments::removeSupportedArgs(argc, argv);
+
+  EXPECT_EQ(argc, 2);
+  EXPECT_STREQ(argv[0], "--non_vt_arg=123");
+  EXPECT_STREQ(argv[1], "--foo=bar");
+  EXPECT_EQ(argv[2], nullptr);
+}
+
+TEST_F(TestCliArguments, test_removing_supported_args_2) {
+  char program_name[] = "vt";
+  char vt_1[] = "--vt_debug_level";
+  char vt_2[] = "!--vt_some_param=1000";
+  char other_program[] = "some_program";
+  char non_vt_1[] = "--non_vt_arg=123";
+  char non_vt_2[] = "--foo=bar";
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(program_name);
+  custom_args.emplace_back(vt_1);
+  custom_args.emplace_back(vt_2);
+  custom_args.emplace_back(other_program);
+  custom_args.emplace_back(non_vt_1);
+  custom_args.emplace_back(non_vt_2);
+  custom_args.emplace_back(nullptr);
+
+  int argc = custom_args.size() - 1;
+  char** argv = custom_args.data();
+
+  EXPECT_EQ(argc, 6);
+
+  vt::arguments::removeSupportedArgs(argc, argv);
+
+  EXPECT_EQ(argc, 3);
+  EXPECT_STREQ(argv[0], "some_program");
+  EXPECT_STREQ(argv[1], "--non_vt_arg=123");
+  EXPECT_STREQ(argv[2], "--foo=bar");
+  EXPECT_EQ(argv[3], nullptr);
 }
 
 }}} // end namespace vt::tests::unit
