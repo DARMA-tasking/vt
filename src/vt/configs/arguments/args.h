@@ -62,6 +62,14 @@ class App;
 namespace arguments {
 
 /**
+ * @brief Removes argv[0] and all vt parametrs matching '--vt_*' or '!--vt_*'
+ * 
+ * @param argc number of arguments
+ * @param argv arguments
+ */
+void removeSupportedArgs(int& argc, char**& argv);
+
+/**
  * \struct ArgConfig
  *
  * \brief Component that manages the configuration for a VT instance, parsed

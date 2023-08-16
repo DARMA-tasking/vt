@@ -55,6 +55,22 @@
 
 namespace vt { namespace arguments {
 
+void removeSupportedArgs(int& argc, char**& argv) {
+  std::vector<char*>* non_vt_args = new std::vector<char*>;
+
+  // Skip program name
+  for (int i = 1; i < argc; i++) {
+    if (!((0 == strncmp(argv[i], "--vt_", 5)) ||
+          (0 == strncmp(argv[i], "!--vt_", 6)))) {
+      non_vt_args->push_back(argv[i]);
+    }
+  }
+  non_vt_args->push_back(nullptr);
+
+  argc = non_vt_args->size() - 1;
+  argv = non_vt_args->data();
+}
+
 // Temporary variables used only for parsing artifacts.
 namespace {
 
