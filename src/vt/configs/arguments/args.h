@@ -63,7 +63,7 @@ namespace arguments {
 
 /**
  * @brief Removes argv[0] and all vt parametrs matching '--vt_*' or '!--vt_*'
- * 
+ *
  * @param argc number of arguments
  * @param argv arguments
  */
