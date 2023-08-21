@@ -30,6 +30,10 @@ RUN apt-get update -y -q && \
     python3 \
     valgrind \
     wget \
+    bison \
+    flex \
+    libssl-dev \
+    libpython3-dev \
     zlib1g \
     zlib1g-dev \
     brotli \
@@ -80,6 +84,9 @@ COPY ./ci/deps/zoltan.sh zoltan.sh
 RUN if test ${zoltan_enabled} -eq 1; then \
       ./zoltan.sh -j4 ${ZOLTAN_INSTALL_DIR}; \
     fi
+
+COPY ./ci/deps/ldms.sh ldms.sh
+RUN ./ldms.sh 4.3.11
 
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
