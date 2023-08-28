@@ -62,12 +62,17 @@ class App;
 namespace arguments {
 
 /**
- * @brief Removes argv[0] and all vt parametrs matching '--vt_*' or '!--vt_*'
+ * @brief Ignores argv[0] and separate all parameters into vt(matching '--vt_*' or '!--vt_*')
+ * and non-vt parameters.
  *
  * @param argc number of arguments
- * @param argv arguments
+ * @param argv arguments list
+ *
+ * @returns Pair of vectors with parameters.
+ * First vector in the pair is for vt params and second is for all non-vt params.
  */
-void removeSupportedArgs(int& argc, char**& argv);
+std::pair<std::vector<std::string>, std::vector<std::string>>
+separateParameters(int argc, char* argv[]);
 
 /**
  * \struct ArgConfig
