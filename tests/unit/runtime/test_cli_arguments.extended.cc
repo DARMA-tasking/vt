@@ -71,18 +71,18 @@ TEST_F(TestCliArguments, test_assert_no_fail) {
   SUCCEED();
 }
 
-TEST_F(TestCliArguments, test_removing_supported_args_invalid_params) {
+TEST_F(TestCliArguments, test_seperating_args_invalid_params) {
   std::vector<char*> custom_args;
   int argc = 0;
   char** argv = custom_args.data();
 
   EXPECT_EQ(argc, 0);
-  vt::arguments::removeSupportedArgs(argc, argv);
-  EXPECT_EQ(argc, 0);
-  EXPECT_EQ(argv[0], nullptr);
+  auto pair = vt::arguments::separateParameters(argc, argv);
+  EXPECT_EQ(0, pair.first.size());
+  EXPECT_EQ(0, pair.second.size());
 }
 
-TEST_F(TestCliArguments, test_removing_supported_args_no_params) {
+TEST_F(TestCliArguments, test_seperating_args_no_params) {
   char program_name[] = "some_program";
   std::vector<char*> custom_args;
   custom_args.emplace_back(program_name);
@@ -92,12 +92,12 @@ TEST_F(TestCliArguments, test_removing_supported_args_no_params) {
   char** argv = custom_args.data();
 
   EXPECT_EQ(argc, 1);
-  vt::arguments::removeSupportedArgs(argc, argv);
-  EXPECT_EQ(argc, 0);
-  EXPECT_EQ(argv[0], nullptr);
+  auto pair = vt::arguments::separateParameters(argc, argv);
+  EXPECT_EQ(0, pair.first.size());
+  EXPECT_EQ(0, pair.second.size());
 }
 
-TEST_F(TestCliArguments, test_removing_supported_args_non_vt_params) {
+TEST_F(TestCliArguments, test_seperating_args_non_vt_params) {
   char program_name[] = "some_program";
   char non_vt_1[] = "--non_vt_arg=123";
   char non_vt_2[] = "--foo=bar";
@@ -111,14 +111,14 @@ TEST_F(TestCliArguments, test_removing_supported_args_non_vt_params) {
   char** argv = custom_args.data();
 
   EXPECT_EQ(argc, 3);
-  vt::arguments::removeSupportedArgs(argc, argv);
-  EXPECT_EQ(argc, 2);
-  EXPECT_STREQ(argv[0], "--non_vt_arg=123");
-  EXPECT_STREQ(argv[1], "--foo=bar");
-  EXPECT_EQ(argv[2], nullptr);
+  auto pair = vt::arguments::separateParameters(argc, argv);
+  EXPECT_EQ(0, pair.first.size());
+  EXPECT_EQ(2, pair.second.size());
+  EXPECT_EQ(pair.second[0], "--non_vt_arg=123");
+  EXPECT_EQ(pair.second[1], "--foo=bar");
 }
 
-TEST_F(TestCliArguments, test_removing_supported_args) {
+TEST_F(TestCliArguments, test_seperating_args) {
   char program_name[] = "vt";
   char non_vt_1[] = "--non_vt_arg=123";
   char vt_1[] = "--vt_debug_level";
@@ -138,15 +138,16 @@ TEST_F(TestCliArguments, test_removing_supported_args) {
 
   EXPECT_EQ(argc, 5);
 
-  vt::arguments::removeSupportedArgs(argc, argv);
-
-  EXPECT_EQ(argc, 2);
-  EXPECT_STREQ(argv[0], "--non_vt_arg=123");
-  EXPECT_STREQ(argv[1], "--foo=bar");
-  EXPECT_EQ(argv[2], nullptr);
+  auto pair = vt::arguments::separateParameters(argc, argv);
+  EXPECT_EQ(2, pair.first.size());
+  EXPECT_EQ(pair.first[0], "--vt_debug_level");
+  EXPECT_EQ(pair.first[1], "!--vt_some_param=1000");
+  EXPECT_EQ(2, pair.second.size());
+  EXPECT_EQ(pair.second[0], "--non_vt_arg=123");
+  EXPECT_EQ(pair.second[1], "--foo=bar");
 }
 
-TEST_F(TestCliArguments, test_removing_supported_args_2) {
+TEST_F(TestCliArguments, test_seperating_args_2) {
   char program_name[] = "vt";
   char vt_1[] = "--vt_debug_level";
   char vt_2[] = "!--vt_some_param=1000";
@@ -168,13 +169,14 @@ TEST_F(TestCliArguments, test_removing_supported_args_2) {
 
   EXPECT_EQ(argc, 6);
 
-  vt::arguments::removeSupportedArgs(argc, argv);
-
-  EXPECT_EQ(argc, 3);
-  EXPECT_STREQ(argv[0], "some_program");
-  EXPECT_STREQ(argv[1], "--non_vt_arg=123");
-  EXPECT_STREQ(argv[2], "--foo=bar");
-  EXPECT_EQ(argv[3], nullptr);
+  auto pair = vt::arguments::separateParameters(argc, argv);
+  EXPECT_EQ(2, pair.first.size());
+  EXPECT_EQ(pair.first[0], "--vt_debug_level");
+  EXPECT_EQ(pair.first[1], "!--vt_some_param=1000");
+  EXPECT_EQ(3, pair.second.size());
+  EXPECT_EQ(pair.second[0], "some_program");
+  EXPECT_EQ(pair.second[1], "--non_vt_arg=123");
+  EXPECT_EQ(pair.second[2], "--foo=bar");
 }
 
 }}} // end namespace vt::tests::unit
