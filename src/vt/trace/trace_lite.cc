@@ -248,21 +248,41 @@ bool TraceLite::checkDynamicRuntimeEnabled(bool is_end_event) {
     (trace_enabled_cur_phase_ or is_end_event);
 }
 
-void TraceLite::addUserEventBracketed(
-  UserEventIDType event, TimeType begin, TimeType end) {
+void TraceLite::addUserEventBracketedBegin(
+  UserEventIDType event, double begin
+) {
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
 
   vt_debug_print(
     normal, trace,
-    "Trace::addUserEventBracketed: event={:x}, begin={}, end={}\n",
-    event, begin, end);
+    "Trace::addUserEventBracketedBegin: event={:x}, begin={}\n",
+    event, begin
+  );
 
   auto const type = TraceConstantsType::UserEventPair;
   NodeType const node = theContext()->getNode();
 
   logEvent(LogType{begin, type, node, event, true});
+}
+
+void TraceLite::addUserEventBracketedEnd(
+  UserEventIDType event, double end
+) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
+  vt_debug_print(
+    normal, trace,
+    "Trace::addUserEventBracketedEnd: event={:x}, end={}\n",
+    event, end
+  );
+
+  auto const type = TraceConstantsType::UserEventPair;
+  NodeType const node = theContext()->getNode();
+
   logEvent(LogType{end, type, node, event, false});
 }
 

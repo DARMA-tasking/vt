@@ -166,13 +166,20 @@ struct TraceLite  {
   void disableTracing();
 
   /**
-   * \brief Log a bracketed user event with start and end time
+   * \brief Log a bracketed user event with begin time
    *
    * \param[in] event the ID for the sts file
    * \param[in] begin the begin time
+   */
+  void addUserEventBracketedBegin(UserEventIDType event, double begin);
+
+  /**
+   * \brief Log a bracketed user event with end time
+   *
+   * \param[in] event the ID for the sts file
    * \param[in] end the end time
    */
-  void addUserEventBracketed(UserEventIDType event, TimeType begin, TimeType end);
+  void addUserEventBracketedEnd(UserEventIDType event, double end);
 
   /**
    * \brief Log a user bracketed event with a note
