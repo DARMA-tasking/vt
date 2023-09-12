@@ -114,8 +114,6 @@ std::string valueFormatHelper(
       out = fn.apply<double>(eval);
     } else if constexpr (std::is_same_v<T, int64_t>) {
       out = fn.apply<int64_t>(eval);
-    } else if constexpr (std::is_same_v<T, uint64_t>) {
-      out = fn.apply<uint64_t>(eval);
     }
   }, eval);
   return out;

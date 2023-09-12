@@ -109,7 +109,6 @@ void reduceHelper(
 
 
 DIAGNOSTIC_VALUE_INSTANCE(int64_t)
-// DIAGNOSTIC_VALUE_INSTANCE(uint64_t)
 DIAGNOSTIC_VALUE_INSTANCE(double)
 
 }}}} /* end namespace vt::runtime::component::detail */
