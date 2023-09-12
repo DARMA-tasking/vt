@@ -78,7 +78,7 @@ Reduce::Reduce(
 detail::ReduceStamp Reduce::generateNextID() {
   *next_seq_ = *next_seq_ + 1;
   detail::ReduceStamp stamp;
-  stamp.init<detail::StrongSeq>(next_seq_);
+  stamp = detail::StrongSeq{next_seq_};
   return stamp;
 }
 

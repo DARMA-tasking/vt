@@ -45,9 +45,9 @@
 #define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_SCOPE_H
 
 #include "vt/collective/reduce/scoping/strong_types.h"
-#include "vt/utils/adt/union.h"
 
 #include <unordered_map>
+#include <variant>
 
 namespace vt { namespace collective { namespace reduce { namespace detail {
 
@@ -58,7 +58,9 @@ namespace vt { namespace collective { namespace reduce { namespace detail {
  * proxy, virtual proxy, group ID, or component ID.
  */
 struct ReduceScope {
-  using ValueType = vt::adt::SafeUnion<
+  using isByteCopyable = std::true_type;
+
+  using ValueType = std::variant<
     StrongObjGroup, StrongVrtProxy, StrongGroup, StrongCom, StrongUserID
   >;
 
@@ -83,16 +85,16 @@ struct ReduceScope {
   }
 
   std::string str() const {
-    if (l0_.is<StrongObjGroup>()) {
-      return fmt::format("objgroup[{:x}]", l0_.get<StrongObjGroup>().get());
-    } else if (l0_.is<StrongVrtProxy>()) {
-      return fmt::format("vrtproxy[{:x}]", l0_.get<StrongVrtProxy>().get());
-    } else if (l0_.is<StrongGroup>()) {
-      return fmt::format("group[{:x}]", l0_.get<StrongGroup>().get());
-    } else if (l0_.is<StrongCom>()) {
-      return fmt::format("component[{}]", l0_.get<StrongCom>().get());
-    } else if (l0_.is<StrongUserID>()) {
-      return fmt::format("userID[{}]", l0_.get<StrongUserID>().get());
+    if (std::holds_alternative<StrongObjGroup>(l0_)) {
+      return fmt::format("objgroup[{:x}]", std::get<StrongObjGroup>(l0_).get());
+    } else if (std::holds_alternative<StrongVrtProxy>(l0_)) {
+      return fmt::format("vrtproxy[{:x}]", std::get<StrongVrtProxy>(l0_).get());
+    } else if (std::holds_alternative<StrongGroup>(l0_)) {
+      return fmt::format("group[{:x}]", std::get<StrongGroup>(l0_).get());
+    } else if (std::holds_alternative<StrongCom>(l0_)) {
+      return fmt::format("component[{}]", std::get<StrongCom>(l0_).get());
+    } else if (std::holds_alternative<StrongUserID>(l0_)) {
+      return fmt::format("userID[{}]", std::get<StrongUserID>(l0_).get());
     } else {
       return "<unknown-type>";
     }
@@ -115,7 +117,7 @@ inline ReduceScope makeScope(Args&&... args);
 /**
  * \brief Reduction stamp bits to identify a specific instance of a reduction.
  */
-using ReduceStamp = vt::adt::SafeUnion<
+using ReduceStamp = std::variant<
   StrongTag, TagPair, StrongSeq, StrongUserID, StrongEpoch
 >;
 
@@ -251,7 +253,7 @@ using TagPair = detail::TagPair;
 template <typename T, typename... Args>
 ReduceStamp makeStamp(Args&&... args) {
   ReduceStamp stamp;
-  stamp.init<T>(std::forward<Args>(args)...);
+  stamp = T{std::forward<Args>(args)...};
   return stamp;
 }
 

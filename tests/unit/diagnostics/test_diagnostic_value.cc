@@ -71,7 +71,7 @@ TEST_F(TestDiagnosticValue, test_diagnostic_value_1) {
   using vt::runtime::component::DiagnosticErasedValue;
   using vt::runtime::component::detail::DiagnosticValue;
 
-  using ValueType = int32_t;
+  using ValueType = int64_t;
 
   ValueType init_value = 10;
   std::string test_key = "my-test-key";
@@ -106,13 +106,15 @@ TEST_F(TestDiagnosticValue, test_diagnostic_value_1) {
   auto this_node = theContext()->getNode();
 
   if (this_node == 0) {
-    EXPECT_TRUE(out.min_.template is<ValueType>());
-    EXPECT_TRUE(out.max_.template is<ValueType>());
-    EXPECT_TRUE(out.sum_.template is<ValueType>());
 
-    EXPECT_EQ(out.min_.template get<ValueType>(), cur_value);
-    EXPECT_EQ(out.max_.template get<ValueType>(), cur_value);
-    EXPECT_EQ(out.sum_.template get<ValueType>(), cur_value * num_nodes);
+    fmt::print("avg={}\n", out.avg_);
+    EXPECT_TRUE(std::holds_alternative<ValueType>(out.min_));
+    EXPECT_TRUE(std::holds_alternative<ValueType>(out.max_));
+    EXPECT_TRUE(std::holds_alternative<ValueType>(out.sum_));
+
+    EXPECT_EQ(std::get<ValueType>(out.min_), cur_value);
+    EXPECT_EQ(std::get<ValueType>(out.max_), cur_value);
+    EXPECT_EQ(std::get<ValueType>(out.sum_), cur_value * num_nodes);
     EXPECT_DOUBLE_EQ(out.avg_, static_cast<double>(cur_value));
     EXPECT_DOUBLE_EQ(out.std_, 0.0);
     EXPECT_EQ(out.update_, DiagnosticUpdate::Sum);
@@ -171,12 +173,12 @@ TEST_F(TestDiagnosticValue, test_diagnostic_value_2) {
   });
 
   if (this_node == 0) {
-    EXPECT_TRUE(out.min_.template is<ValueType>());
-    EXPECT_TRUE(out.max_.template is<ValueType>());
-    EXPECT_TRUE(out.sum_.template is<ValueType>());
+    EXPECT_TRUE(std::holds_alternative<ValueType>(out.min_));
+    EXPECT_TRUE(std::holds_alternative<ValueType>(out.max_));
+    EXPECT_TRUE(std::holds_alternative<ValueType>(out.sum_));
 
-    EXPECT_DOUBLE_EQ(out.min_.template get<ValueType>(), 100);
-    EXPECT_DOUBLE_EQ(out.max_.template get<ValueType>(), 175);
+    EXPECT_DOUBLE_EQ(std::get<ValueType>(out.min_), 100);
+    EXPECT_DOUBLE_EQ(std::get<ValueType>(out.max_), 175);
     EXPECT_DOUBLE_EQ(out.avg_, 150); // check properly weighted average
     EXPECT_EQ(out.update_, DiagnosticUpdate::Avg);
     EXPECT_EQ(out.unit_, DiagnosticUnit::Units);

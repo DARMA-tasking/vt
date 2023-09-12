@@ -49,7 +49,7 @@ function(create_trace_only_target)
     # vt/utils
     vt/utils/demangle/demangle.h vt/utils/bits/bits_counter.h
     vt/utils/bits/bits_common.h vt/utils/bits/bits_packer.h
-    vt/utils/bits/bits_packer.impl.h vt/utils/adt/union.h
+    vt/utils/bits/bits_packer.impl.h
     vt/utils/adt/histogram_approx.h
 
     # vt/collective
