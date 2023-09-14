@@ -271,6 +271,7 @@ std::size_t StatM::getUsage() {
           huge_page_bytes *= 1024;
         }
       }
+      meminfo.close();
     }
 
     return ((npages - huge_pages) * sysconf(_SC_PAGE_SIZE)) +
