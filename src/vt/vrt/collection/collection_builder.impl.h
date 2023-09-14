@@ -193,8 +193,9 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
     makeCollectionElement<ColT>(proxy, idx, this_node, std::move(c));
   }
 
-  if (global_constructed_elms != 0) {
-    // Construct a underlying group for the collection
+  if (not has_dynamic_membership) {
+    // Construct a underlying group for the collection unless there is dynamic
+    // membership and we need to finish a modification epoch
     constructGroup<ColT>(proxy);
   }
 }
