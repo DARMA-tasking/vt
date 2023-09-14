@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          test_list_insert_here.cc
+//                           test_list_insert_here.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -71,7 +71,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index2D> {
   virtual ~MyCol() {
     EXPECT_EQ(count, 1);
   }
-  
+
   int count = 0;
 };
 
