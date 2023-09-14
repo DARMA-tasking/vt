@@ -45,13 +45,21 @@
 #define INCLUDED_VT_RUNNABLE_INVOKE_H
 
 #include "vt/config.h"
+
+#if vt_check_enabled(trace_enabled)
 #include "vt/utils/demangle/demangle.h"
 #include "vt/utils/static_checks/function_ret_check.h"
 #include "vt/trace/trace_registry.h"
 
 #include <type_traits>
+#include <functional>
+#endif
+
+#include <utility>
 
 namespace vt { namespace runnable {
+
+#if vt_check_enabled(trace_enabled)
 
 template <typename FunctionType, FunctionType f>
 static std::string CreateEventTypeCStyleFunc() {
@@ -90,135 +98,63 @@ static std::string CreateEventName() {
   return DU::removeSpaces(barename + "(" + argsV + ")");
 }
 
-template <typename FunctionType, FunctionType f>
-struct CallableWrapper;
-
-template <typename Ret, typename... Args, Ret (*f)(Args...)>
-struct CallableWrapper<Ret(*)(Args...), f> {
-  using Type = Ret(*)(Args...);
+template <auto f>
+struct CallableWrapper {
+  using Type = decltype(f);
 
   static std::string GetEventTypeName() {
-    return CreateEventTypeCStyleFunc<Type, f>();
+    if constexpr (std::is_member_function_pointer_v<Type>) {
+      return CreateEventTypeMemberFunc<util::FunctionWrapper<Type>>();
+    } else {
+      return CreateEventTypeCStyleFunc<Type, f>();
+    }
   }
 
   static std::string GetEventName() {
-    return CreateEventName<Type, f, Args...>();
+    return CreateEventName<Type, f>();
   }
 
   static trace::TraceEntryIDType GetTraceID() {
     return trace::TraceRegistry::registerEventHashed(
-      GetEventTypeName(), GetEventName()
-    );
+      GetEventTypeName(), GetEventName());
   }
 };
 
-template <
-  typename Ret, typename Class, typename... Args, Ret (Class::*f)(Args...)
->
-struct CallableWrapper<Ret (Class::*)(Args...), f> {
-  using Type = Ret (Class::*)(Args...);
+template <auto f, typename... Args>
+struct ScopedInvokeEvent {
+  ScopedInvokeEvent() {
+    const auto trace_id = CallableWrapper<f>::GetTraceID();
+    const auto trace_event = theTrace()->messageCreation(trace_id, 0);
+    const auto from_node = theContext()->getNode();
 
-  static std::string GetEventTypeName() {
-    return CreateEventTypeMemberFunc<Class>();
-  }
-
-  static std::string GetEventName() {
-    return CreateEventName<Type, f, Args...>();
-  }
-
-  static trace::TraceEntryIDType GetTraceID() {
-    return trace::TraceRegistry::registerEventHashed(
-      GetEventTypeName(), GetEventName()
+    tag_ = theTrace()->beginProcessing(
+      trace_id, 0, trace_event, from_node, timing::getCurrentTime()
     );
   }
+
+  ~ScopedInvokeEvent() {
+    theTrace()->endProcessing(tag_, timing::getCurrentTime());
+    theTrace()->messageCreation(CallableWrapper<f>::GetTraceID(), 0);
+  }
+
+private:
+  trace::TraceProcessingTag tag_ = {};
 };
 
-#if vt_check_enabled(trace_enabled)
-template <typename Callable, Callable f, typename... Args>
-static trace::TraceProcessingTag BeginProcessingInvokeEvent() {
-  const auto trace_id = CallableWrapper<Callable, f>::GetTraceID();
-  const auto trace_event = theTrace()->messageCreation(trace_id, 0);
-  const auto from_node = theContext()->getNode();
+#endif // vt_check_enabled(trace_enabled)
 
-  return theTrace()->beginProcessing(trace_id, 0, trace_event, from_node, timing::getCurrentTime());
+template <auto f, typename... Args>
+auto invoke(Args&&... args){
+#if vt_check_enabled(trace_enabled)
+    ScopedInvokeEvent<f> e;
+#endif
+
+  return std::invoke(std::forward<decltype(f)>(f), std::forward<Args>(args)...);
 }
 
 template <typename Callable, Callable f, typename... Args>
-static void EndProcessingInvokeEvent(trace::TraceProcessingTag processing_tag) {
-  theTrace()->endProcessing(processing_tag, timing::getCurrentTime());
-
-  const auto trace_id = CallableWrapper<Callable, f>::GetTraceID();
-  theTrace()->messageCreation(trace_id, 0);
-}
-#endif
-
-template <
-  typename Fn, typename Type, typename T1,
-  typename std::enable_if_t<std::is_pointer<std::decay_t<T1>>::value, int> = 0,
-  typename... Args
->
-decltype(auto) invokeImpl(Type Fn::*f, T1&& obj, Args&&... args) {
-  return ((*std::forward<T1>(obj)).*f)(std::forward<Args>(args)...);
-}
-
-template <
-  typename Fn, typename Type, typename T1,
-  typename std::enable_if_t<!std::is_pointer<std::decay_t<T1>>::value, int> = 0,
-  typename... Args
->
-decltype(auto) invokeImpl(Type Fn::*f, T1&& obj, Args&&... args) {
-  return (std::forward<T1>(obj).*f)(std::forward<Args>(args)...);
-}
-
-template <typename Callable, typename... Args>
-decltype(auto) invokeImpl(Callable&& f, Args&&... args) {
-  return std::forward<Callable>(f)(std::forward<Args>(args)...);
-}
-
-template <typename Callable, Callable f, typename... Args>
-util::Copyable<Callable> invoke(Args&&... args) {
-#if vt_check_enabled(trace_enabled)
-  const auto processing_tag =
-    BeginProcessingInvokeEvent<Callable, f>();
-#endif
-
-  const auto& returnVal = invokeImpl(f, std::forward<Args>(args)...);
-
-#if vt_check_enabled(trace_enabled)
-  EndProcessingInvokeEvent<Callable, f>(processing_tag);
-#endif
-
-  return returnVal;
-}
-
-template <typename Callable, Callable f, typename... Args>
-util::NotCopyable<Callable> invoke(Args&&... args) {
-#if vt_check_enabled(trace_enabled)
-  const auto processing_tag =
-    BeginProcessingInvokeEvent<Callable, f>();
-#endif
-
-  auto&& returnVal = invokeImpl(f, std::forward<Args>(args)...);
-
-#if vt_check_enabled(trace_enabled)
-  EndProcessingInvokeEvent<Callable, f>(processing_tag);
-#endif
-
-  return std::move(returnVal);
-}
-
-template <typename Callable, Callable f, typename... Args>
-util::IsVoidReturn<Callable> invoke(Args&&... args) {
-#if vt_check_enabled(trace_enabled)
-  const auto processing_tag =
-    BeginProcessingInvokeEvent<Callable, f>();
-#endif
-
-  invokeImpl(f, std::forward<Args>(args)...);
-
-#if vt_check_enabled(trace_enabled)
-  EndProcessingInvokeEvent<Callable, f>(processing_tag);
-#endif
+auto invoke(Args&&... args) {
+  return invoke<f>(std::forward<Args>(args)...);
 }
 
 }} // namespace vt::runnable

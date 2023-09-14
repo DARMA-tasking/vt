@@ -78,7 +78,6 @@
 #include "vt/pipe/pipe_headers.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/phase/phase_manager.h"
-#include "vt/runnable/invoke.h"
 #include "vt/runnable/make_runnable.h"
 
 #include <tuple>

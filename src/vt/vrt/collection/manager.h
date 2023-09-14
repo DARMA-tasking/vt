@@ -70,7 +70,6 @@
 #include "vt/collective/reduce/reduce_msg.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
-#include "vt/runnable/invoke.h"
 #include "vt/context/runnable_context/lb_data.fwd.h"
 #include "vt/vrt/collection/param/construct_params.h"
 #include "vt/vrt/collection/param/construct_params_msg.h"
