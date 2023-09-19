@@ -147,7 +147,8 @@ struct StoreElmBase {
   template <typename U>
   static json maybeGenerateJson(U const& u) {
     if constexpr (nlohmann::detail::has_to_json<json,U>::value) {
-      return json{u};
+      json j(u);
+      return j;
     } else {
       vtAbort("Instantiated maybeGenerateJson on non-jsonable type");
       return json{};
