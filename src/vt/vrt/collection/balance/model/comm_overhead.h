@@ -61,19 +61,19 @@ struct CommOverhead : public ComposedModel {
    * \param[in] in_per_byte_weight weight to add per byte received
    */
   explicit CommOverhead(
-    std::shared_ptr<balance::LoadModel> base, TimeType in_per_msg_weight,
-    TimeType in_per_byte_weight
+    std::shared_ptr<balance::LoadModel> base, LoadType in_per_msg_weight,
+    LoadType in_per_byte_weight
   );
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
 
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
+  LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
 
 private:
   std::unordered_map<PhaseType, CommMapType> const* proc_comm_; /**< Underlying comm data */
-  TimeType per_msg_weight_ = 0.001;           /**< Cost per message */
-  TimeType per_byte_weight_ = 0.000001;       /**< Cost per bytes */
+  LoadType per_msg_weight_ = 0.001;           /**< Cost per message */
+  LoadType per_byte_weight_ = 0.000001;       /**< Cost per bytes */
 }; // class CommOverhead
 
 }}}} // end namespace

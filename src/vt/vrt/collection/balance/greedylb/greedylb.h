@@ -72,16 +72,15 @@ enum struct DataDistStrategy : uint8_t {
 };
 
 struct GreedyLB : LoadSamplerBaseLB {
-  using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
+  using ElementLoadType  = std::unordered_map<ObjIDType,LoadType>;
   using TransferType     = std::map<NodeType, std::vector<ObjIDType>>;
-  using LoadType         = double;
   using LoadProfileType  = std::unordered_map<NodeType,LoadType>;
 
   GreedyLB() = default;
   virtual ~GreedyLB() {}
 
   void init(objgroup::proxy::Proxy<GreedyLB> in_proxy);
-  void runLB(TimeType total_load) override;
+  void runLB(LoadType total_load) override;
   void inputParams(balance::ConfigEntry* config) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();

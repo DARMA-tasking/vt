@@ -83,7 +83,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
+  LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     return proc_load_->at(0).at(id).subphase_loads.at(phase.subphase);
   }
 
@@ -115,8 +115,8 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {id1, {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
-       {id2, {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}}};
+       {id1, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
+       {id2, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
 
   std::vector<unsigned int> subphases{2, 0, 1};
   auto test_model =
@@ -127,7 +127,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
   test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
-  std::unordered_map<ElementIDStruct, std::vector<TimeType>> expected_values = {
+  std::unordered_map<ElementIDStruct, std::vector<LoadType>> expected_values = {
     {id1,
      {proc_load[0][id1].subphase_loads[subphases[0]],
       proc_load[0][id1].subphase_loads[subphases[1]],
@@ -160,9 +160,9 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
     {0,
      LoadMapType{
        {ElementIDStruct{1,this_node},
-        {TimeType{60}, {TimeType{10}, TimeType{20}, TimeType{30}}}},
+        {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
        {ElementIDStruct{2,this_node},
-        {TimeType{150}, {TimeType{40}, TimeType{50}, TimeType{60}}}}
+        {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}
      }
     }
   };
@@ -176,9 +176,9 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
   test_model->setLoads(&proc_load, nullptr);
   test_model->updateLoads(0);
 
-  std::unordered_map<ElementIDStruct, TimeType> expected_values = {
-    {ElementIDStruct{1,this_node}, TimeType{50}},
-    {ElementIDStruct{2,this_node}, TimeType{110}}};
+  std::unordered_map<ElementIDStruct, LoadType> expected_values = {
+    {ElementIDStruct{1,this_node}, LoadType{50}},
+    {ElementIDStruct{2,this_node}, LoadType{110}}};
 
   int objects_seen = 0;
 

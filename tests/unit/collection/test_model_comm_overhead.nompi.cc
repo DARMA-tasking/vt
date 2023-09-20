@@ -86,7 +86,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
+  LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     const auto work = proc_load_->at(0).at(id).whole_phase_load;
 
     if (phase.subphase == PhaseOffset::WHOLE_PHASE) {
@@ -122,7 +122,7 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   // Element 3 (home node == 3)
   ElementIDStruct const elem3 = {3, 3};
 
-  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, {TimeType{150}, {}}}}}};
+  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, {LoadType{150}, {}}}}}};
 
   ProcCommMap proc_comm = {
     {0,
@@ -154,8 +154,8 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   );
   test_model->setLoads(&proc_load, &proc_comm);
 
-  std::unordered_map<PhaseType, TimeType> expected_work = {
-    {0, TimeType{296}}, {1, TimeType{295.5}}
+  std::unordered_map<PhaseType, LoadType> expected_work = {
+    {0, LoadType{296}}, {1, LoadType{295.5}}
   };
 
   for (; num_phases < 2; ++num_phases) {

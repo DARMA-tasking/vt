@@ -143,7 +143,7 @@ void GreedyLB::inputParams(balance::ConfigEntry* config) {
   strat_ = strategy_converter_.getFromConfig(config, strat_);
 }
 
-void GreedyLB::runLB(TimeType total_load) {
+void GreedyLB::runLB(LoadType total_load) {
   this_load = loadMilli(total_load);
   buildHistogram();
   loadStats();

@@ -64,7 +64,7 @@ public:
   void inputParams(balance::ConfigEntry* config) override;
 
 protected:
-  TimeType getModeledValue(const elm::ElementIDStruct& obj) override;
+  LoadType getModeledValue(const elm::ElementIDStruct& obj) override;
 
 private:
   std::shared_ptr<balance::LoadModel> total_work_model_ = nullptr;

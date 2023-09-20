@@ -59,7 +59,7 @@ struct WeightedMessages : public ComposedModel {
    */
   explicit WeightedMessages(
     std::shared_ptr<balance::LoadModel> base,
-    TimeType in_per_msg_weight = 0.0, TimeType in_per_byte_weight = 1.0
+    LoadType in_per_msg_weight = 0.0, LoadType in_per_byte_weight = 1.0
   ) : ComposedModel(base),
       per_msg_weight_(in_per_msg_weight),
       per_byte_weight_(in_per_byte_weight) { }
@@ -72,14 +72,14 @@ struct WeightedMessages : public ComposedModel {
     ComposedModel::setLoads(proc_load, proc_comm);
   }
 
-  TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) const override;
+  LoadType getModeledComm(ElementIDStruct object, PhaseOffset when) const override;
 
 private:
   // observer pointer to the underlying comm data
   std::unordered_map<PhaseType, CommMapType> const* proc_comm_;
 
-  TimeType per_msg_weight_;
-  TimeType per_byte_weight_;
+  LoadType per_msg_weight_;
+  LoadType per_byte_weight_;
 };
 
 }}}} // namespace vt::vrt::collection::balance

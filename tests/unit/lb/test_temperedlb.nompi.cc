@@ -55,8 +55,8 @@ using ElementIDStruct = vt::vrt::collection::balance::ElementIDStruct;
 using ElementIDType = vt::vrt::collection::balance::ElementIDType;
 using ObjectOrdering = vt::vrt::collection::lb::ObjectOrderEnum;
 
-TimeType setupProblem(
-  std::unordered_map<ElementIDStruct, TimeType> &cur_objs
+LoadType setupProblem(
+  std::unordered_map<ElementIDStruct, LoadType> &cur_objs
 ) {
   // total load of 29 seconds
   cur_objs.emplace(ElementIDStruct{3,0}, 4.0);
@@ -67,7 +67,7 @@ TimeType setupProblem(
   cur_objs.emplace(ElementIDStruct{4,0}, 3.0);
 
   // compute the load for this processor
-  TimeType my_load = 0;
+  LoadType my_load = 0;
   for (auto &obj : cur_objs) {
     my_load += obj.second;
   }
@@ -76,8 +76,8 @@ TimeType setupProblem(
 
 void orderAndVerify(
   ObjectOrdering order,
-  const std::unordered_map<ElementIDStruct, TimeType>& cur_objs,
-  TimeType my_load, TimeType target_load,
+  const std::unordered_map<ElementIDStruct, LoadType>& cur_objs,
+  LoadType my_load, LoadType target_load,
   const std::vector<ElementIDType>& soln, bool use_tempered_wmin) {
   // have TemperedLB order the objects
   auto ordered_objs = use_tempered_wmin ?
@@ -94,12 +94,12 @@ void orderAndVerify(
 }
 
 void orderUsingOverloadAndVerify(
-  ObjectOrdering order, TimeType over_avg_sec /* my_load-target_load */,
+  ObjectOrdering order, LoadType over_avg_sec /* my_load-target_load */,
   const std::vector<ElementIDType> &soln, bool use_temperd_wmin = false
 ) {
-  std::unordered_map<ElementIDStruct, TimeType> cur_objs;
-  TimeType my_load = setupProblem(cur_objs);
-  TimeType target_load = my_load - over_avg_sec;
+  std::unordered_map<ElementIDStruct, LoadType> cur_objs;
+  LoadType my_load = setupProblem(cur_objs);
+  LoadType target_load = my_load - over_avg_sec;
 
   orderAndVerify(
     order, cur_objs, my_load, target_load, soln, use_temperd_wmin
@@ -107,12 +107,12 @@ void orderUsingOverloadAndVerify(
 }
 
 void orderUsingTargetLoadAndVerify(
-  ObjectOrdering order, TimeType target_load_sec,
+  ObjectOrdering order, LoadType target_load_sec,
   const std::vector<ElementIDType> &soln, bool use_temperd_wmin = false
 ) {
-  std::unordered_map<ElementIDStruct, TimeType> cur_objs;
-  TimeType my_load = setupProblem(cur_objs);
-  TimeType target_load = target_load_sec;
+  std::unordered_map<ElementIDStruct, LoadType> cur_objs;
+  LoadType my_load = setupProblem(cur_objs);
+  LoadType target_load = target_load_sec;
 
   orderAndVerify(
     order, cur_objs, my_load, target_load, soln, use_temperd_wmin
@@ -123,7 +123,7 @@ void orderUsingTargetLoadAndVerify(
 
 TEST_F(TestTemperedLB, test_temperedlb_ordering_elmid) {
   ObjectOrdering order = ObjectOrdering::ElmID;
-  TimeType over_avg = 4.5;
+  LoadType over_avg = 4.5;
   // result will be independent of over_avg
   std::vector<ElementIDType> soln = {0, 1, 2, 3, 4, 5};
 
@@ -134,7 +134,7 @@ TEST_F(TestTemperedLB, test_temperedlb_ordering_elmid) {
 
 TEST_F(TestTemperedLB, test_temperedlb_ordering_fewestmigrations_intermediate) {
   ObjectOrdering order = ObjectOrdering::FewestMigrations;
-  TimeType over_avg = 4.5;
+  LoadType over_avg = 4.5;
   // single_obj_load will be 5.0
   // load order will be 5.0, 4.0, 3.0, 2.0, 6.0, 9.0
   std::vector<ElementIDType> soln = {5, 3, 4, 0, 1, 2};
@@ -144,7 +144,7 @@ TEST_F(TestTemperedLB, test_temperedlb_ordering_fewestmigrations_intermediate) {
 
 TEST_F(TestTemperedLB, test_temperedlb_ordering_fewestmigrations_largest) {
   ObjectOrdering order = ObjectOrdering::FewestMigrations;
-  TimeType over_avg = 12.5;
+  LoadType over_avg = 12.5;
   // single_obj_load will be 9.0
   // load order will be 9.0, 6.0, 5.0, 4.0, 3.0, 2.0
   std::vector<ElementIDType> soln = {2, 1, 5, 3, 4, 0};
@@ -154,7 +154,7 @@ TEST_F(TestTemperedLB, test_temperedlb_ordering_fewestmigrations_largest) {
 
 TEST_F(TestTemperedLB, test_temperedlb_ordering_fewestmigrations_smallest) {
   ObjectOrdering order = ObjectOrdering::FewestMigrations;
-  TimeType over_avg = 1.5;
+  LoadType over_avg = 1.5;
   // single_obj_load will be 2.0
   // load order will be 2.0, 3.0, 4.0, 5.0, 6.0, 9.0
   std::vector<ElementIDType> soln = {0, 4, 3, 5, 1, 2};
@@ -166,7 +166,7 @@ TEST_F(TestTemperedLB, test_temperedlb_ordering_fewestmigrations_smallest) {
 
 TEST_F(TestTemperedLB, test_temperedlb_ordering_smallobjects_intermediate) {
   ObjectOrdering order = ObjectOrdering::SmallObjects;
-  TimeType over_avg = 4.5;
+  LoadType over_avg = 4.5;
   // marginal_obj_load will be 3.0
   // load order will be 3.0, 2.0, 4.0, 5.0, 6.0, 9.0
   std::vector<ElementIDType> soln = {4, 0, 3, 5, 1, 2};
@@ -176,7 +176,7 @@ TEST_F(TestTemperedLB, test_temperedlb_ordering_smallobjects_intermediate) {
 
 TEST_F(TestTemperedLB, test_temperedlb_ordering_smallobjects_largest) {
   ObjectOrdering order = ObjectOrdering::SmallObjects;
-  TimeType target_load = 0.5;
+  LoadType target_load = 0.5;
   // marginal_obj_load will be 9.0
   // load order will be 9.0, 6.0, 5.0, 4.0, 3.0, 2.0
   std::vector<ElementIDType> soln = {2, 1, 5, 3, 4, 0};
@@ -186,7 +186,7 @@ TEST_F(TestTemperedLB, test_temperedlb_ordering_smallobjects_largest) {
 
 TEST_F(TestTemperedLB, test_temperedlb_ordering_smallobjects_smallest) {
   ObjectOrdering order = ObjectOrdering::SmallObjects;
-  TimeType over_avg = 1.5;
+  LoadType over_avg = 1.5;
   // marginal_obj_load will be 2.0
   // load order will be 2.0, 3.0, 4.0, 5.0, 6.0, 9.0
   std::vector<ElementIDType> soln = {0, 4, 3, 5, 1, 2};
@@ -198,7 +198,7 @@ TEST_F(TestTemperedLB, test_temperedlb_ordering_smallobjects_smallest) {
 
 TEST_F(TestTemperedLB, test_temperedlb_ordering_largestobjects) {
   ObjectOrdering order = ObjectOrdering::LargestObjects;
-  TimeType over_avg = 4.5;
+  LoadType over_avg = 4.5;
   // result will be independent of over_avg
   std::vector<ElementIDType> soln = {2, 1, 5, 3, 4, 0};
 
@@ -209,7 +209,7 @@ TEST_F(TestTemperedLB, test_temperedlb_ordering_largestobjects) {
 
 TEST_F(TestTemperedLB, test_temperedwmin_ordering_elmid) {
   ObjectOrdering order = ObjectOrdering::ElmID;
-  TimeType over_avg = 4.5;
+  LoadType over_avg = 4.5;
   // result will be independent of over_avg
   std::vector<ElementIDType> soln = {0, 1, 2, 3, 4, 5};
 
@@ -218,7 +218,7 @@ TEST_F(TestTemperedLB, test_temperedwmin_ordering_elmid) {
 
 TEST_F(TestTemperedLB, test_temperedwmin_ordering_smallobjects_largest) {
   ObjectOrdering order = ObjectOrdering::SmallObjects;
-  TimeType target_load = 0.5;
+  LoadType target_load = 0.5;
   // marginal_obj_load will be 9.0
   // load order will be 9.0, 6.0, 5.0, 4.0, 3.0, 2.0
   std::vector<ElementIDType> soln = {2, 1, 5, 3, 4, 0};

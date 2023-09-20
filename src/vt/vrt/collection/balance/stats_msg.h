@@ -62,7 +62,7 @@ struct LoadData {
   using isByteCopyable = std::true_type;
 
   LoadData() = default;
-  LoadData(lb::Statistic in_stat, TimeType const y)
+  LoadData(lb::Statistic in_stat, LoadType const y)
     : max_(y), sum_(y), min_(y), avg_(y), M2_(0.0f), M3_(0.0f), M4_(0.0f),
       N_(1), P_(y not_eq 0.0f), stat_(in_stat)
   {
@@ -118,12 +118,12 @@ struct LoadData {
     return a1;
   }
 
-  TimeType max() const { return max_; }
-  TimeType sum() const { return sum_; }
-  TimeType min() const { return min_; }
-  TimeType avg() const { return avg_; }
-  TimeType var() const { return N_ > 0 ? M2_ * (1.0f / N_) : 0.0; }
-  TimeType skew() const {
+  LoadType max() const { return max_; }
+  LoadType sum() const { return sum_; }
+  LoadType min() const { return min_; }
+  LoadType avg() const { return avg_; }
+  LoadType var() const { return N_ > 0 ? M2_ * (1.0f / N_) : 0.0; }
+  LoadType skew() const {
     static const double min_sqrt = std::sqrt(std::numeric_limits<double>::min());
     if (N_ == 1 or M2_ < min_sqrt) { // 1.e-150
       return 0.0;
@@ -135,7 +135,7 @@ struct LoadData {
       return nvar_inv * std::sqrt( var_inv ) * M3_;
     }
   }
-  TimeType krte() const {
+  LoadType krte() const {
     if (N_ == 1 or M2_ < 1.e-150) {
       return 0.0;
     } else {
@@ -146,22 +146,22 @@ struct LoadData {
       return nvar_inv * var_inv * M4_ - 3.;
     }
   }
-  TimeType I() const { return avg() > 0.0 ? (max() / avg()) - 1.0f : 0.0; }
-  TimeType stdv() const { return std::sqrt(var()); }
+  LoadType I() const { return avg() > 0.0 ? (max() / avg()) - 1.0f : 0.0; }
+  LoadType stdv() const { return std::sqrt(var()); }
   int32_t  npr() const { return P_; }
 
   static_assert(
-    std::is_same<TimeType, double>::value == true,
-    "TimeType must be a double"
+    std::is_same<LoadType, double>::value == true,
+    "LoadType must be a double"
   );
 
-  TimeType max_ = 0.0;
-  TimeType sum_ = 0.0;
-  TimeType min_ = 0.0;
-  TimeType avg_ = 0.0;
-  TimeType M2_  = 0.0;
-  TimeType M3_  = 0.0;
-  TimeType M4_  = 0.0;
+  LoadType max_ = 0.0;
+  LoadType sum_ = 0.0;
+  LoadType min_ = 0.0;
+  LoadType avg_ = 0.0;
+  LoadType M2_  = 0.0;
+  LoadType M3_  = 0.0;
+  LoadType M4_  = 0.0;
   int32_t  N_ = 0;
   int32_t  P_ = 0;
   lb::Statistic stat_ = lb::Statistic::Rank_load_modeled;

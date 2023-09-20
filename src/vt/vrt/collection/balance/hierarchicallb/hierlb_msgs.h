@@ -56,8 +56,6 @@ struct LBTreeUpMsg : HierLBTypes, ::vt::Message {
   using MessageParentType = ::vt::Message;
   vt_msg_serialize_required(); // prev. serialize(1)
 
-  using LoadType = double;
-
   LBTreeUpMsg() = default;
   LBTreeUpMsg(
     LoadType const in_child_load, NodeType const in_child,
@@ -88,8 +86,6 @@ private:
 struct LBTreeDownMsg : HierLBTypes, ::vt::Message {
   using MessageParentType = ::vt::Message;
   vt_msg_serialize_required(); // prev. serialize(1)
-
-  using LoadType = double;
 
   LBTreeDownMsg() = default;
   LBTreeDownMsg(

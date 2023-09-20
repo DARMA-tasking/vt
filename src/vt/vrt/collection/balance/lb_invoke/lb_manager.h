@@ -287,7 +287,7 @@ private:
   std::shared_ptr<LoadModel> strategy_specific_model_;
   std::unordered_map<std::string, LBProxyType> lb_instances_;
   StatisticMapType stats;
-  TimeType total_load_from_model = 0.;
+  LoadType total_load_from_model = 0.;
   std::unique_ptr<lb::PhaseInfo> last_phase_info_ = nullptr;
   bool before_lb_stats_ = true;
   /// The appender for outputting statistics in JSON format

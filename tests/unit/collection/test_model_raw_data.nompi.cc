@@ -77,12 +77,12 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
 
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
-    LoadMapType{{id1, {TimeType{5}, {TimeType{5}}}},   {id2, {TimeType{10}, {TimeType{10}}}}},
-    LoadMapType{{id1, {TimeType{30}, {TimeType{30}}}},  {id2, {TimeType{100}, {TimeType{100}}}}},
-    LoadMapType{{id1, {TimeType{50}, {TimeType{50}}}},  {id2, {TimeType{40}, {TimeType{40}}}}},
-    LoadMapType{{id1, {TimeType{2}, {TimeType{2}}}},   {id2, {TimeType{50}, {TimeType{50}}}}},
-    LoadMapType{{id1, {TimeType{60}, {TimeType{60}}}},  {id2, {TimeType{20}, {TimeType{20}}}}},
-    LoadMapType{{id1, {TimeType{100}, {TimeType{100}}}}, {id2, {TimeType{10}, {TimeType{10}}}}},
+    LoadMapType{{id1, {LoadType{5}, {LoadType{5}}}},   {id2, {LoadType{10}, {LoadType{10}}}}},
+    LoadMapType{{id1, {LoadType{30}, {LoadType{30}}}},  {id2, {LoadType{100}, {LoadType{100}}}}},
+    LoadMapType{{id1, {LoadType{50}, {LoadType{50}}}},  {id2, {LoadType{40}, {LoadType{40}}}}},
+    LoadMapType{{id1, {LoadType{2}, {LoadType{2}}}},   {id2, {LoadType{50}, {LoadType{50}}}}},
+    LoadMapType{{id1, {LoadType{60}, {LoadType{60}}}},  {id2, {LoadType{20}, {LoadType{20}}}}},
+    LoadMapType{{id1, {LoadType{100}, {LoadType{100}}}}, {id2, {LoadType{10}, {LoadType{10}}}}},
   };
 
   for (size_t iter = 0; iter < load_holder.size(); ++iter) {

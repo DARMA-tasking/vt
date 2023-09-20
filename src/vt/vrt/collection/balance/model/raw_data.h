@@ -59,9 +59,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 struct RawData : public LoadModel {
   RawData() = default;
   void updateLoads(PhaseType last_completed_phase) override;
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
+  LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   bool hasRawLoad() const override { return true; }
-  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
+  LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;

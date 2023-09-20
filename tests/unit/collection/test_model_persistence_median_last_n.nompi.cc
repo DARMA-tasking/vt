@@ -79,7 +79,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
+  LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     // Most recent phase will be at the end of vector
     return proc_load_->at(num_phases + phase.phases).at(id).whole_phase_load;
   }
@@ -110,36 +110,36 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
     LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{10}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{40}, {}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{4}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{10}, {}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{4}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{10}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{20}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{100}, {}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{20}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{100}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{50}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{40}, {}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{50}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{2}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{50}, {}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{2}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{50}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{60}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{20}, {}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{60}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{20}, {}}}},
     LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{100}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{10}, {}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{100}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{10}, {}}}},
   };
 
-  std::array<std::pair<TimeType, TimeType>, num_total_phases> expected_medians{
-    std::make_pair(TimeType{10}, TimeType{40}), // iter 0 results
-    std::make_pair(TimeType{7},  TimeType{25}), // iter 1 results
-    std::make_pair(TimeType{10}, TimeType{40}), // iter 2 results
-    std::make_pair(TimeType{15}, TimeType{40}), // iter 3 results
-    std::make_pair(TimeType{12}, TimeType{45}), // iter 4 results
-    std::make_pair(TimeType{35}, TimeType{45}), // iter 5 results
-    std::make_pair(TimeType{55}, TimeType{30})  // iter 6 results
+  std::array<std::pair<LoadType, LoadType>, num_total_phases> expected_medians{
+    std::make_pair(LoadType{10}, LoadType{40}), // iter 0 results
+    std::make_pair(LoadType{7},  LoadType{25}), // iter 1 results
+    std::make_pair(LoadType{10}, LoadType{40}), // iter 2 results
+    std::make_pair(LoadType{15}, LoadType{40}), // iter 3 results
+    std::make_pair(LoadType{12}, LoadType{45}), // iter 4 results
+    std::make_pair(LoadType{35}, LoadType{45}), // iter 5 results
+    std::make_pair(LoadType{55}, LoadType{30})  // iter 6 results
   };
 
   for (auto iter = 0; iter < num_total_phases; ++iter) {

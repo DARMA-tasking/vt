@@ -66,7 +66,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   balance::LoadModel* model,
   StatisticMapType const& in_stats,
   ElementCommType const& in_comm_lb_data,
-  TimeType total_load,
+  LoadType total_load,
   balance::DataMapType const& in_data_map
 ) {
   start_time_ = timing::getCurrentTime();
@@ -86,7 +86,7 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
 }
 
 /*static*/
-BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) {
+LoadType BaseLB::loadMilli(LoadType const& load) {
   // Convert `load` in seconds to milliseconds, typically for binning purposes
   return load * 1000;
 }
@@ -251,7 +251,7 @@ void BaseLB::finalize(int32_t global_count) {
 
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
-    TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
+    auto const total_time = timing::getCurrentTime() - start_time_;
     vt_debug_print(
       terse, lb,
       "BaseLB::finalize: LB total time={}\n",

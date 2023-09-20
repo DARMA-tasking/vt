@@ -58,11 +58,11 @@ SelectSubphases::SelectSubphases(std::shared_ptr<LoadModel> base, std::vector<un
   //vtAssert(subphases_.size() < base_subphases, "...");
 }
 
-TimeType
+LoadType
 SelectSubphases::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
   if (when.subphase == PhaseOffset::WHOLE_PHASE) {
     // Sum up the selected subphases as if they represent the entire phase
-    TimeType sum = 0.0;
+    LoadType sum = 0.0;
     for (auto s : subphases_) {
       PhaseOffset p{when.phases, s};
       sum += ComposedModel::getModeledLoad(object, p);

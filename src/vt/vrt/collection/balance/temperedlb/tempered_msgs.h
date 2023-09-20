@@ -55,7 +55,7 @@ struct LoadMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required(); // node_load_
 
-  using NodeLoadType = std::unordered_map<NodeType, lb::BaseLB::LoadType>;
+  using NodeLoadType = std::unordered_map<NodeType, LoadType>;
 
   LoadMsg() = default;
   LoadMsg(NodeType in_from_node, NodeLoadType const& in_node_load)
@@ -66,7 +66,7 @@ struct LoadMsg : vt::Message {
     return node_load_;
   }
 
-  void addNodeLoad(NodeType node, lb::BaseLB::LoadType load) {
+  void addNodeLoad(NodeType node, LoadType load) {
     node_load_[node] = load;
   }
 
@@ -117,7 +117,7 @@ struct LazyMigrationMsg : SerializeRequired<
     vt::Message,
     LazyMigrationMsg
   >;
-  using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, lb::BaseLB::LoadType>;
+  using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, LoadType>;
 
   LazyMigrationMsg() = default;
   LazyMigrationMsg(NodeType in_to_node, ObjsType const& in_objs)
