@@ -102,4 +102,29 @@ TEST_F(TestListInsertHere, test_list_insert_here1) {
   });
 }
 
+TEST_F(TestListInsertHere, test_list_insert_here_sparse2) {
+
+  std::vector<std::tuple<vt::Index2D, std::unique_ptr<MyCol>>> elms;
+
+  auto const this_node = theContext()->getNode();
+
+  // node 0 is empty, node 1 makes up for it so the math works out
+  auto end = this_node == 0 ? 0 : (this_node == 1 ? this_node+2 : this_node+1);
+  for (NodeType i = 0; i < end; i++) {
+    elms.emplace_back(vt::Index2D{(int)this_node, (int)i}, std::make_unique<MyCol>());
+  }
+
+  auto proxy = makeCollection<MyCol>("test list insert here")
+    .listInsertHere(std::move(elms))
+    .template mapperFunc<collectionMap>()
+    .wait();
+
+  runInEpochCollective([&]{
+    // rooted broadcast to test spanning tree
+    if (this_node == 0) {
+      proxy.broadcast<&MyCol::handler>();
+    }
+  });
+}
+
 } // end namespace vt::tests::unit::list_insert_here
