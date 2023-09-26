@@ -107,7 +107,7 @@ LoadType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) const {
   if (phase_data.find(object) != phase_data.end()) {
     return phase_data.at(object).get(offset);
   } else {
-    return TimeType{0.0};
+    return 0.0;
   }
 }
 

@@ -50,7 +50,7 @@ LoadType WeightedCommunicationVolume::getModeledLoad(
     ElementIDStruct object, PhaseOffset when
 ) const {
   return alpha_ * ComposedModel::getModeledLoad(object, when) +
-    beta_ * ComposedModel::getModeledComm(object, when) + TimeType{gamma_};
+    beta_ * ComposedModel::getModeledComm(object, when) + gamma_;
 }
 
 }}}} // namespace vt::vrt::collection::balance

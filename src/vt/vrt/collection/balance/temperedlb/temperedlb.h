@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_type.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPEREDLB_H
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPEREDLB_H
 
@@ -104,7 +105,7 @@ protected:
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
   std::vector<NodeType> makeUnderloaded() const;
   std::vector<NodeType> makeSufficientlyUnderloaded(
-    TimeType load_to_accommodate
+    LoadType load_to_accommodate
   ) const;
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available

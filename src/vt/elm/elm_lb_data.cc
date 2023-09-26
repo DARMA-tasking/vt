@@ -69,7 +69,7 @@ void ElementLBData::stop(TimeType time) {
   auto const started = cur_time_started_;
   if (started) {
     cur_time_started_ = false;
-    addTime(total_time);
+    addTime(total_time.seconds());
   }
 
   vt_debug_print(
@@ -124,11 +124,11 @@ void ElementLBData::recvToNode(
   recvComm(key, bytes);
 }
 
-void ElementLBData::addTime(TimeType const& time) {
-  phase_timings_[cur_phase_] += time;
+void ElementLBData::addTime(LoadType const timeLoad) {
+  phase_timings_[cur_phase_] += timeLoad;
 
   subphase_timings_[cur_phase_].resize(cur_subphase_ + 1);
-  subphase_timings_[cur_phase_].at(cur_subphase_) += time;
+  subphase_timings_[cur_phase_].at(cur_subphase_) += timeLoad;
 
   vt_debug_print(
     verbose,lb,
@@ -163,7 +163,7 @@ PhaseType ElementLBData::getPhase() const {
   return cur_phase_;
 }
 
-TimeType ElementLBData::getLoad(PhaseType const& phase) const {
+LoadType ElementLBData::getLoad(PhaseType const& phase) const {
   auto iter = phase_timings_.find(phase);
   if (iter != phase_timings_.end()) {
     auto const total_load = phase_timings_.at(phase);
@@ -176,11 +176,11 @@ TimeType ElementLBData::getLoad(PhaseType const& phase) const {
 
     return total_load;
   } else {
-    return TimeType{0.0};
+    return 0.0;
   }
 }
 
-TimeType
+LoadType
 ElementLBData::getLoad(PhaseType phase, SubphaseType subphase) const {
   if (subphase == no_subphase)
     return getLoad(phase);
@@ -199,7 +199,7 @@ ElementLBData::getLoad(PhaseType phase, SubphaseType subphase) const {
   return total_load;
 }
 
-std::vector<TimeType> const& ElementLBData::getSubphaseTimes(PhaseType phase) {
+std::vector<LoadType> const& ElementLBData::getSubphaseTimes(PhaseType phase) {
   return subphase_timings_[phase];
 }
 

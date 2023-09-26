@@ -244,7 +244,7 @@ struct LoadModel
     vtAbort(
       "LoadModel::getRawLoad() called on a model that does not implement it"
     );
-    return TimeType{0.0};
+    return 0.0;
   };
 
   /**

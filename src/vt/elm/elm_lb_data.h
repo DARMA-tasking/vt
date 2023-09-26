@@ -63,7 +63,7 @@ struct ElementLBData {
 
   void start(TimeType time);
   void stop(TimeType time);
-  void addTime(TimeType const& time);
+  void addTime(LoadType const timeLoad);
 
   void sendToEntity(ElementIDStruct to, ElementIDStruct from, double bytes);
   void sendComm(elm::CommKey key, double bytes);
@@ -84,12 +84,12 @@ struct ElementLBData {
   void updatePhase(PhaseType const& inc = 1);
   void resetPhase();
   PhaseType getPhase() const;
-  TimeType getLoad(PhaseType const& phase) const;
-  TimeType getLoad(PhaseType phase, SubphaseType subphase) const;
+  LoadType getLoad(PhaseType const& phase) const;
+  LoadType getLoad(PhaseType phase, SubphaseType subphase) const;
 
   CommMapType const& getComm(PhaseType const& phase);
   std::vector<CommMapType> const& getSubphaseComm(PhaseType phase);
-  std::vector<TimeType> const& getSubphaseTimes(PhaseType phase);
+  std::vector<LoadType> const& getSubphaseTimes(PhaseType phase);
   void setSubPhase(SubphaseType subphase);
   SubphaseType getSubPhase() const;
 
@@ -126,11 +126,11 @@ protected:
   bool cur_time_started_ = false;
   TimeType cur_time_ = TimeType{0.0};
   PhaseType cur_phase_ = fst_lb_phase;
-  std::unordered_map<PhaseType, TimeType> phase_timings_ = {};
+  std::unordered_map<PhaseType, LoadType> phase_timings_ = {};
   std::unordered_map<PhaseType, CommMapType> phase_comm_ = {};
 
   SubphaseType cur_subphase_ = 0;
-  std::unordered_map<PhaseType, std::vector<TimeType>> subphase_timings_ = {};
+  std::unordered_map<PhaseType, std::vector<LoadType>> subphase_timings_ = {};
   std::unordered_map<PhaseType, std::vector<CommMapType>> subphase_comm_ = {};
 };
 

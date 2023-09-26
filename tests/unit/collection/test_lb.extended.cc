@@ -736,7 +736,7 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
       lbdh.user_defined_json_[phase][elm_id] = std::make_shared<nlohmann::json>(
         elm_ptr->toJson()
       );
-      lbdh.node_data_[phase][elm_id].whole_phase_load = TimeType{1.0};
+      lbdh.node_data_[phase][elm_id].whole_phase_load = 1.0;
     }
   }
 

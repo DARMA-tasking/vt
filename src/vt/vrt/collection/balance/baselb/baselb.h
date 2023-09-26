@@ -141,6 +141,8 @@ struct BaseLB {
     TransferMsg<ObjLoadListType>* msg
   );
 
+  LoadType loadMilli(LoadType const& load);
+
   void applyMigrations(
     TransferVecType const& transfers, MigrationCountCB migration_count_callback
   );

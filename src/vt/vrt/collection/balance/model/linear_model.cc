@@ -65,12 +65,12 @@ LoadType LinearModel::getModeledLoad(ElementIDStruct object, PhaseOffset when) c
   for (int i = -1 * static_cast<int>(phases); i < 0; i++) {
     x.emplace_back(i);
     past_phase.phases = i;
-    y.emplace_back(ComposedModel::getModeledLoad(object, past_phase).seconds());
+    y.emplace_back(ComposedModel::getModeledLoad(object, past_phase));
   }
 
   // should we re-create this every time?
   LinearRegression regression{x, y};
-  return TimeType{regression.predict(when.phases)};
+  return regression.predict(when.phases);
 }
 
 unsigned int LinearModel::getNumPastPhasesNeeded(unsigned int look_back) const

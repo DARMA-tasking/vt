@@ -69,11 +69,11 @@ void TemperedLB::init(objgroup::proxy::Proxy<TemperedLB> in_proxy) {
 }
 
 bool TemperedLB::isUnderloaded(LoadType load) const {
-  return load < target_max_load_.seconds() * temperedlb_load_threshold;
+  return load < target_max_load_ * temperedlb_load_threshold;
 }
 
 bool TemperedLB::isOverloaded(LoadType load) const {
-  return load > target_max_load_.seconds() * temperedlb_load_threshold;
+  return load > target_max_load_ * temperedlb_load_threshold;
 }
 
 /*static*/ std::unordered_map<std::string, std::string>
@@ -423,7 +423,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
 void TemperedLB::runLB(LoadType total_load) {
   bool should_lb = false;
 
-  this_load = total_load.seconds();
+  this_load = total_load;
   stats = *getStats();
 
   auto const avg  = stats.at(lb::Statistic::Rank_load_modeled).at(
@@ -444,13 +444,13 @@ void TemperedLB::runLB(LoadType total_load) {
     // we can't get the processor max lower than the max object load, so
     // modify the algorithm to define overloaded as exceeding the max
     // object load instead of the processor average load
-    target_max_load_ = TimeType{(pole > avg ? pole : avg)};
+    target_max_load_ = (pole > avg ? pole : avg);
   } else {
-    target_max_load_ = TimeType{avg};
+    target_max_load_ = avg;
   }
 
   if (avg > 0.0000000001) {
-    should_lb = max > (run_temperedlb_tolerance + 1.0) * target_max_load_.seconds();
+    should_lb = max > (run_temperedlb_tolerance + 1.0) * target_max_load_;
   }
 
   if (theContext()->getNode() == 0) {
@@ -470,7 +470,7 @@ void TemperedLB::runLB(LoadType total_load) {
   }
 
   if (should_lb) {
-    doLBStages(TimeType{imb});
+    doLBStages(imb);
   }
 }
 
@@ -551,7 +551,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
           // Perform the reduction for Rank_load_modeled -> processor load only
           proxy_.allreduce<&TemperedLB::loadStatsHandler, collective::PlusOp>(
             std::vector<balance::LoadData>{
-              {balance::LoadData{Statistic::Rank_load_modeled, TimeType{this_new_load_}}}
+              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}}
             }
           );
         });
@@ -910,7 +910,7 @@ std::vector<double> TemperedLB::createCMF(NodeSetType const& under) {
 
   switch (cmf_type_) {
   case CMFTypeEnum::Original:
-    factor = 1.0 / target_max_load_.seconds();
+    factor = 1.0 / target_max_load_;
     break;
   case CMFTypeEnum::NormBySelf:
     factor = 1.0 / this_new_load_;
@@ -927,7 +927,7 @@ std::vector<double> TemperedLB::createCMF(NodeSetType const& under) {
           l_max = load;
         }
       }
-      factor = 1.0 / (l_max > target_max_load_.seconds() ? l_max : target_max_load_.seconds());
+      factor = 1.0 / (l_max > target_max_load_ ? l_max : target_max_load_);
     }
     break;
   default:
@@ -998,7 +998,7 @@ std::vector<NodeType> TemperedLB::makeSufficientlyUnderloaded(
   std::vector<NodeType> sufficiently_under = {};
   for (auto&& elm : load_info_) {
     bool eval = Criterion(criterion_)(
-      this_new_load_, elm.second, load_to_accommodate.seconds(), target_max_load_.seconds()
+      this_new_load_, elm.second, load_to_accommodate, target_max_load_
     );
     if (eval) {
       sufficiently_under.push_back(elm.first);
@@ -1052,12 +1052,12 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
     {
       // first find the load of the smallest single object that, if migrated
       // away, could bring this processor's load below the target load
-      auto over_avg = this_new_load - target_max_load.seconds();
+      auto over_avg = this_new_load - target_max_load;
       // if no objects are larger than over_avg, then single_obj_load will still
       // (incorrectly) reflect the total load, which will not be a problem
       auto single_obj_load = this_new_load;
       for (auto &obj : cur_objs) {
-        auto obj_load = obj.second.seconds();
+        auto obj_load = obj.second;
         if (obj_load > over_avg && obj_load < single_obj_load) {
           single_obj_load = obj_load;
         }
@@ -1069,8 +1069,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         [&cur_objs, single_obj_load](
           const ObjIDType &left, const ObjIDType &right
         ) {
-          auto left_load = cur_objs[left].seconds();
-          auto right_load = cur_objs[right].seconds();
+          auto left_load = cur_objs[left];
+          auto right_load = cur_objs[right];
           if (left_load <= single_obj_load && right_load <= single_obj_load) {
             // we're in the sort load descending regime (first section)
             return left_load > right_load;
@@ -1101,7 +1101,7 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
       // first find the smallest object that, if migrated away along with all
       // smaller objects, could bring this processor's load below the target
       // load
-      auto over_avg = this_new_load - target_max_load.seconds();
+      auto over_avg = this_new_load - target_max_load;
       std::sort(
         ordered_obj_ids.begin(), ordered_obj_ids.end(),
         [&cur_objs](const ObjIDType &left, const ObjIDType &right) {
@@ -1112,9 +1112,9 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         }
       );
       auto cum_obj_load = this_new_load;
-      auto single_obj_load = cur_objs[ordered_obj_ids[0]].seconds();
+      auto single_obj_load = cur_objs[ordered_obj_ids[0]];
       for (auto obj_id : ordered_obj_ids) {
-        auto this_obj_load = cur_objs[obj_id].seconds();
+        auto this_obj_load = cur_objs[obj_id];
         if (cum_obj_load - this_obj_load < over_avg) {
           single_obj_load = this_obj_load;
           break;
@@ -1130,8 +1130,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         [&cur_objs, single_obj_load](
           const ObjIDType &left, const ObjIDType &right
         ) {
-          auto left_load = cur_objs[left].seconds();
-          auto right_load = cur_objs[right].seconds();
+          auto left_load = cur_objs[left];
+          auto right_load = cur_objs[right];
           if (left_load <= single_obj_load && right_load <= single_obj_load) {
             // we're in the sort load descending regime (first section)
             return left_load > right_load;
@@ -1234,7 +1234,7 @@ void TemperedLB::decide() {
         auto& selected_load = load_iter->second;
 
         bool eval = Criterion(criterion_)(
-          this_new_load_, selected_load, obj_load.seconds(), target_max_load_.seconds()
+          this_new_load_, selected_load, obj_load, target_max_load_
         );
 
         vt_debug_print(
@@ -1260,10 +1260,10 @@ void TemperedLB::decide() {
           ++n_transfers;
           // transfer the object load in seconds
           // to match the object load units on the receiving end
-          migrate_objs[selected_node][obj_id] = obj_load.seconds();
+          migrate_objs[selected_node][obj_id] = obj_load;
 
-          this_new_load_ -= obj_load.seconds();
-          selected_load += obj_load.seconds();
+          this_new_load_ -= obj_load;
+          selected_load += obj_load;
 
           iter = ordered_obj_ids.erase(iter);
           cur_objs_.erase(obj_id);
@@ -1272,7 +1272,7 @@ void TemperedLB::decide() {
           iter++;
         }
 
-        if (not (this_new_load_ > target_max_load_.seconds())) {
+        if (not (this_new_load_ > target_max_load_)) {
           break;
         }
       }

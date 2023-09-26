@@ -156,7 +156,7 @@ TEST_F(TestModelNorm, test_model_norm_2) {
 
     auto work_val =
       test_model->getModeledLoad(obj, PhaseOffset{0, PhaseOffset::WHOLE_PHASE});
-    EXPECT_NEAR(work_val.seconds(), expected_norms[obj.id - 1].seconds(), 0.001);
+    EXPECT_NEAR(work_val, expected_norms[obj.id - 1], 0.001);
   }
 
   EXPECT_EQ(objects_seen, 2);

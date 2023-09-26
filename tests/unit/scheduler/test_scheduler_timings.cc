@@ -101,7 +101,7 @@ void myHandler(MyMsg* msg) {
       auto load = 1000.0* data->getLoad(0);
       fmt::print("expected time={}, observed time={}\n", time, load);
       double margin = 30+ time*0.20;
-      if ((time - load.seconds())< margin) { num_pass++; }
+      if ((time - load)< margin) { num_pass++; }
     }
     EXPECT_GT (num_pass, num_iter - num_pass);
 

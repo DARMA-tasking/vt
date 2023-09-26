@@ -138,7 +138,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       LoadType time = elm.second.whole_phase_load;
       j["tasks"][i]["resource"] = "cpu";
       j["tasks"][i]["node"] = id.getCurrNode();
-      j["tasks"][i]["time"] = time.seconds();
+      j["tasks"][i]["time"] = time;
       if (user_defined_json_.find(phase) != user_defined_json_.end()) {
         auto &user_def_this_phase = user_defined_json_.at(phase);
         if (user_def_this_phase.find(id) != user_def_this_phase.end()) {
@@ -155,7 +155,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       if (subphases != 0) {
         for (std::size_t s = 0; s < subphases; s++) {
           j["tasks"][i]["subphases"][s]["id"] = s;
-          j["tasks"][i]["subphases"][s]["time"] = subphase_times[s].seconds();
+          j["tasks"][i]["subphases"][s]["time"] = subphase_times[s];
         }
       }
 
@@ -251,7 +251,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
             vtAssertExpr(object.is_number());
 
             auto elm = ElementIDStruct{object, node};
-            this->node_data_[id][elm].whole_phase_load = TimeType{time};
+            this->node_data_[id][elm].whole_phase_load = time;
 
             if (
               task["entity"].find("collection_id") != task["entity"].end() and
@@ -278,7 +278,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
 
                   this->node_data_[id][elm].subphase_loads.resize(
                     static_cast<std::size_t>(sid) + 1);
-                  this->node_data_[id][elm].subphase_loads[sid] = TimeType{stime};
+                  this->node_data_[id][elm].subphase_loads[sid] = stime;
                 }
               }
             }
