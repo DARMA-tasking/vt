@@ -45,6 +45,8 @@
 #include "vt/termination/term_action.h"
 #include "vt/termination/term_common.h"
 #include "vt/termination/termination.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace term {
 
@@ -65,11 +67,26 @@ void TermAction::afterAddEpochAction(EpochType const& epoch) {
    *  Produce a unit of any epoch type to inhibit global termination when
    *  local termination of a specific epoch is waiting for detection
    */
-  theTerm()->produce(term::any_epoch_sentinel);
-
   auto const status = testEpochTerminated(epoch);
   if (status == TermStatusEnum::Terminated) {
-    triggerAllEpochActions(epoch);
+    queueActions(epoch);
+  }
+}
+
+/*static*/ void TermAction::runActions(ActionMsg* msg) {
+  theTerm()->triggerAllEpochActions(msg->ep);
+}
+
+void TermAction::queueActions(EpochType epoch) {
+  if (epoch == term::any_epoch_sentinel) {
+    triggerAllActions(term::any_epoch_sentinel);
+  } else {
+    auto msg = makeMessage<ActionMsg>(epoch);
+    auto const han = auto_registry::makeAutoHandler<ActionMsg, runActions>();
+    auto const this_node = theContext()->getNode();
+    runnable::makeRunnable(msg, true, han, this_node)
+      .withTDEpoch(theTerm()->getEpoch())
+      .enqueue();
   }
 }
 
@@ -91,27 +108,6 @@ void TermAction::addActionEpoch(EpochType const& epoch, ActionType action) {
   afterAddEpochAction(epoch);
 }
 
-void TermAction::clearActions() {
-  global_term_actions_.clear();
-}
-
-void TermAction::clearActionsEpoch(EpochType const& epoch) {
-  if (epoch == term::any_epoch_sentinel) {
-    return clearActions();
-  } else {
-    auto iter = epoch_actions_.find(epoch);
-    if (iter != epoch_actions_.end()) {
-      auto const& epoch_actions_count = iter->second.size();
-      epoch_actions_.erase(iter);
-      /*
-       *  Consume units of epoch-specific actions are cleared to match the
-       *  production in addActionEpoch
-       */
-      theTerm()->consume(term::any_epoch_sentinel, epoch_actions_count);
-    }
-  }
-}
-
 void TermAction::triggerAllActions(EpochType const& epoch) {
   if (epoch == term::any_epoch_sentinel) {
     for (auto&& action : global_term_actions_) {
@@ -126,10 +122,8 @@ void TermAction::triggerAllActions(EpochType const& epoch) {
 
 void TermAction::triggerAllEpochActions(EpochType const& epoch) {
   // Run through the normal ActionType elements associated with this epoch
-  std::size_t epoch_actions_count = 0;
   auto iter = epoch_actions_.find(epoch);
   if (iter != epoch_actions_.end()) {
-    epoch_actions_count += iter->second.size();
     for (auto&& action : iter->second) {
       action();
     }
@@ -138,19 +132,12 @@ void TermAction::triggerAllEpochActions(EpochType const& epoch) {
   // Run through the callables associated with this epoch
   auto iter2 = epoch_callable_actions_.find(epoch);
   if (iter2 != epoch_callable_actions_.end()) {
-    epoch_actions_count += iter2->second.size();
-
     for (auto&& action : iter2->second) {
       action->invoke();
     }
 
     epoch_callable_actions_.erase(iter2);
   }
-  /*
-   *  Consume number of action units of any epoch type to match the production
-   *  in addActionEpoch() so global termination can now be detected
-   */
-  theTerm()->consume(term::any_epoch_sentinel, epoch_actions_count);
 }
 
 }} /* end namespace vt::term */

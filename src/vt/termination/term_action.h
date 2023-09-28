@@ -48,6 +48,7 @@
 #include "vt/termination/term_common.h"
 #include "vt/termination/term_state.h"
 #include "vt/termination/term_terminated.h"
+#include "vt/messaging/message/message.h"
 
 #include <vector>
 #include <unordered_map>
@@ -106,13 +107,19 @@ public:
   void addAction(ActionType action);
   void addAction(EpochType const& epoch, ActionType action);
   void addActionEpoch(EpochType const& epoch, ActionType action);
-  void clearActions();
-  void clearActionsEpoch(EpochType const& epoch);
 
   template <typename Callable>
   void addActionUnique(EpochType const& epoch, Callable&& c);
 
+  struct ActionMsg : vt::Message {
+    explicit ActionMsg(EpochType in_ep) : ep(in_ep) { }
+    EpochType ep = no_epoch;
+  };
+
+  static void runActions(ActionMsg* msg);
+
 protected:
+  void queueActions(EpochType epoch);
   void triggerAllActions(EpochType const& epoch);
   void triggerAllEpochActions(EpochType const& epoch);
   void afterAddEpochAction(EpochType const& epoch);
