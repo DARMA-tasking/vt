@@ -190,7 +190,7 @@ struct TerminationDetector :
    *
    * \return whether it is rooted
    */
-  bool isRooted(EpochType epoch);
+  static bool isRooted(EpochType epoch);
 
   /**
    * \brief Check if the algorithm behind an epoch is Dijkstra-Scholten parental
@@ -200,7 +200,16 @@ struct TerminationDetector :
    *
    * \return whether is it DS
    */
-  bool isDS(EpochType epoch);
+  static bool isDS(EpochType epoch);
+
+  /**
+   * \brief Check if the an epoch is a dependent epoch
+   *
+   * \param[in] epoch the epoch to check
+   *
+   * \return whether is it dependent
+   */
+  static bool isDep(EpochType epoch);
 
   /**
    * \internal \brief Get or create the DS terminator for an epoch
