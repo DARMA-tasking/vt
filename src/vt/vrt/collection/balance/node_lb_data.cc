@@ -58,6 +58,14 @@
 #include <sys/stat.h>
 #include <memory>
 
+#if vt_check_enabled(ldms)
+#include <ldms/ldms.h>
+#include <ldms/ldmsd_stream.h>
+#include <ovis_util/util.h>
+#endif
+
+#include <fmt-vt/core.h>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void NodeLBData::setProxy(objgroup::proxy::Proxy<NodeLBData> in_proxy) {
@@ -300,6 +308,14 @@ void NodeLBData::outputLBDataForPhase(PhaseType phase) {
   auto j = lb_data_->toJson(phase);
   auto writer = static_cast<JSONAppender*>(lb_data_writer_.get());
   writer->addElm(*j);
+
+#if vt_check_enabled(ldms)
+  ldms_t ldms = ldms_xprt_new("sock");
+  const auto jsonStr = j->dump();
+  ldmsd_stream_publish(
+    ldms, "LB_data", LDMSD_STREAM_JSON, jsonStr.c_str(), jsonStr.length()
+  );
+#endif
 }
 
 void NodeLBData::registerCollectionInfo(
