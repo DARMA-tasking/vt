@@ -212,6 +212,19 @@ function(link_target_with_vt)
     )
   endif()
 
+  if (${vt_ldms_enabled})
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: ldms=${vt_ldms_enabled}")
+    endif()
+    target_include_directories(${ARG_TARGET} SYSTEM PUBLIC
+      ${vt_ldms_includes}
+    )
+    target_link_directories(${ARG_TARGET} PUBLIC ${vt_ldms_libs})
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} :libldms.so :libldmsd_stream.so
+    )
+  endif()
+
   if (${ARG_CUSTOM_LINK_ARGS})
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: custom=${ARG_CUSTOM_LINK_ARGS}")
