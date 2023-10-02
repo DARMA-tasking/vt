@@ -74,19 +74,39 @@ void TermAction::afterAddEpochAction(EpochType const& epoch) {
 }
 
 /*static*/ void TermAction::runActions(ActionMsg* msg) {
-  theTerm()->triggerAllEpochActions(msg->ep);
+  theTerm()->triggerAllEpochActions(msg->ep, msg->encapsulated_epoch);
 }
 
 void TermAction::queueActions(EpochType epoch) {
   if (epoch == term::any_epoch_sentinel) {
-    triggerAllActions(term::any_epoch_sentinel);
+    // @todo: should this be delayed also?
+    for (auto&& action : global_term_actions_) {
+      action();
+    }
+
+    global_term_actions_.clear();
   } else {
-    auto msg = makeMessage<ActionMsg>(epoch);
-    auto const han = auto_registry::makeAutoHandler<ActionMsg, runActions>();
-    auto const this_node = theContext()->getNode();
-    runnable::makeRunnable(msg, true, han, this_node)
-      .withTDEpoch(theTerm()->getEpoch())
-      .enqueue();
+    auto make_runnable = [&](EpochType encap_epoch){
+      auto msg = makeMessage<ActionMsg>(epoch, encap_epoch);
+      auto const han = auto_registry::makeAutoHandler<ActionMsg, runActions>();
+      auto const this_node = theContext()->getNode();
+      runnable::makeRunnable(msg, true, han, this_node)
+        .withTDEpoch(encap_epoch)
+        .enqueue();
+    };
+
+    if (auto iter = epoch_actions_.find(epoch); iter != epoch_actions_.end()) {
+      for (auto const& [encapsulated_epoch, _] : iter->second) {
+        make_runnable(encapsulated_epoch);
+      }
+    }
+
+    if (auto iter = epoch_callable_actions_.find(epoch);
+        iter != epoch_callable_actions_.end()) {
+      for (auto const& [encapsulated_epoch, _] : iter->second) {
+        make_runnable(encapsulated_epoch);
+      }
+    }
   }
 }
 
@@ -94,50 +114,56 @@ void TermAction::addActionEpoch(EpochType const& epoch, ActionType action) {
   if (epoch == term::any_epoch_sentinel) {
     return addAction(action);
   } else {
-    auto epoch_iter = epoch_actions_.find(epoch);
-    if (epoch_iter == epoch_actions_.end()) {
-      epoch_actions_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(epoch),
-        std::forward_as_tuple(ActionContType{action})
-      );
-    } else {
-      epoch_iter->second.emplace_back(action);
-    }
+    auto encapsulated_epoch = getCurrentEpoch();
+    theTerm()->produce(encapsulated_epoch);
+    epoch_actions_[epoch][encapsulated_epoch].push_back(action);
   }
   afterAddEpochAction(epoch);
 }
 
-void TermAction::triggerAllActions(EpochType const& epoch) {
-  if (epoch == term::any_epoch_sentinel) {
-    for (auto&& action : global_term_actions_) {
-      action();
-    }
+void TermAction::produceOn(EpochType epoch) const {
+  theTerm()->produce(epoch);
+}
 
-    global_term_actions_.clear();
-  } else {
-    return triggerAllEpochActions(epoch);
+void TermAction::triggerAllEpochActions(
+  EpochType epoch, EpochType encapsulated_epoch
+) {
+  // Run through the normal ActionType elements associated with this epoch
+  if (auto iter = epoch_actions_.find(epoch);
+      iter != epoch_actions_.end()) {
+    if (auto iter2 = iter->second.find(encapsulated_epoch);
+        iter2 != iter->second.end()) {
+      for (auto&& action : iter2->second) {
+        theTerm()->consume(encapsulated_epoch);
+        action();
+      }
+      iter->second.erase(iter2);
+    }
+    if (iter->second.size() == 0) {
+      epoch_actions_.erase(iter);
+    }
+  }
+
+  // Run through the callables associated with this epoch
+
+  if (auto iter = epoch_callable_actions_.find(epoch);
+      iter != epoch_callable_actions_.end()) {
+    if (auto iter2 = iter->second.find(encapsulated_epoch);
+        iter2 != iter->second.end()) {
+      for (auto&& action : iter2->second) {
+        theTerm()->consume(encapsulated_epoch);
+        action->invoke();
+      }
+      iter->second.erase(iter2);
+    }
+    if (iter->second.size() == 0) {
+      epoch_callable_actions_.erase(iter);
+    }
   }
 }
 
-void TermAction::triggerAllEpochActions(EpochType const& epoch) {
-  // Run through the normal ActionType elements associated with this epoch
-  auto iter = epoch_actions_.find(epoch);
-  if (iter != epoch_actions_.end()) {
-    for (auto&& action : iter->second) {
-      action();
-    }
-    epoch_actions_.erase(iter);
-  }
-  // Run through the callables associated with this epoch
-  auto iter2 = epoch_callable_actions_.find(epoch);
-  if (iter2 != epoch_callable_actions_.end()) {
-    for (auto&& action : iter2->second) {
-      action->invoke();
-    }
-
-    epoch_callable_actions_.erase(iter2);
-  }
+EpochType TermAction::getCurrentEpoch() const {
+  return theTerm()->getEpoch();
 }
 
 }} /* end namespace vt::term */

@@ -57,7 +57,11 @@ template <typename Callable>
 void TermAction::addActionUnique(EpochType const& epoch, Callable&& c) {
   std::unique_ptr<CallableBase> callable =
     std::make_unique<CallableHolder<Callable>>(std::move(c));
-  epoch_callable_actions_[epoch].emplace_back(std::move(callable));
+  auto encapsulated_epoch = getCurrentEpoch();
+  produceOn(encapsulated_epoch);
+  epoch_callable_actions_[epoch][encapsulated_epoch].emplace_back(
+    std::move(callable)
+  );
   afterAddEpochAction(epoch);
 }
 

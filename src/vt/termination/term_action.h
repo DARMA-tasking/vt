@@ -93,9 +93,12 @@ private:
 
 struct TermAction : TermTerminated {
   using TermStateType         = TermState;
-  using ActionContType        = std::vector<ActionType>;
+  using ActionVecType         = std::vector<ActionType>;
+  using ActionContType        = std::unordered_map<EpochType, ActionVecType>;
   using CallableActionType    = std::unique_ptr<CallableBase>;
-  using CallableVecType       = std::vector<CallableActionType>;
+  using CallableVecType       = std::unordered_map<
+    EpochType, std::vector<CallableActionType>
+  >;
   using CallableContType      = std::unordered_map<EpochType,CallableVecType>;
   using EpochActionContType   = std::unordered_map<EpochType,ActionContType>;
   using EpochStateType        = std::unordered_map<EpochType,TermStateType>;
@@ -112,21 +115,27 @@ public:
   void addActionUnique(EpochType const& epoch, Callable&& c);
 
   struct ActionMsg : vt::Message {
-    explicit ActionMsg(EpochType in_ep) : ep(in_ep) { }
+    ActionMsg(EpochType in_ep, EpochType in_encapsulated_epoch)
+      : ep(in_ep),
+        encapsulated_epoch(in_encapsulated_epoch)
+    { }
     EpochType ep = no_epoch;
+    EpochType encapsulated_epoch = no_epoch;
   };
 
   static void runActions(ActionMsg* msg);
 
+  EpochType getCurrentEpoch() const;
+  void produceOn(EpochType epoch) const;
+
 protected:
   void queueActions(EpochType epoch);
-  void triggerAllActions(EpochType const& epoch);
-  void triggerAllEpochActions(EpochType const& epoch);
+  void triggerAllEpochActions(EpochType epoch, EpochType encapsulated_epoch);
   void afterAddEpochAction(EpochType const& epoch);
 
 protected:
   // Container for hold global termination actions
-  ActionContType global_term_actions_ = {};
+  ActionVecType global_term_actions_ = {};
   // Container to hold actions to perform when an epoch has terminated
   EpochActionContType epoch_actions_ = {};
   // Container for "callables"; restricted in semantic wrt std::function
