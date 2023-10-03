@@ -62,6 +62,9 @@
 #include <unordered_map>
 #include <vector>
 
+#if vt_check_enabled(ldms)
+struct ldms_xprt;
+#endif
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
@@ -299,6 +302,9 @@ private:
   std::unique_ptr<util::json::BaseAppender> lb_data_writer_ = nullptr;
   /// The struct that holds all the LB data
   std::unique_ptr<LBDataHolder> lb_data_ = nullptr;
+#if vt_check_enabled(ldms)
+  ldms_xprt* ldms_ = nullptr;
+#endif
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
