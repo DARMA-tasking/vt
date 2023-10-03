@@ -324,7 +324,8 @@ void Trace::addUserEventBracketedManual(
   );
 
   auto id = user_event_.createEvent(true, false, 0, event);
-  addUserEventBracketed(id, begin, end);
+  addUserEventBracketedBeginTime(id, begin);
+  addUserEventBracketedEndTime(id, end);
 }
 
 void Trace::addMemoryEvent(std::size_t memory, double time) {

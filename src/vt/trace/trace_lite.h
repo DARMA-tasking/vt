@@ -166,13 +166,20 @@ struct TraceLite  {
   void disableTracing();
 
   /**
-   * \brief Log a bracketed user event with start and end time
+   * \brief Log a bracketed user event with begin time
    *
    * \param[in] event the ID for the sts file
    * \param[in] begin the begin time
+   */
+  void addUserEventBracketedBeginTime(UserEventIDType event, double begin);
+
+  /**
+   * \brief Log a bracketed user event with end time
+   *
+   * \param[in] event the ID for the sts file
    * \param[in] end the end time
    */
-  void addUserEventBracketed(UserEventIDType event, double begin, double end);
+  void addUserEventBracketedEndTime(UserEventIDType event, double end);
 
   /**
    * \brief Log a user bracketed event with a note
@@ -266,8 +273,24 @@ struct TraceLite  {
    *
    * @return the last recorded trace event
    */
-  const LogType* getLastTraceEvent() const noexcept {
+  LogType* getLastTraceEvent() noexcept {
     return traces_.empty() ? nullptr : &traces_.back();
+  }
+
+  /**
+   * \brief Increment incomplete events (used to inhibit flushing before the
+   * event scope closes, leading to incomplete trace output)
+   */
+  void incrementIncompleteEvents() {
+    incomplete_events_++;
+  }
+
+  /**
+   * \brief Decrement incomplete events (used to inhibit flushing before the
+   * event scope closes, leading to incomplete trace output)
+   */
+  void decrementIncompleteEvents() {
+    incomplete_events_++;
   }
 
 protected:
@@ -397,6 +420,7 @@ protected:
   bool trace_enabled_cur_phase_ = true;
   bool idle_begun_              = false;
   std::unique_ptr<vt_gzFile> log_file_;
+  std::size_t incomplete_events_ = 0;
 };
 
 }} //end namespace vt::trace

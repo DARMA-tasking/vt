@@ -247,21 +247,41 @@ bool TraceLite::checkDynamicRuntimeEnabled(bool is_end_event) {
     (trace_enabled_cur_phase_ or is_end_event);
 }
 
-void TraceLite::addUserEventBracketed(
-  UserEventIDType event, double begin, double end) {
+void TraceLite::addUserEventBracketedBeginTime(
+  UserEventIDType event, double begin
+) {
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
 
   vt_debug_print(
     normal, trace,
-    "Trace::addUserEventBracketed: event={:x}, begin={}, end={}\n",
-    event, begin, end);
+    "Trace::addUserEventBracketedBegin: event={:x}, begin={}\n",
+    event, begin
+  );
 
   auto const type = TraceConstantsType::UserEventPair;
   NodeType const node = theContext()->getNode();
 
   logEvent(LogType{begin, type, node, event, true});
+}
+
+void TraceLite::addUserEventBracketedEndTime(
+  UserEventIDType event, double end
+) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
+  vt_debug_print(
+    normal, trace,
+    "Trace::addUserEventBracketedEnd: event={:x}, end={}\n",
+    event, end
+  );
+
+  auto const type = TraceConstantsType::UserEventPair;
+  NodeType const node = theContext()->getNode();
+
   logEvent(LogType{end, type, node, event, false});
 }
 
@@ -446,6 +466,10 @@ void TraceLite::flushTracesFile(bool useGlobalSync) {
     // Synchronize all the nodes before flushing the traces
     // (Consider pushing out: barrier usages are probably domain-specific.)
     theCollective()->barrier();
+  }
+  if (incomplete_events_ > 0) {
+    // wait until all incomplete events are patched up before flushing to disk
+    return;
   }
   if (
     traces_.size() >=

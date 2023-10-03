@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/trace/trace_common.h"
+#include "vt/runtime/runtime.h"
 
 #include <string>
 
@@ -173,6 +174,7 @@ struct TraceScopedEventHash final {
       str_(in_str)
   {
     event_ = registerEventHashed(str_);
+    theTrace()->addUserEventBracketedBeginTime(event_, begin_);
   }
 
   TraceScopedEventHash& operator=(TraceScopedEventHash const&) = delete;
@@ -185,8 +187,7 @@ struct TraceScopedEventHash final {
   void end() {
     if (event_ != no_user_event_id) {
       double end = TraceLite::getCurrentTime();
-      theTrace()->addUserEventBracketed(event_, begin_, end);
-
+      theTrace()->addUserEventBracketedEndTime(event_, end);
       event_ = no_user_event_id;
     }
   }
@@ -216,7 +217,11 @@ struct TraceScopedEvent final {
   explicit TraceScopedEvent(UserEventIDType event)
     : begin_(event != no_user_event_id ? TraceLite::getCurrentTime() : 0),
       event_(event)
-  { }
+  {
+    if (event != no_user_event_id) {
+      theTrace()->addUserEventBracketedBeginTime(event_, begin_);
+    }
+  }
 
   TraceScopedEvent(TraceScopedEvent const&) = delete;
   TraceScopedEvent(TraceScopedEvent &&other) noexcept
@@ -241,8 +246,7 @@ struct TraceScopedEvent final {
   void end() {
     if (event_ != no_user_event_id) {
       double end = TraceLite::getCurrentTime();
-      theTrace()->addUserEventBracketed(event_, begin_, end);
-
+      theTrace()->addUserEventBracketedEndTime(event_, end);
       event_ = no_user_event_id;
     }
   }
@@ -274,7 +278,17 @@ struct TraceScopedNote final {
   ) : begin_(in_event != no_trace_event ? TraceLite::getCurrentTime() : 0),
       event_(in_event),
       note_(in_note)
-  { }
+  {
+    if (event_ != no_user_event_id) {
+      // We need to emit this right away so the event is in the proper place wrt
+      // the begin time. We can patch up the end time later
+      theTrace()->incrementIncompleteEvents();
+    }
+    theTrace()->addUserBracketedNote(begin_, begin_, note_, event_);
+    if (event_ != no_user_event_id) {
+      log_ = theTrace()->getLastTraceEvent();
+    }
+  }
 
   TraceScopedNote(TraceScopedNote const&) = delete;
   TraceScopedNote(TraceScopedNote &&other) noexcept
@@ -282,6 +296,7 @@ struct TraceScopedNote final {
     std::swap(begin_, other.begin_);
     std::swap(event_, other.event_);
     std::swap(note_, other.note_);
+    std::swap(log_, other.log_);
   }
 
   TraceScopedNote& operator=(TraceScopedNote const&) = delete;
@@ -290,6 +305,7 @@ struct TraceScopedNote final {
     std::swap(begin_, other.begin_);
     std::swap(event_, other.event_);
     std::swap(note_, other.note_);
+    std::swap(log_, other.log_);
     return *this;
   }
 
@@ -301,8 +317,8 @@ struct TraceScopedNote final {
   void end() {
     if (event_ != no_user_event_id) {
       double end = TraceLite::getCurrentTime();
-      theTrace()->addUserBracketedNote(begin_, end, note_, event_);
-
+      log_->end_time = end;
+      theTrace()->decrementIncompleteEvents();
       event_ = no_user_event_id;
     }
   }
@@ -315,6 +331,7 @@ private:
   double begin_           = 0.0;
   TraceEventIDType event_ = no_trace_event;
   std::string note_       = "";
+  Log* log_               = nullptr;
 };
 
 #else

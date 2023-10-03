@@ -81,9 +81,15 @@ void addUserEvent(UserEventIDType event) {
 #endif
 }
 
-void addUserEventBracketed(UserEventIDType event, double begin, double end) {
+void addUserEventBracketedBeginTime(UserEventIDType event, double begin) {
 #if vt_check_enabled(trace_enabled)
-  theTrace()->addUserEventBracketed(event, begin, end);
+  theTrace()->addUserEventBracketedBeginTime(event, begin);
+#endif
+}
+
+void addUserEventBracketedEndTime(UserEventIDType event, double end) {
+#if vt_check_enabled(trace_enabled)
+  theTrace()->addUserEventBracketedEndTime(event, end);
 #endif
 }
 
