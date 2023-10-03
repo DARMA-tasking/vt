@@ -255,4 +255,22 @@ TEST_F(TestTermChaining, test_termination_chaining_collective_1) {
   }
 }
 
+TEST_F(TestTermChaining, test_termination_action_grouping) {
+  SET_NUM_NODES_CONSTRAINT(2);
+
+  auto ep1 = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(ep1);
+
+  { // scope for illustration
+    auto ep2 = theTerm()->makeEpochCollective();
+    theTerm()->finishedEpoch(ep2);
+
+    theTerm()->addAction(ep2, [ep1]{
+      EXPECT_EQ(theTerm()->getEpoch(), ep1);
+    });
+  }
+  theMsg()->popEpoch(ep1);
+  theTerm()->finishedEpoch(ep1);
+}
+
 }}} // end namespace vt::tests::unit
