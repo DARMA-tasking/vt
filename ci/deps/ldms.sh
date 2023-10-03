@@ -28,4 +28,3 @@ make -j4
 make install
 cd -
 rm -rf ${ldms_name}
-
