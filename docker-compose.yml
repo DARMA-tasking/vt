@@ -135,6 +135,7 @@ x-ccache: &ccache
 # Define rules for VT configuration options across various services
 x-vtopts: &vtopts
   VT_LB_ENABLED: ${VT_LB:-1}
+  VT_LDMS_ENABLED: ${VT_LDMS:-0}
   VT_TRACE_ENABLED:  ${VT_TRACE:-0}
   VT_MIMALLOC_ENABLED: ${VT_MIMALLOC:-0}
   VT_DOXYGEN_ENABLED: ${VT_DOCS:-0}
@@ -187,6 +188,7 @@ services:
         ubuntu: ${UBUNTU}
         ubsan_enabled: ${VT_UBSAN:-0}
         zoltan_enabled: ${VT_ZOLTAN:-0}
+        ldms_enabled: ${VT_LDMS:-0}
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     ulimits: &ulimits

@@ -21,6 +21,7 @@ variables:
   ULIMIT_CORE: [% ulimit_core %]
   CODE_COVERAGE: [% code_coverage %]
   VT_LB: [% vt_lb %]
+  VT_LDMS: [% vt_ldms %]
   VT_TRACE: [% vt_trace %]
   VT_TRACE_RT: [% vt_trace_rt %]
   VT_TRACE_ONLY: [% vt_trace_only %]

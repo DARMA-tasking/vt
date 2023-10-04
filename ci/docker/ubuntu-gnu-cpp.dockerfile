@@ -12,6 +12,7 @@ ENV https_proxy=${proxy} \
 ENV DEBIAN_FRONTEND=noninteractive
 
 ARG zoltan_enabled
+ARG ldms_enabled
 
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
@@ -85,8 +86,13 @@ RUN if test ${zoltan_enabled} -eq 1; then \
       ./zoltan.sh -j4 ${ZOLTAN_INSTALL_DIR}; \
     fi
 
+ENV LDMS_INCLUDES_DIR="/usr/local/include/"
+ENV LDMS_LIBS_DIR="/usr/local/lib/"
+
 COPY ./ci/deps/ldms.sh ldms.sh
-RUN ./ldms.sh 4.3.11
+RUN if test ${ldms_enabled} -eq 1; then \
+      ./ldms.sh 4.3.11; \
+    fi
 
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
@@ -106,6 +112,7 @@ ARG VT_DOXYGEN_ENABLED
 ARG VT_EXTENDED_TESTS_ENABLED
 ARG VT_FCONTEXT_ENABLED
 ARG VT_LB_ENABLED
+ARG VT_LDMS_ENABLED
 ARG VT_MIMALLOC_ENABLED
 ARG VT_NO_COLOR_ENABLED
 ARG VT_POOL_ENABLED
@@ -126,6 +133,7 @@ ENV BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
     VT_EXTENDED_TESTS_ENABLED=${VT_EXTENDED_TESTS_ENABLED} \
     VT_FCONTEXT_ENABLED=${VT_FCONTEXT_ENABLED} \
     VT_LB_ENABLED=${VT_LB_ENABLED} \
+    VT_LDMS_ENABLED=${VT_LDMS_ENABLED} \
     VT_MIMALLOC_ENABLED=${VT_MIMALLOC_ENABLED} \
     VT_MPI_GUARD_ENABLED=${VT_MPI_GUARD_ENABLED} \
     VT_NO_COLOR_ENABLED=${VT_NO_COLOR_ENABLED} \
