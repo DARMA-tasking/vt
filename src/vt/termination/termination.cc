@@ -657,7 +657,7 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
   }
 
   // Trigger actions associated with epoch
-  triggerAllActions(epoch);
+  queueActions(epoch);
 
   // Update the window for the epoch archetype
   updateResolvedEpochs(epoch);

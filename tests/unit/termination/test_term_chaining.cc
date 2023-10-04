@@ -136,7 +136,7 @@ struct TestTermChaining : TestParallelHarness {
   }
 
   static void start_chain() {
-    EpochType epoch1 = theTerm()->makeEpochRooted();
+    EpochType epoch1 = theTerm()->makeEpochRooted("rooted epoch 1");
     vt::theMsg()->pushEpoch(epoch1);
     auto msg = makeMessage<TestMsg>();
     chain.add(
@@ -145,7 +145,7 @@ struct TestTermChaining : TestParallelHarness {
     vt::theMsg()->popEpoch(epoch1);
     vt::theTerm()->finishedEpoch(epoch1);
 
-    EpochType epoch2 = theTerm()->makeEpochRooted();
+    EpochType epoch2 = theTerm()->makeEpochRooted("rooted epoch 2");
     vt::theMsg()->pushEpoch(epoch2);
     auto msg2 = makeMessage<TestMsg>();
     chain.add(
@@ -213,7 +213,7 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
 
   auto const& this_node = theContext()->getNode();
 
-  epoch = theTerm()->makeEpochCollective();
+  epoch = theTerm()->makeEpochCollective("top chain");
 
   handler_count = 0;
 
@@ -224,16 +224,18 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
     start_chain();
     theTerm()->finishedEpoch(epoch);
     theMsg()->popEpoch(epoch);
-    fmt::print("before run 1\n");
+    vt_print(gen, "before run 1\n");
     vt::runSchedulerThrough(epoch);
-    fmt::print("after run 1\n");
+    vt_print(gen, "after run 1\n");
 
     EXPECT_EQ(handler_count, 4);
   } else {
     theMsg()->pushEpoch(epoch);
     theTerm()->finishedEpoch(epoch);
     theMsg()->popEpoch(epoch);
+    vt_print(gen, "before run 1 (other)\n");
     vt::runSchedulerThrough(epoch);
+    vt_print(gen, "after run 1 (other)\n");
     EXPECT_EQ(handler_count, 13);
   }
 }
@@ -251,6 +253,24 @@ TEST_F(TestTermChaining, test_termination_chaining_collective_1) {
     vt::runInEpochCollective( chain_reduce_single );
     EXPECT_EQ(handler_count, 2);
   }
+}
+
+TEST_F(TestTermChaining, test_termination_action_grouping) {
+  SET_NUM_NODES_CONSTRAINT(2);
+
+  auto ep1 = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(ep1);
+
+  { // scope for illustration
+    auto ep2 = theTerm()->makeEpochCollective();
+    theTerm()->finishedEpoch(ep2);
+
+    theTerm()->addAction(ep2, [ep1]{
+      EXPECT_EQ(theTerm()->getEpoch(), ep1);
+    });
+  }
+  theMsg()->popEpoch(ep1);
+  theTerm()->finishedEpoch(ep1);
 }
 
 }}} // end namespace vt::tests::unit
