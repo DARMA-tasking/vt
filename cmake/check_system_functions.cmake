@@ -32,12 +32,3 @@ check_function_exists(sysinfo vt_has_sysinfo)
 
 set(CMAKE_REQUIRED_INCLUDES "mach/mach.h")
 check_function_exists(mach_task_self vt_has_mach_task_self)
-
-set(CMAKE_REQUIRED_INCLUDES "ldms/ldms.h")
-check_function_exists(ldms_h vt_has_ldms_h)
-
-set(CMAKE_REQUIRED_INCLUDES "ldms/ldmsd_stream.h")
-check_function_exists(ldmsd_stream_h vt_has_ldmsd_stream_h)
-
-set(CMAKE_REQUIRED_INCLUDES "ovis_util/util.h")
-check_function_exists(ovis_util_h vt_has_ovis_util_h)
