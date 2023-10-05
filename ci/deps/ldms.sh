@@ -9,22 +9,14 @@ then
 fi
 
 version=$1
-arch=x86_64
-
-ldms_tar_name=ovis-ldms-${version}.tar.gz
-ldms_name=ovis-ldms-${version}
 
 echo "${version}"
-echo "${ldms_tar_name}"
 
-wget https://github.com/ovis-hpc/ovis/releases/download/OVIS-${version}/${ldms_tar_name}
+git clone https://github.com/ovis-hpc/ovis.git
+cd ovis
+git checkout OVIS-${version}
 
-tar xzf ${ldms_tar_name}
-rm ${ldms_tar_name}
-cd ${ldms_name}
-./configure \
-    ${installation_prefix:+ --prefix"=${installation_prefix}"}
-make -j4
-make install
+./autogen.sh
+./packaging/make-all-top.sh
+
 cd -
-rm -rf ${ldms_name}

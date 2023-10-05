@@ -32,7 +32,13 @@ RUN apt-get update -y -q && \
     valgrind \
     wget \
     bison \
+    autoconf \
+    automake \
     flex \
+    libtool \
+    pkg-config \
+    libibverbs-dev \
+    librdmacm-dev \
     libssl-dev \
     libpython3-dev \
     zlib1g \
@@ -86,12 +92,12 @@ RUN if test ${zoltan_enabled} -eq 1; then \
       ./zoltan.sh -j4 ${ZOLTAN_INSTALL_DIR}; \
     fi
 
-ENV LDMS_INCLUDES_DIR="/usr/local/include/"
-ENV LDMS_LIBS_DIR="/usr/local/lib/"
+ENV VT_LDMS_INCLUDES_DIR="/ovis/LDMS_install/include"
+ENV VT_LDMS_LIBS_DIR="/ovis/LDMS_install/lib"
 
 COPY ./ci/deps/ldms.sh ldms.sh
 RUN if test ${ldms_enabled} -eq 1; then \
-      ./ldms.sh 4.3.11; \
+      ./ldms.sh 4; \
     fi
 
 RUN apt-get update -y -q && \

@@ -217,13 +217,13 @@ function(link_target_with_vt)
       message(STATUS "link_target_with_vt: ldms=${vt_ldms_enabled}")
     endif()
 
-    if(${vt_ldms_includes})
+    if(NOT "${vt_ldms_includes}" STREQUAL "")
       target_include_directories(${ARG_TARGET} SYSTEM PUBLIC
         ${vt_ldms_includes}
       )
     endif()
 
-    if(${vt_ldms_libs})
+    if(NOT "${vt_ldms_libs}" STREQUAL "")
       target_link_directories(${ARG_TARGET} PUBLIC ${vt_ldms_libs})
     endif()
 
