@@ -55,23 +55,6 @@
 
 namespace vt { namespace arguments {
 
-std::pair<std::vector<std::string>, std::vector<std::string>>
-separateParameters(int argc, char* argv[]) {
-  std::vector<std::string> vt_params, non_vt_params;
-
-  // Skip program name
-  for (int i = 1; i < argc; i++) {
-    if (!((0 == strncmp(argv[i], "--vt_", 5)) ||
-          (0 == strncmp(argv[i], "!--vt_", 6)))) {
-      non_vt_params.push_back(argv[i]);
-    } else {
-      vt_params.push_back(argv[i]);
-    }
-  }
-
-  return {std::move(vt_params), std::move(non_vt_params)};
-}
-
 // Temporary variables used only for parsing artifacts.
 namespace {
 

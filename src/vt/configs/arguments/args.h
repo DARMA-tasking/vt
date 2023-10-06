@@ -62,19 +62,6 @@ class App;
 namespace arguments {
 
 /**
- * @brief Ignores argv[0] and separate all parameters into vt(matching '--vt_*' or '!--vt_*')
- * and non-vt parameters.
- *
- * @param argc number of arguments
- * @param argv arguments list
- *
- * @returns Pair of vectors with parameters.
- * First vector in the pair is for vt params and second is for all non-vt params.
- */
-std::pair<std::vector<std::string>, std::vector<std::string>>
-separateParameters(int argc, char* argv[]);
-
-/**
  * \struct ArgConfig
  *
  * \brief Component that manages the configuration for a VT instance, parsed
