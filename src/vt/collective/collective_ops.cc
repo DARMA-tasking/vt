@@ -50,6 +50,7 @@
 #include <memory>
 #include <cstdlib>
 #include <mpi.h>
+#include <iostream>
 
 namespace vt {
 
@@ -211,6 +212,32 @@ void printOverwrittens(
 }
 
 } /* end anon namespace */
+
+template <runtime::RuntimeInstType instance>
+void CollectiveAnyOps<instance>::preconfigure(int& argc, char**& argv) {
+  delete curArgv;
+  curArgv = new arguments::ArgvContainer{argc, argv};
+}
+
+template <runtime::RuntimeInstType instance>
+RuntimePtrType CollectiveAnyOps<instance>::initializePreconfigured(
+  bool is_interop, MPI_Comm* comm, arguments::AppConfig const* appConfig) {
+  
+  int argc = curArgv ? curArgv->argv_vector_.size() : 0;
+  std::vector<char*> cargs;
+
+  std::transform(
+    begin(curArgv->argv_vector_), end(curArgv->argv_vector_),
+    std::back_inserter(cargs), [](std::string& s) { return s.data(); });
+
+  char** argv = argc ? cargs.data() : nullptr;
+
+  auto runtime = initialize(argc, argv, is_interop, comm, appConfig);
+
+  delete[] argv;
+  curArgv = nullptr;
+  return runtime;
+}
 
 template <runtime::RuntimeInstType instance>
 RuntimePtrType CollectiveAnyOps<instance>::initialize(

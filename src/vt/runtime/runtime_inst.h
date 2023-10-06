@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/runtime/runtime_common.h"
+#include "vt/configs/arguments/argv_container.h"
 
 #include <memory>
 
@@ -66,6 +67,7 @@ struct RuntimeInst {
 namespace vt {
 
 // This is the current runtime instance that is active
+extern arguments::ArgvContainer* curArgv;
 extern runtime::Runtime* curRT;
 extern runtime::Runtime* rt;
 

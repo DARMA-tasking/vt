@@ -45,9 +45,15 @@
 #define INCLUDED_VT_COLLECTIVE_STARTUP_H
 
 #include "vt/config.h"
+#include "vt/configs/arguments/argv_container.h"
 #include "vt/runtime/runtime_headers.h"
 
 namespace vt {
+
+void preconfigure(int& argc, char**& argv);
+RuntimePtrType initializePreconfigured(
+  MPI_Comm* comm = nullptr,
+  arguments::AppConfig const* appConfig = nullptr);
 
 RuntimePtrType initialize(
   int& argc, char**& argv, MPI_Comm* comm = nullptr,

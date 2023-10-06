@@ -49,6 +49,17 @@
 
 namespace vt {
 
+void preconfigure(int& argc, char**& argv) {
+  CollectiveOps::preconfigure(argc, argv);
+}
+
+RuntimePtrType initializePreconfigured(
+  MPI_Comm* comm, arguments::AppConfig const* appConfig
+) {
+  bool const is_interop = comm != nullptr;
+  return CollectiveOps::initializePreconfigured(is_interop, comm, appConfig);
+}
+
 // vt::{initialize,finalize} for main ::vt namespace
 RuntimePtrType initialize(
   int& argc, char**& argv, MPI_Comm* comm, arguments::AppConfig const* appConfig
