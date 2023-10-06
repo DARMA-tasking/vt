@@ -45,6 +45,8 @@
 
 #include "test_parallel_harness.h"
 
+#include <vt/configs/arguments/app_config.h>
+
 namespace vt { namespace tests { namespace unit {
 
 struct TestCliArguments : TestParallelHarness { };
