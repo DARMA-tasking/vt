@@ -157,10 +157,10 @@ void NodeLBData::initialize() {
 
 #if vt_check_enabled(ldms)
   ldms_ = ldms_xprt_new_with_auth("sock", "none", NULL);
-  vtAssert(ldms_, "ldms_xprt_new_with_auth failed!");
+  vtWarnIf(ldms_, "ldms_xprt_new_with_auth failed!");
 
   const auto returnCode = ldms_xprt_connect_by_name(ldms_, "localhost", "10444", NULL, NULL);
-  vtAssert(returnCode == 0, fmt::format("ldms_xprt_connect_by_name failed with code {} \n", returnCode));
+  vtWarnIf(returnCode == 0, fmt::format("ldms_xprt_connect_by_name failed with code {} \n", returnCode));
 #endif
 }
 
@@ -307,7 +307,7 @@ void NodeLBData::outputLBDataForPhase(PhaseType phase) {
   const auto returnVal = ldmsd_stream_publish(
     ldms_, "LB_data", LDMSD_STREAM_JSON, jsonStr.c_str(), jsonStr.length() + 1
   );
-  vtAssert(returnVal == 0, fmt::format("ldmsd_stream_publish returned {}!\n", returnVal));
+  vtWarnIf(returnVal == 0, fmt::format("ldmsd_stream_publish returned {}!\n", returnVal));
 #endif
 }
 
