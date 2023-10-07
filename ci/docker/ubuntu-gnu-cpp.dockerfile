@@ -94,6 +94,10 @@ RUN if test ${zoltan_enabled} -eq 1; then \
 
 ENV VT_LDMS_INCLUDES_DIR="/ovis/LDMS_install/include"
 ENV VT_LDMS_LIBS_DIR="/ovis/LDMS_install/lib"
+ENV VT_LDMS_XPTR="sock"
+ENV VT_LDMS_AUTH="none"
+ENV VT_LDMS_HOSTNAME="localhost"
+ENV VT_LDMS_PORT="10444"
 
 COPY ./ci/deps/ldms.sh ldms.sh
 RUN if test ${ldms_enabled} -eq 1; then \

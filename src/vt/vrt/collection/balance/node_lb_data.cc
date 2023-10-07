@@ -156,10 +156,14 @@ void NodeLBData::initialize() {
 #endif
 
 #if vt_check_enabled(ldms)
-  ldms_ = ldms_xprt_new_with_auth("sock", "none", NULL);
+  const auto xPtr = getenv("VT_LDMS_XPTR");
+  const auto auth = getenv("VT_LDMS_AUTH");
+  ldms_ = ldms_xprt_new_with_auth(xPtr, auth, NULL);
   vtWarnIf(ldms_, "ldms_xprt_new_with_auth failed!");
 
-  const auto returnCode = ldms_xprt_connect_by_name(ldms_, "localhost", "10444", NULL, NULL);
+  const auto hostname = getenv("VT_LDMS_HOSTNAME");
+  const auto port = getenv("VT_LDMS_PORT");
+  const auto returnCode = ldms_xprt_connect_by_name(ldms_, hostname, port, NULL, NULL);
   vtWarnIf(returnCode == 0, fmt::format("ldms_xprt_connect_by_name failed with code {} \n", returnCode));
 #endif
 }
