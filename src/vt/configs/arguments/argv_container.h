@@ -10,23 +10,49 @@
 
 namespace vt {
 
-namespace CLI {
-class App;
-} /* end namespace CLI */
-
 namespace arguments {
 
 struct ArgvContainer {
   ArgvContainer(int& argc, char**& argv)
-    : argv_vector_(argv, argv + argc)
-   {}
+  {
+    std::vector<char*> non_vt_args;
+    for(int i = 0; i < argc; i++) {
+      // cache original argv parameter
+      argv_.push_back(strdup(argv[i]));
+      // collect non vt params
+      if (!((0 == strncmp(argv[i], "--vt_", 5)) ||
+          (0 == strncmp(argv[i], "!--vt_", 6)))) {
+        non_vt_args.push_back(argv[i]);
+      }
+    }
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | argv_vector_;
+    // Reconstruct argv without vt related params
+    int new_argc = non_vt_args.size();
+    static std::unique_ptr<char*[]> new_argv = nullptr;
+
+    new_argv = std::make_unique<char*[]>(new_argc + 1);
+
+    int i = 0;
+    for (auto&& arg : non_vt_args) {
+      new_argv[i++] = arg;
+    }
+    new_argv[i++] = nullptr;
+
+    argc = new_argc;
+    argv = new_argv.get();
   }
 
-  std::vector<std::string> argv_vector_;
+  ~ArgvContainer() {
+    for(char* param: argv_) {
+      delete param;
+    }
+  }
+
+  ArgvContainer(const ArgvContainer&) = delete;
+  ArgvContainer& operator=(const ArgvContainer&) = delete;
+
+
+  std::vector<char*> argv_;
 };
 
 } // namespace arguments

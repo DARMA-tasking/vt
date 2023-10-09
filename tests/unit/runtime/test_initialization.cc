@@ -298,7 +298,10 @@ TEST_F(TestInitialization, test_preconfigure_and_initialization) {
 
   vt::preconfigure(custom_argc, custom_argv);
 
-  // ...
+  EXPECT_EQ(custom_argc, 2);
+  EXPECT_STREQ(custom_argv[0], "vt_program");
+  EXPECT_STREQ(custom_argv[1], "--cli_argument=100");
+  EXPECT_EQ(custom_argv[2], nullptr);
 
   vt::initializePreconfigured(&comm, &appConfig);
 
