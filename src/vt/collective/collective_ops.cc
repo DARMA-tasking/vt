@@ -50,7 +50,6 @@
 #include <memory>
 #include <cstdlib>
 #include <mpi.h>
-#include <iostream>
 
 namespace vt {
 

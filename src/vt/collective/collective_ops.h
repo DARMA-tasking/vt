@@ -47,7 +47,6 @@
 #include "vt/config.h"
 #include "vt/context/context.h"
 #include "vt/runtime/runtime_headers.h"
-#include "vt/configs/arguments/argv_container.h"
 
 #include <string>
 

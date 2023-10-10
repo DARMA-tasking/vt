@@ -49,7 +49,6 @@
 
 namespace vt {
 
-// Could be stored here after vt::preconfigure
 arguments::ArgvContainer* curArgv = nullptr;
 runtime::Runtime* curRT = nullptr;
 ::vt::runtime::Runtime* rt = nullptr;
