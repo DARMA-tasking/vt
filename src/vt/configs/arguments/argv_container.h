@@ -44,11 +44,9 @@
 #if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGV_CONTAINER_H
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGV_CONTAINER_H
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
-#include <tuple>
 
 namespace vt {
 
