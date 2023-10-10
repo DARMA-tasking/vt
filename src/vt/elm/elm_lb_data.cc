@@ -138,6 +138,17 @@ void ElementLBData::addTime(LoadType const timeLoad) {
   );
 }
 
+void ElementLBData::setPhase(PhaseType const& new_phase) {
+  cur_phase_ = new_phase;
+
+  // Access all table entries for current phase, to ensure presence even
+  // if they're left empty
+  phase_timings_[cur_phase_];
+  subphase_timings_[cur_phase_];
+  phase_comm_[cur_phase_];
+  subphase_comm_[cur_phase_];
+}
+
 void ElementLBData::updatePhase(PhaseType const& inc) {
   vt_debug_print(
     verbose, lb,
@@ -145,17 +156,7 @@ void ElementLBData::updatePhase(PhaseType const& inc) {
     cur_phase_, inc
   );
 
-  cur_phase_ += inc;
-
-  // Access all table entries for current phase, to ensure presence even
-  // if they're left empty
-  if ( cur_phase_ != 0 )
-  {
-    phase_timings_[cur_phase_];
-    subphase_timings_[cur_phase_];
-    phase_comm_[cur_phase_];
-    subphase_comm_[cur_phase_];
-  }
+  setPhase(cur_phase_ + inc);
 }
 
 void ElementLBData::resetPhase() {
