@@ -221,7 +221,7 @@ void CollectiveAnyOps<instance>::preconfigure(int& argc, char**& argv) {
 template <runtime::RuntimeInstType instance>
 RuntimePtrType CollectiveAnyOps<instance>::initializePreconfigured(
   bool is_interop, MPI_Comm* comm, arguments::AppConfig const* appConfig) {
-  
+
   vtAssert(curArgv != nullptr, "vt was not preconfigured!");
 
   int argc = curArgv->argv_.size();
