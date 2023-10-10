@@ -1182,8 +1182,7 @@ bool CollectionManager::insertCollectionElement(
       std::move(vc)
     });
     auto raw_ptr = elm_holder->lookup(idx).getRawPtr();
-    raw_ptr->getLBData().resetPhase();
-    raw_ptr->getLBData().updatePhase(thePhase()->getCurrentPhase());
+    raw_ptr->getLBData().setPhase(thePhase()->getCurrentPhase());
 
     if (is_migrated_in) {
       theLocMan()->getCollectionLM<IndexT>(proxy)->entityImmigrated(
