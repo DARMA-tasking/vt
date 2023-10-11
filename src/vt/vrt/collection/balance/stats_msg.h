@@ -84,18 +84,18 @@ struct LoadData {
     );
 
     int32_t N            = a1.N_ + a2.N_;
-    double delta         = a2.avg_ - a1.avg_;
-    double delta_sur_N   = delta / static_cast<double>(N);
-    double delta2_sur_N2 = delta_sur_N * delta_sur_N;
+    auto delta     = a2.avg_ - a1.avg_;
+    auto delta_sur_N   = delta / static_cast<double>(N);
+    auto delta2_sur_N2 = delta_sur_N * delta_sur_N;
     int32_t n2           = a1.N_ * a1.N_;
     int32_t n_c2         = a2.N_ * a2.N_;
     int32_t prod_n       = a1.N_ * a2.N_;
     int32_t n_c          = a2.N_;
     int32_t n            = a1.N_;
-    double M2            = a1.M2_;
-    double M2_c          = a2.M2_;
-    double M3            = a1.M3_;
-    double M3_c          = a2.M3_;
+    auto M2            = a1.M2_;
+    auto M2_c          = a2.M2_;
+    auto M3            = a1.M3_;
+    auto M3_c          = a2.M3_;
 
     a1.M4_ += a2.M4_
         + prod_n * ( n2 - prod_n + n_c2 ) * delta * delta_sur_N * delta2_sur_N2
@@ -130,8 +130,8 @@ struct LoadData {
     } else {
       double nm1 = N_ - 1;
       double inv_n = 1. / N_;
-      double var_inv = nm1 / M2_;
-      double nvar_inv = var_inv * inv_n;
+      auto var_inv = nm1 / M2_;
+      auto nvar_inv = var_inv * inv_n;
       return nvar_inv * std::sqrt( var_inv ) * M3_;
     }
   }
@@ -141,8 +141,8 @@ struct LoadData {
     } else {
       double nm1 = N_ - 1;
       double inv_n = 1. / N_;
-      double var_inv = nm1 / M2_;
-      double nvar_inv = var_inv * inv_n;
+      auto var_inv = nm1 / M2_;
+      auto nvar_inv = var_inv * inv_n;
       return nvar_inv * var_inv * M4_ - 3.;
     }
   }

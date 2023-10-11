@@ -46,6 +46,7 @@
 
 #include "vt/runtime/component/diagnostic_types.h"
 #include "vt/utils/adt/histogram_approx.h"
+#include "vt/timing/timing_type.h"
 #include "vt/utils/strong/strong_type.h"
 
 #include <string>
@@ -62,7 +63,7 @@ namespace vt { namespace runtime { namespace component {
 struct DiagnosticErasedValue {
   /// These are the set of valid diagnostic value types after being erased from
   /// \c DiagnosticValue<T> get turned into this union for saving the value.
-  using UnionValueType = std::variant<double, int64_t>;
+  using UnionValueType = std::variant<double, int64_t, TimeType >;
 
   // The trio (min, max, sum) save the actual type with the value to print it
   // correctly

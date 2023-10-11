@@ -43,6 +43,7 @@
 
 #include "vt/config.h"
 #include "vt/configs/arguments/app_config.h"
+#include "vt/configs/types/types_type.h"
 #include "vt/context/context.h"
 #include "vt/phase/phase_hook_enum.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
@@ -607,7 +608,7 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
 balance::LoadData reduceVec(
   lb::Statistic stat, std::vector<balance::LoadData>&& vec
 ) {
-  balance::LoadData reduce_ld(stat, 0.0f);
+  balance::LoadData reduce_ld(stat, 0.0);
   if (vec.size() == 0) {
     return reduce_ld;
   } else {
@@ -669,7 +670,7 @@ void LBManager::computeStatistics(
   ));
 
   if (strategy_specific_model_) {
-    auto rank_strat_specific_load = 0.;
+    LoadType rank_strat_specific_load = 0.;
     std::vector<balance::LoadData> obj_strat_specific_load;
     for (auto elm : *strategy_specific_model_) {
       auto work = strategy_specific_model_->getModeledLoad(elm, when);

@@ -83,7 +83,7 @@ CommOverhead::getModeledLoad(ElementIDStruct object, PhaseOffset offset) const {
     auto whole_phase_work = ComposedModel::getModeledLoad(
       object, PhaseOffset{offset.phases, PhaseOffset::WHOLE_PHASE}
     );
-    return work + overhead * ( static_cast<double>(work)/whole_phase_work );
+    return work + overhead * ( work/whole_phase_work );
   }
 }
 

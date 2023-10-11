@@ -136,7 +136,7 @@ TEST_F(TestSchedTimings, test_sched_msg) {
 
   // This ought to take close to a second (with ms_delay = 100)
   EXPECT_GT(
-    observed_time,
+    observed_time.seconds(),
     vt::theConfig()->vt_sched_progress_sec * fudge
   );
 
@@ -144,7 +144,7 @@ TEST_F(TestSchedTimings, test_sched_msg) {
   fmt::print("expected time={}, observed time={}\n", sum_time, observed_time);
   //double margin =30+ sum_time*0.2;
   //EXPECT_NEAR(sum_time, observed_time, margin );
-  EXPECT_GT(observed_time, sum_time);
+  EXPECT_GT(observed_time.seconds(), sum_time);
 
 }
 

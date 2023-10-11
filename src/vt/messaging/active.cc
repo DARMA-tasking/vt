@@ -347,7 +347,7 @@ EventType ActiveMessenger::sendMsgMPI(
     {
       VT_ALLOW_MPI_CALLS;
       #if vt_check_enabled(trace_enabled)
-        double tr_begin = 0;
+        auto tr_begin = TimeType{0.};
         if (theConfig()->vt_trace_mpi) {
           tr_begin = vt::timing::getCurrentTime();
         }
@@ -579,7 +579,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
     );
     {
       #if vt_check_enabled(trace_enabled)
-        double tr_begin = 0;
+        auto tr_begin = TimeType{0.};
         if (theConfig()->vt_trace_mpi) {
           tr_begin = vt::timing::getCurrentTime();
         }
@@ -769,7 +769,7 @@ void ActiveMessenger::recvDataDirect(
     );
 
     #if vt_check_enabled(trace_enabled)
-      double tr_begin = 0;
+      auto tr_begin = TimeType{0.};
       if (theConfig()->vt_trace_mpi) {
         tr_begin = vt::timing::getCurrentTime();
       }
@@ -1006,7 +1006,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
     {
       #if vt_check_enabled(trace_enabled)
-        double tr_begin = 0;
+        auto tr_begin = TimeType{0.};
         if (theConfig()->vt_trace_mpi) {
           tr_begin = vt::timing::getCurrentTime();
         }

@@ -42,6 +42,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/timing/timing_type.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.fwd.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_types.h"
@@ -153,7 +154,7 @@ void HierarchicalLB::inputParams(balance::ConfigEntry* config) {
   }
 }
 
-void HierarchicalLB::setupTree(TimeTypeWrapper const threshold) {
+void HierarchicalLB::setupTree(TimeType const threshold) {
   vtAssert(
     tree_setup == false,
     "Tree must not already be set up when is this called"
@@ -791,7 +792,7 @@ void HierarchicalLB::clearObj(ObjSampleType& objs) {
 void HierarchicalLB::runLB(LoadType total_load) {
   this_load = loadMilli(total_load);
   buildHistogram();
-  setupTree(min_threshold);
+  setupTree(TimeType{min_threshold});
 
   proxy.allreduce<&HierarchicalLB::setupDone>();
 }

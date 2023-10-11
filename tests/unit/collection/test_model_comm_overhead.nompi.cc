@@ -48,6 +48,7 @@
 #include <gtest/gtest.h>
 
 #include "test_harness.h"
+#include "vt/timing/timing_type.h"
 
 #include <memory>
 

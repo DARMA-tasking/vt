@@ -51,8 +51,8 @@
 namespace vt { namespace elm {
 
 void ElementLBData::start(TimeType time) {
-  TimeTypeWrapper const start_time = time;
-  cur_time_ = start_time.seconds();
+  auto const start_time = time;
+  cur_time_ = start_time;
   cur_time_started_ = true;
 
   vt_debug_print(
@@ -63,13 +63,13 @@ void ElementLBData::start(TimeType time) {
 }
 
 void ElementLBData::stop(TimeType time) {
-  TimeTypeWrapper const stop_time = time;
-  TimeTypeWrapper const total_time = stop_time.seconds() - cur_time_;
+  auto const stop_time = time;
+  auto const total_time = stop_time - cur_time_;
   //vtAssert(cur_time_started_, "Must have started time");
   auto const started = cur_time_started_;
   if (started) {
     cur_time_started_ = false;
-    addTime(total_time);
+    addTime(total_time.seconds());
   }
 
   vt_debug_print(
@@ -124,17 +124,17 @@ void ElementLBData::recvToNode(
   recvComm(key, bytes);
 }
 
-void ElementLBData::addTime(TimeTypeWrapper const& time) {
-  phase_timings_[cur_phase_] += time.seconds();
+void ElementLBData::addTime(LoadType const timeLoad) {
+  phase_timings_[cur_phase_] += timeLoad;
 
   subphase_timings_[cur_phase_].resize(cur_subphase_ + 1);
-  subphase_timings_[cur_phase_].at(cur_subphase_) += time.seconds();
+  subphase_timings_[cur_phase_].at(cur_subphase_) += timeLoad;
 
   vt_debug_print(
     verbose,lb,
     "ElementLBData: addTime: time={}, cur_load={}\n",
     time,
-    TimeTypeWrapper(phase_timings_[cur_phase_])
+    phase_timings_[cur_phase_]
   );
 }
 
@@ -163,10 +163,10 @@ PhaseType ElementLBData::getPhase() const {
   return cur_phase_;
 }
 
-TimeType ElementLBData::getLoad(PhaseType const& phase) const {
+LoadType ElementLBData::getLoad(PhaseType const& phase) const {
   auto iter = phase_timings_.find(phase);
   if (iter != phase_timings_.end()) {
-    TimeTypeWrapper const total_load = phase_timings_.at(phase);
+    auto const total_load = phase_timings_.at(phase);
 
     vt_debug_print(
       verbose, lb,
@@ -174,13 +174,13 @@ TimeType ElementLBData::getLoad(PhaseType const& phase) const {
       total_load, phase, phase_timings_.size()
     );
 
-    return total_load.seconds();
+    return total_load;
   } else {
     return 0.0;
   }
 }
 
-TimeType
+LoadType
 ElementLBData::getLoad(PhaseType phase, SubphaseType subphase) const {
   if (subphase == no_subphase)
     return getLoad(phase);
@@ -188,7 +188,7 @@ ElementLBData::getLoad(PhaseType phase, SubphaseType subphase) const {
   auto const& subphase_loads = subphase_timings_.at(phase);
 
   vtAssert(subphase_loads.size() > subphase, "Must have subphase");
-  TimeTypeWrapper const total_load = subphase_loads.at(subphase);
+  auto const total_load = subphase_loads.at(subphase);
 
   vt_debug_print(
     verbose, lb,
@@ -196,10 +196,10 @@ ElementLBData::getLoad(PhaseType phase, SubphaseType subphase) const {
     total_load, phase, subphase
   );
 
-  return total_load.seconds();
+  return total_load;
 }
 
-std::vector<TimeType> const& ElementLBData::getSubphaseTimes(PhaseType phase) {
+std::vector<LoadType> const& ElementLBData::getSubphaseTimes(PhaseType phase) {
   return subphase_timings_[phase];
 }
 

@@ -124,7 +124,7 @@ void RunnableNew::run() {
   {
     needs_time = contexts_.lb.needsTime();
   }
-  TimeType start_time = needs_time ? theSched()->getRecentTime() : NAN;
+  TimeType start_time = needs_time ? theSched()->getRecentTime() : TimeType{NAN};
 
 #if vt_check_enabled(fcontext)
   if (suspended_) {
@@ -175,7 +175,7 @@ void RunnableNew::run() {
 #endif
   }
   theSched()->setRecentTimeToStale();
-  TimeType end_time = needs_time ? theSched()->getRecentTime() : NAN;
+  TimeType end_time = needs_time ? theSched()->getRecentTime() : TimeType{NAN};
 
 
 

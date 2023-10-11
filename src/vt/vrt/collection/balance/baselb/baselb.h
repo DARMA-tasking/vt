@@ -134,14 +134,14 @@ struct BaseLB {
     balance::DataMapType const& in_data_map
   );
 
-  static LoadType loadMilli(LoadType const& load);
-
   void notifyCurrentHostNodeOfObjectsDeparting(
     TransferMsg<ObjDestinationListType>* msg
   );
   void notifyNewHostNodeOfObjectsArriving(
     TransferMsg<ObjLoadListType>* msg
   );
+
+  LoadType loadMilli(LoadType const& load);
 
   void applyMigrations(
     TransferVecType const& transfers, MigrationCountCB migration_count_callback
@@ -167,7 +167,7 @@ struct BaseLB {
 protected:
   void getArgs(PhaseType phase);
 
-  double start_time_                                  = 0.0f;
+  TimeType start_time_                                = TimeType{0.0};
   ElementCommType const* comm_data                    = nullptr;
   balance::DataMapType const* user_data_              = nullptr;
   objgroup::proxy::Proxy<BaseLB> proxy_               = {};
