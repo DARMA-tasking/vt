@@ -55,12 +55,6 @@ namespace vt { namespace epoch {
 
 static EpochType const arch_epoch_coll = makeEpochZero();
 
-EpochManip::EpochManip()
-  : terminated_collective_epochs_(
-      std::make_unique<EpochWindow>(arch_epoch_coll)
-    )
-{ }
-
 /*static*/ EpochType EpochManip::generateEpoch(
   bool const& is_rooted, NodeType const& root_node,
   eEpochCategory const& category
@@ -123,22 +117,19 @@ EpochType EpochManip::getArchetype(EpochType epoch) const {
 
 EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
   auto const is_rooted = isRooted(epoch);
-  if (is_rooted and epoch != term::any_epoch_sentinel) {
-    auto const& arch_epoch = getArchetype(epoch);
-    auto iter = terminated_epochs_.find(arch_epoch);
-    if (iter == terminated_epochs_.end()) {
-      terminated_epochs_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(arch_epoch),
-        std::forward_as_tuple(std::make_unique<EpochWindow>(arch_epoch))
-      );
-      iter = terminated_epochs_.find(arch_epoch);
-    }
-    return iter->second.get();
-  } else {
-    vtAssertExpr(terminated_collective_epochs_ != nullptr);
-    return terminated_collective_epochs_.get();
+  auto& container = is_rooted and epoch != term::any_epoch_sentinel ?
+    terminated_epochs_ : terminated_collective_epochs_;
+  auto const& arch_epoch = getArchetype(epoch);
+  auto iter = container.find(arch_epoch);
+  if (iter == container.end()) {
+    container.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(arch_epoch),
+      std::forward_as_tuple(std::make_unique<EpochWindow>(arch_epoch))
+    );
+    iter = container.find(arch_epoch);
   }
+  return iter->second.get();
 }
 
 /*static*/ bool EpochManip::isRooted(EpochType const& epoch) {

@@ -612,7 +612,7 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, CallFromEnum from
           term_.erase(ds_term_iter);
         }
       } else {
-        theSched()->enqueue([epoch]{
+        theSched()->enqueueLambda([epoch]{
           theTerm()->cleanupEpoch(epoch, CallFromEnum::NonRoot);
         });
       }
@@ -627,7 +627,7 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, CallFromEnum from
       } else {
         // Schedule the cleanup for later, we are in the midst of iterating and
         // can't safely erase it immediately
-        theSched()->enqueue([epoch]{
+        theSched()->enqueueLambda([epoch]{
           theTerm()->cleanupEpoch(epoch, CallFromEnum::NonRoot);
         });
       }
@@ -1165,7 +1165,7 @@ void TerminationDetector::runReleaseEpochActions(EpochType epoch) {
       fn();
     }
   }
-  theMsg()->releaseEpochMsgs(epoch);
+  theSched()->releaseEpoch(epoch);
 }
 
 void TerminationDetector::onReleaseEpoch(EpochType epoch, ActionType action) {

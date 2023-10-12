@@ -235,6 +235,24 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   void enqueue(RunT r);
 
   /**
+   * \brief Enqueue a callable to execute later with the default priority
+   * \c default_priority
+   *
+   * \param[in] r action to execute
+   */
+  template <typename Callable>
+  void enqueueLambda(Callable&& c);
+
+  /**
+   * \brief Enqueue a callable to execute later with a priority
+   *
+   * \param[in] priority the priority of the action
+   * \param[in] r action to execute
+   */
+  template <typename Callable>
+  void enqueueLambda(PriorityType priority, Callable&& c);
+
+  /**
    * \brief Enqueue an runnable with a priority to execute later
    *
    * \param[in] priority the priority of the action
@@ -352,6 +370,13 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   ThreadManager* getThreadManager();
 #endif
 
+  /**
+   * \brief Release an epoch to run
+   *
+   * \param[in] ep the epoch to release
+   */
+  void releaseEpoch(EpochType ep);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | work_queue_
@@ -381,7 +406,8 @@ struct Scheduler : runtime::component::Component<Scheduler> {
       | vtLiveTime
       | schedLoopTime
       | idleTime
-      | idleTimeMinusTerm;
+      | idleTimeMinusTerm
+      | pending_work_;
   }
 
 private:
@@ -418,6 +444,9 @@ private:
 # else
   Queue<UnitType> work_queue_;
 # endif
+
+  /// Unreleased work pending an epoch release
+  std::unordered_map<EpochType, Queue<UnitType>> pending_work_;
 
 #if vt_check_enabled(fcontext)
   std::unique_ptr<ThreadManager> thread_manager_ = nullptr;

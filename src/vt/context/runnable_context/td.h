@@ -104,6 +104,13 @@ struct TD {
    */
   void resume();
 
+  /**
+   * \brief Get epoch for this context
+   *
+   * \return the epoch
+   */
+  EpochType getEpoch() const { return ep_; }
+
 private:
   EpochType ep_ = no_epoch;                    /**< The epoch for the task */
 #if vt_check_enabled(fcontext)

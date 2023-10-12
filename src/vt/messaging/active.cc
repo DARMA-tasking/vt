@@ -859,7 +859,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
       theTerm()->consume(term::any_epoch_sentinel,1,sender);
       theTerm()->hangDetectRecv();
     };
-    theSched()->enqueue(irecv->priority, run);
+    theSched()->enqueueLambda(irecv->priority, run);
   }
 }
 
@@ -964,13 +964,6 @@ void ActiveMessenger::prepareActiveMsgToRun(
   if (is_obj) {
     objgroup::dispatchObjGroup(base, handler, from_node, cont);
   } else {
-    if (epoch != term::any_epoch_sentinel and epoch::EpochManip::isDep(epoch)) {
-      if (not theTerm()->epochReleased(epoch)) {
-        pending_epoch_msgs_[epoch].emplace_back(base, from_node);
-        return;
-      }
-    }
-
     runnable::makeRunnable(base, not is_term, handler, from_node)
       .withContinuation(cont)
       .withTDEpochFromMsg(is_term)
@@ -986,17 +979,6 @@ void ActiveMessenger::prepareActiveMsgToRun(
   if (not is_term) {
     theTerm()->consume(epoch,1,in_from_node);
     theTerm()->hangDetectRecv();
-  }
-}
-
-void ActiveMessenger::releaseEpochMsgs(EpochType epoch) {
-  auto iter = pending_epoch_msgs_.find(epoch);
-  if (iter != pending_epoch_msgs_.end()) {
-    auto msgs = std::move(iter->second);
-    pending_epoch_msgs_.erase(iter);
-    for (auto&& m : msgs) {
-      prepareActiveMsgToRun(m.buffered_msg, m.from_node, true, m.cont);
-    }
   }
 }
 

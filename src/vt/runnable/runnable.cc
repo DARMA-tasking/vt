@@ -246,6 +246,14 @@ void RunnableNew::resume(TimeType time) {
 #endif
 }
 
+EpochType RunnableNew::getEpoch() const {
+  if (contexts_.has_td) {
+    return contexts_.td.getEpoch();
+  } else {
+    return no_epoch;
+  }
+}
+
 void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
   if (contexts_.has_lb) contexts_.lb.send(elm, bytes);
 }

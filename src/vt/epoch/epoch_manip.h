@@ -72,7 +72,7 @@ namespace vt { namespace epoch {
 struct EpochManip : runtime::component::Component<EpochManip> {
   using CapturedContextType = term::ParentEpochCapture;
 
-  EpochManip();
+  EpochManip() = default;
 
   std::string name() override { return "EpochManip"; }
 
@@ -276,10 +276,12 @@ public:
   }
 
 private:
-  // epoch window container for specific archetyped epochs
-  std::unordered_map<EpochType,std::unique_ptr<EpochWindow>> terminated_epochs_;
-  // epoch window for basic collective epochs
-  std::unique_ptr<EpochWindow> terminated_collective_epochs_ = nullptr;
+  /// epoch window container for specific archetyped epochs
+  std::unordered_map<EpochType, std::unique_ptr<EpochWindow>> terminated_epochs_;
+  /// epoch window for basic collective epochs
+  std::unordered_map<
+    EpochType, std::unique_ptr<EpochWindow>
+  > terminated_collective_epochs_;
 };
 
 }} /* end namespace vt::epoch */

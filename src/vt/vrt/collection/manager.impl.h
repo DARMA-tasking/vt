@@ -1721,7 +1721,7 @@ void CollectionManager::destroyElm(
   if (elm_holder->exists(idx)) {
     // Delay this so we can finish processing this work unit first (which might
     // be this collection element running)
-    theSched()->enqueue([idx,untyped_proxy]{
+    theSched()->enqueueLambda([idx,untyped_proxy]{
       auto elm = theCollection()->findElmHolder<IndexType>(untyped_proxy);
       if (elm->exists(idx)) {
         elm->remove(idx);

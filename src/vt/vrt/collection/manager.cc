@@ -92,7 +92,7 @@ elm::ElementIDStruct CollectionManager::getCurrentContext() const {
 }
 
 void CollectionManager::schedule(ActionType action) {
-  theSched()->enqueue(action);
+  theSched()->enqueueLambda(action);
 }
 
 VirtualProxyType CollectionManager::makeCollectionProxy(

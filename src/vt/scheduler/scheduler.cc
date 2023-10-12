@@ -384,6 +384,17 @@ void Scheduler::resume(ThreadIDType tid) {
   suspended_.resumeRunnable(tid);
 }
 
+void Scheduler::releaseEpoch(EpochType ep) {
+  auto iter = pending_work_.find(ep);
+  if (iter != pending_work_.end()) {
+    auto& container = iter->second;
+    while (container.size() > 0) {
+      work_queue_.emplace(container.pop());
+    }
+    pending_work_.erase(iter);
+  }
+}
+
 #if vt_check_enabled(fcontext)
 ThreadManager* Scheduler::getThreadManager() {
   return thread_manager_.get();

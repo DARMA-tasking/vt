@@ -57,17 +57,14 @@ using namespace vt::tests::unit;
 
 struct TestTermDepEpochActive : TestParallelHarness { };
 
-struct TestMsg : vt::Message { };
-
 struct TestDep {
-  static void depHandler(TestMsg* msg) {
-    //auto const& node = theContext()->getNode();
+  static void depHandler() {
     num_dep++;
-    //fmt::print("{}: depHandler: num_dep={}\n", node, num_dep);
+    vt_print(gen, "depHandler: num_dep={}, epoch={:x}\n", num_dep, theTerm()->getEpoch());
     EXPECT_EQ(num_non_dep, 1);
   }
 
-  static void nonDepHandler(TestMsg* msg) {
+  static void nonDepHandler() {
     //auto const& node = theContext()->getNode();
     num_non_dep++;
     //fmt::print("{}: nonDepHandler: num_non_dep={}\n", node, num_non_dep);
@@ -84,21 +81,16 @@ struct TestDep {
 TEST_F(TestTermDepEpochActive, test_term_dep_epoch_active) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  bool const bcast = true;
   int const k = 10;
 
   TestDep::num_dep = 0;
   TestDep::num_non_dep = 0;
   vt::theCollective()->barrier();
 
-  auto epoch = vt::theTerm()->makeEpochCollectiveDep();
+  auto epoch = vt::theTerm()->makeEpochCollective(term::ParentEpochCapture{}, true);
   vt::theMsg()->pushEpoch(epoch);
-  if (bcast) {
-    for (int i = 0; i < k; i++) {
-      auto msg = vt::makeSharedMessage<TestMsg>();
-      vt::theMsg()->broadcastMsg<TestMsg, TestDep::depHandler>(msg);
-    }
-  } else {
+  for (int i = 0; i < k; i++) {
+    vt::theMsg()->broadcast<TestDep::depHandler>();
   }
   vt::theMsg()->popEpoch(epoch);
   vt::theTerm()->finishedEpoch(epoch);
@@ -107,14 +99,13 @@ TEST_F(TestTermDepEpochActive, test_term_dep_epoch_active) {
   chain->addIndex(this_node);
 
   chain->nextStep([=](NodeType node) {
-    auto const next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-    auto msg = vt::makeSharedMessage<TestMsg>();
-    return vt::theMsg()->sendMsg<TestMsg, TestDep::nonDepHandler>(next,msg);
+    NodeType const next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    return vt::theMsg()->send<TestDep::nonDepHandler>(Node{next});
   });
 
   chain->nextStep([=](NodeType node) {
-    auto msg = vt::makeMessage<TestMsg>();
-    return vt::messaging::PendingSend(msg, [=](MsgVirtualPtr<vt::BaseMsgType>){
+    auto msg = vt::makeMessage<vt::Message>();
+    return vt::messaging::PendingSend(msg, [=](MsgSharedPtr<vt::BaseMsgType>&){
       EXPECT_EQ(TestDep::num_dep, 0);
       theTerm()->releaseEpoch(epoch);
     });
@@ -122,7 +113,7 @@ TEST_F(TestTermDepEpochActive, test_term_dep_epoch_active) {
 
   vt::theTerm()->addAction([=]{
     EXPECT_EQ(TestDep::num_non_dep, 1);
-    EXPECT_EQ(TestDep::num_dep, (num_nodes - 1)*k);
+    EXPECT_EQ(TestDep::num_dep, num_nodes * k);
   });
 }
 

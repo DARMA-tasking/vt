@@ -353,6 +353,13 @@ public:
    */
   static void operator delete(void* ptr);
 
+  /**
+   * \brief Get the epoch for a runnable
+   *
+   * \return the epoch
+   */
+  EpochType getEpoch() const;
+
 private:
   detail::Contexts contexts_;               /**< The contexts  */
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
