@@ -82,17 +82,24 @@ struct ArgvContainer {
     argv = new_argv.get();
   }
 
-  ~ArgvContainer() {
-    for(char* param: argv_) {
-      delete param;
-    }
+  int getArgc() const {
+    return argv_.size();
   }
 
-  ArgvContainer(const ArgvContainer&) = delete;
-  ArgvContainer& operator=(const ArgvContainer&) = delete;
+  std::unique_ptr<char*[]> getArgvDeepCopy() const {
+    auto output = std::make_unique<char*[]>(argv_.size() + 1);
 
+    int i = 0;
+    for(auto&& arg : argv_) {
+      output[i++] = strdup(arg.c_str());
+    }
+    output[i++] = nullptr;
 
-  std::vector<char*> argv_;
+    return output;
+  }
+
+private:
+  std::vector<std::string> argv_;
 };
 
 } // namespace arguments
