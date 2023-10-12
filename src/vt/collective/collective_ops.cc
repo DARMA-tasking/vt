@@ -224,8 +224,9 @@ RuntimePtrType CollectiveAnyOps<instance>::initializePreconfigured(
   vtAssert(curArgv != nullptr, "vt was not preconfigured!");
 
   auto argc = curArgv->getArgc();
-  auto argv = curArgv->getArgvDeepCopy().release();
-  auto runtime = initialize(argc, argv, is_interop, comm, appConfig);
+  auto argv = curArgv->getArgvDeepCopy();
+  auto argv_data = argv.get();
+  auto runtime = initialize(argc, argv_data, is_interop, comm, appConfig);
 
   curArgv.reset();
   return runtime;
