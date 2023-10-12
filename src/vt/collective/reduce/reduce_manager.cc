@@ -46,12 +46,12 @@
 
 namespace vt { namespace collective { namespace reduce {
 
+static std::unique_ptr<Reduce> makeReduceScope(detail::ReduceScope const& scope) {
+  return std::make_unique<Reduce>(scope);
+}
+
 ReduceManager::ReduceManager()
-  : reducers_( // default cons reducer for non-group
-      [](detail::ReduceScope const& scope) {
-        return std::make_unique<Reduce>(scope);
-      }
-    )
+  : reducers_(makeReduceScope)
 {
   // insert the default reducer scope
   reducers_.make(
