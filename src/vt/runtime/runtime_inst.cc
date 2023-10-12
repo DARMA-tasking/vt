@@ -49,7 +49,7 @@
 
 namespace vt {
 
-arguments::ArgvContainer* curArgv = nullptr;
+std::unique_ptr<arguments::ArgvContainer> curArgv;
 runtime::Runtime* curRT = nullptr;
 ::vt::runtime::Runtime* rt = nullptr;
 

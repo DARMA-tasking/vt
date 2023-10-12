@@ -67,7 +67,7 @@ struct RuntimeInst {
 namespace vt {
 
 // This is the container with args used to preconfigure vt
-extern arguments::ArgvContainer* curArgv;
+extern std::unique_ptr<arguments::ArgvContainer> curArgv;
 // This is the current runtime instance that is active
 extern runtime::Runtime* curRT;
 extern runtime::Runtime* rt;

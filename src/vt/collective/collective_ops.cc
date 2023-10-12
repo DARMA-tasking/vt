@@ -214,8 +214,7 @@ void printOverwrittens(
 
 template <runtime::RuntimeInstType instance>
 void CollectiveAnyOps<instance>::preconfigure(int& argc, char**& argv) {
-  delete curArgv;
-  curArgv = new arguments::ArgvContainer{argc, argv};
+  curArgv = std::make_unique<arguments::ArgvContainer>(argc, argv);
 }
 
 template <runtime::RuntimeInstType instance>
@@ -228,9 +227,7 @@ RuntimePtrType CollectiveAnyOps<instance>::initializePreconfigured(
   char** argv = curArgv->argv_.data();
   auto runtime = initialize(argc, argv, is_interop, comm, appConfig);
 
-  delete curArgv;
-  curArgv = nullptr;
-
+  curArgv.reset();
   return runtime;
 }
 
