@@ -143,10 +143,13 @@ void ElementLBData::setPhase(PhaseType const& new_phase) {
 
   // Access all table entries for current phase, to ensure presence even
   // if they're left empty
-  phase_timings_[cur_phase_];
-  subphase_timings_[cur_phase_];
-  phase_comm_[cur_phase_];
-  subphase_comm_[cur_phase_];
+  if ( cur_phase_ != 0 ) 
+  {
+    phase_timings_[cur_phase_];
+    subphase_timings_[cur_phase_];
+    phase_comm_[cur_phase_];
+    subphase_comm_[cur_phase_];
+  }
 }
 
 void ElementLBData::updatePhase(PhaseType const& inc) {
