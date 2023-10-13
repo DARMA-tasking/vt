@@ -1683,6 +1683,10 @@ void CollectionManager::insert(
   if (insert_node == this_node and proceed_with_insertion) {
     auto cons_fn = detail::InsertMsgDispatcher<MsgT, ColT>::makeCons(insert_msg);
     makeCollectionElement<ColT>(untyped_proxy, idx, mapped_node, cons_fn);
+
+    auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
+    auto raw_ptr = elm_holder->lookup(idx).getRawPtr();
+    raw_ptr->getLBData().updatePhase(thePhase()->getCurrentPhase());
   } else if (insert_node != this_node) {
     auto msg = makeMessage<InsertMsg<ColT, MsgT>>(
       proxy, idx, insert_node, mapped_node, modify_epoch, insert_msg
