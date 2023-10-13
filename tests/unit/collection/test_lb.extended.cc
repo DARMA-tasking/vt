@@ -51,6 +51,7 @@
 #include "data_message.h"
 
 #include "vt/phase/phase_manager.h"
+#include "vt/timing/timing_type.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/balance/node_lb_data.h"
@@ -407,6 +408,9 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
     runInEpochCollective([&] {
       proxy.broadcastCollective<colHandler>();
     });
+
+    vt::thePhase()->addUserDefinedData(
+      phase, std::string{"time"}, TimeType{static_cast<double>(phase)});
 
     // Go to the next phase
     vt::thePhase()->nextPhaseCollective();

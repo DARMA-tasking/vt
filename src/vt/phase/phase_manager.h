@@ -49,6 +49,7 @@
 #include "vt/phase/phase_hook_enum.h"
 #include "vt/phase/phase_hook_id.h"
 #include "vt/vrt/collection/balance/lb_invoke/phase_info.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 
 #include <unordered_map>
 #include <map>
@@ -168,6 +169,30 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
    * \brief Store start time for the current phase.
    */
   void setStartTime();
+
+
+template <typename T, typename = void>
+struct is_jsonable : std::false_type {};
+
+template <typename T>
+struct is_jsonable<T, std::void_t<decltype(nlohmann::json(std::declval<T>()))>> : std::true_type {};
+
+template <typename KeyT, typename ValueT>
+void addUserDefinedData(PhaseType phase, const KeyT& key, const ValueT& value) {
+  static_assert(
+    is_jsonable<KeyT>::value,
+    "PhaseManager::addUserDefinedData: KeyT type is not jsonable"
+  );
+  static_assert(
+    is_jsonable<ValueT>::value,
+    "PhaseManager::addUserDefinedData: ValueT type is not jsonable"
+  );
+
+  auto j = std::make_shared<nlohmann::json>();
+  j->emplace(key, value);
+
+  theNodeLBData()->getLBData()->user_per_phase_json_[phase] = j;
+}
 
   /**
    * \brief Print summary for the current phase.
