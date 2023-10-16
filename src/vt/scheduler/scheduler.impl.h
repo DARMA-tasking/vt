@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/messaging/active.h"
 #include "vt/termination/termination.h"
+#include "vt/objgroup/manager.fwd.h"
 
 namespace vt {
 
@@ -92,15 +93,10 @@ void Scheduler::enqueue(bool is_term, RunT r) {
   if (is_term) {
     num_term_msgs_++;
   }
-  auto ep = r->getEpoch();
-  if (
-    ep != no_epoch and ep != term::any_epoch_sentinel and
-    not theTerm()->epochReleased(ep))
-  {
-    pending_work_[ep].push(UnitType(is_term, r));
-  } else {
-    work_queue_.emplace(UnitType(is_term, r));
-  }
+
+  UnitType unit(is_term, r);
+
+  enqueueOrPostpone(std::move(unit));
 }
 
 template <typename MsgT, typename RunT>
@@ -111,25 +107,40 @@ void Scheduler::enqueue(MsgT* msg, RunT r) {
     num_term_msgs_++;
   }
 
+# if vt_check_enabled(priorities)
+  auto priority = envelopeGetPriority(msg->env);
+  UnitType unit(is_term, std::move(r), priority);
+# else
+  UnitType unit(is_term, std::move(r));
+# endif
+
+  enqueueOrPostpone(std::move(unit));
+}
+
+template <typename UnitT>
+void Scheduler::enqueueOrPostpone(UnitT unit) {
+  auto r = unit.getRunnable();
   auto ep = r->getEpoch();
-  if (
-    ep != no_epoch and ep != term::any_epoch_sentinel and
-    not theTerm()->epochReleased(ep))
-  {
-#   if vt_check_enabled(priorities)
-    auto priority = envelopeGetPriority(msg->env);
-    pending_work_[ep].push(UnitType(is_term, std::move(r), priority));
-#   else
-    pending_work_[ep].push(UnitType(is_term, std::move(r)));
-#   endif
-  } else {
-#   if vt_check_enabled(priorities)
-    auto priority = envelopeGetPriority(msg->env);
-    work_queue_.emplace(UnitType(is_term, std::move(r), priority));
-#   else
-    work_queue_.emplace(UnitType(is_term, std::move(r)));
-#   endif
+
+  bool const is_dep = epoch::EpochManip::isDep(ep);
+
+  if (is_dep) {
+    auto obj = r->getObj();
+    if (ep != no_epoch and ep != term::any_epoch_sentinel) {
+      if (obj and r->isObjGroup()) {
+        auto proxy = objgroup::getProxyFromPtr(obj);
+        if (released_objgroups_[ep].find(proxy) == released_objgroups_[ep].end()) {
+          pending_objgroup_work_[ep][proxy].push(unit);
+          return;
+        }
+      } else if (not theTerm()->epochReleased(ep)) {
+        pending_work_[ep].push(unit);
+        return;
+      }
+    }
   }
+
+  work_queue_.push(unit);
 }
 
 template <typename MsgT, typename RunT>
@@ -173,49 +184,16 @@ void Scheduler::enqueueLambda(PriorityType priority, Callable&& c) {
 }
 
 template <typename RunT>
-void Scheduler::enqueue(RunT r) {
+void Scheduler::enqueue(RunT r, PriorityType priority) {
   bool const is_term = false;
 
-  auto ep = r->getEpoch();
-  if (
-    ep != no_epoch and ep != term::any_epoch_sentinel and
-    not theTerm()->epochReleased(ep))
-  {
-#   if vt_check_enabled(priorities)
-    pending_work_[ep].push(UnitType(is_term, std::move(r), default_priority));
-#   else
-    pending_work_[ep].push(UnitType(is_term, std::move(r)));
-#   endif
-  } else {
-#   if vt_check_enabled(priorities)
-    work_queue_.emplace(UnitType(is_term, std::move(r), default_priority));
-#   else
-    work_queue_.emplace(UnitType(is_term, std::move(r)));
+# if vt_check_enabled(priorities)
+  UnitType unit(is_term, std::move(r), priority);
+# else
+  UnitType unit(is_term, std::move(r));
 # endif
-  }
-}
 
-template <typename RunT>
-void Scheduler::enqueue(PriorityType priority, RunT r) {
-  bool const is_term = false;
-
-  auto ep = r->getEpoch();
-  if (
-    ep != no_epoch and ep != term::any_epoch_sentinel and
-    not theTerm()->epochReleased(ep))
-  {
-#   if vt_check_enabled(priorities)
-    pending_work_[ep].push(UnitType(is_term, std::move(r), priority));
-#   else
-    pending_work_[ep].push(UnitType(is_term, std::move(r)));
-#   endif
-  } else {
-#   if vt_check_enabled(priorities)
-    work_queue_.emplace(UnitType(is_term, std::move(r), priority));
-#   else
-    work_queue_.emplace(UnitType(is_term, std::move(r)));
-# endif
-  }
+  enqueueOrPostpone(std::move(unit));
 }
 
 }} /* end namespace vt::sched */

@@ -82,6 +82,7 @@ void RunnableNew::setupHandler(HandlerType handler) {
 void RunnableNew::setupHandlerObjGroup(void* obj, HandlerType handler) {
   f_.func_ = auto_registry::getAutoHandlerObjGroup(handler).get();
   obj_ = obj;
+  is_objgroup_ = true;
 }
 
 void RunnableNew::setupHandlerElement(
@@ -92,6 +93,7 @@ void RunnableNew::setupHandlerElement(
     auto_registry::getAutoHandlerCollectionMem(handler).get() :
     auto_registry::getAutoHandlerCollection(handler).get();
   obj_ = elm;
+  is_objgroup_ = false;
 }
 
 void RunnableNew::setupHandlerElement(

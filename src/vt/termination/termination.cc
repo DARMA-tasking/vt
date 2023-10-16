@@ -1128,27 +1128,10 @@ void TerminationDetector::releaseEpoch(EpochType epoch) {
   bool const is_dep = isDep(epoch);
 
   if (is_dep) {
-    // Put the epoch in the released set, which is not conclusive due to
-    // dependencies, which effects the status. An epoch is *released* iff the
-    // epoch is in the released set and all succesrros are *released* (or there
-    // are no successors). The epoch any_epoch_sentinel does not count as a
-    // succcessor.
+    // Put the epoch in the released set. The epoch any_epoch_sentinel does not
+    // count as a succcessor.
     epoch_released_.insert(epoch);
-
-    bool const is_released = epochReleased(epoch);
-    if (is_released) {
-      runReleaseEpochActions(epoch);
-    } else {
-      // Enqueue continuations to potentially release this epoch since the
-      // successor graph is not inverted (one-way knowledge)
-      auto const& successors = getEpochDep(epoch)->getSuccessors();
-      vtAssert(successors.size() > 0, "Must have unreleased successors in this case");
-      for (auto&& suc : successors) {
-        if (not epochReleased(suc)) {
-          onReleaseEpoch(suc, [epoch]{ theTerm()->releaseEpoch(epoch); });
-        }
-      }
-    }
+    runReleaseEpochActions(epoch);
   } else {
     // The user might have made a mistake if they are trying to release an epoch
     // that is released-by-default (not dependent)
@@ -1178,18 +1161,6 @@ void TerminationDetector::onReleaseEpoch(EpochType epoch, ActionType action) {
   }
 }
 
-bool TerminationDetector::epochSuccessorsReleased(EpochType epoch) {
-  //  Test of all parents of a given epoch are released
-  bool released = true;
-  auto const& successors = getEpochDep(epoch)->getSuccessors();
-  if (successors.size() != 0) {
-    for (auto&& suc : successors) {
-      released &= epochReleased(suc);
-    }
-  }
-  return released;
-}
-
 bool TerminationDetector::epochReleased(EpochType epoch) {
   // Because of case (2), ignore dep <- no-dep because this should not be called
   // unless dep is released
@@ -1204,14 +1175,6 @@ bool TerminationDetector::epochReleased(EpochType epoch) {
   );
   if (is_term) {
     return true;
-  }
-
-  // All successors must be released for an epoch to be released even if its in
-  // the release set. Epochs are put in the release set early as to reduce
-  // tracking of epoch "release chains"
-  bool const is_successors_released = epochSuccessorsReleased(epoch);
-  if (not is_successors_released) {
-    return false;
   }
 
   // Check the release set

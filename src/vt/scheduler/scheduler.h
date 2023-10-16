@@ -226,13 +226,14 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   bool hasSchedRun() const { return has_executed_; }
 
   /**
-   * \brief Enqueue an action to execute later with the default priority
+   * \brief Enqueue an action to execute later with a priority
    * \c default_priority
    *
    * \param[in] r action to execute
+   * \param[in] priority the priority of the action
    */
   template <typename RunT>
-  void enqueue(RunT r);
+  void enqueue(RunT r, PriorityType priority = default_priority);
 
   /**
    * \brief Enqueue a callable to execute later with the default priority
@@ -251,15 +252,6 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   template <typename Callable>
   void enqueueLambda(PriorityType priority, Callable&& c);
-
-  /**
-   * \brief Enqueue an runnable with a priority to execute later
-   *
-   * \param[in] priority the priority of the action
-   * \param[in] r the runnable to execute later
-   */
-  template <typename RunT>
-  void enqueue(PriorityType priority, RunT r);
 
   /**
    * \brief Print current memory usage
@@ -294,6 +286,14 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   template <typename MsgT, typename RunT>
   void enqueue(messaging::MsgSharedPtr<MsgT> const& msg, RunT r);
+
+  /**
+   * \brief Enqueue a work unit or postpone
+   *
+   * \param[in] u the work unit
+   */
+  template <typename UnitT>
+  void enqueueOrPostpone(UnitT u);
 
   /**
    * \brief Get the work queue size
@@ -377,6 +377,13 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   void releaseEpoch(EpochType ep);
 
+  /**
+   * \brief Release an epoch to run
+   *
+   * \param[in] ep the epoch to release
+   */
+  void releaseEpochObjgroup(EpochType ep, ObjGroupProxyType proxy);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | work_queue_
@@ -407,7 +414,9 @@ struct Scheduler : runtime::component::Component<Scheduler> {
       | schedLoopTime
       | idleTime
       | idleTimeMinusTerm
-      | pending_work_;
+      | pending_work_
+      | pending_objgroup_work_
+      | released_objgroups_;
   }
 
 private:
@@ -447,6 +456,14 @@ private:
 
   /// Unreleased work pending an epoch release
   std::unordered_map<EpochType, Queue<UnitType>> pending_work_;
+
+  /// Unreleased work pending on an objgroup epoch release
+  std::unordered_map<
+    EpochType, std::unordered_map<ObjGroupProxyType, Queue<UnitType>>
+  > pending_objgroup_work_;
+
+  /// Released epochs for an objgroup
+  std::unordered_map<EpochType, std::set<ObjGroupProxyType>> released_objgroups_;
 
 #if vt_check_enabled(fcontext)
   std::unique_ptr<ThreadManager> thread_manager_ = nullptr;

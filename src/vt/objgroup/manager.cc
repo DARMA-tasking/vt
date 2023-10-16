@@ -145,4 +145,8 @@ std::unordered_map<ObjGroupProxyType, std::vector<ActionType>>& getPending() {
   return theObjGroup()->pending_;
 }
 
+ObjGroupProxyType getProxyFromPtr(void* obj) {
+  return theObjGroup()->getProxyFromPtr(obj);
+}
+
 }} /* end namespace vt::objgroup */

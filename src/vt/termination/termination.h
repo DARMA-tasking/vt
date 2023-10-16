@@ -408,15 +408,6 @@ private:
    */
   void runReleaseEpochActions(EpochType epoch);
 
-  /**
-   * \brief Check if all epoch successors are released
-   *
-   * \param[in] epoch the epoch to check
-   *
-   * \return whether they are all released
-   */
-  bool epochSuccessorsReleased(EpochType epoch);
-
 public:
   /*
    * Directly call into a specific type of rooted epoch, can not be overridden

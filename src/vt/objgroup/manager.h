@@ -490,6 +490,23 @@ private:
    */
   elm::ElementIDStruct getNextElm(ObjGroupProxyType proxy);
 
+public:
+  /**
+   * \brief Get an objgroup proxy from pointer
+   *
+   * \param[in] obj the pointer
+   *
+   * \return objgroup proxy
+   */
+  ObjGroupProxyType getProxyFromPtr(void* obj) const {
+    auto iter = obj_to_proxy_.find(obj);
+    if (iter != obj_to_proxy_.end()) {
+      return iter->second;
+    } else {
+      return no_obj_group;
+    }
+  }
+
 private:
   /// The current obj ID, sequential on each node for collective construction
   ObjGroupIDType cur_obj_id_ = fst_obj_group_id;

@@ -385,13 +385,30 @@ void Scheduler::resume(ThreadIDType tid) {
 }
 
 void Scheduler::releaseEpoch(EpochType ep) {
-  auto iter = pending_work_.find(ep);
-  if (iter != pending_work_.end()) {
+  if (auto iter = pending_work_.find(ep); iter != pending_work_.end()) {
     auto& container = iter->second;
     while (container.size() > 0) {
       work_queue_.emplace(container.pop());
     }
     pending_work_.erase(iter);
+  }
+}
+
+void Scheduler::releaseEpochObjgroup(EpochType ep, ObjGroupProxyType proxy) {
+  released_objgroups_[ep].insert(proxy);
+
+  if (auto iter = pending_objgroup_work_.find(ep);
+      iter != pending_objgroup_work_.end()) {
+    if (auto iter2 = iter->second.find(proxy); iter2 != iter->second.end()) {
+      auto& container = iter2->second;
+      while (container.size() > 0) {
+        work_queue_.emplace(container.pop());
+      }
+      iter->second.erase(iter2);
+    }
+    if (iter->second.size() == 0) {
+      pending_objgroup_work_.erase(iter);
+    }
   }
 }
 
