@@ -214,15 +214,15 @@ TEST_F(TestWorkloadDataMigrator, test_normalize_call) {
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 
       using vt::vrt::collection::balance::PhaseOffset;
-      auto load = new_model->getWork(
+      auto load = new_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
-      auto subload0 = new_model->getWork(
+      auto subload0 = new_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 0}
       );
       EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
-      auto subload1 = new_model->getWork(
+      auto subload1 = new_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
@@ -262,15 +262,15 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_home) {
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 
       using vt::vrt::collection::balance::PhaseOffset;
-      auto load = back_home_model->getWork(
+      auto load = back_home_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
-      auto subload0 = back_home_model->getWork(
+      auto subload0 = back_home_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 0}
       );
       EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
-      auto subload1 = back_home_model->getWork(
+      auto subload1 = back_home_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
@@ -324,15 +324,15 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_home) {
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 
       using vt::vrt::collection::balance::PhaseOffset;
-      auto load = back_home_if_not_here_model->getWork(
+      auto load = back_home_if_not_here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
-      auto subload0 = back_home_if_not_here_model->getWork(
+      auto subload0 = back_home_if_not_here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 0}
       );
       EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
-      auto subload1 = back_home_if_not_here_model->getWork(
+      auto subload1 = back_home_if_not_here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
@@ -376,15 +376,15 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_home) {
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 
       using vt::vrt::collection::balance::PhaseOffset;
-      auto load = here_model->getWork(
+      auto load = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
-      auto subload0 = here_model->getWork(
+      auto subload0 = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 0}
       );
       EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
-      auto subload1 = here_model->getWork(
+      auto subload1 = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
@@ -439,15 +439,15 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_here_from_home) {
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 
       using vt::vrt::collection::balance::PhaseOffset;
-      auto load = here_model->getWork(
+      auto load = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
-      auto subload0 = here_model->getWork(
+      auto subload0 = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 0}
       );
       EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
-      auto subload1 = here_model->getWork(
+      auto subload1 = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
@@ -493,15 +493,15 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_1) {
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 
       using vt::vrt::collection::balance::PhaseOffset;
-      auto load = here_model->getWork(
+      auto load = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
-      auto subload0 = here_model->getWork(
+      auto subload0 = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 0}
       );
       EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
-      auto subload1 = here_model->getWork(
+      auto subload1 = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
@@ -547,15 +547,15 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_2) {
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 
       using vt::vrt::collection::balance::PhaseOffset;
-      auto load = here_model->getWork(
+      auto load = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
       EXPECT_EQ(load, obj_id.id * 2);
-      auto subload0 = here_model->getWork(
+      auto subload0 = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 0}
       );
       EXPECT_EQ(subload0, obj_id.id % 2 ? obj_id.id * 2 : 0);
-      auto subload1 = here_model->getWork(
+      auto subload1 = here_model->getModeledLoad(
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
@@ -593,9 +593,9 @@ struct StatsResults {
 
     for (auto&& st : in_stat_vec) {
       auto stat = st.stat_;
-      if (stat == Statistic::P_l) {
+      if (stat == Statistic::Rank_load_modeled) {
         P_sum_[save_phase_] = st.sum();
-      } else if (stat == Statistic::O_l) {
+      } else if (stat == Statistic::Object_load_modeled) {
         O_min_[save_phase_] = st.min();
         O_max_[save_phase_] = st.max();
         O_car_[save_phase_] = st.N_;
@@ -616,9 +616,9 @@ struct StatsResults {
 
     for (auto&& st : in_stat_vec) {
       auto stat = st.stat_;
-      if (stat == Statistic::P_l) {
+      if (stat == Statistic::Rank_load_modeled) {
         EXPECT_EQ(P_sum_[comp_phase_], st.sum());
-      } else if (stat == Statistic::O_l) {
+      } else if (stat == Statistic::Object_load_modeled) {
         EXPECT_EQ(O_min_[comp_phase_], st.min());
         EXPECT_EQ(O_max_[comp_phase_], st.max());
         EXPECT_EQ(O_car_[comp_phase_], st.N_);
@@ -747,14 +747,14 @@ setupManyWorkloads(
       auto obj_id = *it;
       using vt::vrt::collection::balance::PhaseOffset;
       scrambled_lbdh->node_data_[phase][obj_id].whole_phase_load =
-        here_model->getWork(
+        here_model->getModeledLoad(
           obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
         );
       scrambled_lbdh->node_data_[phase][*it].subphase_loads.push_back(
-        here_model->getWork(obj_id, {PhaseOffset::NEXT_PHASE, 0})
+        here_model->getModeledLoad(obj_id, {PhaseOffset::NEXT_PHASE, 0})
       );
       scrambled_lbdh->node_data_[phase][*it].subphase_loads.push_back(
-        here_model->getWork(obj_id, {PhaseOffset::NEXT_PHASE, 1})
+        here_model->getModeledLoad(obj_id, {PhaseOffset::NEXT_PHASE, 1})
       );
     }
   }
@@ -780,7 +780,7 @@ TEST_F(TestWorkloadReplay, test_run_replay_verify_some_stats) {
   const PhaseType lb_interval = 2; // make sure this matches the harness above
 
   auto o_proxy = vt::theObjGroup()->makeCollective<StatsResults>(
-    initial_phase, lb_interval
+    "StatsResults", initial_phase, lb_interval
   );
 
   // first set up the workloads to replay, moving them around by phase
