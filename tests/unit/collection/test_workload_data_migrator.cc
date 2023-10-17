@@ -579,12 +579,10 @@ struct StatsResults {
   std::unordered_map<PhaseType, double> O_car_;
   std::unordered_map<PhaseType, double> P_sum_;
 
-  using StatsMsgType = vt::vrt::collection::balance::NodeStatsMsg;
   using Statistic = vt::vrt::collection::lb::Statistic;
+  using LoadData = vt::vrt::collection::balance::LoadData;
 
-  void saveStatsHandler(StatsMsgType* msg) {
-    auto in_stat_vec = msg->getConstVal();
-
+  void saveStatsHandler(std::vector<LoadData> const& in_stat_vec) {
     auto const& this_node = vt::theContext()->getNode();
 
     if (this_node == 0) {
@@ -605,9 +603,7 @@ struct StatsResults {
     ++save_phase_;
   }
 
-  void compStatsHandler(StatsMsgType* msg) {
-    auto in_stat_vec = msg->getConstVal();
-
+  void compStatsHandler(std::vector<LoadData> const& in_stat_vec) {
     auto const& this_node = vt::theContext()->getNode();
 
     if (this_node == 0) {
@@ -655,7 +651,6 @@ migrateObjectsAndDoStatistics(
         );
         runInEpochCollective("computeAndStoreStats", [=] {
           auto stats_cb = vt::theCB()->makeBcast<
-            StatsResults, StatsResults::StatsMsgType,
             &StatsResults::saveStatsHandler
           >(o_proxy);
           theLBManager()->computeStatistics(new_model, false, phase, stats_cb);
@@ -790,7 +785,7 @@ TEST_F(TestWorkloadReplay, test_run_replay_verify_some_stats) {
 
   // make our own stats callback so that we can check the results
   auto stats_cb = vt::theCB()->makeBcast<
-    StatsResults, StatsResults::StatsMsgType, &StatsResults::compStatsHandler
+    &StatsResults::compStatsHandler
   >(o_proxy);
 
   // then replay them but allow the lb to place objects differently
