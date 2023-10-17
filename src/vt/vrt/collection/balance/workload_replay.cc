@@ -63,7 +63,7 @@ void replayWorkloads(
 
   // use the default stats handler
   auto stats_cb = vt::theCB()->makeBcast<
-    LBManager, balance::NodeStatsMsg, &LBManager::statsHandler
+    &LBManager::statsHandler
   >(theLBManager()->getProxy());
 
   replayWorkloads(initial_phase, phases_to_run, workloads, stats_cb);
@@ -72,7 +72,7 @@ void replayWorkloads(
 void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run,
   std::shared_ptr<LBDataHolder> workloads,
-  Callback<balance::NodeStatsMsg> stats_cb
+  Callback<std::vector<balance::LoadData>> stats_cb
 ) {
   using ObjIDType = elm::ElementIDStruct;
 
@@ -271,7 +271,7 @@ WorkloadDataMigrator::construct(std::shared_ptr<LoadModel> model_base) {
   return my_proxy;
 }
 
-void WorkloadDataMigrator::runLB(TimeType) { }
+void WorkloadDataMigrator::runLB(LoadType) { }
 
 void WorkloadDataMigrator::inputParams(ConfigEntry* spec) { }
 

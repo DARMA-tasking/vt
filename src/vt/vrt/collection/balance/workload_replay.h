@@ -94,7 +94,7 @@ void replayWorkloads(
 void replayWorkloads(
   PhaseType initial_phase, PhaseType phases_to_run,
   std::shared_ptr<LBDataHolder> workloads,
-  Callback<balance::NodeStatsMsg> stats_cb
+  Callback<std::vector<balance::LoadData>> stats_cb
 );
 
 /**
@@ -132,7 +132,7 @@ struct WorkloadDataMigrator : lb::BaseLB {
   static objgroup::proxy::Proxy<WorkloadDataMigrator>
   construct(std::shared_ptr<LoadModel> model_base);
 
-  void runLB(TimeType) override;
+  void runLB(LoadType) override;
 
   void inputParams(ConfigEntry* spec) override;
 
