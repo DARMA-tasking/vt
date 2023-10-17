@@ -412,6 +412,15 @@ void Scheduler::releaseEpochObjgroup(EpochType ep, ObjGroupProxyType proxy) {
   }
 }
 
+bool Scheduler::isReleasedEpochObjgroup(
+  EpochType ep, ObjGroupProxyType proxy
+) const {
+  if (auto it = released_objgroups_.find(ep); it != released_objgroups_.end()) {
+    return it->second.find(proxy) != it->second.end();
+  }
+  return false;
+}
+
 #if vt_check_enabled(fcontext)
 ThreadManager* Scheduler::getThreadManager() {
   return thread_manager_.get();

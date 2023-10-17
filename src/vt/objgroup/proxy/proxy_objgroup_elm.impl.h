@@ -140,6 +140,30 @@ ObjT* ProxyElm<ObjT>::get() const {
   return theObjGroup()->get<ObjT>(proxy);
 }
 
+template <typename ObjT>
+bool ProxyElm<ObjT>::isReleased(EpochType epoch) const {
+  if (node_ == theContext()->getNode()) {
+    return theSched()->isReleasedEpochObjgroup(epoch, proxy_);
+  } else {
+    vtAbort("isReleased can only be called locally");
+    return false;
+  }
+}
+
+template <typename ObjT>
+inline void releaseRemoteObjGroup(ProxyElm<ObjT> proxy, EpochType ep) {
+  proxy.release(ep);
+}
+
+template <typename ObjT>
+void ProxyElm<ObjT>::release(EpochType epoch) const {
+  if (node_ == theContext()->getNode()) {
+    theSched()->releaseEpochObjgroup(epoch, proxy_);
+  } else {
+    theMsg()->send<releaseRemoteObjGroup<ObjT>>(vt::Node(node_), *this, epoch);
+  }
+}
+
 inline ProxyElm<void>::ProxyElm(NodeType in_node) : node_{in_node} {}
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>

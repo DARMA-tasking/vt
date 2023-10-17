@@ -384,6 +384,16 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   void releaseEpochObjgroup(EpochType ep, ObjGroupProxyType proxy);
 
+  /**
+   * \brief Check if a epoch is released for an objgroup
+   *
+   * \param[in] ep the epoch to check
+   * \param[in] proxy the objgroup proxy
+   *
+   * \return whether it's released
+   */
+  bool isReleasedEpochObjgroup(EpochType ep, ObjGroupProxyType proxy) const;
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | work_queue_

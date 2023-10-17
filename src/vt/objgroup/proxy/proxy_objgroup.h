@@ -431,6 +431,13 @@ public:
     s | proxy_;
   }
 
+  /**
+   * \brief Release a dependent epoch for all nodes
+   *
+   * \param[in] epoch the epoch to release
+   */
+  void release(EpochType epoch) const;
+
 private:
   ObjGroupProxyType proxy_ = no_obj_group; /**< The raw proxy ID bits */
 };
