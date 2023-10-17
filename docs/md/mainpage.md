@@ -26,8 +26,8 @@ supercomputer architectures. The main public repositories are:
 | Module                             | Name                                                           | Links                      |
 | ---------------------------------- | -------------------------------------------------------------- | -------------------------- |
 | HPC Runtime                        | @m_span{m-text m-success} DARMA/vt @m_endspan (Virtual Transport)                                   | [Github](https://github.com/DARMA-tasking/vt) |
-| HPC Serialization                  | @m_span{m-text m-success} DARMA/checkpoint @m_endspan (Checkpointing and Serialization Library)     | [Github](https://github.com/DARMA-tasking/checkpoint) |
-| HPC LB Simulator                   | @m_span{m-text m-success} DARMA/LBAF @m_endspan (Load Balancing Analysis Framework)                 | [Github](https://github.com/DARMA-tasking/LB-analysis-framework) |
+| HPC Serialization                  | @m_span{m-text m-success} DARMA/checkpoint @m_endspan (Checkpointing and Serialization Library)     | [Github](https://github.com/DARMA-tasking/checkpoint), [Docs](https://darma-tasking.github.io/checkpoint_docs/html/index.html) |
+| HPC LB Simulator                   | @m_span{m-text m-success} DARMA/LBAF @m_endspan (Load Balancing Analysis Framework)                 | [Github](https://github.com/DARMA-tasking/LB-analysis-framework), [Docs](https://darma-tasking.github.io/lbaf_docs/index.html) |
 | HPC Serializer compiler analyzer   | @m_span{m-text m-success} DARMA/checkpoint-analyzer @m_endspan (Static verification of serializers) | [Github](https://github.com/DARMA-tasking/checkpoint-member-analyzer) |
 | Toolkit documentation              | @m_span{m-text m-success} DARMA/docs @m_endspan                                                     | [Docs](https://github.com/DARMA-tasking/DARMA-tasking.github.io) |
 
