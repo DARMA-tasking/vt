@@ -76,14 +76,12 @@ struct TestDepColl : vt::Collection<TestDepColl,vt::Index1D> {
   void check(int k, int r) {
     auto const num_nodes = vt::theContext()->getNumNodes();
     EXPECT_EQ(num_non_dep, 1);
-    EXPECT_EQ(num_dep, num_nodes * msg->k);
+    EXPECT_EQ(num_dep, num_nodes * k);
   }
 
   int num_dep = 0;
   int num_non_dep = 0;
 };
-
-using TestMsg = typename TestDepColl::TestMsg;
 
 TEST_F(TestTermDepEpochCollection, test_term_dep_epoch_collection) {
   auto const& this_node = theContext()->getNode();
@@ -96,7 +94,7 @@ TEST_F(TestTermDepEpochCollection, test_term_dep_epoch_collection) {
   auto proxy = vt::theCollection()->constructCollective<TestDepColl>(range);
   vt::theCollective()->barrier();
 
-  auto epoch = vt::theTerm()->makeEpochCollectiveDep();
+  auto epoch = vt::theTerm()->makeEpochCollective(term::ParentEpochCapture{}, true);
   vt::theMsg()->pushEpoch(epoch);
   if (bcast) {
     for (int i = 0; i < k; i++) {
@@ -116,14 +114,14 @@ TEST_F(TestTermDepEpochCollection, test_term_dep_epoch_collection) {
   }
 
   chain->nextStep([=](vt::Index1D idx) {
-    auto msg = vt::makeMessage<TestMsg>();
+    auto msg = vt::makeMessage<vt::Message>();
     return vt::messaging::PendingSend(msg, [=](MsgSharedPtr<vt::BaseMsgType>){
       proxy[idx].send<&TestDepColl::nonDepHandler>();
     });
   });
 
   chain->nextStep([=](vt::Index1D idx) {
-    auto msg = vt::makeMessage<TestMsg>();
+    auto msg = vt::makeMessage<vt::Message>();
     return vt::messaging::PendingSend(msg, [=](MsgSharedPtr<vt::BaseMsgType>){
       fmt::print("release: {}\n", idx);
       proxy[idx].release(epoch);
