@@ -45,6 +45,7 @@
 #include "vt/vrt/collection/balance/workload_replay.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
+#include "vt/phase/phase_manager.h"
 #include "vt/utils/json/json_reader.h"
 
 #include <nlohmann/json.hpp>
@@ -202,12 +203,17 @@ void replayWorkloads(
               );
             }
           }
+          auto last_phase_info = theLBManager()->getPhaseInfo();
+          last_phase_info->migration_count = lb_reassignment->global_migration_count;
+          last_phase_info->ran_lb = true;
+          last_phase_info->phase = phase;
         }
         vt_debug_print(
           terse, replay,
           "Number of objects after LB: {}\n", migratable_objects_here.size()
         );
         runInEpochCollective("postLBWorkForReplay -> computeStats", [=] {
+          theLBManager()->setComputingBeforeLBStats(false);
           theLBManager()->computeStatistics(
             proposed_model, false, phase, stats_cb
           );
@@ -222,6 +228,8 @@ void replayWorkloads(
       theLBManager()->destroyLB();
     });
     theCollective()->barrier();
+    auto last_phase_info = theLBManager()->getPhaseInfo();
+    thePhase()->printSummary(last_phase_info);
   }
 }
 
