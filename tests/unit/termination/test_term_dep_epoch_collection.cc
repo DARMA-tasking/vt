@@ -57,13 +57,8 @@ using namespace vt::tests::unit;
 
 struct TestTermDepEpochCollection : TestParallelHarness { };
 
-struct TestDep : vt::Collection<TestDep,vt::Index1D> {
-  struct TestMsg : vt::CollectionMessage<TestDep> {
-    int k = 0;
-    int r = 0;
-  };
-
-  void depHandler(TestMsg* msg) {
+struct TestDepColl : vt::Collection<TestDepColl,vt::Index1D> {
+  void depHandler() {
     auto const& node = theContext()->getNode();
     auto idx = this->getIndex();
     num_dep++;
@@ -71,7 +66,7 @@ struct TestDep : vt::Collection<TestDep,vt::Index1D> {
     EXPECT_EQ(num_non_dep, 1);
   }
 
-  void nonDepHandler(TestMsg* msg) {
+  void nonDepHandler() {
     auto const& node = theContext()->getNode();
     auto idx = this->getIndex();
     num_non_dep++;
@@ -79,17 +74,17 @@ struct TestDep : vt::Collection<TestDep,vt::Index1D> {
     EXPECT_EQ(num_dep, 0);
   }
 
-  void check(TestMsg* msg) {
+  void check(int k, int r) {
     auto const num_nodes = vt::theContext()->getNumNodes();
     EXPECT_EQ(num_non_dep, 1);
-    EXPECT_EQ(num_dep, num_nodes*msg->k);
+    EXPECT_EQ(num_dep, num_nodes * msg->k);
   }
 
   int num_dep = 0;
   int num_non_dep = 0;
 };
 
-using TestMsg = typename TestDep::TestMsg;
+using TestMsg = typename TestDepColl::TestMsg;
 
 TEST_F(TestTermDepEpochCollection, test_term_dep_epoch_collection) {
   auto const& this_node = theContext()->getNode();
@@ -99,16 +94,14 @@ TEST_F(TestTermDepEpochCollection, test_term_dep_epoch_collection) {
   int const r = 48;
 
   auto range = vt::Index1D(r);
-  auto proxy = vt::theCollection()->constructCollective<TestDep>(range);
+  auto proxy = vt::theCollection()->constructCollective<TestDepColl>(range);
   vt::theCollective()->barrier();
 
   auto epoch = vt::theTerm()->makeEpochCollectiveDep();
   vt::theMsg()->pushEpoch(epoch);
   if (bcast) {
     for (int i = 0; i < k; i++) {
-      auto msg = vt::makeSharedMessage<TestMsg>();
-      //vt::envelopeSetEpoch(msg->env, epoch);
-      proxy.template broadcast<TestMsg, &TestDep::depHandler>(msg);
+      proxy.template broadcast<&TestDepColl::depHandler>();
     }
   } else {
   }
@@ -125,15 +118,14 @@ TEST_F(TestTermDepEpochCollection, test_term_dep_epoch_collection) {
 
   chain->nextStep([=](vt::Index1D idx) {
     auto msg = vt::makeMessage<TestMsg>();
-    return vt::messaging::PendingSend(msg, [=](MsgVirtualPtr<vt::BaseMsgType>){
-      auto msg2 = vt::makeSharedMessage<TestMsg>();
-      proxy[idx].send<TestMsg, &TestDep::nonDepHandler>(msg2);
+    return vt::messaging::PendingSend(msg, [=](MsgSharedPtr<vt::BaseMsgType>){
+      proxy[idx].send<&TestDepColl::nonDepHandler>();
     });
   });
 
   chain->nextStep([=](vt::Index1D idx) {
     auto msg = vt::makeMessage<TestMsg>();
-    return vt::messaging::PendingSend(msg, [=](MsgVirtualPtr<vt::BaseMsgType>){
+    return vt::messaging::PendingSend(msg, [=](MsgSharedPtr<vt::BaseMsgType>){
       fmt::print("release: {}\n", idx);
       proxy[idx].release(epoch);
     });
@@ -142,10 +134,7 @@ TEST_F(TestTermDepEpochCollection, test_term_dep_epoch_collection) {
   vt::theTerm()->addAction([=]{
     auto const node = vt::theContext()->getNode();
     if (node == 0) {
-      auto msg = vt::makeSharedMessage<TestMsg>();
-      msg->k = k;
-      msg->r = r;
-      proxy.template broadcast<TestMsg, &TestDep::check>(msg);
+      proxy.template broadcast<&TestDepColl::check>(k, r);
     }
   });
 }

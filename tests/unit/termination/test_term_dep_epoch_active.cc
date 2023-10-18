@@ -57,7 +57,7 @@ using namespace vt::tests::unit;
 
 struct TestTermDepEpochActive : TestParallelHarness { };
 
-struct TestDep {
+struct TestDepActive {
   static void depHandler() {
     num_dep++;
     vt_print(gen, "depHandler: num_dep={}, epoch={:x}\n", num_dep, theTerm()->getEpoch());
@@ -75,22 +75,22 @@ struct TestDep {
   static int num_non_dep;
 };
 
-/*static*/ int TestDep::num_dep = 0;
-/*static*/ int TestDep::num_non_dep = 0;
+/*static*/ int TestDepActive::num_dep = 0;
+/*static*/ int TestDepActive::num_non_dep = 0;
 
 TEST_F(TestTermDepEpochActive, test_term_dep_epoch_active) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   int const k = 10;
 
-  TestDep::num_dep = 0;
-  TestDep::num_non_dep = 0;
+  TestDepActive::num_dep = 0;
+  TestDepActive::num_non_dep = 0;
   vt::theCollective()->barrier();
 
   auto epoch = vt::theTerm()->makeEpochCollective(term::ParentEpochCapture{}, true);
   vt::theMsg()->pushEpoch(epoch);
   for (int i = 0; i < k; i++) {
-    vt::theMsg()->broadcast<TestDep::depHandler>();
+    vt::theMsg()->broadcast<TestDepActive::depHandler>();
   }
   vt::theMsg()->popEpoch(epoch);
   vt::theTerm()->finishedEpoch(epoch);
@@ -100,20 +100,20 @@ TEST_F(TestTermDepEpochActive, test_term_dep_epoch_active) {
 
   chain->nextStep([=](NodeType node) {
     NodeType const next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-    return vt::theMsg()->send<TestDep::nonDepHandler>(Node{next});
+    return vt::theMsg()->send<TestDepActive::nonDepHandler>(Node{next});
   });
 
   chain->nextStep([=](NodeType node) {
     auto msg = vt::makeMessage<vt::Message>();
     return vt::messaging::PendingSend(msg, [=](MsgSharedPtr<vt::BaseMsgType>&){
-      EXPECT_EQ(TestDep::num_dep, 0);
+      EXPECT_EQ(TestDepActive::num_dep, 0);
       theTerm()->releaseEpoch(epoch);
     });
   });
 
   vt::theTerm()->addAction([=]{
-    EXPECT_EQ(TestDep::num_non_dep, 1);
-    EXPECT_EQ(TestDep::num_dep, num_nodes * k);
+    EXPECT_EQ(TestDepActive::num_non_dep, 1);
+    EXPECT_EQ(TestDepActive::num_dep, num_nodes * k);
   });
 }
 
