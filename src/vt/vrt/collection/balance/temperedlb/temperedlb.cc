@@ -373,6 +373,15 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
   );
   inform_type_ = inform_type_converter_.getFromConfig(config, inform_type_);
 
+  balance::LBArgsEnumConverter<TransferTypeEnum> transfer_type_converter_(
+    "cmf", "TransferTypeEnum", {
+      {TransferTypeEnum::Original,                   "Original"},
+      {TransferTypeEnum::Recursive,                  "Recursive"},
+      {TransferTypeEnum::SwapClusters,               "SwapClusters"}
+    }
+  );
+  transfer_type_ = transfer_type_converter_.getFromConfig(config, transfer_type_);
+
   balance::LBArgsEnumConverter<ObjectOrderEnum> obj_ordering_converter_(
     "ordering", "ObjectOrderEnum", {
       {ObjectOrderEnum::Arbitrary,        "Arbitrary"},
@@ -414,6 +423,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
       knowledge_converter_.getString(knowledge_), f_, k_max_, num_iters_,
       criterion_converter_.getString(criterion_), num_trials_, deterministic_,
       inform_type_converter_.getString(inform_type_),
+      transfer_type_converter_.getString(transfer_type_),
       obj_ordering_converter_.getString(obj_ordering_),
       cmf_type_converter_.getString(cmf_type_), rollback_, target_pole_
     );
