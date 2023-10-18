@@ -81,6 +81,7 @@ struct ElementLBData {
     NodeType to, ElementIDStruct from_perm,
     double bytes, bool bcast
   );
+  void setPhase(PhaseType const& new_phase);
   void updatePhase(PhaseType const& inc = 1);
   void resetPhase();
   PhaseType getPhase() const;
