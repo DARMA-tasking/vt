@@ -172,7 +172,12 @@ private:
   LoadType target_max_load_                         = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   InformTypeEnum inform_type_                       = InformTypeEnum::AsyncInform;
-  /// Type of strategy to be used in transfer stage
+  /**
+   * \brief Type of strategy to be used in transfer stage
+   *
+   * Available strategies include: Original, Recursive, and SwapClusters
+   * and are adapted to different kinds of problems.
+   */
   TransferTypeEnum transfer_type_                   = TransferTypeEnum::Original;
   ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::FewestMigrations;
   CMFTypeEnum cmf_type_                             = CMFTypeEnum::NormByMax;
