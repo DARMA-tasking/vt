@@ -231,6 +231,8 @@ template <typename ColT, typename IndexT, typename MsgT>
 
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionBcastHandler(MsgT* msg) {
+  envelopeSetSystemMsg(msg->env, false);
+
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const bcast_proxy = col_msg->getBcastProxy();
   auto const& group = envelopeGetGroup(msg->env);
