@@ -261,6 +261,10 @@ public:
 
   void statsHandler(std::vector<balance::LoadData> const& in_stat_vec);
 
+  lb::PhaseInfo *getPhaseInfo() { return last_phase_info_.get(); }
+
+  void setComputingBeforeLBStats(bool before_lb) { before_lb_stats_ = before_lb; }
+
 private:
   bool isCollectiveComm(elm::CommCategory cat) const;
 
