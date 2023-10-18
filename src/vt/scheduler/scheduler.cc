@@ -412,6 +412,24 @@ void Scheduler::releaseEpochObjgroup(EpochType ep, ObjGroupProxyType proxy) {
   }
 }
 
+void Scheduler::releaseEpochCollection(EpochType ep, UntypedCollection* untyped) {
+  if (
+    auto iter = pending_collection_work_.find(ep);
+    iter != pending_collection_work_.end())
+  {
+    if (auto iter2 = iter->second.find(untyped); iter2 != iter->second.end()) {
+      auto& container = iter2->second;
+      while (container.size() > 0) {
+        work_queue_.emplace(container.pop());
+      }
+      iter->second.erase(iter2);
+    }
+    if (iter->second.size() == 0) {
+      pending_collection_work_.erase(iter);
+    }
+  }
+}
+
 bool Scheduler::isReleasedEpochObjgroup(
   EpochType ep, ObjGroupProxyType proxy
 ) const {

@@ -76,6 +76,7 @@ inline void envelopeInit(Env& env) {
 #endif
   envelopeSetHasBeenSerialized(env, false);
   envelopeSetCommLBDataRecordedAboveBareHandler(env, false);
+  envelopeSetSystemMsg(env, false);
 }
 
 inline void envelopeInitEmpty(Envelope& env) {

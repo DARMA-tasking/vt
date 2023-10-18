@@ -53,6 +53,7 @@
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/messaging/async_op_wrapper.fwd.h"
+#include "vt/vrt/collection/types/untyped.h"
 
 #include <cassert>
 #include <vector>
@@ -115,6 +116,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
   using RunnablePtrType      = runnable::RunnableNew*;
+  using UntypedCollection    = vrt::collection::UntypedCollection;
 
   struct SchedulerLoopGuard {
     SchedulerLoopGuard(Scheduler* scheduler);
@@ -385,6 +387,13 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   void releaseEpochObjgroup(EpochType ep, ObjGroupProxyType proxy);
 
   /**
+   * \brief Release an epoch to run
+   *
+   * \param[in] ep the epoch to release
+   */
+  void releaseEpochCollection(EpochType ep, UntypedCollection* untyped);
+
+  /**
    * \brief Check if a epoch is released for an objgroup
    *
    * \param[in] ep the epoch to check
@@ -426,6 +435,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
       | idleTimeMinusTerm
       | pending_work_
       | pending_objgroup_work_
+      | pending_collection_work_
       | released_objgroups_;
   }
 
@@ -471,6 +481,10 @@ private:
   std::unordered_map<
     EpochType, std::unordered_map<ObjGroupProxyType, Queue<UnitType>>
   > pending_objgroup_work_;
+
+  std::unordered_map<
+    EpochType, std::unordered_map<UntypedCollection*, Queue<UnitType>>
+  > pending_collection_work_;
 
   /// Released epochs for an objgroup
   std::unordered_map<EpochType, std::set<ObjGroupProxyType>> released_objgroups_;

@@ -120,22 +120,33 @@ void Scheduler::enqueue(MsgT* msg, RunT r) {
 template <typename UnitT>
 void Scheduler::enqueueOrPostpone(UnitT unit) {
   auto r = unit.getRunnable();
-  auto ep = r->getEpoch();
+  auto m = r->getMsg();
 
-  bool const is_dep = epoch::EpochManip::isDep(ep);
-
-  if (is_dep) {
-    auto obj = r->getObj();
-    if (ep != no_epoch and ep != term::any_epoch_sentinel) {
-      if (obj and r->isObjGroup()) {
-        auto proxy = objgroup::getProxyFromPtr(obj);
-        if (released_objgroups_[ep].find(proxy) == released_objgroups_[ep].end()) {
-          pending_objgroup_work_[ep][proxy].push(unit);
+  // If it's a system message we can schedule it right away
+  if (m and not m->env.system_msg) {
+    auto ep = r->getEpoch();
+    bool const is_dep = epoch::EpochManip::isDep(ep);
+    if (is_dep) {
+      auto obj = r->getObj();
+      if (ep != no_epoch and ep != term::any_epoch_sentinel) {
+        if (obj) {
+          if (r->isObjGroup()) {
+            auto proxy = objgroup::getProxyFromPtr(obj);
+            if (released_objgroups_[ep].find(proxy) == released_objgroups_[ep].end()) {
+              pending_objgroup_work_[ep][proxy].push(unit);
+              return;
+            }
+          } else {
+            auto untyped = static_cast<UntypedCollection*>(obj);
+            if (not untyped->isReleasedEpoch(ep)) {
+              pending_collection_work_[ep][untyped].push(unit);
+              return;
+            }
+          }
+        } else if (not theTerm()->epochReleased(ep)) {
+          pending_work_[ep].push(unit);
           return;
         }
-      } else if (not theTerm()->epochReleased(ep)) {
-        pending_work_[ep].push(unit);
-        return;
       }
     }
   }

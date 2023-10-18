@@ -119,6 +119,7 @@ void InfoRooted::setupRooted() {
         auto msg = makeMessage<GroupListMsg>(
           low_node, listsize, group_, op, listsize, this_node, &lst
         );
+        envelopeSetSystemMsg(msg->env, true);
         is_forward_ = true;
         forward_node_ = low_node;
         if (this_node != low_node) {
@@ -142,6 +143,7 @@ void InfoRooted::setupRooted() {
         low_node, regsize, group_, op, regsize, this_node,
         static_cast<region::Range*>(region_.get())
       );
+      envelopeSetSystemMsg(msg->env, true);
       is_forward_ = true;
       forward_node_ = low_node;
       if (this_node != low_node) {

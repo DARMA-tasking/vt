@@ -1467,6 +1467,50 @@ public:
   template <typename ColT>
   void addCleanupFn(VirtualProxyType proxy);
 
+public:
+  /**
+   * \brief Release a dependent epoch for a given proxy index
+   *
+   * \param[in] proxy the element proxy
+   * \param[in] epoch epoch to release
+   */
+  template <typename ColT>
+  void releaseEpoch(
+    VrtElmProxy<ColT, typename ColT::IndexType> proxy, EpochType epoch
+  );
+
+  /**
+   * \brief Release a dependent epoch for the whole collection
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] epoch the epoch to release
+   */
+  template <typename ColT>
+  void releaseEpochCollection(VirtualProxyType proxy, EpochType epoch);
+
+  /**
+   * \brief Check if a dependent epoch for a given proxy index is released
+   *
+   * \param[in] proxy the element proxy
+   * \param[in] epoch epoch to check
+   *
+   * \return whether it is released on this element
+   */
+  template <typename ColT>
+  bool isReleasedEpoch(
+    VrtElmProxy<ColT, typename ColT::IndexType> proxy, EpochType epoch
+  );
+
+private:
+  /**
+   * \brief Handler to release a dependent epoch across the whole collection
+   *
+   *  \param[in] proxy the collection proxy
+   *  \param[in] epoch epoch to release
+   */
+  template <typename ColT>
+  static void releaseWholeCollection(VirtualProxyType proxy, EpochType epoch);
+
 private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmAttorney;
@@ -1782,6 +1826,7 @@ private:
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.impl.h"
 #include "vt/vrt/collection/broadcast/broadcastable.impl.h"
 #include "vt/vrt/collection/rdmaable/rdmaable.impl.h"
+#include "vt/vrt/collection/release/releasable.impl.h"
 #include "vt/vrt/collection/balance/col_lb_data.impl.h"
 #include "vt/vrt/collection/types/indexable.impl.h"
 #include "vt/vrt/collection/dispatch/dispatch.impl.h"

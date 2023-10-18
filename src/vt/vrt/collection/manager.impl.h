@@ -2318,6 +2318,59 @@ messaging::PendingSend CollectionManager::schedule(
   });
 }
 
+namespace {
+
+template <typename ColT>
+void releaseRemoteCollection(
+  ColT* col, VrtElmProxy<ColT, typename ColT::IndexType> proxy, EpochType ep
+) {
+  proxy.release(ep);
+}
+
+} /* end anon namespace */
+
+template <typename ColT>
+void CollectionManager::releaseEpoch(
+  VrtElmProxy<ColT, typename ColT::IndexType> proxy, EpochType epoch
+) {
+  if (auto ptr = proxy.tryGetLocalPtr(); ptr != nullptr) {
+    ptr->addReleasedEpoch(epoch);
+    theSched()->releaseEpochCollection(epoch, ptr);
+  } else {
+    proxy.template send<releaseRemoteCollection<ColT>>(proxy, epoch);
+  }
+}
+
+template <typename ColT>
+void CollectionManager::releaseEpochCollection(
+  VirtualProxyType proxy, EpochType epoch
+) {
+  theMsg()->broadcast<releaseWholeCollection<ColT>>(proxy, epoch);
+}
+
+template <typename ColT>
+bool CollectionManager::isReleasedEpoch(
+  VrtElmProxy<ColT, typename ColT::IndexType> proxy, EpochType epoch
+) {
+  if (auto ptr = proxy.tryGetLocalPtr(); ptr != nullptr) {
+    return ptr->isReleasedEpoch(epoch);
+  } else {
+    vtAbort("Can not call isReleased on a non-local proxy");
+    return false;
+  }
+}
+
+template <typename ColT>
+/*static*/ void CollectionManager::releaseWholeCollection(
+  VirtualProxyType proxy, EpochType epoch
+) {
+  CollectionProxyWrapType<ColT> typed_proxy{proxy};
+  auto const& idxs = theCollection()->getLocalIndices<ColT>(typed_proxy);
+  for (auto&& idx : idxs) {
+    theCollection()->releaseEpoch(typed_proxy[idx], epoch);
+  }
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #include "vt/vrt/collection/collection_builder.impl.h"

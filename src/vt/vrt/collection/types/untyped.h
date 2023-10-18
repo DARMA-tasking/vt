@@ -61,7 +61,42 @@ protected:
   template <typename Serializer>
   void serialize(Serializer& s) {
     VrtBase::serialize(s);
+    s | released_epochs_;
   }
+
+public:
+  /**
+   * \brief Add a released epoch to the set
+   *
+   * \param[in] epoch the epoch to add
+   */
+  void addReleasedEpoch(EpochType epoch) { released_epochs_.insert(epoch); }
+
+  /**
+   * \brief Remove a released epoch from the set
+   *
+   * \param[in] epoch the epoch to remove
+   */
+  void removeReleasedEpoch(EpochType epoch) {
+    if (auto i = released_epochs_.find(epoch); i != released_epochs_.end()) {
+      released_epochs_.erase(i);
+    }
+  }
+
+  /**
+   * \brief Check if an epoch has been released
+   *
+   * \param[in] epoch the epoch to check
+   *
+   * \return whether it is released
+   */
+  bool isReleasedEpoch(EpochType epoch) const {
+    return released_epochs_.find(epoch) != released_epochs_.end();
+  }
+
+private:
+  /// Released epochs for this collection element
+  std::unordered_set<EpochType> released_epochs_;
 };
 
 }}} /* end namespace vt::vrt::collection */
