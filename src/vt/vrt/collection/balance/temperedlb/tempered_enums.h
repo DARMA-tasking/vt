@@ -71,6 +71,36 @@ enum struct InformTypeEnum : uint8_t {
   AsyncInform = 1
 };
 
+/// Enum for the strategy to be used in transfer stage
+enum struct TransferTypeEnum : uint8_t {
+  /**
+   * \brief Original strategy
+   *
+   * Transfer one object per transfer as in original Grapevine approach.
+   */
+  Original   = 0,
+  /**
+   * \brief Original strategy improved by recursion
+   *
+   * When single object transfer is rejected, attempt to recurse in order to
+   * pull more objects into the transfer and hereby minimize work added by
+   * said transfer.
+   * This is especially useful when communication is taken into account, as
+   * object transfers typically disrupt local vs. global communication edges.
+   */
+  Recursive  = 1,
+  /**
+   * \brief Form object clusters and attempt to perform swaps.
+   *
+   * Object can be clustered according to arbitrary definition, and swaps
+   * of entire clusters, according the nullset, between ranks are attempted.
+   * This is especially useful when shared memory constraints are present,
+   * as breaking shared memory clusters results in higher overall memory
+   * footprint, in constrast with whole cluster swaps.
+   */
+  SwapClusters = 2,
+};
+
 /// Enum for the order in which local objects are considered for transfer
 enum struct ObjectOrderEnum : uint8_t {
   Arbitrary = 0, //< Arbitrary order: iterate as defined by the unordered_map
@@ -163,36 +193,6 @@ enum struct KnowledgeEnum : uint8_t {
    * rounds = log(num_ranks)/log(fanout).
    */
   Log         = 2
-};
-
-/// Enum for the strategy to be used in transfer stage
-enum struct TransferStrategyEnum : uint8_t {
-  /**
-   * \brief Original strategy
-   *
-   * Transfer one object per transfer as in original Grapevine approach.
-   */
-  Original   = 0,
-  /**
-   * \brief Original strategy improved by recursion
-   *
-   * When single object transfer is rejected, attempt to recurse in order to
-   * pull more objects into the transfer and hereby minimize work added by
-   * said transfer.
-   * This is especially useful when communication is taken into account, as
-   * object transfers typically disrupt local vs. global communication edges.
-   */
-  Recursive  = 1,
-  /**
-   * \brief Form object clusters and attempt to perform swaps.
-   *
-   * Object can be clustered according to arbitrary definition, and swaps
-   * of entire clusters, according the nullset, between ranks are attempted.
-   * This is especially useful when shared memory constraints are present,
-   * as breaking shared memory clusters results in higher overall memory
-   * footprint, in constrast with whole cluster swaps.
-   */
-  ClusterSwap = 2,
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
