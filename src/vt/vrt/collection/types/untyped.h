@@ -48,6 +48,8 @@
 #include "vt/vrt/base/base.h"
 #include "vt/vrt/collection/types/has_migrate.h"
 
+#include <unordered_set>
+
 namespace vt { namespace vrt { namespace collection {
 
 /*
