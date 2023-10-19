@@ -671,6 +671,20 @@ void addRuntimeArgs(CLI::App& app, AppConfig& appConfig) {
   a3->group(configRuntime);
 }
 
+void addTVArgs(CLI::App& app, AppConfig& appConfig) {
+  auto tv_enabled = "Enable vt-tv visualization/mesh streaming";
+  auto tv_file = "File name for YAML vt-tv configuraton file";
+
+  auto a1 = app.add_flag("--vt_tv", appConfig.vt_tv, tv_enabled);
+  auto a2 = app.add_option(
+    "--vt_tv_config_file", appConfig.vt_tv_config_file, tv_file
+  );
+
+  auto configTV = "vt-tv Configuration";
+  a1->group(configTV);
+  a2->group(configTV);
+}
+
 void addThreadingArgs(CLI::App& app, AppConfig& appConfig) {
 #if (vt_feature_fcontext != 0)
   auto ult_disable = "Disable running handlers in user-level threads";
@@ -768,6 +782,7 @@ std::tuple<int, std::string> ArgConfig::parseToConfig(
   addSchedulerArgs(app, appConfig);
   addConfigFileArgs(app, appConfig);
   addRuntimeArgs(app, appConfig);
+  addTVArgs(app, appConfig);
   addThreadingArgs(app, appConfig);
 
   std::tuple<int, std::string> result = parseArguments(app, argc, argv, appConfig);

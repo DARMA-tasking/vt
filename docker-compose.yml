@@ -167,6 +167,7 @@ x-vtopts: &vtopts
   CODECOV_TOKEN: ${CODECOV_TOKEN:-}
   TEST_LB_SCHEMA: ${TEST_LB_SCHEMA:-0}
   CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD:-17}
+  VT_TV_ENABLED: ${VT_TV:-0}
 
 services:
   ##############################################################################

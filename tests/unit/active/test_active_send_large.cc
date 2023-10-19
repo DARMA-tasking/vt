@@ -91,7 +91,7 @@ template <typename T>
 void checkMsg(T msg) {
   auto arr = reinterpret_cast<int64_t*>(&msg->payload[0]);
   for (std::size_t i = 0; i < msg->bytes / sizeof(int64_t); i++) {
-    EXPECT_EQ(arr[i], i);
+    EXPECT_EQ(arr[i], static_cast<int64_t>(i));
   }
 }
 

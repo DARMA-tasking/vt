@@ -15,3 +15,9 @@ else()
 endif()
 
 set(CHECKPOINT_LIBRARY vt::lib::checkpoint)
+
+if (EXISTS "${PROJECT_LIB_DIR}/vt-tv")
+  set(vt_tv_python_bindings_enabled OFF)
+  add_subdirectory(${PROJECT_LIB_DIR}/vt-tv)
+  set(TV_LIBRARY vt::lib::vt-tv)
+endif()
