@@ -46,13 +46,16 @@
 
 #include "vt/config.h"
 #include "vt/runtime/runtime_headers.h"
+#include "vt/configs/arguments/argv_container.h"
 
 namespace vt {
 
-void preconfigure(int& argc, char**& argv);
+std::unique_ptr<arguments::ArgvContainer>
+preconfigure(int& argc, char**& argv);
 RuntimePtrType initializePreconfigured(
   MPI_Comm* comm = nullptr,
-  arguments::AppConfig const* appConfig = nullptr);
+  arguments::AppConfig const* appConfig = nullptr,
+  std::unique_ptr<arguments::ArgvContainer> preconfigure_args = nullptr);
 
 RuntimePtrType initialize(
   int& argc, char**& argv, MPI_Comm* comm = nullptr,

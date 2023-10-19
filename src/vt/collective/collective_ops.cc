@@ -213,26 +213,6 @@ void printOverwrittens(
 } /* end anon namespace */
 
 template <runtime::RuntimeInstType instance>
-void CollectiveAnyOps<instance>::preconfigure(int& argc, char**& argv) {
-  curArgv = std::make_unique<arguments::ArgvContainer>(argc, argv);
-}
-
-template <runtime::RuntimeInstType instance>
-RuntimePtrType CollectiveAnyOps<instance>::initializePreconfigured(
-  bool is_interop, MPI_Comm* comm, arguments::AppConfig const* appConfig) {
-
-  vtAssert(curArgv != nullptr, "vt was not preconfigured!");
-
-  auto argc = curArgv->getArgc();
-  auto argv = curArgv->getArgvDeepCopy();
-  auto argv_data = argv.get();
-  auto runtime = initialize(argc, argv_data, is_interop, comm, appConfig);
-
-  curArgv.reset();
-  return runtime;
-}
-
-template <runtime::RuntimeInstType instance>
 RuntimePtrType CollectiveAnyOps<instance>::initialize(
   int& argc, char**& argv, bool is_interop, MPI_Comm* comm,
   arguments::AppConfig const* appConfig

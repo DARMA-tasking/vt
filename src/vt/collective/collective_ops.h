@@ -59,11 +59,6 @@ static constexpr runtime::RuntimeInstType const collective_default_inst =
 
 template <runtime::RuntimeInstType instance = collective_default_inst>
 struct CollectiveAnyOps {
-  static void preconfigure(int& argc, char**& argv);
-  static RuntimePtrType initializePreconfigured(
-    bool is_interop = false, MPI_Comm* comm = nullptr,
-    arguments::AppConfig const* appConfig = nullptr
-  );
   // The general methods that interact with the managed runtime holder
   static RuntimePtrType initialize(
     int& argc, char**& argv, bool is_interop = false, MPI_Comm* comm = nullptr,

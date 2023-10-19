@@ -296,7 +296,7 @@ TEST_F(TestInitialization, test_preconfigure_and_initialization) {
   }
   MPI_Barrier(comm);
 
-  vt::preconfigure(custom_argc, custom_argv);
+  auto vtConfig = vt::preconfigure(custom_argc, custom_argv);
 
   EXPECT_EQ(custom_argc, 2);
   EXPECT_STREQ(custom_argv[0], "vt_program");
@@ -304,6 +304,14 @@ TEST_F(TestInitialization, test_preconfigure_and_initialization) {
   EXPECT_EQ(custom_argv[2], nullptr);
 
   vt::initializePreconfigured(&comm, &appConfig);
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_unknown");
+  EXPECT_EQ(theConfig()->vt_no_terminate, false);
+  EXPECT_EQ(theConfig()->vt_lb_name, "GreedyLB");
+
+  vt::finalize();
+
+  vt::initializePreconfigured(&comm, &appConfig, std::move(vtConfig));
 
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
   EXPECT_EQ(theConfig()->vt_no_terminate, true);

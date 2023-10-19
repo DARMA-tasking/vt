@@ -49,15 +49,22 @@
 
 namespace vt {
 
-void preconfigure(int& argc, char**& argv) {
-  CollectiveOps::preconfigure(argc, argv);
+std::unique_ptr<arguments::ArgvContainer>
+preconfigure(int& argc, char**& argv) {
+  return std::make_unique<arguments::ArgvContainer>(argc, argv);
 }
 
 RuntimePtrType initializePreconfigured(
-  MPI_Comm* comm, arguments::AppConfig const* appConfig
+  MPI_Comm* comm, arguments::AppConfig const* appConfig,
+  std::unique_ptr<arguments::ArgvContainer> preconfigure_args
 ) {
+  auto argc = preconfigure_args ? preconfigure_args->getArgc() : 0;
+  auto argv_container = preconfigure_args ? preconfigure_args->getArgvDeepCopy() : nullptr;
+  auto argv = argv_container ? argv_container.get() : nullptr;
   bool const is_interop = comm != nullptr;
-  return CollectiveOps::initializePreconfigured(is_interop, comm, appConfig);
+  return CollectiveOps::initialize(
+    argc, argv, is_interop, comm, appConfig
+  );
 }
 
 // vt::{initialize,finalize} for main ::vt namespace
