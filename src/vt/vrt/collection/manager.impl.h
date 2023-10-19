@@ -219,6 +219,8 @@ template <typename ColT, typename IndexT, typename MsgT>
 
   auto m = promoteMsg(msg);
 
+  envelopeSetSystemMsg(m->env, false);
+
   runnable::makeRunnable(m, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
