@@ -169,6 +169,27 @@ Description:
 )"
     },
     {
+      "transfer",
+      R"(
+Values: {Original, Recursive, SwapClusters}
+Default: Original
+Description:
+    Transfer strategy to be used in transfer stage. Options are:
+    Original: transfer one object per transfer as in original Grapevine approach.                                     Recursive: original strategy improved by recursion.
+      When single object transfer is rejected, attempt to recurse in order to
+      pull more objects into the transfer and hereby minimize work added by
+      said transfer.
+      This is especially useful when communication is taken into account, as
+      object transfers typically disrupt local vs. global communication edges.
+    SwapClusters: form object clusters and attempt to perform swaps.
+      Object can be clustered according to arbitrary definition, and swaps
+      of entire clusters, according the nullset, between ranks are attempted.
+      This is especially useful when shared memory constraints are present,
+      as breaking shared memory clusters results in higher overall memory
+      footprint, in constrast with whole cluster swaps.
+)"
+    },
+    {
       "ordering",
       R"(
 Values: {Arbitrary, ElmID, FewestMigrations, SmallObject, LargestObjects}
@@ -375,9 +396,9 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
 
   balance::LBArgsEnumConverter<TransferTypeEnum> transfer_type_converter_(
     "cmf", "TransferTypeEnum", {
-      {TransferTypeEnum::Original,                   "Original"},
-      {TransferTypeEnum::Recursive,                  "Recursive"},
-      {TransferTypeEnum::SwapClusters,               "SwapClusters"}
+      {TransferTypeEnum::Original,        "Original"},
+      {TransferTypeEnum::Recursive,       "Recursive"},
+      {TransferTypeEnum::SwapClusters,    "SwapClusters"}
     }
   );
   transfer_type_ = transfer_type_converter_.getFromConfig(config, transfer_type_);
