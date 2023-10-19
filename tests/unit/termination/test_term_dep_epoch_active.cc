@@ -57,39 +57,36 @@ using namespace vt::tests::unit;
 struct TestTermDepEpochActive : TestParallelHarness { };
 
 struct TestDepActive {
-  static void depHandler() {
+  void depHandler() {
     num_dep++;
     vt_print(gen, "depHandler: num_dep={}, epoch={:x}\n", num_dep, theTerm()->getEpoch());
     EXPECT_EQ(num_non_dep, 1);
   }
 
-  static void nonDepHandler() {
+  void nonDepHandler() {
     //auto const& node = theContext()->getNode();
     num_non_dep++;
     //fmt::print("{}: nonDepHandler: num_non_dep={}\n", node, num_non_dep);
     EXPECT_EQ(num_dep, 0);
   }
 
-  static int num_dep;
-  static int num_non_dep;
+  int num_dep = 0;
+  int num_non_dep = 0;
 };
-
-/*static*/ int TestDepActive::num_dep = 0;
-/*static*/ int TestDepActive::num_non_dep = 0;
 
 TEST_F(TestTermDepEpochActive, test_term_dep_epoch_active) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   int const k = 10;
 
-  TestDepActive::num_dep = 0;
-  TestDepActive::num_non_dep = 0;
+  auto proxy = theObjGroup()->makeCollective<TestDepActive>("TestDepActive");
+
   vt::theCollective()->barrier();
 
   auto epoch = vt::theTerm()->makeEpochCollective(term::ParentEpochCapture{}, true);
   vt::theMsg()->pushEpoch(epoch);
   for (int i = 0; i < k; i++) {
-    vt::theMsg()->broadcast<TestDepActive::depHandler>();
+    proxy.broadcast<&TestDepActive::depHandler>();
   }
   vt::theMsg()->popEpoch(epoch);
   vt::theTerm()->finishedEpoch(epoch);
@@ -98,21 +95,20 @@ TEST_F(TestTermDepEpochActive, test_term_dep_epoch_active) {
   chain->addIndex(this_node);
 
   chain->nextStep([=](NodeType node) {
-    NodeType const next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-    return vt::theMsg()->send<TestDepActive::nonDepHandler>(Node{next});
+    return proxy[this_node].send<&TestDepActive::nonDepHandler>();
   });
 
   chain->nextStep([=](NodeType node) {
     auto msg = vt::makeMessage<vt::Message>();
     return vt::messaging::PendingSend(msg, [=](MsgSharedPtr<vt::BaseMsgType>&){
-      EXPECT_EQ(TestDepActive::num_dep, 0);
-      theTerm()->releaseEpoch(epoch);
+      EXPECT_EQ(proxy.get()->num_dep, 0);
+      proxy[this_node].release(epoch);
     });
   });
 
   vt::theTerm()->addAction([=]{
-    EXPECT_EQ(TestDepActive::num_non_dep, 1);
-    EXPECT_EQ(TestDepActive::num_dep, num_nodes * k);
+    EXPECT_EQ(proxy.get()->num_non_dep, 1);
+    EXPECT_EQ(proxy.get()->num_dep, num_nodes * k);
   });
 }
 
