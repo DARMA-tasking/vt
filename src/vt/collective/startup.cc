@@ -56,11 +56,14 @@ preconfigure(int& argc, char**& argv) {
 
 RuntimePtrType initializePreconfigured(
   MPI_Comm* comm, arguments::AppConfig const* appConfig,
-  std::unique_ptr<arguments::ArgvContainer> preconfigure_args
+  arguments::ArgvContainer const* preconfigure_args
 ) {
-  auto argc = preconfigure_args ? preconfigure_args->getArgc() : 0;
-  auto argv_container = preconfigure_args ? preconfigure_args->getArgvDeepCopy() : nullptr;
-  auto argv = argv_container ? argv_container.get() : nullptr;
+  arguments::ArgvContainer args =
+    preconfigure_args ? *preconfigure_args : arguments::ArgvContainer{};
+
+  auto argc = args.getArgc();
+  auto argv_container = args.getArgvDeepCopy();
+  auto argv = argv_container.get();
   bool const is_interop = comm != nullptr;
   return CollectiveOps::initialize(
     argc, argv, is_interop, comm, appConfig

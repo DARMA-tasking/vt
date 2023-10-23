@@ -55,7 +55,7 @@ preconfigure(int& argc, char**& argv);
 RuntimePtrType initializePreconfigured(
   MPI_Comm* comm = nullptr,
   arguments::AppConfig const* appConfig = nullptr,
-  std::unique_ptr<arguments::ArgvContainer> preconfigure_args = nullptr);
+  arguments::ArgvContainer const* preconfigure_args = nullptr);
 
 RuntimePtrType initialize(
   int& argc, char**& argv, MPI_Comm* comm = nullptr,

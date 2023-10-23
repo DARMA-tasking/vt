@@ -82,6 +82,9 @@ struct ArgvContainer {
     argv = new_argv.get();
   }
 
+  ArgvContainer() = default;
+  ArgvContainer(const ArgvContainer&) = default;
+
   int getArgc() const {
     return argv_.size();
   }

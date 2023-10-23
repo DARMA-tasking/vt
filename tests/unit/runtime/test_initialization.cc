@@ -310,12 +310,14 @@ TEST_F(TestInitialization, test_preconfigure_and_initialization) {
   EXPECT_EQ(theConfig()->vt_lb_name, "GreedyLB");
 
   vt::finalize();
-
-  vt::initializePreconfigured(&comm, &appConfig, std::move(vtConfig));
+  vt::initializePreconfigured(&comm, &appConfig, vtConfig.get());
 
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
   EXPECT_EQ(theConfig()->vt_no_terminate, true);
   EXPECT_EQ(theConfig()->vt_lb_name, "RotateLB");
+
+  vt::finalize();
+  vt::initializePreconfigured(&comm, &appConfig, vtConfig.get());
 }
 
 }}} // end namespace vt::tests::unit
