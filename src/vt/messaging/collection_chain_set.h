@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/messaging/dependent_send_chain.h"
+#include "vt/messaging/task_collective.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -161,7 +162,8 @@ public:
     auto iter = chains_.find(idx);
     vtAssert(iter != chains_.end(), "Cannot remove a non-present chain");
     vtAssert(
-      iter->second.isTerminated(), "Cannot remove a chain with pending work");
+      iter->second.isTerminated(), "Cannot remove a chain with pending work"
+    );
 
     chains_.erase(iter);
   }
@@ -239,6 +241,44 @@ public:
 
     vt::theMsg()->popEpoch(epoch);
     theTerm()->finishedEpoch(epoch);
+  }
+
+  void startTasks() {
+    tasks_ep_ = theTerm()->makeEpochCollective("startTasks");
+    vt::theMsg()->pushEpoch(tasks_ep_);
+  }
+
+  void waitForTasks() {
+    vt::theMsg()->popEpoch(tasks_ep_);
+    theTerm()->finishedEpoch(tasks_ep_);
+    runSchedulerThrough(tasks_ep_);
+  }
+
+  task::TaskCollective<Index>* taskCollective(
+    std::string const& label,
+    std::function<PendingSend(Index, task::TaskCollective<Index>*)> task_action
+  ) {
+    auto tc = task_manager_.get()->addTaskCollective(proxy_);
+
+    for (auto& [idx, chain] : chains_) {
+      // Create a dep epoch
+      auto ep = theTerm()->makeEpochRooted(
+        label, term::UseDS{true}, term::ParentEpochCapture{}, true
+      );
+      vt::theMsg()->pushEpoch(ep);
+
+      tc->add(idx, ep);
+      tc->setContext(&idx);
+      task_action(idx, tc);
+      tc->setContext(nullptr);
+
+      vt::theMsg()->popEpoch(ep);
+      theTerm()->finishedEpoch(ep);
+
+      tc->done(idx);
+    }
+
+    return tc;
   }
 
   /**
@@ -353,6 +393,12 @@ private:
   std::unordered_map<Index, DependentSendChain> chains_;
   /// Deallocator that type erases element listener de-registration
   std::function<void()> deallocator_;
+  /// The underlying proxy
+  VirtualProxyType proxy_ = no_vrt_proxy;
+  /// Task collective manager
+  objgroup::proxy::Proxy<task::TaskCollectiveManager<Index>> task_manager_;
+  /// Task grouping epoch
+  EpochType tasks_ep_ = no_epoch;
 };
 
 }} /* end namespace vt::messaging */

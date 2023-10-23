@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                manager.fwd.h
+//                              task_collective.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,31 +41,11 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VT_VRT_COLLECTION_MANAGER_FWD_H
+#include "vt/messaging/task_collective.h"
 
-#include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
+namespace vt::task {
 
-namespace vt { namespace vrt { namespace collection {
+TaskIDType cur_id_ = 1;
 
-struct CollectionManager;
+} /* end namespace vt::task */
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const han);
-
-template <typename Index>
-void releaseEpochCollectionElm(VirtualProxyType proxy, Index idx, EpochType ep);
-
-template <typename Index>
-NodeType getMappedNodeElm(VirtualProxyType proxy, Index idx);
-
-}}} /* end namespace vt::vrt::collection */
-
-namespace vt {
-
-extern vrt::collection::CollectionManager* theCollection();
-
-}  // end namespace vt
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_MANAGER_FWD_H*/

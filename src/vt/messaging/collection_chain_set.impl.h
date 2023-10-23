@@ -69,6 +69,8 @@ CollectionChainSet<Index>::CollectionChainSet(
   auto const this_node = theContext()->getNode();
   auto const proxy_bits = proxy.getProxy();
 
+  proxy_ = proxy_bits;
+
   ListenerType l = [=](ElementEventEnum event, IndexT idx, NodeType home) {
     switch (event) {
     case ElementEventEnum::ElementCreated:
@@ -94,6 +96,7 @@ CollectionChainSet<Index>::CollectionChainSet(
         vtAssert(layout == Home, "Must be a home layout");
         p[home].template send<IdxMsg, &ThisType::removeIndexHan>(idx);
       }
+      break;
     case ElementEventEnum::ElementMigratedOut:
       if (layout == Local) {
         removeIndex(idx);
@@ -124,6 +127,11 @@ CollectionChainSet<Index>::CollectionChainSet(
       proxy_bits, listener
     );
   };
+
+  task_manager_ = task::TaskCollectiveManager<Index>::construct(
+    layout == ChainSetLayout::Local,
+    proxy_bits
+  );
 }
 
 }} /* end namespace vt::messaging */
