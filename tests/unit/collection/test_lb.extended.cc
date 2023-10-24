@@ -410,7 +410,7 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
     });
 
     vt::thePhase()->addUserDefinedData(
-      phase, std::string{"time"}, TimeType{static_cast<double>(phase)});
+      phase, std::string{"time"}, static_cast<double>(phase));
 
     // Go to the next phase
     vt::thePhase()->nextPhaseCollective();

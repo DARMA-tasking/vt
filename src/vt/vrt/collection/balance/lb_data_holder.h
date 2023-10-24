@@ -79,6 +79,7 @@ struct LBDataHolder {
     s | node_comm_;
     s | node_subphase_comm_;
     s | user_defined_json_;
+    s | user_per_phase_json_;
     s | node_idx_;
     s | count_;
     s | skipped_phases_;
