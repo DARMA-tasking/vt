@@ -218,6 +218,14 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
     }
   }
 
+  if (user_per_phase_json_.find(phase) != user_per_phase_json_.end()) {
+    auto& user_def_this_phase = user_per_phase_json_.at(phase);
+
+    if (!user_def_this_phase->empty()) {
+      j["user_defined"] = *user_def_this_phase;
+    }
+  }
+
   return std::make_unique<json>(std::move(j));
 }
 
