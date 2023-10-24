@@ -51,7 +51,6 @@
 #include "data_message.h"
 
 #include "vt/phase/phase_manager.h"
-#include "vt/timing/timing_type.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/balance/node_lb_data.h"

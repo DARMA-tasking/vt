@@ -370,6 +370,12 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
           }
         }
       }
+
+      if (phase.find("user_defined") != phase.end()) {
+        auto userDefined = phase["user_defined"];
+        user_per_phase_json_[phase] = std::make_shared<nlohmann::json>();
+        *(user_per_phase_json_[phase]) = userDefined;
+      }
     }
   }
 
