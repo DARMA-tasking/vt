@@ -162,6 +162,55 @@ EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
   return BitPackerType::boolGetField<dep_bit,1,decltype(cat)>(cat);
 }
 
+/*static*/ bool EpochManip::isDepReleased(EpochType epoch) {
+  using T = typename std::underlying_type<eEpochCategory>::type;
+  if (epoch == no_epoch or epoch == term::any_epoch_sentinel) {
+    return false;
+  }
+  BitPackerType::FieldType const dep_bit =
+    static_cast<T>(eEpochCategory::DependentReleasedEpoch) - 1;
+  auto cat = static_cast<T>(EpochManip::category(epoch));
+  auto ret = BitPackerType::boolGetField<dep_bit,1,decltype(cat)>(cat);
+  // vt_print(gen, "isDepReleased ep={:x}, ret={}\n", epoch, ret);
+  return ret;
+}
+
+/*static*/ void EpochManip::clearDepReleasedBit(EpochType& epoch) {
+  using ImplType = typename EpochType::ImplType;
+  using T = typename std::underlying_type<eEpochCategory>::type;
+  if (epoch == no_epoch or epoch == term::any_epoch_sentinel) {
+    return;
+  }
+  BitPackerType::FieldType const dep_bit =
+    static_cast<T>(eEpochCategory::DependentReleasedEpoch) - 1;
+
+  if (isRooted(epoch)) {
+    auto constexpr bit = eEpochRoot::rEpochCategory + dep_bit;
+    BitPackerType::boolSetField<bit,1,ImplType>(*epoch, false);
+  } else {
+    auto constexpr bit = eEpochColl::cEpochCategory + dep_bit;
+    BitPackerType::boolSetField<bit,1,ImplType>(*epoch, false);
+  }
+}
+
+/*static*/ void EpochManip::setDepReleasedBit(EpochType& epoch) {
+  using ImplType = typename EpochType::ImplType;
+  using T = typename std::underlying_type<eEpochCategory>::type;
+  if (epoch == no_epoch or epoch == term::any_epoch_sentinel) {
+    return;
+  }
+  BitPackerType::FieldType const dep_bit =
+    static_cast<T>(eEpochCategory::DependentReleasedEpoch) - 1;
+
+  if (isRooted(epoch)) {
+    auto constexpr bit = eEpochRoot::rEpochCategory + dep_bit;
+    BitPackerType::boolSetField<bit,1,ImplType>(*epoch, true);
+  } else {
+    auto constexpr bit = eEpochColl::cEpochCategory + dep_bit;
+    BitPackerType::boolSetField<bit,1,ImplType>(*epoch, true);
+  }
+}
+
 /*static*/ eEpochCategory EpochManip::category(EpochType const& epoch) {
   return BitPackerType::getField<
     eEpochRoot::rEpochCategory, epoch_category_num_bits, eEpochCategory

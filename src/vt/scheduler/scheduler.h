@@ -393,6 +393,8 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   void releaseEpochCollection(EpochType ep, UntypedCollection* untyped);
 
+  void fullyReleaseEpoch(EpochType ep);
+
   /**
    * \brief Check if a epoch is released for an objgroup
    *

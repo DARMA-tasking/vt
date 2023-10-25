@@ -361,6 +361,11 @@ public:
   EpochType getEpoch() const;
 
   /**
+   * \brief Set the epoch released bit for a runnable
+   */
+  void setEpochReleasedBit();
+
+  /**
    * \brief Whether this runnable targets an object group
    *
    * \return targets object group

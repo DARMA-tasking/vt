@@ -105,7 +105,7 @@ static constexpr BitCountType const epoch_root_num_bits = 1;
  *  ensure the \c epoch_category_num_bits is sufficiently large.
  *
  */
-static constexpr BitCountType const epoch_category_num_bits = 2;
+static constexpr BitCountType const epoch_category_num_bits = 3;
 
 /**
  * \brief These are different categories of epochs that are allowed.
@@ -114,9 +114,10 @@ static constexpr BitCountType const epoch_category_num_bits = 2;
  * be used to dispatch control logic.
  */
 enum struct eEpochCategory : int8_t {
-  NoCategoryEpoch       = 0x0,
-  DependentEpoch        = 0x1,
-  DijkstraScholtenEpoch = 0x2
+  NoCategoryEpoch        = 0x0,
+  DependentEpoch         = 0x1,
+  DijkstraScholtenEpoch  = 0x2,
+  DependentReleasedEpoch = 0x3
 };
 
 /// Operator<< for printing the epoch category \c eEpochCategory enum

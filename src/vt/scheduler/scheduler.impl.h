@@ -126,7 +126,7 @@ void Scheduler::enqueueOrPostpone(UnitT unit) {
   if (m and not m->env.system_msg) {
     auto ep = r->getEpoch();
     bool const is_dep = epoch::EpochManip::isDep(ep);
-    if (is_dep) {
+    if (is_dep and not epoch::EpochManip::isDepReleased(ep)) {
       auto obj = r->getObj();
       if (ep != no_epoch and ep != term::any_epoch_sentinel) {
         if (obj) {

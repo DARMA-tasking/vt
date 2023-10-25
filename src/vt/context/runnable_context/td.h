@@ -48,6 +48,7 @@
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
 #include "vt/epoch/epoch_type.h"
+#include "vt/epoch/epoch_manip.h"
 
 #include <vector>
 
@@ -110,6 +111,13 @@ struct TD {
    * \return the epoch
    */
   EpochType getEpoch() const { return ep_; }
+
+  /**
+   * \brief Set the epoch released bit
+   */
+  void setEpochReleasedBit() {
+    epoch::EpochManip::setDepReleasedBit(ep_);
+  }
 
 private:
   EpochType ep_ = no_epoch;                    /**< The epoch for the task */

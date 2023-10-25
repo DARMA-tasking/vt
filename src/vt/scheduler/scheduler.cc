@@ -429,6 +429,32 @@ void Scheduler::releaseEpochCollection(EpochType ep, UntypedCollection* untyped)
   }
 }
 
+void Scheduler::fullyReleaseEpoch(EpochType ep) {
+  auto run_through_container = [this](auto& container) {
+    while (container.size() > 0) {
+      auto unit = container.pop();
+      unit.getRunnable()->setEpochReleasedBit();
+      work_queue_.emplace(std::move(unit));
+    }
+  };
+
+  if (auto result = pending_work_.extract(ep); result) {
+    run_through_container(result.mapped());
+  }
+
+  if (auto result = pending_collection_work_.extract(ep); result) {
+    for (auto& [obj, queue] : result.mapped()) {
+      run_through_container(queue);
+    }
+  }
+
+  if (auto result = pending_objgroup_work_.extract(ep); result) {
+    for (auto& [obj, queue] : result.mapped()) {
+      run_through_container(queue);
+    }
+  }
+}
+
 bool Scheduler::isReleasedEpochObjgroup(
   EpochType ep, ObjGroupProxyType proxy
 ) const {
