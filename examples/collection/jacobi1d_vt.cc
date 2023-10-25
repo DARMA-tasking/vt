@@ -70,7 +70,7 @@
 
 static constexpr std::size_t const default_nrow_object = 8;
 static constexpr std::size_t const default_num_objs = 4;
-static constexpr std::size_t const check_conv_freq = 1;
+static constexpr std::size_t const check_conv_freq = 100;
 static constexpr double const default_tol = 1.0e-02;
 
 struct NodeObj;
@@ -95,19 +95,15 @@ public:
   { }
 
   void kernel() {
-    vt_print(gen, "kernel {}\n", this->getIndex());
     iter_ += 1;
 
-    //
-    //--- Copy extremal values
-    //
+    // Copy extremal values
     tcur_[0] = told_[0];
     tcur_[numRowsPerObject_+1] = told_[numRowsPerObject_+1];
 
-    //
-    //---- Jacobi iteration step
-    //---- A tridiagonal matrix = "tridiag" ( [-1.0  2.0  -1.0] )
-    //---- rhs_ right hand side vector
+    // Jacobi iteration step
+    // A tridiagonal matrix = "tridiag" ( [-1.0  2.0  -1.0] )
+    // rhs_ right hand side vector
     //
     for (size_t ii = 1; ii <= numRowsPerObject_; ++ii) {
       tcur_[ii] = 0.5*(rhs_[ii] + told_[ii-1] + told_[ii+1]);
@@ -128,8 +124,6 @@ public:
   }
 
   void reduceMaxNorm(vt::Callback<double> cb) {
-    vt_print(gen, "reduceMaxNorm {}\n", this->getIndex());
-
     auto proxy = this->getCollectionProxy();
     proxy.reduce<vt::collective::MaxOp>(cb, computeMaxNorm());
   }
@@ -138,9 +132,8 @@ public:
     // Send the values to the left
     auto proxy = this->getCollectionProxy();
     auto idx = this->getIndex();
-    vt_print(gen, "sendLeft {}\n", idx);
     if (idx.x() > 0) {
-      proxy[idx.x() - 1].send<&LinearPb1DJacobi::exchange>(idx.x(), told_[1]);
+      proxy[idx.x() - 1].send<&LinearPb1DJacobi::exchange>(idx.x(), told_[1], iter_);
     }
   }
 
@@ -148,16 +141,15 @@ public:
     // Send the values to the right
     auto proxy = this->getCollectionProxy();
     auto idx = this->getIndex();
-    vt_print(gen, "sendRight {}\n", idx);
     if (size_t(idx.x()) < numObjs_ - 1) {
-      proxy[idx.x() + 1].send<&LinearPb1DJacobi::exchange>(idx.x(), told_[numRowsPerObject_]);
+      proxy[idx.x() + 1].send<&LinearPb1DJacobi::exchange>(idx.x(), told_[numRowsPerObject_], iter_);
     }
   }
 
-  void exchange(vt::IdxBase from_index, double val) {
+  void exchange(vt::IdxBase from_index, double val, std::size_t in_iter) {
     // Receive and treat the message from a neighboring object.
     auto idx = this->getIndex();
-    vt_print(gen, "exchange {}, from={}\n", idx, from_index);
+    vtAssert(iter_ == in_iter, "iters should match");
     if (idx.x() > from_index) {
       told_[0] = val;
     }
@@ -218,32 +210,42 @@ struct NodeObj {
 
   void reducedNorm(double normRes) {
     converged_ = normRes < default_tol;
-    fmt::print(
-      "## ITER {} >> Residual Norm = {}, conv={} \n",
-      cur_iter_, normRes, converged_
-    );
+    if (vt::theContext()->getNode() == 0) {
+      fmt::print(
+        "## ITER {} >> Residual Norm = {}, conv={} \n",
+        cur_iter_, normRes, converged_
+      );
+    }
   }
 
   void setup(vt::objgroup::proxy::Proxy<NodeObj> in_proxy) {
     chains_ = std::make_unique<ChainSetType>(proxy_);
-    chains_->startTasks();
+    chains_->startTasksCollective();
     this_proxy_ = in_proxy;
   }
 
   void runToConvergence() {
     while (not converged_ and cur_iter_ < max_iter_) {
-      vt_print(gen, "runToConvergence: cur_iter_={}, max_iter_={}\n", cur_iter_, max_iter_);
-
       auto xl = chains_->taskCollective("exchange left", [&](auto idx, auto t) {
         if (prev_kernel) {
-          t->dependsOn(idx, *prev_kernel);
+          t->dependsOn(idx, prev_kernel);
+
+          if (idx.x() != 0) {
+            auto left = vt::Index1D(idx.x() - 1);
+            t->dependsOn(left, prev_kernel);
+          }
         }
         return proxy_[idx].template send<&LinearPb1DJacobi::sendLeft>();
       });
 
       auto xr = chains_->taskCollective("exchange right", [&](auto idx, auto t) {
         if (prev_kernel) {
-          t->dependsOn(idx, *prev_kernel);
+          t->dependsOn(idx, prev_kernel);
+
+          if (static_cast<std::size_t>(idx.x()) != num_objs_ - 1) {
+            auto right = vt::Index1D(idx.x() + 1);
+            t->dependsOn(right, prev_kernel);
+          }
         }
         return proxy_[idx].template send<&LinearPb1DJacobi::sendRight>();
       });
@@ -251,11 +253,11 @@ struct NodeObj {
       auto kernel = chains_->taskCollective("kernel", [&](auto idx, auto t) {
         if (idx.x() != 0) {
           auto left = vt::Index1D(idx.x() - 1);
-          t->dependsOn(left, *xr);
+          t->dependsOn(left, xr);
         }
         if (static_cast<std::size_t>(idx.x()) != num_objs_ - 1) {
           auto right = vt::Index1D(idx.x() + 1);
-          t->dependsOn(right, *xl);
+          t->dependsOn(right, xl);
         }
         return proxy_[idx].template send<&LinearPb1DJacobi::kernel>();
       });
@@ -263,24 +265,29 @@ struct NodeObj {
 
       if (cur_iter_++ % check_conv_freq == 0) {
         chains_->taskCollective("checkConv", [&](auto idx, auto t) {
-          t->dependsOn(idx, *kernel);
+          t->dependsOn(idx, kernel);
           auto cb = vt::theCB()->makeBcast<&NodeObj::reducedNorm>(this_proxy_);
           return proxy_[idx].template send<&LinearPb1DJacobi::reduceMaxNorm>(cb);
         });
 
-        chains_->waitForTasks();
-        chains_->startTasks();
+        chains_->waitForTasksCollective();
+        vt::thePhase()->nextPhaseCollective();
+        chains_->startTasksCollective();
       }
     }
 
-    if (not converged_) {
-      chains_->waitForTasks();
-      fmt::print("Maximum Number of Iterations Reached without convergence.\n");
-    } else {
-      fmt::print("Convergence is reached at iteration {}.\n", cur_iter_);
+    chains_->waitForTasksCollective();
+
+    if (vt::theContext()->getNode() == 0) {
+      if (not converged_) {
+        fmt::print("Maximum Number of Iterations Reached without convergence.\n");
+      } else {
+        fmt::print("Convergence is reached at iteration {}.\n", cur_iter_);
+      }
     }
 
     chains_->phaseDone();
+    chains_ = nullptr;
   }
 
 private:
@@ -357,8 +364,6 @@ int main(int argc, char** argv) {
 
   grp_proxy.get()->setup(grp_proxy);
   grp_proxy.get()->runToConvergence();
-
-  //vt::thePhase()->nextPhaseCollective();
 
   vt::finalize();
 
