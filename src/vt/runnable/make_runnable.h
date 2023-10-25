@@ -326,20 +326,24 @@ private:
  * \param[in] handler the handler bits
  * \param[in] from the node that caused this runnable to execute
  * \param[in] han_type the type of handler
+ * \param[in] trace whether to trace this runnable
  *
  * \return the maker for further customization
  */
 template <typename U>
 RunnableMaker<U> makeRunnable(
-  MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler, NodeType from
+  MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler,
+  NodeType from, bool trace = true
 ) {
   auto r = new RunnableNew(msg, is_threaded);
 #if vt_check_enabled(trace_enabled)
-  auto const han_type = HandlerManager::getHandlerRegistryType(handler);
-  if (han_type == auto_registry::RegistryTypeEnum::RegVrt or
-      han_type == auto_registry::RegistryTypeEnum::RegGeneral or
-      han_type == auto_registry::RegistryTypeEnum::RegObjGroup) {
-    r->addContextTrace(msg, handler, from);
+  if (trace) {
+    auto const han_type = HandlerManager::getHandlerRegistryType(handler);
+    if (han_type == auto_registry::RegistryTypeEnum::RegVrt or
+        han_type == auto_registry::RegistryTypeEnum::RegGeneral or
+        han_type == auto_registry::RegistryTypeEnum::RegObjGroup) {
+      r->addContextTrace(msg, handler, from);
+    }
   }
 #endif
   r->addContextSetContext(r, from);
