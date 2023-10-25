@@ -3,6 +3,7 @@ set(
   COLLECTION_EXAMPLES
   lb_iter
   jacobi1d_vt
+  jacobi1d_vt_sync
   jacobi2d_vt
   migrate_collection
   polymorphic_collection
