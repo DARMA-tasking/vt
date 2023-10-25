@@ -55,7 +55,7 @@ struct CollectionManager;
 DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const han);
 
 template <typename Index>
-void releaseEpochCollectionElm(VirtualProxyType proxy, Index idx, EpochType ep);
+void fullyReleaseEpoch(VirtualProxyType proxy, Index idx, EpochType ep);
 
 template <typename Index>
 NodeType getMappedNodeElm(VirtualProxyType proxy, Index idx);

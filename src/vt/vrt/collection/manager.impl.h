@@ -2376,13 +2376,13 @@ template <typename ColT>
 }
 
 template <typename Index>
-void releaseEpochCollectionElm(VirtualProxyType proxy, Index idx, EpochType ep) {
+void fullyReleaseEpoch(VirtualProxyType proxy, Index idx, EpochType ep) {
   auto elm_holder = theCollection()->findElmHolder<Index>(proxy);
   auto const elm_exists = elm_holder->exists(idx);
   vtAssertExpr(elm_exists);
   auto ptr = elm_holder->lookup(idx).getRawPtr();
   ptr->addReleasedEpoch(ep);
-  theSched()->releaseEpochCollection(ep, ptr);
+  theSched()->fullyReleaseEpoch(ep);
 }
 
 template <typename Index>

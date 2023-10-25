@@ -1526,7 +1526,7 @@ private:
   friend struct param::ConstructParams;
 
   template <typename Index>
-  friend void releaseEpochCollectionElm(
+  friend void fullyReleaseEpoch(
     VirtualProxyType proxy, Index idx, EpochType ep
   );
 

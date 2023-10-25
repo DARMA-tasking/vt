@@ -243,44 +243,6 @@ public:
     theTerm()->finishedEpoch(epoch);
   }
 
-  void startTasks() {
-    tasks_ep_ = theTerm()->makeEpochCollective("startTasks");
-    vt::theMsg()->pushEpoch(tasks_ep_);
-  }
-
-  void waitForTasks() {
-    vt::theMsg()->popEpoch(tasks_ep_);
-    theTerm()->finishedEpoch(tasks_ep_);
-    runSchedulerThrough(tasks_ep_);
-  }
-
-  task::TaskCollective<Index>* taskCollective(
-    std::string const& label,
-    std::function<PendingSend(Index, task::TaskCollective<Index>*)> task_action
-  ) {
-    auto tc = task_manager_.get()->addTaskCollective(proxy_);
-
-    for (auto& [idx, chain] : chains_) {
-      // Create a dep epoch
-      auto ep = theTerm()->makeEpochRooted(
-        label, term::UseDS{true}, term::ParentEpochCapture{}, true
-      );
-      vt::theMsg()->pushEpoch(ep);
-
-      tc->add(idx, ep);
-      tc->setContext(&idx);
-      task_action(idx, tc);
-      tc->setContext(nullptr);
-
-      vt::theMsg()->popEpoch(ep);
-      theTerm()->finishedEpoch(ep);
-
-      tc->done(idx);
-    }
-
-    return tc;
-  }
-
   /**
    * \brief The next collective step to execute for each index that is added
    * to the CollectionChainSet on each node.
@@ -386,6 +348,60 @@ public:
     for (auto& entry : chains_) {
       fn(entry.first);
     }
+  }
+
+  /**
+   * \brief Start a task collective region (called collectively)
+   */
+  void startTasksCollective() {
+    tasks_ep_ = theTerm()->makeEpochCollective("startTasksCollective");
+    vt::theMsg()->pushEpoch(tasks_ep_);
+  }
+
+  /**
+   * \brief Wait for the collective tasks to finish: this is also a collective
+   * call
+   */
+  void waitForTasksCollective() {
+    task_manager_.get()->waitForTasks();
+
+    vt::theMsg()->popEpoch(tasks_ep_);
+    theTerm()->finishedEpoch(tasks_ep_);
+    runSchedulerThrough(tasks_ep_);
+  }
+
+  /**
+   * \brief Create a collective task for each element of a collection
+   *
+   * \param[in] label label to task collective
+   * \param[in] task_action task for each element of the collection
+   *
+   * \return the task collective handle
+   */
+  task::TaskCollective<Index>* taskCollective(
+    std::string const& label,
+    std::function<PendingSend(Index, task::TaskCollective<Index>*)> task_action
+  ) {
+    auto tc = task_manager_.get()->addTaskCollective(proxy_);
+
+    for (auto& [idx, chain] : chains_) {
+      // Create a dep epoch
+      auto ep = theTerm()->makeEpochRooted(
+        label, term::UseDS{true}, term::ParentEpochCapture{}, true
+      );
+      vt::theMsg()->pushEpoch(ep);
+
+      tc->addTask(idx, ep);
+      tc->setContext(&idx);
+      task_action(idx, tc);
+      tc->setContext(nullptr);
+
+      vt::theMsg()->popEpoch(ep);
+      theTerm()->finishedEpoch(ep);
+
+      tc->checkDone(idx);
+    }
+    return tc;
   }
 
 private:
