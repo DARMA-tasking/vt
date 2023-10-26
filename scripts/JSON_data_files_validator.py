@@ -115,7 +115,8 @@ class SchemaValidator:
                                 },
                                 'bytes': float
                             }
-                        ]
+                        ],
+                        Optional('user_defined'): dict
                     },
                 ]
             }
