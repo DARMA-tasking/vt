@@ -701,7 +701,7 @@ void InfoColl::finalize() {
       buf[0] = '\0';
       int cur = 0;
       for (auto&& elm : collective_->span_children_) {
-        cur += snprintf(buf + cur, max_buffer_length, "%d,", elm);
+        cur += snprintf(buf + cur, max_buffer_length - cur, "%d,", elm);
       }
 
       auto const& num_children = collective_->span_children_.size();
