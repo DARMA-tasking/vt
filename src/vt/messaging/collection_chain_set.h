@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/messaging/dependent_send_chain.h"
 #include "vt/messaging/task_collective.h"
+#include "vt/messaging/task_region.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -363,11 +364,25 @@ public:
    * call
    */
   void waitForTasksCollective() {
-    task_manager_.get()->waitForTasks();
+    task_manager_.get()->dispatchWork();
 
     vt::theMsg()->popEpoch(tasks_ep_);
     theTerm()->finishedEpoch(tasks_ep_);
     runSchedulerThrough(tasks_ep_);
+  }
+
+  /**
+   * \brief Create a new task region with a callable that creates the tasks
+   *
+   * \param[in] c the callable
+   *
+   * \return the task region which can run the callable to enqueue the tasks
+   */
+  template <typename Callable>
+  std::unique_ptr<task::TaskRegion<Index>> createTaskRegion(Callable&& c) {
+    return std::make_unique<task::TaskRegion<Index>>(
+      std::forward<Callable>(c), task_manager_
+    );
   }
 
   /**

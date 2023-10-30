@@ -220,12 +220,13 @@ struct NodeObj {
 
   void setup(vt::objgroup::proxy::Proxy<NodeObj> in_proxy) {
     chains_ = std::make_unique<ChainSetType>(proxy_);
-    chains_->startTasksCollective();
     this_proxy_ = in_proxy;
   }
 
   void runToConvergence() {
-    while (not converged_ and cur_iter_ < max_iter_) {
+    vt::task::TaskCollective<vt::Index1D>* prev_kernel = nullptr;
+
+    auto iteration = chains_->createTaskRegion([&]{
       auto xl = chains_->taskCollective("exchange left", [&](auto idx, auto t) {
         if (prev_kernel) {
           t->dependsOn(idx, prev_kernel);
@@ -250,7 +251,7 @@ struct NodeObj {
         return proxy_[idx].template send<&LinearPb1DJacobi::sendRight>();
       });
 
-      auto kernel = chains_->taskCollective("kernel", [&](auto idx, auto t) {
+      prev_kernel = chains_->taskCollective("kernel", [&](auto idx, auto t) {
         if (idx.x() != 0) {
           auto left = vt::Index1D(idx.x() - 1);
           t->dependsOn(left, xr);
@@ -261,22 +262,24 @@ struct NodeObj {
         }
         return proxy_[idx].template send<&LinearPb1DJacobi::kernel>();
       });
-      prev_kernel = kernel;
+    });
+
+    while (not converged_ and cur_iter_ < max_iter_) {
+      iteration->enqueueTasks();
 
       if (cur_iter_++ % check_conv_freq == 0) {
         chains_->taskCollective("checkConv", [&](auto idx, auto t) {
-          t->dependsOn(idx, kernel);
+          t->dependsOn(idx, prev_kernel);
           auto cb = vt::theCB()->makeBcast<&NodeObj::reducedNorm>(this_proxy_);
           return proxy_[idx].template send<&LinearPb1DJacobi::reduceMaxNorm>(cb);
         });
 
-        chains_->waitForTasksCollective();
+        iteration->waitCollective();
         vt::thePhase()->nextPhaseCollective();
-        chains_->startTasksCollective();
       }
     }
 
-    chains_->waitForTasksCollective();
+    iteration->waitCollective();
 
     if (vt::theContext()->getNode() == 0) {
       if (not converged_) {
@@ -296,7 +299,6 @@ private:
   std::size_t max_iter_ = 0;
   std::size_t cur_iter_ = 0;
   std::unique_ptr<ChainSetType> chains_;
-  vt::task::TaskCollective<vt::Index1D>* prev_kernel = nullptr;
   bool converged_ = false;
   vt::objgroup::proxy::Proxy<NodeObj> this_proxy_;
 };

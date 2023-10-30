@@ -309,7 +309,7 @@ struct TaskCollectiveManager {
    * \brief Fulfill dependency requests and send out any pending dependency
    * requests
    */
-  void waitForTasks() {
+  void dispatchWork() {
     wait_iter_++;
 
     // Send out pending dependency requests
