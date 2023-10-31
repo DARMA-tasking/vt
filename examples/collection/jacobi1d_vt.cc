@@ -70,7 +70,7 @@
 
 static constexpr std::size_t const default_nrow_object = 8;
 static constexpr std::size_t const default_num_objs = 4;
-static constexpr std::size_t const check_conv_freq = 100;
+static constexpr std::size_t const check_conv_freq = 10;
 static constexpr double const default_tol = 1.0e-02;
 
 struct NodeObj;

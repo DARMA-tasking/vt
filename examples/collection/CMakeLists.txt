@@ -5,6 +5,7 @@ set(
   jacobi1d_vt
   jacobi1d_vt_sync
   jacobi2d_vt
+  jacobi2d_vt_sync
   migrate_collection
   polymorphic_collection
   insertable_collection
