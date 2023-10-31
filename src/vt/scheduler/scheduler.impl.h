@@ -143,7 +143,7 @@ void Scheduler::enqueueOrPostpone(UnitT unit) {
               return;
             }
           }
-        } else if (not theTerm()->epochReleased(ep)) {
+        } else if (not theTerm()->isEpochReleased(ep)) {
           pending_work_[ep].push(unit);
           return;
         }

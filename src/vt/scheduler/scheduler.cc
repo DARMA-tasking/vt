@@ -385,12 +385,11 @@ void Scheduler::resume(ThreadIDType tid) {
 }
 
 void Scheduler::releaseEpoch(EpochType ep) {
-  if (auto iter = pending_work_.find(ep); iter != pending_work_.end()) {
-    auto& container = iter->second;
+  if (auto result = pending_work_.extract(ep); result) {
+    auto& container = result.mapped();
     while (container.size() > 0) {
       work_queue_.emplace(container.pop());
     }
-    pending_work_.erase(iter);
   }
 }
 

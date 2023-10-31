@@ -1131,7 +1131,6 @@ void TerminationDetector::releaseEpoch(EpochType epoch) {
     // Put the epoch in the released set. The epoch any_epoch_sentinel does not
     // count as a succcessor.
     epoch_released_.insert(epoch);
-    runReleaseEpochActions(epoch);
   } else {
     // The user might have made a mistake if they are trying to release an epoch
     // that is released-by-default (not dependent)
@@ -1139,29 +1138,7 @@ void TerminationDetector::releaseEpoch(EpochType epoch) {
   }
 }
 
-void TerminationDetector::runReleaseEpochActions(EpochType epoch) {
-  auto iter = epoch_release_action_.find(epoch);
-  if (iter != epoch_release_action_.end()) {
-    auto actions = std::move(iter->second);
-    epoch_release_action_.erase(iter);
-    for (auto&& fn : actions) {
-      fn();
-    }
-  }
-  theSched()->releaseEpoch(epoch);
-}
-
-void TerminationDetector::onReleaseEpoch(EpochType epoch, ActionType action) {
-  // Run an action if an epoch has been released
-  bool const is_dep = isDep(epoch);
-  if (not is_dep or (is_dep and epochReleased(epoch))) {
-    action();
-  } else {
-    epoch_release_action_[epoch].push_back(action);
-  }
-}
-
-bool TerminationDetector::epochReleased(EpochType epoch) {
+bool TerminationDetector::isEpochReleased(EpochType epoch) {
   // Because of case (2), ignore dep <- no-dep because this should not be called
   // unless dep is released
   bool const is_dep = isDep(epoch);

@@ -377,21 +377,14 @@ public:
   void releaseEpoch(EpochType epoch);
 
   /**
-   * \brief Action to run on release of a dependent epoch
-   *
-   * \param[in] epoch the epoch
-   * \param[in] action the action
-   */
-  void onReleaseEpoch(EpochType epoch, ActionType action);
-
-  /**
-   * \brief Test if an epoch is dependent and if it is, if that epoch has been released
+   * \brief Test if an epoch is dependent and if it is, if that epoch has been
+   * released
    *
    * \param[in] epoch the epoch
    *
    * \return if it is released
    */
-  bool epochReleased(EpochType epoch);
+  bool isEpochReleased(EpochType epoch);
 
 private:
   /**
@@ -400,13 +393,6 @@ private:
    *  \param[in] epoch the epoch to cleanup
    */
   void cleanupReleasedEpoch(EpochType epoch);
-
-  /**
-   * \brief Run all actions when an epoch is released
-   *
-   * \param[in] epoch the epoch to run actions for
-   */
-  void runReleaseEpochActions(EpochType epoch);
 
 public:
   /*
@@ -891,8 +877,6 @@ private:
   EpochStackType epoch_stack_;
   // released epoch list for dependent epochs
   std::unordered_set<EpochType> epoch_released_ = {};
-  // release epoch action list for dependent epochs
-  std::unordered_map<EpochType, ActionListType> epoch_release_action_ = {};
 };
 
 }} // end namespace vt::term
