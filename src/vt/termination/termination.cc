@@ -1166,10 +1166,7 @@ void TerminationDetector::cleanupReleasedEpoch(EpochType epoch) {
       epoch
     );
     if (is_term) {
-      auto iter = epoch_released_.find(epoch);
-      if (iter != epoch_released_.end()) {
-        epoch_released_.erase(iter);
-      }
+      epoch_released_.erase(epoch);
     }
   }
 }
