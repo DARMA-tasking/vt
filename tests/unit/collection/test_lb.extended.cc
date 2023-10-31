@@ -427,6 +427,12 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
 
     EXPECT_TRUE(json.find("phases") != json.end());
     EXPECT_EQ(json["phases"].size(), num_phases);
+    for(const auto& phase : json["phases"]){
+      EXPECT_TRUE(phase.find("user_defined") != phase.end());
+      EXPECT_TRUE(phase["user_defined"].contains("time"));
+      EXPECT_EQ(phase["user_defined"]["time"], static_cast<double>(phase["id"]));
+    }
+
   });
 
   if (vt::theContext()->getNode() == 0) {
