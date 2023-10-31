@@ -190,7 +190,11 @@ struct TaskCollective {
         idx, epochs_[idx]
       );
 
-      vrt::collection::fullyReleaseEpoch(proxy_, idx, epochs_[idx]);
+      if constexpr (std::is_same_v<Index, NodeType>) {
+        theSched()->fullyReleaseEpoch(epochs_[idx]);
+      } else {
+        vrt::collection::fullyReleaseEpoch(proxy_, idx, epochs_[idx]);
+      }
       return true;
     } else {
       auto const& dep_set = iter->second;
@@ -405,7 +409,13 @@ protected:
   }
 
   void getDepInfoImpl(Index dep_idx, std::vector<DepInfo> const& vec) {
-    auto mapped_node = vrt::collection::getMappedNodeElm(col_proxy_, dep_idx);
+    NodeType mapped_node = uninitialized_destination;
+
+    if constexpr (std::is_same_v<Index, NodeType>) {
+      mapped_node = dep_idx;
+    } else {
+      mapped_node = vrt::collection::getMappedNodeElm(col_proxy_, dep_idx);
+    }
 
     vt_debug_print(
       terse, gen,
@@ -420,13 +430,19 @@ protected:
       proxy_[node].template send<&ThisType::depInfoHan>(dep_idx, vec, cb, wait_iter_);
     };
 
-    if (local_tracking_) {
-      // Fetch the current location of the element
-      auto lm = theLocMan()->getCollectionLM<Index>(col_proxy_);
-      lm->getLocation(dep_idx, mapped_node, send_dep);
-    } else {
-      // Tracking on home processor, use the mapped node
+    if constexpr (std::is_same_v<Index, NodeType>) {
+      // Node-based chain handling
       send_dep(mapped_node);
+    } else {
+      // Collection handling
+      if (local_tracking_) {
+        // Fetch the current location of the element
+        auto lm = theLocMan()->getCollectionLM<Index>(col_proxy_);
+        lm->getLocation(dep_idx, mapped_node, send_dep);
+      } else {
+        // Tracking on home processor, use the mapped node
+        send_dep(mapped_node);
+      }
     }
   }
 
