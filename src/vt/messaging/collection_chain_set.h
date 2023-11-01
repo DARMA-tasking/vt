@@ -46,6 +46,8 @@
 
 #include "vt/config.h"
 #include "vt/messaging/dependent_send_chain.h"
+#include "vt/messaging/task_collective.h"
+#include "vt/messaging/task_region.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -79,7 +81,7 @@ enum ChainSetLayout {
 template <typename Index>
 class CollectionChainSet final {
   public:
-  CollectionChainSet() = default;
+  CollectionChainSet();
   CollectionChainSet(const CollectionChainSet&) = delete;
   CollectionChainSet(CollectionChainSet&&) = delete;
 
@@ -160,8 +162,10 @@ public:
   void removeIndex(Index idx) {
     auto iter = chains_.find(idx);
     vtAssert(iter != chains_.end(), "Cannot remove a non-present chain");
+    iter->second.done();
     vtAssert(
-      iter->second.isTerminated(), "Cannot remove a chain with pending work");
+      iter->second.isTerminated(), "Cannot remove a chain with pending work"
+    );
 
     chains_.erase(iter);
   }
@@ -348,11 +352,85 @@ public:
     }
   }
 
+  /**
+   * \brief Start a task collective region (called collectively)
+   */
+  void startTasksCollective() {
+    tasks_ep_ = theTerm()->makeEpochCollective("startTasksCollective");
+    vt::theMsg()->pushEpoch(tasks_ep_);
+  }
+
+  /**
+   * \brief Wait for the collective tasks to finish: this is also a collective
+   * call
+   */
+  void waitForTasksCollective() {
+    task_manager_.get()->dispatchWork();
+
+    vt::theMsg()->popEpoch(tasks_ep_);
+    theTerm()->finishedEpoch(tasks_ep_);
+    runSchedulerThrough(tasks_ep_);
+  }
+
+  /**
+   * \brief Create a new task region with a callable that creates the tasks
+   *
+   * \param[in] c the callable
+   *
+   * \return the task region which can run the callable to enqueue the tasks
+   */
+  template <typename Callable>
+  std::unique_ptr<task::TaskRegion<Index>> createTaskRegion(Callable&& c) {
+    return std::make_unique<task::TaskRegion<Index>>(
+      std::forward<Callable>(c), task_manager_
+    );
+  }
+
+  /**
+   * \brief Create a collective task for each element of a collection
+   *
+   * \param[in] label label to task collective
+   * \param[in] task_action task for each element of the collection
+   *
+   * \return the task collective handle
+   */
+  task::TaskCollective<Index>* taskCollective(
+    std::string const& label,
+    std::function<PendingSend(Index, task::TaskCollective<Index>*)> task_action
+  ) {
+    auto tc = task_manager_.get()->addTaskCollective(proxy_);
+
+    for (auto& [idx, chain] : chains_) {
+      // Create a dep epoch
+      auto ep = theTerm()->makeEpochRooted(
+        label, term::UseDS{true}, term::ParentEpochCapture{}, true
+      );
+      vt::theMsg()->pushEpoch(ep);
+
+      tc->addTask(idx, ep);
+      tc->setContext(&idx);
+      task_action(idx, tc);
+      tc->setContext(nullptr);
+
+      vt::theMsg()->popEpoch(ep);
+      theTerm()->finishedEpoch(ep);
+
+      tc->checkDone(idx);
+    }
+    return tc;
+  }
+
 private:
   /// Set of \c DependentSendChain managed on this node for indices
   std::unordered_map<Index, DependentSendChain> chains_;
   /// Deallocator that type erases element listener de-registration
   std::function<void()> deallocator_;
+  /// The underlying proxy
+  VirtualProxyType proxy_ = no_vrt_proxy;
+  /// Task collective manager
+  objgroup::proxy::Proxy<task::TaskCollectiveManager<Index>> task_manager_;
+  /// Task grouping epoch
+  EpochType tasks_ep_ = no_epoch;
 };
 
 }} /* end namespace vt::messaging */

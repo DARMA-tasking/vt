@@ -256,6 +256,11 @@ EpochType RunnableNew::getEpoch() const {
   }
 }
 
+void RunnableNew::setEpochReleasedBit() {
+  vtAssertExpr(contexts_.has_td);
+  contexts_.td.setEpochReleasedBit();
+}
+
 void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
   if (contexts_.has_lb) contexts_.lb.send(elm, bytes);
 }

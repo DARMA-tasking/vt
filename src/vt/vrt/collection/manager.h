@@ -1525,6 +1525,11 @@ private:
   template <typename ColT>
   friend struct param::ConstructParams;
 
+  template <typename Index>
+  friend void fullyReleaseEpoch(
+    VirtualProxyType proxy, Index idx, EpochType ep
+  );
+
   /**
    * \internal \brief Migrate an element out of this node
    *

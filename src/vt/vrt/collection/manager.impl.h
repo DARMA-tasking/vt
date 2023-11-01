@@ -2375,6 +2375,21 @@ template <typename ColT>
   }
 }
 
+template <typename Index>
+void fullyReleaseEpoch(VirtualProxyType proxy, Index idx, EpochType ep) {
+  auto elm_holder = theCollection()->findElmHolder<Index>(proxy);
+  auto const elm_exists = elm_holder->exists(idx);
+  vtAssertExpr(elm_exists);
+  auto ptr = elm_holder->lookup(idx).getRawPtr();
+  ptr->addReleasedEpoch(ep);
+  theSched()->fullyReleaseEpoch(ep);
+}
+
+template <typename Index>
+NodeType getMappedNodeElm(VirtualProxyType proxy, Index idx) {
+  return theCollection()->getMappedNode<Index>(proxy, idx);
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #include "vt/vrt/collection/collection_builder.impl.h"

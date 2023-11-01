@@ -43,6 +43,7 @@
 
 #include "vt/epoch/epoch_window.h"
 #include "vt/epoch/epoch_manip.h"
+#include "vt/context/context.h"
 
 #include <fmt-vt/ostream.h>
 
@@ -82,8 +83,16 @@ EpochWindow::EpochWindow(EpochType epoch) {
     interval.lower(), interval.upper()
   );
 
-  // All epochs in a given window start out terminated (thus, reusable).
-  terminated_epochs_.insertInterval(interval);
+  if (
+    EpochManip::isRooted(arch_epoch) and
+    EpochManip::node(arch_epoch) != theContext()->getNode()
+  ) {
+    // We shouldn't put these as terminated otherwise we might think they are
+    // terminated before they actually are
+  } else {
+    // All epochs in a given window start out terminated (thus, reusable).
+    terminated_epochs_.insertInterval(interval);
+  }
 
   vt_debug_print(
     normal, term,

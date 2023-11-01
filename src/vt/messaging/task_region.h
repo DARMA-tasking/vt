@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                manager.fwd.h
+//                                task_region.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,31 +41,85 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VT_VRT_COLLECTION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_MESSAGING_TASK_REGION_H
+#define INCLUDED_VT_MESSAGING_TASK_REGION_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt::task {
 
-struct CollectionManager;
-
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const han);
-
+/**
+ * \struct TaskRegion
+ *
+ * \brief A region of tasks that can be enqueued, which are grouped in an epoch.
+ */
 template <typename Index>
-void fullyReleaseEpoch(VirtualProxyType proxy, Index idx, EpochType ep);
+struct TaskRegion {
 
-template <typename Index>
-NodeType getMappedNodeElm(VirtualProxyType proxy, Index idx);
+  /**
+   * \internal \brief Create a task region
+   *
+   * \param[in] in_callable the callable that contains the tasks
+   * \param[in] in_task_manager the task manager
+   */
+  TaskRegion(
+    ActionType in_callable,
+    objgroup::proxy::Proxy<task::TaskCollectiveManager<Index>> in_task_manager
+  ) : callable_(in_callable),
+      task_manager_(in_task_manager)
+  { }
 
-}}} /* end namespace vt::vrt::collection */
+  /**
+   * \brief Get the associated epoch
+   *
+   * \return the epoch
+   */
+  EpochType getEpoch() const { return ep_; }
 
-namespace vt {
+  /**
+   * \brief Run the callable and enqueue the tasks
+   */
+  void enqueueTasks() {
+    if (ep_ == no_epoch) {
+      ep_ = theTerm()->makeEpochCollective("TaskRegion::enqueueTasks");
+    }
 
-extern vrt::collection::CollectionManager* theCollection();
+    theMsg()->pushEpoch(ep_);
+    callable_();
+    theMsg()->popEpoch(ep_);
+  }
 
-}  // end namespace vt
+  /**
+   * \brief Tell the region we are done enqueue tasks and to dispatch the work
+   */
+  void finishedEnqueuing() {
+    if (ep_ != no_epoch) {
+      task_manager_.get()->dispatchWork();
+      theTerm()->finishedEpoch(ep_);
+    }
+  }
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_MANAGER_FWD_H*/
+  /**
+   * \brief Block on completion of the enqueued work
+   */
+  void waitCollective() {
+    if (ep_ != no_epoch) {
+      task_manager_.get()->dispatchWork();
+      theTerm()->finishedEpoch(ep_);
+      runSchedulerThrough(ep_);
+      ep_ = no_epoch;
+    }
+  }
+
+private:
+  /// The associated epoch
+  EpochType ep_ = no_epoch;
+  /// The callable containing the tasks
+  ActionType callable_ = nullptr;
+  /// The task manager
+  objgroup::proxy::Proxy<task::TaskCollectiveManager<Index>> task_manager_;
+};
+
+} /* end namespace vt::task */
+
+#endif /*INCLUDED_VT_MESSAGING_TASK_REGION_H*/

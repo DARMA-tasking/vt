@@ -108,6 +108,29 @@ struct EpochManip : runtime::component::Component<EpochManip> {
   static bool isDep(EpochType epoch);
 
   /**
+   * \brief Gets whether a dependent epoch is released
+   *
+   * \param[in] epoch the epoch
+   *
+   * \return whether it is released
+   */
+  static bool isDepReleased(EpochType epoch);
+
+  /**
+   * \brief Clears the released bit for a dependent epoch
+   *
+   * \param[in,out] epoch the epoch
+   */
+  static void clearDepReleasedBit(EpochType& epoch);
+
+  /**
+   * \brief Sets the released bit for a dependent epoch
+   *
+   * \param[in] epoch the epoch
+   */
+  static void setDepReleasedBit(EpochType& epoch);
+
+  /**
    * \brief Gets the \c eEpochCategory of a given epoch
    *
    * \param[in] epoch the epoch to operate on

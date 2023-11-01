@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                manager.fwd.h
+//                           test_task_collective.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,31 +41,81 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_FWD_H
-#define INCLUDED_VT_VRT_COLLECTION_MANAGER_FWD_H
+#include <cstring>
 
-#include "vt/config.h"
-#include "vt/vrt/collection/dispatch/dispatch.h"
-#include "vt/vrt/collection/dispatch/registry.h"
+#include <gtest/gtest.h>
+#include <vt/transport.h>
+#include <vt/messaging/collection_chain_set.h>
 
-namespace vt { namespace vrt { namespace collection {
+#include "test_harness.h"
+#include "test_parallel_harness.h"
 
-struct CollectionManager;
+namespace vt { namespace tests { namespace unit {
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const han);
+using TestTaskCollective = TestParallelHarness;
 
-template <typename Index>
-void fullyReleaseEpoch(VirtualProxyType proxy, Index idx, EpochType ep);
+struct TestGroup {
 
-template <typename Index>
-NodeType getMappedNodeElm(VirtualProxyType proxy, Index idx);
+  void task1(int val) {
+    vt_print(gen, "val={}, t1={}\n", val, t1);
+    t1++;
+  }
 
-}}} /* end namespace vt::vrt::collection */
+  void task2(int val) {
+    vt_print(gen, "val={}, t1={}, t2={}\n", val, t1, t2);
+    t2++;
+    EXPECT_EQ(t1, t2);
+  }
 
-namespace vt {
+  void task3(int val) {
+    vt_print(gen, "val={}, t1={}, t2={}, t3={}\n", val, t1, t2, t3);
+    t3++;
+    EXPECT_EQ(t1, t2);
+    EXPECT_EQ(t2, t3);
+  }
 
-extern vrt::collection::CollectionManager* theCollection();
+  void setProxy(objgroup::proxy::Proxy<TestGroup> in_proxy) {
+    proxy_ = in_proxy;
+  }
 
-}  // end namespace vt
+private:
+  int t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+  objgroup::proxy::Proxy<TestGroup> proxy_;
+};
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_MANAGER_FWD_H*/
+TEST_F(TestTaskCollective, test_node_task_collective_1) {
+  using ChainSetType = messaging::CollectionChainSet<NodeType>;
+
+  auto const num_nodes = theContext()->getNumNodes();
+
+  auto proxy = theObjGroup()->makeCollective<TestGroup>("TestGroup");
+  proxy.get()->setProxy(proxy);
+
+  auto chains_ = std::make_unique<ChainSetType>();
+  chains_->addIndex(theContext()->getNode());
+
+  auto tr = chains_->createTaskRegion([&]{
+    auto t1 = chains_->taskCollective("task1", [&](auto node, auto t) {
+      return proxy[node].template send<&TestGroup::task1>(10);
+    });
+
+    auto t2 = chains_->taskCollective("task2", [&](auto node, auto t) {
+      t->dependsOn(node, t1);
+      t->dependsOn((node+1)%num_nodes, t1);
+      return proxy[node].template send<&TestGroup::task2>(10);
+    });
+
+    /*auto t3 = */chains_->taskCollective("task3", [&](auto node, auto t) {
+      t->dependsOn(node, t2);
+      return proxy[node].template send<&TestGroup::task3>(10);
+    });
+  });
+
+  // Do this a bunch of times
+  for (int i = 0; i < 100; i++) {
+    tr->enqueueTasks();
+    tr->waitCollective();
+  }
+}
+
+}}} // end namespace vt::tests::unit

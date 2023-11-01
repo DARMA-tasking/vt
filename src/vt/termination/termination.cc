@@ -120,7 +120,12 @@ void TerminationDetector::setLocalTerminated(
 }
 
 TerminationDetector::TermStateType&
-TerminationDetector::findOrCreateState(EpochType const& epoch, bool is_ready) {
+TerminationDetector::findOrCreateState(EpochType const& epoch_in, bool is_ready) {
+  EpochType epoch = epoch_in;
+  if (isDep(epoch_in)) {
+    epoch::EpochManip::clearDepReleasedBit(epoch);
+  }
+
   auto const& num_children_ = getNumChildren();
 
   bool const local_term = is_ready;
@@ -145,7 +150,12 @@ TerminationDetector::findOrCreateState(EpochType const& epoch, bool is_ready) {
 }
 
 TerminationDetector::TermStateDSType*
-TerminationDetector::getDSTerm(EpochType epoch, bool is_root) {
+TerminationDetector::getDSTerm(EpochType epoch_in, bool is_root) {
+  EpochType epoch = epoch_in;
+  if (isDep(epoch_in)) {
+    epoch::EpochManip::clearDepReleasedBit(epoch);
+  }
+
   vt_debug_print(
     verbose, termds,
     "getDSTerm: epoch={:x}, is_rooted={}, is_ds={}\n",
@@ -668,10 +678,8 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
   // Matching consume on global epoch once a nested epoch terminates
   if (epoch != any_epoch_sentinel) {
     bool const is_rooted = isRooted(epoch);
-    bool const is_ds = isDS(epoch);
     if (
       not is_rooted or
-      is_ds or
       (is_rooted and epoch::EpochManip::node(epoch) == this_node_)
     ) {
       consumeOnGlobal(epoch);
@@ -705,6 +713,7 @@ void TerminationDetector::inquireTerminated(
 
     bool const is_ready = true;
     auto msg = makeMessage<TermTerminatedReplyMsg>(epoch,is_ready);
+    theMsg()->markAsTermMessage(msg);
     theMsg()->sendMsg<replyEpochTerminated>(from, msg);
   });
 }
@@ -773,6 +782,7 @@ TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
          * terminated or not
          */
         auto msg = makeMessage<TermTerminatedMsg>(epoch,this_node_);
+        theMsg()->markAsTermMessage(msg);
         theMsg()->sendMsg<inquireEpochTerminated>(root, msg);
         epoch_wait_status_.insert(epoch);
       }
@@ -1143,6 +1153,10 @@ bool TerminationDetector::isEpochReleased(EpochType epoch) {
   // unless dep is released
   bool const is_dep = isDep(epoch);
   if (not is_dep) {
+    return true;
+  }
+
+  if (epoch::EpochManip::isDepReleased(epoch)) {
     return true;
   }
 

@@ -90,7 +90,7 @@ void TermAction::queueActions(EpochType epoch) {
       auto msg = makeMessage<ActionMsg>(epoch, encap_epoch);
       auto const han = auto_registry::makeAutoHandler<ActionMsg, runActions>();
       auto const this_node = theContext()->getNode();
-      runnable::makeRunnable(msg, true, han, this_node)
+      runnable::makeRunnable(msg, true, han, this_node, false)
         .withTDEpoch(encap_epoch)
         .enqueue();
     };
