@@ -81,7 +81,7 @@ enum ChainSetLayout {
 template <typename Index>
 class CollectionChainSet final {
   public:
-  CollectionChainSet() = default;
+  CollectionChainSet();
   CollectionChainSet(const CollectionChainSet&) = delete;
   CollectionChainSet(CollectionChainSet&&) = delete;
 
@@ -162,6 +162,7 @@ public:
   void removeIndex(Index idx) {
     auto iter = chains_.find(idx);
     vtAssert(iter != chains_.end(), "Cannot remove a non-present chain");
+    iter->second.done();
     vtAssert(
       iter->second.isTerminated(), "Cannot remove a chain with pending work"
     );

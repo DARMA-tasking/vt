@@ -50,6 +50,13 @@
 namespace vt { namespace messaging {
 
 template <typename Index>
+CollectionChainSet<Index>::CollectionChainSet() {
+  task_manager_ = task::TaskCollectiveManager<Index>::construct(
+    true, no_vrt_proxy
+  );
+}
+
+template <typename Index>
 template <typename ProxyT, typename IndexT>
 CollectionChainSet<Index>::CollectionChainSet(
   ProxyT proxy, ChainSetLayout layout
