@@ -77,7 +77,7 @@ struct TestGroup {
   void setProxy(objgroup::proxy::Proxy<TestGroup> in_proxy) {
     proxy_ = in_proxy;
   }
-  
+
 private:
   int t1 = 0, t2 = 0, t3 = 0, t4 = 0;
   objgroup::proxy::Proxy<TestGroup> proxy_;
