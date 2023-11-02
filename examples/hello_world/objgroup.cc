@@ -41,6 +41,10 @@
 //@HEADER
 */
 
+#include "vt/collective/collective_alg.h"
+#include "vt/group/group_manager.h"
+#include "vt/group/region/group_list.h"
+#include <memory>
 #include <vt/transport.h>
 
 /// [Object group creation]
@@ -54,20 +58,27 @@ struct MyObjGroup {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  const auto this_node = vt::theContext()->getNode();
 
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjGroup>(
-    "examples_hello_world"
-  );
+  auto proxy =
+    vt::theObjGroup()->makeCollective<MyObjGroup>("examples_hello_world");
+
+  vt::theGroup()->newGroupCollective(
+    this_node % 2, [proxy, this_node](::vt::GroupType type) {
+      if (this_node == 0) {
+        proxy.broadcastToGroup<&MyObjGroup::handler>(type, 122, 244);
+      }
+    });
+
+  vt::theCollective()->barrier();
 
   if (this_node == 0) {
-    proxy[0].send<&MyObjGroup::handler>(5,10);
-    if (num_nodes > 1) {
-      proxy[1].send<&MyObjGroup::handler>(10,20);
-    }
-    proxy.broadcast<&MyObjGroup::handler>(400,500);
+    using namespace ::vt::group::region;
+
+    List list(List::ListType{0, 2, 4});
+    proxy.broadcastToNodes<&MyObjGroup::handler>(std::move(list), 20, 40, 60);
   }
+  vt::theCollective()->barrier();
 
   vt::finalize();
 

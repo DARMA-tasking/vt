@@ -41,10 +41,13 @@
 //@HEADER
 */
 
+#include "vt/context/context.h"
+#include "vt/group/region/group_list.h"
 #if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
 #define INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
 
 #include "vt/config.h"
+#include "vt/group/group_manager.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/objgroup/manager.h"
@@ -108,6 +111,39 @@ Proxy<ObjT>::broadcast(Params&&... params) const {
   return typename Proxy<ObjT>::PendingSendType{std::nullptr_t{}};
 }
 
+template <typename ObjT>
+template <auto f, typename... Params>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::broadcastToGroup(GroupType type, Params&&... params) const{
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
+    using SendMsgT = messaging::ParamMsg<Tuple>;
+    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    vt::envelopeSetGroup(msg->env, type);
+    auto const ctrl = proxy::ObjGroupProxy::getID(proxy_);
+    auto const han = auto_registry::makeAutoHandlerObjGroupParam<
+      ObjT, decltype(f), f, SendMsgT
+    >(ctrl);
+    return theObjGroup()->broadcast(msg, han);
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    vt::envelopeSetGroup(msg->env, type);
+    return broadcastMsg<MsgT, f>(msg);
+  }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return typename Proxy<ObjT>::PendingSendType{std::nullptr_t{}};
+}
+
+template <typename ObjT>
+template <auto f, typename... Params>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::broadcastToNodes(group::region::List&& nodes, Params&&... params) const{
+  // TODO: Should we cache it?
+  const auto groupType = theGroup()->newGroup(std::move(nodes), [](GroupType type){});
+  return broadcastToGroup<f>(groupType, std::forward<Params>(params)...);
+}
 
 template <typename ObjT>
 template <

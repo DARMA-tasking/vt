@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/group/region/group_list.h"
 #if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_H
 #define INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_H
 
@@ -158,6 +159,12 @@ public:
    */
   template <auto fn, typename... Args>
   PendingSendType broadcast(Args&&... args) const;
+
+  template <auto fn, typename... Args>
+  PendingSendType broadcastToGroup(GroupType type, Args&&... args) const;
+
+  template <auto fn, typename... Args>
+  PendingSendType broadcastToNodes(group::region::List&& nodes, Args&&... args) const;
 
   /**
    * \brief All-reduce back to this objgroup. Performs a reduction using
