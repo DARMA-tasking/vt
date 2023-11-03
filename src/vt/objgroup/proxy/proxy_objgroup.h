@@ -164,7 +164,7 @@ public:
   PendingSendType broadcastToGroup(GroupType type, Args&&... args) const;
 
   template <auto fn, typename... Args>
-  PendingSendType broadcastToNodes(group::region::List&& nodes, Args&&... args) const;
+  PendingSendType broadcastToNodes(group::region::Region::RegionUPtrType&& nodes, Args&&... args) const;
 
   /**
    * \brief All-reduce back to this objgroup. Performs a reduction using

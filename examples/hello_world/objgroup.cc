@@ -75,8 +75,8 @@ int main(int argc, char** argv) {
   if (this_node == 0) {
     using namespace ::vt::group::region;
 
-    List list(List::ListType{0, 2, 4});
-    proxy.broadcastToNodes<&MyObjGroup::handler>(std::move(list), 20, 40, 60);
+    Region::RegionUPtrType list = std::make_unique<List>(List::ListType{0, 2, 4});
+    proxy.broadcastToNodes<&MyObjGroup::handler>(std::move(list), 20, 40);
   }
   vt::theCollective()->barrier();
 

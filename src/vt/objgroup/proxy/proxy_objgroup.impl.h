@@ -139,7 +139,7 @@ Proxy<ObjT>::broadcastToGroup(GroupType type, Params&&... params) const{
 template <typename ObjT>
 template <auto f, typename... Params>
 typename Proxy<ObjT>::PendingSendType
-Proxy<ObjT>::broadcastToNodes(group::region::List&& nodes, Params&&... params) const{
+Proxy<ObjT>::broadcastToNodes(group::region::Region::RegionUPtrType&& nodes, Params&&... params) const{
   // TODO: Should we cache it?
   const auto groupType = theGroup()->newGroup(std::move(nodes), [](GroupType type){});
   return broadcastToGroup<f>(groupType, std::forward<Params>(params)...);
