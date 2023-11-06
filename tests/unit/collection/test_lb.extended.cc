@@ -411,6 +411,9 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
     vt::thePhase()->addUserDefinedData(
       phase, std::string{"time"}, static_cast<double>(phase));
 
+    vt::thePhase()->addUserDefinedData(
+      phase, std::string{"new_time"}, static_cast<double>(phase));
+
     // Go to the next phase
     vt::thePhase()->nextPhaseCollective();
   }
@@ -431,6 +434,8 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
       EXPECT_TRUE(phase.find("user_defined") != phase.end());
       EXPECT_TRUE(phase["user_defined"].contains("time"));
       EXPECT_EQ(phase["user_defined"]["time"], static_cast<double>(phase["id"]));
+      EXPECT_TRUE(phase["user_defined"].contains("new_time"));
+      EXPECT_EQ(phase["user_defined"]["new_time"], static_cast<double>(phase["id"]));
     }
 
   });

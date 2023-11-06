@@ -188,10 +188,16 @@ void addUserDefinedData(PhaseType phase, const KeyT& key, const ValueT& value) {
     "PhaseManager::addUserDefinedData: ValueT type is not jsonable"
   );
 
-  auto j = std::make_shared<nlohmann::json>();
-  j->emplace(key, value);
+  auto perPhase = theNodeLBData()->getLBData()->user_per_phase_json_;
 
-  theNodeLBData()->getLBData()->user_per_phase_json_[phase] = j;
+  if (perPhase.find(phase) == perPhase.end()) {
+    auto j = std::make_shared<nlohmann::json>();
+    j->emplace(key, value);
+
+    theNodeLBData()->getLBData()->user_per_phase_json_[phase] = j;
+  } else {
+    perPhase[phase]->emplace(key, value);
+  }
 }
 
   /**
