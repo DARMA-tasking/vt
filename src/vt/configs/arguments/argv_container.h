@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  startup.cc
+//                               argv_container.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,74 +41,71 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/collective/startup.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/runtime/runtime_headers.h"
-#include "vt/context/context.h"
+#if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGV_CONTAINER_H
+#define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGV_CONTAINER_H
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace vt {
 
-std::unique_ptr<arguments::ArgvContainer>
-preconfigure(int& argc, char**& argv) {
-  return std::make_unique<arguments::ArgvContainer>(argc, argv);
-}
+namespace arguments {
 
-RuntimePtrType initializePreconfigured(
-  MPI_Comm* comm, arguments::AppConfig const* appConfig,
-  arguments::ArgvContainer const* preconfigure_args
-) {
-  arguments::ArgvContainer args =
-    preconfigure_args ? *preconfigure_args : arguments::ArgvContainer{};
+struct ArgvContainer {
+  ArgvContainer(int& argc, char**& argv)
+  {
+    std::vector<char*> non_vt_args;
+    for(int i = 0; i < argc; i++) {
+      // cache original argv parameter
+      argv_.push_back(strdup(argv[i]));
+      // collect non vt params
+      if (!((0 == strncmp(argv[i], "--vt_", 5)) ||
+          (0 == strncmp(argv[i], "!--vt_", 6)))) {
+        non_vt_args.push_back(argv[i]);
+      }
+    }
 
-  auto argc = args.getArgc();
-  auto argv_container = args.getArgvDeepCopy();
-  auto argv = argv_container.get();
-  bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(
-    argc, argv, is_interop, comm, appConfig
-  );
-}
+    // Reconstruct argv without vt related params
+    int new_argc = non_vt_args.size();
+    static std::unique_ptr<char*[]> new_argv = nullptr;
 
-// vt::{initialize,finalize} for main ::vt namespace
-RuntimePtrType initialize(
-  int& argc, char**& argv, MPI_Comm* comm, arguments::AppConfig const* appConfig
-) {
-  bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(
-    argc, argv, is_interop, comm, appConfig
-  );
-}
+    new_argv = std::make_unique<char*[]>(new_argc + 1);
 
-RuntimePtrType initialize(MPI_Comm* comm) {
-  int argc = 0;
-  char** argv = nullptr;
-  bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(argc,argv,is_interop,comm);
-}
+    int i = 0;
+    for (auto&& arg : non_vt_args) {
+      new_argv[i++] = arg;
+    }
+    new_argv[i++] = nullptr;
 
-RuntimePtrType initialize(
-  int& argc, char**& argv, arguments::AppConfig const* appConfig
-) {
-  return initialize(argc, argv, nullptr, appConfig);
-}
-
-RuntimePtrType initialize(arguments::AppConfig const* appConfig) {
- int argc = 0;
- char** argv = nullptr;
- return initialize(argc, argv, nullptr, appConfig);
-}
-
-void finalize(RuntimePtrType in_rt) {
-  if (in_rt) {
-    return CollectiveOps::finalize(std::move(in_rt));
-  } else {
-    return CollectiveOps::finalize(nullptr);
+    argc = new_argc;
+    argv = new_argv.get();
   }
-}
 
-void finalize() {
-  CollectiveOps::finalize(nullptr);
-}
+  ArgvContainer() = default;
+  ArgvContainer(const ArgvContainer&) = default;
 
-} /* end namespace vt */
+  int getArgc() const {
+    return argv_.size();
+  }
+
+  std::unique_ptr<char*[]> getArgvDeepCopy() const {
+    auto output = std::make_unique<char*[]>(argv_.size() + 1);
+
+    int i = 0;
+    for(auto&& arg : argv_) {
+      output[i++] = strdup(arg.c_str());
+    }
+    output[i++] = nullptr;
+
+    return output;
+  }
+
+private:
+  std::vector<std::string> argv_;
+};
+
+} // namespace arguments
+} // namespace vt
+
+#endif /*INCLUDED_VT_CONFIGS_ARGUMENTS_ARGV_CONTAINER_H*/
