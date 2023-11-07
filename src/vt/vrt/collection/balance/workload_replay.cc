@@ -227,7 +227,6 @@ void replayWorkloads(
     runInEpochCollective("WorkloadReplayDriver -> destroyLB", [&] {
       theLBManager()->destroyLB();
     });
-    theCollective()->barrier();
     auto last_phase_info = theLBManager()->getPhaseInfo();
     thePhase()->printSummary(last_phase_info);
   }
