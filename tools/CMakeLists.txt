@@ -21,15 +21,6 @@ macro(add_tool tool_name)
     TARGET ${tool_name}
     DEFAULT_LINK_SET
   )
-
-### @todo Add command-line arguments for testing
-#  if (BUILD_TESTING)
-#    add_test_for_example_vt(
-#      ${tool_name}
-#      ${TOOL_FILE}
-#      tool_tests
-#    )
-#  endif()
 endmacro()
 
 add_subdirectory(workload_replay)
