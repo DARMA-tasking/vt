@@ -118,9 +118,9 @@ endif()
 #
 # Tools
 #
-option(VT_BUILD_TOOLS "Build VT tools" ON)
+option(vt_build_tools "Build VT tools" ON)
 
-if (VT_BUILD_TOOLS)
+if (vt_build_tools)
   message(
     STATUS
     "VT: building tools"
@@ -130,8 +130,7 @@ if (VT_BUILD_TOOLS)
   add_subdirectory(tools)
 else()
   message(
-    STATUS "VT: NOT building tools because VT_BUILD_TOOLS is not set.\
- Tools that are not built are NOT TESTED."
+    STATUS "VT: NOT building tools because vt_build_tools is not set."
   )
 endif()
 
