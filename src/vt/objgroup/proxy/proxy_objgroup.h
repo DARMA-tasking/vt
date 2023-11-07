@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include "vt/group/region/group_list.h"
 #if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_H
 #define INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_H
 
@@ -60,6 +59,7 @@
 #include "vt/rdmahandle/handle_set.fwd.h"
 #include "vt/messaging/pending_send.h"
 #include "vt/utils/fntraits/fntraits.h"
+#include "vt/group/region/group_list.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -160,9 +160,23 @@ public:
   template <auto fn, typename... Args>
   PendingSendType broadcast(Args&&... args) const;
 
+  /**
+   * \brief Broadcast a message to nodes that are part of given group to be delivered to the local object
+   * instance
+   *
+   * \param[in] type group to broadcast
+   * \param[in] args args to pass to the message constructor
+   */
   template <auto fn, typename... Args>
   PendingSendType broadcastToGroup(GroupType type, Args&&... args) const;
 
+  /**
+   * \brief Broadcast a message to nodes specified by the region to be delivered to the local object
+   * instance
+   *
+   * \param[in] nodes region of nodes to broadcast to
+   * \param[in] args args to pass to the message constructor
+   */
   template <auto fn, typename... Args>
   PendingSendType broadcastToNodes(group::region::Region::RegionUPtrType&& nodes, Args&&... args) const;
 

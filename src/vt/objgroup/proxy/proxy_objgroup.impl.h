@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-#include "vt/context/context.h"
-#include "vt/group/region/group_list.h"
 #if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
 #define INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
 
@@ -138,11 +136,19 @@ Proxy<ObjT>::broadcastToGroup(GroupType type, Params&&... params) const{
 
 template <typename ObjT>
 template <auto f, typename... Params>
-typename Proxy<ObjT>::PendingSendType
-Proxy<ObjT>::broadcastToNodes(group::region::Region::RegionUPtrType&& nodes, Params&&... params) const{
-  // TODO: Should we cache it?
-  const auto groupType = theGroup()->newGroup(std::move(nodes), [](GroupType type){});
-  return broadcastToGroup<f>(groupType, std::forward<Params>(params)...);
+typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::broadcastToNodes(
+  group::region::Region::RegionUPtrType&& nodes, Params&&... params) const {
+  // This will work for list-type ranges only
+  nodes->sort();
+  auto& range = nodes->makeList();
+
+  auto groupID = theGroup()->GetTempGroupForRange(range);
+  if (!groupID.has_value()) {
+    groupID = theGroup()->newGroup(std::move(nodes), [](GroupType type) {});
+    theGroup()->AddNewTempGroup(range, groupID.value());
+  }
+
+  return broadcastToGroup<f>(groupID.value(), std::forward<Params>(params)...);
 }
 
 template <typename ObjT>

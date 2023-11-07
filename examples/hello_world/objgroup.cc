@@ -41,10 +41,6 @@
 //@HEADER
 */
 
-#include "vt/collective/collective_alg.h"
-#include "vt/group/group_manager.h"
-#include "vt/group/region/group_list.h"
-#include <memory>
 #include <vt/transport.h>
 
 /// [Object group creation]
@@ -59,10 +55,12 @@ int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   const auto this_node = vt::theContext()->getNode();
+  const auto num_nodes = vt::theContext()->getNumNodes();
 
   auto proxy =
     vt::theObjGroup()->makeCollective<MyObjGroup>("examples_hello_world");
 
+  // Create group of odd nodes and broadcast to them (from root node)
   vt::theGroup()->newGroupCollective(
     this_node % 2, [proxy, this_node](::vt::GroupType type) {
       if (this_node == 0) {
@@ -73,10 +71,29 @@ int main(int argc, char** argv) {
   vt::theCollective()->barrier();
 
   if (this_node == 0) {
+    // Send to object 0
+    proxy[0].send<&MyObjGroup::handler>(5, 10);
+    if (num_nodes > 1) {
+      // Send to object 1
+      proxy[1].send<&MyObjGroup::handler>(10, 20);
+    }
+
+    // Broadcast to all nodes
+    proxy.broadcast<&MyObjGroup::handler>(400, 500);
+
     using namespace ::vt::group::region;
 
-    Region::RegionUPtrType list = std::make_unique<List>(List::ListType{0, 2, 4});
-    proxy.broadcastToNodes<&MyObjGroup::handler>(std::move(list), 20, 40);
+    // Create list of nodes and broadcast to them
+    List::ListType range;
+    for (vt::NodeType node = 0; node < num_nodes; ++node) {
+      if (node % 2 == 0) {
+        range.push_back(node);
+      }
+    }
+
+    proxy.broadcastToNodes<&MyObjGroup::handler>(
+      std::make_unique<List>(range), 20, 40
+    );
   }
   vt::theCollective()->barrier();
 
