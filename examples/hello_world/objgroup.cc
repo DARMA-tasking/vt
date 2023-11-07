@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
   vt::theGroup()->newGroupCollective(
     this_node % 2, [proxy, this_node](::vt::GroupType type) {
       if (this_node == 0) {
-        proxy.broadcastToGroup<&MyObjGroup::handler>(type, 122, 244);
+        proxy.multicast<&MyObjGroup::handler>(type, 122, 244);
       }
     });
 
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
       }
     }
 
-    proxy.broadcastToNodes<&MyObjGroup::handler>(
+    proxy.multicast<&MyObjGroup::handler>(
       std::make_unique<List>(range), 20, 40
     );
   }

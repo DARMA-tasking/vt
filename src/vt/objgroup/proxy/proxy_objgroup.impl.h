@@ -112,7 +112,7 @@ Proxy<ObjT>::broadcast(Params&&... params) const {
 template <typename ObjT>
 template <auto f, typename... Params>
 typename Proxy<ObjT>::PendingSendType
-Proxy<ObjT>::broadcastToGroup(GroupType type, Params&&... params) const{
+Proxy<ObjT>::multicast(GroupType type, Params&&... params) const{
   using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
   if constexpr (std::is_same_v<MsgT, NoMsg>) {
     using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
@@ -136,7 +136,7 @@ Proxy<ObjT>::broadcastToGroup(GroupType type, Params&&... params) const{
 
 template <typename ObjT>
 template <auto f, typename... Params>
-typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::broadcastToNodes(
+typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::multicast(
   group::region::Region::RegionUPtrType&& nodes, Params&&... params) const {
   // This will work for list-type ranges only
   nodes->sort();
@@ -148,7 +148,7 @@ typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::broadcastToNodes(
     theGroup()->AddNewTempGroup(range, groupID.value());
   }
 
-  return broadcastToGroup<f>(groupID.value(), std::forward<Params>(params)...);
+  return multicast<f>(groupID.value(), std::forward<Params>(params)...);
 }
 
 template <typename ObjT>
