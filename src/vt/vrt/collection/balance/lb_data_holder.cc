@@ -218,6 +218,14 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
     }
   }
 
+  if (user_per_phase_json_.find(phase) != user_per_phase_json_.end()) {
+    auto& user_def_this_phase = user_per_phase_json_.at(phase);
+
+    if (!user_def_this_phase->empty()) {
+      j["user_defined"] = *user_def_this_phase;
+    }
+  }
+
   return std::make_unique<json>(std::move(j));
 }
 
@@ -361,6 +369,12 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
             }
           }
         }
+      }
+
+      if (phase.find("user_defined") != phase.end()) {
+        auto userDefined = phase["user_defined"];
+        user_per_phase_json_[phase] = std::make_shared<nlohmann::json>();
+        *(user_per_phase_json_[phase]) = userDefined;
       }
     }
   }
