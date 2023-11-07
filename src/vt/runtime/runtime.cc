@@ -249,9 +249,10 @@ bool Runtime::hasSchedRun() const {
 
 void Runtime::pauseForDebugger() {
   if (theConfig()->vt_pause) {
-    char node_str[256];
+    constexpr int max_buffer_length = 256;
+    char node_str[max_buffer_length];
     auto node = vt::theContext() ? vt::theContext()->getNode() : -1;
-    sprintf(node_str, "prog-%d.pid", node);
+    snprintf(node_str, max_buffer_length, "prog-%d.pid", node);
     auto const pid = getpid();
     FILE* f = fopen(node_str, "w+");
     fprintf(f, "%d", pid);
