@@ -512,4 +512,6 @@ inline EpochType ActiveMessenger::setupEpochMsg(MsgSharedPtr<MsgT> const& msg) {
 
 }} //end namespace vt::messaging
 
+#include "vt/messaging/param_msg.impl.h"
+
 #endif /*INCLUDED_VT_MESSAGING_ACTIVE_IMPL_H*/

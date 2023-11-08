@@ -234,7 +234,8 @@ struct CallbackTyped : CallbackRawBaseSingle {
   void sendTuple(std::tuple<Params...> tup) {
     using Trait = CBTraits<Args...>;
     using MsgT = messaging::ParamMsg<typename Trait::TupleType>;
-    auto msg = vt::makeMessage<MsgT>(std::move(tup));
+    auto msg = vt::makeMessage<MsgT>();
+    msg->setParams(std::move(tup));
     CallbackRawBaseSingle::sendMsg<MsgT>(msg);
   }
 
@@ -243,7 +244,8 @@ struct CallbackTyped : CallbackRawBaseSingle {
     using Trait = CBTraits<Args...>;
     if constexpr (std::is_same_v<typename Trait::MsgT, NoMsg>) {
       using MsgT = messaging::ParamMsg<typename Trait::TupleType>;
-      auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
+      auto msg = vt::makeMessage<MsgT>();
+      msg->setParams(std::forward<Params>(params)...);
       CallbackRawBaseSingle::sendMsg<MsgT>(msg);
     } else {
       using MsgT = typename Trait::MsgT;
