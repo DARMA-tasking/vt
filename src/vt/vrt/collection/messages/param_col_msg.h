@@ -70,7 +70,7 @@ struct ParamColMsg<
   void setParams(Param&& p, Params&&... in_params) {
     if constexpr (std::is_same_v<Param, MsgProps>) {
       params = TupleType{std::forward<Params>(in_params)...};
-      p.apply(*this);
+      p.apply(this);
     } else {
       params = TupleType{std::forward<Param>(p), std::forward<Params>(in_params)...};
     }
@@ -101,7 +101,7 @@ struct ParamColMsg<
   void setParams(Param&& p, Params&&... in_params) {
     if constexpr (std::is_same_v<Param, MsgProps>) {
       params = std::make_unique<TupleType>(std::forward<Params>(in_params)...);
-      p.apply(*this);
+      p.apply(this);
     } else {
       params = std::make_unique<TupleType>(
         std::forward<Param>(p), std::forward<Params>(in_params)...
