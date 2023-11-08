@@ -100,8 +100,10 @@ private:
   bool as_serial_msg_ = false;
   bool as_collection_msg_ = false;
   EpochType ep_ = no_epoch;
+#if vt_check_enabled(priorities)
   PriorityType priority_ = no_priority;
   PriorityLevelType priority_level_ = no_priority_level;
+#endif
 };
 
 } /* end namespace vt */
