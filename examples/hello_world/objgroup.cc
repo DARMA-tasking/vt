@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
   auto proxy =
     vt::theObjGroup()->makeCollective<MyObjGroup>("examples_hello_world");
 
-  // Create group of odd nodes and broadcast to them (from root node)
+  // Create group of odd nodes and multicast to them (from root node)
   vt::theGroup()->newGroupCollective(
     this_node % 2, [proxy, this_node](::vt::GroupType type) {
       if (this_node == 0) {
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 
     using namespace ::vt::group::region;
 
-    // Create list of nodes and broadcast to them
+    // Create list of nodes and multicast to them
     List::ListType range;
     for (vt::NodeType node = 0; node < num_nodes; ++node) {
       if (node % 2 == 0) {

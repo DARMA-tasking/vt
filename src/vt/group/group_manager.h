@@ -121,12 +121,22 @@ struct GroupManager : runtime::component::Component<GroupManager> {
    */
   void setupDefaultGroup();
 
-  void AddNewTempGroup(const region::Region::ListType& key, GroupType value) {
-    temporary_groups_[key] = value;
+  /**
+   * \internal \brief Cache group created by multicast. This allows for reusing the same group.
+   *
+   * \param[in] range list of nodes that are part of given group
+   * \param[in] group group to cache
+   */
+  void AddNewTempGroup(const region::Region::ListType& range, GroupType group) {
+    temporary_groups_[range] = group;
   }
 
+  /**
+   * \internal \brief Return (if any) group associated with given range of nodes
+   */
   std::optional<GroupType>
   GetTempGroupForRange(const region::Region::ListType& range);
+
   /**
    * \brief Create a new rooted group.
    *
@@ -438,7 +448,8 @@ private:
   ActionContainerType   continuation_actions_         = {};
   ActionListType        cleanup_actions_              = {};
   CollectiveScopeType   collective_scope_;
-  std::unordered_map<region::Region::ListType, GroupType, region::ListHash> temporary_groups_ = {};
+  std::unordered_map<region::Region::ListType, GroupType, region::ListHash>
+    temporary_groups_ = {};
 };
 
 /**

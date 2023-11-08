@@ -138,7 +138,11 @@ template <typename ObjT>
 template <auto f, typename... Params>
 typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::multicast(
   group::region::Region::RegionUPtrType&& nodes, Params&&... params) const {
-  // This will work for list-type ranges only
+  vtAssert(
+    not dynamic_cast<group::region::ShallowList*>(nodes.get()),
+    "multicast: range of nodes is not supported for ShallowList!"
+  );
+
   nodes->sort();
   auto& range = nodes->makeList();
 
