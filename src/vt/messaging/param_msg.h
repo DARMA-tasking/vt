@@ -91,8 +91,8 @@ struct MsgProps {
     return std::move(*this);
   }
 
-  template <typename MsgT>
-  void apply(MsgT& msg);
+  template <typename MsgPtrT>
+  void apply(MsgPtrT msg);
 
 private:
   bool as_location_msg_ = false;

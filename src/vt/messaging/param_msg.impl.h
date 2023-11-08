@@ -48,8 +48,8 @@
 
 namespace vt {
 
-template <typename MsgT>
-void MsgProps::apply(MsgT& msg) {
+template <typename MsgPtrT>
+void MsgProps::apply(MsgPtrT msg) {
   if (as_location_msg_) {
     theMsg()->markAsLocationMessage(msg);
   }
