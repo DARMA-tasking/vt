@@ -78,4 +78,3 @@ void MsgProps::apply(MsgPtrT msg) {
 } /* end namespace vt */
 
 #endif /*INCLUDED_VT_MESSAGING_PARAM_MSG_IMPL_H*/
-
