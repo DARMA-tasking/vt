@@ -54,20 +54,48 @@ struct MyObjGroup {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  const auto this_node = vt::theContext()->getNode();
+  const auto num_nodes = vt::theContext()->getNumNodes();
 
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjGroup>(
-    "examples_hello_world"
-  );
+  auto proxy =
+    vt::theObjGroup()->makeCollective<MyObjGroup>("examples_hello_world");
+
+  // Create group of odd nodes and multicast to them (from root node)
+  vt::theGroup()->newGroupCollective(
+    this_node % 2, [proxy, this_node](::vt::GroupType type) {
+      if (this_node == 0) {
+        proxy.multicast<&MyObjGroup::handler>(type, 122, 244);
+      }
+    });
+
+  vt::theCollective()->barrier();
 
   if (this_node == 0) {
-    proxy[0].send<&MyObjGroup::handler>(5,10);
+    // Send to object 0
+    proxy[0].send<&MyObjGroup::handler>(5, 10);
     if (num_nodes > 1) {
-      proxy[1].send<&MyObjGroup::handler>(10,20);
+      // Send to object 1
+      proxy[1].send<&MyObjGroup::handler>(10, 20);
     }
-    proxy.broadcast<&MyObjGroup::handler>(400,500);
+
+    // Broadcast to all nodes
+    proxy.broadcast<&MyObjGroup::handler>(400, 500);
+
+    using namespace ::vt::group::region;
+
+    // Create list of nodes and multicast to them
+    List::ListType range;
+    for (vt::NodeType node = 0; node < num_nodes; ++node) {
+      if (node % 2 == 0) {
+        range.push_back(node);
+      }
+    }
+
+    proxy.multicast<&MyObjGroup::handler>(
+      std::make_unique<List>(range), 20, 40
+    );
   }
+  vt::theCollective()->barrier();
 
   vt::finalize();
 

@@ -289,6 +289,32 @@ TEST_F(TestObjGroup, test_proxy_invoke) {
   EXPECT_EQ(proxy.get()->recv_, 3);
 }
 
+TEST_F(TestObjGroup, test_proxy_multicast) {
+  using namespace ::vt::group::region;
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+
+  auto proxy =
+    vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_multicast");
+
+  vt::runInEpochCollective([this_node, num_nodes, proxy] {
+    if (this_node == 0) {
+      // Create list of nodes and multicast to them
+      List::ListType range;
+      for (vt::NodeType node = 0; node < num_nodes; ++node) {
+        if (node % 2 == 0) {
+          range.push_back(node);
+        }
+      }
+
+      proxy.multicast<&MyObjA::handler>(std::make_unique<List>(range));
+    }
+  });
+
+  const auto expected = this_node % 2 == 0 ? 1 : 0;
+  EXPECT_EQ(proxy.get()->recv_, expected);
+}
+
 TEST_F(TestObjGroup, test_pending_send) {
   auto my_node = vt::theContext()->getNode();
   // create a proxy to a object group

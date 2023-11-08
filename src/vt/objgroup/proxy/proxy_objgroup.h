@@ -59,6 +59,7 @@
 #include "vt/rdmahandle/handle_set.fwd.h"
 #include "vt/messaging/pending_send.h"
 #include "vt/utils/fntraits/fntraits.h"
+#include "vt/group/region/group_list.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -158,6 +159,26 @@ public:
    */
   template <auto fn, typename... Args>
   PendingSendType broadcast(Args&&... args) const;
+
+  /**
+   * \brief Multicast a message to nodes that are part of given group to be delivered to the local object
+   * instance
+   *
+   * \param[in] type group to multicast
+   * \param[in] args args to pass to the message constructor
+   */
+  template <auto fn, typename... Args>
+  PendingSendType multicast(GroupType type, Args&&... args) const;
+
+  /**
+   * \brief Multicast a message to nodes specified by the region to be delivered to the local object
+   * instance
+   *
+   * \param[in] nodes region of nodes to multicast to
+   * \param[in] args args to pass to the message constructor
+   */
+  template <auto fn, typename... Args>
+  PendingSendType multicast(group::region::Region::RegionUPtrType&& nodes, Args&&... args) const;
 
   /**
    * \brief All-reduce back to this objgroup. Performs a reduction using
