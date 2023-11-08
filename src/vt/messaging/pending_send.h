@@ -153,6 +153,15 @@ struct PendingSend final {
    */
   void release();
 
+  /**
+   * \internal \brief Get the message stored in the pending send
+   *
+   * \note Used for testing purposes
+   *
+   * \return a reference to the message
+   */
+  MsgPtr<BaseMsgType>& getMsg() { return msg_; }
+
 private:
 
   /**
