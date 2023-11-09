@@ -118,7 +118,8 @@ Proxy<ObjT>::multicast(GroupType type, Params&&... params) const{
   if constexpr (std::is_same_v<MsgT, NoMsg>) {
     using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
     using SendMsgT = messaging::ParamMsg<Tuple>;
-    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto msg = vt::makeMessage<SendMsgT>();
+    msg->setParams(std::forward<Params>(params)...);
     vt::envelopeSetGroup(msg->env, type);
     auto const ctrl = proxy::ObjGroupProxy::getID(proxy_);
     auto const han = auto_registry::makeAutoHandlerObjGroupParam<
