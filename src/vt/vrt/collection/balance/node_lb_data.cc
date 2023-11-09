@@ -156,6 +156,9 @@ void NodeLBData::initialize() {
 #endif
 
 #if vt_check_enabled(ldms)
+  if (auto ldms_freq = getenv("VT_LDMS_MILLI_FREQ")) {
+    ldms_milli_freq_ = atoi(ldms_freq);
+  }
   const auto xPtr = getenv("VT_LDMS_XPTR");
   const auto auth = getenv("VT_LDMS_AUTH");
   ldms_ = ldms_xprt_new_with_auth(xPtr, auth, NULL);
@@ -305,11 +308,23 @@ void NodeLBData::outputLBDataForPhase(PhaseType phase) {
   auto j = lb_data_->toJson(phase);
   auto writer = static_cast<JSONAppender*>(lb_data_writer_.get());
   writer->addElm(*j);
+}
 
+void NodeLBData::writeJSONToLDMS(nlohman::json& j) {
 #if vt_check_enabled(ldms)
+  if (ldms_prev_submission_ == 0) {
+    ldms_prev_submission_ = MPI_Wtime();
+  } else if (
+    (MPI_Wtime() - ldms_prev_submission_) * 1000.0 < (double)ldms_milli_freq_
+  ) {
+    return;
+  } else {
+    ldms_prev_submission_ = MPI_Wtime();
+  }
+
   auto jsonStr = j->dump();
   const auto returnVal = ldmsd_stream_publish(
-    ldms_, "LB_data", LDMSD_STREAM_JSON, jsonStr.c_str(), jsonStr.length() + 1
+    ldms_, "vtLBStats", LDMSD_STREAM_JSON, jsonStr.c_str(), jsonStr.length() + 1
   );
   vtWarnIf(returnVal == 0, fmt::format("ldmsd_stream_publish returned {}!\n", returnVal));
 #endif

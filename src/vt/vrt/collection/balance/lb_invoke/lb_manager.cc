@@ -603,6 +603,12 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
   auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
   writer->stageObject(j);
   writer->commitStaged();
+
+#if vt_check_enabled(ldms)
+  j["ts"] = MPI_Wtime();
+
+  theNodeLBData()->writeJSONToLDMS(j);
+#endif
 }
 
 balance::LoadData reduceVec(
