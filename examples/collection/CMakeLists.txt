@@ -4,6 +4,7 @@ set(
   lb_iter
   jacobi1d_vt
   jacobi2d_vt
+  jacobi3d_vt
   migrate_collection
   polymorphic_collection
   insertable_collection
