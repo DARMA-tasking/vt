@@ -12,6 +12,7 @@ ENV https_proxy=${proxy} \
 ENV DEBIAN_FRONTEND=noninteractive
 
 ARG zoltan_enabled
+ARG ldms_enabled
 
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
@@ -30,6 +31,16 @@ RUN apt-get update -y -q && \
     python3 \
     valgrind \
     wget \
+    bison \
+    autoconf \
+    automake \
+    flex \
+    libtool \
+    pkg-config \
+    libibverbs-dev \
+    librdmacm-dev \
+    libssl-dev \
+    libpython3-dev \
     zlib1g \
     zlib1g-dev \
     brotli \
@@ -81,6 +92,18 @@ RUN if test ${zoltan_enabled} -eq 1; then \
       ./zoltan.sh -j4 ${ZOLTAN_INSTALL_DIR}; \
     fi
 
+ENV VT_LDMS_INCLUDES_DIR="/ovis/LDMS_install/include"
+ENV VT_LDMS_LIBS_DIR="/ovis/LDMS_install/lib"
+ENV VT_LDMS_XPTR="sock"
+ENV VT_LDMS_AUTH="none"
+ENV VT_LDMS_HOSTNAME="localhost"
+ENV VT_LDMS_PORT="10444"
+
+COPY ./ci/deps/ldms.sh ldms.sh
+RUN if test ${ldms_enabled} -eq 1; then \
+      ./ldms.sh 4; \
+    fi
+
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
     lcov && \
@@ -99,6 +122,7 @@ ARG VT_DOXYGEN_ENABLED
 ARG VT_EXTENDED_TESTS_ENABLED
 ARG VT_FCONTEXT_ENABLED
 ARG VT_LB_ENABLED
+ARG VT_LDMS_ENABLED
 ARG VT_MIMALLOC_ENABLED
 ARG VT_NO_COLOR_ENABLED
 ARG VT_POOL_ENABLED
@@ -119,6 +143,7 @@ ENV BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
     VT_EXTENDED_TESTS_ENABLED=${VT_EXTENDED_TESTS_ENABLED} \
     VT_FCONTEXT_ENABLED=${VT_FCONTEXT_ENABLED} \
     VT_LB_ENABLED=${VT_LB_ENABLED} \
+    VT_LDMS_ENABLED=${VT_LDMS_ENABLED} \
     VT_MIMALLOC_ENABLED=${VT_MIMALLOC_ENABLED} \
     VT_MPI_GUARD_ENABLED=${VT_MPI_GUARD_ENABLED} \
     VT_NO_COLOR_ENABLED=${VT_NO_COLOR_ENABLED} \

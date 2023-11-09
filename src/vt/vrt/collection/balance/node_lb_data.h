@@ -62,6 +62,9 @@
 #include <unordered_map>
 #include <vector>
 
+#if vt_check_enabled(ldms)
+struct ldms_xprt;
+#endif
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
@@ -256,6 +259,13 @@ public:
    */
   LBDataHolder* getLBData() { return lb_data_.get(); }
 
+  /**
+   * \brief Write some JSON to the LDMS stream
+   *
+   * \param[in] j the josn to write
+   */
+  void writeJSONToLDMS(nlohman::json& j);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | proxy_
@@ -299,6 +309,11 @@ private:
   std::unique_ptr<util::json::BaseAppender> lb_data_writer_ = nullptr;
   /// The struct that holds all the LB data
   std::unique_ptr<LBDataHolder> lb_data_ = nullptr;
+#if vt_check_enabled(ldms)
+  ldms_xprt* ldms_ = nullptr;
+  int ldms_milli_freq_ = 10;
+  double ldms_prev_submission_ = 0;
+#endif
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

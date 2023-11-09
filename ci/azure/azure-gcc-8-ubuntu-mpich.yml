@@ -33,6 +33,7 @@ variables:
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0
   VT_LB: 1
+  VT_LDMS: 0
   VT_TRACE: 1
   VT_TRACE_RT: 0
   VT_TRACE_ONLY: 1

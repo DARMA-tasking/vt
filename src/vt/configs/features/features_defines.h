@@ -63,6 +63,7 @@
 #define vt_feature_memory_pool         0 || vt_feature_cmake_memory_pool
 #define vt_feature_priorities          0 || vt_feature_cmake_priorities
 #define vt_feature_fcontext            0 || vt_feature_cmake_fcontext
+#define vt_feature_ldms                0 || vt_feature_cmake_ldms
 #define vt_feature_mimalloc            0 || vt_feature_cmake_mimalloc
 #define vt_feature_mpi_access_guards   0 || vt_feature_cmake_mpi_access_guards
 #define vt_feature_zoltan              0 || vt_feature_cmake_zoltan
