@@ -681,6 +681,11 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
 
   nlohmann::json j;
   j["id"] = phase;
+#if vt_check_enabled(ldms)
+  j["ts"] = MPI_Wtime();
+
+  theNodeLBData()->writeJSONToLDMS(j);
+#endif
 
   if (!statistics_writer_) {
     createStatisticsFile();
