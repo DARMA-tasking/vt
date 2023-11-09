@@ -146,6 +146,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(StatisticQuantity, {
   {StatisticQuantity::imb, "imb"},
   {StatisticQuantity::npr, "npr"},
   {StatisticQuantity::sum, "sum"},
+  {StatisticQuantity::lbh, "lbh"},
 })
 
 nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics) {
