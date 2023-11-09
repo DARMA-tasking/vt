@@ -55,7 +55,14 @@ TYPED_TEST_P(TestBroadcast, test_broadcast_basic_1) {
   test_broadcast_1<TypeParam>("test_broadcast_basic_1");
 }
 
+TYPED_TEST_P(TestBroadcastDynamic, test_broadcast_dynamic_basic_1) {
+  test_broadcast_dynamic_1<TypeParam>("test_broadcast_dynamic_basic_1");
+}
+
+std::unordered_map<TestIndex, bool> DynamicCountFun::index_map{};
+
 REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_basic_1);
+REGISTER_TYPED_TEST_SUITE_P(TestBroadcastDynamic, test_broadcast_dynamic_basic_1);
 
 using CollectionTestTypesBasic = testing::Types<
   bcast_col_            ::TestCol<int32_t>
@@ -63,6 +70,10 @@ using CollectionTestTypesBasic = testing::Types<
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
   test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
+);
+
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_bcast_basic, TestBroadcastDynamic, CollectionTestTypesBasic, DEFAULT_NAME_GEN
 );
 
 }}}} // end namespace vt::tests::unit::bcast
