@@ -374,6 +374,7 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto dcp = "Enable debug_phase        = \"" debug_pp(phase)        "\"";
   auto ddp = "Enable debug_context      = \"" debug_pp(context)      "\"";
   auto dep = "Enable debug_epoch        = \"" debug_pp(epoch)        "\"";
+  auto dfp = "Enable debug_replay       = \"" debug_pp(replay)       "\"";
 
   auto r1 = app.add_option("--vt_debug_level",      appConfig.vt_debug_level,        rq);
 
@@ -410,6 +411,7 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   auto dc = app.add_flag("--vt_debug_phase",        appConfig.vt_debug_phase,        dcp);
   auto dd = app.add_flag("--vt_debug_context",      appConfig.vt_debug_context,      ddp);
   auto de = app.add_flag("--vt_debug_epoch",        appConfig.vt_debug_epoch,        dep);
+  auto df = app.add_flag("--vt_debug_replay",       appConfig.vt_debug_replay,       dfp);
 
   auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
   r->group(debugGroup);
@@ -446,6 +448,7 @@ void addDebugPrintArgs(CLI::App& app, AppConfig& appConfig) {
   dc->group(debugGroup);
   dd->group(debugGroup);
   de->group(debugGroup);
+  df->group(debugGroup);
 
   auto dbq = "Always flush VT runtime prints";
   auto eb  = app.add_flag("--vt_debug_print_flush", appConfig.vt_debug_print_flush, dbq);

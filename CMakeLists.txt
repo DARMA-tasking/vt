@@ -56,6 +56,7 @@ set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 set(PROJECT_LIB_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+set(PROJECT_TOOLS_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/tools)
 
 # Import the linking macros for VT-related targets
 include(cmake/link_vt.cmake)
@@ -112,6 +113,25 @@ if (VT_BUILD_TESTS
   # The default of BUILD_TESTING is ON.
   # Testing is only enabled if the actual project being built is VT.
   include(CTest)
+endif()
+
+#
+# Tools
+#
+option(vt_build_tools "Build VT tools" ON)
+
+if (vt_build_tools)
+  message(
+    STATUS
+    "VT: building tools"
+  )
+
+  add_custom_target(tools)
+  add_subdirectory(tools)
+else()
+  message(
+    STATUS "VT: NOT building tools because vt_build_tools is not set."
+  )
 endif()
 
 #

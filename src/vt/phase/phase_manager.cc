@@ -301,7 +301,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
       phase,
       "phase={}, duration={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.3f}, "
       "grain_max_time={}, migration count={}, lb_name={}\n",
-      cur_phase_,
+      last_phase_info->phase,
       total_time,
       TimeType(last_phase_info->max_load),
       TimeType(last_phase_info->avg_load),
@@ -313,7 +313,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
     // vt_print(
     //   phase,
     //   "POST phase={}, total time={}, max_load={}, avg_load={}, imbalance={:.3f}, migration count={}\n",
-    //   cur_phase_,
+    //   last_phase_info->phase,
     //   total_time,
     //   TimeType(last_phase_info->max_load_post_lb),
     //   TimeType(last_phase_info->avg_load_post_lb),
@@ -336,7 +336,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
       auto percent_improvement = compute_percent_improvement(
         last_phase_info->max_load, last_phase_info->avg_load
       );
-      if (percent_improvement > 3.0 and cur_phase_ > 0) {
+      if (percent_improvement > 3.0 and last_phase_info->phase > 0) {
         if (grain_percent_improvement < 0.5) {
           // grain size is blocking improvement
           vt_print(
@@ -395,7 +395,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
           }
         }
       }
-    } else if (cur_phase_ == 0) {
+    } else if (last_phase_info->phase == 0) {
        // ran the lb on a phase that may have included initialization costs
        vt_print(
          phase,
