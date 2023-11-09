@@ -121,15 +121,15 @@
     do {                                                                \
       if (!(cond)) {                                                    \
         ::vt::debug::assert::assertOut(                                 \
-          fail,#cond,str,DEBUG_LOCATION,1,std::make_tuple()             \
+          fail,#cond,str,DEBUG_LOCATION,1                               \
         );                                                              \
       }                                                                 \
     } while (false)
   #define vtAssertExprImpl(fail,cond)                                   \
     do {                                                                \
       if (!(cond)) {                                                    \
-        ::vt::debug::assert::assertOutExpr(                             \
-          fail,#cond,DEBUG_LOCATION,1                                   \
+        ::vt::debug::assert::assertOut(                                 \
+          fail,#cond,"",DEBUG_LOCATION,1                                \
         );                                                              \
       }                                                                 \
     } while (false)
