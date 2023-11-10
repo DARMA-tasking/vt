@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_comm.h"
+#include "vt/utils/container/circular_phases_buffer.h"
 
 #include <unordered_map>
 #include <memory>
@@ -126,19 +127,19 @@ private:
 
 public:
   /// Node timings for each local object
-  std::map<PhaseType, LoadMapType> node_data_;
+  vt::util::container::CircularPhasesBuffer<LoadMapType> node_data_;
   /// Node communication graph for each local object
-  std::map<PhaseType, CommMapType> node_comm_;
+  vt::util::container::CircularPhasesBuffer<CommMapType> node_comm_;
   /// Node communication graph for each subphase
-  std::map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
+  vt::util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// User-defined data from each phase for JSON output
-  std::map<PhaseType, std::unordered_map<
+  vt::util::container::CircularPhasesBuffer<std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
 
   std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
   /// User-defined data from each phase for LB
-  std::map<PhaseType, DataMapType> user_defined_lb_info_;
+  vt::util::container::CircularPhasesBuffer<DataMapType> user_defined_lb_info_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy
