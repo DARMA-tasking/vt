@@ -276,7 +276,13 @@ public:
    *
    * \param[in] hist_len the minimal amount of LB data to retain
    */
-  void setMinLBDataHistory(uint32_t hist_len) { min_hist_lb_data_ = hist_len; }
+  void setMinLBDataHistory(uint32_t hist_len) { 
+    min_hist_lb_data_ = hist_len;
+  
+    if (lb_data_) {
+      lb_data_->node_data_.resize(min_hist_lb_data_);
+    }
+  }
 
   /**
    * \brief Trim the cached LB Data to it's minimum retention size

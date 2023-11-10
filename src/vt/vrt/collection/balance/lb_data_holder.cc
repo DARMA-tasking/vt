@@ -435,11 +435,12 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
 
   auto phases = j["phases"];
   if (phases.is_array()) {
+    node_data_.resize(phases.size());
+
     for (auto const& phase : phases) {
       auto id = phase["id"];
       auto tasks = phase["tasks"];
 
-      this->node_data_[id];
       this->node_comm_[id];
 
       if (tasks.is_array()) {
@@ -488,9 +489,9 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                   vtAssertExpr(sid.is_number());
                   vtAssertExpr(stime.is_number());
 
-                  this->node_data_[id][elm].subphase_loads.resize(
+                  this->node_data_.emplace(id)[elm].subphase_loads.resize(
                     static_cast<std::size_t>(sid) + 1);
-                  this->node_data_[id][elm].subphase_loads[sid] = stime;
+                  this->node_data_.emplace(id)[elm].subphase_loads[sid] = stime;
                 }
               }
             }
