@@ -91,12 +91,12 @@ bool NodeLBData::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
   return true;
 }
 
-std::map<PhaseType, LoadMapType> const*
+vt::util::container::CircularPhasesBuffer<LoadMapType> const*
 NodeLBData::getNodeLoad() const {
   return &lb_data_->node_data_;
 }
 
-std::map<PhaseType, DataMapType> const*
+vt::util::container::CircularPhasesBuffer<DataMapType> const*
 NodeLBData::getUserData() const {
   return &lb_data_->user_defined_lb_info_;
 }
@@ -110,7 +110,7 @@ std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() cons
   return &lb_data_->node_comm_;
 }
 
-std::map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
+vt::util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
   return &lb_data_->node_subphase_comm_;
 }
 
@@ -351,9 +351,9 @@ void NodeLBData::addNodeLBData(
   auto const phase = in->getPhase();
   auto const& total_load = in->getLoad(phase, focused_subphase);
 
-  auto &phase_data = lb_data_->node_data_[phase];
-  auto elm_iter = phase_data.find(id);
-  vtAssert(elm_iter == phase_data.end(), "Must not exist");
+  auto phase_data = lb_data_->node_data_.find(phase);
+  auto elm_iter = phase_data->find(id);
+  vtAssert(elm_iter == phase_data->end(), "Must not exist");
 
   auto& subphase_times = in->getSubphaseTimes(phase);
 
@@ -364,16 +364,20 @@ void NodeLBData::addNodeLBData(
   );
 
   auto const& comm = in->getComm(phase);
-  auto &comm_data = lb_data_->node_comm_[phase];
-  for (auto&& c : comm) {
-    comm_data[c.first] += c.second;
+  auto comm_data = lb_data_->node_comm_.find(phase);
+  if (comm_data) {
+    for (auto&& c : comm) {
+      (*comm_data)[c.first] += c.second;
+    }
   }
 
   auto const& subphase_comm = in->getSubphaseComm(phase);
-  auto &subphase_comm_data = lb_data_->node_subphase_comm_[phase];
-  for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
-    for (auto& sp : subphase_comm[i]) {
-      subphase_comm_data[i][sp.first] += sp.second;
+  auto subphase_comm_data = lb_data_->node_subphase_comm_.find(phase);
+  if (subphase_comm_data) {
+    for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
+      for (auto& sp : subphase_comm[i]) {
+        (*subphase_comm_data)[i][sp.first] += sp.second;
+      }
     }
   }
 

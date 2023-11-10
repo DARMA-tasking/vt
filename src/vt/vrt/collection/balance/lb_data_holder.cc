@@ -205,8 +205,8 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   j["id"] = phase;
 
   std::size_t i = 0;
-  if (node_data_.find(phase) != node_data_.end()) {
-    for (auto&& elm : node_data_.at(phase)) {
+  if (node_data_.contains(phase)) {
+    for (auto&& elm : *node_data_.find(phase)) {
       ElementIDStruct id = elm.first;
       LoadType time = elm.second.whole_phase_load;
       j["tasks"][i]["resource"] = "cpu";

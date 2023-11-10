@@ -57,6 +57,7 @@
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/types/storage/storable.h"
 #include "vt/utils/file_spec/spec.h"
+#include "vt/utils/container/circular_phases_buffer.h"
 
 #include <string>
 #include <unordered_map>
@@ -172,21 +173,21 @@ public:
    *
    * \return an observer pointer to the load map
    */
-  std::map<PhaseType, LoadMapType> const* getNodeLoad() const;
+  vt::util::container::CircularPhasesBuffer<LoadMapType> const* getNodeLoad() const;
 
   /**
    * \internal \brief Get stored object comm graph
    *
    * \return an observer pointer to the comm graph
    */
-  std::map<PhaseType, CommMapType> const* getNodeComm() const;
+  vt::util::container::CircularPhasesBuffer<CommMapType> const* getNodeComm() const;
 
   /**
    * \internal \brief Get the user-defined LB data
    *
    * \return an observer pointer to the user-defined LB data
    */
-  std::map<PhaseType, DataMapType> const* getUserData() const;
+  vt::util::container::CircularPhasesBuffer<DataMapType> const* getUserData() const;
 
   /**
    * \internal \brief Get the user-defined attributes
@@ -209,7 +210,7 @@ public:
    *
    * \return an observer pointer to the comm subphase graph
    */
-  std::map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
+  vt::util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
 
   /**
    * \internal \brief Get stored node attributes

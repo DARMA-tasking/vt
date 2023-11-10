@@ -48,6 +48,7 @@
 #include "vt/timing/timing_type.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_comm.h"
+#include "vt/utils/container/circular_phases_buffer.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
