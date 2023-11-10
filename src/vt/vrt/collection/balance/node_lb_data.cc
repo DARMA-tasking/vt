@@ -122,9 +122,11 @@ void NodeLBData::clearLBData() {
   next_elm_ = 1;
 }
 
+// Later this method can be deleted
 void NodeLBData::startIterCleanup(PhaseType phase) {
-  if (phase >= min_hist_lb_data_) {
-    lb_data_->node_data_.erase(phase - min_hist_lb_data_);
+  lb_data_->node_data_.resize(min_hist_lb_data_);
+
+  if (phase >= min_hist_lb_data_) {    
     lb_data_->node_comm_.erase(phase - min_hist_lb_data_);
     lb_data_->node_subphase_comm_.erase(phase - min_hist_lb_data_);
     lb_data_->user_defined_lb_info_.erase(phase - min_hist_lb_data_);
@@ -137,6 +139,7 @@ void NodeLBData::startIterCleanup(PhaseType phase) {
   node_objgroup_lookup_.clear();
 }
 
+// later this method can be deleted
 void NodeLBData::trimLBDataHistory() {
   auto trim_data = [this](auto& map){
     if(map.size() > min_hist_lb_data_) {
@@ -145,7 +148,7 @@ void NodeLBData::trimLBDataHistory() {
     }
   };
 
-  trim_data(lb_data_->node_data_);
+  lb_data_->node_data_.resize(min_hist_lb_data_);
   trim_data(lb_data_->node_comm_);
   trim_data(lb_data_->node_subphase_comm_);
   trim_data(lb_data_->user_defined_lb_info_);
@@ -344,7 +347,7 @@ void NodeLBData::addNodeLBData(
 
   auto& subphase_times = in->getSubphaseTimes(phase);
 
-  phase_data.emplace(
+  phase_data->emplace(
     std::piecewise_construct,
     std::forward_as_tuple(id),
     std::forward_as_tuple(LoadSummary{total_load, subphase_times})

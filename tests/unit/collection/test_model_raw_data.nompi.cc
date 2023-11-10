@@ -88,8 +88,10 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
     LoadMapType{{id1, {LoadType{100}, {LoadType{100}}}}, {id2, {LoadType{10}, {LoadType{10}}}}},
   };
 
+  proc_loads.resize(load_holder.size());
+
   for (size_t iter = 0; iter < load_holder.size(); ++iter) {
-    proc_loads[iter] = load_holder[iter];
+    proc_loads.store(iter, load_holder[iter]);
     test_model->updateLoads(iter);
 
     EXPECT_EQ(test_model->getNumObjects(), 2);

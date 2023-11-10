@@ -60,19 +60,19 @@ void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_lo
 }
 
 ObjectIterator RawData::begin() const {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return {std::make_unique<LoadMapObjectIterator>(iter->second.cbegin(),
-                                                    iter->second.cend())};
+  auto ptr = proc_load_->find(last_completed_phase_);
+  if (ptr) {
+    return {std::make_unique<LoadMapObjectIterator>(ptr->cbegin(),
+                                                    ptr->cend())};
   } else {
     return {nullptr};
   }
 }
 
 int RawData::getNumObjects() const {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return iter->second.size();
+  auto ptr = proc_load_->find(last_completed_phase_);
+  if (ptr) {
+    return ptr->size();
   } else {
     return 0;
   }
@@ -83,14 +83,16 @@ unsigned int RawData::getNumCompletedPhases() const {
 }
 
 int RawData::getNumSubphases() const {
-  const auto& last_phase = proc_load_->at(last_completed_phase_);
+  const auto last_phase = proc_load_->find(last_completed_phase_);
 
   // @todo: this workaround is O(#objects) and should be removed when we finish
   // the new subphase API
   int subphases = 0;
-  for (auto &obj : last_phase) {
-    if (obj.second.subphase_loads.size() > static_cast<size_t>(subphases)) {
-      subphases = obj.second.subphase_loads.size();
+  if (last_phase) {
+    for (auto &obj : *last_phase) {
+      if (obj.second.subphase_loads.size() > static_cast<size_t>(subphases)) {
+        subphases = obj.second.subphase_loads.size();
+      }
     }
   }
   return subphases;
@@ -105,9 +107,9 @@ LoadType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) const {
            "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
   auto phase = getNumCompletedPhases() + offset.phases;
-  auto& phase_data = proc_load_->at(phase);
-  if (phase_data.find(object) != phase_data.end()) {
-    return phase_data.at(object).get(offset);
+  auto phase_data = proc_load_->find(phase);
+  if (phase_data && phase_data->find(object) != phase_data->end()) {
+    return phase_data->at(object).get(offset);
   } else {
     return 0.0;
   }

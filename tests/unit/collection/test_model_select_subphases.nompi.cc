@@ -87,13 +87,13 @@ struct StubModel : LoadModel {
   void updateLoads(PhaseType) override {}
 
   LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
-    return proc_load_->at(0).at(id).subphase_loads.at(phase.subphase);
+    return proc_load_->find(0)->at(id).subphase_loads.at(phase.subphase);
   }
 
   ObjectIterator begin() const override {
     return {
       std::make_unique<LoadMapObjectIterator>(
-        proc_load_->at(0).begin(), proc_load_->at(0).end()
+        proc_load_->find(0)->begin(), proc_load_->find(0)->end()
       )
     };
   }
@@ -132,13 +132,13 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
 
   std::unordered_map<ElementIDStruct, std::vector<LoadType>> expected_values = {
     {id1,
-     {proc_load[0][id1].subphase_loads[subphases[0]],
-      proc_load[0][id1].subphase_loads[subphases[1]],
-      proc_load[0][id1].subphase_loads[subphases[2]]}},
+     {(*proc_load.find(0))[id1].subphase_loads[subphases[0]],
+      (*proc_load.find(0))[id1].subphase_loads[subphases[1]],
+      (*proc_load.find(0))[id1].subphase_loads[subphases[2]]}},
     {id2,
-     {proc_load[0][id2].subphase_loads[subphases[0]],
-      proc_load[0][id2].subphase_loads[subphases[1]],
-      proc_load[0][id2].subphase_loads[subphases[2]]}}};
+     {(*proc_load.find(0))[id2].subphase_loads[subphases[0]],
+      (*proc_load.find(0))[id2].subphase_loads[subphases[1]],
+      (*proc_load.find(0))[id2].subphase_loads[subphases[2]]}}};
 
   for (unsigned int iter = 0; iter < num_subphases; ++iter) {
     int objects_seen = 0;
