@@ -193,7 +193,7 @@ struct TraceScopedEventHash final {
   }
 
 private:
-  TimeType begin_        = TimeType{0.0};
+  TimeType begin_        = TimeType{};
   std::string str_       = "";
   UserEventIDType event_ = no_user_event_id;
 };
@@ -215,7 +215,7 @@ struct TraceScopedEvent final {
    * \c registerEventCollective )
    */
   explicit TraceScopedEvent(UserEventIDType event)
-    : begin_(event != no_user_event_id ? TraceLite::getCurrentTime() : TimeType{0.}),
+    : begin_(event != no_user_event_id ? TraceLite::getCurrentTime() : TimeType{}),
       event_(event)
   { }
 
@@ -249,7 +249,7 @@ struct TraceScopedEvent final {
   }
 
 private:
-  TimeType begin_        = TimeType{0.0};
+  TimeType begin_        = TimeType{};
   UserEventIDType event_ = no_user_event_id;
 };
 
@@ -272,7 +272,7 @@ struct TraceScopedNote final {
    */
   TraceScopedNote(
     std::string const& in_note, TraceEventIDType const in_event = no_trace_event
-  ) : begin_(in_event != no_trace_event ? TraceLite::getCurrentTime() : TimeType{0.}),
+  ) : begin_(in_event != no_trace_event ? TraceLite::getCurrentTime() : TimeType{}),
       event_(in_event),
       note_(in_note)
   { }
@@ -313,7 +313,7 @@ struct TraceScopedNote final {
   }
 
 private:
-  TimeType begin_         = TimeType{0.0};
+  TimeType begin_         = TimeType{};
   TraceEventIDType event_ = no_trace_event;
   std::string note_       = "";
 };

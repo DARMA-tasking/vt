@@ -351,10 +351,10 @@ public:
   // Excluding sys/user-specific data, expected ~24 bytes
 
   // Time of the event - all events need a time.
-  TimeType time = TimeType{0.0};
+  TimeType time = TimeType{};
   // If a duration can be expressed in a single event.
   // (Currently only for user-events.. could elim explicit end events.)
-  TimeType end_time = TimeType{0.0};
+  TimeType end_time = TimeType{};
 
   TraceConstantsType type = TraceConstantsType::InvalidTraceType;
   TraceEntryIDType ep = no_trace_entry_id;

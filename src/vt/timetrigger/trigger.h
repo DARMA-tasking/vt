@@ -85,8 +85,7 @@ struct Trigger {
    * \return the next time this should be triggered
    */
   TimeType nextTriggerTime() const {
-    return TimeType{
-      (last_trigger_time_.milliseconds() + period_.count()) / 1000.0};
+    return TimeType{last_trigger_time_.milliseconds() + period_};
   }
 
   /**
@@ -142,7 +141,7 @@ struct Trigger {
 private:
   std::chrono::milliseconds period_;   /**< The trigger's period */
   ActionType trigger_ = nullptr;       /**< The action to trigger  */
-  TimeType last_trigger_time_ = TimeType{0.};    /**< The last time it was triggered */
+  TimeType last_trigger_time_ = TimeType{};    /**< The last time it was triggered */
   int id_ = -1;                        /**< The trigger's id */
 };
 

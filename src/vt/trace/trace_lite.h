@@ -249,7 +249,7 @@ struct TraceLite  {
    * \return time in microsecond as integer
    */
   static inline TimeIntegerType timeToMicros(TimeType const time) {
-    return time.microseconds();
+    return time.microseconds().count();
   }
 
   /**
@@ -385,7 +385,7 @@ protected:
   TraceEventIDType cur_event_   = 1;
   UserEventIDType flush_event_  = no_user_event_id;
   bool enabled_                 = true;
-  TimeType start_time_          = TimeType{0.0};
+  TimeType start_time_          = TimeType{};
   std::string prog_name_        = "";
   std::string trace_name_       = "";
   std::string full_trace_name_  = "";

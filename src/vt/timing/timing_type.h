@@ -44,7 +44,7 @@
 #if !defined INCLUDED_VT_TIMING_TIMING_TYPE_H
 #define INCLUDED_VT_TIMING_TIMING_TYPE_H
 
-#include <limits>
+#include <chrono>
 #include <algorithm>
 #include <cmath>
 
@@ -52,10 +52,34 @@ namespace vt {
 
 struct TimeTypeWrapper {
   using TimeTypeInternal = double;
-  explicit constexpr TimeTypeWrapper(const TimeTypeInternal time = 0.0)
-    : time_(time) { }
 
-  explicit operator double() const { return time_; }
+  using Seconds = std::chrono::duration<TimeTypeInternal>;
+  using Milliseconds = std::chrono::duration<TimeTypeInternal, std::milli>;
+  using Microseconds = std::chrono::duration<TimeTypeInternal, std::micro>;
+
+  template <typename T>
+  explicit TimeTypeWrapper(
+    T time,
+    typename std::enable_if<
+      std::is_integral<T>::value || std::is_floating_point<T>::value>::type* =
+      nullptr)
+    : time_(Seconds(static_cast<TimeTypeInternal>(time))) { }
+
+  template <typename Rep = TimeTypeInternal>
+  explicit TimeTypeWrapper(
+    const std::chrono::duration<Rep, std::micro>& time =
+      std::chrono::duration<Rep, std::micro>(0))
+    : time_(std::chrono::duration_cast<Seconds>(time)) { }
+
+  template <typename Rep = TimeTypeInternal>
+  explicit TimeTypeWrapper(const std::chrono::duration<Rep, std::milli>& time)
+    : time_(std::chrono::duration_cast<Seconds>(time)) { }
+
+  template <typename Rep = TimeTypeInternal>
+  explicit TimeTypeWrapper(const Seconds& time)
+    : time_(std::chrono::duration_cast<Seconds>(time)) { }
+
+  explicit operator TimeTypeInternal() const { return time_.count(); }
 
   TimeTypeWrapper& operator+=(const TimeTypeWrapper& other) {
     time_ += other.time_;
@@ -67,14 +91,9 @@ struct TimeTypeWrapper {
     return *this;
   }
 
-  TimeTypeWrapper& operator*=(const double scalar) {
-    time_ *= scalar;
-    return *this;
-  }
-
-  TimeTypeWrapper& operator/=(const double scalar) {
-    time_ /= scalar;
-    return *this;
+  friend TimeTypeWrapper
+  operator/(const TimeTypeWrapper& lhs, const TimeTypeWrapper& rhs) {
+    return TimeTypeWrapper{lhs.time_ / rhs.time_};
   }
 
   friend TimeTypeWrapper
@@ -85,36 +104,6 @@ struct TimeTypeWrapper {
   friend TimeTypeWrapper
   operator-(const TimeTypeWrapper& lhs, const TimeTypeWrapper& rhs) {
     return TimeTypeWrapper(lhs.time_ - rhs.time_);
-  }
-
-  friend TimeTypeWrapper
-  operator*(const TimeTypeWrapper& lhs, const TimeTypeWrapper& rhs) {
-    return TimeTypeWrapper(lhs.time_ * rhs.time_);
-  }
-
-  friend TimeTypeWrapper
-  operator*(const TimeTypeWrapper& time, const double scalar) {
-    return TimeTypeWrapper(time.time_ * scalar);
-  }
-
-  friend TimeTypeWrapper
-  operator*(const double scalar, const TimeTypeWrapper& time) {
-    return TimeTypeWrapper(time.time_ * scalar);
-  }
-
-  friend TimeTypeWrapper
-  operator/(const double scalar, const TimeTypeWrapper& time) {
-    return TimeTypeWrapper(scalar / time.time_);
-  }
-
-  friend TimeTypeWrapper
-  operator/(const TimeTypeWrapper& time, const double scalar) {
-    return TimeTypeWrapper(time.time_ / scalar);
-  }
-
-  friend TimeTypeWrapper
-  operator/(const TimeTypeWrapper& lhs, const TimeTypeWrapper& rhs) {
-    return TimeTypeWrapper(lhs.time_ / rhs.time_);
   }
 
   friend bool
@@ -147,13 +136,22 @@ struct TimeTypeWrapper {
     return lhs.time_ != rhs.time_;
   }
 
-  friend TimeTypeWrapper sqrt(const TimeTypeWrapper& time) {
-    return TimeTypeWrapper{std::sqrt(time.time_)};
+  template <typename Rep = TimeTypeInternal>
+  std::chrono::duration<Rep> seconds() const {
+    return std::chrono::duration_cast<std::chrono::duration<Rep>>(time_);
   }
 
-  TimeTypeInternal seconds() const { return time_; }
-  TimeTypeInternal milliseconds() const { return time_ * 1000; }
-  TimeTypeInternal microseconds() const { return time_ * 1000000; }
+  template <typename Rep = TimeTypeInternal>
+  std::chrono::duration<Rep, std::milli> milliseconds() const {
+    return std::chrono::duration_cast<std::chrono::duration<Rep, std::milli>>(
+      time_);
+  }
+
+  template <typename Rep = TimeTypeInternal>
+  std::chrono::duration<Rep, std::micro> microseconds() const {
+    return std::chrono::duration_cast<std::chrono::duration<Rep, std::micro>>(
+      time_);
+  }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -161,37 +159,11 @@ struct TimeTypeWrapper {
   }
 
 private:
-  TimeTypeInternal time_;
+  std::chrono::duration<TimeTypeInternal> time_;
 };
 
 using TimeType = TimeTypeWrapper;
 
 } /* end namespace vt */
 
-namespace std {
-template <>
-class numeric_limits<vt::TimeTypeWrapper> {
-  using Type = typename vt::TimeTypeWrapper::TimeTypeInternal;
-
-public:
-  static constexpr vt::TimeTypeWrapper max() noexcept {
-    return vt::TimeTypeWrapper(std::numeric_limits<Type>::max());
-  }
-
-  static constexpr vt::TimeTypeWrapper lowest() noexcept {
-    return vt::TimeTypeWrapper(std::numeric_limits<Type>::lowest());
-  }
-
-  inline vt::TimeTypeWrapper
-  min(const vt::TimeTypeWrapper& lhs, const vt::TimeTypeWrapper& rhs) {
-    return vt::TimeTypeWrapper(std::min(lhs.seconds(), rhs.seconds()));
-  }
-
-  inline vt::TimeTypeWrapper
-  max(const vt::TimeTypeWrapper& lhs, const vt::TimeTypeWrapper& rhs) {
-    return vt::TimeTypeWrapper(std::max(lhs.seconds(), rhs.seconds()));
-  }
-};
-} // namespace std
-
-#endif /*INCLUDED_VT_TIMING_TIMING_TYPE_H*/
+#endif // INCLUDED_VT_TIMING_TIMING_TYPE_H
