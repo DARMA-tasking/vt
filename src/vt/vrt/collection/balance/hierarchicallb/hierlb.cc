@@ -154,7 +154,7 @@ void HierarchicalLB::inputParams(balance::ConfigEntry* config) {
   }
 }
 
-void HierarchicalLB::setupTree(TimeType const threshold) {
+void HierarchicalLB::setupTree(LoadType const threshold) {
   vtAssert(
     tree_setup == false,
     "Tree must not already be set up when is this called"
@@ -163,7 +163,7 @@ void HierarchicalLB::setupTree(TimeType const threshold) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  this_threshold = threshold.seconds();
+  this_threshold = threshold;
 
   vt_debug_print(
     terse, hierlb,
@@ -794,7 +794,7 @@ void HierarchicalLB::clearObj(ObjSampleType& objs) {
 void HierarchicalLB::runLB(LoadType total_load) {
   this_load = loadMilli(total_load);
   buildHistogram();
-  setupTree(TimeType{min_threshold});
+  setupTree(min_threshold);
 
   proxy.allreduce<&HierarchicalLB::setupDone>();
 }
