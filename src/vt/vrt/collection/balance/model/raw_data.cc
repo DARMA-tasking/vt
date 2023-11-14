@@ -83,16 +83,14 @@ unsigned int RawData::getNumCompletedPhases() const {
 }
 
 int RawData::getNumSubphases() const {
-  const auto last_phase = proc_load_->find(last_completed_phase_);
+  const auto& last_phase = proc_load_->at(last_completed_phase_);
 
   // @todo: this workaround is O(#objects) and should be removed when we finish
   // the new subphase API
   int subphases = 0;
-  if (last_phase) {
-    for (auto &obj : *last_phase) {
-      if (obj.second.subphase_loads.size() > static_cast<size_t>(subphases)) {
-        subphases = obj.second.subphase_loads.size();
-      }
+  for (auto &obj : last_phase) {
+    if (obj.second.subphase_loads.size() > static_cast<size_t>(subphases)) {
+      subphases = obj.second.subphase_loads.size();
     }
   }
   return subphases;
@@ -107,9 +105,9 @@ LoadType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) const {
            "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
   auto phase = getNumCompletedPhases() + offset.phases;
-  auto phase_data = proc_load_->find(phase);
-  if (phase_data && phase_data->find(object) != phase_data->end()) {
-    return phase_data->at(object).get(offset);
+  auto& phase_data = proc_load_->at(phase);
+  if (phase_data.find(object) != phase_data.end()) {
+    return phase_data.at(object).get(offset);
   } else {
     return 0.0;
   }

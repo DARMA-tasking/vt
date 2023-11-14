@@ -87,7 +87,7 @@ struct StubModel : LoadModel {
   void updateLoads(PhaseType) override { }
 
   LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
-    const auto work = proc_load_->find(0)->at(id).whole_phase_load;
+    const auto work = proc_load_->at(0).at(id).whole_phase_load;
 
     if (phase.subphase == PhaseOffset::WHOLE_PHASE) {
       return work;
@@ -98,7 +98,7 @@ struct StubModel : LoadModel {
 
   ObjectIterator begin() const override {
     return {std::make_unique<LoadMapObjectIterator>(
-      proc_load_->find(0)->begin(), proc_load_->find(0)->end()
+      proc_load_->at(0).begin(), proc_load_->at(0).end()
     )};
   }
 

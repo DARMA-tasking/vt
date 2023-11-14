@@ -133,21 +133,22 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 
   std::size_t i = 0;
   if (node_data_.contains(phase)) {
-    for (auto&& elm : *node_data_.find(phase)) {
+    for (auto&& elm : node_data_.at(phase)) {
       ElementIDStruct id = elm.first;
       LoadType time = elm.second.whole_phase_load;
       j["tasks"][i]["resource"] = "cpu";
       j["tasks"][i]["node"] = id.getCurrNode();
       j["tasks"][i]["time"] = time;
-      auto user_def_this_phase = user_defined_json_.find(phase);
-      if (user_def_this_phase) {
-        auto &user_def = user_def_this_phase->at(id);
-        if (!user_def->empty()) {
-          j["tasks"][i]["user_defined"] = *user_def;
+      if (user_defined_json_.find(phase)) {
+        auto &user_def_this_phase = user_defined_json_.at(phase);
+        if (user_def_this_phase.find(id) != user_def_this_phase.end()) {
+          auto &user_def = user_def_this_phase.at(id);
+          if (!user_def->empty()) {
+            j["tasks"][i]["user_defined"] = *user_def;
+          }
         }
       }
       outputEntity(j["tasks"][i]["entity"], id);
-
       auto const& subphase_times = elm.second.subphase_loads;
       std::size_t const subphases = subphase_times.size();
       if (subphases != 0) {
@@ -156,14 +157,13 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
           j["tasks"][i]["subphases"][s]["time"] = subphase_times[s];
         }
       }
-
       i++;
     }
   }
 
   i = 0;
-  if (node_comm_.find(phase)) {
-    for (auto&& elm : *node_comm_.find(phase)) {
+  if (node_comm_.contains(phase)) {
+    for (auto&& elm : node_comm_.at(phase)) {
       auto volume = elm.second;
       auto const& key = elm.first;
       j["communications"][i]["bytes"] = volume.bytes;
@@ -238,12 +238,11 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
   auto phases = j["phases"];
   if (phases.is_array()) {
     node_data_.resize(phases.size());
+    node_comm_.resize(phases.size());
 
     for (auto const& phase : phases) {
       auto id = phase["id"];
       auto tasks = phase["tasks"];
-
-      this->node_comm_[id];
 
       if (tasks.is_array()) {
         for (auto const& task : tasks) {
@@ -258,7 +257,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
             vtAssertExpr(object.is_number());
 
             auto elm = ElementIDStruct{object, node};
-            this->node_data_.emplace(id)[elm].whole_phase_load = time;
+            this->node_data_[id][elm].whole_phase_load = time;
 
             if (
               task["entity"].find("collection_id") != task["entity"].end() and
@@ -283,9 +282,9 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                   vtAssertExpr(sid.is_number());
                   vtAssertExpr(stime.is_number());
 
-                  this->node_data_.emplace(id)[elm].subphase_loads.resize(
+                  this->node_data_[id][elm].subphase_loads.resize(
                     static_cast<std::size_t>(sid) + 1);
-                  this->node_data_.emplace(id)[elm].subphase_loads[sid] = stime;
+                  this->node_data_[id][elm].subphase_loads[sid] = stime;
                 }
               }
             }

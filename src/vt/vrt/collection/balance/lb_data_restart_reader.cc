@@ -81,9 +81,8 @@ void LBDataRestartReader::startup() {
 void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
   num_phases_ = lbdh.node_data_.size();
   for (PhaseType phase = 0; phase < num_phases_; phase++) {
-    auto ptr = lbdh.node_data_.find(phase);
-    if (ptr) {
-      for (auto const& obj : *ptr) {
+    if (lbdh.node_data_.contains(phase)) {
+      for (auto const& obj : lbdh.node_data_.at(phase)) {
         if (obj.first.isMigratable()) {
           history_[phase].insert(obj.first);
         }
