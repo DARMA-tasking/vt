@@ -106,6 +106,9 @@ struct CircularPhasesBuffer {
     }
 
     bool contains(const PhaseType phase) const {
+        if (vector_.empty()) {
+            return false;
+        }
         return vector_[phase % vector_.size()].first == phase;
     }
 
