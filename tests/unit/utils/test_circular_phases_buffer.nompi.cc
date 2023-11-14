@@ -72,7 +72,7 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_empty) {
 
     EXPECT_FALSE(buffer.contains(3));
     EXPECT_FALSE(buffer.contains(10));
-    
+
     buffer.resize(2);
 
     EXPECT_FALSE(buffer.contains(3));

@@ -98,14 +98,6 @@ struct CircularPhasesBuffer {
     }
 
     // map style operator - get reference to exsiting or newly inserted element
-    // const StoredType* operator[](const PhaseType phase) const {
-    //     if (!contains(phase)) {
-    //         store(phase, StoredType{});
-    //     }
-    //     return vector_[phase % vector_.size()].second;
-    // }
-
-    // map style operator - get reference to exsiting or newly inserted element
     StoredType& operator[](const PhaseType phase) {
         if (!contains(phase)) {
             store(phase, StoredType{});
@@ -113,7 +105,7 @@ struct CircularPhasesBuffer {
         return vector_[phase % vector_.size()].second;
     }
 
-    bool contains(const PhaseType phase) const {        
+    bool contains(const PhaseType phase) const {
         return vector_[phase % vector_.size()].first == phase;
     }
 
@@ -162,7 +154,7 @@ struct CircularPhasesBuffer {
                 }
             }
         }
-        
+
         vector_.swap(new_vec);
     }
 
