@@ -143,21 +143,21 @@ void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
   node_objgroup_lookup_.clear();
 }
 
-void NodeLBData::resizeLBDataHistory(uint32_t new_hist_len) {   
-    min_hist_lb_data_ = new_hist_len;
-  
-    if (lb_data_) {
-      lb_data_->node_data_.resize(new_hist_len);
-      lb_data_->node_comm_.resize(new_hist_len);
-      lb_data_->node_subphase_comm_.resize(new_hist_len);
-      lb_data_->user_defined_lb_info_.resize(new_hist_len);
-      lb_data_->user_defined_json_.resize(new_hist_len);
-    }
+void NodeLBData::resizeLBDataHistory(uint32_t new_hist_len) {
+  min_hist_lb_data_ = new_hist_len;
 
-    NodeLBData::node_migrate_.clear();
-    node_collection_lookup_.clear();
-    node_objgroup_lookup_.clear();
+  if (lb_data_) {
+    lb_data_->node_data_.resize(new_hist_len);
+    lb_data_->node_comm_.resize(new_hist_len);
+    lb_data_->node_subphase_comm_.resize(new_hist_len);
+    lb_data_->user_defined_lb_info_.resize(new_hist_len);
+    lb_data_->user_defined_json_.resize(new_hist_len);
   }
+
+  NodeLBData::node_migrate_.clear();
+  node_collection_lookup_.clear();
+  node_objgroup_lookup_.clear();
+}
 
 ElementIDType NodeLBData::getNextElm() {
   return next_elm_++;
