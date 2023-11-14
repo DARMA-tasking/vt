@@ -119,8 +119,7 @@ ElmUserDataType const* NodeLBData::getNodeAttributes() const {
 }
 
 CommMapType* NodeLBData::getNodeComm(PhaseType phase) {
-  auto ptr = lb_data_->node_comm_.find(phase);
-  return (ptr != nullptr) ? ptr : nullptr;
+  return lb_data_->node_comm_.find(phase);
 }
 
 void NodeLBData::clearLBData() {
@@ -144,18 +143,21 @@ void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
   node_objgroup_lookup_.clear();
 }
 
-// later this method can be deleted
-void NodeLBData::trimLBDataHistory() {
-  lb_data_->node_data_.resize(min_hist_lb_data_);
-  lb_data_->node_comm_.resize(min_hist_lb_data_);
-  lb_data_->node_subphase_comm_.resize(min_hist_lb_data_);
-  lb_data_->user_defined_lb_info_.resize(min_hist_lb_data_);
-  lb_data_->user_defined_json_.resize(min_hist_lb_data_);
+void NodeLBData::resizeLBDataHistory(uint32_t new_hist_len) {   
+    min_hist_lb_data_ = new_hist_len;
+  
+    if (lb_data_) {
+      lb_data_->node_data_.resize(new_hist_len);
+      lb_data_->node_comm_.resize(new_hist_len);
+      lb_data_->node_subphase_comm_.resize(new_hist_len);
+      lb_data_->user_defined_lb_info_.resize(new_hist_len);
+      lb_data_->user_defined_json_.resize(new_hist_len);
+    }
 
-  NodeLBData::node_migrate_.clear();
-  node_collection_lookup_.clear();
-  node_objgroup_lookup_.clear();
-}
+    NodeLBData::node_migrate_.clear();
+    node_collection_lookup_.clear();
+    node_objgroup_lookup_.clear();
+  }
 
 ElementIDType NodeLBData::getNextElm() {
   return next_elm_++;
@@ -345,33 +347,29 @@ void NodeLBData::addNodeLBData(
   auto const phase = in->getPhase();
   auto const& total_load = in->getLoad(phase, focused_subphase);
 
-  auto phase_data = lb_data_->node_data_.find(phase);
-  auto elm_iter = phase_data->find(id);
-  vtAssert(elm_iter == phase_data->end(), "Must not exist");
+  auto& phase_data = lb_data_->node_data_[phase];
+  auto elm_iter = phase_data.find(id);
+  vtAssert(elm_iter == phase_data.end(), "Must not exist");
 
   auto& subphase_times = in->getSubphaseTimes(phase);
 
-  phase_data->emplace(
+  phase_data.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(id),
     std::forward_as_tuple(LoadSummary{total_load, subphase_times})
   );
 
   auto const& comm = in->getComm(phase);
-  auto comm_data = lb_data_->node_comm_.find(phase);
-  if (comm_data) {
-    for (auto&& c : comm) {
-      (*comm_data)[c.first] += c.second;
-    }
+  auto& comm_data = lb_data_->node_comm_[phase];
+  for (auto&& c : comm) {
+    comm_data[c.first] += c.second;
   }
 
   auto const& subphase_comm = in->getSubphaseComm(phase);
-  auto subphase_comm_data = lb_data_->node_subphase_comm_.find(phase);
-  if (subphase_comm_data) {
-    for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
-      for (auto& sp : subphase_comm[i]) {
-        (*subphase_comm_data)[i][sp.first] += sp.second;
-      }
+  auto& subphase_comm_data = lb_data_->node_subphase_comm_[phase];
+  for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
+    for (auto& sp : subphase_comm[i]) {
+      subphase_comm_data[i][sp.first] += sp.second;
     }
   }
 

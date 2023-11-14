@@ -272,22 +272,11 @@ public:
   LBDataHolder* getLBData() { return lb_data_.get(); }
 
   /**
-   * \brief Set the minimal amount of historical LB data which should be retained
+   * \brief Set the amount of historical LB data which should be retained
    *
-   * \param[in] hist_len the minimal amount of LB data to retain
+   * \param[in] new_hist_len the amount of LB data to retain
    */
-  void setMinLBDataHistory(uint32_t hist_len) { 
-    min_hist_lb_data_ = hist_len;
-  
-    if (lb_data_) {
-      lb_data_->node_data_.resize(min_hist_lb_data_);
-    }
-  }
-
-  /**
-   * \brief Trim the cached LB Data to it's minimum retention size
-   */
-  void trimLBDataHistory();
+  void resizeLBDataHistory(uint32_t new_hist_len);
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {

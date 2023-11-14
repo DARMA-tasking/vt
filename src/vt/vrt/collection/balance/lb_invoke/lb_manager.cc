@@ -176,8 +176,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   auto nlb_data = theNodeLBData();
   min_hist_lb_data_ = std::max(model->getNumPastPhasesNeeded(), theConfig()->vt_lb_data_retention);
-  nlb_data->setMinLBDataHistory(min_hist_lb_data_);
-  nlb_data->trimLBDataHistory();
+  nlb_data->resizeLBDataHistory(min_hist_lb_data_);
 
   model_ = model;
   model_->setLoads(nlb_data->getNodeLoad(),
@@ -258,15 +257,15 @@ LBManager::runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb) {
   elm::CommMapType const* comm = &empty_comm;
 
   auto const& node_comm = theNodeLBData()->getNodeComm();
-  if (auto ptr = node_comm->find(phase)) {
-    comm = ptr;
+  if (node_comm->contains(phase)) {
+    comm = &node_comm->at(phase);
   }
 
   balance::DataMapType empty_data_map;
   balance::DataMapType const* data_map = &empty_data_map;
   auto const& node_data_map = theNodeLBData()->getUserData();
-  if (auto ptr = node_data_map->find(phase)) {
-    data_map = ptr;
+  if (node_data_map->contains(phase)) {
+    data_map = &node_data_map->at(phase);
   }
 
   vt_debug_print(terse, lb, "LBManager: running strategy\n");
@@ -736,8 +735,8 @@ void LBManager::computeStatistics(
 
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm_data = &empty_comm;
-  if (auto ptr = theNodeLBData()->getNodeComm()->find(phase)) {
-    comm_data = ptr;
+  if (theNodeLBData()->getNodeComm()->contains(phase)) {
+    comm_data = &theNodeLBData()->getNodeComm()->at(phase);
   }
 
   std::vector<LoadData> lstats;
