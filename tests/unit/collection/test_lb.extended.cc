@@ -549,8 +549,9 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
 
   {
     PhaseType phase = write_phase;
-    lbdh.node_data_[phase];
-    lbdh.node_comm_[phase];
+    lbdh.node_data_.resize(num_elms);
+    lbdh.node_comm_.resize(num_elms);
+    lbdh.node_subphase_comm_.resize(num_elms);
 
     for (int i=0; i<num_elms; ++i) {
       vt::Index1D idx(i);
@@ -574,15 +575,15 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
           CommKey::NodeToCollectionTag{}, this_node, elm_id, false
         );
         CommVolume ntocvol{ntoc, ntocm};
-        lbdh.node_comm_[phase][ntockey] = ntocvol;
-        lbdh.node_subphase_comm_[phase][i % 2][ntockey] = ntocvol;
+        (*lbdh.node_comm_[phase])[ntockey] = ntocvol;
+        (*lbdh.node_subphase_comm_[phase])[i % 2][ntockey] = ntocvol;
 
         CommKey ctonkey(
           CommKey::CollectionToNodeTag{}, elm_id, this_node, false
         );
         CommVolume ctonvol{cton, ctonm};
-        lbdh.node_comm_[phase][ctonkey] = ctonvol;
-        lbdh.node_subphase_comm_[phase][(i + 1) % 2][ctonkey] = ctonvol;
+        (*lbdh.node_comm_[phase])[ctonkey] = ctonvol;
+        (*lbdh.node_subphase_comm_[phase])[(i + 1) % 2][ctonkey] = ctonvol;
 
         std::vector<uint64_t> arr;
         arr.push_back(idx.x());
@@ -602,52 +603,52 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
     );
   } else {
     // compare the whole-phase load data in detail
-    // for (auto &phase_data : lbdh.node_data_) {
-    //   auto phase = phase_data.first;
-    //   EXPECT_FALSE(lbdh_read.node_data_.find(phase) == lbdh_read.node_data_.end());
-    //   if (lbdh_read.node_data_.find(phase) == lbdh_read.node_data_.end()) {
-    //     fmt::print(
-    //       "Phase {} in whole-phase loads were not read in",
-    //       phase
-    //     );
-    //   } else {
-    //     auto &read_load_map = lbdh_read.node_data_[phase];
-    //     auto &orig_load_map = phase_data.second;
-    //     for (auto &entry : read_load_map) {
-    //       auto read_elm_id = entry.first;
-    //       EXPECT_FALSE(orig_load_map.find(read_elm_id) == orig_load_map.end());
-    //       if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
-    //         fmt::print(
-    //           "Unexpected element ID read in whole-phase loads on phase={}: "
-    //           "id={}, home={}, curr={}",
-    //           phase,
-    //           read_elm_id.id, read_elm_id.getHomeNode(), read_elm_id.curr_node
-    //         );
-    //       } else {
-    //         auto orig_elm_id = orig_load_map.find(read_elm_id)->first;
-    //         EXPECT_EQ(read_elm_id.getHomeNode(), orig_elm_id.getHomeNode());
-    //         EXPECT_EQ(read_elm_id.curr_node, orig_elm_id.curr_node);
-    //         if (
-    //           read_elm_id.getHomeNode() != orig_elm_id.getHomeNode() ||
-    //           read_elm_id.curr_node != orig_elm_id.curr_node
-    //         ) {
-    //           fmt::print(
-    //             "Corrupted element ID read in whole-phase loads on phase={}: "
-    //             "id={}, home={}, curr={} (expected id={}, home={}, curr={})",
-    //             phase,
-    //             read_elm_id.id, read_elm_id.getHomeNode(), read_elm_id.curr_node,
-    //             orig_elm_id.id, orig_elm_id.getHomeNode(), orig_elm_id.curr_node
-    //           );
-    //         }
-    //         auto read_load = read_load_map[read_elm_id];
-    //         auto orig_load = entry.second;
-    //         // @todo: make this a more robust floating point comparison
-    //         EXPECT_EQ(orig_load.whole_phase_load, read_load.whole_phase_load);
-    //         EXPECT_EQ(orig_load.subphase_loads, read_load.subphase_loads);
-    //       }
-    //     }
-    //   }
-    // }
+    for (auto &phase_data : lbdh.node_data_) {
+      auto phase = phase_data.first;
+      EXPECT_TRUE(lbdh_read.node_data_.contains(phase));
+      if (!lbdh_read.node_data_.contains(phase)) {
+        fmt::print(
+          "Phase {} in whole-phase loads were not read in",
+          phase
+        );
+      } else {
+        auto &read_load_map = lbdh_read.node_data_[phase];
+        auto &orig_load_map = phase_data.second;
+        for (auto &entry : read_load_map) {
+          auto read_elm_id = entry.first;
+          EXPECT_FALSE(orig_load_map.find(read_elm_id) == orig_load_map.end());
+          if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
+            fmt::print(
+              "Unexpected element ID read in whole-phase loads on phase={}: "
+              "id={}, home={}, curr={}",
+              phase,
+              read_elm_id.id, read_elm_id.getHomeNode(), read_elm_id.curr_node
+            );
+          } else {
+            auto orig_elm_id = orig_load_map.find(read_elm_id)->first;
+            EXPECT_EQ(read_elm_id.getHomeNode(), orig_elm_id.getHomeNode());
+            EXPECT_EQ(read_elm_id.curr_node, orig_elm_id.curr_node);
+            if (
+              read_elm_id.getHomeNode() != orig_elm_id.getHomeNode() ||
+              read_elm_id.curr_node != orig_elm_id.curr_node
+            ) {
+              fmt::print(
+                "Corrupted element ID read in whole-phase loads on phase={}: "
+                "id={}, home={}, curr={} (expected id={}, home={}, curr={})",
+                phase,
+                read_elm_id.id, read_elm_id.getHomeNode(), read_elm_id.curr_node,
+                orig_elm_id.id, orig_elm_id.getHomeNode(), orig_elm_id.curr_node
+              );
+            }
+            auto read_load = read_load_map[read_elm_id];
+            auto orig_load = entry.second;
+            // @todo: make this a more robust floating point comparison
+            EXPECT_EQ(orig_load.whole_phase_load, read_load.whole_phase_load);
+            EXPECT_EQ(orig_load.subphase_loads, read_load.subphase_loads);
+          }
+        }
+      }
+    }
   }
 
   // element id to index mapping
@@ -747,7 +748,7 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
       auto elm_id = elm_ptr->getElmID();
       elm_ptr->valInsert("hello", std::string("world"), should_dump, false);
       elm_ptr->valInsert("elephant", 123456789, should_dump, false);
-      lbdh.user_defined_json_[phase][elm_id] = std::make_shared<nlohmann::json>(
+      (*lbdh.user_defined_json_[phase])[elm_id] = std::make_shared<nlohmann::json>(
         elm_ptr->toJson()
       );
       lbdh.node_data_[phase][elm_id].whole_phase_load = 1.0;

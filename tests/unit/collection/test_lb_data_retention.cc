@@ -62,22 +62,22 @@ void validatePersistedPhases(std::vector<PhaseType> expected_phases) {
   #if vt_check_enabled(lblite)
     // Check maps size
     EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->node_comm_.size());
-    // EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->node_data_.size());
+    EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->node_data_.size());
     EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->node_subphase_comm_.size());
     EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->user_defined_json_.size());
     EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->user_defined_lb_info_.size());
     // Check if each phase is present
     for(auto&& phase : expected_phases) {
-      EXPECT_EQ(1, theNodeLBData()->getLBData()->node_comm_.count(phase));
-      // EXPECT_EQ(1, theNodeLBData()->getLBData()->node_data_.count(phase));
-      EXPECT_EQ(1, theNodeLBData()->getLBData()->node_subphase_comm_.count(phase));
-      EXPECT_EQ(1, theNodeLBData()->getLBData()->user_defined_json_.count(phase));
-      EXPECT_EQ(1, theNodeLBData()->getLBData()->user_defined_lb_info_.count(phase));
+      EXPECT_TRUE(nullptr != theNodeLBData()->getLBData()->node_comm_.find(phase));
+      EXPECT_TRUE(nullptr != theNodeLBData()->getLBData()->node_data_.find(phase));
+      EXPECT_TRUE(nullptr != theNodeLBData()->getLBData()->node_subphase_comm_.find(phase));
+      EXPECT_TRUE(nullptr != theNodeLBData()->getLBData()->user_defined_json_.find(phase));
+      EXPECT_TRUE(nullptr != theNodeLBData()->getLBData()->user_defined_lb_info_.find(phase));
     }
   #else
     (void)expected_phases;
     EXPECT_EQ(0, theNodeLBData()->getLBData()->node_comm_.size());
-    // EXPECT_EQ(0, theNodeLBData()->getLBData()->node_data_.size());
+    EXPECT_EQ(0, theNodeLBData()->getLBData()->node_data_.size());
     EXPECT_EQ(0, theNodeLBData()->getLBData()->node_subphase_comm_.size());
     EXPECT_EQ(0, theNodeLBData()->getLBData()->user_defined_json_.size());
     EXPECT_EQ(0, theNodeLBData()->getLBData()->user_defined_lb_info_.size());
