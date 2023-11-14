@@ -100,6 +100,7 @@ private:
 
 TEST_F(TestLinearModel, test_model_linear_model_1) {
   constexpr int32_t num_test_interations = 6;
+  constexpr std::size_t buffer_size = 7;
   NodeType this_node = 0;
 
   auto test_model =
