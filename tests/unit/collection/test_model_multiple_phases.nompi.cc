@@ -82,11 +82,11 @@ struct StubModel : LoadModel {
   LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     // Here we return predicted loads for future phases
     // For the sake of the test we use values from the past phases
-    return proc_load_->find(phase.phases)->at(id).whole_phase_load;
+    return proc_load_->at(phase.phases).at(id).whole_phase_load;
   }
 
   virtual ObjectIterator begin() const override {
-    return {std::make_unique<LoadMapObjectIterator>(proc_load_->find(3)->begin(), proc_load_->find(3)->end())};
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(3).begin(), proc_load_->at(3).end())};
   }
 
   // Not used by this test

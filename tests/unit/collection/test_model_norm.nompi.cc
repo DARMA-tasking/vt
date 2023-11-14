@@ -88,11 +88,11 @@ struct StubModel : LoadModel {
   void updateLoads(PhaseType) override {}
 
   LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
-    return proc_load_->find(0)->at(id).subphase_loads.at(phase.subphase);
+    return proc_load_->at(0).at(id).subphase_loads.at(phase.subphase);
   }
 
   ObjectIterator begin() const override {
-    return {std::make_unique<LoadMapObjectIterator>(proc_load_->find(0)->begin(), proc_load_->find(0)->end())};
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(0).begin(), proc_load_->at(0).end())};
   }
 
   int getNumSubphases() const override { return num_subphases; }
@@ -129,7 +129,7 @@ TEST_F(TestModelNorm, test_model_norm_1) {
       // offset.subphase != PhaseOffset::WHOLE_PHASE
       // expect work load value for given subphase
       auto work_val = test_model->getModeledLoad(obj, PhaseOffset{0, iter});
-      EXPECT_EQ(work_val, (*proc_load.find(0))[obj].subphase_loads[iter]);
+      EXPECT_EQ(work_val, proc_load[0][obj].subphase_loads[iter]);
     }
 
     EXPECT_EQ(objects_seen, 2);

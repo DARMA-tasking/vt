@@ -83,11 +83,11 @@ struct StubModel : LoadModel {
 
   LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     // Most recent phase will be at the end of vector
-    return proc_load_->find(num_phases + phase.phases)->at(id).whole_phase_load;
+    return proc_load_->at(num_phases + phase.phases).at(id).whole_phase_load;
   }
 
   virtual ObjectIterator begin() const override {
-    return {std::make_unique<LoadMapObjectIterator>(proc_load_->find(0)->begin(), proc_load_->find(0)->end())};
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(0).begin(), proc_load_->at(0).end())};
   }
 
   virtual unsigned int getNumCompletedPhases() const override { return num_phases; }
@@ -146,7 +146,7 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
   };
 
   for (auto iter = 0; iter < num_test_interations; ++iter) {
-    proc_loads.store(num_phases, load_holder[iter]);
+    proc_loads[num_phases] = load_holder[iter];
     test_model->updateLoads(num_phases);
     ++num_phases;
 

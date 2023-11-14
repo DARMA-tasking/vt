@@ -85,11 +85,11 @@ struct StubModel : LoadModel {
 
   LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     EXPECT_LE(phase.phases, -1);
-    return proc_load_->find(getIndexFromPhase(phase.phases))->at(id).whole_phase_load;
+    return proc_load_->at(getIndexFromPhase(phase.phases)).at(id).whole_phase_load;
   }
 
   virtual ObjectIterator begin() const override {
-    return {std::make_unique<LoadMapObjectIterator>(proc_load_->find(3)->begin(), proc_load_->find(3)->end())};
+    return {std::make_unique<LoadMapObjectIterator>(proc_load_->at(3).begin(), proc_load_->at(3).end())};
   }
 
   // Not used in this test
@@ -127,7 +127,7 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
     auto &&obj = *it;
     for (auto phase : {0, -1, -2, -3, -4}) {
       auto work_val = test_model->getModeledLoad(obj, PhaseOffset{phase, 1});
-      EXPECT_EQ(work_val, proc_loads.find(getIndexFromPhase(phase))->at(obj).whole_phase_load);
+      EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj).whole_phase_load);
     }
   }
 }
