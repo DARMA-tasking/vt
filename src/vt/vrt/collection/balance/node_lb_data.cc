@@ -119,8 +119,8 @@ ElmUserDataType const* NodeLBData::getNodeAttributes() const {
 }
 
 CommMapType* NodeLBData::getNodeComm(PhaseType phase) {
-  auto iter = lb_data_->node_comm_.find(phase);
-  return (iter != lb_data_->node_comm_.end()) ? &iter->second : nullptr;
+  auto ptr = lb_data_->node_comm_.find(phase);
+  return (ptr != nullptr) ? ptr : nullptr;
 }
 
 void NodeLBData::clearLBData() {
@@ -146,18 +146,11 @@ void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
 
 // later this method can be deleted
 void NodeLBData::trimLBDataHistory() {
-  auto trim_data = [this](auto& map){
-    if(map.size() > min_hist_lb_data_) {
-      auto target = map.upper_bound(map.rbegin()->first - min_hist_lb_data_);
-      map.erase(map.begin(), target);
-    }
-  };
-
   lb_data_->node_data_.resize(min_hist_lb_data_);
-  trim_data(lb_data_->node_comm_);
-  trim_data(lb_data_->node_subphase_comm_);
-  trim_data(lb_data_->user_defined_lb_info_);
-  trim_data(lb_data_->user_defined_json_);
+  lb_data_->node_comm_.resize(min_hist_lb_data_);
+  lb_data_->node_subphase_comm_.resize(min_hist_lb_data_);
+  lb_data_->user_defined_lb_info_.resize(min_hist_lb_data_);
+  lb_data_->user_defined_json_.resize(min_hist_lb_data_);
 
   NodeLBData::node_migrate_.clear();
   node_collection_lookup_.clear();
@@ -383,12 +376,12 @@ void NodeLBData::addNodeLBData(
   }
 
   if (storable) {
-    lb_data_->user_defined_json_[phase][id] = std::make_shared<nlohmann::json>(
+    (*lb_data_->user_defined_json_[phase])[id] = std::make_shared<nlohmann::json>(
       storable->toJson()
     );
     storable->foreachLB(
       [&](std::string const& key, auto val) {
-        lb_data_->user_defined_lb_info_[phase][id][key] = val->toVariant();
+        (*lb_data_->user_defined_lb_info_[phase])[id][key] = val->toVariant();
       }
     );
     storable->collectAttributes(

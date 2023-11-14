@@ -563,8 +563,9 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
 
   {
     PhaseType phase = write_phase;
-    lbdh.node_data_[phase];
-    lbdh.node_comm_[phase];
+    lbdh.node_data_.resize(num_elms);
+    lbdh.node_comm_.resize(num_elms);
+    lbdh.node_subphase_comm_.resize(num_elms);
 
     for (int i=0; i<num_elms; ++i) {
       vt::Index1D idx(i);
@@ -588,15 +589,15 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
           CommKey::NodeToCollectionTag{}, this_node, elm_id, false
         );
         CommVolume ntocvol{ntoc, ntocm};
-        lbdh.node_comm_[phase][ntockey] = ntocvol;
-        lbdh.node_subphase_comm_[phase][i % 2][ntockey] = ntocvol;
+        (*lbdh.node_comm_[phase])[ntockey] = ntocvol;
+        (*lbdh.node_subphase_comm_[phase])[i % 2][ntockey] = ntocvol;
 
         CommKey ctonkey(
           CommKey::CollectionToNodeTag{}, elm_id, this_node, false
         );
         CommVolume ctonvol{cton, ctonm};
-        lbdh.node_comm_[phase][ctonkey] = ctonvol;
-        lbdh.node_subphase_comm_[phase][(i + 1) % 2][ctonkey] = ctonvol;
+        (*lbdh.node_comm_[phase])[ctonkey] = ctonvol;
+        (*lbdh.node_subphase_comm_[phase])[(i + 1) % 2][ctonkey] = ctonvol;
 
         std::vector<uint64_t> arr;
         arr.push_back(idx.x());

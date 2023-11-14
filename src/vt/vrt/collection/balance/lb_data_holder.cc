@@ -212,13 +212,11 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       j["tasks"][i]["resource"] = "cpu";
       j["tasks"][i]["node"] = id.getCurrNode();
       j["tasks"][i]["time"] = time;
-      if (user_defined_json_.find(phase) != user_defined_json_.end()) {
-        auto &user_def_this_phase = user_defined_json_.at(phase);
-        if (user_def_this_phase.find(id) != user_def_this_phase.end()) {
-          auto &user_def = user_def_this_phase.at(id);
-          if (!user_def->empty()) {
-            j["tasks"][i]["user_defined"] = *user_def;
-          }
+      auto user_def_this_phase = user_defined_json_.find(phase);
+      if (user_def_this_phase) {
+        auto &user_def = user_def_this_phase->at(id);
+        if (!user_def->empty()) {
+          j["tasks"][i]["user_defined"] = *user_def;
         }
       }
       outputEntity(j["tasks"][i]["entity"], id);
@@ -550,7 +548,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 from_elm, to_elm, type == "Broadcast"
               );
               CommVolume vol{bytes, messages};
-              this->node_comm_[id][key] = vol;
+              (*this->node_comm_[id])[key] = vol;
             } else if (
               type == "NodeToCollection" || type == "NodeToCollectionBcast"
             ) {
@@ -568,7 +566,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 type == "NodeToCollectionBcast"
               );
               CommVolume vol{bytes, messages};
-              this->node_comm_[id][key] = vol;
+              (*this->node_comm_[id])[key] = vol;
             } else if (
               type == "CollectionToNode" || type == "CollectionToNodeBcast"
             ) {
