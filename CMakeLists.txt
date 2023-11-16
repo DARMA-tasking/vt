@@ -45,8 +45,6 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 
-option(CODE_COVERAGE "Enable coverage reporting" OFF)
-
 set(MPI_EXTRA_FLAGS "" CACHE STRING "Flags to pass to mpirun/mpiexec")
 string(REPLACE " " ";" MPI_EXTRA_FLAGS_LIST "${MPI_EXTRA_FLAGS}")
 message(STATUS "Running tests and examples with additional MPI flags = ${MPI_EXTRA_FLAGS_LIST}")
@@ -65,48 +63,19 @@ include(cmake/link_vt.cmake)
 include(cmake/load_packages.cmake)
 
 include(cmake/check_compiler.cmake)
-
-option(vt_gold_linker_enabled "Build VT using the `gold' linker" ON)
-
-option(vt_unity_build_enabled "Build VT with Unity/Jumbo mode enabled" OFF)
-
-if (vt_unity_build_enabled)
-    message(STATUS "Building VT in Unity/Jumbo build mode")
-endif()
-
-# Option included here, handled in define_build_modes.cmake so libfort can be
-# included correspondingly
-option(vt_diagnostics_enabled "Build VT with performance metrics/stats" ON)
-
-if (vt_diagnostics_enabled)
-  # Default libfort ON if diagnostics are enabled
-  option(vt_libfort_enabled "Build VT with fort library enabled" ON)
-else()
-  option(vt_libfort_enabled "Build VT with fort library enabled" OFF)
-endif()
-
-option(vt_mimalloc_enabled "Build VT with mimalloc" OFF)
-option(vt_mimalloc_static "Build VT with mimalloc using static linking" ON)
-option(vt_asan_enabled "Build VT with address sanitizer" OFF)
-option(vt_ubsan_enabled "Build VT with undefined behavior sanitizer" OFF)
-option(vt_werror_enabled "Build VT with -Werror enabled" OFF)
-
 include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 include(cmake/load_bundled_libraries.cmake)
-
-option(vt_trace_only "Build VT with trace-only mode enabled" OFF)
-if (vt_trace_only)
-  message(STATUS "Building additional target for VT in trace-only mode")
-endif()
+include(cmake/configure_options.cmake)
 
 # Primary VT build
 add_subdirectory(src)
 
+if(vt_no_color_enabled)
+  target_compile_definitions(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC VT_NO_COLOR_ENABLED)
+endif()
 #
 # Test prep - ensures examples can be registered as tests.
 #
-option(VT_BUILD_TESTS "Build VT tests" ON)
-
 if (VT_BUILD_TESTS
    AND "${CMAKE_PROJECT_NAME}" STREQUAL "${PROJECT_NAME}")
   # CTest implies enable_testing() and defines the BUILD_TESTING option.
@@ -118,8 +87,6 @@ endif()
 #
 # Tools
 #
-option(vt_build_tools "Build VT tools" ON)
-
 if (vt_build_tools)
   message(
     STATUS
@@ -137,8 +104,6 @@ endif()
 #
 # Examples
 #
-option(VT_BUILD_EXAMPLES "Build VT examples" ON)
-
 if (VT_BUILD_EXAMPLES)
   message(
     STATUS

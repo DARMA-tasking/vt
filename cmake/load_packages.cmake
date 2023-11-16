@@ -10,7 +10,7 @@ include(cmake/load_mpi_package.cmake)
 include(cmake/load_zlib_package.cmake)
 
 # Discover and load threading configuration
-include(cmake/load_threading_package.cmake)
+# include(cmake/load_threading_package.cmake)
 
 # Perl is used to build the PMPI wrappers
 find_package(Perl)

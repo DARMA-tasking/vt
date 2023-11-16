@@ -19,201 +19,139 @@ else()
 endif()
 list(REMOVE_DUPLICATES VT_CONFIG_TYPES)
 
+# - option_name:        The name of the option.
+# - cmake_description:  A descriptive message that is printed when the option is enabled or disabled.
+# - option_description: A description of the option. This is used by the option() command for documentation purposes.
+# - default_value:      The default value of the option (ON or OFF).
+# - cmake_var:          The name of the CMake variable that will be set based on the option's value.
+function (define_option option_name cmake_description option_description default_value cmake_var)
+  option(${option_name} "${option_description}" ${default_value})
+  if(${option_name})
+    set(${cmake_var} "1" CACHE INTERNAL "")
+    message(STATUS "${cmake_description} enabled")
+  else()
+    set(${cmake_var} "0" CACHE INTERNAL "")
+    message(STATUS "${cmake_description} disabled")
+  endif()
+endfunction()
+
+##########################################################################################################
+
 list(APPEND CMAKE_MESSAGE_INDENT "Building VT with ")
 
-option(vt_lb_enabled "Build VT with load balancing enabled" ON)
-option(vt_trace_enabled "Build VT with trace enabled" OFF)
-option(vt_priorities_enabled "Build VT with message priorities enabled" OFF)
-option(
-        vt_test_trace_runtime_enabled
-        "Build VT with runtime tracing enabled (for testing)" OFF
+define_option(vt_lb_enabled "load balancing" "Build VT with load balancing enabled" ON vt_feature_cmake_lblite)
+define_option(vt_trace_enabled "trace" "Build VT with trace enabled" OFF vt_feature_cmake_trace_enabled)
+define_option(vt_trace_only "additional target for VT in trace-only mode"
+    "Build VT with additional target for VT in trace-only mode" OFF vt_feature_cmake_trace_only
 )
-option(vt_pool_enabled "Build VT with memory pool" ON)
-
-set(
-        vt_priority_bits_per_level 3 CACHE
-        STRING "Number of bits to use per VT priority level"
+set(vt_priority_bits_per_level 3 CACHE
+    STRING "Number of bits to use per VT priority level"
 )
-
-if (${vt_test_trace_runtime_enabled})
-    message(STATUS "runtime tracing enabled (for testing)")
-    set(vt_feature_cmake_test_trace_on "1")
-else()
-    set(vt_feature_cmake_test_trace_on "0")
-endif()
-
-if (${vt_lb_enabled})
-    message(STATUS "load balancing enabled")
-    set(vt_feature_cmake_lblite "1")
-else()
-    message(STATUS "load balancing disabled")
-    set(vt_feature_cmake_lblite "0")
-endif()
-
-if (${vt_trace_enabled})
-    message(STATUS "tracing enabled")
-    set(vt_feature_cmake_trace_enabled "1")
-else()
-    message(STATUS "tracing disabled")
-    set(vt_feature_cmake_trace_enabled "0")
-endif()
-
-# This will be set to 1 during generation of cmake config for vt-trace target
-set(vt_feature_cmake_trace_only "0")
-
-if (${vt_priorities_enabled})
-    message(STATUS "priorities enabled")
-    message(
-            STATUS
-            "priority bits per level: ${vt_priority_bits_per_level}"
-    )
-    set(vt_feature_cmake_priorities "1")
-else()
-    message(STATUS "priorities disabled")
-    set(vt_feature_cmake_priorities "0")
-endif()
-
 set(vt_feature_cmake_priority_bits_level "${vt_priority_bits_per_level}")
-
-if (${vt_bit_check_overflow})
-    message(STATUS "bit check overflow")
-    set(vt_feature_cmake_bit_check_overflow "1")
-else()
-    set(vt_feature_cmake_bit_check_overflow "0")
-endif()
-
-if (${vt_fcontext_enabled})
-    message(STATUS "fcontext (ULT) enabled")
-    set(vt_feature_cmake_fcontext "1")
-else()
-    message(STATUS "fcontext (ULT) disabled")
-    set(vt_feature_cmake_fcontext "0")
-endif()
-
-if (${vt_mimalloc_enabled})
-    message(STATUS "mimalloc enabled")
-    set(vt_feature_cmake_mimalloc "1")
-else()
-    message(STATUS "mimalloc disabled")
-    set(vt_feature_cmake_mimalloc "0")
-endif()
-
-option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" ON)
-
-if ((vt_mpi_guards OR vt_trace_only) AND PERL_FOUND)
-    message(STATUS "user MPI prevention guards enabled")
-    set(vt_feature_cmake_mpi_access_guards "1")
-elseif ((vt_mpi_guards OR vt_trace_only) AND NOT PERL_FOUND)
-    # No perl? Can't generate wrapper source file.
-    message(STATUS "user MPI prevention guards disabled (requested, but perl not found)")
-    set(vt_feature_cmake_mpi_access_guards "0")
-else()
-    message(STATUS "user MPI prevention guards disabled")
-    set(vt_feature_cmake_mpi_access_guards "0")
-endif()
-
-option(vt_zoltan_enabled "Build VT with Zoltan" OFF)
-if (vt_zoltan_enabled AND vt_zoltan_found)
-    message(STATUS "zoltan enabled")
-    set(vt_feature_cmake_zoltan "1")
-elseif (vt_zoltan_enabled AND NOT vt_zoltan_found)
-    message(STATUS "zoltan disabled (requested, but Zoltan not found)")
-    set(vt_feature_cmake_zoltan "0")
-else()
-    message(STATUS "zoltan disabled")
-    set(vt_feature_cmake_zoltan "0")
-endif()
-
-if (LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "release")
-    option(vt_debug_verbose "Build VT with verbose debug printing enabled" OFF)
-else()
-    option(vt_debug_verbose "Build VT with verbose debug printing enabled" ON)
-endif()
-
-if(vt_debug_verbose)
-    message(STATUS "verbose debug printing enabled")
-    set(vt_feature_cmake_debug_verbose "1")
-else()
-    message(STATUS "verbose debug printing disabled")
-    set(vt_feature_cmake_debug_verbose "0")
-endif()
-
-option(vt_rdma_tests_enabled "Build VT with RDMA tests enabled" ON)
-if(vt_rdma_tests_enabled)
-    message(STATUS "RDMA tests enabled")
-    set(vt_feature_cmake_rdma_tests "1")
-else()
-    message(STATUS "RDMA tests disabled")
-    set(vt_feature_cmake_rdma_tests "0")
-endif()
-
-option(
-        vt_diagnostics_runtime_enabled
-        "Build VT with performance metrics/stats enabled at runtime by default" OFF
+define_option(vt_priorities_enabled
+    "priority bits per level: ${vt_priority_bits_per_level}"
+    "Build VT with message priorities enabled" OFF vt_feature_cmake_priorities
 )
-if (vt_diagnostics_enabled)
-    message(STATUS "diagnostics (performance stats) enabled")
-    set(vt_feature_cmake_diagnostics "1")
+define_option(vt_test_trace_runtime_enabled
+    "runtime tracing enabled (for testing)"
+    "Build VT with runtime tracing enabled (for testing)" OFF vt_feature_cmake_test_trace_on
+)
+define_option(vt_pool_enabled "memory pool" "Build VT with memory pool" ON vt_feature_cmake_memory_pool)
+define_option(vt_bit_check_overflow "bit check overflow" "Build VT with bit check overflow"
+    OFF vt_feature_cmake_bit_check_overflow
+)
+define_option(vt_fcontext_enabled "fcontext (ULT)" "Build VT with fcontext (ULT) enabled"
+    OFF vt_feature_cmake_fcontext
+)
+define_option(vt_mimalloc_enabled "mimalloc" "Build VT with fcontext (ULT) enabled"
+    OFF vt_feature_cmake_mimalloc
+)
 
-    if (vt_diagnostics_runtime_enabled)
-        message(
-                STATUS
-                "diagnostics (performance stats) enabled at runtime by default"
-        )
-        set(vt_feature_cmake_diagnostics_runtime "1")
-    else()
-        message(
-                STATUS
-                "diagnostics (performance stats) disabled at runtime by default"
-        )
-        set(vt_feature_cmake_diagnostics_runtime "0")
-    endif()
+if (vt_mpi_guards AND NOT PERL_FOUND)
+    # No perl? Can't generate wrapper source file.
+    message(STATUS "vt_mpi_guards=ON perl not found! Disabling user MPI prevention guards")
+    set(vt_mpi_guards OFF)
+endif()
+if(vt_trace_only)
+    set(vt_mpi_guards ON)
+endif()
 
+define_option(vt_mpi_guards "user MPI prevention guards"
+    "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions"
+    ON vt_feature_cmake_mpi_access_guards
+)
+
+if(vt_zoltan_enabled AND NOT vt_zoltan_found)
+    message(STATUS "vt_zoltan_enabled=ON but Zoltan wasn't found!")
+    set(vt_zoltan_enabled OFF)
+endif()
+define_option(vt_zoltan_enabled "Zoltan" "Build VT with Zoltan" OFF vt_feature_cmake_zoltan)
+
+if(NOT LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "release")
+    set(default_debug_verbose ON)
 else()
-    message(STATUS "diagnostics (performance stats) disabled")
-    set(vt_feature_cmake_diagnostics "0")
+    set(default_debug_verbose OFF)
+endif()
+define_option(vt_debug_verbose "verbose debug printing"
+    "Build VT with verbose debug printing enabled" ${default_debug_verbose} vt_feature_cmake_debug_verbose
+)
+define_option(vt_rdma_tests_enabled "RDMA tests" "Build VT with RDMA tests enabled"
+    ON vt_feature_cmake_rdma_tests
+)
+
+
+#####################################################
+#################### DIAGNOSTICS ####################
+#####################################################
+define_option(vt_diagnostics_runtime_enabled "runtime performance metrics/stats"
+    "Build VT with performance metrics/stats enabled at runtime by default"
+    OFF vt_feature_cmake_diagnostics_runtime
+)
+define_option(vt_diagnostics_enabled "diagnostics (performance stats)"
+    "Build VT with performance metrics/stats" OFF vt_feature_cmake_diagnostics
+)
+define_option(vt_libfort_enabled "libfort" "Build VT with fort library enabled"
+    ${vt_diagnostics_enabled} vt_feature_cmake_libfort
+)
+
+if (NOT vt_diagnostics_enabled)
     set(vt_feature_cmake_diagnostics_runtime "0")
 endif()
 
-option(
-        vt_production_build_enabled
-        "Build VT with assertions and debug prints disabled" OFF
+#####################################################
+define_option(vt_production_build_enabled "production build"
+    "Build VT with assertions and debug prints disabled" OFF vt_feature_cmake_production_build
 )
-if (${vt_production_build_enabled})
-    message(STATUS "assertions and debug prints disabled")
-    set(vt_feature_cmake_production_build "1")
-else()
-    message(STATUS "assertions and debug prints enabled")
-    set(vt_feature_cmake_production_build "0")
-endif()
 
-if (vt_libfort_enabled)
-    set(vt_feature_cmake_libfort "1")
-else()
-    set(vt_feature_cmake_libfort "0")
-endif()
-
-set(vt_feature_cmake_no_feature "0")
-
+set (vt_feature_cmake_no_feature "0")
 set (vt_feature_cmake_mpi_rdma "0")
 set (vt_feature_cmake_print_term_msgs "0")
 set (vt_feature_cmake_no_pool_alloc_env "0")
 
-if (${vt_pool_enabled})
-    message(STATUS "memory pool enabled")
-    set (vt_feature_cmake_memory_pool "1")
-else()
-    message(STATUS "memory pool disabled")
-    set (vt_feature_cmake_memory_pool "0")
-endif()
+define_option(vt_ci_build "CI build"
+    "Build VT with CI mode on" OFF vt_feature_cmake_ci_build
+)
 
-option(vt_ci_build "Build VT with CI mode on" OFF)
-if(${vt_ci_build})
-    set(vt_feature_cmake_ci_build "1")
-else()
-    set(vt_feature_cmake_ci_build "0")
-endif()
+define_option(vt_no_color_enabled "--vt_no_color set to true by default"
+    "Build VT with option --vt_no_color set to true by default" OFF empty_feature
+)
+
+define_option(CODE_COVERAGE "code coverage" "Enable coverage reporting" OFF empty_feature)
+define_option(vt_gold_linker_enabled "`gold' linker" "Build VT using the `gold' linker" ON empty_feature)
+define_option(vt_unity_build_enabled "unity build" "Build VT with Unity/Jumbo mode enabled" OFF empty_feature)
+define_option(vt_mimalloc_enabled "mimalloc" "Build VT with mimalloc" OFF empty_feature)
+define_option(vt_mimalloc_static "mimalloc using static linking" "Build VT with mimalloc using static linking"
+    ON empty_feature
+)
+define_option(vt_asan_enabled "address sanitizer" "Build VT with address sanitizer" OFF empty_feature)
+define_option(vt_ubsan_enabled "undefined behavior sanitizer" "Build VT with undefined behavior sanitizer"
+    OFF empty_feature
+)
+define_option(vt_werror_enabled "-Werror" "Build VT with -Werror enabled" OFF empty_feature)
+define_option(VT_BUILD_TESTS "tests" "Build VT tests" ON empty_feature)
+define_option(vt_build_tools "tools" "Build VT tools" ON empty_feature)
+define_option(VT_BUILD_EXAMPLES "examples" "Build VT examples" ON empty_feature)
 
 list(POP_BACK CMAKE_MESSAGE_INDENT)
 
-message(STATUS "CI_BUILD = ${vt_feature_cmake_ci_build}")
+##########################################################################################################
