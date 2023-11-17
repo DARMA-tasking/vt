@@ -44,6 +44,9 @@ define_option(vt_trace_enabled "trace" "Build VT with trace enabled" OFF vt_feat
 define_option(vt_trace_only "additional target for VT in trace-only mode"
     "Build VT with additional target for VT in trace-only mode" OFF vt_feature_cmake_trace_only
 )
+# This will be changed back to "1" for vt-trace config file
+set(vt_feature_cmake_trace_only "0")
+
 set(vt_priority_bits_per_level 3 CACHE
     STRING "Number of bits to use per VT priority level"
 )
