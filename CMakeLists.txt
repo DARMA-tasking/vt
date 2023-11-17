@@ -62,10 +62,13 @@ include(cmake/link_vt.cmake)
 # Load packages that are required for core VT build
 include(cmake/load_packages.cmake)
 
+# Some options use TPL information (whether Perl was found etc.)
+include(cmake/configure_options.cmake)
+
 include(cmake/check_compiler.cmake)
 include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 include(cmake/load_bundled_libraries.cmake)
-include(cmake/configure_options.cmake)
+
 
 # Primary VT build
 add_subdirectory(src)

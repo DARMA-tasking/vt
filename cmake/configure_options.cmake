@@ -56,7 +56,7 @@ define_option(vt_priorities_enabled
     "Build VT with message priorities enabled" OFF vt_feature_cmake_priorities
 )
 define_option(vt_test_trace_runtime_enabled
-    "runtime tracing enabled (for testing)"
+    "runtime tracing (for testing)"
     "Build VT with runtime tracing enabled (for testing)" OFF vt_feature_cmake_test_trace_on
 )
 define_option(vt_pool_enabled "memory pool" "Build VT with memory pool" ON vt_feature_cmake_memory_pool)
@@ -84,10 +84,6 @@ define_option(vt_mpi_guards "user MPI prevention guards"
     ON vt_feature_cmake_mpi_access_guards
 )
 
-if(vt_zoltan_enabled AND NOT vt_zoltan_found)
-    message(STATUS "vt_zoltan_enabled=ON but Zoltan wasn't found!")
-    set(vt_zoltan_enabled OFF)
-endif()
 define_option(vt_zoltan_enabled "Zoltan" "Build VT with Zoltan" OFF vt_feature_cmake_zoltan)
 
 if(NOT LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "release")
