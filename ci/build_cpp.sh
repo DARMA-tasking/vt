@@ -109,7 +109,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_fcontext_enabled="${VT_FCONTEXT_ENABLED:-0}" \
       -Dvt_fcontext_build_tests_examples="${VT_FCONTEXT_BUILD_TESTS_EXAMPLES:-0}" \
       -Dvt_rdma_tests_enabled="${VT_RDMA_TESTS_ENABLED:-1}" \
-      -DCODE_COVERAGE="${CODE_COVERAGE:-0}" \
+      -Dvt_code_coverage="${VT_CODE_COVERAGE:-0}" \
       -DMI_INTERPOSE:BOOL=ON \
       -DMI_OVERRIDE:BOOL=ON \
       -Dvt_mpi_guards="${VT_MPI_GUARD_ENABLED:-0}" \

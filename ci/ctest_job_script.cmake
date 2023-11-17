@@ -83,8 +83,8 @@ endif()
 if ( NOT DEFINED ENV{VT_RDMA_TESTS_ENABLED} )
   set(ENV{VT_RDMA_TESTS_ENABLED} "1")
 endif()
-if ( NOT DEFINED ENV{CODE_COVERAGE} )
-  set(ENV{CODE_COVERAGE} "0")
+if ( NOT DEFINED ENV{VT_CODE_COVERAGE} )
+  set(ENV{VT_CODE_COVERAGE} "0")
 endif()
 if ( NOT DEFINED ENV{VT_MPI_GUARD_ENABLED} )
   set(ENV{VT_MPI_GUARD_ENABLED} "0")
@@ -137,7 +137,7 @@ set(configureOpts
     "-Dvt_fcontext_enabled=$ENV{VT_FCONTEXT_ENABLED}"
     "-Dvt_fcontext_build_tests_examples=$ENV{VT_FCONTEXT_BUILD_TESTS_EXAMPLES}"
     "-Dvt_rdma_tests_enabled=$ENV{VT_RDMA_TESTS_ENABLED}"
-    "-DCODE_COVERAGE=$ENV{CODE_COVERAGE}"
+    "-Dvt_code_coverage=$ENV{VT_CODE_COVERAGE}"
     "-DMI_INTERPOSE:BOOL=ON"
     "-DMI_OVERRIDE:BOOL=ON"
     "-Dvt_mpi_guards=$ENV{VT_MPI_GUARD_ENABLED}"

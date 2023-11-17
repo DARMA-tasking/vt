@@ -35,7 +35,7 @@
 #   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics collection at runtime by default
 #   BUILD_TYPE=release        # CMake build type
-#   CODE_COVERAGE=0           # Enable generation of code coverage reports
+#   VT_CODE_COVERAGE=0        # Enable generation of code coverage reports
 #   VT_DEBUG_VERBOSE          # Enable verbose debug prints at compile-time
 #   VT_NO_COLOR_ENABLED=0     # Set --vt_no_color flag to true by default
 #   VT_BUILD_SHARED_LIBS=0    # Build VT as shared library
@@ -153,7 +153,7 @@ x-vtopts: &vtopts
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
   VT_EXTENDED_TESTS_ENABLED: ${VT_EXTENDED_TESTS:-1}
-  CODE_COVERAGE: ${CODE_COVERAGE:-0}
+  VT_CODE_COVERAGE: ${VT_CODE_COVERAGE:-0}
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
   LSAN_OPTIONS: ${LSAN_OPTIONS-}

@@ -79,7 +79,7 @@ endif()
 #
 # Test prep - ensures examples can be registered as tests.
 #
-if (VT_BUILD_TESTS
+if (vt_build_tests
    AND "${CMAKE_PROJECT_NAME}" STREQUAL "${PROJECT_NAME}")
   # CTest implies enable_testing() and defines the BUILD_TESTING option.
   # The default of BUILD_TESTING is ON.
@@ -107,7 +107,7 @@ endif()
 #
 # Examples
 #
-if (VT_BUILD_EXAMPLES)
+if (vt_build_examples)
   message(
     STATUS
     "VT: building examples"
@@ -117,7 +117,7 @@ if (VT_BUILD_EXAMPLES)
   add_subdirectory(examples)
 else()
   message(
-    STATUS "VT: NOT building examples because VT_BUILD_EXAMPLES is not set.\
+    STATUS "VT: NOT building examples because vt_build_examples is not set.\
  Examples that are not built are NOT TESTED."
   )
 endif()
@@ -127,7 +127,7 @@ endif()
 #
 
 if (BUILD_TESTING
-   AND VT_BUILD_TESTS
+   AND vt_build_tests
    AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   message(
     STATUS
@@ -140,7 +140,7 @@ if (BUILD_TESTING
 else()
   message(
     STATUS
-    "VT: NOT building tests because VT_BUILD_TESTS or BUILD_TESTING are not set"
+    "VT: NOT building tests because vt_build_tests or BUILD_TESTING are not set"
   )
 endif()
 

@@ -48,8 +48,8 @@ then
       -Dkokkos_DISABLE:BOOL=1 \
       -Dkokkos_kernels_DISABLE:BOOL=1 \
       -Dvt_trace_only="1" \
-      -DVT_BUILD_EXAMPLES="0" \
-      -DVT_BUILD_TESTS="0" \
+      -Dvt_build_examples="0" \
+      -Dvt_build_tests="0" \
       -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-17}" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \

@@ -31,7 +31,7 @@ variables:
   HOST_COMPILER: gcc-9
   BUILD_TYPE: release
   ULIMIT_CORE: 0
-  CODE_COVERAGE: 0
+  VT_CODE_COVERAGE: 0
   VT_LB: 1
   VT_TRACE: 1
   VT_TRACE_RT: 0

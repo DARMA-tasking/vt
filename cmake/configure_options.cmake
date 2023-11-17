@@ -135,7 +135,7 @@ define_option(vt_no_color_enabled "--vt_no_color set to true by default"
     "Build VT with option --vt_no_color set to true by default" OFF empty_feature
 )
 
-define_option(CODE_COVERAGE "code coverage" "Enable coverage reporting" OFF empty_feature)
+define_option(vt_code_coverage "code coverage" "Enable coverage reporting" OFF empty_feature)
 define_option(vt_gold_linker_enabled "`gold' linker" "Build VT using the `gold' linker" ON empty_feature)
 define_option(vt_unity_build_enabled "unity build" "Build VT with Unity/Jumbo mode enabled" OFF empty_feature)
 define_option(vt_mimalloc_enabled "mimalloc" "Build VT with mimalloc" OFF empty_feature)
@@ -147,9 +147,9 @@ define_option(vt_ubsan_enabled "undefined behavior sanitizer" "Build VT with und
     OFF empty_feature
 )
 define_option(vt_werror_enabled "-Werror" "Build VT with -Werror enabled" OFF empty_feature)
-define_option(VT_BUILD_TESTS "tests" "Build VT tests" ON empty_feature)
+define_option(vt_build_tests "tests" "Build VT tests" ON empty_feature)
 define_option(vt_build_tools "tools" "Build VT tools" ON empty_feature)
-define_option(VT_BUILD_EXAMPLES "examples" "Build VT examples" ON empty_feature)
+define_option(VT_build_examples "examples" "Build VT examples" ON empty_feature)
 
 list(POP_BACK CMAKE_MESSAGE_INDENT)
 
