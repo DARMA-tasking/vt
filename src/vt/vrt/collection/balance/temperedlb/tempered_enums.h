@@ -92,8 +92,8 @@ enum struct TransferTypeEnum : uint8_t {
   /**
    * \brief Form object clusters and attempt to perform swaps.
    *
-   * Object can be clustered according to arbitrary definition, and swaps
-   * of entire clusters, according the nullset, between ranks are attempted.
+   * Object can be clustered including to arbitrary definition, and swaps
+   * of entire clusters, including the nullset, between ranks are attempted.
    * This is especially useful when shared memory constraints are present,
    * as breaking shared memory clusters results in higher overall memory
    * footprint, in constrast with whole cluster swaps.
