@@ -174,8 +174,9 @@ Description:
 Values: {Original, Recursive, SwapClusters}
 Default: Original
 Description:
-    Transfer strategy to be used in transfer stage. Options are:
-    Original: transfer one object per transfer as in original Grapevine approach.                                     Recursive: original strategy improved by recursion.
+  Transfer strategy to be used in transfer stage. Options are:
+    Original: transfer one object per transfer as in original Grapevine approach.
+    Recursive: original strategy improved by recursion.
       When single object transfer is rejected, attempt to recurse in order to
       pull more objects into the transfer and hereby minimize work added by
       said transfer.
