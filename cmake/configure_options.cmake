@@ -149,7 +149,7 @@ define_option(vt_ubsan_enabled "undefined behavior sanitizer" "Build VT with und
 define_option(vt_werror_enabled "-Werror" "Build VT with -Werror enabled" OFF empty_feature)
 define_option(vt_build_tests "tests" "Build VT tests" ON empty_feature)
 define_option(vt_build_tools "tools" "Build VT tools" ON empty_feature)
-define_option(VT_build_examples "examples" "Build VT examples" ON empty_feature)
+define_option(vt_build_examples "examples" "Build VT examples" ON empty_feature)
 
 list(POP_BACK CMAKE_MESSAGE_INDENT)
 

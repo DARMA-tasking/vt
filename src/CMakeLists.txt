@@ -259,7 +259,7 @@ target_include_directories(
   $<INSTALL_INTERFACE:${VT_EXTERNAL_DESTINATION}>
 )
 
-if(VT_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+if(${vt_code_coverage} AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   message(STATUS "VT: enabling code coverage generation")
   # Add required flags (GCC & LLVM/Clang)
   target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
