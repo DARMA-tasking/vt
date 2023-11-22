@@ -56,7 +56,7 @@ struct CircularPhasesBuffer {
     using StoredPair = std::pair<PhaseType, StoredType>;
 
     CircularPhasesBuffer(std::size_t capacity = 0)
-    : head_phase_(-1), vector_(capacity, StoredPair{invalid_, StoredType{}})
+    : head_phase_(invalid_), vector_(capacity, StoredPair{invalid_, StoredType{}})
     { }
 
     CircularPhasesBuffer(std::initializer_list<StoredPair> list) {
@@ -176,6 +176,77 @@ struct CircularPhasesBuffer {
 private:
     PhaseType head_phase_;
     std::vector<StoredPair> vector_;
+
+public:
+    template<typename StoredPair>
+    class PhaseIterator {
+        using ContainerType = std::vector<StoredPair>;
+
+        ContainerType * buffer_;
+        std::size_t pos_, head_;
+    public:
+        PhaseIterator(ContainerType *buff, std::size_t start_pos, std::size_t head_pos)
+            :buffer_(buff), pos_(start_pos), head_(head_pos) {
+        }
+
+        PhaseIterator& operator++() {
+            // If already on the head then jump to end
+            if (pos_ == head_) {
+                pos_ = invalid_;
+                return *this;
+            }
+            
+            // find next valid phase - sparse phases or not full buffer
+            do {
+                ++pos_;
+                if (pos_ == buffer_->size()) {
+                    pos_ = 0;
+                }
+            } while ((*buffer_)[pos_].first == invalid_);
+
+            return *this;
+        }
+
+        StoredPair &operator*() {
+            return (*buffer_)[pos_];
+        }
+        
+        StoredPair *operator->() {
+            return &(operator*());
+        }
+
+        bool operator==(const PhaseIterator &other) const {
+            return pos_ == other.pos_;
+        }
+
+        bool operator!=(const PhaseIterator &other) const {
+            return pos_ != other.pos_;
+        }
+    };
+
+    auto begin() {
+        return PhaseIterator(&vector_, firstPhase(), head_phase_ % vector_.size());
+    }
+
+    auto end() {
+        return PhaseIterator(&vector_, invalid_, head_phase_ % vector_.size());
+    }
+
+    // maybe better to track tail
+    PhaseType firstPhase() {
+        auto lowest_phase = head_phase_;
+        for(auto&& pair : vector_) {
+            if (pair.first < lowest_phase) {
+                lowest_phase = pair.first;
+            }
+        }
+        return lowest_phase;
+    }
+
+    PhaseType lastPhase() {
+        return head_phase_;
+    }
+
 };
 
 }}} /* end namespace vt::util::container */
