@@ -396,7 +396,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
   inform_type_ = inform_type_converter_.getFromConfig(config, inform_type_);
 
   balance::LBArgsEnumConverter<TransferTypeEnum> transfer_type_converter_(
-    "cmf", "TransferTypeEnum", {
+    "transfer", "TransferTypeEnum", {
       {TransferTypeEnum::Original,        "Original"},
       {TransferTypeEnum::Recursive,       "Recursive"},
       {TransferTypeEnum::SwapClusters,    "SwapClusters"}
