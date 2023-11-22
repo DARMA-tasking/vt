@@ -163,9 +163,9 @@ void EntityLocationCoord<EntityID>::registerEntity(
   if (home != this_node) {
     vt_debug_print(
       normal, location,
-      "EntityLocationCoord: registerEntity: updating id={}, home={}: "
-      "not migrated\n",
-      id, home
+      "EntityLocationCoord: registerEntity: updating id={}, home={}, "
+      "migrated={}\n",
+      id, home, migrated
     );
 
     auto const& ask_node = uninitialized_destination;
