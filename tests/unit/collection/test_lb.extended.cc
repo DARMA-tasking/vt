@@ -538,7 +538,7 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
     );
   });
 
-  vt::vrt::collection::balance::LBDataHolder lbdh;
+  vt::vrt::collection::balance::LBDataHolder lbdh(num_elms);
   PhaseType write_phase = 0;
 
   using CommKey = vt::elm::CommKey;
@@ -549,10 +549,6 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
 
   {
     PhaseType phase = write_phase;
-    lbdh.node_data_.resize(num_elms);
-    lbdh.node_comm_.resize(num_elms);
-    lbdh.node_subphase_comm_.resize(num_elms);
-
     for (int i=0; i<num_elms; ++i) {
       vt::Index1D idx(i);
 
@@ -733,7 +729,7 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
     );
   });
 
-  vt::vrt::collection::balance::LBDataHolder lbdh;
+  vt::vrt::collection::balance::LBDataHolder lbdh(1);
   PhaseType write_phase = 0;
 
   {

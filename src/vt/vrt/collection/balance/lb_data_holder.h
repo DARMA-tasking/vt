@@ -68,6 +68,13 @@ struct LBDataHolder {
   LBDataHolder() = default;
 
   /**
+   * \brief Create \c LBDataHolder with specified buffers capacity
+   *
+   * \param[in] initial_buffers_size the initial size of the buffers
+   */
+  LBDataHolder(std::size_t initial_buffers_size);
+
+  /**
    * \brief Create \c LBDataHolder from input JSON
    *
    * \param[in] j the json that contains the LB data

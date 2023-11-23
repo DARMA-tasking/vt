@@ -227,6 +227,15 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   return std::make_unique<json>(std::move(j));
 }
 
+LBDataHolder::LBDataHolder(std::size_t initial_buffers_size)
+  : node_data_(initial_buffers_size),
+    node_comm_(initial_buffers_size),
+    node_subphase_comm_(initial_buffers_size),
+    user_defined_json_(initial_buffers_size),
+    user_defined_lb_info_(initial_buffers_size),
+    count_(0)
+{ }
+
 LBDataHolder::LBDataHolder(nlohmann::json const& j)
   : count_(0)
 {
