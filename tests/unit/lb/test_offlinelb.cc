@@ -125,7 +125,7 @@ TEST_F(TestOfflineLB, test_offlinelb_1) {
     ids[5].push_back(nid);
   }
 
-  LBDataHolder dh;
+  LBDataHolder dh(num_phases);
   for (PhaseType i = 0; i < num_phases; i++) {
     for (auto&& elm : ids[i]) {
       (*dh.node_data_[i])[elm] = LoadSummary{3};
