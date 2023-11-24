@@ -212,7 +212,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       j["tasks"][i]["resource"] = "cpu";
       j["tasks"][i]["node"] = id.getCurrNode();
       j["tasks"][i]["time"] = time;
-      if (user_defined_json_.find(phase)) {
+      if (user_defined_json_.contains(phase)) {
         auto &user_def_this_phase = user_defined_json_.at(phase);
         if (user_def_this_phase.find(id) != user_def_this_phase.end()) {
           auto &user_def = user_def_this_phase.at(id);
@@ -245,6 +245,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
           j["tasks"][i]["subphases"][s]["time"] = subphase_times[s];
         }
       }
+
       i++;
     }
 

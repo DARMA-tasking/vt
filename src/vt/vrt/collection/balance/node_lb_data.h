@@ -147,7 +147,7 @@ public:
   /**
    * \internal \brief Cleanup after LB runs
    */
-  void startIterCleanup(PhaseType phase);
+  void startIterCleanup();
 
   /**
    * \internal \brief Load and broadcast the LB specification file

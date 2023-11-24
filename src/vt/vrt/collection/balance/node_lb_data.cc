@@ -347,7 +347,7 @@ void NodeLBData::addNodeLBData(
   auto const phase = in->getPhase();
   auto const& total_load = in->getLoad(phase, focused_subphase);
 
-  auto& phase_data = lb_data_->node_data_[phase];
+  auto &phase_data = lb_data_->node_data_[phase];
   auto elm_iter = phase_data.find(id);
   vtAssert(elm_iter == phase_data.end(), "Must not exist");
 
@@ -360,13 +360,13 @@ void NodeLBData::addNodeLBData(
   );
 
   auto const& comm = in->getComm(phase);
-  auto& comm_data = lb_data_->node_comm_[phase];
+  auto &comm_data = lb_data_->node_comm_[phase];
   for (auto&& c : comm) {
     comm_data[c.first] += c.second;
   }
 
   auto const& subphase_comm = in->getSubphaseComm(phase);
-  auto& subphase_comm_data = lb_data_->node_subphase_comm_[phase];
+  auto &subphase_comm_data = lb_data_->node_subphase_comm_[phase];
   for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
     for (auto& sp : subphase_comm[i]) {
       subphase_comm_data[i][sp.first] += sp.second;

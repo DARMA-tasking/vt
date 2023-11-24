@@ -542,7 +542,7 @@ void LBManager::finishedLB(PhaseType phase) {
     "finishedLB\n"
   );
 
-  theNodeLBData()->startIterCleanup(phase);
+  theNodeLBData()->startIterCleanup();
   theNodeLBData()->outputLBDataForPhase(phase);
 
   destroyLB();

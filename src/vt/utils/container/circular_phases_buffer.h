@@ -195,7 +195,7 @@ public:
                 pos_ = invalid_;
                 return *this;
             }
-            
+
             // find next valid phase - sparse phases or not full buffer
             do {
                 ++pos_;
@@ -210,7 +210,7 @@ public:
         StoredPair &operator*() {
             return (*buffer_)[pos_];
         }
-        
+
         StoredPair *operator->() {
             return &(operator*());
         }
