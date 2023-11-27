@@ -9,7 +9,8 @@ function(add_headers VAR)
 endfunction()
 
 # Define the fmt library, its includes and the needed defines.
-add_headers(FMT_HEADERS core.h format.h format-inl.h ostream.h)
+add_headers(FMT_HEADERS args.h color.h core.h format-inl.h ostream.h ranges.h
+            xchar.h chrono.h compile.h format.h printf.h std.h)
 set(FMT_SOURCES src/format.cc)
 
 add_library(fmt ${FMT_SOURCES} ${FMT_HEADERS})

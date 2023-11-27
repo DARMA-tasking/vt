@@ -1019,7 +1019,7 @@ EpochType TerminationDetector::makeEpochRooted(
   vt_debug_print(
     normal, term,
     "makeEpochRooted: root={}, use_ds={}, successor={:x}, label={}\n",
-    theContext()->getNode(), use_ds, (EpochType)successor, label
+    theContext()->getNode(), use_ds.use_it_, (EpochType)successor, label
   );
 
   bool const force_use_ds = vt::theConfig()->vt_term_rooted_use_ds;

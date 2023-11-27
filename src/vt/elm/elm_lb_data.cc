@@ -133,7 +133,7 @@ void ElementLBData::addTime(LoadType const timeLoad) {
   vt_debug_print(
     verbose,lb,
     "ElementLBData: addTime: time={}, cur_load={}\n",
-    time,
+    timeLoad,
     phase_timings_[cur_phase_]
   );
 }
