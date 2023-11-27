@@ -455,9 +455,9 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
 void TemperedLB::runLB(LoadType total_load) {
   bool should_lb = false;
 
+  // Compute load statistics
   this_load = total_load;
   stats = *getStats();
-
   auto const avg  = stats.at(lb::Statistic::Rank_load_modeled).at(
     lb::StatisticQuantity::avg
   );
@@ -485,6 +485,7 @@ void TemperedLB::runLB(LoadType total_load) {
     should_lb = max > (run_temperedlb_tolerance + 1.0) * target_max_load_;
   }
 
+  // Report statistics from head rank
   if (theContext()->getNode() == 0) {
     vt_debug_print(
       terse, temperedlb,
@@ -501,6 +502,7 @@ void TemperedLB::runLB(LoadType total_load) {
     }
   }
 
+  // Perform load rebalancing when deemed necessary
   if (should_lb) {
     doLBStages(imb);
   }
@@ -814,8 +816,8 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     selected.insert(this_node);
   }
 
+  // Determine fanout factor capped by number of nodes
   auto const fanout = std::min(f_, static_cast<decltype(f_)>(num_nodes - 1));
-
   vt_debug_print(
     verbose, temperedlb,
     "TemperedLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}, "
@@ -823,6 +825,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     trial_, iter_, k_max_, k_cur, selected.size(), fanout
   );
 
+  // Iterate over fanout factor
   for (int i = 0; i < fanout; i++) {
     // This implies full knowledge of all processors
     if (selected.size() >= static_cast<size_t>(num_nodes)) {
@@ -849,6 +852,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
 
     // Send message with load
     if (sync) {
+      // Message in synchronous mode
       auto msg = makeMessage<LoadMsgSync>(this_node, load_info_);
       if (epoch != no_epoch) {
         envelopeSetEpoch(msg->env, epoch);
@@ -858,6 +862,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
         LoadMsgSync, &TemperedLB::propagateIncomingSync
       >(msg.get());
     } else {
+      // Message in asynchronous mode
       auto msg = makeMessage<LoadMsgAsync>(this_node, load_info_, k_cur);
       if (epoch != no_epoch) {
         envelopeSetEpoch(msg->env, epoch);
@@ -1217,8 +1222,10 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
 void TemperedLB::decide() {
   auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: decide");
 
+  // Initialize transfer and rejection counters
   int n_transfers = 0, n_rejected = 0;
 
+  // Try to migrate objects only from overloaded objects
   if (is_overloaded_) {
     std::vector<NodeType> under = makeUnderloaded();
     std::unordered_map<NodeType, ObjsType> migrate_objs;
@@ -1251,6 +1258,7 @@ void TemperedLB::decide() {
         }
         // Rebuild the CMF with the new loads taken into account
         auto cmf = createCMF(under);
+
         // Select a node using the CMF
         auto const selected_node = sampleFromCMF(under, cmf);
 
@@ -1260,16 +1268,15 @@ void TemperedLB::decide() {
           selected_node, load_info_.size()
         );
 
+	// Find load of selected node
         auto load_iter = load_info_.find(selected_node);
         vtAssert(load_iter != load_info_.end(), "Selected node not found");
-
-        // The load of the node selected
         auto& selected_load = load_iter->second;
 
+	// Evaluate criterion for proposed transfer
         bool eval = Criterion(criterion_)(
           this_new_load_, selected_load, obj_load, target_max_load_
         );
-
         vt_debug_print(
           verbose, temperedlb,
           "TemperedLB::decide: trial={}, iter={}, under.size()={}, "
@@ -1289,9 +1296,10 @@ void TemperedLB::decide() {
           eval
         );
 
+	// Decide about proposed migration based on criterion evaluation
         if (eval) {
           ++n_transfers;
-          // transfer the object load in seconds
+          // Transfer the object load in seconds
           // to match the object load units on the receiving end
           migrate_objs[selected_node][obj_id] = obj_load;
 
@@ -1316,7 +1324,6 @@ void TemperedLB::decide() {
       auto node = migration.first;
       lazyMigrateObjsTo(lazy_epoch, node, migration.second);
     }
-
   } else {
     // do nothing (underloaded-based algorithm), waits to get work from
     // overloaded nodes
