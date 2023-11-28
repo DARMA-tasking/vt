@@ -59,7 +59,7 @@ build configuration:
 | `vt_tests_num_nodes`             | -               | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
 | `vt_code_coverage`               | 0               | Enable code coverage for VT examples/tests                                                         |
 | `vt_build_tests`                 | 1               | Build all VT tests                                                                                 |
-| `VT_build_examples`              | 1               | Build all VT examples                                                                              |
+| `vt_build_examples`              | 1               | Build all VT examples                                                                              |
 | `vt_debug_verbose`               | 1 (not Release) | Enable VT verbose debug prints at compile-time                                                     |
 | `vt_no_color_enabled`            | 0               | Set `--vt_no_color` flag to true by default                                                        |
 | `BUILD_SHARED_LIBS`              | 0               | Build VT as shared library                                                                         |
