@@ -70,7 +70,7 @@ namespace vt {
     verbose, handler,
     "HandlerManager::makeHandler: is_functor={}, is_auto={}, registry_type={}, "
     "id={:x}, control={:x}, han={:x}, is_trace={}\n",
-    is_functor, is_auto, registry_type, id, control, new_han, is_trace
+    is_functor, is_auto, static_cast<int32_t>(registry_type), id, control, new_han, is_trace
   );
 
   return new_han;

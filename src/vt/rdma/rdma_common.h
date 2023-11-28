@@ -75,6 +75,7 @@ enum Type {
   Uninitialized = 3
 };
 
+
 static constexpr BitCountType const rdma_type_num_bits = 4;
 static constexpr BitCountType const rdma_sized_num_bits = 1;
 static constexpr BitCountType const rdma_collective_num_bits = 1;
@@ -115,6 +116,21 @@ static constexpr Type uninitialized_rdma_type = Type::Uninitialized;
 static constexpr ByteType rdma_default_byte_size = sizeof(char);
 
 }} //end namespace vt::rdma
+
+template<>
+struct fmt::formatter<vt::rdma::Type> : fmt::formatter<std::string_view> {
+  template <typename FormatContext>
+  auto format(vt::rdma::Type t, FormatContext& ctx) {
+    std::string_view name = "Unknown";
+    switch (t) {
+      case vt::rdma::Type::Get: name = "Get"; break;
+      case vt::rdma::Type::Put: name = "Put"; break;
+      case vt::rdma::Type::GetOrPut: name = "GetOrPut"; break;
+      case vt::rdma::Type::Uninitialized: name = "Uninitialized"; break;
+    }
+    return formatter<std::string_view>::format(name, ctx);
+  }
+};
 
 #define PRINT_CHANNEL_TYPE(rdma_op_type) (                              \
   rdma_op_type == vt::rdma::Type::Get ? "rdma::Get" : (            \
