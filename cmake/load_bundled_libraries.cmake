@@ -20,10 +20,21 @@ endif()
 # CLI11 always included in the build
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 
-# fmt always included in the build
-set(FMT_LIBRARY fmt)
-add_subdirectory(${PROJECT_LIB_DIR}/fmt)
-set_darma_compiler_flags(${FMT_LIBRARY})
+# use included fmt or external one
+if(${vt_external_fmt})
+  # user should provide 'fmt_DIR' to CMake (unless fmt is installed in system libs)
+  if(${fmt_DIR})
+    message(STATUS "vt_external_fmt = ON. Using fmt located at ${fmt_DIR}")
+  else()
+    message(STATUS "vt_external_fmt = ON but ${fmt_DIR} is not provided.")
+  endif()
+  find_package(fmt REQUIRED)
+else()
+  set(FMT_LIBRARY fmt)
+  add_subdirectory(${PROJECT_LIB_DIR}/fmt)
+  set_darma_compiler_flags(${FMT_LIBRARY})
+endif()
+
 
 # EngFormat-Cpp always included in the build
 set(ENG_FORMAT_LIBRARY EngFormat-Cpp)
