@@ -167,4 +167,66 @@ enum struct KnowledgeEnum : uint8_t {
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
+// Specialize fmt::formatter for ObjectOrderEnum
+template <>
+struct fmt::formatter<vt::vrt::collection::lb::ObjectOrderEnum> : formatter<std::string_view> {
+  template <typename FormatContext>
+  auto format(vt::vrt::collection::lb::ObjectOrderEnum c, FormatContext& ctx) {
+    std::string_view name = "Unknown";
+    switch (c) {
+      case vt::vrt::collection::lb::ObjectOrderEnum::Arbitrary: name = "Arbitrary"; break;
+      case vt::vrt::collection::lb::ObjectOrderEnum::ElmID: name = "ElmID"; break;
+      case vt::vrt::collection::lb::ObjectOrderEnum::FewestMigrations: name = "FewestMigrations"; break;
+      case vt::vrt::collection::lb::ObjectOrderEnum::SmallObjects: name = "SmallObjects"; break;
+      case vt::vrt::collection::lb::ObjectOrderEnum::LargestObjects: name = "LargestObjects"; break;
+    }
+    return formatter<string_view>::format(name, ctx);
+  }
+};
+
+// Specialize fmt::formatter for CMFTypeEnum
+template <>
+struct fmt::formatter<vt::vrt::collection::lb::CMFTypeEnum> : formatter<std::string_view> {
+  template <typename FormatContext>
+  auto format(vt::vrt::collection::lb::CMFTypeEnum c, FormatContext& ctx) {
+    std::string_view name = "Unknown";
+    switch (c) {
+      case vt::vrt::collection::lb::CMFTypeEnum::Original: name = "Original"; break;
+      case vt::vrt::collection::lb::CMFTypeEnum::NormByMax: name = "NormByMax"; break;
+      case vt::vrt::collection::lb::CMFTypeEnum::NormBySelf: name = "NormBySelf"; break;
+      case vt::vrt::collection::lb::CMFTypeEnum::NormByMaxExcludeIneligible: name = "NormByMaxExcludeIneligible"; break;
+    }
+    return formatter<string_view>::format(name, ctx);
+  }
+};
+
+// Specialize fmt::formatter for KnowledgeEnum
+template <>
+struct fmt::formatter<vt::vrt::collection::lb::KnowledgeEnum> : formatter<std::string_view> {
+  template <typename FormatContext>
+  auto format(vt::vrt::collection::lb::KnowledgeEnum c, FormatContext& ctx) {
+    std::string_view name = "Unknown";
+    switch (c) {
+      case vt::vrt::collection::lb::KnowledgeEnum::UserDefined: name = "UserDefined"; break;
+      case vt::vrt::collection::lb::KnowledgeEnum::Complete: name = "Complete"; break;
+      case vt::vrt::collection::lb::KnowledgeEnum::Log: name = "Log"; break;
+    }
+    return formatter<string_view>::format(name, ctx);
+  }
+};
+
+// Specialize fmt::formatter for KnowledgeEnum
+template <>
+struct fmt::formatter<vt::vrt::collection::lb::InformTypeEnum> : formatter<std::string_view> {
+  template <typename FormatContext>
+  auto format(vt::vrt::collection::lb::InformTypeEnum c, FormatContext& ctx) {
+    std::string_view name = "Unknown";
+    switch (c) {
+      case vt::vrt::collection::lb::InformTypeEnum::SyncInform: name = "SyncInform"; break;
+      case vt::vrt::collection::lb::InformTypeEnum::AsyncInform: name = "AsyncInform"; break;
+    }
+    return formatter<string_view>::format(name, ctx);
+  }
+};
+
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_ENUMS_H*/

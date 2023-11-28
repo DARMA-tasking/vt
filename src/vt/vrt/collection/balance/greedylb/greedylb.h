@@ -126,4 +126,18 @@ private:
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
+template <>
+struct fmt::formatter<vt::vrt::collection::lb::DataDistStrategy> : formatter<std::string_view> {
+  template <typename FormatContext>
+  auto format(vt::vrt::collection::lb::DataDistStrategy c, FormatContext& ctx) {
+    std::string_view name = "Unknown";
+    switch (c) {
+      case vt::vrt::collection::lb::DataDistStrategy::scatter: name = "scatter"; break;
+      case vt::vrt::collection::lb::DataDistStrategy::bcast: name = "bcast"; break;
+      case vt::vrt::collection::lb::DataDistStrategy::pt2pt: name = "pt2pt"; break;
+    }
+    return formatter<string_view>::format(name, ctx);
+  }
+};
+
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_H*/
