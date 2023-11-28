@@ -144,7 +144,7 @@ void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
 }
 
 void NodeLBData::resizeLBDataHistory(uint32_t new_hist_len) {
-  min_hist_lb_data_ = new_hist_len;
+  hist_lb_data_size_ = new_hist_len;
 
   if (lb_data_) {
     lb_data_->node_data_.resize(new_hist_len);
@@ -344,6 +344,9 @@ void NodeLBData::addNodeLBData(
     "NodeLBData::addNodeLBData: id={}\n", id
   );
 
+  // Ensure that buffers can hold request amount of data
+  in->setHistoryCapacity(hist_lb_data_size_);
+
   auto const phase = in->getPhase();
   auto const& total_load = in->getLoad(phase, focused_subphase);
 
@@ -390,7 +393,6 @@ void NodeLBData::addNodeLBData(
   }
 
   in->updatePhase(1);
-  in->releaseLBDataFromUnneededPhases(phase, min_hist_lb_data_);
 }
 
 VirtualProxyType NodeLBData::getCollectionProxyForElement(

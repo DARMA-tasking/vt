@@ -289,7 +289,7 @@ public:
       | created_dir_
       | lb_data_writer_
       | lb_data_
-      | min_hist_lb_data_;
+      | hist_lb_data_size_;
   }
 
 private:
@@ -322,8 +322,8 @@ private:
   std::unique_ptr<util::json::BaseAppender> lb_data_writer_ = nullptr;
   /// The struct that holds all the LB data
   std::unique_ptr<LBDataHolder> lb_data_ = nullptr;
-  //// The minimal amount of historical LB data to hold
-  uint32_t min_hist_lb_data_ = 0;
+  //// The amount of historical LB data to hold
+  uint32_t hist_lb_data_size_ = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
