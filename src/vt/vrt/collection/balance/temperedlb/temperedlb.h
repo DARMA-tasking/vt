@@ -90,7 +90,7 @@ protected:
   void doLBStages(LoadType start_imb);
   void informAsync();
   void informSync();
-  void decide();
+  void originalTransfer();
   void migrate();
 
   void propagateRound(uint8_t k_cur_async, bool sync, EpochType epoch = no_epoch);
