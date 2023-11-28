@@ -157,6 +157,16 @@ static_assert(
 
 }}  // end namespace vt::index
 
+
+template <typename IndexType, vt::index::NumDimensionsType ndim>
+struct fmt::formatter<vt::index::DenseIndexArray<IndexType, ndim>> : fmt::formatter<std::string> {
+  template <typename FormatContext>
+  auto format(const vt::index::DenseIndexArray<IndexType, ndim>& idx, FormatContext& ctx) {
+    return formatter<std::string>::format(idx.toString(), ctx);
+  }
+};
+
+
 #include "vt/topos/index/dense/dense_array.impl.h"
 
 #endif /*INCLUDED_VT_TOPOS_INDEX_DENSE_DENSE_ARRAY_H*/
