@@ -123,15 +123,12 @@ struct ElementLBData {
   static const constexpr SubphaseType no_subphase =
     std::numeric_limits<SubphaseType>::max();
 
-protected:
   /**
-   * \internal \brief Resize internal buffers
+   * \brief Resize internal buffers
    * 
    * \param[in] hist_lb_data_count the requested buffers capacity
    */
   void setHistoryCapacity(unsigned int hist_lb_data_count);
-
-  friend struct vrt::collection::balance::NodeLBData;
 
 protected:
   bool cur_time_started_ = false;
