@@ -559,6 +559,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         is_underloaded_ = true;
       }
 
+      // Perform requested type of information stage
       switch (inform_type_) {
       case InformTypeEnum::SyncInform:
         informSync();
@@ -570,7 +571,20 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         vtAbort("TemperedLB:: Unsupported inform type");
       }
 
-      decide();
+      // Execute transfer stage
+      switch (transfer_type_) {
+      case TransferTypeEnum::Original:
+        originalTransfer();
+        break;
+      case TransferTypeEnum::Recursive:
+	vtAbort("TemperedLB:: Unimplemented transfer type: Recursive");
+        break;
+      case TransferTypeEnum::SwapClusters:
+	vtAbort("TemperedLB:: Unimplemented transfer type: SwapClusters");
+        break;
+      default:
+        vtAbort("TemperedLB:: Unsupported transfer type");
+      }
 
       vt_debug_print(
         verbose, temperedlb,
@@ -1219,7 +1233,7 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
   return ordered_obj_ids;
 }
 
-void TemperedLB::decide() {
+void TemperedLB::originalTransfer() {
   auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: decide");
 
   // Initialize transfer and rejection counters
