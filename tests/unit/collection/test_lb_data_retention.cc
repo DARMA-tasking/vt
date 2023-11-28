@@ -105,14 +105,12 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
     #if vt_check_enabled(lblite)
       auto phase = col->prevCalls();
       auto model = theLBManager()->getLoadModel();
-      auto phases_needed = std::max(model->getNumPastPhasesNeeded(), theConfig()->vt_lb_data_retention);
-      if (phase > phases_needed) {
-        // updatePhase will have caused entries to be added for the
-        // next phase already
-        EXPECT_EQ(load_phase_count,    phases_needed + 1);
-        EXPECT_EQ(sp_load_phase_count, phases_needed + 1);
-        EXPECT_EQ(comm_phase_count,    phases_needed + 1);
-        EXPECT_EQ(sp_comm_phase_count, phases_needed + 1);
+      auto buffers_size = std::max(model->getNumPastPhasesNeeded(), theConfig()->vt_lb_data_retention);
+      if (phase >= buffers_size) {
+        EXPECT_EQ(load_phase_count,    buffers_size);
+        EXPECT_EQ(sp_load_phase_count, buffers_size);
+        EXPECT_EQ(comm_phase_count,    buffers_size);
+        EXPECT_EQ(sp_comm_phase_count, buffers_size);
       } else if (phase == 0) {
         EXPECT_EQ(load_phase_count,    phase);
         EXPECT_EQ(sp_load_phase_count, phase);
@@ -133,29 +131,6 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
       EXPECT_EQ(sp_comm_phase_count, 0);
     #endif
   }
-
-  static void expect7PhasesOfData(TestCol* col) {
-    auto& lb_data = col->lb_data_;
-    auto load_phase_count = lb_data.getLoadPhaseCount();
-    auto comm_phase_count = lb_data.getCommPhaseCount();
-    auto sp_load_phase_count = lb_data.getSubphaseLoadPhaseCount();
-    auto sp_comm_phase_count = lb_data.getSubphaseCommPhaseCount();
-
-    #if vt_check_enabled(lblite)
-      auto phases_needed = 7;
-      EXPECT_EQ(load_phase_count,    phases_needed);
-      EXPECT_EQ(sp_load_phase_count, phases_needed);
-      EXPECT_EQ(comm_phase_count,    phases_needed);
-      EXPECT_EQ(sp_comm_phase_count, phases_needed);
-    #else
-      EXPECT_EQ(load_phase_count,    0);
-      EXPECT_EQ(sp_load_phase_count, 0);
-      EXPECT_EQ(comm_phase_count,    0);
-      EXPECT_EQ(sp_comm_phase_count, 0);
-    #endif
-  }
-
-  static void emptyColHandler(TestCol*) { }
 };
 
 static constexpr int32_t const num_elms = 16;
@@ -375,7 +350,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
   for (uint32_t i=0; i<first_stage_num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<TestCol::emptyColHandler>();
+      proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
@@ -430,11 +405,11 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   // Check amount of phase data in the node
   validatePersistedPhases({5});
 
-  // Check that amount of the retained data in TestCol is not changed and still contains 7 phases of data
+  // Do another 10 phases of work
   for (uint32_t i=0; i<10; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<TestCol::expect7PhasesOfData>();
+      proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
