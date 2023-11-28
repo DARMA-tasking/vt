@@ -151,6 +151,13 @@ define_option(vt_build_tests "tests" "Build VT tests" ON empty_feature)
 define_option(vt_build_tools "tools" "Build VT tools" ON empty_feature)
 define_option(vt_build_examples "examples" "Build VT examples" ON empty_feature)
 
+option(vt_external_fmt "Build VT with external fmt" OFF)
+if(${vt_external_fmt})
+    message(STATUS "Building vt with external fmt library")
+else()
+    message(STATUS "Building vt with included fmt library")
+endif()
+
 list(POP_BACK CMAKE_MESSAGE_INDENT)
 
 ##########################################################################################################
