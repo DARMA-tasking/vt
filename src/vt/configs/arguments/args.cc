@@ -481,6 +481,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lb_self_migration = "Allow load balancer to migrate objects to the same node";
   auto lb_spec      = "Enable LB spec file (defines which phases output LB data)";
   auto lb_spec_file = "File containing LB spec; --vt_lb_spec to enable";
+  auto lb_first_phase_info = "Force LB to run on the first phase (phase 0)";
   auto s  = app.add_flag("--vt_lb", appConfig.vt_lb, lb);
   auto t1 = app.add_flag("--vt_lb_quiet", appConfig.vt_lb_quiet, lb_quiet);
   auto u  = app.add_option("--vt_lb_file_name", appConfig.vt_lb_file_name, lb_file_name)->capture_default_str()->check(CLI::ExistingFile);
@@ -503,6 +504,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lbasm = app.add_flag("--vt_lb_self_migration",   appConfig.vt_lb_self_migration,      lb_self_migration);
   auto lbspec = app.add_flag("--vt_lb_spec",            appConfig.vt_lb_spec,                lb_spec);
   auto lbspecfile = app.add_option("--vt_lb_spec_file", appConfig.vt_lb_spec_file,           lb_spec_file)->capture_default_str()->check(CLI::ExistingFile);
+  auto lb_first_phase = app.add_flag("--vt_lb_run_lb_first_phase", appConfig.vt_lb_run_lb_first_phase, lb_first_phase_info);
 
   // --vt_lb_name excludes --vt_lb_file_name, and vice versa
   v->excludes(u);
@@ -531,6 +533,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   lbasm->group(debugLB);
   lbspec->group(debugLB);
   lbspecfile->group(debugLB);
+  lb_first_phase->group(debugLB);
 
   // help options deliberately omitted from the debugLB group above so that
   // they appear grouped with --vt_help when --vt_help is used

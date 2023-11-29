@@ -158,6 +158,7 @@ struct AppConfig {
   bool vt_lb_self_migration      = false;
   bool vt_lb_spec                = false;
   std::string vt_lb_spec_file    = "";
+  bool vt_lb_run_lb_first_phase = false;
 
 
   bool vt_no_detect_hang       = false;
