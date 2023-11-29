@@ -228,6 +228,8 @@ private:
   std::unordered_map<ObjIDType, BytesType> obj_working_bytes_;
   /// Current assignment memory/load summary
   ClusterSummaryType cur_blocks_;
+  /// Clusters that we know of on other ranks (might be out of date)
+  std::unordered_map<NodeType, ClusterSummaryType> other_rank_clusters_;
   /// User-defined memory threshold
   BytesType mem_thresh_ = 0;
 };
