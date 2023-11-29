@@ -49,6 +49,15 @@
 #include <vector>
 #include <unordered_map>
 
+namespace vt::vrt::collection::lb {
+
+using SharedIDType     = int;
+using BytesType        = double;
+using ClusterSummaryType =
+  std::unordered_map<SharedIDType, std::tuple<BytesType, LoadType>>;
+
+} /* end namespace vt::vrt::collection::lb */
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct LoadMsg : vt::Message {
@@ -56,6 +65,8 @@ struct LoadMsg : vt::Message {
   vt_msg_serialize_required(); // node_load_
 
   using NodeLoadType = std::unordered_map<NodeType, LoadType>;
+  using NodeClusterSummaryType =
+    std::unordered_map<NodeType, lb::ClusterSummaryType>;
 
   LoadMsg() = default;
   LoadMsg(NodeType in_from_node, NodeLoadType const& in_node_load)
@@ -66,8 +77,16 @@ struct LoadMsg : vt::Message {
     return node_load_;
   }
 
+  NodeClusterSummaryType const& getNodeClusterSummary() const {
+    return node_cluster_summary_;
+  }
+
   void addNodeLoad(NodeType node, LoadType load) {
     node_load_[node] = load;
+  }
+
+  void addNodeClusters(NodeType node, lb::ClusterSummaryType summary) {
+    node_cluster_summary_[node] = summary;
   }
 
   NodeType getFromNode() const { return from_node_; }
@@ -77,11 +96,13 @@ struct LoadMsg : vt::Message {
     MessageParentType::serialize(s);
     s | from_node_;
     s | node_load_;
+    s | node_cluster_summary_;
   }
 
 private:
   NodeType from_node_     = uninitialized_destination;
   NodeLoadType node_load_ = {};
+  NodeClusterSummaryType node_cluster_summary_ = {};
 };
 
 struct LoadMsgAsync : LoadMsg {
