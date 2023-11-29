@@ -565,11 +565,25 @@ void TemperedLB::readClustersMemoryData() {
         obj, shared_id, shared_bytes
       );
 
+      has_memory_data_ = true;
       obj_shared_block_[obj] = shared_id;
       obj_working_bytes_[obj] = working_bytes;
       shared_block_size_[shared_id] = shared_bytes;
-      has_memory_data_ = true;
     }
+  }
+}
+
+void TemperedLB::computeClusterSummary() {
+  for (auto const& [shared_id, shared_bytes] : shared_block_size_) {
+    LoadType cluster_load = 0;
+    for (auto const& [obj_id, obj_load] : cur_objs_) {
+      if (auto iter = obj_shared_block_.find(obj_id); iter != obj_shared_block_.end()) {
+        if (iter->second == shared_id) {
+          cluster_load += obj_load;
+        }
+      }
+    }
+    cur_blocks_[shared_id] = std::make_tuple(shared_bytes, cluster_load);
   }
 }
 
@@ -658,12 +672,25 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         LoadType(this_new_load_)
       );
 
-      vt_print(
-        temperedlb,
-        "Current memory info: total memory usage={}, shared blocks here={}, "
-        "memory_threshold={}\n", computeMemoryUsage(), getSharedBlocksHere().size(),
-        mem_thresh_
-      );
+      if (has_memory_data_) {
+        vt_print(
+          temperedlb,
+          "Current memory info: total memory usage={}, shared blocks here={}, "
+          "memory_threshold={}\n", computeMemoryUsage(),
+          getSharedBlocksHere().size(), mem_thresh_
+        );
+
+        computeClusterSummary();
+
+        for (auto const& [shared_id, value] : cur_blocks_) {
+          auto const& [shared_bytes, cluster_load] = value;
+          vt_print(
+            temperedlb,
+            "Cluster: id={}, bytes={}, load={}\n",
+            shared_id, shared_bytes, cluster_load
+          );
+        }
+      }
 
       if (isOverloaded(this_new_load_)) {
         is_overloaded_ = true;
