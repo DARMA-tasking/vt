@@ -575,7 +575,7 @@ void TemperedLB::readClustersMemoryData() {
 }
 
 void TemperedLB::computeClusterSummary() {
-  cur_blocks_.clear();
+  cur_clusters_.clear();
   for (auto const& [shared_id, shared_bytes] : shared_block_size_) {
     LoadType cluster_load = 0;
     for (auto const& [obj_id, obj_load] : cur_objs_) {
@@ -586,7 +586,7 @@ void TemperedLB::computeClusterSummary() {
       }
     }
     if (cluster_load != 0) {
-      cur_blocks_[shared_id] = std::make_tuple(shared_bytes, cluster_load);
+      cur_clusters_[shared_id] = std::make_tuple(shared_bytes, cluster_load);
     }
   }
 }
@@ -691,7 +691,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         computeClusterSummary();
 
         // Verbose printing about local clusters
-        for (auto const& [shared_id, value] : cur_blocks_) {
+        for (auto const& [shared_id, value] : cur_clusters_) {
           auto const& [shared_bytes, cluster_load] = value;
           vt_print(
             temperedlb,
@@ -1043,7 +1043,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
       }
       msg->addNodeLoad(this_node, this_new_load_);
       if (has_memory_data_) {
-        msg->addNodeClusters(this_node, cur_blocks_);
+        msg->addNodeClusters(this_node, cur_clusters_);
       }
       proxy_[random_node].sendMsg<
         LoadMsgSync, &TemperedLB::propagateIncomingSync
@@ -1056,7 +1056,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
       }
       msg->addNodeLoad(this_node, this_new_load_);
       if (has_memory_data_) {
-        msg->addNodeClusters(this_node, cur_blocks_);
+        msg->addNodeClusters(this_node, cur_clusters_);
       }
       proxy_[random_node].sendMsg<
         LoadMsgAsync, &TemperedLB::propagateIncomingAsync
