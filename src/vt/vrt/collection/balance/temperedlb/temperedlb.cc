@@ -1434,7 +1434,7 @@ void TemperedLB::originalTransfer() {
   // Initialize transfer and rejection counters
   int n_transfers = 0, n_rejected = 0;
 
-  // Try to migrate objects only from overloaded objects
+  // Try to migrate objects only from overloaded ranks
   if (is_overloaded_) {
     std::vector<NodeType> under = makeUnderloaded();
     std::unordered_map<NodeType, ObjsType> migrate_objs;
@@ -1473,7 +1473,7 @@ void TemperedLB::originalTransfer() {
 
         vt_debug_print(
           verbose, temperedlb,
-          "TemperedLB::decide: selected_node={}, load_info_.size()={}\n",
+          "TemperedLB::originalTransfer: selected_node={}, load_info_.size()={}\n",
           selected_node, load_info_.size()
         );
 
@@ -1488,7 +1488,7 @@ void TemperedLB::originalTransfer() {
         );
         vt_debug_print(
           verbose, temperedlb,
-          "TemperedLB::decide: trial={}, iter={}, under.size()={}, "
+          "TemperedLB::originalTransfer: trial={}, iter={}, under.size()={}, "
           "selected_node={}, selected_load={:e}, obj_id={:x}, home={}, "
           "obj_load={}, target_max_load={}, this_new_load_={}, "
           "criterion={}\n",
@@ -1544,13 +1544,62 @@ void TemperedLB::originalTransfer() {
 
   if (theConfig()->vt_debug_temperedlb) {
     // compute rejection rate because it will be printed
-    runInEpochCollective("TemperedLB::decide -> compute rejection", [=] {
+    runInEpochCollective("TemperedLB::originalTransfer -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
         n_rejected, n_transfers
       );
     });
   }
 }
+
+void TemperedLB::swapClusters() {
+  auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: swapClusters");
+
+  // Initialize transfer and rejection counters
+  int n_transfers = 0, n_rejected = 0;
+
+  // Try to migrate objects only from overloaded ranks
+  if (is_overloaded_) {
+    // Compute collection of potential targets
+    std::vector<NodeType> under = makeUnderloaded();
+    std::unordered_map<NodeType, ObjsType> migrate_objs;
+    if (under.size() > 0) {
+      std::vector<ObjIDType> ordered_obj_ids = orderObjects(
+        obj_ordering_, cur_objs_, this_new_load_, target_max_load_
+      );
+
+      // Cluster migratable objects on source rank
+
+      // Iterage over potential targets to try to swap clusters
+
+      //// Iteratr over target clusters
+
+      ////// Decide whether swap is beneficial
+
+
+      //////// If swap is beneficial compute source cluster size
+      //////// Test whether criterion is creater than swap RTOL times source size
+
+      ////////// Only in this case perform swap
+      ////////// Else reject swap
+
+    } // if (under.size() > 0)
+  } // if (is_overloaded_)
+
+  // Finalize epoch
+  theTerm()->finishedEpoch(lazy_epoch);
+  vt::runSchedulerThrough(lazy_epoch);
+
+  // Report on rejection rate in debug mode
+  if (theConfig()->vt_debug_temperedlb) {
+    runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
+      proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
+        n_rejected, n_transfers
+      );
+    });
+  }
+  
+} // void TemperedLB::originalTransfer()
 
 void TemperedLB::thunkMigrations() {
   vt_debug_print(
