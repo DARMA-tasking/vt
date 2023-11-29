@@ -574,6 +574,7 @@ void TemperedLB::readClustersMemoryData() {
 }
 
 void TemperedLB::computeClusterSummary() {
+  cur_blocks_.clear();
   for (auto const& [shared_id, shared_bytes] : shared_block_size_) {
     LoadType cluster_load = 0;
     for (auto const& [obj_id, obj_load] : cur_objs_) {
