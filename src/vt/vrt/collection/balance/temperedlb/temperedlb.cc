@@ -750,7 +750,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 	vtAbort("TemperedLB:: Unimplemented transfer type: Recursive");
         break;
       case TransferTypeEnum::SwapClusters:
-	vtAbort("TemperedLB:: Unimplemented transfer type: SwapClusters");
+	swapClusters();
         break;
       default:
         vtAbort("TemperedLB:: Unsupported transfer type");
@@ -1429,7 +1429,7 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
 }
 
 void TemperedLB::originalTransfer() {
-  auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: decide");
+  auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: originalTransfer");
 
   // Initialize transfer and rejection counters
   int n_transfers = 0, n_rejected = 0;
