@@ -232,8 +232,7 @@ struct CallbackTyped : CallbackRawBaseSingle {
 
   template <typename... Params>
   void sendTuple(std::tuple<Params...> tup) {
-    using Trait = CBTraits<Args...>;
-    using MsgT = messaging::ParamMsg<typename Trait::TupleType>;
+    using MsgT = messaging::ParamMsg<std::tuple<std::decay_t<Params>...>>;
     auto msg = vt::makeMessage<MsgT>();
     msg->setParams(std::move(tup));
     CallbackRawBaseSingle::sendMsg<MsgT>(msg);
@@ -243,7 +242,7 @@ struct CallbackTyped : CallbackRawBaseSingle {
   void send(Params&&... params) {
     using Trait = CBTraits<Args...>;
     if constexpr (std::is_same_v<typename Trait::MsgT, NoMsg>) {
-      using MsgT = messaging::ParamMsg<typename Trait::TupleType>;
+      using MsgT = messaging::ParamMsg<std::tuple<std::decay_t<Params>...>>;
       auto msg = vt::makeMessage<MsgT>();
       msg->setParams(std::forward<Params>(params)...);
       CallbackRawBaseSingle::sendMsg<MsgT>(msg);
