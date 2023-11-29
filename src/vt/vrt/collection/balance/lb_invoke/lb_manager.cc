@@ -130,7 +130,11 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   } else {
     auto interval = theConfig()->vt_lb_interval;
     vtAssert(interval != 0, "LB Interval must not be 0");
-    if (phase % interval == 1 || (interval == 1 && phase != 0)) {
+    if (
+      phase % interval == 1 ||
+      (interval == 1 && phase != 0) ||
+      (phase == 0 && theConfig()->vt_lb_run_lb_first_phase)
+    ) {
       bool name_match = false;
       for (auto&& elm : get_lb_names()) {
         if (elm.second == theConfig()->vt_lb_name) {
