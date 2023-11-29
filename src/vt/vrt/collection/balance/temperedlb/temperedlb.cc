@@ -584,7 +584,9 @@ void TemperedLB::computeClusterSummary() {
         }
       }
     }
-    cur_blocks_[shared_id] = std::make_tuple(shared_bytes, cluster_load);
+    if (cluster_load != 0) {
+      cur_blocks_[shared_id] = std::make_tuple(shared_bytes, cluster_load);
+    }
   }
 }
 
