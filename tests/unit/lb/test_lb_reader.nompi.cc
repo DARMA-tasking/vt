@@ -44,6 +44,7 @@
 #include <vt/vrt/collection/balance/read_lb.h>
 
 #include "test_harness.h"
+#include "test_helpers.h"
 
 namespace vt { namespace tests { namespace unit {
 
@@ -51,7 +52,7 @@ using TestLBReader = TestHarness;
 
 TEST_F(TestLBReader, test_lb_read_1) {
 
-  std::string file_name = "test_lb_read_1.txt";
+  std::string file_name = getUniqueFilename(".txt");
   std::ofstream out(file_name);
   out << ""
     "0 NoLB\n"
@@ -105,7 +106,7 @@ TEST_F(TestLBReader, test_lb_read_1) {
 
 TEST_F(TestLBReader, test_lb_read_2) {
 
-  std::string file_name = "test_lb_read_2.txt";
+  std::string file_name = getUniqueFilename(".txt");
   std::ofstream out(file_name);
   out << ""
     "0 NoLB\n"
@@ -198,7 +199,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
 }
 
 TEST_F(TestLBReader, test_lb_read_3_with_offline_lb) {
-  std::string file_name = "test_lb_read_3_with_offline_lb.txt";
+  std::string file_name = getUniqueFilename(".txt");
   std::ofstream out(file_name);
   out << ""
     "0 NoLB\n"
