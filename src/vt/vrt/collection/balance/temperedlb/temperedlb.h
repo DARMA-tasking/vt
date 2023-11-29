@@ -67,8 +67,6 @@ struct TemperedLB : BaseLB {
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
-  using SharedIDType     = int;
-  using BytesType        = double;
 
   TemperedLB() = default;
   TemperedLB(TemperedLB const&) = delete;
@@ -228,7 +226,7 @@ private:
   /// Working bytes for each object
   std::unordered_map<ObjIDType, BytesType> obj_working_bytes_;
   /// Current assignment memory/load summary
-  std::unordered_map<SharedIDType, std::tuple<BytesType, LoadType>> cur_blocks_;
+  ClusterSummaryType cur_blocks_;
   /// User-defined memory threshold
   BytesType mem_thresh_ = 0;
 };
