@@ -48,6 +48,7 @@
 #include <fstream>
 
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 
 namespace vt { namespace tests { namespace unit { namespace lb {
 
@@ -78,7 +79,7 @@ struct SimCol : vt::Collection<SimCol, vt::Index1D> {
   void sparseHandler(Msg* m){
     auto const this_node = theContext()->getNode();
     vt_debug_print(terse, lb, "sparseHandler: idx={}: elm={}\n", getIndex(), getElmID());
-    if (m->iter == 0 or m->iter == 1 or m->iter == 2 or m->iter == 3 or m->iter == 4 or m->iter == 5 or m->iter == 6) {
+    if (m->iter >= 0 and m->iter <= 6) {
       EXPECT_EQ(getIndex().x() / 2, this_node);
     }
   }
@@ -208,20 +209,16 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
   metadata["type"] = "LBDatafile";
   metadata["phases"] = phasesMetadata;
 
-  auto w = std::make_unique<JSONAppender>(
+  auto appender = std::make_unique<JSONAppender>(
     "phases", metadata, std::move(stream), true
   );
-  for (PhaseType i = 0; i < num_phases; i++) {
-    // ignore skipped and identical phases
-    if(i != 1 && i != 2 && i != 3 && i != 5 && i != 6) {
-      auto j = dh.toJson(i);
-      w->addElm(*j);
-    }
-  }
-  stream = w->finish();
+  // Add phases 0 and 4
+  appender->addElm(*dh.toJson(0));
+  appender->addElm(*dh.toJson(4));
+  stream = appender->finish();
 
   // Preapre configuration file
-  std::string file_name = "test_offlinelb_2.txt";
+  std::string file_name = getUniqueFilenameWithRanks(".txt");
   std::ofstream out(file_name);
   out << ""
     "0 OfflineLB\n"
@@ -234,7 +231,7 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
   out.close();
 
   theConfig()->vt_lb = true;
-  theConfig()->vt_lb_file_name = "test_offlinelb_2.txt";
+  theConfig()->vt_lb_file_name = file_name;
 
   auto up = LBDataRestartReader::construct();
   curRT->theLBDataReader = up.get();
