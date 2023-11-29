@@ -142,6 +142,11 @@ protected:
    */
   std::set<SharedIDType> getSharedBlocksHere() const;
 
+  /**
+   * \brief Compute the current cluster assignment summary for this rank
+   */
+  void computeClusterSummary();
+
 private:
   uint16_t f_                                       = 0;
   uint8_t k_max_                                    = 0;
@@ -222,6 +227,8 @@ private:
   std::unordered_map<SharedIDType, BytesType> shared_block_size_;
   /// Working bytes for each object
   std::unordered_map<ObjIDType, BytesType> obj_working_bytes_;
+  /// Current assignment memory/load summary
+  std::unordered_map<SharedIDType, std::tuple<BytesType, LoadType>> cur_blocks_;
   /// User-defined memory threshold
   BytesType mem_thresh_ = 0;
 };
