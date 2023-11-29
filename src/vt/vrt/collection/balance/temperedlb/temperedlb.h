@@ -91,6 +91,7 @@ protected:
   void informAsync();
   void informSync();
   void originalTransfer();
+  void swapClusters();
   void migrate();
 
   void propagateRound(uint8_t k_cur_async, bool sync, EpochType epoch = no_epoch);
