@@ -274,6 +274,15 @@ Description:
   instead of the processor-average load.
 )"
     },
+    {
+      "memory_threshold",
+      R"(
+Values: <double>
+Defaut: 0
+Description: The memory threshold TemperedLB should strictly stay under which is
+respected if memory information is present in the user-defined data.
+)"
+    }
   };
   return keys_help;
 }
@@ -378,6 +387,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
   deterministic_ = config->getOrDefault<bool>("deterministic", deterministic_);
   rollback_      = config->getOrDefault<bool>("rollback", rollback_);
   target_pole_   = config->getOrDefault<bool>("targetpole", target_pole_);
+  mem_thresh_    = config->getOrDefault<double>("memory_threshold", mem_thresh_);
 
   balance::LBArgsEnumConverter<CriterionEnum> criterion_converter_(
     "criterion", "CriterionEnum", {
@@ -509,6 +519,98 @@ void TemperedLB::runLB(LoadType total_load) {
   }
 }
 
+void TemperedLB::readClustersMemoryData() {
+  if (user_data_) {
+    for (auto const& [obj, data_map] : *user_data_) {
+      SharedIDType shared_id = -1;
+      BytesType shared_bytes = 0;
+      BytesType working_bytes = 0;
+      for (auto const& [key, variant] : data_map) {
+        if (key == "shared_id") {
+          // Because of how JSON is stored this is always a double, even though
+          // it should be an integer
+          if (double const* val = std::get_if<double>(&variant)) {
+            shared_id = static_cast<int>(*val);
+          } else {
+            vtAbort("\"shared_id\" in variant does not match integer");
+          }
+        }
+        if (key == "shared_bytes") {
+          if (BytesType const* val = std::get_if<BytesType>(&variant)) {
+            shared_bytes = *val;
+          } else {
+            vtAbort("\"shared_bytes\" in variant does not match double");
+          }
+        }
+        if (key == "task_working_bytes") {
+          if (BytesType const* val = std::get_if<BytesType>(&variant)) {
+            working_bytes = *val;
+          } else {
+            vtAbort("\"working_bytes\" in variant does not match double");
+          }
+        }
+        if (key == "rank_working_bytes") {
+          if (BytesType const* val = std::get_if<BytesType>(&variant)) {
+            rank_bytes_ = *val;
+          } else {
+            vtAbort("\"rank_bytes\" in variant does not match double");
+          }
+        }
+        // @todo: for now, skip "task_serialized_bytes" and
+        // "task_footprint_bytes"
+      }
+
+      // @todo: switch to debug print at some point
+      vt_print(
+        temperedlb, "obj={} shared_block={} bytes={}\n",
+        obj, shared_id, shared_bytes
+      );
+
+      obj_shared_block_[obj] = shared_id;
+      obj_working_bytes_[obj] = working_bytes;
+      shared_block_size_[shared_id] = shared_bytes;
+      has_memory_data_ = true;
+    }
+  }
+}
+
+TemperedLB::BytesType TemperedLB::computeMemoryUsage() const {
+  // Compute bytes used by shared blocks mapped here based on object mapping
+  auto const blocks_here = getSharedBlocksHere();
+
+  double total_shared_bytes = 0;
+  for (auto const& block_id : blocks_here) {
+    total_shared_bytes += shared_block_size_.find(block_id)->second;
+  }
+
+  // Compute max object size
+  // @todo: Slight issue here that this will only count migratable objects
+  // (those contained in cur_objs), for our current use case this is not a
+  // problem, but it should include the max of non-migratable
+  double max_object_working_bytes = 0;
+  for (auto const& [obj_id, _] : cur_objs_)  {
+    if (obj_working_bytes_.find(obj_id) != obj_working_bytes_.end()) {
+      max_object_working_bytes =
+        std::max(max_object_working_bytes, obj_working_bytes_.find(obj_id)->second);
+    } else {
+      vt_print(
+        temperedlb, "Warning: working bytes not found for object: {}\n", obj_id
+      );
+    }
+  }
+  return rank_bytes_ + total_shared_bytes + max_object_working_bytes;
+}
+
+std::set<TemperedLB::SharedIDType> TemperedLB::getSharedBlocksHere() const {
+  std::set<SharedIDType> blocks_here;
+  for (auto const& [obj, _] : cur_objs_) {
+    if (obj_shared_block_.find(obj) != obj_shared_block_.end()) {
+      blocks_here.insert(obj_shared_block_.find(obj)->second);
+    }
+  }
+  return blocks_here;
+}
+
 void TemperedLB::doLBStages(LoadType start_imb) {
   decltype(this->cur_objs_) best_objs;
   LoadType best_load = 0;
@@ -516,6 +618,9 @@ void TemperedLB::doLBStages(LoadType start_imb) {
   uint16_t best_trial = 0;
 
   auto this_node = theContext()->getNode();
+
+  // Read in memory information if it's available before be do any trials
+  readClustersMemoryData();
 
   for (trial_ = 0; trial_ < num_trials_; ++trial_) {
     // Clear out data structures
@@ -552,6 +657,13 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         "num_iters={}, load={}, new_load={}\n",
         trial_, iter_, num_iters_, LoadType(this_load),
         LoadType(this_new_load_)
+      );
+
+      vt_print(
+        temperedlb,
+        "Current memory info: total memory usage={}, shared blocks here={}, "
+        "memory_threshold={}\n", computeMemoryUsage(), getSharedBlocksHere().size(),
+        mem_thresh_
       );
 
       if (isOverloaded(this_new_load_)) {
