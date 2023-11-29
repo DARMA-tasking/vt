@@ -67,6 +67,8 @@ struct TemperedLB : BaseLB {
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
+  using SharedIDType     = int;
+  using BytesType        = double;
 
   TemperedLB() = default;
   TemperedLB(TemperedLB const&) = delete;
@@ -118,6 +120,27 @@ protected:
   void thunkMigrations();
 
   void setupDone();
+
+  /**
+   * \brief Read the memory data from the user-defined json blocks into data
+   * structures
+   */
+  void readClustersMemoryData();
+
+  /**
+   * \brief Compute the memory usage for current assignment
+   *
+   * \return the total memory usage
+   */
+  BytesType computeMemoryUsage() const;
+
+  /**
+   * \brief Get the shared blocks that are located on this node with the current
+   * object assignment
+   *
+   * \return the number of shared blocks here
+   */
+  std::set<SharedIDType> getSharedBlocksHere() const;
 
 private:
   uint16_t f_                                       = 0;
@@ -183,6 +206,24 @@ private:
   std::mt19937 gen_sample_;
   StatisticMapType stats;
   LoadType this_load                                = 0.0f;
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // All the memory info (may or may not be present)
+  //////////////////////////////////////////////////////////////////////////////
+
+  /// Whether we have memory information
+  bool has_memory_data_ = false;
+  /// Working bytes for this rank
+  BytesType rank_bytes_ = 0;
+  /// Shared ID for each object
+  std::unordered_map<ObjIDType, SharedIDType> obj_shared_block_;
+  /// Shared block size in bytes
+  std::unordered_map<SharedIDType, BytesType> shared_block_size_;
+  /// Working bytes for each object
+  std::unordered_map<ObjIDType, BytesType> obj_working_bytes_;
+  /// User-defined memory threshold
+  BytesType mem_thresh_ = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
