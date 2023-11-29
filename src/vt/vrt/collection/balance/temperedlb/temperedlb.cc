@@ -591,7 +591,7 @@ void TemperedLB::computeClusterSummary() {
   }
 }
 
-TemperedLB::BytesType TemperedLB::computeMemoryUsage() const {
+BytesType TemperedLB::computeMemoryUsage() const {
   // Compute bytes used by shared blocks mapped here based on object mapping
   auto const blocks_here = getSharedBlocksHere();
 
@@ -618,7 +618,7 @@ TemperedLB::BytesType TemperedLB::computeMemoryUsage() const {
   return rank_bytes_ + total_shared_bytes + max_object_working_bytes;
 }
 
-std::set<TemperedLB::SharedIDType> TemperedLB::getSharedBlocksHere() const {
+std::set<SharedIDType> TemperedLB::getSharedBlocksHere() const {
   std::set<SharedIDType> blocks_here;
   for (auto const& [obj, _] : cur_objs_) {
     if (obj_shared_block_.find(obj) != obj_shared_block_.end()) {
@@ -1015,6 +1015,9 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
         envelopeSetEpoch(msg->env, epoch);
       }
       msg->addNodeLoad(this_node, this_new_load_);
+      if (has_memory_data_) {
+        msg->addNodeClusters(this_node, cur_blocks_);
+      }
       proxy_[random_node].sendMsg<
         LoadMsgSync, &TemperedLB::propagateIncomingSync
       >(msg.get());
@@ -1025,6 +1028,9 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
         envelopeSetEpoch(msg->env, epoch);
       }
       msg->addNodeLoad(this_node, this_new_load_);
+      if (has_memory_data_) {
+        msg->addNodeClusters(this_node, cur_blocks_);
+      }
       proxy_[random_node].sendMsg<
         LoadMsgAsync, &TemperedLB::propagateIncomingAsync
       >(msg.get());
