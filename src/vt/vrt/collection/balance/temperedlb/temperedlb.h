@@ -226,8 +226,8 @@ private:
   std::unordered_map<SharedIDType, BytesType> shared_block_size_;
   /// Working bytes for each object
   std::unordered_map<ObjIDType, BytesType> obj_working_bytes_;
-  /// Current assignment memory/load summary
-  ClusterSummaryType cur_blocks_;
+  /// Cluster summary based on current local assignment
+  ClusterSummaryType cur_clusters_;
   /// Clusters that we know of on other ranks (might be out of date)
   std::unordered_map<NodeType, ClusterSummaryType> other_rank_clusters_;
   /// User-defined memory threshold
