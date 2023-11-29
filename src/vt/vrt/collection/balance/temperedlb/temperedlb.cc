@@ -665,6 +665,10 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         underloaded_.clear();
         load_info_.clear();
         is_overloaded_ = is_underloaded_ = false;
+        other_rank_clusters_.clear();
+
+        // Not clearing shared_block_size_ because this never changes and
+        // the knowledge might be useful
       }
 
       vt_debug_print(
@@ -685,11 +689,12 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
         computeClusterSummary();
 
+        // Verbose printing about local clusters
         for (auto const& [shared_id, value] : cur_blocks_) {
           auto const& [shared_bytes, cluster_load] = value;
           vt_print(
             temperedlb,
-            "Cluster: id={}, bytes={}, load={}\n",
+            "Local cluster: id={}, bytes={}, load={}\n",
             shared_id, shared_bytes, cluster_load
           );
         }
@@ -711,6 +716,28 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         break;
       default:
         vtAbort("TemperedLB:: Unsupported inform type");
+      }
+
+      // Some very verbose printing about all remote clusters we know about that
+      // we can shut off later
+      for (auto const& [node, clusters] : other_rank_clusters_) {
+        for (auto const& [shared_id, value] : clusters) {
+          auto const& [shared_bytes, cluster_load] = value;
+          vt_print(
+            temperedlb,
+            "Remote cluster: node={}, id={}, bytes={}, load={}\n",
+            node, shared_id, shared_bytes, cluster_load
+          );
+        }
+      }
+
+      // Move remove cluster information to shared_block_size_ so we have all
+      // the sizes in the same place
+      for (auto const& [node, clusters] : other_rank_clusters_) {
+        for (auto const& [shared_id, value] : clusters) {
+          auto const& [shared_bytes, _] = value;
+          shared_block_size_[shared_id] = shared_bytes;
+        }
       }
 
       // Execute transfer stage
@@ -1048,6 +1075,16 @@ void TemperedLB::propagateIncomingAsync(LoadMsgAsync* msg) {
     trial_, iter_, k_max_, k_cur_async, from_node, msg->getNodeLoad().size()
   );
 
+  auto const this_node = theContext()->getNode();
+  for (auto const& [node, clusters] : msg->getNodeClusterSummary()) {
+    if (
+      node != this_node and
+      other_rank_clusters_.find(node) == other_rank_clusters_.end()
+    ) {
+      other_rank_clusters_[node] = clusters;
+    }
+  }
+
   for (auto&& elm : msg->getNodeLoad()) {
     if (load_info_.find(elm.first) == load_info_.end()) {
       load_info_[elm.first] = elm.second;
@@ -1081,6 +1118,16 @@ void TemperedLB::propagateIncomingSync(LoadMsgSync* msg) {
     "k_cur={}, from_node={}, load info size={}\n",
     trial_, iter_, k_max_, k_cur_, from_node, msg->getNodeLoad().size()
   );
+
+  auto const this_node = theContext()->getNode();
+  for (auto const& [node, clusters] : msg->getNodeClusterSummary()) {
+    if (
+      node != this_node and
+      other_rank_clusters_.find(node) == other_rank_clusters_.end()
+    ) {
+      other_rank_clusters_[node] = clusters;
+    }
+  }
 
   for (auto&& elm : msg->getNodeLoad()) {
     if (new_load_info_.find(elm.first) == new_load_info_.end()) {
