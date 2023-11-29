@@ -1598,7 +1598,6 @@ void TemperedLB::swapClusters() {
       );
     });
   }
-  
 } // void TemperedLB::originalTransfer()
 
 void TemperedLB::thunkMigrations() {
