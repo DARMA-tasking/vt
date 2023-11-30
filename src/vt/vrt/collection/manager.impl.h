@@ -1137,7 +1137,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   return messaging::PendingSend{
     msg, [](MsgSharedPtr<BaseMsgType>& inner_msg){
       auto typed_msg = inner_msg.template to<MsgT>();
-      auto lm2 = theLocMan()->getCollectionLM<IdxT>(typed_msg->getLocInst());
+      auto lm2 = theLocMan()->getCollectionLM<IdxT>(typed_msg->getProxy().getCollectionProxy());
       lm2->template routePreparedMsgHandler<MsgT>(typed_msg);
     }
   };
@@ -1325,12 +1325,6 @@ void CollectionManager::insertMetaCollection(
   typeless_holder_.insertCollectionInfo(proxy, holder, [proxy]{
     theCollection()->constructGroup<ColT>(proxy);
   }, label);
-
-  /*
-   *  This is to ensure that the collection LM instance gets created so that
-   *  messages can be forwarded properly
-   */
-  theLocMan()->getCollectionLM<IndexType>(proxy);
 
   /**
    * Type-erase some lambdas for doing the collective broadcast that collects up
@@ -1982,6 +1976,9 @@ void CollectionManager::destroyMatching(
   }
 
   EntireHolder<IndexT>::remove(untyped_proxy);
+
+  // destroy the location manager
+  theLocMan()->destroyCollectionLM<IndexT>(proxy.getProxy());
 
   auto iter = cleanup_fns_.find(untyped_proxy);
   if (iter != cleanup_fns_.end()) {

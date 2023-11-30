@@ -49,30 +49,21 @@
 
 namespace vt { namespace location {
 
-/*static*/ LocationManager::LocInstContainerType LocationManager::loc_insts;
+/*virtual*/ LocationManager::~LocationManager() { }
 
-/*static*/ LocationManager::LocCoordPtrType LocationManager::getInstance(
-  LocInstType const inst
-) {
-  auto inst_iter = loc_insts.find(inst);
-
-  vtAssert(
-    inst_iter != loc_insts.end(),
-    "LocationManager instance must exist in container"
-  );
-
-  return inst_iter->second;
+void LocationManager::initialize() {
+  {
+    auto lm_proxy = theObjGroup()->makeCollective<VrtLocType>("VrtLoc");
+    lm_proxy.get()->setProxy(lm_proxy);
+    virtual_loc = lm_proxy.get();
+  }
+  {
+    auto lm_proxy = theObjGroup()->makeCollective<VrtLocProxyType>(
+      "VrtContextLoc"
+    );
+    lm_proxy.get()->setProxy(lm_proxy);
+    vrtContextLoc = lm_proxy.get();
+  }
 }
-
-/*virtual*/ LocationManager::~LocationManager() {
-  virtual_loc = nullptr;
-  vrtContextLoc = nullptr;
-  collectionLoc.clear();
-  loc_insts.clear();
-  //pending_inst_.clear();
-  cur_loc_inst = 0xFF00000000000000;
-}
-
-/*static*/ LocInstType LocationManager::cur_loc_inst = 0xFF00000000000000;
 
 }}  // end namespace vt::location
