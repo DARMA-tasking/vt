@@ -185,7 +185,8 @@ Broadcastable<ColT, IndexT, BaseProxyT>::broadcast(Params&&... params) const {
   if constexpr (std::is_same_v<MsgT, NoMsg>) {
     using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
     using SendMsgT = ParamColMsg<Tuple, ColT>;
-    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto msg = vt::makeMessage<SendMsgT>();
+    msg->setParams(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerCollectionMemParam<
       ColT, decltype(f), f, SendMsgT
     >();
@@ -210,7 +211,8 @@ Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(Params&&... params)
   if constexpr (std::is_same_v<MsgT, NoMsg>) {
     using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
     using SendMsgT = ParamColMsg<Tuple, ColT>;
-    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto msg = vt::makeMessage<SendMsgT>();
+    msg->setParams(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerCollectionMemParam<
       ColT, decltype(f), f, SendMsgT
     >();

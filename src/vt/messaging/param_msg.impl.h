@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              reduce_manager.cc
+//                               param_msg.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,64 +41,40 @@
 //@HEADER
 */
 
-#include "vt/collective/reduce/reduce_manager.h"
-#include "vt/collective/reduce/reduce.h"
+#if !defined INCLUDED_VT_MESSAGING_PARAM_MSG_IMPL_H
+#define INCLUDED_VT_MESSAGING_PARAM_MSG_IMPL_H
 
-namespace vt { namespace collective { namespace reduce {
+#include "vt/messaging/param_msg.h"
 
-static std::unique_ptr<Reduce> makeReduceScope(detail::ReduceScope const& scope) {
-  return std::make_unique<Reduce>(scope);
+namespace vt {
+
+template <typename MsgPtrT>
+void MsgProps::apply(MsgPtrT msg) {
+  if (as_location_msg_) {
+    theMsg()->markAsLocationMessage(msg);
+  }
+  if (as_termination_msg_) {
+    theMsg()->markAsTermMessage(msg);
+  }
+  if (as_serial_msg_) {
+    theMsg()->markAsSerialMsgMessage(msg);
+  }
+  if (as_collection_msg_) {
+    theMsg()->markAsCollectionMessage(msg);
+  }
+  if (ep_ != no_epoch) {
+    envelopeSetEpoch(msg->env, ep_);
+  }
+#if vt_check_enabled(priorities)
+  if (priority_ != no_priority) {
+    envelopeSetPriority(msg->env, priority_);
+  }
+  if (priority_level_ != no_priority_level) {
+    envelopeSetPriorityLevel(msg->env, priority_level_);
+  }
+#endif
 }
 
-ReduceManager::ReduceManager()
-  : reducers_(makeReduceScope)
-{
-  // insert the default reducer scope
-  reducers_.make(
-    typename ReduceScopeType::GroupTag{}, default_group,
-    [](detail::ReduceScope const& scope) -> std::unique_ptr<Reduce> {
-      return std::make_unique<Reduce>(scope);
-    }
-  );
-}
+} /* end namespace vt */
 
-Reduce* ReduceManager::global() {
-  return getReducerGroup(default_group);
-}
-
-Reduce* ReduceManager::getReducer(detail::ReduceScope const& scope) {
-  return reducers_.getOnDemand(scope).get();
-}
-
-Reduce* ReduceManager::getReducerObjGroup(ObjGroupProxyType const& proxy) {
-  return reducers_.get(typename ReduceScopeType::ObjGroupTag{}, proxy).get();
-}
-
-Reduce* ReduceManager::getReducerVrtProxy(VirtualProxyType const& proxy) {
-  return reducers_.get(typename ReduceScopeType::VrtProxyTag{}, proxy).get();
-}
-
-Reduce* ReduceManager::getReducerGroup(GroupType const& group) {
-  return reducers_.get(typename ReduceScopeType::GroupTag{}, group).get();
-}
-
-Reduce* ReduceManager::getReducerComponent(ComponentIDType const& cid) {
-  return reducers_.get(typename ReduceScopeType::ComponentTag{}, cid).get();
-}
-
-Reduce* ReduceManager::makeReducerCollective() {
-  return reducers_.get(typename ReduceScopeType::UserIDTag{}, cur_user_id_++).get();
-}
-
-void ReduceManager::makeReducerGroup(
-  GroupType const& group, collective::tree::Tree* tree
-) {
-  reducers_.make(
-    typename ReduceScopeType::GroupTag{}, group,
-    [=](detail::ReduceScope const& scope) -> std::unique_ptr<Reduce> {
-      return std::make_unique<Reduce>(scope, tree);
-    }
-  );
-}
-
-}}} /* end namespace vt::collective::reduce */
+#endif /*INCLUDED_VT_MESSAGING_PARAM_MSG_IMPL_H*/
