@@ -128,12 +128,14 @@ public:
    *
    * \param[in] phase the phase
    *
-   * \return pointer to elements assigned to this node, guaranteed to be not null
+   * \return pointer to elements assigned to this node if not skipped
    */
   std::shared_ptr<const std::set<ElementIDStruct>> getDistro(PhaseType phase) const {
     auto iter = history_.find(phase);
-    vtAssert(iter != history_.end() && iter->second != nullptr, "Must have a valid phase");
-    return iter->second;
+    if (iter != history_.end()) {
+      return iter->second;
+    }
+    return nullptr;
   }
 
   /**
@@ -142,10 +144,7 @@ public:
    * \param[in] phase the phase to clear
    */
   void clearDistro(PhaseType phase) {
-    auto iter = history_.find(phase);
-    if (iter != history_.end()) {
-      history_.erase(iter);
-    }
+    history_.erase(phase);
   }
 
   /**

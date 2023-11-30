@@ -78,8 +78,15 @@ struct SimCol : vt::Collection<SimCol, vt::Index1D> {
 
   void sparseHandler(Msg* m){
     auto const this_node = theContext()->getNode();
+    auto const num_nodes = theContext()->getNumNodes();
+    auto const next_node = (this_node + 1) % num_nodes;
+    auto const prev_node = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
     vt_debug_print(terse, lb, "sparseHandler: idx={}: elm={}\n", getIndex(), getElmID());
-    if (m->iter >= 0 and m->iter <= 6) {
+    if (m->iter == 7 or m->iter == 8 or m->iter == 9) {
+      EXPECT_EQ(getIndex().x() / 2, next_node);
+    } else if (m->iter == 4 or m-> iter == 5) {
+      EXPECT_EQ(getIndex().x() / 2, prev_node);
+    } else {
       EXPECT_EQ(getIndex().x() / 2, this_node);
     }
   }
@@ -171,8 +178,8 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
 
   std::unordered_map<PhaseType, std::vector<ElementIDStruct>> ids;
   int len = 2;
-  PhaseType num_phases = 7;
-  for (int i = 0; i < len; i++) {
+  PhaseType num_phases = 10;
+  for (int i = 0; i < len * 2; i++) {
     auto id = elm::ElmIDBits::createCollectionImpl(true, i+1, this_node, this_node);
     id.curr_node = this_node;
     ids[0].push_back(id);
@@ -183,18 +190,19 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
   }
 
   for (int i = 0; i < len; i++) {
-    auto pid = elm::ElmIDBits::createCollectionImpl(true, i+1, prev_node, this_node);
     auto nid = elm::ElmIDBits::createCollectionImpl(true, i+1, next_node, this_node);
-    ids[1].push_back(pid);
-    ids[2].push_back(pid);
-    ids[4].push_back(nid);
-    ids[5].push_back(nid);
+    auto pid = elm::ElmIDBits::createCollectionImpl(true, i+1, prev_node, this_node);
+    ids[4].push_back(pid);
+    ids[7].push_back(nid);
   }
 
   LBDataHolder dh;
   for (PhaseType i = 0; i < num_phases; i++) {
-    for (auto&& elm : ids[i]) {
-      dh.node_data_[i][elm] = LoadSummary{3};
+    if (i != 1 and i != 2 and i != 5 and i != 8 and i != 9) {
+      auto& elms = ids[i];
+      for(std::size_t j = 0; j < elms.size(); j++) {
+        dh.node_data_[i][elms[j]] = LoadSummary{ static_cast<double>(i + j) + 3};
+      }
     }
   }
 
@@ -202,19 +210,23 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
   std::stringstream stream{std::ios_base::out | std::ios_base::in};
   nlohmann::json metadata, phasesMetadata;
   phasesMetadata["count"] = num_phases;
-  phasesMetadata["skipped"]["list"] = {2};
-  phasesMetadata["skipped"]["range"] = {{3,3}};
-  phasesMetadata["identical_to_previous"]["list"] = {1};
-  phasesMetadata["identical_to_previous"]["range"] = {{5,6}};
+  phasesMetadata["skipped"]["list"] = {9};
+  phasesMetadata["skipped"]["range"] = {{1,2}};
+  phasesMetadata["identical_to_previous"]["list"] = {8};
+  phasesMetadata["identical_to_previous"]["range"] = {{5,5}};
   metadata["type"] = "LBDatafile";
   metadata["phases"] = phasesMetadata;
 
   auto appender = std::make_unique<JSONAppender>(
     "phases", metadata, std::move(stream), true
   );
-  // Add phases 0 and 4
-  appender->addElm(*dh.toJson(0));
-  appender->addElm(*dh.toJson(4));
+  for (PhaseType i = 0; i < num_phases; i++) {
+    // ignore skipped and identical phases
+    if(i != 1 and i != 2 and i != 5 and i != 8 and i != 9) {
+      auto j = dh.toJson(i);
+      appender->addElm(*j);
+    }
+  }
   stream = appender->finish();
 
   // Preapre configuration file
@@ -222,12 +234,15 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
   std::ofstream out(file_name);
   out << ""
     "0 OfflineLB\n"
-    "1 NoLB\n"
-    "2 NoLB\n"
-    "3 NoLB\n"
+    "1 OfflineLB\n"
+    "2 OfflineLB\n"
+    "3 OfflineLB\n"
     "4 OfflineLB\n"
     "5 OfflineLB\n"
-    "6 NoLB\n";
+    "6 OfflineLB\n"
+    "7 OfflineLB\n"
+    "8 OfflineLB\n"
+    "9 OfflineLB\n";
   out.close();
 
   theConfig()->vt_lb = true;

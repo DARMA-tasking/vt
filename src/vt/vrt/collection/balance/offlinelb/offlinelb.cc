@@ -56,10 +56,12 @@ void OfflineLB::init(objgroup::proxy::Proxy<OfflineLB> in_proxy) {
 
 void OfflineLB::runLB(LoadType) {
   auto const distro = theLBDataReader()->getDistro(phase_ + 1);
-  for (auto&& elm : *distro) {
-    migrateObjectTo(elm, theContext()->getNode());
+  if (distro) {
+    for (auto&& elm : *distro) {
+      migrateObjectTo(elm, theContext()->getNode());
+    }
+    theLBDataReader()->clearDistro(phase_ + 1);
   }
-  theLBDataReader()->clearDistro(phase_ + 1);
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
