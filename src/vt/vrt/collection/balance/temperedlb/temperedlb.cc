@@ -1552,6 +1552,20 @@ void TemperedLB::originalTransfer() {
   }
 }
 
+// void TemperedLB::tryLock(
+//   NodeType requesting_node, double criterion_value, SharedIDType cluster_id
+// ) {
+//   // some logic
+
+//   // if yes
+//   is_locked = true;
+//   proxy_[requesting_node].template send<ThisType::lockObtained>(/*full info on cluster*/);
+// }
+
+// void TemperedLB::lockObtained() {
+
+// }
+
 void TemperedLB::swapClusters() {
   auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: swapClusters");
 
@@ -1559,32 +1573,21 @@ void TemperedLB::swapClusters() {
   int n_transfers = 0, n_rejected = 0;
 
   // Try to migrate objects only from overloaded ranks
-  if (is_overloaded_) {
-    // Compute collection of potential targets
-    std::vector<NodeType> under = makeUnderloaded();
-    std::unordered_map<NodeType, ObjsType> migrate_objs;
-    if (under.size() > 0) {
-      std::vector<ObjIDType> ordered_obj_ids = orderObjects(
-        obj_ordering_, cur_objs_, this_new_load_, target_max_load_
-      );
+  // Compute collection of potential targets
+  // std::vector<NodeType> targets = other_rank_clusters_.keys();
+  // sample cmf
+    // Iterage over potential targets to try to swap clusters
 
-      // Cluster migratable objects on source rank
+    //// Iteratr over target clusters
 
-      // Iterage over potential targets to try to swap clusters
-
-      //// Iteratr over target clusters
-
-      ////// Decide whether swap is beneficial
+    ////// Decide whether swap is beneficial
 
 
       //////// If swap is beneficial compute source cluster size
       //////// Test whether criterion is creater than swap RTOL times source size
 
-      ////////// Only in this case perform swap
-      ////////// Else reject swap
-
-    } // if (under.size() > 0)
-  } // if (is_overloaded_)
+    // send try-lock message, with numerical criterion value
+    // spin in the scheduler
 
   // Finalize epoch
   theTerm()->finishedEpoch(lazy_epoch);

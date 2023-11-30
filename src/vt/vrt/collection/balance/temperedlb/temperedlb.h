@@ -233,6 +233,8 @@ private:
   std::unordered_map<NodeType, ClusterSummaryType> other_rank_clusters_;
   /// User-defined memory threshold
   BytesType mem_thresh_ = 0;
+  ///
+  bool is_locked = false;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
