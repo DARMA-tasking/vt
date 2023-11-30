@@ -903,6 +903,7 @@ void Runtime::initializeComponents() {
     >{},
     RuntimeDeps<
       messaging::ActiveMessenger  // Depends on active messenger for sending
+      objgroup::ObjGroupManager   // Depends on objgroup since it creates them
     >{}
   );
 
