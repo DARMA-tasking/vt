@@ -50,39 +50,6 @@
 
 namespace vt { namespace location {
 
-template <typename EntityID>
-struct LocationMsg : vt::Message {
-  using MessageParentType = vt::Message;
-  vt_msg_serialize_prohibited();
-
-  LocInstType loc_man_inst = 0;
-  EntityID entity{};
-  LocEventID loc_event = no_location_event_id;
-  NodeType ask_node = uninitialized_destination;
-  NodeType home_node = uninitialized_destination;
-  NodeType resolved_node = uninitialized_destination;
-
-  LocationMsg(
-    LocInstType const& in_loc_man_inst, EntityID const& in_entity,
-    LocEventID const& in_loc_event, NodeType const& in_ask_node,
-    NodeType in_home_node
-  ) : loc_man_inst(in_loc_man_inst), entity(in_entity), loc_event(in_loc_event),
-      ask_node(in_ask_node), home_node(in_home_node)
-  { }
-
-  LocationMsg(
-    LocInstType const& in_loc_man_inst, EntityID const& in_entity,
-    NodeType const& in_ask_node, NodeType const& in_home_node,
-    NodeType in_resolved
-  ) : loc_man_inst(in_loc_man_inst), entity(in_entity), ask_node(in_ask_node),
-      home_node(in_home_node), resolved_node(in_resolved)
-  { }
-
-  void setResolvedNode(NodeType const& node) {
-    resolved_node = node;
-  }
-};
-
 template <typename EntityID, typename ActiveMessageT>
 struct EntityMsg : ActiveMessageT {
   using MessageParentType = ActiveMessageT;
@@ -99,8 +66,6 @@ struct EntityMsg : ActiveMessageT {
   NodeType getHomeNode() const { return home_node_; }
   void setLocFromNode(NodeType const& node) { loc_from_node_ = node; }
   NodeType getLocFromNode() const { return loc_from_node_; }
-  void setLocInst(LocInstType const& inst) { loc_man_inst_ = inst; }
-  LocInstType getLocInst() const { return loc_man_inst_;  }
   bool hasHandler() const { return handler_ != uninitialized_handler; }
   void setHandler(HandlerType const han) { handler_ = han; }
   HandlerType getHandler() const { return handler_; }
@@ -115,7 +80,6 @@ struct EntityMsg : ActiveMessageT {
     s | entity_id_;
     s | home_node_;
     s | loc_from_node_;
-    s | loc_man_inst_;
     s | handler_;
     s | hops_;
     s | ask_node_;
@@ -125,7 +89,6 @@ private:
   EntityID entity_id_{};
   NodeType home_node_ = uninitialized_destination;
   NodeType loc_from_node_ = uninitialized_destination;
-  LocInstType loc_man_inst_ = no_loc_inst;
   HandlerType handler_ = uninitialized_handler;
   int16_t hops_ = 0;
   NodeType ask_node_ =  uninitialized_destination;

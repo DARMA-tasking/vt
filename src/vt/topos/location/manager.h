@@ -51,6 +51,7 @@
 #include "vt/topos/location/utility/coord.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/collection/proxy.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/runtime/component/component_pack.h"
 
 #include <unordered_map>
@@ -76,7 +77,7 @@ namespace vt { namespace location {
  */
 struct LocationManager : runtime::component::Component<LocationManager> {
   template <typename LocType>
-  using PtrType = std::unique_ptr<LocType>;
+  using PtrType = LocType*;
   using LocCoordPtrType = LocationCoord*;
   using LocInstContainerType = std::unordered_map<LocInstType, LocCoordPtrType>;
   using VrtLocType = EntityLocationCoord<int32_t>;
@@ -88,18 +89,9 @@ struct LocationManager : runtime::component::Component<LocationManager> {
   template <typename IndexT>
   using CollectionLocType = PtrType<IndexT>;
 
-  using LocErasureType = LocationCoord;
-  using LocDeleterType = std::function<void(LocErasureType*)>;
-  using CollectionLocErasedType = std::unique_ptr<
-    LocErasureType, LocDeleterType
-  >;
   using CollectionContainerType = std::unordered_map<
-    VirtualProxyType, CollectionLocErasedType
+    VirtualProxyType, ObjGroupProxyType
   >;
-  template <typename LocType>
-  using ActionLocInstType = std::function<void(LocType*)>;
-  template <typename LocType>
-  using PendingContainerType = std::vector<ActionLocInstType<LocType>>;
 
   /**
    * \internal \brief System call to construct a location manager
@@ -110,99 +102,53 @@ struct LocationManager : runtime::component::Component<LocationManager> {
 
   std::string name() override { return "LocationManager"; }
 
-  /**
-   * \internal \brief Next instance identifier
-   */
-  static LocInstType cur_loc_inst;
-
-  PtrType<VrtLocType> virtual_loc = std::make_unique<VrtLocType>();
-  PtrType<VrtLocProxyType> vrtContextLoc = std::make_unique<VrtLocProxyType>();
+  void initialize() override;
 
   /**
-   * \internal \brief Get the location coordinator for a collection
+   * \internal \brief Make a new location coordinator for a collection
    *
    * \param[in] proxy the collection proxy bits
    *
-   * \return pointer to the coordinator, typed on the collection/index
+   * \return proxy to location manager
    */
   template <typename IndexT>
-  IndexedElmType<IndexT>* getCollectionLM(VirtualProxyType const& proxy);
-
-  /**
-   * \internal \brief Insert a new location coordinator for a collection
-   *
-   * \param[in] proxy the collection proxy bits
-   */
-  template <typename IndexT>
-  void insertCollectionLM(VirtualProxyType const& proxy);
-
-public:
-  // Manage different instances of individually managed entities
-
-  /**
-   * \internal \brief Insert a new coordinator instance
-   *
-   * \param[in] i the instance ID
-   * \param[in] ptr pointer to the coordinator
-   */
-  template <typename LocType>
-  static void insertInstance(LocInstType const i, LocType* ptr);
-
-  /**
-   * \internal \brief Get a coordinator instance
-   *
-   * \param[in] inst the instance ID
-   *
-   * \return the location coordinator
-   */
-  static LocCoordPtrType getInstance(LocInstType const inst);
-
-  /**
-   * \internal \brief Perform an action on a coordinator
-   *
-   * \param[in] inst the instance ID
-   * \param[in] action action to perform
-   */
-  template <typename LocType>
-  static void applyInstance(
-    LocInstType const inst, ActionLocInstType<LocType> action
+  objgroup::proxy::Proxy<IndexedElmType<IndexT>> makeCollectionLM(
+    VirtualProxyType proxy
   );
 
+  /**
+   * \internal \brief Get the new location coordinator for a collection
+   *
+   * \param[in] proxy the collection proxy bits
+   *
+   * \return the location manager
+   */
+  template <typename IndexT>
+  IndexedElmType<IndexT>* getCollectionLM(VirtualProxyType proxy);
+
+  /**
+   * \brief Destroy a location manager
+   *
+   * \param[in] proxy the collection proxy bits
+   */
+  template <typename IndexT>
+  void destroyCollectionLM(VirtualProxyType proxy);
+
+public:
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | collectionLoc
-      | cur_loc_inst
-      | loc_insts
+    s | collection_lms
       | virtual_loc
       | vrtContextLoc;
   }
 
-protected:
-  CollectionContainerType collectionLoc;
+public:
+  PtrType<VrtLocType> virtual_loc;
+  PtrType<VrtLocProxyType> vrtContextLoc;
 
 private:
-  static LocInstContainerType loc_insts;
+  CollectionContainerType collection_lms;
 };
-
-namespace details {
-
-/**
- * \struct PendingInst
- *
- * \brief Hold templated static instances for location coordinators
- *
- * This is split out into a separate class to address the inability of
- * Intel 18 to process static member variable templates
- */
-template <typename LocType>
-struct PendingInst
-{
-  static std::unordered_map<
-    LocInstType, LocationManager::PendingContainerType<LocType>
-  > pending_inst_;
-};
-
-} /* end namespace details */
 
 }} /* end namespace vt::location */
 
