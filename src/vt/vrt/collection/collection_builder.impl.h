@@ -129,9 +129,9 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
   auto const map_han = po.map_han_;
   auto const map_object = po.map_object_;
 
-  // Invoke getCollectionLM() to create a new location manager instance for
-  // this collection
-  theLocMan()->getCollectionLM<IndexType>(proxy);
+  // makeCollectionLM() to create a new location manager instance for this
+  // collection
+  theLocMan()->makeCollectionLM<IndexType>(proxy);
 
   // Insert action on cleanup for this collection
   addCleanupFn<ColT>(proxy);
