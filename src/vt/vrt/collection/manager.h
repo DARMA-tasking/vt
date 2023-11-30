@@ -72,7 +72,6 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/context/runnable_context/lb_data.fwd.h"
 #include "vt/vrt/collection/param/construct_params.h"
-#include "vt/vrt/collection/param/construct_params_msg.h"
 #include "vt/utils/fntraits/fntraits.h"
 
 #include <memory>
@@ -1697,10 +1696,18 @@ private:
    * \internal \brief Handler for receiving a new collection configuration to
    * construct on this node
    *
-   * \param[in] msg the configuration message
+   * \param[in] po construct parameters
+   * \param[in] is_root whether if it's boucing off the root first
    */
   template <typename ColT>
-  static void makeCollectionHandler(param::ConstructParamMsg<ColT>* msg);
+  static void makeCollectionHandler(
+    param::ConstructParams<ColT> po, bool is_root
+  );
+
+  /**
+   * \brief Finished a rooted construction--do the next if needed
+   */
+  static void finishedRootedConstruction();
 
   /**
    * \internal \brief System function to actually constructing the collection
@@ -1766,6 +1773,8 @@ private:
   VirtualIDType next_rooted_id_ = 0;
   TypelessHolder typeless_holder_;
   std::unordered_map<VirtualProxyType, SequentialIDType> reduce_stamp_;
+  bool has_pending_construction_ = false;
+  std::list<ActionType> pending_rooted_constructions_;
 };
 
 }}} /* end namespace vt::vrt::collection */
