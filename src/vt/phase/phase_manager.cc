@@ -310,16 +310,15 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
       last_phase_info->migration_count,
       lb_name
     );
-    // vt_print(
-    //   phase,
-    //   "POST phase={}, total time={}, max_load={}, avg_load={}, imbalance={:.3f}, migration count={}\n",
-    //   last_phase_info->phase,
-    //   total_time,
-    //   TimeType(last_phase_info->max_load_post_lb),
-    //   TimeType(last_phase_info->avg_load_post_lb),
-    //   last_phase_info->imb_load_post_lb,
-    //   last_phase_info->migration_count
-    // );
+
+    vt_debug_print(
+      terse, phase,
+      "POST phase={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.3f}\n",
+      last_phase_info->phase,
+      TimeType(last_phase_info->max_load_post_lb),
+      TimeType(last_phase_info->avg_load_post_lb),
+      last_phase_info->imb_load_post_lb
+    );
 
     auto compute_speedup = [](double t1, double t2) -> double {
        return t1 / t2;
@@ -395,14 +394,15 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
           }
         }
       }
-    } else if (last_phase_info->phase == 0) {
-       // ran the lb on a phase that may have included initialization costs
-       vt_print(
-         phase,
-         "Consider skipping LB on phase 0 if it is not representative of "
-         "future phases\n"
-       );
     } else {
+      if (last_phase_info->phase == 0) {
+        // ran the lb on a phase that may have included initialization costs
+        vt_print(
+          phase,
+          "Consider skipping LB on phase 0 if it is not representative of "
+          "future phases\n"
+        );
+      }
       if (last_phase_info->migration_count > 0) {
         auto speedup = compute_speedup(
           last_phase_info->max_load, last_phase_info->max_load_post_lb
