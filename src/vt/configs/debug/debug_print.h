@@ -288,7 +288,7 @@ static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
   constexpr auto mask = ModeEnum::terse | ModeEnum::normal | ModeEnum::verbose;
   constexpr auto level = mod & mask;
   if (level <= vt::debug::preConfig()->vt_debug_level_val) {
-    auto user = fmt::format(fmt::runtime(std::forward<Arg>(arg)),std::forward<Args>(args)...);
+    auto user = fmt::format(std::forward<Arg>(arg),std::forward<Args>(args)...);
     std::string debug_level = "";
     if (level == ModeEnum::terse) {
       debug_level = "(t)";
