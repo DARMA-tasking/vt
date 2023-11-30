@@ -79,8 +79,8 @@ LocationManager::makeCollectionLM(VirtualProxyType proxy) {
 
 template <typename IndexT>
 void LocationManager::destroyCollectionLM(VirtualProxyType proxy) {
-  if (auto it = collection_lms.find(proxy); it != collection_lms.end()) {
-    objgroup::proxy::Proxy<IndexedElmType<IndexT>> lm_proxy(it->second);
+  if (auto elm = collection_lms.extract(proxy); elm) {
+    objgroup::proxy::Proxy<IndexedElmType<IndexT>> lm_proxy(elm.mapped());
     lm_proxy.destroyCollective();
   } else {
     vtAbort("Could not find location manager for proxy");
