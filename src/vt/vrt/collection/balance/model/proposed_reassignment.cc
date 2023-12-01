@@ -121,4 +121,18 @@ LoadType ProposedReassignment::getRawLoad(ElementIDStruct object, PhaseOffset wh
   return ComposedModel::getRawLoad(object, when);
 }
 
+ElmUserDataType ProposedReassignment::getUserData(ElementIDStruct object, PhaseOffset when) const
+{
+  auto a = reassignment_->arrive_.find(object);
+  if (a != reassignment_->arrive_.end()) {
+    return std::get<2>(a->second);
+  }
+
+  // Check this *after* arrivals to handle hypothetical self-migration
+  vtAssert(reassignment_->depart_.find(object) == reassignment_->depart_.end(),
+           "Departing object should not appear as a user data query subject");
+
+  return ComposedModel::getUserData(object, when);
+}
+
 }}}}

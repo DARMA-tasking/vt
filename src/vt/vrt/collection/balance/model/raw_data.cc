@@ -51,10 +51,12 @@ void RawData::updateLoads(PhaseType last_completed_phase) {
 }
 
 void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                       std::unordered_map<PhaseType, CommMapType> const* proc_comm)
+                       std::unordered_map<PhaseType, CommMapType> const* proc_comm,
+                       std::unordered_map<PhaseType, DataMapType> const* user_data)
 {
   proc_load_ = proc_load;
   proc_comm_ = proc_comm;
+  user_data_ = user_data;
 }
 
 ObjectIterator RawData::begin() const {
@@ -108,6 +110,23 @@ LoadType RawData::getRawLoad(ElementIDStruct object, PhaseOffset offset) const {
     return phase_data.at(object).get(offset);
   } else {
     return 0.0;
+  }
+}
+
+ElmUserDataType RawData::getUserData(ElementIDStruct object, PhaseOffset offset) const {
+  vtAssert(offset.phases < 0,
+           "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
+
+  auto phase = getNumCompletedPhases() + offset.phases;
+  if (user_data_->find(phase) != user_data_->end()) {
+    auto& phase_data = user_data_->at(phase);
+    if (phase_data.find(object) != phase_data.end()) {
+      return phase_data.at(object);
+    } else {
+      return ElmUserDataType{};
+    }
+  } else {
+    return ElmUserDataType{};
   }
 }
 

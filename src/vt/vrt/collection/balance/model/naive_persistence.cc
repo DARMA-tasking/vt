@@ -66,6 +66,14 @@ LoadType NaivePersistence::getRawLoad(ElementIDStruct object, PhaseOffset offset
   return ComposedModel::getRawLoad(object, offset);
 }
 
+ElmUserDataType NaivePersistence::getUserData(ElementIDStruct object, PhaseOffset offset) const
+{
+  if (offset.phases >= 0)
+    offset.phases = -1;
+
+  return ComposedModel::getUserData(object, offset);
+}
+
 unsigned int NaivePersistence::getNumPastPhasesNeeded(unsigned int look_back) const
 {
   return ComposedModel::getNumPastPhasesNeeded(std::max(1u, look_back));

@@ -62,6 +62,7 @@ struct NaivePersistence : public ComposedModel {
   explicit NaivePersistence(std::shared_ptr<balance::LoadModel> base);
   LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   LoadType getRawLoad(ElementIDStruct object, PhaseOffset offset) const override;
+  ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
 }; // class NaivePersistence
 

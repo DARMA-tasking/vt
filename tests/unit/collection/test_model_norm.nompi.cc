@@ -64,10 +64,12 @@ using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
+using vt::vrt::collection::balance::DataMapType;
 
 using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
 using ProcSubphaseLoadMap = std::unordered_map<PhaseType, SubphaseLoadMapType>;
 using ProcCommMap = std::unordered_map<PhaseType, CommMapType>;
+using UserDataMap = std::unordered_map<PhaseType, DataMapType>;
 
 constexpr auto num_subphases = 3;
 
@@ -78,7 +80,8 @@ struct StubModel : LoadModel {
 
   void setLoads(
     ProcLoadMap const* proc_load,
-    ProcCommMap const*) override {
+    ProcCommMap const*,
+    UserDataMap const*) override {
     proc_load_ = proc_load;
   }
 
@@ -111,7 +114,7 @@ TEST_F(TestModelNorm, test_model_norm_1) {
        {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
 
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
-  test_model->setLoads(&proc_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr, nullptr);
   test_model->updateLoads(0);
 
   // ONLY because this is built on top of the StubModel do we expect false
@@ -143,7 +146,7 @@ TEST_F(TestModelNorm, test_model_norm_2) {
 
   // finite 'power' value
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
-  test_model->setLoads(&proc_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr, nullptr);
   test_model->updateLoads(0);
 
   std::array<LoadType, 2> expected_norms = {
@@ -173,7 +176,7 @@ TEST_F(TestModelNorm, test_model_norm_3) {
   // infinite 'power' value
   auto test_model = std::make_shared<Norm>(
     std::make_shared<StubModel>(), std::numeric_limits<double>::infinity());
-  test_model->setLoads(&proc_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr, nullptr);
   test_model->updateLoads(0);
 
   std::array<LoadType, 2> expected_norms = {LoadType{30}, LoadType{60}};

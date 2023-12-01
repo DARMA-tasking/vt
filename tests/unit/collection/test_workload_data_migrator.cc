@@ -66,8 +66,14 @@ using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ProposedReassignment;
 using vt::vrt::collection::balance::ReassignmentMsg;
 using vt::vrt::collection::balance::replay::WorkloadDataMigrator;
+using vt::vrt::collection::balance::ElmUserDataType;
+using vt::vrt::collection::balance::UserDataValueType;
 
 struct TestWorkloadDataMigrator : TestParallelHarness { };
+
+int computeTag(const elm::ElementIDType &id) {
+  return id * 3 + 1;
+}
 
 std::shared_ptr<LBDataHolder>
 setupWorkloads(PhaseType phase, size_t numElements) {
@@ -95,6 +101,9 @@ setupWorkloads(PhaseType phase, size_t numElements) {
     auto &subphase_loads = lbdh->node_data_[phase][elmID].subphase_loads;
     subphase_loads.push_back(elmID.id % 2 ? tval : 0);
     subphase_loads.push_back(elmID.id % 2 ? 0 : tval);
+    lbdh->user_defined_lb_info_[phase][elmID] = ElmUserDataType{
+      {"tag", computeTag(elmID.id)}
+    };
   }
 
   return lbdh;
@@ -104,7 +113,9 @@ std::shared_ptr<LoadModel>
 setupBaseModel(PhaseType phase, std::shared_ptr<LBDataHolder> lbdh) {
   auto base_load_model = vt::theLBManager()->getBaseLoadModel();
   // force it to use our json workloads, not anything it may have collected
-  base_load_model->setLoads(&lbdh->node_data_, &lbdh->node_comm_);
+  base_load_model->setLoads(
+    &lbdh->node_data_, &lbdh->node_comm_, &lbdh->user_defined_lb_info_
+  );
 
   vt::runInEpochCollective("updateLoads", [&]{
     base_load_model->updateLoads(phase);
@@ -226,6 +237,17 @@ TEST_F(TestWorkloadDataMigrator, test_normalize_call) {
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
+      auto user = new_model->getUserData(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(user.size(), 1);
+      if (user.size() == 1) {
+        auto it = user.find(std::string("tag"));
+        EXPECT_TRUE(it != user.end());
+        if (it != user.end()) {
+          EXPECT_EQ(it->second, UserDataValueType(computeTag(obj_id.id)));
+        }
+      }
     }
   }
 }
@@ -274,6 +296,17 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_home) {
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
+      auto user = back_home_model->getUserData(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(user.size(), 1);
+      if (user.size() == 1) {
+        auto it = user.find(std::string("tag"));
+        EXPECT_TRUE(it != user.end());
+        if (it != user.end()) {
+          EXPECT_EQ(it->second, UserDataValueType(computeTag(obj_id.id)));
+        }
+      }
     }
   }
 }
@@ -336,6 +369,17 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_home) {
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
+      auto user = back_home_if_not_here_model->getUserData(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(user.size(), 1);
+      if (user.size() == 1) {
+        auto it = user.find(std::string("tag"));
+        EXPECT_TRUE(it != user.end());
+        if (it != user.end()) {
+          EXPECT_EQ(it->second, UserDataValueType(computeTag(obj_id.id)));
+        }
+      }
     }
   }
 }
@@ -388,6 +432,17 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_home) {
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
+      auto user = here_model->getUserData(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(user.size(), 1);
+      if (user.size() == 1) {
+        auto it = user.find(std::string("tag"));
+        EXPECT_TRUE(it != user.end());
+        if (it != user.end()) {
+          EXPECT_EQ(it->second, UserDataValueType(computeTag(obj_id.id)));
+        }
+      }
     }
   }
 }
@@ -451,6 +506,17 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_here_from_home) {
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
+      auto user = here_model->getUserData(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(user.size(), 1);
+      if (user.size() == 1) {
+        auto it = user.find(std::string("tag"));
+        EXPECT_TRUE(it != user.end());
+        if (it != user.end()) {
+          EXPECT_EQ(it->second, UserDataValueType(computeTag(obj_id.id)));
+        }
+      }
     }
   }
 }
@@ -505,6 +571,17 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_1) {
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
+      auto user = here_model->getUserData(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(user.size(), 1);
+      if (user.size() == 1) {
+        auto it = user.find(std::string("tag"));
+        EXPECT_TRUE(it != user.end());
+        if (it != user.end()) {
+          EXPECT_EQ(it->second, UserDataValueType(computeTag(obj_id.id)));
+        }
+      }
     }
   }
 }
@@ -559,6 +636,17 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_2) {
         obj_id, {PhaseOffset::NEXT_PHASE, 1}
       );
       EXPECT_EQ(subload1, obj_id.id % 2 ? 0 : obj_id.id * 2);
+      auto user = here_model->getUserData(
+        obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      EXPECT_EQ(user.size(), 1);
+      if (user.size() == 1) {
+        auto it = user.find(std::string("tag"));
+        EXPECT_TRUE(it != user.end());
+        if (it != user.end()) {
+          EXPECT_EQ(it->second, UserDataValueType(computeTag(obj_id.id)));
+        }
+      }
     }
   }
 }

@@ -112,14 +112,14 @@ struct LoadSummary {
   }
 };
 
+/// User-defined LB values
+using UserDataValueType = std::variant<int, double, std::string>;
+using ElmUserDataType = std::unordered_map<std::string, UserDataValueType>;
+
 using LoadMapType         = std::unordered_map<ElementIDStruct, LoadSummary>;
 using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<LoadType>>;
-
 /// User-defined LB values map
-using DataMapType         = std::unordered_map<
-  ElementIDStruct,
-  std::unordered_map<std::string, std::variant<int, double, std::string>>
->;
+using DataMapType         = std::unordered_map<ElementIDStruct, ElmUserDataType>;
 
 struct Reassignment {
   // Include the subject node so that these structures can be formed
@@ -130,7 +130,7 @@ struct Reassignment {
   int32_t global_migration_count;
   std::unordered_map<ElementIDStruct, NodeType> depart_;
   std::unordered_map<
-    ElementIDStruct, std::tuple<LoadSummary, LoadSummary>
+    ElementIDStruct, std::tuple<LoadSummary, LoadSummary, ElmUserDataType>
   > arrive_;
 };
 
@@ -172,6 +172,14 @@ LoadSummary getObjectRawLoads(
 );
 
 LoadSummary getObjectRawLoads(
+  LoadModel* model, ElementIDStruct object, PhaseOffset when
+);
+
+ElmUserDataType getObjectUserData(
+  std::shared_ptr<LoadModel> model, ElementIDStruct object, PhaseOffset when
+);
+
+ElmUserDataType getObjectUserData(
   LoadModel* model, ElementIDStruct object, PhaseOffset when
 );
 
