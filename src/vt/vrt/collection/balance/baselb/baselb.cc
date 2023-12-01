@@ -103,7 +103,6 @@ void BaseLB::importProcessorData(
 
   comm_data = &comm_in;
   base_stats_ = &in_stats;
-  user_data_ = &in_data_map;
 }
 
 void BaseLB::getArgs(PhaseType phase) {

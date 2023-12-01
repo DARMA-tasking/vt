@@ -169,7 +169,6 @@ protected:
 
   TimeType start_time_                                = TimeType{0.0};
   ElementCommType const* comm_data                    = nullptr;
-  balance::DataMapType const* user_data_              = nullptr;
   objgroup::proxy::Proxy<BaseLB> proxy_               = {};
   PhaseType phase_                                    = 0;
   std::unique_ptr<balance::ConfigEntry> config_entry_ = nullptr;
