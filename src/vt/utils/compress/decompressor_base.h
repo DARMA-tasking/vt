@@ -45,6 +45,7 @@
 #define INCLUDED_VT_UTILS_COMPRESS_DECOMPRESSOR_BASE_H
 
 #include <string>
+#include <cstdint>
 #include <cstdlib>
 
 namespace vt { namespace util { namespace compress {
