@@ -519,58 +519,64 @@ void TemperedLB::runLB(LoadType total_load) {
 }
 
 void TemperedLB::readClustersMemoryData() {
-  if (user_data_) {
-    for (auto const& [obj, data_map] : *user_data_) {
-      SharedIDType shared_id = -1;
-      BytesType shared_bytes = 0;
-      BytesType working_bytes = 0;
-      for (auto const& [key, variant] : data_map) {
-        if (key == "shared_id") {
-          // Because of how JSON is stored this is always a double, even though
-          // it should be an integer
-          if (double const* val = std::get_if<double>(&variant)) {
-            shared_id = static_cast<int>(*val);
-          } else {
-            vtAbort("\"shared_id\" in variant does not match integer");
+ if (load_model_->hasUserData()) {
+    for (auto obj : *load_model_) {
+      if (obj.isMigratable()) {
+        auto data_map = load_model_->getUserData(
+          obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+        );
+
+        SharedIDType shared_id = -1;
+        BytesType shared_bytes = 0;
+        BytesType working_bytes = 0;
+        for (auto const& [key, variant] : data_map) {
+          if (key == "shared_id") {
+            // Because of how JSON is stored this is always a double, even
+            // though it should be an integer
+            if (double const* val = std::get_if<double>(&variant)) {
+              shared_id = static_cast<int>(*val);
+            } else {
+              vtAbort("\"shared_id\" in variant does not match double");
+            }
           }
-        }
-        if (key == "shared_bytes") {
-          if (BytesType const* val = std::get_if<BytesType>(&variant)) {
-            shared_bytes = *val;
-          } else {
-            vtAbort("\"shared_bytes\" in variant does not match double");
+          if (key == "shared_bytes") {
+            if (BytesType const* val = std::get_if<BytesType>(&variant)) {
+              shared_bytes = *val;
+            } else {
+              vtAbort("\"shared_bytes\" in variant does not match double");
+            }
           }
-        }
-        if (key == "task_working_bytes") {
-          if (BytesType const* val = std::get_if<BytesType>(&variant)) {
-            working_bytes = *val;
-          } else {
-            vtAbort("\"working_bytes\" in variant does not match double");
+          if (key == "task_working_bytes") {
+            if (BytesType const* val = std::get_if<BytesType>(&variant)) {
+              working_bytes = *val;
+            } else {
+              vtAbort("\"working_bytes\" in variant does not match double");
+            }
           }
-        }
-        if (key == "rank_working_bytes") {
-          if (BytesType const* val = std::get_if<BytesType>(&variant)) {
-            rank_bytes_ = *val;
-          } else {
-            vtAbort("\"rank_bytes\" in variant does not match double");
+          if (key == "rank_working_bytes") {
+            if (BytesType const* val = std::get_if<BytesType>(&variant)) {
+              rank_bytes_ = *val;
+            } else {
+              vtAbort("\"rank_bytes\" in variant does not match double");
+            }
           }
+          // @todo: for now, skip "task_serialized_bytes" and
+          // "task_footprint_bytes"
         }
-        // @todo: for now, skip "task_serialized_bytes" and
-        // "task_footprint_bytes"
+
+        // @todo: switch to debug print at some point
+        vt_print(
+          temperedlb, "obj={} shared_block={} bytes={}\n",
+          obj, shared_id, shared_bytes
+        );
+
+        has_memory_data_ = true;
+        obj_shared_block_[obj] = shared_id;
+        obj_working_bytes_[obj] = working_bytes;
+        shared_block_size_[shared_id] = shared_bytes;
       }
-
-      // @todo: switch to debug print at some point
-      vt_print(
-        temperedlb, "obj={} shared_block={} bytes={}\n",
-        obj, shared_id, shared_bytes
-      );
-
-      has_memory_data_ = true;
-      obj_shared_block_[obj] = shared_id;
-      obj_working_bytes_[obj] = working_bytes;
-      shared_block_size_[shared_id] = shared_bytes;
     }
-  }
+ }
 }
 
 void TemperedLB::computeClusterSummary() {
