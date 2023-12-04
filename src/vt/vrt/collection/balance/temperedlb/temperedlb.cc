@@ -576,7 +576,7 @@ void TemperedLB::readClustersMemoryData() {
         shared_block_size_[shared_id] = shared_bytes;
       }
     }
- }
+  }
 }
 
 void TemperedLB::computeClusterSummary() {
