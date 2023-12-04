@@ -57,99 +57,34 @@
 namespace vt { namespace location {
 
 template <typename IndexT>
-void LocationManager::insertCollectionLM(VirtualProxyType const& proxy) {
-  using LocType = IndexedElmType<IndexT>;
-  auto loc_man_typed = new LocType(
-    collection_lm_tag_t{}, static_cast<LocInstType>(proxy)
-  );
-  auto loc_ptr = std::unique_ptr<LocErasureType, LocDeleterType>(
-    static_cast<LocErasureType*>(loc_man_typed),
-    [](LocErasureType* elm) {
-      auto const& typed_elm = static_cast<LocType*>(elm);
-      delete typed_elm;
-    }
-  );
-  collectionLoc.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(proxy),
-    std::forward_as_tuple(std::move(loc_ptr))
-  );
+typename LocationManager::IndexedElmType<IndexT>*
+LocationManager::getCollectionLM(VirtualProxyType proxy) {
+  if (auto it = collection_lms.find(proxy); it != collection_lms.end()) {
+    return objgroup::proxy::Proxy<IndexedElmType<IndexT>>(it->second).get();
+  } else {
+    vtAbort("Could not find location manager for proxy");
+    return nullptr;
+  }
 }
 
 template <typename IndexT>
-LocationManager::IndexedElmType<IndexT>*
-LocationManager::getCollectionLM(VirtualProxyType const& proxy) {
+objgroup::proxy::Proxy<LocationManager::IndexedElmType<IndexT>>
+LocationManager::makeCollectionLM(VirtualProxyType proxy) {
   using LocType = IndexedElmType<IndexT>;
-
-  auto loc_iter = collectionLoc.find(proxy);
-  auto const& found = loc_iter != collectionLoc.end();
-
-  vt_debug_print(
-    normal, location,
-    "getCollectionLM: proxy={}, found={}\n",
-    proxy, print_bool(found)
-  );
-
-  if (!found) {
-    LocationManager::insertCollectionLM<IndexT>(proxy);
-    loc_iter = collectionLoc.find(proxy);
-  } else if (!found) {
-    return nullptr;
-  }
-  vtAssert(
-    loc_iter != collectionLoc.end() && loc_iter->second != nullptr,
-    "Location manager must exist now for this collection"
-  );
-  auto manager = loc_iter->second.get();
-  auto const& typed_loc_ptr = static_cast<LocType*>(manager);
-  return typed_loc_ptr;
+  auto lm_proxy = theObjGroup()->makeCollective<LocType>("LocationManager");
+  lm_proxy.get()->setProxy(lm_proxy);
+  collection_lms[proxy] = lm_proxy.getProxy();
+  return lm_proxy;
 }
 
-template <typename LocType>
-/*static*/ void LocationManager::applyInstance(
-  LocInstType const inst, ActionLocInstType<LocType> action
-) {
-  auto inst_iter = loc_insts.find(inst);
-  if (inst_iter == loc_insts.end()) {
-    auto pending_iter = details::PendingInst<LocType>::pending_inst_.find(inst);
-    if (pending_iter == details::PendingInst<LocType>::pending_inst_.end()) {
-      details::PendingInst<LocType>::pending_inst_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(inst),
-        std::forward_as_tuple(PendingContainerType<LocType>{action})
-      );
-    } else {
-      pending_iter->second.push_back(action);
-    }
+template <typename IndexT>
+void LocationManager::destroyCollectionLM(VirtualProxyType proxy) {
+  if (auto elm = collection_lms.extract(proxy); elm) {
+    objgroup::proxy::Proxy<IndexedElmType<IndexT>> lm_proxy(elm.mapped());
+    lm_proxy.destroyCollective();
   } else {
-    auto const& inst_ret = LocationManager::getInstance(inst);
-    action(static_cast<LocType*>(inst_ret));
+    vtAbort("Could not find location manager for proxy");
   }
-}
-
-template <typename LocType>
-/*static*/ void LocationManager::insertInstance(LocInstType const inst, LocType* ptr) {
-  loc_insts.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(inst),
-    std::forward_as_tuple(static_cast<LocCoordPtrType>(ptr))
-  );
-
-  auto iter = details::PendingInst<LocType>::pending_inst_.find(inst);
-  if (iter != details::PendingInst<LocType>::pending_inst_.end()) {
-    for (auto&& elm : iter->second) {
-      elm(ptr);
-    }
-    details::PendingInst<LocType>::pending_inst_.erase(iter);
-  }
-}
-
-
-namespace details {
-template <typename LocType>
-/*static*/ std::unordered_map<
-  LocInstType, LocationManager::PendingContainerType<LocType>
-> PendingInst<LocType>::pending_inst_;
 }
 
 }} /* end namespace vt::location */
