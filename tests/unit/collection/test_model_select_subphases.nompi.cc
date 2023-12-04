@@ -63,10 +63,12 @@ using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SelectSubphases;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
+using vt::vrt::collection::balance::DataMapType;
 
 using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
 using ProcSubphaseLoadMap = std::unordered_map<PhaseType, SubphaseLoadMapType>;
 using ProcCommMap = std::unordered_map<PhaseType, CommMapType>;
+using UserDataMap = std::unordered_map<PhaseType, DataMapType>;
 
 constexpr auto num_subphases = 3;
 
@@ -77,7 +79,8 @@ struct StubModel : LoadModel {
 
   void setLoads(
     ProcLoadMap const* proc_load,
-    ProcCommMap const*) override {
+    ProcCommMap const*,
+    UserDataMap const*) override {
     proc_load_ = proc_load;
   }
 
@@ -124,7 +127,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
 
   EXPECT_EQ(test_model->getNumSubphases(), subphases.size());
 
-  test_model->setLoads(&proc_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr, nullptr);
   test_model->updateLoads(0);
 
   std::unordered_map<ElementIDStruct, std::vector<LoadType>> expected_values = {
@@ -173,7 +176,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
 
   EXPECT_EQ(test_model->getNumSubphases(), subphases.size());
 
-  test_model->setLoads(&proc_load, nullptr);
+  test_model->setLoads(&proc_load, nullptr, nullptr);
   test_model->updateLoads(0);
 
   std::unordered_map<ElementIDStruct, LoadType> expected_values = {

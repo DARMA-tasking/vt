@@ -82,7 +82,10 @@ void replayWorkloads(
   // remember vt's base load model
   auto base_load_model = theLBManager()->getBaseLoadModel();
   // force it to use our given workloads, not anything it may have collected
-  base_load_model->setLoads(&(workloads->node_data_), &(workloads->node_comm_));
+  base_load_model->setLoads(
+    &(workloads->node_data_), &(workloads->node_comm_),
+    &(workloads->user_defined_lb_info_)
+  );
   // point the load model at the workloads for the relevant phase
   runInEpochCollective("WorkloadReplayDriver -> updateLoads", [=] {
     base_load_model->updateLoads(initial_phase);
@@ -104,7 +107,8 @@ void replayWorkloads(
 
     // force it to use our given workloads, not anything it may have collected
     base_load_model->setLoads(
-      &(workloads->node_data_), &(workloads->node_comm_)
+      &(workloads->node_data_), &(workloads->node_comm_),
+      &(workloads->user_defined_lb_info_)
     );
 
     // point the load model at the workloads for the relevant phase
@@ -151,7 +155,8 @@ void replayWorkloads(
 
       // force it to use our given workloads, not anything it may have collected
       pre_lb_load_model->setLoads(
-        &(workloads->node_data_), &(workloads->node_comm_)
+        &(workloads->node_data_), &(workloads->node_comm_),
+        &(workloads->user_defined_lb_info_)
       );
     }
 

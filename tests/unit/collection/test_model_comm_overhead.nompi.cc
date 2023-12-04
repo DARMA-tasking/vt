@@ -67,10 +67,12 @@ using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
+using vt::vrt::collection::balance::DataMapType;
 
 using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
 using ProcSubphaseLoadMap = std::unordered_map<PhaseType, SubphaseLoadMapType>;
 using ProcCommMap = std::unordered_map<PhaseType, CommMapType>;
+using UserDataMap = std::unordered_map<PhaseType, DataMapType>;
 
 static auto num_phases = 0;
 
@@ -81,7 +83,8 @@ struct StubModel : LoadModel {
 
   void setLoads(
     ProcLoadMap const* proc_load,
-    ProcCommMap const*) override {
+    ProcCommMap const*,
+    UserDataMap const*) override {
     proc_load_ = proc_load;
   }
 
@@ -153,7 +156,7 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   auto test_model = std::make_shared<CommOverhead>(
     std::make_shared<StubModel>(), per_msg_weight, per_byte_weight
   );
-  test_model->setLoads(&proc_load, &proc_comm);
+  test_model->setLoads(&proc_load, &proc_comm, nullptr);
 
   std::unordered_map<PhaseType, LoadType> expected_work = {
     {0, LoadType{296}}, {1, LoadType{295.5}}

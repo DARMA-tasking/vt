@@ -66,7 +66,8 @@ struct CommOverhead : public ComposedModel {
   );
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
+                std::unordered_map<PhaseType, CommMapType> const* proc_comm,
+                std::unordered_map<PhaseType, DataMapType> const* user_data) override;
 
   LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
 

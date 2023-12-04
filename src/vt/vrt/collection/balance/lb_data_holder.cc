@@ -290,6 +290,19 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 }
               }
             }
+
+            if (task.find("user_defined") != task.end()) {
+              for (auto const& [key, value] : task["user_defined"].items()) {
+                if (value.is_string()) {
+                  user_defined_lb_info_[id][elm][key] =
+                    value.template get<std::string>();
+                }
+                if (value.is_number()) {
+                  user_defined_lb_info_[id][elm][key] =
+                    value.template get<double>();
+                }
+              }
+            }
           }
         }
       }

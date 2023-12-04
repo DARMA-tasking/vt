@@ -74,13 +74,16 @@ struct PerCollection : public ComposedModel
   void addModel(CollectionID proxy, std::shared_ptr<LoadModel> model);
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
+                std::unordered_map<PhaseType, CommMapType> const* proc_comm,
+                std::unordered_map<PhaseType, DataMapType> const* user_data) override;
 
   void updateLoads(PhaseType last_completed_phase) override;
 
   LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   bool hasRawLoad() const override;
   LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
+  bool hasUserData() const override;
+  ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
 
 private:

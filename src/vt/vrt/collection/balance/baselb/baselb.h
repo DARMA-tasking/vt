@@ -78,7 +78,7 @@ struct BaseLB {
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
   using LoadSummary      = balance::LoadSummary;
   using ObjLoadListType  = std::vector<
-    std::tuple<ObjIDType, LoadSummary, LoadSummary>
+    std::tuple<ObjIDType, LoadSummary, LoadSummary, balance::ElmUserDataType>
   >;
   using ObjDestinationListType = std::vector<std::tuple<ObjIDType, NodeType>>;
 
@@ -169,7 +169,6 @@ protected:
 
   TimeType start_time_                                = TimeType{0.0};
   ElementCommType const* comm_data                    = nullptr;
-  balance::DataMapType const* user_data_              = nullptr;
   objgroup::proxy::Proxy<BaseLB> proxy_               = {};
   PhaseType phase_                                    = 0;
   std::unique_ptr<balance::ConfigEntry> config_entry_ = nullptr;

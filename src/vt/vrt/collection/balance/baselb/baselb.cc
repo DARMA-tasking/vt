@@ -103,7 +103,6 @@ void BaseLB::importProcessorData(
 
   comm_data = &comm_in;
   base_stats_ = &in_stats;
-  user_data_ = &in_data_map;
 }
 
 void BaseLB::getArgs(PhaseType phase) {
@@ -191,8 +190,12 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
       auto const raw_load_summary = getObjectRawLoads(
         load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
+      auto const obj_user_data = getObjectUserData(
+        load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+
       depart_map[dest].push_back(
-        std::make_tuple(obj_id, load_summary, raw_load_summary)
+        std::make_tuple(obj_id, load_summary, raw_load_summary, obj_user_data)
       );
     }
 
@@ -230,8 +233,9 @@ void BaseLB::notifyNewHostNodeOfObjectsArriving(
     auto const obj_id = std::get<0>(arrival);
     auto const& load_summary = std::get<1>(arrival);
     auto const& raw_load_summary = std::get<2>(arrival);
+    auto const& obj_user_data = std::get<3>(arrival);
     pending_reassignment_->arrive_[obj_id] = std::make_tuple(
-      load_summary, raw_load_summary
+      load_summary, raw_load_summary, obj_user_data
     );
   }
 }

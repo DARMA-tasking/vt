@@ -59,6 +59,7 @@ struct ProposedReassignment : public ComposedModel {
   int getNumObjects() const override;
   LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
+  ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
 
 private:
   std::shared_ptr<const Reassignment> reassignment_;

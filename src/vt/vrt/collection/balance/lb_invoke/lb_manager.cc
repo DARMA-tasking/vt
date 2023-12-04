@@ -164,7 +164,8 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   model_ = model;
   auto nlb_data = theNodeLBData();
   model_->setLoads(nlb_data->getNodeLoad(),
-                   nlb_data->getNodeComm());
+                   nlb_data->getNodeComm(),
+                   nlb_data->getUserData());
 }
 
 template <typename LB>
