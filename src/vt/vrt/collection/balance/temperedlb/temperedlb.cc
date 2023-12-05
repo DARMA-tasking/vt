@@ -1881,7 +1881,7 @@ void TemperedLB::swapClusters() {
   auto criterion = [this](auto src_cluster, auto try_cluster) -> double {
     // this does not handle empty cluster swaps
     auto const& [src_id, src_bytes, src_load] = src_cluster;
-    auto const& [try_rank, try_id, try_bytes, try_load] = try_cluster;
+    auto const& [try_rank, try_id, try_bytes, try_load, try_mem] = try_cluster;
 
     auto const before_work_src = this_new_load_;
     auto const before_work_try = load_info_.find(try_rank)->second;
@@ -1890,6 +1890,10 @@ void TemperedLB::swapClusters() {
     auto const after_work_src = this_new_load_ - src_load + try_load;
     auto const after_work_try = before_work_try + src_load - try_load;
     auto const w_max_new = std::max(after_work_src, after_work_try);
+
+    if (try_mem - try_bytes + src_bytes > mem_thresh_) {
+      return -1000;
+    }
 
     return w_max_0 - w_max_new;
   };
@@ -1900,14 +1904,30 @@ void TemperedLB::swapClusters() {
   for (auto const& [try_rank, try_clusters] : other_rank_clusters_) {
     bool found_potential_good_swap = false;
 
-    // if (try_clusters.size() < cur_clusters_.size()) {
-    //   proxy_[try_rank].template send<&TemperedLB::tryLock>(this_node, 100);
-    //   continue;
-    // }
+    // Approximate roughly the memory usage on the target
+    BytesType try_approx_mem_usage = rank_bytes_;
+    for (auto const& [try_shared_id, try_cluster] : try_clusters) {
+      auto const& [try_cluster_bytes, _] = try_cluster;
+      try_approx_mem_usage += try_cluster_bytes;
+    }
 
     // Iterate over source clusters
     for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
       auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
+
+      // empty cluster swap approximate criterion
+      {
+        double c_try = criterion(
+          std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
+          std::make_tuple(try_rank, 0, 0, 0, try_approx_mem_usage)
+        );
+        if (c_try > 0.0) {
+	  // Try to obtain lock for feasible swap
+          found_potential_good_swap = true;
+          proxy_[try_rank].template send<&TemperedLB::tryLock>(this_node, c_try);
+          break;
+        }
+      }
 
       // Iterate over target clusters
       for (auto const& [try_shared_id, try_cluster] : try_clusters) {
@@ -1915,7 +1935,10 @@ void TemperedLB::swapClusters() {
 	// Decide whether swap is beneficial
         double c_try = criterion(
           std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
-          std::make_tuple(try_rank, try_shared_id, try_cluster_bytes, try_cluster_load)
+          std::make_tuple(
+            try_rank, try_shared_id, try_cluster_bytes, try_cluster_load,
+            try_approx_mem_usage
+          )
         );
         if (c_try > 0.0) {
 	  // Try to obtain lock for feasible swap
