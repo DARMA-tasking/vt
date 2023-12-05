@@ -1895,8 +1895,7 @@ void TemperedLB::swapClusters() {
 
   auto const this_node = theContext()->getNode();
 
-  // Iddentify and perform beneficial cluster swaps
-  int n_rank_swaps = 0;
+  // Identify and message beneficial cluster swaps
   for (auto const& [try_rank, try_clusters] : other_rank_clusters_) {
     bool found_potential_good_swap = false;
 
@@ -1904,7 +1903,7 @@ void TemperedLB::swapClusters() {
     //   proxy_[try_rank].template send<&TemperedLB::tryLock>(this_node, 100);
     //   continue;
     // }
-  
+
     // Iterate over source clusters
     for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
       auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
@@ -1918,16 +1917,15 @@ void TemperedLB::swapClusters() {
           std::make_tuple(try_rank, try_shared_id, try_cluster_bytes, try_cluster_load)
         );
         if (c_try > 0.0) {
-	  // Try to perform swap
+	  // Try to obtain lock for feasible swap
           found_potential_good_swap = true;
           proxy_[try_rank].template send<&TemperedLB::tryLock>(this_node, c_try);
-	  n_rank_swaps;
           break;
         }
-      }
+      } // try_clusters
       if (found_potential_good_swap) {
         break;
-      } // try_clusters
+      }
     } // cur_clusters_
   } // other_rank_clusters
 
