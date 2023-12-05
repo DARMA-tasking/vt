@@ -131,7 +131,7 @@ protected:
    *
    * \return the total memory usage
    */
-  BytesType computeMemoryUsage() const;
+  BytesType computeMemoryUsage();
 
   /**
    * \brief Get the shared blocks that are located on this node with the current
@@ -145,6 +145,56 @@ protected:
    * \brief Compute the current cluster assignment summary for this rank
    */
   void computeClusterSummary();
+
+  void tryLock(NodeType requesting_node, double criterion_value);
+
+  struct LockedInfoMsg : vt::Message {
+    using MessageParentType = vt::Message;
+    vt_msg_serialize_required(); // locked_clusters_
+
+    LockedInfoMsg() = default;
+    LockedInfoMsg(
+      NodeType in_locked_node, LoadType in_locked_load,
+      ClusterSummaryType in_locked_clusters, BytesType in_locked_bytes,
+      BytesType in_locked_max_object_working_bytes
+    ) : locked_node(in_locked_node),
+        locked_load(in_locked_load),
+        locked_clusters(in_locked_clusters),
+        locked_bytes(in_locked_bytes),
+        locked_max_object_working_bytes(in_locked_max_object_working_bytes)
+    { }
+
+    template <typename SerializerT>
+    void serialize(SerializerT& s) {
+      MessageParentType::serialize(s);
+      s | locked_node;
+      s | locked_load;
+      s | locked_clusters;
+      s | locked_bytes;
+      s | locked_max_object_working_bytes;
+    }
+
+    NodeType locked_node = uninitialized_destination;
+    LoadType locked_load = 0;
+    ClusterSummaryType locked_clusters = {};
+    BytesType locked_bytes = 0;
+    BytesType locked_max_object_working_bytes = 0;
+  };
+
+  void satisfyLockRequest();
+  void lockObtained(LockedInfoMsg* msg);
+  void considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg);
+  void releaseLock();
+
+  void giveCluster(
+    NodeType from_rank,
+    std::unordered_map<SharedIDType, BytesType> const& give_shared_blocks_size,
+    std::unordered_map<ObjIDType, LoadType> const& give_objs,
+    std::unordered_map<ObjIDType, SharedIDType> const& give_obj_shared_block,
+    SharedIDType take_cluster
+  );
+
+  auto removeClusterToSend(SharedIDType shared_id);
 
 private:
   uint16_t f_                                       = 0;
@@ -216,6 +266,21 @@ private:
   // All the memory info (may or may not be present)
   //////////////////////////////////////////////////////////////////////////////
 
+  struct TryLock {
+    TryLock(NodeType in_requesting, double in_c_try)
+      : requesting_node(in_requesting),
+        c_try(in_c_try)
+    { }
+
+    NodeType requesting_node = uninitialized_destination;
+    double c_try = 0;
+
+    double operator<(TryLock const& other) const {
+      // sort in reverse order so the best is first!
+      return c_try > other.c_try;
+    }
+  };
+
   /// Whether we have memory information
   bool has_memory_data_ = false;
   /// Working bytes for this rank
@@ -232,8 +297,18 @@ private:
   std::unordered_map<NodeType, ClusterSummaryType> other_rank_clusters_;
   /// User-defined memory threshold
   BytesType mem_thresh_ = 0;
-  ///
-  bool is_locked = false;
+  /// The max working bytes for an object currently residing here
+  BytesType max_object_working_bytes_ = 0;
+  /// Current memory usage based on distribution
+  BytesType current_memory_usage_ = 0;
+  /// Whether this rank is locked or now
+  bool is_locked_ = false;
+  /// Try locks that have arrived from other ranks
+  std::set<TryLock> try_locks_;
+  /// Pending operations that are waiting for an unlock
+  std::list<ActionType> pending_actions_;
+  /// Number of swaps so far
+  int n_transfers_swap_ = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
