@@ -651,6 +651,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
     selected_.clear();
     underloaded_.clear();
     load_info_.clear();
+    other_rank_clusters_.clear();
     is_overloaded_ = is_underloaded_ = false;
 
     LoadType best_imb_this_trial = start_imb + 10;
@@ -1807,6 +1808,8 @@ void TemperedLB::satisfyLockRequest() {
 }
 
 void TemperedLB::swapClusters() {
+  n_transfers_swap_ = 0;
+
   auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: swapClusters");
   theTerm()->pushEpoch(lazy_epoch);
 
