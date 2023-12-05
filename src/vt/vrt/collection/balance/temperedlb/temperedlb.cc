@@ -1647,6 +1647,27 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
     auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
 
+    // try swapping with empty cluster first
+    {
+        double c_try = criterion(
+          std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
+          std::make_tuple(
+            try_rank,
+            try_load,
+            try_total_bytes,
+            -1,
+            0,
+            0
+          )
+        );
+        if (c_try > 0.0) {
+          if (c_try > best_c_try) {
+            best_c_try = c_try;
+            best_swap = std::make_tuple(src_shared_id, -1);
+          }
+        }
+    }
+
     for (auto const& [try_shared_id, try_cluster] : try_clusters) {
       auto const& [try_cluster_bytes, try_cluster_load] = try_cluster;
         double c_try = criterion(
@@ -1808,6 +1829,7 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
   if (is_locked_) {
     proxy_[msg->locked_node].template send<&TemperedLB::releaseLock>();
     theTerm()->consume(cur_epoch);
+    try_locks_.emplace(msg->locked_node, msg->locked_c_try);
     //pending_actions_.push_back(action);
   } else if (is_swapping_) {
     pending_actions_.push_back(action);
@@ -1841,7 +1863,7 @@ void TemperedLB::satisfyLockRequest() {
 
     proxy_[lock.requesting_node].template send<&TemperedLB::lockObtained>(
       this_node, this_new_load_, cur_clusters_, current_memory_usage_,
-      max_object_working_bytes_
+      max_object_working_bytes_, lock.c_try
     );
 
     is_locked_ = true;
@@ -1875,6 +1897,11 @@ void TemperedLB::swapClusters() {
 
   for (auto const& [try_rank, try_clusters] : other_rank_clusters_) {
     bool found_potential_good_swap = false;
+
+    // if (try_clusters.size() < cur_clusters_.size()) {
+    //   proxy_[try_rank].template send<&TemperedLB::tryLock>(this_node, 100);
+    //   continue;
+    // }
 
     for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
       auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
@@ -1919,8 +1946,8 @@ void TemperedLB::swapClusters() {
   vt_print(
     temperedlb,
     "After iteration: total memory usage={}, shared blocks here={}, "
-    "memory_threshold={}\n", computeMemoryUsage(),
-    getSharedBlocksHere().size(), mem_thresh_
+    "memory_threshold={}, load={}\n", computeMemoryUsage(),
+    getSharedBlocksHere().size(), mem_thresh_, this_new_load_
   );
 
   int n_rejected = 0;
