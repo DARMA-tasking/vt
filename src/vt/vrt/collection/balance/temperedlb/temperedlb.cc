@@ -1891,12 +1891,12 @@ void TemperedLB::swapClusters() {
       return - std::numeric_limits<double>::infinity();
     }
 
-    // Compute maximum work of original arrangement 
+    // Compute maximum work of original arrangement
     auto const before_work_src = this_new_load_;
     auto const before_work_try = load_info_.find(try_rank)->second;
     auto const w_max_0 = std::max(before_work_src, before_work_try);
 
-    // Compute maximum work of proposed new arrangement 
+    // Compute maximum work of proposed new arrangement
     auto const after_work_src = this_new_load_ - src_load + try_load;
     auto const after_work_try = before_work_try + src_load - try_load;
     auto const w_max_new = std::max(after_work_src, after_work_try);
