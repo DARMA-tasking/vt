@@ -1572,6 +1572,7 @@ auto TemperedLB::removeClusterToSend(SharedIDType shared_id) {
   std::unordered_map<ObjIDType, LoadType> give_objs;
   std::unordered_map<ObjIDType, SharedIDType> give_obj_shared_block;
   std::unordered_map<SharedIDType, BytesType> give_shared_blocks_size;
+  std::unordered_map<ObjIDType, BytesType> give_obj_working_bytes;
 
   vt_debug_print(
     verbose, temperedlb,
@@ -1588,6 +1589,12 @@ auto TemperedLB::removeClusterToSend(SharedIDType shared_id) {
       if (iter->second == shared_id) {
         give_objs[obj_id] = obj_load;
         give_obj_shared_block[obj_id] = shared_id;
+        if (
+          auto iter2 = give_obj_working_bytes.find(obj_id);
+          iter2 != give_obj_working_bytes.end()
+        ) {
+          give_obj_working_bytes[obj_id] = iter2->second;
+        }
       }
     }
   }
@@ -1611,7 +1618,10 @@ auto TemperedLB::removeClusterToSend(SharedIDType shared_id) {
   );
 
   return std::make_tuple(
-    give_objs, give_obj_shared_block, give_shared_blocks_size
+    give_objs,
+    give_obj_shared_block,
+    give_shared_blocks_size,
+    give_obj_working_bytes
   );
 }
 
@@ -1708,8 +1718,12 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       best_c_try, src_shared_id, try_shared_id, try_rank
     );
 
-    auto const& [give_objs, give_obj_shared_block, give_shared_blocks_size] =
-      removeClusterToSend(src_shared_id);
+    auto const& [
+      give_objs,
+      give_obj_shared_block,
+      give_shared_blocks_size,
+      give_obj_working_bytes
+    ] = removeClusterToSend(src_shared_id);
 
     auto const this_node = theContext()->getNode();
 
@@ -1719,6 +1733,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
         give_shared_blocks_size,
         give_objs,
         give_obj_shared_block,
+        give_obj_working_bytes,
         try_shared_id
       );
     });
@@ -1748,6 +1763,7 @@ void TemperedLB::giveCluster(
   std::unordered_map<SharedIDType, BytesType> const& give_shared_blocks_size,
   std::unordered_map<ObjIDType, LoadType> const& give_objs,
   std::unordered_map<ObjIDType, SharedIDType> const& give_obj_shared_block,
+  std::unordered_map<ObjIDType, BytesType> const& give_obj_working_bytes,
   SharedIDType take_cluster
 ) {
   n_transfers_swap_++;
@@ -1764,18 +1780,26 @@ void TemperedLB::giveCluster(
   for (auto const& [obj_id, id] : give_obj_shared_block) {
     obj_shared_block_[obj_id] = id;
   }
+  for (auto const& elm : give_obj_working_bytes) {
+    obj_working_bytes_.emplace(elm);
+  }
 
   if (take_cluster != -1) {
     auto const this_node = theContext()->getNode();
 
-    auto const& [take_objs, take_obj_shared_block, take_shared_blocks_size] =
-      removeClusterToSend(take_cluster);
+    auto const& [
+      take_objs,
+      take_obj_shared_block,
+      take_shared_blocks_size,
+      take_obj_working_bytes
+    ] = removeClusterToSend(take_cluster);
 
     proxy_[from_rank].template send<&TemperedLB::giveCluster>(
       this_node,
       take_shared_blocks_size,
       take_objs,
       take_obj_shared_block,
+      take_obj_working_bytes,
       -1
     );
   }
@@ -1922,7 +1946,7 @@ void TemperedLB::swapClusters() {
     for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
       auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
 
-      // Compute approximation swap criterion
+      // Compute approximation swap criterion for empty cluster "swap" case
       {
         double c_try = criterion(
           std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
