@@ -153,29 +153,28 @@ void EntityLocationCoord<EntityID>::registerEntity(
     pending_lookups_.erase(pending_lookup_iter);
   }
 
-  if (!migrated) {
-    /*
-     *  This is the case where the entity is *not* migrated here but gets
-     *  constructed in an alternative non-default location. Thus we need to
-     *  inform the home so that messages can be forwarded.
-     */
-    vtAssert(home != uninitialized_destination, "Must have home node info");
-    if (home != this_node) {
-      vt_debug_print(
-        normal, location,
-        "EntityLocationCoord: registerEntity: updating id={}, home={}: "
-        "not migrated\n",
-        id, home
-      );
+  /*
+   *  This is either the case where the entity is *not* migrated here
+   *  but gets constructed in an alternative non-default location or
+   *  it is migrated here and it's not the home. Thus, we need to
+   *  inform the home so that messages can be forwarded.
+   */
+  vtAssert(home != uninitialized_destination, "Must have home node info");
+  if (home != this_node) {
+    vt_debug_print(
+      normal, location,
+      "EntityLocationCoord: registerEntity: updating id={}, home={}, "
+      "migrated={}\n",
+      id, home, migrated
+    );
 
-      auto const& ask_node = uninitialized_destination;
-      auto msg = makeMessage<LocMsgType>(
-        this_inst, id, no_location_event_id, ask_node, home
-      );
-      msg->setResolvedNode(this_node);
-      theMsg()->markAsLocationMessage(msg);
-      theMsg()->sendMsg<&EntityLocationCoord<EntityID>::updateLocation>(home, msg);
-    }
+    auto const& ask_node = uninitialized_destination;
+    auto msg = makeMessage<LocMsgType>(
+      this_inst, id, no_location_event_id, ask_node, home
+    );
+    msg->setResolvedNode(this_node);
+    theMsg()->markAsLocationMessage(msg);
+    theMsg()->sendMsg<&EntityLocationCoord<EntityID>::updateLocation>(home, msg);
   }
 }
 
