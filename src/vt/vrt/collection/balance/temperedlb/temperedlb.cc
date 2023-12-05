@@ -570,7 +570,6 @@ void TemperedLB::readClustersMemoryData() {
           obj, shared_id, shared_bytes
         );
 
-        has_memory_data_ = true;
         obj_shared_block_[obj] = shared_id;
         obj_working_bytes_[obj] = working_bytes;
         shared_block_size_[shared_id] = shared_bytes;
@@ -645,6 +644,10 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
   // Read in memory information if it's available before be do any trials
   readClustersMemoryData();
+
+  if (transfer_type_ == TransferTypeEnum::SwapClusters) {
+    has_memory_data_ = true;
+  }
 
   for (trial_ = 0; trial_ < num_trials_; ++trial_) {
     // Clear out data structures
