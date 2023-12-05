@@ -1840,7 +1840,7 @@ void TemperedLB::satisfyLockRequest() {
     );
 
     proxy_[lock.requesting_node].template send<&TemperedLB::lockObtained>(
-      this_node, this_new_load_, cur_clusters_, rank_bytes_,
+      this_node, this_new_load_, cur_clusters_, current_memory_usage_,
       max_object_working_bytes_
     );
 
