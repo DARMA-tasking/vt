@@ -195,6 +195,7 @@ protected:
     std::unordered_map<SharedIDType, BytesType> const& give_shared_blocks_size,
     std::unordered_map<ObjIDType, LoadType> const& give_objs,
     std::unordered_map<ObjIDType, SharedIDType> const& give_obj_shared_block,
+    std::unordered_map<ObjIDType, BytesType> const& give_obj_working_bytes,
     SharedIDType take_cluster
   );
 
