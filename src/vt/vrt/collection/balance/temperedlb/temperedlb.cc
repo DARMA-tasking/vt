@@ -597,7 +597,7 @@ void TemperedLB::computeClusterSummary() {
   }
 }
 
-BytesType TemperedLB::computeMemoryUsage() const {
+BytesType TemperedLB::computeMemoryUsage() {
   // Compute bytes used by shared blocks mapped here based on object mapping
   auto const blocks_here = getSharedBlocksHere();
 
@@ -613,7 +613,7 @@ BytesType TemperedLB::computeMemoryUsage() const {
   double max_object_working_bytes = 0;
   for (auto const& [obj_id, _] : cur_objs_)  {
     if (obj_working_bytes_.find(obj_id) != obj_working_bytes_.end()) {
-      max_object_working_bytes =
+      max_object_working_bytes_ =
         std::max(max_object_working_bytes, obj_working_bytes_.find(obj_id)->second);
     } else {
       vt_print(
@@ -621,7 +621,8 @@ BytesType TemperedLB::computeMemoryUsage() const {
       );
     }
   }
-  return rank_bytes_ + total_shared_bytes + max_object_working_bytes;
+  return current_memory_usage_ =
+    rank_bytes_ + total_shared_bytes + max_object_working_bytes_;
 }
 
 std::set<SharedIDType> TemperedLB::getSharedBlocksHere() const {
@@ -1558,52 +1559,325 @@ void TemperedLB::originalTransfer() {
   }
 }
 
-// void TemperedLB::tryLock(
-//   NodeType requesting_node, double criterion_value, SharedIDType cluster_id
-// ) {
-//   // some logic
+void TemperedLB::tryLock(NodeType requesting_node, double criterion_value) {
+  try_locks_.emplace(requesting_node, criterion_value);
+}
 
-//   // if yes
-//   is_locked = true;
-//   proxy_[requesting_node].template send<ThisType::lockObtained>(/*full info on cluster*/);
-// }
+auto TemperedLB::removeClusterToSend(SharedIDType shared_id) {
+  std::unordered_map<ObjIDType, LoadType> give_objs;
+  std::unordered_map<ObjIDType, SharedIDType> give_obj_shared_block;
+  std::unordered_map<SharedIDType, BytesType> give_shared_blocks_size;
 
-// void TemperedLB::lockObtained() {
+  if (shared_id != -1) {
+    give_shared_blocks_size[shared_id] = shared_block_size_[shared_id];
+  }
 
-// }
+  for (auto const& [obj_id, obj_load] : cur_objs_) {
+    if (auto iter = obj_shared_block_.find(obj_id); iter != obj_shared_block_.end()) {
+      if (iter->second == shared_id) {
+        give_objs.emplace(obj_id, obj_load);
+        give_obj_shared_block[obj_id] = shared_id;
+      }
+    }
+  }
+
+  for (auto const& [give_obj_id, give_obj_load] : give_objs) {
+    auto iter = cur_objs_.find(give_obj_id);
+    vtAssert(iter != cur_objs_.end(), "Object must exist");
+    // remove the object!
+    cur_objs_.erase(iter);
+    this_new_load_ -= give_obj_load;
+  }
+
+  return std::make_tuple(
+    give_objs, give_obj_shared_block, give_shared_blocks_size
+  );
+}
+
+void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
+  double total_shared_bytes = 0;
+  for (auto const& block_id : getSharedBlocksHere()) {
+    total_shared_bytes += shared_block_size_.find(block_id)->second;
+  }
+
+  auto criterion = [&,this](auto src_cluster, auto try_cluster) -> double {
+    auto const& [src_id, src_bytes, src_load] = src_cluster;
+    auto const& [try_rank, try_total_load, try_total_bytes,
+                 try_id, try_bytes, try_load] = try_cluster;
+
+    auto const before_work_src = this_new_load_;
+    auto const before_work_try = try_total_load;
+    auto const w_max_0 = std::max(before_work_src, before_work_try);
+
+    auto const after_work_src = this_new_load_ - src_load + try_load;
+    auto const after_work_try = before_work_try + src_load - try_load;
+    auto const w_max_new = std::max(after_work_src, after_work_try);
+
+    auto const src_after_mem = current_memory_usage_ - src_bytes + try_bytes;
+    auto const try_after_mem = try_total_bytes + src_bytes - try_bytes;
+
+    if (src_after_mem > mem_thresh_ or try_after_mem > mem_thresh_) {
+      return -1000.0;
+    }
+
+    return w_max_0 - w_max_new;
+  };
+
+  auto const& try_clusters = msg->locked_clusters;
+  auto const& try_rank = msg->locked_node;
+  auto const& try_load = msg->locked_load;
+  auto const& try_total_bytes = msg->locked_bytes;
+
+  double best_c_try = -1.0;
+  std::tuple<SharedIDType, SharedIDType> best_swap = {-1,-1};
+  for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
+    auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
+
+    for (auto const& [try_shared_id, try_cluster] : try_clusters) {
+      auto const& [try_cluster_bytes, try_cluster_load] = try_cluster;
+        double c_try = criterion(
+          std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
+          std::make_tuple(
+            try_rank,
+            try_load,
+            try_total_bytes,
+            try_shared_id,
+            try_cluster_bytes,
+            try_cluster_load
+          )
+        );
+        vt_print(
+          temperedlb,
+          "testing a possible swap: {} {} c_try={}\n",
+          src_shared_id, try_shared_id, c_try
+        );
+        if (c_try > 0.0) {
+          if (c_try > best_c_try) {
+            best_c_try = c_try;
+            best_swap = std::make_tuple(src_shared_id, try_shared_id);
+          }
+        }
+    }
+  }
+  if (best_c_try > 0) {
+    vt_print(
+      temperedlb,
+      "best_c_try={}\n", best_c_try
+    );
+
+    auto const& [src_shared_id, try_shared_id] = best_swap;
+
+    auto const& [give_objs, give_obj_shared_block, give_shared_blocks_size] =
+      removeClusterToSend(src_shared_id);
+
+    auto const this_node = theContext()->getNode();
+
+    runInEpochRooted("giveCluster", [&]{
+      proxy_[try_rank].template send<&TemperedLB::giveCluster>(
+        this_node,
+        give_shared_blocks_size,
+        give_objs,
+        give_obj_shared_block,
+        try_shared_id
+      );
+    });
+  }
+
+  proxy_[try_rank].template send<&TemperedLB::releaseLock>();
+}
+
+void TemperedLB::giveCluster(
+  NodeType from_rank,
+  std::unordered_map<SharedIDType, BytesType> const& give_shared_blocks_size,
+  std::unordered_map<ObjIDType, LoadType> const& give_objs,
+  std::unordered_map<ObjIDType, SharedIDType> const& give_obj_shared_block,
+  SharedIDType take_cluster
+) {
+  n_transfers_swap_++;
+
+  for (auto const& elm : give_objs) {
+    this_new_load_ += elm.second;
+    cur_objs_.emplace(elm);
+  }
+  for (auto const& elm : give_shared_blocks_size) {
+    shared_block_size_.emplace(elm);
+  }
+  for (auto const& elm : give_obj_shared_block) {
+    obj_shared_block_.emplace(elm);
+  }
+
+  if (take_cluster != -1) {
+    auto const this_node = theContext()->getNode();
+
+    auto const& [take_objs, take_obj_shared_block, take_shared_blocks_size] =
+      removeClusterToSend(take_cluster);
+
+    proxy_[from_rank].template send<&TemperedLB::giveCluster>(
+      this_node,
+      take_shared_blocks_size,
+      take_objs,
+      take_obj_shared_block,
+      -1
+    );
+  }
+
+  vt_print(
+    temperedlb,
+    "After giveCluster: total memory usage={}, shared blocks here={}, "
+    "memory_threshold={}\n", computeMemoryUsage(),
+    getSharedBlocksHere().size(), mem_thresh_
+  );
+}
+
+void TemperedLB::releaseLock() {
+  vt_print(
+    temperedlb,
+    "releaseLock: pending size={}\n",
+    pending_actions_.size()
+  );
+
+  is_locked_ = false;
+
+  if (pending_actions_.size() > 0) {
+    auto action = pending_actions_.back();
+    pending_actions_.pop_back();
+    action();
+  } else {
+    // satisfy another lock
+    satisfyLockRequest();
+  }
+}
+
+void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
+  auto msg = promoteMsg(in_msg);
+
+  vt_print(
+    temperedlb,
+    "lockObtained: is_locked_={}\n",
+    is_locked_
+  );
+
+  auto cur_epoch = theMsg()->getEpoch();
+  theTerm()->produce(cur_epoch);
+
+  auto action = [this, msg, cur_epoch]{
+    theMsg()->pushEpoch(cur_epoch);
+    considerSwapsAfterLock(msg);
+    theMsg()->popEpoch(cur_epoch);
+    theTerm()->consume(cur_epoch);
+  };
+
+  if (is_locked_) {
+    pending_actions_.push_back(action);
+  } else {
+    action();
+  }
+}
+
+void TemperedLB::satisfyLockRequest() {
+  vtAssert(not is_locked_, "Must not already be locked to satisfy a request");
+  if (try_locks_.size() > 0) {
+    // find the best lock to give
+    for (auto&& tl : try_locks_) {
+      vt_print(
+        temperedlb,
+        "satisfyLockRequest: node={}, c_try={}\n", tl.requesting_node, tl.c_try
+      );
+    }
+
+    auto iter = try_locks_.begin();
+    auto lock = *iter;
+    try_locks_.erase(iter);
+
+    auto const this_node = theContext()->getNode();
+
+    vt_print(
+      temperedlb,
+      "satisfyLockRequest: locked obtained for node={}\n",
+      lock.requesting_node
+    );
+
+    proxy_[lock.requesting_node].template send<&TemperedLB::lockObtained>(
+      this_node, this_new_load_, cur_clusters_, rank_bytes_,
+      max_object_working_bytes_
+    );
+
+    is_locked_ = true;
+  }
+}
 
 void TemperedLB::swapClusters() {
   auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: swapClusters");
+  theTerm()->pushEpoch(lazy_epoch);
 
-  // Initialize transfer and rejection counters
-  int n_transfers = 0, n_rejected = 0;
+  auto criterion = [this](auto src_cluster, auto try_cluster) -> double {
+    // this does not handle empty cluster swaps
+    auto const& [src_id, src_bytes, src_load] = src_cluster;
+    auto const& [try_rank, try_id, try_bytes, try_load] = try_cluster;
 
-  // Try to migrate objects only from overloaded ranks
-  // Compute collection of potential targets
-  // std::vector<NodeType> targets = other_rank_clusters_.keys();
-  // sample cmf
-    // Iterage over potential targets to try to swap clusters
+    auto const before_work_src = this_new_load_;
+    auto const before_work_try = load_info_.find(try_rank)->second;
+    auto const w_max_0 = std::max(before_work_src, before_work_try);
 
-    //// Iteratr over target clusters
+    auto const after_work_src = this_new_load_ - src_load + try_load;
+    auto const after_work_try = before_work_try + src_load - try_load;
+    auto const w_max_new = std::max(after_work_src, after_work_try);
 
-    ////// Decide whether swap is beneficial
+    return w_max_0 - w_max_new;
+  };
 
+  auto const this_node = theContext()->getNode();
 
-      //////// If swap is beneficial compute source cluster size
-      //////// Test whether criterion is creater than swap RTOL times source size
+  for (auto const& [try_rank, try_clusters] : other_rank_clusters_) {
+    bool found_potential_good_swap = false;
 
-    // send try-lock message, with numerical criterion value
-    // spin in the scheduler
+    for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
+      auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
 
-  // Finalize epoch
+      for (auto const& [try_shared_id, try_cluster] : try_clusters) {
+        auto const& [try_cluster_bytes, try_cluster_load] = try_cluster;
+        double c_try = criterion(
+          std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
+          std::make_tuple(try_rank, try_shared_id, try_cluster_bytes, try_cluster_load)
+        );
+        if (c_try > 0.0) {
+          found_potential_good_swap = true;
+          // request lock
+          proxy_[try_rank].template send<&TemperedLB::tryLock>(this_node, c_try);
+          break;
+        }
+      }
+      if (found_potential_good_swap) {
+        break;
+      }
+    }
+  }
+
+  // We have to be very careful here since we will allow some reentrancy here.
+  constexpr int turn_scheduler_times = 10;
+  for (int i = 0; i < turn_scheduler_times; i++) {
+    theSched()->runSchedulerOnceImpl();
+  }
+
+  while (not theSched()->workQueueEmpty()) {
+    theSched()->runSchedulerOnceImpl();
+  }
+
+  satisfyLockRequest();
+
+  // Finalize epoch, we have sent our initial round of messages
+  // from here everything is message driven
   theTerm()->finishedEpoch(lazy_epoch);
+  theTerm()->popEpoch(lazy_epoch);
   vt::runSchedulerThrough(lazy_epoch);
+
+  int n_rejected = 0;
 
   // Report on rejection rate in debug mode
   if (theConfig()->vt_debug_temperedlb) {
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers
+        n_rejected, n_transfers_swap_
       );
     });
   }
