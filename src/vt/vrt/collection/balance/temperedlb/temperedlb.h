@@ -303,6 +303,8 @@ private:
   BytesType current_memory_usage_ = 0;
   /// Whether this rank is locked or now
   bool is_locked_ = false;
+  // Which rank locked this rank
+  NodeType locking_rank_ = uninitialized_destination;
   /// Try locks that have arrived from other ranks
   std::set<TryLock> try_locks_;
   /// Pending operations that are waiting for an unlock
