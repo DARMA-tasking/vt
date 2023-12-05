@@ -1918,7 +1918,7 @@ void TemperedLB::swapClusters() {
     for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
       auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
 
-      // empty cluster swap approximate criterion
+      // Compute approximation swap criterion
       {
         double c_try = criterion(
           std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
