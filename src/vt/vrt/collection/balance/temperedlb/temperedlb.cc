@@ -1623,6 +1623,13 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     auto const& [try_rank, try_total_load, try_total_bytes,
                  try_id, try_bytes, try_load] = try_cluster;
 
+    auto const src_after_mem = current_memory_usage_ - src_bytes + try_bytes;
+    auto const try_after_mem = try_total_bytes + src_bytes - try_bytes;
+
+    if (src_after_mem > mem_thresh_ or try_after_mem > mem_thresh_) {
+      return - std::numeric_limits<double>::infinity();
+    }
+
     auto const before_work_src = this_new_load_;
     auto const before_work_try = try_total_load;
     auto const w_max_0 = std::max(before_work_src, before_work_try);
@@ -1630,13 +1637,6 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     auto const after_work_src = this_new_load_ - src_load + try_load;
     auto const after_work_try = before_work_try + src_load - try_load;
     auto const w_max_new = std::max(after_work_src, after_work_try);
-
-    auto const src_after_mem = current_memory_usage_ - src_bytes + try_bytes;
-    auto const try_after_mem = try_total_bytes + src_bytes - try_bytes;
-
-    if (src_after_mem > mem_thresh_ or try_after_mem > mem_thresh_) {
-      return -1000.0;
-    }
 
     return w_max_0 - w_max_new;
   };
