@@ -1569,6 +1569,12 @@ auto TemperedLB::removeClusterToSend(SharedIDType shared_id) {
   std::unordered_map<ObjIDType, SharedIDType> give_obj_shared_block;
   std::unordered_map<SharedIDType, BytesType> give_shared_blocks_size;
 
+  vt_print(
+    temperedlb,
+    "removeClusterToSend: shared_id={}\n",
+    shared_id
+  );
+
   if (shared_id != -1) {
     give_shared_blocks_size[shared_id] = shared_block_size_[shared_id];
   }
@@ -1576,11 +1582,13 @@ auto TemperedLB::removeClusterToSend(SharedIDType shared_id) {
   for (auto const& [obj_id, obj_load] : cur_objs_) {
     if (auto iter = obj_shared_block_.find(obj_id); iter != obj_shared_block_.end()) {
       if (iter->second == shared_id) {
-        give_objs.emplace(obj_id, obj_load);
+        give_objs[obj_id] = obj_load;
         give_obj_shared_block[obj_id] = shared_id;
       }
     }
   }
+
+  auto const blocks_here_before = getSharedBlocksHere();
 
   for (auto const& [give_obj_id, give_obj_load] : give_objs) {
     auto iter = cur_objs_.find(give_obj_id);
@@ -1590,16 +1598,21 @@ auto TemperedLB::removeClusterToSend(SharedIDType shared_id) {
     this_new_load_ -= give_obj_load;
   }
 
+  auto const blocks_here_after = getSharedBlocksHere();
+
+  vt_print(
+    temperedlb,
+    "removeClusterToSend: before count={}, after count={}\n",
+    blocks_here_before.size(), blocks_here_after.size()
+  );
+
   return std::make_tuple(
     give_objs, give_obj_shared_block, give_shared_blocks_size
   );
 }
 
 void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
-  double total_shared_bytes = 0;
-  for (auto const& block_id : getSharedBlocksHere()) {
-    total_shared_bytes += shared_block_size_.find(block_id)->second;
-  }
+  is_swapping_ = true;
 
   auto criterion = [&,this](auto src_cluster, auto try_cluster) -> double {
     auto const& [src_id, src_bytes, src_load] = src_cluster;
@@ -1649,8 +1662,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
         );
         vt_print(
           temperedlb,
-          "testing a possible swap: {} {} c_try={}\n",
-          src_shared_id, try_shared_id, c_try
+          "testing a possible swap (rank {}): {} {} c_try={}\n",
+          try_rank, src_shared_id, try_shared_id, c_try
         );
         if (c_try > 0.0) {
           if (c_try > best_c_try) {
@@ -1660,13 +1673,15 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
         }
     }
   }
+
   if (best_c_try > 0) {
+    auto const& [src_shared_id, try_shared_id] = best_swap;
+
     vt_print(
       temperedlb,
-      "best_c_try={}\n", best_c_try
+      "best_c_try={}, swapping {} for {} on rank ={}\n",
+      best_c_try, src_shared_id, try_shared_id, try_rank
     );
-
-    auto const& [src_shared_id, try_shared_id] = best_swap;
 
     auto const& [give_objs, give_obj_shared_block, give_shared_blocks_size] =
       removeClusterToSend(src_shared_id);
@@ -1682,9 +1697,25 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
         try_shared_id
       );
     });
+
+    computeClusterSummary();
+
+    vt_print(
+      temperedlb,
+      "best_c_try={}, swap completed with rank={}\n",
+      best_c_try, try_rank
+    );
   }
 
   proxy_[try_rank].template send<&TemperedLB::releaseLock>();
+
+  is_swapping_ = false;
+
+  if (pending_actions_.size() > 0) {
+    auto action = pending_actions_.back();
+    pending_actions_.pop_back();
+    action();
+  }
 }
 
 void TemperedLB::giveCluster(
@@ -1696,15 +1727,17 @@ void TemperedLB::giveCluster(
 ) {
   n_transfers_swap_++;
 
-  for (auto const& elm : give_objs) {
-    this_new_load_ += elm.second;
-    cur_objs_.emplace(elm);
+  vtAssert(give_shared_blocks_size.size() == 1, "Must be one block right now");
+
+  for (auto const& [obj_id, obj_load] : give_objs) {
+    this_new_load_ += obj_load;
+    cur_objs_[obj_id] = obj_load;
   }
-  for (auto const& elm : give_shared_blocks_size) {
-    shared_block_size_.emplace(elm);
+  for (auto const& [id, bytes] : give_shared_blocks_size) {
+    shared_block_size_[id] = bytes;
   }
-  for (auto const& elm : give_obj_shared_block) {
-    obj_shared_block_.emplace(elm);
+  for (auto const& [obj_id, id] : give_obj_shared_block) {
+    obj_shared_block_[obj_id] = id;
   }
 
   if (take_cluster != -1) {
@@ -1722,11 +1755,14 @@ void TemperedLB::giveCluster(
     );
   }
 
+  computeClusterSummary();
+
   vt_print(
     temperedlb,
-    "After giveCluster: total memory usage={}, shared blocks here={}, "
-    "memory_threshold={}\n", computeMemoryUsage(),
-    getSharedBlocksHere().size(), mem_thresh_
+    "giveCluster: total memory usage={}, shared blocks here={}, "
+    "memory_threshold={}, give_cluster={}, take_cluster={}\n", computeMemoryUsage(),
+    getSharedBlocksHere().size(), mem_thresh_,
+    give_shared_blocks_size.begin()->first, take_cluster
   );
 }
 
@@ -1773,6 +1809,8 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
     proxy_[msg->locked_node].template send<&TemperedLB::releaseLock>();
     theTerm()->consume(cur_epoch);
     //pending_actions_.push_back(action);
+  } else if (is_swapping_) {
+    pending_actions_.push_back(action);
   } else {
     action();
   }
@@ -1877,6 +1915,13 @@ void TemperedLB::swapClusters() {
   theTerm()->finishedEpoch(lazy_epoch);
   theTerm()->popEpoch(lazy_epoch);
   vt::runSchedulerThrough(lazy_epoch);
+
+  vt_print(
+    temperedlb,
+    "After iteration: total memory usage={}, shared blocks here={}, "
+    "memory_threshold={}\n", computeMemoryUsage(),
+    getSharedBlocksHere().size(), mem_thresh_
+  );
 
   int n_rejected = 0;
 

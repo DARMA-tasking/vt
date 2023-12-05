@@ -312,6 +312,8 @@ private:
   std::list<ActionType> pending_actions_;
   /// Number of swaps so far
   int n_transfers_swap_ = 0;
+  /// Whether it's mid-swap or not
+  bool is_swapping_ = false;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
