@@ -57,7 +57,7 @@
 #include <algorithm>
 #include <vector>
 #include <unordered_set>
-#include <set>
+#include <limits>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -1886,18 +1886,22 @@ void TemperedLB::swapClusters() {
     auto const& [src_id, src_bytes, src_load] = src_cluster;
     auto const& [try_rank, try_id, try_bytes, try_load, try_mem] = try_cluster;
 
+    // Check whether strict bounds on memory are satisfied
+    if (try_mem - try_bytes + src_bytes > mem_thresh_) {
+      return - std::numeric_limits<double>::infinity();
+    }
+
+    // Compute maximum work of original arrangement 
     auto const before_work_src = this_new_load_;
     auto const before_work_try = load_info_.find(try_rank)->second;
     auto const w_max_0 = std::max(before_work_src, before_work_try);
 
+    // Compute maximum work of proposed new arrangement 
     auto const after_work_src = this_new_load_ - src_load + try_load;
     auto const after_work_try = before_work_try + src_load - try_load;
     auto const w_max_new = std::max(after_work_src, after_work_try);
 
-    if (try_mem - try_bytes + src_bytes > mem_thresh_) {
-      return -1000;
-    }
-
+    // Return criterion value
     return w_max_0 - w_max_new;
   };
 
