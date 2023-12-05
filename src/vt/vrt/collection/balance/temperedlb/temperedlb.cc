@@ -564,9 +564,9 @@ void TemperedLB::readClustersMemoryData() {
           // "task_footprint_bytes"
         }
 
-        // @todo: switch to debug print at some point
-        vt_print(
-          temperedlb, "obj={} shared_block={} bytes={}\n",
+        vt_debug_print(
+          verbose, temperedlb,
+          "obj={} shared_block={} bytes={}\n",
           obj, shared_id, shared_bytes
         );
 
@@ -615,8 +615,9 @@ BytesType TemperedLB::computeMemoryUsage() {
       max_object_working_bytes_ =
         std::max(max_object_working_bytes, obj_working_bytes_.find(obj_id)->second);
     } else {
-      vt_print(
-        temperedlb, "Warning: working bytes not found for object: {}\n", obj_id
+      vt_debug_print(
+        verbose, temperedlb,
+        "Warning: working bytes not found for object: {}\n", obj_id
       );
     }
   }
@@ -688,8 +689,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       );
 
       if (has_memory_data_) {
-        vt_print(
-          temperedlb,
+        vt_debug_print(
+          terse, temperedlb,
           "Current memory info: total memory usage={}, shared blocks here={}, "
           "memory_threshold={}\n", computeMemoryUsage(),
           getSharedBlocksHere().size(), mem_thresh_
@@ -700,8 +701,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         // Verbose printing about local clusters
         for (auto const& [shared_id, value] : cur_clusters_) {
           auto const& [shared_bytes, cluster_load] = value;
-          vt_print(
-            temperedlb,
+          vt_debug_print(
+            verbose, temperedlb,
             "Local cluster: id={}, bytes={}, load={}\n",
             shared_id, shared_bytes, cluster_load
           );
@@ -731,8 +732,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       for (auto const& [node, clusters] : other_rank_clusters_) {
         for (auto const& [shared_id, value] : clusters) {
           auto const& [shared_bytes, cluster_load] = value;
-          vt_print(
-            temperedlb,
+          vt_debug_print(
+            verbose, temperedlb,
             "Remote cluster: node={}, id={}, bytes={}, load={}\n",
             node, shared_id, shared_bytes, cluster_load
           );
@@ -1569,8 +1570,8 @@ auto TemperedLB::removeClusterToSend(SharedIDType shared_id) {
   std::unordered_map<ObjIDType, SharedIDType> give_obj_shared_block;
   std::unordered_map<SharedIDType, BytesType> give_shared_blocks_size;
 
-  vt_print(
-    temperedlb,
+  vt_debug_print(
+    verbose, temperedlb,
     "removeClusterToSend: shared_id={}\n",
     shared_id
   );
@@ -1600,8 +1601,8 @@ auto TemperedLB::removeClusterToSend(SharedIDType shared_id) {
 
   auto const blocks_here_after = getSharedBlocksHere();
 
-  vt_print(
-    temperedlb,
+  vt_debug_print(
+    verbose, temperedlb,
     "removeClusterToSend: before count={}, after count={}\n",
     blocks_here_before.size(), blocks_here_after.size()
   );
@@ -1681,8 +1682,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
             try_cluster_load
           )
         );
-        vt_print(
-          temperedlb,
+        vt_debug_print(
+          verbose, temperedlb,
           "testing a possible swap (rank {}): {} {} c_try={}\n",
           try_rank, src_shared_id, try_shared_id, c_try
         );
@@ -1698,8 +1699,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   if (best_c_try > 0) {
     auto const& [src_shared_id, try_shared_id] = best_swap;
 
-    vt_print(
-      temperedlb,
+    vt_debug_print(
+      normal, temperedlb,
       "best_c_try={}, swapping {} for {} on rank ={}\n",
       best_c_try, src_shared_id, try_shared_id, try_rank
     );
@@ -1721,8 +1722,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
 
     computeClusterSummary();
 
-    vt_print(
-      temperedlb,
+    vt_debug_print(
+      normal, temperedlb,
       "best_c_try={}, swap completed with rank={}\n",
       best_c_try, try_rank
     );
@@ -1778,8 +1779,8 @@ void TemperedLB::giveCluster(
 
   computeClusterSummary();
 
-  vt_print(
-    temperedlb,
+  vt_debug_print(
+    normal, temperedlb,
     "giveCluster: total memory usage={}, shared blocks here={}, "
     "memory_threshold={}, give_cluster={}, take_cluster={}\n", computeMemoryUsage(),
     getSharedBlocksHere().size(), mem_thresh_,
@@ -1788,8 +1789,8 @@ void TemperedLB::giveCluster(
 }
 
 void TemperedLB::releaseLock() {
-  vt_print(
-    temperedlb,
+  vt_debug_print(
+    verbose, temperedlb,
     "releaseLock: pending size={}\n",
     pending_actions_.size()
   );
@@ -1810,8 +1811,8 @@ void TemperedLB::releaseLock() {
 void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
   auto msg = promoteMsg(in_msg);
 
-  vt_print(
-    temperedlb,
+  vt_debug_print(
+    verbose, temperedlb,
     "lockObtained: is_locked_={}\n",
     is_locked_
   );
@@ -1843,8 +1844,8 @@ void TemperedLB::satisfyLockRequest() {
   if (try_locks_.size() > 0) {
     // find the best lock to give
     for (auto&& tl : try_locks_) {
-      vt_print(
-        temperedlb,
+      vt_debug_print(
+        verbose, temperedlb,
         "satisfyLockRequest: node={}, c_try={}\n", tl.requesting_node, tl.c_try
       );
     }
@@ -1855,8 +1856,8 @@ void TemperedLB::satisfyLockRequest() {
 
     auto const this_node = theContext()->getNode();
 
-    vt_print(
-      temperedlb,
+    vt_debug_print(
+      normal, temperedlb,
       "satisfyLockRequest: locked obtained for node={}\n",
       lock.requesting_node
     );
@@ -1947,8 +1948,8 @@ void TemperedLB::swapClusters() {
   theTerm()->popEpoch(lazy_epoch);
   vt::runSchedulerThrough(lazy_epoch);
 
-  vt_print(
-    temperedlb,
+  vt_debug_print(
+    normal, temperedlb,
     "After iteration: total memory usage={}, shared blocks here={}, "
     "memory_threshold={}, load={}\n", computeMemoryUsage(),
     getSharedBlocksHere().size(), mem_thresh_, this_new_load_
