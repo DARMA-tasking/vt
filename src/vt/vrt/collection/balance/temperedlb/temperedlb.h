@@ -147,8 +147,21 @@ protected:
    */
   void computeClusterSummary();
 
+  /**
+   * \brief Try to lock a rank
+   *
+   * \param[in] requesting_node the requesting rank asking to lock
+   * \param[in] criterion_value the criterion evaluation value to compare
+   */
   void tryLock(NodeType requesting_node, double criterion_value);
 
+  /**
+   * \struct LockedInfoMsg
+   *
+   * \brief The update message that comes from a rank when it is locked. This is
+   * a message instead of a normal handler so it can be buffered without copying
+   * it.
+   */
   struct LockedInfoMsg : vt::Message {
     using MessageParentType = vt::Message;
     vt_msg_serialize_required(); // locked_clusters_
@@ -178,19 +191,55 @@ protected:
       s | locked_c_try;
     }
 
+    /// The node that is locked
     NodeType locked_node = uninitialized_destination;
+    /// The total load of the locked node
     LoadType locked_load = 0;
+    /// The up-to-date summary of the clusters
     ClusterSummaryType locked_clusters = {};
+    /// The total bytes for the locked node
     BytesType locked_bytes = 0;
+    /// The largest working bytes for the locked node
     BytesType locked_max_object_working_bytes = 0;
+    /// The approximate criterion value at the time it was locked with possible
+    /// out-of-date info
     double locked_c_try = 0;
   };
 
+  /**
+   * \brief Satisfy a lock request (if there is one)
+   */
   void satisfyLockRequest();
+
+  /**
+   * \brief Inform a rank that a lock was obtained
+   *
+   * \param[in] msg update message with all the info
+   */
   void lockObtained(LockedInfoMsg* msg);
+
+  /**
+   * \brief Consider possible swaps with all the up-to-date info from a rank
+   *
+   * \param[in] msg update message with all the info
+   */
   void considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg);
+
+  /**
+   * \brief Release a lock on a rank
+   */
   void releaseLock();
 
+  /**
+   * \brief Give a cluster to a rank
+   *
+   * \param[in] from_rank the rank it's coming from
+   * \param[in] give_shared_blocks_size the shared block info for the swap
+   * \param[in] give_objs the objects given
+   * \param[in] give_obj_shared_block the shared block the objs are part of
+   * \param[in] give_obj_working_bytes the working bytes for the objs
+   * \param[in] take_cluster (optional) a cluster requested in return
+   */
   void giveCluster(
     NodeType from_rank,
     std::unordered_map<SharedIDType, BytesType> const& give_shared_blocks_size,
@@ -200,6 +249,14 @@ protected:
     SharedIDType take_cluster
   );
 
+  /**
+   * \internal \brief Remove a cluster to send. Does all the bookkeeping
+   * associated with removing the cluster
+   *
+   * \param[in] shared_id the shared ID of the cluster to remove
+   *
+   * \return a tuple with all the information to send to \c giveCluster
+   */
   auto removeClusterToSend(SharedIDType shared_id);
 
 private:
