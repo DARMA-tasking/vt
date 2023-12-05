@@ -1738,6 +1738,7 @@ void TemperedLB::releaseLock() {
   );
 
   is_locked_ = false;
+  locking_rank_ = uninitialized_destination;
 
   if (pending_actions_.size() > 0) {
     auto action = pending_actions_.back();
@@ -1769,7 +1770,9 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
   };
 
   if (is_locked_) {
-    pending_actions_.push_back(action);
+    proxy_[msg->locked_node].template send<&TemperedLB::releaseLock>();
+    theTerm()->consume(cur_epoch);
+    //pending_actions_.push_back(action);
   } else {
     action();
   }
@@ -1804,6 +1807,7 @@ void TemperedLB::satisfyLockRequest() {
     );
 
     is_locked_ = true;
+    locking_rank_ = lock.requesting_node;
   }
 }
 
