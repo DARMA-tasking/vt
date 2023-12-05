@@ -157,12 +157,14 @@ protected:
     LockedInfoMsg(
       NodeType in_locked_node, LoadType in_locked_load,
       ClusterSummaryType in_locked_clusters, BytesType in_locked_bytes,
-      BytesType in_locked_max_object_working_bytes
+      BytesType in_locked_max_object_working_bytes,
+      double in_locked_c_try
     ) : locked_node(in_locked_node),
         locked_load(in_locked_load),
         locked_clusters(in_locked_clusters),
         locked_bytes(in_locked_bytes),
-        locked_max_object_working_bytes(in_locked_max_object_working_bytes)
+        locked_max_object_working_bytes(in_locked_max_object_working_bytes),
+        locked_c_try(in_locked_c_try)
     { }
 
     template <typename SerializerT>
@@ -173,6 +175,7 @@ protected:
       s | locked_clusters;
       s | locked_bytes;
       s | locked_max_object_working_bytes;
+      s | locked_c_try;
     }
 
     NodeType locked_node = uninitialized_destination;
@@ -180,6 +183,7 @@ protected:
     ClusterSummaryType locked_clusters = {};
     BytesType locked_bytes = 0;
     BytesType locked_max_object_working_bytes = 0;
+    double locked_c_try = 0;
   };
 
   void satisfyLockRequest();
