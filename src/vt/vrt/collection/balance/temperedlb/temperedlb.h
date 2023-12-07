@@ -267,10 +267,12 @@ protected:
    * associated with removing the cluster
    *
    * \param[in] shared_id the shared ID of the cluster to remove
+   * \param[in] objs the set of objects to send with that shared ID (optional,
+   * if not specified then send all of them)
    *
    * \return a tuple with all the information to send to \c giveCluster
    */
-  auto removeClusterToSend(SharedIDType shared_id);
+  auto removeClusterToSend(SharedIDType shared_id, std::set<ObjIDType> objs = {});
 
 private:
   uint16_t f_                                       = 0;
@@ -357,6 +359,20 @@ private:
     }
   };
 
+  struct ObjLoad {
+    ObjLoad(ObjIDType in_obj_id, LoadType in_load)
+      : obj_id(in_obj_id),
+        load(in_load)
+    { }
+
+    ObjIDType obj_id = {};
+    LoadType load = 0;
+
+    double operator<(ObjLoad const& other) const {
+      return load < other.load;
+    }
+  };
+
   /// Whether we have memory information
   bool has_memory_data_ = false;
   /// Working bytes for this rank
@@ -393,6 +409,8 @@ private:
   std::vector<LoadType> max_load_over_iters_;
   /// Whether we are sub-clustering
   bool is_subclustering_ = false;
+  /// Ready to satify looks
+  bool ready_to_satisfy_locks_ = false;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
