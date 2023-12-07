@@ -49,7 +49,7 @@
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/debug/debug_var_unused.h"
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_CORE
 
 /*
    === Debug file/line/func functionality ===
