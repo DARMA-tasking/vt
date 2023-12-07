@@ -117,20 +117,30 @@ static constexpr ByteType rdma_default_byte_size = sizeof(char);
 
 }} //end namespace vt::rdma
 
-template<>
-struct fmt::formatter<vt::rdma::Type> : fmt::formatter<std::string_view> {
+namespace fmt { inline namespace vt {
+template <>
+struct formatter<::vt::rdma::Type> : formatter<std::string_view> {
   template <typename FormatContext>
-  auto format(vt::rdma::Type t, FormatContext& ctx) {
+  auto format(::vt::rdma::Type t, FormatContext& ctx) {
     std::string_view name = "Unknown";
     switch (t) {
-      case vt::rdma::Type::Get: name = "Get"; break;
-      case vt::rdma::Type::Put: name = "Put"; break;
-      case vt::rdma::Type::GetOrPut: name = "GetOrPut"; break;
-      case vt::rdma::Type::Uninitialized: name = "Uninitialized"; break;
+    case ::vt::rdma::Type::Get:
+      name = "Get";
+      break;
+    case ::vt::rdma::Type::Put:
+      name = "Put";
+      break;
+    case ::vt::rdma::Type::GetOrPut:
+      name = "GetOrPut";
+      break;
+    case ::vt::rdma::Type::Uninitialized:
+      name = "Uninitialized";
+      break;
     }
     return formatter<std::string_view>::format(name, ctx);
   }
 };
+}} // namespace fmt::vt
 
 #define PRINT_CHANNEL_TYPE(rdma_op_type) (                              \
   rdma_op_type == vt::rdma::Type::Get ? "rdma::Get" : (            \

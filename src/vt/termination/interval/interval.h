@@ -48,7 +48,7 @@
 
 #include <ostream>
 
-#include <fmt-vt/ostream.h>
+#include INCLUDE_FMT_OSTREAM
 
 namespace vt { namespace term { namespace interval {
 
@@ -230,9 +230,6 @@ using Interval = term::interval::Interval<DomainT>;
 
 } /* end namespace vt */
 
-#include <fmt-vt/core.h>
-#include <fmt-vt/format.h>
-
 namespace vt { namespace term { namespace interval {
 
 template <typename DomainT, DomainT sentinel>
@@ -240,17 +237,18 @@ struct Interval;
 
 }}}
 
+namespace fmt { inline namespace vt {
 template <typename DomainT, DomainT sentinel>
-struct fmt::formatter<vt::term::interval::Interval<DomainT, sentinel>> : fmt::formatter<std::string> {
-    template <typename FormatContext>
-    auto format(const vt::term::interval::Interval<DomainT, sentinel>& interval, FormatContext& ctx) {
-        return format_to(
-            ctx.out(),
-            "Interval[{}, {}]",
-            interval.lower(),
-            interval.upper()
-        );
-    }
+struct formatter<::vt::term::interval::Interval<DomainT, sentinel>>
+  : formatter<std::string> {
+  template <typename FormatContext>
+  auto format(
+    const ::vt::term::interval::Interval<DomainT, sentinel>& interval,
+    FormatContext& ctx) {
+    return format_to(
+      ctx.out(), "Interval[{}, {}]", interval.lower(), interval.upper());
+  }
 };
+}} // namespace fmt::vt
 
 #endif /*INCLUDED_VT_TERMINATION_INTERVAL_INTERVAL_H*/
