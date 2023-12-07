@@ -65,7 +65,7 @@
 #define vt_feature_cmake_production_build    @vt_feature_cmake_production_build@
 #define vt_feature_cmake_debug_verbose       @vt_feature_cmake_debug_verbose@
 #define vt_feature_cmake_rdma_tests          @vt_feature_cmake_rdma_tests@
-
+#define vt_feature_cmake_external_fmt        @vt_feature_cmake_external_fmt@
 
 #define vt_detected_max_num_nodes @cmake_detected_max_num_nodes@
 
@@ -91,3 +91,15 @@
 #cmakedefine vt_has_sysconf
 #cmakedefine vt_has_libunwind_h
 #cmakedefine vt_has_execinfo_h
+
+#if vt_feature_cmake_external_fmt
+  #define INCLUDE_FMT_CORE <fmt/core.h>
+  #define INCLUDE_FMT_FORMAT <fmt/format.h>
+  #define INCLUDE_FMT_RANGES <fmt/ranges.h>
+  #define INCLUDE_FMT_OSTREAM <fmt/ostream.h>
+#else
+  #define INCLUDE_FMT_CORE <fmt-vt/core.h>
+  #define INCLUDE_FMT_FORMAT <fmt-vt/format.h>
+  #define INCLUDE_FMT_RANGES <fmt-vt/ranges.h>
+  #define INCLUDE_FMT_OSTREAM <fmt-vt/ostream.h>
+#endif

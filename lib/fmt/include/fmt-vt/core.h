@@ -173,8 +173,10 @@
 #ifndef FMT_BEGIN_NAMESPACE
 #  define FMT_BEGIN_NAMESPACE \
     namespace fmt {           \
-    inline namespace v10 {
+    inline namespace v10 {    \
+    inline namespace vt {
 #  define FMT_END_NAMESPACE \
+    }                       \
     }                       \
     }
 #endif

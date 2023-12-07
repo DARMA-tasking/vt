@@ -59,7 +59,7 @@
 
 #include <string>
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_CORE
 
 namespace vt {
 

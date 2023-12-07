@@ -148,16 +148,25 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_config) {
 
 }}} // end namespace vt::tests::unit
 
+namespace fmt { inline namespace vt {
+
 template <>
-struct fmt::formatter<vt::tests::unit::DummyEnum> : formatter<std::string_view> {
+struct formatter<::vt::tests::unit::DummyEnum> : formatter<std::string_view> {
   template <typename FormatContext>
-  auto format(vt::tests::unit::DummyEnum c, FormatContext& ctx) {
+  auto format(::vt::tests::unit::DummyEnum c, FormatContext& ctx) {
     std::string_view name = "Unknown";
     switch (c) {
-      case vt::tests::unit::DummyEnum::One: name = "One"; break;
-      case vt::tests::unit::DummyEnum::Two: name = "Two"; break;
-      case vt::tests::unit::DummyEnum::Three: name = "Three"; break;
+    case ::vt::tests::unit::DummyEnum::One:
+      name = "One";
+      break;
+    case ::vt::tests::unit::DummyEnum::Two:
+      name = "Two";
+      break;
+    case ::vt::tests::unit::DummyEnum::Three:
+      name = "Three";
+      break;
     }
     return formatter<string_view>::format(name, ctx);
   }
 };
+}} // namespace fmt::vt

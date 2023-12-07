@@ -94,7 +94,8 @@ struct hash<vt::elm::ElementIDStruct> {
 
 } /* end namespace std */
 
-#include <fmt-vt/format.h>
+#include "vt/cmake_config.h"
+#include INCLUDE_FMT_FORMAT
 
 namespace fmt {
 
