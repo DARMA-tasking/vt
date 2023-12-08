@@ -58,7 +58,7 @@ variables:
   TEST_LB_SCHEMA: 0
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: alpine-clang-13-cache
-  build_root: "$(CACHE)$(ARCH)-alpine-$(HOST_COMPILER)-$(COMPILER)-cache"
+  build_root: "$(CACHE)$(ARCH)-alpine-$(HOST_COMPILER)-$(COMPILER)-cache/alpine-cpp"
   TS: 0
   TS_YEAR: 0
   TS_MONTH: 0
