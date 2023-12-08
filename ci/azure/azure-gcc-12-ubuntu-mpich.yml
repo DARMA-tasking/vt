@@ -9,6 +9,7 @@ trigger:
     include:
       - develop
       - main
+      - 2121-generalize-named-volumes
 
 pr:
   drafts: true
