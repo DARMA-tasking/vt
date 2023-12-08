@@ -69,16 +69,8 @@ version: '3.8'
 volumes:
   ubuntu-cpp:
     name: "${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cache"
-    driver_opts:
-      type: "none"
-      o: "bind"
-      device: "${CACHE}${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cache"
   alpine-cpp:
     name: "${ARCH}-alpine-${HOST_COMPILER}-${COMPILER}-cache"
-    driver_opts:
-      type: "none"
-      o: "bind"
-      device: "${CACHE}${ARCH}-alpine-${HOST_COMPILER}-${COMPILER}-cache"
 
 # Define basic rules for ccache used across multiple services. The beauty of
 # docker compose with cached volumes is that similarly configured builds will
@@ -154,7 +146,7 @@ services:
       <<: [*ccache, *vtopts]
     volumes: &ubuntu-volumes
       - .:/vt:delegated
-      - ubuntu-cpp:/build:delegated
+      - ${CACHE}ubuntu-cpp:/build:delegated
     command: &vt-cpp-command >
       /bin/bash -c "
         /vt/ci/build_cpp.sh /vt /build &&
@@ -384,7 +376,7 @@ services:
       <<: [*ccache, *vtopts]
     volumes: &alpine-volumes
       - .:/vt:delegated
-      - alpine-cpp:/build:delegated
+      - ${CACHE}alpine-cpp:/build:delegated
     command: *vt-cpp-command
 
   ##############################################################################
