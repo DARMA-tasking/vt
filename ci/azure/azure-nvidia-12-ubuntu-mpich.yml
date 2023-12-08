@@ -127,13 +127,6 @@ stages:
           script: |
             val=$(./scripts/check_containers.sh)
             echo "##vso[task.setvariable variable=compose_command]$val"
-      - task: Bash@3
-        displayName: Create directory for docker volume
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
-        inputs:
-          targetType: 'inline'
-          script: |
-            mkdir -p "$(build_root)"
       - task: DockerCompose@0
         displayName: Pull container
         inputs:
