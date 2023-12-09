@@ -219,6 +219,13 @@ protected:
   void lockObtained(LockedInfoMsg* msg);
 
   /**
+   * \brief Compute tempered criterion when only load transfer is considered
+   *
+   * \param[in] in_value contains: source work, destination work, transferred load
+   */
+  double loadTransferCriterion(std::tuple<double, double, double> in_values);
+    
+  /**
    * \brief Consider possible swaps with all the up-to-date info from a rank
    *
    * \param[in] msg update message with all the info
