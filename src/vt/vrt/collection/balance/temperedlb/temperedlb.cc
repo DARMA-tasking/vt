@@ -1656,7 +1656,7 @@ auto TemperedLB::removeClusterToSend(
   );
 }
 
-double loadTransferCriterion(std::tuple<double, double, double> in_values){
+double TemperedLB::loadTransferCriterion(std::tuple<double, double, double> in_values){
   // Compute maximum work of original arrangement
   auto const before_w_src = std::get<0>(in_values);
   auto const before_w_dst = std::get<1>(in_values);
@@ -1687,18 +1687,8 @@ void TemperedLB::considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       return - std::numeric_limits<double>::infinity();
     }
 
-    // Compute maximum work of original arrangement
-    auto const before_work_src = this_new_load_;
-    auto const before_work_try = try_total_load;
-    auto const w_max_0 = std::max(before_work_src, before_work_try);
-
-    // Compute maximum work of proposed new arrangement
-    auto const after_work_src = this_new_load_ - src_load;
-    auto const after_work_try = before_work_try + src_load;
-    auto const w_max_new = std::max(after_work_src, after_work_try);
-
-    // Return criterion value
-    return w_max_0 - w_max_new;
+    // Return load transfer criterion
+    return loadTransferCriterion(std::make_tuple(this_new_load_, try_total_load, src_load));
   };
 
   auto const& try_clusters = msg->locked_clusters;
@@ -1877,18 +1867,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       return - std::numeric_limits<double>::infinity();
     }
 
-    // Compute maximum work of original arrangement
-    auto const before_work_src = this_new_load_;
-    auto const before_work_try = try_total_load;
-    auto const w_max_0 = std::max(before_work_src, before_work_try);
-
-    // Compute maximum work of proposed new arrangement
-    auto const after_work_src = this_new_load_ - src_load + try_load;
-    auto const after_work_try = before_work_try + src_load - try_load;
-    auto const w_max_new = std::max(after_work_src, after_work_try);
-
-    // Return criterion value
-    return w_max_0 - w_max_new;
+    // Return load transfer criterion
+    return loadTransferCriterion(std::make_tuple(this_new_load_, try_total_load, src_load));
   };
 
   auto const& try_clusters = msg->locked_clusters;
@@ -2291,18 +2271,8 @@ void TemperedLB::swapClusters() {
       return - std::numeric_limits<double>::infinity();
     }
 
-    // Compute maximum work of original arrangement
-    auto const before_work_src = this_new_load_;
-    auto const before_work_try = load_info_.find(try_rank)->second;
-    auto const w_max_0 = std::max(before_work_src, before_work_try);
-
-    // Compute maximum work of proposed new arrangement
-    auto const after_work_src = this_new_load_ - src_load + try_load;
-    auto const after_work_try = before_work_try + src_load - try_load;
-    auto const w_max_new = std::max(after_work_src, after_work_try);
-
-    // Return criterion value
-    return w_max_0 - w_max_new;
+    // Return load transfer criterion
+    return loadTransferCriterion(std::make_tuple(this_new_load_, load_info_.find(try_rank)->second, src_load));
   };
 
   auto const this_node = theContext()->getNode();
