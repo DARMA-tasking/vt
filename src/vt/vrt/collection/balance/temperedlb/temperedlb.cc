@@ -1852,18 +1852,22 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     auto const src_after_mem = current_memory_usage_ - src_bytes + try_bytes;
     auto const try_after_mem = try_total_bytes + src_bytes - try_bytes;
 
+    // Check whether strict bounds on memory are satisfied
     if (src_after_mem > mem_thresh_ or try_after_mem > mem_thresh_) {
       return - std::numeric_limits<double>::infinity();
     }
 
+    // Compute maximum work of original arrangement
     auto const before_work_src = this_new_load_;
     auto const before_work_try = try_total_load;
     auto const w_max_0 = std::max(before_work_src, before_work_try);
 
+    // Compute maximum work of proposed new arrangement
     auto const after_work_src = this_new_load_ - src_load + try_load;
     auto const after_work_try = before_work_try + src_load - try_load;
     auto const w_max_new = std::max(after_work_src, after_work_try);
 
+    // Return criterion value
     return w_max_0 - w_max_new;
   };
 
@@ -2258,7 +2262,7 @@ void TemperedLB::swapClusters() {
   theTerm()->pushEpoch(lazy_epoch);
 
   auto criterion = [this](auto src_cluster, auto try_cluster) -> double {
-    // this does not handle empty cluster swaps
+    // FIXME: this does not swaps with an empty cluster
     auto const& [src_id, src_bytes, src_load] = src_cluster;
     auto const& [try_rank, try_id, try_bytes, try_load, try_mem] = try_cluster;
 
@@ -2362,9 +2366,9 @@ void TemperedLB::swapClusters() {
     getSharedBlocksHere().size(), mem_thresh_, this_new_load_
   );
 
-  int n_rejected = 0;
 
   // Report on rejection rate in debug mode
+  int n_rejected = 0;
   if (theConfig()->vt_debug_temperedlb) {
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
