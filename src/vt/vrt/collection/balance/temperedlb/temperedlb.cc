@@ -1667,7 +1667,7 @@ double TemperedLB::loadTransferCriterion(std::tuple<double, double, double> in_v
   auto const after_w_src = before_w_src - src_l;
   auto const after_w_dst = before_w_dst + src_l;
   auto const w_max_new = std::max(after_w_src, after_w_dst);
-  
+
   // Return criterion value
   return w_max_0 - w_max_new;
 } // double loadTransferCriterion
