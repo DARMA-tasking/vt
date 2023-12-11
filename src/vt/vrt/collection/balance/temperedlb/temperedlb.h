@@ -219,7 +219,15 @@ protected:
   void lockObtained(LockedInfoMsg* msg);
 
   /**
-   * \brief Compute tempered criterion when only load transfer is considered
+   * \brief Compute memory component of tempered transfer criterion
+   *
+   * \param[in] try_total_bytes: total memory bytes on target rank
+   * \param[in] src_bytes: memory bytes to be transferred from source rank
+   */
+  bool memoryTransferCriterion(double try_total_bytes, double src_bytes);
+
+  /**
+   * \brief Compute load component of tempered transfer criterion
    *
    * \param[in] in_value contains: source work, destination work, transferred load
    */
