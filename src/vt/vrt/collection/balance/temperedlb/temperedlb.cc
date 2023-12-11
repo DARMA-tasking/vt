@@ -1656,7 +1656,15 @@ auto TemperedLB::removeClusterToSend(
   );
 }
 
-double TemperedLB::loadTransferCriterion(std::tuple<double, double, double> in_values){
+bool TemperedLB::memoryTransferCriterion(double try_total_bytes, double src_bytes) {
+  // FIXME: incomplete implementation that ignores memory regrouping
+  auto const src_after_mem = this->current_memory_usage_;
+  auto const try_after_mem = try_total_bytes + src_bytes;
+
+  return not (src_after_mem > this->mem_thresh_ or try_after_mem > this->mem_thresh_);
+} // bool memoryTransferCriterion
+
+double TemperedLB::loadTransferCriterion(std::tuple<double, double, double> in_values) {
   // Compute maximum work of original arrangement
   auto const before_w_src = std::get<0>(in_values);
   auto const before_w_dst = std::get<1>(in_values);
@@ -1679,11 +1687,9 @@ void TemperedLB::considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     auto const& [src_id, src_bytes, src_load] = src_cluster;
     auto const& [try_rank, try_total_load, try_total_bytes] = try_cluster;
 
-    auto const src_after_mem = current_memory_usage_;
-    auto const try_after_mem = try_total_bytes + src_bytes;
 
     // Check whether strict bounds on memory are satisfied
-    if (src_after_mem > mem_thresh_ or try_after_mem > mem_thresh_) {
+    if (not memoryTransferCriterion(try_total_bytes, src_bytes)) {
       return - std::numeric_limits<double>::infinity();
     }
 
