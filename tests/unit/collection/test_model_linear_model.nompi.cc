@@ -73,9 +73,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const*,
-    std::unordered_map<PhaseType, DataMapType> const*) override {
+    vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load,
+    vt::util::container::CircularPhasesBuffer<CommMapType> const*,
+    vt::util::container::CircularPhasesBuffer<DataMapType> const*) override {
     proc_load_ = proc_load;
   }
 
@@ -100,7 +100,6 @@ private:
 
 TEST_F(TestLinearModel, test_model_linear_model_1) {
   constexpr int32_t num_test_interations = 6;
-  constexpr std::size_t buffer_size = 7;
   NodeType this_node = 0;
 
   auto test_model =

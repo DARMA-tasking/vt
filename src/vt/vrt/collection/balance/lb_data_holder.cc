@@ -346,7 +346,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 from_elm, to_elm, type == "Broadcast"
               );
               CommVolume vol{bytes, messages};
-              (*this->node_comm_[id])[key] = vol;
+              this->node_comm_[id][key] = vol;
             } else if (
               type == "NodeToCollection" || type == "NodeToCollectionBcast"
             ) {
@@ -366,7 +366,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 type == "NodeToCollectionBcast"
               );
               CommVolume vol{bytes, messages};
-              (*this->node_comm_[id])[key] = vol;
+              this->node_comm_[id][key] = vol;
             } else if (
               type == "CollectionToNode" || type == "CollectionToNodeBcast"
             ) {
@@ -386,7 +386,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 type == "CollectionToNodeBcast"
               );
               CommVolume vol{bytes, messages};
-              (*this->node_comm_[id])[key] = vol;
+              this->node_comm_[id][key] = vol;
             }
           }
         }

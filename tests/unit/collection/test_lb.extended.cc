@@ -571,15 +571,15 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
           CommKey::NodeToCollectionTag{}, this_node, elm_id, false
         );
         CommVolume ntocvol{ntoc, ntocm};
-        (*lbdh.node_comm_[phase])[ntockey] = ntocvol;
-        (*lbdh.node_subphase_comm_[phase])[i % 2][ntockey] = ntocvol;
+        lbdh.node_comm_[phase][ntockey] = ntocvol;
+        lbdh.node_subphase_comm_[phase][i % 2][ntockey] = ntocvol;
 
         CommKey ctonkey(
           CommKey::CollectionToNodeTag{}, elm_id, this_node, false
         );
         CommVolume ctonvol{cton, ctonm};
-        (*lbdh.node_comm_[phase])[ctonkey] = ctonvol;
-        (*lbdh.node_subphase_comm_[phase])[(i + 1) % 2][ctonkey] = ctonvol;
+        lbdh.node_comm_[phase][ctonkey] = ctonvol;
+        lbdh.node_subphase_comm_[phase][(i + 1) % 2][ctonkey] = ctonvol;
 
         std::vector<uint64_t> arr;
         arr.push_back(idx.x());
@@ -744,7 +744,7 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
       auto elm_id = elm_ptr->getElmID();
       elm_ptr->valInsert("hello", std::string("world"), should_dump, false);
       elm_ptr->valInsert("elephant", 123456789, should_dump, false);
-      (*lbdh.user_defined_json_[phase])[elm_id] = std::make_shared<nlohmann::json>(
+      lbdh.user_defined_json_[phase][elm_id] = std::make_shared<nlohmann::json>(
         elm_ptr->toJson()
       );
       lbdh.node_data_[phase][elm_id].whole_phase_load = 1.0;
