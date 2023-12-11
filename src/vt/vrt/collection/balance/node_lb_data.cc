@@ -377,12 +377,12 @@ void NodeLBData::addNodeLBData(
   }
 
   if (storable) {
-    (*lb_data_->user_defined_json_[phase])[id] = std::make_shared<nlohmann::json>(
+    lb_data_->user_defined_json_[phase][id] = std::make_shared<nlohmann::json>(
       storable->toJson()
     );
     storable->foreachLB(
       [&](std::string const& key, auto val) {
-        (*lb_data_->user_defined_lb_info_[phase])[id][key] = val->toVariant();
+        lb_data_->user_defined_lb_info_[phase][id][key] = val->toVariant();
       }
     );
     storable->collectAttributes(

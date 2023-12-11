@@ -54,9 +54,9 @@ CommOverhead::CommOverhead(
     per_byte_weight_(in_per_byte_weight)
 { }
 
-void CommOverhead::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                            std::unordered_map<PhaseType, CommMapType> const* proc_comm,
-                            std::unordered_map<PhaseType, DataMapType> const* user_data) {
+void CommOverhead::setLoads(vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load,
+                            vt::util::container::CircularPhasesBuffer<CommMapType> const* proc_comm,
+                            vt::util::container::CircularPhasesBuffer<DataMapType> const* user_data) {
   proc_comm_ = proc_comm;
   ComposedModel::setLoads(proc_load, proc_comm, user_data);
 }

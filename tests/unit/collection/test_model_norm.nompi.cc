@@ -66,10 +66,10 @@ using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
 using vt::vrt::collection::balance::DataMapType;
 
-using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
-using ProcSubphaseLoadMap = std::unordered_map<PhaseType, SubphaseLoadMapType>;
-using ProcCommMap = std::unordered_map<PhaseType, CommMapType>;
-using UserDataMap = std::unordered_map<PhaseType, DataMapType>;
+using ProcLoadMap = vt::util::container::CircularPhasesBuffer<LoadMapType>;
+using ProcSubphaseLoadMap = vt::util::container::CircularPhasesBuffer<SubphaseLoadMapType>;
+using ProcCommMap = vt::util::container::CircularPhasesBuffer<CommMapType>;
+using UserDataMap = vt::util::container::CircularPhasesBuffer<DataMapType>;
 
 constexpr auto num_subphases = 3;
 

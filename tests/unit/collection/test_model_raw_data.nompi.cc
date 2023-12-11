@@ -70,7 +70,7 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
   auto test_model =
     std::make_shared<RawData>();
 
-  std::unordered_map<PhaseType, LoadMapType> proc_loads;
+  vt::util::container::CircularPhasesBuffer<LoadMapType> proc_loads;
   test_model->setLoads(&proc_loads, nullptr, nullptr);
   EXPECT_TRUE(test_model->hasRawLoad());
   EXPECT_FALSE(test_model->hasUserData());  // because passed a nullptr
@@ -129,8 +129,8 @@ TEST_F(TestRawData, test_model_raw_user_data) {
   auto test_model =
     std::make_shared<RawData>();
 
-  std::unordered_map<PhaseType, LoadMapType> proc_loads;
-  std::unordered_map<PhaseType, DataMapType> user_data;
+  vt::util::container::CircularPhasesBuffer<LoadMapType> proc_loads;
+  vt::util::container::CircularPhasesBuffer<DataMapType> user_data;
   test_model->setLoads(&proc_loads, nullptr, &user_data);
   EXPECT_TRUE(test_model->hasRawLoad());
   EXPECT_TRUE(test_model->hasUserData());

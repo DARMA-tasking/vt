@@ -69,9 +69,9 @@ using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
 using vt::vrt::collection::balance::DataMapType;
 
-using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
-using ProcCommMap = std::unordered_map<PhaseType, CommMapType>;
-using UserDataMap = std::unordered_map<PhaseType, DataMapType>;
+using ProcLoadMap = vt::util::container::CircularPhasesBuffer<LoadMapType>;
+using ProcCommMap = vt::util::container::CircularPhasesBuffer<CommMapType>;
+using UserDataMap = vt::util::container::CircularPhasesBuffer<DataMapType>;
 
 static auto num_phases = 0;
 

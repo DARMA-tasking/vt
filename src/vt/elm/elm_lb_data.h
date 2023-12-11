@@ -125,7 +125,7 @@ struct ElementLBData {
 
   /**
    * \brief Resize internal buffers
-   * 
+   *
    * \param[in] hist_lb_data_count the requested buffers capacity
    */
   void setHistoryCapacity(unsigned int hist_lb_data_count);
