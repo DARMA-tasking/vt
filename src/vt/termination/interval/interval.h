@@ -237,18 +237,18 @@ struct Interval;
 
 }}}
 
-namespace fmt { inline namespace vt {
-template <typename DomainT, DomainT sentinel>
-struct formatter<::vt::term::interval::Interval<DomainT, sentinel>>
-  : formatter<std::string> {
-  template <typename FormatContext>
-  auto format(
-    const ::vt::term::interval::Interval<DomainT, sentinel>& interval,
-    FormatContext& ctx) {
-    return format_to(
-      ctx.out(), "Interval[{}, {}]", interval.lower(), interval.upper());
-  }
-};
-}} // namespace fmt::vt
+VT_FMT_NAMESPACE {
+  template <typename DomainT, DomainT sentinel>
+  struct formatter<::vt::term::interval::Interval<DomainT, sentinel>>
+    : formatter<std::string> {
+    template <typename FormatContext>
+    auto format(
+      const ::vt::term::interval::Interval<DomainT, sentinel>& interval,
+      FormatContext& ctx) {
+      return format_to(
+        ctx.out(), "Interval[{}, {}]", interval.lower(), interval.upper());
+    }
+  };
+} // VT_FMT_NAMESPACE
 
 #endif /*INCLUDED_VT_TERMINATION_INTERVAL_INTERVAL_H*/
