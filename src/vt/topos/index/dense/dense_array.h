@@ -159,19 +159,18 @@ static_assert(
 
 }}  // end namespace vt::index
 
-namespace fmt { inline namespace vt {
-
-template <typename IndexType, ::vt::index::NumDimensionsType ndim>
-struct formatter<::vt::index::DenseIndexArray<IndexType, ndim>>
-  : formatter<std::array<IndexType, ndim>> {
-  template <typename FormatContext>
-  auto format(
-    const ::vt::index::DenseIndexArray<IndexType, ndim>& wrapper,
-    FormatContext& ctx) {
-    return formatter<std::array<IndexType, ndim>>::format(wrapper.dims, ctx);
-  }
-};
-}} // namespace fmt::vt
+VT_FMT_NAMESPACE {
+  template <typename IndexType, ::vt::index::NumDimensionsType ndim>
+  struct formatter<::vt::index::DenseIndexArray<IndexType, ndim>>
+    : formatter<std::array<IndexType, ndim>> {
+    template <typename FormatContext>
+    auto format(
+      const ::vt::index::DenseIndexArray<IndexType, ndim>& wrapper,
+      FormatContext& ctx) {
+      return formatter<std::array<IndexType, ndim>>::format(wrapper.dims, ctx);
+    }
+  };
+} // VT_FMT_NAMESPACE
 
 #include "vt/topos/index/dense/dense_array.impl.h"
 

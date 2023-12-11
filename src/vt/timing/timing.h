@@ -63,13 +63,13 @@ TimeType getCurrentTime();
 
 }} /* end namespace vt::timing */
 
-namespace fmt { inline namespace vt {
-template <>
-struct formatter<::vt::TimeTypeWrapper> {
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext& ctx) {
-    return ctx.begin();
-  }
+VT_FMT_NAMESPACE {
+  template <>
+  struct formatter<::vt::TimeTypeWrapper> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext& ctx) {
+      return ctx.begin();
+    }
 
   template <typename FormatContext>
   auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) {
@@ -80,6 +80,6 @@ struct formatter<::vt::TimeTypeWrapper> {
   }
 };
 
-}} // namespace fmt::vt
+} // VT_FMT_NAMESPACE
 
 #endif /*INCLUDED_VT_TIMING_TIMING_H*/
