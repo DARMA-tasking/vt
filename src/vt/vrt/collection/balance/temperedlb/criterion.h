@@ -93,26 +93,26 @@ protected:
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-namespace fmt { inline namespace vt {
-
-template <>
-struct formatter<::vt::vrt::collection::lb::CriterionEnum>
-  : formatter<std::string_view> {
-  template <typename FormatContext>
-  auto format(::vt::vrt::collection::lb::CriterionEnum c, FormatContext& ctx) {
-    std::string_view name = "Unknown";
-    switch (c) {
-    case ::vt::vrt::collection::lb::CriterionEnum::Grapevine:
-      name = "Grapevine";
-      break;
-    case ::vt::vrt::collection::lb::CriterionEnum::ModifiedGrapevine:
-      name = "ModifiedGrapevine";
-      break;
+VT_FMT_NAMESPACE {
+  template <>
+  struct formatter<::vt::vrt::collection::lb::CriterionEnum>
+    : formatter<std::string_view> {
+    template <typename FormatContext>
+    auto
+    format(::vt::vrt::collection::lb::CriterionEnum c, FormatContext& ctx) {
+      std::string_view name = "Unknown";
+      switch (c) {
+      case ::vt::vrt::collection::lb::CriterionEnum::Grapevine:
+        name = "Grapevine";
+        break;
+      case ::vt::vrt::collection::lb::CriterionEnum::ModifiedGrapevine:
+        name = "ModifiedGrapevine";
+        break;
+      }
+      return formatter<string_view>::format(name, ctx);
     }
-    return formatter<string_view>::format(name, ctx);
-  }
-};
+  };
 
-}} // namespace fmt::vt
+} // VT_FMT_NAMESPACE
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_CRITERION_H*/
