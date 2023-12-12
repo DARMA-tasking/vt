@@ -181,7 +181,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
     vt::thePhase()->nextPhaseCollective();
   }
 
-  // Check amount of phase data in the node
+  // Check the phases persisted in the node
   validatePersistedPhases({4});
 }
 
@@ -220,7 +220,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
     vt::thePhase()->nextPhaseCollective();
   }
 
-  // Check amount of phase data in the node
+  // Check the phases persisted in the node
   validatePersistedPhases({4,5});
 }
 
@@ -259,7 +259,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
     vt::thePhase()->nextPhaseCollective();
   }
 
-  // Check amount of phase data in the node
+  // Check the phases persisted in the node
   validatePersistedPhases({4,5,6,7});
 }
 
@@ -301,7 +301,7 @@ TEST_F(TestLBDataRetention, test_lbdata_config_retention_higher) {
     vt::thePhase()->nextPhaseCollective();
   }
 
-  // Check amount of phase data in the node
+  // Check the phases persisted in the node
   validatePersistedPhases({6,7,8,9,10,11});
 }
 
@@ -345,8 +345,11 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
   // Set model which needs only 1 phase of data
   theLBManager()->setLoadModel(model_1_phase);
 
-  // Check amount of phase data in the node
+  // Check the phases persisted in the node
   validatePersistedPhases({10});
+
+  // Go to next phase to update size of the buffers in TestCol.
+  vt::thePhase()->nextPhaseCollective();
 
   for (uint32_t i=0; i<first_stage_num_phases; ++i) {
     runInEpochCollective([&]{
@@ -357,8 +360,8 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
     vt::thePhase()->nextPhaseCollective();
   }
 
-  // Check amount of phase data in the node
-  validatePersistedPhases({21});
+  // Check the phases persisted in the node
+  validatePersistedPhases({22});
 }
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
@@ -396,15 +399,18 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
     vt::thePhase()->nextPhaseCollective();
   }
 
-  // Check amount of phase data in the node
+  // Check the phases persisted in the node
   validatePersistedPhases({0,1,2,3,4,5});
 
   // Set model which needs only 1 phase of data
   auto model_1_phase = std::make_shared<PersistenceMedianLastN>(base, 1U);
   theLBManager()->setLoadModel(model_1_phase);
 
-  // Check amount of phase data in the node
+  // Check the phases persisted in the node
   validatePersistedPhases({5});
+
+  // Go to next phase to update size of the buffers in TestCol.
+  vt::thePhase()->nextPhaseCollective();
 
   // Do another 10 phases of work
   for (uint32_t i=0; i<10; ++i) {
@@ -416,8 +422,8 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
     vt::thePhase()->nextPhaseCollective();
   }
 
-  // Check amount of phase data in the node
-  validatePersistedPhases({15});
+  // Check the phases persisted in the node
+  validatePersistedPhases({16});
 }
 
 }}} // end namespace vt::tests::unit
