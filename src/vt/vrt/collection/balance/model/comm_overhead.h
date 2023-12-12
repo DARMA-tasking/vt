@@ -65,14 +65,14 @@ struct CommOverhead : public ComposedModel {
     LoadType in_per_byte_weight
   );
 
-  void setLoads(vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load,
-                vt::util::container::CircularPhasesBuffer<CommMapType> const* proc_comm,
-                vt::util::container::CircularPhasesBuffer<DataMapType> const* user_data) override;
+  void setLoads(LoadMapBufferType const* proc_load,
+                CommMapBufferType const* proc_comm,
+                DataMapBufferType const* user_data) override;
 
   LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
 
 private:
-  vt::util::container::CircularPhasesBuffer<CommMapType> const* proc_comm_; /**< Underlying comm data */
+  CommMapBufferType const* proc_comm_; /**< Underlying comm data */
   LoadType per_msg_weight_ = 0.001;           /**< Cost per message */
   LoadType per_byte_weight_ = 0.000001;       /**< Cost per bytes */
 }; // class CommOverhead

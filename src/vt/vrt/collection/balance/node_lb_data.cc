@@ -93,21 +93,21 @@ bool NodeLBData::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
   return true;
 }
 
-vt::util::container::CircularPhasesBuffer<LoadMapType> const*
+LoadMapBufferType const*
 NodeLBData::getNodeLoad() const {
   return &lb_data_->node_data_;
 }
 
-vt::util::container::CircularPhasesBuffer<DataMapType> const*
+DataMapBufferType const*
 NodeLBData::getUserData() const {
   return &lb_data_->user_defined_lb_info_;
 }
 
-vt::util::container::CircularPhasesBuffer<CommMapType> const* NodeLBData::getNodeComm() const {
+CommMapBufferType const* NodeLBData::getNodeComm() const {
   return &lb_data_->node_comm_;
 }
 
-vt::util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
+util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
   return &lb_data_->node_subphase_comm_;
 }
 

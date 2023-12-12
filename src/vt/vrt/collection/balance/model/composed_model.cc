@@ -45,9 +45,9 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void ComposedModel::setLoads(vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load,
-                             vt::util::container::CircularPhasesBuffer<CommMapType> const* proc_comm,
-                             vt::util::container::CircularPhasesBuffer<DataMapType> const* user_data) {
+void ComposedModel::setLoads(LoadMapBufferType const* proc_load,
+                             CommMapBufferType const* proc_comm,
+                             DataMapBufferType const* user_data) {
   base_->setLoads(proc_load, proc_comm, user_data);
 }
 

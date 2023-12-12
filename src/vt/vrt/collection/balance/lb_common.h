@@ -49,6 +49,7 @@
 #include "vt/elm/elm_comm.h"
 #include "vt/timing/timing_type.h"
 #include "vt/messaging/message/message.h"
+#include "vt/utils/container/circular_phases_buffer.h"
 
 #include <nlohmann/json_fwd.hpp>
 
@@ -63,6 +64,7 @@ namespace balance {
 using ElementIDStruct = elm::ElementIDStruct;
 using ElementIDType = elm::ElementIDType;
 using CommMapType = elm::CommMapType;
+using CommMapBufferType   = util::container::CircularPhasesBuffer<CommMapType>;
 
 static constexpr ElementIDType const no_element_id = elm::no_element_id;
 
@@ -117,9 +119,11 @@ using UserDataValueType = std::variant<int, double, std::string>;
 using ElmUserDataType = std::unordered_map<std::string, UserDataValueType>;
 
 using LoadMapType         = std::unordered_map<ElementIDStruct, LoadSummary>;
+using LoadMapBufferType   = util::container::CircularPhasesBuffer<LoadMapType>;
 using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<LoadType>>;
 /// User-defined LB values map
 using DataMapType         = std::unordered_map<ElementIDStruct, ElmUserDataType>;
+using DataMapBufferType   = util::container::CircularPhasesBuffer<DataMapType>;
 
 struct Reassignment {
   // Include the subject node so that these structures can be formed

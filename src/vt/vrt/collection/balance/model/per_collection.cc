@@ -55,9 +55,9 @@ void PerCollection::addModel(CollectionID proxy, std::shared_ptr<LoadModel> mode
   models_[proxy] = model;
 }
 
-void PerCollection::setLoads(vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load,
-                             vt::util::container::CircularPhasesBuffer<CommMapType> const* proc_comm,
-                             vt::util::container::CircularPhasesBuffer<DataMapType> const* user_data) {
+void PerCollection::setLoads(LoadMapBufferType const* proc_load,
+                             CommMapBufferType const* proc_comm,
+                             DataMapBufferType const* user_data) {
   for (auto& m : models_)
     m.second->setLoads(proc_load, proc_comm, user_data);
   ComposedModel::setLoads(proc_load, proc_comm, user_data);
