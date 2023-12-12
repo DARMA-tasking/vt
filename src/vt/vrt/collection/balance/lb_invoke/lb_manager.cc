@@ -182,14 +182,6 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   model_->setLoads(nlb_data->getNodeLoad(),
                    nlb_data->getNodeComm(),
                    nlb_data->getUserData());
-
-  // Adjust buffers size on the objs in collection
-  runInEpochCollective("LBManager: setLoadModel", [=] {
-    auto& objs = vt::objgroup::getObjs();
-    for (auto& obj : objs) {
-      obj.second->getLBData().setHistoryCapacity(min_hist_lb_data_);
-    }
-  });
 }
 
 void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
