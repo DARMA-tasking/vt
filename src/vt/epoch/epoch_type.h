@@ -111,7 +111,7 @@ struct hash<vt::epoch::EpochType> {
 #include "vt/cmake_config.h"
 #include INCLUDE_FMT_FORMAT
 
-namespace fmt {
+VT_FMT_NAMESPACE_BEGIN
 
 /// Custom fmt formatter/print for \c EpochType
 template <>
@@ -151,7 +151,7 @@ struct formatter<::vt::epoch::EpochType> {
   }
 };
 
-} /* end namespace fmt */
+VT_FMT_NAMESPACE_END
 
 namespace vt {
 

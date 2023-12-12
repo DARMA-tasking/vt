@@ -148,7 +148,7 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_config) {
 
 }}} // end namespace vt::tests::unit
 
-VT_FMT_NAMESPACE {
+VT_FMT_NAMESPACE_BEGIN
   template <>
   struct formatter<::vt::tests::unit::DummyEnum> : formatter<std::string_view> {
     template <typename FormatContext>
@@ -168,4 +168,4 @@ VT_FMT_NAMESPACE {
       return formatter<string_view>::format(name, ctx);
     }
   };
-} // VT_FMT_NAMESPACE
+VT_FMT_NAMESPACE_END

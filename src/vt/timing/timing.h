@@ -63,13 +63,7 @@ TimeType getCurrentTime();
 
 }} /* end namespace vt::timing */
 
-VT_FMT_NAMESPACE {
-  template <>
-  struct formatter<::vt::TimeTypeWrapper> {
-    template <typename ParseContext>
-    constexpr auto parse(ParseContext& ctx) {
-      return ctx.begin();
-    }
+VT_FMT_NAMESPACE_BEGIN
 
   template <typename FormatContext>
   auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) {
@@ -80,6 +74,14 @@ VT_FMT_NAMESPACE {
   }
 };
 
-} // VT_FMT_NAMESPACE
+  template <typename FormatContext>
+  auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) {
+    return fmt::format_to(
+      ctx.out(), "{}",
+      to_engineering_string(t.seconds(), 3, eng_exponential, "s"));
+  }
+};
+
+VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_TIMING_TIMING_H*/

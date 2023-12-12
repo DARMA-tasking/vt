@@ -100,7 +100,7 @@ struct LBArgsEnumConverter {
       auto err = fmt::format(
         "LBArgsEnumConverter: enum '{}' value '{}' corresponding to LB "
         "argument '{}' does not have a string associated with it",
-        enum_type_, e, par_name_
+        enum_type_, static_cast<std::underlying_type_t<T>>(e), par_name_
       );
       vtAbort(err);
     }
