@@ -134,12 +134,12 @@ protected:
   bool cur_time_started_ = false;
   TimeType cur_time_ = TimeType{0.0};
   PhaseType cur_phase_ = fst_lb_phase;
-  vt::util::container::CircularPhasesBuffer<LoadType> phase_timings_ = {1};
-  vt::util::container::CircularPhasesBuffer<CommMapType> phase_comm_ = {};
+  util::container::CircularPhasesBuffer<LoadType> phase_timings_ = {1};
+  util::container::CircularPhasesBuffer<CommMapType> phase_comm_ = {};
 
   SubphaseType cur_subphase_ = 0;
-  vt::util::container::CircularPhasesBuffer<std::vector<LoadType>> subphase_timings_ = {1};
-  vt::util::container::CircularPhasesBuffer<std::vector<CommMapType>> subphase_comm_ = {};
+  util::container::CircularPhasesBuffer<std::vector<LoadType>> subphase_timings_ = {1};
+  util::container::CircularPhasesBuffer<std::vector<CommMapType>> subphase_comm_ = {};
 };
 
 }} /* end namespace vt::elm */

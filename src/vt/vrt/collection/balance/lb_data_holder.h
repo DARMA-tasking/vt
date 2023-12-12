@@ -191,13 +191,13 @@ public:
   /// Node attributes for the current rank
   ElmUserDataType rank_attributes_;
   /// Node timings for each local object
-  vt::util::container::CircularPhasesBuffer<LoadMapType> node_data_;
+  LoadMapBufferType node_data_;
   /// Node communication graph for each local object
-  vt::util::container::CircularPhasesBuffer<CommMapType> node_comm_;
+  CommMapBufferType node_comm_;
   /// Node communication graph for each subphase
-  vt::util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
+  util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// User-defined data from each phase for JSON output
-  vt::util::container::CircularPhasesBuffer<std::unordered_map<
+  util::container::CircularPhasesBuffer<std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
 

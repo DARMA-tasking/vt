@@ -66,9 +66,9 @@ struct RawData : public LoadModel {
   ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
   CommMapType getComm(PhaseOffset when) const override;
 
-  void setLoads(vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load,
-                vt::util::container::CircularPhasesBuffer<CommMapType> const* proc_comm,
-                vt::util::container::CircularPhasesBuffer<DataMapType> const* user_data) override;
+  void setLoads(LoadMapBufferType const* proc_load,
+                CommMapBufferType const* proc_comm,
+                DataMapBufferType const* user_data) override;
 
   ObjectIterator begin() const override;
 
@@ -78,9 +78,9 @@ struct RawData : public LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
 
   // Observer pointers to the underlying data. In operation, these would be owned by NodeLBData
-  vt::util::container::CircularPhasesBuffer<LoadMapType>         const* proc_load_;
-  vt::util::container::CircularPhasesBuffer<CommMapType>         const* proc_comm_;
-  vt::util::container::CircularPhasesBuffer<DataMapType>         const* user_data_;
+  LoadMapBufferType         const* proc_load_;
+  CommMapBufferType         const* proc_comm_;
+  DataMapBufferType         const* user_data_;
   PhaseType last_completed_phase_ = ~0;
 }; // class RawData
 

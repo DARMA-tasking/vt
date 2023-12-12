@@ -173,21 +173,21 @@ public:
    *
    * \return an observer pointer to the load map
    */
-  vt::util::container::CircularPhasesBuffer<LoadMapType> const* getNodeLoad() const;
+  LoadMapBufferType const* getNodeLoad() const;
 
   /**
    * \internal \brief Get stored object comm graph
    *
    * \return an observer pointer to the comm graph
    */
-  vt::util::container::CircularPhasesBuffer<CommMapType> const* getNodeComm() const;
+  CommMapBufferType const* getNodeComm() const;
 
   /**
    * \internal \brief Get the user-defined LB data
    *
    * \return an observer pointer to the user-defined LB data
    */
-  vt::util::container::CircularPhasesBuffer<DataMapType> const* getUserData() const;
+  DataMapBufferType const* getUserData() const;
 
   /**
    * \internal \brief Get the user-defined attributes
@@ -210,7 +210,7 @@ public:
    *
    * \return an observer pointer to the comm subphase graph
    */
-  vt::util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
+  util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
 
   /**
    * \internal \brief Get stored node attributes
