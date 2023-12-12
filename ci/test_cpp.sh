@@ -12,7 +12,7 @@ pushd "$VT_BUILD"
 # Don't run performance tests here (use label 'unit_test' or 'example')
 ctest --output-on-failure -L 'unit_test|example' | tee cmake-output.log
 
-if test "${CODE_COVERAGE:-0}" -eq 1
+if test "${VT_CODE_COVERAGE:-0}" -eq 1
 then
     export CODECOV_TOKEN="$CODECOV_TOKEN"
     lcov --capture --directory . --output-file coverage.info
