@@ -97,7 +97,7 @@ struct hash<vt::elm::ElementIDStruct> {
 #include "vt/cmake_config.h"
 #include INCLUDE_FMT_FORMAT
 
-namespace fmt {
+VT_FMT_NAMESPACE_BEGIN
 
 /// Custom fmt formatter/print for \c vt::elm::ElementIDStruct
 template <>
@@ -138,6 +138,6 @@ struct formatter<::vt::elm::ElementIDStruct> {
   }
 };
 
-} /* end namespace fmt */
+VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_ELM_ELM_ID_H*/
