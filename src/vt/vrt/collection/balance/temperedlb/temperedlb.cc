@@ -1664,16 +1664,13 @@ bool TemperedLB::memoryTransferCriterion(double try_total_bytes, double src_byte
   return not (src_after_mem > this->mem_thresh_ or try_after_mem > this->mem_thresh_);
 } // bool memoryTransferCriterion
 
-double TemperedLB::loadTransferCriterion(std::tuple<double, double, double> in_values) {
+double TemperedLB::loadTransferCriterion(double before_w_src, double before_w_dst, double src_l, double dst_l) {
   // Compute maximum work of original arrangement
-  auto const before_w_src = std::get<0>(in_values);
-  auto const before_w_dst = std::get<1>(in_values);
   auto const w_max_0 = std::max(before_w_src, before_w_dst);
 
-  // Compute maximum work of arrangement after load transfer
-  auto const src_l = std::get<2>(in_values);
-  auto const after_w_src = before_w_src - src_l;
-  auto const after_w_dst = before_w_dst + src_l;
+  // Compute maximum work of arrangement after proposed load transfer
+  auto const after_w_src = before_w_src - src_l + dst_l;
+  auto const after_w_dst = before_w_dst + src_l - dst_l;
   auto const w_max_new = std::max(after_w_src, after_w_dst);
 
   // Return criterion value
@@ -1694,7 +1691,7 @@ void TemperedLB::considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     }
 
     // Return load transfer criterion
-    return loadTransferCriterion(std::make_tuple(this_new_load_, try_total_load, src_load));
+    return loadTransferCriterion(this_new_load_, try_total_load, src_load, 0.);
   };
 
   auto const& try_clusters = msg->locked_clusters;
@@ -1874,7 +1871,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     }
 
     // Return load transfer criterion
-    return loadTransferCriterion(std::make_tuple(this_new_load_, try_total_load, src_load));
+    return loadTransferCriterion(this_new_load_, try_total_load, src_load, try_load);
   };
 
   auto const& try_clusters = msg->locked_clusters;
@@ -2272,13 +2269,13 @@ void TemperedLB::swapClusters() {
     auto const& [src_id, src_bytes, src_load] = src_cluster;
     auto const& [try_rank, try_id, try_bytes, try_load, try_mem] = try_cluster;
 
-    // Check whether strict bounds on memory are satisfied
+    // Necessary but not sufficient check regarding memory bounds
     if (try_mem - try_bytes + src_bytes > mem_thresh_) {
       return - std::numeric_limits<double>::infinity();
     }
 
     // Return load transfer criterion
-    return loadTransferCriterion(std::make_tuple(this_new_load_, load_info_.find(try_rank)->second, src_load));
+    return loadTransferCriterion(this_new_load_, load_info_.find(try_rank)->second, src_load, try_load);
   };
 
   auto const this_node = theContext()->getNode();
