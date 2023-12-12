@@ -228,9 +228,12 @@ protected:
   /**
    * \brief Compute load component of tempered transfer criterion
    *
-   * \param[in] in_value contains: source work, destination work, transferred load
+   * \param[in] before_w_src: original work on source rank
+   * \param[in] before_w_dst: original work on destination rank
+   * \param[in] src_l: sum of object loads to be transferred from source
+   * \param[in] dst_l: sum of object loads to be transferred from destination
    */
-  double loadTransferCriterion(std::tuple<double, double, double> in_values);
+  double loadTransferCriterion(double before_w_src, double before_w_dst, double src_l, double dst_l);
 
   /**
    * \brief Consider possible swaps with all the up-to-date info from a rank
