@@ -2040,7 +2040,7 @@ void TemperedLB::giveCluster(
 
 void TemperedLB::releaseLock() {
   vt_debug_print(
-    verbose, temperedlb,
+    normal, temperedlb,
     "releaseLock: pending size={}\n",
     pending_actions_.size()
   );
@@ -2081,11 +2081,13 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
     theTerm()->consume(cur_epoch);
   };
 
-  if (is_locked_) {
+  if (is_locked_ && locking_rank_ <= msg->locked_node) {
     proxy_[msg->locked_node].template send<&TemperedLB::releaseLock>();
     theTerm()->consume(cur_epoch);
     try_locks_.emplace(msg->locked_node, msg->locked_c_try);
     //pending_actions_.push_back(action);
+  } else if (is_locked_) {
+    pending_actions_.push_back(action);
   } else if (is_swapping_) {
     pending_actions_.push_back(action);
   } else {
