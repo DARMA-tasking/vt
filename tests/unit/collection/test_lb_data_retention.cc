@@ -68,11 +68,11 @@ void validatePersistedPhases(std::vector<PhaseType> expected_phases) {
     EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->user_defined_lb_info_.size());
     // Check if each phase is present
     for(auto&& phase : expected_phases) {
-      EXPECT_TRUE(nullptr != theNodeLBData()->getLBData()->node_comm_.find(phase));
-      EXPECT_TRUE(nullptr != theNodeLBData()->getLBData()->node_data_.find(phase));
-      EXPECT_TRUE(nullptr != theNodeLBData()->getLBData()->node_subphase_comm_.find(phase));
-      EXPECT_TRUE(nullptr != theNodeLBData()->getLBData()->user_defined_json_.find(phase));
-      EXPECT_TRUE(nullptr != theNodeLBData()->getLBData()->user_defined_lb_info_.find(phase));
+      EXPECT_TRUE(theNodeLBData()->getLBData()->node_comm_.contains(phase));
+      EXPECT_TRUE(theNodeLBData()->getLBData()->node_data_.contains(phase));
+      EXPECT_TRUE(theNodeLBData()->getLBData()->node_subphase_comm_.contains(phase));
+      EXPECT_TRUE(theNodeLBData()->getLBData()->user_defined_json_.contains(phase));
+      EXPECT_TRUE(theNodeLBData()->getLBData()->user_defined_lb_info_.contains(phase));
     }
   #else
     (void)expected_phases;
@@ -423,6 +423,8 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
 
   // Check the phases persisted in the node
   validatePersistedPhases({16});
+
+  EXPECT_EQ(true, false);
 }
 
 }}} // end namespace vt::tests::unit
