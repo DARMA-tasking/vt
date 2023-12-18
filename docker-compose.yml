@@ -112,6 +112,7 @@ x-vtopts: &vtopts
   VT_CI_BUILD: ${VT_CI_BUILD:-0}
   VT_DEBUG_VERBOSE: ${VT_DEBUG_VERBOSE:-0}
   VT_TESTS_NUM_NODES: ${VT_TESTS_NUM_NODES:-}
+  VT_EXTERNAL_FMT: ${VT_EXTERNAL_FMT:-0}
   VT_NO_COLOR_ENABLED: ${VT_NO_COLOR:-0}
   BUILD_SHARED_LIBS: ${VT_BUILD_SHARED_LIBS:-0}
   VT_INCLUSION_TYPE: ${VT_INCLUSION:-TPL}
@@ -138,6 +139,7 @@ services:
         ubuntu: ${UBUNTU}
         ubsan_enabled: ${VT_UBSAN:-0}
         zoltan_enabled: ${VT_ZOLTAN:-0}
+        external_fmt: ${VT_EXTERNAL_FMT:-0}
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     ulimits: &ulimits
