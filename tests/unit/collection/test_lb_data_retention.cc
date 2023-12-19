@@ -423,8 +423,6 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
 
   // Check the phases persisted in the node
   validatePersistedPhases({16});
-
-  EXPECT_EQ(true, false);
 }
 
 }}} // end namespace vt::tests::unit
