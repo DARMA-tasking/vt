@@ -135,11 +135,11 @@ protected:
   TimeType cur_time_ = TimeType{0.0};
   PhaseType cur_phase_ = fst_lb_phase;
   util::container::CircularPhasesBuffer<LoadType> phase_timings_ = {1};
-  util::container::CircularPhasesBuffer<CommMapType> phase_comm_ = {};
+  util::container::CircularPhasesBuffer<CommMapType> phase_comm_ = {1};
 
   SubphaseType cur_subphase_ = 0;
   util::container::CircularPhasesBuffer<std::vector<LoadType>> subphase_timings_ = {1};
-  util::container::CircularPhasesBuffer<std::vector<CommMapType>> subphase_comm_ = {};
+  util::container::CircularPhasesBuffer<std::vector<CommMapType>> subphase_comm_ = {1};
 };
 
 }} /* end namespace vt::elm */
