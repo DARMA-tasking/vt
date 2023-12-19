@@ -9,7 +9,6 @@ trigger:
     include:
       - develop
       - main
-      - 2121-generalize-named-volumes
 
 pr:
   drafts: false
@@ -181,9 +180,6 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            ls -la $(build_root)$(volume_name)
-            docker volume ls
-            docker compose config
             zip -j $(Agent.TempDirectory)/LastTest.log.gz $(build_root)$(volume_name)/vt/Testing/Temporary/LastTest.log
             zip -j $(Agent.TempDirectory)/cmake-output.log.gz $(build_root)$(volume_name)/vt/cmake-output.log
       - task: PublishPipelineArtifact@1
