@@ -2244,7 +2244,7 @@ void TemperedLB::swapClusters() {
   // computation to see if a cluster is blocking progress.
   if (auto const len = max_load_over_iters_.size(); len > 2) {
     double const i1 = max_load_over_iters_[len-1];
-    double const i2 = max_load_over_iters_[len-1];
+    double const i2 = max_load_over_iters_[len-2];
 
     vt_debug_print(
       terse, temperedlb,
