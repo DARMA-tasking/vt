@@ -48,9 +48,6 @@
 
 namespace vt { namespace util { namespace container {
 
-constexpr PhaseType invalid_ = -1;
-
-// Circular Buffer which can store continuous phases data
 template<typename StoredType>
 struct CircularPhasesBuffer {
     using StoredPair = std::pair<PhaseType, StoredType>;
@@ -106,7 +103,7 @@ struct CircularPhasesBuffer {
     }
 
     bool contains(const PhaseType phase) const {
-        if (vector_.empty()) {
+        if (!isInitialized()) {
             return false;
         }
         return vector_[phase % vector_.size()].first == phase;
@@ -130,41 +127,52 @@ struct CircularPhasesBuffer {
         });
     }
 
+    std::size_t capacity() const {
+        return vector_.size();
+    }
+
+    bool isInitialized() const {
+        return vector_.size() > 0;
+    }
+
     void resize(std::size_t new_size) {
-        vtAssert(new_size != 0, "Logic error: Trying to resize buffer to size 0.");
-        if (new_size == vector_.size()) { return; }
-
-        auto new_vec = std::vector<StoredPair>(new_size, StoredPair{invalid_, StoredType{}});
-
-        if (new_size < vector_.size()) {
-            std::size_t count = 0;
-            std::size_t index = head_phase_ % vector_.size();
-
-            for(; count < new_size; index--, count++) {
-                auto pair = vector_[index];
-                if (pair.first != invalid_) {
-                    new_vec[pair.first % new_size] = std::move(pair);
-                }
-
-                if (index == 0) {
-                    index = vector_.size();
-                }
-            }
-        } else {
-            for(auto pair : vector_) {
-                if (pair.first != invalid_) {
-                    new_vec[pair.first % new_size] = std::move(pair);
-                }
-            }
+        if (new_size == 0) {
+            head_phase_ = invalid_;
         }
 
-        vector_.swap(new_vec);
+        if (new_size != vector_.size()) {
+            auto new_vec = std::vector<StoredPair>(new_size, StoredPair{invalid_, StoredType{}});
+
+            if (new_size < size()) {
+                std::size_t count = 0;
+                std::size_t index = head_phase_ % vector_.size();
+
+                for(; count < new_size; index--, count++) {
+                    auto pair = vector_[index];
+                    if (pair.first != invalid_) {
+                        new_vec[pair.first % new_size] = std::move(pair);
+                    }
+
+                    if (index == 0) {
+                        index = vector_.size();
+                    }
+                }
+            } else {
+                for(auto pair : vector_) {
+                    if (pair.first != invalid_) {
+                        new_vec[pair.first % new_size] = std::move(pair);
+                    }
+                }
+            }
+
+            vector_.swap(new_vec);
+        }
     }
 
     void clear() {
         auto new_vec = std::vector<StoredPair>(vector_.size(), StoredPair{invalid_, StoredType{}});
         vector_.swap(new_vec);
-        head_phase_ = 0;
+        head_phase_ = invalid_;
     }
 
     template<typename SerializeT>
@@ -176,6 +184,8 @@ struct CircularPhasesBuffer {
 private:
     PhaseType head_phase_;
     std::vector<StoredPair> vector_;
+
+    static const constexpr PhaseType invalid_ = std::numeric_limits<PhaseType>::max();
 
 public:
     template<typename StoredPair>
@@ -192,7 +202,7 @@ public:
         PhaseIterator& operator++() {
             // If already on the head then jump to end
             if (pos_ == head_) {
-                pos_ = invalid_;
+                pos_ = buffer_->size();
                 return *this;
             }
 
@@ -225,11 +235,15 @@ public:
     };
 
     auto begin() {
-        return PhaseIterator(&vector_, firstPhase(), head_phase_ % vector_.size());
+        if (head_phase_ != invalid_) {
+            return PhaseIterator(&vector_, firstPhase() % vector_.size(), head_phase_ % vector_.size());
+        } else {
+            return end();
+        }
     }
 
     auto end() {
-        return PhaseIterator(&vector_, invalid_, head_phase_ % vector_.size());
+        return PhaseIterator(&vector_, vector_.size(), head_phase_ % vector_.size());
     }
 
     // maybe better to track tail
