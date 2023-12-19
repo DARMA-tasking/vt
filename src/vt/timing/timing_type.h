@@ -162,6 +162,8 @@ private:
   std::chrono::duration<TimeTypeInternal> time_;
 };
 
+static_assert(std::is_trivially_copyable_v<TimeTypeWrapper>, "TimeTypeWrapper must be trivially_copyable");
+
 using TimeType = TimeTypeWrapper;
 
 } /* end namespace vt */
