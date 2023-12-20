@@ -338,6 +338,7 @@ void parse_yaml(std::string& config_file, AppConfig& appConfig) {
 #else
   default_diag_enable = false;
 #endif
+  appConfig.vt_diag_enable = diagnostics["vt_diag_enable"].as<bool>(default_diag_enable);
   appConfig.vt_diag_print_summary = diagnostics["vt_diag_print_summary"].as<bool>(false);
   appConfig.vt_diag_summary_file = diagnostics["vt_diag_summary_file"].as<std::string>("");
   appConfig.vt_diag_summary_csv_file = diagnostics["vt_diag_summary_csv_file"].as<std::string>("vtdiag.txt");
