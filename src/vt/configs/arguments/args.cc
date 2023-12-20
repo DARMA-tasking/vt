@@ -88,6 +88,8 @@ void postParseTransform(AppConfig& appConfig) {
   }
 }
 
+void parse_yaml(std::string& config_file, AppConfig& appConfig);
+
 std::tuple<int, std::string> parseArguments(
   CLI::App& app, int& argc, char**& argv, AppConfig& appConfig
 ) {
@@ -126,20 +128,20 @@ std::tuple<int, std::string> parseArguments(
 
   // Dispatch to CLI or yaml-cpp for config file
   std::string config_file;
-  app.add_option("--vt_input_config", config_file, "Read in a yaml, toml, or ini config file for VT")
-  if (config_file) {
-    config_ending = config_file.substr(config_file.size()-4)
-    if (config_ending == ".yml") | (config_ending == "yaml") {
+  app.add_option("--vt_input_config", config_file, "Read in a yaml, toml, or ini config file for VT");
+  if (!config_file.empty()) {
+    std::string config_ending = config_file.substr(config_file.size()-4);
+    if (config_ending == ".yml" || config_ending == "yaml") {
       // use yaml-cpp
       parse_yaml(config_file, appConfig);
-    } else if (config_ending == ".ini") | (config_ending == "toml") {
+    } else if (config_ending == ".ini" || config_ending == "toml") {
       // use CLI parser
       app.set_config(
         "--vt_input_CLI_config",
         config_file,
         "Read in a config file with CLI library",
         false // not required
-      )
+      );
     }
   }
 
@@ -200,27 +202,20 @@ std::tuple<int, std::string> parseArguments(
 
 void parse_yaml(std::string& config_file, AppConfig& appConfig) {
   // Assume input yaml is structured the same as --vt-help
-  auto yaml_input = YAML::LoadAllFromFile(config_file);
+  auto yaml_input = YAML::LoadFile(config_file);
 
   // Output control
   YAML::Node output_control = yaml_input["Output Control"];
-  auto quiet  = "Quiet the output from vt (only errors, warnings)";
-  auto always = "Colorize output (default)";
-  auto never  = "Do not colorize output (overrides --vt_color)";
-  appConfig.vt_color = output_control["vt_color"].as<std::string>(always);
-  appConfig.vt_no_color = output_control["vt_no_color"].as<std::string>(never);
-  appConfig.vt_quiet = output_control["vt_quiet"].as<std::string>(quiet);
+  appConfig.vt_color = output_control["vt_color"].as<bool>(false);
+  appConfig.vt_no_color = output_control["vt_no_color"].as<bool>(false);
+  appConfig.vt_quiet = output_control["vt_quiet"].as<bool>(false);
 
   // Signal handling
   YAML::Node signal_handling = yaml_input["Signal Handling"];
-  auto no_sigint      = "Do not register signal handler for SIGINT";
-  auto no_sigsegv     = "Do not register signal handler for SIGSEGV";
-  auto no_sigbus      = "Do not register signal handler for SIGBUS";
-  auto no_terminate   = "Do not register handler for std::terminate";
-  appConfig.vt_no_sigint = signal_handling["vt_no_SIGINT"].as<std::string>(no_sigint);
-  appConfig.vt_no_sigsegv = signal_handling["vt_no_SIGSEGV"].as<std::string>(no_sigsegv);
-  appConfig.vt_no_sigbus = signal_handling["vt_no_SIGBUS"].as<std::string>(no_sigbus);
-  appConfig.vt_no_terminate = signal_handling["vt_no_terminate"].as<std::string>(no_terminate);
+  appConfig.vt_no_sigint = signal_handling["vt_no_SIGINT"].as<bool>(false);
+  appConfig.vt_no_sigsegv = signal_handling["vt_no_SIGSEGV"].as<bool>(false);
+  appConfig.vt_no_sigbus = signal_handling["vt_no_SIGBUS"].as<bool>(false);
+  appConfig.vt_no_terminate = signal_handling["vt_no_terminate"].as<bool>(false);
 }
 
 void addColorArgs(CLI::App& app, AppConfig& appConfig) {

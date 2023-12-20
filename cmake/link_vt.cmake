@@ -28,6 +28,7 @@ function(link_target_with_vt)
     LINK_FCONTEXT
     LINK_CHECKPOINT
     LINK_CLI11
+    LINK_YAMLCPP
     LINK_DL
     LINK_ZOLTAN
     LINK_FORT
@@ -208,6 +209,24 @@ function(link_target_with_vt)
     target_include_directories(${ARG_TARGET} PUBLIC
       $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/CLI>
       $<INSTALL_INTERFACE:include/CLI>
+    )
+  endif()
+
+  if (NOT DEFINED ARG_LINK_YAMLCPP AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_YAMLCPP)
+    if (${ARG_DEBUG_LINK})
+        message(STATUS "link_target_with_vt: yaml-cpp=${ARG_LINK_YAMLCPP}")
+    endif()
+
+    # Find the yaml-cpp package
+    find_package(yaml-cpp REQUIRED)
+
+    # Link with yaml-cpp
+    target_link_libraries(${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} yaml-cpp)
+
+    # Include yaml-cpp headers
+    target_include_directories(${ARG_TARGET} PUBLIC
+        $<BUILD_INTERFACE:${YAML_CPP_INCLUDE_DIRS}>
+        $<INSTALL_INTERFACE:include/yaml-cpp>
     )
   endif()
 
