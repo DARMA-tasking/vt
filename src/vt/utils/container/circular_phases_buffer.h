@@ -53,7 +53,7 @@ struct CircularPhasesBuffer {
     using StoredPair = std::pair<PhaseType, StoredType>;
 
     CircularPhasesBuffer(std::size_t capacity = 0)
-    : head_phase_(invalid_), vector_(capacity, StoredPair{invalid_, StoredType{}})
+    : vector_(capacity, StoredPair{invalid_, StoredType{}})
     { }
 
     CircularPhasesBuffer(std::initializer_list<StoredPair> list) {
@@ -65,33 +65,18 @@ struct CircularPhasesBuffer {
 
     // store, override StoredType if present on the same index
     void store(const PhaseType phase, StoredType&& obj) {
-        vector_[phase % vector_.size()] = std::make_pair(phase, std::move(obj));
-        head_phase_ = phase;
+        moveHeadAndTail();
+        vector_[head_] = std::make_pair(phase, std::move(obj));
     }
 
     // store, override StoredType if present on the same index
     void store(const PhaseType phase, StoredType const& obj) {
-        vector_[phase % vector_.size()] = std::make_pair(phase, obj);
-        head_phase_ = phase;
+        moveHeadAndTail();
+        vector_[head_] = std::make_pair(phase, obj);
     }
 
-    StoredType& emplace(const PhaseType phase) {
-        store(phase, StoredType{});
-        return vector_[phase % vector_.size()].second;
-    }
-
-    const StoredType* find(const PhaseType phase) const {
-        if (contains(phase)) {
-            return &vector_[phase % vector_.size()].second;
-        }
-        return nullptr;
-    }
-
-    StoredType* find(const PhaseType phase) {
-        if (contains(phase)) {
-            return &vector_[phase % vector_.size()].second;
-        }
-        return nullptr;
+    bool contains(const PhaseType phase) const {
+        return !empty() && phase <= vector_[head_].first && phase >= vector_[tail_].first;
     }
 
     // map style operator - get reference to exsiting or newly inserted element
@@ -99,32 +84,89 @@ struct CircularPhasesBuffer {
         if (!contains(phase)) {
             store(phase, StoredType{});
         }
-        return vector_[phase % vector_.size()].second;
+        return vector_[phaseToPos(phase)].second;
     }
 
-    bool contains(const PhaseType phase) const {
-        if (!isInitialized()) {
-            return false;
+    const StoredType* find(const PhaseType phase) const {
+        if (contains(phase)) {
+            return &vector_[phaseToPos(phase)].second;
         }
-        return vector_[phase % vector_.size()].first == phase;
+        return nullptr;
+    }
+
+    StoredType* find(const PhaseType phase) {
+        if (contains(phase)) {
+            return &vector_[phaseToPos(phase)].second;
+        }
+        return nullptr;
     }
 
     const StoredType& at(const PhaseType phase) const {
         vtAssert(contains(phase), "Buffer don't contain requested phase.");
 
-        return vector_[phase % vector_.size()].second;
+        return vector_[phaseToPos(phase)].second;
     }
 
     StoredType& at(const PhaseType phase) {
         vtAssert(contains(phase), "Buffer don't contain requested phase.");
 
-        return vector_[phase % vector_.size()].second;
+        return vector_[phaseToPos(phase)].second;
+    }
+
+    void resize(std::size_t new_size) {
+        if (new_size == 0) {
+            resetIndexes();
+        }
+
+        if (new_size != vector_.size()) {
+            auto new_vec = std::vector<StoredPair>(new_size, StoredPair{invalid_, StoredType{}});
+
+            if (new_size < size()) {
+                auto tmp_tail = head_ - new_size + 1;
+                if (tmp_tail < 0) {
+                    tmp_tail += size();
+                }
+
+                for(int i = 0; tmp_tail != getNextEntry(head_);) {
+                    new_vec[i++] = std::move(vector_[tmp_tail]);
+                    tmp_tail = getNextEntry(tmp_tail);
+                }
+
+                head_ = new_size - 1;
+                tail_ = 0;
+
+            } else if (!empty()) {
+                int i = 0;
+                for(auto&& pair : *this) {
+                    new_vec[i++] = std::move(pair);
+                }
+
+                head_ = --i;
+                tail_ = 0;
+            }
+
+            vector_.swap(new_vec);
+        }
     }
 
     std::size_t size() const {
-        return std::count_if(vector_.begin(), vector_.end(), [](const StoredPair& pair){
-            return pair.first != invalid_;
-        });
+        return capacity() - numFree();
+    }
+
+    int numFree() const {
+        if (empty()) {
+            return capacity();
+        } else if (head_ == tail_) {
+            return capacity() - 1;
+        } else if (head_ < tail_) {
+            return tail_ - head_ - 1;
+        } else {
+            return capacity() + tail_ - head_ - 1;
+        }
+    }
+
+    bool empty() const { 
+        return head_ == invalid_index_ && tail_ == invalid_index_; 
     }
 
     std::size_t capacity() const {
@@ -132,60 +174,60 @@ struct CircularPhasesBuffer {
     }
 
     bool isInitialized() const {
-        return vector_.size() > 0;
-    }
-
-    void resize(std::size_t new_size) {
-        if (new_size == 0) {
-            head_phase_ = invalid_;
-        }
-
-        if (new_size != vector_.size()) {
-            auto new_vec = std::vector<StoredPair>(new_size, StoredPair{invalid_, StoredType{}});
-
-            if (new_size < size()) {
-                std::size_t count = 0;
-                std::size_t index = head_phase_ % vector_.size();
-
-                for(; count < new_size; index--, count++) {
-                    auto pair = vector_[index];
-                    if (pair.first != invalid_) {
-                        new_vec[pair.first % new_size] = std::move(pair);
-                    }
-
-                    if (index == 0) {
-                        index = vector_.size();
-                    }
-                }
-            } else {
-                for(auto pair : vector_) {
-                    if (pair.first != invalid_) {
-                        new_vec[pair.first % new_size] = std::move(pair);
-                    }
-                }
-            }
-
-            vector_.swap(new_vec);
-        }
+        return capacity() > 0;
     }
 
     void clear() {
         auto new_vec = std::vector<StoredPair>(vector_.size(), StoredPair{invalid_, StoredType{}});
         vector_.swap(new_vec);
-        head_phase_ = invalid_;
+        resetIndexes();
     }
 
     template<typename SerializeT>
     void serialize(SerializeT& s) {
-        s | head_phase_;
+        s | head_;
+        s | tail_;
         s | vector_;
     }
 
 private:
-    PhaseType head_phase_;
+    inline std::size_t phaseToPos(PhaseType phase) const {
+        auto go_back = vector_[head_].first - phase;
+        if (go_back > head_) {
+            return vector_.size() - (go_back - head_);
+        }
+        return head_ - go_back;
+    }
+
+    inline std::size_t getNextEntry(std::size_t index) const {
+        auto next_entry = index + 1;
+        if (next_entry == capacity()) {
+            next_entry = 0;
+        }
+        return next_entry;
+    }
+
+    inline void moveHeadAndTail() {
+        head_ = getNextEntry(head_);
+        if (head_ == tail_) {
+            tail_ = getNextEntry(tail_);
+        } else if (tail_ == invalid_index_) {
+            tail_ = 0;
+        }
+    }
+
+    inline void resetIndexes() {
+        head_ = invalid_index_;
+        tail_ = invalid_index_;
+    }
+
+private:
+    std::size_t head_ = invalid_index_;
+    std::size_t tail_ = invalid_index_;
     std::vector<StoredPair> vector_;
 
     static const constexpr PhaseType invalid_ = std::numeric_limits<PhaseType>::max();
+    static const constexpr std::size_t invalid_index_ = std::numeric_limits<std::size_t>::max();
 
 public:
     template<typename StoredPair>
@@ -200,19 +242,15 @@ public:
         }
 
         PhaseIterator& operator++() {
-            // If already on the head then jump to end
             if (pos_ == head_) {
                 pos_ = buffer_->size();
                 return *this;
             }
 
-            // find next valid phase - sparse phases or not full buffer
-            do {
-                ++pos_;
-                if (pos_ == buffer_->size()) {
-                    pos_ = 0;
-                }
-            } while ((*buffer_)[pos_].first == invalid_);
+            ++pos_;
+            if (pos_ == buffer_->size()) {
+                pos_ = 0;
+            }
 
             return *this;
         }
@@ -235,32 +273,15 @@ public:
     };
 
     auto begin() {
-        if (head_phase_ != invalid_) {
-            return PhaseIterator(&vector_, firstPhase() % vector_.size(), head_phase_ % vector_.size());
-        } else {
+        if (empty()) {
             return end();
         }
+        return PhaseIterator(&vector_, tail_, head_);
     }
 
     auto end() {
-        return PhaseIterator(&vector_, vector_.size(), head_phase_ % vector_.size());
+        return PhaseIterator(&vector_, vector_.size(), vector_.size());
     }
-
-    // maybe better to track tail
-    PhaseType firstPhase() {
-        auto lowest_phase = head_phase_;
-        for(auto&& pair : vector_) {
-            if (pair.first < lowest_phase) {
-                lowest_phase = pair.first;
-            }
-        }
-        return lowest_phase;
-    }
-
-    PhaseType lastPhase() {
-        return head_phase_;
-    }
-
 };
 
 }}} /* end namespace vt::util::container */
