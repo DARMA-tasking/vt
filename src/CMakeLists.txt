@@ -294,6 +294,7 @@ install(
 install(TARGETS ${BROTLI_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 install(TARGETS ${ENG_FORMAT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 install(TARGETS ${FMT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+install(TARGETS ${YAMLCPP_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 install(TARGETS ${JSON_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 
 if (vt_libfort_enabled)
@@ -307,6 +308,7 @@ export(
                             ${MIMALLOC_LIBRARY}
                             ${FORT_LIBRARY}
                             ${FMT_LIBRARY}
+                            ${YAMLCPP_LIBRARY}
                             ${ENG_FORMAT_LIBRARY}
                             ${JSON_LIBRARY}
                             ${BROTLI_LIBRARY}

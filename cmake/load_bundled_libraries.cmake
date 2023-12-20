@@ -20,6 +20,10 @@ endif()
 # CLI11 always included in the build
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 
+# yaml-cpp always included in the build
+set(YAMLCPP_LIBRARY yaml-cpp)
+add_subdirectory(${PROJECT_LIB_DIR}/yaml-cpp)
+
 # fmt always included in the build
 set(FMT_LIBRARY fmt)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
