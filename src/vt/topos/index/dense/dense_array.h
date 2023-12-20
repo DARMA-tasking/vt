@@ -49,7 +49,6 @@
 #include "vt/utils/bits/bits_packer.h"
 #include "vt/utils/static_checks/meta_type_eq_.h"
 #include "vt/serialization/traits/byte_copy_trait.h"
-#include INCLUDE_FMT_RANGES
 
 #include <array>
 #include <type_traits>
@@ -147,7 +146,6 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
     std::ostream& os, DenseIndexArray<IndexT,nd> const& idx
   );
 
-  friend struct fmt::formatter<vt::index::DenseIndexArray<IndexType, ndim>>;
 private:
   std::array<IndexType, ndim> dims = {};
 };
@@ -163,12 +161,13 @@ VT_FMT_NAMESPACE_BEGIN
 
 template <typename IndexType, ::vt::index::NumDimensionsType ndim>
 struct formatter<::vt::index::DenseIndexArray<IndexType, ndim>>
-  : formatter<std::array<IndexType, ndim>> {
+  : formatter<std::string> {
   template <typename FormatContext>
   auto format(
-    const ::vt::index::DenseIndexArray<IndexType, ndim>& wrapper,
-    FormatContext& ctx) {
-    return formatter<std::array<IndexType, ndim>>::format(wrapper.dims, ctx);
+    const ::vt::index::DenseIndexArray<IndexType, ndim>& idx,
+    FormatContext& ctx
+  ) {
+    return formatter<std::string>::format(idx.toString(), ctx);
   }
 };
 

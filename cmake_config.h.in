@@ -95,7 +95,6 @@
 #if vt_feature_cmake_external_fmt
   #define INCLUDE_FMT_CORE <fmt/core.h>
   #define INCLUDE_FMT_FORMAT <fmt/format.h>
-  #define INCLUDE_FMT_RANGES <fmt/ranges.h>
   #define INCLUDE_FMT_OSTREAM <fmt/ostream.h>
 
   #define VT_FMT_NAMESPACE_BEGIN namespace fmt {
@@ -103,7 +102,6 @@
 #else
   #define INCLUDE_FMT_CORE <fmt-vt/core.h>
   #define INCLUDE_FMT_FORMAT <fmt-vt/format.h>
-  #define INCLUDE_FMT_RANGES <fmt-vt/ranges.h>
   #define INCLUDE_FMT_OSTREAM <fmt-vt/ostream.h>
 
   #define VT_FMT_NAMESPACE_BEGIN namespace fmt { inline namespace vt {
