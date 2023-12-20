@@ -129,12 +129,6 @@ TEST_F(TestRawData, test_model_raw_user_data) {
   auto test_model =
     std::make_shared<RawData>();
 
-  vt::util::container::CircularPhasesBuffer<LoadMapType> proc_loads;
-  vt::util::container::CircularPhasesBuffer<DataMapType> user_data;
-  test_model->setLoads(&proc_loads, nullptr, &user_data);
-  EXPECT_TRUE(test_model->hasRawLoad());
-  EXPECT_TRUE(test_model->hasUserData());
-
   ElementIDStruct id1{1,this_node};
   ElementIDStruct id2{2,this_node};
 
@@ -155,6 +149,12 @@ TEST_F(TestRawData, test_model_raw_user_data) {
     DataMapType{},
     DataMapType{{id2, ElmUserDataType{{"x", 1}, {"y", 2}}}}
   };
+
+  vt::util::container::CircularPhasesBuffer<LoadMapType> proc_loads{load_holder.size()};
+  vt::util::container::CircularPhasesBuffer<DataMapType> user_data{user_holder.size()};
+  test_model->setLoads(&proc_loads, nullptr, &user_data);
+  EXPECT_TRUE(test_model->hasRawLoad());
+  EXPECT_TRUE(test_model->hasUserData());
 
   for (size_t iter = 0; iter < load_holder.size(); ++iter) {
     proc_loads[iter] = load_holder[iter];
