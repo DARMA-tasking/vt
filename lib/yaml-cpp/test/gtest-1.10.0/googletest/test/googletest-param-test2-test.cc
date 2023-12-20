@@ -58,4 +58,3 @@ INSTANTIATE_TEST_SUITE_P(MultiplesOf33,
 INSTANTIATE_TEST_SUITE_P(Sequence2,
                          InstantiationInMultipleTranslationUnitsTest,
                          Values(42*3, 42*4, 42*5));
-

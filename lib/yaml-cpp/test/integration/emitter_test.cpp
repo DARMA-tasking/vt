@@ -899,7 +899,7 @@ TEST_F(EmitterTest, Unicode) {
 
 TEST_F(EmitterTest, DoubleQuotedUnicode) {
   out << DoubleQuoted << "\x24 \xC2\xA2 \xE2\x82\xAC \xF0\xA4\xAD\xA2";
-  ExpectEmit("\"\x24 \xC2\xA2 \xE2\x82\xAC \xF0\xA4\xAD\xA2\""); 
+  ExpectEmit("\"\x24 \xC2\xA2 \xE2\x82\xAC \xF0\xA4\xAD\xA2\"");
 }
 
 TEST_F(EmitterTest, EscapedJsonString) {
@@ -918,7 +918,7 @@ TEST_F(EmitterTest, EscapedJsonString) {
 }
 
 TEST_F(EmitterTest, EscapedCharacters) {
-  out << BeginSeq 
+  out << BeginSeq
     << '\x00'
     << '\x0C'
     << '\x0D'
@@ -1398,7 +1398,7 @@ TEST_F(EmitterTest, NaN) {
 	  "bar: .nan");
 }
 
-TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapWithNewLine) { 
+TEST_F(EmitterTest, ComplexFlowSeqEmbeddingAMapWithNewLine) {
   out << YAML::BeginMap;
 
   out << YAML::Key << "NodeA" << YAML::Value << YAML::BeginMap;

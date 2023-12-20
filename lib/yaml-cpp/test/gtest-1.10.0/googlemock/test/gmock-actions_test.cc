@@ -1442,4 +1442,3 @@ TEST(MoveOnlyArgumentsTest, ReturningActions) {
 #  pragma warning(pop)
 #endif
 #endif
-

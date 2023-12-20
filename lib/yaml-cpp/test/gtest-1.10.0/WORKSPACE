@@ -20,4 +20,3 @@ http_archive(
     strip_prefix = "rules_python-master",
     urls = ["https://github.com/bazelbuild/rules_python/archive/master.zip"],
 )
-
