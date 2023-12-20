@@ -111,6 +111,7 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
         {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
         {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}
     }}};
+  proc_loads.resize(num_test_interations + 1);
   test_model->setLoads(&proc_loads, nullptr, nullptr);
   test_model->updateLoads(0);
 

@@ -58,8 +58,8 @@ void validatePresentPhases(
   util::container::CircularPhasesBuffer<Dummy>& buffer,
   std::vector<PhaseType> expected) {
   for (auto&& phase : expected) {
-    EXPECT_TRUE(buffer.contains(phase)) << "phase: " << phase;
-    EXPECT_EQ(phase * phase, buffer[phase].x) << "phase: " << phase;
+    EXPECT_TRUE(buffer.contains(phase)) << "Phase: " << phase;
+    EXPECT_EQ(phase * phase, buffer[phase].x) << "Phase: " << phase;
   }
 }
 
@@ -67,7 +67,7 @@ void validateMissingPhases(
   util::container::CircularPhasesBuffer<Dummy>& buffer,
   std::vector<PhaseType> expected) {
   for (auto&& phase : expected) {
-    EXPECT_FALSE(buffer.contains(phase)) << "phase: " << phase;
+    EXPECT_FALSE(buffer.contains(phase)) << "Phase: " << phase;
   }
 }
 
@@ -76,33 +76,61 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_empty) {
 
   EXPECT_FALSE(buffer.isInitialized());
   EXPECT_EQ(std::size_t{0}, buffer.capacity());
-  EXPECT_FALSE(buffer.contains(3));
-  EXPECT_FALSE(buffer.contains(10));
+  EXPECT_FALSE(buffer.contains(0));
   EXPECT_EQ(std::size_t{0}, buffer.size());
+  EXPECT_EQ(std::size_t{0}, buffer.numFree());
+  EXPECT_TRUE(buffer.empty());
 
   buffer.resize(2);
 
   EXPECT_TRUE(buffer.isInitialized());
   EXPECT_EQ(std::size_t{2}, buffer.capacity());
-  EXPECT_FALSE(buffer.contains(3));
-  EXPECT_FALSE(buffer.contains(10));
+  EXPECT_FALSE(buffer.contains(0));
   EXPECT_EQ(std::size_t{0}, buffer.size());
+  EXPECT_EQ(std::size_t{2}, buffer.numFree());
+  EXPECT_TRUE(buffer.empty());
 
   buffer.clear();
 
   EXPECT_TRUE(buffer.isInitialized());
   EXPECT_EQ(std::size_t{2}, buffer.capacity());
-  EXPECT_FALSE(buffer.contains(3));
-  EXPECT_FALSE(buffer.contains(10));
+  EXPECT_FALSE(buffer.contains(1));
   EXPECT_EQ(std::size_t{0}, buffer.size());
+  EXPECT_EQ(std::size_t{2}, buffer.numFree());
+  EXPECT_TRUE(buffer.empty());
 
   buffer.resize(0);
 
   EXPECT_FALSE(buffer.isInitialized());
   EXPECT_EQ(std::size_t{0}, buffer.capacity());
-  EXPECT_FALSE(buffer.contains(3));
-  EXPECT_FALSE(buffer.contains(10));
+  EXPECT_FALSE(buffer.contains(1));
   EXPECT_EQ(std::size_t{0}, buffer.size());
+  EXPECT_EQ(std::size_t{0}, buffer.numFree());
+  EXPECT_TRUE(buffer.empty());
+
+  buffer.resize(4);
+  buffer[0] = {0};
+
+  // head_ > tail_
+  EXPECT_TRUE(buffer.isInitialized());
+  EXPECT_EQ(std::size_t{4}, buffer.capacity());
+  EXPECT_TRUE(buffer.contains(0));
+  EXPECT_EQ(std::size_t{1}, buffer.size());
+  EXPECT_EQ(std::size_t{3}, buffer.numFree());
+  EXPECT_FALSE(buffer.empty());
+
+  buffer[1] = {1};
+  buffer[2] = {4};
+  buffer[3] = {6};
+  buffer[4] = {8};
+
+  // head_ < tail_
+  EXPECT_TRUE(buffer.isInitialized());
+  EXPECT_EQ(std::size_t{4}, buffer.capacity());
+  EXPECT_TRUE(buffer.contains(1));
+  EXPECT_EQ(std::size_t{4}, buffer.size());
+  EXPECT_EQ(std::size_t{0}, buffer.numFree());
+  EXPECT_FALSE(buffer.empty());
 }
 
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_store) {
@@ -117,17 +145,9 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_store) {
   }
   std::vector<PhaseType> finalOutput = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
   validatePresentPhases(buffer, finalOutput);
-
-  std::vector<PhaseType> visited;
-  for (auto&& ele : buffer) {
-    visited.push_back(ele.first);
-    EXPECT_EQ(ele.first * ele.first, ele.second.x) << "phase: " << ele.first;
-  }
-  EXPECT_TRUE(std::equal(visited.begin(), visited.end(), finalOutput.begin()));
 }
 
-TEST_F(
-  TestCircularPhasesBuffer, test_circular_phases_buffer_resize_continuous) {
+TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_resize_continuous) {
   util::container::CircularPhasesBuffer<Dummy> buffer{1};
 
   buffer[0] = {0};
@@ -160,7 +180,7 @@ TEST_F(
 
   buffer.resize(1);
   validatePresentPhases(buffer, {35});
-  validateMissingPhases(buffer, {28, 29, 30, 31, 32, 33, 34, 35});
+  validateMissingPhases(buffer, {28, 29, 30, 31, 32, 33, 34});
 }
 
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_forward_iter) {
