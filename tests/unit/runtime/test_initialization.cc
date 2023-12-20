@@ -168,7 +168,7 @@ TEST_F(TestInitialization, test_initialize_with_args_and_appconfig) {
   EXPECT_EQ(custom_argv[2], nullptr);
 }
 
-TEST_F(TestInitialization, test_initialize_with_file_and_args) {
+TEST_F(TestInitialization, test_initialize_with_toml_file_and_args) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
   static char prog_name[]{"vt_program"};
@@ -214,7 +214,7 @@ TEST_F(TestInitialization, test_initialize_with_file_and_args) {
   EXPECT_EQ(custom_argv[2], nullptr);
 }
 
-TEST_F(TestInitialization, test_initialize_with_file_args_and_appconfig) {
+TEST_F(TestInitialization, test_initialize_with_toml_file_args_and_appconfig) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
   static char prog_name[]{"vt_program"};
@@ -263,7 +263,7 @@ TEST_F(TestInitialization, test_initialize_with_file_args_and_appconfig) {
   EXPECT_EQ(custom_argv[2], nullptr);
 }
 
-TEST_F(TestInitialization, test_preconfigure_and_initialization) {
+TEST_F(TestInitialization, test_initialize_with_yaml_file_and_args) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
   static char prog_name[]{"vt_program"};
@@ -271,7 +271,53 @@ TEST_F(TestInitialization, test_preconfigure_and_initialization) {
   static char vt_no_terminate[]{"--vt_no_terminate"};
   static char vt_lb_name[]{"--vt_lb_name=RotateLB"};
 
-  std::string config_file(getUniqueFilenameWithRanks(".toml"));
+  std::string config_file(getUniqueFilenameWithRanks(".yaml"));
+  std::string config_flag("--vt_input_config=");
+  std::string vt_input_config = config_flag + config_file;
+
+  std::vector<char *> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(cli_argument);
+  custom_args.emplace_back(vt_no_terminate);
+  custom_args.emplace_back(strdup(vt_input_config.c_str()));
+  custom_args.emplace_back(vt_lb_name);
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char **custom_argv = custom_args.data();
+
+  EXPECT_EQ(custom_argc, 5);
+
+  int this_rank;
+  MPI_Comm_rank(comm, &this_rank);
+  if (this_rank == 0) {
+    std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
+    cfg_file_ << "vt_lb_name = RandomLB\n";
+    cfg_file_.close();
+  }
+  MPI_Barrier(comm);
+
+  vt::initialize(custom_argc, custom_argv, &comm);
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_program");
+  EXPECT_EQ(theConfig()->vt_no_terminate, true);
+  EXPECT_EQ(theConfig()->vt_lb_name, "RotateLB");
+
+  EXPECT_EQ(custom_argc, 2);
+  EXPECT_STREQ(custom_argv[0], "vt_program");
+  EXPECT_STREQ(custom_argv[1], "--cli_argument=100");
+  EXPECT_EQ(custom_argv[2], nullptr);
+}
+
+TEST_F(TestInitialization, test_initialize_with_yaml_file_args_and_appconfig) {
+  MPI_Comm comm = MPI_COMM_WORLD;
+
+  static char prog_name[]{"vt_program"};
+  static char cli_argument[]{"--cli_argument=100"};
+  static char vt_no_terminate[]{"--vt_no_terminate"};
+  static char vt_lb_name[]{"--vt_lb_name=RotateLB"};
+
+  std::string config_file(getUniqueFilenameWithRanks(".yaml"));
   std::string config_flag("--vt_input_config=");
   std::string vt_input_config = config_flag + config_file;
 
@@ -300,28 +346,16 @@ TEST_F(TestInitialization, test_preconfigure_and_initialization) {
   }
   MPI_Barrier(comm);
 
-  auto vtConfig = vt::preconfigure(custom_argc, custom_argv);
-
-  EXPECT_EQ(custom_argc, 2);
-  EXPECT_STREQ(custom_argv[0], "vt_program");
-  EXPECT_STREQ(custom_argv[1], "--cli_argument=100");
-  EXPECT_EQ(custom_argv[2], nullptr);
-
-  vt::initializePreconfigured(&comm, &appConfig);
-
-  EXPECT_EQ(theConfig()->prog_name, "vt_unknown");
-  EXPECT_EQ(theConfig()->vt_no_terminate, false);
-  EXPECT_EQ(theConfig()->vt_lb_name, "GreedyLB");
-
-  vt::finalize();
-  vt::initializePreconfigured(&comm, &appConfig, vtConfig.get());
+  vt::initialize(custom_argc, custom_argv, &comm, &appConfig);
 
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
   EXPECT_EQ(theConfig()->vt_no_terminate, true);
   EXPECT_EQ(theConfig()->vt_lb_name, "RotateLB");
 
-  vt::finalize();
-  vt::initializePreconfigured(&comm, &appConfig, vtConfig.get());
+  EXPECT_EQ(custom_argc, 2);
+  EXPECT_STREQ(custom_argv[0], "vt_program");
+  EXPECT_STREQ(custom_argv[1], "--cli_argument=100");
+  EXPECT_EQ(custom_argv[2], nullptr);
 }
 
 void prepareLBDataFiles(const std::string file_name_without_ext) {
