@@ -162,7 +162,7 @@ struct CircularPhasesBuffer {
    * \return reference to the stored data
    */
   const StoredType& at(const PhaseType phase) const {
-    vtAssert(contains(phase), "Buffer don't contain requested phase.");
+    vtAssert(contains(phase), "Buffer don't contain the requested phase.");
 
     return vector_[phaseToPos(phase)].second;
   }
@@ -175,7 +175,7 @@ struct CircularPhasesBuffer {
    * \return reference to the stored data
    */
   StoredType& at(const PhaseType phase) {
-    vtAssert(contains(phase), "Buffer don't contain requested phase.");
+    vtAssert(contains(phase), "Buffer don't contain the requested phase.");
 
     return vector_[phaseToPos(phase)].second;
   }
@@ -185,15 +185,15 @@ struct CircularPhasesBuffer {
    *
    * \param[in] new_size the requested new size of the buffer
    */
-  void resize(std::size_t new_size) {
-    if (new_size == 0) {
-      resetIndexes();
+  void resize(const std::size_t new_size) {
+    if (new_size == vector_.size()) {
+      return;
     }
 
-    if (new_size != vector_.size()) {
-      auto new_vec =
-        std::vector<StoredPair>(new_size, StoredPair{invalid_, StoredType{}});
+    auto new_vec =
+      std::vector<StoredPair>(new_size, StoredPair{invalid_, StoredType{}});
 
+    if (new_size > 0) {
       if (new_size < size()) {
         auto tmp_tail = head_ - new_size + 1;
         if (tmp_tail < 0) {
@@ -217,9 +217,11 @@ struct CircularPhasesBuffer {
         head_ = --i;
         tail_ = 0;
       }
-
-      vector_.swap(new_vec);
+    } else {
+      resetIndexes();
     }
+
+    vector_.swap(new_vec);
   }
 
   /**
@@ -234,7 +236,7 @@ struct CircularPhasesBuffer {
    *
    * \return the number free spaces in the buffer
    */
-  int numFree() const {
+  std::size_t numFree() const {
     if (empty()) {
       return capacity();
     } else if (head_ == tail_) {
@@ -249,7 +251,7 @@ struct CircularPhasesBuffer {
   /**
    * \brief Check if the buffer is empty
    *
-   * \return whetever the buffer is empty or not
+   * \return whether the buffer is empty or not
    */
   bool empty() const {
     return head_ == invalid_index_ && tail_ == invalid_index_;
@@ -265,7 +267,7 @@ struct CircularPhasesBuffer {
   /**
    * \brief Check if the buffer is initialized
    *
-   * \return whenever the buffer is initialized or not
+   * \return whether the buffer is initialized or not
    */
   bool isInitialized() const { return capacity() > 0; }
 
@@ -294,7 +296,7 @@ private:
    *
    * \return the index to the phase data
    */
-  inline std::size_t phaseToPos(PhaseType phase) const {
+  inline std::size_t phaseToPos(const PhaseType phase) const {
     auto go_back = vector_[head_].first - phase;
     if (go_back > head_) {
       return vector_.size() - (go_back - head_);
@@ -309,7 +311,7 @@ private:
    *
    * \return the incremented index
    */
-  inline std::size_t getNextEntry(std::size_t index) const {
+  inline std::size_t getNextEntry(const std::size_t index) const {
     auto next_entry = index + 1;
     if (next_entry == capacity()) {
       next_entry = 0;
@@ -398,10 +400,10 @@ public:
     if (empty()) {
       return end();
     }
-    return PhaseIterator(&vector_, tail_, head_);
+    return PhaseIterator<StoredPair>(&vector_, tail_, head_);
   }
 
-  auto end() { return PhaseIterator(&vector_, vector_.size(), vector_.size()); }
+  auto end() { return PhaseIterator<StoredPair>(&vector_, vector_.size(), vector_.size()); }
 };
 
 }}} /* end namespace vt::util::container */
