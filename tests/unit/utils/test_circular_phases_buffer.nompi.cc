@@ -138,9 +138,10 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_store) {
 
   buffer.store(2, {2 * 2});
   validatePresentPhases(buffer, {2});
+  validateMissingPhases(buffer, {0, 1});
 
   // store series of elements
-  for (int i = 0; i < 15; i++) {
+  for (int i = 3; i < 15; i++) {
     buffer.store(i, {i * i});
   }
   std::vector<PhaseType> finalOutput = {5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
