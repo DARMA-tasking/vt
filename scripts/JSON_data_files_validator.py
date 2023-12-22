@@ -64,6 +64,7 @@ class SchemaValidator:
                             'range': [[int]],
                         },
                     },
+                    Optional('attributes'): dict
                 },
                 'phases': [
                     {
@@ -77,7 +78,8 @@ class SchemaValidator:
                                     Optional('index'): [int],
                                     'type': str,
                                     'migratable': bool,
-                                    Optional('objgroup_id'): int
+                                    Optional('objgroup_id'): int,
+                                    Optional('attributes'): dict
                                 },
                                 'node': int,
                                 'resource': str,
