@@ -1,4 +1,5 @@
 macro(find_package_local pkg_name pkg_other_name)
+  set(${pkg_name}_PACKAGE_LOADED 0)
   if(hasParent)
     # Skip this logic when this macro was not invoked from the
     # top-level CMakeLists.txt file under the assumption that this
@@ -21,5 +22,6 @@ macro(find_package_local pkg_name pkg_other_name)
       QUIET
       REQUIRED
     )
+    set(${pkg_name}_PACKAGE_LOADED 1)
   endif()
 endmacro(find_package_local)
