@@ -120,7 +120,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
       -DCMAKE_C_COMPILER="${CC:-cc}" \
       -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS:-}" \
-      -Dcheckpoint_DIR="$CHECKPOINT_BUILD/install" \
+      -Dcheckpoint_ROOT="$CHECKPOINT_BUILD/install" \
       -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}" \
       -DCMAKE_INSTALL_PREFIX="$VT_BUILD/install" \
       -Dvt_ci_build="${VT_CI_BUILD:-0}" \
