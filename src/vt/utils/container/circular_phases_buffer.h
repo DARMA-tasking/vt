@@ -195,11 +195,12 @@ struct CircularPhasesBuffer {
 
     if (new_size > 0) {
       if (new_size < size()) {
-        auto tmp_tail = head_ - new_size + 1;
-        if (tmp_tail < 0) {
-          tmp_tail += size();
+        int tmp = head_ - new_size + 1;
+        if (tmp < 0) {
+          tmp += size();
         }
 
+        std::size_t tmp_tail = static_cast<std::size_t>(tmp);
         for (int i = 0; tmp_tail != getNextEntry(head_);) {
           new_vec[i++] = std::move(vector_[tmp_tail]);
           tmp_tail = getNextEntry(tmp_tail);
