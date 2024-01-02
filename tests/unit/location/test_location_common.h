@@ -123,7 +123,7 @@ void routeTestHandler(EntityMsg* msg) {
   );
   // route message
   vt::theLocMan()->virtual_loc->routeMsg<MsgT>(
-    msg->entity_, msg->home_, test_msg
+    msg->entity_, msg->home_, std::move(test_msg)
   );
 }
 
@@ -147,18 +147,20 @@ void verifyCacheConsistency(
     // create an entity message to route
     auto msg = vt::makeMessage<MsgT>(entity, my_node);
 
+    // check the routing protocol to be used by the manager.
+    bool is_eager = theLocMan()->virtual_loc->useEagerProtocol(msg);
+    auto msg_from = msg->from_;
+    auto sizeof_msg = sizeof(*msg);
     // perform the checks only after all entity messages have been
     // correctly delivered
     runInEpochCollective([&]{
       if (my_node not_eq home) {
         // route entity message
-        vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg);
+        vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, std::move(msg));
       }
     });
 
     if (my_node not_eq home) {
-      // check the routing protocol to be used by the manager.
-      bool is_eager = theLocMan()->virtual_loc->useEagerProtocol(msg);
 
       // check for cache updates
       bool is_entity_cached = isCached(entity);
@@ -167,7 +169,7 @@ void verifyCacheConsistency(
         normal, location,
         "verifyCacheConsistency: iter={}, entityID={}, home={}, bytes={}, "
         "in cache={}\n",
-        iter, entity, msg->from_, sizeof(*msg), is_entity_cached
+        iter, entity, msg_from, sizeof_msg, is_entity_cached
       );
 
       if (not is_eager) {

@@ -96,7 +96,7 @@ struct EntityLocationCoord : LocationCoord {
   using LocRecType = LocRecord<EntityID>;
   using LocCacheType = LocLookup<EntityID, LocRecType>;
   using LocEntityMsg = LocEntity<EntityID>;
-  using LocalRegisteredContType = std::unordered_set<EntityID>;
+  using LocalRegisteredContType = std::unordered_map<EntityID, void*>;
   using LocalRegisteredMsgContType = std::unordered_map<EntityID, LocEntityMsg>;
   using ActionListType = std::list<NodeActionType>;
   using PendingType = PendingLocationLookup<EntityID>;
@@ -138,10 +138,12 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] home the home node for this entity
    * \param[in] msg_action function to trigger when message arrives for it
    * \param[in] migrated whether it migrated in: \c entityEmigrated is preferred
+   * \param[in] obj pointer to the object associated with this entity
    */
   void registerEntity(
     EntityID const& id, NodeType const& home,
-    LocMsgActionType msg_action = nullptr, bool const& migrated = false
+    LocMsgActionType msg_action = nullptr, bool const& migrated = false,
+    void* obj = nullptr
   );
 
   /**
@@ -191,11 +193,13 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] id the entity ID
    * \param[in] home_node the home node for the entity
    * \param[in] msg_action function to trigger when message arrives for it
+   * \param[in] obj pointer to the object associated with this entity
    */
   void entityImmigrated(
     EntityID const& id, NodeType const& home_node,
     NodeType const& __attribute__((unused)) from_node,
-    LocMsgActionType msg_action = nullptr
+    LocMsgActionType msg_action = nullptr,
+    void* obj = nullptr
   );
 
   /**
@@ -240,7 +244,7 @@ struct EntityLocationCoord : LocationCoord {
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routeMsgHandler(
     EntityID const& id, NodeType const& home_node,
-    MsgSharedPtr<MessageT> const& msg
+    MsgSharedPtr<MessageT>&& msg
   );
 
   /**
@@ -248,8 +252,8 @@ struct EntityLocationCoord : LocationCoord {
    *
    * \param[in] m message shared pointer
    */
-  template <typename MessageT>
-  void routePreparedMsgHandler(MsgSharedPtr<MessageT> const& msg);
+  template <typename MessageT, ActiveTypedFnType<MessageT> *f>
+  void routePreparedMsgHandler(MsgSharedPtr<MessageT>&& msg);
 
   /**
    * \brief Route a message with a custom handler
@@ -257,15 +261,16 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] m message shared pointer
    */
   template <typename MessageT>
-  void routePreparedMsg(MsgSharedPtr<MessageT> const& msg);
+  void routePreparedMsg(MsgSharedPtr<MessageT>&& msg);
 
   /**
    * \brief Route a message with a custom handler where the element is local
    *
    * \param[in] m message shared pointer
+   * \param[in] obj the object pointer
    */
-  template <typename MessageT>
-  void routeMsgHandlerLocal(MsgSharedPtr<MessageT> const& msg);
+  template <typename MessageT, ActiveTypedFnType<MessageT> *f>
+  void routeMsgHandlerLocal(MsgSharedPtr<MessageT>&& msg, void* obj);
 
   /**
    * \brief Route a message to the default handler
@@ -278,7 +283,7 @@ struct EntityLocationCoord : LocationCoord {
   template <typename MessageT>
   void routeMsg(
     EntityID const& id, NodeType const& home_node,
-    MsgSharedPtr<MessageT> const& msg,
+    MsgSharedPtr<MessageT>&& msg,
     NodeType from_node = uninitialized_destination
   );
 
@@ -405,7 +410,7 @@ private:
   template <typename MessageT>
   void routeMsgEager(
     EntityID const& id, NodeType const& home_node,
-    MsgSharedPtr<MessageT> const& msg
+    MsgSharedPtr<MessageT>&& msg
   );
 
   /**
@@ -419,7 +424,7 @@ private:
   template <typename MessageT>
   void routeMsgNode(
     EntityID const& id, NodeType const& home_node, NodeType const& to_node,
-    MsgSharedPtr<MessageT> const& msg
+    MsgSharedPtr<MessageT>&& msg
   );
 
   /**
@@ -441,6 +446,8 @@ public:
    */
   LocInstType getInst() const;
 
+  void* getObjContext() const { return obj_context_; }
+
 private:
   LocInstType this_inst = no_loc_inst;
 
@@ -461,6 +468,9 @@ private:
 
   // List of nodes that inquire about an entity that require an update
   LocAsksType loc_asks_;
+
+  /// Current object pointer context
+  void* obj_context_ = nullptr;
 };
 
 }}  // end namespace vt::location

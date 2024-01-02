@@ -59,17 +59,23 @@ PendingSend::PendingSend(PendingSend&& in) noexcept
   std::swap(msg_, in.msg_);
   std::swap(epoch_action_, in.epoch_action_);
   std::swap(send_action_, in.send_action_);
+  std::swap(send_move_action_, in.send_move_action_);
 }
 
 void PendingSend::sendMsg() {
-  if (send_action_ == nullptr) {
+  if (send_action_ == nullptr and send_move_action_ == nullptr) {
     theMsg()->doMessageSend(msg_);
   } else {
-    send_action_(msg_);
+    if (send_action_) {
+      send_action_(msg_);
+    } else {
+      send_move_action_(std::move(msg_));
+    }
   }
   consumeMsg();
   msg_ = nullptr;
   send_action_ = nullptr;
+  send_move_action_ = nullptr;
 }
 
 EpochType PendingSend::getProduceEpochFromMsg() const {
@@ -95,7 +101,7 @@ void PendingSend::consumeMsg() {
 }
 
 void PendingSend::release() {
-  bool send_msg = msg_ != nullptr || send_action_ != nullptr;
+  bool send_msg = msg_ != nullptr || send_action_ != nullptr || send_move_action_ != nullptr;
   vtAssert(!send_msg || !epoch_action_, "cannot have both a message and epoch action");
   if (send_msg) {
     sendMsg();

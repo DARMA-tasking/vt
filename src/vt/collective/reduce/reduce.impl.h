@@ -79,7 +79,7 @@ void Reduce::reduceRootRecv(MsgT* msg) {
 
   auto const from_node = theContext()->getFromNodeCurrentTask();
   auto m = promoteMsg(msg);
-  runnable::makeRunnable(m, false, handler, from_node)
+  runnable::makeRunnable(std::move(m), false, handler, from_node)
     .withTDEpochFromMsg()
     .run();
 }
@@ -241,6 +241,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
   );
 
   if (ready) {
+    auto saved_msg=state.msgs[0];
     // Combine messages
     if (state.msgs.size() > 1) {
       auto size = state.msgs.size();
@@ -281,14 +282,14 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
 
       // this needs to run inline.. threaded not allowed for reduction
       // combination
-      runnable::makeRunnable(state.msgs[0], false, handler, from_node)
+      runnable::makeRunnable(std::move(state.msgs[0]), false, handler, from_node)
         .withTDEpochFromMsg()
         .run();
     }
 
     // Send to parent
     // Collection is of MsgPtr<ReduceMsg>, re-type and drop collection owner.
-    auto msg = state.msgs[0];
+    auto msg = saved_msg;
     MsgPtr<MsgT> typed_msg = msg.template to<MsgT>();
     state.msgs.clear();
     state.num_contrib_ = 1;

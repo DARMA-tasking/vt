@@ -87,7 +87,7 @@ void myHandler(MyMsg* msg) {
       auto handler = auto_registry::makeAutoHandler<MyMsg, myHandler>();
       auto msg = vt::makeMessage<MyMsg>();
       msg->ms = time;
-      auto maker = vt::runnable::makeRunnable(msg, false, handler, 0)
+      auto maker = vt::runnable::makeRunnable(std::move(msg), false, handler, 0)
         .withLBData(std::get<1>(v[i]).get(), id);
       auto runnable = maker.getRunnableImpl();
       runnable->setupHandler(handler);
@@ -123,7 +123,7 @@ TEST_F(TestSchedTimings, test_sched_msg) {
 
     auto handler = auto_registry::makeAutoHandler<MyMsg, myHandler>();
 
-    auto maker = vt::runnable::makeRunnable(next_msg, false, handler, 0);
+    auto maker = vt::runnable::makeRunnable(std::move(next_msg), false, handler, 0);
 
     auto runnable = maker.getRunnableImpl();
     runnable->setupHandler(handler);

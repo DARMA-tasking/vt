@@ -95,7 +95,7 @@ template <typename UserMsgT>
       user_msg.template to<BaseMsgType>(), handler, sys_msg->from_node, nullptr
     );
   } else {
-    runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
+    runnable::makeRunnable(std::move(user_msg), true, handler, sys_msg->from_node)
       .withTDEpochFromMsg()
       .enqueue();
   }
@@ -146,7 +146,7 @@ template <typename UserMsgT>
           msg.template to<BaseMsgType>(), handler, node, action
         );
       } else {
-        runnable::makeRunnable(msg, true, handler, node)
+        runnable::makeRunnable(std::move(msg), true, handler, node)
           .withTDEpoch(epoch, not is_valid_epoch)
           .withContinuation(action)
           .enqueue();
@@ -195,7 +195,7 @@ template <typename UserMsgT, typename BaseEagerMsgT>
       user_msg.template to<BaseMsgType>(), handler, sys_msg->from_node, nullptr
     );
   } else {
-    runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
+    runnable::makeRunnable(std::move(user_msg), true, handler, sys_msg->from_node)
       .withTDEpochFromMsg()
       .enqueue();
   }
@@ -428,14 +428,14 @@ template <typename MsgT, typename BaseT>
         );
 
         auto base_msg = user_msg.template to<BaseMsgType>();
-        return messaging::PendingSend(base_msg, [=](MsgPtr<BaseMsgType> in) {
+        return messaging::PendingSend(std::move(base_msg), [=](MsgPtr<BaseMsgType>&& in) mutable {
           bool const is_obj = HandlerManager::isHandlerObjGroup(typed_handler);
           if (is_obj) {
             objgroup::dispatchObjGroup(
               user_msg.template to<BaseMsgType>(), typed_handler, node, nullptr
             );
           } else {
-            runnable::makeRunnable(user_msg, true, typed_handler, node)
+            runnable::makeRunnable(std::move(user_msg), true, typed_handler, node)
               .withTDEpochFromMsg()
               .enqueue();
           }

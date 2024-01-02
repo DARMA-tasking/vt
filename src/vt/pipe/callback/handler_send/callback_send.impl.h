@@ -110,7 +110,7 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   if (this_node == send_node_) {
     auto msg = reinterpret_cast<ShortMessage*>(data);
     auto m = promoteMsg(msg);
-    runnable::makeRunnable(m, true, handler_, this_node)
+    runnable::makeRunnable(std::move(m), true, handler_, this_node)
       .withTDEpochFromMsg()
       .enqueue();
   } else {
