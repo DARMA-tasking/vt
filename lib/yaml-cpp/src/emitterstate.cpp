@@ -95,7 +95,7 @@ void EmitterState::StartedNode() {
   m_hasNonContent = false;
 }
 
-EmitterNodeType EmitterState::NextGroupType(GroupType type) const {
+EmitterNodeType::value EmitterState::NextGroupType(GroupType type) const {
   if (type == GroupType::Seq) {
     if (GetFlowType(type) == Block)
       return EmitterNodeType::BlockSeq;
@@ -194,7 +194,7 @@ void EmitterState::EndedGroup(GroupType type) {
   m_hasNonContent = false;
 }
 
-EmitterNodeType EmitterState::CurGroupNodeType() const {
+EmitterNodeType::value EmitterState::CurGroupNodeType() const {
   if (m_groups.empty()) {
     return EmitterNodeType::NoType;
   }
@@ -345,8 +345,7 @@ bool EmitterState::SetPostCommentIndent(std::size_t value, FmtScope scope) {
   return true;
 }
 
-bool EmitterState::SetFlowType(GroupType groupType, EMITTER_MANIP value,
-                               FmtScope scope) {
+bool EmitterState::SetFlowType(GroupType groupType, EMITTER_MANIP value, FmtScope scope) {
   switch (value) {
     case Block:
     case Flow:

@@ -35,20 +35,20 @@ class YAML_CPP_API node_data {
 
   void mark_defined();
   void set_mark(const Mark& mark);
-  void set_type(NodeType type);
+  void set_type(NodeType::value type);
   void set_tag(const std::string& tag);
   void set_null();
   void set_scalar(const std::string& scalar);
-  void set_style(EmitterStyle style);
+  void set_style(EmitterStyle::value style);
 
   bool is_defined() const { return m_isDefined; }
   const Mark& mark() const { return m_mark; }
-  NodeType type() const {
+  NodeType::value type() const {
     return m_isDefined ? m_type : NodeType::Undefined;
   }
   const std::string& scalar() const { return m_scalar; }
   const std::string& tag() const { return m_tag; }
-  EmitterStyle style() const { return m_style; }
+  EmitterStyle::value style() const { return m_style; }
 
   // size/iterator
   std::size_t size() const;
@@ -100,9 +100,9 @@ class YAML_CPP_API node_data {
  private:
   bool m_isDefined;
   Mark m_mark;
-  NodeType m_type;
+  NodeType::value m_type;
   std::string m_tag;
-  EmitterStyle m_style;
+  EmitterStyle::value m_style;
 
   // scalar
   std::string m_scalar;
