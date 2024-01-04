@@ -29,7 +29,7 @@ void EmitFromEvents::OnDocumentEnd() {}
 void EmitFromEvents::OnNull(const Mark&, anchor_t anchor) {
   BeginNode();
   EmitProps("", anchor);
-  m_emitter << Null;
+  m_emitter << BaseNull;
 }
 
 void EmitFromEvents::OnAlias(const Mark&, anchor_t anchor) {
