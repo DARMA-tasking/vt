@@ -138,7 +138,7 @@ inline Emitter& Emitter::WriteIntegralType(T value) {
   if (!good())
     return *this;
 
-  PrepareNode(EmitterNodeType::Scalar);
+  PrepareNode(EmitterNodeType::value::Scalar);
 
   std::stringstream stream;
   PrepareIntegralStream(stream);
@@ -155,7 +155,7 @@ inline Emitter& Emitter::WriteStreamable(T value) {
   if (!good())
     return *this;
 
-  PrepareNode(EmitterNodeType::Scalar);
+  PrepareNode(EmitterNodeType::value::Scalar);
 
   std::stringstream stream;
   SetStreamablePrecision<T>(stream);
