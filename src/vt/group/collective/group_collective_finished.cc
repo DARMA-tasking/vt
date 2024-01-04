@@ -59,7 +59,7 @@ void InfoColl::CollSetupFinished::operator()(FinishedReduceMsg* msg) {
   vtAssert(
     iter != theGroup()->local_collective_group_info_.end(), "Must exist"
   );
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto info = iter->second.get();
   if (
     info->known_root_node_ != this_node and

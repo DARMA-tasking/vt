@@ -163,17 +163,10 @@ private:
   objgroup::proxy::Proxy<TemperedLB> proxy_         = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
-<<<<<<< HEAD
-  std::unordered_set<NodeType> selected_            = {};
-  std::unordered_set<NodeType> underloaded_         = {};
-  std::unordered_set<NodeType> new_underloaded_     = {};
+  std::unordered_set<NodeT> selected_            = {};
+  std::unordered_set<NodeT> underloaded_         = {};
+  std::unordered_set<NodeT> new_underloaded_     = {};
   std::unordered_map<ObjIDType, LoadType> cur_objs_ = {};
-=======
-  std::unordered_set <NodeT  > selected_            = {};
-  std::unordered_set <NodeT  > underloaded_         = {};
-  std::unordered_set <NodeT  > new_underloaded_     = {};
-  std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
   LoadType this_new_load_                           = 0.0;
   LoadType new_imbalance_                           = 0.0;
   LoadType target_max_load_                         = 0.0;

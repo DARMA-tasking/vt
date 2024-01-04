@@ -73,7 +73,7 @@ ActiveMessenger::ActiveMessenger()
   in_progress_data_irecv(trace_irecv_polling_dm),
   in_progress_ops(trace_asyncop),
 # endif
-  this_node_(theContext()->getNode())
+  this_node_(theContext()->getNodeStrong())
 {
   // Register counters for AM/DM message sends and number of bytes
   amSentCounterGauge = diagnostic::CounterGauge{

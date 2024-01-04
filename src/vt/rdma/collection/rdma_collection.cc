@@ -90,7 +90,7 @@ namespace vt { namespace rdma {
 ) {
   auto const& rdma = theRDMA();
 
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& handle_getNode = RDMA_HandleManagerType::getRdmaNode(rdma_handle);
   auto const& is_collective = RDMA_HandleManagerType::isCollective(rdma_handle);
 
@@ -155,7 +155,7 @@ namespace vt { namespace rdma {
 ) {
   auto const& rdma = theRDMA();
 
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& handle_getNode = RDMA_HandleManagerType::getRdmaNode(rdma_handle);
   auto const& is_collective = RDMA_HandleManagerType::isCollective(rdma_handle);
 

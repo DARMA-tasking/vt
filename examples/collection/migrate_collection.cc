@@ -73,7 +73,7 @@ static void doWork(Hello* col) {
 static void migrateToNext(Hello* col) {
   auto this_node = vt::theContext()->getNode();
   auto num_nodes = vt::theContext()->getNumNodes();
-  vt::NodeT next_node = (this_node + vt::NodeT{1}) % num_nodes;
+  auto next_node = (this_node + 1) % num_nodes;
 
   fmt::print("{}: migrateToNext: idx={}\n", this_node, col->getIndex());
   col->migrate(next_node);

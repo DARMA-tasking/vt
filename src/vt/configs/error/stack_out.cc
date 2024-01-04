@@ -176,8 +176,8 @@ std::string prettyPrintStack(DumpStackType const& stack) {
   auto magenta    = ::vt::debug::magenta();
   auto yellow     = ::vt::debug::yellow();
   auto vt_pre     = ::vt::debug::vtPre();
-  auto node       = ::vt::theContext()->getNode();
-  auto node_str   = ::vt::debug::proc(node);
+  auto node       = ::vt::theContext()->getNodeStrong();
+  auto node_str   = ::vt::debug::proc(NodeT{node});
   auto prefix     = vt_pre + node_str + " ";
   auto separator  = fmt::format("{}{}{:-^120}{}\n", prefix, yellow, "", reset);
   auto title_node = fmt::format("on Node {}", node);

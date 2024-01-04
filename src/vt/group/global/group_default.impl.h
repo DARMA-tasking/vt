@@ -57,7 +57,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* handler>
 /*static*/ void DefaultGroup::sendPhaseMsg(
   PhaseType const& phase, NodeT const& node
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   if (this_node == node) {
     auto msg = makeMessage<MsgT>();
     envelopeSetTag(msg.get()->env, phase);

@@ -118,9 +118,9 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
     // Count the number of local handles that should exist here. We can't use the
     // cached value in the collection manager since this might be invoked in the
     // an element's constructor before they are all created.
-    auto this_node = theContext()->getNode();
-    auto num_nodes = theContext()->getNumNodes();
-    auto min_node_mapped = theContext()->getNumNodes();
+    auto this_node = theContext()->getNodeStrong();
+    auto num_nodes = theContext()->getNumNodesStrong();
+    auto min_node_mapped = theContext()->getNumNodesStrong();
     std::size_t local_count = 0;
     auto const& map_fn = auto_registry::getHandlerMap(map_han);
     range.foreach ([&](IndexT cur_idx) {

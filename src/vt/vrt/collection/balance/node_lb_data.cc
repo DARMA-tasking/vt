@@ -156,7 +156,7 @@ void NodeLBData::loadAndBroadcastSpec() {
     auto spec_proxy = FileSpec::construct(FileSpecType::LB);
 
     theTerm()->produce();
-    if (theContext()->getNode() == 0) {
+    if (theContext()->getNodeStrong() == 0) {
       auto spec_ptr = spec_proxy.get();
       spec_ptr->parse();
       spec_ptr->broadcastSpec();
@@ -180,7 +180,7 @@ void NodeLBData::createLBDataFile() {
 
   auto const dir = theConfig()->vt_lb_data_dir;
   // NodeT 0 creates the directory
-  if (not created_dir_ and theContext()->getNode() == 0) {
+  if (not created_dir_ and theContext()->getNodeStrong() == 0) {
     int flag = mkdir(dir.c_str(), S_IRWXU);
     if (flag < 0 && errno != EEXIST) {
       throw std::runtime_error("Failed to create directory: " + dir);
@@ -210,15 +210,11 @@ void NodeLBData::createLBDataFile() {
       metadata["shared_node"] = node_metadata;
     }
     metadata["type"] = "LBDatafile";
-<<<<<<< HEAD
-    metadata["rank"] = theContext()->getNode();
+    metadata["rank"] = theContext()->getNodeStrong().get();
     auto phasesMetadata = lb_data_->metadataToJson();
     if(phasesMetadata) {
        metadata["phases"] = *phasesMetadata;
     }
-=======
-    metadata["rank"] = theContext()->getNode().get();
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
     lb_data_writer_ = std::make_unique<JSONAppender>(
       "phases", metadata, file_name, compress
     );

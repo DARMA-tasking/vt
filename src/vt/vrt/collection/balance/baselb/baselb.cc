@@ -127,7 +127,7 @@ void BaseLB::getArgs(PhaseType phase) {
 std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
   using namespace balance;
 
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
   pending_reassignment_->node_ = this_node;
 
   runInEpochCollective("Sum migrations", [&] {
@@ -253,14 +253,9 @@ void BaseLB::finalize(int32_t global_count) {
 
   pending_reassignment_->global_migration_count = global_count;
 
-  auto const& this_node = theContext()->getNode();
-<<<<<<< HEAD
+  auto const& this_node = theContext()->getNodeStrong();
   if (this_node == 0) {
     auto const total_time = timing::getCurrentTime() - start_time_;
-=======
-  if (this_node == vt::NodeT{0}) {
-    TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
     vt_debug_print(
       terse, lb,
       "BaseLB::finalize: LB total time={}\n",

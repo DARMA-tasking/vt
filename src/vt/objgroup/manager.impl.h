@@ -214,7 +214,7 @@ template <typename ObjT, auto f, typename... Args>
 decltype(auto)
 ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
   auto const dest_node = proxy.getNode();
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   vtAssert(
     dest_node == this_node,
@@ -276,13 +276,13 @@ ObjGroupManager::PendingSendType ObjGroupManager::reduce(
 
 template <typename ObjT>
 ObjT* ObjGroupManager::get(ProxyType<ObjT> proxy) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   return get<ObjT>(ProxyElmType<ObjT>(proxy.getProxy(),this_node));
 }
 
 template <typename ObjT>
 ObjT* ObjGroupManager::get(ProxyElmType<ObjT> proxy) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   vtAssert(this_node == proxy.getNode(), "You can only get a local obj");
   auto const proxy_bits = proxy.getProxy();
   auto iter = objs_.find(proxy_bits);
@@ -293,7 +293,7 @@ ObjT* ObjGroupManager::get(ProxyElmType<ObjT> proxy) {
 
 template <typename ObjT, typename... Args>
 void ObjGroupManager::update(ProxyElmType<ObjT> proxy, Args&&... args) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   vtAssert(this_node == proxy.getNode(), "You can only update a local obj");
   auto const proxy_bits = proxy.getProxy();
   auto iter = objs_.find(proxy_bits);
@@ -314,7 +314,7 @@ void ObjGroupManager::update(ProxyElmType<ObjT> proxy, Args&&... args) {
 
 template <typename ObjT, typename... Args>
 void ObjGroupManager::update(ProxyType<ObjT> proxy, Args&&... args) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   auto const elm_proxy = ProxyElmType<ObjT>(proxy.getProxy(),this_node);
   return update<ObjT>(elm_proxy,std::forward<Args>(args)...);
 }
@@ -328,7 +328,7 @@ typename ObjGroupManager::ProxyType<ObjT> ObjGroupManager::getProxy(ObjT* obj) {
 
 template <typename ObjT>
 typename ObjGroupManager::ProxyElmType<ObjT> ObjGroupManager::proxyElm(ObjT* obj) {
-  return getProxy<ObjT>(obj).operator()(theContext()->getNode());
+  return getProxy<ObjT>(obj).operator()(theContext()->getNodeStrong());
 }
 
 template <typename ObjT>

@@ -72,12 +72,7 @@ struct BaseLB {
   using ElementCommType  = elm::CommMapType;
   using TransferDestType = std::tuple<ObjIDType,NodeT>;
   using TransferVecType  = std::vector<TransferDestType>;
-<<<<<<< HEAD
-  using TransferType     = std::map<NodeType, TransferVecType>;
-=======
   using TransferType     = std::map<NodeT, TransferVecType>;
-  using LoadType         = double;
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
   using MigrationCountCB = std::function<void(int32_t)>;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;

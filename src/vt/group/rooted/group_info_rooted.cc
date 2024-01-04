@@ -83,7 +83,7 @@ void InfoRooted::setupRooted() {
       size >= static_cast<region::Region::SizeType>(min_region_size),
       "Size of the region must be at least min_region_size"
     );
-    auto const& this_node = theContext()->getNode();
+    auto const& this_node = theContext()->getNodeStrong();
 
     region_->sort();
     if (region_->isList() || size < max_region_list_size) {

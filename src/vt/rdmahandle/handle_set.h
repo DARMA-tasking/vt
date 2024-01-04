@@ -111,7 +111,7 @@ public:
    */
   HandleType& get(LookupType lookup) {
     vtAssertExpr(valid_);
-    auto this_node = static_cast<LookupType>(theContext()->getNode());
+    auto this_node = static_cast<LookupType>(theContext()->getNodeStrong());
     auto idx = IndexType(this_node, lookup);
     auto iter = set_.find(idx);
     vtAssert(iter != set_.end(), "Index must exist here");

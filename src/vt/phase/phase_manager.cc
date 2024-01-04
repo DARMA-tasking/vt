@@ -292,7 +292,7 @@ void PhaseManager::setStartTime() {
 }
 
 void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info) {
-  if (theContext()->getNode() == 0) {
+  if (theContext()->getNodeStrong() == 0) {
     auto lb_name = vrt::collection::balance::get_lb_names()[
       last_phase_info->lb_type
     ];

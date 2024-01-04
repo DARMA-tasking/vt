@@ -102,7 +102,7 @@ namespace vt { namespace group { namespace global {
     default_group_->spanning_tree_ = std::make_unique<TreeType>(
       collective::tree::tree_cons_tag_t
     );
-    default_group_->this_node_ = theContext()->getNode();
+    default_group_->this_node_ = theContext()->getNodeStrong();
     vtAssert(phase == 0, "Must be first phase when initializing spanning tree");
   }
 }
@@ -156,7 +156,7 @@ namespace vt { namespace group { namespace global {
   // Destination is where the broadcast originated from
   auto const& dest = envelopeGetDest(msg->env);
   auto const& num_children = default_group_->spanning_tree_->getNumChildren();
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
   auto const root_node = NodeT  {0};
   auto const is_root_of_tree = node == root_node;
   bool const send_to_root = is_root && !is_root_of_tree;

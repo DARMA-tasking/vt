@@ -283,13 +283,13 @@ ObjT* Proxy<ObjT>::get() const {
 }
 
 template <typename ObjT>
-ProxyElm<ObjT> Proxy<ObjT>::operator[](::vt::NodeT node) const {
-  return ProxyElm<ObjT>(proxy_,node);
+ProxyElm<ObjT> Proxy<ObjT>::operator[](BaseNodeType node) const {
+  return ProxyElm<ObjT>(proxy_, NodeT{node});
 }
 
 template <typename ObjT>
-ProxyElm<ObjT> Proxy<ObjT>::operator()(::vt::NodeT node) const {
-  return ProxyElm<ObjT>(proxy_,node);
+ProxyElm<ObjT> Proxy<ObjT>::operator()(BaseNodeType node) const {
+  return ProxyElm<ObjT>(proxy_, NodeT{node});
 }
 
 template <typename ObjT>
@@ -364,8 +364,8 @@ void Proxy<ObjT>::destroyHandleSetRDMA(vt::rdma::HandleSet<T> set) const {
   return vt::theHandleRDMA()->deleteHandleSetCollectiveObjGroup<T>(set);
 }
 
-inline DefaultProxyElm Proxy<void>::operator[](::vt::NodeT node) const {
-  return DefaultProxyElm{node};
+inline DefaultProxyElm Proxy<void>::operator[](BaseNodeType node) const {
+  return DefaultProxyElm{NodeT{node}};
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
@@ -381,7 +381,7 @@ Proxy<void>::broadcastMsg(messaging::MsgPtrThief<MsgT> msg, TagType tag) const {
 
 template <typename OpT, typename FunctorT, typename MsgT, typename... Args>
 messaging::PendingSend
-Proxy<void>::reduce(::vt::NodeT root, Args&&... args) const {
+Proxy<void>::reduce(BaseNodeType root, Args&&... args) const {
   return reduce<
     OpT,
     FunctorT,
@@ -399,7 +399,7 @@ template <
   typename... Args
 >
 messaging::PendingSend
-Proxy<void>::reduce(::vt::NodeT root, Args&&... args) const {
+Proxy<void>::reduce(BaseNodeType root, Args&&... args) const {
   auto const msg = makeMessage<MsgT>(std::forward<Args>(args)...);
   return reduceMsg<OpT, FunctorT, MsgT, f>(root, msg.get());
 }
@@ -410,7 +410,7 @@ template <
   typename MsgT
 >
 messaging::PendingSend
-Proxy<void>::reduceMsg(::vt::NodeT root, MsgT* const msg) const {
+Proxy<void>::reduceMsg(BaseNodeType root, MsgT* const msg) const {
   return reduceMsg<
     OpT,
     FunctorT,
@@ -426,7 +426,7 @@ template <
   ActiveTypedFnType<MsgT>* f
 >
 messaging::PendingSend
-Proxy<void>::reduceMsg(::vt::NodeT root, MsgT* const msg) const {
+Proxy<void>::reduceMsg(BaseNodeType root, MsgT* const msg) const {
   return theCollective()->global()->reduce<OpT, FunctorT>(root, msg);
 }
 

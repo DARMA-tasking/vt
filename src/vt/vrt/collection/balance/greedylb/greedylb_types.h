@@ -59,12 +59,7 @@ struct GreedyLBTypes {
   using ObjBinType = int32_t;
   using ObjBinListType = std::list<ObjIDType>;
   using ObjSampleType = std::map<ObjBinType, ObjBinListType>;
-<<<<<<< HEAD
-  using LoadProfileType = std::unordered_map<NodeType,LoadType>;
-=======
-  using LoadType = double;
   using LoadProfileType = std::unordered_map<NodeT,LoadType>;
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
 };
 
 struct GreedyRecord {
@@ -78,34 +73,20 @@ struct GreedyRecord {
   ObjType getObj() const { return obj_; }
 
 private:
-<<<<<<< HEAD
-  GreedyLBTypes::ObjIDType obj_ = { elm::no_element_id, uninitialized_destination };
+  GreedyLBTypes::ObjIDType obj_ = { elm::no_element_id, NodeT{} };
   LoadType load_ = 0.0;
-=======
-  GreedyLBTypes::ObjIDType obj_ = { elm::no_element_id, NodeT  {} };
-  LoadType load_ = 0.0f;
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
 };
 
 struct GreedyProc {
   GreedyProc() = default;
   GreedyProc(
-<<<<<<< HEAD
-    NodeType const& in_node, LoadType const& in_load
-=======
-    NodeT const& in_node, GreedyLBTypes::LoadType const& in_load
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+    NodeT const& in_node, LoadType const& in_load
   ) : node_(in_node), load_(in_load) {}
 
   LoadType getModeledLoad() const { return load_; }
 
-<<<<<<< HEAD
-  NodeType node_ = uninitialized_destination;
-  LoadType load_ = 0.0;
-=======
   NodeT node_ = {};
-  GreedyLBTypes::LoadType load_ = 0.0f;
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+  LoadType load_ = 0.0;
   std::vector<GreedyLBTypes::ObjIDType> recs_;
 };
 

@@ -77,7 +77,7 @@ struct PerfTestHarness : TestHarnessBase {
   // Memory use at the end of test iteration (i.e. phase)
   using MemoryUsage = std::vector<std::vector<std::size_t>>;
   using CombinedMemoryUse =
-    std::unordered_map<NodeType, std::vector<TestResultHolder<std::size_t>>>;
+    std::unordered_map<NodeT, std::vector<TestResultHolder<std::size_t>>>;
 
   virtual ~PerfTestHarness() = default;
 

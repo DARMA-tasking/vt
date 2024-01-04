@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_node.h"
 #if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_COMMON_H
 #define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_COMMON_H
 
@@ -149,7 +150,7 @@ struct BaseMapsDispatcher {
   virtual NodeT dispatch(
     index::BaseIndex* cur_idx_ptr,
     index::BaseIndex* range_ptr,
-    NodeT num_nodes
+    BaseNodeType num_nodes
   ) const = 0;
 };
 
@@ -161,7 +162,7 @@ public:
   NodeT dispatch(
     index::BaseIndex* cur_idx_ptr,
     index::BaseIndex* range_ptr,
-    NodeT num_nodes
+    BaseNodeType num_nodes
   ) const override {
     using T = HandlerT;
 

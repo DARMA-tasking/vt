@@ -59,7 +59,7 @@ struct GreedyPayload : GreedyLBTypes {
   GreedyPayload(ObjSampleType const& in_sample, LoadType const& in_profile)
     : sample_(in_sample)
   {
-    auto const& this_node = theContext()->getNode();
+    auto const& this_node = theContext()->getNodeStrong();
     auto iter = load_profile_.find(this_node);
     auto end_iter = load_profile_.end();
     vtAssert(iter == end_iter, "Must not exist");

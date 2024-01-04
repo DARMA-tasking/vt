@@ -89,14 +89,14 @@ template <
   template <typename Arg> class Op,
   typename... Params
 >
-Reduce::PendingSendType Reduce::reduce(Node root, Params&&... params) {
+Reduce::PendingSendType Reduce::reduce(NodeT root, Params&&... params) {
   using Tuple = typename FuncTraits<decltype(f)>::TupleType;
   using OpT = Op<Tuple>;
   return reduce<OpT, f>(root, std::forward<Params>(params)...);
 }
 
 template <typename Op, auto f, typename... Params>
-Reduce::PendingSendType Reduce::reduce(Node root, Params&&... params) {
+Reduce::PendingSendType Reduce::reduce(NodeT root, Params&&... params) {
   using Tuple = typename FuncTraits<decltype(f)>::TupleType;
   using MsgT = ReduceTMsg<Tuple>;
   using GetReduceStamp = collective::reduce::GetReduceStamp<void, Params...>;
@@ -299,7 +299,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
     state_.erase(lookup);
 
     if (isRoot()) {
-      auto const& this_node = theContext()->getNode();
+      auto const& this_node = theContext()->getNodeStrong();
       if (root != this_node) {
         vt_debug_print(
           normal, reduce,

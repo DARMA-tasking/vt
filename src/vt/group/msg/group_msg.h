@@ -91,27 +91,27 @@ template <typename MsgT>
 struct GroupInfoMsg : MsgT {
   GroupInfoMsg() = default;
   GroupInfoMsg(
-    NodeT const& in_root_node, NodeT const& in_num_nodes,
+    NodeT const in_root_node, size_t const in_num_nodes,
     GroupType const& in_group, RemoteOperationIDType in_op,
-    NodeT const& in_total_num_nodes,
-    NodeT const& in_parent_node = {}
+    size_t const in_total_num_nodes,
+    NodeT const in_parent_node = {}
   ) : MsgT(in_group, in_op), root_node_(in_root_node),
       num_nodes_(in_num_nodes), total_num_nodes_(in_total_num_nodes),
       parent_node_(in_parent_node)
   { }
 
   NodeT getRoot() const { return root_node_; }
-  NodeT getCount() const { return num_nodes_; }
-  NodeT getTotalCount() const { return total_num_nodes_; }
+  size_t getCount() const { return num_nodes_; }
+  size_t getTotalCount() const { return total_num_nodes_; }
   NodeT getParent() const { return parent_node_; }
   bool isStatic() const { return is_static_; }
 
 private:
-  NodeT root_node_       = {};
-  NodeT num_nodes_       = {};
-  NodeT total_num_nodes_ = {};
-  bool is_static_           = true;
-  NodeT parent_node_     = {};
+  NodeT root_node_        = {};
+  size_t num_nodes_       = {};
+  size_t total_num_nodes_ = {};
+  bool is_static_         = true;
+  NodeT parent_node_      = {};
 };
 
 struct GroupListMsg : GroupInfoMsg<GroupMsg<::vt::PayloadMessage>> {

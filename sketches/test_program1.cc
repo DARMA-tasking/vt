@@ -5,8 +5,8 @@
 
 using namespace vt;
 
-NodeType this_node = -1;
-NodeType num_nodes = -1;
+NodeT this_node = -1;
+NodeT num_nodes = -1;
 HandlerType test_msg_han = 0;
 HandlerType test_msg_han2 = 0;
 EpochType test_epoch = -1;

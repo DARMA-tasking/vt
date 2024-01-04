@@ -109,7 +109,7 @@ TEST_F(TestReduce, test_reduce_with_no_elements_on_root_rank) {
 =======
   if (this_node == vt::NodeT{0}) {
     proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
   }
 }
 

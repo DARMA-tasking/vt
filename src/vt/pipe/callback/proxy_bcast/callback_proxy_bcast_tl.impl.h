@@ -65,7 +65,7 @@ void CallbackProxyBcastTypeless::serialize(SerializerT& s) {}
 
 template <typename MsgT>
 void CallbackProxyBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& pipe_node = PipeIDBuilder::getNode(pipe);
   vt_debug_print(
     terse, pipe,
@@ -96,7 +96,7 @@ void CallbackProxyBcastDirect::serialize(SerializerT& s) {
 
 template <typename MsgT>
 void CallbackProxyBcastDirect::trigger(MsgT* msg, PipeType const& pipe) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   vt_debug_print(
     terse, pipe,
     "CallbackProxyBcastDirect: trigger_: pipe={:x}, this_node={}, "

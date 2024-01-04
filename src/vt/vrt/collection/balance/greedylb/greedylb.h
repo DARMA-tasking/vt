@@ -72,16 +72,9 @@ enum struct DataDistStrategy : uint8_t {
 };
 
 struct GreedyLB : LoadSamplerBaseLB {
-<<<<<<< HEAD
   using ElementLoadType  = std::unordered_map<ObjIDType,LoadType>;
-  using TransferType     = std::map<NodeType, std::vector<ObjIDType>>;
-  using LoadProfileType  = std::unordered_map<NodeType,LoadType>;
-=======
-  using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
   using TransferType     = std::map<NodeT, std::vector<ObjIDType>>;
-  using LoadType         = double;
   using LoadProfileType  = std::unordered_map<NodeT,LoadType>;
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
 
   GreedyLB() = default;
   virtual ~GreedyLB() {}

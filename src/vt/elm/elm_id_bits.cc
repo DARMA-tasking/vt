@@ -53,7 +53,7 @@ namespace vt { namespace elm {
   bool migratable, NodeT curr_node
 ) {
   auto const seq_id = theNodeLBData()->getNextElm();
-  auto const home_node = theContext()->getNode();
+  auto const home_node = theContext()->getNodeStrong();
   return createCollectionImpl(migratable, seq_id, home_node, curr_node);
 }
 
@@ -70,7 +70,7 @@ namespace vt { namespace elm {
 ) {
   ElementIDType ret = 0;
   setObjGroup(ret, proxy, node);
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   return ElementIDStruct{ret, this_node};
 }
 

@@ -112,7 +112,7 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
 
   auto const proxy = po.proxy_bits_;
   auto const has_dynamic_membership = po.dynamic_membership_;
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   auto const has_bounds = po.has_bounds_;
   auto const bounds = has_bounds ? po.bounds_ : IndexType{};
   auto const label = po.label_;
@@ -239,7 +239,7 @@ template <typename IdxT>
 bool CollectionManager::elementMappedHere(
   HandlerType map_han, ObjGroupProxyType map_object, IdxT idx, IdxT bounds
 ) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   auto const mapped_node = getElementMapping(map_han, map_object, idx, bounds);
   return mapped_node == this_node;
 }
@@ -255,7 +255,7 @@ NodeT CollectionManager::getElementMapping(
     auto const& map_fn = is_functor ?
       auto_registry::getAutoHandlerFunctorMap(map_han) :
       auto_registry::getAutoHandlerMap(map_han);
-    auto const num_nodes = theContext()->getNumNodes();
+    auto const num_nodes = theContext()->getNumNodesStrong();
     auto const mapped_node = map_fn->dispatch(&idx, &bounds, num_nodes);
 
     return mapped_node;
@@ -264,7 +264,7 @@ NodeT CollectionManager::getElementMapping(
   if (map_object != no_obj_group) {
     objgroup::proxy::Proxy<mapping::BaseMapper<IdxT>> p{map_object};
     auto map_obj_ptr = p.get();
-    auto num_nodes = theContext()->getNumNodes();
+    auto num_nodes = theContext()->getNumNodesStrong();
     return map_obj_ptr->map(&idx, idx.ndims(), num_nodes);
   }
 

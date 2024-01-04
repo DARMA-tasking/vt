@@ -75,7 +75,7 @@ template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord(LocInstType const identifier)
   : LocationCoord(),
     this_inst(identifier),
-    recs_(default_max_cache_size, theContext()->getNode())
+    recs_(default_max_cache_size, theContext()->getNodeStrong())
 {
   vt_debug_print(
     normal, location,
@@ -97,7 +97,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
   EntityID const& id, NodeT const& home, LocMsgActionType msg_action,
   bool const& migrated
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto reg_iter = local_registered_.find(id);
 
   vtAssert(
@@ -139,7 +139,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
   );
 
   if (pending_lookup_iter != pending_lookups_.end()) {
-    auto const& node = theContext()->getNode();
+    auto const& node = theContext()->getNodeStrong();
     int action = 0;
     for (auto&& pending_action : pending_lookup_iter->second) {
       vt_debug_print(
@@ -159,7 +159,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
    *  it is migrated here and it's not the home. Thus, we need to
    *  inform the home so that messages can be forwarded.
    */
-  vtAssert(home != uninitialized_destination, "Must have home node info");
+  vtAssert(home.get() != uninitialized_destination, "Must have home node info");
   if (home != this_node) {
     vt_debug_print(
       normal, location,
@@ -168,7 +168,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
       id, home, migrated
     );
 
-    auto const& ask_node = uninitialized_destination;
+    auto const& ask_node = NodeT{};
     auto msg = makeMessage<LocMsgType>(
       this_inst, id, no_location_event_id, ask_node, home
     );
@@ -196,7 +196,7 @@ void EntityLocationCoord<EntityID>::registerEntityRemote(
     this_inst, home, create_node, id
   );
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   vtAssert(home == this_node, "Must be registered on home node");
 
   recs_.insert(id, home, LocRecType{id, eLocState::Remote, create_node});
@@ -338,7 +338,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   EntityID const& id, NodeT const& home_node,
   MsgSharedPtr<MessageT> const& msg
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto route_to_node = NodeT{};
 
   auto reg_iter = local_registered_.find(id);
@@ -393,7 +393,7 @@ template <typename EntityID>
 void EntityLocationCoord<EntityID>::getLocation(
   EntityID const& id, NodeT const& home_node, NodeActionType const& action
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   auto reg_iter = local_registered_.find(id);
 
@@ -456,7 +456,7 @@ template <typename EntityID>
 void EntityLocationCoord<EntityID>::handleEagerUpdate(
   EntityID const& id, NodeT home_node, NodeT deliver_node
 ) {
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
   vtAssert(this_node != deliver_node, "This should have been a forwarding node");
   vtAssert(home_node != NodeT{}, "Home node should be valid");
   vtAssert(home_node < theContext()->getNumNodes(), "Home node should be valid");
@@ -490,7 +490,7 @@ void EntityLocationCoord<EntityID>::sendEagerUpdate(
     id, ask_node, home_node, deliver_node
   );
 
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
   if (ask_node != this_node) {
     vtAssert(ask_node != NodeT{}, "Ask node must be valid");
     auto msg = makeMessage<LocMsgType>(
@@ -506,7 +506,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   EntityID const& id, NodeT const& home_node, NodeT const& to_node,
   MsgSharedPtr<MessageT> const& msg
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   vt_debug_print(
@@ -580,7 +580,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       auto ask_node = msg->getAskNode();
 
       if (ask_node != NodeT{}) {
-        auto delivered_node = theContext()->getNode();
+        auto delivered_node = theContext()->getNodeStrong();
         sendEagerUpdate(hid, ask_node, home_node, delivered_node);
       }
     };
@@ -614,7 +614,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       EntityID id_ = id;
       // buffer the message here, the entity will be registered in the future
       insertPendingEntityAction(id_, [=](NodeT resolved) {
-        auto const& my_node = theContext()->getNode();
+        auto const& my_node = theContext()->getNodeStrong();
 
         vt_debug_print(
           normal, location,
@@ -692,7 +692,7 @@ void EntityLocationCoord<EntityID>::setupMessageForRouting(
   msg->setHandler(handler);
   msg->setEntity(id);
   msg->setHomeNode(home_node);
-  msg->setLocFromNode(theContext()->getNode());
+  msg->setLocFromNode(theContext()->getNodeStrong());
   msg->setLocInst(this_inst);
 }
 
@@ -701,7 +701,7 @@ template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgHandlerLocal(
   MsgSharedPtr<MessageT> const& msg
 ) {
-  runnable::makeRunnable(msg, true, msg->getHandler(), theContext()->getNode())
+  runnable::makeRunnable(msg, true, msg->getHandler(), theContext()->getNodeStrong())
     .withTDEpochFromMsg()
     .run();
 }
@@ -749,7 +749,7 @@ void EntityLocationCoord<EntityID>::routeMsg(
   MsgSharedPtr<MessageT> const& msg, NodeT from_node
 ) {
   auto const from =
-    from_node == NodeT{} ? theContext()->getNode() :
+    from_node == NodeT{} ? theContext()->getNodeStrong() :
     from_node;
 
   // set field for location routed message

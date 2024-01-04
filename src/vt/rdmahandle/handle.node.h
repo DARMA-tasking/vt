@@ -121,7 +121,7 @@ public:
    *
    * \return the node
    */
-  vt::NodeT getNode() const { return vt::theContext()->getNode(); }
+  vt::NodeT getNode() const { return vt::theContext()->getNodeStrong(); }
 
   /**
    * \brief Check if the handle is ready to be used; implies that all MPI

@@ -64,16 +64,9 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct HierarchicalLB : LoadSamplerBaseLB {
   using ChildPtrType = std::unique_ptr<HierLBChild>;
-<<<<<<< HEAD
-  using ChildMapType = std::unordered_map<NodeType,ChildPtrType>;
-  using ElementLoadType = std::unordered_map<ObjIDType,LoadType>;
-  using TransferType = std::map<NodeType, std::vector<ObjIDType>>;
-=======
   using ChildMapType = std::unordered_map<NodeT,ChildPtrType>;
-  using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
+  using ElementLoadType = std::unordered_map<ObjIDType,LoadType>;
   using TransferType = std::map<NodeT, std::vector<ObjIDType>>;
-  using LoadType = double;
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
 
   HierarchicalLB() = default;
   virtual ~HierarchicalLB() {}

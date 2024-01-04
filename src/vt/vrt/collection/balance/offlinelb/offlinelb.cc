@@ -57,7 +57,7 @@ void OfflineLB::init(objgroup::proxy::Proxy<OfflineLB> in_proxy) {
 void OfflineLB::runLB(LoadType) {
   auto const& distro = theLBDataReader()->getDistro(phase_ + 1);
   for (auto&& elm : distro) {
-    migrateObjectTo(elm, theContext()->getNode());
+    migrateObjectTo(elm, theContext()->getNodeStrong());
   }
   theLBDataReader()->clearDistro(phase_ + 1);
 }

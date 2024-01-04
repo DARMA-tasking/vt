@@ -62,7 +62,7 @@ namespace vt { namespace term { namespace ds {
     "StateDS::requestAck: epoch={:x}, successor={}, count={}\n",
     epoch, successor, count
   );
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
   vtAssertExpr(successor != node);
   auto msg = makeMessage<AckMsg>(epoch,node,successor,count);
   theMsg()->markAsTermMessage(msg);
@@ -77,7 +77,7 @@ namespace vt { namespace term { namespace ds {
     "StateDS::acknowledge: epoch={:x}, predecessor={}, count={}\n",
     epoch, predecessor, count
   );
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
   vtAssertExpr(predecessor != node);
   auto msg = makeMessage<AckMsg>(epoch,node,predecessor,count);
   theMsg()->markAsTermMessage(msg);
@@ -116,7 +116,7 @@ namespace vt { namespace term { namespace ds {
 StateDS::getTerminator(EpochType const& epoch) {
   auto term_iter = theTerm()->term_.find(epoch);
   if (term_iter == theTerm()->term_.end()) {
-    auto const this_node = theContext()->getNode();
+    auto const this_node = theContext()->getNodeStrong();
     theTerm()->term_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(epoch),

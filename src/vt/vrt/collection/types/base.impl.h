@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_node.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_BASE_IMPL_H
 #define INCLUDED_VT_VRT_COLLECTION_TYPES_BASE_IMPL_H
 
@@ -76,10 +77,10 @@ CollectionBase<ColT, IndexT>::getCollectionProxy() const {
 }
 
 template <typename ColT, typename IndexT>
-/*virtual*/ void CollectionBase<ColT, IndexT>::migrate(NodeT const& node) {
+/*virtual*/ void CollectionBase<ColT, IndexT>::migrate(BaseNodeType const node) {
   auto const proxy = this->getCollectionProxy();
   auto const index = this->getIndex();
-  CollectionElmAttorney<ColT,IndexT>::migrate(proxy(index), node);
+  CollectionElmAttorney<ColT,IndexT>::migrate(proxy(index), NodeT{node});
 }
 
 template <typename ColT, typename IndexT>

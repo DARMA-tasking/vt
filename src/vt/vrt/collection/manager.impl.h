@@ -380,7 +380,7 @@ ColT* CollectionManager::getCollectionPtrForInvoke(
     elm_holder->exists(idx),
     fmt::format(
       "Element with idx:{} doesn't exist on node:{}\n", idx,
-      theContext()->getNode()));
+      theContext()->getNodeStrong()));
 
   auto& inner_holder = elm_holder->lookup(idx);
 
@@ -440,7 +440,7 @@ void CollectionManager::invokeCollective(
 
   auto untyped_proxy = proxy.getProxy();
   auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   elm_holder->foreach([&](IndexType const& idx, Indexable<IndexType>* ptr) {
     // be careful not to forward here as we are reusing args
@@ -457,7 +457,7 @@ auto CollectionManager::invoke(
 ) {
   auto ptr = getCollectionPtrForInvoke(proxy);
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   return runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
@@ -520,7 +520,7 @@ void CollectionManager::invokeMsgImpl(
     elm_holder->exists(idx),
     fmt::format(
       "Element with idx:{} doesn't exist on node:{}\n", idx,
-      theContext()->getNode()
+      theContext()->getNodeStrong()
     )
   );
 
@@ -544,7 +544,7 @@ void CollectionManager::invokeMsgImpl(
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
   auto& inner_holder = elm_holder->lookup(idx);
   auto const col_ptr = inner_holder.getRawPtr();
-  auto const from = theContext()->getNode();
+  auto const from = theContext()->getNodeStrong();
 
   msg->setFromNode(from);
   msg->setProxy(proxy);
@@ -587,7 +587,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   auto msg = promoteMsg(raw_msg);
 
   // broadcast to all nodes
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& proxy = msg->getBcastProxy();
   auto elm_holder = theCollection()->findElmHolder<IndexT>(proxy);
   auto const bcast_node = VirtualProxyBuilder::getVirtualNode(proxy);
@@ -672,7 +672,7 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
 ) {
   using IndexT = typename ColT::IndexType;
 
-  msg->setFromNode(theContext()->getNode());
+  msg->setFromNode(theContext()->getNodeStrong());
   msg->setBcastProxy(proxy.getProxy());
 
 #if vt_check_enabled(trace_enabled)
@@ -801,7 +801,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   );
 
   // save the user's handler in the message
-  msg->setFromNode(theContext()->getNode());
+  msg->setFromNode(theContext()->getNodeStrong());
   msg->setVrtHandler(handler);
   msg->setBcastProxy(col_proxy);
 
@@ -831,7 +831,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 # endif
 
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   auto const bnode = VirtualProxyBuilder::getVirtualNode(col_proxy);
 
   if (this_node != bnode) {
@@ -1109,7 +1109,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 #endif
 
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
-  msg->setFromNode(theContext()->getNode());
+  msg->setFromNode(theContext()->getNodeStrong());
   msg->setVrtHandler(handler);
   msg->setProxy(toProxy);
   theMsg()->markAsCollectionMessage(msg);
@@ -1638,7 +1638,7 @@ void CollectionManager::insert(
   auto const mapped_node = getMappedNode<ColT>(proxy, idx);
   auto const has_explicit_node = node != NodeT{};
   auto const insert_node = has_explicit_node ? node : mapped_node;
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   bool proceed_with_insertion = true;
 
@@ -1776,7 +1776,7 @@ template <typename ColT, typename IndexT>
 MigrateStatus CollectionManager::migrateOut(
   VirtualProxyType const& col_proxy, IndexT const& idx, NodeT const& dest
 ) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   vt_debug_print(
     terse, vrt_coll,
@@ -1907,7 +1907,7 @@ MigrateStatus CollectionManager::migrateIn(
   vc_raw_ptr->preMigrateIn();
 
   // Always update the element ID struct for LB statistic tracking
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   vrt_elm_ptr->elm_id_.curr_node = this_node;
 
   auto home_node = getMappedNode<ColT>(proxy, idx);
@@ -1932,7 +1932,7 @@ void CollectionManager::destroy(
   CollectionProxyWrapType<ColT,IndexT> const& proxy
 ) {
   using DestroyMsgType = DestroyMsg<ColT, IndexT>;
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   auto msg = makeMessage<DestroyMsgType>(proxy, this_node);
   theMsg()->markAsCollectionMessage(msg);
@@ -2066,7 +2066,7 @@ template <typename IndexT>
 std::string CollectionManager::makeMetaFilename(
   std::string file_base, bool make_sub_dirs
 ) {
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
   if (make_sub_dirs) {
     int flag = 0;
     flag = mkdir(file_base.c_str(), S_IRWXU);
@@ -2217,7 +2217,7 @@ void CollectionManager::restoreFromFileInPlace(
       if (proxy(idx).tryGetLocalPtr() == nullptr) {
         auto mapped_node = getMappedNode<ColT>(proxy, idx);
         vtAssertExpr(mapped_node != NodeT{});
-        auto this_node = theContext()->getNode();
+        auto this_node = theContext()->getNodeStrong();
 
         if (mapped_node != this_node) {
           theMsg()->send<migrateToRestoreLocation<ColT>>(

@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 
   auto this_node = vt::theContext()->getNode();
 
-  if (this_node == vt::NodeT{0}) {
+  if (this_node == 0) {
     my_global_ctx.x = 1283;
 
     // Make a callback that triggers the callback with a context
@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
     );
 
     auto const default_proxy = vt::theObjGroup()->getDefault();
-    default_proxy[vt::NodeT{1}].send<CallbackMsg, handler>(cb);
+    default_proxy[1].send<CallbackMsg, handler>(cb);
   }
 
   vt::finalize();

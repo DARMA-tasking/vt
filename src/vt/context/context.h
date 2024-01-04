@@ -102,6 +102,8 @@ struct Context : runtime::component::Component<Context> {
    */
   inline BaseNodeType getNode() const { return thisNode_; }
 
+  inline NodeT getNodeStrong() const { return thisNode_; }
+
   /**
    * \brief Get the number of nodes (analogous to MPI's num ranks) being used
    *
@@ -111,6 +113,7 @@ struct Context : runtime::component::Component<Context> {
    */
   inline BaseNodeType getNumNodes() const { return numNodes_; }
 
+  inline NodeT getNumNodesStrong() const { return numNodes_; }
   /**
    * \brief Get the MPI communicator being used by VT in a given runtime
    * instance
@@ -143,7 +146,7 @@ struct Context : runtime::component::Component<Context> {
    * the node that sent the message to trigger the current runnable.
    *
    * \note If a task is not currently running, this will return the this node
-   * ---equivalent to \c theContext()->getNode()
+   * ---equivalent to \c theContext()->getNodeStrong()
    *
    * For the current task that is executing, get the node that sent the message
    * that caused this runnable to execute. Note, for collection handlers this

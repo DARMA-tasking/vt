@@ -58,7 +58,7 @@ static constexpr NodeT const main_node = NodeT{0};
 
 template <typename VrtContextT>
 inline void vrLaunchMainContext() {
-  if (theContext()->getNode() == main_node) {
+  if (theContext()->getNodeStrong() == main_node) {
     vt_debug_print(verbose, gen, "vrLaunchMainContext: launching main context\n");
     theVirtualManager()->makeVirtual<VrtContextT>();
   }

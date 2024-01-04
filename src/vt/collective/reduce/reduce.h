@@ -181,10 +181,10 @@ struct Reduce : virtual collective::tree::Tree {
     template <typename Arg> class Op = NoneOp,
     typename... Params
   >
-  PendingSendType reduce(Node root, Params&&... params);
+  PendingSendType reduce(NodeT root, Params&&... params);
 
   template <typename Op, auto f, typename... Params>
-  PendingSendType reduce(Node root, Params&&... params);
+  PendingSendType reduce(NodeT root, Params&&... params);
 
   /**
    * \brief Reduce a message up the tree

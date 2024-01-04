@@ -55,11 +55,7 @@ struct LoadMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required(); // node_load_
 
-<<<<<<< HEAD
-  using NodeLoadType = std::unordered_map<NodeType, LoadType>;
-=======
-  using NodeLoadType = std::unordered_map<NodeT, lb::BaseLB::LoadType>;
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+  using NodeLoadType = std::unordered_map<NodeT, LoadType>;
 
   LoadMsg() = default;
   LoadMsg(NodeT in_from_node, NodeLoadType const& in_node_load)
@@ -70,11 +66,7 @@ struct LoadMsg : vt::Message {
     return node_load_;
   }
 
-<<<<<<< HEAD
-  void addNodeLoad(NodeType node, LoadType load) {
-=======
-  void addNodeLoad(NodeT node, lb::BaseLB::LoadType load) {
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+  void addNodeLoad(NodeT node, LoadType load) {
     node_load_[node] = load;
   }
 

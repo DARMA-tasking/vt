@@ -179,7 +179,7 @@ struct TestTermChaining : TestParallelHarness {
 =======
     auto cb = vt::theCB()->makeSend<ChainReduceMsg, test_handler_reduce>( NodeT{0} );
     chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(vt::NodeT{0}, msg2.get(), cb));
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 
@@ -206,7 +206,7 @@ struct TestTermChaining : TestParallelHarness {
 =======
     auto cb = vt::theCB()->makeSend<ChainReduceMsg, test_handler_reduce>( NodeT{0} );
     chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(vt::NodeT{0}, msg2.get(), cb));
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 

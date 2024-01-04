@@ -66,7 +66,7 @@ CollectionChainSet<Index>::CollectionChainSet(
     this, "CollectionChainSet"
   );
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   auto const proxy_bits = proxy.getProxy();
 
   ListenerType l = [=](ElementEventEnum event, IndexT idx, NodeT home) {

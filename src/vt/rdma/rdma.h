@@ -631,7 +631,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     RDMA_HandleType const& han, NodeT const& in_target,
     ActionType const& action = nullptr
   ) {
-    auto const& this_node = theContext()->getNode();
+    auto const& this_node = theContext()->getNodeStrong();
     auto const& target = getTarget(han, in_target);
     bool const is_local = true;
     vtAssert(
@@ -681,7 +681,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     RDMA_HandleType const& han, NodeT const& in_target = {},
     ActionType const& action = nullptr
   ) {
-    auto const& this_node = theContext()->getNode();
+    auto const& this_node = theContext()->getNodeStrong();
     auto const& target = getTarget(han, in_target);
     bool const is_local = false;
     vtAssert(
@@ -713,7 +713,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     RDMA_HandleType const& han, NodeT const& in_target,
     ActionType const& action = nullptr
   ) {
-    auto const& this_node = theContext()->getNode();
+    auto const& this_node = theContext()->getNodeStrong();
     auto const& target = getTarget(han, in_target);
     bool const is_local = false;
     vtAssert(
@@ -788,7 +788,7 @@ private:
     MsgT* msg, RDMA_HandleType const& han, FunctionT const& fn,
     bool const& any_tag, TagType const& tag
   ) {
-    auto const& this_node = theContext()->getNode();
+    auto const& this_node = theContext()->getNodeStrong();
     auto const handler_node = RDMA_HandleManagerType::getRdmaNode(han);
     auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
 
@@ -820,7 +820,7 @@ private:
     MsgT* msg, RDMA_HandleType const& han, FunctionT const& fn,
     bool const& any_tag, TagType const& tag
   ) {
-    auto const& this_node = theContext()->getNode();
+    auto const& this_node = theContext()->getNodeStrong();
     auto const handler_node = RDMA_HandleManagerType::getRdmaNode(han);
     auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
 

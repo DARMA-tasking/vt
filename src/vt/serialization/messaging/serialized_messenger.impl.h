@@ -269,7 +269,7 @@ template <typename MsgT, typename BaseT>
 
     // wrap metadata
     payload_msg->handler = han;
-    payload_msg->from_node = theContext()->getNode();
+    payload_msg->from_node = theContext()->getNodeStrong();
     // setup envelope
     envelopeInitCopy(payload_msg->env, msg->env);
 
@@ -297,7 +297,7 @@ template <typename MsgT, typename BaseT>
 
     // wrap metadata
     sys_msg->handler = traceable_han;
-    sys_msg->from_node = theContext()->getNode();
+    sys_msg->from_node = theContext()->getNodeStrong();
     sys_msg->ptr_size = ptr_size;
     // setup envelope
     envelopeInitCopy(sys_msg->env, msg->env);
@@ -388,7 +388,7 @@ template <typename MsgT, typename BaseT>
     vtAssertExpr(payload_msg == nullptr && data_sender != nullptr);
 
     auto send_data = [=](NodeT dest) -> messaging::PendingSend {
-      auto const& node = theContext()->getNode();
+      auto const& node = theContext()->getNodeStrong();
       if (node != dest) {
         auto sys_msg = makeMessage<SerialWrapperMsgType<MsgT>>();
         auto send_serialized = [=](Active::SendFnType send){
@@ -402,7 +402,7 @@ template <typename MsgT, typename BaseT>
 
         // wrap metadata
         sys_msg->handler = typed_handler;
-        sys_msg->from_node = theContext()->getNode();
+        sys_msg->from_node = theContext()->getNodeStrong();
         // setup envelope
         envelopeInitCopy(sys_msg->env, msg->env);
 
@@ -454,7 +454,7 @@ template <typename MsgT, typename BaseT>
 
     // wrap metadata
     payload_msg->handler = typed_handler;
-    payload_msg->from_node = theContext()->getNode();
+    payload_msg->from_node = theContext()->getNodeStrong();
     // setup envelope
     envelopeInitCopy(payload_msg->env, msg->env);
 

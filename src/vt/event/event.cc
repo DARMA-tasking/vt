@@ -80,7 +80,7 @@ void AsyncEvent::initialize() {
 }
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   auto trigger = [=]{
     callable();
@@ -154,7 +154,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   auto const& node = theEvent()->getOwningNode(event);
 
   vtAssert(
-    node == theContext()->getNode(), "NodeT must be identical"
+    node == theContext()->getNodeStrong(), "NodeT must be identical"
   );
 
   auto send_back_fun = [=]{
@@ -173,7 +173,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     normal, event,
     "checkEventFinishedHan:: event={}, node={}, "
     "this_node={}, complete={}, sent_from_node={}\n",
-    event, node, theContext()->getNode(), static_cast<int>(is_complete),
+    event, node, theContext()->getNodeStrong(), static_cast<int>(is_complete),
     msg->sent_from_node_
   );
 
@@ -264,10 +264,10 @@ AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) 
   vt_debug_print(
     verbose, event,
     "theEvent: theEventHolder: node={}, event={}, owning_node={}\n",
-    theContext()->getNode(), event, owning_node
+    theContext()->getNodeStrong(), event, owning_node
   );
 
-  if (owning_node != theContext()->getNode()) {
+  if (owning_node != theContext()->getNodeStrong()) {
     vtAssert(0, "Event does not belong to this node");
   }
 
@@ -293,7 +293,7 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
       return EventStateType::EventWaiting;
     }
   } else {
-    if (getOwningNode(event) == theContext()->getNode()) {
+    if (getOwningNode(event) == theContext()->getNodeStrong()) {
       return EventStateType::EventReady;
     } else {
       return EventStateType::EventRemote;

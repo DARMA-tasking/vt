@@ -72,7 +72,7 @@ static inline void activeMessageReduce() {
   auto const root_reduce_node = vt::NodeT{0};
 
   auto r = vt::theCollective()->global();
-  r->reduce<reduceResult, collective::PlusOp>(vt::Node{root_reduce_node}, 50);
+  r->reduce<reduceResult, collective::PlusOp>(vt::NodeT{root_reduce_node}, 50);
 }
 /// [Tutorial1H]
 

@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_node.h"
 #include <vt/transport.h>
 
 #include <vector>
@@ -284,7 +285,7 @@ vt::NodeT my_map(IndexT* idx, IndexT* max_idx, vt::NodeT num_nodes) {
   }
 }
 
-static void solveGroupSetup(vt::NodeT this_node, vt::VirtualProxyType coll_proxy) {
+static void solveGroupSetup(vt::BaseNodeType this_node, vt::VirtualProxyType coll_proxy) {
   auto const& is_even_node = this_node % 2 == 0;
 
   // This is how you would explicitly create/get a new communicator for this

@@ -73,7 +73,7 @@ UserEventIDType UserEventRegistry::createEvent(
 
 #if !vt_check_enabled(trace_only)
 /*static*/ void UserEventRegistry::newEventHan(NewUserEventMsg* msg) {
-  vtAssert(theContext()->getNode() == 0, "Must be node 0");
+  vtAssert(theContext()->getNodeStrong() == 0, "Must be node 0");
   insertNewUserEvent(msg->id_, msg->name_);
 }
 
@@ -84,7 +84,7 @@ UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
   auto id = std::get<0>(ret);
   auto inserted = std::get<1>(ret);
   if (inserted) {
-    auto const node  = theContext()->getNode();
+    auto const node  = theContext()->getNodeStrong();
     if (node != NodeT{0}) {
       auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
       theMsg()->sendMsg<newEventHan>(NodeT{0}, msg);
@@ -96,7 +96,7 @@ UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
 UserEventIDType UserEventRegistry::rooted(std::string const& in_event_name) {
   auto ret = newEventImpl(false, true, in_event_name, cur_root_event_++);
   auto id = std::get<0>(ret);
-  auto const node  = theContext()->getNode();
+  auto const node  = theContext()->getNodeStrong();
   if (node != NodeT{0}) {
     auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
     theMsg()->sendMsg<newEventHan>(NodeT{0}, msg);
@@ -109,7 +109,7 @@ UserEventIDType UserEventRegistry::user(
 ) {
   auto ret = newEventImpl(true, false, in_event_name, seq);
   auto id = std::get<0>(ret);
-  auto const node  = theContext()->getNode();
+  auto const node  = theContext()->getNodeStrong();
   if (node != NodeT{0}) {
     auto msg = makeMessage<NewUserEventMsg>(true, id, in_event_name);
     theMsg()->sendMsg<newEventHan>(NodeT{0}, msg);
@@ -127,7 +127,7 @@ std::tuple<UserEventIDType, bool> UserEventRegistry::newEventImpl(
   bool user, bool rooted, std::string const& in_event, UserSpecEventIDType id,
   bool hash
 ) {
-  auto const node  = theContext()->getNode();
+  auto const node  = theContext()->getNodeStrong();
   auto const event = createEvent(user, rooted, node, id, hash);
   auto const inserted = insertEvent(event, in_event);
   return std::make_tuple(event, inserted);

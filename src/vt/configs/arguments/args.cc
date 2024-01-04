@@ -797,7 +797,7 @@ namespace {
 static std::string buildRankFile(std::string const& file) {
   std::string name = file;
   std::size_t rank = name.find("%p");
-  auto str_rank = std::to_string(theContext()->getNode());
+  auto str_rank = std::to_string(theContext()->getNodeStrong());
   if (rank == std::string::npos) {
     name = name + str_rank;
   } else {

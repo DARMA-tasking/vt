@@ -81,7 +81,7 @@ bool Tree::isRoot() const {
 }
 
 Tree::NodeListType Tree::getChildren(NodeT node) const {
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& num_nodes = theContext()->getNumNodesStrong();
   auto const& c1_ = node * 2 + 1;
   auto const& c2_ = node * 2 + 2;
   NodeListType children;
@@ -133,8 +133,8 @@ void Tree::foreachChild(NumLevelsType level, OperationType op) const {
 
 void Tree::setupTree() {
   if (not set_up_tree_) {
-    auto const& this_node_ = theContext()->getNode();
-    auto const& num_nodes_ = theContext()->getNumNodes();
+    auto const& this_node_ = theContext()->getNodeStrong();
+    auto const& num_nodes_ = theContext()->getNumNodesStrong();
 
     auto const& c1_ = this_node_ * 2 + 1;
     auto const& c2_ = this_node_ * 2 + 2;
@@ -157,8 +157,8 @@ void Tree::setupTree() {
 }
 
 Tree::NumLevelsType Tree::numLevels() const {
-  auto const& num_nodes = theContext()->getNumNodes();
-  auto const& levels = std::log2(num_nodes.get());
+  auto const num_nodes = theContext()->getNumNodesStrong();
+  auto const levels = std::log2(num_nodes.get());
   return levels;
 }
 

@@ -69,7 +69,7 @@ template <typename T>
 typename CallbackAnon<MsgT>::template IsVoidType<T>
 CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   // Overload when the signal is void
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& pipe_node = PipeIDBuilder::getNode(pid);
   vt_debug_print(
     terse, pipe,
@@ -89,7 +89,7 @@ template <typename T>
 typename CallbackAnon<MsgT>::template IsNotVoidType<T>
 CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   // Overload when the signal is non-void
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& pipe_node = PipeIDBuilder::getNode(pid);
   vt_debug_print(
     terse, pipe,

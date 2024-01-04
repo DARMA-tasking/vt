@@ -568,7 +568,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT>
   [[deprecated("size must be set in makeMessageSz, use regular sendMsg")]]
   PendingSendType sendMsgSz(
-    NodeT dest,
+    BaseNodeType dest,
     HandlerType han,
     MsgPtrThief<MsgT> msg,
     ByteType msg_size,
@@ -589,7 +589,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename MsgT>
   PendingSendType sendMsg(
-    NodeT dest,
+    BaseNodeType dest,
     HandlerType han,
     MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
@@ -611,7 +611,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename MsgT>
   PendingSendType sendMsgAuto(
-    NodeT dest,
+    BaseNodeType dest,
     HandlerType han,
     MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
@@ -726,7 +726,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsg(
-    NodeT dest,
+    BaseNodeType dest,
     MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
@@ -744,7 +744,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <auto f>
   PendingSendType sendMsg(
-    NodeT dest,
+    BaseNodeType dest,
     MsgPtrThief<typename FuncTraits<decltype(f)>::MsgT> msg,
     TagType tag = no_tag
   ) {
@@ -761,7 +761,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the \c PendingSend for the sent message
    */
   template <auto f, typename... Params>
-  PendingSendType send(NodeT dest, Params&&... params) {
+  PendingSendType send(BaseNodeType dest, Params&&... params) {
     using Tuple = typename FuncTraits<decltype(f)>::TupleType;
     using MsgT = ParamMsg<Tuple>;
     auto msg = vt::makeMessage<MsgT>();
@@ -807,7 +807,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   [[deprecated("size must be set in makeMessageSz, use regular sendMsg")]]
   PendingSendType sendMsgSz(
-    NodeT dest,
+    BaseNodeType dest,
     MsgPtrThief<MsgT> msg,
     ByteType msg_size,
     TagType tag = no_tag
@@ -846,7 +846,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsgAuto(
-    NodeT dest,
+    BaseNodeType dest,
     MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
@@ -922,7 +922,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <ActiveFnType* f, typename MsgT>
   PendingSendType sendMsg(
-    NodeT dest,
+    BaseNodeType dest,
     MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
@@ -1037,7 +1037,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename FunctorT,typename MsgT>
   PendingSendType sendMsg(
-    NodeT dest,
+    BaseNodeType dest,
     MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
@@ -1055,7 +1055,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename FunctorT>
   PendingSendType sendMsg(
-    NodeT dest,
+    BaseNodeType dest,
     MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
     TagType tag = no_tag
   );
@@ -1078,7 +1078,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType sendMsgAuto(
-    NodeT dest,
+    BaseNodeType dest,
     MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
@@ -1165,7 +1165,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename MsgT>
   PendingSendType sendMsg(
-    NodeT dest,
+    BaseNodeType dest,
     HandlerType han,
     MsgPtrThief<MsgT> msg,
     UserSendFnType send_payload_fn
@@ -1184,7 +1184,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsg(
-    NodeT dest,
+    BaseNodeType dest,
     MsgPtrThief<MsgT> msg,
     UserSendFnType send_payload_fn
   );

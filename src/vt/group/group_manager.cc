@@ -78,7 +78,7 @@ GroupType GroupManager::newGroupCollective(
 }
 
 GroupType GroupManager::newGroupCollectiveLabel(GroupCollectiveLabelTagType) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto next_id = next_collective_group_id_++;
   auto const& id = GroupIDBuilder::createGroupID(next_id,this_node,true,true);
   return id;
@@ -88,7 +88,7 @@ GroupType GroupManager::newCollectiveGroup(
   bool const is_in_group, bool const is_static, ActionGroupType action,
   bool make_mpi_group
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto new_id = next_collective_group_id_++;
   bool const is_collective = true;
   auto const& group = GroupIDBuilder::createGroupID(
@@ -104,7 +104,7 @@ GroupType GroupManager::newCollectiveGroup(
 GroupType GroupManager::newLocalGroup(
   RegionPtrType in_region, bool const is_static, ActionGroupType action
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto new_id = next_group_id_++;
   bool const is_collective = false;
   auto const& group = GroupIDBuilder::createGroupID(
@@ -329,7 +329,7 @@ EventType GroupManager::sendGroupCollective(
   }
 
   if (in_group && group_ready) {
-    auto const& this_node = theContext()->getNode();
+    auto const& this_node = theContext()->getNodeStrong();
     auto const& dest = envelopeGetDest(msg->env);
     auto const& is_bcast = envelopeIsBcast(msg->env);
     auto const& is_group_collective = GroupIDBuilder::isCollective(group);
@@ -437,7 +437,7 @@ EventType GroupManager::sendGroup(
   bool const is_root,
   bool* const deliver
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& msg = base.get();
   auto const& group = envelopeGetGroup(msg->env);
   auto const& dest = envelopeGetDest(msg->env);

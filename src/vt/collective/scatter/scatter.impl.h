@@ -59,7 +59,7 @@ void Scatter::scatter(
   std::size_t const& total_size, std::size_t const& max_proc_size,
   FuncSizeType size_fn, FuncDataType data_fn
 ) {
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodesStrong();
   auto const elm_size = max_proc_size;
   auto const combined_size = static_cast<size_t>(num_nodes * elm_size);
   auto scatter_msg =
@@ -90,7 +90,7 @@ void Scatter::scatter(
   );
   vtAssert(nptr == ptr + combined_size, "nptr must match size");
   auto const& handler = auto_registry::makeScatterHandler<MessageT, f>();
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   scatter_msg->user_han = handler;
   if (this_node != root_node) {
     theMsg()->sendMsg<scatterHandler>(

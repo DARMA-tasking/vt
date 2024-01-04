@@ -84,7 +84,7 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
       &control_window_
     );
     {
-      auto this_node = theContext()->getNode();
+      auto this_node = theContext()->getNodeStrong();
       LockMPI _scope_lock(Lock::Exclusive, this_node, control_window_, false);
       auto mpi_type = TypeMPI<uint64_t>::getType();
       MPI_Put(&count_, 1, mpi_type, this_node, 0, 1, mpi_type, control_window_);
@@ -136,7 +136,7 @@ std::shared_ptr<LockMPI> Holder<T,E>::lock(Lock l, vt::NodeT node) {
 template <typename T, HandleEnum E>
 template <typename Callable>
 void Holder<T,E>::access(Lock l, Callable fn, std::size_t offset) {
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
 
   LockMPI _scope_lock(l, this_node, data_window_);
   fn(data_base_ + offset, count_ - offset);

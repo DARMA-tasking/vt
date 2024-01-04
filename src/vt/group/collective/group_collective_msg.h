@@ -86,7 +86,7 @@ private:
   bool is_in_group = false;
   bool is_static_ = true;
   ::vt::NodeT child_node_ = {};
-  ::vt::NodeT subtree_size_ = 0;
+  ::vt::NodeT subtree_size_ = NodeT{0};
   CountType extra_nodes_ = 0;
   CountType level_ = 0;
 };

@@ -107,7 +107,7 @@ struct PipeManager
    * \return a callback
    */
   template <typename FunctorT>
-  auto makeSend(NodeType node);
+  auto makeSend(BaseNodeType node);
 
   /**
    * \brief Make callback to an active function
@@ -261,7 +261,7 @@ struct PipeManager
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   [[deprecated("Replace with call to makeSend<auto f>")]]
-  Callback<MsgT> makeSend(NodeType const& node);
+  Callback<MsgT> makeSend(BaseNodeType const& node);
 
   /**
    * \brief Make a callback to a particular collection element invoking a

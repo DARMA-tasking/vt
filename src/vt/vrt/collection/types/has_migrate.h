@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_node.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_HAS_MIGRATE_H
 #define INCLUDED_VT_VRT_COLLECTION_TYPES_HAS_MIGRATE_H
 
@@ -49,7 +50,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 struct HasMigrate {
-  virtual void migrate(NodeT const& to_node) = 0;
+  virtual void migrate(BaseNodeType const to_node) = 0;
 };
 
 }}} /* end namespace vt::vrt::collection */

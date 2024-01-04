@@ -52,7 +52,7 @@ ProposedReassignment::ProposedReassignment(
 ) : ComposedModel(base)
   , reassignment_(reassignment)
 {
-  vtAssert(reassignment_->node_ == vt::theContext()->getNode(),
+  vtAssert(reassignment_->node_ == vt::theContext()->getNodeStrong(),
            "ProposedReassignment model needs to be applied to the present node's data");
 
   // Check invariants?

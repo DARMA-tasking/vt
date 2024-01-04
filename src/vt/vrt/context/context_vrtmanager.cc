@@ -49,7 +49,7 @@
 namespace vt { namespace vrt {
 
 VirtualContextManager::VirtualContextManager()
-  : curIdent_(0), myNode_(theContext()->getNode())
+  : curIdent_(0), myNode_(theContext()->getNodeStrong())
 { }
 
 VirtualProxyType VirtualContextManager::makeVirtualPlaceholder() {

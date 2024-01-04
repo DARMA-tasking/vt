@@ -232,7 +232,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 LBDataHolder::LBDataHolder(nlohmann::json const& j)
   : count_(0)
 {
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
 
   // read metadata for skipped and identical phases
   readMetadata(j);

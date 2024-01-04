@@ -52,13 +52,13 @@ static void getCallbackHandler(Callback<int> cb);
 
 // An active message handler used as the target for a callback
 static void callbackHandler(int data) {
-  NodeT const cur_node = ::vt::theContext()->getNode();
+  auto const cur_node = ::vt::theContext()->getNode();
   ::fmt::print("{}: triggering active message callback: {}\n", cur_node, data);
 }
 
 // An active message handler used as the target for a callback
 static void callbackBcastHandler(int data) {
-  NodeType const cur_node = ::vt::theContext()->getNode();
+  auto const cur_node = ::vt::theContext()->getNode();
   ::fmt::print(
     "{}: triggering active message callback bcast: {}\n", cur_node, data
   );
@@ -81,18 +81,18 @@ static inline void activeMessageCallback() {
     // Node sending the callback message to, which shall invoke the callback
     auto const to_node = NodeT{1};
     // Node that we want to callback to execute on
-    NodeType const cb_node = 0;
+    auto const cb_node = NodeT{0};
 
     // Example of active message handler callback with send node
     {
       auto cb = ::vt::theCB()->makeSend<callbackHandler>(cb_node);
-      ::vt::theMsg()->send<getCallbackHandler>(Node{to_node}, cb);
+      ::vt::theMsg()->send<getCallbackHandler>(NodeT{to_node}, cb);
     }
 
     // Example of active message handler callback with broadcast
     {
       auto cb = ::vt::theCB()->makeBcast<callbackBcastHandler>();
-      ::vt::theMsg()->send<getCallbackHandler>(Node{to_node}, cb);
+      ::vt::theMsg()->send<getCallbackHandler>(NodeT{to_node}, cb);
     }
   }
 }

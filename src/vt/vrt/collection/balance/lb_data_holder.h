@@ -135,15 +135,11 @@ public:
   std::unordered_map<PhaseType, std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
-<<<<<<< HEAD
 
   std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
   /// User-defined data from each phase for LB
   std::unordered_map<PhaseType, DataMapType> user_defined_lb_info_;
   /// Node indices for each ID along with the proxy ID
-=======
-  /// NodeT indices for each ID along with the proxy ID
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy
   std::unordered_map<ElementIDStruct, ObjGroupProxyType> node_objgroup_;

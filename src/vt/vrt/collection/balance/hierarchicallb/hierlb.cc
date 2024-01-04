@@ -160,8 +160,8 @@ void HierarchicalLB::setupTree(TimeType const threshold) {
     "Tree must not already be set up when is this called"
   );
 
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& this_node = theContext()->getNodeStrong();
+  auto const& num_nodes = theContext()->getNumNodesStrong();
 
   this_threshold = threshold.seconds();
 
@@ -253,7 +253,7 @@ double HierarchicalLB::getSumLoad() const {
 }
 
 void HierarchicalLB::loadStats() {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   auto avg_load = getAvgLoad();
   auto total_load = getSumLoad();
   auto I = getStats()->at(lb::Statistic::Rank_load_modeled).at(
@@ -394,7 +394,7 @@ void HierarchicalLB::startMigrations() {
     "startMigrations\n"
   );
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   for (auto&& bin : taken_objs) {
     for (auto&& obj_id : bin.second) {
@@ -477,7 +477,7 @@ void HierarchicalLB::lbTreeUp(
   LoadType const child_load, NodeT const child, ObjSampleType load,
   NodeT const child_size
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   vt_debug_print(
     normal, hierlb,
@@ -613,7 +613,7 @@ HierLBChild* HierarchicalLB::findMinChild() {
 }
 
 void HierarchicalLB::sendDownTree() {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   vt_debug_print(
     normal, hierlb,
@@ -693,7 +693,7 @@ void HierarchicalLB::sendDownTree() {
 }
 
 void HierarchicalLB::distributeAmongChildren() {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   vt_debug_print(
     normal, hierlb,

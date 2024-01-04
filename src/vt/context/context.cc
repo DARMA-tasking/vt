@@ -109,7 +109,7 @@ NodeT Context::getFromNodeCurrentTask() const {
     }
   }
 #endif
-  return getNode();
+  return getNodeStrong();
 }
 
 #if vt_check_enabled(trace_enabled)
@@ -133,19 +133,19 @@ namespace vt { namespace debug {
 NodeT preNode() {
   #if !vt_check_enabled(trace_only)
   return ::vt::curRT != nullptr and ::vt::curRT->isLive() ?
-    theContext()->getNode() :
+    theContext()->getNodeStrong() :
     NodeT{-1};
   #else
-    return theContext() ? theContext()->getNode() : NodeT{-1};
+    return theContext() ? theContext()->getNodeStrong() : NodeT{-1};
   #endif
 }
 NodeT preNodes() {
   #if !vt_check_enabled(trace_only)
   return ::vt::curRT != nullptr and ::vt::curRT->isLive() ?
-    theContext()->getNumNodes() :
+    theContext()->getNumNodesStrong() :
     NodeT{-1};
   #else
-    return theContext() ? theContext()->getNode() : NodeT{-1};
+    return theContext() ? theContext()->getNodeStrong() : NodeT{-1};
   #endif
 }
 

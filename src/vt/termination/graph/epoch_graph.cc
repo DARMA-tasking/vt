@@ -207,7 +207,7 @@ std::string EpochGraph::outputDOT(bool verbose) {
 }
 
 void EpochGraph::writeToFile(std::string const& dot, bool global, std::string tag) {
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
   auto const base_file = "epoch_graph";
   if (tag != "") {
     tag = tag + ".";

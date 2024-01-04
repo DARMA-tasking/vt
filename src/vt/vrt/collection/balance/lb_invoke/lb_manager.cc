@@ -199,7 +199,7 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
 
   last_phase_info_->migration_count = reassignment->global_migration_count;
   last_phase_info_->ran_lb = true;
-  if (theContext()->getNode() == 0) {
+  if (theContext()->getNodeStrong() == 0) {
     stagePostLBStatistics(stats, last_phase_info_->migration_count);
     commitPhaseStatistics(phase);
   }
@@ -238,7 +238,7 @@ LBManager::runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb) {
     computeStatistics(model_, false, phase, stats_cb);
   });
 
-  if (theContext()->getNode() == 0) {
+  if (theContext()->getNodeStrong() == 0) {
     stagePreLBStatistics(stats);
   }
   elm::CommMapType empty_comm;
@@ -290,7 +290,7 @@ void LBManager::startLB(
     "LBManager::startLB: phase={}\n", phase
   );
 
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   if (this_node == vt::NodeT{0} and not theConfig()->vt_lb_quiet) {
     vt_debug_print(
@@ -319,7 +319,7 @@ void LBManager::startLB(
       before_lb_stats_ = true;
       computeStatistics(model_, false, phase, stats_cb);
     });
-    if (theContext()->getNode() == 0) {
+    if (theContext()->getNodeStrong() == 0) {
       stagePreLBStatistics(stats);
       commitPhaseStatistics(phase);
     }
@@ -528,7 +528,7 @@ void LBManager::statsHandler(std::vector<balance::LoadData> const& in_stat_vec) 
       last_phase_info_->max_obj = max;
     }
 
-    if (theContext()->getNode() == 0) {
+    if (theContext()->getNodeStrong() == 0) {
       vt_debug_print(
         normal, lb,
         "LBManager: Statistic={}: "
@@ -545,7 +545,7 @@ void LBManager::statsHandler(std::vector<balance::LoadData> const& in_stat_vec) 
 
 void LBManager::stagePreLBStatistics(const StatisticMapType &statistics) {
   // Statistics output when LB is enabled and appropriate flag is enabled
-  if (theContext()->getNode() != 0 or !theConfig()->vt_lb_statistics) {
+  if (theContext()->getNodeStrong() != 0 or !theConfig()->vt_lb_statistics) {
     return;
   }
 
@@ -565,7 +565,7 @@ void LBManager::stagePostLBStatistics(
   const StatisticMapType &statistics, int32_t migration_count
 ) {
   // Statistics output when LB is enabled and appropriate flag is enabled
-  if (theContext()->getNode() != 0 or !theConfig()->vt_lb_statistics) {
+  if (theContext()->getNodeStrong() != 0 or !theConfig()->vt_lb_statistics) {
     return;
   }
 
@@ -584,7 +584,7 @@ void LBManager::stagePostLBStatistics(
 
 void LBManager::commitPhaseStatistics(PhaseType phase) {
   // Statistics output when LB is enabled and appropriate flag is enabled
-  if (theContext()->getNode() != 0 or !theConfig()->vt_lb_statistics) {
+  if (theContext()->getNodeStrong() != 0 or !theConfig()->vt_lb_statistics) {
     return;
   }
 
@@ -735,7 +735,7 @@ bool LBManager::isCollectiveComm(elm::CommCategory cat) const {
 }
 
 void LBManager::createStatisticsFile() {
-  if (theConfig()->vt_lb_statistics and theContext()->getNode() == 0) {
+  if (theConfig()->vt_lb_statistics and theContext()->getNodeStrong() == 0) {
     auto const file_name = theConfig()->getLBStatisticsFile();
     auto const compress = theConfig()->vt_lb_statistics_compress;
 
@@ -747,7 +747,7 @@ void LBManager::createStatisticsFile() {
     auto const dir = theConfig()->vt_lb_statistics_dir;
     // NodeT 0 creates the directory
     if (
-      theContext()->getNode() == 0 and
+      theContext()->getNodeStrong() == 0 and
       not dir.empty() and not created_lbstats_dir_
     ) {
       int flag = mkdir(dir.c_str(), S_IRWXU);
@@ -777,7 +777,7 @@ void LBManager::closeStatisticsFile() {
 // not self-send and have a non-local edge
 std::unordered_map<NodeT, lb::BaseLB::ElementCommType>
 getSharedEdges(elm::CommMapType const& comm_data) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   std::unordered_map<NodeT, lb::BaseLB::ElementCommType> shared_edges;
 
   vt_debug_print(

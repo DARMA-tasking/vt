@@ -88,7 +88,7 @@ EpochManip::EpochManip()
 /*static*/ EpochType EpochManip::generateRootedEpoch(
   eEpochCategory const& category
 ) {
-  auto const root_node = theContext()->getNode();
+  auto const root_node = theContext()->getNodeStrong();
   return generateEpoch(true,root_node,category);
 }
 
@@ -103,7 +103,7 @@ EpochType EpochManip::getNextCollectiveEpoch(
 EpochType EpochManip::getNextRootedEpoch(
   eEpochCategory const& category
 ) {
-  auto const root_node = theContext()->getNode();
+  auto const root_node = theContext()->getNodeStrong();
   auto const arch_epoch = getNextRootedEpoch(category, root_node);
   return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
 }

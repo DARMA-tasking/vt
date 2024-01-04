@@ -68,7 +68,7 @@ template <typename MsgT>
 /*static*/ void Info::groupSetupHandler(MsgT* msg) {
   using RangeType = typename MsgT::RangeType;
 
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& group_size = msg->getCount();
   auto const& group_total_size = msg->getTotalCount();
   auto const& group_root = msg->getRoot();

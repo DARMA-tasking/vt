@@ -154,7 +154,7 @@ void LBDataRestartReader::determinePhasesToMigrate() {
   std::vector<bool> local_changed_distro;
   local_changed_distro.resize(num_phases_ - 1);
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   runInEpochCollective("LBDataRestartReader::updateLocations", [&]{
     for (PhaseType i = 0; i < num_phases_ - 1; ++i) {

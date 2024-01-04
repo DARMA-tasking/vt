@@ -109,7 +109,7 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
 
   if (this_node == vt::NodeT{0}) {
     EXPECT_EQ(cb_counter, 1);
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
   }
 
   /// Run RotateLB to make the previous group invalid!
@@ -148,7 +148,7 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
 
   if (this_node == vt::NodeT{0}) {
     EXPECT_EQ(cb_counter, 2);
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
   }
 
   vt::runInEpochCollective([&]{
@@ -180,7 +180,7 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
 
   if (this_node == vt::NodeT{0}) {
     EXPECT_EQ(cb_counter, 3);
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
   }
 
 }

@@ -107,7 +107,7 @@ void colHanVecProxyAR(MyCol* col) {
   auto cb = vt::theCB()->makeSend<CheckVec>(NodeT{0});
   vtAssertExpr(cb.valid());
   proxy.reduce<vt::collective::PlusOp<VectorPayload>>(reduce_msg.get(),cb);
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
 }
 
 void colHanNoneCB(MyCol* col) {
@@ -125,7 +125,7 @@ void colHanNoneCB(MyCol* col) {
   auto cb = vt::theCB()->makeSend<NoneReduce>(NodeT{0});
   vtAssertExpr(cb.valid());
   proxy.reduce(rmsg.get(),cb);
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
 }
 
 }}}} // end namespace vt::tests::unit::reduce

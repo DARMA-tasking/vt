@@ -301,7 +301,7 @@ TEST_F(TestObjGroup, test_proxy_multicast) {
     if (this_node == 0) {
       // Create list of nodes and multicast to them
       List::ListType range;
-      for (vt::NodeType node = 0; node < num_nodes; ++node) {
+      for (vt::NodeT node = 0; node < num_nodes; ++node) {
         if (node % 2 == 0) {
           range.push_back(node);
         }

@@ -79,9 +79,9 @@ struct Range : Region {
   friend struct RangeData;
 
 private:
-  BoundType const lo_ = BoundType{};
-  BoundType const hi_ = BoundType{};
-  BoundType const stride_ = BoundType{1};
+  BoundTypeInternal const lo_ = BoundTypeInternal{};
+  BoundTypeInternal const hi_ = BoundTypeInternal{};
+  BoundTypeInternal const stride_ = BoundTypeInternal{1};
   bool made_list_ = false;
   ListType list_;
 };

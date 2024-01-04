@@ -59,7 +59,7 @@ LocRecord<EntityID>::LocRecord(
 
 template <typename EntityID>
 void LocRecord<EntityID>::updateNode(NodeT const& new_node) {
-  if (new_node == theContext()->getNode()) {
+  if (new_node == theContext()->getNodeStrong()) {
     state_ = eLocState::Local;
   } else {
     state_ = eLocState::Remote;

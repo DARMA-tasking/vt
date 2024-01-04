@@ -70,8 +70,8 @@
 namespace vt { namespace group {
 
 void InfoColl::setupCollectiveSingular() {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& this_node = theContext()->getNodeStrong();
+  auto const& num_nodes = theContext()->getNumNodesStrong();
   auto const& in_group = is_in_group;
   vtAssert(num_nodes == vt::NodeT{1}, "This method handles single node case");
   if (in_group) {
@@ -110,7 +110,7 @@ void InfoColl::freeComm() {
 }
 
 void InfoColl::setupCollective() {
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& num_nodes = theContext()->getNumNodesStrong();
   auto const& group_ = getGroupID();
 
   vtAssert(!collective_  , "Collective should not be initialized");
@@ -143,7 +143,7 @@ void InfoColl::setupCollective() {
     // group creation is a collective invocation.
     theGroup()->collective_scope_.mpiCollectiveWait(
       [in_group,this]{
-        auto const this_node_impl = theContext()->getNode();
+        auto const this_node_impl = theContext()->getNodeStrong();
         auto const cur_comm = theContext()->getComm();
         int32_t const group_color = in_group;
         MPI_Comm_split(cur_comm, group_color, this_node_impl, &mpi_group_comm_);
@@ -223,7 +223,7 @@ void InfoColl::setupCollective() {
 
   if (collective_->getInitialChildren() == 0) {
     auto const& size = static_cast<::vt::NodeT  >(is_in_group ? 1 : 0);
-    auto const& child = theContext()->getNode();
+    auto const& child = theContext()->getNodeStrong();
     auto msg = makeMessage<GroupCollectiveMsg>(
       group_, up_tree_cont_, in_group, size, child
     );
@@ -271,7 +271,7 @@ void InfoColl::upTree() {
 
   if (is_root) {
     if (is_in_group) {
-      auto const& this_node = theContext()->getNode();
+      auto const& this_node = theContext()->getNodeStrong();
       for (auto&& msg : msg_in_group) {
         span_children_.push_back(msg->getChild());
       }
@@ -363,7 +363,7 @@ void InfoColl::upTree() {
      *  Case where we have an approx. a balanced tree: send up the tree like
      *  usual
      */
-    auto const child = theContext()->getNode();
+    auto const child = theContext()->getNodeStrong();
     auto const total_subtree = static_cast<::vt::NodeT  >(subtree_ + subtree_this);
     auto const level =
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
@@ -388,7 +388,7 @@ void InfoColl::upTree() {
      * bypassing this node that is null: thus, forward the non-null's child's
      * message up the initial spanning tree
      */
-    auto const child = theContext()->getNode();
+    auto const child = theContext()->getNodeStrong();
     auto const extra = static_cast<GroupCollectiveMsg::CountType>(
       msg_in_group.size()
     );
@@ -422,7 +422,7 @@ void InfoColl::upTree() {
      * child in the spanning tree because that will create a stick-like graph,
      * loosing efficiency!
      */
-    auto const child = theContext()->getNode();
+    auto const child = theContext()->getNodeStrong();
     auto const extra = 1;
 
     subtree_ -= msg_in_group[0]->getSubtreeSize();
@@ -459,7 +459,7 @@ void InfoColl::upTree() {
 
     auto const extra =
       static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size() / 2);
-    auto const child = theContext()->getNode();
+    auto const child = theContext()->getNodeStrong();
 
     auto tree_iter = msg_list.rbegin();
     for (int i = 0; i < extra; i++) {
@@ -527,7 +527,7 @@ RemoteOperationIDType InfoColl::makeCollectiveContinuation(
 }
 
 void InfoColl::newRoot(GroupCollectiveMsg* msg) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   vt_debug_print(
     normal, group,
@@ -701,7 +701,7 @@ void InfoColl::finalize() {
       buf[0] = '\0';
       int cur = 0;
       for (auto&& elm : collective_->span_children_) {
-        cur += snprintf(buf + cur, max_buffer_length - cur, "%d,", elm);
+        cur += snprintf(buf + cur, max_buffer_length - cur, "%d,", elm.get());
       }
 
       auto const& num_children = collective_->span_children_.size();

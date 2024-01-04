@@ -158,13 +158,13 @@ HandleSet<T> Manager::makeHandleSetCollectiveObjGroup(
   using LookupType = LookupT;
   using IndexType  = typename HandleSet<T>::IndexType;
   using SubType = SubHandle<T, vt::rdma::HandleEnum::StaticSize, IndexType>;
-  auto const num_nodes = vt::theContext()->getNumNodes();
+  auto const num_nodes = vt::theContext()->getNumNodesStrong();
   IndexType range(static_cast<LookupType>(num_nodes), max_lookup);
   auto proxy = SubType::template construct<Manager::staticHandleMap>(
     false, range, dense_start_with_zero
   );
   HandleSet<T> set(typename HandleSet<T>::BuildSetTagType{});
-  auto const this_node = static_cast<LookupT>(vt::theContext()->getNode());
+  auto const this_node = static_cast<LookupT>(vt::theContext()->getNodeStrong());
   for (auto&& elm : map) {
     IndexType idx(this_node, elm.first);
     set.addHandle(idx, proxy.get()->addLocalIndex(idx, elm.second));

@@ -68,7 +68,7 @@ struct Migratable : MigrateHookBase, storage::Storable {
    * The user or runtime system can invoke this method at any time (when a valid
    * pointer to it exists) to migrate this VCC element to another memory domain
    *
-   *  1.  Invoke migrate(node) where node != theContext()->getNode()
+   *  1.  Invoke migrate(node) where node != theContext()->getNodeStrong()
    *  2.  Runtime system invokes Migratable::preMigrateOut()
    *  3.  Migratable element is serialized
    *  4.  Migratable element is sent to the destination node

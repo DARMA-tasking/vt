@@ -128,7 +128,7 @@ void Trace::loadAndBroadcastSpec() {
     auto spec_proxy = FileSpec::construct(FileSpecType::TRACE);
 
     theTerm()->produce();
-    if (theContext()->getNode() == 0) {
+    if (theContext()->getNodeStrong() == 0) {
       auto spec_ptr = spec_proxy.get();
       spec_ptr->parse();
       spec_ptr->broadcastSpec();
@@ -230,7 +230,7 @@ void Trace::addUserEvent(UserEventIDType event) {
 
   auto const type = TraceConstantsType::UserEvent;
   auto const time = getCurrentTime();
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   logEvent(
     LogType{time, type, node, event, true}
@@ -265,7 +265,7 @@ void Trace::addUserEventBracketedBegin(UserEventIDType event) {
 
   auto const type = TraceConstantsType::BeginUserEventPair;
   auto const time = getCurrentTime();
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   logEvent(
     LogType{time, type, node, event, true}
@@ -285,7 +285,7 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
 
   auto const type = TraceConstantsType::EndUserEventPair;
   auto const time = getCurrentTime();
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   logEvent(
     LogType{time, type, node, event, true}
@@ -462,7 +462,7 @@ TraceEventIDType Trace::messageCreation(
   }
 
   auto const type = TraceConstantsType::Creation;
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   return logEvent(
     LogType{time, ep, type, node, len}
@@ -477,7 +477,7 @@ TraceEventIDType Trace::messageCreationBcast(
   }
 
   auto const type = TraceConstantsType::CreationBcast;
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   return logEvent(
     LogType{time, ep, type, node, len}
@@ -493,7 +493,7 @@ TraceEventIDType Trace::messageRecv(
   }
 
   auto const type = TraceConstantsType::MessageRecv;
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   return logEvent(
     LogType{time, ep, type, node, len}

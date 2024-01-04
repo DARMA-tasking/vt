@@ -92,10 +92,10 @@ struct PipeManagerTL : virtual PipeManagerBase {
    */
   // Single active message function-handler
   template <auto f, bool is_bcast>
-  auto makeCallbackSingle(NodeType node = uninitialized_destination);
+  auto makeCallbackSingle(NodeT node = {});
 
   template <typename FunctorT, bool is_bcast>
-  auto makeCallbackFunctor(NodeType node = uninitialized_destination);
+  auto makeCallbackFunctor(NodeT node = {});
 
   // Single active message anon func-handler
   auto makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn);

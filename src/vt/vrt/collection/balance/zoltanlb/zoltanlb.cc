@@ -130,7 +130,7 @@ void ZoltanLB::inputParams(balance::ConfigEntry* config) {
 }
 
 void ZoltanLB::runLB(LoadType total_load) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   this_load = total_load;
 
   if (this_node == vt::NodeT{0}) {
@@ -218,7 +218,7 @@ void ZoltanLB::runLB(LoadType total_load) {
 }
 
 void ZoltanLB::makeGraphSymmetric() {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   // Go through the comm graph and extract out paired SendRecv edges that are
   // not self-send and have a non-local edge
@@ -304,7 +304,7 @@ void ZoltanLB::countEdges() {
   int local_edge = 0;
   int remote_owned_edge = 0;
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   for (auto&& elm : load_comm_symm) {
     if (
       elm.first.cat_ == elm::CommCategory::SendRecv and
@@ -352,7 +352,7 @@ void ZoltanLB::reduceCount(int max_edges_per_node) {
 void ZoltanLB::allocateShareEdgeGIDs() {
   std::unordered_map<NodeT, ElementCommType> shared_edges;
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   for (auto&& elm : load_comm_symm) {
     auto from = elm.first.fromObj();
     auto to = elm.first.toObj();

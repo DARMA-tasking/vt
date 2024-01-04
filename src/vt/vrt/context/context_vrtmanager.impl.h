@@ -97,7 +97,7 @@ template <typename SysMsgT>
   if (info.isImmediate) {
     // nothing to do here?
   } else {
-    auto const& cons_node = theContext()->getNode();
+    auto const& cons_node = theContext()->getNodeStrong();
     auto const& req_node = info.from_node;
     auto const& request_id = info.req_id;
 
@@ -117,7 +117,7 @@ template <typename VrtContextT, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualNode(
   NodeT const& node, Args&& ... args
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   if (node != this_node) {
     return makeVirtualRemote<VrtContextT>(
       node, true, nullptr, std::forward<Args>(args)...
@@ -193,7 +193,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
 
   auto sys_msg = makeMessage<MsgType>(ArgsTupleType{std::forward<Args>(args)...});
 
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   std::unique_ptr<RemoteVrtInfo> info = nullptr;
   VirtualProxyType return_proxy = no_vrt_proxy;
 

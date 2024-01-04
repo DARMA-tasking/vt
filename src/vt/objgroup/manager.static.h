@@ -55,8 +55,8 @@ namespace vt { namespace objgroup {
 
 template <typename MsgT>
 messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeT dest_node) {
-  auto const num_nodes = theContext()->getNumNodes();
-  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodesStrong();
+  auto const this_node = theContext()->getNodeStrong();
   vtAssert(dest_node < num_nodes, "Invalid node (must be < num_nodes)");
   if (dest_node != this_node) {
     return theMsg()->sendMsg<MsgT>(dest_node, han,msg, no_tag);
@@ -67,7 +67,7 @@ messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeT dest_
       dispatchObjGroup(
         inner_msg.template to<ShortMessage>(),
         envelopeGetHandler(inner_msg->env),
-        theContext()->getNode(),
+        theContext()->getNodeStrong(),
         nullptr
       );
     }};
@@ -78,7 +78,7 @@ template <typename ObjT, typename MsgT, auto f>
 decltype(auto) invoke(
   messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeT dest_node
 ) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   vtAssert(
     dest_node == this_node,

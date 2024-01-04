@@ -63,7 +63,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 void TemperedLB::init(objgroup::proxy::Proxy<TemperedLB> in_proxy) {
   proxy_ = in_proxy;
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   gen_propagate_.seed(this_node + 12345);
   gen_sample_.seed(this_node + 54321);
 }
@@ -306,7 +306,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     "knowledge=UserDefined"
   );
 
-  auto num_nodes = theContext()->getNumNodes().get();
+  auto num_nodes = theContext()->getNumNodesStrong().get();
   if (knowledge_ == KnowledgeEnum::Log) {
     if (specified_fanout) {
       // set the rounds based on the chosen fanout: k=log_f(p)
@@ -405,7 +405,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     "or another option"
   );
 
-  if (theContext()->getNode() == 0) {
+  if (theContext()->getNodeStrong() == 0) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::inputParams: using knowledge={}, fanout={}, rounds={}, "
@@ -453,7 +453,7 @@ void TemperedLB::runLB(LoadType total_load) {
     should_lb = max > (run_temperedlb_tolerance + 1.0) * target_max_load_;
   }
 
-  if (theContext()->getNode() == NodeT{0}) {
+  if (theContext()->getNodeStrong() == NodeT{0}) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
@@ -480,7 +480,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
   LoadType best_imb = start_imb + 10;
   uint16_t best_trial = 0;
 
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
 
   for (trial_ = 0; trial_ < num_trials_; ++trial_) {
     // Clear out data structures
@@ -613,7 +613,7 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
   auto const& in = vec[0];
   new_imbalance_ = in.I();
 
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
   if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, temperedlb,
@@ -633,7 +633,7 @@ void TemperedLB::rejectionStatsHandler(int n_rejected, int n_transfers) {
   double rej = static_cast<double>(n_rejected) /
     static_cast<double>(n_rejected + n_transfers) * 100.0;
 
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
   if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, temperedlb,
@@ -657,7 +657,7 @@ void TemperedLB::informAsync() {
 
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   if (is_underloaded_) {
     underloaded_.insert(this_node);
   }
@@ -704,7 +704,7 @@ void TemperedLB::informSync() {
 
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   if (is_underloaded_) {
     underloaded_.insert(this_node);
   }
@@ -768,8 +768,8 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     trial_, iter_, k_max_, k_cur
   );
 
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const this_node = theContext()->getNodeStrong();
+  auto const num_nodes = theContext()->getNumNodesStrong();
   std::uniform_int_distribution <NodeT::Type  > dist(0, num_nodes.get() - 1);
 
   if (!deterministic_) {
@@ -992,13 +992,8 @@ std::vector <NodeT  > TemperedLB::makeUnderloaded() const {
   return under;
 }
 
-<<<<<<< HEAD
-std::vector<NodeType> TemperedLB::makeSufficientlyUnderloaded(
+std::vector<NodeT> TemperedLB::makeSufficientlyUnderloaded(
   LoadType load_to_accommodate
-=======
-std::vector <NodeT  > TemperedLB::makeSufficientlyUnderloaded(
-  TimeType load_to_accommodate
->>>>>>> db4b7d85c (#2099: Types: Make NodeType a strong type and use it across the codebase)
 ) const {
   std::vector <NodeT  > sufficiently_under = {};
   for (auto&& elm : load_info_) {
@@ -1315,7 +1310,7 @@ void TemperedLB::thunkMigrations() {
     cur_objs_.size()
   );
 
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
   for (auto elm : cur_objs_) {
     auto obj = elm.first;
     migrateObjectTo(obj, this_node);

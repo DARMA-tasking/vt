@@ -61,7 +61,7 @@ void CallbackBcastTypeless::serialize(SerializerT& s) {
 
 template <typename MsgT>
 void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   vt_debug_print(
     terse, pipe,

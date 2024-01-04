@@ -251,7 +251,7 @@ void Runtime::pauseForDebugger() {
   if (theConfig()->vt_pause) {
     constexpr int max_buffer_length = 256;
     char node_str[max_buffer_length];
-    auto node = vt::theContext() ? vt::theContext()->getNode() : -1;
+    auto node = vt::theContext() ? vt::theContext()->getNodeStrong() : -1;
     snprintf(node_str, max_buffer_length, "prog-%d.pid", node);
     auto const pid = getpid();
     FILE* f = fopen(node_str, "w+");
@@ -262,7 +262,7 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::sigHandlerINT(int sig) {
-  auto node      = vt::theContext() ? vt::theContext()->getNode() : NodeT{-1};
+  auto node      = vt::theContext() ? vt::theContext()->getNodeStrong() : NodeT{-1};
   auto vt_pre    = debug::vtPre();
   auto node_str  = ::vt::debug::proc(node);
   auto prefix    = vt_pre + node_str + " ";
@@ -441,7 +441,7 @@ bool Runtime::initialize(bool const force_now) {
     MPI_Comm comm = theContext->getComm();
 
     MPI_Barrier(comm);
-    if (theContext->getNode() == 0) {
+    if (theContext->getNodeStrong() == 0) {
       printStartupBanner();
       // Enqueue a check for later in case arguments are modified before work
       // actually executes
@@ -482,7 +482,7 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
 
     MPI_Comm comm = theContext->getComm();
 
-    auto const& is_zero = theContext->getNode() == 0;
+    auto const& is_zero = theContext->getNodeStrong() == 0;
 
 #   if vt_check_enabled(diagnostics)
     if (getAppConfig()->vt_diag_enable) {
@@ -586,7 +586,7 @@ void Runtime::output(
   std::string const abort_str, ErrorCodeType const code, bool error,
   bool decorate, bool formatted
 ) {
-  auto node      = theContext ? theContext->getNode() : NodeT{-1};
+  auto node      = theContext ? theContext->getNodeStrong() : NodeT{-1};
   auto green     = debug::green();
   auto byellow   = debug::byellow();
   auto red       = debug::red();

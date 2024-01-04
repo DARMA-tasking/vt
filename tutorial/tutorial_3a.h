@@ -75,10 +75,10 @@ static inline void activeMessageTerm() {
   // Create a new epoch: this is a collective invocation
   auto const new_epoch = theTerm()->makeEpochCollective();
 
-  if (this_node == vt::NodeT{0}) {
+  if (this_node == 0) {
     auto msg = vt::makeMessage<ExampleMsg>(8);
     envelopeSetEpoch(msg->env, new_epoch);
-    vt::theMsg()->sendMsg<recurHandler>(this_node+NodeT{1}, msg);
+    vt::theMsg()->sendMsg<recurHandler>(this_node+1, msg);
   }
 
   // Any node that wishes to have a notification on termination for a given

@@ -193,7 +193,7 @@ void PipeManagerBase::triggerPipe(PipeType const& pipe) {
 }
 
 PipeType PipeManagerBase::makePipeID(bool const persist, bool const send_back) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const next_id = cur_pipe_id_++;
   auto const pipe_id = PipeIDBuilder::createPipeID(
     next_id,this_node,send_back,persist

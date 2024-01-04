@@ -54,7 +54,7 @@
 namespace vt { namespace pipe { namespace callback {
 
 void CallbackAnonTypeless::triggerVoid(PipeType const& pipe) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& pipe_node = PipeIDBuilder::getNode(pipe);
   vt_debug_print(
     terse, pipe,

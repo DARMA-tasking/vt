@@ -96,7 +96,7 @@ void RandomLB::inputParams(balance::ConfigEntry* config) {
 }
 
 void RandomLB::runLB(LoadType) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 
   if (this_node == vt::NodeT{0}) {
