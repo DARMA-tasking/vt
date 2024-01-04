@@ -49,8 +49,8 @@ class EmitterState {
   void StartedGroup(GroupType type);
   void EndedGroup(GroupType type);
 
-  EmitterNodeType::value NextGroupType(GroupType type) const;
-  EmitterNodeType::value CurGroupNodeType() const;
+  EmitterNodeType NextGroupType(GroupType type) const;
+  EmitterNodeType CurGroupNodeType() const;
 
   GroupType CurGroupType() const;
   FlowType CurGroupFlowType() const;
@@ -162,7 +162,7 @@ class EmitterState {
 
     SettingChanges modifiedSettings;
 
-    EmitterNodeType::value NodeType() const {
+    EmitterNodeType NodeType() const {
       if (type == GroupType::Seq) {
         if (flowType == FlowType::Flow)
           return EmitterNodeType::FlowSeq;

@@ -275,7 +275,7 @@ bool Emitter::CanEmitNewline() const { return true; }
 
 // Put the stream in a state so we can simply write the next node
 // E.g., if we're in a sequence, write the "- "
-void Emitter::PrepareNode(EmitterNodeType::value child) {
+void Emitter::PrepareNode(EmitterNodeType child) {
   switch (m_pState->CurGroupNodeType()) {
     case EmitterNodeType::NoType:
       PrepareTopNode(child);
@@ -299,7 +299,7 @@ void Emitter::PrepareNode(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::PrepareTopNode(EmitterNodeType::value child) {
+void Emitter::PrepareTopNode(EmitterNodeType child) {
   if (child == EmitterNodeType::NoType)
     return;
 
@@ -325,7 +325,7 @@ void Emitter::PrepareTopNode(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::FlowSeqPrepareNode(EmitterNodeType::value child) {
+void Emitter::FlowSeqPrepareNode(EmitterNodeType child) {
   const std::size_t lastIndent = m_pState->LastIndent();
 
   if (!m_pState->HasBegunNode()) {
@@ -356,7 +356,7 @@ void Emitter::FlowSeqPrepareNode(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::BlockSeqPrepareNode(EmitterNodeType::value child) {
+void Emitter::BlockSeqPrepareNode(EmitterNodeType child) {
   const std::size_t curIndent = m_pState->CurIndent();
   const std::size_t nextIndent = curIndent + m_pState->CurGroupIndent();
 
@@ -390,7 +390,7 @@ void Emitter::BlockSeqPrepareNode(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::FlowMapPrepareNode(EmitterNodeType::value child) {
+void Emitter::FlowMapPrepareNode(EmitterNodeType child) {
   if (m_pState->CurGroupChildCount() % 2 == 0) {
     if (m_pState->GetMapKeyFormat() == LongKey)
       m_pState->SetLongKey();
@@ -407,7 +407,7 @@ void Emitter::FlowMapPrepareNode(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::FlowMapPrepareLongKey(EmitterNodeType::value child) {
+void Emitter::FlowMapPrepareLongKey(EmitterNodeType child) {
   const std::size_t lastIndent = m_pState->LastIndent();
 
   if (!m_pState->HasBegunNode()) {
@@ -438,7 +438,7 @@ void Emitter::FlowMapPrepareLongKey(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::FlowMapPrepareLongKeyValue(EmitterNodeType::value child) {
+void Emitter::FlowMapPrepareLongKeyValue(EmitterNodeType child) {
   const std::size_t lastIndent = m_pState->LastIndent();
 
   if (!m_pState->HasBegunNode()) {
@@ -466,7 +466,7 @@ void Emitter::FlowMapPrepareLongKeyValue(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::FlowMapPrepareSimpleKey(EmitterNodeType::value child) {
+void Emitter::FlowMapPrepareSimpleKey(EmitterNodeType child) {
   const std::size_t lastIndent = m_pState->LastIndent();
 
   if (!m_pState->HasBegunNode()) {
@@ -497,7 +497,7 @@ void Emitter::FlowMapPrepareSimpleKey(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::FlowMapPrepareSimpleKeyValue(EmitterNodeType::value child) {
+void Emitter::FlowMapPrepareSimpleKeyValue(EmitterNodeType child) {
   const std::size_t lastIndent = m_pState->LastIndent();
 
   if (!m_pState->HasBegunNode()) {
@@ -528,7 +528,7 @@ void Emitter::FlowMapPrepareSimpleKeyValue(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::BlockMapPrepareNode(EmitterNodeType::value child) {
+void Emitter::BlockMapPrepareNode(EmitterNodeType child) {
   if (m_pState->CurGroupChildCount() % 2 == 0) {
     if (m_pState->GetMapKeyFormat() == LongKey)
       m_pState->SetLongKey();
@@ -548,7 +548,7 @@ void Emitter::BlockMapPrepareNode(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::BlockMapPrepareLongKey(EmitterNodeType::value child) {
+void Emitter::BlockMapPrepareLongKey(EmitterNodeType child) {
   const std::size_t curIndent = m_pState->CurIndent();
   const std::size_t childCount = m_pState->CurGroupChildCount();
 
@@ -583,7 +583,7 @@ void Emitter::BlockMapPrepareLongKey(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::BlockMapPrepareLongKeyValue(EmitterNodeType::value child) {
+void Emitter::BlockMapPrepareLongKeyValue(EmitterNodeType child) {
   const std::size_t curIndent = m_pState->CurIndent();
 
   if (child == EmitterNodeType::NoType)
@@ -613,7 +613,7 @@ void Emitter::BlockMapPrepareLongKeyValue(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::BlockMapPrepareSimpleKey(EmitterNodeType::value child) {
+void Emitter::BlockMapPrepareSimpleKey(EmitterNodeType child) {
   const std::size_t curIndent = m_pState->CurIndent();
   const std::size_t childCount = m_pState->CurGroupChildCount();
 
@@ -641,7 +641,7 @@ void Emitter::BlockMapPrepareSimpleKey(EmitterNodeType::value child) {
   }
 }
 
-void Emitter::BlockMapPrepareSimpleKeyValue(EmitterNodeType::value child) {
+void Emitter::BlockMapPrepareSimpleKeyValue(EmitterNodeType child) {
   const std::size_t curIndent = m_pState->CurIndent();
   const std::size_t nextIndent = curIndent + m_pState->CurGroupIndent();
 
