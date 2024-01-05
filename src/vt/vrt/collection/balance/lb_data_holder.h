@@ -85,6 +85,8 @@ struct LBDataHolder {
     s | skipped_phases_;
     s | identical_phases_;
     s | user_defined_lb_info_;
+    s | node_user_attributes_;
+    s | rank_attributes_;
   }
 
   /**
@@ -97,7 +99,7 @@ struct LBDataHolder {
   std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
 
   /**
-   * \brief Output a LB phase's metdadata to JSON
+   * \brief Output a LB phase's metadata to JSON
    *
    * \return the json data structure
    */
@@ -112,10 +114,11 @@ private:
   /**
    * \brief Output an entity to json
    *
+   * \param[in] phase the phase
    * \param[in] j the json
    * \param[in] elm_id the element to output
    */
-  void outputEntity(nlohmann::json& j, ElementIDStruct const& elm_id) const;
+  void outputEntity(PhaseType phase, nlohmann::json& j, ElementIDStruct const& elm_id) const;
 
   /**
    * \brief Read the LB phase's metadata
@@ -125,6 +128,7 @@ private:
   void readMetadata(nlohmann::json const& j);
 
 public:
+  std::shared_ptr<nlohmann::json> rank_attributes_;
   /// Node timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;
   /// Node communication graph for each local object
@@ -135,6 +139,9 @@ public:
   std::unordered_map<PhaseType, std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
+  std::unordered_map<PhaseType, std::unordered_map<
+    ElementIDStruct, std::shared_ptr<nlohmann::json>
+  >> node_user_attributes_;
 
   std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
   /// User-defined data from each phase for LB

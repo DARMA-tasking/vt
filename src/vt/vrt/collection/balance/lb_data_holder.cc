@@ -48,7 +48,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void LBDataHolder::outputEntity(nlohmann::json& j, ElementIDStruct const& id) const {
+void LBDataHolder::outputEntity(PhaseType phase, nlohmann::json& j, ElementIDStruct const& id) const {
   j["type"] = "object";
   j["id"] = id.id;
   j["home"] = id.getHomeNode();
@@ -65,6 +65,11 @@ void LBDataHolder::outputEntity(nlohmann::json& j, ElementIDStruct const& id) co
     j["objgroup_id"] = proxy_id;
   } else {
     // bare handler
+  }
+  if (node_user_attributes_.find(phase) != node_user_attributes_.end()) {
+    if (node_user_attributes_.at(phase).find(id) != node_user_attributes_.at(phase).end()) {
+      j["attributes"] = *(node_user_attributes_.at(phase).at(id));
+    }
   }
 }
 
@@ -117,6 +122,10 @@ std::unique_ptr<nlohmann::json> LBDataHolder::metadataToJson() const {
     }
   }
 
+  if (rank_attributes_) {
+    j["attributes"] = *rank_attributes_;
+  }
+
   // Save metadata
   j["skipped"]["list"] = skipped_list;
   j["skipped"]["range"] = skipped_ranges;
@@ -148,7 +157,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
           }
         }
       }
-      outputEntity(j["tasks"][i]["entity"], id);
+      outputEntity(phase, j["tasks"][i]["entity"], id);
 
       auto const& subphase_times = elm.second.subphase_loads;
       std::size_t const subphases = subphase_times.size();
@@ -179,8 +188,8 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
         } else {
           j["communications"][i]["type"] = "Broadcast";
         }
-        outputEntity(j["communications"][i]["from"], key.fromObj());
-        outputEntity(j["communications"][i]["to"], key.toObj());
+        outputEntity(phase, j["communications"][i]["from"], key.fromObj());
+        outputEntity(phase, j["communications"][i]["to"], key.toObj());
         break;
       }
       case elm::CommCategory::NodeToCollection:
@@ -193,7 +202,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 
         j["communications"][i]["from"]["type"] = "node";
         j["communications"][i]["from"]["id"] = key.fromNode();
-        outputEntity(j["communications"][i]["to"], key.toObj());
+        outputEntity(phase, j["communications"][i]["to"], key.toObj());
         break;
       }
       case elm::CommCategory::CollectionToNode:
@@ -206,7 +215,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 
         j["communications"][i]["to"]["type"] = "node";
         j["communications"][i]["to"]["id"] = key.toNode();
-        outputEntity(j["communications"][i]["from"], key.fromObj());
+        outputEntity(phase, j["communications"][i]["from"], key.fromObj());
         break;
       }
       case elm::CommCategory::LocalInvoke:
@@ -272,6 +281,12 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 auto proxy = static_cast<VirtualProxyType>(cid);
                 this->node_idx_[elm] = std::make_tuple(proxy, arr);
               }
+            }
+
+            if (task["entity"].find("attributes") != task["entity"].end()) {
+              auto attrs = task["entity"]["attributes"];
+              node_user_attributes_[id][elm] = std::make_shared<nlohmann::json>();
+              *(node_user_attributes_[id][elm]) = attrs;
             }
 
             if (task.find("subphases") != task.end()) {
@@ -440,6 +455,11 @@ void LBDataHolder::readMetadata(nlohmann::json const& j) {
           }
         }
       }
+    }
+    // load rank user atrributes
+    if (metadata.find("attributes") != metadata.end()) {
+      rank_attributes_ = std::make_shared<nlohmann::json>();
+      *(rank_attributes_) = metadata["attributes"];
     }
   }
 }
