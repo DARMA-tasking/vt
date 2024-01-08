@@ -162,15 +162,15 @@ class YAML_CPP_API Exception : public std::runtime_error {
   std::string msg;
 
  private:
-  static const std::string build_what(const Mark& mark,
-                                      const std::string& msg) {
-    if (mark.is_null()) {
-      return msg;
+  static const std::string build_what(const Mark& mark_,
+                                      const std::string& msg_) {
+    if (mark_.is_null()) {
+      return msg_;
     }
 
     std::stringstream output;
-    output << "yaml-cpp: error at line " << mark.line + 1 << ", column "
-           << mark.column + 1 << ": " << msg;
+    output << "yaml-cpp: error at line " << mark_.line + 1 << ", column "
+           << mark_.column + 1 << ": " << msg_;
     return output.str();
   }
 };
@@ -221,16 +221,16 @@ class YAML_CPP_API TypedKeyNotFound : public KeyNotFound {
 };
 
 template <typename T>
-inline TypedKeyNotFound<T> MakeTypedKeyNotFound(const Mark& mark,
-                                                const T& key) {
-  return TypedKeyNotFound<T>(mark, key);
+inline TypedKeyNotFound<T> MakeTypedKeyNotFound(const Mark& mark_,
+                                                const T& key_) {
+  return TypedKeyNotFound<T>(mark_, key_);
 }
 
 class YAML_CPP_API InvalidNode : public RepresentationException {
  public:
-  InvalidNode(const std::string& key)
+  InvalidNode(const std::string& key_)
       : RepresentationException(Mark::null_mark(),
-                                ErrorMsg::INVALID_NODE_WITH_KEY(key)) {}
+                                ErrorMsg::INVALID_NODE_WITH_KEY(key_)) {}
   InvalidNode(const InvalidNode&) = default;
   ~InvalidNode() YAML_CPP_NOEXCEPT override;
 };
@@ -260,8 +260,8 @@ class YAML_CPP_API BadDereference : public RepresentationException {
 class YAML_CPP_API BadSubscript : public RepresentationException {
  public:
   template <typename Key>
-  BadSubscript(const Mark& mark_, const Key& key)
-      : RepresentationException(mark_, ErrorMsg::BAD_SUBSCRIPT_WITH_KEY(key)) {}
+  BadSubscript(const Mark& mark_, const Key& key_)
+      : RepresentationException(mark_, ErrorMsg::BAD_SUBSCRIPT_WITH_KEY(key_)) {}
   BadSubscript(const BadSubscript&) = default;
   ~BadSubscript() YAML_CPP_NOEXCEPT override;
 };
