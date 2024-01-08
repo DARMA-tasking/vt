@@ -46,20 +46,21 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void ComposedModel::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                             std::unordered_map<PhaseType, CommMapType> const* proc_comm) {
-  base_->setLoads(proc_load, proc_comm);
+                             std::unordered_map<PhaseType, CommMapType> const* proc_comm,
+                             std::unordered_map<PhaseType, DataMapType> const* user_data) {
+  base_->setLoads(proc_load, proc_comm, user_data);
 }
 
 void ComposedModel::updateLoads(PhaseType last_completed_phase) {
   base_->updateLoads(last_completed_phase);
 }
 
-TimeType
+LoadType
 ComposedModel::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
   return base_->getModeledLoad(object, when);
 }
 
-TimeType
+LoadType
 ComposedModel::getModeledComm(ElementIDStruct object, PhaseOffset when) const {
   return base_->getModeledComm(object, when);
 }
@@ -68,8 +69,16 @@ bool ComposedModel::hasRawLoad() const {
   return base_->hasRawLoad();
 }
 
-TimeType ComposedModel::getRawLoad(ElementIDStruct object, PhaseOffset when) const {
+LoadType ComposedModel::getRawLoad(ElementIDStruct object, PhaseOffset when) const {
   return base_->getRawLoad(object, when);
+}
+
+bool ComposedModel::hasUserData() const {
+  return base_->hasUserData();
+}
+
+ElmUserDataType ComposedModel::getUserData(ElementIDStruct object, PhaseOffset when) const {
+  return base_->getUserData(object, when);
 }
 
 unsigned int ComposedModel::getNumPastPhasesNeeded(unsigned int look_back) const

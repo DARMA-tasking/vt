@@ -56,10 +56,11 @@ void PerCollection::addModel(CollectionID proxy, std::shared_ptr<LoadModel> mode
 }
 
 void PerCollection::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                             std::unordered_map<PhaseType, CommMapType> const* proc_comm) {
+                             std::unordered_map<PhaseType, CommMapType> const* proc_comm,
+                             std::unordered_map<PhaseType, DataMapType> const* user_data) {
   for (auto& m : models_)
-    m.second->setLoads(proc_load, proc_comm);
-  ComposedModel::setLoads(proc_load, proc_comm);
+    m.second->setLoads(proc_load, proc_comm, user_data);
+  ComposedModel::setLoads(proc_load, proc_comm, user_data);
 }
 
 void PerCollection::updateLoads(PhaseType last_completed_phase) {
@@ -68,7 +69,7 @@ void PerCollection::updateLoads(PhaseType last_completed_phase) {
   ComposedModel::updateLoads(last_completed_phase);
 }
 
-TimeType
+LoadType
 PerCollection::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
   // See if some specific model has been given for the object in question
   auto mi = models_.find(theNodeLBData()->getCollectionProxyForElement(object));
@@ -90,7 +91,7 @@ bool PerCollection::hasRawLoad() const {
   return has_raw_load and ComposedModel::hasRawLoad();
 }
 
-TimeType PerCollection::getRawLoad(ElementIDStruct object, PhaseOffset when) const {
+LoadType PerCollection::getRawLoad(ElementIDStruct object, PhaseOffset when) const {
   // See if some specific model has been given for the object in question
   auto mi = models_.find(theNodeLBData()->getCollectionProxyForElement(object));
   if (mi != models_.end())
@@ -98,6 +99,27 @@ TimeType PerCollection::getRawLoad(ElementIDStruct object, PhaseOffset when) con
 
   // Otherwise, default to the given base model
   return ComposedModel::getRawLoad(object, when);
+}
+
+bool PerCollection::hasUserData() const {
+  // Only return true if all possible paths lead to true
+  bool has_user_data = true;
+
+  for (auto it = models_.begin(); it != models_.end(); ++it) {
+    has_user_data = has_user_data and it->second->hasUserData();
+  }
+
+  return has_user_data and ComposedModel::hasUserData();
+}
+
+ElmUserDataType PerCollection::getUserData(ElementIDStruct object, PhaseOffset when) const {
+  // See if some specific model has been given for the object in question
+  auto mi = models_.find(theNodeLBData()->getCollectionProxyForElement(object));
+  if (mi != models_.end())
+    return mi->second->getUserData(object, when);
+
+  // Otherwise, default to the given base model
+  return ComposedModel::getUserData(object, when);
 }
 
 unsigned int PerCollection::getNumPastPhasesNeeded(unsigned int look_back) const

@@ -61,11 +61,9 @@ TEST_F(TestReduce, test_reduce_op) {
   theCollective()->global()->reduce<reducePlus>(root, msg.get());
 }
 
-using ReduceMsg = vt::collective::ReduceTMsg<int>;
-
 struct MyObjGroup {
-  void handler(ReduceMsg* msg) {
-    fmt::print("Reduce complete at {} value {}\n", vt::theContext()->getNode(), msg->getVal());
+  void handler(int val) {
+    fmt::print("Reduce complete at {} value {}\n", vt::theContext()->getNode(), val);
   }
 };
 
@@ -73,20 +71,13 @@ vt::objgroup::proxy::Proxy<MyObjGroup> objgroup_proxy;
 
 struct Hello : vt::Collection<Hello, vt::Index1D> {
 
-  using TestMsg = vt::CollectionMessage<Hello>;
-
-  void doWork(TestMsg* msg) {
+  void doWork() {
     fmt::print("{}: Hello from {}\n", vt::theContext()->getNode(), this->getIndex());
 
     // Get the proxy for the collection
     auto proxy = this->getCollectionProxy();
-
-    // Create a callback for when the reduction finishes
-    auto cb = vt::theCB()->makeBcast<MyObjGroup,ReduceMsg,&MyObjGroup::handler>(objgroup_proxy);
-
-    // Create and send the reduction message holding an int
-    auto red_msg = vt::makeMessage<ReduceMsg>(this->getIndex().x());
-    proxy.reduce<vt::collective::PlusOp<int>>(red_msg.get(),cb);
+    auto cb = theCB()->makeBcast<&MyObjGroup::handler>(objgroup_proxy);
+    proxy.reduce<vt::collective::PlusOp>(cb, getIndex().x());
   }
 };
 
@@ -113,7 +104,7 @@ TEST_F(TestReduce, test_reduce_with_no_elements_on_root_rank) {
     .wait();
 
   if (this_node == 0) {
-    proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
+    proxy.broadcast<&Hello::doWork>();
   }
 }
 

@@ -110,7 +110,7 @@ void TemperedWMin::inputParams(balance::ConfigEntry* config) {
   load_model_ptr = theLBManager()->getLoadModel().get();
 }
 
-TimeType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
+LoadType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
   vtAssert(
     theLBManager()->getLoadModel().get() == load_model_ptr,
     "Load model must not change"

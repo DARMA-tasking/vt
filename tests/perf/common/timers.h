@@ -51,9 +51,9 @@
 namespace vt { namespace tests { namespace perf { namespace common {
 
 using TimePoint     = std::chrono::time_point<std::chrono::steady_clock>;
-using DurationMicro = std::chrono::duration<TimeType, std::micro>;
-using DurationMilli = std::chrono::duration<TimeType, std::milli>;
-using DurationSec   = std::chrono::duration<TimeType>;
+using DurationMicro = std::chrono::duration<TimeType::TimeTypeInternal, std::micro>;
+using DurationMilli = std::chrono::duration<TimeType::TimeTypeInternal, std::milli>;
+using DurationSec   = std::chrono::duration<TimeType::TimeTypeInternal>;
 template <typename Duration>
 struct DurationConverter {
   static DurationMicro ToMicro(Duration const& in_duration) {
@@ -86,7 +86,7 @@ struct StopWatch {
   void Start();
 
   template <typename Duration = DurationMilli>
-  TimeType Stop() {
+  TimeType::TimeTypeInternal Stop() {
     auto const now = std::chrono::steady_clock::now();
     auto const delta = Duration{now - cur_time_};
     cur_time_ = now;

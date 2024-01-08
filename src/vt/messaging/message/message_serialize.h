@@ -98,7 +98,7 @@ struct has_own_serialize_member_t<U,
   : std::true_type
 {};
 
-// Either declared out-of-line (no inheritence in play)
+// Either declared out-of-line (no inheritance in play)
 // or a serialize member is declared on the precise type.
 template <typename T>
 static constexpr auto const has_own_serialize =
@@ -140,7 +140,7 @@ static constexpr auto const has_own_serialize =
   )
 
 /**
- * \brief Mark the message as supporting BUT NOT USING serialzation.
+ * \brief Mark the message as supporting BUT NOT USING serialization.
  *
  * This message MUST support a serialization function. However, this
  * support is only for derived message usage.
@@ -256,7 +256,7 @@ struct is_byte_copyable_t {
 };
 #endif
 
-// Foward-declare
+// Forward-declare
 struct BaseMsg;
 
 // Allows testing of is_base_of<DefinesSerializationMode<Msg>,Msg> to determine

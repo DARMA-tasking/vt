@@ -53,6 +53,17 @@ class SchemaValidator:
                         'rank': int,
                         'num_nodes': int,
                     },
+                    Optional('phases'): {
+                        'count': int,
+                        'skipped': {
+                            'list': [int],
+                            'range': [[int]],
+                        },
+                        'identical_to_previous': {
+                            'list': [int],
+                            'range': [[int]],
+                        },
+                    },
                 },
                 'phases': [
                     {
@@ -104,7 +115,8 @@ class SchemaValidator:
                                 },
                                 'bytes': float
                             }
-                        ]
+                        ],
+                        Optional('user_defined'): dict
                     },
                 ]
             }

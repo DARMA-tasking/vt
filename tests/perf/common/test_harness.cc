@@ -441,7 +441,7 @@ void PerfTestHarness::SpinScheduler() {
 }
 
 void PerfTestHarness::GetMemoryUsage() {
-  // Memory footpring from PerfTestHarness' internal data structs are included
+  // Memory footprint from PerfTestHarness' internal data structs are included
   memory_use_[current_run_].push_back(mem_tracker_.getUsage());
 }
 

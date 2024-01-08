@@ -696,11 +696,12 @@ void InfoColl::finalize() {
   if (in_phase_two_ && send_down_finished_ == send_down_) {
 
     if (!vt_check_enabled(production_build)) {
-      char buf[256];
+      constexpr int max_buffer_length = 256;
+      char buf[max_buffer_length];
       buf[0] = '\0';
       int cur = 0;
       for (auto&& elm : collective_->span_children_) {
-        cur += sprintf(buf + cur, "%d,", elm);
+        cur += snprintf(buf + cur, max_buffer_length - cur, "%d,", elm);
       }
 
       auto const& num_children = collective_->span_children_.size();

@@ -103,24 +103,24 @@ assertOutInfo(
   auto yellow    = debug::yellow();
   auto reset     = debug::reset();
   auto green     = debug::green();
-  auto seperator = fmt::format("{}{}{:-^120}{}\n", prefix, yellow, "", reset);
+  auto separator = fmt::format("{}{}{:-^120}{}\n", prefix, yellow, "", reset);
   auto space     = fmt::format("{}\n", prefix);
   auto title     = fmt::format(
     "{}{}{:-^120}{}\n", prefix, yellow, " Debug State Assert Info ", reset
   );
-  auto pre       = fmt::format("{}{}{}{}", seperator, title, seperator, space);
+  auto pre       = fmt::format("{}{}{}{}", separator, title, separator, space);
 
   std::ostringstream str_buf;
 
   auto buf = fmt::format("{}", pre);
   str_buf << buf;
 
-  //str_buf << seperator << seperator;
+  //str_buf << separator << separator;
   for (auto&& var : varlist) {
     auto cur = fmt::format("{}{}{:>25}{}\n", prefix, green, var, reset);
     str_buf << cur;
   }
-  str_buf << space << seperator << seperator;
+  str_buf << space << separator << separator;
   ::vt::output(str_buf.str(),error,false,false,true,fail);
 
   if (fail) {

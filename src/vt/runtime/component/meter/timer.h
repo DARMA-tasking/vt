@@ -102,9 +102,9 @@ public:
    * \brief Stop the timer and record the interval
    */
   void stop() {
-    if (start_time_ != 0) {
+    if (start_time_ != TimeType{0.}) {
       update(start_time_, timing::getCurrentTime());
-      start_time_ = 0;
+      start_time_ = TimeType{0.};
     }
   }
 
@@ -116,7 +116,7 @@ public:
   }
 
 private:
-  T start_time_ = 0;
+  T start_time_ = T{0};
 };
 
 }}}} /* end namespace vt::runtime::component::meter */

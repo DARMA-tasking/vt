@@ -84,7 +84,7 @@ public:
   /**
    * \brief Increment counter and update gauge value
    *
-   * \param[in] in the new guage value
+   * \param[in] in the new gauge value
    * \param[in] num number of times to increment the counter
    */
   void incrementUpdate(U in, T num = 1) {
@@ -94,7 +94,7 @@ public:
 
 private:
   Counter<T> counter_;          /**< The counter for some event */
-  Gauge<U> gauge_;              /**< The guage measuring some event */
+  Gauge<U> gauge_;              /**< The gauge measuring some event */
 };
 
 }}}} /* end namespace vt::runtime::component::meter */

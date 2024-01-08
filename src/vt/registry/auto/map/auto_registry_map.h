@@ -56,7 +56,7 @@ using namespace mapping;
 
 AutoActiveMapType const& getAutoHandlerFunctorMap(HandlerType const han);
 
-template <typename FunctorT, typename... Args>
+template <typename FunctorT>
 HandlerType makeAutoHandlerFunctorMap();
 
 // Registration for collection index mapping functions

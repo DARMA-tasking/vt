@@ -57,7 +57,7 @@ namespace vt { namespace runtime { namespace component {
 /**
  * \struct ComponentConstructor
  *
- * \brief Construct a component with either a regular \c std::make_unqiue or
+ * \brief Construct a component with either a regular \c std::make_unique or
  * through the specialized static \c construct method, which is used to create
  * the objgroup if the component is implemented as one
  */
@@ -116,7 +116,7 @@ struct Component : BaseComponent {
    *
    * \param[in] args the arguments to forward to the component's constructor
    *
-   * \return unique pointer to the the component
+   * \return unique pointer to the component
    */
   template <typename... Args>
   static std::unique_ptr<T> staticInit(Args&&... args) {

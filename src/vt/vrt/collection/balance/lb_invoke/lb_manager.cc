@@ -43,6 +43,7 @@
 
 #include "vt/config.h"
 #include "vt/configs/arguments/app_config.h"
+#include "vt/configs/types/types_type.h"
 #include "vt/context/context.h"
 #include "vt/phase/phase_hook_enum.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
@@ -163,7 +164,8 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   model_ = model;
   auto nlb_data = theNodeLBData();
   model_->setLoads(nlb_data->getNodeLoad(),
-                   nlb_data->getNodeComm());
+                   nlb_data->getNodeComm(),
+                   nlb_data->getUserData());
 }
 
 template <typename LB>
@@ -185,9 +187,7 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
   auto proposed = std::make_shared<ProposedReassignment>(model_, reassignment);
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    auto stats_cb = vt::theCB()->makeBcast<
-      LBManager, StatsMsgType, &LBManager::statsHandler
-    >(proxy_);
+    auto stats_cb = vt::theCB()->makeBcast<&LBManager::statsHandler>(proxy_);
     before_lb_stats_ = false;
     computeStatistics(proposed, false, phase, stats_cb);
   });
@@ -233,9 +233,7 @@ LBManager::runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb) {
   }
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    auto stats_cb = vt::theCB()->makeBcast<
-      LBManager, StatsMsgType, &LBManager::statsHandler
-    >(proxy_);
+    auto stats_cb = vt::theCB()->makeBcast<&LBManager::statsHandler>(proxy_);
     before_lb_stats_ = true;
     computeStatistics(model_, false, phase, stats_cb);
   });
@@ -245,15 +243,24 @@ LBManager::runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb) {
   }
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm = &empty_comm;
-  auto iter = theNodeLBData()->getNodeComm()->find(phase);
-  if (iter != theNodeLBData()->getNodeComm()->end()) {
+
+  auto const& node_comm = theNodeLBData()->getNodeComm();
+  if (auto iter = node_comm->find(phase); iter != node_comm->end()) {
     comm = &iter->second;
+  }
+
+  balance::DataMapType empty_data_map;
+  balance::DataMapType const* data_map = &empty_data_map;
+  auto const& node_data_map = theNodeLBData()->getUserData();
+  if (auto iter = node_data_map->find(phase); iter != node_data_map->end()) {
+    data_map = &iter->second;
   }
 
   vt_debug_print(terse, lb, "LBManager: running strategy\n");
 
   auto reassignment = strat->startLB(
-    phase, base_proxy, model_.get(), stats, *comm, total_load_from_model
+    phase, base_proxy, model_.get(), stats, *comm, total_load_from_model,
+    *data_map
   );
   cb.send(reassignment, phase);
 }
@@ -308,9 +315,7 @@ void LBManager::startLB(
 
     runInEpochCollective("LBManager::noLB -> computeStats", [=] {
       before_lb_stats_ = true;
-      auto stats_cb = vt::theCB()->makeBcast<
-        LBManager, StatsMsgType, &LBManager::statsHandler
-      >(proxy_);
+      auto stats_cb = vt::theCB()->makeBcast<&LBManager::statsHandler>(proxy_);
       before_lb_stats_ = true;
       computeStatistics(model_, false, phase, stats_cb);
     });
@@ -471,9 +476,7 @@ void LBManager::finishedLB(PhaseType phase) {
   destroyLB();
 }
 
-void LBManager::statsHandler(StatsMsgType* msg) {
-  auto in_stat_vec = msg->getConstVal();
-
+void LBManager::statsHandler(std::vector<balance::LoadData> const& in_stat_vec) {
   // use the raw loads if they were computed, otherwise fall back on model loads
   lb::Statistic rank_statistic = lb::Statistic::Rank_load_modeled;
   lb::Statistic obj_statistic  = lb::Statistic::Object_load_modeled;
@@ -606,7 +609,7 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
 balance::LoadData reduceVec(
   lb::Statistic stat, std::vector<balance::LoadData>&& vec
 ) {
-  balance::LoadData reduce_ld(stat, 0.0f);
+  balance::LoadData reduce_ld(stat, 0.0);
   if (vec.size() == 0) {
     return reduce_ld;
   } else {
@@ -619,7 +622,7 @@ balance::LoadData reduceVec(
 
 void LBManager::computeStatistics(
   std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase,
-  vt::Callback<StatsMsgType> cb
+  vt::Callback<std::vector<balance::LoadData>> cb
 ) {
   vt_debug_print(
     normal, lb,
@@ -640,7 +643,7 @@ void LBManager::computeStatistics(
     total_load_from_model += work;
   }
 
-  TimeType total_load_raw = 0.;
+  LoadType total_load_raw = 0.;
   std::vector<balance::LoadData> obj_load_raw;
   if (model->hasRawLoad()) {
     for (auto elm : *model) {
@@ -668,7 +671,7 @@ void LBManager::computeStatistics(
   ));
 
   if (strategy_specific_model_) {
-    auto rank_strat_specific_load = 0.;
+    LoadType rank_strat_specific_load = 0.;
     std::vector<balance::LoadData> obj_strat_specific_load;
     for (auto elm : *strategy_specific_model_) {
       auto work = strategy_specific_model_->getModeledLoad(elm, when);
@@ -720,9 +723,7 @@ void LBManager::computeStatistics(
     lb::Statistic::Object_comm, std::move(obj_comm)
   ));
 
-  using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
-  auto msg = makeMessage<StatsMsgType>(std::move(lstats));
-  proxy_.template reduce<ReduceOp>(msg,cb);
+  proxy_.reduce<collective::PlusOp>(cb, std::move(lstats));
 }
 
 bool LBManager::isCollectiveComm(elm::CommCategory cat) const {

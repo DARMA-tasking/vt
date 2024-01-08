@@ -48,7 +48,7 @@
 
 namespace vt {
 /**
- * \brief An epoch warapper that provides an RAII-style mechanism for owning an
+ * \brief An epoch wrapper that provides an RAII-style mechanism for owning an
  * epoch for the duration of a scope block.
  *
  * When EpochGuard is created, it pushes the given epoch onto the epoch stack.

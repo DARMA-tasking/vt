@@ -78,7 +78,8 @@ struct Storable {
   void serialize(SerializerT& s);
 
   /**
-   * \brief Insert a new key/value pair
+   * \brief Insert a new key/value pair (defaults to not providing to LB or
+   * dumping to JSON)
    *
    * \param[in] str the key
    * \param[in] u the value
@@ -92,9 +93,15 @@ struct Storable {
    * \param[in] str the key
    * \param[in] u the value
    * \param[in] dump_to_json whether to include in json file
+   * \param[in] provide_to_lb whether to provide the data to the load balancers
+   *
+   * \note If \c provide_to_lb is enabled, the data must be convertible to an
+   * integer, double, or string
    */
   template <typename U>
-  void valInsert(std::string const& str, U&& u, bool dump_to_json);
+  void valInsert(
+    std::string const& str, U&& u, bool dump_to_json, bool provide_to_lb
+  );
 
   /**
    * \brief Get the value from a key
@@ -138,6 +145,20 @@ struct Storable {
    * \return the json
    */
   nlohmann::json toJson();
+
+  /**
+   * \brief Traverse the keys/values in the storable for the LB
+   *
+   * \param[in] c the callable
+   */
+  template <typename Callable>
+  void foreachLB(Callable&& c) {
+    for (auto const& [key, value] : map_) {
+      if (value->provideToLB()) {
+        c(key, value.get());
+      }
+    }
+  }
 
 private:
   /// Map of type-erased, stored values

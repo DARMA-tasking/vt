@@ -51,6 +51,7 @@
 #include <checkpoint/checkpoint.h>
 
 #include <type_traits>
+#include <variant>
 
 namespace vt { namespace vrt { namespace collection { namespace storage {
 
@@ -68,8 +69,15 @@ struct StoreElmBase {
 
   StoreElmBase() = default;
 
-  StoreElmBase(bool dump_to_json)
-    : dump_to_json_(dump_to_json)
+  /**
+   * \brief Store element base class constructor
+   *
+   * \param[in] dump_to_json whether to dump to JSON output
+   * \param[in] provide_to_lb whether to provide to the LB
+   */
+  StoreElmBase(bool dump_to_json, bool provide_to_lb)
+    : dump_to_json_(dump_to_json),
+      provide_to_lb_(provide_to_lb)
   {}
 
   virtual ~StoreElmBase() {}
@@ -80,6 +88,13 @@ struct StoreElmBase {
    * \return the json
    */
   virtual nlohmann::json toJson() = 0;
+
+  /**
+   * \brief Generate variant for LB
+   *
+   * \return the variant
+   */
+  virtual std::variant<int, double, std::string> toVariant() = 0;
 
   /**
    * \brief Get the value as \c T
@@ -105,6 +120,7 @@ struct StoreElmBase {
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | dump_to_json_;
+    s | provide_to_lb_;
   }
 
   /**
@@ -115,37 +131,52 @@ struct StoreElmBase {
   bool shouldJson() const { return dump_to_json_; }
 
   /**
+   * \brief Whether to provide to the LB
+   *
+   * \return is it for LB
+   */
+  bool provideToLB() const {
+    return provide_to_lb_;
+  }
+
+  /**
    * \brief Generate the json because it is jsonable
    *
    * \param[in] u the data to convert to json
    */
   template <typename U>
-  static json maybeGenerateJson(
-    const U& u, typename std::enable_if<
-      nlohmann::detail::has_to_json<json,U>::value
-    >::type* = nullptr
-  ) {
-    json j(u);
-    return j;
+  static json maybeGenerateJson(U const& u) {
+    if constexpr (nlohmann::detail::has_to_json<json,U>::value) {
+      json j(u);
+      return j;
+    } else {
+      vtAbort("Instantiated maybeGenerateJson on non-jsonable type");
+      return json{};
+    }
   }
 
   /**
-   * \brief Abort because it is not jsonable
+   * \brief Generate the variant if matches types
    *
-   * \param[in] u the data that cannot be converted to json
+   * \param[in] u the data to convert to json
    */
   template <typename U>
-  static json maybeGenerateJson(
-    const U& u, typename std::enable_if<
-      not nlohmann::detail::has_to_json<json,U>::value
-    >::type* = nullptr
-  ) {
-    vtAbort("Instantiated maybeGenerateJson on non-jsonable type");
-    return json{};
+  static auto maybeGenerateVariant(U const& u) {
+    if constexpr (
+      std::is_same_v<U, int> or
+      std::is_same_v<U, double> or
+      std::is_same_v<U, std::string>
+    ) {
+      return std::variant<int, double, std::string>{u};
+    } else {
+      vtAbort("Instantiated maybeGenerateVariant on type that doesn't apply");
+      return std::variant<int, double, std::string>{};
+    }
   }
 
 protected:
   bool dump_to_json_ = false;
+  bool provide_to_lb_ = false;
 };
 
 /**
@@ -176,25 +207,12 @@ struct StoreElm<
    * \brief Construct with value
    *
    * \param[in] u the value
+   * \param[in] dump_to_json whether to dump to json
+   * \param[in] provide_to_lb whether to provide to LB
    */
   template <typename U>
-  explicit StoreElm(U&& u)
-    : elm_(std::forward<U>(u))
-  { }
-
-  /**
-   * \brief Construct with value
-   *
-   * \param[in] u the value
-   * \param[in] dump_to_json whether to dump this to json LB data file
-   */
-  template <typename U>
-  StoreElm(
-    U&& u, bool dump_to_json, typename std::enable_if<
-      nlohmann::detail::has_to_json<nlohmann::json,U>::value
-    >::type* = nullptr
-  )
-    : StoreElmBase(dump_to_json),
+  explicit StoreElm(U&& u, bool dump_to_json, bool provide_to_lb)
+    : StoreElmBase(dump_to_json, provide_to_lb),
       elm_(std::forward<U>(u))
   { }
 
@@ -206,12 +224,13 @@ struct StoreElm<
   explicit StoreElm(checkpoint::SERIALIZE_CONSTRUCT_TAG) {}
 
   /**
-   * \brief Serializer
+   * \Brief Serializer
    *
    * \param[in] s the serializer
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    StoreElmBase::serialize(s);
     s | elm_;
   }
 
@@ -234,9 +253,17 @@ struct StoreElm<
    *
    * \return the json
    */
-  nlohmann::json toJson() override
-  {
+  nlohmann::json toJson() override {
     return StoreElm::maybeGenerateJson<T>(elm_);
+  }
+
+  /**
+   * \brief Generate variant if applicable
+   *
+   * \return the variant
+   */
+  std::variant<int, double, std::string> toVariant() override {
+    return StoreElm::maybeGenerateVariant<T>(elm_);
   }
 
 private:
@@ -299,25 +326,12 @@ struct StoreElm<
    * \brief Construct with value
    *
    * \param[in] u the value
+   * \param[in] dump_to_json whether to dump to json
+   * \param[in] provide_to_lb whether to provide to LB
    */
   template <typename U>
-  explicit StoreElm(U&& u)
-    : wrapper_(detail::ByteWrapper<T>{std::forward<U>(u)})
-  { }
-
-  /**
-   * \brief Construct with value
-   *
-   * \param[in] u the value
-   * \param[in] dump_to_json whether to dump this to json LB data file
-   */
-  template <typename U>
-  StoreElm(
-    U&& u, bool dump_to_json, typename std::enable_if<
-      nlohmann::detail::has_to_json<nlohmann::json,U>::value
-    >::type* = nullptr
-  )
-    : StoreElmBase(dump_to_json),
+  explicit StoreElm(U&& u, bool dump_to_json, bool provide_to_lb)
+    : StoreElmBase(dump_to_json, provide_to_lb),
       wrapper_(detail::ByteWrapper<T>{std::forward<U>(u)})
   { }
 
@@ -335,6 +349,7 @@ struct StoreElm<
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    StoreElmBase::serialize(s);
     s | wrapper_;
   }
 
@@ -357,9 +372,17 @@ struct StoreElm<
    *
    * \return the json
    */
-  nlohmann::json toJson() override
-  {
+  nlohmann::json toJson() override {
     return StoreElm::maybeGenerateJson<T>(wrapper_.elm_);
+  }
+
+  /**
+   * \brief Generate variant if applicable
+   *
+   * \return the variant
+   */
+  std::variant<int, double, std::string> toVariant() override {
+    return StoreElm::maybeGenerateVariant<T>(wrapper_.elm_);
   }
 
 private:

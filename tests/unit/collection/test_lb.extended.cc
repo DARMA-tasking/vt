@@ -408,6 +408,12 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
       proxy.broadcastCollective<colHandler>();
     });
 
+    vt::thePhase()->addUserDefinedData(
+      phase, std::string{"time"}, static_cast<double>(phase));
+
+    vt::thePhase()->addUserDefinedData(
+      phase, std::string{"new_time"}, static_cast<double>(phase));
+
     // Go to the next phase
     vt::thePhase()->nextPhaseCollective();
   }
@@ -424,6 +430,14 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
 
     EXPECT_TRUE(json.find("phases") != json.end());
     EXPECT_EQ(json["phases"].size(), num_phases);
+    for(const auto& phase : json["phases"]){
+      EXPECT_TRUE(phase.find("user_defined") != phase.end());
+      EXPECT_TRUE(phase["user_defined"].contains("time"));
+      EXPECT_EQ(phase["user_defined"]["time"], static_cast<double>(phase["id"]));
+      EXPECT_TRUE(phase["user_defined"].contains("new_time"));
+      EXPECT_EQ(phase["user_defined"]["new_time"], static_cast<double>(phase["id"]));
+    }
+
   });
 
   if (vt::theContext()->getNode() == 0) {
@@ -541,7 +555,7 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
     for (int i=0; i<num_elms; ++i) {
       vt::Index1D idx(i);
 
-      TimeType dur = (i % 10 + 1) * 0.1;
+      LoadType dur = (i % 10 + 1) * 0.1;
       uint64_t ntocm = (i+1) % 3 + 2;
       CommBytesType ntoc = (i+1) * 100;
       uint64_t ctonm = (i+1) % 2 + 1;
@@ -551,7 +565,7 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
       if (elm_ptr != nullptr) {
         auto elm_id = elm_ptr->getElmID();
 
-        std::vector<TimeType> dur_vec(2);
+        std::vector<LoadType> dur_vec(2);
         dur_vec[i % 2] = dur;
         lbdh.node_data_[phase][elm_id].whole_phase_load = dur;
         lbdh.node_data_[phase][elm_id].subphase_loads = dur_vec;
@@ -731,8 +745,8 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
     EXPECT_NE(elm_ptr, nullptr);
     if (elm_ptr != nullptr) {
       auto elm_id = elm_ptr->getElmID();
-      elm_ptr->valInsert("hello", std::string("world"), should_dump);
-      elm_ptr->valInsert("elephant", 123456789, should_dump);
+      elm_ptr->valInsert("hello", std::string("world"), should_dump, false);
+      elm_ptr->valInsert("elephant", 123456789, should_dump, false);
       lbdh.user_defined_json_[phase][elm_id] = std::make_shared<nlohmann::json>(
         elm_ptr->toJson()
       );

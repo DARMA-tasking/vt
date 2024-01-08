@@ -45,6 +45,7 @@
 #define INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
 
 #include "vt/config.h"
+#include "vt/group/group_manager.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/objgroup/manager.h"
@@ -54,6 +55,7 @@
 #include "vt/rdmahandle/manager.h"
 #include "vt/messaging/param_msg.h"
 #include "vt/objgroup/proxy/proxy_bits.h"
+#include "vt/collective/reduce/get_reduce_stamp.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -92,7 +94,8 @@ Proxy<ObjT>::broadcast(Params&&... params) const {
   if constexpr (std::is_same_v<MsgT, NoMsg>) {
     using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
     using SendMsgT = messaging::ParamMsg<Tuple>;
-    auto msg = vt::makeMessage<SendMsgT>(std::forward<Params>(params)...);
+    auto msg = vt::makeMessage<SendMsgT>();
+    msg->setParams(std::forward<Params>(params)...);
     auto const ctrl = proxy::ObjGroupProxy::getID(proxy_);
     auto const han = auto_registry::makeAutoHandlerObjGroupParam<
       ObjT, decltype(f), f, SendMsgT
@@ -105,6 +108,137 @@ Proxy<ObjT>::broadcast(Params&&... params) const {
 
   // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
   return typename Proxy<ObjT>::PendingSendType{std::nullptr_t{}};
+}
+
+template <typename ObjT>
+template <auto f, typename... Params>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::multicast(GroupType type, Params&&... params) const{
+  using MsgT = typename ObjFuncTraits<decltype(f)>::MsgT;
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename ObjFuncTraits<decltype(f)>::TupleType;
+    using SendMsgT = messaging::ParamMsg<Tuple>;
+    auto msg = vt::makeMessage<SendMsgT>();
+    msg->setParams(std::forward<Params>(params)...);
+    vt::envelopeSetGroup(msg->env, type);
+    auto const ctrl = proxy::ObjGroupProxy::getID(proxy_);
+    auto const han = auto_registry::makeAutoHandlerObjGroupParam<
+      ObjT, decltype(f), f, SendMsgT
+    >(ctrl);
+    return theObjGroup()->broadcast(msg, han);
+  } else {
+    auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
+    vt::envelopeSetGroup(msg->env, type);
+    return broadcastMsg<MsgT, f>(msg);
+  }
+
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return typename Proxy<ObjT>::PendingSendType{std::nullptr_t{}};
+}
+
+template <typename ObjT>
+template <auto f, typename... Params>
+typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::multicast(
+  group::region::Region::RegionUPtrType&& nodes, Params&&... params) const {
+  vtAssert(
+    not dynamic_cast<group::region::ShallowList*>(nodes.get()),
+    "multicast: range of nodes is not supported for ShallowList!"
+  );
+
+  nodes->sort();
+  auto& range = nodes->makeList();
+
+  auto groupID = theGroup()->GetTempGroupForRange(range);
+  if (!groupID.has_value()) {
+    groupID = theGroup()->newGroup(std::move(nodes), [](GroupType type) {});
+    theGroup()->AddNewTempGroup(range, groupID.value());
+  }
+
+  return multicast<f>(groupID.value(), std::forward<Params>(params)...);
+}
+
+template <typename ObjT>
+template <
+  auto f,
+  template <typename Arg> class Op,
+  typename... Args
+>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::allreduce(
+  Args&&... args
+) const {
+  using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+  using MsgT = collective::ReduceTMsg<Tuple>;
+  using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
+  auto cb = theCB()->makeBcast<f>(*this);
+
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
+  msg->setCallback(cb);
+  auto proxy = Proxy<ObjT>(*this);
+  return theObjGroup()->reduce<
+    ObjT,
+    MsgT,
+    &MsgT::template msgHandler<
+      MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >(proxy, msg.get(), stamp);
+}
+
+template <typename ObjT>
+template <
+  auto f,
+  template <typename Arg> class Op,
+  typename Target,
+  typename... Args
+>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::reduce(
+  Target target,
+  Args&&... args
+) const {
+  using Tuple = typename FuncTraits<decltype(f)>::TupleType;
+  using MsgT = collective::ReduceTMsg<Tuple>;
+  using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
+  auto cb = theCB()->makeSend<f>(target);
+
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
+  msg->setCallback(cb);
+  auto proxy = Proxy<ObjT>(*this);
+  return theObjGroup()->reduce<
+    ObjT,
+    MsgT,
+    &MsgT::template msgHandler<
+      MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >(proxy, msg.get(), stamp);
+}
+
+template <typename ObjT>
+template <
+  template <typename Arg> class Op,
+  typename... CBArgs,
+  typename... Args
+>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::reduce(
+  vt::Callback<CBArgs...> cb,
+  Args&&... args
+) const {
+  using CallbackT = vt::Callback<CBArgs...>;
+  using Tuple = typename CallbackT::TupleType;
+  using MsgT = collective::ReduceTMsg<Tuple>;
+  using GetReduceStamp = collective::reduce::GetReduceStamp<void, Args...>;
+
+  auto [stamp, msg] = GetReduceStamp::template getStampMsg<MsgT>(std::forward<Args>(args)...);
+  msg->setCallback(cb);
+  auto proxy = Proxy<ObjT>(*this);
+  return theObjGroup()->reduce<
+    ObjT,
+    MsgT,
+    &MsgT::template msgHandler<
+      MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >(proxy, msg.get(), stamp);
 }
 
 template <typename ObjT>

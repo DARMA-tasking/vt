@@ -64,7 +64,7 @@ struct Region {
   using ListType = std::vector<BoundType>;
   using ApplyFnType = std::function<void(RegionUPtrType)>;
 
-  virtual ~Region(){}
+  virtual ~Region() = default;
   virtual SizeType getSize() const = 0;
   virtual void sort() = 0;
   virtual bool contains(NodeType const& node) = 0;
@@ -75,6 +75,17 @@ struct Region {
   virtual RegionUPtrType tail() const = 0;
   virtual SplitRegionType split() const = 0;
   virtual void splitN(int nsplits, ApplyFnType apply) const = 0;
+};
+
+struct ListHash {
+    size_t operator()(const Region::ListType& v) const {
+        std::hash<Region::BoundType> hasher;
+        size_t seed = 0;
+        for (const auto i : v) {
+            seed ^= hasher(i) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        }
+        return seed;
+    }
 };
 
 struct List;

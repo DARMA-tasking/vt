@@ -42,6 +42,7 @@
 */
 
 #include "vt/trace/trace_lite.h"
+#include "vt/timing/timing_type.h"
 #if !vt_check_enabled(trace_only)
 #include "vt/collective/collective_alg.h"
 #endif
@@ -248,7 +249,7 @@ bool TraceLite::checkDynamicRuntimeEnabled(bool is_end_event) {
 }
 
 void TraceLite::addUserEventBracketed(
-  UserEventIDType event, double begin, double end) {
+  UserEventIDType event, TimeType begin, TimeType end) {
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
@@ -266,7 +267,7 @@ void TraceLite::addUserEventBracketed(
 }
 
 void TraceLite::addUserBracketedNote(
-  double const begin, double const end, std::string const& note,
+  TimeType const begin, TimeType const end, std::string const& note,
   TraceEventIDType const event
 ) {
   if (not checkDynamicRuntimeEnabled()) {
@@ -295,7 +296,7 @@ TraceEventIDType TraceLite::logEvent(LogType&& log) {
       TraceRegistry::getEvent(log.ep).theEventId() not_eq no_trace_entry_id,
     "Event must exist that was logged");
 
-  double time = log.time;
+  TimeType time = log.time;
 
   // Close any idle event as soon as we encounter any other type of event.
   if (idle_begun_) {
@@ -348,7 +349,7 @@ TraceEventIDType TraceLite::logEvent(LogType&& log) {
 }
 
 
-void TraceLite::beginIdle(double const time) {
+void TraceLite::beginIdle(TimeType const time) {
   if (idle_begun_) {
     return;
   }
@@ -370,7 +371,7 @@ void TraceLite::beginIdle(double const time) {
   idle_begun_ = true; // must set AFTER logEvent
 }
 
-void TraceLite::endIdle(double const time) {
+void TraceLite::endIdle(TimeType const time) {
   if (not idle_begun_) {
     return;
   }
@@ -393,7 +394,7 @@ void TraceLite::endIdle(double const time) {
 }
 
 void TraceLite::emitTraceForTopProcessingEvent(
-  double const time, TraceConstantsType const type) {
+  TimeType const time, TraceConstantsType const type) {
   if (not open_events_.empty()) {
     traces_.push(LogType{open_events_.back(), time, type});
   }
@@ -508,7 +509,7 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
 }
 
 /*static*/ void TraceLite::outputTraces(
-  vt_gzFile* file, TraceContainerType& traces, double start_time, int flush) {
+  vt_gzFile* file, TraceContainerType& traces, TimeType start_time, int flush) {
   auto const num_nodes = theContext()->getNumNodes();
   gzFile gzfile = file->file_type;
 
@@ -713,7 +714,7 @@ void TraceLite::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void TraceLite::outputHeader(
-  vt_gzFile* file, NodeType const node, double const start) {
+  vt_gzFile* file, NodeType const node, TimeType const start) {
   gzFile gzfile = file->file_type;
   // Output header for projections file
   // '6' means COMPUTATION_BEGIN to Projections: this starts a trace
@@ -722,7 +723,7 @@ void TraceLite::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void TraceLite::outputFooter(
-  vt_gzFile* file, NodeType const node, double const start) {
+  vt_gzFile* file, NodeType const node, TimeType const start) {
   gzFile gzfile = file->file_type;
   // Output footer for projections file,
   // '7' means COMPUTATION_END to Projections

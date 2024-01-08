@@ -55,7 +55,7 @@ struct LoadMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required(); // node_load_
 
-  using NodeLoadType = std::unordered_map<NodeType, lb::BaseLB::LoadType>;
+  using NodeLoadType = std::unordered_map<NodeType, LoadType>;
 
   LoadMsg() = default;
   LoadMsg(NodeType in_from_node, NodeLoadType const& in_node_load)
@@ -66,7 +66,7 @@ struct LoadMsg : vt::Message {
     return node_load_;
   }
 
-  void addNodeLoad(NodeType node, lb::BaseLB::LoadType load) {
+  void addNodeLoad(NodeType node, LoadType load) {
     node_load_[node] = load;
   }
 
@@ -117,7 +117,7 @@ struct LazyMigrationMsg : SerializeRequired<
     vt::Message,
     LazyMigrationMsg
   >;
-  using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, lb::BaseLB::LoadType>;
+  using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, LoadType>;
 
   LazyMigrationMsg() = default;
   LazyMigrationMsg(NodeType in_to_node, ObjsType const& in_objs)
@@ -140,46 +140,6 @@ struct LazyMigrationMsg : SerializeRequired<
 private:
   NodeType to_node_ = uninitialized_destination;
   ObjsType objs_  = {};
-};
-
-struct RejectionStats {
-  RejectionStats() = default;
-  RejectionStats(int n_rejected, int n_transfers)
-    : n_rejected_(n_rejected), n_transfers_(n_transfers) { }
-
-  friend RejectionStats operator+(RejectionStats a1, RejectionStats const& a2) {
-    a1.n_rejected_ += a2.n_rejected_;
-    a1.n_transfers_ += a2.n_transfers_;
-
-    return a1;
-  }
-
-  int n_rejected_ = 0;
-  int n_transfers_ = 0;
-};
-
-static_assert(
-  vt::messaging::is_byte_copyable_t<RejectionStats>::value,
-  "Must be trivially copyable to avoid serialization."
-);
-
-struct RejectionStatsMsg : NonSerialized<
-  collective::ReduceTMsg<RejectionStats>,
-  RejectionStatsMsg
->
-{
-  using MessageParentType = NonSerialized<
-    collective::ReduceTMsg<RejectionStats>,
-    RejectionStatsMsg
-  >;
-
-  RejectionStatsMsg() = default;
-  RejectionStatsMsg(int n_rejected, int n_transfers)
-    : MessageParentType(RejectionStats(n_rejected, n_transfers))
-  { }
-  RejectionStatsMsg(RejectionStats&& rs)
-    : MessageParentType(std::move(rs))
-  { }
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

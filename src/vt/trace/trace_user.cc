@@ -81,7 +81,7 @@ void addUserEvent(UserEventIDType event) {
 #endif
 }
 
-void addUserEventBracketed(UserEventIDType event, double begin, double end) {
+void addUserEventBracketed(UserEventIDType event, TimeType begin, TimeType end) {
 #if vt_check_enabled(trace_enabled)
   theTrace()->addUserEventBracketed(event, begin, end);
 #endif
@@ -100,7 +100,7 @@ void addUserData(int32_t data) {
 }
 
 void addUserBracketedNote(
-  double const begin, double const end, std::string const& note,
+  TimeType const begin, TimeType const end, std::string const& note,
   TraceEventIDType const event
 ) {
 #if vt_check_enabled(trace_enabled)
@@ -110,10 +110,10 @@ void addUserBracketedNote(
 
 #if vt_check_enabled(trace_enabled)
 struct UserSplitHolder final {
-  static std::unordered_map<std::string, double> split_;
+  static std::unordered_map<std::string, TimeType> split_;
 };
 
-/*static*/ std::unordered_map<std::string, double> UserSplitHolder::split_ = {};
+/*static*/ std::unordered_map<std::string, TimeType> UserSplitHolder::split_ = {};
 #endif
 
 void addUserNotePre(std::string const& note, TraceEventIDType const) {

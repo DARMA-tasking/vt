@@ -57,8 +57,9 @@ struct ProposedReassignment : public ComposedModel {
 
   ObjectIterator begin() const override;
   int getNumObjects() const override;
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
-  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
+  LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
+  LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
+  ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
 
 private:
   std::shared_ptr<const Reassignment> reassignment_;

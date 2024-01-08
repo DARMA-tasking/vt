@@ -102,7 +102,7 @@ struct LoadMapObjectIterator : public ObjectIteratorImpl {
 
 struct DualLoadMapObjectIterator : public ObjectIteratorImpl {
   using DualLoadMapType = std::unordered_map<
-    ElementIDStruct, std::tuple<LoadSummary, LoadSummary>
+    ElementIDStruct, std::tuple<LoadSummary, LoadSummary, ElmUserDataType>
   >;
   using map_iterator_type = DualLoadMapType::const_iterator;
   using iterator_category = std::iterator_traits<map_iterator_type>::iterator_category;
@@ -196,7 +196,8 @@ struct LoadModel
    */
   virtual void setLoads(
     std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const* proc_comm
+    std::unordered_map<PhaseType, CommMapType> const* proc_comm,
+    std::unordered_map<PhaseType, DataMapType> const* user_data
   ) = 0;
 
   /**
@@ -225,7 +226,7 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const = 0;
+  virtual LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const = 0;
 
   /**
    * \brief Whether or not the model is based on the RawData model
@@ -240,11 +241,31 @@ struct LoadModel
    *
    * \return How much computation time the object required
    */
-  virtual TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) const {
+  virtual LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const {
     vtAbort(
       "LoadModel::getRawLoad() called on a model that does not implement it"
     );
     return 0.0;
+  };
+
+  /**
+   * \brief Whether or not the model is based on the RawData model
+   */
+  virtual bool hasUserData() const { return false; }
+
+  /**
+   * \brief Provide the given object's user data during a specified interval
+   *
+   * \param[in] object The object whose user data is desired
+   * \param[in] when The interval in which the user data is desired
+   *
+   * \return The user data associated with the object
+   */
+  virtual ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const {
+    vtAbort(
+      "LoadModel::getUserData() called on a model that does not implement it"
+    );
+    return ElmUserDataType{};
   };
 
   /**
@@ -259,13 +280,13 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual TimeType getModeledComm(ElementIDStruct object, PhaseOffset when) const {
+  virtual LoadType getModeledComm(ElementIDStruct object, PhaseOffset when) const {
     return {};
   }
 
   /**
    * \brief Compute how many phases of past load statistics need to be
-   * kept availble for the model to use
+   * kept available for the model to use
    *
    * \param[in] look_back How many phases into the past the caller
    * intends to query

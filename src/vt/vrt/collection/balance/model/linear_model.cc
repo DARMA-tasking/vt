@@ -48,7 +48,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-TimeType LinearModel::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
+LoadType LinearModel::getModeledLoad(ElementIDStruct object, PhaseOffset when) const {
   using util::stats::LinearRegression;
 
   // Retrospective queries don't call for a prediction

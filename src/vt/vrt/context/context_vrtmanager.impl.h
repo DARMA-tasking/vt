@@ -223,7 +223,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
   return return_proxy;
 }
 
-inline void VirtualContextManager::setupMappedVirutalContext(
+inline void VirtualContextManager::setupMappedVirtualContext(
   VirtualProxyType const& proxy, SeedType const& seed
 ) {
   auto vrt_info = getVirtualInfoByProxy(proxy);
@@ -237,7 +237,7 @@ VirtualProxyType VirtualContextManager::makeVirtualMapComm(
   auto const& proxy = makeVirtual<VrtContextT, Args...>(
     std::forward<Args>(args)...
   );
-  setupMappedVirutalContext(proxy, seed);
+  setupMappedVirtualContext(proxy, seed);
   return proxy;
 }
 

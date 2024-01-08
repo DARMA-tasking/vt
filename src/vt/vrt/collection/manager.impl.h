@@ -78,7 +78,6 @@
 #include "vt/pipe/pipe_headers.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/phase/phase_manager.h"
-#include "vt/runnable/invoke.h"
 #include "vt/runnable/make_runnable.h"
 
 #include <tuple>
@@ -780,7 +779,7 @@ messaging::PendingSend CollectionManager::broadcastNormalMsg(
   CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
   HandlerType const handler, bool instrument
 ) {
-  auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(*msg);
+  auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(std::move(*msg));
   return broadcastMsgUntypedHandler<ColMsgWrap<ColT, MsgT>, ColT>(
     proxy, wrap_msg.get(), handler, instrument
   );
@@ -986,7 +985,7 @@ messaging::PendingSend CollectionManager::sendNormalMsg(
   VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
   HandlerType const handler
 ) {
-  auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(*msg);
+  auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(std::move(*msg));
   return sendMsgUntypedHandler<ColMsgWrap<ColT, MsgT>, ColT>(
     proxy, wrap_msg.get(), handler
   );
@@ -1192,6 +1191,9 @@ bool CollectionManager::insertCollectionElement(
         listener::ElementEventEnum::ElementMigratedIn, idx, home_node
       );
     } else {
+      auto raw_ptr = elm_holder->lookup(idx).getRawPtr();
+      raw_ptr->getLBData().setPhase(thePhase()->getCurrentPhase());
+
       theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
         idx, home_node,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
@@ -1284,7 +1286,7 @@ template <typename ColT, typename ParamT, typename... Args>
   std::tuple<Args...>
 ) {
   using MapT = typename DefaultMap<ColT>::MapType;
-  return auto_registry::makeAutoHandlerFunctorMap<MapT,Args...>();
+  return auto_registry::makeAutoHandlerFunctorMap<MapT>();
 }
 
 template <typename IndexT>
@@ -1553,9 +1555,7 @@ void CollectionManager::finishModification(
   NodeType collective_root = 0;
   auto stamp = makeStamp<StrongUserID>(untyped_proxy);
   auto msg = makeMessage<CollectionStampMsg>(untyped_proxy, min_seq);
-  auto cb = theCB()->makeBcast<
-    CollectionStampMsg,&CollectionManager::computeReduceStamp
-  >();
+  auto cb = theCB()->makeBcast<&CollectionManager::computeReduceStamp>();
   r->reduce<collective::MinOp<SeqType>>(collective_root, msg.get(), cb, stamp);
 
   theSched()->runSchedulerWhile([untyped_proxy]{
@@ -1684,10 +1684,6 @@ void CollectionManager::insert(
   if (insert_node == this_node and proceed_with_insertion) {
     auto cons_fn = detail::InsertMsgDispatcher<MsgT, ColT>::makeCons(insert_msg);
     makeCollectionElement<ColT>(untyped_proxy, idx, mapped_node, cons_fn);
-
-    auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
-    auto raw_ptr = elm_holder->lookup(idx).getRawPtr();
-    raw_ptr->getLBData().updatePhase(thePhase()->getCurrentPhase());
   } else if (insert_node != this_node) {
     auto msg = makeMessage<InsertMsg<ColT, MsgT>>(
       proxy, idx, insert_node, mapped_node, modify_epoch, insert_msg

@@ -124,6 +124,16 @@ void GroupManager::deleteGroupCollective(GroupType group_id) {
   }
 }
 
+std::optional<GroupType>
+GroupManager::GetTempGroupForRange(const region::Region::ListType& range) {
+  const auto it = temporary_groups_.find(range);
+  if (it != temporary_groups_.end()) {
+    return it->second;
+  }
+
+  return {};
+}
+
 bool GroupManager::inGroup(GroupType const group) {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");

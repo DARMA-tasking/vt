@@ -575,7 +575,7 @@ void TerminationDetector::startEpochGraphBuild() {
   graph->writeToFile(str);
   auto msg = makeMessage<MsgType>(graph);
   NodeType root = 0;
-  auto cb = vt::theCB()->makeSend<MsgType, epochGraphBuiltHandler>(root);
+  auto cb = vt::theCB()->makeSend<epochGraphBuiltHandler>(root);
 
   auto r = theTerm()->reducer();
   r->reduce<ReduceOp>(root, msg.get(), cb);
@@ -657,7 +657,7 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
   }
 
   // Trigger actions associated with epoch
-  triggerAllActions(epoch);
+  queueActions(epoch);
 
   // Update the window for the epoch archetype
   updateResolvedEpochs(epoch);

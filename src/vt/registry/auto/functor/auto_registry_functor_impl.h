@@ -54,15 +54,15 @@
 
 namespace vt { namespace auto_registry {
 
-template <typename FunctorT, bool msg, typename... Args>
+template <typename FunctorT, typename MsgT, bool is_msg_direct>
 inline HandlerType makeAutoHandlerFunctor() {
   // Arg (overload) differentiaton in adapter.
-  using AdapterType = FunctorAdapterArgs<FunctorT, Args...>;
+  using AdapterType = FunctorAdapterArgs<FunctorT, MsgT, is_msg_direct>;
   using ContainerType = AutoActiveFunctorContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveFunctorType>;
   using FuncType = ActiveFnPtrType;
   using RunType =
-    RunnableFunctor<AdapterType, ContainerType, RegInfoType, FuncType, msg>;
+    RunnableFunctor<AdapterType, ContainerType, RegInfoType, FuncType, MsgT>;
 
   constexpr bool is_auto = true;
   constexpr bool is_functor = true;

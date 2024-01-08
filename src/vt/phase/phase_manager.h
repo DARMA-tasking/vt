@@ -49,6 +49,7 @@
 #include "vt/phase/phase_hook_enum.h"
 #include "vt/phase/phase_hook_id.h"
 #include "vt/vrt/collection/balance/lb_invoke/phase_info.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 
 #include <unordered_map>
 #include <map>
@@ -56,9 +57,6 @@
 #define VT_PHASE_MANAGER 20201023
 
 namespace vt { namespace phase {
-
-// fwd-decl for reduce messasge
-struct NextMsg;
 
 /**
  * \struct PhaseManager
@@ -172,6 +170,36 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
    */
   void setStartTime();
 
+
+template <typename T, typename = void>
+struct is_jsonable : std::false_type {};
+
+template <typename T>
+struct is_jsonable<T, std::void_t<decltype(nlohmann::json(std::declval<T>()))>> : std::true_type {};
+
+template <typename KeyT, typename ValueT>
+void addUserDefinedData(PhaseType phase, const KeyT& key, const ValueT& value) {
+  static_assert(
+    is_jsonable<KeyT>::value,
+    "PhaseManager::addUserDefinedData: KeyT type is not jsonable"
+  );
+  static_assert(
+    is_jsonable<ValueT>::value,
+    "PhaseManager::addUserDefinedData: ValueT type is not jsonable"
+  );
+
+  auto perPhase = theNodeLBData()->getLBData()->user_per_phase_json_;
+
+  if (perPhase.find(phase) == perPhase.end()) {
+    auto j = std::make_shared<nlohmann::json>();
+    j->emplace(key, value);
+
+    theNodeLBData()->getLBData()->user_per_phase_json_[phase] = j;
+  } else {
+    perPhase[phase]->emplace(key, value);
+  }
+}
+
   /**
    * \brief Print summary for the current phase.
    *
@@ -186,7 +214,7 @@ private:
    *
    * \param[in] msg the (empty) next phase message
    */
-  void nextPhaseReduce(NextMsg* msg);
+  void nextPhaseReduce();
 
   /**
    * \internal
@@ -194,7 +222,7 @@ private:
    *
    * \param[in] msg the (empty) next phase message
    */
-  void nextPhaseDone(NextMsg* msg);
+  void nextPhaseDone();
 
   /**
    * \internal
@@ -240,9 +268,9 @@ public:
 private:
   PhaseType cur_phase_ = 0;                 /**< Current phase */
   ObjGroupProxyType proxy_ = no_obj_group;  /**< Objgroup proxy  */
-  HookIDMapType collective_hooks_;          /**< Collective regisstered hooks */
-  HookIDMapType rooted_hooks_;              /**< Rooted regisstered hooks  */
-  HookIDMapType unsync_hooks_;              /**< Unsync'ed regisstered hooks  */
+  HookIDMapType collective_hooks_;          /**< Collective registered hooks */
+  HookIDMapType rooted_hooks_;              /**< Rooted registered hooks  */
+  HookIDMapType unsync_hooks_;              /**< Unsync'ed registered hooks  */
   std::size_t next_collective_hook_id_ = 1; /**< Next ID for collective hooks */
   std::size_t next_rooted_hook_id_ = 1;     /**< Next ID for rooted hooks */
   std::size_t next_unsync_hook_id_ = 1;     /**< Next ID for unsync'ed hooks */

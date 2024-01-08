@@ -97,6 +97,26 @@ LoadSummary getObjectRawLoads(
   return ret;
 }
 
+ElmUserDataType getObjectUserData(
+  std::shared_ptr<LoadModel> model, ElementIDStruct object, PhaseOffset when
+) {
+  return getObjectUserData(model.get(), object, when);
+}
+
+ElmUserDataType getObjectUserData(
+  LoadModel* model, ElementIDStruct object, PhaseOffset when
+) {
+  ElmUserDataType ret;
+
+  if (model->hasUserData()) {
+    ret = model->getUserData(
+      object, {when.phases, PhaseOffset::WHOLE_PHASE}
+    );
+  }
+
+  return ret;
+}
+
 LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when)
 {
   LoadSummary ret;

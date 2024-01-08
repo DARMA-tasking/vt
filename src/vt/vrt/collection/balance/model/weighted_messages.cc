@@ -45,12 +45,12 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-TimeType
+LoadType
 WeightedMessages::getModeledComm(ElementIDStruct object, PhaseOffset when) const {
   auto phase = getNumCompletedPhases() + when.phases;
   auto& comm = proc_comm_->at(phase);
 
-  TimeType incoming = 0., outgoing = 0.;
+  LoadType incoming = 0., outgoing = 0.;
   for (auto&& c : comm) {
     if (
       c.first.commCategory() == elm::CommCategory::SendRecv and

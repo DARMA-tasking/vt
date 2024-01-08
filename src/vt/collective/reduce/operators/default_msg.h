@@ -51,11 +51,31 @@
 
 #include <array>
 #include <vector>
+#include <variant>
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
 template <typename>
 struct ReduceCombine;
+
+template <typename T, typename enabled = void>
+struct GetCallbackType;
+
+template <typename T>
+struct GetCallbackType<T> {
+  using CallbackType = Callback<T>;
+  using MsgT = T;
+};
+
+template <typename... Args>
+struct GetCallbackType<std::tuple<Args...>> {
+  using CallbackType = Callback<Args...>;
+};
+
+template <typename T>
+struct GetCallbackType<Callback<T>> {
+  using MsgT = T;
+};
 
 template <typename DataType>
 struct ReduceDataMsg : SerializeIfNeeded<
@@ -63,15 +83,21 @@ struct ReduceDataMsg : SerializeIfNeeded<
   ReduceDataMsg<DataType>,
   DataType
 >, ReduceCombine<void> {
+
+  using DataT = DataType;
+  using CallbackParamType = typename GetCallbackType<DataType>::CallbackType;
+  using CallbackMsgType = Callback<ReduceDataMsg<DataType>>;
+
   using MessageParentType = SerializeIfNeeded<
     ReduceMsg,
     ReduceDataMsg<DataType>,
     DataType
   >;
 
-  using CallbackType = CallbackU;
-
   ReduceDataMsg() = default;
+  ReduceDataMsg(ReduceDataMsg const&) = default;
+  ReduceDataMsg(ReduceDataMsg&&) = default;
+
   explicit ReduceDataMsg(DataType&& in_val)
     : MessageParentType(), ReduceCombine<void>(),
       val_(std::forward<DataType>(in_val))
@@ -80,49 +106,77 @@ struct ReduceDataMsg : SerializeIfNeeded<
     : MessageParentType(), ReduceCombine<void>(), val_(in_val)
   { }
 
+  DataType& getTuple() { return val_; }
   DataType const& getConstVal() const { return val_; }
   DataType& getVal() { return val_; }
   DataType&& getMoveVal() { return std::move(val_); }
-  CallbackType getCallback() { return cb_; }
 
-  template <typename MsgT>
-  void setCallback(Callback<MsgT> cb) { cb_ = CallbackType{cb}; }
+  bool isMsgCallback() const { return cb_.index() == 0; }
+  bool isParamCallback() const { return cb_.index() == 1; }
+  CallbackMsgType getMsgCallback() { return std::get<0>(cb_); }
+  CallbackParamType getParamCallback() { return std::get<1>(cb_); }
+  bool hasValidCallback() {
+    if (isMsgCallback()) {
+      return getMsgCallback().valid();
+    } else {
+      return getParamCallback().valid();
+    }
+  }
+
+  template <typename CallbackT>
+  void setCallback(CallbackT cb) {
+    if constexpr (std::is_same_v<CallbackT, CallbackParamType>) {
+      cb_ = cb;
+    } else if (
+      std::is_convertible_v<
+        typename GetCallbackType<CallbackT>::MsgT*, ReduceDataMsg<DataType>*
+      >
+    ) {
+      auto cb_ptr = reinterpret_cast<Callback<ReduceDataMsg<DataType>>*>(&cb);
+      cb_ = *cb_ptr;
+    } else {
+      static_assert(
+        std::is_same_v<CallbackT, CallbackParamType> or
+        std::is_convertible_v<
+          typename GetCallbackType<CallbackT>::MsgT*, ReduceDataMsg<DataType>*
+        >,
+        "Must be a convertible message callback or parameterized callback"
+      );
+    }
+  }
 
   template <typename SerializeT>
   void serialize(SerializeT& s) {
     MessageParentType::serialize(s);
     s | val_;
-    s | cb_;
+    int index = cb_.index();
+    s | index;
+    if (s.isUnpacking()) {
+      if (index == 0) {
+        CallbackMsgType cb;
+        s | cb;
+        cb_ = cb;
+      } else {
+        CallbackParamType cb;
+        s | cb;
+        cb_ = cb;
+      }
+    } else {
+      if (index == 0) {
+        s | std::get<0>(cb_);
+      } else {
+        s | std::get<1>(cb_);
+      }
+    }
   }
 
 protected:
   DataType val_    = {};
-  CallbackType cb_ = {};
+  std::variant<CallbackMsgType, CallbackParamType> cb_;
 };
 
 template <typename T>
-struct ReduceTMsg : SerializeIfNeeded<
-  ReduceDataMsg<T>,
-  ReduceTMsg<T>
-> {
-  using MessageParentType = SerializeIfNeeded<
-    ReduceDataMsg<T>,
-    ReduceTMsg<T>
-  >;
-
-  ReduceTMsg() = default;
-  explicit ReduceTMsg(T&& in_val)
-    : MessageParentType(std::forward<T>(in_val))
-  { }
-  explicit ReduceTMsg(T const& in_val)
-    : MessageParentType(in_val)
-  { }
-
-  template <typename SerializeT>
-  inline void serialize(SerializeT& s) {
-    MessageParentType::serialize(s);
-  }
-};
+using ReduceTMsg = ReduceDataMsg<T>;
 
 template <typename T, std::size_t N>
 struct ReduceArrMsg : SerializeIfNeeded<

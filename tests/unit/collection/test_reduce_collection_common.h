@@ -55,17 +55,12 @@ namespace vt { namespace tests { namespace unit { namespace reduce {
 int const collect_size = 32;
 int const index_tresh  = 8;
 
-struct MyReduceMsg : vt::collective::ReduceMsg {
-  MyReduceMsg(int const& in_num)
-    : num(in_num) {}
-
-  int num = 0;
-};
-
-struct MyReduceNoneMsg : vt::collective::ReduceNoneMsg { };
-
 struct VectorPayload {
   VectorPayload() = default;
+  VectorPayload(double num) {
+    vec.push_back(num);
+    vec.push_back(num + 1);
+  }
 
   friend VectorPayload operator+(VectorPayload v1, VectorPayload const& v2) {
     for (auto&& elm : v2.vec) {
@@ -82,44 +77,25 @@ struct VectorPayload {
   std::vector<double> vec;
 };
 
-struct SysMsgVec : vt::collective::ReduceTMsg<VectorPayload> {
-  using MessageParentType = vt::collective::ReduceTMsg<VectorPayload>;
-  vt_msg_serialize_required();
-
-  SysMsgVec() = default;
-
-  explicit SysMsgVec(double in_num)
-    : ReduceTMsg<VectorPayload>() {
-    getVal().vec.push_back(in_num);
-    getVal().vec.push_back(in_num + 1);
-  }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-  }
-};
-
-struct CheckVec {
-  void operator()(SysMsgVec* msg) {
-    auto const size = msg->getConstVal().vec.size();
-    vt_debug_print(normal, reduce, "final vec.size={}\n", size);
-    EXPECT_EQ(size, reduce::collect_size * 2U);
-  }
-};
-
-struct NoneReduce {
-  void operator()(MyReduceNoneMsg* msg) { }
-};
-
 struct MyCol : Collection<MyCol, Index1D> {
-  MyCol()
-    : Collection<MyCol, Index1D>() {
+  MyCol() {
     vt_debug_print(
       normal, reduce,
       "constructing MyCol on node={}: idx.x()={}, ptr={}\n",
       theContext()->getNode(), getIndex().x(), print_ptr(this)
     );
+  }
+
+  void noneReduce() { }
+
+  void checkVec(VectorPayload v) {
+    auto const size = v.vec.size();
+    vt_debug_print(normal, reduce, "final vec.size={}\n", size);
+    EXPECT_EQ(size, reduce::collect_size * 2U);
+  }
+
+  void checkNum(int val) {
+    EXPECT_EQ(val, collect_size * (collect_size - 1) / 2);
   }
 
   virtual ~MyCol() = default;
@@ -134,38 +110,6 @@ struct ColMsg : CollectionMessage<MyCol> {
     : from_node(in_from_node)
   {}
 };
-
-template <int expected, bool check = true>
-void reducePlus(MyReduceMsg* msg) {
-  vt_debug_print(
-    normal, reduce,
-    "reducePlus: cur={}: is_root={}, count={}, next={}, num={}\n",
-    print_ptr(msg), print_bool(msg->isRoot()),
-    msg->getCount(), print_ptr(msg->getNext<MyReduceMsg>()), msg->num
-  );
-
-  if (msg->isRoot()) {
-    int const value = msg->num;
-    vt_debug_print(normal, reduce, "reducePlus: final num={}\n", value);
-    if (check) {
-      EXPECT_EQ(value, expected);
-    }
-  } else {
-    auto fst_msg = msg;
-    auto cur_msg = msg->getNext<MyReduceMsg>();
-    while (cur_msg != nullptr) {
-      vt_debug_print(
-        normal, reduce,
-        "reducePlus: while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
-        print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->isRoot()),
-        cur_msg->getCount(), print_ptr(cur_msg->getNext<MyReduceMsg>()), cur_msg->num
-      );
-
-      fst_msg->num += cur_msg->num;
-      cur_msg = cur_msg->getNext<MyReduceMsg>();
-    }
-  }
-}
 
 }}}} // end namespace vt::tests::unit::reduce
 

@@ -49,10 +49,10 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 void LoadSamplerBaseLB::buildHistogram() {
   for (auto obj : *load_model_) {
-    TimeTypeWrapper load = load_model_->getModeledLoad(
+    auto load = load_model_->getModeledLoad(
       obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
-    auto const& load_milli = loadMilli(load.seconds());
+    auto const& load_milli = loadMilli(load);
     auto const& bin = histogramSample(load_milli);
     if (obj.isMigratable()) {
       obj_sample[bin].push_back(obj);

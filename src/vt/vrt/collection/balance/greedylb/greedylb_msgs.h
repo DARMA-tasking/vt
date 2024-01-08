@@ -106,29 +106,6 @@ protected:
   ObjSampleType sample_;
 };
 
-struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
-  using MessageParentType = collective::ReduceTMsg<GreedyPayload>;
-  vt_msg_serialize_required(); // prev. serialize(1)
-
-  GreedyCollectMsg() = default;
-  GreedyCollectMsg(ObjSampleType const& in_load, LoadType const& in_profile)
-    : collective::ReduceTMsg<GreedyPayload>(GreedyPayload{in_load,in_profile})
-  { }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-  }
-
-  ObjSampleType const& getModeledLoad() const {
-    return collective::ReduceTMsg<GreedyPayload>::getConstVal().getSample();
-  }
-
-  ObjSampleType&& getLoadMove() {
-    return collective::ReduceTMsg<GreedyPayload>::getVal().getSampleMove();
-  }
-};
-
 struct GreedySendMsg : GreedyLBTypes, vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required(); // vector

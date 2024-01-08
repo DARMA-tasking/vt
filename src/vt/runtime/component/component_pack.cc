@@ -49,7 +49,7 @@
 namespace vt { namespace runtime { namespace component {
 
 void ComponentPack::construct() {
-  // Topologically sort the components based on dependences to generate a
+  // Topologically sort the components based on dependencies to generate a
   // valid startup order
   auto order = topoSort();
 

@@ -66,14 +66,15 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   balance::LoadModel* model,
   StatisticMapType const& in_stats,
   ElementCommType const& in_comm_lb_data,
-  TimeType total_load
+  LoadType total_load,
+  balance::DataMapType const& in_data_map
 ) {
   start_time_ = timing::getCurrentTime();
   phase_ = phase;
   proxy_ = proxy;
   load_model_ = model;
 
-  importProcessorData(in_stats, in_comm_lb_data);
+  importProcessorData(in_stats, in_comm_lb_data, in_data_map);
 
   runInEpochCollective("BaseLB::startLB -> runLB", [this,total_load]{
     getArgs(phase_);
@@ -85,13 +86,14 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
 }
 
 /*static*/
-BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) {
+LoadType BaseLB::loadMilli(LoadType const& load) {
   // Convert `load` in seconds to milliseconds, typically for binning purposes
   return load * 1000;
 }
 
 void BaseLB::importProcessorData(
-  StatisticMapType const& in_stats, ElementCommType const& comm_in
+  StatisticMapType const& in_stats, ElementCommType const& comm_in,
+  balance::DataMapType const& in_data_map
 ) {
   vt_debug_print(
     normal, lb,
@@ -129,10 +131,8 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
   pending_reassignment_->node_ = this_node;
 
   runInEpochCollective("Sum migrations", [&] {
-    auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);
     int32_t local_migration_count = transfers_.size();
-    auto msg = makeMessage<CountMsg>(local_migration_count);
-    proxy_.template reduce<collective::PlusOp<int32_t>>(msg,cb);
+    proxy_.allreduce<&BaseLB::finalize, collective::PlusOp>(local_migration_count);
   });
 
   std::map<NodeType, ObjDestinationListType> migrate_other;
@@ -190,8 +190,12 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
       auto const raw_load_summary = getObjectRawLoads(
         load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
+      auto const obj_user_data = getObjectUserData(
+        load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+
       depart_map[dest].push_back(
-        std::make_tuple(obj_id, load_summary, raw_load_summary)
+        std::make_tuple(obj_id, load_summary, raw_load_summary, obj_user_data)
       );
     }
 
@@ -229,8 +233,9 @@ void BaseLB::notifyNewHostNodeOfObjectsArriving(
     auto const obj_id = std::get<0>(arrival);
     auto const& load_summary = std::get<1>(arrival);
     auto const& raw_load_summary = std::get<2>(arrival);
+    auto const& obj_user_data = std::get<3>(arrival);
     pending_reassignment_->arrive_[obj_id] = std::make_tuple(
-      load_summary, raw_load_summary
+      load_summary, raw_load_summary, obj_user_data
     );
   }
 }
@@ -241,8 +246,7 @@ void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
   }
 }
 
-void BaseLB::finalize(CountMsg* msg) {
-  auto global_count = msg->getVal();
+void BaseLB::finalize(int32_t global_count) {
   if (migration_count_cb_) {
     migration_count_cb_(global_count);
   }
@@ -251,7 +255,7 @@ void BaseLB::finalize(CountMsg* msg) {
 
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
-    TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
+    auto const total_time = timing::getCurrentTime() - start_time_;
     vt_debug_print(
       terse, lb,
       "BaseLB::finalize: LB total time={}\n",

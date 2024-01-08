@@ -49,7 +49,7 @@
 namespace vt { namespace timing {
 
 TimeType getCurrentTime() {
-  return MPI_Wtime();
+  return TimeType{MPI_Wtime()};
 }
 
 }} /* end namespace vt::timing */

@@ -68,18 +68,17 @@ struct CommMsg;
 
 struct BaseLB {
   using ObjIDType        = balance::ElementIDStruct;
-  using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
+  using ElementLoadType  = std::unordered_map<ObjIDType,LoadType>;
   using ElementCommType  = elm::CommMapType;
   using TransferDestType = std::tuple<ObjIDType,NodeType>;
   using TransferVecType  = std::vector<TransferDestType>;
   using TransferType     = std::map<NodeType, TransferVecType>;
-  using LoadType         = double;
   using MigrationCountCB = std::function<void(int32_t)>;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
   using LoadSummary      = balance::LoadSummary;
   using ObjLoadListType  = std::vector<
-    std::tuple<ObjIDType, LoadSummary, LoadSummary>
+    std::tuple<ObjIDType, LoadSummary, LoadSummary, balance::ElmUserDataType>
   >;
   using ObjDestinationListType = std::vector<std::tuple<ObjIDType, NodeType>>;
 
@@ -96,12 +95,20 @@ struct BaseLB {
   virtual ~BaseLB() = default;
 
   /**
-   * This sets up and invokes the particular strategy implementations
+   * \brief This sets up and invokes the particular strategy implementations
    * through virtual methods `initParams` and `runLB`, and then
    * normalizes their output to a reassignment that can be evaluated
    * and applied
    *
    * This must be called collectively.
+   *
+   * \param[in] phase the phase we are load balancing
+   * \param[in] proxy the base proxy
+   * \param[in] model the load model
+   * \param[in] in_stats LB statistics
+   * \param[in] in_comm_lb_data comm map data
+   * \param[in] total_load total modeled load for this rank
+   * \param[in] in_data_map the user-defined data map
    *
    * \return A normalized reassignment
    */
@@ -111,14 +118,21 @@ struct BaseLB {
     balance::LoadModel *model,
     StatisticMapType const& in_stats,
     ElementCommType const& in_comm_lb_data,
-    TimeType total_load
+    LoadType total_load,
+    balance::DataMapType const& in_data_map
   );
 
+  /**
+   * \brief Import processor data to the base LB
+   *
+   *  \param[in] in_stats statistics
+   *  \param[in] cm the comm map
+   *  \param[in] in_data_map user-defined data
+   */
   void importProcessorData(
-    StatisticMapType const& in_stats, ElementCommType const& cm
+    StatisticMapType const& in_stats, ElementCommType const& cm,
+    balance::DataMapType const& in_data_map
   );
-
-  static LoadType loadMilli(LoadType const& load);
 
   void notifyCurrentHostNodeOfObjectsDeparting(
     TransferMsg<ObjDestinationListType>* msg
@@ -127,6 +141,8 @@ struct BaseLB {
     TransferMsg<ObjLoadListType>* msg
   );
 
+  LoadType loadMilli(LoadType const& load);
+
   void applyMigrations(
     TransferVecType const& transfers, MigrationCountCB migration_count_callback
   );
@@ -134,10 +150,10 @@ struct BaseLB {
   void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
   void transferSend(NodeType from, TransferVecType const& transfer);
   void transferMigrations(TransferMsg<TransferVecType>* msg);
-  void finalize(CountMsg* msg);
+  void finalize(int32_t global_count);
 
   virtual void inputParams(balance::ConfigEntry* config) = 0;
-  virtual void runLB(TimeType total_load) = 0;
+  virtual void runLB(LoadType total_load) = 0;
 
   StatisticMapType const* getStats() const {
     return base_stats_;
@@ -151,7 +167,7 @@ struct BaseLB {
 protected:
   void getArgs(PhaseType phase);
 
-  double start_time_                                  = 0.0f;
+  TimeType start_time_                                = TimeType{0.0};
   ElementCommType const* comm_data                    = nullptr;
   objgroup::proxy::Proxy<BaseLB> proxy_               = {};
   PhaseType phase_                                    = 0;

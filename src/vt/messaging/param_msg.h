@@ -46,7 +46,103 @@
 
 #include "vt/messaging/message/message_serialize.h"
 
-namespace vt { namespace messaging {
+namespace vt {
+
+struct MsgProps {
+
+  MsgProps() = default;
+
+  MsgProps&& asLocationMsg(bool set = true) {
+    as_location_msg_ = set;
+    return std::move(*this);
+  }
+
+  MsgProps&& asTerminationMsg(bool set = true) {
+    as_termination_msg_ = set;
+    return std::move(*this);
+  }
+
+  MsgProps&& asCollectionMsg(bool set = true) {
+    as_collection_msg_ = set;
+    return std::move(*this);
+  }
+
+  MsgProps&& asSerializationMsg(bool set = true) {
+    as_serial_msg_ = set;
+    return std::move(*this);
+  }
+
+  MsgProps&& withEpoch(EpochType in_ep) {
+    ep_ = in_ep;
+    return std::move(*this);
+  }
+
+  MsgProps&& withPriority(PriorityType in_priority) {
+#if vt_check_enabled(priorities)
+    priority_ = in_priority;
+#endif
+    return std::move(*this);
+  }
+
+  MsgProps&& withPriorityLevel(PriorityLevelType in_priority_level) {
+#if vt_check_enabled(priorities)
+    priority_level_ = in_priority_level;
+#endif
+    return std::move(*this);
+  }
+
+  template <typename MsgPtrT>
+  void apply(MsgPtrT msg);
+
+private:
+  bool as_location_msg_ = false;
+  bool as_termination_msg_ = false;
+  bool as_serial_msg_ = false;
+  bool as_collection_msg_ = false;
+  EpochType ep_ = no_epoch;
+#if vt_check_enabled(priorities)
+  PriorityType priority_ = no_priority;
+  PriorityLevelType priority_level_ = no_priority_level;
+#endif
+};
+
+} /* end namespace vt */
+
+namespace vt::messaging::detail {
+
+template <typename enabled_, typename... Params>
+struct GetTraits;
+
+template <>
+struct GetTraits<std::enable_if_t<std::is_same_v<void, void>>> {
+  using TupleType = std::tuple<>;
+};
+
+template <typename Param, typename... Params>
+struct GetTraits<
+  std::enable_if_t<std::is_same_v<MsgProps, Param>>, Param, Params...
+>  {
+  using TupleType = std::tuple<Params...>;
+};
+
+template <typename Param, typename... Params>
+struct GetTraits<
+  std::enable_if_t<not std::is_same_v<MsgProps, Param>>, Param, Params...
+>  {
+  using TupleType = std::tuple<Param, Params...>;
+};
+
+template <typename Tuple>
+struct GetTraitsTuple;
+
+template <typename... Params>
+struct GetTraitsTuple<std::tuple<Params...>> {
+  using TupleType = typename GetTraits<void, Params...>::TupleType;
+};
+
+} /* end namespace vt::messaging::detail */
+
+namespace vt::messaging {
 
 template <typename Tuple, typename enabled = void>
 struct ParamMsg;
@@ -56,15 +152,24 @@ struct ParamMsg<
   Tuple, std::enable_if_t<is_byte_copyable_t<Tuple>::value>
 > : vt::Message
 {
+  using TupleType = typename detail::GetTraitsTuple<Tuple>::TupleType;
+
   ParamMsg() = default;
 
-  template <typename... Params>
-  explicit ParamMsg(Params&&... in_params)
-    : params(std::forward<Params>(in_params)...)
-  { }
+  void setParams() { }
 
-  Tuple params;
-  Tuple& getTuple() { return params; }
+  template <typename Param, typename... Params>
+  void setParams(Param&& p, Params&&... in_params) {
+    if constexpr (std::is_same_v<std::decay_t<Param>, MsgProps>) {
+      params = TupleType{std::forward<Params>(in_params)...};
+      p.apply(this);
+    } else {
+      params = TupleType{std::forward<Param>(p), std::forward<Params>(in_params)...};
+    }
+  }
+
+  TupleType params;
+  TupleType& getTuple() { return params; }
 };
 
 template <typename Tuple>
@@ -75,16 +180,29 @@ struct ParamMsg<
   using MessageParentType = vt::Message;
   vt_msg_serialize_if_needed_by_parent_or_type1(Tuple); // by tup
 
+  using TupleType = typename detail::GetTraitsTuple<Tuple>::TupleType;
+
   ParamMsg() = default;
 
-  template <typename... Params>
-  explicit ParamMsg(Params&&... in_params)
-    : params(std::make_unique<Tuple>(std::forward<Params>(in_params)...))
-  { }
+  void setParams() {
+    params = std::make_unique<TupleType>();
+  }
 
-  std::unique_ptr<Tuple> params;
+  template <typename Param, typename... Params>
+  void setParams(Param&& p, Params&&... in_params) {
+    if constexpr (std::is_same_v<std::decay_t<Param>, MsgProps>) {
+      params = std::make_unique<TupleType>(std::forward<Params>(in_params)...);
+      p.apply(this);
+    } else {
+      params = std::make_unique<TupleType>(
+        std::forward<Param>(p), std::forward<Params>(in_params)...
+      );
+    }
+  }
 
-  Tuple& getTuple() { return *params.get(); }
+  std::unique_ptr<TupleType> params;
+
+  TupleType& getTuple() { return *params.get(); }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -93,6 +211,6 @@ struct ParamMsg<
   }
 };
 
-}} /* end namespace vt::messaging */
+} /* end namespace vt::messaging */
 
 #endif /*INCLUDED_VT_MESSAGING_PARAM_MSG_H*/

@@ -49,6 +49,27 @@
 
 namespace vt {
 
+std::unique_ptr<arguments::ArgvContainer>
+preconfigure(int& argc, char**& argv) {
+  return std::make_unique<arguments::ArgvContainer>(argc, argv);
+}
+
+RuntimePtrType initializePreconfigured(
+  MPI_Comm* comm, arguments::AppConfig const* appConfig,
+  arguments::ArgvContainer const* preconfigure_args
+) {
+  arguments::ArgvContainer args =
+    preconfigure_args ? *preconfigure_args : arguments::ArgvContainer{};
+
+  auto argc = args.getArgc();
+  auto argv_container = args.getArgvDeepCopy();
+  auto argv = argv_container.get();
+  bool const is_interop = comm != nullptr;
+  return CollectiveOps::initialize(
+    argc, argv, is_interop, comm, appConfig
+  );
+}
+
 // vt::{initialize,finalize} for main ::vt namespace
 RuntimePtrType initialize(
   int& argc, char**& argv, MPI_Comm* comm, arguments::AppConfig const* appConfig

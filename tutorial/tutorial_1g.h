@@ -46,44 +46,23 @@
 namespace vt { namespace tutorial {
 
 /// [Tutorial1G]
-//              VT Base Message
-//             \----------------/
-//              \              /
-struct DataMsg : ::vt::Message { };
-
-struct MsgWithCallback : ::vt::Message {
-  MsgWithCallback() = default;
-  explicit MsgWithCallback(Callback<DataMsg> in_cb) : cb(in_cb) {}
-
-  Callback<DataMsg> cb;
-};
-
 
 // Forward declaration for the active message handler
-static void getCallbackHandler(MsgWithCallback* msg);
+static void getCallbackHandler(Callback<int> cb);
 
 // An active message handler used as the target for a callback
-static void callbackHandler(DataMsg* msg) {
+static void callbackHandler(int data) {
   NodeType const cur_node = ::vt::theContext()->getNode();
-  ::fmt::print("{}: triggering active message callback\n", cur_node);
+  ::fmt::print("{}: triggering active message callback: {}\n", cur_node, data);
 }
 
 // An active message handler used as the target for a callback
-static void callbackBcastHandler(DataMsg* msg) {
+static void callbackBcastHandler(int data) {
   NodeType const cur_node = ::vt::theContext()->getNode();
-  ::fmt::print("{}: triggering active message callback bcast\n", cur_node);
+  ::fmt::print(
+    "{}: triggering active message callback bcast: {}\n", cur_node, data
+  );
 }
-
-// A simple context object
-struct MyContext { };
-static MyContext ctx = {};
-
-// A message handler with context used as the target for a callback
-static void callbackCtx(DataMsg* msg, MyContext* cbctx) {
-  NodeType const cur_node = ::vt::theContext()->getNode();
-  ::fmt::print("{}: triggering context callback\n", cur_node);
-}
-
 
 // Tutorial code to demonstrate using a callback
 static inline void activeMessageCallback() {
@@ -104,50 +83,27 @@ static inline void activeMessageCallback() {
     // Node that we want to callback to execute on
     NodeType const cb_node = 0;
 
-    // Example lambda callback (void)
-    auto void_fn = [=]{
-      ::fmt::print("{}: triggering void function callback\n", this_node);
-    };
-
-    // Example of a void lambda callback
-    {
-      auto cb = ::vt::theCB()->makeFunc(vt::pipe::LifetimeEnum::Once, void_fn);
-      auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
-    }
-
     // Example of active message handler callback with send node
     {
-      auto cb = ::vt::theCB()->makeSend<DataMsg,callbackHandler>(cb_node);
-      auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
+      auto cb = ::vt::theCB()->makeSend<callbackHandler>(cb_node);
+      ::vt::theMsg()->send<getCallbackHandler>(Node{to_node}, cb);
     }
 
     // Example of active message handler callback with broadcast
     {
-      auto cb = ::vt::theCB()->makeBcast<DataMsg,callbackBcastHandler>();
-      auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
-    }
-
-    // Example of context callback
-    {
-      auto cb = ::vt::theCB()->makeFunc<DataMsg,MyContext>(
-        vt::pipe::LifetimeEnum::Once, &ctx, callbackCtx
-      );
-      auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<getCallbackHandler>(to_node, msg);
+      auto cb = ::vt::theCB()->makeBcast<callbackBcastHandler>();
+      ::vt::theMsg()->send<getCallbackHandler>(Node{to_node}, cb);
     }
   }
 }
 
 // Message handler for to receive callback and invoke it
-static void getCallbackHandler(MsgWithCallback* msg) {
+static void getCallbackHandler(Callback<int> cb) {
   auto const cur_node = ::vt::theContext()->getNode();
   ::fmt::print("getCallbackHandler: triggered on node={}\n", cur_node);
 
   // Send the callback a message
-  msg->cb.send();
+  cb.send(29 + cur_node);
 }
 /// [Tutorial1G]
 

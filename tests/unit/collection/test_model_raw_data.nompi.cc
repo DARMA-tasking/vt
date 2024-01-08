@@ -62,6 +62,8 @@ using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
+using vt::vrt::collection::balance::ElmUserDataType;
+using vt::vrt::collection::balance::DataMapType;
 
 TEST_F(TestRawData, test_model_raw_data_scalar) {
   NodeType this_node = 0;
@@ -69,20 +71,21 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
     std::make_shared<RawData>();
 
   std::unordered_map<PhaseType, LoadMapType> proc_loads;
-  test_model->setLoads(&proc_loads, nullptr);
+  test_model->setLoads(&proc_loads, nullptr, nullptr);
   EXPECT_TRUE(test_model->hasRawLoad());
+  EXPECT_FALSE(test_model->hasUserData());  // because passed a nullptr
 
   ElementIDStruct id1{1,this_node};
   ElementIDStruct id2{2,this_node};
 
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
-    LoadMapType{{id1, {TimeType{5}, {TimeType{5}}}},   {id2, {TimeType{10}, {TimeType{10}}}}},
-    LoadMapType{{id1, {TimeType{30}, {TimeType{30}}}},  {id2, {TimeType{100}, {TimeType{100}}}}},
-    LoadMapType{{id1, {TimeType{50}, {TimeType{50}}}},  {id2, {TimeType{40}, {TimeType{40}}}}},
-    LoadMapType{{id1, {TimeType{2}, {TimeType{2}}}},   {id2, {TimeType{50}, {TimeType{50}}}}},
-    LoadMapType{{id1, {TimeType{60}, {TimeType{60}}}},  {id2, {TimeType{20}, {TimeType{20}}}}},
-    LoadMapType{{id1, {TimeType{100}, {TimeType{100}}}}, {id2, {TimeType{10}, {TimeType{10}}}}},
+    LoadMapType{{id1, {LoadType{5}, {LoadType{5}}}},   {id2, {LoadType{10}, {LoadType{10}}}}},
+    LoadMapType{{id1, {LoadType{30}, {LoadType{30}}}},  {id2, {LoadType{100}, {LoadType{100}}}}},
+    LoadMapType{{id1, {LoadType{50}, {LoadType{50}}}},  {id2, {LoadType{40}, {LoadType{40}}}}},
+    LoadMapType{{id1, {LoadType{2}, {LoadType{2}}}},   {id2, {LoadType{50}, {LoadType{50}}}}},
+    LoadMapType{{id1, {LoadType{60}, {LoadType{60}}}},  {id2, {LoadType{20}, {LoadType{20}}}}},
+    LoadMapType{{id1, {LoadType{100}, {LoadType{100}}}}, {id2, {LoadType{10}, {LoadType{10}}}}},
   };
 
   for (size_t iter = 0; iter < load_holder.size(); ++iter) {
@@ -114,6 +117,71 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
 
       auto sub_raw_load_val = test_model->getRawLoad(obj, PhaseOffset{-1, 0});
       EXPECT_EQ(sub_raw_load_val, load_holder[iter][obj].subphase_loads[0]);
+    }
+    EXPECT_EQ(objects_seen, 2);
+  }
+}
+
+TEST_F(TestRawData, test_model_raw_user_data) {
+  NodeType this_node = 0;
+  auto test_model =
+    std::make_shared<RawData>();
+
+  std::unordered_map<PhaseType, LoadMapType> proc_loads;
+  std::unordered_map<PhaseType, DataMapType> user_data;
+  test_model->setLoads(&proc_loads, nullptr, &user_data);
+  EXPECT_TRUE(test_model->hasRawLoad());
+  EXPECT_TRUE(test_model->hasUserData());
+
+  ElementIDStruct id1{1,this_node};
+  ElementIDStruct id2{2,this_node};
+
+  // Work loads to be added in each test iteration
+  std::vector<LoadMapType> load_holder{
+    LoadMapType{{id1, {LoadType{5}, {LoadType{5}}}},   {id2, {LoadType{10}, {LoadType{10}}}}},
+    LoadMapType{{id1, {LoadType{30}, {LoadType{30}}}},  {id2, {LoadType{100}, {LoadType{100}}}}},
+    LoadMapType{{id1, {LoadType{50}, {LoadType{50}}}},  {id2, {LoadType{40}, {LoadType{40}}}}},
+    LoadMapType{{id1, {LoadType{2}, {LoadType{2}}}},   {id2, {LoadType{50}, {LoadType{50}}}}},
+    LoadMapType{{id1, {LoadType{60}, {LoadType{60}}}},  {id2, {LoadType{20}, {LoadType{20}}}}},
+    LoadMapType{{id1, {LoadType{100}, {LoadType{100}}}}, {id2, {LoadType{10}, {LoadType{10}}}}},
+  };
+  std::vector<DataMapType> user_holder{
+    DataMapType{{id1, ElmUserDataType{{"init",4}}},   {id2, ElmUserDataType{{"init",12}}}},
+    DataMapType{},
+    DataMapType{{id1, ElmUserDataType{{"tag", 100}}}, {id2, ElmUserDataType{{"tag", 200}}}},
+    DataMapType{{id1, ElmUserDataType{{"tag", 101}}}},
+    DataMapType{},
+    DataMapType{{id2, ElmUserDataType{{"x", 1}, {"y", 2}}}}
+  };
+
+  for (size_t iter = 0; iter < load_holder.size(); ++iter) {
+    proc_loads[iter] = load_holder[iter];
+    user_data[iter] = user_holder[iter];
+    test_model->updateLoads(iter);
+
+    EXPECT_EQ(test_model->getNumObjects(), 2);
+    EXPECT_EQ(test_model->getNumCompletedPhases(), iter+1);
+    EXPECT_EQ(test_model->getNumSubphases(), 1);
+
+    EXPECT_EQ(test_model->getNumPastPhasesNeeded(iter), iter);
+    EXPECT_EQ(test_model->getNumPastPhasesNeeded(2*iter), 2*iter);
+
+    int objects_seen = 0;
+    for (auto&& obj : *test_model) {
+      EXPECT_TRUE(obj.id == 1 || obj.id == 2);
+      objects_seen++;
+
+      auto user_dict = test_model->getUserData(obj, PhaseOffset{-1, PhaseOffset::WHOLE_PHASE});
+      EXPECT_EQ(user_dict.size(), user_holder[iter][obj].size());
+      if (user_dict.size(), user_holder[iter][obj].size()) {
+        for (auto &u : user_holder[iter][obj]) {
+          auto it = user_dict.find(u.first);
+          EXPECT_TRUE(it != user_dict.end());
+          if (it != user_dict.end()) {
+            EXPECT_EQ(it->second, u.second);
+          }
+        }
+      }
     }
     EXPECT_EQ(objects_seen, 2);
   }

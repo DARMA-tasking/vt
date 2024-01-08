@@ -58,8 +58,6 @@ struct RequestDataMsg : vt::CollectionMessage<ColT> {
   vt::NodeType node_;
 };
 
-struct InitMsg : vt::collective::ReduceNoneMsg { };
-
 struct DataMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required(); // by payload_
@@ -170,7 +168,7 @@ struct Block : vt::Collection<Block, vt::Index1D> {
     );
   }
 
-  void doneInit(InitMsg* msg) {
+  void doneInit() {
     if (getIndex().x() == 0) {
       auto proxy = this->getCollectionProxy();
       auto proxy_msg = vt::makeMessage<ProxyMsg>(proxy.getProxy());
@@ -183,9 +181,7 @@ struct Block : vt::Collection<Block, vt::Index1D> {
     initialize();
     // Wait for all initializations to complete
     auto proxy = this->getCollectionProxy();
-    auto cb = vt::theCB()->makeBcast<Block, InitMsg, &Block::doneInit>(proxy);
-    auto empty = vt::makeMessage<InitMsg>();
-    proxy.reduce(empty.get(), cb);
+    proxy.allreduce<&Block::doneInit>();
   }
 
 private:

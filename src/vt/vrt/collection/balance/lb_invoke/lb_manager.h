@@ -62,7 +62,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct LoadModel;
-struct NodeStatsMsg;
+struct LoadData;
 
 /**
  * \struct LBManager
@@ -75,7 +75,6 @@ struct NodeStatsMsg;
  */
 struct LBManager : runtime::component::Component<LBManager> {
   using LBProxyType      = objgroup::proxy::Proxy<lb::BaseLB>;
-  using StatsMsgType     = balance::NodeStatsMsg;
   using QuantityType     = lb::StatisticQuantityMap;
   using StatisticMapType = lb::StatisticMap;
 
@@ -257,10 +256,14 @@ public:
    */
   void computeStatistics(
     std::shared_ptr<LoadModel> model, bool comm_collectives, PhaseType phase,
-    vt::Callback<StatsMsgType> cb
+    vt::Callback<std::vector<balance::LoadData>> cb
   );
 
-  void statsHandler(StatsMsgType* msg);
+  void statsHandler(std::vector<balance::LoadData> const& in_stat_vec);
+
+  lb::PhaseInfo *getPhaseInfo() { return last_phase_info_.get(); }
+
+  void setComputingBeforeLBStats(bool before_lb) { before_lb_stats_ = before_lb; }
 
 private:
   bool isCollectiveComm(elm::CommCategory cat) const;
@@ -288,7 +291,7 @@ private:
   std::shared_ptr<LoadModel> strategy_specific_model_;
   std::unordered_map<std::string, LBProxyType> lb_instances_;
   StatisticMapType stats;
-  TimeType total_load_from_model = 0.;
+  LoadType total_load_from_model = 0.;
   std::unique_ptr<lb::PhaseInfo> last_phase_info_ = nullptr;
   bool before_lb_stats_ = true;
   /// The appender for outputting statistics in JSON format

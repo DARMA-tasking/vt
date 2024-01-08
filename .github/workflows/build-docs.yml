@@ -17,6 +17,7 @@ jobs:
       UBUNTU: 18.04
       COMPILER_TYPE: gnu
       COMPILER: gcc-8
+      HOST_COMPILER: gcc-8
       BUILD_TYPE: release
       ULIMIT_CORE: 0
       VT_LB: 1

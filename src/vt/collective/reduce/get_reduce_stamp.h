@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              modifyable.impl.h
+//                              get_reduce_stamp.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,38 +41,76 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_GET_REDUCE_STAMP_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_GET_REDUCE_STAMP_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/insert/modifyable.h"
-#include "vt/vrt/collection/manager.h"
-#include "vt/vrt/proxy/base_collection_proxy.h"
+#include "vt/collective/reduce/reduce_scope.h"
+#include "vt/messaging/message.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <tuple>
+#include <utility>
+#include <type_traits>
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-Modifyable<ColT,IndexT,BaseProxyT>::Modifyable(
-  VirtualProxyType const in_proxy
-) : BaseProxyT(in_proxy)
-{ }
+namespace vt { namespace collective { namespace reduce {
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-ModifierToken Modifyable<ColT,IndexT,BaseProxyT>::beginModification(
-  std::string const& label
-) const {
-  auto const col_proxy = this->getProxy();
-  return theCollection()->beginModification<ColT>(col_proxy, label);
-}
+template <typename enable = void, typename... Args>
+struct GetReduceStamp : std::false_type {
+  template <typename MsgT>
+  static auto getStampMsg(Args&&... args) {
+    return
+      std::make_tuple(
+	collective::reduce::ReduceStamp{},
+	vt::makeMessage<MsgT>(std::tuple{std::forward<Args>(args)...})
+      );
+  }
+};
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-void Modifyable<ColT,IndexT,BaseProxyT>::finishModification(
-  ModifierToken&& token
-) const {
-  auto const col_proxy = this->getProxy();
-  theCollection()->finishModification<ColT>(col_proxy, std::move(token));
-}
+template <>
+struct GetReduceStamp<
+  std::enable_if_t<std::is_same_v<void, void>>
+> : std::false_type {
+  template <typename MsgT>
+  static auto getStampMsg() {
+    return std::make_tuple(
+      collective::reduce::ReduceStamp{},
+      vt::makeMessage<MsgT>(std::tuple<>{})
+    );
+  }
+};
 
-}}} /* end namespace vt::vrt::collection */
+template <typename... Args>
+struct GetReduceStamp<
+  std::enable_if_t<
+    std::is_same_v<
+      std::decay_t<std::tuple_element_t<sizeof...(Args) - 1, std::tuple<Args...>>>,
+      collective::reduce::ReduceStamp
+    >
+  >,
+  Args...
+> : std::true_type {
+  template <typename... Params, std::size_t... Is>
+  static constexpr auto getMsgHelper(
+    std::tuple<Params...> tp, std::index_sequence<Is...>
+  ) {
+    return std::tuple{std::get<Is>(tp)...};
+  }
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H*/
+  template <typename MsgT>
+  static auto getStampMsg(Args&&... args) {
+    auto tp = std::make_tuple(std::forward<Args>(args)...);
+    return
+      std::make_tuple(
+        std::get<sizeof...(Args) - 1>(tp),
+	vt::makeMessage<MsgT>(
+          getMsgHelper(
+            std::move(tp), std::make_index_sequence<sizeof...(Args) - 1>{}
+          )
+	)
+      );
+  }
+};
+
+}}} /* end namespace vt::collective::reduce */
+
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_GET_REDUCE_STAMP_H*/

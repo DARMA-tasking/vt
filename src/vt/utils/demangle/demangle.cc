@@ -68,6 +68,28 @@ TemplateExtract::singlePfType(std::string const& pf) {
 
 /*static*/ std::string
 TemplateExtract::lastNamedPfType(std::string const& pf, std::string const& tparam) {
+#if defined(__INTEL_LLVM_COMPILER) || defined(__INTEL_COMPILER)
+  // For Intel, we have a different format to parse (we can't just
+  // look for 'TPARAM = '
+
+  // PF -> .. [T1 = .., T2 = .., void (*TPARAM)(...) = (...)]
+  std::string seek = tparam;
+
+  size_t i = pf.find(seek);
+  if (i == std::string::npos)
+    return "";
+  i = i + seek.length();
+
+  auto after_pf = pf.substr(i, pf.length() - i);
+
+  seek = " = ";
+  i = after_pf.find(seek);
+  if (i == std::string::npos)
+    return "";
+  i = i + seek.length();
+
+  return after_pf.substr(i, after_pf.length() - i - 1);
+#else
   // PF -> .. [T1 = .., T2 = .., TPARAM = (...)]
   std::string seek = tparam + " = ";
 
@@ -77,6 +99,7 @@ TemplateExtract::lastNamedPfType(std::string const& pf, std::string const& tpara
   i = i + seek.length();
 
   return pf.substr(i, pf.length() - i - 1);
+#endif
 }
 
 // Given a::b or a::b<c::d> or a<>::b<c>, eg. determines the

@@ -179,7 +179,7 @@ bool Scheduler::shouldCallProgress(
     processed_since_last_progress >= theConfig()->vt_sched_progress_han;
   bool enough_time_passed =
     progress_time_enabled_ and
-    time_since_last_progress > theConfig()->vt_sched_progress_sec;
+    time_since_last_progress > TimeType{theConfig()->vt_sched_progress_sec};
 
   return
     (not progress_time_enabled_ and not k_handler_enabled) or
@@ -269,7 +269,7 @@ void Scheduler::runSchedulerOnceImpl(bool msg_only) {
 
     // Leave idle states are before any potential processing.
     // True-idle must be the outer state to enter/leave to collect more
-    // accurate time and ensure that events are not emited while in idle.
+    // accurate time and ensure that events are not emitted while in idle.
     if (is_idle) {
       is_idle = false;
       triggerEvent(SchedulerEventType::EndIdle);

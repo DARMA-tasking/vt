@@ -63,6 +63,7 @@ using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::CommMapType;
 using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
+using vt::vrt::collection::balance::DataMapType;
 
 static int32_t getIndexFromPhase(int32_t phase) {
   return std::max(0, -1 * phase - 1);
@@ -75,13 +76,14 @@ struct StubModel : LoadModel {
 
   void setLoads(
     std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const*) override {
+    std::unordered_map<PhaseType, CommMapType> const*,
+    std::unordered_map<PhaseType, DataMapType> const*) override {
     proc_load_ = proc_load;
   }
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
+  LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     EXPECT_LE(phase.phases, -1);
     return proc_load_->at(getIndexFromPhase(phase.phases)).at(id).whole_phase_load;
   }
@@ -103,22 +105,22 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
   NodeType this_node = 0;
   std::unordered_map<PhaseType, LoadMapType> proc_loads = {
     {0, LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{10}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{40}, {}}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}}},
     {1, LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{4}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{10}, {}}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{4}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{10}, {}}}}},
     {2, LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{20}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{50}, {}}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{20}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{50}, {}}}}},
     {3, LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{40}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{100}, {}}}}}};
+      {ElementIDStruct{1,this_node}, {LoadType{40}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{100}, {}}}}}};
 
   auto test_model =
     std::make_shared<NaivePersistence>(std::make_shared<StubModel>());
 
-  test_model->setLoads(&proc_loads, nullptr);
+  test_model->setLoads(&proc_loads, nullptr, nullptr);
   test_model->updateLoads(3);
 
   for (auto it = test_model->begin(); it != test_model->end(); ++it) {

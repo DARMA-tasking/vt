@@ -45,24 +45,19 @@
 
 /// [Hello world reduce collection]
 struct Hello : vt::Collection<Hello, vt::Index1D> {
-  using ReduceMsg = vt::collective::ReduceTMsg<int>;
-
-  void done(ReduceMsg* msg) {
-    fmt::print("Reduce complete at {} value {}\n", this->getIndex(), msg->getVal());
+  void done(int val, double val2) {
+    fmt::print("Reduce complete at {} values {} {}\n", getIndex(), val, val2);
   }
 
   void doWork() {
-    fmt::print("Hello from {}\n", this->getIndex());
+    fmt::print("Hello from {}\n", getIndex());
 
     // Get the proxy for the collection
-    auto proxy = this->getCollectionProxy();
+    auto proxy = getCollectionProxy();
 
-    // Create a callback for when the reduction finishes
-    auto cb = vt::theCB()->makeSend<Hello,ReduceMsg,&Hello::done>(proxy(2));
-
-    // Create and send the reduction message holding an int
-    auto red_msg = vt::makeMessage<ReduceMsg>(this->getIndex().x());
-    proxy.reduce<vt::collective::PlusOp<int>>(red_msg.get(),cb);
+    auto val = getIndex().x();
+    auto val2 = 2.4;
+    proxy.allreduce<&Hello::done, vt::collective::PlusOp>(val, val2);
   }
 };
 

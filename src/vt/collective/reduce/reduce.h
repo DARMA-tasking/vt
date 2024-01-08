@@ -169,6 +169,24 @@ struct Reduce : virtual collective::tree::Tree {
   }
 
   /**
+   * \brief Perform a reduction without a message
+   *
+   * \param[in] root the root node to target
+   * \param[in] params parameters to reduce
+   *
+   * \return a pending send
+   */
+  template <
+    auto f,
+    template <typename Arg> class Op = NoneOp,
+    typename... Params
+  >
+  PendingSendType reduce(Node root, Params&&... params);
+
+  template <typename Op, auto f, typename... Params>
+  PendingSendType reduce(Node root, Params&&... params);
+
+  /**
    * \brief Reduce a message up the tree
    *
    * \param[in] root the root node where the final handler provides the result
@@ -243,7 +261,7 @@ struct Reduce : virtual collective::tree::Tree {
         &MsgT::template msgHandler<
           MsgT,
           OpT,
-          collective::reduce::operators::ReduceCallback<MsgT>
+          operators::NoCombine
           >
         >(root, msg, cb, id, num_contrib);
     }
@@ -308,7 +326,7 @@ struct Reduce : virtual collective::tree::Tree {
       &MsgT::template msgHandler<
         MsgT,
         OpT,
-        collective::reduce::operators::ReduceCallback<MsgT>
+        operators::NoCombine
         >
       >(root, msg, cb, id, num_contrib);
   }

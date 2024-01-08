@@ -57,9 +57,9 @@ build configuration:
 | `vt_unity_build_enabled`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16)                                       |
 | `vt_fcontext_enabled`            | 0               | Force use of fcontext for threading                                                                |
 | `vt_tests_num_nodes`             | -               | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
-| `CODE_COVERAGE`                  | 0               | Enable code coverage for VT examples/tests                                                         |
-| `VT_BUILD_TESTS`                 | 1               | Build all VT tests                                                                                 |
-| `VT_BUILD_EXAMPLES`              | 1               | Build all VT examples                                                                              |
+| `vt_code_coverage`               | 0               | Enable code coverage for VT examples/tests                                                         |
+| `vt_build_tests`                 | 1               | Build all VT tests                                                                                 |
+| `vt_build_examples`              | 1               | Build all VT examples                                                                              |
 | `vt_debug_verbose`               | 1 (not Release) | Enable VT verbose debug prints at compile-time                                                     |
 | `vt_no_color_enabled`            | 0               | Set `--vt_no_color` flag to true by default                                                        |
 | `BUILD_SHARED_LIBS`              | 0               | Build VT as shared library                                                                         |
@@ -163,7 +163,7 @@ which `docker-compose` will read.
 #   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics at runtime by default
 #   BUILD_TYPE=release        # CMake build type
-#   CODE_COVERAGE=0           # Enable generation of code coverage reports
+#   VT_CODE_COVERAGE=0           # Enable generation of code coverage reports
 #   VT_DEBUG_VERBOSE          # Enable verbose debug prints at compile-time
 #   VT_NO_COLOR_ENABLED=0     # Set --vt_no_color flag to true by default
 #   VT_BUILD_SHARED_LIBS=0    # Build VT as shared library

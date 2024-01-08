@@ -249,9 +249,10 @@ bool Runtime::hasSchedRun() const {
 
 void Runtime::pauseForDebugger() {
   if (theConfig()->vt_pause) {
-    char node_str[256];
+    constexpr int max_buffer_length = 256;
+    char node_str[max_buffer_length];
     auto node = vt::theContext() ? vt::theContext()->getNode() : -1;
-    sprintf(node_str, "prog-%d.pid", node);
+    snprintf(node_str, max_buffer_length, "prog-%d.pid", node);
     auto const pid = getpid();
     FILE* f = fopen(node_str, "w+");
     fprintf(f, "%d", pid);
@@ -594,7 +595,7 @@ void Runtime::output(
   auto bred      = debug::bred();
   auto node_str  = ::vt::debug::proc(node);
   auto prefix    = vt_pre + node_str + " ";
-  auto seperator = fmt::format("{}{}{:-^120}{}\n", prefix, bred, "", reset);
+  auto separator = fmt::format("{}{}{:-^120}{}\n", prefix, bred, "", reset);
   auto warn_sep  = fmt::format("{}{}{:-^120}{}\n", prefix, byellow, "", reset);
   // auto space     = fmt::format("{}\n", prefix);
 
@@ -603,10 +604,10 @@ void Runtime::output(
       auto f1 = fmt::format(" Runtime Error: System Aborting! ");
       auto const info = ::fmt::format(" Fatal Error on Node {} ", node);
       // fmt::print(stderr, "{}", space);
-      fmt::print(stderr, "{}", seperator);
+      fmt::print(stderr, "{}", separator);
       fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, bred, f1, reset);
       fmt::print(stderr, "{}{}{:-^120}{}\n", prefix, bred, info, reset);
-      fmt::print(stderr, "{}", seperator);
+      fmt::print(stderr, "{}", separator);
     } else {
       auto f1 = fmt::format(" Runtime Warning ");
       auto const info = ::fmt::format(" Warning on Node {} ", node);

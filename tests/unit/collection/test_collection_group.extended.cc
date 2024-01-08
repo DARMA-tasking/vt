@@ -55,12 +55,6 @@ namespace vt { namespace tests { namespace unit {
 
 static int32_t elem_counter = 0;
 
-struct MyReduceMsg : collective::ReduceTMsg<int> {
-  explicit MyReduceMsg(int const in_num)
-    : collective::ReduceTMsg<int>(in_num)
-  { }
-};
-
 struct ColA : Collection<ColA,Index1D> {
 
   struct TestDataMsg : CollectionMessage<ColA> {
@@ -69,21 +63,20 @@ struct ColA : Collection<ColA,Index1D> {
     int32_t value_ = -1;
   };
 
-  void finishedReduce(MyReduceMsg* m) {
-    fmt::print("at root: final num={}\n", m->getVal());
+  void finishedReduce(int value) {
+    fmt::print("at root: final num={}\n", value);
     finished = true;
   }
 
   void doReduce() {
     auto const proxy = getCollectionProxy();
-    auto cb = theCB()->makeBcast<ColA, MyReduceMsg, &ColA::finishedReduce>(proxy);
-    auto reduce_msg = makeMessage<MyReduceMsg>(getIndex().x());
-    proxy.reduce<collective::PlusOp<int>>(reduce_msg.get(),cb);
+    int val = getIndex().x();
+    proxy.allreduce<&ColA::finishedReduce, collective::PlusOp>(val);
     reduce_test = true;
   }
 
-  void memberHandler(TestDataMsg* msg) {
-    EXPECT_EQ(msg->value_, theContext()->getNode());
+  void memberHandler(int16_t value) {
+    EXPECT_EQ(value, theContext()->getNode());
     --elem_counter;
   }
 
@@ -134,33 +127,12 @@ TEST_F(TestCollectionGroup, test_collection_group_2) {
     }, "test_collection_group_2"
   );
 
-  auto const numElems = elem_counter;
-
-  // raw msg pointer case
+  // msg constructed on the fly case
   runBcastTestHelper([proxy, my_node]{
-    auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
-    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, &ColA::memberHandler>(
-      msg.get()
-    );
+    proxy.broadcastCollective<&ColA::memberHandler>(my_node);
   });
 
   EXPECT_EQ(elem_counter, 0);
-
-  // smart msg pointer case
-  runBcastTestHelper([proxy, my_node]{
-    auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
-    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, &ColA::memberHandler>(msg);
-  });
-
-  EXPECT_EQ(elem_counter, -numElems);
-
-  // msg constructed on the fly case
-  runBcastTestHelper([proxy, my_node] {
-    proxy.broadcastCollective<
-      ColA::TestDataMsg, &ColA::memberHandler, ColA::TestDataMsg>(my_node);
-  });
-
-  EXPECT_EQ(elem_counter, -2 * numElems);
 }
 
 TEST_F(TestCollectionGroup, test_collection_group_3) {
@@ -246,7 +218,7 @@ struct TestCollection : Collection<TestCollection, Index1D> {
     );
 
     // Even if msg was sent locally, it is still serialized,
-    // and the handler gots a fresh copy of it.
+    // and the handler gets a fresh copy of it.
     if (from_node == to_node) {
       EXPECT_TRUE(was_serialized);
     }

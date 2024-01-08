@@ -62,7 +62,7 @@ struct LoadData {
   using isByteCopyable = std::true_type;
 
   LoadData() = default;
-  LoadData(lb::Statistic in_stat, TimeType const y)
+  LoadData(lb::Statistic in_stat, LoadType const y)
     : max_(y), sum_(y), min_(y), avg_(y), M2_(0.0f), M3_(0.0f), M4_(0.0f),
       N_(1), P_(y not_eq 0.0f), stat_(in_stat)
   {
@@ -84,18 +84,18 @@ struct LoadData {
     );
 
     int32_t N            = a1.N_ + a2.N_;
-    double delta         = a2.avg_ - a1.avg_;
-    double delta_sur_N   = delta / static_cast<double>(N);
-    double delta2_sur_N2 = delta_sur_N * delta_sur_N;
+    auto delta     = a2.avg_ - a1.avg_;
+    auto delta_sur_N   = delta / static_cast<double>(N);
+    auto delta2_sur_N2 = delta_sur_N * delta_sur_N;
     int32_t n2           = a1.N_ * a1.N_;
     int32_t n_c2         = a2.N_ * a2.N_;
     int32_t prod_n       = a1.N_ * a2.N_;
     int32_t n_c          = a2.N_;
     int32_t n            = a1.N_;
-    double M2            = a1.M2_;
-    double M2_c          = a2.M2_;
-    double M3            = a1.M3_;
-    double M3_c          = a2.M3_;
+    auto M2            = a1.M2_;
+    auto M2_c          = a2.M2_;
+    auto M3            = a1.M3_;
+    auto M3_c          = a2.M3_;
 
     a1.M4_ += a2.M4_
         + prod_n * ( n2 - prod_n + n_c2 ) * delta * delta_sur_N * delta2_sur_N2
@@ -118,50 +118,50 @@ struct LoadData {
     return a1;
   }
 
-  TimeType max() const { return max_; }
-  TimeType sum() const { return sum_; }
-  TimeType min() const { return min_; }
-  TimeType avg() const { return avg_; }
-  TimeType var() const { return N_ > 0 ? M2_ * (1.0f / N_) : 0.0; }
-  TimeType skew() const {
+  LoadType max() const { return max_; }
+  LoadType sum() const { return sum_; }
+  LoadType min() const { return min_; }
+  LoadType avg() const { return avg_; }
+  LoadType var() const { return N_ > 0 ? M2_ * (1.0f / N_) : 0.0; }
+  LoadType skew() const {
     static const double min_sqrt = std::sqrt(std::numeric_limits<double>::min());
     if (N_ == 1 or M2_ < min_sqrt) { // 1.e-150
       return 0.0;
     } else {
       double nm1 = N_ - 1;
       double inv_n = 1. / N_;
-      double var_inv = nm1 / M2_;
-      double nvar_inv = var_inv * inv_n;
+      auto var_inv = nm1 / M2_;
+      auto nvar_inv = var_inv * inv_n;
       return nvar_inv * std::sqrt( var_inv ) * M3_;
     }
   }
-  TimeType krte() const {
+  LoadType krte() const {
     if (N_ == 1 or M2_ < 1.e-150) {
       return 0.0;
     } else {
       double nm1 = N_ - 1;
       double inv_n = 1. / N_;
-      double var_inv = nm1 / M2_;
-      double nvar_inv = var_inv * inv_n;
+      auto var_inv = nm1 / M2_;
+      auto nvar_inv = var_inv * inv_n;
       return nvar_inv * var_inv * M4_ - 3.;
     }
   }
-  TimeType I() const { return avg() > 0.0 ? (max() / avg()) - 1.0f : 0.0; }
-  TimeType stdv() const { return std::sqrt(var()); }
+  LoadType I() const { return avg() > 0.0 ? (max() / avg()) - 1.0f : 0.0; }
+  LoadType stdv() const { return std::sqrt(var()); }
   int32_t  npr() const { return P_; }
 
   static_assert(
-    std::is_same<TimeType, double>::value == true,
-    "TimeType must be a double"
+    std::is_same<LoadType, double>::value == true,
+    "LoadType must be a double"
   );
 
-  TimeType max_ = 0.0;
-  TimeType sum_ = 0.0;
-  TimeType min_ = 0.0;
-  TimeType avg_ = 0.0;
-  TimeType M2_  = 0.0;
-  TimeType M3_  = 0.0;
-  TimeType M4_  = 0.0;
+  LoadType max_ = 0.0;
+  LoadType sum_ = 0.0;
+  LoadType min_ = 0.0;
+  LoadType avg_ = 0.0;
+  LoadType M2_  = 0.0;
+  LoadType M3_  = 0.0;
+  LoadType M4_  = 0.0;
   int32_t  N_ = 0;
   int32_t  P_ = 0;
   lb::Statistic stat_ = lb::Statistic::Rank_load_modeled;
@@ -171,27 +171,6 @@ static_assert(
   vt::messaging::is_byte_copyable_t<LoadData>::value,
   "Must be trivially copyable to avoid serialization."
 );
-
-struct NodeStatsMsg : SerializeRequired<
-  collective::ReduceTMsg<std::vector<LoadData>>,
-  NodeStatsMsg
->
-{
-  using MessageParentType = SerializeRequired<
-    collective::ReduceTMsg<std::vector<LoadData>>,
-    NodeStatsMsg
-  >;
-
-  NodeStatsMsg() = default;
-  explicit NodeStatsMsg(std::vector<LoadData> ld)
-    : MessageParentType(std::move(ld))
-  { }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-  }
-};
 
 }}}} /* end namespace vt::vrt::collection::balance */
 

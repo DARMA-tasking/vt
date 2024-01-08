@@ -61,7 +61,7 @@ struct OfflineLB : BaseLB {
   virtual ~OfflineLB() = default;
 
   void init(objgroup::proxy::Proxy<OfflineLB> in_proxy);
-  void runLB(TimeType) override;
+  void runLB(LoadType) override;
   void inputParams(balance::ConfigEntry* config) override { }
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp() {

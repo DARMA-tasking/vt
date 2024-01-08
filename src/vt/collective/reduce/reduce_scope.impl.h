@@ -51,25 +51,25 @@ namespace vt { namespace collective { namespace reduce { namespace detail {
 template <typename T, typename... Args>
 inline ReduceScope makeScope(Args&&... args) {
   ReduceScope scope;
-  scope.l0_.init<T>(std::forward<Args>(args)...);
+  scope.l0_ = T{std::forward<Args>(args)...};
   return scope;
 }
 
 inline std::string stringizeStamp(ReduceStamp const& stamp) {
-  if (stamp.is<StrongTag>()) {
-    return fmt::format("tag[{}]", stamp.get<StrongTag>().get());
-  } else if (stamp.is<TagPair>()) {
+  if (std::holds_alternative<StrongTag>(stamp)) {
+    return fmt::format("tag[{}]", std::get<StrongTag>(stamp).get());
+  } else if (std::holds_alternative<TagPair>(stamp)) {
     return fmt::format(
       "tagPair[{},{}]",
-      stamp.get<TagPair>().first(),
-      stamp.get<TagPair>().second()
+      std::get<TagPair>(stamp).first(),
+      std::get<TagPair>(stamp).second()
     );
-  } else if (stamp.is<StrongSeq>()) {
-    return fmt::format("seq[{}]", stamp.get<StrongSeq>().get());
-  } else if (stamp.is<StrongUserID>()) {
-    return fmt::format("userID[{}]", stamp.get<StrongUserID>().get());
-  } else if (stamp.is<StrongEpoch>()) {
-    return fmt::format("epoch[{:x}]", stamp.get<StrongEpoch>().get());
+  } else if (std::holds_alternative<StrongSeq>(stamp)) {
+    return fmt::format("seq[{}]", std::get<StrongSeq>(stamp).get());
+  } else if (std::holds_alternative<StrongUserID>(stamp)) {
+    return fmt::format("userID[{}]", std::get<StrongUserID>(stamp).get());
+  } else if (std::holds_alternative<StrongEpoch>(stamp)) {
+    return fmt::format("epoch[{:x}]", std::get<StrongEpoch>(stamp).get());
   } else {
     return "<no-stamp>";
   }
@@ -94,7 +94,7 @@ T& ReduceScopeHolder<T>::getOnDemand(U&& scope) {
   auto iter = scopes_.find(scope);
   if (iter == scopes_.end()) {
     vtAssert(
-      not scope.get().template is<StrongGroup>(),
+      not std::holds_alternative<StrongGroup>(scope.get()),
       "Group reducers cannot be on-demand created -- needs spanning tree"
     );
 

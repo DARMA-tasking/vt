@@ -25,14 +25,16 @@ set(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
 )
 
-# Try to find ccache to speed up compilation
-find_program(ccache_binary ccache)
-if (ccache_binary)
-  message(
-    STATUS
-    "VT: Found ccache binary: ${ccache_binary}; adding launch rule"
-  )
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${ccache_binary}")
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER)
+  # Try to find ccache to speed up compilation
+  find_program(ccache_binary ccache)
+  if (ccache_binary)
+    message(
+      STATUS
+      "VT: Found ccache binary: ${ccache_binary}; adding launch rule"
+    )
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${ccache_binary})
+  endif()
 endif()
 
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -43,8 +45,6 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 
-option(CODE_COVERAGE "Enable coverage reporting" OFF)
-
 set(MPI_EXTRA_FLAGS "" CACHE STRING "Flags to pass to mpirun/mpiexec")
 string(REPLACE " " ";" MPI_EXTRA_FLAGS_LIST "${MPI_EXTRA_FLAGS}")
 message(STATUS "Running tests and examples with additional MPI flags = ${MPI_EXTRA_FLAGS_LIST}")
@@ -54,6 +54,7 @@ set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 set(PROJECT_LIB_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+set(PROJECT_TOOLS_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/tools)
 
 # Import the linking macros for VT-related targets
 include(cmake/link_vt.cmake)
@@ -61,50 +62,24 @@ include(cmake/link_vt.cmake)
 # Load packages that are required for core VT build
 include(cmake/load_packages.cmake)
 
+# Some options use TPL information (whether Perl was found etc.)
+include(cmake/configure_options.cmake)
+
 include(cmake/check_compiler.cmake)
-
-option(vt_gold_linker_enabled "Build VT using the `gold' linker" ON)
-
-option(vt_unity_build_enabled "Build VT with Unity/Jumbo mode enabled" OFF)
-
-if (vt_unity_build_enabled)
-    message(STATUS "Building VT in Unity/Jumbo build mode")
-endif()
-
-# Option included here, handled in define_build_modes.cmake so libfort can be
-# included correspondingly
-option(vt_diagnostics_enabled "Build VT with performance metrics/stats" ON)
-
-if (vt_diagnostics_enabled)
-  # Default libfort ON if diagnostics are enabled
-  option(vt_libfort_enabled "Build VT with fort library enabled" ON)
-else()
-  option(vt_libfort_enabled "Build VT with fort library enabled" OFF)
-endif()
-
-option(vt_mimalloc_enabled "Build VT with mimalloc" OFF)
-option(vt_mimalloc_static "Build VT with mimalloc using static linking" ON)
-option(vt_asan_enabled "Build VT with address sanitizer" OFF)
-option(vt_ubsan_enabled "Build VT with undefined behavior sanitizer" OFF)
-option(vt_werror_enabled "Build VT with -Werror enabled" OFF)
-
 include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 include(cmake/load_bundled_libraries.cmake)
 
-option(vt_trace_only "Build VT with trace-only mode enabled" OFF)
-if (vt_trace_only)
-  message(STATUS "Building additional target for VT in trace-only mode")
-endif()
 
 # Primary VT build
 add_subdirectory(src)
 
+if(vt_no_color_enabled)
+  target_compile_definitions(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC VT_NO_COLOR_ENABLED)
+endif()
 #
 # Test prep - ensures examples can be registered as tests.
 #
-option(VT_BUILD_TESTS "Build VT tests" ON)
-
-if (VT_BUILD_TESTS
+if (vt_build_tests
    AND "${CMAKE_PROJECT_NAME}" STREQUAL "${PROJECT_NAME}")
   # CTest implies enable_testing() and defines the BUILD_TESTING option.
   # The default of BUILD_TESTING is ON.
@@ -113,11 +88,26 @@ if (VT_BUILD_TESTS
 endif()
 
 #
+# Tools
+#
+if (vt_build_tools)
+  message(
+    STATUS
+    "VT: building tools"
+  )
+
+  add_custom_target(tools)
+  add_subdirectory(tools)
+else()
+  message(
+    STATUS "VT: NOT building tools because vt_build_tools is not set."
+  )
+endif()
+
+#
 # Examples
 #
-option(VT_BUILD_EXAMPLES "Build VT examples" ON)
-
-if (VT_BUILD_EXAMPLES)
+if (vt_build_examples)
   message(
     STATUS
     "VT: building examples"
@@ -127,7 +117,7 @@ if (VT_BUILD_EXAMPLES)
   add_subdirectory(examples)
 else()
   message(
-    STATUS "VT: NOT building examples because VT_BUILD_EXAMPLES is not set.\
+    STATUS "VT: NOT building examples because vt_build_examples is not set.\
  Examples that are not built are NOT TESTED."
   )
 endif()
@@ -137,7 +127,7 @@ endif()
 #
 
 if (BUILD_TESTING
-   AND VT_BUILD_TESTS
+   AND vt_build_tests
    AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   message(
     STATUS
@@ -150,7 +140,7 @@ if (BUILD_TESTING
 else()
   message(
     STATUS
-    "VT: NOT building tests because VT_BUILD_TESTS or BUILD_TESTING are not set"
+    "VT: NOT building tests because vt_build_tests or BUILD_TESTING are not set"
   )
 endif()
 

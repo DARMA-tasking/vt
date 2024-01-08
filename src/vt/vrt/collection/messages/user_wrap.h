@@ -63,6 +63,7 @@ struct ColMsgWrap : CollectionMessage<ColT,BaseMsgT> {
   vt_msg_serialize_if_needed_by_parent_or_type1(UserMsgT);
 
   using UserMsgType = UserMsgT;
+  using IsWrapMsg = std::true_type;
 
   ColMsgWrap() = default;
 

@@ -65,20 +65,19 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 struct HierarchicalLB : LoadSamplerBaseLB {
   using ChildPtrType = std::unique_ptr<HierLBChild>;
   using ChildMapType = std::unordered_map<NodeType,ChildPtrType>;
-  using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
+  using ElementLoadType = std::unordered_map<ObjIDType,LoadType>;
   using TransferType = std::map<NodeType, std::vector<ObjIDType>>;
-  using LoadType = double;
 
   HierarchicalLB() = default;
   virtual ~HierarchicalLB() {}
 
   void init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy);
-  void runLB(TimeType total_load) override;
+  void runLB(LoadType total_load) override;
   void inputParams(balance::ConfigEntry* config) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 
-  void setupTree(TimeTypeWrapper const threshold);
+  void setupTree(TimeType const threshold);
   void calcLoadOver(HeapExtractEnum const extract);
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
   void procDataIn(ElementLoadType const& data_in);
@@ -90,7 +89,7 @@ private:
 
   void downTreeHandler(LBTreeDownMsg* msg);
   void lbTreeUpHandler(LBTreeUpMsg* msg);
-  void setupDone(SetupDoneMsg* msg);
+  void setupDone();
 
   void downTreeSend(
     NodeType const node, NodeType const from, ObjSampleType const& excess,
@@ -109,7 +108,7 @@ private:
   );
 
   void sendDownTree();
-  void distributeAmoungChildren();
+  void distributeAmongChildren();
   void clearObj(ObjSampleType& objs);
   HierLBChild* findMinChild();
   void startMigrations();

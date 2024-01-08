@@ -141,19 +141,19 @@ int main(int argc, char** argv) {
     auto cb_functor = vt::theCB()->makeSend<CallbackFunctor>(dest);
     bounceCallback(cb_functor);
 
-    auto cb_func = vt::theCB()->makeSend<TestMsg,callbackFunc>(dest);
+    auto cb_func = vt::theCB()->makeSend<callbackFunc>(dest);
     bounceCallback(cb_func);
 
-    auto cb_obj = vt::theCB()->makeSend<MyObj,TestMsg,&MyObj::handler>(obj[dest]);
+    auto cb_obj = vt::theCB()->makeSend<&MyObj::handler>(obj[dest]);
     bounceCallback(cb_obj);
 
-    auto cb_obj_bcast = vt::theCB()->makeBcast<MyObj,TestMsg,&MyObj::handler>(obj);
+    auto cb_obj_bcast = vt::theCB()->makeBcast<&MyObj::handler>(obj);
     bounceCallback(cb_obj_bcast);
 
-    auto cb_col = vt::theCB()->makeSend<MyCol,TestMsg,colHan>(col[5]);
+    auto cb_col = vt::theCB()->makeSend<colHan>(col[5]);
     bounceCallback(cb_col);
 
-    auto cb_col_bcast = vt::theCB()->makeBcast<MyCol,TestMsg,colHan>(col);
+    auto cb_col_bcast = vt::theCB()->makeBcast<colHan>(col);
     bounceCallback(cb_col_bcast);
   }
 

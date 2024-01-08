@@ -145,8 +145,6 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
     label, proxy, map_han, has_dynamic_membership, map_object, has_bounds, bounds
   );
 
-  std::size_t global_constructed_elms = 0;
-
   if (po.bulk_insert_bounds_) {
     vtAssert(
       po.bulk_inserts_.size() == 0,
@@ -171,7 +169,6 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
         if (elementMappedHere(map_han, map_object, idx, bounds)) {
           makeCollectionElement<ColT>(proxy, idx, this_node, cons_fn);
         }
-        global_constructed_elms++;
       });
     }
 
@@ -181,7 +178,6 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
         if (elementMappedHere(map_han, map_object, idx, bounds)) {
           makeCollectionElement<ColT>(proxy, idx, this_node, cons_fn);
         }
-        global_constructed_elms++;
       });
     }
   }
@@ -193,8 +189,9 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
     makeCollectionElement<ColT>(proxy, idx, this_node, std::move(c));
   }
 
-  if (global_constructed_elms != 0) {
-    // Construct a underlying group for the collection
+  if (not has_dynamic_membership) {
+    // Construct a underlying group for the collection unless there is dynamic
+    // membership and we need to finish a modification epoch
     constructGroup<ColT>(proxy);
   }
 }

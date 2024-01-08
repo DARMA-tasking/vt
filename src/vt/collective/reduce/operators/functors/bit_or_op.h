@@ -45,6 +45,7 @@
 #define INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_BIT_OR_OP_H
 
 #include "vt/config.h"
+#include "vt/collective/reduce/operators/functors/tuple_op_helper.h"
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
@@ -52,6 +53,15 @@ template <typename T>
 struct BitOrOp {
   void operator()(T& v1, T const& v2) {
     v1 = v1 | v2;
+  }
+};
+
+template <typename... Params>
+struct BitOrOp<std::tuple<Params...>> {
+  template <typename X>
+  using GetAsType = BitOrOp<X>;
+  void operator()(std::tuple<Params...>& v1, std::tuple<Params...> const& v2) {
+    opTuple<BitOrOp<std::tuple<Params...>>>(v1, v2);
   }
 };
 

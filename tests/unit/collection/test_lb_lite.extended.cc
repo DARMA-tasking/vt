@@ -150,6 +150,41 @@ TEST_F(TestLB, test_lb_1) {
   }
 }
 
+TEST_F(TestLB, test_lb_phase_stats) {
+  auto const& this_node = theContext()->getNode();
+  auto const& range = Index1D(32);
+  auto proxy = theCollection()->constructCollective<LBTest>(
+    range, "test_lb_phases_stats"
+  );
+
+  for (int i = 0; i < num_iter; i++) {
+    auto cur_time = vt::timing::getCurrentTime();
+
+    vt::runInEpochCollective([=]{
+      proxy.broadcastCollective<IterMsg,&LBTest::iterWork>(i);
+    });
+
+    auto total_time = vt::timing::getCurrentTime() - cur_time;
+    if (this_node == 0) {
+      fmt::print("iteration: iter={},time={}\n", i, total_time);
+    }
+
+    vt::thePhase()->nextPhaseCollective();
+  }
+
+  auto proxy2 = theCollection()->constructCollective<LBTest>(
+    range, "test_lb_phases_stats_2"
+  );
+
+  for (int i = 0; i < num_iter; i++) {
+    vt::runInEpochCollective([=]{
+      proxy2.broadcastCollective<IterMsg,&LBTest::iterWork>(i);
+    });
+
+    vt::thePhase()->nextPhaseCollective();
+  }
+}
+
 // TEST_F(TestLB, test_lb_multi_1) {
 //   auto const& this_node = theContext()->getNode();
 //   if (this_node == 0) {

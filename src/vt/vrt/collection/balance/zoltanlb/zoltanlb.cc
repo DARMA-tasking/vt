@@ -129,9 +129,9 @@ void ZoltanLB::inputParams(balance::ConfigEntry* config) {
   }
 }
 
-void ZoltanLB::runLB(TimeType total_load) {
+void ZoltanLB::runLB(LoadType total_load) {
   auto const& this_node = theContext()->getNode();
-  this_load = loadMilli(total_load);
+  this_load = total_load;
 
   if (this_node == 0) {
     vt_debug_print(terse, lb, "ZoltanLB: runLB: edges={}\n", do_edges_);
@@ -336,13 +336,11 @@ void ZoltanLB::countEdges() {
     total_ids
   );
 
-  auto cb = theCB()->makeBcast<ZoltanLB,ReduceMsg,&ZoltanLB::reduceCount>(proxy);
-  auto msg = makeMessage<ReduceMsg>(total_ids);
-  proxy.reduce<collective::MaxOp<int>>(msg.get(),cb);
+  proxy.allreduce<&ZoltanLB::reduceCount, collective::MaxOp>(total_ids);
 }
 
-void ZoltanLB::reduceCount(ReduceMsg* msg) {
-  max_edges_per_node_ = msg->getVal();
+void ZoltanLB::reduceCount(int max_edges_per_node) {
+  max_edges_per_node_ = max_edges_per_node;
 
   vt_debug_print(
     normal, lb,
@@ -438,7 +436,7 @@ void ZoltanLB::setParams() {
 
 std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   // Insert local load objs into a std::set to get a deterministic order to
-  // traverse them for building the graph consistenly
+  // traverse them for building the graph consistently
   std::set<ObjIDType> load_objs;
   for (auto obj : *load_model_) {
     if (obj.isMigratable()) {
@@ -487,8 +485,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
         obj,
         {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
       );
-      auto time = static_cast<int>(loadMilli(load));
-      graph->vertex_weight[idx++] = time;
+      graph->vertex_weight[idx++] = loadMilli(load);
     }
   }
 

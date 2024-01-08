@@ -45,6 +45,7 @@
 #define INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_MAX_OP_H
 
 #include "vt/config.h"
+#include "vt/collective/reduce/operators/functors/tuple_op_helper.h"
 
 #include <algorithm>
 
@@ -54,6 +55,15 @@ template <typename T>
 struct MaxOp {
   void operator()(T& v1, T const& v2) {
     v1 = std::max(v1,v2);
+  }
+};
+
+template <typename... Params>
+struct MaxOp<std::tuple<Params...>> {
+  template <typename X>
+  using GetAsType = MaxOp<X>;
+  void operator()(std::tuple<Params...>& v1, std::tuple<Params...> const& v2) {
+    opTuple<MaxOp<std::tuple<Params...>>>(v1, v2);
   }
 };
 

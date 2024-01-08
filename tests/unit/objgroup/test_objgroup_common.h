@@ -57,13 +57,6 @@ struct MyMsg : vt::Message {
   vt::NodeType from_ = vt::uninitialized_destination;
 };
 
-struct SysMsg : vt::collective::ReduceTMsg<int> {
-  SysMsg() = delete;
-  explicit SysMsg(int in_num)
-    : vt::collective::ReduceTMsg<int>(in_num)
-  {}
-};
-
 struct MyObjA {
 
   MyObjA() : id_(++next_id) {}
@@ -159,24 +152,6 @@ struct VectorPayload {
   }
 
   std::vector<int> vec_;
-};
-
-struct VecMsg : vt::collective::ReduceTMsg<VectorPayload> {
-  using MessageParentType = vt::collective::ReduceTMsg<VectorPayload>;
-  vt_msg_serialize_required(); // by VectorPayload
-
-  VecMsg() = default;
-
-  explicit VecMsg(int in_num) : ReduceTMsg<VectorPayload>() {
-    auto& vec = getVal().vec_;
-    vec.push_back(in_num);
-    vec.push_back(in_num + 1);
-  }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-  }
 };
 
 /*static*/ int MyObjA::next_id = 0;

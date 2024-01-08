@@ -64,7 +64,7 @@ struct ZoltanLB : BaseLB {
   ZoltanLB();
 
   void init(objgroup::proxy::Proxy<ZoltanLB> in_proxy);
-  void runLB(TimeType total_load) override;
+  void runLB(LoadType total_load) override;
   void inputParams(balance::ConfigEntry* config) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
@@ -99,7 +99,7 @@ private:
   void combineEdges();
   void countEdges();
   void allocateEdges();
-  void reduceCount(ReduceMsg* msg);
+  void reduceCount(int max_edges_per_node);
   void allocateShareEdgeGIDs();
 
   void recvSharedEdges(CommMsg* msg);

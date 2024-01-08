@@ -59,12 +59,15 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 struct RawData : public LoadModel {
   RawData() = default;
   void updateLoads(PhaseType last_completed_phase) override;
-  TimeType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
+  LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
   bool hasRawLoad() const override { return true; }
-  TimeType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
+  LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
+  bool hasUserData() const override { return user_data_ != nullptr; }
+  ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
+                std::unordered_map<PhaseType, CommMapType> const* proc_comm,
+                std::unordered_map<PhaseType, DataMapType> const* user_data) override;
 
   ObjectIterator begin() const override;
 
@@ -76,6 +79,7 @@ struct RawData : public LoadModel {
   // Observer pointers to the underlying data. In operation, these would be owned by NodeLBData
   std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;
   std::unordered_map<PhaseType, CommMapType>         const* proc_comm_;
+  std::unordered_map<PhaseType, DataMapType>         const* user_data_;
   PhaseType last_completed_phase_ = ~0;
 }; // class RawData
 

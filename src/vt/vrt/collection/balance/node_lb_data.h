@@ -182,6 +182,13 @@ public:
   std::unordered_map<PhaseType, CommMapType> const* getNodeComm() const;
 
   /**
+   * \internal \brief Get the user-defined LB data
+   *
+   * \return an observer pointer to the user-defined LB data
+   */
+  std::unordered_map<PhaseType, DataMapType> const* getUserData() const;
+
+  /**
    * \internal \brief Get stored object comm data for a specific phase
    *
    * \param[in] phase phase

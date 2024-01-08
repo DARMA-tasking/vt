@@ -28,9 +28,10 @@ variables:
   UBUNTU: 22.04
   COMPILER_TYPE: clang
   COMPILER: clang-13
+  HOST_COMPILER: clang-13
   BUILD_TYPE: release
   ULIMIT_CORE: 0
-  CODE_COVERAGE: 0
+  VT_CODE_COVERAGE: 0
   VT_LB: 1
   VT_TRACE: 0
   VT_TRACE_RT: 0
@@ -56,7 +57,8 @@ variables:
   TEST_LB_SCHEMA: 0
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-clang-13-cache
-  build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
+  volume_name: ubuntu-cpp
+  build_root: "$(CACHE)$(ARCH)-ubuntu-$(UBUNTU)-$(HOST_COMPILER)-$(COMPILER)-cache/"
   TS: 0
   TS_YEAR: 0
   TS_MONTH: 0
@@ -112,7 +114,7 @@ stages:
         inputs:
           securityNamespace: cache
           key: $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY) | $(TS)
-          path: '$(build_root)/ccache'
+          path: '$(build_root)$(volume_name)/ccache'
           restoreKeys: |
             $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY)
             $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH)
@@ -150,8 +152,8 @@ stages:
           targetType: 'inline'
           script: |
             ./scripts/report_logs_in_comment.sh                     \
-                "$(build_root)/vt/compilation_errors_warnings.out"  \
-                "$(build_root)/vt/cmake-output.log"                 \
+                "$(build_root)$(volume_name)/vt/compilation_errors_warnings.out"  \
+                "$(build_root)$(volume_name)/vt/cmake-output.log"                 \
                 "$(Build.BuildNumber)"                              \
                 "$(System.PullRequest.PullRequestNumber)"           \
                 "$(Build.Repository.Name)"                          \
@@ -178,8 +180,8 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            zip -j $(Agent.TempDirectory)/LastTest.log.gz $(build_root)/vt/Testing/Temporary/LastTest.log
-            zip -j $(Agent.TempDirectory)/cmake-output.log.gz $(build_root)/vt/cmake-output.log
+            zip -j $(Agent.TempDirectory)/LastTest.log.gz $(build_root)$(volume_name)/vt/Testing/Temporary/LastTest.log
+            zip -j $(Agent.TempDirectory)/cmake-output.log.gz $(build_root)$(volume_name)/vt/cmake-output.log
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake test output artifact
         continueOnError: true

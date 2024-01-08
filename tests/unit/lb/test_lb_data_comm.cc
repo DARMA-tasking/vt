@@ -102,6 +102,9 @@ struct MyObjMsg : vt::Message { double x, y, z; };
 struct ElementInfo {
   using MapType = std::map<vt::Index1D, vt::elm::ElementIDStruct>;
   ElementInfo() = default;
+  ElementInfo(vt::Index1D idx, vt::elm::ElementIDStruct elm_id)
+    : elms(std::map<vt::Index1D, vt::elm::ElementIDStruct>{{idx, elm_id}})
+  {};
   explicit ElementInfo(MapType in_map) : elms(in_map) { }
   friend ElementInfo operator+(ElementInfo a1, ElementInfo const& a2) {
     for (auto&& x : a2.elms) a1.elms.insert(x);
@@ -112,27 +115,6 @@ struct ElementInfo {
     s | elms;
   }
   MapType elms;
-};
-struct ReduceMsg : SerializeRequired<
-  vt::collective::ReduceTMsg<ElementInfo>, ReduceMsg
-> {
-  using MessageParentType = SerializeRequired<
-    vt::collective::ReduceTMsg<ElementInfo>, ReduceMsg
-  >;
-
-  ReduceMsg() = default;
-  ReduceMsg(vt::Index1D idx, vt::elm::ElementIDStruct elm_id)
-    : MessageParentType(
-        ElementInfo{
-          std::map<vt::Index1D, vt::elm::ElementIDStruct>{{idx, elm_id}}
-        }
-      )
-  { }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-  }
 };
 struct ColProxyMsg : vt::Message {
   using ProxyType = vt::CollectionProxy<MyCol>;
@@ -263,14 +245,13 @@ auto idxToElmID = [](vt::Index1D i) -> vt::elm::ElementIDType {
   return all_elms.find(i)->second.id;
 };
 
-void recvElementIDs(ReduceMsg* msg) { all_elms = msg->getVal().elms; }
+void recvElementIDs(ElementInfo info) { all_elms = info.elms; }
 
 void doReduce(MyCol* col) {
   auto proxy = col->getCollectionProxy();
   auto index = col->getIndex();
-  auto cb = theCB()->makeBcast<ReduceMsg, recvElementIDs>();
-  auto msg = makeMessage<ReduceMsg>(index, col->getElmID());
-  proxy.reduce<vt::collective::PlusOp<ElementInfo>>(msg.get(), cb);
+  auto cb = theCB()->makeBcast<recvElementIDs>();
+  proxy.reduce<vt::collective::PlusOp>(cb, ElementInfo{index, col->getElmID()});
 }
 
 // ColT -> ColT, expected communication edge on receive side
@@ -757,9 +738,6 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_handler_send) {
     }
   }
   EXPECT_TRUE(found);
-
-  // Suppress warnings about that method being "declared but never referenced" from Intel icpc and Nvidia nvcc
-  (void)&ReduceMsg::serialize<checkpoint::Serializer>;
 }
 
 } /* end anon namespace */

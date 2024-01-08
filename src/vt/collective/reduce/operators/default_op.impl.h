@@ -49,28 +49,46 @@
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
+struct NoCombine {};
+
+template <typename>
+struct IsTuple : std::false_type {};
+template <typename... Args>
+struct IsTuple<std::tuple<Args...>> : std::true_type {};
+
 template <typename T>
 template <typename MsgT, typename Op, typename ActOp>
 /*static*/ void ReduceCombine<T>::msgHandler(MsgT* msg) {
   if (msg->isRoot()) {
-    auto cb = msg->getCallback();
     vt_debug_print(
       terse, reduce,
-      "ROOT: reduce root: valid={}, ptr={}\n", cb.valid(), print_ptr(msg)
+      "ROOT: reduce root: ptr={}\n", print_ptr(msg)
     );
-    if (cb.valid()) {
+    if (msg->hasValidCallback()) {
       envelopeUnlockForForwarding(msg->env);
-      cb.template send<MsgT>(msg);
+      if (msg->isParamCallback()) {
+        if constexpr (IsTuple<typename MsgT::DataT>::value) {
+          msg->getParamCallback().sendTuple(std::move(msg->getVal()));
+        }
+      } else {
+        // We need to force the type to the more specific one here
+        auto cb = msg->getMsgCallback();
+        auto typed_cb = reinterpret_cast<Callback<MsgT>*>(&cb);
+        typed_cb->sendMsg(msg);
+      }
+    } else if (msg->root_handler_ != uninitialized_handler) {
+      auto_registry::getAutoHandler(msg->root_handler_)->dispatch(msg, nullptr);
     } else {
-      ActOp()(msg);
+      if constexpr (not std::is_same_v<ActOp, NoCombine>) {
+        ActOp()(msg);
+      }
     }
   } else {
     MsgT* fst_msg = msg;
     MsgT* cur_msg = msg->template getNext<MsgT>();
     vt_debug_print(
       verbose, reduce,
-      "leaf: fst valid={}, ptr={}\n", fst_msg->getCallback().valid(),
-      print_ptr(fst_msg)
+      "leaf: fst ptr={}\n", print_ptr(fst_msg)
     );
     while (cur_msg != nullptr) {
       ReduceCombine<>::combine<MsgT,Op,ActOp>(fst_msg, cur_msg);

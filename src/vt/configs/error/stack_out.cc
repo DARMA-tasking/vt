@@ -179,15 +179,15 @@ std::string prettyPrintStack(DumpStackType const& stack) {
   auto node       = ::vt::theContext()->getNode();
   auto node_str   = ::vt::debug::proc(node);
   auto prefix     = vt_pre + node_str + " ";
-  auto seperator  = fmt::format("{}{}{:-^120}{}\n", prefix, yellow, "", reset);
+  auto separator  = fmt::format("{}{}{:-^120}{}\n", prefix, yellow, "", reset);
   auto title_node = fmt::format("on Node {}", node);
   auto title      = fmt::format(" Dump Stack Backtrace {} ", title_node);
 
   std::string out = "";
 
-  out += fmt::format("{}", seperator);
+  out += fmt::format("{}", separator);
   out += fmt::format("{}{}{:-^120}{}\n", prefix, yellow, title, reset);
-  out += fmt::format("{}", seperator);
+  out += fmt::format("{}", separator);
 
   int i = 0;
   for (auto&& t : stack) {
@@ -203,7 +203,7 @@ std::string prettyPrintStack(DumpStackType const& stack) {
     i++;
   }
 
-  //out += seperator + seperator + seperator;
+  //out += separator + separator + separator;
 
   return out;
 }

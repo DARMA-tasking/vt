@@ -130,7 +130,7 @@ private:
   // the union for storing payload of event depending on type
   EventPayloadType event_union_;
 
-  // the unqiue event identifier
+  // the unique event identifier
   EventType event_id_ = no_event;
 
   // the type of the event record to access the union properly
@@ -138,7 +138,7 @@ private:
 
 # if vt_check_enabled(diagnostics)
   /// the time this event record was created
-  TimeType creation_time_stamp_ = 0.;
+  TimeType creation_time_stamp_ = TimeType{0.};
 # endif
 };
 

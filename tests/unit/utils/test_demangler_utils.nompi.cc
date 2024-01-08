@@ -48,7 +48,49 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestDemanglerUtils : TestHarness { };
+struct TestDemanglerUtils : TestHarness {
+  template <class MyType, MyType PF_VALUE_NAME>
+  static std::string getExpectedTypeName() {
+    std::string signature = __PRETTY_FUNCTION__;
+    auto labelPos = signature.rfind("PF_VALUE_NAME");
+    auto typePos = signature.find(" = ", labelPos);
+    auto lastBracket = signature.rfind("]");
+
+    assert(typePos != std::string::npos);
+    assert(lastBracket != std::string::npos);
+
+    return signature.substr(typePos + 3, lastBracket - (typePos + 3));
+  }
+
+  template <class T, T PF_VALUE_NAME>
+  static std::string prettyFunctionForValue() {
+    return __PRETTY_FUNCTION__;
+  }
+
+  template <auto f>
+  struct TestFunctor {
+    using FuncType = decltype(f);
+
+    static std::string getPrettyName() {
+      return prettyFunctionForValue<FuncType, f>();
+    }
+    std::pair<std::string, std::string> operator()() {
+      return {getPrettyName(), getExpectedTypeName<FuncType, f>()};
+    }
+  };
+
+  template <typename A, typename B, auto f>
+  struct SecondTestFunctor {
+    using FuncType = decltype(f);
+
+    static std::string getPrettyName() {
+      return prettyFunctionForValue<FuncType, f>();
+    }
+    std::pair<std::string, std::string> operator()() {
+      return {getPrettyName(), getExpectedTypeName<FuncType, f>()};
+    }
+  };
+};
 
 using TE = vt::util::demangle::TemplateExtract;
 
@@ -100,6 +142,37 @@ TEST_F(TestDemanglerUtils, test_getBarename) {
     std::string& given = std::get<0>(t);
     std::string& expected = std::get<1>(t);
     EXPECT_EQ(TE::getBarename(given), expected);
+  }
+}
+
+namespace helpers {
+void someFunc_0() { }
+
+int someFunc_1(int a) {
+  return a * 2;
+}
+
+template <typename A, typename B>
+void someFunc_2(A, B) { }
+} // namespace helpers
+
+TEST_F(TestDemanglerUtils, test_lastNamedPfType) {
+  std::vector<std::tuple<std::string, std::string>> data;
+  data.emplace_back("", "");
+  data.emplace_back(__PRETTY_FUNCTION__, "");
+  data.emplace_back(TestFunctor<helpers::someFunc_0>{}());
+  data.emplace_back(TestFunctor<helpers::someFunc_1>{}());
+  data.emplace_back(TestFunctor<helpers::someFunc_2<int, float>>{}());
+  data.emplace_back(SecondTestFunctor<int, float, helpers::someFunc_0>{}());
+  data.emplace_back(SecondTestFunctor<double, char, helpers::someFunc_1>{}());
+  data.emplace_back(
+    SecondTestFunctor<unsigned, int, helpers::someFunc_2<int, float>>{}());
+
+  for (auto& t : data) {
+    std::string& spf = std::get<0>(t);
+    std::string& expected = std::get<1>(t);
+    EXPECT_EQ(TE::lastNamedPfType(spf, "PF_VALUE_NAME"), expected)
+      << "spf: " << spf << std::endl;
   }
 }
 

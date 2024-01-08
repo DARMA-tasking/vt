@@ -63,6 +63,7 @@ using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::CommMapType;
 using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
+using vt::vrt::collection::balance::DataMapType;
 
 struct StubModel : LoadModel {
 
@@ -71,13 +72,14 @@ struct StubModel : LoadModel {
 
   void setLoads(
     std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const*) override {
+    std::unordered_map<PhaseType, CommMapType> const*,
+    std::unordered_map<PhaseType, DataMapType> const*) override {
     proc_load_ = proc_load;
   }
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
+  LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     // Here we return predicted loads for future phases
     // For the sake of the test we use values from the past phases
     return proc_load_->at(phase.phases).at(id).whole_phase_load;
@@ -100,29 +102,29 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   NodeType this_node = 0;
   std::unordered_map<PhaseType, LoadMapType> proc_loads = {
     {0, LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{10}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{40}, {}}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}}},
     {1, LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{20}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{30}, {}}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{20}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{30}, {}}}}},
     {2, LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{30}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{10}, {}}}}},
+      {ElementIDStruct{1,this_node}, {LoadType{30}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{10}, {}}}}},
     {3, LoadMapType{
-      {ElementIDStruct{1,this_node}, {TimeType{40}, {}}},
-      {ElementIDStruct{2,this_node}, {TimeType{5}, {}}}}}};
+      {ElementIDStruct{1,this_node}, {LoadType{40}, {}}},
+      {ElementIDStruct{2,this_node}, {LoadType{5}, {}}}}}};
 
   auto test_model =
     std::make_shared<MultiplePhases>(std::make_shared<StubModel>(), 4);
 
-  test_model->setLoads(&proc_loads, nullptr);
+  test_model->setLoads(&proc_loads, nullptr, nullptr);
   test_model->updateLoads(3);
 
   for (auto&& obj : *test_model) {
     auto work_val = test_model->getModeledLoad(
       obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
     );
-    EXPECT_EQ(work_val, obj.id == 1 ? TimeType{100} : TimeType{85});
+    EXPECT_EQ(work_val, obj.id == 1 ? LoadType{100} : LoadType{85});
   }
 }
 

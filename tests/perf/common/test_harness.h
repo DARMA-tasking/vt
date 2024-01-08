@@ -45,6 +45,7 @@
 #define INCLUDED_PERF_COMMON_TEST_HARNESS_H
 
 #include "timers.h"
+#include "test_harness_base.h"
 #include "test_harness_macros.h"
 
 #include <vt/configs/types/types_type.h>
@@ -64,21 +65,19 @@ struct TestResultHolder {
   T max_ = {};
 };
 
-struct PerfTestHarness {
+struct PerfTestHarness : TestHarnessBase {
   using TestName = std::string;
-  using TestResult = std::pair<TestName, TimeType>;
-  using FinalTestResult = std::pair<TestName, TestResultHolder<TimeType>>;
+  using TestResult = std::pair<TestName, TimeType::TimeTypeInternal>;
+  using FinalTestResult = std::pair<TestName, TestResultHolder<TimeType::TimeTypeInternal>>;
   using TestResults = std::vector<std::vector<TestResult>>;
   using PerNodeResults =
-    std::unordered_map<NodeType, TestResultHolder<TimeType>>;
+    std::unordered_map<NodeType, TestResultHolder<TimeType::TimeTypeInternal>>;
   using CombinedResults = std::vector<std::pair<TestName, PerNodeResults>>;
 
   // Memory use at the end of test iteration (i.e. phase)
   using MemoryUsage = std::vector<std::vector<std::size_t>>;
   using CombinedMemoryUse =
     std::unordered_map<NodeType, std::vector<TestResultHolder<std::size_t>>>;
-
-  virtual ~PerfTestHarness() = default;
 
   virtual void SetUp();
   virtual void TearDown();

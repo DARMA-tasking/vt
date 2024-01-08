@@ -56,7 +56,6 @@
 #include "vt/registry/auto/auto_registry.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/invoke.h"
 #include "vt/elm/elm_id_bits.h"
 
 #include <memory>

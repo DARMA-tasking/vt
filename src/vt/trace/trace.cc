@@ -311,7 +311,7 @@ void Trace::addUserEventBracketedManualEnd(UserSpecEventIDType event) {
 }
 
 void Trace::addUserEventBracketedManual(
-  UserSpecEventIDType event, double begin, double end
+  UserSpecEventIDType event, TimeType begin, TimeType end
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return;
@@ -327,7 +327,7 @@ void Trace::addUserEventBracketedManual(
   addUserEventBracketed(id, begin, end);
 }
 
-void Trace::addMemoryEvent(std::size_t memory, double time) {
+void Trace::addMemoryEvent(std::size_t memory, TimeType time) {
   auto const type = TraceConstantsType::MemoryUsageCurrent;
   logEvent(LogType{time, type, memory});
 }
@@ -359,7 +359,7 @@ TraceProcessingTag Trace::beginProcessing(
   );
 
   if (theConfig()->vt_trace_memory_usage) {
-    addMemoryEvent(theMemUsage()->getFirstUsage());
+    addMemoryEvent(theMemUsage()->getFirstUsage(), time);
   }
 
   return TraceProcessingTag{ep, loggedEvent};
@@ -404,7 +404,7 @@ void Trace::endProcessing(
   );
 
   if (theConfig()->vt_trace_memory_usage) {
-    addMemoryEvent(theMemUsage()->getFirstUsage());
+    addMemoryEvent(theMemUsage()->getFirstUsage(), time);
   }
 
   // Final event is same as original with a few .. tweaks.
@@ -455,7 +455,7 @@ void Trace::endSchedulerLoop() {
 }
 
 TraceEventIDType Trace::messageCreation(
-  TraceEntryIDType const ep, TraceMsgLenType const len, double const time
+  TraceEntryIDType const ep, TraceMsgLenType const len, TimeType const time
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return no_trace_event;
@@ -470,7 +470,7 @@ TraceEventIDType Trace::messageCreation(
 }
 
 TraceEventIDType Trace::messageCreationBcast(
-  TraceEntryIDType const ep, TraceMsgLenType const len, double const time
+  TraceEntryIDType const ep, TraceMsgLenType const len, TimeType const time
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return no_trace_event;
@@ -486,7 +486,7 @@ TraceEventIDType Trace::messageCreationBcast(
 
 TraceEventIDType Trace::messageRecv(
   TraceEntryIDType const ep, TraceMsgLenType const len,
-  NodeType const from_node, double const time
+  NodeType const from_node, TimeType const time
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return no_trace_event;

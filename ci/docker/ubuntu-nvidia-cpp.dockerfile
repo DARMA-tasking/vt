@@ -5,6 +5,7 @@ ARG arch=amd64
 ARG ubuntu=20.04
 FROM --platform=${arch} nvidia/cuda:${compiler}-devel-ubuntu${ubuntu} as base
 
+ARG host_compiler=gcc-9
 ARG proxy=""
 
 ENV https_proxy=${proxy} \
@@ -12,9 +13,13 @@ ENV https_proxy=${proxy} \
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update -y -q && \
+RUN apt-get update -y && \
+    apt-get install -y software-properties-common --no-install-recommends && \
+    add-apt-repository -y ppa:ubuntu-toolchain-r/test && \
+    apt remove -y software-properties-common && \
     apt-get install -y --no-install-recommends \
     ca-certificates \
+    g++-$(echo ${host_compiler} | cut -d- -f2) \
     curl \
     less \
     git \
@@ -28,14 +33,17 @@ RUN apt-get update -y -q && \
     libunwind-dev \
     valgrind \
     ccache && \
+    apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 ENV CC=gcc \
     CXX=g++
 
+ARG arch
+
 COPY ./ci/deps/cmake.sh cmake.sh
-RUN ./cmake.sh 3.23.4
+RUN ./cmake.sh 3.23.4 ${arch}
 
 ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
@@ -48,6 +56,7 @@ RUN mkdir -p /nvcc_wrapper/build && \
     chmod +x /nvcc_wrapper/build/nvcc_wrapper
 
 ENV MPI_EXTRA_FLAGS="" \
+    HOST_COMPILER=${host_compiler} \
     PATH=/usr/lib/ccache/:/nvcc_wrapper/build:$PATH \
     CXX=nvcc_wrapper
 

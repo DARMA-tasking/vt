@@ -73,9 +73,7 @@ static constexpr double const default_tol = 1.0e-02;
 
 struct NodeObj {
   bool is_finished_ = false;
-  struct WorkFinishedMsg : vt::Message {};
-
-  void workFinishedHandler(WorkFinishedMsg*) { is_finished_ = true; }
+  void workFinishedHandler() { is_finished_ = true; }
   bool isWorkFinished() { return is_finished_; }
 };
 using NodeObjProxy = vt::objgroup::proxy::Proxy<NodeObj>;
@@ -119,18 +117,11 @@ public:
 
   };
 
-  struct ReduxMsg : vt::collective::ReduceTMsg<double> {
-    ReduxMsg() = default;
-    explicit ReduxMsg(double in_val) : ReduceTMsg<double>(in_val) { }
-  };
-
-  void checkCompleteCB(ReduxMsg* msg) {
+  void checkCompleteCB(double normRes) {
     //
     // Only one object for the reduction will visit
     // this function
     //
-
-    double normRes = msg->getConstVal();
 
     auto const iter_max_reached = iter_ > maxIter_;
     auto const norm_res_done = normRes < default_tol;
@@ -143,7 +134,7 @@ public:
       fmt::print(to_print);
 
       // Notify all nodes that computation is finished
-      objProxy_.broadcast<NodeObj::WorkFinishedMsg, &NodeObj::workFinishedHandler>();
+      objProxy_.broadcast<&NodeObj::workFinishedHandler>();
     } else {
       fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter_, normRes);
     }
@@ -184,11 +175,9 @@ public:
     }
 
     auto proxy = this->getCollectionProxy();
-    auto cb = vt::theCB()->makeSend<
-      LinearPb1DJacobi,ReduxMsg,&LinearPb1DJacobi::checkCompleteCB
-    >(proxy[0]);
-    auto msg2 = vt::makeMessage<ReduxMsg>(maxNorm);
-    proxy.reduce<vt::collective::MaxOp<double>>(msg2.get(),cb);
+    proxy.reduce<&LinearPb1DJacobi::checkCompleteCB, vt::collective::MaxOp>(
+      proxy[0], maxNorm
+    );
 
   }
 

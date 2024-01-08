@@ -48,6 +48,7 @@
 #include <gtest/gtest.h>
 
 #include "test_harness.h"
+#include "vt/timing/timing_type.h"
 
 #include <memory>
 
@@ -66,10 +67,12 @@ using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
+using vt::vrt::collection::balance::DataMapType;
 
 using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
 using ProcSubphaseLoadMap = std::unordered_map<PhaseType, SubphaseLoadMapType>;
 using ProcCommMap = std::unordered_map<PhaseType, CommMapType>;
+using UserDataMap = std::unordered_map<PhaseType, DataMapType>;
 
 static auto num_phases = 0;
 
@@ -80,13 +83,14 @@ struct StubModel : LoadModel {
 
   void setLoads(
     ProcLoadMap const* proc_load,
-    ProcCommMap const*) override {
+    ProcCommMap const*,
+    UserDataMap const*) override {
     proc_load_ = proc_load;
   }
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
+  LoadType getModeledLoad(ElementIDStruct id, PhaseOffset phase) const override {
     const auto work = proc_load_->at(0).at(id).whole_phase_load;
 
     if (phase.subphase == PhaseOffset::WHOLE_PHASE) {
@@ -122,7 +126,7 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   // Element 3 (home node == 3)
   ElementIDStruct const elem3 = {3, 3};
 
-  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, {TimeType{150}, {}}}}}};
+  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, {LoadType{150}, {}}}}}};
 
   ProcCommMap proc_comm = {
     {0,
@@ -152,10 +156,10 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   auto test_model = std::make_shared<CommOverhead>(
     std::make_shared<StubModel>(), per_msg_weight, per_byte_weight
   );
-  test_model->setLoads(&proc_load, &proc_comm);
+  test_model->setLoads(&proc_load, &proc_comm, nullptr);
 
-  std::unordered_map<PhaseType, TimeType> expected_work = {
-    {0, TimeType{296}}, {1, TimeType{295.5}}
+  std::unordered_map<PhaseType, LoadType> expected_work = {
+    {0, LoadType{296}}, {1, LoadType{295.5}}
   };
 
   for (; num_phases < 2; ++num_phases) {

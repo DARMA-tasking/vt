@@ -11,6 +11,7 @@ set(
   hello_world_virtual_context_remote
   ring
   objgroup
+  hello_reduce
 )
 
 foreach(EXAMPLE_NAME ${HELLO_WORLD_EXAMPLES})

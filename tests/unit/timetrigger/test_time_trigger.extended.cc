@@ -60,7 +60,7 @@ TEST_F(TestTimeTrigger, test_time_trigger) {
   using namespace std::chrono_literals;
 
   auto trigger_period_ms = 100ms;
-  auto trigger_period_s = duration<TimeType>(trigger_period_ms).count();
+  auto trigger_period_s = duration<TimeType::TimeTypeInternal>(trigger_period_ms).count();
   int trigger_id = 42;
   int triggered = 0;
 
@@ -69,24 +69,24 @@ TEST_F(TestTimeTrigger, test_time_trigger) {
   }, trigger_id};
 
   EXPECT_EQ(trigger.getID(), trigger_id);
-  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime(), 0.0);
-  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime(), 0.0 + trigger_period_s);
+  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime().seconds(), 0.0);
+  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime().seconds(), 0.0 + trigger_period_s);
   EXPECT_EQ(triggered, 0);
 
-  TimeType start_time = 4.0;
+  TimeType start_time = TimeType{4.0};
   trigger.runAction(start_time);
 
-  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime(), start_time);
-  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime(), start_time + trigger_period_s);
-  EXPECT_EQ(trigger.ready(start_time + trigger_period_s), false);
-  EXPECT_EQ(trigger.ready(start_time + trigger_period_s + 0.001), true);
+  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime().seconds(), start_time.seconds());
+  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime().seconds(), start_time.seconds() + trigger_period_s);
+  EXPECT_EQ(trigger.ready(start_time + TimeType{trigger_period_s}), false);
+  EXPECT_EQ(trigger.ready(start_time + TimeType{trigger_period_s + 0.001}), true);
   EXPECT_EQ(triggered, 1);
 }
 
 TEST_F(TestTimeTrigger, test_time_trigger_manager_add_trigger) {
   using namespace std::chrono_literals;
 
-  TimeType current_time = 5.2;
+  TimeType current_time = TimeType{5.2};
   auto trigger_period_ms = 100ms;
   int triggered = 0;
 
@@ -110,9 +110,9 @@ TEST_F(TestTimeTrigger, test_time_trigger_manager_trigger_ready) {
   using namespace std::chrono;
   using namespace std::chrono_literals;
 
-  TimeType current_time = 5.2;
+  TimeType current_time = TimeType{5.2};
   auto trigger_period_ms = 100ms;
-  auto trigger_period_s = duration<TimeType>(trigger_period_ms).count();
+  auto trigger_period_s = duration<TimeType::TimeTypeInternal>(trigger_period_ms).count();
   int triggered = 0;
 
   auto trigger_manager =
@@ -124,16 +124,16 @@ TEST_F(TestTimeTrigger, test_time_trigger_manager_trigger_ready) {
   }, true);
   EXPECT_EQ(triggered, 1);
 
-  trigger_manager->triggerReady(current_time + trigger_period_s);
+  trigger_manager->triggerReady(current_time + TimeType{trigger_period_s});
   EXPECT_EQ(triggered, 1);
 
-  trigger_manager->triggerReady(current_time + trigger_period_s + 0.01);
+  trigger_manager->triggerReady(current_time + TimeType{trigger_period_s + 0.01});
   EXPECT_EQ(triggered, 2);
 
-  // test unregisteration of triggers
+  // test unregistration of triggers
   auto prev_triggered = triggered;
   trigger_manager->removeTrigger(id);
-  trigger_manager->triggerReady(current_time + trigger_period_s + 0.01);
+  trigger_manager->triggerReady(current_time + TimeType{trigger_period_s + 0.01});
 
   // should not have been triggered again!
   EXPECT_EQ(prev_triggered, triggered);

@@ -60,7 +60,7 @@ void TestSerializationLB::init(objgroup::proxy::Proxy<TestSerializationLB>) {
 
 void TestSerializationLB::inputParams(balance::ConfigEntry*) { }
 
-void TestSerializationLB::runLB(TimeType) {
+void TestSerializationLB::runLB(LoadType) {
   auto const this_node = theContext()->getNode();
   for (auto obj : *load_model_) {
     auto const load = load_model_->getModeledLoad(

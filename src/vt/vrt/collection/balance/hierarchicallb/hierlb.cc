@@ -42,6 +42,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/timing/timing_type.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.fwd.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_types.h"
@@ -153,7 +154,7 @@ void HierarchicalLB::inputParams(balance::ConfigEntry* config) {
   }
 }
 
-void HierarchicalLB::setupTree(TimeTypeWrapper const threshold) {
+void HierarchicalLB::setupTree(TimeType const threshold) {
   vtAssert(
     tree_setup == false,
     "Tree must not already be set up when is this called"
@@ -501,7 +502,7 @@ void HierarchicalLB::lbTreeUp(
 
       if (bin.second.size() > 0) {
         // splice in the new list to accumulated work units that fall in a
-        // common histrogram bin
+        // common histogram bin
         auto given_iter = given_objs.find(bin.first);
 
         if (given_iter == given_objs.end()) {
@@ -565,7 +566,7 @@ void HierarchicalLB::lbTreeUp(
       );
       sendDownTree();
     } else {
-      distributeAmoungChildren();
+      distributeAmongChildren();
     }
   }
 }
@@ -691,12 +692,12 @@ void HierarchicalLB::sendDownTree() {
   }
 }
 
-void HierarchicalLB::distributeAmoungChildren() {
+void HierarchicalLB::distributeAmongChildren() {
   auto const& this_node = theContext()->getNode();
 
   vt_debug_print(
     normal, hierlb,
-    "distributeAmoungChildren: parent={}\n", parent
+    "distributeAmongChildren: parent={}\n", parent
   );
 
   auto cIter = given_objs.rbegin();
@@ -756,7 +757,7 @@ void HierarchicalLB::distributeAmoungChildren() {
     auto const& is_live = child.second->is_live;
     vt_debug_print(
       verbose, hierlb,
-      "distributeAmoungChildren: parent={}, child={}. is_live={}, size={}, "
+      "distributeAmongChildren: parent={}, child={}. is_live={}, size={}, "
       "load={}\n",
       parent, node, is_live, node_size, TimeTypeWrapper(load / 1000)
     );
@@ -788,19 +789,15 @@ void HierarchicalLB::clearObj(ObjSampleType& objs) {
   }
 }
 
-void HierarchicalLB::runLB(TimeType total_load) {
+void HierarchicalLB::runLB(LoadType total_load) {
   this_load = loadMilli(total_load);
   buildHistogram();
-  setupTree(min_threshold);
+  setupTree(TimeType{min_threshold});
 
-  auto cb = vt::theCB()->makeBcast<
-    HierarchicalLB, SetupDoneMsg, &HierarchicalLB::setupDone
-  >(proxy);
-  auto msg = makeMessage<SetupDoneMsg>();
-  proxy.reduce(msg.get(),cb);
+  proxy.allreduce<&HierarchicalLB::setupDone>();
 }
 
-void HierarchicalLB::setupDone(SetupDoneMsg* msg) {
+void HierarchicalLB::setupDone() {
   loadStats();
 }
 

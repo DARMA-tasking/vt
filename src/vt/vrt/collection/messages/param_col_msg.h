@@ -46,6 +46,7 @@
 
 #include "vt/vrt/collection/messages/user.h"
 #include "vt/messaging/message/message_serialize.h"
+#include "vt/messaging/param_msg.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -58,15 +59,25 @@ struct ParamColMsg<
   ColT,
   std::enable_if_t<messaging::is_byte_copyable_t<Tuple>::value>
 > : CollectionMessage<ColT, vt::Message> {
+
+  using TupleType = typename messaging::detail::GetTraitsTuple<Tuple>::TupleType;
+
   ParamColMsg() = default;
 
-  template <typename... Params>
-  explicit ParamColMsg(Params&&... in_params)
-    : params(std::forward<Params>(in_params)...)
-  { }
+  void setParams() { }
 
-  Tuple params;
-  Tuple& getTuple() { return params; }
+  template <typename Param, typename... Params>
+  void setParams(Param&& p, Params&&... in_params) {
+    if constexpr (std::is_same_v<std::decay_t<Param>, MsgProps>) {
+      params = TupleType{std::forward<Params>(in_params)...};
+      p.apply(this);
+    } else {
+      params = TupleType{std::forward<Param>(p), std::forward<Params>(in_params)...};
+    }
+  }
+
+  TupleType params;
+  TupleType& getTuple() { return params; }
 };
 
 template <typename Tuple, typename ColT>
@@ -78,16 +89,29 @@ struct ParamColMsg<
   using MessageParentType = CollectionMessage<ColT, vt::Message>;
   vt_msg_serialize_if_needed_by_parent_or_type1(Tuple); // by params
 
+  using TupleType = typename messaging::detail::GetTraitsTuple<Tuple>::TupleType;
+
   ParamColMsg() = default;
 
-  template <typename... Params>
-  explicit ParamColMsg(Params&&... in_params)
-    : params(std::make_unique<Tuple>(std::forward<Params>(in_params)...))
-  { }
+  void setParams() {
+    params = std::make_unique<TupleType>();
+  }
+
+  template <typename Param, typename... Params>
+  void setParams(Param&& p, Params&&... in_params) {
+    if constexpr (std::is_same_v<std::decay_t<Param>, MsgProps>) {
+      params = std::make_unique<TupleType>(std::forward<Params>(in_params)...);
+      p.apply(this);
+    } else {
+      params = std::make_unique<TupleType>(
+        std::forward<Param>(p), std::forward<Params>(in_params)...
+      );
+    }
+  }
 
   std::unique_ptr<Tuple> params;
 
-  Tuple& getTuple() { return *params.get(); }
+  TupleType& getTuple() { return *params.get(); }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {

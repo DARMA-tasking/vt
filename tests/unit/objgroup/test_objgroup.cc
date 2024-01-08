@@ -65,36 +65,23 @@ struct TestObjGroup : TestParallelHarness {
   static int32_t total_verify_expected_;
 
   template <int test>
-  struct Verify {
-
-    Verify() = default;
-    Verify(int value) : expected_(value) {}
-    ~Verify() = default;
-
-    // check reduction results for scalar ops
-    void operator()(SysMsg* msg) {
-      auto const n = vt::theContext()->getNumNodes();
-      auto const value = msg->getConstVal();
-
-      switch (test) {
-        case 1: EXPECT_EQ(value, n * (n - 1)/2); break;
-        case 2: EXPECT_EQ(value, n * 4); break;
-        case 3: EXPECT_EQ(value, n - 1); break;
-        case 4: EXPECT_EQ(value, expected_); break;
-        default: vtAbort("Failure: should not be reached"); break;
-      }
-      total_verify_expected_++;
+  void verify(int value) {
+    auto const n = vt::theContext()->getNumNodes();
+    switch (test) {
+    case 1: EXPECT_EQ(value, n * (n - 1)/2); break;
+    case 2: EXPECT_EQ(value, n * 4); break;
+    case 3: EXPECT_EQ(value, n - 1); break;
+    default: vtAbort("Failure: should not be reached"); break;
     }
-    // check reduction result for vector append
-    void operator()(VecMsg* msg) {
-      auto final_size = msg->getConstVal().vec_.size();
-      auto n = vt::theContext()->getNumNodes();
-      EXPECT_EQ(final_size, n * 2U);
-      total_verify_expected_++;
-    }
-    // for reduction values not depending on ranks
-    int expected_ = 0;
-  };
+    total_verify_expected_++;
+  }
+
+  void verifyVec(VectorPayload vec) {
+    auto final_size = vec.vec_.size();
+    auto n = vt::theContext()->getNumNodes();
+    EXPECT_EQ(final_size, n);
+    total_verify_expected_++;
+  }
 };
 
 /*static*/ int32_t TestObjGroup::total_verify_expected_ = 0;
@@ -249,21 +236,18 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
     auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_reduce");
     auto proxy4 = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_reduce");
 
-    auto msg1 = vt::makeMessage<SysMsg>(my_node);
-    auto msg2 = vt::makeMessage<SysMsg>(4);
-    auto msg3 = vt::makeMessage<SysMsg>(my_node);
-    auto msg4 = vt::makeMessage<VecMsg>(my_node);
-
     // Multiple reductions should not interfere each other, even if
     // performed by the same subset of nodes within the same epoch.
     // Proxies should be able to do perform reduction
     // on any valid operator and data type.
     using namespace vt::collective;
 
-    proxy1.reduce<PlusOp<int>, Verify<1>>(msg1);
-    proxy2.reduce<PlusOp<int>, Verify<2>>(msg2);
-    proxy3.reduce< MaxOp<int>, Verify<3>>(msg3);
-    proxy4.reduce<PlusOp<VectorPayload>, Verify<4>>(msg4);
+    proxy1.reduce<&TestObjGroup::verify<1>, PlusOp>(proxy1[0], my_node);
+    proxy2.reduce<&TestObjGroup::verify<2>, PlusOp>(proxy1[0], 4);
+    proxy3.reduce<&TestObjGroup::verify<3>, MaxOp>(proxy1[0], my_node);
+    proxy4.reduce<&TestObjGroup::verifyVec, PlusOp>(
+      proxy1[0], VectorPayload{std::vector<int>{my_node}}
+    );
   });
 
   auto const root_node = 0;
@@ -303,6 +287,32 @@ TEST_F(TestObjGroup, test_proxy_invoke) {
   EXPECT_TRUE(result);
   EXPECT_EQ(*result, 10);
   EXPECT_EQ(proxy.get()->recv_, 3);
+}
+
+TEST_F(TestObjGroup, test_proxy_multicast) {
+  using namespace ::vt::group::region;
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+
+  auto proxy =
+    vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_multicast");
+
+  vt::runInEpochCollective([this_node, num_nodes, proxy] {
+    if (this_node == 0) {
+      // Create list of nodes and multicast to them
+      List::ListType range;
+      for (vt::NodeType node = 0; node < num_nodes; ++node) {
+        if (node % 2 == 0) {
+          range.push_back(node);
+        }
+      }
+
+      proxy.multicast<&MyObjA::handler>(std::make_unique<List>(range));
+    }
+  });
+
+  const auto expected = this_node % 2 == 0 ? 1 : 0;
+  EXPECT_EQ(proxy.get()->recv_, expected);
 }
 
 TEST_F(TestObjGroup, test_pending_send) {
@@ -377,7 +387,7 @@ struct MyTestObj {
     );
 
     // Even if msg was sent locally, it is still serialized,
-    // and the handler gots a fresh copy of it.
+    // and the handler gets a fresh copy of it.
     if (from_node == to_node) {
       EXPECT_TRUE(was_serialized);
     }

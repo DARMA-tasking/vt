@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_type.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPEREDLB_H
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPEREDLB_H
 
@@ -65,8 +66,6 @@ struct TemperedLB : BaseLB {
   using NodeSetType    = std::vector<NodeType>;
   using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
-  using RejectionMsgType = balance::RejectionStatsMsg;
-  using StatsMsgType     = balance::NodeStatsMsg;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
 
@@ -77,19 +76,19 @@ struct TemperedLB : BaseLB {
 
 public:
   void init(objgroup::proxy::Proxy<TemperedLB> in_proxy);
-  void runLB(TimeType total_load) override;
+  void runLB(LoadType total_load) override;
   void inputParams(balance::ConfigEntry* config) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 
   static std::vector<ObjIDType> orderObjects(
     ObjectOrderEnum obj_ordering,
-    std::unordered_map<ObjIDType, TimeType> cur_objs,
-    LoadType this_new_load, TimeType target_max_load
+    std::unordered_map<ObjIDType, LoadType> cur_objs,
+    LoadType this_new_load, LoadType target_max_load
   );
 
 protected:
-  void doLBStages(TimeType start_imb);
+  void doLBStages(LoadType start_imb);
   void informAsync();
   void informSync();
   void decide();
@@ -111,15 +110,15 @@ protected:
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
-  virtual TimeType getModeledValue(const elm::ElementIDStruct& obj);
+  virtual LoadType getModeledValue(const elm::ElementIDStruct& obj);
 
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
-  void loadStatsHandler(StatsMsgType* msg);
-  void rejectionStatsHandler(RejectionMsgType* msg);
+  void loadStatsHandler(std::vector<balance::LoadData> const& vec);
+  void rejectionStatsHandler(int n_rejected, int n_transfers);
   void thunkMigrations();
 
-  void setupDone(ReduceMsgType* msg);
+  void setupDone();
 
 private:
   uint16_t f_                                       = 0;
@@ -146,7 +145,7 @@ private:
   /**
    * \brief Whether to roll back to the best iteration
    *
-   * If the final iteration of a trial has a worse imbalance than any earier
+   * If the final iteration of a trial has a worse imbalance than any earlier
    * iteration, it will roll back to the best iteration.
    */
   bool rollback_                                    = true;
@@ -167,10 +166,10 @@ private:
   std::unordered_set<NodeType> selected_            = {};
   std::unordered_set<NodeType> underloaded_         = {};
   std::unordered_set<NodeType> new_underloaded_     = {};
-  std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
+  std::unordered_map<ObjIDType, LoadType> cur_objs_ = {};
   LoadType this_new_load_                           = 0.0;
-  TimeType new_imbalance_                           = 0.0;
-  TimeType target_max_load_                         = 0.0;
+  LoadType new_imbalance_                           = 0.0;
+  LoadType target_max_load_                         = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   InformTypeEnum inform_type_                       = InformTypeEnum::AsyncInform;
   ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::FewestMigrations;

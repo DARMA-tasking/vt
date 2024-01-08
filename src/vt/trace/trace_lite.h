@@ -172,7 +172,7 @@ struct TraceLite  {
    * \param[in] begin the begin time
    * \param[in] end the end time
    */
-  void addUserEventBracketed(UserEventIDType event, double begin, double end);
+  void addUserEventBracketed(UserEventIDType event, TimeType begin, TimeType end);
 
   /**
    * \brief Log a user bracketed event with a note
@@ -183,7 +183,7 @@ struct TraceLite  {
    * \param[in] event the event ID
    */
   void addUserBracketedNote(
-    double const begin, double const end, std::string const& note,
+    TimeType const begin, TimeType const end, std::string const& note,
     TraceEventIDType const event = no_trace_event
   );
 
@@ -192,14 +192,14 @@ struct TraceLite  {
    *
    * \param[in] time time it begins idle
    */
-  void beginIdle(double const time = getCurrentTime());
+  void beginIdle(TimeType const time = getCurrentTime());
 
   /**
    * \brief Scheduler trigger for \c sched::SchedulerEvent::EndIdle
    *
    * \param[in] time time it ends idle
    */
-  void endIdle(double const time = getCurrentTime());
+  void endIdle(TimeType const time = getCurrentTime());
 
   /**
    * \internal \brief Check if tracing is enabled
@@ -228,7 +228,7 @@ struct TraceLite  {
   /**
    * \brief Check if trace is in a idle event
    *
-   * \return whether in an idle eveent
+   * \return whether in an idle event
    */
   bool inIdleEvent() const;
 
@@ -237,7 +237,7 @@ struct TraceLite  {
    *
    * \return query the current clock time
    */
-  static inline double getCurrentTime() {
+  static inline TimeType getCurrentTime() {
     return ::vt::timing::getCurrentTime();
   }
 
@@ -248,8 +248,26 @@ struct TraceLite  {
    *
    * \return time in microsecond as integer
    */
-  static inline TimeIntegerType timeToMicros(double const time) {
-    return static_cast<TimeIntegerType>(time * 1e6);
+  static inline TimeIntegerType timeToMicros(TimeType const time) {
+    return time.microseconds();
+  }
+
+  /**
+   * \brief Get the number of recorded trace events
+   *
+   * \return the number of trace events
+   */
+  std::size_t getNumTraceEvents() const {
+    return traces_.size();
+  }
+
+  /**
+   * @brief Get the last recorded trace event
+   *
+   * @return the last recorded trace event
+   */
+  const LogType* getLastTraceEvent() const noexcept {
+    return traces_.empty() ? nullptr : &traces_.back();
   }
 
 protected:
@@ -261,7 +279,7 @@ protected:
    * \param[in] type type of event to emit
    */
   void emitTraceForTopProcessingEvent(
-    double const time, TraceConstantsType const type
+    TimeType const time, TraceConstantsType const type
   );
 
   /**
@@ -275,7 +293,7 @@ protected:
    */
   static void outputTraces(
     vt_gzFile* file, TraceContainerType& traces,
-    double start_time, int flush
+    TimeType start_time, int flush
   );
 
   /**
@@ -286,7 +304,7 @@ protected:
    * \param[in] start the start time
    */
   static void outputHeader(
-    vt_gzFile* file, NodeType const node, double const start
+    vt_gzFile* file, NodeType const node, TimeType const start
   );
 
   /**
@@ -297,7 +315,7 @@ protected:
    * \param[in] start the start time
    */
   static void outputFooter(
-    vt_gzFile* file, NodeType const node, double const start
+    vt_gzFile* file, NodeType const node, TimeType const start
   );
 
   /**
@@ -349,7 +367,7 @@ protected:
    *
    * \return computed bytes used for tracing (lower bound)
    */
-  std::size_t getTracesSize() const {
+  std::size_t getTracesSize() const noexcept {
     return traces_.size() * sizeof(Log);
   }
 
@@ -367,7 +385,7 @@ protected:
   TraceEventIDType cur_event_   = 1;
   UserEventIDType flush_event_  = no_user_event_id;
   bool enabled_                 = true;
-  double start_time_            = 0.0;
+  TimeType start_time_          = TimeType{0.0};
   std::string prog_name_        = "";
   std::string trace_name_       = "";
   std::string full_trace_name_  = "";

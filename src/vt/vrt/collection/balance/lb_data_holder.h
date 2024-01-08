@@ -50,6 +50,8 @@
 
 #include <unordered_map>
 #include <memory>
+#include <variant>
+#include <string>
 
 #include <nlohmann/json_fwd.hpp>
 
@@ -77,7 +79,12 @@ struct LBDataHolder {
     s | node_comm_;
     s | node_subphase_comm_;
     s | user_defined_json_;
+    s | user_per_phase_json_;
     s | node_idx_;
+    s | count_;
+    s | skipped_phases_;
+    s | identical_phases_;
+    s | user_defined_lb_info_;
   }
 
   /**
@@ -88,6 +95,13 @@ struct LBDataHolder {
    * \return the json data structure
    */
   std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
+
+  /**
+   * \brief Output a LB phase's metdadata to JSON
+   *
+   * \return the json data structure
+   */
+  std::unique_ptr<nlohmann::json> metadataToJson() const;
 
   /**
    * \brief Clear all LB data
@@ -103,6 +117,13 @@ private:
    */
   void outputEntity(nlohmann::json& j, ElementIDStruct const& elm_id) const;
 
+  /**
+   * \brief Read the LB phase's metadata
+   *
+   * \param[in] j the json
+   */
+  void readMetadata(nlohmann::json const& j);
+
 public:
   /// Node timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;
@@ -110,14 +131,24 @@ public:
   std::unordered_map<PhaseType, CommMapType> node_comm_;
   /// Node communication graph for each subphase
   std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
-  /// User-defined data from each phase
+  /// User-defined data from each phase for JSON output
   std::unordered_map<PhaseType, std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
+
+  std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
+  /// User-defined data from each phase for LB
+  std::unordered_map<PhaseType, DataMapType> user_defined_lb_info_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy
   std::unordered_map<ElementIDStruct, ObjGroupProxyType> node_objgroup_;
+  // Number of all phases including skipped and identical
+  PhaseType count_;
+  // Set of phases that are skipped
+  std::set<PhaseType> skipped_phases_;
+  // Set of phases which are identical to previous
+  std::set<PhaseType> identical_phases_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

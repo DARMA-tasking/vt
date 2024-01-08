@@ -55,44 +55,27 @@ namespace vt { namespace tests { namespace unit { namespace send {
 using namespace vt;
 using namespace vt::tests::unit;
 
-struct TestColMsg;
-
-struct CallbackMsg : vt::Message {
-  CallbackMsg() = default;
-  explicit CallbackMsg(Callback<> in_cb) : cb_(in_cb) { }
-
-  Callback<> cb_;
-};
-
 struct DataMsg : vt::Message {
   DataMsg() = default;
   DataMsg(int in_a, int in_b, int in_c) : a(in_a), b(in_b), c(in_c) { }
   int a = 0, b = 0, c = 0;
 };
 
-struct CallbackDataMsg : vt::Message {
-  CallbackDataMsg() = default;
-  explicit CallbackDataMsg(Callback<DataMsg> in_cb) : cb_(in_cb) { }
-
-  Callback<DataMsg> cb_;
-};
-
-struct TestCallbackSendCollection : TestParallelHarness {
-  static void testHandler(CallbackDataMsg* msg) {
-    msg->cb_.send(8,9,10);
-  }
-  static void testHandlerEmpty(CallbackMsg* msg) {
-    msg->cb_.send();
-  }
-};
+using TestCallbackSendCollection = TestParallelHarness;
 
 struct TestCol : vt::Collection<TestCol, vt::Index1D> {
   TestCol() = default;
   virtual ~TestCol() = default;
 
-  void check(TestColMsg* msg) {
+  void check() {
     if (this->getIndex().x() % 2 == 0) {
       EXPECT_EQ(val, 29);
+    } else if (this->getIndex().x() % 3 == 0) {
+      EXPECT_EQ(val, 15);
+    } else if (this->getIndex().x() % 5 == 0) {
+      EXPECT_EQ(val, 21);
+    } else if (this->getIndex().x() % 7 == 0) {
+      EXPECT_EQ(val, 99);
     } else {
       EXPECT_EQ(val, 13);
     }
@@ -112,6 +95,18 @@ struct TestCol : vt::Collection<TestCol, vt::Index1D> {
     val = 13;
   }
 
+  void cb4(int a, int b) {
+    EXPECT_EQ(a, 8);
+    EXPECT_EQ(b, 9);
+    val = 15;
+  }
+
+  void cb5(std::string str, int a) {
+    EXPECT_EQ(a, 8);
+    EXPECT_EQ(str, "hello");
+    val = 21;
+  }
+
 public:
   int32_t val = 17;
 };
@@ -120,123 +115,42 @@ static void cb3(TestCol* col, DataMsg* msg) {
   EXPECT_EQ(msg->a, 8);
   EXPECT_EQ(msg->b, 9);
   EXPECT_EQ(msg->c, 10);
-  col->val = 13;
+  col->val = 99;
 }
-
-struct TestColMsg : ::vt::CollectionMessage<TestCol> {};
 
 TEST_F(TestCallbackSendCollection, test_callback_send_collection_1) {
   auto const& this_node = theContext()->getNode();
-  auto const& range = Index1D(32);
 
-  vt::CollectionProxy<TestCol, vt::Index1D> proxy;
+  auto proxy = makeCollection<TestCol>("test_callback_send_collection_1")
+    .bulkInsert(Index1D(32))
+    .wait();
 
-  if (this_node == 0) {
-    proxy = theCollection()->construct<TestCol>(
-      range, "test_callback_send_collection_1"
-    );
-  }
-
-  runInEpochCollective([this_node, proxy]{
+  runInEpochCollective([&]{
     if (this_node == 0) {
       for (auto i = 0; i < 32; i++) {
         if (i % 2 == 0) {
-          auto cb =
-            theCB()->makeSend<TestCol, DataMsg, &TestCol::cb1>(proxy(i));
+          auto cb = theCB()->makeSend<&TestCol::cb1>(proxy(i));
+          cb.send(8, 9, 10);
+        } else if (i % 3 == 0) {
+          auto cb = theCB()->makeSend<&TestCol::cb4>(proxy(i));
+          cb.send(8, 9);
+        } else if (i % 5 == 0) {
+          auto cb = theCB()->makeSend<&TestCol::cb5>(proxy(i));
+          cb.send("hello", 8);
+        } else if (i % 7 == 0) {
+          auto cb = theCB()->makeSend<cb3>(proxy(i));
           cb.send(8, 9, 10);
         } else {
-          auto cb =
-            theCB()->makeSend<TestCol, DataMsg, &TestCol::cb2>(proxy(i));
+          auto cb = theCB()->makeSend<&TestCol::cb2>(proxy(i));
           cb.send(8, 9, 10);
         }
       }
     }
   });
 
-  runInEpochCollective([this_node, proxy]{
-    if (this_node == 0) {
-      proxy.broadcast<TestColMsg, &TestCol::check>();
-    }
+  runInEpochCollective([&]{
+    proxy.broadcastCollective<&TestCol::check>();
   });
 }
-
-TEST_F(TestCallbackSendCollection, test_callback_send_collection_2) {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-
-  if (num_nodes < 2) {
-    return;
-  }
-
-  auto const& range = Index1D(32);
-
-  vt::CollectionProxy<TestCol, vt::Index1D> proxy;
-
-  if (this_node == 0) {
-    proxy = theCollection()->construct<TestCol>(
-      range, "test_callback_send_collection_2"
-    );
-  }
-
-  runInEpochCollective([this_node, num_nodes, proxy]{
-    if (this_node == 0) {
-      for (auto i = 0; i < 32; i++) {
-        auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-        if (i % 2 == 0) {
-          auto cb =
-            theCB()->makeSend<TestCol, DataMsg, &TestCol::cb1>(proxy(i));
-          auto msg = makeMessage<CallbackDataMsg>(cb);
-          theMsg()->sendMsg<testHandler>(next, msg);
-        } else {
-          auto cb =
-            theCB()->makeSend<TestCol, DataMsg, &TestCol::cb2>(proxy(i));
-          auto msg = makeMessage<CallbackDataMsg>(cb);
-          theMsg()->sendMsg<testHandler>(next, msg);
-        }
-      }
-    }
-  });
-
-  runInEpochCollective([this_node, proxy]{
-    if (this_node == 0) {
-      proxy.broadcast<TestColMsg, &TestCol::check>();
-    }
-  });
-}
-
-TEST_F(TestCallbackSendCollection, test_callback_send_collection_3) {
-  auto const& this_node = theContext()->getNode();
-  auto const& range = Index1D(32);
-
-  vt::CollectionProxy<TestCol, vt::Index1D> proxy;
-
-  if (this_node == 0) {
-    proxy = theCollection()->construct<TestCol>(
-      range, "test_callback_send_collection_3"
-    );
-  }
-
-  runInEpochCollective([this_node, proxy]{
-    if (this_node == 0) {
-      for (auto i = 0; i < 32; i++) {
-        if (i % 2 == 0) {
-          auto cb =
-            theCB()->makeSend<TestCol, DataMsg, &TestCol::cb1>(proxy(i));
-          cb.send(8, 9, 10);
-        } else {
-          auto cb = theCB()->makeSend<TestCol, DataMsg, cb3>(proxy(i));
-          cb.send(8, 9, 10);
-        }
-      }
-    }
-  });
-
-  runInEpochCollective([this_node, proxy]{
-    if (this_node == 0) {
-      proxy.broadcast<TestColMsg, &TestCol::check>();
-    }
-  });
-}
-
 
 }}}} // end namespace vt::tests::unit::send

@@ -52,7 +52,7 @@
 namespace vt {
 
 /**
- * \deprecated Use \c makeMesssage.
+ * \deprecated Use \c makeMessage.
  * \brief Create a new 'raw' message.
  *
  * Create a new message and initialize internal state.
@@ -72,7 +72,7 @@ template <typename MsgT, typename... Args>
 MsgT* makeSharedMessage(Args&&... args);
 
 /**
- * \deprecated Use \c makeMesssage.
+ * \deprecated Use \c makeMessage.
  * \brief Create a new 'raw' message, of a given size.
  *
  * Create a new message and initialize internal state.

@@ -53,23 +53,19 @@ enum struct CriterionEnum : uint8_t {
   ModifiedGrapevine = 1
 };
 
-struct CriterionBase {
-  using LoadType = double;
-};
-
-struct GrapevineCriterion : CriterionBase {
+struct GrapevineCriterion {
   bool operator()(LoadType, LoadType under, LoadType obj, LoadType avg) const {
     return not (under + obj > avg);
   }
 };
 
-struct ModifiedGrapevineCriterion : CriterionBase {
+struct ModifiedGrapevineCriterion  {
   bool operator()(LoadType over, LoadType under, LoadType obj, LoadType) const {
     return obj < over - under;
   }
 };
 
-struct Criterion : CriterionBase {
+struct Criterion {
   explicit Criterion(CriterionEnum const criterion)
     : criterion_(criterion)
   { }

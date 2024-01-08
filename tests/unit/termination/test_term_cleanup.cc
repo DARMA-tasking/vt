@@ -58,7 +58,7 @@ struct TestTermCleanup :  TestParallelHarness {
   using TestMsgType = TestStaticBytesNormalMsg<64>;
 
   static void handler(TestMsgType* msg) {
-    //fmt::print("recieve msg\n");
+    //fmt::print("receive msg\n");
   }
 };
 

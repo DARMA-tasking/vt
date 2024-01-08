@@ -66,21 +66,6 @@
 namespace vt { namespace pipe {
 
 /**
- * \internal \struct FunctorTraits
- *
- * \brief Extract acceptable message type from functor
- *
- * Used to automatically extract the message type from a functor endpoint
- */
-template <typename T>
-struct FunctorTraits {
-  template <typename U>
-  using FunctorNoMsgArchType = decltype(std::declval<U>().operator()());
-  using FunctorNoMsgType = detection::is_detected<FunctorNoMsgArchType,T>;
-  static constexpr auto const has_no_msg_type = FunctorNoMsgType::value;
-};
-
-/**
  * \struct PipeManager
  *
  * \brief Core VT component that provides an interface to create type-erased
@@ -103,6 +88,52 @@ struct PipeManager
   PipeManager();
 
   std::string name() override { return "PipeManager"; }
+
+  /**
+   * \brief Make callback to an active function, objgroup, or collection
+   *
+   * \param[in] target the node or proxy to target
+   *
+   * \return a callback
+   */
+  template <auto f, typename Target>
+  auto makeSend(Target target);
+
+  /**
+   * \brief Make callback to a functor
+   *
+   * \param[in] node the node to target
+   *
+   * \return a callback
+   */
+  template <typename FunctorT>
+  auto makeSend(NodeType node);
+
+  /**
+   * \brief Make callback to an active function
+   *
+   * \return a callback
+   */
+  template <auto f>
+  auto makeBcast();
+
+  /**
+   * \brief Make callback to a functor
+   *
+   * \return a callback
+   */
+  template <typename FunctorT>
+  auto makeBcast();
+
+  /**
+   * \brief Make callback to an objgroup or collection
+   *
+   * \param[in] proxy the proxy to target
+   *
+   * \return a callback
+   */
+  template <auto f, typename ProxyT>
+  auto makeBcast(ProxyT proxy);
 
   /**
    * \brief Make callback to a function (including lambdas) with a context
@@ -169,7 +200,7 @@ struct PipeManager
    * \return a new callback
    */
   template <typename ContextT>
-  Callback<Void> makeFunc(
+  Callback<> makeFunc(
     LifetimeEnum life, ContextT* ctx, FuncCtxType<ContextT> fn
   );
 
@@ -218,7 +249,7 @@ struct PipeManager
    *
    * \return the new callback
    */
-  Callback<Void> makeFunc(LifetimeEnum life, FuncVoidType fn);
+  Callback<> makeFunc(LifetimeEnum life, FuncVoidType fn);
 
   /**
    * \brief Make a callback to a active message handler to be invoked on a
@@ -229,32 +260,8 @@ struct PipeManager
    * \return the new callback
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+  [[deprecated("Replace with call to makeSend<auto f>")]]
   Callback<MsgT> makeSend(NodeType const& node);
-
-  /**
-   * \brief Make a callback to a functor handler to be invoked on a certain
-   * node with a message.
-   *
-   * \param[in] node node to invoke callback on
-   *
-   * \return the new callback
-   */
-  template <typename FunctorT, typename MsgT = GetMsgType<FunctorT>>
-  Callback<MsgT> makeSend(NodeType const& node);
-
-  /**
-   * \brief Make a callback to a void functor handler to be invoked on a certain
-   * node.
-   *
-   * \param[in] node node to invoke callback on
-   *
-   * \return the new callback
-   */
-  template <
-    typename FunctorT,
-    typename = std::enable_if_t<FunctorTraits<FunctorT>::has_no_msg_type>
-  >
-  Callback<Void> makeSend(NodeType const& node);
 
   /**
    * \brief Make a callback to a particular collection element invoking a
@@ -265,6 +272,7 @@ struct PipeManager
    * \return the new callback
    */
   template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
+  [[deprecated("Replace with call to makeSend<auto f>")]]
   Callback<MsgT> makeSend(typename ColT::ProxyType proxy);
 
   /**
@@ -276,6 +284,7 @@ struct PipeManager
    * \return the new callback
    */
   template <typename ColT, typename MsgT, ColMemType<ColT,MsgT> f>
+  [[deprecated("Replace with call to makeSend<auto f>")]]
   Callback<MsgT> makeSend(typename ColT::ProxyType proxy);
 
   /**
@@ -287,6 +296,7 @@ struct PipeManager
    * \return the new callback
    */
   template <typename ObjT, typename MsgT, ObjMemType<ObjT,MsgT> f>
+  [[deprecated("Replace with call to makeSend<auto f>")]]
   Callback<MsgT> makeSend(objgroup::proxy::ProxyElm<ObjT> proxy);
 
   /**
@@ -296,28 +306,8 @@ struct PipeManager
    * \return the new callback
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+  [[deprecated("Replace with call to makeBcast<auto f>")]]
   Callback<MsgT> makeBcast();
-
-  /**
-   * \brief Make a callback to a functor handler with a message to be broadcast
-   * to all nodes.
-   *
-   * \return the new callback
-   */
-  template <typename FunctorT, typename MsgT = GetMsgType<FunctorT>>
-  Callback<MsgT> makeBcast();
-
-  /**
-   * \brief Make a void callback to a functor handler to be broadcast to all
-   * nodes.
-   *
-   * \return the new callback
-   */
-  template <
-    typename FunctorT,
-    typename = std::enable_if_t<FunctorTraits<FunctorT>::has_no_msg_type>
-  >
-  Callback<Void> makeBcast();
 
   /**
    * \brief Make a callback to a whole collection invoking a non-intrusive
@@ -328,6 +318,7 @@ struct PipeManager
    * \return the new callback
    */
   template <typename ColT, typename MsgT, ColHanType<ColT,MsgT>* f>
+  [[deprecated("Replace with call to makeBcast<auto f>")]]
   Callback<MsgT> makeBcast(ColProxyType<ColT> proxy);
 
   /**
@@ -339,6 +330,7 @@ struct PipeManager
    * \return the new callback
    */
   template <typename ColT, typename MsgT, ColMemType<ColT,MsgT> f>
+  [[deprecated("Replace with call to makeBcast<auto f>")]]
   Callback<MsgT> makeBcast(ColProxyType<ColT> proxy);
 
   /**
@@ -350,6 +342,7 @@ struct PipeManager
    * \return the new callback
    */
   template <typename ObjT, typename MsgT, ObjMemType<ObjT,MsgT> f>
+  [[deprecated("Replace with call to makeBcast<auto f>")]]
   Callback<MsgT> makeBcast(objgroup::proxy::Proxy<ObjT> proxy);
 
 public:

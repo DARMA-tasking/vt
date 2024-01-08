@@ -226,7 +226,7 @@ inline void envelopeSetCommLBDataRecordedAboveBareHandler(
  * with a guard assert. This is to prevent accidental edge-cases such as
  * sending a message twice.
  *
- * A message is locked when it is sent and recieved. Unlocking messages
+ * A message is locked when it is sent and received. Unlocking messages
  * should be reserved for special cases as done in some core code.
  *
  * \param[in,out] env the envelope

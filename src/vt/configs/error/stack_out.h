@@ -44,6 +44,7 @@
 #if !defined INCLUDED_VT_CONFIGS_ERROR_STACK_OUT_H
 #define INCLUDED_VT_CONFIGS_ERROR_STACK_OUT_H
 
+#include <cstdint>
 #include <cstdlib>
 #include <string>
 #include <tuple>

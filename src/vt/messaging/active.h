@@ -419,7 +419,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   // and do NOT define their own serialization function are required
   // to be byte-transmittable. This covers basic byte-copyable
   // messages directly inheriting from ActiveMsg. ActivMsg implements
-  // a serialize function which is implictly inherited..
+  // a serialize function which is implicitly inherited..
   template <
     typename MsgT,
     std::enable_if_t<true
@@ -766,7 +766,8 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   PendingSendType send(Node dest, Params&&... params) {
     using Tuple = typename FuncTraits<decltype(f)>::TupleType;
     using MsgT = ParamMsg<Tuple>;
-    auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
+    auto msg = vt::makeMessage<MsgT>();
+    msg->setParams(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
     return sendMsg<MsgT>(dest.get(), han, msg, no_tag);
   }
@@ -782,7 +783,8 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   PendingSendType broadcast(Params&&... params) {
     using Tuple = typename FuncTraits<decltype(f)>::TupleType;
     using MsgT = ParamMsg<Tuple>;
-    auto msg = vt::makeMessage<MsgT>(std::forward<Params>(params)...);
+    auto msg = vt::makeMessage<MsgT>();
+    msg->setParams(std::forward<Params>(params)...);
     auto han = auto_registry::makeAutoHandlerParam<decltype(f), f, MsgT>();
     constexpr bool deliver_to_sender = true;
     return broadcastMsg<MsgT>(han, msg, deliver_to_sender, no_tag);

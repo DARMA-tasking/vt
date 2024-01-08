@@ -155,7 +155,7 @@ Description:
 Values: {SyncInform, AsyncInform}
 Default: AsyncInform
 Description:
-  Approach used to track rounds in the information propagatation step. Options
+  Approach used to track rounds in the information propagation step. Options
   are:
     SyncInform: synchronous sharing of underloaded processor loads. The round
       number is defined at the processor level. This approach propagates known
@@ -237,7 +237,7 @@ Description:
 Values: {true, false}
 Default: true
 Description:
-  If the final iteration of a trial has a worse imbalance than any earier
+  If the final iteration of a trial has a worse imbalance than any earlier
   iteration, it will roll back to the iteration with the best imbalance.
 )"
     },
@@ -420,7 +420,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
   }
 }
 
-void TemperedLB::runLB(TimeType total_load) {
+void TemperedLB::runLB(LoadType total_load) {
   bool should_lb = false;
 
   this_load = total_load;
@@ -457,8 +457,8 @@ void TemperedLB::runLB(TimeType total_load) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
-      TimeTypeWrapper(avg), TimeTypeWrapper(max), TimeTypeWrapper(pole), imb,
-      TimeTypeWrapper(load), should_lb
+      LoadType(avg), LoadType(max), LoadType(pole), imb,
+      LoadType(load), should_lb
     );
 
     if (!should_lb) {
@@ -474,10 +474,10 @@ void TemperedLB::runLB(TimeType total_load) {
   }
 }
 
-void TemperedLB::doLBStages(TimeType start_imb) {
+void TemperedLB::doLBStages(LoadType start_imb) {
   decltype(this->cur_objs_) best_objs;
   LoadType best_load = 0;
-  TimeType best_imb = start_imb + 10;
+  LoadType best_imb = start_imb + 10;
   uint16_t best_trial = 0;
 
   auto this_node = theContext()->getNode();
@@ -489,7 +489,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
     load_info_.clear();
     is_overloaded_ = is_underloaded_ = false;
 
-    TimeType best_imb_this_trial = start_imb + 10;
+    LoadType best_imb_this_trial = start_imb + 10;
 
     for (iter_ = 0; iter_ < num_iters_; iter_++) {
       bool first_iter = iter_ == 0;
@@ -515,8 +515,8 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         normal, temperedlb,
         "TemperedLB::doLBStages: (before) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
-        trial_, iter_, num_iters_, TimeTypeWrapper(this_load),
-        TimeTypeWrapper(this_new_load_)
+        trial_, iter_, num_iters_, LoadType(this_load),
+        LoadType(this_new_load_)
       );
 
       if (isOverloaded(this_new_load_)) {
@@ -542,23 +542,18 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         verbose, temperedlb,
         "TemperedLB::doLBStages: (after) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
-        trial_, iter_, num_iters_, TimeTypeWrapper(this_load),
-        TimeTypeWrapper(this_new_load_)
+        trial_, iter_, num_iters_, LoadType(this_load),
+        LoadType(this_new_load_)
       );
 
       if (rollback_ || theConfig()->vt_debug_temperedlb || (iter_ == num_iters_ - 1)) {
         runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
-          using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
-          auto cb = vt::theCB()->makeBcast<
-            TemperedLB, StatsMsgType, &TemperedLB::loadStatsHandler
-          >(this->proxy_);
           // Perform the reduction for Rank_load_modeled -> processor load only
-          auto msg = makeMessage<StatsMsgType>(
+          proxy_.allreduce<&TemperedLB::loadStatsHandler, collective::PlusOp>(
             std::vector<balance::LoadData>{
               {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}}
             }
           );
-          this->proxy_.template reduce<ReduceOp>(msg,cb);
         });
       }
 
@@ -614,8 +609,8 @@ void TemperedLB::doLBStages(TimeType start_imb) {
   thunkMigrations();
 }
 
-void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
-  auto in = msg->getConstVal()[0];
+void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
+  auto const& in = vec[0];
   new_imbalance_ = in.I();
 
   auto this_node = theContext()->getNode();
@@ -624,9 +619,9 @@ void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
       terse, temperedlb,
       "TemperedLB::loadStatsHandler: trial={} iter={} max={} min={} "
       "avg={} pole={} imb={:0.4f}\n",
-      trial_, iter_, TimeTypeWrapper(in.max()),
-      TimeTypeWrapper(in.min()), TimeTypeWrapper(in.avg()),
-      TimeTypeWrapper(stats.at(
+      trial_, iter_, LoadType(in.max()),
+      LoadType(in.min()), LoadType(in.avg()),
+      LoadType(stats.at(
         lb::Statistic::Object_load_modeled
       ).at(lb::StatisticQuantity::max)),
       in.I()
@@ -634,11 +629,7 @@ void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
   }
 }
 
-void TemperedLB::rejectionStatsHandler(RejectionMsgType* msg) {
-  auto in = msg->getConstVal();
-
-  auto n_rejected = in.n_rejected_;
-  auto n_transfers = in.n_transfers_;
+void TemperedLB::rejectionStatsHandler(int n_rejected, int n_transfers) {
   double rej = static_cast<double>(n_rejected) /
     static_cast<double>(n_rejected + n_transfers) * 100.0;
 
@@ -661,7 +652,7 @@ void TemperedLB::informAsync() {
     "TemperedLB::informAsync: starting inform phase: trial={}, iter={}, "
     "k_max={}, is_underloaded={}, is_overloaded={}, load={}\n",
     trial_, iter_, k_max_, is_underloaded_, is_overloaded_,
-    TimeTypeWrapper(this_new_load_)
+    LoadType(this_new_load_)
   );
 
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
@@ -672,11 +663,7 @@ void TemperedLB::informAsync() {
   }
 
   setup_done_ = false;
-
-  auto cb = theCB()->makeBcast<TemperedLB, ReduceMsgType, &TemperedLB::setupDone>(proxy_);
-  auto msg = makeMessage<ReduceMsgType>();
-  proxy_.reduce(msg.get(), cb);
-
+  proxy_.allreduce<&TemperedLB::setupDone>();
   theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
   auto propagate_epoch = theTerm()->makeEpochCollective("TemperedLB: informAsync");
@@ -728,11 +715,7 @@ void TemperedLB::informSync() {
   new_load_info_ = load_info_;
 
   setup_done_ = false;
-
-  auto cb = theCB()->makeBcast<TemperedLB, ReduceMsgType, &TemperedLB::setupDone>(proxy_);
-  auto msg = makeMessage<ReduceMsgType>();
-  proxy_.reduce(msg.get(), cb);
-
+  proxy_.allreduce<&TemperedLB::setupDone>();
   theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
   for (k_cur_ = 0; k_cur_ < k_max_; ++k_cur_) {
@@ -774,7 +757,7 @@ void TemperedLB::informSync() {
   );
 }
 
-void TemperedLB::setupDone(ReduceMsgType* msg) {
+void TemperedLB::setupDone() {
   setup_done_ = true;
 }
 
@@ -1010,7 +993,7 @@ std::vector<NodeType> TemperedLB::makeUnderloaded() const {
 }
 
 std::vector<NodeType> TemperedLB::makeSufficientlyUnderloaded(
-  TimeType load_to_accommodate
+  LoadType load_to_accommodate
 ) const {
   std::vector<NodeType> sufficiently_under = {};
   for (auto&& elm : load_info_) {
@@ -1048,8 +1031,8 @@ TemperedLB::selectObject(
 /*static*/
 std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
   ObjectOrderEnum obj_ordering,
-  std::unordered_map<ObjIDType, TimeType> cur_objs,
-  LoadType this_new_load, TimeType target_max_load
+  std::unordered_map<ObjIDType, LoadType> cur_objs,
+  LoadType this_new_load, LoadType target_max_load
 ) {
   // define the iteration order
   std::vector<ObjIDType> ordered_obj_ids(cur_objs.size());
@@ -1107,8 +1090,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         vt_debug_print(
           normal, temperedlb,
           "TemperedLB::decide: over_avg={}, single_obj_load={}\n",
-          TimeTypeWrapper(over_avg),
-          TimeTypeWrapper(cur_objs[ordered_obj_ids[0]])
+          LoadType(over_avg),
+          LoadType(cur_objs[ordered_obj_ids[0]])
         );
       }
     }
@@ -1168,8 +1151,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         vt_debug_print(
           normal, temperedlb,
           "TemperedLB::decide: over_avg={}, marginal_obj_load={}\n",
-          TimeTypeWrapper(over_avg),
-          TimeTypeWrapper(cur_objs[ordered_obj_ids[0]])
+          LoadType(over_avg),
+          LoadType(cur_objs[ordered_obj_ids[0]])
         );
       }
     }
@@ -1267,9 +1250,9 @@ void TemperedLB::decide() {
           selected_load,
           obj_id.id,
           obj_id.getHomeNode(),
-          TimeTypeWrapper(obj_load),
-          TimeTypeWrapper(target_max_load_),
-          TimeTypeWrapper(this_new_load_),
+          LoadType(obj_load),
+          LoadType(target_max_load_),
+          LoadType(this_new_load_),
           eval
         );
 
@@ -1313,12 +1296,9 @@ void TemperedLB::decide() {
   if (theConfig()->vt_debug_temperedlb) {
     // compute rejection rate because it will be printed
     runInEpochCollective("TemperedLB::decide -> compute rejection", [=] {
-      using ReduceOp = collective::PlusOp<balance::RejectionStats>;
-      auto cb = vt::theCB()->makeBcast<
-        TemperedLB, RejectionMsgType, &TemperedLB::rejectionStatsHandler
-      >(this->proxy_);
-      auto msg = makeMessage<RejectionMsgType>(n_rejected, n_transfers);
-      this->proxy_.template reduce<ReduceOp>(msg,cb);
+      proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
+        n_rejected, n_transfers
+      );
     });
   }
 }
@@ -1361,7 +1341,7 @@ void TemperedLB::migrate() {
   vtAssertExpr(false);
 }
 
-TimeType TemperedLB::getModeledValue(const elm::ElementIDStruct& obj) {
+LoadType TemperedLB::getModeledValue(const elm::ElementIDStruct& obj) {
   return load_model_->getModeledLoad(
     obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
   );

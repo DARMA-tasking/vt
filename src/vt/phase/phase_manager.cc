@@ -156,8 +156,6 @@ void PhaseManager::startup() {
   runHooks(PhaseHook::Start);
 }
 
-struct NextMsg : collective::ReduceNoneMsg {};
-
 void PhaseManager::nextPhaseCollective() {
   vtAbortIf(
     in_next_phase_collective_,
@@ -175,9 +173,7 @@ void PhaseManager::nextPhaseCollective() {
   auto proxy = objgroup::proxy::Proxy<PhaseManager>(proxy_);
 
   // Start with a reduction to sure all nodes are ready for this
-  auto cb = theCB()->makeBcast<PhaseManager, NextMsg, &PhaseManager::nextPhaseReduce>(proxy);
-  auto msg = makeMessage<NextMsg>();
-  proxy.reduce(msg.get(), cb);
+  proxy.allreduce<&PhaseManager::nextPhaseReduce>();
 
   theSched()->runSchedulerWhile([this]{ return not reduce_next_phase_done_; });
   reduce_next_phase_done_ = false;
@@ -203,9 +199,7 @@ void PhaseManager::nextPhaseCollective() {
   runHooks(PhaseHook::Start);
 
   // Start with a reduction to sure all nodes are ready for this
-  auto cb2 = theCB()->makeBcast<PhaseManager, NextMsg, &PhaseManager::nextPhaseDone>(proxy);
-  auto msg2 = makeMessage<NextMsg>();
-  proxy.reduce(msg2.get(), cb2);
+  proxy.allreduce<&PhaseManager::nextPhaseDone>();
 
   theSched()->runSchedulerWhile([this]{ return not reduce_finished_; });
   reduce_finished_ = false;
@@ -213,11 +207,11 @@ void PhaseManager::nextPhaseCollective() {
   in_next_phase_collective_ = false;
 }
 
-void PhaseManager::nextPhaseReduce(NextMsg* msg) {
+void PhaseManager::nextPhaseReduce() {
   reduce_next_phase_done_ = true;
 }
 
-void PhaseManager::nextPhaseDone(NextMsg* msg) {
+void PhaseManager::nextPhaseDone() {
   reduce_finished_ = true;
 }
 
@@ -302,30 +296,29 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
     auto lb_name = vrt::collection::balance::get_lb_names()[
       last_phase_info->lb_type
     ];
-    TimeTypeWrapper const total_time = timing::getCurrentTime() - start_time_;
+    auto const total_time = timing::getCurrentTime() - start_time_;
     vt_print(
       phase,
       "phase={}, duration={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.3f}, "
       "grain_max_time={}, migration count={}, lb_name={}\n",
-      cur_phase_,
+      last_phase_info->phase,
       total_time,
-      TimeTypeWrapper(last_phase_info->max_load),
-      TimeTypeWrapper(last_phase_info->avg_load),
+      TimeType(last_phase_info->max_load),
+      TimeType(last_phase_info->avg_load),
       last_phase_info->imb_load,
-      TimeTypeWrapper(last_phase_info->max_obj),
+      TimeType(last_phase_info->max_obj),
       last_phase_info->migration_count,
       lb_name
     );
-    // vt_print(
-    //   phase,
-    //   "POST phase={}, total time={}, max_load={}, avg_load={}, imbalance={:.3f}, migration count={}\n",
-    //   cur_phase_,
-    //   total_time,
-    //   TimeTypeWrapper(last_phase_info->max_load_post_lb),
-    //   TimeTypeWrapper(last_phase_info->avg_load_post_lb),
-    //   last_phase_info->imb_load_post_lb,
-    //   last_phase_info->migration_count
-    // );
+
+    vt_debug_print(
+      terse, phase,
+      "POST phase={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.3f}\n",
+      last_phase_info->phase,
+      TimeType(last_phase_info->max_load_post_lb),
+      TimeType(last_phase_info->avg_load_post_lb),
+      last_phase_info->imb_load_post_lb
+    );
 
     auto compute_speedup = [](double t1, double t2) -> double {
        return t1 / t2;
@@ -342,7 +335,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
       auto percent_improvement = compute_percent_improvement(
         last_phase_info->max_load, last_phase_info->avg_load
       );
-      if (percent_improvement > 3.0 and cur_phase_ > 0) {
+      if (percent_improvement > 3.0 and last_phase_info->phase > 0) {
         if (grain_percent_improvement < 0.5) {
           // grain size is blocking improvement
           vt_print(
@@ -401,14 +394,15 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
           }
         }
       }
-    } else if (cur_phase_ == 0) {
-       // ran the lb on a phase that may have included initialization costs
-       vt_print(
-         phase,
-         "Consider skipping LB on phase 0 if it is not representative of "
-         "future phases\n"
-       );
     } else {
+      if (last_phase_info->phase == 0) {
+        // ran the lb on a phase that may have included initialization costs
+        vt_print(
+          phase,
+          "Consider skipping LB on phase 0 if it is not representative of "
+          "future phases\n"
+        );
+      }
       if (last_phase_info->migration_count > 0) {
         auto speedup = compute_speedup(
           last_phase_info->max_load, last_phase_info->max_load_post_lb

@@ -67,7 +67,7 @@ void Trace::start(TimeType time) {
       from_node_ != uninitialized_destination ? from_node_ : cur_node;
 
     processing_tag_ = theTrace()->beginProcessing(
-      trace_id, msg_size_, event_, from_node, idx1_, idx2_, idx3_, idx4_, time
+      trace_id, msg_size_, event_, from_node, time, idx1_, idx2_, idx3_, idx4_
     );
   } else {
     processing_tag_ = theTrace()->beginProcessing(

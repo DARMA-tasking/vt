@@ -49,31 +49,27 @@ namespace vt { namespace tests { namespace unit { namespace race {
 using TestReduceCollectionRace = TestParallelHarnessParam<int>;
 
 struct MyCol : vt::Collection<MyCol, vt::Index1D> {};
-using ReduceMsg = vt::collective::ReduceTMsg<int>;
 
-static int multipler = 0;
+static int multiplier = 0;
 
-struct ReduceFunctor {
-  void operator()(ReduceMsg* msg) {
-    auto const num_nodes = theContext()->getNumNodes();
-    auto const num_elems = num_nodes * multipler;
-    fmt::print("reduce finished: val={}, num_elems={}\n", msg->getVal(), num_elems);
-    EXPECT_EQ(msg->getVal(), (num_elems * (num_elems-1))/2);
-  }
-};
+static void reduceTarget(MyCol* col, int val) {
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_elems = num_nodes * multiplier;
+  fmt::print("reduce finished: val={}, num_elems={}\n", val, num_elems);
+  EXPECT_EQ(val, (num_elems * (num_elems-1))/2);
+}
 
 static void handler(MyCol* col) {
   auto proxy = col->getCollectionProxy();
-  auto msg = vt::makeMessage<ReduceMsg>(static_cast<int>(col->getIndex().x()));
-  auto cb = vt::theCB()->makeSend<ReduceFunctor>(0);
-  proxy.reduce<vt::collective::PlusOp<int>>(msg.get(), cb);
+  int val = col->getIndex().x();
+  proxy.reduce<reduceTarget, vt::collective::PlusOp>(proxy[0], val);
 }
 
 TEST_P(TestReduceCollectionRace, test_reduce_race_1) {
   auto const num_nodes = theContext()->getNumNodes();
 
-  multipler = GetParam();
-  auto const range = Index1D(multipler * num_nodes);
+  multiplier = GetParam();
+  auto const range = Index1D(multiplier * num_nodes);
   auto proxy = theCollection()->constructCollective<MyCol>(
     range, "test_reduce_race_1"
   );

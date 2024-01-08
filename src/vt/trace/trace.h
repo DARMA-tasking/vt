@@ -242,7 +242,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    * \param[in] end the end time
    */
   void addUserEventBracketedManual(
-    UserSpecEventIDType event, double begin, double end
+    UserSpecEventIDType event, TimeType begin, TimeType end
   );
 
   /**
@@ -295,7 +295,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   void addMemoryEvent(
     std::size_t memory,
-    double const time = getCurrentTime()
+    TimeType const time = getCurrentTime()
   );
 
   /**
@@ -309,7 +309,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   TraceEventIDType messageCreation(
     TraceEntryIDType const ep, TraceMsgLenType const len,
-    double const time = getCurrentTime()
+    TimeType const time = getCurrentTime()
   );
 
   /**
@@ -323,7 +323,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   TraceEventIDType messageCreationBcast(
     TraceEntryIDType const ep, TraceMsgLenType const len,
-    double const time = getCurrentTime()
+    TimeType const time = getCurrentTime()
   );
 
   /**
@@ -338,7 +338,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   TraceEventIDType messageRecv(
     TraceEntryIDType const ep, TraceMsgLenType const len,
-    NodeType const from_node, double const time = getCurrentTime()
+    NodeType const from_node, TimeType const time = getCurrentTime()
   );
 
   /**
@@ -357,7 +357,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
   /**
    * \brief Check if trace is in a idle event
    *
-   * \return whether in an idle eveent
+   * \return whether in an idle event
    */
   bool inIdleEvent() const;
 

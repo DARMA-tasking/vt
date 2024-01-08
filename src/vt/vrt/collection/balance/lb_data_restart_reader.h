@@ -153,9 +153,9 @@ private:
    * \brief Reduce distribution changes globally to find where migrations need
    * to occur
    *
-   * \param[in] msg the reduction message
+   * \param[in] vec the vector of booleans
    */
-  void reduceDistroChanges(ReduceMsg* msg);
+  void reduceDistroChanges(std::vector<bool> const& vec);
 
   /**
    * \brief Determine which phases migrations must happen to follow the
