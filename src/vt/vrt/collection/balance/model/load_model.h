@@ -216,6 +216,17 @@ struct LoadModel
   virtual void updateLoads(PhaseType last_completed_phase) = 0;
 
   /**
+   * \brief Provide all the comm info for a given phase
+   *
+   * \param[in] when the interval in which comm is desired
+   *
+   * \return the comm info
+   */
+  virtual CommMapType getComm(PhaseOffset when) const {
+    return CommMapType{};
+  }
+
+  /**
    * \brief Provide an estimate of the given object's load during a specified interval
    *
    * \param[in] object The object whose load is desired

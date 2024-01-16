@@ -67,6 +67,9 @@ struct TemperedLB : BaseLB {
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
+  using EdgeMapType      = std::unordered_map<
+    elm::ElementIDStruct, std::vector<std::tuple<elm::ElementIDStruct, double>>
+  >;
 
   TemperedLB() = default;
   TemperedLB(TemperedLB const&) = delete;
@@ -338,6 +341,8 @@ private:
   std::unordered_set<NodeType> underloaded_         = {};
   std::unordered_set<NodeType> new_underloaded_     = {};
   std::unordered_map<ObjIDType, LoadType> cur_objs_ = {};
+  EdgeMapType send_edges_;
+  EdgeMapType recv_edges_;
   LoadType this_new_load_                           = 0.0;
   LoadType new_imbalance_                           = 0.0;
   LoadType target_max_load_                         = 0.0;
@@ -355,7 +360,11 @@ private:
   std::mt19937 gen_sample_;
   StatisticMapType stats;
   LoadType this_load                                = 0.0f;
+  /// Whether any node has communication data
+  bool has_comm_any_ = false;
 
+  void hasCommAny(bool has_comm_any);
+  void giveEdges(EdgeMapType const& edge_map);
 
   //////////////////////////////////////////////////////////////////////////////
   // All the memory info (may or may not be present)
