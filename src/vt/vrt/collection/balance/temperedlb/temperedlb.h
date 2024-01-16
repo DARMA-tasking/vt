@@ -240,6 +240,18 @@ protected:
   double loadTransferCriterion(double before_w_src, double before_w_dst, double src_l, double dst_l);
 
   /**
+   * \brief Compute the amount of work based on the work model
+   *
+   * \note Model: α * load + β * comm_bytes + γ
+   *
+   * \param[in] load the load for a rank
+   * \param[in] comm_bytes the external communication
+   *
+   * \return the amount of work
+   */
+  double computeWork(double load, double comm_bytes) const;
+
+  /**
    * \brief Consider possible swaps with all the up-to-date info from a rank
    *
    * \param[in] msg update message with all the info
@@ -356,6 +368,9 @@ private:
   KnowledgeEnum knowledge_                          = KnowledgeEnum::Log;
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;
+  double α = 1.0;
+  double β = 0.0;
+  double γ = 0.0;
   std::vector<bool> propagated_k_;
   std::mt19937 gen_propagate_;
   std::mt19937 gen_sample_;
