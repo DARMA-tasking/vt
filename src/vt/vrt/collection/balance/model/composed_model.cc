@@ -102,4 +102,8 @@ int ComposedModel::getNumSubphases() const {
   return base_->getNumSubphases();
 }
 
+CommMapType ComposedModel::getComm(PhaseOffset when) const {
+  return base_->getComm(when);
+}
+
 }}}}

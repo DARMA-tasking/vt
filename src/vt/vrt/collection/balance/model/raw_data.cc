@@ -130,6 +130,15 @@ ElmUserDataType RawData::getUserData(ElementIDStruct object, PhaseOffset offset)
   }
 }
 
+CommMapType RawData::getComm(PhaseOffset offset) const {
+  auto phase = getNumCompletedPhases() + offset.phases;
+  if (auto it = proc_comm_->find(phase); it != proc_comm_->end()) {
+    return it->second;
+  } else {
+    return CommMapType{};
+  }
+}
+
 unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back) const
 {
   return look_back;

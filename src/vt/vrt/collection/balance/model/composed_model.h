@@ -77,6 +77,7 @@ public:
   bool hasUserData() const override;
   ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
+  CommMapType getComm(PhaseOffset offset) const override;
 
   ObjectIterator begin() const override;
 
