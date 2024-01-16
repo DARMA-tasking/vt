@@ -515,7 +515,18 @@ void TemperedLB::runLB(LoadType total_load) {
 
   // Perform load rebalancing when deemed necessary
   if (should_lb) {
-    doLBStages(imb);
+#if vt_check_enabled(trace_enabled)
+    theTrace()->disableTracing();
+#endif
+
+    runInEpochCollective("doLBStaged", [&,this]{
+      auto this_node = theContext()->getNode();
+      proxy_[this_node].template send<&TemperedLB::doLBStages>(imb);
+    });
+
+#if vt_check_enabled(trace_enabled)
+    theTrace()->enableTracing();
+#endif
   }
 }
 
