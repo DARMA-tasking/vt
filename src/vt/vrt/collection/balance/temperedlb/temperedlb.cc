@@ -282,6 +282,30 @@ Defaut: 0
 Description: The memory threshold TemperedLB should strictly stay under which is
 respected if memory information is present in the user-defined data.
 )"
+    },
+    {
+      "alpha",
+      R"(
+Values: <double>
+Defaut: 1.0
+Description: α in the work model
+)"
+    },
+    {
+      "beta",
+      R"(
+Values: <double>
+Defaut: 1.0
+Description: β in the work model
+)"
+    },
+    {
+    "gamma",
+      R"(
+Values: <double>
+Defaut: 1.0
+Description: γ in the work model
+)"
     }
   };
   return keys_help;
@@ -380,6 +404,10 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     );
     vtAbort(s);
   }
+
+  α = config->getOrDefault<int32_t>("alpha", α);
+  β = config->getOrDefault<int32_t>("beta", β);
+  γ = config->getOrDefault<int32_t>("gamma", γ);
 
   num_iters_     = config->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = config->getOrDefault<int32_t>("trials", num_trials_);
@@ -1739,6 +1767,10 @@ auto TemperedLB::removeClusterToSend(
     give_shared_blocks_size,
     give_obj_working_bytes
   );
+}
+
+double TemperedLB::computeWork(double load, double comm_bytes) const {
+  return α * load + β * comm_bytes + γ;
 }
 
 bool TemperedLB::memoryTransferCriterion(double try_total_bytes, double src_bytes) {
