@@ -685,6 +685,65 @@ void TemperedLB::doLBStages(LoadType start_imb) {
             cur_objs_[obj] = getModeledValue(obj);
           }
         }
+
+        send_edges_.clear();
+        recv_edges_.clear();
+        bool has_comm = false;
+        auto const& comm = load_model_->getComm(
+          {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+        );
+        // vt_print(temperedlb, "comm size={} {}\n", comm.size(), typeid(load_model_).name());
+
+        for (auto const& [key, volume] : comm) {
+          // vt_print(temperedlb, "Found comm: volume={}\n", volume.bytes);
+          // Skip self edges
+          if (key.selfEdge()) {
+            continue;
+          }
+
+          if (key.commCategory() == elm::CommCategory::SendRecv) {
+            auto const from_obj = key.fromObj();
+            auto const to_obj = key.toObj();
+            auto const bytes = volume.bytes;
+
+            send_edges_[from_obj].emplace_back(to_obj, bytes);
+            recv_edges_[to_obj].emplace_back(from_obj, bytes);
+            has_comm = true;
+          }
+        }
+
+        runInEpochCollective("checkIfEdgesExist", [&]{
+          proxy_.allreduce<&TemperedLB::hasCommAny, collective::OrOp>(has_comm);
+        });
+
+        if (has_comm_any_) {
+          runInEpochCollective("symmEdges", [&]{
+            std::unordered_map<NodeType, EdgeMapType> edges;
+
+            for (auto const& [from_obj, to_edges] : send_edges_) {
+              for (auto const& [to_obj, volume] : to_edges) {
+                vt_print(
+                  temperedlb,
+                  "SymmEdges: from={}, to={}, volume={}\n",
+                  from_obj, to_obj, volume
+                );
+                auto curr_from_node = from_obj.getCurrNode();
+                if (curr_from_node != this_node) {
+                  edges[curr_from_node][from_obj].emplace_back(to_obj, volume);
+                }
+                auto curr_to_node = to_obj.getCurrNode();
+                if (curr_to_node != this_node) {
+                  edges[curr_to_node][from_obj].emplace_back(to_obj, volume);
+                }
+              }
+            }
+
+            for (auto const& [dest_node, edge_map] : edges) {
+              proxy_[dest_node].template send<&TemperedLB::giveEdges>(edge_map);
+            }
+          });
+        }
+
         this_new_load_ = this_load;
       } else {
         // Clear out data structures from previous iteration
@@ -832,6 +891,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
     // Clear out for next try or for not migrating by default
     cur_objs_.clear();
+    send_edges_.clear();
+    recv_edges_.clear();
     this_new_load_ = this_load;
   }
 
@@ -858,6 +919,19 @@ void TemperedLB::doLBStages(LoadType start_imb) {
   // Concretize lazy migrations by invoking the BaseLB object migration on new
   // object node assignments
   thunkMigrations();
+}
+
+void TemperedLB::giveEdges(EdgeMapType const& edge_map) {
+  for (auto const& [from_obj, to_edges] : edge_map) {
+    for (auto const& [to_obj, volume] : to_edges) {
+      send_edges_[from_obj].emplace_back(to_obj, volume);
+      recv_edges_[to_obj].emplace_back(from_obj, volume);
+    }
+  }
+}
+
+void TemperedLB::hasCommAny(bool has_comm_any) {
+  has_comm_any_ = has_comm_any;
 }
 
 void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
