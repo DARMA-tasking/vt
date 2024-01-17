@@ -118,6 +118,7 @@ protected:
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
   void loadStatsHandler(std::vector<balance::LoadData> const& vec);
+  void workStatsHandler(std::vector<balance::LoadData> const& vec);
   void rejectionStatsHandler(int n_rejected, int n_transfers);
   void thunkMigrations();
 
@@ -241,14 +242,29 @@ protected:
   /**
    * \brief Compute the amount of work based on the work model
    *
-   * \note Model: α * load + β * comm_bytes + γ
+   * \note Model: α * load + β * inter_comm_bytes + δ * intra_comm_bytes + γ
    *
    * \param[in] load the load for a rank
    * \param[in] comm_bytes the external communication
    *
    * \return the amount of work
    */
-  double computeWork(double load, double comm_bytes) const;
+  double computeWork(
+    double load, double inter_comm_bytes, double intra_comm_bytes
+  ) const;
+
+  /**
+   * \brief Compute the rank's work
+   *
+   *  \param[in] exclude a set of objects to exclude that are in cur_objs_
+   *  \param[in] include a set of objects to include that are not in cur_objs_
+   *
+   * \return the amount of work currently for the set of objects
+   */
+  double computeRankWork(
+    std::set<ObjIDType> exclude = {},
+    std::set<ObjIDType> include = {}
+  );
 
   /**
    * \brief Consider possible swaps with all the up-to-date info from a rank
@@ -356,7 +372,11 @@ private:
   EdgeMapType send_edges_;
   EdgeMapType recv_edges_;
   LoadType this_new_load_                           = 0.0;
+  LoadType this_new_work_                           = 0.0;
   LoadType new_imbalance_                           = 0.0;
+  LoadType new_work_imbalance_                      = 0.0;
+  LoadType work_mean_                               = 0.0;
+  LoadType work_max_                                = 0.0;
   LoadType target_max_load_                         = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   InformTypeEnum inform_type_                       = InformTypeEnum::AsyncInform;
@@ -370,11 +390,13 @@ private:
   double α = 1.0;
   double β = 0.0;
   double γ = 0.0;
+  double δ = 0.0;
   std::vector<bool> propagated_k_;
   std::mt19937 gen_propagate_;
   std::mt19937 gen_sample_;
   StatisticMapType stats;
   LoadType this_load                                = 0.0f;
+  LoadType this_work                                = 0.0f;
   /// Whether any node has communication data
   bool has_comm_any_ = false;
 
