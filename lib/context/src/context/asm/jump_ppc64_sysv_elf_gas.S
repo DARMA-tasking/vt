@@ -97,7 +97,7 @@ jump_fcontext:
 # endif
 #endif
     # reserve space on stack
-    subi  %r1, %r1, 184
+    subi  %r1, %r1, 192
 
 #if _CALL_ELF != 2
     std  %r2,  0(%r1)  # save TOC
@@ -123,6 +123,7 @@ jump_fcontext:
 #if _CALL_ELF != 2
     std  %r3,  152(%r1)  # save hidden
 #endif
+    stfd  %f31, 184(%r1)  # save F31
 
     # save CR
     mfcr  %r0
@@ -166,6 +167,7 @@ jump_fcontext:
 #if _CALL_ELF != 2
     ld  %r3,  152(%r1)  # restore hidden
 #endif
+    lfd  %f31, 184(%r1)  # restore F31
 
     # restore CR
     ld  %r0, 160(%r1)
@@ -180,7 +182,7 @@ jump_fcontext:
     mtctr  %r12
 
     # adjust stack
-    addi  %r1, %r1, 184
+    addi  %r1, %r1, 192
 
 #if _CALL_ELF == 2
     # copy transfer_t into transfer_fn arg registers
