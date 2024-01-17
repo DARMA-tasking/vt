@@ -1722,6 +1722,7 @@ private:
     MsgSizeType const msg_size
   );
 
+public:
   /**
    * \brief Get the rank-based LB data along with element ID for rank-based work
    *
