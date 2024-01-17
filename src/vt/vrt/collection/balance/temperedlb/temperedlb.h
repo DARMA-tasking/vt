@@ -450,6 +450,8 @@ private:
   ClusterSummaryType cur_clusters_;
   /// Clusters that we know of on other ranks (might be out of date)
   std::unordered_map<NodeType, ClusterSummaryType> other_rank_clusters_;
+  /// Working bytes for ranks we know about (never out of date)
+  std::unordered_map<NodeType, BytesType> other_rank_working_bytes_;
   /// User-defined memory threshold
   BytesType mem_thresh_ = 0;
   /// The max working bytes for an object currently residing here
