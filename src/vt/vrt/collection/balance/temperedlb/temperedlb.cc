@@ -1284,7 +1284,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
       }
       msg->addNodeLoad(this_node, this_new_load_);
       if (has_memory_data_) {
-        msg->addNodeClusters(this_node, cur_clusters_);
+        msg->addNodeClusters(this_node, rank_bytes_, cur_clusters_);
       }
       proxy_[random_node].sendMsg<
         LoadMsgSync, &TemperedLB::propagateIncomingSync
@@ -1297,7 +1297,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
       }
       msg->addNodeLoad(this_node, this_new_load_);
       if (has_memory_data_) {
-        msg->addNodeClusters(this_node, cur_clusters_);
+        msg->addNodeClusters(this_node, rank_bytes_, cur_clusters_);
       }
       proxy_[random_node].sendMsg<
         LoadMsgAsync, &TemperedLB::propagateIncomingAsync
@@ -1318,12 +1318,14 @@ void TemperedLB::propagateIncomingAsync(LoadMsgAsync* msg) {
   );
 
   auto const this_node = theContext()->getNode();
-  for (auto const& [node, clusters] : msg->getNodeClusterSummary()) {
+  for (auto const& [node, rank_summary] : msg->getNodeClusterSummary()) {
     if (
       node != this_node and
       other_rank_clusters_.find(node) == other_rank_clusters_.end()
     ) {
+      auto const& [rank_working_bytes, clusters] = rank_summary;
       other_rank_clusters_[node] = clusters;
+      other_rank_working_bytes_[node] = rank_working_bytes;
     }
   }
 
@@ -1362,12 +1364,14 @@ void TemperedLB::propagateIncomingSync(LoadMsgSync* msg) {
   );
 
   auto const this_node = theContext()->getNode();
-  for (auto const& [node, clusters] : msg->getNodeClusterSummary()) {
+  for (auto const& [node, rank_summary] : msg->getNodeClusterSummary()) {
     if (
       node != this_node and
       other_rank_clusters_.find(node) == other_rank_clusters_.end()
     ) {
+      auto const& [rank_working_bytes, clusters] = rank_summary;
       other_rank_clusters_[node] = clusters;
+      other_rank_working_bytes_[node] = rank_working_bytes;
     }
   }
 

@@ -55,6 +55,7 @@ using SharedIDType     = int;
 using BytesType        = double;
 using ClusterSummaryType =
   std::unordered_map<SharedIDType, std::tuple<BytesType, LoadType>>;
+using RankSummaryType = std::tuple<BytesType, ClusterSummaryType>;
 
 } /* end namespace vt::vrt::collection::lb */
 
@@ -66,7 +67,7 @@ struct LoadMsg : vt::Message {
 
   using NodeLoadType = std::unordered_map<NodeType, LoadType>;
   using NodeClusterSummaryType =
-    std::unordered_map<NodeType, lb::ClusterSummaryType>;
+    std::unordered_map<NodeType, lb::RankSummaryType>;
 
   LoadMsg() = default;
   LoadMsg(NodeType in_from_node, NodeLoadType const& in_node_load)
@@ -85,8 +86,12 @@ struct LoadMsg : vt::Message {
     node_load_[node] = load;
   }
 
-  void addNodeClusters(NodeType node, lb::ClusterSummaryType summary) {
-    node_cluster_summary_[node] = summary;
+  void addNodeClusters(
+    NodeType node,
+    lb::BytesType rank_working_bytes,
+    lb::ClusterSummaryType summary
+  ) {
+    node_cluster_summary_[node] = std::make_tuple(rank_working_bytes, summary);
   }
 
   NodeType getFromNode() const { return from_node_; }
