@@ -273,6 +273,9 @@ getRecvSendDirection(elm::CommKeyType const& comm) {
   case elm::CommCategory::CollectiveToCollectionBcast:
   case elm::CommCategory::LocalInvoke:
     return std::make_pair(ElementIDType{}, ElementIDType{});
+  case elm::CommCategory::WriteShared:
+  case elm::CommCategory::ReadOnlyShared:
+    return std::make_pair(ElementIDType{}, ElementIDType{});
   }
 
   vtAssert(false, "Invalid balance::CommCategory enum value");
