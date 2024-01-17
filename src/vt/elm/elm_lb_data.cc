@@ -86,6 +86,24 @@ void ElementLBData::sendToEntity(
   sendComm(key, bytes);
 }
 
+void ElementLBData::addWritableSharedID(
+  NodeType home, int shared_id, double bytes
+) {
+  elm::CommKey key(elm::CommKey::WriteSharedTag{}, home, shared_id);
+  phase_comm_[cur_phase_][key].sendMsg(bytes);
+  subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
+  subphase_comm_[cur_phase_].at(cur_subphase_)[key].sendMsg(bytes);
+}
+
+void ElementLBData::addReadOnlySharedID(
+  NodeType home, int shared_id, double bytes
+) {
+  elm::CommKey key(elm::CommKey::ReadOnlySharedTag{}, home, shared_id);
+  phase_comm_[cur_phase_][key].sendMsg(bytes);
+  subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
+  subphase_comm_[cur_phase_].at(cur_subphase_)[key].sendMsg(bytes);
+}
+
 void ElementLBData::sendComm(elm::CommKey key, double bytes) {
   phase_comm_[cur_phase_][key].sendMsg(bytes);
   subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
