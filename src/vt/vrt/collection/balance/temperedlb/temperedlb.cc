@@ -2507,8 +2507,9 @@ void TemperedLB::swapClusters() {
   for (auto const& [try_rank, try_clusters] : other_rank_clusters_) {
     bool found_potential_good_swap = false;
 
-    // Approximate roughly the memory usage on the target
-    BytesType try_approx_mem_usage = rank_bytes_;
+    // Approximate the memory usage on the target
+    BytesType try_approx_mem_usage =
+      other_rank_working_bytes_.find(try_rank)->second;
     for (auto const& [try_shared_id, try_cluster] : try_clusters) {
       auto const& [try_cluster_bytes, _] = try_cluster;
       try_approx_mem_usage += try_cluster_bytes;
