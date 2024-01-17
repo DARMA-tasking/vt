@@ -218,7 +218,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
         break;
       }
       case elm::CommCategory::WriteShared: {
-        j["communications"][i]["type"] = "ReadOnlyShared";
+        j["communications"][i]["type"] = "WriteShared";
         j["communications"][i]["to"]["type"] = "node";
         j["communications"][i]["to"]["id"] = key.toNode();
         j["communications"][i]["from"]["type"] = "shared_id";
