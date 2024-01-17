@@ -68,6 +68,9 @@ struct ElementLBData {
   void sendToEntity(ElementIDStruct to, ElementIDStruct from, double bytes);
   void sendComm(elm::CommKey key, double bytes);
 
+  void addWritableSharedID(NodeType home, int shared_id, double bytes);
+  void addReadOnlySharedID(NodeType home, int shared_id, double bytes);
+
   void recvComm(elm::CommKey key, double bytes);
   void recvObjData(
     ElementIDStruct to_perm,
