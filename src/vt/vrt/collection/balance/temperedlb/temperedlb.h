@@ -60,6 +60,13 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+struct WorkBreakdown {
+  double work = 0;
+  double intra_send_vol = 0, intra_recv_vol = 0;
+  double inter_send_vol = 0, inter_recv_vol = 0;
+  double shared_vol = 0;
+};
+
 struct TemperedLB : BaseLB {
   using LoadMsgAsync   = balance::LoadMsgAsync;
   using LoadMsgSync    = balance::LoadMsg;
@@ -120,7 +127,9 @@ protected:
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
   void loadStatsHandler(std::vector<balance::LoadData> const& vec);
   void workStatsHandler(std::vector<balance::LoadData> const& vec);
-  void rejectionStatsHandler(int n_rejected, int n_transfers);
+  void rejectionStatsHandler(
+    int n_rejected, int n_transfers, int n_unhomed_blocks
+  );
   void thunkMigrations();
 
   void setupDone();
@@ -172,33 +181,32 @@ protected:
 
     LockedInfoMsg() = default;
     LockedInfoMsg(
-      NodeType in_locked_node, LoadType in_locked_load,
+      NodeType in_locked_node,
       ClusterSummaryType in_locked_clusters, BytesType in_locked_bytes,
       BytesType in_locked_max_object_working_bytes,
-      double in_locked_c_try
+      double in_locked_c_try,
+      NodeInfo in_locked_info
     ) : locked_node(in_locked_node),
-        locked_load(in_locked_load),
         locked_clusters(in_locked_clusters),
         locked_bytes(in_locked_bytes),
         locked_max_object_working_bytes(in_locked_max_object_working_bytes),
-        locked_c_try(in_locked_c_try)
+        locked_c_try(in_locked_c_try),
+        locked_info(in_locked_info)
     { }
 
     template <typename SerializerT>
     void serialize(SerializerT& s) {
       MessageParentType::serialize(s);
       s | locked_node;
-      s | locked_load;
       s | locked_clusters;
       s | locked_bytes;
       s | locked_max_object_working_bytes;
       s | locked_c_try;
+      s | locked_info;
     }
 
     /// The node that is locked
     NodeType locked_node = uninitialized_destination;
-    /// The total load of the locked node
-    LoadType locked_load = 0;
     /// The up-to-date summary of the clusters
     ClusterSummaryType locked_clusters = {};
     /// The total bytes for the locked node
@@ -208,6 +216,8 @@ protected:
     /// The approximate criterion value at the time it was locked with possible
     /// out-of-date info
     double locked_c_try = 0;
+    /// All the node info
+    NodeInfo locked_info;
   };
 
   /**
@@ -235,15 +245,19 @@ protected:
    *
    * \param[in] before_w_src: original work on source rank
    * \param[in] before_w_dst: original work on destination rank
-   * \param[in] src_l: sum of object loads to be transferred from source
-   * \param[in] dst_l: sum of object loads to be transferred from destination
+   * \param[in] after_w_src: new work on source rank
+   * \param[in] after_w_dst: new work on destination rank
    */
-  double loadTransferCriterion(double before_w_src, double before_w_dst, double src_l, double dst_l);
+  double loadTransferCriterion(
+    double before_w_src, double before_w_dst, double after_w_src,
+    double after_w_dst
+  );
 
   /**
    * \brief Compute the amount of work based on the work model
    *
-   * \note Model: α * load + β * inter_comm_bytes + δ * intra_comm_bytes + γ
+   * \note Model: α * load + β * inter_comm_bytes + δ * intra_comm_bytes +
+   *              ζ * shared_comm_bytes + γ
    *
    * \param[in] load the load for a rank
    * \param[in] comm_bytes the external communication
@@ -251,20 +265,30 @@ protected:
    * \return the amount of work
    */
   double computeWork(
-    double load, double inter_comm_bytes, double intra_comm_bytes
+    double load, double inter_comm_bytes, double intra_comm_bytes,
+    double shared_comm_bytes
   ) const;
 
   /**
-   * \brief Compute the rank's work
+   * \brief Compute work based on a a set of objects
    *
-   *  \param[in] exclude a set of objects to exclude that are in cur_objs_
-   *  \param[in] include a set of objects to include that are not in cur_objs_
+   * \param[in] node the node these objects are mapped to
+   * \param[in] objs input set of objects
+   * \param[in] exclude a set of objects to exclude that are in objs
+   * \param[in] include a map of objects to include that are not in objs
    *
    * \return the amount of work currently for the set of objects
    */
-  double computeRankWork(
-    std::set<ObjIDType> exclude = {},
-    std::set<ObjIDType> include = {}
+  WorkBreakdown computeWorkBreakdown(
+    NodeType node,
+    std::unordered_map<ObjIDType, LoadType> const& objs,
+    std::set<ObjIDType> const& exclude = {},
+    std::unordered_map<ObjIDType, LoadType> const& include = {}
+  );
+
+  double computeWorkAfterClusterSwap(
+    NodeType node, NodeInfo const& info, ClusterInfo const& to_remove,
+    ClusterInfo const& to_add
   );
 
   /**
@@ -361,8 +385,8 @@ private:
    */
   bool target_pole_                                 = false;
   std::random_device seed_;
-  std::unordered_map<NodeType, LoadType> load_info_ = {};
-  std::unordered_map<NodeType, LoadType> new_load_info_ = {};
+  std::unordered_map<NodeType, NodeInfo> load_info_ = {};
+  std::unordered_map<NodeType, NodeInfo> new_load_info_ = {};
   objgroup::proxy::Proxy<TemperedLB> proxy_         = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
@@ -374,6 +398,7 @@ private:
   EdgeMapType recv_edges_;
   LoadType this_new_load_                           = 0.0;
   LoadType this_new_work_                           = 0.0;
+  WorkBreakdown this_new_breakdown_;
   LoadType new_imbalance_                           = 0.0;
   LoadType new_work_imbalance_                      = 0.0;
   LoadType work_mean_                               = 0.0;
@@ -392,6 +417,7 @@ private:
   double β = 0.0;
   double γ = 0.0;
   double δ = 0.0;
+  double ζ = 0.0;
   std::vector<bool> propagated_k_;
   std::mt19937 gen_propagate_;
   std::mt19937 gen_sample_;
@@ -445,6 +471,8 @@ private:
   std::unordered_map<ObjIDType, SharedIDType> obj_shared_block_;
   /// Shared block size in bytes
   std::unordered_map<SharedIDType, BytesType> shared_block_size_;
+  /// Shared block edges
+  std::unordered_map<SharedIDType, std::tuple<NodeType, BytesType>> shared_block_edge_;
   /// Working bytes for each object
   std::unordered_map<ObjIDType, BytesType> obj_working_bytes_;
   /// Cluster summary based on current local assignment
