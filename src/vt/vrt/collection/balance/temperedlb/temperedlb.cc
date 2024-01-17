@@ -314,6 +314,14 @@ Values: <double>
 Defaut: 1.0
 Description: δ in the work model (intra-node communication in work model)
 )"
+    },
+    {
+    "zeta",
+      R"(
+Values: <double>
+Defaut: 1.0
+Description: ζ in the work model (shared-memory-edges in work model)
+)"
     }
   };
   return keys_help;
@@ -413,10 +421,11 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     vtAbort(s);
   }
 
-  α = config->getOrDefault<int32_t>("alpha", α);
-  β = config->getOrDefault<int32_t>("beta", β);
-  γ = config->getOrDefault<int32_t>("gamma", γ);
-  δ = config->getOrDefault<int32_t>("delta", δ);
+  α = config->getOrDefault<double>("alpha", α);
+  β = config->getOrDefault<double>("beta", β);
+  γ = config->getOrDefault<double>("gamma", γ);
+  δ = config->getOrDefault<double>("delta", δ);
+  ζ = config->getOrDefault<double>("zeta", ζ);
 
   num_iters_     = config->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = config->getOrDefault<int32_t>("trials", num_trials_);
@@ -567,7 +576,8 @@ void TemperedLB::runLB(LoadType total_load) {
 }
 
 void TemperedLB::readClustersMemoryData() {
- if (load_model_->hasUserData()) {
+  auto const this_node = theContext()->getNode();
+  if (load_model_->hasUserData()) {
     for (auto obj : *load_model_) {
       if (obj.isMigratable()) {
         auto data_map = load_model_->getUserData(
@@ -621,6 +631,9 @@ void TemperedLB::readClustersMemoryData() {
         obj_shared_block_[obj] = shared_id;
         obj_working_bytes_[obj] = working_bytes;
         shared_block_size_[shared_id] = shared_bytes;
+
+        // @todo: remove this hack once we have good data
+        shared_block_edge_[shared_id] = std::make_tuple(this_node, shared_bytes);
       }
     }
   }
@@ -628,17 +641,77 @@ void TemperedLB::readClustersMemoryData() {
 
 void TemperedLB::computeClusterSummary() {
   cur_clusters_.clear();
+
+  auto const this_node = theContext()->getNode();
+
   for (auto const& [shared_id, shared_bytes] : shared_block_size_) {
-    LoadType cluster_load = 0;
+    auto const& [home_node, shared_volume] = shared_block_edge_[shared_id];
+
+    ClusterInfo info;
+    info.bytes = shared_bytes;
+    info.home_node = home_node;
+    info.edge_weight = shared_volume;
+
+    std::set<ObjIDType> cluster_objs;
     for (auto const& [obj_id, obj_load] : cur_objs_) {
       if (auto iter = obj_shared_block_.find(obj_id); iter != obj_shared_block_.end()) {
         if (iter->second == shared_id) {
-          cluster_load += obj_load;
+          cluster_objs.insert(obj_id);
+          info.load += obj_load;
         }
       }
     }
-    if (cluster_load != 0) {
-      cur_clusters_[shared_id] = std::make_tuple(shared_bytes, cluster_load);
+
+    if (info.load != 0) {
+      for (auto&& obj : cluster_objs) {
+        if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
+          for (auto const& [target, volume] : it->second) {
+            vt_debug_print(
+              verbose, temperedlb,
+              "computeClusterSummary: send obj={}, target={}\n",
+              obj, target
+            );
+
+            if (cluster_objs.find(target) != cluster_objs.end()) {
+              // intra-cluster edge
+              info.intra_send_vol += volume;
+            } else if (
+              cur_objs_.find(target) != cur_objs_.end() or
+              target.isLocatedOnThisNode()
+            ) {
+              // intra-rank edge
+              info.inter_send_vol[this_node] += volume;
+            } else {
+              // inter-rank edge
+              info.inter_send_vol[target.getCurrNode()] += volume;
+            }
+          }
+        }
+        if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
+          for (auto const& [target, volume] : it->second) {
+            vt_debug_print(
+              verbose, temperedlb,
+              "computeClusterSummary: recv obj={}, target={}\n",
+              obj, target
+            );
+            if (cluster_objs.find(target) != cluster_objs.end()) {
+              // intra-cluster edge
+              info.intra_recv_vol += volume;
+            } else if (
+              cur_objs_.find(target) != cur_objs_.end() or
+              target.isLocatedOnThisNode()
+            ) {
+              // intra-rank edge
+              info.inter_recv_vol[this_node] += volume;
+            } else {
+              // inter-rank edge
+              info.inter_recv_vol[target.getCurrNode()] += volume;
+            }
+          }
+        }
+      }
+
+      cur_clusters_.emplace(shared_id, std::move(info));
     }
   }
 }
@@ -653,9 +726,6 @@ BytesType TemperedLB::computeMemoryUsage() {
   }
 
   // Compute max object size
-  // @todo: Slight issue here that this will only count migratable objects
-  // (those contained in cur_objs), for our current use case this is not a
-  // problem, but it should include the max of non-migratable
   double max_object_working_bytes = 0;
   for (auto const& [obj_id, _] : cur_objs_)  {
     if (obj_working_bytes_.find(obj_id) != obj_working_bytes_.end()) {
@@ -690,69 +760,189 @@ void TemperedLB::workStatsHandler(std::vector<balance::LoadData> const& vec) {
 }
 
 double TemperedLB::computeWork(
-  double load, double inter_comm_bytes, double intra_comm_bytes
+  double load, double inter_comm_bytes, double intra_comm_bytes,
+  double shared_comm_bytes
 ) const {
-  return α * load + β * inter_comm_bytes + δ * intra_comm_bytes + γ;
+  // The work model based on input parameters
+  return
+    α * load +
+    β * inter_comm_bytes +
+    δ * intra_comm_bytes +
+    ζ * shared_comm_bytes +
+    γ;
 }
 
-double TemperedLB::computeRankWork(
-  std::set<ObjIDType> exclude, std::set<ObjIDType> include
+WorkBreakdown TemperedLB::computeWorkBreakdown(
+  NodeType node,
+  std::unordered_map<ObjIDType, LoadType> const& objs,
+  std::set<ObjIDType> const& exclude,
+  std::unordered_map<ObjIDType, LoadType> const& include
 ) {
-  auto const load = this_new_load_;
+  double load = 0;
 
   // Communication bytes sent/recv'ed within the rank
   double intra_rank_bytes_sent = 0, intra_rank_bytes_recv = 0;
   // Communication bytes sent/recv'ed off rank
   double inter_rank_bytes_sent = 0, inter_rank_bytes_recv = 0;
 
-  for (auto const& [obj, _] : cur_objs_) {
-    if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
-      for (auto const& [target, volume] : it->second) {
-        vt_debug_print(
-          verbose, temperedlb,
-          "computeRankWork: send obj={}, target={}\n",
-          obj, target
-        );
-        if (
-          cur_objs_.find(target) != cur_objs_.end() or
-          target.isLocatedOnThisNode()
-        ) {
-          intra_rank_bytes_sent += volume;
-        } else {
-          inter_rank_bytes_sent += volume;
+  auto computeEdgeVolumesAndLoad = [&](ObjIDType obj, LoadType obj_load) {
+    if (exclude.find(obj) == exclude.end()) {
+      if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
+        for (auto const& [target, volume] : it->second) {
+          vt_debug_print(
+            verbose, temperedlb,
+            "computeWorkBreakdown: send obj={}, target={}\n",
+            obj, target
+          );
+          if (
+            cur_objs_.find(target) != cur_objs_.end() or
+            target.isLocatedOnThisNode()
+          ) {
+            intra_rank_bytes_sent += volume;
+          } else {
+            inter_rank_bytes_sent += volume;
+          }
+        }
+      }
+      if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
+        for (auto const& [target, volume] : it->second) {
+          vt_debug_print(
+            verbose, temperedlb,
+            "computeWorkBreakdown: recv obj={}, target={}\n",
+            obj, target
+          );
+          if (
+            cur_objs_.find(target) != cur_objs_.end() or
+            target.isLocatedOnThisNode()
+          ) {
+            intra_rank_bytes_recv += volume;
+          } else {
+            inter_rank_bytes_recv += volume;
+          }
         }
       }
     }
-    if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
-      for (auto const& [target, volume] : it->second) {
-        vt_debug_print(
-          verbose, temperedlb,
-          "computeRankWork: recv obj={}, target={}\n",
-          obj, target
-        );
-        if (
-          cur_objs_.find(target) != cur_objs_.end() or
-          target.isLocatedOnThisNode()
-        ) {
-          intra_rank_bytes_recv += volume;
-        } else {
-          inter_rank_bytes_recv += volume;
-        }
-      }
-    }
+
+    load += obj_load;
+  };
+
+  for (auto const& [obj, obj_load] : objs) {
+    computeEdgeVolumesAndLoad(obj, obj_load);
   }
 
-  vt_print(
-    temperedlb,
-    "computeRankWork: intra sent={}, recv={}, inter sent={}, recv={}\n",
-    intra_rank_bytes_sent, intra_rank_bytes_recv,
-    inter_rank_bytes_sent, inter_rank_bytes_recv
-  );
+  for (auto const& [obj, obj_load] : include) {
+    computeEdgeVolumesAndLoad(obj, obj_load);
+  }
+
+  double shared_volume = 0;
+  auto const& shared_blocks_here = getSharedBlocksHere();
+
+  for (auto const& sid : shared_blocks_here) {
+    if (auto it = shared_block_edge_.find(sid); it != shared_block_edge_.end()) {
+      auto const& [home_node, volume] = it->second;
+      if (home_node != node) {
+        shared_volume += volume;
+      }
+    } else {
+      vtAbort("Could not find shared edge volume!");
+    }
+  }
 
   auto const inter_vol = std::max(inter_rank_bytes_sent, inter_rank_bytes_recv);
   auto const intra_vol = std::max(intra_rank_bytes_sent, intra_rank_bytes_recv);
 
-  return computeWork(load, inter_vol, intra_vol);
+  WorkBreakdown w;
+  w.work = computeWork(load, inter_vol, intra_vol, shared_volume);
+  w.intra_send_vol = intra_rank_bytes_sent;
+  w.intra_recv_vol = intra_rank_bytes_recv;
+  w.inter_send_vol = inter_rank_bytes_sent;
+  w.inter_recv_vol = inter_rank_bytes_recv;
+  w.shared_vol = shared_volume;
+
+  vt_print(
+    temperedlb,
+    "computeWorkBreakdown: load={}, intra sent={}, recv={},"
+    " inter sent={}, recv={}, shared_vol={}, work={}\n",
+    load,
+    intra_rank_bytes_sent, intra_rank_bytes_recv,
+    inter_rank_bytes_sent, inter_rank_bytes_recv,
+    shared_volume, w.work
+  );
+
+  return w;
+}
+
+double TemperedLB::computeWorkAfterClusterSwap(
+  NodeType node, NodeInfo const& info, ClusterInfo const& to_remove,
+  ClusterInfo const& to_add
+) {
+  // Start with the existing work for the node and work backwards to compute the
+  // new work with the cluster removed
+  double node_work = info.work;
+
+  // Remove/add clusters' load factor from work model
+  node_work -= α * to_remove.load;
+  node_work += α * to_add.load;
+
+  // Remove/add clusters' intra-comm
+  double const node_intra_send = info.intra_send_vol;
+  double const node_intra_recv = info.intra_recv_vol;
+  node_work -= δ * std::max(node_intra_send, node_intra_recv);
+  node_work += δ * std::max(
+    node_intra_send - to_remove.intra_send_vol + to_add.intra_send_vol,
+    node_intra_recv - to_remove.intra_recv_vol + to_add.intra_recv_vol
+  );
+
+  // Uninitialized destination means that the cluster is empty
+  // If to_remove it was remote, remove that component from the work
+  if (
+    to_remove.home_node != node and
+    to_remove.home_node != uninitialized_destination
+  ) {
+    node_work -= ζ * to_remove.edge_weight;
+  }
+
+  // If to_add is now remote, add that component to the work
+  if (
+    to_add.home_node != node and
+    to_add.home_node != uninitialized_destination
+  ) {
+    node_work += ζ * to_add.edge_weight;
+  }
+
+  double node_inter_send = info.inter_send_vol;
+  double node_inter_recv = info.inter_recv_vol;
+  node_work -= β * std::max(node_inter_send, node_inter_recv);
+
+  // All edges outside the to_remove cluster that are also off the node need to
+  // be removed from the inter-node volumes
+  for (auto const& [target, volume] : to_remove.inter_send_vol) {
+    if (target != node) {
+      node_inter_send -= volume;
+    }
+  }
+  for (auto const& [target, volume] : to_remove.inter_recv_vol) {
+    if (target != node) {
+      node_inter_recv -= volume;
+    }
+  }
+
+  // All edges outside the to_add cluster that are now off the node need to
+  // be added from the inter-node volumes
+  for (auto const& [target, volume] : to_add.inter_send_vol) {
+    if (target != node) {
+      node_inter_send += volume;
+    }
+  }
+  for (auto const& [target, volume] : to_add.inter_recv_vol) {
+    if (target != node) {
+      node_inter_recv += volume;
+    }
+  }
+
+  node_work += β * std::max(node_inter_send, node_inter_recv);
+
+  return node_work;
 }
 
 void TemperedLB::doLBStages(LoadType start_imb) {
@@ -816,6 +1006,18 @@ void TemperedLB::doLBStages(LoadType start_imb) {
             send_edges_[from_obj].emplace_back(to_obj, bytes);
             recv_edges_[to_obj].emplace_back(from_obj, bytes);
             has_comm = true;
+          } else if (key.commCategory() == elm::CommCategory::WriteShared) {
+            auto const to_node = key.toNode();
+            auto const shared_id = key.sharedID();
+            auto const bytes = volume.bytes;
+            shared_block_edge_[shared_id] = std::make_tuple(to_node, bytes);
+            has_comm = true;
+          } else if (key.commCategory() == elm::CommCategory::ReadOnlyShared) {
+            auto const to_node = key.toNode();
+            auto const shared_id = key.sharedID();
+            auto const bytes = volume.bytes;
+            shared_block_edge_[shared_id] = std::make_tuple(to_node, bytes);
+            has_comm = true;
           }
         }
 
@@ -852,7 +1054,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         }
 
         this_new_load_ = this_load;
-        this_work = this_new_work_ = computeRankWork();
+        this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
+        this_work = this_new_work_ = this_new_breakdown_.work;
 
         runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
           // Perform the reduction for Rank_load_modeled -> processor load only
@@ -897,12 +1100,11 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         computeClusterSummary();
 
         // Verbose printing about local clusters
-        for (auto const& [shared_id, value] : cur_clusters_) {
-          auto const& [shared_bytes, cluster_load] = value;
+        for (auto const& [shared_id, cluster_info] : cur_clusters_) {
           vt_debug_print(
             verbose, temperedlb,
-            "Local cluster: id={}, bytes={}, load={}\n",
-            shared_id, shared_bytes, cluster_load
+            "Local cluster: id={}: {}\n",
+            shared_id, cluster_info
           );
         }
       }
@@ -928,12 +1130,11 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       // Some very verbose printing about all remote clusters we know about that
       // we can shut off later
       for (auto const& [node, clusters] : other_rank_clusters_) {
-        for (auto const& [shared_id, value] : clusters) {
-          auto const& [shared_bytes, cluster_load] = value;
+        for (auto const& [shared_id, cluster_info] : clusters) {
           vt_debug_print(
             verbose, temperedlb,
-            "Remote cluster: node={}, id={}, bytes={}, load={}\n",
-            node, shared_id, shared_bytes, cluster_load
+            "Remote cluster: node={}, id={}, {}\n",
+            node, shared_id, cluster_info
           );
         }
       }
@@ -941,9 +1142,10 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       // Move remove cluster information to shared_block_size_ so we have all
       // the sizes in the same place
       for (auto const& [node, clusters] : other_rank_clusters_) {
-        for (auto const& [shared_id, value] : clusters) {
-          auto const& [shared_bytes, _] = value;
-          shared_block_size_[shared_id] = shared_bytes;
+        for (auto const& [shared_id, cluster_info] : clusters) {
+          shared_block_size_[shared_id] = cluster_info.bytes;
+          shared_block_edge_[shared_id] =
+            std::make_tuple(cluster_info.home_node, cluster_info.edge_weight);
         }
       }
 
@@ -976,7 +1178,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         (iter_ == num_iters_ - 1) ||
         transfer_type_ == TransferTypeEnum::SwapClusters
       ) {
-        this_new_work_ = computeRankWork();
+        this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
+        this_new_work_ = this_new_breakdown_.work;
         runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
           // Perform the reduction for Rank_load_modeled -> processor load only
           proxy_.allreduce<&TemperedLB::loadStatsHandler, collective::PlusOp>(
@@ -1087,7 +1290,9 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
   }
 }
 
-void TemperedLB::rejectionStatsHandler(int n_rejected, int n_transfers) {
+void TemperedLB::rejectionStatsHandler(
+  int n_rejected, int n_transfers, int n_unhomed_blocks
+) {
   double rej = static_cast<double>(n_rejected) /
     static_cast<double>(n_rejected + n_transfers) * 100.0;
 
@@ -1095,9 +1300,10 @@ void TemperedLB::rejectionStatsHandler(int n_rejected, int n_transfers) {
   if (this_node == 0) {
     vt_debug_print(
       terse, temperedlb,
-      "TemperedLB::rejectionStatsHandler: n_transfers={} n_rejected={} "
+      "TemperedLB::rejectionStatsHandler: n_transfers={} n_unhomed_blocks={}"
+      " n_rejected={} "
       "rejection_rate={:0.1f}%\n",
-      n_transfers, n_rejected, rej
+      n_transfers, n_unhomed_blocks, n_rejected, rej
     );
   }
 }
@@ -1281,7 +1487,13 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
       if (epoch != no_epoch) {
         envelopeSetEpoch(msg->env, epoch);
       }
-      msg->addNodeLoad(this_node, this_new_load_);
+      NodeInfo info{
+        this_new_load_, this_new_work_,
+        this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
+        this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
+        this_new_breakdown_.shared_vol
+      };
+      msg->addNodeInfo(this_node, info);
       if (has_memory_data_) {
         msg->addNodeClusters(this_node, rank_bytes_, cur_clusters_);
       }
@@ -1294,7 +1506,13 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
       if (epoch != no_epoch) {
         envelopeSetEpoch(msg->env, epoch);
       }
-      msg->addNodeLoad(this_node, this_new_load_);
+      NodeInfo info{
+        this_new_load_, this_new_work_,
+        this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
+        this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
+        this_new_breakdown_.shared_vol
+      };
+      msg->addNodeInfo(this_node, info);
       if (has_memory_data_) {
         msg->addNodeClusters(this_node, rank_bytes_, cur_clusters_);
       }
@@ -1313,7 +1531,7 @@ void TemperedLB::propagateIncomingAsync(LoadMsgAsync* msg) {
     normal, temperedlb,
     "TemperedLB::propagateIncomingAsync: trial={}, iter={}, k_max={}, "
     "k_cur={}, from_node={}, load info size={}\n",
-    trial_, iter_, k_max_, k_cur_async, from_node, msg->getNodeLoad().size()
+    trial_, iter_, k_max_, k_cur_async, from_node, msg->getNodeInfo().size()
   );
 
   auto const this_node = theContext()->getNode();
@@ -1328,11 +1546,11 @@ void TemperedLB::propagateIncomingAsync(LoadMsgAsync* msg) {
     }
   }
 
-  for (auto&& elm : msg->getNodeLoad()) {
+  for (auto&& elm : msg->getNodeInfo()) {
     if (load_info_.find(elm.first) == load_info_.end()) {
       load_info_[elm.first] = elm.second;
 
-      if (isUnderloaded(elm.second)) {
+      if (isUnderloaded(elm.second.load)) {
         underloaded_.insert(elm.first);
       }
     }
@@ -1359,7 +1577,7 @@ void TemperedLB::propagateIncomingSync(LoadMsgSync* msg) {
     normal, temperedlb,
     "TemperedLB::propagateIncomingSync: trial={}, iter={}, k_max={}, "
     "k_cur={}, from_node={}, load info size={}\n",
-    trial_, iter_, k_max_, k_cur_, from_node, msg->getNodeLoad().size()
+    trial_, iter_, k_max_, k_cur_, from_node, msg->getNodeInfo().size()
   );
 
   auto const this_node = theContext()->getNode();
@@ -1374,11 +1592,11 @@ void TemperedLB::propagateIncomingSync(LoadMsgSync* msg) {
     }
   }
 
-  for (auto&& elm : msg->getNodeLoad()) {
+  for (auto&& elm : msg->getNodeInfo()) {
     if (new_load_info_.find(elm.first) == new_load_info_.end()) {
       new_load_info_[elm.first] = elm.second;
 
-      if (isUnderloaded(elm.second)) {
+      if (isUnderloaded(elm.second.load)) {
         new_underloaded_.insert(elm.first);
       }
     }
@@ -1413,7 +1631,7 @@ std::vector<double> TemperedLB::createCMF(NodeSetType const& under) {
       for (auto&& pe : under) {
         auto iter = load_info_.find(pe);
         vtAssert(iter != load_info_.end(), "Node must be in load_info_");
-        auto load = iter->second;
+        auto load = iter->second.load;
         if (load > l_max) {
           l_max = load;
         }
@@ -1429,7 +1647,7 @@ std::vector<double> TemperedLB::createCMF(NodeSetType const& under) {
     auto iter = load_info_.find(pe);
     vtAssert(iter != load_info_.end(), "Node must be in load_info_");
 
-    auto load = iter->second;
+    auto load = iter->second.load;
     sum_p += 1. - factor * load;
     cmf.push_back(sum_p);
   }
@@ -1473,7 +1691,7 @@ NodeType TemperedLB::sampleFromCMF(
 std::vector<NodeType> TemperedLB::makeUnderloaded() const {
   std::vector<NodeType> under = {};
   for (auto&& elm : load_info_) {
-    if (isUnderloaded(elm.second)) {
+    if (isUnderloaded(elm.second.load)) {
       under.push_back(elm.first);
     }
   }
@@ -1489,7 +1707,7 @@ std::vector<NodeType> TemperedLB::makeSufficientlyUnderloaded(
   std::vector<NodeType> sufficiently_under = {};
   for (auto&& elm : load_info_) {
     bool eval = Criterion(criterion_)(
-      this_new_load_, elm.second, load_to_accommodate, target_max_load_
+      this_new_load_, elm.second.load, load_to_accommodate, target_max_load_
     );
     if (eval) {
       sufficiently_under.push_back(elm.first);
@@ -1725,7 +1943,7 @@ void TemperedLB::originalTransfer() {
 	// Find load of selected node
         auto load_iter = load_info_.find(selected_node);
         vtAssert(load_iter != load_info_.end(), "Selected node not found");
-        auto& selected_load = load_iter->second;
+        auto& selected_load = load_iter->second.load;
 
 	// Evaluate criterion for proposed transfer
         bool eval = Criterion(criterion_)(
@@ -1791,7 +2009,7 @@ void TemperedLB::originalTransfer() {
     // compute rejection rate because it will be printed
     runInEpochCollective("TemperedLB::originalTransfer -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers
+        n_rejected, n_transfers, 0
       );
     });
   }
@@ -1883,22 +2101,24 @@ bool TemperedLB::memoryTransferCriterion(double try_total_bytes, double src_byte
   auto const try_after_mem = try_total_bytes + src_bytes;
 
   return not (src_after_mem > this->mem_thresh_ or try_after_mem > this->mem_thresh_);
-} // bool memoryTransferCriterion
+}
 
-double TemperedLB::loadTransferCriterion(double before_w_src, double before_w_dst, double src_l, double dst_l) {
+double TemperedLB::loadTransferCriterion(
+  double before_w_src, double before_w_dst, double after_w_src,
+  double after_w_dst
+) {
   // Compute maximum work of original arrangement
   auto const w_max_0 = std::max(before_w_src, before_w_dst);
 
   // Compute maximum work of arrangement after proposed load transfer
-  auto const after_w_src = before_w_src - src_l + dst_l;
-  auto const after_w_dst = before_w_dst + src_l - dst_l;
   auto const w_max_new = std::max(after_w_src, after_w_dst);
 
   // Return criterion value
   return w_max_0 - w_max_new;
-} // double loadTransferCriterion
+}
 
 void TemperedLB::considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
+#if 0
   is_swapping_ = true;
 
   auto criterion = [&,this](auto src_cluster, auto try_cluster) -> double {
@@ -2056,6 +2276,8 @@ void TemperedLB::considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     });
 
     computeClusterSummary();
+    this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
+    this_new_work_ = this_new_breakdown_.work;
 
     vt_debug_print(
       normal, temperedlb,
@@ -2073,83 +2295,82 @@ void TemperedLB::considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     pending_actions_.pop_back();
     action();
   }
+#endif
 }
 
 void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   is_swapping_ = true;
 
-  auto criterion = [&,this](auto src_cluster, auto try_cluster) -> double {
-    auto const& [src_id, src_bytes, src_load] = src_cluster;
-    auto const& [try_rank, try_total_load, try_total_bytes,
-                 try_id, try_bytes, try_load] = try_cluster;
+  auto const this_node = theContext()->getNode();
 
-    auto const src_after_mem = current_memory_usage_ - src_bytes + try_bytes;
-    auto const try_after_mem = try_total_bytes + src_bytes - try_bytes;
+  NodeInfo this_info{
+    this_new_load_, this_new_work_,
+    this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
+    this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
+    this_new_breakdown_.shared_vol
+  };
 
-    // Check whether strict bounds on memory are satisfied
-    if (src_after_mem > mem_thresh_ or try_after_mem > mem_thresh_) {
+  auto criterion = [&,this](
+    auto try_rank, auto const& try_info, auto try_mem,
+    auto const& src_cluster, auto const& try_cluster
+  ) -> double {
+    if (try_mem - try_cluster.bytes + src_cluster.bytes > mem_thresh_) {
       return - std::numeric_limits<double>::infinity();
     }
 
+    auto const src_mem = current_memory_usage_;
+    if (src_mem + try_cluster.bytes - src_cluster.bytes > mem_thresh_) {
+      return - std::numeric_limits<double>::infinity();
+    }
+
+    double const src_new_work =
+      computeWorkAfterClusterSwap(this_node, this_info, src_cluster, try_cluster);
+    double const dest_new_work =
+      computeWorkAfterClusterSwap(try_rank, try_info, try_cluster, src_cluster);
+
     // Return load transfer criterion
-    return loadTransferCriterion(this_new_load_, try_total_load, src_load, try_load);
+    return loadTransferCriterion(
+      this_new_work_, try_info.work, src_new_work, dest_new_work
+    );
   };
 
   auto const& try_clusters = msg->locked_clusters;
   auto const& try_rank = msg->locked_node;
-  auto const& try_load = msg->locked_load;
   auto const& try_total_bytes = msg->locked_bytes;
+  auto const& try_info = msg->locked_info;
 
   double best_c_try = -1.0;
   std::tuple<SharedIDType, SharedIDType> best_swap = {-1,-1};
   for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
-    auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
-
     // try swapping with empty cluster first
     {
-        double c_try = criterion(
-          std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
-          std::make_tuple(
-            try_rank,
-            try_load,
-            try_total_bytes,
-            -1,
-            0,
-            0
-          )
-        );
-        if (c_try > 0.0) {
-          if (c_try > best_c_try) {
-            best_c_try = c_try;
-            best_swap = std::make_tuple(src_shared_id, -1);
-          }
+      ClusterInfo empty_cluster;
+      double c_try = criterion(
+        try_rank, try_info, try_total_bytes, src_cluster, empty_cluster
+      );
+      if (c_try > 0.0) {
+        if (c_try > best_c_try) {
+          best_c_try = c_try;
+          best_swap = std::make_tuple(src_shared_id, -1);
         }
+      }
     }
 
     for (auto const& [try_shared_id, try_cluster] : try_clusters) {
-      auto const& [try_cluster_bytes, try_cluster_load] = try_cluster;
-        double c_try = criterion(
-          std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
-          std::make_tuple(
-            try_rank,
-            try_load,
-            try_total_bytes,
-            try_shared_id,
-            try_cluster_bytes,
-            try_cluster_load
-          )
-        );
-        vt_debug_print(
-          verbose, temperedlb,
-          "testing a possible swap (rank {}): {} {} c_try={}\n",
-          try_rank, src_shared_id, try_shared_id, c_try
-        );
-        if (c_try > 0.0) {
-          if (c_try > best_c_try) {
-            best_c_try = c_try;
-            best_swap = std::make_tuple(src_shared_id, try_shared_id);
-          }
+      double c_try = criterion(
+        try_rank, try_info, try_total_bytes, src_cluster, try_cluster
+      );
+      vt_debug_print(
+        verbose, temperedlb,
+        "testing a possible swap (rank {}): {} {} c_try={}\n",
+        try_rank, src_shared_id, try_shared_id, c_try
+      );
+      if (c_try > 0.0) {
+        if (c_try > best_c_try) {
+          best_c_try = c_try;
+          best_swap = std::make_tuple(src_shared_id, try_shared_id);
         }
+      }
     }
   }
 
@@ -2169,8 +2390,6 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       give_obj_working_bytes
     ] = removeClusterToSend(src_shared_id);
 
-    auto const this_node = theContext()->getNode();
-
     runInEpochRooted("giveCluster", [&]{
       proxy_[try_rank].template send<&TemperedLB::giveCluster>(
         this_node,
@@ -2183,6 +2402,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     });
 
     computeClusterSummary();
+    this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
+    this_new_work_ = this_new_breakdown_.work;
 
     vt_debug_print(
       normal, temperedlb,
@@ -2210,6 +2431,8 @@ void TemperedLB::giveCluster(
   std::unordered_map<ObjIDType, BytesType> const& give_obj_working_bytes,
   SharedIDType take_cluster
 ) {
+  auto const this_node = theContext()->getNode();
+
   n_transfers_swap_++;
 
   vtAssert(give_shared_blocks_size.size() == 1, "Must be one block right now");
@@ -2229,8 +2452,6 @@ void TemperedLB::giveCluster(
   }
 
   if (take_cluster != -1) {
-    auto const this_node = theContext()->getNode();
-
     auto const& [
       take_objs,
       take_obj_shared_block,
@@ -2249,6 +2470,8 @@ void TemperedLB::giveCluster(
   }
 
   computeClusterSummary();
+  this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
+  this_new_work_ = this_new_breakdown_.work;
 
   vt_debug_print(
     normal, temperedlb,
@@ -2339,9 +2562,16 @@ void TemperedLB::satisfyLockRequest() {
       lock.requesting_node
     );
 
+    NodeInfo this_info{
+      this_new_load_, this_new_work_,
+      this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
+      this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
+      this_new_breakdown_.shared_vol
+    };
+
     proxy_[lock.requesting_node].template send<&TemperedLB::lockObtained>(
-      this_node, this_new_load_, cur_clusters_, current_memory_usage_,
-      max_object_working_bytes_, lock.c_try
+      this_node, cur_clusters_, current_memory_usage_,
+      max_object_working_bytes_, lock.c_try, this_info
     );
 
     is_locked_ = true;
@@ -2350,6 +2580,7 @@ void TemperedLB::satisfyLockRequest() {
 }
 
 void TemperedLB::trySubClustering() {
+#if 0
   is_subclustering_ = true;
   n_transfers_swap_ = 0;
 
@@ -2396,7 +2627,7 @@ void TemperedLB::trySubClustering() {
       // cluster size that this rank has
       if (total_clusters_bytes + avg_cluster_bytes < mem_thresh_) {
         if (
-          auto target_rank_load = load_info_.find(try_rank)->second;
+          auto target_rank_load = load_info_.find(try_rank)->second.load;
           target_rank_load < target_max_load_
         ) {
 
@@ -2452,10 +2683,11 @@ void TemperedLB::trySubClustering() {
   if (theConfig()->vt_debug_temperedlb) {
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers_swap_
+        n_rejected, n_transfers_swap_, 0
       );
     });
   }
+#endif
 }
 
 void TemperedLB::swapClusters() {
@@ -2484,47 +2716,62 @@ void TemperedLB::swapClusters() {
 
   n_transfers_swap_ = 0;
 
+  auto const this_node = theContext()->getNode();
+
+  NodeInfo this_info{
+    this_new_load_, this_new_work_,
+    this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
+    this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
+    this_new_breakdown_.shared_vol
+  };
+
   auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: swapClusters");
   theTerm()->pushEpoch(lazy_epoch);
 
-  auto criterion = [this](auto src_cluster, auto try_cluster) -> double {
-    // FIXME: this does not swaps with an empty cluster
-    auto const& [src_id, src_bytes, src_load] = src_cluster;
-    auto const& [try_rank, try_id, try_bytes, try_load, try_mem] = try_cluster;
+  auto criterion = [&,this](
+    auto try_rank, auto try_mem, auto const& src_cluster, auto const& try_cluster
+  ) -> double {
 
     // Necessary but not sufficient check regarding memory bounds
-    if (try_mem - try_bytes + src_bytes > mem_thresh_) {
+    if (try_mem - try_cluster.bytes + src_cluster.bytes > mem_thresh_) {
       return - std::numeric_limits<double>::infinity();
     }
 
-    // Return load transfer criterion
-    return loadTransferCriterion(this_new_load_, load_info_.find(try_rank)->second, src_load, try_load);
-  };
+    auto const src_mem = current_memory_usage_;
+    if (src_mem + try_cluster.bytes - src_cluster.bytes > mem_thresh_) {
+      return - std::numeric_limits<double>::infinity();
+    }
 
-  auto const this_node = theContext()->getNode();
+    auto const& try_info = load_info_.find(try_rank)->second;
+
+    double const src_new_work =
+      computeWorkAfterClusterSwap(this_node, this_info, src_cluster, try_cluster);
+    double const dest_new_work =
+      computeWorkAfterClusterSwap(try_rank, try_info, try_cluster, src_cluster);
+
+    // Return load transfer criterion
+    return loadTransferCriterion(
+      this_new_work_, try_info.work, src_new_work, dest_new_work
+    );
+  };
 
   // Identify and message beneficial cluster swaps
   for (auto const& [try_rank, try_clusters] : other_rank_clusters_) {
     bool found_potential_good_swap = false;
 
     // Approximate the memory usage on the target
-    BytesType try_approx_mem_usage =
+    BytesType try_mem =
       other_rank_working_bytes_.find(try_rank)->second;
     for (auto const& [try_shared_id, try_cluster] : try_clusters) {
-      auto const& [try_cluster_bytes, _] = try_cluster;
-      try_approx_mem_usage += try_cluster_bytes;
+      try_mem += try_cluster.bytes;
     }
 
     // Iterate over source clusters
     for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
-      auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
-
       // Compute approximation swap criterion for empty cluster "swap" case
       {
-        double c_try = criterion(
-          std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
-          std::make_tuple(try_rank, 0, 0, 0, try_approx_mem_usage)
-        );
+        ClusterInfo empty_cluster;
+        double c_try = criterion(try_rank, try_mem, src_cluster, empty_cluster);
         if (c_try > 0.0) {
 	  // Try to obtain lock for feasible swap
           found_potential_good_swap = true;
@@ -2535,15 +2782,8 @@ void TemperedLB::swapClusters() {
 
       // Iterate over target clusters
       for (auto const& [try_shared_id, try_cluster] : try_clusters) {
-        auto const& [try_cluster_bytes, try_cluster_load] = try_cluster;
 	// Decide whether swap is beneficial
-        double c_try = criterion(
-          std::make_tuple(src_shared_id, src_cluster_bytes, src_cluster_load),
-          std::make_tuple(
-            try_rank, try_shared_id, try_cluster_bytes, try_cluster_load,
-            try_approx_mem_usage
-          )
-        );
+        double c_try = criterion(try_rank, try_mem, src_cluster, try_cluster);
         if (c_try > 0.0) {
 	  // Try to obtain lock for feasible swap
           found_potential_good_swap = true;
@@ -2583,13 +2823,26 @@ void TemperedLB::swapClusters() {
     getSharedBlocksHere().size(), mem_thresh_, this_new_load_
   );
 
+  auto const& shared_blocks_here = getSharedBlocksHere();
+  int remote_block_count = 0;
+  for (auto const& sid : shared_blocks_here) {
+    if (auto it = shared_block_edge_.find(sid); it != shared_block_edge_.end()) {
+      auto const& [home_node, volume] = it->second;
+      if (home_node != this_node) {
+        remote_block_count++;
+      }
+    } else {
+      vtAbort("Could not find shared edge volume!");
+    }
+  }
+
 
   // Report on rejection rate in debug mode
   int n_rejected = 0;
   if (theConfig()->vt_debug_temperedlb) {
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers_swap_
+        n_rejected, n_transfers_swap_, remote_block_count
       );
     });
   }
