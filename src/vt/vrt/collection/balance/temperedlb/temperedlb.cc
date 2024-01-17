@@ -288,7 +288,7 @@ respected if memory information is present in the user-defined data.
       R"(
 Values: <double>
 Defaut: 1.0
-Description: α in the work model
+Description: α in the work model (load in work model)
 )"
     },
     {
@@ -296,7 +296,7 @@ Description: α in the work model
       R"(
 Values: <double>
 Defaut: 1.0
-Description: β in the work model
+Description: β in the work model (inter-node communication in work model)
 )"
     },
     {
@@ -304,7 +304,15 @@ Description: β in the work model
       R"(
 Values: <double>
 Defaut: 1.0
-Description: γ in the work model
+Description: γ in the work model (constant in work model)
+)"
+    },
+    {
+    "delta",
+      R"(
+Values: <double>
+Defaut: 1.0
+Description: δ in the work model (intra-node communication in work model)
 )"
     }
   };
@@ -408,6 +416,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
   α = config->getOrDefault<int32_t>("alpha", α);
   β = config->getOrDefault<int32_t>("beta", β);
   γ = config->getOrDefault<int32_t>("gamma", γ);
+  δ = config->getOrDefault<int32_t>("delta", δ);
 
   num_iters_     = config->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = config->getOrDefault<int32_t>("trials", num_trials_);
@@ -547,7 +556,7 @@ void TemperedLB::runLB(LoadType total_load) {
     theTrace()->disableTracing();
 #endif
 
-    runInEpochCollective("doLBStaged", [&,this]{
+    runInEpochCollective("doLBStages", [&,this]{
       auto this_node = theContext()->getNode();
       proxy_[this_node].template send<&TemperedLB::doLBStages>(imb);
     });
@@ -674,6 +683,79 @@ std::set<SharedIDType> TemperedLB::getSharedBlocksHere() const {
   return blocks_here;
 }
 
+void TemperedLB::workStatsHandler(std::vector<balance::LoadData> const& vec) {
+  auto const& work = vec[1];
+  work_mean_ = work.avg();
+  work_max_ = work.max();
+  new_work_imbalance_ = work.I();
+}
+
+double TemperedLB::computeWork(
+  double load, double inter_comm_bytes, double intra_comm_bytes
+) const {
+  return α * load + β * inter_comm_bytes + δ * intra_comm_bytes + γ;
+}
+
+double TemperedLB::computeRankWork(
+  std::set<ObjIDType> exclude, std::set<ObjIDType> include
+) {
+  auto const load = this_new_load_;
+
+  // Communication bytes sent/recv'ed within the rank
+  double intra_rank_bytes_sent = 0, intra_rank_bytes_recv = 0;
+  // Communication bytes sent/recv'ed off rank
+  double inter_rank_bytes_sent = 0, inter_rank_bytes_recv = 0;
+
+  for (auto const& [obj, _] : cur_objs_) {
+    if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
+      for (auto const& [target, volume] : it->second) {
+        vt_debug_print(
+          verbose, temperedlb,
+          "computeRankWork: send obj={}, target={}\n",
+          obj, target
+        );
+        if (
+          cur_objs_.find(target) != cur_objs_.end() or
+          target.isLocatedOnThisNode()
+        ) {
+          intra_rank_bytes_sent += volume;
+        } else {
+          inter_rank_bytes_sent += volume;
+        }
+      }
+    }
+    if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
+      for (auto const& [target, volume] : it->second) {
+        vt_debug_print(
+          verbose, temperedlb,
+          "computeRankWork: recv obj={}, target={}\n",
+          obj, target
+        );
+        if (
+          cur_objs_.find(target) != cur_objs_.end() or
+          target.isLocatedOnThisNode()
+        ) {
+          intra_rank_bytes_recv += volume;
+        } else {
+          inter_rank_bytes_recv += volume;
+        }
+      }
+    }
+  }
+
+  vt_print(
+    temperedlb,
+    "computeRankWork: intra sent={}, recv={}, inter sent={}, recv={}\n",
+    intra_rank_bytes_sent, intra_rank_bytes_recv,
+    inter_rank_bytes_sent, inter_rank_bytes_recv
+  );
+
+  auto const inter_vol = std::max(inter_rank_bytes_sent, inter_rank_bytes_recv);
+  auto const intra_vol = std::max(intra_rank_bytes_sent, intra_rank_bytes_recv);
+
+  return computeWork(load, inter_vol, intra_vol);
+}
+
 void TemperedLB::doLBStages(LoadType start_imb) {
   decltype(this->cur_objs_) best_objs;
   LoadType best_load = 0;
@@ -709,9 +791,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         // Copy this node's object assignments to a local, mutable copy
         cur_objs_.clear();
         for (auto obj : *load_model_) {
-          if (obj.isMigratable()) {
-            cur_objs_[obj] = getModeledValue(obj);
-          }
+          cur_objs_[obj] = getModeledValue(obj);
         }
 
         send_edges_.clear();
@@ -773,6 +853,18 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         }
 
         this_new_load_ = this_load;
+        this_work = this_new_work_ = computeRankWork();
+
+        runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
+          // Perform the reduction for Rank_load_modeled -> processor load only
+          proxy_.allreduce<&TemperedLB::workStatsHandler, collective::PlusOp>(
+            std::vector<balance::LoadData>{
+              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}},
+              {balance::LoadData{Statistic::Rank_strategy_specific_load_modeled, this_new_work_}}
+            }
+          );
+        });
+
       } else {
         // Clear out data structures from previous iteration
         selected_.clear();
@@ -885,11 +977,13 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         (iter_ == num_iters_ - 1) ||
         transfer_type_ == TransferTypeEnum::SwapClusters
       ) {
+        this_new_work_ = computeRankWork();
         runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
           // Perform the reduction for Rank_load_modeled -> processor load only
           proxy_.allreduce<&TemperedLB::loadStatsHandler, collective::PlusOp>(
             std::vector<balance::LoadData>{
-              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}}
+              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}},
+              {balance::LoadData{Statistic::Rank_strategy_specific_load_modeled, this_new_work_}}
             }
           );
         });
@@ -964,7 +1058,12 @@ void TemperedLB::hasCommAny(bool has_comm_any) {
 
 void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
   auto const& in = vec[0];
+  auto const& work = vec[1];
   new_imbalance_ = in.I();
+
+  work_mean_ = work.avg();
+  work_max_ = work.max();
+  new_work_imbalance_ = work.I();
 
   max_load_over_iters_.push_back(in.max());
 
@@ -972,14 +1071,19 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
   if (this_node == 0) {
     vt_debug_print(
       terse, temperedlb,
-      "TemperedLB::loadStatsHandler: trial={} iter={} max={} min={} "
-      "avg={} pole={} imb={:0.4f}\n",
-      trial_, iter_, LoadType(in.max()),
+      "TemperedLB::loadStatsHandler: trial={} iter={}"
+      " Load[max={:0.2f} min={:0.2f} avg={:0.2f} pole={:0.2f} imb={:0.4f}] "
+      " Work[max={:0.2f} min={:0.2f} avg={:0.2f} imb={:0.4f}]\n",
+      trial_, iter_,
+      LoadType(in.max()),
       LoadType(in.min()), LoadType(in.avg()),
       LoadType(stats.at(
         lb::Statistic::Object_load_modeled
       ).at(lb::StatisticQuantity::max)),
-      in.I()
+      in.I(),
+      LoadType(work.max()),
+      LoadType(work.min()), LoadType(work.avg()),
+      work.I()
     );
   }
 }
@@ -1767,10 +1871,6 @@ auto TemperedLB::removeClusterToSend(
     give_shared_blocks_size,
     give_obj_working_bytes
   );
-}
-
-double TemperedLB::computeWork(double load, double comm_bytes) const {
-  return α * load + β * comm_bytes + γ;
 }
 
 bool TemperedLB::memoryTransferCriterion(double try_total_bytes, double src_bytes) {
