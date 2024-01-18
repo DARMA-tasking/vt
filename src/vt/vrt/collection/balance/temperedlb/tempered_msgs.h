@@ -65,6 +65,9 @@ struct ClusterInfo {
   BytesType edge_weight = 0;
   BytesType max_object_working_bytes = 0;
   BytesType max_object_working_bytes_outside = 0;
+  BytesType max_object_serialized_bytes = 0;
+  BytesType max_object_serialized_bytes_outside = 0;
+  BytesType cluster_footprint = 0;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -73,6 +76,9 @@ struct ClusterInfo {
     s | home_node | edge_weight;
     s | max_object_working_bytes;
     s | max_object_working_bytes_outside;
+    s | max_object_serialized_bytes;
+    s | max_object_serialized_bytes_outside;
+    s | cluster_footprint;
   }
 };
 

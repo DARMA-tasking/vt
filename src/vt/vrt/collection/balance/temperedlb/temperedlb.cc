@@ -587,6 +587,8 @@ void TemperedLB::readClustersMemoryData() {
         SharedIDType shared_id = -1;
         BytesType shared_bytes = 0;
         BytesType working_bytes = 0;
+        BytesType footprint_bytes = 0;
+        BytesType serialized_bytes = 0;
         for (auto const& [key, variant] : data_map) {
           if (key == "shared_id") {
             // Because of how JSON is stored this is always a double, even
@@ -608,28 +610,47 @@ void TemperedLB::readClustersMemoryData() {
             if (BytesType const* val = std::get_if<BytesType>(&variant)) {
               working_bytes = *val;
             } else {
-              vtAbort("\"working_bytes\" in variant does not match double");
+              vtAbort("\"task_working_bytes\" in variant does not match double");
+            }
+          }
+          if (key == "task_footprint_bytes") {
+            if (BytesType const* val = std::get_if<BytesType>(&variant)) {
+              footprint_bytes = *val;
+            } else {
+              vtAbort(
+                "\"task_footprint_bytes\" in variant does not match double"
+              );
+            }
+          }
+          if (key == "task_serialized_bytes") {
+            if (BytesType const* val = std::get_if<BytesType>(&variant)) {
+              serialized_bytes = *val;
+            } else {
+              vtAbort(
+                "\"task_serialized_bytes\" in variant does not match double"
+              );
             }
           }
           if (key == "rank_working_bytes") {
             if (BytesType const* val = std::get_if<BytesType>(&variant)) {
               rank_bytes_ = *val;
             } else {
-              vtAbort("\"rank_bytes\" in variant does not match double");
+              vtAbort("\"rank_working_bytes\" in variant does not match double");
             }
           }
-          // @todo: for now, skip "task_serialized_bytes" and
-          // "task_footprint_bytes"
         }
 
         vt_debug_print(
           verbose, temperedlb,
-          "obj={} shared_block={} bytes={}\n",
-          obj, shared_id, shared_bytes
+          "obj={} sid={} bytes={} footprint={} serialized={}, working={}\n",
+          obj, shared_id, shared_bytes, footprint_bytes, serialized_bytes,
+          working_bytes
         );
 
         obj_shared_block_[obj] = shared_id;
         obj_working_bytes_[obj] = working_bytes;
+        obj_footprint_bytes_[obj] = footprint_bytes;
+        obj_serialized_bytes_[obj] = serialized_bytes;
         shared_block_size_[shared_id] = shared_bytes;
 
         // @todo: remove this hack once we have good data
@@ -655,6 +676,9 @@ void TemperedLB::computeClusterSummary() {
     std::set<ObjIDType> cluster_objs;
     BytesType max_object_working_bytes = 0;
     BytesType max_object_working_bytes_outside = 0;
+    BytesType max_object_serialized_bytes = 0;
+    BytesType max_object_serialized_bytes_outside = 0;
+    BytesType cluster_footprint = 0;
 
     for (auto const& [obj_id, obj_load] : cur_objs_) {
       if (auto iter = obj_shared_block_.find(obj_id); iter != obj_shared_block_.end()) {
@@ -669,6 +693,20 @@ void TemperedLB::computeClusterSummary() {
               max_object_working_bytes, it->second
             );
           }
+          if (
+            auto it = obj_serialized_bytes_.find(obj_id);
+            it != obj_serialized_bytes_.end()
+          ) {
+            max_object_serialized_bytes = std::max(
+              max_object_serialized_bytes, it->second
+            );
+          }
+          if (
+            auto it = obj_footprint_bytes_.find(obj_id);
+            it != obj_footprint_bytes_.end()
+          ) {
+            cluster_footprint += it->second;
+          }
         } else {
           if (
             auto it = obj_working_bytes_.find(obj_id);
@@ -678,12 +716,23 @@ void TemperedLB::computeClusterSummary() {
               max_object_working_bytes_outside, it->second
             );
           }
+          if (
+            auto it = obj_serialized_bytes_.find(obj_id);
+            it != obj_serialized_bytes_.end()
+          ) {
+            max_object_serialized_bytes_outside = std::max(
+              max_object_serialized_bytes_outside, it->second
+            );
+          }
         }
       }
     }
 
+    info.cluster_footprint = cluster_footprint;
     info.max_object_working_bytes = max_object_working_bytes;
     info.max_object_working_bytes_outside = max_object_working_bytes_outside;
+    info.max_object_serialized_bytes = max_object_serialized_bytes;
+    info.max_object_serialized_bytes_outside = max_object_serialized_bytes_outside;
 
     if (info.load != 0) {
       for (auto&& obj : cluster_objs) {
@@ -748,12 +797,21 @@ BytesType TemperedLB::computeMemoryUsage() {
     total_shared_bytes += shared_block_size_.find(block_id)->second;
   }
 
-  // Compute max object size
-  double max_object_working_bytes = 0;
+  // Compute max object working and serialized bytes
   for (auto const& [obj_id, _] : cur_objs_)  {
-    if (obj_working_bytes_.find(obj_id) != obj_working_bytes_.end()) {
+    if (
+      auto it = obj_serialized_bytes_.find(obj_id);
+      it != obj_serialized_bytes_.end()
+    ) {
+      max_object_serialized_bytes_ =
+        std::max(max_object_serialized_bytes_, it->second);
+    }
+    if (
+      auto it = obj_working_bytes_.find(obj_id);
+      it != obj_working_bytes_.end()
+    ) {
       max_object_working_bytes_ =
-        std::max(max_object_working_bytes, obj_working_bytes_.find(obj_id)->second);
+        std::max(max_object_working_bytes_, it->second);
     } else {
       vt_debug_print(
         verbose, temperedlb,
@@ -761,8 +819,24 @@ BytesType TemperedLB::computeMemoryUsage() {
       );
     }
   }
+
+  // Sum up all footprint bytes
+  double object_footprint_bytes = 0;
+  for (auto const& [obj_id, _] : cur_objs_)  {
+    if (
+      auto it = obj_footprint_bytes_.find(obj_id);
+      it != obj_footprint_bytes_.end()
+    ) {
+      object_footprint_bytes += it->second;
+    }
+  }
+
   return current_memory_usage_ =
-    rank_bytes_ + total_shared_bytes + max_object_working_bytes_;
+    rank_bytes_ +
+    total_shared_bytes +
+    max_object_working_bytes_ +
+    object_footprint_bytes +
+    max_object_serialized_bytes_;
 }
 
 std::set<SharedIDType> TemperedLB::getSharedBlocksHere() const {
@@ -2301,6 +2375,7 @@ void TemperedLB::considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     computeClusterSummary();
     this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
     this_new_work_ = this_new_breakdown_.work;
+    computeMemoryUsage();
 
     vt_debug_print(
       normal, temperedlb,
@@ -2336,6 +2411,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   auto criterion = [&,this](
     auto try_rank, auto const& try_info, auto try_mem,
     auto try_max_object_working_bytes,
+    auto try_max_object_serialized_bytes,
     auto const& src_cluster, auto const& try_cluster
   ) -> double {
     BytesType try_new_mem = try_mem;
@@ -2346,6 +2422,13 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       try_cluster.max_object_working_bytes_outside,
       src_cluster.max_object_working_bytes
     );
+    try_new_mem -= try_max_object_serialized_bytes;
+    try_new_mem += std::max(
+      try_cluster.max_object_serialized_bytes_outside,
+      src_cluster.max_object_serialized_bytes
+    );
+    try_new_mem -= try_cluster.cluster_footprint;
+    try_new_mem += src_cluster.cluster_footprint;
 
     if (try_new_mem > mem_thresh_) {
       return - std::numeric_limits<double>::infinity();
@@ -2359,6 +2442,13 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       src_cluster.max_object_working_bytes_outside,
       try_cluster.max_object_working_bytes
     );
+    src_new_mem -= max_object_serialized_bytes_;
+    src_new_mem += std::max(
+      src_cluster.max_object_serialized_bytes_outside,
+      try_cluster.max_object_serialized_bytes
+    );
+    src_new_mem += try_cluster.cluster_footprint;
+    src_new_mem -= src_cluster.cluster_footprint;
 
     if (src_new_mem > mem_thresh_) {
       return - std::numeric_limits<double>::infinity();
@@ -2379,6 +2469,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   auto const& try_rank = msg->locked_node;
   auto const& try_total_bytes = msg->locked_bytes;
   auto const& try_max_owm = msg->locked_max_object_working_bytes;
+  auto const& try_max_osm = msg->locked_max_object_serialized_bytes;
   auto const& try_info = msg->locked_info;
 
   double best_c_try = -1.0;
@@ -2388,7 +2479,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     {
       ClusterInfo empty_cluster;
       double c_try = criterion(
-        try_rank, try_info, try_total_bytes, try_max_owm,
+        try_rank, try_info, try_total_bytes, try_max_owm, try_max_osm,
         src_cluster, empty_cluster
       );
       if (c_try > 0.0) {
@@ -2401,7 +2492,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
 
     for (auto const& [try_shared_id, try_cluster] : try_clusters) {
       double c_try = criterion(
-        try_rank, try_info, try_total_bytes, try_max_owm,
+        try_rank, try_info, try_total_bytes, try_max_owm, try_max_osm,
         src_cluster, try_cluster
       );
       vt_debug_print(
@@ -2448,6 +2539,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     computeClusterSummary();
     this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
     this_new_work_ = this_new_breakdown_.work;
+    computeMemoryUsage();
 
     vt_debug_print(
       normal, temperedlb,
@@ -2516,6 +2608,7 @@ void TemperedLB::giveCluster(
   computeClusterSummary();
   this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
   this_new_work_ = this_new_breakdown_.work;
+  computeMemoryUsage();
 
   vt_debug_print(
     normal, temperedlb,
@@ -2615,7 +2708,8 @@ void TemperedLB::satisfyLockRequest() {
 
     proxy_[lock.requesting_node].template send<&TemperedLB::lockObtained>(
       this_node, cur_clusters_, current_memory_usage_,
-      max_object_working_bytes_, lock.c_try, this_info
+      max_object_working_bytes_, max_object_serialized_bytes_,
+      lock.c_try, this_info
     );
 
     is_locked_ = true;
