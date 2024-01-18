@@ -404,6 +404,8 @@ void CollectionManager::invokeCollectiveMsg(
 
   auto untyped_proxy = proxy.getProxy();
   auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
+
+  vtAssert(elm_holder != nullptr, "Proxy was not found.");
   elm_holder->foreach([&](IndexType const& idx, Indexable<IndexType>*) {
     invokeMsgImpl<ColT, MsgT>(proxy(idx), msgPtr, true);
   });
@@ -427,6 +429,8 @@ void CollectionManager::invokeCollectiveMsg(
 
   auto untyped_proxy = proxy.getProxy();
   auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
+
+  vtAssert(elm_holder != nullptr, "Proxy was not found.");
   elm_holder->foreach([&](IndexType const& idx, Indexable<IndexType>*) {
     invokeMsgImpl<ColT, MsgT>(proxy(idx), msgPtr, true);
   });
@@ -1951,6 +1955,7 @@ void CollectionManager::incomingDestroy(
       fn();
     }
   }
+  collect_lb_data_for_lb_.erase(proxy.getProxy());
 }
 
 template <typename ColT, typename IndexT>
