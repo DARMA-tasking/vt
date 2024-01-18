@@ -654,14 +654,37 @@ void TemperedLB::computeClusterSummary() {
     info.edge_weight = shared_volume;
 
     std::set<ObjIDType> cluster_objs;
+    BytesType max_object_working_bytes = 0;
+    BytesType max_object_working_bytes_outside = 0;
+
     for (auto const& [obj_id, obj_load] : cur_objs_) {
       if (auto iter = obj_shared_block_.find(obj_id); iter != obj_shared_block_.end()) {
         if (iter->second == shared_id) {
           cluster_objs.insert(obj_id);
           info.load += obj_load;
+          if (
+            auto it = obj_working_bytes_.find(obj_id);
+            it != obj_working_bytes_.end()
+          ) {
+            max_object_working_bytes = std::max(
+              max_object_working_bytes, it->second
+            );
+          }
+        } else {
+          if (
+            auto it = obj_working_bytes_.find(obj_id);
+            it != obj_working_bytes_.end()
+          ) {
+            max_object_working_bytes_outside = std::max(
+              max_object_working_bytes_outside, it->second
+            );
+          }
         }
       }
     }
+
+    info.max_object_working_bytes = max_object_working_bytes;
+    info.max_object_working_bytes_outside = max_object_working_bytes_outside;
 
     if (info.load != 0) {
       for (auto&& obj : cluster_objs) {
@@ -2312,14 +2335,32 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
 
   auto criterion = [&,this](
     auto try_rank, auto const& try_info, auto try_mem,
+    auto try_max_object_working_bytes,
     auto const& src_cluster, auto const& try_cluster
   ) -> double {
-    if (try_mem - try_cluster.bytes + src_cluster.bytes > mem_thresh_) {
+    BytesType try_new_mem = try_mem;
+    try_new_mem -= try_cluster.bytes;
+    try_new_mem += src_cluster.bytes;
+    try_new_mem -= try_max_object_working_bytes;
+    try_new_mem += std::max(
+      try_cluster.max_object_working_bytes_outside,
+      src_cluster.max_object_working_bytes
+    );
+
+    if (try_new_mem > mem_thresh_) {
       return - std::numeric_limits<double>::infinity();
     }
 
-    auto const src_mem = current_memory_usage_;
-    if (src_mem + try_cluster.bytes - src_cluster.bytes > mem_thresh_) {
+    BytesType src_new_mem = current_memory_usage_;
+    src_new_mem -= src_cluster.bytes;
+    src_new_mem += try_cluster.bytes;
+    src_new_mem -= max_object_working_bytes_;
+    src_new_mem += std::max(
+      src_cluster.max_object_working_bytes_outside,
+      try_cluster.max_object_working_bytes
+    );
+
+    if (src_new_mem > mem_thresh_) {
       return - std::numeric_limits<double>::infinity();
     }
 
@@ -2337,6 +2378,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   auto const& try_clusters = msg->locked_clusters;
   auto const& try_rank = msg->locked_node;
   auto const& try_total_bytes = msg->locked_bytes;
+  auto const& try_max_owm = msg->locked_max_object_working_bytes;
   auto const& try_info = msg->locked_info;
 
   double best_c_try = -1.0;
@@ -2346,7 +2388,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     {
       ClusterInfo empty_cluster;
       double c_try = criterion(
-        try_rank, try_info, try_total_bytes, src_cluster, empty_cluster
+        try_rank, try_info, try_total_bytes, try_max_owm,
+        src_cluster, empty_cluster
       );
       if (c_try > 0.0) {
         if (c_try > best_c_try) {
@@ -2358,7 +2401,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
 
     for (auto const& [try_shared_id, try_cluster] : try_clusters) {
       double c_try = criterion(
-        try_rank, try_info, try_total_bytes, src_cluster, try_cluster
+        try_rank, try_info, try_total_bytes, try_max_owm,
+        src_cluster, try_cluster
       );
       vt_debug_print(
         verbose, temperedlb,
