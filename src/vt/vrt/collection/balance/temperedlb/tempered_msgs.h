@@ -63,12 +63,16 @@ struct ClusterInfo {
   std::unordered_map<NodeType, double> inter_send_vol, inter_recv_vol;
   NodeType home_node = uninitialized_destination;
   BytesType edge_weight = 0;
+  BytesType max_object_working_bytes = 0;
+  BytesType max_object_working_bytes_outside = 0;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | load | bytes | intra_send_vol | intra_recv_vol;
     s | inter_send_vol | inter_recv_vol;
     s | home_node | edge_weight;
+    s | max_object_working_bytes;
+    s | max_object_working_bytes_outside;
   }
 };
 
