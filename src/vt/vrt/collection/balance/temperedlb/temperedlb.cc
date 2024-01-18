@@ -957,8 +957,8 @@ WorkBreakdown TemperedLB::computeWorkBreakdown(
   w.inter_recv_vol = inter_rank_bytes_recv;
   w.shared_vol = shared_volume;
 
-  vt_print(
-    temperedlb,
+  vt_debug_print(
+    normal, temperedlb,
     "computeWorkBreakdown: load={}, intra sent={}, recv={},"
     " inter sent={}, recv={}, shared_vol={}, work={}\n",
     load,
