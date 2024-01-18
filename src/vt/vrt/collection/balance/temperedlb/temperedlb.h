@@ -184,12 +184,14 @@ protected:
       NodeType in_locked_node,
       ClusterSummaryType in_locked_clusters, BytesType in_locked_bytes,
       BytesType in_locked_max_object_working_bytes,
+      BytesType in_locked_max_object_serialized_bytes,
       double in_locked_c_try,
       NodeInfo in_locked_info
     ) : locked_node(in_locked_node),
         locked_clusters(in_locked_clusters),
         locked_bytes(in_locked_bytes),
         locked_max_object_working_bytes(in_locked_max_object_working_bytes),
+        locked_max_object_serialized_bytes(in_locked_max_object_serialized_bytes),
         locked_c_try(in_locked_c_try),
         locked_info(in_locked_info)
     { }
@@ -201,6 +203,7 @@ protected:
       s | locked_clusters;
       s | locked_bytes;
       s | locked_max_object_working_bytes;
+      s | locked_max_object_serialized_bytes;
       s | locked_c_try;
       s | locked_info;
     }
@@ -213,6 +216,8 @@ protected:
     BytesType locked_bytes = 0;
     /// The largest working bytes for the locked node
     BytesType locked_max_object_working_bytes = 0;
+    /// The largest serialized bytes for the locked node
+    BytesType locked_max_object_serialized_bytes = 0;
     /// The approximate criterion value at the time it was locked with possible
     /// out-of-date info
     double locked_c_try = 0;
@@ -475,6 +480,10 @@ private:
   std::unordered_map<SharedIDType, std::tuple<NodeType, BytesType>> shared_block_edge_;
   /// Working bytes for each object
   std::unordered_map<ObjIDType, BytesType> obj_working_bytes_;
+  /// Serialized bytes for each object
+  std::unordered_map<ObjIDType, BytesType> obj_serialized_bytes_;
+  /// Footprint bytes for each object
+  std::unordered_map<ObjIDType, BytesType> obj_footprint_bytes_;
   /// Cluster summary based on current local assignment
   ClusterSummaryType cur_clusters_;
   /// Clusters that we know of on other ranks (might be out of date)
@@ -485,6 +494,8 @@ private:
   BytesType mem_thresh_ = 0;
   /// The max working bytes for an object currently residing here
   BytesType max_object_working_bytes_ = 0;
+  /// The max serialized bytes for an object currently residing here
+  BytesType max_object_serialized_bytes_ = 0;
   /// Current memory usage based on distribution
   BytesType current_memory_usage_ = 0;
   /// Whether this rank is locked or now
