@@ -516,6 +516,7 @@ private:
   bool is_subclustering_ = false;
   /// Ready to satify looks
   bool ready_to_satisfy_locks_ = false;
+  int consider_swaps_counter_ = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
