@@ -2403,7 +2403,14 @@ void TemperedLB::considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
 }
 
 void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
+  consider_swaps_counter_++;
   is_swapping_ = true;
+
+  vt_debug_print(
+    verbose, temperedlb,
+    "considerSwapsAfterLock: consider_swaps_counter_={} start\n",
+    consider_swaps_counter_
+  );
 
   auto const this_node = theContext()->getNode();
 
@@ -2532,6 +2539,11 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     ] = removeClusterToSend(src_shared_id);
 
     runInEpochRooted("giveCluster", [&]{
+      vt_debug_print(
+        verbose, temperedlb,
+        "considerSwapsAfterLock: giveCluster swapping {} for {}, epoch={:x}\n",
+        src_shared_id, try_shared_id, theMsg()->getEpoch()
+      );
       proxy_[try_rank].template send<&TemperedLB::giveCluster>(
         this_node,
         give_shared_blocks_size,
@@ -2556,7 +2568,14 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
 
   proxy_[try_rank].template send<&TemperedLB::releaseLock>();
 
+  vt_debug_print(
+    verbose, temperedlb,
+    "considerSwapsAfterLock: consider_swaps_counter_={} finish\n",
+    consider_swaps_counter_
+  );
+
   is_swapping_ = false;
+  consider_swaps_counter_--;
 
   if (pending_actions_.size() > 0) {
     auto action = pending_actions_.back();
@@ -2618,8 +2637,10 @@ void TemperedLB::giveCluster(
 
   vt_debug_print(
     normal, temperedlb,
-    "giveCluster: total memory usage={}, shared blocks here={}, "
-    "memory_threshold={}, give_cluster={}, take_cluster={}\n", computeMemoryUsage(),
+    "giveCluster: from_rank={}, epoch={:x} total memory usage={}, shared blocks here={}, "
+    "memory_threshold={}, give_cluster={}, take_cluster={}\n",
+    from_rank, theMsg()->getEpoch(),
+    computeMemoryUsage(),
     getSharedBlocksHere().size(), mem_thresh_,
     give_shared_blocks_size.begin()->first, take_cluster
   );
@@ -2650,8 +2671,8 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
 
   vt_debug_print(
     normal, temperedlb,
-    "lockObtained: is_locked_={}, is_subclustering_={}\n",
-    is_locked_, is_subclustering_
+    "lockObtained: is_locked_={}, is_subclustering_={}, is_swapping_={}\n",
+    is_locked_, is_subclustering_, is_swapping_
   );
 
   auto cur_epoch = theMsg()->getEpoch();
@@ -2678,6 +2699,12 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
   } else if (is_swapping_) {
     pending_actions_.push_back(action);
   } else {
+    vt_debug_print(
+      normal, temperedlb,
+      "lockObtained: running action immediately\n"
+    );
+
+
     action();
   }
 }
