@@ -1188,12 +1188,18 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       );
 
       if (has_memory_data_) {
+        double const memory_usage = computeMemoryUsage();
+
         vt_debug_print(
           terse, temperedlb,
           "Current memory info: total memory usage={}, shared blocks here={}, "
-          "memory_threshold={}\n", computeMemoryUsage(),
+          "memory_threshold={}\n", memory_usage,
           getSharedBlocksHere().size(), mem_thresh_
         );
+
+        if (memory_usage > mem_thresh_) {
+          vtAbort("This should never be possible to go over the threshold\n");
+        }
 
         computeClusterSummary();
 
