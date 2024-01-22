@@ -2405,6 +2405,7 @@ void TemperedLB::considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
 void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   consider_swaps_counter_++;
   is_swapping_ = true;
+  is_locked_ = true;
 
   vt_debug_print(
     verbose, temperedlb,
@@ -2575,6 +2576,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   );
 
   is_swapping_ = false;
+  is_locked_ = false;
   consider_swaps_counter_--;
 
   if (pending_actions_.size() > 0) {
