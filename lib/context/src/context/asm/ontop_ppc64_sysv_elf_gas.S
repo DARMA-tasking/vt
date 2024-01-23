@@ -97,7 +97,7 @@ ontop_fcontext:
 # endif
 #endif
     # reserve space on stack
-    subi  %r1, %r1, 184
+    subi  %r1, %r1, 192
 
 #if _CALL_ELF != 2
     std  %r2,  0(%r1)  # save TOC
@@ -123,6 +123,7 @@ ontop_fcontext:
 #if _CALL_ELF != 2
     std  %r3,  152(%r1)  # save hidden
 #endif
+    stfd  %f31, 184(%r1)  # save F31
 
     # save CR
     mfcr  %r0
@@ -165,6 +166,7 @@ ontop_fcontext:
 #if _CALL_ELF != 2
     ld  %r3,  152(%r1)  # restore hidden
 #endif
+    lfd  %f31, 184(%r1)  # restore F31
 
     # restore CR
     ld  %r0, 160(%r1)
@@ -203,7 +205,7 @@ return_to_ctx:
     mtlr  %r0
 
     # adjust stack
-    addi  %r1, %r1, 184
+    addi  %r1, %r1, 192
 
     # jump to context
     bctr
