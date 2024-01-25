@@ -878,7 +878,7 @@ TEST_F(TestWorkloadReplay, test_run_replay_verify_some_stats) {
 
   // then replay them but allow the lb to place objects differently
   vt::vrt::collection::balance::replay::replayWorkloads(
-    initial_phase, num_phases, lbdh, stats_cb
+    initial_phase, num_phases, 0, lbdh, stats_cb
   );
 }
 
