@@ -56,7 +56,7 @@ namespace vt { namespace vrt { namespace collection {
 namespace balance { namespace replay {
 
 void replayWorkloads(
-  PhaseType initial_phase, PhaseType phases_to_run
+  PhaseType initial_phase, PhaseType phases_to_run, PhaseType phase_mod
 ) {
   // read in object loads from json files
   auto const filename = theConfig()->getLBDataFileIn();
@@ -67,11 +67,11 @@ void replayWorkloads(
     &LBManager::statsHandler
   >(theLBManager()->getProxy());
 
-  replayWorkloads(initial_phase, phases_to_run, workloads, stats_cb);
+  replayWorkloads(initial_phase, phases_to_run, phase_mod, workloads, stats_cb);
 }
 
 void replayWorkloads(
-  PhaseType initial_phase, PhaseType phases_to_run,
+  PhaseType initial_phase, PhaseType phases_to_run, PhaseType phase_mod,
   std::shared_ptr<LBDataHolder> workloads,
   Callback<std::vector<balance::LoadData>> stats_cb
 ) {
@@ -102,6 +102,8 @@ void replayWorkloads(
   // simulate the given number of phases
   auto stop_phase = initial_phase + phases_to_run;
   for (PhaseType phase = initial_phase; phase < stop_phase; phase++) {
+    PhaseType input_phase = phase_mod == 0 ? phase : phase % phase_mod;
+
     // reapply the base load model if in case we overwrote it on a previous iter
     theLBManager()->setLoadModel(base_load_model);
 
@@ -113,7 +115,7 @@ void replayWorkloads(
 
     // point the load model at the workloads for the relevant phase
     runInEpochCollective("WorkloadReplayDriver -> updateLoads", [=] {
-      base_load_model->updateLoads(phase);
+      base_load_model->updateLoads(input_phase);
     });
 
     if (theConfig()->vt_debug_replay) {
@@ -123,7 +125,7 @@ void replayWorkloads(
           ++count;
           vt_debug_print(
             normal, replay,
-            "workload for element {} is here on phase {}\n", workload_id, phase
+            "workload for element {} is here on input_phase {}\n", workload_id, input_phase
           );
         }
       }
@@ -161,7 +163,7 @@ void replayWorkloads(
     }
 
     if (this_rank == 0) {
-      vt_print(replay, "Simulating phase {}...\n", phase);
+      vt_print(replay, "Simulating phase {} using inputs from phase {}...\n", phase, input_phase);
     }
 
     if (theConfig()->vt_debug_replay) {
@@ -227,12 +229,19 @@ void replayWorkloads(
       auto cb = theCB()->makeFunc<ReassignmentMsg>(
         vt::pipe::LifetimeEnum::Once, postLBWork
       );
-      theLBManager()->selectStartLB(phase, cb);
+      auto lb = theLBManager()->decideLBToRun(phase, true);
+      auto const start_time = timing::getCurrentTime();
+      theLBManager()->startLB(input_phase, lb, cb);
+      auto const total_time = timing::getCurrentTime() - start_time;
+      if (lb != LBType::NoLB) {
+        vt_print(replay, "Time in load balancer: {}\n", total_time);
+      }
     });
     runInEpochCollective("WorkloadReplayDriver -> destroyLB", [&] {
       theLBManager()->destroyLB();
     });
     auto last_phase_info = theLBManager()->getPhaseInfo();
+    last_phase_info->phase = phase;
     thePhase()->printSummary(last_phase_info);
   }
 }
