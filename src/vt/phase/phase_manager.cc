@@ -299,7 +299,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
     auto const total_time = timing::getCurrentTime() - start_time_;
     vt_print(
       phase,
-      "phase={}, duration={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.3f}, "
+      "phase={}, duration={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.4f}, "
       "grain_max_time={}, migration count={}, lb_name={}\n",
       last_phase_info->phase,
       total_time,
@@ -311,14 +311,16 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
       lb_name
     );
 
-    vt_debug_print(
-      terse, phase,
-      "POST phase={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.3f}\n",
-      last_phase_info->phase,
-      TimeType(last_phase_info->max_load_post_lb),
-      TimeType(last_phase_info->avg_load_post_lb),
-      last_phase_info->imb_load_post_lb
-    );
+    if (last_phase_info->migration_count > 0) {
+      vt_debug_print(
+        terse, phase,
+        "POST phase={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.4f}\n",
+        last_phase_info->phase,
+        TimeType(last_phase_info->max_load_post_lb),
+        TimeType(last_phase_info->avg_load_post_lb),
+        last_phase_info->imb_load_post_lb
+      );
+    }
 
     auto compute_speedup = [](double t1, double t2) -> double {
        return t1 / t2;
