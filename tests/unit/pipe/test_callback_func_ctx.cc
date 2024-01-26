@@ -110,7 +110,7 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  if (num_nodes < 2) {
+  if (num_nodes < vt::NodeT{2}) {
     return;
   }
 
@@ -118,7 +118,7 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
     ctx = std::make_unique<Context>();
     ctx->val = this_node;
 
-    auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
     auto cb = theCB()->makeFunc<DataMsg, Context>(
       vt::pipe::LifetimeEnum::Once,
       ctx.get(), [next](DataMsg* msg, Context* my_ctx) {

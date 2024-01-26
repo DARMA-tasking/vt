@@ -77,7 +77,7 @@ TEST_P(TestEpochParam, basic_test_epoch_collective_1) {
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_rooted_1) {
-  auto const& n              = 48;
+  auto const& n              = NodeT{48};
   auto const start_seq       = GetParam();
   auto epoch                 = epoch::EpochManip::generateEpoch(
     true, n
@@ -95,7 +95,7 @@ TEST_P(TestEpochParam, basic_test_epoch_rooted_1) {
 TEST_P(TestEpochParam, basic_test_epoch_category_1) {
   auto const start_seq       = GetParam();
   auto epoch                 = epoch::EpochManip::generateEpoch(
-    false, uninitialized_destination,
+    false, NodeT{},
     epoch::eEpochCategory::InsertEpoch
   );
   epoch::EpochManip::setSeq(epoch, start_seq);
@@ -109,7 +109,7 @@ TEST_P(TestEpochParam, basic_test_epoch_category_1) {
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_all_1) {
-  auto const& n              = 48;
+  auto const& n              = NodeT{48};
   auto const start_seq       = GetParam();
   auto epoch                 = epoch::EpochManip::generateEpoch(
     true, n, epoch::eEpochCategory::InsertEpoch

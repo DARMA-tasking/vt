@@ -128,7 +128,7 @@ void Trace::loadAndBroadcastSpec() {
     auto spec_proxy = FileSpec::construct(FileSpecType::TRACE);
 
     theTerm()->produce();
-    if (theContext()->getNode() == 0) {
+    if (theContext()->getNodeStrong() == 0) {
       auto spec_ptr = spec_proxy.get();
       spec_ptr->parse();
       spec_ptr->broadcastSpec();
@@ -230,7 +230,7 @@ void Trace::addUserEvent(UserEventIDType event) {
 
   auto const type = TraceConstantsType::UserEvent;
   auto const time = getCurrentTime();
-  NodeType const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   logEvent(
     LogType{time, type, node, event, true}
@@ -248,7 +248,7 @@ void Trace::addUserEventManual(UserSpecEventIDType event) {
     event
   );
 
-  auto id = user_event_.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, NodeT{0}, event);
   addUserEvent(id);
 }
 
@@ -265,7 +265,7 @@ void Trace::addUserEventBracketedBegin(UserEventIDType event) {
 
   auto const type = TraceConstantsType::BeginUserEventPair;
   auto const time = getCurrentTime();
-  NodeType const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   logEvent(
     LogType{time, type, node, event, true}
@@ -285,7 +285,7 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
 
   auto const type = TraceConstantsType::EndUserEventPair;
   auto const time = getCurrentTime();
-  NodeType const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   logEvent(
     LogType{time, type, node, event, true}
@@ -297,7 +297,7 @@ void Trace::addUserEventBracketedManualBegin(UserSpecEventIDType event) {
     return;
   }
 
-  auto id = user_event_.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, NodeT{0}, event);
   addUserEventBracketedBegin(id);
 }
 
@@ -306,7 +306,7 @@ void Trace::addUserEventBracketedManualEnd(UserSpecEventIDType event) {
     return;
   }
 
-  auto id = user_event_.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, NodeT{0}, event);
   addUserEventBracketedEnd(id);
 }
 
@@ -323,7 +323,7 @@ void Trace::addUserEventBracketedManual(
     event, begin, end
   );
 
-  auto id = user_event_.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, NodeT{0}, event);
   addUserEventBracketed(id, begin, end);
 }
 
@@ -334,7 +334,7 @@ void Trace::addMemoryEvent(std::size_t memory, TimeType time) {
 
 TraceProcessingTag Trace::beginProcessing(
   TraceEntryIDType const ep, TraceMsgLenType const len,
-  TraceEventIDType const event, NodeType const from_node,
+  TraceEventIDType const event, NodeT const from_node,
   TimeType const time,
   uint64_t const idx1, uint64_t const idx2,
   uint64_t const idx3, uint64_t const idx4
@@ -449,7 +449,7 @@ void Trace::endSchedulerLoop() {
   // Start an event representing time outside of top-level scheduler.
   if (event_holds_.size() == 1) {
     between_sched_event_ = beginProcessing(
-      between_sched_event_type_, 0, trace::no_trace_event, 0, timing::getCurrentTime()
+      between_sched_event_type_, 0, trace::no_trace_event, NodeT{0}, timing::getCurrentTime()
     );
   }
 }
@@ -462,7 +462,7 @@ TraceEventIDType Trace::messageCreation(
   }
 
   auto const type = TraceConstantsType::Creation;
-  NodeType const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   return logEvent(
     LogType{time, ep, type, node, len}
@@ -477,7 +477,7 @@ TraceEventIDType Trace::messageCreationBcast(
   }
 
   auto const type = TraceConstantsType::CreationBcast;
-  NodeType const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   return logEvent(
     LogType{time, ep, type, node, len}
@@ -486,14 +486,14 @@ TraceEventIDType Trace::messageCreationBcast(
 
 TraceEventIDType Trace::messageRecv(
   TraceEntryIDType const ep, TraceMsgLenType const len,
-  NodeType const from_node, TimeType const time
+  NodeT const from_node, TimeType const time
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return no_trace_event;
   }
 
   auto const type = TraceConstantsType::MessageRecv;
-  NodeType const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   return logEvent(
     LogType{time, ep, type, node, len}

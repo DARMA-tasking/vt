@@ -78,7 +78,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
 
   int c1 = 0, c2 = 0;
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto cb = theCB()->makeFunc<DataMsg>(
       vt::pipe::LifetimeEnum::Once, [&c1](DataMsg* msg){
         c1++;
@@ -86,7 +86,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
       }
     );
     auto msg = makeMessage<CallbackMsg>(cb);
-    theMsg()->sendMsg<bounce>(1, msg);
+    theMsg()->sendMsg<bounce>(vt::NodeT{1}, msg);
   }
 
   // run until termination
@@ -105,7 +105,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
   // Since the RT has been finalized, the pipe ID for the new callback will be
   // the same as the one before.
   //
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto cb = theCB()->makeFunc<DataMsg>(
       vt::pipe::LifetimeEnum::Once, [&c2](DataMsg* msg){
         c2++;
@@ -113,14 +113,14 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
       }
     );
     auto msg = makeMessage<CallbackMsg>(cb);
-    theMsg()->sendMsg<bounce>(1, msg);
+    theMsg()->sendMsg<bounce>(vt::NodeT{1}, msg);
   }
 
   // run until termination
   vt::theSched()->runSchedulerWhile([]{ return not vt::rt->isTerminated(); });
 
   // now, check if we only fired the callbacks exactly once!
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     EXPECT_EQ(c1, 1);
     EXPECT_EQ(c2, 1);
   }

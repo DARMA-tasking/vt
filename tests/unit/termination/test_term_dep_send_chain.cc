@@ -74,7 +74,7 @@ struct MyObjGroup;
 
 struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   MyCol() = default;
-  MyCol(NodeType num, int k) : max_x(static_cast<int>(num)), max_y(k) {
+  MyCol(NodeT num, int k) : max_x(static_cast<int>(num)), max_y(k) {
     idx_ = getIndex();
   }
 
@@ -256,7 +256,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     migrating_ = true;
     auto node = vt::theContext()->getNode();
     auto num = vt::theContext()->getNumNodes();
-    auto next = node + 1 < num ? node + 1 : 0;
+    auto next = NodeT{node.get() + 1 < num.get() ? node.get() + 1 : 0};
     this->migrate(next);
   }
 
@@ -315,7 +315,7 @@ struct MyObjGroup {
     frontend_proxy_ = vt::theObjGroup()->makeCollective(this, "MyObjGroup");
   }
 
-  void makeColl(std::string const& label, NodeType num_nodes, int k) {
+  void makeColl(std::string const& label, NodeT num_nodes, int k) {
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
     backend_proxy_ = vt::theCollection()->constructCollective<MyCol>(
       range, [=](vt::Index2D idx) { return std::make_unique<MyCol>(num_nodes, k); },
@@ -363,7 +363,7 @@ struct MyObjGroup {
     chains_->nextStep("op4", [=](vt::Index2D idx) {
       auto node = vt::theContext()->getNode();
       auto num = vt::theContext()->getNumNodes();
-      auto next = node + 1 < num ? node + 1 : 0;
+      auto next = NodeT{node.get() + 1 < num.get() ? node.get() + 1 : 0};
       auto proxy = frontend_proxy_(next);
       auto c = vt::theCB()->makeSend<&MyObjGroup::op4Impl>(proxy);
       return backend_proxy_(idx).template send<ProxyMsg, &MyCol::op4>(c);
@@ -480,7 +480,7 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
   vt::theCollective()->barrier();
 
   for (int t = 0; t < iter; t++) {
-    if (this_node == 0 && t % 5 == 0) {
+    if (this_node == vt::NodeT{0} && t % 5 == 0) {
       fmt::print("start iter={}, k={}, max_iter={}\n", t, k, iter);
     }
 
@@ -517,7 +517,7 @@ struct PrintParam {
 
 struct MergeCol : vt::Collection<MergeCol,vt::Index2D> {
   MergeCol() = default;
-  MergeCol(NodeType num, double off) : offset_( off ) {
+  MergeCol(NodeT num, double off) : offset_( off ) {
     idx_ = getIndex();
   }
 
@@ -583,7 +583,7 @@ struct MergeObjGroup
     frontend_proxy_ = vt::theObjGroup()->makeCollective(this, "MergeObjGroup");
   }
 
-  void makeColl(std::string const& label, NodeType num_nodes, int k, double offset) {
+  void makeColl(std::string const& label, NodeT num_nodes, int k, double offset) {
     auto const node = theContext()->getNode();
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
     backend_proxy_ = vt::theCollection()->constructCollective<MergeCol>(

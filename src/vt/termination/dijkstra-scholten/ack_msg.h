@@ -54,20 +54,20 @@ namespace vt { namespace term { namespace ds {
 struct AckMsg : ::vt::Message {
   AckMsg() = default;
   AckMsg(
-    EpochType const& in_epoch, NodeType const& in_this, NodeType const& in_pred,
+    EpochType const& in_epoch, NodeT const& in_this, NodeT const& in_pred,
     int64_t const in_count
   ) : epoch_(in_epoch), node_(in_this), pred_(in_pred), count_(in_count)
   { }
 
   EpochType getEpoch() const { return epoch_; }
-  NodeType getNode()   const { return node_;  }
-  NodeType getPred()   const { return pred_;  }
+  NodeT getNode()   const { return node_;  }
+  NodeT getPred()   const { return pred_;  }
   int64_t getCount()   const { return count_; }
 
 private:
   EpochType epoch_ = no_epoch;
-  NodeType node_ = uninitialized_destination;
-  NodeType pred_ = uninitialized_destination;
+  NodeT node_ = {};
+  NodeT pred_ = {};
   int64_t count_ = 0;
 };
 

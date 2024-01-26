@@ -100,7 +100,7 @@ inline void envelopeSetHandler(Env& env, HandlerType const handler) {
 }
 
 template <typename Env>
-inline void envelopeSetDest(Env& env, NodeType const& dest) {
+inline void envelopeSetDest(Env& env, NodeT const& dest) {
   vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->dest = dest;
 }

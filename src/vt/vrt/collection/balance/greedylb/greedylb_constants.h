@@ -48,7 +48,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-static constexpr NodeType const greedy_root             = 0;
+static constexpr NodeT    const greedy_root             = NodeT{0};
 static constexpr int32_t  const greedy_bin_size         = 10;
 static constexpr bool     const greedy_auto_threshold_p = true;
 static constexpr double   const greedy_tolerance        = 0.03f;

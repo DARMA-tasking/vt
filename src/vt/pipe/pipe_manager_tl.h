@@ -92,10 +92,10 @@ struct PipeManagerTL : virtual PipeManagerBase {
    */
   // Single active message function-handler
   template <auto f, bool is_bcast>
-  auto makeCallbackSingle(NodeType node = uninitialized_destination);
+  auto makeCallbackSingle(NodeT node = {});
 
   template <typename FunctorT, bool is_bcast>
-  auto makeCallbackFunctor(NodeType node = uninitialized_destination);
+  auto makeCallbackFunctor(NodeT node = {});
 
   // Single active message anon func-handler
   auto makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn);
@@ -121,7 +121,7 @@ struct PipeManagerTL : virtual PipeManagerBase {
   CallbackMsgType<T> makeCallbackTyped();
 
   template <typename T, ActiveTypedFnType<T>* f, typename CbkT = DefType<T>>
-  void addListener(CbkT const& cb, NodeType const& node);
+  void addListener(CbkT const& cb, NodeT const& node);
 
   template <typename T, ActiveTypedFnType<T>* f, typename CbkT = DefType<T>>
   void addListenerBcast(CbkT const& cb);
@@ -131,10 +131,10 @@ struct PipeManagerTL : virtual PipeManagerBase {
     typename T = typename util::FunctorExtractor<FunctorT>::MessageType,
     typename CbkT = DefType<T>
   >
-  void addListenerFunctor(CbkT const& cb, NodeType const& node);
+  void addListenerFunctor(CbkT const& cb, NodeT const& node);
 
   template <typename FunctorT, typename CbkT = DefType<V>>
-  void addListenerFunctorVoid(CbkT const& cb, NodeType const& node);
+  void addListenerFunctorVoid(CbkT const& cb, NodeT const& node);
 
   template <
     typename FunctorT,

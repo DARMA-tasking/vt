@@ -133,7 +133,7 @@ LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when)
 
 void applyReassignment(const std::shared_ptr<const balance::Reassignment> &reassignment) {
   runInEpochCollective([&] {
-    auto from = theContext()->getNode();
+    auto from = theContext()->getNodeStrong();
 
     for (auto&& departing_elm : reassignment->depart_) {
       auto obj_id = departing_elm.first;

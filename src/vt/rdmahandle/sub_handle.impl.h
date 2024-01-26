@@ -66,8 +66,8 @@ void SubHandle<T,E,IndexT>::initialize(
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::makeSubHandles(bool initial) {
   if (ordered_opt_) {
-    auto this_node = theContext()->getNode();
-    auto num_nodes = theContext()->getNumNodes();
+    auto this_node = theContext()->getNodeStrong();
+    auto num_nodes = theContext()->getNumNodesStrong();
     auto const& map_fn = auto_registry::getHandlerMap(map_han_);
     range_.foreach ([&](IndexT cur_idx) {
       auto home_node = map_fn->dispatch(&cur_idx, &range_, num_nodes);
@@ -124,7 +124,7 @@ void SubHandle<T,E,IndexT>::makeSubHandles(bool initial) {
           t[i+1] = sub_handles_[sub_layout_[sub_layout_.size()-1]].count_ + sub_prefix_[(i-2)/2];
         });
       } else {
-        auto this_node = theContext()->getNode();
+        auto this_node = theContext()->getNodeStrong();
         loc_handle_.modifyExclusive([&](uint64_t* t, std::size_t) {
           uint64_t i = 0;
           for (i = 0; i < num_local * 4; i += 4) {
@@ -152,19 +152,19 @@ SubHandle<T,E,IndexT>::linearize(IndexT idx) {
 }
 
 template <typename T, HandleEnum E, typename IndexT>
-NodeType SubHandle<T, E, IndexT>::getHomeNode(IndexT const& idx) {
+NodeT SubHandle<T, E, IndexT>::getHomeNode(IndexT const& idx) {
   auto const& fn = auto_registry::getHandlerMap(map_han_);
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodesStrong();
   auto idx_p = idx;
   return fn->dispatch(&idx_p, &range_, num_nodes);
 }
 
 template <typename T, HandleEnum E, typename IndexT>
-int SubHandle<T, E, IndexT>::getOrderedOffset(IndexT idx, NodeType home_node) {
+int SubHandle<T, E, IndexT>::getOrderedOffset(IndexT idx, NodeT home_node) {
   auto iter = ordered_local_offset_.find(idx);
   int found_offset = 0;
   if (iter == ordered_local_offset_.end()) {
-    auto num_nodes = theContext()->getNumNodes();
+    auto num_nodes = theContext()->getNumNodesStrong();
     auto const& map_fn = auto_registry::getHandlerMap(map_han_);
     int offset = 0;
     range_.foreach ([&](IndexT cur_idx) {
@@ -185,11 +185,11 @@ int SubHandle<T, E, IndexT>::getOrderedOffset(IndexT idx, NodeType home_node) {
 
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::updateInfo(
-  IndexT const& idx, IndexInfo info, NodeType home
+  IndexT const& idx, IndexInfo info, NodeT home
 ) {
   vtAssertExpr(not ordered_opt_);
   vtAssertExpr(is_migratable_);
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
   auto home_size = loc_handle_.getCount(home);
   vt_debug_print(
     normal, rdma,
@@ -226,7 +226,7 @@ void SubHandle<T,E,IndexT>::updateInfo(
 
 template <typename T, HandleEnum E, typename IndexT>
 IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
   auto home_node = getHomeNode(idx);
   if (ordered_opt_) {
     auto offset = getOrderedOffset(idx, home_node);
@@ -310,7 +310,7 @@ template <typename T, HandleEnum E, typename IndexT>
 IndexInfo SubHandle<T,E,IndexT>::resolveLocation(IndexT const& idx) {
   auto iter = sub_handles_.find(idx);
   if (iter != sub_handles_.end()) {
-    auto const this_node = vt::theContext()->getNode();
+    auto const this_node = vt::theContext()->getNodeStrong();
     return IndexInfo(this_node, iter->second.offset_, iter->second.count_);
   } else {
     if (cache_.hasIndex(idx)) {

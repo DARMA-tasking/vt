@@ -50,11 +50,11 @@ bool ElementIDStruct::isMigratable() const {
   return ElmIDBits::isMigratable(id);
 }
 
-NodeType ElementIDStruct::getHomeNode() const {
+NodeT ElementIDStruct::getHomeNode() const {
   return ElmIDBits::getNode(id);
 }
 
-NodeType ElementIDStruct::getCurrNode() const {
+NodeT ElementIDStruct::getCurrNode() const {
   return curr_node;
 }
 

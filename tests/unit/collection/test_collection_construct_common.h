@@ -121,7 +121,7 @@ void test_construct_1(std::string const& label) {
   using MsgType   = typename ColType::MsgType;
 
   auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     // We don't want too many elements for 4 dimensions
     auto constexpr num_dims = ColType::IndexType::ndims();
     auto constexpr col_size = 8 / num_dims;

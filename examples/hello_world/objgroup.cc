@@ -71,11 +71,9 @@ int main(int argc, char** argv) {
   vt::theCollective()->barrier();
 
   if (this_node == 0) {
-    // Send to object 0
-    proxy[0].send<&MyObjGroup::handler>(5, 10);
+    proxy[0].send<&MyObjGroup::handler>(5,10);
     if (num_nodes > 1) {
-      // Send to object 1
-      proxy[1].send<&MyObjGroup::handler>(10, 20);
+      proxy[1].send<&MyObjGroup::handler>(10,20);
     }
 
     // Broadcast to all nodes
@@ -85,7 +83,7 @@ int main(int argc, char** argv) {
 
     // Create list of nodes and multicast to them
     List::ListType range;
-    for (vt::NodeType node = 0; node < num_nodes; ++node) {
+    for (int32_t node = 0; node < num_nodes; ++node) {
       if (node % 2 == 0) {
         range.push_back(node);
       }

@@ -81,13 +81,13 @@ struct VirtualProxyRequestMsg : ShortMessage {
   using MessageParentType = ShortMessage;
   vt_msg_serialize_prohibited();
 
-  NodeType request_node = uninitialized_destination;
-  NodeType construct_node = uninitialized_destination;
+  NodeT request_node = {};
+  NodeT construct_node = {};
   VirtualRequestIDType request_id = no_request_id;
   VirtualProxyType proxy = no_vrt_proxy;
 
   VirtualProxyRequestMsg(
-    NodeType const& in_node, NodeType const& in_req_node,
+    NodeT const& in_node, NodeT const& in_req_node,
     VirtualRequestIDType const& in_request_id,
     VirtualProxyType const& in_proxy = no_vrt_proxy
   )

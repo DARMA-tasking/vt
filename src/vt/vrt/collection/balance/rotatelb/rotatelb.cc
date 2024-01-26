@@ -62,11 +62,11 @@ RotateLB::getInputKeysWithHelp() {
 void RotateLB::inputParams(balance::ConfigEntry* config) { }
 
 void RotateLB::runLB(LoadType) {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-  auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
+  auto const& this_node = theContext()->getNodeStrong();
+  auto const& num_nodes = theContext()->getNumNodesStrong();
+  auto const next_node = this_node + 1 > num_nodes-1 ? NodeT{0} : this_node + 1;
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, lb,
       "RotateLB: runLB: next_node={}\n",

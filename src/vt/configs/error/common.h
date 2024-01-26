@@ -44,7 +44,7 @@
 #if !defined INCLUDED_VT_CONFIGS_ERROR_COMMON_H
 #define INCLUDED_VT_CONFIGS_ERROR_COMMON_H
 
-#include "vt/configs/types/types_type.h"
+#include "vt/configs/types/types_node.h"
 
 #define INVERT_COND(cond) (!(cond))
 #define DEBUG_LOCATION __FILE__,__LINE__,__func__
@@ -53,8 +53,8 @@ namespace vt {
 
 namespace debug {
 
-extern NodeType preNode();
-extern NodeType preNodes();
+extern NodeT preNode();
+extern NodeT preNodes();
 
 }} /* end namespace vt::debug */
 

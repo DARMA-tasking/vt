@@ -54,7 +54,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 struct MappedNode : BaseProxyT {
-  using FuncLocType = std::function<void(NodeType)>;
+  using FuncLocType = std::function<void (NodeT  )>;
 
   MappedNode() = default;
   MappedNode(

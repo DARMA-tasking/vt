@@ -79,7 +79,7 @@ struct TestTermChaining : TestParallelHarness {
 
     EXPECT_EQ(theContext()->getNode(), 1);
     auto msg2 = makeMessage<TestMsg>();
-    theMsg()->sendMsg<test_handler_response>(0, msg2);
+    theMsg()->sendMsg<test_handler_response>(vt::NodeT{0}, msg2);
   }
 
   static void test_handler_response(TestMsg* msg) {
@@ -96,7 +96,7 @@ struct TestTermChaining : TestParallelHarness {
     EXPECT_EQ(handler_count, 12);
     handler_count++;
     auto msg2 = makeMessage<TestMsg>();
-    theMsg()->sendMsg<test_handler_chained>(0, msg2);
+    theMsg()->sendMsg<test_handler_chained>(vt::NodeT{0}, msg2);
   }
 
   static void test_handler_chained(TestMsg* msg) {
@@ -140,7 +140,7 @@ struct TestTermChaining : TestParallelHarness {
     vt::theMsg()->pushEpoch(epoch1);
     auto msg = makeMessage<TestMsg>();
     chain.add(
-      epoch1, theMsg()->sendMsg<test_handler_reflector>(1, msg)
+      epoch1, theMsg()->sendMsg<test_handler_reflector>(vt::NodeT{1}, msg)
     );
     vt::theMsg()->popEpoch(epoch1);
     vt::theTerm()->finishedEpoch(epoch1);
@@ -149,7 +149,7 @@ struct TestTermChaining : TestParallelHarness {
     vt::theMsg()->pushEpoch(epoch2);
     auto msg2 = makeMessage<TestMsg>();
     chain.add(
-      epoch2, theMsg()->sendMsg<test_handler_chainer>(1, msg2)
+      epoch2, theMsg()->sendMsg<test_handler_chainer>(vt::NodeT{1}, msg2)
     );
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
@@ -160,12 +160,12 @@ struct TestTermChaining : TestParallelHarness {
   static void chain_reduce() {
     auto node = theContext()->getNode();
 
-    if (0 == node) {
+    if (vt::NodeT{0} == node) {
       EpochType epoch1 = theTerm()->makeEpochRooted();
       vt::theMsg()->pushEpoch(epoch1);
       auto msg = makeMessage<TestMsg>();
       chain.add(
-        epoch1, theMsg()->sendMsg<test_handler_reflector>(1, msg.get()));
+        epoch1, theMsg()->sendMsg<test_handler_reflector>(vt::NodeT{1}, msg.get()));
       vt::theMsg()->popEpoch(epoch1);
       vt::theTerm()->finishedEpoch(epoch1);
     }
@@ -173,8 +173,13 @@ struct TestTermChaining : TestParallelHarness {
     EpochType epoch2 = theTerm()->makeEpochCollective();
     vt::theMsg()->pushEpoch(epoch2);
     auto msg2 = makeMessage<ChainReduceMsg>(theContext()->getNode());
+<<<<<<< HEAD
     auto cb = vt::theCB()->makeSend<test_handler_reduce>( 0 );
     chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(0, msg2.get(), cb));
+=======
+    auto cb = vt::theCB()->makeSend<ChainReduceMsg, test_handler_reduce>( NodeT{0} );
+    chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(vt::NodeT{0}, msg2.get(), cb));
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 
@@ -195,8 +200,13 @@ struct TestTermChaining : TestParallelHarness {
     EpochType epoch2 = theTerm()->makeEpochRooted();
     vt::theMsg()->pushEpoch(epoch2);
     auto msg2 = makeMessage<ChainReduceMsg>(theContext()->getNode());
+<<<<<<< HEAD
     auto cb = vt::theCB()->makeSend<test_handler_reduce>( 0 );
     chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(0, msg2.get(), cb));
+=======
+    auto cb = vt::theCB()->makeSend<ChainReduceMsg, test_handler_reduce>( NodeT{0} );
+    chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(vt::NodeT{0}, msg2.get(), cb));
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 
@@ -219,7 +229,7 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
 
   fmt::print("global collective epoch {:x}\n", epoch);
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     theMsg()->pushEpoch(epoch);
     start_chain();
     theTerm()->finishedEpoch(epoch);
@@ -246,10 +256,10 @@ TEST_F(TestTermChaining, test_termination_chaining_collective_1) {
   chain = vt::messaging::DependentSendChain{};
   handler_count = 0;
 
-  if (num_nodes == 2) {
+  if (num_nodes == vt::NodeT{2}) {
     vt::runInEpochCollective( chain_reduce );
     EXPECT_EQ(handler_count, 3);
-  } else if (num_nodes == 1) {
+  } else if (num_nodes == vt::NodeT{1}) {
     vt::runInEpochCollective( chain_reduce_single );
     EXPECT_EQ(handler_count, 2);
   }

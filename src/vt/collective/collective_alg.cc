@@ -146,7 +146,7 @@ static void broadcastConsensus(
 
   reenter_counter_++;
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   TagType consensus_scope = no_tag;
   TagType consensus_tag = no_tag;
   bool consensus_is_user_tag = false;

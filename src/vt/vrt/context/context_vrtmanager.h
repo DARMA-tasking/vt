@@ -102,7 +102,7 @@ struct VirtualContextManager
   VirtualProxyType makeVirtual(Args&& ... args);
 
   template <typename VrtContextT, typename... Args>
-  VirtualProxyType makeVirtualNode(NodeType const& node, Args&& ... args);
+  VirtualProxyType makeVirtualNode(NodeT const& node, Args&& ... args);
 
   template <typename VrtContextT, mapping::ActiveSeedMapFnType fn, typename... Args>
   VirtualProxyType makeVirtualMap(Args ... args);
@@ -150,14 +150,14 @@ private:
 
   template <typename VrtContextT, typename... Args>
   VirtualProxyType makeVirtualRemote(
-    NodeType const& node, bool isImmediate, ActionProxyType action,
+    NodeT const& node, bool isImmediate, ActionProxyType action,
     Args&&... args
   );
 
   void insertVirtualContext(VirtualPtrType new_vc, VirtualProxyType proxy);
 
   VirtualProxyType generateNewProxy();
-  VirtualRemoteIDType generateNewRemoteID(NodeType const& node);
+  VirtualRemoteIDType generateNewRemoteID(NodeT const& node);
 
   // All messages directed to a virtual context are routed through this handler
   // so the user's handler can be invoked with the pointer to the virtual
@@ -184,7 +184,7 @@ private:
   );
   void destroyVirtualByID(VirtualIDType const& lookupID, bool const is_remote);
   VirtualIDType getCurrentID() const;
-  NodeType getNode() const;
+  NodeT getNode() const;
 
  private:
   // Holder for local virtual contexts that are mapped to this node; VirtualInfo
@@ -198,10 +198,10 @@ private:
   VirtualIDType curIdent_;
 
   // The current identifier (for remote nodes) for this manager
-  std::unordered_map<NodeType, VirtualRemoteIDType> curRemoteID_;
+  std::unordered_map<NodeT, VirtualRemoteIDType> curRemoteID_;
 
   // Cache of the node for the virtual context manager
-  NodeType myNode_;
+  NodeT myNode_;
 
   // The current request identifier, used to track remote transactions
   VirtualRequestIDType cur_request_id = 0;

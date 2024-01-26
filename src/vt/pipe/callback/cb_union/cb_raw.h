@@ -64,7 +64,7 @@ struct AnonCB : CallbackAnonTypeless { };
 struct SendMsgCB : CallbackSendTypeless {
   SendMsgCB() = default;
   SendMsgCB(
-    HandlerType const in_handler, NodeType const& in_send_node
+    HandlerType const in_handler, ::vt::NodeT const& in_send_node
   ) : CallbackSendTypeless(in_handler, in_send_node)
   { }
 };
@@ -108,7 +108,7 @@ struct BcastObjGrpCB : CallbackObjGroupBcast {
 
 struct SendObjGrpCB : CallbackObjGroupSend {
   SendObjGrpCB() = default;
-  SendObjGrpCB(HandlerType in_handler, ObjGroupProxyType in_proxy, NodeType in_n)
+  SendObjGrpCB(HandlerType in_handler, ObjGroupProxyType in_proxy, ::vt::NodeT in_n)
     : CallbackObjGroupSend(in_handler, in_proxy, in_n)
   { }
 };

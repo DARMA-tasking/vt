@@ -124,7 +124,7 @@ void test_broadcast_1(std::string const& label) {
   using TestParamType = typename ColType::ParamType;
 
   auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto const& col_size = 32;
     auto range = TestIndex(col_size);
     TestParamType args = ConstructTuple<TestParamType>::construct();

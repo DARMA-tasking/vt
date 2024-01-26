@@ -50,7 +50,7 @@ struct TestTermGlobal : action::BaseFixture {};
 TEST_P(TestTermGlobal, test_term_detect_broadcast) /* NOLINT*/{
   if (channel::node == channel::root) {
     // start computation
-    channel::broadcast<channel::basicHandler>(1, vt::no_epoch);
+    channel::broadcast<channel::basicHandler>(vt::NodeT{1}, vt::no_epoch);
     // trigger detection and check status
     action::finalize(vt::no_epoch, order_);
   }

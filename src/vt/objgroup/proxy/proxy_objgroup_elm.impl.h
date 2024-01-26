@@ -141,7 +141,7 @@ ObjT* ProxyElm<ObjT>::get() const {
   return theObjGroup()->get<ObjT>(proxy);
 }
 
-inline ProxyElm<void>::ProxyElm(NodeType in_node) : node_{in_node} {}
+inline ProxyElm<void>::ProxyElm(::vt::NodeT in_node) : node_{in_node} {}
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
 void ProxyElm<void>::send(Args&&... args) const {

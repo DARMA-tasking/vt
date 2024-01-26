@@ -92,7 +92,7 @@ void colHandler(MyCol* col) {
   }
 }
 
-static NodeType map_fn(Index1D* idx, Index1D* max_idx, NodeType nnodes) {
+static NodeT map_fn(Index1D* idx, Index1D* max_idx, NodeT nnodes) {
   return mapping::dense1DRoundRobinMap(idx, max_idx, nnodes);
 }
 
@@ -118,7 +118,7 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
     auto token = proxy.beginModification();
 
     for (int i = 0; i < range.x() / 2; i++) {
-      if (i % num_nodes == this_node) {
+      if (vt::NodeT{i} % num_nodes == this_node) {
         proxy[i].insert(token);
       }
     }
@@ -129,7 +129,7 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
   for (int phase = 0; phase < num_phases; phase++) {
     // Do some work.
     runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.broadcast<colHandler>();
       }
     });
@@ -139,16 +139,16 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
 
     auto token = proxy.beginModification();
 
-    if (this_node == 0 and insert_counter < num_elms) {
+    if (this_node == vt::NodeT{0} and insert_counter < num_elms) {
       proxy[insert_counter].insert(token);
       insert_counter++;
     }
 
     // Try to re-insert an element that already exists to test for reinsertion
     // bugs
-    if (this_node == 0 or this_node == 1) {
-      proxy[0].insertAt(token, 1);
-      proxy[0].insertAt(token, 0);
+    if (this_node == vt::NodeT{0} or this_node == vt::NodeT{1}) {
+      proxy[0].insertAt(token, vt::NodeT{1});
+      proxy[0].insertAt(token, vt::NodeT{0});
     }
 
     proxy.finishModification(std::move(token));

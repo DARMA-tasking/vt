@@ -58,7 +58,7 @@ struct DefaultMapBase {
   using IndexType        = typename CollectionT::IndexType;
   using BaseType         = typename IndexType::DenseIndexType;
   using IndexPtrType     = IndexType*;
-  using MapParamPackType = std::tuple<IndexPtrType,IndexPtrType,NodeType>;
+  using MapParamPackType = std::tuple<IndexPtrType,IndexPtrType,NodeT>;
 };
 
 template <typename CollectionT, typename Enable = void>

@@ -57,31 +57,31 @@ int const invalid_entity = -1;
 
 struct EntityMsg : vt::Message {
 
-  EntityMsg(int in_entity, vt::NodeType in_home, bool in_large = false)
+  EntityMsg(int in_entity, vt::NodeT in_home, bool in_large = false)
     : entity_  (in_entity),
       home_    (in_home),
       is_large_(in_large)
   {}
 
   int entity_ = invalid_entity;
-  vt::NodeType home_ = vt::uninitialized_destination;
+  vt::NodeT home_ = vt::NodeT{};
   bool is_large_ = false;
 };
 
 struct ShortMsg : vt::LocationRoutedMsg<int, vt::ShortMessage> {
 
-  ShortMsg(int in_entity, vt::NodeType in_from)
+  ShortMsg(int in_entity, vt::NodeT in_from)
     : from_(in_from),
       entity_(in_entity)
   {}
 
-  vt::NodeType from_ = vt::uninitialized_destination;
+  vt::NodeT from_ = vt::NodeT{};
   int entity_ = invalid_entity;
 };
 
 struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
 
-  LongMsg(int in_entity, vt::NodeType in_from)
+  LongMsg(int in_entity, vt::NodeT in_from)
     : from_(in_from),
       entity_(in_entity),
       data_ ()
@@ -89,13 +89,13 @@ struct LongMsg : vt::LocationRoutedMsg<int, vt::Message> {
     std::memset(data_, 0, vt::location::small_msg_max_size);
   }
 
-  vt::NodeType from_ = vt::uninitialized_destination;
+  vt::NodeT from_ = vt::NodeT{};
   int entity_ = invalid_entity;
   char data_[vt::location::small_msg_max_size] = "";
 };
 
 struct SerialMsg : ShortMsg {
-  SerialMsg(int in_entity, vt::NodeType in_from)
+  SerialMsg(int in_entity, vt::NodeT in_from)
     : ShortMsg(in_entity, in_from)
   { }
 };
@@ -139,8 +139,8 @@ bool isCached(int const entity) {
 // - (previous) home node or not
 template <typename MsgT>
 void verifyCacheConsistency(
-  int const entity, vt::NodeType const my_node,
-  vt::NodeType const home, vt::NodeType const new_home, int const nb_rounds
+  int const entity, vt::NodeT const my_node,
+  vt::NodeT const home, vt::NodeT const new_home, int const nb_rounds
 ) {
 
   for (int iter = 0; iter < nb_rounds; ++iter) {

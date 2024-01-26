@@ -47,8 +47,8 @@
 namespace vt { namespace tests { namespace unit { namespace channel {
 
 template<typename Msg, vt::ActiveTypedFnType<Msg>* handler>
-void sendMsg(vt::NodeType dst, int count, vt::EpochType ep) {
-  vtAssert(dst != vt::uninitialized_destination, "Invalid destination");
+void sendMsg(vt::NodeT dst, int count, vt::EpochType ep) {
+  vtAssert(dst != vt::NodeT{}, "Invalid destination");
   vtAssert(dst != node, "Invalid destination");
 
   auto msg = makeMessage<Msg>(node, dst, count, ep);
@@ -63,7 +63,7 @@ void sendMsg(vt::NodeType dst, int count, vt::EpochType ep) {
 template<vt::ActiveTypedFnType<BasicMsg>* handler>
 void broadcast(int count, vt::EpochType ep) {
   auto msg = makeMessage<BasicMsg>(
-    node, vt::uninitialized_destination, count, ep
+    node, vt::NodeT{}, count, ep
   );
   if (ep != vt::no_epoch) {
     vt::envelopeSetEpoch(msg->env,ep);
@@ -79,25 +79,25 @@ void broadcast(int count, vt::EpochType ep) {
   }
 }
 
-inline void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep) {
+inline void routeBasic(vt::NodeT dst, int ttl, vt::EpochType ep) {
   sendMsg<BasicMsg,routedHandler>(dst, ttl, ep);
   // increment outgoing message counter
   data[ep].count_[dst].out_++;
 }
 
-inline void sendPing(vt::NodeType dst, int count, vt::EpochType ep) {
+inline void sendPing(vt::NodeT dst, int count, vt::EpochType ep) {
   sendMsg<CtrlMsg,pingHandler>(dst, count, ep);
 }
 
-inline void sendEcho(vt::NodeType dst, int count, vt::EpochType ep) {
+inline void sendEcho(vt::NodeT dst, int count, vt::EpochType ep) {
   vt_debug_print(
     normal, term,
     "rank:{} echo::dst {}\n",
     node, dst
   );
 
-  vtAssert(dst >= 0, "Invalid destination");
-  vtAssert(dst != vt::uninitialized_destination, "Invalid destination");
+  vtAssert(dst >= NodeT{0}, "Invalid destination");
+  vtAssert(dst != vt::NodeT{}, "Invalid destination");
   sendMsg<CtrlMsg, echoHandler>(dst, count, ep);
 }
 
@@ -118,9 +118,9 @@ inline void routedHandler(BasicMsg* msg) {
   vtAssert(node != root, "Cannot route from root");
   basicHandler(msg);
 
-  if (all > 2 && msg->ttl_ > 0) {
+  if (all > NodeT{2} && msg->ttl_ > 0) {
     // avoid implicit cast
-    vt::NodeType const one = 1;
+    vt::NodeT const one = NodeT{1};
     int const nb_rounds = static_cast<int>(drand48()*5);
 
     for (int k = 0; k < nb_rounds; ++k) {

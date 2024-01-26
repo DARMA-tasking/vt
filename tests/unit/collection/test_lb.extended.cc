@@ -163,7 +163,7 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   // setup
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
-  auto const next_node = (this_node + 1) % num_nodes;
+  auto const next_node = (this_node + vt::NodeT{1}) % num_nodes;
 
   auto id_from =
     elm::ElmIDBits::createCollectionImpl(true, 1, this_node, this_node);
@@ -189,13 +189,13 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   vt::theLBManager()->destroyLB();
 
   // assert
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     ASSERT_EQ(comm_data->size(), 1);
     return;
   }
 
   ASSERT_EQ(comm_data->size(), 2);
-  auto const prev_node = (this_node + num_nodes - 1) % num_nodes;
+  auto const prev_node = (this_node + num_nodes - NodeT{1}) % num_nodes;
   bool this_to_next = false, prev_to_this = false;
 
   for (auto&& elm : *comm_data) {
@@ -229,7 +229,7 @@ struct MyCol2 : vt::Collection<MyCol2,vt::Index1D> {};
 using TestLoadBalancerNoWork = TestParallelHarness;
 
 TEST_F(TestLoadBalancerNoWork, test_load_balancer_no_work) {
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodes().get();
   auto const range = Index1D(num_nodes * 8);
   theCollection()->constructCollective<MyCol2>(
     range, [](vt::Index1D) { return std::make_unique<MyCol2>(); },
@@ -719,8 +719,8 @@ getJsonStringForPhase(
 TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
   bool should_dump = GetParam();
 
-  auto this_node = vt::theContext()->getNode();
-  auto num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode().get();
+  auto num_nodes = vt::theContext()->getNumNodes().get();
 
   vt::vrt::collection::CollectionProxy<MyCol> proxy;
   auto const range = vt::Index1D(num_nodes * 1);

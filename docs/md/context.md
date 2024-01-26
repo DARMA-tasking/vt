@@ -18,7 +18,7 @@ provides the MPI communicator that an instance of \vt is currently using.
 To get the current node, one may query this method:
 
 \code{.cpp}
-vt::NodeType this_node = vt::theContext()->getNode();
+vt::NodeT this_node = vt::theContext()->getNode();
 \endcode
 
 \subsection get-num-nodes Number of nodes/ranks
@@ -29,7 +29,7 @@ To get the number of nodes or ranks that an instance of \vt is using, one may
 query this method:
 
 \code{.cpp}
-vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+vt::NodeT num_nodes = vt::theContext()->getNumNodes();
 \endcode
 
 \note The result from \c getNode or \c getNumNodes will depend on the

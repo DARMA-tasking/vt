@@ -160,8 +160,8 @@ void HierarchicalLB::setupTree(TimeType const threshold) {
     "Tree must not already be set up when is this called"
   );
 
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& this_node = theContext()->getNodeStrong();
+  auto const& num_nodes = theContext()->getNumNodesStrong();
 
   this_threshold = threshold.seconds();
 
@@ -171,8 +171,8 @@ void HierarchicalLB::setupTree(TimeType const threshold) {
     threshold
   );
 
-  for (NodeType node = 0; node < hierlb_nary; node++) {
-    NodeType const child = this_node * hierlb_nary + node + 1;
+  for (NodeT node = NodeT{0}; node < hierlb_nary; node++) {
+    NodeT const child = this_node * hierlb_nary + node + NodeT{1};
     if (child < num_nodes) {
       auto child_iter = children.find(child);
       vtAssert(child_iter == children.end(), "Child must not exist");
@@ -195,12 +195,12 @@ void HierarchicalLB::setupTree(TimeType const threshold) {
   );
 
   if (children.size() == 0) {
-    for (NodeType node = 0; node < hierlb_nary; node++) {
-      NodeType factor = num_nodes / hierlb_nary * hierlb_nary;
+    for (NodeT node = NodeT{0}; node < hierlb_nary; node++) {
+      NodeT factor = num_nodes / hierlb_nary * hierlb_nary;
       if (factor < num_nodes) {
         factor += hierlb_nary;
       }
-      NodeType const child = (this_node * hierlb_nary + node + 1) - factor - 1;
+      NodeT const child = (this_node * hierlb_nary + node + NodeT{1}) - factor - NodeT{1};
       if (child < num_nodes && child >= 0) {
         children.emplace(
           std::piecewise_construct,
@@ -218,14 +218,14 @@ void HierarchicalLB::setupTree(TimeType const threshold) {
     }
   }
 
-  parent = (this_node - 1) / hierlb_nary;
+  parent = (this_node - NodeT{1}) / hierlb_nary;
 
-  NodeType factor = num_nodes / hierlb_nary * hierlb_nary;
+  NodeT factor = num_nodes / hierlb_nary * hierlb_nary;
   if (factor < num_nodes) {
     factor += hierlb_nary;
   }
 
-  bottom_parent = ((this_node + 1 + factor) - 1) / hierlb_nary;
+  bottom_parent = ((this_node + NodeT{1} + factor) - NodeT{1}) / hierlb_nary;
 
   vt_debug_print(
     normal, hierlb,
@@ -253,7 +253,7 @@ double HierarchicalLB::getSumLoad() const {
 }
 
 void HierarchicalLB::loadStats() {
-  auto const& this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   auto avg_load = getAvgLoad();
   auto total_load = getSumLoad();
   auto I = getStats()->at(lb::Statistic::Rank_load_modeled).at(
@@ -271,7 +271,7 @@ void HierarchicalLB::loadStats() {
     this_threshold = std::min(std::max(1.0f - I, min_threshold), max_threshold);
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, hierlb,
       "loadStats: load={}, total={}, avg={}, I={:.2f},"
@@ -293,7 +293,7 @@ void HierarchicalLB::loadStats() {
     calcLoadOver(extract_strategy);
 
     lbTreeUpSend(
-      bottom_parent, this_load, this_node, load_over, 1
+      bottom_parent, this_load, this_node, load_over, NodeT{1}
     );
 
     if (children.size() == 0) {
@@ -394,7 +394,7 @@ void HierarchicalLB::startMigrations() {
     "startMigrations\n"
   );
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   for (auto&& bin : taken_objs) {
     for (auto&& obj_id : bin.second) {
@@ -404,7 +404,7 @@ void HierarchicalLB::startMigrations() {
 }
 
 void HierarchicalLB::downTreeSend(
-  NodeType const node, NodeType const from, ObjSampleType const& excess,
+  NodeT const node, NodeT const from, ObjSampleType const& excess,
   bool const final_child, std::size_t const& approx_size
 ) {
   proxy[node].template send<LBTreeDownMsg, &HierarchicalLB::downTreeHandler>(
@@ -413,7 +413,7 @@ void HierarchicalLB::downTreeSend(
 }
 
 void HierarchicalLB::downTree(
-  NodeType const from, ObjSampleType excess_load, bool const final_child
+  NodeT const from, ObjSampleType excess_load, bool const final_child
 ) {
   vt_debug_print(
     normal, hierlb,
@@ -465,8 +465,8 @@ std::size_t HierarchicalLB::getSize(ObjSampleType const& sample) {
 }
 
 void HierarchicalLB::lbTreeUpSend(
-  NodeType const node, LoadType const child_load, NodeType const child,
-  ObjSampleType const& load, NodeType const child_size
+  NodeT const node, LoadType const child_load, NodeT const child,
+  ObjSampleType const& load, NodeT const child_size
 ) {
   proxy[node].template send<LBTreeUpMsg, &HierarchicalLB::lbTreeUpHandler>(
     child_load, child, load, child_size
@@ -474,10 +474,10 @@ void HierarchicalLB::lbTreeUpSend(
 }
 
 void HierarchicalLB::lbTreeUp(
-  LoadType const child_load, NodeType const child, ObjSampleType load,
-  NodeType const child_size
+  LoadType const child_load, NodeT const child, ObjSampleType load,
+  NodeT const child_size
 ) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   vt_debug_print(
     normal, hierlb,
@@ -613,7 +613,7 @@ HierLBChild* HierarchicalLB::findMinChild() {
 }
 
 void HierarchicalLB::sendDownTree() {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   vt_debug_print(
     normal, hierlb,
@@ -693,7 +693,7 @@ void HierarchicalLB::sendDownTree() {
 }
 
 void HierarchicalLB::distributeAmongChildren() {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   vt_debug_print(
     normal, hierlb,
@@ -749,7 +749,7 @@ void HierarchicalLB::distributeAmongChildren() {
   }
 
   LoadType total_child_load = 0.0;
-  NodeType total_size = 0;
+  NodeT total_size = NodeT{0};
   for (auto&& child : children) {
     auto const& node = child.second->node;
     auto const& node_size = child.second->node_size;
@@ -763,7 +763,7 @@ void HierarchicalLB::distributeAmongChildren() {
     );
     if (is_live) {
       total_child_load += load;
-      total_size += node_size;
+      total_size += NodeT{node_size};
     }
   }
 

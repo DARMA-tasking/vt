@@ -81,23 +81,23 @@ TEST_F(TestCallbackFunc, test_callback_func_2) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  if (num_nodes < 2) {
+  if (num_nodes < vt::NodeT{2}) {
     return;
   }
 
   called = 0;
 
   runInEpochCollective([this_node]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       auto cb = theCB()->makeFunc(
         vt::pipe::LifetimeEnum::Once, []{ called = 400; }
       );
       auto msg = makeMessage<CallbackMsg>(cb);
-      theMsg()->sendMsg<test_handler>(1, msg);
+      theMsg()->sendMsg<test_handler>(vt::NodeT{1}, msg);
     }
   });
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     EXPECT_EQ(called, 400);
   }
 }

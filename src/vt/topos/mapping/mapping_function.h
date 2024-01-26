@@ -50,12 +50,10 @@
 namespace vt { namespace mapping {
 
 template <typename IndexT>
-using ActiveMapTypedFnType = NodeType(IndexT*, IndexT*, NodeType);
-using ActiveMapFnPtrType = NodeType(*)(
-  index::BaseIndex*, index::BaseIndex*, NodeType
-);
+using ActiveMapTypedFnType = NodeT(IndexT*, IndexT*, NodeT);
+using ActiveMapFnPtrType = NodeT(*)(index::BaseIndex*, index::BaseIndex*, NodeT);
 
-using ActiveSeedMapFnType = NodeType(SeedType, NodeType);
+using ActiveSeedMapFnType = NodeT(SeedType, NodeT);
 using ActiveSeedMapFnPtrType = ActiveSeedMapFnType*;
 using CollectionMapFnType = ActiveMapFnPtrType;
 

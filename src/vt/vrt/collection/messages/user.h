@@ -95,8 +95,8 @@ struct CollectionMessage : RoutedMessageType<BaseMsgT, typename ColT::IndexType>
   VirtualProxyType getBcastProxy() const;
   void setBcastProxy(VirtualProxyType const& in_proxy);
 
-  NodeType getFromNode() const;
-  void setFromNode(NodeType const& node);
+  NodeT getFromNode() const;
+  void setFromNode(NodeT const& node);
 
   bool getWrap() const;
   void setWrap(bool const& wrap);
@@ -124,7 +124,7 @@ private:
   VirtualProxyType bcast_proxy_{};
   VirtualElmProxyType<ColT, IndexType> to_proxy_{};
   HandlerType vt_sub_handler_ = uninitialized_handler;
-  NodeType from_node_ = uninitialized_destination;
+  NodeT from_node_ = {};
   bool is_wrap_ = false;
 
   #if vt_check_enabled(lblite)

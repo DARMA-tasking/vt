@@ -61,8 +61,14 @@ static void reduceTarget(MyCol* col, int val) {
 
 static void handler(MyCol* col) {
   auto proxy = col->getCollectionProxy();
+<<<<<<< HEAD
   int val = col->getIndex().x();
   proxy.reduce<reduceTarget, vt::collective::PlusOp>(proxy[0], val);
+=======
+  auto msg = vt::makeMessage<ReduceMsg>(static_cast<int>(col->getIndex().x()));
+  auto cb = vt::theCB()->makeSend<ReduceFunctor>(NodeT{0});
+  proxy.reduce<vt::collective::PlusOp<int>>(msg.get(), cb);
+>>>>>>> db4b7d85c (#2099: Types: Make NodeT a strong type and use it across the codebase)
 }
 
 TEST_P(TestReduceCollectionRace, test_reduce_race_1) {

@@ -58,7 +58,7 @@ extern char** test_argv;
  * Maximum number of ranks/nodes detected by CMake on this machine.
  * Defaults to number of processors detected on the host system.
  */
-constexpr NodeType CMAKE_DETECTED_MAX_NUM_NODES = vt_detected_max_num_nodes;
+constexpr NodeT CMAKE_DETECTED_MAX_NUM_NODES = NodeT{vt_detected_max_num_nodes};
 
 /**
  * Check whether we're oversubscribing on the current execution.

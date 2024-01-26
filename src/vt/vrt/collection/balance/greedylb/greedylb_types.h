@@ -59,7 +59,7 @@ struct GreedyLBTypes {
   using ObjBinType = int32_t;
   using ObjBinListType = std::list<ObjIDType>;
   using ObjSampleType = std::map<ObjBinType, ObjBinListType>;
-  using LoadProfileType = std::unordered_map<NodeType,LoadType>;
+  using LoadProfileType = std::unordered_map<NodeT,LoadType>;
 };
 
 struct GreedyRecord {
@@ -73,19 +73,19 @@ struct GreedyRecord {
   ObjType getObj() const { return obj_; }
 
 private:
-  GreedyLBTypes::ObjIDType obj_ = { elm::no_element_id, uninitialized_destination };
+  GreedyLBTypes::ObjIDType obj_ = { elm::no_element_id, NodeT{} };
   LoadType load_ = 0.0;
 };
 
 struct GreedyProc {
   GreedyProc() = default;
   GreedyProc(
-    NodeType const& in_node, LoadType const& in_load
+    NodeT const& in_node, LoadType const& in_load
   ) : node_(in_node), load_(in_load) {}
 
   LoadType getModeledLoad() const { return load_; }
 
-  NodeType node_ = uninitialized_destination;
+  NodeT node_ = {};
   LoadType load_ = 0.0;
   std::vector<GreedyLBTypes::ObjIDType> recs_;
 };

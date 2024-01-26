@@ -7,8 +7,8 @@ using namespace vt;
 struct ParticleCollection : vt::VirtualCollectionContext {
   std::vector<Particle> particles;
 
-  NodeType initial_map_to_node(index i) {
-    
+  NodeT initial_map_to_node(index i) {
+
   }
 };
 

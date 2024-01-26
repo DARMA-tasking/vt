@@ -72,14 +72,14 @@ struct MultipleFunctions {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     return vt::rerror("requires at least 2 nodes");
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto msg = vt::makeMessage<HelloMsg>(this_node);
 
     // 'HelloWorld' functor has only single 'operator()' declared
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     vt::theMsg()->broadcastMsg<HelloWorld>(msg);
 
     msg = vt::makeMessage<HelloMsg>(this_node);
-    vt::theMsg()->sendMsg<HelloWorld>(1, msg);
+    vt::theMsg()->sendMsg<HelloWorld>(vt::NodeT{1}, msg);
 
     // 'MultipleFunctions' functor declares more than one 'operator()'
     // so we have to specify the type of the message, as it can't be deduced
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
     vt::theMsg()->broadcastMsg<MultipleFunctions, AnotherMsg>(new_msg);
 
     msg = vt::makeMessage<HelloMsg>(this_node);
-    vt::theMsg()->sendMsg<MultipleFunctions, HelloMsg>(1, msg);
+    vt::theMsg()->sendMsg<MultipleFunctions, HelloMsg>(vt::NodeT{1}, msg);
   }
 
   vt::finalize();

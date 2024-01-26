@@ -64,24 +64,24 @@ struct GroupMsg : MsgT {
 
   GroupMsg(
     GroupType const& in_group, RemoteOperationIDType const& in_op,
-    NodeType const& in_root, bool const& in_default_group
+    NodeT const& in_root, bool const& in_default_group
   ) : MsgT(), group_(in_group), op_id_(in_op), root_(in_root),
       default_group_(in_default_group)
   { }
 
   GroupType getGroup() const { return group_; }
   RemoteOperationIDType getOpID() const { return op_id_; }
-  NodeType getRoot() const { return root_; }
+  NodeT getRoot() const { return root_; }
   bool isDefault() const { return default_group_; }
 
   void setGroup(GroupType const& group) { group_ = group; }
   void setOpID(RemoteOperationIDType const& op) { op_id_ = op; }
-  void setRoot(NodeType const& root) { root_ = root; }
+  void setRoot(NodeT const& root) { root_ = root; }
 
 protected:
   GroupType group_             = no_group;
   RemoteOperationIDType op_id_ = no_op_id;
-  NodeType root_               = uninitialized_destination;
+  NodeT root_               = {};
   bool default_group_          = false;
 };
 
@@ -91,27 +91,27 @@ template <typename MsgT>
 struct GroupInfoMsg : MsgT {
   GroupInfoMsg() = default;
   GroupInfoMsg(
-    NodeType const& in_root_node, NodeType const& in_num_nodes,
+    NodeT const in_root_node, size_t const in_num_nodes,
     GroupType const& in_group, RemoteOperationIDType in_op,
-    NodeType const& in_total_num_nodes,
-    NodeType const& in_parent_node = uninitialized_destination
+    size_t const in_total_num_nodes,
+    NodeT const in_parent_node = {}
   ) : MsgT(in_group, in_op), root_node_(in_root_node),
       num_nodes_(in_num_nodes), total_num_nodes_(in_total_num_nodes),
       parent_node_(in_parent_node)
   { }
 
-  NodeType getRoot() const { return root_node_; }
-  NodeType getCount() const { return num_nodes_; }
-  NodeType getTotalCount() const { return total_num_nodes_; }
-  NodeType getParent() const { return parent_node_; }
+  NodeT getRoot() const { return root_node_; }
+  size_t getCount() const { return num_nodes_; }
+  size_t getTotalCount() const { return total_num_nodes_; }
+  NodeT getParent() const { return parent_node_; }
   bool isStatic() const { return is_static_; }
 
 private:
-  NodeType root_node_       = uninitialized_destination;
-  NodeType num_nodes_       = uninitialized_destination;
-  NodeType total_num_nodes_ = uninitialized_destination;
-  bool is_static_           = true;
-  NodeType parent_node_     = uninitialized_destination;
+  NodeT root_node_        = {};
+  size_t num_nodes_       = {};
+  size_t total_num_nodes_ = {};
+  bool is_static_         = true;
+  NodeT parent_node_      = {};
 };
 
 struct GroupListMsg : GroupInfoMsg<GroupMsg<::vt::PayloadMessage>> {
@@ -119,9 +119,9 @@ struct GroupListMsg : GroupInfoMsg<GroupMsg<::vt::PayloadMessage>> {
 
   GroupListMsg() = default;
   GroupListMsg(
-    NodeType const& in_root_node, NodeType const& in_num_nodes,
+    NodeT const in_root_node, NodeT const in_num_nodes,
     GroupType const& in_group, RemoteOperationIDType in_op,
-    NodeType const& in_total_num_nodes, NodeType const& in_parent_node,
+    NodeT const in_total_num_nodes, NodeT const in_parent_node,
     RangeType* in_range
   ) : GroupInfoMsg(
         in_root_node, in_num_nodes, in_group, in_op, in_total_num_nodes,
@@ -147,9 +147,9 @@ struct GroupRangeMsg : GroupInfoMsg<GroupMsg<::vt::Message>> {
 
   GroupRangeMsg() = default;
   GroupRangeMsg(
-    NodeType const& in_root_node, NodeType const& in_num_nodes,
+    NodeT const& in_root_node, NodeT const& in_num_nodes,
     GroupType const& in_group, RemoteOperationIDType in_op,
-    NodeType const& in_total_num_nodes, NodeType const& in_parent_node,
+    NodeT const& in_total_num_nodes, NodeT const& in_parent_node,
     RangeType* in_range
   ) : GroupInfoMsg(
         in_root_node, in_num_nodes, in_group, in_op, in_total_num_nodes,

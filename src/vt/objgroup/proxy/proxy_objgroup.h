@@ -436,7 +436,7 @@ public:
    *
    * \return an indexed proxy to that node
    */
-  ProxyElm<ObjT> operator[](NodeType node) const;
+  ProxyElm<ObjT> operator[](BaseNodeType node) const;
 
   /**
    * \brief Index the proxy to get the element proxy for a particular node
@@ -445,7 +445,7 @@ public:
    *
    * \return an indexed proxy to that node
    */
-  ProxyElm<ObjT> operator()(NodeType node) const;
+  ProxyElm<ObjT> operator()(BaseNodeType node) const;
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -465,7 +465,7 @@ struct Proxy<void> {
    *
    * \return an indexed proxy to that node
    */
-  DefaultProxyElm operator[](NodeType node) const;
+  DefaultProxyElm operator[](BaseNodeType node) const;
 
   /**
    * \brief Broadcast a message.
@@ -544,7 +544,7 @@ struct Proxy<void> {
     typename MsgT,
     typename... Args
   >
-  messaging::PendingSend reduce(NodeType root, Args&&... args) const;
+  messaging::PendingSend reduce(BaseNodeType root, Args&&... args) const;
 
     template <
     typename OpT,
@@ -553,7 +553,7 @@ struct Proxy<void> {
     ActiveTypedFnType<MsgT>* f,
     typename... Args
   >
-  messaging::PendingSend reduce(NodeType root, Args&&... args) const;
+  messaging::PendingSend reduce(BaseNodeType root, Args&&... args) const;
 
   /**
    * \brief Reduce a message up the tree, possibly delayed through a pending
@@ -569,7 +569,7 @@ struct Proxy<void> {
     typename FunctorT,
     typename MsgT
   >
-  messaging::PendingSend reduceMsg(NodeType root, MsgT* const msg) const;
+  messaging::PendingSend reduceMsg(BaseNodeType root, MsgT* const msg) const;
 
   template <
     typename OpT,
@@ -577,7 +577,7 @@ struct Proxy<void> {
     typename MsgT,
     ActiveTypedFnType<MsgT>* f
   >
-  messaging::PendingSend reduceMsg(NodeType root, MsgT* const msg) const;
+  messaging::PendingSend reduceMsg(BaseNodeType root, MsgT* const msg) const;
 };
 
 using DefaultProxyType = Proxy<void>;

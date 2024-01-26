@@ -50,7 +50,7 @@
 namespace vt { namespace mapping {
 
 template <typename IndexT>
-using MapAdapter = PhysicalResourceType(IndexT*, IndexT*, PhysicalResourceType);
+using MapAdapter = NodeT(IndexT*, IndexT*, NodeT);
 
 template <typename F, F* f>
 using FunctorAdapt = ::vt::auto_registry::FunctorAdapter<F,f>;

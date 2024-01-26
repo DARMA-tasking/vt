@@ -83,7 +83,7 @@ TEST_F(TestCollectionPromoteMsg, test_collection_promote_1) {
   auto proxy = theCollection()->constructCollective<Hello>(
     num_elems, "test_collection_promote_1"
   );
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     proxy.broadcast<TestMsg,&Hello::doWork>("hello there");
   }
 }

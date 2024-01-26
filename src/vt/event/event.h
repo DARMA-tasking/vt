@@ -109,7 +109,7 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
    *
    * \return a new event identifier
    */
-  EventType createEvent(EventRecordTypeType const& type, NodeType const& node);
+  EventType createEvent(EventRecordTypeType const& type, ::vt::NodeT const& node);
 
   /**
    * \brief Get the event record
@@ -127,7 +127,7 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
    *
    * \return the node that owns the event
    */
-  NodeType getOwningNode(EventType const& event);
+  ::vt::NodeT getOwningNode(EventType const& event);
 
   /**
    * \brief Create a new MPI event that holds a MPI_Request
@@ -136,7 +136,7 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
    *
    * \return the event identifier
    */
-  EventType createMPIEvent(NodeType const& node);
+  EventType createMPIEvent(::vt::NodeT const& node);
 
   /**
    * \brief Create a regular type event
@@ -145,7 +145,7 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
    *
    * \return the event identifier
    */
-  EventType createNormalEvent(NodeType const& node);
+  EventType createNormalEvent(::vt::NodeT const& node);
 
   /**
    * \brief Create a parent event that can have multiple children
@@ -154,7 +154,7 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
    *
    * \return the event identifier
    */
-  EventType createParentEvent(NodeType const& node);
+  EventType createParentEvent(::vt::NodeT const& node);
 
   /**
    * \brief Get the holder for an event

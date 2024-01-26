@@ -72,7 +72,7 @@ struct CallbackSend : CallbackBase<signal::Signal<MsgT>> {
   CallbackSend(CallbackSend&&) = default;
 
   CallbackSend(
-    HandlerType const in_handler, NodeType const& in_send_node
+    HandlerType const in_handler, NodeT const& in_send_node
   );
 
   HandlerType getHandler() const { return handler_; }
@@ -91,7 +91,7 @@ private:
   void trigger_(SignalDataType* data) override;
 
 private:
-  NodeType send_node_  = uninitialized_destination;
+  NodeT send_node_  = {};
   HandlerType handler_ = uninitialized_handler;
 };
 

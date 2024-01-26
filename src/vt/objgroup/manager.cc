@@ -87,7 +87,7 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
   std::string const& label, HolderBasePtrType base, void* obj_ptr
 ) {
   auto const id = cur_obj_id_++;
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
   auto const is_collective = true;
   auto const proxy = proxy::ObjGroupProxy::create(id, node, is_collective);
 
@@ -107,7 +107,7 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
 
 ObjGroupManager::HolderBaseType* ObjGroupManager::getHolderBase(HandlerType han) {
   auto const ctrl = HandlerManager::getHandlerControl(han);
-  auto const node = 0;
+  auto const node = NodeT{0};
   auto const proxy = proxy::ObjGroupProxy::create(ctrl, node, true);
   vt_debug_print(
     normal, objgroup,
@@ -130,7 +130,7 @@ holder::HolderBase* getHolderBase(HandlerType handler) {
 elm::ElementIDStruct ObjGroupManager::getNextElm(ObjGroupProxyType proxy) {
   // Avoid startup races
   if (theNodeLBData()) {
-    auto const this_node = theContext()->getNode();
+    auto const this_node = theContext()->getNodeStrong();
     return elm::ElmIDBits::createObjGroup(proxy, this_node);
   } else {
     return elm::ElementIDStruct{};

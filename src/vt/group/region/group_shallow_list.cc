@@ -70,7 +70,7 @@ ShallowList::ShallowList(ListType const& in_list)
   vtAssert(0, "Can not be sorted");
 }
 
-/*virtual*/ bool ShallowList::contains(NodeType const& node) {
+/*virtual*/ bool ShallowList::contains(NodeT const& node) {
   for (decltype(size_) i = 0; i < size_; i++) {
     if (bound_[i] == node) {
       return true;

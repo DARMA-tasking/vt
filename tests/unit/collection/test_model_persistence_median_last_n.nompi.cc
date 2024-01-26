@@ -100,7 +100,7 @@ private:
 
 TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) {
   constexpr int32_t num_total_phases = 7;
-  NodeType this_node = 0;
+  NodeT this_node = NodeT{0};
 
   auto test_model =
     std::make_shared<PersistenceMedianLastN>(std::make_shared<StubModel>(), 4);

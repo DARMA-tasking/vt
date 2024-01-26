@@ -202,7 +202,7 @@ void Runtime::computeAndPrintDiagnostics() {
     });
   });
 
-  if (theContext->getNode() not_eq 0) {
+  if (theContext->getNodeStrong() not_eq 0) {
     return;
   }
 

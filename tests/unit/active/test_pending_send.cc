@@ -56,14 +56,14 @@ using namespace vt::tests::unit;
 struct TestPendingSend : TestParallelHarness {
   struct TestMsg : vt::Message {
     TestMsg() = default;
-    explicit TestMsg(vt::NodeType in_sender) : sender(in_sender) { }
-    vt::NodeType sender = uninitialized_destination;
+    explicit TestMsg(vt::NodeT in_sender) : sender(in_sender) { }
+    vt::NodeT sender = vt::NodeT{};
   };
   static void handlerPong(TestMsg*) { delivered = true; }
   static void handlerPing(TestMsg* in_msg) {
     auto const this_node = theContext()->getNode();
     auto const num_nodes = theContext()->getNumNodes();
-    auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+    auto prev = this_node - NodeT{1} >= 0 ? this_node - NodeT{1} : num_nodes - NodeT{1};
     auto msg = vt::makeMessage<TestMsg>();
     theMsg()->sendMsg<handlerPong>(prev, msg);
   }
@@ -88,7 +88,7 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   auto ep = theTerm()->makeEpochCollective();
   theMsg()->pushEpoch(ep);
 
-  auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+  auto next = this_node + vt::NodeT{1} < num_nodes ? this_node + vt::NodeT{1} : vt::NodeT{0};
 
   auto msg = vt::makeMessage<TestMsg>();
   auto msg_hold = promoteMsg(msg.get());

@@ -268,7 +268,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_4) {
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+  auto next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
   int32_t num_hans = 4;
   std::size_t num_vals = 10;
   int space = 100;

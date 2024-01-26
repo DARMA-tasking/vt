@@ -232,7 +232,7 @@ private:
     vt_msg_serialize_required(); // for SpecMapType
 
     SpecMsg() = default;
-    SpecMsg(SpecMapType in_mod, SpecMapType in_exact, NodeType in_root)
+    SpecMsg(SpecMapType in_mod, SpecMapType in_exact, NodeT in_root)
       : spec_mod_(in_mod),
         spec_exact_(in_exact),
         root_(in_root)
@@ -248,7 +248,7 @@ private:
 
     SpecMapType spec_mod_;
     SpecMapType spec_exact_;
-    NodeType root_ = uninitialized_destination;
+    NodeT root_ = {};
   };
 
   /**

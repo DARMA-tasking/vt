@@ -47,12 +47,12 @@
 namespace vt {namespace vrt {
 
 /*static*/ VirtualProxyType VirtualProxyBuilder::createProxy(
-  VirtualIDType const& id, NodeType const& node, bool const& is_coll,
+  VirtualIDType const& id, ::vt::NodeT const& node, bool const& is_coll,
   bool const& is_migratable, bool const& is_distributed
 ) {
-  constexpr NodeType const default_remote_node = 0;
+  constexpr NodeT const default_remote_node = NodeT{0};
   VirtualProxyType new_proxy = 0;
-  NodeType remote_node = is_distributed ? default_remote_node : node;
+  NodeT remote_node = is_distributed ? default_remote_node : node;
 
   setIsCollection(new_proxy, is_coll);
   setIsMigratable(new_proxy, is_migratable);
@@ -64,8 +64,8 @@ namespace vt {namespace vrt {
 }
 
 /*static*/ VirtualProxyType VirtualProxyBuilder::createRemoteProxy(
-  VirtualRemoteIDType const& id, NodeType const& this_node,
-  NodeType const& target_node, bool const& is_coll, bool const& is_migratable
+  VirtualRemoteIDType const& id, ::vt::NodeT const& this_node,
+  ::vt::NodeT const& target_node, bool const& is_coll, bool const& is_migratable
 ) {
   VirtualProxyType new_proxy = 0;
 
@@ -98,7 +98,7 @@ namespace vt {namespace vrt {
 }
 
 /*static*/ void VirtualProxyBuilder::setVirtualNode(
-  VirtualProxyType& proxy, NodeType const& node
+  VirtualProxyType& proxy, ::vt::NodeT const& node
 ) {
   BitPackerType::setField<eVirtualProxyBits::Node, virtual_node_num_bits>(
     proxy, node
@@ -114,7 +114,7 @@ namespace vt {namespace vrt {
 }
 
 /*static*/ void VirtualProxyBuilder::setVirtualRemoteNode(
-  VirtualProxyType& proxy, NodeType const& node
+  VirtualProxyType& proxy, ::vt::NodeT const& node
 ) {
   BitPackerType::setField<
     eVirtualProxyRemoteBits::RemoteNode, virtual_node_num_bits
@@ -147,11 +147,11 @@ namespace vt {namespace vrt {
   return BitPackerType::boolGetField<eVirtualProxyBits::Remote>(proxy);
 }
 
-/*static*/ NodeType VirtualProxyBuilder::getVirtualNode(
+/*static*/ ::vt::NodeT VirtualProxyBuilder::getVirtualNode(
   VirtualProxyType const& proxy
 ) {
   return BitPackerType::getField<
-    eVirtualProxyBits::Node, virtual_node_num_bits, NodeType
+    eVirtualProxyBits::Node, virtual_node_num_bits, ::vt::NodeT
   >(proxy);
 }
 

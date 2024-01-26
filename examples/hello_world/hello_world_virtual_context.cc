@@ -92,14 +92,14 @@ static void hello_world(HelloMsg* msg) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     return vt::rerror("requires at least 2 nodes");
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto proxy = vt::theVirtualManager()->makeVirtual<MyVC>(29);
     sendMsgToProxy(proxy);
 

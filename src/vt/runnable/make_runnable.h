@@ -74,7 +74,7 @@ struct RunnableMaker {
    */
   RunnableMaker(
     RunnableNew* in_impl, MsgSharedPtr<MsgT> const& in_msg,
-    HandlerType in_handler, NodeType in_from_node
+    HandlerType in_handler, NodeT in_from_node
   ) : impl_(in_impl),
       msg_(in_msg),
       handler_(in_handler),
@@ -312,7 +312,7 @@ private:
   MsgSharedPtr<MsgT> const& msg_;
   HandlerType handler_ = uninitialized_handler;
   bool set_handler_ = false;
-  NodeType from_node_ = uninitialized_destination;
+  NodeT from_node_ = {};
   bool is_done_ = false;
   bool is_term_ = false;
   bool has_msg_ = true;
@@ -331,7 +331,7 @@ private:
  */
 template <typename U>
 RunnableMaker<U> makeRunnable(
-  MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler, NodeType from
+  MsgSharedPtr<U> const& msg, bool is_threaded, HandlerType handler, NodeT from
 ) {
   auto r = new RunnableNew(msg, is_threaded);
 #if vt_check_enabled(trace_enabled)
@@ -356,7 +356,7 @@ RunnableMaker<U> makeRunnable(
  * \return the maker for further customization
  */
 inline RunnableMaker<BaseMsgType> makeRunnableVoid(
-  bool is_threaded, HandlerType handler, NodeType from
+  bool is_threaded, HandlerType handler, NodeT from
 ) {
   // These are currently only types of registry entries that can be void
   auto r = new RunnableNew(is_threaded);

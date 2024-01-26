@@ -275,7 +275,7 @@ extern runtime::Runtime* curRT;
 } /* end namespace vt */
 
 namespace vt { namespace debug {
-NodeType preNode();
+NodeT preNode();
 }} /* end namespace vt::debug */
 
 namespace vt { namespace config {
@@ -284,7 +284,7 @@ template <CatEnum cat, CtxEnum ctx, ModeEnum mod>
 struct DebugPrintOp;
 
 template <CatEnum cat, ModeEnum mod, typename Arg, typename... Args>
-static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
+static inline void debugPrintImpl(NodeT node, Arg&& arg, Args&&... args) {
   constexpr auto mask = ModeEnum::terse | ModeEnum::normal | ModeEnum::verbose;
   constexpr auto level = mod & mask;
   if (level <= vt::debug::preConfig()->vt_debug_level_val) {
@@ -332,7 +332,7 @@ struct DebugPrintOp<cat, CtxEnum::unknown, mod> {
   template <typename Arg, typename... Args>
   void operator()(bool const rt_option, Arg&& arg, Args&&... args) {
     if (rt_option or vt::debug::preConfig()->vt_debug_all) {
-      debugPrintImpl<cat,mod>(-1,std::forward<Arg>(arg),std::forward<Args>(args)...);
+      debugPrintImpl<cat,mod>(NodeT{-1},std::forward<Arg>(arg),std::forward<Args>(args)...);
     }
   }
 };

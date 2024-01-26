@@ -97,9 +97,9 @@ int main(int argc, char** argv) {
     num_iter = atoi(argv[3]);
   }
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     fmt::print(
       "lb_iter: elms={}, weight={}, num_iter={}\n",
       num_elms, weight, num_iter
@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
     });
 
     auto total_time = vt::timing::getCurrentTime() - cur_time;
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       fmt::print("iteration: iter={},time={}\n", i, total_time);
     }
 

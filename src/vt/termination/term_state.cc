@@ -55,7 +55,7 @@ void TermState::setCurWave(TermWaveType const& wave) {
   cur_wave_ = wave;
 }
 
-NodeType TermState::getNumChildren() const {
+NodeT TermState::getNumChildren() const {
   return num_children_;
 }
 
@@ -123,7 +123,7 @@ TermCounterType TermState::decrementDependency() {
 
 bool TermState::readySubmitParent() const {
   vtAssert(
-    num_children_ != uninitialized_destination, "Children must be valid"
+    num_children_ != NodeT{}, "Children must be valid"
   );
 
   auto const ret = epoch_active_ and local_terminated_ and
@@ -145,7 +145,7 @@ bool TermState::readySubmitParent() const {
 
 TermState::TermState(
   EpochType const& in_epoch, bool const in_local_terminated, bool const active,
-  NodeType const& children
+  NodeT const& children
 ) : EpochDependency(in_epoch, false),
     local_terminated_(in_local_terminated), epoch_active_(active),
     num_children_(children)
@@ -158,7 +158,7 @@ TermState::TermState(
   );
 }
 
-TermState::TermState(EpochType const& in_epoch, NodeType const& children)
+TermState::TermState(EpochType const& in_epoch, NodeT const& children)
   : EpochDependency(in_epoch, false), num_children_(children)
 {
   vt_debug_print(

@@ -52,7 +52,7 @@
 
 namespace vt { namespace location {
 
-using NodeActionType = std::function<void(NodeType)>;
+using NodeActionType = std::function<void (NodeT  )>;
 using LocMsgActionType = std::function<void(BaseMessage * )>;
 using LocEventID = int64_t;
 

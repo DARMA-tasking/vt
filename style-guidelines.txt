@@ -9,7 +9,7 @@
  * the order sane. Make type aliases whenever it seems useful. Do not hold back,
  * especially if the type is long or *could ever change*.
  */
-using NodeType = uint16_t;
+using NodeT = uint16_t;
 
 struct OtherClass {
   virtual void myTestMethod(int a) = 0;

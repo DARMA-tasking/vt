@@ -57,7 +57,7 @@ enum struct Lock : int8_t {
 
 struct LockMPI {
   LockMPI(
-    Lock in_l, vt::NodeType in_rank, MPI_Win in_window,
+    Lock in_l, vt::NodeT in_rank, MPI_Win in_window,
     bool get_mpi_access = true
   ) : l_(in_l),
       rank_(in_rank),
@@ -90,7 +90,7 @@ struct LockMPI {
 
 private:
   Lock l_ = Lock::None;
-  vt::NodeType rank_ = vt::uninitialized_destination;
+  vt::NodeT rank_ = vt::NodeT  {};
   MPI_Win window_;
   bool get_mpi_access_ = true;
 };

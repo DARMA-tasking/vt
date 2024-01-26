@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   if (this_node == 0) {
     my_global_ctx.x = 1283;

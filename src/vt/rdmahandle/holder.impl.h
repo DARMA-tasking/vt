@@ -84,7 +84,7 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
       &control_window_
     );
     {
-      auto this_node = theContext()->getNode();
+      auto this_node = theContext()->getNodeStrong();
       LockMPI _scope_lock(Lock::Exclusive, this_node, control_window_, false);
       auto mpi_type = TypeMPI<uint64_t>::getType();
       MPI_Put(&count_, 1, mpi_type, this_node, 0, 1, mpi_type, control_window_);
@@ -99,7 +99,7 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
 }
 
 template <typename T, HandleEnum E>
-std::size_t Holder<T,E>::getCount(vt::NodeType node, Lock l) {
+std::size_t Holder<T,E>::getCount(vt::NodeT node, Lock l) {
   uint64_t result = 0;
   auto mpi_type = TypeMPI<uint64_t>::getType();
   {
@@ -129,14 +129,14 @@ void Holder<T,E>::deallocate() {
 }
 
 template <typename T, HandleEnum E>
-std::shared_ptr<LockMPI> Holder<T,E>::lock(Lock l, vt::NodeType node) {
+std::shared_ptr<LockMPI> Holder<T,E>::lock(Lock l, vt::NodeT node) {
   return std::make_shared<LockMPI>(l, node, data_window_);
 }
 
 template <typename T, HandleEnum E>
 template <typename Callable>
 void Holder<T,E>::access(Lock l, Callable fn, std::size_t offset) {
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
 
   LockMPI _scope_lock(l, this_node, data_window_);
   fn(data_base_ + offset, count_ - offset);
@@ -144,7 +144,7 @@ void Holder<T,E>::access(Lock l, Callable fn, std::size_t offset) {
 
 template <typename T, HandleEnum E>
 RequestHolder Holder<T,E>::rget(
-  vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
+  vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset
 ) {
   auto mpi_type = TypeMPI<T>::getType();
   auto mpi_type_str = TypeMPI<T>::getTypeStr();
@@ -175,14 +175,14 @@ RequestHolder Holder<T,E>::rget(
 
 template <typename T, HandleEnum E>
 void Holder<T,E>::get(
-  vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
+  vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset
 ) {
   rget(node, l, ptr, len, offset);
 }
 
 template <typename T, HandleEnum E>
 RequestHolder Holder<T,E>::rput(
-  vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
+  vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset
 ) {
   auto mpi_type = TypeMPI<T>::getType();
   auto mpi_type_str = TypeMPI<T>::getTypeStr();
@@ -213,13 +213,13 @@ RequestHolder Holder<T,E>::rput(
 
 template <typename T, HandleEnum E>
 void Holder<T,E>::put(
-  vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
+  vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset
 ) {
   rput(node, l, ptr, len, offset);
 }
 
 template <typename T, HandleEnum E>
-T Holder<T,E>::fetchOp(vt::NodeType node, Lock l, T in, int offset, MPI_Op op) {
+T Holder<T,E>::fetchOp(vt::NodeT node, Lock l, T in, int offset, MPI_Op op) {
   auto mpi_type = TypeMPI<T>::getType();
   auto mpi_type_str = TypeMPI<T>::getTypeStr();
   T out;
@@ -238,7 +238,7 @@ T Holder<T,E>::fetchOp(vt::NodeType node, Lock l, T in, int offset, MPI_Op op) {
 
 template <typename T, HandleEnum E>
 RequestHolder Holder<T,E>::raccum(
-  vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset,
+  vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset,
   MPI_Op op
 ) {
   auto mpi_type = TypeMPI<T>::getType();
@@ -274,7 +274,7 @@ RequestHolder Holder<T,E>::raccum(
 
 template <typename T, HandleEnum E>
 void Holder<T,E>::accum(
-  vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset,
+  vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset,
   MPI_Op op
 ) {
   raccum(node, l, ptr, len, offset, op);
@@ -293,13 +293,13 @@ void Holder<T,E>::sync() {
 }
 
 template <typename T, HandleEnum E>
-void Holder<T,E>::flush(vt::NodeType node) {
+void Holder<T,E>::flush(vt::NodeT node) {
   VT_ALLOW_MPI_CALLS;
   MPI_Win_flush(node, data_window_);
 }
 
 template <typename T, HandleEnum E>
-void Holder<T,E>::flushLocal(vt::NodeType node) {
+void Holder<T,E>::flushLocal(vt::NodeT node) {
   VT_ALLOW_MPI_CALLS;
   MPI_Win_flush_local(node, data_window_);
 }

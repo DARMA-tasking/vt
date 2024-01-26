@@ -47,7 +47,7 @@ namespace vt { namespace tutorial {
 
 /// [Tutorial1H]
 void reduceResult(int result) {
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
   (void)num_nodes;  // don't warn about possibly unused variable
   fmt::print("reduction value={}\n", result);
   assert(num_nodes * 50 == result);
@@ -55,18 +55,24 @@ void reduceResult(int result) {
 
 // Tutorial code to demonstrate using reduction on all nodes
 static inline void activeMessageReduce() {
-  NodeType const this_node = ::vt::theContext()->getNode();
+  auto const this_node = ::vt::theContext()->getNode();
   (void)this_node;  // don't warn about unused variable
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
   (void)num_nodes;  // don't warn about unused variable
 
   /*
    * Perform reduction over all the nodes.
    */
-  NodeType const root_reduce_node = 0;
+
+  // This is the type of the reduction (uses the plus operator over the data
+  // type). Once can implement their own data type and overload the plus
+  // operator for the combine during the reduce
+  using ReduceOp = ::vt::collective::PlusOp<int32_t>;
+
+  auto const root_reduce_node = vt::NodeT{0};
 
   auto r = vt::theCollective()->global();
-  r->reduce<reduceResult, collective::PlusOp>(vt::Node{root_reduce_node}, 50);
+  r->reduce<reduceResult, collective::PlusOp>(vt::NodeT{root_reduce_node}, 50);
 }
 /// [Tutorial1H]
 

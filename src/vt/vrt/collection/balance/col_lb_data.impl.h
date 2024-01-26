@@ -81,7 +81,7 @@ void CollectionLBData::syncNextPhase(ColT* col, CollectStatsMsg<ColT>* msg) {
     idx.push_back(static_cast<uint64_t>(col->getIndex()[i]));
   }
 
-  auto migrate = [col](NodeType node){ col->migrate(node); };
+  auto migrate = [col](NodeT node){ col->migrate(node); };
   theNodeLBData()->registerCollectionInfo(col->elm_id_, proxy, idx, migrate);
 }
 

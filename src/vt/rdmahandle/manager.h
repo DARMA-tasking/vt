@@ -217,10 +217,10 @@ public:
   Holder<T,E>& getEntry(HandleKey const& key);
 
 private:
-  static vt::NodeType staticHandleMap(
-    vt::Index2D* idx, vt::Index2D*, vt::NodeType
+  static vt::NodeT staticHandleMap(
+    vt::Index2D* idx, vt::Index2D*, vt::NodeT
   ) {
-    return static_cast<vt::NodeType>(idx->x());
+    return static_cast<vt::NodeT  >(idx->x());
   }
 
   std::size_t getHolderFootprint() const;

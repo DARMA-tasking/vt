@@ -47,9 +47,9 @@ static int num_total_rings = 2;
 static int num_times = 0;
 
 struct RingMsg : vt::Message {
-  vt::NodeType from = vt::uninitialized_destination;
+  vt::NodeT from = {};
 
-  explicit RingMsg(vt::NodeType const& in_from)
+  explicit RingMsg(vt::NodeT const& in_from)
     : from(in_from)
   { }
 };
@@ -57,22 +57,24 @@ struct RingMsg : vt::Message {
 static void sendToNext();
 
 static void ring(RingMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
   fmt::print("{}: Hello from node {}: num_times={}\n", this_node, msg->from, num_times);
 
   num_times++;
 
-  if (msg->from != num_nodes - 1 or num_times < num_total_rings) {
+  if (msg->from != num_nodes - vt::NodeT{1} or num_times < num_total_rings) {
     sendToNext();
   }
 }
 
 static void sendToNext() {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
-  vt::NodeType next_node = this_node + 1 >= num_nodes ? 0 : this_node + 1;
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
+  auto next_node = this_node + vt::NodeT{1} >= num_nodes ?
+    vt::NodeT{0} :
+    this_node + vt::NodeT{1};
 
   auto msg = vt::makeMessage<RingMsg>(this_node);
   vt::theMsg()->sendMsg<ring>(next_node, msg);
@@ -81,14 +83,14 @@ static void sendToNext() {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     return vt::rerror("requires at least 2 nodes");
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     sendToNext();
   }
 

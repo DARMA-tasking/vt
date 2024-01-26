@@ -59,7 +59,7 @@ struct CallbackSendHandler : CallbackBase<signal::Signal<MsgT>> {
   using SignalDataType = typename SignalType::DataType;
   using MessageType    = MsgT;
 
-  CallbackSendHandler(NodeType const& in_send_node);
+  CallbackSendHandler(NodeT const& in_send_node);
 
   template <typename SerializerT>
   void serialize(SerializerT& s);
@@ -68,7 +68,7 @@ private:
   void trigger_(SignalDataType* data) override;
 
 private:
-  NodeType send_node_ = uninitialized_destination;
+  NodeT send_node_ = {};
 };
 
 }}} /* end namespace vt::pipe::callback */

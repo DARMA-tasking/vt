@@ -63,7 +63,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 void TemperedLB::init(objgroup::proxy::Proxy<TemperedLB> in_proxy) {
   proxy_ = in_proxy;
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   gen_propagate_.seed(this_node + 12345);
   gen_sample_.seed(this_node + 54321);
 }
@@ -306,7 +306,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     "knowledge=UserDefined"
   );
 
-  auto num_nodes = theContext()->getNumNodes();
+  auto num_nodes = theContext()->getNumNodesStrong().get();
   if (knowledge_ == KnowledgeEnum::Log) {
     if (specified_fanout) {
       // set the rounds based on the chosen fanout: k=log_f(p)
@@ -405,7 +405,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     "or another option"
   );
 
-  if (theContext()->getNode() == 0) {
+  if (theContext()->getNodeStrong() == 0) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::inputParams: using knowledge={}, fanout={}, rounds={}, "
@@ -453,7 +453,7 @@ void TemperedLB::runLB(LoadType total_load) {
     should_lb = max > (run_temperedlb_tolerance + 1.0) * target_max_load_;
   }
 
-  if (theContext()->getNode() == 0) {
+  if (theContext()->getNodeStrong() == NodeT{0}) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
@@ -480,7 +480,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
   LoadType best_imb = start_imb + 10;
   uint16_t best_trial = 0;
 
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
 
   for (trial_ = 0; trial_ < num_trials_; ++trial_) {
     // Clear out data structures
@@ -571,7 +571,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       }
     }
 
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       vt_debug_print(
         terse, temperedlb,
         "TemperedLB::doLBStages: trial={} {} imb={:0.4f}\n",
@@ -590,14 +590,14 @@ void TemperedLB::doLBStages(LoadType start_imb) {
     this_load = this_new_load_ = best_load;
     new_imbalance_ = best_imb;
 
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       vt_debug_print(
         terse, temperedlb,
         "TemperedLB::doLBStages: chose trial={} with imb={:0.4f}\n",
         best_trial, new_imbalance_
       );
     }
-  } else if (this_node == 0) {
+  } else if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::doLBStages: rejected all trials because they would increase imbalance\n"
@@ -613,8 +613,8 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
   auto const& in = vec[0];
   new_imbalance_ = in.I();
 
-  auto this_node = theContext()->getNode();
-  if (this_node == 0) {
+  auto this_node = theContext()->getNodeStrong();
+  if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::loadStatsHandler: trial={} iter={} max={} min={} "
@@ -633,8 +633,8 @@ void TemperedLB::rejectionStatsHandler(int n_rejected, int n_transfers) {
   double rej = static_cast<double>(n_rejected) /
     static_cast<double>(n_rejected + n_transfers) * 100.0;
 
-  auto this_node = theContext()->getNode();
-  if (this_node == 0) {
+  auto this_node = theContext()->getNodeStrong();
+  if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, temperedlb,
       "TemperedLB::rejectionStatsHandler: n_transfers={} n_rejected={} "
@@ -657,7 +657,7 @@ void TemperedLB::informAsync() {
 
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   if (is_underloaded_) {
     underloaded_.insert(this_node);
   }
@@ -704,7 +704,7 @@ void TemperedLB::informSync() {
 
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
 
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   if (is_underloaded_) {
     underloaded_.insert(this_node);
   }
@@ -768,9 +768,9 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     trial_, iter_, k_max_, k_cur
   );
 
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
-  std::uniform_int_distribution<NodeType> dist(0, num_nodes - 1);
+  auto const this_node = theContext()->getNodeStrong();
+  auto const num_nodes = theContext()->getNumNodesStrong();
+  std::uniform_int_distribution <NodeT::Type  > dist(0, num_nodes.get() - 1);
 
   if (!deterministic_) {
     gen_propagate_.seed(seed_());
@@ -782,7 +782,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     selected.insert(this_node);
   }
 
-  auto const fanout = std::min(f_, static_cast<decltype(f_)>(num_nodes - 1));
+  auto const fanout = std::min(f_, static_cast<decltype(f_)>(num_nodes.get() - 1));
 
   vt_debug_print(
     verbose, temperedlb,
@@ -798,11 +798,11 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     }
 
     // First, randomly select a node
-    NodeType random_node = uninitialized_destination;
+    NodeT random_node = {};
 
     // Keep generating until we have a unique node for this round
     do {
-      random_node = dist(gen_propagate_);
+      random_node = NodeT{dist(gen_propagate_)};
     } while (
       selected.find(random_node) != selected.end()
     );
@@ -921,7 +921,7 @@ std::vector<double> TemperedLB::createCMF(NodeSetType const& under) {
       double l_max = 0.0;
       for (auto&& pe : under) {
         auto iter = load_info_.find(pe);
-        vtAssert(iter != load_info_.end(), "Node must be in load_info_");
+        vtAssert(iter != load_info_.end(), "NodeT must be in load_info_");
         auto load = iter->second;
         if (load > l_max) {
           l_max = load;
@@ -936,7 +936,7 @@ std::vector<double> TemperedLB::createCMF(NodeSetType const& under) {
 
   for (auto&& pe : under) {
     auto iter = load_info_.find(pe);
-    vtAssert(iter != load_info_.end(), "Node must be in load_info_");
+    vtAssert(iter != load_info_.end(), "NodeT must be in load_info_");
 
     auto load = iter->second;
     sum_p += 1. - factor * load;
@@ -953,7 +953,7 @@ std::vector<double> TemperedLB::createCMF(NodeSetType const& under) {
   return cmf;
 }
 
-NodeType TemperedLB::sampleFromCMF(
+NodeT TemperedLB::sampleFromCMF(
   NodeSetType const& under, std::vector<double> const& cmf
 ) {
   // Create the distribution
@@ -963,7 +963,7 @@ NodeType TemperedLB::sampleFromCMF(
     gen_sample_.seed(seed_());
   }
 
-  NodeType selected_node = uninitialized_destination;
+  NodeT selected_node = {};
 
   // Pick from the CMF
   auto const u = dist(gen_sample_);
@@ -979,8 +979,8 @@ NodeType TemperedLB::sampleFromCMF(
   return selected_node;
 }
 
-std::vector<NodeType> TemperedLB::makeUnderloaded() const {
-  std::vector<NodeType> under = {};
+std::vector <NodeT  > TemperedLB::makeUnderloaded() const {
+  std::vector <NodeT  > under = {};
   for (auto&& elm : load_info_) {
     if (isUnderloaded(elm.second)) {
       under.push_back(elm.first);
@@ -992,10 +992,10 @@ std::vector<NodeType> TemperedLB::makeUnderloaded() const {
   return under;
 }
 
-std::vector<NodeType> TemperedLB::makeSufficientlyUnderloaded(
+std::vector<NodeT> TemperedLB::makeSufficientlyUnderloaded(
   LoadType load_to_accommodate
 ) const {
-  std::vector<NodeType> sufficiently_under = {};
+  std::vector <NodeT  > sufficiently_under = {};
   for (auto&& elm : load_info_) {
     bool eval = Criterion(criterion_)(
       this_new_load_, elm.second, load_to_accommodate, target_max_load_
@@ -1187,8 +1187,8 @@ void TemperedLB::decide() {
   int n_transfers = 0, n_rejected = 0;
 
   if (is_overloaded_) {
-    std::vector<NodeType> under = makeUnderloaded();
-    std::unordered_map<NodeType, ObjsType> migrate_objs;
+    std::vector <NodeT  > under = makeUnderloaded();
+    std::unordered_map<NodeT, ObjsType> migrate_objs;
 
     if (under.size() > 0) {
       std::vector<ObjIDType> ordered_obj_ids = orderObjects(
@@ -1310,7 +1310,7 @@ void TemperedLB::thunkMigrations() {
     cur_objs_.size()
   );
 
-  auto this_node = theContext()->getNode();
+  auto this_node = theContext()->getNodeStrong();
   for (auto elm : cur_objs_) {
     auto obj = elm.first;
     migrateObjectTo(obj, this_node);
@@ -1329,7 +1329,7 @@ void TemperedLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
 }
 
 void TemperedLB::lazyMigrateObjsTo(
-  EpochType epoch, NodeType node, ObjsType const& objs
+  EpochType epoch, NodeT node, ObjsType const& objs
 ) {
   using LazyMsg = balance::LazyMigrationMsg;
   auto msg = makeMessage<LazyMsg>(node, objs);

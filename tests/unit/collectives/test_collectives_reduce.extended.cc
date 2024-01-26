@@ -54,7 +54,7 @@ namespace vt { namespace tests { namespace unit {
 
 TEST_F(TestReduce, test_reduce_plus_default_op) {
   auto const my_node = theContext()->getNode();
-  auto const root = 0;
+  auto const root = NodeT{0};
 
   auto msg = makeMessage<SysMsg>(my_node);
   vt_debug_print(normal, reduce, "msg->num={}\n", msg->getConstVal());
@@ -65,7 +65,7 @@ TEST_F(TestReduce, test_reduce_plus_default_op) {
 
 TEST_F(TestReduce, test_reduce_max_default_op) {
   auto const my_node = theContext()->getNode();
-  auto const root = 0;
+  auto const root = NodeT{0};
 
   auto msg = makeMessage<SysMsg>(my_node);
   vt_debug_print(normal, reduce, "msg->num={}\n", msg->getConstVal());
@@ -76,7 +76,7 @@ TEST_F(TestReduce, test_reduce_max_default_op) {
 
 TEST_F(TestReduce, test_reduce_min_default_op) {
   auto const my_node = theContext()->getNode();
-  auto const root = 0;
+  auto const root = NodeT{0};
 
   auto msg = makeMessage<SysMsg>(my_node);
   vt_debug_print(normal, reduce, "msg->num={}\n", msg->getConstVal());
@@ -91,7 +91,7 @@ TEST_F(TestReduce, test_reduce_vec_bool_msg) {
   vecOfBool.push_back(false);
   vecOfBool.push_back(true);
 
-  auto const root = 0;
+  auto const root = NodeT{0};
   auto msg = makeMessage<ReduceVecMsg<bool>>(vecOfBool);
   theCollective()->global()->reduce<
     PlusOp<std::vector<bool>>, Verify<ReduceOP::Plus>
@@ -106,7 +106,7 @@ TEST_F(TestReduce, test_reduce_vec_int_msg) {
   vecOfInt.push_back(2);
   vecOfInt.push_back(3);
 
-  auto const root = 0;
+  auto const root = NodeT{0};
   auto const default_proxy = theObjGroup()->getDefault();
   default_proxy.reduce<
     PlusOp<std::vector<int>>,

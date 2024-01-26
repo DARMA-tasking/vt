@@ -214,7 +214,7 @@ void FileSpec::parse() {
 }
 
 void FileSpec::broadcastSpec() {
-  auto root = theContext()->getNode();
+  auto root = theContext()->getNodeStrong();
   proxy_.template broadcast<SpecMsg, &FileSpec::transferSpec>(
     spec_mod_, spec_exact_, root
   );

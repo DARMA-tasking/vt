@@ -58,14 +58,14 @@ struct MigrateMsg final : ::vt::Message {
 
   MigrateMsg() = default;
   MigrateMsg(
-    VrtElmProxy<ColT, IndexT> const& in_elm_proxy, NodeType const& in_from,
-    NodeType const& in_to, ColT* in_elm
+    VrtElmProxy<ColT, IndexT> const& in_elm_proxy, NodeT const& in_from,
+    NodeT const& in_to, ColT* in_elm
   ) : elm_proxy_(in_elm_proxy), from_(in_from), to_(in_to), elm_(in_elm)
   { }
 
   VrtElmProxy<ColT, IndexT> getElementProxy() const { return elm_proxy_; }
-  NodeType getFromNode() const { return from_; }
-  NodeType getToNode() const { return to_; }
+  NodeT getFromNode() const { return from_; }
+  NodeT getToNode() const { return to_; }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -78,8 +78,8 @@ struct MigrateMsg final : ::vt::Message {
 
 private:
   VrtElmProxy<ColT, IndexT> elm_proxy_;
-  NodeType from_ = uninitialized_destination;
-  NodeType to_ = uninitialized_destination;
+  NodeT from_ = {};
+  NodeT to_ = {};
 public:
   ColT* elm_ = nullptr;
 };

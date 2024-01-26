@@ -49,7 +49,7 @@ static constexpr int32_t const default_num_elms = 16;
 struct Hello : vt::Collection<Hello, vt::Index1D> {
 
   Hello() {
-    vt::NodeType this_node = vt::theContext()->getNode();
+    auto this_node = vt::theContext()->getNode();
     fmt::print("{}: Hello: index={}\n", this_node, getIndex());
     test_val = getIndex().x() * 29.3;
   }
@@ -66,14 +66,14 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
 };
 
 static void doWork(Hello* col) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
   fmt::print("{}: idx={}: val={}\n", this_node, col->getIndex(), col->test_val);
 }
 
 static void migrateToNext(Hello* col) {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
-  vt::NodeType next_node = (this_node + 1) % num_nodes;
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
+  auto next_node = (this_node + 1) % num_nodes;
 
   fmt::print("{}: migrateToNext: idx={}\n", this_node, col->getIndex());
   col->migrate(next_node);
@@ -82,10 +82,10 @@ static void migrateToNext(Hello* col) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     return vt::rerror("requires at least 2 nodes");
   }
 
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
     .bulkInsert()
     .wait();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     vt::runInEpochRooted([=] { proxy.broadcast<doWork>(); });
     vt::runInEpochRooted([=] { proxy.broadcast<migrateToNext>(); });
     vt::runInEpochRooted([=] { proxy.broadcast<doWork>(); });

@@ -54,7 +54,7 @@ namespace vt { namespace tests { namespace unit {
 struct MyMsg : vt::Message {
 
   MyMsg() : from_(vt::theContext()->getNode()) {}
-  vt::NodeType from_ = vt::uninitialized_destination;
+  vt::NodeT from_ = vt::NodeT{};
 };
 
 struct MyObjA {

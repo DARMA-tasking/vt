@@ -111,7 +111,7 @@ private:
 };
 
 TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
-  NodeType this_node = 0;
+  NodeT this_node = NodeT{0};
   ElementIDStruct id1{1,this_node};
   ElementIDStruct id2{2,this_node};
 
@@ -158,7 +158,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
 }
 
 TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
-  NodeType this_node = 0;
+  NodeT this_node = NodeT{0};
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{

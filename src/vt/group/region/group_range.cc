@@ -70,7 +70,7 @@ Range::Range(
   // do nothing, it's already sorted
 }
 
-/*virtual*/ bool Range::contains(NodeType const& node) {
+/*virtual*/ bool Range::contains(NodeT const& node) {
   // Range overlap: x1 <= y2 && y1 <= x2
   if (made_list_) {
     // List must be sorted
@@ -94,7 +94,7 @@ Range::Range(
 
 Range::Range(Range const& in_other, BoundType in_remove_extent)
   : Range(
-    in_other.lo_ + in_remove_extent * in_other.stride_,
+    BoundType{in_other.lo_ + in_remove_extent * in_other.stride_},
     in_other.hi_,
     in_other.stride_
   )
@@ -109,7 +109,7 @@ Range::Range(Range const& in_other, BoundType in_remove_extent)
 }
 
 /*virtual*/ Range::RegionUPtrType Range::tail() const {
-  return std::make_unique<Range>(lo_ + stride_, hi_, stride_);
+  return std::make_unique<Range>(BoundType{lo_ + stride_}, hi_, stride_);
 }
 
 /*virtual*/ Range::SplitRegionType Range::split() const {
@@ -118,8 +118,8 @@ Range::Range(Range const& in_other, BoundType in_remove_extent)
   vtAssert(
     size >= 2, "Size must be at least 2 to split"
   );
-  auto r1 = std::make_unique<Range>(lo_, lo_+span, stride_);
-  auto r2 = std::make_unique<Range>(lo_+span, hi_, stride_);
+  auto r1 = std::make_unique<Range>(lo_, BoundType{lo_+span}, stride_);
+  auto r2 = std::make_unique<Range>(BoundType{lo_+span}, hi_, stride_);
   return std::make_tuple(std::move(r1),std::move(r2));
 }
 
@@ -134,10 +134,10 @@ Range::Range(Range const& in_other, BoundType in_remove_extent)
   for (auto split = 0; split < num_splits; split++) {
     auto const& child_size = size / num_splits;
     auto hi_bound = split == num_splits - 1 ?
-      hi_ : std::min(static_cast<int>(hi_), cur_lo + child_size*stride_);
-    auto r1 = std::make_unique<Range>(cur_lo, hi_bound, stride_);
+      hi_ : std::min(hi_, cur_lo + child_size*stride_);
+    auto r1 = std::make_unique<Range>(cur_lo, BoundType{hi_bound}, stride_);
     apply(std::move(r1));
-    cur_lo += child_size*stride_;
+    cur_lo += BoundType{child_size*stride_};
   }
 }
 

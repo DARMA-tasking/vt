@@ -338,7 +338,7 @@ private:
    * \return the event ID for any generated events (like MPI_Requests)
    */
   EventType sendGroup(
-    MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
+    MsgSharedPtr<BaseMsgType> const& base, NodeT const from,
     bool const is_root,
     bool* const deliver
   );
@@ -354,7 +354,7 @@ private:
    * \return the event ID for any generated events (like MPI_Requests)
    */
   EventType sendGroupCollective(
-    MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
+    MsgSharedPtr<BaseMsgType> const& base, NodeT const from,
     bool const is_root,
     bool* const deliver
   );
@@ -376,7 +376,7 @@ public:
    *
    * \return the root node
    */
-  NodeType groupRoot(GroupType const group) const;
+  NodeT groupRoot(GroupType const group) const;
 
   /**
    * \brief Check if a group is the default group (all nodes, default spanning
@@ -430,7 +430,7 @@ private:
    * \return the event ID for any generated events (like MPI_Requests)
    */
   static EventType groupHandler(
-    MsgSharedPtr<BaseMsgType> const& msg, NodeType const from,
+    MsgSharedPtr<BaseMsgType> const& msg, NodeT const from,
     bool const is_root,
     bool* const deliver
   );

@@ -65,7 +65,7 @@ TerminationDetector::TerminationDetector()
   : collective::tree::Tree(collective::tree::tree_cons_tag_t),
     any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
     hang_(no_epoch, true, false, getNumChildren()),
-    this_node_(theContext()->getNode())
+    this_node_(theContext()->getNodeStrong())
 {
   pushEpoch(term::any_epoch_sentinel);
 }
@@ -543,7 +543,7 @@ void TerminationDetector::startEpochGraphBuild() {
 }
 
 /*static*/ void TerminationDetector::hangCheckHandler(HangCheckMsg* msg) {
-  fmt::print("{}:hangCheckHandler\n",theContext()->getNode());
+  fmt::print("{}:hangCheckHandler\n",theContext()->getNodeStrong());
   theTerm()->hang_.activateEpoch();
 }
 
@@ -574,13 +574,13 @@ void TerminationDetector::startEpochGraphBuild() {
   auto str = graph->outputDOT();
   graph->writeToFile(str);
   auto msg = makeMessage<MsgType>(graph);
-  NodeType root = 0;
+  NodeT root = NodeT{0};
   auto cb = vt::theCB()->makeSend<epochGraphBuiltHandler>(root);
 
   auto r = theTerm()->reducer();
   r->reduce<ReduceOp>(root, msg.get(), cb);
 
-  if (theContext()->getNode() != root) {
+  if (theContext()->getNodeStrong() != root) {
     theTerm()->has_printed_epoch_graph = true;
   }
 }
@@ -680,7 +680,7 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
 }
 
 void TerminationDetector::inquireTerminated(
-  EpochType const& epoch, NodeType const& from
+  EpochType const& epoch, NodeT const& from
 ) {
   auto const& is_rooted = epoch::EpochManip::isRooted(epoch);
   auto const& epoch_root_node = epoch::EpochManip::node(epoch);
@@ -948,7 +948,7 @@ void TerminationDetector::initializeRootedWaveEpoch(
     terse, term,
     "makeEpochRootedWave: root={}, epoch={:x}, successor={:x},"
     "label={}\n",
-    theContext()->getNode(), epoch, (EpochType)successor, label
+    theContext()->getNodeStrong(), epoch, (EpochType)successor, label
   );
 
   /*
@@ -1019,7 +1019,7 @@ EpochType TerminationDetector::makeEpochRooted(
   vt_debug_print(
     normal, term,
     "makeEpochRooted: root={}, use_ds={}, successor={:x}, label={}\n",
-    theContext()->getNode(), use_ds, (EpochType)successor, label
+    theContext()->getNodeStrong(), use_ds, (EpochType)successor, label
   );
 
   bool const force_use_ds = vt::theConfig()->vt_term_rooted_use_ds;

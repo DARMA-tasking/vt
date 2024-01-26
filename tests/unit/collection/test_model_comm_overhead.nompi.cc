@@ -118,13 +118,13 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
 
   // For simplicity's sake, the elements are on the home node
   // Element 1 (home node == 1)
-  ElementIDStruct const elem1 = {1, 1};
+  ElementIDStruct const elem1 = {1, NodeT{1}};
 
   // Element 2 (home node == 2)
-  ElementIDStruct const elem2 = {2, 2};
+  ElementIDStruct const elem2 = {2, NodeT{2}};
 
   // Element 3 (home node == 3)
-  ElementIDStruct const elem3 = {3, 3};
+  ElementIDStruct const elem3 = {3, NodeT{3}};
 
   ProcLoadMap proc_load = {{0, LoadMapType{{elem2, {LoadType{150}, {}}}}}};
 

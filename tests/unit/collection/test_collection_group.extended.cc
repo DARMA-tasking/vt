@@ -58,9 +58,9 @@ static int32_t elem_counter = 0;
 struct ColA : Collection<ColA,Index1D> {
 
   struct TestDataMsg : CollectionMessage<ColA> {
-    TestDataMsg(int32_t value) : value_(value) {}
+    TestDataMsg(NodeT value) : value_(value) {}
 
-    int32_t value_ = -1;
+    NodeT value_ = NodeT{-1};
   };
 
   void finishedReduce(int value) {
@@ -105,10 +105,10 @@ void runBcastTestHelper(f&& func) {
 struct TestCollectionGroup : TestParallelHarness { };
 
 TEST_F(TestCollectionGroup, test_collection_group_1) {
-  auto const my_node = theContext()->getNode();
+auto const my_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
   if (my_node == 0) {
-    auto const range = Index1D(std::max(num_nodes / 2, 1));
+    auto const range = Index1D(std::max(num_nodes.get() / 2, 1));
     auto const proxy = theCollection()->construct<ColA>(
       range, "test_collection_group_1"
     );
@@ -180,7 +180,7 @@ struct TestCollectionMsg : CollectionMessage<ColT> {
   using MessageParentType = CollectionMessage<ColT>;
   vt_msg_serialize_required();
 
-  explicit TestCollectionMsg(NodeType const node): node_{node} {
+  explicit TestCollectionMsg(NodeT const node): node_{node} {
     ::fmt::print("Creating TestCollectionMsg on node: {}\n", node_);
   }
 
@@ -197,12 +197,12 @@ struct TestCollectionMsg : CollectionMessage<ColT> {
     }
   }
 
-  NodeType fromNode() const { return node_; }
+  NodeT fromNode() const { return node_; }
 
   bool wasSerialized() const { return was_serialized_; }
 
 private:
-  NodeType node_{-1};
+  NodeT node_{-1};
   bool was_serialized_{false};
 };
 
@@ -270,7 +270,7 @@ TEST_F(TestCollectionGroup, test_collection_group_dont_serialize_when_invoke) {
 
   runInEpochCollective([proxy] {
     auto const this_node = theContext()->getNode();
-    proxy[this_node].invoke<
+    proxy[this_node.get()].invoke<
       TestCollectionMsg<TestCollection>, &TestCollection::handleInvokeMsg
     >(this_node);
   });

@@ -54,9 +54,9 @@
 namespace vt { namespace objgroup {
 
 template <typename MsgT>
-messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
-  auto const num_nodes = theContext()->getNumNodes();
-  auto const this_node = theContext()->getNode();
+messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeT dest_node) {
+  auto const num_nodes = theContext()->getNumNodesStrong();
+  auto const this_node = theContext()->getNodeStrong();
   vtAssert(dest_node < num_nodes, "Invalid node (must be < num_nodes)");
   if (dest_node != this_node) {
     return theMsg()->sendMsg<MsgT>(dest_node, han,msg, no_tag);
@@ -67,7 +67,7 @@ messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType de
       dispatchObjGroup(
         inner_msg.template to<ShortMessage>(),
         envelopeGetHandler(inner_msg->env),
-        theContext()->getNode(),
+        theContext()->getNodeStrong(),
         nullptr
       );
     }};
@@ -76,9 +76,9 @@ messaging::PendingSend send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType de
 
 template <typename ObjT, typename MsgT, auto f>
 decltype(auto) invoke(
-  messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node
+  messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeT dest_node
 ) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
 
   vtAssert(
     dest_node == this_node,
@@ -108,7 +108,7 @@ namespace detail {
 
 template <typename MsgT, typename ObjT>
 void dispatchImpl(
-  MsgSharedPtr<MsgT> const& msg, HandlerType han, NodeType from_node,
+  MsgSharedPtr<MsgT> const& msg, HandlerType han, NodeT from_node,
   ActionType cont, ObjT* obj
 ) {
   auto holder = detail::getHolderBase(han);
@@ -124,7 +124,7 @@ void dispatchImpl(
 
 template <typename MsgT>
 void dispatch(
-  MsgSharedPtr<MsgT> msg, HandlerType han, NodeType from_node,
+  MsgSharedPtr<MsgT> msg, HandlerType han, NodeT from_node,
   ActionType cont
 ) {
   // Extract the control-bit sequence from the handler
@@ -133,7 +133,7 @@ void dispatch(
     verbose, objgroup,
     "dispatch: ctrl={:x}, han={:x}\n", ctrl, han
   );
-  auto const node = 0;
+  auto const node = NodeT  {0};
   auto const proxy = proxy::ObjGroupProxy::create(ctrl, node, true);
   auto& objs = getObjs();
   auto obj_iter = objs.find(proxy);
@@ -166,7 +166,7 @@ void dispatch(
 
 template <typename MsgT>
 void dispatchObjGroup(
-  MsgSharedPtr<MsgT> msg, HandlerType han, NodeType from_node,
+  MsgSharedPtr<MsgT> msg, HandlerType han, NodeT from_node,
   ActionType cont
 ) {
   vt_debug_print(

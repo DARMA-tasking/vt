@@ -50,8 +50,8 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 static constexpr double   const hierlb_threshold_p      = 0.8f;
 static constexpr double   const hierlb_max_threshold_p  = 1.004f;
-static constexpr NodeType const hierlb_nary             = 2;
-static constexpr NodeType const hierlb_root             = 0;
+static constexpr NodeT    const hierlb_nary             = NodeT{2};
+static constexpr NodeT    const hierlb_root             = NodeT{0};
 static constexpr int32_t  const hierlb_bin_size         = 10;
 static constexpr double   const hierlb_no_load_sentinel = -1.0f;
 static constexpr double   const hierlb_tolerance        = 0.03f;

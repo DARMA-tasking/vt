@@ -73,7 +73,7 @@ template argument to `.mapperFunc<my_map>()`, where `my_map` has the following
 definition (shown for a 1-dimensional collection):
 
 \code{.cpp}
-vt::NodeType my_map(vt::Index1D* idx, vt::Index1D* bounds, vt::NodeType num_nodes) {
+vt::NodeT my_map(vt::Index1D* idx, vt::Index1D* bounds, vt::NodeT num_nodes) {
   return idx->x() % num_nodes;
 }
 \endcode
@@ -85,7 +85,7 @@ group instance that already exists by passing the proxy to it. Otherwise, one
 may just give the type and constructor arguments to create a new instance:
 `.mapperObjGroupConstruct<MyObjectGroup>(args...)`. An object group mapper must
 inherit from `vt::mapping::BaseMapper` and implement the pure virtual method
-`NodeType map(IdxT* idx, int ndim, NodeType num_nodes)` to define the mapping
+`NodeT map(IdxT* idx, int ndim, NodeT num_nodes)` to define the mapping
 for the runtime. As an example, the object group mapper used by default for
 unbounded collections is implemented as follows:
 
@@ -97,7 +97,7 @@ struct UnboundedDefaultMap : vt::mapping::BaseMapper<IdxT> {
     return proxy.getProxy();
   }
 
-  NodeType map(IdxT* idx, int ndim, NodeType num_nodes) override {
+  NodeT map(IdxT* idx, int ndim, NodeT num_nodes) override {
     typename IdxT::DenseIndexType val = 0;
     for (int i = 0; i < ndim; i++) {
       val ^= idx->get(i);
@@ -157,8 +157,8 @@ collective interface):
   auto range = vt::Index1D(num_elms);
   auto token = proxy.beginModification();
   for (int i = 0; i < range.x() / 2; i++) {
-    if (i % num_nodes == this_node) {
-      proxy[i].insertAt(token, i % 2);
+    if (vt::NodeT{i} % num_nodes == this_node) {
+      proxy[i].insertAt(token, vt::NodeT{i % 2});
     }
   }
   proxy.finishModification(std::move(token));

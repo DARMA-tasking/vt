@@ -46,6 +46,7 @@
 
 #include <functional>
 #include <type_traits>
+#include <stdint.h>
 
 namespace vt { namespace util { namespace strong { namespace detail {
 
@@ -71,11 +72,29 @@ struct Strong {
   constexpr Strong() = default;
 
   /**
-   * \brief Construct with a explicit initial value
+   * \brief Construct with a explicit initial value for non-arithmetic types
    *
    * \param[in] v the value
    */
+  template <
+    typename U = T,
+    typename std::enable_if_t<!std::is_arithmetic<U>::value, int> = 0>
   explicit constexpr Strong(T v) : v_(v) { }
+
+  /**
+   * \brief Construct with a explicit initial value for arithmetic types
+   *
+   * \param[in] v the value
+   */
+  template <
+    typename Integral,
+    typename std::enable_if_t<
+      std::is_arithmetic<Type>::value &&
+        std::is_convertible<Integral, Type>::value,
+      int
+    > = 0
+  >
+  explicit constexpr Strong(Integral v) : v_(static_cast<Type>(v)) { }
 
   /**
    * \brief Equal operator
@@ -132,6 +151,161 @@ struct Strong {
   }
 
   /**
+   * \brief Addition assignment operator
+   *
+   * \param[in] in the other value
+   */
+  ThisType& operator+=(const ThisType& in) {
+    v_ += in.v_;
+    return *this;
+  }
+
+  /**
+   * \brief Addition operator
+   *
+   * \param[in] in the other value
+   */
+  ThisType operator+(const ThisType& in) const {
+    return ThisType{v_ + in.v_};
+  }
+
+  /**
+   * \brief Subtraction operator
+   *
+   * \param[in] in the other value
+   */
+  ThisType operator-(const ThisType& in) const {
+    return ThisType{v_ - in.v_};
+  }
+
+  /**
+   * \brief Modulo operator
+   *
+   * \param[in] in the other value
+   */
+  ThisType operator%(const ThisType& in) const {
+    return ThisType{v_ % in.v_};
+  }
+
+  /**
+   * \brief Multiplication operator
+   *
+   * \param[in] in the other value
+   */
+  ThisType operator*(const ThisType& in) const {
+    return ThisType{v_ * in.v_};
+  }
+
+  /**
+   * \brief Division operator
+   *
+   * \param[in] in the other value
+   */
+  ThisType operator/(const ThisType& in) const {
+    return ThisType{v_ / in.v_};
+  }
+
+  /**
+   * \brief Addition assignment operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType& operator+=(const OtherType& in) {
+    v_ += static_cast<Type>(in);
+    return *this;
+  }
+
+  /**
+   * \brief Division assignment operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType& operator/=(const OtherType& in) {
+    v_ /= static_cast<Type>(in);
+    return *this;
+  }
+
+  /**
+   * \brief Multiplication assignment operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType& operator*=(const OtherType& in) {
+    v_ *= static_cast<Type>(in);
+    return *this;
+  }
+
+  /**
+   * \brief Addition operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType operator+(const OtherType& in) const {
+    return ThisType{v_ + static_cast<Type>(in)};
+  }
+
+  /**
+   * \brief Subtraction operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType operator-(const OtherType& in) const {
+    return ThisType{v_ - static_cast<Type>(in)};
+  }
+
+  /**
+   * \brief Modulo operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType operator%(const OtherType& in) const {
+    return ThisType{v_ % static_cast<Type>(in)};
+  }
+
+  /**
+   * \brief Multiplication operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType operator*(const OtherType& in) const {
+    return ThisType{v_ * static_cast<Type>(in)};
+  }
+
+  /**
+   * \brief Division operator
+   *
+   * \param[in] in the other value
+   */
+  template <typename OtherType>
+  ThisType operator/(const OtherType& in) const {
+    return ThisType{v_ / static_cast<Type>(in)};
+  }
+
+  /**
+   * \brief Pre-increment operator
+   */
+  ThisType& operator++() {
+    ++v_;
+    return *this;
+  }
+
+  /**
+   * \brief Post-increment operator
+   */
+  ThisType operator++(int) {
+    ThisType tmp{*this};
+    ++v_;
+    return tmp;
+  }
+
+  /**
    * \brief Dereference the value as a reference
    *
    * \return reference to underlying value
@@ -145,6 +319,7 @@ struct Strong {
    */
   T const& operator*() const { return v_; }
 
+  operator T() const { return v_; }
   /**
    * \brief Get reference
    *

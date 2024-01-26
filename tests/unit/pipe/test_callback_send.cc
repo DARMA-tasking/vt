@@ -141,10 +141,10 @@ TEST_F(TestCallbackSend, test_callback_send_remote_1) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
     auto cb = theCB()->makeSend<callbackFn>(this_node);
     theMsg()->send<applyCallbackMsg<DataMsg, int, int, int>>(
-      vt::Node{next}, cb, 1, 2, 3
+      vt::NodeT{next}, cb, 1, 2, 3
     );
   });
 
@@ -158,10 +158,10 @@ TEST_F(TestCallbackSend, test_callback_send_remote_2) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
     auto cb = theCB()->makeSend<CallbackFunctor>(this_node);
     theMsg()->send<applyCallbackMsg<DataMsg, int, int, int>>(
-      vt::Node{next}, cb, 1, 2, 3
+      vt::NodeT{next}, cb, 1, 2, 3
     );
   });
 
@@ -175,9 +175,9 @@ TEST_F(TestCallbackSend, test_callback_send_remote_3) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
     auto cb = theCB()->makeSend<CallbackFunctorEmpty>(this_node);
-    theMsg()->send<applyCallback<>>(vt::Node{next}, cb);
+    theMsg()->send<applyCallback<>>(vt::NodeT{next}, cb);
   });
 
   EXPECT_EQ(called, 300);
@@ -228,9 +228,9 @@ TEST_F(TestCallbackSend, test_callback_send_param_1) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<callbackVoidFn>(this_node);
-    theMsg()->send<applyCallback<>>(vt::Node{next}, cb);
+    theMsg()->send<applyCallback<>>(vt::NodeT{next}, cb);
   });
 
   EXPECT_EQ(called, 100);
@@ -243,9 +243,9 @@ TEST_F(TestCallbackSend, test_callback_send_param_2) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<callbackParamFn>(this_node);
-    theMsg()->send<applyCallback<int, int>>(vt::Node{next}, cb, 10, 20);
+    theMsg()->send<applyCallback<int, int>>(vt::NodeT{next}, cb, 10, 20);
   });
 
   EXPECT_EQ(called, 100);
@@ -258,9 +258,9 @@ TEST_F(TestCallbackSend, test_callback_send_param_3) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<callbackParamSerFn>(this_node);
-    theMsg()->send<applyCallback<std::string, int>>(vt::Node{next}, cb, "hello", 20);
+    theMsg()->send<applyCallback<std::string, int>>(vt::NodeT{next}, cb, "hello", 20);
   });
 
   EXPECT_EQ(called, 100);
@@ -273,9 +273,9 @@ TEST_F(TestCallbackSend, test_callback_send_param_4) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<CallbackVoidFn>(this_node);
-    theMsg()->send<applyCallback<>>(vt::Node{next}, cb);
+    theMsg()->send<applyCallback<>>(vt::NodeT{next}, cb);
   });
 
   EXPECT_EQ(called, 100);
@@ -288,9 +288,9 @@ TEST_F(TestCallbackSend, test_callback_send_param_5) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<CallbackParamFn>(this_node);
-    theMsg()->send<applyCallback<int, int>>(vt::Node{next}, cb, 10, 20);
+    theMsg()->send<applyCallback<int, int>>(vt::NodeT{next}, cb, 10, 20);
   });
 
   EXPECT_EQ(called, 100);
@@ -303,9 +303,9 @@ TEST_F(TestCallbackSend, test_callback_send_param_6) {
   called = 0;
 
   runInEpochCollective([this_node, num_nodes]{
-    NodeType next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    NodeT next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<CallbackParamSerFn>(this_node);
-    theMsg()->send<applyCallback<std::string, int>>(vt::Node{next}, cb, "hello", 20);
+    theMsg()->send<applyCallback<std::string, int>>(vt::NodeT{next}, cb, "hello", 20);
   });
 
   EXPECT_EQ(called, 100);

@@ -92,12 +92,12 @@ void CollectionMessage<ColT, BaseMsgT>::setBcastProxy(
 }
 
 template <typename ColT, typename BaseMsgT>
-NodeType CollectionMessage<ColT, BaseMsgT>::getFromNode() const {
+NodeT CollectionMessage<ColT, BaseMsgT>::getFromNode() const {
   return from_node_;
 }
 
 template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT, BaseMsgT>::setFromNode(NodeType const& node) {
+void CollectionMessage<ColT, BaseMsgT>::setFromNode(NodeT const& node) {
   from_node_ = node;
 }
 

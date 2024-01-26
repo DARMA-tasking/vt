@@ -65,7 +65,7 @@ template <typename MsgT>
 void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   static_assert(not std::is_same<MsgT, NoMsg>::value, "Must not be no msg");
 
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   vt_debug_print(
     terse, pipe,
     "CallbackSendTypeless: trigger_: pipe={:x}, this_node={}, send_node_={}\n",

@@ -55,7 +55,7 @@ inline HandlerType envelopeGetHandler(Env const& env) {
 }
 
 template <typename Env>
-inline NodeType envelopeGetDest(Env const& env) {
+inline BaseNodeType envelopeGetDest(Env const& env) {
   return reinterpret_cast<Envelope const*>(&env)->dest;
 }
 

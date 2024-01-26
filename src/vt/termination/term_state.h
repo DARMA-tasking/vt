@@ -71,7 +71,7 @@ struct TermState : EpochDependency, EpochLabel {
   EpochType getEpoch() const;
   TermWaveType getCurWave() const;
   void setCurWave(TermWaveType const& wave);
-  NodeType getNumChildren() const;
+  NodeT getNumChildren() const;
   bool noLocalUnits() const;
   void incrementDependency();
   TermCounterType decrementDependency();
@@ -80,9 +80,9 @@ struct TermState : EpochDependency, EpochLabel {
 
   TermState(
     EpochType const& in_epoch, bool const in_local_terminated, bool const active,
-    NodeType const& children
+    NodeT const& children
   );
-  TermState(EpochType const& in_epoch, NodeType const& children);
+  TermState(EpochType const& in_epoch, NodeT const& children);
 
   TermState(TermState const&) = default;
   TermState(TermState&&) = default;
@@ -128,7 +128,7 @@ private:
   TermCounterType deps_                       = 0;
 
   EventCountType recv_child_count_            = 0;
-  NodeType num_children_                      = uninitialized_destination;
+  NodeT num_children_                      = {};
   TermWaveType cur_wave_                      = 0;
   TermWaveType  submitted_wave_               = -1;
 };

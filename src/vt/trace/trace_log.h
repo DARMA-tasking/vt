@@ -268,7 +268,7 @@ struct Log final {
   // User event
   Log(
     TimeType const in_time, TraceConstantsType const in_type,
-    NodeType in_node,
+    NodeT in_node,
     UserEventIDType in_user_event, bool in_user_start
   ) : time(in_time), type(in_type),
       node(in_node),
@@ -279,7 +279,7 @@ struct Log final {
   // Used for idle
   Log(
     TimeType const in_time, TraceConstantsType const in_type,
-    NodeType in_node
+    NodeT in_node
   ) : time(in_time), type(in_type),
       node(in_node),
       data(Data::SysData{0})
@@ -289,7 +289,7 @@ struct Log final {
   // Used for messages
   Log(
     TimeType const in_time, TraceEntryIDType const in_ep, TraceConstantsType const in_type,
-    NodeType in_node,
+    NodeT in_node,
     TraceMsgLenType const in_msg_len
   ) : time(in_time), type(in_type), ep(in_ep),
       node(in_node),
@@ -309,7 +309,7 @@ struct Log final {
 
   Log(
     TimeType in_time, TraceEntryIDType in_ep, TraceConstantsType in_type,
-    TraceEventIDType in_event, TraceMsgLenType in_msg_len, NodeType in_node,
+    TraceEventIDType in_event, TraceMsgLenType in_msg_len, NodeT in_node,
     uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
   ) : time(in_time), type(in_type), ep(in_ep), event(in_event),
       node(in_node),
@@ -360,7 +360,7 @@ public:
   TraceEntryIDType ep = no_trace_entry_id;
   TraceEventIDType event = no_trace_event;
   // If the event relates to a DIFFERENT node.
-  NodeType node = uninitialized_destination;
+  NodeT node = {};
 
 private:
 

@@ -154,21 +154,21 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
 
   vt::CollectionProxy<TestCol, vt::Index1D> proxy;
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     proxy = theCollection()->construct<TestCol>(
       range, "test_callback_bcast_collection_1"
     );
   }
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       auto cb = theCB()->makeBcast<&TestCol::cb1>(proxy);
       cb.send(8,9,10);
     }
   });
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.broadcast<&TestCol::check>();
     }
   });
@@ -178,7 +178,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  if (num_nodes < 2) {
+  if (num_nodes < vt::NodeT{2}) {
     return;
   }
 
@@ -186,15 +186,15 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
 
   vt::CollectionProxy<TestCol, vt::Index1D> proxy;
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     proxy = theCollection()->construct<TestCol>(
       range, "test_callback_bcast_collection_2"
     );
   }
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
-      auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    if (this_node == vt::NodeT{0}) {
+      auto next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
       auto cb = theCB()->makeBcast<&TestCol::cb2>(proxy);
       auto msg = makeMessage<CallbackDataMsg>(cb);
       theMsg()->sendMsg<testHandler>(next, msg);
@@ -202,7 +202,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
   });
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.broadcast<&TestCol::check>();
     }
   });
@@ -250,7 +250,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  if (num_nodes < 2) {
+  if (num_nodes < vt::NodeT{2}) {
     return;
   }
 
@@ -258,15 +258,15 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
 
   vt::CollectionProxy<TestCol, vt::Index1D> proxy;
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     proxy = theCollection()->construct<TestCol>(
       range, "test_callback_bcast_collection_3"
     );
   }
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
-      auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    if (this_node == vt::NodeT{0}) {
+      auto next = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
       auto cb = theCB()->makeBcast<cb5>(proxy);
       auto msg = makeMessage<CallbackDataMsg>(cb);
       theMsg()->sendMsg<testHandler>(next, msg);
@@ -274,7 +274,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
   });
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.broadcast<&TestCol::check>();
     }
   });

@@ -85,7 +85,7 @@ struct ReduceMsg : SerializeSupported<
   ReduceStamp const& stamp() const { return reduce_id_.stamp(); }
   detail::ReduceScope const& scope() const { return reduce_id_.scope(); }
 
-  NodeType reduce_root_ = uninitialized_destination;
+  NodeT reduce_root_ = {};
   detail::ReduceIDImpl reduce_id_;
   HandlerType combine_handler_ = uninitialized_handler;
   HandlerType root_handler_ = uninitialized_handler;

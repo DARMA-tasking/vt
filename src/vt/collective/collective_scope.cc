@@ -80,7 +80,7 @@ TagType CollectiveScope::mpiCollectiveAsync(ActionType action) {
   // order. This implies that runCollective might be called with different tags
   // on different nodes. Thus, in runCollective, we will use a consensus
   // protocol to agree on a consistent tag across all the nodes.
-  NodeType collective_root = 0;
+  NodeT collective_root = NodeT{0};
 
   using CollectiveMsg = CollectiveAlg::CollectiveMsg;
   auto cb = theCB()->makeBcast<&CollectiveAlg::runCollective>();

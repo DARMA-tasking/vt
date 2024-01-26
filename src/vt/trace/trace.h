@@ -44,6 +44,7 @@
 #if !defined INCLUDED_VT_TRACE_TRACE_H
 #define INCLUDED_VT_TRACE_TRACE_H
 
+#include "vt/configs/types/types_node.h"
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_containers.h"
 #include "vt/trace/trace_log.h"
@@ -146,7 +147,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   TraceProcessingTag beginProcessing(
      TraceEntryIDType const ep, TraceMsgLenType const len,
-     TraceEventIDType const event, NodeType const from_node,
+     TraceEventIDType const event, ::vt::NodeT const from_node,
      TimeType const time,
      uint64_t const idx1 = 0, uint64_t const idx2 = 0,
      uint64_t const idx3 = 0, uint64_t const idx4 = 0
@@ -338,7 +339,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   TraceEventIDType messageRecv(
     TraceEntryIDType const ep, TraceMsgLenType const len,
-    NodeType const from_node, TimeType const time = getCurrentTime()
+    ::vt::NodeT const from_node, TimeType const time = getCurrentTime()
   );
 
   /**

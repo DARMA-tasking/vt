@@ -53,7 +53,7 @@
 namespace vt { namespace term { namespace ds {
 
 template <typename CommType>
-TermDS<CommType>::TermDS(EpochType in_epoch, bool isRoot_, NodeType self_)
+TermDS<CommType>::TermDS(EpochType in_epoch, bool isRoot_, NodeT self_)
   : EpochDependency(in_epoch, true),
     parent(-1), self(self_), C(0), ackedArbitrary(0), ackedParent(0),
     reqedParent(0), engagementMessageCount(0), D(0), processedSum(C)
@@ -90,7 +90,7 @@ void TermDS<CommType>::setRoot(bool isRoot) {
 }
 
 template <typename CommType>
-void TermDS<CommType>::msgSent(NodeType successor, CountType count) {
+void TermDS<CommType>::msgSent(NodeT successor, CountType count) {
   vtAssertExpr(successor >= 0);
   vtAssertInfo(
     1 && (C == processedSum - (ackedArbitrary + ackedParent)),
@@ -140,7 +140,7 @@ void TermDS<CommType>::doneSending() {
 }
 
 template <typename CommType>
-void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
+void TermDS<CommType>::msgProcessed(NodeT predecessor, CountType count) {
   vtAssertInfo(
     4 && (C == processedSum - (ackedArbitrary + ackedParent)),
     "DS-invariant", C, D, processedSum, ackedArbitrary,
@@ -214,7 +214,7 @@ void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
 
 template <typename CommType>
 void TermDS<CommType>::needAck(
-  NodeType const predecessor, CountType const count
+  NodeT const predecessor, CountType const count
 ) {
   vtAssertInfo(
     5 && (C == processedSum - (ackedArbitrary + ackedParent)),
@@ -309,7 +309,7 @@ void TermDS<CommType>::tryLast() {
       CommType::acknowledge(epoch_, parent, engagementMessageCount);
     }
 
-    parent = -1;
+    parent = NodeT{-1};
     C = ackedParent = ackedArbitrary = reqedParent = 0;
     engagementMessageCount = processedSum = 0;
 

@@ -68,8 +68,8 @@ static void msgHandlerX(MyDataMsg* msg);
 
 // Tutorial code to demonstrate broadcasting a message to the entire system
 static inline void activeMessageBroadcast() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
+  auto const this_node = ::vt::theContext()->getNode();
+  auto const num_nodes = ::vt::theContext()->getNumNodes();
   (void)num_nodes;  // don't warn about unused variable
 
   /*
@@ -90,7 +90,7 @@ static inline void activeMessageBroadcast() {
    *  Most calls to VT that supply a message are expected to relinquish ownership.
    */
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto const default_proxy = theObjGroup()->getDefault();
     default_proxy.broadcast<MyDataMsg, msgHandlerX>(1.0, 2.0, 3.0);
   }

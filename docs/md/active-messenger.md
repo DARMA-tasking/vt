@@ -49,14 +49,14 @@ struct MyMsg : vt::Message {
 
 // Active function pointer
 void myHandler(MyMsg* m) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeT this_node = vt::theContext()->getNode();
   fmt::print("{}: val={}, vec size={}\n", this_node, m->val, m->my_vec.size());
 }
 
 // Active functor
 struct MyFunctor {
   void operator()(MyMsg* m) {
-    vt::NodeType this_node = vt::theContext()->getNode();
+    vt::NodeT this_node = vt::theContext()->getNode();
     fmt::print("{}: val={}, vec size={}\n", this_node, m->val, m->my_vec.size());
   }
 };
@@ -64,9 +64,9 @@ struct MyFunctor {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeT this_node = vt::theContext()->getNode();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     // spins in scheduler until termination of the enclosed work
     vt::runInEpochRooted([=]{
       std::vector<double> vec_to_send;
@@ -74,10 +74,10 @@ int main(int argc, char** argv) {
       vec_to_send.push_back(54.);
 
       auto msg = vt::makeMessage<MyMsg>(10, vec_to_send);
-      vt::theMsg()->sendMsg<MyMsg, myHandler>(1, msg); // send to node 1
+      vt::theMsg()->sendMsg<MyMsg, myHandler>(vt::NodeT{1}, msg); // send to node 1
 
       auto msg2 = vt::makeMessage<MyMsg>(11, vec_to_send);
-      vt::theMsg()->sendMsg<MyFunctor>(1, msg2);  // send to node 1
+      vt::theMsg()->sendMsg<MyFunctor>(vt::NodeT{1}, msg2);  // send to node 1
     });
   }
 

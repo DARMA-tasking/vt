@@ -78,12 +78,12 @@ management.
         bool done = false;
 
         struct HelloMsg : vt::Message {
-          HelloMsg(vt::NodeType in_from) : from(in_from) { }
-          vt::NodeType from = 0;
+          HelloMsg(vt::NodeT in_from) : from(in_from) { }
+          vt::NodeT from = 0;
         };
 
         void hello_world(HelloMsg* msg) {
-          vt::NodeType this_node = vt::theContext()->getNode();
+          vt::NodeT this_node = vt::theContext()->getNode();
           fmt::print("{}: Hello from node {}\n", this_node, msg->from);
           done = true;
         }
@@ -91,10 +91,10 @@ management.
         int main(int argc, char** argv) {
           vt::initialize(argc, arv);
 
-          vt::NodeType this_node = vt::theContext()->getNode();
-          vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+          vt::NodeT this_node = vt::theContext()->getNode();
+          vt::NodeT num_nodes = vt::theContext()->getNumNodes();
 
-          if (this_node == 0) {
+          if (this_node == vt::NodeT{0}) {
             auto msg = vt::makeMessage<HelloMsg>(this_node);
             vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
             done = true;

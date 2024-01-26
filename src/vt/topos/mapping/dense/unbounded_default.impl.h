@@ -49,12 +49,12 @@
 namespace vt { namespace mapping {
 
 template <typename IdxT>
-NodeType UnboundedDefaultMap<IdxT>::map(IdxT* idx, int ndim, NodeType num_nodes) {
+NodeT UnboundedDefaultMap<IdxT>::map(IdxT* idx, int ndim, NodeT num_nodes) {
   typename IdxT::DenseIndexType val = 0;
   for (int i = 0; i < ndim; i++) {
     val ^= idx->get(i);
   }
-  return val % num_nodes;
+  return NodeT{val} % num_nodes;
 }
 
 template <typename IdxT>

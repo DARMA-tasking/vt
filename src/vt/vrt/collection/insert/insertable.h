@@ -44,6 +44,7 @@
 #if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_INSERTABLE_H
 #define INCLUDED_VT_VRT_COLLECTION_INSERT_INSERTABLE_H
 
+#include "vt/configs/types/types_node.h"
 #include "vt/config.h"
 #include "vt/vrt/collection/send/sendable.h"
 #include "vt/vrt/collection/insert/modify_token.h"
@@ -80,7 +81,7 @@ struct ElmInsertable : BaseProxyT {
    * \param[in] token the modifier token
    * \param[in] node the node to insert on
    */
-  void insertAt(ModifierToken& token, NodeType node) const;
+  void insertAt(ModifierToken& token, ::vt::NodeT node) const;
 
   /**
    * \brief Insert a new collection element, calling the constructor that takes
@@ -104,7 +105,7 @@ struct ElmInsertable : BaseProxyT {
    */
   template <typename MsgT>
   void insertAtMsg(
-    ModifierToken& token, NodeType node, messaging::MsgPtrThief<MsgT> msg
+    ModifierToken& token, ::vt::NodeT node, messaging::MsgPtrThief<MsgT> msg
   ) const;
 
   /**

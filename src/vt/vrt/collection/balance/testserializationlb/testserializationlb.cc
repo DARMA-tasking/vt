@@ -61,7 +61,7 @@ void TestSerializationLB::init(objgroup::proxy::Proxy<TestSerializationLB>) {
 void TestSerializationLB::inputParams(balance::ConfigEntry*) { }
 
 void TestSerializationLB::runLB(LoadType) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   for (auto obj : *load_model_) {
     auto const load = load_model_->getModeledLoad(
       obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}

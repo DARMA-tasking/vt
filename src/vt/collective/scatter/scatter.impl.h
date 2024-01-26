@@ -59,9 +59,9 @@ void Scatter::scatter(
   std::size_t const& total_size, std::size_t const& max_proc_size,
   FuncSizeType size_fn, FuncDataType data_fn
 ) {
-  auto const& num_nodes = theContext()->getNumNodes();
-  auto const& elm_size = max_proc_size;
-  auto const& combined_size = num_nodes * elm_size;
+  auto const num_nodes = theContext()->getNumNodesStrong();
+  auto const elm_size = max_proc_size;
+  auto const combined_size = static_cast<size_t>(num_nodes * elm_size);
   auto scatter_msg =
     makeMessageSz<ScatterMsg>(combined_size, combined_size, elm_size);
   vtAssert(total_size == combined_size, "Sizes must be consistent");
@@ -83,14 +83,14 @@ void Scatter::scatter(
     total_size, elm_size, sizeof(ScatterMsg), print_ptr(scatter_msg.get()),
     print_ptr(ptr), remaining_size
   );
-  auto const& root_node = 0;
+  auto const root_node = NodeT  {0};
   auto nptr = applyScatterRecur(root_node, ptr, elm_size, size_fn, data_fn);
   vt_debug_print(
     verbose, scatter, "Scatter::scatter: incremented size={}\n", nptr - ptr
   );
   vtAssert(nptr == ptr + combined_size, "nptr must match size");
   auto const& handler = auto_registry::makeScatterHandler<MessageT, f>();
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   scatter_msg->user_han = handler;
   if (this_node != root_node) {
     theMsg()->sendMsg<scatterHandler>(

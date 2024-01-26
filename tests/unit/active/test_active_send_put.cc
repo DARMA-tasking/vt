@@ -61,13 +61,13 @@ struct PutTestMessage : ::vt::PayloadMessage {
 };
 
 struct TestActiveSendPut : TestParameterHarnessNode {
-  static NodeType from_node;
-  static NodeType to_node;
+  static inline NodeT from_node;
+  static inline NodeT to_node;
 
   virtual void SetUp() {
     TestParameterHarnessNode::SetUp();
-    from_node = 0;
-    to_node = 1;
+    from_node = NodeT{0};
+    to_node = NodeT{1};
   }
 
   static void test_handler(PutTestMessage* msg) {
@@ -86,8 +86,8 @@ struct TestActiveSendPut : TestParameterHarnessNode {
   }
 };
 
-/*static*/ NodeType TestActiveSendPut::from_node;
-/*static*/ NodeType TestActiveSendPut::to_node;
+// /*static*/ NodeT TestActiveSendPut::from_node;
+// /*static*/ NodeT TestActiveSendPut::to_node;
 
 TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
   SET_MIN_NUM_NODES_CONSTRAINT(2);
@@ -113,7 +113,7 @@ TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
     #if DEBUG_TEST_HARNESS_PRINT
       fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
     #endif
-    theMsg()->sendMsg<test_handler>(1, msg);
+    theMsg()->sendMsg<test_handler>(vt::NodeT{1}, msg);
   }
 
   // Spin here so test_vec does not go out of scope before the send completes
@@ -122,7 +122,7 @@ TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
 
 INSTANTIATE_TEST_SUITE_P(
   InstantiationName, TestActiveSendPut,
-  ::testing::Range(static_cast<NodeType>(2), static_cast<NodeType>(512), 4)
+  ::testing::Range(static_cast<NodeT>(2), static_cast<NodeT>(512), 4)
 );
 
 }}}} // end namespace vt::tests::unit::send_put

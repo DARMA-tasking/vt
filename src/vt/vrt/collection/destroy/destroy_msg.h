@@ -59,12 +59,12 @@ struct DestroyMsg final : ::vt::Message {
   DestroyMsg() = default;
   DestroyMsg(
     CollectionProxyType const& in_proxy,
-    NodeType const& in_from
+    NodeT const& in_from
   ) : proxy_(in_proxy), from_(in_from)
   { }
 
   CollectionProxyType getProxy() const { return proxy_; }
-  NodeType getFromNode() const { return from_; }
+  NodeT getFromNode() const { return from_; }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -73,7 +73,7 @@ struct DestroyMsg final : ::vt::Message {
 
 private:
   CollectionProxyType proxy_;
-  NodeType from_ = uninitialized_destination;
+  NodeT from_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */

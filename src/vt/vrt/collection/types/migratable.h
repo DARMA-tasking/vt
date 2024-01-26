@@ -68,7 +68,7 @@ struct Migratable : MigrateHookBase, storage::Storable {
    * The user or runtime system can invoke this method at any time (when a valid
    * pointer to it exists) to migrate this VCC element to another memory domain
    *
-   *  1.  Invoke migrate(node) where node != theContext()->getNode()
+   *  1.  Invoke migrate(node) where node != theContext()->getNodeStrong()
    *  2.  Runtime system invokes Migratable::preMigrateOut()
    *  3.  Migratable element is serialized
    *  4.  Migratable element is sent to the destination node
@@ -90,12 +90,12 @@ struct Migratable : MigrateHookBase, storage::Storable {
   /*
     @todo: migrate interface is through base class HasMigrate to insert lower in
            the hierarchy
-     virtual void migrate(NodeType const& node);
+     virtual void migrate(NodeT const& node);
   */
 
   /*
    * The system invokes this when the destructor is about to be called on the
-   * VCC element due a migrate(NodeType const&) invocation
+   * VCC element due a migrate(NodeT const&) invocation
    */
   virtual void destroy();
 

@@ -96,10 +96,10 @@ void RandomLB::inputParams(balance::ConfigEntry* config) {
 }
 
 void RandomLB::runLB(LoadType) {
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
       randomize_seed_, seed_
@@ -128,7 +128,7 @@ void RandomLB::runLB(LoadType) {
 
   // we skip the first object to be certain we never end up with zero objects
   for (auto it = ++objs.begin(); it != objs.end(); ++it) {
-    auto const to_node = dist(gen);
+    auto const to_node = NodeT{dist(gen)};
     if (to_node != this_node) {
       vt_debug_print(
         terse, lb,

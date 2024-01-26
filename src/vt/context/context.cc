@@ -81,15 +81,15 @@ Context::Context(bool const is_interop, MPI_Comm comm) {
   // Always duplicate, which may be MPI_COMM_WORLD.
   MPI_Comm_dup(comm, &comm);
 
-  int numNodesLocal = uninitialized_destination;
-  int thisNodeLocal = uninitialized_destination;
+  int numNodesLocal = {};
+  int thisNodeLocal = {};
 
   MPI_Comm_size(comm, &numNodesLocal);
   MPI_Comm_rank(comm, &thisNodeLocal);
 
   communicator_ = comm;
-  numNodes_ = static_cast<NodeType>(numNodesLocal);
-  thisNode_ = static_cast<NodeType>(thisNodeLocal);
+  numNodes_ = static_cast <NodeT  >(numNodesLocal);
+  thisNode_ = static_cast <NodeT  >(thisNodeLocal);
 }
 
 Context::~Context() {
@@ -100,7 +100,7 @@ void Context::setTask(runnable::RunnableNew* in_task) {
   cur_task_ = in_task;
 }
 
-NodeType Context::getFromNodeCurrentTask() const {
+NodeT Context::getFromNodeCurrentTask() const {
 #if !vt_check_enabled(trace_only)
   if (getTask() != nullptr) {
     auto from = getTask()->get<ctx::SetContext>();
@@ -109,7 +109,7 @@ NodeType Context::getFromNodeCurrentTask() const {
     }
   }
 #endif
-  return getNode();
+  return getNodeStrong();
 }
 
 #if vt_check_enabled(trace_enabled)
@@ -130,22 +130,22 @@ trace::TraceEventIDType Context::getTraceEventCurrentTask() const {
 
 namespace vt { namespace debug {
 
-NodeType preNode() {
+NodeT preNode() {
   #if !vt_check_enabled(trace_only)
   return ::vt::curRT != nullptr and ::vt::curRT->isLive() ?
-    theContext()->getNode() :
-    -1;
+    theContext()->getNodeStrong() :
+    NodeT{-1};
   #else
-    return theContext() ? theContext()->getNode() : -1;
+    return theContext() ? theContext()->getNodeStrong() : NodeT{-1};
   #endif
 }
-NodeType preNodes() {
+NodeT preNodes() {
   #if !vt_check_enabled(trace_only)
   return ::vt::curRT != nullptr and ::vt::curRT->isLive() ?
-    theContext()->getNumNodes() :
-    -1;
+    theContext()->getNumNodesStrong() :
+    NodeT{-1};
   #else
-    return theContext() ? theContext()->getNode() : -1;
+    return theContext() ? theContext()->getNodeStrong() : NodeT{-1};
   #endif
 }
 

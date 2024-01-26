@@ -123,7 +123,7 @@ TEST_F(TestMemoryLifetime, test_active_send_serial_lifetime) {
   auto const& num_nodes = theContext()->getNumNodes();
 
   runInEpochCollective([&]{
-    auto const next_node = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto const next_node = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeMessage<SerialTestMsg>();
       theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, msg);
@@ -158,7 +158,7 @@ TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_msgptr) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  auto const next_node = this_node + 1 < num_nodes ? this_node + 1 : 0;
+  auto const next_node = this_node + NodeT{1} < num_nodes ? this_node + NodeT{1} : NodeT{0};
   for (int i = 0; i < num_msgs_sent; i++) {
     auto msg = makeMessage<NormalTestMsg>();
     // sendMsg takes MsgPtr ownership - keep our own handle

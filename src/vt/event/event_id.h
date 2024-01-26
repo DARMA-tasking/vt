@@ -55,7 +55,7 @@ static constexpr BitCountType const event_identifier_num_bits = 32;
 
 enum eEventIDBits {
   Node       = 0,
-  EventIdent = eEventIDBits::Node       + node_num_bits
+  EventIdent = eEventIDBits::Node + node_num_bits
 };
 
 struct EventIDManager {
@@ -63,9 +63,9 @@ struct EventIDManager {
 
   EventIDManager() = default;
 
-  static EventType makeEvent(EventIdentifierType const& id, NodeType const& node);
-  static NodeType getEventNode(EventType const& event);
-  static void setEventNode(EventType& event, NodeType const& node);
+  static EventType makeEvent(EventIdentifierType const& id, ::vt::NodeT const& node);
+  static ::vt::NodeT getEventNode(EventType const& event);
+  static void setEventNode(EventType& event, ::vt::NodeT const& node);
   static void setEventIdentifier(EventType& event, EventIdentifierType const& id);
   static EventIdentifierType getEventIdentifier(EventType const& event);
 

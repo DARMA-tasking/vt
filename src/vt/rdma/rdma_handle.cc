@@ -73,7 +73,7 @@ namespace vt { namespace rdma {
 }
 
 /*static*/ void HandleManager::setRdmaNode(
-  RDMA_UniversalIdType& handle, NodeType const& node
+  RDMA_UniversalIdType& handle, NodeT const& node
 ) {
   BitPackerType::setField<RDMA_BitsType::Node, node_num_bits>(handle, node);
 }
@@ -86,10 +86,10 @@ namespace vt { namespace rdma {
   );
 }
 
-/*static*/ NodeType HandleManager::getRdmaNode(
+/*static*/ NodeT HandleManager::getRdmaNode(
   RDMA_UniversalIdType const& handle
 ) {
-  return BitPackerType::getField<RDMA_BitsType::Node, node_num_bits, NodeType>(handle);
+  return BitPackerType::getField<RDMA_BitsType::Node, node_num_bits, NodeT  >(handle);
 }
 
 /*static*/ RDMA_IdentifierType HandleManager::getRdmaIdentifier(

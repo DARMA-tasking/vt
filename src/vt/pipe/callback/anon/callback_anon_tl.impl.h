@@ -61,7 +61,7 @@ void CallbackAnonTypeless::serialize(SerializerT& s) {}
 
 template <typename MsgT>
 void CallbackAnonTypeless::trigger(MsgT* msg, PipeType const& pipe) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& pipe_node = PipeIDBuilder::getNode(pipe);
   vt_debug_print(
     terse, pipe,

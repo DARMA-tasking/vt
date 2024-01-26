@@ -70,10 +70,10 @@
 namespace vt { namespace group {
 
 void InfoColl::setupCollectiveSingular() {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& this_node = theContext()->getNodeStrong();
+  auto const& num_nodes = theContext()->getNumNodesStrong();
   auto const& in_group = is_in_group;
-  vtAssert(num_nodes == 1, "This method handles single node case");
+  vtAssert(num_nodes == vt::NodeT{1}, "This method handles single node case");
   if (in_group) {
     known_root_node_   = this_node;
     is_new_root_       = true;
@@ -81,14 +81,14 @@ void InfoColl::setupCollectiveSingular() {
     has_root_          = true;
     is_default_group_  = true;
   } else {
-    known_root_node_   = uninitialized_destination;
+    known_root_node_   = {};
     is_new_root_       = false;
     in_phase_two_      = true;
     has_root_          = true;
     is_default_group_  = false;
   }
   collective_->span_ = std::make_unique<TreeType>(
-    true,uninitialized_destination,TreeType::NodeListType{}
+    true,::vt::NodeT  {},TreeType::NodeListType{}
   );
   auto const& action = getAction();
   if (action) {
@@ -110,7 +110,7 @@ void InfoColl::freeComm() {
 }
 
 void InfoColl::setupCollective() {
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& num_nodes = theContext()->getNumNodesStrong();
   auto const& group_ = getGroupID();
 
   vtAssert(!collective_  , "Collective should not be initialized");
@@ -119,7 +119,7 @@ void InfoColl::setupCollective() {
     collective_ = std::make_unique<InfoColl::GroupCollectiveType>();
   }
 
-  if (num_nodes == 1) {
+  if (num_nodes == vt::NodeT{1}) {
     return setupCollectiveSingular();
   }
 
@@ -143,7 +143,7 @@ void InfoColl::setupCollective() {
     // group creation is a collective invocation.
     theGroup()->collective_scope_.mpiCollectiveWait(
       [in_group,this]{
-        auto const this_node_impl = theContext()->getNode();
+        auto const this_node_impl = theContext()->getNodeStrong();
         auto const cur_comm = theContext()->getComm();
         int32_t const group_color = in_group;
         MPI_Comm_split(cur_comm, group_color, this_node_impl, &mpi_group_comm_);
@@ -222,8 +222,8 @@ void InfoColl::setupCollective() {
   );
 
   if (collective_->getInitialChildren() == 0) {
-    auto const& size = static_cast<NodeType>(is_in_group ? 1 : 0);
-    auto const& child = theContext()->getNode();
+    auto const& size = static_cast<::vt::NodeT  >(is_in_group ? 1 : 0);
+    auto const& child = theContext()->getNodeStrong();
     auto msg = makeMessage<GroupCollectiveMsg>(
       group_, up_tree_cont_, in_group, size, child
     );
@@ -271,7 +271,7 @@ void InfoColl::upTree() {
 
   if (is_root) {
     if (is_in_group) {
-      auto const& this_node = theContext()->getNode();
+      auto const& this_node = theContext()->getNodeStrong();
       for (auto&& msg : msg_in_group) {
         span_children_.push_back(msg->getChild());
       }
@@ -329,7 +329,7 @@ void InfoColl::upTree() {
         group, is_root, root_node, msg_list.size()
       );
 
-      auto const& subtree_zero = static_cast<NodeType>(0);
+      auto const subtree_zero = ::vt::NodeT  {0};
       auto const& extra = static_cast<GroupCollectiveMsg::CountType>(
         msg_in_group.size()-1
       );
@@ -363,8 +363,8 @@ void InfoColl::upTree() {
      *  Case where we have an approx. a balanced tree: send up the tree like
      *  usual
      */
-    auto const child = theContext()->getNode();
-    auto const total_subtree = static_cast<NodeType>(subtree_ + subtree_this);
+    auto const child = theContext()->getNodeStrong();
+    auto const total_subtree = static_cast<::vt::NodeT  >(subtree_ + subtree_this);
     auto const level =
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
 
@@ -388,7 +388,7 @@ void InfoColl::upTree() {
      * bypassing this node that is null: thus, forward the non-null's child's
      * message up the initial spanning tree
      */
-    auto const child = theContext()->getNode();
+    auto const child = theContext()->getNodeStrong();
     auto const extra = static_cast<GroupCollectiveMsg::CountType>(
       msg_in_group.size()
     );
@@ -404,7 +404,7 @@ void InfoColl::upTree() {
     );
 
     auto msg = makeMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,static_cast<NodeType>(subtree_),child,0,extra
+      group,op,is_in_group,static_cast<::vt::NodeT  >(subtree_),child,0,extra
     );
     theMsg()->sendMsg<upHan>(p, msg);
     /*
@@ -422,12 +422,12 @@ void InfoColl::upTree() {
      * child in the spanning tree because that will create a stick-like graph,
      * loosing efficiency!
      */
-    auto const child = theContext()->getNode();
+    auto const child = theContext()->getNodeStrong();
     auto const extra = 1;
 
     subtree_ -= msg_in_group[0]->getSubtreeSize();
 
-    auto const total_subtree = static_cast<NodeType>(subtree_ + subtree_this);
+    auto const total_subtree = static_cast<::vt::NodeT  >(subtree_ + subtree_this);
 
     vt_debug_print(
       normal, group,
@@ -459,7 +459,7 @@ void InfoColl::upTree() {
 
     auto const extra =
       static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size() / 2);
-    auto const child = theContext()->getNode();
+    auto const child = theContext()->getNodeStrong();
 
     auto tree_iter = msg_list.rbegin();
     for (int i = 0; i < extra; i++) {
@@ -467,7 +467,7 @@ void InfoColl::upTree() {
       tree_iter++;
     }
 
-    auto const total_subtree = static_cast<NodeType>(subtree_this + subtree_);
+    auto const total_subtree = static_cast<::vt::NodeT  >(subtree_this + subtree_);
 
     vt_debug_print(
       normal, group,
@@ -488,7 +488,7 @@ void InfoColl::upTree() {
 
     auto iter = msg_list.rbegin();
     auto iter_end = msg_list.rend();
-    NodeType* c = static_cast<NodeType*>(std::malloc(sizeof(NodeType) * extra));
+    NodeT  * c = static_cast<::vt::NodeT  *>(std::malloc(sizeof(::vt::NodeT  ) * extra));
 
     for (int i = 0; i < extra; i++) {
       GroupCollectiveMsg* tmsg = *iter;
@@ -527,7 +527,7 @@ RemoteOperationIDType InfoColl::makeCollectiveContinuation(
 }
 
 void InfoColl::newRoot(GroupCollectiveMsg* msg) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   vt_debug_print(
     normal, group,
@@ -539,7 +539,7 @@ void InfoColl::newRoot(GroupCollectiveMsg* msg) {
   is_new_root_     = true;
 }
 
-NodeType InfoColl::getRoot() const {
+::vt::NodeT InfoColl::getRoot() const {
   vt_debug_print(
     verbose, group,
     "InfoColl::getRoot: group={:x}, has_root_={}, known_root_node_={}\n",
@@ -547,7 +547,7 @@ NodeType InfoColl::getRoot() const {
   );
 
   if (!has_root_) {
-    return uninitialized_destination;
+    return ::vt::NodeT  {};
   } else {
     return known_root_node_;
   }
@@ -648,13 +648,13 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
   theMsg()->sendMsg<downFinishedHan>(from, nmsg);
 }
 
-void InfoColl::newTree(NodeType const& parent) {
+void InfoColl::newTree(::vt::NodeT const& parent) {
   if (not is_empty_group_) {
     vtAssert(is_in_group, "Must be in group");
   }
 
   auto const& group_ = getGroupID();
-  collective_->parent_ = is_new_root_ ? -1 : parent;
+  collective_->parent_ = is_new_root_ ? ::vt::NodeT{-1} : parent;
   sendDownNewTree();
 
   auto const& is_root = is_new_root_;
@@ -701,7 +701,7 @@ void InfoColl::finalize() {
       buf[0] = '\0';
       int cur = 0;
       for (auto&& elm : collective_->span_children_) {
-        cur += snprintf(buf + cur, max_buffer_length - cur, "%d,", elm);
+        cur += snprintf(buf + cur, max_buffer_length - cur, "%d,", elm.get());
       }
 
       auto const& num_children = collective_->span_children_.size();
@@ -738,7 +738,7 @@ void InfoColl::finalize() {
       }
     }
 
-    auto const& root = 0;
+    auto const& root = ::vt::NodeT{0};
 
     using collective::reduce::makeStamp;
     using collective::reduce::StrongUserID;
@@ -819,7 +819,7 @@ InfoColl::TreeType* InfoColl::getTree() const {
   vtAssert(in_phase_two_     , "Must be in phase two");
   vtAssert(has_root_         , "Root node must be known by this node");
   vtAssert(
-    known_root_node_ != uninitialized_destination, "Known root must be set"
+    known_root_node_ != ::vt::NodeT{}, "Known root must be set"
   );
   return collective_->span_.get();
 }

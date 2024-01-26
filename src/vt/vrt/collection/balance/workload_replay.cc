@@ -77,7 +77,7 @@ void replayWorkloads(
 ) {
   using ObjIDType = elm::ElementIDStruct;
 
-  auto const this_rank = theContext()->getNode();
+  auto const this_rank = theContext()->getNodeStrong();
 
   // remember vt's base load model
   auto base_load_model = theLBManager()->getBaseLoadModel();
@@ -313,11 +313,11 @@ WorkloadDataMigrator::updateCurrentNodes(
     lb_reassignment->global_migration_count;
   for (auto &dep : lb_reassignment->depart_) {
     ObjIDType id = dep.first;
-    NodeType dest = dep.second;
+    NodeT dest = dep.second;
     id.curr_node = dest;
     modified_reassignment->depart_[id] = dest;
   }
-  auto const this_rank = vt::theContext()->getNode();
+  auto const this_rank = vt::theContext()->getNodeStrong();
   for (auto &arr : lb_reassignment->arrive_) {
     ObjIDType id = arr.first;
     id.curr_node = this_rank;
@@ -392,7 +392,7 @@ WorkloadDataMigrator::createModelToMoveWorkloadsHome(
   std::shared_ptr<LoadModel> model_base,
   std::set<ObjIDType> migratable_objects_here
 ) {
-  auto const this_rank = vt::theContext()->getNode();
+  auto const this_rank = vt::theContext()->getNodeStrong();
   vt_debug_print(
     terse, replay,
     "constructing load model to get loads from file location to home\n"
@@ -428,7 +428,7 @@ WorkloadDataMigrator::createModelToMoveWorkloadsHere(
   std::shared_ptr<LoadModel> model_base,
   std::set<ObjIDType> migratable_objects_here
 ) {
-  auto const this_rank = vt::theContext()->getNode();
+  auto const this_rank = vt::theContext()->getNodeStrong();
   vt_debug_print(
     terse, replay,
     "constructing load model to get loads from home to here\n"

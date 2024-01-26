@@ -64,9 +64,9 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct HierarchicalLB : LoadSamplerBaseLB {
   using ChildPtrType = std::unique_ptr<HierLBChild>;
-  using ChildMapType = std::unordered_map<NodeType,ChildPtrType>;
+  using ChildMapType = std::unordered_map<NodeT,ChildPtrType>;
   using ElementLoadType = std::unordered_map<ObjIDType,LoadType>;
-  using TransferType = std::map<NodeType, std::vector<ObjIDType>>;
+  using TransferType = std::map<NodeT, std::vector<ObjIDType>>;
 
   HierarchicalLB() = default;
   virtual ~HierarchicalLB() {}
@@ -92,19 +92,19 @@ private:
   void setupDone();
 
   void downTreeSend(
-    NodeType const node, NodeType const from, ObjSampleType const& excess,
+    NodeT const node, NodeT const from, ObjSampleType const& excess,
     bool const final_child, std::size_t const& approx_size
   );
   void lbTreeUpSend(
-    NodeType const node, LoadType const child_load, NodeType const child,
-    ObjSampleType const& load, NodeType const child_size
+    NodeT const node, LoadType const child_load, NodeT const child,
+    ObjSampleType const& load, NodeT const child_size
   );
   void downTree(
-    NodeType const from, ObjSampleType excess, bool const final_child
+    NodeT const from, ObjSampleType excess, bool const final_child
   );
   void lbTreeUp(
-    LoadType const child_load, NodeType const child, ObjSampleType load,
-    NodeType const child_size
+    LoadType const child_load, NodeT const child, ObjSampleType load,
+    NodeT const child_size
   );
 
   void sendDownTree();
@@ -122,9 +122,9 @@ private:
 private:
   double this_threshold = 0.0f;
   bool tree_setup = false;
-  NodeType parent = uninitialized_destination;
-  NodeType bottom_parent = uninitialized_destination;
-  NodeType agg_node_size = 0, child_msgs = 0;
+  NodeT parent = {};
+  NodeT bottom_parent = {};
+  NodeT agg_node_size = NodeT{0}, child_msgs = NodeT{0};
   ChildMapType children;
   LoadType this_load_begin = 0.0f;
   ObjSampleType load_over, given_objs, taken_objs;

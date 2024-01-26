@@ -182,14 +182,14 @@ struct Reducable : BaseProxyT {
   [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   messaging::PendingSend reduce(
     MsgT *const msg, ReduceStamp stamp = ReduceStamp{},
-    NodeType const& node = uninitialized_destination
+    ::vt::NodeT const& node = {}
   ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   [[deprecated("Use new interface calls (allreduce/reduce) without message")]]
   messaging::PendingSend reduceExpr(
     MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp = ReduceStamp{},
-    NodeType const& node = uninitialized_destination
+    ::vt::NodeT const& node = {}
   ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>

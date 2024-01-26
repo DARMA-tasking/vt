@@ -125,7 +125,7 @@ struct ScopedInvokeEvent {
   ScopedInvokeEvent() {
     const auto trace_id = CallableWrapper<f>::GetTraceID();
     const auto trace_event = theTrace()->messageCreation(trace_id, 0);
-    const auto from_node = theContext()->getNode();
+    const auto from_node = theContext()->getNodeStrong();
 
     tag_ = theTrace()->beginProcessing(
       trace_id, 0, trace_event, from_node, timing::getCurrentTime()

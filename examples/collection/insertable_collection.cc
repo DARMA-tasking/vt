@@ -47,7 +47,7 @@ static constexpr int32_t const default_num_elms = 64;
 
 struct InsertCol : vt::Collection<InsertCol, vt::Index1D> {
   InsertCol() {
-    vt::NodeType this_node = vt::theContext()->getNode();
+    auto this_node = vt::theContext()->getNode();
     ::fmt::print("{}: constructing: idx={}\n", this_node, getIndex().x());
   }
 };
@@ -60,8 +60,8 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
   int32_t num_elms = default_num_elms;
   if (argc > 1) {
@@ -77,8 +77,8 @@ int main(int argc, char** argv) {
     auto token = proxy.beginModification();
 
     for (int i = 0; i < range.x() / 2; i++) {
-      if (i % num_nodes == this_node) {
-        proxy[i].insertAt(token, i % 2);
+      if (vt::NodeT{i} % num_nodes == this_node) {
+        proxy[i].insertAt(token, vt::NodeT{i % 2});
       }
     }
 
@@ -90,8 +90,8 @@ int main(int argc, char** argv) {
     auto token = proxy.beginModification();
 
     for (int i = range.x()/2; i < range.x(); i++) {
-      if (i % num_nodes == this_node) {
-        proxy[i].insertAt(token, i % 2);
+      if (vt::NodeT{i} % num_nodes == this_node) {
+        proxy[i].insertAt(token, vt::NodeT{i % 2});
       }
     }
     proxy.finishModification(std::move(token));

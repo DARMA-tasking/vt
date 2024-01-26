@@ -101,7 +101,7 @@ TYPED_TEST_P(TestCollectionIndexTypes, test_collection_index_1) {
 
   auto const& this_node = theContext()->getNode();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto const& col_size = 32;
     auto range = IndexType(static_cast<BaseIndexType>(col_size));
     auto proxy = theCollection()->construct<ColType>(

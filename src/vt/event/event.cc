@@ -80,7 +80,7 @@ void AsyncEvent::initialize() {
 }
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
 
   auto trigger = [=]{
     callable();
@@ -154,7 +154,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   auto const& node = theEvent()->getOwningNode(event);
 
   vtAssert(
-    node == theContext()->getNode(), "Node must be identical"
+    node == theContext()->getNodeStrong(), "NodeT must be identical"
   );
 
   auto send_back_fun = [=]{
@@ -173,7 +173,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     normal, event,
     "checkEventFinishedHan:: event={}, node={}, "
     "this_node={}, complete={}, sent_from_node={}\n",
-    event, node, theContext()->getNode(), static_cast<int>(is_complete),
+    event, node, theContext()->getNodeStrong(), static_cast<int>(is_complete),
     msg->sent_from_node_
   );
 
@@ -207,7 +207,7 @@ bool AsyncEvent::isLocalTerm() {
   return event_container_.size() == 0;
 }
 
-NodeType AsyncEvent::getOwningNode(EventType const& event) {
+::vt::NodeT AsyncEvent::getOwningNode(EventType const& event) {
   return EventManagerType::getEventNode(event);
 }
 
@@ -217,7 +217,7 @@ bool AsyncEvent::needsPolling(EventRecordTypeType const& type) {
 }
 
 EventType AsyncEvent::createEvent(
-  EventRecordTypeType const& type, NodeType const& node
+  EventRecordTypeType const& type, ::vt::NodeT const& node
 ) {
   EventType const event = EventManagerType::makeEvent(cur_event_, node);
   cur_event_++;
@@ -238,15 +238,15 @@ EventType AsyncEvent::createEvent(
   return event;
 }
 
-EventType AsyncEvent::createMPIEvent(NodeType const& node) {
+EventType AsyncEvent::createMPIEvent(::vt::NodeT const& node) {
   return createEvent(EventRecordTypeType::MPI_EventRecord, node);
 }
 
-EventType AsyncEvent::createNormalEvent(NodeType const& node) {
+EventType AsyncEvent::createNormalEvent(::vt::NodeT const& node) {
   return createEvent(EventRecordTypeType::NormalEventRecord, node);
 }
 
-EventType AsyncEvent::createParentEvent(NodeType const& node) {
+EventType AsyncEvent::createParentEvent(::vt::NodeT const& node) {
   return createEvent(EventRecordTypeType::ParentEventRecord, node);
 }
 
@@ -264,10 +264,10 @@ AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) 
   vt_debug_print(
     verbose, event,
     "theEvent: theEventHolder: node={}, event={}, owning_node={}\n",
-    theContext()->getNode(), event, owning_node
+    theContext()->getNodeStrong(), event, owning_node
   );
 
-  if (owning_node != theContext()->getNode()) {
+  if (owning_node != theContext()->getNodeStrong()) {
     vtAssert(0, "Event does not belong to this node");
   }
 
@@ -293,7 +293,7 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
       return EventStateType::EventWaiting;
     }
   } else {
-    if (getOwningNode(event) == theContext()->getNode()) {
+    if (getOwningNode(event) == theContext()->getNodeStrong()) {
       return EventStateType::EventReady;
     } else {
       return EventStateType::EventRemote;

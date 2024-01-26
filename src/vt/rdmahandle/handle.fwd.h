@@ -52,7 +52,7 @@ namespace vt { namespace rdma {
 template <
   typename T,
   HandleEnum E = rdma::HandleEnum::StaticSize,
-  typename IndexT = vt::NodeType,
+  typename IndexT = vt::NodeT  ,
   typename = void
 >
 struct Handle;

@@ -57,7 +57,7 @@ struct BaseMapper {
   using BaseIndexType = IdxT;
 
   virtual ~BaseMapper() = default;
-  virtual NodeType map(IdxT* idx, int ndim, NodeType num_nodes) = 0;
+  virtual NodeT map(IdxT* idx, int ndim, NodeT num_nodes) = 0;
 };
 
 }} /* end namespace vt::mapping */

@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_node.h"
 #if !defined INCLUDED_VT_GROUP_REGION_GROUP_REGION_H
 #define INCLUDED_VT_GROUP_REGION_GROUP_REGION_H
 
@@ -56,7 +57,8 @@
 namespace vt { namespace group { namespace region {
 
 struct Region {
-  using BoundType = NodeType;
+  using BoundType = BaseNodeType;
+  using BoundTypeInternal = NodeT;
   using SizeType = size_t;
   using RegionPtr = Region*;
   using RegionUPtrType = std::unique_ptr<Region>;
@@ -67,7 +69,7 @@ struct Region {
   virtual ~Region() = default;
   virtual SizeType getSize() const = 0;
   virtual void sort() = 0;
-  virtual bool contains(NodeType const& node) = 0;
+  virtual bool contains(NodeT const& node) = 0;
   virtual bool isList() const = 0;
   virtual ListType const& makeList() = 0;
   virtual RegionUPtrType copy() const = 0;
@@ -79,7 +81,7 @@ struct Region {
 
 struct ListHash {
     size_t operator()(const Region::ListType& v) const {
-        std::hash<Region::BoundType> hasher;
+        std::hash<Region::BoundTypeInternal> hasher;
         size_t seed = 0;
         for (const auto i : v) {
             seed ^= hasher(i) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

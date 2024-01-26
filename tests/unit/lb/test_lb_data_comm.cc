@@ -140,7 +140,7 @@ void MyObj::simulateObjGroupColTSends(ColProxyMsg* msg) {
   auto proxy = msg->proxy;
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   for (int i = 0; i < dim1; i++) {
     vt::Index1D idx{i};
     auto node = vt::theCollection()->getMappedNode(proxy, idx);
@@ -156,7 +156,7 @@ void MyObj::simulateObjGroupObjGroupSends(ProxyMsg* msg) {
   auto obj_proxy = msg->obj_proxy;
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   for (int i = 0; i < num_sends; i++) {
     obj_proxy[next].template send<MyObjMsg, &MyObj::dummyHandler>();
   }
@@ -175,7 +175,7 @@ void simulateColTObjGroupSends(MyCol* col, ProxyMsg* msg) {
   auto obj_proxy = msg->obj_proxy;
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   for (int i = 0; i < num_sends; i++) {
     obj_proxy[next].template send<MyObjMsg, &MyObj::dummyHandler>();
   }
@@ -186,7 +186,7 @@ void bareDummyHandler(MyObjMsg* msg) {}
 void simulateColTHandlerSends(MyCol* col) {
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   for (int i = 0; i < num_sends; i++) {
     auto msg2 = makeMessage<MyObjMsg>();
     vt::theMsg()->sendMsg<bareDummyHandler>(next, msg2);
@@ -196,7 +196,7 @@ void simulateColTHandlerSends(MyCol* col) {
 void MyObj::simulateObjGroupHandlerSends(MyMsg* msg) {
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   for (int i = 0; i < num_sends; i++) {
     auto msg2 = makeMessage<MyObjMsg>();
     vt::theMsg()->sendMsg<bareDummyHandler>(next, msg2);
@@ -207,7 +207,7 @@ void simulateHandlerColTSends(ColProxyMsg* msg) {
   auto proxy = msg->proxy;
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   for (int i = 0; i < dim1; i++) {
     vt::Index1D idx{i};
     auto node = vt::theCollection()->getMappedNode(proxy, idx);
@@ -223,7 +223,7 @@ void simulateHandlerObjGroupSends(ProxyMsg* msg) {
   auto obj_proxy = msg->obj_proxy;
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   for (int i = 0; i < num_sends; i++) {
     obj_proxy[next].template send<MyObjMsg, &MyObj::dummyHandler>();
   }
@@ -232,7 +232,7 @@ void simulateHandlerObjGroupSends(ProxyMsg* msg) {
 void simulateHandlerHandlerSends(MyMsg* msg) {
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   for (int i = 0; i < num_sends; i++) {
     auto msg2 = makeMessage<MyObjMsg>();
     vt::theMsg()->sendMsg<bareDummyHandler>(next, msg2);
@@ -346,7 +346,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_objgroup_send) {
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   auto op = obj_proxy.getProxy();
 
   // Check that communication exists on the send side as expected
@@ -410,7 +410,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_col_send) {
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes-1;
+  auto prev = NodeT{this_node.get() - 1 >= 0 ? this_node.get() - 1 : num_nodes.get()-1};
   auto op = obj_proxy.getProxy();
 
   // Check that communication exists on the receive side as expected
@@ -464,7 +464,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_objgroup_send) {
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   auto opa = obj_proxy_a.getProxy();
   auto opb = obj_proxy_b.getProxy();
   auto ida = vt::elm::ElmIDBits::createObjGroup(opa, this_node).id;
@@ -501,7 +501,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_col_send) {
   vt::runInEpochCollective("simulateHandlerColTSends", [&]{
     auto this_node = theContext()->getNode();
     auto num_nodes = theContext()->getNumNodes();
-    auto next = (this_node + 1) % num_nodes;
+    auto next = (this_node + vt::NodeT{1}) % num_nodes;
     auto msg = makeMessage<ColProxyMsg>(proxy);
     theMsg()->sendMsg<simulateHandlerColTSends>(next, msg);
   });
@@ -522,7 +522,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_col_send) {
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes-1;
+  auto prev = NodeT{this_node.get() - 1 >= 0 ? this_node.get() - 1 : num_nodes.get() - 1};
 
   // Check that communication exists on the receive side as expected
   for (int i = 0; i < dim1; i++) {
@@ -582,7 +582,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_handler_send) {
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
 
   // Check that communication exists on the send side as expected
   for (int i = 0; i < dim1; i++) {
@@ -632,7 +632,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_handler_send) {
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   auto opa = obj_proxy_a.getProxy();
   auto ida = vt::elm::ElmIDBits::createObjGroup(opa, this_node).id;
 
@@ -664,7 +664,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_objgroup_send) {
   vt::runInEpochCollective("simulateHandlerObjGroupSends", [&]{
     auto this_node = theContext()->getNode();
     auto num_nodes = theContext()->getNumNodes();
-    auto next = (this_node + 1) % num_nodes;
+    auto next = (this_node + vt::NodeT{1}) % num_nodes;
     auto msg = makeMessage<ProxyMsg>(obj_proxy_a);
     theMsg()->sendMsg<simulateHandlerObjGroupSends>(next, msg);
   });
@@ -677,7 +677,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_objgroup_send) {
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   auto opa = obj_proxy_a.getProxy();
   auto ida = vt::elm::ElmIDBits::createObjGroup(opa, next).id;
 
@@ -705,7 +705,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_handler_send) {
   vt::runInEpochCollective("simulateHandlerHandlerSends", [&]{
     auto this_node = theContext()->getNode();
     auto num_nodes = theContext()->getNumNodes();
-    auto next = (this_node + 1) % num_nodes;
+    auto next = (this_node + vt::NodeT{1}) % num_nodes;
     auto msg = makeMessage<MyMsg>();
     theMsg()->sendMsg<simulateHandlerHandlerSends>(next, msg);
   });
@@ -718,7 +718,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_handler_send) {
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  auto next = (this_node + 1) % num_nodes;
+  auto next = (this_node + vt::NodeT{1}) % num_nodes;
   auto ida = vt::elm::ElmIDBits::createBareHandler(next).id;
   auto idb = vt::elm::ElmIDBits::createBareHandler(this_node).id;
 

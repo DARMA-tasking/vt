@@ -344,7 +344,7 @@ MemoryUsage::MemoryUsage() {
     if (iter != name_map.end()) {
       reporters_.emplace_back(std::move(all_reporters[iter->second]));
     } else {
-      if (theContext()->getNode() == 0) {
+      if (theContext()->getNodeStrong() == 0) {
         auto warning = fmt::format(
           "Invalid memory reporter specified: {}", r
         );
@@ -362,7 +362,7 @@ MemoryUsage::MemoryUsage() {
 
 void MemoryUsage::initialize() {
   if (theConfig()->vt_print_memory_each_phase) {
-    auto this_node = theContext()->getNode();
+    auto this_node = theContext()->getNodeStrong();
     if (
       "all" == theConfig()->vt_print_memory_node or
       std::to_string(this_node) == theConfig()->vt_print_memory_node

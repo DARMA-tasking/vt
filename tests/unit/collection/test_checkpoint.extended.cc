@@ -160,7 +160,7 @@ struct TestCol : vt::Collection<TestCol,vt::Index3D> {
   int iter = 0;
   std::vector<double> data1, data2;
   std::shared_ptr<int> token;
-  NodeType final_node = uninitialized_destination;
+  NodeT final_node = NodeT{};
 };
 
 using TestCheckpoint = TestParallelHarness;
@@ -181,14 +181,14 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
     );
 
     vt::runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
       }
     });
 
     for (int i = 0; i < 5; i++) {
       vt::runInEpochCollective([&]{
-        if (this_node == 0) {
+        if (this_node == vt::NodeT{0}) {
           proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
         }
       });
@@ -201,7 +201,7 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
 
     // Null the token to ensure we don't end up getting the same instance
     vt::runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.broadcast<TestCol::NullMsg,&TestCol::nullToken>();
       }
     });
@@ -210,7 +210,7 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
 
     // Destroy the collection
     vt::runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.destroy();
       }
     });
@@ -230,13 +230,13 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
       auto const got_label = vt::theCollection()->getLabel(proxy.getProxy());
       EXPECT_EQ(got_label, expected_label);
 
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.broadcast<TestCol::NullMsg, &TestCol::verify>();
       }
     });
 
     runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.destroy();
       }
     });
@@ -260,14 +260,14 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
   theConfig()->vt_lb_name = "TemperedLB";
 
   vt::runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
     }
   });
 
   for (int i = 0; i < 5; i++) {
     vt::runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
       }
     });
@@ -283,7 +283,7 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
 
   // Do more work after the checkpoint
   vt::runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
     }
   });
@@ -303,13 +303,13 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
   vt::theCollective()->barrier();
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.broadcast<TestCol::NullMsg,&TestCol::verify>();
     }
   });
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.destroy();
     }
   });
@@ -332,14 +332,14 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
   theConfig()->vt_lb_name = "TemperedLB";
 
   vt::runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
     }
   });
 
   for (int i = 0; i < 5; i++) {
     vt::runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
       }
     });
@@ -348,7 +348,7 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
   }
 
   vt::runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.broadcast<TestCol::NullMsg,&TestCol::saveNode>();
     }
   });
@@ -359,7 +359,7 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
   });
 
   vt::runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.destroy();
     }
   });
@@ -389,8 +389,8 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
 //  2. Checkpoint the collection
 //  3. Restore the collection and validate it
 
-vt::NodeType map(vt::Index3D* idx, vt::Index3D* max_idx, vt::NodeType num_nodes) {
-  return (idx->x() % (num_nodes-1))+1;
+vt::NodeT map(vt::Index3D* idx, vt::Index3D* max_idx, vt::NodeT num_nodes) {
+  return vt::NodeT{(idx->x() % (num_nodes.get()-1))+1};
 }
 
 TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
@@ -410,20 +410,20 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
       .wait();
 
     vt::runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.broadcast<TestCol::NullMsg, &TestCol::init>();
       }
     });
     //this number of iterations is expected in the verify member function
     for (int i = 0; i < 5; i++) {
       vt::runInEpochCollective([&]{
-        if(this_node == 0) {
+        if(this_node == vt::NodeT{0}) {
           proxy.broadcast<TestCol::NullMsg, &TestCol::doIter>();
         }
       });
     }
     //verify that root node has no elements, by construction with map
-    if(this_node == 0) {
+    if(this_node == vt::NodeT{0}) {
       auto local_set = theCollection()->getLocalIndices(proxy);
       EXPECT_EQ(local_set.size(), 0);
     }
@@ -436,7 +436,7 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
 
     // Destroy the collection
     vt::runInEpochCollective([&]{
-      if (this_node == 0) {
+      if (this_node == vt::NodeT{0}) {
         proxy.destroy();
       }
     });
@@ -452,7 +452,7 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
   vt::theCollective()->barrier();
 
   runInEpochCollective([&]{
-    if (this_node == 0) {
+    if (this_node == vt::NodeT{0}) {
       proxy.broadcast<TestCol::NullMsg,&TestCol::verify>();
     }
   });

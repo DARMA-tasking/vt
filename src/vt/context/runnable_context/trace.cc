@@ -64,7 +64,7 @@ void Trace::start(TimeType time) {
   if (is_collection_) {
     auto const cur_node = theContext()->getFromNodeCurrentTask();
     auto const from_node =
-      from_node_ != uninitialized_destination ? from_node_ : cur_node;
+      from_node_ != {} ? from_node_ : cur_node;
 
     processing_tag_ = theTrace()->beginProcessing(
       trace_id, msg_size_, event_, from_node, time, idx1_, idx2_, idx3_, idx4_

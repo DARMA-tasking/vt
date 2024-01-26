@@ -75,7 +75,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index2D> {
   int count = 0;
 };
 
-vt::NodeType collectionMap(vt::Index2D* idx, vt::Index2D*, vt::NodeType) {
+vt::NodeT collectionMap(vt::Index2D* idx, vt::Index2D*, vt::NodeT) {
   return idx->x();
 }
 
@@ -85,7 +85,7 @@ TEST_F(TestListInsertHere, test_list_insert_here1) {
 
   auto const this_node = theContext()->getNode();
 
-  for (NodeType i = 0; i < this_node+1; i++) {
+  for (NodeT i = 0; i < this_node+1; i++) {
     elms.emplace_back(vt::Index2D{(int)this_node, (int)i}, std::make_unique<MyCol>());
   }
 
@@ -110,7 +110,7 @@ TEST_F(TestListInsertHere, test_list_insert_here_sparse2) {
 
   // node 0 is empty, node 1 makes up for it so the math works out
   auto end = this_node == 0 ? 0 : (this_node == 1 ? this_node+2 : this_node+1);
-  for (NodeType i = 0; i < end; i++) {
+  for (NodeT i = 0; i < end; i++) {
     elms.emplace_back(vt::Index2D{(int)this_node, (int)i}, std::make_unique<MyCol>());
   }
 

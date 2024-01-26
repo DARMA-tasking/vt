@@ -53,13 +53,13 @@ namespace vt { namespace location {
 template <typename EntityID>
 LocRecord<EntityID>::LocRecord(
   EntityID const& in_id, LocStateType const& in_state,
-  NodeType const& in_node
+  NodeT const& in_node
 ) : id_(in_id), state_(in_state), cur_node_(in_node)
 { }
 
 template <typename EntityID>
-void LocRecord<EntityID>::updateNode(NodeType const& new_node) {
-  if (new_node == theContext()->getNode()) {
+void LocRecord<EntityID>::updateNode(NodeT const& new_node) {
+  if (new_node == theContext()->getNodeStrong()) {
     state_ = eLocState::Local;
   } else {
     state_ = eLocState::Remote;
@@ -79,7 +79,7 @@ bool LocRecord<EntityID>::isRemote() const {
 }
 
 template <typename EntityID>
-NodeType LocRecord<EntityID>::getRemoteNode() const {
+NodeT LocRecord<EntityID>::getRemoteNode() const {
   return cur_node_;
 }
 

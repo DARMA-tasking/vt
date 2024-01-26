@@ -77,11 +77,11 @@ public:
 struct TestActiveSend : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 
-  static NodeType from_node;
-  static NodeType to_node;
+  static inline NodeT from_node = {};
+  static inline NodeT to_node = {};
 
-  static int handler_count;
-  static int num_msg_sent;
+  static inline int handler_count = {};
+  static inline int num_msg_sent = {};
 
   virtual void SetUp() {
     TestParallelHarness::SetUp();
@@ -89,8 +89,8 @@ struct TestActiveSend : TestParallelHarness {
     handler_count = 0;
     num_msg_sent = 16;
 
-    from_node = 0;
-    to_node = 1;
+    from_node = NodeT{0};
+    to_node = NodeT{1};
   }
 
   static void test_handler_small_put(PutTestMessage* msg) {
@@ -139,11 +139,6 @@ struct TestActiveSend : TestParallelHarness {
 
   static void msgSerialA(DataMsg*) { handler_count++; }
 };
-
-/*static*/ NodeType TestActiveSend::from_node;
-/*static*/ NodeType TestActiveSend::to_node;
-/*static*/ int TestActiveSend::handler_count;
-/*static*/ int TestActiveSend::num_msg_sent;
 
 TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
   SET_MIN_NUM_NODES_CONSTRAINT(2);
@@ -249,11 +244,11 @@ void testPropertiesHandler(int a, double b) {
 TEST_F(TestActiveSend, test_active_message_properties) {
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
-  NodeType const next_node = (this_node + 1) % num_nodes;
+  NodeT const next_node = (this_node + 1) % num_nodes;
 
   if (num_nodes > 1) {
     auto ps = theMsg()->send<testPropertiesHandler>(
-      vt::Node{next_node}, MsgProps().asTerminationMsg(), 10, 20.0
+      vt::NodeT{next_node}, MsgProps().asTerminationMsg(), 10, 20.0
     );
     EXPECT_TRUE(messaging::envelopeIsTerm(ps.getMsg()->env));
   }

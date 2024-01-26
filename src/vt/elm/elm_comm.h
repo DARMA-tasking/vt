@@ -53,15 +53,15 @@ namespace vt { namespace elm {
 enum struct CommCategory : int8_t {
   SendRecv = 1,
   CollectionToNode = 2,
-  NodeToCollection = 3,
+  NodeCollection = 3,
   Broadcast = 4,
   CollectionToNodeBcast = 5,
-  NodeToCollectionBcast = 6,
+  NodeCollectionBcast = 6,
   CollectiveToCollectionBcast = 7,
   LocalInvoke = 8
 };
 
-inline NodeType objGetNode(ElementIDStruct const id) {
+inline NodeT objGetNode(ElementIDStruct const id) {
   return id.curr_node;
 }
 
@@ -94,25 +94,25 @@ struct CommKey {
   { }
   CommKey(
     CollectionToNodeTag,
-    ElementIDStruct from, NodeType to,
+    ElementIDStruct from, NodeT to,
     bool bcast
   ) : from_(from), nto_(to),
       cat_(bcast ? CommCategory::CollectionToNodeBcast : CommCategory::CollectionToNode)
   { }
   CommKey(
     NodeToCollectionTag,
-    NodeType from, ElementIDStruct to,
+    NodeT from, ElementIDStruct to,
     bool bcast
   ) : to_(to), nfrom_(from),
-      cat_(bcast ? CommCategory::NodeToCollectionBcast : CommCategory::NodeToCollection)
+      cat_(bcast ? CommCategory::NodeCollectionBcast : CommCategory::NodeCollection)
   { }
 
   ElementIDStruct from_ = {};
   ElementIDStruct to_   = {};
 
   ElementIDStruct edge_id_ = {};
-  NodeType nfrom_          = uninitialized_destination;
-  NodeType nto_            = uninitialized_destination;
+  NodeT nfrom_          = {};
+  NodeT nto_            = {};
   CommCategory  cat_       = CommCategory::SendRecv;
 
   ElementIDStruct fromObj()    const { return from_; }
@@ -128,7 +128,7 @@ struct CommKey {
       return objGetNode(from_) != objGetNode(to_);
     } else if (cat_ == CommCategory::CollectionToNode) {
       return objGetNode(from_) != nto_;
-    } else if (cat_ == CommCategory::NodeToCollection) {
+    } else if (cat_ == CommCategory::NodeCollection) {
       return objGetNode(to_) != nfrom_;
     } else {
       return true;

@@ -58,14 +58,14 @@ struct CallbackSendTypeless : CallbackBaseTL<CallbackSendTypeless> {
   CallbackSendTypeless& operator=(CallbackSendTypeless const&) = default;
 
   CallbackSendTypeless(
-    HandlerType const in_handler, NodeType const& in_send_node
+    HandlerType const in_handler, ::vt::NodeT const& in_send_node
   );
 
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
   HandlerType getHandler() const { return handler_; }
-  NodeType getSendNode() const { return send_node_; }
+  ::vt::NodeT getSendNode() const { return send_node_; }
 
   bool operator==(CallbackSendTypeless const& other) const {
     return other.send_node_ == send_node_ && other.handler_ == handler_;
@@ -77,7 +77,7 @@ public:
   void triggerVoid(PipeType const& pipe);
 
 private:
-  NodeType send_node_ = uninitialized_destination;
+  ::vt::NodeT send_node_ = {};
   HandlerType handler_ = uninitialized_handler;
 };
 

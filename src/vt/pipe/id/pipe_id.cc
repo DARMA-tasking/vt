@@ -49,7 +49,7 @@
 namespace vt { namespace pipe {
 
 /*static*/ PipeType PipeIDBuilder::createPipeID(
-  PipeIDType const& id, NodeType const& node, bool const& is_send_back,
+  PipeIDType const& id, ::vt::NodeT const& node, bool const& is_send_back,
   bool const& is_persist
 ) {
   PipeType new_pipe = 0;
@@ -75,7 +75,7 @@ namespace vt { namespace pipe {
 }
 
 /*static*/ void PipeIDBuilder::setNode(
-  PipeType& pipe, NodeType const& node
+  PipeType& pipe, ::vt::NodeT const& node
 ) {
   BitPackerType::setField<ePipeIDBits::Node, pipe_node_num_bits>(pipe, node);
 }
@@ -94,9 +94,9 @@ namespace vt { namespace pipe {
   return BitPackerType::boolGetField<ePipeIDBits::Persist>(pipe);
 }
 
-/*static*/ NodeType PipeIDBuilder::getNode(PipeType const& pipe) {
+/*static*/ ::vt::NodeT PipeIDBuilder::getNode(PipeType const& pipe) {
   return BitPackerType::getField<
-    ePipeIDBits::Node, pipe_node_num_bits, NodeType
+    ePipeIDBits::Node, pipe_node_num_bits, ::vt::NodeT
   >(pipe);
 }
 

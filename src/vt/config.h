@@ -45,6 +45,7 @@
 #define INCLUDED_VT_CONFIG_H
 
 #include "vt/configs/debug/debug_masterconfig.h"
+#include "vt/configs/types/types_node.h"
 #include "vt/configs/types/types_headers.h"
 #include "vt/configs/error/error_headers.h"
 

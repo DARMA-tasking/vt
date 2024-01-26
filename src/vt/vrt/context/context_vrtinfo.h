@@ -79,7 +79,7 @@ struct VirtualInfo {
   VirtualContext *get() const;
 
   VirtualProxyType getProxy() const { return proxy_; }
-  NodeType getNode() const { return default_node_; }
+  NodeT getNode() const { return default_node_; }
 
   void setNodeMap(HandlerType const han) { node_map_handle_ = han; }
   bool hasNodeMap() const { return node_map_handle_ != uninitialized_handler; }
@@ -98,7 +98,7 @@ struct VirtualInfo {
 
  private:
   HandlerType node_map_handle_ = uninitialized_handler;
-  NodeType default_node_ = uninitialized_destination;
+  NodeT default_node_ = {};
   VirtualProxyType proxy_ = no_vrt_proxy;
   VirtualPtrType vrt_ptr_ = nullptr;
   bool needs_lock_ = false;

@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 
   auto reduce_msg = vt::makeMessage<ReduceDataMsg>(50);
 
-  NodeType const root_reduce_node = 0;
+  NodeT const root_reduce_node = 0;
   vt::theCollective()->global()->reduce<vt::collective::PlusOp<int>,ReduceResult>(
     root_reduce_node, reduce_msg.get()
   );

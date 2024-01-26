@@ -73,8 +73,8 @@ enum struct DataDistStrategy : uint8_t {
 
 struct GreedyLB : LoadSamplerBaseLB {
   using ElementLoadType  = std::unordered_map<ObjIDType,LoadType>;
-  using TransferType     = std::map<NodeType, std::vector<ObjIDType>>;
-  using LoadProfileType  = std::unordered_map<NodeType,LoadType>;
+  using TransferType     = std::map<NodeT, std::vector<ObjIDType>>;
+  using LoadProfileType  = std::unordered_map<NodeT,LoadType>;
 
   GreedyLB() = default;
   virtual ~GreedyLB() {}
@@ -97,7 +97,7 @@ private:
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
   void runBalancer(ObjSampleType&& objs, LoadProfileType&& profile);
   void transferObjs(std::vector<GreedyProc>&& load);
-  ObjIDType objSetNode(NodeType const& node, ObjIDType const& id);
+  ObjIDType objSetNode(NodeT const& node, ObjIDType const& id);
   void recvObjsDirect(std::size_t len, GreedyLBTypes::ObjIDType* objs);
   void recvObjs(GreedySendMsg* msg);
   void recvObjsBcast(GreedyBcastMsg* msg);

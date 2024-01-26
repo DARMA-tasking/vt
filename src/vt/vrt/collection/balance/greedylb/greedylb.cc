@@ -150,7 +150,7 @@ void GreedyLB::runLB(LoadType total_load) {
 }
 
 void GreedyLB::loadStats() {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto avg_load = getAvgLoad();
   auto total_load = getSumLoad();
   auto I = getStats()->at(lb::Statistic::Rank_load_modeled).at(
@@ -168,7 +168,7 @@ void GreedyLB::loadStats() {
     this_threshold = std::min(std::max(1.0f - I, min_threshold), max_threshold);
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     vt_debug_print(
       terse, lb,
       "loadStats: load={}, total={}, avg={}, I={:.2f},"
@@ -229,7 +229,7 @@ void GreedyLB::runBalancer(
 ) {
   using CompRecType = GreedyCompareLoadMax<GreedyRecord>;
   using CompProcType = GreedyCompareLoadMin<GreedyProc>;
-  auto const& num_nodes = theContext()->getNumNodes();
+  auto const& num_nodes = theContext()->getNumNodesStrong();
   ObjSampleType objs{std::move(in_objs)};
   LoadProfileType profile{std::move(in_profile)};
   std::vector<GreedyRecord> recs;
@@ -247,7 +247,7 @@ void GreedyLB::runBalancer(
   }
   std::make_heap(recs.begin(), recs.end(), CompRecType());
   auto nodes = std::vector<GreedyProc>{};
-  for (NodeType n = 0; n < num_nodes; n++) {
+  for (NodeT n = NodeT{0}; n < num_nodes; n++) {
     auto iter = profile.find(n);
     vtAssert(iter != profile.end(), "Must have load profile");
     nodes.emplace_back(GreedyProc{n,iter->second});
@@ -283,7 +283,7 @@ void GreedyLB::runBalancer(
 }
 
 GreedyLB::ObjIDType GreedyLB::objSetNode(
-  NodeType const& node, ObjIDType const& id
+  NodeT const& node, ObjIDType const& id
 ) {
   auto new_id = id;
   new_id.curr_node = node;
@@ -299,7 +299,7 @@ void GreedyLB::recvObjs(GreedySendMsg* msg) {
 }
 
 void GreedyLB::recvObjsBcast(GreedyBcastMsg* msg) {
-  auto const n = theContext()->getNode();
+  auto const n = theContext()->getNodeStrong();
   vt_debug_print(
     normal, lb,
     "recvObjs: msg->transfer_.size={}\n", msg->transfer_[n].size()
@@ -308,7 +308,7 @@ void GreedyLB::recvObjsBcast(GreedyBcastMsg* msg) {
 }
 
 void GreedyLB::recvObjsDirect(std::size_t len, GreedyLBTypes::ObjIDType* objs) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& num_recs = len;
   vt_debug_print(
     normal, lb,
@@ -363,7 +363,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       max_recs, max_bytes
     );
     theCollective()->scatter<GreedyLBTypes::ObjIDType,recvObjsHan>(
-      max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, void* ptr){
+      max_bytes*load.size(),max_bytes,nullptr,[&](NodeT node, void* ptr){
         auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
         auto const& proc = node_transfer[node];
         auto const& rec_size = proc.size();
@@ -374,7 +374,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       }
     );
   } else if (strat_ == DataDistStrategy::pt2pt) {
-    for (NodeType n = 0; n < theContext()->getNumNodes(); n++) {
+    for (NodeT n = NodeT{0}; n < theContext()->getNumNodesStrong(); n++) {
       vtAssert(
         node_transfer.size() == static_cast<size_t>(theContext()->getNumNodes()),
         "Must contain all nodes"

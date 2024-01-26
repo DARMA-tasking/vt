@@ -55,7 +55,7 @@ struct HandleMsg : vt::Message {
 };
 
 static void readDataFn(HandleMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
   fmt::print("{}: readDataFn: handle={}\n", this_node, msg->han);
 
@@ -67,16 +67,16 @@ static void readDataFn(HandleMsg* msg) {
 }
 
 static void putDataFn(HandleMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
 
-  if (this_node == 1 or this_node == 2) {
+  if (this_node == vt::NodeT{1} or this_node == vt::NodeT{2}) {
     fmt::print(
       "{}: putting data, handle={}, my_data={}\n",
       this_node, msg->han, print_ptr(my_data.get())
     );
 
     int const num_elm = 2;
-    int const offset = num_elm*(this_node-1);
+    int const offset = num_elm*(this_node.get()-1);
     auto han = msg->han;
     vt::theRDMA()->putTypedData(msg->han, my_data.get(), num_elm, offset, [=]{
       fmt::print(
@@ -84,7 +84,7 @@ static void putDataFn(HandleMsg* msg) {
       );
 
       auto back = vt::makeMessage<HandleMsg>(han);
-      vt::theMsg()->sendMsg<readDataFn>(0, back);
+      vt::theMsg()->sendMsg<readDataFn>(vt::NodeT{0}, back);
     });
   }
 }
@@ -92,10 +92,10 @@ static void putDataFn(HandleMsg* msg) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes < 4) {
+  if (num_nodes < vt::NodeT{4}) {
     return vt::rerror("requires exactly 4 nodes");
   }
 
@@ -103,10 +103,10 @@ int main(int argc, char** argv) {
 
   // initialize my_data buffer, all but node 0 get -1.0
   for (auto i = 0; i < my_data_len; i++) {
-    my_data[i] = this_node != 0 ? (this_node+1)*i+1 : -1.0;
+    my_data[i] = this_node != vt::NodeT{0} ? (this_node.get()+1)*i+1 : -1.0;
   }
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     vt::RDMA_HandleType my_handle =
       vt::theRDMA()->registerNewTypedRdmaHandler(my_data.get(), put_len);
 
@@ -117,8 +117,8 @@ int main(int argc, char** argv) {
 
     auto msg1 = vt::makeMessage<HandleMsg>(my_handle);
     auto msg2 = vt::makeMessage<HandleMsg>(my_handle);
-    vt::theMsg()->sendMsg<putDataFn>(1, msg1);
-    vt::theMsg()->sendMsg<putDataFn>(2, msg2);
+    vt::theMsg()->sendMsg<putDataFn>(vt::NodeT{1}, msg1);
+    vt::theMsg()->sendMsg<putDataFn>(vt::NodeT{2}, msg2);
   }
 
   vt::finalize();

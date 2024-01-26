@@ -50,7 +50,7 @@
 
 namespace vt {
 
-template <typename T, typename I = vt::NodeType>
+template <typename T, typename I = vt::NodeT  >
 using HandleRDMA = rdma::Handle<T, rdma::HandleEnum::StaticSize, I>;
 
 } /* end namespace vt */

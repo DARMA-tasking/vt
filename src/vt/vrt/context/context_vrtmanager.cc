@@ -49,7 +49,7 @@
 namespace vt { namespace vrt {
 
 VirtualContextManager::VirtualContextManager()
-  : curIdent_(0), myNode_(theContext()->getNode())
+  : curIdent_(0), myNode_(theContext()->getNodeStrong())
 { }
 
 VirtualProxyType VirtualContextManager::makeVirtualPlaceholder() {
@@ -105,7 +105,7 @@ VirtualProxyType VirtualContextManager::generateNewProxy() {
 }
 
 VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
-  NodeType const& node
+  NodeT const& node
 ) {
   auto iter = curRemoteID_.find(node);
   if (iter == curRemoteID_.end()) {
@@ -226,7 +226,7 @@ void VirtualContextManager::destroyVirtualByProxy(
   }
 }
 
-NodeType VirtualContextManager::getNode() const {
+NodeT VirtualContextManager::getNode() const {
   return myNode_;
 }
 

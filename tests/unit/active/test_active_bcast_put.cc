@@ -109,7 +109,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
   auto const& my_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  NodeType const& root = GetParam();
+  NodeT const& root = GetParam();
 
   #if DEBUG_TEST_HARNESS_PRINT
     fmt::print("test_type_safe_active_fn_bcast: node={}, root={}\n", my_node, root);
@@ -141,7 +141,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
 
 INSTANTIATE_TEST_SUITE_P(
   InstantiationName, TestActiveBroadcastPut,
-  ::testing::Range(static_cast<NodeType>(0), static_cast<NodeType>(16), 1)
+  ::testing::Range(static_cast<NodeT>(0), static_cast<NodeT>(16), 1)
 );
 
 }}}} // end namespace vt::tests::unit::bcast_put

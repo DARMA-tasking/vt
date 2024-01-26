@@ -102,11 +102,11 @@ struct MyCol : Collection<MyCol, Index1D> {
 };
 
 struct ColMsg : CollectionMessage<MyCol> {
-  NodeType from_node;
+  NodeT from_node;
 
   ColMsg() = default;
 
-  explicit ColMsg(NodeType const& in_from_node)
+  explicit ColMsg(NodeT const& in_from_node)
     : from_node(in_from_node)
   {}
 };

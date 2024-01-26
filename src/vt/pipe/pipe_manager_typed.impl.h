@@ -100,7 +100,7 @@ PipeManagerTyped::makeCallbackSingleAnonVoidTyped(
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 PipeManagerTyped::CallbackSendType<MsgT>
 PipeManagerTyped::makeCallbackSingleSendTyped(
-  bool const is_persist, NodeType const& send_to_node
+  bool const is_persist, NodeT const& send_to_node
 ) {
   auto const& new_pipe_id = makePipeID(is_persist,false);
   auto const& handler = auto_registry::makeAutoHandler<MsgT,f>();
@@ -113,7 +113,7 @@ PipeManagerTyped::makeCallbackSingleSendTyped(
 template <typename FunctorT, typename MsgT>
 PipeManagerTyped::CallbackSendType<MsgT>
 PipeManagerTyped::makeCallbackSingleSendFunctorTyped(
-  bool const is_persist, NodeType const& send_to_node
+  bool const is_persist, NodeT const& send_to_node
 ) {
   auto const& new_pipe_id = makePipeID(is_persist,false);
   auto const& handler =
@@ -125,7 +125,7 @@ PipeManagerTyped::makeCallbackSingleSendFunctorTyped(
 template <typename FunctorT>
 PipeManagerTyped::CallbackSendVoidType
 PipeManagerTyped::makeCallbackSingleSendFunctorVoidTyped(
-  bool const is_persist, NodeType const& send_to_node
+  bool const is_persist, NodeT const& send_to_node
 ) {
   auto const& new_pipe_id = makePipeID(is_persist,false);
   auto const& handler = auto_registry::makeAutoHandlerFunctor<FunctorT, void, false>();
@@ -205,16 +205,16 @@ interface::CallbackDirectSendMulti<
   typename RepeatNImpl<sizeof...(f),callback::CallbackSend<MsgT>>::ResultType
 >
 PipeManagerTyped::makeCallbackMultiSendTyped(
-  bool const is_persist, NodeType const& send_to_node
+  bool const is_persist, NodeT const& send_to_node
 ) {
   using CBSendT = callback::CallbackSend<MsgT>;
-  using ConsT = std::tuple<NodeType>;
+  using ConsT = std::tuple <NodeT  >;
   using TupleConsT = typename RepeatNImpl<sizeof...(f),ConsT>::ResultType;
   using ConstructMeta = ConstructCallbacks<CBSendT,TupleConsT,MsgT,f...>;
   using TupleCBType = typename ConstructMeta::ResultType;
 
   auto const& new_pipe_id = makePipeID(is_persist,false);
-  std::array<NodeType,sizeof...(f)> send_node_array;
+  std::array<NodeT,sizeof...(f)> send_node_array;
   send_node_array.fill(send_to_node);
   auto const cons = TupleConsT{send_node_array};
   auto const tuple = ConstructMeta::make(cons);
@@ -239,7 +239,7 @@ auto PipeManagerTyped::pushTargetBcast(bool const& inc) {
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
-auto PipeManagerTyped::pushTarget(CallbackT in, NodeType const& send_to_node) {
+auto PipeManagerTyped::pushTarget(CallbackT in, NodeT const& send_to_node) {
   auto const& han = auto_registry::makeAutoHandler<MsgT,f>();
   return std::tuple_cat(
     std::make_tuple(callback::CallbackSend<MsgT>(han,send_to_node)), in
@@ -247,7 +247,7 @@ auto PipeManagerTyped::pushTarget(CallbackT in, NodeType const& send_to_node) {
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-auto PipeManagerTyped::pushTarget(NodeType const& send_to_node) {
+auto PipeManagerTyped::pushTarget(NodeT const& send_to_node) {
   auto const& han = auto_registry::makeAutoHandler<MsgT,f>();
   return std::make_tuple(callback::CallbackSend<MsgT>(han,send_to_node));
 }

@@ -187,7 +187,7 @@ void TraceLite::setupNames(std::string const& in_prog_name) {
     return;
   }
 
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   trace_name_ = prog_name_ + "." + std::to_string(node) + ".log.gz";
   auto dir_name = prog_name_ + "_trace";
@@ -206,7 +206,7 @@ void TraceLite::setupNames(std::string const& in_prog_name) {
   if (full_dir_name_[full_dir_name_.size() - 1] != '/')
     full_dir_name_ = full_dir_name_ + "/";
 
-  if (theContext()->getNode() == 0) {
+  if (theContext()->getNodeStrong() == 0) {
     int flag = mkdir(full_dir_name_.c_str(), S_IRWXU);
     if ((flag < 0) && (errno != EEXIST)) {
       vtAssert(flag >= 0, "Must be able to make directory");
@@ -244,7 +244,7 @@ bool TraceLite::checkDynamicRuntimeEnabled(bool is_end_event) {
    * current phase (LB phase), which can be disabled via a trace enable
    * specification file
    */
-  return enabled_ and traceWritingEnabled(theContext()->getNode()) and
+  return enabled_ and traceWritingEnabled(theContext()->getNodeStrong()) and
     (trace_enabled_cur_phase_ or is_end_event);
 }
 
@@ -260,7 +260,7 @@ void TraceLite::addUserEventBracketed(
     event, begin, end);
 
   auto const type = TraceConstantsType::UserEventPair;
-  NodeType const node = theContext()->getNode();
+  NodeT const node = theContext()->getNodeStrong();
 
   logEvent(LogType{begin, type, node, event, true});
   logEvent(LogType{end, type, node, event, false});
@@ -364,7 +364,7 @@ void TraceLite::beginIdle(TimeType const time) {
   );
 
   auto const type = TraceConstantsType::BeginIdle;
-  NodeType const node = theContext()->getNode();
+  NodeT const node = theContext()->getNodeStrong();
 
   emitTraceForTopProcessingEvent(time, TraceConstantsType::EndProcessing);
   logEvent(LogType{time, type, node});
@@ -386,7 +386,7 @@ void TraceLite::endIdle(TimeType const time) {
   );
 
   auto const type = TraceConstantsType::EndIdle;
-  NodeType const node = theContext()->getNode();
+  NodeT const node = theContext()->getNodeStrong();
 
   idle_begun_ = false; // must set BEFORE logEvent
   logEvent(LogType{time, type, node});
@@ -400,14 +400,14 @@ void TraceLite::emitTraceForTopProcessingEvent(
   }
 }
 
-/*static*/ bool TraceLite::traceWritingEnabled(NodeType node) {
+/*static*/ bool TraceLite::traceWritingEnabled(::vt::NodeT node) {
   return (
     theConfig()->vt_trace and
     (theConfig()->vt_trace_mod == 0 or
      (node % theConfig()->vt_trace_mod == 0)));
 }
 
-/*static*/ bool TraceLite::isStsOutputNode(NodeType node) {
+/*static*/ bool TraceLite::isStsOutputNode(::vt::NodeT node) {
   return (theConfig()->vt_trace and node == designated_root_node);
 }
 
@@ -416,7 +416,7 @@ void TraceLite::enableTracing() { enabled_ = true; }
 void TraceLite::disableTracing() { enabled_ = false; }
 
 void TraceLite::cleanupTracesFile() {
-  auto const& node = theContext()->getNode();
+  auto const& node = theContext()->getNodeStrong();
   if (
     not(traceWritingEnabled(node) or isStsOutputNode(node)) or
     traces_.empty()) {
@@ -459,7 +459,7 @@ void TraceLite::flushTracesFile(bool useGlobalSync) {
 }
 
 void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
-  auto const node = theContext()->getNode();
+  auto const node = theContext()->getNodeStrong();
 
   size_t to_write = traces_.size();
 
@@ -510,7 +510,7 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
 
 /*static*/ void TraceLite::outputTraces(
   vt_gzFile* file, TraceContainerType& traces, TimeType start_time, int flush) {
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodesStrong();
   gzFile gzfile = file->file_type;
 
   while (not traces.empty()) {
@@ -645,7 +645,7 @@ void TraceLite::outputControlFile(std::ofstream& file) {
     TraceContainerEventClassType::mapped_type*, bool,
     TraceEventSeqCompare<EventClassType>>;
 
-  auto const num_nodes = theContext()->getNumNodes();
+  auto const num_nodes = theContext()->getNumNodesStrong();
 
   auto* event_types = TraceContainersType::getEventTypeContainer();
   auto* events = TraceContainersType::getEventContainer();
@@ -714,7 +714,7 @@ void TraceLite::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void TraceLite::outputHeader(
-  vt_gzFile* file, NodeType const node, TimeType const start) {
+  vt_gzFile* file, ::vt::NodeT const node, TimeType const start) {
   gzFile gzfile = file->file_type;
   // Output header for projections file
   // '6' means COMPUTATION_BEGIN to Projections: this starts a trace
@@ -723,7 +723,7 @@ void TraceLite::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void TraceLite::outputFooter(
-  vt_gzFile* file, NodeType const node, TimeType const start) {
+  vt_gzFile* file, ::vt::NodeT const node, TimeType const start) {
   gzFile gzfile = file->file_type;
   // Output footer for projections file,
   // '7' means COMPUTATION_END to Projections

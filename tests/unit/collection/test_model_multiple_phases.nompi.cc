@@ -99,7 +99,7 @@ private:
 };
 
 TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
-  NodeType this_node = 0;
+  NodeT this_node = NodeT{0};
   std::unordered_map<PhaseType, LoadMapType> proc_loads = {
     {0, LoadMapType{
       {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},

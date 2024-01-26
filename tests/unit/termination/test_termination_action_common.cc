@@ -47,9 +47,9 @@
 namespace vt { namespace tests { namespace unit { namespace channel {
 
 // set channel counting ranks
-vt::NodeType root = vt::uninitialized_destination;
-vt::NodeType node = vt::uninitialized_destination;
-vt::NodeType all  = vt::uninitialized_destination;
+vt::NodeT root = vt::NodeT{};
+vt::NodeT node = vt::NodeT{};
+vt::NodeT all  = vt::NodeT{};
 std::unordered_map<vt::EpochType,Data> data;
 bool ok = false;
 

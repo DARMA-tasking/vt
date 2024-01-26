@@ -142,7 +142,7 @@ struct Reduce : virtual collective::tree::Tree {
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType reduce(
-    NodeType root, MsgT* const msg,
+    NodeT root, MsgT* const msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType num_contrib = 1
   );
@@ -159,7 +159,7 @@ struct Reduce : virtual collective::tree::Tree {
    */
   template <auto f>
   PendingSendType reduce(
-    NodeType root,
+    NodeT root,
     typename FuncTraits<decltype(f)>::MsgT* const msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType num_contrib = 1
@@ -181,10 +181,10 @@ struct Reduce : virtual collective::tree::Tree {
     template <typename Arg> class Op = NoneOp,
     typename... Params
   >
-  PendingSendType reduce(Node root, Params&&... params);
+  PendingSendType reduce(NodeT root, Params&&... params);
 
   template <typename Op, auto f, typename... Params>
-  PendingSendType reduce(Node root, Params&&... params);
+  PendingSendType reduce(NodeT root, Params&&... params);
 
   /**
    * \brief Reduce a message up the tree
@@ -198,7 +198,7 @@ struct Reduce : virtual collective::tree::Tree {
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   detail::ReduceStamp reduceImmediate(
-    NodeType root, MsgT* const msg,
+    NodeT root, MsgT* const msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType num_contrib = 1
   );
@@ -215,7 +215,7 @@ struct Reduce : virtual collective::tree::Tree {
    */
   template <auto f>
   detail::ReduceStamp reduceImmediate(
-    NodeType root,
+    NodeT root,
     typename FuncTraits<decltype(f)>::MsgT* const msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType num_contrib = 1
@@ -241,7 +241,7 @@ struct Reduce : virtual collective::tree::Tree {
     ActiveTypedFnType<MsgT> *f
   >
   PendingSendType reduce(
-    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    NodeT const& root, MsgT* msg, Callback<MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   );
@@ -250,7 +250,7 @@ struct Reduce : virtual collective::tree::Tree {
     typename MsgT
   >
   PendingSendType reduce(
-    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    NodeT const& root, MsgT* msg, Callback<MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   )
@@ -279,7 +279,7 @@ struct Reduce : virtual collective::tree::Tree {
    */
   template <typename OpT, auto f>
   PendingSendType reduce(
-    NodeType const& root,
+    NodeT const& root,
     typename FuncTraits<decltype(f)>::MsgT* msg,
     Callback<typename FuncTraits<decltype(f)>::MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
@@ -306,7 +306,7 @@ struct Reduce : virtual collective::tree::Tree {
     ActiveTypedFnType<MsgT> *f
   >
   detail::ReduceStamp reduceImmediate(
-    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    NodeT const& root, MsgT* msg, Callback<MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   );
@@ -315,7 +315,7 @@ struct Reduce : virtual collective::tree::Tree {
     typename MsgT
   >
   detail::ReduceStamp reduceImmediate(
-    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    NodeT const& root, MsgT* msg, Callback<MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   )
@@ -344,7 +344,7 @@ struct Reduce : virtual collective::tree::Tree {
    */
   template <typename OpT, auto f>
   detail::ReduceStamp reduceImmediate(
-    NodeType const& root,
+    NodeT const& root,
     typename FuncTraits<decltype(f)>::MsgT* msg,
     Callback<typename FuncTraits<decltype(f)>::MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
@@ -371,7 +371,7 @@ struct Reduce : virtual collective::tree::Tree {
     ActiveTypedFnType<MsgT> *f
   >
   PendingSendType reduce(
-    NodeType const& root, MsgT* msg,
+    NodeT const& root, MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   );
@@ -381,7 +381,7 @@ struct Reduce : virtual collective::tree::Tree {
     typename MsgT
   >
   PendingSendType reduce(
-    NodeType const& root, MsgT* msg,
+    NodeT const& root, MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   )
@@ -410,7 +410,7 @@ struct Reduce : virtual collective::tree::Tree {
     auto f
   >
   PendingSendType reduce(
-    NodeType const& root,
+    NodeT const& root,
     typename FuncTraits<decltype(f)>::MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
@@ -436,7 +436,7 @@ struct Reduce : virtual collective::tree::Tree {
     ActiveTypedFnType<MsgT> *f
   >
   detail::ReduceStamp reduceImmediate(
-    NodeType const& root, MsgT* msg,
+    NodeT const& root, MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   );
@@ -446,7 +446,7 @@ struct Reduce : virtual collective::tree::Tree {
     typename MsgT
     >
   detail::ReduceStamp reduceImmediate(
-    NodeType const& root, MsgT* msg,
+    NodeT const& root, MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   )
@@ -475,7 +475,7 @@ struct Reduce : virtual collective::tree::Tree {
     auto f
   >
   detail::ReduceStamp reduceImmediate(
-    NodeType const& root,
+    NodeT const& root,
     typename FuncTraits<decltype(f)>::MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1

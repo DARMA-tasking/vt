@@ -80,7 +80,7 @@ bool NodeLBData::hasObjectToMigrate(ElementIDStruct obj_id) const {
   return iter != node_migrate_.end();
 }
 
-bool NodeLBData::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
+bool NodeLBData::migrateObjTo(ElementIDStruct obj_id, NodeT to_node) {
   auto iter = node_migrate_.find(obj_id);
   if (iter == node_migrate_.end()) {
     return false;
@@ -156,7 +156,7 @@ void NodeLBData::loadAndBroadcastSpec() {
     auto spec_proxy = FileSpec::construct(FileSpecType::LB);
 
     theTerm()->produce();
-    if (theContext()->getNode() == 0) {
+    if (theContext()->getNodeStrong() == 0) {
       auto spec_ptr = spec_proxy.get();
       spec_ptr->parse();
       spec_ptr->broadcastSpec();
@@ -179,8 +179,8 @@ void NodeLBData::createLBDataFile() {
   );
 
   auto const dir = theConfig()->vt_lb_data_dir;
-  // Node 0 creates the directory
-  if (not created_dir_ and theContext()->getNode() == 0) {
+  // NodeT 0 creates the directory
+  if (not created_dir_ and theContext()->getNodeStrong() == 0) {
     int flag = mkdir(dir.c_str(), S_IRWXU);
     if (flag < 0 && errno != EEXIST) {
       throw std::runtime_error("Failed to create directory: " + dir);
@@ -210,7 +210,7 @@ void NodeLBData::createLBDataFile() {
       metadata["shared_node"] = node_metadata;
     }
     metadata["type"] = "LBDatafile";
-    metadata["rank"] = theContext()->getNode();
+    metadata["rank"] = theContext()->getNodeStrong().get();
     auto phasesMetadata = lb_data_->metadataToJson();
     if(phasesMetadata) {
        metadata["phases"] = *phasesMetadata;
@@ -248,8 +248,8 @@ getRecvSendDirection(elm::CommKeyType const& comm) {
   case elm::CommCategory::Broadcast:
     return std::make_pair(comm.toObj().id, comm.fromObj().id);
 
-  case elm::CommCategory::NodeToCollection:
-  case elm::CommCategory::NodeToCollectionBcast:
+  case elm::CommCategory::NodeCollection:
+  case elm::CommCategory::NodeCollectionBcast:
     return std::make_pair(comm.toObj().id, comm.fromNode());
 
   case elm::CommCategory::CollectionToNode:

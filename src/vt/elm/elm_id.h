@@ -45,6 +45,7 @@
 #define INCLUDED_VT_ELM_ELM_ID_H
 
 #include "vt/configs/types/types_type.h"
+#include "vt/configs/types/types_node.h"
 #include "vt/configs/types/types_sentinels.h"
 
 namespace vt { namespace elm {
@@ -73,11 +74,11 @@ struct ElementIDStruct {
   }
 
   ElementIDType id = no_element_id; /**< id must be unique across nodes */
-  NodeType curr_node = uninitialized_destination; /**< the current node */
+  NodeT curr_node = {}; /**< the current node */
 
   bool isMigratable() const;
-  NodeType getHomeNode() const;
-  NodeType getCurrNode() const;
+  NodeT getHomeNode() const;
+  NodeT getCurrNode() const;
 };
 
 

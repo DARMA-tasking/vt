@@ -74,7 +74,7 @@ private:
   void allocateDataWindow(std::size_t const in_len = 0);
 
 public:
-  std::shared_ptr<LockMPI> lock(Lock l, vt::NodeType node);
+  std::shared_ptr<LockMPI> lock(Lock l, vt::NodeT node);
 
 public:
   void deallocate();
@@ -82,33 +82,33 @@ public:
   template <typename Callable>
   void access(Lock l, Callable fn, std::size_t offset);
 
-  std::size_t getCount(vt::NodeType node, Lock l = Lock::Shared);
+  std::size_t getCount(vt::NodeT node, Lock l = Lock::Shared);
 
   RequestHolder rget(
-    vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
+    vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset
   );
-  void get(vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset);
+  void get(vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset);
 
   RequestHolder rput(
-    vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
+    vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset
   );
-  void put(vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset);
+  void put(vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset);
 
   RequestHolder raccum(
-    vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset,
+    vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset,
     MPI_Op op
   );
   void accum(
-    vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset,
+    vt::NodeT node, Lock l, T* ptr, std::size_t len, int offset,
     MPI_Op op
   );
 
-  T fetchOp(vt::NodeType node, Lock l, T ptr, int offset, MPI_Op op);
+  T fetchOp(vt::NodeT node, Lock l, T ptr, int offset, MPI_Op op);
 
   void fence(int assert = 0);
   void sync();
-  void flush(vt::NodeType node);
-  void flushLocal(vt::NodeType node);
+  void flush(vt::NodeT node);
+  void flushLocal(vt::NodeT node);
   void flushAll();
 
   bool isUniform() const { return uniform_size_; }

@@ -99,8 +99,8 @@ struct InsertMsg : ::vt::Message {
   InsertMsg() = default;
 
   InsertMsg(
-    CollectionProxy<ColT> in_proxy, IndexType in_idx, NodeType in_construct_node,
-    NodeType in_home_node, EpochType in_insert_epoch,
+    CollectionProxy<ColT> in_proxy, IndexType in_idx, NodeT in_construct_node,
+    NodeT in_home_node, EpochType in_insert_epoch,
     MsgSharedPtr<MsgT> in_insert_msg = nullptr
   ) : proxy_(in_proxy),
       idx_(in_idx),
@@ -132,8 +132,8 @@ struct InsertMsg : ::vt::Message {
 
   CollectionProxy<ColT> proxy_ = {};
   IndexType idx_ = {};
-  NodeType construct_node_ = uninitialized_destination;
-  NodeType home_node_ = uninitialized_destination;
+  NodeT construct_node_ = {};
+  NodeT home_node_ = {};
   EpochType insert_epoch_ = no_epoch;
   bool pinged_ = false;
   MsgSharedPtr<MsgT> insert_msg_ = nullptr;

@@ -51,21 +51,21 @@ namespace vt { namespace rdma {
 
 Channel::Channel(
   RDMA_HandleType const& in_rdma_handle, RDMA_TypeType const& in_op_type,
-  NodeType const& in_target, TagType const& in_channel_group_tag,
-  NodeType const& in_non_target, RDMA_PtrType const& in_ptr, ByteType const& in_num_bytes
+  NodeT const& in_target, TagType const& in_channel_group_tag,
+  NodeT const& in_non_target, RDMA_PtrType const& in_ptr, ByteType const& in_num_bytes
 ) : rdma_handle_(in_rdma_handle), target_(in_target),
     non_target_(in_non_target), num_bytes_(in_num_bytes), ptr_(in_ptr),
     op_type_(in_op_type), channel_group_tag_(in_channel_group_tag)
 {
-  auto const& my_node = theContext()->getNode();
+  auto const& my_node = theContext()->getNodeStrong();
 
   is_target_ = target_ == my_node;
 
   vtAssertExpr(target_ != non_target_);
 
   vtAssert(
-    non_target_ != uninitialized_destination and
-    target_ != uninitialized_destination,
+    non_target_ != NodeT{} and
+    target_ != NodeT{},
     "Channel must know both target and non_target"
   );
 
@@ -328,12 +328,12 @@ Channel::initChannelWindow() {
   );
 }
 
-NodeType
+NodeT
 Channel::getTarget() const {
   return target_;
 }
 
-NodeType
+NodeT
 Channel::getNonTarget() const {
   return non_target_;
 }

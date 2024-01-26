@@ -177,7 +177,7 @@ using TestParallelHarnessParam = TestParallelHarnessAny<
   testing::TestWithParam<ParamT>
 >;
 
-using TestParameterHarnessNode = TestParallelHarnessParam<vt::NodeType>;
+using TestParameterHarnessNode = TestParallelHarnessParam<vt::NodeT>;
 
 }}} // end namespace vt::tests::unit
 

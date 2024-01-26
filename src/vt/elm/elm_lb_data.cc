@@ -109,7 +109,7 @@ void ElementLBData::recvObjData(
 }
 
 void ElementLBData::recvFromNode(
-  ElementIDStruct pto, NodeType from,
+  ElementIDStruct pto, NodeT from,
   double bytes, bool bcast
 ) {
   elm::CommKey key(elm::CommKey::NodeToCollectionTag{}, from, pto, bcast);
@@ -117,7 +117,7 @@ void ElementLBData::recvFromNode(
 }
 
 void ElementLBData::recvToNode(
-  NodeType to, ElementIDStruct pfrom,
+  NodeT to, ElementIDStruct pfrom,
   double bytes, bool bcast
 ) {
   elm::CommKey key(elm::CommKey::CollectionToNodeTag{}, pfrom, to, bcast);

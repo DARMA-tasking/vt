@@ -103,7 +103,7 @@ struct EntityLocationCoord : LocationCoord {
   using PendingLocLookupsType = std::unordered_map<EntityID, ActionListType>;
   using ActionContainerType = std::unordered_map<LocEventID, PendingType>;
   using LocMsgType = LocationMsg<EntityID>;
-  using LocAsksType = std::unordered_map<EntityID, std::unordered_set<NodeType>>;
+  using LocAsksType = std::unordered_map<EntityID, std::unordered_set <NodeT  >>;
 
   template <typename MessageT>
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
@@ -140,7 +140,7 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] migrated whether it migrated in: \c entityEmigrated is preferred
    */
   void registerEntity(
-    EntityID const& id, NodeType const& home,
+    EntityID const& id, NodeT const& home,
     LocMsgActionType msg_action = nullptr, bool const& migrated = false
   );
 
@@ -157,7 +157,7 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] msg_action function to trigger when message arrives for it
    */
   void registerEntityRemote(
-    EntityID const& id, NodeType const& home, NodeType const create_node,
+    EntityID const& id, NodeT const& home, NodeT const create_node,
     LocMsgActionType msg_action = nullptr
   );
 
@@ -175,7 +175,7 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] id the entity ID
    * \param[in] new_node the node it was migrated to
    */
-  void entityEmigrated(EntityID const& id, NodeType const& new_node);
+  void entityEmigrated(EntityID const& id, NodeT const& new_node);
 
   /**
    * \brief Register a migrated entity on new node
@@ -184,17 +184,17 @@ struct EntityLocationCoord : LocationCoord {
    * This should be called after the entity is migrated when it arrived on the
    * new node: order of operations:
    *
-   *   1) Node 0: registerEntity(my_id, ...);
-   *   2) Node 0: entityEmigrated(my_id, 1);
-   *   3) Node 1: entityImmigrated(my_id, <home>, 0, ...);
+   *   1) NodeT 0: registerEntity(my_id, ...);
+   *   2) NodeT 0: entityEmigrated(my_id, 1);
+   *   3) NodeT 1: entityImmigrated(my_id, <home>, 0, ...);
    *
    * \param[in] id the entity ID
    * \param[in] home_node the home node for the entity
    * \param[in] msg_action function to trigger when message arrives for it
    */
   void entityImmigrated(
-    EntityID const& id, NodeType const& home_node,
-    NodeType const& __attribute__((unused)) from_node,
+    EntityID const& id, NodeT const& home_node,
+    NodeT const& __attribute__((unused)) from_node,
     LocMsgActionType msg_action = nullptr
   );
 
@@ -221,12 +221,12 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] action the action to trigger with the discovered location
    */
   void getLocation(
-    EntityID const& id, NodeType const& home_node, NodeActionType const& action
+    EntityID const& id, NodeT const& home_node, NodeActionType const& action
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void setupMessageForRouting(
-    EntityID const& id, NodeType const& home_node,
+    EntityID const& id, NodeT const& home_node,
     MsgSharedPtr<MessageT> const& msg
   );
 
@@ -239,7 +239,7 @@ struct EntityLocationCoord : LocationCoord {
    */
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routeMsgHandler(
-    EntityID const& id, NodeType const& home_node,
+    EntityID const& id, NodeT const& home_node,
     MsgSharedPtr<MessageT> const& msg
   );
 
@@ -277,9 +277,9 @@ struct EntityLocationCoord : LocationCoord {
    */
   template <typename MessageT>
   void routeMsg(
-    EntityID const& id, NodeType const& home_node,
+    EntityID const& id, NodeT const& home_node,
     MsgSharedPtr<MessageT> const& msg,
-    NodeType from_node = uninitialized_destination
+    NodeT from_node = {}
   );
 
   /**
@@ -290,7 +290,7 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] action action once entity is found
    */
   void routeNonEagerAction(
-    EntityID const& id, NodeType const& home_node, ActionNodeType action
+    EntityID const& id, NodeT const& home_node, ActionNodeType action
   );
 
   /**
@@ -303,7 +303,7 @@ struct EntityLocationCoord : LocationCoord {
    */
   void updatePendingRequest(
     LocEventID const& event_id, EntityID const& id,
-    NodeType const& resolved_node, NodeType const& home_node
+    NodeT const& resolved_node, NodeT const& home_node
   );
 
   /**
@@ -334,8 +334,8 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] deliver_node the node discovered which delivered the message
    */
   void sendEagerUpdate(
-    EntityID const& id, NodeType ask_node, NodeType home_node,
-    NodeType deliver_node
+    EntityID const& id, NodeT ask_node, NodeT home_node,
+    NodeT deliver_node
   );
 
   /**
@@ -346,7 +346,7 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] deliver_node the node discovered which delivered the message
    */
   void handleEagerUpdate(
-    EntityID const& id, NodeType home_node, NodeType deliver_node
+    EntityID const& id, NodeT home_node, NodeT deliver_node
   );
 
   /**
@@ -404,7 +404,7 @@ private:
    */
   template <typename MessageT>
   void routeMsgEager(
-    EntityID const& id, NodeType const& home_node,
+    EntityID const& id, NodeT const& home_node,
     MsgSharedPtr<MessageT> const& msg
   );
 
@@ -418,7 +418,7 @@ private:
    */
   template <typename MessageT>
   void routeMsgNode(
-    EntityID const& id, NodeType const& home_node, NodeType const& to_node,
+    EntityID const& id, NodeT const& home_node, NodeT const& to_node,
     MsgSharedPtr<MessageT> const& msg
   );
 

@@ -71,10 +71,10 @@ TEST_F(TestTermReset, test_termination_reset_1) {
 
   auto const& this_node = theContext()->getNode();
 
-  if (this_node == 0) {
+  if (this_node == vt::NodeT{0}) {
     auto msg = makeMessage<TestMsg>();
     theMsg()->broadcastMsg<test_handler>(msg);
-  } else if (this_node == 1) {
+  } else if (this_node == vt::NodeT{1}) {
     theTerm()->addAction([=]{
       EXPECT_EQ(handler_count, 10);
     });
@@ -87,10 +87,10 @@ TEST_F(TestTermReset, test_termination_reset_1) {
   handler_count = 0;
   theCollective()->barrier();
 
-  if (this_node == 1) {
+  if (this_node == vt::NodeT{1}) {
     auto msg = makeMessage<TestMsg>();
     theMsg()->broadcastMsg<test_handler>(msg);
-  } else if (this_node == 0) {
+  } else if (this_node == vt::NodeT{0}) {
     theTerm()->addAction([=]{
       EXPECT_EQ(handler_count, 10);
     });

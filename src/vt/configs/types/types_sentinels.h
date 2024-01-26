@@ -50,8 +50,6 @@
 namespace vt {
 
 // Physical identifier sentinel values (nodes etc.)
-static constexpr NodeType const uninitialized_destination          = static_cast<NodeType>(0xFFFF);
-
 static constexpr PhysicalResourceType const no_workers [[deprecated]]   = static_cast<PhysicalResourceType>(0xFFFF);
 
 // Runtime default `empty' sentinel value

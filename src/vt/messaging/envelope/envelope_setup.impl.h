@@ -52,7 +52,7 @@ namespace vt {
 
 template <typename Env>
 inline void envelopeSetup(
-  Env& env, NodeType const& dest, HandlerType const handler
+  Env& env, NodeT const& dest, HandlerType const handler
 ) {
   envelopeSetDest(env, dest);
   envelopeSetHandler(env, handler);
@@ -62,7 +62,7 @@ template <typename Env>
 inline void envelopeInit(Env& env) {
   envelopeSetIsLocked(env, false);
   setNormalType(env);
-  envelopeSetDest(env, uninitialized_destination);
+  envelopeSetDest(env, NodeT{});
   envelopeSetHandler(env, uninitialized_handler);
   envelopeSetRef(env, not_shared_message);
   envelopeSetGroup(env);
@@ -93,7 +93,7 @@ inline void envelopeInitCopy(Env& env, Env const& src_env) {
 template <typename Env>
 inline void envelopeCopyBcastData(Env& env, Env const& src_env) {
   envelopeSetIsLocked(env, false);
-  envelopeSetDest(env, envelopeGetDest(src_env));
+  envelopeSetDest(env, NodeT{envelopeGetDest(src_env)});
   setBroadcastType(env);
   envelopeSetIsLocked(env, true);
 }

@@ -55,10 +55,10 @@ struct LoadMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required(); // node_load_
 
-  using NodeLoadType = std::unordered_map<NodeType, LoadType>;
+  using NodeLoadType = std::unordered_map<NodeT, LoadType>;
 
   LoadMsg() = default;
-  LoadMsg(NodeType in_from_node, NodeLoadType const& in_node_load)
+  LoadMsg(NodeT in_from_node, NodeLoadType const& in_node_load)
     : from_node_(in_from_node), node_load_(in_node_load)
   { }
 
@@ -66,11 +66,11 @@ struct LoadMsg : vt::Message {
     return node_load_;
   }
 
-  void addNodeLoad(NodeType node, LoadType load) {
+  void addNodeLoad(NodeT node, LoadType load) {
     node_load_[node] = load;
   }
 
-  NodeType getFromNode() const { return from_node_; }
+  NodeT getFromNode() const { return from_node_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -80,7 +80,7 @@ struct LoadMsg : vt::Message {
   }
 
 private:
-  NodeType from_node_     = uninitialized_destination;
+  NodeT from_node_     = {};
   NodeLoadType node_load_ = {};
 };
 
@@ -90,7 +90,7 @@ struct LoadMsgAsync : LoadMsg {
 
   LoadMsgAsync() = default;
   LoadMsgAsync(
-    NodeType in_from_node, NodeLoadType const& in_node_load, int round
+    NodeT in_from_node, NodeLoadType const& in_node_load, int round
   )
     : LoadMsg(in_from_node, in_node_load), round_(round)
   { }
@@ -120,7 +120,7 @@ struct LazyMigrationMsg : SerializeRequired<
   using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, LoadType>;
 
   LazyMigrationMsg() = default;
-  LazyMigrationMsg(NodeType in_to_node, ObjsType const& in_objs)
+  LazyMigrationMsg(NodeT in_to_node, ObjsType const& in_objs)
     : to_node_(in_to_node), objs_(in_objs)
   { }
 
@@ -128,7 +128,7 @@ struct LazyMigrationMsg : SerializeRequired<
     return objs_;
   }
 
-  NodeType getToNode() const { return to_node_; }
+  NodeT getToNode() const { return to_node_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -138,7 +138,7 @@ struct LazyMigrationMsg : SerializeRequired<
   }
 
 private:
-  NodeType to_node_ = uninitialized_destination;
+  NodeT to_node_ = {};
   ObjsType objs_  = {};
 };
 

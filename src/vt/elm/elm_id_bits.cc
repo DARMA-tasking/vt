@@ -50,15 +50,15 @@
 namespace vt { namespace elm {
 
 /*static*/ ElementIDStruct ElmIDBits::createCollection(
-  bool migratable, NodeType curr_node
+  bool migratable, NodeT curr_node
 ) {
   auto const seq_id = theNodeLBData()->getNextElm();
-  auto const home_node = theContext()->getNode();
+  auto const home_node = theContext()->getNodeStrong();
   return createCollectionImpl(migratable, seq_id, home_node, curr_node);
 }
 
 /*static*/ ElementIDStruct ElmIDBits::createCollectionImpl(
-  bool migratable, ElementIDType seq_id, NodeType home_node, NodeType curr_node
+  bool migratable, ElementIDType seq_id, NodeT home_node, NodeT curr_node
 ) {
   ElementIDType ret = 0;
   setCollectionID(ret, migratable, seq_id, home_node);
@@ -66,20 +66,20 @@ namespace vt { namespace elm {
 }
 
 /*static*/ ElementIDStruct ElmIDBits::createObjGroup(
-  ObjGroupProxyType proxy, NodeType node
+  ObjGroupProxyType proxy, NodeT node
 ) {
   ElementIDType ret = 0;
   setObjGroup(ret, proxy, node);
-  auto const this_node = theContext()->getNode();
+  auto const this_node = theContext()->getNodeStrong();
   return ElementIDStruct{ret, this_node};
 }
 
-/*static*/ ElementIDStruct ElmIDBits::createBareHandler(NodeType node) {
+/*static*/ ElementIDStruct ElmIDBits::createBareHandler(NodeT node) {
   ElementIDType ret = 0;
   BitPackerType::setField<eElmIDProxyBitsObjGroup::Control, num_control_bits>(
     ret, BareHandler
   );
-  constexpr auto num_node_bits = BitCounterType<NodeType>::value;
+  constexpr auto num_node_bits = BitCounterType <NodeT  >::value;
   BitPackerType::setField<eElmIDProxyBitsNonObjGroup::Node, num_node_bits>(
     ret, node
   );
@@ -87,7 +87,7 @@ namespace vt { namespace elm {
 }
 
 /*static*/ void ElmIDBits::setObjGroup(
-  ElementIDType& id, ObjGroupProxyType proxy, NodeType node
+  ElementIDType& id, ObjGroupProxyType proxy, NodeT node
 ) {
   BitPackerType::setField<eElmIDProxyBitsObjGroup::Control, num_control_bits>(
     id, ObjGroup
@@ -100,12 +100,12 @@ namespace vt { namespace elm {
 }
 
 /*static*/ void ElmIDBits::setCollectionID(
-  ElementIDType& id, bool migratable, ElementIDType seq_id, NodeType node
+  ElementIDType& id, bool migratable, ElementIDType seq_id, NodeT node
 ) {
   BitPackerType::setField<eElmIDProxyBitsNonObjGroup::Control2, num_control_bits>(
     id, migratable ? CollectionMigratable : CollectionNonMigratable
   );
-  constexpr auto num_node_bits = BitCounterType<NodeType>::value;
+  constexpr auto num_node_bits = BitCounterType <NodeT  >::value;
   BitPackerType::setField<eElmIDProxyBitsNonObjGroup::Node, num_node_bits>(
     id, node
   );
@@ -127,15 +127,15 @@ namespace vt { namespace elm {
   );
 }
 
-/*static*/ NodeType ElmIDBits::getNode(ElementIDType id) {
+/*static*/ NodeT ElmIDBits::getNode(ElementIDType id) {
   auto const ctrl = getControlBits(id);
   if (ctrl == ObjGroup) {
     auto const proxy = ElmIDBits::getObjGroupProxy(id, true);
     return objgroup::proxy::ObjGroupProxy::getNode(proxy);
   } else {
-    constexpr auto num_node_bits = BitCounterType<NodeType>::value;
+    constexpr auto num_node_bits = BitCounterType <NodeT  >::value;
     return BitPackerType::getField<
-      eElmIDProxyBitsNonObjGroup::Node, num_node_bits, NodeType
+      eElmIDProxyBitsNonObjGroup::Node, num_node_bits, NodeT
     >(id);
   }
 }
@@ -148,7 +148,7 @@ namespace vt { namespace elm {
     eElmIDProxyBitsObjGroup::ObjGroupID, proxy_bits, ObjGroupProxyType
   >(id);
   if (not include_node) {
-    objgroup::proxy::ObjGroupProxy::setNode(proxy, 0);
+    objgroup::proxy::ObjGroupProxy::setNode(proxy, NodeT{0});
   }
   return proxy;
 }

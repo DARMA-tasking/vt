@@ -74,11 +74,11 @@ struct ElementLBData {
     ElementIDStruct from_perm, double bytes, bool bcast
   );
   void recvFromNode(
-    ElementIDStruct to_perm, NodeType from,
+    ElementIDStruct to_perm, NodeT from,
     double bytes, bool bcast
   );
   void recvToNode(
-    NodeType to, ElementIDStruct from_perm,
+    NodeT to, ElementIDStruct from_perm,
     double bytes, bool bcast
   );
   void setPhase(PhaseType const& new_phase);

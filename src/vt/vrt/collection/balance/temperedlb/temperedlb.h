@@ -63,7 +63,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 struct TemperedLB : BaseLB {
   using LoadMsgAsync   = balance::LoadMsgAsync;
   using LoadMsgSync    = balance::LoadMsg;
-  using NodeSetType    = std::vector<NodeType>;
+  using NodeSetType    = std::vector <NodeT  >;
   using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
@@ -102,9 +102,9 @@ protected:
   bool isOverloaded(LoadType load) const;
 
   std::vector<double> createCMF(NodeSetType const& under);
-  NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
-  std::vector<NodeType> makeUnderloaded() const;
-  std::vector<NodeType> makeSufficientlyUnderloaded(
+  NodeT sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
+  std::vector <NodeT  > makeUnderloaded() const;
+  std::vector <NodeT  > makeSufficientlyUnderloaded(
     LoadType load_to_accommodate
   ) const;
   ElementLoadType::iterator selectObject(
@@ -112,7 +112,7 @@ protected:
   );
   virtual LoadType getModeledValue(const elm::ElementIDStruct& obj);
 
-  void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
+  void lazyMigrateObjsTo(EpochType epoch, NodeT node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
   void loadStatsHandler(std::vector<balance::LoadData> const& vec);
   void rejectionStatsHandler(int n_rejected, int n_transfers);
@@ -158,14 +158,14 @@ private:
    */
   bool target_pole_                                 = false;
   std::random_device seed_;
-  std::unordered_map<NodeType, LoadType> load_info_ = {};
-  std::unordered_map<NodeType, LoadType> new_load_info_ = {};
+  std::unordered_map<NodeT, LoadType> load_info_ = {};
+  std::unordered_map<NodeT, LoadType> new_load_info_ = {};
   objgroup::proxy::Proxy<TemperedLB> proxy_         = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
-  std::unordered_set<NodeType> selected_            = {};
-  std::unordered_set<NodeType> underloaded_         = {};
-  std::unordered_set<NodeType> new_underloaded_     = {};
+  std::unordered_set<NodeT> selected_            = {};
+  std::unordered_set<NodeT> underloaded_         = {};
+  std::unordered_set<NodeT> new_underloaded_     = {};
   std::unordered_map<ObjIDType, LoadType> cur_objs_ = {};
   LoadType this_new_load_                           = 0.0;
   LoadType new_imbalance_                           = 0.0;

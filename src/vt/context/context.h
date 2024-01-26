@@ -96,21 +96,24 @@ struct Context : runtime::component::Component<Context> {
    * \brief Gets the current node (analogous to MPI's rank) currently being
    * used.
    *
-   * \see \c vt::NodeType
+   * \see \c vt::NodeT
    *
    * \return the node currently being run on
    */
-  inline NodeType getNode() const { return thisNode_; }
+  inline BaseNodeType getNode() const { return thisNode_; }
+
+  inline NodeT getNodeStrong() const { return thisNode_; }
 
   /**
    * \brief Get the number of nodes (analogous to MPI's num ranks) being used
    *
-   * \see \c vt::NodeType
+   * \see \c vt::NodeT
    *
    * \return the number of nodes currently being run on
    */
-  inline NodeType getNumNodes() const { return numNodes_; }
+  inline BaseNodeType getNumNodes() const { return numNodes_; }
 
+  inline NodeT getNumNodesStrong() const { return numNodes_; }
   /**
    * \brief Get the MPI communicator being used by VT in a given runtime
    * instance
@@ -143,7 +146,7 @@ struct Context : runtime::component::Component<Context> {
    * the node that sent the message to trigger the current runnable.
    *
    * \note If a task is not currently running, this will return the this node
-   * ---equivalent to \c theContext()->getNode()
+   * ---equivalent to \c theContext()->getNodeStrong()
    *
    * For the current task that is executing, get the node that sent the message
    * that caused this runnable to execute. Note, for collection handlers this
@@ -152,7 +155,7 @@ struct Context : runtime::component::Component<Context> {
    *
    * \return the node that sent the message that triggered the current task
    */
-  NodeType getFromNodeCurrentTask() const;
+  NodeT getFromNodeCurrentTask() const;
 
 #if vt_check_enabled(trace_enabled)
   /**
@@ -174,8 +177,8 @@ protected:
   void setTask(runnable::RunnableNew* in_task);
 
 private:
-  NodeType thisNode_ = uninitialized_destination;
-  NodeType numNodes_ = uninitialized_destination;
+  NodeT thisNode_ = {};
+  NodeT numNodes_ = {};
   MPI_Comm communicator_ = MPI_COMM_NULL;
   runnable::RunnableNew* cur_task_ = nullptr;
 };

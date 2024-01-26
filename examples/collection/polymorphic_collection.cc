@@ -139,9 +139,9 @@ void Hello::doWork() {
 
 
 static void migrateToNext(Hello* col) {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
-  vt::NodeType next_node = (this_node + 1) % num_nodes;
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
+  auto const next_node = (this_node + 1) % num_nodes;
 
   fmt::print("{}: migrateToNext: idx={}\n", this_node, col->getIndex());
   col->migrate(next_node);
@@ -150,8 +150,8 @@ static void migrateToNext(Hello* col) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
-  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
 
   auto num_elms = std::max(static_cast<int32_t>(num_nodes), default_num_elms);
 

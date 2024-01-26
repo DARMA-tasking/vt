@@ -55,8 +55,8 @@ static constexpr int64_t const max_bytes = 16777216;
 
 static constexpr int64_t num_pings = 10;
 
-static constexpr NodeType const ping_node = 0;
-static constexpr NodeType const pong_node = 1;
+static constexpr NodeT const ping_node = NodeT{0};
+static constexpr NodeT const pong_node = NodeT{1};
 
 vt::EpochType the_epoch = vt::no_epoch;
 
@@ -115,12 +115,12 @@ struct NodeObj {
       // End of iteration for node 1
       addPerfStats(num_bytes);
 
-      proxy_[0]
+      proxy_[NodeT{0}]
         .send<
           NodeObj::FinishedPingMsg<num_bytes>,
           &NodeObj::finishedPing<num_bytes>>(num_bytes);
     } else {
-      NodeType const next =
+      NodeT const next =
         theContext()->getNode() == ping_node ? pong_node : ping_node;
 
       auto msg = vt::makeMessage<NodeObj::PingMsg<num_bytes>>(cnt + 1);
@@ -148,13 +148,13 @@ VT_PERF_TEST(MyTest, test_ping_pong) {
   );
   grp_proxy[my_node_].invoke<&NodeObj::initialize>();
 
-  if (theContext()->getNode() == 0) {
+  if (my_node_ == NodeT{0}) {
     theTerm()->disableTD();
   }
 
   StartTimer(fmt::format("{} Bytes", min_bytes));
 
-  if (my_node_ == 0) {
+  if (my_node_ == NodeT{0}) {
     grp_proxy[pong_node]
       .send<NodeObj::PingMsg<min_bytes>, &NodeObj::pingPong<min_bytes>>();
   }

@@ -71,7 +71,7 @@ void Runtime::printStartupBanner() {
     return;
   }
 
-  NodeType const nodes = theContext->getNumNodes();
+  NodeT const nodes = theContext->getNumNodesStrong();
 
   std::string is_interop_str =
     is_interop_ ?

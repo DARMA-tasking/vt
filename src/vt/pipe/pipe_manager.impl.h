@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_node.h"
 #if !defined INCLUDED_VT_PIPE_PIPE_MANAGER_IMPL_H
 #define INCLUDED_VT_PIPE_PIPE_MANAGER_IMPL_H
 
@@ -68,7 +69,7 @@ namespace vt { namespace pipe {
 
 template <typename MsgT>
 void PipeManager::triggerSendBack(PipeType const& pipe, MsgT* data) {
-  auto const& this_node = theContext()->getNode();
+  auto const& this_node = theContext()->getNodeStrong();
   auto const& node_back = PipeIDBuilder::getNode(pipe);
   if (node_back != this_node) {
     // Send the message back to the owner node
@@ -99,13 +100,13 @@ Callback<MsgT> PipeManager::makeFunc(LifetimeEnum life, FuncMsgType<MsgT> fn) {
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-Callback<MsgT> PipeManager::makeSend(NodeType const& node) {
-  return makeCallbackSingle<f, false>(node);
+Callback<MsgT> PipeManager::makeSend(BaseNodeType const& node) {
+  return makeCallbackSingle<f, false>(NodeT{node});
 }
 
 template <typename FunctorT>
-auto PipeManager::makeSend(NodeType node) {
-  return makeCallbackFunctor<FunctorT, false>(node);
+auto PipeManager::makeSend(BaseNodeType node) {
+  return makeCallbackFunctor<FunctorT, false>(NodeT{node});
 }
 
 template <typename FunctorT>
@@ -121,9 +122,9 @@ auto PipeManager::makeBcast() {
 template <auto f, typename Target>
 auto PipeManager::makeSend(Target target) {
   if constexpr (
-    std::is_same_v<Target, NodeType> or
+    std::is_same_v<Target, BaseNodeType> or
     std::is_same_v<Target, int> or
-    std::is_same_v<Target, vt::Node>
+    std::is_same_v<Target, NodeT>
   ) {
     return makeCallbackSingle<f, false>(target);
   } else {

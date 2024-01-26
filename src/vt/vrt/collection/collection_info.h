@@ -56,7 +56,7 @@ struct CollectionInfo {
   CollectionInfo(CollectionInfo const&) = default;
   CollectionInfo(
     IndexT const& in_range, bool const in_immediate,
-    NodeType const& in_from_node, VirtualProxyType in_proxy
+    NodeT const& in_from_node, VirtualProxyType in_proxy
   ) : immediate_(in_immediate), proxy_(in_proxy),
       from_node_(in_from_node), range_(in_range)
   { }
@@ -78,7 +78,7 @@ private:
   bool immediate_ = false;
   VirtualProxyType proxy_ = no_vrt_proxy;
   VirtualRequestIDType req_id_ = no_request_id;
-  NodeType from_node_ = uninitialized_destination;
+  NodeT from_node_ = {};
   IndexT range_;
   EpochType insert_epoch_ = no_epoch;
 };

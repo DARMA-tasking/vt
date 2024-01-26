@@ -48,7 +48,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   Hello() = default;
 
   virtual ~Hello() {
-    vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+    auto num_nodes = vt::theContext()->getNumNodes();
     vtAssert(counter_ == num_nodes, "Should receive # nodes broadcasts");
   }
 

@@ -106,7 +106,7 @@ private:
 };
 
 TEST_F(TestModelNorm, test_model_norm_1) {
-  NodeType this_node = 0;
+  NodeT this_node = NodeT{0};
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
@@ -137,7 +137,7 @@ TEST_F(TestModelNorm, test_model_norm_1) {
 }
 
 TEST_F(TestModelNorm, test_model_norm_2) {
-  NodeType this_node = 0;
+  NodeT this_node = NodeT{0};
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
@@ -166,7 +166,7 @@ TEST_F(TestModelNorm, test_model_norm_2) {
 }
 
 TEST_F(TestModelNorm, test_model_norm_3) {
-  NodeType this_node = 0;
+  NodeT this_node = NodeT{0};
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{

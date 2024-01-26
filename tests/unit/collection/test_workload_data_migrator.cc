@@ -202,7 +202,7 @@ TEST_F(TestWorkloadDataMigrator, test_normalize_call) {
     vt::runInEpochCollective("choose migrations", [&]{
       for (auto obj_id : *base_load_model) {
         if (obj_id.isMigratable()) {
-          vt::NodeType dest = obj_id.id % num_nodes;
+          vt::NodeT dest = obj_id.id % num_nodes;
           normalizer->migrateObjectTo(obj_id, dest);
         }
       }
@@ -220,7 +220,7 @@ TEST_F(TestWorkloadDataMigrator, test_normalize_call) {
   // then iterate over it to make sure what shows up here is correct
   for (auto obj_id : *new_model) {
     if (obj_id.isMigratable()) {
-      vt::NodeType dest = obj_id.id % num_nodes;
+      vt::NodeT dest = obj_id.id % num_nodes;
       EXPECT_EQ(dest, this_node);
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 

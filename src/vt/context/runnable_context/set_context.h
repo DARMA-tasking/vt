@@ -66,7 +66,7 @@ struct SetContext {
    * \param[in] in_from_node the from node on the message that caused a task to
    * run
    */
-  SetContext(runnable::RunnableNew* in_cur_task, NodeType in_from_node)
+  SetContext(runnable::RunnableNew* in_cur_task, NodeT in_from_node)
     : cur_task_(in_cur_task),
       node_(in_from_node)
   {}
@@ -76,7 +76,7 @@ struct SetContext {
    *
    * \return the node
    */
-  NodeType get() const { return node_; }
+  NodeT get() const { return node_; }
 
   /**
    * \brief Preserve the existing task and replace with a new one
@@ -98,7 +98,7 @@ private:
   /// The new runnable that is replacing it
   util::ObserverPtr<runnable::RunnableNew> cur_task_ = nullptr;
   util::ObserverPtr<runnable::RunnableNew> suspended_task_ = nullptr;
-  NodeType node_ = uninitialized_destination; /**< The from node */
+  NodeT node_ = {}; /**< The from node */
 };
 
 }} /* end namespace vt::ctx */

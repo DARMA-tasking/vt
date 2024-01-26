@@ -67,7 +67,7 @@ struct TestMappingRegistry : TestParallelHarness {
 
     static constexpr Index1D::DenseIndexType const val = 64;
     static constexpr Index1D::DenseIndexType const max = 256;
-    static constexpr NodeType const nnodes = 8;
+    static constexpr NodeT const nnodes = NodeT{8};
 
     Index1D idx(val);
     Index1D max_idx(max);
@@ -76,24 +76,20 @@ struct TestMappingRegistry : TestParallelHarness {
     auto const node = fn->dispatch(&idx, &max_idx, nnodes);
 
     if (msg->is_block) {
-      EXPECT_EQ(val / (max / nnodes), node);
+      EXPECT_EQ(val / (max / nnodes.get()), node.get());
     } else {
-      EXPECT_EQ(val % nnodes, node);
+      EXPECT_EQ(val % nnodes.get(), node.get());
     }
     //fmt::print("node={}\n", node);
   }
 
 };
 
-static NodeType map_fn(
-  Index1D* idx, Index1D* max_idx, NodeType nnodes
-) {
+static NodeT map_fn(Index1D* idx, Index1D* max_idx, NodeT nnodes) {
   return mapping::dense1DBlockMap(idx, max_idx, nnodes);
 }
 
-static NodeType map_fn2(
-  Index1D* idx, Index1D* max_idx, NodeType nnodes
-) {
+static NodeT map_fn2(Index1D* idx, Index1D* max_idx, NodeT nnodes) {
   return mapping::dense1DRoundRobinMap(idx, max_idx, nnodes);
 }
 
@@ -104,7 +100,7 @@ TEST_F(TestMappingRegistry, test_mapping_block_1d_registry) {
     fmt::print("test_type_safe_active_fn_send: node={}\n", my_node);
   #endif
 
-  if (my_node == 0) {
+  if (my_node == NodeT{0}) {
     auto map_han = auto_registry::makeAutoHandlerMap<Index1D, map_fn>();
     auto msg = makeMessage<TestMsg>(map_han);
     msg->is_block = true;

@@ -388,7 +388,7 @@ public:
    * \param[in] node node to send message
    */
   template <typename MsgT>
-  PendingSendType send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
+  PendingSendType send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeT node);
 
   /**
    * \internal \brief Invoke a message handler on an objgroup
@@ -400,7 +400,7 @@ public:
    */
   template <typename ObjT, typename MsgT, auto f>
   decltype(auto) invoke(
-    messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node
+    messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeT node
   );
 
   /**
