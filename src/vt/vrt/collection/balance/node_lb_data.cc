@@ -365,6 +365,11 @@ void NodeLBData::addNodeLBData(
         lb_data_->user_defined_lb_info_[phase][id][key] = val->toVariant();
       }
     );
+    storable->collectAttributes(
+      [&](std::string const& key, auto val) {
+        lb_data_->node_user_attributes_[phase][id][key] = val->toVariant();
+      }
+    );
   }
 
   in->updatePhase(1);
