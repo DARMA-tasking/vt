@@ -102,6 +102,11 @@ NodeLBData::getUserData() const {
   return &lb_data_->user_defined_lb_info_;
 }
 
+std::unordered_map<PhaseType, DataMapType> const*
+NodeLBData::getUserAttributes() const {
+  return &lb_data_->node_user_attributes_;
+}
+
 std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() const {
   return &lb_data_->node_comm_;
 }
