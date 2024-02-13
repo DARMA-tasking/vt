@@ -205,6 +205,13 @@ public:
   std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
 
   /**
+   * \internal \brief Get stored node attributes
+   *
+   * \return an observer shared pointer to the node attributes
+   */
+  std::shared_ptr<nlohmann::json> const getNodeAttributes() const;
+
+  /**
    * \internal \brief Test if this node has an object to migrate
    *
    * \param[in] obj_id the object ID struct

@@ -122,10 +122,6 @@ std::unique_ptr<nlohmann::json> LBDataHolder::metadataToJson() const {
     }
   }
 
-  if (rank_attributes_) {
-    j["attributes"] = *rank_attributes_;
-  }
-
   // Save metadata
   j["skipped"]["list"] = skipped_list;
   j["skipped"]["range"] = skipped_ranges;
