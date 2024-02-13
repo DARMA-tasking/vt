@@ -745,8 +745,8 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
     EXPECT_NE(elm_ptr, nullptr);
     if (elm_ptr != nullptr) {
       auto elm_id = elm_ptr->getElmID();
-      elm_ptr->valInsert("hello", std::string("world"), should_dump, false);
-      elm_ptr->valInsert("elephant", 123456789, should_dump, false);
+      elm_ptr->valInsert("hello", std::string("world"), should_dump, false, false);
+      elm_ptr->valInsert("elephant", 123456789, should_dump, false, false);
       lbdh.user_defined_json_[phase][elm_id] = std::make_shared<nlohmann::json>(
         elm_ptr->toJson()
       );
