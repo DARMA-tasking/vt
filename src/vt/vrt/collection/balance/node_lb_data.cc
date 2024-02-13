@@ -110,6 +110,10 @@ std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> con
   return &lb_data_->node_subphase_comm_;
 }
 
+std::shared_ptr<nlohmann::json> const NodeLBData::getNodeAttributes() const {
+  return lb_data_->rank_attributes_;
+}
+
 CommMapType* NodeLBData::getNodeComm(PhaseType phase) {
   auto iter = lb_data_->node_comm_.find(phase);
   return (iter != lb_data_->node_comm_.end()) ? &iter->second : nullptr;
@@ -127,6 +131,7 @@ void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
     lb_data_->node_comm_.erase(phase - look_back);
     lb_data_->node_subphase_comm_.erase(phase - look_back);
     lb_data_->user_defined_lb_info_.erase(phase - look_back);
+    lb_data_->node_user_attributes_.erase(phase - look_back);
   }
 
   // Clear migrate lambdas and proxy lookup since LB is complete
@@ -214,6 +219,9 @@ void NodeLBData::createLBDataFile() {
     auto phasesMetadata = lb_data_->metadataToJson();
     if(phasesMetadata) {
        metadata["phases"] = *phasesMetadata;
+    }
+    if(lb_data_->rank_attributes_) {
+      metadata["attributes"] = *lb_data_->rank_attributes_;
     }
     lb_data_writer_ = std::make_unique<JSONAppender>(
       "phases", metadata, file_name, compress

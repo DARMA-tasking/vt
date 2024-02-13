@@ -236,10 +236,6 @@ TEST_F(TestLBDataHolder, test_lb_rank_attributes) {
   LBDataHolder testObj(json);
   EXPECT_TRUE(nullptr != testObj.rank_attributes_);
   EXPECT_EQ(123, (*testObj.rank_attributes_)["some_val"]);
-
-  auto outJsonPtr = testObj.metadataToJson();
-  ASSERT_TRUE(outJsonPtr != nullptr);
-  EXPECT_EQ(123, (*outJsonPtr)["attributes"]["some_val"]);
 }
 
 TEST_F(TestLBDataHolder, test_lb_entity_attributes) {
