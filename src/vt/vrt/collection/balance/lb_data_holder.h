@@ -114,11 +114,10 @@ private:
   /**
    * \brief Output an entity to json
    *
-   * \param[in] phase the phase
    * \param[in] j the json
    * \param[in] elm_id the element to output
    */
-  void outputEntity(PhaseType phase, nlohmann::json& j, ElementIDStruct const& elm_id) const;
+  void outputEntity(nlohmann::json& j, ElementIDStruct const& elm_id) const;
 
   /**
    * \brief Read the LB phase's metadata
@@ -128,6 +127,7 @@ private:
   void readMetadata(nlohmann::json const& j);
 
 public:
+  /// Node attributes for the current rank
   std::shared_ptr<nlohmann::json> rank_attributes_;
   /// Node timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;
@@ -139,13 +139,12 @@ public:
   std::unordered_map<PhaseType, std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
-  std::unordered_map<PhaseType, std::unordered_map<
-    ElementIDStruct, std::shared_ptr<nlohmann::json>
-  >> node_user_attributes_;
 
   std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
   /// User-defined data from each phase for LB
   std::unordered_map<PhaseType, DataMapType> user_defined_lb_info_;
+  /// User-defined attributes from each phase
+  std::unordered_map<PhaseType, DataMapType> node_user_attributes_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy

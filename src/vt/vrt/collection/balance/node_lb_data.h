@@ -189,6 +189,13 @@ public:
   std::unordered_map<PhaseType, DataMapType> const* getUserData() const;
 
   /**
+   * \internal \brief Get the user-defined attributes
+   *
+   * \return an observer pointer to the user-defined attributes
+   */
+  std::unordered_map<PhaseType, DataMapType> const* getUserAttributes() const;
+
+  /**
    * \internal \brief Get stored object comm data for a specific phase
    *
    * \param[in] phase phase

@@ -78,8 +78,7 @@ class SchemaValidator:
                                     Optional('index'): [int],
                                     'type': str,
                                     'migratable': bool,
-                                    Optional('objgroup_id'): int,
-                                    Optional('attributes'): dict
+                                    Optional('objgroup_id'): int
                                 },
                                 'node': int,
                                 'resource': str,
@@ -90,7 +89,8 @@ class SchemaValidator:
                                     }
                                 ],
                                 'time': float,
-                                Optional('user_defined'): dict
+                                Optional('user_defined'): dict,
+                                Optional('attributes'): dict
                             },
                         ],
                         Optional('communications'): [

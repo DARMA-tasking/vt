@@ -48,7 +48,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void LBDataHolder::outputEntity(PhaseType phase, nlohmann::json& j, ElementIDStruct const& id) const {
+void LBDataHolder::outputEntity(nlohmann::json& j, ElementIDStruct const& id) const {
   j["type"] = "object";
   j["id"] = id.id;
   j["home"] = id.getHomeNode();
@@ -65,11 +65,6 @@ void LBDataHolder::outputEntity(PhaseType phase, nlohmann::json& j, ElementIDStr
     j["objgroup_id"] = proxy_id;
   } else {
     // bare handler
-  }
-  if (node_user_attributes_.find(phase) != node_user_attributes_.end()) {
-    if (node_user_attributes_.at(phase).find(id) != node_user_attributes_.at(phase).end()) {
-      j["attributes"] = *(node_user_attributes_.at(phase).at(id));
-    }
   }
 }
 
@@ -153,7 +148,21 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
           }
         }
       }
-      outputEntity(phase, j["tasks"][i]["entity"], id);
+      outputEntity(j["tasks"][i]["entity"], id);
+
+      if (node_user_attributes_.find(phase) != node_user_attributes_.end()) {
+        if (node_user_attributes_.at(phase).find(id) != node_user_attributes_.at(phase).end()) {
+          for (auto const& [key, value] : node_user_attributes_.at(phase).at(id)) {
+            if (std::holds_alternative<int>(value)) {
+              j["tasks"][i]["attributes"][key] = std::get<int>(value);
+            } else if (std::holds_alternative<double>(value)) {
+              j["tasks"][i]["attributes"][key] = std::get<double>(value);
+            } else if (std::holds_alternative<std::string>(value)) {
+              j["tasks"][i]["attributes"][key] = std::get<std::string>(value);
+            }
+          }          
+        }
+      }
 
       auto const& subphase_times = elm.second.subphase_loads;
       std::size_t const subphases = subphase_times.size();
@@ -184,8 +193,8 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
         } else {
           j["communications"][i]["type"] = "Broadcast";
         }
-        outputEntity(phase, j["communications"][i]["from"], key.fromObj());
-        outputEntity(phase, j["communications"][i]["to"], key.toObj());
+        outputEntity(j["communications"][i]["from"], key.fromObj());
+        outputEntity(j["communications"][i]["to"], key.toObj());
         break;
       }
       case elm::CommCategory::NodeToCollection:
@@ -198,7 +207,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 
         j["communications"][i]["from"]["type"] = "node";
         j["communications"][i]["from"]["id"] = key.fromNode();
-        outputEntity(phase, j["communications"][i]["to"], key.toObj());
+        outputEntity(j["communications"][i]["to"], key.toObj());
         break;
       }
       case elm::CommCategory::CollectionToNode:
@@ -211,7 +220,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 
         j["communications"][i]["to"]["type"] = "node";
         j["communications"][i]["to"]["id"] = key.toNode();
-        outputEntity(phase, j["communications"][i]["from"], key.fromObj());
+        outputEntity(j["communications"][i]["from"], key.fromObj());
         break;
       }
       case elm::CommCategory::LocalInvoke:
@@ -279,12 +288,6 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               }
             }
 
-            if (task["entity"].find("attributes") != task["entity"].end()) {
-              auto attrs = task["entity"]["attributes"];
-              node_user_attributes_[id][elm] = std::make_shared<nlohmann::json>();
-              *(node_user_attributes_[id][elm]) = attrs;
-            }
-
             if (task.find("subphases") != task.end()) {
               auto subphases = task["subphases"];
               if (subphases.is_array()) {
@@ -311,6 +314,18 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 if (value.is_number()) {
                   user_defined_lb_info_[id][elm][key] =
                     value.template get<double>();
+                }
+              }
+            }
+
+            if (task.find("attributes") != task.end()) {
+              for (auto const& [key, value] : task["attributes"].items()) {
+                if (value.is_number_integer()) {
+                  node_user_attributes_[id][elm][key] = value.get<int>();
+                } else if (value.is_number_float()) {
+                  node_user_attributes_[id][elm][key] = value.get<double>();
+                } else if (value.is_string()) {
+                  node_user_attributes_[id][elm][key] = value.get<std::string>();
                 }
               }
             }

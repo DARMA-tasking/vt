@@ -253,14 +253,16 @@ TEST_F(TestLBDataHolder, test_lb_entity_attributes) {
                 "home": 0,
                 "id": 524291,
                 "type": "object",
-                "migratable": true,
-                "attributes": {
-                  "some_val": 123
-                }
+                "migratable": true
               },
               "node": 0,
               "resource": "cpu",
-              "time": 3.0
+              "time": 3.0,
+              "attributes": {
+                "intSample": 123,
+                "doubleSample": 1.99,
+                "stringSample": "abc"
+              }
             }
           ]
         }
@@ -272,11 +274,16 @@ TEST_F(TestLBDataHolder, test_lb_entity_attributes) {
   LBDataHolder testObj(json);
   EXPECT_TRUE(testObj.node_user_attributes_.find(0) != testObj.node_user_attributes_.end());
   EXPECT_TRUE(testObj.node_user_attributes_[0].find(id) != testObj.node_user_attributes_[0].end());
-  EXPECT_EQ(123, (*testObj.node_user_attributes_[0][id])["some_val"]);
+  auto attributes = testObj.node_user_attributes_[0][id];
+  EXPECT_EQ(123, std::get<int>(attributes["intSample"]));
+  EXPECT_EQ(1.99, std::get<double>(attributes["doubleSample"]));
+  EXPECT_EQ("abc", std::get<std::string>(attributes["stringSample"]));
 
   auto outJsonPtr = testObj.toJson(0);
   ASSERT_TRUE(outJsonPtr != nullptr);
-  EXPECT_EQ(123, (*outJsonPtr)["tasks"][0]["entity"]["attributes"]["some_val"]);
+  EXPECT_EQ(123, (*outJsonPtr)["tasks"][0]["attributes"]["intSample"]);
+  EXPECT_EQ(1.99, (*outJsonPtr)["tasks"][0]["attributes"]["doubleSample"]);
+  EXPECT_EQ("abc", (*outJsonPtr)["tasks"][0]["attributes"]["stringSample"]);
 }
 
 }}}} // end namespace vt::tests::unit::lb
