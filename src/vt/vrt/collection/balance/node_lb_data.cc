@@ -115,8 +115,8 @@ std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> con
   return &lb_data_->node_subphase_comm_;
 }
 
-std::shared_ptr<nlohmann::json> const NodeLBData::getNodeAttributes() const {
-  return lb_data_->rank_attributes_;
+ElmUserDataType const* NodeLBData::getNodeAttributes() const {
+  return &lb_data_->rank_attributes_;
 }
 
 CommMapType* NodeLBData::getNodeComm(PhaseType phase) {
@@ -225,8 +225,9 @@ void NodeLBData::createLBDataFile() {
     if(phasesMetadata) {
        metadata["phases"] = *phasesMetadata;
     }
-    if(lb_data_->rank_attributes_) {
-      metadata["attributes"] = *lb_data_->rank_attributes_;
+    auto attributesMetadata = lb_data_->rankAttributesToJson();
+    if(attributesMetadata) {
+      metadata["attributes"] = *attributesMetadata;
     }
     lb_data_writer_ = std::make_unique<JSONAppender>(
       "phases", metadata, file_name, compress

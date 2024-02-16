@@ -214,9 +214,9 @@ public:
   /**
    * \internal \brief Get stored node attributes
    *
-   * \return an observer shared pointer to the node attributes
+   * \return an observer pointer to the node attributes
    */
-  std::shared_ptr<nlohmann::json> const getNodeAttributes() const;
+  ElmUserDataType const* getNodeAttributes() const;
 
   /**
    * \internal \brief Test if this node has an object to migrate

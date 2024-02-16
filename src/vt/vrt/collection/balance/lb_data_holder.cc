@@ -125,6 +125,22 @@ std::unique_ptr<nlohmann::json> LBDataHolder::metadataToJson() const {
   return std::make_unique<nlohmann::json>(std::move(j));
 }
 
+std::unique_ptr<nlohmann::json> LBDataHolder::rankAttributesToJson() const {
+  nlohmann::json j;
+
+  for (auto const& [key, value] : rank_attributes_) {
+    if (std::holds_alternative<int>(value)) {
+      j["attributes"][key] = std::get<int>(value);
+    } else if (std::holds_alternative<double>(value)) {
+      j["attributes"][key] = std::get<double>(value);
+    } else if (std::holds_alternative<std::string>(value)) {
+      j["attributes"][key] = std::get<std::string>(value);
+    }
+  }
+
+  return std::make_unique<nlohmann::json>(std::move(j));
+}
+
 std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   using json = nlohmann::json;
 
@@ -469,8 +485,15 @@ void LBDataHolder::readMetadata(nlohmann::json const& j) {
     }
     // load rank user atrributes
     if (metadata.find("attributes") != metadata.end()) {
-      rank_attributes_ = std::make_shared<nlohmann::json>();
-      *(rank_attributes_) = metadata["attributes"];
+      for (auto const& [key, value] : metadata["attributes"].items()) {
+        if (value.is_number_integer()) {
+          rank_attributes_[key] = value.get<int>();
+        } else if (value.is_number_float()) {
+          rank_attributes_[key] = value.get<double>();
+        } else if (value.is_string()) {
+          rank_attributes_[key] = value.get<std::string>();
+        }
+      }
     }
   }
 }
