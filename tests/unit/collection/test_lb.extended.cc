@@ -810,7 +810,7 @@ TEST_P(TestDumpAttributesFieldData, test_dump_attributes_json) {
       elm_ptr->valInsert("intSample", 123, false, false, is_attribute);
       elm_ptr->valInsert("doubleSample", 123.456, false, false, is_attribute);
       elm_ptr->valInsert("stringSample", std::string("abc"), false, false, is_attribute);
-      
+
       elm_ptr->collectAttributes(
         [&](std::string const& key, auto val) {
           lbdh.node_user_attributes_[phase][elm_id][key] = val->toVariant();
