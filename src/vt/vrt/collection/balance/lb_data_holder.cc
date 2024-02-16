@@ -176,7 +176,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
             } else if (std::holds_alternative<std::string>(value)) {
               j["tasks"][i]["attributes"][key] = std::get<std::string>(value);
             }
-          }          
+          }
         }
       }
 

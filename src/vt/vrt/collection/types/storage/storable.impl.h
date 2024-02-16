@@ -68,7 +68,7 @@ void Storable::valInsert(std::string const& str, U&& u) {
 
 template <typename U>
 void Storable::valInsert(
-  std::string const& str, U&& u, bool dump_to_json, bool provide_to_lb, bool dump_to_attributes 
+  std::string const& str, U&& u, bool dump_to_json, bool provide_to_lb, bool dump_to_attributes
 ) {
   map_.emplace(
     std::piecewise_construct,
