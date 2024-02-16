@@ -226,7 +226,9 @@ TEST_F(TestLBDataHolder, test_lb_rank_attributes) {
       "type": "LBDatafile",
       "metadata" : {
         "attributes": {
-            "some_val": 123
+            "intSample": 123,
+            "doubleSample": 1.99,
+            "stringSample": "abc"
         }
       },
       "phases" : []
@@ -234,8 +236,15 @@ TEST_F(TestLBDataHolder, test_lb_rank_attributes) {
   )"_json;
 
   LBDataHolder testObj(json);
-  EXPECT_TRUE(nullptr != testObj.rank_attributes_);
-  EXPECT_EQ(123, (*testObj.rank_attributes_)["some_val"]);
+  EXPECT_EQ(123, std::get<int>(testObj.rank_attributes_["intSample"]));
+  EXPECT_EQ(1.99, std::get<double>(testObj.rank_attributes_["doubleSample"]));
+  EXPECT_EQ("abc", std::get<std::string>(testObj.rank_attributes_["stringSample"]));
+
+  auto outAttributesJsonPtr = testObj.rankAttributesToJson();
+  ASSERT_TRUE(outAttributesJsonPtr != nullptr);
+  EXPECT_EQ(123, (*outAttributesJsonPtr)["attributes"]["intSample"]);
+  EXPECT_EQ(1.99, (*outAttributesJsonPtr)["attributes"]["doubleSample"]);
+  EXPECT_EQ("abc", (*outAttributesJsonPtr)["attributes"]["stringSample"]);
 }
 
 TEST_F(TestLBDataHolder, test_lb_entity_attributes) {

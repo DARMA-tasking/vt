@@ -106,6 +106,13 @@ struct LBDataHolder {
   std::unique_ptr<nlohmann::json> metadataToJson() const;
 
   /**
+   * \brief Output a LB rank attributes metadata to JSON
+   *
+   * \return the json data structure
+   */
+  std::unique_ptr<nlohmann::json> rankAttributesToJson() const;
+
+  /**
    * \brief Clear all LB data
    */
   void clear();
@@ -128,7 +135,7 @@ private:
 
 public:
   /// Node attributes for the current rank
-  std::shared_ptr<nlohmann::json> rank_attributes_;
+  ElmUserDataType rank_attributes_;
   /// Node timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;
   /// Node communication graph for each local object
