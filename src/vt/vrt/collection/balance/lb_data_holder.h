@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_comm.h"
+#include "vt/utils/container/circular_phases_buffer.h"
 
 #include <unordered_map>
 #include <memory>
@@ -65,6 +66,13 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct LBDataHolder {
   LBDataHolder() = default;
+
+  /**
+   * \brief Create \c LBDataHolder with specified buffers capacity
+   *
+   * \param[in] initial_buffers_size the initial size of the buffers
+   */
+  LBDataHolder(std::size_t initial_buffers_size);
 
   /**
    * \brief Create \c LBDataHolder from input JSON
@@ -126,19 +134,19 @@ private:
 
 public:
   /// Node timings for each local object
-  std::unordered_map<PhaseType, LoadMapType> node_data_;
+  LoadMapBufferType node_data_;
   /// Node communication graph for each local object
-  std::unordered_map<PhaseType, CommMapType> node_comm_;
+  CommMapBufferType node_comm_;
   /// Node communication graph for each subphase
-  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
+  util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// User-defined data from each phase for JSON output
-  std::unordered_map<PhaseType, std::unordered_map<
+  util::container::CircularPhasesBuffer<std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
 
   std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
   /// User-defined data from each phase for LB
-  std::unordered_map<PhaseType, DataMapType> user_defined_lb_info_;
+  DataMapBufferType user_defined_lb_info_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy

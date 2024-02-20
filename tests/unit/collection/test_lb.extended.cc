@@ -538,7 +538,7 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
     );
   });
 
-  vt::vrt::collection::balance::LBDataHolder lbdh;
+  vt::vrt::collection::balance::LBDataHolder lbdh(num_elms);
   PhaseType write_phase = 0;
 
   using CommKey = vt::elm::CommKey;
@@ -549,9 +549,6 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
 
   {
     PhaseType phase = write_phase;
-    lbdh.node_data_[phase];
-    lbdh.node_comm_[phase];
-
     for (int i=0; i<num_elms; ++i) {
       vt::Index1D idx(i);
 
@@ -604,8 +601,8 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
     // compare the whole-phase load data in detail
     for (auto &phase_data : lbdh.node_data_) {
       auto phase = phase_data.first;
-      EXPECT_FALSE(lbdh_read.node_data_.find(phase) == lbdh_read.node_data_.end());
-      if (lbdh_read.node_data_.find(phase) == lbdh_read.node_data_.end()) {
+      EXPECT_TRUE(lbdh_read.node_data_.contains(phase));
+      if (!lbdh_read.node_data_.contains(phase)) {
         fmt::print(
           "Phase {} in whole-phase loads were not read in",
           phase
@@ -732,7 +729,7 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
     );
   });
 
-  vt::vrt::collection::balance::LBDataHolder lbdh;
+  vt::vrt::collection::balance::LBDataHolder lbdh(1);
   PhaseType write_phase = 0;
 
   {

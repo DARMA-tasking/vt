@@ -57,6 +57,7 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <memory>
+#include <iterator>
 
 #include <fmt-vt/core.h>
 
@@ -92,27 +93,26 @@ bool NodeLBData::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
   return true;
 }
 
-std::unordered_map<PhaseType, LoadMapType> const*
+LoadMapBufferType const*
 NodeLBData::getNodeLoad() const {
   return &lb_data_->node_data_;
 }
 
-std::unordered_map<PhaseType, DataMapType> const*
+DataMapBufferType const*
 NodeLBData::getUserData() const {
   return &lb_data_->user_defined_lb_info_;
 }
 
-std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() const {
+CommMapBufferType const* NodeLBData::getNodeComm() const {
   return &lb_data_->node_comm_;
 }
 
-std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
+util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
   return &lb_data_->node_subphase_comm_;
 }
 
 CommMapType* NodeLBData::getNodeComm(PhaseType phase) {
-  auto iter = lb_data_->node_comm_.find(phase);
-  return (iter != lb_data_->node_comm_.end()) ? &iter->second : nullptr;
+  return lb_data_->node_comm_.find(phase);
 }
 
 void NodeLBData::clearLBData() {
@@ -121,15 +121,24 @@ void NodeLBData::clearLBData() {
   next_elm_ = 1;
 }
 
-void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
-  if (phase >= look_back) {
-    lb_data_->node_data_.erase(phase - look_back);
-    lb_data_->node_comm_.erase(phase - look_back);
-    lb_data_->node_subphase_comm_.erase(phase - look_back);
-    lb_data_->user_defined_lb_info_.erase(phase - look_back);
+void NodeLBData::startIterCleanup() {
+  // Clear migrate lambdas and proxy lookup since LB is complete
+  NodeLBData::node_migrate_.clear();
+  node_collection_lookup_.clear();
+  node_objgroup_lookup_.clear();
+}
+
+void NodeLBData::resizeLBDataHistory(uint32_t new_hist_len) {
+  hist_lb_data_size_ = new_hist_len;
+
+  if (lb_data_) {
+    lb_data_->node_data_.resize(new_hist_len);
+    lb_data_->node_comm_.resize(new_hist_len);
+    lb_data_->node_subphase_comm_.resize(new_hist_len);
+    lb_data_->user_defined_lb_info_.resize(new_hist_len);
+    lb_data_->user_defined_json_.resize(new_hist_len);
   }
 
-  // Clear migrate lambdas and proxy lookup since LB is complete
   NodeLBData::node_migrate_.clear();
   node_collection_lookup_.clear();
   node_objgroup_lookup_.clear();
@@ -314,6 +323,9 @@ void NodeLBData::addNodeLBData(
     "NodeLBData::addNodeLBData: id={}\n", id
   );
 
+  // Ensure that buffers can hold request amount of data
+  in->setHistoryCapacity(hist_lb_data_size_);
+
   auto const phase = in->getPhase();
   auto const& total_load = in->getLoad(phase, focused_subphase);
 
@@ -355,9 +367,6 @@ void NodeLBData::addNodeLBData(
   }
 
   in->updatePhase(1);
-
-  auto model = theLBManager()->getLoadModel();
-  in->releaseLBDataFromUnneededPhases(phase, model->getNumPastPhasesNeeded());
 }
 
 VirtualProxyType NodeLBData::getCollectionProxyForElement(

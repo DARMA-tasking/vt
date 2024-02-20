@@ -48,6 +48,7 @@
 #include "vt/timing/timing_type.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_comm.h"
+#include "vt/utils/container/circular_phases_buffer.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -195,9 +196,9 @@ struct LoadModel
    * passed a new model instance for a collection
    */
   virtual void setLoads(
-    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const* proc_comm,
-    std::unordered_map<PhaseType, DataMapType> const* user_data
+    LoadMapBufferType const* proc_load,
+    CommMapBufferType const* proc_comm,
+    DataMapBufferType const* user_data
   ) = 0;
 
   /**

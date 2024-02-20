@@ -47,6 +47,7 @@
 #include "vt/elm/elm_id.h"
 #include "vt/elm/elm_comm.h"
 #include "vt/timing/timing.h"
+#include "vt/utils/container/circular_phases_buffer.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -115,24 +116,23 @@ struct ElementLBData {
   static const constexpr SubphaseType no_subphase =
     std::numeric_limits<SubphaseType>::max();
 
-protected:
   /**
-   * \internal \brief Release LB data from phases prior to lookback
+   * \brief Resize internal buffers
+   *
+   * \param[in] hist_lb_data_count the requested buffers capacity
    */
-  void releaseLBDataFromUnneededPhases(PhaseType phase, unsigned int look_back);
-
-  friend struct vrt::collection::balance::NodeLBData;
+  void setHistoryCapacity(unsigned int hist_lb_data_count);
 
 protected:
   bool cur_time_started_ = false;
   TimeType cur_time_ = TimeType{0.0};
   PhaseType cur_phase_ = fst_lb_phase;
-  std::unordered_map<PhaseType, LoadType> phase_timings_ = {};
-  std::unordered_map<PhaseType, CommMapType> phase_comm_ = {};
+  util::container::CircularPhasesBuffer<LoadType> phase_timings_ = {1};
+  util::container::CircularPhasesBuffer<CommMapType> phase_comm_ = {1};
 
   SubphaseType cur_subphase_ = 0;
-  std::unordered_map<PhaseType, std::vector<LoadType>> subphase_timings_ = {};
-  std::unordered_map<PhaseType, std::vector<CommMapType>> subphase_comm_ = {};
+  util::container::CircularPhasesBuffer<std::vector<LoadType>> subphase_timings_ = {1};
+  util::container::CircularPhasesBuffer<std::vector<CommMapType>> subphase_comm_ = {1};
 };
 
 }} /* end namespace vt::elm */

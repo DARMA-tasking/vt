@@ -71,9 +71,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const*,
-    std::unordered_map<PhaseType, DataMapType> const*) override {
+    vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load,
+    vt::util::container::CircularPhasesBuffer<CommMapType> const*,
+    vt::util::container::CircularPhasesBuffer<DataMapType> const*) override {
     proc_load_ = proc_load;
   }
 
@@ -95,12 +95,12 @@ struct StubModel : LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
-  std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
+  vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   NodeType this_node = 0;
-  std::unordered_map<PhaseType, LoadMapType> proc_loads = {
+  vt::util::container::CircularPhasesBuffer<LoadMapType> proc_loads = {
     {0, LoadMapType{
       {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
       {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}}},

@@ -73,9 +73,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const*,
-    std::unordered_map<PhaseType, DataMapType> const*) override {
+    vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load,
+    vt::util::container::CircularPhasesBuffer<CommMapType> const*,
+    vt::util::container::CircularPhasesBuffer<DataMapType> const*) override {
     proc_load_ = proc_load;
   }
 
@@ -95,7 +95,7 @@ struct StubModel : LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
-  std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
+  vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load_ = nullptr;
 };
 
 TEST_F(TestLinearModel, test_model_linear_model_1) {
@@ -107,10 +107,11 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
 
   // For linear regression there needs to be at least 2 phases completed
   // so we begin with 1 phase already done
-  std::unordered_map<PhaseType, LoadMapType> proc_loads{{0, LoadMapType{
+  vt::util::container::CircularPhasesBuffer<LoadMapType> proc_loads{{0, LoadMapType{
         {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
         {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}
     }}};
+  proc_loads.resize(num_test_interations + 1);
   test_model->setLoads(&proc_loads, nullptr, nullptr);
   test_model->updateLoads(0);
 

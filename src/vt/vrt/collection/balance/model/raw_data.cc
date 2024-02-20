@@ -50,9 +50,9 @@ void RawData::updateLoads(PhaseType last_completed_phase) {
   last_completed_phase_ = last_completed_phase;
 }
 
-void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                       std::unordered_map<PhaseType, CommMapType> const* proc_comm,
-                       std::unordered_map<PhaseType, DataMapType> const* user_data)
+void RawData::setLoads(LoadMapBufferType const* proc_load,
+                       CommMapBufferType const* proc_comm,
+                       DataMapBufferType const* user_data)
 {
   proc_load_ = proc_load;
   proc_comm_ = proc_comm;
@@ -60,19 +60,19 @@ void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_lo
 }
 
 ObjectIterator RawData::begin() const {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return {std::make_unique<LoadMapObjectIterator>(iter->second.cbegin(),
-                                                    iter->second.cend())};
+  auto ptr = proc_load_->find(last_completed_phase_);
+  if (ptr) {
+    return {std::make_unique<LoadMapObjectIterator>(ptr->cbegin(),
+                                                    ptr->cend())};
   } else {
     return {nullptr};
   }
 }
 
 int RawData::getNumObjects() const {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return iter->second.size();
+  auto ptr = proc_load_->find(last_completed_phase_);
+  if (ptr) {
+    return ptr->size();
   } else {
     return 0;
   }
@@ -118,7 +118,7 @@ ElmUserDataType RawData::getUserData(ElementIDStruct object, PhaseOffset offset)
            "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
   auto phase = getNumCompletedPhases() + offset.phases;
-  if (user_data_->find(phase) != user_data_->end()) {
+  if (user_data_->contains(phase)) {
     auto& phase_data = user_data_->at(phase);
     if (phase_data.find(object) != phase_data.end()) {
       return phase_data.at(object);

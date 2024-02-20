@@ -132,14 +132,14 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   j["id"] = phase;
 
   std::size_t i = 0;
-  if (node_data_.find(phase) != node_data_.end()) {
+  if (node_data_.contains(phase)) {
     for (auto&& elm : node_data_.at(phase)) {
       ElementIDStruct id = elm.first;
       LoadType time = elm.second.whole_phase_load;
       j["tasks"][i]["resource"] = "cpu";
       j["tasks"][i]["node"] = id.getCurrNode();
       j["tasks"][i]["time"] = time;
-      if (user_defined_json_.find(phase) != user_defined_json_.end()) {
+      if (user_defined_json_.contains(phase)) {
         auto &user_def_this_phase = user_defined_json_.at(phase);
         if (user_def_this_phase.find(id) != user_def_this_phase.end()) {
           auto &user_def = user_def_this_phase.at(id);
@@ -164,7 +164,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   }
 
   i = 0;
-  if (node_comm_.find(phase) != node_comm_.end()) {
+  if (node_comm_.contains(phase)) {
     for (auto&& elm : node_comm_.at(phase)) {
       auto volume = elm.second;
       auto const& key = elm.first;
@@ -229,6 +229,14 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   return std::make_unique<json>(std::move(j));
 }
 
+LBDataHolder::LBDataHolder(std::size_t initial_buffers_size)
+  : node_data_(initial_buffers_size),
+    node_comm_(initial_buffers_size),
+    node_subphase_comm_(initial_buffers_size),
+    user_defined_json_(initial_buffers_size),
+    user_defined_lb_info_(initial_buffers_size),
+    count_(0) { }
+
 LBDataHolder::LBDataHolder(nlohmann::json const& j)
   : count_(0)
 {
@@ -239,12 +247,12 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
 
   auto phases = j["phases"];
   if (phases.is_array()) {
+    node_data_.resize(phases.size());
+    node_comm_.resize(phases.size());
+
     for (auto const& phase : phases) {
       auto id = phase["id"];
       auto tasks = phase["tasks"];
-
-      this->node_data_[id];
-      this->node_comm_[id];
 
       if (tasks.is_array()) {
         for (auto const& task : tasks) {
