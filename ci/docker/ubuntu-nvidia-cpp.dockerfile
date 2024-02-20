@@ -51,6 +51,14 @@ ENV LESSCHARSET=utf-8
 COPY ./ci/deps/mpich.sh mpich.sh
 RUN ./mpich.sh 3.3.2 -j4
 
+ARG external_fmt
+COPY ./ci/deps/fmt.sh fmt.sh
+
+RUN if test ${external_fmt} -eq 1; then \
+      chmod +x ./fmt.sh && \
+      ./fmt.sh 7.1.3 -j4; \
+    fi
+
 RUN mkdir -p /nvcc_wrapper/build && \
     wget https://raw.githubusercontent.com/kokkos/kokkos/master/bin/nvcc_wrapper -P /nvcc_wrapper/build && \
     chmod +x /nvcc_wrapper/build/nvcc_wrapper

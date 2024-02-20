@@ -47,7 +47,8 @@
 #include <string>
 
 #include <EngFormat-Cpp/eng_format.hpp>
-#include <fmt-vt/core.h>
+#include "vt/cmake_config.h"
+#include INCLUDE_FMT_CORE
 
 #include "vt/timing/timing_type.h"
 
@@ -62,24 +63,23 @@ TimeType getCurrentTime();
 
 }} /* end namespace vt::timing */
 
-namespace fmt {
+VT_FMT_NAMESPACE_BEGIN
 
-template<>
+template <>
 struct formatter<::vt::TimeTypeWrapper> {
-  template<typename ParseContext>
+  template <typename ParseContext>
   constexpr auto parse(ParseContext& ctx) {
     return ctx.begin();
   }
 
-  template<typename FormatContext>
+  template <typename FormatContext>
   auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) {
     return fmt::format_to(
       ctx.out(), "{}",
-      to_engineering_string(t.seconds(), 3, eng_exponential, "s")
-    );
+      to_engineering_string(t.seconds(), 3, eng_exponential, "s"));
   }
 };
 
-} /* end namespace fmt */
+VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_TIMING_TIMING_H*/

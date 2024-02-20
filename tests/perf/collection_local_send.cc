@@ -43,7 +43,7 @@
 #include "common/test_harness.h"
 #include <vt/transport.h>
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_CORE
 
 using namespace vt;
 using namespace vt::tests::perf::common;
