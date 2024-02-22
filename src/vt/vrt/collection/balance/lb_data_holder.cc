@@ -126,6 +126,10 @@ std::unique_ptr<nlohmann::json> LBDataHolder::metadataToJson() const {
 }
 
 std::unique_ptr<nlohmann::json> LBDataHolder::rankAttributesToJson() const {
+  if (rank_attributes_.empty()) {
+    return nullptr;
+  }
+
   nlohmann::json j;
 
   for (auto const& [key, value] : rank_attributes_) {
