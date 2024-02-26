@@ -85,6 +85,8 @@ struct LBDataHolder {
     s | skipped_phases_;
     s | identical_phases_;
     s | user_defined_lb_info_;
+    s | node_user_attributes_;
+    s | rank_attributes_;
   }
 
   /**
@@ -97,11 +99,18 @@ struct LBDataHolder {
   std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
 
   /**
-   * \brief Output a LB phase's metdadata to JSON
+   * \brief Output a LB phase's metadata to JSON
    *
    * \return the json data structure
    */
   std::unique_ptr<nlohmann::json> metadataToJson() const;
+
+  /**
+   * \brief Output a LB rank attributes metadata to JSON
+   *
+   * \return the json data structure
+   */
+  std::unique_ptr<nlohmann::json> rankAttributesToJson() const;
 
   /**
    * \brief Clear all LB data
@@ -125,6 +134,8 @@ private:
   void readMetadata(nlohmann::json const& j);
 
 public:
+  /// Node attributes for the current rank
+  ElmUserDataType rank_attributes_;
   /// Node timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;
   /// Node communication graph for each local object
@@ -139,6 +150,8 @@ public:
   std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
   /// User-defined data from each phase for LB
   std::unordered_map<PhaseType, DataMapType> user_defined_lb_info_;
+  /// User-defined attributes from each phase
+  std::unordered_map<PhaseType, DataMapType> node_user_attributes_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy

@@ -64,6 +64,7 @@ class SchemaValidator:
                             'range': [[int]],
                         },
                     },
+                    Optional('attributes'): dict
                 },
                 'phases': [
                     {
@@ -88,7 +89,8 @@ class SchemaValidator:
                                     }
                                 ],
                                 'time': float,
-                                Optional('user_defined'): dict
+                                Optional('user_defined'): dict,
+                                Optional('attributes'): dict
                             },
                         ],
                         Optional('communications'): [

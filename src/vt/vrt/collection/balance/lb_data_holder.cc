@@ -125,6 +125,26 @@ std::unique_ptr<nlohmann::json> LBDataHolder::metadataToJson() const {
   return std::make_unique<nlohmann::json>(std::move(j));
 }
 
+std::unique_ptr<nlohmann::json> LBDataHolder::rankAttributesToJson() const {
+  if (rank_attributes_.empty()) {
+    return nullptr;
+  }
+
+  nlohmann::json j;
+
+  for (auto const& [key, value] : rank_attributes_) {
+    if (std::holds_alternative<int>(value)) {
+      j["attributes"][key] = std::get<int>(value);
+    } else if (std::holds_alternative<double>(value)) {
+      j["attributes"][key] = std::get<double>(value);
+    } else if (std::holds_alternative<std::string>(value)) {
+      j["attributes"][key] = std::get<std::string>(value);
+    }
+  }
+
+  return std::make_unique<nlohmann::json>(std::move(j));
+}
+
 std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   using json = nlohmann::json;
 
@@ -149,6 +169,20 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
         }
       }
       outputEntity(j["tasks"][i]["entity"], id);
+
+      if (node_user_attributes_.find(phase) != node_user_attributes_.end()) {
+        if (node_user_attributes_.at(phase).find(id) != node_user_attributes_.at(phase).end()) {
+          for (auto const& [key, value] : node_user_attributes_.at(phase).at(id)) {
+            if (std::holds_alternative<int>(value)) {
+              j["tasks"][i]["attributes"][key] = std::get<int>(value);
+            } else if (std::holds_alternative<double>(value)) {
+              j["tasks"][i]["attributes"][key] = std::get<double>(value);
+            } else if (std::holds_alternative<std::string>(value)) {
+              j["tasks"][i]["attributes"][key] = std::get<std::string>(value);
+            }
+          }
+        }
+      }
 
       auto const& subphase_times = elm.second.subphase_loads;
       std::size_t const subphases = subphase_times.size();
@@ -303,6 +337,18 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 }
               }
             }
+
+            if (task.find("attributes") != task.end()) {
+              for (auto const& [key, value] : task["attributes"].items()) {
+                if (value.is_number_integer()) {
+                  node_user_attributes_[id][elm][key] = value.get<int>();
+                } else if (value.is_number_float()) {
+                  node_user_attributes_[id][elm][key] = value.get<double>();
+                } else if (value.is_string()) {
+                  node_user_attributes_[id][elm][key] = value.get<std::string>();
+                }
+              }
+            }
           }
         }
       }
@@ -438,6 +484,18 @@ void LBDataHolder::readMetadata(nlohmann::json const& j) {
           for(PhaseType i = pair[0]; i <= pair[1]; i++){
             identical_phases_.insert(i);
           }
+        }
+      }
+    }
+    // load rank user atrributes
+    if (metadata.find("attributes") != metadata.end()) {
+      for (auto const& [key, value] : metadata["attributes"].items()) {
+        if (value.is_number_integer()) {
+          rank_attributes_[key] = value.get<int>();
+        } else if (value.is_number_float()) {
+          rank_attributes_[key] = value.get<double>();
+        } else if (value.is_string()) {
+          rank_attributes_[key] = value.get<std::string>();
         }
       }
     }

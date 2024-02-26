@@ -58,7 +58,7 @@ namespace vt { namespace tests { namespace unit { namespace lb {
 
 static constexpr int const num_phases = 10;
 
-struct TestOptionalPhasesMetadata : TestParallelHarnessParam<bool> { };
+struct TestLBDataHolder : TestParallelHarnessParam<bool> { };
 
 void addPhasesDataToJson(nlohmann::json& json, PhaseType amountOfPhasesToAdd, std::vector<PhaseType> toSkip) {
   using ElementIDStruct = vt::vrt::collection::balance::ElementIDStruct;
@@ -90,7 +90,7 @@ void addPhasesDataToJson(nlohmann::json& json, PhaseType amountOfPhasesToAdd, st
   json["phases"] = phases;
 }
 
-TEST_F(TestOptionalPhasesMetadata, test_no_metadata) {
+TEST_F(TestLBDataHolder, test_no_metadata) {
   using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
 
   nlohmann::json json;
@@ -117,7 +117,7 @@ TEST_F(TestOptionalPhasesMetadata, test_no_metadata) {
   EXPECT_EQ((*outJsonPtr)["identical_to_previous"]["range"], expectedIdenticalRanges);
 }
 
-TEST_F(TestOptionalPhasesMetadata, test_no_lb_phases_metadata) {
+TEST_F(TestLBDataHolder, test_no_lb_phases_metadata) {
   using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
 
   nlohmann::json json;
@@ -146,7 +146,7 @@ TEST_F(TestOptionalPhasesMetadata, test_no_lb_phases_metadata) {
   EXPECT_EQ((*outJsonPtr)["identical_to_previous"]["range"], expectedIdenticalRanges);
 }
 
-TEST_F(TestOptionalPhasesMetadata, test_lb_phases_metadata_empty) {
+TEST_F(TestLBDataHolder, test_lb_phases_metadata_empty) {
   using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
 
   nlohmann::json metadata, phasesMetadata, json;
@@ -182,7 +182,7 @@ TEST_F(TestOptionalPhasesMetadata, test_lb_phases_metadata_empty) {
   EXPECT_EQ((*outJsonPtr)["identical_to_previous"]["range"], expectedIdenticalRanges);
 }
 
-TEST_F(TestOptionalPhasesMetadata, test_lb_phases_metadata_filled) {
+TEST_F(TestLBDataHolder, test_lb_phases_metadata_filled) {
   using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
 
   nlohmann::json metadata, phasesMetadata, json;
@@ -216,6 +216,83 @@ TEST_F(TestOptionalPhasesMetadata, test_lb_phases_metadata_filled) {
   EXPECT_EQ((*outJsonPtr)["identical_to_previous"]["list"], expectedIdenticalList);
   std::vector<std::pair<PhaseType, PhaseType>> expectedIdenticalRanges = {{8,9}};
   EXPECT_EQ((*outJsonPtr)["identical_to_previous"]["range"], expectedIdenticalRanges);
+}
+
+TEST_F(TestLBDataHolder, test_lb_rank_attributes) {
+  using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
+
+  nlohmann::json json = R"(
+    {
+      "type": "LBDatafile",
+      "metadata" : {
+        "attributes": {
+            "intSample": 123,
+            "doubleSample": 1.99,
+            "stringSample": "abc"
+        }
+      },
+      "phases" : []
+    }
+  )"_json;
+
+  LBDataHolder testObj(json);
+  EXPECT_EQ(123, std::get<int>(testObj.rank_attributes_["intSample"]));
+  EXPECT_EQ(1.99, std::get<double>(testObj.rank_attributes_["doubleSample"]));
+  EXPECT_EQ("abc", std::get<std::string>(testObj.rank_attributes_["stringSample"]));
+
+  auto outAttributesJsonPtr = testObj.rankAttributesToJson();
+  ASSERT_TRUE(outAttributesJsonPtr != nullptr);
+  EXPECT_EQ(123, (*outAttributesJsonPtr)["attributes"]["intSample"]);
+  EXPECT_EQ(1.99, (*outAttributesJsonPtr)["attributes"]["doubleSample"]);
+  EXPECT_EQ("abc", (*outAttributesJsonPtr)["attributes"]["stringSample"]);
+}
+
+TEST_F(TestLBDataHolder, test_lb_entity_attributes) {
+  using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
+
+  nlohmann::json json = R"(
+    {
+      "type": "LBDatafile",
+      "phases": [
+        {
+          "id": 0,
+          "tasks": [
+            {
+              "entity": {
+                "home": 0,
+                "id": 524291,
+                "type": "object",
+                "migratable": true
+              },
+              "node": 0,
+              "resource": "cpu",
+              "time": 3.0,
+              "attributes": {
+                "intSample": 123,
+                "doubleSample": 1.99,
+                "stringSample": "abc"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  )"_json;
+  auto id = vt::vrt::collection::balance::ElementIDStruct{524291, 0};
+
+  LBDataHolder testObj(json);
+  EXPECT_TRUE(testObj.node_user_attributes_.find(0) != testObj.node_user_attributes_.end());
+  EXPECT_TRUE(testObj.node_user_attributes_[0].find(id) != testObj.node_user_attributes_[0].end());
+  auto attributes = testObj.node_user_attributes_[0][id];
+  EXPECT_EQ(123, std::get<int>(attributes["intSample"]));
+  EXPECT_EQ(1.99, std::get<double>(attributes["doubleSample"]));
+  EXPECT_EQ("abc", std::get<std::string>(attributes["stringSample"]));
+
+  auto outJsonPtr = testObj.toJson(0);
+  ASSERT_TRUE(outJsonPtr != nullptr);
+  EXPECT_EQ(123, (*outJsonPtr)["tasks"][0]["attributes"]["intSample"]);
+  EXPECT_EQ(1.99, (*outJsonPtr)["tasks"][0]["attributes"]["doubleSample"]);
+  EXPECT_EQ("abc", (*outJsonPtr)["tasks"][0]["attributes"]["stringSample"]);
 }
 
 }}}} // end namespace vt::tests::unit::lb
