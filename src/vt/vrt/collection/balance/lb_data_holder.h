@@ -81,7 +81,6 @@ struct LBDataHolder {
     s | user_defined_json_;
     s | user_per_phase_json_;
     s | node_idx_;
-    s | count_;
     s | skipped_phases_;
     s | identical_phases_;
     s | user_defined_lb_info_;
@@ -156,8 +155,6 @@ public:
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy
   std::unordered_map<ElementIDStruct, ObjGroupProxyType> node_objgroup_;
-  // Number of all phases including skipped and identical
-  PhaseType count_;
   // Set of phases that are skipped
   std::set<PhaseType> skipped_phases_;
   // Set of phases which are identical to previous
