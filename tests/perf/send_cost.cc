@@ -41,10 +41,13 @@
 //@HEADER
 */
 #include "common/test_harness.h"
-#include "vt/configs/error/config_assert.h"
+#include "vt/collective/collective_alg.h"
+#include "vt/context/context.h"
 #include "vt/scheduler/scheduler.h"
+#include <cstdint>
 #include <vt/collective/collective_ops.h>
 #include <vt/objgroup/manager.h>
+#include <vt/vrt/collection/manager.h>
 #include <vt/messaging/active.h>
 
 #include <fmt-vt/core.h>
@@ -54,41 +57,18 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
-static constexpr std::array<int32_t, 7> const payloadSizes = {
-  1, 64, 128, 2048, 16384, 524288, 268435456};
+// static constexpr std::array<size_t, 7> const payloadSizes = {
+//   1, 64, 128, 2048, 16384, 524288, 268435456};
+
+static constexpr std::array<size_t, 2> const payloadSizes = {1, 64};
 
 vt::EpochType the_epoch = vt::no_epoch;
 
 struct SendTest : PerfTestHarness { };
 
-struct NodeObj {
-  struct PingMsg : Message {
-    using MessageParentType = vt::Message;
-    vt_msg_serialize_required();
-    std::vector<int32_t> vec_;
-
-    PingMsg() : Message() { }
-    explicit PingMsg(size_t size) : Message() {
-      vec_.resize(size, vt::theContext()->getNode());
-    }
-
-    template <typename SerializerT>
-    void serialize(SerializerT& s) {
-      MessageParentType::serialize(s);
-      s | vec_;
-    }
-  };
-
-  void sendHandler(NodeObj::PingMsg* msg) { handled_ = true; }
-
-  explicit NodeObj(SendTest* test_obj) : test_obj_(test_obj) { }
-
-  void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
-
-  bool handled_ = false;
-  SendTest* test_obj_ = nullptr;
-  vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
-};
+////////////////////////////////////////
+//////////////// RAW MPI ///////////////
+////////////////////////////////////////
 
 VT_PERF_TEST(SendTest, test_send) {
   auto const thisNode = vt::theContext()->getNode();
@@ -124,6 +104,39 @@ VT_PERF_TEST(SendTest, test_send) {
   }
 }
 
+////////////////////////////////////////
+///////////// OBJECT GROUP /////////////
+////////////////////////////////////////
+
+struct NodeObj {
+  struct PingMsg : Message {
+    using MessageParentType = vt::Message;
+    vt_msg_serialize_required();
+    std::vector<int32_t> vec_;
+
+    PingMsg() : Message() { }
+    explicit PingMsg(size_t size) : Message() {
+      vec_.resize(size, vt::theContext()->getNode());
+    }
+
+    template <typename SerializerT>
+    void serialize(SerializerT& s) {
+      MessageParentType::serialize(s);
+      s | vec_;
+    }
+  };
+
+  void sendHandler(NodeObj::PingMsg* msg) { handled_ = true; }
+
+  explicit NodeObj(SendTest* test_obj) : test_obj_(test_obj) { }
+
+  void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
+
+  bool handled_ = false;
+  SendTest* test_obj_ = nullptr;
+  vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
+};
+
 VT_PERF_TEST(SendTest, test_objgroup_send) {
   auto grp_proxy =
     vt::theObjGroup()->makeCollective<NodeObj>("test_objgroup_send", this);
@@ -138,26 +151,79 @@ VT_PERF_TEST(SendTest, test_objgroup_send) {
 
   auto const prevNode = (thisNode - 1 + num_nodes_) % num_nodes_;
   auto const nextNode = (thisNode + 1) % num_nodes_;
-  int data = thisNode;
-  {
-    for (auto size : payloadSizes) {
-      NodeObj::PingMsg msg(size);
-      StartTimer(fmt::format("ObjGroup Payload size {}", size));
 
-      vt::runInEpochCollective([grp_proxy, nextNode, tmpMsg = std::move(msg)] {
-        grp_proxy[nextNode].send<&NodeObj::sendHandler>(std::move(tmpMsg));
-      });
+  for (auto size : payloadSizes) {
+    NodeObj::PingMsg msg(size);
+    StartTimer(fmt::format("ObjGroup Payload size {}", size));
 
-      StopTimer(fmt::format("ObjGroup Payload size {}", size));
+    vt::runInEpochCollective([grp_proxy, nextNode, tmpMsg = std::move(msg)] {
+      grp_proxy[nextNode].send<&NodeObj::sendHandler>(std::move(tmpMsg));
+    });
 
-      assert(grp_proxy[thisNode].get()->handled_);
-      grp_proxy[thisNode].get()->handled_ = false;
-    }
+    StopTimer(fmt::format("ObjGroup Payload size {}", size));
+
+    assert(grp_proxy[thisNode].get()->handled_);
+    grp_proxy[thisNode].get()->handled_ = false;
   }
 
   if (vt::theContext()->getNode() == 0) {
     vt::theTerm()->enableTD();
   }
+}
+
+////////////////////////////////////////
+////////////// COLLECTION //////////////
+////////////////////////////////////////
+
+struct Hello : vt::Collection<Hello, vt::Index1D> {
+  struct TestDataMsg : vt::CollectionMessage<Hello> {
+    vt_msg_serialize_required();
+    using MessageParentType = vt::CollectionMessage<Hello>;
+    //  vt_msg_serialize_if_needed_by_parent_or_type1(vt::IdxBase);
+    TestDataMsg() = default;
+    explicit TestDataMsg(size_t size) {
+      vec_.resize(size, theContext()->getNode());
+    }
+
+    template <typename SerializerT>
+    void serialize(SerializerT& s) {
+      MessageParentType::serialize(s);
+      s | vec_;
+    }
+
+    std::vector<int32_t> vec_ = {};
+  };
+  Hello() = default;
+
+  void handler(TestDataMsg* msg) {
+    fmt::print("[{}] Handler!\n", theContext()->getNode());
+    counter_++;
+  }
+
+private:
+  int counter_ = 0;
+};
+
+VT_PERF_TEST(SendTest, test_collection_send) {
+  auto range = vt::Index1D(int32_t{num_nodes_});
+  auto proxy = vt::makeCollection<Hello>("hello_world_collection_reduce")
+                 .bounds(range)
+                 .bulkInsert()
+                 .wait();
+
+  auto const thisNode = vt::theContext()->getNode();
+  auto const nextNode = (thisNode + 1) % num_nodes_;
+
+  for (auto size : payloadSizes) {
+    StartTimer(fmt::format("Collection Payload size {}", size));
+
+    vt::runInEpochCollective([&] {
+      proxy[nextNode].send<Hello::TestDataMsg, &Hello::handler>(size);
+    });
+
+    StopTimer(fmt::format("Collection Payload size {}", size));
+  }
+  vt::theCollective()->barrier();
 }
 
 VT_PERF_TEST_MAIN()
