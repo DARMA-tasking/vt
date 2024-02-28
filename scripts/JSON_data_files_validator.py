@@ -54,7 +54,7 @@ class SchemaValidator:
                         'num_nodes': int,
                     },
                     Optional('phases'): {
-                        'count': int,
+                        Optional('count'): int,
                         'skipped': {
                             'list': [int],
                             'range': [[int]],
