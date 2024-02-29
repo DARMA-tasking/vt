@@ -79,8 +79,26 @@ void LBDataRestartReader::startup() {
 }
 
 void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
+  auto find_max_data_phase = [&]() -> PhaseType {
+    if (lbdh.node_data_.empty()) {
+      return 0;
+    }
+    return std::max_element(
+             lbdh.node_data_.begin(), lbdh.node_data_.end(),
+             [](const auto& p1, const auto& p2) { return p1.first < p2.first; })
+      ->first;
+  };
+
+  // Find last phase number
+  auto largest_data = find_max_data_phase();
+  auto largest_identical =
+    lbdh.identical_phases_.size() > 0 ? *lbdh.identical_phases_.rbegin() : 0;
+  auto largest_skipped =
+    lbdh.skipped_phases_.size() > 0 ? *lbdh.skipped_phases_.rbegin() : 0;
+  num_phases_ =
+    std::max(std::max(largest_data, largest_identical), largest_skipped) + 1;
+
   PhaseType last_found_phase = 0;
-  num_phases_ = lbdh.count_;
   for (PhaseType phase = 0; phase < num_phases_; phase++) {
     auto iter = lbdh.node_data_.find(phase);
     if (iter != lbdh.node_data_.end()) {
@@ -93,11 +111,13 @@ void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
           history_[phase]->insert(obj.first);
         }
       }
-    } else if(lbdh.identical_phases_.find(phase) != lbdh.identical_phases_.end()) {
+    } else if (
+      lbdh.identical_phases_.find(phase) != lbdh.identical_phases_.end()) {
       // Phase is identical to previous one, use the shared pointer to data from previous phase
       addIdenticalPhase(phase, last_found_phase);
-    } else if(lbdh.skipped_phases_.find(phase) == lbdh.skipped_phases_.end()) {
-      vtAbort("Could not find data: Skipped phases needs to be listed in file metadata.");
+    } else if (lbdh.skipped_phases_.find(phase) == lbdh.skipped_phases_.end()) {
+      vtAbort("Could not find data: Skipped phases needs to be listed in file "
+              "metadata.");
     }
   }
 }
