@@ -42,7 +42,10 @@
 */
 #include "common/test_harness.h"
 #include "vt/collective/collective_alg.h"
+#include "vt/configs/error/config_assert.h"
+#include "vt/configs/error/hard_error.h"
 #include "vt/context/context.h"
+#include "vt/messaging/message/shared_message.h"
 #include "vt/scheduler/scheduler.h"
 #include <cstdint>
 #include <vt/collective/collective_ops.h>
@@ -57,10 +60,8 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
-// static constexpr std::array<size_t, 7> const payloadSizes = {
-//   1, 64, 128, 2048, 16384, 524288, 268435456};
-
-static constexpr std::array<size_t, 2> const payloadSizes = {1, 64};
+static constexpr std::array<size_t, 7> const payloadSizes = {
+  1, 64, 128, 2048, 16384, 524288, 268435456};
 
 vt::EpochType the_epoch = vt::no_epoch;
 
@@ -195,13 +196,16 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   };
   Hello() = default;
 
-  void handler(TestDataMsg* msg) {
-    fmt::print("[{}] Handler!\n", theContext()->getNode());
-    counter_++;
+  void Handler(TestDataMsg* msg) { handled_ = true; }
+
+  void CheckHandledAndReset() {
+    vtAssert(
+      handled_, fmt::format("[{}] Recv not run!", theContext()->getNode()));
+
+    handled_ = false;
   }
 
-private:
-  int counter_ = 0;
+  bool handled_ = false;
 };
 
 VT_PERF_TEST(SendTest, test_collection_send) {
@@ -215,15 +219,17 @@ VT_PERF_TEST(SendTest, test_collection_send) {
   auto const nextNode = (thisNode + 1) % num_nodes_;
 
   for (auto size : payloadSizes) {
+    auto msg = vt::makeMessage<Hello::TestDataMsg>(size_t{size});
     StartTimer(fmt::format("Collection Payload size {}", size));
 
-    vt::runInEpochCollective([&] {
-      proxy[nextNode].send<Hello::TestDataMsg, &Hello::handler>(size);
-    });
+    vt::runInEpochCollective(
+      [&] { proxy[nextNode].sendMsg<&Hello::Handler>(msg); });
 
     StopTimer(fmt::format("Collection Payload size {}", size));
+
+    vt::runInEpochCollective(
+      [&] { proxy[thisNode].invoke<&Hello::CheckHandledAndReset>(); });
   }
-  vt::theCollective()->barrier();
 }
 
 VT_PERF_TEST_MAIN()
