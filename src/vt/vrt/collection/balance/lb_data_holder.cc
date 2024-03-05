@@ -88,7 +88,6 @@ std::unique_ptr<nlohmann::json> LBDataHolder::metadataToJson() const {
   };
 
   nlohmann::json j;
-  j["count"] = count_;
 
   // Generate list and ranges of skipped phases
   std::set<PhaseType> skipped_list;
@@ -264,7 +263,6 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 }
 
 LBDataHolder::LBDataHolder(nlohmann::json const& j)
-  : count_(0)
 {
   auto this_node = theContext()->getNode();
 
@@ -438,10 +436,6 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
     }
   }
 
-  if (!count_) {
-    count_ = node_data_.size();
-  }
-
   // @todo: implement subphase communication de-serialization, no use for it
   // right now, so it will be ignored
 }
@@ -451,9 +445,6 @@ void LBDataHolder::readMetadata(nlohmann::json const& j) {
     auto metadata = j["metadata"];
     if (metadata.find("phases") != metadata.end()) {
       auto phases = metadata["phases"];
-      // load count
-      vtAssertExpr(phases["count"].is_number());
-      count_ = phases["count"];
       // load all skipped phases
       auto sl = phases["skipped"]["list"];
       if(sl.is_array()) {
@@ -507,7 +498,6 @@ void LBDataHolder::clear() {
   node_data_.clear();
   node_subphase_comm_.clear();
   node_idx_.clear();
-  count_ = 0;
   skipped_phases_.clear();
   identical_phases_.clear();
 }
