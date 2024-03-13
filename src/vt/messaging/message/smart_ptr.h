@@ -211,7 +211,7 @@ struct MsgSharedPtr final {
 
     // Obtain the size of the message from the block allocated by the
     // memory pool allocator
-    return thePool()->allocatedSize(ptr_);
+    return thePool()->allocatedSize(reinterpret_cast<std::byte*>(ptr_));
   }
 
   /**
