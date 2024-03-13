@@ -184,7 +184,7 @@ trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
 }
 
 MsgSizeType ActiveMessenger::packMsg(
-  MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
+  MessageType* msg, MsgSizeType size, std::byte* ptr, MsgSizeType ptr_bytes
 ) {
   vt_debug_print(
     verbose, active,
@@ -260,7 +260,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
       );
     }
     if (direct_buf_pack) {
-      new_msg_size = packMsg(msg, base.size(), put_ptr, put_size);
+      new_msg_size = packMsg(msg, base.size(), reinterpret_cast<std::byte*>(put_ptr), put_size);
     } else {
       auto const& env_tag = envelopeGetPutTag(msg->env);
       auto const& ret = sendData(
@@ -670,7 +670,7 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 }
 
 bool ActiveMessenger::recvDataMsgBuffer(
-  int nchunks, void* const user_buf, TagType const& tag,
+  int nchunks, std::byte* const user_buf, TagType const& tag,
   NodeType const& node, bool const& enqueue, ActionType dealloc,
   ContinuationDeleterType next, bool is_user_buf
 ) {
@@ -681,7 +681,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 }
 
 bool ActiveMessenger::recvDataMsgBuffer(
-  int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
+  int nchunks, std::byte* const user_buf, PriorityType priority, TagType const& tag,
   NodeType const& node, bool const& enqueue, ActionType dealloc_user_buf,
   ContinuationDeleterType next, bool is_user_buf
 ) {
@@ -702,9 +702,9 @@ bool ActiveMessenger::recvDataMsgBuffer(
     if (flag == 1) {
       MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-      char* buf = user_buf == nullptr ?
-        static_cast<char*>(thePool()->alloc(num_probe_bytes)) :
-        static_cast<char*>(user_buf);
+      std::byte* buf = user_buf == nullptr ?
+        reinterpret_cast<std::byte*>(thePool()->alloc(num_probe_bytes)) :
+        user_buf;
 
       NodeType const sender = stat.MPI_SOURCE;
 
@@ -730,7 +730,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       std::forward_as_tuple(tag),
       std::forward_as_tuple(
         PendingRecvType{
-          nchunks, reinterpret_cast<std::byte*>(user_buf), next, dealloc_user_buf, node, priority,
+          nchunks, user_buf, next, dealloc_user_buf, node, priority,
           is_user_buf
         }
       )
@@ -743,7 +743,7 @@ void ActiveMessenger::recvDataDirect(
   int nchunks, TagType const tag, NodeType const from, MsgSizeType len,
   ContinuationDeleterType next
 ) {
-  char* buf = static_cast<char*>(thePool()->alloc(len));
+  std::byte* buf = reinterpret_cast<std::byte*>(thePool()->alloc(len));
 
   recvDataDirect(
     nchunks, buf, tag, from, len, default_priority, nullptr, next, false
@@ -751,7 +751,7 @@ void ActiveMessenger::recvDataDirect(
 }
 
 void ActiveMessenger::recvDataDirect(
-  int nchunks, void* const buf, TagType const tag, NodeType const from,
+  int nchunks, std::byte* const buf, TagType const tag, NodeType const from,
   MsgSizeType len, PriorityType prio, ActionType dealloc,
   ContinuationDeleterType next, bool is_user_buf
 ) {
@@ -760,7 +760,7 @@ void ActiveMessenger::recvDataDirect(
   std::vector<MPI_Request> reqs;
   reqs.resize(nchunks);
 
-  char* cbuf = static_cast<char*>(buf);
+  char* cbuf = reinterpret_cast<char*>(buf);
   MsgSizeType remainder = len;
   auto const max_per_send = theConfig()->vt_max_mpi_send_size;
   for (int i = 0; i < nchunks; i++) {
@@ -801,7 +801,7 @@ void ActiveMessenger::recvDataDirect(
   }
 
   InProgressDataIRecv recv{
-    reinterpret_cast<std::byte*>(cbuf), len, from, std::move(reqs), is_user_buf ? reinterpret_cast<std::byte*>(buf) : nullptr, dealloc,
+    reinterpret_cast<std::byte*>(cbuf), len, from, std::move(reqs), is_user_buf ? buf : nullptr, dealloc,
     next, prio
   };
 
