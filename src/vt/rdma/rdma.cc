@@ -135,7 +135,7 @@ RDMAManager::RDMAManager()
     );
   } else {
     theMsg()->recvDataMsgBuffer(
-      msg->nchunks, get_ptr, msg->mpi_tag_to_recv, msg->send_back, true,
+      msg->nchunks, reinterpret_cast<std::byte*>(get_ptr), msg->mpi_tag_to_recv, msg->send_back, true,
       [get_ptr_action]{
         vt_debug_print(
           normal, rdma,
@@ -241,7 +241,7 @@ RDMAManager::RDMAManager()
         msg->offset != no_byte ? static_cast<char*>(put_ptr) + msg->offset : put_ptr;
       // do a direct recv into the user buffer
       theMsg()->recvDataMsgBuffer(
-        msg->nchunks, put_ptr_offset, recv_tag, recv_node, true, []{},
+        msg->nchunks, reinterpret_cast<std::byte*>(put_ptr_offset), recv_tag, recv_node, true, []{},
         [=](RDMA_GetType ptr, ActionType deleter){
           vt_debug_print(
             normal, rdma,

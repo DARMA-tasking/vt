@@ -1235,7 +1235,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the new size of the message
    */
   MsgSizeType packMsg(
-    MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
+    MessageType* msg, MsgSizeType size, std::byte* ptr, MsgSizeType ptr_bytes
   );
 
   /**
@@ -1335,7 +1335,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return whether the data is ready or pending
    */
   bool recvDataMsgBuffer(
-    int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
+    int nchunks, std::byte* const user_buf, PriorityType priority, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
     ContinuationDeleterType next = nullptr, bool is_user_buf = false
@@ -1357,7 +1357,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return whether the data is ready or pending
    */
   bool recvDataMsgBuffer(
-    int nchunks, void* const user_buf, TagType const& tag,
+    int nchunks, std::byte* const user_buf, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
     ContinuationDeleterType next = nullptr, bool is_user_buf = false
@@ -1377,7 +1377,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] is_user_buf is a user buffer that require user deallocation
    */
   void recvDataDirect(
-    int nchunks, void* const buf, TagType const tag, NodeType const from,
+    int nchunks, std::byte* const buf, TagType const tag, NodeType const from,
     MsgSizeType len, PriorityType prio, ActionType dealloc = nullptr,
     ContinuationDeleterType next = nullptr, bool is_user_buf = false
   );
