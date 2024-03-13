@@ -98,7 +98,7 @@ void* MemoryPoolEqual<num_bytes_t, use_header>::alloc(
   void* ptr_ret = ptr;
   if (use_header) {
     ptr_ret = HeaderManagerType::setHeader(
-      sz, oversize, static_cast<char*>(ptr)
+      sz, oversize, reinterpret_cast<std::byte*>(ptr)
     );
   }
 
@@ -124,7 +124,7 @@ void MemoryPoolEqual<num_bytes_t, use_header>::dealloc(void* const t) {
     cur_slot_ - 1 >= 0, "Must be greater than zero"
   );
 
-  auto t_char = static_cast<char*>(t);
+  auto t_char = reinterpret_cast<std::byte*>(t);
   void* ptr_actual = t;
   if (use_header) {
     ptr_actual = HeaderManagerType::getHeaderPtr(t_char);
