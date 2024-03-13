@@ -300,7 +300,7 @@ private:
 }
 
 void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
-  auto buf = static_cast<char*>(thePool()->alloc(msg->getSize()));
+  auto buf = reinterpret_cast<std::byte*>(thePool()->alloc(msg->getSize()));
 
   auto const size = msg->getSize();
   auto const info = msg->getInfo();
@@ -730,7 +730,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       std::forward_as_tuple(tag),
       std::forward_as_tuple(
         PendingRecvType{
-          nchunks, user_buf, next, dealloc_user_buf, node, priority,
+          nchunks, reinterpret_cast<std::byte*>(user_buf), next, dealloc_user_buf, node, priority,
           is_user_buf
         }
       )
@@ -801,7 +801,7 @@ void ActiveMessenger::recvDataDirect(
   }
 
   InProgressDataIRecv recv{
-    cbuf, len, from, std::move(reqs), is_user_buf ? buf : nullptr, dealloc,
+    reinterpret_cast<std::byte*>(cbuf), len, from, std::move(reqs), is_user_buf ? reinterpret_cast<std::byte*>(buf) : nullptr, dealloc,
     next, prio
   };
 
@@ -838,7 +838,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     vt_debug_print(
       normal, active,
       "finishPendingDataMsgAsyncRecv: continuation user_buf={}, buf={}\n",
-      user_buf, buf
+      reinterpret_cast<void*>(user_buf), reinterpret_cast<void*>(buf)
     );
 
     if (user_buf == nullptr) {
@@ -1032,7 +1032,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
       #endif
     }
 
-    InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
+    InProgressIRecv recv_holder{reinterpret_cast<std::byte*>(buf), num_probe_bytes, sender, req};
 
     int num_mpi_tests = 0;
     auto done = recv_holder.test(num_mpi_tests);
@@ -1051,7 +1051,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 }
 
 void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
-  char* buf = irecv->buf;
+  char* buf = reinterpret_cast<char*>(irecv->buf);
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
 
