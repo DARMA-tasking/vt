@@ -100,7 +100,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
       child, num_children, child_bytes_size
     );
     auto const child_remaining_size =
-      thePool()->remainingSize(reinterpret_cast<void*>(child_msg.get()));
+      thePool()->remainingSize(reinterpret_cast<std::byte*>(child_msg.get()));
     child_msg->user_han = user_handler;
     auto ptr = reinterpret_cast<char*>(child_msg.get()) + sizeof(ScatterMsg);
     vt_debug_print(

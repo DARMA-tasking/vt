@@ -68,7 +68,7 @@ void Scatter::scatter(
   auto ptr = reinterpret_cast<char*>(scatter_msg.get()) + sizeof(ScatterMsg);
 #if vt_check_enabled(memory_pool)
   auto remaining_size =
-    thePool()->remainingSize(reinterpret_cast<void*>(scatter_msg.get()));
+    thePool()->remainingSize(reinterpret_cast<std::byte*>(scatter_msg.get()));
   vtAssertInfo(
     remaining_size >= combined_size, "Remaining size must be sufficient",
     total_size, combined_size, remaining_size, elm_size

@@ -154,7 +154,7 @@ struct ActiveMsg : BaseMsg {
       "Message::delete of ptr={}\n", print_ptr(ptr)
     );
 
-    return thePool()->dealloc(ptr);
+    return thePool()->dealloc(reinterpret_cast<std::byte*>(ptr));
   }
 
   /**

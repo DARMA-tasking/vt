@@ -79,7 +79,7 @@ Pool::ePoolSize Pool::getPoolType(
   }
 }
 
-void* Pool::tryPooledAlloc(size_t const& num_bytes, size_t const& oversize) {
+std::byte* Pool::tryPooledAlloc(size_t const& num_bytes, size_t const& oversize) {
   ePoolSize const pool_type = getPoolType(num_bytes, oversize);
 
   if (pool_type != ePoolSize::Malloc) {
@@ -89,10 +89,9 @@ void* Pool::tryPooledAlloc(size_t const& num_bytes, size_t const& oversize) {
   }
 }
 
-bool Pool::tryPooledDealloc(void* const buf) {
-  auto buf_byte = reinterpret_cast<std::byte*>(buf);
-  auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_byte);
-  auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf_byte);
+bool Pool::tryPooledDealloc(std::byte* const buf) {
+  auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf);
+  auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf);
   ePoolSize const pool_type = getPoolType(actual_alloc_size, oversize);
 
   if (pool_type != ePoolSize::Malloc) {
@@ -103,23 +102,23 @@ bool Pool::tryPooledDealloc(void* const buf) {
   }
 }
 
-void* Pool::pooledAlloc(
+std::byte* Pool::pooledAlloc(
   size_t const& num_bytes, size_t const& oversize, ePoolSize const pool_type
 ) {
-  void* ret = nullptr;
+  std::byte* ret = nullptr;
 
   vt_debug_print(
     normal, pool,
     "Pool::pooled_alloc of size={}, type={}, ret={}\n",
-    num_bytes, print_pool_type(pool_type), ret
+    num_bytes, print_pool_type(pool_type), print_ptr(ret)
   );
 
   if (pool_type == ePoolSize::Small) {
     auto pool = small_msg.get();
-    ret = pool->alloc(num_bytes, oversize);
+    ret = reinterpret_cast<std::byte*>(pool->alloc(num_bytes, oversize));
   } else if (pool_type == ePoolSize::Medium) {
     auto pool = medium_msg.get();
-    ret = pool->alloc(num_bytes, oversize);
+    ret = reinterpret_cast<std::byte*>(pool->alloc(num_bytes, oversize));
   } else {
     vtAssert(0, "Pool must be valid");
     ret = nullptr;
@@ -128,7 +127,7 @@ void* Pool::pooledAlloc(
   return ret;
 }
 
-void Pool::poolDealloc(void* const buf, ePoolSize const pool_type) {
+void Pool::poolDealloc(std::byte* const buf, ePoolSize const pool_type) {
   vt_debug_print(
     normal, pool,
     "Pool::pooled_dealloc of ptr={}, type={}\n",
@@ -144,19 +143,19 @@ void Pool::poolDealloc(void* const buf, ePoolSize const pool_type) {
   }
 }
 
-void* Pool::defaultAlloc(size_t const& num_bytes, size_t const& oversize) {
+std::byte* Pool::defaultAlloc(size_t const& num_bytes, size_t const& oversize) {
   auto alloc_buf = std::malloc(num_bytes + oversize + sizeof(HeaderType));
   return HeaderManagerType::setHeader(
     num_bytes, oversize, reinterpret_cast<std::byte*>(alloc_buf)
   );
 }
 
-void Pool::defaultDealloc(void* const ptr) {
-  std::free(ptr);
+void Pool::defaultDealloc(std::byte* const ptr) {
+  std::free(reinterpret_cast<void*>(ptr));
 }
 
-void* Pool::alloc(size_t const& num_bytes, size_t oversize) {
-  void* ret = nullptr;
+std::byte* Pool::alloc(size_t const& num_bytes, size_t oversize) {
+  std::byte* ret = nullptr;
 
   #if vt_check_enabled(memory_pool)
     ret = tryPooledAlloc(num_bytes, oversize);
@@ -171,21 +170,20 @@ void* Pool::alloc(size_t const& num_bytes, size_t oversize) {
   vt_debug_print(
     normal, pool,
     "Pool::alloc of size={}, ret={}\n",
-    num_bytes, ret
+    num_bytes, print_ptr(ret)
   );
 
   return ret;
 }
 
-void Pool::dealloc(void* const buf) {
-  auto buf_byte = reinterpret_cast<std::byte*>(buf);
-  auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_byte);
-  auto const& ptr_actual = HeaderManagerType::getHeaderPtr(buf_byte);
+void Pool::dealloc(std::byte* const buf) {
+  auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf);
+  auto const& ptr_actual = HeaderManagerType::getHeaderPtr(buf);
 
   vt_debug_print(
     normal, pool,
     "Pool::dealloc of buf={}, alloc_size={}, ptr={}\n",
-    buf, actual_alloc_size, print_ptr(ptr_actual)
+    print_ptr(buf), actual_alloc_size, print_ptr(ptr_actual)
   );
 
   bool success = false;
@@ -199,11 +197,10 @@ void Pool::dealloc(void* const buf) {
   }
 }
 
-Pool::SizeType Pool::remainingSize(void* const buf) const {
+Pool::SizeType Pool::remainingSize(std::byte* const buf) const {
   #if vt_check_enabled(memory_pool)
-    auto buf_byte = reinterpret_cast<std::byte*>(buf);
-    auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_byte);
-    auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf_byte);
+    auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf);
+    auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf);
 
     ePoolSize const pool_type = getPoolType(actual_alloc_size, oversize);
 
@@ -219,19 +216,18 @@ Pool::SizeType Pool::remainingSize(void* const buf) const {
   #endif
 }
 
-Pool::SizeType Pool::allocatedSize(void* const buf) const {
-  auto buf_byte = reinterpret_cast<std::byte*>(buf);
-  return HeaderManagerType::getHeaderBytes(buf_byte) + HeaderManagerType::getHeaderOversizeBytes(buf_byte);
+Pool::SizeType Pool::allocatedSize(std::byte* const buf) const {
+  return HeaderManagerType::getHeaderBytes(buf) + HeaderManagerType::getHeaderOversizeBytes(buf);
 }
 
 bool
-Pool::tryGrowAllocation(void* buf, size_t grow_amount) {
+Pool::tryGrowAllocation(std::byte* buf, size_t grow_amount) {
   // For non-pooled alloc, this condition will always be true
   // since remainingSize(buf) would be 0
   if ( remainingSize(buf) < grow_amount )
     return false;
 
-  auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(reinterpret_cast<std::byte*>(buf)));
+  auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(buf));
   header->alloc_size += grow_amount;
   return true;
 }
