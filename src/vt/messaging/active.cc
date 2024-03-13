@@ -192,7 +192,7 @@ MsgSizeType ActiveMessenger::packMsg(
     size, ptr_bytes, print_ptr(ptr)
   );
 
-  auto const can_grow = thePool()->tryGrowAllocation(msg, ptr_bytes);
+  auto const can_grow = thePool()->tryGrowAllocation(reinterpret_cast<std::byte*>(msg), ptr_bytes);
   // Typically this should be checked by the caller in advance
   vtAssert(can_grow, "not enough space to pack message" );
 
@@ -236,7 +236,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     auto const& put_ptr = envelopeGetPutPtr(msg->env);
     auto const& put_size = envelopeGetPutSize(msg->env);
     bool const& memory_pool_active = thePool()->active_env();
-    auto const& rem_size = thePool()->remainingSize(msg);
+    auto const& rem_size = thePool()->remainingSize(reinterpret_cast<std::byte*>(msg));
     /*
      * Directly pack if the pool is active (which means it may have
      * overallocated and the remaining size of the (envelope) buffer is
@@ -998,7 +998,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-    char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
+    char* buf = reinterpret_cast<char*>(thePool()->alloc(num_probe_bytes));
 
     NodeType const sender = stat.MPI_SOURCE;
 

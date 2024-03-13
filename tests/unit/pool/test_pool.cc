@@ -107,12 +107,12 @@ TEST_F(TestPool, pool_alloc) {
   std::unique_ptr<pool::Pool> testPool = std::make_unique<pool::Pool>();
 
   for (size_t cur_bytes = 1; cur_bytes < max_bytes; cur_bytes *= 2) {
-    void* ptr = testPool->alloc(cur_bytes);
-    std::memset(ptr, init_val, cur_bytes);
+    std::byte* ptr = testPool->alloc(cur_bytes);
+    std::memset(reinterpret_cast<void*>(ptr), init_val, cur_bytes);
     //fmt::print("alloc {} bytes, ptr={}\n", cur_bytes, ptr);
     EXPECT_NE(ptr, nullptr);
     for (size_t i = 0; i < cur_bytes; i++) {
-      EXPECT_EQ(static_cast<CharType*>(ptr)[i], init_val);
+      EXPECT_EQ(reinterpret_cast<CharType*>(ptr)[i], init_val);
     }
     testPool->dealloc(ptr);
   }
