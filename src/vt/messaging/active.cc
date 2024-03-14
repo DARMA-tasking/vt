@@ -1100,7 +1100,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
         );
       }
 
-      envelopeSetPutPtrOnly(msg->env, put_ptr);
+      envelopeSetPutPtrOnly(msg->env, reinterpret_cast<std::byte*>(put_ptr));
       put_finished = true;
     } else {
       /*bool const put_delivered = */recvDataMsg(
