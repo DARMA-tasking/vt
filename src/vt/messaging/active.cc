@@ -838,7 +838,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     vt_debug_print(
       normal, active,
       "finishPendingDataMsgAsyncRecv: continuation user_buf={}, buf={}\n",
-      reinterpret_cast<void*>(user_buf), reinterpret_cast<void*>(buf)
+      print_ptr(user_buf), print_ptr(buf)
     );
 
     if (user_buf == nullptr) {
