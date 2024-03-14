@@ -80,8 +80,8 @@
 
 namespace vt {
 
-/// A pair of a void* and number of bytes (length) for sending data
-using PtrLenPairType = std::tuple<void*, ByteType>;
+/// A pair of a std::byte* and number of bytes (length) for sending data
+using PtrLenPairType = std::tuple<std::byte*, ByteType>;
 
 /// A continuation function with an allocated pointer with a deleter function
 using ContinuationDeleterType =

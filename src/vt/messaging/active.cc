@@ -264,7 +264,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     } else {
       auto const& env_tag = envelopeGetPutTag(msg->env);
       auto const& ret = sendData(
-        PtrLenPairType{put_ptr,put_size}, dest, env_tag
+        PtrLenPairType{reinterpret_cast<std::byte*>(put_ptr),put_size}, dest, env_tag
       );
       auto const& ret_tag = ret.getTag();
       if (ret_tag != env_tag) {
@@ -376,7 +376,7 @@ EventType ActiveMessenger::sendMsgMPI(
     auto tag = allocateNewTag();
 
     // Send the actual data in multiple chunks
-    PtrLenPairType tup = std::make_tuple(untyped_msg, msg_size);
+    PtrLenPairType tup = std::make_tuple(reinterpret_cast<std::byte*>(untyped_msg), msg_size);
     SendInfo info = sendData(tup, dest, tag);
 
     auto event_id = info.getEvent();
@@ -539,7 +539,7 @@ SendInfo ActiveMessenger::sendData(
   vt_debug_print(
     terse, active,
     "sendData: ptr={}, num_bytes={} dest={}, tag={}, send_tag={}\n",
-    data_ptr, num_bytes, dest, tag, send_tag
+    print_ptr(data_ptr), num_bytes, dest, tag, send_tag
   );
 
   vtAbortIf(
@@ -564,7 +564,7 @@ SendInfo ActiveMessenger::sendData(
 std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
   PtrLenPairType const& payload, NodeType const& dest, TagType const& tag
 ) {
-  auto ptr = static_cast<char*>(std::get<0>(payload));
+  auto ptr = reinterpret_cast<char*>(std::get<0>(payload));
   auto remainder = std::get<1>(payload);
   int num_sends = 0;
   std::vector<EventType> events;
@@ -743,7 +743,7 @@ void ActiveMessenger::recvDataDirect(
   int nchunks, TagType const tag, NodeType const from, MsgSizeType len,
   ContinuationDeleterType next
 ) {
-  std::byte* buf = reinterpret_cast<std::byte*>(thePool()->alloc(len));
+  std::byte* buf = thePool()->alloc(len);
 
   recvDataDirect(
     nchunks, buf, tag, from, len, default_priority, nullptr, next, false

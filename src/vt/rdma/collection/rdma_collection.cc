@@ -61,7 +61,7 @@ namespace vt { namespace rdma {
 
   auto const& elm_size = sizeof(void*);
   auto const& num_bytes = elm_size * num_elms;
-  void* ptr = nullptr;
+  std::byte* ptr = nullptr;
   auto const& han = rdma->registerNewRdmaHandler(false, ptr, num_bytes, true);
 
   auto iter = rdma->holder_.find(han);
