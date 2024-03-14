@@ -115,10 +115,10 @@ std::byte* Pool::pooledAlloc(
 
   if (pool_type == ePoolSize::Small) {
     auto pool = small_msg.get();
-    ret = reinterpret_cast<std::byte*>(pool->alloc(num_bytes, oversize));
+    ret = pool->alloc(num_bytes, oversize);
   } else if (pool_type == ePoolSize::Medium) {
     auto pool = medium_msg.get();
-    ret = reinterpret_cast<std::byte*>(pool->alloc(num_bytes, oversize));
+    ret = pool->alloc(num_bytes, oversize);
   } else {
     vtAssert(0, "Pool must be valid");
     ret = nullptr;
