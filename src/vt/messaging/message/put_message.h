@@ -52,10 +52,10 @@ namespace vt { namespace messaging {
 
 template <typename MessageT>
 struct PutMessageComponent : MessageT {
-  void setPut(void const* const ptr, size_t const size) {
+  void setPut(std::byte const* const ptr, size_t const size) {
     envelopeSetPutPtr(MessageT::env, ptr, size);
   }
-  void* getPut() {
+  std::byte* getPut() {
     return envelopeGetPutPtr(MessageT::env);
   }
   size_t getPutSize() {
