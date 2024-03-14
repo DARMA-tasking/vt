@@ -76,7 +76,7 @@ static constexpr size_t const memory_size_medium =
  */
 template <int64_t num_bytes_t, bool use_header = true>
 struct MemoryPoolEqual {
-  using ContainerType = std::vector<void*>;
+  using ContainerType = std::vector<std::byte*>;
   using SlotType = int64_t;
   using HeaderType = Header;
   using HeaderManagerType = HeaderManager;
@@ -92,8 +92,8 @@ struct MemoryPoolEqual {
 
   virtual ~MemoryPoolEqual();
 
-  void* alloc(size_t const& sz, size_t const& oversize);
-  void dealloc(void* const t);
+  std::byte* alloc(size_t const& sz, size_t const& oversize);
+  void dealloc(std::byte* const t);
   void resizePool();
   SlotType getNumBytes();
 

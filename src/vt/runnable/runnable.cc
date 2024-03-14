@@ -255,7 +255,7 @@ void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
 }
 
 /*static*/ void RunnableNew::operator delete(void* ptr) {
-  RunnableNewAlloc::runnable->dealloc(ptr);
+  RunnableNewAlloc::runnable->dealloc(reinterpret_cast<std::byte*>(ptr));
 }
 
 /*static*/
