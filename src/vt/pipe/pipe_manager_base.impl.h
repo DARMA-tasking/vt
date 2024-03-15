@@ -103,7 +103,7 @@ void PipeManagerBase::triggerPipeUnknown(PipeType const& pipe, MsgT* msg) {
     pipe, print_ptr(msg)
   );
 
-  iter->second.dispatch(msg);
+  iter->second.dispatch(reinterpret_cast<std::byte*>(msg));
 }
 
 template <typename SignalT, typename ListenerT>
