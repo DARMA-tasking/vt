@@ -288,7 +288,7 @@ ObjT* ObjGroupManager::get(ProxyElmType<ObjT> proxy) {
   auto iter = objs_.find(proxy_bits);
   vtAssert(iter != objs_.end(), "Obj must exist on this node");
   HolderBaseType* holder = iter->second.get();
-  return static_cast<ObjT*>(holder->getPtr());
+  return reinterpret_cast<ObjT*>(holder->getPtr());
 }
 
 template <typename ObjT, typename... Args>
