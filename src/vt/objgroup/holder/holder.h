@@ -63,7 +63,7 @@ struct Holder final : HolderObjBase<ObjT> {
 public:
   ObjT* get() override { return obj_.get(); }
   bool exists() override { return obj_ != nullptr; }
-  void* getPtr() override { return obj_.get(); }
+  std::byte* getPtr() override { return reinterpret_cast<std::byte*>(obj_.get()); }
 
   template <typename... Args>
   void reset(Args&&... args) {
