@@ -82,15 +82,15 @@ namespace vt { namespace messaging {
 struct MsgPtrImplBase {
   /// Invoke messageDeref on the appropriate type.
   /// (Ensure a valid delete-expression on virtual message types.)
-  virtual void messageDeref(void* msg_ptr) = 0;
+  virtual void messageDeref(std::byte* msg_ptr) = 0;
   virtual ~MsgPtrImplBase() {}
 };
 
 template <typename MsgT>
 struct MsgPtrImplTyped : MsgPtrImplBase {
-  virtual void messageDeref(void* msg_ptr) {
+  virtual void messageDeref(std::byte* msg_ptr) {
     // N.B. messageDeref<T> invokes delete-expr T.
-    vt::messageDeref(static_cast<MsgT*>(msg_ptr));
+    vt::messageDeref(reinterpret_cast<MsgT*>(msg_ptr));
   }
 };
 
@@ -280,7 +280,7 @@ private:
 
     T* msgPtr = get();
 
-    impl_->messageDeref(msgPtr);
+    impl_->messageDeref(reinterpret_cast<std::byte*>(msgPtr));
 
     ptr_ = nullptr;
   }
