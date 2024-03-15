@@ -104,7 +104,7 @@ using ActiveGetFunctionType = RDMA_GetType(*)(BaseMessage*, ByteType, ByteType, 
 using ActivePutFunctionType = void(*)(BaseMessage*, RDMA_PtrType, ByteType, ByteType, TagType, bool);
 
 using RDMA_PtrContinuationType = std::function<void(RDMA_PtrType)>;
-using RDMA_RecvType = std::function<void(void* ptr, size_t num_bytes)>;
+using RDMA_RecvType = std::function<void(std::byte* ptr, size_t num_bytes)>;
 
 using RDMA_NumElemsType = int64_t;
 using RDMA_BlockElmRangeType = std::tuple<RDMA_BlockType,RDMA_ElmType,RDMA_ElmType>;
