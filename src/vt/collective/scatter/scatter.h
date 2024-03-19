@@ -66,7 +66,7 @@ namespace vt { namespace collective { namespace scatter {
  */
 struct Scatter : virtual collective::tree::Tree {
   using FuncSizeType = std::function<std::size_t(NodeType)>;
-  using FuncDataType = std::function<void(NodeType, void*)>;
+  using FuncDataType = std::function<void(NodeType, std::byte*)>;
 
   /**
    * \internal \brief Construct a scatter manager
