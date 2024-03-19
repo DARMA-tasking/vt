@@ -71,7 +71,7 @@ struct SentinelObject {};
 
 struct BaseHandlersDispatcher {
   virtual ~BaseHandlersDispatcher() = default;
-  virtual void dispatch(messaging::BaseMsg* msg, void* object) const = 0;
+  virtual void dispatch(messaging::BaseMsg* msg, std::byte* object) const = 0;
 };
 
 template <typename MsgT, typename HandlerT, typename ObjT>
@@ -100,11 +100,11 @@ struct HandlersDispatcher final : BaseHandlersDispatcher {
     detection::is_detected_convertible<std::true_type, ColTrait, U>;
 
 public:
-  void dispatch(messaging::BaseMsg* base_msg, void* object) const override {
+  void dispatch(messaging::BaseMsg* base_msg, std::byte* object) const override {
     using T = HandlerT;
 
     [[maybe_unused]] auto msg = static_cast<MsgT*>(base_msg);
-    [[maybe_unused]] auto elm = static_cast<ObjT*>(object);
+    [[maybe_unused]] auto elm = reinterpret_cast<ObjT*>(object);
 
     if constexpr (std::is_same_v<T, ActiveVoidFnType*>) {
       fp();
@@ -183,7 +183,7 @@ private:
 
 struct BaseScatterDispatcher {
   virtual ~BaseScatterDispatcher() = default;
-  virtual void dispatch(void* msg, void* object) const = 0;
+  virtual void dispatch(std::byte* msg, std::byte* object) const = 0;
 };
 
 template <typename MsgT, typename HandlerT, typename ObjT>
@@ -191,11 +191,11 @@ struct ScatterDispatcher final : BaseScatterDispatcher {
   explicit ScatterDispatcher(HandlerT in_fn_ptr) : fp(in_fn_ptr) {}
 
 public:
-  void dispatch(void* msg, void*) const override {
+  void dispatch(std::byte* msg, std::byte*) const override {
     using T = HandlerT;
 
     if constexpr (std::is_same_v<T, ActiveTypedFnType<MsgT>*>) {
-      fp(static_cast<MsgT*>(msg));
+      fp(reinterpret_cast<MsgT*>(msg));
     } else {
       vtAbort("Invalid function type for scatter handler");
     }
