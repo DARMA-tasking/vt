@@ -84,7 +84,7 @@ ObjGroupProxyType ObjGroupManager::getProxy(ObjGroupProxyType proxy) {
 }
 
 ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
-  std::string const& label, HolderBasePtrType base, void* obj_ptr
+  std::string const& label, HolderBasePtrType base, std::byte* obj_ptr
 ) {
   auto const id = cur_obj_id_++;
   auto const node = theContext()->getNode();
