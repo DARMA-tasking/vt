@@ -64,7 +64,7 @@ char* Scatter::applyScatterRecur(
     "Scatter::applyScatterRecur: elm_size={}, ptr={}, node={}\n",
     elm_size, print_ptr(ptr), node
   );
-  data_fn(node, reinterpret_cast<void*>(cur_ptr));
+  data_fn(node, reinterpret_cast<std::byte*>(cur_ptr));
   cur_ptr += elm_size;
   for (auto&& child : children) {
     vt_debug_print(
