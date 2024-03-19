@@ -110,7 +110,7 @@ PipeType PipeManagerBase::makeCallbackFuncVoid(
 
   bool const& send_back = false;
   auto const& pipe_id = makePipeID(persist,send_back);
-  auto dispatch_fn = [pipe_id](void*) {
+  auto dispatch_fn = [pipe_id](std::byte*) {
     signal_holder_<SignalType>.deliverAll(pipe_id,nullptr);
   };
   DispatchFuncType dfn = nullptr;
