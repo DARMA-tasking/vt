@@ -106,7 +106,7 @@ void CallbackProxyBcastDirect::trigger(MsgT* msg, PipeType const& pipe) {
 
   auto dispatcher = vrt::collection::getDispatcher(vrt_dispatch_han_);
   auto const& proxy = proxy_;
-  dispatcher->broadcast(proxy, msg, handler_);
+  dispatcher->broadcast(proxy, reinterpret_cast<std::byte*>(msg), handler_);
 }
 
 }}} /* end namespace vt::pipe::callback */
