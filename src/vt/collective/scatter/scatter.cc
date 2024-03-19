@@ -118,7 +118,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
   });
 
   auto const& active_fn = auto_registry::getScatterAutoHandler(user_handler);
-  active_fn->dispatch(in_base_ptr, nullptr);
+  active_fn->dispatch(reinterpret_cast<std::byte*>(in_base_ptr), nullptr);
 }
 
 /*static*/ void Scatter::scatterHandler(ScatterMsg* msg) {

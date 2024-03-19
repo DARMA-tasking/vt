@@ -202,7 +202,7 @@ public:
    * \param[in] elm the object pointer
    * \param[in] handler the handler ID bits
    */
-  void setupHandlerObjGroup(void* obj, HandlerType handler);
+  void setupHandlerObjGroup(std::byte* obj, HandlerType handler);
 
   /**
    * \brief Set up a handler to run on an non-collection object
@@ -356,7 +356,7 @@ public:
 private:
   detail::Contexts contexts_;               /**< The contexts  */
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
-  void* obj_ = nullptr;                     /**< Object pointer */
+  std::byte* obj_ = nullptr;                     /**< Object pointer */
   union {
     DispatcherType func_;
     DispatcherScatterType func_scat_;

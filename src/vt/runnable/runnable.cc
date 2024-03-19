@@ -79,7 +79,7 @@ void RunnableNew::setupHandler(HandlerType handler) {
   }
 }
 
-void RunnableNew::setupHandlerObjGroup(void* obj, HandlerType handler) {
+void RunnableNew::setupHandlerObjGroup(std::byte* obj, HandlerType handler) {
   f_.func_ = auto_registry::getAutoHandlerObjGroup(handler).get();
   obj_ = obj;
 }
@@ -91,14 +91,14 @@ void RunnableNew::setupHandlerElement(
   f_.func_ = member ?
     auto_registry::getAutoHandlerCollectionMem(handler).get() :
     auto_registry::getAutoHandlerCollection(handler).get();
-  obj_ = elm;
+  obj_ = reinterpret_cast<std::byte*>(elm);
 }
 
 void RunnableNew::setupHandlerElement(
   vrt::VirtualContext* elm, HandlerType handler
 ) {
   f_.func_ = auto_registry::getAutoHandlerVC(handler).get();
-  obj_ = elm;
+  obj_ = reinterpret_cast<std::byte*>(elm);
 }
 
 void RunnableNew::run() {
@@ -165,7 +165,7 @@ void RunnableNew::run() {
 #endif
 
     if (is_scatter_) {
-      f_.func_scat_->dispatch(msg_ == nullptr ? nullptr : msg_.get(), obj_);
+      f_.func_scat_->dispatch(msg_ == nullptr ? nullptr : reinterpret_cast<std::byte*>(msg_.get()), obj_);
     } else {
       f_.func_->dispatch(msg_ == nullptr ? nullptr : msg_.get(), obj_);
     }
