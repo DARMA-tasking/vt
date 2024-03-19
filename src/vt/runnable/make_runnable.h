@@ -167,7 +167,7 @@ struct RunnableMaker {
   RunnableMaker&& withObjGroup(ElmT* elm) {
     set_handler_ = true;
     if (handler_ != uninitialized_handler) {
-      impl_->setupHandlerObjGroup(elm, handler_);
+      impl_->setupHandlerObjGroup(reinterpret_cast<std::byte*>(elm), handler_);
     }
     return std::move(*this);
   }
