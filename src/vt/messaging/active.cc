@@ -255,16 +255,16 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
         verbose, active,
         "sendMsgBytesWithPut: (put) put_ptr={}, size:[msg={},put={},rem={}],"
         "dest={}, max_pack_size={}, direct_buf_pack={}\n",
-        put_ptr, base.size(), put_size, rem_size, dest, max_pack_direct_size,
+        print_ptr(put_ptr), base.size(), put_size, rem_size, dest, max_pack_direct_size,
         print_bool(direct_buf_pack)
       );
     }
     if (direct_buf_pack) {
-      new_msg_size = packMsg(msg, base.size(), reinterpret_cast<std::byte*>(put_ptr), put_size);
+      new_msg_size = packMsg(msg, base.size(), put_ptr, put_size);
     } else {
       auto const& env_tag = envelopeGetPutTag(msg->env);
       auto const& ret = sendData(
-        PtrLenPairType{reinterpret_cast<std::byte*>(put_ptr),put_size}, dest, env_tag
+        PtrLenPairType{put_ptr,put_size}, dest, env_tag
       );
       auto const& ret_tag = ret.getTag();
       if (ret_tag != env_tag) {
