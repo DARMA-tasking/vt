@@ -300,11 +300,11 @@ Description: β in the work model (inter-node communication in work model)
 )"
     },
     {
-    "gamma",
+    "epislon",
       R"(
 Values: <double>
 Defaut: 1.0
-Description: γ in the work model (constant in work model)
+Description: ε in the work model (constant in work model)
 )"
     },
     {
@@ -312,15 +312,15 @@ Description: γ in the work model (constant in work model)
       R"(
 Values: <double>
 Defaut: 1.0
-Description: δ in the work model (intra-node communication in work model)
+Description: δ in the work model (shared-memory-edges in work model)
 )"
     },
     {
-    "zeta",
+    "gamma",
       R"(
 Values: <double>
 Defaut: 1.0
-Description: ζ in the work model (shared-memory-edges in work model)
+Description: γ in the work model (intra-node communication in work model)
 )"
     }
   };
@@ -425,7 +425,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
   β = config->getOrDefault<double>("beta", β);
   γ = config->getOrDefault<double>("gamma", γ);
   δ = config->getOrDefault<double>("delta", δ);
-  ζ = config->getOrDefault<double>("zeta", ζ);
+  ε = config->getOrDefault<double>("epsilon", ε);
 
   num_iters_     = config->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = config->getOrDefault<int32_t>("trials", num_trials_);
@@ -864,9 +864,9 @@ double TemperedLB::computeWork(
   return
     α * load +
     β * inter_comm_bytes +
-    δ * intra_comm_bytes +
-    ζ * shared_comm_bytes +
-    γ;
+    γ * intra_comm_bytes +
+    δ * shared_comm_bytes +
+    ε;
 }
 
 WorkBreakdown TemperedLB::computeWorkBreakdown(
