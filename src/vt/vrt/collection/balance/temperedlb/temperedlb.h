@@ -421,7 +421,7 @@ private:
   double β = 0.0;
   double γ = 0.0;
   double δ = 0.0;
-  double ζ = 0.0;
+  double ε = 0.0;
   std::vector<bool> propagated_k_;
   std::mt19937 gen_propagate_;
   std::mt19937 gen_sample_;
