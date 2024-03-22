@@ -151,7 +151,7 @@ std::byte* Pool::defaultAlloc(size_t const& num_bytes, size_t const& oversize) {
 }
 
 void Pool::defaultDealloc(std::byte* const ptr) {
-  std::free(reinterpret_cast<void*>(ptr));
+  std::free(ptr);
 }
 
 std::byte* Pool::alloc(size_t const& num_bytes, size_t oversize) {

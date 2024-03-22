@@ -300,7 +300,7 @@ private:
 }
 
 void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
-  auto buf = reinterpret_cast<std::byte*>(thePool()->alloc(msg->getSize()));
+  auto buf = thePool()->alloc(msg->getSize());
 
   auto const size = msg->getSize();
   auto const info = msg->getInfo();
@@ -703,7 +703,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
       std::byte* buf = user_buf == nullptr ?
-        reinterpret_cast<std::byte*>(thePool()->alloc(num_probe_bytes)) :
+        thePool()->alloc(num_probe_bytes) :
         user_buf;
 
       NodeType const sender = stat.MPI_SOURCE;
@@ -760,7 +760,7 @@ void ActiveMessenger::recvDataDirect(
   std::vector<MPI_Request> reqs;
   reqs.resize(nchunks);
 
-  char* cbuf = reinterpret_cast<char*>(buf);
+  std::byte* cbuf = buf;
   MsgSizeType remainder = len;
   auto const max_per_send = theConfig()->vt_max_mpi_send_size;
   for (int i = 0; i < nchunks; i++) {
@@ -801,7 +801,7 @@ void ActiveMessenger::recvDataDirect(
   }
 
   InProgressDataIRecv recv{
-    reinterpret_cast<std::byte*>(cbuf), len, from, std::move(reqs), is_user_buf ? buf : nullptr, dealloc,
+    cbuf, len, from, std::move(reqs), is_user_buf ? buf : nullptr, dealloc,
     next, prio
   };
 
@@ -998,7 +998,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-    char* buf = reinterpret_cast<char*>(thePool()->alloc(num_probe_bytes));
+    std::byte* buf = thePool()->alloc(num_probe_bytes);
 
     NodeType const sender = stat.MPI_SOURCE;
 
@@ -1032,7 +1032,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
       #endif
     }
 
-    InProgressIRecv recv_holder{reinterpret_cast<std::byte*>(buf), num_probe_bytes, sender, req};
+    InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
 
     int num_mpi_tests = 0;
     auto done = recv_holder.test(num_mpi_tests);
@@ -1051,7 +1051,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 }
 
 void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
-  char* buf = reinterpret_cast<char*>(irecv->buf);
+  std::byte* buf = irecv->buf;
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
 
@@ -1089,18 +1089,18 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
     if (put_tag == PutPackedTag) {
       auto const put_size = envelopeGetPutSize(msg->env);
       auto const msg_size = num_probe_bytes - put_size;
-      char* put_ptr = buf + msg_size;
+      std::byte* put_ptr = buf + msg_size;
 
       if (!is_term || vt_check_enabled(print_term_msgs)) {
         vt_debug_print(
           verbose, active,
           "finishPendingActiveMsgAsyncRecv: packed put: ptr={}, msg_size={}, "
           "put_size={}\n",
-          put_ptr, msg_size, put_size
+          print_ptr(put_ptr), msg_size, put_size
         );
       }
 
-      envelopeSetPutPtrOnly(msg->env, reinterpret_cast<std::byte*>(put_ptr));
+      envelopeSetPutPtrOnly(msg->env, put_ptr);
       put_finished = true;
     } else {
       /*bool const put_delivered = */recvDataMsg(

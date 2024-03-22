@@ -65,7 +65,7 @@ void Scatter::scatter(
   auto scatter_msg =
     makeMessageSz<ScatterMsg>(combined_size, combined_size, elm_size);
   vtAssert(total_size == combined_size, "Sizes must be consistent");
-  auto ptr = reinterpret_cast<char*>(scatter_msg.get()) + sizeof(ScatterMsg);
+  auto ptr = reinterpret_cast<std::byte*>(scatter_msg.get()) + sizeof(ScatterMsg);
 #if vt_check_enabled(memory_pool)
   auto remaining_size =
     thePool()->remainingSize(reinterpret_cast<std::byte*>(scatter_msg.get()));
@@ -84,11 +84,11 @@ void Scatter::scatter(
     print_ptr(ptr), remaining_size
   );
   auto const& root_node = 0;
-  auto nptr = applyScatterRecur(root_node, reinterpret_cast<std::byte*>(ptr), elm_size, size_fn, data_fn);
+  auto nptr = applyScatterRecur(root_node, ptr, elm_size, size_fn, data_fn);
   vt_debug_print(
-    verbose, scatter, "Scatter::scatter: incremented size={}\n", nptr - reinterpret_cast<std::byte*>(ptr)
+    verbose, scatter, "Scatter::scatter: incremented size={}\n", nptr - ptr
   );
-  vtAssert(nptr == reinterpret_cast<std::byte*>(ptr + combined_size), "nptr must match size");
+  vtAssert(nptr == ptr + combined_size, "nptr must match size");
   auto const& handler = auto_registry::makeScatterHandler<MessageT, f>();
   auto const& this_node = theContext()->getNode();
   scatter_msg->user_han = handler;

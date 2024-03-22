@@ -216,7 +216,7 @@ bool State::testReadyPutData(TagType const& tag) {
     "To use default handler ptr, bytes must be set"
   );
 
-  std::memcpy(reinterpret_cast<char*>(state.ptr) + req_offset, in_ptr, req_num_bytes);
+  std::memcpy(state.ptr + req_offset, in_ptr, req_num_bytes);
 }
 
 void State::getData(
