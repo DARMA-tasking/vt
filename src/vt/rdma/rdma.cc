@@ -135,7 +135,7 @@ RDMAManager::RDMAManager()
     );
   } else {
     theMsg()->recvDataMsgBuffer(
-      msg->nchunks, reinterpret_cast<std::byte*>(get_ptr), msg->mpi_tag_to_recv, msg->send_back, true,
+      msg->nchunks, get_ptr, msg->mpi_tag_to_recv, msg->send_back, true,
       [get_ptr_action]{
         vt_debug_print(
           normal, rdma,
@@ -178,9 +178,9 @@ RDMAManager::RDMAManager()
   );
 
   if (direct) {
-    auto data_ptr = reinterpret_cast<char*>(msg) + sizeof(PutMessage);
+    auto data_ptr = reinterpret_cast<std::byte*>(msg) + sizeof(PutMessage);
     theRDMA()->triggerPutRecvData(
-      msg->rdma_handle, msg_tag, reinterpret_cast<std::byte*>(data_ptr), msg->num_bytes, msg->offset, [=]{
+      msg->rdma_handle, msg_tag, data_ptr, msg->num_bytes, msg->offset, [=]{
         vt_debug_print(
           normal, rdma,
           "put_data: after put trigger: send_back={}\n", send_back
@@ -238,10 +238,10 @@ RDMAManager::RDMAManager()
         });
     } else {
       auto const& put_ptr_offset =
-        msg->offset != no_byte ? reinterpret_cast<char*>(put_ptr) + msg->offset : reinterpret_cast<char*>(put_ptr);
+        msg->offset != no_byte ? put_ptr + msg->offset : put_ptr;
       // do a direct recv into the user buffer
       theMsg()->recvDataMsgBuffer(
-        msg->nchunks, reinterpret_cast<std::byte*>(put_ptr_offset), recv_tag, recv_node, true, []{},
+        msg->nchunks, put_ptr_offset, recv_tag, recv_node, true, []{},
         [=](RDMA_GetType ptr, ActionType deleter){
           vt_debug_print(
             normal, rdma,
@@ -780,7 +780,7 @@ void RDMAManager::putRegionTypeless(
       auto const& elm_size = region.elm_size;
       auto const& rlo = region.lo;
       auto const& roffset = lo - rlo;
-      auto const& ptr_offset = reinterpret_cast<char*>(ptr) + (roffset * elm_size);
+      auto const& ptr_offset = ptr + (roffset * elm_size);
       auto const& block_offset = (lo - blk_lo) * elm_size;
 
       vt_debug_print(
@@ -794,7 +794,7 @@ void RDMAManager::putRegionTypeless(
       remote_action->addDep();
 
       putData(
-        han, reinterpret_cast<std::byte*>(ptr_offset), (hi-lo)*elm_size, block_offset, no_tag, elm_size,
+        han, ptr_offset, (hi-lo)*elm_size, block_offset, no_tag, elm_size,
         [=]{ remote_action->release(); }, node
       );
     });
@@ -842,7 +842,7 @@ void RDMAManager::getRegionTypeless(
       auto const& elm_size = region.elm_size;
       auto const& rlo = region.lo;
       auto const& roffset = lo - rlo;
-      auto const& ptr_offset = reinterpret_cast<char*>(ptr) + (roffset * elm_size);
+      auto const& ptr_offset = ptr + (roffset * elm_size);
       auto const& block_offset = (lo - blk_lo) * elm_size;
 
       vt_debug_print(
@@ -855,7 +855,7 @@ void RDMAManager::getRegionTypeless(
       action->addDep();
 
       getDataIntoBuf(
-        han, reinterpret_cast<std::byte*>(ptr_offset), (hi-lo)*elm_size, block_offset, no_tag, [=]{
+        han, ptr_offset, (hi-lo)*elm_size, block_offset, no_tag, [=]{
           auto const& my_node = theContext()->getNode();
           vt_debug_print(
             normal, rdma,
