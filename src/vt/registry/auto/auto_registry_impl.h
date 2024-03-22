@@ -130,7 +130,7 @@ inline HandlerType makeScatterHandler() {
   using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f, MessageT>;
   using ContainerType = ScatterContainerType;
   using RegInfoType = AutoRegInfoType<BaseScatterDispatcherPtr>;
-  using FuncType = void (*)(void*);
+  using FuncType = void (*)(std::byte*);
   using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
 
   constexpr bool is_auto = true;
