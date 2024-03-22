@@ -84,11 +84,11 @@ void Scatter::scatter(
     print_ptr(ptr), remaining_size
   );
   auto const& root_node = 0;
-  auto nptr = applyScatterRecur(root_node, ptr, elm_size, size_fn, data_fn);
+  auto nptr = applyScatterRecur(root_node, reinterpret_cast<std::byte*>(ptr), elm_size, size_fn, data_fn);
   vt_debug_print(
-    verbose, scatter, "Scatter::scatter: incremented size={}\n", nptr - ptr
+    verbose, scatter, "Scatter::scatter: incremented size={}\n", nptr - reinterpret_cast<std::byte*>(ptr)
   );
-  vtAssert(nptr == ptr + combined_size, "nptr must match size");
+  vtAssert(nptr == reinterpret_cast<std::byte*>(ptr + combined_size), "nptr must match size");
   auto const& handler = auto_registry::makeScatterHandler<MessageT, f>();
   auto const& this_node = theContext()->getNode();
   scatter_msg->user_han = handler;

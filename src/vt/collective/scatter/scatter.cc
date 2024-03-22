@@ -52,19 +52,19 @@ Scatter::Scatter()
   : tree::Tree(tree::tree_cons_tag_t)
 { }
 
-char* Scatter::applyScatterRecur(
-  NodeType node, char* ptr, std::size_t elm_size, FuncSizeType size_fn,
+std::byte* Scatter::applyScatterRecur(
+  NodeType node, std::byte* ptr, std::size_t elm_size, FuncSizeType size_fn,
   FuncDataType data_fn
 ) {
   // pre-order k-ary tree traversal for data layout
   auto children = Tree::getChildren(node);
-  char* cur_ptr = ptr;
+  auto cur_ptr = ptr;
   vt_debug_print(
     normal, scatter,
     "Scatter::applyScatterRecur: elm_size={}, ptr={}, node={}\n",
     elm_size, print_ptr(ptr), node
   );
-  data_fn(node, reinterpret_cast<std::byte*>(cur_ptr));
+  data_fn(node, cur_ptr);
   cur_ptr += elm_size;
   for (auto&& child : children) {
     vt_debug_print(
