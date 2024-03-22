@@ -130,8 +130,8 @@ private:
    *
    * \return incremented point after scatter is complete
    */
-  char* applyScatterRecur(
-    NodeType node, char* ptr, std::size_t elm_size, FuncSizeType size_fn,
+  std::byte* applyScatterRecur(
+    NodeType node, std::byte* ptr, std::size_t elm_size, FuncSizeType size_fn,
     FuncDataType data_fn
   );
 
