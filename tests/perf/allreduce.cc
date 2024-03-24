@@ -48,22 +48,19 @@
 #include <vt/messaging/active.h>
 #include <vt/collective/reduce/allreduce/allreduce.h>
 
-#include INCLUDE_FMT_CORE
+#include <fmt-vt/core.h>
 
 using namespace vt;
 using namespace vt::tests::perf::common;
 
 static constexpr int num_iters = 1;
 
-struct MyTest : PerfTestHarness {
-  MyTest() { DisableGlobalTimer(); }
-};
+struct MyTest : PerfTestHarness { };
 
 struct NodeObj {
   explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
 
   void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this);
-//  data_["Node"] = theContext()->getNode(); }
   }
   struct MyMsg : vt::Message {};
 
@@ -103,10 +100,12 @@ VT_PERF_TEST(MyTest, test_reduce) {
     theTerm()->disableTD();
   }
 
-  grp_proxy[my_node_].invoke<&NodeObj::initialize>();
+  std::vector<int32_t> data(1024, theContext()->getNode());
+  grp_proxy.allreduce<&NodeObj::reduceComplete, collective::PlusOp>(data);
 
-  using MsgType = typename NodeObj::MyMsg;
-  grp_proxy[my_node_].send<MsgType, &NodeObj::perfReduce>();
+  if (theContext()->getNode() == 0) {
+    theTerm()->enableTD();
+  }
 }
 
 VT_PERF_TEST_MAIN()
