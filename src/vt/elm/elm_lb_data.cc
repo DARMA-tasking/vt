@@ -142,6 +142,7 @@ void ElementLBData::setTime(
   LoadType const timeLoad,
   std::vector<LoadType> const& subphaseLoads
 ) {
+  // warning: this will override any existing time that might be there
   phase_timings_[cur_phase_] = timeLoad;
 
   subphase_timings_[cur_phase_] = subphaseLoads;
