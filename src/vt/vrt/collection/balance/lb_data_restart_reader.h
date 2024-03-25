@@ -132,10 +132,8 @@ public:
    */
   std::shared_ptr<const std::set<ElementIDStruct>> getDistro(PhaseType phase) const {
     auto iter = history_.find(phase);
-    if (iter != history_.end()) {
-      return iter->second;
-    }
-    return nullptr;
+    vtAssert(iter != history_.end(), "Must have a valid, not skipped phase");
+    return iter->second;
   }
 
   /**
@@ -193,7 +191,7 @@ private:
   std::vector<bool> changed_distro_;
 
   /// History of mapping that was read in from the data files
-  std::map<PhaseType, std::shared_ptr<std::set<ElementIDStruct>>> history_;
+  std::unordered_map<PhaseType, std::shared_ptr<std::set<ElementIDStruct>>> history_;
 
   struct DepartMsg : vt::Message {
     DepartMsg(NodeType in_depart_node, PhaseType in_phase, ElementIDStruct in_elm)

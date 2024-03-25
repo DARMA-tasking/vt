@@ -232,17 +232,20 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
   // Preapre configuration file
   std::string file_name = getUniqueFilenameWithRanks(".txt");
   std::ofstream out(file_name);
+
+  // NoLB for phases on skipped list and one phase before them.
+  // Phases on the skipped list: 1, 2, 9
   out << ""
-    "0 OfflineLB\n"
-    "1 OfflineLB\n"
-    "2 OfflineLB\n"
+    "0 NoLB\n"
+    "1 NoLB\n"
+    "2 NoLB\n"
     "3 OfflineLB\n"
     "4 OfflineLB\n"
     "5 OfflineLB\n"
     "6 OfflineLB\n"
     "7 OfflineLB\n"
-    "8 OfflineLB\n"
-    "9 OfflineLB\n";
+    "8 NoLB\n"
+    "9 NoLB\n";
   out.close();
 
   theConfig()->vt_lb = true;
