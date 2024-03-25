@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/runtime/runtime_headers.h"
 #include "vt/configs/arguments/argv_container.h"
+#include <mpi.h>
 
 namespace vt {
 
