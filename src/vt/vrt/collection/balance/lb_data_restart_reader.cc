@@ -182,29 +182,29 @@ void LBDataRestartReader::determinePhasesToMigrate() {
 
   auto const this_node = theContext()->getNode();
   runInEpochCollective("LBDataRestartReader::updateLocations", [&]{
-    for (PhaseType curr = 0; curr < num_phases_ - 1; ++curr) {
-      if(history_.count(curr) && history_.count(curr + 1)) {
-        local_changed_distro[curr] = *history_[curr] != *history_[curr + 1];
-        if (local_changed_distro[curr]) {
+    for (PhaseType i = 0; i < num_phases_ - 1; ++i) {
+      if(history_.count(i) && history_.count(i+1)) {
+        local_changed_distro[i] = *history_[i] != *history_[i+1];
+        if (local_changed_distro[i]) {
           std::set<ElementIDStruct> departing, arriving;
 
           std::set_difference(
-            history_[curr + 1]->begin(), history_[curr + 1]->end(),
-            history_[curr]->begin(),     history_[curr]->end(),
+            history_[i+1]->begin(), history_[i+1]->end(),
+            history_[i]->begin(),   history_[i]->end(),
             std::inserter(arriving, arriving.begin())
           );
 
           std::set_difference(
-            history_[curr]->begin(),     history_[curr]->end(),
-            history_[curr + 1]->begin(), history_[curr + 1]->end(),
+            history_[i]->begin(),    history_[i]->end(),
+            history_[i+1]->begin(),  history_[i+1]->end(),
             std::inserter(departing, departing.begin())
           );
 
           for (auto&& d : departing) {
-            proxy_[d.getHomeNode()].send<DepartMsg, &LBDataRestartReader::departing>(this_node, curr + 1, d);
+            proxy_[d.getHomeNode()].send<DepartMsg, &LBDataRestartReader::departing>(this_node, i+1, d);
           }
           for (auto&& a : arriving) {
-            proxy_[a.getHomeNode()].send<ArriveMsg, &LBDataRestartReader::arriving>(this_node, curr + 1, a);
+            proxy_[a.getHomeNode()].send<ArriveMsg, &LBDataRestartReader::arriving>(this_node, i+1, a);
           }
         }
       }
