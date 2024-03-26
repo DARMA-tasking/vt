@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/context/context.h"
 #include "vt/elm/elm_id.h"
 #include "vt/elm/elm_id_bits.h"
 
@@ -56,6 +57,10 @@ NodeType ElementIDStruct::getHomeNode() const {
 
 NodeType ElementIDStruct::getCurrNode() const {
   return curr_node;
+}
+
+bool ElementIDStruct::isLocatedOnThisNode() const {
+  return theContext()->getNode() == curr_node and not isMigratable();
 }
 
 }} /* end namespace vt::elm */

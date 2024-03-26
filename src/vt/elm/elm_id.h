@@ -78,6 +78,7 @@ struct ElementIDStruct {
   bool isMigratable() const;
   NodeType getHomeNode() const;
   NodeType getCurrNode() const;
+  bool isLocatedOnThisNode() const;
 };
 
 

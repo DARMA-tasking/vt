@@ -64,6 +64,7 @@ struct RawData : public LoadModel {
   LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
   bool hasUserData() const override { return user_data_ != nullptr; }
   ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
+  CommMapType getComm(PhaseOffset when) const override;
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm,
