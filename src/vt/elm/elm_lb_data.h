@@ -129,7 +129,7 @@ protected:
 
 protected:
   bool cur_time_started_ = false;
-  TimeType cur_time_ = TimeType{0.0};
+  TimeType cur_time_ = TimeType{};
   PhaseType cur_phase_ = fst_lb_phase;
   std::unordered_map<PhaseType, LoadType> phase_timings_ = {};
   std::unordered_map<PhaseType, CommMapType> phase_comm_ = {};

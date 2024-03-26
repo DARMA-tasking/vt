@@ -59,34 +59,34 @@ TEST_F(TestTimeTrigger, test_time_trigger) {
   using namespace std::chrono;
   using namespace std::chrono_literals;
 
-  auto trigger_period_ms = 100ms;
-  auto trigger_period_s = duration<TimeType::TimeTypeInternal>(trigger_period_ms).count();
+  auto trigger_period_ms = TimeType{100ms};
+  auto trigger_period_s = trigger_period_ms.seconds<double>();
   int trigger_id = 42;
   int triggered = 0;
 
-  vt::timetrigger::Trigger trigger{trigger_period_ms, [&triggered](){
+  vt::timetrigger::Trigger trigger{trigger_period_ms.milliseconds<int64_t>(), [&triggered](){
     triggered++;
   }, trigger_id};
 
   EXPECT_EQ(trigger.getID(), trigger_id);
-  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime().seconds(), 0.0);
-  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime().seconds(), 0.0 + trigger_period_s);
+  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime().seconds().count(), 0.0);
+  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime().seconds().count(), 0.0 + trigger_period_s.count());
   EXPECT_EQ(triggered, 0);
 
-  TimeType start_time = TimeType{4.0};
+  auto start_time = TimeType{4.0};
   trigger.runAction(start_time);
 
-  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime().seconds(), start_time.seconds());
-  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime().seconds(), start_time.seconds() + trigger_period_s);
+  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime().seconds().count(), start_time.seconds().count());
+  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime().seconds().count(), (start_time.seconds() + trigger_period_s).count());
   EXPECT_EQ(trigger.ready(start_time + TimeType{trigger_period_s}), false);
-  EXPECT_EQ(trigger.ready(start_time + TimeType{trigger_period_s + 0.001}), true);
+  EXPECT_EQ(trigger.ready(start_time + TimeType{trigger_period_s} + TimeType{1ms}), true);
   EXPECT_EQ(triggered, 1);
 }
 
 TEST_F(TestTimeTrigger, test_time_trigger_manager_add_trigger) {
   using namespace std::chrono_literals;
 
-  TimeType current_time = TimeType{5.2};
+  auto current_time = TimeType{5.2};
   auto trigger_period_ms = 100ms;
   int triggered = 0;
 
@@ -110,9 +110,9 @@ TEST_F(TestTimeTrigger, test_time_trigger_manager_trigger_ready) {
   using namespace std::chrono;
   using namespace std::chrono_literals;
 
-  TimeType current_time = TimeType{5.2};
+  auto current_time = TimeType{5.2};
   auto trigger_period_ms = 100ms;
-  auto trigger_period_s = duration<TimeType::TimeTypeInternal>(trigger_period_ms).count();
+  auto trigger_period_s = TimeType{trigger_period_ms}.seconds().count();
   int triggered = 0;
 
   auto trigger_manager =

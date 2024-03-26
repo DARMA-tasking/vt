@@ -168,7 +168,7 @@ struct DiagnosticValueWrapper {
    *
    * \return the max value
    */
-  T max() const { return N_ == 0 ? T{0} : max_; }
+  T max() const { return N_ == 0 ? T{} : max_; }
 
   /**
    * \internal \brief Get sum of values (use after reduction)
@@ -182,7 +182,7 @@ struct DiagnosticValueWrapper {
    *
    * \return the min value
    */
-  T min() const { return N_ == 0 ? T{0} : min_; }
+  T min() const { return N_ == 0 ? T{} : min_; }
 
   /**
    * \internal \brief Get the arithmetic mean value (use after reduction)
@@ -237,7 +237,12 @@ struct DiagnosticValueWrapper {
    */
   T getComputedValue() const {
     if (N_ > 0) {
-      return value_ / N_;
+      // silence nvcc warning
+      if constexpr (std::is_same_v<decltype(N_), T>) {
+        return value_ / N_;
+      } else {
+        return value_ / static_cast<T>(N_);
+      }
     } else {
       return value_;
     }

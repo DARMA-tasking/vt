@@ -132,11 +132,11 @@ TEST_F(TestSchedTimings, test_sched_msg) {
 
   sched->runSchedulerWhile([&]{ return count < num_iter; });
   double const fudge = 0.8;
-  auto observed_time = 1000.0 *(vt::timing::getCurrentTime() - start_time);
+  auto observed_time = vt::timing::getCurrentTime() - start_time;
 
   // This ought to take close to a second (with ms_delay = 100)
   EXPECT_GT(
-    observed_time.seconds(),
+    observed_time.seconds().count(),
     vt::theConfig()->vt_sched_progress_sec * fudge
   );
 
@@ -144,7 +144,7 @@ TEST_F(TestSchedTimings, test_sched_msg) {
   fmt::print("expected time={}, observed time={}\n", sum_time, observed_time);
   //double margin =30+ sum_time*0.2;
   //EXPECT_NEAR(sum_time, observed_time, margin );
-  EXPECT_GT(observed_time.seconds(), sum_time);
+  EXPECT_GT(observed_time.milliseconds().count(), sum_time);
 
 }
 

@@ -86,7 +86,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
 
   // This ought to take close to a second
   EXPECT_GT(
-    TimeType{vt::timing::getCurrentTime() - cur_time}.seconds(),
+    TimeType{vt::timing::getCurrentTime() - cur_time}.seconds().count(),
     vt::theConfig()->vt_sched_progress_sec * fudge
   );
 
@@ -125,7 +125,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_2) {
 
   // This ought to take close to a second
   EXPECT_GT(
-    (vt::timing::getCurrentTime() - cur_time).seconds(),
+    (vt::timing::getCurrentTime() - cur_time).seconds().count(),
     vt::theConfig()->vt_sched_progress_sec * fudge
   );
 

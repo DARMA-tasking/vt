@@ -93,7 +93,7 @@ meter::Timer<T> Diagnostic::registerTimerT(
 ) {
   auto sum = registerDiagnostic<T>(
     key + " [sum]", desc, DiagnosticUpdate::Sum, unit,
-    DiagnosticTypeEnum::PerformanceDiagnostic, T{0}
+    DiagnosticTypeEnum::PerformanceDiagnostic, T{}
   );
   auto min = registerDiagnostic<T>(
     key + " [min]", desc, DiagnosticUpdate::Min, unit,
@@ -105,7 +105,7 @@ meter::Timer<T> Diagnostic::registerTimerT(
   );
   auto avg = registerDiagnostic<T>(
     key + " [avg]", desc, DiagnosticUpdate::Avg, unit,
-    DiagnosticTypeEnum::PerformanceDiagnostic, T{0}
+    DiagnosticTypeEnum::PerformanceDiagnostic, T{}
   );
   return meter::Timer<T>{sum, avg, max, min};
 }

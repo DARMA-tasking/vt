@@ -98,7 +98,7 @@ struct RequestHolder {
   bool testAll(Callable c, int& num_mpi_tests) {
 #   if vt_check_enabled(trace_enabled)
     std::size_t const holder_size_start = holder_.size();
-    auto tr_begin = TimeType{0.0};
+    auto tr_begin = TimeType{};
     if (theConfig()->vt_trace_irecv_polling) {
       tr_begin = vt::timing::getCurrentTime();
     }
