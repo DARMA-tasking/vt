@@ -82,12 +82,12 @@ struct SimCol : vt::Collection<SimCol, vt::Index1D> {
     auto const next_node = (this_node + 1) % num_nodes;
     auto const prev_node = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
     vt_debug_print(terse, lb, "sparseHandler: idx={}: elm={}\n", getIndex(), getElmID());
-    if (m->iter == 7 or m->iter == 8 or m->iter == 9) {
-      EXPECT_EQ(getIndex().x() / 2, next_node);
+    if (m->iter <= 3 or m->iter == 6) {
+      EXPECT_EQ(getIndex().x() / 2, this_node);
     } else if (m->iter == 4 or m-> iter == 5) {
       EXPECT_EQ(getIndex().x() / 2, prev_node);
-    } else {
-      EXPECT_EQ(getIndex().x() / 2, this_node);
+    } else if (m->iter == 7 or m->iter == 8) {
+      EXPECT_EQ(getIndex().x() / 2, next_node);
     }
   }
 };
