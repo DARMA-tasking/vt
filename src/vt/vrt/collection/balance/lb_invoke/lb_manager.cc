@@ -204,7 +204,14 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
     commitPhaseStatistics(phase);
   }
 
+  auto const start_time = timing::getCurrentTime();
   applyReassignment(reassignment);
+  auto const mig_time = timing::getCurrentTime() - start_time;
+  vt_debug_print(
+    terse, phase,
+    "phase={}: mig_time={}\n",
+    phase, mig_time
+  );
 
   // Inform the collection manager to rebuild spanning trees if needed
   if (reassignment->global_migration_count != 0) {
@@ -258,9 +265,16 @@ LBManager::runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb) {
 
   vt_debug_print(terse, lb, "LBManager: running strategy\n");
 
+  auto const start_time = timing::getCurrentTime();
   auto reassignment = strat->startLB(
     phase, base_proxy, model_.get(), stats, *comm, total_load_from_model,
     *data_map
+  );
+  auto const lb_time = timing::getCurrentTime() - start_time;
+  vt_debug_print(
+    terse, phase,
+    "phase={}: lb_time={}\n",
+    phase, lb_time
   );
   cb.send(reassignment, phase);
 }
