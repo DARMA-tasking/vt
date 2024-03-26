@@ -245,7 +245,7 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
     "6 OfflineLB\n"
     "7 OfflineLB\n"
     "8 NoLB\n"
-    "9 NoLB\n";
+    "9 OfflineLB\n"; // Set to OfflineLB to provoke crash
   out.close();
 
   theConfig()->vt_lb = true;
@@ -261,11 +261,21 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
     .bulkInsert()
     .wait();
 
-  for (PhaseType i = 0; i < num_phases; i++) {
+  // Do work for properly configured phases 0-8
+  for (PhaseType i = 0; i <= 8; i++) {
     runInEpochCollective("run sparseHandler", [&]{
       proxy.broadcastCollective<typename SimCol::Msg, &SimCol::sparseHandler>(i);
     });
     thePhase()->nextPhaseCollective();
+  }
+
+  if(num_nodes == 1) {
+    // Try to run OfflineLB on phase 9 which will trigger assert.
+    PhaseType crashingPhase = 9;
+    runInEpochCollective("run sparseHandler", [&]{
+      proxy.broadcastCollective<typename SimCol::Msg, &SimCol::sparseHandler>(crashingPhase);
+    });
+    EXPECT_DEATH(thePhase()->nextPhaseCollective(), "");
   }
 }
 
