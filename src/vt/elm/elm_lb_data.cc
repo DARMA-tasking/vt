@@ -133,8 +133,24 @@ void ElementLBData::addTime(LoadType const timeLoad) {
   vt_debug_print(
     verbose,lb,
     "ElementLBData: addTime: time={}, cur_load={}\n",
-    time,
+    timeLoad,
     phase_timings_[cur_phase_]
+  );
+}
+
+void ElementLBData::setTime(
+  LoadType const timeLoad,
+  std::vector<LoadType> const& subphaseLoads
+) {
+  // warning: this will override any existing time that might be there
+  phase_timings_[cur_phase_] = timeLoad;
+
+  subphase_timings_[cur_phase_] = subphaseLoads;
+
+  vt_debug_print(
+    verbose,lb,
+    "ElementLBData: setTime: time={}\n",
+    timeLoad
   );
 }
 

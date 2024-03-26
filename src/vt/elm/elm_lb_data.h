@@ -64,6 +64,10 @@ struct ElementLBData {
   void start(TimeType time);
   void stop(TimeType time);
   void addTime(LoadType const timeLoad);
+  /// warning: this will override any existing time that might be there
+  void setTime(
+    LoadType const timeLoad, std::vector<LoadType> const& subphaseLoads
+  );
 
   void sendToEntity(ElementIDStruct to, ElementIDStruct from, double bytes);
   void sendComm(elm::CommKey key, double bytes);
