@@ -435,10 +435,10 @@ bool Runtime::needLBDataRestartReader() {
         return ReadLBConfig::hasOfflineLB();
       }
     }
-    return false;
-  } else
+  }
   #endif
-    return false;
+
+  return false;
 }
 
 bool Runtime::initialize(bool const force_now) {
