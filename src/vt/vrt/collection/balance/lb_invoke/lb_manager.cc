@@ -150,6 +150,11 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
     }
   }
 
+  // Check if LBDataRestartReader requires to run OfflineLB for a given phase.
+  if(the_lb == LBType::OfflineLB && !theLBDataReader()->needsLB(phase)) {
+    the_lb = LBType::NoLB;
+  }
+
   vt_debug_print(
     terse, lb,
     "LBManager::decidedLBToRun: phase={}, return lb_={}\n",

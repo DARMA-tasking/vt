@@ -233,19 +233,19 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
   std::string file_name = getUniqueFilenameWithRanks(".txt");
   std::ofstream out(file_name);
 
-  // NoLB for phases on skipped list and one phase before them.
-  // Phases on the skipped list: 1, 2, 9
+  // Request OfflineLB for each phase.
+  // LBDataRestartReader will check beforehand if that phase requires OfflineLB.
   out << ""
-    "0 NoLB\n"
-    "1 NoLB\n"
-    "2 NoLB\n"
+    "0 OfflineLB\n"
+    "1 OfflineLB\n"
+    "2 OfflineLB\n"
     "3 OfflineLB\n"
     "4 OfflineLB\n"
     "5 OfflineLB\n"
     "6 OfflineLB\n"
     "7 OfflineLB\n"
-    "8 NoLB\n"
-    "9 NoLB\n";
+    "8 OfflineLB\n"
+    "9 OfflineLB\n";
   out.close();
 
   theConfig()->vt_lb = true;
@@ -261,7 +261,6 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
     .bulkInsert()
     .wait();
 
-  // Do work for properly configured phases 0-8
   for (PhaseType i = 0; i < num_phases; i++) {
     runInEpochCollective("run sparseHandler", [&]{
       proxy.broadcastCollective<typename SimCol::Msg, &SimCol::sparseHandler>(i);
