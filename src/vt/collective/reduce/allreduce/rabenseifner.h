@@ -9,11 +9,10 @@
 
 #include <utility>
 
-namespace vt::collective::reduce::alleduce {
+namespace vt::collective::reduce::allreduce {
 
 template <auto f, template <typename Arg> class Op, typename... Args>
-void allreduce(Args&&... data) {
-
+void allreduce_r(Args&&... data) {
   auto msg = vt::makeMessage<AllreduceMsg>(std::forward<Args>(data)...);
   auto const this_node = vt::theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
@@ -39,7 +38,8 @@ void allreduce(Args&&... data) {
     vt::runInEpochCollective([=] {
       if (is_part_of_adjustment_group) {
         auto const partner = is_even ? this_node + 1 : this_node - 1;
-        grp_proxy[partner].send<&Reducer::sendHandler>(std::forward<Args...>(data...));
+        grp_proxy[partner].send<&Reducer::sendHandler>(
+          std::forward<Args...>(data...));
       }
     });
 
@@ -123,6 +123,6 @@ void allreduce(Args&&... data) {
   */
 }
 
-} // namespace vt::collective::reduce::alleduce
+} // namespace vt::collective::reduce::allreduce
 
 #endif // INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H

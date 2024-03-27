@@ -198,6 +198,15 @@ public:
     Args&&... args
   ) const;
 
+  template <
+    auto f,
+    template <typename Arg> class Op = collective::NoneOp,
+    typename... Args
+  >
+  PendingSendType allreduce_h(
+    Args&&... args
+  ) const;
+
   /**
    * \brief Reduce back to a point target. Performs a reduction using operator
    * `Op` followed by a send to `f` with the result.
