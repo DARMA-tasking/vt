@@ -207,6 +207,24 @@ template <typename ObjT>
 template <
   auto f,
   template <typename Arg> class Op,
+  typename... Args
+>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::allreduce_h(
+  Args&&... args
+) const {
+  auto proxy = Proxy<ObjT>(*this);
+  return theObjGroup()->allreduce_r<
+  f,
+    ObjT,
+    Op
+  >(proxy, std::forward<Args>(args)...);
+}
+
+template <typename ObjT>
+template <
+  auto f,
+  template <typename Arg> class Op,
   typename Target,
   typename... Args
 >

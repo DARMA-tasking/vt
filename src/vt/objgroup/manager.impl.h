@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#include "vt/messaging/message/smart_ptr.h"
+#include <utility>
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
@@ -57,6 +59,7 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
 #include "vt/elm/elm_id_bits.h"
+#include "vt/collective/reduce/allreduce/allreduce.h"
 
 #include <memory>
 
@@ -260,6 +263,32 @@ decltype(auto) ObjGroupManager::invoke(
 template <typename MsgT>
 ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
   return objgroup::broadcast(msg,han);
+}
+
+template <
+  auto f, typename ObjT, template <typename Arg> class Op, typename DataT>
+ObjGroupManager::PendingSendType
+ObjGroupManager::allreduce_r(ProxyType<ObjT> proxy, const DataT& data) {
+  // check payload size and choose appropriate algorithm
+
+  auto const this_node = vt::theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+
+  using Reducer = collective::reduce::allreduce::Allreduce<DataT>;
+
+  auto grp_proxy =
+    vt::theObjGroup()->makeCollective<Reducer>("allreduce_rabenseifner");
+
+  grp_proxy[this_node].template invoke<&Reducer::initialize>(
+    data, grp_proxy, num_nodes);
+
+  vt::runInEpochCollective([=] {
+    grp_proxy[this_node].template invoke<&Reducer::partOneCollective>();
+  });
+
+  proxy[this_node].template invoke<f>(grp_proxy.get()->val_);
+
+  return PendingSendType{nullptr};
 }
 
 template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>
