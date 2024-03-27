@@ -96,7 +96,7 @@ decltype(auto) invoke(
   return runnable::makeRunnableVoid(false, han, this_node)
     .withObjGroup(elm)
     .withLBData(lb_data, elm_id)
-    .runLambda(f, static_cast<ObjT*>(elm), msg.get());
+    .runLambda(f, reinterpret_cast<ObjT*>(elm), msg.get());
 }
 
 template <typename MsgT>

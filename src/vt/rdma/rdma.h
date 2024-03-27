@@ -142,7 +142,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     ByteType const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
     ByteType const byte_offset = offset == no_byte ? 0 : sizeof(T)*offset;
     return putData(
-      rdma_handle, static_cast<RDMA_PtrType>(ptr), num_bytes, byte_offset, tag,
+      rdma_handle, reinterpret_cast<RDMA_PtrType>(ptr), num_bytes, byte_offset, tag,
       sizeof(T), action_after_put
     );
   }
@@ -327,7 +327,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     ByteType const byte_offset = elm_offset == no_byte ? 0 : sizeof(T)*elm_offset;
 
     return getDataIntoBuf(
-      rdma_handle, static_cast<RDMA_PtrType>(ptr), num_bytes, byte_offset, tag,
+      rdma_handle, reinterpret_cast<RDMA_PtrType>(ptr), num_bytes, byte_offset, tag,
       next_action, sizeof(T)
     );
   }
@@ -391,7 +391,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
       print_ptr(ptr), num_bytes
     );
     return registerNewRdmaHandler(
-      true, static_cast<RDMA_PtrType>(ptr), num_bytes
+      true, reinterpret_cast<RDMA_PtrType>(ptr), num_bytes
     );
   }
 

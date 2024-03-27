@@ -81,7 +81,7 @@ Channel::Channel(
     normal, rdma_channel,
     "channel: construct: target={}, non_target={}, my_node={}, han={}, "
     "ptr={}, bytes={}, is_target={}\n",
-    target_, non_target_, my_node, rdma_handle_, ptr_, num_bytes_,
+    target_, non_target_, my_node, rdma_handle_, print_ptr(ptr_), num_bytes_,
     print_bool(is_target_)
   );
 }
@@ -246,7 +246,7 @@ Channel::writeDataToChannel(
     normal, rdma_channel,
     "writeDataToChannel: target={}, ptr={}, ptr_num_bytes={}, "
     "num_bytes={}, op_type={}, offset={}, locked_={}\n",
-    target_, ptr, ptr_num_bytes, num_bytes_, PRINT_RDMA_OP_TYPE(op_type_),
+    target_, print_ptr(ptr), ptr_num_bytes, num_bytes_, PRINT_RDMA_OP_TYPE(op_type_),
     offset, locked_
   );
 

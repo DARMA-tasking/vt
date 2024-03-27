@@ -47,8 +47,8 @@
 
 namespace vt { namespace pool {
 
-/*static*/ char* HeaderManager::setHeader(
-  size_t const& num_bytes, size_t const& oversize, char* buffer
+/*static*/ std::byte* HeaderManager::setHeader(
+  size_t const& num_bytes, size_t const& oversize, std::byte* buffer
 ) {
   AllocView view;
   view.buffer = buffer;
@@ -58,19 +58,19 @@ namespace vt { namespace pool {
   return buf_start;
 }
 
-/*static*/ size_t HeaderManager::getHeaderBytes(char* buffer) {
+/*static*/ size_t HeaderManager::getHeaderBytes(std::byte* buffer) {
   AllocView view;
   view.buffer = buffer - sizeof(Header);
   return view.layout->prealloc.alloc_size;
 }
 
-/*static*/ size_t HeaderManager::getHeaderOversizeBytes(char* buffer) {
+/*static*/ size_t HeaderManager::getHeaderOversizeBytes(std::byte* buffer) {
   AllocView view;
   view.buffer = buffer - sizeof(Header);
   return view.layout->prealloc.oversize;
 }
 
-/*static*/ char* HeaderManager::getHeaderPtr(char* buffer) {
+/*static*/ std::byte* HeaderManager::getHeaderPtr(std::byte* buffer) {
   return buffer - sizeof(Header);
 }
 

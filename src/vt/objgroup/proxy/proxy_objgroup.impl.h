@@ -279,7 +279,7 @@ typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceS
 template <typename ObjT>
 ObjT* Proxy<ObjT>::get() const {
   auto proxy = Proxy<ObjT>(*this);
-  return theObjGroup()->get<ObjT>(proxy);
+  return reinterpret_cast<ObjT*>(theObjGroup()->get<ObjT>(proxy));
 }
 
 template <typename ObjT>
