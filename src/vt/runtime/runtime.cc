@@ -445,7 +445,7 @@ bool Runtime::initialize(bool const force_now) {
       printStartupBanner();
       // Enqueue a check for later in case arguments are modified before work
       // actually executes
-      theSched->enqueue([this]{
+      theSched->enqueueLambda([this]{
         this->checkForArgumentErrors();
       });
 

@@ -211,6 +211,22 @@ struct ProxyElm {
    */
   NodeType getNode() const { return node_; }
 
+  /**
+   * \brief Check if dependent epoch is released
+   *
+   * \param[in] epoch the epoch in question
+   *
+   * \return whether it is released
+   */
+  bool isReleased(EpochType epoch) const;
+
+  /**
+   * \brief Release a dependent epoch for this element
+   *
+   * \param[in] epoch the epoch to release
+   */
+  void release(EpochType epoch) const;
+
 public:
   /**
    * \brief Serialize the element proxy

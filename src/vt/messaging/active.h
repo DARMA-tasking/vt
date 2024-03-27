@@ -268,7 +268,7 @@ struct BufferedActiveMsg {
 
   BufferedActiveMsg(
     MessageType const& in_buffered_msg, NodeType const& in_from_node,
-    ActionType in_cont
+    ActionType in_cont = nullptr
   ) : buffered_msg(in_buffered_msg), from_node(in_from_node), cont(in_cont)
   { }
 

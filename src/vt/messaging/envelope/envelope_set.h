@@ -250,6 +250,16 @@ inline void envelopeSetIsLocked(Env& env, bool is_locked);
 template <typename Env>
 inline void envelopeUnlockForForwarding(Env& env);
 
+/**
+ * \brief Set whether this is an internal system message
+ *
+ * \param[in,out] env the envelope
+ * \param[in] is_system_msg value indicating message is a system message
+ */
+template <typename Env>
+inline void envelopeSetSystemMsg(Env& env, bool is_system_msg);
+
+
 } /* end namespace vt */
 
 #include "vt/messaging/envelope/envelope_set.impl.h"

@@ -101,6 +101,13 @@ struct BaseUnit {
    */
   void execute();
 
+  /**
+   * \brief Get the runnable
+   *
+   * \return the runnable
+   */
+  RunnablePtrType getRunnable() const { return r_; }
+
 protected:
   RunnablePtrType r_ = nullptr; /**< the runnable task */
   ActionType work_ = nullptr;   /**< the lambda task */

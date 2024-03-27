@@ -160,6 +160,11 @@ inline void envelopeSetCommLBDataRecordedAboveBareHandler(
 }
 
 template <typename Env>
+inline void envelopeSetSystemMsg(Env& env, bool is_system_msg) {
+  reinterpret_cast<Envelope*>(&env)->system_msg = is_system_msg;
+}
+
+template <typename Env>
 inline void envelopeSetIsLocked(Env& env, bool is_locked) {
   reinterpret_cast<Envelope*>(&env)->is_locked = is_locked;
 }

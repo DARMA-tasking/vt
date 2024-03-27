@@ -384,6 +384,60 @@ void Scheduler::resume(ThreadIDType tid) {
   suspended_.resumeRunnable(tid);
 }
 
+void Scheduler::releaseEpoch(EpochType ep) {
+  if (auto result = pending_work_.extract(ep); result) {
+    auto& container = result.mapped();
+    while (container.size() > 0) {
+      work_queue_.emplace(container.pop());
+    }
+  }
+}
+
+void Scheduler::releaseEpochObjgroup(EpochType ep, ObjGroupProxyType proxy) {
+  released_objgroups_[ep].insert(proxy);
+
+  if (auto iter = pending_objgroup_work_.find(ep);
+      iter != pending_objgroup_work_.end()) {
+    if (auto iter2 = iter->second.find(proxy); iter2 != iter->second.end()) {
+      auto& container = iter2->second;
+      while (container.size() > 0) {
+        work_queue_.emplace(container.pop());
+      }
+      iter->second.erase(iter2);
+    }
+    if (iter->second.size() == 0) {
+      pending_objgroup_work_.erase(iter);
+    }
+  }
+}
+
+void Scheduler::releaseEpochCollection(EpochType ep, UntypedCollection* untyped) {
+  if (
+    auto iter = pending_collection_work_.find(ep);
+    iter != pending_collection_work_.end())
+  {
+    if (auto iter2 = iter->second.find(untyped); iter2 != iter->second.end()) {
+      auto& container = iter2->second;
+      while (container.size() > 0) {
+        work_queue_.emplace(container.pop());
+      }
+      iter->second.erase(iter2);
+    }
+    if (iter->second.size() == 0) {
+      pending_collection_work_.erase(iter);
+    }
+  }
+}
+
+bool Scheduler::isReleasedEpochObjgroup(
+  EpochType ep, ObjGroupProxyType proxy
+) const {
+  if (auto it = released_objgroups_.find(ep); it != released_objgroups_.end()) {
+    return it->second.find(proxy) != it->second.end();
+  }
+  return false;
+}
+
 #if vt_check_enabled(fcontext)
 ThreadManager* Scheduler::getThreadManager() {
   return thread_manager_.get();

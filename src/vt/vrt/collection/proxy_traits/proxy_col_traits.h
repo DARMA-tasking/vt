@@ -51,13 +51,17 @@
 #include "vt/vrt/collection/insert/modifiable.h"
 #include "vt/vrt/collection/rdmaable/rdmaable.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
+#include "vt/vrt/collection/release/releasable.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 namespace col_proxy {
 
 template <typename ColT, typename IndexT>
-using Chain5 = RDMAable<ColT,IndexT,BaseCollectionProxy<ColT,IndexT>>;
+using Chain6 = ReleasableCol<ColT,IndexT,BaseCollectionProxy<ColT,IndexT>>;
+
+template <typename ColT, typename IndexT>
+using Chain5 = RDMAable<ColT,IndexT,Chain6<ColT,IndexT>>;
 
 template <typename ColT, typename IndexT>
 using Chain4 = Modifiable<ColT,IndexT,Chain5<ColT,IndexT>>;

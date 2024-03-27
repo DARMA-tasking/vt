@@ -105,6 +105,10 @@ struct ActiveEnvelope {
   /// Used to denote that the message's bare handlers shouldn't record
   /// communication LB data due to redundancy
   bool comm_lb_data_recorded_above_bare_handler : 1;
+
+  /// Used to denote that this is an internal system message that does not do
+  /// application work
+  bool system_msg : 1;
 };
 
 }} /* end namespace vt::messaging */

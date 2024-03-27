@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              proxy_elm_traits.h
+//                                 releasable.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,52 +41,52 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
-#define INCLUDED_VT_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_RELEASE_RELEASABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_RELEASE_RELEASABLE_H
 
-#include "vt/config.h"
-#include "vt/vrt/proxy/base_collection_elm_proxy.h"
-#include "vt/vrt/proxy/base_elm_proxy.h"
-#include "vt/vrt/collection/send/sendable.h"
-#include "vt/vrt/collection/invoke/invokable.h"
-#include "vt/vrt/collection/gettable/gettable.h"
-#include "vt/vrt/collection/insert/insertable.h"
-#include "vt/vrt/collection/release/releasable.h"
+#include "vt/vrt/proxy/base_collection_proxy.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt::vrt::collection {
 
-namespace elm_proxy {
+template <typename ColT, typename IndexT, typename BaseProxyT>
+struct Releaseable : BaseProxyT {
+  Releaseable() = default;
+  Releaseable(
+    typename BaseProxyT::ProxyType const& in_proxy,
+    typename BaseProxyT::ElementProxyType const& in_elm
+  );
 
-template <typename ColT, typename IndexT>
-using Chain5 = Releaseable<ColT,IndexT,BaseCollectionElmProxy<IndexT>>;
+  /**
+   * \brief Check if dependent epoch is released
+   *
+   * \param[in] epoch the epoch in question
+   *
+   * \return whether it is released
+   */
+  bool isReleased(EpochType epoch) const;
 
-template <typename ColT, typename IndexT>
-using Chain4 = Invokable<ColT,IndexT,Chain5<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain3 = Gettable<ColT,IndexT,Chain4<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain2 = ElmInsertable<ColT,IndexT,Chain3<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain1 = Sendable<ColT,IndexT,Chain2<ColT,IndexT>>;
-
-} /* end namespace proxy */
-
-template <typename ColT, typename IndexT>
-struct ProxyCollectionElmTraits : elm_proxy::Chain1<ColT,IndexT> {
-  ProxyCollectionElmTraits() = default;
-  ProxyCollectionElmTraits(ProxyCollectionElmTraits const&) = default;
-  ProxyCollectionElmTraits(ProxyCollectionElmTraits&&) = default;
-  ProxyCollectionElmTraits(
-    typename elm_proxy::Chain1<ColT,IndexT>::ProxyType const& in_proxy,
-    typename elm_proxy::Chain1<ColT,IndexT>::ElementProxyType const& in_elm
-  ) : elm_proxy::Chain1<ColT,IndexT>(in_proxy,in_elm)
-  {}
-  ProxyCollectionElmTraits& operator=(ProxyCollectionElmTraits const&) = default;
+  /**
+   * \brief Release a dependent epoch for this element
+   *
+   * \param[in] epoch the epoch to release
+   */
+  void release(EpochType epoch) const;
 };
 
-}}} /* end namespace vt::vrt::collection */
+template <typename ColT, typename IndexT, typename BaseProxyT>
+struct ReleasableCol : BaseProxyT {
+  ReleasableCol() = default;
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H*/
+  explicit ReleasableCol(VirtualProxyType const in_proxy);
+
+  /**
+   * \brief Release a dependent epoch for the whole collection
+   *
+   * \param[in] epoch the epoch to release
+   */
+  void release(EpochType epoch) const;
+};
+
+} /* end namespace vt::vrt::collection */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_RELEASE_RELEASABLE_H*/

@@ -859,7 +859,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
       theTerm()->consume(term::any_epoch_sentinel,1,sender);
       theTerm()->hangDetectRecv();
     };
-    theSched()->enqueue(irecv->priority, run);
+    theSched()->enqueueLambda(irecv->priority, run);
   }
 }
 
@@ -934,12 +934,13 @@ void ActiveMessenger::prepareActiveMsgToRun(
   using MsgType = ShortMessage;
   auto msg = base.to<MsgType>().get();
 
-  auto const is_term = envelopeIsTerm(msg->env);
-  auto const is_bcast = envelopeIsBcast(msg->env);
-  auto const dest = envelopeGetDest(msg->env);
-  auto const handler = envelopeGetHandler(msg->env);
-  auto const epoch = envelopeIsEpochType(msg->env) ?
+  auto const is_term   = envelopeIsTerm(msg->env);
+  auto const is_bcast  = envelopeIsBcast(msg->env);
+  auto const dest      = envelopeGetDest(msg->env);
+  auto const handler   = envelopeGetHandler(msg->env);
+  auto const epoch     = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
+
   auto const from_node = is_bcast ? dest : in_from_node;
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {

@@ -53,6 +53,7 @@
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/messaging/async_op_wrapper.fwd.h"
+#include "vt/vrt/collection/types/untyped.h"
 
 #include <cassert>
 #include <vector>
@@ -115,6 +116,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
   using RunnablePtrType      = runnable::RunnableNew*;
+  using UntypedCollection    = vrt::collection::UntypedCollection;
 
   struct SchedulerLoopGuard {
     SchedulerLoopGuard(Scheduler* scheduler);
@@ -226,22 +228,32 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   bool hasSchedRun() const { return has_executed_; }
 
   /**
-   * \brief Enqueue an action to execute later with the default priority
+   * \brief Enqueue an action to execute later with a priority
+   * \c default_priority
+   *
+   * \param[in] r action to execute
+   * \param[in] priority the priority of the action
+   */
+  template <typename RunT>
+  void enqueue(RunT r, PriorityType priority = default_priority);
+
+  /**
+   * \brief Enqueue a callable to execute later with the default priority
    * \c default_priority
    *
    * \param[in] r action to execute
    */
-  template <typename RunT>
-  void enqueue(RunT r);
+  template <typename Callable>
+  void enqueueLambda(Callable&& c);
 
   /**
-   * \brief Enqueue an runnable with a priority to execute later
+   * \brief Enqueue a callable to execute later with a priority
    *
    * \param[in] priority the priority of the action
-   * \param[in] r the runnable to execute later
+   * \param[in] r action to execute
    */
-  template <typename RunT>
-  void enqueue(PriorityType priority, RunT r);
+  template <typename Callable>
+  void enqueueLambda(PriorityType priority, Callable&& c);
 
   /**
    * \brief Print current memory usage
@@ -276,6 +288,14 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   template <typename MsgT, typename RunT>
   void enqueue(messaging::MsgSharedPtr<MsgT> const& msg, RunT r);
+
+  /**
+   * \brief Enqueue a work unit or postpone
+   *
+   * \param[in] u the work unit
+   */
+  template <typename UnitT>
+  void enqueueOrPostpone(UnitT u);
 
   /**
    * \brief Get the work queue size
@@ -352,6 +372,37 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   ThreadManager* getThreadManager();
 #endif
 
+  /**
+   * \brief Release an epoch to run
+   *
+   * \param[in] ep the epoch to release
+   */
+  void releaseEpoch(EpochType ep);
+
+  /**
+   * \brief Release an epoch to run
+   *
+   * \param[in] ep the epoch to release
+   */
+  void releaseEpochObjgroup(EpochType ep, ObjGroupProxyType proxy);
+
+  /**
+   * \brief Release an epoch to run
+   *
+   * \param[in] ep the epoch to release
+   */
+  void releaseEpochCollection(EpochType ep, UntypedCollection* untyped);
+
+  /**
+   * \brief Check if a epoch is released for an objgroup
+   *
+   * \param[in] ep the epoch to check
+   * \param[in] proxy the objgroup proxy
+   *
+   * \return whether it's released
+   */
+  bool isReleasedEpochObjgroup(EpochType ep, ObjGroupProxyType proxy) const;
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | work_queue_
@@ -381,7 +432,11 @@ struct Scheduler : runtime::component::Component<Scheduler> {
       | vtLiveTime
       | schedLoopTime
       | idleTime
-      | idleTimeMinusTerm;
+      | idleTimeMinusTerm
+      | pending_work_
+      | pending_objgroup_work_
+      | pending_collection_work_
+      | released_objgroups_;
   }
 
 private:
@@ -418,6 +473,21 @@ private:
 # else
   Queue<UnitType> work_queue_;
 # endif
+
+  /// Unreleased work pending an epoch release
+  std::unordered_map<EpochType, Queue<UnitType>> pending_work_;
+
+  /// Unreleased work pending on an objgroup epoch release
+  std::unordered_map<
+    EpochType, std::unordered_map<ObjGroupProxyType, Queue<UnitType>>
+  > pending_objgroup_work_;
+
+  std::unordered_map<
+    EpochType, std::unordered_map<UntypedCollection*, Queue<UnitType>>
+  > pending_collection_work_;
+
+  /// Released epochs for an objgroup
+  std::unordered_map<EpochType, std::set<ObjGroupProxyType>> released_objgroups_;
 
 #if vt_check_enabled(fcontext)
   std::unique_ptr<ThreadManager> thread_manager_ = nullptr;

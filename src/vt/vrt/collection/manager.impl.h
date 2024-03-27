@@ -219,6 +219,8 @@ template <typename ColT, typename IndexT, typename MsgT>
 
   auto m = promoteMsg(msg);
 
+  envelopeSetSystemMsg(m->env, false);
+
   runnable::makeRunnable(m, true, han, from)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
@@ -231,6 +233,8 @@ template <typename ColT, typename IndexT, typename MsgT>
 
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionBcastHandler(MsgT* msg) {
+  envelopeSetSystemMsg(msg->env, false);
+
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const bcast_proxy = col_msg->getBcastProxy();
   auto const& group = envelopeGetGroup(msg->env);
@@ -1725,7 +1729,7 @@ void CollectionManager::destroyElm(
   if (elm_holder->exists(idx)) {
     // Delay this so we can finish processing this work unit first (which might
     // be this collection element running)
-    theSched()->enqueue([idx,untyped_proxy]{
+    theSched()->enqueueLambda([idx,untyped_proxy]{
       auto elm = theCollection()->findElmHolder<IndexType>(untyped_proxy);
       if (elm->exists(idx)) {
         elm->remove(idx);
@@ -2321,6 +2325,59 @@ messaging::PendingSend CollectionManager::schedule(
       schedule(fn);
     }
   });
+}
+
+namespace {
+
+template <typename ColT>
+void releaseRemoteCollection(
+  ColT* col, VrtElmProxy<ColT, typename ColT::IndexType> proxy, EpochType ep
+) {
+  proxy.release(ep);
+}
+
+} /* end anon namespace */
+
+template <typename ColT>
+void CollectionManager::releaseEpoch(
+  VrtElmProxy<ColT, typename ColT::IndexType> proxy, EpochType epoch
+) {
+  if (auto ptr = proxy.tryGetLocalPtr(); ptr != nullptr) {
+    ptr->addReleasedEpoch(epoch);
+    theSched()->releaseEpochCollection(epoch, ptr);
+  } else {
+    proxy.template send<releaseRemoteCollection<ColT>>(proxy, epoch);
+  }
+}
+
+template <typename ColT>
+void CollectionManager::releaseEpochCollection(
+  VirtualProxyType proxy, EpochType epoch
+) {
+  theMsg()->broadcast<releaseWholeCollection<ColT>>(proxy, epoch);
+}
+
+template <typename ColT>
+bool CollectionManager::isReleasedEpoch(
+  VrtElmProxy<ColT, typename ColT::IndexType> proxy, EpochType epoch
+) {
+  if (auto ptr = proxy.tryGetLocalPtr(); ptr != nullptr) {
+    return ptr->isReleasedEpoch(epoch);
+  } else {
+    vtAbort("Can not call isReleased on a non-local proxy");
+    return false;
+  }
+}
+
+template <typename ColT>
+/*static*/ void CollectionManager::releaseWholeCollection(
+  VirtualProxyType proxy, EpochType epoch
+) {
+  CollectionProxyWrapType<ColT> typed_proxy{proxy};
+  auto const& idxs = theCollection()->getLocalIndices<ColT>(typed_proxy);
+  for (auto&& idx : idxs) {
+    theCollection()->releaseEpoch(typed_proxy[idx], epoch);
+  }
 }
 
 }}} /* end namespace vt::vrt::collection */

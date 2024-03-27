@@ -353,6 +353,27 @@ public:
    */
   static void operator delete(void* ptr);
 
+  /**
+   * \brief Get the epoch for a runnable
+   *
+   * \return the epoch
+   */
+  EpochType getEpoch() const;
+
+  /**
+   * \brief Whether this runnable targets an object group
+   *
+   * \return targets object group
+   */
+  bool isObjGroup() const { return is_objgroup_; }
+
+  /**
+   * \brief Get the object this runnable targets
+   *
+   * \return the obj
+   */
+  void* getObj() const { return obj_; }
+
 private:
   detail::Contexts contexts_;               /**< The contexts  */
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
@@ -362,6 +383,7 @@ private:
     DispatcherScatterType func_scat_;
   } f_;
   bool is_scatter_ = false;
+  bool is_objgroup_ = false;
 #if vt_check_enabled(fcontext)
   bool is_threaded_ = false;                /**< Whether ULTs are supported */
   bool done_ = false;                       /**< Whether task is complete */

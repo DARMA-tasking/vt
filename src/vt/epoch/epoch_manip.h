@@ -72,7 +72,7 @@ namespace vt { namespace epoch {
 struct EpochManip : runtime::component::Component<EpochManip> {
   using CapturedContextType = term::ParentEpochCapture;
 
-  EpochManip();
+  EpochManip() = default;
 
   std::string name() override { return "EpochManip"; }
 
@@ -88,6 +88,24 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \return whether the \c epoch is rooted
    */
   static bool isRooted(EpochType const& epoch);
+
+  /**
+   * \brief Gets whether an epoch is DS or onot
+   *
+   * \param[in] epoch the epoch
+   *
+   * \return whether it is DS
+   */
+  static bool isDS(EpochType epoch);
+
+  /**
+   * \brief Gets whether an epoch is dependent or onot
+   *
+   * \param[in] epoch the epoch
+   *
+   * \return whether it is dependent
+   */
+  static bool isDep(EpochType epoch);
 
   /**
    * \brief Gets the \c eEpochCategory of a given epoch
@@ -151,6 +169,14 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \param[in] seq the sequential ID to set on the epoch
    */
   static void setSeq(EpochType& epoch, EpochType::ImplType const seq);
+
+  /**
+   * \brief Combine eEpochCategory elements
+   *
+   * \param[in] c1 category 1
+   * \param[in] c2 category 2
+   */
+  static eEpochCategory makeCat(eEpochCategory c1, eEpochCategory c2);
 
   /*
    * General (stateless) methods for creating a epoch with certain properties
@@ -250,10 +276,12 @@ public:
   }
 
 private:
-  // epoch window container for specific archetyped epochs
-  std::unordered_map<EpochType,std::unique_ptr<EpochWindow>> terminated_epochs_;
-  // epoch window for basic collective epochs
-  std::unique_ptr<EpochWindow> terminated_collective_epochs_ = nullptr;
+  /// epoch window container for specific archetyped epochs
+  std::unordered_map<EpochType, std::unique_ptr<EpochWindow>> terminated_epochs_;
+  /// epoch window for basic collective epochs
+  std::unordered_map<
+    EpochType, std::unique_ptr<EpochWindow>
+  > terminated_collective_epochs_;
 };
 
 }} /* end namespace vt::epoch */

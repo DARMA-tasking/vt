@@ -55,12 +55,6 @@ namespace vt { namespace epoch {
 
 static EpochType const arch_epoch_coll = makeEpochZero();
 
-EpochManip::EpochManip()
-  : terminated_collective_epochs_(
-      std::make_unique<EpochWindow>(arch_epoch_coll)
-    )
-{ }
-
 /*static*/ EpochType EpochManip::generateEpoch(
   bool const& is_rooted, NodeType const& root_node,
   eEpochCategory const& category
@@ -123,22 +117,19 @@ EpochType EpochManip::getArchetype(EpochType epoch) const {
 
 EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
   auto const is_rooted = isRooted(epoch);
-  if (is_rooted and epoch != term::any_epoch_sentinel) {
-    auto const& arch_epoch = getArchetype(epoch);
-    auto iter = terminated_epochs_.find(arch_epoch);
-    if (iter == terminated_epochs_.end()) {
-      terminated_epochs_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(arch_epoch),
-        std::forward_as_tuple(std::make_unique<EpochWindow>(arch_epoch))
-      );
-      iter = terminated_epochs_.find(arch_epoch);
-    }
-    return iter->second.get();
-  } else {
-    vtAssertExpr(terminated_collective_epochs_ != nullptr);
-    return terminated_collective_epochs_.get();
+  auto& container = is_rooted and epoch != term::any_epoch_sentinel ?
+    terminated_epochs_ : terminated_collective_epochs_;
+  auto const& arch_epoch = getArchetype(epoch);
+  auto iter = container.find(arch_epoch);
+  if (iter == container.end()) {
+    container.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(arch_epoch),
+      std::forward_as_tuple(std::make_unique<EpochWindow>(arch_epoch))
+    );
+    iter = container.find(arch_epoch);
   }
+  return iter->second.get();
 }
 
 /*static*/ bool EpochManip::isRooted(EpochType const& epoch) {
@@ -146,6 +137,29 @@ EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
   constexpr BitPackerType::FieldType field = eEpochRoot::rEpochIsRooted;
   constexpr BitPackerType::FieldType size = 1;
   return BitPackerType::boolGetField<field,size,ImplType>(*epoch);
+}
+
+/*static*/ bool EpochManip::isDS(EpochType epoch) {
+  using T = typename std::underlying_type<eEpochCategory>::type;
+  if (epoch != term::any_epoch_sentinel and isRooted(epoch)) {
+    BitPackerType::FieldType const ds_bit =
+      static_cast<T>(eEpochCategory::DijkstraScholtenEpoch) - 1;
+    auto cat = static_cast<T>(EpochManip::category(epoch));
+    return BitPackerType::boolGetField<ds_bit,1,decltype(cat)>(cat);
+  } else {
+    return false;
+  }
+}
+
+/*static*/ bool EpochManip::isDep(EpochType epoch) {
+  using T = typename std::underlying_type<eEpochCategory>::type;
+  if (epoch == no_epoch or epoch == term::any_epoch_sentinel) {
+    return false;
+  }
+  BitPackerType::FieldType const dep_bit =
+    static_cast<T>(eEpochCategory::DependentEpoch) - 1;
+  auto cat = static_cast<T>(EpochManip::category(epoch));
+  return BitPackerType::boolGetField<dep_bit,1,decltype(cat)>(cat);
 }
 
 /*static*/ eEpochCategory EpochManip::category(EpochType const& epoch) {
@@ -188,6 +202,14 @@ void EpochManip::setCategory(EpochType& epoch, eEpochCategory const cat) {
   BitPackerType::setField<
     eEpochRoot::rEpochCategory, epoch_category_num_bits
   >(*epoch,cat);
+}
+
+/*static*/ eEpochCategory EpochManip::makeCat(
+  eEpochCategory c1, eEpochCategory c2
+) {
+  using T = typename std::underlying_type<eEpochCategory>::type;
+  auto ret = static_cast<T>(c1) | static_cast<T>(c2);
+  return static_cast<eEpochCategory>(ret);
 }
 
 /*static*/

@@ -364,6 +364,17 @@ void Proxy<ObjT>::destroyHandleSetRDMA(vt::rdma::HandleSet<T> set) const {
   return vt::theHandleRDMA()->deleteHandleSetCollectiveObjGroup<T>(set);
 }
 
+template <typename ObjT>
+inline void releaseRemoteObjGroupBcast(Proxy<ObjT> proxy, EpochType ep) {
+  auto const node = theContext()->getNode();
+  proxy[node].release(ep);
+}
+
+template <typename ObjT>
+void Proxy<ObjT>::release(EpochType epoch) const {
+  theMsg()->broadcast<releaseRemoteObjGroupBcast<ObjT>>(*this, epoch);
+}
+
 inline DefaultProxyElm Proxy<void>::operator[](NodeType node) const {
   return DefaultProxyElm{node};
 }

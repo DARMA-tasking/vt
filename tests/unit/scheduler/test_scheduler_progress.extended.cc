@@ -77,7 +77,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
   // Fill the queue with a second amount of work, in smaller increments to see
   // if progress triggers too early
   for (int i = 0; i < vt::theConfig()->vt_sched_progress_sec / 0.05; i++) {
-    testSched->enqueue([]{ sleep_for(50ms); });
+    testSched->enqueueLambda([]{ sleep_for(50ms); });
   }
 
   testSched->runSchedulerWhile([&done]{return not done;});
@@ -116,7 +116,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_2) {
   theEvent()->getEventHolder(event).attachAction([&]{ done = true; });
 
   for (int i = 0; i < 10; i++) {
-    testSched->enqueue([]{ sleep_for(100ms); });
+    testSched->enqueueLambda([]{ sleep_for(100ms); });
   }
 
   testSched->runSchedulerWhile([&done]{return not done;});

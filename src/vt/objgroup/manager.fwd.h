@@ -75,6 +75,8 @@ decltype(auto) invoke(messaging::MsgSharedPtr<MsgT> msg, HandlerType han, NodeTy
 template <typename MsgT>
 messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 
+ObjGroupProxyType getProxyFromPtr(void* obj);
+
 }} /* end namespace vt::objgroup */
 
 namespace vt {
