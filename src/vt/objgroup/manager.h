@@ -291,6 +291,9 @@ public:
     ProxyType<ObjT> proxy, std::string const& name, std::string const& parent = ""
   );
 
+template <auto f, typename ObjT, template <typename Arg> class Op, typename DataT>
+ObjGroupManager::PendingSendType allreduce_r(ProxyType<ObjT> proxy, const DataT& data);
+
   /**
    * \brief Perform a reduction over an objgroup
    *
