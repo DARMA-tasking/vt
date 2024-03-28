@@ -53,6 +53,7 @@ variables:
   VT_NO_COLOR: 1
   VT_BUILD_SHARED_LIBS: 0
   VT_INCLUSION: TPL
+  VT_DEBUG_VERBOSE: 0
   CMAKE_CXX_STANDARD: 17
   TEST_LB_SCHEMA: 0
   CACHE: "$(Agent.TempDirectory)/cache/"
