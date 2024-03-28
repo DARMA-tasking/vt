@@ -424,12 +424,21 @@ bool Runtime::tryFinalize(bool const disable_sig) {
 }
 
 bool Runtime::needLBDataRestartReader() {
+  using vrt::collection::balance::ReadLBConfig;
+
   #if vt_check_enabled(lblite)
-  if (true) {
-    return arg_config_->config_.vt_lb_data_in;
-  } else
+  if (arg_config_->config_.vt_lb_data_in) {
+    auto& config_file = arg_config_->config_.vt_lb_file_name;
+    if (config_file != "") {
+      bool const has_spec = ReadLBConfig::openConfig(config_file);
+      if (has_spec) {
+        return ReadLBConfig::hasOfflineLB();
+      }
+    }
+  }
   #endif
-    return false;
+
+  return false;
 }
 
 bool Runtime::initialize(bool const force_now) {
