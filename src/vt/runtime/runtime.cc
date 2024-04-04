@@ -435,6 +435,7 @@ bool Runtime::needLBDataRestartReader() {
         return ReadLBConfig::hasOfflineLB();
       }
     }
+    return true;
   }
   #endif
 
