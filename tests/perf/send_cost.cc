@@ -243,9 +243,9 @@ VT_PERF_TEST(SendTest, test_objgroup_send) {
   auto const thisNode = vt::theContext()->getNode();
   auto const lastNode = theContext()->getNumNodes() - 1;
 
-  int nsteps = 2;
+  int nsteps = static_cast<int32_t>(log2(theContext()->getNumNodes()));
   auto nprocs_rem = 0;
-  size_t count = 32; //1 << 6;
+  size_t count = 16; //1 << 6;
   auto* buf = (int32_t*)malloc(sizeof(int32_t) * count);
   auto nprocs_pof2 = 1 << nsteps;
   auto rank = theContext()->getNode();
