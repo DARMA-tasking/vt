@@ -42,6 +42,7 @@
 */
 #include "common/test_harness.h"
 #include "vt/collective/collective_alg.h"
+#include "vt/configs/error/config_assert.h"
 #include "vt/context/context.h"
 #include <unordered_map>
 #include <vt/collective/collective_ops.h>
@@ -73,7 +74,11 @@ struct NodeObj {
     // fmt::print(
     //   "\n[{}]: allreduce_h done! (Size == {}) Results are ...\n",
     //   theContext()->getNode(), in.size());
-
+    // const auto p = theContext()->getNumNodes();
+    // const auto expected = (p * (p + 1)) / 2;
+    // for (auto val : in) {
+    //   vtAssert(val == expected, "FAILURE!");
+    // }
     // for (int node = 0; node < theContext()->getNumNodes(); ++node) {
     //   if (node == theContext()->getNode()) {
     //     std::string printer(128, 0x0);
