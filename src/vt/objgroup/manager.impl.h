@@ -283,7 +283,15 @@ ObjGroupManager::allreduce_r(ProxyType<ObjT> proxy, const DataT& data) {
     data, grp_proxy, num_nodes);
 
   vt::runInEpochCollective([=] {
-    grp_proxy[this_node].template invoke<&Reducer::partOneCollective>();
+    grp_proxy[this_node].template invoke<&Reducer::partOne>();
+  });
+
+  vt::runInEpochCollective([=] {
+    grp_proxy[this_node].template invoke<&Reducer::partTwo>();
+  });
+
+  vt::runInEpochCollective([=] {
+    grp_proxy[this_node].template invoke<&Reducer::partThree>();
   });
 
   proxy[this_node].template invoke<f>(grp_proxy.get()->val_);
