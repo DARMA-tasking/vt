@@ -360,6 +360,18 @@ struct Allreduce {
     }
   }
 
+  void partFour() {
+    if (is_part_of_adjustment_group_ and is_even_) {
+      if constexpr (debug) {
+        fmt::print(
+          "[{}] Part4 : Sending to Node {}  \n", this_node_, this_node_ + 1);
+      }
+      proxy_[this_node_ + 1].template send<&Allreduce::partFourHandler>(val_);
+    }
+  }
+
+  void partFourHandler(AllreduceMsg<DataT>* msg) { val_ = msg->val_; }
+
   NodeType this_node_ = {};
   bool is_even_ = false;
   vt::objgroup::proxy::Proxy<Allreduce> proxy_ = {};
