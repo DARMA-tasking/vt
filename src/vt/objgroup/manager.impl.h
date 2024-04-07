@@ -274,6 +274,10 @@ ObjGroupManager::allreduce_r(ProxyType<ObjT> proxy, const DataT& data) {
   auto const this_node = vt::theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
 
+  if(num_nodes < 2){
+    return PendingSendType{nullptr};
+  }
+
   using Reducer = collective::reduce::allreduce::Allreduce<DataT>;
 
   auto grp_proxy =
@@ -292,6 +296,10 @@ ObjGroupManager::allreduce_r(ProxyType<ObjT> proxy, const DataT& data) {
 
   vt::runInEpochCollective([=] {
     grp_proxy[this_node].template invoke<&Reducer::partThree>();
+  });
+
+  vt::runInEpochCollective([=] {
+    grp_proxy[this_node].template invoke<&Reducer::partFour>();
   });
 
   proxy[this_node].template invoke<f>(grp_proxy.get()->val_);
