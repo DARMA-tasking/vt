@@ -300,7 +300,7 @@ Description: β in the work model (inter-node communication in work model)
 )"
     },
     {
-    "epislon",
+    "epsilon",
       R"(
 Values: <double>
 Defaut: 1.0
@@ -996,7 +996,7 @@ double TemperedLB::computeWorkAfterClusterSwap(
     to_remove.home_node != node and
     to_remove.home_node != uninitialized_destination
   ) {
-    node_work -= ζ * to_remove.edge_weight;
+    node_work -= δ * to_remove.edge_weight;
   }
 
   // If to_add is now remote, add that component to the work
@@ -1004,7 +1004,7 @@ double TemperedLB::computeWorkAfterClusterSwap(
     to_add.home_node != node and
     to_add.home_node != uninitialized_destination
   ) {
-    node_work += ζ * to_add.edge_weight;
+    node_work += δ * to_add.edge_weight;
   }
 
   double node_inter_send = info.inter_send_vol;
