@@ -1135,8 +1135,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
             for (auto const& [from_obj, to_edges] : send_edges_) {
               for (auto const& [to_obj, volume] : to_edges) {
-                vt_print(
-                  temperedlb,
+                vt_debug_print(
+                  verbose, temperedlb,
                   "SymmEdges: from={}, to={}, volume={}\n",
                   from_obj, to_obj, volume
                 );
