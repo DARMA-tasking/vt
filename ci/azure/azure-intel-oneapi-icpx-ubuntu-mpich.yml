@@ -29,7 +29,7 @@ variables:
   COMPILER_TYPE: intel-oneapi
   COMPILER: icpx
   HOST_COMPILER: icpx
-  BUILD_TYPE: release
+  BUILD_TYPE: debug
   ULIMIT_CORE: 0
   VT_CODE_COVERAGE: 0
   VT_LB: 1
@@ -48,7 +48,7 @@ variables:
   VT_PRODUCTION_BUILD: 0
   VT_FCONTEXT: 0
   VT_ZOLTAN: 0
-  VT_CI_BUILD: 1
+  VT_CI_BUILD: 0
   VT_DIAGNOSTICS: 1
   VT_NO_COLOR: 1
   VT_BUILD_SHARED_LIBS: 0
