@@ -856,6 +856,23 @@ std::set<SharedIDType> TemperedLB::getSharedBlocksHere() const {
   return blocks_here;
 }
 
+int TemperedLB::getRemoteBlockCountHere() const {
+  auto this_node = theContext()->getNode();
+  auto const& shared_blocks_here = getSharedBlocksHere();
+  int remote_block_count = 0;
+  for (auto const& sid : shared_blocks_here) {
+    if (auto it = shared_block_edge_.find(sid); it != shared_block_edge_.end()) {
+      auto const& [home_node, volume] = it->second;
+      if (home_node != this_node) {
+        remote_block_count++;
+      }
+    } else {
+      vtAbort("Could not find shared edge volume!");
+    }
+  }
+  return remote_block_count;
+}
+
 void TemperedLB::workStatsHandler(std::vector<balance::LoadData> const& vec) {
   auto const& work = vec[1];
   work_mean_ = work.avg();
@@ -1343,6 +1360,13 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         best_trial, new_imbalance_
       );
     }
+
+    auto remote_block_count = getRemoteBlockCountHere();
+    runInEpochCollective("TemperedLB::doLBStages -> compute unhomed", [=] {
+      proxy_.allreduce<&TemperedLB::remoteBlockCountHandler, collective::PlusOp>(
+        remote_block_count
+      );
+    });
   } else if (this_node == 0) {
     vt_debug_print(
       terse, temperedlb,
@@ -1414,6 +1438,17 @@ void TemperedLB::rejectionStatsHandler(
       " n_rejected={} "
       "rejection_rate={:0.1f}%\n",
       n_transfers, n_unhomed_blocks, n_rejected, rej
+    );
+  }
+}
+
+void TemperedLB::remoteBlockCountHandler(int n_unhomed_blocks) {
+  auto this_node = theContext()->getNode();
+  if (this_node == 0) {
+    vt_print(
+      temperedlb,
+      "After load balancing, {} blocks will be off their home ranks\n",
+      n_unhomed_blocks
     );
   }
 }
@@ -2857,10 +2892,9 @@ void TemperedLB::trySubClustering() {
     getSharedBlocksHere().size(), mem_thresh_, this_new_load_
   );
 
-  int n_rejected = 0;
-
   // Report on rejection rate in debug mode
   if (theConfig()->vt_debug_temperedlb) {
+    int n_rejected = 0;
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
         n_rejected, n_transfers_swap_, 0
@@ -3003,23 +3037,10 @@ void TemperedLB::swapClusters() {
     getSharedBlocksHere().size(), mem_thresh_, this_new_load_
   );
 
-  auto const& shared_blocks_here = getSharedBlocksHere();
-  int remote_block_count = 0;
-  for (auto const& sid : shared_blocks_here) {
-    if (auto it = shared_block_edge_.find(sid); it != shared_block_edge_.end()) {
-      auto const& [home_node, volume] = it->second;
-      if (home_node != this_node) {
-        remote_block_count++;
-      }
-    } else {
-      vtAbort("Could not find shared edge volume!");
-    }
-  }
-
-
   // Report on rejection rate in debug mode
-  int n_rejected = 0;
   if (theConfig()->vt_debug_temperedlb) {
+    int n_rejected = 0;
+    auto remote_block_count = getRemoteBlockCountHere();
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
         n_rejected, n_transfers_swap_, remote_block_count

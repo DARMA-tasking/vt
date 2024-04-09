@@ -129,6 +129,7 @@ protected:
   void rejectionStatsHandler(
     int n_rejected, int n_transfers, int n_unhomed_blocks
   );
+  void remoteBlockCountHandler(int n_unhomed_blocks);
   void thunkMigrations();
 
   void setupDone();
@@ -150,9 +151,17 @@ protected:
    * \brief Get the shared blocks that are located on this node with the current
    * object assignment
    *
-   * \return the number of shared blocks here
+   * \return the set of shared blocks here
    */
   std::set<SharedIDType> getSharedBlocksHere() const;
+
+  /**
+   * \brief Get the number of shared blocks that are located on this node with
+   * the current object assignment but are not homed here
+   *
+   * \return the number of unhomed shared blocks here
+   */
+  int getRemoteBlockCountHere() const;
 
   /**
    * \brief Compute the current cluster assignment summary for this rank
