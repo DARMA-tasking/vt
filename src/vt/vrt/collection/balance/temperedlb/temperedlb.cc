@@ -599,6 +599,15 @@ void TemperedLB::readClustersMemoryData() {
               vtAbort("\"shared_id\" in variant does not match double");
             }
           }
+          if (key == "home_rank") {
+            // Because of how JSON is stored this is always a double, even
+            // though it should be an integer
+            if (double const* val = std::get_if<double>(&variant)) {
+              home_rank = static_cast<int>(*val);
+            } else {
+              vtAbort("\"home_rank\" in variant does not match double");
+            }
+          }
           if (key == "shared_bytes") {
             if (BytesType const* val = std::get_if<BytesType>(&variant)) {
               shared_bytes = *val;
@@ -652,9 +661,7 @@ void TemperedLB::readClustersMemoryData() {
         obj_footprint_bytes_[obj] = footprint_bytes;
         obj_serialized_bytes_[obj] = serialized_bytes;
         shared_block_size_[shared_id] = shared_bytes;
-
-        // @todo: remove this hack once we have good data
-        shared_block_edge_[shared_id] = std::make_tuple(this_node, shared_bytes);
+        shared_block_edge_[shared_id] = std::make_tuple(home_rank, shared_bytes);
       }
     }
   }
