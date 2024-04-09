@@ -576,7 +576,6 @@ void TemperedLB::runLB(LoadType total_load) {
 }
 
 void TemperedLB::readClustersMemoryData() {
-  auto const this_node = theContext()->getNode();
   if (load_model_->hasUserData()) {
     for (auto obj : *load_model_) {
       if (obj.isMigratable()) {
@@ -585,6 +584,7 @@ void TemperedLB::readClustersMemoryData() {
         );
 
         SharedIDType shared_id = -1;
+        vt::NodeType home_rank = vt::uninitialized_destination;
         BytesType shared_bytes = 0;
         BytesType working_bytes = 0;
         BytesType footprint_bytes = 0;
