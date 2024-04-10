@@ -56,8 +56,8 @@ void abort(std::string const str, int32_t const code) {
 }
 
 void output(
-  std::string const str, int32_t const code, bool error, bool formatted,
-  bool decorate, bool abort_out
+  std::string const str, int32_t const code, bool error, bool decorate,
+  bool formatted, bool abort_out
 ) {
 #if !vt_check_enabled(trace_only)
   return CollectiveOps::output(str,code,error,decorate,formatted,abort_out);
