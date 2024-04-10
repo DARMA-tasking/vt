@@ -46,7 +46,6 @@
 #include <vt/collective/collective_ops.h>
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
-#include <vt/collective/reduce/allreduce/allreduce.h>
 
 #include <fmt-vt/core.h>
 
