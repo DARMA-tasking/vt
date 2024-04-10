@@ -230,12 +230,7 @@ void replayWorkloads(
         vt::pipe::LifetimeEnum::Once, postLBWork
       );
       auto lb = theLBManager()->decideLBToRun(phase, true);
-      auto const start_time = timing::getCurrentTime();
       theLBManager()->startLB(input_phase, lb, cb);
-      auto const total_time = timing::getCurrentTime() - start_time;
-      if (lb != LBType::NoLB) {
-        vt_print(replay, "Time in load balancer: {}\n", total_time);
-      }
     });
     runInEpochCollective("WorkloadReplayDriver -> destroyLB", [&] {
       theLBManager()->destroyLB();
