@@ -69,8 +69,6 @@ namespace vt { namespace tests { namespace perf { namespace common {
   *
   * VT_PERF_TEST_MAIN()
   */
-
-
 struct PerfTestRegistry{
   static void AddTest(std::unique_ptr<TestHarnessBase>&& test) {
     tests_.push_back(std::move(test));

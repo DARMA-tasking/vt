@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-#include "vt/messaging/message/smart_ptr.h"
-#include <utility>
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
@@ -59,7 +57,10 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
 #include "vt/elm/elm_id_bits.h"
-#include "vt/collective/reduce/allreduce/allreduce.h"
+#include "vt/collective/reduce/allreduce/distance_doubling.h"
+#include "vt/collective/reduce/allreduce/rabenseifner.h"
+#include "vt/messaging/message/smart_ptr.h"
+#include <utility>
 
 #include <memory>
 
@@ -278,7 +279,8 @@ ObjGroupManager::allreduce_r(ProxyType<ObjT> proxy, const DataT& data) {
     return PendingSendType{nullptr};
   }
 
-  using Reducer = collective::reduce::allreduce::Allreduce<DataT>;
+  using Reducer = collective::reduce::allreduce::Rabenseifner<DataT>;
+  // using Reducer = collective::reduce::allreduce::DistanceDoubling<DataT>;
 
   auto grp_proxy =
     vt::theObjGroup()->makeCollective<Reducer>("allreduce_rabenseifner");
@@ -286,18 +288,31 @@ ObjGroupManager::allreduce_r(ProxyType<ObjT> proxy, const DataT& data) {
   grp_proxy[this_node].template invoke<&Reducer::initialize>(
     data, grp_proxy, num_nodes);
 
+  if(this_node == 0){
+    fmt::print("\nStarting part one ...\n");
+  }
+
   vt::runInEpochCollective([=] {
     grp_proxy[this_node].template invoke<&Reducer::partOne>();
   });
 
+  if(this_node == 0){
+    fmt::print("Starting part two ...\n");
+  }
   vt::runInEpochCollective([=] {
     grp_proxy[this_node].template invoke<&Reducer::partTwo>();
   });
 
+  if(this_node == 0){
+    fmt::print("Starting part three ...\n");
+  }
   vt::runInEpochCollective([=] {
     grp_proxy[this_node].template invoke<&Reducer::partThree>();
   });
 
+  if(this_node == 0){
+    fmt::print("Starting part four ...\n");
+  }
   vt::runInEpochCollective([=] {
     grp_proxy[this_node].template invoke<&Reducer::partFour>();
   });
