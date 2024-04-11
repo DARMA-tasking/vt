@@ -110,31 +110,23 @@ private:
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
 };
 
-// VT_PERF_TEST(MyTest, test_reduce) {
-//   auto grp_proxy =
-//     vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce", this);
-
-//   if (theContext()->getNode() == 0) {
-//     theTerm()->disableTD();
-//   }
-
-//   vt::runInEpochCollective([=] {
-//     grp_proxy.allreduce<&NodeObj::reduceComplete, collective::PlusOp>(data);
-//   });
-
-//   if (theContext()->getNode() == 0) {
-//     theTerm()->enableTD();
-//   }
-// }
-
-VT_PERF_TEST(MyTest, test_allreduce) {
+VT_PERF_TEST(MyTest, test_reduce) {
   auto grp_proxy =
     vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce", this);
 
-  vt::runInEpochCollective([=] {
-    grp_proxy.allreduce_h<&NodeObj::newReduceComplete, collective::PlusOp>(
-      data);
-  });
+  grp_proxy.allreduce<&NodeObj::reduceComplete, collective::PlusOp>(data);
+}
+
+VT_PERF_TEST(MyTest, test_allreduce) {
+  auto grp_proxy =
+    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new", this);
+
+  grp_proxy.allreduce_h<&NodeObj::newReduceComplete, collective::PlusOp>(data);
+}
+
+VT_PERF_TEST(MyTest, test_epoch_collective) {
+  vt::runInEpochCollective([] {});
+  vt::runInEpochCollective([] {});
 }
 
 VT_PERF_TEST_MAIN()

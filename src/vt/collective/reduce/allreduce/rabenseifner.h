@@ -54,7 +54,7 @@
 
 namespace vt::collective::reduce::allreduce {
 
-constexpr bool debug = true;
+constexpr bool debug = false;
 
 template <typename DataT>
 struct AllreduceRbnMsg
@@ -140,23 +140,13 @@ struct Rabenseifner {
       }
     }
 
-    expected_send_ = num_steps_;
-    expected_recv_ = num_steps_;
     steps_sent_.resize(num_steps_, false);
     steps_recv_.resize(num_steps_, false);
 
     if constexpr (debug) {
-      std::string str(1024, 0x0);
-      for (int i = 0; i < num_steps_; ++i) {
-        str.append(fmt::format(
-          "Step{}: send_idx = {} send_count = {} recieve_idx = {} "
-          "recieve_count "
-          "= {}\n",
-          i, s_index_[i], s_count_[i], r_index_[i], r_count_[i]));
-      }
       fmt::print(
-        "[{}] Initialize with size = {} num_steps {} \n {}", this_node_,
-        w_size_, num_steps_, str);
+        "[{}] Initialize with size = {} num_steps {} \n", this_node_,
+        w_size_, num_steps_);
     }
   }
 
@@ -372,9 +362,7 @@ struct Rabenseifner {
   size_t w_size_ = {};
   int32_t step_ = 0;
   int32_t num_send_ = 0;
-  int32_t expected_send_ = 0;
   int32_t num_recv_ = 0;
-  int32_t expected_recv_ = 0;
 
   std::vector<bool> steps_recv_ = {};
   std::vector<bool> steps_sent_ = {};
