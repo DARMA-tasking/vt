@@ -29,7 +29,7 @@ variables:
   COMPILER_TYPE: gnu
   COMPILER: gcc-12
   HOST_COMPILER: gcc-12
-  BUILD_TYPE: debug
+  BUILD_TYPE: release
   ULIMIT_CORE: 0
   VT_CODE_COVERAGE: 0
   VT_LB: 1
