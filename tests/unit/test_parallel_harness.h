@@ -73,8 +73,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 #if vt_feature_cmake_debug_verbose and !vt_feature_cmake_ci_build
     static char verbose_on[]{"--vt_debug_level=verbose"};
     static char debug_all[]{"--vt_debug_all"};
-    static char verbose_flush[]{"--vt_debug_print_flush"};
-    addArgs(verbose_on, debug_all, verbose_flush);
+    addArgs(verbose_on, debug_all);
 #endif
 
     static char throw_on_abort[]{"--vt_throw_on_abort=1"};
