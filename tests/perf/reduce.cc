@@ -41,14 +41,9 @@
 //@HEADER
 */
 #include "common/test_harness.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/configs/error/config_assert.h"
-#include "vt/context/context.h"
-#include <unordered_map>
 #include <vt/collective/collective_ops.h>
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
-#include <vt/collective/reduce/allreduce/rabenseifner.h>
 
 #include INCLUDE_FMT_CORE
 
@@ -64,69 +59,48 @@ struct MyTest : PerfTestHarness {
 struct NodeObj {
   explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
 
-  void initialize() {
-    proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this);
-    //  data_["Node"] = theContext()->getNode(); }
-  }
-  struct MyMsg : vt::Message { };
+  void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
 
-  void newReduceComplete(std::vector<int32_t> in) {
-    // fmt::print(
-    //   "\n[{}]: allreduce_h done! (Size == {}) Results are ...\n",
-    //   theContext()->getNode(), in.size());
-    // const auto p = theContext()->getNumNodes();
-    // const auto expected = (p * (p + 1)) / 2;
-    // for (auto val : in) {
-    //   vtAssert(val == expected, "FAILURE!");
-    // }
-    // for (int node = 0; node < theContext()->getNumNodes(); ++node) {
-    //   if (node == theContext()->getNode()) {
-    //     std::string printer(128, 0x0);
-    //     for (auto val : in) {
-    //       printer.append(fmt::format("{} ", val));
-    //     }
+  struct MyMsg : vt::Message {};
 
-    //     fmt::print("{}\n", printer);
-
-    //     theCollective()->barrier();
-    //   }
-    // }
-
-    // fmt::print("\n");
+  void reduceComplete() {
+    reduce_counter_++;
+    test_obj_->StopTimer(fmt::format("{} reduce", i));
+    test_obj_->GetMemoryUsage();
+    if (i < num_iters) {
+      i++;
+      auto this_node = theContext()->getNode();
+      proxy_[this_node].send<MyMsg, &NodeObj::perfReduce>();
+    } else if (theContext()->getNode() == 0) {
+      theTerm()->enableTD();
+    }
   }
 
-  void reduceComplete(std::vector<int32_t> in) {
-    // fmt::print(
-    //   "[{}]: allreduce done! Results are ...\n", theContext()->getNode());
-    // for (auto val : in) {
-    //   fmt::print("{} ", val);
-    // }
-
-    // fmt::print("\n");
+  void perfReduce(MyMsg* in_msg) {
+    test_obj_->StartTimer(fmt::format("{} reduce", i));
+    proxy_.allreduce<&NodeObj::reduceComplete>();
   }
 
 private:
   MyTest* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
+  int reduce_counter_ = -1;
+  int i = 0;
 };
 
 VT_PERF_TEST(MyTest, test_reduce) {
-  auto grp_proxy =
-    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce", this);
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
+    "test_reduce", this
+  );
 
-  grp_proxy.allreduce<&NodeObj::reduceComplete, collective::PlusOp>(data);
-}
+  if (theContext()->getNode() == 0) {
+    theTerm()->disableTD();
+  }
 
-VT_PERF_TEST(MyTest, test_allreduce) {
-  auto grp_proxy =
-    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new", this);
+  grp_proxy[my_node_].invoke<&NodeObj::initialize>();
 
-  grp_proxy.allreduce_h<&NodeObj::newReduceComplete, collective::PlusOp>(data);
-}
-
-VT_PERF_TEST(MyTest, test_epoch_collective) {
-  vt::runInEpochCollective([] {});
-  vt::runInEpochCollective([] {});
+  using MsgType = typename NodeObj::MyMsg;
+  grp_proxy[my_node_].send<MsgType, &NodeObj::perfReduce>();
 }
 
 VT_PERF_TEST_MAIN()

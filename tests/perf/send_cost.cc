@@ -609,3 +609,4 @@ VT_PERF_TEST(SendTest, test_collection_send) {
 }
 
 VT_PERF_TEST_MAIN()
+

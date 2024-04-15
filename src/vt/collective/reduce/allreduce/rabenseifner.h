@@ -86,11 +86,13 @@ struct AllreduceRbnMsg
   int32_t step_ = {};
 };
 
-template <typename DataT>
+template <
+  typename DataT, template <typename Arg> class Op, typename ObjT,
+  auto finalHandler>
 struct Rabenseifner {
   void initialize(
     const DataT& data, vt::objgroup::proxy::Proxy<Rabenseifner> proxy,
-    uint32_t num_nodes) {
+    vt::objgroup::proxy::Proxy<ObjT> parentProxy, uint32_t num_nodes) {
     this_node_ = vt::theContext()->getNode();
     is_even_ = this_node_ % 2 == 0;
     val_ = data;
@@ -145,8 +147,8 @@ struct Rabenseifner {
 
     if constexpr (debug) {
       fmt::print(
-        "[{}] Initialize with size = {} num_steps {} \n", this_node_,
-        w_size_, num_steps_);
+        "[{}] Initialize with size = {} num_steps {} \n", this_node_, w_size_,
+        num_steps_);
     }
   }
 
@@ -186,7 +188,7 @@ struct Rabenseifner {
       val_[(val_.size() / 2) + i] = msg->val_[i];
     }
 
-    // partTwo();
+    partTwo();
   }
 
   void partTwo() {
@@ -350,6 +352,7 @@ struct Rabenseifner {
   NodeType this_node_ = {};
   bool is_even_ = false;
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
+  vt::objgroup::proxy::Proxy<ObjT> parentProxy_ = {};
   DataT val_ = {};
   NodeType vrt_node_ = {};
   bool is_part_of_adjustment_group_ = false;

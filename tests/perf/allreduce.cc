@@ -41,11 +41,16 @@
 //@HEADER
 */
 #include "common/test_harness.h"
+#include "vt/collective/collective_alg.h"
+#include "vt/collective/reduce/operators/functors/plus_op.h"
+#include "vt/configs/error/config_assert.h"
 #include "vt/context/context.h"
 #include <unordered_map>
 #include <vt/collective/collective_ops.h>
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
+#include <vt/collective/reduce/allreduce/rabenseifner.h>
+#include <vt/collective/reduce/allreduce/recursive_doubling.h>
 
 #include <fmt-vt/core.h>
 
@@ -53,58 +58,131 @@ using namespace vt;
 using namespace vt::tests::perf::common;
 
 static constexpr int num_iters = 1;
+struct MyTest : PerfTestHarness {
+  void SetUp() override {
+    PerfTestHarness::SetUp();
+    data.resize(1 << 4);
+    for (auto& val : data) {
+      val = theContext()->getNode() + 1;
+    }
+  }
 
-struct MyTest : PerfTestHarness { };
+  std::vector<int32_t> data;
+};
 
 struct NodeObj {
   explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
 
-  void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this);
+  void initialize() {
+    proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this);
+    //  data_["Node"] = theContext()->getNode(); }
   }
-  struct MyMsg : vt::Message {};
+  struct MyMsg : vt::Message { };
+
+  void recursiveDoubling(std::vector<int32_t> in) {
+    // std::string printer(1024, 0x0);
+    // printer.append(fmt::format("\n[{}]: recursiveDoubling done! ", theContext()->getNode()));
+
+    // for (int node = 0; node < theContext()->getNumNodes(); ++node) {
+    //   if (node == theContext()->getNode()) {
+
+    //     for (auto val : in) {
+    //       printer.append(fmt::format("{} ", val));
+    //     }
+
+    //     fmt::print("{}\n", printer);
+
+    //     theCollective()->barrier();
+    //   }
+    // }
+
+    // fmt::print("\n");
+    // const auto p = theContext()->getNumNodes();
+    // const auto expected = (p * (p + 1)) / 2;
+    // for (auto val : in) {
+    //   vtAssert(val == expected, "FAILURE!");
+    // }
+  }
+
+  void newReduceComplete(std::vector<int32_t> in) {
+    // fmt::print(
+    //   "\n[{}]: allreduce_h done! (Size == {}) Results are ...\n",
+    //   theContext()->getNode(), in.size());
+    // const auto p = theContext()->getNumNodes();
+    // const auto expected = (p * (p + 1)) / 2;
+    // for (auto val : in) {
+    //   vtAssert(val == expected, "FAILURE!");
+    // }
+    // for (int node = 0; node < theContext()->getNumNodes(); ++node) {
+    //   if (node == theContext()->getNode()) {
+    //     std::string printer(128, 0x0);
+    //     for (auto val : in) {
+    //       printer.append(fmt::format("{} ", val));
+    //     }
+
+    //     fmt::print("{}\n", printer);
+
+    //     theCollective()->barrier();
+    //   }
+    // }
+
+    // fmt::print("\n");
+  }
 
   void reduceComplete(std::vector<int32_t> in) {
-    reduce_counter_++;
-    test_obj_->StopTimer(fmt::format("{} reduce", i));
-    test_obj_->GetMemoryUsage();
-    if (i < num_iters) {
-      i++;
-      auto this_node = theContext()->getNode();
-      proxy_[this_node].send<MyMsg, &NodeObj::perfReduce>();
-    } else if (theContext()->getNode() == 0) {
-      theTerm()->enableTD();
-    }
-  }
+    // fmt::print(
+    //   "[{}]: allreduce done! Results are ...\n", theContext()->getNode());
+    // for (auto val : in) {
+    //   fmt::print("{} ", val);
+    // }
 
-  void perfReduce(MyMsg* in_msg) {
-    test_obj_->StartTimer(fmt::format("{} reduce", i));
-
-    proxy_.allreduce<&NodeObj::reduceComplete, collective::PlusOp>(data_);
+    // fmt::print("\n");
   }
 
 private:
   MyTest* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
-  int reduce_counter_ = -1;
-  int i = 0;
-  std::vector<int32_t> data_ = {};
 };
 
 VT_PERF_TEST(MyTest, test_reduce) {
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(
-    "test_reduce", this
-  );
+  auto grp_proxy =
+    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce", this);
 
-  if (theContext()->getNode() == 0) {
-    theTerm()->disableTD();
-  }
+  vt::runInEpochCollective([=] {
+    grp_proxy.allreduce<&NodeObj::reduceComplete, collective::PlusOp>(data);
+  });
+}
 
-  std::vector<int32_t> data(1024, theContext()->getNode());
-  grp_proxy.allreduce<&NodeObj::reduceComplete, collective::PlusOp>(data);
+VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
+  auto proxy =
+    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new", this);
 
-  if (theContext()->getNode() == 0) {
-    theTerm()->enableTD();
-  }
+  using DataT = decltype(data);
+  using Reducer = collective::reduce::allreduce::Rabenseifner<
+    DataT, collective::PlusOp, NodeObj, &NodeObj::newReduceComplete>;
+
+  auto grp_proxy =
+    vt::theObjGroup()->makeCollective<Reducer>("allreduce_rabenseifner");
+  vt::runInEpochCollective([=] {
+    grp_proxy[my_node_].template invoke<&Reducer::initialize>(
+      data, grp_proxy, proxy, num_nodes_);
+    grp_proxy[my_node_].template invoke<&Reducer::partOne>();
+  });
+}
+
+VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
+  auto proxy =
+    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new_2", this);
+
+  using DataT = decltype(data);
+  using Reducer = collective::reduce::allreduce::DistanceDoubling<
+    DataT, collective::PlusOp, NodeObj, &NodeObj::recursiveDoubling>;
+
+  auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
+    "allreduce_recursive_doubling", num_nodes_, data);
+  vt::runInEpochCollective([=] {
+    grp_proxy[my_node_].template invoke<&Reducer::allreduce>(grp_proxy, proxy);
+  });
 }
 
 VT_PERF_TEST_MAIN()
