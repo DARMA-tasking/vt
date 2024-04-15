@@ -61,7 +61,7 @@ home rank after the relevant tasks complete.
 
 Each of four ranks has three shared blocks. The memory constrains dictate that
 at most four unique shared_id values can coexist on each rank. Under these
-memory constraints, it is possible to perfectly balance the load (time). There
+memory constraints, it is possible to balance the load (time) well. There
 is more than one way to do so. The communication cost to migrate a task off-rank
 is extremely low, but the cost to communicate back the result should be
 significant enough to discourage migrating shared_ids to other ranks without it
@@ -73,9 +73,9 @@ rank-averaged load. The sum of the loads for the task corresponding to one of
 its shared_id values is more than the rank-averaged load, so the tasks for that
 shared_id will need to be split across two ranks to achieve good balance. The
 tasks for the other shared_ids across all ranks do not need to be split across
-multiple ranks to perfectly balance the load (time).
+multiple ranks to balance the load (time).
 
-Below is one solution with a perfectly balanced load and decent communication.
+Below is one solution with a well balanced load and decent communication.
 I have not evaluated whether it is optimal.
 
 Rank 0:
