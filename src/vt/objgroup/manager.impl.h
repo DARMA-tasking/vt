@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include <type_traits>
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
@@ -58,7 +57,6 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
 #include "vt/elm/elm_id_bits.h"
-#include "vt/collective/reduce/allreduce/distance_doubling.h"
 #include "vt/collective/reduce/allreduce/rabenseifner.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include <utility>
@@ -281,51 +279,42 @@ ObjGroupManager::allreduce_r(ProxyType<ObjT> proxy, const DataT& data) {
   }
 
   // using Reducer = collective::reduce::allreduce::Rabenseifner<DataT>;
-  using Reducer = collective::reduce::allreduce::DistanceDoubling<DataT, ObjT, f>;
+  // using Reducer = collective::reduce::allreduce::DistanceDoubling<DataT, Op, ObjT, f>;
 
-  return PendingSendType{[=] {
-    auto grp_proxy =
-      vt::theObjGroup()->makeCollective<Reducer>("allreduce_rabenseifner");
-    if constexpr (std::is_same_v<
-                    Reducer,
-                    collective::reduce::allreduce::DistanceDoubling<DataT, ObjT, f>>) {
-      grp_proxy[this_node].template invoke<&Reducer::initialize>(
-        data, grp_proxy, num_nodes);
+  return PendingSendType{theTerm()->getEpoch(), [=] {
+    // auto grp_proxy =
+    //   vt::theObjGroup()->makeCollective<Reducer>("allreduce_rabenseifner");
+    // if constexpr (std::is_same_v<
+    //                 Reducer,
+    //                 collective::reduce::allreduce::DistanceDoubling<DataT, Op, ObjT, f>>) {
+    //   grp_proxy[this_node].template invoke<&Reducer::initialize>(
+    //     data, grp_proxy, proxy, num_nodes);
 
-      grp_proxy[this_node].template invoke<&Reducer::partOne>();
+    //   grp_proxy[this_node].template invoke<&Reducer::partOne>();
 
-      // vt::runInEpochCollective(
-      //   [=] { grp_proxy[this_node].template invoke<&Reducer::partTwo>(); });
+    // } else if constexpr (std::is_same_v<
+    //                        Reducer,
+    //                        collective::reduce::allreduce::Rabenseifner<
+    //                          DataT, Op, ObjT, f>>) {
+    //   grp_proxy[this_node].template invoke<&Reducer::initialize>(
+    //     data, grp_proxy, num_nodes);
 
-      // grp_proxy[this_node].template invoke<&Reducer::finalPart>();
+    //   if (grp_proxy.get()->nprocs_rem_) {
+    //     vt::runInEpochCollective(
+    //       [=] { grp_proxy[this_node].template invoke<&Reducer::partOne>(); });
+    //   }
 
-      // if (grp_proxy.get()->nprocs_rem_) {
-      //   vt::runInEpochCollective(
-      //     [=] { grp_proxy[this_node].template invoke<&Reducer::partThree>(); });
-      // }
-    } else if constexpr (std::is_same_v<
-                           Reducer,
-                           collective::reduce::allreduce::Rabenseifner<
-                             DataT>>) {
-      grp_proxy[this_node].template invoke<&Reducer::initialize>(
-        data, grp_proxy, num_nodes);
+    //   vt::runInEpochCollective(
+    //     [=] { grp_proxy[this_node].template invoke<&Reducer::partTwo>(); });
 
-      if (grp_proxy.get()->nprocs_rem_) {
-        vt::runInEpochCollective(
-          [=] { grp_proxy[this_node].template invoke<&Reducer::partOne>(); });
-      }
+    //   vt::runInEpochCollective(
+    //     [=] { grp_proxy[this_node].template invoke<&Reducer::partThree>(); });
 
-      vt::runInEpochCollective(
-        [=] { grp_proxy[this_node].template invoke<&Reducer::partTwo>(); });
-
-      vt::runInEpochCollective(
-        [=] { grp_proxy[this_node].template invoke<&Reducer::partThree>(); });
-
-      if (grp_proxy.get()->nprocs_rem_) {
-        vt::runInEpochCollective(
-          [=] { grp_proxy[this_node].template invoke<&Reducer::partFour>(); });
-      }
-    }
+    //   if (grp_proxy.get()->nprocs_rem_) {
+    //     vt::runInEpochCollective(
+    //       [=] { grp_proxy[this_node].template invoke<&Reducer::partFour>(); });
+    //   }
+    // }
   }};
 }
 
