@@ -187,7 +187,7 @@ Description:
       of entire clusters, according the nullset, between ranks are attempted.
       This is especially useful when shared memory constraints are present,
       as breaking shared memory clusters results in higher overall memory
-      footprint, in constrast with whole cluster swaps.
+      footprint, in contrast with whole cluster swaps.
 )"
     },
     {
@@ -1015,7 +1015,7 @@ double TemperedLB::computeWorkAfterClusterSwap(
   );
 
   // Uninitialized destination means that the cluster is empty
-  // If to_remove it was remote, remove that component from the work
+  // If to_remove was remote, remove that component from the work
   if (
     to_remove.home_node != node and
     to_remove.home_node != uninitialized_destination
@@ -1074,7 +1074,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
   auto this_node = theContext()->getNode();
 
-  // Read in memory information if it's available before be do any trials
+  // Read in memory information if it's available before we do any trials
   readClustersMemoryData();
 
   if (transfer_type_ == TransferTypeEnum::SwapClusters) {
@@ -1266,7 +1266,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         }
       }
 
-      // Move remove cluster information to shared_block_size_ so we have all
+      // Move remote cluster information to shared_block_size_ so we have all
       // the sizes in the same place
       for (auto const& [node, clusters] : other_rank_clusters_) {
         for (auto const& [shared_id, cluster_info] : clusters) {

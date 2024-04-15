@@ -96,7 +96,7 @@ enum struct TransferTypeEnum : uint8_t {
    * of entire clusters, including the nullset, between ranks are attempted.
    * This is especially useful when shared memory constraints are present,
    * as breaking shared memory clusters results in higher overall memory
-   * footprint, in constrast with whole cluster swaps.
+   * footprint, in contrast with whole cluster swaps.
    */
   SwapClusters = 2,
 };
