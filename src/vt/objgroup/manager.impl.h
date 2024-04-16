@@ -57,7 +57,6 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
 #include "vt/elm/elm_id_bits.h"
-#include "vt/collective/reduce/allreduce/rabenseifner.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include <utility>
 
@@ -268,7 +267,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> m
 template <
   auto f, typename ObjT, template <typename Arg> class Op, typename DataT>
 ObjGroupManager::PendingSendType
-ObjGroupManager::allreduce_r(ProxyType<ObjT> proxy, const DataT& data) {
+ObjGroupManager::allreduce(ProxyType<ObjT> proxy, const DataT& data) {
   // check payload size and choose appropriate algorithm
 
   auto const this_node = vt::theContext()->getNode();

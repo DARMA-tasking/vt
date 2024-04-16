@@ -214,7 +214,7 @@ Proxy<ObjT>::allreduce_h(
   Args&&... args
 ) const {
   auto proxy = Proxy<ObjT>(*this);
-  return theObjGroup()->allreduce_r<
+  return theObjGroup()->allreduce<
   f,
     ObjT,
     Op
