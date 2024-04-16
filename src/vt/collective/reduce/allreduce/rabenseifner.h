@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   reduce.h
+//                                rabenseifner.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -90,16 +90,21 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
 struct Rabenseifner {
-  void initialize(
-    const DataT& data, vt::objgroup::proxy::Proxy<Rabenseifner> proxy,
-    vt::objgroup::proxy::Proxy<ObjT> parentProxy, uint32_t num_nodes) {
-    this_node_ = vt::theContext()->getNode();
-    is_even_ = this_node_ % 2 == 0;
-    val_ = data;
-    proxy_ = proxy;
-    num_steps_ = static_cast<int32_t>(log2(num_nodes));
-    nprocs_pof2_ = 1 << num_steps_;
-    nprocs_rem_ = num_nodes - nprocs_pof2_;
+  template <typename... Args>
+  Rabenseifner(
+    vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
+    Args&&... args)
+    : parent_proxy_(parentProxy),
+      val_(std::forward<Args>(args)...),
+      num_nodes_(num_nodes),
+      this_node_(vt::theContext()->getNode()),
+      is_even_(this_node_ % 2 == 0),
+      num_steps_(static_cast<int32_t>(log2(num_nodes_))),
+      nprocs_pof2_(1 << num_steps_),
+      nprocs_rem_(num_nodes_ - nprocs_pof2_),
+      gather_step_(num_steps_ - 1),
+      gather_mask_(nprocs_pof2_ >> 1),
+      finished_adjustment_part_(nprocs_rem_ == 0) {
     is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
     if (is_part_of_adjustment_group_) {
       if (is_even_) {
@@ -111,15 +116,21 @@ struct Rabenseifner {
       vrt_node_ = this_node_ - nprocs_rem_;
     }
 
+    scatter_messages_.resize(num_steps_, nullptr);
+    scatter_steps_recv_.resize(num_steps_, false);
+    scatter_steps_reduced_.resize(num_steps_, false);
+
+    gather_messages_.resize(num_steps_, nullptr);
+    gather_steps_recv_.resize(num_steps_, false);
+    gather_steps_reduced_.resize(num_steps_, false);
+
     r_index_.resize(num_steps_, 0);
     r_count_.resize(num_steps_, 0);
     s_index_.resize(num_steps_, 0);
     s_count_.resize(num_steps_, 0);
 
-    w_size_ = data.size();
-
     int step = 0;
-    size_t wsize = data.size();
+    size_t wsize = val_.size();
     for (int mask = 1; mask < nprocs_pof2_; mask <<= 1) {
       auto vdest = vrt_node_ ^ mask;
       auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
@@ -142,137 +153,206 @@ struct Rabenseifner {
       }
     }
 
-    steps_sent_.resize(num_steps_, false);
-    steps_recv_.resize(num_steps_, false);
+    scatter_steps_recv_.resize(num_steps_, false);
+  }
 
-    if constexpr (debug) {
-      fmt::print(
-        "[{}] Initialize with size = {} num_steps {} \n", this_node_, w_size_,
-        num_steps_);
+  void allreduce() {
+    if (nprocs_rem_) {
+      adjustForPowerOfTwo();
+    } else {
+      scatterReduceIter();
     }
   }
 
-  void partOne() {
+  void adjustForPowerOfTwo() {
     if (is_part_of_adjustment_group_) {
       auto const partner = is_even_ ? this_node_ + 1 : this_node_ - 1;
 
       if (is_even_) {
-        proxy_[partner].template send<&Rabenseifner::partOneRightHalf>(
-          DataT{val_.begin() + (val_.size() / 2), val_.end()});
+        proxy_[partner]
+          .template send<&Rabenseifner::adjustForPowerOfTwoRightHalf>(
+            DataT{val_.begin() + (val_.size() / 2), val_.end()});
       } else {
-        proxy_[partner].template send<&Rabenseifner::partOneLeftHalf>(
-          DataT{val_.begin(), val_.end() - (val_.size() / 2)});
+        proxy_[partner]
+          .template send<&Rabenseifner::adjustForPowerOfTwoLeftHalf>(
+            DataT{val_.begin(), val_.end() - (val_.size() / 2)});
       }
     }
   }
 
-  void partOneRightHalf(AllreduceRbnMsg<DataT>* msg) {
+  void adjustForPowerOfTwoRightHalf(AllreduceRbnMsg<DataT>* msg) {
     for (int i = 0; i < msg->val_.size(); i++) {
       val_[(val_.size() / 2) + i] += msg->val_[i];
     }
 
     // Send to left node
     proxy_[theContext()->getNode() - 1]
-      .template send<&Rabenseifner::partOneFinalPart>(
+      .template send<&Rabenseifner::adjustForPowerOfTwoFinalPart>(
         DataT{val_.begin() + (val_.size() / 2), val_.end()});
   }
 
-  void partOneLeftHalf(AllreduceRbnMsg<DataT>* msg) {
+  void adjustForPowerOfTwoLeftHalf(AllreduceRbnMsg<DataT>* msg) {
     for (int i = 0; i < msg->val_.size(); i++) {
       val_[i] += msg->val_[i];
     }
   }
 
-  void partOneFinalPart(AllreduceRbnMsg<DataT>* msg) {
+  void adjustForPowerOfTwoFinalPart(AllreduceRbnMsg<DataT>* msg) {
     for (int i = 0; i < msg->val_.size(); i++) {
       val_[(val_.size() / 2) + i] = msg->val_[i];
     }
 
-    partTwo();
+    finished_adjustment_part_ = true;
+
+    scatterReduceIter();
   }
 
-  void partTwo() {
+  void printValues() {
+    if constexpr (debug) {
+      std::string printer(1024, 0x0);
+      for (auto val : val_) {
+        printer.append(fmt::format("{} ", val));
+      }
+      fmt::print("[{}] Values = {} \n", this_node_, printer);
+    }
+  }
+
+  bool scatterAllMessagesReceived() {
+    return std::all_of(
+      scatter_steps_recv_.cbegin(),
+      scatter_steps_recv_.cbegin() + scatter_step_,
+      [](const auto val) { return val; });
+  }
+
+  bool scatterIsDone() {
+    return scatter_step_ == num_steps_ and scatter_num_recv_ == num_steps_;
+  }
+
+  bool scatterIsReady() {
+    return (is_part_of_adjustment_group_ and finished_adjustment_part_) and
+      scatter_step_ == 0 or
+      scatterAllMessagesReceived();
+  }
+
+  void scatterTryReduce(int32_t step) {
     if (
-      vrt_node_ == -1 or (step_ >= num_steps_) or
-      (not std::all_of(
-        steps_recv_.cbegin(), steps_recv_.cbegin() + step_,
-        [](const auto val) { return val; }))) {
+      (step < scatter_step_) and not scatter_steps_reduced_[step] and
+      scatter_steps_recv_[step] and
+      std::all_of(
+        scatter_steps_reduced_.cbegin(), scatter_steps_reduced_.cbegin() + step,
+        [](const auto val) { return val; })) {
+      auto& in_msg = scatter_messages_.at(step);
+      auto& in_val = in_msg->val_;
+      for (int i = 0; i < in_val.size(); i++) {
+        Op<typename DataT::value_type>()(
+          val_[r_index_[in_msg->step_] + i], in_val[i]);
+      }
+
+      scatter_steps_reduced_[step] = true;
+    }
+  }
+
+  void scatterReduceIter() {
+    if (not scatterIsReady()) {
       return;
     }
 
-    auto vdest = vrt_node_ ^ mask_;
+    auto vdest = vrt_node_ ^ scatter_mask_;
     auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
     if constexpr (debug) {
       fmt::print(
         "[{}] Part2 Step {}: Sending to Node {} starting with idx = {} and "
         "count "
         "{} \n",
-        this_node_, step_, dest, s_index_[step_], s_count_[step_]);
+        this_node_, scatter_step_, dest, s_index_[scatter_step_],
+        s_count_[scatter_step_]);
     }
-    proxy_[dest].template send<&Rabenseifner::partTwoHandler>(
+    proxy_[dest].template send<&Rabenseifner::scatterReduceIterHandler>(
       DataT{
-        val_.begin() + (s_index_[step_]),
-        val_.begin() + (s_index_[step_]) + s_count_[step_]},
-      step_);
+        val_.begin() + (s_index_[scatter_step_]),
+        val_.begin() + (s_index_[scatter_step_]) + s_count_[scatter_step_]},
+      scatter_step_);
 
-    mask_ <<= 1;
-    num_send_++;
-    steps_sent_[step_] = true;
-    step_++;
+    scatter_mask_ <<= 1;
+    scatter_step_++;
 
-    if (std::all_of(
-          steps_recv_.cbegin(), steps_recv_.cbegin() + step_,
-          [](const auto val) { return val; })) {
-      partTwo();
+    scatterTryReduce(scatter_step_ - 1);
+
+    if (scatterIsDone()) {
+      printValues();
+      finished_scatter_part_ = true;
+      gatherIter();
+    } else if (scatterAllMessagesReceived()) {
+      scatterReduceIter();
     }
   }
 
-  void partTwoHandler(AllreduceRbnMsg<DataT>* msg) {
-    for (int i = 0; i < msg->val_.size(); i++) {
-      val_[r_index_[msg->step_] + i] += msg->val_[i];
-    }
-    if constexpr (debug) {
-      fmt::print(
-        "[{}] Part2 Step {} mask_= {} nprocs_pof2_ = {}: "
-        "idx = {} from {}\n",
-        this_node_, msg->step_, mask_, nprocs_pof2_, r_index_[msg->step_],
-        theContext()->getFromNodeCurrentTask());
-    }
-    steps_recv_[msg->step_] = true;
-    num_recv_++;
-    if (mask_ < nprocs_pof2_) {
-      if (std::all_of(
-            steps_recv_.cbegin(), steps_recv_.cbegin() + step_,
-            [](const auto val) { return val; })) {
-        partTwo();
-      }
-    } else {
-      // step_ = num_steps_ - 1;
-      // mask_ = nprocs_pof2_ >> 1;
-      //  partThree();
-    }
-  }
+  void scatterReduceIterHandler(AllreduceRbnMsg<DataT>* msg) {
+    scatter_messages_[msg->step_] = promoteMsg(msg);
+    scatter_steps_recv_[msg->step_] = true;
+    scatter_num_recv_++;
 
-  void partThree() {
-    if (
-      vrt_node_ == -1 or
-      (not std::all_of(
-        steps_recv_.cbegin() + step_ + 1, steps_recv_.cend(),
-        [](const auto val) { return val; }))) {
+    if (not finished_adjustment_part_) {
       return;
     }
 
-    if (not startedPartThree_) {
-      step_ = num_steps_ - 1;
-      mask_ = nprocs_pof2_ >> 1;
-      num_send_ = 0;
-      num_recv_ = 0;
-      startedPartThree_ = true;
-      std::fill(steps_sent_.begin(), steps_sent_.end(), false);
-      std::fill(steps_recv_.begin(), steps_recv_.end(), false);
+    scatterTryReduce(msg->step_);
+
+    if constexpr (debug) {
+      fmt::print(
+        "[{}] Part2 Step {} scatter_mask_= {} nprocs_pof2_ = {}: "
+        "idx = {} from {}\n",
+        this_node_, msg->step_, scatter_mask_, nprocs_pof2_,
+        r_index_[msg->step_], theContext()->getFromNodeCurrentTask());
     }
 
-    auto vdest = vrt_node_ ^ mask_;
+    if ((scatter_mask_ < nprocs_pof2_) and scatterAllMessagesReceived()) {
+      scatterReduceIter();
+    } else if (scatterIsDone()) {
+      printValues();
+      finished_scatter_part_ = true;
+      gatherIter();
+    }
+  }
+
+  bool gatherAllMessagesReceived() {
+    return std::all_of(
+      gather_steps_recv_.cbegin() + gather_step_ + 1, gather_steps_recv_.cend(),
+      [](const auto val) { return val; });
+  }
+
+  bool gatherIsDone() {
+    return (gather_step_ < 0) and (gather_num_recv_ == num_steps_);
+  }
+
+  bool gatherIsReady() {
+    return (gather_step_ == num_steps_ - 1) or gatherAllMessagesReceived();
+  }
+
+  void gatherTryReduce(int32_t step) {
+    const auto doRed = (step > gather_step_) and
+      not gather_steps_reduced_[step] and gather_steps_recv_[step] and
+      std::all_of(gather_steps_reduced_.cbegin() + step + 1,
+                  gather_steps_reduced_.cend(),
+                  [](const auto val) { return val; });
+
+    if (doRed) {
+      auto& in_msg = gather_messages_.at(step);
+      auto& in_val = in_msg->val_;
+      for (int i = 0; i < in_val.size(); i++) {
+        val_[s_index_[in_msg->step_] + i] = in_val[i];
+      }
+
+      gather_steps_reduced_[step] = true;
+    }
+  }
+
+  void gatherIter() {
+    if (not gatherIsReady()) {
+      return;
+    }
+
+    auto vdest = vrt_node_ ^ gather_mask_;
     auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
 
     if constexpr (debug) {
@@ -280,43 +360,29 @@ struct Rabenseifner {
         "[{}] Part3 Step {}: Sending to Node {} starting with idx = {} and "
         "count "
         "{} \n",
-        this_node_, step_, dest, r_index_[step_], r_count_[step_]);
+        this_node_, gather_step_, dest, r_index_[gather_step_],
+        r_count_[gather_step_]);
     }
-    proxy_[dest].template send<&Rabenseifner::partThreeHandler>(
+    proxy_[dest].template send<&Rabenseifner::gatherIterHandler>(
       DataT{
-        val_.begin() + (r_index_[step_]),
-        val_.begin() + (r_index_[step_]) + r_count_[step_]},
-      step_);
+        val_.begin() + (r_index_[gather_step_]),
+        val_.begin() + (r_index_[gather_step_]) + r_count_[gather_step_]},
+      gather_step_);
 
-    steps_sent_[step_] = true;
-    num_send_++;
-    mask_ >>= 1;
-    step_--;
-    if (
-      step_ >= 0 and
-      std::all_of(
-        steps_recv_.cbegin() + step_ + 1, steps_recv_.cend(),
-        [](const auto val) { return val; })) {
-      partThree();
+    gather_mask_ >>= 1;
+    gather_step_--;
+
+    gatherTryReduce(gather_step_ + 1);
+    printValues();
+
+    if (gatherIsDone()) {
+      finalPart();
+    } else if (gatherIsReady()) {
+      gatherIter();
     }
   }
 
-  void partThreeHandler(AllreduceRbnMsg<DataT>* msg) {
-    for (int i = 0; i < msg->val_.size(); i++) {
-      val_[s_index_[msg->step_] + i] = msg->val_[i];
-    }
-
-    if (not startedPartThree_) {
-      step_ = num_steps_ - 1;
-      mask_ = nprocs_pof2_ >> 1;
-      num_send_ = 0;
-      num_recv_ = 0;
-      startedPartThree_ = true;
-      std::fill(steps_sent_.begin(), steps_sent_.end(), false);
-      std::fill(steps_recv_.begin(), steps_recv_.end(), false);
-    }
-
-    num_recv_++;
+  void gatherIterHandler(AllreduceRbnMsg<DataT>* msg) {
     if constexpr (debug) {
       fmt::print(
         "[{}] Part3 Step {}: Received idx = {} from {}\n", this_node_,
@@ -324,55 +390,93 @@ struct Rabenseifner {
         theContext()->getFromNodeCurrentTask());
     }
 
-    steps_recv_[msg->step_] = true;
+    gather_messages_[msg->step_] = promoteMsg(msg);
+    gather_steps_recv_[msg->step_] = true;
+    gather_num_recv_++;
 
-    if (
-      mask_ > 0 and
-      ((step_ == num_steps_ - 1) or
-       std::all_of(
-         steps_recv_.cbegin() + step_ + 1, steps_recv_.cend(),
-         [](const auto val) { return val; }))) {
-      partThree();
+    if (not finished_scatter_part_) {
+      return;
+    }
+
+    gatherTryReduce(msg->step_);
+    printValues();
+
+    if (gather_mask_ > 0 and gatherIsReady()) {
+      gatherIter();
+    } else if (gatherIsDone()) {
+      finalPart();
     }
   }
 
-  void partFour() {
+  void finalPart() {
+    if (completed_) {
+      return;
+    }
+
+    if (nprocs_rem_) {
+      sendToExcludedNodes();
+    }
+
+    parent_proxy_[this_node_].template invoke<finalHandler>(val_);
+    completed_ = true;
+  }
+
+  void sendToExcludedNodes() {
     if (is_part_of_adjustment_group_ and is_even_) {
       if constexpr (debug) {
         fmt::print(
           "[{}] Part4 : Sending to Node {}  \n", this_node_, this_node_ + 1);
       }
-      proxy_[this_node_ + 1].template send<&Rabenseifner::partFourHandler>(
-        val_, 0);
+      proxy_[this_node_ + 1]
+        .template send<&Rabenseifner::sendToExcludedNodesHandler>(val_, 0);
     }
   }
 
-  void partFourHandler(AllreduceRbnMsg<DataT>* msg) { val_ = msg->val_; }
+  void sendToExcludedNodesHandler(AllreduceRbnMsg<DataT>* msg) {
+    val_ = msg->val_;
 
-  NodeType this_node_ = {};
-  bool is_even_ = false;
+    parent_proxy_[this_node_].template invoke<finalHandler>(val_);
+    completed_ = true;
+  }
+
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
-  vt::objgroup::proxy::Proxy<ObjT> parentProxy_ = {};
+  vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
+
   DataT val_ = {};
-  NodeType vrt_node_ = {};
-  bool is_part_of_adjustment_group_ = false;
+  NodeType this_node_ = {};
+  NodeType num_nodes_ = {};
+  bool is_even_ = false;
   int32_t num_steps_ = {};
   int32_t nprocs_pof2_ = {};
   int32_t nprocs_rem_ = {};
-  int32_t mask_ = 1;
-  bool startedPartThree_ = false;
 
-  size_t w_size_ = {};
-  int32_t step_ = 0;
-  int32_t num_send_ = 0;
-  int32_t num_recv_ = 0;
-
-  std::vector<bool> steps_recv_ = {};
-  std::vector<bool> steps_sent_ = {};
   std::vector<int32_t> r_index_ = {};
   std::vector<int32_t> r_count_ = {};
   std::vector<int32_t> s_index_ = {};
   std::vector<int32_t> s_count_ = {};
+
+  NodeType vrt_node_ = {};
+  bool is_part_of_adjustment_group_ = false;
+  bool finished_adjustment_part_ = false;
+
+  bool completed_ = false;
+
+  // Scatter
+  int32_t scatter_mask_ = 1;
+  int32_t scatter_step_ = 0;
+  int32_t scatter_num_recv_ = 0;
+  std::vector<bool> scatter_steps_recv_ = {};
+  std::vector<bool> scatter_steps_reduced_ = {};
+  std::vector<MsgSharedPtr<AllreduceRbnMsg<DataT>>> scatter_messages_ = {};
+  bool finished_scatter_part_ = false;
+
+  // Gather
+  int32_t gather_mask_ = 1;
+  int32_t gather_step_ = 0;
+  int32_t gather_num_recv_ = 0;
+  std::vector<bool> gather_steps_recv_ = {};
+  std::vector<bool> gather_steps_reduced_ = {};
+  std::vector<MsgSharedPtr<AllreduceRbnMsg<DataT>>> gather_messages_ = {};
 };
 
 } // namespace vt::collective::reduce::allreduce
