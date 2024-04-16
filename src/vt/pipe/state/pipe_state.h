@@ -52,7 +52,7 @@
 namespace vt { namespace pipe {
 
 struct PipeState {
-  using DispatchFuncType = std::function<void(void*)>;
+  using DispatchFuncType = std::function<void(std::byte*)>;
 
   PipeState(
     PipeType const& in_pipe, PipeRefType const& in_signals, PipeRefType const& in_lis,
@@ -72,7 +72,7 @@ struct PipeState {
 
   bool hasDispatch() const;
   void setDispatch(DispatchFuncType in_dispatch);
-  void dispatch(void* ptr);
+  void dispatch(std::byte* ptr);
 
 private:
   bool automatic_                 = false;

@@ -80,8 +80,8 @@
 
 namespace vt {
 
-/// A pair of a void* and number of bytes (length) for sending data
-using PtrLenPairType = std::tuple<void*, ByteType>;
+/// A pair of a std::byte* and number of bytes (length) for sending data
+using PtrLenPairType = std::tuple<std::byte*, ByteType>;
 
 /// A continuation function with an allocated pointer with a deleter function
 using ContinuationDeleterType =
@@ -118,7 +118,7 @@ static constexpr MsgSizeType const max_pack_direct_size = 512;
  */
 struct PendingRecv {
   int nchunks = 0;
-  void* user_buf = nullptr;
+  std::byte* user_buf = nullptr;
   ContinuationDeleterType cont = nullptr;
   ActionType dealloc_user_buf = nullptr;
   NodeType sender = uninitialized_destination;
@@ -126,7 +126,7 @@ struct PendingRecv {
   bool is_user_buf = false;
 
   PendingRecv(
-    int in_nchunks, void* in_user_buf, ContinuationDeleterType in_cont,
+    int in_nchunks, std::byte* in_user_buf, ContinuationDeleterType in_cont,
     ActionType in_dealloc_user_buf, NodeType node,
     PriorityType in_priority, bool in_is_user_buf
   ) : nchunks(in_nchunks), user_buf(in_user_buf), cont(in_cont),
@@ -153,7 +153,7 @@ struct PendingRecv {
  */
 struct InProgressBase {
   InProgressBase(
-    char* in_buf, MsgSizeType in_probe_bytes, NodeType in_sender
+    std::byte* in_buf, MsgSizeType in_probe_bytes, NodeType in_sender
   ) : buf(in_buf), probe_bytes(in_probe_bytes), sender(in_sender),
       valid(true)
   { }
@@ -166,7 +166,7 @@ struct InProgressBase {
       | valid;
   }
 
-  char* buf = nullptr;
+  std::byte* buf = nullptr;
   MsgSizeType probe_bytes = 0;
   NodeType sender = uninitialized_destination;
   bool valid = false;
@@ -180,7 +180,7 @@ struct InProgressBase {
 struct InProgressIRecv : InProgressBase {
 
   InProgressIRecv(
-    char* in_buf, MsgSizeType in_probe_bytes, NodeType in_sender,
+    std::byte* in_buf, MsgSizeType in_probe_bytes, NodeType in_sender,
     MPI_Request in_req = MPI_REQUEST_NULL
   ) : InProgressBase(in_buf, in_probe_bytes, in_sender),
       req(in_req)
@@ -207,8 +207,8 @@ private:
  */
 struct InProgressDataIRecv : InProgressBase {
   InProgressDataIRecv(
-    char* in_buf, MsgSizeType in_probe_bytes, NodeType in_sender,
-    std::vector<MPI_Request> in_reqs, void* const in_user_buf,
+    std::byte* in_buf, MsgSizeType in_probe_bytes, NodeType in_sender,
+    std::vector<MPI_Request> in_reqs, std::byte* const in_user_buf,
     ActionType in_dealloc_user_buf,
     ContinuationDeleterType in_next,
     PriorityType in_priority
@@ -244,7 +244,7 @@ struct InProgressDataIRecv : InProgressBase {
       | reqs;
   }
 
-  void* user_buf = nullptr;
+  std::byte* user_buf = nullptr;
   ActionType dealloc_user_buf = nullptr;
   ContinuationDeleterType next = nullptr;
   PriorityType priority = no_priority;
@@ -1235,7 +1235,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the new size of the message
    */
   MsgSizeType packMsg(
-    MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
+    MessageType* msg, MsgSizeType size, std::byte* ptr, MsgSizeType ptr_bytes
   );
 
   /**
@@ -1335,7 +1335,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return whether the data is ready or pending
    */
   bool recvDataMsgBuffer(
-    int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
+    int nchunks, std::byte* const user_buf, PriorityType priority, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
     ContinuationDeleterType next = nullptr, bool is_user_buf = false
@@ -1357,7 +1357,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return whether the data is ready or pending
    */
   bool recvDataMsgBuffer(
-    int nchunks, void* const user_buf, TagType const& tag,
+    int nchunks, std::byte* const user_buf, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
     ContinuationDeleterType next = nullptr, bool is_user_buf = false
@@ -1377,7 +1377,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] is_user_buf is a user buffer that require user deallocation
    */
   void recvDataDirect(
-    int nchunks, void* const buf, TagType const tag, NodeType const from,
+    int nchunks, std::byte* const buf, TagType const tag, NodeType const from,
     MsgSizeType len, PriorityType prio, ActionType dealloc = nullptr,
     ContinuationDeleterType next = nullptr, bool is_user_buf = false
   );

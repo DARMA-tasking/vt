@@ -351,7 +351,7 @@ template <typename MsgT, typename BaseT>
       ptr_size = size;
 
       if (size > serialized_msg_eager_size) {
-        ptr = static_cast<SerialByteType*>(std::malloc(size));
+        ptr = reinterpret_cast<SerialByteType*>(std::malloc(size));
         return ptr;
       } else {
         payload_msg = makeMessage<SerialEagerPayloadMsg<MsgT, BaseT>>(
@@ -392,7 +392,8 @@ template <typename MsgT, typename BaseT>
       if (node != dest) {
         auto sys_msg = makeMessage<SerialWrapperMsgType<MsgT>>();
         auto send_serialized = [=](Active::SendFnType send){
-          auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag);
+          auto byte_ptr = reinterpret_cast<std::byte*>(ptr);
+          auto ret = send(RDMA_GetType{byte_ptr, ptr_size}, dest, no_tag);
           EventType event = ret.getEvent();
           theEvent()->attachAction(event, [=]{ std::free(ptr); });
           sys_msg->data_recv_tag = ret.getTag();

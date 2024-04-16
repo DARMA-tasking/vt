@@ -66,7 +66,7 @@ namespace vt { namespace collective { namespace scatter {
  */
 struct Scatter : virtual collective::tree::Tree {
   using FuncSizeType = std::function<std::size_t(NodeType)>;
-  using FuncDataType = std::function<void(NodeType, void*)>;
+  using FuncDataType = std::function<void(NodeType, std::byte*)>;
 
   /**
    * \internal \brief Construct a scatter manager
@@ -130,8 +130,8 @@ private:
    *
    * \return incremented point after scatter is complete
    */
-  char* applyScatterRecur(
-    NodeType node, char* ptr, std::size_t elm_size, FuncSizeType size_fn,
+  std::byte* applyScatterRecur(
+    NodeType node, std::byte* ptr, std::size_t elm_size, FuncSizeType size_fn,
     FuncDataType data_fn
   );
 

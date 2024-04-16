@@ -363,7 +363,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       max_recs, max_bytes
     );
     theCollective()->scatter<GreedyLBTypes::ObjIDType,recvObjsHan>(
-      max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, void* ptr){
+      max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, std::byte* ptr){
         auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
         auto const& proc = node_transfer[node];
         auto const& rec_size = proc.size();

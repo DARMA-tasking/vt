@@ -129,13 +129,13 @@ struct GroupListMsg : GroupInfoMsg<GroupMsg<::vt::PayloadMessage>> {
       )
   {
     setPut(
-      in_range->getBound(),
+      reinterpret_cast<const std::byte*>(in_range->getBound()),
       in_range->getSize() * sizeof(RangeType::BoundType)
     );
   }
 
   RangeType getRange() {
-    auto const& ptr = static_cast<RangeType::BoundType*>(getPut());
+    auto const& ptr = reinterpret_cast<RangeType::BoundType*>(getPut());
     return region::ShallowList(ptr, getCount());
   }
 };

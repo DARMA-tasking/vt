@@ -194,7 +194,7 @@ bool State::testReadyPutData(TagType const& tag) {
   );
 
   return RDMA_GetType{
-    static_cast<char*>(state.ptr) + req_offset,
+    state.ptr + req_offset,
     req_num_bytes == no_byte ? state.num_bytes : req_num_bytes
   };
 }
@@ -216,7 +216,7 @@ bool State::testReadyPutData(TagType const& tag) {
     "To use default handler ptr, bytes must be set"
   );
 
-  std::memcpy(static_cast<char*>(state.ptr) + req_offset, in_ptr, req_num_bytes);
+  std::memcpy(state.ptr + req_offset, in_ptr, req_num_bytes);
 }
 
 void State::getData(

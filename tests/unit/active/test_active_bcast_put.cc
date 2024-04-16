@@ -82,7 +82,7 @@ struct TestActiveBroadcastPut : TestParameterHarnessNode {
       fmt::print("{}: test_handler: cnt={}\n", this_node, handler_count);
     #endif
 
-    auto const ptr = static_cast<int*>(msg->getPut());
+    auto const ptr = reinterpret_cast<int*>(msg->getPut());
     auto const size = msg->getPutSize();
 
     #if DEBUG_TEST_HARNESS_PRINT || 1
@@ -126,7 +126,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
       if (my_node == root) {
         for (int i = 0; i < num_msg_sent; i++) {
           auto msg = makeMessage<PutTestMessage>();
-          msg->setPut(put_payload.data(), put_size * sizeof(int));
+          msg->setPut(reinterpret_cast<std::byte*>(put_payload.data()), put_size * sizeof(int));
           theMsg()->broadcastMsg<test_handler>(msg);
         }
       }

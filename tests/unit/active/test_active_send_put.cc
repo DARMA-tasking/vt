@@ -71,7 +71,7 @@ struct TestActiveSendPut : TestParameterHarnessNode {
   }
 
   static void test_handler(PutTestMessage* msg) {
-    auto ptr = static_cast<int*>(msg->getPut());
+    auto ptr = reinterpret_cast<int*>(msg->getPut());
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
@@ -109,7 +109,7 @@ TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
     auto msg = makeMessage<PutTestMessage>(
       static_cast<int>(test_vec_2.size())
     );
-    msg->setPut(test_vec_2.data(), sizeof(int)*test_vec_2.size());
+    msg->setPut(reinterpret_cast<std::byte*>(test_vec_2.data()), sizeof(int)*test_vec_2.size());
     #if DEBUG_TEST_HARNESS_PRINT
       fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
     #endif

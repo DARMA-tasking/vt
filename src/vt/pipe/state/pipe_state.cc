@@ -94,7 +94,7 @@ void PipeState::setDispatch(DispatchFuncType in_dispatch) {
   dispatch_ = in_dispatch;
 }
 
-void PipeState::dispatch(void* ptr) {
+void PipeState::dispatch(std::byte* ptr) {
   vtAssert(dispatch_ != nullptr, "Dispatch function must be available");
   dispatch_(ptr);
 }

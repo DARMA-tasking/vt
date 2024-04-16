@@ -81,7 +81,7 @@ template <int64_t num_bytes_t, bool use_header>
 }
 
 template <int64_t num_bytes_t, bool use_header>
-void* MemoryPoolEqual<num_bytes_t, use_header>::alloc(
+std::byte* MemoryPoolEqual<num_bytes_t, use_header>::alloc(
   size_t const& sz, size_t const& oversize
 ) {
   if (static_cast<size_t>(cur_slot_ + 1) >= holder_.size()) {
@@ -94,18 +94,18 @@ void* MemoryPoolEqual<num_bytes_t, use_header>::alloc(
   );
 
   auto const& slot = cur_slot_;
-  void* const ptr = holder_[slot];
-  void* ptr_ret = ptr;
+  std::byte* const ptr = holder_[slot];
+  std::byte* ptr_ret = ptr;
   if (use_header) {
     ptr_ret = HeaderManagerType::setHeader(
-      sz, oversize, static_cast<char*>(ptr)
+      sz, oversize, ptr
     );
   }
 
   vt_debug_print(
     normal, pool,
     "alloc: ptr={}, ptr_ret={} cur_slot={}, sz={}, oversize={}\n",
-    ptr, ptr_ret, cur_slot_, sz, oversize
+    print_ptr(ptr), print_ptr(ptr_ret), cur_slot_, sz, oversize
   );
 
   cur_slot_++;
@@ -114,20 +114,19 @@ void* MemoryPoolEqual<num_bytes_t, use_header>::alloc(
 }
 
 template <int64_t num_bytes_t, bool use_header>
-void MemoryPoolEqual<num_bytes_t, use_header>::dealloc(void* const t) {
+void MemoryPoolEqual<num_bytes_t, use_header>::dealloc(std::byte* const t) {
   vt_debug_print(
     normal, pool,
-    "dealloc t={}, cur_slot={}\n", t, cur_slot_
+    "dealloc t={}, cur_slot={}\n", print_ptr(t), cur_slot_
   );
 
   vtAssert(
     cur_slot_ - 1 >= 0, "Must be greater than zero"
   );
 
-  auto t_char = static_cast<char*>(t);
-  void* ptr_actual = t;
+  std::byte* ptr_actual = t;
   if (use_header) {
-    ptr_actual = HeaderManagerType::getHeaderPtr(t_char);
+    ptr_actual = HeaderManagerType::getHeaderPtr(t);
   }
 
   holder_[--cur_slot_] = ptr_actual;
@@ -141,7 +140,7 @@ void MemoryPoolEqual<num_bytes_t, use_header>::resizePool() {
   holder_.resize(new_size);
 
   for (auto i = cur_size; i < new_size; i++) {
-    holder_[i] = static_cast<void*>(malloc(use_header ? num_full_bytes_ : num_bytes_t));
+    holder_[i] = reinterpret_cast<std::byte*>(malloc(use_header ? num_full_bytes_ : num_bytes_t));
   }
 }
 

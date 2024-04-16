@@ -81,7 +81,7 @@ static void put_data_fn(HandleMsg* msg) {
     }
 
     vt::theRDMA()->putData(
-      handle, local_data, sizeof(double)*local_data_len,
+      handle, reinterpret_cast<std::byte*>(local_data), sizeof(double)*local_data_len,
       (this_node-1)*local_data_len, vt::no_tag, vt::rdma::rdma_default_byte_size,
       [=]{
         delete [] local_data;
@@ -111,7 +111,7 @@ static void put_handler_fn(
   for (decltype(count) i = 0; i < count; i++) {
     ::fmt::print(
       "{}: put_handler_fn: data[{}] = {}\n",
-      this_node, i, static_cast<double*>(in_ptr)[i]
+      this_node, i, reinterpret_cast<double*>(in_ptr)[i]
     );
   }
 

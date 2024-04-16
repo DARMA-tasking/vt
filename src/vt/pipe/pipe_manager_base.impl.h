@@ -103,7 +103,7 @@ void PipeManagerBase::triggerPipeUnknown(PipeType const& pipe, MsgT* msg) {
     pipe, print_ptr(msg)
   );
 
-  iter->second.dispatch(msg);
+  iter->second.dispatch(reinterpret_cast<std::byte*>(msg));
 }
 
 template <typename SignalT, typename ListenerT>
@@ -147,7 +147,7 @@ PipeType PipeManagerBase::makeCallbackAny(
    *  Create a dispatch function so any inputs can be dispatched without any
    *  type information on the sending side
    */
-  auto dispatch_fn = [pipe_id](void* input) {
+  auto dispatch_fn = [pipe_id](std::byte* input) {
     auto data = reinterpret_cast<typename SignalType::DataPtrType>(input);
     signal_holder_<SignalType>.deliverAll(pipe_id,data);
   };
@@ -191,7 +191,7 @@ void PipeManagerBase::addListenerAny(PipeType const& pipe, ListenerT&& fn) {
   vtAssert(iter != pipe_state_.end(), "Pipe state must exist");
   auto& state = iter->second;
   if (!state.hasDispatch()) {
-    auto fn2 = [pipe](void* input) {
+    auto fn2 = [pipe](std::byte* input) {
       auto data = reinterpret_cast<typename SignalType::DataPtrType>(input);
       signal_holder_<SignalType>.deliverAll(pipe,data);
     };
