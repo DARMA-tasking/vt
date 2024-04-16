@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   reduce.h
+//                             recursive_doubling.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_DISTANCE_DOUBLING_H
-#define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_DISTANCE_DOUBLING_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_H
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -68,10 +68,11 @@ struct AllreduceDblMsg
   AllreduceDblMsg(AllreduceDblMsg const&) = default;
   AllreduceDblMsg(AllreduceDblMsg&&) = default;
 
-  explicit AllreduceDblMsg(DataT&& in_val)
+  AllreduceDblMsg(DataT&& in_val, int step = 0)
     : MessageParentType(),
-      val_(std::forward<DataT>(in_val)) { }
-  explicit AllreduceDblMsg(DataT const& in_val, int step = 0)
+      val_(std::forward<DataT>(in_val)),
+      step_(step) { }
+  AllreduceDblMsg(DataT const& in_val, int step = 0)
     : MessageParentType(),
       val_(in_val),
       step_(step) { }
@@ -92,18 +93,18 @@ template <
   auto finalHandler>
 struct DistanceDoubling {
   template <typename... Args>
-  DistanceDoubling(NodeType num_nodes, Args&&... args)
-    : val_(std::forward<Args>(args)...),
-      num_nodes_(num_nodes) { }
-
-  void initialize() {
-    this_node_ = vt::theContext()->getNode();
-    is_even_ = this_node_ % 2 == 0;
-    num_steps_ = static_cast<int32_t>(log2(num_nodes_));
-    messages.resize(num_steps_, nullptr);
-
-    nprocs_pof2_ = 1 << num_steps_;
-    nprocs_rem_ = num_nodes_ - nprocs_pof2_;
+  DistanceDoubling(
+    vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
+    Args&&... args)
+    : parent_proxy_(parentProxy),
+      val_(std::forward<Args>(args)...),
+      num_nodes_(num_nodes),
+      this_node_(vt::theContext()->getNode()),
+      is_even_(this_node_ % 2 == 0),
+      num_steps_(static_cast<int32_t>(log2(num_nodes_))),
+      nprocs_pof2_(1 << num_steps_),
+      nprocs_rem_(num_nodes_ - nprocs_pof2_),
+      finished_adjustment_part_(nprocs_rem_ == 0) {
     is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
     if (is_part_of_adjustment_group_) {
       if (is_even_) {
@@ -115,22 +116,12 @@ struct DistanceDoubling {
       vrt_node_ = this_node_ - nprocs_rem_;
     }
 
+    messages_.resize(num_steps_, nullptr);
     steps_recv_.resize(num_steps_, false);
     steps_reduced_.resize(num_steps_, false);
-
-    initialized_ = true;
   }
 
-  void allreduce(
-    vt::objgroup::proxy::Proxy<DistanceDoubling> proxy,
-    vt::objgroup::proxy::Proxy<ObjT> parentProxy) {
-    if (not initialized_) {
-      initialize();
-    }
-
-    proxy_ = proxy;
-    parent_proxy_ = parentProxy;
-
+  void allreduce() {
     if (nprocs_rem_) {
       adjustForPowerOfTwo();
     } else {
@@ -157,9 +148,9 @@ struct DistanceDoubling {
         data.append(fmt::format("{} ", val));
       }
       fmt::print(
-        "[{}] Part1 Handler initialized_ = {}: Received data ({}) "
+        "[{}] Part1 Handler: Received data ({}) "
         "from {}\n",
-        this_node_, initialized_, data, theContext()->getFromNodeCurrentTask());
+        this_node_, data, theContext()->getFromNodeCurrentTask());
     }
 
     Op<DataT>()(val_, msg->val_);
@@ -216,7 +207,7 @@ struct DistanceDoubling {
       std::all_of(
         steps_reduced_.cbegin(), steps_reduced_.cbegin() + step,
         [](const auto val) { return val; })) {
-      Op<DataT>()(val_, messages.at(step)->val_);
+      Op<DataT>()(val_, messages_.at(step)->val_);
       steps_reduced_[step] = true;
     }
   }
@@ -228,27 +219,20 @@ struct DistanceDoubling {
         data.append(fmt::format("{} ", val));
       }
       fmt::print(
-        "[{}] Part2 Step {} initialized_ = {} mask_= {} nprocs_pof2_ = {}: "
+        "[{}] Part2 Step {} mask_= {} nprocs_pof2_ = {}: "
         "Received data ({}) "
         "from {}\n",
-        this_node_, msg->step_, initialized_, mask_, nprocs_pof2_, data,
+        this_node_, msg->step_, mask_, nprocs_pof2_, data,
         theContext()->getFromNodeCurrentTask());
     }
 
+    messages_.at(msg->step_) = promoteMsg(msg);
+    steps_recv_[msg->step_] = true;
+
     // Special case when we receive step 2 message before step 1 is done on this node
     if (not finished_adjustment_part_) {
-      if (not initialized_) {
-        initialize();
-      }
-
-      messages.at(msg->step_) = promoteMsg(msg);
-      steps_recv_[msg->step_] = true;
-
       return;
     }
-
-    messages.at(msg->step_) = promoteMsg(msg);
-    steps_recv_[msg->step_] = true;
 
     tryReduce(msg->step_);
 
@@ -275,6 +259,7 @@ struct DistanceDoubling {
     val_ = msg->val_;
 
     parent_proxy_[this_node_].template invoke<finalHandler>(val_);
+    completed_ = true;
   }
 
   void finalPart() {
@@ -290,19 +275,21 @@ struct DistanceDoubling {
     completed_ = true;
   }
 
-  NodeType this_node_ = {};
-  uint32_t num_nodes_ = {};
-  bool is_even_ = false;
   vt::objgroup::proxy::Proxy<DistanceDoubling> proxy_ = {};
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
+
   DataT val_ = {};
-  NodeType vrt_node_ = {};
-  bool initialized_ = false;
-  bool is_part_of_adjustment_group_ = false;
-  bool finished_adjustment_part_ = false;
+  NodeType this_node_ = {};
+  NodeType num_nodes_ = {};
+  bool is_even_ = false;
   int32_t num_steps_ = {};
   int32_t nprocs_pof2_ = {};
   int32_t nprocs_rem_ = {};
+
+  NodeType vrt_node_ = {};
+  bool is_part_of_adjustment_group_ = false;
+  bool finished_adjustment_part_ = false;
+
   int32_t mask_ = 1;
 
   int32_t step_ = 0;
@@ -311,9 +298,9 @@ struct DistanceDoubling {
   std::vector<bool> steps_recv_ = {};
   std::vector<bool> steps_reduced_ = {};
 
-  std::vector<MsgSharedPtr<AllreduceDblMsg<DataT>>> messages = {};
+  std::vector<MsgSharedPtr<AllreduceDblMsg<DataT>>> messages_ = {};
 };
 
 } // namespace vt::collective::reduce::allreduce
 
-#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_H*/

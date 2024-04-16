@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  reduce.cc
+//                                 allreduce.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -61,7 +61,7 @@ static constexpr int num_iters = 1;
 struct MyTest : PerfTestHarness {
   void SetUp() override {
     PerfTestHarness::SetUp();
-    data.resize(1 << 4);
+    data.resize(1 << 16);
     for (auto& val : data) {
       val = theContext()->getNode() + 1;
     }
@@ -105,17 +105,12 @@ struct NodeObj {
   }
 
   void newReduceComplete(std::vector<int32_t> in) {
-    // fmt::print(
-    //   "\n[{}]: allreduce_h done! (Size == {}) Results are ...\n",
-    //   theContext()->getNode(), in.size());
-    // const auto p = theContext()->getNumNodes();
-    // const auto expected = (p * (p + 1)) / 2;
-    // for (auto val : in) {
-    //   vtAssert(val == expected, "FAILURE!");
-    // }
+    // std::string printer(1024, 0x0);
+    // printer.append(fmt::format("\n[{}]: allreduce_rabenseifner done! ", theContext()->getNode()));
+
     // for (int node = 0; node < theContext()->getNumNodes(); ++node) {
     //   if (node == theContext()->getNode()) {
-    //     std::string printer(128, 0x0);
+
     //     for (auto val : in) {
     //       printer.append(fmt::format("{} ", val));
     //     }
@@ -127,6 +122,11 @@ struct NodeObj {
     // }
 
     // fmt::print("\n");
+    // const auto p = theContext()->getNumNodes();
+    // const auto expected = (p * (p + 1)) / 2;
+    // for (auto val : in) {
+    //   vtAssert(val == expected, "FAILURE!");
+    // }
   }
 
   void reduceComplete(std::vector<int32_t> in) {
@@ -161,13 +161,11 @@ VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
   using Reducer = collective::reduce::allreduce::Rabenseifner<
     DataT, collective::PlusOp, NodeObj, &NodeObj::newReduceComplete>;
 
-  auto grp_proxy =
-    vt::theObjGroup()->makeCollective<Reducer>("allreduce_rabenseifner");
-  vt::runInEpochCollective([=] {
-    grp_proxy[my_node_].template invoke<&Reducer::initialize>(
-      data, grp_proxy, proxy, num_nodes_);
-    grp_proxy[my_node_].template invoke<&Reducer::partOne>();
-  });
+  auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
+    "allreduce_rabenseifner", proxy, num_nodes_, data);
+  grp_proxy[my_node_].get()->proxy_ = grp_proxy;
+  vt::runInEpochCollective(
+    [=] { grp_proxy[my_node_].template invoke<&Reducer::allreduce>(); });
 }
 
 VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
@@ -179,10 +177,10 @@ VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
     DataT, collective::PlusOp, NodeObj, &NodeObj::recursiveDoubling>;
 
   auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-    "allreduce_recursive_doubling", num_nodes_, data);
-  vt::runInEpochCollective([=] {
-    grp_proxy[my_node_].template invoke<&Reducer::allreduce>(grp_proxy, proxy);
-  });
+    "allreduce_recursive_doubling", proxy, num_nodes_, data);
+  grp_proxy[my_node_].get()->proxy_ = grp_proxy;
+  vt::runInEpochCollective(
+    [=] { grp_proxy[my_node_].template invoke<&Reducer::allreduce>(); });
 }
 
 VT_PERF_TEST_MAIN()
