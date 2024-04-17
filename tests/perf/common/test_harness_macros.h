@@ -47,6 +47,8 @@
 #include "test_harness_base.h"
 
 #include <vector>
+#include <memory>
+
 namespace vt { namespace tests { namespace perf { namespace common {
 
 /**
@@ -70,35 +72,39 @@ namespace vt { namespace tests { namespace perf { namespace common {
 
 
 struct PerfTestRegistry{
-  static void AddTest(TestHarnessBase* test){
-    tests_.push_back(test);
+  static void AddTest(std::unique_ptr<TestHarnessBase>&& test) {
+    tests_.push_back(std::move(test));
   }
 
-  static const std::vector<TestHarnessBase*>&
-  GetTests(){
+  static const std::vector<std::unique_ptr<TestHarnessBase>>&
+  GetTests() {
     return tests_;
   }
 
   private:
-  inline static std::vector<TestHarnessBase*> tests_ = {};
+  inline static std::vector<std::unique_ptr<TestHarnessBase>> tests_ = {};
 };
 
-#define VT_PERF_TEST(StructName, TestName)                  \
-  struct StructName##TestName : StructName {                \
-    StructName##TestName() {                                \
-      name_ = #TestName; }                                  \
-    void SetUp() override { StructName::SetUp(); }          \
-    void TearDown() override { StructName::TearDown(); }    \
-    void TestFunc() override;                               \
-  };                                                        \
-                                                            \
-  static struct StructName##TestName##_registerer_t {       \
-    StructName##TestName##_registerer_t() {                 \
-      PerfTestRegistry::AddTest(new StructName##TestName());\
-    }                                                       \
-  } StructName##TestName##_registerer;                      \
+#define VT_PERF_TEST(StructName, TestName)                                 \
+  struct StructName##TestName : StructName {                               \
+    StructName##TestName() {                                               \
+      name_ = #TestName;                                                   \
+    }                                                                      \
+    void SetUp() override {                                                \
+      StructName::SetUp();                                                 \
+    }                                                                      \
+    void TearDown() override {                                             \
+      StructName::TearDown();                                              \
+    }                                                                      \
+    void TestFunc() override;                                              \
+  };                                                                       \
+                                                                           \
+  static struct StructName##TestName##_registerer_t {                      \
+    StructName##TestName##_registerer_t() {                                \
+      PerfTestRegistry::AddTest(std::make_unique<StructName##TestName>()); \
+    }                                                                      \
+  } StructName##TestName##_registerer;                                     \
   void StructName##TestName::TestFunc()
-
 
 #define VT_PERF_TEST_MAIN()                                                      \
   int main(int argc, char** argv) {                                              \
@@ -107,7 +113,7 @@ struct PerfTestRegistry{
     int rank;                                                                    \
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                        \
     for (const auto& test_base : PerfTestRegistry::GetTests()) {                 \
-      auto* test = dynamic_cast<PerfTestHarness*>(test_base);                    \
+      auto* test = dynamic_cast<PerfTestHarness*>(test_base.get());              \
       test->Initialize(argc, argv);                                              \
       auto const num_runs = test->GetNumRuns();                                  \
       StopWatch timer;                                                           \
