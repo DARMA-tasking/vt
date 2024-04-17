@@ -41,13 +41,16 @@
 //@HEADER
 */
 #include "common/test_harness.h"
+#include "common/timers.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/configs/error/config_assert.h"
 #include "vt/configs/error/hard_error.h"
 #include "vt/context/context.h"
 #include "vt/messaging/message/shared_message.h"
 #include "vt/scheduler/scheduler.h"
+#include <chrono>
 #include <cstdint>
+#include <unistd.h>
 #include <vt/collective/collective_ops.h>
 #include <vt/objgroup/manager.h>
 #include <vt/vrt/collection/manager.h>
@@ -64,6 +67,7 @@ static constexpr std::array<size_t, 7> const payloadSizes = {
   1, 64, 128, 2048, 16384, 524288, 268435456};
 
 vt::EpochType the_epoch = vt::no_epoch;
+bool send_done = false;
 
 struct SendTest : PerfTestHarness { };
 
@@ -114,9 +118,12 @@ struct NodeObj {
     using MessageParentType = vt::Message;
     vt_msg_serialize_required();
     std::vector<int32_t> vec_;
+    DurationMilli start_;
 
     PingMsg() : Message() { }
-    explicit PingMsg(size_t size) : Message() {
+    explicit PingMsg(size_t size)
+      : Message(),
+        start_(std::chrono::steady_clock::now().time_since_epoch()) {
       vec_.resize(size, vt::theContext()->getNode());
     }
 
@@ -124,10 +131,18 @@ struct NodeObj {
     void serialize(SerializerT& s) {
       MessageParentType::serialize(s);
       s | vec_;
+      s | start_;
     }
   };
 
-  void sendHandler(NodeObj::PingMsg* msg) { handled_ = true; }
+  void sendHandler(NodeObj::PingMsg* msg) {
+    test_obj_->AddResult(
+      {fmt::format("ObjGroup Payload size {}", msg->vec_.size()),
+       (DurationMilli{std::chrono::steady_clock::now().time_since_epoch()} -
+        msg->start_)
+         .count()});
+    send_done = true;
+  }
 
   explicit NodeObj(SendTest* test_obj) : test_obj_(test_obj) { }
 
@@ -154,17 +169,12 @@ VT_PERF_TEST(SendTest, test_objgroup_send) {
   auto const nextNode = (thisNode + 1) % num_nodes_;
 
   for (auto size : payloadSizes) {
-    NodeObj::PingMsg msg(size);
-    StartTimer(fmt::format("ObjGroup Payload size {}", size));
+    theCollective()->barrier();
 
-    vt::runInEpochCollective([grp_proxy, nextNode, tmpMsg = std::move(msg)] {
-      grp_proxy[nextNode].send<&NodeObj::sendHandler>(std::move(tmpMsg));
-    });
+    grp_proxy[nextNode].send<&NodeObj::sendHandler>(size);
+    theSched()->runSchedulerWhile([]{ return !send_done; });
 
-    StopTimer(fmt::format("ObjGroup Payload size {}", size));
-
-    assert(grp_proxy[thisNode].get()->handled_);
-    grp_proxy[thisNode].get()->handled_ = false;
+    send_done = false;
   }
 
   if (vt::theContext()->getNode() == 0) {
