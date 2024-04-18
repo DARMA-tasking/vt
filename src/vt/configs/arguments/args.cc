@@ -88,7 +88,7 @@ void postParseTransform(AppConfig& appConfig) {
   }
 }
 
-void parse_yaml(std::string& config_file, AppConfig& appConfig);
+void parseYaml(std::string& config_file, AppConfig& appConfig);
 
 std::tuple<int, std::string> parseArguments(
   CLI::App& app, int& argc, char**& argv, AppConfig& appConfig
@@ -133,7 +133,7 @@ std::tuple<int, std::string> parseArguments(
     std::string config_ending = config_file.substr(config_file.size()-4);
     if (config_ending == ".yml" || config_ending == "yaml") {
       // use yaml-cpp
-      parse_yaml(config_file, appConfig);
+      parseYaml(config_file, appConfig);
     } else if (config_ending == ".ini" || config_ending == "toml") {
       // use CLI parser
       app.set_config(
@@ -200,7 +200,7 @@ std::tuple<int, std::string> parseArguments(
   return std::make_tuple(-1, std::string{});
 }
 
-void parse_yaml(std::string& config_file, AppConfig& appConfig) {
+void parseYaml(std::string& config_file, AppConfig& appConfig) {
   // Assume input yaml is structured the same as --vt-help
   auto yaml_input = YAML::LoadFile(config_file);
 
