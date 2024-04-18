@@ -250,7 +250,8 @@ void parseYaml(std::string& config_file, AppConfig& appConfig) {
   // Tracing Configuration
   YAML::Node tracing_configuration = yaml_input["Tracing Configuration"];
   appConfig.vt_trace = tracing_configuration["Enabled"].as<bool>(false);
-  appConfig.vt_trace_mpi = tracing_configuration["MPI Type Events"].as<std::string>("");
+  appConfig.vt_trace_mpi = tracing_configuration["MPI Type Events"].as<std::string>("").find("internal") != std::string::npos;
+  appConfig.vt_trace_pmpi = tracing_configuration["MPI Type Events"].as<std::string>("").find("external") != std::string::npos;
   appConfig.vt_trace_file = tracing_configuration["File"].as<std::string>("");
   appConfig.vt_trace_dir = tracing_configuration["Directory"].as<std::string>("");
   appConfig.vt_trace_mod = tracing_configuration["Output Rank Mod"].as<int32_t>(0);
