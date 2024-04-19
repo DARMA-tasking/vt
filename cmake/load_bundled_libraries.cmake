@@ -22,11 +22,13 @@ add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 
 # use included fmt or external one
 if(${vt_external_fmt})
-  # user should provide 'fmt_DIR' to CMake (unless fmt is installed in system libs)
-  if(fmt_DIR)
+  # user should provide 'fmt_DIR' or 'fmt_ROOT' to CMake (unless fmt is installed in system libs)
+  if(fmt_ROOT)
+    message(STATUS "vt_external_fmt = ON. Using fmt located at ${fmt_ROOT}")
+  elseif(fmt_DIR)
     message(STATUS "vt_external_fmt = ON. Using fmt located at ${fmt_DIR}")
   else()
-    message(STATUS "vt_external_fmt = ON but fmt_DIR is not provided!")
+    message(STATUS "vt_external_fmt = ON but neither fmt_DIR nor fmt_ROOT is provided!")
   endif()
   find_package(fmt 7.1.0 REQUIRED)
 
