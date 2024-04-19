@@ -120,7 +120,9 @@ static constexpr ByteType rdma_default_byte_size = sizeof(char);
 VT_FMT_NAMESPACE_BEGIN
 
 template <>
-struct formatter<::vt::rdma::Type> : formatter<std::string_view> {
+struct formatter<::vt::rdma::Type> {
+  constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
+
   template <typename FormatContext>
   auto format(::vt::rdma::Type t, FormatContext& ctx) const {
     std::string_view name = "Unknown";
@@ -141,7 +143,8 @@ struct formatter<::vt::rdma::Type> : formatter<std::string_view> {
       name = fmt::format(
         "{}", static_cast<std::underlying_type_t<::vt::rdma::Type>>(t));
     }
-    return formatter<std::string_view>::format(name, ctx);
+
+    return fmt::format_to(ctx.out(), name);
   }
 };
 

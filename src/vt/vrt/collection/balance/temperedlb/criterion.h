@@ -96,8 +96,9 @@ protected:
 VT_FMT_NAMESPACE_BEGIN
 
 template <>
-struct formatter<::vt::vrt::collection::lb::CriterionEnum>
-  : formatter<std::string_view> {
+struct formatter<::vt::vrt::collection::lb::CriterionEnum> {
+  constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
+
   template <typename FormatContext>
   auto format(::vt::vrt::collection::lb::CriterionEnum c, FormatContext& ctx) const {
     std::string_view name = "Unknown";
@@ -109,7 +110,7 @@ struct formatter<::vt::vrt::collection::lb::CriterionEnum>
       name = "ModifiedGrapevine";
       break;
     }
-    return formatter<string_view>::format(name, ctx);
+    return fmt::format_to(ctx.out(), name);
   }
 };
 

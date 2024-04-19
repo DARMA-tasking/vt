@@ -150,7 +150,9 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_config) {
 
 VT_FMT_NAMESPACE_BEGIN
   template <>
-  struct formatter<::vt::tests::unit::DummyEnum> : formatter<std::string_view> {
+  struct formatter<::vt::tests::unit::DummyEnum> {
+    constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
+
     template <typename FormatContext>
     auto format(::vt::tests::unit::DummyEnum c, FormatContext& ctx) const {
       std::string_view name = "Unknown";
@@ -165,7 +167,7 @@ VT_FMT_NAMESPACE_BEGIN
         name = "Three";
         break;
       }
-      return formatter<string_view>::format(name, ctx);
+      return fmt::format_to(ctx.out(), name);
     }
   };
 VT_FMT_NAMESPACE_END
