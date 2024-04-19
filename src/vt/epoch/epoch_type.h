@@ -142,7 +142,7 @@ struct formatter<::vt::epoch::EpochType> {
   /// Formats the epoch using the parsed format specification (presentation)
   /// stored in this formatter.
   template <typename FormatContext>
-  auto format(::vt::epoch::EpochType const& e, FormatContext& ctx) {
+  auto format(::vt::epoch::EpochType const& e, FormatContext& ctx) const {
     return format_to(
       ctx.out(),
       presentation == 'b' ? "{:b}" : (presentation == 'd' ? "{:d}" : "{:x}"),

@@ -122,7 +122,7 @@ VT_FMT_NAMESPACE_BEGIN
 template <>
 struct formatter<::vt::rdma::Type> : formatter<std::string_view> {
   template <typename FormatContext>
-  auto format(::vt::rdma::Type t, FormatContext& ctx) {
+  auto format(::vt::rdma::Type t, FormatContext& ctx) const {
     std::string_view name = "Unknown";
     switch (t) {
     case ::vt::rdma::Type::Get:
