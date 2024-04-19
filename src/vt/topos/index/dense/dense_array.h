@@ -160,14 +160,14 @@ static_assert(
 VT_FMT_NAMESPACE_BEGIN
 
 template <typename IndexType, ::vt::index::NumDimensionsType ndim>
-struct formatter<::vt::index::DenseIndexArray<IndexType, ndim>>
-  : formatter<std::string> {
+struct formatter<::vt::index::DenseIndexArray<IndexType, ndim>> {
+  constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
+
   template <typename FormatContext>
   auto format(
     const ::vt::index::DenseIndexArray<IndexType, ndim>& idx,
-    FormatContext& ctx
-  ) const {
-    return formatter<std::string>::format(idx.toString(), ctx);
+    FormatContext& ctx) const {
+    return fmt::format_to(ctx.out(), idx.toString());
   }
 };
 
