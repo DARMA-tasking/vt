@@ -26,4 +26,9 @@ endif()
 set (VT_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include")
 set (VT_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
 
+if (@vt_external_fmt@)
+  set (fmt_DIR @fmt_DIR@)
+  find_dependency(fmt REQUIRED HINTS @fmt_DIR@)
+endif()
+
 set(VT_HAS_FMT "TRUE")
