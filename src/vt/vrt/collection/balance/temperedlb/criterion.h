@@ -99,7 +99,7 @@ template <>
 struct formatter<::vt::vrt::collection::lb::CriterionEnum>
   : formatter<std::string_view> {
   template <typename FormatContext>
-  auto format(::vt::vrt::collection::lb::CriterionEnum c, FormatContext& ctx) {
+  auto format(::vt::vrt::collection::lb::CriterionEnum c, FormatContext& ctx) const {
     std::string_view name = "Unknown";
     switch (c) {
     case ::vt::vrt::collection::lb::CriterionEnum::Grapevine:

@@ -245,7 +245,7 @@ struct formatter<::vt::term::interval::Interval<DomainT, sentinel>>
   template <typename FormatContext>
   auto format(
     const ::vt::term::interval::Interval<DomainT, sentinel>& interval,
-    FormatContext& ctx) {
+    FormatContext& ctx) const {
     return format_to(
       ctx.out(), "Interval[{}, {}]", interval.lower(), interval.upper());
   }

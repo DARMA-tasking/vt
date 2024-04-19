@@ -166,7 +166,7 @@ struct formatter<::vt::index::DenseIndexArray<IndexType, ndim>>
   auto format(
     const ::vt::index::DenseIndexArray<IndexType, ndim>& idx,
     FormatContext& ctx
-  ) {
+  ) const {
     return formatter<std::string>::format(idx.toString(), ctx);
   }
 };

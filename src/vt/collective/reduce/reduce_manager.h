@@ -47,6 +47,7 @@
 #include "vt/collective/reduce/reduce_scope.h"
 #include "vt/collective/tree/tree.h"
 
+#include <memory>
 namespace vt { namespace collective { namespace reduce {
 
 struct Reduce;

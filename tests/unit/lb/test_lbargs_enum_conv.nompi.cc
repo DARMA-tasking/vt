@@ -152,7 +152,7 @@ VT_FMT_NAMESPACE_BEGIN
   template <>
   struct formatter<::vt::tests::unit::DummyEnum> : formatter<std::string_view> {
     template <typename FormatContext>
-    auto format(::vt::tests::unit::DummyEnum c, FormatContext& ctx) {
+    auto format(::vt::tests::unit::DummyEnum c, FormatContext& ctx) const {
       std::string_view name = "Unknown";
       switch (c) {
       case ::vt::tests::unit::DummyEnum::One:
