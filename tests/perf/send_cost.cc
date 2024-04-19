@@ -40,13 +40,11 @@
 // *****************************************************************************
 //@HEADER
 */
+
 #include "common/test_harness.h"
 #include "common/timers.h"
 #include "vt/collective/collective_alg.h"
-#include "vt/configs/error/config_assert.h"
-#include "vt/configs/error/hard_error.h"
 #include "vt/context/context.h"
-#include "vt/messaging/message/shared_message.h"
 #include "vt/scheduler/scheduler.h"
 #include <chrono>
 #include <cstdint>
@@ -66,8 +64,8 @@ using namespace vt::tests::perf::common;
 static constexpr std::array<size_t, 7> const payloadSizes = {
   1, 64, 128, 2048, 16384, 524288, 268435456};
 
-vt::EpochType the_epoch = vt::no_epoch;
-bool send_done = false;
+bool obj_send_done = false;
+bool col_send_done = false;
 
 struct SendTest : PerfTestHarness { };
 
@@ -140,8 +138,10 @@ struct NodeObj {
       {fmt::format("ObjGroup Payload size {}", msg->vec_.size()),
        (DurationMilli{std::chrono::steady_clock::now().time_since_epoch()} -
         msg->start_)
-         .count()});
-    send_done = true;
+         .count()
+      }
+    );
+    obj_send_done = true;
   }
 
   explicit NodeObj(SendTest* test_obj) : test_obj_(test_obj) { }
@@ -172,9 +172,9 @@ VT_PERF_TEST(SendTest, test_objgroup_send) {
     theCollective()->barrier();
 
     grp_proxy[nextNode].send<&NodeObj::sendHandler>(size);
-    theSched()->runSchedulerWhile([]{ return !send_done; });
+    theSched()->runSchedulerWhile([] { return !obj_send_done; });
 
-    send_done = false;
+    obj_send_done = false;
   }
 
   if (vt::theContext()->getNode() == 0) {
@@ -190,9 +190,9 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   struct TestDataMsg : vt::CollectionMessage<Hello> {
     vt_msg_serialize_required();
     using MessageParentType = vt::CollectionMessage<Hello>;
-    //  vt_msg_serialize_if_needed_by_parent_or_type1(vt::IdxBase);
     TestDataMsg() = default;
-    explicit TestDataMsg(size_t size) {
+    explicit TestDataMsg(size_t size)
+      : start_(std::chrono::steady_clock::now().time_since_epoch()) {
       vec_.resize(size, theContext()->getNode());
     }
 
@@ -200,27 +200,32 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
     void serialize(SerializerT& s) {
       MessageParentType::serialize(s);
       s | vec_;
+      s | start_;
     }
 
     std::vector<int32_t> vec_ = {};
+    DurationMilli start_;
   };
+
   Hello() = default;
 
-  void Handler(TestDataMsg* msg) { handled_ = true; }
-
-  void CheckHandledAndReset() {
-    vtAssert(
-      handled_, fmt::format("[{}] Recv not run!", theContext()->getNode()));
-
-    handled_ = false;
+  void Handler(TestDataMsg* msg) {
+    test_obj_->AddResult(
+      {fmt::format("Collection Payload size {}", msg->vec_.size()),
+       (DurationMilli{std::chrono::steady_clock::now().time_since_epoch()} -
+        msg->start_)
+         .count()
+      }
+    );
+    col_send_done = true;
   }
 
-  bool handled_ = false;
+  SendTest* test_obj_ = nullptr;
 };
 
 VT_PERF_TEST(SendTest, test_collection_send) {
   auto range = vt::Index1D(int32_t{num_nodes_});
-  auto proxy = vt::makeCollection<Hello>("hello_world_collection_reduce")
+  auto proxy = vt::makeCollection<Hello>("send_cost_collection")
                  .bounds(range)
                  .bulkInsert()
                  .wait();
@@ -228,17 +233,15 @@ VT_PERF_TEST(SendTest, test_collection_send) {
   auto const thisNode = vt::theContext()->getNode();
   auto const nextNode = (thisNode + 1) % num_nodes_;
 
+  proxy[thisNode].tryGetLocalPtr()->test_obj_ = this;
+
   for (auto size : payloadSizes) {
-    auto msg = vt::makeMessage<Hello::TestDataMsg>(size_t{size});
-    StartTimer(fmt::format("Collection Payload size {}", size));
+    theCollective()->barrier();
+    proxy[nextNode].send<&Hello::Handler>(size);
 
-    vt::runInEpochCollective(
-      [&] { proxy[nextNode].sendMsg<&Hello::Handler>(msg); });
-
-    StopTimer(fmt::format("Collection Payload size {}", size));
-
-    vt::runInEpochCollective(
-      [&] { proxy[thisNode].invoke<&Hello::CheckHandledAndReset>(); });
+    // We run 1 coll elem per node, so it should be ok
+    theSched()->runSchedulerWhile([] { return !col_send_done; });
+    col_send_done = false;
   }
 }
 
