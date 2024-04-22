@@ -65,7 +65,7 @@ using VTPrintConfig = Configuration<
     CtxEnum::unknown
   ),
   static_cast<ModeEnum>(
-#if !vt_feature_cmake_ci_build
+#if !vt_feature_cmake_ci_build || vt_feature_cmake_debug_verbose
     ModeEnum::terse   |
     ModeEnum::normal  |
 #if vt_feature_cmake_debug_verbose
