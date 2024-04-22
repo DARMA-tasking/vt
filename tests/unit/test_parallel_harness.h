@@ -70,6 +70,11 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     addArgs(traceon);
 #endif
 
+#if vt_feature_cmake_debug_verbose
+    static char verbose_on[]{"--vt_debug_level=verbose"};
+    addArgs(verbose_on);
+#endif
+
     static char throw_on_abort[]{"--vt_throw_on_abort=1"};
     addArgs(throw_on_abort);
 
