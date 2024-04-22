@@ -404,6 +404,7 @@ TEST_F(TestInitialization, test_initialize_without_restart_reader) {
   EXPECT_TRUE(theLBDataReader() == nullptr);
 }
 
+#if vt_feature_cmake_lblite
 TEST_F(TestInitialization, test_initialize_with_lb_data_in) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
@@ -474,6 +475,7 @@ TEST_F(TestInitialization, test_initialize_with_lb_data_and_config_offline_lb) {
   EXPECT_EQ(theConfig()->vt_lb_file_name, file_name);
   EXPECT_TRUE(theLBDataReader() != nullptr);
 }
+#endif
 
 TEST_F(TestInitialization, test_initialize_with_lb_data_and_config_no_lb) {
   MPI_Comm comm = MPI_COMM_WORLD;
