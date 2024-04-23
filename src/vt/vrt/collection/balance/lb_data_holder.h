@@ -203,7 +203,7 @@ public:
 
   std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
   /// User-defined data from each phase for LB
-  std::unordered_map<PhaseType, DataMapType> user_defined_lb_info_;
+  DataMapBufferType user_defined_lb_info_;
   /// User-defined attributes from each phase
   std::unordered_map<PhaseType, DataMapType> node_user_attributes_;
   /// Node indices for each ID along with the proxy ID

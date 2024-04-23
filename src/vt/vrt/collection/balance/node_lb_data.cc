@@ -106,7 +106,8 @@ NodeLBData::getPhaseAttributes() const {
   return &lb_data_->node_user_attributes_;
 }
 
-std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() const {
+CommMapBufferType const*
+NodeLBData::getNodeComm() const {
   return &lb_data_->node_comm_;
 }
 
@@ -128,15 +129,7 @@ void NodeLBData::clearLBData() {
   next_elm_ = 1;
 }
 
-void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
-  if (phase >= look_back) {
-    lb_data_->node_data_.erase(phase - look_back);
-    lb_data_->node_comm_.erase(phase - look_back);
-    lb_data_->node_subphase_comm_.erase(phase - look_back);
-    lb_data_->user_defined_lb_info_.erase(phase - look_back);
-    lb_data_->node_user_attributes_.erase(phase - look_back);
-  }
-
+void NodeLBData::startIterCleanup() {
   // Clear migrate lambdas and proxy lookup since LB is complete
   NodeLBData::node_migrate_.clear();
   node_collection_lookup_.clear();
