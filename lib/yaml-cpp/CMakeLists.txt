@@ -79,7 +79,7 @@ set_property(TARGET yaml-cpp
     CXX_STANDARD_REQUIRED ON)
 
 target_include_directories(yaml-cpp
-  PUBLIC
+  SYSTEM PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   PRIVATE
@@ -93,19 +93,12 @@ endif()
 
 target_compile_options(yaml-cpp
   PRIVATE
-    $<${not-msvc}:-Wall -Wextra -Wshadow -Wno-long-long -Wno-tautological-constant-compare>
     $<${not-msvc}:-pedantic -pedantic-errors>
 
     $<$<AND:${backport-msvc-runtime},${msvc-rt-mtd-static}>:-MTd>
     $<$<AND:${backport-msvc-runtime},${msvc-rt-mt-static}>:-MT>
     $<$<AND:${backport-msvc-runtime},${msvc-rt-mtd-dll}>:-MDd>
-    $<$<AND:${backport-msvc-runtime},${msvc-rt-mt-dll}>:-MD>
-
-    # /wd4127 = disable warning C4127 "conditional expression is constant"
-    # http://msdn.microsoft.com/en-us/library/6t66728h.aspx
-    # /wd4355 = disable warning C4355 "'this' : used in base member initializer list
-    # http://msdn.microsoft.com/en-us/library/3c594ae3.aspx
-    $<$<CXX_COMPILER_ID:MSVC>:/W3 /wd4127 /wd4355>)
+    $<$<AND:${backport-msvc-runtime},${msvc-rt-mt-dll}>:-MD>)
 
 target_compile_definitions(yaml-cpp
   PRIVATE
