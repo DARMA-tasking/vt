@@ -236,4 +236,11 @@ function(link_target_with_vt)
   if (vt_ubsan_enabled)
     target_link_libraries(${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} -fsanitize=undefined)
   endif()
+
+  # Enable additional flag for GCC-8 to link std::filesystem
+  if (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
+    if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9))
+      target_link_libraries(${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} -lstdc++fs)
+    endif ()
+  endif ()
 endfunction()
