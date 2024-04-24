@@ -423,6 +423,8 @@ template <typename MsgT, typename BaseT>
         auto msg_data = ptr;
         auto user_msg = deserializeFullMessage<MsgT>(msg_data);
 
+        std::free(msg_data);
+
         vt_debug_print(
           verbose, serial_msg,
           "serialMsgHandler: local msg: handler={}\n", typed_handler
