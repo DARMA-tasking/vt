@@ -44,6 +44,7 @@
 #include "common/test_harness.h"
 #include "common/timers.h"
 #include "vt/collective/collective_alg.h"
+#include "vt/configs/error/config_assert.h"
 #include "vt/context/context.h"
 #include "vt/scheduler/scheduler.h"
 #include <chrono>
@@ -115,32 +116,76 @@ struct NodeObj {
   struct PingMsg : Message {
     using MessageParentType = vt::Message;
     vt_msg_serialize_required();
-    std::vector<int32_t> vec_;
-    DurationMilli start_;
 
     PingMsg() : Message() { }
-    explicit PingMsg(size_t size)
+    explicit PingMsg(const std::vector<int32_t>& payload)
       : Message(),
-        start_(std::chrono::steady_clock::now().time_since_epoch()) {
-      vec_.resize(size, vt::theContext()->getNode());
-    }
+        payload_(payload),
+        start_(std::chrono::steady_clock::now().time_since_epoch()) { }
 
     template <typename SerializerT>
     void serialize(SerializerT& s) {
       MessageParentType::serialize(s);
-      s | vec_;
+      s | payload_;
       s | start_;
     }
+
+    std::vector<int32_t> payload_;
+    DurationMilli start_;
+  };
+
+  struct PingMsgPtr : Message {
+    using MessageParentType = vt::Message;
+    vt_msg_serialize_required();
+
+    PingMsgPtr() : Message() { }
+
+    explicit PingMsgPtr(const std::shared_ptr<std::vector<int32_t>>& payload)
+      : Message(),
+        payload_(payload),
+        start_(std::chrono::steady_clock::now().time_since_epoch()) { }
+
+    template <typename SerializerT>
+    void serialize(SerializerT& s) {
+      MessageParentType::serialize(s);
+
+      if (s.isUnpacking()) {
+        payload_ = std::make_shared<std::vector<int32_t>>();
+      }
+
+      s | *payload_;
+      s | start_;
+    }
+
+    std::shared_ptr<std::vector<int32_t>> payload_;
+    DurationMilli start_;
   };
 
   void sendHandler(NodeObj::PingMsg* msg) {
     test_obj_->AddResult(
-      {fmt::format("ObjGroup Payload size {}", msg->vec_.size()),
+      {fmt::format("ObjGroup Payload size {}", msg->payload_.size()),
        (DurationMilli{std::chrono::steady_clock::now().time_since_epoch()} -
         msg->start_)
-         .count()
-      }
-    );
+         .count()});
+
+    obj_send_done = true;
+  }
+
+  void sendHandlerPtr(NodeObj::PingMsgPtr* msg) {
+    test_obj_->AddResult(
+      {fmt::format("ObjGroupPtr Payload size {}", msg->payload_->size()),
+       (DurationMilli{std::chrono::steady_clock::now().time_since_epoch()} -
+        msg->start_)
+         .count()});
+
+    auto const num_nodes = vt::theContext()->getNumNodes();
+    auto const this_node = vt::theContext()->getNode();
+    auto const prev_node = (this_node - 1 + num_nodes) % num_nodes;
+    for (auto val : *msg->payload_) {
+      vtAssert(
+        val == prev_node, fmt::format("[{}]: Incorrect value!\n", this_node));
+    }
+
     obj_send_done = true;
   }
 
@@ -153,7 +198,39 @@ struct NodeObj {
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
 };
 
-VT_PERF_TEST(SendTest, test_objgroup_send) {
+VT_PERF_TEST(SendTest, test_objgroup_send_ptr) {
+  auto grp_proxy =
+    vt::theObjGroup()->makeCollective<NodeObj>("test_objgroup_send_ptr", this);
+  grp_proxy[my_node_].invoke<&NodeObj::initialize>();
+
+  if (theContext()->getNode() == 0) {
+    theTerm()->disableTD();
+  }
+
+  auto const thisNode = vt::theContext()->getNode();
+  auto const lastNode = theContext()->getNumNodes() - 1;
+
+  auto const prevNode = (thisNode - 1 + num_nodes_) % num_nodes_;
+  auto const nextNode = (thisNode + 1) % num_nodes_;
+
+  for (auto size : payloadSizes) {
+    auto payload = std::make_shared<std::vector<int32_t>>();
+    payload->resize(size, thisNode);
+
+    theCollective()->barrier();
+
+    grp_proxy[nextNode].send<&NodeObj::sendHandlerPtr>(payload);
+    theSched()->runSchedulerWhile([] { return !obj_send_done; });
+
+    obj_send_done = false;
+  }
+
+  if (vt::theContext()->getNode() == 0) {
+    vt::theTerm()->enableTD();
+  }
+}
+
+VT_PERF_TEST(SendTest, test_objgroup_send_vec) {
   auto grp_proxy =
     vt::theObjGroup()->makeCollective<NodeObj>("test_objgroup_send", this);
   grp_proxy[my_node_].invoke<&NodeObj::initialize>();
@@ -169,9 +246,11 @@ VT_PERF_TEST(SendTest, test_objgroup_send) {
   auto const nextNode = (thisNode + 1) % num_nodes_;
 
   for (auto size : payloadSizes) {
+    std::vector<int32_t> payload(size, thisNode);
+
     theCollective()->barrier();
 
-    grp_proxy[nextNode].send<&NodeObj::sendHandler>(size);
+    grp_proxy[nextNode].send<&NodeObj::sendHandler>(payload);
     theSched()->runSchedulerWhile([] { return !obj_send_done; });
 
     obj_send_done = false;
@@ -214,9 +293,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
       {fmt::format("Collection Payload size {}", msg->vec_.size()),
        (DurationMilli{std::chrono::steady_clock::now().time_since_epoch()} -
         msg->start_)
-         .count()
-      }
-    );
+         .count()});
     col_send_done = true;
   }
 
