@@ -90,6 +90,7 @@ using NodeObjProxy = vt::objgroup::proxy::Proxy<NodeObj>;
 struct LinearPb3DJacobi : vt::Collection<LinearPb3DJacobi,vt::Index3D> {
 
 private:
+  using ReduceMsg = vt::collective::ReduceTMsg<double>;
 
   std::vector<double> tcur_, told_; // 3D jx, jy*ldx, jz*ldx*ldy (X is the leading dimension)
   std::vector<double> rhs_;
@@ -131,14 +132,7 @@ public:
 
   };
 
-
-  struct ReduxMsg : vt::collective::ReduceTMsg<double> {
-    ReduxMsg() = default;
-    explicit ReduxMsg(double in_val) : ReduceTMsg<double>(in_val) { }
-  };
-
-
-  void checkCompleteCB(ReduxMsg* msg) {
+  void checkCompleteCB(ReduceMsg* msg) {
     //
     // Only one object for the reduction will visit
     // this function
@@ -247,10 +241,8 @@ public:
     }
 
     auto proxy = this->getCollectionProxy();
-    auto cb = vt::theCB()->makeSend<
-      LinearPb3DJacobi,ReduxMsg,&LinearPb3DJacobi::checkCompleteCB
-    >(proxy(0,0,0));
-    auto msg2 = vt::makeMessage<ReduxMsg>(maxNorm);
+    auto cb = vt::theCB()->makeSend<&LinearPb3DJacobi::checkCompleteCB>(proxy(0,0,0));
+    auto msg2 = vt::makeMessage<ReduceMsg>(maxNorm);
     proxy.reduce<vt::collective::MaxOp<double>>(msg2.get(),cb);
   }
 
@@ -603,7 +595,7 @@ public:
 
 bool isWorkDone( vt::objgroup::proxy::Proxy<NodeObj> const& proxy){
   auto const this_node = vt::theContext()->getNode();
-  return proxy[this_node].invoke<decltype(&NodeObj::isWorkFinished), &NodeObj::isWorkFinished>();
+  return proxy[this_node].invoke<&NodeObj::isWorkFinished>();
 }
 
 int main(int argc, char** argv) {
@@ -668,7 +660,7 @@ int main(int argc, char** argv) {
 
   // Object group of all nodes that take part in computation
   // Used to determine whether the computation is finished
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>();
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>("test");
 
   // Create the decomposition into objects
   using BaseIndexType = typename vt::Index3D::DenseIndexType;
