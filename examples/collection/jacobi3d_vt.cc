@@ -74,15 +74,12 @@
 
 
 static constexpr std::size_t const default_nrow_object = 64;
-static constexpr std::size_t const default_ncol_object = 16; // Not used at this moment
 static constexpr std::size_t const default_num_objs = 4;
 static constexpr double const default_tol = 1.0e-02;
 
 struct NodeObj {
   bool is_finished_ = false;
-  struct WorkFinishedMsg : vt::Message {};
-
-  void workFinishedHandler(WorkFinishedMsg*) { is_finished_ = true; }
+  void workFinishedHandler() { is_finished_ = true; }
   bool isWorkFinished() { return is_finished_; }
 };
 using NodeObjProxy = vt::objgroup::proxy::Proxy<NodeObj>;
@@ -90,7 +87,6 @@ using NodeObjProxy = vt::objgroup::proxy::Proxy<NodeObj>;
 struct LinearPb3DJacobi : vt::Collection<LinearPb3DJacobi,vt::Index3D> {
 
 private:
-  using ReduceMsg = vt::collective::ReduceTMsg<double>;
 
   std::vector<double> tcur_, told_; // 3D jx, jy*ldx, jz*ldx*ldy (X is the leading dimension)
   std::vector<double> rhs_;
@@ -98,10 +94,8 @@ private:
   size_t msgReceived_ = 0, totalReceive_ = 0;
   size_t numObjsX_ = 1, numObjsY_ = 1, numObjsZ_ = 1;
   size_t numRowsPerObject_ = default_nrow_object;
-  // Not used at this moment. We may want to have non-qubic domain in future.
-  // size_t numColsPerObject_ = default_ncol_object;
   size_t maxIter_ = 5;
-  NodeObjProxy objProxy_; // Similar to MPI_Comm/MPI_Group?
+  NodeObjProxy objProxy_;
 
 public:
 
@@ -132,13 +126,12 @@ public:
 
   };
 
-  void checkCompleteCB(ReduceMsg* msg) {
+  void checkCompleteCB(double const normRes) {
     //
     // Only one object for the reduction will visit
     // this function
     //
 
-    const double normRes = msg->getConstVal();
     auto const iter_max_reached = iter_ > maxIter_;
     auto const norm_res_done = normRes < default_tol;
 
@@ -150,7 +143,7 @@ public:
       fmt::print(to_print);
 
       // Notify all nodes that computation is finished
-      objProxy_.broadcast<NodeObj::WorkFinishedMsg, &NodeObj::workFinishedHandler>();
+      objProxy_.broadcast<&NodeObj::workFinishedHandler>();
     } else {
       fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter_, normRes);
     }
@@ -208,7 +201,6 @@ public:
           //---- rhs_ right hand side vector
           //
           size_t node = ix + iy * ldx + iz * ldx * ldy;
-          //size_t node = ix + iy * ldx;
           tcur_[node] = (1.0/6.0) * (rhs_[node]
                              + told_[node - 1] + told_[node + 1]
                              + told_[node - ldx] + told_[node + ldx]
@@ -233,7 +225,6 @@ public:
       for (size_t iy = 1; iy <= numRowsPerObject_; ++iy) {
         for (size_t ix = 1; ix <= numRowsPerObject_; ++ix) {
           size_t node = ix + iy * ldx + iz * ldx * ldy;
-          //size_t node = ix + iy * ldx;
           double val = tcur_[node];
           maxNorm = (maxNorm > std::fabs(val)) ? maxNorm : std::fabs(val);
         }
@@ -241,9 +232,9 @@ public:
     }
 
     auto proxy = this->getCollectionProxy();
-    auto cb = vt::theCB()->makeSend<&LinearPb3DJacobi::checkCompleteCB>(proxy(0,0,0));
-    auto msg2 = vt::makeMessage<ReduceMsg>(maxNorm);
-    proxy.reduce<vt::collective::MaxOp<double>>(msg2.get(),cb);
+    proxy.reduce<&LinearPb3DJacobi::checkCompleteCB, vt::collective::MaxOp>(
+      proxy(0,0,0), maxNorm
+    );
   }
 
   //
@@ -284,10 +275,10 @@ public:
       const size_t ldy = numRowsPerObject_ + 2;
       const size_t nz = msg->nz;
       const size_t ny = msg->ny;
-      for (size_t jz = 0; jz < nz ; ++jz) { // msg->val_size
+      for (size_t jz = 0; jz < nz ; ++jz) {
         for (size_t jy = 0; jy < ny ; ++jy) {
           this->told_[0+jy*ldx+ ldx*ldy*jz] =
-                   msg->val[jy+jz*ny]; // Need to think
+                   msg->val[jy+jz*ny];
         }
       }
       msgReceived_ += 1;
@@ -299,8 +290,7 @@ public:
       const size_t ny = msg->ny;
       for (size_t jz = 0; jz < nz ; ++jz) {
         for (size_t jy = 0; jy < ny; ++jy) {
-          this->told_[numRowsPerObject_ + 1 + jy*ldx + jz *ldy* ldx] = msg->val[jy+jz*ny]; // Need to think
-        //this->told_[numRowsPerObject_ + 1 + jy*ldx] = msg->val[jy];
+          this->told_[numRowsPerObject_ + 1 + jy*ldx + jz *ldy* ldx] = msg->val[jy+jz*ny];
         }
       }
       msgReceived_ += 1;
@@ -310,13 +300,11 @@ public:
       const size_t ldx = numRowsPerObject_ + 2;
       const size_t nz = msg->nz;
       const size_t nx = msg->nx;
-      // Cannot do sequential copy
       for (size_t jz = 0; jz < nz; ++jz) {
         for (size_t jx = 0; jx < nx; ++jx) {
           this->told_[jx+ldx*ldy*jz] = msg->val[jx+jz*nx];
         }
       }
-      //std::copy(msg->val.begin(), msg->val.end(), this->told_.begin());
       msgReceived_ += 1;
     }
     else if (this->getIndex().y() < msg->from_index.y()) {  // Receiving message XZ plan from Y+1
@@ -332,13 +320,12 @@ public:
       msgReceived_ += 1;
     }
     else if (this->getIndex().z() > msg->from_index.z()) { // Receiving message XY plan from Z-1
-      // const size_t ldy = numRowsPerObject_ + 2;
       const size_t ldx = numRowsPerObject_ + 2;
       const size_t ny = msg->ny;
       const size_t nx = msg->nx;
       for (size_t jy = 0; jy < ny; ++jy) {
         for (size_t jx = 0; jx < nx; ++jx) {
-          this->told_[jx+ jy*ldx] = msg->val[jx+jy*nx]; //
+          this->told_[jx+ jy*ldx] = msg->val[jx+jy*nx];
         }
       }
       msgReceived_ += 1;
@@ -350,7 +337,7 @@ public:
       const size_t nx = msg->nx;
       for (size_t jy = 0; jy < ny; ++jy) {
         for (size_t jx = 0; jx < nx; ++jx) {
-          this->told_[jx+ jy*ldx + (numRowsPerObject_ + 1)*ldx*ldy ] = msg->val[jx+jy*nx];  //
+          this->told_[jx+ jy*ldx + (numRowsPerObject_ + 1)*ldx*ldy ] = msg->val[jx+jy*nx];
         }
       }
       msgReceived_ += 1;
@@ -393,7 +380,7 @@ public:
       size_t rz = numRowsPerObject_ + 2;
       size_t ldx = numRowsPerObject_ + 2;
       size_t ldy = numRowsPerObject_ + 2;
-      // No ghost
+
       for (size_t jz = 1; jz <= numRowsPerObject_; ++jz)
         for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
            tcopy[jy+jz*ry] = told_[1 + jy * ldx + jz * ldx *ldy]; // put YZ plane for X=1
@@ -401,14 +388,13 @@ public:
     }
 
     if (y > 0) {
-      //  std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       std::vector<double> tcopy( (numRowsPerObject_ + 2) * (numRowsPerObject_ + 2)  , 0.0); // size needs to be changed
       size_t rx = numRowsPerObject_ + 2;
       size_t ry = 0;
       size_t rz = numRowsPerObject_ + 2;
       size_t ldx = numRowsPerObject_ + 2;
       size_t ldy = numRowsPerObject_ + 2;
-      // No ghost
+
       for (size_t jz = 1; jz <= numRowsPerObject_; ++jz)
         for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
           tcopy[jx+rx*jz] = told_[jx + ldx + jz * ldx * ldy];
@@ -422,7 +408,7 @@ public:
       size_t rz = 0;
       size_t ldx = numRowsPerObject_ + 2;
       size_t ldy = numRowsPerObject_ + 2;
-      // No ghost
+
       for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
         for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
           tcopy[jx+rx*jy] = told_[jx + jy * ldx + ldx * ldy ];
@@ -430,7 +416,6 @@ public:
     }
 
     if (size_t(x) < numObjsX_ - 1) {
-      //std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       std::vector<double> tcopy( (numRowsPerObject_ + 2) * (numRowsPerObject_ + 2)  , 0.0); // size needs to be changed
       size_t rx = 0;
       size_t ry = numRowsPerObject_ + 2;
@@ -438,7 +423,6 @@ public:
       size_t ldx = numRowsPerObject_ + 2;
       size_t ldy = numRowsPerObject_ + 2;
 
-      // No ghost
       for (size_t jz = 1; jz <= numRowsPerObject_; ++jz) {
         for (size_t jy = 1; jy <= numRowsPerObject_; ++jy) {
           tcopy[jy+jz*ry] = told_[ (ldx - 2) + jy * ldx + jz * ldx * ldy ];
@@ -448,13 +432,13 @@ public:
     }
 
     if (size_t(y) < numObjsY_ - 1) {
-      // std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       std::vector<double> tcopy( (numRowsPerObject_ + 2) * (numRowsPerObject_ + 2)  , 0.0); // size needs to be changed
       size_t rx = numRowsPerObject_ + 2;
       size_t ry = 0;
       size_t rz = numRowsPerObject_ + 2;
       size_t ldx = numRowsPerObject_ + 2;
       size_t ldy = numRowsPerObject_ + 2;
+
       for (size_t jz = 1; jz <= numRowsPerObject_; ++jz)
         for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
           tcopy[jx+jz*rx] = told_[jx + ( ldy - 2 ) * ldx + jz * ldx * ldy];
@@ -462,7 +446,6 @@ public:
     }
 
     if (size_t(z) < numObjsZ_ - 1) {
-      // std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       std::vector<double> tcopy( (numRowsPerObject_ + 2) * (numRowsPerObject_ + 2)  , 0.0); // size needs to be changed
       size_t rx = numRowsPerObject_ + 2;
       size_t ry = numRowsPerObject_ + 2;
@@ -470,6 +453,7 @@ public:
       size_t ldx = numRowsPerObject_ + 2;
       size_t ldy = numRowsPerObject_ + 2;
       size_t ldz = numRowsPerObject_ + 2;
+
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
           tcopy[jx + jy *rx] = told_[ jx + jy * ldx + (ldz - 2 ) * ldx * ldy];
@@ -498,7 +482,7 @@ public:
     double hx = 1.0 / (numRowsPerObject_ * numObjsX_ + 1.0);
     double hy = 1.0 / (numRowsPerObject_ * numObjsY_ + 1.0);
     double hz = 1.0 / (numRowsPerObject_ * numObjsZ_ + 1.0);
-    // Need 3 values for max
+
     size_t maxNObjs = (size_t) std::max(numObjsX_, numObjsY_);
     maxNObjs = (maxNObjs < numObjsY_ ) ? numObjsY_ : maxNObjs;
 
@@ -593,14 +577,13 @@ public:
 
 };
 
-bool isWorkDone( vt::objgroup::proxy::Proxy<NodeObj> const& proxy){
+bool isWorkDone(vt::objgroup::proxy::Proxy<NodeObj> const& proxy){
   auto const this_node = vt::theContext()->getNode();
   return proxy[this_node].invoke<&NodeObj::isWorkFinished>();
 }
 
 int main(int argc, char** argv) {
 
-  // Need the default value??
   size_t numX_objs = default_num_objs;
   size_t numY_objs = default_num_objs;
   size_t numZ_objs = default_num_objs;
@@ -660,7 +643,7 @@ int main(int argc, char** argv) {
 
   // Object group of all nodes that take part in computation
   // Used to determine whether the computation is finished
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>("test");
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>("examples_jacobi3d");
 
   // Create the decomposition into objects
   using BaseIndexType = typename vt::Index3D::DenseIndexType;
@@ -671,7 +654,7 @@ int main(int argc, char** argv) {
   );
 
   // Need 3D partioning
-  auto col_proxy = vt::makeCollection<LinearPb3DJacobi>()
+  auto col_proxy = vt::makeCollection<LinearPb3DJacobi>("examples_jacobi3d")
     .bounds(range)
     .bulkInsert()
     .wait();
