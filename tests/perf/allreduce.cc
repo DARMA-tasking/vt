@@ -45,6 +45,7 @@
 #include "vt/collective/reduce/operators/functors/plus_op.h"
 #include "vt/configs/error/config_assert.h"
 #include "vt/context/context.h"
+#include "vt/scheduler/scheduler.h"
 #include <unordered_map>
 #include <vt/collective/collective_ops.h>
 #include <vt/objgroup/manager.h>
@@ -57,7 +58,6 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
-static constexpr int num_iters = 1;
 struct MyTest : PerfTestHarness {
   void SetUp() override {
     PerfTestHarness::SetUp();
@@ -71,7 +71,7 @@ struct MyTest : PerfTestHarness {
 };
 
 struct NodeObj {
-  explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
+  explicit NodeObj(MyTest* test_obj, const std::string& name) : test_obj_(test_obj), timer_name_(name) { }
 
   void initialize() {
     proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this);
@@ -102,6 +102,7 @@ struct NodeObj {
     // for (auto val : in) {
     //   vtAssert(val == expected, "FAILURE!");
     // }
+    test_obj_->StopTimer(timer_name_);
   }
 
   void newReduceComplete(std::vector<int32_t> in) {
@@ -127,6 +128,7 @@ struct NodeObj {
     // for (auto val : in) {
     //   vtAssert(val == expected, "FAILURE!");
     // }
+    test_obj_->StopTimer(timer_name_);
   }
 
   void reduceComplete(std::vector<int32_t> in) {
@@ -137,25 +139,26 @@ struct NodeObj {
     // }
 
     // fmt::print("\n");
+    test_obj_->StopTimer(timer_name_);
   }
 
-private:
+  std::string timer_name_ = {};
   MyTest* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
 };
 
 VT_PERF_TEST(MyTest, test_reduce) {
   auto grp_proxy =
-    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce", this);
+    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce", this, "Reduce -> Bcast");
 
-  vt::runInEpochCollective([=] {
-    grp_proxy.allreduce<&NodeObj::reduceComplete, collective::PlusOp>(data);
-  });
+  theCollective()->barrier();
+  StartTimer(grp_proxy[theContext()->getNode()].get()->timer_name_);
+  grp_proxy.allreduce<&NodeObj::reduceComplete, collective::PlusOp>(data);
 }
 
 VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
   auto proxy =
-    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new", this);
+    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new", this, "Rabenseifner");
 
   using DataT = decltype(data);
   using Reducer = collective::reduce::allreduce::Rabenseifner<
@@ -164,13 +167,15 @@ VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
     "allreduce_rabenseifner", proxy, num_nodes_, data);
   grp_proxy[my_node_].get()->proxy_ = grp_proxy;
-  vt::runInEpochCollective(
-    [=] { grp_proxy[my_node_].template invoke<&Reducer::allreduce>(); });
+
+  theCollective()->barrier();
+  StartTimer(proxy[theContext()->getNode()].get()->timer_name_);
+  grp_proxy[my_node_].template invoke<&Reducer::allreduce>();
 }
 
 VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
   auto proxy =
-    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new_2", this);
+    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new_2", this, "Recursive doubling");
 
   using DataT = decltype(data);
   using Reducer = collective::reduce::allreduce::DistanceDoubling<
