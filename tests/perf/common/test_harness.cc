@@ -454,4 +454,12 @@ void PerfTestHarness::GetMemoryUsage() {
   print_memory_use_ = true;
 }
 
+void PerfTestHarness::DisableGlobalTimer() {
+  print_total_time_ = false;
+}
+
+bool PerfTestHarness::ShouldOutputGlobalTimer() const {
+  return print_total_time_;
+}
+
 }}}} // namespace vt::tests::perf::common

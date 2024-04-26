@@ -121,8 +121,8 @@ struct PerfTestRegistry{
       if (rank == 0) {                                                       \
         fmt::print(                                                          \
           "{}{}RUNNING TEST:{} {} (Number of runs = {}) ...\n",              \
-          test_num > 0 ? "\n\n\n\n" : "", vt::debug::bold(), vt::debug::reset(), \
-          vt::debug::reg(test->GetName()),                                   \
+          test_num > 0 ? "\n\n\n\n" : "", vt::debug::bold(),                 \
+          vt::debug::reset(), vt::debug::reg(test->GetName()),               \
           vt::debug::reg(fmt::format("{}", num_runs)));                      \
       }                                                                      \
       for (uint32_t run_num = 1; run_num <= num_runs; ++run_num) {           \
@@ -131,7 +131,10 @@ struct PerfTestRegistry{
         timer.Start();                                                       \
         test->TestFunc();                                                    \
         PerfTestHarness::SpinScheduler();                                    \
-        test->AddResult({test->GetName(), timer.Stop()});                    \
+                                                                             \
+        if (test->ShouldOutputGlobalTimer()) {                               \
+          test->AddResult({test->GetName(), timer.Stop()});                  \
+        }                                                                    \
                                                                              \
         if (run_num == num_runs) {                                           \
           test->SyncResults();                                               \
