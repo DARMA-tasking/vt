@@ -262,9 +262,9 @@ public:
 
     IndexType from_index;
     std::vector<double> val;
-    size_t nx;
-    size_t ny;
-    size_t nz;
+    size_t nx = 0;
+    size_t ny = 0;
+    size_t nz = 0;
   };
 
   void exchange(VecMsg *msg) {
