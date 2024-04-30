@@ -235,14 +235,14 @@ struct CircularPhasesBuffer {
 
   /**
    * @brief Get iterator to the begging of the buffer
-   * 
+   *
    * @return auto the begin iterator
    */
   auto begin() { return m_buffer.begin(); }
 
   /**
    * @brief Get iterator to the space after buffer
-   * 
+   *
    * @return auto the end iterator
    */
   auto end() { return m_buffer.end(); }
@@ -250,7 +250,7 @@ struct CircularPhasesBuffer {
 private:
   /**
    * @brief Add new phase to the cache and remove oldest one if buffer exceeds requested size
-   * 
+   *
    * @param pair the pair<PhaseType, StoredType> to be stored
    */
   void addToCache(StoredPair&& pair) {
