@@ -45,14 +45,15 @@
 #define INCLUDED_VT_UTILS_CONTAINER_CIRCULAR_PHASES_BUFFER_H
 
 #include "vt/config.h"
+#include <queue>
 
 namespace vt { namespace util { namespace container {
 
 /**
  * \struct CircularPhasesBuffer
  *
- * \brief The circular buffer which holds data related to a continuous set of phases.
- * PhaseType is used as a key when storing or retrieving data.
+ * \brief The circular buffer which holds data related to a set of phases.
+ * PhaseType is used as a key when storing or retrieving data. If capacity was not specified then buffer is allow to grow without limit.
  */
 template <typename StoredType>
 struct CircularPhasesBuffer {
@@ -63,18 +64,22 @@ struct CircularPhasesBuffer {
    *
    * \param[in] capacity the requested capacity of the buffer
    */
-  CircularPhasesBuffer(std::size_t capacity = 0)
-    : vector_(capacity, StoredPair{invalid_, StoredType{}}) { }
+  CircularPhasesBuffer(std::size_t capacity = 0) {
+    m_requested_capacity = capacity;
+    m_buffer.reserve(capacity);
+  }
 
   /**
-   * \brief Construct a CircularPhasesBuffer. The size of buffer will be equal to the size of the list
+   * \brief Construct a CircularPhasesBuffer. The max size of buffer will be equal to the size of the list
    *
    * \param[in] list the initializer list with elements to be put into the buffer
    */
   CircularPhasesBuffer(std::initializer_list<StoredPair> list) {
-    vector_.resize(list.size());
+    m_requested_capacity = list.size();
+    m_buffer.reserve(list.size());
+
     for (auto&& pair : list) {
-      store(pair.first, std::move(pair.second));
+      addToCache(std::make_pair(pair.first, pair.second));
     }
   }
 
@@ -85,8 +90,7 @@ struct CircularPhasesBuffer {
    * \param[in] obj the data to store
    */
   void store(const PhaseType phase, StoredType&& obj) {
-    moveHeadAndTail();
-    vector_[head_] = std::make_pair(phase, std::move(obj));
+    addToCache(std::make_pair(phase, std::move(obj)));
   }
 
   /**
@@ -96,8 +100,7 @@ struct CircularPhasesBuffer {
    * \param[in] obj the data to store
    */
   void store(const PhaseType phase, StoredType const& obj) {
-    moveHeadAndTail();
-    vector_[head_] = std::make_pair(phase, obj);
+    addToCache(std::make_pair(phase, obj));
   }
 
   /**
@@ -108,8 +111,7 @@ struct CircularPhasesBuffer {
    * \return whether buffer contains the phase or not
    */
   bool contains(const PhaseType phase) const {
-    return !empty() && phase <= vector_[head_].first &&
-      phase >= vector_[tail_].first;
+    return m_buffer.find(phase) != m_buffer.end();
   }
 
   /**
@@ -121,9 +123,9 @@ struct CircularPhasesBuffer {
    */
   StoredType& operator[](const PhaseType phase) {
     if (!contains(phase)) {
-      store(phase, StoredType{});
+      addToCache(std::make_pair(phase, StoredType{}));
     }
-    return vector_[phaseToPos(phase)].second;
+    return m_buffer[phase];
   }
 
   /**
@@ -134,8 +136,9 @@ struct CircularPhasesBuffer {
    * \return pointer to the stored data or null if not present
    */
   const StoredType* find(const PhaseType phase) const {
-    if (contains(phase)) {
-      return &vector_[phaseToPos(phase)].second;
+    auto iter = m_buffer.find(phase);
+    if (iter != m_buffer.end()) {
+      return &iter->second;
     }
     return nullptr;
   }
@@ -148,81 +151,47 @@ struct CircularPhasesBuffer {
    * \return pointer to the stored data or null if not present
    */
   StoredType* find(const PhaseType phase) {
-    if (contains(phase)) {
-      return &vector_[phaseToPos(phase)].second;
+    auto iter = m_buffer.find(phase);
+    if (iter != m_buffer.end()) {
+      return &iter->second;
     }
     return nullptr;
   }
 
   /**
-   * \brief Get data related to the phase. Throws and exception if phase is not present.
+   * \brief Get data related to the phase.
    *
    * \param[in] phase the phase to look for
    *
    * \return reference to the stored data
    */
   const StoredType& at(const PhaseType phase) const {
-    vtAssert(contains(phase), "Buffer don't contain the requested phase.");
-
-    return vector_[phaseToPos(phase)].second;
+    return m_buffer.at(phase);
   }
 
   /**
-   * \brief Get data related to the phase. Throws and exception if phase is not present.
+   * \brief Get data related to the phase.
    *
    * \param[in] phase the phase to look for
    *
    * \return reference to the stored data
    */
-  StoredType& at(const PhaseType phase) {
-    vtAssert(contains(phase), "Buffer don't contain the requested phase.");
-
-    return vector_[phaseToPos(phase)].second;
-  }
+  StoredType& at(const PhaseType phase) { return m_buffer.at(phase); }
 
   /**
-   * \brief Resize buffer to the requested new_size
+   * \brief Resize buffer to the requested size
    *
    * \param[in] new_size the requested new size of the buffer
    */
   void resize(const std::size_t new_size) {
-    if (new_size == vector_.size()) {
-      return;
-    }
-
-    auto new_vec =
-      std::vector<StoredPair>(new_size, StoredPair{invalid_, StoredType{}});
-
-    if (new_size > 0) {
-      if (new_size < size()) {
-        int tmp = head_ - new_size + 1;
-        if (tmp < 0) {
-          tmp += size();
-        }
-
-        std::size_t tmp_tail = static_cast<std::size_t>(tmp);
-        for (int i = 0; tmp_tail != getNextEntry(head_);) {
-          new_vec[i++] = std::move(vector_[tmp_tail]);
-          tmp_tail = getNextEntry(tmp_tail);
-        }
-
-        head_ = new_size - 1;
-        tail_ = 0;
-
-      } else if (!empty()) {
-        int i = 0;
-        for (auto&& pair : *this) {
-          new_vec[i++] = std::move(pair);
-        }
-
-        head_ = --i;
-        tail_ = 0;
+    if (new_size < m_buffer.size()) {
+      std::size_t remove_last = m_buffer.size() - new_size;
+      for (std::size_t i = 0; i < remove_last; i++) {
+        removeOldest();
       }
-    } else {
-      resetIndexes();
     }
 
-    vector_.swap(new_vec);
+    m_requested_capacity = new_size;
   }
 
   /**
@@ -230,181 +199,80 @@ struct CircularPhasesBuffer {
    *
    * \return the current size
    */
-  std::size_t size() const { return capacity() - numFree(); }
-
-  /**
-   * \brief Get number of free spaces in the buffer
-   *
-   * \return the number free spaces in the buffer
-   */
-  std::size_t numFree() const {
-    if (empty()) {
-      return capacity();
-    } else if (head_ == tail_) {
-      return capacity() - 1;
-    } else if (head_ < tail_) {
-      return tail_ - head_ - 1;
-    } else {
-      return capacity() + tail_ - head_ - 1;
-    }
-  }
+  std::size_t size() const { return m_buffer.size(); }
 
   /**
    * \brief Check if the buffer is empty
    *
    * \return whether the buffer is empty or not
    */
-  bool empty() const {
-    return head_ == invalid_index_ && tail_ == invalid_index_;
+  bool empty() const { return m_buffer.empty(); }
+
+  /**
+   * \brief Clears content of the buffer. Does not change the buffer maximum capacity.
+   */
+  void clear() {
+    std::queue<PhaseType> empty;
+    m_indexes.swap(empty);
+    m_buffer.clear();
   }
 
   /**
-   * \brief Get the maximum number of phases which can be stored
-   *
-   * \return the maximum number of phases
+   * @brief Clears content of the buffer and allow the buffer maximum capacity to grow
    */
-  std::size_t capacity() const { return vector_.size(); }
-
-  /**
-   * \brief Check if the buffer is initialized
-   *
-   * \return whether the buffer is initialized or not
-   */
-  bool isInitialized() const { return capacity() > 0; }
-
-  /**
-   * \brief Clears content of the buffer including phases and related data. Does not change the buffer maximum capacity.
-   */
-  void clear() {
-    auto new_vec = std::vector<StoredPair>(
-      vector_.size(), StoredPair{invalid_, StoredType{}});
-    vector_.swap(new_vec);
-    resetIndexes();
+  void reset() {
+    m_requested_capacity = 0;
+    clear();
   }
 
   template <typename SerializeT>
   void serialize(SerializeT& s) {
-    s | head_;
-    s | tail_;
-    s | vector_;
+    s | m_requested_capacity;
+    // TODO: Checkpoint is not supporting the queue
+    // s | m_indexes;
+    s | m_buffer;
   }
+
+  /**
+   * @brief Get iterator to the begging of the buffer
+   * 
+   * @return auto the begin iterator
+   */
+  auto begin() { return m_buffer.begin(); }
+
+  /**
+   * @brief Get iterator to the space after buffer
+   * 
+   * @return auto the end iterator
+   */
+  auto end() { return m_buffer.end(); }
 
 private:
   /**
-   * \brief Convert the phase number to related index in the buffer
-   *
-   * \param[in] phase the phase to convert
-   *
-   * \return the index to the phase data
+   * @brief Add new phase to the cache and remove oldest one if buffer exceeds requested size
+   * 
+   * @param pair the pair<PhaseType, StoredType> to be stored
    */
-  inline std::size_t phaseToPos(const PhaseType phase) const {
-    auto go_back = vector_[head_].first - phase;
-    if (go_back > head_) {
-      return vector_.size() - (go_back - head_);
+  void addToCache(StoredPair&& pair) {
+    if (m_requested_capacity > 0 && m_buffer.size() >= m_requested_capacity) {
+      removeOldest();
     }
-    return head_ - go_back;
+    m_indexes.push(pair.first);
+    m_buffer[pair.first] = std::move(pair.second);
   }
 
   /**
-   * \brief Calculates next valid index in the buffer after the passed index
-   *
-   * \param[in] index the index to be incremented
-   *
-   * \return the incremented index
+   * @brief Remove oldest phase from cache
    */
-  inline std::size_t getNextEntry(const std::size_t index) const {
-    auto next_entry = index + 1;
-    if (next_entry == capacity()) {
-      next_entry = 0;
-    }
-    return next_entry;
-  }
-
-  /**
-   * \brief Update internal indexes to point to the correct spots in the buffer after inserting new element
-   */
-  inline void moveHeadAndTail() {
-    head_ = getNextEntry(head_);
-    if (head_ == tail_) {
-      tail_ = getNextEntry(tail_);
-    } else if (tail_ == invalid_index_) {
-      tail_ = 0;
-    }
-  }
-
-  /**
-   * \brief Resets internal indexes to their default position
-   */
-  inline void resetIndexes() {
-    head_ = invalid_index_;
-    tail_ = invalid_index_;
+  void removeOldest() {
+    m_buffer.erase(m_indexes.front());
+    m_indexes.pop();
   }
 
 private:
-  std::size_t head_ = invalid_index_;
-  std::size_t tail_ = invalid_index_;
-  std::vector<StoredPair> vector_;
-
-  static const constexpr PhaseType invalid_ =
-    std::numeric_limits<PhaseType>::max();
-  static const constexpr std::size_t invalid_index_ =
-    std::numeric_limits<std::size_t>::max();
-
-public:
-  /**
- * \struct PhaseIterator
- *
- * \brief The iterator for CircularPhasesBuffer.
- */
-  template <typename StoredPair>
-  class PhaseIterator {
-    using ContainerType = std::vector<StoredPair>;
-
-    ContainerType* buffer_;
-    std::size_t pos_, head_;
-
-  public:
-    PhaseIterator(
-      ContainerType* buff, std::size_t start_pos, std::size_t head_pos)
-      : buffer_(buff),
-        pos_(start_pos),
-        head_(head_pos) { }
-
-    PhaseIterator& operator++() {
-      if (pos_ == head_) {
-        pos_ = buffer_->size();
-        return *this;
-      }
-
-      ++pos_;
-      if (pos_ == buffer_->size()) {
-        pos_ = 0;
-      }
-
-      return *this;
-    }
-
-    StoredPair& operator*() { return (*buffer_)[pos_]; }
-
-    StoredPair* operator->() { return &(operator*()); }
-
-    bool operator==(const PhaseIterator& other) const {
-      return pos_ == other.pos_;
-    }
-
-    bool operator!=(const PhaseIterator& other) const {
-      return pos_ != other.pos_;
-    }
-  };
-
-  auto begin() {
-    if (empty()) {
-      return end();
-    }
-    return PhaseIterator<StoredPair>(&vector_, tail_, head_);
-  }
-
-  auto end() { return PhaseIterator<StoredPair>(&vector_, vector_.size(), vector_.size()); }
+  std::size_t m_requested_capacity;
+  std::queue<PhaseType> m_indexes;
+  std::unordered_map<PhaseType, StoredType> m_buffer;
 };
 
 }}} /* end namespace vt::util::container */

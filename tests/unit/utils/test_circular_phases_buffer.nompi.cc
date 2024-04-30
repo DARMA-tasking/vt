@@ -59,7 +59,7 @@ void validatePresentPhases(
   std::vector<PhaseType> expected) {
   for (auto&& phase : expected) {
     EXPECT_TRUE(buffer.contains(phase)) << "Phase: " << phase;
-    EXPECT_EQ(phase * phase, buffer[phase].x) << "Phase: " << phase;
+    EXPECT_EQ(phase * phase, buffer.at(phase).x) << "Phase: " << phase;
   }
 }
 
@@ -74,49 +74,33 @@ void validateMissingPhases(
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_empty) {
   util::container::CircularPhasesBuffer<Dummy> buffer;
 
-  EXPECT_FALSE(buffer.isInitialized());
-  EXPECT_EQ(std::size_t{0}, buffer.capacity());
   EXPECT_FALSE(buffer.contains(0));
   EXPECT_EQ(std::size_t{0}, buffer.size());
-  EXPECT_EQ(std::size_t{0}, buffer.numFree());
   EXPECT_TRUE(buffer.empty());
 
   buffer.resize(2);
 
-  EXPECT_TRUE(buffer.isInitialized());
-  EXPECT_EQ(std::size_t{2}, buffer.capacity());
   EXPECT_FALSE(buffer.contains(0));
   EXPECT_EQ(std::size_t{0}, buffer.size());
-  EXPECT_EQ(std::size_t{2}, buffer.numFree());
   EXPECT_TRUE(buffer.empty());
 
   buffer.clear();
 
-  EXPECT_TRUE(buffer.isInitialized());
-  EXPECT_EQ(std::size_t{2}, buffer.capacity());
   EXPECT_FALSE(buffer.contains(1));
   EXPECT_EQ(std::size_t{0}, buffer.size());
-  EXPECT_EQ(std::size_t{2}, buffer.numFree());
   EXPECT_TRUE(buffer.empty());
 
   buffer.resize(0);
 
-  EXPECT_FALSE(buffer.isInitialized());
-  EXPECT_EQ(std::size_t{0}, buffer.capacity());
   EXPECT_FALSE(buffer.contains(1));
   EXPECT_EQ(std::size_t{0}, buffer.size());
-  EXPECT_EQ(std::size_t{0}, buffer.numFree());
   EXPECT_TRUE(buffer.empty());
 
   buffer.resize(4);
   buffer[0] = {0};
 
-  // head_ > tail_
-  EXPECT_TRUE(buffer.isInitialized());
-  EXPECT_EQ(std::size_t{4}, buffer.capacity());
   EXPECT_TRUE(buffer.contains(0));
   EXPECT_EQ(std::size_t{1}, buffer.size());
-  EXPECT_EQ(std::size_t{3}, buffer.numFree());
   EXPECT_FALSE(buffer.empty());
 
   buffer[1] = {1};
@@ -124,13 +108,15 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_empty) {
   buffer[3] = {6};
   buffer[4] = {8};
 
-  // head_ < tail_
-  EXPECT_TRUE(buffer.isInitialized());
-  EXPECT_EQ(std::size_t{4}, buffer.capacity());
   EXPECT_TRUE(buffer.contains(1));
   EXPECT_EQ(std::size_t{4}, buffer.size());
-  EXPECT_EQ(std::size_t{0}, buffer.numFree());
   EXPECT_FALSE(buffer.empty());
+
+  buffer.reset();
+
+  EXPECT_FALSE(buffer.contains(0));
+  EXPECT_EQ(std::size_t{0}, buffer.size());
+  EXPECT_TRUE(buffer.empty());
 }
 
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_store) {
@@ -192,52 +178,21 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_forward_iter) {
     EXPECT_EQ(true, false) << "Unexpected phase: " << ele.first;
   }
 
-  buffer.resize(4);
-
-  for (auto&& ele : buffer) {
-    // This will never be called.
-    EXPECT_EQ(true, false) << "Unexpected phase: " << ele.first;
-  }
-
   buffer[0] = {0};
   buffer[1] = {1};
   buffer[2] = {4};
 
-  {
-    std::vector<PhaseType> expected = {0, 1, 2};
-    std::vector<PhaseType> visited;
-    for (auto&& ele : buffer) {
-      visited.push_back(ele.first);
-      EXPECT_EQ(ele.first * ele.first, ele.second.x);
-    }
-    EXPECT_TRUE(std::equal(visited.begin(), visited.end(), expected.begin()));
-  }
+  validatePresentPhases(buffer, {0, 1, 2});
 
   buffer[3] = {9};
 
-  {
-    std::vector<PhaseType> expected = {0, 1, 2, 3};
-    std::vector<PhaseType> visited;
-    for (auto&& ele : buffer) {
-      visited.push_back(ele.first);
-      EXPECT_EQ(ele.first * ele.first, ele.second.x);
-    }
-    EXPECT_TRUE(std::equal(visited.begin(), visited.end(), expected.begin()));
-  }
+  validatePresentPhases(buffer, {0, 1, 2, 3});
 
   buffer[4] = {16};
   buffer[5] = {25};
   buffer[6] = {36};
 
-  {
-    std::vector<PhaseType> expected = {3, 4, 5, 6};
-    std::vector<PhaseType> visited;
-    for (auto&& ele : buffer) {
-      visited.push_back(ele.first);
-      EXPECT_EQ(ele.first * ele.first, ele.second.x);
-    }
-    EXPECT_TRUE(std::equal(visited.begin(), visited.end(), expected.begin()));
-  }
+  validatePresentPhases(buffer, {0, 1, 2, 3, 4, 5, 6});
 
   buffer.clear();
 
