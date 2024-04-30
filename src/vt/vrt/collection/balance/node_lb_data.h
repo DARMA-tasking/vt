@@ -194,7 +194,7 @@ public:
    *
    * \return an observer pointer to the user-defined attributes
    */
-  std::unordered_map<PhaseType, DataMapType> const* getPhaseAttributes() const;
+  DataMapBufferType const* getPhaseAttributes() const;
 
   /**
    * \internal \brief Get stored object comm data for a specific phase

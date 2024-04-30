@@ -65,14 +65,16 @@ void validatePersistedPhases(std::vector<PhaseType> expected_phases) {
     EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->node_data_.size());
     EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->node_subphase_comm_.size());
     EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->user_defined_json_.size());
-    // EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->user_defined_lb_info_.size());
+    EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->user_defined_lb_info_.size());
+    EXPECT_EQ(expected_phases.size(), theNodeLBData()->getLBData()->node_user_attributes_.size());
     // Check if each phase is present
     for(auto&& phase : expected_phases) {
       EXPECT_TRUE(theNodeLBData()->getLBData()->node_comm_.contains(phase));
       EXPECT_TRUE(theNodeLBData()->getLBData()->node_data_.contains(phase));
       EXPECT_TRUE(theNodeLBData()->getLBData()->node_subphase_comm_.contains(phase));
       EXPECT_TRUE(theNodeLBData()->getLBData()->user_defined_json_.contains(phase));
-      // EXPECT_TRUE(theNodeLBData()->getLBData()->user_defined_lb_info_.contains(phase));
+      EXPECT_TRUE(theNodeLBData()->getLBData()->user_defined_lb_info_.contains(phase));
+      EXPECT_TRUE(theNodeLBData()->getLBData()->node_user_attributes_.contains(phase));
     }
   #else
     (void)expected_phases;
@@ -81,21 +83,20 @@ void validatePersistedPhases(std::vector<PhaseType> expected_phases) {
     EXPECT_EQ(0, theNodeLBData()->getLBData()->node_subphase_comm_.size());
     EXPECT_EQ(0, theNodeLBData()->getLBData()->user_defined_json_.size());
     EXPECT_EQ(0, theNodeLBData()->getLBData()->user_defined_lb_info_.size());
+    EXPECT_EQ(0, theNodeLBData()->getLBData()->node_user_attributes_.size());
   #endif
 }
 
 struct TestCol : vt::Collection<TestCol,vt::Index1D> {
   unsigned int prev_calls_ = thePhase()->getCurrentPhase();
 
-  TestCol() {
-    // Insert dummy lb info data
-    valInsert("foo", 10, true, true, true);
-  }
-
   unsigned int prevCalls() { return prev_calls_++; }
 
-  static void colHandler(TestCol* col) {
+  static void insertValue(TestCol* col) {
+    col->valInsert("foo", 10, true, true, true);
+  }
 
+  static void colHandler(TestCol* col) {
     auto& lb_data = col->lb_data_;
     auto load_phase_count = lb_data.getLoadPhaseCount();
     auto comm_phase_count = lb_data.getCommPhaseCount();
@@ -174,6 +175,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
   for (int i=0; i<num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
+      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -213,6 +215,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
   for (int i=0; i<num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
+      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -252,6 +255,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
   for (int i=0; i<num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
+      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -294,6 +298,7 @@ TEST_F(TestLBDataRetention, test_lbdata_config_retention_higher) {
   for (uint32_t i=0; i<theConfig()->vt_lb_data_retention * 2; ++i) {
     runInEpochCollective([&]{
       // Do some work.
+      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -335,6 +340,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
   for (uint32_t i=0; i<first_stage_num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
+      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -353,6 +359,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
   for (uint32_t i=0; i<first_stage_num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
+      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -392,6 +399,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   for (uint32_t i=0; i<first_stage_num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
+      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -415,6 +423,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   for (uint32_t i=0; i<10; ++i) {
     runInEpochCollective([&]{
       // Do some work.
+      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.

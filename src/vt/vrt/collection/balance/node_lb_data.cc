@@ -101,7 +101,7 @@ NodeLBData::getUserData() const {
   return &lb_data_->user_defined_lb_info_;
 }
 
-std::unordered_map<PhaseType, DataMapType> const*
+DataMapBufferType const*
 NodeLBData::getPhaseAttributes() const {
   return &lb_data_->node_user_attributes_;
 }
@@ -145,6 +145,7 @@ void NodeLBData::resizeLBDataHistory(uint32_t new_hist_len) {
     lb_data_->node_subphase_comm_.resize(new_hist_len);
     lb_data_->user_defined_lb_info_.resize(new_hist_len);
     lb_data_->user_defined_json_.resize(new_hist_len);
+    lb_data_->node_user_attributes_.resize(new_hist_len);
   }
 
   NodeLBData::node_migrate_.clear();
