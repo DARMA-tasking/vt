@@ -131,10 +131,9 @@ void EntityLocationCoord<EntityID>::registerEntity(
       id, home, migrated
     );
 
-      proxy_[home].template send<&ThisType::updateLocation>(
-        MsgProps().asLocationMsg(), id, this_node, home
-      );
-    }
+    proxy_[home].template send<&ThisType::updateLocation>(
+      MsgProps().asLocationMsg(), id, this_node, home
+    );
   }
 }
 
