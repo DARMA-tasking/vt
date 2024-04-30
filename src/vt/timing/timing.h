@@ -47,7 +47,8 @@
 #include <string>
 
 #include <EngFormat-Cpp/eng_format.hpp>
-#include <fmt-vt/core.h>
+#include "vt/cmake_config.h"
+#include INCLUDE_FMT_CORE
 
 #include "vt/timing/timing_type.h"
 
@@ -62,7 +63,7 @@ TimeType getCurrentTime();
 
 }} /* end namespace vt::timing */
 
-namespace fmt {
+VT_FMT_NAMESPACE_BEGIN
 
 template<>
 struct formatter<::vt::TimeTypeWrapper> {
@@ -72,7 +73,7 @@ struct formatter<::vt::TimeTypeWrapper> {
   }
 
   template<typename FormatContext>
-  auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) {
+  auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) const {
     return fmt::format_to(
       ctx.out(), "{}",
       to_engineering_string(t.seconds(), 5, eng_exponential, "s")
@@ -80,6 +81,6 @@ struct formatter<::vt::TimeTypeWrapper> {
   }
 };
 
-} /* end namespace fmt */
+VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_TIMING_TIMING_H*/

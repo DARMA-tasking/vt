@@ -108,9 +108,10 @@ struct hash<vt::epoch::EpochType> {
 
 } /* end namespace std */
 
-#include <fmt-vt/format.h>
+#include "vt/cmake_config.h"
+#include INCLUDE_FMT_FORMAT
 
-namespace fmt {
+VT_FMT_NAMESPACE_BEGIN
 
 /// Custom fmt formatter/print for \c EpochType
 template <>
@@ -141,7 +142,7 @@ struct formatter<::vt::epoch::EpochType> {
   /// Formats the epoch using the parsed format specification (presentation)
   /// stored in this formatter.
   template <typename FormatContext>
-  auto format(::vt::epoch::EpochType const& e, FormatContext& ctx) {
+  auto format(::vt::epoch::EpochType const& e, FormatContext& ctx) const {
     return format_to(
       ctx.out(),
       presentation == 'b' ? "{:b}" : (presentation == 'd' ? "{:d}" : "{:x}"),
@@ -150,7 +151,7 @@ struct formatter<::vt::epoch::EpochType> {
   }
 };
 
-} /* end namespace fmt */
+VT_FMT_NAMESPACE_END
 
 namespace vt {
 

@@ -41,11 +41,11 @@
 //@HEADER
 */
 
-#include <fmt-vt/core.h>
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
 #include "vt/configs/error/stack_out.h"
+#include INCLUDE_FMT_CORE
 
 namespace vt { namespace tests { namespace unit {
 

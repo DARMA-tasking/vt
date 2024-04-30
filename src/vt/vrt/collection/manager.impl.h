@@ -88,8 +88,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <fmt-vt/core.h>
-#include <fmt-vt/ostream.h>
+#include INCLUDE_FMT_CORE
+#include INCLUDE_FMT_OSTREAM
 
 namespace vt { namespace vrt { namespace collection {
 

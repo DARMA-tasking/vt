@@ -58,8 +58,6 @@
 #include <sys/stat.h>
 #include <memory>
 
-#include <fmt-vt/core.h>
-
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void NodeLBData::setProxy(objgroup::proxy::Proxy<NodeLBData> in_proxy) {

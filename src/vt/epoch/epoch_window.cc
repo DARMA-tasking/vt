@@ -44,7 +44,7 @@
 #include "vt/epoch/epoch_window.h"
 #include "vt/epoch/epoch_manip.h"
 
-#include <fmt-vt/ostream.h>
+#include INCLUDE_FMT_OSTREAM
 
 namespace vt { namespace epoch {
 
