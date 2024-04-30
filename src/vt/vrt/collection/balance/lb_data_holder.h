@@ -68,13 +68,6 @@ struct LBDataHolder {
   LBDataHolder() = default;
 
   /**
-   * \brief Create \c LBDataHolder with specified buffers capacity
-   *
-   * \param[in] initial_buffers_size the initial size of the buffers
-   */
-  LBDataHolder(std::size_t initial_buffers_size);
-
-  /**
    * \brief Create \c LBDataHolder from input JSON
    *
    * \param[in] j the json that contains the LB data
@@ -205,7 +198,7 @@ public:
   /// User-defined data from each phase for LB
   DataMapBufferType user_defined_lb_info_;
   /// User-defined attributes from each phase
-  std::unordered_map<PhaseType, DataMapType> node_user_attributes_;
+  DataMapBufferType node_user_attributes_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy

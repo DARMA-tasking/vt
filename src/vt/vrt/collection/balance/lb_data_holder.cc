@@ -223,7 +223,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       }
       outputEntity(j["tasks"][i]["entity"], id);
 
-      if (node_user_attributes_.find(phase) != node_user_attributes_.end()) {
+      if (node_user_attributes_.contains(phase)) {
         if (node_user_attributes_.at(phase).find(id) != node_user_attributes_.at(phase).end()) {
           for (auto const& [key, value] : node_user_attributes_.at(phase).at(id)) {
             if (std::holds_alternative<int>(value)) {

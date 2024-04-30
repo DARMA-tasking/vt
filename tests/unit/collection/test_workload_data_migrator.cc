@@ -93,7 +93,7 @@ setupWorkloads(PhaseType phase, size_t numElements) {
     );
   }
 
-  auto lbdh = std::make_shared<LBDataHolder>(numElements);
+  auto lbdh = std::make_shared<LBDataHolder>();
 
   for (auto&& elmID : myElemList) {
     double tval = elmID.id * 2;
@@ -790,7 +790,7 @@ setupManyWorkloads(
     );
   }
 
-  auto lbdh = std::make_shared<LBDataHolder>(num_phases);
+  auto lbdh = std::make_shared<LBDataHolder>();
 
   PhaseType stop_phase = initial_phase + num_phases;
   for (PhaseType phase = initial_phase; phase < stop_phase; ++phase) {
@@ -804,7 +804,7 @@ setupManyWorkloads(
     }
   }
 
-  auto scrambled_lbdh = std::make_shared<LBDataHolder>(num_phases);
+  auto scrambled_lbdh = std::make_shared<LBDataHolder>();
 
   for (PhaseType phase = initial_phase; phase < stop_phase; ++phase) {
     auto base_load_model = setupBaseModel(phase, lbdh);
