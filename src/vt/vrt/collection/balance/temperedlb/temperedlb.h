@@ -413,11 +413,11 @@ private:
   KnowledgeEnum knowledge_                          = KnowledgeEnum::Log;
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;
-  double α = 1.0;
-  double β = 0.0;
-  double γ = 0.0;
-  double δ = 0.0;
-  double ε = 0.0;
+  double alpha = 1.0;
+  double beta = 0.0;
+  double gamma = 0.0;
+  double delta = 0.0;
+  double epsilon = 0.0;
   std::vector<bool> propagated_k_;
   std::mt19937 gen_propagate_;
   std::mt19937 gen_sample_;

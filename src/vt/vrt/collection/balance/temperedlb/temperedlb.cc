@@ -304,7 +304,7 @@ Description: β in the work model (inter-node communication in work model)
       R"(
 Values: <double>
 Defaut: 1.0
-Description: ε in the work model (constant in work model)
+Description: ε in the work model (memory term in work model)
 )"
     },
     {
@@ -421,11 +421,11 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     vtAbort(s);
   }
 
-  α = config->getOrDefault<double>("alpha", α);
-  β = config->getOrDefault<double>("beta", β);
-  γ = config->getOrDefault<double>("gamma", γ);
-  δ = config->getOrDefault<double>("delta", δ);
-  ε = config->getOrDefault<double>("epsilon", ε);
+  alpha = config->getOrDefault<double>("alpha", alpha);
+  beta = config->getOrDefault<double>("beta", beta);
+  gamma = config->getOrDefault<double>("gamma", gamma);
+  delta = config->getOrDefault<double>("delta", delta);
+  epsilon = config->getOrDefault<double>("epsilon", epsilon);
 
   num_iters_     = config->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = config->getOrDefault<int32_t>("trials", num_trials_);
@@ -886,11 +886,11 @@ double TemperedLB::computeWork(
 ) const {
   // The work model based on input parameters
   return
-    α * load +
-    β * inter_comm_bytes +
-    γ * intra_comm_bytes +
-    δ * shared_comm_bytes +
-    ε;
+    alpha * load +
+    beta * inter_comm_bytes +
+    gamma * intra_comm_bytes +
+    delta * shared_comm_bytes +
+    epsilon;
 }
 
 WorkBreakdown TemperedLB::computeWorkBreakdown(
@@ -1002,14 +1002,14 @@ double TemperedLB::computeWorkAfterClusterSwap(
   double node_work = info.work;
 
   // Remove/add clusters' load factor from work model
-  node_work -= α * to_remove.load;
-  node_work += α * to_add.load;
+  node_work -= alpha * to_remove.load;
+  node_work += alpha * to_add.load;
 
   // Remove/add clusters' intra-comm
   double const node_intra_send = info.intra_send_vol;
   double const node_intra_recv = info.intra_recv_vol;
-  node_work -= δ * std::max(node_intra_send, node_intra_recv);
-  node_work += δ * std::max(
+  node_work -= delta * std::max(node_intra_send, node_intra_recv);
+  node_work += delta * std::max(
     node_intra_send - to_remove.intra_send_vol + to_add.intra_send_vol,
     node_intra_recv - to_remove.intra_recv_vol + to_add.intra_recv_vol
   );
@@ -1020,7 +1020,7 @@ double TemperedLB::computeWorkAfterClusterSwap(
     to_remove.home_node != node and
     to_remove.home_node != uninitialized_destination
   ) {
-    node_work -= δ * to_remove.edge_weight;
+    node_work -= delta * to_remove.edge_weight;
   }
 
   // If to_add is now remote, add that component to the work
@@ -1028,12 +1028,12 @@ double TemperedLB::computeWorkAfterClusterSwap(
     to_add.home_node != node and
     to_add.home_node != uninitialized_destination
   ) {
-    node_work += δ * to_add.edge_weight;
+    node_work += delta * to_add.edge_weight;
   }
 
   double node_inter_send = info.inter_send_vol;
   double node_inter_recv = info.inter_recv_vol;
-  node_work -= β * std::max(node_inter_send, node_inter_recv);
+  node_work -= beta * std::max(node_inter_send, node_inter_recv);
 
   // All edges outside the to_remove cluster that are also off the node need to
   // be removed from the inter-node volumes
@@ -1061,7 +1061,7 @@ double TemperedLB::computeWorkAfterClusterSwap(
     }
   }
 
-  node_work += β * std::max(node_inter_send, node_inter_recv);
+  node_work += beta * std::max(node_inter_send, node_inter_recv);
 
   return node_work;
 }
