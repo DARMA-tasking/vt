@@ -312,22 +312,9 @@ protected:
   void considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg);
 
   /**
-   * \brief Consider possible subcluster transfers with all the up-to-date info
-   * from a rank
-   *
-   * \param[in] msg update message with all the info
-   */
-  void considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg);
-
-  /**
    * \brief Release a lock on a rank
    */
   void releaseLock();
-
-  /**
-   * \brief Try sub-clustering---i.e., breaking up clusters to improve LB
-   */
-  void trySubClustering();
 
   /**
    * \brief Give a cluster to a rank
@@ -520,8 +507,6 @@ private:
   bool is_swapping_ = false;
   /// Max-load over ranks vector
   std::vector<LoadType> max_load_over_iters_;
-  /// Whether we are sub-clustering
-  bool is_subclustering_ = false;
   /// Ready to satify looks
   bool ready_to_satisfy_locks_ = false;
   int consider_swaps_counter_ = 0;
