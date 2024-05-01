@@ -1089,7 +1089,6 @@ void TemperedLB::doLBStages(LoadType start_imb) {
     other_rank_clusters_.clear();
     max_load_over_iters_.clear();
     is_overloaded_ = is_underloaded_ = false;
-    is_subclustering_ = false;
     ready_to_satisfy_locks_ = false;
 
     LoadType best_imb_this_trial = start_imb + 10;
@@ -1194,7 +1193,6 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         underloaded_.clear();
         load_info_.clear();
         is_overloaded_ = is_underloaded_ = false;
-        is_subclustering_ = false;
         ready_to_satisfy_locks_ = false;
         other_rank_clusters_.clear();
 
@@ -2262,188 +2260,6 @@ double TemperedLB::loadTransferCriterion(
   return w_max_0 - w_max_new;
 }
 
-void TemperedLB::considerSubClustersAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
-#if 0
-  is_swapping_ = true;
-
-  auto criterion = [&,this](auto src_cluster, auto try_cluster) -> double {
-    auto const& [src_id, src_bytes, src_load] = src_cluster;
-    auto const& [try_rank, try_total_load, try_total_bytes] = try_cluster;
-
-
-    // Check whether strict bounds on memory are satisfied
-    if (not memoryTransferCriterion(try_total_bytes, src_bytes)) {
-      return - std::numeric_limits<double>::infinity();
-    }
-
-    // Return load transfer criterion
-    return loadTransferCriterion(this_new_load_, try_total_load, src_load, 0.);
-  };
-
-  auto const& try_clusters = msg->locked_clusters;
-  auto const& try_rank = msg->locked_node;
-  auto const& try_load = msg->locked_load;
-  auto const& try_total_bytes = msg->locked_bytes;
-
-  vt_print(
-    temperedlb,
-    "considerSubClustersAfterLock: try_rank={} try_load={}\n", try_rank, try_load
-  );
-
-  // get the shared blocks current residing on this rank
-  auto shared_blocks_here = getSharedBlocksHere();
-
-  // Shared IDs when added to this rank don't put it over the limit
-  std::set<SharedIDType> possible_transfers;
-
-  for (auto const& shared_id : shared_blocks_here) {
-    // Allow shared blocks that don't put it over memory or already exist on
-    // try_rank
-    if (try_clusters.find(shared_id) == try_clusters.end()) {
-      if (try_total_bytes + shared_block_size_[shared_id] < mem_thresh_) {
-        possible_transfers.insert(shared_id);
-      }
-    } else {
-      possible_transfers.insert(shared_id);
-    }
-  }
-
-  vt_print(
-    temperedlb,
-    "considerSubClustersAfterLock: possible_transfers={}\n",
-    possible_transfers.size()
-  );
-
-  // Now, we will greedily try to find a combo of objects that will reduce our
-  // max
-
-  // We can prune some clusters out of this mix based on the requirements that
-  // this is beneficial
-  auto const amount_over_average = this_new_load_ - target_max_load_;
-  auto const amount_under_average = target_max_load_ - try_load;
-
-  // Any sub-cluster that is smaller than amount_over_average or smaller than
-  // amount_under_average we can just skip. We start by skipping all entire
-  // clusters that don't fit this criteria since sub-clusters will also be
-  // eliminated from those
-
-  vt_print(
-    temperedlb,
-    "considerSubClustersAfterLock: over={}, under={}\n", amount_over_average,
-    amount_under_average
-  );
-
-  std::set<SharedIDType> clusters_to_split;
-
-  for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
-    auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
-    if (
-      src_cluster_load < amount_over_average or
-      src_cluster_load < amount_under_average
-    ) {
-      // skip it
-    } else {
-      clusters_to_split.insert(src_shared_id);
-    }
-  }
-
-  double best_c_try = -1.0;
-  std::set<ObjIDType> best_selected;
-  SharedIDType best_id = -1;
-  for (auto const& shared_id : clusters_to_split) {
-    auto const& [src_cluster_bytes, src_cluster_load] = cur_clusters_[shared_id];
-
-    std::set<ObjLoad> objs;
-    for (auto const& [obj_id, shared_id_obj] : obj_shared_block_) {
-      if (shared_id_obj == shared_id) {
-        objs.emplace(obj_id, cur_objs_[obj_id]);
-      }
-    }
-
-    std::set<ObjIDType> selected;
-    LoadType load_sum = 0;
-    for (auto const& [obj_id, load] : objs) {
-      load_sum += load;
-      selected.insert(obj_id);
-
-      // We will not consider empty cluster "swaps" here.
-      if (selected.size() != objs.size()) {
-        auto src_cluster_bytes_add =
-          try_clusters.find(shared_id) == try_clusters.end() ? src_cluster_bytes : 0;
-
-        double c_try = criterion(
-          std::make_tuple(shared_id, src_cluster_bytes_add, load_sum),
-          std::make_tuple(try_rank, try_load, try_total_bytes)
-        );
-
-        vt_debug_print(
-          terse, temperedlb,
-          "testing a possible sub-cluster (rank {}): id={} load={} c_try={}, "
-          "amount over average={}, amount under average={}\n",
-          try_rank, shared_id, load_sum, c_try, amount_over_average,
-          amount_under_average
-        );
-
-        if (c_try > 0.0) {
-          best_c_try = c_try;
-          best_selected = selected;
-          best_id = shared_id;
-        }
-      }
-    }
-  }
-
-  if (best_c_try > 0.0) {
-    vt_debug_print(
-      normal, temperedlb,
-      "best_c_try={}, picked subcluster with id={} for rank ={}\n",
-      best_c_try, best_id, try_rank
-    );
-
-    auto const& [
-      give_objs,
-      give_obj_shared_block,
-      give_shared_blocks_size,
-      give_obj_working_bytes
-    ] = removeClusterToSend(best_id, best_selected);
-
-    auto const this_node = theContext()->getNode();
-
-    runInEpochRooted("giveSubCluster", [&]{
-      proxy_[try_rank].template send<&TemperedLB::giveCluster>(
-        this_node,
-        give_shared_blocks_size,
-        give_objs,
-        give_obj_shared_block,
-        give_obj_working_bytes,
-        -1
-      );
-    });
-
-    computeClusterSummary();
-    this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
-    this_new_work_ = this_new_breakdown_.work;
-    computeMemoryUsage();
-
-    vt_debug_print(
-      normal, temperedlb,
-      "best_c_try={}, sub-cluster sent to rank={}\n",
-      best_c_try, try_rank
-    );
-  }
-
-  proxy_[try_rank].template send<&TemperedLB::releaseLock>();
-
-  is_swapping_ = false;
-
-  if (pending_actions_.size() > 0) {
-    auto action = pending_actions_.back();
-    pending_actions_.pop_back();
-    action();
-  }
-#endif
-}
-
 void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   consider_swaps_counter_++;
   is_swapping_ = true;
@@ -2715,8 +2531,8 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
 
   vt_debug_print(
     normal, temperedlb,
-    "lockObtained: is_locked_={}, is_subclustering_={}, is_swapping_={}\n",
-    is_locked_, is_subclustering_, is_swapping_
+    "lockObtained: is_locked_={}, is_swapping_={}\n",
+    is_locked_, is_swapping_
   );
 
   auto cur_epoch = theMsg()->getEpoch();
@@ -2724,11 +2540,7 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
 
   auto action = [this, msg, cur_epoch]{
     theMsg()->pushEpoch(cur_epoch);
-    if (is_subclustering_) {
-      considerSubClustersAfterLock(msg);
-    } else {
-      considerSwapsAfterLock(msg);
-    }
+    considerSwapsAfterLock(msg);
     theMsg()->popEpoch(cur_epoch);
     theTerm()->consume(cur_epoch);
   };
@@ -2794,140 +2606,7 @@ void TemperedLB::satisfyLockRequest() {
   }
 }
 
-void TemperedLB::trySubClustering() {
-#if 0
-  is_subclustering_ = true;
-  n_transfers_swap_ = 0;
-
-  auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: subCluster");
-  theTerm()->pushEpoch(lazy_epoch);
-
-  auto const this_node = theContext()->getNode();
-
-  vt_print(
-    temperedlb,
-    "SUBcluster: load={} max_load={}\n",
-    this_new_load_, max_load_over_iters_.back()
-  );
-
-  // Only ranks that are close to max should do this...otherwise its a waste
-  // Very aggressive to start.
-  if (
-    auto n_iters = max_load_over_iters_.size();
-    this_new_load_ / max_load_over_iters_[n_iters - 1] > 0.80
-  ) {
-    BytesType avg_cluster_bytes = 0;
-    for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
-      auto const& [src_cluster_bytes, src_cluster_load] = src_cluster;
-      avg_cluster_bytes += src_cluster_bytes;
-    }
-    avg_cluster_bytes /= cur_clusters_.size();
-
-    for (auto const& [try_rank, try_clusters] : other_rank_clusters_) {
-
-      BytesType total_clusters_bytes = 0;
-      for (auto const& [try_shared_id, try_cluster] : try_clusters) {
-        auto const& [try_cluster_bytes, try_cluster_load] = try_cluster;
-        total_clusters_bytes += try_cluster_bytes;
-      }
-
-      vt_print(
-        temperedlb,
-        "SUBcluster: load={} max_load={}, try_rank={}\n",
-        this_new_load_, max_load_over_iters_.back(), try_rank
-      );
-
-
-      // Only target ranks where the target rank has room for the average
-      // cluster size that this rank has
-      if (total_clusters_bytes + avg_cluster_bytes < mem_thresh_) {
-        if (
-          auto target_rank_load = load_info_.find(try_rank)->second.load;
-          target_rank_load < target_max_load_
-        ) {
-
-          vt_print(
-            temperedlb,
-            "SUBcluster: load={} max_load={}, try_rank={} sending lock\n",
-            this_new_load_, max_load_over_iters_.back(), try_rank
-          );
-
-          // c-value is now the ratio of load compared to this rank. prefer
-          // ranks that have less load and have fewer clusters.
-          proxy_[try_rank].template send<&TemperedLB::tryLock>(
-            this_node, this_new_load_ / target_rank_load
-          );
-        }
-      }
-
-    }
-
-  } else {
-    // do nothing--not loaded enough, may be a target to put load
-  }
-
-  // We have to be very careful here since we will allow some reentrancy here.
-  constexpr int turn_scheduler_times = 10;
-  for (int i = 0; i < turn_scheduler_times; i++) {
-    theSched()->runSchedulerOnceImpl();
-  }
-
-  while (not theSched()->workQueueEmpty()) {
-    theSched()->runSchedulerOnceImpl();
-  }
-
-  ready_to_satisfy_locks_ = true;
-  satisfyLockRequest();
-
-  // Finalize epoch, we have sent our initial round of messages
-  // from here everything is message driven
-  theTerm()->finishedEpoch(lazy_epoch);
-  theTerm()->popEpoch(lazy_epoch);
-  vt::runSchedulerThrough(lazy_epoch);
-
-  vt_debug_print(
-    normal, temperedlb,
-    "After subclustering iteration: total memory usage={}, shared blocks here={}, "
-    "memory_threshold={}, load={}\n", computeMemoryUsage(),
-    getSharedBlocksHere().size(), mem_thresh_, this_new_load_
-  );
-
-  // Report on rejection rate in debug mode
-  if (theConfig()->vt_debug_temperedlb) {
-    int n_rejected = 0;
-    runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
-      proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers_swap_, 0
-      );
-    });
-  }
-#endif
-}
-
 void TemperedLB::swapClusters() {
-#if 0
-  // Do the test to see if we should start sub-clustering. This is probably far
-  // too aggressive. We could check as an conservative check that requires more
-  // computation to see if a cluster is blocking progress.
-  if (auto const len = max_load_over_iters_.size(); len > 2) {
-    double const i1 = max_load_over_iters_[len-1];
-    double const i2 = max_load_over_iters_[len-2];
-
-    vt_debug_print(
-      terse, temperedlb,
-      "swapClusters: check for subclustering: i1={}, i2={},"
-      " criteria=abs={} tol={}\n",
-      i1, i2, std::abs(i1 - i2), 0.01*i1
-    );
-
-    // the max is mostly stable
-    if (std::abs(i1 - i2) < 0.01*i1) {
-      trySubClustering();
-      return;
-    }
-  }
-#endif
-
   n_transfers_swap_ = 0;
 
   auto const this_node = theContext()->getNode();
