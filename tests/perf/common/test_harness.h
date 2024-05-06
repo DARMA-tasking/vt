@@ -167,11 +167,18 @@ struct PerfTestHarness : TestHarnessBase {
    */
   void GetMemoryUsage();
 
-  void
-  DisableGlobalTimer();
+/**
+ * \brief Disables the global timer (execution time of VT_PERF_TEST).
+ * Useful for tests that use custom timers.
+ */
+void DisableGlobalTimer();
 
-  bool
-  ShouldOutputGlobalTimer() const;
+/**
+ * \brief Returns information whether global timer (execution time of VT_PERF_TEST)
+ * is disabled.
+ */
+bool ShouldOutputGlobalTimer() const;
+
 
 private:
   std::string OutputMemoryUse() const;
