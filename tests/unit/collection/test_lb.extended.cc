@@ -552,7 +552,7 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
     );
   });
 
-  vt::vrt::collection::balance::LBDataHolder lbdh(num_elms);
+  vt::vrt::collection::balance::LBDataHolder lbdh;
   PhaseType write_phase = 0;
 
   using CommKey = vt::elm::CommKey;
@@ -747,7 +747,7 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
     );
   });
 
-  vt::vrt::collection::balance::LBDataHolder lbdh(1);
+  vt::vrt::collection::balance::LBDataHolder lbdh;
   PhaseType write_phase = 0;
 
   {
