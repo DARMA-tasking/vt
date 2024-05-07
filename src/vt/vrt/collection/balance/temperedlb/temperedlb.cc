@@ -2382,7 +2382,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   }
 
   if (best_c_try > 0) {
-    auto const& [src_shared_id, try_shared_id] = best_swap;
+    auto const src_shared_id = std::get<0>(best_swap);
+    auto const try_shared_id = std::get<1>(best_swap);
 
     vt_debug_print(
       normal, temperedlb,
@@ -2390,12 +2391,11 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       best_c_try, src_shared_id, try_shared_id, try_rank
     );
 
-    auto const& [
-      give_objs,
-      give_obj_shared_block,
-      give_shared_blocks_size,
-      give_obj_working_bytes
-    ] = removeClusterToSend(src_shared_id);
+    auto const& give_data = removeClusterToSend(src_shared_id);
+    auto const& give_objs = std::get<0>(give_data);
+    auto const& give_obj_shared_block = std::get<1>(give_data);
+    auto const& give_shared_blocks_size = std::get<2>(give_data);
+    auto const& give_obj_working_bytes = std::get<3>(give_data);
 
     runInEpochRooted("giveCluster", [&]{
       vt_debug_print(
