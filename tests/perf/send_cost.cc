@@ -130,9 +130,9 @@ struct NodeObj {
       s | start_;
     }
 
-    std::vector<int32_t>* payload_;
+    std::vector<int32_t>* payload_ = nullptr;
     bool owning_ = false;
-    DurationMilli start_;
+    DurationMilli start_ = {};
   };
 
   void sendHandler(NodeObj::ObjGroupMsg* msg) {
@@ -219,8 +219,8 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
       s | *payload_;
     }
 
-    DurationMilli start_;
-    std::vector<int32_t>* payload_ = {};
+    DurationMilli start_ = {};
+    std::vector<int32_t>* payload_ = nullptr;
     bool owning_ = false;
   };
 
