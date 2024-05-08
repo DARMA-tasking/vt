@@ -32,6 +32,7 @@ cd ${mpich_name}
     --enable-fast=all \
     --enable-g=none \
     --enable-timing=none \
+    --with-hwloc=embedded \
     ${installation_prefix:+ --prefix"=${installation_prefix}"}
 make ${make_flags}
 make install

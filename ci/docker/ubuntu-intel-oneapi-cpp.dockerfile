@@ -11,7 +11,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
-    intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-2022.2.1 \
+    intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-2023.2.4 \
+    intel-oneapi-compiler-fortran \
+    debconf \
     ca-certificates \
     less \
     curl \
@@ -47,7 +49,7 @@ ENV CC=intel-cc \
     CXX=${compiler}
 
 COPY ./ci/deps/mpich.sh mpich.sh
-RUN ./mpich.sh 4.0.2 -j4
+RUN ./mpich.sh 4.0.3 -j$(nproc)
 
 ENV CC=mpicc \
     CXX=mpicxx \
