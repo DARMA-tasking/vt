@@ -55,6 +55,7 @@ namespace vt { namespace runtime { namespace component {
  * unique name for the given component.
  */
 struct ComponentName {
+  virtual ~ComponentName() = default;
   /**
    * \internal \brief Get the name of the component
    */

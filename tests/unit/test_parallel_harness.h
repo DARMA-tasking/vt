@@ -60,7 +60,7 @@ extern char** test_argv;
 
 template <typename TestBase>
 struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
-  virtual void SetUp() {
+  virtual void SetUp() override {
     using namespace vt;
 
     TestHarnessAny<TestBase>::SetUp();
@@ -102,7 +102,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 #endif
   }
 
-  virtual void TearDown() {
+  virtual void TearDown() override {
     using namespace vt;
 
     try {

@@ -51,11 +51,11 @@
 namespace vt { namespace tests { namespace unit {
 
 class TestIndex : public TestHarness {
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestHarness::SetUp();
   }
 
-  virtual void TearDown() {
+  virtual void TearDown() override {
     TestHarness::TearDown();
   }
 };

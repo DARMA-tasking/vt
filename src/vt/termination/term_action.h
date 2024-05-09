@@ -104,6 +104,7 @@ struct TermAction : TermTerminated {
   using EpochStateType        = std::unordered_map<EpochType,TermStateType>;
 
   TermAction() = default;
+  virtual ~TermAction() = default;
 
 public:
   void addDefaultAction(ActionType action);

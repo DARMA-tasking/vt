@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/vrt/context/context_vrtmanager.impl.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_HAS_MIGRATE_H
 #define INCLUDED_VT_VRT_COLLECTION_TYPES_HAS_MIGRATE_H
 
@@ -49,6 +50,8 @@
 namespace vt { namespace vrt { namespace collection {
 
 struct HasMigrate {
+  virtual ~HasMigrate() = default;
+
   virtual void migrate(NodeType const& to_node) = 0;
 };
 

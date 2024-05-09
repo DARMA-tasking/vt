@@ -88,7 +88,7 @@ struct MsgPtrImplBase {
 
 template <typename MsgT>
 struct MsgPtrImplTyped : MsgPtrImplBase {
-  virtual void messageDeref(std::byte* msg_ptr) {
+  virtual void messageDeref(std::byte* msg_ptr) override {
     // N.B. messageDeref<T> invokes delete-expr T.
     vt::messageDeref(reinterpret_cast<MsgT*>(msg_ptr));
   }

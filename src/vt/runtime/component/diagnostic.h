@@ -69,6 +69,8 @@ struct Diagnostic : ComponentName, ComponentReducer {
   using UpdateType = DiagnosticUpdate;
   using UnitType = DiagnosticUnit;
 
+  virtual ~Diagnostic() = default;
+
   virtual void dumpState() = 0;
 
   /**
