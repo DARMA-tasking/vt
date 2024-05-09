@@ -63,7 +63,7 @@ struct TestPool : TestParallelHarness {
   template <int64_t num_bytes>
   static void testPoolFun(TestMsg<num_bytes>* prev_msg);
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
   }
 };

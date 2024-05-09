@@ -64,7 +64,7 @@ struct TestActiveSendPut : TestParameterHarnessNode {
   static NodeType from_node;
   static NodeType to_node;
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParameterHarnessNode::SetUp();
     from_node = 0;
     to_node = 1;

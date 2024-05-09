@@ -65,7 +65,7 @@ static constexpr NodeType const to_node = 1;
 struct TestPoolMessageSizes : TestParallelHarness {
   static int count;
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
     count = 0;
   }

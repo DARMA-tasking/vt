@@ -83,7 +83,7 @@ struct TestActiveSend : TestParallelHarness {
   static int handler_count;
   static int num_msg_sent;
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
 
     handler_count = 0;

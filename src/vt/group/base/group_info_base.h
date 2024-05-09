@@ -59,6 +59,8 @@ struct InfoBase {
   using TreeType = collective::tree::Tree;
   using TreePtrType = std::unique_ptr<TreeType>;
 
+  virtual ~InfoBase() = default;
+
 protected:
   virtual GroupType getGroupID() const = 0;
   virtual ActionType getAction() const = 0;

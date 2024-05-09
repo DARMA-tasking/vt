@@ -54,6 +54,8 @@ namespace vt { namespace runtime { namespace component {
  */
 struct Progressable {
 
+  virtual ~Progressable() = default;
+
   /**
    * \brief Progress function for incremental polling
    *

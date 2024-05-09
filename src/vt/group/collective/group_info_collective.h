@@ -75,6 +75,8 @@ struct InfoColl : virtual InfoBase {
   {
   }
 
+  virtual ~InfoColl() = default;
+
 private:
   /*
    *  Inner struct used as functor reduce target after the collective group is

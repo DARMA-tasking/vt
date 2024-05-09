@@ -51,6 +51,7 @@ namespace vt { namespace vrt { namespace collection {
 
 struct BaseHolder {
   BaseHolder() = default;
+  virtual ~BaseHolder() = default;
 
   virtual void destroy() = 0;
 };

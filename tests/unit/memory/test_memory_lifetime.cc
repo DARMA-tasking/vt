@@ -91,7 +91,7 @@ using NormalTestMsg = TrackMsg;
 using SerialTestMsg = SerialTrackMsg;
 
 struct TestMemoryLifetime : TestParallelHarness {
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
     SerialTestMsg::alloc_count = 0;
     local_count = 0;
