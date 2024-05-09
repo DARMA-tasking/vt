@@ -169,13 +169,13 @@ void Runtime::printStartupBanner() {
       fmt::format("{}Compile-time Features Enabled:{}\n", green, reset)
   };
 
-  for (auto &&line: info_lines)
+  for (auto &&line : info_lines)
   {
     fmt::print("{}{}{}", vt_pre, line, reset);
   }
 
-  for (size_t i = 0; i < features.size(); i++) {
-    fmt::print("{}\t{}\n", vt_pre, emph(features.at(i)));
+  for (const auto& feature : features) {
+    fmt::print("{}\t{}\n", vt_pre, emph(feature));
   }
 
   auto warn_cr = [=](std::string opt, std::string compile) -> std::string {
