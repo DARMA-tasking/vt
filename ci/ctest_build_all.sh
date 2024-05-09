@@ -8,13 +8,6 @@ build_dir=${2}
 # Dependency versions, when fetched via git.
 checkpoint_rev=develop
 
-if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
-then
-    token=${3}
-else
-    target=${3:-install}
-fi
-
     export parallel_level=4
 if [ -z ${4} ]; then
     export dashj=""
