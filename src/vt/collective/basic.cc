@@ -56,7 +56,7 @@ void abort(std::string const str, int32_t const code) {
 }
 
 void output(
-  std::string const str, int32_t const code, bool error, bool formatted,
+  std::string const& str, int32_t const code, bool error, bool formatted,
   bool decorate, bool abort_out
 ) {
 #if !vt_check_enabled(trace_only)
