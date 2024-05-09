@@ -2382,6 +2382,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   }
 
   if (best_c_try > 0) {
+    // FIXME C++20: use structured binding
     auto const src_shared_id = std::get<0>(best_swap);
     auto const try_shared_id = std::get<1>(best_swap);
 
@@ -2391,6 +2392,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       best_c_try, src_shared_id, try_shared_id, try_rank
     );
 
+    // FIXME C++20: use structured binding
     auto const& give_data = removeClusterToSend(src_shared_id);
     auto const& give_objs = std::get<0>(give_data);
     auto const& give_obj_shared_block = std::get<1>(give_data);
