@@ -16,10 +16,13 @@ endmacro()
 
 if(NOT DEFINED VT_WARNING_FLAGS)
   add_cxx_compiler_flag_if_supported("-Wall")
-  add_cxx_compiler_flag_if_supported("-pedantic")
-  add_cxx_compiler_flag_if_supported("-Wshadow")
+  # add_cxx_compiler_flag_if_supported("-Wextra")
   add_cxx_compiler_flag_if_supported("-Wno-unknown-pragmas")
+  add_cxx_compiler_flag_if_supported("-Wnon-virtual-dtor")
+  add_cxx_compiler_flag_if_supported("-Wshadow")
   add_cxx_compiler_flag_if_supported("-Wsign-compare")
+  add_cxx_compiler_flag_if_supported("-Wsuggest-override")
+  add_cxx_compiler_flag_if_supported("-pedantic")
   # Not really a warning, is still diagnostic related..
   if (NOT CMAKE_CXX_COMPILER_ID STREQUAL Intel OR
       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 2021)
