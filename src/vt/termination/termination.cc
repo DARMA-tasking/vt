@@ -281,7 +281,7 @@ std::shared_ptr<TerminationDetector::EpochGraph> TerminationDetector::makeGraph(
     for (auto const& elm : epoch_state_) {
       auto const ep = elm.first;
       bool const rooted = epoch::EpochManip::isRooted(ep);
-      if (not rooted or (rooted and epoch::EpochManip::node(ep) == this_node_)) {
+      if (not rooted or (epoch::EpochManip::node(ep) == this_node_)) {
         if (not isEpochTerminated(elm.first)) {
           auto label = elm.second.getLabel();
           live_epochs[ep] = std::make_shared<EpochGraph>(ep, label);
