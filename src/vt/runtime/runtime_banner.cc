@@ -960,7 +960,6 @@ void Runtime::printShutdownBanner(
   auto f2 = fmt::format("{}Total work units processed:{} ", green, reset);
   auto f3 = fmt::format("{}Total collective epochs processed:{} ", green, reset);
   auto vt_pre = bd_green + std::string("vt") + reset + ": ";
-  std::string fin = "";
   std::string units = std::to_string(num_units);
   fmt::print("{}{}{}{}{}\n", vt_pre, f3, magenta, coll_epochs, reset);
   fmt::print("{}{}{}{}{}\n", vt_pre, f2, magenta, units, reset);
