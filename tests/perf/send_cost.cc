@@ -58,13 +58,17 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
-static constexpr std::array<size_t, 8> const payloadSizes = {
-  1, 64, 128, 2048, 16384, 524288, 2097152, 268435456};
+static constexpr std::array<size_t, 9> const payloadSizes = {
+  1, 64, 128, 2048, 16384, 32768, 524288, 1048576, 2097152};
 
 bool obj_send_done = false;
 bool col_send_done = false;
 
-struct SendTest : PerfTestHarness { };
+struct SendTest : PerfTestHarness {
+  SendTest() {
+    DisableGlobalTimer();
+  }
+};
 
 ////////////////////////////////////////
 //////////////// RAW MPI ///////////////
@@ -159,10 +163,6 @@ VT_PERF_TEST(SendTest, test_objgroup_send) {
     vt::theObjGroup()->makeCollective<NodeObj>("test_objgroup_send", this);
   grp_proxy[my_node_].invoke<&NodeObj::initialize>();
 
-  if (theContext()->getNode() == 0) {
-    theTerm()->disableTD();
-  }
-
   auto const thisNode = vt::theContext()->getNode();
   auto const lastNode = theContext()->getNumNodes() - 1;
 
@@ -181,10 +181,6 @@ VT_PERF_TEST(SendTest, test_objgroup_send) {
     obj_send_done = false;
 
     delete payload;
-  }
-
-  if (vt::theContext()->getNode() == 0) {
-    vt::theTerm()->enableTD();
   }
 }
 
@@ -239,7 +235,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
 
 VT_PERF_TEST(SendTest, test_collection_send) {
   auto range = vt::Index1D(int32_t{num_nodes_});
-  auto proxy = vt::makeCollection<Hello>("send_cost_collection")
+  auto proxy = vt::makeCollection<Hello>("test_collection_send")
                  .bounds(range)
                  .bulkInsert()
                  .wait();
