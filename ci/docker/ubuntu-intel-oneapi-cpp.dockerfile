@@ -25,8 +25,7 @@ RUN apt-get update -y -q && \
     valgrind \
     make-guile \
     libomp5 \
-    libunwind-dev \
-    ccache && \
+    libunwind-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -49,15 +48,14 @@ ENV CC=intel-cc \
     CXX=${compiler}
 
 COPY ./ci/deps/mpich.sh mpich.sh
-RUN ./mpich.sh 4.0.3 -j$(nproc)
+RUN ./mpich.sh 4.2.1 -j$(nproc)
 
 ENV CC=mpicc \
     CXX=mpicxx \
     MPICH_CC=intel-cc \
     MPICH_CXX=${compiler} \
     MPI_EXTRA_FLAGS="" \
-    LESSCHARSET=utf-8 \
-    PATH=/usr/lib/ccache/:$PATH
+    LESSCHARSET=utf-8
 
 FROM base as build
 COPY . /vt
