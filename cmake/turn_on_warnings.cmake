@@ -16,7 +16,7 @@ endmacro()
 
 if(NOT DEFINED VT_WARNING_FLAGS)
   add_cxx_compiler_flag_if_supported("-Wall")
-  # add_cxx_compiler_flag_if_supported("-Wextra")
+  add_cxx_compiler_flag_if_supported("-Wextra")
   add_cxx_compiler_flag_if_supported("-Wno-unknown-pragmas")
   add_cxx_compiler_flag_if_supported("-Wnon-virtual-dtor")
   add_cxx_compiler_flag_if_supported("-Wshadow")
