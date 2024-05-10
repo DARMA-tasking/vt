@@ -46,9 +46,8 @@
 
 #include "vt/config.h"
 
-#include <fmt-vt/format.h>
+#include INCLUDE_FMT_FORMAT
 
-#include <vector>
 #include <unordered_map>
 
 namespace vt::vrt::collection::lb {
@@ -103,7 +102,7 @@ using RankSummaryType = std::tuple<BytesType, ClusterSummaryType>;
 
 } /* end namespace vt::vrt::collection::lb */
 
-namespace fmt {
+VT_FMT_NAMESPACE_BEGIN
 
 /// Custom fmt formatter/print for \c vt::vrt::collection::lb::ClusterInfo
 template <>
@@ -136,7 +135,7 @@ struct formatter<::vt::vrt::collection::lb::ClusterInfo> {
   }
 };
 
-} /* end namespace fmt */
+VT_FMT_NAMESPACE_END
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
