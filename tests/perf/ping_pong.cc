@@ -60,7 +60,9 @@ static constexpr NodeType const pong_node = 1;
 
 vt::EpochType the_epoch = vt::no_epoch;
 
-struct MyTest : PerfTestHarness { };
+struct MyTest : PerfTestHarness {
+  MyTest() { DisableGlobalTimer(); }
+};
 
 struct NodeObj {
   template <int64_t num_bytes>
