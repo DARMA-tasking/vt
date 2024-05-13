@@ -101,11 +101,7 @@ struct NodeObj {
       constexpr auto new_num_bytes = num_bytes * 2;
       test_obj_->StartTimer(fmt::format("{} Bytes", new_num_bytes));
 
-      proxy_[pong_node]
-        .send<
-          NodeObj::PingMsg<new_num_bytes>, &NodeObj::pingPong<new_num_bytes>
-        >();
-    } else {
+      proxy_[pong_node].send<&NodeObj::pingPong<new_num_bytes>>();
     }
   }
 
@@ -117,19 +113,12 @@ struct NodeObj {
       // End of iteration for node 1
       addPerfStats(num_bytes);
 
-      proxy_[0]
-        .send<
-          NodeObj::FinishedPingMsg<num_bytes>,
-          &NodeObj::finishedPing<num_bytes>>(num_bytes);
+      proxy_[0].send<&NodeObj::finishedPing<num_bytes>>(num_bytes);
     } else {
       NodeType const next =
         theContext()->getNode() == ping_node ? pong_node : ping_node;
 
-      auto msg = vt::makeMessage<NodeObj::PingMsg<num_bytes>>(cnt + 1);
-      proxy_[next]
-        .sendMsg<NodeObj::PingMsg<num_bytes>, &NodeObj::pingPong<num_bytes>>(
-          msg
-        );
+      proxy_[next].send<&NodeObj::pingPong<num_bytes>>(cnt + 1);
     }
   }
 
@@ -157,8 +146,7 @@ VT_PERF_TEST(MyTest, test_ping_pong) {
   StartTimer(fmt::format("{} Bytes", min_bytes));
 
   if (my_node_ == 0) {
-    grp_proxy[pong_node]
-      .send<NodeObj::PingMsg<min_bytes>, &NodeObj::pingPong<min_bytes>>();
+    grp_proxy[pong_node].send<&NodeObj::pingPong<min_bytes>>();
   }
 }
 
