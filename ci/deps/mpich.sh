@@ -32,7 +32,9 @@ cd ${mpich_name}
     --enable-fast=all \
     --enable-g=none \
     --enable-timing=none \
+    --without-mpit-pvars \
     --with-hwloc=embedded \
+    --disable-dependency-tracking \
     ${installation_prefix:+ --prefix"=${installation_prefix}"}
 make ${make_flags}
 make install

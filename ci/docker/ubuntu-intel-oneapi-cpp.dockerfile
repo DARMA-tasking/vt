@@ -25,6 +25,7 @@ RUN apt-get update -y -q && \
     valgrind \
     make-guile \
     libomp5 \
+    libtool \
     libunwind-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -48,7 +49,7 @@ ENV CC=intel-cc \
     CXX=${compiler}
 
 COPY ./ci/deps/mpich.sh mpich.sh
-RUN ./mpich.sh 4.2.1 -j$(nproc)
+RUN ./mpich.sh 4.0.2 -j$(nproc)
 
 ENV CC=mpicc \
     CXX=mpicxx \
