@@ -54,7 +54,9 @@ using namespace vt::tests::perf::common;
 static constexpr int num_iters = 10000;
 static int i = 0;
 
-struct MyTest : PerfTestHarness { };
+struct MyTest : PerfTestHarness {
+  MyTest() { DisableGlobalTimer(); }
+};
 
 struct MyMsg : vt::Message {};
 
@@ -79,14 +81,14 @@ struct NodeObj {
   }
 
   void complete() {
-    test_obj_->StopTimer(fmt::format("{} ping-pong", i));
+    test_obj_->StopTimer("ping-pong");
     if (theContext()->getNode() == 0) {
       theTerm()->enableTD();
     }
   }
 
   void perfPingPong(MyMsg* in_msg) {
-    test_obj_->StartTimer(fmt::format("{} ping-pong", i));
+    test_obj_->StartTimer("ping-pong");
     auto msg = makeMessage<MyMsg>();
     theMsg()->sendMsg<&handler>(1, msg);
   }
