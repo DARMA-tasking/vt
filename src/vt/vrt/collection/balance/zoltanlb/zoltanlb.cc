@@ -595,8 +595,9 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
 }
 
 /*static*/ void ZoltanLB::getVertexList(
-  void *data, int gid_size, int lid_size, ZOLTAN_ID_PTR global_id,
-  ZOLTAN_ID_PTR local_id, int weight_dim, float *obj_weights, int *ierr
+  void *data, [[maybe_unused]] int gid_size, [[maybe_unused]] int lid_size,
+  ZOLTAN_ID_PTR global_id, ZOLTAN_ID_PTR local_id,
+  [[maybe_unused]] int weight_dim, float *obj_weights, int *ierr
 ) {
   Graph* graph = reinterpret_cast<Graph*>(data);
   for (int i = 0; i < graph->num_vertices; i++) {
@@ -618,8 +619,9 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
 }
 
 /*static*/ void ZoltanLB::getHypergraph(
-  void *data, int gid_size, int num_edges, int num_nonzeroes, int format,
-  ZOLTAN_ID_PTR edge_gid, int *vertex_ptr, ZOLTAN_ID_PTR vertex_gid, int *ierr
+  void *data, [[maybe_unused]] int gid_size, int num_edges, int num_nonzeroes,
+  int format, ZOLTAN_ID_PTR edge_gid, int *vertex_ptr,
+  ZOLTAN_ID_PTR vertex_gid, int *ierr
 ) {
   Graph* graph = reinterpret_cast<Graph*>(data);
   bool const edge_equal           = num_edges     == graph->num_edges;
@@ -656,8 +658,9 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
 }
 
 /*static*/ void ZoltanLB::getHypergraphEdgeWeights(
-  void *data, int num_gid, int num_lid, int num_edges, int edge_weight_dim,
-  ZOLTAN_ID_PTR edge_gid, ZOLTAN_ID_PTR edge_lid, float *edge_weights, int *ierr
+  void *data, [[maybe_unused]] int num_gid, [[maybe_unused]] int num_lid,
+  int num_edges, [[maybe_unused]] int edge_weight_dim, ZOLTAN_ID_PTR edge_gid,
+  ZOLTAN_ID_PTR edge_lid, float *edge_weights, int *ierr
 ) {
   Graph* graph = reinterpret_cast<Graph*>(data);
   for (int i = 0; i < num_edges; i++) {

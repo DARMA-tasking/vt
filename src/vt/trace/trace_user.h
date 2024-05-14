@@ -324,7 +324,7 @@ struct TraceScopedNote final {
   TraceScopedNote(std::string const&, TraceEventIDType const = no_trace_event) { }
 
   void end() { }
-  void setEvent(TraceEventIDType const in_event) { }
+  void setEvent([[maybe_unused]] TraceEventIDType const in_event) { }
 };
 
 struct TraceScopedEvent final {

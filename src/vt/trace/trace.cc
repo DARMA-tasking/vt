@@ -211,7 +211,10 @@ void Trace::registerUserEventManual(
   user_event_.user(name, id);
 }
 
-void insertNewUserEvent(UserEventIDType event, std::string const& name) {
+void insertNewUserEvent(
+  [[maybe_unused]] UserEventIDType event,
+  [[maybe_unused]] std::string const& name
+) {
   #if vt_check_enabled(trace_enabled)
     theTrace()->user_event_.insertEvent(event, name);
   #endif

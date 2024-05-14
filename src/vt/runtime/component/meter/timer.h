@@ -84,7 +84,7 @@ public:
    * \param[in] begin begin time of event being tracked
    * \param[in] end end time of event being tracked
    */
-  void update(T begin, T end) {
+  void update([[maybe_unused]] T begin, [[maybe_unused]] T end) {
 #   if vt_check_enabled(diagnostics)
     auto const duration = end - begin;
     this->updateStats(duration);

@@ -221,7 +221,7 @@ bool State::testReadyPutData(TagType const& tag) {
 
 void State::getData(
   GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info,
-  NodeType const& from_node
+  [[maybe_unused]] NodeType const& from_node
 ) {
   auto const& tag = info.tag;
 
@@ -289,7 +289,7 @@ void State::getData(
 
 void State::putData(
   PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info,
-  NodeType const& from_node
+  [[maybe_unused]] NodeType const& from_node
 ) {
   auto const& tag = info.tag;
 

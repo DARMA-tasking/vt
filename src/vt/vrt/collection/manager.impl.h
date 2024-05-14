@@ -205,7 +205,7 @@ GroupType CollectionManager::createGroupCollection(
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
-  trace::TraceEventIDType event, bool immediate
+  [[maybe_unused]] trace::TraceEventIDType event, bool immediate
 ) {
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
@@ -511,7 +511,7 @@ void CollectionManager::invokeMsg(
 template <typename ColT, typename MsgT>
 void CollectionManager::invokeMsgImpl(
   VirtualElmProxyType<ColT> const& proxy, MsgSharedPtr<MsgT> msg,
-  bool instrument
+  [[maybe_unused]] bool instrument
 )
 {
   using IndexT = typename ColT::IndexType;
@@ -674,7 +674,8 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsg(
 
 template <typename MsgT, typename ColT>
 messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
-  CollectionProxyWrapType<ColT> const& proxy, MsgPtr<MsgT>& msg, bool instrument
+  CollectionProxyWrapType<ColT> const& proxy, MsgPtr<MsgT>& msg,
+  [[maybe_unused]] bool instrument
 ) {
   using IndexT = typename ColT::IndexType;
 
@@ -794,7 +795,7 @@ messaging::PendingSend CollectionManager::broadcastNormalMsg(
 template <typename MsgT, typename ColT, typename IdxT>
 messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT* raw_msg,
-  HandlerType const handler, bool instrument
+  HandlerType const handler, [[maybe_unused]] bool instrument
 ) {
   auto const idx = makeVrtDispatch<MsgT,ColT>();
   auto const col_proxy = toProxy.getProxy();
