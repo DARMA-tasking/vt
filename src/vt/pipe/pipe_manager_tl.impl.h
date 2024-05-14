@@ -254,7 +254,7 @@ auto PipeManagerTL::makeCallbackSingle([[maybe_unused]] NodeType node) {
 }
 
 template <typename FunctorT, bool is_bcast>
-auto PipeManagerTL::makeCallbackFunctor(NodeType node) {
+auto PipeManagerTL::makeCallbackFunctor([[maybe_unused]] NodeType node) {
   auto const new_pipe_id = makePipeID(true,false);
 
   using Trait = FunctorTraits<FunctorT, decltype(&FunctorT::operator())>;
