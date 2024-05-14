@@ -69,7 +69,7 @@ struct TestPool : TestParallelHarness {
 };
 
 template <int64_t num_bytes>
-void TestPool::testPoolFun(TestMsg<num_bytes>* prev_msg) {
+void TestPool::testPoolFun([[maybe_unused]] TestMsg<num_bytes>* prev_msg) {
   #if DEBUG_TEST_HARNESS_PRINT
     fmt::print("testPoolFun: num_bytes={}\n", num_bytes);
   #endif
@@ -81,7 +81,9 @@ void TestPool::testPoolFun(TestMsg<num_bytes>* prev_msg) {
 }
 
 template <>
-void TestPool::testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
+void TestPool::testPoolFun<max_bytes>(
+  [[maybe_unused]] TestMsg<max_bytes>* msg
+) { }
 
 TEST_F(TestPool, pool_message_alloc) {
   using namespace vt;

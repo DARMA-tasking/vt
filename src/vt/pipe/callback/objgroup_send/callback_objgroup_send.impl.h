@@ -57,7 +57,9 @@ void CallbackObjGroupSend::serialize(SerializerT& s) {
 }
 
 template <typename MsgT>
-void CallbackObjGroupSend::trigger(MsgT* in_msg, PipeType const& pipe) {
+void CallbackObjGroupSend::trigger(
+  MsgT* in_msg, [[maybe_unused]] PipeType const& pipe
+) {
   auto msg = promoteMsg(in_msg);
   objgroup::send<MsgT>(msg,handler_,node_);
 }

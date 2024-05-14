@@ -486,7 +486,7 @@ TraceEventIDType Trace::messageCreationBcast(
 
 TraceEventIDType Trace::messageRecv(
   TraceEntryIDType const ep, TraceMsgLenType const len,
-  NodeType const from_node, TimeType const time
+  [[maybe_unused]] NodeType const from_node, TimeType const time
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return no_trace_event;

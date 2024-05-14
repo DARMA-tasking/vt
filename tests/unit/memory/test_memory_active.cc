@@ -63,7 +63,7 @@ struct TestMemoryActiveMsg {
 
 template <typename MsgT>
 struct TestMemoryActive : TestParallelHarness {
-  static void test_handler(MsgT* msg) { }
+  static void test_handler([[maybe_unused]] MsgT* msg) { }
 };
 
 static constexpr int32_t const num_msg_sent = 5;

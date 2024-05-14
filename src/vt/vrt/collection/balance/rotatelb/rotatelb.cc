@@ -59,7 +59,7 @@ RotateLB::getInputKeysWithHelp() {
   return std::unordered_map<std::string, std::string>{};
 }
 
-void RotateLB::inputParams(balance::ConfigEntry* config) { }
+void RotateLB::inputParams([[maybe_unused]] balance::ConfigEntry* config) { }
 
 void RotateLB::runLB(LoadType) {
   auto const& this_node = theContext()->getNode();

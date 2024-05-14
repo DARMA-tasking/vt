@@ -64,7 +64,7 @@ public:
   std::byte* getPtr() override { return reinterpret_cast<std::byte*>(obj_); }
 
   template <typename... Args>
-  void reset(Args&&... args) {
+  void reset([[maybe_unused]] Args&&... args) {
     vtAssert(false, "HolderBasic is not resetable");
   }
 

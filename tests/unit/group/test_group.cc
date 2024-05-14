@@ -67,7 +67,7 @@ struct TestGroup : TestParallelHarness {
     SET_MIN_NUM_NODES_CONSTRAINT(2);
   }
 
-  static void groupHandler(TestMsg* msg) {
+  static void groupHandler([[maybe_unused]] TestMsg* msg) {
     auto const& this_node = theContext()->getNode();
     num_recv++;
     fmt::print("{}: groupHandler: num_recv={}\n", this_node, num_recv);

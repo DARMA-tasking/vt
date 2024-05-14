@@ -62,7 +62,9 @@ namespace vt { namespace error {
 template <typename... Args>
 inline
 std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
-display(std::string const& str, ErrorCodeType error, Args&&... args) {
+display(
+  std::string const& str, ErrorCodeType error, [[maybe_unused]] Args&&... args
+) {
   std::string const inf = ::fmt::format("FATAL ERROR: {}\n",str);
   return ::vt::abort(inf,error);
 }
@@ -81,7 +83,7 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 displayLoc(
   std::string const& str, ErrorCodeType error,
   std::string const& file, int const line, std::string const& func,
-  std::tuple<Args...>&& tup
+  [[maybe_unused]] std::tuple<Args...>&& tup
 ) {
   auto msg = "vtAbort() Invoked";
   auto const inf = debug::stringizeMessage(msg,str,"",file,line,func,error);

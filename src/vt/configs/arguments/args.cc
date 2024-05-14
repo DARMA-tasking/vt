@@ -675,7 +675,10 @@ void addRuntimeArgs(CLI::App& app, AppConfig& appConfig) {
   a3->group(configRuntime);
 }
 
-void addThreadingArgs(CLI::App& app, AppConfig& appConfig) {
+void addThreadingArgs(
+  [[maybe_unused]] CLI::App& app,
+  [[maybe_unused]] AppConfig& appConfig
+) {
 #if (vt_feature_fcontext != 0)
   auto ult_disable = "Disable running handlers in user-level threads";
   auto stack_size = "The default stack size for user-level threads";
@@ -702,7 +705,9 @@ ArgConfig::construct(std::unique_ptr<ArgConfig> arg) {
 
 class VtFormatter : public CLI::Formatter {
 public:
-  std::string make_usage(const CLI::App *, std::string name) const override {
+  std::string make_usage(
+    const CLI::App *, [[maybe_unused]] std::string name
+  ) const override {
     std::stringstream u;
     u << "\n"
 "Usage:"

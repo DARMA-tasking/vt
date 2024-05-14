@@ -61,7 +61,7 @@ struct CallbackAnonTypeless : CallbackBaseTL<CallbackAnonTypeless> {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  bool operator==(CallbackAnonTypeless const& other) const {
+  bool operator==([[maybe_unused]] CallbackAnonTypeless const& other) const {
     return true;
   }
 

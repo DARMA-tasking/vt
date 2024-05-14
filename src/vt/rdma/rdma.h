@@ -574,8 +574,10 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] action action when complete
    */
   void newGetChannel(
-    RDMA_HandleType const& han, NodeType const& target,
-    NodeType const& non_target, ActionType const& action = nullptr
+    [[maybe_unused]] RDMA_HandleType const& han,
+    [[maybe_unused]] NodeType const& target,
+    [[maybe_unused]] NodeType const& non_target,
+    [[maybe_unused]] ActionType const& action = nullptr
   ) {
     #if vt_check_enabled(mpi_rdma)
       return newChannel(
@@ -595,8 +597,10 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] action action when complete
    */
   void newPutChannel(
-    RDMA_HandleType const& han, NodeType const& target,
-    NodeType const& non_target, ActionType const& action = nullptr
+    [[maybe_unused]] RDMA_HandleType const& han,
+    [[maybe_unused]] NodeType const& target,
+    [[maybe_unused]] NodeType const& non_target,
+    [[maybe_unused]] ActionType const& action = nullptr
   ) {
 
     #if vt_check_enabled(mpi_rdma)

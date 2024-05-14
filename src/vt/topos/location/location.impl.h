@@ -258,8 +258,8 @@ void EntityLocationCoord<EntityID>::entityEmigrated(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityImmigrated(
-  EntityID const& id, NodeType const& home_node, NodeType const& from,
-  LocMsgActionType msg_action
+  EntityID const& id, NodeType const& home_node,
+  [[maybe_unused]] NodeType const& from, LocMsgActionType msg_action
 ) {
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future

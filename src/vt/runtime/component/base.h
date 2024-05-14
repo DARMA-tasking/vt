@@ -103,7 +103,7 @@ struct BaseComponent : Diagnostic, Bufferable, Progressable {
   friend struct ComponentPack;
 
   template <typename Serializer>
-  void serialize(Serializer& s) {}
+  void serialize([[maybe_unused]] Serializer& s) {}
 };
 
 }}} /* end namespace vt::runtime::component */

@@ -147,7 +147,7 @@ struct ReassignmentMsg : vt::Message {
   { }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
+  void serialize([[maybe_unused]] SerializerT& s) {
     vtAssert(false, "Must never be called");
   }
 

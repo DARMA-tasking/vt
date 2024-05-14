@@ -214,7 +214,8 @@ void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
 
 template <typename CommType>
 void TermDS<CommType>::needAck(
-  NodeType const predecessor, CountType const count
+  [[maybe_unused]] NodeType const predecessor,
+  [[maybe_unused]] CountType const count
 ) {
   vtAssertInfo(
     5 && (C == processedSum - (ackedArbitrary + ackedParent)),

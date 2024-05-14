@@ -114,8 +114,8 @@ static test_data::C magic_C_t_       = test_data::C{"test123",34};
 template <typename Tuple, typename=void>
 struct ConstructTuple {
   static Tuple construct() { return Tuple{}; }
-  static void print(Tuple t) { }
-  static void isCorrect(Tuple t) { }
+  static void print([[maybe_unused]] Tuple t) { }
+  static void isCorrect([[maybe_unused]] Tuple t) { }
 };
 
 #define CONSTRUCT_TUPLE_TYPE(PARAM_TYPE,PARAM_NAME)                     \

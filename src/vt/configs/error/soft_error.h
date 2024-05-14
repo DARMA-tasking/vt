@@ -86,7 +86,7 @@ inline std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 warningImpl(
   std::string const& str, ErrorCodeType error, bool quit,
   std::string const& file, int const line, std::string const& func,
-  Args&&... args
+  [[maybe_unused]] Args&&... args
 ) {
   auto msg = "vtWarn() Invoked";
   auto inf = debug::stringizeMessage(msg,str,"",file,line,func,error);

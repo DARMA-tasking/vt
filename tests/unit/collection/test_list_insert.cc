@@ -76,7 +76,7 @@ struct ListInsertTest : Collection<ListInsertTest,Index1D> {
   void work(WorkMsg* msg);
 };
 
-void ListInsertTest::work(WorkMsg* msg) {
+void ListInsertTest::work([[maybe_unused]] WorkMsg* msg) {
   vt_print(gen, "num_work={}, idx={}\n", num_work, getIndex());
   num_work++;
 }
@@ -111,7 +111,7 @@ using ColProxyTypeNDC = CollectionIndexProxy<NonDefaultConstructibleStruct,Index
 void reconstruct(NonDefaultConstructibleStruct*&, void*) {
 }
 
-void NonDefaultConstructibleStruct::work(WorkMsgNDC* msg) {
+void NonDefaultConstructibleStruct::work([[maybe_unused]] WorkMsgNDC* msg) {
   vt_print(gen, "num_work={}, idx={}\n", num_work, getIndex());
   num_work++;
 }
@@ -183,7 +183,9 @@ struct MyMapper : vt::mapping::BaseMapper<IndexT> {
     ).getProxy();
   }
 
-  vt::NodeType map(IndexT* idx, int ndim, vt::NodeType num_nodes) override {
+  vt::NodeType map(
+    IndexT* idx, [[maybe_unused]] int ndim, vt::NodeType num_nodes
+  ) override {
     return idx->x() % num_nodes;
   }
 };

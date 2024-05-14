@@ -75,7 +75,9 @@ void AnonListener<SignalT>::trigger_(SignalDataType* data) {
 }
 
 template <typename SignalT>
-void AnonListener<SignalT>::trigger_(SignalDataType* data, PipeType const& pipe_id) {
+void AnonListener<SignalT>::trigger_(
+  SignalDataType* data, [[maybe_unused]] PipeType const& pipe_id
+) {
   return trigger_(data);
 }
 

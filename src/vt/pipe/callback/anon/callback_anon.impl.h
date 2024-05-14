@@ -67,7 +67,9 @@ void CallbackAnon<MsgT>::serialize(SerializerT& s) {
 template <typename MsgT>
 template <typename T>
 typename CallbackAnon<MsgT>::template IsVoidType<T>
-CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
+CallbackAnon<MsgT>::triggerDispatch(
+  [[maybe_unused]] SignalDataType* data, PipeType const& pid
+) {
   // Overload when the signal is void
   auto const& this_node = theContext()->getNode();
   auto const& pipe_node = PipeIDBuilder::getNode(pid);
@@ -115,7 +117,7 @@ void CallbackAnon<MsgT>::trigger_(SignalDataType* data, PipeType const& pid) {
 }
 
 template <typename MsgT>
-void CallbackAnon<MsgT>::trigger_(SignalDataType* data) {
+void CallbackAnon<MsgT>::trigger_([[maybe_unused]] SignalDataType* data) {
   vtAssert(0, "Should not be reachable in this derived class");
 }
 

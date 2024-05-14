@@ -83,7 +83,7 @@ struct ColMsg : CollectionMessage<TestCol<IndexT>> {
 };
 
 template <typename IndexT>
-void TestCol<IndexT>::handler(ColMsg<IndexT>* msg) {}
+void TestCol<IndexT>::handler([[maybe_unused]] ColMsg<IndexT>* msg) {}
 
 } /* end namespace test_index_types_ */
 

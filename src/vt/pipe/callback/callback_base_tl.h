@@ -54,7 +54,7 @@ struct CallbackBaseTL {
   CallbackBaseTL() = default;
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) { }
+  void serialize([[maybe_unused]] SerializerT& s) { }
 
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe) {

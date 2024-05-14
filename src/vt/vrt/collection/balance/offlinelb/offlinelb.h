@@ -62,7 +62,7 @@ struct OfflineLB : BaseLB {
 
   void init(objgroup::proxy::Proxy<OfflineLB> in_proxy);
   void runLB(LoadType) override;
-  void inputParams(balance::ConfigEntry* config) override { }
+  void inputParams([[maybe_unused]] balance::ConfigEntry* config) override { }
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp() {
     return std::unordered_map<std::string, std::string>{};

@@ -87,7 +87,9 @@ struct TestPoolMessageSizes : TestParallelHarness {
 /*static*/ int TestPoolMessageSizes::count;
 
 template <int64_t num_bytes>
-void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
+void TestPoolMessageSizes::testPoolFun(
+  [[maybe_unused]] TestMsg<num_bytes>* prev_msg
+) {
   auto const& this_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
@@ -114,7 +116,9 @@ void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
 }
 
 template <>
-void TestPoolMessageSizes::testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
+void TestPoolMessageSizes::testPoolFun<max_bytes>(
+  [[maybe_unused]] TestMsg<max_bytes>* msg
+) { }
 
 TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
   SET_NUM_NODES_CONSTRAINT(2);

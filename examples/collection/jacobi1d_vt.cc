@@ -227,7 +227,7 @@ public:
 
   }
 
-  void doIter(BlankMsg *msg) {
+  void doIter([[maybe_unused]] BlankMsg *msg) {
 
     //
     // Treat the particular case of 1 object

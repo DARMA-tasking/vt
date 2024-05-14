@@ -52,7 +52,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {};
 
 static int multiplier = 0;
 
-static void reduceTarget(MyCol* col, int val) {
+static void reduceTarget([[maybe_unused]] MyCol* col, int val) {
   auto const num_nodes = theContext()->getNumNodes();
   auto const num_elems = num_nodes * multiplier;
   fmt::print("reduce finished: val={}, num_elems={}\n", val, num_elems);

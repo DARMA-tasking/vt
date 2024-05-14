@@ -259,7 +259,7 @@ struct Log final {
   // User event
   Log(
       TimeType const in_time, TraceConstantsType const in_type,
-      std::string const& in_note, UserDataType in_data
+      std::string const& in_note, [[maybe_unused]] UserDataType in_data
   ) : time(in_time), type(in_type),
       data(Data::UserData{in_note, 0, 0, false})
   {
