@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: DARMA/vt => Virtual Transport
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - name: Darma Team
+identifiers:
+  - type: doi
+    value: 10.1109/Cluster48925.2021.00039
+
+# @inproceedings{lifflander2021optimizing,
+#   title={Optimizing Distributed Load Balancing for Workloads with Time-Varying Imbalance},
+#   author={Lifflander, Jonathan and Slattengren, Nicole Lemaster and P{\'e}ba{\"y}, Philippe P and Miller, Phil and Rizzi, Francesco and Bettencourt, Matthew T},
+#   booktitle={2021 IEEE International Conference on Cluster Computing (CLUSTER)},
+#   pages={238--249},
+#   year={2021},
+#   organization={IEEE}
+# }
+
+
