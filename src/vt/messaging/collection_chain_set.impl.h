@@ -94,6 +94,7 @@ CollectionChainSet<Index>::CollectionChainSet(
         vtAssert(layout == Home, "Must be a home layout");
         p[home].template send<IdxMsg, &ThisType::removeIndexHan>(idx);
       }
+      break;
     case ElementEventEnum::ElementMigratedOut:
       if (layout == Local) {
         removeIndex(idx);

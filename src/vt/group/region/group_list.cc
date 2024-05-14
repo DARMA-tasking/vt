@@ -148,8 +148,7 @@ List::List(
 }
 
 /*virtual*/ List::RegionUPtrType List::copy() const {
-  auto list = std::make_unique<List>(*this);
-  return std::move(list);
+  return std::make_unique<List>(*this);
 }
 
 /*virtual*/ void List::splitN(int nsplits, ApplyFnType apply) const {
