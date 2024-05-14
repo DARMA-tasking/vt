@@ -112,7 +112,10 @@ inline HandlerType makeAutoHandlerCollectionMemParam() {
 }
 
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
-void setHandlerTraceNameColl(std::string const& name, std::string const& parent) {
+void setHandlerTraceNameColl(
+  [[maybe_unused]] std::string const& name,
+  [[maybe_unused]] std::string const& parent
+) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerCollection<ColT,MsgT,f>();
   auto const trace_id = handlerTraceID(handler);
@@ -121,7 +124,10 @@ void setHandlerTraceNameColl(std::string const& name, std::string const& parent)
 }
 
 template <typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-void setHandlerTraceNameCollMem(std::string const& name, std::string const& parent) {
+void setHandlerTraceNameCollMem(
+  [[maybe_unused]] std::string const& name,
+  [[maybe_unused]] std::string const& parent
+) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   auto const trace_id = handlerTraceID(handler);

@@ -167,7 +167,9 @@ void ActiveMessenger::startup() {
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {}
 
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
-  HandlerType const handler, ByteType serialized_msg_size, bool is_bcast
+  [[maybe_unused]] HandlerType const handler,
+  [[maybe_unused]] ByteType serialized_msg_size,
+  [[maybe_unused]] bool is_bcast
 ) {
   #if vt_check_enabled(trace_enabled)
     trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler);

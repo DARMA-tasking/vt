@@ -228,7 +228,7 @@ auto PipeManagerTL::makeCallbackProxy(ProxyT proxy) {
 }
 
 template <auto f, bool is_bcast>
-auto PipeManagerTL::makeCallbackSingle(NodeType node) {
+auto PipeManagerTL::makeCallbackSingle([[maybe_unused]] NodeType node) {
   auto const new_pipe_id = makePipeID(true,false);
 
   using Trait = FuncTraits<decltype(f)>;

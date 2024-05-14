@@ -82,7 +82,7 @@ public:
    *
    * \param[in] val the new value
    */
-  void update(T val) {
+  void update([[maybe_unused]] T val) {
 #   if vt_check_enabled(diagnostics)
     this->updateStats(val);
 #   endif

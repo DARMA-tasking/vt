@@ -71,21 +71,27 @@ void ActiveMessenger::markAsTermMessage(MsgPtrT const msg) {
 }
 
 template <typename MsgPtrT>
-void ActiveMessenger::markAsLocationMessage(MsgPtrT const msg) {
+void ActiveMessenger::markAsLocationMessage(
+  [[maybe_unused]] MsgPtrT const msg
+) {
 #if vt_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, theConfig()->traceLocation());
 #endif
 }
 
 template <typename MsgPtrT>
-void ActiveMessenger::markAsSerialMsgMessage(MsgPtrT const msg) {
+void ActiveMessenger::markAsSerialMsgMessage(
+  [[maybe_unused]] MsgPtrT const msg
+) {
 #if vt_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, theConfig()->traceSerialMsg());
 #endif
 }
 
 template <typename MsgPtrT>
-void ActiveMessenger::markAsCollectionMessage(MsgPtrT const msg) {
+void ActiveMessenger::markAsCollectionMessage(
+  [[maybe_unused]] MsgPtrT const msg
+) {
 #if vt_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, theConfig()->traceCollection());
 #endif
