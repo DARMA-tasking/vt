@@ -88,7 +88,7 @@ void postParseTransform(AppConfig& appConfig) {
   }
 }
 
-void parseYaml(std::string& config_file, AppConfig& appConfig);
+void parseYaml(AppConfig& appConfig, std::string inputFile);
 
 std::tuple<int, std::string> parseArguments(
   CLI::App& app, int& argc, char**& argv, AppConfig& appConfig
@@ -126,24 +126,13 @@ std::tuple<int, std::string> parseArguments(
     args_to_parse.push_back(*it);
   }
 
-  // Dispatch to CLI or yaml-cpp for config file
-  std::string config_file;
-  app.add_option("--vt_input_config", config_file, "Read in a yaml, toml, or ini config file for VT");
-  if (!config_file.empty()) {
-    std::string config_ending = config_file.substr(config_file.size()-4);
-    if (config_ending == ".yml" || config_ending == "yaml") {
-      // use yaml-cpp
-      parseYaml(config_file, appConfig);
-    } else if (config_ending == ".ini" || config_ending == "toml") {
-      // use CLI parser
-      app.set_config(
-        "--vt_input_CLI_config",
-        config_file,
-        "Read in a config file with CLI library",
-        false // not required
-      );
-    }
-  }
+  // Allow a input config file
+  app.set_config(
+    "--vt_input_config",
+    "", // no default file name
+    "Read in an ini config file for VT",
+    false // not required
+  );
 
   try {
     app.parse(args_to_parse);
@@ -154,6 +143,11 @@ std::tuple<int, std::string> parseArguments(
     int result = app.exit(ex, message_stream, message_stream);
 
     return std::make_tuple(result, message_stream.str());
+  }
+
+  // YAML input will overwrite command line arguments
+  if (appConfig.vt_input_config_yaml != "") {
+    parseYaml(appConfig, appConfig.vt_input_config_yaml);
   }
 
   // If the user specified to output the full configuration, save it in a string
@@ -200,9 +194,14 @@ std::tuple<int, std::string> parseArguments(
   return std::make_tuple(-1, std::string{});
 }
 
-void parseYaml(std::string& config_file, AppConfig& appConfig) {
-  // Assume input yaml is structured the same as --vt-help
-  auto yaml_input = YAML::LoadFile(config_file);
+void addYamlConfig(CLI::App& app, AppConfig& appConfig) {
+  auto yaml_description = "Read in a yaml config file for VT";
+  app.add_option("--vt_input_config_yaml", appConfig.vt_input_config_yaml, yaml_description);
+}
+
+void parseYaml(AppConfig& appConfig, std::string inputFile) {
+  // Read in the YAML configuration file
+  auto yaml_input = YAML::LoadFile(inputFile);
 
   // Output control
   YAML::Node output_control = yaml_input["Output Control"];
@@ -273,40 +272,45 @@ void parseYaml(std::string& config_file, AppConfig& appConfig) {
   appConfig.vt_debug_level = debug_print_configuration["Level"].as<std::string>("terse");
   appConfig.vt_debug_all = debug_print_configuration["Enable All"].as<bool>(false);
   appConfig.vt_debug_none = debug_print_configuration["Disable All"].as<bool>(false);
-  appConfig.vt_debug_gen = debug_print_configuration["Enable gen"].as<bool>(false);
-  appConfig.vt_debug_runtime = debug_print_configuration["Enable runtime"].as<bool>(false);
-  appConfig.vt_debug_active = debug_print_configuration["Enable active"].as<bool>(false);
-  appConfig.vt_debug_term = debug_print_configuration["Enable term"].as<bool>(false);
-  appConfig.vt_debug_termds = debug_print_configuration["Enable termds"].as<bool>(false);
-  appConfig.vt_debug_barrier = debug_print_configuration["Enable barrier"].as<bool>(false);
-  appConfig.vt_debug_event = debug_print_configuration["Enable event"].as<bool>(false);
-  appConfig.vt_debug_pipe = debug_print_configuration["Enable pipe"].as<bool>(false);
-  appConfig.vt_debug_pool = debug_print_configuration["Enable pool"].as<bool>(false);
-  appConfig.vt_debug_reduce = debug_print_configuration["Enable reduce"].as<bool>(false);
-  appConfig.vt_debug_rdma = debug_print_configuration["Enable rdma"].as<bool>(false);
-  appConfig.vt_debug_rdma_channel = debug_print_configuration["Enable rdma_channel"].as<bool>(false);
-  appConfig.vt_debug_rdma_state = debug_print_configuration["Enable rdma_state"].as<bool>(false);
-  appConfig.vt_debug_handler = debug_print_configuration["Enable handler"].as<bool>(false);
-  appConfig.vt_debug_hierlb = debug_print_configuration["Enable hierlb"].as<bool>(false);
-  appConfig.vt_debug_temperedlb = debug_print_configuration["Enable temperedlb"].as<bool>(false);
-  appConfig.vt_debug_temperedwmin = debug_print_configuration["Enable temperedwmin"].as<bool>(false);
-  appConfig.vt_debug_scatter = debug_print_configuration["Enable scatter"].as<bool>(false);
-  appConfig.vt_debug_serial_msg = debug_print_configuration["Enable serial_msg"].as<bool>(false);
-  appConfig.vt_debug_trace = debug_print_configuration["Enable trace"].as<bool>(false);
-  appConfig.vt_debug_location = debug_print_configuration["Enable location"].as<bool>(false);
-  appConfig.vt_debug_lb = debug_print_configuration["Enable lb"].as<bool>(false);
-  appConfig.vt_debug_vrt = debug_print_configuration["Enable vrt"].as<bool>(false);
-  appConfig.vt_debug_vrt_coll = debug_print_configuration["Enable vrt_coll"].as<bool>(false);
-  appConfig.vt_debug_worker = debug_print_configuration["Enable worker"].as<bool>(false);
-  appConfig.vt_debug_group = debug_print_configuration["Enable group"].as<bool>(false);
-  appConfig.vt_debug_broadcast = debug_print_configuration["Enable broadcast"].as<bool>(false);
-  appConfig.vt_debug_objgroup = debug_print_configuration["Enable objgroup"].as<bool>(false);
-  appConfig.vt_debug_phase = debug_print_configuration["Enable phase"].as<bool>(false);
-  appConfig.vt_debug_context = debug_print_configuration["Enable context"].as<bool>(false);
-  appConfig.vt_debug_epoch = debug_print_configuration["Enable epoch"].as<bool>(false);
-  // appConfig.vt_debug_replay = debug_print_configuration["Enable replay"].as<bool>(false);
-  appConfig.vt_debug_print_flush = debug_print_configuration["Enable Print Flushing"].as<bool>(false);
 
+  std::vector<std::string> debug_enables;
+  if (debug_print_configuration["Enable"]) {
+      debug_enables = debug_print_configuration["Enable"].as<std::vector<std::string>>();
+  }
+
+  appConfig.vt_debug_gen = (std::find(debug_enables.begin(), debug_enables.end(), "gen") != debug_enables.end());
+  appConfig.vt_debug_runtime = (std::find(debug_enables.begin(), debug_enables.end(), "runtime") != debug_enables.end());
+  appConfig.vt_debug_active = (std::find(debug_enables.begin(), debug_enables.end(), "active") != debug_enables.end());
+  appConfig.vt_debug_term = (std::find(debug_enables.begin(), debug_enables.end(), "term") != debug_enables.end());
+  appConfig.vt_debug_termds = (std::find(debug_enables.begin(), debug_enables.end(), "termds") != debug_enables.end());
+  appConfig.vt_debug_barrier = (std::find(debug_enables.begin(), debug_enables.end(), "barrier") != debug_enables.end());
+  appConfig.vt_debug_event = (std::find(debug_enables.begin(), debug_enables.end(), "event") != debug_enables.end());
+  appConfig.vt_debug_pipe = (std::find(debug_enables.begin(), debug_enables.end(), "pipe") != debug_enables.end());
+  appConfig.vt_debug_pool = (std::find(debug_enables.begin(), debug_enables.end(), "pool") != debug_enables.end());
+  appConfig.vt_debug_reduce = (std::find(debug_enables.begin(), debug_enables.end(), "reduce") != debug_enables.end());
+  appConfig.vt_debug_rdma = (std::find(debug_enables.begin(), debug_enables.end(), "rdma") != debug_enables.end());
+  appConfig.vt_debug_rdma_channel = (std::find(debug_enables.begin(), debug_enables.end(), "rdma_channel") != debug_enables.end());
+  appConfig.vt_debug_rdma_state = (std::find(debug_enables.begin(), debug_enables.end(), "rdma_state") != debug_enables.end());
+  appConfig.vt_debug_handler = (std::find(debug_enables.begin(), debug_enables.end(), "handler") != debug_enables.end());
+  appConfig.vt_debug_hierlb = (std::find(debug_enables.begin(), debug_enables.end(), "hierlb") != debug_enables.end());
+  appConfig.vt_debug_temperedlb = (std::find(debug_enables.begin(), debug_enables.end(), "temperedlb") != debug_enables.end());
+  appConfig.vt_debug_temperedwmin = (std::find(debug_enables.begin(), debug_enables.end(), "temperedwmin") != debug_enables.end());
+  appConfig.vt_debug_scatter = (std::find(debug_enables.begin(), debug_enables.end(), "scatter") != debug_enables.end());
+  appConfig.vt_debug_serial_msg = (std::find(debug_enables.begin(), debug_enables.end(), "serial_msg") != debug_enables.end());
+  appConfig.vt_debug_trace = (std::find(debug_enables.begin(), debug_enables.end(), "trace") != debug_enables.end());
+  appConfig.vt_debug_location = (std::find(debug_enables.begin(), debug_enables.end(), "location") != debug_enables.end());
+  appConfig.vt_debug_lb = (std::find(debug_enables.begin(), debug_enables.end(), "lb") != debug_enables.end());
+  appConfig.vt_debug_vrt = (std::find(debug_enables.begin(), debug_enables.end(), "vrt") != debug_enables.end());
+  appConfig.vt_debug_vrt_coll = (std::find(debug_enables.begin(), debug_enables.end(), "vrt_coll") != debug_enables.end());
+  appConfig.vt_debug_worker = (std::find(debug_enables.begin(), debug_enables.end(), "worker") != debug_enables.end());
+  appConfig.vt_debug_group = (std::find(debug_enables.begin(), debug_enables.end(), "group") != debug_enables.end());
+  appConfig.vt_debug_broadcast = (std::find(debug_enables.begin(), debug_enables.end(), "broadcast") != debug_enables.end());
+  appConfig.vt_debug_objgroup = (std::find(debug_enables.begin(), debug_enables.end(), "objgroup") != debug_enables.end());
+  appConfig.vt_debug_phase = (std::find(debug_enables.begin(), debug_enables.end(), "phase") != debug_enables.end());
+  appConfig.vt_debug_context = (std::find(debug_enables.begin(), debug_enables.end(), "context") != debug_enables.end());
+  appConfig.vt_debug_epoch = (std::find(debug_enables.begin(), debug_enables.end(), "epoch") != debug_enables.end());
+  appConfig.vt_debug_print_flush = debug_print_configuration["Enable Print Flushing"].as<bool>(false);
+  // appConfig.vt_debug_replay = debug_print_configuration["Enable replay"].as<bool>(false);
 
   // Load Balancing
   YAML::Node load_balancing = yaml_input["Load Balancing"];
@@ -318,17 +322,24 @@ void parseYaml(std::string& config_file, AppConfig& appConfig) {
   appConfig.vt_lb_args = load_balancing["Arguments"].as<std::string>("");
   appConfig.vt_lb_interval = load_balancing["Interval"].as<int32_t>(1);
   appConfig.vt_lb_keep_last_elm = load_balancing["Keep Last Element"].as<bool>(false);
-  appConfig.vt_lb_data = load_balancing["Enable LB Data Output"].as<bool>(false);
-  appConfig.vt_lb_data_in = load_balancing["Enable LB Data Input"].as<bool>(false);
-  appConfig.vt_lb_data_compress = load_balancing["Enable LB Data Compression"].as<bool>(false);
-  appConfig.vt_lb_data_dir = load_balancing["LB Data Output Directory"].as<std::string>("vt_lb_data");
-  appConfig.vt_lb_data_file = load_balancing["LB Data Output File"].as<std::string>("data.%p.json");
-  appConfig.vt_lb_data_dir_in = load_balancing["LB Data Input Directory"].as<std::string>("vt_lb_data_in");
-  appConfig.vt_lb_data_file_in = load_balancing["LB Data Input File"].as<std::string>("data.%p.json");
-  appConfig.vt_lb_statistics = load_balancing["Enable Statistics"].as<bool>(false);
-  appConfig.vt_lb_statistics_compress = load_balancing["Enable Statistic Compression"].as<bool>(false);
-  appConfig.vt_lb_statistics_file = load_balancing["Statistic File"].as<std::string>("vt_lb_statistics.%t.json");
-  appConfig.vt_lb_statistics_dir = load_balancing["Statistic Directory"].as<std::string>("");
+
+  YAML::Node lb_output = load_balancing["LB Data Output"];
+  appConfig.vt_lb_data = lb_output["Enabled"].as<bool>(false);
+  appConfig.vt_lb_data_dir = lb_output["Directory"].as<std::string>("vt_lb_data");
+  appConfig.vt_lb_data_file = lb_output["File"].as<std::string>("data.%p.json");
+
+  YAML::Node lb_input = load_balancing["LB Data Input"];
+  appConfig.vt_lb_data_in = lb_input["Enabled"].as<bool>(false);
+  appConfig.vt_lb_data_compress = lb_input["Enable Compression"].as<bool>(false);
+  appConfig.vt_lb_data_dir_in = lb_input["Directory"].as<std::string>("vt_lb_data_in");
+  appConfig.vt_lb_data_file_in = lb_input["File"].as<std::string>("data.%p.json");
+
+  YAML::Node lb_stats = load_balancing["LB Statistics"];
+  appConfig.vt_lb_statistics = lb_stats["Enabled"].as<bool>(false);
+  appConfig.vt_lb_statistics_compress = lb_stats["Enable Compression"].as<bool>(false);
+  appConfig.vt_lb_statistics_file = lb_stats["File"].as<std::string>("vt_lb_statistics.%t.json");
+  appConfig.vt_lb_statistics_dir = lb_stats["Directory"].as<std::string>("");
+
   appConfig.vt_lb_self_migration = load_balancing["Enable Self Migration"].as<bool>(false);
   appConfig.vt_lb_spec = load_balancing["Enable Specification"].as<bool>(false);
   appConfig.vt_lb_spec_file = load_balancing["Specification File"].as<std::string>("");
@@ -969,6 +980,10 @@ std::tuple<int, std::string> ArgConfig::parseToConfig(
 
   app.set_help_flag("--vt_help", "Display help");
 
+  // Find a YAML config file, if present
+  addYamlConfig(app, appConfig);
+
+  // Parse remaining args
   addColorArgs(app, appConfig);
   addSignalArgs(app, appConfig);
   addMemUsageArgs(app, appConfig);
