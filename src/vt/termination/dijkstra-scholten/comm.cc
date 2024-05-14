@@ -132,7 +132,7 @@ StateDS::getTerminator(EpochType const& epoch) {
 /*static*/ void StateDS::requestAckHan(AckMsg* msg) {
   auto const epoch = msg->getEpoch();
   auto term = getTerminator(epoch);
-  term->needAck(msg->getNode(),msg->getCount());
+  term->needAck();
 }
 
 /*static*/ void StateDS::acknowledgeHan(AckMsg* msg) {

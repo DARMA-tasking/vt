@@ -91,7 +91,7 @@ struct TermDS : EpochDependency, EpochLabel {
   void gotAck(CountType count);
   void doneSending();
   void msgProcessed(NodeType predecessor, CountType count);
-  void needAck(NodeType const predecessor, CountType const count);
+  void needAck();
   void tryAck();
   void terminated();
   bool hasParent();
