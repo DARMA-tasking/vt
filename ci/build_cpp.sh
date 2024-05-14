@@ -89,6 +89,7 @@ mkdir -p "$VT_BUILD"
 cd "$VT_BUILD"
 rm -Rf ./*
 cmake -G "${CMAKE_GENERATOR:-Ninja}" \
+      -DCMAKE_VERBOSE_MAKEFILE=ON \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -Dvt_test_trace_runtime_enabled="${VT_TRACE_RUNTIME_ENABLED:-0}" \
       -Dvt_lb_enabled="${VT_LB_ENABLED:-1}" \
