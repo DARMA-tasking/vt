@@ -93,7 +93,7 @@ LoadType BaseLB::loadMilli(LoadType const& load) {
 
 void BaseLB::importProcessorData(
   StatisticMapType const& in_stats, ElementCommType const& comm_in,
-  balance::DataMapType const& in_data_map
+  [[maybe_unused]] balance::DataMapType const& in_data_map
 ) {
   vt_debug_print(
     normal, lb,

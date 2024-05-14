@@ -92,7 +92,7 @@ static inline void activeMessageGroupCollective() {
 }
 
 // Message handler
-static void msgHandlerGroupB(MySimpleMsg2* msg) {
+static void msgHandlerGroupB([[maybe_unused]] MySimpleMsg2* msg) {
   auto const cur_node = ::vt::theContext()->getNode();
   vtAssert(cur_node % 2 == 0, "This handler should only execute on even nodes");
 

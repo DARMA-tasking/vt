@@ -80,7 +80,7 @@ template <typename T, HandleEnum E, typename I>
 void Handle<
   T,E,I,typename std::enable_if_t<std::is_same<I,vt::NodeType>::value>
 >::get(
-  vt::NodeType node, std::size_t len, int offset, Lock l
+  vt::NodeType node, std::size_t len, int offset, [[maybe_unused]] Lock l
 ) {
   rget(node, len, offset);
 }

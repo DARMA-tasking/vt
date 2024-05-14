@@ -260,7 +260,8 @@ void Runtime::computeAndPrintDiagnostics() {
         }
       },
       [&](
-        std::string const& comp, component::detail::DiagnosticBase* diag,
+        [[maybe_unused]] std::string const& comp,
+        component::detail::DiagnosticBase* diag,
         component::DiagnosticErasedValue* str
       ) {
         table[table.cur_row()][1].set_cell_content_fg_color(fort::color::green);

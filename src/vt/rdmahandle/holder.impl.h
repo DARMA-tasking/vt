@@ -53,8 +53,8 @@ namespace vt { namespace rdma {
 template <typename T, HandleEnum E>
 template <typename ProxyT>
 void Holder<T,E>::addHandle(
-  HandleKey key, ElemType lin, Handle<T,E> han, std::size_t in_count,
-  bool uniform_size
+  HandleKey key, [[maybe_unused]] ElemType lin,
+  Handle<T,E> han, std::size_t in_count, bool uniform_size
 ) {
   handle_ = han;
   key_ = key;

@@ -80,7 +80,7 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 assertOut(
   bool fail, std::string const cond, std::string const& str,
   std::string const& file, int const line, std::string const& func,
-  ErrorCodeType error, std::tuple<Args...>&& tup
+  ErrorCodeType error, [[maybe_unused]] std::tuple<Args...>&& tup
 ) {
   auto msg = "Assertion failed:";
   auto assert_fail_str = stringizeMessage(msg,str,cond,file,line,func,error);

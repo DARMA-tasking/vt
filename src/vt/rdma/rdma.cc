@@ -242,7 +242,10 @@ RDMAManager::RDMAManager()
       // do a direct recv into the user buffer
       theMsg()->recvDataMsgBuffer(
         msg->nchunks, put_ptr_offset, recv_tag, recv_node, true, []{},
-        [=](RDMA_GetType ptr, ActionType deleter){
+        [=](
+          [[maybe_unused]] RDMA_GetType ptr,
+          [[maybe_unused]] ActionType deleter
+        ){
           vt_debug_print(
             normal, rdma,
             "putData: recv_data_msg_buffer DIRECT: offset={}\n",
@@ -304,7 +307,8 @@ RDMAManager::RDMAManager()
 
 RDMA_HandleType RDMAManager::registerNewCollective(
   bool const& use_default, RDMA_PtrType const& ptr, ByteType const& num_bytes,
-  ByteType const& num_total_bytes, ByteType const& elm_size, RDMA_MapType const& map
+  [[maybe_unused]] ByteType const& num_total_bytes, ByteType const& elm_size,
+  RDMA_MapType const& map
 ) {
   auto const& han = registerNewRdmaHandler(use_default, ptr, num_bytes, true);
 
@@ -423,8 +427,8 @@ void RDMAManager::requestGetData(
 }
 
 void RDMAManager::triggerGetRecvData(
-  RDMA_OpType const& op, TagType const& tag, RDMA_PtrType ptr,
-  ByteType const& num_bytes, ActionType const& action
+  RDMA_OpType const& op, [[maybe_unused]] TagType const& tag,
+  RDMA_PtrType ptr, ByteType const& num_bytes, ActionType const& action
 ) {
   auto iter = pending_ops_.find(op);
 
@@ -518,7 +522,7 @@ void RDMAManager::triggerPutRecvData(
 
 RDMA_PtrType
 RDMAManager::tryPutPtr(
-  RDMA_HandleType const& han, TagType const& tag
+  RDMA_HandleType const& han, [[maybe_unused]] TagType const& tag
 ) {
   auto const& this_node = theContext()->getNode();
   auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
@@ -1195,7 +1199,8 @@ RDMAManager::RDMA_ChannelLookupType RDMAManager::makeChannelLookup(
 
 RDMAManager::RDMA_ChannelType* RDMAManager::findChannel(
   RDMA_HandleType const& han, RDMA_TypeType const& rdma_op_type, NodeType const& target,
-  NodeType const& non_target, bool const& should_insert, bool const& must_exist
+  NodeType const& non_target, [[maybe_unused]] bool const& should_insert,
+  [[maybe_unused]] bool const& must_exist
 ) {
   auto chan_iter = channels_.find(
     makeChannelLookup(han,rdma_op_type,target,non_target)

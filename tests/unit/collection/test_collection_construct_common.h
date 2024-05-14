@@ -71,7 +71,9 @@ struct ConstructHandlers {
     typename CollectionT,
     typename MessageT = typename CollectionT::MsgType
   >
-  static void handler(CollectionT* col, MessageT* msg) {
+  static void handler(
+    [[maybe_unused]] CollectionT* col, [[maybe_unused]] MessageT* msg
+  ) {
     // fmt::print(
     //   "{}: constructed TestCol: idx.x()={}\n",
     //   theContext()->getNode(), col->getIndex().x(), print_ptr(col)
@@ -98,7 +100,7 @@ struct ConstructParams {
     IndexType idx, std::string const& label
   ) {
     return theCollection()->constructCollective<ColT>(
-      idx, [=](IndexType my_idx) {
+      idx, [=]([[maybe_unused]] IndexType my_idx) {
         return std::make_unique<ColT>();
       }, label
     );

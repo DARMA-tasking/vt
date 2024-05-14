@@ -79,7 +79,7 @@ struct TestCol : Collection<TestCol, Index1D> {
     testHandlerValues(msg);
   }
 
-  void testHandlerValues(TestMsg* msg) {
+  void testHandlerValues([[maybe_unused]] TestMsg* msg) {
     EXPECT_EQ(this->valGet<int>("hello"), this->getIndex().x());
 
     std::vector<int> in_vec{5,4,1,7,3};

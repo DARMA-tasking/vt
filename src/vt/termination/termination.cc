@@ -542,7 +542,9 @@ void TerminationDetector::startEpochGraphBuild() {
   }
 }
 
-/*static*/ void TerminationDetector::hangCheckHandler(HangCheckMsg* msg) {
+/*static*/ void TerminationDetector::hangCheckHandler(
+  [[maybe_unused]] HangCheckMsg* msg
+) {
   fmt::print("{}:hangCheckHandler\n",theContext()->getNode());
   theTerm()->hang_.activateEpoch();
 }

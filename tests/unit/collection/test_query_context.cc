@@ -63,7 +63,7 @@ struct QueryTest : Collection<QueryTest,Index1D> {
 
 struct WorkMsg : CollectionMessage<QueryTest> {};
 
-void QueryTest::work(WorkMsg* msg) {
+void QueryTest::work([[maybe_unused]] WorkMsg* msg) {
   auto idx = vt::theCollection()->queryIndexContext<Index1D>();
   auto proxy = vt::theCollection()->queryProxyContext<Index1D>();
   EXPECT_EQ(*idx, this->getIndex());

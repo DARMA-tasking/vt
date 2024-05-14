@@ -50,7 +50,7 @@ namespace vt { namespace collective { namespace reduce { namespace operators {
 
 template <typename T = void>
 struct ReduceCallback {
-  void operator()(T* t) const { /* do nothing */ }
+  void operator()([[maybe_unused]] T* t) const { /* do nothing */ }
 };
 
 }}}} /* end namespace vt::collective::reduce::operators */

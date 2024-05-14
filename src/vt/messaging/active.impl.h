@@ -220,7 +220,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
   MsgPtrThief<MsgT> msg,
-  ByteType msg_size,
+  [[maybe_unused]] ByteType msg_size,
   bool deliver_to_sender,
   TagType tag
 ) {
@@ -265,7 +265,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
   NodeType dest,
   MsgPtrThief<MsgT> msg,
-  ByteType msg_size,
+  [[maybe_unused]] ByteType msg_size,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();

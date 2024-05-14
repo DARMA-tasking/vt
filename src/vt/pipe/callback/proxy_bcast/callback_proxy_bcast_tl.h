@@ -57,7 +57,9 @@ struct CallbackProxyBcastTypeless : CallbackBaseTL<CallbackProxyBcastTypeless> {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  bool operator==(CallbackProxyBcastTypeless const& other) const {
+  bool operator==(
+    [[maybe_unused]] CallbackProxyBcastTypeless const& other
+  ) const {
     return true;
   }
 
@@ -65,7 +67,7 @@ public:
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe);
 
-  void triggerVoid(PipeType const& pipe) {
+  void triggerVoid([[maybe_unused]] PipeType const& pipe) {
     vtAssert(0, "Must not be void");
   }
 };
@@ -94,7 +96,7 @@ public:
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe);
 
-  void triggerVoid(PipeType const& pipe) {
+  void triggerVoid([[maybe_unused]] PipeType const& pipe) {
     vtAssert(0, "Must not be void");
   }
 

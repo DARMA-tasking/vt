@@ -138,7 +138,7 @@ void Scheduler::enqueue(RunT r) {
 }
 
 template <typename RunT>
-void Scheduler::enqueue(PriorityType priority, RunT r) {
+void Scheduler::enqueue([[maybe_unused]] PriorityType priority, RunT r) {
   bool const is_term = false;
 # if vt_check_enabled(priorities)
   work_queue_.emplace(UnitType(is_term, std::move(r), priority));

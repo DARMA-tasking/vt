@@ -78,7 +78,7 @@ struct InsertTest : Collection<InsertTest,Index1D> {
   void work(WorkMsg* msg);
 };
 
-void InsertTest::work(WorkMsg* msg) {
+void InsertTest::work([[maybe_unused]] WorkMsg* msg) {
   ::fmt::print("node={}: num_work={}, idx={}\n", theContext()->getNode(), num_work, getIndex());
   num_work++;
 }

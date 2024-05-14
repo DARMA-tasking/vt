@@ -80,7 +80,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
 
   if (this_node == 0) {
     auto cb = theCB()->makeFunc<DataMsg>(
-      vt::pipe::LifetimeEnum::Once, [&c1](DataMsg* msg){
+      vt::pipe::LifetimeEnum::Once, [&c1]([[maybe_unused]] DataMsg* msg){
         c1++;
         fmt::print("called A");
       }
@@ -107,7 +107,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
   //
   if (this_node == 0) {
     auto cb = theCB()->makeFunc<DataMsg>(
-      vt::pipe::LifetimeEnum::Once, [&c2](DataMsg* msg){
+      vt::pipe::LifetimeEnum::Once, [&c2]([[maybe_unused]] DataMsg* msg){
         c2++;
         fmt::print("called B");
       }

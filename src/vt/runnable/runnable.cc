@@ -220,7 +220,7 @@ void RunnableNew::finish(TimeType time) {
 #endif
 }
 
-void RunnableNew::suspend(TimeType time) {
+void RunnableNew::suspend([[maybe_unused]] TimeType time) {
 #if vt_check_enabled(fcontext)
   contexts_.setcontext.suspend();
   if (contexts_.has_td) contexts_.td.suspend();
@@ -233,7 +233,7 @@ void RunnableNew::suspend(TimeType time) {
 #endif
 }
 
-void RunnableNew::resume(TimeType time) {
+void RunnableNew::resume([[maybe_unused]] TimeType time) {
 #if vt_check_enabled(fcontext)
   contexts_.setcontext.resume();
   if (contexts_.has_td) contexts_.td.resume();

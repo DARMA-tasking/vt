@@ -46,7 +46,7 @@
 /// [Collective group creation]
 struct HelloGroupMsg : vt::Message { };
 
-static void hello_group_handler(HelloGroupMsg* msg) {
+static void hello_group_handler([[maybe_unused]] HelloGroupMsg* msg) {
   fmt::print("{}: Hello from group handler\n", vt::theContext()->getNode());
 }
 

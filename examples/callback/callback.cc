@@ -110,7 +110,7 @@ struct MyObj {
 struct MyCol : vt::Collection<MyCol, vt::Index1D> { };
 
 // Collection handler callback endpoint
-void colHan(MyCol* col, TestMsg* msg) {
+void colHan([[maybe_unused]] MyCol* col, [[maybe_unused]] TestMsg* msg) {
   printOutput(msg, "MyCol colHan (non-intrusive)");
 }
 

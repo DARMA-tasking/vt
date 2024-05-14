@@ -48,7 +48,9 @@
 namespace vt { namespace sched {
 
 void SuspendedUnits::addSuspended(
-  ThreadIDType tid, RunnablePtrType runnable, PriorityType p
+  [[maybe_unused]] ThreadIDType tid,
+  [[maybe_unused]] RunnablePtrType runnable,
+  [[maybe_unused]] PriorityType p
 ) {
 #if vt_check_enabled(fcontext)
   vtAssert(runnable->isSuspended(), "Runnable must be suspended to add");
@@ -65,7 +67,7 @@ void SuspendedUnits::addSuspended(
 #endif
 }
 
-void SuspendedUnits::resumeRunnable(ThreadIDType tid) {
+void SuspendedUnits::resumeRunnable([[maybe_unused]] ThreadIDType tid) {
 #if vt_check_enabled(fcontext)
   auto iter = units_.find(tid);
   vtAbortIf(iter == units_.end(), "Must have valid thread ID to resume");

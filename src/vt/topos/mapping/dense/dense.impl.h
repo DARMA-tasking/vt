@@ -75,7 +75,9 @@ NodeType defaultDenseIndexNDMap(IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType n
 
 // Default round robin mappings
 template <typename T>
-NodeType dense1DRoundRobinMap(Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType nx) {
+NodeType dense1DRoundRobinMap(
+  Idx1DPtr<T> idx, [[maybe_unused]] Idx1DPtr<T> max, NodeType nx
+) {
   return idx->x() % nx;
 }
 

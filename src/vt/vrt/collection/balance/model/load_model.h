@@ -241,7 +241,9 @@ struct LoadModel
    *
    * \return How much computation time the object required
    */
-  virtual LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const {
+  virtual LoadType getRawLoad(
+    [[maybe_unused]] ElementIDStruct object, [[maybe_unused]] PhaseOffset when
+  ) const {
     vtAbort(
       "LoadModel::getRawLoad() called on a model that does not implement it"
     );
@@ -261,7 +263,9 @@ struct LoadModel
    *
    * \return The user data associated with the object
    */
-  virtual ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const {
+  virtual ElmUserDataType getUserData(
+    [[maybe_unused]] ElementIDStruct object, [[maybe_unused]] PhaseOffset when
+  ) const {
     vtAbort(
       "LoadModel::getUserData() called on a model that does not implement it"
     );
@@ -280,7 +284,9 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual LoadType getModeledComm(ElementIDStruct object, PhaseOffset when) const {
+  virtual LoadType getModeledComm(
+    [[maybe_unused]] ElementIDStruct object, [[maybe_unused]] PhaseOffset when
+  ) const {
     return {};
   }
 
@@ -345,7 +351,7 @@ struct LoadModel
   virtual int getNumSubphases() const = 0;
 
   template <typename Serializer>
-  void serialize(Serializer& s) {}
+  void serialize([[maybe_unused]] Serializer& s) {}
 }; // struct LoadModel
 
 }}}} // namespaces

@@ -91,7 +91,9 @@ Barrier::BarrierStateType& Barrier::insertFindBarrier(
 }
 
 void Barrier::removeBarrier(
-  bool const& is_named, bool const& is_wait, BarrierType const& barrier
+  bool const& is_named,
+  [[maybe_unused]] bool const& is_wait,
+  BarrierType const& barrier
 ) {
   auto& state = is_named ? named_barrier_state_ : unnamed_barrier_state_;
 

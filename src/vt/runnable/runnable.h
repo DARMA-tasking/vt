@@ -106,7 +106,9 @@ struct RunnableNew {
    * \param[in] in_is_threaded whether the handler can be run with a thread
    */
   template <typename U>
-  RunnableNew(MsgSharedPtr<U> const& in_msg, bool in_is_threaded)
+  RunnableNew(
+    MsgSharedPtr<U> const& in_msg, [[maybe_unused]] bool in_is_threaded
+  )
     : msg_(in_msg.template to<BaseMsgType>())
 #if vt_check_enabled(fcontext)
     , is_threaded_(in_is_threaded)
@@ -118,7 +120,7 @@ struct RunnableNew {
    *
    * \param[in] in_is_threaded whether the handler can be run with a thread
    */
-  explicit RunnableNew(bool in_is_threaded)
+  explicit RunnableNew([[maybe_unused]] bool in_is_threaded)
 #if vt_check_enabled(fcontext)
     : is_threaded_(in_is_threaded)
 #endif

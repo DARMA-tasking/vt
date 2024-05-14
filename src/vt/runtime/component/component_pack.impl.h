@@ -51,7 +51,9 @@ namespace vt { namespace runtime { namespace component {
 namespace {
 
 template <typename T, typename Tuple, size_t... I>
-std::unique_ptr<T> tupleConsImpl(Tuple&& tup, std::index_sequence<I...> seq) {
+std::unique_ptr<T> tupleConsImpl(
+  Tuple&& tup, [[maybe_unused]] std::index_sequence<I...> seq
+) {
   return T::template staticInit(std::get<I>(std::forward<Tuple>(tup))...);
 }
 

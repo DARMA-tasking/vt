@@ -71,7 +71,7 @@ struct RunnableNew {};
 
 namespace vt { namespace ctx {
 
-Context::Context(bool const is_interop, MPI_Comm comm) {
+Context::Context([[maybe_unused]] bool const is_interop, MPI_Comm comm) {
   #if DEBUG_VT_CONTEXT
     fmt::print(
       "Context::Context is_interop={}, comm={}\n", print_bool(is_interop), comm

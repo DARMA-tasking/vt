@@ -59,7 +59,7 @@ using MyMsg = Message;
 
 struct MyObjGroup {
 
-  void handler(MyMsg* msg) {
+  void handler([[maybe_unused]] MyMsg* msg) {
     auto const this_node = theContext()->getNode();
     auto const num_nodes = theContext()->getNumNodes();
     auto const to_node = (this_node + 1) % num_nodes;

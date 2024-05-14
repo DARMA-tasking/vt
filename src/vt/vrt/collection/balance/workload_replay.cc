@@ -289,7 +289,7 @@ WorkloadDataMigrator::construct(std::shared_ptr<LoadModel> model_base) {
 
 void WorkloadDataMigrator::runLB(LoadType) { }
 
-void WorkloadDataMigrator::inputParams(ConfigEntry* spec) { }
+void WorkloadDataMigrator::inputParams([[maybe_unused]] ConfigEntry* spec) { }
 
 std::unordered_map<std::string, std::string>
 WorkloadDataMigrator::getInputKeysWithHelp() {

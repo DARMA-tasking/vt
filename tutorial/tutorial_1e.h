@@ -87,7 +87,7 @@ static inline void activeMessageGroupRoot() {
 }
 
 // Message handler
-static void msgHandlerGroupA(MySimpleMsg* msg) {
+static void msgHandlerGroupA([[maybe_unused]] MySimpleMsg* msg) {
   auto const cur_node = ::vt::theContext()->getNode();
   vtAssert(cur_node >= 1, "This handler should only execute on nodes >= 1");
 

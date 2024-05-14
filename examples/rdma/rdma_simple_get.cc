@@ -77,7 +77,7 @@ static void tell_handle(HandleMsg* msg) {
 static std::unique_ptr<double[]> my_data = nullptr;
 
 static vt::RDMA_GetType test_get_fn(
-  vt::BaseMessage*, vt::ByteType num_bytes, vt::ByteType offset, vt::TagType tag,
+  vt::BaseMessage*, vt::ByteType num_bytes, [[maybe_unused]] vt::ByteType offset, vt::TagType tag,
   bool
 ) {
   vt::NodeType this_node = vt::theContext()->getNode();

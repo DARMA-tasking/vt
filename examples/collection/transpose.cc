@@ -176,7 +176,7 @@ struct Block : vt::Collection<Block, vt::Index1D> {
     }
   }
 
-  void solve(SolveMsg<Block>* msg) {
+  void solve([[maybe_unused]] SolveMsg<Block>* msg) {
     // Invoke initialize here so that the index is ready
     initialize();
     // Wait for all initializations to complete
@@ -190,7 +190,9 @@ private:
 
 //using ActiveMapTypedFnType = NodeType(IndexT*, IndexT*, NodeType);
 template <typename IndexT>
-vt::NodeType my_map(IndexT* idx, IndexT* max_idx, vt::NodeType num_nodes) {
+vt::NodeType my_map(
+  IndexT* idx, [[maybe_unused]] IndexT* max_idx, vt::NodeType num_nodes
+) {
   // simple round-robin for 1-d only.
   return idx->x() % num_nodes;
 }

@@ -182,7 +182,7 @@ void TraceLite::finalizeStandalone() {
 }
 #endif
 
-void TraceLite::setupNames(std::string const& in_prog_name) {
+void TraceLite::setupNames([[maybe_unused]] std::string const& in_prog_name) {
   if (not theConfig()->vt_trace) {
     return;
   }
@@ -714,7 +714,9 @@ void TraceLite::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void TraceLite::outputHeader(
-  vt_gzFile* file, NodeType const node, TimeType const start) {
+  vt_gzFile* file, [[maybe_unused]] NodeType const node,
+  [[maybe_unused]] TimeType const start
+) {
   gzFile gzfile = file->file_type;
   // Output header for projections file
   // '6' means COMPUTATION_BEGIN to Projections: this starts a trace
@@ -723,7 +725,9 @@ void TraceLite::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void TraceLite::outputFooter(
-  vt_gzFile* file, NodeType const node, TimeType const start) {
+  vt_gzFile* file, [[maybe_unused]] NodeType const node,
+  TimeType const start
+) {
   gzFile gzfile = file->file_type;
   // Output footer for projections file,
   // '7' means COMPUTATION_END to Projections

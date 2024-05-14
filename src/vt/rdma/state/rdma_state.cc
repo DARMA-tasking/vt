@@ -178,7 +178,7 @@ bool State::testReadyPutData(TagType const& tag) {
 
 /*static*/ RDMA_GetType State::defaultGetHandlerFn(
   StateMessage<State>* msg, ByteType req_num_bytes, ByteType req_offset,
-  TagType tag, bool is_local
+  TagType tag, [[maybe_unused]] bool is_local
 ) {
   auto const& state = *msg->state;
 
@@ -201,7 +201,7 @@ bool State::testReadyPutData(TagType const& tag) {
 
 /*static*/ void State::defaultPutHandlerFn(
   StateMessage<State>* msg, RDMA_PtrType in_ptr, ByteType req_num_bytes,
-  ByteType req_offset, TagType tag, bool is_local
+  ByteType req_offset, TagType tag, [[maybe_unused]] bool is_local
 ) {
   auto const& state = *msg->state;
 

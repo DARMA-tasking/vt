@@ -139,7 +139,7 @@ struct ConstructCallbacksImpl<N,T,ConsT,U,N> {
 
 template <typename T, typename ConsT, typename U, std::size_t N>
 /*static*/ typename ConstructCallbacksImpl<N,T,ConsT,U,N>::ResultType
-ConstructCallbacksImpl<N,T,ConsT,U,N>::make(ConsT const& ct) {
+ConstructCallbacksImpl<N,T,ConsT,U,N>::make([[maybe_unused]] ConsT const& ct) {
   return {};
 }
 

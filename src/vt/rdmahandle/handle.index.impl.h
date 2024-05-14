@@ -103,7 +103,7 @@ void Handle<
 template <typename T, HandleEnum E, typename I>
 void Handle<
   T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
->::lock(Lock l, I const& index) {
+>::lock([[maybe_unused]] Lock l, [[maybe_unused]] I const& index) {
   //@todo: implement this
 }
 
@@ -141,7 +141,7 @@ template <typename T, HandleEnum E, typename I>
 void Handle<
   T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
 >::get(
-  I const& index, std::size_t len, int offset, Lock l
+  I const& index, std::size_t len, int offset, [[maybe_unused]] Lock l
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
   proxy.get()->rget(index, len, offset);

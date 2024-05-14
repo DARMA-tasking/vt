@@ -89,7 +89,9 @@ public:
   explicit MyComponentArgs(Tag) {}
 public:
   struct MyTag {};
-  static std::unique_ptr<MyComponentArgs> construct(int a, int& b, MyTag&& tag) {
+  static std::unique_ptr<MyComponentArgs> construct(
+    [[maybe_unused]] int a, int& b, [[maybe_unused]] MyTag&& tag
+  ) {
     b = 20;
     return std::make_unique<MyComponentArgs>(Tag{});
   }
