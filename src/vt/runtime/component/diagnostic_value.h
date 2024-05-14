@@ -331,7 +331,7 @@ struct DiagnosticSnapshotValues {
         break;
       case DiagnosticUpdate::Avg:
         v.incrementN();
-        // no break to include update for Avg after increment
+        [[fallthrough]]; // no break to include update for Avg after increment
       case DiagnosticUpdate::Sum:
         v.update(v.getRawValue() + val);
         break;
