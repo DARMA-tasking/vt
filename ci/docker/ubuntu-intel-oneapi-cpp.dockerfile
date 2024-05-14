@@ -12,8 +12,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
     intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-2022.2.1 \
-    intel-oneapi-compiler-fortran \
-    debconf \
     ca-certificates \
     less \
     curl \
@@ -25,8 +23,8 @@ RUN apt-get update -y -q && \
     valgrind \
     make-guile \
     libomp5 \
-    libtool \
-    libunwind-dev && \
+    libunwind-dev \
+    ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -56,7 +54,8 @@ ENV CC=mpicc \
     MPICH_CC=intel-cc \
     MPICH_CXX=${compiler} \
     MPI_EXTRA_FLAGS="" \
-    LESSCHARSET=utf-8
+    LESSCHARSET=utf-8 \
+    PATH=/usr/lib/ccache/:$PATH
 
 FROM base as build
 COPY . /vt
