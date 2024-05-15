@@ -125,7 +125,7 @@ struct CUDAGroup {
     checkCudaErrors(cudaStreamDestroy(stream2_), "cudaStreamDestroy(stream2_)");
   }
 
-  void cudaHandler(MyMsg* msg) {
+  void cudaHandler([[maybe_unused]] MyMsg* msg) {
     auto const nBytes = dataSize_ * sizeof(double);
 
     checkCudaErrors(cudaStreamCreate(&stream1_), "cudaStreamCreate (stream1_)");
