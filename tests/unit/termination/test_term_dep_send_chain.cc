@@ -519,7 +519,7 @@ struct PrintParam {
 
 struct MergeCol : vt::Collection<MergeCol,vt::Index2D> {
   MergeCol() = default;
-  MergeCol([[maybe_unused]] NodeType num, double off) : offset_( off ) {
+  MergeCol(NodeType, double off) : offset_( off ) {
     idx_ = getIndex();
   }
 

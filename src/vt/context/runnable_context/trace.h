@@ -130,7 +130,7 @@ private:
 struct Trace {
 
   template <typename... Args>
-  Trace([[maybe_unused]] Args&&... args) {}
+  Trace(Args&&...) {}
 
 };
 

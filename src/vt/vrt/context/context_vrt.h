@@ -54,7 +54,6 @@ namespace vt { namespace vrt {
 
 struct VirtualContext : VrtBase {
   VirtualContext() = default;
-  VirtualContext([[maybe_unused]] bool const in_is_main) { }
 
   friend struct VirtualContextAttorney;
 
@@ -64,7 +63,7 @@ struct VirtualContext : VrtBase {
 };
 
 struct MainVirtualContext : VirtualContext {
-  MainVirtualContext() : VirtualContext(true) { }
+  MainVirtualContext() : VirtualContext() { }
 };
 
 }}  // end namespace vt::vrt
