@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include "vt/vrt/context/context_vrtmanager.impl.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_HAS_MIGRATE_H
 #define INCLUDED_VT_VRT_COLLECTION_TYPES_HAS_MIGRATE_H
 
