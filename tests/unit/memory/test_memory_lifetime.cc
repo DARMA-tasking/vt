@@ -64,10 +64,10 @@ struct SerialTrackMsg : ::vt::Message {
   vt_msg_serialize_required();
 
   SerialTrackMsg() { ++alloc_count; }
-  SerialTrackMsg([[maybe_unused]] SerialTrackMsg const& other) {
+  SerialTrackMsg(SerialTrackMsg const&) {
     ++alloc_count;
   }
-  SerialTrackMsg([[maybe_unused]] SerialTrackMsg&& other) { ++alloc_count; }
+  SerialTrackMsg(SerialTrackMsg&&) { ++alloc_count; }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
