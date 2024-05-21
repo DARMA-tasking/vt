@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_type.h"
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_H
 
@@ -291,6 +292,9 @@ public:
     ProxyType<ObjT> proxy, std::string const& name, std::string const& parent = ""
   );
 
+template <typename Reducer, auto f, typename ObjT, template <typename Arg> class Op, typename DataT>
+ObjGroupManager::PendingSendType allreduce(ProxyType<ObjT> proxy, const DataT& data);
+
 template <auto f, typename ObjT, template <typename Arg> class Op, typename DataT>
 ObjGroupManager::PendingSendType allreduce(ProxyType<ObjT> proxy, const DataT& data);
 
@@ -504,6 +508,8 @@ private:
   std::unordered_map<ObjGroupProxyType, std::vector<ActionType>> pending_;
   /// Map of object groups' labels
   std::unordered_map<ObjGroupProxyType, std::string> labels_;
+
+  std::unordered_map<ObjGroupProxyType, ObjGroupProxyType> reducers_;
 };
 
 }} /* end namespace vt::objgroup */

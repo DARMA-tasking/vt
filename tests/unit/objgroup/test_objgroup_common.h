@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include <vector>
 #if !defined INCLUDED_UNIT_OBJGROUP_TEST_OBJGROUP_COMMON_H
 #define INCLUDED_UNIT_OBJGROUP_TEST_OBJGROUP_COMMON_H
 
@@ -95,6 +96,33 @@ struct MyObjA {
     i = std::make_unique<int32_t>(10);
 
     return i;
+  }
+
+  static inline int32_t total_verify_expected_ = 0;
+
+  template <int test>
+  void verifyAllred(int value) {
+    auto const n = vt::theContext()->getNumNodes();
+    switch (test) {
+    case 1: EXPECT_EQ(value, n * (n - 1)/2); break;
+    case 2: EXPECT_EQ(value, n * 4); break;
+    case 3: EXPECT_EQ(value, n - 1); break;
+    default: vtAbort("Failure: should not be reached"); break;
+    }
+    total_verify_expected_++;
+  }
+
+  void verifyAllredVec(std::vector<int> vec) {
+    auto final_size = vec.size();
+    EXPECT_EQ(final_size, 256);
+
+    auto n = vt::theContext()->getNumNodes();
+    auto const total_sum = n * (n - 1)/2;
+    for(auto val : vec){
+      EXPECT_EQ(val, total_sum);
+    }
+
+    total_verify_expected_++;
   }
 
   int id_ = -1;

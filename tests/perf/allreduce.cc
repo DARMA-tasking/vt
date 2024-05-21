@@ -184,8 +184,10 @@ VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
     "allreduce_recursive_doubling", proxy, num_nodes_, data);
   grp_proxy[my_node_].get()->proxy_ = grp_proxy;
-  vt::runInEpochCollective(
-    [=] { grp_proxy[my_node_].template invoke<&Reducer::allreduce>(); });
+
+  theCollective()->barrier();
+  StartTimer(proxy[theContext()->getNode()].get()->timer_name_);
+  grp_proxy[my_node_].template invoke<&Reducer::allreduce>();
 }
 
 VT_PERF_TEST_MAIN()
