@@ -267,77 +267,65 @@ public:
     size_t nz = 0;
   };
 
-  void exchange(VecMsg *msg) {
+  void exchange(IndexType from_index, std::vector<double> const& val, size_t nx, size_t ny, size_t nz) {
 
     // Receive and treat the message from a neighboring object.
-    if (this->getIndex().x() > msg->from_index.x()) {   // Receiving message YZ plane from X+1
+    if (this->getIndex().x() > from_index.x()) {   // Receiving message YZ plane from X+1
       const size_t ldx = numRowsPerObject_ + 2;
       const size_t ldy = numRowsPerObject_ + 2;
-      const size_t nz = msg->nz;
-      const size_t ny = msg->ny;
       for (size_t jz = 0; jz < nz ; ++jz) {
         for (size_t jy = 0; jy < ny ; ++jy) {
           this->told_[0+jy*ldx+ ldx*ldy*jz] =
-                   msg->val[jy+jz*ny];
+                   val[jy+jz*ny];
         }
       }
       msgReceived_ += 1;
     }
-    else if (this->getIndex().x() < msg->from_index.x()) { // Receiving message YZ plane from X-1
+    else if (this->getIndex().x() < from_index.x()) { // Receiving message YZ plane from X-1
       const size_t ldx = numRowsPerObject_ + 2;
       const size_t ldy = numRowsPerObject_ + 2;
-      const size_t nz = msg->nz;
-      const size_t ny = msg->ny;
       for (size_t jz = 0; jz < nz ; ++jz) {
         for (size_t jy = 0; jy < ny; ++jy) {
-          this->told_[numRowsPerObject_ + 1 + jy*ldx + jz *ldy* ldx] = msg->val[jy+jz*ny];
+          this->told_[numRowsPerObject_ + 1 + jy*ldx + jz *ldy* ldx] = val[jy+jz*ny];
         }
       }
       msgReceived_ += 1;
     }
-    else if (this->getIndex().y() > msg->from_index.y()) { // Receiving message XZ plan from Y-1
+    else if (this->getIndex().y() > from_index.y()) { // Receiving message XZ plan from Y-1
       const size_t ldy = numRowsPerObject_ + 2;
       const size_t ldx = numRowsPerObject_ + 2;
-      const size_t nz = msg->nz;
-      const size_t nx = msg->nx;
       for (size_t jz = 0; jz < nz; ++jz) {
         for (size_t jx = 0; jx < nx; ++jx) {
-          this->told_[jx+ldx*ldy*jz] = msg->val[jx+jz*nx];
+          this->told_[jx+ldx*ldy*jz] = val[jx+jz*nx];
         }
       }
       msgReceived_ += 1;
     }
-    else if (this->getIndex().y() < msg->from_index.y()) {  // Receiving message XZ plan from Y+1
+    else if (this->getIndex().y() < from_index.y()) {  // Receiving message XZ plan from Y+1
       const size_t ldy = numRowsPerObject_ + 2;
       const size_t ldx = numRowsPerObject_ + 2;
-      const size_t nz = msg->nz;
-      const size_t nx = msg->nx;
       for (size_t jz = 0; jz < nz; ++jz) {
         for (size_t jx = 0; jx < nx; ++jx) {
-          this->told_[jx+ ldx * (numRowsPerObject_ + 1) + ldx*ldy*jz] =  msg->val[jx+jz*nx];
+          this->told_[jx+ ldx * (numRowsPerObject_ + 1) + ldx*ldy*jz] =  val[jx+jz*nx];
         }
       }
       msgReceived_ += 1;
     }
-    else if (this->getIndex().z() > msg->from_index.z()) { // Receiving message XY plan from Z-1
+    else if (this->getIndex().z() > from_index.z()) { // Receiving message XY plan from Z-1
       const size_t ldx = numRowsPerObject_ + 2;
-      const size_t ny = msg->ny;
-      const size_t nx = msg->nx;
       for (size_t jy = 0; jy < ny; ++jy) {
         for (size_t jx = 0; jx < nx; ++jx) {
-          this->told_[jx+ jy*ldx] = msg->val[jx+jy*nx];
+          this->told_[jx+ jy*ldx] = val[jx+jy*nx];
         }
       }
       msgReceived_ += 1;
     }
-    else if (this->getIndex().z() < msg->from_index.z()) { // Receiving message XY plan from Z+1
+    else if (this->getIndex().z() < from_index.z()) { // Receiving message XY plan from Z+1
       const size_t ldy = numRowsPerObject_ + 2;
       const size_t ldx = numRowsPerObject_ + 2;
-      const size_t ny = msg->ny;
-      const size_t nx = msg->nx;
       for (size_t jy = 0; jy < ny; ++jy) {
         for (size_t jx = 0; jx < nx; ++jx) {
-          this->told_[jx+ jy*ldx + (numRowsPerObject_ + 1)*ldx*ldy ] = msg->val[jx+jy*nx];
+          this->told_[jx+ jy*ldx + (numRowsPerObject_ + 1)*ldx*ldy ] = val[jx+jy*nx];
         }
       }
       msgReceived_ += 1;
@@ -347,10 +335,9 @@ public:
       msgReceived_ = 0;
       doIteration();
     }
-
   }
 
-  void doIter(BlankMsg *msg) {
+  void doIter() {
 
     //
     // Treat the particular case of 1 object
@@ -384,7 +371,7 @@ public:
       for (size_t jz = 1; jz <= numRowsPerObject_; ++jz)
         for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
            tcopy[jy+jz*ry] = told_[1 + jy * ldx + jz * ldx *ldy]; // put YZ plane for X=1
-      proxy(x-1, y, z).send<VecMsg, &LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz);
+      proxy(x-1, y, z).send<&LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz);
     }
 
     if (y > 0) {
@@ -398,7 +385,7 @@ public:
       for (size_t jz = 1; jz <= numRowsPerObject_; ++jz)
         for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
           tcopy[jx+rx*jz] = told_[jx + ldx + jz * ldx * ldy];
-      proxy(x, y-1, z).send<VecMsg, &LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz );
+      proxy(x, y-1, z).send<&LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz );
     }
 
     if (z > 0) {
@@ -412,7 +399,7 @@ public:
       for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
         for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
           tcopy[jx+rx*jy] = told_[jx + jy * ldx + ldx * ldy ];
-      proxy(x, y, z-1).send<VecMsg, &LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz);
+      proxy(x, y, z-1).send<&LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz);
     }
 
     if (size_t(x) < numObjsX_ - 1) {
@@ -428,7 +415,7 @@ public:
           tcopy[jy+jz*ry] = told_[ (ldx - 2) + jy * ldx + jz * ldx * ldy ];
         }
       }
-      proxy(x+1, y, z).send<VecMsg, &LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz);
+      proxy(x+1, y, z).send<&LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz);
     }
 
     if (size_t(y) < numObjsY_ - 1) {
@@ -442,7 +429,7 @@ public:
       for (size_t jz = 1; jz <= numRowsPerObject_; ++jz)
         for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
           tcopy[jx+jz*rx] = told_[jx + ( ldy - 2 ) * ldx + jz * ldx * ldy];
-      proxy(x, y+1, z).send<VecMsg, &LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz);
+      proxy(x, y+1, z).send<&LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz);
     }
 
     if (size_t(z) < numObjsZ_ - 1) {
@@ -457,7 +444,7 @@ public:
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
           tcopy[jx + jy *rx] = told_[ jx + jy * ldx + (ldz - 2 ) * ldx * ldy];
-      proxy(x, y, z+1).send<VecMsg, &LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz);
+      proxy(x, y, z+1).send<&LinearPb3DJacobi::exchange>(idx, tcopy, rx, ry, rz);
     }
 
   }
@@ -667,8 +654,7 @@ int main(int argc, char** argv) {
 
   while (!isWorkDone(grp_proxy)) {
     vt::runInEpochCollective([col_proxy] {
-      col_proxy.broadcastCollective<
-        LinearPb3DJacobi::BlankMsg, &LinearPb3DJacobi::doIter>();
+      col_proxy.broadcastCollective<&LinearPb3DJacobi::doIter>();
     });
 
     vt::thePhase()->nextPhaseCollective();
