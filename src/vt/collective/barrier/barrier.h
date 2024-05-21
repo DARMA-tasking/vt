@@ -107,11 +107,10 @@ struct Barrier : virtual collective::tree::Tree {
    * \internal \brief Remove the state of a barrier
    *
    * \param[in] is_named whether the barrier is named
-   * \param[in] is_wait whether the barrier is of waiting type
    * \param[in] barrier the barrier ID
    */
   void removeBarrier(
-    bool const& is_named, bool const& is_wait, BarrierType const& barrier
+    bool const& is_named, BarrierType const& barrier
   );
 
   /**

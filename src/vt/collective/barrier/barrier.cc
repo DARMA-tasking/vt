@@ -90,11 +90,7 @@ Barrier::BarrierStateType& Barrier::insertFindBarrier(
   return iter->second;
 }
 
-void Barrier::removeBarrier(
-  bool const& is_named,
-  [[maybe_unused]] bool const& is_wait,
-  BarrierType const& barrier
-) {
+void Barrier::removeBarrier(bool const& is_named, BarrierType const& barrier) {
   auto& state = is_named ? named_barrier_state_ : unnamed_barrier_state_;
 
   auto iter = state.find(barrier);
@@ -147,7 +143,7 @@ void Barrier::waitBarrier(
     "waitBarrier: released: named={}, barrier={}\n", is_named, barrier
   );
 
-  removeBarrier(is_named, is_wait, barrier);
+  removeBarrier(is_named, barrier);
 }
 
 void Barrier::contBarrier(
