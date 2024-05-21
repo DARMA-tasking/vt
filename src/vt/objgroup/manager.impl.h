@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_sentinels.h"
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
@@ -58,7 +59,10 @@
 #include "vt/messaging/active.h"
 #include "vt/elm/elm_id_bits.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/collective/reduce/allreduce/rabenseifner.h"
+#include "vt/collective/reduce/allreduce/recursive_doubling.h"
 #include <utility>
+#include <array>
 
 #include <memory>
 
@@ -264,57 +268,70 @@ ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> m
   return objgroup::broadcast(msg,han);
 }
 
+
+// Helper trait to detect if a type is a specialization of a given variadic template
+template <template <typename...> class Template, typename T>
+struct is_specialization_of : std::false_type {};
+
+template <template <typename...> class Template, typename... Args>
+struct is_specialization_of<Template, Template<Args...>> : std::true_type {};
+
+// Specialized trait for std::array
+template <typename T>
+struct is_std_array : std::false_type {};
+
+template <typename T, std::size_t N>
+struct is_std_array<std::array<T, N>> : std::true_type {};
+
+// Trait to detect if a type is a standard container (std::vector or std::array in this case)
+template <typename T>
+struct is_std_container : std::integral_constant<bool,
+    is_specialization_of<std::vector, T>::value || is_std_array<T>::value> {};
+
+template <
+  typename Reducer, auto f, typename ObjT, template <typename Arg> class Op, typename DataT>
+ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
+  ProxyType<ObjT> proxy, const DataT& data) {
+  return PendingSendType{
+    theTerm()->getEpoch(), [=] {
+      auto const this_node = vt::theContext()->getNode();
+      auto const num_nodes = theContext()->getNumNodes();
+
+      proxy::Proxy<Reducer> grp_proxy = {};
+
+      if (reducers_.find(proxy.getProxy()) != reducers_.end()) {
+        auto* obj = reinterpret_cast<Reducer*>(
+          objs_[reducers_[proxy.getProxy()]]->getPtr()
+        );
+        obj->initialize(data);
+        grp_proxy = obj->proxy_;
+      } else {
+        grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
+          "allreduce_rabenseifner", proxy, num_nodes, data);
+        grp_proxy[this_node].get()->proxy_ = grp_proxy;
+      }
+
+      grp_proxy[this_node].template invoke<&Reducer::allreduce>();
+    }};
+}
+
 template <
   auto f, typename ObjT, template <typename Arg> class Op, typename DataT>
 ObjGroupManager::PendingSendType
 ObjGroupManager::allreduce(ProxyType<ObjT> proxy, const DataT& data) {
-  // check payload size and choose appropriate algorithm
-
-  auto const this_node = vt::theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
-
-  if (num_nodes < 2) {
+  if (theContext()->getNumNodes() < 2) {
     return PendingSendType{nullptr};
   }
 
-  // using Reducer = collective::reduce::allreduce::Rabenseifner<DataT>;
-  // using Reducer = collective::reduce::allreduce::DistanceDoubling<DataT, Op, ObjT, f>;
-
-  return PendingSendType{theTerm()->getEpoch(), [=] {
-    // auto grp_proxy =
-    //   vt::theObjGroup()->makeCollective<Reducer>("allreduce_rabenseifner");
-    // if constexpr (std::is_same_v<
-    //                 Reducer,
-    //                 collective::reduce::allreduce::DistanceDoubling<DataT, Op, ObjT, f>>) {
-    //   grp_proxy[this_node].template invoke<&Reducer::initialize>(
-    //     data, grp_proxy, proxy, num_nodes);
-
-    //   grp_proxy[this_node].template invoke<&Reducer::partOne>();
-
-    // } else if constexpr (std::is_same_v<
-    //                        Reducer,
-    //                        collective::reduce::allreduce::Rabenseifner<
-    //                          DataT, Op, ObjT, f>>) {
-    //   grp_proxy[this_node].template invoke<&Reducer::initialize>(
-    //     data, grp_proxy, num_nodes);
-
-    //   if (grp_proxy.get()->nprocs_rem_) {
-    //     vt::runInEpochCollective(
-    //       [=] { grp_proxy[this_node].template invoke<&Reducer::partOne>(); });
-    //   }
-
-    //   vt::runInEpochCollective(
-    //     [=] { grp_proxy[this_node].template invoke<&Reducer::partTwo>(); });
-
-    //   vt::runInEpochCollective(
-    //     [=] { grp_proxy[this_node].template invoke<&Reducer::partThree>(); });
-
-    //   if (grp_proxy.get()->nprocs_rem_) {
-    //     vt::runInEpochCollective(
-    //       [=] { grp_proxy[this_node].template invoke<&Reducer::partFour>(); });
-    //   }
-    // }
-  }};
+  if constexpr (is_std_container<DataT>::value) {
+    using Reducer =
+      vt::collective::reduce::allreduce::Rabenseifner<DataT, Op, ObjT, f>;
+    return allreduce<Reducer, f, ObjT, Op>(proxy, data);
+  } else {
+    using Reducer =
+      vt::collective::reduce::allreduce::DistanceDoubling<DataT, Op, ObjT, f>;
+    return allreduce<Reducer, f, ObjT, Op>(proxy, data);
+  }
 }
 
 template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>

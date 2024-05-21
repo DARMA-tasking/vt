@@ -256,6 +256,49 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
   }
 }
 
+TEST_F(TestObjGroup, test_proxy_allreduce) {
+  using namespace vt::collective;
+
+  auto const my_node = vt::theContext()->getNode();
+
+  TestObjGroup::total_verify_expected_ = 0;
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_reduce");
+
+  vt::theCollective()->barrier();
+
+  runInEpochCollective(
+    [&] { proxy.allreduce_h<&MyObjA::verifyAllred<1>, PlusOp>(my_node); }
+  );
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 1);
+
+  runInEpochCollective(
+    [&] { proxy.allreduce_h<&MyObjA::verifyAllred<2>, PlusOp>(4); }
+  );
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 2);
+
+  runInEpochCollective(
+    [&] { proxy.allreduce_h<&MyObjA::verifyAllred<3>, MaxOp>(my_node); }
+  );
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 3);
+
+  runInEpochCollective([&] {
+    using Reducer =
+        vt::collective::reduce::allreduce::Rabenseifner<std::vector<int>, PlusOp, MyObjA, &MyObjA::verifyAllredVec>;
+    std::vector<int> payload(256, my_node);
+    theObjGroup()->allreduce<Reducer, &MyObjA::verifyAllredVec, MyObjA, PlusOp>(
+      proxy, payload
+    );
+    theObjGroup()->allreduce<Reducer, &MyObjA::verifyAllredVec, MyObjA, PlusOp>(
+      proxy, payload
+    );
+  });
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 5);
+}
+
 TEST_F(TestObjGroup, test_proxy_invoke) {
   auto const& this_node = theContext()->getNode();
 

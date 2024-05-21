@@ -97,7 +97,6 @@ struct DistanceDoubling {
     vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
     Args&&... args)
     : parent_proxy_(parentProxy),
-      val_(std::forward<Args>(args)...),
       num_nodes_(num_nodes),
       this_node_(vt::theContext()->getNode()),
       is_even_(this_node_ % 2 == 0),
@@ -105,6 +104,12 @@ struct DistanceDoubling {
       nprocs_pof2_(1 << num_steps_),
       nprocs_rem_(num_nodes_ - nprocs_pof2_),
       finished_adjustment_part_(nprocs_rem_ == 0) {
+        initialize(std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  void initialize(Args&&... args) {
+    val_ = DataT(std::forward<Args>(args)...);
     is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
     if (is_part_of_adjustment_group_) {
       if (is_even_) {
@@ -168,8 +173,8 @@ struct DistanceDoubling {
       [](const auto val) { return val; });
   }
   bool isReady() {
-    return (is_part_of_adjustment_group_ and finished_adjustment_part_) and
-      step_ == 0 or
+    return ((is_part_of_adjustment_group_ and finished_adjustment_part_) and
+      step_ == 0) or
       allMessagesReceived();
   }
 
@@ -279,8 +284,9 @@ struct DistanceDoubling {
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
   DataT val_ = {};
-  NodeType this_node_ = {};
   NodeType num_nodes_ = {};
+  NodeType this_node_ = {};
+
   bool is_even_ = false;
   int32_t num_steps_ = {};
   int32_t nprocs_pof2_ = {};
