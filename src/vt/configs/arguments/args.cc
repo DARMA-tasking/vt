@@ -355,8 +355,8 @@ void parseYaml(AppConfig& appConfig, std::string inputFile) {
 #endif
   appConfig.vt_diag_enable = diagnostics["Enabled"].as<bool>(default_diag_enable);
   appConfig.vt_diag_print_summary = diagnostics["Enable Print Summary"].as<bool>(false);
-  appConfig.vt_diag_summary_file = diagnostics["Summary File"].as<std::string>("");
-  appConfig.vt_diag_summary_csv_file = diagnostics["Summary CSV File"].as<std::string>("vtdiag.txt");
+  appConfig.vt_diag_summary_file = diagnostics["Summary File"].as<std::string>("vtdiag.txt");
+  appConfig.vt_diag_summary_csv_file = diagnostics["Summary CSV File"].as<std::string>("");
   appConfig.vt_diag_csv_base_units = diagnostics["Use CSV Base Units"].as<bool>(false);
 
   // Termination

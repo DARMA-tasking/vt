@@ -51,6 +51,8 @@
 #include <vt/utils/json/json_appender.h>
 #include <vt/elm/elm_id_bits.h>
 
+#include <yaml-cpp/yaml.h>
+
 #include <fstream>
 #include <filesystem>
 
@@ -263,99 +265,256 @@ TEST_F(TestInitialization, test_initialize_with_toml_file_args_and_appconfig) {
   EXPECT_EQ(custom_argv[2], nullptr);
 }
 
-TEST_F(TestInitialization, test_initialize_with_yaml_file_and_args) {
+TEST_F(TestInitialization, test_initialize_with_yaml) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
   static char prog_name[]{"vt_program"};
-  static char cli_argument[]{"--cli_argument=100"};
-  static char vt_no_terminate[]{"--vt_no_terminate"};
-  static char vt_lb_name[]{"--vt_lb_name=RotateLB"};
 
   std::string config_file(getUniqueFilenameWithRanks(".yaml"));
-  std::string config_flag("--vt_input_config=");
-  std::string vt_input_config = config_flag + config_file;
-
-  std::vector<char *> custom_args;
-  custom_args.emplace_back(prog_name);
-  custom_args.emplace_back(cli_argument);
-  custom_args.emplace_back(vt_no_terminate);
-  custom_args.emplace_back(strdup(vt_input_config.c_str()));
-  custom_args.emplace_back(vt_lb_name);
-  custom_args.emplace_back(nullptr);
-
-  int custom_argc = custom_args.size() - 1;
-  char **custom_argv = custom_args.data();
-
-  EXPECT_EQ(custom_argc, 5);
-
-  int this_rank;
-  MPI_Comm_rank(comm, &this_rank);
-  if (this_rank == 0) {
-    std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
-    cfg_file_ << "vt_lb_name = RandomLB\n";
-    cfg_file_.close();
-  }
-  MPI_Barrier(comm);
-
-  vt::initialize(custom_argc, custom_argv, &comm);
-
-  EXPECT_EQ(theConfig()->prog_name, "vt_program");
-  EXPECT_EQ(theConfig()->vt_no_terminate, true);
-  EXPECT_EQ(theConfig()->vt_lb_name, "RotateLB");
-
-  EXPECT_EQ(custom_argc, 2);
-  EXPECT_STREQ(custom_argv[0], "vt_program");
-  EXPECT_STREQ(custom_argv[1], "--cli_argument=100");
-  EXPECT_EQ(custom_argv[2], nullptr);
-}
-
-TEST_F(TestInitialization, test_initialize_with_yaml_file_args_and_appconfig) {
-  MPI_Comm comm = MPI_COMM_WORLD;
-
-  static char prog_name[]{"vt_program"};
-  static char cli_argument[]{"--cli_argument=100"};
-  static char vt_no_terminate[]{"--vt_no_terminate"};
-  static char vt_lb_name[]{"--vt_lb_name=RotateLB"};
-
-  std::string config_file(getUniqueFilenameWithRanks(".yaml"));
-  std::string config_flag("--vt_input_config=");
+  std::string config_flag("--vt_input_config_yaml=");
   std::string vt_input_config = config_flag + config_file;
 
   std::vector<char*> custom_args;
   custom_args.emplace_back(prog_name);
-  custom_args.emplace_back(cli_argument);
-  custom_args.emplace_back(vt_no_terminate);
   custom_args.emplace_back(strdup(vt_input_config.c_str()));
-  custom_args.emplace_back(vt_lb_name);
   custom_args.emplace_back(nullptr);
 
   int custom_argc = custom_args.size() - 1;
   char** custom_argv = custom_args.data();
 
-  EXPECT_EQ(custom_argc, 5);
-
-  arguments::AppConfig appConfig{};
-  appConfig.vt_lb_name = "GreedyLB";
+  EXPECT_EQ(custom_argc, 2);
 
   int this_rank;
   MPI_Comm_rank(comm, &this_rank);
   if (this_rank == 0) {
     std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
-    cfg_file_ << "vt_lb_name = RandomLB\n";
+    cfg_file_ << "Output Control:\n"
+              << "  Color: False\n"
+              << "  Quiet: True\n"
+              << "Signal Handling:\n"
+              << "  Disable SIGINT: True\n"
+              << "  Disable SIGSEGV: True\n"
+              << "  Disable SIGBUS: True\n"
+              << "  Disable Terminate Signal: True\n"
+              << "Memory Usage Reporting:\n"
+              << "  Print Memory Each Phase: True\n"
+              // << "  Print Memory On Node: '1'\n" // throws an error maybe
+              << "  Allow Memory Report With ps: True\n"
+              << "Tracing Configuration:\n"
+              << "  Enabled: False\n"
+              << "Debug Print Configuration:\n"
+              << "  Level: normal\n"
+              << "  Enable:\n"
+              << "    - gen\n"
+              << "    - term\n"
+              << "    - pool\n"
+              << "    - group\n"
+              << "Load Balancing:\n"
+              << "  Enabled: True\n"
+              << "  LB Data Output:\n"
+              << "    Enabled: False\n"
+              << "  LB Data Input:\n"
+              << "    Enabled: False\n"
+              << "  LB Statistics:\n"
+              << "    Enabled: False\n"
+              << "Diagnostics:\n"
+              << "  Enabled: True\n"
+              << "  Enable Print Summary: True\n"
+              << "Termination:\n"
+              << "  Detect Hangs: True\n"
+              << "  Terse Epoch Graph Output: True\n"
+              << "Launch:\n"
+              << "  Pause: False\n"
+              << "User Options:\n"
+              << "  User 1: True\n"
+              << "  User int 1: 45\n"
+              << "  User str 1: test_string\n"
+              << "Scheduler Configuration:\n"
+              << "  Num Progress Times: 3\n"
+              << "Runtime:\n"
+              << "  Throw on Abort: True\n";
     cfg_file_.close();
   }
+  // Load this config file using yaml-cpp
+  // YAML::Node input_config = YAML::Load(cfg_file_);
+
   MPI_Barrier(comm);
 
-  vt::initialize(custom_argc, custom_argv, &comm, &appConfig);
+  vt::initialize(custom_argc, custom_argv, &comm);
 
+  // TEST THAT THE CONFIGURATION FILE WAS READ IN CORRECTLY
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
-  EXPECT_EQ(theConfig()->vt_no_terminate, true);
-  EXPECT_EQ(theConfig()->vt_lb_name, "RotateLB");
 
-  EXPECT_EQ(custom_argc, 2);
-  EXPECT_STREQ(custom_argv[0], "vt_program");
-  EXPECT_STREQ(custom_argv[1], "--cli_argument=100");
-  EXPECT_EQ(custom_argv[2], nullptr);
+  // Output Control
+  EXPECT_EQ(theConfig()->vt_color, false);
+  EXPECT_EQ(theConfig()->vt_no_color, true);
+  EXPECT_EQ(theConfig()->vt_quiet, true);
+
+  // Signal Handling
+  EXPECT_EQ(theConfig()->vt_no_sigint, true);
+  EXPECT_EQ(theConfig()->vt_no_sigsegv, true);
+  EXPECT_EQ(theConfig()->vt_no_sigbus, true);
+  EXPECT_EQ(theConfig()->vt_no_terminate, true);
+
+  // Memory Usage Reporting
+  EXPECT_EQ(theConfig()->vt_print_memory_each_phase, true);
+  // EXPECT_EQ(theConfig()->vt_print_memory_node, "0");
+  EXPECT_EQ(theConfig()->vt_allow_memory_report_with_ps, true);
+  EXPECT_EQ(theConfig()->vt_print_memory_threshold, "1 GiB");
+  EXPECT_EQ(theConfig()->vt_print_memory_sched_poll, 100);
+  EXPECT_EQ(theConfig()->vt_print_memory_footprint, false);
+
+  // Dump Stack Backtrace
+  EXPECT_EQ(theConfig()->vt_no_warn_stack, false);
+  EXPECT_EQ(theConfig()->vt_no_assert_stack, false);
+  EXPECT_EQ(theConfig()->vt_no_abort_stack, false);
+  EXPECT_EQ(theConfig()->vt_no_stack, false);
+  EXPECT_EQ(theConfig()->vt_stack_file, "");
+  EXPECT_EQ(theConfig()->vt_stack_dir, "");
+  EXPECT_EQ(theConfig()->vt_stack_mod, 0);
+
+  // Tracing Configuration
+  EXPECT_EQ(theConfig()->vt_trace, false);
+  EXPECT_EQ(theConfig()->vt_trace_mpi, false);
+  EXPECT_EQ(theConfig()->vt_trace_pmpi, false);
+  EXPECT_EQ(theConfig()->vt_trace_mod, 0);
+  EXPECT_EQ(theConfig()->vt_trace_flush_size, 0);
+  EXPECT_EQ(theConfig()->vt_trace_gzip_finish_flush, false);
+  EXPECT_EQ(theConfig()->vt_trace_sys_all, false);
+  EXPECT_EQ(theConfig()->vt_trace_sys_term, false);
+  EXPECT_EQ(theConfig()->vt_trace_sys_location, false);
+  EXPECT_EQ(theConfig()->vt_trace_sys_collection, false);
+  EXPECT_EQ(theConfig()->vt_trace_sys_serial_msg, false);
+  EXPECT_EQ(theConfig()->vt_trace_spec, false);
+  EXPECT_EQ(theConfig()->vt_trace_spec_file, "");
+  EXPECT_EQ(theConfig()->vt_trace_memory_usage, false);
+  EXPECT_EQ(theConfig()->vt_trace_event_polling, false);
+  EXPECT_EQ(theConfig()->vt_trace_irecv_polling, false);
+
+
+  EXPECT_EQ(theConfig()->vt_debug_level, "normal");
+  EXPECT_EQ(theConfig()->vt_debug_all, false);
+  EXPECT_EQ(theConfig()->vt_debug_none, false);
+  EXPECT_EQ(theConfig()->vt_debug_print_flush, false);
+  EXPECT_EQ(theConfig()->vt_debug_gen, true);
+  EXPECT_EQ(theConfig()->vt_debug_runtime, false);
+  EXPECT_EQ(theConfig()->vt_debug_active, false);
+  EXPECT_EQ(theConfig()->vt_debug_term, true);
+  EXPECT_EQ(theConfig()->vt_debug_termds, false);
+  EXPECT_EQ(theConfig()->vt_debug_barrier, false);
+  EXPECT_EQ(theConfig()->vt_debug_event, false);
+  EXPECT_EQ(theConfig()->vt_debug_pipe, false);
+  EXPECT_EQ(theConfig()->vt_debug_pool, true);
+  EXPECT_EQ(theConfig()->vt_debug_reduce, false);
+  EXPECT_EQ(theConfig()->vt_debug_rdma, false);
+  EXPECT_EQ(theConfig()->vt_debug_rdma_channel, false);
+  EXPECT_EQ(theConfig()->vt_debug_rdma_state, false);
+  EXPECT_EQ(theConfig()->vt_debug_handler, false);
+  EXPECT_EQ(theConfig()->vt_debug_hierlb, false);
+  EXPECT_EQ(theConfig()->vt_debug_temperedlb, false);
+  EXPECT_EQ(theConfig()->vt_debug_temperedwmin, false);
+  EXPECT_EQ(theConfig()->vt_debug_scatter, false);
+  EXPECT_EQ(theConfig()->vt_debug_serial_msg, false);
+  EXPECT_EQ(theConfig()->vt_debug_trace, false);
+  EXPECT_EQ(theConfig()->vt_debug_location, false);
+  EXPECT_EQ(theConfig()->vt_debug_lb, false);
+  EXPECT_EQ(theConfig()->vt_debug_vrt, false);
+  EXPECT_EQ(theConfig()->vt_debug_vrt_coll, false);
+  EXPECT_EQ(theConfig()->vt_debug_worker, false);
+  EXPECT_EQ(theConfig()->vt_debug_group, true);
+  EXPECT_EQ(theConfig()->vt_debug_broadcast, false);
+  EXPECT_EQ(theConfig()->vt_debug_objgroup, false);
+  EXPECT_EQ(theConfig()->vt_debug_phase, false);
+  EXPECT_EQ(theConfig()->vt_debug_context, false);
+  EXPECT_EQ(theConfig()->vt_debug_epoch, false);
+
+  // Load Balancing
+  EXPECT_EQ(theConfig()->vt_lb, true);
+  EXPECT_EQ(theConfig()->vt_lb_quiet, false);
+  EXPECT_EQ(theConfig()->vt_lb_file_name, "");
+  EXPECT_EQ(theConfig()->vt_lb_show_config, false);
+  EXPECT_EQ(theConfig()->vt_lb_name, "NoLB");
+  EXPECT_EQ(theConfig()->vt_lb_args, "");
+  EXPECT_EQ(theConfig()->vt_lb_interval, 1);
+  EXPECT_EQ(theConfig()->vt_lb_keep_last_elm, false);
+  EXPECT_EQ(theConfig()->vt_lb_data, false);
+  EXPECT_EQ(theConfig()->vt_lb_data_dir, "vt_lb_data");
+  EXPECT_EQ(theConfig()->vt_lb_data_file, "data.%p.json");
+  EXPECT_EQ(theConfig()->vt_lb_data_in, false);
+  EXPECT_EQ(theConfig()->vt_lb_data_compress, false);
+  EXPECT_EQ(theConfig()->vt_lb_data_dir_in, "vt_lb_data_in");
+  EXPECT_EQ(theConfig()->vt_lb_data_file_in, "data.%p.json");
+  EXPECT_EQ(theConfig()->vt_lb_statistics, false);
+  EXPECT_EQ(theConfig()->vt_lb_statistics_compress, false);
+  EXPECT_EQ(theConfig()->vt_lb_statistics_file, "vt_lb_statistics.%t.json");
+  EXPECT_EQ(theConfig()->vt_lb_statistics_dir, "");
+  EXPECT_EQ(theConfig()->vt_lb_self_migration, false);
+  EXPECT_EQ(theConfig()->vt_lb_spec, false);
+  EXPECT_EQ(theConfig()->vt_lb_spec_file, "");
+
+  // Diagnostics
+  EXPECT_EQ(theConfig()->vt_diag_enable, true);
+  EXPECT_EQ(theConfig()->vt_diag_print_summary, true);
+  EXPECT_EQ(theConfig()->vt_diag_summary_file, "vtdiag.txt");
+  EXPECT_EQ(theConfig()->vt_diag_summary_csv_file, "");
+  EXPECT_EQ(theConfig()->vt_diag_csv_base_units, false);
+
+  // Termination
+  EXPECT_EQ(theConfig()->vt_no_detect_hang, false);
+  EXPECT_EQ(theConfig()->vt_term_rooted_use_ds, false);
+  EXPECT_EQ(theConfig()->vt_term_rooted_use_wave, false);
+  EXPECT_EQ(theConfig()->vt_epoch_graph_on_hang, true);
+  EXPECT_EQ(theConfig()->vt_epoch_graph_terse, true);
+  EXPECT_EQ(theConfig()->vt_print_no_progress, true);
+  EXPECT_EQ(theConfig()->vt_hang_freq, 1024);
+
+  // Debugging/Launch
+  EXPECT_EQ(theConfig()->vt_pause, false);
+
+  // User Options
+  EXPECT_EQ(theConfig()->vt_user_1, true);
+  EXPECT_EQ(theConfig()->vt_user_2, false);
+  EXPECT_EQ(theConfig()->vt_user_3, false);
+  EXPECT_EQ(theConfig()->vt_user_int_1, 45);
+  EXPECT_EQ(theConfig()->vt_user_int_2, 0);
+  EXPECT_EQ(theConfig()->vt_user_int_3, 0);
+  EXPECT_EQ(theConfig()->vt_user_str_1, "test_string");
+  EXPECT_EQ(theConfig()->vt_user_str_2, "");
+  EXPECT_EQ(theConfig()->vt_user_str_3, "");
+
+  // Scheduler Configuration
+  EXPECT_EQ(theConfig()->vt_sched_num_progress, 3);
+  EXPECT_EQ(theConfig()->vt_sched_progress_han, 0);
+  EXPECT_EQ(theConfig()->vt_sched_progress_sec, 0);
+
+  // Runtime
+  EXPECT_EQ(theConfig()->vt_max_mpi_send_size, 1ull << 30);
+  EXPECT_EQ(theConfig()->vt_no_assert_fail, false);
+  EXPECT_EQ(theConfig()->vt_throw_on_abort, true);
+
+  // TEST THAT THE CONFIGURATION FILE WAS WRITTEN OUT CORRECTLY
+  // YAML::Node output_config = theConfig()->convertConfigToYaml();
+  // YAML::Node current_output_node = output_config;
+  // YAML::Node current_input_node = input_config;
+
+  // for (const auto& [key, val] : current_input_node) {
+  //   if (current_input_node[key].IsMap()) {
+  //     current_output_node = current_output_node[key];
+  //     current_input_node = current_input_node[key];
+
+  //   } else if (current_input_node[key].IsSequence()) {
+  //     for (const auto& elt : current_input_node[key]) {
+  //       /*assert that elt is in current_output_node*/
+  //     }
+  //   } else if (current_input_node[key]) {
+  //     EXPECT_EQ(input_config[key], current_output_node[key]);
+  //   } else {
+  //     // Reset current node
+  //     current_input_node = input_config
+  //     current_output_node = output_config;
+  //   }
+  // }
+
 }
 
 void prepareLBDataFiles(const std::string file_name_without_ext) {

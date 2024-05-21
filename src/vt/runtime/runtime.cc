@@ -465,9 +465,15 @@ bool Runtime::initialize(bool const force_now) {
       // If the user specified to output a configuration file, write it to the
       // specified file on rank 0
       if (theConfig()->vt_output_config) {
-        std::ofstream out(theConfig()->vt_output_config_file);
-        out << theConfig()->vt_output_config_str;
-        out.close();
+        auto output_file = theConfig()->vt_output_config_file;
+        auto config_file_ending = output_file.substr(output_file.size()-4);
+        if (config_file_ending == ".yml" || config_file_ending == "yaml") {
+          theConfig()->writeConfigToYaml();
+        } else {
+          std::ofstream out(output_file);
+          out << theConfig()->vt_output_config_str;
+          out.close();
+        }
       }
     }
     setup();
