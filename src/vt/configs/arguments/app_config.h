@@ -47,7 +47,9 @@
 // do not pull in any VT dependencies here
 #include <string>
 #include <vector>
-#include <unordered_map>
+#include <tuple>
+#include <variant>
+#include <fstream>
 #include <yaml-cpp/yaml.h>
 
 namespace vt { namespace arguments {
@@ -262,163 +264,6 @@ struct AppConfig {
   std::string getLBDataFileIn() const;
   std::string getLBStatisticsFile() const;
 
-  // {CLI arg, {Node, Key}}
-  std::unordered_map<std::string, std::pair<std::string, std::string>> cli_to_yaml_args = {
-    // Output Control
-    {"vt_color", {"Output Control", "Color"}},
-    {"vt_no_color", {"Output Control", "Color"}},
-    {"vt_quiet", {"Output Control", "Quiet"}},
-
-    // Signal Handling
-    {"vt_no_sigint", {"Signal Handling", "Disable SIGINT"}},
-    {"vt_no_sigsegv", {"Signal Handling", "Disable SIGSEGV"}},
-    {"vt_no_sigbus", {"Signal Handling", "Disable SIGBUS"}},
-    {"vt_no_terminate", {"Signal Handling", "Disable Terminate Signal"}},
-
-    // Memory Usage Reporting
-    {"vt_memory_reporters", {"Memory Usage Reporting", "Memory Reporters"}},
-    {"vt_print_memory_each_phase", {"Memory Usage Reporting", "Print Memory Each Phase"}},
-    {"vt_print_memory_node", {"Memory Usage Reporting", "Print Memory on Node"}},
-    {"vt_allow_memory_report_with_ps", {"Memory Usage Reporting", "Allow Memory Report With ps"}},
-    {"vt_print_memory_threshold", {"Memory Usage Reporting", "Print Memory Threshold"}},
-    {"vt_print_memory_sched_poll", {"Memory Usage Reporting", "Print Memory Scheduler Poll"}},
-    {"vt_print_memory_footprint", {"Memory Usage Reporting", "Print Memory Footprint"}},
-
-    // Dump Stack Backtrace
-    {"vt_no_warn_stack", {"Dump Stack Backtrace", "Enable Stack Output on Warning"}},
-    {"vt_no_assert_stack", {"Dump Stack Backtrace", "Enable Stack Output on Assert"}},
-    {"vt_no_abort_stack", {"Dump Stack Backtrace", "Enable Stack Output on Abort"}},
-    {"vt_no_stack", {"Dump Stack Backtrace", "Enable Stack Output"}},
-    {"vt_stack_file", {"Dump Stack Backtrace", "File"}},
-    {"vt_stack_dir", {"Dump Stack Backtrace", "Directory"}},
-    {"vt_stack_mod", {"Dump Stack Backtrace", "Output Rank Mod"}},
-
-    // Tracing Configuration
-    {"vt_trace", {"Tracing Configuration", "Enabled"}},
-    {"vt_trace_mpi", {"Tracing Configuration", "MPI Type Events"}},
-    {"vt_trace_pmpi", {"Tracing Configuration", "MPI Type Events"}},
-    {"vt_trace_file", {"Tracing Configuration", "File"}},
-    {"vt_trace_dir", {"Tracing Configuration", "Directory"}},
-    {"vt_trace_mod", {"Tracing Configuration", "Output Rank Mod"}},
-    {"vt_trace_flush_size", {"Tracing Configuration", "Flush Size"}},
-    {"vt_trace_gzip_finish_flush", {"Tracing Configuration", "GZip Finish Flush"}},
-    {"vt_trace_sys_all", {"Tracing Configuration", "Include All System Events"}},
-    {"vt_trace_sys_term", {"Tracing Configuration", "Include Termination Events"}},
-    {"vt_trace_sys_location", {"Tracing Configuration", "Include Location Events"}},
-    {"vt_trace_sys_collection", {"Tracing Configuration", "Include Collection Events"}},
-    {"vt_trace_sys_serial_msg", {"Tracing Configuration", "Include Message Serialization Events"}},
-    {"vt_trace_spec", {"Tracing Configuration", "Specification Enabled"}},
-    {"vt_trace_spec_file", {"Tracing Configuration", "Spec File"}},
-    {"vt_trace_memory_usage", {"Tracing Configuration", "Memory Usage"}},
-    {"vt_trace_event_polling", {"Tracing Configuration", "Event Polling"}},
-    {"vt_trace_irecv_polling", {"Tracing Configuration", "IRecv Polling"}},
-
-    // Debug Print Configuration
-    {"vt_debug_level", {"Debug Print Configuration", "Level"}},
-    {"vt_debug_all", {"Debug Print Configuration", "Enable All"}},
-    {"vt_debug_none", {"Debug Print Configuration", "Disable All"}},
-    {"vt_debug_print_flush", {"Debug Print Configuration", "Debug Print Flush"}},
-    {"vt_debug_gen", {"Debug Print Configuration/Enable", "gen"}},
-    {"vt_debug_runtime", {"Debug Print Configuration/Enable", "runtime"}},
-    {"vt_debug_active", {"Debug Print Configuration/Enable", "active"}},
-    {"vt_debug_term", {"Debug Print Configuration/Enable", "term"}},
-    {"vt_debug_termds", {"Debug Print Configuration/Enable", "termds"}},
-    {"vt_debug_barrier", {"Debug Print Configuration/Enable", "barrier"}},
-    {"vt_debug_event", {"Debug Print Configuration/Enable", "event"}},
-    {"vt_debug_pipe", {"Debug Print Configuration/Enable", "pipe"}},
-    {"vt_debug_pool", {"Debug Print Configuration/Enable", "pool"}},
-    {"vt_debug_reduce", {"Debug Print Configuration/Enable", "reduce"}},
-    {"vt_debug_rdma", {"Debug Print Configuration/Enable", "rdma"}},
-    {"vt_debug_rdma_channel", {"Debug Print Configuration/Enable", "rdma_channel"}},
-    {"vt_debug_rdma_state", {"Debug Print Configuration/Enable", "rdma_state"}},
-    {"vt_debug_handler", {"Debug Print Configuration/Enable", "handler"}},
-    {"vt_debug_hierlb", {"Debug Print Configuration/Enable", "hierlb"}},
-    {"vt_debug_temperedlb", {"Debug Print Configuration/Enable", "temperedlb"}},
-    {"vt_debug_temperedwmin", {"Debug Print Configuration/Enable", "temperedwmin"}},
-    {"vt_debug_scatter", {"Debug Print Configuration/Enable", "scatter"}},
-    {"vt_debug_serial_msg", {"Debug Print Configuration/Enable", "serial_msg"}},
-    {"vt_debug_trace", {"Debug Print Configuration/Enable", "trace"}},
-    {"vt_debug_location", {"Debug Print Configuration/Enable", "location"}},
-    {"vt_debug_lb", {"Debug Print Configuration/Enable", "lb"}},
-    {"vt_debug_vrt", {"Debug Print Configuration/Enable", "vrt"}},
-    {"vt_debug_vrt_coll", {"Debug Print Configuration/Enable", "vrt_coll"}},
-    {"vt_debug_worker", {"Debug Print Configuration/Enable", "worker"}},
-    {"vt_debug_group", {"Debug Print Configuration/Enable", "group"}},
-    {"vt_debug_broadcast", {"Debug Print Configuration/Enable", "broadcast"}},
-    {"vt_debug_objgroup", {"Debug Print Configuration/Enable", "objgroup"}},
-    {"vt_debug_phase", {"Debug Print Configuration/Enable", "phase"}},
-    {"vt_debug_context", {"Debug Print Configuration/Enable", "context"}},
-    {"vt_debug_epoch", {"Debug Print Configuration/Enable", "epoch"}},
-
-    // Load Balancing
-    {"vt_lb", {"Load Balancing", "Enabled"}},
-    {"vt_lb_quiet", {"Load Balancing", "Quiet"}},
-    {"vt_lb_file_name", {"Load Balancing", "File"}},
-    {"vt_lb_show_config", {"Load Balancing", "Show Configuration"}},
-    {"vt_lb_name", {"Load Balancing", "Name"}},
-    {"vt_lb_args", {"Load Balancing", "Arguments"}},
-    {"vt_lb_interval", {"Load Balancing", "Interval"}},
-    {"vt_lb_keep_last_elm", {"Load Balancing", "Keep Last Element"}},
-    {"vt_lb_data", {"Load Balancing/LB Data Output", "Enabled"}},
-    {"vt_lb_data_dir", {"Load Balancing/LB Data Output", "Directory"}},
-    {"vt_lb_data_file", {"Load Balancing/LB Data Output", "File"}},
-    {"vt_lb_data_in", {"Load Balancing/LB Data Input", "Enabled"}},
-    {"vt_lb_data_compress", {"Load Balancing/LB Data Input", "Enable Compression"}},
-    {"vt_lb_data_dir_in", {"Load Balancing/LB Data Input", "Directory"}},
-    {"vt_lb_data_file_in", {"Load Balancing/LB Data Input", "File"}},
-    {"vt_lb_statistics", {"Load Balancing/LB Statistics", "Enabled"}},
-    {"vt_lb_statistics_compress", {"Load Balancing/LB Statistics", "Enable Compression"}},
-    {"vt_lb_statistics_file", {"Load Balancing/LB Statistics", "File"}},
-    {"vt_lb_statistics_dir", {"Load Balancing/LB Statistics", "Directory"}},
-    {"vt_lb_self_migration", {"Load Balancing", "Enable Self Migration"}},
-    {"vt_lb_spec", {"Load Balancing", "Enable Specification"}},
-    {"vt_lb_spec_file", {"Load Balancing", "Specification File"}},
-
-    // Diagnostics
-    {"vt_diag_enable", {"Diagnostics", "Enabled"}},
-    {"vt_diag_print_summary", {"Diagnostics", "Enable Print Summary"}},
-    {"vt_diag_summary_file", {"Diagnostics", "Summary File"}},
-    {"vt_diag_summary_csv_file", {"Diagnostics", "Summary CSV File"}},
-    {"vt_diag_csv_base_units", {"Diagnostics", "Use CSV Base Units"}},
-
-    // Termination
-    {"vt_no_detect_hang", {"Termination", "Detect Hangs"}},
-    {"vt_term_rooted_use_ds", {"Termination", "Use DS for Rooted"}},
-    {"vt_term_rooted_use_wave", {"Termination", "Use Wave for Rooted"}},
-    {"vt_epoch_graph_on_hang", {"Termination", "Output Epoch Graph on Hang"}},
-    {"vt_epoch_graph_terse", {"Termination", "Terse Epoch Graph Output"}},
-    {"vt_print_no_progress", {"Termination", "Print No Progress"}},
-    {"vt_hang_freq", {"Termination", "Hang Check Frequency"}},
-
-    // Debugging/Launch
-    {"vt_pause", {"Launch", "Pause"}},
-
-    // User Options
-    {"vt_user_1", {"User Options", "User 1"}},
-    {"vt_user_2", {"User Options", "User 2"}},
-    {"vt_user_3", {"User Options", "User 3"}},
-    {"vt_user_int_1", {"User Options", "User int 1"}},
-    {"vt_user_int_2", {"User Options", "User int 2"}},
-    {"vt_user_int_3", {"User Options", "User int 3"}},
-    {"vt_user_str_1", {"User Options", "User str 1"}},
-    {"vt_user_str_2", {"User Options", "User str 2"}},
-    {"vt_user_str_3", {"User Options", "User str 3"}},
-
-    // Scheduler Configuration
-    {"vt_sched_num_progress", {"Scheduler Configuration", "Num Progress Times"}},
-    {"vt_sched_progress_han", {"Scheduler Configuration", "Progress Handlers"}},
-    {"vt_sched_progress_sec", {"Scheduler Configuration", "Progress Seconds"}},
-
-    // Configuration File
-    {"vt_output_config", {"Configuration File", "Enable Output Config"}},
-    {"vt_output_config_file", {"Configuration File", "File"}},
-
-    // Runtime
-    {"vt_max_mpi_send_size", {"Runtime", "Max MPI Send Size"}},
-    {"vt_no_assert_fail", {"Runtime", "Disable Assert Failure"}},
-    {"vt_throw_on_abort", {"Runtime", "Throw on Abort"}}
-  };
-
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | vt_color
@@ -573,45 +418,236 @@ struct AppConfig {
       | passthru_args;
   }
 
-  // std::vector<std::string> split_string(std::string input_str, std::string delimiter) {
-  //   std::vector<std::string> splits;
-  //   std::string segment;
-  //   while (std::getline(input_str, segment, delimiter)) {
-  //     splits.push_back(segment);
-  //   }
-  //   return splits;
-  // }
+  using variantArg_t = std::variant<bool, int32_t, int64_t, double, std::size_t, std::string>;
 
-  // void config_to_yaml_str(std::string ini_string) {
-  //   std::string yaml_conf_str;
-  //   std::istringstream iss(ini_string);
-  //   std::string line;
+  std::vector<std::string> splitString(std::string input_str) {
+    std::vector<std::string> splits;
+    long unsigned int pos = 0;
+    while (input_str.find("/") != input_str.npos) {
+      pos = input_str.find("/");
+      splits.push_back(input_str.substr(0, pos));
+      input_str.erase(0, pos + 1);
+    }
+    splits.push_back(input_str);
+    return splits;
+  }
 
-  //   // Loop through every line of the .ini string
-  //   while (std::getline(iss, line)) {
-  //     std::vector<std::string> cli_key = split_string(line, "=");
+  void addVariantToNode(YAML::Node& node, std::string key, variantArg_t variant_val) {
+      // Get the yaml_val from the variant
+      if (std::holds_alternative<bool>(variant_val)) {
+        node[key] = std::get<bool>(variant_val);
+      } else if (std::holds_alternative<int32_t>(variant_val)) {
+        node[key] = std::get<int32_t>(variant_val);
+      } else if (std::holds_alternative<int64_t>(variant_val)) {
+        node[key] = std::get<int64_t>(variant_val);
+      } else if (std::holds_alternative<double>(variant_val)) {
+        node[key] = std::get<double>(variant_val);
+      } else if (std::holds_alternative<std::size_t>(variant_val)) {
+        node[key] = std::get<std::size_t>(variant_val);
+      } else if (std::holds_alternative<std::string>(variant_val)) {
+        node[key] = std::get<std::string>(variant_val);
+      } else {
+        throw std::runtime_error("Argument type not recognized.");
+      }
+  }
 
-  //     // Map the CLI key to the YAML key
-  //     std::unordered_map<std::string, std::pair<std::string, std::string>> cli_to_yaml_args;
-  //     auto it = cli_to_yaml_args.find(cli_key[0]);
-  //     if (it != cli_to_yaml_args.end()) {
-  //       auto yaml_key_pair = it->second;
-  //       auto yaml_node_name = yaml_key_pair.first;
-  //       auto yaml_key = yaml_key_pair.second;
+  YAML::Node convertConfigToYaml() {
 
-  //       // Look for indication of nested structure
-  //       if (yaml_node_name.find("/") != yaml_node_name.end()) {
-  //         if (split_string(yaml_node_name, "/")[0] == "Debug Print Configuration") {
-  //             // Handle the list
-  //         } else {
-  //             // Handle the generic Sub-Node
-  //         }
-  //       } else {
-  //           // Handle the generic node
-  //       }
-  //     }
-  //   }
-  // }
+    // First, create a converter vector of tuples {Node(s), Key, Value}
+    std::vector< std::tuple<std::string, std::string, variantArg_t> > cli_to_yaml_args =
+    {
+      // Output Control
+      {"Output Control", "Color", static_cast<variantArg_t>(vt_color)},
+      {"Output Control", "Color", static_cast<variantArg_t>(not vt_no_color)}, // overwrites vt_color
+      {"Output Control", "Quiet", static_cast<variantArg_t>(vt_quiet)},
+
+      // Signal Handling
+      {"Signal Handling", "Disable SIGINT", static_cast<variantArg_t>(vt_no_sigint)},
+      {"Signal Handling", "Disable SIGSEGV", static_cast<variantArg_t>(vt_no_sigsegv)},
+      {"Signal Handling", "Disable SIGBUS", static_cast<variantArg_t>(vt_no_sigbus)},
+      {"Signal Handling", "Disable Terminate Signal", static_cast<variantArg_t>(vt_no_terminate)},
+
+      // Memory Usage Reporting
+      {"Memory Usage Reporting", "Memory Reporters", static_cast<variantArg_t>(vt_memory_reporters)},
+      {"Memory Usage Reporting", "Print Memory Each Phase", static_cast<variantArg_t>(vt_print_memory_each_phase)},
+      {"Memory Usage Reporting", "Print Memory on Node", static_cast<variantArg_t>(vt_print_memory_node)},
+      {"Memory Usage Reporting", "Allow Memory Report With ps", static_cast<variantArg_t>(vt_allow_memory_report_with_ps)},
+      {"Memory Usage Reporting", "Print Memory Threshold", static_cast<variantArg_t>(vt_print_memory_threshold)},
+      {"Memory Usage Reporting", "Print Memory Scheduler Poll", static_cast<variantArg_t>(vt_print_memory_sched_poll)},
+      {"Memory Usage Reporting", "Print Memory Footprint", static_cast<variantArg_t>(vt_print_memory_footprint)},
+
+      // Dump Stack Backtrace
+      {"Dump Stack Backtrace", "Enable Stack Output on Warning", static_cast<variantArg_t>(vt_no_warn_stack)},
+      {"Dump Stack Backtrace", "Enable Stack Output on Assert", static_cast<variantArg_t>(vt_no_assert_stack)},
+      {"Dump Stack Backtrace", "Enable Stack Output on Abort", static_cast<variantArg_t>(vt_no_abort_stack)},
+      {"Dump Stack Backtrace", "Enable Stack Output", static_cast<variantArg_t>(vt_no_stack)},
+      {"Dump Stack Backtrace", "File", static_cast<variantArg_t>(vt_stack_file)},
+      {"Dump Stack Backtrace", "Directory", static_cast<variantArg_t>(vt_stack_dir)},
+      {"Dump Stack Backtrace", "Output Rank Mod", static_cast<variantArg_t>(vt_stack_mod)},
+
+      // Tracing Configuration
+      {"Tracing Configuration", "Enabled", static_cast<variantArg_t>(vt_trace)},
+      {"Tracing Configuration", "MPI Type Events", static_cast<variantArg_t>(vt_trace_mpi)},
+      {"Tracing Configuration", "MPI Type Events", static_cast<variantArg_t>(vt_trace_pmpi)},
+      {"Tracing Configuration", "File", static_cast<variantArg_t>(vt_trace_file)},
+      {"Tracing Configuration", "Directory", static_cast<variantArg_t>(vt_trace_dir)},
+      {"Tracing Configuration", "Output Rank Mod", static_cast<variantArg_t>(vt_trace_mod)},
+      {"Tracing Configuration", "Flush Size", static_cast<variantArg_t>(vt_trace_flush_size)},
+      {"Tracing Configuration", "GZip Finish Flush", static_cast<variantArg_t>(vt_trace_gzip_finish_flush)},
+      {"Tracing Configuration", "Include All System Events", static_cast<variantArg_t>(vt_trace_sys_all)},
+      {"Tracing Configuration", "Include Termination Events", static_cast<variantArg_t>(vt_trace_sys_term)},
+      {"Tracing Configuration", "Include Location Events", static_cast<variantArg_t>(vt_trace_sys_location)},
+      {"Tracing Configuration", "Include Collection Events", static_cast<variantArg_t>(vt_trace_sys_collection)},
+      {"Tracing Configuration", "Include Message Serialization Events", static_cast<variantArg_t>(vt_trace_sys_serial_msg)},
+      {"Tracing Configuration", "Specification Enabled", static_cast<variantArg_t>(vt_trace_spec)},
+      {"Tracing Configuration", "Spec File", static_cast<variantArg_t>(vt_trace_spec_file)},
+      {"Tracing Configuration", "Memory Usage", static_cast<variantArg_t>(vt_trace_memory_usage)},
+      {"Tracing Configuration", "Event Polling", static_cast<variantArg_t>(vt_trace_event_polling)},
+      {"Tracing Configuration", "IRecv Polling", static_cast<variantArg_t>(vt_trace_irecv_polling)},
+
+      // Debug Print Configuration
+      {"Debug Print Configuration", "Level", static_cast<variantArg_t>(vt_debug_level)},
+      {"Debug Print Configuration", "Enable All", static_cast<variantArg_t>(vt_debug_all)},
+      {"Debug Print Configuration", "Disable All", static_cast<variantArg_t>(vt_debug_none)},
+      {"Debug Print Configuration", "Debug Print Flush", static_cast<variantArg_t>(vt_debug_print_flush)},
+      {"Debug Print Configuration/Enable", "gen", static_cast<variantArg_t>(vt_debug_gen)},
+      {"Debug Print Configuration/Enable", "runtime", static_cast<variantArg_t>(vt_debug_runtime)},
+      {"Debug Print Configuration/Enable", "active", static_cast<variantArg_t>(vt_debug_active)},
+      {"Debug Print Configuration/Enable", "term", static_cast<variantArg_t>(vt_debug_term)},
+      {"Debug Print Configuration/Enable", "termds", static_cast<variantArg_t>(vt_debug_termds)},
+      {"Debug Print Configuration/Enable", "barrier", static_cast<variantArg_t>(vt_debug_barrier)},
+      {"Debug Print Configuration/Enable", "event", static_cast<variantArg_t>(vt_debug_event)},
+      {"Debug Print Configuration/Enable", "pipe", static_cast<variantArg_t>(vt_debug_pipe)},
+      {"Debug Print Configuration/Enable", "pool", static_cast<variantArg_t>(vt_debug_pool)},
+      {"Debug Print Configuration/Enable", "reduce", static_cast<variantArg_t>(vt_debug_reduce)},
+      {"Debug Print Configuration/Enable", "rdma", static_cast<variantArg_t>(vt_debug_rdma)},
+      {"Debug Print Configuration/Enable", "rdma_channel", static_cast<variantArg_t>(vt_debug_rdma_channel)},
+      {"Debug Print Configuration/Enable", "rdma_state", static_cast<variantArg_t>(vt_debug_rdma_state)},
+      {"Debug Print Configuration/Enable", "handler", static_cast<variantArg_t>(vt_debug_handler)},
+      {"Debug Print Configuration/Enable", "hierlb", static_cast<variantArg_t>(vt_debug_hierlb)},
+      {"Debug Print Configuration/Enable", "temperedlb", static_cast<variantArg_t>(vt_debug_temperedlb)},
+      {"Debug Print Configuration/Enable", "temperedwmin", static_cast<variantArg_t>(vt_debug_temperedwmin)},
+      {"Debug Print Configuration/Enable", "scatter", static_cast<variantArg_t>(vt_debug_scatter)},
+      {"Debug Print Configuration/Enable", "serial_msg", static_cast<variantArg_t>(vt_debug_serial_msg)},
+      {"Debug Print Configuration/Enable", "trace", static_cast<variantArg_t>(vt_debug_trace)},
+      {"Debug Print Configuration/Enable", "location", static_cast<variantArg_t>(vt_debug_location)},
+      {"Debug Print Configuration/Enable", "lb", static_cast<variantArg_t>(vt_debug_lb)},
+      {"Debug Print Configuration/Enable", "vrt", static_cast<variantArg_t>(vt_debug_vrt)},
+      {"Debug Print Configuration/Enable", "vrt_coll", static_cast<variantArg_t>(vt_debug_vrt_coll)},
+      {"Debug Print Configuration/Enable", "worker", static_cast<variantArg_t>(vt_debug_worker)},
+      {"Debug Print Configuration/Enable", "group", static_cast<variantArg_t>(vt_debug_group)},
+      {"Debug Print Configuration/Enable", "broadcast", static_cast<variantArg_t>(vt_debug_broadcast)},
+      {"Debug Print Configuration/Enable", "objgroup", static_cast<variantArg_t>(vt_debug_objgroup)},
+      {"Debug Print Configuration/Enable", "phase", static_cast<variantArg_t>(vt_debug_phase)},
+      {"Debug Print Configuration/Enable", "context", static_cast<variantArg_t>(vt_debug_context)},
+      {"Debug Print Configuration/Enable", "epoch", static_cast<variantArg_t>(vt_debug_epoch)},
+
+      // Load Balancing
+      {"Load Balancing", "Enabled", static_cast<variantArg_t>(vt_lb)},
+      {"Load Balancing", "Quiet", static_cast<variantArg_t>(vt_lb_quiet)},
+      {"Load Balancing", "File", static_cast<variantArg_t>(vt_lb_file_name)},
+      {"Load Balancing", "Show Configuration", static_cast<variantArg_t>(vt_lb_show_config)},
+      {"Load Balancing", "Name", static_cast<variantArg_t>(vt_lb_name)},
+      {"Load Balancing", "Arguments", static_cast<variantArg_t>(vt_lb_args)},
+      {"Load Balancing", "Interval", static_cast<variantArg_t>(vt_lb_interval)},
+      {"Load Balancing", "Keep Last Element", static_cast<variantArg_t>(vt_lb_keep_last_elm)},
+      {"Load Balancing/LB Data Output", "Enabled", static_cast<variantArg_t>(vt_lb_data)},
+      {"Load Balancing/LB Data Output", "Directory", static_cast<variantArg_t>(vt_lb_data_dir)},
+      {"Load Balancing/LB Data Output", "File", static_cast<variantArg_t>(vt_lb_data_file)},
+      {"Load Balancing/LB Data Input", "Enabled", static_cast<variantArg_t>(vt_lb_data_in)},
+      {"Load Balancing/LB Data Input", "Enable Compression", static_cast<variantArg_t>(vt_lb_data_compress)},
+      {"Load Balancing/LB Data Input", "Directory", static_cast<variantArg_t>(vt_lb_data_dir_in)},
+      {"Load Balancing/LB Data Input", "File", static_cast<variantArg_t>(vt_lb_data_file_in)},
+      {"Load Balancing/LB Statistics", "Enabled", static_cast<variantArg_t>(vt_lb_statistics)},
+      {"Load Balancing/LB Statistics", "Enable Compression", static_cast<variantArg_t>(vt_lb_statistics_compress)},
+      {"Load Balancing/LB Statistics", "File", static_cast<variantArg_t>(vt_lb_statistics_file)},
+      {"Load Balancing/LB Statistics", "Directory", static_cast<variantArg_t>(vt_lb_statistics_dir)},
+      {"Load Balancing", "Enable Self Migration", static_cast<variantArg_t>(vt_lb_self_migration)},
+      {"Load Balancing", "Enable Specification", static_cast<variantArg_t>(vt_lb_spec)},
+      {"Load Balancing", "Specification File", static_cast<variantArg_t>(vt_lb_spec_file)},
+
+      // Diagnostics
+      {"Diagnostics", "Enabled", static_cast<variantArg_t>(vt_diag_enable)},
+      {"Diagnostics", "Enable Print Summary", static_cast<variantArg_t>(vt_diag_print_summary)},
+      {"Diagnostics", "Summary File", static_cast<variantArg_t>(vt_diag_summary_file)},
+      {"Diagnostics", "Summary CSV File", static_cast<variantArg_t>(vt_diag_summary_csv_file)},
+      {"Diagnostics", "Use CSV Base Units", static_cast<variantArg_t>(vt_diag_csv_base_units)},
+
+      // Termination
+      {"Termination", "Detect Hangs", static_cast<variantArg_t>(vt_no_detect_hang)},
+      {"Termination", "Use DS for Rooted", static_cast<variantArg_t>(vt_term_rooted_use_ds)},
+      {"Termination", "Use Wave for Rooted", static_cast<variantArg_t>(vt_term_rooted_use_wave)},
+      {"Termination", "Output Epoch Graph on Hang", static_cast<variantArg_t>(vt_epoch_graph_on_hang)},
+      {"Termination", "Terse Epoch Graph Output", static_cast<variantArg_t>(vt_epoch_graph_terse)},
+      {"Termination", "Print No Progress", static_cast<variantArg_t>(vt_print_no_progress)},
+      {"Termination", "Hang Check Frequency", static_cast<variantArg_t>(vt_hang_freq)},
+
+      // Debugging/Launch
+      {"Launch", "Pause", static_cast<variantArg_t>(vt_pause)},
+
+      // User Options
+      {"User Options", "User 1", static_cast<variantArg_t>(vt_user_1)},
+      {"User Options", "User 2", static_cast<variantArg_t>(vt_user_2)},
+      {"User Options", "User 3", static_cast<variantArg_t>(vt_user_3)},
+      {"User Options", "User int 1", static_cast<variantArg_t>(vt_user_int_1)},
+      {"User Options", "User int 2", static_cast<variantArg_t>(vt_user_int_2)},
+      {"User Options", "User int 3", static_cast<variantArg_t>(vt_user_int_3)},
+      {"User Options", "User str 1", static_cast<variantArg_t>(vt_user_str_1)},
+      {"User Options", "User str 2", static_cast<variantArg_t>(vt_user_str_2)},
+      {"User Options", "User str 3", static_cast<variantArg_t>(vt_user_str_3)},
+
+      // Scheduler Configuration
+      {"Scheduler Configuration", "Num Progress Times", static_cast<variantArg_t>(vt_sched_num_progress)},
+      {"Scheduler Configuration", "Progress Handlers", static_cast<variantArg_t>(vt_sched_progress_han)},
+      {"Scheduler Configuration", "Progress Seconds", static_cast<variantArg_t>(vt_sched_progress_sec)},
+
+      // Configuration File
+      {"Configuration File", "Enable Output Config", static_cast<variantArg_t>(vt_output_config)},
+      {"Configuration File", "File", static_cast<variantArg_t>(vt_output_config_file)},
+
+      // Runtime
+      {"Runtime", "Max MPI Send Size", static_cast<variantArg_t>(vt_max_mpi_send_size)},
+      {"Runtime", "Disable Assert Failure", static_cast<variantArg_t>(vt_no_assert_fail)},
+      {"Runtime", "Throw on Abort", static_cast<variantArg_t>(vt_throw_on_abort)}
+    };
+
+    // Create an empty node that we will populate
+    YAML::Node output_config_yaml;
+
+    // Then convert to YAML
+    for (const auto& yaml_data : cli_to_yaml_args) {
+
+      // Unpack the yaml data
+      auto yaml_node = std::get<0>(yaml_data);
+      auto yaml_key = std::get<1>(yaml_data);
+      auto yaml_val = std::get<2>(yaml_data);
+
+      // First, explicitly handle the Debug Print Configuration list
+      if (yaml_node == "Debug Print Configuration/Enable") {
+        if (std::get<bool>(yaml_val)) {
+          output_config_yaml["Debug Print Configuration"]["Enable"].push_back(yaml_key);
+        }
+      }
+      // Then handle any nested nodes (with "/" in them)
+      else if (yaml_node.find("/") != yaml_node.npos) {
+        auto nodes = splitString(yaml_node);
+        auto current_node = output_config_yaml[nodes[0]][nodes[1]]; // TODO: generalize this
+        addVariantToNode(current_node, yaml_key, yaml_val);
+      }
+      // The rest are straightforward
+      else {
+        auto current_node = output_config_yaml[yaml_node];
+        addVariantToNode(current_node, yaml_key, yaml_val);
+      }
+    }
+  return output_config_yaml;
+  }
+
+  void writeConfigToYaml() {
+    auto output_config_yaml = convertConfigToYaml();
+    std::ofstream fout(vt_output_config_file);
+    fout << output_config_yaml;
+  }
 };
 
 }} /* end namespace vt::arguments */
