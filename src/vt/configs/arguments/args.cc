@@ -93,7 +93,8 @@ std::tuple<int, std::string> parseArguments(
 
   std::vector<char*> vt_args;
 
-  // Load up vectors (has curious ability to alternate vt/mpi/passthru)
+  // Load up vectors
+  // Has the ability to read interleaved arguments for vt, MPI, and others passed through to other libraries or the application.
   std::vector<char*>* rargs = nullptr;
   for (int i = 1; i < argc; i++) {
     char* c = argv[i];
