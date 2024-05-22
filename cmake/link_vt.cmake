@@ -219,6 +219,10 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${YAMLCPP_LIBRARY}
     )
+    target_include_directories(${ARG_TARGET} PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/yaml-cpp>
+    $<INSTALL_INTERFACE:include/yaml-cpp>
+  )
   endif()
 
   if (${vt_mimalloc_enabled})
