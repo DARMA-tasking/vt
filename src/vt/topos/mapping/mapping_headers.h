@@ -48,4 +48,4 @@
 #include "vt/topos/mapping/dense/dense.h"
 #include "vt/topos/mapping/mapping_function.h"
 
-#endif  /*INCLUDED_VT_TOPOS_MAPPING_MAPPING_HEADERS_H*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_MAPPING_HEADERS_H*/

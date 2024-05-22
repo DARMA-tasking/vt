@@ -56,4 +56,4 @@ using BitPackerType = utils::BitPacker;
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_VT_UTILS_BITS_BITS_COMMON_H*/
+#endif /*INCLUDED_VT_UTILS_BITS_BITS_COMMON_H*/

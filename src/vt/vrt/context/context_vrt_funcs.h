@@ -58,4 +58,4 @@ using ActiveVrtTypedFnType = void(VirtualContextT*, MessageT*);
 
 }} /* end namespace vt::context */
 
-#endif /*INCLUDED_VT_VRT_CONTEXT/CONTEXT_VRT_FUNCS_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_FUNCS_H*/

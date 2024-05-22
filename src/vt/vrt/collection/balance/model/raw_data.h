@@ -85,4 +85,4 @@ struct RawData : public LoadModel {
 
 }}}} // end namespace
 
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_RAW_DATA_H*/

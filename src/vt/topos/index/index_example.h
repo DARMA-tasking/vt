@@ -111,4 +111,4 @@ static_assert(
 
 }} // end namespace vt::index
 
-#endif  /*INCLUDED_VT_TOPOS_INDEX_INDEX_EXAMPLE_H*/
+#endif /*INCLUDED_VT_TOPOS_INDEX_INDEX_EXAMPLE_H*/

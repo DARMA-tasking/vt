@@ -77,4 +77,4 @@ private:
 
 }}}} // namespace vt::vrt::collection::balance
 
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_WEIGHTED_COMMUNICATION_VOLUME_H*/

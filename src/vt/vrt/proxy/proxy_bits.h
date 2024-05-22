@@ -107,4 +107,4 @@ struct VirtualProxyBuilder {
 
 }}  // end namespace vt::vrt
 
-#endif  /*INCLUDED_VT_VRT_PROXY_PROXY_BITS_H*/
+#endif /*INCLUDED_VT_VRT_PROXY_PROXY_BITS_H*/

@@ -121,4 +121,3 @@ private:
 #include "vt/utils/container/concurrent_deque_locked.impl.h"
 
 #endif /*INCLUDED_VT_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_H*/
-

@@ -88,4 +88,4 @@ template <typename T>           using IdxType3D = index::Index3D<T>;
 
 #include "vt/topos/index/printer/print_index.h"
 
-#endif  /*INCLUDED_VT_TOPOS_INDEX_INDEX_H*/
+#endif /*INCLUDED_VT_TOPOS_INDEX_INDEX_H*/

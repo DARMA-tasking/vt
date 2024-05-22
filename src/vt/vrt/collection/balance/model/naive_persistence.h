@@ -68,4 +68,4 @@ struct NaivePersistence : public ComposedModel {
 
 }}}} // end namespace
 
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_NAIVE_PERSISTENCE_H*/

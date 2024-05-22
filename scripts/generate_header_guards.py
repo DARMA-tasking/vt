@@ -10,7 +10,7 @@ def has_license_header(lines):
         return True
     return False
 
-def find_existing_guards(lines, file_path):
+def find_existing_guards(lines):
     """
     Find the range of lines containing existing header guards.
     """
@@ -55,7 +55,7 @@ def generate_header_guard(file_path, root):
     endif_guard = f'#endif /*{guard_name}*/\n'
 
     # Detect existing guards
-    start_line, end_line = find_existing_guards(lines, file_path)
+    start_line, end_line = find_existing_guards(lines)
 
     if has_license:
         license_content = ''.join(lines[:42])

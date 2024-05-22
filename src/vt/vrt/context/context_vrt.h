@@ -68,4 +68,4 @@ struct MainVirtualContext : VirtualContext {
 
 }}  // end namespace vt::vrt
 
-#endif  /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_H*/

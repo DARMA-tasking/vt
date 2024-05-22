@@ -57,4 +57,4 @@ struct BitCounter {
 
 }} // end namespace vt::utils
 
-#endif  /*INCLUDED_VT_UTILS_BITS_BITS_COUNTER_H*/
+#endif /*INCLUDED_VT_UTILS_BITS_BITS_COUNTER_H*/

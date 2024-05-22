@@ -68,4 +68,4 @@ static constexpr BitCountType const
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_SIZE_H*/
+#endif /*INCLUDED_VT_CONFIGS_TYPES_TYPES_SIZE_H*/
