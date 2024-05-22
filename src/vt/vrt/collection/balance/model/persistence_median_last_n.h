@@ -74,4 +74,4 @@ private:
 
 }}}} // namespaces
 
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_PERSISTENCE_MEDIAN_LAST_N_H*/

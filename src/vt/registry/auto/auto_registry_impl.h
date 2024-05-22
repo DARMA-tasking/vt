@@ -40,6 +40,7 @@
 // *****************************************************************************
 //@HEADER
 */
+
 #if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_IMPL_H
 #define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_IMPL_H
 

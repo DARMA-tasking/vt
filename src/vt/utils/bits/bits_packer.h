@@ -111,4 +111,4 @@ namespace vt {
 
 #include "vt/utils/bits/bits_packer.impl.h"
 
-#endif  /*INCLUDED_VT_UTILS_BITS_BITS_PACKER_H*/
+#endif /*INCLUDED_VT_UTILS_BITS_BITS_PACKER_H*/

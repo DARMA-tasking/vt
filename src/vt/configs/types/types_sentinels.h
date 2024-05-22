@@ -92,4 +92,4 @@ static constexpr ThreadIDType const no_thread_id                   = 0;
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_SENTINELS_H*/
+#endif /*INCLUDED_VT_CONFIGS_TYPES_TYPES_SENTINELS_H*/

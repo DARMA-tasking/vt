@@ -113,4 +113,4 @@ using SerializedMessenger = ::vt::serialization::SerializedMessenger;
 
 #include "vt/serialization/messaging/serialized_messenger.impl.h"
 
-#endif /*INCLUDED_VT_SERIALIZATION_MESSAGING/SERIALIZED_MESSENGER_H*/
+#endif /*INCLUDED_VT_SERIALIZATION_MESSAGING_SERIALIZED_MESSENGER_H*/

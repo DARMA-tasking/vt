@@ -48,4 +48,4 @@
 #include "vt/configs/types/types_headers.h"
 #include "vt/configs/error/error_headers.h"
 
-#endif  /*INCLUDED_VT_CONFIG_H*/
+#endif /*INCLUDED_VT_CONFIG_H*/

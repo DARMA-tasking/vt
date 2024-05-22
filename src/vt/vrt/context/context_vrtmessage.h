@@ -106,4 +106,4 @@ private:
 
 }}  // end namespace vt::vrt
 
-#endif  /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRTMESSAGE_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRTMESSAGE_H*/

@@ -189,4 +189,3 @@ extern ctx::Context* theContext();
 } // end namespace vt
 
 #endif /*INCLUDED_VT_CONTEXT_CONTEXT_H*/
-

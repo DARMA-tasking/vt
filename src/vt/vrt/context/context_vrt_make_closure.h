@@ -99,4 +99,4 @@ struct VirtualMakeClosure {
 
 #include "vt/vrt/context/context_vrt_make_closure.impl.h"
 
-#endif /*INCLUDED_VT_VRT_CONTEXT/CONTEXT_VRT_MAKE_CLOSURE_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_MAKE_CLOSURE_H*/

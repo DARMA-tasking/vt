@@ -98,4 +98,4 @@ struct VirtualProxyRequestMsg : ShortMessage {
 
 }} /* end namespace vt::vrt */
 
-#endif /*INCLUDED_VT_VRT_CONTEXT/CONTEXT_VRT_INTERNAL_MSGS_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_INTERNAL_MSGS_H*/

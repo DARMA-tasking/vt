@@ -51,4 +51,3 @@
 #include "vt/vrt/context/context_vrt_funcs.h"
 
 #endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRTHEADERS_H*/
-
