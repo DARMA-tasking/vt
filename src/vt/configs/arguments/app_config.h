@@ -45,12 +45,12 @@
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_APP_CONFIG_H
 
 // do not pull in any VT dependencies here
+#include <yaml-cpp/yaml.h>
 #include <string>
 #include <vector>
 #include <tuple>
 #include <variant>
 #include <fstream>
-#include <yaml-cpp/yaml.h>
 
 namespace vt { namespace arguments {
 
@@ -470,7 +470,7 @@ struct AppConfig {
       // Memory Usage Reporting
       {"Memory Usage Reporting", "Memory Reporters", static_cast<variantArg_t>(vt_memory_reporters)},
       {"Memory Usage Reporting", "Print Memory Each Phase", static_cast<variantArg_t>(vt_print_memory_each_phase)},
-      {"Memory Usage Reporting", "Print Memory on Node", static_cast<variantArg_t>(vt_print_memory_node)},
+      {"Memory Usage Reporting", "Print Memory On Node", static_cast<variantArg_t>(vt_print_memory_node)},
       {"Memory Usage Reporting", "Allow Memory Report With ps", static_cast<variantArg_t>(vt_allow_memory_report_with_ps)},
       {"Memory Usage Reporting", "Print Memory Threshold", static_cast<variantArg_t>(vt_print_memory_threshold)},
       {"Memory Usage Reporting", "Print Memory Scheduler Poll", static_cast<variantArg_t>(vt_print_memory_sched_poll)},
@@ -574,7 +574,7 @@ struct AppConfig {
       {"Diagnostics", "Use CSV Base Units", static_cast<variantArg_t>(vt_diag_csv_base_units)},
 
       // Termination
-      {"Termination", "Detect Hangs", static_cast<variantArg_t>(vt_no_detect_hang)},
+      {"Termination", "Detect Hangs", static_cast<variantArg_t>(not vt_no_detect_hang)},
       {"Termination", "Use DS for Rooted", static_cast<variantArg_t>(vt_term_rooted_use_ds)},
       {"Termination", "Use Wave for Rooted", static_cast<variantArg_t>(vt_term_rooted_use_wave)},
       {"Termination", "Output Epoch Graph on Hang", static_cast<variantArg_t>(vt_epoch_graph_on_hang)},

@@ -225,7 +225,7 @@ void parseYaml(AppConfig& appConfig, std::string inputFile) {
   "mstats,machinfo,selfstat,selfstatm,sbrk,mallinfo,getrusage,ps";
   appConfig.vt_memory_reporters = memory_usage_reporting["Memory Reporters"].as<std::string>(default_vt_memory_reporters);
   appConfig.vt_print_memory_each_phase = memory_usage_reporting["Print Memory Each Phase"].as<bool>(false);
-  appConfig.vt_print_memory_node = memory_usage_reporting["Print Memory on Node"].as<std::string>("0");
+  appConfig.vt_print_memory_node = memory_usage_reporting["Print Memory On Node"].as<std::string>("0");
   appConfig.vt_allow_memory_report_with_ps = memory_usage_reporting["Allow Memory Report With ps"].as<bool>(false);
   if (memory_usage_reporting["Print Memory Threshold"]) {
     appConfig.vt_print_memory_at_threshold = true;
