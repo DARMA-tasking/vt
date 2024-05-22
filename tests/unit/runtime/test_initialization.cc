@@ -298,7 +298,7 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
               << "  Disable Terminate Signal: True\n"
               << "Memory Usage Reporting:\n"
               << "  Print Memory Each Phase: True\n"
-              // << "  Print Memory On Node: '1'\n" // throws an error maybe
+              << "  Print Memory On Node: '1'\n"
               << "  Allow Memory Report With ps: True\n"
               << "Tracing Configuration:\n"
               << "  Enabled: False\n"
@@ -335,8 +335,6 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
               << "  Throw on Abort: True\n";
     cfg_file_.close();
   }
-  // Load this config file using yaml-cpp
-  // YAML::Node input_config = YAML::Load(cfg_file_);
 
   MPI_Barrier(comm);
 
@@ -358,7 +356,7 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
 
   // Memory Usage Reporting
   EXPECT_EQ(theConfig()->vt_print_memory_each_phase, true);
-  // EXPECT_EQ(theConfig()->vt_print_memory_node, "0");
+  EXPECT_EQ(theConfig()->vt_print_memory_node, "1");
   EXPECT_EQ(theConfig()->vt_allow_memory_report_with_ps, true);
   EXPECT_EQ(theConfig()->vt_print_memory_threshold, "1 GiB");
   EXPECT_EQ(theConfig()->vt_print_memory_sched_poll, 100);
@@ -493,28 +491,9 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
   EXPECT_EQ(theConfig()->vt_throw_on_abort, true);
 
   // TEST THAT THE CONFIGURATION FILE WAS WRITTEN OUT CORRECTLY
-  // YAML::Node output_config = theConfig()->convertConfigToYaml();
-  // YAML::Node current_output_node = output_config;
-  // YAML::Node current_input_node = input_config;
-
-  // for (const auto& [key, val] : current_input_node) {
-  //   if (current_input_node[key].IsMap()) {
-  //     current_output_node = current_output_node[key];
-  //     current_input_node = current_input_node[key];
-
-  //   } else if (current_input_node[key].IsSequence()) {
-  //     for (const auto& elt : current_input_node[key]) {
-  //       /*assert that elt is in current_output_node*/
-  //     }
-  //   } else if (current_input_node[key]) {
-  //     EXPECT_EQ(input_config[key], current_output_node[key]);
-  //   } else {
-  //     // Reset current node
-  //     current_input_node = input_config
-  //     current_output_node = output_config;
-  //   }
-  // }
-
+  YAML::Node input_config = YAML::LoadFile(config_file);
+  YAML::Node output_config = theConfig()->convertConfigToYaml();
+  assertYamlNodesHaveIdenticalEntries(input_config, output_config);
 }
 
 void prepareLBDataFiles(const std::string file_name_without_ext) {
