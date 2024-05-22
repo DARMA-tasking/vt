@@ -1100,9 +1100,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         // Copy this node's object assignments to a local, mutable copy
         cur_objs_.clear();
         for (auto obj : *load_model_) {
-          if (obj.isMigratable()) {
-            cur_objs_[obj] = getModeledValue(obj);
-          }
+          cur_objs_[obj] = getModeledValue(obj);
         }
 
         send_edges_.clear();
