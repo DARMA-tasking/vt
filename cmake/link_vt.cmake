@@ -216,14 +216,18 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: yamlcpp=${ARG_LINK_YAMLCPP}")
     endif()
+    message("targetting link library ${YAMLCPP_LIBRARY}")
+    message("arg_target: ${ARG_TARGET}")
+    message("arg_build_type: ${ARG_BUILD_TYPE}")
+    message("yamlcpp lib: ${YAMLCPP_LIBRARY}")
     target_link_libraries(
       ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${YAMLCPP_LIBRARY}
     )
-    target_include_directories(${ARG_TARGET} PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/yaml-cpp>
-    $<INSTALL_INTERFACE:include/yaml-cpp>
-  )
+    message("done")
   endif()
+
+  # message(STATUS "yamlcpp_arg_link=${ARG_LINK_YAMLCPP}")
+  message(STATUS "YAMLCPP_LIBRARY=${YAMLCPP_LIBRARY}")
 
   if (${vt_mimalloc_enabled})
     if (${ARG_DEBUG_LINK})
