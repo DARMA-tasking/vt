@@ -150,8 +150,6 @@ if (YAML_CPP_INSTALL)
     DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig)
 endif()
 
-message("YAML-CPP: installation complete")
-
 if(YAML_CPP_BUILD_TESTS)
 	add_subdirectory(test)
 endif()
