@@ -324,7 +324,7 @@ TEST_F(TestInitialization, test_preconfigure_and_initialization) {
   vt::initializePreconfigured(&comm, &appConfig, vtConfig.get());
 }
 
-void preapreLBDataFiles(const std::string file_name_without_ext) {
+void prepareLBDataFiles(const std::string file_name_without_ext) {
   using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
   using ElementIDStruct = vt::vrt::collection::balance::ElementIDStruct;
   using LoadSummary = vt::vrt::collection::balance::LoadSummary;
@@ -376,14 +376,12 @@ void preapreLBDataFiles(const std::string file_name_without_ext) {
   }
   stream = w->finish();
 
-  // save to files
-  for (int i = 0; i < 9; i++) {
-    std::string file_name = file_name_without_ext + "." + std::to_string(i) + ".json";
-    std::filesystem::path file_path = std::filesystem::current_path() / file_name;
-    std::ofstream out(file_path);
-    out << stream.str();
-    out.close();
-  }
+  // save to file
+  std::string file_name = file_name_without_ext + "." + std::to_string(this_node) + ".json";
+  std::filesystem::path file_path = std::filesystem::current_path() / file_name;
+  std::ofstream out(file_path);
+  out << stream.str();
+  out.close();
 }
 
 TEST_F(TestInitialization, test_initialize_without_restart_reader) {
@@ -409,8 +407,8 @@ TEST_F(TestInitialization, test_initialize_with_lb_data_in) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
   // Preapre data files
-  auto prefix = getUniqueFilenameWithRanks() + std::to_string(theContext()->getNode());
-  preapreLBDataFiles(prefix);
+  auto prefix = getUniqueFilenameWithRanks();
+  prepareLBDataFiles(prefix);
 
   static char prog_name[]{"vt_program"};
   static char data_in[]{"--vt_lb_data_in"};
@@ -440,8 +438,8 @@ TEST_F(TestInitialization, test_initialize_with_lb_data_and_config_offline_lb) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
   // Preapre data files
-  auto prefix = getUniqueFilenameWithRanks() + std::to_string(theContext()->getNode());
-  preapreLBDataFiles(prefix);
+  auto prefix = getUniqueFilenameWithRanks();
+  prepareLBDataFiles(prefix);
 
   // Preapre configuration file
   std::string file_name = getUniqueFilenameWithRanks(".txt");
@@ -481,8 +479,8 @@ TEST_F(TestInitialization, test_initialize_with_lb_data_and_config_no_lb) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
   // Preapre data files
-  auto prefix = getUniqueFilenameWithRanks() + std::to_string(theContext()->getNode());
-  preapreLBDataFiles(prefix);
+  auto prefix = getUniqueFilenameWithRanks();
+  prepareLBDataFiles(prefix);
 
   // Preapre configuration file
   std::string file_name = getUniqueFilenameWithRanks(".txt");
