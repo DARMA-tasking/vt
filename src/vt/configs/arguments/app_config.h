@@ -50,6 +50,7 @@
 #include <vector>
 #include <tuple>
 #include <variant>
+#include <unordered_map>
 #include <fstream>
 
 namespace vt { namespace arguments {
@@ -244,6 +245,18 @@ struct AppConfig {
   std::string vt_user_str_1 = "";
   std::string vt_user_str_2 = "";
   std::string vt_user_str_3 = "";
+
+  std::unordered_map<std::string, std::string> user_args = {
+    {"vt_user_1", "unused_user_param"},
+    {"vt_user_2", "unused_user_param"},
+    {"vt_user_3", "unused_user_param"},
+    {"vt_user_int_1", "unused_user_param"},
+    {"vt_user_int_2", "unused_user_param"},
+    {"vt_user_int_3", "unused_user_param"},
+    {"vt_user_str_1", "unused_user_param"},
+    {"vt_user_str_2", "unused_user_param"},
+    {"vt_user_str_3", "unused_user_param"}
+  };
 
   bool vt_output_config   = false;
   std::string vt_output_config_file = "vt_config.ini";
@@ -586,15 +599,15 @@ struct AppConfig {
       {"Launch", "Pause", static_cast<variantArg_t>(vt_pause)},
 
       // User Options
-      {"User Options", "User 1", static_cast<variantArg_t>(vt_user_1)},
-      {"User Options", "User 2", static_cast<variantArg_t>(vt_user_2)},
-      {"User Options", "User 3", static_cast<variantArg_t>(vt_user_3)},
-      {"User Options", "User int 1", static_cast<variantArg_t>(vt_user_int_1)},
-      {"User Options", "User int 2", static_cast<variantArg_t>(vt_user_int_2)},
-      {"User Options", "User int 3", static_cast<variantArg_t>(vt_user_int_3)},
-      {"User Options", "User str 1", static_cast<variantArg_t>(vt_user_str_1)},
-      {"User Options", "User str 2", static_cast<variantArg_t>(vt_user_str_2)},
-      {"User Options", "User str 3", static_cast<variantArg_t>(vt_user_str_3)},
+      {"User Options", user_args["vt_user_1"], static_cast<variantArg_t>(vt_user_1)},
+      {"User Options", user_args["vt_user_2"], static_cast<variantArg_t>(vt_user_2)},
+      {"User Options", user_args["vt_user_3"], static_cast<variantArg_t>(vt_user_3)},
+      {"User Options", user_args["vt_user_int_1"], static_cast<variantArg_t>(vt_user_int_1)},
+      {"User Options", user_args["vt_user_int_2"], static_cast<variantArg_t>(vt_user_int_2)},
+      {"User Options", user_args["vt_user_int_3"], static_cast<variantArg_t>(vt_user_int_3)},
+      {"User Options", user_args["vt_user_str_1"], static_cast<variantArg_t>(vt_user_str_1)},
+      {"User Options", user_args["vt_user_str_2"], static_cast<variantArg_t>(vt_user_str_2)},
+      {"User Options", user_args["vt_user_str_3"], static_cast<variantArg_t>(vt_user_str_3)},
 
       // Scheduler Configuration
       {"Scheduler Configuration", "Num Progress Times", static_cast<variantArg_t>(vt_sched_num_progress)},
@@ -627,6 +640,11 @@ struct AppConfig {
         if (std::get<bool>(yaml_val)) {
           output_config_yaml["Debug Print Configuration"]["Enable"].push_back(yaml_key);
         }
+      }
+      // Then handle the User Defined parameters
+      else if (yaml_node == "User Options" and yaml_key != "unused_user_param") {
+        auto current_node = output_config_yaml["User Options"];
+        addVariantToNode(current_node, yaml_key, yaml_val);
       }
       // Then handle any nested nodes (with "/" in them)
       else if (yaml_node.find("/") != yaml_node.npos) {
