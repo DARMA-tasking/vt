@@ -425,9 +425,15 @@ bool Runtime::tryFinalize(bool const disable_sig) {
 
 bool Runtime::needLBDataRestartReader() {
   using vrt::collection::balance::ReadLBConfig;
+  using vrt::collection::balance::LBType;
+  using vrt::collection::balance::get_lb_names;
 
   #if vt_check_enabled(lblite)
-  if (arg_config_->config_.vt_lb_data_in) {
+  bool data_in = arg_config_->config_.vt_lb_data_in;
+  bool requested_offline_lb = arg_config_->config_.vt_lb_name == get_lb_names()[LBType::OfflineLB];
+  bool has_file = arg_config_->config_.vt_lb_file_name != "";
+
+  if (data_in || requested_offline_lb || has_file) {
     auto& config_file = arg_config_->config_.vt_lb_file_name;
     if (config_file != "") {
       bool const has_spec = ReadLBConfig::openConfig(config_file);
