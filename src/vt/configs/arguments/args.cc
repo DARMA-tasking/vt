@@ -375,15 +375,41 @@ void parseYaml(AppConfig& appConfig, std::string inputFile) {
 
   // User Options
   YAML::Node user_options = yaml_input["User Options"];
-  appConfig.vt_user_1 = user_options["User 1"].as<bool>(false);
-  appConfig.vt_user_2 = user_options["User 2"].as<bool>(false);
-  appConfig.vt_user_3 = user_options["User 3"].as<bool>(false);
-  appConfig.vt_user_int_1 = user_options["User int 1"].as<int32_t>(0);
-  appConfig.vt_user_int_2 = user_options["User int 2"].as<int32_t>(0);
-  appConfig.vt_user_int_3 = user_options["User int 3"].as<int32_t>(0);
-  appConfig.vt_user_str_1 = user_options["User str 1"].as<std::string>("");
-  appConfig.vt_user_str_2 = user_options["User str 2"].as<std::string>("");
-  appConfig.vt_user_str_3 = user_options["User str 3"].as<std::string>("");
+  int bool_iter = 1, int_iter = 1, str_iter = 1;
+  bool too_many_user_args = false;
+  for (YAML::const_iterator it = user_options.begin(); it != user_options.end(); ++it) {
+    const std::string& key = it->first.as<std::string>();
+    try {
+      bool user_input = user_options[key].as<bool>();
+      if (bool_iter == 1) appConfig.vt_user_1 = user_input;
+      else if (bool_iter == 2) appConfig.vt_user_2 = user_input;
+      else if (bool_iter == 3) appConfig.vt_user_3 = user_input;
+      else too_many_user_args = true;
+      appConfig.user_args["vt_user_" + std::to_string(bool_iter)] = key;
+      bool_iter++;
+    } catch(...) {
+      try {
+        int user_input = user_options[key].as<int>();
+        if (int_iter == 1) appConfig.vt_user_int_1 = user_input;
+        else if (int_iter == 2) appConfig.vt_user_int_2 = user_input;
+        else if (int_iter == 3) appConfig.vt_user_int_3 = user_input;
+        else too_many_user_args = true;
+        appConfig.user_args["vt_user_int_" + std::to_string(int_iter)] = key;
+        int_iter++;
+      } catch(...) {
+        std::string user_input = user_options[key].as<std::string>();
+        if (str_iter == 1) appConfig.vt_user_str_1 = user_input;
+        else if (str_iter == 2) appConfig.vt_user_str_2 = user_input;
+        else if (str_iter == 3) appConfig.vt_user_str_3 = user_input;
+        else too_many_user_args = true;
+        appConfig.user_args["vt_user_str_" + std::to_string(str_iter)] = key;
+        str_iter++;
+      }
+    }
+  }
+  if (too_many_user_args) {
+    throw std::runtime_error("Only three user-defined arguments of each type (bool, int, or string) are supported.");
+  }
 
   // Scheduler Configuration
   YAML::Node scheduler_configuration = yaml_input["Scheduler Configuration"];
