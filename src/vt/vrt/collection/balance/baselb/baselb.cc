@@ -143,6 +143,12 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
     auto const new_node = std::get<1>(transfer);
     auto const current_node = obj_id.curr_node;
 
+    if (not obj_id.isMigratable()) {
+      vt_debug_print(
+        verbose, lb, "BaseLB::normalizeReassignments(): obj not migratable\n"
+      );
+      continue;
+    }
     if (current_node == new_node) {
       vt_debug_print(
         verbose, lb, "BaseLB::normalizeReassignments(): self migration\n"
