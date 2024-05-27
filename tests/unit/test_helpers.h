@@ -174,4 +174,4 @@ min_req_num_nodes, max_req_num_nodes)              \
 
 }}} // namespace vt::tests::unit
 
-#endif /* INCLUDED_UNIT_TEST_HELPERS_H */
+#endif /*INCLUDED_UNIT_TEST_HELPERS_H*/

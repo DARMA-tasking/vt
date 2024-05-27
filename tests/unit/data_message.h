@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#if ! defined INCLUDED_UNIT_DATA_MESSAGE_H
+#if !defined INCLUDED_UNIT_DATA_MESSAGE_H
 #define INCLUDED_UNIT_DATA_MESSAGE_H
 
 #include "vt/messaging/message.h"
@@ -123,4 +123,4 @@ struct WaitInfoMsg : MessageT {
 
 }}} // end namespace vt::tests::unit
 
-#endif /* INCLUDED_UNIT_DATA_MESSAGE_H*/
+#endif /*INCLUDED_UNIT_DATA_MESSAGE_H*/
