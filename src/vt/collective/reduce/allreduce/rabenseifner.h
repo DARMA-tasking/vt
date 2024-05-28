@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H
 
@@ -51,6 +50,7 @@
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/registry/auto/auto_registry.h"
 #include "vt/pipe/pipe_manager.h"
+#include "data_handler.h"
 
 #include <tuple>
 #include <cstdint>
@@ -93,6 +93,8 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
 struct Rabenseifner {
+  using DataType = DataHandler<DataT>;
+
   template <typename... Args>
   Rabenseifner(
     vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
@@ -141,6 +143,7 @@ struct Rabenseifner {
 
     int step = 0;
     size_t wsize = val_.size();
+    size_ = wsize;
     for (int mask = 1; mask < nprocs_pof2_; mask <<= 1) {
       auto vdest = vrt_node_ ^ mask;
       auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
@@ -188,35 +191,39 @@ struct Rabenseifner {
       if (is_even_) {
         proxy_[partner]
           .template send<&Rabenseifner::adjustForPowerOfTwoRightHalf>(
-            DataT{val_.begin() + (val_.size() / 2), val_.end()});
+            DataType::split(val_, size_ / 2, size_));
       } else {
         proxy_[partner]
           .template send<&Rabenseifner::adjustForPowerOfTwoLeftHalf>(
-            DataT{val_.begin(), val_.end() - (val_.size() / 2)});
+            DataType::split(val_, 0, size_ / 2));
       }
     }
   }
 
   void adjustForPowerOfTwoRightHalf(AllreduceRbnMsg<DataT>* msg) {
+
     for (uint32_t i = 0; i < msg->val_.size(); i++) {
-      val_[(val_.size() / 2) + i] += msg->val_[i];
+      Op<typename DataType::Scalar>()(
+        DataType::at(val_, (size_ / 2) + i), DataType::at(msg->val_, i));
     }
 
     // Send to left node
     proxy_[theContext()->getNode() - 1]
       .template send<&Rabenseifner::adjustForPowerOfTwoFinalPart>(
-        DataT{val_.begin() + (val_.size() / 2), val_.end()});
+        DataType::split(val_, size_ / 2, size_));
+        // DataT{val_.begin() + (val_.size() / 2), val_.end()});
   }
 
   void adjustForPowerOfTwoLeftHalf(AllreduceRbnMsg<DataT>* msg) {
     for (uint32_t i = 0; i < msg->val_.size(); i++) {
-      val_[i] += msg->val_[i];
+      Op<typename DataT::value_type>()(DataType::at(val_, i), DataType::at(msg->val_, i));
     }
   }
 
   void adjustForPowerOfTwoFinalPart(AllreduceRbnMsg<DataT>* msg) {
     for (uint32_t i = 0; i < msg->val_.size(); i++) {
-      val_[(val_.size() / 2) + i] = msg->val_[i];
+      DataType::at(val_, (val_.size() / 2) + i) = DataType::at(msg->val_, i);
+      // val_[(val_.size() / 2) + i] = msg->val_[i];
     }
 
     finished_adjustment_part_ = true;
@@ -262,7 +269,9 @@ struct Rabenseifner {
       auto& in_val = in_msg->val_;
       for (uint32_t i = 0; i < in_val.size(); i++) {
         Op<typename DataT::value_type>()(
-          val_[r_index_[in_msg->step_] + i], in_val[i]);
+          DataType::at(val_, r_index_[in_msg->step_] + i),
+          DataType::at(in_val, i));
+          // val_[r_index_[in_msg->step_] + i], in_val[i]);
       }
 
       scatter_steps_reduced_[step] = true;
@@ -357,7 +366,8 @@ struct Rabenseifner {
       auto& in_msg = gather_messages_.at(step);
       auto& in_val = in_msg->val_;
       for (uint32_t i = 0; i < in_val.size(); i++) {
-        val_[s_index_[in_msg->step_] + i] = in_val[i];
+        DataType::at(val_, s_index_[in_msg->step_] + i) = DataType::at(in_val, i);
+        //val_[s_index_[in_msg->step_] + i] = in_val[i];
       }
 
       gather_steps_reduced_[step] = true;
@@ -458,6 +468,7 @@ struct Rabenseifner {
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
   DataT val_ = {};
+  size_t size_ = {};
   NodeType this_node_ = {};
   NodeType num_nodes_ = {};
   bool is_even_ = false;
