@@ -1,22 +1,25 @@
 cff-version: 1.2.0
-title: DARMA/vt => Virtual Transport
+title: "Design and implementation techniques for an MPI-oriented AMT runtime"
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
-type: software
-authors:
-  - name: Darma Team
-identifiers:
-  - type: doi
-    value: 10.1109/Cluster48925.2021.00039
-
-# @inproceedings{lifflander2021optimizing,
-#   title={Optimizing Distributed Load Balancing for Workloads with Time-Varying Imbalance},
-#   author={Lifflander, Jonathan and Slattengren, Nicole Lemaster and P{\'e}ba{\"y}, Philippe P and Miller, Phil and Rizzi, Francesco and Bettencourt, Matthew T},
-#   booktitle={2021 IEEE International Conference on Cluster Computing (CLUSTER)},
-#   pages={238--249},
-#   year={2021},
-#   organization={IEEE}
-# }
-
-
+preferred-citation:
+  type: article
+  authors:
+  - given-names: Jonathan
+    family-names: Lifflander
+  - given-names: Phil
+    family-names: Miller
+  - given-names: Nicole Lemaster
+    family-names: Slattengren
+  - given-names: Nicolas
+    family-names: Morales
+  - given-names: Paul
+    family-names: Stickney
+  - given-names: Philippe P
+    family-names: P{\'e}ba{\"y}
+  booktitle: "2020 Workshop on Exascale MPI (ExaMPI)"
+  start: 31 # First page number
+  end: 40 # Last page number
+  year: 2020
+  organization: "IEEE"
