@@ -106,9 +106,9 @@ struct Rabenseifner {
       num_steps_(static_cast<int32_t>(log2(num_nodes_))),
       nprocs_pof2_(1 << num_steps_),
       nprocs_rem_(num_nodes_ - nprocs_pof2_),
+      finished_adjustment_part_(nprocs_rem_ == 0),
       gather_step_(num_steps_ - 1),
-      gather_mask_(nprocs_pof2_ >> 1),
-      finished_adjustment_part_(nprocs_rem_ == 0)
+      gather_mask_(nprocs_pof2_ >> 1)
   {
     initialize(std::forward<Args>(args)...);
   }
@@ -253,8 +253,8 @@ struct Rabenseifner {
   }
 
   bool scatterIsReady() {
-    return (is_part_of_adjustment_group_ and finished_adjustment_part_) and
-      scatter_step_ == 0 or
+    return ((is_part_of_adjustment_group_ and finished_adjustment_part_) and
+      scatter_step_ == 0) or
       scatterAllMessagesReceived();
   }
 
@@ -469,8 +469,9 @@ struct Rabenseifner {
 
   DataT val_ = {};
   size_t size_ = {};
-  NodeType this_node_ = {};
   NodeType num_nodes_ = {};
+  NodeType this_node_ = {};
+
   bool is_even_ = false;
   int32_t num_steps_ = {};
   int32_t nprocs_pof2_ = {};
@@ -497,8 +498,8 @@ struct Rabenseifner {
   bool finished_scatter_part_ = false;
 
   // Gather
-  int32_t gather_mask_ = 1;
   int32_t gather_step_ = 0;
+  int32_t gather_mask_ = 1;
   int32_t gather_num_recv_ = 0;
   std::vector<bool> gather_steps_recv_ = {};
   std::vector<bool> gather_steps_reduced_ = {};
