@@ -96,6 +96,19 @@ else
     fi
 fi
 
+if test "${VT_TV_ENABLED}" -eq 1
+then
+    if test -d "${source_dir}/lib/vt-tv"
+    then
+        { echo "vt-tv already in lib... not downloading"; } 2>/dev/null
+    else
+        cd "${source_dir}/lib"
+        vt_tv_rev="master"
+        git clone -b "${vt_tv_rev}" --depth 1 https://github.com/DARMA-tasking/vt-tv.git
+        cd -
+    fi
+fi
+
 if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1
 then
     export Zoltan_DIR=${ZOLTAN_DIR:-""}

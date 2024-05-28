@@ -242,7 +242,7 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
     });
 
     // Ensure that all elements were properly destroyed
-    EXPECT_EQ(counter, 0);
+    EXPECT_EQ(counter, 0ull);
   }
 }
 
@@ -315,7 +315,7 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
   });
 
   // Ensure that all elements were properly destroyed
-  EXPECT_EQ(counter, 0);
+  EXPECT_EQ(counter, 0ull);
 }
 
 TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
@@ -428,7 +428,7 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
     //verify that root node has no elements, by construction with map
     if(this_node == 0) {
       auto local_set = theCollection()->getLocalIndices(proxy);
-      EXPECT_EQ(local_set.size(), 0);
+      EXPECT_EQ(local_set.size(), 0ull);
     }
 
     vt_print(gen, "checkpointToFile\n");

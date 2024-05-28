@@ -79,6 +79,14 @@ if(vt_trace_only)
     set(vt_mpi_guards ON)
 endif()
 
+if (TV_LIBRARY)
+    message(STATUS "vt-tv found and enabled")
+    set(vt_feature_cmake_tv "1")
+else()
+    message(STATUS "vt-tv not found")
+    set(vt_feature_cmake_tv "0")
+endif()
+
 define_option(vt_mpi_guards "user MPI prevention guards"
     "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions"
     ON vt_feature_cmake_mpi_access_guards

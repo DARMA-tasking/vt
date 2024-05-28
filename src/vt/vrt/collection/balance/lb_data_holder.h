@@ -47,6 +47,10 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 
+#if vt_check_enabled(tv)
+#  include <vt-tv/api/info.h>
+#endif
+
 #include <unordered_map>
 #include <memory>
 
@@ -93,6 +97,26 @@ struct LBDataHolder {
    * \return the json data structure
    */
   std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
+
+#if vt_check_enabled(tv)
+          /**
+   * \brief Generate vt-tv data structure for visualization
+   *
+   * \param[in] phase the phase to generate
+   *
+   * \return a \c vt::tv::PhaseWork data structure
+   */
+  std::unique_ptr<tv::PhaseWork> toTV(PhaseType phase) const;
+
+  /**
+   * \brief Get all object info mapped here for a given phase
+   *
+   * \return map with object info
+   */
+  std::unordered_map<ElementIDType, tv::ObjectInfo> getObjInfo(
+    PhaseType phase
+  ) const;
+#endif
 
   /**
    * \brief Output a LB phase's metadata to JSON

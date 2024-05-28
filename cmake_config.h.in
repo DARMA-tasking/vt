@@ -67,6 +67,7 @@
 #define vt_feature_cmake_rdma_tests          @vt_feature_cmake_rdma_tests@
 #define vt_feature_cmake_external_fmt        @vt_feature_cmake_external_fmt@
 #define vt_feature_cmake_libunwind           @vt_feature_cmake_libunwind@
+#define vt_feature_cmake_tv                  @vt_feature_cmake_tv@
 
 #define vt_detected_max_num_nodes @cmake_detected_max_num_nodes@
 

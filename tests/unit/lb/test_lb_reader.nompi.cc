@@ -69,8 +69,8 @@ TEST_F(TestLBReader, test_lb_read_1) {
 
   EXPECT_EQ(Config::hasOfflineLB(), false);
   EXPECT_EQ(Config::numEntries(), 3);
-  EXPECT_EQ(Config::getExactEntries().size(), 2);
-  EXPECT_EQ(Config::getModEntries().size(), 1);
+  EXPECT_EQ(Config::getExactEntries().size(), 2u);
+  EXPECT_EQ(Config::getModEntries().size(), 1u);
 
   for (ConfigIdx i = 0; i < 21; i++) {
     auto entry = Config::entry(i);
