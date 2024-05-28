@@ -103,8 +103,15 @@ function(create_trace_only_target)
   )
 
   install(
-      FILES "${CMAKE_CURRENT_SOURCE_DIR}/../lib/yaml-cpp/include/yaml-cpp/yaml.h"
-      DESTINATION "include/vt-trace/yaml-cpp"
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../lib/yaml-cpp/include/yaml-cpp/"
+    DESTINATION "include/vt-trace/yaml-cpp"
+    FILES_MATCHING PATTERN "*.h"
+  )
+
+  install(
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../lib/yaml-cpp/include/yaml-cpp/node"
+    DESTINATION "include/vt-trace/yaml-cpp/node"
+    FILES_MATCHING PATTERN "*.h"
   )
 
   set(VT_TRACE_LIB vt-trace CACHE INTERNAL "" FORCE)
