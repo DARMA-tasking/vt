@@ -2088,16 +2088,17 @@ void TemperedLB::originalTransfer() {
         vtAssert(load_iter != load_info_.end(), "Selected node not found");
         auto& selected_load = load_iter->second.load;
 
-	// Evaluate criterion for proposed transfer
-        bool eval = Criterion(criterion_)(
+	// Check if object is migratable and evaluate criterion for proposed transfer
+        bool is_migratable = obj_id.isMigratable();
+        bool eval = obj_id.isMigratable() && Criterion(criterion_)(
           this_new_load_, selected_load, obj_load, target_max_load_
         );
         vt_debug_print(
           verbose, temperedlb,
           "TemperedLB::originalTransfer: trial={}, iter={}, under.size()={}, "
           "selected_node={}, selected_load={:e}, obj_id={:x}, home={}, "
-          "obj_load={}, target_max_load={}, this_new_load_={}, "
-          "criterion={}\n",
+          "is_migratable()={}, obj_load={}, target_max_load={}, "
+          "this_new_load_={}, criterion={}\n",
           trial_,
           iter_,
           under.size(),
@@ -2105,6 +2106,7 @@ void TemperedLB::originalTransfer() {
           selected_load,
           obj_id.id,
           obj_id.getHomeNode(),
+          is_migratable,
           LoadType(obj_load),
           LoadType(target_max_load_),
           LoadType(this_new_load_),
@@ -2112,7 +2114,7 @@ void TemperedLB::originalTransfer() {
         );
 
 	// Decide about proposed migration based on criterion evaluation
-        if (eval) {
+        if (is_migratable and eval) {
           ++n_transfers;
           // Transfer the object load in seconds
           // to match the object load units on the receiving end
