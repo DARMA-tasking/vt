@@ -1,10 +1,14 @@
 cff-version: 1.2.0
-title: "Design and implementation techniques for an MPI-oriented AMT runtime"
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
+title:  DARMA/vt => Virtual Transport
+authors:
+  - family-names: DARMA Team
+url: https://darma-tasking.github.io/docs/html/index.html
 preferred-citation:
-  type: article
+  type: conference-paper
+  title: "Design and implementation techniques for an MPI-oriented AMT runtime"
   authors:
   - given-names: Jonathan
     family-names: Lifflander
@@ -18,8 +22,11 @@ preferred-citation:
     family-names: Stickney
   - given-names: Philippe P
     family-names: P{\'e}ba{\"y}
-  booktitle: "2020 Workshop on Exascale MPI (ExaMPI)"
+  collection-title: "2020 Workshop on Exascale MPI (ExaMPI)"
+  collection-type: proceedings
+  year: 2020
   start: 31 # First page number
   end: 40 # Last page number
-  year: 2020
-  organization: "IEEE"
+  publisher:
+    name: "IEEE"
+  url: "https://www.osti.gov/servlets/purl/1825838"
