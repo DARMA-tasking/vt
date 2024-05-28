@@ -2107,9 +2107,9 @@ void TemperedLB::originalTransfer() {
           obj_id.id,
           obj_id.getHomeNode(),
           is_migratable,
-          LoadType(obj_load),
-          LoadType(target_max_load_),
-          LoadType(this_new_load_),
+          obj_load,
+          target_max_load_,
+          this_new_load_,
           eval
         );
 
