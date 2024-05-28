@@ -50,7 +50,7 @@ namespace vt {
 
 void abort(std::string const str = "", int32_t const code = 1);
 void output(
-  std::string const str, int32_t const code = 1, bool error = false,
+  std::string const& str, int32_t const code = 1, bool error = false,
   bool decorate = true, bool formatted = false, bool abort_out = false
 );
 int rerror(char const* str);

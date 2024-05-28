@@ -1012,7 +1012,8 @@ std::vector<NodeType> TemperedLB::makeSufficientlyUnderloaded(
 
 TemperedLB::ElementLoadType::iterator
 TemperedLB::selectObject(
-  LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
+  [[maybe_unused]] LoadType size, ElementLoadType& load,
+  std::set<ObjIDType> const& available
 ) {
   if (available.size() == 0) {
     return load.end();

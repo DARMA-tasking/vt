@@ -58,7 +58,7 @@ struct TestEpochGuard : TestParallelHarness {
   using TestMsg = EpochMessage;
   static EpochType ep;
 
-  static void test_guarded_msg_recv(TestMsg *msg)
+  static void test_guarded_msg_recv([[maybe_unused]] TestMsg *msg)
   {
     EXPECT_EQ(theMsg()->getEpoch(), ep);
   }

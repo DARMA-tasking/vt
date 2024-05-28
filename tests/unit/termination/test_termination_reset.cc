@@ -59,7 +59,7 @@ struct TestTermReset : TestParallelHarness {
 
   static int32_t handler_count;
 
-  static void test_handler(TestMsg* msg) {
+  static void test_handler([[maybe_unused]] TestMsg* msg) {
     handler_count = 10;
   }
 };

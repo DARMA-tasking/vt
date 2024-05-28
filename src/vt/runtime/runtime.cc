@@ -272,7 +272,7 @@ void Runtime::pauseForDebugger() {
   handleSignalFailure();
 }
 
-/*static*/ void Runtime::sigHandlerUsr1(int sig) {
+/*static*/ void Runtime::sigHandlerUsr1([[maybe_unused]] int sig) {
   Runtime::sig_user_1_ = true;
 }
 
@@ -583,8 +583,8 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
 }
 
 void Runtime::output(
-  std::string const abort_str, ErrorCodeType const code, bool error,
-  bool decorate, bool formatted
+  std::string const abort_str, [[maybe_unused]] ErrorCodeType const code,
+  bool error, bool decorate, bool formatted
 ) {
   auto node      = theContext ? theContext->getNode() : -1;
   auto green     = debug::green();
@@ -946,7 +946,7 @@ namespace {
    * \param comm    the MPI communicator
    * \param errc    pointer to the error code
    */
-  void mpiErrorHandler(MPI_Comm *comm, int *errc, ...) {
+  void mpiErrorHandler([[maybe_unused]] MPI_Comm *comm, int *errc, ...) {
     int len = MPI_MAX_ERROR_STRING;
     char msg[MPI_MAX_ERROR_STRING];
     MPI_Error_string(*errc, msg, &len);

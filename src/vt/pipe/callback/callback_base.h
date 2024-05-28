@@ -95,7 +95,9 @@ public:
 protected:
   virtual void trigger_(SignalDataType* data) = 0;
 
-  virtual void trigger_(SignalDataType* data, PipeType const& pipe_id) {
+  virtual void trigger_(
+    SignalDataType* data, [[maybe_unused]] PipeType const& pipe_id
+  ) {
     return trigger_(data);
   }
 

@@ -150,7 +150,9 @@ typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::multicast(
 
   auto groupID = theGroup()->GetTempGroupForRange(range);
   if (!groupID.has_value()) {
-    groupID = theGroup()->newGroup(std::move(nodes), [](GroupType type) {});
+    groupID = theGroup()->newGroup(
+      std::move(nodes), []([[maybe_unused]] GroupType type) {}
+    );
     theGroup()->AddNewTempGroup(range, groupID.value());
   }
 

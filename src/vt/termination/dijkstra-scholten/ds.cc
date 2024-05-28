@@ -213,9 +213,7 @@ void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
 }
 
 template <typename CommType>
-void TermDS<CommType>::needAck(
-  NodeType const predecessor, CountType const count
-) {
+void TermDS<CommType>::needAck() {
   vtAssertInfo(
     5 && (C == processedSum - (ackedArbitrary + ackedParent)),
     "DS-invariant", C, D, processedSum, ackedArbitrary,

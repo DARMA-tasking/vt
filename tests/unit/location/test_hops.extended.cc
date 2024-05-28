@@ -118,9 +118,7 @@ struct TestColl : Collection<TestColl,vt::Index2D> {
     EXPECT_TRUE(not m->do_check_ or m->getHops() <= 1);
   }
 
-  void cont(TestMsg* m) {
-
-  }
+  void cont([[maybe_unused]] TestMsg* m) { }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {

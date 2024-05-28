@@ -59,6 +59,8 @@ enum struct TermStatusEnum : int8_t {
 };
 
 struct TermTerminated {
+  virtual ~TermTerminated() = default;
+
   virtual TermStatusEnum testEpochTerminated(EpochType epoch) = 0;
 };
 

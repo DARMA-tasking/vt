@@ -126,7 +126,7 @@ struct hipGroup {
     checkHipErrors(hipStreamDestroy(stream2_), "hipStreamDestroy(stream2_)");
   }
 
-  void hipHandler(MyMsg* msg) {
+  void hipHandler([[maybe_unused]] MyMsg* msg) {
     auto const nBytes = dataSize_ * sizeof(double);
 
     checkHipErrors(hipStreamCreate(&stream1_), "hipStreamCreate (stream1_)");

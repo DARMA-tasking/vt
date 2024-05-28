@@ -58,7 +58,7 @@
 namespace vt { namespace pipe { namespace callback {
 
 template <typename SerializerT>
-void CallbackProxySendTypeless::serialize(SerializerT& s) { }
+void CallbackProxySendTypeless::serialize([[maybe_unused]] SerializerT& s) { }
 
 template <typename MsgT>
 void CallbackProxySendTypeless::trigger(MsgT* msg, PipeType const& pipe) {

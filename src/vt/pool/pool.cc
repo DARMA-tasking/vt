@@ -197,7 +197,9 @@ void Pool::dealloc(std::byte* const buf) {
   }
 }
 
-Pool::SizeType Pool::remainingSize(std::byte* const buf) const {
+Pool::SizeType Pool::remainingSize(
+  [[maybe_unused]] std::byte* const buf
+) const {
   #if vt_check_enabled(memory_pool)
     auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf);
     auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf);

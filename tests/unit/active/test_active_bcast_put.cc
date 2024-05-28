@@ -64,7 +64,7 @@ struct TestActiveBroadcastPut : TestParameterHarnessNode {
   static int num_msg_sent;
   static size_t put_size;
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParameterHarnessNode::SetUp();
     handler_count = 0;
     num_msg_sent = 1;
@@ -72,7 +72,7 @@ struct TestActiveBroadcastPut : TestParameterHarnessNode {
     SET_MIN_NUM_NODES_CONSTRAINT(2);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown() override {
     TestParameterHarnessNode::TearDown();
   }
 

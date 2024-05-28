@@ -389,7 +389,10 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
 //  2. Checkpoint the collection
 //  3. Restore the collection and validate it
 
-vt::NodeType map(vt::Index3D* idx, vt::Index3D* max_idx, vt::NodeType num_nodes) {
+vt::NodeType map(
+  vt::Index3D* idx, [[maybe_unused]] vt::Index3D* max_idx,
+  vt::NodeType num_nodes
+) {
   return (idx->x() % (num_nodes-1))+1;
 }
 

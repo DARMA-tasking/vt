@@ -64,7 +64,7 @@ struct MultipleFunctions {
     fmt::print("{}: MultipleFunctions -> Hello from node {}\n", vt::theContext()->getNode(), msg->from);
   }
 
-  void operator()(AnotherMsg* msg) const {
+  void operator()([[maybe_unused]] AnotherMsg* msg) const {
     fmt::print("{}: MultipleFunctions with AnotherMsg\n", vt::theContext()->getNode());
   }
 };

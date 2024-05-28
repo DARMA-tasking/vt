@@ -16,10 +16,13 @@ endmacro()
 
 if(NOT DEFINED VT_WARNING_FLAGS)
   add_cxx_compiler_flag_if_supported("-Wall")
-  add_cxx_compiler_flag_if_supported("-pedantic")
-  add_cxx_compiler_flag_if_supported("-Wshadow")
+  add_cxx_compiler_flag_if_supported("-Wextra")
   add_cxx_compiler_flag_if_supported("-Wno-unknown-pragmas")
+  add_cxx_compiler_flag_if_supported("-Wnon-virtual-dtor")
+  add_cxx_compiler_flag_if_supported("-Wshadow")
   add_cxx_compiler_flag_if_supported("-Wsign-compare")
+  add_cxx_compiler_flag_if_supported("-Wsuggest-override")
+  add_cxx_compiler_flag_if_supported("-pedantic")
   # Not really a warning, is still diagnostic related..
   if (NOT CMAKE_CXX_COMPILER_ID STREQUAL Intel OR
       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 2021)
@@ -27,17 +30,7 @@ if(NOT DEFINED VT_WARNING_FLAGS)
   endif()
 
   if (vt_werror_enabled)   # Treat warning as errors
-  add_cxx_compiler_flag_if_supported("-Werror")
-  endif()
-
-  # Silence some spurious warnings on older compilers
-  if (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU" AND
-      CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6)
-    list(APPEND VT_WARNING_FLAGS -Wno-unused-variable)
-  endif()
-  if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" AND
-      CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6)
-    list(APPEND VT_WARNING_FLAGS -Wno-missing-braces)
+    add_cxx_compiler_flag_if_supported("-Werror")
   endif()
 endif()
 

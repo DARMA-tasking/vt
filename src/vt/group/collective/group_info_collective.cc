@@ -186,7 +186,7 @@ void InfoColl::setupCollective() {
   );
   GroupOnlyTMsg::registerContinuationT(
     new_tree_cont_,
-    [group_](MsgSharedPtr<GroupOnlyMsg> msg){
+    [group_]([[maybe_unused]] MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       auto const& from = theContext()->getFromNodeCurrentTask();
@@ -766,7 +766,7 @@ void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
   finalize();
 }
 
-void InfoColl::downTreeFinished(GroupOnlyMsg* msg) {
+void InfoColl::downTreeFinished([[maybe_unused]] GroupOnlyMsg* msg) {
   send_down_finished_++;
   finalize();
 }

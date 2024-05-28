@@ -60,7 +60,7 @@ struct TestPendingSend : TestParallelHarness {
     vt::NodeType sender = uninitialized_destination;
   };
   static void handlerPong(TestMsg*) { delivered = true; }
-  static void handlerPing(TestMsg* in_msg) {
+  static void handlerPing([[maybe_unused]] TestMsg* in_msg) {
     auto const this_node = theContext()->getNode();
     auto const num_nodes = theContext()->getNumNodes();
     auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;

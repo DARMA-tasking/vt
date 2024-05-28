@@ -405,7 +405,7 @@ void HierarchicalLB::startMigrations() {
 
 void HierarchicalLB::downTreeSend(
   NodeType const node, NodeType const from, ObjSampleType const& excess,
-  bool const final_child, std::size_t const& approx_size
+  bool const final_child, [[maybe_unused]] std::size_t const& approx_size
 ) {
   proxy[node].template send<LBTreeDownMsg, &HierarchicalLB::downTreeHandler>(
     from, excess, final_child
@@ -460,7 +460,9 @@ void HierarchicalLB::lbTreeUpHandler(LBTreeUpMsg* msg) {
   );
 }
 
-std::size_t HierarchicalLB::getSize(ObjSampleType const& sample) {
+std::size_t HierarchicalLB::getSize(
+  [[maybe_unused]] ObjSampleType const& sample
+) {
   return 0;
 }
 

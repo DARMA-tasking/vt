@@ -107,7 +107,7 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
 static constexpr int32_t const num_elms = 16;
 
 struct TestLBDataRetention : TestParallelHarness {
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
 
     // We must have more or equal number of elements than nodes for this test to
@@ -116,7 +116,6 @@ struct TestLBDataRetention : TestParallelHarness {
   }
 };
 
-using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::PersistenceMedianLastN;
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {

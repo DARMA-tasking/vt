@@ -65,7 +65,9 @@ struct ApplyOp<Op, cur, max, std::enable_if_t<cur != max>> {
 template <typename Op, int cur, int max>
 struct ApplyOp<Op, cur, max, std::enable_if_t<cur == max>> {
   template <typename Tuple1, typename Tuple2>
-  static void apply(Tuple1& t1, Tuple2 const& t2) { }
+  static void apply(
+    [[maybe_unused]] Tuple1& t1, [[maybe_unused]] Tuple2 const& t2
+  ) { }
 };
 
 //

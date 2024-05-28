@@ -67,7 +67,8 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 assertOutInfo(
   bool fail, std::string const cond, std::string const& str,
   std::string const& file, int const line, std::string const& func,
-  ErrorCodeType error, std::tuple<Args2...>&& tup, std::tuple<Args...>&& t2
+  ErrorCodeType error, [[maybe_unused]] std::tuple<Args2...>&& tup,
+  std::tuple<Args...>&& t2
 ) {
   return assertOut(
     fail,cond,str,file,line,func,error,std::forward<std::tuple<Args...>>(t2)

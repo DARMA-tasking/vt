@@ -200,7 +200,9 @@ inline AutoActiveType const& getAutoHandler(HandlerType const handler) {
 
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
 void setHandlerTraceNameObjGroup(
-  HandlerControlType ctrl, std::string const& name, std::string const& parent
+  [[maybe_unused]] HandlerControlType ctrl,
+  [[maybe_unused]] std::string const& name,
+  [[maybe_unused]] std::string const& parent
 ) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerObjGroup<ObjT,MsgT,f>(ctrl);
@@ -210,7 +212,10 @@ void setHandlerTraceNameObjGroup(
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-void setHandlerTraceName(std::string const& name, std::string const& parent) {
+void setHandlerTraceName(
+  [[maybe_unused]] std::string const& name,
+  [[maybe_unused]] std::string const& parent
+) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandler<MsgT,f>();
   auto const trace_id = handlerTraceID(handler);
@@ -219,7 +224,10 @@ void setHandlerTraceName(std::string const& name, std::string const& parent) {
 }
 
 template <typename T, T value>
-void setHandlerTraceName(std::string const& name, std::string const& parent) {
+void setHandlerTraceName(
+  [[maybe_unused]] std::string const& name,
+  [[maybe_unused]] std::string const& parent
+) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerParam<T,value>();
   auto const trace_id = handlerTraceID(handler);

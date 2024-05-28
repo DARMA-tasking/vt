@@ -81,7 +81,10 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   }
 };
 
-vt::NodeType map(vt::Index1D* idx, vt::Index1D* max_idx, vt::NodeType num_nodes) {
+vt::NodeType map(
+  vt::Index1D* idx, [[maybe_unused]] vt::Index1D* max_idx,
+  vt::NodeType num_nodes
+) {
   return (idx->x() % (num_nodes-1))+1;
 }
 

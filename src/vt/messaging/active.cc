@@ -167,7 +167,9 @@ void ActiveMessenger::startup() {
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {}
 
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
-  HandlerType const handler, ByteType serialized_msg_size, bool is_bcast
+  [[maybe_unused]] HandlerType const handler,
+  [[maybe_unused]] ByteType serialized_msg_size,
+  [[maybe_unused]] bool is_bcast
 ) {
   #if vt_check_enabled(trace_enabled)
     trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler);
@@ -1152,7 +1154,7 @@ bool ActiveMessenger::testPendingAsyncOps() {
   );
 }
 
-int ActiveMessenger::progress(TimeType current_time) {
+int ActiveMessenger::progress([[maybe_unused]] TimeType current_time) {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   bool const received_active_msg = testPendingActiveMsgAsyncRecv();
@@ -1167,7 +1169,9 @@ void ActiveMessenger::registerAsyncOp(std::unique_ptr<AsyncOp> in) {
   in_progress_ops.emplace(AsyncOpWrapper{std::move(in)});
 }
 
-void ActiveMessenger::blockOnAsyncOp(std::unique_ptr<AsyncOp> op) {
+void ActiveMessenger::blockOnAsyncOp(
+  [[maybe_unused]] std::unique_ptr<AsyncOp> op
+) {
 #if vt_check_enabled(fcontext)
   using TA = sched::ThreadAction;
   auto tid = TA::getActiveThreadID();

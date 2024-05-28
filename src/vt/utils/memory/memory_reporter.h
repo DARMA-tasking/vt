@@ -55,7 +55,7 @@ struct Reporter {
   virtual std::string getName() = 0;
 
   template <typename Serializer>
-  void serialize(Serializer& s) { }
+  void serialize([[maybe_unused]] Serializer& s) { }
 };
 
 }}} /* end namespace vt::util::memory */

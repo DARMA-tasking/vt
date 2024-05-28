@@ -64,8 +64,10 @@ struct SerialTrackMsg : ::vt::Message {
   vt_msg_serialize_required();
 
   SerialTrackMsg() { ++alloc_count; }
-  SerialTrackMsg(SerialTrackMsg const& other) { ++alloc_count; }
-  SerialTrackMsg(SerialTrackMsg&& other) { ++alloc_count; }
+  SerialTrackMsg(SerialTrackMsg const&) {
+    ++alloc_count;
+  }
+  SerialTrackMsg(SerialTrackMsg&&) { ++alloc_count; }
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -91,7 +93,7 @@ using NormalTestMsg = TrackMsg;
 using SerialTestMsg = SerialTrackMsg;
 
 struct TestMemoryLifetime : TestParallelHarness {
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
     SerialTestMsg::alloc_count = 0;
     local_count = 0;
@@ -99,11 +101,11 @@ struct TestMemoryLifetime : TestParallelHarness {
     SET_MIN_NUM_NODES_CONSTRAINT(2);
   }
 
-  static void serialHan(SerialTestMsg* msg) {
+  static void serialHan([[maybe_unused]] SerialTestMsg* msg) {
     local_count++;
   }
 
-  static void normalHan(NormalTestMsg* msg) {
+  static void normalHan([[maybe_unused]] NormalTestMsg* msg) {
     local_count++;
     //fmt::print("{}: normalHan num={}\n", theContext()->getNode(), local_count);
   }
@@ -221,7 +223,8 @@ static void callbackHan(CallbackMsg<NormalTestMsg>* msg) {
 TEST_F(TestMemoryLifetime, test_active_send_callback_lifetime_1) {
 
   auto cb = theCB()->makeFunc<NormalTestMsg>(
-     vt::pipe::LifetimeEnum::Indefinite, [](NormalTestMsg* msg){ }
+     vt::pipe::LifetimeEnum::Indefinite,
+     []([[maybe_unused]] NormalTestMsg* msg){ }
   );
 
   for (int i = 0; i < num_msgs_sent; i++) {
@@ -252,7 +255,8 @@ static void callbackHan(CallbackMsg<SerialTestMsg>* msg) {
 
 TEST_F(TestMemoryLifetime, test_active_serial_callback_lifetime_1) {
   auto cb = theCB()->makeFunc<SerialTestMsg>(
-    vt::pipe::LifetimeEnum::Indefinite, [](SerialTestMsg* msg){ }
+    vt::pipe::LifetimeEnum::Indefinite,
+    []([[maybe_unused]] SerialTestMsg* msg){ }
   );
 
   for (int i = 0; i < num_msgs_sent; i++) {

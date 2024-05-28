@@ -70,7 +70,7 @@ public:
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe);
 
-  void triggerVoid(PipeType const& pipe) {
+  void triggerVoid([[maybe_unused]] PipeType const& pipe) {
     vtAssert(0, "Must not be void");
   }
 

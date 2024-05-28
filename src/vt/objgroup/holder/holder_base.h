@@ -78,7 +78,7 @@ template <typename ObjT>
 struct HolderObjBase : HolderBase {
   virtual ~HolderObjBase() = default;
   virtual ObjT* get() = 0;
-  virtual std::byte* getPtr() = 0;
+  virtual std::byte* getPtr() override = 0;
 };
 
 }}} /* end namespace vt::objgroup::holder */

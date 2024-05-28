@@ -198,7 +198,7 @@ void AsyncEvent::finalize() {
   event_container_.clear();
 }
 
-int AsyncEvent::progress(TimeType current_time) {
+int AsyncEvent::progress([[maybe_unused]] TimeType current_time) {
   theEvent()->testEventsTrigger();
   return 0;
 }

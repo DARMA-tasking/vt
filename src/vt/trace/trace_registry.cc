@@ -121,7 +121,9 @@ TraceRegistry::registerEventHashed(
 
 /*static*/ void
 TraceRegistry::setTraceName(
-  TraceEntryIDType id, std::string const& name, std::string const& type_name
+  [[maybe_unused]] TraceEntryIDType id,
+  [[maybe_unused]] std::string const& name,
+  [[maybe_unused]] std::string const& type_name
 ) {
 #if vt_check_enabled(trace_enabled)
   auto* events = TraceContainers::getEventContainer();

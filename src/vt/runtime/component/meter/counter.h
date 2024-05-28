@@ -77,7 +77,7 @@ public:
    *
    * \param[in] val amount to increment
    */
-  void increment(T val = 1) {
+  void increment([[maybe_unused]] T val = 1) {
 #   if vt_check_enabled(diagnostics)
     if (impl_) {
       impl_->update(val);
@@ -90,7 +90,7 @@ public:
    *
    * \param[in] val amount to decrement
    */
-  void decrement(T val = 1) {
+  void decrement([[maybe_unused]] T val = 1) {
 #   if vt_check_enabled(diagnostics)
     if (impl_) {
       impl_->update(-val);

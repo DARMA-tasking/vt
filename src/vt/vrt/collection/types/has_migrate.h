@@ -49,6 +49,8 @@
 namespace vt { namespace vrt { namespace collection {
 
 struct HasMigrate {
+  virtual ~HasMigrate() = default;
+
   virtual void migrate(NodeType const& to_node) = 0;
 };
 

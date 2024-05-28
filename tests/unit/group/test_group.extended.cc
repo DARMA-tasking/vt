@@ -51,7 +51,7 @@ namespace vt { namespace tests { namespace unit {
 
 struct MySimpleMsg : ::vt::Message { };
 
-static void msgHandlerGroup(MySimpleMsg* msg) {
+static void msgHandlerGroup([[maybe_unused]] MySimpleMsg* msg) {
   auto const cur_node = ::vt::theContext()->getNode();
   vtAssert(cur_node % 2 == 0, "This handler should only execute on even nodes");
 

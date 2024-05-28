@@ -57,7 +57,7 @@ using namespace vt::tests::unit;
 struct TestTermCleanup :  TestParallelHarness {
   using TestMsgType = TestStaticBytesNormalMsg<64>;
 
-  static void handler(TestMsgType* msg) {
+  static void handler([[maybe_unused]] TestMsgType* msg) {
     //fmt::print("receive msg\n");
   }
 };

@@ -431,7 +431,9 @@ template <typename MsgT, typename BaseT>
         );
 
         auto base_msg = user_msg.template to<BaseMsgType>();
-        return messaging::PendingSend(base_msg, [=](MsgPtr<BaseMsgType> in) {
+        return messaging::PendingSend(
+          base_msg, [=]([[maybe_unused]] MsgPtr<BaseMsgType> in
+        ) {
           bool const is_obj = HandlerManager::isHandlerObjGroup(typed_handler);
           if (is_obj) {
             objgroup::dispatchObjGroup(

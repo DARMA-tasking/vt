@@ -54,17 +54,16 @@ namespace vt { namespace vrt {
 
 struct VirtualContext : VrtBase {
   VirtualContext() = default;
-  VirtualContext(bool const in_is_main) { }
 
   friend struct VirtualContextAttorney;
 
   template <typename Serializer>
-  void serialize(Serializer& s) {}
+  void serialize([[maybe_unused]] Serializer& s) {}
 
 };
 
 struct MainVirtualContext : VirtualContext {
-  MainVirtualContext() : VirtualContext(true) { }
+  MainVirtualContext() : VirtualContext() { }
 };
 
 }}  // end namespace vt::vrt

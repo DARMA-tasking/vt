@@ -180,7 +180,9 @@ struct RunnableMaker {
    * captured one)
    */
   template <typename ElmT, typename MsgU>
-  RunnableMaker&& withLBData(ElmT* elm, MsgU* msg) {
+  RunnableMaker&& withLBData(
+    [[maybe_unused]] ElmT* elm, [[maybe_unused]] MsgU* msg
+  ) {
 #if vt_check_enabled(lblite)
     impl_->addContextLB(elm, msg);
 #endif
@@ -204,7 +206,9 @@ struct RunnableMaker {
    * \param[in] elm_id the element ID
    */
   template <typename LBDataT, typename T>
-  RunnableMaker&& withLBData(LBDataT* lb_data, T elm_id) {
+  RunnableMaker&& withLBData(
+    [[maybe_unused]] LBDataT* lb_data, [[maybe_unused]] T elm_id
+  ) {
 #if vt_check_enabled(lblite)
     impl_->addContextLB(lb_data, elm_id);
 #endif
@@ -217,7 +221,7 @@ struct RunnableMaker {
    * \param[in] elm the element
    */
   template <typename ElmT>
-  RunnableMaker&& withLBData(ElmT* elm) {
+  RunnableMaker&& withLBData([[maybe_unused]] ElmT* elm) {
 #if vt_check_enabled(lblite)
     impl_->addContextLB(elm, msg_.get());
 #endif

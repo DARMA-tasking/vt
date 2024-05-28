@@ -66,7 +66,7 @@ struct MyCol : ::vt::Collection<MyCol,Index1D> {
 //                \                              /
 struct MyCollMsg : ::vt::CollectionMessage<MyCol> { };
 
-void MyCol::msgHandler(MyCollMsg* msg) {
+void MyCol::msgHandler([[maybe_unused]] MyCollMsg* msg) {
   auto cur_node = theContext()->getNode();
   auto idx = this->getIndex();
   ::fmt::print("MyCol::msgHandler index={}, node={}\n", idx.x(), cur_node);

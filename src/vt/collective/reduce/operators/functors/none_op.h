@@ -57,7 +57,7 @@ struct None {
     "Must be empty data"
   );
 
-  void operator()(T& v1, T const& v2) {}
+  void operator()([[maybe_unused]] T& v1, [[maybe_unused]] T const& v2) {}
 };
 
 }}}} /* end namespace vt::collective::reduce::operators */

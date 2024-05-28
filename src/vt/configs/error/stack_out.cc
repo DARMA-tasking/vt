@@ -122,7 +122,6 @@ DumpStackType dumpStack(int skip) {
     for (auto i = skip; i < num_frames; i++) {
       //printf("%s\n", symbols[i]);
 
-      std::string str = "";
       Dl_info info;
       if (dladdr(callstack[i], &info) && info.dli_sname) {
         char *demangled = nullptr;
@@ -140,23 +139,12 @@ DumpStackType dumpStack(int skip) {
           )
         );
 
-        auto const& t = stack.back();
-        str = fmt::format(
-          "{:<4} {:<4} {:<15} {} + {}\n",
-          i, std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t)
-        );
-
         std::free(demangled);
       } else {
         stack.emplace_back(
           std::forward_as_tuple(
             static_cast<int>(2 + sizeof(void*) * 2), reinterpret_cast<long>(callstack[i]), symbols[i], 0
           )
-        );
-
-        auto const& t = stack.back();
-        str = fmt::format(
-          "{:10} {} {} {}\n", i, std::get<0>(t), std::get<1>(t), std::get<2>(t)
         );
       }
 

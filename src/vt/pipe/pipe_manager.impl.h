@@ -67,7 +67,9 @@
 namespace vt { namespace pipe {
 
 template <typename MsgT>
-void PipeManager::triggerSendBack(PipeType const& pipe, MsgT* data) {
+void PipeManager::triggerSendBack(
+  PipeType const& pipe, [[maybe_unused]] MsgT* data
+) {
   auto const& this_node = theContext()->getNode();
   auto const& node_back = PipeIDBuilder::getNode(pipe);
   if (node_back != this_node) {

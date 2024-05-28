@@ -62,8 +62,7 @@ struct AddDep<U, Args...> {
 
 template <>
 struct AddDep<> {
-  static void add(registry::AutoHandlerType t) {
-  }
+  static void add([[maybe_unused]] registry::AutoHandlerType t) { }
 };
 
 struct ComponentRegistry {

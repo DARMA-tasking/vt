@@ -205,7 +205,7 @@ GroupType CollectionManager::createGroupCollection(
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
-  trace::TraceEventIDType event, bool immediate
+  [[maybe_unused]] trace::TraceEventIDType event, bool immediate
 ) {
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
@@ -252,7 +252,7 @@ template <typename ColT, typename IndexT, typename MsgT>
       "broadcast apply: size={}\n", elm_holder->numElements()
     );
     elm_holder->foreach([col_msg, msg, handler](
-      IndexT const& idx, Indexable<IndexT>* base
+      [[maybe_unused]] IndexT const& idx, Indexable<IndexT>* base
     ) {
       vtAssert(base != nullptr, "Must be valid pointer");
 
@@ -446,7 +446,9 @@ void CollectionManager::invokeCollective(
   auto elm_holder = findElmHolder<IndexType>(untyped_proxy);
   auto const this_node = theContext()->getNode();
 
-  elm_holder->foreach([&](IndexType const& idx, Indexable<IndexType>* ptr) {
+  elm_holder->foreach(
+    [&]([[maybe_unused]] IndexType const& idx, Indexable<IndexType>* ptr
+  ) {
     // be careful not to forward here as we are reusing args
     runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
       .withCollection(ptr)
@@ -509,7 +511,7 @@ void CollectionManager::invokeMsg(
 template <typename ColT, typename MsgT>
 void CollectionManager::invokeMsgImpl(
   VirtualElmProxyType<ColT> const& proxy, MsgSharedPtr<MsgT> msg,
-  bool instrument
+  [[maybe_unused]] bool instrument
 )
 {
   using IndexT = typename ColT::IndexType;
@@ -672,7 +674,8 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsg(
 
 template <typename MsgT, typename ColT>
 messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
-  CollectionProxyWrapType<ColT> const& proxy, MsgPtr<MsgT>& msg, bool instrument
+  CollectionProxyWrapType<ColT> const& proxy, MsgPtr<MsgT>& msg,
+  [[maybe_unused]] bool instrument
 ) {
   using IndexT = typename ColT::IndexType;
 
@@ -792,7 +795,7 @@ messaging::PendingSend CollectionManager::broadcastNormalMsg(
 template <typename MsgT, typename ColT, typename IdxT>
 messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT* raw_msg,
-  HandlerType const handler, bool instrument
+  HandlerType const handler, [[maybe_unused]] bool instrument
 ) {
   auto const idx = makeVrtDispatch<MsgT,ColT>();
   auto const col_proxy = toProxy.getProxy();
@@ -960,7 +963,8 @@ messaging::PendingSend CollectionManager::reduceMsg(
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 messaging::PendingSend CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT> const& proxy,
-  MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
+  MsgT *const msg,
+  [[maybe_unused]] ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
   ReduceStamp stamp, typename ColT::IndexType const& idx
 ) {
   auto const mapped_node = getMappedNode<ColT>(proxy, idx);
@@ -1506,7 +1510,8 @@ ColT* CollectionManager::tryGetLocalPtr(
 
 template <typename ColT>
 ModifierToken CollectionManager::beginModification(
-  CollectionProxyWrapType<ColT> const& proxy, std::string const& label
+  [[maybe_unused]] CollectionProxyWrapType<ColT> const& proxy,
+  std::string const& label
 ) {
   auto epoch = theTerm()->makeEpochCollective(label);
 
@@ -2191,7 +2196,8 @@ template <typename ColT>
 
 template <typename ColT>
 void CollectionManager::restoreFromFileInPlace(
-  CollectionProxyWrapType<ColT> proxy, typename ColT::IndexType range,
+  CollectionProxyWrapType<ColT> proxy,
+  [[maybe_unused]] typename ColT::IndexType range,
   std::string const& file_base
 ) {
   using IndexType = typename ColT::IndexType;
@@ -2308,7 +2314,9 @@ messaging::PendingSend CollectionManager::schedule(
   MsgT msg, bool execute_now, EpochType cur_epoch, ActionType action
 ) {
   theTerm()->produce(cur_epoch);
-  return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
+  return messaging::PendingSend(
+    msg, [=]([[maybe_unused]] MsgVirtualPtr<BaseMsgType> inner_msg
+  ){
     auto fn = [=]{
       theMsg()->pushEpoch(cur_epoch);
       action();

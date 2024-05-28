@@ -187,7 +187,7 @@ Channel::lockChannelForOp() {
     auto const& lock_type =
       (not is_target_) ?
       (op_type_ == RDMA_TypeType::Put ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED) :
-      (op_type_ == RDMA_TypeType::Put ? MPI_LOCK_SHARED : MPI_LOCK_SHARED);
+      MPI_LOCK_SHARED;
 
     vt_debug_print(
       normal, rdma_channel,

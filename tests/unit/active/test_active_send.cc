@@ -83,7 +83,7 @@ struct TestActiveSend : TestParallelHarness {
   static int handler_count;
   static int num_msg_sent;
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
 
     handler_count = 0;
@@ -242,7 +242,7 @@ TEST_F(TestActiveSend, test_active_message_serialization) {
   EXPECT_EQ(handler_count, num_msg_sent);
 }
 
-void testPropertiesHandler(int a, double b) {
+void testPropertiesHandler([[maybe_unused]] int a, [[maybe_unused]] double b) {
   // do nothing
 }
 

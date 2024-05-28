@@ -68,6 +68,7 @@ struct InfoRooted : virtual InfoBase {
     bool const& in_is_remote, RegionPtrType in_region,
     RegionType::SizeType const& in_total_size
   );
+  virtual ~InfoRooted() = default;
 
 protected:
   void setupRooted();

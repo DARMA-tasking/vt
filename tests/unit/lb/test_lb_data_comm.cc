@@ -123,7 +123,7 @@ struct ColProxyMsg : vt::Message {
 };
 struct ProxyMsg;
 struct MyObj {
-  void dummyHandler(MyObjMsg* msg) {}
+  void dummyHandler([[maybe_unused]] MyObjMsg* msg) {}
   void simulateObjGroupColTSends(ColProxyMsg* msg);
   void simulateObjGroupObjGroupSends(ProxyMsg* msg);
   void simulateObjGroupHandlerSends(MyMsg* msg);
@@ -134,7 +134,7 @@ struct ProxyMsg : vt::CollectionMessage<MyCol> {
   ProxyType obj_proxy;
 };
 
-void handler2(MyCol* col, MyMsg*) {}
+void handler2([[maybe_unused]] MyCol* col, MyMsg*) {}
 
 void MyObj::simulateObjGroupColTSends(ColProxyMsg* msg) {
   auto proxy = msg->proxy;
@@ -171,7 +171,9 @@ void simulateColTColTSends(MyCol* col) {
   }
 }
 
-void simulateColTObjGroupSends(MyCol* col, ProxyMsg* msg) {
+void simulateColTObjGroupSends(
+  [[maybe_unused]] MyCol* col, ProxyMsg* msg
+) {
   auto obj_proxy = msg->obj_proxy;
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -181,9 +183,9 @@ void simulateColTObjGroupSends(MyCol* col, ProxyMsg* msg) {
   }
 }
 
-void bareDummyHandler(MyObjMsg* msg) {}
+void bareDummyHandler([[maybe_unused]] MyObjMsg* msg) {}
 
-void simulateColTHandlerSends(MyCol* col) {
+void simulateColTHandlerSends([[maybe_unused]] MyCol* col) {
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
   auto next = (this_node + 1) % num_nodes;
@@ -193,7 +195,7 @@ void simulateColTHandlerSends(MyCol* col) {
   }
 }
 
-void MyObj::simulateObjGroupHandlerSends(MyMsg* msg) {
+void MyObj::simulateObjGroupHandlerSends([[maybe_unused]] MyMsg* msg) {
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
   auto next = (this_node + 1) % num_nodes;
@@ -229,7 +231,7 @@ void simulateHandlerObjGroupSends(ProxyMsg* msg) {
   }
 }
 
-void simulateHandlerHandlerSends(MyMsg* msg) {
+void simulateHandlerHandlerSends([[maybe_unused]] MyMsg* msg) {
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
   auto next = (this_node + 1) % num_nodes;
