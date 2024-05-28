@@ -12,6 +12,8 @@ endfunction()
 add_headers(FMT_HEADERS core.h format.h format-inl.h ostream.h)
 set(FMT_SOURCES src/format.cc)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 add_library(fmt ${FMT_SOURCES} ${FMT_HEADERS})
 add_library(fmt::fmt ALIAS fmt)
 set_target_properties(fmt PROPERTIES OUTPUT_NAME fmt-vt)

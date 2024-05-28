@@ -79,7 +79,7 @@ struct TestObjGroup : TestParallelHarness {
   void verifyVec(VectorPayload vec) {
     auto final_size = vec.vec_.size();
     auto n = vt::theContext()->getNumNodes();
-    EXPECT_EQ(final_size, n);
+    EXPECT_EQ(final_size, static_cast<std::size_t>(n));
     total_verify_expected_++;
   }
 };
