@@ -310,7 +310,7 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
               << "    - pool\n"
               << "    - group\n"
               << "Load Balancing:\n"
-              << "  Enabled: True\n"
+              << "  Enabled: False\n"
               << "  LB Data Output:\n"
               << "    Enabled: False\n"
               << "  LB Data Input:\n"
@@ -427,7 +427,7 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
   EXPECT_EQ(theConfig()->vt_debug_epoch, false);
 
   // Load Balancing
-  EXPECT_EQ(theConfig()->vt_lb, true);
+  EXPECT_EQ(theConfig()->vt_lb, false);
   EXPECT_EQ(theConfig()->vt_lb_quiet, false);
   EXPECT_EQ(theConfig()->vt_lb_file_name, "");
   EXPECT_EQ(theConfig()->vt_lb_show_config, false);
