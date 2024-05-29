@@ -126,8 +126,9 @@ def main():
     for root, _, files in os.walk(src_dir_abs):
         if "extern" not in root.split(os.sep): # skip googletest
             for file in files:
-                if file.endswith('.h'):
+                if file.endswith('.h') or file.endswith('.cc'):
                     generate_license(os.path.join(root, file), license_path_abs)
+                if file.endswith('.h'):
                     generate_header_guard(os.path.join(root, file), src_dir_abs)
 
 if __name__ == '__main__':

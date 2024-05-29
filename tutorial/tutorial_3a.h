@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_TUTORIAL_3A_H
+#define INCLUDED_TUTORIAL_3A_H
+
 #include "vt/transport.h"
 
 namespace vt { namespace tutorial {
@@ -123,3 +126,4 @@ static void recurHandler(ExampleMsg* msg) {
 /// [Tutorial3A]
 
 }} /* end namespace vt::tutorial */
+#endif /*INCLUDED_TUTORIAL_3A_H*/

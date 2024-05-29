@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_TUTORIAL_1F_H
+#define INCLUDED_TUTORIAL_1F_H
+
 #include "vt/transport.h"
 
 namespace vt { namespace tutorial {
@@ -101,3 +104,4 @@ static void msgHandlerGroupB([[maybe_unused]] MySimpleMsg2* msg) {
 /// [Tutorial1F]
 
 }} /* end namespace vt::tutorial */
+#endif /*INCLUDED_TUTORIAL_1F_H*/

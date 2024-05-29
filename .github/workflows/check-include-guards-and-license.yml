@@ -1,4 +1,4 @@
-name: Check header guards
+name: Check header guards and license
 
 on: pull_request
 
@@ -15,8 +15,5 @@ jobs:
         with:
             python-version: '3.7'
 
-      - name: Install checkguard
-        run: pip install guardonce
-
-      - name: Check that include guards are properly named
+      - name: Check that for correct include guards and license
         run: ./scripts/check_guards.sh $(pwd)
