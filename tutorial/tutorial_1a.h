@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_TUTORIAL_1A_H
+#define INCLUDED_TUTORIAL_1A_H
+
 #include "vt/transport.h"
 
 namespace vt { namespace tutorial {
@@ -70,3 +73,4 @@ static inline void context() {
 /// [Tutorial1A]
 
 }} /* end namespace vt::tutorial */
+#endif /*INCLUDED_TUTORIAL_1A_H*/

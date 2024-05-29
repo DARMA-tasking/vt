@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_TUTORIAL_1D_H
+#define INCLUDED_TUTORIAL_1D_H
+
 #include "vt/transport.h"
 
 namespace vt { namespace tutorial {
@@ -109,3 +112,4 @@ static void msgHandlerX(MyDataMsg* msg) {
 /// [Tutorial1D]
 
 }} /* end namespace vt::tutorial */
+#endif /*INCLUDED_TUTORIAL_1D_H*/

@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_TUTORIAL_MAIN_H
+#define INCLUDED_TUTORIAL_MAIN_H
+
 #include "vt/transport.h"
 
 #include "tutorial_1a.h"
@@ -139,3 +142,4 @@ int main(int argc, char** argv) {
    */
   ::vt::CollectiveOps::finalize();
 }
+#endif /*INCLUDED_TUTORIAL_MAIN_H*/
