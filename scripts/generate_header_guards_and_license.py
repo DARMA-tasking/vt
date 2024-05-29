@@ -124,10 +124,11 @@ def main():
     src_dir_abs = os.path.abspath(os.path.expanduser(args.src_dir))
     license_path_abs = os.path.abspath(os.path.expanduser(args.license_path))
     for root, _, files in os.walk(src_dir_abs):
-        for file in files:
-            if file.endswith('.h'):
-                generate_license(os.path.join(root, file), license_path_abs)
-                generate_header_guard(os.path.join(root, file), src_dir_abs)
+        if "extern" not in root.split(os.sep): # skip googletest
+            for file in files:
+                if file.endswith('.h'):
+                    generate_license(os.path.join(root, file), license_path_abs)
+                    generate_header_guard(os.path.join(root, file), src_dir_abs)
 
 if __name__ == '__main__':
     main()
