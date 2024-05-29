@@ -24,9 +24,6 @@ option(YAML_BUILD_SHARED_LIBS "Build yaml-cpp shared library" ${BUILD_SHARED_LIB
 cmake_dependent_option(YAML_CPP_BUILD_TESTS
   "Enable yaml-cpp tests" ON
   "BUILD_TESTING;CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF)
-cmake_dependent_option(YAML_CPP_INSTALL
-  "Enable generation of yaml-cpp install targets" ON
-  "CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF)
 cmake_dependent_option(YAML_MSVC_SHARED_RT
   "MSVC: Build yaml-cpp with shared runtime libs (/MD)" ON
   "MSVC" OFF)
@@ -131,24 +128,22 @@ write_basic_package_version_file(
 
 configure_file(yaml-cpp.pc.in yaml-cpp.pc @ONLY)
 
-if (YAML_CPP_INSTALL)
-	install(TARGETS yaml-cpp
-    EXPORT yaml-cpp-targets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-	install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-		FILES_MATCHING PATTERN "*.h")
-  install(EXPORT yaml-cpp-targets
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/yaml-cpp")
-	install(FILES
-		"${PROJECT_BINARY_DIR}/yaml-cpp-config.cmake"
-		"${PROJECT_BINARY_DIR}/yaml-cpp-config-version.cmake"
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/yaml-cpp")
-  install(FILES "${PROJECT_BINARY_DIR}/yaml-cpp.pc"
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig)
-endif()
+install(TARGETS yaml-cpp
+  EXPORT yaml-cpp-targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.h")
+install(EXPORT yaml-cpp-targets
+  DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/yaml-cpp")
+install(FILES
+  "${PROJECT_BINARY_DIR}/yaml-cpp-config.cmake"
+  "${PROJECT_BINARY_DIR}/yaml-cpp-config-version.cmake"
+  DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/yaml-cpp")
+install(FILES "${PROJECT_BINARY_DIR}/yaml-cpp.pc"
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig)
 
 if(YAML_CPP_BUILD_TESTS)
 	add_subdirectory(test)
