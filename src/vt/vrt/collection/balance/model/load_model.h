@@ -222,7 +222,7 @@ struct LoadModel
    *
    * \return the comm info
    */
-  virtual CommMapType getComm(PhaseOffset when) const {
+  virtual CommMapType getComm([[maybe_unused]] PhaseOffset when) const {
     return CommMapType{};
   }
 
