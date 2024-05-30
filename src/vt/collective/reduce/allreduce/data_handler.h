@@ -45,6 +45,7 @@
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_DATA_HANDLER_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_DATA_HANDLER_H
 
+namespace vt::collective::reduce::allreduce {
 #include <vector>
 
 #ifdef VT_KOKKOS_ENABLED
@@ -65,6 +66,7 @@ public:
 template <typename T>
 class DataHandler<std::vector<T>> {
 public:
+  using UnderlyingType = std::vector<T>;
   using Scalar = T;
   static size_t size(const std::vector<T>& data) { return data.size(); }
   static T at(const std::vector<T>& data, size_t idx) { return data[idx]; }
@@ -96,5 +98,7 @@ public:
   }
 };
 #endif // VT_KOKKOS_ENABLED
+
+} // namespace vt::collective::reduce::allreduce
 
 #endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_DATA_HANDLER_H*/
