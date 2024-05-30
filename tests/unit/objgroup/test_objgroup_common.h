@@ -41,14 +41,15 @@
 //@HEADER
 */
 
-#include <vector>
 #if !defined INCLUDED_UNIT_OBJGROUP_TEST_OBJGROUP_COMMON_H
 #define INCLUDED_UNIT_OBJGROUP_TEST_OBJGROUP_COMMON_H
 
 #include "test_parallel_harness.h"
 #include "vt/collective/reduce/operators/default_msg.h"
+#include "vt/collective/reduce/allreduce/data_handler.h"
 
 #include <numeric>
+#include <vector>
 
 namespace vt { namespace tests { namespace unit {
 
@@ -56,6 +57,24 @@ struct MyMsg : vt::Message {
 
   MyMsg() : from_(vt::theContext()->getNode()) {}
   vt::NodeType from_ = vt::uninitialized_destination;
+};
+
+struct VectorPayload {
+  VectorPayload() = default;
+
+  friend VectorPayload operator+(VectorPayload v1, VectorPayload const& v2) {
+    for (auto&& elm : v2.vec_) {
+      v1.vec_.push_back(elm);
+    }
+    return v1;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | vec_;
+  }
+
+  std::vector<int> vec_;
 };
 
 struct MyObjA {
@@ -125,6 +144,8 @@ struct MyObjA {
     total_verify_expected_++;
   }
 
+  void verifyAllredVecPayload(VectorPayload vec) { verifyAllredVec(vec.vec_); }
+
   int id_ = -1;
   int recv_ = 0;
   static int next_id;
@@ -164,26 +185,29 @@ struct MyObjB {
   }
 };
 
-struct VectorPayload {
-  VectorPayload() = default;
-
-  friend VectorPayload operator+(VectorPayload v1, VectorPayload const& v2) {
-    for (auto&& elm : v2.vec_) {
-      v1.vec_.push_back(elm);
-    }
-    return v1;
-  }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | vec_;
-  }
-
-  std::vector<int> vec_;
-};
-
 /*static*/ int MyObjA::next_id = 0;
 /*static*/ int MyObjB::next_id = 0;
 }}} // end namespace vt::tests::unit
+
+namespace vt::collective::reduce::allreduce {
+template<>
+class DataHandler<tests::unit::VectorPayload> {
+private:
+  using DataT = ::vt::tests::unit::VectorPayload;
+public:
+  using Scalar = typename decltype(DataT::vec_)::value_type;
+  using UnderlyingType = decltype(DataT::vec_);
+
+  static size_t size(const DataT& data) { return data.vec_.size(); }
+  static Scalar at(const DataT& data, size_t idx) { return data.vec_[idx]; }
+  static Scalar& at(DataT& data, size_t idx) { return data.vec_[idx]; }
+  static void set(DataT& data, size_t idx, const Scalar& value) {
+    data.vec_[idx] = value;
+  }
+  static DataT split(DataT& data, size_t start, size_t end) {
+    return DataT{UnderlyingType{data.vec_.begin() + start, data.vec_.begin() + end}};
+  }
+};
+} // namespace vt::collective::reduce::allreduce
 
 #endif /*INCLUDED_UNIT_OBJGROUP_TEST_OBJGROUP_COMMON_H*/
