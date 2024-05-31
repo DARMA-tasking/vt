@@ -79,25 +79,31 @@ public:
   }
 };
 
-#ifdef VT_KOKKOS_ENABLED
+#if KOKKOS_ENABLED_CHECKPOINT
+
 template <typename T, typename... Props>
-class DataHandler<Kokkos::View<T*, Props...>> {
+class DataHandler<Kokkos::View<T*, Kokkos::HostSpace, Props...>> {
+  using ViewType = Kokkos::View<T*, Kokkos::HostSpace, Props...>;
+
 public:
-  static size_t size(const Kokkos::View<T*, Props...>& data) {
-    return data.extent(0);
-  }
-  static T at(const Kokkos::View<T*, Props...>& data, size_t idx) {
-    return data(idx);
-  }
-  static T& at(Kokkos::View<T*, Props...>& data, size_t idx) {
-    return data(idx);
-  }
-  static void
-  set(Kokkos::View<T*, Props...>& data, size_t idx, const T& value) {
+  using Scalar = T;
+
+  static size_t size(const ViewType& data) { return data.extent(0); }
+
+  static T at(const ViewType& data, size_t idx) { return data(idx); }
+
+  static T& at(ViewType& data, size_t idx) { return data(idx); }
+
+  static void set(ViewType& data, size_t idx, const T& value) {
     data(idx) = value;
   }
+
+  static ViewType split(ViewType& data, size_t start, size_t end) {
+    return Kokkos::subview(data, std::make_pair(start, end));
+  }
 };
-#endif // VT_KOKKOS_ENABLED
+
+#endif // KOKKOS_ENABLED_CHECKPOINT
 
 } // namespace vt::collective::reduce::allreduce
 
