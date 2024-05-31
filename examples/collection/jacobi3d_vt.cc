@@ -107,9 +107,6 @@ public:
       maxIter_(5)
   { }
 
-
-  struct BlankMsg : vt::CollectionMessage<LinearPb3DJacobi> { };
-
   struct LPMsg : vt::CollectionMessage<LinearPb3DJacobi> {
 
     size_t numXObjs = 0;
@@ -236,36 +233,6 @@ public:
       proxy(0,0,0), maxNorm
     );
   }
-
-  //
-  // Message
-  //
-  struct VecMsg : vt::CollectionMessage<LinearPb3DJacobi> {
-    using MessageParentType = vt::CollectionMessage<LinearPb3DJacobi>;
-    vt_msg_serialize_required(); // stl vector
-
-    VecMsg() = default;
-    VecMsg(IndexType const& in_index, const std::vector<double> &ref, size_t const &rx, size_t const &ry, size_t const &rz) :
-      vt::CollectionMessage<LinearPb3DJacobi>(),
-      from_index(in_index), val(ref), nx(rx), ny(ry), nz(rz)
-    { }
-
-    template <typename Serializer>
-    void serialize(Serializer& s) {
-      MessageParentType::serialize(s);
-      s | from_index;
-      s | val;
-      s | nx;
-      s | ny;
-      s | nz;
-    }
-
-    IndexType from_index;
-    std::vector<double> val;
-    size_t nx = 0;
-    size_t ny = 0;
-    size_t nz = 0;
-  };
 
   void exchange(IndexType from_index, std::vector<double> const& val, size_t nx, size_t ny, size_t nz) {
 
