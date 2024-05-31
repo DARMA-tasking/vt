@@ -311,6 +311,53 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
   EXPECT_EQ(MyObjA::total_verify_expected_, 6);
 }
 
+#if KOKKOS_ENABLED_CHECKPOINT
+struct TestObjGroupKokkos : TestParallelHarness {
+  void SetUp() override {
+    TestParallelHarness::SetUp();
+
+    Kokkos::initialize();
+
+    SET_MIN_NUM_NODES_CONSTRAINT(2);
+  }
+
+  void TearDown() override {
+    TestParallelHarness::TearDown();
+
+    Kokkos::finalize();
+  }
+};
+
+TEST_F(TestObjGroupKokkos, test_proxy_allreduce_kokkos) {
+  using namespace vt::collective;
+
+  TestObjGroup::total_verify_expected_ = 0;
+  auto const my_node = vt::theContext()->getNode();
+
+  auto kokkos_proxy =
+    vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_reduce_kokkos");
+
+  vt::theCollective()->barrier();
+
+  runInEpochCollective([&] {
+    Kokkos::View<float*, Kokkos::HostSpace> view("view", 256);
+    Kokkos::parallel_for(
+      "InitView", view.extent(0),
+      KOKKOS_LAMBDA(const int i) { view(i) = static_cast<float>(my_node); });
+
+    using Reducer = vt::collective::reduce::allreduce::Rabenseifner<
+      decltype(view), PlusOp, MyObjA, &MyObjA::verifyAllredView>;
+
+    theObjGroup()
+      ->allreduce<Reducer, &MyObjA::verifyAllredView, MyObjA, PlusOp>(
+        kokkos_proxy, view);
+  });
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 1);
+}
+#endif // KOKKOS_ENABLED_CHECKPOINT
+
+
 TEST_F(TestObjGroup, test_proxy_invoke) {
   auto const& this_node = theContext()->getNode();
 
