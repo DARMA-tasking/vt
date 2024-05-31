@@ -146,6 +146,21 @@ struct MyObjA {
 
   void verifyAllredVecPayload(VectorPayload vec) { verifyAllredVec(vec.vec_); }
 
+#if KOKKOS_ENABLED_CHECKPOINT
+  void verifyAllredView(Kokkos::View<float*, Kokkos::HostSpace> view) {
+    auto final_size = view.extent(0);
+    EXPECT_EQ(final_size, 256);
+
+    auto n = vt::theContext()->getNumNodes();
+    auto const total_sum = n * (n - 1) / 2;
+    Kokkos::parallel_for("InitView", view.extent(0), KOKKOS_LAMBDA(const int i) {
+      EXPECT_EQ(view(i), total_sum);
+    });
+
+    total_verify_expected_++;
+  }
+#endif
+
   int id_ = -1;
   int recv_ = 0;
   static int next_id;
@@ -208,6 +223,7 @@ public:
     return DataT{UnderlyingType{data.vec_.begin() + start, data.vec_.begin() + end}};
   }
 };
+
 } // namespace vt::collective::reduce::allreduce
 
 #endif /*INCLUDED_UNIT_OBJGROUP_TEST_OBJGROUP_COMMON_H*/
