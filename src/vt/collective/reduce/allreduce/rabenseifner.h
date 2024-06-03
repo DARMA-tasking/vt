@@ -57,7 +57,7 @@
 
 namespace vt::collective::reduce::allreduce {
 
-constexpr bool debug = false;
+constexpr bool debug = true;
 
 template <typename DataT>
 struct AllreduceRbnMsg
@@ -89,376 +89,203 @@ struct AllreduceRbnMsg
   int32_t step_ = {};
 };
 
+/**
+ * \struct Rabenseifner
+ * \brief Class implementing Rabenseifner's allreduce algorithm.
+ *
+ * This class performs an allreduce operation using Rabenseifner's method. The algorithm consists
+ * of several phases: adjustment for power-of-two processes, scatter-reduce, and gather-allgather.
+ *
+ * \tparam DataT Type of the data being reduced.
+ * \tparam Op Reduction operation (e.g., sum, max, min).
+ * \tparam ObjT Object type used for callback invocation.
+ * \tparam finalHandler Callback handler for the final result.
+ */
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
-  auto finalHandler>
+  typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
+>
 struct Rabenseifner {
   using DataType = DataHandler<DataT>;
 
+  /**
+   * \brief Constructor for Rabenseifner's allreduce algorithm.
+   *
+   * \param parentProxy Proxy to the object group managing the reduction.
+   * \param num_nodes Total number of nodes involved in the allreduce operation.
+   * \param args Additional arguments for initializing the data value.
+   */
   template <typename... Args>
   Rabenseifner(
     vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
-    Args&&... args)
-    : parent_proxy_(parentProxy),
-      num_nodes_(num_nodes),
-      this_node_(vt::theContext()->getNode()),
-      is_even_(this_node_ % 2 == 0),
-      num_steps_(static_cast<int32_t>(log2(num_nodes_))),
-      nprocs_pof2_(1 << num_steps_),
-      nprocs_rem_(num_nodes_ - nprocs_pof2_),
-      finished_adjustment_part_(nprocs_rem_ == 0),
-      gather_step_(num_steps_ - 1),
-      gather_mask_(nprocs_pof2_ >> 1) {
-    initialize(std::forward<Args>(args)...);
-  }
+    Args&&... args);
 
+  /**
+   * \brief Initialize the allreduce algorithm.
+   *
+   * This function sets up the necessary data structures and initial values for the reduction operation.
+   *
+   * \param args Additional arguments for initializing the data value.
+   */
   template <typename... Args>
-  void initialize(Args&&... args) {
-    val_ = DataT(std::forward<Args>(args)...);
+  void initialize(Args&&... args);
 
-    is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
-    if (is_part_of_adjustment_group_) {
-      if (is_even_) {
-        vrt_node_ = this_node_ / 2;
-      } else {
-        vrt_node_ = -1;
-      }
-    } else {
-      vrt_node_ = this_node_ - nprocs_rem_;
-    }
+  /**
+   * \brief Execute the final handler callback with the reduced result.
+   */
+  void executeFinalHan();
 
-    scatter_messages_.resize(num_steps_, nullptr);
-    scatter_steps_recv_.resize(num_steps_, false);
-    scatter_steps_reduced_.resize(num_steps_, false);
+  /**
+   * \brief Perform the allreduce operation.
+   *
+   * This function starts the allreduce operation, adjusting for non-power-of-two process counts if necessary.
+   */
+  void allreduce();
 
-    gather_messages_.resize(num_steps_, nullptr);
-    gather_steps_recv_.resize(num_steps_, false);
-    gather_steps_reduced_.resize(num_steps_, false);
+  /**
+   * \brief Adjust the process count to the nearest power-of-two.
+   *
+   * This function performs additional steps to handle non-power-of-two process counts, ensuring that the
+   * main scatter-reduce and gather-allgather phases can proceed with a power-of-two number of processes.
+   */
+  void adjustForPowerOfTwo();
 
-    r_index_.resize(num_steps_, 0);
-    r_count_.resize(num_steps_, 0);
-    s_index_.resize(num_steps_, 0);
-    s_count_.resize(num_steps_, 0);
+  /**
+   * \brief Handler for adjusting the right half of the process group.
+   *
+   * This function handles the data received from the partner process and combines it using the reduction operation.
+   *
+   * \param msg Message containing the data from the partner process.
+   */
+  void adjustForPowerOfTwoRightHalf(AllreduceRbnMsg<DataT>* msg);
 
-    int step = 0;
-    size_t wsize = DataType::size(val_);
-    size_ = wsize;
-    for (int mask = 1; mask < nprocs_pof2_; mask <<= 1) {
-      auto vdest = vrt_node_ ^ mask;
-      auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
+  /**
+   * \brief Handler for adjusting the left half of the process group.
+   *
+   * This function handles the data received from the partner process and combines it using the reduction operation.
+   *
+   * \param msg Message containing the data from the partner process.
+   */
+  void adjustForPowerOfTwoLeftHalf(AllreduceRbnMsg<DataT>* msg);
 
-      if (this_node_ < dest) {
-        r_count_[step] = wsize / 2;
-        s_count_[step] = wsize - r_count_[step];
-        s_index_[step] = r_index_[step] + r_count_[step];
-      } else {
-        s_count_[step] = wsize / 2;
-        r_count_[step] = wsize - s_count_[step];
-        r_index_[step] = s_index_[step] + s_count_[step];
-      }
+  /**
+   * \brief Final adjustment step for non-power-of-two process counts.
+   *
+   * This function handles the final step of the adjustment phase, combining the data and proceeding to the next phase.
+   *
+   * \param msg Message containing the data from the partner process.
+   */
+  void adjustForPowerOfTwoFinalPart(AllreduceRbnMsg<DataT>* msg);
 
-      if (step + 1 < num_steps_) {
-        r_index_[step + 1] = r_index_[step];
-        s_index_[step + 1] = r_index_[step];
-        wsize = r_count_[step];
-        step++;
-      }
-    }
+  /**
+   * \brief Check if all scatter messages have been received.
+   *
+   * \return True if all scatter messages have been received, false otherwise.
+   */
+  bool scatterAllMessagesReceived();
 
-    scatter_steps_recv_.resize(num_steps_, false);
-  }
+  /**
+   * \brief Check if the scatter phase is complete.
+   *
+   * \return True if the scatter phase is complete, false otherwise.
+   */
+  bool scatterIsDone();
 
-  void executeFinalHan() {
-    // theCB()->makeSend<finalHandler>(parent_proxy_[this_node_]).sendTuple(std::make_tuple(val_));
-    parent_proxy_[this_node_].template invoke<finalHandler>(val_);
-    completed_ = true;
-  }
+  /**
+   * \brief Check if the scatter phase is ready to proceed.
+   *
+   * \return True if the scatter phase is ready to proceed, false otherwise.
+   */
+  bool scatterIsReady();
 
-  void allreduce() {
-    if (nprocs_rem_) {
-      adjustForPowerOfTwo();
-    } else {
-      scatterReduceIter();
-    }
-  }
+  /**
+   * \brief Try to reduce the received scatter messages.
+   *
+   * \param step The current step in the scatter phase.
+   */
+  void scatterTryReduce(int32_t step);
 
-  void adjustForPowerOfTwo() {
-    if (is_part_of_adjustment_group_) {
-      auto const partner = is_even_ ? this_node_ + 1 : this_node_ - 1;
+  /**
+   * \brief Perform the scatter-reduce iteration.
+   *
+   * This function sends data to the appropriate partner process and proceeds to the next step in the scatter phase.
+   */
+  void scatterReduceIter();
 
-      if (is_even_) {
-        proxy_[partner]
-          .template send<&Rabenseifner::adjustForPowerOfTwoRightHalf>(
-            DataType::split(val_, size_ / 2, size_));
-      } else {
-        proxy_[partner]
-          .template send<&Rabenseifner::adjustForPowerOfTwoLeftHalf>(
-            DataType::split(val_, 0, size_ / 2));
-      }
-    }
-  }
+  /**
+   * \brief Handler for receiving scatter-reduce messages.
+   *
+   * This function handles the data received during the scatter-reduce phase and combines it using the reduction operation.
+   *
+   * \param msg Message containing the data from the partner process.
+   */
+  void scatterReduceIterHandler(AllreduceRbnMsg<DataT>* msg);
 
-  void adjustForPowerOfTwoRightHalf(AllreduceRbnMsg<DataT>* msg) {
-    for (uint32_t i = 0; i < DataType::size(msg->val_); i++) {
-      Op<typename DataType::Scalar>()(
-        DataType::at(val_, (size_ / 2) + i), DataType::at(msg->val_, i));
-    }
+  /**
+   * \brief Check if all gather messages have been received.
+   *
+   * \return True if all gather messages have been received, false otherwise.
+   */
+  bool gatherAllMessagesReceived();
 
-    // Send to left node
-    proxy_[theContext()->getNode() - 1]
-      .template send<&Rabenseifner::adjustForPowerOfTwoFinalPart>(
-        DataType::split(val_, size_ / 2, size_));
-  }
+  /**
+   * \brief Check if the gather phase is complete.
+   *
+   * \return True if the gather phase is complete, false otherwise.
+   */
+  bool gatherIsDone();
 
-  void adjustForPowerOfTwoLeftHalf(AllreduceRbnMsg<DataT>* msg) {
-    for (uint32_t i = 0; i < DataType::size(msg->val_); i++) {
-      Op<typename DataType::Scalar>()(
-        DataType::at(val_, i), DataType::at(msg->val_, i));
-    }
-  }
+  /**
+   * \brief Check if the gather phase is ready to proceed.
+   *
+   * \return True if the gather phase is ready to proceed, false otherwise.
+   */
+  bool gatherIsReady();
 
-  void adjustForPowerOfTwoFinalPart(AllreduceRbnMsg<DataT>* msg) {
-    for (uint32_t i = 0; i < DataType::size(msg->val_); i++) {
-      DataType::at(val_, (size_ / 2) + i) = DataType::at(msg->val_, i);
-    }
+  /**
+   * \brief Try to reduce the received gather messages.
+   *
+   * \param step The current step in the gather phase.
+   */
+  void gatherTryReduce(int32_t step);
 
-    finished_adjustment_part_ = true;
+  /**
+   * \brief Perform the gather iteration.
+   *
+   * This function sends data to the appropriate partner process and proceeds to the next step in the gather phase.
+   */
+  void gatherIter();
 
-    scatterReduceIter();
-  }
+  /**
+   * \brief Handler for receiving gather messages.
+   *
+   * This function handles the data received during the gather phase and combines it using the reduction operation.
+   *
+   * \param msg Message containing the data from the partner process.
+   */
+  void gatherIterHandler(AllreduceRbnMsg<DataT>* msg);
 
-  void printValues() {
-    if constexpr (debug) {
-      std::string printer(1024, 0x0);
-      for (auto val : val_) {
-        printer.append(fmt::format("{} ", val));
-      }
-      fmt::print("[{}] Values = {} \n", this_node_, printer);
-    }
-  }
+  /**
+   * \brief Perform the final part of the allreduce operation.
+   *
+   * This function completes the allreduce operation, handling any remaining steps and invoking the final handler.
+   */
+  void finalPart();
 
-  bool scatterAllMessagesReceived() {
-    return std::all_of(
-      scatter_steps_recv_.cbegin(),
-      scatter_steps_recv_.cbegin() + scatter_step_,
-      [](const auto val) { return val; });
-  }
+  /**
+   * \brief Send the result to excluded nodes.
+   *
+   * This function handles the final step for non-power-of-two process counts, sending the reduced result to excluded nodes.
+   */
+  void sendToExcludedNodes();
 
-  bool scatterIsDone() {
-    return scatter_step_ == num_steps_ and scatter_num_recv_ == num_steps_;
-  }
-
-  bool scatterIsReady() {
-    return ((is_part_of_adjustment_group_ and finished_adjustment_part_) and
-            scatter_step_ == 0) or
-      scatterAllMessagesReceived();
-  }
-
-  void scatterTryReduce(int32_t step) {
-    if (
-      (step < scatter_step_) and not scatter_steps_reduced_[step] and
-      scatter_steps_recv_[step] and
-      std::all_of(
-        scatter_steps_reduced_.cbegin(), scatter_steps_reduced_.cbegin() + step,
-        [](const auto val) { return val; })) {
-      auto& in_msg = scatter_messages_.at(step);
-      auto& in_val = in_msg->val_;
-      for (uint32_t i = 0; i < DataType::size(in_val); i++) {
-        Op<typename DataType::Scalar>()(
-          DataType::at(val_, r_index_[in_msg->step_] + i),
-          DataType::at(in_val, i));
-        // val_[r_index_[in_msg->step_] + i], in_val[i]);
-      }
-
-      scatter_steps_reduced_[step] = true;
-    }
-  }
-
-  void scatterReduceIter() {
-    if (not scatterIsReady()) {
-      return;
-    }
-
-    auto vdest = vrt_node_ ^ scatter_mask_;
-    auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
-    if constexpr (debug) {
-      fmt::print(
-        "[{}] Part2 Step {}: Sending to Node {} starting with idx = {} and "
-        "count "
-        "{} \n",
-        this_node_, scatter_step_, dest, s_index_[scatter_step_],
-        s_count_[scatter_step_]);
-    }
-    proxy_[dest].template send<&Rabenseifner::scatterReduceIterHandler>(
-      DataType::split(
-        val_, s_index_[scatter_step_],
-        s_index_[scatter_step_] + s_count_[scatter_step_]),
-      scatter_step_);
-
-    scatter_mask_ <<= 1;
-    scatter_step_++;
-
-    scatterTryReduce(scatter_step_ - 1);
-
-    if (scatterIsDone()) {
-      printValues();
-      finished_scatter_part_ = true;
-      gatherIter();
-    } else if (scatterAllMessagesReceived()) {
-      scatterReduceIter();
-    }
-  }
-
-  void scatterReduceIterHandler(AllreduceRbnMsg<DataT>* msg) {
-    scatter_messages_[msg->step_] = promoteMsg(msg);
-    scatter_steps_recv_[msg->step_] = true;
-    scatter_num_recv_++;
-
-    if (not finished_adjustment_part_) {
-      return;
-    }
-
-    scatterTryReduce(msg->step_);
-
-    if constexpr (debug) {
-      fmt::print(
-        "[{}] Part2 Step {} scatter_mask_= {} nprocs_pof2_ = {}: "
-        "idx = {} from {}\n",
-        this_node_, msg->step_, scatter_mask_, nprocs_pof2_,
-        r_index_[msg->step_], theContext()->getFromNodeCurrentTask());
-    }
-
-    if ((scatter_mask_ < nprocs_pof2_) and scatterAllMessagesReceived()) {
-      scatterReduceIter();
-    } else if (scatterIsDone()) {
-      printValues();
-      finished_scatter_part_ = true;
-      gatherIter();
-    }
-  }
-
-  bool gatherAllMessagesReceived() {
-    return std::all_of(
-      gather_steps_recv_.cbegin() + gather_step_ + 1, gather_steps_recv_.cend(),
-      [](const auto val) { return val; });
-  }
-
-  bool gatherIsDone() {
-    return (gather_step_ < 0) and (gather_num_recv_ == num_steps_);
-  }
-
-  bool gatherIsReady() {
-    return (gather_step_ == num_steps_ - 1) or gatherAllMessagesReceived();
-  }
-
-  void gatherTryReduce(int32_t step) {
-    const auto doRed = (step > gather_step_) and
-      not gather_steps_reduced_[step] and gather_steps_recv_[step] and
-      std::all_of(gather_steps_reduced_.cbegin() + step + 1,
-                  gather_steps_reduced_.cend(),
-                  [](const auto val) { return val; });
-
-    if (doRed) {
-      auto& in_msg = gather_messages_.at(step);
-      auto& in_val = in_msg->val_;
-      for (uint32_t i = 0; i < DataType::size(in_val); i++) {
-        DataType::at(val_, s_index_[in_msg->step_] + i) =
-          DataType::at(in_val, i);
-      }
-
-      gather_steps_reduced_[step] = true;
-    }
-  }
-
-  void gatherIter() {
-    if (not gatherIsReady()) {
-      return;
-    }
-
-    auto vdest = vrt_node_ ^ gather_mask_;
-    auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
-
-    if constexpr (debug) {
-      fmt::print(
-        "[{}] Part3 Step {}: Sending to Node {} starting with idx = {} and "
-        "count "
-        "{} \n",
-        this_node_, gather_step_, dest, r_index_[gather_step_],
-        r_count_[gather_step_]);
-    }
-    proxy_[dest].template send<&Rabenseifner::gatherIterHandler>(
-      DataType::split(
-        val_, r_index_[gather_step_],
-        r_index_[gather_step_] + r_count_[gather_step_]),
-      gather_step_);
-
-    gather_mask_ >>= 1;
-    gather_step_--;
-
-    gatherTryReduce(gather_step_ + 1);
-    printValues();
-
-    if (gatherIsDone()) {
-      finalPart();
-    } else if (gatherIsReady()) {
-      gatherIter();
-    }
-  }
-
-  void gatherIterHandler(AllreduceRbnMsg<DataT>* msg) {
-    if constexpr (debug) {
-      fmt::print(
-        "[{}] Part3 Step {}: Received idx = {} from {}\n", this_node_,
-        msg->step_, s_index_[msg->step_],
-        theContext()->getFromNodeCurrentTask());
-    }
-
-    gather_messages_[msg->step_] = promoteMsg(msg);
-    gather_steps_recv_[msg->step_] = true;
-    gather_num_recv_++;
-
-    if (not finished_scatter_part_) {
-      return;
-    }
-
-    gatherTryReduce(msg->step_);
-    printValues();
-
-    if (gather_mask_ > 0 and gatherIsReady()) {
-      gatherIter();
-    } else if (gatherIsDone()) {
-      finalPart();
-    }
-  }
-
-  void finalPart() {
-    if (completed_) {
-      return;
-    }
-
-    if (nprocs_rem_) {
-      sendToExcludedNodes();
-    }
-
-    executeFinalHan();
-  }
-
-  void sendToExcludedNodes() {
-    if (is_part_of_adjustment_group_ and is_even_) {
-      if constexpr (debug) {
-        fmt::print(
-          "[{}] Part4 : Sending to Node {}  \n", this_node_, this_node_ + 1);
-      }
-      proxy_[this_node_ + 1]
-        .template send<&Rabenseifner::sendToExcludedNodesHandler>(val_, 0);
-    }
-  }
-
-  void sendToExcludedNodesHandler(AllreduceRbnMsg<DataT>* msg) {
-    val_ = msg->val_;
-
-    executeFinalHan();
-  }
+  /**
+   * \brief Handler for receiving the final result on excluded nodes.
+   *
+   * This function handles the data received on excluded nodes and invokes the final handler.
+   *
+   * \param msg Message containing the final result.
+   */
+  void sendToExcludedNodesHandler(AllreduceRbnMsg<DataT>* msg);
 
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
@@ -503,5 +330,7 @@ struct Rabenseifner {
 };
 
 } // namespace vt::collective::reduce::allreduce
+
+#include "rabenseifner.impl.h"
 
 #endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H*/
