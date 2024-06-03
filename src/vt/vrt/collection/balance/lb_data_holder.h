@@ -125,6 +125,8 @@ private:
    */
   void outputEntity(nlohmann::json& j, ElementIDStruct const& elm_id) const;
 
+  void addInitialTask(nlohmann::json& j, PhaseType phase) const;
+
   /**
    * \brief Read the LB phase's metadata
    *
