@@ -56,8 +56,6 @@
 
 namespace vt::collective::reduce::allreduce {
 
-constexpr bool isdebug = false;
-
 template <typename DataT>
 struct AllreduceDblMsg
   : SerializeIfNeeded<vt::Message, AllreduceDblMsg<DataT>, DataT> {
