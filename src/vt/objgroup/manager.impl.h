@@ -329,7 +329,7 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, const DataT& data) {
     return allreduce<Reducer, f, ObjT, Op>(proxy, data);
   } else {
     using Reducer =
-      vt::collective::reduce::allreduce::DistanceDoubling<DataT, Op, ObjT, f>;
+      vt::collective::reduce::allreduce::RecursiveDoubling<DataT, Op, ObjT, f>;
     return allreduce<Reducer, f, ObjT, Op>(proxy, data);
   }
 }

@@ -178,7 +178,7 @@ VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
     vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new_2", this, "Recursive doubling");
 
   using DataT = decltype(data);
-  using Reducer = collective::reduce::allreduce::DistanceDoubling<
+  using Reducer = collective::reduce::allreduce::RecursiveDoubling<
     DataT, collective::PlusOp, NodeObj, &NodeObj::recursiveDoubling>;
 
   auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
