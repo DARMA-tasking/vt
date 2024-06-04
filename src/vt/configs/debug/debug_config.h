@@ -81,7 +81,8 @@ enum CatEnum : uint64_t {
   context      = 1ull<<29,
   epoch        = 1ull<<30,
   temperedwmin = 1ull<<31,
-  replay       = 1ull<<32
+  replay       = 1ull<<32,
+  allreduce    = 1ull<<33
 };
 
 enum CtxEnum : uint64_t {
@@ -149,6 +150,7 @@ vt_option_category_pretty_print(trace,        "trace")
 vt_option_category_pretty_print(vrt,          "vc")
 vt_option_category_pretty_print(vrt_coll,     "vcc")
 vt_option_category_pretty_print(worker,       "worker")
+vt_option_category_pretty_print(allreduce,    "allreduce")
 
 /*
  * Pretty print for CtxEnum output

@@ -229,6 +229,7 @@ struct AppConfig {
   bool vt_debug_context      = false;
   bool vt_debug_epoch        = false;
   bool vt_debug_replay       = false;
+  bool vt_debug_allreduce    = false;
 
   bool vt_debug_print_flush = false;
 
@@ -394,6 +395,7 @@ struct AppConfig {
       | vt_debug_context
       | vt_debug_epoch
       | vt_debug_replay
+      | vt_debug_allreduce
 
       | vt_debug_print_flush
 
