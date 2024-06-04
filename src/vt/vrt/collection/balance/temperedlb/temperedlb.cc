@@ -215,7 +215,7 @@ Description:
     {
       "cmf",
       R"(
-Values: {Original, NormByMax, NormBySelf, NormByMaxExcludeIneligible}
+Values: {Original, NormByMax, NormByMaxExcludeIneligible}
 Default: NormByMax
 Description:
   Approach for computing the CMF used to pick an object to transfer. Options
@@ -229,10 +229,6 @@ Description:
       until the next iteration. Use a CMF factor of 1.0/x, where x is the
       greater of the target load and the load of the most loaded processor in
       the CMF.
-    NormBySelf: compute the CMF factor using the load of this processor. Do not
-      remove processors from the CMF that exceed the target load until the next
-      iteration. Use a CMF factor of 1.0/x, where x is the load of the processor
-      that is computing the CMF.
     NormByMaxExcludeIneligible: narrow the CMF to only include processors that
       can accommodate the transfer. Use a CMF factor of 1.0/x, where x is the
       greater of the target load and the load of the most loaded processor in
@@ -475,7 +471,6 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     "cmf", "CMFTypeEnum", {
       {CMFTypeEnum::Original,                   "Original"},
       {CMFTypeEnum::NormByMax,                  "NormByMax"},
-      {CMFTypeEnum::NormBySelf,                 "NormBySelf"},
       {CMFTypeEnum::NormByMaxExcludeIneligible, "NormByMaxExcludeIneligible"}
     }
   );
@@ -1763,9 +1758,6 @@ std::vector<double> TemperedLB::createCMF(NodeSetType const& under) {
   switch (cmf_type_) {
   case CMFTypeEnum::Original:
     factor = 1.0 / target_max_load_;
-    break;
-  case CMFTypeEnum::NormBySelf:
-    factor = 1.0 / this_new_load_;
     break;
   case CMFTypeEnum::NormByMax:
   case CMFTypeEnum::NormByMaxExcludeIneligible:

@@ -153,14 +153,6 @@ enum struct CMFTypeEnum : uint8_t {
    */
   NormByMax  = 1,
   /**
-   * \brief Compute the CMF factor using the load of this processor
-   *
-   * Do not remove processors from the CMF that exceed the target load until the
-   * next iteration. Use a CMF factor of 1.0/x, where x is the load of the
-   * processor that is computing the CMF.
-   */
-  NormBySelf = 2,
-  /**
    * \brief Narrow the CMF to only include processors that can accommodate the
    * transfer
    *
@@ -169,7 +161,7 @@ enum struct CMFTypeEnum : uint8_t {
    * in the CMF that will pass the chosen Criterion for the object being
    * considered for transfer.
    */
-  NormByMaxExcludeIneligible = 3,
+  NormByMaxExcludeIneligible = 2,
 };
 
 /// Enum for determining fanout and rounds
