@@ -1008,8 +1008,8 @@ double TemperedLB::computeWorkAfterClusterSwap(
   // Remove/add clusters' intra-comm
   double const node_intra_send = info.intra_send_vol;
   double const node_intra_recv = info.intra_recv_vol;
-  node_work -= delta * std::max(node_intra_send, node_intra_recv);
-  node_work += delta * std::max(
+  node_work -= gamma * std::max(node_intra_send, node_intra_recv);
+  node_work += gamma * std::max(
     node_intra_send - to_remove.intra_send_vol + to_add.intra_send_vol,
     node_intra_recv - to_remove.intra_recv_vol + to_add.intra_recv_vol
   );
