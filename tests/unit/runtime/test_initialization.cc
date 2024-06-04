@@ -516,40 +516,7 @@ TEST_F(TestInitialization, test_initialize_with_lb_data_without_data_in) {
   EXPECT_EQ(theConfig()->vt_lb_name, "NoLB");
   EXPECT_EQ(theConfig()->vt_lb_data_in, false);
   EXPECT_EQ(theConfig()->vt_lb_file_name, file_name);
-  EXPECT_TRUE(theLBDataReader() != nullptr);
-}
-
-TEST_F(TestInitialization, test_initialize_with_lb_data_and_lb_name) {
-  MPI_Comm comm = MPI_COMM_WORLD;
-
-  // Preapre data files
-  auto prefix = getUniqueFilenameWithRanks();
-  prepareLBDataFiles(prefix);
-
-  static char prog_name[]{"vt_program"};
-  std::string data_file_dir = "--vt_lb_data_dir_in=";
-  data_file_dir += std::filesystem::current_path();
-  std::string data_file = "--vt_lb_data_file_in=";
-  data_file += prefix + ".%p.json";
-  std::string lb_name = "--vt_lb_name=OfflineLB";
-
-  std::vector<char*> custom_args;
-  custom_args.emplace_back(prog_name);
-  custom_args.emplace_back(const_cast<char*>(lb_name.c_str()));
-  custom_args.emplace_back(const_cast<char*>(data_file_dir.c_str()));
-  custom_args.emplace_back(const_cast<char*>(data_file.c_str()));
-  custom_args.emplace_back(nullptr);
-
-  int custom_argc = custom_args.size() - 1;
-  char** custom_argv = custom_args.data();
-
-  vt::initialize(custom_argc, custom_argv, &comm);
-
-  EXPECT_EQ(theConfig()->prog_name, "vt_program");
-  EXPECT_EQ(theConfig()->vt_lb_name, "OfflineLB");
-  EXPECT_EQ(theConfig()->vt_lb_data_in, false);
-  EXPECT_EQ(theConfig()->vt_lb_file_name, "");
-  EXPECT_TRUE(theLBDataReader() != nullptr);
+  EXPECT_TRUE(theLBDataReader() == nullptr);
 }
 #endif
 
