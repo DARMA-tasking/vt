@@ -105,10 +105,10 @@ template <
   auto finalHandler>
 void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwo() {
   if (is_part_of_adjustment_group_ and not is_even_) {
-    if constexpr (isdebug) {
-      fmt::print(
-        "[{}] Part1: Sending to Node {} \n", this_node_, this_node_ - 1);
-    }
+    vt_debug_print(
+      terse, allreduce, "[{}] RecursiveDoubling Part1: Sending to Node {} \n", this_node_,
+      this_node_ - 1
+    );
 
     proxy_[this_node_ - 1]
       .template send<&RecursiveDoubling::adjustForPowerOfTwoHandler>(val_);
@@ -120,17 +120,6 @@ template <
   auto finalHandler>
 void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::
   adjustForPowerOfTwoHandler(AllreduceDblMsg<DataT>* msg) {
-  if constexpr (isdebug) {
-    std::string data(1024, 0x0);
-    for (auto val : msg->val_) {
-      data.append(fmt::format("{} ", val));
-    }
-    fmt::print(
-      "[{}] Part1 Handler: Received data ({}) "
-      "from {}\n",
-      this_node_, data, theContext()->getFromNodeCurrentTask());
-  }
-
   Op<DataT>()(val_, msg->val_);
 
   finished_adjustment_part_ = true;
@@ -180,10 +169,11 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::reduceIter() {
 
   auto vdest = vrt_node_ ^ mask_;
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
-  if constexpr (isdebug) {
-    fmt::print(
-      "[{}] Part2 Step {}: Sending to Node {} \n", this_node_, step_, dest);
-  }
+  vt_debug_print(
+    terse, allreduce,
+    "[{}] RecursiveDoubling Part2 (step {}): Sending to Node {} \n", this_node_,
+    step_, dest
+  );
 
   proxy_[dest].template send<&RecursiveDoubling::reduceIterHandler>(
     val_, step_);
@@ -219,18 +209,13 @@ template <
   auto finalHandler>
 void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::reduceIterHandler(
   AllreduceDblMsg<DataT>* msg) {
-  if constexpr (isdebug) {
-    std::string data(1024, 0x0);
-    for (auto val : msg->val_) {
-      data.append(fmt::format("{} ", val));
-    }
-    fmt::print(
-      "[{}] Part2 Step {} mask_= {} nprocs_pof2_ = {}: "
-      "Received data ({}) "
-      "from {}\n",
-      this_node_, msg->step_, mask_, nprocs_pof2_, data,
-      theContext()->getFromNodeCurrentTask());
-  }
+  vt_debug_print(
+    terse, allreduce,
+    "[{}] RecursiveDoubling Part2 (step {}): mask_= {} nprocs_pof2_ = {}: "
+    "from {}\n",
+    this_node_, msg->step_, mask_, nprocs_pof2_,
+    theContext()->getFromNodeCurrentTask()
+  );
 
   messages_.at(msg->step_) = promoteMsg(msg);
   steps_recv_[msg->step_] = true;
@@ -255,10 +240,11 @@ template <
   auto finalHandler>
 void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::sendToExcludedNodes() {
   if (is_part_of_adjustment_group_ and is_even_) {
-    if constexpr (isdebug) {
-      fmt::print(
-        "[{}] Part3 : Sending to Node {}  \n", this_node_, this_node_ + 1);
-    }
+    vt_debug_print(
+      terse, allreduce, "[{}] RecursiveDoubling Part3: Sending to Node {}  \n", this_node_,
+      this_node_ + 1
+    );
+
     proxy_[this_node_ + 1]
       .template send<&RecursiveDoubling::sendToExcludedNodesHandler>(val_);
   }
