@@ -52,12 +52,9 @@
 #include "vt/pipe/pipe_manager.h"
 #include "data_handler.h"
 
-#include <tuple>
 #include <cstdint>
 
 namespace vt::collective::reduce::allreduce {
-
-constexpr bool debug = true;
 
 template <typename DataT>
 struct AllreduceRbnMsg

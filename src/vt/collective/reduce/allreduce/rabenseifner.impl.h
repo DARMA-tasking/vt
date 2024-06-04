@@ -45,15 +45,6 @@
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 
 #include "vt/config.h"
-#include "vt/context/context.h"
-#include "vt/messaging/message/message.h"
-#include "vt/objgroup/proxy/proxy_objgroup.h"
-#include "vt/registry/auto/auto_registry.h"
-#include "vt/pipe/pipe_manager.h"
-#include "data_handler.h"
-
-#include <tuple>
-#include <cstdint>
 
 namespace vt::collective::reduce::allreduce {
 
@@ -221,7 +212,7 @@ template <
 bool Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterAllMessagesReceived() {
   return std::all_of(
     scatter_steps_recv_.cbegin(), scatter_steps_recv_.cbegin() + scatter_step_,
-    [](const auto val) { return val; });
+    [](auto const val) { return val; });
 }
 
 template <
@@ -250,14 +241,14 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterTryReduce(
     scatter_steps_recv_[step] and
     std::all_of(
       scatter_steps_reduced_.cbegin(), scatter_steps_reduced_.cbegin() + step,
-      [](const auto val) { return val; })) {
+      [](auto const val) { return val; })) {
     auto& in_msg = scatter_messages_.at(step);
     auto& in_val = in_msg->val_;
     for (uint32_t i = 0; i < DataType::size(in_val); i++) {
       Op<typename DataType::Scalar>()(
         DataType::at(val_, r_index_[in_msg->step_] + i),
-        DataType::at(in_val, i));
-      // val_[r_index_[in_msg->step_] + i], in_val[i]);
+        DataType::at(in_val, i)
+      );
     }
 
     scatter_steps_reduced_[step] = true;
@@ -274,14 +265,15 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIter() {
 
   auto vdest = vrt_node_ ^ scatter_mask_;
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
-  if constexpr (debug) {
-    fmt::print(
-      "[{}] Part2 Step {}: Sending to Node {} starting with idx = {} and "
-      "count "
-      "{} \n",
-      this_node_, scatter_step_, dest, s_index_[scatter_step_],
-      s_count_[scatter_step_]);
-  }
+  vt_debug_print(
+    terse, allreduce,
+    "[{}] Rabenseifer Part2 (step {}): Sending to Node {} starting with idx = {} and "
+    "count "
+    "{} \n",
+    this_node_, scatter_step_, dest, s_index_[scatter_step_],
+    s_count_[scatter_step_]
+  );
+
   proxy_[dest].template send<&Rabenseifner::scatterReduceIterHandler>(
     DataType::split(
       val_, s_index_[scatter_step_],
@@ -316,13 +308,13 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIterHandler(
 
   scatterTryReduce(msg->step_);
 
-  if constexpr (debug) {
-    fmt::print(
-      "[{}] Part2 Step {} scatter_mask_= {} nprocs_pof2_ = {}: "
-      "idx = {} from {}\n",
-      this_node_, msg->step_, scatter_mask_, nprocs_pof2_, r_index_[msg->step_],
-      theContext()->getFromNodeCurrentTask());
-  }
+  vt_debug_print(
+    terse, allreduce,
+    "[{}] Rabenseifner Part2 (step {}): scatter_mask_= {} nprocs_pof2_ = {}: "
+    "idx = {} from {}\n",
+    this_node_, msg->step_, scatter_mask_, nprocs_pof2_, r_index_[msg->step_],
+    theContext()->getFromNodeCurrentTask()
+  );
 
   if ((scatter_mask_ < nprocs_pof2_) and scatterAllMessagesReceived()) {
     scatterReduceIter();
@@ -338,7 +330,7 @@ template <
 bool Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherAllMessagesReceived() {
   return std::all_of(
     gather_steps_recv_.cbegin() + gather_step_ + 1, gather_steps_recv_.cend(),
-    [](const auto val) { return val; });
+    [](auto const val) { return val; });
 }
 
 template <
@@ -360,11 +352,11 @@ template <
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherTryReduce(
   int32_t step) {
-  const auto doRed = (step > gather_step_) and
+  auto const doRed = (step > gather_step_) and
     not gather_steps_reduced_[step] and gather_steps_recv_[step] and
     std::all_of(gather_steps_reduced_.cbegin() + step + 1,
                 gather_steps_reduced_.cend(),
-                [](const auto val) { return val; });
+                [](auto const val) { return val; });
 
   if (doRed) {
     auto& in_msg = gather_messages_.at(step);
@@ -388,14 +380,15 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherIter() {
   auto vdest = vrt_node_ ^ gather_mask_;
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
 
-  if constexpr (debug) {
-    fmt::print(
-      "[{}] Part3 Step {}: Sending to Node {} starting with idx = {} and "
-      "count "
-      "{} \n",
-      this_node_, gather_step_, dest, r_index_[gather_step_],
-      r_count_[gather_step_]);
-  }
+  vt_debug_print(
+    terse, allreduce,
+    "[{}] Rabenseifner Part3 (step {}): Sending to Node {} starting with idx = {} and "
+    "count "
+    "{} \n",
+    this_node_, gather_step_, dest, r_index_[gather_step_],
+    r_count_[gather_step_]
+  );
+
   proxy_[dest].template send<&Rabenseifner::gatherIterHandler>(
     DataType::split(
       val_, r_index_[gather_step_],
@@ -419,11 +412,11 @@ template <
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherIterHandler(
   AllreduceRbnMsg<DataT>* msg) {
-  if constexpr (debug) {
-    fmt::print(
-      "[{}] Part3 Step {}: Received idx = {} from {}\n", this_node_, msg->step_,
-      s_index_[msg->step_], theContext()->getFromNodeCurrentTask());
-  }
+  vt_debug_print(
+    terse, allreduce, "[{}] Rabenseifner Part3 (step {}): Received idx = {} from {}\n",
+    this_node_, msg->step_, s_index_[msg->step_],
+    theContext()->getFromNodeCurrentTask()
+  );
 
   gather_messages_[msg->step_] = promoteMsg(msg);
   gather_steps_recv_[msg->step_] = true;
@@ -462,10 +455,10 @@ template <
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::sendToExcludedNodes() {
   if (is_part_of_adjustment_group_ and is_even_) {
-    if constexpr (debug) {
-      fmt::print(
-        "[{}] Part4 : Sending to Node {}  \n", this_node_, this_node_ + 1);
-    }
+    vt_debug_print(
+      terse, allreduce, "[{}] Rabenseifner Part4: Sending to Node {}  \n", this_node_,
+      this_node_ + 1
+    );
     proxy_[this_node_ + 1]
       .template send<&Rabenseifner::sendToExcludedNodesHandler>(val_, 0);
   }
