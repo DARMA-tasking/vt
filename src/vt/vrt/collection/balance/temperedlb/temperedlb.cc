@@ -2090,7 +2090,7 @@ void TemperedLB::originalTransfer() {
 
 	// Check if object is migratable and evaluate criterion for proposed transfer
         bool is_migratable = obj_id.isMigratable();
-        bool eval = obj_id.isMigratable() && Criterion(criterion_)(
+        bool eval = Criterion(criterion_)(
           this_new_load_, selected_load, obj_load, target_max_load_
         );
         vt_debug_print(
