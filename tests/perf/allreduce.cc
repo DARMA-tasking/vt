@@ -58,136 +58,105 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
+static constexpr std::array<size_t, 8> const payloadSizes = {
+  64, 128, 2048, 16384, 32768, 524288, 1048576, 2097152};
+
 struct MyTest : PerfTestHarness {
-  void SetUp() override {
-    PerfTestHarness::SetUp();
-    data.resize(1 << 16);
-    for (auto& val : data) {
-      val = theContext()->getNode() + 1;
-    }
+  MyTest() {
+    DisableGlobalTimer();
   }
 
   std::vector<int32_t> data;
 };
 
 struct NodeObj {
-  explicit NodeObj(MyTest* test_obj, const std::string& name) : test_obj_(test_obj), timer_name_(name) { }
+  explicit NodeObj(MyTest* test_obj, const std::string& name)
+    : base_name_(name),
+      test_obj_(test_obj) {
+    for (auto const payload_size : payloadSizes) {
+      timer_names_[payload_size] =
+        fmt::format("{} {}", base_name_, payload_size);
+    }
+  }
 
   void initialize() {
     proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this);
-    //  data_["Node"] = theContext()->getNode(); }
-  }
-  struct MyMsg : vt::Message { };
-
-  void recursiveDoubling(std::vector<int32_t> in) {
-    // std::string printer(1024, 0x0);
-    // printer.append(fmt::format("\n[{}]: recursiveDoubling done! ", theContext()->getNode()));
-
-    // for (int node = 0; node < theContext()->getNumNodes(); ++node) {
-    //   if (node == theContext()->getNode()) {
-
-    //     for (auto val : in) {
-    //       printer.append(fmt::format("{} ", val));
-    //     }
-
-    //     fmt::print("{}\n", printer);
-
-    //     theCollective()->barrier();
-    //   }
-    // }
-
-    // fmt::print("\n");
-    // const auto p = theContext()->getNumNodes();
-    // const auto expected = (p * (p + 1)) / 2;
-    // for (auto val : in) {
-    //   vtAssert(val == expected, "FAILURE!");
-    // }
-    test_obj_->StopTimer(timer_name_);
   }
 
-  void newReduceComplete(std::vector<int32_t> in) {
-    // std::string printer(1024, 0x0);
-    // printer.append(fmt::format("\n[{}]: allreduce_rabenseifner done! ", theContext()->getNode()));
-
-    // for (int node = 0; node < theContext()->getNumNodes(); ++node) {
-    //   if (node == theContext()->getNode()) {
-
-    //     for (auto val : in) {
-    //       printer.append(fmt::format("{} ", val));
-    //     }
-
-    //     fmt::print("{}\n", printer);
-
-    //     theCollective()->barrier();
-    //   }
-    // }
-
-    // fmt::print("\n");
-    // const auto p = theContext()->getNumNodes();
-    // const auto expected = (p * (p + 1)) / 2;
-    // for (auto val : in) {
-    //   vtAssert(val == expected, "FAILURE!");
-    // }
-    test_obj_->StopTimer(timer_name_);
+  void handlerVec(std::vector<int32_t> vec) {
+    test_obj_->StopTimer(timer_names_.at(vec.size()));
   }
 
-  void reduceComplete(std::vector<int32_t> in) {
-    // fmt::print(
-    //   "[{}]: allreduce done! Results are ...\n", theContext()->getNode());
-    // for (auto val : in) {
-    //   fmt::print("{} ", val);
-    // }
-
-    // fmt::print("\n");
-    test_obj_->StopTimer(timer_name_);
+#if KOKKOS_ENABLED_CHECKPOINT
+  template <typename Scalar>
+  void handlerView(Kokkos::View<Scalar*, Kokkos::HostSpace> view) {
+    test_obj_->StopTimer(timer_names_.at(view.extent(0)));
   }
+#endif // KOKKOS_ENABLED_CHECKPOINT
 
-  std::string timer_name_ = {};
+
+  std::string base_name_ = {};
+  std::unordered_map<size_t, std::string> timer_names_= {};
   MyTest* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
 };
 
 VT_PERF_TEST(MyTest, test_reduce) {
   auto grp_proxy =
-    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce", this, "Reduce -> Bcast");
+    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce", this, "Reduce -> Bcast vector");
 
-  theCollective()->barrier();
-  StartTimer(grp_proxy[theContext()->getNode()].get()->timer_name_);
-  grp_proxy.allreduce<&NodeObj::reduceComplete, collective::PlusOp>(data);
+  for (auto payload_size : payloadSizes) {
+    data.resize(payload_size, theContext()->getNode() + 1);
+
+    theCollective()->barrier();
+
+    StartTimer(grp_proxy[my_node_].get()->timer_names_.at(payload_size));
+    grp_proxy.allreduce<&NodeObj::handlerVec, collective::PlusOp>(data);
+  }
 }
 
 VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
-  auto proxy =
-    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new", this, "Rabenseifner");
+  auto proxy = vt::theObjGroup()->makeCollective<NodeObj>(
+    "test_allreduce_rabenseifner", this, "Rabenseifner vector"
+  );
 
   using DataT = decltype(data);
   using Reducer = collective::reduce::allreduce::Rabenseifner<
-    DataT, collective::PlusOp, NodeObj, &NodeObj::newReduceComplete>;
+    DataT, collective::PlusOp, NodeObj, &NodeObj::handlerVec>;
 
   auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
     "allreduce_rabenseifner", proxy, num_nodes_, data);
   grp_proxy[my_node_].get()->proxy_ = grp_proxy;
 
-  theCollective()->barrier();
-  StartTimer(proxy[theContext()->getNode()].get()->timer_name_);
-  grp_proxy[my_node_].template invoke<&Reducer::allreduce>();
+  for (auto payload_size : payloadSizes) {
+    data.resize(payload_size, theContext()->getNode() + 1);
+
+    theCollective()->barrier();
+    StartTimer(proxy[my_node_].get()->timer_names_.at(payload_size));
+    grp_proxy[my_node_].template invoke<&Reducer::allreduce>();
+  }
 }
 
 VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
-  auto proxy =
-    vt::theObjGroup()->makeCollective<NodeObj>("test_allreduce_new_2", this, "Recursive doubling");
+  auto proxy = vt::theObjGroup()->makeCollective<NodeObj>(
+    "test_allreduce_recursive_doubling", this, "Recursive doubling vector"
+  );
 
   using DataT = decltype(data);
   using Reducer = collective::reduce::allreduce::RecursiveDoubling<
-    DataT, collective::PlusOp, NodeObj, &NodeObj::recursiveDoubling>;
+    DataT, collective::PlusOp, NodeObj, &NodeObj::handlerVec>;
 
   auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
     "allreduce_recursive_doubling", proxy, num_nodes_, data);
   grp_proxy[my_node_].get()->proxy_ = grp_proxy;
 
-  theCollective()->barrier();
-  StartTimer(proxy[theContext()->getNode()].get()->timer_name_);
-  grp_proxy[my_node_].template invoke<&Reducer::allreduce>();
+  for (auto payload_size : payloadSizes) {
+    data.resize(payload_size, theContext()->getNode() + 1);
+
+    theCollective()->barrier();
+    StartTimer(proxy[my_node_].get()->timer_names_.at(payload_size));
+    grp_proxy[my_node_].template invoke<&Reducer::allreduce>();
+  }
 }
 
 VT_PERF_TEST_MAIN()
