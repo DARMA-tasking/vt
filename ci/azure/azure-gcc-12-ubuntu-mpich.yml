@@ -146,6 +146,7 @@ stages:
           dockerComposeCommand: 'run ubuntu-cpp-clean'
         env:
           CODECOV_TOKEN: $(codecov_token)
+          VT_KOKKOS_ENABLED: 1
       - task: Bash@3
         displayName: Put compilation's and tests' logs in PR comment
         continueOnError: true

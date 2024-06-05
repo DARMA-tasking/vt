@@ -15,7 +15,7 @@ else
     target=${3:-install}
 fi
 
-if [ -z ${4} ]; then
+if [ -z "${4}" ]; then
     dashj=""
 else
     dashj="-j ${4}"
@@ -44,6 +44,28 @@ case $CXX in
         && export NVCC_WRAPPER_DEFAULT_COMPILER;;
 esac
 
+if test "${VT_KOKKOS_ENABLED:-0}" -eq 1
+then
+  echo "The variable VT_KOKKOS_ENABLED is set."
+
+  if test -d "kokkos"
+  then
+    rm -Rf kokkos
+  fi
+
+  git clone -b master https://github.com/kokkos/kokkos.git
+  export KOKKOS_DIR=$PWD/kokkos
+  export KOKKOS_BUILD=${build_dir}/kokkos/build
+  export KOKKOS_INSTALL="$KOKKOS_BUILD/install"
+  mkdir -p "$KOKKOS_BUILD"
+  cd "$KOKKOS_BUILD"
+  cmake -G "${CMAKE_GENERATOR:-Ninja}" \
+        -DCMAKE_INSTALL_PREFIX="$KOKKOS_INSTALL" \
+        "$KOKKOS_DIR"
+  cmake --build . "${dashj}" --target install
+  cd "${build_dir}"
+fi
+
 if test -d "checkpoint"
 then
     rm -Rf checkpoint
@@ -68,8 +90,9 @@ else
         cd build
         cmake -G "${CMAKE_GENERATOR:-Ninja}" \
               -DCMAKE_INSTALL_PREFIX="$CHECKPOINT_BUILD/install" \
+              -Dkokkos_DIR="$KOKKOS_INSTALL" \
               "$CHECKPOINT"
-        cmake --build . ${dashj} --target install
+        cmake --build . "${dashj}" --target install
     fi
 fi
 
@@ -172,7 +195,7 @@ then
         # To easily tell if compilation of given file succeeded special progress bar is used
         # (controlled by variable NINJA_STATUS)
         export NINJA_STATUS="[ninja][%f/%t] "
-        time cmake --build . ${dashj} --target "${target}" | tee "$OUTPUT_TMP"
+        time cmake --build . "${dashj}" --target "${target}" | tee "$OUTPUT_TMP"
         compilation_ret=${PIPESTATUS[0]}
         sed -i '/ninja: build stopped:/d' "$OUTPUT_TMP"
 
@@ -181,7 +204,7 @@ then
     elif test "$GENERATOR" = "Unix Makefiles"
     then
         # Gcc outputs warnings and errors to stderr, so there's not much to do
-        time cmake --build . ${dashj} --target "${target}" 2> >(tee "$OUTPUT_TMP")
+        time cmake --build . "${dashj}" --target "${target}" 2> >(tee "$OUTPUT_TMP")
         compilation_ret=$?
         WARNS_ERRS=$(cat "$OUTPUT_TMP")
     fi
@@ -190,7 +213,7 @@ then
     WARNS_ERRS=${WARNS_ERRS//$'\n'/$DELIMITER}
     echo "$WARNS_ERRS" > "$OUTPUT"
 else
-    time cmake --build . ${dashj} --target "${target}"
+    time cmake --build . "${dashj}" --target "${target}"
     compilation_ret=$?
 fi
 
