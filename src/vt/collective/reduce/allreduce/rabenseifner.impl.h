@@ -267,10 +267,10 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIter() {
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
   vt_debug_print(
     terse, allreduce,
-    "[{}] Rabenseifer Part2 (step {}): Sending to Node {} starting with idx = {} and "
+    "Rabenseifner Part2 (step {}): Sending to Node {} starting with idx = {} and "
     "count "
     "{} \n",
-    this_node_, scatter_step_, dest, s_index_[scatter_step_],
+    scatter_step_, dest, s_index_[scatter_step_],
     s_count_[scatter_step_]
   );
 
@@ -310,9 +310,9 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIterHandler(
 
   vt_debug_print(
     terse, allreduce,
-    "[{}] Rabenseifner Part2 (step {}): scatter_mask_= {} nprocs_pof2_ = {}: "
+    "Rabenseifner Part2 (step {}): scatter_mask_= {} nprocs_pof2_ = {}: "
     "idx = {} from {}\n",
-    this_node_, msg->step_, scatter_mask_, nprocs_pof2_, r_index_[msg->step_],
+    msg->step_, scatter_mask_, nprocs_pof2_, r_index_[msg->step_],
     theContext()->getFromNodeCurrentTask()
   );
 
@@ -382,10 +382,10 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherIter() {
 
   vt_debug_print(
     terse, allreduce,
-    "[{}] Rabenseifner Part3 (step {}): Sending to Node {} starting with idx = {} and "
+    "Rabenseifner Part3 (step {}): Sending to Node {} starting with idx = {} and "
     "count "
     "{} \n",
-    this_node_, gather_step_, dest, r_index_[gather_step_],
+    gather_step_, dest, r_index_[gather_step_],
     r_count_[gather_step_]
   );
 
@@ -413,8 +413,8 @@ template <
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherIterHandler(
   AllreduceRbnMsg<DataT>* msg) {
   vt_debug_print(
-    terse, allreduce, "[{}] Rabenseifner Part3 (step {}): Received idx = {} from {}\n",
-    this_node_, msg->step_, s_index_[msg->step_],
+    terse, allreduce, "Rabenseifner Part3 (step {}): Received idx = {} from {}\n",
+    msg->step_, s_index_[msg->step_],
     theContext()->getFromNodeCurrentTask()
   );
 
@@ -456,7 +456,7 @@ template <
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::sendToExcludedNodes() {
   if (is_part_of_adjustment_group_ and is_even_) {
     vt_debug_print(
-      terse, allreduce, "[{}] Rabenseifner Part4: Sending to Node {}  \n", this_node_,
+      terse, allreduce, "Rabenseifner Part4: Sending to Node {}  \n",
       this_node_ + 1
     );
     proxy_[this_node_ + 1]
