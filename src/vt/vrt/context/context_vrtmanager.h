@@ -219,4 +219,4 @@ extern vrt::VirtualContextManager* theVirtualManager();
 
 #include "vt/vrt/context/context_vrtmanager.impl.h"
 
-#endif  /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRTMANAGER_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRTMANAGER_H*/

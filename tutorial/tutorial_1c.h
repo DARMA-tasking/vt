@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_TUTORIAL_1C_H
+#define INCLUDED_TUTORIAL_1C_H
+
 #include "vt/transport.h"
 
 #include <vector>
@@ -157,3 +160,4 @@ static void msgSerialA(ParticleMsg* msg) {
 /// [Tutorial1C]
 
 }} /* end namespace vt::tutorial */
+#endif /*INCLUDED_TUTORIAL_1C_H*/

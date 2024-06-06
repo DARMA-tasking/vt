@@ -83,4 +83,4 @@ using CoreSeedMapType = SeedMapType;
 
 }}  // end namespace vt::location
 
-#endif  /*INCLUDED_VT_TOPOS_MAPPING_MAPPING_H*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_MAPPING_H*/

@@ -76,4 +76,4 @@ public:
 
 }}}} // namespaces
 
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_SELECT_SUBPHASES_H*/

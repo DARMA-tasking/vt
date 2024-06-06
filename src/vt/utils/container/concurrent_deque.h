@@ -56,4 +56,3 @@ using ConcurrentDeque = ConcurrentDequeLocked<T>;
 }}} //end namespace vt::util::container
 
 #endif /*INCLUDED_VT_UTILS_CONTAINER_CONCURRENT_DEQUE_H*/
-

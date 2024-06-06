@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#if ! defined INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H
+#if !defined INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H
 #define INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H
 
 #include <vector>
@@ -186,4 +186,4 @@ using TestParameterHarnessNode = TestParallelHarnessParam<vt::NodeType>;
 
 }}} // end namespace vt::tests::unit
 
-#endif /* INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H */
+#endif /*INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H*/

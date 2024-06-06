@@ -61,4 +61,4 @@ using CollectionMapFnType = ActiveMapFnPtrType;
 
 }} /* end namespace vt::mapping */
 
-#endif /*INCLUDED_VT_TOPOS_MAPPING/MAPPING_FUNCTION_H*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_MAPPING_FUNCTION_H*/

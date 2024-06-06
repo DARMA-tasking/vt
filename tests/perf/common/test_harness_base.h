@@ -1,3 +1,4 @@
+/*
 //@HEADER
 // *****************************************************************************
 //
@@ -38,6 +39,7 @@
 //
 // *****************************************************************************
 //@HEADER
+*/
 
 #if !defined INCLUDED_PERF_COMMON_TEST_HARNESS_BASE_H
 #define INCLUDED_PERF_COMMON_TEST_HARNESS_BASE_H
@@ -51,4 +53,4 @@ struct TestHarnessBase {
 
 } // namespace vt::tests::perf::common
 
-#endif
+#endif /*INCLUDED_PERF_COMMON_TEST_HARNESS_BASE_H*/

@@ -67,4 +67,4 @@ using RDMA_PutSerialize = std::function<RDMA_PutRetType(RDMA_PutRetType)>;
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_RDMA_H*/
+#endif /*INCLUDED_VT_CONFIGS_TYPES_TYPES_RDMA_H*/

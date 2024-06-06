@@ -97,4 +97,4 @@ using SerialEagerPayloadMsg = SerialPayloadMsg<
 
 }} /* end namespace vt::serialization */
 
-#endif /*INCLUDED_VT_SERIALIZATION_MESSAGING/SERIALIZED_DATA_MSG_H*/
+#endif /*INCLUDED_VT_SERIALIZATION_MESSAGING_SERIALIZED_DATA_MSG_H*/

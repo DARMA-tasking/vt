@@ -121,4 +121,4 @@ using ActiveTypedRDMAPutFnType = void(
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_VT_ACTIVEFN_ACTIVEFN_H*/
+#endif /*INCLUDED_VT_ACTIVEFN_ACTIVEFN_H*/

@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_TUTORIAL_1H_H
+#define INCLUDED_TUTORIAL_1H_H
+
 #include "vt/transport.h"
 
 namespace vt { namespace tutorial {
@@ -71,3 +74,4 @@ static inline void activeMessageReduce() {
 /// [Tutorial1H]
 
 }} /* end namespace vt::tutorial */
+#endif /*INCLUDED_TUTORIAL_1H_H*/
