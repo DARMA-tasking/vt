@@ -228,8 +228,7 @@ struct CircularPhasesBuffer {
   template <typename SerializeT>
   void serialize(SerializeT& s) {
     s | m_requested_capacity;
-    // TODO: Checkpoint is not supporting the queue
-    // s | m_indexes;
+    s | m_indexes;
     s | m_buffer;
   }
 
