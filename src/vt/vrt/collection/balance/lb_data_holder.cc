@@ -144,15 +144,13 @@ std::unique_ptr<nlohmann::json> LBDataHolder::rankAttributesToJson() const {
   return std::make_unique<nlohmann::json>(std::move(j));
 }
 
-void LBDataHolder::addInitialTask(nlohmann::json& j, PhaseType phase) const {
-  if (phase == 0) {
-    j["tasks"][0]["resource"] = "cpu";
-    j["tasks"][0]["node"] = vt::theContext()->getNode();
-    j["tasks"][0]["time"] = 0;
-    outputEntity(
-      j["tasks"][0]["entity"], ElementIDStruct()
-    );
-  }
+void LBDataHolder::addInitialTask(nlohmann::json& j, std::size_t n) const {
+  j["tasks"][n]["resource"] = "cpu";
+  j["tasks"][n]["node"] = vt::theContext()->getNode();
+  j["tasks"][n]["time"] = 0;
+  outputEntity(
+    j["tasks"][n]["entity"], ElementIDStruct()
+  );
 }
 
 std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
@@ -160,9 +158,8 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 
   json j;
   j["id"] = phase;
-  addInitialTask(j, phase);
 
-  std::size_t i = 1;
+  std::size_t i = 0;
   if (node_data_.find(phase) != node_data_.end()) {
     for (auto&& elm : node_data_.at(phase)) {
       ElementIDStruct id = elm.first;
@@ -205,6 +202,10 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       }
 
       i++;
+    }
+
+    if ((phase == 0) and (i > 0)) {
+      addInitialTask(j, i);
     }
   }
 
