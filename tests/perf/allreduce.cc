@@ -58,8 +58,11 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
-static constexpr std::array<size_t, 8> const payloadSizes = {
-  64, 128, 2048, 16384, 32768, 524288, 1048576, 2097152};
+// static constexpr std::array<size_t, 8> const payloadSizes = {
+//   64, 128, 2048, 16384, 32768, 524288, 1048576, 2097152};
+
+static constexpr std::array<size_t, 1> const payloadSizes = {
+2097152};
 
 struct MyTest : PerfTestHarness {
   MyTest() {
@@ -109,7 +112,6 @@ VT_PERF_TEST(MyTest, test_reduce) {
     data.resize(payload_size, theContext()->getNode() + 1);
 
     theCollective()->barrier();
-
     StartTimer(grp_proxy[my_node_].get()->timer_names_.at(payload_size));
     grp_proxy.allreduce<&NodeObj::handlerVec, collective::PlusOp>(data);
   }
@@ -124,16 +126,12 @@ VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
   using Reducer = collective::reduce::allreduce::Rabenseifner<
     DataT, collective::PlusOp, NodeObj, &NodeObj::handlerVec>;
 
-  auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-    "allreduce_rabenseifner", proxy, num_nodes_, data);
-  grp_proxy[my_node_].get()->proxy_ = grp_proxy;
-
   for (auto payload_size : payloadSizes) {
     data.resize(payload_size, theContext()->getNode() + 1);
 
     theCollective()->barrier();
     StartTimer(proxy[my_node_].get()->timer_names_.at(payload_size));
-    grp_proxy[my_node_].template invoke<&Reducer::allreduce>();
+    proxy.allreduce_h<&NodeObj::handlerVec, collective::PlusOp>(data);
   }
 }
 
@@ -146,16 +144,12 @@ VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
   using Reducer = collective::reduce::allreduce::RecursiveDoubling<
     DataT, collective::PlusOp, NodeObj, &NodeObj::handlerVec>;
 
-  auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-    "allreduce_recursive_doubling", proxy, num_nodes_, data);
-  grp_proxy[my_node_].get()->proxy_ = grp_proxy;
-
   for (auto payload_size : payloadSizes) {
     data.resize(payload_size, theContext()->getNode() + 1);
 
     theCollective()->barrier();
     StartTimer(proxy[my_node_].get()->timer_names_.at(payload_size));
-    grp_proxy[my_node_].template invoke<&Reducer::allreduce>();
+    proxy.allreduce_h<&NodeObj::handlerVec, collective::PlusOp>(data);
   }
 }
 

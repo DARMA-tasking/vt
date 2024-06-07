@@ -132,6 +132,7 @@ template <
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::executeFinalHan() {
   // theCB()->makeSend<finalHandler>(parent_proxy_[this_node_]).sendTuple(std::make_tuple(val_));
+  vt_debug_print(terse, allreduce, "Rabenseifner executing final handler\n");
   parent_proxy_[this_node_].template invoke<finalHandler>(val_);
   completed_ = true;
 }
@@ -267,7 +268,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIter() {
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner Part2 (step {}): Sending to Node {} starting with idx = {} and "
+    "Rabenseifner Part2 (Send step {}): To Node {} starting with idx = {} and "
     "count "
     "{} \n",
     scatter_step_, dest, s_index_[scatter_step_],
@@ -310,7 +311,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIterHandler(
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner Part2 (step {}): scatter_mask_= {} nprocs_pof2_ = {}: "
+    "Rabenseifner Part2 (Recv step {}): scatter_mask_= {} nprocs_pof2_ = {}: "
     "idx = {} from {}\n",
     msg->step_, scatter_mask_, nprocs_pof2_, r_index_[msg->step_],
     theContext()->getFromNodeCurrentTask()
