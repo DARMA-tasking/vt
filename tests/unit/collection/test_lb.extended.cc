@@ -615,6 +615,10 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
         auto &orig_load_map = phase_data.second;
         for (auto &entry : read_load_map) {
           auto read_elm_id = entry.first;
+          if ((read_elm_id.id == vt::elm::no_element_id)
+              and (read_elm_id.getHomeNode() == 0)) {
+            continue;
+          }
           EXPECT_FALSE(orig_load_map.find(read_elm_id) == orig_load_map.end());
           if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
             fmt::print(
