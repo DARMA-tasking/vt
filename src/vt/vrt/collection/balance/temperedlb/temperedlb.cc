@@ -1026,6 +1026,7 @@ double TemperedLB::computeWorkAfterClusterSwap(
     node_work += delta * to_add.edge_weight;
   }
 
+  // Update formulae for inter-node communication
   double node_inter_send = info.inter_send_vol;
   double node_inter_recv = info.inter_recv_vol;
   node_work -= beta * std::max(node_inter_send, node_inter_recv);
