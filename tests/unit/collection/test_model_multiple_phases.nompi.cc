@@ -64,6 +64,9 @@ using vt::vrt::collection::balance::CommMapType;
 using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
 using vt::vrt::collection::balance::DataMapType;
+using vt::vrt::collection::balance::LoadMapBufferType;
+using vt::vrt::collection::balance::CommMapBufferType;
+using vt::vrt::collection::balance::DataMapBufferType;
 
 struct StubModel : LoadModel {
 
@@ -71,9 +74,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load,
-    vt::util::container::CircularPhasesBuffer<CommMapType> const*,
-    vt::util::container::CircularPhasesBuffer<DataMapType> const*) override {
+    LoadMapBufferType const* proc_load,
+    CommMapBufferType const*,
+    DataMapBufferType const*) override {
     proc_load_ = proc_load;
   }
 
@@ -95,12 +98,12 @@ struct StubModel : LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
-  vt::util::container::CircularPhasesBuffer<LoadMapType> const* proc_load_ = nullptr;
+  LoadMapBufferType const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   NodeType this_node = 0;
-  vt::util::container::CircularPhasesBuffer<LoadMapType> proc_loads = {
+  LoadMapBufferType proc_loads = {
     {0, LoadMapType{
       {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
       {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}}},

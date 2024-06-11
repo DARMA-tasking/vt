@@ -65,11 +65,9 @@ using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
 using vt::vrt::collection::balance::DataMapType;
-
-using ProcLoadMap = vt::util::container::CircularPhasesBuffer<LoadMapType>;
-using ProcSubphaseLoadMap = vt::util::container::CircularPhasesBuffer<SubphaseLoadMapType>;
-using ProcCommMap = vt::util::container::CircularPhasesBuffer<CommMapType>;
-using UserDataMap = vt::util::container::CircularPhasesBuffer<DataMapType>;
+using vt::vrt::collection::balance::LoadMapBufferType;
+using vt::vrt::collection::balance::CommMapBufferType;
+using vt::vrt::collection::balance::DataMapBufferType;
 
 constexpr auto num_subphases = 3;
 
@@ -79,9 +77,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    ProcLoadMap const* proc_load,
-    ProcCommMap const*,
-    UserDataMap const*) override {
+    LoadMapBufferType const* proc_load,
+    CommMapBufferType const*,
+    DataMapBufferType const*) override {
     proc_load_ = proc_load;
   }
 
@@ -102,12 +100,12 @@ struct StubModel : LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
-  ProcLoadMap const* proc_load_ = nullptr;
+  LoadMapBufferType const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelNorm, test_model_norm_1) {
   NodeType this_node = 0;
-  ProcLoadMap proc_load = {
+  LoadMapBufferType proc_load = {
     {0,
      LoadMapType{
        {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
@@ -138,7 +136,7 @@ TEST_F(TestModelNorm, test_model_norm_1) {
 
 TEST_F(TestModelNorm, test_model_norm_2) {
   NodeType this_node = 0;
-  ProcLoadMap proc_load = {
+  LoadMapBufferType proc_load = {
     {0,
      LoadMapType{
        {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
@@ -167,7 +165,7 @@ TEST_F(TestModelNorm, test_model_norm_2) {
 
 TEST_F(TestModelNorm, test_model_norm_3) {
   NodeType this_node = 0;
-  ProcLoadMap proc_load = {
+  LoadMapBufferType proc_load = {
     {0,
      LoadMapType{
        {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},

@@ -68,10 +68,9 @@ using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
 using vt::vrt::collection::balance::DataMapType;
-
-using ProcLoadMap = vt::util::container::CircularPhasesBuffer<LoadMapType>;
-using ProcCommMap = vt::util::container::CircularPhasesBuffer<CommMapType>;
-using UserDataMap = vt::util::container::CircularPhasesBuffer<DataMapType>;
+using vt::vrt::collection::balance::LoadMapBufferType;
+using vt::vrt::collection::balance::CommMapBufferType;
+using vt::vrt::collection::balance::DataMapBufferType;
 
 static auto num_phases = 0;
 
@@ -80,9 +79,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    ProcLoadMap const* proc_load,
-    ProcCommMap const* proc_comm,
-    UserDataMap const*) override {
+    LoadMapBufferType const* proc_load,
+    CommMapBufferType const* proc_comm,
+    DataMapBufferType const*) override {
     proc_load_ = proc_load;
     proc_comm_ = proc_comm;
   }
@@ -114,8 +113,8 @@ struct StubModel : LoadModel {
   }
 
 private:
-  ProcLoadMap const* proc_load_ = nullptr;
-  ProcCommMap const* proc_comm_ = nullptr;
+  LoadMapBufferType const* proc_load_ = nullptr;
+  CommMapBufferType const* proc_comm_ = nullptr;
 };
 
 TEST_F(TestModelWeightedCommunicationVolume, test_model) {
@@ -129,9 +128,9 @@ TEST_F(TestModelWeightedCommunicationVolume, test_model) {
   // Element 3 (home node == 3)
   ElementIDStruct const elem3 = {3, 3};
 
-  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, {LoadType{150}, {}}}}}};
+  LoadMapBufferType proc_load = {{0, LoadMapType{{elem2, {LoadType{150}, {}}}}}};
 
-  ProcCommMap proc_comm = {
+  CommMapBufferType proc_comm = {
     {0,
      CommMapType{// Node 1 -> Node 2
                  {{CommKeyType::CollectionTag{}, elem1, elem2, false},
