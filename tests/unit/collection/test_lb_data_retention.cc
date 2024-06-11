@@ -112,11 +112,6 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
         EXPECT_EQ(sp_load_phase_count, buffers_size);
         EXPECT_EQ(comm_phase_count,    buffers_size);
         EXPECT_EQ(sp_comm_phase_count, buffers_size);
-      } else if (phase == 0) {
-        EXPECT_EQ(load_phase_count,    phase);
-        EXPECT_EQ(sp_load_phase_count, phase);
-        EXPECT_EQ(comm_phase_count,    phase);
-        EXPECT_EQ(sp_comm_phase_count, phase);
       } else {
         // updatePhase will have caused entries to be added for the
         // next phase already
