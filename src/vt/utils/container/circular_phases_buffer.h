@@ -297,4 +297,4 @@ private:
 
 }}} /* end namespace vt::util::container */
 
-#endif /* INCLUDED_VT_UTILS_CONTAINER_CIRCULAR_PHASES_BUFFER_H */
+#endif /*INCLUDED_VT_UTILS_CONTAINER_CIRCULAR_PHASES_BUFFER_H*/

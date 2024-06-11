@@ -58,6 +58,8 @@
 
 namespace vt { namespace tests { namespace unit {
 
+namespace TestLBDataRetention {
+
 void validatePersistedPhases(std::vector<PhaseType> expected_phases) {
   #if vt_check_enabled(lblite)
     // Check maps size
@@ -88,9 +90,6 @@ void validatePersistedPhases(std::vector<PhaseType> expected_phases) {
 }
 
 struct TestCol : vt::Collection<TestCol,vt::Index1D> {
-  unsigned int prev_calls_ = thePhase()->getCurrentPhase();
-
-  unsigned int prevCalls() { return prev_calls_++; }
 
   static void insertValue(TestCol* col) {
     col->valInsert("foo", 10, true, true, true);
@@ -104,7 +103,7 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
     auto sp_comm_phase_count = lb_data.getSubphaseCommPhaseCount();
 
     #if vt_check_enabled(lblite)
-      auto phase = col->prevCalls();
+      auto phase = thePhase()->getCurrentPhase();
       auto model = theLBManager()->getLoadModel();
       auto buffers_size = std::max(model->getNumPastPhasesNeeded(), theConfig()->vt_lb_data_retention);
       if (phase >= buffers_size) {
@@ -112,6 +111,11 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
         EXPECT_EQ(sp_load_phase_count, buffers_size);
         EXPECT_EQ(comm_phase_count,    buffers_size);
         EXPECT_EQ(sp_comm_phase_count, buffers_size);
+      } else if (phase == 0) {
+        EXPECT_EQ(load_phase_count,    1);
+        EXPECT_EQ(sp_load_phase_count, 1);
+        EXPECT_EQ(comm_phase_count,    0);
+        EXPECT_EQ(sp_comm_phase_count, 0);
       } else {
         // updatePhase will have caused entries to be added for the
         // next phase already
@@ -155,6 +159,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
     proxy = vt::theCollection()->constructCollective<TestCol>(
       range, "test_lbstats_retention_last1"
     );
+    proxy.broadcastCollective<TestCol::insertValue>();
   });
 
   // Get the base model, assert it's valid
@@ -170,7 +175,6 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {
   for (int i=0; i<num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -195,6 +199,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
     proxy = vt::theCollection()->constructCollective<TestCol>(
       range, "test_lbstats_retention_last2"
     );
+    proxy.broadcastCollective<TestCol::insertValue>();
   });
 
   // Get the base model, assert it's valid
@@ -210,7 +215,6 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last2) {
   for (int i=0; i<num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -235,6 +239,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
     proxy = vt::theCollection()->constructCollective<TestCol>(
       range, "test_lbstats_retention_last4"
     );
+    proxy.broadcastCollective<TestCol::insertValue>();
   });
 
   // Get the base model, assert it's valid
@@ -250,7 +255,6 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_last4) {
   for (int i=0; i<num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -278,6 +282,7 @@ TEST_F(TestLBDataRetention, test_lbdata_config_retention_higher) {
     proxy = vt::theCollection()->constructCollective<TestCol>(
       range, "test_lbdata_config_retention_higher"
     );
+    proxy.broadcastCollective<TestCol::insertValue>();
   });
 
   // Get the base model, assert it's valid
@@ -293,7 +298,6 @@ TEST_F(TestLBDataRetention, test_lbdata_config_retention_higher) {
   for (uint32_t i=0; i<theConfig()->vt_lb_data_retention * 2; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -319,6 +323,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
     proxy = vt::theCollection()->constructCollective<TestCol>(
       range, "test_lbdata_retention_model_switch_1"
     );
+    proxy.broadcastCollective<TestCol::insertValue>();
   });
 
   // Get the base model, assert it's valid
@@ -335,7 +340,6 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_1) {
   for (uint32_t i=0; i<first_stage_num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -380,6 +384,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
     proxy = vt::theCollection()->constructCollective<TestCol>(
       range, "test_lbdata_retention_model_switch_2"
     );
+    proxy.broadcastCollective<TestCol::insertValue>();
   });
 
   // Get the base model, assert it's valid
@@ -394,7 +399,6 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   for (uint32_t i=0; i<first_stage_num_phases; ++i) {
     runInEpochCollective([&]{
       // Do some work.
-      proxy.broadcastCollective<TestCol::insertValue>();
       proxy.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -429,4 +433,4 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   validatePersistedPhases({16});
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::TestLBDataRetention

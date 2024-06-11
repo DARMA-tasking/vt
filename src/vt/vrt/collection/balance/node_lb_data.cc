@@ -149,9 +149,7 @@ void NodeLBData::resizeLBDataHistory(uint32_t new_hist_len) {
     lb_data_->node_user_attributes_.resize(new_hist_len);
   }
 
-  NodeLBData::node_migrate_.clear();
-  node_collection_lookup_.clear();
-  node_objgroup_lookup_.clear();
+  startIterCleanup();
 }
 
 ElementIDType NodeLBData::getNextElm() {
