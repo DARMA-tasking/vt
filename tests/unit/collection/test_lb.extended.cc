@@ -438,6 +438,10 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
       EXPECT_EQ(phase["user_defined"]["new_time"], static_cast<double>(phase["id"]));
     }
 
+    auto num_tasks = json["phases"][0]["tasks"].size();
+    auto entity = json["phases"][0]["tasks"][num_tasks - 1]["entity"];
+    EXPECT_EQ(entity["home"], 0);
+    EXPECT_EQ(entity["id"], 0);
   });
 
   if (vt::theContext()->getNode() == 0) {
@@ -615,6 +619,10 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
         auto &orig_load_map = phase_data.second;
         for (auto &entry : read_load_map) {
           auto read_elm_id = entry.first;
+          if ((read_elm_id.id == vt::elm::no_element_id)
+              and (read_elm_id.getHomeNode() == 0)) {
+            continue;
+          }
           EXPECT_FALSE(orig_load_map.find(read_elm_id) == orig_load_map.end());
           if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
             fmt::print(

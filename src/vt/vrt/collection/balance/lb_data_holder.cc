@@ -144,6 +144,15 @@ std::unique_ptr<nlohmann::json> LBDataHolder::rankAttributesToJson() const {
   return std::make_unique<nlohmann::json>(std::move(j));
 }
 
+void LBDataHolder::addInitialTask(nlohmann::json& j, std::size_t n) const {
+  j["tasks"][n]["resource"] = "cpu";
+  j["tasks"][n]["node"] = vt::theContext()->getNode();
+  j["tasks"][n]["time"] = 0;
+  outputEntity(
+    j["tasks"][n]["entity"], ElementIDStruct()
+  );
+}
+
 std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   using json = nlohmann::json;
 
@@ -193,6 +202,10 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       }
 
       i++;
+    }
+
+    if ((phase == 0) and (i > 0)) {
+      addInitialTask(j, i);
     }
   }
 
