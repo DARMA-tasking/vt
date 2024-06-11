@@ -120,7 +120,8 @@ ElmUserDataType const* NodeLBData::getNodeAttributes() const {
 }
 
 CommMapType* NodeLBData::getNodeComm(PhaseType phase) {
-  return lb_data_->node_comm_.find(phase);
+  auto iter = lb_data_->node_comm_.find(phase);
+  return (iter != lb_data_->node_comm_.end()) ? &iter->second : nullptr;
 }
 
 void NodeLBData::clearLBData() {

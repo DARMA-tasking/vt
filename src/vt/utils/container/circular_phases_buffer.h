@@ -105,61 +105,6 @@ struct CircularPhasesBuffer {
   }
 
   /**
-   * \brief Check if phase is present in the buffer
-   *
-   * \param[in] phase the phase to look for
-   *
-   * \return whether buffer contains the phase or not
-   */
-  bool contains(const PhaseType phase) const {
-    return m_buffer.find(phase) != m_buffer.end();
-  }
-
-  /**
-   * \brief Get data related to the phase. Insert new data if phase is not present in the buffer.
-   *
-   * \param[in] phase the phase to look for
-   *
-   * \return reference to the stored data
-   */
-  StoredType& operator[](const PhaseType phase) {
-    if (!contains(phase)) {
-      addToCache(std::make_pair(phase, StoredType{}));
-    }
-    return m_buffer[phase];
-  }
-
-  /**
-   * \brief Find data related to the phase.
-   *
-   * \param[in] phase the phase to look for
-   *
-   * \return pointer to the stored data or null if not present
-   */
-  const StoredType* find(const PhaseType phase) const {
-    auto iter = m_buffer.find(phase);
-    if (iter != m_buffer.end()) {
-      return &iter->second;
-    }
-    return nullptr;
-  }
-
-  /**
-   * \brief Find data related to the phase.
-   *
-   * \param[in] phase the phase to look for
-   *
-   * \return pointer to the stored data or null if not present
-   */
-  StoredType* find(const PhaseType phase) {
-    auto iter = m_buffer.find(phase);
-    if (iter != m_buffer.end()) {
-      return &iter->second;
-    }
-    return nullptr;
-  }
-
-  /**
    * \brief Get data related to the phase.
    *
    * \param[in] phase the phase to look for
@@ -178,6 +123,53 @@ struct CircularPhasesBuffer {
    * \return reference to the stored data
    */
   StoredType& at(const PhaseType phase) { return m_buffer.at(phase); }
+
+  /**
+   * \brief Get data related to the phase. Insert new data if phase is not present in the buffer.
+   *
+   * \param[in] phase the phase to look for
+   *
+   * \return reference to the stored data
+   */
+  StoredType& operator[](const PhaseType phase) {
+    if (!contains(phase)) {
+      addToCache(std::make_pair(phase, StoredType{}));
+    }
+    return m_buffer[phase];
+  }
+
+  /**
+   * \brief Find an element for passed phase.
+   *
+   * \param[in] phase the phase to look for
+   *
+   * \return iterator to the requested element.
+   */
+  auto find(const PhaseType& phase) {
+    return m_buffer.find(phase);
+  }
+
+  /**
+   * \brief Find an element for passed phase.
+   *
+   * \param[in] phase the phase to look for
+   *
+   * \return const iterator to the requested element.
+   */
+  auto find(const PhaseType& phase) const {
+    return m_buffer.find(phase);
+  }
+
+  /**
+   * \brief Check if phase is present in the buffer
+   *
+   * \param[in] phase the phase to look for
+   *
+   * \return whether buffer contains the phase or not
+   */
+  bool contains(const PhaseType phase) const {
+    return m_buffer.find(phase) != m_buffer.end();
+  }
 
   /**
    * \brief Resize buffer to the requested size
@@ -241,11 +233,39 @@ struct CircularPhasesBuffer {
   auto begin() { return m_buffer.begin(); }
 
   /**
+   * @brief Get const iterator to the begging of the buffer
+   *
+   * @return auto the const begin iterator
+   */
+  auto begin() const { return m_buffer.begin(); }
+
+  /**
+   * @brief Get const iterator to the begging of the buffer
+   *
+   * @return auto the const begin iterator
+   */
+  auto cbegin() const { return m_buffer.cbegin(); }
+
+  /**
    * @brief Get iterator to the space after buffer
    *
    * @return auto the end iterator
    */
   auto end() { return m_buffer.end(); }
+
+  /**
+   * @brief Get const iterator to the space after buffer
+   *
+   * @return auto the const end iterator
+   */
+  auto end() const { return m_buffer.end(); }
+
+  /**
+   * @brief Get const iterator to the space after buffer
+   *
+   * @return auto the const end iterator
+   */
+  auto cend() const { return m_buffer.cend(); }
 
 private:
   /**
