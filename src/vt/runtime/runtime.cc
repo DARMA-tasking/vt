@@ -579,7 +579,7 @@ void Runtime::reset() {
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   output(abort_str, code, true, true, false);
 
-  if (theConfig()->vt_throw_on_abort) {
+  if (theContext && theConfig()->vt_throw_on_abort) {
     throw std::runtime_error(abort_str);
   } else {
     aborted_ = true;
@@ -640,7 +640,12 @@ void Runtime::output(
     fmt::print(stderr, "{}\n", prefix);
   }
 
-  if (!theConfig()->vt_no_stack) {
+  if (theContext == nullptr) {
+    // Too early in init process to check dump settings - always dump stack.
+    auto stack = debug::stack::dumpStack();
+    auto stack_pretty = debug::stack::prettyPrintStack(stack);
+    fmt::print("{}", stack_pretty);
+  } else if (!theConfig()->vt_no_stack) {
     bool const on_abort = !theConfig()->vt_no_abort_stack;
     bool const on_warn = !theConfig()->vt_no_warn_stack;
     bool const dump = (error && on_abort) || (!error && on_warn);
