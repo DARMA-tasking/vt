@@ -18,5 +18,8 @@ include(cmake/load_libunwind.cmake)
 # Optionally link with Zoltan
 include(cmake/load_zoltan_package.cmake)
 
+# Link with PAPI
+include(cmake/load_papi.cmake)
+
 # Tests
 include(cmake/test_vt.cmake)

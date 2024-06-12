@@ -114,6 +114,17 @@ then
     fi
 fi
 
+if test -d "${source_dir}/lib/papi"
+then
+    { echo "papi already in lib... not downloading, building, and installing"; } 2>/dev/null
+else
+    cd "${source_dir}/lib"
+    git clone https://github.com/icl-utk-edu/papi.git
+    cd papi/src
+    ./configure --prefix=${source_dir}/lib/papi/install
+    make && make install
+fi
+
 if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1
 then
     export Zoltan_DIR=${ZOLTAN_DIR:-""}
