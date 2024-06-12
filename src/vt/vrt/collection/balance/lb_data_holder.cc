@@ -252,9 +252,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 
   i = 0;
   if (node_comm_.find(phase) != node_comm_.end()) {
-    for (auto&& elm : node_comm_.at(phase)) {
-      auto volume = elm.second;
-      auto const& key = elm.first;
+    for (auto const& [key, volume] : node_comm_.at(phase)) {
       j["communications"][i]["bytes"] = volume.bytes;
       j["communications"][i]["messages"] = volume.messages;
 
@@ -296,16 +294,11 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
         outputEntity(j["communications"][i]["from"], key.fromObj());
         break;
       }
-      case elm::CommCategory::ReadOnlyShared: {
-        j["communications"][i]["type"] = "ReadOnlyShared";
-        j["communications"][i]["to"]["type"] = "node";
-        j["communications"][i]["to"]["id"] = key.toNode();
-        j["communications"][i]["from"]["type"] = "shared_id";
-        j["communications"][i]["from"]["id"] = key.sharedID();
-        break;
-      }
+      case elm::CommCategory::ReadOnlyShared:
       case elm::CommCategory::WriteShared: {
-        j["communications"][i]["type"] = "WriteShared";
+        j["communications"][i]["type"] =
+          (key.cat_ == elm::CommCategory::ReadOnlyShared) ?
+          "ReadOnlyShared" : "WriteShared";
         j["communications"][i]["to"]["type"] = "node";
         j["communications"][i]["to"]["id"] = key.toNode();
         j["communications"][i]["from"]["type"] = "shared_id";
