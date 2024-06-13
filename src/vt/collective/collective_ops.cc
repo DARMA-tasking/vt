@@ -293,8 +293,10 @@ void CollectiveAnyOps<instance>::abort(
   auto myrt = tls_rt ? tls_rt : ::vt::rt;
   if (myrt) {
 #if vt_check_enabled(trace_enabled)
-    //--- Try to flush most of the traces before aborting
-    myrt->theTrace->cleanupTracesFile();
+    if (myrt->theTrace) {
+      //--- Try to flush most of the traces before aborting
+      myrt->theTrace->cleanupTracesFile();
+    }
 #endif
     myrt->abort(str, code);
   } else if (vt::debug::preConfig()->vt_throw_on_abort) {
