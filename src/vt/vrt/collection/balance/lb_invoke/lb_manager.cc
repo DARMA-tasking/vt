@@ -518,6 +518,7 @@ void LBManager::statsHandler(std::vector<balance::LoadData> const& in_stat_vec) 
     auto stdv     = st.stdv();
     auto skew     = st.skew();
     auto krte     = st.krte();
+    auto lbhist   = st.lbhist();
 
     stats[stat][lb::StatisticQuantity::max] = max;
     stats[stat][lb::StatisticQuantity::min] = min;
@@ -531,6 +532,7 @@ void LBManager::statsHandler(std::vector<balance::LoadData> const& in_stat_vec) 
     stats[stat][lb::StatisticQuantity::std] = stdv;
     stats[stat][lb::StatisticQuantity::skw] = skew;
     stats[stat][lb::StatisticQuantity::kur] = krte;
+    stats[stat][lb::StatisticQuantity::lbh] = lbhist;
 
     if (stat == rank_statistic) {
       if (before_lb_stats_) {
