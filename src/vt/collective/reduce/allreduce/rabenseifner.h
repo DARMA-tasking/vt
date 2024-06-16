@@ -86,6 +86,50 @@ struct AllreduceRbnMsg
   int32_t step_ = {};
 };
 
+template <typename Scalar>
+struct AllreduceRbnRawMsg
+  : Message {
+    using MessageParentType = vt::Message;
+    vt_msg_serialize_required();
+
+
+  AllreduceRbnRawMsg() = default;
+  AllreduceRbnRawMsg(AllreduceRbnRawMsg const&) = default;
+  AllreduceRbnRawMsg(AllreduceRbnRawMsg&&) = default;
+  ~AllreduceRbnRawMsg() {
+    if (owning_) {
+      delete[] val_;
+    }
+  }
+
+  AllreduceRbnRawMsg(Scalar* in_val, size_t size, int step = 0)
+    : MessageParentType(),
+      val_(in_val),
+      size_(size),
+      step_(step) { }
+
+  template <typename SerializeT>
+  void serialize(SerializeT& s) {
+      MessageParentType::serialize(s);
+
+      s | size_;
+
+      if (s.isUnpacking()) {
+        owning_ = true;
+        val_ = new Scalar[size_];
+      }
+
+      checkpoint::dispatch::serializeArray(s, val_, size_);
+
+      s | step_;
+  }
+
+  Scalar* val_ = {};
+  size_t size_ = {};
+  int32_t step_ = {};
+  bool owning_ = false;
+};
+
 /**
  * \struct Rabenseifner
  * \brief Class implementing Rabenseifner's allreduce algorithm.
@@ -103,6 +147,7 @@ template <
 >
 struct Rabenseifner {
   using DataType = DataHandler<DataT>;
+  using Scalar = typename DataType::Scalar;
 
   /**
    * \brief Constructor for Rabenseifner's allreduce algorithm.
@@ -111,7 +156,7 @@ struct Rabenseifner {
    * \param num_nodes Total number of nodes involved in the allreduce operation.
    * \param args Additional arguments for initializing the data value.
    */
-  template <typename... Args>
+  template <typename ...Args>
   Rabenseifner(
     vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
     Args&&... args);
@@ -123,7 +168,7 @@ struct Rabenseifner {
    *
    * \param args Additional arguments for initializing the data value.
    */
-  template <typename... Args>
+  template <typename ...Args>
   void initialize(Args&&... args);
 
   /**
@@ -153,7 +198,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void adjustForPowerOfTwoRightHalf(AllreduceRbnMsg<DataT>* msg);
+  void adjustForPowerOfTwoRightHalf(AllreduceRbnRawMsg<Scalar>* msg);
 
   /**
    * \brief Handler for adjusting the left half of the process group.
@@ -162,7 +207,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void adjustForPowerOfTwoLeftHalf(AllreduceRbnMsg<DataT>* msg);
+  void adjustForPowerOfTwoLeftHalf(AllreduceRbnRawMsg<Scalar>* msg);
 
   /**
    * \brief Final adjustment step for non-power-of-two process counts.
@@ -171,7 +216,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void adjustForPowerOfTwoFinalPart(AllreduceRbnMsg<DataT>* msg);
+  void adjustForPowerOfTwoFinalPart(AllreduceRbnRawMsg<Scalar>* msg);
 
   /**
    * \brief Check if all scatter messages have been received.
@@ -215,7 +260,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void scatterReduceIterHandler(AllreduceRbnMsg<DataT>* msg);
+  void scatterReduceIterHandler(AllreduceRbnRawMsg<Scalar>* msg);
 
   /**
    * \brief Check if all gather messages have been received.
@@ -259,7 +304,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void gatherIterHandler(AllreduceRbnMsg<DataT>* msg);
+  void gatherIterHandler(AllreduceRbnRawMsg<Scalar>* msg);
 
   /**
    * \brief Perform the final part of the allreduce operation.
@@ -282,12 +327,13 @@ struct Rabenseifner {
    *
    * \param msg Message containing the final result.
    */
-  void sendToExcludedNodesHandler(AllreduceRbnMsg<DataT>* msg);
+  void sendToExcludedNodesHandler(AllreduceRbnRawMsg<Scalar>* msg);
 
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
-  DataT val_ = {};
+  // DataT val_ = {};
+  std::vector<Scalar> val_;
   size_t size_ = {};
   NodeType num_nodes_ = {};
   NodeType this_node_ = {};
@@ -297,10 +343,10 @@ struct Rabenseifner {
   int32_t nprocs_pof2_ = {};
   int32_t nprocs_rem_ = {};
 
-  std::vector<int32_t> r_index_ = {};
-  std::vector<int32_t> r_count_ = {};
-  std::vector<int32_t> s_index_ = {};
-  std::vector<int32_t> s_count_ = {};
+  std::vector<uint32_t> r_index_ = {};
+  std::vector<uint32_t> r_count_ = {};
+  std::vector<uint32_t> s_index_ = {};
+  std::vector<uint32_t> s_count_ = {};
 
   NodeType vrt_node_ = {};
   bool is_part_of_adjustment_group_ = false;
@@ -314,7 +360,7 @@ struct Rabenseifner {
   int32_t scatter_num_recv_ = 0;
   std::vector<bool> scatter_steps_recv_ = {};
   std::vector<bool> scatter_steps_reduced_ = {};
-  std::vector<MsgSharedPtr<AllreduceRbnMsg<DataT>>> scatter_messages_ = {};
+  std::vector<MsgSharedPtr<AllreduceRbnRawMsg<Scalar>>> scatter_messages_ = {};
   bool finished_scatter_part_ = false;
 
   // Gather
@@ -323,7 +369,7 @@ struct Rabenseifner {
   int32_t gather_num_recv_ = 0;
   std::vector<bool> gather_steps_recv_ = {};
   std::vector<bool> gather_steps_reduced_ = {};
-  std::vector<MsgSharedPtr<AllreduceRbnMsg<DataT>>> gather_messages_ = {};
+  std::vector<MsgSharedPtr<AllreduceRbnRawMsg<Scalar>>> gather_messages_ = {};
 };
 
 } // namespace vt::collective::reduce::allreduce

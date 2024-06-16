@@ -288,8 +288,7 @@ template <typename T>
 struct is_std_container : std::integral_constant<bool,
     is_specialization_of<std::vector, T>::value || is_std_array<T>::value> {};
 
-template <
-  typename Reducer, auto f, typename ObjT, template <typename Arg> class Op, typename DataT>
+template <typename Reducer, typename ObjT, typename DataT>
 ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
   ProxyType<ObjT> proxy, const DataT& data) {
   return PendingSendType{
@@ -301,7 +300,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
 
       if (reducers_.find(proxy.getProxy()) != reducers_.end()) {
         auto* obj = reinterpret_cast<Reducer*>(
-          objs_[reducers_[proxy.getProxy()]]->getPtr()
+          objs_.at(reducers_.at(proxy.getProxy()))->getPtr()
         );
         obj->initialize(data);
         grp_proxy = obj->proxy_;
@@ -309,6 +308,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
         grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
           "allreduce_rabenseifner", proxy, num_nodes, data);
         grp_proxy[this_node].get()->proxy_ = grp_proxy;
+        reducers_[proxy.getProxy()] = grp_proxy.getProxy();
       }
 
       grp_proxy[this_node].template invoke<&Reducer::allreduce>();
@@ -326,11 +326,11 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, const DataT& data) {
   if constexpr (is_std_container<DataT>::value) {
     using Reducer =
       vt::collective::reduce::allreduce::Rabenseifner<DataT, Op, ObjT, f>;
-    return allreduce<Reducer, f, ObjT, Op>(proxy, data);
+    return allreduce<Reducer>(proxy, data);
   } else {
     using Reducer =
       vt::collective::reduce::allreduce::RecursiveDoubling<DataT, Op, ObjT, f>;
-    return allreduce<Reducer, f, ObjT, Op>(proxy, data);
+    return allreduce<Reducer>(proxy, data);
   }
 }
 

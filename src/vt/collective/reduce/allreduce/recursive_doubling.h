@@ -50,6 +50,7 @@
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/configs/error/config_assert.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "data_handler.h"
 
 #include <tuple>
 #include <cstdint>
@@ -86,6 +87,50 @@ struct AllreduceDblMsg
   int32_t step_ = {};
 };
 
+template <typename Scalar>
+struct AllreduceDblRawMsg
+  : Message {
+    using MessageParentType = vt::Message;
+    vt_msg_serialize_required();
+
+
+  AllreduceDblRawMsg() = default;
+  AllreduceDblRawMsg(AllreduceDblRawMsg const&) = default;
+  AllreduceDblRawMsg(AllreduceDblRawMsg&&) = default;
+  ~AllreduceDblRawMsg() {
+    if (owning_) {
+      delete[] val_;
+    }
+  }
+
+  AllreduceDblRawMsg(std::vector<Scalar>& in_val, int step = 0)
+    : MessageParentType(),
+      val_(in_val.data()),
+      size_(in_val.size()),
+      step_(step) { }
+
+  template <typename SerializeT>
+  void serialize(SerializeT& s) {
+      MessageParentType::serialize(s);
+
+      s | size_;
+
+      if (s.isUnpacking()) {
+        owning_ = true;
+        val_ = new Scalar[size_];
+      }
+
+      checkpoint::dispatch::serializeArray(s, val_, size_);
+
+      s | step_;
+  }
+
+  Scalar* val_ = {};
+  size_t size_ = {};
+  int32_t step_ = {};
+  bool owning_ = false;
+};
+
 /**
  * \brief Class implementing the Recursive Doubling algorithm for allreduce operation.
  *
@@ -102,6 +147,8 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
 struct RecursiveDoubling {
+  using DataType = DataHandler<DataT>;
+  using Scalar = typename DataHandler<DataT>::Scalar;
   /**
    * \brief Constructor for RecursiveDoubling class.
    *
@@ -111,10 +158,9 @@ struct RecursiveDoubling {
    * \param num_nodes The number of nodes.
    * \param args Additional arguments for data initialization.
    */
-  template <typename... Args>
   RecursiveDoubling(
     vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
-    Args&&... args);
+    const DataT& data);
 
   /**
    * \brief Start the allreduce operation.
@@ -126,8 +172,7 @@ struct RecursiveDoubling {
    *
    * \param args Additional arguments for data initialization.
    */
-  template <typename... Args>
-  void initialize(Args&&... args);
+  void initialize(const DataT& data);
 
   /**
    * \brief Adjust for power of two nodes.
@@ -139,7 +184,7 @@ struct RecursiveDoubling {
    *
    * \param msg Pointer to the message.
    */
-  void adjustForPowerOfTwoHandler(AllreduceDblMsg<DataT>* msg);
+  void adjustForPowerOfTwoHandler(AllreduceDblRawMsg<Scalar>* msg);
 
   /**
    * \brief Check if the allreduce operation is done.
@@ -186,7 +231,7 @@ struct RecursiveDoubling {
    *
    * \param msg Pointer to the message.
    */
-  void reduceIterHandler(AllreduceDblMsg<DataT>* msg);
+  void reduceIterHandler(AllreduceDblRawMsg<Scalar>* msg);
 
   /**
    * \brief Send data to excluded nodes for finalization.
@@ -198,7 +243,7 @@ struct RecursiveDoubling {
    *
    * \param msg Pointer to the message.
    */
-  void sendToExcludedNodesHandler(AllreduceDblMsg<DataT>* msg);
+  void sendToExcludedNodesHandler(AllreduceDblRawMsg<Scalar>* msg);
 
   /**
    * \brief Perform the final part of the allreduce operation.
@@ -208,7 +253,8 @@ struct RecursiveDoubling {
   vt::objgroup::proxy::Proxy<RecursiveDoubling> proxy_ = {};
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
-  DataT val_ = {};
+  // DataT val_ = {};
+  std::vector<Scalar> val_;
   NodeType num_nodes_ = {};
   NodeType this_node_ = {};
 
@@ -222,14 +268,14 @@ struct RecursiveDoubling {
   bool finished_adjustment_part_ = false;
 
   int32_t mask_ = 1;
-
   int32_t step_ = 0;
+
   bool completed_ = false;
 
   std::vector<bool> steps_recv_ = {};
   std::vector<bool> steps_reduced_ = {};
 
-  std::vector<MsgSharedPtr<AllreduceDblMsg<DataT>>> messages_ = {};
+  std::vector<MsgSharedPtr<AllreduceDblRawMsg<Scalar>>> messages_ = {};
 };
 
 } // namespace vt::collective::reduce::allreduce
