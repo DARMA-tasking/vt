@@ -46,6 +46,10 @@
 
 #include "test_harness_base.h"
 
+#if KOKKOS_ENABLED_CHECKPOINT
+#include "Kokkos_Core.hpp"
+#endif
+
 #include <vector>
 #include <memory>
 
@@ -74,7 +78,7 @@ struct PerfTestRegistry{
     tests_.push_back(std::move(test));
   }
 
-  static const std::vector<std::unique_ptr<TestHarnessBase>>&
+  static std::vector<std::unique_ptr<TestHarnessBase>>&
   GetTests() {
     return tests_;
   }
@@ -104,10 +108,23 @@ struct PerfTestRegistry{
   } StructName##TestName##_registerer;                                     \
   void StructName##TestName::TestFunc()
 
+inline void tryInitializeKokkos() {
+#if KOKKOS_ENABLED_CHECKPOINT
+  Kokkos::initialize();
+#endif
+}
+
+inline void tryFinalizeKokkos() {
+#if KOKKOS_ENABLED_CHECKPOINT
+  Kokkos::finalize();
+#endif
+}
+
 #define VT_PERF_TEST_MAIN()                                                  \
   int main(int argc, char** argv) {                                          \
     using namespace vt::tests::perf::common;                                 \
     MPI_Init(&argc, &argv);                                                  \
+    tryInitializeKokkos();                                                   \
     int rank;                                                                \
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                    \
     auto& tests = PerfTestRegistry::GetTests();                              \
@@ -142,6 +159,8 @@ struct PerfTestRegistry{
       }                                                                      \
       test->DumpResults();                                                   \
     }                                                                        \
+    tests.clear();                                                           \
+    tryFinalizeKokkos();                                                     \
     MPI_Finalize();                                                          \
     return 0;                                                                \
   }
