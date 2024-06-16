@@ -65,6 +65,19 @@ struct PlusOp<std::tuple<Params...>> {
   }
 };
 
+#if KOKKOS_ENABLED_CHECKPOINT
+template <typename T>
+struct PlusOp<Kokkos::View<T*, Kokkos::HostSpace>> {
+  void operator()(
+    Kokkos::View<T*, Kokkos::HostSpace>& v1,
+    Kokkos::View<T*, Kokkos::HostSpace> const& v2) {
+    Kokkos::parallel_for(
+      "Initialize", v1.extent(0),
+      KOKKOS_LAMBDA(const int i) { v1(i) += v2(i); });
+  }
+};
+#endif
+
 template <typename T>
 struct PlusOp< std::vector<T> > {
   void operator()(std::vector<T>& v1, std::vector<T> const& v2) {

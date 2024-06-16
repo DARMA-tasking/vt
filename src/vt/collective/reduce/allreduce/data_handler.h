@@ -45,22 +45,36 @@
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_DATA_HANDLER_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_DATA_HANDLER_H
 
-namespace vt::collective::reduce::allreduce {
 #include <vector>
 
 #ifdef VT_KOKKOS_ENABLED
 #include <Kokkos_Core.hpp>
 #endif
 
-template <typename Container>
+namespace vt::collective::reduce::allreduce {
+
+template <typename DataType, typename Enable = void>
 class DataHandler {
 public:
-  using Scalar = float;
+  using Scalar = void;
+};
 
-  static size_t size(const Container& data);
-  static Scalar& at(Container& data, size_t idx);
-  static void set(Container& data, size_t idx, const Scalar& value);
-  static Container split(Container& data, size_t start, size_t end);
+template <typename Scalar>
+class DataHandler<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
+public:
+  using ScalarType = Scalar;
+
+  static std::vector<ScalarType> toVec(const ScalarType& data) { return std::vector<ScalarType>{data}; }
+  static ScalarType fromVec(const std::vector<ScalarType>& data) { return data[0]; }
+  static ScalarType fromMemory(ScalarType* data, size_t count) {
+    return *data;
+  }
+
+  // static const ScalarType* data(const ScalarType& data) { return &data; }
+  // static size_t size(const ScalarType&) { return 1; }
+  // static ScalarType& at(ScalarType& data, size_t) { return data; }
+  // static void set(ScalarType& data, size_t, const ScalarType& value) { data = value; }
+  // static ScalarType split(ScalarType&, size_t, size_t) { return ScalarType{}; }
 };
 
 template <typename T>
@@ -68,15 +82,23 @@ class DataHandler<std::vector<T>> {
 public:
   using UnderlyingType = std::vector<T>;
   using Scalar = T;
+
+  static const std::vector<T>& toVec(const std::vector<T>& data) { return data; }
+  static std::vector<T> fromVec(const std::vector<T>& data) { return data; }
+  static std::vector<T> fromMemory(T* data, size_t count) {
+    return std::vector<T>(data, data + count);
+  }
+
+  // static const T* data(const std::vector<T>& data) {return data.data(); }
   static size_t size(const std::vector<T>& data) { return data.size(); }
-  static T at(const std::vector<T>& data, size_t idx) { return data[idx]; }
-  static T& at(std::vector<T>& data, size_t idx) { return data[idx]; }
-  static void set(std::vector<T>& data, size_t idx, const T& value) {
-    data[idx] = value;
-  }
-  static std::vector<T> split(std::vector<T>& data, size_t start, size_t end) {
-    return std::vector<T>{data.begin() + start, data.begin() + end};
-  }
+  // static T at(const std::vector<T>& data, size_t idx) { return data[idx]; }
+  // static T& at(std::vector<T>& data, size_t idx) { return data[idx]; }
+  // static void set(std::vector<T>& data, size_t idx, const T& value) {
+  //   data[idx] = value;
+  // }
+  // static std::vector<T> split(std::vector<T>& data, size_t start, size_t end) {
+  //   return std::vector<T>{data.begin() + start, data.begin() + end};
+  // }
 };
 
 #if KOKKOS_ENABLED_CHECKPOINT
@@ -88,19 +110,40 @@ class DataHandler<Kokkos::View<T*, Kokkos::HostSpace, Props...>> {
 public:
   using Scalar = T;
 
+  static std::vector<T> toVec(const ViewType& data) {
+    std::vector<T> vec;
+    vec.resize(data.extent(0));
+    std::memcpy(vec.data(), data.data(), data.extent(0) * sizeof(T));
+    return vec;
+  }
+
+  static ViewType fromMemory(T* data, size_t size) {
+    return ViewType(data, size);
+  }
+
+  static ViewType fromVec(const std::vector<T>& data) {
+    ViewType view("", data.size());
+    Kokkos::parallel_for(
+      "InitView", view.extent(0),
+      KOKKOS_LAMBDA(const int i) { view(i) = static_cast<float>(data[i]); });
+
+    return view;
+  }
+
+  // static const T* data(const ViewType& data) {return data.data(); }
   static size_t size(const ViewType& data) { return data.extent(0); }
 
-  static T at(const ViewType& data, size_t idx) { return data(idx); }
+  // static T at(const ViewType& data, size_t idx) { return data(idx); }
 
-  static T& at(ViewType& data, size_t idx) { return data(idx); }
+  // static T& at(ViewType& data, size_t idx) { return data(idx); }
 
-  static void set(ViewType& data, size_t idx, const T& value) {
-    data(idx) = value;
-  }
+  // static void set(ViewType& data, size_t idx, const T& value) {
+  //   data(idx) = value;
+  // }
 
-  static ViewType split(ViewType& data, size_t start, size_t end) {
-    return Kokkos::subview(data, std::make_pair(start, end));
-  }
+  // static ViewType split(ViewType& data, size_t start, size_t end) {
+  //   return Kokkos::subview(data, std::make_pair(start, end));
+  // }
 };
 
 #endif // KOKKOS_ENABLED_CHECKPOINT
