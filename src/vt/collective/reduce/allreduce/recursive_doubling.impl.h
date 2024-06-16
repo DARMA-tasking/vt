@@ -51,10 +51,9 @@ namespace vt::collective::reduce::allreduce {
 template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
-template <typename... Args>
 RecursiveDoubling<DataT, Op, ObjT, finalHandler>::RecursiveDoubling(
   vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
-  Args&&... args)
+  const DataT& data)
   : parent_proxy_(parentProxy),
     num_nodes_(num_nodes),
     this_node_(vt::theContext()->getNode()),
@@ -62,18 +61,7 @@ RecursiveDoubling<DataT, Op, ObjT, finalHandler>::RecursiveDoubling(
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_),
-    finished_adjustment_part_(nprocs_rem_ == 0) {
-  initialize(std::forward<Args>(args)...);
-}
-
-template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
-  auto finalHandler>
-template <typename... Args>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::initialize(
-  Args&&... args) {
-  val_ = DataT(std::forward<Args>(args)...);
-  is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
+    is_part_of_adjustment_group_(this_node_ < (2 * nprocs_rem_)){
   if (is_part_of_adjustment_group_) {
     if (is_even_) {
       vrt_node_ = this_node_ / 2;
@@ -87,13 +75,28 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::initialize(
   messages_.resize(num_steps_, nullptr);
   steps_recv_.resize(num_steps_, false);
   steps_reduced_.resize(num_steps_, false);
+
+  initialize(data);
+}
+
+template <
+  typename DataT, template <typename Arg> class Op, typename ObjT,
+  auto finalHandler>
+void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::initialize(
+  const DataT& data) {
+  val_ = DataType::toVec(data);
+
+  completed_ = false;
+  step_ = 0;
+  mask_ = 1;
+  finished_adjustment_part_ = not is_part_of_adjustment_group_;
 }
 
 template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
 void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::allreduce() {
-  if (nprocs_rem_) {
+  if (is_part_of_adjustment_group_) {
     adjustForPowerOfTwo();
   } else {
     reduceIter();
@@ -119,8 +122,11 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
 void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::
-  adjustForPowerOfTwoHandler(AllreduceDblMsg<DataT>* msg) {
-  Op<DataT>()(val_, msg->val_);
+  adjustForPowerOfTwoHandler(AllreduceDblRawMsg<Scalar>* msg) {
+
+  for(size_t i = 0; i < val_.size(); ++i){
+    Op<Scalar>()(val_[i], msg->val_[i]);
+  }
 
   finished_adjustment_part_ = true;
 
@@ -171,7 +177,7 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::reduceIter() {
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
   vt_debug_print(
     terse, allreduce,
-    "[{}] RecursiveDoubling Part2 (step {}): Sending to Node {} \n", this_node_,
+    "RecursiveDoubling Part2 (Send step {}): To Node {} \n",
     step_, dest
   );
 
@@ -199,7 +205,10 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::tryReduce(int32_t step) {
     std::all_of(
       steps_reduced_.cbegin(), steps_reduced_.cbegin() + step,
       [](const auto val) { return val; })) {
-    Op<DataT>()(val_, messages_.at(step)->val_);
+    for (size_t i = 0; i < val_.size(); ++i) {
+      Op<Scalar>()(val_[i], messages_.at(step)->val_[i]);
+    }
+
     steps_reduced_[step] = true;
   }
 }
@@ -208,12 +217,12 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
 void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::reduceIterHandler(
-  AllreduceDblMsg<DataT>* msg) {
+  AllreduceDblRawMsg<Scalar>* msg) {
   vt_debug_print(
     terse, allreduce,
-    "[{}] RecursiveDoubling Part2 (step {}): mask_= {} nprocs_pof2_ = {}: "
+    "RecursiveDoubling Part2 (Recv step {}): mask_= {} nprocs_pof2_ = {}: "
     "from {}\n",
-    this_node_, msg->step_, mask_, nprocs_pof2_,
+    msg->step_, mask_, nprocs_pof2_,
     theContext()->getFromNodeCurrentTask()
   );
 
@@ -241,7 +250,7 @@ template <
 void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::sendToExcludedNodes() {
   if (is_part_of_adjustment_group_ and is_even_) {
     vt_debug_print(
-      terse, allreduce, "[{}] RecursiveDoubling Part3: Sending to Node {}  \n", this_node_,
+      terse, allreduce, "RecursiveDoubling Part3: Sending to Node {}  \n",
       this_node_ + 1
     );
 
@@ -254,10 +263,13 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
 void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::
-  sendToExcludedNodesHandler(AllreduceDblMsg<DataT>* msg) {
-  val_ = msg->val_;
+  sendToExcludedNodesHandler(AllreduceDblRawMsg<Scalar>* msg) {
+  // val_ = msg->val_;
+  // std::memcpy(val_.data(), msg->val_, val_.size() * sizeof(Scalar));
 
-  parent_proxy_[this_node_].template invoke<finalHandler>(val_);
+  parent_proxy_[this_node_].template invoke<finalHandler>(
+    DataType::fromMemory(msg->val_, msg->size_)
+  );
   completed_ = true;
 }
 
@@ -273,8 +285,14 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::finalPart() {
     sendToExcludedNodes();
   }
 
-  parent_proxy_[this_node_].template invoke<finalHandler>(val_);
+  parent_proxy_[this_node_].template invoke<finalHandler>(DataType::fromVec(val_));
+
   completed_ = true;
+
+  std::fill(messages_.begin(), messages_.end(), nullptr);
+
+  steps_recv_.assign(num_steps_, false);
+  steps_reduced_.assign(num_steps_, false);
 }
 
 } // namespace vt::collective::reduce::allreduce

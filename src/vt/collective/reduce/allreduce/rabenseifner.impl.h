@@ -44,17 +44,18 @@
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 
+#include "vt/collective/reduce/allreduce/data_handler.h"
 #include "vt/config.h"
 
 namespace vt::collective::reduce::allreduce {
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
->
+  typename DataT, template <typename Arg> class Op, typename ObjT,
+  auto finalHandler>
 template <typename... Args>
 Rabenseifner<DataT, Op, ObjT, finalHandler>::Rabenseifner(
   vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
-  Args&&... args)
+  Args&&... data)
   : parent_proxy_(parentProxy),
     num_nodes_(num_nodes),
     this_node_(vt::theContext()->getNode()),
@@ -62,20 +63,7 @@ Rabenseifner<DataT, Op, ObjT, finalHandler>::Rabenseifner(
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_),
-    finished_adjustment_part_(nprocs_rem_ == 0),
-    gather_step_(num_steps_ - 1),
-    gather_mask_(nprocs_pof2_ >> 1) {
-  initialize(std::forward<Args>(args)...);
-}
-
-template <
-  typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
->
-template <typename... Args>
-void Rabenseifner<DataT, Op, ObjT, finalHandler>::initialize(Args&&... args) {
-  val_ = DataT(std::forward<Args>(args)...);
-
-  is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
+    is_part_of_adjustment_group_(this_node_ < (2 * nprocs_rem_)) {
   if (is_part_of_adjustment_group_) {
     if (is_even_) {
       vrt_node_ = this_node_ / 2;
@@ -99,32 +87,61 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::initialize(Args&&... args) {
   s_index_.resize(num_steps_, 0);
   s_count_.resize(num_steps_, 0);
 
+  initialize(std::forward<Args>(data)...);
+}
+
+template <
+  typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
+>
+template <typename ...Args>
+void Rabenseifner<DataT, Op, ObjT, finalHandler>::initialize(Args&&... data) {
+  val_ = DataType::toVec(std::forward<Args>(data)...);
+
+  finished_adjustment_part_ = not is_part_of_adjustment_group_;
+  completed_ = false;
+
+  scatter_mask_ = 1;
+  scatter_step_ = 0;
+  scatter_num_recv_ = 0;
+  finished_scatter_part_ = false;
+
+  gather_step_ = num_steps_ - 1;
+  gather_mask_ = nprocs_pof2_ >> 1;
+  gather_num_recv_ = 0;
+
   int step = 0;
-  size_t wsize = DataType::size(val_);
-  size_ = wsize;
+  size_ = val_.size();
+  auto size = size_;
   for (int mask = 1; mask < nprocs_pof2_; mask <<= 1) {
     auto vdest = vrt_node_ ^ mask;
     auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
 
     if (this_node_ < dest) {
-      r_count_[step] = wsize / 2;
-      s_count_[step] = wsize - r_count_[step];
+      r_count_[step] = size / 2;
+      s_count_[step] = size - r_count_[step];
       s_index_[step] = r_index_[step] + r_count_[step];
     } else {
-      s_count_[step] = wsize / 2;
-      r_count_[step] = wsize - s_count_[step];
+      s_count_[step] = size / 2;
+      r_count_[step] = size - s_count_[step];
       r_index_[step] = s_index_[step] + s_count_[step];
     }
 
     if (step + 1 < num_steps_) {
       r_index_[step + 1] = r_index_[step];
       s_index_[step + 1] = r_index_[step];
-      wsize = r_count_[step];
+      size = r_count_[step];
       step++;
     }
   }
 
-  scatter_steps_recv_.resize(num_steps_, false);
+  vt_debug_print(
+    terse, allreduce,
+    "Rabenseifner initialize: size_ = {} num_steps_ = {} nprocs_pof2_ = {} nprocs_rem_ = "
+    "{} "
+    "is_part_of_adjustment_group_ = {} vrt_node_ = {} \n",
+    size_, num_steps_, nprocs_pof2_, nprocs_rem_, is_part_of_adjustment_group_,
+    vrt_node_
+  );
 }
 
 template <
@@ -141,7 +158,7 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::allreduce() {
-  if (nprocs_rem_) {
+  if (is_part_of_adjustment_group_) {
     adjustForPowerOfTwo();
   } else {
     scatterReduceIter();
@@ -158,11 +175,15 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwo() {
     if (is_even_) {
       proxy_[partner]
         .template send<&Rabenseifner::adjustForPowerOfTwoRightHalf>(
-          DataType::split(val_, size_ / 2, size_));
+          val_.data() + (size_ / 2), size_ - (size_ / 2));
     } else {
       proxy_[partner].template send<&Rabenseifner::adjustForPowerOfTwoLeftHalf>(
-        DataType::split(val_, 0, size_ / 2));
+        val_.data(), size_ / 2);
     }
+
+    vt_debug_print(
+      terse, allreduce, "Rabenseifner Part1: Sending to Node {}\n", partner
+    );
   }
 }
 
@@ -170,26 +191,26 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoRightHalf(
-  AllreduceRbnMsg<DataT>* msg) {
-  for (uint32_t i = 0; i < DataType::size(msg->val_); i++) {
-    Op<typename DataType::Scalar>()(
-      DataType::at(val_, (size_ / 2) + i), DataType::at(msg->val_, i));
+  AllreduceRbnRawMsg<Scalar>* msg) {
+
+  for (uint32_t i = 0; i < msg->size_; i++) {
+    Op<Scalar>()(val_[(size_ / 2) + i], msg->val_[i]);
   }
 
   // Send to left node
   proxy_[theContext()->getNode() - 1]
     .template send<&Rabenseifner::adjustForPowerOfTwoFinalPart>(
-      DataType::split(val_, size_ / 2, size_));
+      val_.data() + (size_ / 2), size_ - (size_ / 2));
 }
 
 template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoLeftHalf(
-  AllreduceRbnMsg<DataT>* msg) {
-  for (uint32_t i = 0; i < DataType::size(msg->val_); i++) {
-    Op<typename DataType::Scalar>()(
-      DataType::at(val_, i), DataType::at(msg->val_, i));
+  AllreduceRbnRawMsg<Scalar>* msg) {
+
+  for (uint32_t i = 0; i < msg->size_; i++) {
+    Op<Scalar>()(val_[i], msg->val_[i]);
   }
 }
 
@@ -197,9 +218,9 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoFinalPart(
-  AllreduceRbnMsg<DataT>* msg) {
-  for (uint32_t i = 0; i < DataType::size(msg->val_); i++) {
-    DataType::at(val_, (size_ / 2) + i) = DataType::at(msg->val_, i);
+  AllreduceRbnRawMsg<Scalar>* msg) {
+  for (uint32_t i = 0; i < msg->size_; i++) {
+    val_[(size_ / 2) + i] = msg->val_[i];
   }
 
   finished_adjustment_part_ = true;
@@ -245,11 +266,8 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterTryReduce(
       [](auto const val) { return val; })) {
     auto& in_msg = scatter_messages_.at(step);
     auto& in_val = in_msg->val_;
-    for (uint32_t i = 0; i < DataType::size(in_val); i++) {
-      Op<typename DataType::Scalar>()(
-        DataType::at(val_, r_index_[in_msg->step_] + i),
-        DataType::at(in_val, i)
-      );
+    for (uint32_t i = 0; i < in_msg->size_; i++) {
+      Op<Scalar>()(val_[r_index_[in_msg->step_] + i], in_val[i]);
     }
 
     scatter_steps_reduced_[step] = true;
@@ -276,10 +294,8 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIter() {
   );
 
   proxy_[dest].template send<&Rabenseifner::scatterReduceIterHandler>(
-    DataType::split(
-      val_, s_index_[scatter_step_],
-      s_index_[scatter_step_] + s_count_[scatter_step_]),
-    scatter_step_);
+    val_.data() + s_index_[scatter_step_], s_count_[scatter_step_], scatter_step_
+  );
 
   scatter_mask_ <<= 1;
   scatter_step_++;
@@ -298,7 +314,7 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIterHandler(
-  AllreduceRbnMsg<DataT>* msg) {
+  AllreduceRbnRawMsg<Scalar>* msg) {
   scatter_messages_[msg->step_] = promoteMsg(msg);
   scatter_steps_recv_[msg->step_] = true;
   scatter_num_recv_++;
@@ -362,8 +378,8 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherTryReduce(
   if (doRed) {
     auto& in_msg = gather_messages_.at(step);
     auto& in_val = in_msg->val_;
-    for (uint32_t i = 0; i < DataType::size(in_val); i++) {
-      DataType::at(val_, s_index_[in_msg->step_] + i) = DataType::at(in_val, i);
+    for (uint32_t i = 0; i < in_msg->size_; i++) {
+      val_[s_index_[in_msg->step_] + i] = in_val[i];
     }
 
     gather_steps_reduced_[step] = true;
@@ -391,10 +407,8 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherIter() {
   );
 
   proxy_[dest].template send<&Rabenseifner::gatherIterHandler>(
-    DataType::split(
-      val_, r_index_[gather_step_],
-      r_index_[gather_step_] + r_count_[gather_step_]),
-    gather_step_);
+    val_.data() + r_index_[gather_step_], r_count_[gather_step_], gather_step_
+  );
 
   gather_mask_ >>= 1;
   gather_step_--;
@@ -412,7 +426,7 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherIterHandler(
-  AllreduceRbnMsg<DataT>* msg) {
+  AllreduceRbnRawMsg<Scalar>* msg) {
   vt_debug_print(
     terse, allreduce, "Rabenseifner Part3 (step {}): Received idx = {} from {}\n",
     msg->step_, s_index_[msg->step_],
@@ -448,7 +462,30 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::finalPart() {
     sendToExcludedNodes();
   }
 
-  executeFinalHan();
+  vt_debug_print(
+    terse, allreduce,
+    "Rabenseifner Part4: Executing final handler with size {}\n", val_.size()
+  );
+
+  parent_proxy_[this_node_].template invoke<finalHandler>(
+    DataType::fromVec(val_)
+  );
+
+  completed_ = true;
+
+  std::fill(scatter_messages_.begin(), scatter_messages_.end(), nullptr);
+  std::fill(gather_messages_.begin(), gather_messages_.end(), nullptr);
+
+  scatter_steps_recv_.assign(num_steps_, false);
+  gather_steps_recv_.assign(num_steps_, false);
+
+  scatter_steps_reduced_.assign(num_steps_, false);
+  gather_steps_reduced_.assign(num_steps_, false);
+
+  r_index_.assign(num_steps_, 0);
+  r_count_.assign(num_steps_, 0);
+  s_index_.assign(num_steps_, 0);
+  s_count_.assign(num_steps_, 0);
 }
 
 template <
@@ -461,7 +498,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::sendToExcludedNodes() {
       this_node_ + 1
     );
     proxy_[this_node_ + 1]
-      .template send<&Rabenseifner::sendToExcludedNodesHandler>(val_, 0);
+      .template send<&Rabenseifner::sendToExcludedNodesHandler>(val_.data(), size_);
   }
 }
 
@@ -469,10 +506,16 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::sendToExcludedNodesHandler(
-  AllreduceRbnMsg<DataT>* msg) {
-  val_ = msg->val_;
+  AllreduceRbnRawMsg<Scalar>* msg) {
+  vt_debug_print(
+    terse, allreduce,
+    "Rabenseifner Part4: Received allreduce result with size {}\n", msg->size_
+  );
 
-  executeFinalHan();
+  parent_proxy_[this_node_].template invoke<finalHandler>(
+    DataType::fromMemory(msg->val_, msg->size_)
+  );
+  completed_ = true;
 }
 
 } // namespace vt::collective::reduce::allreduce
