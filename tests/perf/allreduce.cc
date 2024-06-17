@@ -87,7 +87,7 @@ struct NodeObj {
     proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this);
   }
 
-  void handlerVec(std::vector<int32_t> vec) {
+  void handlerVec(const std::vector<int32_t>& vec) {
     test_obj_->StopTimer(timer_names_.at(vec.size()));
     allreduce_done_ = true;
   }
@@ -159,53 +159,53 @@ VT_PERF_TEST(MyTestKokkos, test_reduce_kokkos) {
 }
 #endif
 
-VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
-  auto proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTest>>(
-    "test_allreduce_rabenseifner", this, "Rabenseifner vector"
-  );
+// VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
+//   auto proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTest>>(
+//     "test_allreduce_rabenseifner", this, "Rabenseifner vector"
+//   );
 
-  using DataT = decltype(data);
-  using Reducer = collective::reduce::allreduce::Rabenseifner<
-    DataT, collective::PlusOp, NodeObj<MyTest>, &NodeObj<MyTest>::handlerVec>;
+//   using DataT = decltype(data);
+//   using Reducer = collective::reduce::allreduce::Rabenseifner<
+//     DataT, collective::PlusOp, NodeObj<MyTest>, &NodeObj<MyTest>::handlerVec>;
 
-  for (auto payload_size : payloadSizes) {
-    data.resize(payload_size, theContext()->getNode() + 1);
+//   for (auto payload_size : payloadSizes) {
+//     data.resize(payload_size, theContext()->getNode() + 1);
 
-    theCollective()->barrier();
-    auto* obj_ptr = proxy[my_node_].get();
-    StartTimer(obj_ptr->timer_names_.at(payload_size));
-    theObjGroup()->allreduce<Reducer>(proxy, data);
+//     theCollective()->barrier();
+//     auto* obj_ptr = proxy[my_node_].get();
+//     StartTimer(obj_ptr->timer_names_.at(payload_size));
+//     theObjGroup()->allreduce<Reducer>(proxy, data);
 
-    theSched()->runSchedulerWhile(
-      [obj_ptr] { return !obj_ptr->allreduce_done_; });
-    obj_ptr->allreduce_done_ = false;
-  }
-}
+//     theSched()->runSchedulerWhile(
+//       [obj_ptr] { return !obj_ptr->allreduce_done_; });
+//     obj_ptr->allreduce_done_ = false;
+//   }
+// }
 
 #if KOKKOS_ENABLED_CHECKPOINT
-VT_PERF_TEST(MyTestKokkos, test_allreduce_rabenseifner_kokkos) {
-  auto proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTestKokkos>>(
-    "test_allreduce_rabenseifner", this, "Rabenseifner view"
-  );
+// VT_PERF_TEST(MyTestKokkos, test_allreduce_rabenseifner_kokkos) {
+//   auto proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTestKokkos>>(
+//     "test_allreduce_rabenseifner", this, "Rabenseifner view"
+//   );
 
-  using DataT = decltype(view);
-  using Reducer = collective::reduce::allreduce::Rabenseifner<
-    DataT, collective::PlusOp, NodeObj<MyTestKokkos>,
-    &NodeObj<MyTestKokkos>::handlerView<float>
-  >;
+//   using DataT = decltype(view);
+//   using Reducer = collective::reduce::allreduce::Rabenseifner<
+//     DataT, collective::PlusOp, NodeObj<MyTestKokkos>,
+//     &NodeObj<MyTestKokkos>::handlerView<float>
+//   >;
 
-  for (auto payload_size : payloadSizes) {
-    view = Kokkos::View<float*, Kokkos::HostSpace>("view", payload_size);
+//   for (auto payload_size : payloadSizes) {
+//     view = Kokkos::View<float*, Kokkos::HostSpace>("view", payload_size);
 
-    theCollective()->barrier();
-    auto* obj_ptr = proxy[my_node_].get();
-    StartTimer(obj_ptr->timer_names_.at(payload_size));
-    theObjGroup()->allreduce<Reducer>(proxy, view);
+//     theCollective()->barrier();
+//     auto* obj_ptr = proxy[my_node_].get();
+//     StartTimer(obj_ptr->timer_names_.at(payload_size));
+//     theObjGroup()->allreduce<Reducer>(proxy, view);
 
-    theSched()->runSchedulerWhile([obj_ptr] { return !obj_ptr->allreduce_done_; });
-    obj_ptr->allreduce_done_ = false;
-  }
-}
+//     theSched()->runSchedulerWhile([obj_ptr] { return !obj_ptr->allreduce_done_; });
+//     obj_ptr->allreduce_done_ = false;
+//   }
+// }
 #endif // KOKKOS_ENABLED_CHECKPOINT
 
 VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
@@ -230,5 +230,31 @@ VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
     obj_ptr->allreduce_done_ = false;
   }
 }
+
+#if KOKKOS_ENABLED_CHECKPOINT
+VT_PERF_TEST(MyTestKokkos, test_allreduce_recursive_doubling_kokkos) {
+  auto proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTestKokkos>>(
+    "test_allreduce_rabenseifner", this, "Recursive doubling view"
+  );
+
+  using DataT = decltype(view);
+  using Reducer = collective::reduce::allreduce::RecursiveDoubling<
+    DataT, collective::PlusOp, NodeObj<MyTestKokkos>,
+    &NodeObj<MyTestKokkos>::handlerView<float>
+  >;
+
+  for (auto payload_size : payloadSizes) {
+    view = Kokkos::View<float*, Kokkos::HostSpace>("view", payload_size);
+
+    theCollective()->barrier();
+    auto* obj_ptr = proxy[my_node_].get();
+    StartTimer(obj_ptr->timer_names_.at(payload_size));
+    theObjGroup()->allreduce<Reducer>(proxy, view);
+
+    theSched()->runSchedulerWhile([obj_ptr] { return !obj_ptr->allreduce_done_; });
+    obj_ptr->allreduce_done_ = false;
+  }
+}
+#endif // KOKKOS_ENABLED_CHECKPOINT
 
 VT_PERF_TEST_MAIN()
