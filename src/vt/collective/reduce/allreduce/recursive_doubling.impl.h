@@ -341,11 +341,11 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::finalPart(size_t id) {
   parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
 
   state.completed_ = true;
+  states_.erase(id);
+  // std::fill(state.messages_.begin(), state.messages_.end(), nullptr);
 
-  std::fill(state.messages_.begin(), state.messages_.end(), nullptr);
-
-  state.steps_recv_.assign(num_steps_, false);
-  state.steps_reduced_.assign(num_steps_, false);
+  // state.steps_recv_.assign(num_steps_, false);
+  // state.steps_reduced_.assign(num_steps_, false);
 }
 
 } // namespace vt::collective::reduce::allreduce

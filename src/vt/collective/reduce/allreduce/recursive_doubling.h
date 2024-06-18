@@ -226,8 +226,6 @@ struct RecursiveDoubling {
   vt::objgroup::proxy::Proxy<RecursiveDoubling> proxy_ = {};
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
-  // DataT val_ = {};
-
   struct State{
     DataT val_ = {};
     bool finished_adjustment_part_ = false;
