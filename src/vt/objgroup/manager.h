@@ -292,11 +292,11 @@ public:
     ProxyType<ObjT> proxy, std::string const& name, std::string const& parent = ""
   );
 
-template <typename Reducer, typename ObjT, typename DataT>
-ObjGroupManager::PendingSendType allreduce(ProxyType<ObjT> proxy, const DataT& data);
+template <typename Reducer, typename ObjT, typename... Args>
+ObjGroupManager::PendingSendType allreduce(ProxyType<ObjT> proxy, Args&&... data);
 
-template <auto f, typename ObjT, template <typename Arg> class Op, typename DataT>
-ObjGroupManager::PendingSendType allreduce(ProxyType<ObjT> proxy, const DataT& data);
+template <auto f, typename ObjT, template <typename Arg> class Op, typename DataT, typename... Args>
+ObjGroupManager::PendingSendType allreduce(ProxyType<ObjT> proxy, Args&&... data);
 
   /**
    * \brief Perform a reduction over an objgroup

@@ -211,16 +211,12 @@ private:
   using DataT = ::vt::tests::unit::VectorPayload;
 public:
   using Scalar = typename decltype(DataT::vec_)::value_type;
-  using UnderlyingType = decltype(DataT::vec_);
 
   static size_t size(const DataT& data) { return data.vec_.size(); }
-  static Scalar at(const DataT& data, size_t idx) { return data.vec_[idx]; }
-  static Scalar& at(DataT& data, size_t idx) { return data.vec_[idx]; }
-  static void set(DataT& data, size_t idx, const Scalar& value) {
-    data.vec_[idx] = value;
-  }
-  static DataT split(DataT& data, size_t start, size_t end) {
-    return DataT{UnderlyingType{data.vec_.begin() + start, data.vec_.begin() + end}};
+  static const std::vector<Scalar>& toVec(const DataT& data) { return data.vec_; }
+  static DataT fromVec(const std::vector<Scalar>& data) { return DataT{data}; }
+  static DataT fromMemory(Scalar* data, size_t count) {
+    return DataT{std::vector<Scalar>(data, data + count)};
   }
 };
 
