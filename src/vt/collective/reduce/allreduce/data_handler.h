@@ -47,7 +47,7 @@
 
 #include <vector>
 
-#ifdef VT_KOKKOS_ENABLED
+#ifdef KOKKOS_ENABLED_CHECKPOINT
 #include <Kokkos_Core.hpp>
 #endif
 
@@ -57,21 +57,22 @@ template <typename DataType, typename Enable = void>
 class DataHandler {
 public:
   using Scalar = void;
+  static size_t size(void) { return 0; }
 };
 
-template <typename Scalar>
-class DataHandler<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
+template <typename ScalarType>
+class DataHandler<ScalarType, typename std::enable_if<std::is_arithmetic<ScalarType>::value>::type> {
 public:
-  using ScalarType = Scalar;
+  using Scalar = ScalarType;
 
   static std::vector<ScalarType> toVec(const ScalarType& data) { return std::vector<ScalarType>{data}; }
   static ScalarType fromVec(const std::vector<ScalarType>& data) { return data[0]; }
-  static ScalarType fromMemory(ScalarType* data, size_t count) {
+  static ScalarType fromMemory(ScalarType* data, size_t) {
     return *data;
   }
 
   // static const ScalarType* data(const ScalarType& data) { return &data; }
-  // static size_t size(const ScalarType&) { return 1; }
+  static size_t size(const ScalarType&) { return 1; }
   // static ScalarType& at(ScalarType& data, size_t) { return data; }
   // static void set(ScalarType& data, size_t, const ScalarType& value) { data = value; }
   // static ScalarType split(ScalarType&, size_t, size_t) { return ScalarType{}; }
@@ -80,7 +81,6 @@ public:
 template <typename T>
 class DataHandler<std::vector<T>> {
 public:
-  using UnderlyingType = std::vector<T>;
   using Scalar = T;
 
   static const std::vector<T>& toVec(const std::vector<T>& data) { return data; }
