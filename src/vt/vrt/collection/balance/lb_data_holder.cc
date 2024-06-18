@@ -338,9 +338,10 @@ std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
   std::unordered_map<ElementIDType, ObjectWork> objects;
 
   if (node_data_.find(phase) != node_data_.end()) {
+    std::cout << "FINDING PHASE " << phase << std::endl;
     for (auto&& elm : node_data_.at(phase)) {
       ElementIDStruct id = elm.first;
-      TimeType whole_phase_load = elm.second.whole_phase_load;
+      double whole_phase_load = elm.second.whole_phase_load;
       auto const& subphase_loads = elm.second.subphase_loads;
 
       typename DataMapType::mapped_type user_defined;
@@ -357,7 +358,10 @@ std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
       }
       objects.try_emplace(
         id.id,
-        id.id, whole_phase_load, std::move(subphase_map), std::move(user_defined)
+        // add id into map and then construct ObjectWork with these parameters
+        ObjectWork{
+          id.id, whole_phase_load, std::move(subphase_map) //, std::move(user_defined)
+        }
       );
     }
   }
