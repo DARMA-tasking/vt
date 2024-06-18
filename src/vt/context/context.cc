@@ -90,6 +90,23 @@ Context::Context([[maybe_unused]] bool const is_interop, MPI_Comm comm) {
   communicator_ = comm;
   numNodes_ = static_cast<NodeType>(numNodesLocal);
   thisNode_ = static_cast<NodeType>(thisNodeLocal);
+
+  int retval;
+
+  /* Initialize the PAPI library */
+  retval = PAPI_library_init(PAPI_VER_CURRENT);
+  if (retval != PAPI_VER_CURRENT)
+      handle_papi_error(retval);
+
+  /* Check for possible failures */
+  if (retval < 0)
+      handle_papi_error(retval);
+
+  /* Print PAPI Version */
+  fprintf(stdout, "PAPI Version Number\n");
+  fprintf(stdout, "MAJOR:    %d\n", PAPI_VERSION_MAJOR(retval));
+  fprintf(stdout, "MINOR:    %d\n", PAPI_VERSION_MINOR(retval));
+  fprintf(stdout, "REVISION: %d\n", PAPI_VERSION_REVISION(retval));
 }
 
 Context::~Context() {

@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/manager.h"
 
 #include <memory>
+#include <papi.h>
 
 namespace vt { namespace ctx {
 
@@ -61,6 +62,20 @@ LBData::LBData(ElmT* in_elm, MsgT* msg)
 {
   // record the communication LB data right away!
   theCollection()->recordLBData(in_elm, msg);
+
+  // /* Create the PAPI Event Set */
+  // papi_retval_ = PAPI_create_eventset(&EventSet_);
+  // if (papi_retval_ != PAPI_OK) {
+  //   printf("LBData Constructor 1: Creating the PAPI Event Set: PAPI error %d: %s\n", papi_retval_, PAPI_strerror(papi_retval_));
+  //   exit(1);
+  // }
+
+  // /* Add Total Instructions Executed to the PAPI Event Set */
+  // papi_retval_ = PAPI_add_event(EventSet_, PAPI_TOT_INS);
+  // if (papi_retval_ != PAPI_OK) {
+  //   printf("LBData Constructor 1: Adding Total Instructions Executed to the PAPI Event Set: PAPI error %d: %s\n", papi_retval_, PAPI_strerror(papi_retval_));
+  //   exit(1);
+  // }
 }
 
 }} /* end namespace vt::ctx */

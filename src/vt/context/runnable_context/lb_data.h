@@ -47,6 +47,8 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_lb_data.fwd.h"
 
+#include <papi.h>
+
 namespace vt { namespace ctx {
 
 /**
@@ -57,6 +59,12 @@ namespace vt { namespace ctx {
 struct LBData {
   using ElementIDStruct = elm::ElementIDStruct;
   using ElementLBData    = elm::ElementLBData;
+
+  void handle_papi_error (int retval, std::string info)
+  {
+    printf("%s: PAPI error %d: %s\n", info.c_str(), retval, PAPI_strerror(retval));
+    exit(1);
+  }
 
   LBData() = default;
 
@@ -79,7 +87,17 @@ struct LBData {
     : lb_data_(in_lb_data),
       cur_elm_id_(in_elm_id),
       should_instrument_(true)
-  { }
+  {
+    /* Create the PAPI Event Set */
+    papi_retval_ = PAPI_create_eventset(&EventSet_);
+    if (papi_retval_ != PAPI_OK)
+      handle_papi_error(papi_retval_, "LBData Constructor 2: Creating the PAPI Event Set: ");
+
+    // /* Add Total Instructions Executed to the PAPI Event Set */
+    // papi_retval_ = PAPI_add_event(EventSet_, PAPI_DP_OPS);
+    // if (papi_retval_ != PAPI_OK)
+    //   handle_papi_error(papi_retval_, "LBData Constructor 2: Adding Total Instructions Executed to the PAPI Event Set: ");
+  }
 
   /**
    * \brief Return whether time is required
@@ -119,6 +137,10 @@ private:
   ElementLBData* lb_data_ = nullptr;     /**< Element LB data */
   ElementIDStruct cur_elm_id_ = {};   /**< Current element ID  */
   bool should_instrument_ = false;    /**< Whether we are instrumenting */
+  long_long papi_values_[1];
+  int EventSet_ = PAPI_NULL;
+  int papi_retval_;
+  long long start_cycles_, end_cycles_, start_usec_, end_usec_;
 };
 
 }} /* end namespace vt::ctx */
