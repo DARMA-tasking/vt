@@ -46,6 +46,7 @@
 
 #include <memory>
 #include <mpi.h>
+#include <papi.h>
 
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
@@ -123,6 +124,12 @@ struct Context : runtime::component::Component<Context> {
   friend struct ContextAttorney;
 
   std::string name() override { return "Context"; }
+
+  void handle_papi_error (int retval)
+  {
+    printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
+    exit(1);
+  }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
