@@ -483,7 +483,7 @@ void LBManager::fatalError() {
 }
 
 #if vt_check_enabled(tv)
-        struct GatherTVInfo {
+struct GatherTVInfo {
   GatherTVInfo() = default;
 
   std::unordered_map<NodeType, tv::Rank> rank_map;
