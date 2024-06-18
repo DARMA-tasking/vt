@@ -47,6 +47,10 @@
 
 #include <typeinfo>
 
+#ifdef KOKKOS_ENABLED_CHECKPOINT
+#include <Kokkos_Core.hpp>
+#endif
+
 namespace vt { namespace tests { namespace unit {
 
 struct TestObjGroup : TestParallelHarness {
@@ -283,32 +287,36 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
   );
 
   EXPECT_EQ(MyObjA::total_verify_expected_, 3);
+  runInEpochCollective([&] {
+    using Reducer = vt::collective::reduce::allreduce::RecursiveDoubling<
+      std::vector<int>, PlusOp, MyObjA, &MyObjA::verifyAllredVec
+    >;
+    std::vector<int> payload(256, my_node);
+    theObjGroup()->allreduce<Reducer>(proxy, payload);
+  });
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 4);
 
   runInEpochCollective([&] {
     using Reducer = vt::collective::reduce::allreduce::Rabenseifner<
       std::vector<int>, PlusOp, MyObjA, &MyObjA::verifyAllredVec
     >;
     std::vector<int> payload(256, my_node);
-    theObjGroup()->allreduce<Reducer, &MyObjA::verifyAllredVec, MyObjA, PlusOp>(
-      proxy, payload
-    );
-    theObjGroup()->allreduce<Reducer, &MyObjA::verifyAllredVec, MyObjA, PlusOp>(
-      proxy, payload
-    );
+    theObjGroup()->allreduce<Reducer>(proxy, payload);
+    theObjGroup()->allreduce<Reducer>(proxy, payload);
   });
 
-  EXPECT_EQ(MyObjA::total_verify_expected_, 5);
+  EXPECT_EQ(MyObjA::total_verify_expected_, 6);
 
   runInEpochCollective([&] {
     using Reducer = vt::collective::reduce::allreduce::Rabenseifner<
       VectorPayload, PlusOp, MyObjA, &MyObjA::verifyAllredVecPayload>;
     std::vector<int> payload(256, my_node);
     VectorPayload data{payload};
-    theObjGroup()->allreduce<Reducer, &MyObjA::verifyAllredVecPayload, MyObjA, PlusOp>(
-      proxy, data);
+    theObjGroup()->allreduce<Reducer>(proxy, data);
   });
 
-  EXPECT_EQ(MyObjA::total_verify_expected_, 6);
+  EXPECT_EQ(MyObjA::total_verify_expected_, 7);
 }
 
 #if KOKKOS_ENABLED_CHECKPOINT
@@ -348,9 +356,7 @@ TEST_F(TestObjGroupKokkos, test_proxy_allreduce_kokkos) {
     using Reducer = vt::collective::reduce::allreduce::Rabenseifner<
       decltype(view), PlusOp, MyObjA, &MyObjA::verifyAllredView>;
 
-    theObjGroup()
-      ->allreduce<Reducer, &MyObjA::verifyAllredView, MyObjA, PlusOp>(
-        kokkos_proxy, view);
+    theObjGroup()->allreduce<Reducer>(kokkos_proxy, view);
   });
 
   EXPECT_EQ(MyObjA::total_verify_expected_, 1);

@@ -214,11 +214,10 @@ Proxy<ObjT>::allreduce_h(
   Args&&... args
 ) const {
   auto proxy = Proxy<ObjT>(*this);
-  return theObjGroup()->allreduce<
-  f,
-    ObjT,
-    Op
-  >(proxy, std::forward<Args>(args)...);
+
+  // using DataT = std::tuple<std::decay_t<Args>...>;
+  return theObjGroup()->allreduce<f, ObjT, Op, std::decay_t<Args>...>(
+    proxy, std::forward<Args>(args)...);
 }
 
 template <typename ObjT>
