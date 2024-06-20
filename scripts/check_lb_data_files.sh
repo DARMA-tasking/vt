@@ -19,8 +19,11 @@ function run_schema_validator() {
 }
 
 # Use vt to generate LB Datafile
-python3 "${path_to_vt_src_dir}/scripts/generate_and_validate_lb_data_file.py" \
-    -g -s "${path_to_vt_src_dir}" -b "${path_to_vt_build_dir}" -i "LBData_from_lb_iter.%p.json"
+if ! python3 "${path_to_vt_src_dir}/scripts/generate_and_validate_lb_data_file.py" -g \
+    -b "${path_to_vt_build_dir}" -f "LBData_from_lb_iter.%p.json"
+then
+    exit 2;
+fi
 
 find . -iname "*.json" | grep -v "compile_commands" | while read f
 do
@@ -32,6 +35,9 @@ do
     run_schema_validator "$f"
 done
 
-# # Use vt to generate LB Datafile
-# python3 "${path_to_vt_src_dir}/scripts/generate_and_validate_lb_data_file.py" \
-#     -v -s "${path_to_vt_src_dir}" -b "${path_to_vt_build_dir}" -i "${path_to_vt_build_dir}/LBData_from_lb_iter.json"
+# Use vt to generate LB Datafile
+if ! python3 "${path_to_vt_src_dir}/scripts/generate_and_validate_lb_data_file.py" -v \
+    -b "${path_to_vt_build_dir}" -f "LBData_from_lb_iter.0.json" -r "${path_to_vt_src_dir}/examples/LBDatafile_example.json"
+then
+    exit 3;
+fi
