@@ -30,6 +30,11 @@ do
     run_schema_validator "$f"
 done
 
+find "${path_to_vt_src_dir}/examples" -iname "*.json" | while read f
+do
+    run_schema_validator "$f"
+done
+
 find . -iname "*.json.br" | while read f
 do
     run_schema_validator "$f"
