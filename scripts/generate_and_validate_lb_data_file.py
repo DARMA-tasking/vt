@@ -12,7 +12,7 @@ def generate(vt_build, out_file_name):
     out_dir = "--vt_lb_data_dir=" + vt_build
     out_file = "--vt_lb_data_file=" + out_file_name
 
-    args = (exe_path, "8", "1.0", "2", "--vt_lb", "--vt_lb_interval=1", "--vt_lb_name=RotateLB", "--vt_lb_data", "--vt_lb_data_compress=false", out_dir, out_file)
+    args = (exe_path, "4", "1.0", "1", "--vt_lb", "--vt_lb_interval=1", "--vt_lb_name=RotateLB", "--vt_lb_data", "--vt_lb_data_compress=false", out_dir, out_file)
     runner = subprocess.Popen(args, stdout=subprocess.PIPE)
     exit_code = runner.wait()
     if exit_code != 0:
