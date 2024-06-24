@@ -8,6 +8,7 @@ cd "$path_to_vt_build_dir" || exit 1
 
 function run_schema_validator() {
     file=$1
+    echo ""
     echo "Running schema validator on: $file"
     if python3 "${path_to_vt_src_dir}/scripts/JSON_data_files_validator.py" --file_path="$file"
     then
