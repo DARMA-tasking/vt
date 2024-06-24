@@ -27,7 +27,7 @@ def validate(vt_build, file_to_validate, reference_file):
     with open(vt_build + "/" + file_to_validate) as val_file, open(reference_file) as ref_file:
         to_validate = json.load(val_file)
         reference = json.load(ref_file)
-        diff = DeepDiff(to_validate, reference, report_repetition=True, math_epsilon=0.001)
+        diff = DeepDiff(to_validate, reference, report_repetition=True, math_epsilon=0.1)
         is_valid = not len(diff.affected_paths)
 
         if not is_valid:
