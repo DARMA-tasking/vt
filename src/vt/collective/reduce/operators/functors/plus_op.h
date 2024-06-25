@@ -65,7 +65,7 @@ struct PlusOp<std::tuple<Params...>> {
   }
 };
 
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
 template <typename T>
 struct PlusOp<Kokkos::View<T*, Kokkos::HostSpace>> {
   void operator()(
@@ -76,7 +76,7 @@ struct PlusOp<Kokkos::View<T*, Kokkos::HostSpace>> {
       KOKKOS_LAMBDA(const int i) { v1(i) += v2(i); });
   }
 };
-#endif
+#endif // MAGISTRATE_KOKKOS_ENABLED
 
 template <typename T>
 struct PlusOp< std::vector<T> > {

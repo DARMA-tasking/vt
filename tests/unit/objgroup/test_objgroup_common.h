@@ -146,7 +146,7 @@ struct MyObjA {
 
   void verifyAllredVecPayload(VectorPayload vec) { verifyAllredVec(vec.vec_); }
 
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
   void verifyAllredView(Kokkos::View<float*, Kokkos::HostSpace> view) {
     auto final_size = view.extent(0);
     EXPECT_EQ(final_size, 256);
@@ -159,7 +159,7 @@ struct MyObjA {
 
     total_verify_expected_++;
   }
-#endif
+#endif // MAGISTRATE_KOKKOS_ENABLED
 
   int id_ = -1;
   int recv_ = 0;
