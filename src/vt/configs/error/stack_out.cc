@@ -164,7 +164,7 @@ std::string prettyPrintStack(DumpStackType const& stack) {
   auto magenta    = ::vt::debug::magenta();
   auto yellow     = ::vt::debug::yellow();
   auto vt_pre     = ::vt::debug::vtPre();
-  auto node       = ::vt::theContext()->getNode();
+  auto node       = ::vt::theContext() ? ::vt::theContext()->getNode() : -1;
   auto node_str   = ::vt::debug::proc(node);
   auto prefix     = vt_pre + node_str + " ";
   auto separator  = fmt::format("{}{}{:-^120}{}\n", prefix, yellow, "", reset);

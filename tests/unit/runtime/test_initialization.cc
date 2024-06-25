@@ -47,8 +47,12 @@
 #include "test_helpers.h"
 
 #include <vt/collective/startup.h>
+#include <vt/vrt/collection/balance/lb_data_restart_reader.h>
+#include <vt/utils/json/json_appender.h>
+#include <vt/elm/elm_id_bits.h>
 
 #include <fstream>
+#include <filesystem>
 
 namespace vt { namespace tests { namespace unit {
 
@@ -318,6 +322,280 @@ TEST_F(TestInitialization, test_preconfigure_and_initialization) {
 
   vt::finalize();
   vt::initializePreconfigured(&comm, &appConfig, vtConfig.get());
+}
+
+void prepareLBDataFiles(const std::string file_name_without_ext) {
+  using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
+  using ElementIDStruct = vt::vrt::collection::balance::ElementIDStruct;
+  using LoadSummary = vt::vrt::collection::balance::LoadSummary;
+
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const next_node = (this_node + 1) % num_nodes;
+  auto const prev_node = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+
+  std::unordered_map<PhaseType, std::vector<ElementIDStruct>> ids;
+  int len = 2;
+  PhaseType num_phases = 7;
+  for (int i = 0; i < len; i++) {
+    auto id = vt::elm::ElmIDBits::createCollectionImpl(true, i+1, this_node, this_node);
+    id.curr_node = this_node;
+    ids[0].push_back(id);
+    id.curr_node = next_node;
+    ids[3].push_back(id);
+    id.curr_node = prev_node;
+    ids[6].push_back(id);
+  }
+
+  for (int i = 0; i < len; i++) {
+    auto pid = vt::elm::ElmIDBits::createCollectionImpl(true, i+1, prev_node, this_node);
+    auto nid = vt::elm::ElmIDBits::createCollectionImpl(true, i+1, next_node, this_node);
+    ids[1].push_back(pid);
+    ids[2].push_back(pid);
+    ids[4].push_back(nid);
+    ids[5].push_back(nid);
+  }
+
+  LBDataHolder dh;
+  for (PhaseType i = 0; i < num_phases; i++) {
+    for (auto&& elm : ids[i]) {
+      dh.node_data_[i][elm] = LoadSummary{3};
+    }
+  }
+
+  using JSONAppender = util::json::Appender<std::stringstream>;
+  std::stringstream stream{std::ios_base::out | std::ios_base::in};
+  nlohmann::json metadata;
+  metadata["type"] = "LBDatafile";
+  auto w = std::make_unique<JSONAppender>(
+    "phases", metadata, std::move(stream), true
+  );
+  for (PhaseType i = 0; i < num_phases; i++) {
+    auto j = dh.toJson(i);
+    w->addElm(*j);
+  }
+  stream = w->finish();
+
+  // save to file
+  std::string file_name = file_name_without_ext + "." + std::to_string(this_node) + ".json";
+  std::filesystem::path file_path = std::filesystem::current_path() / file_name;
+  std::ofstream out(file_path);
+  out << stream.str();
+  out.close();
+}
+
+TEST_F(TestInitialization, test_initialize_without_restart_reader) {
+  MPI_Comm comm = MPI_COMM_WORLD;
+
+  static char prog_name[]{"vt_program"};
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char** custom_argv = custom_args.data();
+
+  vt::initialize(custom_argc, custom_argv, &comm);
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_program");
+  EXPECT_EQ(theConfig()->vt_lb_name, "NoLB");
+  EXPECT_EQ(theConfig()->vt_lb_data_in, false);
+  EXPECT_EQ(theConfig()->vt_lb_file_name, "");
+  EXPECT_TRUE(theLBDataReader() == nullptr);
+}
+
+#if vt_feature_cmake_lblite
+TEST_F(TestInitialization, test_initialize_with_lb_data_in) {
+  MPI_Comm comm = MPI_COMM_WORLD;
+
+  // Preapre data files
+  auto prefix = getUniqueFilenameWithRanks();
+  prepareLBDataFiles(prefix);
+
+  static char prog_name[]{"vt_program"};
+  static char data_in[]{"--vt_lb_data_in"};
+  std::string data_file_dir = "--vt_lb_data_dir_in=";
+  data_file_dir += std::filesystem::current_path();
+  std::string data_file = "--vt_lb_data_file_in=";
+  data_file += prefix + ".%p.json";
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(data_in);
+  custom_args.emplace_back(const_cast<char*>(data_file_dir.c_str()));
+  custom_args.emplace_back(const_cast<char*>(data_file.c_str()));
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char** custom_argv = custom_args.data();
+
+  vt::initialize(custom_argc, custom_argv, &comm);
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_program");
+  EXPECT_EQ(theConfig()->vt_lb_name, "NoLB");
+  EXPECT_EQ(theConfig()->vt_lb_data_in, true);
+  EXPECT_EQ(theConfig()->vt_lb_file_name, "");
+  EXPECT_TRUE(theLBDataReader() == nullptr);
+}
+
+TEST_F(TestInitialization, test_initialize_with_lb_data_and_config_offline_lb) {
+  MPI_Comm comm = MPI_COMM_WORLD;
+
+  // Preapre data files
+  auto prefix = getUniqueFilenameWithRanks();
+  prepareLBDataFiles(prefix);
+
+  // Preapre configuration file
+  std::string file_name = getUniqueFilenameWithRanks(".txt");
+  std::ofstream out(file_name);
+  out << "0 OfflineLB\n";
+  out.close();
+
+  static char prog_name[]{"vt_program"};
+  static char data_in[]{"--vt_lb_data_in"};
+  std::string data_file_dir = "--vt_lb_data_dir_in=";
+  data_file_dir += std::filesystem::current_path();
+  std::string data_file = "--vt_lb_data_file_in=";
+  data_file += prefix + ".%p.json";
+  std::string config_file = "--vt_lb_file_name=" + file_name;
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(data_in);
+  custom_args.emplace_back(const_cast<char*>(data_file_dir.c_str()));
+  custom_args.emplace_back(const_cast<char*>(data_file.c_str()));
+  custom_args.emplace_back(const_cast<char*>(config_file.c_str()));
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char** custom_argv = custom_args.data();
+
+  vt::initialize(custom_argc, custom_argv, &comm);
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_program");
+  EXPECT_EQ(theConfig()->vt_lb_name, "NoLB");
+  EXPECT_EQ(theConfig()->vt_lb_data_in, true);
+  EXPECT_EQ(theConfig()->vt_lb_file_name, file_name);
+  EXPECT_TRUE(theLBDataReader() != nullptr);
+}
+
+TEST_F(TestInitialization, test_initialize_with_lb_data_and_no_lb) {
+  MPI_Comm comm = MPI_COMM_WORLD;
+
+  // Preapre data files
+  auto prefix = getUniqueFilenameWithRanks();
+  prepareLBDataFiles(prefix);
+
+  // Preapre configuration file
+  std::string file_name = getUniqueFilenameWithRanks(".txt");
+  std::ofstream out(file_name);
+  out << "0 NoLB\n";
+  out.close();
+
+  static char prog_name[]{"vt_program"};
+  static char data_in[]{"--vt_lb_data_in"};
+  std::string data_file_dir = "--vt_lb_data_dir_in=";
+  data_file_dir += std::filesystem::current_path();
+  std::string data_file = "--vt_lb_data_file_in=";
+  data_file += prefix + ".%p.json";
+  std::string config_file = "--vt_lb_file_name=" + file_name;
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(data_in);
+  custom_args.emplace_back(const_cast<char*>(data_file_dir.c_str()));
+  custom_args.emplace_back(const_cast<char*>(data_file.c_str()));
+  custom_args.emplace_back(const_cast<char*>(config_file.c_str()));
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char** custom_argv = custom_args.data();
+
+  vt::initialize(custom_argc, custom_argv, &comm);
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_program");
+  EXPECT_EQ(theConfig()->vt_lb_name, "NoLB");
+  EXPECT_EQ(theConfig()->vt_lb_data_in, true);
+  EXPECT_EQ(theConfig()->vt_lb_file_name, file_name);
+  EXPECT_TRUE(theLBDataReader() == nullptr);
+}
+
+TEST_F(TestInitialization, test_initialize_with_lb_data_and_offline_lb) {
+  MPI_Comm comm = MPI_COMM_WORLD;
+
+  // Preapre data files
+  auto prefix = getUniqueFilenameWithRanks();
+  prepareLBDataFiles(prefix);
+
+  static char prog_name[]{"vt_program"};
+  static char data_in[]{"--vt_lb_data_in"};
+  static char offline_lb[]{"--vt_lb_name=OfflineLB"};
+  std::string data_file_dir = "--vt_lb_data_dir_in=";
+  data_file_dir += std::filesystem::current_path();
+  std::string data_file = "--vt_lb_data_file_in=";
+  data_file += prefix + ".%p.json";
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(data_in);
+  custom_args.emplace_back(offline_lb);
+  custom_args.emplace_back(const_cast<char*>(data_file_dir.c_str()));
+  custom_args.emplace_back(const_cast<char*>(data_file.c_str()));
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char** custom_argv = custom_args.data();
+
+  vt::initialize(custom_argc, custom_argv, &comm);
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_program");
+  EXPECT_EQ(theConfig()->vt_lb_name, "OfflineLB");
+  EXPECT_EQ(theConfig()->vt_lb_data_in, true);
+  EXPECT_EQ(theConfig()->vt_lb_file_name, "");
+  EXPECT_TRUE(theLBDataReader() != nullptr);
+}
+#endif
+
+TEST_F(TestInitialization, test_initialize_with_lb_data_and_config_no_lb) {
+  MPI_Comm comm = MPI_COMM_WORLD;
+
+  // Preapre data files
+  auto prefix = getUniqueFilenameWithRanks();
+  prepareLBDataFiles(prefix);
+
+  // Preapre configuration file
+  std::string file_name = getUniqueFilenameWithRanks(".txt");
+  std::ofstream out(file_name);
+  out << "0 NoLB\n";
+  out.close();
+
+  static char prog_name[]{"vt_program"};
+  static char data_in[]{"--vt_lb_data_in"};
+  std::string data_file_dir = "--vt_lb_data_dir_in=";
+  data_file_dir += std::filesystem::current_path();
+  std::string data_file = "--vt_lb_data_file_in=";
+  data_file += prefix + ".%p.json";
+  std::string config_file = "--vt_lb_file_name=" + file_name;
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(data_in);
+  custom_args.emplace_back(const_cast<char*>(data_file_dir.c_str()));
+  custom_args.emplace_back(const_cast<char*>(data_file.c_str()));
+  custom_args.emplace_back(const_cast<char*>(config_file.c_str()));
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char** custom_argv = custom_args.data();
+
+  vt::initialize(custom_argc, custom_argv, &comm);
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_program");
+  EXPECT_EQ(theConfig()->vt_lb_name, "NoLB");
+  EXPECT_EQ(theConfig()->vt_lb_data_in, true);
+  EXPECT_EQ(theConfig()->vt_lb_file_name, file_name);
+  EXPECT_TRUE(theLBDataReader() == nullptr);
 }
 
 }}} // end namespace vt::tests::unit
