@@ -46,9 +46,9 @@
 
 #include "test_harness_base.h"
 
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
 #include "Kokkos_Core.hpp"
-#endif
+#endif // MAGISTRATE_KOKKOS_ENABLED
 
 #include <vector>
 #include <memory>
@@ -109,15 +109,15 @@ struct PerfTestRegistry{
   void StructName##TestName::TestFunc()
 
 inline void tryInitializeKokkos() {
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
   Kokkos::initialize();
-#endif
+#endif // MAGISTRATE_KOKKOS_ENABLED
 }
 
 inline void tryFinalizeKokkos() {
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
   Kokkos::finalize();
-#endif
+#endif // MAGISTRATE_KOKKOS_ENABLED
 }
 
 #define VT_PERF_TEST_MAIN()                                                  \

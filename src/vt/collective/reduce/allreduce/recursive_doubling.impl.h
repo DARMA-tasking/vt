@@ -341,6 +341,10 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::finalPart(size_t id) {
   parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
 
   state.completed_ = true;
+
+  state.adjust_message_ = nullptr;
+  state.messages_.clear();
+
   states_.erase(id);
   // std::fill(state.messages_.begin(), state.messages_.end(), nullptr);
 

@@ -60,6 +60,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/collective/reduce/allreduce/rabenseifner.h"
 #include "vt/collective/reduce/allreduce/recursive_doubling.h"
+#include "vt/collective/reduce/allreduce/type.h"
 #include <utility>
 #include <array>
 
@@ -270,32 +271,36 @@ ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> m
 template <typename Reducer, typename ObjT, typename... Args>
 ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
   ProxyType<ObjT> proxy, Args&&... data) {
+  using namespace vt::collective::reduce::allreduce;
+
+  auto const this_node = vt::theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  size_t id = 0;
+
+  proxy::Proxy<Reducer> grp_proxy = {};
+
+  auto& reducers = Reducer::type_ == ReducerType::Rabenseifner ? reducersR_ : reducersRD_;
+  if (reducers.find(proxy.getProxy()) != reducers.end()) {
+    auto* obj = reinterpret_cast<Reducer*>(
+      objs_.at(reducers.at(proxy.getProxy()))->getPtr()
+    );
+    id = obj->generateNewId();
+    obj->initialize(id, std::forward<Args>(data)...);
+    grp_proxy = obj->proxy_;
+  } else {
+    grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
+      TypeToString(Reducer::type_), proxy,
+      num_nodes, std::forward<Args>(data)...
+    );
+    grp_proxy[this_node].get()->proxy_ = grp_proxy;
+    reducers[proxy.getProxy()] = grp_proxy.getProxy();
+    id = grp_proxy[this_node].get()->id_ - 1;
+  }
+
   return PendingSendType{
-    theTerm()->getEpoch(), [&] {
-      auto const this_node = vt::theContext()->getNode();
-      auto const num_nodes = theContext()->getNumNodes();
-
-      proxy::Proxy<Reducer> grp_proxy = {};
-
-      if (reducers_.find(proxy.getProxy()) != reducers_.end()) {
-        auto* obj = reinterpret_cast<Reducer*>(
-          objs_.at(reducers_.at(proxy.getProxy()))->getPtr()
-        );
-        auto const id = obj->generateNewId();
-        obj->initialize(id, std::forward<Args>(data)...);
-        grp_proxy = obj->proxy_;
-        grp_proxy[this_node].template invoke<&Reducer::allreduce>(id);
-      } else {
-        grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-          "allreduce_rabenseifner", proxy, num_nodes,
-          std::forward<Args>(data)...);
-        grp_proxy[this_node].get()->proxy_ = grp_proxy;
-        reducers_[proxy.getProxy()] = grp_proxy.getProxy();
-        grp_proxy[this_node].template invoke<&Reducer::allreduce>(
-          grp_proxy[this_node].get()->id_ - 1
-        );
-      }
-    }};
+    theTerm()->getEpoch(),
+    [&] { grp_proxy[this_node].template invoke<&Reducer::allreduce>(id); }
+  };
 }
 
 template <auto f, typename ObjT, template <typename Arg> class Op, typename DataT, typename... Args>

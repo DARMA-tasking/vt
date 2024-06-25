@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // *****************************************************************************
@@ -47,9 +46,9 @@
 
 #include <vector>
 
-#ifdef KOKKOS_ENABLED_CHECKPOINT
+#ifdef MAGISTRATE_KOKKOS_ENABLED
 #include <Kokkos_Core.hpp>
-#endif
+#endif // MAGISTRATE_KOKKOS_ENABLED
 
 namespace vt::collective::reduce::allreduce {
 
@@ -101,7 +100,7 @@ public:
   // }
 };
 
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
 
 template <typename T, typename... Props>
 class DataHandler<Kokkos::View<T*, Kokkos::HostSpace, Props...>> {
@@ -146,7 +145,7 @@ public:
   // }
 };
 
-#endif // KOKKOS_ENABLED_CHECKPOINT
+#endif // MAGISTRATE_KOKKOS_ENABLED
 
 } // namespace vt::collective::reduce::allreduce
 

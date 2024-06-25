@@ -119,7 +119,9 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::initialize(size_t id, Args&&..
   auto& state = states_[id];
   state.val_ = DataType::toVec(std::forward<Args>(data)...);
 
-  initializeState(id);
+  if(not state.initialized_){
+    initializeState(id);
+  }
 
   int step = 0;
   state.size_ = state.val_.size();
@@ -347,11 +349,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIter(size_t id) {
   auto& state = states_.at(id);
   auto vdest = vrt_node_ ^ state.scatter_mask_;
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
-  vtAssert(dest < num_nodes_, fmt::format("Rabenseifner Part2 (Send step {}): To Node {} starting with idx = {} and "
-    "count "
-    "{} ID = {}\n",
-    state.scatter_step_, dest, state.s_index_[state.scatter_step_],
-    state.s_count_[state.scatter_step_], id));
+
   vt_debug_print(
     terse, allreduce,
     "Rabenseifner Part2 (Send step {}): To Node {} starting with idx = {} and "
@@ -383,7 +381,16 @@ template <
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIterHandler(
   AllreduceRbnRawMsg<Scalar>* msg) {
-  auto& state = states_.at(msg->id_);
+  auto& state = states_[msg->id_];
+
+  if(not state.initialized_){
+    initializeState(msg->id_);
+    state.scatter_messages_[msg->step_] = promoteMsg(msg);
+    state.scatter_steps_recv_[msg->step_] = true;
+    state.scatter_num_recv_++;
+
+    return;
+  }
 
   state.scatter_messages_[msg->step_] = promoteMsg(msg);
   state.scatter_steps_recv_[msg->step_] = true;

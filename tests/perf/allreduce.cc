@@ -54,7 +54,7 @@
 #include <vt/collective/reduce/allreduce/recursive_doubling.h>
 
 #include <fmt-vt/core.h>
-#ifdef KOKKOS_ENABLED_CHECKPOINT
+#ifdef MAGISTRATE_KOKKOS_ENABLED
 #include <Kokkos_Core.hpp>
 #endif
 
@@ -92,13 +92,13 @@ struct NodeObj {
     allreduce_done_ = true;
   }
 
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
   template <typename Scalar>
   void handlerView(Kokkos::View<Scalar*, Kokkos::HostSpace> view) {
     test_obj_->StopTimer(timer_names_.at(view.extent(0)));
     allreduce_done_ = true;
   }
-#endif // KOKKOS_ENABLED_CHECKPOINT
+#endif // MAGISTRATE_KOKKOS_ENABLED
 
 
   std::string base_name_ = {};
@@ -126,7 +126,7 @@ VT_PERF_TEST(MyTest, test_reduce) {
 }
 
 
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
 
 struct MyTestKokkos : PerfTestHarness {
   MyTestKokkos() {
@@ -182,7 +182,7 @@ VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
   }
 }
 
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
 VT_PERF_TEST(MyTestKokkos, test_allreduce_rabenseifner_kokkos) {
   auto proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTestKokkos>>(
     "test_allreduce_rabenseifner", this, "Rabenseifner view"
@@ -206,7 +206,7 @@ VT_PERF_TEST(MyTestKokkos, test_allreduce_rabenseifner_kokkos) {
     obj_ptr->allreduce_done_ = false;
   }
 }
-#endif // KOKKOS_ENABLED_CHECKPOINT
+#endif // MAGISTRATE_KOKKOS_ENABLED
 
 VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
   auto proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTest>>(
@@ -231,7 +231,7 @@ VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
   }
 }
 
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
 VT_PERF_TEST(MyTestKokkos, test_allreduce_recursive_doubling_kokkos) {
   auto proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTestKokkos>>(
     "test_allreduce_rabenseifner", this, "Recursive doubling view"
@@ -255,6 +255,6 @@ VT_PERF_TEST(MyTestKokkos, test_allreduce_recursive_doubling_kokkos) {
     obj_ptr->allreduce_done_ = false;
   }
 }
-#endif // KOKKOS_ENABLED_CHECKPOINT
+#endif // MAGISTRATE_KOKKOS_ENABLED
 
 VT_PERF_TEST_MAIN()
