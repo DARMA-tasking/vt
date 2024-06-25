@@ -51,6 +51,7 @@
 #include "vt/registry/auto/auto_registry.h"
 #include "vt/pipe/pipe_manager.h"
 #include "data_handler.h"
+#include "type.h"
 
 #include <cstdint>
 
@@ -358,6 +359,8 @@ struct Rabenseifner {
 
   NodeType vrt_node_ = {};
   bool is_part_of_adjustment_group_ = false;
+  static inline const std::string name_ = "Rabenseifner";
+  static const ReducerType type_ = ReducerType::Rabenseifner;
 };
 
 } // namespace vt::collective::reduce::allreduce
