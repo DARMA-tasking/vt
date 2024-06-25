@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include "vt/configs/types/types_type.h"
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_H
 
@@ -509,7 +508,8 @@ private:
   /// Map of object groups' labels
   std::unordered_map<ObjGroupProxyType, std::string> labels_;
 
-  std::unordered_map<ObjGroupProxyType, ObjGroupProxyType> reducers_;
+  std::unordered_map<ObjGroupProxyType, ObjGroupProxyType> reducersRD_;
+  std::unordered_map<ObjGroupProxyType, ObjGroupProxyType> reducersR_;
 };
 
 }} /* end namespace vt::objgroup */

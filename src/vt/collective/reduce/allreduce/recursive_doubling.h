@@ -51,6 +51,7 @@
 #include "vt/configs/error/config_assert.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "data_handler.h"
+#include "type.h"
 
 #include <tuple>
 #include <cstdint>
@@ -254,6 +255,7 @@ struct RecursiveDoubling {
 
   NodeType vrt_node_ = {};
   bool is_part_of_adjustment_group_ = false;
+  static inline ReducerType type_ = ReducerType::RedursiveDoubling;
 };
 
 } // namespace vt::collective::reduce::allreduce
