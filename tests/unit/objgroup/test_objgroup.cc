@@ -47,7 +47,7 @@
 
 #include <typeinfo>
 
-#ifdef KOKKOS_ENABLED_CHECKPOINT
+#ifdef MAGISTRATE_KOKKOS_ENABLED
 #include <Kokkos_Core.hpp>
 #endif
 
@@ -319,7 +319,7 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
   EXPECT_EQ(MyObjA::total_verify_expected_, 7);
 }
 
-#if KOKKOS_ENABLED_CHECKPOINT
+#if MAGISTRATE_KOKKOS_ENABLED
 struct TestObjGroupKokkos : TestParallelHarness {
   void SetUp() override {
     TestParallelHarness::SetUp();
@@ -361,7 +361,7 @@ TEST_F(TestObjGroupKokkos, test_proxy_allreduce_kokkos) {
 
   EXPECT_EQ(MyObjA::total_verify_expected_, 1);
 }
-#endif // KOKKOS_ENABLED_CHECKPOINT
+#endif // MAGISTRATE_KOKKOS_ENABLED
 
 
 TEST_F(TestObjGroup, test_proxy_invoke) {
