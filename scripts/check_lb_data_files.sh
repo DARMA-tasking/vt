@@ -42,7 +42,7 @@ do
 done
 
 # Use vt to generate LB Datafile
-if ! python3 "${path_to_vt_src_dir}/scripts/generate_and_validate_lb_data_file.py" -v \
+if ! python3 "${path_to_vt_src_dir}/scripts/generate_and_validate_lb_data_file.py" -c \
     -b "${path_to_vt_build_dir}" -f "LBData_from_lb_iter.0.json" -r "${path_to_vt_src_dir}/examples/LBDatafile_example.json"
 then
     exit 3;
