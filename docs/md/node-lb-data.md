@@ -42,7 +42,7 @@ contains information about the task that performed this work. If that `entity`
 is a virtual collection object, it will specify the unique `id` for the object,
 and optionally the `index`, `home`, and `collection_id` for that object.
 
-\include examples/LBDatafile_example.json
+\include examples/lb_data/lb_data_file_example.json
 
 Each phase in the file may also have a `communications` array that specify any
 communication between tasks that occurred during the phase. Each communication
