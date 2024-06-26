@@ -21,6 +21,33 @@
     },
     "phases": [
         {
+            "communications": [
+                {
+                    "bytes": 160.0,
+                    "from": {
+                        "collection_id": 7,
+                        "home": 0,
+                        "id": 262147,
+                        "index": [
+                            0
+                        ],
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "messages": 1,
+                    "to": {
+                        "collection_id": 7,
+                        "home": 0,
+                        "id": 262147,
+                        "index": [
+                            0
+                        ],
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "type": "SendRecv"
+                }
+            ],
             "id": 0,
             "tasks": [
                 {
@@ -39,18 +66,10 @@
                     "subphases": [
                         {
                             "id": 0,
-                            "time": 0.037584
-                        },
-                        {
-                            "id": 1,
-                            "time": 0.037717999999999995
-                        },
-                        {
-                            "id": 2,
-                            "time": 0.038012000000000004
+                            "time": 0.0009759999999999994
                         }
                     ],
-                    "time": 0.113314
+                    "time": 0.0009759999999999994
                 },
                 {
                     "entity": {
@@ -88,10 +107,10 @@
                     "subphases": [
                         {
                             "id": 0,
-                            "time": 2.2000000000000318e-05
+                            "time": 2.400000000000015e-05
                         }
                     ],
-                    "time": 2.2000000000000318e-05
+                    "time": 2.400000000000015e-05
                 },
                 {
                     "entity": {
