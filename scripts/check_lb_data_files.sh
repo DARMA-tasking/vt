@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xo pipefail
+set -exo pipefail
 
 path_to_vt_build_dir=${1}
 path_to_vt_src_dir=${2}
