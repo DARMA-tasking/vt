@@ -585,62 +585,33 @@ void TemperedLB::readClustersMemoryData() {
         BytesType footprint_bytes = 0;
         BytesType serialized_bytes = 0;
         for (auto const& [key, variant] : data_map) {
+          auto val = std::get_if<double>(&variant);
+          vtAbortIf(!val, '"' + key + "\" in variant does not match double");
+
           if (key == "shared_id") {
             // Because of how JSON is stored this is always a double, even
             // though it should be an integer
-            if (double const* val = std::get_if<double>(&variant)) {
-              shared_id = static_cast<int>(*val);
-            } else {
-              vtAbort("\"shared_id\" in variant does not match double");
-            }
+            shared_id = static_cast<int>(*val);
           }
           if (key == "home_rank") {
             // Because of how JSON is stored this is always a double, even
             // though it should be an integer
-            if (double const* val = std::get_if<double>(&variant)) {
-              home_rank = static_cast<int>(*val);
-            } else {
-              vtAbort("\"home_rank\" in variant does not match double");
-            }
+            home_rank = static_cast<int>(*val);
           }
           if (key == "shared_bytes") {
-            if (BytesType const* val = std::get_if<BytesType>(&variant)) {
-              shared_bytes = *val;
-            } else {
-              vtAbort("\"shared_bytes\" in variant does not match double");
-            }
+            shared_bytes = *val;
           }
           if (key == "task_working_bytes") {
-            if (BytesType const* val = std::get_if<BytesType>(&variant)) {
-              working_bytes = *val;
-            } else {
-              vtAbort("\"task_working_bytes\" in variant does not match double");
-            }
+            working_bytes = *val;
           }
           if (key == "task_footprint_bytes") {
-            if (BytesType const* val = std::get_if<BytesType>(&variant)) {
-              footprint_bytes = *val;
-            } else {
-              vtAbort(
-                "\"task_footprint_bytes\" in variant does not match double"
-              );
-            }
+            footprint_bytes = *val;
           }
           if (key == "task_serialized_bytes") {
-            if (BytesType const* val = std::get_if<BytesType>(&variant)) {
-              serialized_bytes = *val;
-            } else {
-              vtAbort(
-                "\"task_serialized_bytes\" in variant does not match double"
-              );
-            }
+            serialized_bytes = *val;
           }
           if (key == "rank_working_bytes") {
-            if (BytesType const* val = std::get_if<BytesType>(&variant)) {
-              rank_bytes_ = *val;
-            } else {
-              vtAbort("\"rank_working_bytes\" in variant does not match double");
-            }
+            rank_bytes_ = *val;
           }
         }
 
