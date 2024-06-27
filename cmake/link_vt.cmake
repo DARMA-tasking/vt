@@ -197,7 +197,7 @@ function(link_target_with_vt)
       message(STATUS "link_target_with_vt: checkpoint=${ARG_LINK_CHECKPOINT}")
     endif()
     target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${CHECKPOINT_LIBRARY}
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${MAGISTRATE_LIBRARY}
     )
   endif()
 

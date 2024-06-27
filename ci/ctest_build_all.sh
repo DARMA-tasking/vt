@@ -49,13 +49,13 @@ else
     else
         git clone -b "${checkpoint_rev}" --depth 1 https://github.com/DARMA-tasking/checkpoint.git
         export CHECKPOINT=$PWD/checkpoint
-        export CHECKPOINT_BUILD=${build_dir}/checkpoint
-        mkdir -p "$CHECKPOINT_BUILD"
-        cd "$CHECKPOINT_BUILD"
+        export MAGISTRATE_BUILD=${build_dir}/checkpoint
+        mkdir -p "$MAGISTRATE_BUILD"
+        cd "$MAGISTRATE_BUILD"
         mkdir build
         cd build
         cmake -G "${CMAKE_GENERATOR:-Ninja}" \
-              -DCMAKE_INSTALL_PREFIX="$CHECKPOINT_BUILD/install" \
+              -DCMAKE_INSTALL_PREFIX="$MAGISTRATE_BUILD/install" \
               "$CHECKPOINT"
         cmake --build . ${dashj} --target install
     fi
