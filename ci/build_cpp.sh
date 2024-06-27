@@ -90,7 +90,7 @@ else
         cd build
         cmake -G "${CMAKE_GENERATOR:-Ninja}" \
               -DCMAKE_INSTALL_PREFIX="$MAGISTRATE_BUILD/install" \
-              -Dkokkos_DIR="$KOKKOS_INSTALL" \
+              -DKokkos_ROOT="$KOKKOS_INSTALL" \
               "$CHECKPOINT"
         cmake --build . ${dashj} --target install
     fi
