@@ -89,6 +89,7 @@ static constexpr SequentialIDType const first_seq_id               = 1;
 static constexpr PriorityType const no_priority                    = 0;
 static constexpr PriorityLevelType const no_priority_level         = 0;
 static constexpr ThreadIDType const no_thread_id                   = 0;
+static constexpr SharedIDType const no_shared_id                   = -1;
 
 }  // end namespace vt
 

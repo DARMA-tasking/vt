@@ -44,6 +44,7 @@
 #if !defined INCLUDED_VT_ELM_ELM_COMM_H
 #define INCLUDED_VT_ELM_ELM_COMM_H
 
+#include "vt/configs/types/types_type.h"
 #include "vt/elm/elm_id.h"
 
 #include <unordered_map>
@@ -129,7 +130,7 @@ struct CommKey {
   ElementIDStruct edge_id_ = {};
   NodeType nfrom_          = uninitialized_destination;
   NodeType nto_            = uninitialized_destination;
-  int shared_id_            = -1;
+  SharedIDType shared_id_  = no_shared_id;
   CommCategory  cat_       = CommCategory::SendRecv;
 
   ElementIDStruct fromObj()    const { return from_; }
