@@ -19,13 +19,6 @@ function run_schema_validator() {
     fi
 }
 
-# Use vt to generate LB Datafile
-if ! python3 "${path_to_vt_src_dir}/scripts/generate_and_validate_lb_data_file.py" -g \
-    -b "${path_to_vt_build_dir}" -f "LBData_from_lb_iter.%p.json"
-then
-    exit 2;
-fi
-
 find . -iname "*.json" | grep -v "compile_commands" | while read f
 do
     run_schema_validator "$f"
@@ -41,9 +34,10 @@ do
     run_schema_validator "$f"
 done
 
-# Use vt to generate LB Datafile
-if ! python3 "${path_to_vt_src_dir}/scripts/generate_and_validate_lb_data_file.py" -c \
-    -b "${path_to_vt_build_dir}" -f "LBData_from_lb_iter.0.json" -r "${path_to_vt_src_dir}/examples/lb_data/lb_data_file_example.json"
+# Compare output of the lb_data_file_generator example with reference file
+if ! python3 "${path_to_vt_src_dir}/scripts/generate_and_validate_lb_data_file.py" \
+    -f "${path_to_vt_build_dir}/examples/lb_data/lb_data_file_generator_1_LBDatafile.0.json" \
+    -r "${path_to_vt_src_dir}/examples/lb_data/lb_data_file_example.json"
 then
-    exit 3;
+    exit 2;
 fi

@@ -118,7 +118,7 @@ macro(add_test_for_example_vt test_target test_exec test_list)
         "--vt_lb_interval=1"
         "--vt_lb_data"
         "--vt_lb_data_compress=false"
-        "--vt_lb_data_file=${test_name}_${PROC}_LBDatafile.%p.json"  
+        "--vt_lb_data_file=${test_name}_${PROC}_LBDatafile.%p.json"
         "--vt_lb_data_dir=.")
     endif()
 
