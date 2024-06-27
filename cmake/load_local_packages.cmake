@@ -9,7 +9,7 @@ if (EXISTS "${PROJECT_LIB_DIR}/checkpoint")
   add_subdirectory(${PROJECT_LIB_DIR}/checkpoint)
 else()
   # find these required packages locally
-  find_package_local(checkpoint checkpoint)
+  find_package_local(magistrate)
   endif()
 
-set(CHECKPOINT_LIBRARY vt::lib::checkpoint)
+set(MAGISTRATE_LIBRARY vt::lib::magistrate)

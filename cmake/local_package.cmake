@@ -1,4 +1,4 @@
-macro(find_package_local pkg_name pkg_other_name)
+macro(find_package_local pkg_name)
   set(${pkg_name}_PACKAGE_LOADED 0)
   if(hasParent)
     # Skip this logic when this macro was not invoked from the
@@ -13,7 +13,7 @@ macro(find_package_local pkg_name pkg_other_name)
 
     find_package(
       ${pkg_name}
-      NAMES ${pkg_name} ${pkg_other_name}
+      NAMES ${pkg_name}
       NO_CMAKE_PACKAGE_REGISTRY
       NO_CMAKE_BUILDS_PATH
       NO_CMAKE_SYSTEM_PATH
