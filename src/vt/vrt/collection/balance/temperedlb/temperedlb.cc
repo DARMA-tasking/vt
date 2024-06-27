@@ -578,7 +578,7 @@ void TemperedLB::readClustersMemoryData() {
           obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
         );
 
-        SharedIDType shared_id = -1;
+        SharedIDType shared_id = vt::no_shared_id;
         vt::NodeType home_rank = vt::uninitialized_destination;
         BytesType shared_bytes = 0;
         BytesType working_bytes = 0;
@@ -2146,7 +2146,7 @@ auto TemperedLB::removeClusterToSend(
     shared_id
   );
 
-  if (shared_id != -1) {
+  if (shared_id != no_shared_id) {
     give_shared_blocks_size[shared_id] = shared_block_size_[shared_id];
   }
 
@@ -2311,7 +2311,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   auto const& try_info = msg->locked_info;
 
   double best_c_try = -1.0;
-  std::tuple<SharedIDType, SharedIDType> best_swap = {-1,-1};
+  std::tuple<SharedIDType, SharedIDType> best_swap =
+    {no_shared_id, no_shared_id};
   for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
     // try swapping with empty cluster first
     {
@@ -2323,7 +2324,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       if (c_try > 0.0) {
         if (c_try > best_c_try) {
           best_c_try = c_try;
-          best_swap = std::make_tuple(src_shared_id, -1);
+          best_swap = std::make_tuple(src_shared_id, no_shared_id);
         }
       }
     }
@@ -2440,7 +2441,7 @@ void TemperedLB::giveCluster(
     obj_working_bytes_.emplace(elm);
   }
 
-  if (take_cluster != -1) {
+  if (take_cluster != no_shared_id) {
     auto const& [
       take_objs,
       take_obj_shared_block,
@@ -2454,7 +2455,7 @@ void TemperedLB::giveCluster(
       take_objs,
       take_obj_shared_block,
       take_obj_working_bytes,
-      -1
+      no_shared_id
     );
   }
 

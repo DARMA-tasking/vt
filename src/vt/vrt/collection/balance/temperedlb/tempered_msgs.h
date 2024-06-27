@@ -52,7 +52,6 @@
 
 namespace vt::vrt::collection::lb {
 
-using SharedIDType     = int;
 using BytesType        = double;
 
 struct ClusterInfo {
