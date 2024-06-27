@@ -2723,7 +2723,7 @@ void TemperedLB::swapClusters() {
       );
     });
   }
-} // void TemperedLB::originalTransfer()
+}
 
 void TemperedLB::thunkMigrations() {
   vt_debug_print(
