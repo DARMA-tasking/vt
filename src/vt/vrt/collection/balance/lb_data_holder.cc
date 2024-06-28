@@ -147,7 +147,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::rankAttributesToJson() const {
 void LBDataHolder::addInitialTask(nlohmann::json& j, std::size_t n) const {
   j["tasks"][n]["resource"] = "cpu";
   j["tasks"][n]["node"] = vt::theContext()->getNode();
-  j["tasks"][n]["time"] = 0;
+  j["tasks"][n]["time"] = 0.0;
   outputEntity(
     j["tasks"][n]["entity"], ElementIDStruct()
   );
