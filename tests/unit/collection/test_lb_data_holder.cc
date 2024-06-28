@@ -285,6 +285,23 @@ TEST_F(TestLBDataHolder, test_lb_entity_attributes) {
   EXPECT_EQ("abc", (*outJsonPtr)["tasks"][0]["attributes"]["stringSample"]);
 }
 
+TEST_F(TestLBDataHolder, test_default_time_format) {
+  using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
+
+  nlohmann::json json;
+  json["metadata"]["type"] = "LBDatafile";
+
+  addPhasesDataToJson(json, num_phases, {});
+
+  LBDataHolder testObj(json);
+  auto outJsonPtr = testObj.toJson(0);
+  ASSERT_TRUE(outJsonPtr != nullptr);
+
+  for (auto& task: (*outJsonPtr)["tasks"]) {
+    EXPECT_EQ(true, task["time"].is_number_float());
+  }
+}
+
 }}}} // end namespace vt::tests::unit::lb
 
 #endif /*vt_check_enabled(lblite)*/
