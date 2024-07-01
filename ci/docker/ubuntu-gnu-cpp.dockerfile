@@ -87,7 +87,8 @@ RUN apt-get update -y -q && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install schema deepdiff
+RUN pip3 install --upgrade pip \
+    && pip3 install schema deepdiff
 
 FROM base as build
 COPY . /vt
