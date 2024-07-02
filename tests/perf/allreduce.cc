@@ -53,7 +53,6 @@
 #include <vt/collective/reduce/allreduce/rabenseifner.h>
 #include <vt/collective/reduce/allreduce/recursive_doubling.h>
 
-#include <fmt-vt/core.h>
 #ifdef MAGISTRATE_KOKKOS_ENABLED
 #include <Kokkos_Core.hpp>
 #endif
