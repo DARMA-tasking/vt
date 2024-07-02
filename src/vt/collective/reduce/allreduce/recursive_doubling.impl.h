@@ -241,7 +241,7 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::tryReduce(size_t id, int3
 
   vt_debug_print(
       terse, allreduce, "RecursiveDoubling Part2 (Reduce step {}): state.step_ = {} state.steps_reduced_[step] = {} state.steps_recv_[step] = {} all_msgs_received = {} ID = {} \n",
-      step, state.step_, state.steps_reduced_[step], state.steps_recv_[step], all_msgs_received, id);
+      step, state.step_, static_cast<bool>(state.steps_reduced_[step]), static_cast<bool>(state.steps_recv_[step]), all_msgs_received, id);
 
   if (
     (step < state.step_) and not state.steps_reduced_[step] and
