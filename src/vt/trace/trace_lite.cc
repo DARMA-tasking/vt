@@ -249,7 +249,7 @@ bool TraceLite::checkDynamicRuntimeEnabled(bool is_end_event) {
 }
 
 void TraceLite::addUserEventBracketedBeginTime(
-  UserEventIDType event, double begin
+  UserEventIDType event, TimeType begin
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return;
@@ -268,7 +268,7 @@ void TraceLite::addUserEventBracketedBeginTime(
 }
 
 void TraceLite::addUserEventBracketedEndTime(
-  UserEventIDType event, double end
+  UserEventIDType event, TimeType end
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return;

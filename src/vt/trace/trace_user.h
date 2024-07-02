@@ -101,7 +101,7 @@ void addUserEvent(UserEventIDType event);
  * \param[in] begin the begin time
  * \param[in] end the end time
  */
-void addUserEventBracketed(UserEventIDType event, double begin, double end);
+void addUserEventBracketed(UserEventIDType event, TimeType begin, TimeType end);
 
 /**
  * \brief Log a user note
@@ -187,7 +187,7 @@ struct TraceScopedEventHash final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      double end = TraceLite::getCurrentTime();
+      auto end = TraceLite::getCurrentTime();
       theTrace()->addUserEventBracketedEndTime(event_, end);
       event_ = no_user_event_id;
     }
@@ -246,7 +246,7 @@ struct TraceScopedEvent final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      double end = TraceLite::getCurrentTime();
+      auto end = TraceLite::getCurrentTime();
       theTrace()->addUserEventBracketedEndTime(event_, end);
       event_ = no_user_event_id;
     }
@@ -317,7 +317,7 @@ struct TraceScopedNote final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      double end = TraceLite::getCurrentTime();
+      auto end = TraceLite::getCurrentTime();
       log_->end_time = end;
       theTrace()->decrementIncompleteEvents();
       event_ = no_user_event_id;
