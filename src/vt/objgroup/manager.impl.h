@@ -299,7 +299,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
 
   return PendingSendType{
     theTerm()->getEpoch(),
-    [&] { grp_proxy[this_node].template invoke<&Reducer::allreduce>(id); }
+    [=] { grp_proxy[this_node].template invoke<&Reducer::allreduce>(id); }
   };
 }
 
