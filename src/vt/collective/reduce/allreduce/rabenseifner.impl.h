@@ -74,6 +74,7 @@ Rabenseifner<DataT, Op, ObjT, finalHandler>::Rabenseifner(
     vrt_node_ = this_node_ - nprocs_rem_;
   }
 
+  vt_debug_print(terse, allreduce, "Rabenseifner constructor\n");
   initialize(generateNewId(), std::forward<Args>(data)...);
 }
 
@@ -82,6 +83,8 @@ template <
 >void Rabenseifner<DataT, Op, ObjT, finalHandler>::initializeState(size_t id)
 {
   auto& state = states_[id];
+
+  vt_debug_print(terse, allreduce, "Rabenseifner initializing state for ID = {}\n", id);
 
   state.scatter_messages_.resize(num_steps_, nullptr);
   state.scatter_steps_recv_.resize(num_steps_, false);
@@ -173,6 +176,7 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::allreduce(size_t id) {
+  vt_debug_print(terse, allreduce, "Rabenseifner allreduce is_part_of_adjustment_group_ = {}\n", is_part_of_adjustment_group_);
   if (is_part_of_adjustment_group_) {
     adjustForPowerOfTwo(id);
   } else {
@@ -187,6 +191,10 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwo(size_t id)
   if (is_part_of_adjustment_group_) {
     auto& state = states_.at(id);
     auto const partner = is_even_ ? this_node_ + 1 : this_node_ - 1;
+
+    vt_debug_print(
+      terse, allreduce, "Rabenseifner (Send Part1): To Node {} ID = {}\n", partner, id
+    );
 
     if (is_even_) {
       proxy_[partner]
@@ -204,10 +212,6 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwo(size_t id)
         adjustForPowerOfTwoRightHalf(state.right_adjust_message_.get());
       }
     }
-
-    vt_debug_print(
-      terse, allreduce, "Rabenseifner (Send Part1): To Node {} ID = {}\n", partner, id
-    );
   }
 }
 
