@@ -171,7 +171,7 @@ struct TraceLite  {
    * \param[in] event the ID for the sts file
    * \param[in] begin the begin time
    */
-  void addUserEventBracketedBeginTime(UserEventIDType event, double begin);
+  void addUserEventBracketedBeginTime(UserEventIDType event, TimeType begin);
 
   /**
    * \brief Log a bracketed user event with end time
@@ -179,7 +179,7 @@ struct TraceLite  {
    * \param[in] event the ID for the sts file
    * \param[in] end the end time
    */
-  void addUserEventBracketedEndTime(UserEventIDType event, double end);
+  void addUserEventBracketedEndTime(UserEventIDType event, TimeType end);
 
   /**
    * \brief Log a user bracketed event with a note
@@ -251,7 +251,7 @@ struct TraceLite  {
   /**
    * \brief Convert time in seconds to integer in microseconds
    *
-   * \param[in] time the time in seconds as double
+   * \param[in] time the time in seconds as TimeType
    *
    * \return time in microsecond as integer
    */
