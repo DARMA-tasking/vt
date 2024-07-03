@@ -319,6 +319,7 @@ struct TraceScopedNote final {
     if (event_ != no_user_event_id) {
       auto end = TraceLite::getCurrentTime();
       log_->end_time = end;
+      log_->setUserNote(note_);
       theTrace()->decrementIncompleteEvents();
       event_ = no_user_event_id;
     }
@@ -326,6 +327,10 @@ struct TraceScopedNote final {
 
   void setEvent(TraceEventIDType const in_event) {
     event_ = in_event;
+  }
+
+  void setNote(std::string const& in_note) {
+    note_ = in_note;
   }
 
 private:
