@@ -563,6 +563,9 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
 
   {
     PhaseType phase = write_phase;
+    lbdh.node_data_[phase];
+    lbdh.node_comm_[phase];
+
     for (int i=0; i<num_elms; ++i) {
       vt::Index1D idx(i);
 
