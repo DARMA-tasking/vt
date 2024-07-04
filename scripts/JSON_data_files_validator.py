@@ -292,11 +292,14 @@ class SchemaValidator:
 
 class JSONDataFilesValidator:
     """ Class validating VT data files according do defined schema. """
-    def __init__(self, file_path: str = None, dir_path: str = None, file_prefix: str = None, file_suffix: str = None):
+    def __init__(self, file_path: str = None, dir_path: str = None,
+                 file_prefix: str = None, file_suffix: str = None,
+                 validate_comm_links: bool = False):
         self.__file_path = file_path
         self.__dir_path = dir_path
         self.__file_prefix = file_prefix
         self.__file_suffix = file_suffix
+        self.__validate_comm_links = validate_comm_links
         self.__cli()
 
     def __cli(self):
@@ -307,6 +310,7 @@ class JSONDataFilesValidator:
         group.add_argument("--file_path", help="Path to a validated file. Pass only when validating a single file.")
         parser.add_argument("--file_prefix", help="File prefix. Optional. Pass only when --dir_path is provided.")
         parser.add_argument("--file_suffix", help="File suffix. Optional. Pass only when --dir_path is provided.")
+        parser.add_argument("--validate_comm_links", help='Verify that comm links reference tasks.', action='store_true')
         args = parser.parse_args()
         if args.file_path:
             self.__file_path = os.path.abspath(args.file_path)
@@ -316,6 +320,7 @@ class JSONDataFilesValidator:
             self.__file_prefix = args.file_prefix
         if args.file_suffix:
             self.__file_suffix = args.file_suffix
+        self.__validate_comm_links = args.validate_comm_links
 
     @staticmethod
     def __check_if_file_exists(file_path: str) -> bool:
@@ -353,7 +358,7 @@ class JSONDataFilesValidator:
                       key=lambda x: int(x.split(os.sep)[-1].split('.')[-2]))
 
     @staticmethod
-    def __validate_file(file_path):
+    def __validate_file(file_path, validate_comm_links):
         """ Validates the file against the schema. """
         logging.info(f"Validating file: {file_path}")
         with open(file_path, "rb") as json_file:
@@ -375,15 +380,20 @@ class JSONDataFilesValidator:
             if SchemaValidator(schema_type=schema_type).is_valid(schema_to_validate=json_data):
                 logging.info(f"Valid JSON schema in {file_path}")
             else:
-                print(f"Invalid JSON schema in {file_path}")
+                logging.error(f"Invalid JSON schema in {file_path}")
                 SchemaValidator(schema_type=schema_type).validate(schema_to_validate=json_data)
         else:
             logging.warning(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
 
+        if validate_comm_links:
+            logging.error("FIXME: comm_links validation not implemented.")
+
+
     def main(self):
         if self.__file_path is not None:
             if self.__check_if_file_exists(file_path=self.__file_path):
-                self.__validate_file(file_path=self.__file_path)
+                self.__validate_file(file_path=self.__file_path,
+                                     validate_comm_links=self.__validate_comm_links)
             else:
                 sys.excepthook = exc_handler
                 raise FileNotFoundError(f"File: {self.__file_path} NOT found")
@@ -393,7 +403,8 @@ class JSONDataFilesValidator:
                                                                                file_prefix=self.__file_prefix,
                                                                                file_suffix=self.__file_suffix)
                 for file in list_of_files_for_validation:
-                    self.__validate_file(file_path=file)
+                    self.__validate_file(file_path=file,
+                                         validate_comm_links=self.__validate_comm_links)
             else:
                 sys.excepthook = exc_handler
                 raise FileNotFoundError(f"Directory: {self.__dir_path} does NOT exist")
