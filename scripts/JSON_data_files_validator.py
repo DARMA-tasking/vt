@@ -386,7 +386,7 @@ class JSONDataFilesValidator:
             logging.warning(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
 
         if validate_comm_links:
-            logging.error("FIXME: comm_links validation not implemented.")
+            logging.info("FIXME: comm_links validation not implemented.")
 
 
     def main(self):
