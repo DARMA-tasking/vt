@@ -12,6 +12,7 @@ import argparse
 from collections import Counter
 from collections.abc import Iterable
 import json
+import logging
 
 import brotli
 from schema import And, Optional, Schema
@@ -328,7 +329,7 @@ class JSONDataFilesValidator:
 
     @staticmethod
     def __get_files_for_validation(dir_path: str, file_prefix: str, file_suffix: str) -> list:
-        """ Check for existence of a given directory. Returns True when file exists. """
+        """ Get a sorted list of files from directory. """
         list_of_files = os.listdir(dir_path)
 
         if not list_of_files:
@@ -354,32 +355,30 @@ class JSONDataFilesValidator:
     @staticmethod
     def __validate_file(file_path):
         """ Validates the file against the schema. """
-        print(f"Validating file: {file_path}")
-        with open(file_path, "rb") as compr_json_file:
-            compr_bytes = compr_json_file.read()
-            try:
-                decompr_bytes = brotli.decompress(compr_bytes)
-                decompressed_dict = json.loads(decompr_bytes.decode("utf-8"))
-            except brotli.error:
-                decompressed_dict = json.loads(compr_bytes.decode("utf-8"))
+        logging.info(f"Validating file: {file_path}")
+        with open(file_path, "rb") as json_file:
+            content = json_file.read()
+            if file_path.endswith('.br'):
+                content = brotli.decompress(content)
+            json_data = json.loads(content.decode("utf-8"))
 
         # Extracting type from JSON data
         schema_type = None
-        if decompressed_dict.get("metadata") is not None:
-            schema_type = decompressed_dict.get("metadata").get("type")
+        if json_data.get("metadata") is not None:
+            schema_type = json_data.get("metadata").get("type")
         else:
-            if decompressed_dict.get("type") is not None:
-                schema_type = decompressed_dict.get("type")
+            if json_data.get("type") is not None:
+                schema_type = json_data.get("type")
 
         if schema_type is not None:
             # Validate schema
-            if SchemaValidator(schema_type=schema_type).is_valid(schema_to_validate=decompressed_dict):
-                print(f"Valid JSON schema in {file_path}")
+            if SchemaValidator(schema_type=schema_type).is_valid(schema_to_validate=json_data):
+                logging.info(f"Valid JSON schema in {file_path}")
             else:
                 print(f"Invalid JSON schema in {file_path}")
-                SchemaValidator(schema_type=schema_type).validate(schema_to_validate=decompressed_dict)
+                SchemaValidator(schema_type=schema_type).validate(schema_to_validate=json_data)
         else:
-            print(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
+            logging.warning(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
 
     def main(self):
         if self.__file_path is not None:

@@ -6,6 +6,8 @@ path_to_vt_build_dir=${1}
 path_to_vt_src_dir=${2}
 cd "$path_to_vt_build_dir" || exit 1
 
+set +x
+
 function run_schema_validator() {
     file=$1
     echo "Running schema validator on: $file"
