@@ -11,7 +11,7 @@ set +x
 function run_schema_validator() {
     file=$1
     echo "Running schema validator on: $file"
-    if python3 "${path_to_vt_src_dir}/scripts/JSON_data_files_validator.py" --file_path="$file"
+    if python3 "${path_to_vt_src_dir}/scripts/JSON_data_files_validator.py" --file_path="$file" --validate_comm_links
     then
         echo "Valid file"
     else
