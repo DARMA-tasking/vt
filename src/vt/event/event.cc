@@ -306,7 +306,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
   int32_t num_completed  = 0;
   std::unique_ptr<trace::TraceScopedNote> trace_note;
   if (theConfig()->vt_trace_event_polling) {
-    trace_note = std::make_unique<trace::TraceScopedNote>("", trace_event_polling);
+    trace_note = std::make_unique<trace::TraceScopedNote>(trace_event_polling);
   }
 # endif
 

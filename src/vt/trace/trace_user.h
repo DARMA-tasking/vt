@@ -107,7 +107,7 @@ void addUserData(int32_t data);
 
 /**
  * \brief Log the start for a bracketed user event with a note
- * 
+ *
  * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
  * bracketed user events with a note.
  *
