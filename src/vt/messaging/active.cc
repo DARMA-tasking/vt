@@ -351,7 +351,7 @@ EventType ActiveMessenger::sendMsgMPI(
       #if vt_check_enabled(trace_enabled)
         std::unique_ptr<trace::TraceScopedNote> trace_note;
         if (theConfig()->vt_trace_mpi) {
-          trace_note = std::make_unique<trace::TraceScopedNote>("", trace_isend);
+          trace_note = std::make_unique<trace::TraceScopedNote>(trace_isend);
         }
       #endif
       int const ret = MPI_Isend(
@@ -583,7 +583,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
       #if vt_check_enabled(trace_enabled)
         std::unique_ptr<trace::TraceScopedNote> trace_note;
         if (theConfig()->vt_trace_mpi) {
-          trace_note = std::make_unique<trace::TraceScopedNote>("", trace_isend);
+          trace_note = std::make_unique<trace::TraceScopedNote>(trace_isend);
         }
       #endif
 
@@ -773,7 +773,7 @@ void ActiveMessenger::recvDataDirect(
     #if vt_check_enabled(trace_enabled)
       std::unique_ptr<trace::TraceScopedNote> trace_note;
       if (theConfig()->vt_trace_mpi) {
-        trace_note = std::make_unique<trace::TraceScopedNote>("", trace_irecv);
+        trace_note = std::make_unique<trace::TraceScopedNote>(trace_irecv);
       }
     #endif
 
@@ -1010,7 +1010,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
       #if vt_check_enabled(trace_enabled)
         std::unique_ptr<trace::TraceScopedNote> trace_note;
         if (theConfig()->vt_trace_mpi) {
-          trace_note = std::make_unique<trace::TraceScopedNote>("", trace_irecv);
+          trace_note = std::make_unique<trace::TraceScopedNote>(trace_irecv);
         }
       #endif
 

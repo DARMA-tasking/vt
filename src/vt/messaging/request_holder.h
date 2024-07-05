@@ -100,7 +100,7 @@ struct RequestHolder {
     std::size_t const holder_size_start = holder_.size();
     std::unique_ptr<trace::TraceScopedNote> trace_note;
     if (theConfig()->vt_trace_irecv_polling) {
-      trace_note = std::make_unique<trace::TraceScopedNote>("", trace_user_event_);
+      trace_note = std::make_unique<trace::TraceScopedNote>(trace_user_event_);
     }
 #   endif
 
