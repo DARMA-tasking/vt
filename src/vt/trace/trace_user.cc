@@ -118,39 +118,36 @@ void addUserBracketedNote(
 }
 
 #if vt_check_enabled(trace_enabled)
-struct UserSplitHolder final {
-  static std::unordered_map<std::string, TimeType> split_;
+struct UserNoteHolder final {
+  static std::unordered_map<std::string, TraceScopedNote> notes_;
 };
 
-/*static*/ std::unordered_map<std::string, TimeType> UserSplitHolder::split_ = {};
+/*static*/ std::unordered_map<std::string, TraceScopedNote> UserNoteHolder::notes_ = {};
 #endif
 
 void addUserNotePre(
-  [[maybe_unused]] std::string const& note,
-  [[maybe_unused]] TraceEventIDType const
+  [[maybe_unused]] std::string const& in_note,
+  [[maybe_unused]] TraceEventIDType const in_event
 ) {
 #if vt_check_enabled(trace_enabled)
-  auto iter = UserSplitHolder::split_.find(note);
-  vtAssertExpr(iter == UserSplitHolder::split_.end());
-  UserSplitHolder::split_.emplace(
+  auto iter = UserNoteHolder::notes_.find(in_note);
+  vtAssertExpr(iter == UserNoteHolder::notes_.end());
+  UserNoteHolder::notes_.emplace(
     std::piecewise_construct,
-    std::forward_as_tuple(note),
-    std::forward_as_tuple(Trace::getCurrentTime())
+    std::forward_as_tuple(in_note),
+    std::forward_as_tuple(in_note, in_event)
   );
 #endif
 }
 
 void addUserNoteEpi(
   [[maybe_unused]] std::string const& in_note,
-  [[maybe_unused]] TraceEventIDType const event
+  [[maybe_unused]] TraceEventIDType const in_event
 ) {
 #if vt_check_enabled(trace_enabled)
-  auto iter = UserSplitHolder::split_.find(in_note);
-  vtAssertExpr(iter != UserSplitHolder::split_.end());
-  auto begin = iter->second;
-  auto end = Trace::getCurrentTime();
-  theTrace()->addUserBracketedNote(begin, end, in_note, event);
-  UserSplitHolder::split_.erase(iter);
+  auto iter = UserNoteHolder::notes_.find(in_note);
+  vtAssertExpr(iter != UserNoteHolder::notes_.end());
+  UserNoteHolder::notes_.erase(iter);
 #endif
 }
 

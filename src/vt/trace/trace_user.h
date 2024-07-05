@@ -135,6 +135,9 @@ void addUserBracketedNote(
 
 /**
  * \brief Log the start for a bracketed user event with a note
+ * 
+ * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
+ * bracketed user events with a note.
  *
  * \param[in] note the note
  * \param[in] event the pre-registered user event ID
@@ -143,6 +146,9 @@ void addUserNotePre(std::string const& note, TraceEventIDType const event);
 
 /**
  * \brief Log the end for a bracketed user event with a note
+ *
+ * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
+ * bracketed user events with a note.
  *
  * \param[in] note the note
  * \param[in] event the pre-registered user event ID
