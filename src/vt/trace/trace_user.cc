@@ -83,18 +83,6 @@ void addUserEvent([[maybe_unused]] UserEventIDType event) {
 #endif
 }
 
-void addUserEventBracketedBeginTime(UserEventIDType event, TimeType begin) {
-#if vt_check_enabled(trace_enabled)
-  theTrace()->addUserEventBracketedBeginTime(event, begin);
-#endif
-}
-
-void addUserEventBracketedEndTime(UserEventIDType event, TimeType end) {
-#if vt_check_enabled(trace_enabled)
-  theTrace()->addUserEventBracketedEndTime(event, end);
-#endif
-}
-
 void addUserNote([[maybe_unused]] std::string const& note) {
 #if vt_check_enabled(trace_enabled)
   theTrace()->addUserNote(note);
@@ -104,16 +92,6 @@ void addUserNote([[maybe_unused]] std::string const& note) {
 void addUserData([[maybe_unused]] int32_t data) {
 #if vt_check_enabled(trace_enabled)
   theTrace()->addUserData(data);
-#endif
-}
-
-void addUserBracketedNote(
-  [[maybe_unused]] TimeType const begin, [[maybe_unused]] TimeType const end,
-  [[maybe_unused]] std::string const& note,
-  [[maybe_unused]] TraceEventIDType const event
-) {
-#if vt_check_enabled(trace_enabled)
-  theTrace()->addUserBracketedNote(begin, end, note, event);
 #endif
 }
 

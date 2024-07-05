@@ -286,25 +286,59 @@ void TraceLite::addUserEventBracketedEndTime(
   logEvent(LogType{end, type, node, event, false});
 }
 
-void TraceLite::addUserBracketedNote(
-  TimeType const begin, TimeType const end, std::string const& note,
-  TraceEventIDType const event
+void TraceLite::addUserNoteBracketedBeginTime(
+  std::string const& note, TraceEventIDType const event
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
+  auto begin = getCurrentTime();
 
   vt_debug_print(
     normal, trace,
-    "Trace::addUserBracketedNote: begin={}, end={}, note={}, event={}\n",
-    begin, end, note, event
+    "Trace::addUserNoteBracketedBeginTime: begin={}, note={}, event={}\n",
+    begin, note, event
   );
 
   auto const type = TraceConstantsType::UserSuppliedBracketedNote;
+  logEvent(LogType{begin, begin, type, note, event});
 
-  logEvent(LogType{begin, end, type, note, event});
+  // Save event log for fixing up the end time later
+  if (event != no_user_event_id) {
+    auto* last_trace = getLastTraceEvent();
+    incomplete_notes_[event].push(last_trace);
+  }
 }
 
+void TraceLite::addUserNoteBracketedEndTime(
+  std::string const& note, TraceEventIDType const event
+) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+  auto end = getCurrentTime();
+
+  vt_debug_print(
+    normal, trace,
+    "Trace::addUserNoteBracketedEndTime: end={}, note={}, event={}\n",
+    end, note, event
+  );
+
+  // Fixup end time of the note
+  if (event != no_user_event_id) {
+    auto iter = incomplete_notes_.find(event);
+    vtAssertExpr(iter != incomplete_notes_.end());
+    // update data in the Log
+    auto& last_trace = iter->second.top();
+    last_trace->end_time = end;
+    last_trace->setUserNote(note);
+    // clean up pointers to Log
+    iter->second.pop();
+    if (iter->second.empty()) {
+      incomplete_notes_.erase(iter);
+    }
+  }
+}
 
 TraceEventIDType TraceLite::logEvent(LogType&& log) {
   if (not checkDynamicRuntimeEnabled()) {
@@ -468,7 +502,7 @@ void TraceLite::flushTracesFile(bool useGlobalSync) {
     // (Consider pushing out: barrier usages are probably domain-specific.)
     theCollective()->barrier();
   }
-  if (incomplete_events_ > 0) {
+  if (incomplete_notes_.size() > 0) {
     // wait until all incomplete events are patched up before flushing to disk
     return;
   }

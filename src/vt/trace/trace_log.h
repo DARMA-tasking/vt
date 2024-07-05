@@ -223,7 +223,6 @@ struct Log final {
     }
   };
 
-  // [[deprecated]]] - use appropriate ctor
   void setUserNote(std::string const& note) {
     if (data.user.data_type == LogDataType::user) {
       data.user.user_note = note;

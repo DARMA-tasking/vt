@@ -54,6 +54,7 @@
 #include <string>
 #include <queue>
 #include <vector>
+#include <stack>
 #include <mpi.h>
 
 namespace vt { namespace trace {
@@ -184,14 +185,27 @@ struct TraceLite  {
   /**
    * \brief Log a user bracketed event with a note
    *
-   * \param[in] begin the begin time
-   * \param[in] end the end time
+   * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
+   * bracketed user events with a note.
+   *
    * \param[in] note the note to log
    * \param[in] event the event ID
    */
-  void addUserBracketedNote(
-    TimeType const begin, TimeType const end, std::string const& note,
-    TraceEventIDType const event = no_trace_event
+  void addUserNoteBracketedBeginTime(
+    std::string const& note, TraceEventIDType const event = no_trace_event
+  );
+
+  /**
+   * \brief Log a user bracketed event with a note
+   *
+   * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
+   * bracketed user events with a note.
+   *
+   * \param[in] note the note to log
+   * \param[in] event the event ID
+   */
+  void addUserNoteBracketedEndTime(
+    std::string const& note, TraceEventIDType const event = no_trace_event
   );
 
  /**
@@ -275,22 +289,6 @@ struct TraceLite  {
    */
   LogType* getLastTraceEvent() noexcept {
     return traces_.empty() ? nullptr : &traces_.back();
-  }
-
-  /**
-   * \brief Increment incomplete events (used to inhibit flushing before the
-   * event scope closes, leading to incomplete trace output)
-   */
-  void incrementIncompleteEvents() {
-    incomplete_events_++;
-  }
-
-  /**
-   * \brief Decrement incomplete events (used to inhibit flushing before the
-   * event scope closes, leading to incomplete trace output)
-   */
-  void decrementIncompleteEvents() {
-    incomplete_events_++;
   }
 
 protected:
@@ -420,7 +418,7 @@ protected:
   bool trace_enabled_cur_phase_ = true;
   bool idle_begun_              = false;
   std::unique_ptr<vt_gzFile> log_file_;
-  std::size_t incomplete_events_ = 0;
+  std::unordered_map<TraceEventIDType, std::stack<Log*>> incomplete_notes_ = {};
 };
 
 }} //end namespace vt::trace

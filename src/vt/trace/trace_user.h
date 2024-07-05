@@ -92,18 +92,6 @@ UserEventIDType registerEventHashed(std::string const& name);
 void addUserEvent(UserEventIDType event);
 
 /**
- * \brief Log a bracketed user event
- *
- * \note See \c TraceScopedEvent for a safer scope-based logging mechanism for
- * bracketed user events.
- *
- * \param[in] event the event ID to log
- * \param[in] begin the begin time
- * \param[in] end the end time
- */
-void addUserEventBracketed(UserEventIDType event, TimeType begin, TimeType end);
-
-/**
  * \brief Log a user note
  *
  * \param[in] note the note to log
@@ -116,22 +104,6 @@ void addUserNote(std::string const& note);
  * \param[in] data the integer to log
  */
 void addUserData(int32_t data);
-
-/**
- * \brief Log a bracketed user event with a note
- *
- * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
- * bracketed user events with a note.
- *
- * \param[in] begin the begin time
- * \param[in] end the end time
- * \param[in] note the note to log
- * \param[in] event the event ID to log
- */
-void addUserBracketedNote(
-  TimeType const begin, TimeType const end, std::string const& note,
-  TraceEventIDType const event = no_trace_event
-);
 
 /**
  * \brief Log the start for a bracketed user event with a note
@@ -282,37 +254,37 @@ struct TraceScopedNote final {
    */
   TraceScopedNote(
     std::string const& in_note, TraceEventIDType const in_event = no_trace_event
-  ) : begin_(in_event != no_trace_event ? TraceLite::getCurrentTime() : TimeType{0.}),
-      event_(in_event),
+  ) : event_(in_event),
       note_(in_note)
   {
-    if (event_ != no_user_event_id) {
-      // We need to emit this right away so the event is in the proper place wrt
-      // the begin time. We can patch up the end time later
-      theTrace()->incrementIncompleteEvents();
-    }
-    theTrace()->addUserBracketedNote(begin_, begin_, note_, event_);
-    if (event_ != no_user_event_id) {
-      log_ = theTrace()->getLastTraceEvent();
-    }
+    theTrace()->addUserNoteBracketedBeginTime(note_, event_);
+  }
+
+  /**
+   * \brief Construct a scoped event with an empty note
+   *
+   * \param[in] event the user event to log (e.g., may be obtained from
+   * \c registerEventCollective )
+   */
+  TraceScopedNote(TraceEventIDType const in_event = no_trace_event)
+    : event_(in_event),
+      note_("")
+  {
+    theTrace()->addUserNoteBracketedBeginTime(note_, event_);
   }
 
   TraceScopedNote(TraceScopedNote const&) = delete;
   TraceScopedNote(TraceScopedNote &&other) noexcept
   {
-    std::swap(begin_, other.begin_);
     std::swap(event_, other.event_);
     std::swap(note_, other.note_);
-    std::swap(log_, other.log_);
   }
 
   TraceScopedNote& operator=(TraceScopedNote const&) = delete;
   TraceScopedNote& operator=(TraceScopedNote &&other) noexcept
   {
-    std::swap(begin_, other.begin_);
     std::swap(event_, other.event_);
     std::swap(note_, other.note_);
-    std::swap(log_, other.log_);
     return *this;
   }
 
@@ -323,16 +295,9 @@ struct TraceScopedNote final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      auto end = TraceLite::getCurrentTime();
-      log_->end_time = end;
-      log_->setUserNote(note_);
-      theTrace()->decrementIncompleteEvents();
+      theTrace()->addUserNoteBracketedEndTime(note_, event_);
       event_ = no_user_event_id;
     }
-  }
-
-  void setEvent(TraceEventIDType const in_event) {
-    event_ = in_event;
   }
 
   void setNote(std::string const& in_note) {
@@ -340,10 +305,8 @@ struct TraceScopedNote final {
   }
 
 private:
-  TimeType begin_         = TimeType{0.0};
   TraceEventIDType event_ = no_trace_event;
   std::string note_       = "";
-  Log* log_               = nullptr;
 };
 
 #else
@@ -352,7 +315,7 @@ struct TraceScopedNote final {
   TraceScopedNote(std::string const&, TraceEventIDType const = no_trace_event) { }
 
   void end() { }
-  void setEvent([[maybe_unused]] TraceEventIDType const in_event) { }
+  void setNote([[maybe_unused]] std::string const& in_note) { }
 };
 
 struct TraceScopedEvent final {
