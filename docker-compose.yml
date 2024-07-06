@@ -62,9 +62,6 @@
 #  $ COMPILER=gcc-8 docker compose run ubuntu-cpp
 #
 
-# Need verision >= 3.5 for the features in use
-version: '3.8'
-
 # Volume will be created automatically for each combination of parameters.
 volumes:
   ubuntu-cpp:
