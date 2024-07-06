@@ -193,7 +193,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwo(size_t id)
     auto const partner = is_even_ ? this_node_ + 1 : this_node_ - 1;
 
     vt_debug_print(
-      terse, allreduce, "Rabenseifner (Send Part1): To Node {} ID = {}\n", partner, id
+      terse, allreduce, "Rabenseifner::adjustForPowerOfTwo: To Node {} ID = {}\n", partner, id
     );
 
     if (is_even_) {
@@ -231,7 +231,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoRightHalf(
   }
 
   vt_debug_print(
-    terse, allreduce, "Rabenseifner (Recv Part1): From Node {} ID = {}\n",
+    terse, allreduce, "Rabenseifner::adjustForPowerOfTwoRightHalf: From Node {} ID = {}\n",
     theContext()->getFromNodeCurrentTask(), msg->id_
   );
 
@@ -260,7 +260,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoLeftHalf(
   }
 
   vt_debug_print(
-    terse, allreduce, "Rabenseifner (Recv Part1): From Node {} ID = {}\n",
+    terse, allreduce, "Rabenseifner::adjustForPowerOfTwoLeftHalf: From Node {} ID = {}\n",
     theContext()->getFromNodeCurrentTask(), msg->id_
   );
 
@@ -276,7 +276,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoFinalPart(
   AllreduceRbnRawMsg<Scalar>* msg) {
 
   vt_debug_print(
-    terse, allreduce, "Rabenseifner (Recv Part2): From Node {} ID = {}\n",
+    terse, allreduce, "Rabenseifner::adjustForPowerOfTwoFinalPart: From Node {} ID = {}\n",
     theContext()->getFromNodeCurrentTask(), msg->id_
   );
 
@@ -356,7 +356,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIter(size_t id) {
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner Part2 (Send step {}): To Node {} starting with idx = {} and "
+    "Rabenseifner Scatter (Send step {}): To Node {} starting with idx = {} and "
     "count "
     "{} ID = {}\n",
     state.scatter_step_, dest, state.s_index_[state.scatter_step_],
@@ -408,7 +408,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIterHandler(
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner Part2 (Recv step {}): scatter_mask_= {} nprocs_pof2_ = {}: "
+    "Rabenseifner Scatter (Recv step {}): scatter_mask_= {} nprocs_pof2_ = {}: "
     "idx = {} from {} ID = {}\n",
     msg->step_, state.scatter_mask_, nprocs_pof2_, state.r_index_[msg->step_],
     theContext()->getFromNodeCurrentTask(), msg->id_
@@ -486,7 +486,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherIter(size_t id) {
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner Part3 (step {}): Sending to Node {} starting with idx = {} and "
+    "Rabenseifner Gather (step {}): Sending to Node {} starting with idx = {} and "
     "count "
     "{} ID = {}\n",
     state.gather_step_, dest, state.r_index_[state.gather_step_],
@@ -516,7 +516,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherIterHandler(
   AllreduceRbnRawMsg<Scalar>* msg) {
   auto& state = states_.at(msg->id_);
   vt_debug_print(
-    terse, allreduce, "Rabenseifner Part3 (step {}): Received idx = {} from {} ID = {}\n",
+    terse, allreduce, "Rabenseifner Gather (step {}): Received idx = {} from {} ID = {}\n",
     msg->step_, state.s_index_[msg->step_],
     theContext()->getFromNodeCurrentTask(), msg->id_
   );
@@ -553,7 +553,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::finalPart(size_t id) {
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner Part4: Executing final handler with size {} ID = {}\n", state.val_.size(), id
+    "Rabenseifner::finalPart(): Executing final handler with size {} ID = {}\n", state.val_.size(), id
   );
 
   parent_proxy_[this_node_].template invoke<finalHandler>(
@@ -584,7 +584,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::sendToExcludedNodes(size_t id)
   auto& state = states_.at(id);
   if (is_part_of_adjustment_group_ and is_even_) {
     vt_debug_print(
-      terse, allreduce, "Rabenseifner Part4: Sending to Node {} ID = {}\n",
+      terse, allreduce, "Rabenseifner::sendToExcludedNodes(): Sending to Node {} ID = {}\n",
       this_node_ + 1, id
     );
     proxy_[this_node_ + 1]
@@ -600,7 +600,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::sendToExcludedNodesHandler(
   auto& state = states_.at(msg->id_);
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner Part4: Received allreduce result with size {} ID = {}\n", msg->size_, msg->id_
+    "Rabenseifner::sendToExcludedNodesHandler(): Received allreduce result with size {} ID = {}\n", msg->size_, msg->id_
   );
 
   parent_proxy_[this_node_].template invoke<finalHandler>(
