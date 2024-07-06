@@ -51,15 +51,15 @@
 # $ export COMPILER=icpx
 # $ export HOST_COMPILER=icpx
 # $ export VT_TRACE=1
-# $ docker-compose pull ubuntu-cpp-interactive
-# $ docker-compose run ubuntu-cpp-interactive
+# $ docker compose pull ubuntu-cpp-interactive
+# $ docker compose run ubuntu-cpp-interactive
 # # /vt/ci/build_cpp.sh /vt /build
 #
 # For a non-interactive build with gcc-8, since gnu is the default compiler
 # type, one may do the following:
 #
-#  $ COMPILER=gcc-8 docker-compose pull ubuntu-cpp
-#  $ COMPILER=gcc-8 docker-compose run ubuntu-cpp
+#  $ COMPILER=gcc-8 docker compose pull ubuntu-cpp
+#  $ COMPILER=gcc-8 docker compose run ubuntu-cpp
 #
 
 # Need verision >= 3.5 for the features in use
@@ -125,7 +125,7 @@ services:
   ##############################################################################
   # C++ builds of VT on ubuntu/alpine platform from container baseline
   # Ubuntu gcc-12 debug build:
-  #   docker-compose run -e CMAKE_BUILD_TYPE=debug ubuntu-cpp
+  #   docker compose run -e CMAKE_BUILD_TYPE=debug ubuntu-cpp
   ubuntu-cpp:
     image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     build:
@@ -161,7 +161,7 @@ services:
   # baseline.
   #
   # Example:
-  #   docker-compose run ubuntu-cpp-clean
+  #   docker compose run ubuntu-cpp-clean
   ubuntu-cpp-clean:
     image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     build:
@@ -187,7 +187,7 @@ services:
   # baseline without installing.
   #
   # Example:
-  #   docker-compose run ubuntu-cpp-clean-noinstall
+  #   docker compose run ubuntu-cpp-clean-noinstall
   ubuntu-cpp-clean-noinstall:
     image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     build:
@@ -211,7 +211,7 @@ services:
   # Interactive C++ setup of VT on ubuntu platform from container baseline.
   #
   # After running:
-  #   docker-compose run ubuntu-cpp-interactive
+  #   docker compose run ubuntu-cpp-interactive
   #
   # You will get a command line where you can run the build command:
   #   $ /vt/ci/build_cpp.sh /vt /build

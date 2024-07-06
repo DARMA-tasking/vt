@@ -32,4 +32,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker-compose run ubuntu-docs
+      run: docker compose run ubuntu-docs
