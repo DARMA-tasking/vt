@@ -385,9 +385,18 @@ class JSONDataFilesValidator:
         else:
             logging.warning(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
 
-        if validate_comm_links:
-            logging.info("FIXME: comm_links validation not implemented.")
+        if validate_comm_links and schema_type == "LBDatafile":
+            JSONDataFilesValidator.__validate_comm_links(json_data)
 
+    @staticmethod
+    def __validate_comm_links(data):
+        for phase in data["phases"]:
+            comm_ids = {int(comm["from"]["id"]) for comm in phase["communications"]}
+            comm_ids.update({int(comm["to"]["id"]) for comm in phase["communications"]})
+            task_ids = {int(task["entity"]["id"]) for task in phase["tasks"]}
+
+            if not comm_ids.issubset(task_ids):
+                logging.error(f" Phase {phase["id"]}: tasks {comm_ids - task_ids} were referenced in communication, but were not found.")
 
     def main(self):
         if self.__file_path is not None:
