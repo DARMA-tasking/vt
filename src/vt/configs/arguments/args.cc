@@ -962,7 +962,7 @@ void addThreadingArgs(
 
 using variantArg_t = std::variant<bool, int32_t, int64_t, double, std::size_t, std::string>;
 
-void addVariantToNode(YAML::Node& node, std::string key, variantArg_t variant_val) {
+void addVariantToNode(YAML::Node& node, std::string& key, variantArg_t& variant_val) {
     // Get the yaml_val from the variant
     if (std::holds_alternative<bool>(variant_val)) {
       node[key] = std::get<bool>(variant_val);
