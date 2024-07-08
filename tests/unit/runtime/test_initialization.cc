@@ -288,51 +288,56 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
   MPI_Comm_rank(comm, &this_rank);
   if (this_rank == 0) {
     std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
-    cfg_file_ << "Output Control:\n"
-              << "  Color: False\n"
-              << "  Quiet: True\n"
-              << "Signal Handling:\n"
-              << "  Disable SIGINT: True\n"
-              << "  Disable SIGSEGV: True\n"
-              << "  Disable SIGBUS: True\n"
-              << "  Disable Terminate Signal: True\n"
-              << "Memory Usage Reporting:\n"
-              << "  Print Memory Each Phase: True\n"
-              << "  Print Memory On Node: '1'\n"
-              << "  Allow Memory Report With ps: True\n"
-              << "Tracing Configuration:\n"
-              << "  Enabled: False\n"
-              << "Debug Print Configuration:\n"
-              << "  Level: normal\n"
-              << "  Enable:\n"
-              << "    - gen\n"
-              << "    - term\n"
-              << "    - pool\n"
-              << "    - group\n"
-              << "Load Balancing:\n"
-              << "  Enabled: False\n"
-              << "  LB Data Output:\n"
-              << "    Enabled: False\n"
-              << "  LB Data Input:\n"
-              << "    Enabled: False\n"
-              << "  LB Statistics:\n"
-              << "    Enabled: False\n"
-              << "Diagnostics:\n"
-              << "  Enabled: True\n"
-              << "  Enable Print Summary: True\n"
-              << "Termination:\n"
-              << "  Detect Hangs: True\n"
-              << "  Terse Epoch Graph Output: True\n"
-              << "Launch:\n"
-              << "  Pause: False\n"
-              << "User Options:\n"
-              << "  Test bool: True\n"
-              << "  Test int: 45\n"
-              << "  Test string: test_string\n"
-              << "Scheduler Configuration:\n"
-              << "  Num Progress Times: 3\n"
-              << "Runtime:\n"
-              << "  Throw on Abort: True\n";
+    cfg_file_ << R"(
+    Output Control:
+      Color: False
+      Quiet: True
+    Signal Handling:
+      Disable SIGINT: True
+      Disable SIGSEGV: True
+      Disable SIGBUS: True
+      Disable Terminate Signal: True
+    Memory Usage Reporting:
+      Print Memory Each Phase: True
+      Print Memory On Node: '1'
+      Allow Memory Report With ps: True
+    Tracing Configuration:
+      Enabled: False
+    Debug Print Configuration:
+      Level: normal
+      Enable:
+        - gen
+        - term
+        - pool
+        - group
+    Load Balancing:
+      Enabled: False
+      LB Data Output:
+        Enabled: False
+      LB Data Input:
+        Enabled: False
+      LB Statistics:
+        Enabled: False
+    Diagnostics:
+      Enabled: True
+      Enable Print Summary: True
+    Termination:
+      Detect Hangs: True
+      Terse Epoch Graph Output: True
+    Launch:
+      Pause: False
+    User Options:
+      Test bool: True
+      Test int: 45
+      Test string: test_string
+    Scheduler Configuration:
+      Num Progress Times: 3
+    Runtime:
+      Throw on Abort: True
+    Configuration File:
+      Enable Output Config: True
+      File: test_config.yaml
+    )";
     cfg_file_.close();
   }
 
@@ -439,11 +444,11 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
   EXPECT_EQ(theConfig()->vt_lb_data_dir, "vt_lb_data");
   EXPECT_EQ(theConfig()->vt_lb_data_file, "data.%p.json");
   EXPECT_EQ(theConfig()->vt_lb_data_in, false);
-  EXPECT_EQ(theConfig()->vt_lb_data_compress, false);
+  EXPECT_EQ(theConfig()->vt_lb_data_compress, true);
   EXPECT_EQ(theConfig()->vt_lb_data_dir_in, "vt_lb_data_in");
   EXPECT_EQ(theConfig()->vt_lb_data_file_in, "data.%p.json");
   EXPECT_EQ(theConfig()->vt_lb_statistics, false);
-  EXPECT_EQ(theConfig()->vt_lb_statistics_compress, false);
+  EXPECT_EQ(theConfig()->vt_lb_statistics_compress, true);
   EXPECT_EQ(theConfig()->vt_lb_statistics_file, "vt_lb_statistics.%t.json");
   EXPECT_EQ(theConfig()->vt_lb_statistics_dir, "");
   EXPECT_EQ(theConfig()->vt_lb_self_migration, false);
@@ -492,7 +497,7 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
 
   // TEST THAT THE CONFIGURATION FILE WAS WRITTEN OUT CORRECTLY
   YAML::Node input_config = YAML::LoadFile(config_file);
-  YAML::Node output_config = theConfig()->convertConfigToYaml();
+  YAML::Node output_config = YAML::Load(theConfig()->vt_output_config_yaml);
   assertYamlNodesHaveIdenticalEntries(input_config, output_config);
 }
 
@@ -768,6 +773,72 @@ TEST_F(TestInitialization, test_initialize_with_lb_data_and_config_no_lb) {
   EXPECT_EQ(theConfig()->vt_lb_data_in, true);
   EXPECT_EQ(theConfig()->vt_lb_file_name, file_name);
   EXPECT_TRUE(theLBDataReader() == nullptr);
+}
+
+TEST_F(TestInitialization, test_initialize_with_yaml_toml_and_args) {
+  MPI_Comm comm = MPI_COMM_WORLD;
+
+  // Set command line arguments
+  static char prog_name[]{"vt_program"};
+  static char vt_color[]{"--vt_color"};
+  static char vt_no_terminate[]{"--vt_no_terminate"};
+  static char vt_lb_name[]{"--vt_lb_name=RotateLB"};
+
+  std::vector<char*> custom_args;
+  custom_args.emplace_back(prog_name);
+  custom_args.emplace_back(vt_color);
+  custom_args.emplace_back(vt_lb_name);
+  custom_args.emplace_back(vt_no_terminate);
+
+  // Set TOML config file
+  std::string toml_config_file(getUniqueFilenameWithRanks(".toml"));
+  std::string toml_config_flag("--vt_input_config=");
+  std::string vt_input_config_toml = toml_config_flag + toml_config_file;
+
+  custom_args.emplace_back(strdup(vt_input_config_toml.c_str()));
+
+  int this_rank;
+  MPI_Comm_rank(comm, &this_rank);
+
+  if (this_rank == 0) {
+    std::ofstream toml_cfg_file_{toml_config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
+    toml_cfg_file_ << "vt_lb_name = RandomLB\n"
+                   << "vt_color = False\n"
+                   << "vt_quiet = True";
+    toml_cfg_file_.close();
+  }
+  MPI_Barrier(comm);
+
+  // Set YAML config file
+  std::string yaml_config_file(getUniqueFilenameWithRanks(".yaml"));
+  std::string yaml_config_flag("--vt_input_config_yaml=");
+  std::string vt_input_config_yaml = yaml_config_flag + yaml_config_file;
+
+  custom_args.emplace_back(strdup(vt_input_config_yaml.c_str()));
+  custom_args.emplace_back(nullptr);
+
+  int custom_argc = custom_args.size() - 1;
+  char** custom_argv = custom_args.data();
+
+  if (this_rank == 0) {
+    std::ofstream yaml_cfg_file_{yaml_config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
+    yaml_cfg_file_ << R"(
+    Load Balancing:
+      Name: NoLB
+    )";
+    yaml_cfg_file_.close();
+  }
+
+  MPI_Barrier(comm);
+
+  vt::initialize(custom_argc, custom_argv, &comm);
+
+  // Test that everything was read in correctly
+  EXPECT_EQ(theConfig()->prog_name, "vt_program");
+
+  EXPECT_EQ(theConfig()->vt_quiet, true);     // Original TOML
+  EXPECT_EQ(theConfig()->vt_color, true);     // CLI overwrote TOML
+  EXPECT_EQ(theConfig()->vt_lb_name, "NoLB"); // YAML overwrote everything
 }
 
 }}} // end namespace vt::tests::unit
