@@ -105,6 +105,17 @@ then
         cd "${source_dir}/lib"
         vt_tv_rev="master"
         git clone -b "${vt_tv_rev}" --depth 1 https://github.com/DARMA-tasking/vt-tv.git
+        export VT_TV=$PWD/vt-tv
+        export VT_TV_BUILD=${build_dir}/vt-tv
+        mkdir -p "$VT_TV_BUILD"
+        cd "$VT_TV_BUILD"
+        mkdir build
+        cd build
+        cmake -G "${CMAKE_GENERATOR:-Ninja}" \
+              -DVT_TV_PYTHON_BINDINGS_ENABLED=OFF \
+              -DCMAKE_INSTALL_PREFIX="$VT_TV_BUILD/install" \
+              "$VT_TV"
+        cmake --build . ${dashj} --target install
         cd -
     fi
 fi
