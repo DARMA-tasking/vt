@@ -257,7 +257,9 @@ struct TraceScopedNote final {
   ) : event_(in_event),
       note_(in_note)
   {
-    theTrace()->addUserNoteBracketedBeginTime(note_, event_);
+    if (event_ != no_user_event_id) {
+      theTrace()->addUserNoteBracketedBeginTime(note_, event_);
+    }
   }
 
   /**
@@ -270,7 +272,9 @@ struct TraceScopedNote final {
     : event_(in_event),
       note_("")
   {
-    theTrace()->addUserNoteBracketedBeginTime(note_, event_);
+    if (event_ != no_user_event_id) {
+      theTrace()->addUserNoteBracketedBeginTime(note_, event_);
+    }
   }
 
   TraceScopedNote(TraceScopedNote const&) = delete;
