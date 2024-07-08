@@ -130,16 +130,16 @@ inline void assertYamlNodesHaveIdenticalEntries(const YAML::Node& yaml_1, const 
         else if (yaml_1_val.IsScalar()) {
           try {
             EXPECT_EQ(yaml_1_val.as<bool>(), yaml_2_val.as<bool>());
-          } catch(...) {
+          } catch (const YAML::RepresentationException&) {
             try {
               EXPECT_EQ(yaml_1_val.as<int>(), yaml_2_val.as<int>());
-            } catch(...) {
+            } catch (const YAML::RepresentationException&) {
               EXPECT_EQ(yaml_1_val.as<std::string>(), yaml_2_val.as<std::string>());
             }
           }
         }
         else {
-          EXPECT_TRUE(false);
+          vtAbort("YAML::Node type not recognized (must be Map, Sequence, or Scalar)");
         }
     }
 }
