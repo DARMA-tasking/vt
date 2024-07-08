@@ -21,6 +21,7 @@ function(run_executable_with_mpi)
     TARGET_ARGS
     WRAPPER_ARGS
   )
+  set(allKeywords ${noValOption} ${singleValArg} ${multiValueArg})
 
   cmake_parse_arguments(
     ARG "${noValOption}" "${singleValArg}" "${multiValueArgs}" ${ARGN}

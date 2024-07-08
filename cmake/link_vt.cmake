@@ -39,6 +39,7 @@ function(link_target_with_vt)
     multiValueArg
     CUSTOM_LINK_ARGS
   )
+  set(allKeywords ${noValOption} ${singleValArg} ${multiValueArg})
 
   cmake_parse_arguments(
     ARG "${noValOption}" "${singleValArg}" "${multiValueArg}" ${ARGN}
