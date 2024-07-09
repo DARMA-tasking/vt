@@ -53,17 +53,15 @@ void LBData::start(TimeType time) {
   }
 
   /* -- PAPI START -- */
-
   /* Start counting events in the Event Set */
-  // papi_retval_ = PAPI_start(EventSet_);
-  // if (papi_retval_ != PAPI_OK)
-  //   handle_papi_error(papi_retval_, "LBData start: Starting counting events in the Event Set: ");
+  papi_retval_ = PAPI_start(EventSet_);
+  if (papi_retval_ != PAPI_OK)
+    handle_papi_error(papi_retval_, "LBData start: Starting counting events in the Event Set: ");
 
-  /* Gets the starting time in clock cycles */
-  start_cycles_ = PAPI_get_real_cyc();
-
-  /* Gets the starting time in microseconds */
-  start_usec_ = PAPI_get_real_usec();
+  start_real_cycles_ = PAPI_get_real_cyc();
+  start_real_usec_ = PAPI_get_real_usec();
+  start_virt_cycles_ = PAPI_get_virt_cyc();
+  start_virt_usec_ = PAPI_get_virt_usec();
 
   /* ---------------- */
 }
@@ -74,30 +72,18 @@ void LBData::finish(TimeType time) {
     lb_data_->stop(time);
   }
 
-  /* -- PAPI READ AND STOP -- */
+  /* -- PAPI STOP -- */
+  /* Stop the counting of events in the Event Set */
+  papi_retval_ = PAPI_stop(EventSet_, papi_values_);
+  if (papi_retval_ != PAPI_OK)
+    handle_papi_error(papi_retval_, "LBData finish: Stoping the counting of events in the Event Set: ");
 
-  /* Read the counting events in the Event Set */
-  // papi_retval_ = PAPI_read(EventSet_, papi_values_);
-  // if (papi_retval_ != PAPI_OK)
-  //   handle_papi_error(papi_retval_, "LBData finish: Reading the counting events in the Event Set: ");
+  end_real_cycles_ = PAPI_get_real_cyc();
+  end_real_usec_ = PAPI_get_real_usec();
+  end_virt_cycles_ = PAPI_get_virt_cyc();
+  end_virt_usec_ = PAPI_get_virt_usec();
 
-  // printf("Counters after LBData::finish: %lld\n",papi_values_[0]);
-
-  // /* Stop the counting of events in the Event Set */
-  // papi_retval_ = PAPI_stop(EventSet_, papi_values_);
-  // if (papi_retval_ != PAPI_OK)
-  //   handle_papi_error(papi_retval_, "LBData finish: Stoping the counting of events in the Event Set: ");
-
-  /* Gets the ending time in clock cycles */
-  end_cycles_ = PAPI_get_real_cyc();
-
-  /* Gets the ending time in microseconds */
-  end_usec_ = PAPI_get_real_usec();
-
-  printf("Wall clock cycles: %lld\n", end_cycles_ - start_cycles_);
-  printf("Wall clock time in microseconds: %lld\n", end_usec_ - start_usec_);
-
-  /* ------------------------ */
+  /* -------------- */
 }
 
 void LBData::send(elm::ElementIDStruct dest, MsgSizeType bytes) {
@@ -116,6 +102,14 @@ void LBData::resume(TimeType time) {
 
 typename LBData::ElementIDStruct const& LBData::getCurrentElementID() const {
   return cur_elm_id_;
+}
+
+std::unordered_map<std::string, double> LBData::getPAPIMetrics() const {
+  std::unordered_map<std::string, double> papi_metrics = {};
+  for (size_t i = 0; i < native_events_.size(); i++) {
+    papi_metrics[native_events_[i]] = papi_values_[i];
+  }
+  return papi_metrics;
 }
 
 }} /* end namespace vt::ctx */
