@@ -497,7 +497,7 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
 
   // TEST THAT THE CONFIGURATION FILE WAS WRITTEN OUT CORRECTLY
   YAML::Node input_config = YAML::LoadFile(config_file);
-  YAML::Node output_config = YAML::Load(theConfig()->vt_output_config_yaml);
+  YAML::Node output_config = YAML::Load(theConfig()->vt_output_config_str);
   assertYamlNodesHaveIdenticalEntries(input_config, output_config);
 }
 

@@ -48,7 +48,6 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <fstream>
 
 namespace vt { namespace arguments {
 
@@ -258,7 +257,6 @@ struct AppConfig {
   bool vt_output_config   = false;
   std::string vt_output_config_file = "vt_config.ini";
   std::string vt_output_config_str  = "";
-  std::string vt_output_config_yaml = "";
 
   /// Name of the program launched (excluding any path!)
   std::string prog_name {"vt_unknown"};
@@ -427,11 +425,6 @@ struct AppConfig {
       | argv_prog_name
 
       | passthru_args;
-  }
-
-  void writeConfigToYaml() {
-    std::ofstream fout(vt_output_config_file);
-    fout << vt_output_config_yaml;
   }
 };
 
