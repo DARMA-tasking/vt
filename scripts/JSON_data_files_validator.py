@@ -323,16 +323,6 @@ class JSONDataFilesValidator:
         self.__validate_comm_links = args.validate_comm_links
 
     @staticmethod
-    def __check_if_file_exists(file_path: str) -> bool:
-        """ Check for existence of a given file. Returns True when file exists. """
-        return os.path.isfile(file_path)
-
-    @staticmethod
-    def __check_if_dir_exists(dir_path: str) -> bool:
-        """ Check for existence of a given directory. Returns True when file exists. """
-        return os.path.isdir(dir_path)
-
-    @staticmethod
     def __get_files_for_validation(dir_path: str, file_prefix: str, file_suffix: str) -> list:
         """ Get a sorted list of files from directory. """
         list_of_files = os.listdir(dir_path)
@@ -424,14 +414,14 @@ class JSONDataFilesValidator:
 
     def main(self):
         if self.__file_path is not None:
-            if self.__check_if_file_exists(file_path=self.__file_path):
+            if os.path.isfile(self.__file_path):
                 self.__validate_file(file_path=self.__file_path,
                                      validate_comm_links=self.__validate_comm_links)
             else:
                 sys.excepthook = exc_handler
                 raise FileNotFoundError(f"File: {self.__file_path} NOT found")
         elif self.__dir_path is not None:
-            if self.__check_if_dir_exists(dir_path=self.__dir_path):
+            if os.path.isdir(self.__dir_path):
                 list_of_files_for_validation = self.__get_files_for_validation(dir_path=self.__dir_path,
                                                                                file_prefix=self.__file_prefix,
                                                                                file_suffix=self.__file_suffix)
