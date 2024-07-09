@@ -83,13 +83,13 @@ else
     else
         git clone -b "${checkpoint_rev}" --depth 1 https://github.com/DARMA-tasking/checkpoint.git
         export CHECKPOINT=$PWD/checkpoint
-        export CHECKPOINT_BUILD=${build_dir}/checkpoint
-        mkdir -p "$CHECKPOINT_BUILD"
-        cd "$CHECKPOINT_BUILD"
+        export MAGISTRATE_BUILD=${build_dir}/checkpoint
+        mkdir -p "$MAGISTRATE_BUILD"
+        cd "$MAGISTRATE_BUILD"
         mkdir build
         cd build
         cmake -G "${CMAKE_GENERATOR:-Ninja}" \
-              -DCMAKE_INSTALL_PREFIX="$CHECKPOINT_BUILD/install" \
+              -DCMAKE_INSTALL_PREFIX="$MAGISTRATE_BUILD/install" \
               -Dkokkos_DIR="$KOKKOS_INSTALL" \
               "$CHECKPOINT"
         cmake --build . ${dashj} --target install
@@ -143,7 +143,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
       -DCMAKE_C_COMPILER="${CC:-cc}" \
       -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS:-}" \
-      -Dcheckpoint_ROOT="$CHECKPOINT_BUILD/install" \
+      -Dmagistrate_ROOT="$MAGISTRATE_BUILD/install" \
       -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}" \
       -DCMAKE_INSTALL_PREFIX="$VT_BUILD/install" \
       -Dvt_ci_build="${VT_CI_BUILD:-0}" \
