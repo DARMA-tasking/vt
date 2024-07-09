@@ -303,7 +303,7 @@ std::tuple<int, std::string> parseArguments(
     auto output_file = appConfig.vt_output_config_file;
     auto config_file_ending = output_file.substr(output_file.size()-4);
     if (config_file_ending == ".yml" || config_file_ending == "yaml") {
-      appConfig.vt_output_config_yaml = convertConfigToYamlString(appConfig);
+      appConfig.vt_output_config_str = convertConfigToYamlString(appConfig);
     } else {
       appConfig.vt_output_config_str = app.config_to_str(true, true);
     }
