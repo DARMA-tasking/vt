@@ -121,8 +121,10 @@ else
     cd "${source_dir}/lib"
     git clone https://github.com/icl-utk-edu/papi.git
     cd papi/src
-    ./configure --prefix=${source_dir}/lib/papi/install
-    make && make install
+    export PAPI_BUILD=${build_dir}/papi
+    mkdir -p "$PAPI_BUILD"
+    CC="${CC:-cc}" F77="${F77:-gfortran}" ./configure --prefix=${PAPI_BUILD}/install
+    make -j ${dashj} && make install
 fi
 
 if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1
@@ -174,6 +176,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_C_COMPILER="${CC:-cc}" \
       -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS:-}" \
       -Dmagistrate_ROOT="$MAGISTRATE_BUILD/install" \
+      -Dpapi_ROOT="${build_dir}/papi/install" \
       -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}" \
       -DCMAKE_INSTALL_PREFIX="$VT_BUILD/install" \
       -Dvt_ci_build="${VT_CI_BUILD:-0}" \

@@ -199,6 +199,15 @@ void RunnableNew::run() {
 #endif
 }
 
+std::unordered_map<std::string, double> RunnableNew::getPAPIMetrics() const {
+  std::unordered_map<std::string, double> result = {};
+  if (contexts_.has_lb)
+  {
+    result = contexts_.lb.getPAPIMetrics();
+  }
+  return result;
+}
+
 void RunnableNew::start(TimeType time) {
   contexts_.setcontext.start();
   if (contexts_.has_td) contexts_.td.start();

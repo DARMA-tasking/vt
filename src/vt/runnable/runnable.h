@@ -318,6 +318,13 @@ public:
    */
   BaseMsgType* getMsg() const { return msg_.get(); }
 
+  /**
+   * \brief Get the dictionnary of PAPI metrics associated with the runnable
+   *
+   * \return the dictionnary
+   */
+  std::unordered_map<std::string, double> getPAPIMetrics() const;
+
 #if vt_check_enabled(fcontext)
   /**
    * \brief Check if this runnable is complete or not
