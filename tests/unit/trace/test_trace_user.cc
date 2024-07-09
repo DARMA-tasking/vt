@@ -61,7 +61,6 @@ struct TestTraceUser : TestParallelHarness {
       "--vt_trace_dir={}",
       ::testing::UnitTest::GetInstance()->current_test_info()->name());
     addArgs(trace_dir);
-    addArgs(flush);
   }
 
   virtual void TearDown() override {
@@ -85,8 +84,6 @@ struct TestTraceUser : TestParallelHarness {
 
 private:
   std::string trace_dir;
-  // must be != 0 for the test to work
-  std::string flush = "--vt_trace_flush_size=100";
 };
 
 void validateLine(const std::string line, int& time) {
@@ -105,13 +102,14 @@ void validateLine(const std::string line, int& time) {
   }
 
   // validate the start time
-  int start_time = 0;
-  bool check_time = true;
+  int start_time = 0, end_time = 0;
+  bool check_start_time = true, check_end_time = false;
   eTraceConstants type = static_cast<eTraceConstants>(std::stoi(tokens[0]));
   switch(type) {
     case eTraceConstants::Creation: // 1
     case eTraceConstants::BeginProcessing: // 2
     case eTraceConstants::EndProcessing: // 3
+    case eTraceConstants::CreationBcast: // 20
       start_time = std::stoi(tokens[3]);
       break;
     case eTraceConstants::UserEvent: // 13
@@ -125,16 +123,24 @@ void validateLine(const std::string line, int& time) {
     case eTraceConstants::BeginIdle: // 14
     case eTraceConstants::EndIdle: // 15
     case eTraceConstants::UserSuppliedNote: // 28
-    case eTraceConstants::UserSuppliedBracketedNote: // 29
       start_time = std::stoi(tokens[1]);
       break;
+    // those with end time
+    case eTraceConstants::UserSuppliedBracketedNote: // 29
+      start_time = std::stoi(tokens[1]);
+      end_time = std::stoi(tokens[2]);
+      check_end_time = true;
+      break;
     default:
-      check_time = false;
+      check_start_time = false;
   }
 
-  if (check_time) {
+  if (check_start_time) {
     EXPECT_GE(start_time, time);
     time = start_time;
+  }
+  if (check_end_time) {
+    EXPECT_GE(end_time, start_time);
   }
 }
 
@@ -177,12 +183,11 @@ TEST_F(TestTraceUser, trace_user_add_note_pre_epi) {
   // Only the begging of the note
   {
     trace::addUserNotePre("some note", 2);
-    trace::addUserNoteEpi("some note", 2); // will crash without it 
   }
   // Two opening notes with the same id
   {
-    // trace::addUserNotePre("note 1", 5); // will crash
-    // trace::addUserNotePre("note 2", 5); // will crash
+    trace::addUserNotePre("note 1", 5);
+    trace::addUserNotePre("note 2", 5);
   }
   // note with events in between
   {
@@ -333,13 +338,13 @@ TEST_F(TestTraceUser, trace_user_bracketed_event) {
   theTrace()->addUserEventBracketedBegin(2);
   theTrace()->addUserEventBracketedEnd(2);
   theTrace()->addUserEventBracketedBegin(3);
-  
+
   theTrace()->addUserEventManual(123);
   theTrace()->addUserData(123456789);
-  
+
   theTrace()->addUserEventBracketedEnd(1);
   theTrace()->addUserEventBracketedEnd(3);
-  
+
   theTrace()->addUserNote("Some Note 2");
   theTrace()->addUserData(123456);
   theTrace()->addUserEvent(124);
