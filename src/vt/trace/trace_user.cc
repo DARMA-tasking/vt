@@ -95,26 +95,14 @@ void addUserData([[maybe_unused]] int32_t data) {
 #endif
 }
 
-#if vt_check_enabled(trace_enabled)
-struct UserNoteHolder final {
-  static std::unordered_map<std::string, TraceScopedNote> notes_;
-};
-
-/*static*/ std::unordered_map<std::string, TraceScopedNote> UserNoteHolder::notes_ = {};
-#endif
-
 void addUserNotePre(
   [[maybe_unused]] std::string const& in_note,
   [[maybe_unused]] TraceEventIDType const in_event
 ) {
 #if vt_check_enabled(trace_enabled)
-  auto iter = UserNoteHolder::notes_.find(in_note);
-  vtAssertExpr(iter == UserNoteHolder::notes_.end());
-  UserNoteHolder::notes_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(in_note),
-    std::forward_as_tuple(in_note, in_event)
-  );
+  if (in_event != no_user_event_id) {
+    theTrace()->addUserNoteBracketedBeginTime(in_note, in_event);
+  }
 #endif
 }
 
@@ -123,9 +111,9 @@ void addUserNoteEpi(
   [[maybe_unused]] TraceEventIDType const in_event
 ) {
 #if vt_check_enabled(trace_enabled)
-  auto iter = UserNoteHolder::notes_.find(in_note);
-  vtAssertExpr(iter != UserNoteHolder::notes_.end());
-  UserNoteHolder::notes_.erase(iter);
+  if (in_event != no_user_event_id) {
+    theTrace()->addUserNoteBracketedEndTime(in_note, in_event);
+  }
 #endif
 }
 
