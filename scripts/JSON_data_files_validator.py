@@ -290,6 +290,13 @@ class SchemaValidator:
         return self.valid_schema.validate(schema_to_validate)
 
 
+def get_json(file_path):
+    with open(file_path, "rb") as json_file:
+        content = json_file.read()
+        if file_path.endswith('.br'):
+            content = brotli.decompress(content)
+        return json.loads(content.decode("utf-8"))
+
 class JSONDataFilesValidator:
     """ Class validating VT data files according do defined schema. """
     def __init__(self, file_path: str = None, dir_path: str = None,
@@ -347,19 +354,10 @@ class JSONDataFilesValidator:
         return sorted([os.path.join(dir_path, file) for file in list_of_files],
                       key=lambda x: int(x.split(os.sep)[-1].split('.')[-2]))
 
-    @staticmethod
-    def __get_json(file_path):
-        with open(file_path, "rb") as json_file:
-            content = json_file.read()
-            if file_path.endswith('.br'):
-                content = brotli.decompress(content)
-            return json.loads(content.decode("utf-8"))
-
-    @staticmethod
-    def __validate_file(file_path, validate_comm_links):
+    def __validate_file(self, file_path):
         """ Validates the file against the schema. """
         logging.info(f"Validating file: {file_path}")
-        json_data = JSONDataFilesValidator.__get_json(file_path)
+        json_data = get_json(file_path)
 
         # Extracting type from JSON data
         schema_type = None
@@ -377,46 +375,56 @@ class JSONDataFilesValidator:
                 logging.error(f"Invalid JSON schema in {file_path}")
                 SchemaValidator(schema_type=schema_type).validate(schema_to_validate=json_data)
         else:
-            logging.warning(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
+            logging.warning(f"Schema type not found in file: {file_path}. \n"
+                            "Passing by default when schema type not found.")
 
-        if validate_comm_links and schema_type == "LBDatafile":
+        if self.__validate_comm_links and schema_type == "LBDatafile":
             basename = os.path.basename(file_path)
-            dirname = os.path.dirname(file_path)
             digits = ''.join(filter(lambda c: c.isdigit(), basename))
-            has_number = digits.isnumeric()
 
-            if not has_number:
-                JSONDataFilesValidator.__validate_comm_links(json_data)
+            all_jsons = []
+            if not digits.isnumeric():
+                # validate single file
+                all_jsons = [json_data]
             elif int(digits) == 0:
-                files = JSONDataFilesValidator.__get_files_for_validation(dirname, None, None)
-                all_data = [JSONDataFilesValidator.__get_json(file) for file in files]
+                # validate complete dataset
+                dirname = os.path.dirname(file_path)
+                files = self.__get_files_for_validation(dirname, None, None)
+                all_jsons = [get_json(file) for file in files]
+            else:
+                # only datasets starting with 0
+                return
 
-                comm_ids = set()
-                task_ids = set()
-                for data in all_data:
-                    for phase in data["phases"]:
-                        comm_ids.update({int(comm["from"]["id"]) for comm in phase["communications"]}            )
-                        comm_ids.update({int(comm["to"]["id"]) for comm in phase["communications"]})
-                        task_ids.update({int(task["entity"]["id"]) for task in phase["tasks"]})
-                if not comm_ids.issubset(task_ids):
-                    logging.error(f" Phase {phase["id"]}: tasks {comm_ids - task_ids} were referenced in communication, but were not found.")
+            if not self.validate_comm_links(all_jsons):
+                logging.error(f" Invalid dataset: {files}")
 
 
     @staticmethod
-    def __validate_comm_links(data):
-        for phase in data["phases"]:
-            comm_ids = {int(comm["from"]["id"]) for comm in phase["communications"]}
-            comm_ids.update({int(comm["to"]["id"]) for comm in phase["communications"]})
-            task_ids = {int(task["entity"]["id"]) for task in phase["tasks"]}
+    def validate_comm_links(all_jsons):
+        for n in range(len(all_jsons[0]["phases"])):
+            comm_ids = set()
+            task_ids = set()
+
+            for data in all_jsons:
+                comms = data["phases"][n]["communications"]
+                tasks = data["phases"][n]["tasks"]
+                comm_ids.update({int(comm["from"]["id"]) for comm in comms})
+                comm_ids.update({int(comm["to"]["id"]) for comm in comms})
+                task_ids.update({int(task["entity"]["id"]) for task in tasks})
 
             if not comm_ids.issubset(task_ids):
-                logging.error(f" Phase {phase["id"]}: tasks {comm_ids - task_ids} were referenced in communication, but were not found.")
+                logging.error(
+                    f" Phase {n}: Task ids: {comm_ids - task_ids}. Tasks are "
+                    "referenced in communication, but are not present in the "
+                    "dataset."
+                )
+                return False
+        return True
 
     def main(self):
         if self.__file_path is not None:
             if os.path.isfile(self.__file_path):
-                self.__validate_file(file_path=self.__file_path,
-                                     validate_comm_links=self.__validate_comm_links)
+                self.__validate_file(file_path=self.__file_path)
             else:
                 sys.excepthook = exc_handler
                 raise FileNotFoundError(f"File: {self.__file_path} NOT found")
@@ -426,8 +434,7 @@ class JSONDataFilesValidator:
                                                                                file_prefix=self.__file_prefix,
                                                                                file_suffix=self.__file_suffix)
                 for file in list_of_files_for_validation:
-                    self.__validate_file(file_path=file,
-                                         validate_comm_links=self.__validate_comm_links)
+                    self.__validate_file(file_path=file)
             else:
                 sys.excepthook = exc_handler
                 raise FileNotFoundError(f"Directory: {self.__dir_path} does NOT exist")
