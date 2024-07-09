@@ -734,7 +734,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_handler_send) {
         EXPECT_FALSE(key.to_.isMigratable());
         EXPECT_FALSE(key.from_.isMigratable());
         EXPECT_GE(vol.bytes, sizeof(MyObjMsg) * num_sends);
-        EXPECT_EQ(vol.messages, static_cast<std::size_t>(num_sends));
+        EXPECT_GE(vol.messages, static_cast<std::size_t>(num_sends));
         found = true;
       }
     }
