@@ -47,8 +47,6 @@
 // do not pull in any VT dependencies here
 #include <string>
 #include <vector>
-#include <tuple>
-#include <variant>
 #include <unordered_map>
 #include <fstream>
 
