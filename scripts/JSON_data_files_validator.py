@@ -342,11 +342,11 @@ class JSONDataFilesValidator:
             raise FileNotFoundError(f"Directory: {dir_path} is EMPTY")
 
         if file_prefix is None and file_suffix is None:
-            print("File prefix and file suffix not given")
+            logging.info("File prefix and file suffix not given")
             file_prefix = Counter([file.split('.')[0] for file in list_of_files]).most_common()[0][0]
-            print(f"Found most common prefix: {file_prefix}")
+            logging.info(f"Found most common prefix: {file_prefix}")
             file_suffix = Counter([file.split('.')[-1] for file in list_of_files]).most_common()[0][0]
-            print(f"Found most common suffix: {file_suffix}")
+            logging.info(f"Found most common suffix: {file_suffix}")
 
         if file_prefix is not None:
             list_of_files = [file for file in list_of_files if file.split('.')[0] == file_prefix]
@@ -358,14 +358,18 @@ class JSONDataFilesValidator:
                       key=lambda x: int(x.split(os.sep)[-1].split('.')[-2]))
 
     @staticmethod
-    def __validate_file(file_path, validate_comm_links):
-        """ Validates the file against the schema. """
-        logging.info(f"Validating file: {file_path}")
+    def __get_json(file_path):
         with open(file_path, "rb") as json_file:
             content = json_file.read()
             if file_path.endswith('.br'):
                 content = brotli.decompress(content)
-            json_data = json.loads(content.decode("utf-8"))
+            return json.loads(content.decode("utf-8"))
+
+    @staticmethod
+    def __validate_file(file_path, validate_comm_links):
+        """ Validates the file against the schema. """
+        logging.info(f"Validating file: {file_path}")
+        json_data = JSONDataFilesValidator.__get_json(file_path)
 
         # Extracting type from JSON data
         schema_type = None
@@ -386,7 +390,27 @@ class JSONDataFilesValidator:
             logging.warning(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
 
         if validate_comm_links and schema_type == "LBDatafile":
-            JSONDataFilesValidator.__validate_comm_links(json_data)
+            basename = os.path.basename(file_path)
+            dirname = os.path.dirname(file_path)
+            digits = ''.join(filter(lambda c: c.isdigit(), basename))
+            has_number = digits.isnumeric()
+
+            if not has_number:
+                JSONDataFilesValidator.__validate_comm_links(json_data)
+            elif int(digits) == 0:
+                files = JSONDataFilesValidator.__get_files_for_validation(dirname, None, None)
+                all_data = [JSONDataFilesValidator.__get_json(file) for file in files]
+
+                comm_ids = set()
+                task_ids = set()
+                for data in all_data:
+                    for phase in data["phases"]:
+                        comm_ids.update({int(comm["from"]["id"]) for comm in phase["communications"]}            )
+                        comm_ids.update({int(comm["to"]["id"]) for comm in phase["communications"]})
+                        task_ids.update({int(task["entity"]["id"]) for task in phase["tasks"]})
+                if not comm_ids.issubset(task_ids):
+                    logging.error(f" Phase {phase["id"]}: tasks {comm_ids - task_ids} were referenced in communication, but were not found.")
+
 
     @staticmethod
     def __validate_comm_links(data):
