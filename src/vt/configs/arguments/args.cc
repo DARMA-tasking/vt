@@ -268,33 +268,48 @@ std::tuple<int, std::string> parseArguments(
   app.allow_extras(false);
 
   // Build string-vector and reverse order to parse (CLI quirk)
-  std::vector<std::string> args_to_parse;
+  std::vector<std::string> args_to_parse, yaml_input_arg;
   for (auto it = vt_args.crbegin(); it != vt_args.crend(); ++it) {
-    args_to_parse.push_back(*it);
+    if (util::demangle::DemanglerUtils::splitString(*it,'=')[0] == "--vt_input_config_yaml") {
+      yaml_input_arg.push_back(*it);
+    } else {
+      args_to_parse.push_back(*it);
+    }
   }
 
   // Allow a input config file
   app.set_config(
     "--vt_input_config",
     "", // no default file name
-    "Read in an ini config file for VT",
+    "Read in an ini or toml config file for VT",
     false // not required
   );
 
+  // Identify input YAML file first, if present
+  if (!yaml_input_arg.empty()) {
+    try {
+      app.parse(yaml_input_arg);
+    } catch (CLI::Error &ex) {
+      // Return exit code and message, delaying logic processing of such.
+      // The default exit code for 'help' is 0.
+      std::stringstream yaml_message_stream;
+      int yaml_result = app.exit(ex, yaml_message_stream, yaml_message_stream);
+      return std::make_tuple(yaml_result, yaml_message_stream.str());
+    }
+  }
+
+  // Parse the YAML parameters
+  if (appConfig.vt_input_config_yaml != "") {
+    parseYaml(appConfig, appConfig.vt_input_config_yaml);
+  }
+
+  // Then parse the remaining arguments
   try {
     app.parse(args_to_parse);
   } catch (CLI::Error &ex) {
-    // Return exit code and message, delaying logic processing of such.
-    // The default exit code for 'help' is 0.
     std::stringstream message_stream;
     int result = app.exit(ex, message_stream, message_stream);
-
     return std::make_tuple(result, message_stream.str());
-  }
-
-  // YAML input will overwrite command line arguments
-  if (appConfig.vt_input_config_yaml != "") {
-    parseYaml(appConfig, appConfig.vt_input_config_yaml);
   }
 
   // If the user specified to output the full configuration, save it in a string
