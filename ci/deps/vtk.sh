@@ -2,28 +2,37 @@
 
 set -exo pipefail
 
-if test $# -lt 2
+if test $# -lt 3
 then
-    echo "usage: ./$0 <vtk-version> <installation-dir>"
+    echo "usage: ./$0 <vtk-version> <build-root> <num_procs>"
     exit 1
 fi
+
+base_dir=$(pwd)
 
 vtk_version="$1"
 vtk_tar_name="v${vtk_version}.tar.gz"
 vtk_name="VTK-${vtk_version}"
-install_dir="${2-}"
-build_dir=/vtk-build/
+build_root="${2-}"
+
+num_procs=$3
 
 wget "https://github.com/Kitware/VTK/archive/refs/tags/$vtk_tar_name"
 tar xzf ${vtk_tar_name}
 rm ${vtk_tar_name}
-cd ${vtk_name}
 
-mkdir -p ${build_dir}
-mkdir -p ${install_dir}
+mkdir -p ${build_root}
+cd ${build_root}
 
-cd ${build_dir}
+mkdir -p build
+mkdir -p install
+
+cd build
+rm -rf ./*
 cmake \
-  -DCMAKE_INSTALL_PREFIX:FILEPATH=${install_dir} \
-  ../${vtk_name}
-cmake --build ${build_dir} --target install
+  -DCMAKE_INSTALL_PREFIX:FILEPATH=${build_root}/install \
+  ${base_dir}/${vtk_name}
+cmake --build . --target install -j ${num_procs}
+
+cd ${base_dir}
+rm -rf ${vtk_name}
