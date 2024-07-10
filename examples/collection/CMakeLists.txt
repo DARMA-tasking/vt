@@ -10,6 +10,7 @@ set(
   insertable_collection
   reduce_integral
   transpose
+  do_flops
 )
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})

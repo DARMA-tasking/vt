@@ -110,12 +110,8 @@ typename LBData::ElementIDStruct const& LBData::getCurrentElementID() const {
 
 std::unordered_map<std::string, double> LBData::getPAPIMetrics() {
   std::unordered_map<std::string, double> papi_metrics = {};
-  char event_code_str[PAPI_MAX_STR_LEN];
-  for (size_t i = 0; i < events_.size(); i++) {
-    papi_retval_ = PAPI_event_code_to_name(events_[i], event_code_str);
-    if (papi_retval_ != PAPI_OK)
-      handle_papi_error(papi_retval_, "LBData getPAPIMetrics: couldn't get name from event code: ");
-    papi_metrics[std::string(event_code_str)] = papi_values_[i];
+  for (size_t i = 0; i < native_events_.size(); i++) {
+    papi_metrics[native_events_[i]] = papi_values_[i];
   }
   papi_metrics[std::string("real_time")] = end_real_usec_ - start_real_usec_;
   papi_metrics[std::string("real_cycles")] = end_real_cycles_ - start_real_cycles_;
