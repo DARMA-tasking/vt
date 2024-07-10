@@ -68,10 +68,12 @@ RUN ./cmake.sh 3.23.4 ${arch}
 ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
 
+ARG VT_TV_ENABLED
+
 COPY ./ci/deps/vtk.sh vtk.sh
-RUN if [ "$VT_TV_ENABLED" -eq 1]; then \
+RUN if [ "$VT_TV_ENABLED" -eq 1 ]; then \
       chmod +x vtk.sh && \
-      ./vtk.sh 9.3.0 /vtk-install 4; \
+      ./vtk.sh 9.3.0 /vtk-build -j4; \
     fi
 
 COPY ./ci/deps/mpich.sh mpich.sh
@@ -147,7 +149,9 @@ ENV BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
     CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} \
     VT_DEBUG_VERBOSE=$(VT_DEBUG_VERBOSE) \
     VT_CI_BUILD=${VT_CI_BUILD} \
-    VT_KOKKOS_ENABLED=${VT_KOKKOS_ENABLED}
+    VT_KOKKOS_ENABLED=${VT_KOKKOS_ENABLED} \
+    VT_TV_ENABLED=${VT_TV_ENABLED} \
+    VTK_DIR=${VTK_DIR}
 
 RUN /vt/ci/build_cpp.sh /vt /build
 
