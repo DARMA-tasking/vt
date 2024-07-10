@@ -70,7 +70,8 @@ ENV LESSCHARSET=utf-8
 
 COPY ./ci/deps/vtk.sh vtk.sh
 RUN if [ "$VT_TV_ENABLED" -eq 1]; then \
-      ./vtk.sh 9.3.0 /vtk-install; \
+      chmod +x vtk.sh && \
+      ./vtk.sh 9.3.0 /vtk-install 4; \
     fi
 
 COPY ./ci/deps/mpich.sh mpich.sh
