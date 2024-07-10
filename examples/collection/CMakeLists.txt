@@ -11,6 +11,7 @@ set(
   reduce_integral
   transpose
   4d_collection
+  do_flops
 )
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})
