@@ -199,7 +199,7 @@ void RunnableNew::run() {
 #endif
 }
 
-std::unordered_map<std::string, double> RunnableNew::getPAPIMetrics() const {
+std::unordered_map<std::string, double> RunnableNew::getPAPIMetrics() {
   std::unordered_map<std::string, double> result = {};
   if (contexts_.has_lb)
   {

@@ -60,7 +60,7 @@ struct LBData {
   using ElementIDStruct = elm::ElementIDStruct;
   using ElementLBData    = elm::ElementLBData;
 
-  void handle_papi_error (int retval, std::string info)
+  void handle_papi_error (int retval, std::string info) const
   {
     printf("%s: PAPI error %d: %s\n", info.c_str(), retval, PAPI_strerror(retval));
     exit(1);
@@ -95,16 +95,12 @@ struct LBData {
       exit(1);
     }
 
-    for (const auto& event_name : native_events_) {
-      int native = 0x0;
-      papi_retval_ = PAPI_event_name_to_code(event_name.c_str(), &native);
+    for (const auto& event : events_) {
+      papi_retval_ = PAPI_add_event(EventSet_, event);
+      char event_code_str[PAPI_MAX_STR_LEN];
       if (papi_retval_ != PAPI_OK) {
-        printf("LBData Constructor 2: Couldn't event_name_to_code for %s: PAPI error %d: %s\n",event_name.c_str(), papi_retval_, PAPI_strerror(papi_retval_));
-        exit(1);
-      }
-      papi_retval_ = PAPI_add_event(EventSet_, native);
-      if (papi_retval_ != PAPI_OK) {
-        printf("LBData Constructor 2: Couldn't add %s to the PAPI Event Set: PAPI error %d: %s\n",event_name.c_str(), papi_retval_, PAPI_strerror(papi_retval_));
+        PAPI_event_code_to_name(event, event_code_str);
+        printf("LBData Constructor 2: Couldn't add %s: PAPI error %d: %s\n", event_code_str, papi_retval_, PAPI_strerror(papi_retval_));
         exit(1);
       }
     }
@@ -145,11 +141,24 @@ struct LBData {
   ElementIDStruct const& getCurrentElementID() const;
 
   /**
+   * \brief Start PAPI metrics map for the running context
+   */
+  void startPAPIMetrics();
+
+  /**
+   * \brief Stop PAPI metrics map for the running context
+   * 
+   * \note has to be called after startPAPIMetrics
+   * 
+   */
+  void stopPAPIMetrics();
+
+  /**
    * \brief Get the current PAPI metrics map for the running context
    *
    * \return the PAPI metrics map
    */
-  std::unordered_map<std::string, double> getPAPIMetrics() const;
+  std::unordered_map<std::string, double> getPAPIMetrics();
 
 private:
   ElementLBData* lb_data_ = nullptr;     /**< Element LB data */
@@ -159,8 +168,8 @@ private:
   int papi_retval_;
   long long start_real_cycles_, end_real_cycles_, start_real_usec_, end_real_usec_;
   long long start_virt_cycles_, end_virt_cycles_, start_virt_usec_, end_virt_usec_;
-  std::vector<std::string> native_events_ = {"instructions", "cache-misses", "fp_arith_inst_retired.scalar_double"};
-  long_long papi_values_[3];
+  std::vector<int> events_ = {PAPI_L1_DCM, PAPI_TOT_INS};
+  long_long papi_values_[5];
 };
 
 }} /* end namespace vt::ctx */

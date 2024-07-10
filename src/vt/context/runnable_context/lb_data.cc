@@ -51,7 +51,9 @@ void LBData::start(TimeType time) {
   if (should_instrument_) {
     lb_data_->start(time);
   }
+}
 
+void LBData::startPAPIMetrics() {
   /* -- PAPI START -- */
   /* Start counting events in the Event Set */
   papi_retval_ = PAPI_start(EventSet_);
@@ -71,7 +73,9 @@ void LBData::finish(TimeType time) {
   if (should_instrument_) {
     lb_data_->stop(time);
   }
+}
 
+void LBData::stopPAPIMetrics() {
   /* -- PAPI STOP -- */
   /* Stop the counting of events in the Event Set */
   papi_retval_ = PAPI_stop(EventSet_, papi_values_);
@@ -104,11 +108,22 @@ typename LBData::ElementIDStruct const& LBData::getCurrentElementID() const {
   return cur_elm_id_;
 }
 
-std::unordered_map<std::string, double> LBData::getPAPIMetrics() const {
+std::unordered_map<std::string, double> LBData::getPAPIMetrics() {
   std::unordered_map<std::string, double> papi_metrics = {};
-  for (size_t i = 0; i < native_events_.size(); i++) {
-    papi_metrics[native_events_[i]] = papi_values_[i];
+  char event_code_str[PAPI_MAX_STR_LEN];
+  for (size_t i = 0; i < events_.size(); i++) {
+    papi_retval_ = PAPI_event_code_to_name(events_[i], event_code_str);
+    if (papi_retval_ != PAPI_OK)
+      handle_papi_error(papi_retval_, "LBData getPAPIMetrics: couldn't get name from event code: ");
+    papi_metrics[std::string(event_code_str)] = papi_values_[i];
   }
+  papi_metrics[std::string("real_time")] = end_real_usec_ - start_real_usec_;
+  papi_metrics[std::string("real_cycles")] = end_real_cycles_ - start_real_cycles_;
+  papi_metrics[std::string("virt_time")] = end_virt_usec_ - start_virt_usec_;
+  papi_metrics[std::string("virt_cycles")] = end_virt_cycles_ - start_virt_cycles_;
+  // for (auto [name, value] : papi_metrics) {
+  //   fmt::print("{}: {}\n", name, value);
+  // }
   return papi_metrics;
 }
 

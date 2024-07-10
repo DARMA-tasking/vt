@@ -319,11 +319,24 @@ public:
   BaseMsgType* getMsg() const { return msg_.get(); }
 
   /**
+   * \brief Start PAPI metrics map for the running context
+   */
+  void startPAPIMetrics() { contexts_.lb.startPAPIMetrics(); }
+
+  /**
+   * \brief Stop PAPI metrics map for the running context
+   * 
+   * \note has to be called after startPAPIMetrics
+   * 
+   */
+  void stopPAPIMetrics() { contexts_.lb.stopPAPIMetrics(); }
+
+  /**
    * \brief Get the dictionnary of PAPI metrics associated with the runnable
    *
    * \return the dictionnary
    */
-  std::unordered_map<std::string, double> getPAPIMetrics() const;
+  std::unordered_map<std::string, double> getPAPIMetrics();
 
 #if vt_check_enabled(fcontext)
   /**
