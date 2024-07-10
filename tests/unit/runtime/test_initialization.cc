@@ -586,7 +586,7 @@ TEST_F(TestInitialization, test_initialize_without_restart_reader) {
 TEST_F(TestInitialization, test_initialize_with_lb_data_in) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
-  // Preapre data files
+  // Prepare data files
   auto prefix = getUniqueFilenameWithRanks();
   prepareLBDataFiles(prefix);
 
@@ -619,11 +619,11 @@ TEST_F(TestInitialization, test_initialize_with_lb_data_in) {
 TEST_F(TestInitialization, test_initialize_with_lb_data_and_config_offline_lb) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
-  // Preapre data files
+  // Prepare data files
   auto prefix = getUniqueFilenameWithRanks();
   prepareLBDataFiles(prefix);
 
-  // Preapre configuration file
+  // Prepare configuration file
   std::string file_name = getUniqueFilenameWithRanks(".txt");
   std::ofstream out(file_name);
   out << "0 OfflineLB\n";
@@ -660,11 +660,11 @@ TEST_F(TestInitialization, test_initialize_with_lb_data_and_config_offline_lb) {
 TEST_F(TestInitialization, test_initialize_with_lb_data_and_no_lb) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
-  // Preapre data files
+  // Prepare data files
   auto prefix = getUniqueFilenameWithRanks();
   prepareLBDataFiles(prefix);
 
-  // Preapre configuration file
+  // Prepare configuration file
   std::string file_name = getUniqueFilenameWithRanks(".txt");
   std::ofstream out(file_name);
   out << "0 NoLB\n";
@@ -701,7 +701,7 @@ TEST_F(TestInitialization, test_initialize_with_lb_data_and_no_lb) {
 TEST_F(TestInitialization, test_initialize_with_lb_data_and_offline_lb) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
-  // Preapre data files
+  // Prepare data files
   auto prefix = getUniqueFilenameWithRanks();
   prepareLBDataFiles(prefix);
 
@@ -737,11 +737,11 @@ TEST_F(TestInitialization, test_initialize_with_lb_data_and_offline_lb) {
 TEST_F(TestInitialization, test_initialize_with_lb_data_and_config_no_lb) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
-  // Preapre data files
+  // Prepare data files
   auto prefix = getUniqueFilenameWithRanks();
   prepareLBDataFiles(prefix);
 
-  // Preapre configuration file
+  // Prepare configuration file
   std::string file_name = getUniqueFilenameWithRanks(".txt");
   std::ofstream out(file_name);
   out << "0 NoLB\n";
@@ -780,15 +780,11 @@ TEST_F(TestInitialization, test_initialize_with_yaml_toml_and_args) {
 
   // Set command line arguments
   static char prog_name[]{"vt_program"};
-  static char vt_color[]{"--vt_color"};
-  static char vt_no_terminate[]{"--vt_no_terminate"};
-  static char vt_lb_name[]{"--vt_lb_name=RotateLB"};
+  static char vt_debug_level[]{"--vt_debug_level=verbose"};
 
   std::vector<char*> custom_args;
   custom_args.emplace_back(prog_name);
-  custom_args.emplace_back(vt_color);
-  custom_args.emplace_back(vt_lb_name);
-  custom_args.emplace_back(vt_no_terminate);
+  custom_args.emplace_back(vt_debug_level);
 
   // Set TOML config file
   std::string toml_config_file(getUniqueFilenameWithRanks(".toml"));
@@ -802,9 +798,8 @@ TEST_F(TestInitialization, test_initialize_with_yaml_toml_and_args) {
 
   if (this_rank == 0) {
     std::ofstream toml_cfg_file_{toml_config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
-    toml_cfg_file_ << "vt_lb_name = RandomLB\n"
-                   << "vt_color = False\n"
-                   << "vt_quiet = True";
+    toml_cfg_file_ << "vt_debug_level = terse\n"
+                   << "vt_color = False";
     toml_cfg_file_.close();
   }
   MPI_Barrier(comm);
@@ -823,8 +818,11 @@ TEST_F(TestInitialization, test_initialize_with_yaml_toml_and_args) {
   if (this_rank == 0) {
     std::ofstream yaml_cfg_file_{yaml_config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
     yaml_cfg_file_ << R"(
-    Load Balancing:
-      Name: NoLB
+    Output Control:
+      Color: True
+      Quiet: True
+    Debug Print Configuration:
+      Level: normal
     )";
     yaml_cfg_file_.close();
   }
@@ -836,9 +834,9 @@ TEST_F(TestInitialization, test_initialize_with_yaml_toml_and_args) {
   // Test that everything was read in correctly
   EXPECT_EQ(theConfig()->prog_name, "vt_program");
 
-  EXPECT_EQ(theConfig()->vt_quiet, true);     // Original TOML
-  EXPECT_EQ(theConfig()->vt_color, true);     // CLI overwrote TOML
-  EXPECT_EQ(theConfig()->vt_lb_name, "NoLB"); // YAML overwrote everything
+  EXPECT_EQ(theConfig()->vt_quiet, true);            // yaml
+  EXPECT_EQ(theConfig()->vt_color, false);           // toml overwrites yaml
+  EXPECT_EQ(theConfig()->vt_debug_level, "verbose"); // args overwrites everything
 }
 
 }}} // end namespace vt::tests::unit
