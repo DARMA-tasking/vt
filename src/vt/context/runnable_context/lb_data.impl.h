@@ -70,16 +70,12 @@ LBData::LBData(ElmT* in_elm, MsgT* msg)
     exit(1);
   }
 
-  for (const auto& event_name : native_events_) {
-    int native = 0x0;
-    papi_retval_ = PAPI_event_name_to_code(event_name.c_str(), &native);
+  for (const auto& event : events_) {
+    papi_retval_ = PAPI_add_event(EventSet_, event);
+    char event_code_str[PAPI_MAX_STR_LEN];
     if (papi_retval_ != PAPI_OK) {
-      printf("LBData Constructor 1: Couldn't event_name_to_code for %s: PAPI error %d: %s\n",event_name.c_str(), papi_retval_, PAPI_strerror(papi_retval_));
-      exit(1);
-    }
-    papi_retval_ = PAPI_add_event(EventSet_, native);
-    if (papi_retval_ != PAPI_OK) {
-      printf("LBData Constructor 1: Couldn't add %s to the PAPI Event Set: PAPI error %d: %s\n",event_name.c_str(), papi_retval_, PAPI_strerror(papi_retval_));
+      PAPI_event_code_to_name(event, event_code_str);
+      printf("LBData Constructor 1: Couldn't add %s: PAPI error %d: %s\n", event_code_str, papi_retval_, PAPI_strerror(papi_retval_));
       exit(1);
     }
   }
