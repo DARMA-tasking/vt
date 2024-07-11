@@ -137,6 +137,7 @@ services:
         host_compiler: ${HOST_COMPILER}
         ubuntu: ${UBUNTU}
         ubsan_enabled: ${VT_UBSAN:-0}
+        vt_tv_enabled: ${VT_TV_ENABLED:-0}
         zoltan_enabled: ${VT_ZOLTAN:-0}
         external_fmt: ${VT_EXTERNAL_FMT:-0}
       cache_from:
