@@ -70,8 +70,10 @@ ENV LESSCHARSET=utf-8
 
 ARG VT_TV_ENABLED
 
+RUN echo "VT_TV_ENABLED is set to: $VT_TV_ENABLED"
+
 COPY ./ci/deps/vtk.sh vtk.sh
-RUN if [ "$VT_TV_ENABLED" -eq 1 ]; then \
+RUN if [ "$VT_TV_ENABLED" ]; then \
       chmod +x vtk.sh && \
       ./vtk.sh 9.3.0 /vtk-build -j4; \
     fi
