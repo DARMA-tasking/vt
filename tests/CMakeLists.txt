@@ -10,6 +10,7 @@ else()
   message(STATUS "Building VT without extended testing")
 endif()
 
+set(PROJECT_TEST_CONFIG_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/config)
 set(PROJECT_TEST_UNIT_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 set(PROJECT_TEST_PERF_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/perf)
 set(PROJECT_GTEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/googletest/googletest/include)
@@ -207,6 +208,11 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
 
   if (SUB_DIR STREQUAL "trace")
     list(APPEND ADDITIONAL_ARGS "--vt_trace")
+  endif()
+
+  if (vt_tv_enabled)
+    list(APPEND ADDITIONAL_ARGS "--vt_tv")
+    list(APPEND ADDITIONAL_ARGS "--vt_tv_config_file=${PROJECT_TEST_CONFIG_DIR}/test_vttv.yaml")
   endif()
 
   add_unit_test("${SUB_DIR}_basic" UNIT_LIST_BASIC ON "${ADDITIONAL_ARGS}")

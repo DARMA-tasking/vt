@@ -79,18 +79,13 @@ if(vt_trace_only)
     set(vt_mpi_guards ON)
 endif()
 
-if (TV_LIBRARY)
-    message(STATUS "vt-tv found and enabled")
-    set(vt_feature_cmake_tv "1")
-else()
-    message(STATUS "vt-tv not found")
-    set(vt_feature_cmake_tv "0")
-endif()
-
 define_option(vt_mpi_guards "user MPI prevention guards"
     "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions"
     ON vt_feature_cmake_mpi_access_guards
 )
+
+define_option(vt_tv_enabled "vt-tv" "Build VT with vt-tv" OFF vt_feature_cmake_tv)
+set(vtk_dir "" CACHE PATH "Path to the VTK build directory")
 
 define_option(vt_zoltan_enabled "Zoltan" "Build VT with Zoltan" OFF vt_feature_cmake_zoltan)
 
