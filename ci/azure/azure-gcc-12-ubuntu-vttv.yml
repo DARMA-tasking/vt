@@ -57,7 +57,7 @@ variables:
   VT_DEBUG_VERBOSE: 0
   VT_KOKKOS_ENABLED: 0
   VT_TV_ENABLED: 1
-  VTK_DIR: /vtk-build/build
+  VTK_DIR: 
   CMAKE_CXX_STANDARD: 17
   TEST_LB_SCHEMA: 0
   CACHE: "$(Agent.TempDirectory)/cache/"

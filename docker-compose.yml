@@ -118,7 +118,6 @@ x-vtopts: &vtopts
   VT_CI_TEST_LB_SCHEMA: ${VT_CI_TEST_LB_SCHEMA:-0}
   CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD:-17}
   VT_TV_ENABLED: ${VT_TV_ENABLED:-0}
-  VTK_DIR: ${VTK_DIR:-0}
 
 services:
   ##############################################################################

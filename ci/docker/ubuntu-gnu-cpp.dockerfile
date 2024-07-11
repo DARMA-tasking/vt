@@ -76,6 +76,8 @@ RUN if [ "$VT_TV_ENABLED" -eq 1 ]; then \
       ./vtk.sh 9.3.0 /vtk-build -j4; \
     fi
 
+ENV VTK_DIR=/vtk-build/build
+
 COPY ./ci/deps/mpich.sh mpich.sh
 RUN if [ "$ubuntu" = "18.04" ]; then \
       ./mpich.sh 3.3.2 -j4; else \
@@ -150,8 +152,7 @@ ENV BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
     VT_DEBUG_VERBOSE=$(VT_DEBUG_VERBOSE) \
     VT_CI_BUILD=${VT_CI_BUILD} \
     VT_KOKKOS_ENABLED=${VT_KOKKOS_ENABLED} \
-    VT_TV_ENABLED=${VT_TV_ENABLED} \
-    VTK_DIR=${VTK_DIR}
+    VT_TV_ENABLED=${VT_TV_ENABLED}
 
 RUN /vt/ci/build_cpp.sh /vt /build
 
