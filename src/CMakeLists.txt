@@ -316,9 +316,9 @@ export(
   NAMESPACE                 vt::runtime::
 )
 
-if (EXISTS "${PROJECT_LIB_DIR}/checkpoint")
+if (EXISTS "${PROJECT_LIB_DIR}/checkpoint" OR EXISTS "${PROJECT_LIB_DIR}/magistrate")
   install(
-    TARGETS                 checkpoint
+    TARGETS                 magistrate
     EXPORT                  ${VIRTUAL_TRANSPORT_LIBRARY}
   )
 endif()

@@ -7,6 +7,8 @@ include(cmake/local_package.cmake)
 
 if (EXISTS "${PROJECT_LIB_DIR}/checkpoint")
   add_subdirectory(${PROJECT_LIB_DIR}/checkpoint)
+elseif(EXISTS "${PROJECT_LIB_DIR}/magistrate")
+  add_subdirectory(${PROJECT_LIB_DIR}/magistrate)
 else()
   # find these required packages locally
   find_package_local(magistrate)
