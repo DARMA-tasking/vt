@@ -47,7 +47,6 @@
 // do not pull in any VT dependencies here
 #include <string>
 #include <vector>
-#include <unordered_map>
 
 namespace vt { namespace arguments {
 
@@ -241,18 +240,6 @@ struct AppConfig {
   std::string vt_user_str_1 = "";
   std::string vt_user_str_2 = "";
   std::string vt_user_str_3 = "";
-
-  std::unordered_map<std::string, std::string> user_args = {
-    {"vt_user_1", "unused_user_param"},
-    {"vt_user_2", "unused_user_param"},
-    {"vt_user_3", "unused_user_param"},
-    {"vt_user_int_1", "unused_user_param"},
-    {"vt_user_int_2", "unused_user_param"},
-    {"vt_user_int_3", "unused_user_param"},
-    {"vt_user_str_1", "unused_user_param"},
-    {"vt_user_str_2", "unused_user_param"},
-    {"vt_user_str_3", "unused_user_param"}
-  };
 
   bool vt_output_config   = false;
   std::string vt_output_config_file = "vt_config.ini";

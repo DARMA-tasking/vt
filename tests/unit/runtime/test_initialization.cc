@@ -836,7 +836,7 @@ TEST_F(TestInitialization, test_initialize_with_yaml_toml_and_args) {
 
   EXPECT_EQ(theConfig()->vt_quiet, true);            // yaml
   EXPECT_EQ(theConfig()->vt_color, false);           // toml overwrites yaml
-  EXPECT_EQ(theConfig()->vt_debug_level, "verbose"); // args overwrites everything
+  EXPECT_EQ(theConfig()->vt_debug_level, "verbose"); // args overwrite everything
 }
 
 }}} // end namespace vt::tests::unit

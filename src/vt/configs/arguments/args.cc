@@ -205,6 +205,18 @@ static const std::string vt_max_mpi_send_size_label = "Max MPI Send Size";
 static const std::string vt_no_assert_fail_label = "Disable Assert Failure";
 static const std::string vt_throw_on_abort_label = "Throw on Abort";
 
+std::unordered_map<std::string, std::string> user_args_labels = {
+  {"vt_user_1", "unused_user_param"},
+  {"vt_user_2", "unused_user_param"},
+  {"vt_user_3", "unused_user_param"},
+  {"vt_user_int_1", "unused_user_param"},
+  {"vt_user_int_2", "unused_user_param"},
+  {"vt_user_int_3", "unused_user_param"},
+  {"vt_user_str_1", "unused_user_param"},
+  {"vt_user_str_2", "unused_user_param"},
+  {"vt_user_str_3", "unused_user_param"}
+};
+
 std::vector<std::string> arg_trace_mpi;
 
 /**
@@ -561,7 +573,7 @@ void parseYaml(AppConfig& appConfig, std::string inputFile) {
       else if (bool_iter == 3)
         appConfig.vt_user_3 = user_input;
       else too_many_user_args = true;
-      appConfig.user_args["vt_user_" + std::to_string(bool_iter)] = key;
+      user_args_labels["vt_user_" + std::to_string(bool_iter)] = key;
       bool_iter++;
     } catch (const YAML::RepresentationException&) {
       try {
@@ -574,7 +586,7 @@ void parseYaml(AppConfig& appConfig, std::string inputFile) {
           appConfig.vt_user_int_3 = user_input;
         else
           too_many_user_args = true;
-        appConfig.user_args["vt_user_int_" + std::to_string(int_iter)] = key;
+        user_args_labels["vt_user_int_" + std::to_string(int_iter)] = key;
         int_iter++;
       } catch (const YAML::RepresentationException&) {
         std::string user_input = user_options[key].as<std::string>();
@@ -585,7 +597,7 @@ void parseYaml(AppConfig& appConfig, std::string inputFile) {
         else if (str_iter == 3)
           appConfig.vt_user_str_3 = user_input;
         else too_many_user_args = true;
-        appConfig.user_args["vt_user_str_" + std::to_string(str_iter)] = key;
+        user_args_labels["vt_user_str_" + std::to_string(str_iter)] = key;
         str_iter++;
       }
     }
@@ -1276,15 +1288,15 @@ std::vector<std::tuple<std::string, std::string, variantArg_t>> cli_to_yaml_args
     {"Launch", vt_pause_label, static_cast<variantArg_t>(appConfig.vt_pause)},
 
     // User Options
-    {"User Options", appConfig.user_args["vt_user_1"], static_cast<variantArg_t>(appConfig.vt_user_1)},
-    {"User Options", appConfig.user_args["vt_user_2"], static_cast<variantArg_t>(appConfig.vt_user_2)},
-    {"User Options", appConfig.user_args["vt_user_3"], static_cast<variantArg_t>(appConfig.vt_user_3)},
-    {"User Options", appConfig.user_args["vt_user_int_1"], static_cast<variantArg_t>(appConfig.vt_user_int_1)},
-    {"User Options", appConfig.user_args["vt_user_int_2"], static_cast<variantArg_t>(appConfig.vt_user_int_2)},
-    {"User Options", appConfig.user_args["vt_user_int_3"], static_cast<variantArg_t>(appConfig.vt_user_int_3)},
-    {"User Options", appConfig.user_args["vt_user_str_1"], static_cast<variantArg_t>(appConfig.vt_user_str_1)},
-    {"User Options", appConfig.user_args["vt_user_str_2"], static_cast<variantArg_t>(appConfig.vt_user_str_2)},
-    {"User Options", appConfig.user_args["vt_user_str_3"], static_cast<variantArg_t>(appConfig.vt_user_str_3)},
+    {"User Options", user_args_labels["vt_user_1"], static_cast<variantArg_t>(appConfig.vt_user_1)},
+    {"User Options", user_args_labels["vt_user_2"], static_cast<variantArg_t>(appConfig.vt_user_2)},
+    {"User Options", user_args_labels["vt_user_3"], static_cast<variantArg_t>(appConfig.vt_user_3)},
+    {"User Options", user_args_labels["vt_user_int_1"], static_cast<variantArg_t>(appConfig.vt_user_int_1)},
+    {"User Options", user_args_labels["vt_user_int_2"], static_cast<variantArg_t>(appConfig.vt_user_int_2)},
+    {"User Options", user_args_labels["vt_user_int_3"], static_cast<variantArg_t>(appConfig.vt_user_int_3)},
+    {"User Options", user_args_labels["vt_user_str_1"], static_cast<variantArg_t>(appConfig.vt_user_str_1)},
+    {"User Options", user_args_labels["vt_user_str_2"], static_cast<variantArg_t>(appConfig.vt_user_str_2)},
+    {"User Options", user_args_labels["vt_user_str_3"], static_cast<variantArg_t>(appConfig.vt_user_str_3)},
 
     // Scheduler Configuration
     {"Scheduler Configuration", vt_sched_num_progress_label, static_cast<variantArg_t>(appConfig.vt_sched_num_progress)},
@@ -1326,8 +1338,7 @@ std::vector<std::tuple<std::string, std::string, variantArg_t>> cli_to_yaml_args
     // Then handle any nested nodes (with "/" in them)
     else if (yaml_node.find("/") != yaml_node.npos) {
       auto nodes = util::demangle::DemanglerUtils::splitString(yaml_node, '/');
-      // auto nodes = splitString(yaml_node);
-      auto current_node = output_config_yaml[nodes[0]][nodes[1]]; // TODO: generalize this
+      auto current_node = output_config_yaml[nodes[0]][nodes[1]];
       addVariantToNode(current_node, yaml_key, yaml_val);
     }
     // The rest are straightforward
