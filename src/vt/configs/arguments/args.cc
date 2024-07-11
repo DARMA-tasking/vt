@@ -1157,161 +1157,161 @@ void addVariantToNode(YAML::Node& node, std::string& key, variantArg_t& variant_
 
 std::string convertConfigToYamlString(AppConfig& appConfig) {
   // First, create a converter vector of tuples {Node(s), Key, Value}
-std::vector<std::tuple<std::string, std::string, variantArg_t>> cli_to_yaml_args = {
-    // Output Control
-    {"Output Control", vt_color_label, static_cast<variantArg_t>(appConfig.vt_color)},
-    {"Output Control", vt_no_color_label, static_cast<variantArg_t>(not appConfig.vt_no_color)},
-    {"Output Control", vt_quiet_label, static_cast<variantArg_t>(appConfig.vt_quiet)},
+  std::vector<std::tuple<std::string, std::string, variantArg_t>> cli_to_yaml_args = {
+      // Output Control
+      {"Output Control", vt_color_label, static_cast<variantArg_t>(appConfig.vt_color)},
+      {"Output Control", vt_no_color_label, static_cast<variantArg_t>(not appConfig.vt_no_color)},
+      {"Output Control", vt_quiet_label, static_cast<variantArg_t>(appConfig.vt_quiet)},
 
-    // Signal Handling
-    {"Signal Handling", vt_no_sigint_label, static_cast<variantArg_t>(appConfig.vt_no_sigint)},
-    {"Signal Handling", vt_no_sigsegv_label, static_cast<variantArg_t>(appConfig.vt_no_sigsegv)},
-    {"Signal Handling", vt_no_sigbus_label, static_cast<variantArg_t>(appConfig.vt_no_sigbus)},
-    {"Signal Handling", vt_no_terminate_label, static_cast<variantArg_t>(appConfig.vt_no_terminate)},
+      // Signal Handling
+      {"Signal Handling", vt_no_sigint_label, static_cast<variantArg_t>(appConfig.vt_no_sigint)},
+      {"Signal Handling", vt_no_sigsegv_label, static_cast<variantArg_t>(appConfig.vt_no_sigsegv)},
+      {"Signal Handling", vt_no_sigbus_label, static_cast<variantArg_t>(appConfig.vt_no_sigbus)},
+      {"Signal Handling", vt_no_terminate_label, static_cast<variantArg_t>(appConfig.vt_no_terminate)},
 
-    // Memory Usage Reporting
-    {"Memory Usage Reporting", vt_memory_reporters_label, static_cast<variantArg_t>(appConfig.vt_memory_reporters)},
-    {"Memory Usage Reporting", vt_print_memory_each_phase_label, static_cast<variantArg_t>(appConfig.vt_print_memory_each_phase)},
-    {"Memory Usage Reporting", vt_print_memory_node_label, static_cast<variantArg_t>(appConfig.vt_print_memory_node)},
-    {"Memory Usage Reporting", vt_allow_memory_report_with_ps_label, static_cast<variantArg_t>(appConfig.vt_allow_memory_report_with_ps)},
-    {"Memory Usage Reporting", vt_print_memory_threshold_label, static_cast<variantArg_t>(appConfig.vt_print_memory_threshold)},
-    {"Memory Usage Reporting", vt_print_memory_sched_poll_label, static_cast<variantArg_t>(appConfig.vt_print_memory_sched_poll)},
-    {"Memory Usage Reporting", vt_print_memory_footprint_label, static_cast<variantArg_t>(appConfig.vt_print_memory_footprint)},
+      // Memory Usage Reporting
+      {"Memory Usage Reporting", vt_memory_reporters_label, static_cast<variantArg_t>(appConfig.vt_memory_reporters)},
+      {"Memory Usage Reporting", vt_print_memory_each_phase_label, static_cast<variantArg_t>(appConfig.vt_print_memory_each_phase)},
+      {"Memory Usage Reporting", vt_print_memory_node_label, static_cast<variantArg_t>(appConfig.vt_print_memory_node)},
+      {"Memory Usage Reporting", vt_allow_memory_report_with_ps_label, static_cast<variantArg_t>(appConfig.vt_allow_memory_report_with_ps)},
+      {"Memory Usage Reporting", vt_print_memory_threshold_label, static_cast<variantArg_t>(appConfig.vt_print_memory_threshold)},
+      {"Memory Usage Reporting", vt_print_memory_sched_poll_label, static_cast<variantArg_t>(appConfig.vt_print_memory_sched_poll)},
+      {"Memory Usage Reporting", vt_print_memory_footprint_label, static_cast<variantArg_t>(appConfig.vt_print_memory_footprint)},
 
-    // Dump Stack Backtrace
-    {"Dump Stack Backtrace", vt_no_warn_stack_label, static_cast<variantArg_t>(appConfig.vt_no_warn_stack)},
-    {"Dump Stack Backtrace", vt_no_assert_stack_label, static_cast<variantArg_t>(appConfig.vt_no_assert_stack)},
-    {"Dump Stack Backtrace", vt_no_abort_stack_label, static_cast<variantArg_t>(appConfig.vt_no_abort_stack)},
-    {"Dump Stack Backtrace", vt_no_stack_label, static_cast<variantArg_t>(appConfig.vt_no_stack)},
-    {"Dump Stack Backtrace", vt_stack_file_label, static_cast<variantArg_t>(appConfig.vt_stack_file)},
-    {"Dump Stack Backtrace", vt_stack_dir_label, static_cast<variantArg_t>(appConfig.vt_stack_dir)},
-    {"Dump Stack Backtrace", vt_stack_mod_label, static_cast<variantArg_t>(appConfig.vt_stack_mod)},
+      // Dump Stack Backtrace
+      {"Dump Stack Backtrace", vt_no_warn_stack_label, static_cast<variantArg_t>(appConfig.vt_no_warn_stack)},
+      {"Dump Stack Backtrace", vt_no_assert_stack_label, static_cast<variantArg_t>(appConfig.vt_no_assert_stack)},
+      {"Dump Stack Backtrace", vt_no_abort_stack_label, static_cast<variantArg_t>(appConfig.vt_no_abort_stack)},
+      {"Dump Stack Backtrace", vt_no_stack_label, static_cast<variantArg_t>(appConfig.vt_no_stack)},
+      {"Dump Stack Backtrace", vt_stack_file_label, static_cast<variantArg_t>(appConfig.vt_stack_file)},
+      {"Dump Stack Backtrace", vt_stack_dir_label, static_cast<variantArg_t>(appConfig.vt_stack_dir)},
+      {"Dump Stack Backtrace", vt_stack_mod_label, static_cast<variantArg_t>(appConfig.vt_stack_mod)},
 
-    // Tracing Configuration
-    {"Tracing Configuration", vt_trace_label, static_cast<variantArg_t>(appConfig.vt_trace)},
-    {"Tracing Configuration", vt_trace_mpi_label, static_cast<variantArg_t>(appConfig.vt_trace_mpi)},
-    {"Tracing Configuration", vt_trace_pmpi_label, static_cast<variantArg_t>(appConfig.vt_trace_pmpi)},
-    {"Tracing Configuration", vt_trace_file_label, static_cast<variantArg_t>(appConfig.vt_trace_file)},
-    {"Tracing Configuration", vt_trace_dir_label, static_cast<variantArg_t>(appConfig.vt_trace_dir)},
-    {"Tracing Configuration", vt_trace_mod_label, static_cast<variantArg_t>(appConfig.vt_trace_mod)},
-    {"Tracing Configuration", vt_trace_flush_size_label, static_cast<variantArg_t>(appConfig.vt_trace_flush_size)},
-    {"Tracing Configuration", vt_trace_gzip_finish_flush_label, static_cast<variantArg_t>(appConfig.vt_trace_gzip_finish_flush)},
-    {"Tracing Configuration", vt_trace_sys_all_label, static_cast<variantArg_t>(appConfig.vt_trace_sys_all)},
-    {"Tracing Configuration", vt_trace_sys_term_label, static_cast<variantArg_t>(appConfig.vt_trace_sys_term)},
-    {"Tracing Configuration", vt_trace_sys_location_label, static_cast<variantArg_t>(appConfig.vt_trace_sys_location)},
-    {"Tracing Configuration", vt_trace_sys_collection_label, static_cast<variantArg_t>(appConfig.vt_trace_sys_collection)},
-    {"Tracing Configuration", vt_trace_sys_serial_msg_label, static_cast<variantArg_t>(appConfig.vt_trace_sys_serial_msg)},
-    {"Tracing Configuration", vt_trace_spec_label, static_cast<variantArg_t>(appConfig.vt_trace_spec)},
-    {"Tracing Configuration", vt_trace_spec_file_label, static_cast<variantArg_t>(appConfig.vt_trace_spec_file)},
-    {"Tracing Configuration", vt_trace_memory_usage_label, static_cast<variantArg_t>(appConfig.vt_trace_memory_usage)},
-    {"Tracing Configuration", vt_trace_event_polling_label, static_cast<variantArg_t>(appConfig.vt_trace_event_polling)},
-    {"Tracing Configuration", vt_trace_irecv_polling_label, static_cast<variantArg_t>(appConfig.vt_trace_irecv_polling)},
+      // Tracing Configuration
+      {"Tracing Configuration", vt_trace_label, static_cast<variantArg_t>(appConfig.vt_trace)},
+      {"Tracing Configuration", vt_trace_mpi_label, static_cast<variantArg_t>(appConfig.vt_trace_mpi)},
+      {"Tracing Configuration", vt_trace_pmpi_label, static_cast<variantArg_t>(appConfig.vt_trace_pmpi)},
+      {"Tracing Configuration", vt_trace_file_label, static_cast<variantArg_t>(appConfig.vt_trace_file)},
+      {"Tracing Configuration", vt_trace_dir_label, static_cast<variantArg_t>(appConfig.vt_trace_dir)},
+      {"Tracing Configuration", vt_trace_mod_label, static_cast<variantArg_t>(appConfig.vt_trace_mod)},
+      {"Tracing Configuration", vt_trace_flush_size_label, static_cast<variantArg_t>(appConfig.vt_trace_flush_size)},
+      {"Tracing Configuration", vt_trace_gzip_finish_flush_label, static_cast<variantArg_t>(appConfig.vt_trace_gzip_finish_flush)},
+      {"Tracing Configuration", vt_trace_sys_all_label, static_cast<variantArg_t>(appConfig.vt_trace_sys_all)},
+      {"Tracing Configuration", vt_trace_sys_term_label, static_cast<variantArg_t>(appConfig.vt_trace_sys_term)},
+      {"Tracing Configuration", vt_trace_sys_location_label, static_cast<variantArg_t>(appConfig.vt_trace_sys_location)},
+      {"Tracing Configuration", vt_trace_sys_collection_label, static_cast<variantArg_t>(appConfig.vt_trace_sys_collection)},
+      {"Tracing Configuration", vt_trace_sys_serial_msg_label, static_cast<variantArg_t>(appConfig.vt_trace_sys_serial_msg)},
+      {"Tracing Configuration", vt_trace_spec_label, static_cast<variantArg_t>(appConfig.vt_trace_spec)},
+      {"Tracing Configuration", vt_trace_spec_file_label, static_cast<variantArg_t>(appConfig.vt_trace_spec_file)},
+      {"Tracing Configuration", vt_trace_memory_usage_label, static_cast<variantArg_t>(appConfig.vt_trace_memory_usage)},
+      {"Tracing Configuration", vt_trace_event_polling_label, static_cast<variantArg_t>(appConfig.vt_trace_event_polling)},
+      {"Tracing Configuration", vt_trace_irecv_polling_label, static_cast<variantArg_t>(appConfig.vt_trace_irecv_polling)},
 
-    // Debug Print Configuration
-    {"Debug Print Configuration", vt_debug_level_label, static_cast<variantArg_t>(appConfig.vt_debug_level)},
-    {"Debug Print Configuration", vt_debug_all_label, static_cast<variantArg_t>(appConfig.vt_debug_all)},
-    {"Debug Print Configuration", vt_debug_none_label, static_cast<variantArg_t>(appConfig.vt_debug_none)},
-    {"Debug Print Configuration", vt_debug_print_flush_label, static_cast<variantArg_t>(appConfig.vt_debug_print_flush)},
-    {"Debug Print Configuration/Enable", vt_debug_gen_label, static_cast<variantArg_t>(appConfig.vt_debug_gen)},
-    {"Debug Print Configuration/Enable", vt_debug_runtime_label, static_cast<variantArg_t>(appConfig.vt_debug_runtime)},
-    {"Debug Print Configuration/Enable", vt_debug_active_label, static_cast<variantArg_t>(appConfig.vt_debug_active)},
-    {"Debug Print Configuration/Enable", vt_debug_term_label, static_cast<variantArg_t>(appConfig.vt_debug_term)},
-    {"Debug Print Configuration/Enable", vt_debug_termds_label, static_cast<variantArg_t>(appConfig.vt_debug_termds)},
-    {"Debug Print Configuration/Enable", vt_debug_barrier_label, static_cast<variantArg_t>(appConfig.vt_debug_barrier)},
-    {"Debug Print Configuration/Enable", vt_debug_event_label, static_cast<variantArg_t>(appConfig.vt_debug_event)},
-    {"Debug Print Configuration/Enable", vt_debug_pipe_label, static_cast<variantArg_t>(appConfig.vt_debug_pipe)},
-    {"Debug Print Configuration/Enable", vt_debug_pool_label, static_cast<variantArg_t>(appConfig.vt_debug_pool)},
-    {"Debug Print Configuration/Enable", vt_debug_reduce_label, static_cast<variantArg_t>(appConfig.vt_debug_reduce)},
-    {"Debug Print Configuration/Enable", vt_debug_rdma_label, static_cast<variantArg_t>(appConfig.vt_debug_rdma)},
-    {"Debug Print Configuration/Enable", vt_debug_rdma_channel_label, static_cast<variantArg_t>(appConfig.vt_debug_rdma_channel)},
-    {"Debug Print Configuration/Enable", vt_debug_rdma_state_label, static_cast<variantArg_t>(appConfig.vt_debug_rdma_state)},
-    {"Debug Print Configuration/Enable", vt_debug_handler_label, static_cast<variantArg_t>(appConfig.vt_debug_handler)},
-    {"Debug Print Configuration/Enable", vt_debug_hierlb_label, static_cast<variantArg_t>(appConfig.vt_debug_hierlb)},
-    {"Debug Print Configuration/Enable", vt_debug_temperedlb_label, static_cast<variantArg_t>(appConfig.vt_debug_temperedlb)},
-    {"Debug Print Configuration/Enable", vt_debug_temperedwmin_label, static_cast<variantArg_t>(appConfig.vt_debug_temperedwmin)},
-    {"Debug Print Configuration/Enable", vt_debug_scatter_label, static_cast<variantArg_t>(appConfig.vt_debug_scatter)},
-    {"Debug Print Configuration/Enable", vt_debug_serial_msg_label, static_cast<variantArg_t>(appConfig.vt_debug_serial_msg)},
-    {"Debug Print Configuration/Enable", vt_debug_trace_label, static_cast<variantArg_t>(appConfig.vt_debug_trace)},
-    {"Debug Print Configuration/Enable", vt_debug_location_label, static_cast<variantArg_t>(appConfig.vt_debug_location)},
-    {"Debug Print Configuration/Enable", vt_debug_lb_label, static_cast<variantArg_t>(appConfig.vt_debug_lb)},
-    {"Debug Print Configuration/Enable", vt_debug_vrt_label, static_cast<variantArg_t>(appConfig.vt_debug_vrt)},
-    {"Debug Print Configuration/Enable", vt_debug_vrt_coll_label, static_cast<variantArg_t>(appConfig.vt_debug_vrt_coll)},
-    {"Debug Print Configuration/Enable", vt_debug_worker_label, static_cast<variantArg_t>(appConfig.vt_debug_worker)},
-    {"Debug Print Configuration/Enable", vt_debug_group_label, static_cast<variantArg_t>(appConfig.vt_debug_group)},
-    {"Debug Print Configuration/Enable", vt_debug_broadcast_label, static_cast<variantArg_t>(appConfig.vt_debug_broadcast)},
-    {"Debug Print Configuration/Enable", vt_debug_objgroup_label, static_cast<variantArg_t>(appConfig.vt_debug_objgroup)},
-    {"Debug Print Configuration/Enable", vt_debug_phase_label, static_cast<variantArg_t>(appConfig.vt_debug_phase)},
-    {"Debug Print Configuration/Enable", vt_debug_context_label, static_cast<variantArg_t>(appConfig.vt_debug_context)},
-    {"Debug Print Configuration/Enable", vt_debug_epoch_label, static_cast<variantArg_t>(appConfig.vt_debug_epoch)},
+      // Debug Print Configuration
+      {"Debug Print Configuration", vt_debug_level_label, static_cast<variantArg_t>(appConfig.vt_debug_level)},
+      {"Debug Print Configuration", vt_debug_all_label, static_cast<variantArg_t>(appConfig.vt_debug_all)},
+      {"Debug Print Configuration", vt_debug_none_label, static_cast<variantArg_t>(appConfig.vt_debug_none)},
+      {"Debug Print Configuration", vt_debug_print_flush_label, static_cast<variantArg_t>(appConfig.vt_debug_print_flush)},
+      {"Debug Print Configuration/Enable", vt_debug_gen_label, static_cast<variantArg_t>(appConfig.vt_debug_gen)},
+      {"Debug Print Configuration/Enable", vt_debug_runtime_label, static_cast<variantArg_t>(appConfig.vt_debug_runtime)},
+      {"Debug Print Configuration/Enable", vt_debug_active_label, static_cast<variantArg_t>(appConfig.vt_debug_active)},
+      {"Debug Print Configuration/Enable", vt_debug_term_label, static_cast<variantArg_t>(appConfig.vt_debug_term)},
+      {"Debug Print Configuration/Enable", vt_debug_termds_label, static_cast<variantArg_t>(appConfig.vt_debug_termds)},
+      {"Debug Print Configuration/Enable", vt_debug_barrier_label, static_cast<variantArg_t>(appConfig.vt_debug_barrier)},
+      {"Debug Print Configuration/Enable", vt_debug_event_label, static_cast<variantArg_t>(appConfig.vt_debug_event)},
+      {"Debug Print Configuration/Enable", vt_debug_pipe_label, static_cast<variantArg_t>(appConfig.vt_debug_pipe)},
+      {"Debug Print Configuration/Enable", vt_debug_pool_label, static_cast<variantArg_t>(appConfig.vt_debug_pool)},
+      {"Debug Print Configuration/Enable", vt_debug_reduce_label, static_cast<variantArg_t>(appConfig.vt_debug_reduce)},
+      {"Debug Print Configuration/Enable", vt_debug_rdma_label, static_cast<variantArg_t>(appConfig.vt_debug_rdma)},
+      {"Debug Print Configuration/Enable", vt_debug_rdma_channel_label, static_cast<variantArg_t>(appConfig.vt_debug_rdma_channel)},
+      {"Debug Print Configuration/Enable", vt_debug_rdma_state_label, static_cast<variantArg_t>(appConfig.vt_debug_rdma_state)},
+      {"Debug Print Configuration/Enable", vt_debug_handler_label, static_cast<variantArg_t>(appConfig.vt_debug_handler)},
+      {"Debug Print Configuration/Enable", vt_debug_hierlb_label, static_cast<variantArg_t>(appConfig.vt_debug_hierlb)},
+      {"Debug Print Configuration/Enable", vt_debug_temperedlb_label, static_cast<variantArg_t>(appConfig.vt_debug_temperedlb)},
+      {"Debug Print Configuration/Enable", vt_debug_temperedwmin_label, static_cast<variantArg_t>(appConfig.vt_debug_temperedwmin)},
+      {"Debug Print Configuration/Enable", vt_debug_scatter_label, static_cast<variantArg_t>(appConfig.vt_debug_scatter)},
+      {"Debug Print Configuration/Enable", vt_debug_serial_msg_label, static_cast<variantArg_t>(appConfig.vt_debug_serial_msg)},
+      {"Debug Print Configuration/Enable", vt_debug_trace_label, static_cast<variantArg_t>(appConfig.vt_debug_trace)},
+      {"Debug Print Configuration/Enable", vt_debug_location_label, static_cast<variantArg_t>(appConfig.vt_debug_location)},
+      {"Debug Print Configuration/Enable", vt_debug_lb_label, static_cast<variantArg_t>(appConfig.vt_debug_lb)},
+      {"Debug Print Configuration/Enable", vt_debug_vrt_label, static_cast<variantArg_t>(appConfig.vt_debug_vrt)},
+      {"Debug Print Configuration/Enable", vt_debug_vrt_coll_label, static_cast<variantArg_t>(appConfig.vt_debug_vrt_coll)},
+      {"Debug Print Configuration/Enable", vt_debug_worker_label, static_cast<variantArg_t>(appConfig.vt_debug_worker)},
+      {"Debug Print Configuration/Enable", vt_debug_group_label, static_cast<variantArg_t>(appConfig.vt_debug_group)},
+      {"Debug Print Configuration/Enable", vt_debug_broadcast_label, static_cast<variantArg_t>(appConfig.vt_debug_broadcast)},
+      {"Debug Print Configuration/Enable", vt_debug_objgroup_label, static_cast<variantArg_t>(appConfig.vt_debug_objgroup)},
+      {"Debug Print Configuration/Enable", vt_debug_phase_label, static_cast<variantArg_t>(appConfig.vt_debug_phase)},
+      {"Debug Print Configuration/Enable", vt_debug_context_label, static_cast<variantArg_t>(appConfig.vt_debug_context)},
+      {"Debug Print Configuration/Enable", vt_debug_epoch_label, static_cast<variantArg_t>(appConfig.vt_debug_epoch)},
 
-    // Load Balancing
-    {"Load Balancing", vt_lb_label, static_cast<variantArg_t>(appConfig.vt_lb)},
-    {"Load Balancing", vt_lb_quiet_label, static_cast<variantArg_t>(appConfig.vt_lb_quiet)},
-    {"Load Balancing", vt_lb_file_name_label, static_cast<variantArg_t>(appConfig.vt_lb_file_name)},
-    {"Load Balancing", vt_lb_show_config_label, static_cast<variantArg_t>(appConfig.vt_lb_show_config)},
-    {"Load Balancing", vt_lb_name_label, static_cast<variantArg_t>(appConfig.vt_lb_name)},
-    {"Load Balancing", vt_lb_args_label, static_cast<variantArg_t>(appConfig.vt_lb_args)},
-    {"Load Balancing", vt_lb_interval_label, static_cast<variantArg_t>(appConfig.vt_lb_interval)},
-    {"Load Balancing", vt_lb_keep_last_elm_label, static_cast<variantArg_t>(appConfig.vt_lb_keep_last_elm)},
-    {"Load Balancing/LB Data Output", vt_lb_data_label, static_cast<variantArg_t>(appConfig.vt_lb_data)},
-    {"Load Balancing/LB Data Output", vt_lb_data_dir_label, static_cast<variantArg_t>(appConfig.vt_lb_data_dir)},
-    {"Load Balancing/LB Data Output", vt_lb_data_file_label, static_cast<variantArg_t>(appConfig.vt_lb_data_file)},
-    {"Load Balancing/LB Data Input", vt_lb_data_in_label, static_cast<variantArg_t>(appConfig.vt_lb_data_in)},
-    {"Load Balancing/LB Data Input", vt_lb_data_compress_label, static_cast<variantArg_t>(appConfig.vt_lb_data_compress)},
-    {"Load Balancing/LB Data Input", vt_lb_data_dir_in_label, static_cast<variantArg_t>(appConfig.vt_lb_data_dir_in)},
-    {"Load Balancing/LB Data Input", vt_lb_data_file_in_label, static_cast<variantArg_t>(appConfig.vt_lb_data_file_in)},
-    {"Load Balancing/LB Statistics", vt_lb_statistics_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics)},
-    {"Load Balancing/LB Statistics", vt_lb_statistics_compress_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics_compress)},
-    {"Load Balancing/LB Statistics", vt_lb_statistics_file_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics_file)},
-    {"Load Balancing/LB Statistics", vt_lb_statistics_dir_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics_dir)},
-    {"Load Balancing", vt_lb_self_migration_label, static_cast<variantArg_t>(appConfig.vt_lb_self_migration)},
-    {"Load Balancing", vt_lb_spec_label, static_cast<variantArg_t>(appConfig.vt_lb_spec)},
-    {"Load Balancing", vt_lb_spec_file_label, static_cast<variantArg_t>(appConfig.vt_lb_spec_file)},
+      // Load Balancing
+      {"Load Balancing", vt_lb_label, static_cast<variantArg_t>(appConfig.vt_lb)},
+      {"Load Balancing", vt_lb_quiet_label, static_cast<variantArg_t>(appConfig.vt_lb_quiet)},
+      {"Load Balancing", vt_lb_file_name_label, static_cast<variantArg_t>(appConfig.vt_lb_file_name)},
+      {"Load Balancing", vt_lb_show_config_label, static_cast<variantArg_t>(appConfig.vt_lb_show_config)},
+      {"Load Balancing", vt_lb_name_label, static_cast<variantArg_t>(appConfig.vt_lb_name)},
+      {"Load Balancing", vt_lb_args_label, static_cast<variantArg_t>(appConfig.vt_lb_args)},
+      {"Load Balancing", vt_lb_interval_label, static_cast<variantArg_t>(appConfig.vt_lb_interval)},
+      {"Load Balancing", vt_lb_keep_last_elm_label, static_cast<variantArg_t>(appConfig.vt_lb_keep_last_elm)},
+      {"Load Balancing/LB Data Output", vt_lb_data_label, static_cast<variantArg_t>(appConfig.vt_lb_data)},
+      {"Load Balancing/LB Data Output", vt_lb_data_dir_label, static_cast<variantArg_t>(appConfig.vt_lb_data_dir)},
+      {"Load Balancing/LB Data Output", vt_lb_data_file_label, static_cast<variantArg_t>(appConfig.vt_lb_data_file)},
+      {"Load Balancing/LB Data Input", vt_lb_data_in_label, static_cast<variantArg_t>(appConfig.vt_lb_data_in)},
+      {"Load Balancing/LB Data Input", vt_lb_data_compress_label, static_cast<variantArg_t>(appConfig.vt_lb_data_compress)},
+      {"Load Balancing/LB Data Input", vt_lb_data_dir_in_label, static_cast<variantArg_t>(appConfig.vt_lb_data_dir_in)},
+      {"Load Balancing/LB Data Input", vt_lb_data_file_in_label, static_cast<variantArg_t>(appConfig.vt_lb_data_file_in)},
+      {"Load Balancing/LB Statistics", vt_lb_statistics_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics)},
+      {"Load Balancing/LB Statistics", vt_lb_statistics_compress_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics_compress)},
+      {"Load Balancing/LB Statistics", vt_lb_statistics_file_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics_file)},
+      {"Load Balancing/LB Statistics", vt_lb_statistics_dir_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics_dir)},
+      {"Load Balancing", vt_lb_self_migration_label, static_cast<variantArg_t>(appConfig.vt_lb_self_migration)},
+      {"Load Balancing", vt_lb_spec_label, static_cast<variantArg_t>(appConfig.vt_lb_spec)},
+      {"Load Balancing", vt_lb_spec_file_label, static_cast<variantArg_t>(appConfig.vt_lb_spec_file)},
 
-    // Diagnostics
-    {"Diagnostics", vt_diag_enable_label, static_cast<variantArg_t>(appConfig.vt_diag_enable)},
-    {"Diagnostics", vt_diag_print_summary_label, static_cast<variantArg_t>(appConfig.vt_diag_print_summary)},
-    {"Diagnostics", vt_diag_summary_file_label, static_cast<variantArg_t>(appConfig.vt_diag_summary_file)},
-    {"Diagnostics", vt_diag_summary_csv_file_label, static_cast<variantArg_t>(appConfig.vt_diag_summary_csv_file)},
-    {"Diagnostics", vt_diag_csv_base_units_label, static_cast<variantArg_t>(appConfig.vt_diag_csv_base_units)},
+      // Diagnostics
+      {"Diagnostics", vt_diag_enable_label, static_cast<variantArg_t>(appConfig.vt_diag_enable)},
+      {"Diagnostics", vt_diag_print_summary_label, static_cast<variantArg_t>(appConfig.vt_diag_print_summary)},
+      {"Diagnostics", vt_diag_summary_file_label, static_cast<variantArg_t>(appConfig.vt_diag_summary_file)},
+      {"Diagnostics", vt_diag_summary_csv_file_label, static_cast<variantArg_t>(appConfig.vt_diag_summary_csv_file)},
+      {"Diagnostics", vt_diag_csv_base_units_label, static_cast<variantArg_t>(appConfig.vt_diag_csv_base_units)},
 
-    // Termination
-    {"Termination", vt_no_detect_hang_label, static_cast<variantArg_t>(not appConfig.vt_no_detect_hang)},
-    {"Termination", vt_term_rooted_use_ds_label, static_cast<variantArg_t>(appConfig.vt_term_rooted_use_ds)},
-    {"Termination", vt_term_rooted_use_wave_label, static_cast<variantArg_t>(appConfig.vt_term_rooted_use_wave)},
-    {"Termination", vt_epoch_graph_on_hang_label, static_cast<variantArg_t>(appConfig.vt_epoch_graph_on_hang)},
-    {"Termination", vt_epoch_graph_terse_label, static_cast<variantArg_t>(appConfig.vt_epoch_graph_terse)},
-    {"Termination", vt_print_no_progress_label, static_cast<variantArg_t>(appConfig.vt_print_no_progress)},
-    {"Termination", vt_hang_freq_label, static_cast<variantArg_t>(appConfig.vt_hang_freq)},
+      // Termination
+      {"Termination", vt_no_detect_hang_label, static_cast<variantArg_t>(not appConfig.vt_no_detect_hang)},
+      {"Termination", vt_term_rooted_use_ds_label, static_cast<variantArg_t>(appConfig.vt_term_rooted_use_ds)},
+      {"Termination", vt_term_rooted_use_wave_label, static_cast<variantArg_t>(appConfig.vt_term_rooted_use_wave)},
+      {"Termination", vt_epoch_graph_on_hang_label, static_cast<variantArg_t>(appConfig.vt_epoch_graph_on_hang)},
+      {"Termination", vt_epoch_graph_terse_label, static_cast<variantArg_t>(appConfig.vt_epoch_graph_terse)},
+      {"Termination", vt_print_no_progress_label, static_cast<variantArg_t>(appConfig.vt_print_no_progress)},
+      {"Termination", vt_hang_freq_label, static_cast<variantArg_t>(appConfig.vt_hang_freq)},
 
-    // Debugging/Launch
-    {"Launch", vt_pause_label, static_cast<variantArg_t>(appConfig.vt_pause)},
+      // Debugging/Launch
+      {"Launch", vt_pause_label, static_cast<variantArg_t>(appConfig.vt_pause)},
 
-    // User Options
-    {"User Options", user_args_labels["vt_user_1"], static_cast<variantArg_t>(appConfig.vt_user_1)},
-    {"User Options", user_args_labels["vt_user_2"], static_cast<variantArg_t>(appConfig.vt_user_2)},
-    {"User Options", user_args_labels["vt_user_3"], static_cast<variantArg_t>(appConfig.vt_user_3)},
-    {"User Options", user_args_labels["vt_user_int_1"], static_cast<variantArg_t>(appConfig.vt_user_int_1)},
-    {"User Options", user_args_labels["vt_user_int_2"], static_cast<variantArg_t>(appConfig.vt_user_int_2)},
-    {"User Options", user_args_labels["vt_user_int_3"], static_cast<variantArg_t>(appConfig.vt_user_int_3)},
-    {"User Options", user_args_labels["vt_user_str_1"], static_cast<variantArg_t>(appConfig.vt_user_str_1)},
-    {"User Options", user_args_labels["vt_user_str_2"], static_cast<variantArg_t>(appConfig.vt_user_str_2)},
-    {"User Options", user_args_labels["vt_user_str_3"], static_cast<variantArg_t>(appConfig.vt_user_str_3)},
+      // User Options
+      {"User Options", user_args_labels["vt_user_1"], static_cast<variantArg_t>(appConfig.vt_user_1)},
+      {"User Options", user_args_labels["vt_user_2"], static_cast<variantArg_t>(appConfig.vt_user_2)},
+      {"User Options", user_args_labels["vt_user_3"], static_cast<variantArg_t>(appConfig.vt_user_3)},
+      {"User Options", user_args_labels["vt_user_int_1"], static_cast<variantArg_t>(appConfig.vt_user_int_1)},
+      {"User Options", user_args_labels["vt_user_int_2"], static_cast<variantArg_t>(appConfig.vt_user_int_2)},
+      {"User Options", user_args_labels["vt_user_int_3"], static_cast<variantArg_t>(appConfig.vt_user_int_3)},
+      {"User Options", user_args_labels["vt_user_str_1"], static_cast<variantArg_t>(appConfig.vt_user_str_1)},
+      {"User Options", user_args_labels["vt_user_str_2"], static_cast<variantArg_t>(appConfig.vt_user_str_2)},
+      {"User Options", user_args_labels["vt_user_str_3"], static_cast<variantArg_t>(appConfig.vt_user_str_3)},
 
-    // Scheduler Configuration
-    {"Scheduler Configuration", vt_sched_num_progress_label, static_cast<variantArg_t>(appConfig.vt_sched_num_progress)},
-    {"Scheduler Configuration", vt_sched_progress_han_label, static_cast<variantArg_t>(appConfig.vt_sched_progress_han)},
-    {"Scheduler Configuration", vt_sched_progress_sec_label, static_cast<variantArg_t>(appConfig.vt_sched_progress_sec)},
+      // Scheduler Configuration
+      {"Scheduler Configuration", vt_sched_num_progress_label, static_cast<variantArg_t>(appConfig.vt_sched_num_progress)},
+      {"Scheduler Configuration", vt_sched_progress_han_label, static_cast<variantArg_t>(appConfig.vt_sched_progress_han)},
+      {"Scheduler Configuration", vt_sched_progress_sec_label, static_cast<variantArg_t>(appConfig.vt_sched_progress_sec)},
 
-    // Configuration File
-    {"Configuration File", vt_output_config_label, static_cast<variantArg_t>(appConfig.vt_output_config)},
-    {"Configuration File", vt_output_config_file_label, static_cast<variantArg_t>(appConfig.vt_output_config_file)},
+      // Configuration File
+      {"Configuration File", vt_output_config_label, static_cast<variantArg_t>(appConfig.vt_output_config)},
+      {"Configuration File", vt_output_config_file_label, static_cast<variantArg_t>(appConfig.vt_output_config_file)},
 
-    // Runtime
-    {"Runtime", vt_max_mpi_send_size_label, static_cast<variantArg_t>(appConfig.vt_max_mpi_send_size)},
-    {"Runtime", vt_no_assert_fail_label, static_cast<variantArg_t>(appConfig.vt_no_assert_fail)},
-    {"Runtime", vt_throw_on_abort_label, static_cast<variantArg_t>(appConfig.vt_throw_on_abort)}
-};
+      // Runtime
+      {"Runtime", vt_max_mpi_send_size_label, static_cast<variantArg_t>(appConfig.vt_max_mpi_send_size)},
+      {"Runtime", vt_no_assert_fail_label, static_cast<variantArg_t>(appConfig.vt_no_assert_fail)},
+      {"Runtime", vt_throw_on_abort_label, static_cast<variantArg_t>(appConfig.vt_throw_on_abort)}
+  };
 
   // Create an empty node that we will populate
   YAML::Node output_config_yaml;
@@ -1347,10 +1347,10 @@ std::vector<std::tuple<std::string, std::string, variantArg_t>> cli_to_yaml_args
       addVariantToNode(current_node, yaml_key, yaml_val);
     }
   }
-std::ostringstream yaml_stream;
-yaml_stream << output_config_yaml;
-std::string output_config_string = yaml_stream.str();
-return output_config_string;
+  std::ostringstream yaml_stream;
+  yaml_stream << output_config_yaml;
+  std::string output_config_string = yaml_stream.str();
+  return output_config_string;
 }
 
 } /* end anon namespace */
