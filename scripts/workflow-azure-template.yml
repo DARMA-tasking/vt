@@ -45,7 +45,6 @@ variables:
   VT_DEBUG_VERBOSE: [% vt_debug_verbose %]
   VT_KOKKOS_ENABLED: [% vt_kokkos_enabled %]
   VT_TV_ENABLED: [% vt_tv_enabled %]
-  VTK_DIR: [% vtk_dir %]
   CMAKE_CXX_STANDARD: [% cmake_cxx_standard %]
   VT_CI_TEST_LB_SCHEMA: [% vt_ci_test_lb_schema %]
   RUN_FULL_CI: [% run_full_ci %]
