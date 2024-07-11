@@ -73,7 +73,7 @@ function(link_target_with_vt)
   endif()
 
   if (NOT DEFINED ARG_LINK_VT_TV AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_VT_TV)
-    if (TV_LIBRARY)
+    if (vt_tv_enabled)
       target_link_libraries(
         ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${TV_LIBRARY}
       )

@@ -16,7 +16,7 @@ else()
 
 set(MAGISTRATE_LIBRARY vt::lib::magistrate)
 
-if (EXISTS "${PROJECT_LIB_DIR}/vt-tv")
+if (EXISTS "${PROJECT_LIB_DIR}/vt-tv" AND vt_tv_enabled)
   set(vt_tv_python_bindings_enabled OFF)
   add_subdirectory(${PROJECT_LIB_DIR}/vt-tv)
   set(TV_LIBRARY vt::lib::vt-tv)
