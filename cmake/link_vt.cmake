@@ -90,7 +90,7 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: gtest=${ARG_LINK_GTEST}")
     endif()
-    target_link_libraries(${ARG_TARGET} PRIVATE gtest)
+    target_link_libraries(${ARG_TARGET} PRIVATE ${GOOGLETEST_LIBRARY})
   endif()
 
   if (NOT DEFINED ARG_LINK_UNWIND AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_UNWIND)
