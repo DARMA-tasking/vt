@@ -11,7 +11,7 @@ trigger:
       - main
 
 pr:
-  drafts: false
+  drafts: true
   autoCancel: true
   branches:
     include:
