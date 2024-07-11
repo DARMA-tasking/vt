@@ -68,12 +68,8 @@ RUN ./cmake.sh 3.23.4 ${arch}
 ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
 
-ARG VT_TV_ENABLED
-
-RUN echo "VT_TV_ENABLED is set to: $VT_TV_ENABLED"
-
 COPY ./ci/deps/vtk.sh vtk.sh
-RUN if [ "$VT_TV_ENABLED" ]; then \
+RUN if test ${vt_tv_enabled} -eq 1; then \
       chmod +x vtk.sh && \
       ./vtk.sh 9.3.0 /vtk-build -j4; \
     fi
