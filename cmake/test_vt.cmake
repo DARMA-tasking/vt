@@ -66,11 +66,16 @@ function(build_mpi_proc_test_list)
 
   set(noValOption)
   set(singleValArg MAX_PROC VARIABLE_OUT )
-  set(multiValueArg)
-  set(allKeywords ${noValOption} ${singleValArg} ${multiValueArg})
+  set(multiValueArgs)
+  set(allKeywords ${noValOption} ${singleValArg} ${multiValueArgs})
   cmake_parse_arguments(
     ARG "${noValOption}" "${singleValArg}" "${multiValueArgs}" ${ARGN}
   )
+
+  # Stop the configurtion if there are any unparsed arguments
+  if (ARG_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "found unparsed arguments: ${ARG_UNPARSED_ARGUMENTS}")
+  endif()
 
   if (NOT DEFINED ARG_MAX_PROC)
     # Default to 8 processors
