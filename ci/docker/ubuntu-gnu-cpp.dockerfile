@@ -69,7 +69,7 @@ ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
 
 COPY ./ci/deps/vtk.sh vtk.sh
-RUN if test ${vt_tv_enabled} -eq 1; then \
+RUN if [ "${vt_tv_enabled}" = "1" ]; then \
       chmod +x vtk.sh && \
       ./vtk.sh 9.3.0 /vtk-build -j4; \
     fi
