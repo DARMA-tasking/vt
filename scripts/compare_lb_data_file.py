@@ -11,17 +11,17 @@ def compare(file_to_validate, reference_file):
         to_validate = json.load(val_file)
         reference = json.load(ref_file)
         diff = DeepDiff(to_validate, reference, report_repetition=True, math_epsilon=0.1)
-        is_valid = not len(diff.affected_paths)
 
-        if not is_valid:
-            sys.stderr.write("Comparing '" + file_to_validate + "' with reference file '" + reference_file + "'... Failed!\n")
+        message = f"Comparing '{file_to_validate}' with reference file '{reference_file}'..."
+        if diff:
+            sys.stderr.write(f"{message} Failed!\n")
             sys.stderr.write("Detected differences:\n")
             json.dump(str(diff), sys.stderr, indent=4)
             sys.stderr.write("\n")
             sys.stderr.flush()
             sys.exit(1)
         else:
-            print("Comparing '" + file_to_validate + "' with reference file '" + reference_file + "'... Status OK.")
+            print(f"{message} Status OK.")
 
 def main():
     parser = argparse.ArgumentParser()
