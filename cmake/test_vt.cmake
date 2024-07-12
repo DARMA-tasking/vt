@@ -118,7 +118,7 @@ macro(add_test_for_example_vt test_target test_exec test_list)
     endif()
 
     # Append parameters required for the examples to output LBDatafiles.
-    if (vt_test_lb_schema)
+    if (vt_ci_generate_lb_files)
       list(APPEND EXEC_ARGS
         "--vt_lb_interval=1"
         "--vt_lb_data"

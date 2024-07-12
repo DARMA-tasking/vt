@@ -147,11 +147,11 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}" \
       -DCMAKE_INSTALL_PREFIX="$VT_BUILD/install" \
       -Dvt_ci_build="${VT_CI_BUILD:-0}" \
+      -Dvt_ci_generate_lb_files="${VT_CI_TEST_LB_SCHEMA:-0}" \
       -Dvt_debug_verbose="${VT_DEBUG_VERBOSE:-0}" \
       -Dvt_tests_num_nodes="${VT_TESTS_NUM_NODES:-}" \
       -Dvt_external_fmt="${VT_EXTERNAL_FMT:-0}" \
       -Dvt_no_color_enabled="${VT_NO_COLOR_ENABLED:-0}" \
-      -Dvt_test_lb_schema="${TEST_LB_SCHEMA:-0}" \
       -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-17}" \
       -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS:-0}" \
       "$VT"
