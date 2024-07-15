@@ -33,6 +33,3 @@ cmake \
   -DCMAKE_INSTALL_PREFIX:FILEPATH=${build_root}/install \
   ${base_dir}/${vtk_name}
 cmake --build . --target install -j ${make_args}
-
-cd ${base_dir}
-rm -rf ${vtk_name}
