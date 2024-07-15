@@ -173,19 +173,6 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
                    nlb_data->getUserData());
 }
 
-template <typename LB>
-LBManager::LBProxyType
-LBManager::makeLB(std::string const& lb_name) {
-  auto proxy = theObjGroup()->makeCollective<LB>(lb_name);
-  auto strat = proxy.get();
-  strat->init(proxy);
-  auto base_proxy = proxy.template castToBase<lb::BaseLB>();
-
-  destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
-
-  return base_proxy;
-}
-
 void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
   auto reassignment = msg->reassignment;
   auto phase = msg->phase;
