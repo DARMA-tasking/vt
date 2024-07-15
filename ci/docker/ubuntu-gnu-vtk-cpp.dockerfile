@@ -3,7 +3,7 @@ ARG ubuntu=20.04
 FROM ${arch}/ubuntu:${ubuntu} as base
 
 ARG proxy=""
-ARG compiler=gcc-9
+ARG compiler=gcc-12
 ARG ubuntu
 
 ENV https_proxy=${proxy} \
@@ -27,6 +27,7 @@ RUN apt-get update -y -q && \
     libunwind-dev \
     make-guile \
     ninja-build \
+    python3 \
     valgrind \
     wget \
     zlib1g \
@@ -68,6 +69,10 @@ RUN ./cmake.sh 3.23.4 ${arch}
 ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
 
+COPY ./ci/deps/vtk.sh vtk.sh
+RUN chmod +x vtk.sh && ./vtk.sh 9.3.0 /vtk-build -j4
+ENV VTK_DIR=/vtk-build/build
+
 COPY ./ci/deps/mpich.sh mpich.sh
 RUN if [ "$ubuntu" = "18.04" ]; then \
       ./mpich.sh 3.3.2 -j4; else \
@@ -91,8 +96,7 @@ RUN apt-get update -y -q && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --upgrade pip \
-    && pip3 install schema deepdiff
+RUN pip3 install schema
 
 FROM base as build
 COPY . /vt
