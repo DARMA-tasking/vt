@@ -322,7 +322,7 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
       Enabled: True
       Enable Print Summary: True
     Termination:
-      Detect Hangs: True
+      No Detect Hangs: True
       Terse Epoch Graph Output: True
     Launch:
       Pause: False
@@ -350,7 +350,11 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
 
   // Output Control
   EXPECT_EQ(theConfig()->vt_color, false);
+#ifdef VT_NO_COLOR_ENABLED
   EXPECT_EQ(theConfig()->vt_no_color, true);
+#else
+  EXPECT_EQ(theConfig()->vt_no_color, false);
+#endif
   EXPECT_EQ(theConfig()->vt_quiet, true);
 
   // Signal Handling
@@ -463,7 +467,7 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
   EXPECT_EQ(theConfig()->vt_diag_csv_base_units, false);
 
   // Termination
-  EXPECT_EQ(theConfig()->vt_no_detect_hang, false);
+  EXPECT_EQ(theConfig()->vt_no_detect_hang, true);
   EXPECT_EQ(theConfig()->vt_term_rooted_use_ds, false);
   EXPECT_EQ(theConfig()->vt_term_rooted_use_wave, false);
   EXPECT_EQ(theConfig()->vt_epoch_graph_on_hang, true);
