@@ -63,24 +63,24 @@ struct CircularPhasesBuffer {
   /**
    * \brief Construct a CircularPhasesBuffer
    *
-   * \param[in] capacity the requested capacity of the buffer
+   * \param[in] in_capacity the requested capacity of the buffer
    */
-  CircularPhasesBuffer(std::size_t capacity = 0) {
-    m_requested_capacity = capacity;
-    m_buffer.reserve(capacity);
+  CircularPhasesBuffer(std::size_t in_capacity = 0) {
+    requested_capacity_ = in_capacity;
+    buffer_.reserve(in_capacity);
   }
 
   /**
    * \brief Construct a CircularPhasesBuffer. The max size of buffer will be equal to the size of the list
    *
-   * \param[in] list the initializer list with elements to be put into the buffer
+   * \param[in] in_list the initializer list with elements to be put into the buffer
    */
-  CircularPhasesBuffer(std::initializer_list<StoredPair> list) {
-    m_requested_capacity = list.size();
-    m_buffer.reserve(list.size());
+  CircularPhasesBuffer(std::initializer_list<StoredPair> in_list) {
+    requested_capacity_ = in_list.size();
+    buffer_.reserve(in_list.size());
 
-    for (auto&& pair : list) {
-      addToCache(std::make_pair(pair.first, pair.second));
+    for (auto&& pair : in_list) {
+      addToCache(pair.first, pair.second);
     }
   }
 
@@ -91,7 +91,7 @@ struct CircularPhasesBuffer {
    * \param[in] obj the data to store
    */
   void store(const PhaseType phase, StoredType&& obj) {
-    addToCache(std::make_pair(phase, std::move(obj)));
+    addToCache(phase, std::move(obj));
   }
 
   /**
@@ -101,7 +101,7 @@ struct CircularPhasesBuffer {
    * \param[in] obj the data to store
    */
   void store(const PhaseType phase, StoredType const& obj) {
-    addToCache(std::make_pair(phase, obj));
+    addToCache(phase, obj);
   }
 
   /**
@@ -112,7 +112,7 @@ struct CircularPhasesBuffer {
    * \return reference to the stored data
    */
   const StoredType& at(const PhaseType phase) const {
-    return m_buffer.at(phase);
+    return buffer_.at(phase);
   }
 
   /**
@@ -122,7 +122,7 @@ struct CircularPhasesBuffer {
    *
    * \return reference to the stored data
    */
-  StoredType& at(const PhaseType phase) { return m_buffer.at(phase); }
+  StoredType& at(const PhaseType phase) { return buffer_.at(phase); }
 
   /**
    * \brief Get data related to the phase. Insert new data if phase is not present in the buffer.
@@ -133,9 +133,9 @@ struct CircularPhasesBuffer {
    */
   StoredType& operator[](const PhaseType phase) {
     if (!contains(phase)) {
-      addToCache(std::make_pair(phase, StoredType{}));
+      addToCache(phase, StoredType{});
     }
-    return m_buffer[phase];
+    return buffer_[phase];
   }
 
   /**
@@ -146,7 +146,7 @@ struct CircularPhasesBuffer {
    * \return iterator to the requested element.
    */
   auto find(const PhaseType& phase) {
-    return m_buffer.find(phase);
+    return buffer_.find(phase);
   }
 
   /**
@@ -157,7 +157,7 @@ struct CircularPhasesBuffer {
    * \return const iterator to the requested element.
    */
   auto find(const PhaseType& phase) const {
-    return m_buffer.find(phase);
+    return buffer_.find(phase);
   }
 
   /**
@@ -168,7 +168,7 @@ struct CircularPhasesBuffer {
    * \return whether buffer contains the phase or not
    */
   bool contains(const PhaseType phase) const {
-    return m_buffer.find(phase) != m_buffer.end();
+    return buffer_.find(phase) != buffer_.end();
   }
 
   /**
@@ -177,14 +177,14 @@ struct CircularPhasesBuffer {
    * \param[in] new_size the requested new size of the buffer
    */
   void resize(const std::size_t new_size) {
-    if (new_size < m_buffer.size()) {
-      std::size_t remove_last = m_buffer.size() - new_size;
+    if (new_size < buffer_.size()) {
+      std::size_t remove_last = buffer_.size() - new_size;
       for (std::size_t i = 0; i < remove_last; i++) {
         removeOldest();
       }
     }
 
-    m_requested_capacity = new_size;
+    requested_capacity_ = new_size;
   }
 
   /**
@@ -192,107 +192,108 @@ struct CircularPhasesBuffer {
    *
    * \return the current size
    */
-  std::size_t size() const { return m_buffer.size(); }
+  std::size_t size() const { return buffer_.size(); }
 
   /**
    * \brief Check if the buffer is empty
    *
    * \return whether the buffer is empty or not
    */
-  bool empty() const { return m_buffer.empty(); }
+  bool empty() const { return buffer_.empty(); }
 
   /**
    * \brief Clears content of the buffer. Does not change the buffer maximum capacity.
    */
   void clear() {
     std::queue<PhaseType> empty;
-    m_indexes.swap(empty);
-    m_buffer.clear();
+    indexes_.swap(empty);
+    buffer_.clear();
   }
 
   /**
    * @brief Clears content of the buffer and allow the buffer maximum capacity to grow
    */
   void reset() {
-    m_requested_capacity = 0;
+    requested_capacity_ = 0;
     clear();
   }
 
   template <typename SerializeT>
   void serialize(SerializeT& s) {
-    s | m_requested_capacity;
-    s | m_indexes;
-    s | m_buffer;
+    s | requested_capacity_;
+    s | indexes_;
+    s | buffer_;
   }
 
   /**
-   * @brief Get iterator to the begging of the buffer
+   * @brief Get iterator to the beginning of the buffer
    *
    * @return auto the begin iterator
    */
-  auto begin() { return m_buffer.begin(); }
+  auto begin() { return buffer_.begin(); }
 
   /**
-   * @brief Get const iterator to the begging of the buffer
+   * @brief Get const iterator to the beginning of the buffer
    *
    * @return auto the const begin iterator
    */
-  auto begin() const { return m_buffer.begin(); }
+  auto begin() const { return buffer_.begin(); }
 
   /**
-   * @brief Get const iterator to the begging of the buffer
+   * @brief Get const iterator to the beginning of the buffer
    *
    * @return auto the const begin iterator
    */
-  auto cbegin() const { return m_buffer.cbegin(); }
+  auto cbegin() const { return buffer_.cbegin(); }
 
   /**
    * @brief Get iterator to the space after buffer
    *
    * @return auto the end iterator
    */
-  auto end() { return m_buffer.end(); }
+  auto end() { return buffer_.end(); }
 
   /**
    * @brief Get const iterator to the space after buffer
    *
    * @return auto the const end iterator
    */
-  auto end() const { return m_buffer.end(); }
+  auto end() const { return buffer_.end(); }
 
   /**
    * @brief Get const iterator to the space after buffer
    *
    * @return auto the const end iterator
    */
-  auto cend() const { return m_buffer.cend(); }
+  auto cend() const { return buffer_.cend(); }
 
 private:
   /**
    * @brief Add new phase to the cache and remove oldest one if buffer exceeds requested size
    *
-   * @param pair the pair<PhaseType, StoredType> to be stored
+   * \param[in] phase the phase for which data will be stored
+   * \param[in] data the data to store
    */
-  void addToCache(StoredPair&& pair) {
-    if (m_requested_capacity > 0 && m_buffer.size() >= m_requested_capacity) {
+  void addToCache(const PhaseType phase, StoredType const& data) {
+    if (requested_capacity_ > 0 && buffer_.size() >= requested_capacity_) {
       removeOldest();
     }
-    m_indexes.push(pair.first);
-    m_buffer[pair.first] = std::move(pair.second);
+    indexes_.push(phase);
+    buffer_.emplace(phase, data);
   }
 
   /**
    * @brief Remove oldest phase from cache
    */
   void removeOldest() {
-    m_buffer.erase(m_indexes.front());
-    m_indexes.pop();
+    buffer_.erase(indexes_.front());
+    indexes_.pop();
   }
 
 private:
-  std::size_t m_requested_capacity;
-  std::queue<PhaseType> m_indexes;
-  std::unordered_map<PhaseType, StoredType> m_buffer;
+  std::size_t requested_capacity_;
+  std::queue<PhaseType> indexes_;
+  std::unordered_map<PhaseType, StoredType> buffer_;
 };
 
 }}} /* end namespace vt::util::container */
