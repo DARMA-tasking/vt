@@ -156,6 +156,25 @@ services:
         /vt/ci/build_vt_sample.sh /vt /build"
 
   ##############################################################################
+  # C++ builds of VTK and VT on ubuntu/alpine platform from container baseline
+  # Ubuntu gcc-12 debug build:
+  #   docker compose run -e CMAKE_BUILD_TYPE=debug ubuntu-vtk-cpp
+  ubuntu-cpp-vtk:
+    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-vtk-cpp
+    build:
+      context: .
+      target: base
+      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-vtk-cpp.dockerfile
+      args: *default-args
+      cache_from:
+        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-vtk-cpp
+    ulimits: *ulimits
+    environment:
+      <<: [*ccache, *vtopts]
+    volumes: *ubuntu-volumes
+    command: *vt-cpp-command
+
+  ##############################################################################
   # C++ build/test/clean target for VT on ubuntu platform from container
   # baseline.
   #
