@@ -139,7 +139,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean'
+          dockerComposeCommand: '$(compose_command) ubuntu-cpp-vtk'
       - task: DockerCompose@1
         displayName: Build container
         inputs:
@@ -147,7 +147,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'run ubuntu-cpp-clean'
+          dockerComposeCommand: 'run ubuntu-cpp-vtk'
         env:
           CODECOV_TOKEN: $(codecov_token)
       - task: Bash@3
@@ -179,7 +179,7 @@ stages:
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'push ubuntu-cpp-clean'
+          dockerComposeCommand: 'push ubuntu-cpp-vtk'
       - task: Bash@3
         displayName: Create artifacts
         continueOnError: true
