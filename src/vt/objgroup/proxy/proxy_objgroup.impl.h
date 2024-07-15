@@ -139,7 +139,8 @@ Proxy<ObjT>::multicast(GroupType type, Params&&... params) const{
 template <typename ObjT>
 template <auto f, typename... Params>
 typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::multicast(
-  group::region::Region::RegionUPtrType&& nodes, Params&&... params) const {
+  group::region::Region::RegionUPtrType&& nodes, Params&&... params
+) const {
   vtAssert(
     not dynamic_cast<group::region::ShallowList*>(nodes.get()),
     "multicast: range of nodes is not supported for ShallowList!"
@@ -150,13 +151,29 @@ typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::multicast(
 
   auto groupID = theGroup()->GetTempGroupForRange(range);
   if (!groupID.has_value()) {
-    groupID = theGroup()->newGroup(
-      std::move(nodes), []([[maybe_unused]] GroupType type) {}
-    );
-    theGroup()->AddNewTempGroup(range, groupID.value());
+    return typename Proxy<ObjT>::PendingSendType{
+      theTerm()->getCurrentEpoch(),
+      [&, this,
+       args = std::make_tuple(std::forward<Params>(params)...)] {
+        std::apply(
+          [&, this](auto&&... unpackedArgs) {
+            // Explicit copy, we move 'nodes' in group creation
+            auto range_copy = nodes->makeList();
+            auto id =
+              theGroup()->newGroup(std::move(nodes), [&, this](GroupType type) {
+                multicast<f>(
+                  type, std::forward<decltype(unpackedArgs)>(unpackedArgs)...);
+              });
+            theGroup()->AddNewTempGroup(range_copy, id);
+          },
+          std::move(args));
+      }};
+  } else {
+    return multicast<f>(groupID.value(), std::forward<Params>(params)...);
   }
 
-  return multicast<f>(groupID.value(), std::forward<Params>(params)...);
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return typename Proxy<ObjT>::PendingSendType{std::nullptr_t{}};
 }
 
 template <typename ObjT>
