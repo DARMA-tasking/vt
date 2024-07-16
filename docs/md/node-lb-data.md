@@ -42,122 +42,7 @@ contains information about the task that performed this work. If that `entity`
 is a virtual collection object, it will specify the unique `id` for the object,
 and optionally the `index`, `home`, and `collection_id` for that object.
 
-\code{.json}
-{
-    "phases": [
-        {
-            "id": 0,
-            "tasks": [
-                {
-                    "entity": {
-                        "collection_id": 7,
-                        "home": 0,
-                        "id": 3407875,
-                        "index": [
-                            12
-                        ],
-                        "migratable": true,
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "subphases": [
-                        {
-                            "id": 0,
-                            "time": 1.1263000033068238e-05
-                        },
-                        {
-                            "id": 1,
-                            "time": 1.1333999964335817e-05
-                        }
-                    ],
-                    "time": 3.379300005690311e-05
-                },
-                {
-                    "entity": {
-                        "collection_id": 7,
-                        "home": 0,
-                        "id": 3145731,
-                        "index": [
-                            11
-                        ],
-                        "migratable": true,
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "subphases": [
-                        {
-                            "id": 0,
-                            "time": 1.1653000001388136e-05
-                        },
-                        {
-                            "id": 1,
-                            "time": 1.1435000033088727e-05
-                        }
-                    ],
-                    "time": 3.452300006756559e-05
-                }
-            ]
-        },
-        {
-            "id": 1,
-            "tasks": [
-                {
-                    "entity": {
-                        "collection_id": 7,
-                        "home": 0,
-                        "id": 3407875,
-                        "index": [
-                            12
-                        ],
-                        "migratable": true,
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "subphases": [
-                        {
-                            "id": 0,
-                            "time": 3.207300005669822e-05
-                        },
-                        {
-                            "id": 1,
-                            "time": 1.1347999816280208e-05
-                        }
-                    ],
-                    "time": 5.658399982166884e-05
-                },
-                {
-                    "entity": {
-                        "collection_id": 7,
-                        "home": 0,
-                        "id": 3145731,
-                        "index": [
-                            11
-                        ],
-                        "migratable": true,
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "subphases": [
-                        {
-                            "id": 0,
-                            "time": 1.3647000059791026e-05
-                        },
-                        {
-                            "id": 1,
-                            "time": 1.1320000112391426e-05
-                        }
-                    ],
-                    "time": 3.787500008911593e-05
-                }
-            ]
-        }
-    ]
-}
-\endcode
+\include examples/lb_data/lb_data_file_example.json
 
 Each phase in the file may also have a `communications` array that specify any
 communication between tasks that occurred during the phase. Each communication
@@ -228,98 +113,14 @@ The type of communication lines up with the enum
 For all the broadcast-like edges, the communication logging will occur on the
 receive of the broadcast side (one entry per broadcast recipient).
 
-\section JSON_data_files_validator.py
+\section lb-data-file-validator LB Data File Validator
 
 All input JSON files will be validated using the `JSON_data_files_validator.py` found in the `scripts` directory, which ensures that a given JSON adheres to the following schema:
 
-\code{.py}
-Schema(
-    {
-        Optional('type'): And(str, lambda a: a in allowed_types_data,
-                                error=f"{self.get_error_message(allowed_types_data)} must be chosen"),
-        Optional('metadata'): {
-            Optional('type'): And(str, lambda a: a in allowed_types_data,
-                                    error=f"{self.get_error_message(allowed_types_data)} must be chosen"),
-            Optional('rank'): int,
-            Optional('shared_node'): {
-                'id': int,
-                'size': int,
-                'rank': int,
-                'num_nodes': int,
-            },
-            Optional('phases'): {
-                Optional('count'): int,
-                'skipped': {
-                    'list': [int],
-                    'range': [[int]],
-                },
-                'identical_to_previous': {
-                    'list': [int],
-                    'range': [[int]],
-                },
-            },
-            Optional('attributes'): dict
-        },
-        'phases': [
-            {
-                'id': int,
-                'tasks': [
-                    {
-                        'entity': {
-                            Optional('collection_id'): int,
-                            'home': int,
-                            'id': int,
-                            Optional('index'): [int],
-                            'type': str,
-                            'migratable': bool,
-                            Optional('objgroup_id'): int
-                        },
-                        'node': int,
-                        'resource': str,
-                        Optional('subphases'): [
-                            {
-                                'id': int,
-                                'time': float,
-                            }
-                        ],
-                        'time': float,
-                        Optional('user_defined'): dict,
-                        Optional('attributes'): dict
-                    },
-                ],
-                Optional('communications'): [
-                    {
-                        'type': str,
-                        'to': {
-                            'type': str,
-                            'id': int,
-                            Optional('home'): int,
-                            Optional('collection_id'): int,
-                            Optional('migratable'): bool,
-                            Optional('index'): [int],
-                            Optional('objgroup_id'): int,
-                        },
-                        'messages': int,
-                        'from': {
-                            'type': str,
-                            'id': int,
-                            Optional('home'): int,
-                            Optional('collection_id'): int,
-                            Optional('migratable'): bool,
-                            Optional('index'): [int],
-                            Optional('objgroup_id'): int,
-                        },
-                        'bytes': float
-                    }
-                ],
-                Optional('user_defined'): dict
-            },
-        ]
-    }
-)
-\endcode
+\include scripts/LBDatafile_schema.py
 
 \section lb-spec-file LB Specification File
+
 In order to customize when LB output is enabled and disabled, a LB
 specification file can be passed to \vt via a command-line flag:
 `--vt_lb_spec --vt_lb_spec_file=filename.spec`.

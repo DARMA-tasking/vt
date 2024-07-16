@@ -150,6 +150,7 @@ define_option(vt_werror_enabled "-Werror" "Build VT with -Werror enabled" OFF em
 define_option(vt_build_tests "tests" "Build VT tests" ON empty_feature)
 define_option(vt_build_tools "tools" "Build VT tools" ON empty_feature)
 define_option(vt_build_examples "examples" "Build VT examples" ON empty_feature)
+define_option(vt_ci_generate_lb_files "generate lb files" "Enable generation of LBDatafiles when runnning examples" OFF empty_feature)
 
 option(vt_external_fmt "Build VT with external fmt" OFF)
 if(${vt_external_fmt})

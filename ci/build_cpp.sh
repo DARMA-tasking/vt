@@ -147,6 +147,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}" \
       -DCMAKE_INSTALL_PREFIX="$VT_BUILD/install" \
       -Dvt_ci_build="${VT_CI_BUILD:-0}" \
+      -Dvt_ci_generate_lb_files="${VT_CI_TEST_LB_SCHEMA:-0}" \
       -Dvt_debug_verbose="${VT_DEBUG_VERBOSE:-0}" \
       -Dvt_tests_num_nodes="${VT_TESTS_NUM_NODES:-}" \
       -Dvt_external_fmt="${VT_EXTERNAL_FMT:-0}" \

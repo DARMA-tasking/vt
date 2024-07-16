@@ -45,7 +45,7 @@ variables:
   VT_DEBUG_VERBOSE: [% vt_debug_verbose %]
   VT_KOKKOS_ENABLED: [% vt_kokkos_enabled %]
   CMAKE_CXX_STANDARD: [% cmake_cxx_standard %]
-  TEST_LB_SCHEMA: [% test_lb_schema %]
+  VT_CI_TEST_LB_SCHEMA: [% vt_ci_test_lb_schema %]
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: [% cache_name %]
   volume_name: [% volume_name %]

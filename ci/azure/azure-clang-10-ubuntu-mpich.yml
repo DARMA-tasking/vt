@@ -57,7 +57,7 @@ variables:
   VT_DEBUG_VERBOSE: 0
   VT_KOKKOS_ENABLED: 0
   CMAKE_CXX_STANDARD: 17
-  TEST_LB_SCHEMA: 0
+  VT_CI_TEST_LB_SCHEMA: 0
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-clang-10-cache
   volume_name: ubuntu-cpp
