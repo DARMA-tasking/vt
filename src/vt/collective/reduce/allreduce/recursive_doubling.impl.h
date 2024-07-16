@@ -91,7 +91,8 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::initialize(
   state.val_ = DataT{std::forward<Args>(data)...};
 
   vt_debug_print(
-      terse, allreduce, "RecursiveDoubling Initialize: size {} ID {}\n", DataType::size(state.val_), id
+    terse, allreduce, "RecursiveDoubling Initialize: size {} ID {}\n",
+    DataType::size(state.val_), id
   );
 }
 
@@ -100,6 +101,9 @@ template <
   auto finalHandler>
 void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::initializeState(size_t id){
   auto& state = states_[id];
+
+  vt_debug_print(terse, allreduce, "RecursiveDoubling initializing state for ID = {}\n", id);
+
   state.messages_.resize(num_steps_, nullptr);
   state.steps_recv_.resize(num_steps_, false);
   state.steps_reduced_.resize(num_steps_, false);
@@ -129,8 +133,8 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwo(size_
   auto& state = states_.at(id);
   if (is_part_of_adjustment_group_ and not is_even_) {
     vt_debug_print(
-      terse, allreduce, "RecursiveDoubling Part1: Sending to Node {} ID ={}  \n", this_node_,
-      this_node_ - 1, id
+      terse, allreduce, "RecursiveDoubling AdjustInitial (To {}): ID = {}  \n",
+      this_node_, this_node_ - 1, id
     );
 
     proxy_[this_node_ - 1]
@@ -148,8 +152,10 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::
   adjustForPowerOfTwoHandler(AllreduceDblRawMsg<DataT>* msg) {
 
   auto& state = states_[msg->id_];
-  if(not state.initialized_) {
-    initializeState(msg->id_);
+  if (DataType::size(state.val_) == 0) {
+    if (not state.initialized_) {
+      initializeState(msg->id_);
+    }
     state.adjust_message_ = promoteMsg(msg);
 
     return;
@@ -240,8 +246,13 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::tryReduce(size_t id, int3
       [](const auto val) { return val; });
 
   vt_debug_print(
-      terse, allreduce, "RecursiveDoubling Part2 (Reduce step {}): state.step_ = {} state.steps_reduced_[step] = {} state.steps_recv_[step] = {} all_msgs_received = {} ID = {} \n",
-      step, state.step_, static_cast<bool>(state.steps_reduced_[step]), static_cast<bool>(state.steps_recv_[step]), all_msgs_received, id);
+    terse, allreduce,
+    "RecursiveDoubling Part2 (Reduce step {}): state.step_ = {} "
+    "state.steps_reduced_[step] = {} state.steps_recv_[step] = {} "
+    "all_msgs_received = {} ID = {} \n",
+    step, state.step_, static_cast<bool>(state.steps_reduced_[step]),
+    static_cast<bool>(state.steps_recv_[step]), all_msgs_received, id
+  );
 
   if (
     (step < state.step_) and not state.steps_reduced_[step] and
@@ -259,8 +270,10 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::reduceIterHandler(
   AllreduceDblRawMsg<DataT>* msg) {
   auto& state = states_[msg->id_];
 
-  if(not state.initialized_){
-    initializeState(msg->id_);
+  if (DataType::size(state.val_) == 0) {
+    if (not state.initialized_) {
+      initializeState(msg->id_);
+    }
     state.messages_.at(msg->step_) = promoteMsg(msg);
     state.steps_recv_[msg->step_] = true;
 
