@@ -4,8 +4,6 @@
 #
 
 find_package(ZLIB REQUIRED)
-if(ZLIB_FOUND)
-  include_directories(${ZLIB_INCLUDE_DIRS})
-else()
+if(NOT ZLIB_FOUND)
   message("zlib is required for tracing")
-endif(ZLIB_FOUND)
+endif(NOT ZLIB_FOUND)
