@@ -41,11 +41,14 @@
 //@HEADER
 */
 
+#include "vt/collective/reduce/allreduce/rabenseifner.h"
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 
 #include "vt/collective/reduce/allreduce/data_handler.h"
 #include "vt/config.h"
+
+#include <type_traits>
 
 namespace vt::collective::reduce::allreduce {
 
@@ -119,7 +122,8 @@ template <
 template <typename ...Args>
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::initialize(size_t id, Args&&... data) {
   auto& state = states_[id];
-  state.val_ = DataType::toVec(std::forward<Args>(data)...);
+
+  DataHelper<Scalar, DataT>::assign(state.val_, std::forward<Args>(data)...);
 
   if(not state.initialized_){
     initializeState(id);
@@ -167,6 +171,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::executeFinalHan(size_t id) {
   auto& state = states_.at(id);
   vt_debug_print(terse, allreduce, "Rabenseifner executing final handler ID = {}\n", id);
 
+  // TODO convert
   parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
   state.completed_ = true;
 }
@@ -196,15 +201,20 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwo(size_t id)
 
     if (is_even_) {
       proxy_[partner]
-        .template send<&Rabenseifner::adjustForPowerOfTwoRightHalf>(
-          state.val_.data() + (state.size_ / 2), state.size_ - (state.size_ / 2), id);
+        .template sendMsg<&Rabenseifner::adjustForPowerOfTwoRightHalf>(
+          DataHelperT::createMessage(
+            state.val_, state.size_ / 2, state.size_ - (state.size_ / 2), id
+          )
+        );
 
       if(state.left_adjust_message_ != nullptr){
         adjustForPowerOfTwoLeftHalf(state.left_adjust_message_.get());
       }
     } else {
-      proxy_[partner].template send<&Rabenseifner::adjustForPowerOfTwoLeftHalf>(
-        state.val_.data(), state.size_ / 2, id);
+      proxy_[partner]
+        .template sendMsg<&Rabenseifner::adjustForPowerOfTwoLeftHalf>(
+          DataHelperT::createMessage(state.val_, 0, state.size_ / 2, id)
+        );
 
       if(state.right_adjust_message_ != nullptr){
         adjustForPowerOfTwoRightHalf(state.right_adjust_message_.get());
@@ -217,11 +227,11 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoRightHalf(
-  AllreduceRbnRawMsg<Scalar>* msg) {
+  RabenseifnerMsg<Scalar, DataT>* msg) {
 
   auto& state = states_[msg->id_];
 
-  if (state.val_.empty()) {
+  if (DataHelperT::empty(state.val_)) {
     if (not state.initialized_) {
       vt_debug_print(
         verbose, allreduce,
@@ -241,24 +251,23 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoRightHalf(
     theContext()->getFromNodeCurrentTask(), msg->id_
   );
 
-  for (uint32_t i = 0; i < msg->size_; i++) {
-    Op<Scalar>()(state.val_[(state.size_ / 2) + i], msg->val_[i]);
-  }
+  DataHelperT::template reduce<Op>(state.val_, state.size_ / 2, msg);
 
   // Send to left node
   proxy_[theContext()->getNode() - 1]
-    .template send<&Rabenseifner::adjustForPowerOfTwoFinalPart>(
-      state.val_.data() + (state.size_ / 2), state.size_ - (state.size_ / 2), msg->id_);
+    .template sendMsg<&Rabenseifner::adjustForPowerOfTwoFinalPart>(
+      DataHelperT::createMessage(state.val_, state.size_ / 2, state.size_ - (state.size_ / 2), msg->id_)
+    );
 }
 
 template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoLeftHalf(
-  AllreduceRbnRawMsg<Scalar>* msg) {
+  RabenseifnerMsg<Scalar, DataT>* msg) {
 
   auto& state = states_[msg->id_];
-  if (state.val_.empty()) {
+  if (DataHelperT::empty(state.val_)) {
     if (not state.initialized_) {
       vt_debug_print(
         verbose, allreduce,
@@ -277,16 +286,14 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoLeftHalf(
     theContext()->getFromNodeCurrentTask(), msg->id_
   );
 
-  for (uint32_t i = 0; i < msg->size_; i++) {
-    Op<Scalar>()(state.val_[i], msg->val_[i]);
-  }
+  DataHelperT::template reduce<Op>(state.val_, 0, msg);
 }
 
 template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoFinalPart(
-  AllreduceRbnRawMsg<Scalar>* msg) {
+  RabenseifnerMsg<Scalar, DataT>* msg) {
 
   vt_debug_print(
     terse, allreduce, "Rabenseifner AdjustFinal (From {}): ID = {}\n",
@@ -295,9 +302,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwoFinalPart(
 
   auto& state = states_[msg->id_];
 
-  for (uint32_t i = 0; i < msg->size_; i++) {
-    state.val_[(state.size_ / 2) + i] = msg->val_[i];
-  }
+  DataHelperT::copy(state.val_, state.size_ / 2, msg);
 
   state.finished_adjustment_part_ = true;
 
@@ -354,10 +359,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterTryReduce(
 
   if (do_reduce) {
     auto& in_msg = state.scatter_messages_.at(step);
-    auto& in_val = in_msg->val_;
-    for (uint32_t i = 0; i < in_msg->size_; i++) {
-      Op<Scalar>()(state.val_[state.r_index_[in_msg->step_] + i], in_val[i]);
-    }
+    DataHelperT::template reduce<Op>(state.val_, state.r_index_[in_msg->step_], in_msg.get());
 
     state.scatter_steps_reduced_[step] = true;
   }
@@ -384,9 +386,8 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIter(size_t id) {
     state.s_count_[state.scatter_step_], id
   );
 
-  proxy_[dest].template send<&Rabenseifner::scatterReduceIterHandler>(
-    state.val_.data() + state.s_index_[state.scatter_step_],
-    state.s_count_[state.scatter_step_], id, state.scatter_step_
+  proxy_[dest].template sendMsg<&Rabenseifner::scatterReduceIterHandler>(
+    DataHelperT::createMessage(state.val_, state.s_index_[state.scatter_step_], state.s_count_[state.scatter_step_], id, state.scatter_step_)
   );
 
   state.scatter_mask_ <<= 1;
@@ -406,10 +407,10 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::scatterReduceIterHandler(
-  AllreduceRbnRawMsg<Scalar>* msg) {
+  RabenseifnerMsg<Scalar, DataT>* msg) {
   auto& state = states_[msg->id_];
 
-  if (state.val_.empty()) {
+  if (DataHelperT::empty(state.val_)) {
     if (not state.initialized_) {
       vt_debug_print(
         verbose, allreduce,
@@ -497,10 +498,7 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherTryReduce(
 
   if (doRed) {
     auto& in_msg = state.gather_messages_.at(step);
-    auto& in_val = in_msg->val_;
-    for (uint32_t i = 0; i < in_msg->size_; i++) {
-      state.val_[state.s_index_[in_msg->step_] + i] = in_val[i];
-    }
+    DataHelperT::copy(state.val_, state.s_index_[in_msg->step_], in_msg.get());
 
     state.gather_steps_reduced_[step] = true;
   }
@@ -527,8 +525,11 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherIter(size_t id) {
     state.r_count_[state.gather_step_], id
   );
 
-  proxy_[dest].template send<&Rabenseifner::gatherIterHandler>(
-    state.val_.data() + state.r_index_[state.gather_step_], state.r_count_[state.gather_step_], id, state.gather_step_
+  proxy_[dest].template sendMsg<&Rabenseifner::gatherIterHandler>(
+    DataHelperT::createMessage(
+      state.val_, state.r_index_[state.gather_step_],
+      state.r_count_[state.gather_step_], id, state.gather_step_
+    )
   );
 
   state.gather_mask_ >>= 1;
@@ -547,7 +548,7 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::gatherIterHandler(
-  AllreduceRbnRawMsg<Scalar>* msg) {
+  RabenseifnerMsg<Scalar, DataT>* msg) {
   auto& state = states_.at(msg->id_);
   vt_debug_print(
     terse, allreduce, "Rabenseifner Gather (Recv step {} from {}): idx = {} ID = {}\n",
@@ -587,12 +588,17 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::finalPart(size_t id) {
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner::finalPart(): Executing final handler with size {} ID = {}\n", state.val_.size(), id
+    "Rabenseifner::finalPart(): Executing final handler with size {} ID = {}\n",
+    state.val_.size(), id
   );
 
-  parent_proxy_[this_node_].template invoke<finalHandler>(
-    DataType::fromVec(state.val_)
-  );
+  if constexpr (ShouldUseView_v<Scalar, DataT>) {
+    parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
+  } else {
+    parent_proxy_[this_node_].template invoke<finalHandler>(
+      DataType::fromVec(state.val_)
+    );
+  }
 
   state.completed_ = true;
 
@@ -621,8 +627,11 @@ void Rabenseifner<DataT, Op, ObjT, finalHandler>::sendToExcludedNodes(size_t id)
       terse, allreduce, "Rabenseifner::sendToExcludedNodes(): Sending to Node {} ID = {}\n",
       this_node_ + 1, id
     );
+
     proxy_[this_node_ + 1]
-      .template send<&Rabenseifner::sendToExcludedNodesHandler>(state.val_.data(), state.size_, id);
+      .template sendMsg<&Rabenseifner::sendToExcludedNodesHandler>(
+        DataHelperT::createMessage(state.val_, 0, state.size_, id)
+      );
   }
 }
 
@@ -630,16 +639,22 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 void Rabenseifner<DataT, Op, ObjT, finalHandler>::sendToExcludedNodesHandler(
-  AllreduceRbnRawMsg<Scalar>* msg) {
+  RabenseifnerMsg<Scalar, DataT>* msg) {
   auto& state = states_.at(msg->id_);
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner::sendToExcludedNodesHandler(): Received allreduce result with size {} ID = {}\n", msg->size_, msg->id_
+    "Rabenseifner::sendToExcludedNodesHandler(): Received allreduce result "
+    "with ID = {}\n",
+    msg->id_
   );
 
-  parent_proxy_[this_node_].template invoke<finalHandler>(
-    DataType::fromMemory(msg->val_, msg->size_)
-  );
+  if constexpr (ShouldUseView_v<Scalar, DataT>) {
+    parent_proxy_[this_node_].template invoke<finalHandler>(msg->val_);
+  } else {
+    parent_proxy_[this_node_].template invoke<finalHandler>(
+      DataType::fromMemory(msg->val_, msg->size_));
+  }
+
   state.completed_ = true;
 }
 

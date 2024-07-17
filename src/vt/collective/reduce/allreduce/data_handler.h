@@ -66,15 +66,11 @@ public:
 
   static std::vector<ScalarType> toVec(const ScalarType& data) { return std::vector<ScalarType>{data}; }
   static ScalarType fromVec(const std::vector<ScalarType>& data) { return data[0]; }
-  static ScalarType fromMemory(ScalarType* data, size_t) {
+  static ScalarType fromMemory(const ScalarType* data, size_t) {
     return *data;
   }
 
-  // static const ScalarType* data(const ScalarType& data) { return &data; }
   static size_t size(const ScalarType&) { return 1; }
-  // static ScalarType& at(ScalarType& data, size_t) { return data; }
-  // static void set(ScalarType& data, size_t, const ScalarType& value) { data = value; }
-  // static ScalarType split(ScalarType&, size_t, size_t) { return ScalarType{}; }
 };
 
 template <typename T>
@@ -84,20 +80,11 @@ public:
 
   static const std::vector<T>& toVec(const std::vector<T>& data) { return data; }
   static std::vector<T> fromVec(const std::vector<T>& data) { return data; }
-  static std::vector<T> fromMemory(T* data, size_t count) {
+  static std::vector<T> fromMemory(const T* data, size_t count) {
     return std::vector<T>(data, data + count);
   }
 
-  // static const T* data(const std::vector<T>& data) {return data.data(); }
   static size_t size(const std::vector<T>& data) { return data.size(); }
-  // static T at(const std::vector<T>& data, size_t idx) { return data[idx]; }
-  // static T& at(std::vector<T>& data, size_t idx) { return data[idx]; }
-  // static void set(std::vector<T>& data, size_t idx, const T& value) {
-  //   data[idx] = value;
-  // }
-  // static std::vector<T> split(std::vector<T>& data, size_t start, size_t end) {
-  //   return std::vector<T>{data.begin() + start, data.begin() + end};
-  // }
 };
 
 #if MAGISTRATE_KOKKOS_ENABLED
@@ -129,20 +116,7 @@ public:
     return view;
   }
 
-  // static const T* data(const ViewType& data) {return data.data(); }
   static size_t size(const ViewType& data) { return data.extent(0); }
-
-  // static T at(const ViewType& data, size_t idx) { return data(idx); }
-
-  // static T& at(ViewType& data, size_t idx) { return data(idx); }
-
-  // static void set(ViewType& data, size_t idx, const T& value) {
-  //   data(idx) = value;
-  // }
-
-  // static ViewType split(ViewType& data, size_t start, size_t end) {
-  //   return Kokkos::subview(data, std::make_pair(start, end));
-  // }
 };
 
 #endif // MAGISTRATE_KOKKOS_ENABLED
