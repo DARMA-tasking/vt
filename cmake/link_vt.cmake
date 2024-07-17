@@ -165,6 +165,9 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${ZLIB_LIBRARIES}
     )
+    target_include_directories(
+      ${ARG_TARGET} PUBLIC $<BUILD_INTERFACE:${ZLIB_INCLUDE_DIRS}>
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_FMT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FMT)
