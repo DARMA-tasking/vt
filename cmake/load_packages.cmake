@@ -7,7 +7,7 @@ include(cmake/load_local_packages.cmake)
 include(cmake/load_mpi_package.cmake)
 
 # ZLIB package
-include(cmake/load_zlib_package.cmake)
+find_package(ZLIB REQUIRED)
 
 # Perl is used to build the PMPI wrappers
 find_package(Perl)
