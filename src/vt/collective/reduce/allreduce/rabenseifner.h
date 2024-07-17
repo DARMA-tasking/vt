@@ -52,57 +52,30 @@
 #include "vt/pipe/pipe_manager.h"
 #include "data_handler.h"
 #include "type.h"
+#include "rabenseifner_msg.h"
+#include "helpers.h"
 
 #include <cstdint>
 
 namespace vt::collective::reduce::allreduce {
 
-template <typename Scalar>
-struct AllreduceRbnRawMsg
-  : Message {
-    using MessageParentType = vt::Message;
-    vt_msg_serialize_required();
-
-
-  AllreduceRbnRawMsg() = default;
-  AllreduceRbnRawMsg(AllreduceRbnRawMsg const&) = default;
-  AllreduceRbnRawMsg(AllreduceRbnRawMsg&&) = default;
-  ~AllreduceRbnRawMsg() {
-    if (owning_) {
-      delete[] val_;
-    }
-  }
-
-  AllreduceRbnRawMsg(Scalar* in_val, size_t size, size_t id, int step = 0)
-    : MessageParentType(),
-      val_(in_val),
-      size_(size),
-      id_(id),
-      step_(step) { }
-
-  template <typename SerializeT>
-  void serialize(SerializeT& s) {
-      MessageParentType::serialize(s);
-
-      s | size_;
-
-      if (s.isUnpacking()) {
-        owning_ = true;
-        val_ = new Scalar[size_];
-      }
-
-      checkpoint::dispatch::serializeArray(s, val_, size_);
-
-      s | id_;
-      s | step_;
-  }
-
-  Scalar* val_ = {};
-  size_t size_ = {};
-  size_t id_ = {};
-  int32_t step_ = {};
-  bool owning_ = false;
+// Primary template
+template <typename Scalar, typename DataT>
+struct ShouldUseView {
+  static constexpr bool Value = false;
 };
+
+#if MAGISTRATE_KOKKOS_ENABLED
+// Partial specialization for Kokkos::View
+template <typename Scalar>
+struct ShouldUseView<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
+  static constexpr bool Value = true;
+};
+#endif // MAGISTRATE_KOKKOS_ENABLED
+
+// Helper alias for cleaner usage
+template <typename Scalar, typename DataT>
+inline constexpr bool ShouldUseView_v = ShouldUseView<Scalar, DataT>::Value;
 
 /**
  * \struct Rabenseifner
@@ -122,6 +95,10 @@ template <
 struct Rabenseifner {
   using DataType = DataHandler<DataT>;
   using Scalar = typename DataType::Scalar;
+  using DataHelperT = DataHelper<Scalar, DataT>;
+  using StateT = State<Scalar, DataT>;
+
+  static constexpr bool KokkosPaylod = ShouldUseView_v<Scalar, DataT>;
 
   /**
    * \brief Constructor for Rabenseifner's allreduce algorithm.
@@ -175,7 +152,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void adjustForPowerOfTwoRightHalf(AllreduceRbnRawMsg<Scalar>* msg);
+  void adjustForPowerOfTwoRightHalf(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Handler for adjusting the left half of the process group.
@@ -184,7 +161,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void adjustForPowerOfTwoLeftHalf(AllreduceRbnRawMsg<Scalar>* msg);
+  void adjustForPowerOfTwoLeftHalf(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Final adjustment step for non-power-of-two process counts.
@@ -193,7 +170,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void adjustForPowerOfTwoFinalPart(AllreduceRbnRawMsg<Scalar>* msg);
+  void adjustForPowerOfTwoFinalPart(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Check if all scatter messages have been received.
@@ -237,7 +214,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void scatterReduceIterHandler(AllreduceRbnRawMsg<Scalar>* msg);
+  void scatterReduceIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Check if all gather messages have been received.
@@ -281,7 +258,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void gatherIterHandler(AllreduceRbnRawMsg<Scalar>* msg);
+  void gatherIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Perform the final part of the allreduce operation.
@@ -304,51 +281,13 @@ struct Rabenseifner {
    *
    * \param msg Message containing the final result.
    */
-  void sendToExcludedNodesHandler(AllreduceRbnRawMsg<Scalar>* msg);
+  void sendToExcludedNodesHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
-  struct State {
-      std::vector<Scalar> val_ = {};
-      size_t size_ = {};
-
-      bool finished_adjustment_part_ = false;
-      MsgSharedPtr<AllreduceRbnRawMsg<Scalar>> left_adjust_message_ = nullptr;
-      MsgSharedPtr<AllreduceRbnRawMsg<Scalar>> right_adjust_message_ = nullptr;
-
-      int32_t mask_ = 1;
-      int32_t step_ = 0;
-      bool initialized_ = false;
-      bool completed_ = false;
-
-      // Scatter
-      int32_t scatter_mask_ = 1;
-      int32_t scatter_step_ = 0;
-      int32_t scatter_num_recv_ = 0;
-      std::vector<bool> scatter_steps_recv_ = {};
-      std::vector<bool> scatter_steps_reduced_ = {};
-      std::vector<MsgSharedPtr<AllreduceRbnRawMsg<Scalar>>> scatter_messages_ =
-        {};
-      bool finished_scatter_part_ = false;
-
-      // Gather
-      int32_t gather_step_ = 0;
-      int32_t gather_mask_ = 1;
-      int32_t gather_num_recv_ = 0;
-      std::vector<bool> gather_steps_recv_ = {};
-      std::vector<bool> gather_steps_reduced_ = {};
-      std::vector<MsgSharedPtr<AllreduceRbnRawMsg<Scalar>>> gather_messages_ =
-        {};
-
-      std::vector<uint32_t> r_index_ = {};
-      std::vector<uint32_t> r_count_ = {};
-      std::vector<uint32_t> s_index_ = {};
-      std::vector<uint32_t> s_count_ = {};
-  };
-
   size_t id_ = 0;
-  std::unordered_map<size_t, State> states_ = {};
+  std::unordered_map<size_t, StateT> states_ = {};
   NodeType num_nodes_ = {};
   NodeType this_node_ = {};
 

@@ -215,7 +215,7 @@ public:
   static size_t size(const DataT& data) { return data.vec_.size(); }
   static const std::vector<Scalar>& toVec(const DataT& data) { return data.vec_; }
   static DataT fromVec(const std::vector<Scalar>& data) { return DataT{data}; }
-  static DataT fromMemory(Scalar* data, size_t count) {
+  static DataT fromMemory(const Scalar* data, size_t count) {
     return DataT{std::vector<Scalar>(data, data + count)};
   }
 };
