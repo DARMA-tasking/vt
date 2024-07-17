@@ -46,6 +46,7 @@
 
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_lb_data.fwd.h"
+#include "vt/context/runnable_context/papi_data.h"
 
 #include <papi.h>
 
@@ -59,12 +60,6 @@ namespace vt { namespace ctx {
 struct LBData {
   using ElementIDStruct = elm::ElementIDStruct;
   using ElementLBData    = elm::ElementLBData;
-
-  void handle_papi_error (int retval, std::string info) const
-  {
-    printf("%s: PAPI error %d: %s\n", info.c_str(), retval, PAPI_strerror(retval));
-    exit(1);
-  }
 
   LBData() = default;
 
@@ -86,29 +81,9 @@ struct LBData {
   LBData(ElementLBData* in_lb_data, ElementIDStruct const& in_elm_id)
     : lb_data_(in_lb_data),
       cur_elm_id_(in_elm_id),
-      should_instrument_(true)
-  {
-    /* Create the PAPI Event Set */
-    papi_retval_ = PAPI_create_eventset(&EventSet_);
-    if (papi_retval_ != PAPI_OK) {
-      printf("LBData Constructor 2: Creating the PAPI Event Set: PAPI error %d: %s\n", papi_retval_, PAPI_strerror(papi_retval_));
-      exit(1);
-    }
-
-    for (const auto& event_name : native_events_) {
-      int native = 0x0;
-      papi_retval_ = PAPI_event_name_to_code(event_name.c_str(), &native);
-      if (papi_retval_ != PAPI_OK) {
-        printf("LBData Constructor 1: Couldn't event_name_to_code for %s: PAPI error %d: %s\n",event_name.c_str(), papi_retval_, PAPI_strerror(papi_retval_));
-        exit(1);
-      }
-      papi_retval_ = PAPI_add_event(EventSet_, native);
-      if (papi_retval_ != PAPI_OK) {
-        printf("LBData Constructor 1: Couldn't add %s to the PAPI Event Set: PAPI error %d: %s\n",event_name.c_str(), papi_retval_, PAPI_strerror(papi_retval_));
-        exit(1);
-      }
-    }
-  }
+      should_instrument_(true),
+      papiData_(std::make_unique<PAPIData>())
+  { }
 
   /**
    * \brief Return whether time is required
@@ -147,7 +122,7 @@ struct LBData {
   /**
    * \brief Start PAPI metrics map for the running context
    */
-  void startPAPIMetrics();
+  void startPAPIMetrics() { papiData_->start(); }
 
   /**
    * \brief Stop PAPI metrics map for the running context
@@ -155,25 +130,21 @@ struct LBData {
    * \note has to be called after startPAPIMetrics
    * 
    */
-  void stopPAPIMetrics();
+  void stopPAPIMetrics() { papiData_->stop(); }
 
   /**
    * \brief Get the current PAPI metrics map for the running context
    *
    * \return the PAPI metrics map
    */
-  std::unordered_map<std::string, double> getPAPIMetrics();
+  std::unordered_map<std::string, uint64_t> getPAPIMetrics();
 
 private:
   ElementLBData* lb_data_ = nullptr;     /**< Element LB data */
   ElementIDStruct cur_elm_id_ = {};   /**< Current element ID  */
   bool should_instrument_ = false;    /**< Whether we are instrumenting */
   int EventSet_ = PAPI_NULL;
-  int papi_retval_;
-  long long start_real_cycles_, end_real_cycles_, start_real_usec_, end_real_usec_;
-  long long start_virt_cycles_, end_virt_cycles_, start_virt_usec_, end_virt_usec_;
-  std::vector<std::string> native_events_ = {"instructions", "cache-misses", "fp_arith_inst_retired.scalar_double"};
-  long_long papi_values_[3];
+  std::unique_ptr<PAPIData> papiData_;
 };
 
 }} /* end namespace vt::ctx */

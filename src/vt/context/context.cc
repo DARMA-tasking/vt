@@ -98,15 +98,10 @@ Context::Context([[maybe_unused]] bool const is_interop, MPI_Comm comm) {
   if (retval != PAPI_VER_CURRENT)
       handle_papi_error(retval);
 
-  /* Check for possible failures */
-  if (retval < 0)
+  /* Enable and initialize multiplex support */
+  retval = PAPI_multiplex_init();
+  if (retval != PAPI_OK)
       handle_papi_error(retval);
-
-  /* Print PAPI Version */
-  fprintf(stdout, "PAPI Version Number\n");
-  fprintf(stdout, "MAJOR:    %d\n", PAPI_VERSION_MAJOR(retval));
-  fprintf(stdout, "MINOR:    %d\n", PAPI_VERSION_MINOR(retval));
-  fprintf(stdout, "REVISION: %d\n", PAPI_VERSION_REVISION(retval));
 }
 
 Context::~Context() {

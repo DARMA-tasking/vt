@@ -53,41 +53,11 @@ void LBData::start(TimeType time) {
   }
 }
 
-void LBData::startPAPIMetrics() {
-  /* -- PAPI START -- */
-  /* Start counting events in the Event Set */
-  papi_retval_ = PAPI_start(EventSet_);
-  if (papi_retval_ != PAPI_OK)
-    handle_papi_error(papi_retval_, "LBData start: Starting counting events in the Event Set: ");
-
-  start_real_cycles_ = PAPI_get_real_cyc();
-  start_real_usec_ = PAPI_get_real_usec();
-  start_virt_cycles_ = PAPI_get_virt_cyc();
-  start_virt_usec_ = PAPI_get_virt_usec();
-
-  /* ---------------- */
-}
-
 void LBData::finish(TimeType time) {
   // record end time
   if (should_instrument_) {
     lb_data_->stop(time);
   }
-}
-
-void LBData::stopPAPIMetrics() {
-  /* -- PAPI STOP -- */
-  /* Stop the counting of events in the Event Set */
-  papi_retval_ = PAPI_stop(EventSet_, papi_values_);
-  if (papi_retval_ != PAPI_OK)
-    handle_papi_error(papi_retval_, "LBData finish: Stoping the counting of events in the Event Set: ");
-
-  end_real_cycles_ = PAPI_get_real_cyc();
-  end_real_usec_ = PAPI_get_real_usec();
-  end_virt_cycles_ = PAPI_get_virt_cyc();
-  end_virt_usec_ = PAPI_get_virt_usec();
-
-  /* -------------- */
 }
 
 void LBData::send(elm::ElementIDStruct dest, MsgSizeType bytes) {
@@ -108,15 +78,15 @@ typename LBData::ElementIDStruct const& LBData::getCurrentElementID() const {
   return cur_elm_id_;
 }
 
-std::unordered_map<std::string, double> LBData::getPAPIMetrics() {
-  std::unordered_map<std::string, double> papi_metrics = {};
-  for (size_t i = 0; i < native_events_.size(); i++) {
-    papi_metrics[native_events_[i]] = papi_values_[i];
+std::unordered_map<std::string, uint64_t> LBData::getPAPIMetrics() {
+  std::unordered_map<std::string, uint64_t> papi_metrics = {};
+  for (size_t i = 0; i < papiData_->native_events.size(); i++) {
+    papi_metrics[papiData_->native_events[i]] = papiData_->values[i];
   }
-  papi_metrics[std::string("real_time")] = end_real_usec_ - start_real_usec_;
-  papi_metrics[std::string("real_cycles")] = end_real_cycles_ - start_real_cycles_;
-  papi_metrics[std::string("virt_time")] = end_virt_usec_ - start_virt_usec_;
-  papi_metrics[std::string("virt_cycles")] = end_virt_cycles_ - start_virt_cycles_;
+  papi_metrics[std::string("real_time")] = papiData_->end_real_usec - papiData_->start_real_usec;
+  papi_metrics[std::string("real_cycles")] = papiData_->end_real_cycles - papiData_->start_real_cycles;
+  papi_metrics[std::string("virt_time")] = papiData_->end_virt_usec - papiData_->start_virt_usec;
+  papi_metrics[std::string("virt_cycles")] = papiData_->end_virt_cycles - papiData_->start_virt_cycles;
   // for (auto [name, value] : papi_metrics) {
   //   fmt::print("{}: {}\n", name, value);
   // }
