@@ -57,7 +57,7 @@
 #include <iostream>
 
 static constexpr std::size_t const default_nrow_object = 8;
-static constexpr std::size_t const default_num_objs = 4;
+static constexpr std::size_t const default_num_objs = 1;
 static constexpr double const default_tol = 1.0e-02;
 static constexpr std::size_t const default_flops_per_iter = 100000;
 
@@ -82,6 +82,16 @@ do_flops( int n )
 		c += a * b;
 	}
 	dummy( ( void * ) &c );
+}
+
+double pi(uint64_t n) {
+  double sum = 0.0;
+  int sign = 1;
+  for (int i = 0; i < n; ++i) {
+    sum += sign/(2.0*i+1.0);
+    sign *= -1;
+  }
+  return 4.0*sum;
 }
 
 struct NodeObj {
@@ -135,21 +145,31 @@ public:
 
   void doIteration() {
     iter_ += 1;
+    fmt::print("-- Starting Iteration --\n");
 
-    // vt::theContext()->getTask()->startPAPIMetrics();
+    vt::theContext()->getTask()->startPAPIMetrics();
 
-    do_flops(flopsPerIter_);
+    // ----------------------------------------------------------
+    // test non packed double precision floating point operations
+    // should result in ~4*n of these operations
 
-    // vt::theContext()->getTask()->stopPAPIMetrics();
-    // auto res = vt::theContext()->getTask()->getPAPIMetrics();
-    // for (auto [name, value] : res) {
-    //   fmt::print("  {}: {}\n", name, value);
-    // }
+    double p;
+    p = pi(10000000);
+    fmt::print("pi: {}\n", p);
+    // ----------------------------------------------------------
 
     auto proxy = this->getCollectionProxy();
     proxy.reduce<&GenericWork::checkCompleteCB, vt::collective::MaxOp>(
       proxy[0], 0.0
     );
+
+    vt::theContext()->getTask()->stopPAPIMetrics();
+    std::unordered_map<std::string, uint64_t> res = vt::theContext()->getTask()->getPAPIMetrics();
+    for (auto [name, value] : res) {
+      fmt::print("  {}: {}\n", name, value);
+    }
+
+    fmt::print("-- Stopping Iteration --\n");
   }
 
   struct VecMsg : vt::CollectionMessage<GenericWork> {
@@ -187,8 +207,6 @@ public:
       return;
     }
 
-    vt::theContext()->getTask()->startPAPIMetrics();
-
     vt::IdxBase const myIdx = getIndex().x();
     auto proxy = this->getCollectionProxy();
 
@@ -203,12 +221,6 @@ public:
       proxy[myIdx + 1].send<VecMsg, &GenericWork::exchange>(
         myIdx
       );
-    }
-
-    vt::theContext()->getTask()->stopPAPIMetrics();
-    auto res = vt::theContext()->getTask()->getPAPIMetrics();
-    for (auto [name, value] : res) {
-      fmt::print("  {}: {}\n", name, value);
     }
   }
 

@@ -336,7 +336,7 @@ public:
    *
    * \return the dictionnary
    */
-  std::unordered_map<std::string, double> getPAPIMetrics();
+  std::unordered_map<std::string, uint64_t> getPAPIMetrics();
 
 #if vt_check_enabled(fcontext)
   /**

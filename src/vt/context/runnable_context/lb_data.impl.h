@@ -58,31 +58,11 @@ template <typename ElmT, typename MsgT>
 LBData::LBData(ElmT* in_elm, MsgT* msg)
   : lb_data_(&in_elm->getLBData()),
     cur_elm_id_(in_elm->getElmID()),
-    should_instrument_(msg->lbLiteInstrument())
+    should_instrument_(msg->lbLiteInstrument()),
+    papiData_(std::make_unique<PAPIData>())
 {
   // record the communication LB data right away!
   theCollection()->recordLBData(in_elm, msg);
-
-  /* Create the PAPI Event Set */
-  papi_retval_ = PAPI_create_eventset(&EventSet_);
-  if (papi_retval_ != PAPI_OK) {
-    printf("LBData Constructor 1: Creating the PAPI Event Set: PAPI error %d: %s\n", papi_retval_, PAPI_strerror(papi_retval_));
-    exit(1);
-  }
-
-  for (const auto& event_name : native_events_) {
-    int native = 0x0;
-    papi_retval_ = PAPI_event_name_to_code(event_name.c_str(), &native);
-    if (papi_retval_ != PAPI_OK) {
-      printf("LBData Constructor 2: Couldn't event_name_to_code for %s: PAPI error %d: %s\n",event_name.c_str(), papi_retval_, PAPI_strerror(papi_retval_));
-      exit(1);
-    }
-    papi_retval_ = PAPI_add_event(EventSet_, native);
-    if (papi_retval_ != PAPI_OK) {
-      printf("LBData Constructor 2: Couldn't add %s to the PAPI Event Set: PAPI error %d: %s\n",event_name.c_str(), papi_retval_, PAPI_strerror(papi_retval_));
-      exit(1);
-    }
-  }
 }
 
 }} /* end namespace vt::ctx */
