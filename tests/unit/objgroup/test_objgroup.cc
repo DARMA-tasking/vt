@@ -43,6 +43,8 @@
 
 #include "test_objgroup_common.h"
 #include "test_helpers.h"
+#include "vt/collective/reduce/allreduce/rabenseifner.h"
+#include "vt/configs/types/types_type.h"
 #include "vt/objgroup/manager.h"
 
 #include <typeinfo>
@@ -266,7 +268,7 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
   auto const my_node = vt::theContext()->getNode();
 
   TestObjGroup::total_verify_expected_ = 0;
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_reduce");
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_allreduce");
 
   vt::theCollective()->barrier();
 
@@ -289,7 +291,7 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
   EXPECT_EQ(MyObjA::total_verify_expected_, 3);
   runInEpochCollective([&] {
     using Reducer = vt::collective::reduce::allreduce::RecursiveDoubling<
-      std::vector<int>, PlusOp, MyObjA, &MyObjA::verifyAllredVec
+      std::vector<int>, PlusOp, MyObjA, &MyObjA::verifyAllredVec<int, 256>
     >;
     std::vector<int> payload(256, my_node);
     theObjGroup()->allreduce<Reducer>(proxy, payload);
@@ -299,18 +301,20 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
 
   runInEpochCollective([&] {
     using Reducer = vt::collective::reduce::allreduce::Rabenseifner<
-      std::vector<int>, PlusOp, MyObjA, &MyObjA::verifyAllredVec
+      NodeType, PlusOp, MyObjA, &MyObjA::verifyAllred<1>
     >;
-    std::vector<int> payload(256, my_node);
-    theObjGroup()->allreduce<Reducer>(proxy, payload);
-    theObjGroup()->allreduce<Reducer>(proxy, payload);
+    std::vector<int> payload(2048, my_node);
+    theObjGroup()->allreduce<Reducer>(proxy, my_node);
+
+    std::vector<short> payload_large(2048 * 2, my_node);
+    theObjGroup()->allreduce<Reducer>(proxy, my_node);
   });
 
   EXPECT_EQ(MyObjA::total_verify_expected_, 6);
 
   runInEpochCollective([&] {
     using Reducer = vt::collective::reduce::allreduce::Rabenseifner<
-      VectorPayload, PlusOp, MyObjA, &MyObjA::verifyAllredVecPayload>;
+      VectorPayload, PlusOp, MyObjA, &MyObjA::verifyAllredVecPayload<VectorPayload, 256>>;
     std::vector<int> payload(256, my_node);
     VectorPayload data{payload};
     theObjGroup()->allreduce<Reducer>(proxy, data);

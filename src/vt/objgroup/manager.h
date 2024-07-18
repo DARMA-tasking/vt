@@ -58,11 +58,13 @@
 #include "vt/messaging/pending_send.h"
 #include "vt/elm/elm_id.h"
 #include "vt/utils/fntraits/fntraits.h"
+#include "vt/utils/hash/hash_tuple.h"
 
 #include <memory>
 #include <functional>
 #include <unordered_map>
 #include <vector>
+#include <typeindex>
 
 namespace vt { namespace objgroup {
 
@@ -91,6 +93,11 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   using HolderBaseType      = holder::HolderBase;
   using HolderBasePtrType   = std::unique_ptr<HolderBaseType>;
   using PendingSendType     = messaging::PendingSend;
+  using ReduceDataType      = std::type_index;
+  using ReduceOperandType   = std::type_index;
+  using ReducerMapType      = std::unordered_map<
+    std::tuple<ObjGroupProxyType, ReduceDataType, ReduceOperandType>,
+    ObjGroupProxyType>;
 
 public:
   /**
@@ -507,9 +514,10 @@ private:
   std::unordered_map<ObjGroupProxyType, std::vector<ActionType>> pending_;
   /// Map of object groups' labels
   std::unordered_map<ObjGroupProxyType, std::string> labels_;
-
-  std::unordered_map<ObjGroupProxyType, ObjGroupProxyType> reducersRD_;
-  std::unordered_map<ObjGroupProxyType, ObjGroupProxyType> reducersR_;
+  /// Recursive Doubling reducers
+  ReducerMapType reducers_recursive_doubling_;
+  /// Rabenseifner reducers
+  ReducerMapType reducers_rabenseifner_;
 };
 
 }} /* end namespace vt::objgroup */

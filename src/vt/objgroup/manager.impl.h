@@ -61,6 +61,7 @@
 #include "vt/collective/reduce/allreduce/rabenseifner.h"
 #include "vt/collective/reduce/allreduce/recursive_doubling.h"
 #include "vt/collective/reduce/allreduce/type.h"
+#include "vt/collective/reduce/allreduce/helpers.h"
 #include <utility>
 #include <array>
 
@@ -279,21 +280,36 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
 
   proxy::Proxy<Reducer> grp_proxy = {};
 
-  auto& reducers = Reducer::type_ == ReducerType::Rabenseifner ? reducersR_ : reducersRD_;
-  if (reducers.find(proxy.getProxy()) != reducers.end()) {
-    auto* obj = reinterpret_cast<Reducer*>(
-      objs_.at(reducers.at(proxy.getProxy()))->getPtr()
+  auto& reducers = Reducer::type_ == ReducerType::Rabenseifner ?
+    reducers_rabenseifner_ :
+    reducers_recursive_doubling_;
+  auto const key = std::make_tuple(
+    proxy.getProxy(), std::type_index(typeid(typename Reducer::Data)),
+    std::type_index(typeid(typename Reducer::ReduceOp))
+  );
+  if (reducers.find(key) != reducers.end()) {
+    vt_debug_print(
+      verbose, allreduce, "Found reducer (type: {}) for proxy {:x}",
+      TypeToString(Reducer::type_), proxy.getProxy()
     );
+
+    auto* obj =
+      reinterpret_cast<Reducer*>(objs_.at(reducers.at(key))->getPtr());
     id = obj->generateNewId();
     obj->initialize(id, std::forward<Args>(data)...);
     grp_proxy = obj->proxy_;
   } else {
+    vt_debug_print(
+      verbose, allreduce, "Creating reducer (type: {}) for proxy {:x}",
+      TypeToString(Reducer::type_), proxy.getProxy()
+    );
+
     grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-      TypeToString(Reducer::type_), proxy,
-      num_nodes, std::forward<Args>(data)...
+      TypeToString(Reducer::type_), proxy, num_nodes,
+      std::forward<Args>(data)...
     );
     grp_proxy[this_node].get()->proxy_ = grp_proxy;
-    reducers[proxy.getProxy()] = grp_proxy.getProxy();
+    reducers[key] = grp_proxy.getProxy();
     id = grp_proxy[this_node].get()->id_ - 1;
   }
 
@@ -314,9 +330,10 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   }
 
   auto const payload_size =
-    collective::reduce::allreduce::DataHandler<DataT>::size(
+    collective::reduce::allreduce::DataHandler<remove_cvref<DataT>>::size(
       std::forward<Args>(data)...
     );
+
   if (payload_size < 2048) {
     using Reducer =
       vt::collective::reduce::allreduce::RecursiveDoubling<DataT, Op, ObjT, f>;
@@ -327,6 +344,7 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
     return allreduce<Reducer>(proxy, std::forward<Args>(data)...);
   }
 
+  // Silence nvcc warning
   return PendingSendType{nullptr};
 }
 
