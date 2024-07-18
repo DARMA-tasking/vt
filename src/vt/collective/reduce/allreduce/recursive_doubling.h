@@ -116,8 +116,10 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT,
   auto finalHandler>
 struct RecursiveDoubling {
+  using Data = DataT;
   using DataType = DataHandler<DataT>;
   using Scalar = typename DataHandler<DataT>::Scalar;
+  using ReduceOp = Op<Scalar>;
   /**
    * \brief Constructor for RecursiveDoubling class.
    *
