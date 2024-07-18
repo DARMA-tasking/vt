@@ -56,6 +56,7 @@
 #include "vt/messaging/param_msg.h"
 #include "vt/objgroup/proxy/proxy_bits.h"
 #include "vt/collective/reduce/get_reduce_stamp.h"
+#include "vt/collective/reduce/allreduce/helpers.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -215,8 +216,7 @@ Proxy<ObjT>::allreduce_h(
 ) const {
   auto proxy = Proxy<ObjT>(*this);
 
-  // using DataT = std::tuple<std::decay_t<Args>...>;
-  return theObjGroup()->allreduce<f, ObjT, Op, std::decay_t<Args>...>(
+  return theObjGroup()->allreduce<f, ObjT, Op, remove_cvref<Args>...>(
     proxy, std::forward<Args>(args)...);
 }
 
