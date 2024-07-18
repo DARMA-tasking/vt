@@ -93,8 +93,10 @@ template <
   typename DataT, template <typename Arg> class Op, typename ObjT, auto finalHandler
 >
 struct Rabenseifner {
+  using Data = DataT;
   using DataType = DataHandler<DataT>;
   using Scalar = typename DataType::Scalar;
+  using ReduceOp = Op<Scalar>;
   using DataHelperT = DataHelper<Scalar, DataT>;
   using StateT = State<Scalar, DataT>;
 

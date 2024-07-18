@@ -131,11 +131,12 @@ struct MyObjA {
     total_verify_expected_++;
   }
 
-  void verifyAllredVec(std::vector<int> vec) {
+  template<typename Scalar, int32_t size>
+  void verifyAllredVec(std::vector<Scalar> vec) {
     auto final_size = vec.size();
-    EXPECT_EQ(final_size, 256);
+    EXPECT_EQ(final_size, size);
 
-    auto n = vt::theContext()->getNumNodes();
+    auto const n = theContext()->getNumNodes();
     auto const total_sum = n * (n - 1)/2;
     for(auto val : vec){
       EXPECT_EQ(val, total_sum);
@@ -144,7 +145,10 @@ struct MyObjA {
     total_verify_expected_++;
   }
 
-  void verifyAllredVecPayload(VectorPayload vec) { verifyAllredVec(vec.vec_); }
+  template <typename DataT, int32_t size>
+  void verifyAllredVecPayload(VectorPayload vec) {
+    verifyAllredVec<typename decltype(DataT::vec_)::value_type, size>(vec.vec_);
+  }
 
 #if MAGISTRATE_KOKKOS_ENABLED
   void verifyAllredView(Kokkos::View<float*, Kokkos::HostSpace> view) {
