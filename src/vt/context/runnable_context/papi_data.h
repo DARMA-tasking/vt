@@ -58,16 +58,33 @@ struct PAPIData {
   int retval = 0;
   uint64_t start_real_cycles = 0, end_real_cycles = 0, start_real_usec = 0, end_real_usec = 0;
   uint64_t start_virt_cycles = 0, end_virt_cycles = 0, start_virt_usec = 0, end_virt_usec = 0;
-  std::vector<std::string> native_events = {
-    "fp_arith_inst_retired.scalar_double",
-    "cache-misses",
-    "page-faults"
-  };
-  uint64_t values[4];
+  std::vector<std::string> native_events = {};
+  std::vector<uint64_t> values = {};
 
   PAPIData()
   {
-    std::fill(std::begin(values), std::end(values), 0);
+    const char* env_p =  getenv("VT_EVENTS");
+
+    // check if the environment variable is set
+    if (env_p == nullptr) {
+      fmt::print("Warning: Environment variabale VT_EVENTS not set, defaulting to instructions and cycles for the PAPI event set.\n");
+      native_events.push_back("cycles"); // instructions is added when initializing the event set
+    }
+    else {
+      std::string env_str(env_p);
+
+      std::stringstream ss(env_str);
+      std::string item;
+
+      while (std::getline(ss, item, ','))
+      {
+        native_events.push_back(item);
+      }
+
+    }
+    values.resize(native_events.size());
+    std::fill(values.begin(), values.end(), 0);
+
     /* Create an EventSet */
     retval = PAPI_create_eventset(&(EventSet));
     if (retval != PAPI_OK)
@@ -124,7 +141,7 @@ struct PAPIData {
 
   void stop()
   {
-    retval = PAPI_stop(EventSet, reinterpret_cast<long long*>(values));
+    retval = PAPI_stop(EventSet, reinterpret_cast<long long*>(values.data()));
     if (retval != PAPI_OK)
       handle_error("PAPIData stop: Stopping the counting of events in the Event Set: ");
 
