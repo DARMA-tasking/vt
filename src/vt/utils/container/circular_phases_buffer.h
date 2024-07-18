@@ -79,7 +79,7 @@ struct CircularPhasesBuffer {
     requested_capacity_ = in_list.size();
     buffer_.reserve(in_list.size());
 
-    for (const auto& pair : in_list) {
+    for (auto pair : in_list) {
       addToCache(pair.first, std::move(pair.second));
     }
   }
@@ -274,7 +274,7 @@ private:
    * \param[in] phase the phase for which data will be stored
    * \param[in] data the data to store
    */
-  void addToCache(const PhaseType& phase, const StoredType&& data) {
+  void addToCache(const PhaseType& phase, StoredType&& data) {
     if (requested_capacity_ > 0 && buffer_.size() >= requested_capacity_) {
       removeOldest();
     }
