@@ -11,7 +11,7 @@ trigger:
       - main
 
 pr:
-  drafts: true
+  drafts: false
   autoCancel: true
   branches:
     include:
@@ -58,7 +58,7 @@ variables:
   VT_KOKKOS_ENABLED: 0
   VT_TV_ENABLED: 1
   CMAKE_CXX_STANDARD: 17
-  TEST_LB_SCHEMA: 0
+  VT_CI_TEST_LB_SCHEMA: 0
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-gcc-12-cache
   volume_name: ubuntu-cpp
