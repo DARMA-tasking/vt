@@ -337,6 +337,8 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
     Configuration File:
       Enable Output Config: True
       File: test_config.yaml
+    Visualization:
+      Enabled: False
     )";
     cfg_file_.close();
   }
@@ -498,6 +500,10 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
   EXPECT_EQ(theConfig()->vt_max_mpi_send_size, 1ull << 30);
   EXPECT_EQ(theConfig()->vt_no_assert_fail, false);
   EXPECT_EQ(theConfig()->vt_throw_on_abort, true);
+
+  // Visualization
+  EXPECT_EQ(theConfig()->vt_tv, false);
+  EXPECT_EQ(theConfig()->vt_tv_config_file, "");
 
   // TEST THAT THE CONFIGURATION FILE WAS WRITTEN OUT CORRECTLY
   YAML::Node input_config = YAML::LoadFile(config_file);
