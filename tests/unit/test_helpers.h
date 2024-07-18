@@ -46,6 +46,7 @@
 
 #include "vt/context/context.h"
 #include <mpi.h>
+#include <yaml-cpp/yaml.h>
 #include <gtest/gtest.h>
 #include <sstream>
 
@@ -99,6 +100,48 @@ inline std::string getUniqueFilenameWithRanks(const std::string& ext = "") {
   std::stringstream ss;
   ss << getUniqueFilename() << "_" << ranks << ext;
   return ss.str();
+}
+
+/**
+ * Compare two YAML::Nodes and assert that they are either identical or that
+ * yaml_1 is a subset of yaml_2 (all entries of yaml_1 exist in yaml_2).
+ */
+inline void assertYamlNodesHaveIdenticalEntries(const YAML::Node& yaml_1, const YAML::Node& yaml_2) {
+    EXPECT_TRUE(yaml_2.IsMap() and yaml_1.IsMap());
+
+    for (YAML::const_iterator it = yaml_1.begin(); it != yaml_1.end(); ++it) {
+        const std::string& key = it->first.as<std::string>();
+
+        EXPECT_TRUE(yaml_2[key].IsDefined());
+
+        auto yaml_1_val = yaml_1[key];
+        auto yaml_2_val = yaml_2[key];
+
+        EXPECT_EQ(yaml_1_val.Type(), yaml_2_val.Type());
+
+        if (yaml_1_val.IsMap()) {
+          assertYamlNodesHaveIdenticalEntries(yaml_1_val, yaml_2_val);
+        }
+        else if (yaml_1_val.IsSequence()) {
+          for (std::size_t i = 0; i < yaml_1_val.size(); i++) {
+            EXPECT_EQ(yaml_1_val[i].as<std::string>(), yaml_2_val[i].as<std::string>());
+          }
+        }
+        else if (yaml_1_val.IsScalar()) {
+          try {
+            EXPECT_EQ(yaml_1_val.as<bool>(), yaml_2_val.as<bool>());
+          } catch (const YAML::RepresentationException&) {
+            try {
+              EXPECT_EQ(yaml_1_val.as<int>(), yaml_2_val.as<int>());
+            } catch (const YAML::RepresentationException&) {
+              EXPECT_EQ(yaml_1_val.as<std::string>(), yaml_2_val.as<std::string>());
+            }
+          }
+        }
+        else {
+          vtAbort("YAML::Node type not recognized (must be Map, Sequence, or Scalar)");
+        }
+    }
 }
 
 /**

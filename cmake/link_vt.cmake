@@ -28,6 +28,7 @@ function(link_target_with_vt)
     LINK_FCONTEXT
     LINK_CHECKPOINT
     LINK_CLI11
+    LINK_YAMLCPP
     LINK_DL
     LINK_ZOLTAN
     LINK_FORT
@@ -41,7 +42,7 @@ function(link_target_with_vt)
   set(allKeywords ${noValOption} ${singleValArg} ${multiValueArg})
 
   cmake_parse_arguments(
-    ARG "${noValOption}" "${singleValArg}" "${multiValueArgs}" ${ARGN}
+    ARG "${noValOption}" "${singleValArg}" "${multiValueArg}" ${ARGN}
   )
 
   if (${ARG_DEBUG_LINK})
@@ -208,6 +209,15 @@ function(link_target_with_vt)
     target_include_directories(${ARG_TARGET} PUBLIC
       $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/CLI>
       $<INSTALL_INTERFACE:include/CLI>
+    )
+  endif()
+
+  if (NOT DEFINED ARG_LINK_YAMLCPP AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_YAMLCPP)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: yamlcpp=${ARG_LINK_YAMLCPP}")
+    endif()
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${YAMLCPP_LIBRARY}
     )
   endif()
 

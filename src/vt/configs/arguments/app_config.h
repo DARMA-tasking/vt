@@ -77,6 +77,8 @@ struct AppConfig {
     return vt_debug_print_flush;
   }
 
+  std::string vt_input_config_yaml = "";
+
   bool vt_color      = true;
 #ifdef VT_NO_COLOR_ENABLED
   bool vt_no_color   = true;

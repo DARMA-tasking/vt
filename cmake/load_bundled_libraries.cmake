@@ -38,6 +38,10 @@ else()
   set_darma_compiler_flags(${FMT_LIBRARY})
 endif()
 
+# yaml-cpp always included in the build
+set(YAMLCPP_LIBRARY yaml-cpp)
+add_subdirectory(${PROJECT_LIB_DIR}/yaml-cpp)
+set_darma_compiler_flags(${YAMLCPP_LIBRARY})
 
 # EngFormat-Cpp always included in the build
 set(ENG_FORMAT_LIBRARY EngFormat-Cpp)
