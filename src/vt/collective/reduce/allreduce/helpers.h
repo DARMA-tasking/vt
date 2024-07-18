@@ -43,10 +43,18 @@
 
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H
+
 #include "data_handler.h"
 #include "rabenseifner_msg.h"
 #include "vt/messaging/message/shared_message.h"
+
 #include <vector>
+#include <type_traits>
+
+namespace vt {
+template <typename T>
+using remove_cvref = std::remove_cv_t<std::remove_reference_t<T>>;
+}
 
 namespace vt::collective::reduce::allreduce {
 
