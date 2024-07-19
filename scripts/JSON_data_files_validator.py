@@ -291,10 +291,13 @@ class SchemaValidator:
 
 
 def get_json(file_path):
+    """ Always try to decompress in case '.br' extension is missing. """
     with open(file_path, "rb") as json_file:
         content = json_file.read()
-        if file_path.endswith('.br'):
+        try:
             content = brotli.decompress(content)
+        except Exception:
+            pass
         return json.loads(content.decode("utf-8"))
 
 class JSONDataFilesValidator:
