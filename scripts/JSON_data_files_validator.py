@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 try:
@@ -382,23 +383,30 @@ class JSONDataFilesValidator:
                             "Passing by default when schema type not found.")
 
         if self.__validate_comm_links and schema_type == "LBDatafile":
+            # FIXME: extract into a method
             basename = os.path.basename(file_path)
-            digits = ''.join(filter(lambda c: c.isdigit(), basename))
+            numbers = re.findall(r'\d+', basename)
 
-            all_jsons = []
-            if not digits.isnumeric():
+            if not numbers:
                 # validate single file
+                files = [file_path]
                 all_jsons = [json_data]
-            elif int(digits) == 0:
+            elif numbers[-1] == '0':
                 # validate complete dataset
                 dirname = os.path.dirname(file_path)
-                files = self.__get_files_for_validation(dirname, None, None)
+                index = basename.rfind('0')
+                base = basename[0:index]
+                #FIXME: files = get_complete_dataset...
+                files = [os.path.join(dirname, f) for f in os.listdir(dirname)
+                         if f.startswith(base)]
+                print(files) #REMOVE_ME / logging
                 all_jsons = [get_json(file) for file in files]
             else:
-                # only datasets starting with 0
+                # this dataset is already validated
                 return
 
             if not self.validate_comm_links(all_jsons):
+                # FIXME: could be undefined
                 logging.error(f" Invalid dataset: {files}")
 
 
@@ -409,10 +417,13 @@ class JSONDataFilesValidator:
             task_ids = set()
 
             for data in all_jsons:
+                #FIXME: KeyErorr: 'communications'
+                #if data... get("communications") is not None:
                 comms = data["phases"][n]["communications"]
-                tasks = data["phases"][n]["tasks"]
                 comm_ids.update({int(comm["from"]["id"]) for comm in comms})
                 comm_ids.update({int(comm["to"]["id"]) for comm in comms})
+
+                tasks = data["phases"][n]["tasks"]
                 task_ids.update({int(task["entity"]["id"]) for task in tasks})
 
             if not comm_ids.issubset(task_ids):
