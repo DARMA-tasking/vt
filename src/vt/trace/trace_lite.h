@@ -236,6 +236,9 @@ struct TraceLite  {
   /**
    * \brief Flush traces to file
    *
+   * \note The flush will be blocked when having an incomplete user notes.
+   * In that case method will not flush any traces.
+   *
    * \param[in] useGlobalSync whether a global sync should be invoked before
    * flushing output
    */
