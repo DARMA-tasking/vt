@@ -417,11 +417,10 @@ class JSONDataFilesValidator:
             task_ids = set()
 
             for data in all_jsons:
-                #FIXME: KeyErorr: 'communications'
-                #if data... get("communications") is not None:
-                comms = data["phases"][n]["communications"]
-                comm_ids.update({int(comm["from"]["id"]) for comm in comms})
-                comm_ids.update({int(comm["to"]["id"]) for comm in comms})
+                if data["phases"][n].get("communications") is not None:
+                    comms = data["phases"][n]["communications"]
+                    comm_ids.update({int(comm["from"]["id"]) for comm in comms})
+                    comm_ids.update({int(comm["to"]["id"]) for comm in comms})
 
                 tasks = data["phases"][n]["tasks"]
                 task_ids.update({int(task["entity"]["id"]) for task in tasks})
