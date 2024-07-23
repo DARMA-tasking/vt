@@ -40,8 +40,10 @@ endif()
 
 # yaml-cpp always included in the build
 set(YAMLCPP_LIBRARY yaml-cpp)
-add_subdirectory(${PROJECT_LIB_DIR}/yaml-cpp)
-set_darma_compiler_flags(${YAMLCPP_LIBRARY})
+if(NOT TARGET ${YAMLCPP_LIBRARY})
+  add_subdirectory(${PROJECT_LIB_DIR}/yaml-cpp)
+  set_darma_compiler_flags(${YAMLCPP_LIBRARY})
+endif()
 
 # EngFormat-Cpp always included in the build
 set(ENG_FORMAT_LIBRARY EngFormat-Cpp)
