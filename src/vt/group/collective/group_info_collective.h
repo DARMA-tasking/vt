@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_type.h"
 #if !defined INCLUDED_VT_GROUP_COLLECTIVE_GROUP_INFO_COLLECTIVE_H
 #define INCLUDED_VT_GROUP_COLLECTIVE_GROUP_INFO_COLLECTIVE_H
 
@@ -105,10 +106,10 @@ protected:
   static void upHan(GroupCollectiveMsg* msg);
   static void downHan(GroupCollectiveMsg* msg);
   static void newRootHan(GroupCollectiveMsg* msg);
-  static void downFinishedHan(GroupOnlyMsg* msg);
-  static void finalizeHan(GroupOnlyMsg* msg);
-  static void newTreeHan(GroupOnlyMsg* msg);
-  static void tree(GroupOnlyMsg* msg);
+  static void downFinishedHan(GroupCollectiveFinalMsg* msg);
+  static void finalizeHan(GroupCollectiveFinalMsg* msg);
+  static void newTreeHan(GroupCollectiveFinalMsg* msg);
+  static void tree(GroupCollectiveFinalMsg* msg);
 
 private:
   void upTree();
@@ -116,8 +117,8 @@ private:
   void downTree(GroupCollectiveMsg* msg);
   void collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg);
   void newRoot(GroupCollectiveMsg* msg);
-  void downTreeFinished(GroupOnlyMsg* msg);
-  void finalizeTree(GroupOnlyMsg* msg);
+  void downTreeFinished(GroupCollectiveFinalMsg* msg);
+  void finalizeTree(GroupCollectiveFinalMsg* msg);
   void finalize();
   void sendDownNewTree();
   void newTree(NodeType const& parent);
@@ -141,6 +142,7 @@ protected:
   bool is_default_group_                 = false;
   bool is_empty_group_                   = false;
   std::size_t subtree_                   = 0;
+  std::vector<NodeType> nodes_           = {};
 
 private:
   RemoteOperationIDType down_tree_cont_     = no_op_id;
