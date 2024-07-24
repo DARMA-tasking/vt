@@ -56,6 +56,8 @@ namespace vt { namespace group {
 
 template <typename MsgT>
 struct GroupMsg : MsgT {
+  using MessageParentType = MsgT;
+  vt_msg_serialize_if_needed_by_parent();
   GroupMsg() = default;
 
   GroupMsg(GroupType const& in_group, RemoteOperationIDType const& in_op)
@@ -77,6 +79,15 @@ struct GroupMsg : MsgT {
   void setGroup(GroupType const& group) { group_ = group; }
   void setOpID(RemoteOperationIDType const& op) { op_id_ = op; }
   void setRoot(NodeType const& root) { root_ = root; }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | group_;
+    s | op_id_;
+    s | root_;
+    s | default_group_;
+  }
 
 protected:
   GroupType group_             = no_group;
