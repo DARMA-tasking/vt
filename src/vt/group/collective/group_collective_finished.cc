@@ -65,7 +65,7 @@ void InfoColl::CollSetupFinished::operator()(FinishedReduceMsg* msg) {
     info->known_root_node_ != this_node and
     info->known_root_node_ != uninitialized_destination
   ) {
-    auto nmsg = makeMessage<GroupOnlyMsg>(
+    auto nmsg = makeMessage<GroupCollectiveFinalMsg>(
       msg->getGroup(),info->new_tree_cont_
     );
     theMsg()->sendMsg<InfoColl::newTreeHan>(
