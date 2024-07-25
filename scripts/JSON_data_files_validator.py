@@ -297,8 +297,8 @@ def get_json(file_path):
         content = json_file.read()
         try:
             content = brotli.decompress(content)
-        except Exception:
-            pass
+        except brotli.error as e:
+            logging.debug(f"No decompression applied for {file_path}: {e}")
         return json.loads(content.decode("utf-8"))
 
 class JSONDataFilesValidator:
@@ -322,6 +322,7 @@ class JSONDataFilesValidator:
         parser.add_argument("--file_prefix", help="File prefix. Optional. Pass only when --dir_path is provided.")
         parser.add_argument("--file_suffix", help="File suffix. Optional. Pass only when --dir_path is provided.")
         parser.add_argument("--validate_comm_links", help='Verify that comm links reference tasks.', action='store_true')
+        parser.add_argument("--debug", help="Enable debug logging", action="store_true")
         args = parser.parse_args()
         if args.file_path:
             self.__file_path = os.path.abspath(args.file_path)
@@ -332,6 +333,7 @@ class JSONDataFilesValidator:
         if args.file_suffix:
             self.__file_suffix = args.file_suffix
         self.__validate_comm_links = args.validate_comm_links
+        logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO, format='%(levelname)s - %(filename)s:%(lineno)d - %(message)s')
 
     @staticmethod
     def __get_files_for_validation(dir_path: str, file_prefix: str, file_suffix: str) -> list:
@@ -358,6 +360,31 @@ class JSONDataFilesValidator:
         return sorted([os.path.join(dir_path, file) for file in list_of_files],
                       key=lambda x: int(x.split(os.sep)[-1].split('.')[-2]))
 
+    @staticmethod
+    def get_complete_dataset(file_path):
+        """ Returns all json files that share the same basename. """
+        dirname = os.path.dirname(file_path)
+        basename = os.path.basename(file_path)
+        index = basename.rfind('0')
+        base = basename[0:index]
+        files = [os.path.join(dirname, f) for f in os.listdir(dirname)
+            if f.startswith(base) and (f.endswith(".json") or f.endswith(".json.br"))]
+        logging.debug(f"Dataset: {files}")
+
+        return files
+
+    @staticmethod
+    def get_nodes_info(file_path):
+        """ Returns node information from file name.  """
+        basename = os.path.basename(file_path)
+        nodes_info = re.findall(r'\d+', basename)
+        if not nodes_info:
+            return '-1', '-1'
+        elif len(nodes_info) == 1:
+            return '-1', nodes_info[0]
+        else:
+            return nodes_info[0], nodes_info[1]
+
     def __validate_file(self, file_path):
         """ Validates the file against the schema. """
         logging.info(f"Validating file: {file_path}")
@@ -383,31 +410,20 @@ class JSONDataFilesValidator:
                             "Passing by default when schema type not found.")
 
         if self.__validate_comm_links and schema_type == "LBDatafile":
-            # FIXME: extract into a method
-            basename = os.path.basename(file_path)
-            numbers = re.findall(r'\d+', basename)
-
-            if not numbers:
+            num_nodes, current_node = self.get_nodes_info(file_path)
+            if num_nodes == '-1' and current_node == '-1':
                 # validate single file
-                files = [file_path]
                 all_jsons = [json_data]
-            elif numbers[-1] == '0':
+            elif current_node == '0':
                 # validate complete dataset
-                dirname = os.path.dirname(file_path)
-                index = basename.rfind('0')
-                base = basename[0:index]
-                #FIXME: files = get_complete_dataset...
-                files = [os.path.join(dirname, f) for f in os.listdir(dirname)
-                         if f.startswith(base) and (f.endswith(".json") or f.endswith(".json.br"))]
-                print(files) #REMOVE_ME / logging
-                all_jsons = [get_json(file) for file in files]
+                dataset_files = self.get_complete_dataset(file_path)
+                all_jsons = [get_json(file) for file in dataset_files]
             else:
                 # this dataset is already validated
                 return
 
             if not self.validate_comm_links(all_jsons):
-                # FIXME: could be undefined
-                logging.error(f" Invalid dataset: {files}")
+                logging.error(f" Invalid dataset for file: {file_path}!")
 
 
     @staticmethod
