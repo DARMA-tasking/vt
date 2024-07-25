@@ -81,20 +81,13 @@ struct PAPIData {
         native_events.push_back(item);
       }
     }
-    std::cout << native_events.size() << std::endl;
-    for (auto e: native_events) {
-      std::cout << e << std::endl;
-    }
     values.resize(native_events.size());
     std::fill(values.begin(), values.end(), 0);
 
     /* Create an EventSet */
     retval = PAPI_create_eventset(&EventSet);
     if (retval != PAPI_OK)
-    {
-      std::cout << "Couldn't create an event set: " << std::endl;
-      handle_error(retval);
-    }
+      handle_error("PAPIData Constructor: Couldn't create an event set: ");
 
     /* Add one event to our EventSet,
     must be done such that we can call PAPI_set_multiplex */
@@ -102,18 +95,12 @@ struct PAPIData {
     retval = PAPI_event_name_to_code(native_events[0].c_str(), &native);
     retval = PAPI_add_event(EventSet, native);
     if (retval != PAPI_OK)
-    {
-      std::cout << "Couldn't add instructions to event set: " << std::endl;
-      handle_error(retval);
-    }
+      handle_error("PAPIData Constructor: Couldn't add instructions to event set: ");
 
     /* Convert the EventSet to a multiplexed EventSet */
     retval = PAPI_set_multiplex(EventSet);
     if (retval != PAPI_OK)
-    {
-      std::cout << "Couldn't convert event set to multiplexed: " << std::endl;
-      handle_error(retval);
-    }
+      handle_error("PAPIData Constructor: Couldn't convert event set to multiplexed: ");
 
     // Starting at i=1 because we've already added the first event
     for (size_t i = 1; i < native_events.size(); i++) {
