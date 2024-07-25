@@ -126,9 +126,9 @@ struct LBData {
 
   /**
    * \brief Stop PAPI metrics map for the running context
-   * 
+   *
    * \note has to be called after startPAPIMetrics
-   * 
+   *
    */
   void stopPAPIMetrics() { papiData_->stop(); }
 

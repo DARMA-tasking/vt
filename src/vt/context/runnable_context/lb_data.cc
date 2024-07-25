@@ -87,9 +87,6 @@ std::unordered_map<std::string, uint64_t> LBData::getPAPIMetrics() {
   papi_metrics[std::string("real_cycles")] = papiData_->end_real_cycles - papiData_->start_real_cycles;
   papi_metrics[std::string("virt_time")] = papiData_->end_virt_usec - papiData_->start_virt_usec;
   papi_metrics[std::string("virt_cycles")] = papiData_->end_virt_cycles - papiData_->start_virt_cycles;
-  // for (auto [name, value] : papi_metrics) {
-  //   fmt::print("{}: {}\n", name, value);
-  // }
   return papi_metrics;
 }
 
