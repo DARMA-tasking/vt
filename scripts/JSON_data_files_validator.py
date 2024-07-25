@@ -398,7 +398,7 @@ class JSONDataFilesValidator:
                 base = basename[0:index]
                 #FIXME: files = get_complete_dataset...
                 files = [os.path.join(dirname, f) for f in os.listdir(dirname)
-                         if f.startswith(base)]
+                         if f.startswith(base) and (f.endswith(".json") or f.endswith(".json.br"))]
                 print(files) #REMOVE_ME / logging
                 all_jsons = [get_json(file) for file in files]
             else:
