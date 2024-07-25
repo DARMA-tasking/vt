@@ -67,8 +67,8 @@ struct PAPIData {
 
     // check if the environment variable is set
     if (env_p == nullptr) {
-      fmt::print("Warning: Environment variabale VT_EVENTS not set, defaulting to instructions and cycles for the PAPI event set.\n");
-      native_events.push_back("cycles"); // instructions is added when initializing the event set
+      std::cout << "Warning: Environment variabale VT_EVENTS not set, defaulting to instructions for the PAPI event set." << std::endl;
+      native_events.push_back("instructions");
     }
     else {
       std::string env_str(env_p);
@@ -80,45 +80,55 @@ struct PAPIData {
       {
         native_events.push_back(item);
       }
-
+    }
+    std::cout << native_events.size() << std::endl;
+    for (auto e: native_events) {
+      std::cout << e << std::endl;
     }
     values.resize(native_events.size());
     std::fill(values.begin(), values.end(), 0);
 
     /* Create an EventSet */
-    retval = PAPI_create_eventset(&(EventSet));
+    retval = PAPI_create_eventset(&EventSet);
     if (retval != PAPI_OK)
-        handle_error("PAPIData constructor: Couldn't create an event set: ");
+    {
+      std::cout << "Couldn't create an event set: " << std::endl;
+      handle_error(retval);
+    }
 
-    /* Add Total Instructions to our EventSet,
+    /* Add one event to our EventSet,
     must be done such that we can call PAPI_set_multiplex */
     int native = 0x0;
-    retval = PAPI_event_name_to_code("instructions", &native);
+    retval = PAPI_event_name_to_code(native_events[0].c_str(), &native);
     retval = PAPI_add_event(EventSet, native);
     if (retval != PAPI_OK)
-        handle_error("PAPIData constructor: Couldn't add instructions to event set: ");
+    {
+      std::cout << "Couldn't add instructions to event set: " << std::endl;
+      handle_error(retval);
+    }
 
     /* Convert the EventSet to a multiplexed EventSet */
     retval = PAPI_set_multiplex(EventSet);
     if (retval != PAPI_OK)
-        handle_error("PAPIData constructor: Couldn't convert event set to multiplexed: ");
+    {
+      std::cout << "Couldn't convert event set to multiplexed: " << std::endl;
+      handle_error(retval);
+    }
 
-    for (const auto& event_name : native_events) {
+    // Starting at i=1 because we've already added the first event
+    for (size_t i = 1; i < native_events.size(); i++) {
       native = 0x0;
-      retval = PAPI_event_name_to_code(event_name.c_str(), &native);
+      retval = PAPI_event_name_to_code(native_events[i].c_str(), &native);
       if (retval != PAPI_OK) {
-        printf("PAPIData constructor: Couldn't event_name_to_code for %s: PAPI error %d: %s\n",event_name.c_str(), retval, PAPI_strerror(retval));
+        printf("Couldn't event_name_to_code for %s: PAPI error %d: %s\n",native_events[i].c_str(), retval, PAPI_strerror(retval));
         exit(1);
       }
       retval = PAPI_add_event(EventSet, native);
       if (retval != PAPI_OK) {
-        printf("PAPIData constructor: Couldn't add %s to the PAPI Event Set: PAPI error %d: %s\n",event_name.c_str(), retval, PAPI_strerror(retval));
+        printf("Couldn't add %s to the PAPI Event Set: PAPI error %d: %s\n",native_events[i].c_str(), retval, PAPI_strerror(retval));
         exit(1);
       }
     }
-    // we added instructions on its own to the event set for multiplex initialization purposes;
-    // here we add it to the list of measured events for later usage
-    native_events.insert(native_events.begin(), "instructions");
   }
 
   void handle_error (std::string info) const
