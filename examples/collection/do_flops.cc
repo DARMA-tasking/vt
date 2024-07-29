@@ -87,7 +87,7 @@ do_flops( int n )
 double pi(uint64_t n) {
   double sum = 0.0;
   int sign = 1;
-  for (int i = 0; i < n; ++i) {
+  for (uint64_t i = 0; i < n; ++i) {
     sum += sign/(2.0*i+1.0);
     sign *= -1;
   }
@@ -132,7 +132,7 @@ public:
     { }
   };
 
-  void checkCompleteCB(double normRes) {
+  void checkCompleteCB() {
     auto const iter_max_reached = iter_ > maxIter_;
 
     if (iter_max_reached) {
@@ -160,7 +160,7 @@ public:
 
     auto proxy = this->getCollectionProxy();
     proxy.reduce<&GenericWork::checkCompleteCB, vt::collective::MaxOp>(
-      proxy[0], 0.0
+      proxy[0]
     );
 
     vt::theContext()->getTask()->stopPAPIMetrics();
