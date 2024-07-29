@@ -85,6 +85,7 @@ struct GroupCollectiveInfoMsg : MsgT {
   CountType getExtraNodes() const { return extra_nodes_; }
   CountType getLevel() const { return level_; }
   std::vector<NodeType> const& getNodes() {return nodes_;}
+  void clearNodes() { nodes_.clear();}
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
