@@ -25,7 +25,7 @@ variables:
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
-  UBUNTU: 22.04
+  UBUNTU: 24.04
   COMPILER_TYPE: clang
   COMPILER: clang-16
   HOST_COMPILER: clang-16
