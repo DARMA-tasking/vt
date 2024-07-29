@@ -95,7 +95,7 @@ void GroupManagerT<T>::registerContinuationT(
   RemoteOperationIDType const op, ActionTType action
 ) {
   vt_debug_print(
-    verbose, group,
+    terse, group,
     "GroupManager::registerContinuationT: op={:x}\n", op
   );
 

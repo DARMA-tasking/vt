@@ -224,6 +224,11 @@ void InfoColl::setupCollective() {
   );
 
   if (collective_->getInitialChildren() == 0) {
+    vt_debug_print(
+      terse, group,
+      "InfoColl::setupCollective (group={:x}): Leaf {} sending to parent={}\n",
+      group_, theContext()->getNode(), parent
+    );
     auto const& size = static_cast<NodeType>(is_in_group ? 1 : 0);
     auto const& child = theContext()->getNode();
     auto msg = makeMessage<GroupCollectiveMsg>(
@@ -266,6 +271,15 @@ void InfoColl::upTree() {
   nodes_.push_back(theContext()->getNode());
   for (auto&& msg : msgs_) {
     if (msg->isInGroup()) {
+      std::string nodes_info = "Nodes: ";
+      nodes_info.reserve(1024);
+      for (auto& node : msg->getNodes()) {
+        nodes_info += fmt::format("{} ", node);
+      }
+      nodes_info += "\n";
+
+      vt_debug_print(
+        terse, group, "InfoColl::upTree: msg={} {}\n", msg, nodes_info);
       msg_in_group.push_back(msg);
       subtree_ += msg->getSubtreeSize();
       for(auto& node : msg->getNodes()){
@@ -397,7 +411,7 @@ void InfoColl::upTree() {
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
 
     vt_debug_print(
-      normal, group,
+      terse, group,
       "InfoColl::upTree: case 1: sub={}, total={}\n",
       subtree_, total_subtree
     );
@@ -426,7 +440,7 @@ void InfoColl::upTree() {
     }
 
     vt_debug_print(
-      normal, group,
+      terse, group,
       "InfoColl::upTree: case 2: sub={} (total is same)\n",
       subtree_
     );
@@ -458,7 +472,7 @@ void InfoColl::upTree() {
     auto const total_subtree = static_cast<NodeType>(subtree_ + subtree_this);
 
     vt_debug_print(
-      normal, group,
+      terse, group,
       "InfoColl::upTree: case 3: sub={}, total={}\n",
       subtree_, total_subtree
     );
@@ -469,6 +483,8 @@ void InfoColl::upTree() {
     theMsg()->sendMsg<upHan>(p, msg);
     // new MsgPtr to avoid thief of original in collection
     auto msg_out = promoteMsg(msg_in_group[0].get());
+    // clear nodes information (child node already sent in previous message within nodes_)
+    msg_out->clearNodes();
     theMsg()->sendMsg<upHan>(p, msg_out);
   } else {
     vtAssertExpr(msg_in_group.size() > 2);
@@ -498,7 +514,7 @@ void InfoColl::upTree() {
     auto const total_subtree = static_cast<NodeType>(subtree_this + subtree_);
 
     vt_debug_print(
-      normal, group,
+      terse, group,
       "InfoColl::upTree: case 4: sub={}, total={}\n",
       subtree_, total_subtree
     );
@@ -509,7 +525,7 @@ void InfoColl::upTree() {
     theMsg()->sendMsg<upHan>(p, msg);
 
     vt_debug_print(
-      verbose, group,
+      terse, group,
       "InfoColl::upTree: msg_in_group.size()={}, msg_size.size()={}\n",
       msg_in_group.size(), msg_list.size()
     );
@@ -521,6 +537,8 @@ void InfoColl::upTree() {
     for (int i = 0; i < extra; i++) {
       GroupCollectiveMsg* tmsg = *iter;
       c[i] = tmsg->getChild();
+      // clear nodes information for extra nodes
+      tmsg->clearNodes();
       auto pmsg = promoteMsg(tmsg);
       theMsg()->sendMsg<upHan>(p, pmsg);
       iter++;
@@ -528,6 +546,9 @@ void InfoColl::upTree() {
 
     int32_t i = 0;
     while (iter != iter_end) {
+      vt_debug_print(
+        terse, group, "InfoColl::upTree: Sending to Node {}\n", c[i % extra]
+      );
       GroupCollectiveMsg* tmsg = *iter;
       tmsg->setOpID(down_tree_cont_);
       auto pmsg = promoteMsg(tmsg);
@@ -612,7 +633,7 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
     (coll_wait_count_ == static_cast<WaitCountType>(arrived_count_) + 1);
 
   vt_debug_print(
-    verbose, group,
+    terse, group,
     "InfoColl::collectiveFn: group={:x}, arrived_count_={}, extra_count_={}, "
     "coll_wait_count_-1={}, ready={}\n",
     msg->getGroup(), arrived_count_, extra_count_, coll_wait_count_-1,
@@ -638,9 +659,9 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
   envelopeUnlockForForwarding(msg->env);
 
   vt_debug_print(
-    verbose, group,
-    "InfoColl::upHan: group={:x}, op={:x}, child={}, extra={}\n",
-    msg->getGroup(), msg->getOpID(), msg->getChild(), msg->getExtraNodes()
+    terse, group,
+    "InfoColl::upHan: from={}, group={:x}, op={:x}, child={}, extra={}\n",
+    theContext()->getFromNodeCurrentTask(), msg->getGroup(), msg->getOpID(), msg->getChild(), msg->getExtraNodes()
   );
   auto const& op_id = msg->getOpID();
   vtAssert(op_id != no_op_id, "Must have valid op");
@@ -654,7 +675,7 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
   auto const& from = theContext()->getFromNodeCurrentTask();
 
   vt_debug_print(
-    verbose, group,
+    terse, group,
     "InfoColl::downTree: group={:x}, child={}, from={}\n",
     getGroupID(), msg->getChild(), from
   );
@@ -672,7 +693,7 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
   }
 
   auto const& group_ = getGroupID();
-  auto nmsg = makeMessage<GroupCollectiveFinalMsg>(group_,down_tree_fin_cont_, nodes_);
+  auto nmsg = makeMessage<GroupCollectiveFinalMsg>(group_,down_tree_fin_cont_);
   theMsg()->sendMsg<downFinishedHan>(from, nmsg);
 }
 
@@ -754,6 +775,12 @@ void InfoColl::finalize() {
       terse, group, "InfoColl::finalize: group={:x}, {}\n", group_, nodes_info
     );
 
+    // TODO: initialize reducer here
+    // We pass groupType and nodes_. With this information,
+    // we can calculate group size and neighbour nodes
+
+    // reducer_ = Reducer(group, nodes_);
+
     auto const& children = collective_->getChildren();
     for (auto&& c : children) {
 
@@ -793,7 +820,7 @@ void InfoColl::finalize() {
 void InfoColl::finalizeTree(GroupCollectiveFinalMsg* msg) {
   auto const& new_root = msg->getRoot();
   vt_debug_print(
-    normal, group,
+    terse, group,
     "InfoColl::finalizeTree: group={:x}, new_root={}\n",
     msg->getGroup(), new_root
   );
