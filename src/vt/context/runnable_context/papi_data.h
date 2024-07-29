@@ -67,7 +67,7 @@ struct PAPIData {
 
     // check if the environment variable is set
     if (env_p == nullptr) {
-      std::cout << "Warning: Environment variabale VT_EVENTS not set, defaulting to instructions for the PAPI event set." << std::endl;
+      fmt::print("Warning: Environment variabale VT_EVENTS not set, defaulting to instructions for the PAPI event set.\n");
       native_events.push_back("instructions");
     }
     else {
