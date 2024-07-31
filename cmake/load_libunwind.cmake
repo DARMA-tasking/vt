@@ -1,7 +1,7 @@
-set(vt_has_libunwind 0)
+set(vt_feature_cmake_libunwind "0")
 
 find_package(libunwind)
 
-if(libunwind_FOUND)
-    set(vt_has_libunwind 1)
+if(LIBUNWIND_FOUND)
+    set(vt_feature_cmake_libunwind "1")
 endif()

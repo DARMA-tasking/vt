@@ -47,7 +47,7 @@
 
 #include <cxxabi.h>
 
-#if defined(vt_has_libunwind)
+#if vt_check_enabled(libunwind)
 # define UNW_LOCAL_ONLY
 # include <libunwind.h>
 #elif defined(vt_has_execinfo_h)
@@ -59,7 +59,7 @@ namespace vt { namespace debug { namespace stack {
 
 DumpStackType dumpStack(int skip) {
   DumpStackType stack;
-  #if defined(vt_has_libunwind)
+  #if vt_check_enabled(libunwind)
 
     unw_cursor_t cursor;
     unw_context_t context;
