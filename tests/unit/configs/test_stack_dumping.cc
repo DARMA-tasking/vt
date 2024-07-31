@@ -49,7 +49,7 @@
 
 namespace vt { namespace tests { namespace unit {
 
-#if defined(vt_has_libunwind_h) || defined(vt_has_execinfo_h)
+#if defined(vt_has_libunwind) || defined(vt_has_execinfo_h)
 
   struct TestStackDumping : TestParallelHarness {};
 

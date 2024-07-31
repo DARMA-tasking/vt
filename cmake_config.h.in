@@ -89,7 +89,7 @@
 #cmakedefine vt_has_unistd_h
 #cmakedefine vt_has_inttypes_h
 #cmakedefine vt_has_sysconf
-#cmakedefine vt_has_libunwind_h
+#cmakedefine vt_has_libunwind
 #cmakedefine vt_has_execinfo_h
 
 #if vt_feature_cmake_external_fmt
