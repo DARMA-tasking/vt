@@ -152,7 +152,8 @@ DumpStackType dumpStack(int skip) {
     std::free(symbols);
 
     return stack;
-  #else //neither libnunwind.h or libexecinfo.h is available
+  #else // neither libunwind.h nor libexecinfo.h is available
+    (void)skip;
     return stack;
   #endif
 }
