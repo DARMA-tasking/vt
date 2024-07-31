@@ -94,7 +94,7 @@ function(link_target_with_vt)
   endif()
 
   if (NOT DEFINED ARG_LINK_UNWIND AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_UNWIND)
-    if (vt_has_libunwind_h)
+    if (vt_has_libunwind)
       if (${ARG_DEBUG_LINK})
         message(STATUS "link_target_with_vt: unwind=${ARG_LINK_UNWIND}")
       endif()
