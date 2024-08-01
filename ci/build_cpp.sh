@@ -151,6 +151,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_debug_verbose="${VT_DEBUG_VERBOSE:-0}" \
       -Dvt_tests_num_nodes="${VT_TESTS_NUM_NODES:-}" \
       -Dvt_external_fmt="${VT_EXTERNAL_FMT:-0}" \
+      -D libunwind_ROOT_DIR="${LIBUNWIND_ROOT_DIR:-/usr}" \
       -Dvt_no_color_enabled="${VT_NO_COLOR_ENABLED:-0}" \
       -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-17}" \
       -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS:-0}" \

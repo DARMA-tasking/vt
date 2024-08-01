@@ -2,7 +2,7 @@
 #
 # - Try to find Libunwind
 # Input variables:
-#  LIBUNWIND_ROOT_DIR     - The libunwind install directory
+#  libunwind_ROOT_DIR     - The libunwind install directory
 #  LIBUNWIND_INCLUDE_DIR  - The libunwind include directory
 #  LIBUNWIND_LIBRARY      - The libunwind library directory
 # Output variables:
@@ -16,20 +16,26 @@ include(FindPackageHandleStandardArgs)
 if(NOT DEFINED LIBUNWIND_FOUND)
 
   # Set default sarch paths for libunwind
-  if(LIBUNWIND_ROOT_DIR)
-    set(LIBUNWIND_INCLUDE_DIR ${LIBUNWIND_ROOT_DIR}/include CACHE PATH "The include directory for libunwind")
+  if(libunwind_ROOT_DIR)
+    set(LIBUNWIND_INCLUDE_DIR ${libunwind_ROOT_DIR}/include CACHE PATH "The include directory for libunwind")
     if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
-      set(LIBUNWIND_LIBRARY ${LIBUNWIND_ROOT_DIR}/lib64;${LIBUNWIND_ROOT_DIR}/lib CACHE PATH "The library directory for libunwind")
+      set(LIBUNWIND_LIBRARY ${libunwind_ROOT_DIR}/lib64;${libunwind_ROOT_DIR}/lib CACHE PATH "The library directory for libunwind")
     else()
-      set(LIBUNWIND_LIBRARY ${LIBUNWIND_ROOT_DIR}/lib CACHE PATH "The library directory for libunwind")
+      set(LIBUNWIND_LIBRARY ${libunwind_ROOT_DIR}/lib CACHE PATH "The library directory for libunwind")
     endif()
   endif()
 
+  # First, try searching in libunwind_ROOT ("/usr" by default)
   find_path(LIBUNWIND_INCLUDE_DIRS NAMES libunwind.h
-      HINTS ${LIBUNWIND_INCLUDE_DIR})
-
+      HINTS ${LIBUNWIND_INCLUDE_DIR}
+      NO_DEFAULT_PATH)
   find_library(LIBUNWIND_LIBRARIES unwind
-      HINTS ${LIBUNWIND_LIBRARY})
+      HINTS ${LIBUNWIND_LIBRARY}
+      NO_DEFAULT_PATH)
+
+  # If that fails, use CMake's default path
+  find_path(LIBUNWIND_INCLUDE_DIRS NAMES libunwind.h)
+  find_library(LIBUNWIND_LIBRARIES unwind)
 
   # Get libunwind version
   if(EXISTS "${LIBUNWIND_INCLUDE_DIRS}/libunwind-common.h")
