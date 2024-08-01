@@ -99,7 +99,7 @@ struct LBDataHolder {
   std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
 
 #if vt_check_enabled(tv)
-          /**
+  /**
    * \brief Generate vt-tv data structure for visualization
    *
    * \param[in] phase the phase to generate

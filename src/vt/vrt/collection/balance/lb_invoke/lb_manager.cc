@@ -495,7 +495,7 @@ struct GatherTVInfo {
     s | rank_map | info | phase;
   }
 
-  friend GatherTVInfo operator+(GatherTVInfo a1, GatherTVInfo const& a2) {
+  friend GatherTVInfo operator+(GatherTVInfo& a1, GatherTVInfo const& a2) {
     for (auto& [node, rank] : a2.rank_map) {
       a1.rank_map[node] = rank;
     }

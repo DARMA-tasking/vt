@@ -389,7 +389,7 @@ std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
     }
   }
 
-  return std::make_unique<PhaseWork>(phase, objects);;
+  return std::make_unique<PhaseWork>(phase, objects);
 }
 
 std::unordered_map<ElementIDType, tv::ObjectInfo> LBDataHolder::getObjInfo(
@@ -404,9 +404,9 @@ std::unordered_map<ElementIDType, tv::ObjectInfo> LBDataHolder::getObjInfo(
       bool is_objgroup = false;
 
       std::vector<uint64_t> idx;
-      if (node_idx_.find(id) != node_idx_.end()) {
+      if (auto it = node_idx_.find(id); it != node_idx_.end()) {
         is_collection = true;
-        idx = std::get<1>(node_idx_.find(id)->second);
+        idx = std::get<1>(it->second);
       }
 
       if (node_objgroup_.find(id) != node_objgroup_.end()) {
