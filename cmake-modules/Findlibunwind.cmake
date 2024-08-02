@@ -1,10 +1,12 @@
-# This file downloaded from https://raw.githubusercontent.com/m-a-d-n-e-s-s/madness/master/cmake/modules/FindLibunwind.cmake
+# This file was downloaded from https://raw.githubusercontent.com/m-a-d-n-e-s-s/madness/master/cmake/modules/FindLibunwind.cmake
+# and modified on August 2 2024
 #
 # - Try to find Libunwind
 # Input variables:
 #  libunwind_ROOT_DIR     - The libunwind install directory
 #  LIBUNWIND_INCLUDE_DIR  - The libunwind include directory
 #  LIBUNWIND_LIBRARY      - The libunwind library directory
+#
 # Output variables:
 #  LIBUNWIND_FOUND        - System has libunwind
 #  LIBUNWIND_INCLUDE_DIRS - The libunwind include directories
@@ -15,7 +17,7 @@ include(FindPackageHandleStandardArgs)
 
 if(NOT DEFINED LIBUNWIND_FOUND)
 
-  # Set default sarch paths for libunwind
+  # Set default search paths for libunwind
   if(libunwind_ROOT_DIR)
     set(LIBUNWIND_INCLUDE_DIR ${libunwind_ROOT_DIR}/include CACHE PATH "The include directory for libunwind")
     if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -54,7 +56,7 @@ if(NOT DEFINED LIBUNWIND_FOUND)
     unset(_libunwind_version_header)
   endif()
 
-  # handle the QUIETLY and REQUIRED arguments and set LIBUNWIND_FOUND to TRUE
+  # Handle the QUIETLY and REQUIRED arguments and set LIBUNWIND_FOUND to TRUE
   # if all listed variables are TRUE
   find_package_handle_standard_args(Libunwind
       FOUND_VAR LIBUNWIND_FOUND
