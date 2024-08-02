@@ -46,7 +46,9 @@
 
 #include <memory>
 #include <mpi.h>
+#if vt_check_enabled(papi)
 #include <papi.h>
+#endif
 
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
@@ -125,11 +127,13 @@ struct Context : runtime::component::Component<Context> {
 
   std::string name() override { return "Context"; }
 
+#if vt_check_enabled(papi)
   void handle_papi_error (int retval)
   {
     printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
     exit(1);
   }
+#endif
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {

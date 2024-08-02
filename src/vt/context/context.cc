@@ -91,6 +91,7 @@ Context::Context([[maybe_unused]] bool const is_interop, MPI_Comm comm) {
   numNodes_ = static_cast<NodeType>(numNodesLocal);
   thisNode_ = static_cast<NodeType>(thisNodeLocal);
 
+#if vt_check_enabled(papi)
   int retval;
 
   /* Initialize the PAPI library */
@@ -102,6 +103,7 @@ Context::Context([[maybe_unused]] bool const is_interop, MPI_Comm comm) {
   retval = PAPI_multiplex_init();
   if (retval != PAPI_OK)
       handle_papi_error(retval);
+#endif
 }
 
 Context::~Context() {
