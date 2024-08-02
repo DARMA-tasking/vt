@@ -78,6 +78,7 @@ typename LBData::ElementIDStruct const& LBData::getCurrentElementID() const {
   return cur_elm_id_;
 }
 
+#if vt_check_enabled(papi)
 std::unordered_map<std::string, uint64_t> LBData::getPAPIMetrics() {
   std::unordered_map<std::string, uint64_t> papi_metrics = {};
   for (size_t i = 0; i < papiData_->native_events.size(); i++) {
@@ -89,5 +90,6 @@ std::unordered_map<std::string, uint64_t> LBData::getPAPIMetrics() {
   papi_metrics[std::string("virt_cycles")] = papiData_->end_virt_cycles - papiData_->start_virt_cycles;
   return papi_metrics;
 }
+#endif
 
 }} /* end namespace vt::ctx */

@@ -18,7 +18,10 @@ include(cmake/load_libunwind.cmake)
 # Optionally link with Zoltan
 include(cmake/load_zoltan_package.cmake)
 
-# Link with PAPI
+# If enabled, link with PAPI
+include(cmake/load_papi.cmake)
+
+# If enabled, test if perf is available and works
 include(cmake/load_papi.cmake)
 
 # Tests

@@ -100,6 +100,8 @@ define_option(vt_rdma_tests_enabled "RDMA tests" "Build VT with RDMA tests enabl
     ON vt_feature_cmake_rdma_tests
 )
 
+define_option(vt_papi_enabled "PAPI task measurement" "Build VT with PAPI to measure low level metrics of interest" OFF vt_feature_cmake_papi)
+define_option(vt_papi_enabled "perf task measurement" "Build VT with perf to measure low level metrics of interest" OFF vt_feature_cmake_perf)
 
 #####################################################
 #################### DIAGNOSTICS ####################

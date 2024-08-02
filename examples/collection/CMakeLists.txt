@@ -11,8 +11,10 @@ set(
   reduce_integral
   transpose
   4d_collection
-  do_flops
 )
+if ((vt_papi_enabled AND vt_papi_found) OR (vt_perf_enabled AND vt_perf_found))
+  list(APPEND COLLECTION_EXAMPLES do_flops)
+endif()
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})
   # message("Example: building collection example >>>>> ${EXAMPLE_NAME}")
