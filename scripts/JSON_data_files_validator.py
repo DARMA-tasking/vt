@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 try:
@@ -12,6 +13,7 @@ import argparse
 from collections import Counter
 from collections.abc import Iterable
 import json
+import logging
 
 import brotli
 from schema import And, Optional, Schema
@@ -289,13 +291,26 @@ class SchemaValidator:
         return self.valid_schema.validate(schema_to_validate)
 
 
+def get_json(file_path):
+    """ Always try to decompress in case '.br' extension is missing. """
+    with open(file_path, "rb") as json_file:
+        content = json_file.read()
+        try:
+            content = brotli.decompress(content)
+        except brotli.error as e:
+            logging.debug(f"No decompression applied for {file_path}: {e}")
+        return json.loads(content.decode("utf-8"))
+
 class JSONDataFilesValidator:
     """ Class validating VT data files according do defined schema. """
-    def __init__(self, file_path: str = None, dir_path: str = None, file_prefix: str = None, file_suffix: str = None):
+    def __init__(self, file_path: str = None, dir_path: str = None,
+                 file_prefix: str = None, file_suffix: str = None,
+                 validate_comm_links: bool = False):
         self.__file_path = file_path
         self.__dir_path = dir_path
         self.__file_prefix = file_prefix
         self.__file_suffix = file_suffix
+        self.__validate_comm_links = validate_comm_links
         self.__cli()
 
     def __cli(self):
@@ -306,6 +321,8 @@ class JSONDataFilesValidator:
         group.add_argument("--file_path", help="Path to a validated file. Pass only when validating a single file.")
         parser.add_argument("--file_prefix", help="File prefix. Optional. Pass only when --dir_path is provided.")
         parser.add_argument("--file_suffix", help="File suffix. Optional. Pass only when --dir_path is provided.")
+        parser.add_argument("--validate_comm_links", help='Verify that comm links reference tasks.', action='store_true')
+        parser.add_argument("--debug", help="Enable debug logging", action="store_true")
         args = parser.parse_args()
         if args.file_path:
             self.__file_path = os.path.abspath(args.file_path)
@@ -315,20 +332,12 @@ class JSONDataFilesValidator:
             self.__file_prefix = args.file_prefix
         if args.file_suffix:
             self.__file_suffix = args.file_suffix
-
-    @staticmethod
-    def __check_if_file_exists(file_path: str) -> bool:
-        """ Check for existence of a given file. Returns True when file exists. """
-        return os.path.isfile(file_path)
-
-    @staticmethod
-    def __check_if_dir_exists(dir_path: str) -> bool:
-        """ Check for existence of a given directory. Returns True when file exists. """
-        return os.path.isdir(dir_path)
+        self.__validate_comm_links = args.validate_comm_links
+        logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO, format='%(levelname)s - %(filename)s:%(lineno)d - %(message)s')
 
     @staticmethod
     def __get_files_for_validation(dir_path: str, file_prefix: str, file_suffix: str) -> list:
-        """ Check for existence of a given directory. Returns True when file exists. """
+        """ Get a sorted list of files from directory. """
         list_of_files = os.listdir(dir_path)
 
         if not list_of_files:
@@ -336,11 +345,11 @@ class JSONDataFilesValidator:
             raise FileNotFoundError(f"Directory: {dir_path} is EMPTY")
 
         if file_prefix is None and file_suffix is None:
-            print("File prefix and file suffix not given")
+            logging.info("File prefix and file suffix not given")
             file_prefix = Counter([file.split('.')[0] for file in list_of_files]).most_common()[0][0]
-            print(f"Found most common prefix: {file_prefix}")
+            logging.info(f"Found most common prefix: {file_prefix}")
             file_suffix = Counter([file.split('.')[-1] for file in list_of_files]).most_common()[0][0]
-            print(f"Found most common suffix: {file_suffix}")
+            logging.info(f"Found most common suffix: {file_suffix}")
 
         if file_prefix is not None:
             list_of_files = [file for file in list_of_files if file.split('.')[0] == file_prefix]
@@ -352,44 +361,104 @@ class JSONDataFilesValidator:
                       key=lambda x: int(x.split(os.sep)[-1].split('.')[-2]))
 
     @staticmethod
-    def __validate_file(file_path):
+    def get_complete_dataset(file_path):
+        """ Returns all json files that share the same basename. """
+        dirname = os.path.dirname(file_path)
+        basename = os.path.basename(file_path)
+        index = basename.rfind('0')
+        base = basename[0:index]
+        files = [os.path.join(dirname, f) for f in os.listdir(dirname)
+            if f.startswith(base) and (f.endswith(".json") or f.endswith(".json.br"))]
+        logging.debug(f"Dataset: {files}")
+
+        return files
+
+    @staticmethod
+    def get_nodes_info(file_path):
+        """ Returns node information from file name.  """
+        basename = os.path.basename(file_path)
+        nodes_info = re.findall(r'\d+', basename)
+        if not nodes_info:
+            return '-1', '-1'
+        elif len(nodes_info) == 1:
+            return '-1', nodes_info[0]
+        else:
+            return nodes_info[0], nodes_info[1]
+
+    def __validate_file(self, file_path):
         """ Validates the file against the schema. """
-        print(f"Validating file: {file_path}")
-        with open(file_path, "rb") as compr_json_file:
-            compr_bytes = compr_json_file.read()
-            try:
-                decompr_bytes = brotli.decompress(compr_bytes)
-                decompressed_dict = json.loads(decompr_bytes.decode("utf-8"))
-            except brotli.error:
-                decompressed_dict = json.loads(compr_bytes.decode("utf-8"))
+        logging.info(f"Validating file: {file_path}")
+        json_data = get_json(file_path)
 
         # Extracting type from JSON data
         schema_type = None
-        if decompressed_dict.get("metadata") is not None:
-            schema_type = decompressed_dict.get("metadata").get("type")
+        if json_data.get("metadata") is not None:
+            schema_type = json_data.get("metadata").get("type")
         else:
-            if decompressed_dict.get("type") is not None:
-                schema_type = decompressed_dict.get("type")
+            if json_data.get("type") is not None:
+                schema_type = json_data.get("type")
 
         if schema_type is not None:
             # Validate schema
-            if SchemaValidator(schema_type=schema_type).is_valid(schema_to_validate=decompressed_dict):
-                print(f"Valid JSON schema in {file_path}")
+            if SchemaValidator(schema_type=schema_type).is_valid(schema_to_validate=json_data):
+                logging.info(f"Valid JSON schema in {file_path}")
             else:
-                print(f"Invalid JSON schema in {file_path}")
-                SchemaValidator(schema_type=schema_type).validate(schema_to_validate=decompressed_dict)
+                logging.error(f"Invalid JSON schema in {file_path}")
+                SchemaValidator(schema_type=schema_type).validate(schema_to_validate=json_data)
         else:
-            print(f"Schema type not found in file: {file_path}. \nPassing by default when schema type not found.")
+            logging.warning(f"Schema type not found in file: {file_path}. \n"
+                            "Passing by default when schema type not found.")
+
+        if self.__validate_comm_links and schema_type == "LBDatafile":
+            num_nodes, current_node = self.get_nodes_info(file_path)
+            if num_nodes == '-1' and current_node == '-1':
+                # validate single file
+                all_jsons = [json_data]
+            elif current_node == '0':
+                # validate complete dataset
+                dataset_files = self.get_complete_dataset(file_path)
+                all_jsons = [get_json(file) for file in dataset_files]
+            else:
+                # this dataset is already validated
+                return
+
+            if not self.validate_comm_links(all_jsons):
+                logging.error(f" Invalid dataset for file: {file_path}!")
+
+
+    @staticmethod
+    def validate_comm_links(all_jsons):
+        for n in range(len(all_jsons[0]["phases"])):
+            comm_ids = set()
+            task_ids = set()
+
+            for data in all_jsons:
+                if data["phases"][n].get("communications") is not None:
+                    comms = data["phases"][n]["communications"]
+                    comm_ids.update({int(comm["from"]["id"]) for comm in comms})
+                    comm_ids.update({int(comm["to"]["id"]) for comm in comms})
+
+                tasks = data["phases"][n]["tasks"]
+                task_ids.update({int(task["entity"]["id"]) for task in tasks})
+
+            if not comm_ids.issubset(task_ids):
+                logging.error(
+                    f" Phase {n}: Task ids: {comm_ids - task_ids}. Tasks are "
+                    "referenced in communication, but are not present in the "
+                    "dataset."
+                )
+                return False
+        return True
 
     def main(self):
         if self.__file_path is not None:
-            if self.__check_if_file_exists(file_path=self.__file_path):
+            if os.path.isfile(self.__file_path):
                 self.__validate_file(file_path=self.__file_path)
             else:
                 sys.excepthook = exc_handler
                 raise FileNotFoundError(f"File: {self.__file_path} NOT found")
         elif self.__dir_path is not None:
-            if self.__check_if_dir_exists(dir_path=self.__dir_path):
+            if os.path.isdir(self.__dir_path):
                 list_of_files_for_validation = self.__get_files_for_validation(dir_path=self.__dir_path,
                                                                                file_prefix=self.__file_prefix,
                                                                                file_suffix=self.__file_suffix)
