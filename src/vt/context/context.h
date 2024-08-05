@@ -46,9 +46,6 @@
 
 #include <memory>
 #include <mpi.h>
-#if vt_check_enabled(papi)
-#include <papi.h>
-#endif
 
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
@@ -64,6 +61,9 @@ struct RunnableNew;
 
 #if vt_check_enabled(trace_enabled)
 # include "vt/trace/trace_common.h"
+#endif
+#if vt_check_enabled(papi)
+# include <papi.h>
 #endif
 
 namespace vt {  namespace ctx {

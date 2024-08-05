@@ -318,6 +318,7 @@ public:
    */
   BaseMsgType* getMsg() const { return msg_.get(); }
 
+#if vt_check_enabled(papi)
   /**
    * \brief Start PAPI metrics map for the running context
    */
@@ -337,6 +338,7 @@ public:
    * \return the dictionnary
    */
   std::unordered_map<std::string, uint64_t> getPAPIMetrics();
+#endif
 
 #if vt_check_enabled(fcontext)
   /**
