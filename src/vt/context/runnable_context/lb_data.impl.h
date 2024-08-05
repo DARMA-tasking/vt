@@ -60,7 +60,7 @@ template <typename ElmT, typename MsgT>
 LBData::LBData(ElmT* in_elm, MsgT* msg)
   : lb_data_(&in_elm->getLBData()),
     cur_elm_id_(in_elm->getElmID()),
-    should_instrument_(msg->lbLiteInstrument()),
+    should_instrument_(msg->lbLiteInstrument())
 {
 #if vt_check_enabled(papi)
   papiData_ = std::make_unique<PAPIData>();

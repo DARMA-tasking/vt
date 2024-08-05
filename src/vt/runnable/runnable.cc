@@ -199,6 +199,7 @@ void RunnableNew::run() {
 #endif
 }
 
+#if vt_check_enabled(papi)
 std::unordered_map<std::string, uint64_t> RunnableNew::getPAPIMetrics() {
   std::unordered_map<std::string, uint64_t> result = {};
   if (contexts_.has_lb)
@@ -207,6 +208,7 @@ std::unordered_map<std::string, uint64_t> RunnableNew::getPAPIMetrics() {
   }
   return result;
 }
+#endif
 
 void RunnableNew::start(TimeType time) {
   contexts_.setcontext.start();
