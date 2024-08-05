@@ -257,7 +257,7 @@ struct TraceScopedNote final {
   ) : event_(in_event),
       note_(in_note)
   {
-    if (event_ != no_user_event_id) {
+    if (event_ != no_trace_event) {
       theTrace()->addUserNoteBracketedBeginTime(note_, event_);
     }
   }
@@ -272,7 +272,7 @@ struct TraceScopedNote final {
     : event_(in_event),
       note_("")
   {
-    if (event_ != no_user_event_id) {
+    if (event_ != no_trace_event) {
       theTrace()->addUserNoteBracketedBeginTime(note_, event_);
     }
   }
@@ -298,9 +298,9 @@ struct TraceScopedNote final {
    * \brief Manually end the scoped event early (before it goes out of scope)
    */
   void end() {
-    if (event_ != no_user_event_id) {
+    if (event_ != no_trace_event) {
       theTrace()->addUserNoteBracketedEndTime(note_, event_);
-      event_ = no_user_event_id;
+      event_ = no_trace_event;
     }
   }
 
