@@ -27,5 +27,5 @@ The trace events can be configured to be saved to the file in the incremental ma
 To configure the interval of the flushes use the `--vt_trace_flush_size=X` parameter.
 The `X` stands for the number of trace events before the next flush.
 
-\note The incremental flushing will be blocked in the case of an incomplete user notes.
-In that scenario there will be no output to the files. All trace events will be kept in memory and will be tried to be flushed on the next interval if the incomplete notes where closed.
+\note The incremental flushing will be blocked in the case of an incomplete user note.
+In that scenario there will be no output to the files. All trace events will be kept in memory and will be tried to be flushed on the next interval if the incomplete notes were closed.
