@@ -1,7 +1,7 @@
 set(vt_feature_cmake_libunwind "0")
 
-if(NOT DEFINED libunwind_ROOT_DIR)
-    set(libunwind_ROOT_DIR "/usr")
+if(NOT DEFINED LIBUNWIND_ROOT)
+    set(LIBUNWIND_ROOT "/usr")
 endif()
 
 find_package(libunwind)

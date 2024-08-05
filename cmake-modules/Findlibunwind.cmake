@@ -1,78 +1,41 @@
-# This file was downloaded from https://raw.githubusercontent.com/m-a-d-n-e-s-s/madness/master/cmake/modules/FindLibunwind.cmake
-# and modified on August 2 2024
+
+# Users can pass LIBUNWIND_ROOT, LIBUNWIND_INCLUDE_DIR, and LIBUNWIND_LIBRARY as CMake variables
 #
-# - Try to find Libunwind
-# Input variables:
-#  libunwind_ROOT_DIR     - The libunwind install directory
-#  LIBUNWIND_INCLUDE_DIR  - The libunwind include directory
-#  LIBUNWIND_LIBRARY      - The libunwind library directory
-#
-# Output variables:
-#  LIBUNWIND_FOUND        - System has libunwind
-#  LIBUNWIND_INCLUDE_DIRS - The libunwind include directories
-#  LIBUNWIND_LIBRARIES    - The libraries needed to use libunwind
-#  LIBUNWIND_VERSION      - The version string for libunwind
+# LIBUNWIND_FOUND, LIBUNWIND_INCLUDE_DIRS, and LIBUNWIND_LIBRARIES are outputs
 
-include(FindPackageHandleStandardArgs)
-
-if(NOT DEFINED LIBUNWIND_FOUND)
-
-  # Set default search paths for libunwind
-  if(libunwind_ROOT_DIR)
-    set(LIBUNWIND_INCLUDE_DIR ${libunwind_ROOT_DIR}/include CACHE PATH "The include directory for libunwind")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
-      set(LIBUNWIND_LIBRARY ${libunwind_ROOT_DIR}/lib64;${libunwind_ROOT_DIR}/lib CACHE PATH "The library directory for libunwind")
-    else()
-      set(LIBUNWIND_LIBRARY ${libunwind_ROOT_DIR}/lib CACHE PATH "The library directory for libunwind")
-    endif()
-  endif()
-
-  # First, try searching in libunwind_ROOT ("/usr" by default)
-  find_path(LIBUNWIND_INCLUDE_DIRS NAMES libunwind.h
-      HINTS ${LIBUNWIND_INCLUDE_DIR}
-      NO_DEFAULT_PATH)
-  find_library(LIBUNWIND_LIBRARIES unwind
-      HINTS ${LIBUNWIND_LIBRARY}
-      NO_DEFAULT_PATH)
-
-  # If that fails, use CMake's default path
-  find_path(LIBUNWIND_INCLUDE_DIRS NAMES libunwind.h)
-  find_library(LIBUNWIND_LIBRARIES unwind)
-
-  # Get libunwind version
-  if(EXISTS "${LIBUNWIND_INCLUDE_DIRS}/libunwind-common.h")
-    file(READ "${LIBUNWIND_INCLUDE_DIRS}/libunwind-common.h" _libunwind_version_header)
-    string(REGEX REPLACE ".*define[ \t]+UNW_VERSION_MAJOR[ \t]+([0-9]+).*" "\\1"
-        LIBUNWIND_MAJOR_VERSION "${_libunwind_version_header}")
-    string(REGEX REPLACE ".*define[ \t]+UNW_VERSION_MINOR[ \t]+([0-9]+).*" "\\1"
-        LIBUNWIND_MINOR_VERSION "${_libunwind_version_header}")
-    string(REGEX REPLACE ".*define[ \t]+UNW_VERSION_EXTRA[ \t]+([0-9]*).*" "\\1"
-        LIBUNWIND_MICRO_VERSION "${_libunwind_version_header}")
-    if(LIBUNWIND_MICRO_VERSION)
-      set(LIBUNWIND_VERSION "${LIBUNWIND_MAJOR_VERSION}.${LIBUNWIND_MINOR_VERSION}.${LIBUNWIND_MICRO_VERSION}")
-    else()
-      set(LIBUNWIND_VERSION "${LIBUNWIND_MAJOR_VERSION}.${LIBUNWIND_MINOR_VERSION}")
-    endif()
-    unset(_libunwind_version_header)
-  endif()
-
-  # Handle the QUIETLY and REQUIRED arguments and set LIBUNWIND_FOUND to TRUE
-  # if all listed variables are TRUE
-  find_package_handle_standard_args(Libunwind
-      FOUND_VAR LIBUNWIND_FOUND
-      VERSION_VAR LIBUNWIND_VERSION
-      REQUIRED_VARS LIBUNWIND_LIBRARIES LIBUNWIND_INCLUDE_DIRS)
-
-  mark_as_advanced(LIBUNWIND_INCLUDE_DIR LIBUNWIND_LIBRARY
-      LIBUNWIND_INCLUDE_DIRS LIBUNWIND_LIBRARIES)
-
+if(LIBUNWIND_ROOT)
+    set(LIBUNWIND_INCLUDE_DIR ${LIBUNWIND_ROOT}/include CACHE PATH "The include directory for libunwind")
+    set(LIBUNWIND_LIBRARY ${LIBUNWIND_ROOT}/lib64;${LIBUNWIND_ROOT}/lib CACHE PATH "The library directory for libunwind")
 endif()
 
+# First, check only in the hinted paths
+find_path(LIBUNWIND_INCLUDE_DIRS NAMES libunwind.h
+    DOC "The libunwind include directory"
+    HINTS ${LIBUNWIND_INCLUDE_DIR}
+    NO_DEFAULT_PATH
+)
+find_library(LIBUNWIND_LIBRARIES NAMES unwind
+    DOC "The libunwind library"
+    HINTS ${LIBUNWIND_LIBRARY}
+    NO_DEFAULT_PATH
+)
+
+# If that fails, check in CMake's default paths
+find_path(LIBUNWIND_INCLUDE_DIRS NAMES libunwind.h
+    DOC "The libunwind include directory"
+)
+find_library(LIBUNWIND_LIBRARIES NAMES unwind
+    DOC "The libunwind library"
+)
+
+include(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(LIBUNWIND
+                                  REQUIRED_VARS LIBUNWIND_LIBRARIES LIBUNWIND_INCLUDE_DIRS)
+
 if(LIBUNWIND_FOUND)
-  if(NOT TARGET LIBUNWIND::LIBUNWIND)
-    add_library(LIBUNWIND::LIBUNWIND UNKNOWN IMPORTED)
-    set_target_properties(LIBUNWIND::LIBUNWIND PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${LIBUNWIND_INCLUDE_DIRS}"
-        IMPORTED_LOCATION "${LIBUNWIND_LIBRARIES}" )
+  if(NOT TARGET libunwind)
+    add_library(libunwind UNKNOWN IMPORTED)
+    set_target_properties(libunwind PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${LIBUNWIND_INCLUDE_DIRS}")
+    set_property(TARGET libunwind APPEND PROPERTY IMPORTED_LOCATION "${LIBUNWIND_LIBRARY}")
   endif()
 endif()
