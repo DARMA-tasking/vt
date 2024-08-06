@@ -201,11 +201,21 @@ struct TraceLite  {
    * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
    * bracketed user events with a note.
    *
-   * \param[in] note the note to log
    * \param[in] event the event ID
    */
+  void addUserNoteBracketedEndTime(TraceEventIDType const event = no_trace_event);
+
+  /**
+   * \brief Log a user bracketed event with a note
+   *
+   * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
+   * bracketed user events with a note.
+   *
+   * \param[in] event the event ID
+   * \param[in] new_note the new note which overrides the old one
+   */
   void addUserNoteBracketedEndTime(
-    std::string const& note, TraceEventIDType const event = no_trace_event
+    TraceEventIDType const event, std::string const& new_note
   );
 
  /**
@@ -394,6 +404,11 @@ protected:
   std::size_t getTracesSize() const noexcept {
     return traces_.size() * sizeof(Log);
   }
+
+private:
+  void fixupNoteEndTime(
+    const TraceEventIDType& event, const TimeType& end,
+    const std::string* new_note);
 
 protected:
   /*

@@ -303,22 +303,50 @@ TEST_F(TestTraceUser, trace_user_note_bracketed) {
     GTEST_SKIP() << "trace tests require --vt_trace to be set";
   }
 
-  theTrace()->addUserNoteBracketedBeginTime("", 10);
-  theTrace()->addUserNoteBracketedBeginTime("", 10);
-  theTrace()->addUserNoteBracketedBeginTime("", 10);
+  theTrace()->addUserNoteBracketedBeginTime("OUTER TEST NOTE 10", 10);
+  theTrace()->addUserNoteBracketedBeginTime("INNER TEST NOTE 10", 10);
+  theTrace()->addUserNoteBracketedBeginTime("INNER INNER TEST NOTE 10", 10);
+  theTrace()->addUserNoteBracketedBeginTime("INNER INNER INNER TEST NOTE 12", 12);
+
+  theTrace()->addUserEvent(901);
+  trace::addUserNote("Note 0");
+  theTrace()->addUserEvent(902);
+
+  theTrace()->addUserNoteBracketedEndTime(12);
+  trace::addUserNote("Note 1");
+  theTrace()->addUserNoteBracketedEndTime(10);
+  trace::addUserNote("Note 2");
+  theTrace()->addUserNoteBracketedEndTime(10);
+  trace::addUserNote("Note 3");
+  theTrace()->addUserNoteBracketedEndTime(10);
+  trace::addUserNote("Note 4");
+
+  TestTraceUser::stopVt();
+  validateAllTraceFiles();
+}
+
+TEST_F(TestTraceUser, trace_user_note_bracketed_override_note) {
+  if (!theTrace()->checkDynamicRuntimeEnabled()) {
+    TestTraceUser::stopVt();
+    GTEST_SKIP() << "trace tests require --vt_trace to be set";
+  }
+
+  theTrace()->addUserNoteBracketedBeginTime("ABC", 10);
+  theTrace()->addUserNoteBracketedBeginTime("123", 10);
+  theTrace()->addUserNoteBracketedBeginTime("X", 10);
   theTrace()->addUserNoteBracketedBeginTime("", 12);
 
   theTrace()->addUserEvent(901);
   trace::addUserNote("Note 0");
   theTrace()->addUserEvent(902);
 
-  theTrace()->addUserNoteBracketedEndTime("INNER INNER INNER TEST NOTE 10", 12);
+  theTrace()->addUserNoteBracketedEndTime(12, "INNER INNER INNER TEST NOTE 12");
   trace::addUserNote("Note 1");
-  theTrace()->addUserNoteBracketedEndTime("INNER INNER TEST NOTE 10", 10);
+  theTrace()->addUserNoteBracketedEndTime(10, "INNER INNER TEST NOTE 10");
   trace::addUserNote("Note 2");
-  theTrace()->addUserNoteBracketedEndTime("INNER TEST NOTE 10", 10);
+  theTrace()->addUserNoteBracketedEndTime(10, "INNER TEST NOTE 10");
   trace::addUserNote("Note 3");
-  theTrace()->addUserNoteBracketedEndTime("OUTER TEST NOTE 10", 10);
+  theTrace()->addUserNoteBracketedEndTime(10, "OUTER TEST NOTE 10");
   trace::addUserNote("Note 4");
 
   TestTraceUser::stopVt();

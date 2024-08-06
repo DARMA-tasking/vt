@@ -310,8 +310,42 @@ void TraceLite::addUserNoteBracketedBeginTime(
   }
 }
 
+void TraceLite::fixupNoteEndTime(const TraceEventIDType& event, const TimeType& end, const std::string* new_note) {
+  auto iter = incomplete_notes_.find(event);
+  vtAssertExpr(iter != incomplete_notes_.end());
+  // update data in the Log
+  auto& last_trace = iter->second.top();
+  last_trace->end_time = end;
+  if (new_note != nullptr) {
+    last_trace->setUserNote(*new_note);
+  }
+  // clean up pointers to Log
+  iter->second.pop();
+  if (iter->second.empty()) {
+    incomplete_notes_.erase(iter);
+  }
+}
+
+void TraceLite::addUserNoteBracketedEndTime(TraceEventIDType const event) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+  auto end = getCurrentTime();
+
+  vt_debug_print(
+    normal, trace,
+    "Trace::addUserNoteBracketedEndTime: end={}, event={}\n",
+    end, event
+  );
+
+  // Fixup end time of the note
+  if (event != no_trace_event) {
+    fixupNoteEndTime(event, end, nullptr);
+  }
+}
+
 void TraceLite::addUserNoteBracketedEndTime(
-  std::string const& note, TraceEventIDType const event
+  TraceEventIDType const event, std::string const& new_note
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return;
@@ -320,23 +354,13 @@ void TraceLite::addUserNoteBracketedEndTime(
 
   vt_debug_print(
     normal, trace,
-    "Trace::addUserNoteBracketedEndTime: end={}, note={}, event={}\n",
-    end, note, event
+    "Trace::addUserNoteBracketedEndTime: end={}, new_note={}, event={}\n",
+    end, new_note, event
   );
 
   // Fixup end time of the note
   if (event != no_user_event_id) {
-    auto iter = incomplete_notes_.find(event);
-    vtAssertExpr(iter != incomplete_notes_.end());
-    // update data in the Log
-    auto& last_trace = iter->second.top();
-    last_trace->end_time = end;
-    last_trace->setUserNote(note);
-    // clean up pointers to Log
-    iter->second.pop();
-    if (iter->second.empty()) {
-      incomplete_notes_.erase(iter);
-    }
+    fixupNoteEndTime(event, end, &new_note);
   }
 }
 
