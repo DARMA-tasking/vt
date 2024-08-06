@@ -253,7 +253,7 @@ struct TraceScopedNote final {
    * \c registerEventCollective )
    */
   TraceScopedNote(
-    std::string const& in_note, TraceEventIDType const in_event = no_trace_event
+    std::string const& in_note, TraceEventIDType const in_event
   ) : event_(in_event),
       note_(in_note)
   {
@@ -268,7 +268,7 @@ struct TraceScopedNote final {
    * \param[in] event the user event to log (e.g., may be obtained from
    * \c registerEventCollective )
    */
-  TraceScopedNote(TraceEventIDType const in_event = no_trace_event)
+  TraceScopedNote(TraceEventIDType const in_event)
     : event_(in_event),
       note_("")
   {
@@ -316,10 +316,11 @@ private:
 #else
 
 struct TraceScopedNote final {
-  TraceScopedNote(std::string const&, TraceEventIDType const = no_trace_event) { }
+  TraceScopedNote(std::string const&, TraceEventIDType const) { }
+  TraceScopedNote(TraceEventIDType const) { }
 
   void end() { }
-  void setNote([[maybe_unused]] std::string const& in_note) { }
+  void setNote(std::string const&) { }
 };
 
 struct TraceScopedEvent final {
