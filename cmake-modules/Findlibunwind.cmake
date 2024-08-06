@@ -1,5 +1,6 @@
 
-# Users can pass LIBUNWIND_ROOT, LIBUNWIND_INCLUDE_DIR, and LIBUNWIND_LIBRARY as CMake variables
+# Users can pass LIBUNWIND_ROOT, LIBUNWIND_INCLUDE_DIR, and LIBUNWIND_LIBRARY as CMake variables.
+# If LIBUNWIND_ROOT is provided, the INCLUDE_DIR and LIBRARY variables may be omitted.
 #
 # LIBUNWIND_FOUND, LIBUNWIND_INCLUDE_DIRS, and LIBUNWIND_LIBRARIES are outputs
 
