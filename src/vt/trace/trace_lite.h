@@ -406,7 +406,16 @@ protected:
   }
 
 private:
-  void fixupNoteEndTime(
+
+  /**
+   * \brief Completes the user note by updating the event end time
+   * and replacing the message if new one is supplied.
+   *
+   * \param[in] event the event to be closed
+   * \param[in] end the time to be set as event end time
+   * \param[in] new_note the new note
+   */
+  void updateNoteEndTime(
     const TraceEventIDType& event, const TimeType& end,
     const std::string* new_note);
 

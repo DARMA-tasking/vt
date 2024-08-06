@@ -310,7 +310,9 @@ void TraceLite::addUserNoteBracketedBeginTime(
   }
 }
 
-void TraceLite::fixupNoteEndTime(const TraceEventIDType& event, const TimeType& end, const std::string* new_note) {
+void TraceLite::updateNoteEndTime(
+  const TraceEventIDType& event, const TimeType& end, const std::string* new_note
+) {
   auto iter = incomplete_notes_.find(event);
   vtAssertExpr(iter != incomplete_notes_.end());
   // update data in the Log
@@ -340,7 +342,7 @@ void TraceLite::addUserNoteBracketedEndTime(TraceEventIDType const event) {
 
   // Fixup end time of the note
   if (event != no_trace_event) {
-    fixupNoteEndTime(event, end, nullptr);
+    updateNoteEndTime(event, end, nullptr);
   }
 }
 
@@ -360,7 +362,7 @@ void TraceLite::addUserNoteBracketedEndTime(
 
   // Fixup end time of the note
   if (event != no_user_event_id) {
-    fixupNoteEndTime(event, end, &new_note);
+    updateNoteEndTime(event, end, &new_note);
   }
 }
 
