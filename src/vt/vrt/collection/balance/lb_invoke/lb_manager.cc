@@ -516,6 +516,21 @@ static void collectTVData(GatherTVInfo& gather) {
   );
   pr.parseAndRender(gather.phase, std::move(info));
 }
+
+void gatherTVGlobal(PhaseType phase, objgroup::proxy::Proxy<LBManager> &proxy) {
+  vt::runInEpochCollective([&]{
+    auto phase_work = theNodeLBData()->getLBData()->toTV(phase);
+    auto object_info = theNodeLBData()->getLBData()->getObjInfo(phase);
+    std::unordered_map<PhaseType, vt::tv::PhaseWork> map;
+    map[phase] = std::move(*phase_work);
+    auto this_node = theContext()->getNode();
+    vt::tv::Rank r{this_node, std::move(map)};
+    std::unordered_map<NodeType, tv::Rank> rank_map;
+    rank_map[this_node] = std::move(r);
+    GatherTVInfo gather{rank_map, object_info, phase};
+    proxy.reduce<collectTVData, vt::collective::PlusOp>(0, std::move(gather));
+  });
+}
 #endif
 
 void LBManager::finishedLB(PhaseType phase) {
@@ -531,18 +546,7 @@ void LBManager::finishedLB(PhaseType phase) {
 
 #if vt_check_enabled(tv)
   if (theConfig()->vt_tv) {
-    vt::runInEpochCollective([&]{
-      auto phase_work = theNodeLBData()->getLBData()->toTV(phase);
-      auto object_info = theNodeLBData()->getLBData()->getObjInfo(phase);
-      std::unordered_map<PhaseType, vt::tv::PhaseWork> map;
-      map[phase] = std::move(*phase_work);
-      auto this_node = theContext()->getNode();
-      vt::tv::Rank r{this_node, std::move(map)};
-      std::unordered_map<NodeType, tv::Rank> rank_map;
-      rank_map[this_node] = std::move(r);
-      GatherTVInfo gather{rank_map, object_info, phase};
-      proxy_.reduce<collectTVData, vt::collective::PlusOp>(0, std::move(gather));
-    });
+    gatherTVGlobal(phase, proxy_);
   }
 #endif
 }
