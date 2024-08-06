@@ -58,6 +58,8 @@
 #include <vector>
 #include <unordered_set>
 #include <set>
+#include <limits>
+#include <cmath>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -449,7 +451,8 @@ void TemperedLB::runLB(LoadType total_load) {
     target_max_load_ = avg;
   }
 
-  if (avg > 0.0000000001) {
+  // Use an absolute minimal bound on average load to load-balance
+  if (avg > std::sqrt(std::numeric_limits<LoadType>::epsilon())) {
     should_lb = max > (run_temperedlb_tolerance + 1.0) * target_max_load_;
   }
 
