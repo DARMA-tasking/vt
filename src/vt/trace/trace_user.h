@@ -299,7 +299,7 @@ struct TraceScopedNote final {
    */
   void end() {
     if (event_ != no_trace_event) {
-      theTrace()->addUserNoteBracketedEndTime(note_, event_);
+      theTrace()->addUserNoteBracketedEndTime(event_, note_);
       event_ = no_trace_event;
     }
   }
