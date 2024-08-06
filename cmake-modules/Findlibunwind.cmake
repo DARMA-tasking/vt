@@ -4,8 +4,8 @@
 # LIBUNWIND_FOUND, LIBUNWIND_INCLUDE_DIRS, and LIBUNWIND_LIBRARIES are outputs
 
 if(LIBUNWIND_ROOT)
-    set(LIBUNWIND_INCLUDE_DIR ${LIBUNWIND_ROOT}/include CACHE PATH "The include directory for libunwind")
-    set(LIBUNWIND_LIBRARY ${LIBUNWIND_ROOT}/lib64;${LIBUNWIND_ROOT}/lib CACHE PATH "The library directory for libunwind")
+    set(LIBUNWIND_INCLUDE_DIR ${LIBUNWIND_INCLUDE_DIR};${LIBUNWIND_ROOT}/include)
+    set(LIBUNWIND_LIBRARY ${LIBUNWIND_LIBRARY};${LIBUNWIND_ROOT}/lib64;${LIBUNWIND_ROOT}/lib)
 endif()
 
 # First, check only in the hinted paths
