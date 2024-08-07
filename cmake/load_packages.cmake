@@ -15,6 +15,9 @@ find_package(Perl)
 # Doxygen package
 include(cmake/load_doxygen.cmake)
 
+# Optionally link with libunwind
+include(cmake/load_libunwind.cmake)
+
 # Optionally link with Zoltan
 include(cmake/load_zoltan_package.cmake)
 

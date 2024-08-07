@@ -66,6 +66,7 @@
 #define vt_feature_cmake_debug_verbose       @vt_feature_cmake_debug_verbose@
 #define vt_feature_cmake_rdma_tests          @vt_feature_cmake_rdma_tests@
 #define vt_feature_cmake_external_fmt        @vt_feature_cmake_external_fmt@
+#define vt_feature_cmake_libunwind           @vt_feature_cmake_libunwind@
 
 #define vt_detected_max_num_nodes @cmake_detected_max_num_nodes@
 
@@ -89,7 +90,6 @@
 #cmakedefine vt_has_unistd_h
 #cmakedefine vt_has_inttypes_h
 #cmakedefine vt_has_sysconf
-#cmakedefine vt_has_libunwind_h
 #cmakedefine vt_has_execinfo_h
 
 #if vt_feature_cmake_external_fmt
