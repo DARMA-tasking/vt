@@ -56,7 +56,7 @@ stages:
           script: |
             val=$(./scripts/check_containers.sh)
             echo "##vso[task.setvariable variable=compose_command]$val"
-      - task: DockerCompose@0
+      - task: DockerCompose@1
         displayName: Pull container
         inputs:
           projectName: darma-tasking-vt
@@ -64,7 +64,7 @@ stages:
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
           dockerComposeCommand: '$(compose_command) ubuntu-spack'
-      - task: DockerCompose@0
+      - task: DockerCompose@1
         displayName: Build container
         inputs:
           projectName: darma-tasking-vt
@@ -72,7 +72,7 @@ stages:
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
           dockerComposeCommand: 'run ubuntu-spack'
-      - task: DockerCompose@0
+      - task: DockerCompose@1
         displayName: Push container to registry
         condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
         inputs:
