@@ -58,6 +58,24 @@ using remove_cvref = std::remove_cv_t<std::remove_reference_t<T>>;
 
 namespace vt::collective::reduce::allreduce {
 
+// Primary template
+template <typename Scalar, typename DataT>
+struct ShouldUseView {
+  static constexpr bool Value = false;
+};
+
+#if MAGISTRATE_KOKKOS_ENABLED
+// Partial specialization for Kokkos::View
+template <typename Scalar>
+struct ShouldUseView<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
+  static constexpr bool Value = true;
+};
+#endif // MAGISTRATE_KOKKOS_ENABLED
+
+// Helper alias for cleaner usage
+template <typename Scalar, typename DataT>
+inline constexpr bool ShouldUseView_v = ShouldUseView<Scalar, DataT>::Value;
+
 template <typename Scalar, typename DataT>
 struct DataHelper {
   using DataType = DataHandler<DataT>;

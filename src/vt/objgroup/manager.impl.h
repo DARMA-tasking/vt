@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/group/group_manager.h"
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
@@ -275,7 +276,6 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
   using namespace vt::collective::reduce::allreduce;
 
   auto const this_node = vt::theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
   size_t id = 0;
 
   proxy::Proxy<Reducer> grp_proxy = {};
@@ -305,7 +305,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
     );
 
     grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-      TypeToString(Reducer::type_), proxy, num_nodes,
+      TypeToString(Reducer::type_), default_group,
       std::forward<Args>(data)...
     );
     grp_proxy[this_node].get()->proxy_ = grp_proxy;
@@ -336,11 +336,11 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
 
   if (payload_size < 2048) {
     using Reducer =
-      vt::collective::reduce::allreduce::RecursiveDoubling<DataT, Op, ObjT, f>;
+      vt::collective::reduce::allreduce::RecursiveDoubling<DataT, Op, f>;
     return allreduce<Reducer>(proxy, std::forward<Args>(data)...);
   } else {
     using Reducer =
-      vt::collective::reduce::allreduce::Rabenseifner<DataT, Op, ObjT, f>;
+      vt::collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
     return allreduce<Reducer>(proxy, std::forward<Args>(data)...);
   }
 

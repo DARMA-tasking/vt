@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include "vt/configs/types/types_type.h"
 #if !defined INCLUDED_VT_GROUP_COLLECTIVE_GROUP_INFO_COLLECTIVE_H
 #define INCLUDED_VT_GROUP_COLLECTIVE_GROUP_INFO_COLLECTIVE_H
 
@@ -142,7 +141,7 @@ protected:
   bool is_default_group_                 = false;
   bool is_empty_group_                   = false;
   std::size_t subtree_                   = 0;
-  std::vector<NodeType> nodes_           = {};
+  std::set<NodeType> nodes_              = {};
 
 private:
   RemoteOperationIDType down_tree_cont_     = no_op_id;

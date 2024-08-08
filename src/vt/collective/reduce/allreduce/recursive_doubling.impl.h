@@ -49,14 +49,13 @@
 namespace vt::collective::reduce::allreduce {
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-template <typename... Args>
-RecursiveDoubling<DataT, Op, ObjT, finalHandler>::RecursiveDoubling(
+template <typename ObjT, typename... Args>
+RecursiveDoubling<DataT, Op, finalHandler>::RecursiveDoubling(
   vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
   Args&&... data)
-  : parent_proxy_(parentProxy),
-    num_nodes_(num_nodes),
+  : num_nodes_(num_nodes),
     this_node_(vt::theContext()->getNode()),
     is_even_(this_node_ % 2 == 0),
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
@@ -77,10 +76,37 @@ RecursiveDoubling<DataT, Op, ObjT, finalHandler>::RecursiveDoubling(
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
+  auto finalHandler>
+template <typename... Args>
+RecursiveDoubling<DataT, Op, finalHandler>::RecursiveDoubling(
+  GroupType group, Args&&... args)
+  : nodes_(theGroup()->GetGroupNodes(group)),
+    num_nodes_(nodes_.size()),
+    this_node_(vt::theContext()->getNode()),
+    is_even_(this_node_ % 2 == 0),
+    num_steps_(static_cast<int32_t>(log2(num_nodes_))),
+    nprocs_pof2_(1 << num_steps_),
+    nprocs_rem_(num_nodes_ - nprocs_pof2_),
+    is_part_of_adjustment_group_(this_node_ < (2 * nprocs_rem_)){
+  if (is_part_of_adjustment_group_) {
+    if (is_even_) {
+      vrt_node_ = this_node_ / 2;
+    } else {
+      vrt_node_ = -1;
+    }
+  } else {
+    vrt_node_ = this_node_ - nprocs_rem_;
+  }
+
+  initialize(generateNewId(), std::forward<Args>(args)...);
+}
+
+template <
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
 template <typename ...Args>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::initialize(
+void RecursiveDoubling<DataT, Op, finalHandler>::initialize(
   size_t id, Args&&... data) {
   auto& state = states_[id];
 
@@ -97,9 +123,9 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::initialize(
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::initializeState(size_t id){
+void RecursiveDoubling<DataT, Op, finalHandler>::initializeState(size_t id){
   auto& state = states_[id];
 
   vt_debug_print(terse, allreduce, "RecursiveDoubling initializing state for ID = {}\n", id);
@@ -116,9 +142,9 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::initializeState(size_t id
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::allreduce(size_t id) {
+void RecursiveDoubling<DataT, Op, finalHandler>::allreduce(size_t id) {
   if (is_part_of_adjustment_group_) {
     adjustForPowerOfTwo(id);
   } else {
@@ -127,9 +153,9 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::allreduce(size_t id) {
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwo(size_t id) {
+void RecursiveDoubling<DataT, Op, finalHandler>::adjustForPowerOfTwo(size_t id) {
   auto& state = states_.at(id);
   if (is_part_of_adjustment_group_ and not is_even_) {
     vt_debug_print(
@@ -146,9 +172,9 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::adjustForPowerOfTwo(size_
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::
+void RecursiveDoubling<DataT, Op, finalHandler>::
   adjustForPowerOfTwoHandler(AllreduceDblRawMsg<DataT>* msg) {
 
   auto& state = states_[msg->id_];
@@ -169,25 +195,25 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-bool RecursiveDoubling<DataT, Op, ObjT, finalHandler>::isDone(size_t id) {
+bool RecursiveDoubling<DataT, Op, finalHandler>::isDone(size_t id) {
   auto& state = states_.at(id);
   return (state.step_ == num_steps_) and allMessagesReceived(id);
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-bool RecursiveDoubling<DataT, Op, ObjT, finalHandler>::isValid(size_t id) {
+bool RecursiveDoubling<DataT, Op, finalHandler>::isValid(size_t id) {
   auto& state = states_.at(id);
   return (vrt_node_ != -1) and (state.step_ < num_steps_);
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-bool RecursiveDoubling<DataT, Op, ObjT, finalHandler>::allMessagesReceived(size_t id) {
+bool RecursiveDoubling<DataT, Op, finalHandler>::allMessagesReceived(size_t id) {
   auto& state = states_.at(id);
   return std::all_of(
     state.steps_recv_.cbegin(), state.steps_recv_.cbegin() + state.step_,
@@ -195,9 +221,9 @@ bool RecursiveDoubling<DataT, Op, ObjT, finalHandler>::allMessagesReceived(size_
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-bool RecursiveDoubling<DataT, Op, ObjT, finalHandler>::isReady(size_t id) {
+bool RecursiveDoubling<DataT, Op, finalHandler>::isReady(size_t id) {
   auto& state = states_.at(id);
   return ((is_part_of_adjustment_group_ and state.finished_adjustment_part_) and
           state.step_ == 0) or
@@ -205,9 +231,9 @@ bool RecursiveDoubling<DataT, Op, ObjT, finalHandler>::isReady(size_t id) {
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::reduceIter(size_t id) {
+void RecursiveDoubling<DataT, Op, finalHandler>::reduceIter(size_t id) {
   // Ensure we have received all necessary messages
   if (not isReady(id)) {
     return;
@@ -237,9 +263,9 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::reduceIter(size_t id) {
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::tryReduce(size_t id, int32_t step) {
+void RecursiveDoubling<DataT, Op, finalHandler>::tryReduce(size_t id, int32_t step) {
   auto& state = states_.at(id);
   auto const all_msgs_received = std::all_of(
       state.steps_reduced_.cbegin(), state.steps_reduced_.cbegin() + step,
@@ -264,9 +290,9 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::tryReduce(size_t id, int3
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::reduceIterHandler(
+void RecursiveDoubling<DataT, Op, finalHandler>::reduceIterHandler(
   AllreduceDblRawMsg<DataT>* msg) {
   auto& state = states_[msg->id_];
 
@@ -307,9 +333,9 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::reduceIterHandler(
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::sendToExcludedNodes(size_t id) {
+void RecursiveDoubling<DataT, Op, finalHandler>::sendToExcludedNodes(size_t id) {
   if (is_part_of_adjustment_group_ and is_even_) {
     vt_debug_print(
       terse, allreduce, "RecursiveDoubling Part3: Sending to Node {} ID = {}\n",
@@ -323,20 +349,20 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::sendToExcludedNodes(size_
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::
+void RecursiveDoubling<DataT, Op, finalHandler>::
   sendToExcludedNodesHandler(AllreduceDblRawMsg<DataT>* msg) {
 
-  parent_proxy_[this_node_].template invoke<finalHandler>(*(msg->val_));
+  // parent_proxy_[this_node_].template invoke<finalHandler>(*(msg->val_));
 
   states_.at(msg->id_).completed_ = true;
 }
 
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
+  typename DataT, template <typename Arg> class Op,
   auto finalHandler>
-void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::finalPart(size_t id) {
+void RecursiveDoubling<DataT, Op, finalHandler>::finalPart(size_t id) {
   auto& state = states_.at(id);
   if (state.completed_) {
     return;
@@ -351,7 +377,7 @@ void RecursiveDoubling<DataT, Op, ObjT, finalHandler>::finalPart(size_t id) {
     sendToExcludedNodes(id);
   }
 
-  parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
+  // parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
 
   state.completed_ = true;
 }
