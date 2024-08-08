@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                rabenseifner.h
+//                             rabenseifner_group.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H
-#define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_GROUP_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_GROUP_H
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -54,11 +54,42 @@
 #include "type.h"
 #include "rabenseifner_msg.h"
 #include "helpers.h"
-#include "vt/utils/fntraits/fntraits.h"
+#include "vt/configs/types/types_type.h"
 
+#include <unordered_map>
 #include <cstdint>
 
 namespace vt::collective::reduce::allreduce {
+
+struct StateHolderBase {
+  virtual ~StateHolderBase() = default;
+};
+
+template <typename Scalar, typename DataT, template <typename Arg> class Op>
+struct StateHolder : StateHolderBase {
+  using ReduceOp = Op<DataT>;
+  static constexpr bool KokkosPaylod = ShouldUseView_v<Scalar, DataT>;
+  State<Scalar, DataT>  state_ = {};
+
+
+  // static HolderID storeState(State<Scalar, DataT> const& state) {
+  //   auto key =
+  // }
+};
+
+template <typename T>
+struct function_traits;  // General template declaration.
+
+// Specialization for function pointers.
+template <typename Ret, typename... Args>
+struct function_traits<Ret(*)(Args...)> {
+    using return_type = Ret;
+    static constexpr std::size_t arity = sizeof...(Args);
+    using args_tuple = std::tuple<Args...>;
+
+    template <std::size_t N>
+    using arg_type = typename std::tuple_element<N, std::tuple<Args...>>::type;
+};
 
 /**
  * \struct Rabenseifner
@@ -72,23 +103,15 @@ namespace vt::collective::reduce::allreduce {
  * \tparam ObjT Object type used for callback invocation.
  * \tparam finalHandler Callback handler for the final result.
  */
-template <
-  typename DataT, template <typename Arg> class Op, auto f
->
-struct Rabenseifner {
-  using Data = DataT;
-  using DataType = DataHandler<DataT>;
-  using Scalar = typename DataType::Scalar;
-  using ReduceOp = Op<Scalar>;
-  using DataHelperT = DataHelper<Scalar, DataT>;
-  using StateT = State<Scalar, DataT>;
-  // using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
 
-  static constexpr bool KokkosPaylod = ShouldUseView_v<Scalar, DataT>;
+struct RabenseifnerGroup {
 
-  template <typename ...Args>
-  Rabenseifner(GroupType group, Args&&... args);
-
+  using ID = size_t;
+  /// Each allreduce state holder per ID
+  std::unordered_map< ID, std::unique_ptr<StateHolderBase>> state_holder_ = {};
+RabenseifnerGroup() = default;
+RabenseifnerGroup(
+  GroupType group, std::vector<NodeType> const& nodes);
   /**
    * \brief Initialize the allreduce algorithm.
    *
@@ -96,23 +119,26 @@ struct Rabenseifner {
    *
    * \param args Additional arguments for initializing the data value.
    */
-  template <typename ...Args>
-  void initialize(size_t id, Args&&... args);
+  template <auto f, template <typename Arg> class Op, typename ...Args>
+  void initialize(ID id, Args&&... args);
 
-  void initializeState(size_t id);
-  size_t generateNewId() { return id_++; }
+  template <typename DataT, template <typename Arg> class Op>
+  void initializeState(ID id);
+
+  ID generateNewId() { return id_++; }
 
   /**
    * \brief Execute the final handler callback with the reduced result.
    */
-  void executeFinalHan(size_t id);
+  void executeFinalHan(ID id);
 
   /**
    * \brief Perform the allreduce operation.
    *
    * This function starts the allreduce operation, adjusting for non-power-of-two process counts if necessary.
    */
-  void allreduce(size_t id);
+  template <auto f, template <typename Arg> class Op, typename ...Args>
+  void allreduce(size_t id, Args&&... args);
 
   /**
    * \brief Adjust the process count to the nearest power-of-two.
@@ -129,7 +155,8 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void adjustForPowerOfTwoRightHalf(RabenseifnerMsg<Scalar, DataT>* msg);
+  template<typename Scalar, typename DataT>
+  static void adjustForPowerOfTwoRightHalf(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Handler for adjusting the left half of the process group.
@@ -138,7 +165,8 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void adjustForPowerOfTwoLeftHalf(RabenseifnerMsg<Scalar, DataT>* msg);
+  template<typename Scalar, typename DataT>
+  static void adjustForPowerOfTwoLeftHalf(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Final adjustment step for non-power-of-two process counts.
@@ -147,7 +175,8 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void adjustForPowerOfTwoFinalPart(RabenseifnerMsg<Scalar, DataT>* msg);
+  template<typename Scalar, typename DataT>
+  static void adjustForPowerOfTwoFinalPart(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Check if all scatter messages have been received.
@@ -191,7 +220,8 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void scatterReduceIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
+  template<typename Scalar, typename DataT>
+  static void scatterReduceIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Check if all gather messages have been received.
@@ -235,7 +265,8 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  void gatherIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
+  template<typename Scalar, typename DataT>
+  static void gatherIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Perform the final part of the allreduce operation.
@@ -258,33 +289,37 @@ struct Rabenseifner {
    *
    * \param msg Message containing the final result.
    */
-  void sendToExcludedNodesHandler(RabenseifnerMsg<Scalar, DataT>* msg);
+  template<typename Scalar, typename DataT>
+  static void sendToExcludedNodesHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
-  vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
-  // vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
+  GroupType group_ = {};
 
   size_t id_ = 0;
-  std::unordered_map<size_t, StateT> states_ = {};
+  std::unordered_map<size_t, std::unique_ptr<StateBase>> states_ = {};
 
-  /// Only used when non-default group is beign used
+  /// (Sorted) list of Nodes that take part in this allreduce
   std::vector<NodeType> nodes_ = {};
 
-  NodeType num_nodes_ = {};
+  /// This rank's index inside 'nodes_'
   NodeType this_node_ = {};
+
+  size_t num_nodes_ = {};
 
   bool is_even_ = false;
   int32_t num_steps_ = {};
   int32_t nprocs_pof2_ = {};
   int32_t nprocs_rem_ = {};
 
+  /// Temporary Node value (can be changed if we have non power of 2 'num_nodes_')
   NodeType vrt_node_ = {};
   bool is_part_of_adjustment_group_ = false;
   static inline const std::string name_ = "Rabenseifner";
   static inline const ReducerType type_ = ReducerType::Rabenseifner;
+  HandlerType hand_ = {};
 };
 
 } // namespace vt::collective::reduce::allreduce
 
-#include "rabenseifner.impl.h"
+#include "rabenseifner_group.impl.h"
 
-#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_GROUP_H*/

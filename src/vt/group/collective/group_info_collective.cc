@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#include "vt/collective/reduce/allreduce/rabenseifner_group.h"
+#include "vt/collective/reduce/operators/functors/plus_op.h"
 #include "vt/config.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/group/group_common.h"
@@ -57,6 +59,7 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/collective_ops.h"
 #include "vt/pipe/pipe_headers.h"
+#include "vt/scheduler/scheduler.h"
 
 #include <memory>
 #include <set>
@@ -223,6 +226,10 @@ void InfoColl::setupCollective() {
     group_, is_in_group, parent, collective_->getInitialChildren()
   );
 
+  if(is_in_group){
+    nodes_.insert({theContext()->getNode()});
+  }
+
   if (collective_->getInitialChildren() == 0) {
     vt_debug_print(
       terse, group,
@@ -232,7 +239,7 @@ void InfoColl::setupCollective() {
     auto const& size = static_cast<NodeType>(is_in_group ? 1 : 0);
     auto const& child = theContext()->getNode();
     auto msg = makeMessage<GroupCollectiveMsg>(
-      group_, up_tree_cont_, in_group, size, child, 0, 0, std::vector<NodeType>{theContext()->getNode()}
+      group_, up_tree_cont_, in_group, size, child, 0, 0, nodes_
     );
     theMsg()->sendMsg<upHan>(parent, msg);
   }
@@ -241,13 +248,7 @@ void InfoColl::setupCollective() {
 void InfoColl::atRoot() {
   auto const& is_root = collective_->isInitialRoot();
   auto const& group = getGroupID();
-  vt_debug_print(
-    normal, group,
-    "InfoColl::atRoot: is_in_group={}, group={:x}, root={}, children={}\n",
-    is_in_group, group, is_root, collective_->span_children_.size()
-  );
-
-  std::string nodes_info = "Nodes: ";
+    std::string nodes_info = "Nodes: ";
   nodes_info.reserve(1024);
   for(auto& node : nodes_){
     nodes_info += fmt::format("{} ", node);
@@ -256,8 +257,8 @@ void InfoColl::atRoot() {
 
   vt_debug_print(
     terse, group,
-    "InfoColl::atRoot: group={:x} {}\n",
-    group, nodes_info
+    "InfoColl::atRoot: is_in_group={}, group={:x}, root={}, children={} nodes_={}\n",
+    is_in_group, group, is_root, collective_->span_children_.size(), nodes_info
   );
 }
 
@@ -268,23 +269,16 @@ void InfoColl::upTree() {
   );
   decltype(msgs_) msg_in_group = {};
   subtree_ = 0;
-  nodes_.push_back(theContext()->getNode());
-  for (auto&& msg : msgs_) {
-    if (msg->isInGroup()) {
-      std::string nodes_info = "Nodes: ";
-      nodes_info.reserve(1024);
-      for (auto& node : msg->getNodes()) {
-        nodes_info += fmt::format("{} ", node);
-      }
-      nodes_info += "\n";
 
-      vt_debug_print(
-        terse, group, "InfoColl::upTree: msg={} {}\n", msg, nodes_info);
+  for (auto&& msg : msgs_) {
+    for (auto& node : msg->getNodes()) {
+      nodes_.insert(node);
+    }
+
+    if (msg->isInGroup()) {
       msg_in_group.push_back(msg);
       subtree_ += msg->getSubtreeSize();
-      for(auto& node : msg->getNodes()){
-        nodes_.push_back(node);
-      }
+
     }
   }
 
@@ -455,6 +449,16 @@ void InfoColl::upTree() {
     for (std::size_t i = 0; i < msg_in_group.size(); i++) {
       // new MsgPtr to avoid thief of original in collection
       auto msg_out = promoteMsg(msg_in_group[i].get());
+
+      std::string nodes_info_ = "Nodes: ";
+      nodes_info.reserve(1024);
+      for (auto& node : msg_out->getNodes()) {
+        nodes_info_ += fmt::format("{} ", node);
+      }
+      vt_debug_print(
+        terse, group, "InfoColl::upTree<upHan>: case 2: sending to node {}  {}\n", p,
+        nodes_info_);
+
       theMsg()->sendMsg<upHan>(p, msg_out);
     }
   } else if (is_in_group && msg_in_group.size() == 1) {
@@ -483,8 +487,17 @@ void InfoColl::upTree() {
     theMsg()->sendMsg<upHan>(p, msg);
     // new MsgPtr to avoid thief of original in collection
     auto msg_out = promoteMsg(msg_in_group[0].get());
+
+                      std::string nodes_info_ = "Nodes: ";
+      nodes_info.reserve(1024);
+      for (auto& node : msg_out->getNodes()) {
+        nodes_info_ += fmt::format("{} ", node);
+      }
+      vt_debug_print(
+        terse, group, "InfoColl::upTree<upHan>: case 3: sending to node {}  {}\n", p,
+        nodes_info_);
     // clear nodes information (child node already sent in previous message within nodes_)
-    msg_out->clearNodes();
+    // msg_out->clearNodes();
     theMsg()->sendMsg<upHan>(p, msg_out);
   } else {
     vtAssertExpr(msg_in_group.size() > 2);
@@ -538,20 +551,37 @@ void InfoColl::upTree() {
       GroupCollectiveMsg* tmsg = *iter;
       c[i] = tmsg->getChild();
       // clear nodes information for extra nodes
-      tmsg->clearNodes();
+      // tmsg->clearNodes();
       auto pmsg = promoteMsg(tmsg);
+
+            std::string nodes_info_ = "Nodes: ";
+      nodes_info.reserve(1024);
+      for (auto& node : pmsg->getNodes()) {
+        nodes_info_ += fmt::format("{} ", node);
+      }
+      vt_debug_print(
+        terse, group, "InfoColl::upTree<upHan>: case 4: sending to node {}  {}\n", p,
+        nodes_info_);
+
       theMsg()->sendMsg<upHan>(p, pmsg);
       iter++;
     }
 
     int32_t i = 0;
     while (iter != iter_end) {
-      vt_debug_print(
-        terse, group, "InfoColl::upTree: Sending to Node {}\n", c[i % extra]
-      );
       GroupCollectiveMsg* tmsg = *iter;
       tmsg->setOpID(down_tree_cont_);
       auto pmsg = promoteMsg(tmsg);
+
+                  std::string nodes_info_ = "Nodes: ";
+      nodes_info.reserve(1024);
+      for (auto& node : pmsg->getNodes()) {
+        nodes_info_ += fmt::format("{} ", node);
+      }
+      vt_debug_print(
+        terse, group, "InfoColl::upTree<downHan>: case 4: sending to node {}  {}\n", c[i % extra],
+        nodes_info_);
+
       theMsg()->sendMsg<downHan>(c[i % extra], pmsg);
       ++send_down_;
       ++iter;
@@ -676,11 +706,24 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
 
   vt_debug_print(
     terse, group,
-    "InfoColl::downTree: group={:x}, child={}, from={}\n",
-    getGroupID(), msg->getChild(), from
+    "InfoColl::downTree: group={:x}, child={}, from={} is_in_group={}\n",
+    getGroupID(), msg->getChild(), from, is_in_group
   );
 
   vtAssert(collective_ != nullptr, "Must be valid");
+
+  if (is_in_group) {
+    for (auto& node : msg->getNodes()) {
+      nodes_.insert(node);
+    }
+  }
+
+  std::string nodes_info_ = "Nodes: ";
+  nodes_info_.reserve(1024);
+  for (auto& node : nodes_) {
+    nodes_info_ += fmt::format("{} ", node);
+  }
+  vt_debug_print(terse, group, "InfoColl::downTree:  {}\n", nodes_info_);
 
   if (collective_->span_children_.size() < 4) {
     collective_->span_children_.push_back(msg->getChild());
@@ -693,7 +736,7 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
   }
 
   auto const& group_ = getGroupID();
-  auto nmsg = makeMessage<GroupCollectiveFinalMsg>(group_,down_tree_fin_cont_);
+  auto nmsg = makeMessage<GroupCollectiveFinalMsg>(group_,down_tree_fin_cont_, nodes_);
   theMsg()->sendMsg<downFinishedHan>(from, nmsg);
 }
 
@@ -755,7 +798,7 @@ void InfoColl::finalize() {
 
       auto const& num_children = collective_->span_children_.size();
       vt_debug_print(
-        verbose, group,
+        terse, group,
         "InfoColl::finalize: group={:x}, send_down_={}, "
         "send_down_finished_={}, in_phase_two_={}, in_group={}, "
         "has_root_={}, known_root_node_={}, is_new_root_={}, num={}, sub={},"
@@ -765,6 +808,7 @@ void InfoColl::finalize() {
       );
     }
 
+    // std::sort(nodes_.begin(), nodes_.end());
     std::string nodes_info = "Nodes: ";
     nodes_info.reserve(1024);
     for (auto& node : nodes_) {
@@ -775,14 +819,23 @@ void InfoColl::finalize() {
       terse, group, "InfoColl::finalize: group={:x}, {}\n", group_, nodes_info
     );
 
+
     // TODO: initialize reducer here
     // We pass groupType and nodes_. With this information,
     // we can calculate group size and neighbour nodes
+    if (is_in_group) {
+      std::vector<NodeType> nodes(nodes_.begin(), nodes_.end());
+      // allreducer_ = collective::reduce::allreduce::RabenseifnerGroup(group_, nodes);
+      //vt::runInEpochCollective([&]{
 
-    // reducer_ = Reducer(group, nodes_);
+        // collective::reduce::allreduce::RabenseifnerGroup a(group_, nodes);
+        //a.allreduce(a.id_);
+      //});
 
-    auto const& children = collective_->getChildren();
-    for (auto&& c : children) {
+    }
+
+  auto const& children = collective_->getChildren();
+  for (auto&& c : children) {
 
       vt_debug_print(
         terse, group,
@@ -834,6 +887,9 @@ void InfoColl::finalizeTree(GroupCollectiveFinalMsg* msg) {
 
 void InfoColl::downTreeFinished([[maybe_unused]] GroupCollectiveFinalMsg* msg) {
   send_down_finished_++;
+  for(auto& node : msg->getNodes()){
+    nodes_.insert(node);
+  }
   finalize();
 }
 

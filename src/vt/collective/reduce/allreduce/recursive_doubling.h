@@ -113,13 +113,13 @@ struct AllreduceDblRawMsg
  * \tparam finalHandler The final handler.
  */
 template <
-  typename DataT, template <typename Arg> class Op, typename ObjT,
-  auto finalHandler>
+  typename DataT, template <typename Arg> class Op, auto f>
 struct RecursiveDoubling {
   using Data = DataT;
   using DataType = DataHandler<DataT>;
   using Scalar = typename DataHandler<DataT>::Scalar;
   using ReduceOp = Op<Scalar>;
+  // using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
   /**
    * \brief Constructor for RecursiveDoubling class.
    *
@@ -129,10 +129,22 @@ struct RecursiveDoubling {
    * \param num_nodes The number of nodes.
    * \param args Additional arguments for data initialization.
    */
-  template <typename... Args>
+  template <typename ObjT, typename... Args>
   RecursiveDoubling(
     vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
     Args&&... data);
+
+      /**
+   * \brief Constructor for RecursiveDoubling class.
+   *
+   * Initializes the RecursiveDoubling object with the provided parameters.
+   *
+   * \param parentProxy The parent proxy.
+   * \param num_nodes The number of nodes.
+   * \param args Additional arguments for data initialization.
+   */
+  template <typename... Args>
+  RecursiveDoubling(GroupType group, Args&&... args);
 
   /**
    * \brief Start the allreduce operation.
@@ -227,7 +239,7 @@ struct RecursiveDoubling {
   void finalPart(size_t id);
 
   vt::objgroup::proxy::Proxy<RecursiveDoubling> proxy_ = {};
-  vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
+  // vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
   struct State{
     DataT val_ = {};
@@ -247,6 +259,7 @@ struct RecursiveDoubling {
   size_t id_ = 0;
   std::unordered_map<size_t, State> states_ = {};
 
+  std::vector<NodeType> nodes_ = {};
   NodeType num_nodes_ = {};
   NodeType this_node_ = {};
 
