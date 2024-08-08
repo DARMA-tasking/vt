@@ -72,7 +72,7 @@ struct GroupCollectiveInfoMsg : MsgT {
     NodeType const& in_subtree,
     NodeType const& in_child_node = uninitialized_destination,
     CountType const& level = 0, CountType const& extra_nodes = 0,
-    std::vector<NodeType> nodes = {}
+    std::set<NodeType> const& nodes = {}
   ) : MsgT(in_group, in_op), is_in_group(in_is_in_group),
       child_node_(in_child_node), subtree_size_(in_subtree),
       extra_nodes_(extra_nodes), level_(level), nodes_(nodes)
@@ -84,7 +84,7 @@ struct GroupCollectiveInfoMsg : MsgT {
   bool isInGroup() const { return is_in_group; }
   CountType getExtraNodes() const { return extra_nodes_; }
   CountType getLevel() const { return level_; }
-  std::vector<NodeType> const& getNodes() {return nodes_;}
+  std::set<NodeType> const& getNodes() {return nodes_;}
   void clearNodes() { nodes_.clear();}
 
   template <typename SerializerT>
@@ -106,7 +106,7 @@ private:
   NodeType subtree_size_ = 0;
   CountType extra_nodes_ = 0;
   CountType level_ = 0;
-  std::vector<NodeType> nodes_ = {};
+  std::set<NodeType> nodes_ = {};
 };
 
 template <typename MsgT>
@@ -117,11 +117,11 @@ struct GroupCollectiveFinalInfoMsg : MsgT {
   GroupCollectiveFinalInfoMsg() = default;
   GroupCollectiveFinalInfoMsg(
     GroupType const& in_group, RemoteOperationIDType in_op,
-    std::vector<NodeType> const& nodes = {}
+    std::set<NodeType> const& nodes = {}
   ) : MsgT(in_group, in_op), nodes_(nodes)
   { }
 
-  std::vector<NodeType> const& getNodes() {return nodes_;}
+  std::set<NodeType> const& getNodes() {return nodes_;}
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -130,7 +130,7 @@ struct GroupCollectiveFinalInfoMsg : MsgT {
   }
 
 private:
-  std::vector<NodeType> nodes_ = {};
+  std::set<NodeType> nodes_ = {};
 };
 
 using GroupCollectiveMsg = GroupCollectiveInfoMsg<GroupMsg<::vt::Message>>;

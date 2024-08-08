@@ -42,6 +42,8 @@
 */
 
 #include "vt/config.h"
+#include "vt/configs/types/types_sentinels.h"
+#include "vt/configs/types/types_type.h"
 #include "vt/context/context.h"
 #include "vt/group/group_common.h"
 #include "vt/group/group_manager.h"
@@ -138,6 +140,25 @@ bool GroupManager::inGroup(GroupType const group) {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   return iter->second->inGroup();
+}
+
+std::vector<NodeType>
+GroupManager::GetGroupNodes(GroupType const group_id) const {
+  if (group_id == default_group) {
+    std::vector<NodeType> nodes(theContext()->getNumNodes());
+    for (NodeType i = 0; i < theContext()->getNumNodes(); ++i) {
+      nodes[i] = i;
+    }
+
+    return nodes;
+  } else {
+    // TODO Check if collective!
+    auto iter = local_collective_group_info_.find(group_id);
+    vtAssert(iter != local_collective_group_info_.end(), "Must exist");
+    auto& list = iter->second->nodes_;
+
+    return std::vector<NodeType>{list.begin(), list.end()};
+  }
 }
 
 GroupManager::ReducePtrType GroupManager::groupReducer(GroupType const group) {
@@ -358,7 +379,7 @@ EventType GroupManager::sendGroupCollective(
     auto const& num_children = tree->getNumChildren();
 
     vt_debug_print(
-      normal, group,
+      terse, group,
       "GroupManager::sendGroupCollective: group={:x}, collective={}, "
       "num_children={}\n",
       group, is_group_collective, num_children
@@ -369,7 +390,7 @@ EventType GroupManager::sendGroupCollective(
         bool const& send = child != dest;
 
         vt_debug_print(
-          normal, broadcast,
+          terse, group,
           "GroupManager::sendGroupCollective *send* size={}, from={}, child={}, "
           "send={}, msg={}\n",
           base.size(), from, child, send, print_ptr(msg)

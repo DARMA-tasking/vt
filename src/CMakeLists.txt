@@ -34,6 +34,7 @@ set(
       collective/scatter/
       collective/reduce/
         collective/reduce/operators collective/reduce/functors
+        collective/reduce/allreduce
     elm
     group/id group/region group/global group/msg group/collective group/rooted
     group/base
