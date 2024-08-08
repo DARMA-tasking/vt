@@ -291,7 +291,7 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
   EXPECT_EQ(MyObjA::total_verify_expected_, 3);
   runInEpochCollective([&] {
     using Reducer = vt::collective::reduce::allreduce::RecursiveDoubling<
-      std::vector<int>, PlusOp, MyObjA, &MyObjA::verifyAllredVec<int, 256>
+      std::vector<int>, PlusOp, &MyObjA::verifyAllredVec<int, 256>
     >;
     std::vector<int> payload(256, my_node);
     theObjGroup()->allreduce<Reducer>(proxy, payload);
@@ -301,7 +301,7 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
 
   runInEpochCollective([&] {
     using Reducer = vt::collective::reduce::allreduce::Rabenseifner<
-      NodeType, PlusOp, MyObjA, &MyObjA::verifyAllred<1>
+      NodeType, PlusOp, &MyObjA::verifyAllred<1>
     >;
     std::vector<int> payload(2048, my_node);
     theObjGroup()->allreduce<Reducer>(proxy, my_node);
@@ -314,7 +314,7 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
 
   runInEpochCollective([&] {
     using Reducer = vt::collective::reduce::allreduce::Rabenseifner<
-      VectorPayload, PlusOp, MyObjA, &MyObjA::verifyAllredVecPayload<VectorPayload, 256>>;
+      VectorPayload, PlusOp, &MyObjA::verifyAllredVecPayload<VectorPayload, 256>>;
     std::vector<int> payload(256, my_node);
     VectorPayload data{payload};
     theObjGroup()->allreduce<Reducer>(proxy, data);
@@ -358,7 +358,7 @@ TEST_F(TestObjGroupKokkos, test_proxy_allreduce_kokkos) {
       KOKKOS_LAMBDA(const int i) { view(i) = static_cast<float>(my_node); });
 
     using Reducer = vt::collective::reduce::allreduce::Rabenseifner<
-      decltype(view), PlusOp, MyObjA, &MyObjA::verifyAllredView>;
+      decltype(view), PlusOp, &MyObjA::verifyAllredView>;
 
     theObjGroup()->allreduce<Reducer>(kokkos_proxy, view);
   });

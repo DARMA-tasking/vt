@@ -55,6 +55,8 @@
 #include "vt/messaging/active.h"
 #include "vt/activefn/activefn.h"
 #include "vt/group/group_info.h"
+#include "vt/collective/reduce/allreduce/rabenseifner.h"
+#include "vt/objgroup/manager.h"
 
 namespace vt { namespace group {
 
@@ -95,7 +97,7 @@ void GroupManagerT<T>::registerContinuationT(
   RemoteOperationIDType const op, ActionTType action
 ) {
   vt_debug_print(
-    terse, group,
+    verbose, group,
     "GroupManager::registerContinuationT: op={:x}\n", op
   );
 
@@ -153,6 +155,30 @@ void GroupManagerT<T>::triggerContinuationT(
       waiting_cont_[op].push_back(t);
     }
   }
+}
+
+template <auto f, template <typename Arg> typename Op, typename... Args>
+void GroupManager::allreduce(GroupType group, Args&&... args) {
+
+  auto iter = local_collective_group_info_.find(group);
+  vtAssert(iter != local_collective_group_info_.end(), "Must exist");
+
+  // TODO: Should we generate ID collectively?
+  auto const id = nextCollectiveID();
+  using DataT = typename collective::reduce::allreduce::function_traits<
+    decltype(f)>::template arg_type<0>;
+  using Reducer = collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
+
+  auto proxy = theObjGroup()->makeCollective<Reducer>("reducer", group, std::forward<Args>(args)...);
+  if (iter->second->is_in_group) {
+
+   // proxy.allreduce<f, Op>(id, );
+  }
+
+  // if (iter->second->is_in_group) {
+  //   auto& r = iter->second->getAllreduce();
+  //   r.allreduce<f, Op>(id, std::forward<Args>(args)...);
+  // }
 }
 
 }} /* end namespace vt::group */
