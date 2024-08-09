@@ -58,7 +58,6 @@
 #include <vector>
 #include <unordered_set>
 #include <set>
-#include <limits>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -439,9 +438,6 @@ void TemperedLB::runLB(LoadType total_load) {
   auto const imb  = stats.at(lb::Statistic::Rank_load_modeled).at(
     lb::StatisticQuantity::imb
   );
-  auto const min = stats.at(lb::Statistic::Object_load_modeled).at(
-    lb::StatisticQuantity::min
-  );
   auto const load = this_load;
 
   if (target_pole_) {
@@ -453,8 +449,8 @@ void TemperedLB::runLB(LoadType total_load) {
     target_max_load_ = avg;
   }
 
-  // Use an minimal object load on average rank load to load-balance
-  if (avg > min / theContext()->getNumNodes()) {
+  // Use an estimated load-balancing cost on average rank load to load-balance
+  if (avg > getCollectiveEpochCost()) {
     should_lb = max > (run_temperedlb_tolerance + 1.0) * target_max_load_;
   }
 

@@ -263,7 +263,8 @@ void HierarchicalLB::loadStats() {
   bool should_lb = false;
   this_load_begin = this_load;
 
-  if (avg_load > 0.0000000001) {
+  // Use an estimated load-balancing cost on average rank load to load-balance
+  if (avg_load > getCollectiveEpochCost()) {
     should_lb = I > hierlb_tolerance;
   }
 
