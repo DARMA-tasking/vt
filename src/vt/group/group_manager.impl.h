@@ -164,15 +164,17 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
 
   // TODO: Should we generate ID collectively?
-  auto const id = nextCollectiveID();
+  // auto const id = nextCollectiveID();
   using DataT = typename collective::reduce::allreduce::function_traits<
     decltype(f)>::template arg_type<0>;
   using Reducer = collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
 
   auto proxy = theObjGroup()->makeCollective<Reducer>("reducer", group, std::forward<Args>(args)...);
   if (iter->second->is_in_group) {
-
-   // proxy.allreduce<f, Op>(id, );
+    auto const this_node = theContext()->getNode();
+    auto id = proxy[this_node].get()->id_ - 1;
+    proxy[this_node].get()->proxy_ = proxy;
+    proxy[this_node].template invoke<&Reducer::allreduce>(id);
   }
 
   // if (iter->second->is_in_group) {
