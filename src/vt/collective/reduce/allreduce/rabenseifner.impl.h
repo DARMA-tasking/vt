@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-
-#include "vt/configs/types/types_sentinels.h"
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 
@@ -53,6 +51,7 @@
 #include "vt/group/global/group_default.h"
 #include "vt/group/group_manager.h"
 #include "vt/group/group_info.h"
+#include "vt/configs/types/types_sentinels.h"
 
 #include <type_traits>
 
@@ -69,6 +68,7 @@ Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_) {
+
   auto const is_default_group = group == default_group;
   auto const is_part_of_allreduce = (not is_default_group and theGroup()->inGroup(group)) or is_default_group;
   if (not is_default_group and theGroup()->inGroup(group)) {
@@ -213,13 +213,14 @@ void Rabenseifner<DataT, Op, finalHandler>::adjustForPowerOfTwo(size_t id) {
   if (is_part_of_adjustment_group_) {
     auto& state = states_.at(id);
     auto const partner = is_even_ ? this_node_ + 1 : this_node_ - 1;
+    auto const actual_partner = nodes_[partner];
 
     vt_debug_print(
-      terse, allreduce, "Rabenseifner AdjustInitial (To {}): ID = {}\n", partner, id
+      terse, allreduce, "Rabenseifner AdjustInitial (To {}): ID = {}\n", actual_partner, id
     );
 
     if (is_even_) {
-      proxy_[partner]
+      proxy_[actual_partner]
         .template sendMsg<&Rabenseifner::adjustForPowerOfTwoRightHalf>(
           DataHelperT::createMessage(
             state.val_, state.size_ / 2, state.size_ - (state.size_ / 2), id
@@ -230,7 +231,7 @@ void Rabenseifner<DataT, Op, finalHandler>::adjustForPowerOfTwo(size_t id) {
         adjustForPowerOfTwoLeftHalf(state.left_adjust_message_.get());
       }
     } else {
-      proxy_[partner]
+      proxy_[actual_partner]
         .template sendMsg<&Rabenseifner::adjustForPowerOfTwoLeftHalf>(
           DataHelperT::createMessage(state.val_, 0, state.size_ / 2, id)
         );
@@ -273,7 +274,8 @@ void Rabenseifner<DataT, Op, finalHandler>::adjustForPowerOfTwoRightHalf(
   DataHelperT::template reduce<Op>(state.val_, state.size_ / 2, msg);
 
   // Send to left node
-  proxy_[theContext()->getNode() - 1]
+  auto const actual_partner = nodes_[this_node_ - 1];
+  proxy_[actual_partner]
     .template sendMsg<&Rabenseifner::adjustForPowerOfTwoFinalPart>(
       DataHelperT::createMessage(state.val_, state.size_ / 2, state.size_ - (state.size_ / 2), msg->id_)
     );
@@ -395,17 +397,18 @@ void Rabenseifner<DataT, Op, finalHandler>::scatterReduceIter(size_t id) {
   auto& state = states_.at(id);
   auto vdest = vrt_node_ ^ state.scatter_mask_;
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
+  auto const actual_partner = nodes_[dest];
 
   vt_debug_print(
     terse, allreduce,
     "Rabenseifner Scatter (Send step {} to {}): Starting with idx = {} and "
     "count "
     "{} ID = {}\n",
-    state.scatter_step_, dest, state.s_index_[state.scatter_step_],
+    state.scatter_step_, actual_partner, state.s_index_[state.scatter_step_],
     state.s_count_[state.scatter_step_], id
   );
 
-  proxy_[dest].template sendMsg<&Rabenseifner::scatterReduceIterHandler>(
+  proxy_[actual_partner].template sendMsg<&Rabenseifner::scatterReduceIterHandler>(
     DataHelperT::createMessage(state.val_, state.s_index_[state.scatter_step_], state.s_count_[state.scatter_step_], id, state.scatter_step_)
   );
 
@@ -534,17 +537,18 @@ void Rabenseifner<DataT, Op, finalHandler>::gatherIter(size_t id) {
   auto& state = states_.at(id);
   auto vdest = vrt_node_ ^ state.gather_mask_;
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
+  auto const actual_partner = nodes_[dest];
 
   vt_debug_print(
     terse, allreduce,
     "Rabenseifner Gather (step {}): Sending to Node {} starting with idx = {} and "
     "count "
     "{} ID = {}\n",
-    state.gather_step_, dest, state.r_index_[state.gather_step_],
+    state.gather_step_, actual_partner, state.r_index_[state.gather_step_],
     state.r_count_[state.gather_step_], id
   );
 
-  proxy_[dest].template sendMsg<&Rabenseifner::gatherIterHandler>(
+  proxy_[actual_partner].template sendMsg<&Rabenseifner::gatherIterHandler>(
     DataHelperT::createMessage(
       state.val_, state.r_index_[state.gather_step_],
       state.r_count_[state.gather_step_], id, state.gather_step_
@@ -642,12 +646,13 @@ template <
 void Rabenseifner<DataT, Op, finalHandler>::sendToExcludedNodes(size_t id) {
   auto& state = states_.at(id);
   if (is_part_of_adjustment_group_ and is_even_) {
+    auto const actual_partner = nodes_[this_node_ + 1];
     vt_debug_print(
       terse, allreduce, "Rabenseifner::sendToExcludedNodes(): Sending to Node {} ID = {}\n",
-      this_node_ + 1, id
+      actual_partner, id
     );
 
-    proxy_[this_node_ + 1]
+    proxy_[actual_partner]
       .template sendMsg<&Rabenseifner::sendToExcludedNodesHandler>(
         DataHelperT::createMessage(state.val_, 0, state.size_, id)
       );
