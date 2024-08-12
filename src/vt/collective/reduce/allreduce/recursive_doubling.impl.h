@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/context/context.h"
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_IMPL_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_IMPL_H
 
@@ -48,20 +49,18 @@
 
 namespace vt::collective::reduce::allreduce {
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-template <typename ObjT, typename... Args>
+template <typename DataT, template <typename Arg> class Op, auto finalHandler>
+template <typename... Args>
 RecursiveDoubling<DataT, Op, finalHandler>::RecursiveDoubling(
-  vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
-  Args&&... data)
-  : num_nodes_(num_nodes),
+  vt::objgroup::proxy::Proxy<ObjT> parentProxy, Args&&... data)
+  : parent_proxy_(parentProxy),
+    num_nodes_(theContext()->getNumNodes()),
     this_node_(vt::theContext()->getNode()),
     is_even_(this_node_ % 2 == 0),
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_),
-    is_part_of_adjustment_group_(this_node_ < (2 * nprocs_rem_)){
+    is_part_of_adjustment_group_(this_node_ < (2 * nprocs_rem_)) {
   if (is_part_of_adjustment_group_) {
     if (is_even_) {
       vrt_node_ = this_node_ / 2;

@@ -232,35 +232,28 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   SendTest* test_obj_ = nullptr;
 };
 
-struct MyMessage : vt::Message {
-
-};
-
-void handlerYo(MyMessage* m) {}
 VT_PERF_TEST(SendTest, test_collection_send) {
-  theGroup()->newGroupCollective(theContext()->getNode() % 2 == 1, [](GroupType g){
-  });
-  // auto range = vt::Index1D(int32_t{num_nodes_ - 2});
-  // auto proxy = vt::makeCollection<Hello>("test_collection_send")
-  //                .bounds(range)
-  //                .bulkInsert()
-  //                .wait();
+  auto range = vt::Index1D(int32_t{num_nodes_});
+  auto proxy = vt::makeCollection<Hello>("test_collection_send")
+                 .bounds(range)
+                 .bulkInsert()
+                 .wait();
 
-  // auto const thisNode = vt::theContext()->getNode();
-  // auto const nextNode = (thisNode + 1) % num_nodes_;
+  auto const thisNode = vt::theContext()->getNode();
+  auto const nextNode = (thisNode + 1) % num_nodes_;
 
-  // // proxy[thisNode].tryGetLocalPtr()->test_obj_ = this;
+  proxy[thisNode].tryGetLocalPtr()->test_obj_ = this;
 
-  // for (auto size : payloadSizes) {
-  //   std::vector<int32_t> payload(size, thisNode);
+  for (auto size : payloadSizes) {
+    std::vector<int32_t> payload(size, thisNode);
 
-  //   theCollective()->barrier();
-  //   proxy[nextNode].send<&Hello::Handler>(&payload);
+    theCollective()->barrier();
+    proxy[nextNode].send<&Hello::Handler>(&payload);
 
-  //   // We run 1 coll elem per node, so it should be ok
-  //  //  theSched()->runSchedulerWhile([] { return !col_send_done; });
-  //   // col_send_done = false;
-  // }
+    // We run 1 coll elem per node, so it should be ok
+    theSched()->runSchedulerWhile([] { return !col_send_done; });
+    col_send_done = false;
+  }
 }
 
 VT_PERF_TEST_MAIN()
