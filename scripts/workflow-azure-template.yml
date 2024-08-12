@@ -46,6 +46,7 @@ variables:
   VT_KOKKOS_ENABLED: [% vt_kokkos_enabled %]
   CMAKE_CXX_STANDARD: [% cmake_cxx_standard %]
   VT_CI_TEST_LB_SCHEMA: [% vt_ci_test_lb_schema %]
+  RUN_TESTS: [% run_tests %]
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: [% cache_name %]
   volume_name: [% volume_name %]
@@ -170,7 +171,7 @@ stages:
       - task: Bash@3
         displayName: Create artifacts
         continueOnError: true
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        condition: and(eq(variables['RUN_TESTS'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetType: 'inline'
           script: |
@@ -179,7 +180,7 @@ stages:
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake test output artifact
         continueOnError: true
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        condition: and(eq(variables['RUN_TESTS'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetPath: '$(Agent.TempDirectory)/LastTest.log.gz'
           artifact: 'CMakeLastTestLog'
@@ -187,7 +188,7 @@ stages:
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake full output artifact
         continueOnError: true
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        condition: and(eq(variables['RUN_TESTS'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetPath: '$(Agent.TempDirectory)/cmake-output.log.gz'
           artifact: 'CMakeOutputLog'
