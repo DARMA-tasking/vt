@@ -42,6 +42,7 @@
 */
 
 #include "vt/group/group_manager.h"
+#include "vt/utils/fntraits/fntraits.h"
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
@@ -305,7 +306,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
     );
 
     grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-      TypeToString(Reducer::type_), default_group,
+      TypeToString(Reducer::type_), proxy,
       std::forward<Args>(data)...
     );
     grp_proxy[this_node].get()->proxy_ = grp_proxy;
@@ -328,6 +329,9 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
       proxy[this_node].template invoke<f>(std::forward<Args>(data)...);
     }};
   }
+
+  // using Obj = typename FuncTraits<decltype(f)>::ObjT;
+  // auto cb = theCB()->makeSend<f>(proxy);
 
   auto const payload_size =
     collective::reduce::allreduce::DataHandler<remove_cvref<DataT>>::size(

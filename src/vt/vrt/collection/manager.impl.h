@@ -926,6 +926,11 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
     cur_stamp = proxy(idx).tryGetLocalPtr()->getNextStamp();
   }
 
+  vt_debug_print(
+    terse, allreduce,
+    "reduceMsg: col_proxy={:x}, num_elms={}, send_group={}, use_group={} group={:x}\n",
+    col_proxy, num_elms, send_group, use_group, group
+  );
   collective::reduce::Reduce* r = nullptr;
   if (use_group) {
     r = theGroup()->groupReducer(group);

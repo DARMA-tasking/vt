@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#include "vt/configs/debug/debug_print.h"
+#include <string>
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 
@@ -52,25 +54,39 @@
 #include "vt/group/group_manager.h"
 #include "vt/group/group_info.h"
 #include "vt/configs/types/types_sentinels.h"
+#include "vt/registry/auto/auto_registry.h"
+#include "vt/utils/fntraits/fntraits.h"
 
 #include <type_traits>
 
 namespace vt::collective::reduce::allreduce {
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
+template <typename DataT, template <typename Arg> class Op, auto finalHandler>
 template <typename... Args>
 Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(
-  GroupType group, Args&&... data) :
-    nodes_(theGroup()->GetGroupNodes(group)),
+  GroupType group, Args&&... data)
+  : nodes_(theGroup()->GetGroupNodes(group)),
     num_nodes_(nodes_.size()),
+    this_node_(theContext()->getNode()),
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
-    nprocs_rem_(num_nodes_ - nprocs_pof2_) {
+    nprocs_rem_(num_nodes_ - nprocs_pof2_)
+     {
 
+  std::string nodes_info;
+  for(auto& node : nodes_){
+    nodes_info += fmt::format("{} ", node);
+  }
   auto const is_default_group = group == default_group;
   auto const is_part_of_allreduce = (not is_default_group and theGroup()->inGroup(group)) or is_default_group;
+
+  vt_debug_print(
+    terse, allreduce,
+    "Rabenseifner: is_default_group={} is_part_of_allreduce={} num_nodes_={} "
+    "Nodes:[{}]\n",
+    is_default_group, is_part_of_allreduce, num_nodes_, nodes_info
+  );
+
   if (not is_default_group and theGroup()->inGroup(group)) {
     // vtAssert(theGroup()->inGroup(group), fmt::format("This node is not part of group {:x}!", group));
 
@@ -79,7 +95,10 @@ Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(
 
     // index in group list
     this_node_ = it - nodes_.begin();
-  }
+    // if constexpr(ObjFuncTraits<decltype(finalHandler)>::is_objgroup){
+    //   auto handler = auto_registry::makeAutoHandlerObjGroup<typename ObjFuncTraits<decltype(finalHandler)>, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>(HandlerControlType control)
+    // }
+     }
 
   // We collectively create this Reducer, so it's possible that not all Nodes are part of it
   if (is_part_of_allreduce) {
@@ -97,6 +116,44 @@ Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(
 
     initialize(generateNewId(), std::forward<Args>(data)...);
   }
+}
+
+template <typename DataT, template <typename Arg> class Op, auto finalHandler>
+template <typename... Args>
+Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(
+  vt::objgroup::proxy::Proxy<ObjT> proxy, Args&&... data)
+  : parent_proxy_(proxy),
+    nodes_(theGroup()->GetGroupNodes(default_group)),
+    num_nodes_(nodes_.size()),
+    this_node_(theContext()->getNode()),
+    num_steps_(static_cast<int32_t>(log2(num_nodes_))),
+    nprocs_pof2_(1 << num_steps_),
+    nprocs_rem_(num_nodes_ - nprocs_pof2_) {
+  std::string nodes_info;
+  for (auto& node : nodes_) {
+    nodes_info += fmt::format("{} ", node);
+  }
+
+  vt_debug_print(
+    terse, allreduce,
+    "Rabenseifner: is_default_group={} is_part_of_allreduce={} num_nodes_={} "
+    "Nodes:[{}]\n",
+    true, true, num_nodes_, nodes_info);
+
+  // We collectively create this Reducer, so it's possible that not all Nodes are part of it
+  is_even_ = this_node_ % 2 == 0;
+  is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
+  if (is_part_of_adjustment_group_) {
+    if (is_even_) {
+      vrt_node_ = this_node_ / 2;
+    } else {
+      vrt_node_ = -1;
+    }
+  } else {
+    vrt_node_ = this_node_ - nprocs_rem_;
+  }
+
+  initialize(generateNewId(), std::forward<Args>(data)...);
 }
 
 template <
@@ -408,9 +465,13 @@ void Rabenseifner<DataT, Op, finalHandler>::scatterReduceIter(size_t id) {
     state.s_count_[state.scatter_step_], id
   );
 
-  proxy_[actual_partner].template sendMsg<&Rabenseifner::scatterReduceIterHandler>(
-    DataHelperT::createMessage(state.val_, state.s_index_[state.scatter_step_], state.s_count_[state.scatter_step_], id, state.scatter_step_)
-  );
+  proxy_[actual_partner]
+    .template sendMsg<&Rabenseifner::scatterReduceIterHandler>(
+      DataHelperT::createMessage(
+        state.val_, state.s_index_[state.scatter_step_],
+        state.s_count_[state.scatter_step_], id, state.scatter_step_
+      )
+    );
 
   state.scatter_mask_ <<= 1;
   state.scatter_step_++;
@@ -611,16 +672,24 @@ void Rabenseifner<DataT, Op, finalHandler>::finalPart(size_t id) {
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner::finalPart(): Executing final handler with size {} ID = {}\n",
-    state.val_.size(), id
+    "Rabenseifner::finalPart(): Executing final handler with size {} ID = {} "
+    "use_view={} obj_is_void={}\n",
+    state.val_.size(), id, ShouldUseView_v<Scalar, DataT>,
+    std::is_same_v<ObjT, void>
   );
 
   if constexpr (ShouldUseView_v<Scalar, DataT>) {
-    //parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
+    if constexpr (std::is_same_v<ObjT, void>) {
+      f(state.val_);
+    } else {
+      parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
+    }
   } else {
-    //parent_proxy_[this_node_].template invoke<finalHandler>(
-    //      DataType::fromVec(state.val_)
-    //  );
+    if constexpr (std::is_same_v<ObjT, void>) {
+    } else {
+      parent_proxy_[this_node_].template invoke<finalHandler>(
+        DataType::fromVec(state.val_));
+    }
   }
 
   state.completed_ = true;
@@ -675,8 +744,13 @@ void Rabenseifner<DataT, Op, finalHandler>::sendToExcludedNodesHandler(
   if constexpr (ShouldUseView_v<Scalar, DataT>) {
     // parent_proxy_[this_node_].template invoke<finalHandler>(msg->val_);
   } else {
-    // parent_proxy_[this_node_].template invoke<finalHandler>(
-    //   DataType::fromMemory(msg->val_, msg->size_));
+    if constexpr(std::is_same_v<ObjT, void>){
+
+    }else{
+      parent_proxy_[this_node_].template invoke<finalHandler>(
+         DataType::fromVec(state.val_)
+     );
+    }
   }
 
   state.completed_ = true;

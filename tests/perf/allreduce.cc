@@ -48,12 +48,14 @@
 #include "vt/context/context.h"
 #include "vt/group/group_manager.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/vrt/collection/manager.fwd.h"
 #include <unordered_map>
 #include <vt/collective/collective_ops.h>
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
 #include <vt/collective/reduce/allreduce/rabenseifner.h>
 #include <vt/collective/reduce/allreduce/recursive_doubling.h>
+#include <vt/vrt/collection/manager.h>
 
 #ifdef MAGISTRATE_KOKKOS_ENABLED
 #include <Kokkos_Core.hpp>
@@ -269,5 +271,46 @@ VT_PERF_TEST(MyTest, test_allreduce_group_rabenseifner) {
     vt::theGroup()->allreduce<allreduce_group_han, collective::PlusOp>(g, payload);
   });
 }
+
+struct Hello : vt::Collection<Hello, vt::Index1D> {
+  Hello() = default;
+
+  void AllredHandler(std::vector<int32_t> result) {
+
+  }
+  void Handler(std::vector<int32_t> result) {
+    auto proxy = getCollectionProxy();
+    proxy.allreduce<&Hello::AllredHandler, collective::PlusOp>(result);
+
+    col_send_done_ = true;
+  }
+
+  bool col_send_done_ = false;
+};
+
+// VT_PERF_TEST(MyTest, test_allreduce_collection_rabenseifner) {
+//   auto range = vt::Index1D(int32_t{num_nodes_});
+//   auto proxy = vt::makeCollection<Hello>("test_collection_send")
+//                  .bounds(range)
+//                  .bulkInsert()
+//                  .wait();
+
+
+//   auto const thisNode = vt::theContext()->getNode();
+//   auto const nextNode = (thisNode + 1) % num_nodes_;
+
+//   auto* elm = proxy[thisNode].tryGetLocalPtr();
+
+//   for (auto size : payloadSizes) {
+//     std::vector<int32_t> payload(size, thisNode);
+
+//     theCollective()->barrier();
+//     proxy.broadcast<&Hello::Handler>(payload);
+
+//     // We run 1 coll elem per node, so it should be ok
+//     // theSched()->runSchedulerWhile([&] { return !(elm->col_send_done_); });
+//     elm->col_send_done_ = false;
+//   }
+// }
 
 VT_PERF_TEST_MAIN()

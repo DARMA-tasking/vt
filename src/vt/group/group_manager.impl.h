@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/objgroup/proxy/proxy_objgroup.h"
 #if !defined INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H
 
@@ -163,12 +164,12 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
 
-  // TODO: Should we generate ID collectively?
-  // auto const id = nextCollectiveID();
   using DataT = typename collective::reduce::allreduce::function_traits<
     decltype(f)>::template arg_type<0>;
+
   using Reducer = collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
 
+  // TODO; Save the proxy so it can be deleted afterwards
   auto proxy = theObjGroup()->makeCollective<Reducer>("reducer", group, std::forward<Args>(args)...);
   if (iter->second->is_in_group) {
     auto const this_node = theContext()->getNode();
@@ -176,11 +177,6 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
     proxy[this_node].get()->proxy_ = proxy;
     proxy[this_node].template invoke<&Reducer::allreduce>(id);
   }
-
-  // if (iter->second->is_in_group) {
-  //   auto& r = iter->second->getAllreduce();
-  //   r.allreduce<f, Op>(id, std::forward<Args>(args)...);
-  // }
 }
 
 }} /* end namespace vt::group */

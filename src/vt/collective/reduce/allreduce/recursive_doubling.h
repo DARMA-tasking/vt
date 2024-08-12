@@ -119,7 +119,8 @@ struct RecursiveDoubling {
   using DataType = DataHandler<DataT>;
   using Scalar = typename DataHandler<DataT>::Scalar;
   using ReduceOp = Op<Scalar>;
-  // using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
+  using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
+
   /**
    * \brief Constructor for RecursiveDoubling class.
    *
@@ -129,9 +130,9 @@ struct RecursiveDoubling {
    * \param num_nodes The number of nodes.
    * \param args Additional arguments for data initialization.
    */
-  template <typename ObjT, typename... Args>
+  template <typename... Args>
   RecursiveDoubling(
-    vt::objgroup::proxy::Proxy<ObjT> parentProxy, NodeType num_nodes,
+    vt::objgroup::proxy::Proxy<ObjT> parentProxy,
     Args&&... data);
 
       /**
@@ -239,7 +240,7 @@ struct RecursiveDoubling {
   void finalPart(size_t id);
 
   vt::objgroup::proxy::Proxy<RecursiveDoubling> proxy_ = {};
-  // vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
+  vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
   struct State{
     DataT val_ = {};
