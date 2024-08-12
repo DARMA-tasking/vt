@@ -82,12 +82,15 @@ struct Rabenseifner {
   using ReduceOp = Op<Scalar>;
   using DataHelperT = DataHelper<Scalar, DataT>;
   using StateT = State<Scalar, DataT>;
-  // using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
+  using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
 
   static constexpr bool KokkosPaylod = ShouldUseView_v<Scalar, DataT>;
 
   template <typename ...Args>
   Rabenseifner(GroupType group, Args&&... args);
+
+  template <typename ...Args>
+  Rabenseifner(vt::objgroup::proxy::Proxy<ObjT> proxy, Args&&... args);
 
   /**
    * \brief Initialize the allreduce algorithm.
@@ -261,7 +264,7 @@ struct Rabenseifner {
   void sendToExcludedNodesHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
-  // vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
+  vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
   size_t id_ = 0;
   std::unordered_map<size_t, StateT> states_ = {};
