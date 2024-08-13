@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                lb_data.impl.h
+//                                  perf_event_map.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,37 +41,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_IMPL_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_IMPL_H
+#if !defined INCLUDED_VT_METRICS_PERF_MAP_H
+#define INCLUDED_VT_METRICS_PERF_MAP_H
 
-#include "vt/context/runnable_context/lb_data.h"
-#include "vt/messaging/active.h"
-#include "vt/elm/elm_lb_data.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/config.h"
+#include "vt/runtime/component/component_pack.h"
+#include "example_events.h"
 
-#include <memory>
-#if vt_check_enabled(papi)
-#include <papi.h>
-#endif
+namespace vt {  namespace metrics {
 
-namespace vt { namespace ctx {
+/** \file */
 
-template <typename ElmT, typename MsgT>
-LBData::LBData(ElmT* in_elm, MsgT* msg)
-  : lb_data_(&in_elm->getLBData()),
-    cur_elm_id_(in_elm->getElmID()),
-    should_instrument_(msg->lbLiteInstrument())
-{
-#if vt_check_enabled(papi)
-  papiData_ = std::make_unique<PAPIData>();
-#endif
-#if vt_check_enabled(perf)
-    perfData_ = std::make_unique<PerfData>();
-#endif
-  // record the communication LB data right away!
-  theCollection()->recordLBData(in_elm, msg);
-}
+/**
+ * \struct PerfEventMap perf_event_map.h vt/metrics/perf_event_map.h
+ *
+ * \brief Used to obtain the association between string names of metrics and their corresponding perf event type and identifier
+ *
+ */
+struct PerfEventMap : runtime::component::Component<PerfEventMap> {
+  /**
+   * \brief Gets the map of event names to their corresponding perf variables
+   * used.
+   *
+   * \return the node currently being run on
+   */
+  std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> getEventMap() const { return event_map_; }
 
-}} /* end namespace vt::ctx */
+  void startup() override { event_map_ = example_event_map; }
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_IMPL_H*/
+  std::string name() override { return "PerfEventMap"; }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | event_map_;
+  }
+
+private:
+  std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> event_map_ = {};
+};
+
+}} // end namespace vt::metrics
+
+namespace vt {
+
+extern metrics::PerfEventMap* thePerfEventMap();
+
+} // end namespace vt
+
+#endif /*INCLUDED_VT_METRICS_PERF_MAP_H*/

@@ -12,8 +12,11 @@ set(
   transpose
   4d_collection
 )
-if ((vt_papi_enabled AND vt_papi_found) OR (vt_perf_enabled AND vt_perf_found))
-  list(APPEND COLLECTION_EXAMPLES do_flops)
+if ((vt_papi_enabled AND vt_papi_found))
+  list(APPEND COLLECTION_EXAMPLES do_flops_papi)
+endif()
+if ((vt_perf_enabled AND vt_perf_found))
+  list(APPEND COLLECTION_EXAMPLES do_flops_perf)
 endif()
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})

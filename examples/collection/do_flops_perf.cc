@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                jacobi2d_vt.cc
+//                                do_flops_perf.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -42,6 +42,7 @@
 */
 
 #include <vt/transport.h>
+#include <vt/metrics/perf_event_map.h>
 
 #include <cstdlib>
 #include <cassert>
@@ -147,8 +148,8 @@ public:
     iter_ += 1;
     fmt::print("-- Starting Iteration --\n");
 
-    vt::theContext()->getTask()->startPAPIMetrics();
-
+    vt::theContext()->getTask()->startPerfMeasurements();
+    
     // ----------------------------------------------------------
     // test non packed double precision floating point operations
     // should result in ~4*n of these operations
@@ -163,8 +164,8 @@ public:
       proxy[0]
     );
 
-    vt::theContext()->getTask()->stopPAPIMetrics();
-    std::unordered_map<std::string, uint64_t> res = vt::theContext()->getTask()->getPAPIMetrics();
+    vt::theContext()->getTask()->stopPerfMeasurements();
+    std::unordered_map<std::string, uint64_t> res = vt::theContext()->getTask()->getPerfMeasurements();
     for (auto [name, value] : res) {
       fmt::print("  {}: {}\n", name, value);
     }

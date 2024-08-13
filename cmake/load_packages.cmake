@@ -22,7 +22,7 @@ include(cmake/load_zoltan_package.cmake)
 include(cmake/load_papi.cmake)
 
 # If enabled, test if perf is available and works
-include(cmake/load_papi.cmake)
+include(cmake/load_perf.cmake)
 
 # Tests
 include(cmake/test_vt.cmake)
