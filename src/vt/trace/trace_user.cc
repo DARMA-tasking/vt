@@ -101,7 +101,7 @@ void addUserNotePre(
 ) {
 #if vt_check_enabled(trace_enabled)
   if (in_event != no_user_event_id) {
-    theTrace()->addUserNoteBracketedBeginTime(in_note, in_event);
+    theTrace()->addUserNoteBracketedBeginTime(in_event, in_note);
   }
 #endif
 }
