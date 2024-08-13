@@ -64,13 +64,9 @@ public:
     PerfData()
     {
         std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> global_map = vt::thePerfEventMap()->getEventMap();
-        // std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> global_map = {
-        //     {"instructions", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS)}
-        // };
         if (global_map.empty())
         {
-            // vtAbort("the PerfEventMap event map is empty; initialize vt::thePerfEventMap->getEventMap(...)");
-            fmt::print("the PerfEventMap event map is empty; initialize vt::thePerfEventMap->getEventMap(...)\n");
+            vtAbort("the PerfEventMap event map is empty; initialize vt::thePerfEventMap->getEventMap(...)");
         } else {
             const char* env_p =  getenv("VT_EVENTS");
 
