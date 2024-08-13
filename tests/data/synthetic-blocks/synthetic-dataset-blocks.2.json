@@ -1,0 +1,1 @@
+{"metadata":{"type":"LBDatafile","rank":2},"phases":[{"id":0,"tasks":[{"entity":{"home":2,"id":8,"migratable":true,"type":"object"},"node":2,"resource":"cpu","time":1.5,"user_defined":{"shared_id":4,"shared_bytes":9.0,"home_rank":2}}],"communications":[{"type":"SendRecv","to":{"type":"object","id":6},"messages":1,"from":{"type":"object","id":8},"bytes":1.5}]}]}
