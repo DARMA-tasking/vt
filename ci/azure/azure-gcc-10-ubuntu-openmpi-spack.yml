@@ -8,7 +8,6 @@ trigger:
   branches:
     include:
       - develop
-      - 2335-fix-missing-project-name-in-spack-ci
 
 pr: none
 
@@ -52,9 +51,9 @@ variables:
   VT_KOKKOS_ENABLED: 0
   CMAKE_CXX_STANDARD: 17
   VT_CI_TEST_LB_SCHEMA: 0
-  RUN_TESTS: false
+  RUN_FULL_CI: false
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: ubuntu-spack-gcc-10-openmpi-cache
+  cache_name: ubuntu-gcc-10-cache
   volume_name: ubuntu-spack
   build_root: "$(CACHE)$(ARCH)-ubuntu-$(UBUNTU)-$(HOST_COMPILER)-$(COMPILER)-openmpi-cpp/"
   TS: 0
@@ -79,6 +78,7 @@ stages:
       - task: Bash@3
         displayName: Build timestamp for caching
         continueOnError: true
+        condition: eq(variables['RUN_FULL_CI'], 'true')
         inputs:
           targetType: 'inline'
           script: |
@@ -101,14 +101,14 @@ stages:
       - task: Bash@3
         displayName: Output timestamp for caching
         continueOnError: true
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetType: 'inline'
           script: 'echo "my pipeline variable is $(TS) $(TS_YEAR) $(TS_MONTH) $(TS_DAY)"'
       - task: Cache@2
         displayName: Update cache
         continueOnError: true
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           securityNamespace: cache
           key: $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY) | $(TS)
@@ -147,7 +147,7 @@ stages:
       - task: Bash@3
         displayName: Put compilation's and tests' logs in PR comment
         continueOnError: true
-        condition: and(succeededOrFailed(), eq(variables['Build.Reason'], 'PullRequest'))
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), and(succeededOrFailed(), eq(variables['Build.Reason'], 'PullRequest')))
         inputs:
           targetType: 'inline'
           script: |
@@ -177,7 +177,7 @@ stages:
       - task: Bash@3
         displayName: Create artifacts
         continueOnError: true
-        condition: and(eq(variables['RUN_TESTS'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetType: 'inline'
           script: |
@@ -186,7 +186,7 @@ stages:
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake test output artifact
         continueOnError: true
-        condition: and(eq(variables['RUN_TESTS'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetPath: '$(Agent.TempDirectory)/LastTest.log.gz'
           artifact: 'CMakeLastTestLog'
@@ -194,7 +194,7 @@ stages:
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake full output artifact
         continueOnError: true
-        condition: and(eq(variables['RUN_TESTS'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetPath: '$(Agent.TempDirectory)/cmake-output.log.gz'
           artifact: 'CMakeOutputLog'
