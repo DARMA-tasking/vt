@@ -51,6 +51,10 @@
 #include "vt/context/runnable_context/papi_data.h"
 #endif
 
+#if vt_check_enabled(perf)
+#include "vt/context/runnable_context/perf_data.h"
+#endif
+
 namespace vt { namespace ctx {
 
 /**
@@ -86,6 +90,9 @@ struct LBData {
   {
 #if vt_check_enabled(papi)
     papiData_ = std::make_unique<PAPIData>();
+#endif
+#if vt_check_enabled(perf)
+    perfData_ = std::make_unique<PerfData>();
 #endif
   }
 
@@ -128,9 +135,7 @@ struct LBData {
    * \brief Start PAPI metrics map for the running context
    */
   void startPAPIMetrics() { papiData_->start(); }
-#endif
 
-#if vt_check_enabled(papi)
   /**
    * \brief Stop PAPI metrics map for the running context
    *
@@ -138,9 +143,7 @@ struct LBData {
    *
    */
   void stopPAPIMetrics() { papiData_->stop(); }
-#endif
 
-#if vt_check_enabled(papi)
   /**
    * \brief Get the current PAPI metrics map for the running context
    *
@@ -149,12 +152,37 @@ struct LBData {
   std::unordered_map<std::string, uint64_t> getPAPIMetrics();
 #endif
 
+#if vt_check_enabled(perf)
+  /**
+   * \brief Start perf metrics map for the running context
+   */
+  void startPerfMeasurements() { perfData_->start(); }
+
+  /**
+   * \brief Stop perf metrics map for the running context
+   *
+   * \note has to be called after startperfMetrics
+   *
+   */
+  void stopPerfMeasurements() { perfData_->stop(); }
+
+  /**
+   * \brief Get the current perf metrics map for the running context
+   *
+   * \return the perf metrics map
+   */
+  std::unordered_map<std::string, uint64_t> getPerfMeasurements() { return perfData_->getMeasurements(); }
+#endif
+
 private:
   ElementLBData* lb_data_ = nullptr;     /**< Element LB data */
   ElementIDStruct cur_elm_id_ = {};   /**< Current element ID  */
   bool should_instrument_ = false;    /**< Whether we are instrumenting */
 #if vt_check_enabled(papi)
   std::unique_ptr<PAPIData> papiData_;
+#endif
+#if vt_check_enabled(perf)
+  std::unique_ptr<PerfData> perfData_;
 #endif
 };
 
