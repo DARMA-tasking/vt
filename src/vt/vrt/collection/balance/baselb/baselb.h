@@ -164,16 +164,6 @@ struct BaseLB {
   bool isCommAware() const { return comm_aware_; }
   void recvSharedEdges(CommMsg* msg);
 
-  /**
-   * \brief Get the estimated time needed for load balancing
-   *
-   * \return the estimated time
-   */
-  double getCollectiveEpochCost() const {
-    // 100 ns
-    return 0.0000001;
-  }
-
 protected:
   void getArgs(PhaseType phase);
 
@@ -197,6 +187,16 @@ protected:
   static void setStrategySpecificModel(
     std::shared_ptr<balance::LoadModel> model
   );
+
+  /**
+   * \brief Get the estimated time needed for load balancing
+   *
+   * \return the estimated time
+   */
+  double getCollectiveEpochCost() const {
+    // 100 ns
+    return 0.0000001;
+  }
 
 private:
   TransferVecType transfers_                      = {};
