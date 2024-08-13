@@ -116,9 +116,15 @@ struct GroupCollectiveFinalInfoMsg : MsgT {
 
   GroupCollectiveFinalInfoMsg() = default;
   GroupCollectiveFinalInfoMsg(
-    GroupType const& in_group, RemoteOperationIDType in_op,
+    GroupType const& in_group, RemoteOperationIDType const& in_op,
     std::set<NodeType> const& nodes = {}
   ) : MsgT(in_group, in_op), nodes_(nodes)
+  { }
+
+  GroupCollectiveFinalInfoMsg(
+    GroupType const& in_group, RemoteOperationIDType const& in_op,
+    NodeType const& in_root, bool const& in_default_group, std::set<NodeType> const& nodes = {}
+  ) : MsgT(in_group, in_op, in_root, in_default_group), nodes_(nodes)
   { }
 
   std::set<NodeType> const& getNodes() {return nodes_;}

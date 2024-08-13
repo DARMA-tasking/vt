@@ -844,7 +844,7 @@ void InfoColl::finalize() {
       );
 
       auto msg = makeMessage<GroupCollectiveFinalMsg>(
-        group_,finalize_cont_,nodes_
+        group_,finalize_cont_, known_root_node_, is_default_group_, nodes_
       );
       theMsg()->sendMsg<finalizeHan>(c, msg);
     }
@@ -874,8 +874,8 @@ void InfoColl::finalizeTree(GroupCollectiveFinalMsg* msg) {
   auto const& new_root = msg->getRoot();
   vt_debug_print(
     terse, group,
-    "InfoColl::finalizeTree: group={:x}, new_root={}\n",
-    msg->getGroup(), new_root
+    "InfoColl::finalizeTree: group={:x}, new_root={} default_group={}\n",
+    msg->getGroup(), new_root, msg->isDefault()
   );
   in_phase_two_     = true;
   known_root_node_  = new_root;
