@@ -287,7 +287,7 @@ void TraceLite::addUserEventBracketedEndTime(
 }
 
 void TraceLite::addUserNoteBracketedBeginTime(
-  std::string const& note, TraceEventIDType const event
+  TraceEventIDType const event, std::string const& note
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return;

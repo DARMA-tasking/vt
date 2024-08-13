@@ -303,10 +303,10 @@ TEST_F(TestTraceUser, trace_user_note_bracketed) {
     GTEST_SKIP() << "trace tests require --vt_trace to be set";
   }
 
-  theTrace()->addUserNoteBracketedBeginTime("OUTER TEST NOTE 10", 10);
-  theTrace()->addUserNoteBracketedBeginTime("INNER TEST NOTE 10", 10);
-  theTrace()->addUserNoteBracketedBeginTime("INNER INNER TEST NOTE 10", 10);
-  theTrace()->addUserNoteBracketedBeginTime("INNER INNER INNER TEST NOTE 12", 12);
+  theTrace()->addUserNoteBracketedBeginTime(10, "OUTER TEST NOTE 10");
+  theTrace()->addUserNoteBracketedBeginTime(10, "INNER TEST NOTE 10");
+  theTrace()->addUserNoteBracketedBeginTime(10, "INNER INNER TEST NOTE 10");
+  theTrace()->addUserNoteBracketedBeginTime(12, "INNER INNER INNER TEST NOTE 12");
 
   theTrace()->addUserEvent(901);
   trace::addUserNote("Note 0");
@@ -331,10 +331,10 @@ TEST_F(TestTraceUser, trace_user_note_bracketed_override_note) {
     GTEST_SKIP() << "trace tests require --vt_trace to be set";
   }
 
-  theTrace()->addUserNoteBracketedBeginTime("ABC", 10);
-  theTrace()->addUserNoteBracketedBeginTime("123", 10);
-  theTrace()->addUserNoteBracketedBeginTime("X", 10);
-  theTrace()->addUserNoteBracketedBeginTime("", 12);
+  theTrace()->addUserNoteBracketedBeginTime(10, "ABC");
+  theTrace()->addUserNoteBracketedBeginTime(10, "123");
+  theTrace()->addUserNoteBracketedBeginTime(10, "X");
+  theTrace()->addUserNoteBracketedBeginTime(12, "");
 
   theTrace()->addUserEvent(901);
   trace::addUserNote("Note 0");
