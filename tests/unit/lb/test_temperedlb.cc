@@ -21,10 +21,10 @@ std::string writeTemperedLBConfig(std::string transfer_strategy,
     auto config_file = getUniqueFilename();
     if (this_rank == 0) {
         std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
-        cfg_file_ << "0 TemperedLB transfer=" << transfer_strategy << 
-                     " alpha=1.0" << 
+        cfg_file_ << "0 TemperedLB transfer=" << transfer_strategy <<
+                     " alpha=1.0" <<
                      " beta=" << beta <<
-                     " gamma=" << gamma << 
+                     " gamma=" << gamma <<
                      " delta=" << delta;
         if (mem_constraints) {
             cfg_file_ << " memory_threshold=20.0";
