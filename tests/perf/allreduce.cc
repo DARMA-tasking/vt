@@ -275,12 +275,15 @@ VT_PERF_TEST(MyTest, test_allreduce_group_rabenseifner) {
 struct Hello : vt::Collection<Hello, vt::Index1D> {
   Hello() = default;
 
-  void AllredHandler(std::vector<int32_t> result) {
-
+  void AllredHandler(NodeType result) {
+    fmt::print("Allreduce result is {} \n", result);
   }
-  void Handler(std::vector<int32_t> result) {
-    auto proxy = getCollectionProxy();
-    proxy.allreduce<&Hello::AllredHandler, collective::PlusOp>(result);
+
+  void Handler() {
+    auto proxy = this->getCollectionProxy();
+
+    fmt::print("[{}] Hello from idx={} \n", theContext()->getNode(), getIndex());
+    proxy.allreduce<&Hello::AllredHandler, collective::PlusOp>(theContext()->getNode());
 
     col_send_done_ = true;
   }
@@ -288,29 +291,28 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   bool col_send_done_ = false;
 };
 
-// VT_PERF_TEST(MyTest, test_allreduce_collection_rabenseifner) {
-//   auto range = vt::Index1D(int32_t{num_nodes_});
-//   auto proxy = vt::makeCollection<Hello>("test_collection_send")
-//                  .bounds(range)
-//                  .bulkInsert()
-//                  .wait();
+VT_PERF_TEST(MyTest, test_allreduce_collection_rabenseifner) {
+  auto range = vt::Index1D(int32_t{num_nodes_ * 2});
+  auto proxy = vt::makeCollection<Hello>("test_collection_send")
+                 .bounds(range)
+                 .bulkInsert()
+                 .wait();
 
 
-//   auto const thisNode = vt::theContext()->getNode();
-//   auto const nextNode = (thisNode + 1) % num_nodes_;
+  auto const thisNode = vt::theContext()->getNode();
+  auto const nextNode = (thisNode + 1) % num_nodes_;
 
-//   auto* elm = proxy[thisNode].tryGetLocalPtr();
+  // auto* elm = proxy[thisNode].tryGetLocalPtr();
 
-//   for (auto size : payloadSizes) {
-//     std::vector<int32_t> payload(size, thisNode);
+    theCollective()->barrier();
 
-//     theCollective()->barrier();
-//     proxy.broadcast<&Hello::Handler>(payload);
+    proxy.broadcastCollective<&Hello::Handler>();
 
-//     // We run 1 coll elem per node, so it should be ok
-//     // theSched()->runSchedulerWhile([&] { return !(elm->col_send_done_); });
-//     elm->col_send_done_ = false;
-//   }
-// }
+
+    // We run 1 coll elem per node, so it should be ok
+    // theSched()->runSchedulerWhile([&] { return !(elm->col_send_done_); });
+    //elm->col_send_done_ = false;
+
+}
 
 VT_PERF_TEST_MAIN()
