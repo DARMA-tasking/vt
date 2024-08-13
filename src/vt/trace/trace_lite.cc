@@ -304,7 +304,7 @@ void TraceLite::addUserNoteBracketedBeginTime(
   logEvent(LogType{begin, begin, type, note, event});
 
   // Save event log for fixing up the end time later
-  if (event != no_user_event_id) {
+  if (event != no_trace_event) {
     auto* last_trace = getLastTraceEvent();
     incomplete_notes_[event].push(last_trace);
   }
@@ -361,7 +361,7 @@ void TraceLite::addUserNoteBracketedEndTime(
   );
 
   // Fixup end time of the note
-  if (event != no_user_event_id) {
+  if (event != no_trace_event) {
     updateNoteEndTime(event, end, &new_note);
   }
 }
