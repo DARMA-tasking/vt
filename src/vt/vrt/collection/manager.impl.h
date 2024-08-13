@@ -184,7 +184,7 @@ GroupType CollectionManager::createGroupCollection(
       }
 
       vt_debug_print(
-        normal, vrt_coll,
+        normal, allreduce,
         "group finished construction: proxy={:x}, new_group={:x}, use_group={}, "
         "ready={}, root={}, is_group_default={}\n",
         proxy, new_group, elm_holder->useGroup(), elm_holder->groupReady(),
