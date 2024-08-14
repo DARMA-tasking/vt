@@ -63,21 +63,25 @@ void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
 }
 
 TEST_F(TestTemperedLB, test_load_only) {
+    SET_NUM_NODES_CONSTRAINT(4);
     auto cfg = writeTemperedLBConfig("Original", false);
     runTemperedLBTest(cfg);
 }
 
 TEST_F(TestTemperedLB, test_load_and_memory_swapclusters) {
+    SET_NUM_NODES_CONSTRAINT(4);
     auto cfg = writeTemperedLBConfig("SwapClusters", true);
     runTemperedLBTest(cfg);
 }
 
 TEST_F(TestTemperedLB, test_load_memory_homing_swapclusters) {
+    SET_NUM_NODES_CONSTRAINT(4);
     auto cfg = writeTemperedLBConfig("SwapClusters", true, 1.0);
     runTemperedLBTest(cfg);
 }
 
 TEST_F(TestTemperedLB, test_load_memory_homing_comms) {
+    SET_NUM_NODES_CONSTRAINT(4);
     auto cfg = writeTemperedLBConfig("SwapClusters", true, 1.0, 1.0);
     double expected_imbalance = 0.0; // placeholder for value from MILP
     runTemperedLBTest(cfg, expected_imbalance);
