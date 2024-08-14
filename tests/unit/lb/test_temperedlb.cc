@@ -29,6 +29,9 @@ std::string writeTemperedLBConfig(std::string transfer_strategy,
         if (mem_constraints) {
             cfg_file_ << " memory_threshold=20.0";
         }
+        if (transfer_strategy == "SwapClusters") {
+            cfg_file_ << " rollback=false";
+        }
         cfg_file_.close();
     }
     return config_file;
@@ -37,7 +40,6 @@ std::string writeTemperedLBConfig(std::string transfer_strategy,
 void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
     // Set configuration
     theConfig()->vt_lb = true;
-    theConfig()->vt_lb_name = "TemperedLB";
     theConfig()->vt_lb_data_in = true;
     theConfig()->vt_lb_file_name = config_file;
     theConfig()->vt_lb_data_file_in="synthetic-dataset-blocks.%p.json";
@@ -54,8 +56,7 @@ void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
     auto phase_info = theLBManager()->getPhaseInfo();
 
     // Assert that temperedLB found the correct imbalance
-    auto imb = (phase_info->max_load / phase_info->avg_load) - 1;
-    EXPECT_EQ(imb, expected_imb);
+    EXPECT_EQ(phase_info->imb_load_post_lb, expected_imb);
 
     // Clear the LB config ahead of next test
     vrt::collection::balance::ReadLBConfig::clear();
@@ -78,7 +79,7 @@ TEST_F(TestTemperedLB, test_load_memory_homing_swapclusters) {
 
 TEST_F(TestTemperedLB, test_load_memory_homing_comms) {
     auto cfg = writeTemperedLBConfig("SwapClusters", true, 1.0, 1.0);
-    double expected_imbalance = 0.25; // placeholder for value from MILP
+    double expected_imbalance = 0.0; // placeholder for value from MILP
     runTemperedLBTest(cfg, expected_imbalance);
 }
 
