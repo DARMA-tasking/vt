@@ -8,8 +8,3 @@ viz:
   save_meshes: false
   save_pngs: false
   force_continuous_object_qoi: true
-
-output:
-  directory: ../../output
-  file_stem: tv_test
-  window_size: 2000
