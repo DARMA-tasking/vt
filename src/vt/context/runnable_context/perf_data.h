@@ -49,6 +49,7 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <cstring>
+
 #include "vt/metrics/perf_event_map.h"
 
 namespace vt { namespace ctx {
@@ -56,28 +57,29 @@ namespace vt { namespace ctx {
 /**
  * \struct PerfData
  *
- * \brief Structure for storing Linux perf data structures to track  low level metrics
+ * \brief Structure for storing Linux perf data structures to track low-level metrics.
  */
 struct PerfData
 {
 public:
     PerfData()
     {
-        std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> global_map = vt::thePerfEventMap()->getEventMap();
+        std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> global_map = vt::thePerfEventMap()->getEventMap();
         if (global_map.empty())
         {
-            vtAbort("the PerfEventMap event map is empty; initialize vt::thePerfEventMap->getEventMap(...)");
-        } else {
-            const char* env_p =  getenv("VT_EVENTS");
+            vtAbort("The PerfEventMap event map is empty; initialize vt::thePerfEventMap->getEventMap(...)");
+        }
+        else
+        {
+            const char* env_p = getenv("VT_EVENTS");
 
-            // check if the environment variable is set
+            // Check if the environment variable is set
             if (env_p == nullptr) {
-                vtWarn("Warning: Environment variabale VT_EVENTS not set, defaulting to instructions for the PAPI event set.\n");
+                vtWarn("Warning: Environment variable VT_EVENTS not set, defaulting to 'instructions' for the PAPI event set.\n");
                 event_names_.push_back("instructions");
             }
             else {
                 std::string env_str(env_p);
-
                 std::stringstream ss(env_str);
                 std::string item;
 
@@ -91,10 +93,11 @@ public:
             {
                 if (global_map.find(event_name) == global_map.end())
                 {
+                    cleanupBeforeAbort();
                     vtAbort("Event name isn't in known perf events map: " + event_name);
                 }
-                struct perf_event_attr pe;
-                memset(&pe, 0, sizeof(struct perf_event_attr));
+
+                struct perf_event_attr pe = {};
                 pe.type = global_map.at(event_name).first;
                 pe.size = sizeof(struct perf_event_attr);
                 pe.config = global_map.at(event_name).second;
@@ -104,20 +107,19 @@ public:
                 pe.exclude_hv = 1;
                 pe.inherit = 1; // Ensure event is inherited by threads
 
-                if (event_name == "instructions") { // or event_name == "FP_ARITH_INST_RETIRED_SCALAR_DOUBLE") {
+                if (event_name == "instructions") {
                     pe.pinned = 1;
                 }
-                // pe.sample_period = 1000000;
 
                 int fd = perf_event_open(&pe, 0, -1, -1, PERF_FLAG_FD_CLOEXEC);
                 if (fd == -1)
                 {
+                    cleanupBeforeAbort();
                     vtAbort("Error opening perf event: " + std::string(strerror(errno)));
                 }
-                fds.push_back(fd);
-                event_names_.push_back(event_name);
-            }
 
+                fds.push_back(fd);
+            }
         }
     }
 
@@ -136,8 +138,10 @@ public:
     {
         for (int fd : fds)
         {
-            ioctl(fd, PERF_EVENT_IOC_RESET, 0);
-            ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+            if (fd != -1) {
+                ioctl(fd, PERF_EVENT_IOC_RESET, 0);
+                ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+            }
         }
     }
 
@@ -145,7 +149,9 @@ public:
     {
         for (int fd : fds)
         {
-            ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+            if (fd != -1) {
+                ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+            }
         }
     }
 
@@ -155,8 +161,12 @@ public:
         for (size_t i = 0; i < fds.size(); ++i)
         {
             uint64_t count;
-            read(fds[i], &count, sizeof(uint64_t));
-            measurements[event_names_[i]] = count;
+            if (fds[i] != -1 && read(fds[i], &count, sizeof(uint64_t)) != -1) {
+                measurements[event_names_[i]] = count;
+            }
+            else {
+                vtWarn("Failed to read perf event data for: " + event_names_[i]);
+            }
         }
         return measurements;
     }
@@ -164,7 +174,23 @@ public:
 private:
     std::vector<int> fds = {};
     std::vector<std::string> event_names_ = {};
-    static long perf_event_open(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags) { return syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags); }
+
+    void cleanupBeforeAbort()
+    {
+        for (int fd : fds)
+        {
+            if (fd != -1)
+            {
+                close(fd);
+            }
+        }
+        fds.clear();
+    }
+
+    static long perf_event_open(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags)
+    {
+        return syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
+    }
 };
 
 }} /* end namespace vt::ctx */
