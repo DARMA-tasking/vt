@@ -492,7 +492,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
       terse, temperedlb,
       "TemperedLB::inputParams: using knowledge={}, fanout={}, rounds={}, "
       "iters={}, criterion={}, trials={}, deterministic={}, inform={}, "
-      "ordering={}, cmf={}, rollback={}, targetpole={}\n",
+      "transfer={}, ordering={}, cmf={}, rollback={}, targetpole={}\n",
       knowledge_converter_.getString(knowledge_), f_, k_max_, num_iters_,
       criterion_converter_.getString(criterion_), num_trials_, deterministic_,
       inform_type_converter_.getString(inform_type_),
