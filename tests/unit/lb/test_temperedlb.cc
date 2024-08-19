@@ -26,11 +26,13 @@ std::string writeTemperedLBConfig(std::string transfer_strategy,
                      " beta=" << beta <<
                      " gamma=" << gamma <<
                      " delta=" << delta;
-        if (mem_constraints) {
-            cfg_file_ << " memory_threshold=20.0";
-        }
         if (transfer_strategy == "SwapClusters") {
             cfg_file_ << " rollback=false";
+            if (mem_constraints) {
+                cfg_file_ << " memory_threshold=20.0";
+            } else {
+                cfg_file_ << " memory_threshold=1e8";
+            }
         }
         cfg_file_.close();
     }
@@ -64,7 +66,7 @@ void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
 
 TEST_F(TestTemperedLB, test_load_only) {
     SET_NUM_NODES_CONSTRAINT(4);
-    auto cfg = writeTemperedLBConfig("Original", false);
+    auto cfg = writeTemperedLBConfig("SwapClusters", false);
     runTemperedLBTest(cfg);
 }
 
@@ -74,15 +76,27 @@ TEST_F(TestTemperedLB, test_load_and_memory_swapclusters) {
     runTemperedLBTest(cfg);
 }
 
+TEST_F(TestTemperedLB, test_load_no_memory_delta_10) {
+    SET_NUM_NODES_CONSTRAINT(4);
+    auto cfg = writeTemperedLBConfig("SwapClusters", false, 1.0);
+    runTemperedLBTest(cfg);
+}
+
+TEST_F(TestTemperedLB, test_load_no_memory_delta_01) {
+    SET_NUM_NODES_CONSTRAINT(4);
+    auto cfg = writeTemperedLBConfig("SwapClusters", false, 0.1);
+    runTemperedLBTest(cfg);
+}
+
 TEST_F(TestTemperedLB, test_load_memory_homing_swapclusters) {
     SET_NUM_NODES_CONSTRAINT(4);
-    auto cfg = writeTemperedLBConfig("SwapClusters", true, 1.0);
+    auto cfg = writeTemperedLBConfig("SwapClusters", true, 0.1);
     runTemperedLBTest(cfg);
 }
 
 TEST_F(TestTemperedLB, test_load_memory_homing_comms) {
     SET_NUM_NODES_CONSTRAINT(4);
-    auto cfg = writeTemperedLBConfig("SwapClusters", true, 1.0, 1.0);
+    auto cfg = writeTemperedLBConfig("SwapClusters", true, 0.1, 1.0);
     double expected_imbalance = 0.0; // placeholder for value from MILP
     runTemperedLBTest(cfg, expected_imbalance);
 }
