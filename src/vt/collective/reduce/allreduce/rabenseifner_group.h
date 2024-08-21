@@ -77,19 +77,6 @@ struct StateHolder : StateHolderBase {
   // }
 };
 
-template <typename T>
-struct function_traits;  // General template declaration.
-
-// Specialization for function pointers.
-template <typename Ret, typename... Args>
-struct function_traits<Ret(*)(Args...)> {
-    using return_type = Ret;
-    static constexpr std::size_t arity = sizeof...(Args);
-    using args_tuple = std::tuple<Args...>;
-
-    template <std::size_t N>
-    using arg_type = typename std::tuple_element<N, std::tuple<Args...>>::type;
-};
 
 /**
  * \struct Rabenseifner
