@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_type.h"
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H
 
@@ -87,11 +88,16 @@ struct Rabenseifner {
   static constexpr bool KokkosPaylod = ShouldUseView_v<Scalar, DataT>;
 
   template <typename ...Args>
-  Rabenseifner(GroupType group, Args&&... args);
+  Rabenseifner(detail::StrongVrtProxy proxy, Args&&... args);
+
+  template <typename ...Args>
+  Rabenseifner(detail::StrongGroup group, Args&&... args);
 
   template <typename ...Args>
   Rabenseifner(vt::objgroup::proxy::Proxy<ObjT> proxy, Args&&... args);
 
+  template <typename IdxT>
+  void localReduce(IdxT idx);
   /**
    * \brief Initialize the allreduce algorithm.
    *
@@ -265,25 +271,36 @@ struct Rabenseifner {
 
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
+  VirtualProxyType collection_proxy_ = {};
 
   size_t id_ = 0;
   std::unordered_map<size_t, StateT> states_ = {};
 
-  /// Only used when non-default group is beign used
+  /// Sorted list of Nodes that take part in allreduce
   std::vector<NodeType> nodes_ = {};
 
   NodeType num_nodes_ = {};
+
+  /// Represents an index inside nodes_
   NodeType this_node_ = {};
 
   bool is_even_ = false;
+
+  /// Num steps for each scatter/gather phase
   int32_t num_steps_ = {};
+
+  /// 2^num_steps_
   int32_t nprocs_pof2_ = {};
   int32_t nprocs_rem_ = {};
 
+  /// For non-power-of-2 number of nodes this respresents whether current Node
+  /// is excluded (has value of -1) from computation
   NodeType vrt_node_ = {};
+
   bool is_part_of_adjustment_group_ = false;
+
   static inline const std::string name_ = "Rabenseifner";
-  static inline const ReducerType type_ = ReducerType::Rabenseifner;
+  static inline constexpr ReducerType type_ = ReducerType::Rabenseifner;
 };
 
 } // namespace vt::collective::reduce::allreduce

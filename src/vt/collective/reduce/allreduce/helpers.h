@@ -58,6 +58,30 @@ using remove_cvref = std::remove_cv_t<std::remove_reference_t<T>>;
 
 namespace vt::collective::reduce::allreduce {
 
+template <typename T>
+struct function_traits;  // General template declaration.
+
+// Specialization for function pointers.
+template <typename Ret, typename... Args>
+struct function_traits<Ret(*)(Args...)> {
+    using return_type = Ret;
+    static constexpr std::size_t arity = sizeof...(Args);
+    using args_tuple = std::tuple<Args...>;
+
+    template <std::size_t N>
+    using arg_type = typename std::tuple_element<N, std::tuple<Args...>>::type;
+};
+
+template <typename Ret, typename ObjT, typename... Args>
+struct function_traits<Ret(ObjT::*)(Args...)> {
+    using return_type = Ret;
+    static constexpr std::size_t arity = sizeof...(Args);
+    using args_tuple = std::tuple<Args...>;
+
+    template <std::size_t N>
+    using arg_type = typename std::tuple_element<N, std::tuple<Args...>>::type;
+};
+
 // Primary template
 template <typename Scalar, typename DataT>
 struct ShouldUseView {

@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_type.h"
+#include <cstdint>
 #if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_H
 #define INCLUDED_VT_VRT_COLLECTION_MANAGER_H
 
@@ -741,6 +743,11 @@ struct CollectionManager
   void invokeMsgImpl(
     VirtualElmProxyType<ColT> const& proxy, MsgSharedPtr<MsgT> msg,
     bool instrument
+  );
+
+  template <auto f, typename ColT, template <typename Arg> class Op, typename ...Args>
+  messaging::PendingSend reduceLocal(
+    CollectionProxyWrapType<ColT> const& proxy, Args &&... args
   );
 
   /**
@@ -1766,6 +1773,10 @@ private:
   VirtualIDType next_rooted_id_ = 0;
   TypelessHolder typeless_holder_;
   std::unordered_map<VirtualProxyType, SequentialIDType> reduce_stamp_;
+
+  // Allreduce stuff, probably should be moved elsewhere
+  std::unordered_map<VirtualProxyType, ObjGroupProxyType> rabenseifner_reducers_;
+  std::unordered_map<VirtualProxyType, uint32_t> waiting_count_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */

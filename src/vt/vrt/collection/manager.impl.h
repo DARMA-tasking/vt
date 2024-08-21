@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/collective/reduce/scoping/strong_types.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 #define INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 
@@ -184,7 +185,7 @@ GroupType CollectionManager::createGroupCollection(
       }
 
       vt_debug_print(
-        normal, allreduce,
+        normal, vrt_coll,
         "group finished construction: proxy={:x}, new_group={:x}, use_group={}, "
         "ready={}, root={}, is_group_default={}\n",
         proxy, new_group, elm_holder->useGroup(), elm_holder->groupReady(),
@@ -868,6 +869,71 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
     theMsg()->popEpoch(cur_epoch);
     return ps;
   }
+}
+
+template <
+  auto f, typename ColT, template <typename Arg> class Op, typename... Args>
+messaging::PendingSend CollectionManager::reduceLocal(
+  CollectionProxyWrapType<ColT> const& proxy, Args&&... args) {
+  using namespace collective::reduce::allreduce;
+  using DataT = typename function_traits<decltype(f)>::template arg_type<0>;
+
+  using Reducer = collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
+
+  using IndexT = typename ColT::IndexType;
+
+  // Get the current running index context
+  IndexT idx = *queryIndexContext<IndexT>();
+  auto const col_proxy = proxy.getProxy();
+  auto elm_holder = findElmHolder<IndexT>(col_proxy);
+  std::size_t num_elms = elm_holder->numElements();
+
+  auto const group_ready = elm_holder->groupReady();
+  auto const send_group = elm_holder->useGroup();
+  auto const group = elm_holder->group();
+  bool const use_group = group_ready && send_group;
+
+  // First time here
+  if (waiting_count_[col_proxy] == 0) {
+    if (use_group) {
+      // theGroup()->allreduce<f, Op>(group, );
+    } else {
+      auto obj_proxy = theObjGroup()->makeCollective<Reducer>(
+        "reducer", collective::reduce::detail::StrongVrtProxy{col_proxy},
+        std::forward<Args>(args)...
+      );
+
+      rabenseifner_reducers_[col_proxy] = obj_proxy.getProxy();
+      obj_proxy[theContext()->getNode()].get()->proxy_ = obj_proxy;
+
+      obj_proxy[theContext()->getNode()].get()->localReduce(idx);
+    }
+  }else{
+    if (use_group) {
+      // theGroup()->allreduce<f, Op>(group, );
+    } else {
+      auto obj_proxy = rabenseifner_reducers_.at(col_proxy);
+      auto typed_proxy = static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
+      typed_proxy[theContext()->getNode()].get()->localReduce(idx);
+    }
+  }
+
+  waiting_count_[col_proxy]++;
+  bool is_ready = waiting_count_[col_proxy] == num_elms;
+  vt_debug_print(
+    terse, allreduce, "reduceLocal: idx={} num_elms={} is_ready={}\n", idx,
+    num_elms, is_ready);
+  if (is_ready) {
+    if (use_group) {
+      // theGroup()->allreduce<f, Op>(group, );
+    } else {
+      auto obj_proxy = rabenseifner_reducers_[col_proxy];
+      auto typed_proxy = static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
+      typed_proxy[theContext()->getNode()].get()->localReduce(idx);
+    }
+  }
+
+  return messaging::PendingSend{nullptr};
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>

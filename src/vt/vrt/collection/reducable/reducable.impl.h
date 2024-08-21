@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#include "vt/collective/reduce/allreduce/rabenseifner_msg.h"
+#include <utility>
 #if !defined INCLUDED_VT_VRT_COLLECTION_REDUCABLE_REDUCABLE_IMPL_H
 #define INCLUDED_VT_VRT_COLLECTION_REDUCABLE_REDUCABLE_IMPL_H
 
@@ -78,6 +80,16 @@ messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::allreduce(
       MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
     >
   >(proxy, msg.get(), stamp, root_node);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <auto f, template <typename Arg> class Op, typename... Args>
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::allreduce_h(
+  Args&&... args
+) const {
+  auto const proxy = this->getProxy();
+  return theCollection()->reduceLocal<f, ColT, Op>(
+    proxy, std::forward<Args>(args)...);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>

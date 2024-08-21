@@ -170,7 +170,11 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
   using Reducer = collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
 
   // TODO; Save the proxy so it can be deleted afterwards
-  auto proxy = theObjGroup()->makeCollective<Reducer>("reducer", group, std::forward<Args>(args)...);
+  auto proxy = theObjGroup()->makeCollective<Reducer>(
+    "reducer", collective::reduce::detail::StrongGroup{group},
+    std::forward<Args>(args)...
+  );
+
   if (iter->second->is_in_group) {
     auto const this_node = theContext()->getNode();
     auto id = proxy[this_node].get()->id_ - 1;
