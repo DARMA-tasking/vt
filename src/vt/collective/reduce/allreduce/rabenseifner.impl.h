@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-#include "vt/configs/debug/debug_print.h"
-#include <string>
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 
@@ -56,16 +54,30 @@
 #include "vt/configs/types/types_sentinels.h"
 #include "vt/registry/auto/auto_registry.h"
 #include "vt/utils/fntraits/fntraits.h"
+#include "vt/configs/debug/debug_print.h"
+#include <string>
 
 #include <type_traits>
 
 namespace vt::collective::reduce::allreduce {
 
 template <typename DataT, template <typename Arg> class Op, auto finalHandler>
+template <typename ...Args>
+Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(detail::StrongVrtProxy proxy, Args&&... data){
+  vt_debug_print(terse, allreduce, "Rabenseifner: proxy={:x} \n", proxy.get());
+}
+
+template <typename DataT, template <typename Arg> class Op, auto finalHandler>
+template <typename IdxT>
+void Rabenseifner<DataT, Op, finalHandler>::localReduce(IdxT idx){
+    vt_debug_print(terse, allreduce, "Rabenseifner: idx={} \n", idx);
+}
+
+template <typename DataT, template <typename Arg> class Op, auto finalHandler>
 template <typename... Args>
 Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(
-  GroupType group, Args&&... data)
-  : nodes_(theGroup()->GetGroupNodes(group)),
+  detail::StrongGroup group, Args&&... data)
+  : nodes_(theGroup()->GetGroupNodes(group.get())),
     num_nodes_(nodes_.size()),
     this_node_(theContext()->getNode()),
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
@@ -77,8 +89,8 @@ Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(
   for(auto& node : nodes_){
     nodes_info += fmt::format("{} ", node);
   }
-  auto const is_default_group = group == default_group;
-  auto const is_part_of_allreduce = (not is_default_group and theGroup()->inGroup(group)) or is_default_group;
+  auto const is_default_group = group.get() == default_group;
+  auto const is_part_of_allreduce = (not is_default_group and theGroup()->inGroup(group.get())) or is_default_group;
 
   vt_debug_print(
     terse, allreduce,
@@ -87,7 +99,7 @@ Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(
     is_default_group, is_part_of_allreduce, num_nodes_, nodes_info
   );
 
-  if (not is_default_group and theGroup()->inGroup(group)) {
+  if (not is_default_group and theGroup()->inGroup(group.get())) {
     // vtAssert(theGroup()->inGroup(group), fmt::format("This node is not part of group {:x}!", group));
 
     auto it = std::find(nodes_.begin(), nodes_.end(), theContext()->getNode());
