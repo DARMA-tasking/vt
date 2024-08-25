@@ -323,6 +323,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
 template <auto f, typename ObjT, template <typename Arg> class Op, typename DataT, typename... Args>
 ObjGroupManager::PendingSendType
 ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
+  using namespace collective::reduce::allreduce;
   if (theContext()->getNumNodes() < 2) {
     return PendingSendType{theTerm()->getEpoch(), [&] {
       auto const this_node = vt::theContext()->getNode();
@@ -334,17 +335,13 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   // auto cb = theCB()->makeSend<f>(proxy);
 
   auto const payload_size =
-    collective::reduce::allreduce::DataHandler<remove_cvref<DataT>>::size(
-      std::forward<Args>(data)...
-    );
+    DataHandler<remove_cvref<DataT>>::size(std::forward<Args>(data)...);
 
   if (payload_size < 2048) {
-    using Reducer =
-      vt::collective::reduce::allreduce::RecursiveDoubling<DataT, Op, f>;
+    using Reducer = RecursiveDoubling<DataT, Op, f>;
     return allreduce<Reducer>(proxy, std::forward<Args>(data)...);
   } else {
-    using Reducer =
-      vt::collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
+    using Reducer = Rabenseifner<ObjgroupAllreduceT, DataT, Op, f>;
     return allreduce<Reducer>(proxy, std::forward<Args>(data)...);
   }
 

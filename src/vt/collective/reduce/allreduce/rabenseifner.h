@@ -61,6 +61,10 @@
 
 namespace vt::collective::reduce::allreduce {
 
+struct CollectionAllreduceT {};
+struct GroupAllreduceT {};
+struct ObjgroupAllreduceT {};
+
 /**
  * \struct Rabenseifner
  * \brief Class implementing Rabenseifner's allreduce algorithm.
@@ -74,7 +78,7 @@ namespace vt::collective::reduce::allreduce {
  * \tparam finalHandler Callback handler for the final result.
  */
 template <
-  typename DataT, template <typename Arg> class Op, auto f
+  typename Type, typename DataT, template <typename Arg> class Op, auto f
 >
 struct Rabenseifner {
   using Data = DataT;

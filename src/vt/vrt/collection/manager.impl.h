@@ -878,7 +878,7 @@ messaging::PendingSend CollectionManager::reduceLocal(
   using namespace collective::reduce::allreduce;
   using DataT = typename function_traits<decltype(f)>::template arg_type<0>;
 
-  using Reducer = collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
+  using Reducer = collective::reduce::allreduce::Rabenseifner<CollectionAllreduceT, DataT, Op, f>;
 
   using IndexT = typename ColT::IndexType;
 
