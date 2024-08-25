@@ -160,14 +160,14 @@ void GroupManagerT<T>::triggerContinuationT(
 
 template <auto f, template <typename Arg> typename Op, typename... Args>
 void GroupManager::allreduce(GroupType group, Args&&... args) {
+  using namespace collective::reduce::allreduce;
 
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
 
-  using DataT = typename collective::reduce::allreduce::function_traits<
-    decltype(f)>::template arg_type<0>;
+  using DataT = typename function_traits<decltype(f)>::template arg_type<0>;
 
-  using Reducer = collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
+  using Reducer = Rabenseifner<GroupAllreduceT, DataT, Op, f>;
 
   // TODO; Save the proxy so it can be deleted afterwards
   auto proxy = theObjGroup()->makeCollective<Reducer>(
