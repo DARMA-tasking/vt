@@ -274,14 +274,8 @@ VT_PERF_TEST(MyTest, test_allreduce_group_rabenseifner) {
 
 struct Hello : vt::Collection<Hello, vt::Index1D> {
   Hello() = default;
-  void FInalHan(NodeType result) {
-    fmt::print("Allreduce result is {} \n", result);
-  }
-  void AllredHandler(NodeType result) {
-    fmt::print("Allreduce result is {} \n", result);
-
-    auto proxy = this->getCollectionProxy();
-    proxy.allreduce_h<&Hello::FInalHan, collective::PlusOp>(theContext()->getNode());
+  void FInalHan(std::vector<int32_t> result) {
+    fmt::print("Allreduce handler\n");
   }
 
   void Handler() {
@@ -289,7 +283,8 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
 
     fmt::print("[{}] Hello from idx={} \n", theContext()->getNode(), getIndex());
     // proxy.reduce<&Hello::AllredHandler, collective::PlusOp>(theContext()->getNode(), theContext()->getNode());
-    proxy.allreduce_h<&Hello::FInalHan, collective::PlusOp>(theContext()->getNode());
+    std::vector<int32_t> payload(100, theContext()->getNode());
+    proxy.allreduce_h<&Hello::FInalHan, collective::PlusOp>(std::move(payload));
     col_send_done_ = true;
   }
 

@@ -88,7 +88,7 @@ struct Rabenseifner {
   static constexpr bool KokkosPaylod = ShouldUseView_v<Scalar, DataT>;
 
   template <typename ...Args>
-  Rabenseifner(detail::StrongVrtProxy proxy, Args&&... args);
+  Rabenseifner(detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems, Args&&... args);
 
   template <typename ...Args>
   Rabenseifner(detail::StrongGroup group, Args&&... args);
@@ -96,8 +96,8 @@ struct Rabenseifner {
   template <typename ...Args>
   Rabenseifner(vt::objgroup::proxy::Proxy<ObjT> proxy, Args&&... args);
 
-  template <typename IdxT>
-  void localReduce(IdxT idx);
+  template <typename ...Args>
+  void localReduce(size_t id, Args&&... args);
   /**
    * \brief Initialize the allreduce algorithm.
    *
@@ -271,7 +271,10 @@ struct Rabenseifner {
 
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
+
   VirtualProxyType collection_proxy_ = {};
+  uint32_t local_col_wait_count_ = {};
+  size_t local_num_elems_ = {};
 
   size_t id_ = 0;
   std::unordered_map<size_t, StateT> states_ = {};

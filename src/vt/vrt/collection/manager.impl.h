@@ -893,43 +893,29 @@ messaging::PendingSend CollectionManager::reduceLocal(
   auto const group = elm_holder->group();
   bool const use_group = group_ready && send_group;
 
-  // First time here
-  if (waiting_count_[col_proxy] == 0) {
+  if (auto reducer = rabenseifner_reducers_.find(col_proxy);
+      reducer == rabenseifner_reducers_.end()) {
     if (use_group) {
       // theGroup()->allreduce<f, Op>(group, );
     } else {
       auto obj_proxy = theObjGroup()->makeCollective<Reducer>(
         "reducer", collective::reduce::detail::StrongVrtProxy{col_proxy},
-        std::forward<Args>(args)...
-      );
+        collective::reduce::detail::StrongGroup{group},
+        num_elms,
+        std::forward<Args>(args)...);
 
       rabenseifner_reducers_[col_proxy] = obj_proxy.getProxy();
       obj_proxy[theContext()->getNode()].get()->proxy_ = obj_proxy;
-
-      obj_proxy[theContext()->getNode()].get()->localReduce(idx);
     }
-  }else{
+  } else {
     if (use_group) {
       // theGroup()->allreduce<f, Op>(group, );
     } else {
       auto obj_proxy = rabenseifner_reducers_.at(col_proxy);
-      auto typed_proxy = static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
-      typed_proxy[theContext()->getNode()].get()->localReduce(idx);
-    }
-  }
-
-  waiting_count_[col_proxy]++;
-  bool is_ready = waiting_count_[col_proxy] == num_elms;
-  vt_debug_print(
-    terse, allreduce, "reduceLocal: idx={} num_elms={} is_ready={}\n", idx,
-    num_elms, is_ready);
-  if (is_ready) {
-    if (use_group) {
-      // theGroup()->allreduce<f, Op>(group, );
-    } else {
-      auto obj_proxy = rabenseifner_reducers_[col_proxy];
-      auto typed_proxy = static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
-      typed_proxy[theContext()->getNode()].get()->localReduce(idx);
+      auto typed_proxy =
+        static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
+      auto* obj = typed_proxy[theContext()->getNode()].get();
+      obj->localReduce(obj->id_ - 1);
     }
   }
 
