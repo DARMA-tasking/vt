@@ -169,7 +169,8 @@ VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
 
   using DataT = decltype(data);
   using Reducer = collective::reduce::allreduce::Rabenseifner<
-    DataT, collective::PlusOp, &NodeObj<MyTest>::handlerVec>;
+    vt::collective::reduce::allreduce::ObjgroupAllreduceT, DataT,
+    collective::PlusOp, &NodeObj<MyTest>::handlerVec>;
 
   for (auto payload_size : payloadSizes) {
     data.resize(payload_size, theContext()->getNode() + 1);
@@ -193,8 +194,8 @@ VT_PERF_TEST(MyTestKokkos, test_allreduce_rabenseifner_kokkos) {
 
   using DataT = decltype(view);
   using Reducer = collective::reduce::allreduce::Rabenseifner<
-    DataT, collective::PlusOp,
-    &NodeObj<MyTestKokkos>::handlerView<float>
+    vt::collective::reduce::allreduce::ObjgroupAllreduceT, DataT,
+    collective::PlusOp, &NodeObj<MyTestKokkos>::handlerView<float>
   >;
 
   for (auto payload_size : payloadSizes) {
