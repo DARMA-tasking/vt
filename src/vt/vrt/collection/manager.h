@@ -1776,7 +1776,6 @@ private:
 
   // Allreduce stuff, probably should be moved elsewhere
   std::unordered_map<VirtualProxyType, ObjGroupProxyType> rabenseifner_reducers_;
-  std::unordered_map<VirtualProxyType, uint32_t> waiting_count_ = {};
 };
 
 }}} /* end namespace vt::vrt::collection */
