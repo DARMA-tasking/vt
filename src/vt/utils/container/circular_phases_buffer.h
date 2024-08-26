@@ -239,32 +239,58 @@ public:
   }
 
   /**
-   * @brief Get iterator to the beginning of the buffer
+   * \brief Get const iterator to the beginning of the buffer
    *
-   * @return auto the begin iterator
-   */
-  auto begin() { return ForwardIterator(head_, findTail(), &buffer_); }
-
-  /**
-   * @brief Get const iterator to the beginning of the buffer
-   *
-   * @return auto the const begin iterator
+   * \return the const begin iterator
    */
   auto begin() const { return ForwardIterator(head_, findTail(), &buffer_); }
 
   /**
-   * @brief Get iterator to the space after buffer
+   * \brief Get const iterator to the space after buffer
    *
-   * @return auto the end iterator
-   */
-  auto end() { return ForwardIterator(); }
-
-  /**
-   * @brief Get const iterator to the space after buffer
-   *
-   * @return auto the const end iterator
+   * \return the const end iterator
    */
   auto end() const { return ForwardIterator(); }
+
+  /**
+   * \brief Finds the newest phase in the buffer.
+   *
+   * \return the newest phase in the buffer.
+   */
+  PhaseType frontPhase() const {
+    return inserted_ == 0 ? 0 : head_phase_ - 1;
+  }
+
+  /**
+   * \brief Get the newest element in buffer.
+   *
+   * \return the reference to the newest element.
+   */
+  StoredType& front() {
+    return buffer_.at(getPrevIndex(head_));
+  }
+
+  /**
+   * \brief Finds the oldest phase in the buffer.
+   *
+   * \return the oldest phase in the buffer.
+   */
+  PhaseType backPhase() const {
+    if (head_ == inserted_) {
+      return 0;
+    }
+    return head_phase_ - buffer_.size();
+  }
+
+  /**
+   * \brief Get the oldest element in buffer.
+   *
+   * \return the reference to the oldest element.
+   */
+  StoredType& back() {
+    return buffer_.at(findTail());
+  }
+
 private:
   std::size_t findTail() const {
     if (inserted_ == 0) {
@@ -318,12 +344,11 @@ private:
   std::vector<StoredType> buffer_;
 
 public:
-  // TODO: Change iterator to return a pair of phase and reference to data
   struct ForwardIterator {
     using iterator_category = std::forward_iterator_tag;
     using difference_type   = std::ptrdiff_t;
     using value_type        = StoredType;
-    using reference         = StoredType&;
+    using reference         = const StoredType&;
 
     ForwardIterator(std::size_t head, std::size_t index, const std::vector<value_type>* buffer)
       : head_(head), index_(index), buffer_(buffer) {}
@@ -331,7 +356,7 @@ public:
     ForwardIterator()
       : head_(no_pos), index_(no_pos), buffer_(nullptr) {}
 
-    reference operator*() { return &buffer_->at(index_); }
+    reference operator*() { return (*buffer_)[index_]; }
 
     ForwardIterator& operator++() {
       advance();
