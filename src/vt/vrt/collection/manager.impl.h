@@ -42,6 +42,7 @@
 */
 
 #include "vt/collective/reduce/scoping/strong_types.h"
+#include "vt/vrt/collection/manager.fwd.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 #define INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 
@@ -878,7 +879,7 @@ messaging::PendingSend CollectionManager::reduceLocal(
   using namespace collective::reduce::allreduce;
   using DataT = typename function_traits<decltype(f)>::template arg_type<0>;
 
-  using Reducer = collective::reduce::allreduce::Rabenseifner<CollectionAllreduceT, DataT, Op, f>;
+
 
   using IndexT = typename ColT::IndexType;
 
@@ -893,6 +894,13 @@ messaging::PendingSend CollectionManager::reduceLocal(
   auto const group = elm_holder->group();
   bool const use_group = group_ready && send_group;
 
+  auto final_handler = [=](DataT&& final_val){
+    proxy.template broadcastCollective<f>(std::move(final_val));
+  };
+
+  using Reducer = collective::reduce::allreduce::Rabenseifner<
+    CollectionAllreduceT, DataT, Op, f>;
+
   if (auto reducer = rabenseifner_reducers_.find(col_proxy);
       reducer == rabenseifner_reducers_.end()) {
     if (use_group) {
@@ -905,7 +913,9 @@ messaging::PendingSend CollectionManager::reduceLocal(
         std::forward<Args>(args)...);
 
       rabenseifner_reducers_[col_proxy] = obj_proxy.getProxy();
-      obj_proxy[theContext()->getNode()].get()->proxy_ = obj_proxy;
+      auto* obj = obj_proxy[theContext()->getNode()].get();
+      obj->proxy_ = obj_proxy;
+      obj->setFinalHandler(final_handler);
     }
   } else {
     if (use_group) {
@@ -915,6 +925,7 @@ messaging::PendingSend CollectionManager::reduceLocal(
       auto typed_proxy =
         static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
       auto* obj = typed_proxy[theContext()->getNode()].get();
+      obj->setFinalHandler(final_handler);
       obj->localReduce(obj->id_ - 1);
     }
   }

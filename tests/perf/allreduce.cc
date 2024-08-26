@@ -261,8 +261,15 @@ VT_PERF_TEST(MyTestKokkos, test_allreduce_rabenseifner_kokkos) {
 // }
 #endif // MAGISTRATE_KOKKOS_ENABLED
 
-void allreduce_group_han(std::vector<int32_t> vec){
-
+void allreduce_group_han(std::vector<int32_t> result){
+    std::string result_s = "";
+    for(auto val : result){
+      result_s.append(fmt::format("{} ", val));
+    }
+    fmt::print(
+      "[{}]: Allreduce handler (Values=[{}])\n",
+      theContext()->getNode(), result_s
+    );
 }
 
 VT_PERF_TEST(MyTest, test_allreduce_group_rabenseifner) {
@@ -276,16 +283,23 @@ VT_PERF_TEST(MyTest, test_allreduce_group_rabenseifner) {
 struct Hello : vt::Collection<Hello, vt::Index1D> {
   Hello() = default;
   void FInalHan(std::vector<int32_t> result) {
-    fmt::print("Allreduce handler\n");
+    std::string result_s = "";
+    for(auto val : result){
+      result_s.append(fmt::format("{} ", val));
+    }
+    fmt::print(
+      "[{}]: Allreduce handler (Values=[{}]), idx={}\n",
+      theContext()->getNode(), result_s, getIndex().x()
+    );
   }
 
   void Handler() {
     auto proxy = this->getCollectionProxy();
 
     fmt::print("[{}] Hello from idx={} \n", theContext()->getNode(), getIndex());
-    // proxy.reduce<&Hello::AllredHandler, collective::PlusOp>(theContext()->getNode(), theContext()->getNode());
     std::vector<int32_t> payload(100, theContext()->getNode());
     proxy.allreduce_h<&Hello::FInalHan, collective::PlusOp>(std::move(payload));
+
     col_send_done_ = true;
   }
 
