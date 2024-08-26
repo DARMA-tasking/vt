@@ -100,6 +100,9 @@ struct Rabenseifner {
   template <typename ...Args>
   Rabenseifner(vt::objgroup::proxy::Proxy<ObjT> proxy, Args&&... args);
 
+  void setFinalHandler(const std::function<void(DataT&&)>& fin) {
+    final_handler_ = fin;
+  }
   template <typename ...Args>
   void localReduce(size_t id, Args&&... args);
   /**
@@ -275,6 +278,8 @@ struct Rabenseifner {
 
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
+
+  std::function<void(DataT&&)> final_handler_ = {};
 
   VirtualProxyType collection_proxy_ = {};
   uint32_t local_col_wait_count_ = {};
