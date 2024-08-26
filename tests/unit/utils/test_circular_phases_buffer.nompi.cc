@@ -75,24 +75,32 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_empty) {
   EXPECT_FALSE(buffer.contains(0));
   EXPECT_EQ(std::size_t{0}, buffer.size());
   EXPECT_TRUE(buffer.empty());
+  EXPECT_EQ(0, buffer.backPhase());
+  EXPECT_EQ(0, buffer.frontPhase());
 
   buffer.resize(2);
 
   EXPECT_FALSE(buffer.contains(0));
   EXPECT_EQ(std::size_t{0}, buffer.size());
   EXPECT_TRUE(buffer.empty());
+  EXPECT_EQ(0, buffer.backPhase());
+  EXPECT_EQ(0, buffer.frontPhase());
 
   buffer.clear();
 
   EXPECT_FALSE(buffer.contains(1));
   EXPECT_EQ(std::size_t{0}, buffer.size());
   EXPECT_TRUE(buffer.empty());
+  EXPECT_EQ(0, buffer.backPhase());
+  EXPECT_EQ(0, buffer.frontPhase());
 
   buffer.resize(0);
 
   EXPECT_FALSE(buffer.contains(1));
   EXPECT_EQ(std::size_t{0}, buffer.size());
   EXPECT_TRUE(buffer.empty());
+  EXPECT_EQ(0, buffer.backPhase());
+  EXPECT_EQ(0, buffer.frontPhase());
 
   buffer.resize(4);
   buffer[0] = {0};
@@ -100,6 +108,10 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_empty) {
   EXPECT_TRUE(buffer.contains(0));
   EXPECT_EQ(std::size_t{1}, buffer.size());
   EXPECT_FALSE(buffer.empty());
+  EXPECT_EQ(0, buffer.backPhase());
+  EXPECT_EQ(0, buffer.frontPhase());
+  EXPECT_EQ(0, buffer.back().x);
+  EXPECT_EQ(0, buffer.front().x);
 
   buffer[1] = {1};
   buffer[2] = {4};
@@ -109,12 +121,18 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_empty) {
   EXPECT_TRUE(buffer.contains(1));
   EXPECT_EQ(std::size_t{4}, buffer.size());
   EXPECT_FALSE(buffer.empty());
+  EXPECT_EQ(1, buffer.backPhase());
+  EXPECT_EQ(4, buffer.frontPhase());
+  EXPECT_EQ(1, buffer.back().x);
+  EXPECT_EQ(8, buffer.front().x);
 
   buffer.clear();
 
   EXPECT_FALSE(buffer.contains(0));
   EXPECT_EQ(std::size_t{0}, buffer.size());
   EXPECT_TRUE(buffer.empty());
+  EXPECT_EQ(0, buffer.backPhase());
+  EXPECT_EQ(0, buffer.frontPhase());
 }
 
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_single_element) {
