@@ -42,7 +42,10 @@
 */
 
 #include "vt/vrt/collection/balance/lb_data_holder.h"
+#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/context/context.h"
+#include "vt/elm/elm_id_bits.h"
+#include "vt/elm/elm_comm.h"
 
 #include <nlohmann/json.hpp>
 
@@ -296,6 +299,10 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
           auto node = task["node"];
           auto time = task["time"];
           auto etype = task["entity"]["type"];
+          auto home = task["entity"]["home"];
+          bool migratable = task["entity"]["migratable"];
+          auto seq_id = theNodeLBData()->getNextElm();
+
           vtAssertExpr(time.is_number());
           vtAssertExpr(node.is_number());
 
@@ -303,7 +310,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
             auto object = task["entity"]["id"];
             vtAssertExpr(object.is_number());
 
-            auto elm = ElementIDStruct{object, node};
+            auto elm = elm::ElmIDBits::createCollectionImpl(migratable, seq_id, home, node);
             this->node_data_[id][elm].whole_phase_load = time;
 
             if (

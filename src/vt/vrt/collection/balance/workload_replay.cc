@@ -51,6 +51,7 @@
 #include <nlohmann/json.hpp>
 
 #include <set>
+#include <iostream>
 
 namespace vt { namespace vrt { namespace collection {
 namespace balance { namespace replay {
@@ -60,6 +61,7 @@ void replayWorkloads(
 ) {
   // read in object loads from json files
   auto const filename = theConfig()->getLBDataFileIn();
+  std::cout << "Reading in file: " << filename << std::endl;
   auto workloads = readInWorkloads(filename);
 
   // use the default stats handler
