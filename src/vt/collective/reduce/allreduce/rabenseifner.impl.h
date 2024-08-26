@@ -295,6 +295,7 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::executeFinalHan(size_t id) {
     } else if constexpr (std::is_same_v<Type, GroupAllreduceT>) {
       finalHandler(state.val_);
     } else {
+      final_handler_(std::move(state.val_));
       // theCollection()->invokeCollective<ObjT, finalHandler>(state.val_);
     }
   } else {
@@ -304,6 +305,7 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::executeFinalHan(size_t id) {
     } else if constexpr (std::is_same_v<Type, GroupAllreduceT>) {
       finalHandler(DataType::fromVec(state.val_));
     } else {
+      final_handler_(std::move(DataType::fromVec(state.val_)));
       // collection_proxy_.broadcastCollective<finalHandler>(state.val_);
     }
   }
