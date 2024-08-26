@@ -60,19 +60,18 @@ void RawData::setLoads(LoadMapBufferType const* proc_load,
 }
 
 ObjectIterator RawData::begin() const {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return {std::make_unique<LoadMapObjectIterator>(iter->second.cbegin(),
-                                                    iter->second.cend())};
+  if (proc_load_->contains(last_completed_phase_)) {
+    auto ptr = proc_load_->find(last_completed_phase_);
+    return {std::make_unique<LoadMapObjectIterator>(ptr->cbegin(),
+                                                    ptr->cend())};
   } else {
     return {nullptr};
   }
 }
 
 int RawData::getNumObjects() const {
-  auto iter = proc_load_->find(last_completed_phase_);
-  if (iter != proc_load_->end()) {
-    return iter->second.size();
+  if (proc_load_->contains(last_completed_phase_)) {
+    return proc_load_->at(last_completed_phase_).size();
   } else {
     return 0;
   }

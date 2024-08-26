@@ -249,19 +249,19 @@ readInWorkloads(const std::string &filename) {
   auto json = r.readFile();
   auto sd = std::make_shared<LBDataHolder>(*json);
 
-  for (auto &phase_data : sd->node_data_) {
+  for (auto phase = sd->node_data_.backPhase(); phase <= sd->node_data_.frontPhase(); phase++) {
     vt_debug_print(
       normal, replay,
       "found {} loads for phase {}\n",
-      phase_data.second.size(), phase_data.first
+      sd->node_data_[phase].size(), phase
     );
   }
 
-  for (auto &phase_data : sd->node_comm_) {
+  for (auto phase = sd->node_comm_.backPhase(); phase <= sd->node_comm_.frontPhase(); phase++) {
     vt_debug_print(
       normal, replay,
       "found {} comms for phase {}\n",
-      phase_data.second.size(), phase_data.first
+      sd->node_comm_[phase].size(), phase
     );
   }
 

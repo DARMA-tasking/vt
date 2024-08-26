@@ -83,10 +83,7 @@ void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
     if (lbdh.node_data_.empty()) {
       return 0;
     }
-    return std::max_element(
-             lbdh.node_data_.begin(), lbdh.node_data_.end(),
-             [](const auto& p1, const auto& p2) { return p1.first < p2.first; })
-      ->first;
+    return lbdh.node_data_.frontPhase();
   };
 
   // Find last phase number
@@ -100,10 +97,9 @@ void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
 
   PhaseType last_found_phase = 0;
   for (PhaseType phase = 0; phase < num_phases_; phase++) {
-    auto iter = lbdh.node_data_.find(phase);
-    if (iter != lbdh.node_data_.end()) {
+    if (lbdh.node_data_.contains(phase)) {
       last_found_phase = phase;
-      for (auto const& obj : iter->second) {
+      for (auto const& obj : lbdh.node_data_.at(phase)) {
         if (obj.first.isMigratable()) {
           if (history_[phase] == nullptr) {
             history_[phase] = std::make_shared<std::set<ElementIDStruct>>();
