@@ -301,7 +301,6 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
           auto etype = task["entity"]["type"];
           auto home = task["entity"]["home"];
           bool migratable = task["entity"]["migratable"];
-          auto seq_id = theNodeLBData()->getNextElm();
 
           vtAssertExpr(time.is_number());
           vtAssertExpr(node.is_number());
@@ -310,13 +309,13 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
             auto object = task["entity"]["id"];
             vtAssertExpr(object.is_number());
 
-            auto elm = elm::ElmIDBits::createCollectionImpl(migratable, seq_id, home, node);
-            this->node_data_[id][elm].whole_phase_load = time;
+            auto elm = ElementIDStruct{object, node};
 
             if (
               task["entity"].find("collection_id") != task["entity"].end() and
               task["entity"].find("index") != task["entity"].end()
             ) {
+              elm = elm::ElmIDBits::createCollectionImpl(migratable, object, home, node);
               auto cid = task["entity"]["collection_id"];
               auto idx = task["entity"]["index"];
               if (cid.is_number() && idx.is_array()) {
@@ -325,6 +324,8 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 this->node_idx_[elm] = std::make_tuple(proxy, arr);
               }
             }
+
+            this->node_data_[id][elm].whole_phase_load = time;
 
             if (task.find("subphases") != task.end()) {
               auto subphases = task["subphases"];
