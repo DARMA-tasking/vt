@@ -315,9 +315,18 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               task["entity"].find("collection_id") != task["entity"].end() and
               task["entity"].find("index") != task["entity"].end()
             ) {
-              elm = elm::ElmIDBits::createCollectionImpl(migratable, object, home, node);
+              using Field = uint64_t;
+              auto strippedObject = BitPackerType::getField<
+                                      vt::elm::eElmIDProxyBitsNonObjGroup::ID,
+                                      vt::elm::elm_id_num_bits,
+                                      Field
+                                    >(static_cast<Field>(object));
               auto cid = task["entity"]["collection_id"];
               auto idx = task["entity"]["index"];
+              elm = elm::ElmIDBits::createCollectionImpl(migratable,
+                                                         strippedObject,
+                                                         home,
+                                                         node);
               if (cid.is_number() && idx.is_array()) {
                 std::vector<uint64_t> arr = idx;
                 auto proxy = static_cast<VirtualProxyType>(cid);
