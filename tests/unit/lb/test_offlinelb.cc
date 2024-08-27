@@ -45,8 +45,6 @@
 #include <vt/vrt/collection/balance/lb_data_restart_reader.h>
 #include <vt/utils/json/json_appender.h>
 
-#include <iostream>
-
 #include <fstream>
 
 #include "test_parallel_harness.h"
@@ -69,22 +67,12 @@ struct SimCol : vt::Collection<SimCol, vt::Index1D> {
     auto const next_node = (this_node + 1) % num_nodes;
     auto const prev_node = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
     vt_debug_print(terse, lb, "handler: idx={}: elm={}\n", getIndex(), getElmID());
-    int this_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &this_rank);
-    if (this_rank == 0) {
-      std::cout << std::endl << "m->iter:          " << m->iter << "\n" <<
-                                "getIndex().x():   " << getIndex().x() << "\n" <<
-                                "getIndex().x()/2: " << getIndex().x() / 2 << "\n" <<
-                                "this node:        " << this_node << "\n" <<
-                                "prev node:        " << prev_node << "\n" <<
-                                "next node:        " << next_node << "\n" << std::endl;
-      if (m->iter == 0 or m->iter == 3 or m->iter == 6) {
-        EXPECT_EQ(getIndex().x() / 2, this_node);
-      } else if (m->iter == 1 or m-> iter == 2) {
-        EXPECT_EQ(getIndex().x() / 2, prev_node);
-      } else if (m->iter == 4 or m-> iter == 5) {
-        EXPECT_EQ(getIndex().x() / 2, next_node);
-      }
+    if (m->iter == 0 or m->iter == 3 or m->iter == 6) {
+      EXPECT_EQ(getIndex().x() / 2, this_node);
+    } else if (m->iter == 1 or m-> iter == 2) {
+      EXPECT_EQ(getIndex().x() / 2, prev_node);
+    } else if (m->iter == 4 or m-> iter == 5) {
+      EXPECT_EQ(getIndex().x() / 2, next_node);
     }
   }
 
