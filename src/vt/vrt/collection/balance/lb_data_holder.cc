@@ -319,12 +319,12 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                                       vt::elm::elm_id_num_bits,
                                       Field
                                     >(static_cast<Field>(object));
-              auto cid = task["entity"]["collection_id"];
-              auto idx = task["entity"]["index"];
               elm = elm::ElmIDBits::createCollectionImpl(migratable,
                                                          strippedObject,
                                                          home,
                                                          node);
+              auto cid = task["entity"]["collection_id"];
+              auto idx = task["entity"]["index"];
               if (cid.is_number() && idx.is_array()) {
                 std::vector<uint64_t> arr = idx;
                 auto proxy = static_cast<VirtualProxyType>(cid);
