@@ -129,7 +129,7 @@ TEST_F(TestBitPacking, test_bit_packing_dynamic_check_masking_5) {
 TEST_F(TestBitPacking, test_bit_packing_and_create_collection) {
   using Field = uint64_t;
   bool migratable = true;
-  int home = 0;
+  int home = 1;
   int node = 0;
   auto seq_id = 3;
   auto init_elm = elm::ElmIDBits::createCollectionImpl(migratable, seq_id, home, node);
