@@ -264,7 +264,10 @@ void HierarchicalLB::loadStats() {
   this_load_begin = this_load;
 
   // Use an estimated load-balancing cost on average rank load to load-balance
-  if (avg_load > getCollectiveEpochCost()) {
+  auto avg_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+    std::chrono::duration<double>(avg_load)
+  );
+  if (avg_ns > getCollectiveEpochCost()) {
     should_lb = I > hierlb_tolerance;
   }
 
