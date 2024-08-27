@@ -55,6 +55,7 @@
 #include <map>
 #include <unordered_map>
 #include <tuple>
+#include <chrono>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -193,9 +194,8 @@ protected:
    *
    * \return the estimated time
    */
-  double getCollectiveEpochCost() const {
-    // 100 ns
-    return 0.0000001;
+  auto getCollectiveEpochCost() const {
+    return std::chrono::nanoseconds(100);
   }
 
 private:
