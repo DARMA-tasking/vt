@@ -127,7 +127,6 @@ TEST_F(TestBitPacking, test_bit_packing_dynamic_check_masking_5) {
 }
 
 TEST_F(TestBitPacking, test_bit_packing_and_create_collection) {
-  using Field = uint64_t;
   bool migratable = true;
   int home = 1;
   int node = 0;
@@ -136,7 +135,7 @@ TEST_F(TestBitPacking, test_bit_packing_and_create_collection) {
   auto derived_id = BitPackerType::getField<
                                       vt::elm::eElmIDProxyBitsNonObjGroup::ID,
                                       vt::elm::elm_id_num_bits,
-                                      Field
+                                      uint64_t
                                    >(init_elm.id);
   auto derived_elm = elm::ElmIDBits::createCollectionImpl(migratable, derived_id, home, node);
   EXPECT_EQ(init_elm.id, derived_elm.id);
