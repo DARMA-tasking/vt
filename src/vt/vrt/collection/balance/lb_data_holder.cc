@@ -42,10 +42,8 @@
 */
 
 #include "vt/vrt/collection/balance/lb_data_holder.h"
-#include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/context/context.h"
 #include "vt/elm/elm_id_bits.h"
-#include "vt/elm/elm_comm.h"
 
 #include <nlohmann/json.hpp>
 
