@@ -435,12 +435,11 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
 
   auto phases = j["phases"];
   if (phases.is_array()) {
+    resizeHistory(phases.size());
+
     for (auto const& phase : phases) {
       auto id = phase["id"];
       auto tasks = phase["tasks"];
-
-      this->node_data_[id];
-      this->node_comm_[id];
 
       if (tasks.is_array()) {
         for (auto const& task : tasks) {
