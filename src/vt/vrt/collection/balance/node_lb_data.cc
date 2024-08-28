@@ -57,7 +57,6 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <memory>
-#include <iterator>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 

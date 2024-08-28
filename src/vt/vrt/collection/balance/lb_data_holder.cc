@@ -431,11 +431,31 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
   this_node_ = theContext()->getNode();
 
   // read metadata for skipped and identical phases
-  readMetadata(j);
+  auto num_phases = readMetadata(j);
+  auto largest_identical = identical_phases_.size() > 0 ? *identical_phases_.rbegin() : 0;
+  auto largest_skipped = skipped_phases_.size() > 0 ? *skipped_phases_.rbegin() : 0;
+  PhaseType max_phase = std::max(largest_identical, largest_skipped);
 
   auto phases = j["phases"];
   if (phases.is_array()) {
-    resizeHistory(phases.size());
+    num_phases = std::max(num_phases, phases.size());
+
+    for(auto const& phase: phases) {
+      auto id = phase["id"];
+      if (id > max_phase) {
+        max_phase = id;
+      }
+    }
+    resizeHistory(num_phases);
+    // create entries in buffer for each phase
+    PhaseType min_phase = 0;
+    if (max_phase > num_phases) {
+      min_phase = max_phase - num_phases;
+    }
+    for (auto i = min_phase; i <= max_phase; i++) {
+      this->node_data_[i];
+      this->node_comm_[i];
+    }
 
     for (auto const& phase : phases) {
       auto id = phase["id"];
@@ -630,11 +650,17 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
   // right now, so it will be ignored
 }
 
-void LBDataHolder::readMetadata(nlohmann::json const& j) {
+std::size_t LBDataHolder::readMetadata(nlohmann::json const& j) {
+  std::size_t num_phases = 0;
   if (j.find("metadata") != j.end()) {
     auto metadata = j["metadata"];
     if (metadata.find("phases") != metadata.end()) {
       auto phases = metadata["phases"];
+      // read the number of phases
+      if (phases.find("count") != phases.end()) {
+        num_phases = phases["count"];
+      }
+
       // load all skipped phases
       auto sl = phases["skipped"]["list"];
       if(sl.is_array()) {
@@ -681,6 +707,8 @@ void LBDataHolder::readMetadata(nlohmann::json const& j) {
       }
     }
   }
+
+  return num_phases;
 }
 
 void LBDataHolder::clear() {

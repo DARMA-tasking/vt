@@ -187,8 +187,10 @@ private:
    * \brief Read the LB phase's metadata
    *
    * \param[in] j the json
+   *
+   * \return the number of phases in the json's metadata
    */
-  void readMetadata(nlohmann::json const& j);
+  std::size_t readMetadata(nlohmann::json const& j);
 
 public:
   /// The current node

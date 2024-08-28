@@ -45,9 +45,7 @@
 #define INCLUDED_VT_UTILS_CONTAINER_CIRCULAR_PHASES_BUFFER_H
 
 #include "vt/config.h"
-#include <unordered_map>
-#include <queue>
-#include <iterator>
+#include <vector>
 
 namespace vt { namespace util { namespace container {
 

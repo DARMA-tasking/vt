@@ -79,15 +79,8 @@ void LBDataRestartReader::startup() {
 }
 
 void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
-  auto find_max_data_phase = [&]() -> PhaseType {
-    if (lbdh.node_data_.empty()) {
-      return 0;
-    }
-    return lbdh.node_data_.frontPhase();
-  };
-
   // Find last phase number
-  auto largest_data = find_max_data_phase();
+  auto largest_data = lbdh.node_data_.frontPhase();
   auto largest_identical =
     lbdh.identical_phases_.size() > 0 ? *lbdh.identical_phases_.rbegin() : 0;
   auto largest_skipped =
@@ -97,7 +90,7 @@ void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
 
   PhaseType last_found_phase = 0;
   for (PhaseType phase = 0; phase < num_phases_; phase++) {
-    if (lbdh.node_data_.contains(phase)) {
+    if (lbdh.node_data_.contains(phase) && lbdh.node_data_.at(phase).size() > 0) {
       last_found_phase = phase;
       for (auto const& obj : lbdh.node_data_.at(phase)) {
         if (obj.first.isMigratable()) {
