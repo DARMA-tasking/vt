@@ -212,7 +212,7 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_resize) {
   validateMissingPhases(buffer, {28, 29, 30, 31, 32, 33, 34});
 
   buffer.resize(0);
-  validateMissingPhases(buffer, {35});
+  validatePresentPhases(buffer, {35});
 }
 
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_forward_iter) {

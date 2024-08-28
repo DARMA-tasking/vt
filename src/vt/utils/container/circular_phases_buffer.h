@@ -182,7 +182,7 @@ public:
    * \param[in] new_size the requested new size of the buffer
    */
   void resize(const std::size_t new_size) {
-    if (new_size == buffer_.size()) {
+    if (new_size == buffer_.size() || new_size == 0) {
       return;
     }
     // temporary vector to copy the elements to retain
