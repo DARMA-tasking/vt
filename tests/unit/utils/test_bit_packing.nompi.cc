@@ -44,6 +44,7 @@
 #include <gtest/gtest.h>
 
 #include "vt/utils/bits/bits_packer.h"
+#include "vt/elm/elm_id_bits.h"
 #include "test_harness.h"
 
 namespace vt { namespace tests { namespace unit {
@@ -123,6 +124,21 @@ TEST_F(TestBitPacking, test_bit_packing_dynamic_check_masking_5) {
   BitPacker::setFieldDynamic<Field>(32, 16, x, x0);
 
   EXPECT_EQ(x, 0x0000FCCD0000FEEDull);
+}
+
+TEST_F(TestBitPacking, test_bit_packing_and_create_collection) {
+  bool migratable = true;
+  int home = 1;
+  int node = 0;
+  auto seq_id = 3;
+  auto init_elm = elm::ElmIDBits::createCollectionImpl(migratable, seq_id, home, node);
+  auto derived_id = BitPackerType::getField<
+                                      vt::elm::eElmIDProxyBitsNonObjGroup::ID,
+                                      vt::elm::elm_id_num_bits,
+                                      uint64_t
+                                   >(init_elm.id);
+  auto derived_elm = elm::ElmIDBits::createCollectionImpl(migratable, derived_id, home, node);
+  EXPECT_EQ(init_elm.id, derived_elm.id);
 }
 
 }}} /* end namespace vt::tests::unit */

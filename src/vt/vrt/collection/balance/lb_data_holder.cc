@@ -43,6 +43,7 @@
 
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/context/context.h"
+#include "vt/elm/elm_id_bits.h"
 
 #include <nlohmann/json.hpp>
 
@@ -296,6 +297,9 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
           auto node = task["node"];
           auto time = task["time"];
           auto etype = task["entity"]["type"];
+          auto home = task["entity"]["home"];
+          bool migratable = task["entity"]["migratable"];
+
           vtAssertExpr(time.is_number());
           vtAssertExpr(node.is_number());
 
@@ -304,12 +308,21 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
             vtAssertExpr(object.is_number());
 
             auto elm = ElementIDStruct{object, node};
-            this->node_data_[id][elm].whole_phase_load = time;
 
             if (
               task["entity"].find("collection_id") != task["entity"].end() and
               task["entity"].find("index") != task["entity"].end()
             ) {
+              using Field = uint64_t;
+              auto strippedObject = BitPackerType::getField<
+                                      vt::elm::eElmIDProxyBitsNonObjGroup::ID,
+                                      vt::elm::elm_id_num_bits,
+                                      Field
+                                    >(static_cast<Field>(object));
+              elm = elm::ElmIDBits::createCollectionImpl(migratable,
+                                                         strippedObject,
+                                                         home,
+                                                         node);
               auto cid = task["entity"]["collection_id"];
               auto idx = task["entity"]["index"];
               if (cid.is_number() && idx.is_array()) {
@@ -318,6 +331,8 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 this->node_idx_[elm] = std::make_tuple(proxy, arr);
               }
             }
+
+            this->node_data_[id][elm].whole_phase_load = time;
 
             if (task.find("subphases") != task.end()) {
               auto subphases = task["subphases"];
