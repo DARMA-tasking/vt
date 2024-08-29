@@ -51,6 +51,8 @@
 #include "vt/configs/error/config_assert.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "data_handler.h"
+#include "vt/pipe/pipe_manager.h"
+#include "vt/utils/fntraits/fntraits.h"
 #include "type.h"
 
 #include <tuple>
@@ -119,7 +121,12 @@ struct RecursiveDoubling {
   using DataType = DataHandler<DataT>;
   using Scalar = typename DataHandler<DataT>::Scalar;
   using ReduceOp = Op<Scalar>;
-  using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
+  // using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
+    using Trait = ObjFuncTraits<decltype(f)>;
+  using ObjT = typename Trait::ObjT;
+  using MsgT = typename Trait::MsgT;
+  using CallbackType =
+    typename Trait::template WrapType<pipe::PipeManagerTL::CallbackRetType>;
 
   /**
    * \brief Constructor for RecursiveDoubling class.
@@ -147,6 +154,7 @@ struct RecursiveDoubling {
   template <typename... Args>
   RecursiveDoubling(GroupType group, Args&&... args);
 
+  void setFinalHandler(const CallbackType& ) {}
   /**
    * \brief Start the allreduce operation.
    */

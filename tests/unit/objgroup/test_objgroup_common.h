@@ -132,7 +132,7 @@ struct MyObjA {
   }
 
   template<typename Scalar, int32_t size>
-  void verifyAllredVec(std::vector<Scalar> vec) {
+  void verifyAllredVec(std::vector<Scalar> const& vec) {
     auto final_size = vec.size();
     EXPECT_EQ(final_size, size);
 

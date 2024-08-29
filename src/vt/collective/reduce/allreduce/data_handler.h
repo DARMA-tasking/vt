@@ -44,6 +44,8 @@
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_DATA_HANDLER_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_DATA_HANDLER_H
 
+#include "vt/configs/error/config_assert.h"
+
 #include <vector>
 
 #ifdef MAGISTRATE_KOKKOS_ENABLED
@@ -56,7 +58,45 @@ template <typename DataType, typename Enable = void>
 class DataHandler {
 public:
   using Scalar = void;
-  static size_t size(void) { return 0; }
+
+  static DataType toVec(const DataType&) {
+    vtAssert(
+      true,
+      "Using default DataHandler! This means that you're using custom type for "
+      "allreduce. Please provide specialization for you data type."
+    );
+
+    return {};
+  }
+  static DataType fromVec(const std::vector<Scalar>&) {
+    vtAssert(
+      true,
+      "Using default DataHandler! This means that you're using custom type for "
+      "allreduce. Please provide specialization for you data type."
+    );
+
+    return {};
+  }
+
+  static DataType fromMemory(const Scalar*, size_t) {
+    vtAssert(
+      true,
+      "Using default DataHandler! This means that you're using custom type for "
+      "allreduce. Please provide specialization for you data type."
+    );
+
+    return {};
+  }
+
+  static size_t size(void) {
+    vtAssert(
+      true,
+      "Using default DataHandler! This means that you're using custom type for "
+      "allreduce. Please provide specialization for you data type."
+    );
+
+    return {};
+  }
 };
 
 template <typename ScalarType>
