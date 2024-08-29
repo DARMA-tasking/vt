@@ -84,8 +84,8 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::localReduce(
   size_t id, Args&&... data) {
   local_col_wait_count_++;
 
-  // auto& state = states_.at(id);
-  // DataHelper<Scalar, DataT>::reduce(state.val_, std::forward<Args>(data)...);
+  auto& state = states_.at(id);
+  DataHelper<Scalar, DataT>::template reduce<Op>(state.val_, std::forward<Args>(data)...);
 
   auto const is_ready = local_col_wait_count_ == local_num_elems_;
   vt_debug_print(
@@ -390,7 +390,7 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::adjustForPowerOfTwoRightHalf(
     theContext()->getFromNodeCurrentTask(), msg->id_
   );
 
-  DataHelperT::template reduce<Op>(state.val_, state.size_ / 2, msg);
+  DataHelperT::template reduceMsg<Op>(state.val_, state.size_ / 2, msg);
 
   // Send to left node
   auto const actual_partner = nodes_[this_node_ - 1];
@@ -426,7 +426,7 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::adjustForPowerOfTwoLeftHalf(
     theContext()->getFromNodeCurrentTask(), msg->id_
   );
 
-  DataHelperT::template reduce<Op>(state.val_, 0, msg);
+  DataHelperT::template reduceMsg<Op>(state.val_, 0, msg);
 }
 
 template <
@@ -499,7 +499,7 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::scatterTryReduce(
 
   if (do_reduce) {
     auto& in_msg = state.scatter_messages_.at(step);
-    DataHelperT::template reduce<Op>(state.val_, state.r_index_[in_msg->step_], in_msg.get());
+    DataHelperT::template reduceMsg<Op>(state.val_, state.r_index_[in_msg->step_], in_msg.get());
 
     state.scatter_steps_reduced_[step] = true;
   }
