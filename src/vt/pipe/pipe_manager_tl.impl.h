@@ -141,6 +141,46 @@ void PipeManagerTL::addListenerFunctorBcast(
 template <typename U>
 using hasIdx_t = typename U::IndexType;
 
+template <auto f, typename ProxyT>
+auto PipeManagerTL::makeCallbackBcastProxy(ProxyT proxy) {
+  bool const persist = true;
+  bool const send_back = false;
+  bool const dispatch = true;
+  auto const pipe_id = makePipeID(persist, send_back);
+  newPipeState(pipe_id, persist, dispatch, -1, -1, 0);
+
+  using Trait = ObjFuncTraits<decltype(f)>;
+  using ColT = typename Trait::ObjT;
+  using MsgT = typename Trait::MsgT;
+  using RetType = typename Trait::template WrapType<CallbackRetType>;
+
+  HandlerType han = uninitialized_handler;
+  vrt::collection::AutoHandlerType vrt_handler = uninitialized_handler;
+
+  if constexpr (std::is_same_v<MsgT, NoMsg>) {
+    using Tuple = typename Trait::TupleType;
+    using NormMsgT = messaging::ParamMsg<Tuple>;
+    using WrapMsgT = vrt::collection::ColMsgWrap<ColT, NormMsgT, vt::Message>;
+    han = auto_registry::makeAutoHandlerCollectionMemParam<
+      ColT, decltype(f), f, WrapMsgT>();
+
+    vrt_handler = vrt::collection::makeVrtDispatch<NormMsgT, ColT>();
+
+  } else {
+    if constexpr (Trait::is_member) {
+      han = auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>();
+    } else {
+      han = auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>();
+    }
+
+    vrt_handler = vrt::collection::makeVrtDispatch<MsgT, ColT>();
+  }
+
+  return RetType{
+      callback::cbunion::RawCollBcastColDirTag, pipe_id, han, vrt_handler,
+      proxy.getProxy()};
+}
+
 template <auto f, bool is_bcast, typename ProxyT>
 auto PipeManagerTL::makeCallbackProxy(ProxyT proxy) {
   bool const persist = true;

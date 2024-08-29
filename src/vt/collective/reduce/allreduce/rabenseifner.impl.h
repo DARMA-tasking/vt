@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-
-#include "vt/vrt/collection/manager.fwd.h"
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_IMPL_H
 
@@ -83,15 +81,16 @@ Rabenseifner<Type, DataT, Op, finalHandler>::Rabenseifner(
 template <typename Type, typename DataT, template <typename Arg> class Op, auto finalHandler>
 template <typename... Args>
 void Rabenseifner<Type, DataT, Op, finalHandler>::localReduce(
-  size_t id, Args&&... ) {
+  size_t id, Args&&... data) {
   local_col_wait_count_++;
 
-  // auto& state = states_.at(id_);
+  // auto& state = states_.at(id);
   // DataHelper<Scalar, DataT>::reduce(state.val_, std::forward<Args>(data)...);
+
   auto const is_ready = local_col_wait_count_ == local_num_elems_;
   vt_debug_print(
     terse, allreduce, "Rabenseifner (this={}): local_col_wait_count_={} ID={} is_ready={} num_states={}\n",
-    print_ptr(this), local_col_wait_count_, id_, is_ready, states_.size()
+    print_ptr(this), local_col_wait_count_, id, is_ready, states_.size()
   );
 
   if(is_ready){
@@ -295,7 +294,8 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::executeFinalHan(size_t id) {
     } else if constexpr (std::is_same_v<Type, GroupAllreduceT>) {
       finalHandler(state.val_);
     } else {
-      final_handler_(std::move(state.val_));
+      // final_handler_(std::move(state.val_));
+      final_handler_.send(std::move(state.val_));
       // theCollection()->invokeCollective<ObjT, finalHandler>(state.val_);
     }
   } else {
@@ -305,7 +305,8 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::executeFinalHan(size_t id) {
     } else if constexpr (std::is_same_v<Type, GroupAllreduceT>) {
       finalHandler(DataType::fromVec(state.val_));
     } else {
-      final_handler_(std::move(DataType::fromVec(state.val_)));
+      final_handler_.send(std::move(DataType::fromVec(state.val_)));
+      // final_handler_();
       // collection_proxy_.broadcastCollective<finalHandler>(state.val_);
     }
   }
