@@ -124,7 +124,7 @@ struct DataHelper {
   }
 
   template <template <typename Arg> class Op>
-  static void reduce(
+  static void reduceMsg(
     std::vector<Scalar>& dest, size_t start_idx, RabenseifnerMsg<Scalar, DataT>* msg) {
     for (uint32_t i = 0; i < msg->size_; i++) {
       Op<Scalar>()(dest[start_idx + i], msg->val_[i]);
@@ -133,10 +133,10 @@ struct DataHelper {
 
   template <template <typename Arg> class Op, typename... Args>
   static void reduce(
-    std::vector<Scalar>& dest, size_t start_idx, Args &&... val) {
-    auto vector_val = DataHan::toVec(std::forward<Args>(val)...);
+    std::vector<Scalar>& dest, Args &&... data) {
+    auto vector_val = DataHan::toVec(std::forward<Args>(data)...);
     for (uint32_t i = 0; i < vector_val.size(); i++) {
-      Op<Scalar>()(dest[start_idx + i], vector_val[i]);
+      Op<Scalar>()(dest[i], vector_val[i]);
     }
   }
 
@@ -174,7 +174,7 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
   }
 
   template <template <typename Arg> class Op>
-  static void reduce(
+  static void reduceMsg(
     DataT& dest, size_t start_idx, RabenseifnerMsg<Scalar, DataT>* msg) {
     Kokkos::parallel_for(
       "Rabenseifner::reduce", msg->val_.extent(0), KOKKOS_LAMBDA(const int i) {
@@ -185,11 +185,11 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
 
   template <template <typename Arg> class Op, typename... Args>
   static void reduce(
-    DataT& dest, size_t start_idx, Args&&... val) {
+    DataT& dest, Args&&... val) {
     auto view_val = {std::forward<Args>(val)...};
     Kokkos::parallel_for(
       "Rabenseifner::reduce", view_val.extent(0), KOKKOS_LAMBDA(const int i) {
-        Op<Scalar>()(dest(start_idx + i), view_val(i));
+        Op<Scalar>()(dest(i), view_val(i));
       }
     );
   }
