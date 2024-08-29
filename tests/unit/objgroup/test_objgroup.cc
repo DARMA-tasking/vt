@@ -294,7 +294,7 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
       std::vector<int>, PlusOp, &MyObjA::verifyAllredVec<int, 256>
     >;
     std::vector<int> payload(256, my_node);
-    theObjGroup()->allreduce<Reducer>(proxy, payload);
+    theObjGroup()->allreduce<&MyObjA::verifyAllredVec<int, 256>, Reducer>(proxy, payload);
   });
 
   EXPECT_EQ(MyObjA::total_verify_expected_, 4);
@@ -304,10 +304,10 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
       reduce::allreduce::ObjgroupAllreduceT, NodeType, PlusOp, &MyObjA::verifyAllred<1>
     >;
     std::vector<int> payload(2048, my_node);
-    theObjGroup()->allreduce<Reducer>(proxy, my_node);
+    theObjGroup()->allreduce<&MyObjA::verifyAllred<1>, Reducer>(proxy, my_node);
 
     std::vector<short> payload_large(2048 * 2, my_node);
-    theObjGroup()->allreduce<Reducer>(proxy, my_node);
+    theObjGroup()->allreduce<&MyObjA::verifyAllred<1>, Reducer>(proxy, my_node);
   });
 
   EXPECT_EQ(MyObjA::total_verify_expected_, 6);
@@ -318,7 +318,9 @@ TEST_F(TestObjGroup, test_proxy_allreduce) {
       &MyObjA::verifyAllredVecPayload<VectorPayload, 256>>;
     std::vector<int> payload(256, my_node);
     VectorPayload data{payload};
-    theObjGroup()->allreduce<Reducer>(proxy, data);
+    theObjGroup()
+      ->allreduce<&MyObjA::verifyAllredVecPayload<VectorPayload, 256>, Reducer>(
+        proxy, data);
   });
 
   EXPECT_EQ(MyObjA::total_verify_expected_, 7);
@@ -361,7 +363,7 @@ TEST_F(TestObjGroupKokkos, test_proxy_allreduce_kokkos) {
     using Reducer = vt::collective::reduce::allreduce::Rabenseifner<
       reduce::allreduce::ObjgroupAllreduceT, decltype(view), PlusOp, &MyObjA::verifyAllredView>;
 
-    theObjGroup()->allreduce<Reducer>(kokkos_proxy, view);
+    theObjGroup()->allreduce<&MyObjA::verifyAllredView, Reducer>(kokkos_proxy, view);
   });
 
   EXPECT_EQ(MyObjA::total_verify_expected_, 1);
