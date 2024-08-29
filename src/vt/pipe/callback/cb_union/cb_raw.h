@@ -85,6 +85,16 @@ struct BcastColMsgCB : CallbackProxyBcastTypeless {
   BcastColMsgCB() = default;
 };
 
+struct CollBcastColDirCB : CallbackProxyBcastCollDirect {
+  CollBcastColDirCB() = default;
+  CollBcastColDirCB(
+    HandlerType const in_handler,
+    CallbackProxyBcastCollDirect::AutoHandlerType const in_vrt_handler,
+    VirtualProxyType const& in_proxy
+  ) : CallbackProxyBcastCollDirect(in_handler, in_vrt_handler, in_proxy)
+  { }
+};
+
 struct BcastColDirCB : CallbackProxyBcastDirect {
   BcastColDirCB() = default;
   BcastColDirCB(
@@ -125,6 +135,7 @@ union CallbackUnion {
   explicit CallbackUnion(SendColMsgCB const& in)    : send_col_msg_cb_(in)  { }
   explicit CallbackUnion(BcastColMsgCB const& in)   : bcast_col_msg_cb_(in) { }
   explicit CallbackUnion(BcastColDirCB const& in)   : bcast_col_dir_cb_(in) { }
+  explicit CallbackUnion(CollBcastColDirCB const& in)   : coll_bcast_col_dir_cb_(in) { }
   explicit CallbackUnion(SendColDirCB const& in)    : send_col_dir_cb_(in)  { }
   explicit CallbackUnion(AnonCB const& in)          : anon_cb_(in)          { }
   explicit CallbackUnion(BcastObjGrpCB const& in)   : bcast_obj_cb_(in)     { }
@@ -136,6 +147,7 @@ union CallbackUnion {
   SendColMsgCB  send_col_msg_cb_;
   BcastColMsgCB bcast_col_msg_cb_;
   BcastColDirCB bcast_col_dir_cb_;
+  CollBcastColDirCB coll_bcast_col_dir_cb_;
   SendColDirCB  send_col_dir_cb_;
   BcastObjGrpCB bcast_obj_cb_;
   SendObjGrpCB  send_obj_cb_;
@@ -147,11 +159,12 @@ enum struct CallbackEnum : int8_t {
   BcastMsgCB    = 2,
   SendColMsgCB  = 3,
   BcastColMsgCB = 4,
-  BcastColDirCB = 5,
-  SendColDirCB  = 6,
-  AnonCB        = 7,
-  BcastObjGrpCB = 8,
-  SendObjGrpCB  = 9
+  CollBcastColDirCB = 5,
+  BcastColDirCB = 6,
+  SendColDirCB  = 7,
+  AnonCB        = 8,
+  BcastObjGrpCB = 9,
+  SendObjGrpCB  = 10
 };
 
 struct GeneralCallback {
@@ -171,6 +184,9 @@ struct GeneralCallback {
   { }
   explicit GeneralCallback(BcastColMsgCB const& in)
     : u_(in), active_(CallbackEnum::BcastColMsgCB)
+  { }
+  explicit GeneralCallback(CollBcastColDirCB const& in)
+    : u_(in), active_(CallbackEnum::CollBcastColDirCB)
   { }
   explicit GeneralCallback(AnonCB const& in)
     : u_(in), active_(CallbackEnum::AnonCB)
@@ -204,6 +220,8 @@ struct GeneralCallback {
         return u_.bcast_col_msg_cb_ == other.u_.bcast_col_msg_cb_;
       case CallbackEnum::BcastColDirCB:
         return u_.bcast_col_dir_cb_ == other.u_.bcast_col_dir_cb_;
+      case CallbackEnum::CollBcastColDirCB:
+        return u_.coll_bcast_col_dir_cb_ == other.u_.coll_bcast_col_dir_cb_;
       case CallbackEnum::BcastObjGrpCB:
         return u_.bcast_obj_cb_ == other.u_.bcast_obj_cb_;
       case CallbackEnum::SendObjGrpCB:
@@ -242,6 +260,9 @@ struct GeneralCallback {
       ser(u_.bcast_msg_cb_);
       break;
     case CallbackEnum::BcastColMsgCB:
+      ser(u_.bcast_col_msg_cb_);
+      break;
+    case CallbackEnum::CollBcastColDirCB:
       ser(u_.bcast_col_msg_cb_);
       break;
     case CallbackEnum::BcastColDirCB:

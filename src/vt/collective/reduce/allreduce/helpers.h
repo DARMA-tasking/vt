@@ -102,11 +102,11 @@ inline constexpr bool ShouldUseView_v = ShouldUseView<Scalar, DataT>::Value;
 
 template <typename Scalar, typename DataT>
 struct DataHelper {
-  using DataType = DataHandler<DataT>;
+  using DataHan = DataHandler<DataT>;
 
   template <typename... Args>
   static void assign(std::vector<Scalar>& dest, Args&&... data) {
-    dest = DataHandler<DataT>::toVec(std::forward<Args>(data)...);
+    dest = DataHan::toVec(std::forward<Args>(data)...);
   }
 
   static MsgPtr<RabenseifnerMsg<Scalar, DataT>> createMessage(
@@ -131,7 +131,14 @@ struct DataHelper {
     }
   }
 
-  static void invoke() { }
+  template <template <typename Arg> class Op, typename... Args>
+  static void reduce(
+    std::vector<Scalar>& dest, size_t start_idx, Args &&... val) {
+    auto vector_val = DataHan::toVec(std::forward<Args>(val)...);
+    for (uint32_t i = 0; i < vector_val.size(); i++) {
+      Op<Scalar>()(dest[start_idx + i], vector_val[i]);
+    }
+  }
 
   static bool empty(const std::vector<Scalar>& payload) {
     return payload.empty();
@@ -176,7 +183,16 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
     );
   }
 
-  static void invoke() { }
+  template <template <typename Arg> class Op, typename... Args>
+  static void reduce(
+    DataT& dest, size_t start_idx, Args&&... val) {
+    auto view_val = {std::forward<Args>(val)...};
+    Kokkos::parallel_for(
+      "Rabenseifner::reduce", view_val.extent(0), KOKKOS_LAMBDA(const int i) {
+        Op<Scalar>()(dest(start_idx + i), view_val(i));
+      }
+    );
+  }
 
   static bool empty(const DataT& payload) {
     return payload.extent(0) == 0;

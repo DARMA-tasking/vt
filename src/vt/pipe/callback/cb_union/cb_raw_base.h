@@ -65,6 +65,7 @@ static struct RawSendColMsgTagType  { } RawSendColMsgTag  { };
 static struct RawBcastColMsgTagType { } RawBcastColMsgTag { };
 static struct RawSendColDirTagType  { } RawSendColDirTag  { };
 static struct RawBcastColDirTagType { } RawBcastColDirTag { };
+static struct RawCollBcastColDirTagType { } RawCollBcastColDirTag { };
 static struct RawSendObjGrpTagType  { } RawSendObjGrpTag  { };
 static struct RawBcastObjGrpTagType { } RawBcastObjGrpTag { };
 #pragma GCC diagnostic pop
@@ -95,6 +96,11 @@ struct CallbackRawBaseSingle {
   CallbackRawBaseSingle(RawAnonTagType, PipeType const& in_pipe);
   CallbackRawBaseSingle(RawSendColMsgTagType, PipeType const& in_pipe);
   CallbackRawBaseSingle(RawBcastColMsgTagType, PipeType const& in_pipe);
+  CallbackRawBaseSingle(
+    RawCollBcastColDirTagType, PipeType const& in_pipe,
+    HandlerType const in_handler, AutoHandlerType const in_vrt,
+    VirtualProxyType const& in_proxy
+  );
   CallbackRawBaseSingle(
     RawBcastColDirTagType, PipeType const& in_pipe,
     HandlerType const in_handler, AutoHandlerType const in_vrt,
@@ -187,6 +193,16 @@ struct CallbackTyped : CallbackRawBaseSingle {
   CallbackTyped(RawBcastColMsgTagType, PipeType const& in_pipe)
     : CallbackRawBaseSingle(RawBcastColMsgTag,in_pipe)
   { }
+
+  CallbackTyped(
+    RawCollBcastColDirTagType, PipeType const& in_pipe,
+    HandlerType const in_handler, AutoHandlerType const in_vrt,
+    VirtualProxyType const& in_proxy
+  ) : CallbackRawBaseSingle(
+        RawCollBcastColDirTag, in_pipe, in_handler, in_vrt, in_proxy
+      )
+  { }
+
   CallbackTyped(
     RawBcastColDirTagType, PipeType const& in_pipe,
     HandlerType const in_handler, AutoHandlerType const in_vrt,

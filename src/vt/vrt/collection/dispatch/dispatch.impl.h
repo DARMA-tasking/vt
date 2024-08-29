@@ -67,6 +67,18 @@ void DispatchCollection<ColT, MsgT>::broadcast(
 }
 
 template <typename ColT, typename MsgT>
+void DispatchCollection<ColT, MsgT>::broadcastCollective(
+  VirtualProxyType proxy, std::byte* msg, HandlerType han
+) {
+  using IdxT = typename ColT::IndexType;
+  auto const msg_typed = reinterpret_cast<MsgT*>(msg);
+  CollectionProxy<ColT, IdxT> typed_proxy{proxy};
+  theCollection()->broadcastCollectiveMsgWithHan<MsgT, ColT>(
+    typed_proxy, msg_typed, han, true
+  );
+}
+
+template <typename ColT, typename MsgT>
 void DispatchCollection<ColT, MsgT>::send(
   VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han
 ) {
