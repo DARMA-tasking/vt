@@ -271,7 +271,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> m
   return objgroup::broadcast(msg,han);
 }
 
-template <typename Reducer, typename ObjT, typename... Args>
+template <auto f, typename Reducer, typename ObjT, typename... Args>
 ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
   ProxyType<ObjT> proxy, Args&&... data) {
   using namespace vt::collective::reduce::allreduce;
@@ -314,6 +314,9 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
     id = grp_proxy[this_node].get()->id_ - 1;
   }
 
+  auto cb = theCB()->makeSend<f>(proxy[this_node]);
+  grp_proxy[this_node].get()->setFinalHandler(cb);
+
   return PendingSendType{
     theTerm()->getEpoch(),
     [=] { grp_proxy[this_node].template invoke<&Reducer::allreduce>(id); }
@@ -324,25 +327,26 @@ template <auto f, typename ObjT, template <typename Arg> class Op, typename Data
 ObjGroupManager::PendingSendType
 ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   using namespace collective::reduce::allreduce;
+
+  auto const this_node = vt::theContext()->getNode();
   if (theContext()->getNumNodes() < 2) {
     return PendingSendType{theTerm()->getEpoch(), [&] {
-      auto const this_node = vt::theContext()->getNode();
       proxy[this_node].template invoke<f>(std::forward<Args>(data)...);
     }};
   }
 
   // using Obj = typename FuncTraits<decltype(f)>::ObjT;
-  // auto cb = theCB()->makeSend<f>(proxy);
+  // auto cb = theCB()->makeSend<f>(proxy[this_node]);
 
   auto const payload_size =
     DataHandler<remove_cvref<DataT>>::size(std::forward<Args>(data)...);
 
   if (payload_size < 2048) {
     using Reducer = RecursiveDoubling<DataT, Op, f>;
-    return allreduce<Reducer>(proxy, std::forward<Args>(data)...);
+    return allreduce<f, Reducer>(proxy, std::forward<Args>(data)...);
   } else {
     using Reducer = Rabenseifner<ObjgroupAllreduceT, DataT, Op, f>;
-    return allreduce<Reducer>(proxy, std::forward<Args>(data)...);
+    return allreduce<f, Reducer>(proxy, std::forward<Args>(data)...);
   }
 
   // Silence nvcc warning

@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#include "vt/configs/types/types_type.h"
+
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H
 
@@ -56,6 +56,7 @@
 #include "rabenseifner_msg.h"
 #include "helpers.h"
 #include "vt/utils/fntraits/fntraits.h"
+#include "vt/configs/types/types_type.h"
 
 #include <cstdint>
 

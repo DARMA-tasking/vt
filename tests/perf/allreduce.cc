@@ -178,10 +178,10 @@ VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
     theCollective()->barrier();
     auto* obj_ptr = proxy[my_node_].get();
     StartTimer(obj_ptr->timer_names_.at(payload_size));
-    theObjGroup()->allreduce<Reducer>(proxy, data);
+    theObjGroup()->allreduce<&NodeObj<MyTest>::handlerVec, Reducer>(proxy, data);
 
-    // theSched()->runSchedulerWhile(
-    //   [obj_ptr] { return !obj_ptr->allreduce_done_; });
+    theSched()->runSchedulerWhile(
+      [obj_ptr] { return !obj_ptr->allreduce_done_; });
     obj_ptr->allreduce_done_ = false;
   }
 }
@@ -204,9 +204,9 @@ VT_PERF_TEST(MyTestKokkos, test_allreduce_rabenseifner_kokkos) {
     theCollective()->barrier();
     auto* obj_ptr = proxy[my_node_].get();
     StartTimer(obj_ptr->timer_names_.at(payload_size));
-    theObjGroup()->allreduce<Reducer>(proxy, view);
+    theObjGroup()->allreduce<&NodeObj<MyTestKokkos>::handlerView<float>, Reducer>(proxy, view);
 
-    // theSched()->runSchedulerWhile([obj_ptr] { return !obj_ptr->allreduce_done_; });
+    theSched()->runSchedulerWhile([obj_ptr] { return !obj_ptr->allreduce_done_; });
     obj_ptr->allreduce_done_ = false;
   }
 }
@@ -296,12 +296,8 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   void Handler() {
     auto proxy = this->getCollectionProxy();
 
-    fmt::print("[{}] Hello from idx={} \n", theContext()->getNode(), getIndex());
-    std::vector<int32_t> payload(100, theContext()->getNode());
+    std::vector<int32_t> payload(100, getIndex().x());
     proxy.allreduce_h<&Hello::FInalHan, collective::PlusOp>(std::move(payload));
-
-    // auto cb = vt::theCB()->makeCallbackBcastProxy<&Hello::FInalHan>(proxy);
-    // cb.send(payload);
 
     col_send_done_ = true;
   }
@@ -324,10 +320,9 @@ VT_PERF_TEST(MyTest, test_allreduce_collection_rabenseifner) {
 
   proxy.broadcastCollective<&Hello::Handler>();
 
-  // auto cb = vt::theCB()->makeCallbackBcastProxy<f>(proxy);
-    // We run 1 coll elem per node, so it should be ok
-    // theSched()->runSchedulerWhile([&] { return !(elm->col_send_done_); });
-    //elm->col_send_done_ = false;
+  // We run 1 coll elem per node, so it should be ok
+  // theSched()->runSchedulerWhile([&] { return !(elm->col_send_done_); });
+  //elm->col_send_done_ = false;
 
 }
 

@@ -177,8 +177,10 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
 
   if (iter->second->is_in_group) {
     auto const this_node = theContext()->getNode();
-    auto id = proxy[this_node].get()->id_ - 1;
-    proxy[this_node].get()->proxy_ = proxy;
+    auto* ptr = proxy[this_node].get();
+    auto id = ptr->id_ - 1;
+    ptr->proxy_ = proxy;
+    ptr->setFinalHandler(theCB()->makeSend<f>(this_node));
     proxy[this_node].template invoke<&Reducer::allreduce>(id);
   }
 }

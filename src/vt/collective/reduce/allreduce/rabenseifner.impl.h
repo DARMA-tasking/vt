@@ -285,30 +285,10 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::executeFinalHan(size_t id) {
   auto& state = states_.at(id);
   vt_debug_print(terse, allreduce, "Rabenseifner executing final handler ID = {}\n", id);
 
-  // TODO convert
-  // parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
-
   if constexpr (ShouldUseView_v<Scalar, DataT>) {
-    if constexpr (std::is_same_v<Type, ObjgroupAllreduceT>) {
-      parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
-    } else if constexpr (std::is_same_v<Type, GroupAllreduceT>) {
-      finalHandler(state.val_);
-    } else {
-      // final_handler_(std::move(state.val_));
-      final_handler_.send(std::move(state.val_));
-      // theCollection()->invokeCollective<ObjT, finalHandler>(state.val_);
-    }
+    final_handler_.send(std::move(state.val_));
   } else {
-    if constexpr (std::is_same_v<Type, ObjgroupAllreduceT>) {
-      parent_proxy_[this_node_].template invoke<finalHandler>(
-        DataType::fromVec(state.val_));
-    } else if constexpr (std::is_same_v<Type, GroupAllreduceT>) {
-      finalHandler(DataType::fromVec(state.val_));
-    } else {
-      final_handler_.send(std::move(DataType::fromVec(state.val_)));
-      // final_handler_();
-      // collection_proxy_.broadcastCollective<finalHandler>(state.val_);
-    }
+    final_handler_.send(std::move(DataType::fromVec(state.val_)));
   }
 
   state.completed_ = true;
