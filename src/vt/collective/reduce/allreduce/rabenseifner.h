@@ -87,7 +87,13 @@ struct Rabenseifner {
   using ReduceOp = Op<Scalar>;
   using DataHelperT = DataHelper<Scalar, DataT>;
   using StateT = State<Scalar, DataT>;
-  using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
+  // using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
+
+  using Trait = ObjFuncTraits<decltype(f)>;
+  using ObjT = typename Trait::ObjT;
+  using MsgT = typename Trait::MsgT;
+  using CallbackType =
+    typename Trait::template WrapType<pipe::PipeManagerTL::CallbackRetType>;
 
   static constexpr bool KokkosPaylod = ShouldUseView_v<Scalar, DataT>;
 
@@ -100,7 +106,7 @@ struct Rabenseifner {
   template <typename ...Args>
   Rabenseifner(vt::objgroup::proxy::Proxy<ObjT> proxy, Args&&... args);
 
-  void setFinalHandler(const std::function<void(DataT&&)>& fin) {
+  void setFinalHandler(const CallbackType& fin) {
     final_handler_ = fin;
   }
   template <typename ...Args>
@@ -279,7 +285,7 @@ struct Rabenseifner {
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
   vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
-  std::function<void(DataT&&)> final_handler_ = {};
+  CallbackType final_handler_ = {};
 
   VirtualProxyType collection_proxy_ = {};
   uint32_t local_col_wait_count_ = {};

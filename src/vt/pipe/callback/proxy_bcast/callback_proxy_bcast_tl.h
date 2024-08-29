@@ -106,6 +106,40 @@ private:
   VirtualProxyType proxy_           = no_vrt_proxy;
 };
 
+struct CallbackProxyBcastCollDirect : CallbackBaseTL<CallbackProxyBcastCollDirect> {
+  using AutoHandlerType = auto_registry::AutoHandlerType;
+
+  CallbackProxyBcastCollDirect() = default;
+  CallbackProxyBcastCollDirect(
+    HandlerType const in_han, AutoHandlerType const in_vrt,
+    VirtualProxyType const& in_proxy
+  ) : vrt_dispatch_han_(in_vrt), handler_(in_han), proxy_(in_proxy)
+  { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s);
+
+  bool operator==(CallbackProxyBcastCollDirect const& other) const {
+    return
+      other.handler_ == handler_ &&
+      other.vrt_dispatch_han_ == vrt_dispatch_han_ &&
+      other.proxy_ == proxy_;
+  }
+
+public:
+  template <typename MsgT>
+  void trigger(MsgT* msg, PipeType const& pipe);
+
+  void triggerVoid([[maybe_unused]] PipeType const& pipe) {
+    vtAssert(0, "Must not be void");
+  }
+
+private:
+  AutoHandlerType vrt_dispatch_han_ = uninitialized_handler;
+  HandlerType handler_              = uninitialized_handler;
+  VirtualProxyType proxy_           = no_vrt_proxy;
+};
+
 }}} /* end namespace vt::pipe::callback */
 
 #include "vt/pipe/callback/handler_bcast/callback_bcast_tl.impl.h"

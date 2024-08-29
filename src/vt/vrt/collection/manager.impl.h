@@ -42,6 +42,7 @@
 */
 
 #include "vt/collective/reduce/scoping/strong_types.h"
+#include "vt/messaging/message/smart_ptr.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 #define INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
@@ -641,6 +642,29 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   return ret;
 }
 
+template <typename MsgT, typename ColT>
+CollectionManager::IsNotColMsgType<MsgT>
+CollectionManager::broadcastCollectiveMsgWithHan(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT* msg, HandlerType const han,
+  bool instrument) {
+  auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(std::move(*msg));
+  wrap_msg->setVrtHandler(han);
+
+  return broadcastCollectiveMsgImpl<ColMsgWrap<ColT, MsgT>, ColT>(proxy, wrap_msg, instrument);
+}
+
+template <typename MsgT, typename ColT>
+CollectionManager::IsColMsgType<MsgT>
+CollectionManager::broadcastCollectiveMsgWithHan(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT* msg, HandlerType const han,
+  bool instrument) {
+
+  auto msgPtr = promoteMsg(msg);
+  msgPtr->setVrtHandler(han);
+
+  return broadcastCollectiveMsgImpl<MsgT, ColT>(proxy, msgPtr, instrument);
+}
+
 template <
   typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
 >
@@ -877,10 +901,8 @@ template <
 messaging::PendingSend CollectionManager::reduceLocal(
   CollectionProxyWrapType<ColT> const& proxy, Args&&... args) {
   using namespace collective::reduce::allreduce;
+
   using DataT = typename function_traits<decltype(f)>::template arg_type<0>;
-
-
-
   using IndexT = typename ColT::IndexType;
 
   // Get the current running index context
@@ -894,9 +916,6 @@ messaging::PendingSend CollectionManager::reduceLocal(
   auto const group = elm_holder->group();
   bool const use_group = group_ready && send_group;
 
-  auto final_handler = [=](DataT&& final_val){
-    proxy.template broadcastCollective<f>(std::move(final_val));
-  };
 
   using Reducer = collective::reduce::allreduce::Rabenseifner<
     CollectionAllreduceT, DataT, Op, f>;
@@ -915,7 +934,9 @@ messaging::PendingSend CollectionManager::reduceLocal(
       rabenseifner_reducers_[col_proxy] = obj_proxy.getProxy();
       auto* obj = obj_proxy[theContext()->getNode()].get();
       obj->proxy_ = obj_proxy;
-      obj->setFinalHandler(final_handler);
+
+      auto cb = vt::theCB()->makeCallbackBcastProxy<f>(proxy);
+      obj->setFinalHandler(cb);
     }
   } else {
     if (use_group) {
@@ -925,7 +946,6 @@ messaging::PendingSend CollectionManager::reduceLocal(
       auto typed_proxy =
         static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
       auto* obj = typed_proxy[theContext()->getNode()].get();
-      obj->setFinalHandler(final_handler);
       obj->localReduce(obj->id_ - 1);
     }
   }
