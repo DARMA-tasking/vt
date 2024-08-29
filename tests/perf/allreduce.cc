@@ -300,6 +300,9 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
     std::vector<int32_t> payload(100, theContext()->getNode());
     proxy.allreduce_h<&Hello::FInalHan, collective::PlusOp>(std::move(payload));
 
+    // auto cb = vt::theCB()->makeCallbackBcastProxy<&Hello::FInalHan>(proxy);
+    // cb.send(payload);
+
     col_send_done_ = true;
   }
 
@@ -317,14 +320,11 @@ VT_PERF_TEST(MyTest, test_allreduce_collection_rabenseifner) {
   auto const thisNode = vt::theContext()->getNode();
   auto const nextNode = (thisNode + 1) % num_nodes_;
 
-  // auto* elm = proxy[thisNode].tryGetLocalPtr();
+  theCollective()->barrier();
 
-    theCollective()->barrier();
+  proxy.broadcastCollective<&Hello::Handler>();
 
-    proxy.broadcastCollective<&Hello::Handler>();
-    // proxy.allreduce<&Hello::AllredHandler, collective::PlusOp>(theContext()->getNode());
-
-
+  // auto cb = vt::theCB()->makeCallbackBcastProxy<f>(proxy);
     // We run 1 coll elem per node, so it should be ok
     // theSched()->runSchedulerWhile([&] { return !(elm->col_send_done_); });
     //elm->col_send_done_ = false;

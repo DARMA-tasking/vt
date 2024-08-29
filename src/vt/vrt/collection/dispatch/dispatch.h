@@ -63,6 +63,8 @@ struct DispatchCollectionBase {
   virtual void
   broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
   virtual void
+  broadcastCollective(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
+  virtual void
   send(VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han) = 0;
 
   template <typename=void>
@@ -84,6 +86,7 @@ template <typename ColT, typename MsgT>
 struct DispatchCollection final : DispatchCollectionBase {
 private:
   void broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
+  void broadcastCollective(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
   void send(
     VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han
   ) override;
