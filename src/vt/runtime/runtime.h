@@ -56,7 +56,7 @@
 #endif
 #include "vt/pmpi/pmpi_component.h"
 #if vt_check_enabled(perf)
-#include "vt/metrics/perf_event_map.h"
+#include "vt/metrics/perf_data.h"
 #endif
 
 #include <memory>
@@ -436,7 +436,7 @@ public:
     ComponentPtrType<pmpi::PMPIComponent> thePMPI = nullptr;
   #endif
   #if vt_check_enabled(perf)
-    ComponentPtrType<metrics::PerfEventMap> thePerfEventMap = nullptr;
+    ComponentPtrType<metrics::PerfData> thePerfData = nullptr;
   #endif
 
   static bool volatile sig_user_1_;

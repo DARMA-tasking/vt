@@ -1,3 +1,6 @@
+#if !defined INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H
+#define INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H
+
 #include <unordered_map>
 #include <string>
 #include <linux/perf_event.h>

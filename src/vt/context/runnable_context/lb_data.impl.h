@@ -65,9 +65,6 @@ LBData::LBData(ElmT* in_elm, MsgT* msg)
 #if vt_check_enabled(papi)
   papiData_ = std::make_unique<PAPIData>();
 #endif
-#if vt_check_enabled(perf)
-    perfData_ = std::make_unique<PerfData>();
-#endif
   // record the communication LB data right away!
   theCollection()->recordLBData(in_elm, msg);
 }
