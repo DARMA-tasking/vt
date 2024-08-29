@@ -42,7 +42,7 @@
 */
 
 #include <vt/transport.h>
-#include <vt/metrics/perf_event_map.h>
+#include <vt/metrics/perf_data.h>
 
 #include <cstdlib>
 #include <cassert>
@@ -58,7 +58,7 @@
 #include <iostream>
 
 static constexpr std::size_t const default_nrow_object = 8;
-static constexpr std::size_t const default_num_objs = 1;
+static constexpr std::size_t const default_num_objs = 100;
 static constexpr double const default_tol = 1.0e-02;
 static constexpr std::size_t const default_flops_per_iter = 100000;
 
@@ -148,7 +148,7 @@ public:
     iter_ += 1;
     fmt::print("-- Starting Iteration --\n");
 
-    vt::theContext()->getTask()->startPerfMeasurements();
+    vt::thePerfData()->startTaskMeasurement(vt::theContext()->getTask());
     
     // ----------------------------------------------------------
     // test non packed double precision floating point operations
@@ -164,8 +164,8 @@ public:
       proxy[0]
     );
 
-    vt::theContext()->getTask()->stopPerfMeasurements();
-    std::unordered_map<std::string, uint64_t> res = vt::theContext()->getTask()->getPerfMeasurements();
+    vt::thePerfData()->stopTaskMeasurement(vt::theContext()->getTask());
+    std::unordered_map<std::string, uint64_t> res = vt::thePerfData()->getTaskMeasurements(vt::theContext()->getTask());
     for (auto [name, value] : res) {
       fmt::print("  {}: {}\n", name, value);
     }

@@ -340,28 +340,6 @@ public:
   std::unordered_map<std::string, uint64_t> getPAPIMetrics();
 #endif
 
-#if vt_check_enabled(perf)
-  /**
-   * \brief Start perf metrics map for the running context
-   */
-  void startPerfMeasurements() { contexts_.lb.startPerfMeasurements(); }
-
-  /**
-   * \brief Stop perf metrics map for the running context
-   *
-   * \note has to be called after startperfMetrics
-   *
-   */
-  void stopPerfMeasurements() { contexts_.lb.stopPerfMeasurements(); }
-
-  /**
-   * \brief Get the current perf metrics map for the running context
-   *
-   * \return the perf metrics map
-   */
-  std::unordered_map<std::string, uint64_t> getPerfMeasurements() { return contexts_.lb.getPerfMeasurements(); }
-#endif
-
 #if vt_check_enabled(fcontext)
   /**
    * \brief Check if this runnable is complete or not
