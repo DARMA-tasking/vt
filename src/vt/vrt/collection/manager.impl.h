@@ -946,7 +946,7 @@ messaging::PendingSend CollectionManager::reduceLocal(
       auto typed_proxy =
         static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
       auto* obj = typed_proxy[theContext()->getNode()].get();
-      obj->localReduce(obj->id_ - 1);
+      obj->localReduce(obj->id_ - 1, std::forward<Args>(args)...);
     }
   }
 
