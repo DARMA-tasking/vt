@@ -441,6 +441,22 @@ public:
    */
   LocInstType getInst() const;
 
+  /**
+   * \brief Whether dynamic membership is allowed
+   *
+   * \return whether it is allowed
+   */
+  bool hasDynamicMembership() const { return dynamic_membership_; }
+
+  /**
+   * \brief Set whether dynamic membership is allowed
+   *
+   * \param[in] in_dynamic_membership whether it is allowed
+   */
+  void setDynamicMembership(bool in_dynamic_membership) {
+    dynamic_membership_ = in_dynamic_membership;
+  }
+
 private:
   LocInstType this_inst = no_loc_inst;
 
@@ -461,6 +477,10 @@ private:
 
   // List of nodes that inquire about an entity that require an update
   LocAsksType loc_asks_;
+
+  /// Whether the managed entities have dynamic membership (deletions/insertions
+  /// after construction)
+  bool dynamic_membership_ = false;
 };
 
 }}  // end namespace vt::location
