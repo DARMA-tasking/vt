@@ -281,49 +281,65 @@ VT_PERF_TEST(MyTest, test_allreduce_group_rabenseifner) {
 }
 
 struct Hello : vt::Collection<Hello, vt::Index1D> {
-  Hello() = default;
-  void FInalHan(std::vector<int32_t> result) {
-    std::string result_s = "";
-    for(auto val : result){
-      result_s.append(fmt::format("{} ", val));
-    }
-    fmt::print(
-      "[{}]: Allreduce handler (Values=[{}]), idx={}\n",
-      theContext()->getNode(), result_s, getIndex().x()
-    );
+  Hello() {
+      for (auto const payload_size : payloadSizes) {
+      timer_names_[payload_size] = fmt::format("Collection {}", payload_size);
+      }
   }
 
-  void Handler() {
-    auto proxy = this->getCollectionProxy();
-
-    std::vector<int32_t> payload(100, getIndex().x());
-    proxy.allreduce_h<&Hello::FInalHan, collective::PlusOp>(std::move(payload));
+  void finalHan(std::vector<int32_t> result) {
+    // std::string result_s = "";
+    // for(auto val : result){
+    //   result_s.append(fmt::format("{} ", val));
+    // }
+    // fmt::print(
+    //   "[{}]: Allreduce handler (Values=[{}]), idx={}\n",
+    //   theContext()->getNode(), result_s, getIndex().x()
+    // );
 
     col_send_done_ = true;
+    parent_->StopTimer(timer_names_.at(result.size()));
+  }
+
+  void handler(size_t payload_size) {
+    auto proxy = this->getCollectionProxy();
+
+    std::vector<int32_t> payload(payload_size, getIndex().x());
+    parent_->StartTimer(timer_names_.at(payload_size));
+    proxy.allreduce_h<&Hello::finalHan, collective::PlusOp>(std::move(payload));
   }
 
   bool col_send_done_ = false;
+  std::unordered_map<size_t, std::string> timer_names_= {};
+  MyTest* parent_ = {};
 };
 
 VT_PERF_TEST(MyTest, test_allreduce_collection_rabenseifner) {
-  auto range = vt::Index1D(int32_t{num_nodes_ * 2});
+  auto range = vt::Index1D(int32_t{num_nodes_});
   auto proxy = vt::makeCollection<Hello>("test_collection_send")
                  .bounds(range)
                  .bulkInsert()
                  .wait();
-
 
   auto const thisNode = vt::theContext()->getNode();
   auto const nextNode = (thisNode + 1) % num_nodes_;
 
   theCollective()->barrier();
 
-  proxy.broadcastCollective<&Hello::Handler>();
+  auto const num_elms_per_node = 1;
+  auto const elm = thisNode * num_elms_per_node;
 
-  // We run 1 coll elem per node, so it should be ok
-  // theSched()->runSchedulerWhile([&] { return !(elm->col_send_done_); });
-  //elm->col_send_done_ = false;
+  proxy[elm].tryGetLocalPtr()->parent_ = this;
+  proxy.broadcastCollective<&Hello::handler>(payloadSizes.front());
+  theSched()->runSchedulerWhile(
+    [&] { return !proxy[elm].tryGetLocalPtr()->col_send_done_; });
+  // for (auto payload_size : payloadSizes) {
+  //   proxy.broadcastCollective<&Hello::handler>(payload_size);
 
+  //   // We run 1 coll elem per node, so it should be ok
+  //   theSched()->runSchedulerWhile([&] { return !proxy[elm].tryGetLocalPtr()->col_send_done_; });
+  //   proxy[elm].tryGetLocalPtr()->col_send_done_ = false;
+  // }
 }
 
 VT_PERF_TEST_MAIN()

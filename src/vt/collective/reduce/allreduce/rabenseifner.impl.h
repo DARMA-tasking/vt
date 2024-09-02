@@ -65,17 +65,20 @@ namespace vt::collective::reduce::allreduce {
 template <typename Type, typename DataT, template <typename Arg> class Op, auto finalHandler>
 template <typename... Args>
 Rabenseifner<Type, DataT, Op, finalHandler>::Rabenseifner(
-  detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems,
+  detail::StrongVrtProxy proxy, detail::StrongGroup group,
+  size_t num_elems,
   Args&&... data)
   : Rabenseifner<Type, DataT, Op, finalHandler>(group, std::forward<Args>(data)...) {
   collection_proxy_ = proxy.get();
   local_num_elems_ = num_elems;
   local_col_wait_count_++;
+
+  auto const is_ready = local_col_wait_count_ == local_num_elems_;
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner (this={}): proxy={:x} local_num_elems={} ID={} is_ready={}\n",
-    print_ptr(this), proxy.get(), local_num_elems_, id_,
-    local_col_wait_count_ == local_num_elems_);
+    "Rabenseifner (this={}): proxy={:x} proxy_={} local_num_elems={} ID={} is_ready={}\n",
+    print_ptr(this), proxy.get(), proxy_.getProxy(), local_num_elems_, id_ - 1, is_ready
+  );
 }
 
 template <typename Type, typename DataT, template <typename Arg> class Op, auto finalHandler>
@@ -502,9 +505,9 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::scatterReduceIter(size_t id) {
     terse, allreduce,
     "Rabenseifner Scatter (Send step {} to {}): Starting with idx = {} and "
     "count "
-    "{} ID = {}\n",
+    "{} ID = {} proxy_={}\n",
     state.scatter_step_, actual_partner, state.s_index_[state.scatter_step_],
-    state.s_count_[state.scatter_step_], id
+    state.s_count_[state.scatter_step_], id, proxy_.getProxy()
   );
 
   proxy_[actual_partner]
