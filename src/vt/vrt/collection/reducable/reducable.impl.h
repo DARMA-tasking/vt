@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-#include "vt/collective/reduce/allreduce/rabenseifner_msg.h"
-#include <utility>
 #if !defined INCLUDED_VT_VRT_COLLECTION_REDUCABLE_REDUCABLE_IMPL_H
 #define INCLUDED_VT_VRT_COLLECTION_REDUCABLE_REDUCABLE_IMPL_H
 

@@ -920,6 +920,7 @@ messaging::PendingSend CollectionManager::reduceLocal(
   using Reducer = collective::reduce::allreduce::Rabenseifner<
     CollectionAllreduceT, DataT, Op, f>;
 
+  // Incorrect! will yield same reducer for different Op/payload size/final handler etc.
   if (auto reducer = rabenseifner_reducers_.find(col_proxy);
       reducer == rabenseifner_reducers_.end()) {
     if (use_group) {
@@ -937,12 +938,16 @@ messaging::PendingSend CollectionManager::reduceLocal(
 
       auto cb = vt::theCB()->makeCallbackBcastProxy<f>(proxy);
       obj->setFinalHandler(cb);
+
+      if(num_elms == 1){
+        obj->allreduce(obj->id_ - 1);
+      }
     }
   } else {
     if (use_group) {
       // theGroup()->allreduce<f, Op>(group, );
     } else {
-      auto obj_proxy = rabenseifner_reducers_.at(col_proxy);
+      auto obj_proxy = reducer->second; // rabenseifner_reducers_.at(col_proxy);
       auto typed_proxy =
         static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
       auto* obj = typed_proxy[theContext()->getNode()].get();
