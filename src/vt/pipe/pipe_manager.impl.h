@@ -154,6 +154,11 @@ auto PipeManager::makeBcast(ProxyT proxy) {
   return makeCallbackProxy<f, true>(proxy);
 }
 
+template <auto f, typename ProxyT>
+auto PipeManager::makeBcastCollective(ProxyT proxy) {
+  return makeCallbackBcastCollectiveProxy<f>(proxy);
+}
+
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 Callback<MsgT> PipeManager::makeBcast() {
   return makeCallbackSingle<f, true>();

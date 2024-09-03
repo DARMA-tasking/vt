@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-#include "vt/group/group_manager.h"
-#include "vt/utils/fntraits/fntraits.h"
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
