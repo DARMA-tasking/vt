@@ -114,7 +114,7 @@ struct PipeManagerTL : virtual PipeManagerBase {
   auto makeCallbackProxy(ProxyT proxy);
 
   template <auto f, typename ProxyT>
-  auto makeCallbackBcastProxy(ProxyT proxy);
+  auto makeCallbackBcastCollectiveProxy(ProxyT proxy);
 
   // Multi-staged callback
   template <typename=void>

@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include "vt/objgroup/proxy/proxy_objgroup.h"
 #if !defined INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H
 
