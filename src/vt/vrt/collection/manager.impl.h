@@ -41,9 +41,6 @@
 //@HEADER
 */
 
-#include "vt/collective/reduce/scoping/strong_types.h"
-#include "vt/messaging/message/smart_ptr.h"
-#include "vt/vrt/collection/manager.fwd.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 #define INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 
@@ -936,7 +933,7 @@ messaging::PendingSend CollectionManager::reduceLocal(
       auto* obj = obj_proxy[theContext()->getNode()].get();
       obj->proxy_ = obj_proxy;
 
-      auto cb = vt::theCB()->makeCallbackBcastProxy<f>(proxy);
+      auto cb = vt::theCB()->makeCallbackBcastCollectiveProxy<f>(proxy);
       obj->setFinalHandler(cb);
 
       if(num_elms == 1){

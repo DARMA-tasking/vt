@@ -142,7 +142,7 @@ template <typename U>
 using hasIdx_t = typename U::IndexType;
 
 template <auto f, typename ProxyT>
-auto PipeManagerTL::makeCallbackBcastProxy(ProxyT proxy) {
+auto PipeManagerTL::makeCallbackBcastCollectiveProxy(ProxyT proxy) {
   bool const persist = true;
   bool const send_back = false;
   bool const dispatch = true;
