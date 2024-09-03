@@ -75,7 +75,6 @@ struct ObjgroupAllreduceT {};
  *
  * \tparam DataT Type of the data being reduced.
  * \tparam Op Reduction operation (e.g., sum, max, min).
- * \tparam ObjT Object type used for callback invocation.
  * \tparam finalHandler Callback handler for the final result.
  */
 template <
@@ -88,10 +87,8 @@ struct Rabenseifner {
   using ReduceOp = Op<Scalar>;
   using DataHelperT = DataHelper<Scalar, DataT>;
   using StateT = State<Scalar, DataT>;
-  // using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
 
   using Trait = ObjFuncTraits<decltype(f)>;
-  using ObjT = typename Trait::ObjT;
   using MsgT = typename Trait::MsgT;
   using CallbackType =
     typename Trait::template WrapType<pipe::PipeManagerTL::CallbackRetType>;
@@ -105,7 +102,7 @@ struct Rabenseifner {
   Rabenseifner(detail::StrongGroup group, Args&&... args);
 
   template <typename ...Args>
-  Rabenseifner(vt::objgroup::proxy::Proxy<ObjT> proxy, Args&&... args);
+  Rabenseifner(Args&&... args);
 
   void setFinalHandler(const CallbackType& fin) {
     final_handler_ = fin;
@@ -284,7 +281,6 @@ struct Rabenseifner {
   void sendToExcludedNodesHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
-  vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
 
   CallbackType final_handler_ = {};
 
