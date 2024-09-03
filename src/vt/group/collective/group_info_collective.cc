@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include "vt/collective/reduce/allreduce/rabenseifner_group.h"
 #include "vt/collective/reduce/operators/functors/plus_op.h"
 #include "vt/config.h"
 #include "vt/configs/types/types_type.h"
