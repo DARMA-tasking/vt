@@ -161,10 +161,8 @@ Rabenseifner<Type, DataT, Op, finalHandler>::Rabenseifner(
 
 template <typename Type, typename DataT, template <typename Arg> class Op, auto finalHandler>
 template <typename... Args>
-Rabenseifner<Type, DataT, Op, finalHandler>::Rabenseifner(
-  vt::objgroup::proxy::Proxy<ObjT> proxy, Args&&... data)
-  : parent_proxy_(proxy),
-    nodes_(theGroup()->GetGroupNodes(default_group)),
+Rabenseifner<Type, DataT, Op, finalHandler>::Rabenseifner(Args&&... data)
+  : nodes_(theGroup()->GetGroupNodes(default_group)),
     num_nodes_(nodes_.size()),
     this_node_(theContext()->getNode()),
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
@@ -287,6 +285,7 @@ template <
 void Rabenseifner<Type, DataT, Op, finalHandler>::executeFinalHan(size_t id) {
   auto& state = states_.at(id);
   vt_debug_print(terse, allreduce, "Rabenseifner executing final handler ID = {}\n", id);
+  vtAssert(final_handler_.valid(), "Final handler is not set!");
 
   if constexpr (ShouldUseView_v<Scalar, DataT>) {
     final_handler_.send(std::move(state.val_));
@@ -301,6 +300,12 @@ template <
   typename Type, typename DataT, template <typename Arg> class Op,
   auto finalHandler>
 void Rabenseifner<Type, DataT, Op, finalHandler>::allreduce(size_t id) {
+  // Execute early in case we're the only node
+  if(num_nodes_ < 2){
+    executeFinalHan(id);
+    return;
+  }
+
   if (is_part_of_adjustment_group_) {
     adjustForPowerOfTwo(id);
   } else {
@@ -718,31 +723,11 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::finalPart(size_t id) {
   vt_debug_print(
     terse, allreduce,
     "Rabenseifner::finalPart(): Executing final handler with size {} ID = {} "
-    "use_view={} obj_is_void={}\n",
-    state.val_.size(), id, ShouldUseView_v<Scalar, DataT>,
-    std::is_same_v<ObjT, void>
+    "use_view={}\n",
+    state.val_.size(), id, ShouldUseView_v<Scalar, DataT>
   );
 
   executeFinalHan(id);
-  // if constexpr (ShouldUseView_v<Scalar, DataT>) {
-  //   if constexpr (std::is_same_v<Type, ObjgroupAllreduceT>) {
-  //     parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
-  //   } else if constexpr (std::is_same_v<Type, GroupAllreduceT>){
-  //     f(state.val_);
-  //   }else{
-  //     // theCollection()->invokeCollective<ObjT, finalHandler>(state.val_);
-  //   }
-  // } else {
-  //   if constexpr (std::is_same_v<Type, ObjgroupAllreduceT>) {
-  //     parent_proxy_[this_node_].template invoke<finalHandler>(DataType::fromVec(state.val_));
-  //   } else if constexpr (std::is_same_v<Type, GroupAllreduceT>){
-  //     f(DataType::fromVec(state.val_));
-  //   }else{
-  //     // collection_proxy_.broadcastCollective<finalHandler>(state.val_);
-  //   }
-  // }
-
-  // state.completed_ = true;
 
   std::fill(state.scatter_messages_.begin(), state.scatter_messages_.end(), nullptr);
   std::fill(state.gather_messages_.begin(), state.gather_messages_.end(), nullptr);
@@ -783,7 +768,6 @@ template <
 >
 void Rabenseifner<Type, DataT, Op, finalHandler>::sendToExcludedNodesHandler(
   RabenseifnerMsg<Scalar, DataT>* msg) {
-  auto& state = states_.at(msg->id_);
   vt_debug_print(
     terse, allreduce,
     "Rabenseifner::sendToExcludedNodesHandler(): Received allreduce result "
@@ -791,19 +775,7 @@ void Rabenseifner<Type, DataT, Op, finalHandler>::sendToExcludedNodesHandler(
     msg->id_
   );
 
-  if constexpr (ShouldUseView_v<Scalar, DataT>) {
-    // parent_proxy_[this_node_].template invoke<finalHandler>(msg->val_);
-  } else {
-    if constexpr(std::is_same_v<ObjT, void>){
-
-    }else{
-      parent_proxy_[this_node_].template invoke<finalHandler>(
-         DataType::fromVec(state.val_)
-     );
-    }
-  }
-
-  state.completed_ = true;
+  executeFinalHan(msg->id_);
 }
 
 } // namespace vt::collective::reduce::allreduce

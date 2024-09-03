@@ -121,9 +121,8 @@ struct RecursiveDoubling {
   using DataType = DataHandler<DataT>;
   using Scalar = typename DataHandler<DataT>::Scalar;
   using ReduceOp = Op<Scalar>;
-  // using ObjT = typename ObjFuncTraits<decltype(f)>::ObjT;
-    using Trait = ObjFuncTraits<decltype(f)>;
-  using ObjT = typename Trait::ObjT;
+
+  using Trait = ObjFuncTraits<decltype(f)>;
   using MsgT = typename Trait::MsgT;
   using CallbackType =
     typename Trait::template WrapType<pipe::PipeManagerTL::CallbackRetType>;
@@ -138,9 +137,7 @@ struct RecursiveDoubling {
    * \param args Additional arguments for data initialization.
    */
   template <typename... Args>
-  RecursiveDoubling(
-    vt::objgroup::proxy::Proxy<ObjT> parentProxy,
-    Args&&... data);
+  RecursiveDoubling(Args&&... data);
 
       /**
    * \brief Constructor for RecursiveDoubling class.
@@ -154,7 +151,10 @@ struct RecursiveDoubling {
   template <typename... Args>
   RecursiveDoubling(GroupType group, Args&&... args);
 
-  void setFinalHandler(const CallbackType& ) {}
+  void executeFinalHan(size_t id);
+  void setFinalHandler(const CallbackType& fin) {
+    final_handler_ = fin;
+  }
   /**
    * \brief Start the allreduce operation.
    */
@@ -248,7 +248,7 @@ struct RecursiveDoubling {
   void finalPart(size_t id);
 
   vt::objgroup::proxy::Proxy<RecursiveDoubling> proxy_ = {};
-  vt::objgroup::proxy::Proxy<ObjT> parent_proxy_ = {};
+  CallbackType final_handler_ = {};
 
   struct State{
     DataT val_ = {};
