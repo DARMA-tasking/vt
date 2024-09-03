@@ -41,20 +41,19 @@
 //@HEADER
 */
 
-#include "vt/context/context.h"
+
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_IMPL_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_IMPL_H
 
 #include "vt/config.h"
+#include "vt/context/context.h"
 
 namespace vt::collective::reduce::allreduce {
 
 template <typename DataT, template <typename Arg> class Op, auto finalHandler>
 template <typename... Args>
-RecursiveDoubling<DataT, Op, finalHandler>::RecursiveDoubling(
-  vt::objgroup::proxy::Proxy<ObjT> parentProxy, Args&&... data)
-  : parent_proxy_(parentProxy),
-    num_nodes_(theContext()->getNumNodes()),
+RecursiveDoubling<DataT, Op, finalHandler>::RecursiveDoubling(Args&&... data)
+  : num_nodes_(theContext()->getNumNodes()),
     this_node_(vt::theContext()->getNode()),
     is_even_(this_node_ % 2 == 0),
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
@@ -353,9 +352,7 @@ template <
 void RecursiveDoubling<DataT, Op, finalHandler>::
   sendToExcludedNodesHandler(AllreduceDblRawMsg<DataT>* msg) {
 
-  // parent_proxy_[this_node_].template invoke<finalHandler>(*(msg->val_));
-
-  states_.at(msg->id_).completed_ = true;
+  executeFinalHan(msg->id_);
 }
 
 template <
@@ -376,7 +373,17 @@ void RecursiveDoubling<DataT, Op, finalHandler>::finalPart(size_t id) {
     sendToExcludedNodes(id);
   }
 
-  // parent_proxy_[this_node_].template invoke<finalHandler>(state.val_);
+  executeFinalHan(id);
+}
+
+template <
+  typename DataT, template <typename Arg> class Op,
+  auto finalHandler>
+void RecursiveDoubling<DataT, Op, finalHandler>::executeFinalHan(size_t id) {
+  auto& state = states_.at(id);
+  vt_debug_print(terse, allreduce, "RecursiveDoubling executing final handler ID = {}\n", id);
+
+  final_handler_.send(std::move(state.val_));
 
   state.completed_ = true;
 }

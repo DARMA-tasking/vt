@@ -306,8 +306,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
     );
 
     grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-      TypeToString(Reducer::type_), proxy,
-      std::forward<Args>(data)...
+      TypeToString(Reducer::type_), std::forward<Args>(data)...
     );
     grp_proxy[this_node].get()->proxy_ = grp_proxy;
     reducers[key] = grp_proxy.getProxy();
