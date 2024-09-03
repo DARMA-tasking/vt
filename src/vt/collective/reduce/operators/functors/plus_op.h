@@ -47,6 +47,10 @@
 #include "vt/config.h"
 #include "vt/collective/reduce/operators/functors/tuple_op_helper.h"
 
+#if MAGISTRATE_KOKKOS_ENABLED
+#include <Kokkos_Core.hpp>
+#endif
+
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
 template <typename T>
@@ -66,6 +70,7 @@ struct PlusOp<std::tuple<Params...>> {
 };
 
 #if MAGISTRATE_KOKKOS_ENABLED
+
 template <typename T>
 struct PlusOp<Kokkos::View<T*, Kokkos::HostSpace>> {
   void operator()(
