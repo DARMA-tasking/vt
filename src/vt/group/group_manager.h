@@ -63,7 +63,6 @@
 #include "vt/collective/collective_scope.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/utils/fntraits/fntraits.h"
-#include "vt/collective/reduce/allreduce/rabenseifner_group.h"
 #include "vt/configs/types/types_type.h"
 
 #include <memory>
@@ -458,7 +457,6 @@ private:
   CollectiveScopeType   collective_scope_;
   std::unordered_map<region::Region::ListType, GroupType, region::ListHash>
     temporary_groups_ = {};
-  std::unordered_map<GroupType, collective::reduce::allreduce::RabenseifnerGroup> reducers_ = {};
 };
 
 /**
