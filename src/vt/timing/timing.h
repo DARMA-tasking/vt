@@ -76,7 +76,7 @@ struct formatter<::vt::TimeTypeWrapper> {
   auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) const {
     return fmt::format_to(
       ctx.out(), "{}",
-      to_engineering_string(t.seconds(), 5, eng_exponential, "s")
+      to_engineering_string(t.seconds().count(), 5, eng_exponential, "s")
     );
   }
 };

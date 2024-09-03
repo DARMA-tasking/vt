@@ -69,7 +69,7 @@ void ElementLBData::stop(TimeType time) {
   auto const started = cur_time_started_;
   if (started) {
     cur_time_started_ = false;
-    addTime(total_time.seconds());
+    addTime(total_time.seconds().count());
   }
 
   vt_debug_print(
