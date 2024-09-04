@@ -48,13 +48,16 @@
 
 namespace vt::collective::reduce::allreduce {
 
-enum class ReducerType { Rabenseifner, RedursiveDoubling };
+struct RabenseifnerT {};
+struct RecursiveDoublingT {};
+
+enum class ReducerType { Rabenseifner, RecursiveDoubling };
 
 inline std::string TypeToString(ReducerType t) {
   if (t == ReducerType::Rabenseifner) {
     return "Rabenseifner";
   } else {
-    return "RedursiveDoubling";
+    return "RecursiveDoubling";
   }
 }
 

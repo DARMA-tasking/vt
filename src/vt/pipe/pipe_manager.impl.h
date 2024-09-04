@@ -155,7 +155,7 @@ auto PipeManager::makeBcast(ProxyT proxy) {
 }
 
 template <auto f, typename ProxyT>
-auto PipeManager::makeBcastCollective(ProxyT proxy) {
+auto PipeManager::makeSendLocalCollectionElement(ProxyT proxy) {
   return makeCallbackBcastCollectiveProxy<f>(proxy);
 }
 
