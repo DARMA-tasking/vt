@@ -190,12 +190,29 @@ protected:
   );
 
   /**
-   * \brief Get the estimated time needed for load balancing
+   * \brief Get the estimated time needed for load-balancing
    *
    * \return the estimated time
    */
   auto getCollectiveEpochCost() const {
     return std::chrono::nanoseconds(100);
+  }
+
+  /**
+   * \brief Check if load-balancing should be done
+   *
+   * \return true when the maximum load exceeds the cost of load balancing; false otherwise
+   */
+  bool maxLoadExceedsLBCost() const {
+    auto const max = base_stats_->at(lb::Statistic::Rank_load_modeled).at(
+      lb::StatisticQuantity::max
+    );
+    auto max_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::duration<double>(max)
+    );
+
+    // Compare the maximum rank load to the estimated load-balancing cost
+    return max_in_ns > getCollectiveEpochCost();
   }
 
 private:

@@ -449,11 +449,7 @@ void TemperedLB::runLB(LoadType total_load) {
     target_max_load_ = avg;
   }
 
-  // Use an estimated load-balancing cost on average rank load to load-balance
-  auto avg_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-    std::chrono::duration<double>(avg)
-  );
-  if (avg_ns > getCollectiveEpochCost()) {
+  if (maxLoadExceedsLBCost()) {
     should_lb = max > (run_temperedlb_tolerance + 1.0) * target_max_load_;
   }
 
