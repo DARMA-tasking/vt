@@ -77,7 +77,7 @@ struct ObjgroupAllreduceT {};
  * \tparam finalHandler Callback handler for the final result.
  */
 template <
-  typename Type, typename DataT, template <typename Arg> class Op, auto f
+  typename DataT, template <typename Arg> class Op, auto f
 >
 struct Rabenseifner {
   using Data = DataT;
@@ -88,11 +88,8 @@ struct Rabenseifner {
   using StateT = State<Scalar, DataT>;
 
   using Trait = ObjFuncTraits<decltype(f)>;
-  using MsgT = typename Trait::MsgT;
   using CallbackType =
     typename Trait::template WrapType<pipe::PipeManagerTL::CallbackRetType>;
-
-  static constexpr bool KokkosPaylod = ShouldUseView_v<Scalar, DataT>;
 
   template <typename ...Args>
   Rabenseifner(detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems, Args&&... args);
@@ -315,6 +312,7 @@ struct Rabenseifner {
 
   static inline const std::string name_ = "Rabenseifner";
   static inline constexpr ReducerType type_ = ReducerType::Rabenseifner;
+  static constexpr bool KokkosPaylod = ShouldUseView_v<Scalar, DataT>;
 };
 
 } // namespace vt::collective::reduce::allreduce

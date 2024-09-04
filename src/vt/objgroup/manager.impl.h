@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#include "vt/configs/error/config_assert.h"
+#include <type_traits>
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
@@ -269,9 +271,9 @@ ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> m
   return objgroup::broadcast(msg,han);
 }
 
-template <auto f, typename Reducer, typename ObjT, typename... Args>
+template <typename Reducer, typename ObjT, typename CbT, typename... Args>
 ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
-  ProxyType<ObjT> proxy, Args&&... data) {
+  ProxyType<ObjT> proxy, CbT cb, Args&&... data) {
   using namespace vt::collective::reduce::allreduce;
 
   auto const this_node = vt::theContext()->getNode();
@@ -311,7 +313,6 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
     id = grp_proxy[this_node].get()->id_ - 1;
   }
 
-  auto cb = theCB()->makeSend<f>(proxy[this_node]);
   grp_proxy[this_node].get()->setFinalHandler(cb);
 
   return PendingSendType{
@@ -320,30 +321,33 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
   };
 }
 
-template <auto f, typename ObjT, template <typename Arg> class Op, typename DataT, typename... Args>
+  template <
+    typename Type, auto f, template <typename Arg> class Op, typename ObjT,
+    typename... Args
+  >
 ObjGroupManager::PendingSendType
 ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   using namespace collective::reduce::allreduce;
 
-  auto const this_node = vt::theContext()->getNode();
+  auto cb = theCB()->makeSend<f>(proxy[theContext()->getNode()]);
   if (theContext()->getNumNodes() < 2) {
-    return PendingSendType{theTerm()->getEpoch(), [&] {
-      proxy[this_node].template invoke<f>(std::forward<Args>(data)...);
-    }};
+    return PendingSendType{
+      theTerm()->getEpoch(), [&] { cb.send(std::forward<Args>(data)...); }};
   }
 
-  // using Obj = typename FuncTraits<decltype(f)>::ObjT;
-  // auto cb = theCB()->makeSend<f>(proxy[this_node]);
+  using Trait = ObjFuncTraits<decltype(f)>;
 
-  auto const payload_size =
-    DataHandler<remove_cvref<DataT>>::size(std::forward<Args>(data)...);
+  // We only support allreduce with a single data type
+  using DataT = typename std::tuple_element<0, typename Trait::TupleType>::type;
 
-  if (payload_size < 2048) {
+  if constexpr (std::is_same_v<Type, RabenseifnerT>) {
+    using Reducer = Rabenseifner<DataT, Op, f>;
+    return allreduce<Reducer>(proxy, cb, std::forward<Args>(data)...);
+  } else if (std::is_same_v<Type, RecursiveDoublingT>) {
     using Reducer = RecursiveDoubling<DataT, Op, f>;
-    return allreduce<f, Reducer>(proxy, std::forward<Args>(data)...);
+    return allreduce<Reducer>(proxy, cb, std::forward<Args>(data)...);
   } else {
-    using Reducer = Rabenseifner<ObjgroupAllreduceT, DataT, Op, f>;
-    return allreduce<f, Reducer>(proxy, std::forward<Args>(data)...);
+    vtAssert(true, "Unknown allreduce algorithm type!");
   }
 
   // Silence nvcc warning

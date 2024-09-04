@@ -143,7 +143,7 @@ struct PipeManager
    * \return a callback
    */
   template <auto f, typename ProxyT>
-  auto makeBcastCollective(ProxyT proxy);
+  auto makeSendLocalCollectionElement(ProxyT proxy);
 
   /**
    * \brief Make callback to a function (including lambdas) with a context
