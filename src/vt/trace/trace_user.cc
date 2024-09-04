@@ -100,7 +100,7 @@ void addUserNotePre(
   [[maybe_unused]] TraceEventIDType const in_event
 ) {
 #if vt_check_enabled(trace_enabled)
-  if (in_event != no_user_event_id) {
+  if (in_event != no_trace_event) {
     theTrace()->addUserNoteBracketedBeginTime(in_event, in_note);
   }
 #endif
@@ -111,7 +111,7 @@ void addUserNoteEpi(
   [[maybe_unused]] TraceEventIDType const in_event
 ) {
 #if vt_check_enabled(trace_enabled)
-  if (in_event != no_user_event_id) {
+  if (in_event != no_trace_event) {
     theTrace()->addUserNoteBracketedEndTime(in_event, in_note);
   }
 #endif

@@ -167,7 +167,7 @@ struct TraceLite  {
   void disableTracing();
 
   /**
-   * \brief Log a bracketed user event with begin time
+   * \brief Log the start of the bracketed user event
    *
    * \param[in] event the ID for the sts file
    * \param[in] begin the begin time
@@ -175,7 +175,7 @@ struct TraceLite  {
   void addUserEventBracketedBeginTime(UserEventIDType event, TimeType begin);
 
   /**
-   * \brief Log a bracketed user event with end time
+   * \brief Log the end of the bracketed user event
    *
    * \param[in] event the ID for the sts file
    * \param[in] end the end time
@@ -183,7 +183,7 @@ struct TraceLite  {
   void addUserEventBracketedEndTime(UserEventIDType event, TimeType end);
 
   /**
-   * \brief Log a user bracketed event with a note
+   * \brief Log the start of the bracketed user event with a note
    *
    * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
    * bracketed user events with a note.
@@ -196,7 +196,7 @@ struct TraceLite  {
   );
 
   /**
-   * \brief Log a user bracketed event with a note
+   * \brief Log the end of the bracketed user event with a note
    *
    * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
    * bracketed user events with a note.
@@ -206,7 +206,7 @@ struct TraceLite  {
   void addUserNoteBracketedEndTime(TraceEventIDType const event);
 
   /**
-   * \brief Log a user bracketed event with a note
+   * \brief Log the end of the bracketed user event with a note
    *
    * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
    * bracketed user events with a note.
