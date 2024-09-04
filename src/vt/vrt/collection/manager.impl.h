@@ -913,9 +913,7 @@ messaging::PendingSend CollectionManager::reduceLocal(
   auto const group = elm_holder->group();
   bool const use_group = group_ready && send_group;
 
-
-  using Reducer = collective::reduce::allreduce::Rabenseifner<
-    CollectionAllreduceT, DataT, Op, f>;
+  using Reducer = collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
 
   // Incorrect! will yield same reducer for different Op/payload size/final handler etc.
   if (auto reducer = rabenseifner_reducers_.find(col_proxy);

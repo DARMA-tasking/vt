@@ -279,7 +279,7 @@ struct RecursiveDoubling {
 
   NodeType vrt_node_ = {};
   bool is_part_of_adjustment_group_ = false;
-  static inline ReducerType type_ = ReducerType::RedursiveDoubling;
+  static inline ReducerType type_ = ReducerType::RecursiveDoubling;
 };
 
 } // namespace vt::collective::reduce::allreduce

@@ -182,7 +182,7 @@ TEST_F(TestCallbackBcastCollective, test_callback_bcast_collective_1) {
 
   runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = theCB()->makeBcastCollective<&TestCol::cb1>(proxy);
+      auto cb = theCB()->makeSendLocalCollectionElement<&TestCol::cb1>(proxy);
       cb.send(8,9,10);
     }
   });
@@ -213,7 +213,7 @@ TEST_F(TestCallbackBcastCollective, test_callback_bcast_collective_2) {
   runInEpochCollective([&]{
     if (this_node == 0) {
       auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-      auto cb = theCB()->makeBcastCollective<&TestCol::cb2>(proxy);
+      auto cb = theCB()->makeSendLocalCollectionElement<&TestCol::cb2>(proxy);
       auto msg = makeMessage<CallbackDataMsg>(cb);
       theMsg()->sendMsg<testHandler>(next, msg);
     }
@@ -235,7 +235,7 @@ TEST_F(TestCallbackBcastCollective, test_callback_bcast_collective_param_1) {
 
   runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = theCB()->makeBcastCollective<&TestCol::cb3>(proxy);
+      auto cb = theCB()->makeSendLocalCollectionElement<&TestCol::cb3>(proxy);
       cb.send(8, 9);
     }
   });
@@ -254,7 +254,7 @@ TEST_F(TestCallbackBcastCollective, test_callback_bcast_collective_param_2) {
 
   runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = theCB()->makeBcastCollective<&TestCol::cb4>(proxy);
+      auto cb = theCB()->makeSendLocalCollectionElement<&TestCol::cb4>(proxy);
       cb.send("hello", 8);
     }
   });
@@ -283,7 +283,7 @@ TEST_F(TestCallbackBcastCollective, test_callback_bcast_collective_3) {
   runInEpochCollective([&]{
     if (this_node == 0) {
       auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-      auto cb = theCB()->makeBcastCollective<cb5>(proxy);
+      auto cb = theCB()->makeSendLocalCollectionElement<cb5>(proxy);
       auto msg = makeMessage<CallbackDataMsg>(cb);
       theMsg()->sendMsg<testHandler>(next, msg);
     }

@@ -166,7 +166,7 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
 
   using DataT = typename function_traits<decltype(f)>::template arg_type<0>;
 
-  using Reducer = Rabenseifner<GroupAllreduceT, DataT, Op, f>;
+  using Reducer = Rabenseifner<DataT, Op, f>;
 
   // TODO; Save the proxy so it can be deleted afterwards
   auto proxy = theObjGroup()->makeCollective<Reducer>(
