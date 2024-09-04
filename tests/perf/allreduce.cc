@@ -43,6 +43,7 @@
 
 #include "common/test_harness.h"
 #include "vt/collective/collective_alg.h"
+#include "vt/collective/reduce/allreduce/type.h"
 #include "vt/collective/reduce/operators/functors/plus_op.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/context/context.h"
@@ -166,18 +167,15 @@ VT_PERF_TEST(MyTest, test_allreduce_rabenseifner) {
     "test_allreduce_rabenseifner", this, "Rabenseifner vector"
   );
 
-  using DataT = decltype(data);
-  using Reducer = collective::reduce::allreduce::Rabenseifner<
-    vt::collective::reduce::allreduce::ObjgroupAllreduceT, DataT,
-    collective::PlusOp, &NodeObj<MyTest>::handlerVec>;
-
   for (auto payload_size : payloadSizes) {
     data.resize(payload_size, theContext()->getNode() + 1);
 
     theCollective()->barrier();
     auto* obj_ptr = proxy[my_node_].get();
     StartTimer(obj_ptr->timer_names_.at(payload_size));
-    theObjGroup()->allreduce<&NodeObj<MyTest>::handlerVec, Reducer>(proxy, data);
+    proxy.allreduce<
+      &NodeObj<MyTest>::handlerVec, collective::PlusOp,
+      vt::collective::reduce::allreduce::RabenseifnerT>(data);
 
     theSched()->runSchedulerWhile(
       [obj_ptr] { return !obj_ptr->allreduce_done_; });
@@ -191,19 +189,16 @@ VT_PERF_TEST(MyTestKokkos, test_allreduce_rabenseifner_kokkos) {
     "test_allreduce_rabenseifner", this, "Rabenseifner view"
   );
 
-  using DataT = decltype(view);
-  using Reducer = collective::reduce::allreduce::Rabenseifner<
-    vt::collective::reduce::allreduce::ObjgroupAllreduceT, DataT,
-    collective::PlusOp, &NodeObj<MyTestKokkos>::handlerView<float>
-  >;
-
   for (auto payload_size : payloadSizes) {
     view = Kokkos::View<float*, Kokkos::HostSpace>("view", payload_size);
 
     theCollective()->barrier();
     auto* obj_ptr = proxy[my_node_].get();
     StartTimer(obj_ptr->timer_names_.at(payload_size));
-    theObjGroup()->allreduce<&NodeObj<MyTestKokkos>::handlerView<float>, Reducer>(proxy, view);
+
+    proxy.allreduce<
+      &NodeObj<MyTestKokkos>::handlerView<float>, collective::PlusOp,
+      vt::collective::reduce::allreduce::RabenseifnerT>(view);
 
     theSched()->runSchedulerWhile([obj_ptr] { return !obj_ptr->allreduce_done_; });
     obj_ptr->allreduce_done_ = false;
@@ -216,17 +211,16 @@ VT_PERF_TEST(MyTest, test_allreduce_recursive_doubling) {
     "test_allreduce_recursive_doubling", this, "Recursive doubling vector"
   );
 
-  using DataT = decltype(data);
-  using Reducer = collective::reduce::allreduce::RecursiveDoubling<
-    DataT, collective::PlusOp, &NodeObj<MyTest>::handlerVec>;
-
   for (auto payload_size : payloadSizes) {
     data.resize(payload_size, theContext()->getNode() + 1);
 
     theCollective()->barrier();
     auto* obj_ptr = proxy[my_node_].get();
     StartTimer(obj_ptr->timer_names_.at(payload_size));
-    theObjGroup()->allreduce<&NodeObj<MyTest>::handlerVec, Reducer>(proxy, data);
+
+    proxy.allreduce<
+      &NodeObj<MyTest>::handlerVec, collective::PlusOp,
+      vt::collective::reduce::allreduce::RecursiveDoublingT>(data);
 
     theSched()->runSchedulerWhile(
       [obj_ptr] { return !obj_ptr->allreduce_done_; });
@@ -240,19 +234,16 @@ VT_PERF_TEST(MyTestKokkos, test_allreduce_recursive_doubling_kokkos) {
     "test_allreduce_rabenseifner", this, "Recursive doubling view"
   );
 
-  using DataT = decltype(view);
-  using Reducer = collective::reduce::allreduce::RecursiveDoubling<
-    DataT, collective::PlusOp,
-    &NodeObj<MyTestKokkos>::handlerView<float>
-  >;
-
   for (auto payload_size : payloadSizes) {
     view = Kokkos::View<float*, Kokkos::HostSpace>("view", payload_size);
 
     theCollective()->barrier();
     auto* obj_ptr = proxy[my_node_].get();
     StartTimer(obj_ptr->timer_names_.at(payload_size));
-    theObjGroup()->allreduce<&NodeObj<MyTestKokkos>::handlerView<float>, Reducer>(proxy, view);
+
+    proxy.allreduce<
+      &NodeObj<MyTestKokkos>::handlerView<float>, collective::PlusOp,
+      vt::collective::reduce::allreduce::RecursiveDoublingT>(view);
 
     theSched()->runSchedulerWhile([obj_ptr] { return !obj_ptr->allreduce_done_; });
     obj_ptr->allreduce_done_ = false;

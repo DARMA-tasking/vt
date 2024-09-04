@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#include "vt/collective/reduce/allreduce/type.h"
+#include "vt/context/context.h"
 #if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
 #define INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
 
@@ -208,15 +210,16 @@ template <typename ObjT>
 template <
   auto f,
   template <typename Arg> class Op,
+  typename Type,
   typename... Args
 >
 typename Proxy<ObjT>::PendingSendType
-Proxy<ObjT>::allreduce_h(
+Proxy<ObjT>::allreduce(
   Args&&... args
 ) const {
   auto proxy = Proxy<ObjT>(*this);
 
-  return theObjGroup()->allreduce<f, ObjT, Op, remove_cvref<Args>...>(
+  return theObjGroup()->allreduce<Type, f, Op>(
     proxy, std::forward<Args>(args)...);
 }
 
