@@ -20,8 +20,15 @@ set(TOP_LEVEL_SUBDIRS
   activefn
   # Add single-directory components
   context event handler sequence termination
-  scheduler standalone runtime trace timing demangle rdmahandle metrics
+  scheduler standalone runtime trace timing demangle rdmahandle
 )
+if(vt_perf_enabled)
+  list(
+      APPEND
+      TOP_LEVEL_SUBDIRS
+      metrics
+    )
+endif()
 set(
   PROJECT_SUBDIRS_LIST
   # Add component along with sub-directories

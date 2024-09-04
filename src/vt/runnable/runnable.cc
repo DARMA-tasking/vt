@@ -50,7 +50,6 @@
 #include "vt/configs/debug/debug_var_unused.h"
 #include "vt/configs/arguments/app_config.h"
 #include "vt/scheduler/thread_manager.h"
-#include "vt/metrics/perf_data.h"
 
 namespace vt { namespace runnable {
 
@@ -268,7 +267,12 @@ void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
 
 /*static*/ void RunnableNew::operator delete(void* ptr) {
   RunnableNewAlloc::runnable->dealloc(reinterpret_cast<std::byte*>(ptr));
-  vt::thePerfData()->purgeTask(reinterpret_cast<RunnableNew*>(ptr));
+  #if vt_check_enabled(perf)
+  if (vt::thePerfData() != nullptr && curRT->isInitialized())
+  {
+    vt::thePerfData()->purgeTask(reinterpret_cast<RunnableNew*>(ptr));
+  }
+  #endif
 }
 
 /*static*/
