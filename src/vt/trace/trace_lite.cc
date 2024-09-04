@@ -296,7 +296,7 @@ void TraceLite::addUserNoteBracketedBeginTime(
 
   vt_debug_print(
     normal, trace,
-    "Trace::addUserNoteBracketedBeginTime: begin={}, note={}, event={}\n",
+    "Trace::addUserNoteBracketedBegin: begin={}, note={}, event={}\n",
     begin, note, event
   );
 
@@ -336,11 +336,10 @@ void TraceLite::addUserNoteBracketedEndTime(TraceEventIDType const event) {
 
   vt_debug_print(
     normal, trace,
-    "Trace::addUserNoteBracketedEndTime: end={}, event={}\n",
+    "Trace::addUserNoteBracketedEnd: end={}, event={}\n",
     end, event
   );
 
-  // Fixup end time of the note
   if (event != no_trace_event) {
     updateNoteEndTime(event, end, nullptr);
   }
@@ -356,11 +355,10 @@ void TraceLite::addUserNoteBracketedEndTime(
 
   vt_debug_print(
     normal, trace,
-    "Trace::addUserNoteBracketedEndTime: end={}, new_note={}, event={}\n",
+    "Trace::addUserNoteBracketedEnd: end={}, new_note={}, event={}\n",
     end, new_note, event
   );
 
-  // Fixup end time of the note
   if (event != no_trace_event) {
     updateNoteEndTime(event, end, &new_note);
   }
