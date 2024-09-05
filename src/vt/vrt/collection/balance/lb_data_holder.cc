@@ -50,23 +50,23 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void get_object_from_json_field_(
-  const nlohmann::json& field, nlohmann::json& object, bool& bitpacked) {
+  const nlohmann::json& field, nlohmann::json& object, bool& is_bitpacked) {
   if (field.find("id") != field.end()) {
     object = field["id"];
-    bitpacked = true;
+    is_bitpacked = true;
   } else {
     object = field["seq_id"];
-    bitpacked = false;
+    is_bitpacked = false;
   }
 }
 
 ElementIDStruct get_elm_from_object_info_(
-  const nlohmann::json& object, bool bitpacked, bool migratable,
+  const nlohmann::json& object, bool is_bitpacked, bool migratable,
   const nlohmann::json& home, const nlohmann::json& node) {
   using Field = uint64_t;
 
   Field object_id;
-  if (bitpacked) {
+  if (is_bitpacked) {
     object_id = BitPackerType::getField<
       vt::elm::eElmIDProxyBitsNonObjGroup::ID, vt::elm::elm_id_num_bits, Field>(
       static_cast<Field>(object));
@@ -81,11 +81,11 @@ ElementIDStruct get_elm_from_object_info_(
 ElementIDStruct get_elm_from_comm_object_(const nlohmann::json& field, bool collection) {
   // Get the object's id and determine if it is bit-encoded
   nlohmann::json object;
-  bool bitpacked_id;
-  get_object_from_json_field_(field, object, bitpacked_id);
+  bool is_bitpacked;
+  get_object_from_json_field_(field, object, is_bitpacked);
   vtAssertExpr(object.is_number());
 
-  // Somehow will this information
+  // TODO: need to get this information (if it's relevant)
   int home = 0;
   int node = 0;
   bool migratable = false;
@@ -94,7 +94,7 @@ ElementIDStruct get_elm_from_comm_object_(const nlohmann::json& field, bool coll
   ElementIDStruct elm;
   if (collection) {
     elm =
-      get_elm_from_object_info_(object, bitpacked_id, migratable, home, node);
+      get_elm_from_object_info_(object, is_bitpacked, migratable, home, node);
   } else {
     elm = ElementIDStruct{object, theContext()->getNode()};
   }
@@ -357,13 +357,8 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
 
           if (etype == "object") {
             nlohmann::json object;
-            bool bitpacked_id = false;
-            if (task["entity"].find("id") != task["entity"].end()) {
-              object = task["entity"]["id"];
-              bitpacked_id = true;
-            } else {
-              object = task["entity"]["seq_id"];
-            }
+            bool is_bitpacked;
+            get_object_from_json_field_(task["entity"], object, is_bitpacked);
             vtAssertExpr(object.is_number());
 
             ElementIDStruct elm;
@@ -372,7 +367,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               task["entity"].find("collection_id") != task["entity"].end() and
               task["entity"].find("index") != task["entity"].end()) {
               elm = get_elm_from_object_info_(
-                object, bitpacked_id, migratable, home, node);
+                object, is_bitpacked, migratable, home, node);
               auto cid = task["entity"]["collection_id"];
               auto idx = task["entity"]["index"];
               if (cid.is_number() && idx.is_array()) {
