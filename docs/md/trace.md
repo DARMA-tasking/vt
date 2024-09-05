@@ -20,3 +20,12 @@ specification file can be passed to \vt via a command-line flag:
 `--vt_trace_spec --vt_trace_spec_file=filename.spec`.
 
 For details about vt's Specification File see \ref spec-file
+
+\section incremental-tracing Incremental Trace Output
+
+The trace events can be configured to be saved to the file in the incremental matter.
+To configure the interval of the flushes use the `--vt_trace_flush_size=X` parameter.
+The `X` stands for the number of trace events before the next flush.
+
+\note The incremental flushing will be blocked in the case of an incomplete user note.
+In that scenario there will be no output to the files. All trace events will be kept in memory and will be tried to be flushed on the next interval if the incomplete notes were closed.

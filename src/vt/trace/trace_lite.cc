@@ -248,27 +248,8 @@ bool TraceLite::checkDynamicRuntimeEnabled(bool is_end_event) {
     (trace_enabled_cur_phase_ or is_end_event);
 }
 
-void TraceLite::addUserEventBracketed(
-  UserEventIDType event, TimeType begin, TimeType end) {
-  if (not checkDynamicRuntimeEnabled()) {
-    return;
-  }
-
-  vt_debug_print(
-    normal, trace,
-    "Trace::addUserEventBracketed: event={:x}, begin={}, end={}\n",
-    event, begin, end);
-
-  auto const type = TraceConstantsType::UserEventPair;
-  NodeType const node = theContext()->getNode();
-
-  logEvent(LogType{begin, type, node, event, true});
-  logEvent(LogType{end, type, node, event, false});
-}
-
-void TraceLite::addUserBracketedNote(
-  TimeType const begin, TimeType const end, std::string const& note,
-  TraceEventIDType const event
+void TraceLite::addUserEventBracketedBeginTime(
+  UserEventIDType event, TimeType begin
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return;
@@ -276,15 +257,112 @@ void TraceLite::addUserBracketedNote(
 
   vt_debug_print(
     normal, trace,
-    "Trace::addUserBracketedNote: begin={}, end={}, note={}, event={}\n",
-    begin, end, note, event
+    "Trace::addUserEventBracketedBegin: event={:x}, begin={}\n",
+    event, begin
+  );
+
+  auto const type = TraceConstantsType::UserEventPair;
+  NodeType const node = theContext()->getNode();
+
+  logEvent(LogType{begin, type, node, event, true});
+}
+
+void TraceLite::addUserEventBracketedEndTime(
+  UserEventIDType event, TimeType end
+) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
+  vt_debug_print(
+    normal, trace,
+    "Trace::addUserEventBracketedEnd: event={:x}, end={}\n",
+    event, end
+  );
+
+  auto const type = TraceConstantsType::UserEventPair;
+  NodeType const node = theContext()->getNode();
+
+  logEvent(LogType{end, type, node, event, false});
+}
+
+void TraceLite::addUserNoteBracketedBeginTime(
+  TraceEventIDType const event, std::string const& note
+) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+  auto begin = getCurrentTime();
+
+  vt_debug_print(
+    normal, trace,
+    "Trace::addUserNoteBracketedBegin: begin={}, note={}, event={}\n",
+    begin, note, event
   );
 
   auto const type = TraceConstantsType::UserSuppliedBracketedNote;
+  logEvent(LogType{begin, begin, type, note, event});
 
-  logEvent(LogType{begin, end, type, note, event});
+  // Save event log for fixing up the end time later
+  if (event != no_trace_event) {
+    auto* last_trace = getLastTraceEvent();
+    incomplete_notes_[event].push(last_trace);
+  }
 }
 
+void TraceLite::updateNoteEndTime(
+  const TraceEventIDType& event, const TimeType& end, const std::string* new_note
+) {
+  auto iter = incomplete_notes_.find(event);
+  vtAssertExpr(iter != incomplete_notes_.end());
+  // update data in the Log
+  auto& last_trace = iter->second.top();
+  last_trace->end_time = end;
+  if (new_note != nullptr) {
+    last_trace->setUserNote(*new_note);
+  }
+  // clean up pointers to Log
+  iter->second.pop();
+  if (iter->second.empty()) {
+    incomplete_notes_.erase(iter);
+  }
+}
+
+void TraceLite::addUserNoteBracketedEndTime(TraceEventIDType const event) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+  auto end = getCurrentTime();
+
+  vt_debug_print(
+    normal, trace,
+    "Trace::addUserNoteBracketedEnd: end={}, event={}\n",
+    end, event
+  );
+
+  if (event != no_trace_event) {
+    updateNoteEndTime(event, end, nullptr);
+  }
+}
+
+void TraceLite::addUserNoteBracketedEndTime(
+  TraceEventIDType const event, std::string const& new_note
+) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+  auto end = getCurrentTime();
+
+  vt_debug_print(
+    normal, trace,
+    "Trace::addUserNoteBracketedEnd: end={}, new_note={}, event={}\n",
+    end, new_note, event
+  );
+
+  if (event != no_trace_event) {
+    updateNoteEndTime(event, end, &new_note);
+  }
+}
 
 TraceEventIDType TraceLite::logEvent(LogType&& log) {
   if (not checkDynamicRuntimeEnabled()) {
@@ -447,6 +525,10 @@ void TraceLite::flushTracesFile(bool useGlobalSync) {
     // Synchronize all the nodes before flushing the traces
     // (Consider pushing out: barrier usages are probably domain-specific.)
     theCollective()->barrier();
+  }
+  if (incomplete_notes_.size() > 0) {
+    // wait until all incomplete events are patched up before flushing to disk
+    return;
   }
   if (
     traces_.size() >=

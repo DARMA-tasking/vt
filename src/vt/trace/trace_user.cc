@@ -83,15 +83,6 @@ void addUserEvent([[maybe_unused]] UserEventIDType event) {
 #endif
 }
 
-void addUserEventBracketed(
-  [[maybe_unused]] UserEventIDType event, [[maybe_unused]] TimeType begin,
-  [[maybe_unused]] TimeType end
-) {
-#if vt_check_enabled(trace_enabled)
-  theTrace()->addUserEventBracketed(event, begin, end);
-#endif
-}
-
 void addUserNote([[maybe_unused]] std::string const& note) {
 #if vt_check_enabled(trace_enabled)
   theTrace()->addUserNote(note);
@@ -104,50 +95,25 @@ void addUserData([[maybe_unused]] int32_t data) {
 #endif
 }
 
-void addUserBracketedNote(
-  [[maybe_unused]] TimeType const begin, [[maybe_unused]] TimeType const end,
-  [[maybe_unused]] std::string const& note,
-  [[maybe_unused]] TraceEventIDType const event
-) {
-#if vt_check_enabled(trace_enabled)
-  theTrace()->addUserBracketedNote(begin, end, note, event);
-#endif
-}
-
-#if vt_check_enabled(trace_enabled)
-struct UserSplitHolder final {
-  static std::unordered_map<std::string, TimeType> split_;
-};
-
-/*static*/ std::unordered_map<std::string, TimeType> UserSplitHolder::split_ = {};
-#endif
-
 void addUserNotePre(
-  [[maybe_unused]] std::string const& note,
-  [[maybe_unused]] TraceEventIDType const
+  [[maybe_unused]] std::string const& in_note,
+  [[maybe_unused]] TraceEventIDType const in_event
 ) {
 #if vt_check_enabled(trace_enabled)
-  auto iter = UserSplitHolder::split_.find(note);
-  vtAssertExpr(iter == UserSplitHolder::split_.end());
-  UserSplitHolder::split_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(note),
-    std::forward_as_tuple(Trace::getCurrentTime())
-  );
+  if (in_event != no_trace_event) {
+    theTrace()->addUserNoteBracketedBeginTime(in_event, in_note);
+  }
 #endif
 }
 
 void addUserNoteEpi(
   [[maybe_unused]] std::string const& in_note,
-  [[maybe_unused]] TraceEventIDType const event
+  [[maybe_unused]] TraceEventIDType const in_event
 ) {
 #if vt_check_enabled(trace_enabled)
-  auto iter = UserSplitHolder::split_.find(in_note);
-  vtAssertExpr(iter != UserSplitHolder::split_.end());
-  auto begin = iter->second;
-  auto end = Trace::getCurrentTime();
-  theTrace()->addUserBracketedNote(begin, end, in_note, event);
-  UserSplitHolder::split_.erase(iter);
+  if (in_event != no_trace_event) {
+    theTrace()->addUserNoteBracketedEndTime(in_event, in_note);
+  }
 #endif
 }
 

@@ -304,10 +304,9 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
 void AsyncEvent::testEventsTrigger(int const& num_events) {
 # if vt_check_enabled(trace_enabled)
   int32_t num_completed  = 0;
-  auto tr_begin = TimeType{0.0};
-
+  std::unique_ptr<trace::TraceScopedNote> trace_note;
   if (theConfig()->vt_trace_event_polling) {
-    tr_begin = timing::getCurrentTime();
+    trace_note = std::make_unique<trace::TraceScopedNote>(trace_event_polling);
   }
 # endif
 
@@ -356,9 +355,9 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
 # if vt_check_enabled(trace_enabled)
   if (theConfig()->vt_trace_event_polling) {
     if (num_completed > 0) {
-      TimeType tr_end = timing::getCurrentTime();
       auto tr_note = fmt::format("completed {} of {}", num_completed, cur);
-      trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_event_polling);
+      trace_note->setNote(tr_note);
+      trace_note->end();
     }
   } else {
     (void)num_completed;
