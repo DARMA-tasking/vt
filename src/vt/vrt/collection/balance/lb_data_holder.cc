@@ -61,7 +61,7 @@ void get_object_from_json_field_(
 }
 
 ElementIDStruct get_elm_from_object_info_(
-  const nlohmann::json& object, bool is_bitpacked, bool migratable,
+  const nlohmann::json& object, bool is_bitpacked, bool is_migratable,
   const nlohmann::json& home, const nlohmann::json& node) {
   using Field = uint64_t;
 
@@ -75,26 +75,28 @@ ElementIDStruct get_elm_from_object_info_(
   }
 
   return elm::ElmIDBits::createCollectionImpl(
-    migratable, object_id, home, node);
+    is_migratable, object_id, home, node);
 }
 
-ElementIDStruct get_elm_from_comm_object_(const nlohmann::json& field, bool collection) {
+ElementIDStruct
+get_elm_from_comm_object_(const nlohmann::json& field, bool collection) {
   // Get the object's id and determine if it is bit-encoded
   nlohmann::json object;
   bool is_bitpacked;
   get_object_from_json_field_(field, object, is_bitpacked);
   vtAssertExpr(object.is_number());
 
-  // TODO: need to get this information (if it's relevant)
-  int home = 0;
-  int node = 0;
-  bool migratable = false;
-
   // Create elm with encoded data
   ElementIDStruct elm;
+
   if (collection) {
-    elm =
-      get_elm_from_object_info_(object, is_bitpacked, migratable, home, node);
+    // TODO: need to get actual object data
+    int home = 0;
+    int node = 0;
+    bool is_migratable = false;
+
+    elm = get_elm_from_object_info_(
+      object, is_bitpacked, is_migratable, home, node);
   } else {
     elm = ElementIDStruct{object, theContext()->getNode()};
   }
@@ -350,7 +352,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
           auto time = task["time"];
           auto etype = task["entity"]["type"];
           auto home = task["entity"]["home"];
-          bool migratable = task["entity"]["migratable"];
+          bool is_migratable = task["entity"]["migratable"];
 
           vtAssertExpr(time.is_number());
           vtAssertExpr(node.is_number());
@@ -367,7 +369,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               task["entity"].find("collection_id") != task["entity"].end() and
               task["entity"].find("index") != task["entity"].end()) {
               elm = get_elm_from_object_info_(
-                object, is_bitpacked, migratable, home, node);
+                object, is_bitpacked, is_migratable, home, node);
               auto cid = task["entity"]["collection_id"];
               auto idx = task["entity"]["index"];
               if (cid.is_number() && idx.is_array()) {
