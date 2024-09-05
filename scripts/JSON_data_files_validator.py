@@ -435,11 +435,12 @@ class JSONDataFilesValidator:
             for data in all_jsons:
                 if data["phases"][n].get("communications") is not None:
                     comms = data["phases"][n]["communications"]
-                    comm_ids.update({int(comm["from"]["id"]) for comm in comms})
-                    comm_ids.update({int(comm["to"]["id"]) for comm in comms})
+                    id_string = "id" if "id" in comms[0]["from"] else "seq_id"
+                    comm_ids.update({int(comm["from"][id_string]) for comm in comms})
+                    comm_ids.update({int(comm["to"][id_string]) for comm in comms})
 
                 tasks = data["phases"][n]["tasks"]
-                task_ids.update({int(task["entity"]["id"]) for task in tasks})
+                task_ids.update({int(task["entity"][id_string]) for task in tasks})
 
             if not comm_ids.issubset(task_ids):
                 logging.error(

@@ -304,7 +304,14 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
           vtAssertExpr(node.is_number());
 
           if (etype == "object") {
-            auto object = task["entity"]["id"];
+            nlohmann::json object;
+            bool bitpacked_id = false;
+            if (task["entity"].find("id") != task["entity"].end()) {
+              object = task["entity"]["id"];
+              bitpacked_id = true;
+            } else {
+              object = task["entity"]["seq_id"];
+            }
             vtAssertExpr(object.is_number());
 
             auto elm = ElementIDStruct{object, node};
@@ -314,13 +321,18 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               task["entity"].find("index") != task["entity"].end()
             ) {
               using Field = uint64_t;
-              auto strippedObject = BitPackerType::getField<
-                                      vt::elm::eElmIDProxyBitsNonObjGroup::ID,
-                                      vt::elm::elm_id_num_bits,
-                                      Field
-                                    >(static_cast<Field>(object));
+              Field object_id;
+              if (bitpacked_id) {
+                object_id = BitPackerType::getField<
+                              vt::elm::eElmIDProxyBitsNonObjGroup::ID,
+                              vt::elm::elm_id_num_bits,
+                              Field
+                            >(static_cast<Field>(object));
+              } else {
+                object_id = static_cast<Field>(object);
+              }
               elm = elm::ElmIDBits::createCollectionImpl(migratable,
-                                                         strippedObject,
+                                                         object_id,
                                                          home,
                                                          node);
               auto cid = task["entity"]["collection_id"];
