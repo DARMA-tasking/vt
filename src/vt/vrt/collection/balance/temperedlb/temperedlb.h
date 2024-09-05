@@ -417,7 +417,7 @@ private:
   double beta = 0.0;
   double gamma = 0.0;
   double delta = 0.0;
-  double epsilon = 0.0;
+  double epsilon = std::numeric_limits<double>::infinity();
   std::vector<bool> propagated_k_;
   std::mt19937 gen_propagate_;
   std::mt19937 gen_sample_;

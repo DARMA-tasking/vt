@@ -257,6 +257,7 @@ Default: true
 Description:
   If the final iteration of a trial has a worse imbalance than any earlier
   iteration, it will roll back to the iteration with the best imbalance.
+  If transfer_strategy is SwapClusters, rollback is automatically set to false.
 )"
     },
     {
@@ -291,32 +292,32 @@ Description: α in the work model (load in work model)
       "beta",
       R"(
 Values: <double>
-Defaut: 1.0
+Defaut: 0.0
 Description: β in the work model (inter-node communication in work model)
-)"
-    },
-    {
-    "epsilon",
-      R"(
-Values: <double>
-Defaut: 1.0
-Description: ε in the work model (memory term in work model)
-)"
-    },
-    {
-    "delta",
-      R"(
-Values: <double>
-Defaut: 1.0
-Description: δ in the work model (shared-memory-edges in work model)
 )"
     },
     {
     "gamma",
       R"(
 Values: <double>
-Defaut: 1.0
+Defaut: 0.0
 Description: γ in the work model (intra-node communication in work model)
+)"
+    },
+    {
+    "delta",
+      R"(
+Values: <double>
+Defaut: 0.0
+Description: δ in the work model (shared-memory-edges in work model)
+)"
+    },
+    {
+    "epsilon",
+      R"(
+Values: <double>
+Defaut: infinity
+Description: ε in the work model (memory term in work model)
 )"
     }
   };
@@ -455,6 +456,10 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     }
   );
   transfer_type_ = transfer_type_converter_.getFromConfig(config, transfer_type_);
+
+  if (transfer_type_ == TransferTypeEnum::SwapClusters) {
+    rollback_ = false;
+  }
 
   balance::LBArgsEnumConverter<ObjectOrderEnum> obj_ordering_converter_(
     "ordering", "ObjectOrderEnum", {
@@ -1066,9 +1071,21 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       if (first_iter) {
         // Copy this node's object assignments to a local, mutable copy
         cur_objs_.clear();
+        int total_num_objs = 0;
+        int num_migratable_objs = 0;
         for (auto obj : *load_model_) {
-          cur_objs_[obj] = getModeledValue(obj);
+          total_num_objs++;
+          if (obj.isMigratable()) {
+            num_migratable_objs++;
+            cur_objs_[obj] = getModeledValue(obj);
+          }
         }
+
+        vt_debug_print(
+          normal, temperedlb,
+          "TemperedLB::doLBStages: Found {} migratable objects out of {}.\n",
+          num_migratable_objs, total_num_objs
+        );
 
         send_edges_.clear();
         recv_edges_.clear();
@@ -1326,12 +1343,14 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       );
     }
 
-    auto remote_block_count = getRemoteBlockCountHere();
-    runInEpochCollective("TemperedLB::doLBStages -> compute unhomed", [=] {
-      proxy_.allreduce<&TemperedLB::remoteBlockCountHandler, collective::PlusOp>(
-        remote_block_count
-      );
-    });
+    // Skip this block when not using SwapClusters
+    if (transfer_type_ == TransferTypeEnum::SwapClusters) {
+      auto remote_block_count = getRemoteBlockCountHere();
+      runInEpochCollective("TemperedLB::doLBStages -> compute unhomed", [=] {
+        proxy_.allreduce<&TemperedLB::remoteBlockCountHandler,
+                         collective::PlusOp>(remote_block_count);
+      });
+    }
   } else if (this_node == 0) {
     vt_debug_print(
       terse, temperedlb,
@@ -2269,7 +2288,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     try_new_mem += src_cluster.cluster_footprint;
 
     if (try_new_mem > mem_thresh_) {
-      return - std::numeric_limits<double>::infinity();
+      return - epsilon;
     }
 
     BytesType src_new_mem = current_memory_usage_;
@@ -2289,7 +2308,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     src_new_mem -= src_cluster.cluster_footprint;
 
     if (src_new_mem > mem_thresh_) {
-      return - std::numeric_limits<double>::infinity();
+      return - epsilon;
     }
 
     double const src_new_work =
@@ -2596,12 +2615,12 @@ void TemperedLB::swapClusters() {
 
     // Necessary but not sufficient check regarding memory bounds
     if (try_mem - try_cluster.bytes + src_cluster.bytes > mem_thresh_) {
-      return - std::numeric_limits<double>::infinity();
+      return - epsilon;
     }
 
     auto const src_mem = current_memory_usage_;
     if (src_mem + try_cluster.bytes - src_cluster.bytes > mem_thresh_) {
-      return - std::numeric_limits<double>::infinity();
+      return - epsilon;
     }
 
     auto const& try_info = load_info_.find(try_rank)->second;
