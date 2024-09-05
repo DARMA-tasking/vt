@@ -27,7 +27,6 @@ RUN apt-get update -y -q && \
     libunwind-dev \
     make-guile \
     ninja-build \
-    python3 \
     valgrind \
     wget \
     zlib1g \
