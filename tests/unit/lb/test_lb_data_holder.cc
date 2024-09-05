@@ -54,7 +54,7 @@ namespace vt { namespace tests { namespace unit { namespace lb {
 using TestLBDataHolder = TestHarness;
 
 nlohmann::json create_basic_json(std::string id_type, int id,
-                                 int home, int node, bool migratable) {
+                                 int home, int node, bool is_migratable) {
     nlohmann::json j = {
         {"metadata", {
             {"rank", 0},
@@ -70,7 +70,7 @@ nlohmann::json create_basic_json(std::string id_type, int id,
                             {"index", {0}},
                             {"home", home},
                             {id_type, id},
-                            {"migratable", migratable},
+                            {"migratable", is_migratable},
                             {"type", "object"}
                         }},
                         {"node", node},
@@ -85,18 +85,18 @@ nlohmann::json create_basic_json(std::string id_type, int id,
     return j;
 }
 
-void test_data_holder_elms(int seq_id, int home, int node, bool migratable) {
+void test_data_holder_elms(int seq_id, int home, int node, bool is_migratable) {
     // Determine encoded ID
-    auto elm = elm::ElmIDBits::createCollectionImpl(migratable, seq_id, home, node);
+    auto elm = elm::ElmIDBits::createCollectionImpl(is_migratable, seq_id, home, node);
     auto encoded_id = elm.id;
 
     // Create DataHolder and get resulting object elm
-    auto simple_json_id = create_basic_json("id", encoded_id, home, node, migratable);
+    auto simple_json_id = create_basic_json("id", encoded_id, home, node, is_migratable);
     auto dh_id = vt::vrt::collection::balance::LBDataHolder(simple_json_id);
     auto elm_id = dh_id.node_data_[0].begin()->first;
 
     // Create new DataHolder using "seq_id" and get elm
-    auto simple_json_seq = create_basic_json("seq_id", seq_id, home, node, migratable);
+    auto simple_json_seq = create_basic_json("seq_id", seq_id, home, node, is_migratable);
     auto dh_seq = vt::vrt::collection::balance::LBDataHolder(simple_json_seq);
     auto elm_seq = dh_seq.node_data_[0].begin()->first;
 
@@ -106,7 +106,7 @@ void test_data_holder_elms(int seq_id, int home, int node, bool migratable) {
 }
 
 TEST_F(TestLBDataHolder, test_lb_data_holder_no_comms_object_id) {
-    // Run a variety of test cases (seq_id, home, node, migratable)
+    // Run a variety of test cases (seq_id, home, node, is_migratable)
     test_data_holder_elms(0,0,0,false);
     test_data_holder_elms(0,0,0,true);
     test_data_holder_elms(0,0,2,false);
