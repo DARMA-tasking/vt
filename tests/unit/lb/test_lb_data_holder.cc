@@ -106,12 +106,6 @@ void test_data_holder_elms(int seq_id, int home, int node, bool migratable) {
 }
 
 TEST_F(TestLBDataHolder, test_lb_data_holder_no_comms_object_id) {
-    // Initialize
-    int argc = 0;
-    char** argv = nullptr;
-    MPI_Comm comm = MPI_COMM_WORLD;
-    vt::initialize(argc, argv, &comm);
-
     // Run a variety of test cases (seq_id, home, node, migratable)
     test_data_holder_elms(0,0,0,false);
     test_data_holder_elms(0,0,0,true);
@@ -120,9 +114,6 @@ TEST_F(TestLBDataHolder, test_lb_data_holder_no_comms_object_id) {
     test_data_holder_elms(1,1,0,false);
     test_data_holder_elms(2,1,9,true);
     test_data_holder_elms(3,0,1,false);
-
-    // Finalize
-    // vt::finalize();
 }
 
 }}}} // end namespace vt::tests::unit::lb
