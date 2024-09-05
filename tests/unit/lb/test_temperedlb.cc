@@ -27,7 +27,6 @@ std::string writeTemperedLBConfig(std::string transfer_strategy,
                      " gamma=" << gamma <<
                      " delta=" << delta;
         if (transfer_strategy == "SwapClusters") {
-            cfg_file_ << " rollback=false";
             if (mem_constraints) {
                 cfg_file_ << " memory_threshold=20.0";
             } else {
@@ -40,6 +39,9 @@ std::string writeTemperedLBConfig(std::string transfer_strategy,
 }
 
 void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
+    // Clear the LB config
+    vrt::collection::balance::ReadLBConfig::clear();
+
     // Set configuration
     theConfig()->vt_lb = true;
     theConfig()->vt_lb_data_in = true;
@@ -59,9 +61,6 @@ void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
 
     // Assert that temperedLB found the correct imbalance
     EXPECT_EQ(phase_info->imb_load_post_lb, expected_imb);
-
-    // Clear the LB config ahead of next test
-    vrt::collection::balance::ReadLBConfig::clear();
 }
 
 TEST_F(TestTemperedLB, test_load_only) {
