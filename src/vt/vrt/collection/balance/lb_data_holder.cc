@@ -50,7 +50,8 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void get_object_from_json_field_(
-  const nlohmann::json& field, nlohmann::json& object, bool& is_bitpacked) {
+  const nlohmann::json& field, nlohmann::json& object, bool& is_bitpacked,
+  bool& is_collection) {
   if (field.find("id") != field.end()) {
     object = field["id"];
     is_bitpacked = true;
@@ -58,11 +59,16 @@ void get_object_from_json_field_(
     object = field["seq_id"];
     is_bitpacked = false;
   }
+  if (field.find("collection_id") != field.end()) {
+    is_collection = true;
+  } else {
+    is_collection = false;
+  }
 }
 
 ElementIDStruct get_elm_from_object_info_(
   const nlohmann::json& object, bool is_bitpacked, bool is_migratable,
-  const nlohmann::json& home, const nlohmann::json& node) {
+  const nlohmann::json& home) {
   using Field = uint64_t;
 
   Field object_id;
@@ -75,35 +81,31 @@ ElementIDStruct get_elm_from_object_info_(
   }
 
   return elm::ElmIDBits::createCollectionImpl(
-    is_migratable, object_id, home, node);
+    is_migratable, object_id, home, theContext()->getNode());
 }
 
 ElementIDStruct
-get_elm_from_comm_object_(const nlohmann::json& field, bool collection) {
+get_elm_from_comm_object_(const nlohmann::json& field) {
   // Get the object's id and determine if it is bit-encoded
   nlohmann::json object;
   bool is_bitpacked;
-  get_object_from_json_field_(field, object, is_bitpacked);
+  bool is_collection;
+  get_object_from_json_field_(field, object, is_bitpacked, is_collection);
   vtAssertExpr(object.is_number());
 
   // Create elm with encoded data
   ElementIDStruct elm;
-
-  if (collection) {
-    // TODO: need to get actual object data
-    int home = 0;
-    int node = 0;
-    bool is_migratable = false;
-
+  if (is_collection) {
+    int home = field["home"];
+    bool is_migratable = field["migratable"];
     elm = get_elm_from_object_info_(
-      object, is_bitpacked, is_migratable, home, node);
+      object, is_bitpacked, is_migratable, home);
   } else {
     elm = ElementIDStruct{object, theContext()->getNode()};
   }
 
   return elm;
 }
-
 
 void LBDataHolder::outputEntity(nlohmann::json& j, ElementIDStruct const& id) const {
   j["type"] = "object";
@@ -359,23 +361,23 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
 
           if (etype == "object") {
             nlohmann::json object;
-            bool is_bitpacked;
-            get_object_from_json_field_(task["entity"], object, is_bitpacked);
+            bool is_bitpacked, is_collection;
+            get_object_from_json_field_(task["entity"], object, is_bitpacked, is_collection);
             vtAssertExpr(object.is_number());
 
+            // Creating elm from `tasks` field
             ElementIDStruct elm;
-
-            if (
-              task["entity"].find("collection_id") != task["entity"].end() and
-              task["entity"].find("index") != task["entity"].end()) {
+            if (is_collection) {
               elm = get_elm_from_object_info_(
-                object, is_bitpacked, is_migratable, home, node);
+                object, is_bitpacked, is_migratable, home);
               auto cid = task["entity"]["collection_id"];
-              auto idx = task["entity"]["index"];
-              if (cid.is_number() && idx.is_array()) {
-                std::vector<uint64_t> arr = idx;
-                auto proxy = static_cast<VirtualProxyType>(cid);
-                this->node_idx_[elm] = std::make_tuple(proxy, arr);
+              if (task["entity"].find("index") != task["entity"].end()) {
+                auto idx = task["entity"]["index"];
+                if (cid.is_number() && idx.is_array()) {
+                  std::vector<uint64_t> arr = idx;
+                  auto proxy = static_cast<VirtualProxyType>(cid);
+                  this->node_idx_[elm] = std::make_tuple(proxy, arr);
+                }
               }
             } else {
               elm = ElementIDStruct{object, node};
@@ -449,8 +451,8 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               // TODO: passing false here (and below) avoids encoding
               //       any information into the obj ids, which preserves
               //       the original behavior
-              auto from_elm = get_elm_from_comm_object_(comm["from"], false);
-              auto to_elm = get_elm_from_comm_object_(comm["to"], false);
+              auto from_elm = get_elm_from_comm_object_(comm["from"]);
+              auto to_elm = get_elm_from_comm_object_(comm["to"]);
 
               CommKey key(
                 CommKey::CollectionTag{},
@@ -467,7 +469,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               auto from_node = comm["from"]["id"];
               vtAssertExpr(from_node.is_number());
 
-              auto to_elm = get_elm_from_comm_object_(comm["to"], false);
+              auto to_elm = get_elm_from_comm_object_(comm["to"]);
 
               CommKey key(
                 CommKey::NodeToCollectionTag{},
@@ -482,7 +484,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               vtAssertExpr(comm["from"]["type"] == "object");
               vtAssertExpr(comm["to"]["type"] == "node");
 
-              auto from_elm = get_elm_from_comm_object_(comm["from"], false);
+              auto from_elm = get_elm_from_comm_object_(comm["from"]);
 
               auto to_node = comm["to"]["id"];
               vtAssertExpr(to_node.is_number());
