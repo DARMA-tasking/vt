@@ -52,7 +52,6 @@
 namespace vt { namespace tests { namespace unit { namespace lb {
 
 using TestLBDataHolder = TestParallelHarness;
-using LBDataHolder = vt::vrt::collection::balance::LBDataHolder;
 
 nlohmann::json create_entity_(std::string id_type, int id, int home, bool is_migratable) {
   nlohmann::json entity = {
@@ -123,12 +122,12 @@ void test_data_holder_elms(int seq_id_1, int home, int node, bool is_migratable)
   // Create DataHolder and get resulting object elm
   auto simple_json_id = create_json_(
     "id", encoded_id_1, encoded_id_2, home, node, is_migratable);
-  auto dh_id = LBDataHolder(simple_json_id);
+  auto dh_id = vt::vrt::collection::balance::LBDataHolder(simple_json_id);
 
   // Create new DataHolder using "seq_id" and get elm
   auto simple_json_seq =
     create_json_("seq_id", seq_id_1, seq_id_2, home, node, is_migratable);
-  auto dh_seq = LBDataHolder(simple_json_seq);
+  auto dh_seq = vt::vrt::collection::balance::LBDataHolder(simple_json_seq);
 
   // Find both elms in each DataHolder
   auto it_id_1 = dh_id.node_data_[0].find(elm_1);
