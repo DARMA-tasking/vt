@@ -449,7 +449,7 @@ void TemperedLB::runLB(LoadType total_load) {
     target_max_load_ = avg;
   }
 
-  if (avg > 0.0000000001) {
+  if (maxLoadExceedsLBCost()) {
     should_lb = max > (run_temperedlb_tolerance + 1.0) * target_max_load_;
   }
 

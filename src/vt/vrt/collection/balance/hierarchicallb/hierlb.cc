@@ -263,7 +263,7 @@ void HierarchicalLB::loadStats() {
   bool should_lb = false;
   this_load_begin = this_load;
 
-  if (avg_load > 0.0000000001) {
+  if (maxLoadExceedsLBCost()) {
     should_lb = I > hierlb_tolerance;
   }
 
