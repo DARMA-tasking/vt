@@ -448,9 +448,6 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               vtAssertExpr(comm["from"]["type"] == "object");
               vtAssertExpr(comm["to"]["type"] == "object");
 
-              // TODO: passing false here (and below) avoids encoding
-              //       any information into the obj ids, which preserves
-              //       the original behavior
               auto from_elm = get_elm_from_comm_object_(comm["from"]);
               auto to_elm = get_elm_from_comm_object_(comm["to"]);
 
