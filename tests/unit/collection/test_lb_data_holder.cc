@@ -47,6 +47,7 @@
 #include "test_helpers.h"
 #include "test_collection_common.h"
 
+#include "vt/elm/elm_id_bits.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 
@@ -88,6 +89,104 @@ void addPhasesDataToJson(nlohmann::json& json, PhaseType amountOfPhasesToAdd, st
   }
 
   json["phases"] = phases;
+}
+
+nlohmann::json createEntity_(std::string id_type, int id, int home, bool is_migratable) {
+  nlohmann::json entity = {
+    {id_type, id},
+    {"type", "object"},
+    {"collection_id", 7},
+    {"index", {0}},
+    {"home", home},
+    {"migratable", is_migratable},
+  };
+  return entity;
+}
+
+nlohmann::json createJson_(
+  std::string id_type, int id_1, int id_2, int home, int node,
+  bool is_migratable) {
+
+  auto entity_1 = createEntity_(id_type, id_1, home, is_migratable);
+  auto entity_2 = createEntity_(id_type, id_2, home, is_migratable);
+
+  // Generate JSON
+  nlohmann::json j = {
+    {"metadata", {{"rank", 0}, {"type", "LBDatafile"}}},
+    {"phases",
+      {{{"communications",
+        {{{"bytes", 2.0},
+          {"from", entity_1},
+          {"messages", 1},
+          {"to", entity_2},
+          {"type", "SendRecv"}}}},
+        {"id", 0},
+        {"tasks",
+        {
+          {
+            {"entity", entity_1},
+            {"node", node},
+            {"resource", "cpu"},
+            {"time", 0.5},
+          },
+          {
+            {"entity", entity_2},
+            {"node", node},
+            {"resource", "cpu"},
+            {"time", 0.5},
+          }
+        }
+      }}}
+    }
+  };
+
+  return j;
+}
+
+void testDataHolderElms(int seq_id_1, int home, int node, bool is_migratable) {
+  // Create a second seq_id
+  auto seq_id_2 = seq_id_1 + 1;
+
+  // Determine encoded ID
+  auto elm_1 =
+    elm::ElmIDBits::createCollectionImpl(is_migratable, seq_id_1, home, node);
+  auto encoded_id_1 = elm_1.id;
+
+  // Create second encoded ID
+  auto elm_2 =
+    elm::ElmIDBits::createCollectionImpl(is_migratable, seq_id_2, home, node);
+  auto encoded_id_2 = elm_2.id;
+
+  // Create DataHolder and get resulting object elm
+  auto simple_json_id = createJson_(
+    "id", encoded_id_1, encoded_id_2, home, node, is_migratable);
+  auto dh_id = vt::vrt::collection::balance::LBDataHolder(simple_json_id);
+
+  // Create new DataHolder using "seq_id" and get elm
+  auto simple_json_seq =
+    createJson_("seq_id", seq_id_1, seq_id_2, home, node, is_migratable);
+  auto dh_seq = vt::vrt::collection::balance::LBDataHolder(simple_json_seq);
+
+  // Assert that both elms exist in both DataHolders
+  ASSERT_NE(dh_id.node_data_[0].find(elm_1), dh_id.node_data_[0].end());
+  ASSERT_NE(dh_seq.node_data_[0].find(elm_1), dh_seq.node_data_[0].end());
+  ASSERT_NE(dh_id.node_data_[0].find(elm_2), dh_id.node_data_[0].end());
+  ASSERT_NE(dh_seq.node_data_[0].find(elm_2), dh_seq.node_data_[0].end());
+
+  // Check the communication data
+  auto comm_id = dh_id.node_comm_[0];
+  auto comm_key_id = comm_id.begin()->first;
+  auto comm_seq = dh_seq.node_comm_[0];
+  auto comm_key_seq = comm_seq.begin()->first;
+
+  // Ensure that we get the same CommKey from both id types
+  EXPECT_EQ(comm_key_id, comm_key_seq);
+
+  // Assert that both elms are present in the communication data
+  EXPECT_EQ(comm_key_id.fromObj(), elm_1);
+  EXPECT_EQ(comm_key_id.toObj(), elm_2);
+  EXPECT_EQ(comm_key_seq.fromObj(), elm_1);
+  EXPECT_EQ(comm_key_seq.toObj(), elm_2);
 }
 
 TEST_F(TestLBDataHolder, test_no_metadata) {
@@ -300,6 +399,19 @@ TEST_F(TestLBDataHolder, test_default_time_format) {
   for (auto& task: (*outJsonPtr)["tasks"]) {
     EXPECT_EQ(true, task["time"].is_number_float());
   }
+}
+
+TEST_F(TestLBDataHolder, test_lb_data_holder_object_id) {
+  // Run a variety of test cases (seq_id, home, node, is_migratable)
+  auto current_node = theContext()->getNode();
+  testDataHolderElms(0, 0, current_node, false);
+  testDataHolderElms(0, 0, current_node, true);
+  testDataHolderElms(1, 0, current_node, false);
+  testDataHolderElms(1, 0, current_node, true);
+  testDataHolderElms(0, 1, current_node, false);
+  testDataHolderElms(0, 1, current_node, true);
+  testDataHolderElms(3, 1, current_node, false);
+  testDataHolderElms(2, 2, current_node, true);
 }
 
 }}}} // end namespace vt::tests::unit::lb
