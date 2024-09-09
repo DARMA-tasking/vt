@@ -159,7 +159,7 @@ private:
 
 public:
   /// The current node
-  NodeType this_node_;
+  NodeType this_node_ = vt::uninitialized_destination;
   /// Node attributes for the current rank
   ElmUserDataType rank_attributes_;
   /// Node timings for each local object
