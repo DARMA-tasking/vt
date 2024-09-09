@@ -128,6 +128,29 @@ private:
   void addInitialTask(nlohmann::json& j, std::size_t n) const;
 
   /**
+   * \brief Determine the object ID from the tasks or communication field of
+   *        input JSON
+   *
+   * \param[in] field the json field containing an object ID
+   * \param[in] object empty json object to be populated with the object's ID
+   * \param[in] is_bitpacked empty bool to be populated with whether or not
+   *                         the ID is bit-encoded
+   * \param[in] is_collection empty bool to be populated with whether
+   *                          or not the object belongs to a collection
+   */
+  static void getObjectFromJsonField_(
+    nlohmann::json const& field, nlohmann::json& object,
+    bool& is_bitpacked, bool& is_collection);
+
+  /**
+   * \brief Create an ElementIDStruct for the communication object
+   *
+   * \param[in] field the communication field for the desired object
+   *                  e.g. communications["to"] or communications["from"]
+   */
+  ElementIDStruct getElmFromCommObject_(nlohmann::json const& field) const;
+
+  /**
    * \brief Read the LB phase's metadata
    *
    * \param[in] j the json
@@ -135,6 +158,8 @@ private:
   void readMetadata(nlohmann::json const& j);
 
 public:
+  /// The current node
+  NodeType this_node_;
   /// Node attributes for the current rank
   ElmUserDataType rank_attributes_;
   /// Node timings for each local object
