@@ -56,11 +56,36 @@
 #include "vt/utils/fntraits/fntraits.h"
 #include "vt/configs/debug/debug_print.h"
 #include "vt/configs/debug/debug_printconst.h"
+#include "vt/collective/reduce/allreduce/type.h"
+#include "vt/collective/reduce/allreduce/state_holder.h"
+#include "vt/collective/reduce/scoping/strong_types.h"
+#include "vt/configs/types/types_type.h"
 
 #include <string>
 #include <type_traits>
 
 namespace vt::collective::reduce::allreduce {
+
+template <typename DataT>
+static inline auto&
+getState(VirtualProxyType coll, ObjGroupProxyType obj, size_t id) {
+  if (coll != u64empty) {
+    return StateHolder::getState<RabenseifnerT, DataT>(
+      detail::StrongVrtProxy{coll}, id
+    );
+  } else if (obj != u64empty) {
+    return StateHolder::getState<RabenseifnerT, DataT>(
+      detail::StrongObjGroup{obj}, id
+    );
+  } else {
+    vtAssert(true, "Both proxies are empty!");
+  }
+
+  // Silence warning
+  return StateHolder::getState<RabenseifnerT, DataT>(
+      detail::StrongVrtProxy{coll}, id
+    );
+}
 
 template <typename DataT, template <typename Arg> class Op, auto finalHandler>
 template <typename... Args>
@@ -87,13 +112,14 @@ void Rabenseifner<DataT, Op, finalHandler>::localReduce(
   size_t id, Args&&... data) {
   local_col_wait_count_++;
 
-  auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
+  // auto& state = states_.at(id);
   DataHelper<Scalar, DataT>::template reduce<Op>(state.val_, std::forward<Args>(data)...);
 
   auto const is_ready = local_col_wait_count_ == local_num_elems_;
   vt_debug_print(
-    terse, allreduce, "Rabenseifner (this={}): local_col_wait_count_={} ID={} is_ready={} num_states={}\n",
-    print_ptr(this), local_col_wait_count_, id, is_ready, states_.size()
+    terse, allreduce, "Rabenseifner (this={}): local_col_wait_count_={} ID={} is_ready={}\n",
+    print_ptr(this), local_col_wait_count_, id, is_ready
   );
 
   if(is_ready){
@@ -161,13 +187,15 @@ Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(
 
 template <typename DataT, template <typename Arg> class Op, auto finalHandler>
 template <typename... Args>
-Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(Args&&... data)
-  : nodes_(theGroup()->GetGroupNodes(default_group)),
+Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(detail::StrongObjGroup objgroup, size_t id, Args&&... data)
+  : objgroup_proxy_(objgroup.get()),
+    nodes_(theGroup()->GetGroupNodes(default_group)),
     num_nodes_(nodes_.size()),
     this_node_(theContext()->getNode()),
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_) {
+  id_ = id;
   std::string nodes_info;
   for (auto& node : nodes_) {
     nodes_info += fmt::format("{} ", node);
@@ -192,14 +220,15 @@ Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(Args&&... data)
     vrt_node_ = this_node_ - nprocs_rem_;
   }
 
-  initialize(generateNewId(), std::forward<Args>(data)...);
+  initialize(id, std::forward<Args>(data)...);
 }
 
 template <
   typename DataT, template <typename Arg> class Op, auto finalHandler
 >void Rabenseifner<DataT, Op, finalHandler>::initializeState(size_t id)
 {
-  auto& state = states_[id];
+  // auto& state = states_[id];
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
 
   vt_debug_print(terse, allreduce, "Rabenseifner initializing state for ID = {}\n", id);
 
@@ -236,7 +265,8 @@ template <
 >
 template <typename ...Args>
 void Rabenseifner<DataT, Op, finalHandler>::initialize(size_t id, Args&&... data) {
-  auto& state = states_[id];
+  // auto& state = states_[id];
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
 
   DataHelper<Scalar, DataT>::assign(state.val_, std::forward<Args>(data)...);
 
@@ -283,7 +313,9 @@ template <
   typename DataT, template <typename Arg> class Op, auto finalHandler
 >
 void Rabenseifner<DataT, Op, finalHandler>::executeFinalHan(size_t id) {
-  auto& state = states_.at(id);
+  // auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
+
   vt_debug_print(terse, allreduce, "Rabenseifner executing final handler ID = {}\n", id);
   vtAssert(final_handler_.valid(), "Final handler is not set!");
 
@@ -318,7 +350,9 @@ template <
 >
 void Rabenseifner<DataT, Op, finalHandler>::adjustForPowerOfTwo(size_t id) {
   if (is_part_of_adjustment_group_) {
-    auto& state = states_.at(id);
+    // auto& state = states_.at(id);
+    auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
+
     auto const partner = is_even_ ? this_node_ + 1 : this_node_ - 1;
     auto const actual_partner = nodes_[partner];
 
@@ -356,7 +390,8 @@ template <
 void Rabenseifner<DataT, Op, finalHandler>::adjustForPowerOfTwoRightHalf(
   RabenseifnerMsg<Scalar, DataT>* msg) {
 
-  auto& state = states_[msg->id_];
+  // auto& state = states_[msg->id_];
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, msg->id_);
 
   if (DataHelperT::empty(state.val_)) {
     if (not state.initialized_) {
@@ -394,7 +429,8 @@ template <
 void Rabenseifner<DataT, Op, finalHandler>::adjustForPowerOfTwoLeftHalf(
   RabenseifnerMsg<Scalar, DataT>* msg) {
 
-  auto& state = states_[msg->id_];
+  // auto& state = states_[msg->id_];
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, msg->id_);
   if (DataHelperT::empty(state.val_)) {
     if (not state.initialized_) {
       vt_debug_print(
@@ -428,7 +464,8 @@ void Rabenseifner<DataT, Op, finalHandler>::adjustForPowerOfTwoFinalPart(
     theContext()->getFromNodeCurrentTask(), msg->id_
   );
 
-  auto& state = states_[msg->id_];
+  // auto& state = states_[msg->id_];
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, msg->id_);
 
   DataHelperT::copy(state.val_, state.size_ / 2, msg);
 
@@ -441,7 +478,8 @@ template <
   typename DataT, template <typename Arg> class Op, auto finalHandler
 >
 bool Rabenseifner<DataT, Op, finalHandler>::scatterAllMessagesReceived(size_t id) {
-  auto const& state = states_.at(id);
+  // auto const& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
 
   return std::all_of(
     state.scatter_steps_recv_.cbegin(), state.scatter_steps_recv_.cbegin() + state.scatter_step_,
@@ -452,7 +490,8 @@ template <
   typename DataT, template <typename Arg> class Op, auto finalHandler
 >
 bool Rabenseifner<DataT, Op, finalHandler>::scatterIsDone(size_t id) {
-  auto const& state = states_.at(id);
+  // auto const& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
   return (state.scatter_step_ == num_steps_) and (state.scatter_num_recv_ == num_steps_);
 }
 
@@ -460,7 +499,8 @@ template <
   typename DataT, template <typename Arg> class Op, auto finalHandler
 >
 bool Rabenseifner<DataT, Op, finalHandler>::scatterIsReady(size_t id) {
-  auto const& state = states_.at(id);
+  // auto const& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
   return ((is_part_of_adjustment_group_ and state.finished_adjustment_part_) and
           state.scatter_step_ == 0) or
     ((state.scatter_mask_ < nprocs_pof2_) and scatterAllMessagesReceived(id));
@@ -471,7 +511,8 @@ template <
 >
 void Rabenseifner<DataT, Op, finalHandler>::scatterTryReduce(
   size_t id, int32_t step) {
-  auto& state = states_.at(id);
+  // auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
 
   auto do_reduce = (step < state.scatter_step_) and
     not state.scatter_steps_reduced_[step] and
@@ -501,7 +542,8 @@ void Rabenseifner<DataT, Op, finalHandler>::scatterReduceIter(size_t id) {
     return;
   }
 
-  auto& state = states_.at(id);
+  // auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
   auto vdest = vrt_node_ ^ state.scatter_mask_;
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
   auto const actual_partner = nodes_[dest];
@@ -541,7 +583,8 @@ template <
 >
 void Rabenseifner<DataT, Op, finalHandler>::scatterReduceIterHandler(
   RabenseifnerMsg<Scalar, DataT>* msg) {
-  auto& state = states_[msg->id_];
+  // auto& state = states_[msg->id_];
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, msg->id_);
 
   if (DataHelperT::empty(state.val_)) {
     if (not state.initialized_) {
@@ -594,7 +637,8 @@ template <
   typename DataT, template <typename Arg> class Op, auto finalHandler
 >
 bool Rabenseifner<DataT, Op, finalHandler>::gatherAllMessagesReceived(size_t id) {
-  auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
+  // auto& state = states_.at(id);
   return std::all_of(
     state.gather_steps_recv_.cbegin() + state.gather_step_ + 1, state.gather_steps_recv_.cend(),
     [](auto const val) { return val; });
@@ -604,7 +648,8 @@ template <
   typename DataT, template <typename Arg> class Op, auto finalHandler
 >
 bool Rabenseifner<DataT, Op, finalHandler>::gatherIsDone(size_t id) {
-  auto& state = states_.at(id);
+  //auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
   return (state.gather_step_ < 0) and (state.gather_num_recv_ == num_steps_);
 }
 
@@ -612,7 +657,8 @@ template <
   typename DataT, template <typename Arg> class Op, auto finalHandler
 >
 bool Rabenseifner<DataT, Op, finalHandler>::gatherIsReady(size_t id) {
-  auto& state = states_.at(id);
+  // auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
   return (state.gather_step_ == num_steps_ - 1) or gatherAllMessagesReceived(id);
 }
 
@@ -621,7 +667,8 @@ template <
 >
 void Rabenseifner<DataT, Op, finalHandler>::gatherTryReduce(
   size_t id, int32_t step) {
-  auto& state = states_.at(id);
+  // auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
 
   auto const doRed = (step > state.gather_step_) and
     not state.gather_steps_reduced_[step] and state.gather_steps_recv_[step] and
@@ -645,7 +692,8 @@ void Rabenseifner<DataT, Op, finalHandler>::gatherIter(size_t id) {
     return;
   }
 
-  auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
+  // auto& state = states_.at(id);
   auto vdest = vrt_node_ ^ state.gather_mask_;
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
   auto const actual_partner = nodes_[dest];
@@ -683,7 +731,8 @@ template <
 >
 void Rabenseifner<DataT, Op, finalHandler>::gatherIterHandler(
   RabenseifnerMsg<Scalar, DataT>* msg) {
-  auto& state = states_.at(msg->id_);
+  //auto& state = states_.at(msg->id_);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, msg->id_);
   vt_debug_print(
     terse, allreduce, "Rabenseifner Gather (Recv step {} from {}): idx = {} ID = {}\n",
     msg->step_, theContext()->getFromNodeCurrentTask(), state.s_index_[msg->step_],
@@ -711,7 +760,8 @@ template <
   typename DataT, template <typename Arg> class Op, auto finalHandler
 >
 void Rabenseifner<DataT, Op, finalHandler>::finalPart(size_t id) {
-  auto& state = states_.at(id);
+  // auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
   if (state.completed_) {
     return;
   }
@@ -748,7 +798,8 @@ template <
   typename DataT, template <typename Arg> class Op, auto finalHandler
 >
 void Rabenseifner<DataT, Op, finalHandler>::sendToExcludedNodes(size_t id) {
-  auto& state = states_.at(id);
+  // auto& state = states_.at(id);
+  auto& state = getState<DataT>(collection_proxy_, objgroup_proxy_, id);
   if (is_part_of_adjustment_group_ and is_even_) {
     auto const actual_partner = nodes_[this_node_ + 1];
     vt_debug_print(

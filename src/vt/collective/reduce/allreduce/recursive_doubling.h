@@ -137,7 +137,7 @@ struct RecursiveDoubling {
    * \param args Additional arguments for data initialization.
    */
   template <typename... Args>
-  RecursiveDoubling(Args&&... data);
+  RecursiveDoubling(detail::StrongObjGroup objgroup, size_t id, Args&&... data);
 
       /**
    * \brief Constructor for RecursiveDoubling class.
@@ -248,6 +248,10 @@ struct RecursiveDoubling {
   void finalPart(size_t id);
 
   vt::objgroup::proxy::Proxy<RecursiveDoubling> proxy_ = {};
+
+  VirtualProxyType collection_proxy_ = u64empty;
+  ObjGroupProxyType objgroup_proxy_ = u64empty;
+
   CallbackType final_handler_ = {};
 
   struct State{

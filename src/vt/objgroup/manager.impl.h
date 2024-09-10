@@ -41,8 +41,7 @@
 //@HEADER
 */
 
-#include "vt/configs/error/config_assert.h"
-#include <type_traits>
+
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
@@ -64,9 +63,11 @@
 #include "vt/collective/reduce/allreduce/recursive_doubling.h"
 #include "vt/collective/reduce/allreduce/type.h"
 #include "vt/collective/reduce/allreduce/helpers.h"
+#include "vt/collective/reduce/scoping/strong_types.h"
+#include "vt/collective/reduce/allreduce/state_holder.h"
+
 #include <utility>
 #include <array>
-
 #include <memory>
 
 namespace vt { namespace objgroup {
@@ -273,45 +274,58 @@ ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> m
 
 template <typename Reducer, typename ObjT, typename CbT, typename... Args>
 ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
-  ProxyType<ObjT> proxy, CbT cb, Args&&... data) {
+  ProxyType<ObjT> proxy, CbT cb, size_t id, Args&&... data) {
   using namespace vt::collective::reduce::allreduce;
 
   auto const this_node = vt::theContext()->getNode();
-  size_t id = 0;
 
   proxy::Proxy<Reducer> grp_proxy = {};
 
-  auto& reducers = Reducer::type_ == ReducerType::Rabenseifner ?
-    reducers_rabenseifner_ :
-    reducers_recursive_doubling_;
-  auto const key = std::make_tuple(
-    proxy.getProxy(), std::type_index(typeid(typename Reducer::Data)),
-    std::type_index(typeid(typename Reducer::ReduceOp))
-  );
-  if (reducers.find(key) != reducers.end()) {
-    vt_debug_print(
-      verbose, allreduce, "Found reducer (type: {}) for proxy {:x}",
-      TypeToString(Reducer::type_), proxy.getProxy()
-    );
+  vt_debug_print(
+    verbose, allreduce, "Creating reducer (type: {}) for proxy {:x}\n",
+    TypeToString(Reducer::type_), proxy.getProxy());
 
-    auto* obj =
-      reinterpret_cast<Reducer*>(objs_.at(reducers.at(key))->getPtr());
-    id = obj->generateNewId();
-    obj->initialize(id, std::forward<Args>(data)...);
-    grp_proxy = obj->proxy_;
-  } else {
-    vt_debug_print(
-      verbose, allreduce, "Creating reducer (type: {}) for proxy {:x}",
-      TypeToString(Reducer::type_), proxy.getProxy()
-    );
+  grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
+    TypeToString(Reducer::type_),
+    vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()},
+    id, std::forward<Args>(data)...);
+  grp_proxy[this_node].get()->proxy_ = grp_proxy;
+  // reducers[key] = grp_proxy.getProxy();
+  // id = grp_proxy[this_node].get()->id_ - 1;
 
-    grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-      TypeToString(Reducer::type_), std::forward<Args>(data)...
-    );
-    grp_proxy[this_node].get()->proxy_ = grp_proxy;
-    reducers[key] = grp_proxy.getProxy();
-    id = grp_proxy[this_node].get()->id_ - 1;
-  }
+  // auto& reducers = Reducer::type_ == ReducerType::Rabenseifner ?
+  //   reducers_rabenseifner_ :
+  //   reducers_recursive_doubling_;
+  // auto const key = std::make_tuple(
+  //   proxy.getProxy(), std::type_index(typeid(typename Reducer::Data)),
+  //   std::type_index(typeid(typename Reducer::ReduceOp))
+  // );
+  // if (reducers.find(key) != reducers.end()) {
+  //   vt_debug_print(
+  //     verbose, allreduce, "Found reducer (type: {}) for proxy {:x}",
+  //     TypeToString(Reducer::type_), proxy.getProxy()
+  //   );
+
+  //   auto* obj =
+  //     reinterpret_cast<Reducer*>(objs_.at(reducers.at(key))->getPtr());
+  //   id = obj->generateNewId();
+  //   obj->initialize(id, std::forward<Args>(data)...);
+  //   grp_proxy = obj->proxy_;
+  // } else {
+  //   vt_debug_print(
+  //     verbose, allreduce, "Creating reducer (type: {}) for proxy {:x}",
+  //     TypeToString(Reducer::type_), proxy.getProxy()
+  //   );
+
+  //   grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
+  //     TypeToString(Reducer::type_),
+  //     vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()},
+  //     std::forward<Args>(data)...
+  //   );
+  //   grp_proxy[this_node].get()->proxy_ = grp_proxy;
+  //   reducers[key] = grp_proxy.getProxy();
+  //   id = grp_proxy[this_node].get()->id_ - 1;
+  // }
 
   grp_proxy[this_node].get()->setFinalHandler(cb);
 
@@ -342,10 +356,16 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
 
   if constexpr (std::is_same_v<Type, RabenseifnerT>) {
     using Reducer = Rabenseifner<DataT, Op, f>;
-    return allreduce<Reducer>(proxy, cb, std::forward<Args>(data)...);
+    auto const id = StateHolder::getNextID<RabenseifnerT>(
+      vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()}
+    );
+    return allreduce<Reducer>(proxy, cb, id, std::forward<Args>(data)...);
   } else if (std::is_same_v<Type, RecursiveDoublingT>) {
     using Reducer = RecursiveDoubling<DataT, Op, f>;
-    return allreduce<Reducer>(proxy, cb, std::forward<Args>(data)...);
+    auto const id = StateHolder::getNextID<RabenseifnerT>(
+      vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()}
+    );
+    return allreduce<Reducer>(proxy, cb, id, std::forward<Args>(data)...);
   } else {
     vtAssert(true, "Unknown allreduce algorithm type!");
   }

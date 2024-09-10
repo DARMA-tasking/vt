@@ -51,14 +51,17 @@ namespace vt::collective::reduce::allreduce {
 
 template <typename DataT, template <typename Arg> class Op, auto finalHandler>
 template <typename... Args>
-RecursiveDoubling<DataT, Op, finalHandler>::RecursiveDoubling(Args&&... data)
-  : num_nodes_(theContext()->getNumNodes()),
+RecursiveDoubling<DataT, Op, finalHandler>::RecursiveDoubling(detail::StrongObjGroup objgroup, size_t id, Args&&... data)
+  : objgroup_proxy_(objgroup.get()),
+    num_nodes_(theContext()->getNumNodes()),
     this_node_(vt::theContext()->getNode()),
     is_even_(this_node_ % 2 == 0),
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_),
     is_part_of_adjustment_group_(this_node_ < (2 * nprocs_rem_)) {
+
+  id_ = id;
   if (is_part_of_adjustment_group_) {
     if (is_even_) {
       vrt_node_ = this_node_ / 2;
@@ -69,7 +72,7 @@ RecursiveDoubling<DataT, Op, finalHandler>::RecursiveDoubling(Args&&... data)
     vrt_node_ = this_node_ - nprocs_rem_;
   }
 
-  initialize(generateNewId(), std::forward<Args>(data)...);
+  initialize(id, std::forward<Args>(data)...);
 }
 
 template <
