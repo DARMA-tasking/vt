@@ -87,6 +87,17 @@ getState(VirtualProxyType coll, ObjGroupProxyType obj, size_t id) {
     );
 }
 
+static inline void
+cleanupState(VirtualProxyType coll, ObjGroupProxyType obj, size_t id) {
+  if (coll != u64empty) {
+    StateHolder::clear<RabenseifnerT>(detail::StrongVrtProxy{coll}, id);
+  } else if (obj != u64empty) {
+    StateHolder::clear<RabenseifnerT>(detail::StrongObjGroup{obj}, id);
+  } else {
+    vtAssert(true, "Both proxies are empty!");
+  }
+}
+
 template <typename DataT, template <typename Arg> class Op, auto finalHandler>
 template <typename... Args>
 Rabenseifner<DataT, Op, finalHandler>::Rabenseifner(
@@ -326,6 +337,8 @@ void Rabenseifner<DataT, Op, finalHandler>::executeFinalHan(size_t id) {
   }
 
   state.completed_ = true;
+
+  cleanupState(collection_proxy_, objgroup_proxy_, id);
 }
 
 template <
@@ -779,19 +792,19 @@ void Rabenseifner<DataT, Op, finalHandler>::finalPart(size_t id) {
 
   executeFinalHan(id);
 
-  std::fill(state.scatter_messages_.begin(), state.scatter_messages_.end(), nullptr);
-  std::fill(state.gather_messages_.begin(), state.gather_messages_.end(), nullptr);
+  // std::fill(state.scatter_messages_.begin(), state.scatter_messages_.end(), nullptr);
+  // std::fill(state.gather_messages_.begin(), state.gather_messages_.end(), nullptr);
 
-  state.scatter_steps_recv_.assign(num_steps_, false);
-  state.gather_steps_recv_.assign(num_steps_, false);
+  // state.scatter_steps_recv_.assign(num_steps_, false);
+  // state.gather_steps_recv_.assign(num_steps_, false);
 
-  state.scatter_steps_reduced_.assign(num_steps_, false);
-  state.gather_steps_reduced_.assign(num_steps_, false);
+  // state.scatter_steps_reduced_.assign(num_steps_, false);
+  // state.gather_steps_reduced_.assign(num_steps_, false);
 
-  state.r_index_.assign(num_steps_, 0);
-  state.r_count_.assign(num_steps_, 0);
-  state.s_index_.assign(num_steps_, 0);
-  state.s_count_.assign(num_steps_, 0);
+  // state.r_index_.assign(num_steps_, 0);
+  // state.r_count_.assign(num_steps_, 0);
+  // state.s_index_.assign(num_steps_, 0);
+  // state.s_count_.assign(num_steps_, 0);
 }
 
 template <

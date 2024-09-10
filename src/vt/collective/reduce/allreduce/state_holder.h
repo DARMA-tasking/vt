@@ -67,7 +67,7 @@ struct StateHolder {
 
       auto const num_states = states.size();
       vtAssert(
-        num_states <= idx + 1,
+        num_states >= idx,
         fmt::format(
           "Attempting to access state {} with total numer of states {}!", idx,
           num_states));
@@ -127,7 +127,56 @@ struct StateHolder {
 
   template <typename ReducerT>
   static void clear(detail::StrongVrtProxy proxy, size_t idx) {
-    active_coll_rabenseifner_states_[proxy.get()].at(idx).reset();
+    if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
+      auto& states = active_coll_rabenseifner_states_[proxy.get()];
+
+      auto const num_states = states.size();
+      vtAssert(
+        num_states >= idx,
+        fmt::format(
+          "Attempting to access state {} with total numer of states {}!", idx,
+          num_states));
+
+      active_coll_rabenseifner_states_[proxy.get()].at(idx).reset();
+
+    } else {
+      auto& states = active_coll_recursive_doubling_states_[proxy.get()];
+      auto const num_states = states.size();
+      vtAssert(
+        num_states >= idx,
+        fmt::format(
+          "Attempting to access state {} with total numer of states {}!", idx,
+          num_states));
+
+      active_coll_rabenseifner_states_[proxy.get()].at(idx).reset();
+    }
+  }
+
+template <typename ReducerT>
+  static void clear(detail::StrongObjGroup proxy, size_t idx) {
+    if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
+      auto& states = active_coll_rabenseifner_states_[proxy.get()];
+
+      auto const num_states = states.size();
+      vtAssert(
+        num_states >= idx,
+        fmt::format(
+          "Attempting to access state {} with total numer of states {}!", idx,
+          num_states));
+
+      active_obj_rabenseifner_states_[proxy.get()].at(idx).reset();
+
+    } else {
+      auto& states = active_coll_recursive_doubling_states_[proxy.get()];
+      auto const num_states = states.size();
+      vtAssert(
+        num_states >= idx,
+        fmt::format(
+          "Attempting to access state {} with total numer of states {}!", idx,
+          num_states));
+
+      active_obj_recursive_doubling_states_[proxy.get()].at(idx).reset();
+    }
   }
 
   static inline std::unordered_map<
