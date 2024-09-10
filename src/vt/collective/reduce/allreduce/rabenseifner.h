@@ -98,7 +98,7 @@ struct Rabenseifner {
   Rabenseifner(detail::StrongGroup group, Args&&... args);
 
   template <typename ...Args>
-  Rabenseifner(Args&&... args);
+  Rabenseifner(detail::StrongObjGroup objgroup, size_t id, Args&&... args);
 
   void setFinalHandler(const CallbackType& fin) {
     final_handler_ = fin;
@@ -280,12 +280,14 @@ struct Rabenseifner {
 
   CallbackType final_handler_ = {};
 
-  VirtualProxyType collection_proxy_ = {};
+  VirtualProxyType collection_proxy_ = u64empty;
+  ObjGroupProxyType objgroup_proxy_ = u64empty;
+
   uint32_t local_col_wait_count_ = {};
   size_t local_num_elems_ = {};
 
   size_t id_ = 0;
-  std::unordered_map<size_t, StateT> states_ = {};
+  // std::unordered_map<size_t, StateT> states_ = {};
 
   /// Sorted list of Nodes that take part in allreduce
   std::vector<NodeType> nodes_ = {};

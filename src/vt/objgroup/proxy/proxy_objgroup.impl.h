@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-#include "vt/collective/reduce/allreduce/type.h"
-#include "vt/context/context.h"
 #if !defined INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
 #define INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H
 
