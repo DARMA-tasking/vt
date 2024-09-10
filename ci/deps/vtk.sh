@@ -23,13 +23,9 @@ rm ${vtk_tar_name}
 
 mkdir -p ${build_root}
 cd ${build_root}
-
-mkdir -p build
-mkdir -p install
-
-cd build
 rm -rf ./*
-cmake \
-  -DCMAKE_INSTALL_PREFIX:FILEPATH=${build_root}/install \
-  ${base_dir}/${vtk_name}
-cmake --build . --target install -j ${make_args}
+cmake ${base_dir}/${vtk_name}
+cmake --build . -j ${make_args}
+
+cd ${base_dir}
+rm -rf ${vtk_name}

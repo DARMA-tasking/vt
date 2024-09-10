@@ -71,7 +71,7 @@ ENV LESSCHARSET=utf-8
 
 COPY ./ci/deps/vtk.sh vtk.sh
 RUN chmod +x vtk.sh && ./vtk.sh 9.3.0 /vtk-build -j4
-ENV VTK_DIR=/vtk-build/build
+ENV VTK_DIR=/vtk-build
 
 COPY ./ci/deps/mpich.sh mpich.sh
 RUN if [ "$ubuntu" = "18.04" ]; then \
