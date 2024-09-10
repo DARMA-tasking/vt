@@ -300,7 +300,7 @@ public:
 
   template <typename Reducer, typename ObjT, typename CbT, typename... Args>
   ObjGroupManager::PendingSendType allreduce(
-    ProxyType<ObjT> proxy, CbT cb, Args&&... data);
+    ProxyType<ObjT> proxy, CbT cb, size_t id, Args&&... data);
 
   template <
     typename Type, auto f, template <typename Arg> class Op, typename ObjT,

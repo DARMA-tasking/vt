@@ -202,6 +202,7 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
 #endif // MAGISTRATE_KOKKOS_ENABLED
 
 struct StateBase {
+  virtual ~StateBase() = default;
   size_t size_ = {};
 
   bool finished_adjustment_part_ = false;
