@@ -236,6 +236,19 @@ struct StateBase {
 
 template <typename Scalar, typename DataT>
 struct State : StateBase {
+  ~State() override {
+    left_adjust_message_ = nullptr;
+    right_adjust_message_ = nullptr;
+
+    for(auto& msg : scatter_messages_){
+      msg = nullptr;
+    }
+
+    for(auto& msg : gather_messages_){
+      msg = nullptr;
+    }
+  }
+
   std::vector<Scalar> val_ = {};
 
   MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> left_adjust_message_ = nullptr;
