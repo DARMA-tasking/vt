@@ -193,7 +193,7 @@ Description:
     {
       "ordering",
       R"(
-Values: {Arbitrary, ElmID, FewestMigrations, SmallObject, LargestObjects}
+Values: {Arbitrary, ElmID, FewestMigrations, SmallObjects, LargestObjects}
 Default: FewestMigrations
 Description:
   The order in which local objects are considered for transfer. Options are:
@@ -860,8 +860,8 @@ double TemperedLB::computeWork(
     alpha * load +
     beta * inter_comm_bytes +
     gamma * intra_comm_bytes +
-    delta * shared_comm_bytes +
-    epsilon;
+    delta * shared_comm_bytes;
+    // epsilon;
 }
 
 WorkBreakdown TemperedLB::computeWorkBreakdown(
@@ -1894,7 +1894,7 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
       auto single_obj_load = this_new_load;
       for (auto &obj : cur_objs) {
         auto obj_load = obj.second;
-        if (obj_load > over_avg && obj_load < single_obj_load) {
+        if (obj_load >= over_avg && obj_load < single_obj_load) {
           single_obj_load = obj_load;
         }
       }
@@ -2340,7 +2340,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
         try_rank, try_info, try_total_bytes, try_max_owm, try_max_osm,
         src_cluster, empty_cluster
       );
-      if (c_try > 0.0) {
+      if (c_try >= 0.0) {
         if (c_try > best_c_try) {
           best_c_try = c_try;
           best_swap = std::make_tuple(src_shared_id, no_shared_id);
@@ -2358,7 +2358,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
         "testing a possible swap (rank {}): {} {} c_try={}\n",
         try_rank, src_shared_id, try_shared_id, c_try
       );
-      if (c_try > 0.0) {
+      if (c_try >= 0.0) {
         if (c_try > best_c_try) {
           best_c_try = c_try;
           best_swap = std::make_tuple(src_shared_id, try_shared_id);
@@ -2367,7 +2367,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     }
   }
 
-  if (best_c_try > 0) {
+  if (best_c_try >= 0) {
     // FIXME C++20: use structured binding
     auto const src_shared_id = std::get<0>(best_swap);
     auto const try_shared_id = std::get<1>(best_swap);
@@ -2653,7 +2653,7 @@ void TemperedLB::swapClusters() {
       {
         ClusterInfo empty_cluster;
         double c_try = criterion(try_rank, try_mem, src_cluster, empty_cluster);
-        if (c_try > 0.0) {
+        if (c_try >= 0.0) {
 	  // Try to obtain lock for feasible swap
           found_potential_good_swap = true;
           proxy_[try_rank].template send<&TemperedLB::tryLock>(this_node, c_try);
@@ -2665,7 +2665,7 @@ void TemperedLB::swapClusters() {
       for (auto const& [try_shared_id, try_cluster] : try_clusters) {
 	// Decide whether swap is beneficial
         double c_try = criterion(try_rank, try_mem, src_cluster, try_cluster);
-        if (c_try > 0.0) {
+        if (c_try >= 0.0) {
 	  // Try to obtain lock for feasible swap
           found_potential_good_swap = true;
           proxy_[try_rank].template send<&TemperedLB::tryLock>(this_node, c_try);
