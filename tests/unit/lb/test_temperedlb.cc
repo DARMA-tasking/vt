@@ -63,16 +63,23 @@ void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
     EXPECT_EQ(phase_info->imb_load_post_lb, expected_imb);
 }
 
-TEST_F(TestTemperedLB, test_load_only) {
+TEST_F(TestTemperedLB, test_load_only_original_transfer) {
+    SET_NUM_NODES_CONSTRAINT(4);
+    auto cfg = writeTemperedLBConfig("Original", false);
+    runTemperedLBTest(cfg);
+}
+
+TEST_F(TestTemperedLB, test_load_only_swapclusters) {
     SET_NUM_NODES_CONSTRAINT(4);
     auto cfg = writeTemperedLBConfig("SwapClusters", false);
-    runTemperedLBTest(cfg);
+    // Expect 0.25 in this case because vt does not subcluster
+    runTemperedLBTest(cfg, 0.25);
 }
 
 TEST_F(TestTemperedLB, test_load_and_memory_swapclusters) {
     SET_NUM_NODES_CONSTRAINT(4);
     auto cfg = writeTemperedLBConfig("SwapClusters", true);
-    runTemperedLBTest(cfg);
+    runTemperedLBTest(cfg, 0.25);
 }
 
 TEST_F(TestTemperedLB, test_load_no_memory_delta_10) {
