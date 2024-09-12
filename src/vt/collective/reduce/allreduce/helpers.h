@@ -135,10 +135,8 @@ struct DataHelper {
   template <template <typename Arg> class Op, typename... Args>
   static void reduce(
     std::vector<Scalar>& dest, Args &&... data) {
-    auto vector_val = DataHan::toVec(std::forward<Args>(data)...);
-    for (uint32_t i = 0; i < vector_val.size(); i++) {
-      Op<Scalar>()(dest[i], vector_val[i]);
-    }
+    auto& vector_val = DataHan::toVec(std::forward<Args>(data)...);
+    Op<std::vector<Scalar>>()(dest, vector_val);
   }
 
   static bool empty(const std::vector<Scalar>& payload) {

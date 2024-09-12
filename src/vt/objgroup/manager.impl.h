@@ -358,7 +358,7 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   auto const strong_proxy = vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()};
 
   if constexpr (std::is_same_v<Type, RabenseifnerT>) {
-    using Reducer = Rabenseifner<Op>;
+    using Reducer = Rabenseifner;
 
     auto const id = StateHolder::getNextID<RabenseifnerT>(strong_proxy);
 
@@ -366,7 +366,7 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
       TypeToString(Reducer::type_), strong_proxy);
     grp_proxy[this_node].get()->proxy_ = grp_proxy;
     grp_proxy[this_node].get()->template setFinalHandler<DataT>(cb, id);
-    grp_proxy[this_node].get()->template localReduce<DataT>(id, std::forward<Args>(data)...);
+    grp_proxy[this_node].get()->template localReduce<DataT, Op>(id, std::forward<Args>(data)...);
     // return PendingSendType{
     //   theTerm()->getEpoch(),
     //   [&, this, args = std::make_tuple(std::forward<Args>(data)...)] {
