@@ -168,7 +168,7 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
 
   using DataT = typename function_traits<decltype(f)>::template arg_type<0>;
 
-  using Reducer = Rabenseifner<Op>;
+  using Reducer = Rabenseifner;
   auto const strong_group = collective::reduce::detail::StrongGroup{group};
   // TODO; Save the proxy so it can be deleted afterwards
   auto proxy = theObjGroup()->makeCollective<Reducer>("reducer", strong_group);
@@ -176,10 +176,10 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
   if (iter->second->is_in_group) {
     auto const this_node = theContext()->getNode();
     auto* ptr = proxy[this_node].get();
-    auto id = StateHolder::getNextID<RabenseifnerT>(strong_group);
+    auto id = StateHolder::getNextID(strong_group);
     ptr->proxy_ = proxy;
-    ptr->template setFinalHandler<DataT>(theCB()->makeSend<f>(this_node));
-    ptr->template localReduce<DataT>(id, std::forward<Args>(args)...);
+    ptr->template setFinalHandler<DataT>(theCB()->makeSend<f>(this_node), id);
+    ptr->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
   }
 }
 
