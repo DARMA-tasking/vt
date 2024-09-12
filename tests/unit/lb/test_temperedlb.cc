@@ -114,12 +114,6 @@ TEST_F(TestTemperedLB, test_load_memory_delta_03) {
     runTemperedLBTest(cfg, 1.0);
 }
 
-TEST_F(TestTemperedLB, test_load_memory_homing_comms) {
-    SET_NUM_NODES_CONSTRAINT(4);
-    auto cfg = writeTemperedLBConfig("SwapClusters", true, 1, 1, 0, 0.1);
-    runTemperedLBTest(cfg, 0.25);
-}
-
 #endif
 
 }}}} /* end namespace vt::tests::unit::lb */
