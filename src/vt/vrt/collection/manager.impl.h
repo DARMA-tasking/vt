@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#include "vt/configs/types/types_type.h"
+#include "vt/objgroup/manager.fwd.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 #define INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 
@@ -913,7 +915,7 @@ messaging::PendingSend CollectionManager::reduceLocal(
   auto const group = elm_holder->group();
   bool const use_group = group_ready && send_group;
 
-  using Reducer = collective::reduce::allreduce::Rabenseifner<Op>;
+  using Reducer = collective::reduce::allreduce::Rabenseifner;
   auto stamp = proxy(idx).tryGetLocalPtr()->getNextAllreduceStamp();
   auto const id = std::get<collective::reduce::detail::StrongSeq>(stamp).get();
 
@@ -925,6 +927,8 @@ messaging::PendingSend CollectionManager::reduceLocal(
     if (use_group) {
       // theGroup()->allreduce<f, Op>(group, );
     } else {
+
+      vt_debug_print(terse, allreduce, "Creating Reducer on idx={} with id={}\n", idx, id);
       auto obj_proxy = theObjGroup()->makeCollective<Reducer>(
         "reducer", collective::reduce::detail::StrongVrtProxy{col_proxy},
         collective::reduce::detail::StrongGroup{group}, num_elms
@@ -935,19 +939,20 @@ messaging::PendingSend CollectionManager::reduceLocal(
       obj->proxy_ = obj_proxy;
 
       obj->template setFinalHandler<DataT>(cb, id);
-      obj->template localReduce<DataT>(id, std::forward<Args>(args)...);
+      obj->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
     }
   } else {
     if (use_group) {
       // theGroup()->allreduce<f, Op>(group, );
     } else {
+      vt_debug_print(terse, allreduce, "Reusing Reducer on idx={} with id={}\n", idx, id);
       auto obj_proxy = reducer->second; // rabenseifner_reducers_.at(col_proxy);
       auto typed_proxy =
         static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
       auto* obj = typed_proxy[theContext()->getNode()].get();
 
       obj->template setFinalHandler<DataT>(cb, id);
-      obj->template localReduce<DataT>(id, std::forward<Args>(args)...);
+      obj->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
     }
   }
 
