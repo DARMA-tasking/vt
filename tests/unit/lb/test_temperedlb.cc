@@ -13,16 +13,17 @@ using TestTemperedLB = TestParallelHarness;
 
 std::string writeTemperedLBConfig(std::string transfer_strategy,
                                   bool mem_constraints,
-                                  double delta = 0.0,
+                                  double alpha = 1.0,
                                   double beta = 0.0,
-                                  double gamma = 0.0) {
+                                  double gamma = 0.0,
+                                  double delta = 0.0) {
     int this_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &this_rank);
     auto config_file = getUniqueFilename();
     if (this_rank == 0) {
         std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
         cfg_file_ << "0 TemperedLB transfer=" << transfer_strategy <<
-                     " alpha=1.0" <<
+                     " alpha=" << alpha <<
                      " beta=" << beta <<
                      " gamma=" << gamma <<
                      " delta=" << delta;
@@ -56,12 +57,14 @@ void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
     vt::vrt::collection::balance::replay::replayWorkloads(
         initial_phase, phases_to_run, phase_mod);
 
-    // Get information for the last phase (this problem only has one)
+    // Get information for the last phase
     auto phase_info = theLBManager()->getPhaseInfo();
 
     // Assert that temperedLB found the correct imbalance
     EXPECT_EQ(phase_info->imb_load_post_lb, expected_imb);
 }
+
+// The following tests use expected values found by the MILP
 
 TEST_F(TestTemperedLB, test_load_only_original_transfer) {
     SET_NUM_NODES_CONSTRAINT(4);
@@ -72,7 +75,6 @@ TEST_F(TestTemperedLB, test_load_only_original_transfer) {
 TEST_F(TestTemperedLB, test_load_only_swapclusters) {
     SET_NUM_NODES_CONSTRAINT(4);
     auto cfg = writeTemperedLBConfig("SwapClusters", false);
-    // Expect 0.25 in this case because vt does not subcluster
     runTemperedLBTest(cfg, 0.25);
 }
 
@@ -84,27 +86,38 @@ TEST_F(TestTemperedLB, test_load_and_memory_swapclusters) {
 
 TEST_F(TestTemperedLB, test_load_no_memory_delta_10) {
     SET_NUM_NODES_CONSTRAINT(4);
-    auto cfg = writeTemperedLBConfig("SwapClusters", false, 1.0);
-    runTemperedLBTest(cfg);
+    auto cfg = writeTemperedLBConfig("SwapClusters", false, 1, 0, 0, 1);
+    runTemperedLBTest(cfg, 1.0);
 }
 
 TEST_F(TestTemperedLB, test_load_no_memory_delta_01) {
     SET_NUM_NODES_CONSTRAINT(4);
-    auto cfg = writeTemperedLBConfig("SwapClusters", false, 0.1);
-    runTemperedLBTest(cfg);
+    auto cfg = writeTemperedLBConfig("SwapClusters", false, 1, 0, 0, 0.1);
+    runTemperedLBTest(cfg, 0.25);
 }
 
-TEST_F(TestTemperedLB, test_load_memory_homing_swapclusters) {
+TEST_F(TestTemperedLB, test_load_memory_delta_01) {
     SET_NUM_NODES_CONSTRAINT(4);
-    auto cfg = writeTemperedLBConfig("SwapClusters", true, 0.1);
-    runTemperedLBTest(cfg);
+    auto cfg = writeTemperedLBConfig("SwapClusters", true, 1, 0, 0, 0.1);
+    runTemperedLBTest(cfg, 0.25);
+}
+
+TEST_F(TestTemperedLB, test_load_no_memory_delta_03) {
+    SET_NUM_NODES_CONSTRAINT(4);
+    auto cfg = writeTemperedLBConfig("SwapClusters", false, 1, 0, 0, 0.3);
+    runTemperedLBTest(cfg, 1.0);
+}
+
+TEST_F(TestTemperedLB, test_load_memory_delta_03) {
+    SET_NUM_NODES_CONSTRAINT(4);
+    auto cfg = writeTemperedLBConfig("SwapClusters", true, 1, 0, 0, 0.3);
+    runTemperedLBTest(cfg, 1.0);
 }
 
 TEST_F(TestTemperedLB, test_load_memory_homing_comms) {
     SET_NUM_NODES_CONSTRAINT(4);
-    auto cfg = writeTemperedLBConfig("SwapClusters", true, 0.1, 1.0);
-    double expected_imbalance = 0.0; // placeholder for value from MILP
-    runTemperedLBTest(cfg, expected_imbalance);
+    auto cfg = writeTemperedLBConfig("SwapClusters", true, 1, 1, 0, 0.1);
+    runTemperedLBTest(cfg, 0.25);
 }
 
 #endif
