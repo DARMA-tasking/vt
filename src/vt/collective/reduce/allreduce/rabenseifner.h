@@ -76,27 +76,17 @@ struct ObjgroupAllreduceT {};
  * \tparam Op Reduction operation (e.g., sum, max, min).
  * \tparam finalHandler Callback handler for the final result.
  */
-template <template <typename Arg> class Op>
+
 struct Rabenseifner {
-  // using Data = DataT;
-  // using DataType = DataHandler<DataT>;
-  // using Scalar = typename DataType::Scalar;
-  // using ReduceOp = Op<Scalar>;
-  // using DataHelperT = DataHelper<Scalar, DataT>;
-  // using StateT = State<Scalar, DataT>;
-
-  // using Trait = ObjFuncTraits<decltype(f)>;
-  // using CallbackType =
-  //   typename Trait::template WrapType<pipe::PipeManagerTL::CallbackRetType>;
-
   Rabenseifner(detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems);
   Rabenseifner(detail::StrongGroup group);
   Rabenseifner(detail::StrongObjGroup objgroup);
+  ~Rabenseifner();
 
   template <typename DataT, typename CallbackType>
   void setFinalHandler(const CallbackType& fin, size_t id);
 
-  template <typename DataT, typename... Args>
+  template <typename DataT, template <typename Arg> class Op, typename... Args>
   void localReduce(size_t id, Args&&... args);
   /**
    * \brief Initialize the allreduce algorithm.
@@ -123,7 +113,7 @@ struct Rabenseifner {
    *
    * This function starts the allreduce operation, adjusting for non-power-of-two process counts if necessary.
    */
-  template <typename DataT>
+  template <typename DataT, template <typename Arg> class Op>
   void allreduce(size_t id);
 
   /**
@@ -132,7 +122,7 @@ struct Rabenseifner {
    * This function performs additional steps to handle non-power-of-two process counts, ensuring that the
    * main scatter-reduce and gather-allgather phases can proceed with a power-of-two number of processes.
    */
-  template <typename DataT>
+  template <typename DataT, template <typename Arg> class Op>
   void adjustForPowerOfTwo(size_t id);
 
   /**
@@ -142,7 +132,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  template <typename DataT, typename Scalar = typename DataHandler<DataT>::Scalar>
+  template <typename DataT, typename Scalar, template <typename Arg> class Op>
   void adjustForPowerOfTwoRightHalf(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
@@ -152,7 +142,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  template <typename DataT, typename Scalar = typename DataHandler<DataT>::Scalar>
+  template <typename DataT, typename Scalar, template <typename Arg> class Op>
   void adjustForPowerOfTwoLeftHalf(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
@@ -162,7 +152,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  template <typename DataT, typename Scalar = typename DataHandler<DataT>::Scalar>
+  template <typename DataT, typename Scalar, template <typename Arg> class Op>
   void adjustForPowerOfTwoFinalPart(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
@@ -194,7 +184,7 @@ struct Rabenseifner {
    *
    * \param step The current step in the scatter phase.
    */
-  template <typename DataT>
+  template <typename DataT, template <typename Arg> class Op>
   void scatterTryReduce(size_t id, int32_t step);
 
   /**
@@ -202,7 +192,7 @@ struct Rabenseifner {
    *
    * This function sends data to the appropriate partner process and proceeds to the next step in the scatter phase.
    */
-  template <typename DataT>
+  template <typename DataT, template <typename Arg> class Op>
   void scatterReduceIter(size_t id);
 
   /**
@@ -212,7 +202,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
-  template <typename DataT, typename Scalar>
+  template <typename DataT, typename Scalar, template <typename Arg> class Op>
   void scatterReduceIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
@@ -295,6 +285,7 @@ struct Rabenseifner {
 
   VirtualProxyType collection_proxy_ = u64empty;
   ObjGroupProxyType objgroup_proxy_ = u64empty;
+  GroupType group_ = u64empty;
 
   size_t local_num_elems_ = {};
 
