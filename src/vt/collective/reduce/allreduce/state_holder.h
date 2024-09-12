@@ -49,6 +49,7 @@
 #include "vt/collective/reduce/allreduce/type.h"
 #include "vt/collective/reduce/scoping/strong_types.h"
 #include "vt/configs/types/types_type.h"
+#include "vt/configs/debug/debug_print.h"
 
 #include <memory>
 #include <type_traits>
@@ -62,24 +63,17 @@ struct StateHolder {
     typename Scalar = typename DataHandler<DataT>::Scalar>
   static State<Scalar, DataT>&
   getState(detail::StrongVrtProxy proxy, size_t idx) {
-    if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
-      auto& states = active_coll_rabenseifner_states_[proxy.get()];
-
-      auto const num_states = states.size();
-      vtAssert(
-        num_states >= idx,
-        fmt::format(
-          "Attempting to access state {} with total numer of states {}!", idx,
-          num_states));
-
-      if (idx > num_states or (num_states == 0)) {
-        states.push_back(std::make_unique<State<Scalar, DataT>>());
-      }
-      return dynamic_cast<State<Scalar, DataT>&>(*(states.at(idx)));
-    } else {
-      return dynamic_cast<State<Scalar, DataT>&>(
-        *(active_coll_recursive_doubling_states_.at(proxy.get()).at(idx)));
-    }
+    // vt_debug_print(
+    //   terse, allreduce,
+    //   "Vrt get state for proxy = {} idx = {} active_coll_states_.size() = {}\n",
+    //   proxy.get(), idx, active_coll_states_.size());
+    return getStateImpl<DataT>(proxy, active_coll_states_, idx);
+    // if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
+    //   return getStateImpl<DataT>(proxy, active_coll_rabenseifner_states_, idx);
+    // } else {
+    //   return getStateImpl<DataT>(
+    //     proxy, active_coll_recursive_doubling_states_, idx);
+    // }
   }
 
   template <
@@ -88,32 +82,33 @@ struct StateHolder {
   static State<Scalar, DataT>&
   getState(detail::StrongObjGroup proxy, size_t idx) {
     if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
-      auto& states = active_obj_rabenseifner_states_[proxy.get()];
-
-      auto const num_states = states.size();
-      vtAssert(
-        num_states >= idx,
-        fmt::format(
-          "Attempting to access state {} with total numer of states {}!", idx,
-          num_states));
-
-      if (idx >= num_states or (num_states == 0)) {
-        states.push_back(std::make_unique<State<Scalar, DataT>>());
-      }
-      return dynamic_cast<State<Scalar, DataT>&>(*(states.at(idx)));
+      return getStateImpl<DataT>(proxy, active_obj_rabenseifner_states_, idx);
     } else {
-      return dynamic_cast<State<Scalar, DataT>&>(
-        *(active_obj_recursive_doubling_states_.at(proxy.get()).at(idx)));
+      return getStateImpl<DataT>(
+        proxy, active_obj_recursive_doubling_states_, idx);
+    }
+  }
+
+  template <
+    typename ReducerT, typename DataT,
+    typename Scalar = typename DataHandler<DataT>::Scalar>
+  static State<Scalar, DataT>& getState(detail::StrongGroup proxy, size_t idx) {
+    if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
+      return getStateImpl<DataT>(proxy, active_grp_rabenseifner_states_, idx);
+    } else {
+      return getStateImpl<DataT>(
+        proxy, active_grp_recursive_doubling_states_, idx);
     }
   }
 
   template <typename ReducerT>
   static size_t getNextID(detail::StrongVrtProxy proxy) {
-    if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
-      return active_coll_rabenseifner_states_[proxy.get()].size();
-    } else {
-      return active_coll_recursive_doubling_states_[proxy.get()].size();
-    }
+    return active_coll_states_[proxy.get()].size();
+    // if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
+
+    // } else {
+    //   return active_coll_recursive_doubling_states_[proxy.get()].size();
+    // }
   }
 
   template <typename ReducerT>
@@ -126,74 +121,107 @@ struct StateHolder {
   }
 
   template <typename ReducerT>
-  static void clear(detail::StrongVrtProxy proxy, size_t idx) {
+  static size_t getNextID(detail::StrongGroup group) {
     if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
-      auto& states = active_coll_rabenseifner_states_[proxy.get()];
-
-      auto const num_states = states.size();
-      vtAssert(
-        num_states >= idx,
-        fmt::format(
-          "Attempting to access state {} with total numer of states {}!", idx,
-          num_states));
-
-      active_coll_rabenseifner_states_[proxy.get()].at(idx).reset();
-
+      return active_grp_rabenseifner_states_[group.get()].size();
     } else {
-      auto& states = active_coll_recursive_doubling_states_[proxy.get()];
-      auto const num_states = states.size();
-      vtAssert(
-        num_states >= idx,
-        fmt::format(
-          "Attempting to access state {} with total numer of states {}!", idx,
-          num_states));
-
-      active_coll_rabenseifner_states_[proxy.get()].at(idx).reset();
+      return active_grp_recursive_doubling_states_[group.get()].size();
     }
   }
 
-template <typename ReducerT>
+  template <typename ReducerT>
+  static void clear(detail::StrongVrtProxy proxy, size_t idx) {
+    clearImpl(proxy, active_coll_states_, idx);
+    // if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
+    //   clearImpl(proxy, active_coll_states_, idx);
+    // } else {
+    //   clearImpl(proxy, active_coll_recursive_doubling_states_, idx);
+    // }
+  }
+
+  template <typename ReducerT>
   static void clear(detail::StrongObjGroup proxy, size_t idx) {
     if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
-      auto& states = active_coll_rabenseifner_states_[proxy.get()];
-
-      auto const num_states = states.size();
-      vtAssert(
-        num_states >= idx,
-        fmt::format(
-          "Attempting to access state {} with total numer of states {}!", idx,
-          num_states));
-
-      active_obj_rabenseifner_states_[proxy.get()].at(idx).reset();
-
+      clearImpl(proxy, active_obj_rabenseifner_states_, idx);
     } else {
-      auto& states = active_coll_recursive_doubling_states_[proxy.get()];
-      auto const num_states = states.size();
-      vtAssert(
-        num_states >= idx,
-        fmt::format(
-          "Attempting to access state {} with total numer of states {}!", idx,
-          num_states));
-
-      active_obj_recursive_doubling_states_[proxy.get()].at(idx).reset();
+      clearImpl(proxy, active_obj_recursive_doubling_states_, idx);
     }
+  }
+
+  template <typename ReducerT>
+  static void clear(detail::StrongGroup group, size_t idx) {
+    if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
+      clearImpl(group, active_grp_rabenseifner_states_, idx);
+    } else {
+      clearImpl(group, active_grp_recursive_doubling_states_, idx);
+    }
+  }
+
+private:
+  template <typename ProxyT, typename MapT>
+  static void clearImpl(ProxyT proxy, MapT& states_map, size_t idx) {
+    auto& states = states_map[proxy.get()];
+
+    auto const num_states = states.size();
+    vtAssert(
+      num_states >= idx,
+      fmt::format(
+        "Attempting to access state {} with total numer of states {}!", idx,
+        num_states));
+
+    states.at(idx).reset();
+  }
+
+  template <
+    typename DataT, typename ProxyT, typename MapT,
+    typename Scalar = typename DataHandler<DataT>::Scalar>
+  static State<Scalar, DataT>&
+  getStateImpl(ProxyT proxy, MapT& states_map, size_t idx) {
+    auto& states = states_map[proxy.get()];
+
+    auto const num_states = states.size();
+    vtAssert(
+      num_states >= idx,
+      fmt::format(
+        "Attempting to access state {} with total numer of states {}!", idx,
+        num_states));
+
+    if (idx >= num_states or (num_states == 0)) {
+      states.push_back(std::make_unique<State<Scalar, DataT>>());
+    }
+    return dynamic_cast<State<Scalar, DataT>&>(*(states.at(idx)));
   }
 
   static inline std::unordered_map<
     VirtualProxyType, std::vector<std::unique_ptr<StateBase>>>
-    active_coll_rabenseifner_states_ = {};
+    active_coll_states_ = {};
 
+  /// VrtColl holders
+  // static inline std::unordered_map<
+  //   VirtualProxyType, std::vector<std::unique_ptr<StateBase>>>
+  //   active_coll_rabenseifner_states_ = {};
+
+  // static inline std::unordered_map<
+  //   VirtualProxyType, std::vector<std::unique_ptr<StateBase>>>
+  //   active_coll_recursive_doubling_states_ = {};
+
+  /// ObjGRoup holders
   static inline std::unordered_map<
     ObjGroupProxyType, std::vector<std::unique_ptr<StateBase>>>
     active_obj_rabenseifner_states_ = {};
 
   static inline std::unordered_map<
-    VirtualProxyType, std::vector<std::unique_ptr<StateBase>>>
-    active_coll_recursive_doubling_states_ = {};
-
-  static inline std::unordered_map<
     ObjGroupProxyType, std::vector<std::unique_ptr<StateBase>>>
     active_obj_recursive_doubling_states_ = {};
+
+  /// Group holders
+  static inline std::unordered_map<
+    GroupType, std::vector<std::unique_ptr<StateBase>>>
+    active_grp_rabenseifner_states_ = {};
+
+  static inline std::unordered_map<
+    GroupType, std::vector<std::unique_ptr<StateBase>>>
+    active_grp_recursive_doubling_states_ = {};
 };
 
 } // namespace vt::collective::reduce::allreduce

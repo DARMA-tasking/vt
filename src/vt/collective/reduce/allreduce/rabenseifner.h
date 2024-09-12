@@ -76,34 +76,27 @@ struct ObjgroupAllreduceT {};
  * \tparam Op Reduction operation (e.g., sum, max, min).
  * \tparam finalHandler Callback handler for the final result.
  */
-template <
-  typename DataT, template <typename Arg> class Op, auto f
->
+template <template <typename Arg> class Op>
 struct Rabenseifner {
-  using Data = DataT;
-  using DataType = DataHandler<DataT>;
-  using Scalar = typename DataType::Scalar;
-  using ReduceOp = Op<Scalar>;
-  using DataHelperT = DataHelper<Scalar, DataT>;
-  using StateT = State<Scalar, DataT>;
+  // using Data = DataT;
+  // using DataType = DataHandler<DataT>;
+  // using Scalar = typename DataType::Scalar;
+  // using ReduceOp = Op<Scalar>;
+  // using DataHelperT = DataHelper<Scalar, DataT>;
+  // using StateT = State<Scalar, DataT>;
 
-  using Trait = ObjFuncTraits<decltype(f)>;
-  using CallbackType =
-    typename Trait::template WrapType<pipe::PipeManagerTL::CallbackRetType>;
+  // using Trait = ObjFuncTraits<decltype(f)>;
+  // using CallbackType =
+  //   typename Trait::template WrapType<pipe::PipeManagerTL::CallbackRetType>;
 
-  template <typename ...Args>
-  Rabenseifner(detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems, Args&&... args);
+  Rabenseifner(detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems);
+  Rabenseifner(detail::StrongGroup group);
+  Rabenseifner(detail::StrongObjGroup objgroup);
 
-  template <typename ...Args>
-  Rabenseifner(detail::StrongGroup group, Args&&... args);
+  template <typename DataT, typename CallbackType>
+  void setFinalHandler(const CallbackType& fin, size_t id);
 
-  template <typename ...Args>
-  Rabenseifner(detail::StrongObjGroup objgroup, size_t id, Args&&... args);
-
-  void setFinalHandler(const CallbackType& fin) {
-    final_handler_ = fin;
-  }
-  template <typename ...Args>
+  template <typename DataT, typename... Args>
   void localReduce(size_t id, Args&&... args);
   /**
    * \brief Initialize the allreduce algorithm.
@@ -112,15 +105,17 @@ struct Rabenseifner {
    *
    * \param args Additional arguments for initializing the data value.
    */
-  template <typename ...Args>
+  template <typename DataT, typename ...Args>
   void initialize(size_t id, Args&&... args);
 
+  template <typename DataT>
   void initializeState(size_t id);
   size_t generateNewId() { return id_++; }
 
   /**
    * \brief Execute the final handler callback with the reduced result.
    */
+  template <typename DataT>
   void executeFinalHan(size_t id);
 
   /**
@@ -128,6 +123,7 @@ struct Rabenseifner {
    *
    * This function starts the allreduce operation, adjusting for non-power-of-two process counts if necessary.
    */
+  template <typename DataT>
   void allreduce(size_t id);
 
   /**
@@ -136,6 +132,7 @@ struct Rabenseifner {
    * This function performs additional steps to handle non-power-of-two process counts, ensuring that the
    * main scatter-reduce and gather-allgather phases can proceed with a power-of-two number of processes.
    */
+  template <typename DataT>
   void adjustForPowerOfTwo(size_t id);
 
   /**
@@ -145,6 +142,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
+  template <typename DataT, typename Scalar = typename DataHandler<DataT>::Scalar>
   void adjustForPowerOfTwoRightHalf(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
@@ -154,6 +152,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
+  template <typename DataT, typename Scalar = typename DataHandler<DataT>::Scalar>
   void adjustForPowerOfTwoLeftHalf(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
@@ -163,6 +162,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
+  template <typename DataT, typename Scalar = typename DataHandler<DataT>::Scalar>
   void adjustForPowerOfTwoFinalPart(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
@@ -170,6 +170,7 @@ struct Rabenseifner {
    *
    * \return True if all scatter messages have been received, false otherwise.
    */
+  template <typename DataT>
   bool scatterAllMessagesReceived(size_t id);
 
   /**
@@ -177,6 +178,7 @@ struct Rabenseifner {
    *
    * \return True if the scatter phase is complete, false otherwise.
    */
+  template <typename DataT>
   bool scatterIsDone(size_t id);
 
   /**
@@ -184,6 +186,7 @@ struct Rabenseifner {
    *
    * \return True if the scatter phase is ready to proceed, false otherwise.
    */
+  template <typename DataT>
   bool scatterIsReady(size_t id);
 
   /**
@@ -191,6 +194,7 @@ struct Rabenseifner {
    *
    * \param step The current step in the scatter phase.
    */
+  template <typename DataT>
   void scatterTryReduce(size_t id, int32_t step);
 
   /**
@@ -198,6 +202,7 @@ struct Rabenseifner {
    *
    * This function sends data to the appropriate partner process and proceeds to the next step in the scatter phase.
    */
+  template <typename DataT>
   void scatterReduceIter(size_t id);
 
   /**
@@ -207,6 +212,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
+  template <typename DataT, typename Scalar>
   void scatterReduceIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
@@ -214,6 +220,7 @@ struct Rabenseifner {
    *
    * \return True if all gather messages have been received, false otherwise.
    */
+  template <typename DataT>
   bool gatherAllMessagesReceived(size_t id);
 
   /**
@@ -221,6 +228,7 @@ struct Rabenseifner {
    *
    * \return True if the gather phase is complete, false otherwise.
    */
+  template <typename DataT>
   bool gatherIsDone(size_t id);
 
   /**
@@ -228,6 +236,7 @@ struct Rabenseifner {
    *
    * \return True if the gather phase is ready to proceed, false otherwise.
    */
+  template <typename DataT>
   bool gatherIsReady(size_t id);
 
   /**
@@ -235,6 +244,7 @@ struct Rabenseifner {
    *
    * \param step The current step in the gather phase.
    */
+  template <typename DataT>
   void gatherTryReduce(size_t id, int32_t step);
 
   /**
@@ -242,6 +252,7 @@ struct Rabenseifner {
    *
    * This function sends data to the appropriate partner process and proceeds to the next step in the gather phase.
    */
+  template <typename DataT>
   void gatherIter(size_t id);
 
   /**
@@ -251,6 +262,7 @@ struct Rabenseifner {
    *
    * \param msg Message containing the data from the partner process.
    */
+  template <typename DataT, typename Scalar>
   void gatherIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
@@ -258,6 +270,7 @@ struct Rabenseifner {
    *
    * This function completes the allreduce operation, handling any remaining steps and invoking the final handler.
    */
+  template <typename DataT>
   void finalPart(size_t id);
 
   /**
@@ -265,6 +278,7 @@ struct Rabenseifner {
    *
    * This function handles the final step for non-power-of-two process counts, sending the reduced result to excluded nodes.
    */
+  template <typename DataT>
   void sendToExcludedNodes(size_t id);
 
   /**
@@ -274,20 +288,17 @@ struct Rabenseifner {
    *
    * \param msg Message containing the final result.
    */
+  template <typename DataT, typename Scalar>
   void sendToExcludedNodesHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
 
-  CallbackType final_handler_ = {};
-
   VirtualProxyType collection_proxy_ = u64empty;
   ObjGroupProxyType objgroup_proxy_ = u64empty;
 
-  uint32_t local_col_wait_count_ = {};
   size_t local_num_elems_ = {};
 
   size_t id_ = 0;
-  // std::unordered_map<size_t, StateT> states_ = {};
 
   /// Sorted list of Nodes that take part in allreduce
   std::vector<NodeType> nodes_ = {};
@@ -314,7 +325,6 @@ struct Rabenseifner {
 
   static inline const std::string name_ = "Rabenseifner";
   static inline constexpr ReducerType type_ = ReducerType::Rabenseifner;
-  static constexpr bool KokkosPaylod = ShouldUseView_v<Scalar, DataT>;
 };
 
 } // namespace vt::collective::reduce::allreduce

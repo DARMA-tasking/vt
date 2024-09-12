@@ -152,7 +152,7 @@ struct RecursiveDoubling {
   RecursiveDoubling(GroupType group, Args&&... args);
 
   void executeFinalHan(size_t id);
-  void setFinalHandler(const CallbackType& fin) {
+  void setFinalHandler(const CallbackType& fin, size_t id = 0) {
     final_handler_ = fin;
   }
   /**
