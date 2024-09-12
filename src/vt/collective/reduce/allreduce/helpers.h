@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/configs/debug/debug_printconst.h"
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H
 
@@ -109,7 +110,7 @@ struct DataHelper {
     dest = DataHan::toVec(std::forward<Args>(data)...);
   }
 
-  static MsgPtr<RabenseifnerMsg<Scalar, DataT>> createMessage(
+  static auto createMessage(
     const std::vector<Scalar>& payload, size_t begin, size_t count, size_t id,
     int32_t step = 0) {
     return vt::makeMessage<RabenseifnerMsg<Scalar, DataT>>(
@@ -157,7 +158,7 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
     dest = {std::forward<Args>(data)...};
   }
 
-  static MsgPtr<RabenseifnerMsg<Scalar, DataT>> createMessage(
+  static auto createMessage(
     const DataT& payload, size_t begin, size_t count, size_t id,
     int32_t step = 0) {
     return vt::makeMessage<RabenseifnerMsg<Scalar, DataT>>(
@@ -186,7 +187,7 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
   template <template <typename Arg> class Op, typename... Args>
   static void reduce(
     DataT& dest, Args&&... val) {
-    auto view_val = {std::forward<Args>(val)...};
+    auto view_val = DataT{std::forward<Args>(val)...};
     Kokkos::parallel_for(
       "Rabenseifner::reduce", view_val.extent(0), KOKKOS_LAMBDA(const int i) {
         Op<Scalar>()(dest(i), view_val(i));
@@ -205,6 +206,7 @@ struct StateBase {
   virtual ~StateBase() = default;
   size_t size_ = {};
 
+  uint32_t local_col_wait_count_ = 0;
   bool finished_adjustment_part_ = false;
 
   int32_t mask_ = 1;
@@ -255,6 +257,8 @@ struct State : StateBase {
   MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> right_adjust_message_ = nullptr;
   std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> scatter_messages_ = {};
   std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> gather_messages_ = {};
+
+  vt::pipe::callback::cbunion::CallbackTyped<DataT> final_handler_ = {};
 };
 
 #if MAGISTRATE_KOKKOS_ENABLED
@@ -268,6 +272,8 @@ struct State<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> : StateBase {
   MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> right_adjust_message_ = nullptr;
   std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> scatter_messages_ = {};
   std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> gather_messages_ = {};
+
+  vt::pipe::callback::cbunion::CallbackTyped<DataT> final_handler_ = {};
 };
 #endif //MAGISTRATE_KOKKOS_ENABLED
 

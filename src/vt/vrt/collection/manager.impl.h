@@ -913,7 +913,11 @@ messaging::PendingSend CollectionManager::reduceLocal(
   auto const group = elm_holder->group();
   bool const use_group = group_ready && send_group;
 
-  using Reducer = collective::reduce::allreduce::Rabenseifner<DataT, Op, f>;
+  using Reducer = collective::reduce::allreduce::Rabenseifner<Op>;
+  auto stamp = proxy(idx).tryGetLocalPtr()->getNextAllreduceStamp();
+  auto const id = std::get<collective::reduce::detail::StrongSeq>(stamp).get();
+
+  auto cb = vt::theCB()->makeCallbackBcastCollectiveProxy<f>(proxy);
 
   // Incorrect! will yield same reducer for different Op/payload size/final handler etc.
   if (auto reducer = rabenseifner_reducers_.find(col_proxy);
@@ -923,20 +927,15 @@ messaging::PendingSend CollectionManager::reduceLocal(
     } else {
       auto obj_proxy = theObjGroup()->makeCollective<Reducer>(
         "reducer", collective::reduce::detail::StrongVrtProxy{col_proxy},
-        collective::reduce::detail::StrongGroup{group},
-        num_elms,
-        std::forward<Args>(args)...);
+        collective::reduce::detail::StrongGroup{group}, num_elms
+      );
 
       rabenseifner_reducers_[col_proxy] = obj_proxy.getProxy();
       auto* obj = obj_proxy[theContext()->getNode()].get();
       obj->proxy_ = obj_proxy;
 
-      auto cb = vt::theCB()->makeCallbackBcastCollectiveProxy<f>(proxy);
-      obj->setFinalHandler(cb);
-
-      if(num_elms == 1){
-        obj->allreduce(obj->id_ - 1);
-      }
+      obj->template setFinalHandler<DataT>(cb, id);
+      obj->template localReduce<DataT>(id, std::forward<Args>(args)...);
     }
   } else {
     if (use_group) {
@@ -946,7 +945,9 @@ messaging::PendingSend CollectionManager::reduceLocal(
       auto typed_proxy =
         static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
       auto* obj = typed_proxy[theContext()->getNode()].get();
-      obj->localReduce(obj->id_ - 1, std::forward<Args>(args)...);
+
+      obj->template setFinalHandler<DataT>(cb, id);
+      obj->template localReduce<DataT>(id, std::forward<Args>(args)...);
     }
   }
 

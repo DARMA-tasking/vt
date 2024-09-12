@@ -327,7 +327,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
   //   id = grp_proxy[this_node].get()->id_ - 1;
   // }
 
-  grp_proxy[this_node].get()->setFinalHandler(cb);
+  grp_proxy[this_node].get()->template setFinalHandler<>(cb, id);
 
   return PendingSendType{
     theTerm()->getEpoch(),
@@ -354,18 +354,45 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   // We only support allreduce with a single data type
   using DataT = typename std::tuple_element<0, typename Trait::TupleType>::type;
 
+  auto const this_node = vt::theContext()->getNode();
+  auto const strong_proxy = vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()};
+
   if constexpr (std::is_same_v<Type, RabenseifnerT>) {
-    using Reducer = Rabenseifner<DataT, Op, f>;
-    auto const id = StateHolder::getNextID<RabenseifnerT>(
-      vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()}
-    );
-    return allreduce<Reducer>(proxy, cb, id, std::forward<Args>(data)...);
+    using Reducer = Rabenseifner<Op>;
+
+    auto const id = StateHolder::getNextID<RabenseifnerT>(strong_proxy);
+
+    auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
+      TypeToString(Reducer::type_), strong_proxy);
+    grp_proxy[this_node].get()->proxy_ = grp_proxy;
+    grp_proxy[this_node].get()->template setFinalHandler<DataT>(cb, id);
+    grp_proxy[this_node].get()->template localReduce<DataT>(id, std::forward<Args>(data)...);
+    // return PendingSendType{
+    //   theTerm()->getEpoch(),
+    //   [&, this, args = std::make_tuple(std::forward<Args>(data)...)] {
+    //     std::apply(
+    //       [&, this](auto&&... unpackedArgs) {
+    //         grp_proxy[this_node].template invoke<&Reducer::template localReduce<DataT>>(
+    //           id, std::forward<Args>(unpackedArgs)...
+    //         );
+    //       },
+    //       std::move(args));
+    //   }};
+    return PendingSendType{nullptr};
   } else if (std::is_same_v<Type, RecursiveDoublingT>) {
     using Reducer = RecursiveDoubling<DataT, Op, f>;
-    auto const id = StateHolder::getNextID<RabenseifnerT>(
-      vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()}
+    auto const id = StateHolder::getNextID<RecursiveDoublingT>(strong_proxy);
+
+    auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
+      TypeToString(Reducer::type_), strong_proxy, id,
+      std::forward<Args>(data)...
     );
-    return allreduce<Reducer>(proxy, cb, id, std::forward<Args>(data)...);
+    grp_proxy[this_node].get()->proxy_ = grp_proxy;
+    grp_proxy[this_node].get()->setFinalHandler(cb, id);
+
+    return PendingSendType{
+      theTerm()->getEpoch(),
+      [=] { grp_proxy[this_node].template invoke<&Reducer::allreduce>(id); }};
   } else {
     vtAssert(true, "Unknown allreduce algorithm type!");
   }

@@ -41,6 +41,8 @@
 //@HEADER
 */
 
+#include "vt/collective/reduce/allreduce/state_holder.h"
+#include "vt/collective/reduce/allreduce/type.h"
 #if !defined INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H
 
@@ -166,21 +168,18 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
 
   using DataT = typename function_traits<decltype(f)>::template arg_type<0>;
 
-  using Reducer = Rabenseifner<DataT, Op, f>;
-
+  using Reducer = Rabenseifner<Op>;
+  auto const strong_group = collective::reduce::detail::StrongGroup{group};
   // TODO; Save the proxy so it can be deleted afterwards
-  auto proxy = theObjGroup()->makeCollective<Reducer>(
-    "reducer", collective::reduce::detail::StrongGroup{group},
-    std::forward<Args>(args)...
-  );
+  auto proxy = theObjGroup()->makeCollective<Reducer>("reducer", strong_group);
 
   if (iter->second->is_in_group) {
     auto const this_node = theContext()->getNode();
     auto* ptr = proxy[this_node].get();
-    auto id = ptr->id_ - 1;
+    auto id = StateHolder::getNextID<RabenseifnerT>(strong_group);
     ptr->proxy_ = proxy;
-    ptr->setFinalHandler(theCB()->makeSend<f>(this_node));
-    proxy[this_node].template invoke<&Reducer::allreduce>(id);
+    ptr->template setFinalHandler<DataT>(theCB()->makeSend<f>(this_node));
+    ptr->template localReduce<DataT>(id, std::forward<Args>(args)...);
   }
 }
 

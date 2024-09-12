@@ -91,12 +91,20 @@ public:
   ReduceStampType getNextStamp();
 
   /**
+   * \brief Get the next allreduce stamp and increment
+   *
+   * \return the reduce stamp
+   */
+  ReduceStampType getNextAllreduceStamp();
+
+  /**
    * \brief Zero out the reduce stamp
    */
   void zeroReduceStamp();
 
 protected:
   ReduceSeqStampType reduce_stamp_ = ReduceSeqStampType{1};
+  ReduceSeqStampType allreduce_stamp_ = ReduceSeqStampType{0};
 };
 
 }}} /* end namespace vt::vrt::collection */
