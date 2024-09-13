@@ -41,14 +41,12 @@
 //@HEADER
 */
 
-#include "vt/configs/debug/debug_printconst.h"
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H
 
 #include "data_handler.h"
 #include "rabenseifner_msg.h"
 #include "vt/messaging/message/shared_message.h"
-
 #include <vector>
 #include <type_traits>
 
@@ -199,81 +197,6 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
 };
 
 #endif // MAGISTRATE_KOKKOS_ENABLED
-
-struct StateBase {
-  virtual ~StateBase() = default;
-  size_t size_ = {};
-
-  uint32_t local_col_wait_count_ = 0;
-  bool finished_adjustment_part_ = false;
-
-  int32_t mask_ = 1;
-  int32_t step_ = 0;
-  bool initialized_ = false;
-  bool completed_ = false;
-
-  // Scatter
-  int32_t scatter_mask_ = 1;
-  int32_t scatter_step_ = 0;
-  int32_t scatter_num_recv_ = 0;
-  std::vector<bool> scatter_steps_recv_ = {};
-  std::vector<bool> scatter_steps_reduced_ = {};
-
-  bool finished_scatter_part_ = false;
-
-  // Gather
-  int32_t gather_step_ = 0;
-  int32_t gather_mask_ = 1;
-  int32_t gather_num_recv_ = 0;
-  std::vector<bool> gather_steps_recv_ = {};
-  std::vector<bool> gather_steps_reduced_ = {};
-
-  std::vector<uint32_t> r_index_ = {};
-  std::vector<uint32_t> r_count_ = {};
-  std::vector<uint32_t> s_index_ = {};
-  std::vector<uint32_t> s_count_ = {};
-};
-
-template <typename Scalar, typename DataT>
-struct State : StateBase {
-  ~State() override {
-    left_adjust_message_ = nullptr;
-    right_adjust_message_ = nullptr;
-
-    for(auto& msg : scatter_messages_){
-      msg = nullptr;
-    }
-
-    for(auto& msg : gather_messages_){
-      msg = nullptr;
-    }
-  }
-
-  std::vector<Scalar> val_ = {};
-
-  MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> left_adjust_message_ = nullptr;
-  MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> right_adjust_message_ = nullptr;
-  std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> scatter_messages_ = {};
-  std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> gather_messages_ = {};
-
-  vt::pipe::callback::cbunion::CallbackTyped<DataT> final_handler_ = {};
-};
-
-#if MAGISTRATE_KOKKOS_ENABLED
-template <typename Scalar>
-struct State<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> : StateBase {
-  using DataT = Kokkos::View<Scalar*, Kokkos::HostSpace>;
-
-  Kokkos::View<Scalar*, Kokkos::HostSpace> val_ = {};
-
-  MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> left_adjust_message_ = nullptr;
-  MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> right_adjust_message_ = nullptr;
-  std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> scatter_messages_ = {};
-  std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> gather_messages_ = {};
-
-  vt::pipe::callback::cbunion::CallbackTyped<DataT> final_handler_ = {};
-};
-#endif //MAGISTRATE_KOKKOS_ENABLED
 
 } // namespace vt::collective::reduce::allreduce
 #endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H*/

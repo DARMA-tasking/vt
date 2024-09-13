@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-#include "vt/configs/types/types_type.h"
-#include "vt/objgroup/manager.fwd.h"
 #if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 #define INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 

@@ -50,6 +50,7 @@
 #include "vt/collective/reduce/scoping/strong_types.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/debug/debug_print.h"
+#include "vt/collective/reduce/allreduce/state.h"
 
 #include <memory>
 #include <type_traits>
@@ -61,24 +62,22 @@ struct StateHolder {
   template <
     typename ReducerT, typename DataT,
     typename Scalar = typename DataHandler<DataT>::Scalar>
-  static State<Scalar, DataT>&
-  getState(detail::StrongVrtProxy proxy, size_t idx) {
-    return getStateImpl<DataT>(proxy, active_coll_states_, idx);
+  static auto& getState(detail::StrongVrtProxy proxy, size_t idx) {
+    return getStateImpl<ReducerT, DataT>(proxy, active_coll_states_, idx);
   }
 
   template <
     typename ReducerT, typename DataT,
     typename Scalar = typename DataHandler<DataT>::Scalar>
-  static State<Scalar, DataT>&
-  getState(detail::StrongObjGroup proxy, size_t idx) {
-    return getStateImpl<DataT>(proxy, active_obj_states_, idx);
+  static auto& getState(detail::StrongObjGroup proxy, size_t idx) {
+    return getStateImpl<ReducerT, DataT>(proxy, active_obj_states_, idx);
   }
 
   template <
     typename ReducerT, typename DataT,
     typename Scalar = typename DataHandler<DataT>::Scalar>
-  static State<Scalar, DataT>& getState(detail::StrongGroup proxy, size_t idx) {
-    return getStateImpl<DataT>(proxy, active_grp_states_, idx);
+  static auto& getState(detail::StrongGroup proxy, size_t idx) {
+    return getStateImpl<ReducerT, DataT>(proxy, active_grp_states_, idx);
   }
 
   template <typename ReducerT>
@@ -143,10 +142,9 @@ private:
   }
 
   template <
-    typename DataT, typename ProxyT, typename MapT,
+    typename ReduceT, typename DataT, typename ProxyT, typename MapT,
     typename Scalar = typename DataHandler<DataT>::Scalar>
-  static State<Scalar, DataT>&
-  getStateImpl(ProxyT proxy, MapT& states_map, size_t idx) {
+  static auto& getStateImpl(ProxyT proxy, MapT& states_map, size_t idx) {
     auto& states = states_map[proxy.get()];
 
     auto const num_states = states.size();
@@ -154,19 +152,26 @@ private:
       num_states >= idx,
       fmt::format(
         "Attempting to access state {} with total numer of states {}!", idx,
-        num_states
-      )
-    );
+        num_states));
 
     if (idx >= num_states or (num_states == 0)) {
-      states.push_back(std::make_unique<State<Scalar, DataT>>());
+      if constexpr (std::is_same_v<ReduceT, RabenseifnerT>) {
+        states.push_back(std::make_unique<RabenseifnerState<Scalar, DataT>>());
+      } else {
+        states.push_back(
+          std::make_unique<RecursiveDoublingState<DataT>>());
+      }
     }
 
     vtAssert(
       states.at(idx),
-      fmt::format("Attempting to access invalidated state at idx={}!", idx)
-    );
-    return dynamic_cast<State<Scalar, DataT>&>(*(states.at(idx)));
+      fmt::format("Attempting to access invalidated state at idx={}!", idx));
+    if constexpr (std::is_same_v<ReduceT, RabenseifnerT>) {
+      return dynamic_cast<RabenseifnerState<Scalar, DataT>&>(*(states.at(idx)));
+    } else {
+      return dynamic_cast<RecursiveDoublingState<DataT>&>(
+        *(states.at(idx)));
+    }
   }
 
   static inline std::unordered_map<
@@ -181,6 +186,31 @@ private:
     GroupType, std::vector<std::unique_ptr<StateBase>>>
     active_grp_states_ = {};
 };
+
+template <typename ReducerT, typename DataT>
+static inline auto&
+getState(VirtualProxyType coll, ObjGroupProxyType obj, GroupType g, size_t id) {
+  if (coll != u64empty) {
+    return StateHolder::getState<ReducerT, DataT>(
+      detail::StrongVrtProxy{coll}, id);
+  } else if (obj != u64empty) {
+    return StateHolder::getState<ReducerT, DataT>(
+      detail::StrongObjGroup{obj}, id);
+  } else {
+    return StateHolder::getState<ReducerT, DataT>(detail::StrongGroup{g}, id);
+  }
+}
+
+static inline void cleanupState(
+  VirtualProxyType coll, ObjGroupProxyType obj, GroupType g, size_t id) {
+  if (coll != u64empty) {
+    StateHolder::clearSingle(detail::StrongVrtProxy{coll}, id);
+  } else if (obj != u64empty) {
+    StateHolder::clearSingle(detail::StrongObjGroup{obj}, id);
+  } else {
+    StateHolder::clearSingle(detail::StrongGroup{g}, id);
+  }
+}
 
 } // namespace vt::collective::reduce::allreduce
 
