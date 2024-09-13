@@ -541,6 +541,9 @@ void prepareLBDataFiles(const std::string file_name_without_ext) {
   for (PhaseType i = 0; i < num_phases; i++) {
     for (auto&& elm : ids[i]) {
       dh.node_data_[i][elm] = LoadSummary{3};
+      std::vector<uint64_t> arr = {1};
+      VirtualProxyType proxy = 7;
+      dh.node_idx_[elm] = std::make_tuple(proxy, arr);
     }
   }
 
