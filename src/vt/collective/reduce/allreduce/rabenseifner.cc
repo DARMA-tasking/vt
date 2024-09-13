@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             rabenseifner.impl.h
+//                               rabenseifner.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -53,11 +53,11 @@ Rabenseifner::Rabenseifner(
     nodes_(theGroup()->GetGroupNodes(group.get())),
     num_nodes_(nodes_.size()),
     this_node_(theContext()->getNode()),
-    num_steps_(static_cast<int32_t>(log2(num_nodes_))),
+    num_steps_(static_cast<int32_t>(std::log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_) {
 
-  auto const is_default_group = group.get() == default_group;
+  auto const is_default_group = theGroup()->isGroupDefault(group.get());
   if (not is_default_group) {
     auto it = std::find(nodes_.begin(), nodes_.end(), theContext()->getNode());
     vtAssert(it != nodes_.end(), "This node was not found in group nodes!");
@@ -97,9 +97,10 @@ Rabenseifner::Rabenseifner(
   for (auto& node : nodes_) {
     nodes_info += fmt::format("{} ", node);
   }
-  auto const is_default_group = group.get() == default_group;
+  auto const is_default_group = theGroup()->isGroupDefault(group_);
+  auto const in_group = theGroup()->inGroup(group_);
   auto const is_part_of_allreduce =
-    (not is_default_group and theGroup()->inGroup(group.get())) or
+    (not is_default_group and in_group) or
     is_default_group;
 
   vt_debug_print(
@@ -108,7 +109,7 @@ Rabenseifner::Rabenseifner(
     "Nodes:[{}]\n",
     is_default_group, is_part_of_allreduce, num_nodes_, nodes_info);
 
-  if (not is_default_group and theGroup()->inGroup(group.get())) {
+  if (not is_default_group and in_group) {
     auto it = std::find(nodes_.begin(), nodes_.end(), theContext()->getNode());
     vtAssert(it != nodes_.end(), "This node was not found in group nodes!");
 

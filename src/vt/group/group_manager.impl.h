@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-#include "vt/collective/reduce/allreduce/state_holder.h"
-#include "vt/collective/reduce/allreduce/type.h"
 #if !defined INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H
 
