@@ -54,53 +54,13 @@
 #include "vt/pipe/pipe_manager.h"
 #include "vt/utils/fntraits/fntraits.h"
 #include "type.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/collective/reduce/allreduce/recursive_doubling_msg.h"
 
 #include <tuple>
 #include <cstdint>
 
 namespace vt::collective::reduce::allreduce {
-
-template <typename DataT>
-struct AllreduceDblRawMsg
-  : Message {
-    using MessageParentType = vt::Message;
-    vt_msg_serialize_required();
-
-
-  AllreduceDblRawMsg() = default;
-  AllreduceDblRawMsg(AllreduceDblRawMsg const&) = default;
-  AllreduceDblRawMsg(AllreduceDblRawMsg&&) = default;
-  ~AllreduceDblRawMsg() {
-    if (owning_) {
-      delete val_;
-    }
-  }
-
-  AllreduceDblRawMsg(DataT const& in_val, size_t id, int step = 0)
-    : MessageParentType(),
-      val_(&in_val),
-      id_(id),
-      step_(step) { }
-
-  template <typename SerializeT>
-  void serialize(SerializeT& s) {
-      MessageParentType::serialize(s);
-
-      if (s.isUnpacking()) {
-        owning_ = true;
-        val_ = new DataT();
-      }
-
-      s | *val_;
-      s | id_;
-      s | step_;
-  }
-
-  const DataT* val_ = {};
-  size_t id_ = {};
-  int32_t step_ = {};
-  bool owning_ = false;
-};
 
 /**
  * \brief Class implementing the Recursive Doubling algorithm for allreduce operation.
@@ -114,19 +74,8 @@ struct AllreduceDblRawMsg
  * \tparam ObjT The object type.
  * \tparam finalHandler The final handler.
  */
-template <
-  typename DataT, template <typename Arg> class Op, auto f>
+
 struct RecursiveDoubling {
-  using Data = DataT;
-  using DataType = DataHandler<DataT>;
-  using Scalar = typename DataHandler<DataT>::Scalar;
-  using ReduceOp = Op<Scalar>;
-
-  using Trait = ObjFuncTraits<decltype(f)>;
-  using MsgT = typename Trait::MsgT;
-  using CallbackType =
-    typename Trait::template WrapType<pipe::PipeManagerTL::CallbackRetType>;
-
   /**
    * \brief Constructor for RecursiveDoubling class.
    *
@@ -136,8 +85,7 @@ struct RecursiveDoubling {
    * \param num_nodes The number of nodes.
    * \param args Additional arguments for data initialization.
    */
-  template <typename... Args>
-  RecursiveDoubling(detail::StrongObjGroup objgroup, size_t id, Args&&... data);
+  RecursiveDoubling(detail::StrongObjGroup objgroup);
 
       /**
    * \brief Constructor for RecursiveDoubling class.
@@ -148,16 +96,23 @@ struct RecursiveDoubling {
    * \param num_nodes The number of nodes.
    * \param args Additional arguments for data initialization.
    */
-  template <typename... Args>
-  RecursiveDoubling(GroupType group, Args&&... args);
+  RecursiveDoubling(detail::StrongGroup group);
 
+  ~RecursiveDoubling();
+
+  template <typename DataT>
   void executeFinalHan(size_t id);
-  void setFinalHandler(const CallbackType& fin, size_t id = 0) {
-    final_handler_ = fin;
-  }
+
+  template <typename DataT, typename CallbackType>
+  void setFinalHandler(const CallbackType& fin, size_t id);
+
+  template <typename DataT, template <typename Arg> class Op, typename... Args>
+  void localReduce(size_t id, Args&&... args);
+
   /**
    * \brief Start the allreduce operation.
    */
+  template <typename DataT, template <typename Arg> class Op>
   void allreduce(size_t id);
 
   /**
@@ -165,15 +120,16 @@ struct RecursiveDoubling {
    *
    * \param args Additional arguments for data initialization.
    */
-  template <typename... Args>
+  template <typename DataT, typename ...Args>
   void initialize(size_t id, Args&&... data);
-  void initializeState(size_t id);
 
-  size_t generateNewId() { return id_++; }
+  template <typename DataT>
+  void initializeState(size_t id);
 
   /**
    * \brief Adjust for power of two nodes.
    */
+  template <typename DataT, template <typename Arg> class Op>
   void adjustForPowerOfTwo(size_t id);
 
   /**
@@ -181,6 +137,7 @@ struct RecursiveDoubling {
    *
    * \param msg Pointer to the message.
    */
+  template <typename DataT, template <typename Arg> class Op>
   void adjustForPowerOfTwoHandler(AllreduceDblRawMsg<DataT>* msg);
 
   /**
@@ -188,6 +145,7 @@ struct RecursiveDoubling {
    *
    * \return True if the operation is done, otherwise false.
    */
+  template <typename DataT>
   bool isDone(size_t id);
 
   /**
@@ -195,6 +153,7 @@ struct RecursiveDoubling {
    *
    * \return True if the state is valid, otherwise false.
    */
+  template <typename DataT>
   bool isValid(size_t id);
 
   /**
@@ -202,6 +161,7 @@ struct RecursiveDoubling {
    *
    * \return True if all messages are received, otherwise false.
    */
+  template <typename DataT>
   bool allMessagesReceived(size_t id);
 
   /**
@@ -209,11 +169,13 @@ struct RecursiveDoubling {
    *
    * \return True if ready, otherwise false.
    */
+  template <typename DataT>
   bool isReady(size_t id);
 
   /**
    * \brief Perform the next step of the allreduce operation.
    */
+  template <typename DataT, template <typename Arg> class Op>
   void reduceIter(size_t id);
 
   /**
@@ -221,6 +183,7 @@ struct RecursiveDoubling {
    *
    * \param step The step at which to try reduction.
    */
+  template <typename DataT, template <typename Arg> class Op>
   void tryReduce(size_t id, int32_t step);
 
   /**
@@ -228,11 +191,13 @@ struct RecursiveDoubling {
    *
    * \param msg Pointer to the message.
    */
+  template <typename DataT, template <typename Arg> class Op>
   void reduceIterHandler(AllreduceDblRawMsg<DataT>* msg);
 
   /**
    * \brief Send data to excluded nodes for finalization.
    */
+  template <typename DataT>
   void sendToExcludedNodes(size_t id);
 
   /**
@@ -240,37 +205,22 @@ struct RecursiveDoubling {
    *
    * \param msg Pointer to the message.
    */
+  template <typename DataT>
   void sendToExcludedNodesHandler(AllreduceDblRawMsg<DataT>* msg);
 
   /**
    * \brief Perform the final part of the allreduce operation.
    */
+  template <typename DataT>
   void finalPart(size_t id);
 
   vt::objgroup::proxy::Proxy<RecursiveDoubling> proxy_ = {};
 
   VirtualProxyType collection_proxy_ = u64empty;
   ObjGroupProxyType objgroup_proxy_ = u64empty;
+  GroupType group_ = u64empty;
 
-  CallbackType final_handler_ = {};
-
-  struct State{
-    DataT val_ = {};
-    bool finished_adjustment_part_ = false;
-    MsgSharedPtr<AllreduceDblRawMsg<DataT>> adjust_message_ = nullptr;
-
-    int32_t mask_ = 1;
-    int32_t step_ = 0;
-    bool initialized_ = false;
-    bool completed_ = false;
-
-    std::vector<bool> steps_recv_ = {};
-    std::vector<bool> steps_reduced_ = {};
-    std::vector<MsgSharedPtr<AllreduceDblRawMsg<DataT>>> messages_ = {};
-  };
-
-  size_t id_ = 0;
-  std::unordered_map<size_t, State> states_ = {};
+  size_t local_num_elems_ = {};
 
   std::vector<NodeType> nodes_ = {};
   NodeType num_nodes_ = {};

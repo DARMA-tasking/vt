@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
@@ -380,19 +379,18 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
     //   }};
     return PendingSendType{nullptr};
   } else if (std::is_same_v<Type, RecursiveDoublingT>) {
-    using Reducer = RecursiveDoubling<DataT, Op, f>;
+    using Reducer = RecursiveDoubling;
     auto const id = StateHolder::getNextID<RecursiveDoublingT>(strong_proxy);
 
     auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-      TypeToString(Reducer::type_), strong_proxy, id,
-      std::forward<Args>(data)...
+      TypeToString(Reducer::type_), strong_proxy
     );
     grp_proxy[this_node].get()->proxy_ = grp_proxy;
-    grp_proxy[this_node].get()->setFinalHandler(cb, id);
-
-    return PendingSendType{
-      theTerm()->getEpoch(),
-      [=] { grp_proxy[this_node].template invoke<&Reducer::allreduce>(id); }};
+    grp_proxy[this_node].get()->template setFinalHandler<DataT>(cb, id);
+    grp_proxy[this_node].get()->template localReduce<DataT, Op>(id, std::forward<Args>(data)...);
+    // return PendingSendType{
+    //   theTerm()->getEpoch(),
+    //   [=] { grp_proxy[this_node].template invoke<&Reducer::localReduce<DataT, Op>>(id); }};
   } else {
     vtAssert(true, "Unknown allreduce algorithm type!");
   }

@@ -46,89 +46,69 @@
 
 #include "vt/config.h"
 #include "vt/context/context.h"
+#include "vt/collective/reduce/allreduce/recursive_doubling.h"
+#include "vt/collective/reduce/allreduce/state_holder.h"
+#include "vt/collective/reduce/allreduce/data_handler.h"
+#include "vt/collective/reduce/allreduce/type.h"
 
 namespace vt::collective::reduce::allreduce {
 
-template <typename DataT, template <typename Arg> class Op, auto finalHandler>
-template <typename... Args>
-RecursiveDoubling<DataT, Op, finalHandler>::RecursiveDoubling(detail::StrongObjGroup objgroup, size_t id, Args&&... data)
-  : objgroup_proxy_(objgroup.get()),
-    num_nodes_(theContext()->getNumNodes()),
-    this_node_(vt::theContext()->getNode()),
-    is_even_(this_node_ % 2 == 0),
-    num_steps_(static_cast<int32_t>(log2(num_nodes_))),
-    nprocs_pof2_(1 << num_steps_),
-    nprocs_rem_(num_nodes_ - nprocs_pof2_),
-    is_part_of_adjustment_group_(this_node_ < (2 * nprocs_rem_)) {
-
-  id_ = id;
-  if (is_part_of_adjustment_group_) {
-    if (is_even_) {
-      vrt_node_ = this_node_ / 2;
-    } else {
-      vrt_node_ = -1;
-    }
-  } else {
-    vrt_node_ = this_node_ - nprocs_rem_;
-  }
-
-  initialize(id, std::forward<Args>(data)...);
+template <typename DataT, typename CallbackType>
+void RecursiveDoubling::setFinalHandler(const CallbackType& fin, size_t id) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
+  state.final_handler_ = fin;
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-template <typename... Args>
-RecursiveDoubling<DataT, Op, finalHandler>::RecursiveDoubling(
-  GroupType group, Args&&... args)
-  : nodes_(theGroup()->GetGroupNodes(group)),
-    num_nodes_(nodes_.size()),
-    this_node_(vt::theContext()->getNode()),
-    is_even_(this_node_ % 2 == 0),
-    num_steps_(static_cast<int32_t>(log2(num_nodes_))),
-    nprocs_pof2_(1 << num_steps_),
-    nprocs_rem_(num_nodes_ - nprocs_pof2_),
-    is_part_of_adjustment_group_(this_node_ < (2 * nprocs_rem_)){
-  if (is_part_of_adjustment_group_) {
-    if (is_even_) {
-      vrt_node_ = this_node_ / 2;
-    } else {
-      vrt_node_ = -1;
-    }
+template <typename DataT, template <typename Arg> class Op, typename... Args>
+void RecursiveDoubling::localReduce(size_t id, Args&&... data) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
+
+  vt_debug_print(
+    terse, allreduce,
+    "RecursiveDoubling (this={}): local_col_wait_count_={} ID={} initialized={}\n",
+    print_ptr(this), state.local_col_wait_count_, id, state.initialized_);
+
+  if (not state.value_assigned_) {
+    initialize<DataT>(id, std::forward<Args>(data)...);
   } else {
-    vrt_node_ = this_node_ - nprocs_rem_;
+    Op<DataT>()(state.val_, std::forward<Args>(data)...);
   }
 
-  initialize(generateNewId(), std::forward<Args>(args)...);
+  state.local_col_wait_count_++;
+  auto const is_ready = state.local_col_wait_count_ == local_num_elems_;
+
+  if (is_ready) {
+    allreduce<DataT, Op>(id);
+  }
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-template <typename ...Args>
-void RecursiveDoubling<DataT, Op, finalHandler>::initialize(
-  size_t id, Args&&... data) {
-  auto& state = states_[id];
+template <typename DataT, typename... Args>
+void RecursiveDoubling::initialize(size_t id, Args&&... data) {
+  using DataType = DataHandler<DataT>;
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
 
-  if(not state.initialized_){
-    initializeState(id);
+  if (not state.initialized_) {
+    initializeState<DataT>(id);
   }
 
   state.val_ = DataT{std::forward<Args>(data)...};
+  state.value_assigned_ = true;
 
   vt_debug_print(
     terse, allreduce, "RecursiveDoubling Initialize: size {} ID {}\n",
-    DataType::size(state.val_), id
-  );
+    DataType::size(state.val_), id);
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::initializeState(size_t id){
-  auto& state = states_[id];
+template <typename DataT>
+void RecursiveDoubling::initializeState(size_t id) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
 
-  vt_debug_print(terse, allreduce, "RecursiveDoubling initializing state for ID = {}\n", id);
+  vt_debug_print(
+    terse, allreduce, "RecursiveDoubling initializing state for ID = {}\n", id);
 
   state.messages_.resize(num_steps_, nullptr);
   state.steps_recv_.resize(num_steps_, false);
@@ -141,46 +121,43 @@ void RecursiveDoubling<DataT, Op, finalHandler>::initializeState(size_t id){
   state.initialized_ = true;
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::allreduce(size_t id) {
+template <typename DataT, template <typename Arg> class Op>
+void RecursiveDoubling::allreduce(size_t id) {
   if (is_part_of_adjustment_group_) {
-    adjustForPowerOfTwo(id);
+    adjustForPowerOfTwo<DataT, Op>(id);
   } else {
-    reduceIter(id);
+    reduceIter<DataT, Op>(id);
   }
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::adjustForPowerOfTwo(size_t id) {
-  auto& state = states_.at(id);
+template <typename DataT, template <typename Arg> class Op>
+void RecursiveDoubling::adjustForPowerOfTwo(size_t id) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
   if (is_part_of_adjustment_group_ and not is_even_) {
     vt_debug_print(
       terse, allreduce, "RecursiveDoubling AdjustInitial (To {}): ID = {}  \n",
-      this_node_, this_node_ - 1, id
-    );
+      this_node_, this_node_ - 1, id);
 
     proxy_[this_node_ - 1]
-      .template send<&RecursiveDoubling::adjustForPowerOfTwoHandler>(state.val_, id);
-  }else if(state.adjust_message_ != nullptr){
+      .template send<
+        &RecursiveDoubling::template adjustForPowerOfTwoHandler<DataT, Op>>(
+        state.val_, id);
+  } else if (state.adjust_message_ != nullptr) {
     // We have pending reduce message
-    adjustForPowerOfTwoHandler(state.adjust_message_.get());
+    adjustForPowerOfTwoHandler<DataT, Op>(state.adjust_message_.get());
   }
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::
-  adjustForPowerOfTwoHandler(AllreduceDblRawMsg<DataT>* msg) {
-
-  auto& state = states_[msg->id_];
+template <typename DataT, template <typename Arg> class Op>
+void RecursiveDoubling::adjustForPowerOfTwoHandler(
+  AllreduceDblRawMsg<DataT>* msg) {
+  using DataType = DataHandler<DataT>;
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, msg->id_);
   if (DataType::size(state.val_) == 0) {
     if (not state.initialized_) {
-      initializeState(msg->id_);
+      initializeState<DataT>(msg->id_);
     }
     state.adjust_message_ = promoteMsg(msg);
 
@@ -191,85 +168,80 @@ void RecursiveDoubling<DataT, Op, finalHandler>::
 
   state.finished_adjustment_part_ = true;
 
-  reduceIter(msg->id_);
+  reduceIter<DataT, Op>(msg->id_);
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-bool RecursiveDoubling<DataT, Op, finalHandler>::isDone(size_t id) {
-  auto& state = states_.at(id);
-  return (state.step_ == num_steps_) and allMessagesReceived(id);
+template <typename DataT>
+bool RecursiveDoubling::isDone(size_t id) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
+  return (state.step_ == num_steps_) and allMessagesReceived<DataT>(id);
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-bool RecursiveDoubling<DataT, Op, finalHandler>::isValid(size_t id) {
-  auto& state = states_.at(id);
+template <typename DataT>
+bool RecursiveDoubling::isValid(size_t id) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
   return (vrt_node_ != -1) and (state.step_ < num_steps_);
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-bool RecursiveDoubling<DataT, Op, finalHandler>::allMessagesReceived(size_t id) {
-  auto& state = states_.at(id);
+template <typename DataT>
+bool RecursiveDoubling::allMessagesReceived(size_t id) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
   return std::all_of(
     state.steps_recv_.cbegin(), state.steps_recv_.cbegin() + state.step_,
     [](const auto val) { return val; });
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-bool RecursiveDoubling<DataT, Op, finalHandler>::isReady(size_t id) {
-  auto& state = states_.at(id);
+template <typename DataT>
+bool RecursiveDoubling::isReady(size_t id) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
   return ((is_part_of_adjustment_group_ and state.finished_adjustment_part_) and
           state.step_ == 0) or
-    allMessagesReceived(id);
+    allMessagesReceived<DataT>(id);
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::reduceIter(size_t id) {
+template <typename DataT, template <typename Arg> class Op>
+void RecursiveDoubling::reduceIter(size_t id) {
   // Ensure we have received all necessary messages
-  if (not isReady(id)) {
+  if (not isReady<DataT>(id)) {
     return;
   }
 
-  auto& state = states_.at(id);
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
   auto vdest = vrt_node_ ^ state.mask_;
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;
   vt_debug_print(
     terse, allreduce,
     "RecursiveDoubling Part2 (Send step {}): To Node {} ID = {} \n",
-    state.step_, dest, id
-  );
+    state.step_, dest, id);
 
-  proxy_[dest].template send<&RecursiveDoubling::reduceIterHandler>(state.val_, id, state.step_);
+  proxy_[dest]
+    .template send<&RecursiveDoubling::template reduceIterHandler<DataT, Op>>(
+      state.val_, id, state.step_);
 
   state.mask_ <<= 1;
   state.step_++;
 
-  tryReduce(id, state.step_ - 1);
+  tryReduce<DataT, Op>(id, state.step_ - 1);
 
-  if (isDone(id)) {
-    finalPart(id);
-  } else if (isReady(id)) {
-    reduceIter(id);
+  if (isDone<DataT>(id)) {
+    finalPart<DataT>(id);
+  } else if (isReady<DataT>(id)) {
+    reduceIter<DataT, Op>(id);
   }
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::tryReduce(size_t id, int32_t step) {
-  auto& state = states_.at(id);
+template <typename DataT, template <typename Arg> class Op>
+void RecursiveDoubling::tryReduce(size_t id, int32_t step) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
   auto const all_msgs_received = std::all_of(
-      state.steps_reduced_.cbegin(), state.steps_reduced_.cbegin() + step,
-      [](const auto val) { return val; });
+    state.steps_reduced_.cbegin(), state.steps_reduced_.cbegin() + step,
+    [](const auto val) { return val; });
 
   vt_debug_print(
     terse, allreduce,
@@ -277,8 +249,7 @@ void RecursiveDoubling<DataT, Op, finalHandler>::tryReduce(size_t id, int32_t st
     "state.steps_reduced_[step] = {} state.steps_recv_[step] = {} "
     "all_msgs_received = {} ID = {} \n",
     step, state.step_, static_cast<bool>(state.steps_reduced_[step]),
-    static_cast<bool>(state.steps_recv_[step]), all_msgs_received, id
-  );
+    static_cast<bool>(state.steps_recv_[step]), all_msgs_received, id);
 
   if (
     (step < state.step_) and not state.steps_reduced_[step] and
@@ -289,16 +260,15 @@ void RecursiveDoubling<DataT, Op, finalHandler>::tryReduce(size_t id, int32_t st
   }
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::reduceIterHandler(
-  AllreduceDblRawMsg<DataT>* msg) {
-  auto& state = states_[msg->id_];
+template <typename DataT, template <typename Arg> class Op>
+void RecursiveDoubling::reduceIterHandler(AllreduceDblRawMsg<DataT>* msg) {
+  using DataType = DataHandler<DataT>;
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, msg->id_);
 
   if (DataType::size(state.val_) == 0) {
     if (not state.initialized_) {
-      initializeState(msg->id_);
+      initializeState<DataT>(msg->id_);
     }
     state.messages_.at(msg->step_) = promoteMsg(msg);
     state.steps_recv_[msg->step_] = true;
@@ -311,83 +281,79 @@ void RecursiveDoubling<DataT, Op, finalHandler>::reduceIterHandler(
 
   vt_debug_print(
     terse, allreduce,
-    "RecursiveDoubling Part2 (Recv step {}): finished_adjustment_part_ = {} mask_= {} nprocs_pof2_ = {} "
+    "RecursiveDoubling Part2 (Recv step {}): finished_adjustment_part_ = {} "
+    "mask_= {} nprocs_pof2_ = {} "
     "from {} ID = {}\n",
     msg->step_, state.finished_adjustment_part_, state.mask_, nprocs_pof2_,
-    theContext()->getFromNodeCurrentTask(), msg->id_
-  );
+    theContext()->getFromNodeCurrentTask(), msg->id_);
 
   // Special case when we receive step 2 message before step 1 is done on this node
   if (not state.finished_adjustment_part_) {
     return;
   }
 
-  tryReduce(msg->id_, msg->step_);
+  tryReduce<DataT, Op>(msg->id_, msg->step_);
 
-  if ((state.mask_ < nprocs_pof2_) and isReady(msg->id_)) {
-    reduceIter(msg->id_);
+  if ((state.mask_ < nprocs_pof2_) and isReady<DataT>(msg->id_)) {
+    reduceIter<DataT, Op>(msg->id_);
 
-  } else if (isDone(msg->id_)) {
-    finalPart(msg->id_);
+  } else if (isDone<DataT>(msg->id_)) {
+    finalPart<DataT>(msg->id_);
   }
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::sendToExcludedNodes(size_t id) {
+template <typename DataT>
+void RecursiveDoubling::sendToExcludedNodes(size_t id) {
   if (is_part_of_adjustment_group_ and is_even_) {
     vt_debug_print(
       terse, allreduce, "RecursiveDoubling Part3: Sending to Node {} ID = {}\n",
-      this_node_ + 1, id
-    );
+      this_node_ + 1, id);
 
-    auto& state = states_.at(id);
+    auto& state = getState<RecursiveDoublingT, DataT>(
+      collection_proxy_, objgroup_proxy_, group_, id);
     proxy_[this_node_ + 1]
-      .template send<&RecursiveDoubling::sendToExcludedNodesHandler>(state.val_, id);
+      .template send<&RecursiveDoubling::template sendToExcludedNodesHandler<DataT>>(
+        state.val_, id);
   }
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::
-  sendToExcludedNodesHandler(AllreduceDblRawMsg<DataT>* msg) {
-
-  executeFinalHan(msg->id_);
+template <typename DataT>
+void RecursiveDoubling::sendToExcludedNodesHandler(
+  AllreduceDblRawMsg<DataT>* msg) {
+  executeFinalHan<DataT>(msg->id_);
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::finalPart(size_t id) {
-  auto& state = states_.at(id);
+template <typename DataT>
+void RecursiveDoubling::finalPart(size_t id) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
   if (state.completed_) {
     return;
   }
 
   vt_debug_print(
     terse, allreduce,
-    "RecursiveDoubling Part4: Executing final handler ID = {}\n", id
-  );
+    "RecursiveDoubling Part4: Executing final handler ID = {}\n", id);
 
   if (nprocs_rem_) {
-    sendToExcludedNodes(id);
+    sendToExcludedNodes<DataT>(id);
   }
 
-  executeFinalHan(id);
+  executeFinalHan<DataT>(id);
 }
 
-template <
-  typename DataT, template <typename Arg> class Op,
-  auto finalHandler>
-void RecursiveDoubling<DataT, Op, finalHandler>::executeFinalHan(size_t id) {
-  auto& state = states_.at(id);
-  vt_debug_print(terse, allreduce, "RecursiveDoubling executing final handler ID = {}\n", id);
+template <typename DataT>
+void RecursiveDoubling::executeFinalHan(size_t id) {
+  auto& state = getState<RecursiveDoublingT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, id);
+  vt_debug_print(
+    terse, allreduce, "RecursiveDoubling executing final handler ID = {}\n",
+    id);
 
-  final_handler_.send(std::move(state.val_));
+  state.final_handler_.send(std::move(state.val_));
 
   state.completed_ = true;
+  cleanupState(collection_proxy_, objgroup_proxy_, group_, id);
 }
 
 } // namespace vt::collective::reduce::allreduce

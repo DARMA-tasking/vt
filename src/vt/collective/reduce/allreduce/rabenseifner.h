@@ -100,7 +100,6 @@ struct Rabenseifner {
 
   template <typename DataT>
   void initializeState(size_t id);
-  size_t generateNewId() { return id_++; }
 
   /**
    * \brief Execute the final handler callback with the reduced result.
@@ -288,8 +287,6 @@ struct Rabenseifner {
   GroupType group_ = u64empty;
 
   size_t local_num_elems_ = {};
-
-  size_t id_ = 0;
 
   /// Sorted list of Nodes that take part in allreduce
   std::vector<NodeType> nodes_ = {};
