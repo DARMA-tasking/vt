@@ -1,9 +1,16 @@
 from schema import And, Optional, Schema
 
-def validate_id_and_seq_id(field):
-    """Ensure that either seq_id or id is provided."""
+def validate_ids(field):
+    """
+    Ensure that 1) either seq_id or id is provided,
+    and 2) if an object is migratable, collection_id has been set.
+    """
     if 'seq_id' not in field and 'id' not in field:
         raise ValueError('Either id (bit-encoded) or seq_id must be provided.')
+
+    if field['migratable'] and 'collection_id' not in field:
+        raise ValueError('If an entity is migratable, it must have a collection_id')
+
     return field
 
 LBDatafile_schema = Schema(
@@ -45,7 +52,7 @@ LBDatafile_schema = Schema(
                             'type': str,
                             'migratable': bool,
                             Optional('objgroup_id'): int
-                        }, validate_id_and_seq_id),
+                        }, validate_ids),
                         'node': int,
                         'resource': str,
                         Optional('subphases'): [
@@ -71,7 +78,7 @@ LBDatafile_schema = Schema(
                             Optional('migratable'): bool,
                             Optional('index'): [int],
                             Optional('objgroup_id'): int,
-                        }, validate_id_and_seq_id),
+                        }, validate_ids),
                         'messages': int,
                         'from': And({
                             'type': str,
@@ -82,7 +89,7 @@ LBDatafile_schema = Schema(
                             Optional('migratable'): bool,
                             Optional('index'): [int],
                             Optional('objgroup_id'): int,
-                        }, validate_id_and_seq_id),
+                        }, validate_ids),
                         'bytes': float
                     }
                 ],
