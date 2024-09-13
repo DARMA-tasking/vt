@@ -855,13 +855,12 @@ double TemperedLB::computeWork(
   double load, double inter_comm_bytes, double intra_comm_bytes,
   double shared_comm_bytes
 ) const {
-  // The work model based on input parameters
+  // The work model based on input parameters (excluding epsilon)
   return
     alpha * load +
     beta * inter_comm_bytes +
     gamma * intra_comm_bytes +
     delta * shared_comm_bytes;
-    // epsilon;
 }
 
 WorkBreakdown TemperedLB::computeWorkBreakdown(
