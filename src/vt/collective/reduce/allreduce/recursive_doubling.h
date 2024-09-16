@@ -76,6 +76,7 @@ namespace vt::collective::reduce::allreduce {
  */
 
 struct RecursiveDoubling {
+  RecursiveDoubling(detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems);
   /**
    * \brief Constructor for RecursiveDoubling class.
    *
