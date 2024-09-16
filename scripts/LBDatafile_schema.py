@@ -8,7 +8,7 @@ def validate_ids(field):
     if 'seq_id' not in field and 'id' not in field:
         raise ValueError('Either id (bit-encoded) or seq_id must be provided.')
 
-    if field['migratable'] and 'collection_id' not in field:
+    if field['migratable'] and 'seq_id' in field and 'collection_id' not in field:
         raise ValueError('If an entity is migratable, it must have a collection_id')
 
     return field

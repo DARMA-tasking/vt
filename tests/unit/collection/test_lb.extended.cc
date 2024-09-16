@@ -152,7 +152,7 @@ TEST_P(TestLoadBalancerOther, test_load_balancer_other_keep_last_elm) {
 
 TEST_P(TestLoadBalancerOther, test_load_balancer_other_run_lb_first_phase) {
   vt::theConfig()->vt_lb_run_lb_first_phase = true;
-  runTest(GetParam(), "test_load_balancer_other_keep_last_elm");
+  runTest(GetParam(), "test_load_balancer_other_run_lb_first_phase");
 }
 
 TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_2) {
@@ -166,7 +166,7 @@ TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_keep_last_elm) {
 
 TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_run_lb_first_phase) {
   vt::theConfig()->vt_lb_run_lb_first_phase = true;
-  runTest(GetParam(), "test_load_balancer_greedy_keep_last_elm");
+  runTest(GetParam(), "test_load_balancer_greedy_run_lb_first_phase");
 }
 
 TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {

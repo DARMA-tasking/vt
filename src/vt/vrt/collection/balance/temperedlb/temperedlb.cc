@@ -2222,14 +2222,6 @@ auto TemperedLB::removeClusterToSend(
   );
 }
 
-bool TemperedLB::memoryTransferCriterion(double try_total_bytes, double src_bytes) {
-  // FIXME: incomplete implementation that ignores memory regrouping
-  auto const src_after_mem = this->current_memory_usage_;
-  auto const try_after_mem = try_total_bytes + src_bytes;
-
-  return not (src_after_mem > this->mem_thresh_ or try_after_mem > this->mem_thresh_);
-}
-
 double TemperedLB::loadTransferCriterion(
   double before_w_src, double before_w_dst, double after_w_src,
   double after_w_dst
