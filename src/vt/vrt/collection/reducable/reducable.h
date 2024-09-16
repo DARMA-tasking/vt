@@ -86,11 +86,12 @@ struct Reducable : BaseProxyT {
   ) const;
 
   template <
+    typename ReducerT,
     auto f,
     template <typename Arg> class Op = collective::NoneOp,
     typename... Args
   >
-  messaging::PendingSend allreduce_h(
+  messaging::PendingSend allreduce(
     Args&&... args
   ) const;
 

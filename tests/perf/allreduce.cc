@@ -291,49 +291,27 @@ VT_PERF_TEST(MyTest, test_allreduce_group_rabenseifner) {
   }
 }
 
-struct Hello : vt::Collection<Hello, vt::Index1D> {
-  Hello() {
+struct RabensifnerColl : vt::Collection<RabensifnerColl, vt::Index1D> {
+  RabensifnerColl() {
     for (auto const payload_size : payloadSizes) {
-      timer_names_[payload_size] = fmt::format("Collection {}", payload_size);
+      timer_names_[payload_size] = fmt::format("Collection Rabenseifner {}", payload_size);
     }
   }
 
-  void finalMaxHan(std::vector<int32_t> result) {
-    std::string result_s = "";
-    for (auto val : result) {
-      result_s.append(fmt::format("{} ", val));
-    }
-    fmt::print(
-      "[{}]: Allreduce finalMaxHan (Values=[{}]), idx={}\n",
-      theContext()->getNode(), result_s, getIndex().x());
-
-    // col_send_done_ = true;
-    // parent_->StopTimer(timer_names_.at(result.size()));
-  }
-
-  void finalHan(std::vector<int32_t> result) {
-    // std::string result_s = "";
-    // for(auto val : result){
-    //   result_s.append(fmt::format("{} ", val));
-    // }
-    // fmt::print(
-    //   "[{}]: Allreduce handler (Values=[{}]), idx={}\n",
-    //   theContext()->getNode(), result_s, getIndex().x()
-    // );
-
+  void allreduceHan(std::vector<int32_t> result) {
     col_send_done_ = true;
     parent_->StopTimer(timer_names_.at(result.size()));
   }
 
-  void handler(size_t payload_size) {
+  void executeAllreduce(size_t payload_size) {
     auto proxy = this->getCollectionProxy();
 
     std::vector<int32_t> payload(payload_size, getIndex().x());
     parent_->StartTimer(timer_names_.at(payload_size));
-    proxy.allreduce_h<&Hello::finalHan, collective::PlusOp>(payload);
-
-    // proxy.allreduce_h<&Hello::finalMaxHan, collective::MaxOp>(
-    //   std::move(payload));
+    proxy.allreduce<
+      collective::reduce::allreduce::RabenseifnerT, &RabensifnerColl::allreduceHan,
+      collective::PlusOp
+    >(payload);
   }
 
   bool col_send_done_ = false;
@@ -344,7 +322,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
 VT_PERF_TEST(MyTest, test_allreduce_collection_rabenseifner) {
   auto const num_elms_per_node = 1;
   auto range = vt::Index1D(int32_t{num_nodes_ * num_elms_per_node});
-  auto proxy = vt::makeCollection<Hello>("test_collection_send")
+  auto proxy = vt::makeCollection<RabensifnerColl>("test_collection_allreduce")
                  .bounds(range)
                  .bulkInsert()
                  .wait();
@@ -355,13 +333,64 @@ VT_PERF_TEST(MyTest, test_allreduce_collection_rabenseifner) {
   theCollective()->barrier();
 
   auto const elm = thisNode * num_elms_per_node;
-
   proxy[elm].tryGetLocalPtr()->parent_ = this;
-  proxy.broadcastCollective<&Hello::handler>(payloadSizes.front());
-  theSched()->runSchedulerWhile(
-    [&] { return !proxy[elm].tryGetLocalPtr()->col_send_done_; });
+
   for (auto payload_size : payloadSizes) {
-    proxy.broadcastCollective<&Hello::handler>(payload_size);
+    proxy.broadcastCollective<&RabensifnerColl::executeAllreduce>(payload_size);
+
+    // We run 1 coll elem per node, so it should be ok
+    theSched()->runSchedulerWhile(
+      [&] { return !proxy[elm].tryGetLocalPtr()->col_send_done_; });
+    proxy[elm].tryGetLocalPtr()->col_send_done_ = false;
+  }
+}
+
+struct RecursiveDoublingColl : vt::Collection<RecursiveDoublingColl, vt::Index1D> {
+  RecursiveDoublingColl() {
+    for (auto const payload_size : payloadSizes) {
+      timer_names_[payload_size] = fmt::format("Collection RecursiveDoubling {}", payload_size);
+    }
+  }
+
+  void allreduceHan(std::vector<int32_t> result) {
+    col_send_done_ = true;
+    parent_->StopTimer(timer_names_.at(result.size()));
+  }
+
+  void executeAllreduce(size_t payload_size) {
+    auto proxy = this->getCollectionProxy();
+
+    std::vector<int32_t> payload(payload_size, getIndex().x());
+    parent_->StartTimer(timer_names_.at(payload_size));
+    proxy.allreduce<
+      collective::reduce::allreduce::RecursiveDoublingT, &RecursiveDoublingColl::allreduceHan,
+      collective::PlusOp
+    >(payload);
+  }
+
+  bool col_send_done_ = false;
+  std::unordered_map<size_t, std::string> timer_names_ = {};
+  MyTest* parent_ = {};
+};
+
+VT_PERF_TEST(MyTest, test_allreduce_collection_racursive_doubling) {
+  auto const num_elms_per_node = 1;
+  auto range = vt::Index1D(int32_t{num_nodes_ * num_elms_per_node});
+  auto proxy = vt::makeCollection<RecursiveDoublingColl>("test_collection_allreduce")
+                 .bounds(range)
+                 .bulkInsert()
+                 .wait();
+
+  auto const thisNode = vt::theContext()->getNode();
+  auto const nextNode = (thisNode + 1) % num_nodes_;
+
+  theCollective()->barrier();
+
+  auto const elm = thisNode * num_elms_per_node;
+  proxy[elm].tryGetLocalPtr()->parent_ = this;
+
+  for (auto payload_size : payloadSizes) {
+    proxy.broadcastCollective<&RecursiveDoublingColl::executeAllreduce>(payload_size);
 
     // We run 1 coll elem per node, so it should be ok
     theSched()->runSchedulerWhile(
