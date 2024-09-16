@@ -19,7 +19,7 @@ std::string writeTemperedLBConfig(
   auto config_file = getUniqueFilename();
   if (this_node == 0) {
     std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
-    cfg_file_ << "0 TemperedLB transfer=" << transfer_strategy <<
+    cfg_file_ << "0 TemperedLB iters=10 transfer=" << transfer_strategy <<
       " alpha=" << alpha <<
       " beta=" << beta <<
       " gamma=" << gamma <<
@@ -30,7 +30,7 @@ std::string writeTemperedLBConfig(
       } else {
         cfg_file_ << " memory_threshold=1e8";
       }
-        }
+    }
     cfg_file_.close();
   }
   return config_file;
@@ -64,7 +64,7 @@ void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
 
 // The following tests use expected values found by the MILP
 
-TEST_F(TestTemperedLB, test_load_only_original_transfer) {
+TEST_F(TestTemperedLB, test_load_only_original) {
   SET_NUM_NODES_CONSTRAINT(4);
   auto cfg = writeTemperedLBConfig("Original", false);
   runTemperedLBTest(cfg);
