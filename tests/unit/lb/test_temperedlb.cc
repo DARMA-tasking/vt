@@ -12,7 +12,7 @@ namespace vt { namespace tests { namespace unit { namespace lb {
 using TestTemperedLB = TestParallelHarness;
 
 std::string writeTemperedLBConfig(
-  std::string transfer_strategy, bool mem_constraints, double alpha = 1.0,
+  std::string transfer_strategy, double memory_threshold, double alpha = 1.0,
   double beta = 0.0, double gamma = 0.0, double delta = 0.0
 ) {
   auto const this_node = theContext()->getNode();
@@ -25,11 +25,7 @@ std::string writeTemperedLBConfig(
       " gamma=" << gamma <<
       " delta=" << delta;
     if (transfer_strategy == "SwapClusters") {
-      if (mem_constraints) {
-        cfg_file_ << " memory_threshold=20.0";
-      } else {
-        cfg_file_ << " memory_threshold=1e8";
-      }
+        cfg_file_ << " memory_threshold=" << memory_threshold;
     }
     cfg_file_.close();
   }
@@ -66,49 +62,49 @@ void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
 
 TEST_F(TestTemperedLB, test_load_only_original) {
   SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("Original", false);
+  auto cfg = writeTemperedLBConfig("Original", 1e8);
   runTemperedLBTest(cfg);
 }
 
 TEST_F(TestTemperedLB, test_load_only_swapclusters) {
   SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", false);
+  auto cfg = writeTemperedLBConfig("SwapClusters", 1e8);
   runTemperedLBTest(cfg, 0.25);
 }
 
 TEST_F(TestTemperedLB, test_load_and_memory_swapclusters) {
   SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", true);
+  auto cfg = writeTemperedLBConfig("SwapClusters", 20);
   runTemperedLBTest(cfg, 0.25);
 }
 
 TEST_F(TestTemperedLB, test_load_no_memory_delta_10) {
   SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", false, 1, 0, 0, 1);
+  auto cfg = writeTemperedLBConfig("SwapClusters", 1e8, 1, 0, 0, 1);
   runTemperedLBTest(cfg, 1.0);
 }
 
 TEST_F(TestTemperedLB, test_load_no_memory_delta_01) {
   SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", false, 1, 0, 0, 0.1);
+  auto cfg = writeTemperedLBConfig("SwapClusters", 1e8, 1, 0, 0, 0.1);
   runTemperedLBTest(cfg, 0.25);
 }
 
 TEST_F(TestTemperedLB, test_load_memory_delta_01) {
   SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", true, 1, 0, 0, 0.1);
+  auto cfg = writeTemperedLBConfig("SwapClusters", 20, 1, 0, 0, 0.1);
   runTemperedLBTest(cfg, 0.25);
 }
 
 TEST_F(TestTemperedLB, test_load_no_memory_delta_03) {
   SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", false, 1, 0, 0, 0.3);
+  auto cfg = writeTemperedLBConfig("SwapClusters", 1e8, 1, 0, 0, 0.3);
   runTemperedLBTest(cfg, 1.0);
 }
 
 TEST_F(TestTemperedLB, test_load_memory_delta_03) {
   SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", true, 1, 0, 0, 0.3);
+  auto cfg = writeTemperedLBConfig("SwapClusters", 20, 1, 0, 0, 0.3);
   runTemperedLBTest(cfg, 1.0);
 }
 
