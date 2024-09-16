@@ -744,7 +744,7 @@ struct CollectionManager
   );
 
 
-  template <auto f, typename ColT, template <typename Arg> class Op, typename ...Args>
+  template <typename ReducerT, auto f, typename ColT, template <typename Arg> class Op, typename ...Args>
   messaging::PendingSend reduceLocal(
     CollectionProxyWrapType<ColT> const& proxy, Args &&... args
   );
@@ -1796,6 +1796,7 @@ private:
 
   // Allreduce stuff, probably should be moved elsewhere
   std::unordered_map<VirtualProxyType, ObjGroupProxyType> rabenseifner_reducers_;
+  std::unordered_map<VirtualProxyType, ObjGroupProxyType> recursive_doubling_reducers_;
 };
 
 }}} /* end namespace vt::vrt::collection */
