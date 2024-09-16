@@ -81,12 +81,12 @@ messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::allreduce(
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-template <auto f, template <typename Arg> class Op, typename... Args>
-messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::allreduce_h(
+template <typename ReducerT, auto f, template <typename Arg> class Op, typename... Args>
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::allreduce(
   Args&&... args
 ) const {
   auto const proxy = this->getProxy();
-  return theCollection()->reduceLocal<f, ColT, Op>(
+  return theCollection()->reduceLocal<ReducerT, f, ColT, Op>(
     proxy, std::forward<Args>(args)...);
 }
 

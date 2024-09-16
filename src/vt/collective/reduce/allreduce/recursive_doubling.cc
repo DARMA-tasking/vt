@@ -48,6 +48,42 @@
 namespace vt::collective::reduce::allreduce {
 
 RecursiveDoubling::RecursiveDoubling(
+  detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems)
+  : collection_proxy_(proxy.get()),
+    local_num_elems_(num_elems),
+    nodes_(theGroup()->GetGroupNodes(group.get())),
+    num_nodes_(nodes_.size()),
+    this_node_(theContext()->getNode()),
+    num_steps_(static_cast<uint32_t>(std::log2(num_nodes_))),
+    nprocs_pof2_(1 << num_steps_),
+    nprocs_rem_(num_nodes_ - nprocs_pof2_) {
+  auto const is_default_group = theGroup()->isGroupDefault(group.get());
+  if (not is_default_group) {
+    auto it = std::find(nodes_.begin(), nodes_.end(), theContext()->getNode());
+    vtAssert(it != nodes_.end(), "This node was not found in group nodes!");
+
+    this_node_ = it - nodes_.begin();
+  }
+
+  is_even_ = this_node_ % 2 == 0;
+  is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
+  if (is_part_of_adjustment_group_) {
+    if (is_even_) {
+      vrt_node_ = this_node_ / 2;
+    } else {
+      vrt_node_ = -1;
+    }
+  } else {
+    vrt_node_ = this_node_ - nprocs_rem_;
+  }
+
+  vt_debug_print(
+    terse, allreduce,
+    "RecursiveDoubling (this={}): proxy={:x} proxy_={} local_num_elems={}\n",
+    print_ptr(this), proxy.get(), proxy_.getProxy(), local_num_elems_);
+}
+
+RecursiveDoubling::RecursiveDoubling(
   detail::StrongObjGroup objgroup)
   : objgroup_proxy_(objgroup.get()),
     local_num_elems_(1),
