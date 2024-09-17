@@ -294,7 +294,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_col_send) {
     if (proxy(i).tryGetLocalPtr()) {
       bool found = false;
       for (auto&& x : comm) {
-        for (auto&& y : x) {
+        for (auto&& y : x.second) {
           auto key = y.first;
           auto vol = y.second;
           if (key.to_.id == idxToElmID(idx)) {
@@ -358,7 +358,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_objgroup_send) {
       bool found = false;
       auto idb = vt::elm::ElmIDBits::createObjGroup(op, next).id;
       for (auto&& x : comm) {
-        for (auto&& y : x) {
+        for (auto&& y : x.second) {
           auto key = y.first;
           auto vol = y.second;
           if (key.from_.id == idxToElmID(idx) /*and key.to_.id == idb*/) {
@@ -421,7 +421,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_col_send) {
     if (proxy(i).tryGetLocalPtr()) {
       bool found = false;
       for (auto&& x : comm) {
-        for (auto&& y : x) {
+        for (auto&& y : x.second) {
           auto key = y.first;
           auto vol = y.second;
           if (key.to_.id == idxToElmID(idx)) {
@@ -475,7 +475,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_objgroup_send) {
   // Check that communication exists on the send side as expected
   bool found = false;
   for (auto&& x : comm) {
-    for (auto&& y : x) {
+    for (auto&& y : x.second) {
       auto key = y.first;
       auto vol = y.second;
       if (key.from_.id == ida /*and key.to_.id == idb*/) {
@@ -532,7 +532,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_col_send) {
     if (proxy(i).tryGetLocalPtr()) {
       bool found = false;
       for (auto&& x : comm) {
-        for (auto&& y : x) {
+        for (auto&& y : x.second) {
           auto key = y.first;
           auto vol = y.second;
           if (key.to_.id == idxToElmID(idx)) {
@@ -592,7 +592,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_handler_send) {
     if (proxy(i).tryGetLocalPtr()) {
       bool found = false;
       for (auto&& x : comm) {
-        for (auto&& y : x) {
+        for (auto&& y : x.second) {
           auto key = y.first;
           auto vol = y.second;
           fmt::print("from={}, to={}\n", key.from_, key.to_);
@@ -641,7 +641,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_handler_send) {
   // Check that communication exists on the send side as expected
   bool found = false;
   for (auto&& x : comm) {
-    for (auto&& y : x) {
+    for (auto&& y : x.second) {
       auto key = y.first;
       auto vol = y.second;
       if (key.from_.id == ida) {
@@ -686,7 +686,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_objgroup_send) {
   // Check that communication exists on the send side as expected
   bool found = false;
   for (auto&& x : comm) {
-    for (auto&& y : x) {
+    for (auto&& y : x.second) {
       auto key = y.first;
       auto vol = y.second;
       if (key.to_.id == ida) {
@@ -727,7 +727,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_handler_send) {
   // Check that communication exists on the send side as expected
   bool found = false;
   for (auto&& x : comm) {
-    for (auto&& y : x) {
+    for (auto&& y : x.second) {
       auto key = y.first;
       auto vol = y.second;
       if (key.to_.id == ida and key.from_.id == idb) {

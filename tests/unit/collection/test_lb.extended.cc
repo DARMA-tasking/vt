@@ -616,8 +616,9 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
     );
   } else {
     // compare the whole-phase load data in detail
-    for (auto phase = lbdh.node_data_.backPhase(); phase <= lbdh.node_data_.frontPhase(); phase++) {
-      EXPECT_TRUE(lbdh_read.node_data_.contains(phase));
+    for (auto &phase_data : lbdh.node_data_) {
+      auto phase = phase_data.first;
+      EXPECT_FALSE(!lbdh_read.node_data_.contains(phase));
       if (!lbdh_read.node_data_.contains(phase)) {
         fmt::print(
           "Phase {} in whole-phase loads were not read in",
@@ -625,7 +626,7 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
         );
       } else {
         auto &read_load_map = lbdh_read.node_data_[phase];
-        auto &orig_load_map = lbdh.node_data_[phase];
+        auto &orig_load_map = phase_data.second;
         for (auto &entry : read_load_map) {
           auto read_elm_id = entry.first;
           if ((read_elm_id.id == vt::elm::no_element_id)
