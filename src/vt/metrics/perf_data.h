@@ -89,8 +89,8 @@ public:
 
 private:
   std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> event_map_;
-  std::unordered_map<runnable::RunnableNew*, std::vector<int>> task_fds_map_;
   std::vector<std::string> event_names_;
+  std::vector<int> event_fds_;
 
   void cleanupBeforeAbort();
   static long perf_event_open(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags);
