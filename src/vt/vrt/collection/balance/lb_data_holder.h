@@ -65,12 +65,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * output them as JSON.
  */
 struct LBDataHolder {
-  /**
-   * \brief Construct a new \c LBDataHolder with specified history length.
-   *
-   * \param[in] phases_history_num the number of phases to retain
-   */
-  LBDataHolder(std::size_t phases_history_num);
+  LBDataHolder() = default;
 
   /**
    * \brief Create \c LBDataHolder from input JSON

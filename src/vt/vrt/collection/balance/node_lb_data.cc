@@ -139,12 +139,7 @@ void NodeLBData::resizeLBDataHistory(uint32_t new_hist_len) {
   hist_lb_data_size_ = new_hist_len;
 
   if (lb_data_) {
-    lb_data_->node_data_.resize(new_hist_len);
-    lb_data_->node_comm_.resize(new_hist_len);
-    lb_data_->node_subphase_comm_.resize(new_hist_len);
-    lb_data_->user_defined_lb_info_.resize(new_hist_len);
-    lb_data_->user_defined_json_.resize(new_hist_len);
-    lb_data_->node_user_attributes_.resize(new_hist_len);
+    lb_data_->resizeHistory(hist_lb_data_size_);
   }
 
   startIterCleanup();
@@ -155,7 +150,8 @@ ElementIDType NodeLBData::getNextElm() {
 }
 
 void NodeLBData::initialize() {
-  lb_data_ = std::make_unique<LBDataHolder>(hist_lb_data_size_);
+  lb_data_ = std::make_unique<LBDataHolder>();
+  lb_data_->resizeHistory(hist_lb_data_size_);
 
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_data) {

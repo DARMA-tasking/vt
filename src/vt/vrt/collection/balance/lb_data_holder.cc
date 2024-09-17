@@ -51,6 +51,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void LBDataHolder::getObjectFromJsonField_(
