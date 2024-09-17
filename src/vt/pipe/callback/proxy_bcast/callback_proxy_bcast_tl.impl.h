@@ -110,18 +110,18 @@ void CallbackProxyBcastDirect::trigger(MsgT* msg, PipeType const& pipe) {
 }
 
 template <typename SerializerT>
-void CallbackProxyBcastCollDirect::serialize(SerializerT& s) {
+void CallbackProxyLocalSendCollDirect::serialize(SerializerT& s) {
   s | handler_;
   s | vrt_dispatch_han_;
   s | proxy_;
 }
 
 template <typename MsgT>
-void CallbackProxyBcastCollDirect::trigger(MsgT* msg, PipeType const& pipe) {
+void CallbackProxyLocalSendCollDirect::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
     terse, pipe,
-    "CallbackProxyBcastCollDirect: trigger_: pipe={:x}, this_node={}, "
+    "CallbackProxyLocalSendCollDirect: trigger_: pipe={:x}, this_node={}, "
     "handler={}, vrt_handler={}\n",
     pipe, this_node, handler_, vrt_dispatch_han_
   );

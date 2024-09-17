@@ -106,11 +106,11 @@ private:
   VirtualProxyType proxy_           = no_vrt_proxy;
 };
 
-struct CallbackProxyBcastCollDirect : CallbackBaseTL<CallbackProxyBcastCollDirect> {
+struct CallbackProxyLocalSendCollDirect : CallbackBaseTL<CallbackProxyLocalSendCollDirect> {
   using AutoHandlerType = auto_registry::AutoHandlerType;
 
-  CallbackProxyBcastCollDirect() = default;
-  CallbackProxyBcastCollDirect(
+  CallbackProxyLocalSendCollDirect() = default;
+  CallbackProxyLocalSendCollDirect(
     HandlerType const in_han, AutoHandlerType const in_vrt,
     VirtualProxyType const& in_proxy
   ) : vrt_dispatch_han_(in_vrt), handler_(in_han), proxy_(in_proxy)
@@ -119,7 +119,7 @@ struct CallbackProxyBcastCollDirect : CallbackBaseTL<CallbackProxyBcastCollDirec
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  bool operator==(CallbackProxyBcastCollDirect const& other) const {
+  bool operator==(CallbackProxyLocalSendCollDirect const& other) const {
     return
       other.handler_ == handler_ &&
       other.vrt_dispatch_han_ == vrt_dispatch_han_ &&

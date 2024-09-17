@@ -68,11 +68,6 @@ namespace vt::collective::reduce::allreduce {
  * This class provides an implementation of the Recursive Doubling algorithm for the
  * allreduce operation. It is parameterized by the data type to be reduced, the reduction
  * operation, the object type, and the final handler.
- *
- * \tparam DataT The data type to be reduced.
- * \tparam Op The reduction operation type.
- * \tparam ObjT The object type.
- * \tparam finalHandler The final handler.
  */
 
 struct RecursiveDoubling {
@@ -139,7 +134,7 @@ struct RecursiveDoubling {
    * \param msg Pointer to the message.
    */
   template <typename DataT, template <typename Arg> class Op>
-  void adjustForPowerOfTwoHandler(AllreduceDblRawMsg<DataT>* msg);
+  void adjustForPowerOfTwoHandler(RecursiveDoublingMsg<DataT>* msg);
 
   /**
    * \brief Check if the allreduce operation is done.
@@ -193,7 +188,7 @@ struct RecursiveDoubling {
    * \param msg Pointer to the message.
    */
   template <typename DataT, template <typename Arg> class Op>
-  void reduceIterHandler(AllreduceDblRawMsg<DataT>* msg);
+  void reduceIterHandler(RecursiveDoublingMsg<DataT>* msg);
 
   /**
    * \brief Send data to excluded nodes for finalization.
@@ -207,7 +202,7 @@ struct RecursiveDoubling {
    * \param msg Pointer to the message.
    */
   template <typename DataT>
-  void sendToExcludedNodesHandler(AllreduceDblRawMsg<DataT>* msg);
+  void sendToExcludedNodesHandler(RecursiveDoublingMsg<DataT>* msg);
 
   /**
    * \brief Perform the final part of the allreduce operation.

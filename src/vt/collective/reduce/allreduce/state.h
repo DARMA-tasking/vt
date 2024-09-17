@@ -89,11 +89,11 @@ template <typename DataT>
 struct RecursiveDoublingState : StateBase {
   DataT val_ = {};
   bool value_assigned_ = false;
-  MsgSharedPtr<AllreduceDblRawMsg<DataT>> adjust_message_ = nullptr;
+  MsgSharedPtr<RecursiveDoublingMsg<DataT>> adjust_message_ = nullptr;
 
   std::vector<bool> steps_recv_ = {};
   std::vector<bool> steps_reduced_ = {};
-  std::vector<MsgSharedPtr<AllreduceDblRawMsg<DataT>>> messages_ = {};
+  std::vector<MsgSharedPtr<RecursiveDoublingMsg<DataT>>> messages_ = {};
   vt::pipe::callback::cbunion::CallbackTyped<DataT> final_handler_ = {};
 };
 
