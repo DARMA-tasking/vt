@@ -19,7 +19,7 @@ std::string writeTemperedLBConfig(
   auto config_file = getUniqueFilename();
   if (this_node == 0) {
     std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
-    cfg_file_ << "0 TemperedLB iters=10 transfer=" << transfer_strategy <<
+    cfg_file_ << "0 TemperedLB iters=10 trials=3 transfer=" << transfer_strategy <<
       " alpha=" << alpha <<
       " beta=" << beta <<
       " gamma=" << gamma <<
