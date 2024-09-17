@@ -74,58 +74,49 @@ PerfData::PerfData()
       vtAbort("Event name isn't in known perf events map: " + event_name);
     }
   }
+
+  // Initialize perf events once and store file descriptors
+  for (const auto &event_name : event_names_)
+  {
+    struct perf_event_attr pe = {};
+    pe.type = event_map_.at(event_name).first;
+    pe.size = sizeof(struct perf_event_attr);
+    pe.config = event_map_.at(event_name).second;
+
+    pe.disabled = 1;
+    pe.exclude_kernel = 1;
+    pe.exclude_hv = 1;
+    pe.inherit = 1; // Ensure event is inherited by threads
+
+    if (event_name == "instructions") {
+      pe.pinned = 1;
+    }
+
+    int fd = perf_event_open(&pe, 0, -1, -1, PERF_FLAG_FD_CLOEXEC);
+    if (fd == -1)
+    {
+      cleanupBeforeAbort();
+      vtAbort("Error opening perf event: " + std::string(strerror(errno)));
+    }
+
+    event_fds_.push_back(fd);
+  }
 }
 
 PerfData::~PerfData()
 {
-  for (auto& [task, fds] : task_fds_map_)
+  for (int fd : event_fds_)
   {
-    for (int fd : fds)
+    if (fd != -1)
     {
-      if (fd != -1)
-      {
-        close(fd);
-      }
+      close(fd);
     }
   }
 }
 
 void PerfData::startTaskMeasurement(runnable::RunnableNew* task)
 {
-  // fmt::print("*********** startTaskMeasurement: PerfData currently is tracking {} tasks\n", task_fds_map_.size());
-  if (task_fds_map_.find(task) == task_fds_map_.end())
-  {
-    // fmt::print(" Task was not in the task_fds_map_.\n");
-    std::vector<int> fds;
-    for (const auto &event_name : event_names_)
-    {
-      struct perf_event_attr pe = {};
-      pe.type = event_map_.at(event_name).first;
-      pe.size = sizeof(struct perf_event_attr);
-      pe.config = event_map_.at(event_name).second;
-
-      pe.disabled = 1;
-      pe.exclude_kernel = 1;
-      pe.exclude_hv = 1;
-      pe.inherit = 1; // Ensure event is inherited by threads
-
-      if (event_name == "instructions") {
-        pe.pinned = 1;
-      }
-
-      int fd = perf_event_open(&pe, 0, -1, -1, PERF_FLAG_FD_CLOEXEC);
-      if (fd == -1)
-      {
-        cleanupBeforeAbort();
-        vtAbort("Error opening perf event: " + std::string(strerror(errno)));
-      }
-
-      fds.push_back(fd);
-    }
-    task_fds_map_[task] = fds;
-  }
-
-  for (int fd : task_fds_map_[task])
+  for (int fd : event_fds_)
   {
     if (fd != -1) {
       ioctl(fd, PERF_EVENT_IOC_RESET, 0);
@@ -136,33 +127,25 @@ void PerfData::startTaskMeasurement(runnable::RunnableNew* task)
 
 void PerfData::stopTaskMeasurement(runnable::RunnableNew* task)
 {
-  // fmt::print("*********** stopTaskMeasurement: PerfData currently is tracking {} tasks\n", task_fds_map_.size());
-  if (task_fds_map_.find(task) != task_fds_map_.end())
+  for (int fd : event_fds_)
   {
-    for (int fd : task_fds_map_[task])
-    {
-      if (fd != -1) {
-        ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
-      }
+    if (fd != -1) {
+      ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
     }
   }
 }
 
 std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements(runnable::RunnableNew* task)
 {
-  // fmt::print("*********** getTaskMeasurements: PerfData currently is tracking {} tasks\n", task_fds_map_.size());
   std::unordered_map<std::string, uint64_t> measurements;
-  if (task_fds_map_.find(task) != task_fds_map_.end())
+  for (size_t i = 0; i < event_fds_.size(); ++i)
   {
-    for (size_t i = 0; i < task_fds_map_[task].size(); ++i)
-    {
-      uint64_t count;
-      if (task_fds_map_[task][i] != -1 && read(task_fds_map_[task][i], &count, sizeof(uint64_t)) != -1) {
-        measurements[event_names_[i]] = count;
-      }
-      else {
-        vtWarn("Failed to read perf event data for: " + event_names_[i]);
-      }
+    uint64_t count;
+    if (event_fds_[i] != -1 && read(event_fds_[i], &count, sizeof(uint64_t)) != -1) {
+      measurements[event_names_[i]] = count;
+    }
+    else {
+      vtWarn("Failed to read perf event data for: " + event_names_[i]);
     }
   }
   return measurements;
@@ -170,17 +153,7 @@ std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements(runnable
 
 void PerfData::purgeTask(runnable::RunnableNew* task)
 {
-  if (task_fds_map_.find(task) != task_fds_map_.end())
-  {
-    for (int fd : task_fds_map_[task])
-    {
-      if (fd != -1)
-      {
-        close(fd);
-      }
-    }
-    task_fds_map_.erase(task);
-  }
+  // No longer needed since we don't track tasks individually
 }
 
 std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> PerfData::getEventMap() const { return event_map_; }
@@ -196,17 +169,14 @@ void PerfData::serialize(SerializerT& s) {
 
 void PerfData::cleanupBeforeAbort()
 {
-  for (auto& [task, fds] : task_fds_map_)
+  for (int fd : event_fds_)
   {
-    for (int fd : fds)
+    if (fd != -1)
     {
-      if (fd != -1)
-      {
-        close(fd);
-      }
+      close(fd);
     }
   }
-  task_fds_map_.clear();
+  event_fds_.clear();
 }
 
 long PerfData::perf_event_open(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags)
