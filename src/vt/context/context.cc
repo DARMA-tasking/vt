@@ -90,6 +90,20 @@ Context::Context([[maybe_unused]] bool const is_interop, MPI_Comm comm) {
   communicator_ = comm;
   numNodes_ = static_cast<NodeType>(numNodesLocal);
   thisNode_ = static_cast<NodeType>(thisNodeLocal);
+
+#if vt_check_enabled(papi)
+  int retval;
+
+  /* Initialize the PAPI library */
+  retval = PAPI_library_init(PAPI_VER_CURRENT);
+  if (retval != PAPI_VER_CURRENT)
+      handle_papi_error(retval);
+
+  /* Enable and initialize multiplex support */
+  retval = PAPI_multiplex_init();
+  if (retval != PAPI_OK)
+      handle_papi_error(retval);
+#endif
 }
 
 Context::~Context() {

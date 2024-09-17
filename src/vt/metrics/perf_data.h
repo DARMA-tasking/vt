@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_data.cc
+//                                  perf_data.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,55 +41,67 @@
 //@HEADER
 */
 
-#include "vt/context/runnable_context/lb_data.h"
-#include "vt/vrt/collection/manager.h"
+#if !defined INCLUDED_VT_METRICS_PERF_DATA_H
+#define INCLUDED_VT_METRICS_PERF_DATA_H
 
-namespace vt { namespace ctx {
+#include "vt/config.h"
+#include "vt/runtime/component/component_pack.h"
+#include "vt/context/context.h"
+#include "example_events.h"
 
-void LBData::start(TimeType time) {
-  // record start time
-  if (should_instrument_) {
-    lb_data_->start(time);
-  }
-}
+#include <linux/perf_event.h>
+#include <sys/ioctl.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+#include <cstring>
+#include <unordered_map>
+#include <vector>
+#include <string>
+#include <sstream>
 
-void LBData::finish(TimeType time) {
-  // record end time
-  if (should_instrument_) {
-    lb_data_->stop(time);
-  }
-}
+namespace vt { namespace metrics {
 
-void LBData::send(elm::ElementIDStruct dest, MsgSizeType bytes) {
-  if (should_instrument_) {
-    lb_data_->sendToEntity(dest, cur_elm_id_, bytes);
-  }
-}
+/** \file */
 
-void LBData::suspend(TimeType time) {
-  finish(time);
-}
+/**
+ * \struct PerfData perf_data.h vt/metrics/perf_data.h
+ *
+ * \brief Tracks perf metrics per task
+ *
+ */
+struct PerfData: runtime::component::Component<PerfData>
+{
+public:
+  PerfData();
+  ~PerfData();
 
-void LBData::resume(TimeType time) {
-  start(time);
-}
+  void startTaskMeasurement(runnable::RunnableNew* task);
+  void stopTaskMeasurement(runnable::RunnableNew* task);
+  std::unordered_map<std::string, uint64_t> getTaskMeasurements(runnable::RunnableNew* task);
+  void purgeTask(runnable::RunnableNew* task);
 
-typename LBData::ElementIDStruct const& LBData::getCurrentElementID() const {
-  return cur_elm_id_;
-}
+  std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> getEventMap() const;
+  void startup() override;
+  std::string name() override;
 
-#if vt_check_enabled(papi)
-std::unordered_map<std::string, uint64_t> LBData::getPAPIMetrics() {
-  std::unordered_map<std::string, uint64_t> papi_metrics = {};
-  for (size_t i = 0; i < papiData_->native_events.size(); i++) {
-    papi_metrics[papiData_->native_events[i]] = papiData_->values[i];
-  }
-  papi_metrics[std::string("real_time")] = papiData_->end_real_usec - papiData_->start_real_usec;
-  papi_metrics[std::string("real_cycles")] = papiData_->end_real_cycles - papiData_->start_real_cycles;
-  papi_metrics[std::string("virt_time")] = papiData_->end_virt_usec - papiData_->start_virt_usec;
-  papi_metrics[std::string("virt_cycles")] = papiData_->end_virt_cycles - papiData_->start_virt_cycles;
-  return papi_metrics;
-}
-#endif
+  template <typename SerializerT>
+  void serialize(SerializerT& s);
 
-}} /* end namespace vt::ctx */
+private:
+  std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> event_map_;
+  std::vector<std::string> event_names_;
+  std::vector<int> event_fds_;
+
+  void cleanupBeforeAbort();
+  static long perf_event_open(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags);
+};
+
+}} // end namespace vt::metrics
+
+namespace vt {
+
+extern metrics::PerfData* thePerfData();
+
+} // end namespace vt
+
+#endif /*INCLUDED_VT_METRICS_PERF_DATA_H*/

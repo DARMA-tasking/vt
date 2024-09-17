@@ -199,6 +199,17 @@ void RunnableNew::run() {
 #endif
 }
 
+#if vt_check_enabled(papi)
+std::unordered_map<std::string, uint64_t> RunnableNew::getPAPIMetrics() {
+  std::unordered_map<std::string, uint64_t> result = {};
+  if (contexts_.has_lb)
+  {
+    result = contexts_.lb.getPAPIMetrics();
+  }
+  return result;
+}
+#endif
+
 void RunnableNew::start(TimeType time) {
   contexts_.setcontext.start();
   if (contexts_.has_td) contexts_.td.start();
@@ -256,6 +267,12 @@ void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
 
 /*static*/ void RunnableNew::operator delete(void* ptr) {
   RunnableNewAlloc::runnable->dealloc(reinterpret_cast<std::byte*>(ptr));
+  #if vt_check_enabled(perf)
+  if (vt::thePerfData() != nullptr && curRT->isInitialized())
+  {
+    vt::thePerfData()->purgeTask(reinterpret_cast<RunnableNew*>(ptr));
+  }
+  #endif
 }
 
 /*static*/

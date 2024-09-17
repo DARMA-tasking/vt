@@ -54,6 +54,8 @@
 #include "vt/context/runnable_context/continuation.h"
 #include "vt/pool/static_sized/memory_pool_equal.h"
 #include "vt/elm/elm_id.h"
+#include "vt/metrics/perf_data.h"
+#include "vt/runtime/runtime_inst.h"
 
 // fwd-declarations for the element types
 namespace vt { namespace vrt {
@@ -320,6 +322,28 @@ public:
    * \return the message
    */
   BaseMsgType* getMsg() const { return msg_.get(); }
+
+#if vt_check_enabled(papi)
+  /**
+   * \brief Start PAPI metrics map for the running context
+   */
+  void startPAPIMetrics() { contexts_.lb.startPAPIMetrics(); }
+
+  /**
+   * \brief Stop PAPI metrics map for the running context
+   * 
+   * \note has to be called after startPAPIMetrics
+   * 
+   */
+  void stopPAPIMetrics() { contexts_.lb.stopPAPIMetrics(); }
+
+  /**
+   * \brief Get the dictionnary of PAPI metrics associated with the runnable
+   *
+   * \return the dictionnary
+   */
+  std::unordered_map<std::string, uint64_t> getPAPIMetrics();
+#endif
 
 #if vt_check_enabled(fcontext)
   /**

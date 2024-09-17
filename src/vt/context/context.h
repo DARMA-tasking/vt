@@ -62,6 +62,9 @@ struct RunnableNew;
 #if vt_check_enabled(trace_enabled)
 # include "vt/trace/trace_common.h"
 #endif
+#if vt_check_enabled(papi)
+# include <papi.h>
+#endif
 
 namespace vt {  namespace ctx {
 
@@ -123,6 +126,14 @@ struct Context : runtime::component::Component<Context> {
   friend struct ContextAttorney;
 
   std::string name() override { return "Context"; }
+
+#if vt_check_enabled(papi)
+  void handle_papi_error (int retval)
+  {
+    printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
+    exit(1);
+  }
+#endif
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
