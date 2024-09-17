@@ -215,6 +215,15 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
   endif()
 endforeach()
 
+# Copy synthetic blocks data files to <build-dir>/tests/synthetic-blocks-data
+set(SYNTHETIC_BLOCKS_DATA_DEST "${CMAKE_BINARY_DIR}/tests/synthetic-blocks-data")
+file(MAKE_DIRECTORY ${SYNTHETIC_BLOCKS_DATA_DEST})
+file(GLOB SYNTHETIC_BLOCKS_DATA_FILES "${CMAKE_SOURCE_DIR}/tests/data/synthetic-blocks/*")
+foreach(SYNTHETIC_BLOCKS_DATA_FILE ${SYNTHETIC_BLOCKS_DATA_FILES})
+  get_filename_component(FILE_NAME ${SYNTHETIC_BLOCKS_DATA_FILE} NAME)
+  configure_file(${SYNTHETIC_BLOCKS_DATA_FILE} ${SYNTHETIC_BLOCKS_DATA_DEST} COPYONLY)
+endforeach()
+
 #
 # Performance Tests
 #

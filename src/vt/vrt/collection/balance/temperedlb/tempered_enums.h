@@ -71,6 +71,36 @@ enum struct InformTypeEnum : uint8_t {
   AsyncInform = 1
 };
 
+/// Enum for the strategy to be used in transfer stage
+enum struct TransferTypeEnum : uint8_t {
+  /**
+   * \brief Original strategy
+   *
+   * Transfer one object per transfer as in original Grapevine approach.
+   */
+  Original   = 0,
+  /**
+   * \brief Original strategy improved by recursion
+   *
+   * When single object transfer is rejected, attempt to recurse in order to
+   * pull more objects into the transfer and hereby minimize work added by
+   * said transfer.
+   * This is especially useful when communication is taken into account, as
+   * object transfers typically disrupt local vs. global communication edges.
+   */
+  Recursive  = 1,
+  /**
+   * \brief Form object clusters and attempt to perform swaps.
+   *
+   * Object can be clustered including to arbitrary definition, and swaps
+   * of entire clusters, including the nullset, between ranks are attempted.
+   * This is especially useful when shared memory constraints are present,
+   * as breaking shared memory clusters results in higher overall memory
+   * footprint, in contrast with whole cluster swaps.
+   */
+  SwapClusters = 2,
+};
+
 /// Enum for the order in which local objects are considered for transfer
 enum struct ObjectOrderEnum : uint8_t {
   Arbitrary = 0, //< Arbitrary order: iterate as defined by the unordered_map
@@ -123,14 +153,6 @@ enum struct CMFTypeEnum : uint8_t {
    */
   NormByMax  = 1,
   /**
-   * \brief Compute the CMF factor using the load of this processor
-   *
-   * Do not remove processors from the CMF that exceed the target load until the
-   * next iteration. Use a CMF factor of 1.0/x, where x is the load of the
-   * processor that is computing the CMF.
-   */
-  NormBySelf = 2,
-  /**
    * \brief Narrow the CMF to only include processors that can accommodate the
    * transfer
    *
@@ -139,7 +161,7 @@ enum struct CMFTypeEnum : uint8_t {
    * in the CMF that will pass the chosen Criterion for the object being
    * considered for transfer.
    */
-  NormByMaxExcludeIneligible = 3,
+  NormByMaxExcludeIneligible = 2,
 };
 
 /// Enum for determining fanout and rounds

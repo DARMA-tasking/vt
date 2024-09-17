@@ -63,7 +63,7 @@ struct GrapevineCriterion {
 
 struct ModifiedGrapevineCriterion  {
   bool operator()(LoadType over, LoadType under, LoadType obj, LoadType) const {
-    return obj < over - under;
+    return obj <= over - under;
   }
 };
 

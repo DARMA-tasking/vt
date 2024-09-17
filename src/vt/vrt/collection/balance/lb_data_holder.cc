@@ -252,9 +252,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 
   i = 0;
   if (node_comm_.find(phase) != node_comm_.end()) {
-    for (auto&& elm : node_comm_.at(phase)) {
-      auto volume = elm.second;
-      auto const& key = elm.first;
+    for (auto const& [key, volume] : node_comm_.at(phase)) {
       j["communications"][i]["bytes"] = volume.bytes;
       j["communications"][i]["messages"] = volume.messages;
 
@@ -294,6 +292,17 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
         j["communications"][i]["to"]["type"] = "node";
         j["communications"][i]["to"]["id"] = key.toNode();
         outputEntity(j["communications"][i]["from"], key.fromObj());
+        break;
+      }
+      case elm::CommCategory::ReadOnlyShared:
+      case elm::CommCategory::WriteShared: {
+        j["communications"][i]["type"] =
+          (key.cat_ == elm::CommCategory::ReadOnlyShared) ?
+          "ReadOnlyShared" : "WriteShared";
+        j["communications"][i]["to"]["type"] = "node";
+        j["communications"][i]["to"]["id"] = key.toNode();
+        j["communications"][i]["from"]["type"] = "shared_id";
+        j["communications"][i]["from"]["id"] = key.sharedID();
         break;
       }
       case elm::CommCategory::LocalInvoke:
@@ -476,6 +485,34 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               );
               CommVolume vol{bytes, messages};
               this->node_comm_[id][key] = vol;
+            } else if (
+              type == "ReadOnlyShared" or type == "WriteShared"
+            ) {
+              vtAssertExpr(comm["from"]["type"] == "shared_id");
+              vtAssertExpr(comm["to"]["type"] == "node");
+
+              CommVolume vol{bytes, messages};
+              auto to_node = comm["to"]["id"];
+              vtAssertExpr(to_node.is_number());
+
+              auto from_shared_id = comm["from"]["id"];
+              vtAssertExpr(from_shared_id.is_number());
+
+              if (type == "ReadOnlyShared") {
+                CommKey key(
+                  CommKey::ReadOnlySharedTag{},
+                  static_cast<NodeType>(to_node),
+                  static_cast<int>(from_shared_id)
+                );
+                this->node_comm_[id][key] = vol;
+              } else {
+                CommKey key(
+                  CommKey::WriteSharedTag{},
+                  static_cast<NodeType>(to_node),
+                  static_cast<int>(from_shared_id)
+                );
+                this->node_comm_[id][key] = vol;
+              }
             }
           }
         }

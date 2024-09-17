@@ -46,12 +46,9 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/elm/elm_comm.h"
 
 #include <unordered_map>
 #include <memory>
-#include <variant>
-#include <string>
 
 #include <nlohmann/json_fwd.hpp>
 

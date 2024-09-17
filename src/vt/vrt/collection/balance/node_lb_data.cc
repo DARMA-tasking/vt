@@ -272,6 +272,8 @@ getRecvSendDirection(elm::CommKeyType const& comm) {
   // this case is just to avoid warning of not handled enum
   case elm::CommCategory::CollectiveToCollectionBcast:
   case elm::CommCategory::LocalInvoke:
+  case elm::CommCategory::WriteShared:
+  case elm::CommCategory::ReadOnlyShared:
     return std::make_pair(ElementIDType{}, ElementIDType{});
   }
 

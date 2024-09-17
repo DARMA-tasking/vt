@@ -1722,6 +1722,19 @@ private:
     MsgSizeType const msg_size
   );
 
+public:
+  /**
+   * \brief Get the rank-based LB data along with element ID for rank-based work
+   *
+   * \return tuple with pointers to each one
+   */
+  auto getRankLBData() {
+    return std::make_tuple(
+      &bare_handler_dummy_elm_id_for_lb_data_,
+      &bare_handler_lb_data_
+    );
+  }
+
 private:
 # if vt_check_enabled(trace_enabled)
   trace::UserEventIDType trace_irecv             = trace::no_user_event_id;
