@@ -177,7 +177,7 @@ auto PipeManagerTL::makeCallbackBcastCollectiveProxy(ProxyT proxy) {
   }
 
   return RetType{
-      callback::cbunion::RawCollBcastColDirTag, pipe_id, han, vrt_handler,
+      callback::cbunion::RawSendLocalCollTag, pipe_id, han, vrt_handler,
       proxy.getProxy()};
 }
 

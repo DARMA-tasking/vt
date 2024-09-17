@@ -74,9 +74,9 @@ CallbackRawBaseSingle::CallbackRawBaseSingle(
 { }
 
 CallbackRawBaseSingle::CallbackRawBaseSingle(
-  RawCollBcastColDirTagType, PipeType const& in_pipe, HandlerType const in_handler,
+  RawSendLocalCollTagType, PipeType const& in_pipe, HandlerType const in_handler,
   AutoHandlerType const in_vrt, VirtualProxyType const& in_proxy
-) : pipe_(in_pipe), cb_(CollBcastColDirCB{in_handler, in_vrt, in_proxy})
+) : pipe_(in_pipe), cb_(CollLocalSendDirCB{in_handler, in_vrt, in_proxy})
 { }
 
 CallbackRawBaseSingle::CallbackRawBaseSingle(

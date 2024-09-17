@@ -80,7 +80,12 @@ void RecursiveDoubling::localReduce(size_t id, Args&&... data) {
   auto const is_ready = state.local_col_wait_count_ == local_num_elems_;
 
   if (is_ready) {
-    allreduce<DataT, Op>(id);
+    // Execute early in case we're the only node
+    if (num_nodes_ < 2) {
+      executeFinalHan<DataT>(id);
+    } else {
+      allreduce<DataT, Op>(id);
+    }
   }
 }
 
@@ -151,7 +156,7 @@ void RecursiveDoubling::adjustForPowerOfTwo(size_t id) {
 
 template <typename DataT, template <typename Arg> class Op>
 void RecursiveDoubling::adjustForPowerOfTwoHandler(
-  AllreduceDblRawMsg<DataT>* msg) {
+  RecursiveDoublingMsg<DataT>* msg) {
   using DataType = DataHandler<DataT>;
   auto& state = getState<RecursiveDoublingT, DataT>(
     collection_proxy_, objgroup_proxy_, group_, msg->id_);
@@ -261,7 +266,7 @@ void RecursiveDoubling::tryReduce(size_t id, int32_t step) {
 }
 
 template <typename DataT, template <typename Arg> class Op>
-void RecursiveDoubling::reduceIterHandler(AllreduceDblRawMsg<DataT>* msg) {
+void RecursiveDoubling::reduceIterHandler(RecursiveDoublingMsg<DataT>* msg) {
   using DataType = DataHandler<DataT>;
   auto& state = getState<RecursiveDoublingT, DataT>(
     collection_proxy_, objgroup_proxy_, group_, msg->id_);
@@ -319,7 +324,7 @@ void RecursiveDoubling::sendToExcludedNodes(size_t id) {
 
 template <typename DataT>
 void RecursiveDoubling::sendToExcludedNodesHandler(
-  AllreduceDblRawMsg<DataT>* msg) {
+  RecursiveDoublingMsg<DataT>* msg) {
   executeFinalHan<DataT>(msg->id_);
 }
 

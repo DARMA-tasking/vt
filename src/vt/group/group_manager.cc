@@ -144,7 +144,7 @@ bool GroupManager::inGroup(GroupType const group) {
 
 std::vector<NodeType>
 GroupManager::GetGroupNodes(GroupType const group_id) const {
-  if (group_id == default_group) {
+  if (isGroupDefault(group_id)) {
     std::vector<NodeType> nodes(theContext()->getNumNodes());
     for (NodeType i = 0; i < theContext()->getNumNodes(); ++i) {
       nodes[i] = i;
@@ -379,7 +379,7 @@ EventType GroupManager::sendGroupCollective(
     auto const& num_children = tree->getNumChildren();
 
     vt_debug_print(
-      terse, group,
+      normal, group,
       "GroupManager::sendGroupCollective: group={:x}, collective={}, "
       "num_children={}\n",
       group, is_group_collective, num_children
@@ -390,7 +390,7 @@ EventType GroupManager::sendGroupCollective(
         bool const& send = child != dest;
 
         vt_debug_print(
-          terse, group,
+          normal, broadcast,
           "GroupManager::sendGroupCollective *send* size={}, from={}, child={}, "
           "send={}, msg={}\n",
           base.size(), from, child, send, print_ptr(msg)

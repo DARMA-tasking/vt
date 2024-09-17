@@ -49,20 +49,20 @@
 namespace vt::collective::reduce::allreduce {
 
 template <typename DataT>
-struct AllreduceDblRawMsg : Message {
+struct RecursiveDoublingMsg : Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required();
 
-  AllreduceDblRawMsg() = default;
-  AllreduceDblRawMsg(AllreduceDblRawMsg const&) = default;
-  AllreduceDblRawMsg(AllreduceDblRawMsg&&) = default;
-  ~AllreduceDblRawMsg() {
+  RecursiveDoublingMsg() = default;
+  RecursiveDoublingMsg(RecursiveDoublingMsg const&) = default;
+  RecursiveDoublingMsg(RecursiveDoublingMsg&&) = default;
+  ~RecursiveDoublingMsg() {
     if (owning_) {
       delete val_;
     }
   }
 
-  AllreduceDblRawMsg(DataT const& in_val, size_t id, int step = 0)
+  RecursiveDoublingMsg(DataT const& in_val, size_t id, int step = 0)
     : MessageParentType(),
       val_(&in_val),
       id_(id),
