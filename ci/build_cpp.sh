@@ -108,7 +108,7 @@ then
         { echo "vt-tv already in lib... not downloading"; } 2>/dev/null
     else
         cd "${source_dir}/lib"
-        vt_tv_rev="master"
+        vt_tv_rev="1.5.0"
         git clone -b "${vt_tv_rev}" --depth 1 https://github.com/DARMA-tasking/vt-tv.git
         cd -
     fi
