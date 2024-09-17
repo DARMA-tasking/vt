@@ -41,9 +41,6 @@
 //@HEADER
 */
 
-#include "vt/collective/reduce/allreduce/recursive_doubling.h"
-#include "vt/collective/reduce/allreduce/type.h"
-#include <type_traits>
 #if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 #define INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H
 

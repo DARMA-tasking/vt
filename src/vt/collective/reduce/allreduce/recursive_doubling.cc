@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          recursive_doubling.impl.h
+//                            recursive_doubling.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC

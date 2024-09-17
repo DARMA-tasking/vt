@@ -71,10 +71,6 @@ struct ObjgroupAllreduceT {};
  *
  * This class performs an allreduce operation using Rabenseifner's method. The algorithm consists
  * of several phases: adjustment for power-of-two processes, scatter-reduce, and gather-allgather.
- *
- * \tparam DataT Type of the data being reduced.
- * \tparam Op Reduction operation (e.g., sum, max, min).
- * \tparam finalHandler Callback handler for the final result.
  */
 
 struct Rabenseifner {

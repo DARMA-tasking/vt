@@ -89,59 +89,6 @@ struct RabenseifnerMsg : Message {
     s | step_;
   }
 
-struct NoCombine {};
-
-template <typename>
-struct IsTuple : std::false_type {};
-template <typename... Args>
-struct IsTuple<std::tuple<Args...>> : std::true_type {};
-
-  template <typename MsgT, typename Op, typename ActOp>
-  static void combine(MsgT* m1, MsgT* m2) {
-    Op()(m1->getVal(), m2->getConstVal());
-  }
-
-  template <typename Tuple, typename Op, typename ActOp>
-  static void FinalHandler(ReduceTMsg<Tuple>* msg) {
-    // using MsgT = ReduceTMsg<Tuple>;
-       vt_debug_print(
-        terse, reduce,
-        "FinalHandler: reduce root: ptr={}\n", print_ptr(msg)
-      );
-    //   if (msg->isRoot()) {
-    //   vt_debug_print(
-    //     terse, reduce,
-    //     "FinalHandler::ROOT: reduce root: ptr={}\n", print_ptr(msg)
-    //   );
-    //   if (msg->hasValidCallback()) {
-    //     envelopeUnlockForForwarding(msg->env);
-    //     if (msg->isParamCallback()) {
-    //       if constexpr (IsTuple<typename MsgT::DataT>::value) {
-    //         msg->getParamCallback().sendTuple(std::move(msg->getVal()));
-    //       }
-    //     } else {
-    //       // We need to force the type to the more specific one here
-    //       auto cb = msg->getMsgCallback();
-    //       auto typed_cb = reinterpret_cast<Callback<MsgT>*>(&cb);
-    //       typed_cb->sendMsg(msg);
-    //     }
-    //   } else if (msg->root_handler_ != uninitialized_handler) {
-    //     auto_registry::getAutoHandler(msg->root_handler_)->dispatch(msg, nullptr);
-    //   }
-    // } else {
-    //   MsgT* fst_msg = msg;
-    //   MsgT* cur_msg = msg->template getNext<MsgT>();
-    //   vt_debug_print(
-    //     terse, reduce,
-    //     "FinalHandler::leaf: fst ptr={}\n", print_ptr(fst_msg)
-    //   );
-    //   while (cur_msg != nullptr) {
-    //     RabenseifnerMsg<Scalar, DataT>::combine<MsgT,Op,ActOp>(fst_msg, cur_msg);
-    //     cur_msg = cur_msg->template getNext<MsgT>();
-    //   }
-    // }
-  }
-
   const Scalar* val_ = {};
   size_t size_ = {};
   size_t id_ = {};

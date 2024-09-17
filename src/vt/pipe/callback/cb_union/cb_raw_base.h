@@ -58,16 +58,16 @@ namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
-static struct RawAnonTagType        { } RawAnonTag        { };
-static struct RawSendMsgTagType     { } RawSendMsgTag     { };
-static struct RawBcastMsgTagType    { } RawBcastMsgTag    { };
-static struct RawSendColMsgTagType  { } RawSendColMsgTag  { };
-static struct RawBcastColMsgTagType { } RawBcastColMsgTag { };
-static struct RawSendColDirTagType  { } RawSendColDirTag  { };
-static struct RawBcastColDirTagType { } RawBcastColDirTag { };
-static struct RawCollBcastColDirTagType { } RawCollBcastColDirTag { };
-static struct RawSendObjGrpTagType  { } RawSendObjGrpTag  { };
-static struct RawBcastObjGrpTagType { } RawBcastObjGrpTag { };
+static struct RawAnonTagType          { } RawAnonTag          { };
+static struct RawSendMsgTagType       { } RawSendMsgTag       { };
+static struct RawBcastMsgTagType      { } RawBcastMsgTag      { };
+static struct RawSendColMsgTagType    { } RawSendColMsgTag    { };
+static struct RawBcastColMsgTagType   { } RawBcastColMsgTag   { };
+static struct RawSendColDirTagType    { } RawSendColDirTag    { };
+static struct RawBcastColDirTagType   { } RawBcastColDirTag   { };
+static struct RawSendLocalCollTagType { } RawSendLocalCollTag { };
+static struct RawSendObjGrpTagType    { } RawSendObjGrpTag    { };
+static struct RawBcastObjGrpTagType   { } RawBcastObjGrpTag   { };
 #pragma GCC diagnostic pop
 
 template <typename... Args>
@@ -97,7 +97,7 @@ struct CallbackRawBaseSingle {
   CallbackRawBaseSingle(RawSendColMsgTagType, PipeType const& in_pipe);
   CallbackRawBaseSingle(RawBcastColMsgTagType, PipeType const& in_pipe);
   CallbackRawBaseSingle(
-    RawCollBcastColDirTagType, PipeType const& in_pipe,
+    RawSendLocalCollTagType, PipeType const& in_pipe,
     HandlerType const in_handler, AutoHandlerType const in_vrt,
     VirtualProxyType const& in_proxy
   );
@@ -195,11 +195,11 @@ struct CallbackTyped : CallbackRawBaseSingle {
   { }
 
   CallbackTyped(
-    RawCollBcastColDirTagType, PipeType const& in_pipe,
+    RawSendLocalCollTagType, PipeType const& in_pipe,
     HandlerType const in_handler, AutoHandlerType const in_vrt,
     VirtualProxyType const& in_proxy
   ) : CallbackRawBaseSingle(
-        RawCollBcastColDirTag, in_pipe, in_handler, in_vrt, in_proxy
+        RawSendLocalCollTag, in_pipe, in_handler, in_vrt, in_proxy
       )
   { }
 

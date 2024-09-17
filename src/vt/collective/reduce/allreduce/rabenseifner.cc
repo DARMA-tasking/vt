@@ -83,8 +83,7 @@ Rabenseifner::Rabenseifner(
     print_ptr(this), proxy.get(), proxy_.getProxy(), local_num_elems_);
 }
 
-Rabenseifner::Rabenseifner(
-  detail::StrongGroup group)
+Rabenseifner::Rabenseifner(detail::StrongGroup group)
   : group_(group.get()),
     local_num_elems_(1),
     nodes_(theGroup()->GetGroupNodes(group.get())),
@@ -136,22 +135,20 @@ Rabenseifner::Rabenseifner(
 Rabenseifner::Rabenseifner(detail::StrongObjGroup objgroup)
   : objgroup_proxy_(objgroup.get()),
     local_num_elems_(1),
-    nodes_(theGroup()->GetGroupNodes(default_group)),
-    num_nodes_(nodes_.size()),
+    num_nodes_(theContext()->getNumNodes()),
     this_node_(theContext()->getNode()),
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_) {
-  std::string nodes_info;
-  for (auto& node : nodes_) {
-    nodes_info += fmt::format("{} ", node);
+  nodes_.resize(num_nodes_);
+  for (NodeType i = 0; i < theContext()->getNumNodes(); ++i) {
+    nodes_[i] = i;
   }
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner: is_default_group={} is_part_of_allreduce={} num_nodes_={} "
-    "Nodes:[{}]\n",
-    true, true, num_nodes_, nodes_info);
+    "Rabenseifner: is_default_group={} is_part_of_allreduce={} num_nodes_={} \n",
+    true, true, num_nodes_);
 
   // We collectively create this Reducer, so it's possible that not all Nodes are part of it
   is_even_ = this_node_ % 2 == 0;

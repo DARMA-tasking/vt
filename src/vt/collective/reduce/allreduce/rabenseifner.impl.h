@@ -94,10 +94,6 @@ void Rabenseifner::localReduce(size_t id, Args&&... data) {
 
   state.local_col_wait_count_++;
   auto const is_ready = state.local_col_wait_count_ == local_num_elems_;
-  // vt_debug_print(
-  //   terse, allreduce, "Rabenseifner (this={}): local_col_wait_count_={} ID={} is_ready={}\n",
-  //   print_ptr(this), state.local_col_wait_count_, id, is_ready
-  // );
 
   if (is_ready) {
     // Execute early in case we're the only node
