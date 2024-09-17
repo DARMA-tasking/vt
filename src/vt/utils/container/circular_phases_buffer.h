@@ -58,30 +58,41 @@ template <typename StoredType>
 class CircularPhasesBuffer {
   using StoredPair = std::pair<PhaseType, StoredType>;
 
-  static const auto no_pos = std::numeric_limits<std::size_t>::max();
+  constexpr static auto no_phase = std::numeric_limits<PhaseType>::max();
+  constexpr static auto no_index = std::numeric_limits<std::size_t>::max();
+
+  static StoredPair makeEmptyPair(const PhaseType& phase = no_phase) {
+    return std::make_pair(phase, StoredType{});
+  }
 
 public:
 
   /**
    * \brief Construct a CircularPhasesBuffer
    *
-   * \param[in] in_capacity the requested size of the buffer
+   * \param[in] size_in the requested size of the buffer
    */
   CircularPhasesBuffer(std::size_t size_in = 1)
-    : buffer_(size_in)
-  { }
+    : buffer_(size_in, makeEmptyPair())
+  {
+    vtAssert(size_in > 0, "Size of circular phases buffer needs to be greather than zero.");
+  }
 
   /**
    * \brief Construct a CircularPhasesBuffer.
-   * The max size of buffer will be equal to the size of the list.
    *
    * \param[in] in_list the initializer list with elements to be put into the buffer
    */
-  CircularPhasesBuffer(std::initializer_list<StoredPair> in_list)
-    : buffer_(in_list.size()) {
+  CircularPhasesBuffer(std::initializer_list<StoredPair> in_list) {
+    const auto& [min, max] = std::minmax(in_list, [](const StoredPair& lhs, const StoredPair& rhs) {
+      return lhs.first < rhs.first;
+    });
+    // Calcuate the size of the buffer to hold all phases including the missing ones
+    buffer_.resize((max.first - min.first) + 1, makeEmptyPair());
 
     for (auto pair : in_list) {
-      store(pair.first, pair.second);
+      buffer_[phaseToIndex(pair.first)] = pair;
+      updateHead(pair.first);
     }
   }
 
@@ -93,22 +104,37 @@ public:
    * \return whether buffer contains the phase or not
    */
   bool contains(const PhaseType& phase) const {
-    return phase < head_phase_ && phase >= (head_phase_ - size());
+    return buffer_[phaseToIndex(phase)].first == phase;
   }
 
   /**
-   * \brief Get data related to the phase.
-   * Insert new data if phase is not present in the buffer.
+   * \brief Get or set data for the phase.
    *
    * \param[in] phase the phase to look for
    *
    * \return reference to the stored data
    */
   StoredType& operator[](const PhaseType phase) {
-    if (!contains(phase)) {
+    auto& pair = buffer_[phaseToIndex(phase)];
+    // Create empty data for new phase
+    if (pair.first != phase) {
       store(phase, StoredType{});
     }
-    return at(phase);
+    return pair.second;
+  }
+
+  /**
+   * \brief Store data in the buffer.
+   *
+   * \param[in] phase the phase for which data will be stored
+   * \param[in] obj the data to store
+   */
+  // probably best to get phase and data and store it when it is within valid range of phases
+  void store(const PhaseType& phase, StoredType data) {
+    vtAssert(canBeStored(phase), "Phase is out of valid range");
+
+    buffer_[phaseToIndex(phase)] = std::make_pair(phase, data);
+    updateHead(phase);
   }
 
   /**
@@ -119,7 +145,8 @@ public:
    * \return reference to the stored data
    */
   StoredType& at(const PhaseType phase) {
-    return buffer_.at(phaseToIndex(phase));
+    vtAssert(contains(phase), "Phase is not stored in the buffer.");
+    return buffer_[phaseToIndex(phase)].second;
   }
 
   /**
@@ -130,7 +157,91 @@ public:
    * \return reference to the stored data
    */
   const StoredType& at(const PhaseType phase) const {
-    return buffer_.at(phaseToIndex(phase));
+    vtAssert(contains(phase), "Phase is not stored in the buffer.");
+    return buffer_[phaseToIndex(phase)].second;
+  }
+
+  /**
+   * \brief Resize buffer to the requested size.
+   * The minimal size of the buffer is 1.
+   *
+   * \param[in] new_size_in the requested new size of the buffer
+   */
+  void resize(const std::size_t new_size_in) {
+    vtAssert(new_size_in > 0, "Size of circular phases buffer needs to be greather than zero.");
+    if (new_size_in == buffer_.size()) {
+      return;
+    }
+
+    // temporary vector to copy the elements to retain
+    std::vector<StoredPair> tmp(new_size_in, makeEmptyPair());
+    // number of elements to copy
+    auto num = std::min(new_size_in, buffer_.size() - numFree());
+
+    // copy num phases
+    auto to_copy = head_phase_;
+    while(num > 0 && to_copy != no_phase) {
+      if (contains(to_copy)) {
+        tmp[calcIndex(to_copy, tmp)] = buffer_[phaseToIndex(to_copy)];
+        num--;
+      }
+      to_copy--;
+    }
+
+    buffer_.swap(tmp);
+  }
+
+  /**
+   * \brief Check if the buffer is empty.
+   *
+   * \return whether the buffer is empty or not
+   */
+  bool empty() const {
+    return head_phase_ == no_phase;
+  }
+
+  /**
+   * \brief Get the number of valid elements in the buffer
+   *
+   * \return the number of valid elements
+   */
+  std::size_t size() const {
+    return buffer_.size() - numFree();
+  }
+
+  /**
+   * \brief Returns the current capacity of the buffer
+   *
+   * \return the buffer capacity
+   */
+  std::size_t capacity() const {
+    return buffer_.size();
+  }
+
+  /**
+   * \brief Clears content of the buffer.
+   */
+  void clear() {
+    head_phase_ = no_phase;
+    buffer_.assign(buffer_.size(), makeEmptyPair());
+  }
+
+  /**
+   * \brief Get the latest phase
+   *
+   * \return the latest phase
+   */
+  PhaseType frontPhase() const {
+    return head_phase_;
+  }
+
+  /**
+   * \brief Get the data for the latest phase
+   *
+   * \return the reference to the latest data
+   */
+  StoredType& frontData() {
+    return at(head_phase_);
   }
 
   /**
@@ -142,7 +253,7 @@ public:
    */
   StoredType* find(const PhaseType& phase) {
     if (contains(phase)) {
-      return &buffer_[phaseToIndex(phase)];
+      return &buffer_[phaseToIndex(phase)].second;
     }
     return nullptr;
   }
@@ -156,203 +267,108 @@ public:
    */
   const StoredType* find(const PhaseType& phase) const {
     if (contains(phase)) {
-      return &buffer_[phaseToIndex(phase)];
+      return &buffer_[phaseToIndex(phase)].second;
     }
     return nullptr;
   }
 
   /**
-   * \brief Store data in the buffer.
+   * \brief Get const iterator to the first valid element in the buffer
    *
-   * \param[in] phase the phase for which data will be stored
-   * \param[in] obj the data to store
+   * \return the const iterator
    */
-  void store(const PhaseType& phase, StoredType data) {
-    buffer_[head_] = std::move(data);
-    head_ = getNextIndex();
-    head_phase_ = phase + 1;
-    inserted_ = inserted_ + 1;
-  }
+  auto begin() const { return ++ForwardIterator(&buffer_, no_index); }
 
   /**
-   * \brief Resize buffer to the requested size.
+   * \brief Get iterator to the first valid element in the buffer
    *
-   * \param[in] new_size the requested new size of the buffer
+   * \return the iterator
    */
-  void resize(const std::size_t new_size) {
-    if (new_size == buffer_.size() || new_size == 0) {
-      return;
-    }
-    // temporary vector to copy the elements to retain
-    std::vector<StoredType> tmp(new_size);
-    // number of elements to copy
-    auto num = std::min(new_size, size());
-
-    // copy
-    auto to_copy = head_;
-    for(std::size_t it = num; it > 0; it--) {
-      to_copy = getPrevIndex(to_copy);
-      tmp[it - 1] = buffer_[to_copy];
-    }
-
-    buffer_.swap(tmp);
-    inserted_ = num;
-    head_ = getNextIndex(num - 1);
-  }
+  auto begin() { return ++ForwardIterator(&buffer_, no_index); }
 
   /**
-   * \brief Get number of elements in the buffer.
+   * \brief Get const iterator to the space after the buffer
    *
-   * \return the number of elements
+   * \return the const end iterator
    */
-  std::size_t size() const {
-    return std::min(inserted_, buffer_.size());
-  }
+  auto end() const { return ForwardIterator(&buffer_, buffer_.size()); }
 
   /**
-   * \brief Check if the buffer is empty.
+   * \brief Get iterator to the space after the buffer
    *
-   * \return whether the buffer is empty or not
+   * \return the end iterator
    */
-  bool empty() const {
-    return inserted_ == 0;
-  }
-
-  /**
-   * \brief Clears content of the buffer.
-   */
-  void clear() {
-    head_ = 0;
-    inserted_ = 0;
-    head_phase_ = 0;
-    buffer_.assign(buffer_.size(), StoredType{});
-  }
+  auto end() { return ForwardIterator(&buffer_, buffer_.size()); }
 
   template <typename SerializeT>
   void serialize(SerializeT& s) {
-    s | head_;
-    s | inserted_;
     s | head_phase_;
     s | buffer_;
   }
 
-  /**
-   * \brief Get const iterator to the beginning of the buffer
-   *
-   * \return the const begin iterator
-   */
-  auto begin() const { return ForwardIterator(head_, findTail(), &buffer_); }
-
-  /**
-   * \brief Get const iterator to the space after buffer
-   *
-   * \return the const end iterator
-   */
-  auto end() const { return ForwardIterator(); }
-
-  /**
-   * \brief Finds the newest phase in the buffer.
-   *
-   * \return the newest phase in the buffer.
-   */
-  PhaseType frontPhase() const {
-    return inserted_ == 0 ? 0 : head_phase_ - 1;
-  }
-
-  /**
-   * \brief Get the newest element in buffer.
-   *
-   * \return the reference to the newest element.
-   */
-  StoredType& front() {
-    return buffer_.at(getPrevIndex(head_));
-  }
-
-  /**
-   * \brief Finds the oldest phase in the buffer.
-   *
-   * \return the oldest phase in the buffer.
-   */
-  PhaseType backPhase() const {
-    if (head_ == inserted_) {
-      return 0;
-    }
-    return head_phase_ - buffer_.size();
-  }
-
-  /**
-   * \brief Get the oldest element in buffer.
-   *
-   * \return the reference to the oldest element.
-   */
-  StoredType& back() {
-    return buffer_.at(findTail());
-  }
-
 private:
-  std::size_t findTail() const {
-    if (inserted_ == 0) {
-      return no_pos;
-    } else if (head_ == inserted_) {
-      return 0;
-    }
-    return head_;
+  /**
+   * \brief Converts the phase to the index in the buffer
+   *
+   * \param phase - the phase to be converted
+   * \return the position of the data container in the buffer
+   */
+  std::size_t phaseToIndex(const PhaseType& phase) const {
+    return phase % buffer_.size();
   }
 
-  std::size_t phaseToIndex(const PhaseType phase) const {
-    std::size_t go_back = head_phase_ - phase;
-    if (go_back > head_) {
-      return size() - (go_back - head_);
-    } else {
-      return head_ - go_back;
+  /**
+   * \brief Converts the phase to the index in the temporary buffer
+   *
+   * @param phase - the phase to be converted
+   * @param vector - the buffer to return index for
+   * @return the position of the data container in the buffer
+   */
+  std::size_t calcIndex(const PhaseType& phase, const std::vector<StoredPair>& vector) const {
+    return phase % vector.size();
+  }
+
+  /**
+   * \brief Counts spots in the buffer without a valid phase assigned.
+   *
+   * @return the number of empty spots
+   */
+  std::size_t numFree() const {
+    return std::count_if(buffer_.begin(), buffer_.end(),
+      [](const StoredPair& pair){ return pair.first == no_phase; }
+    );
+  }
+
+  /**
+   * \brief Update the head phase stored in the buffer if necessary
+   *
+   * \param phase - the phase to compare to \c head_phase_
+   */
+  void updateHead(const PhaseType& phase) {
+    if (head_phase_ == no_phase || phase > head_phase_) {
+      head_phase_ = phase;
     }
   }
 
-  std::size_t getPrevIndex(std::size_t index) const {
-    std::size_t prev = index - 1;
-    if (prev > buffer_.size()) {
-      prev = buffer_.size() - 1;
+  bool canBeStored(const PhaseType& phase) const {
+    if (!empty() && head_phase_ > buffer_.size()) {
+      return phase > head_phase_ - buffer_.size();
     }
-    return prev;
+    return true;
   }
 
-  std::size_t getNextIndex() const {
-    std::size_t next = head_ + 1;
-    if (next >= buffer_.size()) {
-      next = 0;
-    }
-    return next;
-  }
-
-  std::size_t getNextIndex(std::size_t index) const {
-    std::size_t next = index + 1;
-    if (next >= buffer_.size()) {
-      next = 0;
-    }
-    return next;
-  }
-
-  // Number of the next index in buffer
-  std::size_t head_ = 0;
-  // Counter for inserted phases
-  std::size_t inserted_ = 0;
-  // Number of the next phase
-  PhaseType head_phase_ = 0;
-
-  std::vector<StoredType> buffer_;
+  PhaseType head_phase_ = no_phase;
+  std::vector<StoredPair> buffer_;
 
 public:
   struct ForwardIterator {
     using iterator_category = std::forward_iterator_tag;
     using difference_type   = std::ptrdiff_t;
-    using value_type        = StoredType;
-    using reference         = const StoredType&;
+    using value_type        = StoredPair;
+    using reference         = StoredPair&;
 
-    ForwardIterator(std::size_t head, std::size_t index, const std::vector<value_type>* buffer)
-      : head_(head), index_(index), buffer_(buffer) {}
-
-    ForwardIterator()
-      : head_(no_pos), index_(no_pos), buffer_(nullptr) {}
+    ForwardIterator(std::vector<value_type>* buffer, std::size_t index)
+      : index_(index), buffer_(buffer) { }
 
     reference operator*() { return (*buffer_)[index_]; }
 
@@ -366,23 +382,22 @@ public:
       return tmp;
     }
 
-    bool operator== (const ForwardIterator& it) { return index_ == it.index_; };
-    bool operator!= (const ForwardIterator& it) { return index_ != it.index_; };
+    bool operator== (const ForwardIterator& it) const { return index_ == it.index_; };
+    bool operator!= (const ForwardIterator& it) const { return index_ != it.index_; };
 
   private:
     void advance() {
       index_++;
-      if (index_ >= buffer_->size()) {
-        index_ = 0;
+      if (index_ == buffer_->size()) {
+        return;
       }
-      if (index_ == head_) {
-        index_ = no_pos;
+      if ((*buffer_)[index_].first == no_phase) {
+        advance();
       }
     }
 
-    std::size_t head_;
     std::size_t index_;
-    const std::vector<value_type>* buffer_;
+    std::vector<value_type>* buffer_;
   };
 };
 
