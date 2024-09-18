@@ -198,7 +198,7 @@ void Rabenseifner::executeFinalHan(size_t id) {
   vtAssert(state.final_handler_.valid(), "Final handler is not set!");
 
   if constexpr (ShouldUseView_v<typename DataHandler<DataT>::Scalar, DataT>) {
-    state.final_handler_.send(std::move(state.val_));
+    state.final_handler_.send(state.val_);
   } else {
     state.final_handler_.send(
       std::move(DataHandler<DataT>::fromVec(state.val_)));
@@ -234,7 +234,7 @@ void Rabenseifner::adjustForPowerOfTwo(size_t id) {
 
     if (is_even_) {
       proxy_[actual_partner]
-        .template sendMsg<&Rabenseifner::template adjustForPowerOfTwoRightHalf<
+        .template sendMsg<&Rabenseifner::adjustForPowerOfTwoRightHalf<
           DataT, Scalar, Op>>(
           DataHelperT::createMessage(
             state.val_, state.size_ / 2, state.size_ - (state.size_ / 2), id));
@@ -342,7 +342,6 @@ void Rabenseifner::adjustForPowerOfTwoFinalPart(
 
 template <typename DataT>
 bool Rabenseifner::scatterAllMessagesReceived(size_t id) {
-  // auto const& state = states_.at(id);
   auto& state = getState<RabenseifnerT, DataT>(
     collection_proxy_, objgroup_proxy_, group_, id);
 
@@ -354,7 +353,6 @@ bool Rabenseifner::scatterAllMessagesReceived(size_t id) {
 
 template <typename DataT>
 bool Rabenseifner::scatterIsDone(size_t id) {
-  // auto const& state = states_.at(id);
   auto& state = getState<RabenseifnerT, DataT>(
     collection_proxy_, objgroup_proxy_, group_, id);
   return (state.scatter_step_ == num_steps_) and
@@ -363,7 +361,6 @@ bool Rabenseifner::scatterIsDone(size_t id) {
 
 template <typename DataT>
 bool Rabenseifner::scatterIsReady(size_t id) {
-  // auto const& state = states_.at(id);
   auto& state = getState<RabenseifnerT, DataT>(
     collection_proxy_, objgroup_proxy_, group_, id);
   return ((is_part_of_adjustment_group_ and state.finished_adjustment_part_) and
@@ -508,7 +505,6 @@ template <typename DataT>
 bool Rabenseifner::gatherAllMessagesReceived(size_t id) {
   auto& state = getState<RabenseifnerT, DataT>(
     collection_proxy_, objgroup_proxy_, group_, id);
-  // auto& state = states_.at(id);
   return std::all_of(
     state.gather_steps_recv_.cbegin() + state.gather_step_ + 1,
     state.gather_steps_recv_.cend(), [](auto const val) { return val; });
@@ -524,7 +520,6 @@ bool Rabenseifner::gatherIsDone(size_t id) {
 
 template <typename DataT>
 bool Rabenseifner::gatherIsReady(size_t id) {
-  // auto& state = states_.at(id);
   auto& state = getState<RabenseifnerT, DataT>(
     collection_proxy_, objgroup_proxy_, group_, id);
   return (state.gather_step_ == num_steps_ - 1) or
@@ -622,7 +617,6 @@ void Rabenseifner::gatherIterHandler(RabenseifnerMsg<Scalar, DataT>* msg) {
 
 template <typename DataT>
 void Rabenseifner::finalPart(size_t id) {
-  // auto& state = states_.at(id);
   auto& state = getState<RabenseifnerT, DataT>(
     collection_proxy_, objgroup_proxy_, group_, id);
   if (state.completed_) {
@@ -651,8 +645,8 @@ void Rabenseifner::sendToExcludedNodes(size_t id) {
     auto const actual_partner = nodes_[this_node_ + 1];
     vt_debug_print(
       terse, allreduce,
-      "Rabenseifner::sendToExcludedNodes(): Sending to Node {} ID = {}\n",
-      actual_partner, id);
+      "Rabenseifner::sendToExcludedNodes(): Sending to Node {} ID = {} size={}\n",
+      actual_partner, id, state.size_);
 
     proxy_[actual_partner]
       .template sendMsg<
@@ -664,11 +658,23 @@ void Rabenseifner::sendToExcludedNodes(size_t id) {
 template <typename DataT, typename Scalar>
 void Rabenseifner::sendToExcludedNodesHandler(
   RabenseifnerMsg<Scalar, DataT>* msg) {
+
   vt_debug_print(
     terse, allreduce,
     "Rabenseifner::sendToExcludedNodesHandler(): Received allreduce result "
     "with ID = {}\n",
     msg->id_);
+
+  auto& state = getState<RabenseifnerT, DataT>(
+    collection_proxy_, objgroup_proxy_, group_, msg->id_
+  );
+  if constexpr (ShouldUseView_v<typename DataHandler<DataT>::Scalar, DataT>) {
+    state.val_ = msg->val_;
+  } else {
+    DataHelper<typename DataHandler<DataT>::Scalar, DataT>::assignFromMem(
+      state.val_, msg->val_, msg->size_
+    );
+  }
 
   executeFinalHan<DataT>(msg->id_);
 }

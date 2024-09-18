@@ -137,10 +137,7 @@ public:
   using Scalar = T;
 
   static std::vector<T> toVec(const ViewType& data) {
-    std::vector<T> vec;
-    vec.resize(data.extent(0));
-    std::memcpy(vec.data(), data.data(), data.extent(0) * sizeof(T));
-    return vec;
+    return std::vector<T>(data.data(), data.data() + data.extent(0));
   }
 
   static ViewType fromMemory(T* data, size_t size) {
@@ -148,11 +145,9 @@ public:
   }
 
   static ViewType fromVec(const std::vector<T>& data) {
-    ViewType view("", data.size());
-    Kokkos::parallel_for(
-      "InitView", view.extent(0),
-      KOKKOS_LAMBDA(const int i) { view(i) = static_cast<float>(data[i]); });
-
+    ViewType view("view", data.size());
+    auto data_view = Kokkos::View<const T*, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>(data.data(), data.size());
+    Kokkos::deep_copy(view, data_view);
     return view;
   }
 

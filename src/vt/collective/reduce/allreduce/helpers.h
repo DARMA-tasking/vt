@@ -48,60 +48,32 @@
 #include "rabenseifner_msg.h"
 #include "vt/messaging/message/shared_message.h"
 #include <vector>
-#include <type_traits>
-
-namespace vt {
-template <typename T>
-using remove_cvref = std::remove_cv_t<std::remove_reference_t<T>>;
-}
 
 namespace vt::collective::reduce::allreduce {
 
-template <typename T>
-struct function_traits;  // General template declaration.
-
-// Specialization for function pointers.
-template <typename Ret, typename... Args>
-struct function_traits<Ret(*)(Args...)> {
-    using return_type = Ret;
-    static constexpr std::size_t arity = sizeof...(Args);
-    using args_tuple = std::tuple<Args...>;
-
-    template <std::size_t N>
-    using arg_type = typename std::tuple_element<N, std::tuple<Args...>>::type;
-};
-
-template <typename Ret, typename ObjT, typename... Args>
-struct function_traits<Ret(ObjT::*)(Args...)> {
-    using return_type = Ret;
-    static constexpr std::size_t arity = sizeof...(Args);
-    using args_tuple = std::tuple<Args...>;
-
-    template <std::size_t N>
-    using arg_type = typename std::tuple_element<N, std::tuple<Args...>>::type;
-};
-
-// Primary template
 template <typename Scalar, typename DataT>
 struct ShouldUseView {
   static constexpr bool Value = false;
 };
 
 #if MAGISTRATE_KOKKOS_ENABLED
-// Partial specialization for Kokkos::View
 template <typename Scalar>
 struct ShouldUseView<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
   static constexpr bool Value = true;
 };
 #endif // MAGISTRATE_KOKKOS_ENABLED
 
-// Helper alias for cleaner usage
 template <typename Scalar, typename DataT>
 inline constexpr bool ShouldUseView_v = ShouldUseView<Scalar, DataT>::Value;
 
 template <typename Scalar, typename DataT>
 struct DataHelper {
   using DataHan = DataHandler<DataT>;
+
+  template <typename... Args>
+  static void assignFromMem(std::vector<Scalar>& dest, const Scalar* data, size_t size) {
+    std::memcpy(dest.data(), data, size * sizeof(Scalar));
+  }
 
   template <typename... Args>
   static void assign(std::vector<Scalar>& dest, Args&&... data) {
@@ -199,4 +171,5 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
 #endif // MAGISTRATE_KOKKOS_ENABLED
 
 } // namespace vt::collective::reduce::allreduce
+
 #endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H*/

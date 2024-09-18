@@ -70,6 +70,7 @@ struct RecursiveDoublingColl : vt::Collection<RecursiveDoublingColl, vt::Index1D
         return val == expected_val;
       });
 
+
     ASSERT_TRUE(verify_result);
   }
 
@@ -118,7 +119,7 @@ struct RecursiveDoublingColl : vt::Collection<RecursiveDoublingColl, vt::Index1D
 
 struct TestAllreduceCollection : TestParallelHarness {};
 
-TEST_F(TestAllreduceCollection, test_allreduce_recursive_doubling) {
+TEST_F(TestAllreduceCollection, test_allreduce) {
   using namespace vt::collective::reduce::allreduce;
 
   auto const my_node = theContext()->getNode();
