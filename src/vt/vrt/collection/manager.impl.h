@@ -899,7 +899,7 @@ messaging::PendingSend CollectionManager::reduceLocal(
   CollectionProxyWrapType<ColT> const& proxy, Args&&... args) {
   using namespace collective::reduce::allreduce;
 
-  using DataT = typename function_traits<decltype(f)>::template arg_type<0>;
+  using DataT = std::tuple_element_t<0, typename FuncTraits<decltype(f)>::TupleType>;
   using IndexT = typename ColT::IndexType;
 
   // Get the current running index context
