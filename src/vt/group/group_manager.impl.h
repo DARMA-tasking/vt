@@ -164,7 +164,7 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
 
-  using DataT = typename function_traits<decltype(f)>::template arg_type<0>;
+  using DataT = std::tuple_element_t<0, typename FuncTraits<decltype(f)>::TupleType>;
 
   using Reducer = Rabenseifner;
   auto const strong_group = collective::reduce::detail::StrongGroup{group};

@@ -325,6 +325,9 @@ void RecursiveDoubling::sendToExcludedNodes(size_t id) {
 template <typename DataT>
 void RecursiveDoubling::sendToExcludedNodesHandler(
   RecursiveDoublingMsg<DataT>* msg) {
+    auto& state = getState<RecursiveDoublingT, DataT>(
+      collection_proxy_, objgroup_proxy_, group_, msg->id_);
+  state.val_ = *msg->val_;
   executeFinalHan<DataT>(msg->id_);
 }
 
