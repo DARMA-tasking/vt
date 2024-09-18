@@ -44,21 +44,10 @@
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_H
 
-#include "vt/config.h"
-#include "vt/context/context.h"
-#include "vt/messaging/message/message.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
-#include "vt/configs/error/config_assert.h"
-#include "vt/messaging/message/smart_ptr.h"
-#include "data_handler.h"
-#include "vt/pipe/pipe_manager.h"
-#include "vt/utils/fntraits/fntraits.h"
 #include "type.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/collective/reduce/allreduce/recursive_doubling_msg.h"
-
-#include <tuple>
-#include <cstdint>
 
 namespace vt::collective::reduce::allreduce {
 
@@ -71,42 +60,62 @@ namespace vt::collective::reduce::allreduce {
  */
 
 struct RecursiveDoubling {
-  RecursiveDoubling(detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems);
+
   /**
-   * \brief Constructor for RecursiveDoubling class.
+   * \brief Constructor for Collection
    *
-   * Initializes the RecursiveDoubling object with the provided parameters.
+   * \param proxy Collection proxy
+   * \param group GroupID (for given collection)
+   * \param num_elems Number of local collection elements
+   */
+  RecursiveDoubling(detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems);
+
+  /**
+   * \brief Constructor for ObjGroup
    *
-   * \param parentProxy The parent proxy.
-   * \param num_nodes The number of nodes.
-   * \param args Additional arguments for data initialization.
+   * \param objgroup ObjGroupProxy
    */
   RecursiveDoubling(detail::StrongObjGroup objgroup);
 
-      /**
-   * \brief Constructor for RecursiveDoubling class.
+  /**
+   * \brief Constructor for Group
    *
-   * Initializes the RecursiveDoubling object with the provided parameters.
-   *
-   * \param parentProxy The parent proxy.
-   * \param num_nodes The number of nodes.
-   * \param args Additional arguments for data initialization.
+   * \param group GroupID
    */
   RecursiveDoubling(detail::StrongGroup group);
 
   ~RecursiveDoubling();
 
+  /**
+   * \brief Execute the final handler callback with the reduced result.
+   *
+   * \param id Allreduce ID
+   */
   template <typename DataT>
   void executeFinalHan(size_t id);
 
+  /**
+   * \brief Set final handler that will be executed with allreduce result
+   *
+   * \param fin Callback to be executed
+   * \param id Allreduce ID
+   */
   template <typename DataT, typename CallbackType>
   void setFinalHandler(const CallbackType& fin, size_t id);
 
+  /**
+   * \brief Performs local reduce, and once the local one is done it starts up the global allreduce
+   *
+   * \param id Allreduce ID
+   * \param args Data to be allreduced
+   */
   template <typename DataT, template <typename Arg> class Op, typename... Args>
   void localReduce(size_t id, Args&&... args);
 
   /**
    * \brief Start the allreduce operation.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT, template <typename Arg> class Op>
   void allreduce(size_t id);
@@ -114,16 +123,24 @@ struct RecursiveDoubling {
   /**
    * \brief Initialize the RecursiveDoubling object.
    *
+   * \param id Allreduce ID
    * \param args Additional arguments for data initialization.
    */
   template <typename DataT, typename ...Args>
   void initialize(size_t id, Args&&... data);
 
+  /**
+   * \brief Initialize the internal state of allreduce algorithm.
+   *
+   * \param id Allreduce ID
+   */
   template <typename DataT>
   void initializeState(size_t id);
 
   /**
    * \brief Adjust for power of two nodes.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT, template <typename Arg> class Op>
   void adjustForPowerOfTwo(size_t id);
@@ -139,6 +156,7 @@ struct RecursiveDoubling {
   /**
    * \brief Check if the allreduce operation is done.
    *
+   * \param id Allreduce ID
    * \return True if the operation is done, otherwise false.
    */
   template <typename DataT>
@@ -147,6 +165,7 @@ struct RecursiveDoubling {
   /**
    * \brief Check if the current state is valid for allreduce.
    *
+   * \param id Allreduce ID
    * \return True if the state is valid, otherwise false.
    */
   template <typename DataT>
@@ -155,6 +174,7 @@ struct RecursiveDoubling {
   /**
    * \brief Check if all messages are received for the current step.
    *
+   * \param id Allreduce ID
    * \return True if all messages are received, otherwise false.
    */
   template <typename DataT>
@@ -163,6 +183,7 @@ struct RecursiveDoubling {
   /**
    * \brief Check if the object is ready for the next step of allreduce.
    *
+   * \param id Allreduce ID
    * \return True if ready, otherwise false.
    */
   template <typename DataT>
@@ -170,6 +191,8 @@ struct RecursiveDoubling {
 
   /**
    * \brief Perform the next step of the allreduce operation.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT, template <typename Arg> class Op>
   void reduceIter(size_t id);
@@ -177,6 +200,7 @@ struct RecursiveDoubling {
   /**
    * \brief Try to reduce the message at the specified step.
    *
+   * \param id Allreduce ID
    * \param step The step at which to try reduction.
    */
   template <typename DataT, template <typename Arg> class Op>
@@ -192,6 +216,8 @@ struct RecursiveDoubling {
 
   /**
    * \brief Send data to excluded nodes for finalization.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT>
   void sendToExcludedNodes(size_t id);
@@ -206,6 +232,8 @@ struct RecursiveDoubling {
 
   /**
    * \brief Perform the final part of the allreduce operation.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT>
   void finalPart(size_t id);

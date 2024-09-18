@@ -57,6 +57,7 @@
 #include "vt/group/group_info.h"
 #include "vt/collective/reduce/allreduce/rabenseifner.h"
 #include "vt/objgroup/manager.h"
+#include "vt/pipe/pipe_manager.impl.h"
 
 namespace vt { namespace group {
 

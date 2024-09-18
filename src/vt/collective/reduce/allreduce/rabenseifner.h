@@ -44,26 +44,14 @@
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_H
 
-#include "vt/config.h"
-#include "vt/context/context.h"
-#include "vt/messaging/message/message.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
-#include "vt/registry/auto/auto_registry.h"
-#include "vt/pipe/pipe_manager.h"
-#include "data_handler.h"
 #include "type.h"
 #include "rabenseifner_msg.h"
-#include "helpers.h"
-#include "vt/utils/fntraits/fntraits.h"
 #include "vt/configs/types/types_type.h"
 
 #include <cstdint>
 
 namespace vt::collective::reduce::allreduce {
-
-struct CollectionAllreduceT {};
-struct GroupAllreduceT {};
-struct ObjgroupAllreduceT {};
 
 /**
  * \struct Rabenseifner
@@ -74,31 +62,71 @@ struct ObjgroupAllreduceT {};
  */
 
 struct Rabenseifner {
+  /**
+   * \brief Constructor for Collection
+   *
+   * \param proxy Collection proxy
+   * \param group GroupID (for given collection)
+   * \param num_elems Number of local collection elements
+   */
   Rabenseifner(detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems);
+
+  /**
+   * \brief Constructor for Group
+   *
+   * \param group GroupID
+   */
   Rabenseifner(detail::StrongGroup group);
+
+  /**
+   * \brief Constructor for ObjGroup
+   *
+   * \param objgroup ObjGroupProxy
+   */
   Rabenseifner(detail::StrongObjGroup objgroup);
   ~Rabenseifner();
 
+  /**
+   * \brief Set final handler that will be executed with allreduce result
+   *
+   * \param fin Callback to be executed
+   * \param id Allreduce ID
+   */
   template <typename DataT, typename CallbackType>
   void setFinalHandler(const CallbackType& fin, size_t id);
 
+  /**
+   * \brief Performs local reduce, and once the local one is done it starts up the global allreduce
+   *
+   * \param id Allreduce ID
+   * \param args Data to be allreduced
+   */
   template <typename DataT, template <typename Arg> class Op, typename... Args>
   void localReduce(size_t id, Args&&... args);
+
   /**
    * \brief Initialize the allreduce algorithm.
    *
    * This function sets up the necessary data structures and initial values for the reduction operation.
    *
+   * \param id Allreduce ID
    * \param args Additional arguments for initializing the data value.
    */
   template <typename DataT, typename ...Args>
   void initialize(size_t id, Args&&... args);
 
+  /**
+   * \brief Initialize the internal state of allreduce algorithm.
+   *
+   * \param id Allreduce ID
+   */
   template <typename DataT>
   void initializeState(size_t id);
 
   /**
    * \brief Execute the final handler callback with the reduced result.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT>
   void executeFinalHan(size_t id);
@@ -107,6 +135,8 @@ struct Rabenseifner {
    * \brief Perform the allreduce operation.
    *
    * This function starts the allreduce operation, adjusting for non-power-of-two process counts if necessary.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT, template <typename Arg> class Op>
   void allreduce(size_t id);
@@ -116,6 +146,8 @@ struct Rabenseifner {
    *
    * This function performs additional steps to handle non-power-of-two process counts, ensuring that the
    * main scatter-reduce and gather-allgather phases can proceed with a power-of-two number of processes.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT, template <typename Arg> class Op>
   void adjustForPowerOfTwo(size_t id);
@@ -153,6 +185,7 @@ struct Rabenseifner {
   /**
    * \brief Check if all scatter messages have been received.
    *
+   * \param id Allreduce ID
    * \return True if all scatter messages have been received, false otherwise.
    */
   template <typename DataT>
@@ -161,6 +194,7 @@ struct Rabenseifner {
   /**
    * \brief Check if the scatter phase is complete.
    *
+   * \param id Allreduce ID
    * \return True if the scatter phase is complete, false otherwise.
    */
   template <typename DataT>
@@ -169,6 +203,7 @@ struct Rabenseifner {
   /**
    * \brief Check if the scatter phase is ready to proceed.
    *
+   * \param id Allreduce ID
    * \return True if the scatter phase is ready to proceed, false otherwise.
    */
   template <typename DataT>
@@ -186,6 +221,8 @@ struct Rabenseifner {
    * \brief Perform the scatter-reduce iteration.
    *
    * This function sends data to the appropriate partner process and proceeds to the next step in the scatter phase.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT, template <typename Arg> class Op>
   void scatterReduceIter(size_t id);
@@ -203,6 +240,7 @@ struct Rabenseifner {
   /**
    * \brief Check if all gather messages have been received.
    *
+   * \param id Allreduce ID
    * \return True if all gather messages have been received, false otherwise.
    */
   template <typename DataT>
@@ -211,6 +249,7 @@ struct Rabenseifner {
   /**
    * \brief Check if the gather phase is complete.
    *
+   * \param id Allreduce ID
    * \return True if the gather phase is complete, false otherwise.
    */
   template <typename DataT>
@@ -219,6 +258,7 @@ struct Rabenseifner {
   /**
    * \brief Check if the gather phase is ready to proceed.
    *
+   * \param id Allreduce ID
    * \return True if the gather phase is ready to proceed, false otherwise.
    */
   template <typename DataT>
@@ -227,6 +267,7 @@ struct Rabenseifner {
   /**
    * \brief Try to reduce the received gather messages.
    *
+   * \param id Allreduce ID
    * \param step The current step in the gather phase.
    */
   template <typename DataT>
@@ -236,6 +277,8 @@ struct Rabenseifner {
    * \brief Perform the gather iteration.
    *
    * This function sends data to the appropriate partner process and proceeds to the next step in the gather phase.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT>
   void gatherIter(size_t id);
@@ -254,6 +297,8 @@ struct Rabenseifner {
    * \brief Perform the final part of the allreduce operation.
    *
    * This function completes the allreduce operation, handling any remaining steps and invoking the final handler.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT>
   void finalPart(size_t id);
@@ -262,6 +307,8 @@ struct Rabenseifner {
    * \brief Send the result to excluded nodes.
    *
    * This function handles the final step for non-power-of-two process counts, sending the reduced result to excluded nodes.
+   *
+   * \param id Allreduce ID
    */
   template <typename DataT>
   void sendToExcludedNodes(size_t id);
