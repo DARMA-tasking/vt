@@ -78,16 +78,6 @@ public:
     return {};
   }
 
-  static DataType fromMemory(const Scalar*, size_t) {
-    vtAssert(
-      true,
-      "Using default DataHandler! This means that you're using custom type for "
-      "allreduce. Please provide specialization for you data type."
-    );
-
-    return {};
-  }
-
   static size_t size(void) {
     vtAssert(
       true,
@@ -106,9 +96,6 @@ public:
 
   static std::vector<ScalarType> toVec(const ScalarType& data) { return std::vector<ScalarType>{data}; }
   static ScalarType fromVec(const std::vector<ScalarType>& data) { return data[0]; }
-  static ScalarType fromMemory(const ScalarType* data, size_t) {
-    return *data;
-  }
 
   static size_t size(const ScalarType&) { return 1; }
 };
@@ -120,10 +107,6 @@ public:
 
   static const std::vector<T>& toVec(const std::vector<T>& data) { return data; }
   static std::vector<T> fromVec(const std::vector<T>& data) { return data; }
-  static std::vector<T> fromMemory(const T* data, size_t count) {
-    return std::vector<T>(data, data + count);
-  }
-
   static size_t size(const std::vector<T>& data) { return data.size(); }
 };
 
@@ -138,10 +121,6 @@ public:
 
   static std::vector<T> toVec(const ViewType& data) {
     return std::vector<T>(data.data(), data.data() + data.extent(0));
-  }
-
-  static ViewType fromMemory(T* data, size_t size) {
-    return ViewType(data, size);
   }
 
   static ViewType fromVec(const std::vector<T>& data) {
