@@ -276,47 +276,4 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_forward_iter) {
   }
 }
 
-TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_list_init) {
-  {
-    CircularBufferType buffer{};
-
-    EXPECT_EQ(true, buffer.empty());
-    EXPECT_EQ(0, buffer.size());
-    EXPECT_EQ(1, buffer.capacity());
-  }
-
-  {
-    CircularBufferType buffer{{0, {0}}, {1, {1}}, {2, {2}}};
-
-    EXPECT_EQ(false, buffer.empty());
-    EXPECT_EQ(3, buffer.size());
-    EXPECT_EQ(3, buffer.capacity());
-    validatePresentPhases(buffer, {0, 1, 2});
-    EXPECT_EQ(2, buffer.frontPhase());
-    EXPECT_EQ(2, buffer.frontData().x);
-  }
-
-  {
-    CircularBufferType buffer{{4, {4}}, {9, {9}}, {0, {0}}};
-
-    EXPECT_EQ(false, buffer.empty());
-    EXPECT_EQ(3, buffer.size());
-    EXPECT_EQ(10, buffer.capacity());
-    validatePresentPhases(buffer, {0, 4, 9});
-    EXPECT_EQ(9, buffer.frontPhase());
-    EXPECT_EQ(9, buffer.frontData().x);
-  }
-
-  {
-    CircularBufferType buffer{{9, {9}}, {4, {4}}, {12, {12}}};
-
-    EXPECT_EQ(false, buffer.empty());
-    EXPECT_EQ(3, buffer.size());
-    EXPECT_EQ(9, buffer.capacity());
-    validatePresentPhases(buffer, {12, 4, 9});
-    EXPECT_EQ(12, buffer.frontPhase());
-    EXPECT_EQ(12, buffer.frontData().x);
-  }
-}
-
 }}} /* end namespace vt::tests::unit */

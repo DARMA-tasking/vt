@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include <vector>
+#include <algorithm>
 
 namespace vt { namespace util { namespace container {
 
@@ -61,6 +62,12 @@ class CircularPhasesBuffer {
   constexpr static auto no_phase = std::numeric_limits<PhaseType>::max();
   constexpr static auto no_index = std::numeric_limits<std::size_t>::max();
 
+  /**
+   * \brief Creates a new pair to be stored in the buffer
+   *
+   * \param phase - the phase to be assigned, \c no_phase otherwise
+   * \return the new pair
+   */
   static StoredPair makeEmptyPair(const PhaseType& phase = no_phase) {
     return std::make_pair(phase, StoredType{});
   }
@@ -75,33 +82,16 @@ public:
   CircularPhasesBuffer(std::size_t size_in = 1)
     : buffer_(size_in, makeEmptyPair())
   {
-    vtAssert(size_in > 0, "Size of circular phases buffer needs to be greather than zero.");
+    vtAssert(size_in > 0, "Size of CircularPhasesBuffer needs to be greather than zero.");
   }
 
-  /**
-   * \brief Construct a CircularPhasesBuffer.
-   *
-   * \param[in] in_list the initializer list with elements to be put into the buffer
-   */
-  CircularPhasesBuffer(std::initializer_list<StoredPair> in_list) {
-    const auto& [min, max] = std::minmax(in_list, [](const StoredPair& lhs, const StoredPair& rhs) {
-      return lhs.first < rhs.first;
-    });
-    // Calcuate the size of the buffer to hold all phases including the missing ones
-    buffer_.resize((max.first - min.first) + 1, makeEmptyPair());
-
-    for (auto pair : in_list) {
-      buffer_[phaseToIndex(pair.first)] = pair;
-      updateHead(pair.first);
-    }
-  }
 
   /**
    * \brief Check if phase is present in the buffer.
    *
    * \param[in] phase the phase to look for
    *
-   * \return whether buffer contains the phase or not
+   * \return whenever the buffer contains the phase or not
    */
   bool contains(const PhaseType& phase) const {
     return buffer_[phaseToIndex(phase)].first == phase;
@@ -129,7 +119,6 @@ public:
    * \param[in] phase the phase for which data will be stored
    * \param[in] obj the data to store
    */
-  // probably best to get phase and data and store it when it is within valid range of phases
   void store(const PhaseType& phase, StoredType data) {
     vtAssert(canBeStored(phase), "Phase is out of valid range");
 
@@ -168,15 +157,15 @@ public:
    * \param[in] new_size_in the requested new size of the buffer
    */
   void resize(const std::size_t new_size_in) {
-    vtAssert(new_size_in > 0, "Size of circular phases buffer needs to be greather than zero.");
-    if (new_size_in == buffer_.size()) {
+    auto new_size = std::max(std::size_t{1}, new_size_in);
+    if (new_size == buffer_.size()) {
       return;
     }
 
     // temporary vector to copy the elements to retain
-    std::vector<StoredPair> tmp(new_size_in, makeEmptyPair());
+    std::vector<StoredPair> tmp(new_size, makeEmptyPair());
     // number of elements to copy
-    auto num = std::min(new_size_in, buffer_.size() - numFree());
+    auto num = std::min(new_size, buffer_.size() - numFree());
 
     // copy num phases
     auto to_copy = head_phase_;
