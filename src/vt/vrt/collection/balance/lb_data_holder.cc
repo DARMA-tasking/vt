@@ -433,32 +433,10 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
   this_node_ = theContext()->getNode();
 
   // read metadata for skipped and identical phases
-  auto num_phases = readMetadata(j);
-  auto largest_identical = identical_phases_.size() > 0 ? *identical_phases_.rbegin() : 0;
-  auto largest_skipped = skipped_phases_.size() > 0 ? *skipped_phases_.rbegin() : 0;
-  PhaseType max_phase = std::max(largest_identical, largest_skipped);
+  readMetadata(j);
 
   auto phases = j["phases"];
   if (phases.is_array()) {
-    num_phases = std::max(num_phases, phases.size());
-
-    for(auto const& phase: phases) {
-      auto id = phase["id"];
-      if (id > max_phase) {
-        max_phase = id;
-      }
-    }
-    resizeHistory(num_phases);
-    // create entries in buffer for each phase
-    PhaseType min_phase = 0;
-    if (max_phase > num_phases) {
-      min_phase = max_phase - num_phases;
-    }
-    for (auto i = min_phase; i <= max_phase; i++) {
-      this->node_data_[i];
-      this->node_comm_[i];
-    }
-
     for (auto const& phase : phases) {
       auto id = phase["id"];
       auto tasks = phase["tasks"];
@@ -652,7 +630,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
   // right now, so it will be ignored
 }
 
-std::size_t LBDataHolder::readMetadata(nlohmann::json const& j) {
+void LBDataHolder::readMetadata(nlohmann::json const& j) {
   std::size_t num_phases = 0;
   if (j.find("metadata") != j.end()) {
     auto metadata = j["metadata"];
@@ -710,7 +688,37 @@ std::size_t LBDataHolder::readMetadata(nlohmann::json const& j) {
     }
   }
 
-  return num_phases;
+  // Adjust the capacity of the data containers
+  if (num_phases > 0) {
+    resizeHistory(num_phases);
+  } else {
+    // find min and max phase
+    PhaseType min = std::numeric_limits<PhaseType>::max();
+    PhaseType max = 0;
+
+    if (identical_phases_.size() > 0) {
+      min = std::min(min, *identical_phases_.begin());
+      max = std::max(max, *identical_phases_.rbegin());
+    }
+    if (skipped_phases_.size() > 0) {
+      min = std::min(min, *skipped_phases_.begin());
+      max = std::max(max, *skipped_phases_.rbegin());
+    }
+
+    auto phases = j["phases"];
+    if (phases.is_array()) {
+      for (auto const& phase : phases) {
+        auto id = phase["id"];
+        if (id < min) {
+          min = id;
+        } else if (id > max) {
+          max = id;
+        }
+      }
+    }
+
+    resizeHistory((max - min) + 1);
+  }
 }
 
 void LBDataHolder::clear() {
