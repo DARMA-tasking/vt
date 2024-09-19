@@ -188,7 +188,7 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   auto const phase = thePhase()->getCurrentPhase();
   auto const comm_data = theNodeLBData()->getNodeComm(phase);
   ASSERT_NE(comm_data, nullptr);
-  ASSERT_EQ(comm_data->size(), 1);
+  ASSERT_EQ(comm_data->size(), 1ull);
 
   // test
   auto proxy = theLBManager()->makeLB<vt::vrt::collection::lb::TemperedWMin>();
@@ -200,11 +200,11 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
 
   // assert
   if (num_nodes == 1) {
-    ASSERT_EQ(comm_data->size(), 1);
+    ASSERT_EQ(comm_data->size(), 1ull);
     return;
   }
 
-  ASSERT_EQ(comm_data->size(), 2);
+  ASSERT_EQ(comm_data->size(), 2ull);
   auto const prev_node = (this_node + num_nodes - 1) % num_nodes;
   bool this_to_next = false, prev_to_this = false;
 
@@ -439,7 +439,7 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
     auto& json = *json_ptr;
 
     EXPECT_TRUE(json.find("phases") != json.end());
-    EXPECT_EQ(json["phases"].size(), num_phases);
+    EXPECT_EQ(json["phases"].size(), static_cast<std::size_t>(num_phases));
     for(const auto& phase : json["phases"]){
       EXPECT_TRUE(phase.find("user_defined") != phase.end());
       EXPECT_TRUE(phase["user_defined"].contains("time"));

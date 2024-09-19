@@ -177,7 +177,7 @@ TEST_F(TestIntegralSet, test_interval_set_3) {
   i.insert(0);
 
   EXPECT_FALSE(i.empty());
-  EXPECT_EQ(i.size(), 1);
+  EXPECT_EQ(i.size(), 1ull);
 }
 
 }}} // end namespace vt::tests::unit

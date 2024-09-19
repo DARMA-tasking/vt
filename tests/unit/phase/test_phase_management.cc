@@ -55,7 +55,7 @@ TEST_F(TestPhaseManagement, test_phase_manager_1) {
   auto phase_mgr = phase::PhaseManager::construct();
 
   // start with phase 0
-  EXPECT_EQ(phase_mgr->getCurrentPhase(), 0);
+  EXPECT_EQ(phase_mgr->getCurrentPhase(), 0ull);
 
   int start_hooks = 0;
   int end_hooks = 0;
@@ -97,13 +97,13 @@ TEST_F(TestPhaseManagement, test_phase_manager_1) {
   EXPECT_EQ(start_hooks, 3);
   EXPECT_EQ(end_hooks, 1);
   EXPECT_EQ(end_post_hooks, 1);
-  EXPECT_EQ(phase_mgr->getCurrentPhase(), 1);
+  EXPECT_EQ(phase_mgr->getCurrentPhase(), 1ull);
 
   phase_mgr->nextPhaseCollective();
   EXPECT_EQ(start_hooks, 4);
   EXPECT_EQ(end_hooks, 2);
   EXPECT_EQ(end_post_hooks, 2);
-  EXPECT_EQ(phase_mgr->getCurrentPhase(), 2);
+  EXPECT_EQ(phase_mgr->getCurrentPhase(), 2ull);
 }
 
 }}} // end namespace vt::tests::unit

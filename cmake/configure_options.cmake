@@ -84,6 +84,8 @@ define_option(vt_mpi_guards "user MPI prevention guards"
     ON vt_feature_cmake_mpi_access_guards
 )
 
+define_option(vt_tv_enabled "vt-tv" "Build VT with vt-tv" OFF vt_feature_cmake_tv)
+
 define_option(vt_zoltan_enabled "Zoltan" "Build VT with Zoltan" OFF vt_feature_cmake_zoltan)
 
 if(NOT LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "release")

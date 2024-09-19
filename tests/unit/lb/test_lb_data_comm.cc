@@ -302,7 +302,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_col_send) {
             EXPECT_TRUE(key.from_.isMigratable());
             EXPECT_EQ(key.from_.id, idxToElmID(prev_idx));
             EXPECT_EQ(vol.bytes, sizeof(MyMsg) * num_sends);
-            EXPECT_EQ(vol.messages, num_sends);
+            EXPECT_EQ(vol.messages, static_cast<std::size_t>(num_sends));
             found = true;
           }
         }
@@ -367,7 +367,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_objgroup_send) {
             EXPECT_FALSE(key.to_.isMigratable());
             EXPECT_EQ(key.to_.id, idb);
             EXPECT_EQ(vol.bytes, sizeof(MyObjMsg) * num_sends);
-            EXPECT_EQ(vol.messages, num_sends);
+            EXPECT_EQ(vol.messages, static_cast<std::size_t>(num_sends));
             found = true;
           }
         }
@@ -430,7 +430,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_col_send) {
             EXPECT_FALSE(key.from_.isMigratable());
             EXPECT_EQ(key.from_.id, vt::elm::ElmIDBits::createObjGroup(op, prev).id);
             EXPECT_EQ(vol.bytes, sizeof(MyMsg) * num_sends);
-            EXPECT_EQ(vol.messages, num_sends);
+            EXPECT_EQ(vol.messages, static_cast<std::size_t>(num_sends));
             found = true;
           }
         }
@@ -484,7 +484,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_objgroup_send) {
         EXPECT_FALSE(key.from_.isMigratable());
         EXPECT_EQ(key.to_.id, idb);
         EXPECT_EQ(vol.bytes, sizeof(MyObjMsg) * num_sends);
-        EXPECT_EQ(vol.messages, num_sends);
+        EXPECT_EQ(vol.messages, static_cast<std::size_t>(num_sends));
         found = true;
       }
     }
@@ -541,7 +541,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_col_send) {
             EXPECT_FALSE(key.from_.isMigratable());
             EXPECT_EQ(key.from_.id, vt::elm::ElmIDBits::createBareHandler(prev).id);
             EXPECT_EQ(vol.bytes, sizeof(MyMsg) * num_sends);
-            EXPECT_EQ(vol.messages, num_sends);
+            EXPECT_EQ(vol.messages, static_cast<std::size_t>(num_sends));
             found = true;
           }
         }
@@ -602,7 +602,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_col_to_handler_send) {
             EXPECT_FALSE(key.to_.isMigratable());
             EXPECT_EQ(key.to_.id, vt::elm::ElmIDBits::createBareHandler(next).id);
             EXPECT_EQ(vol.bytes, sizeof(MyObjMsg) * num_sends);
-            EXPECT_EQ(vol.messages, num_sends);
+            EXPECT_EQ(vol.messages, static_cast<std::size_t>(num_sends));
             found = true;
           }
         }
@@ -649,7 +649,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_objgroup_to_handler_send) {
         EXPECT_EQ(key.to_.id, vt::elm::ElmIDBits::createBareHandler(next).id);
         EXPECT_FALSE(key.from_.isMigratable());
         EXPECT_EQ(vol.bytes, sizeof(MyObjMsg) * num_sends);
-        EXPECT_EQ(vol.messages, num_sends);
+        EXPECT_EQ(vol.messages, static_cast<std::size_t>(num_sends));
         found = true;
       }
     }
@@ -694,7 +694,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_objgroup_send) {
         EXPECT_EQ(key.from_.id, vt::elm::ElmIDBits::createBareHandler(this_node).id);
         EXPECT_FALSE(key.from_.isMigratable());
         EXPECT_EQ(vol.bytes, sizeof(MyObjMsg) * num_sends);
-        EXPECT_EQ(vol.messages, num_sends);
+        EXPECT_EQ(vol.messages, static_cast<std::size_t>(num_sends));
         found = true;
       }
     }
@@ -734,7 +734,7 @@ TEST_F(TestLBDataComm, test_lb_data_comm_handler_to_handler_send) {
         EXPECT_FALSE(key.to_.isMigratable());
         EXPECT_FALSE(key.from_.isMigratable());
         EXPECT_GE(vol.bytes, sizeof(MyObjMsg) * num_sends);
-        EXPECT_GE(vol.messages, num_sends);
+        EXPECT_GE(vol.messages, static_cast<std::size_t>(num_sends));
         found = true;
       }
     }

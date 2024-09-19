@@ -5,6 +5,7 @@ lib/*-build
 lib/checkpoint
 lib/googletest
 lib/kokkos
+lib/vt-tv
 .emacs.desktop
 .clangd/
 .vscode/

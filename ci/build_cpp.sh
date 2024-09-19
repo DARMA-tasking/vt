@@ -71,6 +71,11 @@ then
     rm -Rf checkpoint
 fi
 
+if test -d "vt-tv"
+then
+    rm -Rf vt-tv
+fi
+
 if test -d "${source_dir}/lib/checkpoint"
 then
     { echo "Checkpoint already in lib... not downloading, building, and installing"; } 2>/dev/null
@@ -93,6 +98,19 @@ else
               -DKokkos_ROOT="$KOKKOS_INSTALL" \
               "$CHECKPOINT"
         cmake --build . ${dashj} --target install
+    fi
+fi
+
+if test "${VT_TV_ENABLED}" -eq 1
+then
+    if test -d "${source_dir}/lib/vt-tv"
+    then
+        { echo "vt-tv already in lib... not downloading"; } 2>/dev/null
+    else
+        cd "${source_dir}/lib"
+        vt_tv_rev="1.5.0"
+        git clone -b "${vt_tv_rev}" --depth 1 https://github.com/DARMA-tasking/vt-tv.git
+        cd -
     fi
 fi
 
@@ -125,6 +143,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_pool_enabled="${VT_POOL_ENABLED:-1}" \
       -Dvt_build_extended_tests="${VT_EXTENDED_TESTS_ENABLED:-1}" \
       -Dvt_zoltan_enabled="${VT_ZOLTAN_ENABLED:-0}" \
+      -Dvt_tv_enabled="${VT_TV_ENABLED:-0}" \
       -Dvt_production_build_enabled="${VT_PRODUCTION_BUILD_ENABLED:-0}" \
       -Dvt_unity_build_enabled="${VT_UNITY_BUILD_ENABLED:-0}" \
       -Dvt_diagnostics_enabled="${VT_DIAGNOSTICS_ENABLED:-1}" \

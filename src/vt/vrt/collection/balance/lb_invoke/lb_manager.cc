@@ -73,6 +73,10 @@
 #include "vt/vrt/collection/manager.h"
 #include "vt/utils/json/json_appender.h"
 
+#if vt_check_enabled(tv)
+# include <vt-tv/utility/parse_render.h>
+#endif
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/ std::unique_ptr<LBManager> LBManager::construct() {
@@ -478,6 +482,57 @@ void LBManager::fatalError() {
   closeStatisticsFile();
 }
 
+#if vt_check_enabled(tv)
+struct GatherTVInfo {
+  GatherTVInfo() = default;
+
+  std::unordered_map<NodeType, tv::Rank> rank_map;
+  std::unordered_map<ElementIDType, tv::ObjectInfo> info;
+  PhaseType phase = 0;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | rank_map | info | phase;
+  }
+
+  friend GatherTVInfo operator+(GatherTVInfo a1, GatherTVInfo const& a2) {
+    for (auto& [node, rank] : a2.rank_map) {
+      a1.rank_map[node] = rank;
+    }
+    for (auto& [elm, oi] : a2.info) {
+      a1.info[elm] = oi;
+    }
+    return a1;
+  }
+};
+
+
+static void collectTVData(GatherTVInfo& gather) {
+  using tv::utility::ParseRender;
+  ParseRender pr{theConfig()->vt_tv_config_file};
+  auto info = std::make_unique<tv::Info>(
+    std::move(gather.info),
+    std::move(gather.rank_map)
+  );
+  pr.parseAndRender(gather.phase, std::move(info));
+}
+
+void gatherTVGlobal(PhaseType phase, objgroup::proxy::Proxy<LBManager> &proxy) {
+  vt::runInEpochCollective([&]{
+    auto phase_work = theNodeLBData()->getLBData()->toTV(phase);
+    auto object_info = theNodeLBData()->getLBData()->getObjInfo(phase);
+    std::unordered_map<PhaseType, vt::tv::PhaseWork> map;
+    map[phase] = std::move(*phase_work);
+    auto this_node = theContext()->getNode();
+    vt::tv::Rank r{this_node, std::move(map)};
+    std::unordered_map<NodeType, tv::Rank> rank_map;
+    rank_map[this_node] = std::move(r);
+    GatherTVInfo gather{rank_map, object_info, phase};
+    proxy.reduce<collectTVData, vt::collective::PlusOp>(0, std::move(gather));
+  });
+}
+#endif
+
 void LBManager::finishedLB(PhaseType phase) {
   vt_debug_print(
     normal, lb,
@@ -488,6 +543,12 @@ void LBManager::finishedLB(PhaseType phase) {
   theNodeLBData()->outputLBDataForPhase(phase);
 
   destroyLB();
+
+#if vt_check_enabled(tv)
+  if (theConfig()->vt_tv) {
+    gatherTVGlobal(phase, proxy_);
+  }
+#endif
 }
 
 void LBManager::statsHandler(std::vector<balance::LoadData> const& in_stat_vec) {

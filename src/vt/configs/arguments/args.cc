@@ -206,6 +206,10 @@ static const std::string vt_max_mpi_send_size_label = "Max MPI Send Size";
 static const std::string vt_no_assert_fail_label = "Disable Assert Failure";
 static const std::string vt_throw_on_abort_label = "Throw on Abort";
 
+// Visualization
+static const std::string vt_tv_label = "Enabled";
+static const std::string vt_tv_config_file_label = "Configuration File";
+
 std::unordered_map<std::string, std::string> user_args_labels = {
   {"vt_user_1", "unused_user_param"},
   {"vt_user_2", "unused_user_param"},
@@ -615,6 +619,11 @@ void parseYaml(AppConfig& appConfig, std::string const& inputFile) {
   update_config(appConfig.vt_max_mpi_send_size, vt_max_mpi_send_size_label, runtime);
   update_config(appConfig.vt_no_assert_fail, vt_no_assert_fail_label, runtime);
   update_config(appConfig.vt_throw_on_abort, vt_throw_on_abort_label, runtime);
+
+  // Visualization
+  YAML::Node viz = yaml_input["Visualization"];
+  update_config(appConfig.vt_tv, vt_tv_label, viz);
+  update_config(appConfig.vt_tv_config_file, vt_tv_config_file_label, viz);
 }
 
 void addColorArgs(CLI::App& app, AppConfig& appConfig) {
@@ -1109,6 +1118,20 @@ void addRuntimeArgs(CLI::App& app, AppConfig& appConfig) {
   a3->group(configRuntime);
 }
 
+void addTVArgs(CLI::App& app, AppConfig& appConfig) {
+  auto tv_enabled = "Enable vt-tv visualization/mesh streaming";
+  auto tv_file = "File name for YAML vt-tv configuraton file";
+
+  auto a1 = app.add_flag("--vt_tv", appConfig.vt_tv, tv_enabled);
+  auto a2 = app.add_option(
+          "--vt_tv_config_file", appConfig.vt_tv_config_file, tv_file
+  );
+
+  auto configTV = "vt-tv Configuration";
+  a1->group(configTV);
+  a2->group(configTV);
+}
+
 void addThreadingArgs(
   [[maybe_unused]] CLI::App& app,
   [[maybe_unused]] AppConfig& appConfig
@@ -1306,7 +1329,11 @@ std::string convertConfigToYamlString(AppConfig& appConfig) {
       // Runtime
       {"Runtime", vt_max_mpi_send_size_label, static_cast<variantArg_t>(appConfig.vt_max_mpi_send_size)},
       {"Runtime", vt_no_assert_fail_label, static_cast<variantArg_t>(appConfig.vt_no_assert_fail)},
-      {"Runtime", vt_throw_on_abort_label, static_cast<variantArg_t>(appConfig.vt_throw_on_abort)}
+      {"Runtime", vt_throw_on_abort_label, static_cast<variantArg_t>(appConfig.vt_throw_on_abort)},
+
+      // Visualization
+      {"Visualization", vt_tv_label, static_cast<variantArg_t>(appConfig.vt_tv)},
+      {"Visualization", vt_tv_config_file_label, static_cast<variantArg_t>(appConfig.vt_tv_config_file)}
   };
 
   // Create an empty node that we will populate
@@ -1452,6 +1479,7 @@ std::tuple<int, std::string> ArgConfig::parseToConfig(
   addSchedulerArgs(app, appConfig);
   addConfigFileArgs(app, appConfig);
   addRuntimeArgs(app, appConfig);
+  addTVArgs(app, appConfig);
   addThreadingArgs(app, appConfig);
 
   std::tuple<int, std::string> result = parseArguments(app, argc, argv, appConfig);
