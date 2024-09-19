@@ -750,7 +750,8 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
     );
   });
 
-  vt::vrt::collection::balance::LBDataHolder lbdh(num_phases);
+  vt::vrt::collection::balance::LBDataHolder lbdh;
+  lbdh.resizeHistory(num_phases);
   PhaseType write_phase = 0;
 
   {
@@ -813,7 +814,8 @@ TEST_P(TestDumpAttributesFieldData, test_dump_attributes_json) {
     );
   });
 
-  vt::vrt::collection::balance::LBDataHolder lbdh(num_phases);
+  vt::vrt::collection::balance::LBDataHolder lbdh;
+  lbdh.resizeHistory(num_phases);
   PhaseType phase = 0;
 
   {
