@@ -206,10 +206,6 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
         dh.node_data_[i][elms[j]] = LoadSummary{ static_cast<double>(i + j) + 3};
       }
     }
-    else {
-      // add empty element - circular buffer expects continuous phases
-      dh.node_data_[i];
-    }
   }
 
   using JSONAppender = util::json::Appender<std::stringstream>;

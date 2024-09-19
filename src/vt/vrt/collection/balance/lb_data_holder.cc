@@ -700,10 +700,6 @@ void LBDataHolder::readMetadata(nlohmann::json const& j) {
       min = std::min(min, *identical_phases_.begin());
       max = std::max(max, *identical_phases_.rbegin());
     }
-    if (skipped_phases_.size() > 0) {
-      min = std::min(min, *skipped_phases_.begin());
-      max = std::max(max, *skipped_phases_.rbegin());
-    }
 
     auto phases = j["phases"];
     if (phases.is_array()) {

@@ -90,7 +90,7 @@ void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
 
   PhaseType last_found_phase = 0;
   for (PhaseType phase = 0; phase < num_phases_; phase++) {
-    if (lbdh.node_data_.contains(phase) && lbdh.node_data_.at(phase).size() > 0) {
+    if (lbdh.node_data_.contains(phase)) {
       last_found_phase = phase;
       for (auto const& obj : lbdh.node_data_.at(phase)) {
         if (obj.first.isMigratable()) {
