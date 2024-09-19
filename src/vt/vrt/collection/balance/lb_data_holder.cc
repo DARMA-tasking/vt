@@ -257,7 +257,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   }
 
   i = 0;
-  if (node_comm_.find(phase) != node_comm_.end()) {
+  if (node_comm_.contains(phase)) {
     for (auto const& [key, volume] : node_comm_.at(phase)) {
       j["communications"][i]["bytes"] = volume.bytes;
       j["communications"][i]["messages"] = volume.messages;
