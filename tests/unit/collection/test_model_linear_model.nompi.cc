@@ -110,11 +110,10 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
 
   // For linear regression there needs to be at least 2 phases completed
   // so we begin with 1 phase already done
-  LoadMapBufferType proc_loads{{0, LoadMapType{
+  LoadMapBufferType proc_loads(num_test_interations + 1);
+  proc_loads[0] = LoadMapType{
         {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
-        {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}
-    }}};
-  proc_loads.resize(num_test_interations + 1);
+        {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}};
   test_model->setLoads(&proc_loads, nullptr, nullptr);
   test_model->updateLoads(0);
 

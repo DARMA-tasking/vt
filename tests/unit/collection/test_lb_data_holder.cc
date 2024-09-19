@@ -74,7 +74,8 @@ void addPhasesDataToJson(nlohmann::json& json, PhaseType amountOfPhasesToAdd, st
     }
   }
 
-  LBDataHolder dh(amountOfPhasesToAdd);
+  LBDataHolder dh;
+  dh.resizeHistory(amountOfPhasesToAdd);
   for (unsigned i = 0; i < amountOfPhasesToAdd; i++) {
     for (auto&& elm : ids[i]) {
       dh.node_data_[i][elm] = LoadSummary{3.};

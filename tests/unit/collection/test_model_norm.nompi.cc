@@ -105,11 +105,12 @@ private:
 
 TEST_F(TestModelNorm, test_model_norm_1) {
   NodeType this_node = 0;
-  LoadMapBufferType proc_load = {
-    {0,
-     LoadMapType{
-       {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
-       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
+  LoadMapBufferType proc_load(1);
+  proc_load[0] = LoadMapType{
+    {ElementIDStruct{1, this_node},
+     {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
+    {ElementIDStruct{2, this_node},
+     {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}};
 
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
   test_model->setLoads(&proc_load, nullptr, nullptr);
@@ -136,11 +137,12 @@ TEST_F(TestModelNorm, test_model_norm_1) {
 
 TEST_F(TestModelNorm, test_model_norm_2) {
   NodeType this_node = 0;
-  LoadMapBufferType proc_load = {
-    {0,
-     LoadMapType{
-       {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
-       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
+  LoadMapBufferType proc_load(1);
+  proc_load[0] = LoadMapType{
+    {ElementIDStruct{1, this_node},
+     {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
+    {ElementIDStruct{2, this_node},
+     {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}};
 
   // finite 'power' value
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
@@ -165,11 +167,10 @@ TEST_F(TestModelNorm, test_model_norm_2) {
 
 TEST_F(TestModelNorm, test_model_norm_3) {
   NodeType this_node = 0;
-  LoadMapBufferType proc_load = {
-    {0,
-     LoadMapType{
+  LoadMapBufferType proc_load(1);
+  proc_load[0] = LoadMapType{
        {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
-       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
+       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}};
 
   // infinite 'power' value
   auto test_model = std::make_shared<Norm>(

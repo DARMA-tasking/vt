@@ -113,11 +113,10 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
   ElementIDStruct id1{1,this_node};
   ElementIDStruct id2{2,this_node};
 
-  LoadMapBufferType proc_load = {
-    {0,
-     LoadMapType{
+  LoadMapBufferType proc_load(1);
+  proc_load[0] = LoadMapType{
        {id1, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
-       {id2, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
+       {id2, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}};
 
   std::vector<unsigned int> subphases{2, 0, 1};
   auto test_model =
@@ -157,16 +156,12 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
 
 TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
   NodeType this_node = 0;
-  LoadMapBufferType proc_load = {
-    {0,
-     LoadMapType{
-       {ElementIDStruct{1,this_node},
-        {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
-       {ElementIDStruct{2,this_node},
-        {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}
-     }
-    }
-  };
+  LoadMapBufferType proc_load(1);
+  proc_load[0] = LoadMapType{
+    {ElementIDStruct{1, this_node},
+     {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
+    {ElementIDStruct{2, this_node},
+     {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}};
 
   std::vector<unsigned int> subphases{2, 1};
   auto test_model =

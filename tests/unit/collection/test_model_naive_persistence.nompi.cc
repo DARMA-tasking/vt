@@ -106,19 +106,19 @@ private:
 
 TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
   NodeType this_node = 0;
-  LoadMapBufferType proc_loads = {
-    {0, LoadMapType{
-      {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
-      {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}}},
-    {1, LoadMapType{
-      {ElementIDStruct{1,this_node}, {LoadType{4}, {}}},
-      {ElementIDStruct{2,this_node}, {LoadType{10}, {}}}}},
-    {2, LoadMapType{
-      {ElementIDStruct{1,this_node}, {LoadType{20}, {}}},
-      {ElementIDStruct{2,this_node}, {LoadType{50}, {}}}}},
-    {3, LoadMapType{
-      {ElementIDStruct{1,this_node}, {LoadType{40}, {}}},
-      {ElementIDStruct{2,this_node}, {LoadType{100}, {}}}}}};
+  LoadMapBufferType proc_loads(4);
+  proc_loads[0] = LoadMapType{
+    {ElementIDStruct{1, this_node}, {LoadType{10}, {}}},
+    {ElementIDStruct{2, this_node}, {LoadType{40}, {}}}};
+  proc_loads[1] = LoadMapType{
+    {ElementIDStruct{1, this_node}, {LoadType{4}, {}}},
+    {ElementIDStruct{2, this_node}, {LoadType{10}, {}}}};
+  proc_loads[2] = LoadMapType{
+    {ElementIDStruct{1, this_node}, {LoadType{20}, {}}},
+    {ElementIDStruct{2, this_node}, {LoadType{50}, {}}}};
+  proc_loads[3] = LoadMapType{
+    {ElementIDStruct{1, this_node}, {LoadType{40}, {}}},
+    {ElementIDStruct{2, this_node}, {LoadType{100}, {}}}};
 
   auto test_model =
     std::make_shared<NaivePersistence>(std::make_shared<StubModel>());

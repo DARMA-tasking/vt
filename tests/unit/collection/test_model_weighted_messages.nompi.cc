@@ -124,26 +124,22 @@ TEST_F(TestModelWeightedMessages, test_model) {
   // Element 3 (home node == 3)
   ElementIDStruct const elem3 = {3, 3};
 
-  LoadMapBufferType proc_load = {{0, LoadMapType{{elem2, {LoadType{150}, {}}}}}};
+  LoadMapBufferType proc_load(1);
+  proc_load[0] = LoadMapType{{elem2, {LoadType{150}, {}}}};
 
-  CommMapBufferType proc_comm = {
-    {0,
-     CommMapType{// Node 1 -> Node 2
-                 {{CommKeyType::CollectionTag{}, elem1, elem2, false},
-                  CommVolume{20.0, 2}},
-                 // Node 3 -> Node 2
-                 {{CommKeyType::CollectionTag{}, elem3, elem2, false},
-                  CommVolume{5.0, 5}}}
-    },
-    {1,
-     CommMapType{// Node 3 -> Node 2
-                 {{CommKeyType::CollectionTag{}, elem3, elem2, false},
-                  CommVolume{500.0, 50}},
-                 // Node 1 -> Node 2
-                 {{CommKeyType::CollectionTag{}, elem1, elem2, false},
-                  CommVolume{25.0, 10}}}
-    }
-  };
+  CommMapBufferType proc_comm(2);
+  proc_comm[0] = CommMapType{
+    // Node 1 -> Node 2
+    {{CommKeyType::CollectionTag{}, elem1, elem2, false}, CommVolume{20.0, 2}},
+    // Node 3 -> Node 2
+    {{CommKeyType::CollectionTag{}, elem3, elem2, false}, CommVolume{5.0, 5}}};
+  proc_comm[1] =
+    CommMapType{// Node 3 -> Node 2
+                {{CommKeyType::CollectionTag{}, elem3, elem2, false},
+                 CommVolume{500.0, 50}},
+                // Node 1 -> Node 2
+                {{CommKeyType::CollectionTag{}, elem1, elem2, false},
+                 CommVolume{25.0, 10}}};
 
   constexpr auto per_msg_weight = 3.0;
   constexpr auto per_byte_weight = 5.0;
