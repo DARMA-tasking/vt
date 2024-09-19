@@ -552,7 +552,8 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
     );
   });
 
-  vt::vrt::collection::balance::LBDataHolder lbdh(num_phases);
+  vt::vrt::collection::balance::LBDataHolder lbdh;
+  lbdh.resizeHistory(num_phases);
   PhaseType write_phase = 0;
 
   using CommKey = vt::elm::CommKey;
