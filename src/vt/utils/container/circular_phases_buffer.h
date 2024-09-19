@@ -63,9 +63,9 @@ class CircularPhasesBuffer {
   constexpr static auto no_index = std::numeric_limits<std::size_t>::max();
 
   /**
-   * \brief Creates a new pair to be stored in the buffer
+   * \brief Creates an empty pair to be stored in the buffer
    *
-   * \param phase - the phase to be assigned, \c no_phase otherwise
+   * \param[in] phase - the phase to be assigned, \c no_phase otherwise
    * \return the new pair
    */
   static StoredPair makeEmptyPair(const PhaseType& phase = no_phase) {
@@ -98,7 +98,9 @@ public:
   }
 
   /**
-   * \brief Get or set data for the phase.
+   * \brief Get data for the phase. Inserts a new element when phase is not present in the buffer.
+   * Can call \c vtAbort() when phase is outside of the valid range.
+   * Check \c canBeStored() for more details.
    *
    * \param[in] phase the phase to look for
    *
@@ -106,7 +108,7 @@ public:
    */
   StoredType& operator[](const PhaseType phase) {
     auto& pair = buffer_[phaseToIndex(phase)];
-    // Create empty data for new phase
+    // Inserts empty data for new phase
     if (pair.first != phase) {
       store(phase, StoredType{});
     }
@@ -115,6 +117,8 @@ public:
 
   /**
    * \brief Store data in the buffer.
+   * Can call \c vtAbort() when phase is outside of the valid range.
+   * Check \c canBeStored() for more details.
    *
    * \param[in] phase the phase for which data will be stored
    * \param[in] obj the data to store
@@ -151,7 +155,7 @@ public:
   }
 
   /**
-   * \brief Resize buffer to the requested size.
+   * \brief Resize the buffer to the requested size.
    * The minimal size of the buffer is 1.
    *
    * \param[in] new_size_in the requested new size of the buffer
@@ -167,7 +171,7 @@ public:
     // number of elements to copy
     auto num = std::min(new_size, buffer_.size() - numFree());
 
-    // copy num phases
+    // copy data which should be retained
     auto to_copy = head_phase_;
     while(num > 0 && to_copy != no_phase) {
       if (contains(to_copy)) {
@@ -297,7 +301,7 @@ public:
 
 private:
   /**
-   * \brief Converts the phase to the index in the buffer
+   * \brief Converts phase number to the index in the buffer
    *
    * \param phase - the phase to be converted
    * \return the position of the data container in the buffer
@@ -307,20 +311,20 @@ private:
   }
 
   /**
-   * \brief Converts the phase to the index in the temporary buffer
+   * \brief Converts phase number to the index in the temporary buffer
    *
-   * @param phase - the phase to be converted
-   * @param vector - the buffer to return index for
-   * @return the position of the data container in the buffer
+   * \param[in] phase - the phase to be converted
+   * \param[in] vector - the buffer to return index for
+   * \return the position of the data container in the buffer
    */
   std::size_t calcIndex(const PhaseType& phase, const std::vector<StoredPair>& vector) const {
     return phase % vector.size();
   }
 
   /**
-   * \brief Counts spots in the buffer without a valid phase assigned.
+   * \brief Counts fields in the buffer without a valid phase assigned.
    *
-   * @return the number of empty spots
+   * \return the number of empty fields
    */
   std::size_t numFree() const {
     return std::count_if(buffer_.begin(), buffer_.end(),
@@ -339,6 +343,13 @@ private:
     }
   }
 
+  /**
+   * \brief Checks if phase can be stored in the buffer.
+   * Valid phase needs to be higher than (head_phase_ - buffer_.size())
+   *
+   * \param[in] phase - the phase to validate
+   * \return true if higher than (head_phase_ - buffer_.size()), false otherwise
+   */
   bool canBeStored(const PhaseType& phase) const {
     if (!empty() && head_phase_ > buffer_.size()) {
       return phase > head_phase_ - buffer_.size();
@@ -375,6 +386,10 @@ public:
     bool operator!= (const ForwardIterator& it) const { return index_ != it.index_; };
 
   private:
+    /**
+     * \brief Advances the iterator to the next element with valid phase number.
+     *
+     */
     void advance() {
       index_++;
       if (index_ == buffer_->size()) {
