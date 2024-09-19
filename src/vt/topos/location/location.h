@@ -57,6 +57,7 @@
 #include "vt/context/context.h"
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/vrt_common.h"
+#include "vt/objgroup/manager.h"
 
 #include <cstdint>
 #include <memory>
@@ -93,16 +94,16 @@ struct collection_lm_tag_t {};
  */
 template <typename EntityID>
 struct EntityLocationCoord : LocationCoord {
+  using ThisType = EntityLocationCoord<EntityID>;
   using LocRecType = LocRecord<EntityID>;
   using LocCacheType = LocLookup<EntityID, LocRecType>;
   using LocEntityMsg = LocEntity<EntityID>;
   using LocalRegisteredContType = std::unordered_set<EntityID>;
   using LocalRegisteredMsgContType = std::unordered_map<EntityID, LocEntityMsg>;
-  using ActionListType = std::list<NodeActionType>;
+  using ActionListType = std::vector<NodeActionType>;
   using PendingType = PendingLocationLookup<EntityID>;
   using PendingLocLookupsType = std::unordered_map<EntityID, ActionListType>;
   using ActionContainerType = std::unordered_map<LocEventID, PendingType>;
-  using LocMsgType = LocationMsg<EntityID>;
   using LocAsksType = std::unordered_map<EntityID, std::unordered_set<NodeType>>;
 
   template <typename MessageT>
@@ -111,25 +112,11 @@ struct EntityLocationCoord : LocationCoord {
   /**
    * \internal \brief System call to construct a new entity coordinator
    */
-  EntityLocationCoord();
+  EntityLocationCoord()
+    : recs_(default_max_cache_size, theContext()->getNode())
+  { }
 
-  /**
-   * \internal \brief System call to construct a new entity coordinator for
-   * collections
-   *
-   * \param[in] collection_lm_tag_t tag
-   * \param[in] identifier the entity class identifier
-   */
-  EntityLocationCoord(collection_lm_tag_t, LocInstType identifier);
-
-  /**
-   * \internal \brief System call to construct a new entity coordinator
-   *
-   * \param[in] identifier the entity class identifier
-   */
-  explicit EntityLocationCoord(LocInstType const identifier);
-
-  virtual ~EntityLocationCoord();
+  virtual ~EntityLocationCoord() {}
 
   /**
    * \brief Register a new entity
@@ -296,14 +283,12 @@ struct EntityLocationCoord : LocationCoord {
   /**
    * \internal \brief Update location
    *
-   * \param[in] event_id the event ID waiting on the location
    * \param[in] id the entity ID
    * \param[in] resolved_node the node reported to have the entity
    * \param[in] home_node the home node for the entity
    */
   void updatePendingRequest(
-    LocEventID const& event_id, EntityID const& id,
-    NodeType const& resolved_node, NodeType const& home_node
+    EntityID const& id, NodeType const& resolved_node, NodeType const& home_node
   );
 
   /**
@@ -365,6 +350,15 @@ struct EntityLocationCoord : LocationCoord {
   template <typename MessageT>
   bool useEagerProtocol(MsgSharedPtr<MessageT> const& msg) const;
 
+  /**
+   * \brief Set the proxy for the objgroup
+   *
+   * \param[in] proxy proxy to set
+   */
+  void setProxy(objgroup::proxy::Proxy<EntityLocationCoord<EntityID>> proxy) {
+    proxy_ = proxy;
+  }
+
 private:
   /**
    * \internal \brief Handle relocation on different node.
@@ -372,28 +366,27 @@ private:
    * \param[in] msg the message
    */
   template <typename MessageT>
-  static void routedHandler(MessageT *msg);
+  void routedHandler(MessageT *msg);
 
   /**
    * \internal \brief Request location handler from this node
    *
-   * \param[in] msg the location request message
+   * \param[in] id entity id
+   * \param[in] home_node the home node for the entity
+   * \param[in] cb the callback to trigger
    */
-  static void getLocationHandler(LocMsgType *msg);
+  void getLocationRequest(
+    EntityID id, NodeType home_node, Callback<EntityID, NodeType, NodeType> cb
+  );
 
   /**
    * \internal \brief Update the location on this node
    *
-   * \param[in] msg the location update message
+   * \param[in] id entity id
+   * \param[in] answer the answer of where the entity is location
+   * \param[in] home_node the home node for the entity
    */
-  static void updateLocation(LocMsgType *msg);
-
-  /**
-   * \internal \brief Receive an eager location update
-   *
-   * \param[in] msg the location update message
-   */
-  static void recvEagerUpdate(LocMsgType *msg);
+  void updateLocation(EntityID const& id, NodeType answer, NodeType home_node);
 
   /**
    * \internal \brief Route a message to destination with eager protocol
@@ -433,34 +426,27 @@ private:
    */
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);
 
-public:
-  /**
-   * \internal \brief Get the instance identifier for this location manager
-   *
-   * \return the instance ID
-   */
-  LocInstType getInst() const;
-
 private:
-  LocInstType this_inst = no_loc_inst;
-
-  // message handlers for local registrations
+  /// message handlers for local registrations
   LocalRegisteredMsgContType local_registered_msg_han_;
 
-  // registered entities
+  /// registered entities
   LocalRegisteredContType local_registered_;
 
-  // the cached location records
+  /// the cached location records
   LocCacheType recs_;
 
-  // hold pending actions that this location manager is waiting on
+  /// hold pending actions that this location manager is waiting on
   ActionContainerType pending_actions_;
 
-  // pending lookup requests where this manager is the home node
+  /// pending lookup requests where this manager is the home node
   PendingLocLookupsType pending_lookups_;
 
-  // List of nodes that inquire about an entity that require an update
+  /// List of nodes that inquire about an entity that require an update
   LocAsksType loc_asks_;
+
+  /// the location manager's objgroup proxy
+  objgroup::proxy::Proxy<EntityLocationCoord<EntityID>> proxy_;
 };
 
 }}  // end namespace vt::location

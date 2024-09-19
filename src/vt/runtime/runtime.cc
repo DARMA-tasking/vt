@@ -842,7 +842,8 @@ void Runtime::initializeComponents() {
   p_->registerComponent<location::LocationManager>(
     &theLocMan, Deps<
       ctx::Context,               // Everything depends on theContext
-      messaging::ActiveMessenger  // Depends on active messenger for sending
+      messaging::ActiveMessenger, // Depends on active messenger for sending
+      objgroup::ObjGroupManager   // Depends on objgroup since it creates them
     >{}
   );
 
