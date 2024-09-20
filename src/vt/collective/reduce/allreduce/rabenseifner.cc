@@ -43,6 +43,7 @@
 
 #include "vt/collective/reduce/allreduce/rabenseifner.h"
 #include "vt/configs/error/config_assert.h"
+#include "vt/group/group_manager.h"
 
 namespace vt::collective::reduce::allreduce {
 
@@ -166,7 +167,8 @@ Rabenseifner::Rabenseifner(detail::StrongObjGroup objgroup)
 
 Rabenseifner::~Rabenseifner() {
   if (collection_proxy_ != u64empty) {
-    StateHolder::clearAll(detail::StrongVrtProxy{collection_proxy_});
+   //  StateHolder::clearAll(detail::StrongVrtProxy{collection_proxy_});
+
   } else if (objgroup_proxy_ != u64empty) {
     StateHolder::clearAll(detail::StrongObjGroup{objgroup_proxy_});
   } else {
