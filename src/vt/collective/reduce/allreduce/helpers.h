@@ -47,6 +47,8 @@
 #include "data_handler.h"
 #include "rabenseifner_msg.h"
 #include "vt/messaging/message/shared_message.h"
+#include "vt/utils/kokkos/exec_space.h"
+
 #include <vector>
 
 namespace vt::collective::reduce::allreduce {
@@ -61,6 +63,7 @@ template <typename Scalar>
 struct ShouldUseView<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
   static constexpr bool Value = true;
 };
+
 #endif // MAGISTRATE_KOKKOS_ENABLED
 
 template <typename Scalar, typename DataT>
@@ -116,9 +119,10 @@ struct DataHelper {
 
 #if MAGISTRATE_KOKKOS_ENABLED
 
-template <typename Scalar>
-struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
-  using DataT = Kokkos::View<Scalar*, Kokkos::HostSpace>;
+template <typename Scalar, typename MemorySpace>
+struct DataHelper<Scalar, Kokkos::View<Scalar*, MemorySpace>> {
+  using DataT = Kokkos::View<Scalar*, MemorySpace>;
+  using ExecSpace = typename utils::kokkos::AssociatedExecSpace<MemorySpace>::type;
   using DataType = DataHandler<DataT>;
 
   template <typename... Args>
@@ -136,8 +140,10 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
 
   static void
   copy(DataT& dest, size_t start_idx, RabenseifnerMsg<Scalar, DataT>* msg) {
+
+    Kokkos::RangePolicy<ExecSpace> policy(0, msg->val_.extent(0));
     Kokkos::parallel_for(
-      "Rabenseifner::copy", msg->val_.extent(0),
+      "Rabenseifner::copy", policy,
       KOKKOS_LAMBDA(const int i) { dest(start_idx + i) = msg->val_(i); }
     );
   }
@@ -145,8 +151,10 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
   template <template <typename Arg> class Op>
   static void reduceMsg(
     DataT& dest, size_t start_idx, RabenseifnerMsg<Scalar, DataT>* msg) {
+
+    Kokkos::RangePolicy<ExecSpace> policy(0, msg->val_.extent(0));
     Kokkos::parallel_for(
-      "Rabenseifner::reduce", msg->val_.extent(0), KOKKOS_LAMBDA(const int i) {
+      "Rabenseifner::reduce", policy, KOKKOS_LAMBDA(const int i) {
         Op<Scalar>()(dest(start_idx + i), msg->val_(i));
       }
     );
@@ -156,8 +164,10 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
   static void reduce(
     DataT& dest, Args&&... val) {
     auto view_val = DataT{std::forward<Args>(val)...};
+
+    Kokkos::RangePolicy<ExecSpace> policy(0, view_val.extent(0));
     Kokkos::parallel_for(
-      "Rabenseifner::reduce", view_val.extent(0), KOKKOS_LAMBDA(const int i) {
+      "Rabenseifner::reduce", policy, KOKKOS_LAMBDA(const int i) {
         Op<Scalar>()(dest(i), view_val(i));
       }
     );

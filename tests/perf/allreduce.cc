@@ -141,9 +141,9 @@ VT_PERF_TEST(MyTestKokkos, test_reduce_kokkos) {
 
   for (auto payload_size : payloadSizes) {
     view = Kokkos::View<float*, Kokkos::HostSpace>("view", payload_size);
-    Kokkos::parallel_for(
-      "InitView", view.extent(0),
-      KOKKOS_LAMBDA(const int i) { view(i) = static_cast<float>(my_node_); });
+    for (uint32_t i = 0; i < view.extent(0); ++i) {
+      view(i) = static_cast<float>(my_node_);
+    }
 
     theCollective()->barrier();
     auto* obj_ptr = grp_proxy[my_node_].get();
