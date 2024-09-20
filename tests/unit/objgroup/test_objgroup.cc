@@ -360,9 +360,9 @@ TEST_F(TestObjGroupKokkos, test_proxy_allreduce_kokkos) {
 
   runInEpochCollective([&] {
     Kokkos::View<float*, Kokkos::HostSpace> view("view", 256);
-    Kokkos::parallel_for(
-      "InitView", view.extent(0),
-      KOKKOS_LAMBDA(const int i) { view(i) = static_cast<float>(my_node); });
+    for (uint32_t i = 0; i < view.extent(0); i++) {
+      view(i) = static_cast<float>(my_node);
+    }
 
     kokkos_proxy.allreduce<
       &MyObjA::verifyAllredView, PlusOp, reduce::allreduce::RabenseifnerT>(
