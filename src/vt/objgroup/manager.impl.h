@@ -64,6 +64,7 @@
 #include "vt/collective/reduce/allreduce/helpers.h"
 #include "vt/collective/reduce/scoping/strong_types.h"
 #include "vt/collective/reduce/allreduce/state_holder.h"
+#include "vt/pipe/pipe_manager.h"
 
 #include <utility>
 #include <array>
