@@ -47,9 +47,7 @@
 #include "vt/config.h"
 #include "vt/collective/reduce/operators/functors/tuple_op_helper.h"
 
-#if MAGISTRATE_KOKKOS_ENABLED
-#include <Kokkos_Core.hpp>
-#endif
+#include "vt/utils/kokkos/exec_space.h"
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
@@ -71,14 +69,23 @@ struct PlusOp<std::tuple<Params...>> {
 
 #if MAGISTRATE_KOKKOS_ENABLED
 
-template <typename T>
-struct PlusOp<Kokkos::View<T*, Kokkos::HostSpace>> {
+template <typename T, typename MemorySpace>
+struct PlusOp<Kokkos::View<T*, MemorySpace>> {
   void operator()(
-    Kokkos::View<T*, Kokkos::HostSpace>& v1,
-    Kokkos::View<T*, Kokkos::HostSpace> const& v2) {
+    Kokkos::View<T*, MemorySpace>& v1,
+    Kokkos::View<T*, MemorySpace> const& v2) const {
+
+    using ExecSpace = typename utils::kokkos::AssociatedExecSpace<MemorySpace>::type;
+
+    Kokkos::RangePolicy<ExecSpace> policy(0, v1.extent(0));
+
     Kokkos::parallel_for(
-      "Initialize", v1.extent(0),
-      KOKKOS_LAMBDA(const int i) { v1(i) += v2(i); });
+      "PlusOp_Host",
+      policy,
+      KOKKOS_LAMBDA(const int i) {
+        v1(i) += v2(i);
+      }
+    );
   }
 };
 #endif // MAGISTRATE_KOKKOS_ENABLED
