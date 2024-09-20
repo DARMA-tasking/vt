@@ -129,7 +129,7 @@ RecursiveDoubling::RecursiveDoubling(detail::StrongGroup group)
 
 RecursiveDoubling::~RecursiveDoubling() {
   if (collection_proxy_ != u64empty) {
-    StateHolder::clearAll(detail::StrongVrtProxy{collection_proxy_});
+   //  StateHolder::clearAll(detail::StrongVrtProxy{collection_proxy_});
   } else if (objgroup_proxy_ != u64empty) {
     StateHolder::clearAll(detail::StrongObjGroup{objgroup_proxy_});
   } else {

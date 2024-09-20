@@ -49,8 +49,6 @@
 #include "vt/context/context.h"
 #include "vt/configs/error/config_assert.h"
 #include "vt/group/global/group_default.h"
-#include "vt/group/group_manager.h"
-#include "vt/group/group_info.h"
 #include "vt/configs/types/types_sentinels.h"
 #include "vt/registry/auto/auto_registry.h"
 #include "vt/utils/fntraits/fntraits.h"

@@ -55,9 +55,10 @@
 #include "vt/messaging/active.h"
 #include "vt/activefn/activefn.h"
 #include "vt/group/group_info.h"
-#include "vt/collective/reduce/allreduce/rabenseifner.h"
+#include "vt/collective/reduce/allreduce/allreduce_holder.h"
 #include "vt/objgroup/manager.h"
 #include "vt/pipe/pipe_manager.impl.h"
+#include "vt/collective/reduce/allreduce/type.h"
 
 namespace vt { namespace group {
 
@@ -167,10 +168,10 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
 
   using DataT = std::tuple_element_t<0, typename FuncTraits<decltype(f)>::TupleType>;
 
-  using Reducer = Rabenseifner;
+  // using Reducer = Rabenseifner;
   auto const strong_group = collective::reduce::detail::StrongGroup{group};
-  // TODO; Save the proxy so it can be deleted afterwards
-  auto proxy = theObjGroup()->makeCollective<Reducer>("reducer", strong_group);
+  auto proxy =
+    AllreduceHolder::getAllreducer<RabenseifnerT>(strong_group);
 
   if (iter->second->is_in_group) {
     auto const this_node = theContext()->getNode();
@@ -180,6 +181,10 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
     ptr->template setFinalHandler<DataT>(theCB()->makeSend<f>(this_node), id);
     ptr->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
   }
+
+  addCleanupAction([strong_group] {
+    AllreduceHolder::remove(strong_group);
+  });
 }
 
 }} /* end namespace vt::group */
