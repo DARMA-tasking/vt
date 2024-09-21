@@ -84,6 +84,11 @@ struct RecursiveDoubling {
    */
   RecursiveDoubling(detail::StrongGroup group);
 
+  /**
+   * \brief Initialize vrt_node_ variable
+   */
+  void initializeVrtNode();
+
   ~RecursiveDoubling();
 
   /**

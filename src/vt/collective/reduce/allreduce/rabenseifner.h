@@ -84,6 +84,9 @@ struct Rabenseifner {
    * \param objgroup ObjGroupProxy
    */
   Rabenseifner(detail::StrongObjGroup objgroup);
+
+  void initializeVrtNode();
+
   ~Rabenseifner();
 
   /**
