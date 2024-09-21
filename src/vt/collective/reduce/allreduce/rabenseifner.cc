@@ -42,6 +42,7 @@
 */
 
 #include "vt/collective/reduce/allreduce/rabenseifner.h"
+#include "vt/collective/reduce/allreduce/allreduce_holder.h"
 #include "vt/configs/error/config_assert.h"
 #include "vt/group/group_manager.h"
 
@@ -67,16 +68,7 @@ Rabenseifner::Rabenseifner(
   }
 
   is_even_ = this_node_ % 2 == 0;
-  is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
-  if (is_part_of_adjustment_group_) {
-    if (is_even_) {
-      vrt_node_ = this_node_ / 2;
-    } else {
-      vrt_node_ = -1;
-    }
-  } else {
-    vrt_node_ = this_node_ - nprocs_rem_;
-  }
+  initializeVrtNode();
 
   vt_debug_print(
     terse, allreduce,
@@ -93,21 +85,15 @@ Rabenseifner::Rabenseifner(detail::StrongGroup group)
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_) {
-  std::string nodes_info;
-  for (auto& node : nodes_) {
-    nodes_info += fmt::format("{} ", node);
-  }
   auto const is_default_group = theGroup()->isGroupDefault(group_);
   auto const in_group = theGroup()->inGroup(group_);
   auto const is_part_of_allreduce =
-    (not is_default_group and in_group) or
-    is_default_group;
+    (not is_default_group and in_group) or is_default_group;
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner: is_default_group={} is_part_of_allreduce={} num_nodes_={} "
-    "Nodes:[{}]\n",
-    is_default_group, is_part_of_allreduce, num_nodes_, nodes_info);
+    "Rabenseifner: is_default_group={} is_part_of_allreduce={} num_nodes_={} \n",
+    is_default_group, is_part_of_allreduce, num_nodes_);
 
   if (not is_default_group and in_group) {
     auto it = std::find(nodes_.begin(), nodes_.end(), theContext()->getNode());
@@ -120,16 +106,8 @@ Rabenseifner::Rabenseifner(detail::StrongGroup group)
   // We collectively create this Reducer, so it's possible that not all Nodes are part of it
   if (is_part_of_allreduce) {
     is_even_ = this_node_ % 2 == 0;
-    is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
-    if (is_part_of_adjustment_group_) {
-      if (is_even_) {
-        vrt_node_ = this_node_ / 2;
-      } else {
-        vrt_node_ = -1;
-      }
-    } else {
-      vrt_node_ = this_node_ - nprocs_rem_;
-    }
+
+    initializeVrtNode();
   }
 }
 
@@ -141,17 +119,21 @@ Rabenseifner::Rabenseifner(detail::StrongObjGroup objgroup)
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_) {
+
   nodes_.resize(num_nodes_);
   for (NodeType i = 0; i < theContext()->getNumNodes(); ++i) {
     nodes_[i] = i;
   }
 
+  initializeVrtNode();
+
   vt_debug_print(
     terse, allreduce,
     "Rabenseifner: is_default_group={} is_part_of_allreduce={} num_nodes_={} \n",
     true, true, num_nodes_);
+}
 
-  // We collectively create this Reducer, so it's possible that not all Nodes are part of it
+void Rabenseifner::initializeVrtNode() {
   is_even_ = this_node_ % 2 == 0;
   is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
   if (is_part_of_adjustment_group_) {
@@ -166,12 +148,10 @@ Rabenseifner::Rabenseifner(detail::StrongObjGroup objgroup)
 }
 
 Rabenseifner::~Rabenseifner() {
-  if (collection_proxy_ != u64empty) {
-   //  StateHolder::clearAll(detail::StrongVrtProxy{collection_proxy_});
-
-  } else if (objgroup_proxy_ != u64empty) {
+  if (objgroup_proxy_ != u64empty) {
     StateHolder::clearAll(detail::StrongObjGroup{objgroup_proxy_});
-  } else {
+    AllreduceHolder::remove(detail::StrongObjGroup{objgroup_proxy_});
+  } else if(group_ != u64empty){
     StateHolder::clearAll(detail::StrongGroup{group_});
   }
 }

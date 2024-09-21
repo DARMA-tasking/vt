@@ -118,6 +118,33 @@ struct AllreduceHolder {
     }
   }
 
+  template <typename ReducerT>
+  static auto getAllreducer(detail::StrongObjGroup strong_objgroup) {
+    auto const objgroup = strong_objgroup.get();
+
+    if (auto it = objgroup_reducers_.find(objgroup); it == objgroup_reducers_.end()) {
+      objgroup_reducers_[objgroup] = {u64empty, u64empty};
+    }
+
+    if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
+      auto untyped_proxy = objgroup_reducers_.at(objgroup).first;
+      if (untyped_proxy == u64empty) {
+        return addRabensifnerAllreducer(strong_objgroup);
+      } else {
+        return static_cast<vt::objgroup::proxy::Proxy<Rabenseifner>>(
+          untyped_proxy);
+      }
+    } else {
+      auto untyped_proxy = objgroup_reducers_.at(objgroup).second;
+      if (untyped_proxy == u64empty) {
+        return addRecursiveDoublingAllreducer(strong_objgroup);
+      } else {
+        return static_cast<vt::objgroup::proxy::Proxy<RecursiveDoubling>>(
+          untyped_proxy);
+      }
+    }
+  }
+
   static objgroup::proxy::Proxy<Rabenseifner> addRabensifnerAllreducer(
     detail::StrongVrtProxy strong_proxy, detail::StrongGroup strong_group,
     size_t num_elems);
@@ -132,8 +159,14 @@ struct AllreduceHolder {
   static objgroup::proxy::Proxy<RecursiveDoubling>
   addRecursiveDoublingAllreducer(detail::StrongGroup strong_group);
 
+  static objgroup::proxy::Proxy<Rabenseifner>
+  addRabensifnerAllreducer(detail::StrongObjGroup strong_group);
+  static objgroup::proxy::Proxy<RecursiveDoubling>
+  addRecursiveDoublingAllreducer(detail::StrongObjGroup strong_group);
+
   static void remove(detail::StrongVrtProxy strong_proxy);
   static void remove(detail::StrongGroup strong_group);
+  static void remove(detail::StrongObjGroup strong_group);
 
   static inline std::unordered_map<
     VirtualProxyType, std::pair<RabenseifnerProxy, RecursiveDoublingProxy>>
