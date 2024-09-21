@@ -5,7 +5,7 @@
 //                              rdma_simple_get.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -77,7 +77,7 @@ static void tell_handle(HandleMsg* msg) {
 static std::unique_ptr<double[]> my_data = nullptr;
 
 static vt::RDMA_GetType test_get_fn(
-  vt::BaseMessage*, vt::ByteType num_bytes, vt::ByteType offset, vt::TagType tag,
+  vt::BaseMessage*, vt::ByteType num_bytes, [[maybe_unused]] vt::ByteType offset, vt::TagType tag,
   bool
 ) {
   vt::NodeType this_node = vt::theContext()->getNode();
@@ -86,7 +86,7 @@ static vt::RDMA_GetType test_get_fn(
     this_node, num_bytes, tag
   );
   return vt::RDMA_GetType{
-    my_data.get() + tag, num_bytes == vt::no_byte ? sizeof(double)*10 : num_bytes
+    reinterpret_cast<std::byte*>(my_data.get() + tag), num_bytes == vt::no_byte ? sizeof(double)*10 : num_bytes
   };
 }
 

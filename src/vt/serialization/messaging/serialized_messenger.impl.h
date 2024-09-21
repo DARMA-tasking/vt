@@ -5,7 +5,7 @@
 //                         serialized_messenger.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -351,7 +351,7 @@ template <typename MsgT, typename BaseT>
       ptr_size = size;
 
       if (size > serialized_msg_eager_size) {
-        ptr = static_cast<SerialByteType*>(std::malloc(size));
+        ptr = reinterpret_cast<SerialByteType*>(std::malloc(size));
         return ptr;
       } else {
         payload_msg = makeMessage<SerialEagerPayloadMsg<MsgT, BaseT>>(
@@ -392,7 +392,8 @@ template <typename MsgT, typename BaseT>
       if (node != dest) {
         auto sys_msg = makeMessage<SerialWrapperMsgType<MsgT>>();
         auto send_serialized = [=](Active::SendFnType send){
-          auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag);
+          auto byte_ptr = reinterpret_cast<std::byte*>(ptr);
+          auto ret = send(RDMA_GetType{byte_ptr, ptr_size}, dest, no_tag);
           EventType event = ret.getEvent();
           theEvent()->attachAction(event, [=]{ std::free(ptr); });
           sys_msg->data_recv_tag = ret.getTag();
@@ -422,13 +423,17 @@ template <typename MsgT, typename BaseT>
         auto msg_data = ptr;
         auto user_msg = deserializeFullMessage<MsgT>(msg_data);
 
+        std::free(msg_data);
+
         vt_debug_print(
           verbose, serial_msg,
           "serialMsgHandler: local msg: handler={}\n", typed_handler
         );
 
         auto base_msg = user_msg.template to<BaseMsgType>();
-        return messaging::PendingSend(base_msg, [=](MsgPtr<BaseMsgType> in) {
+        return messaging::PendingSend(
+          base_msg, [=]([[maybe_unused]] MsgPtr<BaseMsgType> in
+        ) {
           bool const is_obj = HandlerManager::isHandlerObjGroup(typed_handler);
           if (is_obj) {
             objgroup::dispatchObjGroup(

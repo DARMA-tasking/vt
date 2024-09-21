@@ -5,7 +5,7 @@
 //                                 param_msg.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -77,14 +77,16 @@ struct MsgProps {
     return std::move(*this);
   }
 
-  MsgProps&& withPriority(PriorityType in_priority) {
+  MsgProps&& withPriority([[maybe_unused]] PriorityType in_priority) {
 #if vt_check_enabled(priorities)
     priority_ = in_priority;
 #endif
     return std::move(*this);
   }
 
-  MsgProps&& withPriorityLevel(PriorityLevelType in_priority_level) {
+  MsgProps&& withPriorityLevel(
+    [[maybe_unused]] PriorityLevelType in_priority_level
+  ) {
 #if vt_check_enabled(priorities)
     priority_level_ = in_priority_level;
 #endif

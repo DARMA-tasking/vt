@@ -1,0 +1,140 @@
+{
+    "metadata": {
+        "rank": 1,
+        "type": "LBDatafile"
+    },
+    "phases": [
+        {
+            "communications": [
+                {
+                    "bytes": 2.0,
+                    "from": {
+                        "collection_id": 7,
+                        "home": 1,
+                        "seq_id": 4,
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "messages": 1,
+                    "to": {
+                        "collection_id": 7,
+                        "home": 0,
+                        "seq_id": 1,
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "type": "SendRecv"
+                },
+                {
+                    "bytes": 2.0,
+                    "from": {
+                        "collection_id": 7,
+                        "home": 1,
+                        "seq_id": 5,
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "messages": 1,
+                    "to": {
+                        "collection_id": 7,
+                        "home": 2,
+                        "seq_id": 8,
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "type": "SendRecv"
+                },
+                {
+                    "bytes": 1.0,
+                    "from": {
+                        "collection_id": 7,
+                        "home": 1,
+                        "seq_id": 7,
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "messages": 1,
+                    "to": {
+                        "collection_id": 7,
+                        "home": 1,
+                        "seq_id": 6,
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "type": "SendRecv"
+                }
+            ],
+            "id": 0,
+            "tasks": [
+                {
+                    "entity": {
+                        "collection_id": 7,
+                        "home": 1,
+                        "seq_id": 5,
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "node": 1,
+                    "resource": "cpu",
+                    "time": 2.0,
+                    "user_defined": {
+                        "home_rank": 1,
+                        "shared_bytes": 9.0,
+                        "shared_id": 2
+                    }
+                },
+                {
+                    "entity": {
+                        "collection_id": 7,
+                        "home": 1,
+                        "seq_id": 4,
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "node": 1,
+                    "resource": "cpu",
+                    "time": 0.5,
+                    "user_defined": {
+                        "home_rank": 1,
+                        "shared_bytes": 9.0,
+                        "shared_id": 2
+                    }
+                },
+                {
+                    "entity": {
+                        "collection_id": 7,
+                        "home": 1,
+                        "seq_id": 7,
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "node": 1,
+                    "resource": "cpu",
+                    "time": 0.5,
+                    "user_defined": {
+                        "home_rank": 1,
+                        "shared_bytes": 9.0,
+                        "shared_id": 3
+                    }
+                },
+                {
+                    "entity": {
+                        "collection_id": 7,
+                        "home": 1,
+                        "seq_id": 6,
+                        "migratable": true,
+                        "type": "object"
+                    },
+                    "node": 1,
+                    "resource": "cpu",
+                    "time": 1.0,
+                    "user_defined": {
+                        "home_rank": 1,
+                        "shared_bytes": 9.0,
+                        "shared_id": 3
+                    }
+                }
+            ]
+        }
+    ]
+}

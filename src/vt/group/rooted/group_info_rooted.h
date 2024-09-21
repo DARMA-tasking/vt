@@ -5,7 +5,7 @@
 //                             group_info_rooted.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -68,6 +68,7 @@ struct InfoRooted : virtual InfoBase {
     bool const& in_is_remote, RegionPtrType in_region,
     RegionType::SizeType const& in_total_size
   );
+  virtual ~InfoRooted() = default;
 
 protected:
   void setupRooted();

@@ -5,7 +5,7 @@
 //                                 raw_data.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -127,6 +127,15 @@ ElmUserDataType RawData::getUserData(ElementIDStruct object, PhaseOffset offset)
     }
   } else {
     return ElmUserDataType{};
+  }
+}
+
+CommMapType RawData::getComm(PhaseOffset offset) const {
+  auto phase = getNumCompletedPhases() + offset.phases;
+  if (auto it = proc_comm_->find(phase); it != proc_comm_->end()) {
+    return it->second;
+  } else {
+    return CommMapType{};
   }
 }
 

@@ -5,7 +5,7 @@
 //                                 diagnostic.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -68,6 +68,8 @@ struct Diagnostic : ComponentName, ComponentReducer {
   using DiagnosticBasePtrType = std::unique_ptr<detail::DiagnosticBase>;
   using UpdateType = DiagnosticUpdate;
   using UnitType = DiagnosticUnit;
+
+  virtual ~Diagnostic() = default;
 
   virtual void dumpState() = 0;
 

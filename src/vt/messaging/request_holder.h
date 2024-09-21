@@ -5,7 +5,7 @@
 //                               request_holder.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -98,9 +98,9 @@ struct RequestHolder {
   bool testAll(Callable c, int& num_mpi_tests) {
 #   if vt_check_enabled(trace_enabled)
     std::size_t const holder_size_start = holder_.size();
-    auto tr_begin = TimeType{0.0};
+    std::unique_ptr<trace::TraceScopedNote> trace_note;
     if (theConfig()->vt_trace_irecv_polling) {
-      tr_begin = vt::timing::getCurrentTime();
+      trace_note = std::make_unique<trace::TraceScopedNote>(trace_user_event_);
     }
 #   endif
 
@@ -131,13 +131,13 @@ struct RequestHolder {
 #   if vt_check_enabled(trace_enabled)
     if (theConfig()->vt_trace_irecv_polling) {
        if (holder_size_start > 0) {
-         auto tr_end = vt::timing::getCurrentTime();
          auto tr_note = fmt::format(
            "completed {} of {}",
            holder_size_start - holder_.size(),
            holder_size_start
          );
-         trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_user_event_);
+         trace_note->setNote(tr_note);
+         trace_note->end();
        }
     }
 #   endif

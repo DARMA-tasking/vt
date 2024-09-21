@@ -5,7 +5,7 @@
 //                         test_term_dep_send_chain.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -318,7 +318,9 @@ struct MyObjGroup {
   void makeColl(std::string const& label, NodeType num_nodes, int k) {
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
     backend_proxy_ = vt::theCollection()->constructCollective<MyCol>(
-      range, [=](vt::Index2D idx) { return std::make_unique<MyCol>(num_nodes, k); },
+      range, [=]([[maybe_unused]] vt::Index2D idx) {
+        return std::make_unique<MyCol>(num_nodes, k);
+      },
       label
     );
 
@@ -517,7 +519,7 @@ struct PrintParam {
 
 struct MergeCol : vt::Collection<MergeCol,vt::Index2D> {
   MergeCol() = default;
-  MergeCol(NodeType num, double off) : offset_( off ) {
+  MergeCol(NodeType, double off) : offset_( off ) {
     idx_ = getIndex();
   }
 
@@ -587,7 +589,7 @@ struct MergeObjGroup
     auto const node = theContext()->getNode();
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
     backend_proxy_ = vt::theCollection()->constructCollective<MergeCol>(
-      range, [=](vt::Index2D idx) {
+      range, [=]([[maybe_unused]] vt::Index2D idx) {
         return std::make_unique<MergeCol>(num_nodes, offset);
       }, label
     );

@@ -5,7 +5,7 @@
 //                     test_model_select_subphases.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -125,7 +125,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
   auto test_model =
     std::make_shared<SelectSubphases>(std::make_shared<StubModel>(), subphases);
 
-  EXPECT_EQ(test_model->getNumSubphases(), subphases.size());
+  EXPECT_EQ(test_model->getNumSubphases(), static_cast<int>(subphases.size()));
 
   test_model->setLoads(&proc_load, nullptr, nullptr);
   test_model->updateLoads(0);
@@ -174,7 +174,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
   auto test_model =
     std::make_shared<SelectSubphases>(std::make_shared<StubModel>(), subphases);
 
-  EXPECT_EQ(test_model->getNumSubphases(), subphases.size());
+  EXPECT_EQ(test_model->getNumSubphases(), static_cast<int>(subphases.size()));
 
   test_model->setLoads(&proc_load, nullptr, nullptr);
   test_model->updateLoads(0);

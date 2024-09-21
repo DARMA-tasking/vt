@@ -18,12 +18,19 @@ include(CMakeFindDependencyMacro)
 
 find_dependency(MPI REQUIRED)
 
-if (@checkpoint_PACKAGE_LOADED@)
-  set (checkpoint_DIR @checkpoint_DIR@)
-  find_dependency(checkpoint REQUIRED HINTS @checkpoint_DIR@)
+if (@magistrate_PACKAGE_LOADED@)
+  set (magistrate_DIR @magistrate_DIR@)
+  set (magistrate_ROOT @magistrate_ROOT@)
+  find_dependency(magistrate REQUIRED HINTS @magistrate_DIR@ @magistrate_ROOT@)
 endif()
 
 set (VT_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include")
 set (VT_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
+
+if (@vt_external_fmt@)
+  set (fmt_DIR @fmt_DIR@)
+  set (fmt_ROOT @fmt_ROOT@)
+  find_dependency(fmt REQUIRED HINTS @fmt_DIR@ @fmt_ROOT@)
+endif()
 
 set(VT_HAS_FMT "TRUE")

@@ -5,7 +5,7 @@
 //                                   baselb.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -55,6 +55,7 @@
 #include <map>
 #include <unordered_map>
 #include <tuple>
+#include <chrono>
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -187,6 +188,32 @@ protected:
   static void setStrategySpecificModel(
     std::shared_ptr<balance::LoadModel> model
   );
+
+  /**
+   * \brief Get the estimated time needed for load-balancing
+   *
+   * \return the estimated time
+   */
+  auto getCollectiveEpochCost() const {
+    return std::chrono::nanoseconds(100);
+  }
+
+  /**
+   * \brief Check if load-balancing should be done
+   *
+   * \return true when the maximum load exceeds the cost of load balancing; false otherwise
+   */
+  bool maxLoadExceedsLBCost() const {
+    auto const max = base_stats_->at(lb::Statistic::Rank_load_modeled).at(
+      lb::StatisticQuantity::max
+    );
+    auto max_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::duration<double>(max)
+    );
+
+    // Compare the maximum rank load to the estimated load-balancing cost
+    return max_in_ns > getCollectiveEpochCost();
+  }
 
 private:
   TransferVecType transfers_                      = {};

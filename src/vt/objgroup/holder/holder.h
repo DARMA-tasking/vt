@@ -5,7 +5,7 @@
 //                                   holder.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -63,7 +63,7 @@ struct Holder final : HolderObjBase<ObjT> {
 public:
   ObjT* get() override { return obj_.get(); }
   bool exists() override { return obj_ != nullptr; }
-  void* getPtr() override { return obj_.get(); }
+  std::byte* getPtr() override { return reinterpret_cast<std::byte*>(obj_.get()); }
 
   template <typename... Args>
   void reset(Args&&... args) {

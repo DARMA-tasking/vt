@@ -5,7 +5,7 @@
 //                               manager.static.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -96,7 +96,7 @@ decltype(auto) invoke(
   return runnable::makeRunnableVoid(false, han, this_node)
     .withObjGroup(elm)
     .withLBData(lb_data, elm_id)
-    .runLambda(f, static_cast<ObjT*>(elm), msg.get());
+    .runLambda(f, reinterpret_cast<ObjT*>(elm), msg.get());
 }
 
 template <typename MsgT>

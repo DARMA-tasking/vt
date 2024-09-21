@@ -5,7 +5,7 @@
 //                            test_group.extended.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -51,7 +51,7 @@ namespace vt { namespace tests { namespace unit {
 
 struct MySimpleMsg : ::vt::Message { };
 
-static void msgHandlerGroup(MySimpleMsg* msg) {
+static void msgHandlerGroup([[maybe_unused]] MySimpleMsg* msg) {
   auto const cur_node = ::vt::theContext()->getNode();
   vtAssert(cur_node % 2 == 0, "This handler should only execute on even nodes");
 

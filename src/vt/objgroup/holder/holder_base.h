@@ -5,7 +5,7 @@
 //                                holder_base.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -57,7 +57,7 @@ struct HolderBase {
 
   virtual ~HolderBase() = default;
   virtual bool exists() = 0;
-  virtual void* getPtr() = 0;
+  virtual std::byte* getPtr() = 0;
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -78,7 +78,7 @@ template <typename ObjT>
 struct HolderObjBase : HolderBase {
   virtual ~HolderObjBase() = default;
   virtual ObjT* get() = 0;
-  virtual void* getPtr() = 0;
+  virtual std::byte* getPtr() override = 0;
 };
 
 }}} /* end namespace vt::objgroup::holder */

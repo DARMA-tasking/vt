@@ -5,7 +5,7 @@
 //                        test_histogram_approx.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -93,7 +93,7 @@ TEST_F(TestHistogramApprox, test_histogram_2) {
   EXPECT_EQ(h.getMin(), 1);
   EXPECT_EQ(h.getMax(), 92);
   EXPECT_EQ(h.getCount(), len);
-  EXPECT_EQ(h.getCentroids().size(), 4);
+  EXPECT_EQ(h.getCentroids().size(), 4u);
 }
 
 TEST_F(TestHistogramApprox, test_histogram_sum_3) {
@@ -247,7 +247,7 @@ TEST_F(TestHistogramApprox, test_histogram_merge_7) {
   auto centroids = h1.getCentroids();
 
   // Must be 8 centroids if merge/max was applied correctly
-  EXPECT_EQ(centroids.size(), 8);
+  EXPECT_EQ(centroids.size(), 8ull);
 
   // We should have all the original centroids, except the last one, which
   // should be a single combined centroids of the last three values if optimal

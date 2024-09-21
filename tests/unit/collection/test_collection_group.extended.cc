@@ -5,7 +5,7 @@
 //                      test_collection_group.extended.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -91,7 +91,10 @@ struct ColA : Collection<ColA,Index1D> {
   bool reduce_test = false;
 };
 
-void colHandler(typename ColA::TestDataMsg::CollectionType* type, ColA::TestDataMsg*) {
+void colHandler(
+  [[maybe_unused]] typename ColA::TestDataMsg::CollectionType* type,
+  ColA::TestDataMsg*
+) {
   --elem_counter;
 }
 
@@ -121,7 +124,7 @@ TEST_F(TestCollectionGroup, test_collection_group_2) {
 
   auto const range = Index1D(8);
   auto const proxy = theCollection()->constructCollective<ColA>(
-    range, [](vt::Index1D idx) {
+    range, []([[maybe_unused]] vt::Index1D idx) {
       ++elem_counter;
       return std::make_unique<ColA>();
     }, "test_collection_group_2"
@@ -141,7 +144,7 @@ TEST_F(TestCollectionGroup, test_collection_group_3) {
 
   auto const range = Index1D(8);
   auto const proxy = theCollection()->constructCollective<ColA>(
-    range, [](vt::Index1D idx) {
+    range, []([[maybe_unused]] vt::Index1D idx) {
       ++elem_counter;
       return std::make_unique<ColA>();
     }, "test_collection_group_3"

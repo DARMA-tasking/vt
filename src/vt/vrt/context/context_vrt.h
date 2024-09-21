@@ -5,7 +5,7 @@
 //                                context_vrt.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -54,19 +54,18 @@ namespace vt { namespace vrt {
 
 struct VirtualContext : VrtBase {
   VirtualContext() = default;
-  VirtualContext(bool const in_is_main) { }
 
   friend struct VirtualContextAttorney;
 
   template <typename Serializer>
-  void serialize(Serializer& s) {}
+  void serialize([[maybe_unused]] Serializer& s) {}
 
 };
 
 struct MainVirtualContext : VirtualContext {
-  MainVirtualContext() : VirtualContext(true) { }
+  MainVirtualContext() : VirtualContext() { }
 };
 
 }}  // end namespace vt::vrt
 
-#endif  /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_H*/

@@ -5,7 +5,7 @@
 //                               dispatch.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -56,7 +56,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename MsgT>
 void DispatchCollection<ColT, MsgT>::broadcast(
-  VirtualProxyType proxy, void* msg, HandlerType han
+  VirtualProxyType proxy, std::byte* msg, HandlerType han
 ) {
   using IdxT = typename ColT::IndexType;
   auto const msg_typed = reinterpret_cast<MsgT*>(msg);
@@ -68,7 +68,7 @@ void DispatchCollection<ColT, MsgT>::broadcast(
 
 template <typename ColT, typename MsgT>
 void DispatchCollection<ColT, MsgT>::send(
-  VirtualProxyType proxy, void* idx, void* msg, HandlerType han
+  VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han
 ) {
   using IdxT = typename ColT::IndexType;
   auto const msg_typed = reinterpret_cast<MsgT*>(msg);

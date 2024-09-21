@@ -5,7 +5,7 @@
 //                            test_term_chaining.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -72,7 +72,7 @@ struct TestTermChaining : TestParallelHarness {
     int num = 0;
   };
 
-  static void test_handler_reflector(TestMsg* msg) {
+  static void test_handler_reflector([[maybe_unused]] TestMsg* msg) {
     fmt::print("reflector run\n");
 
     handler_count = 12;
@@ -82,7 +82,7 @@ struct TestTermChaining : TestParallelHarness {
     theMsg()->sendMsg<test_handler_response>(0, msg2);
   }
 
-  static void test_handler_response(TestMsg* msg) {
+  static void test_handler_response([[maybe_unused]] TestMsg* msg) {
     fmt::print("response run\n");
 
     EXPECT_EQ(theContext()->getNode(), 0);
@@ -90,7 +90,7 @@ struct TestTermChaining : TestParallelHarness {
     handler_count++;
   }
 
-  static void test_handler_chainer(TestMsg* msg) {
+  static void test_handler_chainer([[maybe_unused]] TestMsg* msg) {
     fmt::print("chainer run\n");
 
     EXPECT_EQ(handler_count, 12);
@@ -99,7 +99,7 @@ struct TestTermChaining : TestParallelHarness {
     theMsg()->sendMsg<test_handler_chained>(0, msg2);
   }
 
-  static void test_handler_chained(TestMsg* msg) {
+  static void test_handler_chained([[maybe_unused]] TestMsg* msg) {
     fmt::print("chained run\n");
 
     EXPECT_EQ(theContext()->getNode(), 0);
@@ -107,7 +107,7 @@ struct TestTermChaining : TestParallelHarness {
     handler_count = 4;
   }
 
-  static void test_handler_set(TestMsg* msg) {
+  static void test_handler_set([[maybe_unused]] TestMsg* msg) {
     handler_count = 1;
   }
 
@@ -119,7 +119,7 @@ struct TestTermChaining : TestParallelHarness {
     handler_count = 2;
   }
 
-  static void test_handler_bcast(TestMsg* msg) {
+  static void test_handler_bcast([[maybe_unused]] TestMsg* msg) {
     static auto visited = 0;
 
     if (theContext()->getNode() == 0) {

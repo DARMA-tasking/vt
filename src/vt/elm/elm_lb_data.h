@@ -5,7 +5,7 @@
 //                                elm_lb_data.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -64,9 +64,16 @@ struct ElementLBData {
   void start(TimeType time);
   void stop(TimeType time);
   void addTime(LoadType const timeLoad);
+  /// warning: this will override any existing time that might be there
+  void setTime(
+    LoadType const timeLoad, std::vector<LoadType> const& subphaseLoads
+  );
 
   void sendToEntity(ElementIDStruct to, ElementIDStruct from, double bytes);
   void sendComm(elm::CommKey key, double bytes);
+
+  void addWritableSharedID(NodeType home, int shared_id, double bytes);
+  void addReadOnlySharedID(NodeType home, int shared_id, double bytes);
 
   void recvComm(elm::CommKey key, double bytes);
   void recvObjData(

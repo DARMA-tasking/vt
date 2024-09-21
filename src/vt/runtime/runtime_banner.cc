@@ -5,7 +5,7 @@
 //                              runtime_banner.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -169,13 +169,13 @@ void Runtime::printStartupBanner() {
       fmt::format("{}Compile-time Features Enabled:{}\n", green, reset)
   };
 
-  for (auto &&line: info_lines)
+  for (auto &&line : info_lines)
   {
     fmt::print("{}{}{}", vt_pre, line, reset);
   }
 
-  for (size_t i = 0; i < features.size(); i++) {
-    fmt::print("{}\t{}\n", vt_pre, emph(features.at(i)));
+  for (const auto& feature : features) {
+    fmt::print("{}\t{}\n", vt_pre, emph(feature));
   }
 
   auto warn_cr = [=](std::string opt, std::string compile) -> std::string {
@@ -960,7 +960,6 @@ void Runtime::printShutdownBanner(
   auto f2 = fmt::format("{}Total work units processed:{} ", green, reset);
   auto f3 = fmt::format("{}Total collective epochs processed:{} ", green, reset);
   auto vt_pre = bd_green + std::string("vt") + reset + ": ";
-  std::string fin = "";
   std::string units = std::to_string(num_units);
   fmt::print("{}{}{}{}{}\n", vt_pre, f3, magenta, coll_epochs, reset);
   fmt::print("{}{}{}{}{}\n", vt_pre, f2, magenta, units, reset);

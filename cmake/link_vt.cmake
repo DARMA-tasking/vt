@@ -28,11 +28,13 @@ function(link_target_with_vt)
     LINK_FCONTEXT
     LINK_CHECKPOINT
     LINK_CLI11
+    LINK_YAMLCPP
     LINK_DL
     LINK_ZOLTAN
     LINK_FORT
     LINK_JSON
     LINK_BROTLI
+    LINK_VT_TV
   )
   set(
     multiValueArg
@@ -41,7 +43,7 @@ function(link_target_with_vt)
   set(allKeywords ${noValOption} ${singleValArg} ${multiValueArg})
 
   cmake_parse_arguments(
-    ARG "${noValOption}" "${singleValArg}" "${multiValueArgs}" ${ARGN}
+    ARG "${noValOption}" "${singleValArg}" "${multiValueArg}" ${ARGN}
   )
 
   if (${ARG_DEBUG_LINK})
@@ -70,6 +72,14 @@ function(link_target_with_vt)
     endif()
   endif()
 
+  if (NOT DEFINED ARG_LINK_VT_TV AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_VT_TV)
+    if (vt_tv_enabled)
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${TV_LIBRARY}
+      )
+    endif()
+  endif()
+
   if (NOT DEFINED ARG_LINK_ZOLTAN AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_ZOLTAN)
     if (vt_zoltan_enabled)
       if (${ARG_DEBUG_LINK})
@@ -89,17 +99,17 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: gtest=${ARG_LINK_GTEST}")
     endif()
-    target_link_libraries(${ARG_TARGET} PRIVATE gtest)
+    target_link_libraries(${ARG_TARGET} PRIVATE ${GOOGLETEST_LIBRARY})
   endif()
 
   if (NOT DEFINED ARG_LINK_UNWIND AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_UNWIND)
-    if (vt_has_libunwind_h)
+    if (vt_feature_cmake_libunwind)
       if (${ARG_DEBUG_LINK})
         message(STATUS "link_target_with_vt: unwind=${ARG_LINK_UNWIND}")
       endif()
       if (NOT DEFINED APPLE)
         target_link_libraries(
-          ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} unwind
+          ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${LIBUNWIND_LIBRARIES}
         )
       endif()
     endif()
@@ -170,9 +180,17 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: fmt=${ARG_LINK_FMT}")
     endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FMT_LIBRARY}
-    )
+
+    if(${vt_external_fmt})
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} fmt::fmt
+      )
+    else()
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FMT_LIBRARY}
+      )
+    endif()
+
   endif()
 
   if (NOT DEFINED ARG_LINK_ENG_FORMAT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_ENG_FORMAT)
@@ -189,7 +207,7 @@ function(link_target_with_vt)
       message(STATUS "link_target_with_vt: checkpoint=${ARG_LINK_CHECKPOINT}")
     endif()
     target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${CHECKPOINT_LIBRARY}
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${MAGISTRATE_LIBRARY}
     )
   endif()
 
@@ -200,6 +218,15 @@ function(link_target_with_vt)
     target_include_directories(${ARG_TARGET} PUBLIC
       $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/CLI>
       $<INSTALL_INTERFACE:include/CLI>
+    )
+  endif()
+
+  if (NOT DEFINED ARG_LINK_YAMLCPP AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_YAMLCPP)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: yamlcpp=${ARG_LINK_YAMLCPP}")
+    endif()
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${YAMLCPP_LIBRARY}
     )
   endif()
 
@@ -228,4 +255,11 @@ function(link_target_with_vt)
   if (vt_ubsan_enabled)
     target_link_libraries(${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} -fsanitize=undefined)
   endif()
+
+  # Enable additional flag for GCC-8 to link std::filesystem
+  if (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
+    if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9))
+      target_link_libraries(${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} -lstdc++fs)
+    endif ()
+  endif ()
 endfunction()

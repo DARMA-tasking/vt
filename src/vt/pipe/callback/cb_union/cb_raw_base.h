@@ -5,7 +5,7 @@
 //                                cb_raw_base.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -103,7 +103,7 @@ struct CallbackRawBaseSingle {
   CallbackRawBaseSingle(
     RawSendColDirTagType, PipeType const& in_pipe,
     HandlerType const in_handler, AutoHandlerType const in_vrt_handler,
-    void* index_bits
+    std::byte* index_bits
   );
   CallbackRawBaseSingle(
     RawBcastObjGrpTagType, PipeType in_pipe, HandlerType in_handler,
@@ -198,7 +198,7 @@ struct CallbackTyped : CallbackRawBaseSingle {
   CallbackTyped(
     RawSendColDirTagType, PipeType const& in_pipe,
     HandlerType const in_handler, AutoHandlerType const in_vrt_handler,
-    void* index_bits
+    std::byte* index_bits
   ) : CallbackRawBaseSingle(
         RawSendColDirTag,in_pipe,in_handler,in_vrt_handler,index_bits
       )

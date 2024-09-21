@@ -5,7 +5,7 @@
 //                              context_vrt_fwd.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -67,4 +67,3 @@ struct VirtualMakeClosure;
 }}  // end namespace vt::vrt
 
 #endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_FWD_H*/
-

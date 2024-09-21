@@ -5,7 +5,7 @@
 //                                  manager.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -84,7 +84,7 @@ ObjGroupProxyType ObjGroupManager::getProxy(ObjGroupProxyType proxy) {
 }
 
 ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
-  std::string const& label, HolderBasePtrType base, void* obj_ptr
+  std::string const& label, HolderBasePtrType base, std::byte* obj_ptr
 ) {
   auto const id = cur_obj_id_++;
   auto const node = theContext()->getNode();

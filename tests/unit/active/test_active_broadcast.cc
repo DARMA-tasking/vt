@@ -5,7 +5,7 @@
 //                           test_active_broadcast.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -59,7 +59,7 @@ struct TestActiveBroadcast : TestParameterHarnessNode {
   static int handler_count;
   static int num_msg_sent;
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParameterHarnessNode::SetUp();
 
     handler_count = 0;
@@ -68,7 +68,7 @@ struct TestActiveBroadcast : TestParameterHarnessNode {
     SET_MIN_NUM_NODES_CONSTRAINT(2);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown() override {
     TestParameterHarnessNode::TearDown();
   }
 

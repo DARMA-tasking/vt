@@ -27,11 +27,15 @@ RUN apt-get update -y -q && \
     libunwind-dev \
     make-guile \
     ninja-build \
-    python3 \
     valgrind \
     wget \
     zlib1g \
     zlib1g-dev \
+    libncurses5-dev \
+    m4 \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    mesa-common-dev \
     brotli \
     python3 \
     python3-brotli \
@@ -87,7 +91,8 @@ RUN apt-get update -y -q && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install schema
+RUN pip3 install --upgrade pip \
+    && pip3 install schema deepdiff
 
 FROM base as build
 COPY . /vt
@@ -109,6 +114,9 @@ ARG VT_UBSAN_ENABLED
 ARG VT_WERROR_ENABLED
 ARG VT_ZOLTAN_ENABLED
 ARG CMAKE_CXX_STANDARD
+ARG VT_DEBUG_VERBOSE
+ARG VT_CI_BUILD
+ARG VT_KOKKOS_ENABLED
 
 ENV BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
     CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
@@ -130,7 +138,11 @@ ENV BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
     VT_UNITY_BUILD_ENABLED=${VT_UNITY_BUILD_ENABLED} \
     VT_WERROR_ENABLED=${VT_WERROR_ENABLED} \
     VT_ZOLTAN_ENABLED=${VT_ZOLTAN_ENABLED} \
-    CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+    CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} \
+    VT_DEBUG_VERBOSE=$(VT_DEBUG_VERBOSE) \
+    VT_CI_BUILD=${VT_CI_BUILD} \
+    VT_KOKKOS_ENABLED=${VT_KOKKOS_ENABLED} \
+    VT_TV_ENABLED=${VT_TV_ENABLED}
 
 RUN /vt/ci/build_cpp.sh /vt /build
 

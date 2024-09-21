@@ -5,7 +5,7 @@
 //                                pool_header.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -59,16 +59,16 @@ struct AllocLayout {
 
 union AllocView {
   AllocLayout* layout;
-  char* buffer;
+  std::byte* buffer;
 };
 
 struct HeaderManager {
-  static char* setHeader(
-    size_t const& num_bytes, size_t const& oversize, char* buffer
+  static std::byte* setHeader(
+    size_t const& num_bytes, size_t const& oversize, std::byte* buffer
   );
-  static size_t getHeaderBytes(char* buffer);
-  static size_t getHeaderOversizeBytes(char* buffer);
-  static char* getHeaderPtr(char* buffer);
+  static size_t getHeaderBytes(std::byte* buffer);
+  static size_t getHeaderOversizeBytes(std::byte* buffer);
+  static std::byte* getHeaderPtr(std::byte* buffer);
 };
 
 }} /* end namespace vt::pool */

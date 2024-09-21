@@ -5,7 +5,7 @@
 //                           pipe_manager_construct.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -139,7 +139,7 @@ struct ConstructCallbacksImpl<N,T,ConsT,U,N> {
 
 template <typename T, typename ConsT, typename U, std::size_t N>
 /*static*/ typename ConstructCallbacksImpl<N,T,ConsT,U,N>::ResultType
-ConstructCallbacksImpl<N,T,ConsT,U,N>::make(ConsT const& ct) {
+ConstructCallbacksImpl<N,T,ConsT,U,N>::make([[maybe_unused]] ConsT const& ct) {
   return {};
 }
 

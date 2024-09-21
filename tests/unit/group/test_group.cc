@@ -5,7 +5,7 @@
 //                                test_group.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -67,7 +67,7 @@ struct TestGroup : TestParallelHarness {
     SET_MIN_NUM_NODES_CONSTRAINT(2);
   }
 
-  static void groupHandler(TestMsg* msg) {
+  static void groupHandler([[maybe_unused]] TestMsg* msg) {
     auto const& this_node = theContext()->getNode();
     num_recv++;
     fmt::print("{}: groupHandler: num_recv={}\n", this_node, num_recv);

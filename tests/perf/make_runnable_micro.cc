@@ -5,7 +5,7 @@
 //                            make_runnable_micro.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -46,14 +46,16 @@
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_CORE
 
 using namespace vt;
 using namespace vt::tests::perf::common;
 
 static constexpr int num_iters = 100000;
 
-struct MyTest : PerfTestHarness { };
+struct MyTest : PerfTestHarness {
+  MyTest() { DisableGlobalTimer(); }
+};
 struct MyMsg : vt::Message {};
 
 struct NodeObj;

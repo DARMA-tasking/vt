@@ -5,7 +5,7 @@
 //                             pipe_manager_base.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -110,7 +110,7 @@ PipeType PipeManagerBase::makeCallbackFuncVoid(
 
   bool const& send_back = false;
   auto const& pipe_id = makePipeID(persist,send_back);
-  auto dispatch_fn = [pipe_id](void*) {
+  auto dispatch_fn = [pipe_id](std::byte*) {
     signal_holder_<SignalType>.deliverAll(pipe_id,nullptr);
   };
   DispatchFuncType dfn = nullptr;

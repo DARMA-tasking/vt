@@ -5,7 +5,7 @@
 //                                   timer.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -84,7 +84,7 @@ public:
    * \param[in] begin begin time of event being tracked
    * \param[in] end end time of event being tracked
    */
-  void update(T begin, T end) {
+  void update([[maybe_unused]] T begin, [[maybe_unused]] T end) {
 #   if vt_check_enabled(diagnostics)
     auto const duration = end - begin;
     this->updateStats(duration);

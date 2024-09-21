@@ -5,7 +5,7 @@
 //                                group_list.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -148,8 +148,7 @@ List::List(
 }
 
 /*virtual*/ List::RegionUPtrType List::copy() const {
-  auto list = std::make_unique<List>(*this);
-  return std::move(list);
+  return std::make_unique<List>(*this);
 }
 
 /*virtual*/ void List::splitN(int nsplits, ApplyFnType apply) const {

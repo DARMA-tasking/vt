@@ -5,7 +5,7 @@
 //                              types_sentinels.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -89,7 +89,8 @@ static constexpr SequentialIDType const first_seq_id               = 1;
 static constexpr PriorityType const no_priority                    = 0;
 static constexpr PriorityLevelType const no_priority_level         = 0;
 static constexpr ThreadIDType const no_thread_id                   = 0;
+static constexpr SharedIDType const no_shared_id                   = -1;
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_SENTINELS_H*/
+#endif /*INCLUDED_VT_CONFIGS_TYPES_TYPES_SENTINELS_H*/

@@ -5,7 +5,7 @@
 //                                active.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -71,21 +71,27 @@ void ActiveMessenger::markAsTermMessage(MsgPtrT const msg) {
 }
 
 template <typename MsgPtrT>
-void ActiveMessenger::markAsLocationMessage(MsgPtrT const msg) {
+void ActiveMessenger::markAsLocationMessage(
+  [[maybe_unused]] MsgPtrT const msg
+) {
 #if vt_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, theConfig()->traceLocation());
 #endif
 }
 
 template <typename MsgPtrT>
-void ActiveMessenger::markAsSerialMsgMessage(MsgPtrT const msg) {
+void ActiveMessenger::markAsSerialMsgMessage(
+  [[maybe_unused]] MsgPtrT const msg
+) {
 #if vt_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, theConfig()->traceSerialMsg());
 #endif
 }
 
 template <typename MsgPtrT>
-void ActiveMessenger::markAsCollectionMessage(MsgPtrT const msg) {
+void ActiveMessenger::markAsCollectionMessage(
+  [[maybe_unused]] MsgPtrT const msg
+) {
 #if vt_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, theConfig()->traceCollection());
 #endif
@@ -220,7 +226,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
   MsgPtrThief<MsgT> msg,
-  ByteType msg_size,
+  [[maybe_unused]] ByteType msg_size,
   bool deliver_to_sender,
   TagType tag
 ) {
@@ -265,7 +271,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
   NodeType dest,
   MsgPtrThief<MsgT> msg,
-  ByteType msg_size,
+  [[maybe_unused]] ByteType msg_size,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();

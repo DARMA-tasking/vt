@@ -5,7 +5,7 @@
 //                        callback_proxy_send_tl.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -58,7 +58,7 @@
 namespace vt { namespace pipe { namespace callback {
 
 template <typename SerializerT>
-void CallbackProxySendTypeless::serialize(SerializerT& s) { }
+void CallbackProxySendTypeless::serialize([[maybe_unused]] SerializerT& s) { }
 
 template <typename MsgT>
 void CallbackProxySendTypeless::trigger(MsgT* msg, PipeType const& pipe) {

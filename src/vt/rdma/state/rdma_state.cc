@@ -5,7 +5,7 @@
 //                                rdma_state.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -178,7 +178,7 @@ bool State::testReadyPutData(TagType const& tag) {
 
 /*static*/ RDMA_GetType State::defaultGetHandlerFn(
   StateMessage<State>* msg, ByteType req_num_bytes, ByteType req_offset,
-  TagType tag, bool is_local
+  TagType tag, [[maybe_unused]] bool is_local
 ) {
   auto const& state = *msg->state;
 
@@ -194,14 +194,14 @@ bool State::testReadyPutData(TagType const& tag) {
   );
 
   return RDMA_GetType{
-    static_cast<char*>(state.ptr) + req_offset,
+    state.ptr + req_offset,
     req_num_bytes == no_byte ? state.num_bytes : req_num_bytes
   };
 }
 
 /*static*/ void State::defaultPutHandlerFn(
   StateMessage<State>* msg, RDMA_PtrType in_ptr, ByteType req_num_bytes,
-  ByteType req_offset, TagType tag, bool is_local
+  ByteType req_offset, TagType tag, [[maybe_unused]] bool is_local
 ) {
   auto const& state = *msg->state;
 
@@ -216,12 +216,12 @@ bool State::testReadyPutData(TagType const& tag) {
     "To use default handler ptr, bytes must be set"
   );
 
-  std::memcpy(static_cast<char*>(state.ptr) + req_offset, in_ptr, req_num_bytes);
+  std::memcpy(state.ptr + req_offset, in_ptr, req_num_bytes);
 }
 
 void State::getData(
   GetMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info,
-  NodeType const& from_node
+  [[maybe_unused]] NodeType const& from_node
 ) {
   auto const& tag = info.tag;
 
@@ -289,7 +289,7 @@ void State::getData(
 
 void State::putData(
   PutMessage* msg, bool const& is_user_msg, RDMA_InfoType const& info,
-  NodeType const& from_node
+  [[maybe_unused]] NodeType const& from_node
 ) {
   auto const& tag = info.tag;
 

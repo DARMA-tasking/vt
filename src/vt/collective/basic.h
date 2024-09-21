@@ -5,7 +5,7 @@
 //                                   basic.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -50,7 +50,7 @@ namespace vt {
 
 void abort(std::string const str = "", int32_t const code = 1);
 void output(
-  std::string const str, int32_t const code = 1, bool error = false,
+  std::string const& str, int32_t const code = 1, bool error = false,
   bool decorate = true, bool formatted = false, bool abort_out = false
 );
 int rerror(char const* str);

@@ -1,19 +1,19 @@
 get_directory_property(projHasParent PARENT_DIRECTORY)
 
-# Local packages that VT depends on: checkpoint
-include(cmake/load_local_packages.cmake)
-
 # MPI package
 include(cmake/load_mpi_package.cmake)
 
 # ZLIB package
-include(cmake/load_zlib_package.cmake)
+find_package(ZLIB REQUIRED)
 
 # Perl is used to build the PMPI wrappers
 find_package(Perl)
 
 # Doxygen package
 include(cmake/load_doxygen.cmake)
+
+# Optionally link with libunwind
+include(cmake/load_libunwind.cmake)
 
 # Optionally link with Zoltan
 include(cmake/load_zoltan_package.cmake)

@@ -5,7 +5,7 @@
 //                                 offlinelb.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -55,8 +55,8 @@ void OfflineLB::init(objgroup::proxy::Proxy<OfflineLB> in_proxy) {
 }
 
 void OfflineLB::runLB(LoadType) {
-  auto const& distro = theLBDataReader()->getDistro(phase_ + 1);
-  for (auto&& elm : distro) {
+  auto const distro = theLBDataReader()->getDistro(phase_ + 1);
+  for (auto&& elm : *distro) {
     migrateObjectTo(elm, theContext()->getNode());
   }
   theLBDataReader()->clearDistro(phase_ + 1);

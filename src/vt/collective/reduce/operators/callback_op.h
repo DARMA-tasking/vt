@@ -5,7 +5,7 @@
 //                                callback_op.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -50,7 +50,7 @@ namespace vt { namespace collective { namespace reduce { namespace operators {
 
 template <typename T = void>
 struct ReduceCallback {
-  void operator()(T* t) const { /* do nothing */ }
+  void operator()([[maybe_unused]] T* t) const { /* do nothing */ }
 };
 
 }}}} /* end namespace vt::collective::reduce::operators */

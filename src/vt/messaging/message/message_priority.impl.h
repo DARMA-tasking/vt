@@ -5,7 +5,7 @@
 //                           message_priority.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -49,21 +49,27 @@
 namespace vt { namespace messaging {
 
 template <typename MsgT>
-void msgSetPriorityLevel(MsgT ptr, PriorityLevelType level) {
+void msgSetPriorityLevel(
+  [[maybe_unused]] MsgT ptr, [[maybe_unused]] PriorityLevelType level
+) {
 # if vt_check_enabled(priorities)
   envelopeSetPriorityLevel(ptr->env, level);
 # endif
 }
 
 template <typename MsgT>
-void msgSetPriorityAllLevels(MsgT ptr, PriorityType priority) {
+void msgSetPriorityAllLevels(
+  [[maybe_unused]] MsgT ptr, [[maybe_unused]] PriorityType priority
+) {
 # if vt_check_enabled(priorities)
   envelopeSetPriority(ptr->env, priority);
 # endif
 }
 
 template <typename MsgT, typename MsgU>
-bool msgIncPriorityLevel(MsgT old_msg, MsgU new_msg) {
+bool msgIncPriorityLevel(
+  [[maybe_unused]] MsgT old_msg, [[maybe_unused]] MsgU new_msg
+) {
 # if vt_check_enabled(priorities)
   auto const level = envelopeGetPriorityLevel(old_msg->env);
   if (level + 1 < sched::priority_num_levels) {
@@ -78,7 +84,11 @@ bool msgIncPriorityLevel(MsgT old_msg, MsgU new_msg) {
 }
 
 template <typename MsgU>
-void msgSetPriority(MsgU new_msg, PriorityType priority, bool increment_level) {
+void msgSetPriority(
+  [[maybe_unused]] MsgU new_msg,
+  [[maybe_unused]] PriorityType priority,
+  [[maybe_unused]] bool increment_level
+) {
 # if vt_check_enabled(priorities)
   PriorityLevelType const level = increment_level ? 1 : 0;
   PriorityType old_priority = vt::min_priority;
@@ -88,8 +98,10 @@ void msgSetPriority(MsgU new_msg, PriorityType priority, bool increment_level) {
 
 template <typename MsgU>
 void msgSetPriorityImpl(
-  MsgU new_msg, PriorityType new_priority, PriorityType old_priority,
-  PriorityLevelType level
+  [[maybe_unused]] MsgU new_msg,
+  [[maybe_unused]] PriorityType new_priority,
+  [[maybe_unused]] PriorityType old_priority,
+  [[maybe_unused]] PriorityLevelType level
 ) {
 # if vt_check_enabled(priorities)
 
@@ -115,7 +127,8 @@ void msgSetPriorityImpl(
 
 template <typename MsgT, typename MsgU>
 void msgSetPriorityFrom(
-  MsgT old_msg, MsgU new_msg, PriorityType priority, bool increment_level
+  [[maybe_unused]] MsgT old_msg, [[maybe_unused]] MsgU new_msg,
+  [[maybe_unused]] PriorityType priority, [[maybe_unused]] bool increment_level
 ) {
 # if vt_check_enabled(priorities)
   vtAssert(old_msg != nullptr, "Must have a valid message");
@@ -130,7 +143,9 @@ void msgSetPriorityFrom(
 }
 
 template <typename MsgT>
-void msgSystemSetPriority(MsgT ptr, PriorityType priority) {
+void msgSystemSetPriority(
+  [[maybe_unused]] MsgT ptr, [[maybe_unused]] PriorityType priority
+) {
 # if vt_check_enabled(priorities)
   PriorityType prior = no_priority;
   envelopeSetPriorityLevel(ptr->env, 0);

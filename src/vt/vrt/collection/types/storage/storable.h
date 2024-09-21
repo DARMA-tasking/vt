@@ -5,7 +5,7 @@
 //                                  storable.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -94,13 +94,14 @@ struct Storable {
    * \param[in] u the value
    * \param[in] dump_to_json whether to include in json file
    * \param[in] provide_to_lb whether to provide the data to the load balancers
+   * \param[in] dump_to_attributes whether to dump to attributes in JSON output
    *
    * \note If \c provide_to_lb is enabled, the data must be convertible to an
    * integer, double, or string
    */
   template <typename U>
   void valInsert(
-    std::string const& str, U&& u, bool dump_to_json, bool provide_to_lb
+    std::string const& str, U&& u, bool dump_to_json, bool provide_to_lb, bool dump_to_attributes
   );
 
   /**
@@ -155,6 +156,20 @@ struct Storable {
   void foreachLB(Callable&& c) {
     for (auto const& [key, value] : map_) {
       if (value->provideToLB()) {
+        c(key, value.get());
+      }
+    }
+  }
+
+  /**
+   * \brief Traverse the map and calls Callable on each attribute
+   *
+   * \param[in] c the callable
+   */
+  template <typename Callable>
+  void collectAttributes(Callable&& c) {
+    for (auto const& [key, value] : map_) {
+      if (value->isAttribute()) {
         c(key, value.get());
       }
     }

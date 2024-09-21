@@ -5,7 +5,7 @@
 //                               tempered_msgs.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -46,8 +46,95 @@
 
 #include "vt/config.h"
 
-#include <vector>
+#include INCLUDE_FMT_FORMAT
+
 #include <unordered_map>
+
+namespace vt::vrt::collection::lb {
+
+using BytesType        = double;
+
+struct ClusterInfo {
+  LoadType load = 0;
+  BytesType bytes = 0;
+  double intra_send_vol = 0, intra_recv_vol = 0;
+  std::unordered_map<NodeType, double> inter_send_vol, inter_recv_vol;
+  NodeType home_node = uninitialized_destination;
+  BytesType edge_weight = 0;
+  BytesType max_object_working_bytes = 0;
+  BytesType max_object_working_bytes_outside = 0;
+  BytesType max_object_serialized_bytes = 0;
+  BytesType max_object_serialized_bytes_outside = 0;
+  BytesType cluster_footprint = 0;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | load | bytes | intra_send_vol | intra_recv_vol;
+    s | inter_send_vol | inter_recv_vol;
+    s | home_node | edge_weight;
+    s | max_object_working_bytes;
+    s | max_object_working_bytes_outside;
+    s | max_object_serialized_bytes;
+    s | max_object_serialized_bytes_outside;
+    s | cluster_footprint;
+  }
+};
+
+struct NodeInfo {
+  LoadType load = 0;
+  LoadType work = 0;
+  double inter_send_vol = 0, inter_recv_vol = 0;
+  double intra_send_vol = 0, intra_recv_vol = 0;
+  double shared_vol = 0;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | load | work;
+    s | inter_send_vol | inter_recv_vol;
+    s | intra_send_vol | intra_recv_vol;
+    s | shared_vol;
+  }
+};
+
+using ClusterSummaryType = std::unordered_map<SharedIDType, ClusterInfo>;
+using RankSummaryType = std::tuple<BytesType, ClusterSummaryType>;
+
+} /* end namespace vt::vrt::collection::lb */
+
+VT_FMT_NAMESPACE_BEGIN
+
+/// Custom fmt formatter/print for \c vt::vrt::collection::lb::ClusterInfo
+template <>
+struct formatter<::vt::vrt::collection::lb::ClusterInfo> {
+  /// Parses format specifications of the form ['x' | 'd' | 'b'].
+  auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+    // Parse the presentation format and store it in the formatter:
+    auto it = ctx.begin(), end = ctx.end();
+
+    // Check if reached the end of the range:
+    if (it != end && *it != '}') {
+      throw format_error("invalid format");
+    }
+
+    // Return an iterator past the end of the parsed range:
+    return it;
+  }
+
+  /// Formats the epoch using the parsed format specification (presentation)
+  /// stored in this formatter.
+  template <typename FormatContext>
+  auto format(
+    ::vt::vrt::collection::lb::ClusterInfo const& e, FormatContext& ctx
+  ) {
+    auto fmt_str = "(load={},bytes={},intra=({},{})),home={},edge={}";
+    return format_to(
+      ctx.out(), fmt_str, e.load, e.bytes, e.intra_send_vol, e.intra_recv_vol,
+      e.home_node, e.edge_weight
+    );
+  }
+};
+
+VT_FMT_NAMESPACE_END
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -55,19 +142,33 @@ struct LoadMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required(); // node_load_
 
-  using NodeLoadType = std::unordered_map<NodeType, LoadType>;
+  using NodeClusterSummaryType =
+    std::unordered_map<NodeType, lb::RankSummaryType>;
+  using NodeInfoType = std::unordered_map<NodeType, lb::NodeInfo>;
 
   LoadMsg() = default;
-  LoadMsg(NodeType in_from_node, NodeLoadType const& in_node_load)
-    : from_node_(in_from_node), node_load_(in_node_load)
+  LoadMsg(NodeType in_from_node, NodeInfoType const& in_node_info)
+    : from_node_(in_from_node), node_info_(in_node_info)
   { }
 
-  NodeLoadType const& getNodeLoad() const {
-    return node_load_;
+  NodeInfoType const& getNodeInfo() const {
+    return node_info_;
   }
 
-  void addNodeLoad(NodeType node, LoadType load) {
-    node_load_[node] = load;
+  NodeClusterSummaryType const& getNodeClusterSummary() const {
+    return node_cluster_summary_;
+  }
+
+  void addNodeInfo(NodeType node, lb::NodeInfo info) {
+    node_info_[node] = info;
+  }
+
+  void addNodeClusters(
+    NodeType node,
+    lb::BytesType rank_working_bytes,
+    lb::ClusterSummaryType summary
+  ) {
+    node_cluster_summary_[node] = std::make_tuple(rank_working_bytes, summary);
   }
 
   NodeType getFromNode() const { return from_node_; }
@@ -76,12 +177,14 @@ struct LoadMsg : vt::Message {
   void serialize(SerializerT& s) {
     MessageParentType::serialize(s);
     s | from_node_;
-    s | node_load_;
+    s | node_info_;
+    s | node_cluster_summary_;
   }
 
 private:
   NodeType from_node_     = uninitialized_destination;
-  NodeLoadType node_load_ = {};
+  NodeInfoType node_info_ = {};
+  NodeClusterSummaryType node_cluster_summary_ = {};
 };
 
 struct LoadMsgAsync : LoadMsg {
@@ -90,9 +193,9 @@ struct LoadMsgAsync : LoadMsg {
 
   LoadMsgAsync() = default;
   LoadMsgAsync(
-    NodeType in_from_node, NodeLoadType const& in_node_load, int round
+    NodeType in_from_node, NodeInfoType const& in_node_info, int round
   )
-    : LoadMsg(in_from_node, in_node_load), round_(round)
+    : LoadMsg(in_from_node, in_node_info), round_(round)
   { }
 
   uint8_t getRound() const {

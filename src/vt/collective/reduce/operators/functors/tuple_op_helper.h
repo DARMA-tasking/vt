@@ -5,7 +5,7 @@
 //                              tuple_op_helper.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -65,7 +65,9 @@ struct ApplyOp<Op, cur, max, std::enable_if_t<cur != max>> {
 template <typename Op, int cur, int max>
 struct ApplyOp<Op, cur, max, std::enable_if_t<cur == max>> {
   template <typename Tuple1, typename Tuple2>
-  static void apply(Tuple1& t1, Tuple2 const& t2) { }
+  static void apply(
+    [[maybe_unused]] Tuple1& t1, [[maybe_unused]] Tuple2 const& t2
+  ) { }
 };
 
 //

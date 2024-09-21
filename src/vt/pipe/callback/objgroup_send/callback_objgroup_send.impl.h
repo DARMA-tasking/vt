@@ -5,7 +5,7 @@
 //                        callback_objgroup_send.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -57,7 +57,9 @@ void CallbackObjGroupSend::serialize(SerializerT& s) {
 }
 
 template <typename MsgT>
-void CallbackObjGroupSend::trigger(MsgT* in_msg, PipeType const& pipe) {
+void CallbackObjGroupSend::trigger(
+  MsgT* in_msg, [[maybe_unused]] PipeType const& pipe
+) {
   auto msg = promoteMsg(in_msg);
   objgroup::send<MsgT>(msg,handler_,node_);
 }

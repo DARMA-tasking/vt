@@ -5,7 +5,7 @@
 //                          test_collectives_reduce.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -81,7 +81,10 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
   }
 };
 
-vt::NodeType map(vt::Index1D* idx, vt::Index1D* max_idx, vt::NodeType num_nodes) {
+vt::NodeType map(
+  vt::Index1D* idx, [[maybe_unused]] vt::Index1D* max_idx,
+  vt::NodeType num_nodes
+) {
   return (idx->x() % (num_nodes-1))+1;
 }
 

@@ -5,7 +5,7 @@
 //                        callback_proxy_bcast_tl.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -61,7 +61,7 @@
 namespace vt { namespace pipe { namespace callback {
 
 template <typename SerializerT>
-void CallbackProxyBcastTypeless::serialize(SerializerT& s) {}
+void CallbackProxyBcastTypeless::serialize([[maybe_unused]] SerializerT& s) {}
 
 template <typename MsgT>
 void CallbackProxyBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
@@ -106,7 +106,7 @@ void CallbackProxyBcastDirect::trigger(MsgT* msg, PipeType const& pipe) {
 
   auto dispatcher = vrt::collection::getDispatcher(vrt_dispatch_han_);
   auto const& proxy = proxy_;
-  dispatcher->broadcast(proxy, msg, handler_);
+  dispatcher->broadcast(proxy, reinterpret_cast<std::byte*>(msg), handler_);
 }
 
 }}} /* end namespace vt::pipe::callback */

@@ -5,7 +5,7 @@
 //                          callback_proxy_bcast_tl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -57,7 +57,9 @@ struct CallbackProxyBcastTypeless : CallbackBaseTL<CallbackProxyBcastTypeless> {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  bool operator==(CallbackProxyBcastTypeless const& other) const {
+  bool operator==(
+    [[maybe_unused]] CallbackProxyBcastTypeless const& other
+  ) const {
     return true;
   }
 
@@ -65,7 +67,7 @@ public:
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe);
 
-  void triggerVoid(PipeType const& pipe) {
+  void triggerVoid([[maybe_unused]] PipeType const& pipe) {
     vtAssert(0, "Must not be void");
   }
 };
@@ -94,7 +96,7 @@ public:
   template <typename MsgT>
   void trigger(MsgT* msg, PipeType const& pipe);
 
-  void triggerVoid(PipeType const& pipe) {
+  void triggerVoid([[maybe_unused]] PipeType const& pipe) {
     vtAssert(0, "Must not be void");
   }
 

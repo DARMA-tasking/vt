@@ -5,7 +5,7 @@
 //                        callback_anon_listener.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -75,7 +75,9 @@ void AnonListener<SignalT>::trigger_(SignalDataType* data) {
 }
 
 template <typename SignalT>
-void AnonListener<SignalT>::trigger_(SignalDataType* data, PipeType const& pipe_id) {
+void AnonListener<SignalT>::trigger_(
+  SignalDataType* data, [[maybe_unused]] PipeType const& pipe_id
+) {
   return trigger_(data);
 }
 

@@ -5,7 +5,7 @@
 //                           lb_args_enum_converter.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -100,7 +100,7 @@ struct LBArgsEnumConverter {
       auto err = fmt::format(
         "LBArgsEnumConverter: enum '{}' value '{}' corresponding to LB "
         "argument '{}' does not have a string associated with it",
-        enum_type_, e, par_name_
+        enum_type_, static_cast<std::underlying_type_t<T>>(e), par_name_
       );
       vtAbort(err);
     }

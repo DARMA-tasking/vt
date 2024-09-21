@@ -5,7 +5,7 @@
 //                            hello_world_functor.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -64,7 +64,7 @@ struct MultipleFunctions {
     fmt::print("{}: MultipleFunctions -> Hello from node {}\n", vt::theContext()->getNode(), msg->from);
   }
 
-  void operator()(AnotherMsg* msg) const {
+  void operator()([[maybe_unused]] AnotherMsg* msg) const {
     fmt::print("{}: MultipleFunctions with AnotherMsg\n", vt::theContext()->getNode());
   }
 };

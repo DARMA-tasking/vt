@@ -5,7 +5,7 @@
 //                        test_workload_data_migrator.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -240,7 +240,7 @@ TEST_F(TestWorkloadDataMigrator, test_normalize_call) {
       auto user = new_model->getUserData(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
-      EXPECT_EQ(user.size(), 1);
+      EXPECT_EQ(user.size(), static_cast<std::size_t>(1));
       if (user.size() == 1) {
         auto it = user.find(std::string("tag"));
         EXPECT_TRUE(it != user.end());
@@ -299,7 +299,7 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_home) {
       auto user = back_home_model->getUserData(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
-      EXPECT_EQ(user.size(), 1);
+      EXPECT_EQ(user.size(), static_cast<std::size_t>(1));
       if (user.size() == 1) {
         auto it = user.find(std::string("tag"));
         EXPECT_TRUE(it != user.end());
@@ -372,7 +372,7 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_home) {
       auto user = back_home_if_not_here_model->getUserData(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
-      EXPECT_EQ(user.size(), 1);
+      EXPECT_EQ(user.size(), static_cast<std::size_t>(1));
       if (user.size() == 1) {
         auto it = user.find(std::string("tag"));
         EXPECT_TRUE(it != user.end());
@@ -435,7 +435,7 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_home) {
       auto user = here_model->getUserData(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
-      EXPECT_EQ(user.size(), 1);
+      EXPECT_EQ(user.size(), static_cast<std::size_t>(1));
       if (user.size() == 1) {
         auto it = user.find(std::string("tag"));
         EXPECT_TRUE(it != user.end());
@@ -509,7 +509,7 @@ TEST_F(TestWorkloadDataMigrator, test_move_some_data_here_from_home) {
       auto user = here_model->getUserData(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
-      EXPECT_EQ(user.size(), 1);
+      EXPECT_EQ(user.size(), static_cast<std::size_t>(1));
       if (user.size() == 1) {
         auto it = user.find(std::string("tag"));
         EXPECT_TRUE(it != user.end());
@@ -554,7 +554,7 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_1) {
   // then iterate over it to make sure what shows up here is correct
   for (auto obj_id : *here_model) {
     if (obj_id.isMigratable()) {
-      EXPECT_EQ(migratable_objects_here.count(obj_id), 1);
+      EXPECT_EQ(migratable_objects_here.count(obj_id), static_cast<std::size_t>(1));
 
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 
@@ -574,7 +574,7 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_1) {
       auto user = here_model->getUserData(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
-      EXPECT_EQ(user.size(), 1);
+      EXPECT_EQ(user.size(), static_cast<std::size_t>(1));
       if (user.size() == 1) {
         auto it = user.find(std::string("tag"));
         EXPECT_TRUE(it != user.end());
@@ -619,7 +619,7 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_2) {
   // then iterate over it to make sure what shows up here is correct
   for (auto obj_id : *here_model) {
     if (obj_id.isMigratable()) {
-      EXPECT_EQ(migratable_objects_here.count(obj_id), 1);
+      EXPECT_EQ(migratable_objects_here.count(obj_id), static_cast<std::size_t>(1));
 
       EXPECT_EQ(obj_id.getCurrNode(), this_node);
 
@@ -639,7 +639,7 @@ TEST_F(TestWorkloadDataMigrator, test_move_data_here_from_whereever_2) {
       auto user = here_model->getUserData(
         obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
       );
-      EXPECT_EQ(user.size(), 1);
+      EXPECT_EQ(user.size(), static_cast<std::size_t>(1));
       if (user.size() == 1) {
         auto it = user.find(std::string("tag"));
         EXPECT_TRUE(it != user.end());
@@ -878,7 +878,7 @@ TEST_F(TestWorkloadReplay, test_run_replay_verify_some_stats) {
 
   // then replay them but allow the lb to place objects differently
   vt::vrt::collection::balance::replay::replayWorkloads(
-    initial_phase, num_phases, lbdh, stats_cb
+    initial_phase, num_phases, 0, lbdh, stats_cb
   );
 }
 

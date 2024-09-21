@@ -5,7 +5,7 @@
 //                               test_storage.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -79,7 +79,7 @@ struct TestCol : Collection<TestCol, Index1D> {
     testHandlerValues(msg);
   }
 
-  void testHandlerValues(TestMsg* msg) {
+  void testHandlerValues([[maybe_unused]] TestMsg* msg) {
     EXPECT_EQ(this->valGet<int>("hello"), this->getIndex().x());
 
     std::vector<int> in_vec{5,4,1,7,3};

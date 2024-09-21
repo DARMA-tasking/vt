@@ -5,7 +5,7 @@
 //                        callback_objgroup_bcast.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-
 #if !defined INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_BCAST_CALLBACK_OBJGROUP_BCAST_IMPL_H
 #define INCLUDED_VT_PIPE_CALLBACK_OBJGROUP_BCAST_CALLBACK_OBJGROUP_BCAST_IMPL_H
 
@@ -58,7 +57,9 @@ void CallbackObjGroupBcast::serialize(SerializerT& s) {
 }
 
 template <typename MsgT>
-void CallbackObjGroupBcast::trigger(MsgT* in_msg, PipeType const& pipe) {
+void CallbackObjGroupBcast::trigger(
+  MsgT* in_msg, [[maybe_unused]] PipeType const& pipe
+) {
   auto msg = promoteMsg(in_msg);
   envelopeSetGroup(msg->env, default_group);
   objgroup::broadcast<MsgT>(msg,handler_);

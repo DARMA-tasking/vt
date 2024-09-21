@@ -5,7 +5,7 @@
 //                                   gauge.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -82,7 +82,7 @@ public:
    *
    * \param[in] val the new value
    */
-  void update(T val) {
+  void update([[maybe_unused]] T val) {
 #   if vt_check_enabled(diagnostics)
     this->updateStats(val);
 #   endif

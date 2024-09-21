@@ -5,7 +5,7 @@
 //                               make_runnable.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -167,7 +167,7 @@ struct RunnableMaker {
   RunnableMaker&& withObjGroup(ElmT* elm) {
     set_handler_ = true;
     if (handler_ != uninitialized_handler) {
-      impl_->setupHandlerObjGroup(elm, handler_);
+      impl_->setupHandlerObjGroup(reinterpret_cast<std::byte*>(elm), handler_);
     }
     return std::move(*this);
   }
@@ -180,7 +180,9 @@ struct RunnableMaker {
    * captured one)
    */
   template <typename ElmT, typename MsgU>
-  RunnableMaker&& withLBData(ElmT* elm, MsgU* msg) {
+  RunnableMaker&& withLBData(
+    [[maybe_unused]] ElmT* elm, [[maybe_unused]] MsgU* msg
+  ) {
 #if vt_check_enabled(lblite)
     impl_->addContextLB(elm, msg);
 #endif
@@ -204,7 +206,9 @@ struct RunnableMaker {
    * \param[in] elm_id the element ID
    */
   template <typename LBDataT, typename T>
-  RunnableMaker&& withLBData(LBDataT* lb_data, T elm_id) {
+  RunnableMaker&& withLBData(
+    [[maybe_unused]] LBDataT* lb_data, [[maybe_unused]] T elm_id
+  ) {
 #if vt_check_enabled(lblite)
     impl_->addContextLB(lb_data, elm_id);
 #endif
@@ -217,7 +221,7 @@ struct RunnableMaker {
    * \param[in] elm the element
    */
   template <typename ElmT>
-  RunnableMaker&& withLBData(ElmT* elm) {
+  RunnableMaker&& withLBData([[maybe_unused]] ElmT* elm) {
 #if vt_check_enabled(lblite)
     impl_->addContextLB(elm, msg_.get());
 #endif

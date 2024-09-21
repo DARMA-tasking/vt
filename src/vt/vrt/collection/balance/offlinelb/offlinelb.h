@@ -5,7 +5,7 @@
 //                                 offlinelb.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -62,7 +62,7 @@ struct OfflineLB : BaseLB {
 
   void init(objgroup::proxy::Proxy<OfflineLB> in_proxy);
   void runLB(LoadType) override;
-  void inputParams(balance::ConfigEntry* config) override { }
+  void inputParams([[maybe_unused]] balance::ConfigEntry* config) override { }
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp() {
     return std::unordered_map<std::string, std::string>{};

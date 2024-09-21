@@ -5,7 +5,7 @@
 //                               node_lb_data.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -58,8 +58,6 @@
 #include <sys/stat.h>
 #include <memory>
 
-#include <fmt-vt/core.h>
-
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void NodeLBData::setProxy(objgroup::proxy::Proxy<NodeLBData> in_proxy) {
@@ -102,12 +100,21 @@ NodeLBData::getUserData() const {
   return &lb_data_->user_defined_lb_info_;
 }
 
+std::unordered_map<PhaseType, DataMapType> const*
+NodeLBData::getPhaseAttributes() const {
+  return &lb_data_->node_user_attributes_;
+}
+
 std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() const {
   return &lb_data_->node_comm_;
 }
 
 std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
   return &lb_data_->node_subphase_comm_;
+}
+
+ElmUserDataType const* NodeLBData::getNodeAttributes() const {
+  return &lb_data_->rank_attributes_;
 }
 
 CommMapType* NodeLBData::getNodeComm(PhaseType phase) {
@@ -127,6 +134,7 @@ void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
     lb_data_->node_comm_.erase(phase - look_back);
     lb_data_->node_subphase_comm_.erase(phase - look_back);
     lb_data_->user_defined_lb_info_.erase(phase - look_back);
+    lb_data_->node_user_attributes_.erase(phase - look_back);
   }
 
   // Clear migrate lambdas and proxy lookup since LB is complete
@@ -215,6 +223,10 @@ void NodeLBData::createLBDataFile() {
     if(phasesMetadata) {
        metadata["phases"] = *phasesMetadata;
     }
+    auto attributesMetadata = lb_data_->rankAttributesToJson();
+    if(attributesMetadata) {
+      metadata["attributes"] = *attributesMetadata;
+    }
     lb_data_writer_ = std::make_unique<JSONAppender>(
       "phases", metadata, file_name, compress
     );
@@ -260,6 +272,8 @@ getRecvSendDirection(elm::CommKeyType const& comm) {
   // this case is just to avoid warning of not handled enum
   case elm::CommCategory::CollectiveToCollectionBcast:
   case elm::CommCategory::LocalInvoke:
+  case elm::CommCategory::WriteShared:
+  case elm::CommCategory::ReadOnlyShared:
     return std::make_pair(ElementIDType{}, ElementIDType{});
   }
 
@@ -350,6 +364,11 @@ void NodeLBData::addNodeLBData(
     storable->foreachLB(
       [&](std::string const& key, auto val) {
         lb_data_->user_defined_lb_info_[phase][id][key] = val->toVariant();
+      }
+    );
+    storable->collectAttributes(
+      [&](std::string const& key, auto val) {
+        lb_data_->node_user_attributes_[phase][id][key] = val->toVariant();
       }
     );
   }

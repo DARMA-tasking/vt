@@ -5,7 +5,7 @@
 //                            test_hops.extended.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -118,9 +118,7 @@ struct TestColl : Collection<TestColl,vt::Index2D> {
     EXPECT_TRUE(not m->do_check_ or m->getHops() <= 1);
   }
 
-  void cont(TestMsg* m) {
-
-  }
+  void cont([[maybe_unused]] TestMsg* m) { }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {

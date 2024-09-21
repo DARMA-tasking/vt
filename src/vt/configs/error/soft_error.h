@@ -5,7 +5,7 @@
 //                                 soft_error.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -59,7 +59,7 @@
 
 #include <string>
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_CORE
 
 namespace vt {
 
@@ -86,7 +86,7 @@ inline std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 warningImpl(
   std::string const& str, ErrorCodeType error, bool quit,
   std::string const& file, int const line, std::string const& func,
-  Args&&... args
+  [[maybe_unused]] Args&&... args
 ) {
   auto msg = "vtWarn() Invoked";
   auto inf = debug::stringizeMessage(msg,str,"",file,line,func,error);

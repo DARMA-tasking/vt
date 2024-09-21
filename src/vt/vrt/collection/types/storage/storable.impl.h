@@ -5,7 +5,7 @@
 //                               storable.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -60,7 +60,7 @@ void Storable::valInsert(std::string const& str, U&& u) {
     std::forward_as_tuple(str),
     std::forward_as_tuple(
       std::make_unique<StoreElm<typename std::decay<U>::type>>(
-        std::forward<U>(u), false, false
+        std::forward<U>(u), false, false, false
       )
     )
   );
@@ -68,14 +68,14 @@ void Storable::valInsert(std::string const& str, U&& u) {
 
 template <typename U>
 void Storable::valInsert(
-  std::string const& str, U&& u, bool dump_to_json, bool provide_to_lb
+  std::string const& str, U&& u, bool dump_to_json, bool provide_to_lb, bool dump_to_attributes
 ) {
   map_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(str),
     std::forward_as_tuple(
       std::make_unique<StoreElm<typename std::decay<U>::type>>(
-        std::forward<U>(u), dump_to_json, provide_to_lb
+        std::forward<U>(u), dump_to_json, provide_to_lb, dump_to_attributes
       )
     )
   );

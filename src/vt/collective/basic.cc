@@ -5,7 +5,7 @@
 //                                   basic.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -56,7 +56,7 @@ void abort(std::string const str, int32_t const code) {
 }
 
 void output(
-  std::string const str, int32_t const code, bool error, bool formatted,
+  std::string const& str, int32_t const code, bool error, bool formatted,
   bool decorate, bool abort_out
 ) {
 #if !vt_check_enabled(trace_only)

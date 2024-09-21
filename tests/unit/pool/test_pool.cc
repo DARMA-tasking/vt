@@ -5,7 +5,7 @@
 //                                 test_pool.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -63,13 +63,13 @@ struct TestPool : TestParallelHarness {
   template <int64_t num_bytes>
   static void testPoolFun(TestMsg<num_bytes>* prev_msg);
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
   }
 };
 
 template <int64_t num_bytes>
-void TestPool::testPoolFun(TestMsg<num_bytes>* prev_msg) {
+void TestPool::testPoolFun([[maybe_unused]] TestMsg<num_bytes>* prev_msg) {
   #if DEBUG_TEST_HARNESS_PRINT
     fmt::print("testPoolFun: num_bytes={}\n", num_bytes);
   #endif
@@ -81,7 +81,9 @@ void TestPool::testPoolFun(TestMsg<num_bytes>* prev_msg) {
 }
 
 template <>
-void TestPool::testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
+void TestPool::testPoolFun<max_bytes>(
+  [[maybe_unused]] TestMsg<max_bytes>* msg
+) { }
 
 TEST_F(TestPool, pool_message_alloc) {
   using namespace vt;
@@ -107,12 +109,12 @@ TEST_F(TestPool, pool_alloc) {
   std::unique_ptr<pool::Pool> testPool = std::make_unique<pool::Pool>();
 
   for (size_t cur_bytes = 1; cur_bytes < max_bytes; cur_bytes *= 2) {
-    void* ptr = testPool->alloc(cur_bytes);
+    std::byte* ptr = testPool->alloc(cur_bytes);
     std::memset(ptr, init_val, cur_bytes);
     //fmt::print("alloc {} bytes, ptr={}\n", cur_bytes, ptr);
     EXPECT_NE(ptr, nullptr);
     for (size_t i = 0; i < cur_bytes; i++) {
-      EXPECT_EQ(static_cast<CharType*>(ptr)[i], init_val);
+      EXPECT_EQ(reinterpret_cast<CharType*>(ptr)[i], init_val);
     }
     testPool->dealloc(ptr);
   }

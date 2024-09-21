@@ -5,7 +5,7 @@
 //                                  manager.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -446,7 +446,7 @@ private:
    * \return a new untyped proxy
    */
   ObjGroupProxyType makeCollectiveImpl(
-    std::string const& label, HolderBasePtrType b, void* obj_ptr
+    std::string const& label, HolderBasePtrType b, std::byte* obj_ptr
   );
 
   /**
@@ -496,7 +496,7 @@ private:
   /// Type-erased pointers to the objects held on this node
   std::unordered_map<ObjGroupProxyType, HolderBasePtrType> objs_;
   /// Reverse lookup map from an object pointer to the proxy
-  std::unordered_map<void*, ObjGroupProxyType> obj_to_proxy_;
+  std::unordered_map<std::byte*, ObjGroupProxyType> obj_to_proxy_;
   /// Messages that are pending creation for delivery
   std::unordered_map<ObjGroupProxyType, std::vector<ActionType>> pending_;
   /// Map of object groups' labels

@@ -5,7 +5,7 @@
 //                                lb_manager.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -73,6 +73,10 @@
 #include "vt/vrt/collection/manager.h"
 #include "vt/utils/json/json_appender.h"
 
+#if vt_check_enabled(tv)
+# include <vt-tv/utility/parse_render.h>
+#endif
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/ std::unique_ptr<LBManager> LBManager::construct() {
@@ -130,7 +134,11 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   } else {
     auto interval = theConfig()->vt_lb_interval;
     vtAssert(interval != 0, "LB Interval must not be 0");
-    if (phase % interval == 1 || (interval == 1 && phase != 0)) {
+    vt::PhaseType offset = theConfig()->vt_lb_run_lb_first_phase ? 0 : 1;
+    if (
+      phase % interval == offset ||
+      (interval == 1 && phase != 0)
+    ) {
       bool name_match = false;
       for (auto&& elm : get_lb_names()) {
         if (elm.second == theConfig()->vt_lb_name) {
@@ -150,6 +158,11 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
     }
   }
 
+  // Check if LBDataRestartReader requires to run OfflineLB for a given phase.
+  if(the_lb == LBType::OfflineLB && !theLBDataReader()->needsLB(phase)) {
+    the_lb = LBType::NoLB;
+  }
+
   vt_debug_print(
     terse, lb,
     "LBManager::decidedLBToRun: phase={}, return lb_={}\n",
@@ -166,19 +179,6 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   model_->setLoads(nlb_data->getNodeLoad(),
                    nlb_data->getNodeComm(),
                    nlb_data->getUserData());
-}
-
-template <typename LB>
-LBManager::LBProxyType
-LBManager::makeLB(std::string const& lb_name) {
-  auto proxy = theObjGroup()->makeCollective<LB>(lb_name);
-  auto strat = proxy.get();
-  strat->init(proxy);
-  auto base_proxy = proxy.template castToBase<lb::BaseLB>();
-
-  destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
-
-  return base_proxy;
 }
 
 void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
@@ -204,7 +204,16 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
     commitPhaseStatistics(phase);
   }
 
+  auto const start_time = timing::getCurrentTime();
   applyReassignment(reassignment);
+  if (theContext()->getNode() == 0) {
+    auto const mig_time = timing::getCurrentTime() - start_time;
+    vt_debug_print(
+      terse, phase,
+      "phase={}: mig_time={}\n",
+      phase, mig_time
+    );
+  }
 
   // Inform the collection manager to rebuild spanning trees if needed
   if (reassignment->global_migration_count != 0) {
@@ -258,10 +267,19 @@ LBManager::runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb) {
 
   vt_debug_print(terse, lb, "LBManager: running strategy\n");
 
+  auto const start_time = timing::getCurrentTime();
   auto reassignment = strat->startLB(
     phase, base_proxy, model_.get(), stats, *comm, total_load_from_model,
     *data_map
   );
+  if (theContext()->getNode() == 0) {
+    auto const lb_time = timing::getCurrentTime() - start_time;
+    vt_debug_print(
+      terse, phase,
+      "phase={}: lb_time={}\n",
+      phase, lb_time
+    );
+  }
   cb.send(reassignment, phase);
 }
 
@@ -464,6 +482,57 @@ void LBManager::fatalError() {
   closeStatisticsFile();
 }
 
+#if vt_check_enabled(tv)
+struct GatherTVInfo {
+  GatherTVInfo() = default;
+
+  std::unordered_map<NodeType, tv::Rank> rank_map;
+  std::unordered_map<ElementIDType, tv::ObjectInfo> info;
+  PhaseType phase = 0;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | rank_map | info | phase;
+  }
+
+  friend GatherTVInfo operator+(GatherTVInfo a1, GatherTVInfo const& a2) {
+    for (auto& [node, rank] : a2.rank_map) {
+      a1.rank_map[node] = rank;
+    }
+    for (auto& [elm, oi] : a2.info) {
+      a1.info[elm] = oi;
+    }
+    return a1;
+  }
+};
+
+
+static void collectTVData(GatherTVInfo& gather) {
+  using tv::utility::ParseRender;
+  ParseRender pr{theConfig()->vt_tv_config_file};
+  auto info = std::make_unique<tv::Info>(
+    std::move(gather.info),
+    std::move(gather.rank_map)
+  );
+  pr.parseAndRender(gather.phase, std::move(info));
+}
+
+void gatherTVGlobal(PhaseType phase, objgroup::proxy::Proxy<LBManager> &proxy) {
+  vt::runInEpochCollective([&]{
+    auto phase_work = theNodeLBData()->getLBData()->toTV(phase);
+    auto object_info = theNodeLBData()->getLBData()->getObjInfo(phase);
+    std::unordered_map<PhaseType, vt::tv::PhaseWork> map;
+    map[phase] = std::move(*phase_work);
+    auto this_node = theContext()->getNode();
+    vt::tv::Rank r{this_node, std::move(map)};
+    std::unordered_map<NodeType, tv::Rank> rank_map;
+    rank_map[this_node] = std::move(r);
+    GatherTVInfo gather{rank_map, object_info, phase};
+    proxy.reduce<collectTVData, vt::collective::PlusOp>(0, std::move(gather));
+  });
+}
+#endif
+
 void LBManager::finishedLB(PhaseType phase) {
   vt_debug_print(
     normal, lb,
@@ -474,6 +543,12 @@ void LBManager::finishedLB(PhaseType phase) {
   theNodeLBData()->outputLBDataForPhase(phase);
 
   destroyLB();
+
+#if vt_check_enabled(tv)
+  if (theConfig()->vt_tv) {
+    gatherTVGlobal(phase, proxy_);
+  }
+#endif
 }
 
 void LBManager::statsHandler(std::vector<balance::LoadData> const& in_stat_vec) {

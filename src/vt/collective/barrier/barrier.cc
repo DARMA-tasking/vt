@@ -5,7 +5,7 @@
 //                                  barrier.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -90,9 +90,7 @@ Barrier::BarrierStateType& Barrier::insertFindBarrier(
   return iter->second;
 }
 
-void Barrier::removeBarrier(
-  bool const& is_named, bool const& is_wait, BarrierType const& barrier
-) {
+void Barrier::removeBarrier(bool const& is_named, BarrierType const& barrier) {
   auto& state = is_named ? named_barrier_state_ : unnamed_barrier_state_;
 
   auto iter = state.find(barrier);
@@ -145,7 +143,7 @@ void Barrier::waitBarrier(
     "waitBarrier: released: named={}, barrier={}\n", is_named, barrier
   );
 
-  removeBarrier(is_named, is_wait, barrier);
+  removeBarrier(is_named, barrier);
 }
 
 void Barrier::contBarrier(

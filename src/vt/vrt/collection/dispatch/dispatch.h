@@ -5,7 +5,7 @@
 //                                  dispatch.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -61,9 +61,9 @@ struct DispatchCollectionBase {
   virtual ~DispatchCollectionBase() {}
 
   virtual void
-  broadcast(VirtualProxyType proxy, void* msg, HandlerType han) = 0;
+  broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
   virtual void
-  send(VirtualProxyType proxy, void* idx, void* msg, HandlerType han) = 0;
+  send(VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han) = 0;
 
   template <typename=void>
   VirtualProxyType getDefaultProxy() const;
@@ -83,9 +83,9 @@ private:
 template <typename ColT, typename MsgT>
 struct DispatchCollection final : DispatchCollectionBase {
 private:
-  void broadcast(VirtualProxyType proxy, void* msg, HandlerType han) override;
+  void broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
   void send(
-    VirtualProxyType proxy, void* idx, void* msg, HandlerType han
+    VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han
   ) override;
 };
 

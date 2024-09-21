@@ -5,7 +5,7 @@
 //                              test_rdma_common.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -55,7 +55,7 @@ struct UpdateData {
   static void init(
     HandleT& handle, int space, std::size_t size, vt::NodeType rank
 ) {
-    handle.modifyExclusive([=](T* val, std::size_t count){
+    handle.modifyExclusive([=](T* val, [[maybe_unused]] std::size_t count){
       setMem(val, space, size, rank, 0);
     });
   }

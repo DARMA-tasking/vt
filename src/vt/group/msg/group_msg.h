@@ -5,7 +5,7 @@
 //                                 group_msg.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -129,13 +129,13 @@ struct GroupListMsg : GroupInfoMsg<GroupMsg<::vt::PayloadMessage>> {
       )
   {
     setPut(
-      in_range->getBound(),
+      reinterpret_cast<const std::byte*>(in_range->getBound()),
       in_range->getSize() * sizeof(RangeType::BoundType)
     );
   }
 
   RangeType getRange() {
-    auto const& ptr = static_cast<RangeType::BoundType*>(getPut());
+    auto const& ptr = reinterpret_cast<RangeType::BoundType*>(getPut());
     return region::ShallowList(ptr, getCount());
   }
 };

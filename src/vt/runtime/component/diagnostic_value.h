@@ -5,7 +5,7 @@
 //                              diagnostic_value.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -331,7 +331,7 @@ struct DiagnosticSnapshotValues {
         break;
       case DiagnosticUpdate::Avg:
         v.incrementN();
-        // no break to include update for Avg after increment
+        [[fallthrough]]; // no break to include update for Avg after increment
       case DiagnosticUpdate::Sum:
         v.update(v.getRawValue() + val);
         break;

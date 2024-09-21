@@ -32,6 +32,7 @@ variables:
   VT_POOL: [% vt_pool %]
   VT_EXTENDED_TESTS: [% vt_extended_tests %]
   VT_TESTS_NUM_NODES: [% vt_tests_num_nodes %]
+  VT_EXTERNAL_FMT: [% vt_external_fmt %]
   VT_UNITY_BUILD: [% vt_unity_build %]
   VT_PRODUCTION_BUILD: [% vt_production_build %]
   VT_FCONTEXT: [% vt_fcontext %]
@@ -41,8 +42,12 @@ variables:
   VT_NO_COLOR: [% vt_no_color %]
   VT_BUILD_SHARED_LIBS: [% vt_build_shared_libs %]
   VT_INCLUSION: [% vt_inclusion %]
+  VT_DEBUG_VERBOSE: [% vt_debug_verbose %]
+  VT_KOKKOS_ENABLED: [% vt_kokkos_enabled %]
+  VT_TV_ENABLED: [% vt_tv_enabled %]
   CMAKE_CXX_STANDARD: [% cmake_cxx_standard %]
-  TEST_LB_SCHEMA: [% test_lb_schema %]
+  VT_CI_TEST_LB_SCHEMA: [% vt_ci_test_lb_schema %]
+  RUN_FULL_CI: [% run_full_ci %]
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: [% cache_name %]
   volume_name: [% volume_name %]
@@ -69,6 +74,7 @@ stages:
       - task: Bash@3
         displayName: Build timestamp for caching
         continueOnError: true
+        condition: eq(variables['RUN_FULL_CI'], 'true')
         inputs:
           targetType: 'inline'
           script: |
@@ -91,14 +97,14 @@ stages:
       - task: Bash@3
         displayName: Output timestamp for caching
         continueOnError: true
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetType: 'inline'
           script: 'echo "my pipeline variable is $(TS) $(TS_YEAR) $(TS_MONTH) $(TS_DAY)"'
       - task: Cache@2
         displayName: Update cache
         continueOnError: true
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           securityNamespace: cache
           key: $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY) | $(TS)
@@ -116,16 +122,18 @@ stages:
           script: |
             val=$(./scripts/check_containers.sh)
             echo "##vso[task.setvariable variable=compose_command]$val"
-      - task: DockerCompose@0
+      - task: DockerCompose@1
         displayName: Pull container
         inputs:
+          projectName: darma-tasking-vt
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
           dockerComposeCommand: '$(compose_command) [% docker_target %]'
-      - task: DockerCompose@0
+      - task: DockerCompose@1
         displayName: Build container
         inputs:
+          projectName: darma-tasking-vt
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
@@ -135,7 +143,7 @@ stages:
       - task: Bash@3
         displayName: Put compilation's and tests' logs in PR comment
         continueOnError: true
-        condition: and(succeededOrFailed(), eq(variables['Build.Reason'], 'PullRequest'))
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), and(succeededOrFailed(), eq(variables['Build.Reason'], 'PullRequest')))
         inputs:
           targetType: 'inline'
           script: |
@@ -151,11 +159,12 @@ stages:
                 "$(Agent.JobStatus)"
         env:
           GITHUB_PAT: $(github_pat)
-      - task: DockerCompose@0
+      - task: DockerCompose@1
         displayName: Push container to registry
         continueOnError: true
         condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
         inputs:
+          projectName: darma-tasking-vt
           containerregistrytype: 'Container Registry'
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
           dockerComposeFile: '**/docker-compose.yml'
@@ -164,7 +173,7 @@ stages:
       - task: Bash@3
         displayName: Create artifacts
         continueOnError: true
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetType: 'inline'
           script: |
@@ -173,7 +182,7 @@ stages:
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake test output artifact
         continueOnError: true
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetPath: '$(Agent.TempDirectory)/LastTest.log.gz'
           artifact: 'CMakeLastTestLog'
@@ -181,7 +190,7 @@ stages:
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake full output artifact
         continueOnError: true
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        condition: and(eq(variables['RUN_FULL_CI'], 'true'), in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues'))
         inputs:
           targetPath: '$(Agent.TempDirectory)/cmake-output.log.gz'
           artifact: 'CMakeOutputLog'

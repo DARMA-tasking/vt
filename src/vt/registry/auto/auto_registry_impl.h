@@ -5,7 +5,7 @@
 //                             auto_registry_impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -40,6 +40,7 @@
 // *****************************************************************************
 //@HEADER
 */
+
 #if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_IMPL_H
 #define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_IMPL_H
 
@@ -130,7 +131,7 @@ inline HandlerType makeScatterHandler() {
   using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f, MessageT>;
   using ContainerType = ScatterContainerType;
   using RegInfoType = AutoRegInfoType<BaseScatterDispatcherPtr>;
-  using FuncType = void (*)(void*);
+  using FuncType = void (*)(std::byte*);
   using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
 
   constexpr bool is_auto = true;
@@ -200,7 +201,9 @@ inline AutoActiveType const& getAutoHandler(HandlerType const handler) {
 
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
 void setHandlerTraceNameObjGroup(
-  HandlerControlType ctrl, std::string const& name, std::string const& parent
+  [[maybe_unused]] HandlerControlType ctrl,
+  [[maybe_unused]] std::string const& name,
+  [[maybe_unused]] std::string const& parent
 ) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerObjGroup<ObjT,MsgT,f>(ctrl);
@@ -210,7 +213,10 @@ void setHandlerTraceNameObjGroup(
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-void setHandlerTraceName(std::string const& name, std::string const& parent) {
+void setHandlerTraceName(
+  [[maybe_unused]] std::string const& name,
+  [[maybe_unused]] std::string const& parent
+) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandler<MsgT,f>();
   auto const trace_id = handlerTraceID(handler);
@@ -219,7 +225,10 @@ void setHandlerTraceName(std::string const& name, std::string const& parent) {
 }
 
 template <typename T, T value>
-void setHandlerTraceName(std::string const& name, std::string const& parent) {
+void setHandlerTraceName(
+  [[maybe_unused]] std::string const& name,
+  [[maybe_unused]] std::string const& parent
+) {
 #if vt_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerParam<T,value>();
   auto const trace_id = handlerTraceID(handler);

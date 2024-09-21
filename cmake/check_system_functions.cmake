@@ -10,7 +10,6 @@ check_include_files(mach/mach.h vt_has_mach_mach_h)
 check_include_files(sys/resource.h vt_has_sys_resource_h)
 check_include_files(unistd.h vt_has_unistd_h)
 check_include_files(inttypes.h vt_has_inttypes_h)
-check_include_files(libunwind.h vt_has_libunwind_h)
 check_include_files(execinfo.h vt_has_execinfo_h)
 
 check_function_exists(mstats vt_has_mstats)

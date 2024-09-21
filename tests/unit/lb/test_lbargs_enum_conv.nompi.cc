@@ -5,7 +5,7 @@
 //                        test_lbargs_enum_conv.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -147,3 +147,27 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_config) {
 }
 
 }}} // end namespace vt::tests::unit
+
+VT_FMT_NAMESPACE_BEGIN
+  template <>
+  struct formatter<::vt::tests::unit::DummyEnum> {
+    constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(::vt::tests::unit::DummyEnum c, FormatContext& ctx) const {
+      std::string_view name = "Unknown";
+      switch (c) {
+      case ::vt::tests::unit::DummyEnum::One:
+        name = "One";
+        break;
+      case ::vt::tests::unit::DummyEnum::Two:
+        name = "Two";
+        break;
+      case ::vt::tests::unit::DummyEnum::Three:
+        name = "Three";
+        break;
+      }
+      return fmt::format_to(ctx.out(), name);
+    }
+  };
+VT_FMT_NAMESPACE_END

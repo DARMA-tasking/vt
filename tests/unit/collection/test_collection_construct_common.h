@@ -5,7 +5,7 @@
 //                      test_collection_construct_common.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -49,8 +49,8 @@
 #include "vt/vrt/collection/manager.h"
 #include "data_message.h"
 
-#include <fmt-vt/core.h>
-#include <fmt-vt/ostream.h>
+#include INCLUDE_FMT_CORE
+#include INCLUDE_FMT_OSTREAM
 
 #include <gtest/gtest.h>
 
@@ -71,7 +71,9 @@ struct ConstructHandlers {
     typename CollectionT,
     typename MessageT = typename CollectionT::MsgType
   >
-  static void handler(CollectionT* col, MessageT* msg) {
+  static void handler(
+    [[maybe_unused]] CollectionT* col, [[maybe_unused]] MessageT* msg
+  ) {
     // fmt::print(
     //   "{}: constructed TestCol: idx.x()={}\n",
     //   theContext()->getNode(), col->getIndex().x(), print_ptr(col)
@@ -98,7 +100,7 @@ struct ConstructParams {
     IndexType idx, std::string const& label
   ) {
     return theCollection()->constructCollective<ColT>(
-      idx, [=](IndexType my_idx) {
+      idx, [=]([[maybe_unused]] IndexType my_idx) {
         return std::make_unique<ColT>();
       }, label
     );

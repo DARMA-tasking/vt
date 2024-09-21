@@ -5,7 +5,7 @@
 //                                 ping_pong.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -45,7 +45,7 @@
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_CORE
 
 using namespace vt;
 using namespace vt::tests::perf::common;
@@ -60,7 +60,9 @@ static constexpr NodeType const pong_node = 1;
 
 vt::EpochType the_epoch = vt::no_epoch;
 
-struct MyTest : PerfTestHarness { };
+struct MyTest : PerfTestHarness {
+  MyTest() { DisableGlobalTimer(); }
+};
 
 struct NodeObj {
   template <int64_t num_bytes>
@@ -99,11 +101,7 @@ struct NodeObj {
       constexpr auto new_num_bytes = num_bytes * 2;
       test_obj_->StartTimer(fmt::format("{} Bytes", new_num_bytes));
 
-      proxy_[pong_node]
-        .send<
-          NodeObj::PingMsg<new_num_bytes>, &NodeObj::pingPong<new_num_bytes>
-        >();
-    } else {
+      proxy_[pong_node].send<&NodeObj::pingPong<new_num_bytes>>();
     }
   }
 
@@ -115,19 +113,12 @@ struct NodeObj {
       // End of iteration for node 1
       addPerfStats(num_bytes);
 
-      proxy_[0]
-        .send<
-          NodeObj::FinishedPingMsg<num_bytes>,
-          &NodeObj::finishedPing<num_bytes>>(num_bytes);
+      proxy_[0].send<&NodeObj::finishedPing<num_bytes>>(num_bytes);
     } else {
       NodeType const next =
         theContext()->getNode() == ping_node ? pong_node : ping_node;
 
-      auto msg = vt::makeMessage<NodeObj::PingMsg<num_bytes>>(cnt + 1);
-      proxy_[next]
-        .sendMsg<NodeObj::PingMsg<num_bytes>, &NodeObj::pingPong<num_bytes>>(
-          msg
-        );
+      proxy_[next].send<&NodeObj::pingPong<num_bytes>>(cnt + 1);
     }
   }
 
@@ -155,8 +146,7 @@ VT_PERF_TEST(MyTest, test_ping_pong) {
   StartTimer(fmt::format("{} Bytes", min_bytes));
 
   if (my_node_ == 0) {
-    grp_proxy[pong_node]
-      .send<NodeObj::PingMsg<min_bytes>, &NodeObj::pingPong<min_bytes>>();
+    grp_proxy[pong_node].send<&NodeObj::pingPong<min_bytes>>();
   }
 }
 

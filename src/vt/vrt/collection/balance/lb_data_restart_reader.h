@@ -5,7 +5,7 @@
 //                           lb_data_restart_reader.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -128,11 +128,11 @@ public:
    *
    * \param[in] phase the phase
    *
-   * \return element assigned to this node
+   * \return pointer to elements assigned to this node if not skipped
    */
-  std::set<ElementIDStruct> const& getDistro(PhaseType phase) {
+  std::shared_ptr<const std::set<ElementIDStruct>> getDistro(PhaseType phase) const {
     auto iter = history_.find(phase);
-    vtAssert(iter != history_.end(), "Must have a valid phase");
+    vtAssert(iter != history_.end(), "Must have a valid, not skipped phase");
     return iter->second;
   }
 
@@ -142,10 +142,31 @@ public:
    * \param[in] phase the phase to clear
    */
   void clearDistro(PhaseType phase) {
-    auto iter = history_.find(phase);
-    if (iter != history_.end()) {
-      history_.erase(iter);
+    history_.erase(phase);
+  }
+
+  /**
+   * \brief Add history for a given phase
+   *
+   * \param[in] phase the phase to be added
+   * \param[in] distro the distribution to be added
+   */
+  void addDistro(PhaseType phase, const std::set<ElementIDStruct>& distro) {
+    if (history_[phase] == nullptr) {
+      history_[phase] = std::make_shared<std::set<ElementIDStruct>>();
     }
+    history_[phase]->insert(distro.begin(), distro.end());
+  }
+
+  /**
+   * \brief Add identical phase to one already present
+   *
+   * \param[in] phase the phase to be added
+   * \param[in] identical the identical phase to be used
+   */
+  void addIdenticalPhase(PhaseType phase, PhaseType identical) {
+    vtAssert(history_.find(identical) != history_.end(), "Identical phase was not added to history map.");
+    history_[phase] = history_[identical];
   }
 
 private:
@@ -170,7 +191,7 @@ private:
   std::vector<bool> changed_distro_;
 
   /// History of mapping that was read in from the data files
-  std::unordered_map<PhaseType, std::set<ElementIDStruct>> history_;
+  std::unordered_map<PhaseType, std::shared_ptr<std::set<ElementIDStruct>>> history_;
 
   struct DepartMsg : vt::Message {
     DepartMsg(NodeType in_depart_node, PhaseType in_phase, ElementIDStruct in_elm)

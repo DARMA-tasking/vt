@@ -5,7 +5,7 @@
 //                           test_active_send_put.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -64,14 +64,14 @@ struct TestActiveSendPut : TestParameterHarnessNode {
   static NodeType from_node;
   static NodeType to_node;
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParameterHarnessNode::SetUp();
     from_node = 0;
     to_node = 1;
   }
 
   static void test_handler(PutTestMessage* msg) {
-    auto ptr = static_cast<int*>(msg->getPut());
+    auto ptr = reinterpret_cast<int*>(msg->getPut());
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
@@ -109,7 +109,7 @@ TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
     auto msg = makeMessage<PutTestMessage>(
       static_cast<int>(test_vec_2.size())
     );
-    msg->setPut(test_vec_2.data(), sizeof(int)*test_vec_2.size());
+    msg->setPut(reinterpret_cast<std::byte*>(test_vec_2.data()), sizeof(int)*test_vec_2.size());
     #if DEBUG_TEST_HARNESS_PRINT
       fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
     #endif

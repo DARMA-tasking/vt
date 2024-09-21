@@ -5,7 +5,7 @@
 //                             pipe_manager.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -67,7 +67,9 @@
 namespace vt { namespace pipe {
 
 template <typename MsgT>
-void PipeManager::triggerSendBack(PipeType const& pipe, MsgT* data) {
+void PipeManager::triggerSendBack(
+  PipeType const& pipe, [[maybe_unused]] MsgT* data
+) {
   auto const& this_node = theContext()->getNode();
   auto const& node_back = PipeIDBuilder::getNode(pipe);
   if (node_back != this_node) {

@@ -5,7 +5,7 @@
 //                              handle.node.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -80,7 +80,7 @@ template <typename T, HandleEnum E, typename I>
 void Handle<
   T,E,I,typename std::enable_if_t<std::is_same<I,vt::NodeType>::value>
 >::get(
-  vt::NodeType node, std::size_t len, int offset, Lock l
+  vt::NodeType node, std::size_t len, int offset, [[maybe_unused]] Lock l
 ) {
   rget(node, len, offset);
 }

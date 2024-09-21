@@ -5,7 +5,7 @@
 //                                 dense.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -75,7 +75,9 @@ NodeType defaultDenseIndexNDMap(IdxNDPtr<T,N> idx, IdxNDPtr<T,N> max, NodeType n
 
 // Default round robin mappings
 template <typename T>
-NodeType dense1DRoundRobinMap(Idx1DPtr<T> idx, Idx1DPtr<T> max, NodeType nx) {
+NodeType dense1DRoundRobinMap(
+  Idx1DPtr<T> idx, [[maybe_unused]] Idx1DPtr<T> max, NodeType nx
+) {
   return idx->x() % nx;
 }
 

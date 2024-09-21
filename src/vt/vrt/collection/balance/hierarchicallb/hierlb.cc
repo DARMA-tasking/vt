@@ -5,7 +5,7 @@
 //                                  hierlb.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -263,7 +263,7 @@ void HierarchicalLB::loadStats() {
   bool should_lb = false;
   this_load_begin = this_load;
 
-  if (avg_load > 0.0000000001) {
+  if (maxLoadExceedsLBCost()) {
     should_lb = I > hierlb_tolerance;
   }
 
@@ -405,7 +405,7 @@ void HierarchicalLB::startMigrations() {
 
 void HierarchicalLB::downTreeSend(
   NodeType const node, NodeType const from, ObjSampleType const& excess,
-  bool const final_child, std::size_t const& approx_size
+  bool const final_child, [[maybe_unused]] std::size_t const& approx_size
 ) {
   proxy[node].template send<LBTreeDownMsg, &HierarchicalLB::downTreeHandler>(
     from, excess, final_child
@@ -460,7 +460,9 @@ void HierarchicalLB::lbTreeUpHandler(LBTreeUpMsg* msg) {
   );
 }
 
-std::size_t HierarchicalLB::getSize(ObjSampleType const& sample) {
+std::size_t HierarchicalLB::getSize(
+  [[maybe_unused]] ObjSampleType const& sample
+) {
   return 0;
 }
 

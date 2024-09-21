@@ -5,7 +5,7 @@
 //                                holder.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -53,8 +53,8 @@ namespace vt { namespace rdma {
 template <typename T, HandleEnum E>
 template <typename ProxyT>
 void Holder<T,E>::addHandle(
-  HandleKey key, ElemType lin, Handle<T,E> han, std::size_t in_count,
-  bool uniform_size
+  HandleKey key, [[maybe_unused]] ElemType lin,
+  Handle<T,E> han, std::size_t in_count, bool uniform_size
 ) {
   handle_ = han;
   key_ = key;

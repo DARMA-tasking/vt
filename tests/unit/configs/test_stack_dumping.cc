@@ -5,7 +5,7 @@
 //                            test_stack_dumping.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,15 +41,15 @@
 //@HEADER
 */
 
-#include <fmt-vt/core.h>
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
 #include "vt/configs/error/stack_out.h"
+#include INCLUDE_FMT_CORE
 
 namespace vt { namespace tests { namespace unit {
 
-#if defined(vt_has_libunwind_h) || defined(vt_has_execinfo_h)
+#if vt_check_enabled(libunwind) || defined(vt_has_execinfo_h)
 
   struct TestStackDumping : TestParallelHarness {};
 

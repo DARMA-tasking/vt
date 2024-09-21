@@ -5,7 +5,7 @@
 //                                node_lb_data.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -189,6 +189,13 @@ public:
   std::unordered_map<PhaseType, DataMapType> const* getUserData() const;
 
   /**
+   * \internal \brief Get the user-defined attributes
+   *
+   * \return an observer pointer to the user-defined attributes
+   */
+  std::unordered_map<PhaseType, DataMapType> const* getPhaseAttributes() const;
+
+  /**
    * \internal \brief Get stored object comm data for a specific phase
    *
    * \param[in] phase phase
@@ -203,6 +210,13 @@ public:
    * \return an observer pointer to the comm subphase graph
    */
   std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
+
+  /**
+   * \internal \brief Get stored node attributes
+   *
+   * \return an observer pointer to the node attributes
+   */
+  ElmUserDataType const* getNodeAttributes() const;
 
   /**
    * \internal \brief Test if this node has an object to migrate

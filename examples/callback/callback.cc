@@ -5,7 +5,7 @@
 //                                 callback.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -110,7 +110,7 @@ struct MyObj {
 struct MyCol : vt::Collection<MyCol, vt::Index1D> { };
 
 // Collection handler callback endpoint
-void colHan(MyCol* col, TestMsg* msg) {
+void colHan([[maybe_unused]] MyCol* col, [[maybe_unused]] TestMsg* msg) {
   printOutput(msg, "MyCol colHan (non-intrusive)");
 }
 

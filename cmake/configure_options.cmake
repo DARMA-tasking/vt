@@ -84,6 +84,8 @@ define_option(vt_mpi_guards "user MPI prevention guards"
     ON vt_feature_cmake_mpi_access_guards
 )
 
+define_option(vt_tv_enabled "vt-tv" "Build VT with vt-tv" OFF vt_feature_cmake_tv)
+
 define_option(vt_zoltan_enabled "Zoltan" "Build VT with Zoltan" OFF vt_feature_cmake_zoltan)
 
 if(NOT LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "release")
@@ -150,6 +152,16 @@ define_option(vt_werror_enabled "-Werror" "Build VT with -Werror enabled" OFF em
 define_option(vt_build_tests "tests" "Build VT tests" ON empty_feature)
 define_option(vt_build_tools "tools" "Build VT tools" ON empty_feature)
 define_option(vt_build_examples "examples" "Build VT examples" ON empty_feature)
+define_option(vt_ci_generate_lb_files "generate lb files" "Enable generation of LBDatafiles when runnning examples" OFF empty_feature)
+
+option(vt_external_fmt "Build VT with external fmt" OFF)
+if(${vt_external_fmt})
+    message(STATUS "Building vt with external fmt library")
+    set(vt_feature_cmake_external_fmt "1")
+else()
+    message(STATUS "Building vt with included fmt library")
+    set(vt_feature_cmake_external_fmt "0")
+endif()
 
 list(POP_BACK CMAKE_MESSAGE_INDENT)
 

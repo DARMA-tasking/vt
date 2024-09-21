@@ -5,7 +5,7 @@
 //                              features_defines.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -72,6 +72,9 @@
 #define vt_feature_libfort             0 || vt_feature_cmake_libfort
 #define vt_feature_production_build    0 || vt_feature_cmake_production_build
 #define vt_feature_debug_verbose       0 || vt_feature_cmake_debug_verbose
+#define vt_feature_fmt_external        0 || vt_feature_cmake_external_fmt
+#define vt_feature_libunwind           0 || vt_feature_cmake_libunwind
+#define vt_feature_tv                  0 || vt_feature_cmake_tv
 
 #define vt_check_enabled(test_option) (vt_feature_ ## test_option != 0)
 

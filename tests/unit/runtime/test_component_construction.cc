@@ -5,7 +5,7 @@
 //                        test_component_construction.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -89,7 +89,9 @@ public:
   explicit MyComponentArgs(Tag) {}
 public:
   struct MyTag {};
-  static std::unique_ptr<MyComponentArgs> construct(int a, int& b, MyTag&& tag) {
+  static std::unique_ptr<MyComponentArgs> construct(
+    [[maybe_unused]] int a, int& b, [[maybe_unused]] MyTag&& tag
+  ) {
     b = 20;
     return std::make_unique<MyComponentArgs>(Tag{});
   }

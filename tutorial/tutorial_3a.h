@@ -5,7 +5,7 @@
 //                                tutorial_3a.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -40,6 +40,9 @@
 // *****************************************************************************
 //@HEADER
 */
+
+#if !defined INCLUDED_TUTORIAL_3A_H
+#define INCLUDED_TUTORIAL_3A_H
 
 #include "vt/transport.h"
 
@@ -123,3 +126,4 @@ static void recurHandler(ExampleMsg* msg) {
 /// [Tutorial3A]
 
 }} /* end namespace vt::tutorial */
+#endif /*INCLUDED_TUTORIAL_3A_H*/

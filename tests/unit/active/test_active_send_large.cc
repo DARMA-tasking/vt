@@ -5,7 +5,7 @@
 //                          test_active_send_large.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -91,7 +91,7 @@ template <typename T>
 void checkMsg(T msg) {
   auto arr = reinterpret_cast<int64_t*>(&msg->payload[0]);
   for (std::size_t i = 0; i < msg->bytes / sizeof(int64_t); i++) {
-    EXPECT_EQ(arr[i], i);
+    EXPECT_EQ(arr[i], static_cast<int64_t>(i));
   }
 }
 

@@ -5,7 +5,7 @@
 //                          lb_data_restart_reader.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -79,19 +79,45 @@ void LBDataRestartReader::startup() {
 }
 
 void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
-  num_phases_ = lbdh.node_data_.size();
+  auto find_max_data_phase = [&]() -> PhaseType {
+    if (lbdh.node_data_.empty()) {
+      return 0;
+    }
+    return std::max_element(
+             lbdh.node_data_.begin(), lbdh.node_data_.end(),
+             [](const auto& p1, const auto& p2) { return p1.first < p2.first; })
+      ->first;
+  };
+
+  // Find last phase number
+  auto largest_data = find_max_data_phase();
+  auto largest_identical =
+    lbdh.identical_phases_.size() > 0 ? *lbdh.identical_phases_.rbegin() : 0;
+  auto largest_skipped =
+    lbdh.skipped_phases_.size() > 0 ? *lbdh.skipped_phases_.rbegin() : 0;
+  num_phases_ =
+    std::max(std::max(largest_data, largest_identical), largest_skipped) + 1;
+
+  PhaseType last_found_phase = 0;
   for (PhaseType phase = 0; phase < num_phases_; phase++) {
     auto iter = lbdh.node_data_.find(phase);
     if (iter != lbdh.node_data_.end()) {
+      last_found_phase = phase;
       for (auto const& obj : iter->second) {
         if (obj.first.isMigratable()) {
-          history_[phase].insert(obj.first);
+          if (history_[phase] == nullptr) {
+            history_[phase] = std::make_shared<std::set<ElementIDStruct>>();
+          }
+          history_[phase]->insert(obj.first);
         }
       }
-    } else {
-      // We assume that all phases are dense all fully specified even if they
-      // don't change
-      vtAbort("Could not find data: phases must all be specified");
+    } else if (
+      lbdh.identical_phases_.find(phase) != lbdh.identical_phases_.end()) {
+      // Phase is identical to previous one, use the shared pointer to data from previous phase
+      addIdenticalPhase(phase, last_found_phase);
+    } else if (lbdh.skipped_phases_.find(phase) == lbdh.skipped_phases_.end()) {
+      vtAbort("Could not find data: Skipped phases needs to be listed in file "
+              "metadata.");
     }
   }
 }
@@ -134,12 +160,12 @@ void LBDataRestartReader::arriving(ArriveMsg* msg) {
 }
 
 void LBDataRestartReader::update(UpdateMsg* msg) {
-  auto iter = history_[msg->phase].find(msg->elm);
-  vtAssert(iter != history_[msg->phase].end(), "Must exist");
+  auto iter = history_[msg->phase]->find(msg->elm);
+  vtAssert(iter != history_[msg->phase]->end(), "Must exist");
   auto elm = *iter;
   elm.curr_node = msg->curr_node;
-  history_[msg->phase].erase(iter);
-  history_[msg->phase].insert(elm);
+  history_[msg->phase]->erase(iter);
+  history_[msg->phase]->insert(elm);
 }
 
 void LBDataRestartReader::checkBothEnds(Coord& coord) {
@@ -155,30 +181,31 @@ void LBDataRestartReader::determinePhasesToMigrate() {
   local_changed_distro.resize(num_phases_ - 1);
 
   auto const this_node = theContext()->getNode();
-
   runInEpochCollective("LBDataRestartReader::updateLocations", [&]{
     for (PhaseType i = 0; i < num_phases_ - 1; ++i) {
-      local_changed_distro[i] = history_[i] != history_[i+1];
-      if (local_changed_distro[i]) {
-        std::set<ElementIDStruct> departing, arriving;
+      if(history_.count(i) && history_.count(i+1)) {
+        local_changed_distro[i] = *history_[i] != *history_[i+1];
+        if (local_changed_distro[i]) {
+          std::set<ElementIDStruct> departing, arriving;
 
-        std::set_difference(
-          history_[i+1].begin(), history_[i+1].end(),
-          history_[i].begin(),   history_[i].end(),
-          std::inserter(arriving, arriving.begin())
-        );
+          std::set_difference(
+            history_[i+1]->begin(), history_[i+1]->end(),
+            history_[i]->begin(),   history_[i]->end(),
+            std::inserter(arriving, arriving.begin())
+          );
 
-        std::set_difference(
-          history_[i].begin(),   history_[i].end(),
-          history_[i+1].begin(), history_[i+1].end(),
-          std::inserter(departing, departing.begin())
-        );
+          std::set_difference(
+            history_[i]->begin(),    history_[i]->end(),
+            history_[i+1]->begin(),  history_[i+1]->end(),
+            std::inserter(departing, departing.begin())
+          );
 
-        for (auto&& d : departing) {
-          proxy_[d.getHomeNode()].send<DepartMsg, &LBDataRestartReader::departing>(this_node, i+1, d);
-        }
-        for (auto&& a : arriving) {
-          proxy_[a.getHomeNode()].send<ArriveMsg, &LBDataRestartReader::arriving>(this_node, i+1, a);
+          for (auto&& d : departing) {
+            proxy_[d.getHomeNode()].send<DepartMsg, &LBDataRestartReader::departing>(this_node, i+1, d);
+          }
+          for (auto&& a : arriving) {
+            proxy_[a.getHomeNode()].send<ArriveMsg, &LBDataRestartReader::arriving>(this_node, i+1, a);
+          }
         }
       }
     }

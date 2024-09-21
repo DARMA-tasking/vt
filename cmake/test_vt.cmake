@@ -17,7 +17,7 @@ function(run_executable_with_mpi)
     WRAPPER_EXECUTABLE
   )
   set(
-    multiValueArg
+    multiValueArgs
     TARGET_ARGS
     WRAPPER_ARGS
   )
@@ -26,6 +26,11 @@ function(run_executable_with_mpi)
   cmake_parse_arguments(
     ARG "${noValOption}" "${singleValArg}" "${multiValueArgs}" ${ARGN}
   )
+
+  # Stop the configurtion if there are any unparsed arguments
+  if (ARG_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "found unparsed arguments: ${ARG_UNPARSED_ARGUMENTS}")
+  endif()
 
   if (NOT DEFINED ARG_EXECUTE_WITH_WRAPPER)
     set(ARG_WRAPPER_EXECUTABLE "")
@@ -62,11 +67,16 @@ function(build_mpi_proc_test_list)
 
   set(noValOption)
   set(singleValArg MAX_PROC VARIABLE_OUT )
-  set(multiValueArg)
-  set(allKeywords ${noValOption} ${singleValArg} ${multiValueArg})
+  set(multiValueArgs)
+  set(allKeywords ${noValOption} ${singleValArg} ${multiValueArgs})
   cmake_parse_arguments(
     ARG "${noValOption}" "${singleValArg}" "${multiValueArgs}" ${ARGN}
   )
+
+  # Stop the configurtion if there are any unparsed arguments
+  if (ARG_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "found unparsed arguments: ${ARG_UNPARSED_ARGUMENTS}")
+  endif()
 
   if (NOT DEFINED ARG_MAX_PROC)
     # Default to 8 processors
@@ -106,6 +116,16 @@ macro(add_test_for_example_vt test_target test_exec test_list)
     set(EXEC_ARGS ${ARGN})
     if (vt_trace_enabled)
         list(APPEND EXEC_ARGS "--vt_trace")
+    endif()
+
+    # Append parameters required for the examples to output LBDatafiles.
+    if (vt_ci_generate_lb_files)
+      list(APPEND EXEC_ARGS
+        "--vt_lb_interval=1"
+        "--vt_lb_data"
+        "--vt_lb_data_compress=false"
+        "--vt_lb_data_file=${test_name}_${PROC}_LBDatafile.%p.json"
+        "--vt_lb_data_dir=.")
     endif()
 
     run_executable_with_mpi(

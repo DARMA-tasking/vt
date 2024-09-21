@@ -5,7 +5,7 @@
 //                                  raw_data.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -64,6 +64,7 @@ struct RawData : public LoadModel {
   LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const override;
   bool hasUserData() const override { return user_data_ != nullptr; }
   ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
+  CommMapType getComm(PhaseOffset when) const override;
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm,
@@ -85,4 +86,4 @@ struct RawData : public LoadModel {
 
 }}}} // end namespace
 
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_RAW_DATA_H*/

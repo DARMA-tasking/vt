@@ -5,7 +5,7 @@
 //                           group_info_collective.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -186,7 +186,7 @@ void InfoColl::setupCollective() {
   );
   GroupOnlyTMsg::registerContinuationT(
     new_tree_cont_,
-    [group_](MsgSharedPtr<GroupOnlyMsg> msg){
+    [group_]([[maybe_unused]] MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
       auto const& from = theContext()->getFromNodeCurrentTask();
@@ -766,7 +766,7 @@ void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
   finalize();
 }
 
-void InfoColl::downTreeFinished(GroupOnlyMsg* msg) {
+void InfoColl::downTreeFinished([[maybe_unused]] GroupOnlyMsg* msg) {
   send_down_finished_++;
   finalize();
 }

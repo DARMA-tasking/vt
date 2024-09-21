@@ -5,7 +5,7 @@
 //                             test_index.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -51,11 +51,11 @@
 namespace vt { namespace tests { namespace unit {
 
 class TestIndex : public TestHarness {
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestHarness::SetUp();
   }
 
-  virtual void TearDown() {
+  virtual void TearDown() override {
     TestHarness::TearDown();
   }
 };

@@ -5,7 +5,7 @@
 //                             memory_pool_equal.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -76,7 +76,7 @@ static constexpr size_t const memory_size_medium =
  */
 template <int64_t num_bytes_t, bool use_header = true>
 struct MemoryPoolEqual {
-  using ContainerType = std::vector<void*>;
+  using ContainerType = std::vector<std::byte*>;
   using SlotType = int64_t;
   using HeaderType = Header;
   using HeaderManagerType = HeaderManager;
@@ -92,8 +92,8 @@ struct MemoryPoolEqual {
 
   virtual ~MemoryPoolEqual();
 
-  void* alloc(size_t const& sz, size_t const& oversize);
-  void dealloc(void* const t);
+  std::byte* alloc(size_t const& sz, size_t const& oversize);
+  void dealloc(std::byte* const t);
   void resizePool();
   SlotType getNumBytes();
 

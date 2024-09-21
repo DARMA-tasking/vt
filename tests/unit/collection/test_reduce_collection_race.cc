@@ -5,7 +5,7 @@
 //                        test_reduce_collection_race.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -52,7 +52,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {};
 
 static int multiplier = 0;
 
-static void reduceTarget(MyCol* col, int val) {
+static void reduceTarget([[maybe_unused]] MyCol* col, int val) {
   auto const num_nodes = theContext()->getNumNodes();
   auto const num_elems = num_nodes * multiplier;
   fmt::print("reduce finished: val={}, num_elems={}\n", val, num_elems);

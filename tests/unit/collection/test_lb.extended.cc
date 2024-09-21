@@ -5,7 +5,7 @@
 //                             test_lb.extended.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -150,6 +150,11 @@ TEST_P(TestLoadBalancerOther, test_load_balancer_other_keep_last_elm) {
   runTest(GetParam(), "test_load_balancer_other_keep_last_elm");
 }
 
+TEST_P(TestLoadBalancerOther, test_load_balancer_other_run_lb_first_phase) {
+  vt::theConfig()->vt_lb_run_lb_first_phase = true;
+  runTest(GetParam(), "test_load_balancer_other_run_lb_first_phase");
+}
+
 TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_2) {
   runTest(GetParam(), "test_load_balancer_greedy_2");
 }
@@ -157,6 +162,11 @@ TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_2) {
 TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_keep_last_elm) {
   vt::theConfig()->vt_lb_keep_last_elm = true;
   runTest(GetParam(), "test_load_balancer_greedy_keep_last_elm");
+}
+
+TEST_P(TestLoadBalancerGreedy, test_load_balancer_greedy_run_lb_first_phase) {
+  vt::theConfig()->vt_lb_run_lb_first_phase = true;
+  runTest(GetParam(), "test_load_balancer_greedy_run_lb_first_phase");
 }
 
 TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
@@ -178,7 +188,7 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
   auto const phase = thePhase()->getCurrentPhase();
   auto const comm_data = theNodeLBData()->getNodeComm(phase);
   ASSERT_NE(comm_data, nullptr);
-  ASSERT_EQ(comm_data->size(), 1);
+  ASSERT_EQ(comm_data->size(), 1ull);
 
   // test
   auto proxy = theLBManager()->makeLB<vt::vrt::collection::lb::TemperedWMin>();
@@ -190,11 +200,11 @@ TEST_F(TestLoadBalancerOther, test_make_graph_symmetric) {
 
   // assert
   if (num_nodes == 1) {
-    ASSERT_EQ(comm_data->size(), 1);
+    ASSERT_EQ(comm_data->size(), 1ull);
     return;
   }
 
-  ASSERT_EQ(comm_data->size(), 2);
+  ASSERT_EQ(comm_data->size(), 2ull);
   auto const prev_node = (this_node + num_nodes - 1) % num_nodes;
   bool this_to_next = false, prev_to_this = false;
 
@@ -429,7 +439,7 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
     auto& json = *json_ptr;
 
     EXPECT_TRUE(json.find("phases") != json.end());
-    EXPECT_EQ(json["phases"].size(), num_phases);
+    EXPECT_EQ(json["phases"].size(), static_cast<std::size_t>(num_phases));
     for(const auto& phase : json["phases"]){
       EXPECT_TRUE(phase.find("user_defined") != phase.end());
       EXPECT_TRUE(phase["user_defined"].contains("time"));
@@ -438,6 +448,10 @@ TEST_P(TestNodeLBDataDumper, test_node_lb_data_dumping_with_interval) {
       EXPECT_EQ(phase["user_defined"]["new_time"], static_cast<double>(phase["id"]));
     }
 
+    auto num_tasks = json["phases"][0]["tasks"].size();
+    auto entity = json["phases"][0]["tasks"][num_tasks - 1]["entity"];
+    EXPECT_EQ(entity["home"], 0);
+    EXPECT_EQ(entity["id"], 0);
   });
 
   if (vt::theContext()->getNode() == 0) {
@@ -615,6 +629,10 @@ TEST_F(TestRestoreLBData, test_restore_lb_data_data_1) {
         auto &orig_load_map = phase_data.second;
         for (auto &entry : read_load_map) {
           auto read_elm_id = entry.first;
+          if ((read_elm_id.id == vt::elm::no_element_id)
+              and (read_elm_id.getHomeNode() == 0)) {
+            continue;
+          }
           EXPECT_FALSE(orig_load_map.find(read_elm_id) == orig_load_map.end());
           if (orig_load_map.find(read_elm_id) == orig_load_map.end()) {
             fmt::print(
@@ -745,8 +763,8 @@ TEST_P(TestDumpUserdefinedData, test_dump_userdefined_json) {
     EXPECT_NE(elm_ptr, nullptr);
     if (elm_ptr != nullptr) {
       auto elm_id = elm_ptr->getElmID();
-      elm_ptr->valInsert("hello", std::string("world"), should_dump, false);
-      elm_ptr->valInsert("elephant", 123456789, should_dump, false);
+      elm_ptr->valInsert("hello", std::string("world"), should_dump, false, false);
+      elm_ptr->valInsert("elephant", 123456789, should_dump, false, false);
       lbdh.user_defined_json_[phase][elm_id] = std::make_shared<nlohmann::json>(
         elm_ptr->toJson()
       );
@@ -775,6 +793,68 @@ auto const booleans = ::testing::Values(false, true);
 
 INSTANTIATE_TEST_SUITE_P(
   DumpUserdefinedDataExplode, TestDumpUserdefinedData, booleans
+);
+
+struct TestDumpAttributesFieldData : TestParallelHarnessParam<bool> { };
+
+TEST_P(TestDumpAttributesFieldData, test_dump_attributes_json) {
+  bool is_attribute = GetParam();
+
+  auto this_node = vt::theContext()->getNode();
+  auto num_nodes = vt::theContext()->getNumNodes();
+
+  vt::vrt::collection::CollectionProxy<MyCol> proxy;
+  auto const range = vt::Index1D(num_nodes * 1);
+
+  // Construct a collection
+  runInEpochCollective([&] {
+    proxy = vt::theCollection()->constructCollective<MyCol>(
+      range, "test_dump_attributes_json"
+    );
+  });
+
+  vt::vrt::collection::balance::LBDataHolder lbdh;
+  PhaseType phase = 0;
+
+  {
+    lbdh.node_data_[phase];
+    lbdh.node_comm_[phase];
+
+    vt::Index1D idx(this_node * 1);
+    auto elm_ptr = proxy(idx).tryGetLocalPtr();
+    EXPECT_NE(elm_ptr, nullptr);
+    if (elm_ptr != nullptr) {
+      auto elm_id = elm_ptr->getElmID();
+      elm_ptr->valInsert("intSample", 123, false, false, is_attribute);
+      elm_ptr->valInsert("doubleSample", 123.456, false, false, is_attribute);
+      elm_ptr->valInsert("stringSample", std::string("abc"), false, false, is_attribute);
+
+      elm_ptr->collectAttributes(
+        [&](std::string const& key, auto val) {
+          lbdh.node_user_attributes_[phase][elm_id][key] = val->toVariant();
+        }
+      );
+      lbdh.node_data_[phase][elm_id].whole_phase_load = 1.0;
+    }
+  }
+
+  auto json_str = getJsonStringForPhase(phase, lbdh);
+  fmt::print("{}\n", json_str);
+  if (is_attribute) {
+    EXPECT_NE(json_str.find("attributes"), std::string::npos);
+    EXPECT_NE(json_str.find("intSample"), std::string::npos);
+    EXPECT_NE(json_str.find("doubleSample"), std::string::npos);
+    EXPECT_NE(json_str.find("stringSample"), std::string::npos);
+  } else {
+    EXPECT_EQ(json_str.find("attributes"), std::string::npos);
+    EXPECT_EQ(json_str.find("intSample"), std::string::npos);
+    EXPECT_EQ(json_str.find("doubleSample"), std::string::npos);
+    EXPECT_EQ(json_str.find("stringSample"), std::string::npos);
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+  DumpAttributesFieldDataExplode, TestDumpAttributesFieldData, booleans
 );
 
 struct SerializationTestCol : vt::Collection<SerializationTestCol, vt::Index1D> {

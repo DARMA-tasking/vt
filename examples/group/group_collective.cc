@@ -5,7 +5,7 @@
 //                             group_collective.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -46,7 +46,7 @@
 /// [Collective group creation]
 struct HelloGroupMsg : vt::Message { };
 
-static void hello_group_handler(HelloGroupMsg* msg) {
+static void hello_group_handler([[maybe_unused]] HelloGroupMsg* msg) {
   fmt::print("{}: Hello from group handler\n", vt::theContext()->getNode());
 }
 

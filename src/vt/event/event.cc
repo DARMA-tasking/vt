@@ -5,7 +5,7 @@
 //                                   event.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -198,7 +198,7 @@ void AsyncEvent::finalize() {
   event_container_.clear();
 }
 
-int AsyncEvent::progress(TimeType current_time) {
+int AsyncEvent::progress([[maybe_unused]] TimeType current_time) {
   theEvent()->testEventsTrigger();
   return 0;
 }
@@ -304,10 +304,9 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
 void AsyncEvent::testEventsTrigger(int const& num_events) {
 # if vt_check_enabled(trace_enabled)
   int32_t num_completed  = 0;
-  auto tr_begin = TimeType{0.0};
-
+  std::unique_ptr<trace::TraceScopedNote> trace_note;
   if (theConfig()->vt_trace_event_polling) {
-    tr_begin = timing::getCurrentTime();
+    trace_note = std::make_unique<trace::TraceScopedNote>(trace_event_polling);
   }
 # endif
 
@@ -356,9 +355,9 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
 # if vt_check_enabled(trace_enabled)
   if (theConfig()->vt_trace_event_polling) {
     if (num_completed > 0) {
-      TimeType tr_end = timing::getCurrentTime();
       auto tr_note = fmt::format("completed {} of {}", num_completed, cur);
-      trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_event_polling);
+      trace_note->setNote(tr_note);
+      trace_note->end();
     }
   } else {
     (void)num_completed;

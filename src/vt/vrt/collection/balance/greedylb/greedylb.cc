@@ -5,7 +5,7 @@
 //                                 greedylb.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -160,7 +160,7 @@ void GreedyLB::loadStats() {
   bool should_lb = false;
   this_load_begin = this_load;
 
-  if (avg_load > 0.0000000001) {
+  if (maxLoadExceedsLBCost()) {
     should_lb = I > greedy_tolerance;
   }
 
@@ -363,7 +363,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       max_recs, max_bytes
     );
     theCollective()->scatter<GreedyLBTypes::ObjIDType,recvObjsHan>(
-      max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, void* ptr){
+      max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, std::byte* ptr){
         auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
         auto const& proc = node_transfer[node];
         auto const& rec_size = proc.size();

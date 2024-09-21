@@ -5,7 +5,7 @@
 //                              trace_registry.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -121,7 +121,9 @@ TraceRegistry::registerEventHashed(
 
 /*static*/ void
 TraceRegistry::setTraceName(
-  TraceEntryIDType id, std::string const& name, std::string const& type_name
+  [[maybe_unused]] TraceEntryIDType id,
+  [[maybe_unused]] std::string const& name,
+  [[maybe_unused]] std::string const& type_name
 ) {
 #if vt_check_enabled(trace_enabled)
   auto* events = TraceContainers::getEventContainer();

@@ -5,7 +5,7 @@
 //                            test_memory_active.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -63,7 +63,7 @@ struct TestMemoryActiveMsg {
 
 template <typename MsgT>
 struct TestMemoryActive : TestParallelHarness {
-  static void test_handler(MsgT* msg) { }
+  static void test_handler([[maybe_unused]] MsgT* msg) { }
 };
 
 static constexpr int32_t const num_msg_sent = 5;

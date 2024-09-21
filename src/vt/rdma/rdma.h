@@ -5,7 +5,7 @@
 //                                    rdma.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -142,7 +142,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     ByteType const num_bytes = num_elems == no_byte ? no_byte : sizeof(T)*num_elems;
     ByteType const byte_offset = offset == no_byte ? 0 : sizeof(T)*offset;
     return putData(
-      rdma_handle, static_cast<RDMA_PtrType>(ptr), num_bytes, byte_offset, tag,
+      rdma_handle, reinterpret_cast<RDMA_PtrType>(ptr), num_bytes, byte_offset, tag,
       sizeof(T), action_after_put
     );
   }
@@ -327,7 +327,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     ByteType const byte_offset = elm_offset == no_byte ? 0 : sizeof(T)*elm_offset;
 
     return getDataIntoBuf(
-      rdma_handle, static_cast<RDMA_PtrType>(ptr), num_bytes, byte_offset, tag,
+      rdma_handle, reinterpret_cast<RDMA_PtrType>(ptr), num_bytes, byte_offset, tag,
       next_action, sizeof(T)
     );
   }
@@ -391,7 +391,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
       print_ptr(ptr), num_bytes
     );
     return registerNewRdmaHandler(
-      true, static_cast<RDMA_PtrType>(ptr), num_bytes
+      true, reinterpret_cast<RDMA_PtrType>(ptr), num_bytes
     );
   }
 
@@ -574,8 +574,10 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] action action when complete
    */
   void newGetChannel(
-    RDMA_HandleType const& han, NodeType const& target,
-    NodeType const& non_target, ActionType const& action = nullptr
+    [[maybe_unused]] RDMA_HandleType const& han,
+    [[maybe_unused]] NodeType const& target,
+    [[maybe_unused]] NodeType const& non_target,
+    [[maybe_unused]] ActionType const& action = nullptr
   ) {
     #if vt_check_enabled(mpi_rdma)
       return newChannel(
@@ -595,8 +597,10 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] action action when complete
    */
   void newPutChannel(
-    RDMA_HandleType const& han, NodeType const& target,
-    NodeType const& non_target, ActionType const& action = nullptr
+    [[maybe_unused]] RDMA_HandleType const& han,
+    [[maybe_unused]] NodeType const& target,
+    [[maybe_unused]] NodeType const& non_target,
+    [[maybe_unused]] ActionType const& action = nullptr
   ) {
 
     #if vt_check_enabled(mpi_rdma)

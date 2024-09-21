@@ -5,7 +5,7 @@
 //                            test_async_op_cuda.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -125,7 +125,7 @@ struct CUDAGroup {
     checkCudaErrors(cudaStreamDestroy(stream2_), "cudaStreamDestroy(stream2_)");
   }
 
-  void cudaHandler(MyMsg* msg) {
+  void cudaHandler([[maybe_unused]] MyMsg* msg) {
     auto const nBytes = dataSize_ * sizeof(double);
 
     checkCudaErrors(cudaStreamCreate(&stream1_), "cudaStreamCreate (stream1_)");

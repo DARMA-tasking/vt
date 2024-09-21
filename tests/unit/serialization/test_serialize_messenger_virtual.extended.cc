@@ -5,7 +5,7 @@
 //                 test_serialize_messenger_virtual.extended.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -94,7 +94,7 @@ struct DataMsg : vt::vrt::VirtualMessage {
 struct TestSerialMessengerVirtual : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 
-  static void testHandler(TestCtx* ctx, DataMsg* msg) {
+  static void testHandler([[maybe_unused]] TestCtx* ctx, DataMsg* msg) {
     msg->check();
   }
 };

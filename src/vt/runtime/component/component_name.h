@@ -5,7 +5,7 @@
 //                               component_name.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -55,6 +55,7 @@ namespace vt { namespace runtime { namespace component {
  * unique name for the given component.
  */
 struct ComponentName {
+  virtual ~ComponentName() = default;
   /**
    * \internal \brief Get the name of the component
    */

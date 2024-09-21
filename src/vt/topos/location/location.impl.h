@@ -5,7 +5,7 @@
 //                               location.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -258,8 +258,8 @@ void EntityLocationCoord<EntityID>::entityEmigrated(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityImmigrated(
-  EntityID const& id, NodeType const& home_node, NodeType const& from,
-  LocMsgActionType msg_action
+  EntityID const& id, NodeType const& home_node,
+  [[maybe_unused]] NodeType const& from, LocMsgActionType msg_action
 ) {
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future

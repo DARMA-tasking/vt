@@ -5,7 +5,7 @@
 //                             test_timing.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -54,37 +54,37 @@ using TestTiming = TestHarness;
 TEST_F(TestTiming, test_time_formatting) {
   {
     TimeType const t = TimeType{15664645.400691890716};
-    EXPECT_EQ(fmt::format("{}", t), "15.7e6 s");
+    EXPECT_EQ(fmt::format("{}", t), "15.665e6 s");
   }
 
   {
     TimeType const t = TimeType{4.0006918907165527344};
-    EXPECT_EQ(fmt::format("{}", t), "4.00e0 s");
+    EXPECT_EQ(fmt::format("{}", t), "4.0007e0 s");
   }
 
   {
     TimeType const t = TimeType{0.0691890716552734423};
-    EXPECT_EQ(fmt::format("{}", t), "69.2e-3 s");
+    EXPECT_EQ(fmt::format("{}", t), "69.189e-3 s");
   }
 
   {
     TimeType const t = TimeType{-0.0691890716552734423};
-    EXPECT_EQ(fmt::format("{}", t), "-69.2e-3 s");
+    EXPECT_EQ(fmt::format("{}", t), "-69.189e-3 s");
   }
 
   {
     TimeType const t = TimeType{0.0006918907165527344};
-    EXPECT_EQ(fmt::format("{}", t), "692e-6 s");
+    EXPECT_EQ(fmt::format("{}", t), "691.89e-6 s");
   }
 
   {
     TimeType const t = TimeType{0.0000006918907165527};
-    EXPECT_EQ(fmt::format("{}", t), "692e-9 s");
+    EXPECT_EQ(fmt::format("{}", t), "691.89e-9 s");
   }
 
   {
     TimeType const t = TimeType{3.14};
-    EXPECT_EQ(fmt::format("{}", t), "3.14e0 s");
+    EXPECT_EQ(fmt::format("{}", t), "3.1400e0 s");
   }
 }
 

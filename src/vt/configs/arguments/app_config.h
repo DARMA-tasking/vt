@@ -5,7 +5,7 @@
 //                                 app_config.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -76,6 +76,8 @@ struct AppConfig {
   inline bool alwaysFlush() const {
     return vt_debug_print_flush;
   }
+
+  std::string vt_input_config_yaml = "";
 
   bool vt_color      = true;
 #ifdef VT_NO_COLOR_ENABLED
@@ -158,6 +160,7 @@ struct AppConfig {
   bool vt_lb_self_migration      = false;
   bool vt_lb_spec                = false;
   std::string vt_lb_spec_file    = "";
+  bool vt_lb_run_lb_first_phase = false;
 
 
   bool vt_no_detect_hang       = false;
@@ -228,6 +231,9 @@ struct AppConfig {
   bool vt_debug_replay       = false;
 
   bool vt_debug_print_flush = false;
+
+  bool vt_tv = false;
+  std::string vt_tv_config_file = "";
 
   bool vt_user_1 = false;
   bool vt_user_2 = false;
@@ -390,6 +396,9 @@ struct AppConfig {
       | vt_debug_replay
 
       | vt_debug_print_flush
+
+      | vt_tv
+      | vt_tv_config_file
 
       | vt_user_1
       | vt_user_2

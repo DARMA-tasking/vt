@@ -5,7 +5,7 @@
 //                           test_async_op_threads.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -62,7 +62,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
 
   using MyMsg = vt::CollectionMessage<MyCol>;
 
-  void handler(MyMsg* msg) {
+  void handler([[maybe_unused]] MyMsg* msg) {
     auto const this_node = theContext()->getNode();
     auto const num_nodes = theContext()->getNumNodes();
     auto const to_node = (this_node + 1) % num_nodes;
@@ -130,7 +130,7 @@ struct MyCol : vt::Collection<MyCol, vt::Index1D> {
     theMsg()->popEpoch(cur_ep);
   }
 
-  void handlerInvoke(MyMsg* msg) {
+  void handlerInvoke([[maybe_unused]] MyMsg* msg) {
     auto const this_node = theContext()->getNode();
     auto const num_nodes = theContext()->getNumNodes();
     auto const to_node = (this_node + 1) % num_nodes;

@@ -121,19 +121,19 @@ $ VT_TRACE_ENABLED=1 CMAKE_BUILD_TYPE=Debug /usr/src/vt/ci/build_cpp.sh /usr/src
 
 The easiest way to build *vt* is by using `docker` with the available containers
 that contain the proper compilers, MPI, and all other dependencies. First,
-install `docker` on the system. On some systems, `docker-compose` might also
+install `docker` on the system. On some systems, `docker compose` might also
 need to be installed.
 
-The `docker` builds are configured through `docker-compose` to use a shared,
+The `docker` builds are configured through `docker compose` to use a shared,
 cached filesystem mount with the host for `ccache` to enable fast re-builds.
 
-For `docker-compose`, the following variables can be set to configure the
+For `docker compose`, the following variables can be set to configure the
 build. One may configure the architecture, compiler type (GNU, Clang, Intel,
 Nvidia) and compiler version, Linux distro (ubuntu or alpine), and distro
 version.
 
 The default set of the docker configuration options is located in `vt/.env`,
-which `docker-compose` will read.
+which `docker compose` will read.
 
 ```
 # Variables:
@@ -171,18 +171,18 @@ which `docker-compose` will read.
 
 With these set, one may run the following for a non-interactive build with
 ubuntu. Or, to speed up the build process, the base container can be pulled for
-many of the common configurations: `docker-compose pull ubuntu-cpp`.
+many of the common configurations: `docker compose pull ubuntu-cpp`.
 
 ```bash
 $ cd vt
-$ docker-compose run -e BUILD_TYPE=debug -e VT_TRACE=1 ubuntu-cpp
+$ docker compose run -e BUILD_TYPE=debug -e VT_TRACE=1 ubuntu-cpp
 ```
 
 Or, alternatively, run a non-interactive build with alpine:
 
 ```bash
 $ cd vt
-$ docker-compose run -e BUILD_TYPE=debug -e VT_TRACE=1 alpine-cpp
+$ docker compose run -e BUILD_TYPE=debug -e VT_TRACE=1 alpine-cpp
 ```
 
 For an interactive build with ubuntu, where one can build, debug, and run
@@ -190,7 +190,7 @@ For an interactive build with ubuntu, where one can build, debug, and run
 
 ```bash
 $ cd vt
-$ docker-compose run -e BUILD_TYPE=debug -e VT_TRACE=1 ubuntu-cpp-interactive
+$ docker compose run -e BUILD_TYPE=debug -e VT_TRACE=1 ubuntu-cpp-interactive
 # /vt/ci/build_cpp.sh /vt /build
 # /vt/ci/test_cpp.sh /vt /build
 # /vt/ci/build_vt_sample.sh /vt /build

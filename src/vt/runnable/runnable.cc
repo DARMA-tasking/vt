@@ -5,7 +5,7 @@
 //                                 runnable.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -79,7 +79,7 @@ void RunnableNew::setupHandler(HandlerType handler) {
   }
 }
 
-void RunnableNew::setupHandlerObjGroup(void* obj, HandlerType handler) {
+void RunnableNew::setupHandlerObjGroup(std::byte* obj, HandlerType handler) {
   f_.func_ = auto_registry::getAutoHandlerObjGroup(handler).get();
   obj_ = obj;
 }
@@ -91,14 +91,14 @@ void RunnableNew::setupHandlerElement(
   f_.func_ = member ?
     auto_registry::getAutoHandlerCollectionMem(handler).get() :
     auto_registry::getAutoHandlerCollection(handler).get();
-  obj_ = elm;
+  obj_ = reinterpret_cast<std::byte*>(elm);
 }
 
 void RunnableNew::setupHandlerElement(
   vrt::VirtualContext* elm, HandlerType handler
 ) {
   f_.func_ = auto_registry::getAutoHandlerVC(handler).get();
-  obj_ = elm;
+  obj_ = reinterpret_cast<std::byte*>(elm);
 }
 
 void RunnableNew::run() {
@@ -165,7 +165,7 @@ void RunnableNew::run() {
 #endif
 
     if (is_scatter_) {
-      f_.func_scat_->dispatch(msg_ == nullptr ? nullptr : msg_.get(), obj_);
+      f_.func_scat_->dispatch(msg_ == nullptr ? nullptr : reinterpret_cast<std::byte*>(msg_.get()), obj_);
     } else {
       f_.func_->dispatch(msg_ == nullptr ? nullptr : msg_.get(), obj_);
     }
@@ -220,7 +220,7 @@ void RunnableNew::finish(TimeType time) {
 #endif
 }
 
-void RunnableNew::suspend(TimeType time) {
+void RunnableNew::suspend([[maybe_unused]] TimeType time) {
 #if vt_check_enabled(fcontext)
   contexts_.setcontext.suspend();
   if (contexts_.has_td) contexts_.td.suspend();
@@ -233,7 +233,7 @@ void RunnableNew::suspend(TimeType time) {
 #endif
 }
 
-void RunnableNew::resume(TimeType time) {
+void RunnableNew::resume([[maybe_unused]] TimeType time) {
 #if vt_check_enabled(fcontext)
   contexts_.setcontext.resume();
   if (contexts_.has_td) contexts_.td.resume();
@@ -255,7 +255,7 @@ void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
 }
 
 /*static*/ void RunnableNew::operator delete(void* ptr) {
-  RunnableNewAlloc::runnable->dealloc(ptr);
+  RunnableNewAlloc::runnable->dealloc(reinterpret_cast<std::byte*>(ptr));
 }
 
 /*static*/

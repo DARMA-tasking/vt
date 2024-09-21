@@ -5,7 +5,7 @@
 //                                epoch_manip.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -49,7 +49,7 @@
 #include "vt/utils/bits/bits_packer.h"
 #include "vt/termination/term_common.h"
 
-#include <fmt-vt/ostream.h>
+#include INCLUDE_FMT_OSTREAM
 
 namespace vt { namespace epoch {
 

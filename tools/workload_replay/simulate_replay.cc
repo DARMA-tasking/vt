@@ -5,7 +5,7 @@
 //                              simulate_replay.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -50,21 +50,28 @@ int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   vtAbortIf(
-    argc != 3,
-    "Must have two app-specific arguments: <initial phase> <phases to run>\n"
+    argc < 3 or argc > 4,
+    "Must have two or three app-specific arguments:\n"
+    "  <initial phase> <phases to run> [phase modulus]\n"
     "The json workload files needs to be specified using\n"
-    "--vt_lb_data_file_in and --vt_lb_data_dir_in"
+    "  --vt_lb_data_in, --vt_lb_data_file_in, and --vt_lb_data_dir_in"
   );
 
   // initial phase to simulate
   PhaseType initial_phase = atoi(argv[1]);
   // number of phases to simulate
   PhaseType phases_to_run = atoi(argv[2]);
+  // phase modulus to apply to input
+  PhaseType phase_mod = 0;
+
+  if (argc > 3) {
+    phase_mod = atoi(argv[3]);
+  }
 
   // the workloads used will be those specified with the command-line arguments
-  // --vt_lb_data_file_in and --vt_lb_data_dir_in
+  // --vt_lb_data_in, --vt_lb_data_file_in, and --vt_lb_data_dir_in
   vt::vrt::collection::balance::replay::replayWorkloads(
-    initial_phase, phases_to_run
+    initial_phase, phases_to_run, phase_mod
   );
 
   vt::finalize();

@@ -5,7 +5,7 @@
 //                                 trace_lite.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -54,6 +54,7 @@
 #include <string>
 #include <queue>
 #include <vector>
+#include <stack>
 #include <mpi.h>
 
 namespace vt { namespace trace {
@@ -166,25 +167,55 @@ struct TraceLite  {
   void disableTracing();
 
   /**
-   * \brief Log a bracketed user event with start and end time
+   * \brief Log the start of the bracketed user event
    *
    * \param[in] event the ID for the sts file
    * \param[in] begin the begin time
-   * \param[in] end the end time
    */
-  void addUserEventBracketed(UserEventIDType event, TimeType begin, TimeType end);
+  void addUserEventBracketedBeginTime(UserEventIDType event, TimeType begin);
 
   /**
-   * \brief Log a user bracketed event with a note
+   * \brief Log the end of the bracketed user event
    *
-   * \param[in] begin the begin time
+   * \param[in] event the ID for the sts file
    * \param[in] end the end time
+   */
+  void addUserEventBracketedEndTime(UserEventIDType event, TimeType end);
+
+  /**
+   * \brief Log the start of the bracketed user event with a note
+   *
+   * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
+   * bracketed user events with a note.
+   *
+   * \param[in] event the event ID
    * \param[in] note the note to log
+   */
+  void addUserNoteBracketedBeginTime(
+    TraceEventIDType const event, std::string const& note
+  );
+
+  /**
+   * \brief Log the end of the bracketed user event with a note
+   *
+   * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
+   * bracketed user events with a note.
+   *
    * \param[in] event the event ID
    */
-  void addUserBracketedNote(
-    TimeType const begin, TimeType const end, std::string const& note,
-    TraceEventIDType const event = no_trace_event
+  void addUserNoteBracketedEndTime(TraceEventIDType const event);
+
+  /**
+   * \brief Log the end of the bracketed user event with a note
+   *
+   * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
+   * bracketed user events with a note.
+   *
+   * \param[in] event the event ID
+   * \param[in] new_note the new note which overrides the old one
+   */
+  void addUserNoteBracketedEndTime(
+    TraceEventIDType const event, std::string const& new_note
   );
 
  /**
@@ -215,6 +246,9 @@ struct TraceLite  {
   /**
    * \brief Flush traces to file
    *
+   * \note The flush will be blocked when having an incomplete user notes.
+   * In that case method will not flush any traces.
+   *
    * \param[in] useGlobalSync whether a global sync should be invoked before
    * flushing output
    */
@@ -244,7 +278,7 @@ struct TraceLite  {
   /**
    * \brief Convert time in seconds to integer in microseconds
    *
-   * \param[in] time the time in seconds as double
+   * \param[in] time the time in seconds as TimeType
    *
    * \return time in microsecond as integer
    */
@@ -266,7 +300,7 @@ struct TraceLite  {
    *
    * @return the last recorded trace event
    */
-  const LogType* getLastTraceEvent() const noexcept {
+  LogType* getLastTraceEvent() noexcept {
     return traces_.empty() ? nullptr : &traces_.back();
   }
 
@@ -371,6 +405,20 @@ protected:
     return traces_.size() * sizeof(Log);
   }
 
+private:
+
+  /**
+   * \brief Completes the user note by updating the event end time
+   * and replacing the message if new one is supplied.
+   *
+   * \param[in] event the event to be closed
+   * \param[in] end the time to be set as event end time
+   * \param[in] new_note the new note
+   */
+  void updateNoteEndTime(
+    const TraceEventIDType& event, const TimeType& end,
+    const std::string* new_note);
+
 protected:
   /*
    * Incremental flush mode for zlib. Not set here with zlib constants to reduce
@@ -397,6 +445,7 @@ protected:
   bool trace_enabled_cur_phase_ = true;
   bool idle_begun_              = false;
   std::unique_ptr<vt_gzFile> log_file_;
+  std::unordered_map<TraceEventIDType, std::stack<Log*>> incomplete_notes_ = {};
 };
 
 }} //end namespace vt::trace

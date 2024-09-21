@@ -5,7 +5,7 @@
 //                                 lb_common.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -147,7 +147,7 @@ struct ReassignmentMsg : vt::Message {
   { }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
+  void serialize([[maybe_unused]] SerializerT& s) {
     vtAssert(false, "Must never be called");
   }
 

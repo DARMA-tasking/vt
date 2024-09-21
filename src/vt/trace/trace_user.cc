@@ -5,7 +5,7 @@
 //                                trace_user.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -51,7 +51,9 @@
 
 namespace vt { namespace trace {
 
-UserEventIDType registerEventCollective(std::string const& name) {
+UserEventIDType registerEventCollective(
+  [[maybe_unused]] std::string const& name
+) {
 #if vt_check_enabled(trace_enabled)
   return theTrace()->registerUserEventColl(name);
 #else
@@ -59,7 +61,7 @@ UserEventIDType registerEventCollective(std::string const& name) {
 #endif
 }
 
-UserEventIDType registerEventRooted(std::string const& name) {
+UserEventIDType registerEventRooted([[maybe_unused]] std::string const& name) {
 #if vt_check_enabled(trace_enabled)
   return theTrace()->registerUserEventRoot(name);
 #else
@@ -67,7 +69,7 @@ UserEventIDType registerEventRooted(std::string const& name) {
 #endif
 }
 
-UserEventIDType registerEventHashed(std::string const& name) {
+UserEventIDType registerEventHashed([[maybe_unused]] std::string const& name) {
 #if vt_check_enabled(trace_enabled)
   return theTrace()->registerUserEventHash(name);
 #else
@@ -75,67 +77,43 @@ UserEventIDType registerEventHashed(std::string const& name) {
 #endif
 }
 
-void addUserEvent(UserEventIDType event) {
+void addUserEvent([[maybe_unused]] UserEventIDType event) {
 #if vt_check_enabled(trace_enabled)
   theTrace()->addUserEvent(event);
 #endif
 }
 
-void addUserEventBracketed(UserEventIDType event, TimeType begin, TimeType end) {
-#if vt_check_enabled(trace_enabled)
-  theTrace()->addUserEventBracketed(event, begin, end);
-#endif
-}
-
-void addUserNote(std::string const& note) {
+void addUserNote([[maybe_unused]] std::string const& note) {
 #if vt_check_enabled(trace_enabled)
   theTrace()->addUserNote(note);
 #endif
 }
 
-void addUserData(int32_t data) {
+void addUserData([[maybe_unused]] int32_t data) {
 #if vt_check_enabled(trace_enabled)
   theTrace()->addUserData(data);
 #endif
 }
 
-void addUserBracketedNote(
-  TimeType const begin, TimeType const end, std::string const& note,
-  TraceEventIDType const event
+void addUserNotePre(
+  [[maybe_unused]] std::string const& in_note,
+  [[maybe_unused]] TraceEventIDType const in_event
 ) {
 #if vt_check_enabled(trace_enabled)
-  theTrace()->addUserBracketedNote(begin, end, note, event);
+  if (in_event != no_trace_event) {
+    theTrace()->addUserNoteBracketedBeginTime(in_event, in_note);
+  }
 #endif
 }
 
+void addUserNoteEpi(
+  [[maybe_unused]] std::string const& in_note,
+  [[maybe_unused]] TraceEventIDType const in_event
+) {
 #if vt_check_enabled(trace_enabled)
-struct UserSplitHolder final {
-  static std::unordered_map<std::string, TimeType> split_;
-};
-
-/*static*/ std::unordered_map<std::string, TimeType> UserSplitHolder::split_ = {};
-#endif
-
-void addUserNotePre(std::string const& note, TraceEventIDType const) {
-#if vt_check_enabled(trace_enabled)
-  auto iter = UserSplitHolder::split_.find(note);
-  vtAssertExpr(iter == UserSplitHolder::split_.end());
-  UserSplitHolder::split_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(note),
-    std::forward_as_tuple(Trace::getCurrentTime())
-  );
-#endif
-}
-
-void addUserNoteEpi(std::string const& in_note, TraceEventIDType const event) {
-#if vt_check_enabled(trace_enabled)
-  auto iter = UserSplitHolder::split_.find(in_note);
-  vtAssertExpr(iter != UserSplitHolder::split_.end());
-  auto begin = iter->second;
-  auto end = Trace::getCurrentTime();
-  theTrace()->addUserBracketedNote(begin, end, in_note, event);
-  UserSplitHolder::split_.erase(iter);
+  if (in_event != no_trace_event) {
+    theTrace()->addUserNoteBracketedEndTime(in_event, in_note);
+  }
 #endif
 }
 

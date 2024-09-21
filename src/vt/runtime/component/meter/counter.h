@@ -5,7 +5,7 @@
 //                                  counter.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -77,7 +77,7 @@ public:
    *
    * \param[in] val amount to increment
    */
-  void increment(T val = 1) {
+  void increment([[maybe_unused]] T val = 1) {
 #   if vt_check_enabled(diagnostics)
     if (impl_) {
       impl_->update(val);
@@ -90,7 +90,7 @@ public:
    *
    * \param[in] val amount to decrement
    */
-  void decrement(T val = 1) {
+  void decrement([[maybe_unused]] T val = 1) {
 #   if vt_check_enabled(diagnostics)
     if (impl_) {
       impl_->update(-val);

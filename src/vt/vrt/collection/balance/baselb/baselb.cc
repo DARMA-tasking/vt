@@ -5,7 +5,7 @@
 //                                  baselb.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -93,7 +93,7 @@ LoadType BaseLB::loadMilli(LoadType const& load) {
 
 void BaseLB::importProcessorData(
   StatisticMapType const& in_stats, ElementCommType const& comm_in,
-  balance::DataMapType const& in_data_map
+  [[maybe_unused]] balance::DataMapType const& in_data_map
 ) {
   vt_debug_print(
     normal, lb,
@@ -143,6 +143,9 @@ std::shared_ptr<const balance::Reassignment> BaseLB::normalizeReassignments() {
     auto const new_node = std::get<1>(transfer);
     auto const current_node = obj_id.curr_node;
 
+    vtAbortIf(
+      not obj_id.isMigratable(), "Transfering object that is not migratable"
+    );
     if (current_node == new_node) {
       vt_debug_print(
         verbose, lb, "BaseLB::normalizeReassignments(): self migration\n"

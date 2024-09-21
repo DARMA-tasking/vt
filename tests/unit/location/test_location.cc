@@ -5,7 +5,7 @@
 //                               test_location.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -135,7 +135,9 @@ TEST_F(TestLocation, test_unregister_multiple_entities) /* NOLINT */ {
   for (auto i = 0; i < nb_nodes; ++i) {
     // The entity can be located on the node where it has been registered
     vt::theLocMan()->virtual_loc->getLocation(
-      location::default_entity + i, i, [](vt::NodeType node) {
+      location::default_entity + i, i,
+      []([[maybe_unused]] vt::NodeType node
+    ) {
         // This lambda should not be executed if the unregisterEntity works
         // correctly
         FAIL() << "entity should have been yet unregistered";
@@ -366,7 +368,8 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_hits) /* NOLINT */ {
   // register entity and count received messages
   if (my_node == home) {
     vt::theLocMan()->virtual_loc->registerEntity(
-      entity, my_node, [&](vt::BaseMessage* msg){ nb_received++; }
+      entity, my_node,
+      [&]([[maybe_unused]] vt::BaseMessage* msg){ nb_received++; }
     );
   }
 
@@ -410,7 +413,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
         // receive migrated entity: register it and keep in cache
         vt::theLocMan()->virtual_loc->entityImmigrated(
           entity, home, my_node,
-          [entity, &nb_received](vt::BaseMessage* in_msg) {
+          [entity, &nb_received]([[maybe_unused]] vt::BaseMessage* in_msg) {
             vt_debug_print(
               normal, location,
               "TestLocationRoute: message arrived to me for a migrated "

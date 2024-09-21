@@ -5,7 +5,7 @@
 //                              lb_data_holder.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,12 +41,57 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/context/context.h"
+#include "vt/elm/elm_id_bits.h"
+#include "vt/vrt/collection/balance/lb_data_holder.h"
+
+#if vt_check_enabled(tv)
+#  include <vt-tv/api/info.h>
+#endif
 
 #include <nlohmann/json.hpp>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
+
+void LBDataHolder::getObjectFromJsonField_(
+  nlohmann::json const& field, nlohmann::json& object, bool& is_bitpacked,
+  bool& is_collection) {
+  if (field.find("id") != field.end()) {
+    object = field["id"];
+    is_bitpacked = true;
+  } else {
+    object = field["seq_id"];
+    is_bitpacked = false;
+  }
+  vtAssertExpr(object.is_number());
+  if (field.find("collection_id") != field.end()) {
+    is_collection = true;
+  } else {
+    is_collection = false;
+  }
+}
+
+ElementIDStruct
+LBDataHolder::getElmFromCommObject_(
+  nlohmann::json const& field) const {
+  // Get the object's id and determine if it is bit-encoded
+  nlohmann::json object;
+  bool is_bitpacked, is_collection;
+  getObjectFromJsonField_(field, object, is_bitpacked, is_collection);
+
+  // Create elm with encoded data
+  ElementIDStruct elm;
+  if (is_collection and not is_bitpacked) {
+    int home = field["home"];
+    bool is_migratable = field["migratable"];
+    elm = elm::ElmIDBits::createCollectionImpl(
+      is_migratable, static_cast<ElementIDType>(object), home, this_node_);
+  } else {
+    elm = ElementIDStruct{object, this_node_};
+  }
+
+  return elm;
+}
 
 void LBDataHolder::outputEntity(nlohmann::json& j, ElementIDStruct const& id) const {
   j["type"] = "object";
@@ -88,7 +133,6 @@ std::unique_ptr<nlohmann::json> LBDataHolder::metadataToJson() const {
   };
 
   nlohmann::json j;
-  j["count"] = count_;
 
   // Generate list and ranges of skipped phases
   std::set<PhaseType> skipped_list;
@@ -125,6 +169,35 @@ std::unique_ptr<nlohmann::json> LBDataHolder::metadataToJson() const {
   return std::make_unique<nlohmann::json>(std::move(j));
 }
 
+std::unique_ptr<nlohmann::json> LBDataHolder::rankAttributesToJson() const {
+  if (rank_attributes_.empty()) {
+    return nullptr;
+  }
+
+  nlohmann::json j;
+
+  for (auto const& [key, value] : rank_attributes_) {
+    if (std::holds_alternative<int>(value)) {
+      j["attributes"][key] = std::get<int>(value);
+    } else if (std::holds_alternative<double>(value)) {
+      j["attributes"][key] = std::get<double>(value);
+    } else if (std::holds_alternative<std::string>(value)) {
+      j["attributes"][key] = std::get<std::string>(value);
+    }
+  }
+
+  return std::make_unique<nlohmann::json>(std::move(j));
+}
+
+void LBDataHolder::addInitialTask(nlohmann::json& j, std::size_t n) const {
+  j["tasks"][n]["resource"] = "cpu";
+  j["tasks"][n]["node"] = vt::theContext()->getNode();
+  j["tasks"][n]["time"] = 0.0;
+  outputEntity(
+    j["tasks"][n]["entity"], ElementIDStruct()
+  );
+}
+
 std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   using json = nlohmann::json;
 
@@ -150,6 +223,20 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       }
       outputEntity(j["tasks"][i]["entity"], id);
 
+      if (node_user_attributes_.find(phase) != node_user_attributes_.end()) {
+        if (node_user_attributes_.at(phase).find(id) != node_user_attributes_.at(phase).end()) {
+          for (auto const& [key, value] : node_user_attributes_.at(phase).at(id)) {
+            if (std::holds_alternative<int>(value)) {
+              j["tasks"][i]["attributes"][key] = std::get<int>(value);
+            } else if (std::holds_alternative<double>(value)) {
+              j["tasks"][i]["attributes"][key] = std::get<double>(value);
+            } else if (std::holds_alternative<std::string>(value)) {
+              j["tasks"][i]["attributes"][key] = std::get<std::string>(value);
+            }
+          }
+        }
+      }
+
       auto const& subphase_times = elm.second.subphase_loads;
       std::size_t const subphases = subphase_times.size();
       if (subphases != 0) {
@@ -161,13 +248,15 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
 
       i++;
     }
+
+    if ((phase == 0) and (i > 0)) {
+      addInitialTask(j, i);
+    }
   }
 
   i = 0;
   if (node_comm_.find(phase) != node_comm_.end()) {
-    for (auto&& elm : node_comm_.at(phase)) {
-      auto volume = elm.second;
-      auto const& key = elm.first;
+    for (auto const& [key, volume] : node_comm_.at(phase)) {
       j["communications"][i]["bytes"] = volume.bytes;
       j["communications"][i]["messages"] = volume.messages;
 
@@ -209,6 +298,17 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
         outputEntity(j["communications"][i]["from"], key.fromObj());
         break;
       }
+      case elm::CommCategory::ReadOnlyShared:
+      case elm::CommCategory::WriteShared: {
+        j["communications"][i]["type"] =
+          (key.cat_ == elm::CommCategory::ReadOnlyShared) ?
+          "ReadOnlyShared" : "WriteShared";
+        j["communications"][i]["to"]["type"] = "node";
+        j["communications"][i]["to"]["id"] = key.toNode();
+        j["communications"][i]["from"]["type"] = "shared_id";
+        j["communications"][i]["from"]["id"] = key.sharedID();
+        break;
+      }
       case elm::CommCategory::LocalInvoke:
       case elm::CommCategory::CollectiveToCollectionBcast:
         // not currently supported
@@ -229,10 +329,106 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   return std::make_unique<json>(std::move(j));
 }
 
+#if vt_check_enabled(tv)
+std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
+  using vt::tv::PhaseWork;
+  using vt::tv::ObjectWork;
+  using vt::tv::ObjectCommunicator;
+
+  std::unordered_map<ElementIDType, ObjectWork> objects;
+
+  if (node_data_.find(phase) != node_data_.end()) {
+    for (auto&& elm : node_data_.at(phase)) {
+      ElementIDStruct id = elm.first;
+      double whole_phase_load = elm.second.whole_phase_load;
+      auto const& subphase_loads = elm.second.subphase_loads;
+
+      ElmUserDataType user_defined;
+      if (
+        user_defined_lb_info_.find(phase) != user_defined_lb_info_.end() and
+        user_defined_lb_info_.at(phase).find(id) !=
+        user_defined_lb_info_.at(phase).end()
+      ) {
+        user_defined = user_defined_lb_info_.at(phase).at(id);
+      }
+      std::unordered_map<SubphaseType, double> subphase_map;
+      for (std::size_t i = 0; i < subphase_loads.size(); i++) {
+        subphase_map[i] = subphase_loads[i];
+      }
+      objects.try_emplace(
+        id.id,
+        // add id into map and then construct ObjectWork with these parameters
+        ObjectWork(
+          id.id, whole_phase_load, std::move(subphase_map), std::move(user_defined)
+        )
+      );
+    }
+  }
+
+  if (node_comm_.find(phase) != node_comm_.end()) {
+    for (auto&& elm : node_comm_.at(phase)) {
+      auto const& key = elm.first;
+      auto const& volume = elm.second;
+      auto const& bytes = volume.bytes;
+      switch(key.cat_) {
+      case elm::CommCategory::SendRecv: {
+        auto from_id = key.fromObj();
+        auto to_id = key.toObj();
+
+        if (objects.find(from_id.id) != objects.end()) {
+          objects.at(from_id.id).addSentCommunications(to_id.id, bytes);
+        } else if (objects.find(to_id.id) != objects.end()) {
+          objects.at(to_id.id).addReceivedCommunications(from_id.id, bytes);
+        }
+        break;
+      }
+      default:
+        // skip all other communications for now
+        break;
+      }
+    }
+  }
+
+  return std::make_unique<PhaseWork>(phase, objects);
+}
+
+std::unordered_map<ElementIDType, tv::ObjectInfo> LBDataHolder::getObjInfo(
+  PhaseType phase
+) const {
+  std::unordered_map<ElementIDType, tv::ObjectInfo> map;
+  if (node_data_.find(phase) != node_data_.end()) {
+    for (auto&& elm : node_data_.at(phase)) {
+      ElementIDStruct id = elm.first;
+
+      bool is_collection = false;
+      bool is_objgroup = false;
+
+      std::vector<uint64_t> idx;
+      if (auto it = node_idx_.find(id); it != node_idx_.end()) {
+        is_collection = true;
+        idx = std::get<1>(it->second);
+      }
+
+      if (node_objgroup_.find(id) != node_objgroup_.end()) {
+        is_objgroup = true;
+      }
+
+      tv::ObjectInfo oi{
+        id.id, id.getHomeNode(), id.isMigratable(), std::move(idx)
+      };
+      oi.setIsCollection(is_collection);
+      oi.setIsObjGroup(is_objgroup);
+      map[id.id] = std::move(oi);
+    }
+  }
+  return map;
+}
+
+#endif
+
 LBDataHolder::LBDataHolder(nlohmann::json const& j)
-  : count_(0)
 {
-  auto this_node = theContext()->getNode();
+  this_node_ = theContext()->getNode();
 
   // read metadata for skipped and identical phases
   readMetadata(j);
@@ -251,28 +447,36 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
           auto node = task["node"];
           auto time = task["time"];
           auto etype = task["entity"]["type"];
+          auto home = task["entity"]["home"];
+          bool is_migratable = task["entity"]["migratable"];
+
           vtAssertExpr(time.is_number());
           vtAssertExpr(node.is_number());
 
           if (etype == "object") {
-            auto object = task["entity"]["id"];
-            vtAssertExpr(object.is_number());
+            nlohmann::json object;
+            bool is_bitpacked, is_collection;
+            getObjectFromJsonField_(task["entity"], object, is_bitpacked, is_collection);
 
-            auto elm = ElementIDStruct{object, node};
+            // Create elm
+            ElementIDStruct elm = is_collection and not is_bitpacked
+              ? elm::ElmIDBits::createCollectionImpl(
+                  is_migratable, static_cast<ElementIDType>(object), home, this_node_)
+              : ElementIDStruct{object, this_node_};
             this->node_data_[id][elm].whole_phase_load = time;
 
-            if (
-              task["entity"].find("collection_id") != task["entity"].end() and
-              task["entity"].find("index") != task["entity"].end()
-            ) {
+            if (is_collection) {
               auto cid = task["entity"]["collection_id"];
-              auto idx = task["entity"]["index"];
-              if (cid.is_number() && idx.is_array()) {
-                std::vector<uint64_t> arr = idx;
-                auto proxy = static_cast<VirtualProxyType>(cid);
-                this->node_idx_[elm] = std::make_tuple(proxy, arr);
+              if (task["entity"].find("index") != task["entity"].end()) {
+                auto idx = task["entity"]["index"];
+                if (cid.is_number() && idx.is_array()) {
+                  std::vector<uint64_t> arr = idx;
+                  auto proxy = static_cast<VirtualProxyType>(cid);
+                  this->node_idx_[elm] = std::make_tuple(proxy, arr);
+                }
               }
             }
+
 
             if (task.find("subphases") != task.end()) {
               auto subphases = task["subphases"];
@@ -303,6 +507,18 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
                 }
               }
             }
+
+            if (task.find("attributes") != task.end()) {
+              for (auto const& [key, value] : task["attributes"].items()) {
+                if (value.is_number_integer()) {
+                  node_user_attributes_[id][elm][key] = value.get<int>();
+                } else if (value.is_number_float()) {
+                  node_user_attributes_[id][elm][key] = value.get<double>();
+                } else if (value.is_string()) {
+                  node_user_attributes_[id][elm][key] = value.get<std::string>();
+                }
+              }
+            }
           }
         }
       }
@@ -325,13 +541,8 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               vtAssertExpr(comm["from"]["type"] == "object");
               vtAssertExpr(comm["to"]["type"] == "object");
 
-              auto from_object = comm["from"]["id"];
-              vtAssertExpr(from_object.is_number());
-              auto from_elm = ElementIDStruct{from_object, this_node};
-
-              auto to_object = comm["to"]["id"];
-              vtAssertExpr(to_object.is_number());
-              auto to_elm = ElementIDStruct{to_object, this_node};
+              auto from_elm = getElmFromCommObject_(comm["from"]);
+              auto to_elm = getElmFromCommObject_(comm["to"]);
 
               CommKey key(
                 CommKey::CollectionTag{},
@@ -348,9 +559,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               auto from_node = comm["from"]["id"];
               vtAssertExpr(from_node.is_number());
 
-              auto to_object = comm["to"]["id"];
-              vtAssertExpr(to_object.is_number());
-              auto to_elm = ElementIDStruct{to_object, this_node};
+              auto to_elm = getElmFromCommObject_(comm["to"]);
 
               CommKey key(
                 CommKey::NodeToCollectionTag{},
@@ -365,9 +574,7 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               vtAssertExpr(comm["from"]["type"] == "object");
               vtAssertExpr(comm["to"]["type"] == "node");
 
-              auto from_object = comm["from"]["id"];
-              vtAssertExpr(from_object.is_number());
-              auto from_elm = ElementIDStruct{from_object, this_node};
+              auto from_elm = getElmFromCommObject_(comm["from"]);
 
               auto to_node = comm["to"]["id"];
               vtAssertExpr(to_node.is_number());
@@ -379,6 +586,34 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
               );
               CommVolume vol{bytes, messages};
               this->node_comm_[id][key] = vol;
+            } else if (
+              type == "ReadOnlyShared" or type == "WriteShared"
+            ) {
+              vtAssertExpr(comm["from"]["type"] == "shared_id");
+              vtAssertExpr(comm["to"]["type"] == "node");
+
+              CommVolume vol{bytes, messages};
+              auto to_node = comm["to"]["id"];
+              vtAssertExpr(to_node.is_number());
+
+              auto from_shared_id = comm["from"]["id"];
+              vtAssertExpr(from_shared_id.is_number());
+
+              if (type == "ReadOnlyShared") {
+                CommKey key(
+                  CommKey::ReadOnlySharedTag{},
+                  static_cast<NodeType>(to_node),
+                  static_cast<int>(from_shared_id)
+                );
+                this->node_comm_[id][key] = vol;
+              } else {
+                CommKey key(
+                  CommKey::WriteSharedTag{},
+                  static_cast<NodeType>(to_node),
+                  static_cast<int>(from_shared_id)
+                );
+                this->node_comm_[id][key] = vol;
+              }
             }
           }
         }
@@ -392,10 +627,6 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
     }
   }
 
-  if (!count_) {
-    count_ = node_data_.size();
-  }
-
   // @todo: implement subphase communication de-serialization, no use for it
   // right now, so it will be ignored
 }
@@ -405,9 +636,6 @@ void LBDataHolder::readMetadata(nlohmann::json const& j) {
     auto metadata = j["metadata"];
     if (metadata.find("phases") != metadata.end()) {
       auto phases = metadata["phases"];
-      // load count
-      vtAssertExpr(phases["count"].is_number());
-      count_ = phases["count"];
       // load all skipped phases
       auto sl = phases["skipped"]["list"];
       if(sl.is_array()) {
@@ -441,6 +669,18 @@ void LBDataHolder::readMetadata(nlohmann::json const& j) {
         }
       }
     }
+    // load rank user atrributes
+    if (metadata.find("attributes") != metadata.end()) {
+      for (auto const& [key, value] : metadata["attributes"].items()) {
+        if (value.is_number_integer()) {
+          rank_attributes_[key] = value.get<int>();
+        } else if (value.is_number_float()) {
+          rank_attributes_[key] = value.get<double>();
+        } else if (value.is_string()) {
+          rank_attributes_[key] = value.get<std::string>();
+        }
+      }
+    }
   }
 }
 
@@ -449,7 +689,6 @@ void LBDataHolder::clear() {
   node_data_.clear();
   node_subphase_comm_.clear();
   node_idx_.clear();
-  count_ = 0;
   skipped_phases_.clear();
   identical_phases_.clear();
 }

@@ -5,7 +5,7 @@
 //                                  runtime.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -272,7 +272,7 @@ void Runtime::pauseForDebugger() {
   handleSignalFailure();
 }
 
-/*static*/ void Runtime::sigHandlerUsr1(int sig) {
+/*static*/ void Runtime::sigHandlerUsr1([[maybe_unused]] int sig) {
   Runtime::sig_user_1_ = true;
 }
 
@@ -424,12 +424,25 @@ bool Runtime::tryFinalize(bool const disable_sig) {
 }
 
 bool Runtime::needLBDataRestartReader() {
+  using vrt::collection::balance::ReadLBConfig;
+  using vrt::collection::balance::LBType;
+  using vrt::collection::balance::get_lb_names;
+
+  bool needOfflineLB = false;
+
   #if vt_check_enabled(lblite)
-  if (true) {
-    return arg_config_->config_.vt_lb_data_in;
-  } else
+  if (ReadLBConfig::openConfig(arg_config_->config_.vt_lb_file_name)) {
+    needOfflineLB = ReadLBConfig::hasOfflineLB();
+  }
+
+  needOfflineLB = needOfflineLB || arg_config_->config_.vt_lb_name == get_lb_names()[LBType::OfflineLB];
+
+  if (needOfflineLB && !arg_config_->config_.vt_lb_data_in) {
+    vtAbort("VT cannot run OfflineLB without '--vt_lb_data_in' parameter.");
+  }
   #endif
-    return false;
+
+  return needOfflineLB;
 }
 
 bool Runtime::initialize(bool const force_now) {
@@ -566,7 +579,7 @@ void Runtime::reset() {
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
   output(abort_str, code, true, true, false);
 
-  if (theConfig()->vt_throw_on_abort) {
+  if (theContext && theConfig()->vt_throw_on_abort) {
     throw std::runtime_error(abort_str);
   } else {
     aborted_ = true;
@@ -583,8 +596,8 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
 }
 
 void Runtime::output(
-  std::string const abort_str, ErrorCodeType const code, bool error,
-  bool decorate, bool formatted
+  std::string const abort_str, [[maybe_unused]] ErrorCodeType const code,
+  bool error, bool decorate, bool formatted
 ) {
   auto node      = theContext ? theContext->getNode() : -1;
   auto green     = debug::green();
@@ -627,7 +640,12 @@ void Runtime::output(
     fmt::print(stderr, "{}\n", prefix);
   }
 
-  if (!theConfig()->vt_no_stack) {
+  if (theContext == nullptr) {
+    // Too early in init process to check dump settings - always dump stack.
+    auto stack = debug::stack::dumpStack();
+    auto stack_pretty = debug::stack::prettyPrintStack(stack);
+    fmt::print("{}", stack_pretty);
+  } else if (!theConfig()->vt_no_stack) {
     bool const on_abort = !theConfig()->vt_no_abort_stack;
     bool const on_warn = !theConfig()->vt_no_warn_stack;
     bool const dump = (error && on_abort) || (!error && on_warn);
@@ -946,7 +964,7 @@ namespace {
    * \param comm    the MPI communicator
    * \param errc    pointer to the error code
    */
-  void mpiErrorHandler(MPI_Comm *comm, int *errc, ...) {
+  void mpiErrorHandler([[maybe_unused]] MPI_Comm *comm, int *errc, ...) {
     int len = MPI_MAX_ERROR_STRING;
     char msg[MPI_MAX_ERROR_STRING];
     MPI_Error_string(*errc, msg, &len);

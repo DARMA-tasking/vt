@@ -5,7 +5,7 @@
 //                                 smart_ptr.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -82,15 +82,15 @@ namespace vt { namespace messaging {
 struct MsgPtrImplBase {
   /// Invoke messageDeref on the appropriate type.
   /// (Ensure a valid delete-expression on virtual message types.)
-  virtual void messageDeref(void* msg_ptr) = 0;
+  virtual void messageDeref(std::byte* msg_ptr) = 0;
   virtual ~MsgPtrImplBase() {}
 };
 
 template <typename MsgT>
 struct MsgPtrImplTyped : MsgPtrImplBase {
-  virtual void messageDeref(void* msg_ptr) {
+  virtual void messageDeref(std::byte* msg_ptr) override {
     // N.B. messageDeref<T> invokes delete-expr T.
-    vt::messageDeref(static_cast<MsgT*>(msg_ptr));
+    vt::messageDeref(reinterpret_cast<MsgT*>(msg_ptr));
   }
 };
 
@@ -211,7 +211,7 @@ struct MsgSharedPtr final {
 
     // Obtain the size of the message from the block allocated by the
     // memory pool allocator
-    return thePool()->allocatedSize(ptr_);
+    return thePool()->allocatedSize(reinterpret_cast<std::byte*>(ptr_));
   }
 
   /**
@@ -280,7 +280,7 @@ private:
 
     T* msgPtr = get();
 
-    impl_->messageDeref(msgPtr);
+    impl_->messageDeref(reinterpret_cast<std::byte*>(msgPtr));
 
     ptr_ = nullptr;
   }

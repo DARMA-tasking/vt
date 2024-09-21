@@ -10,6 +10,7 @@ else()
   message(STATUS "Building VT without extended testing")
 endif()
 
+set(PROJECT_TEST_CONFIG_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/config)
 set(PROJECT_TEST_UNIT_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 set(PROJECT_TEST_PERF_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/perf)
 set(PROJECT_GTEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/googletest/googletest/include)
@@ -44,7 +45,9 @@ subdirlist(
 set(BUILD_GMOCK OFF CACHE BOOL "Builds the googlemock subproject" FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Enable installation of googletest. (Projects embedding googletest may want to turn this OFF.)" FORCE)
 
-add_subdirectory(extern/googletest)
+if (NOT TARGET gtest)
+  add_subdirectory(extern/googletest)
+endif()
 set(GOOGLETEST_LIBRARY gtest)
 set_darma_compiler_flags(${GOOGLETEST_LIBRARY})
 
@@ -207,12 +210,26 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
     list(APPEND ADDITIONAL_ARGS "--vt_trace")
   endif()
 
+  if (vt_tv_enabled)
+    list(APPEND ADDITIONAL_ARGS "--vt_tv")
+    list(APPEND ADDITIONAL_ARGS "--vt_tv_config_file=${PROJECT_TEST_CONFIG_DIR}/test_vttv.yaml")
+  endif()
+
   add_unit_test("${SUB_DIR}_basic" UNIT_LIST_BASIC ON "${ADDITIONAL_ARGS}")
   add_unit_test("${SUB_DIR}_nompi" UNIT_LIST_NOMPI OFF "${ADDITIONAL_ARGS}")
 
   if (vt_build_extended_tests)
     add_unit_test("${SUB_DIR}_extended" UNIT_LIST_EXTENDED ON "${ADDITIONAL_ARGS}")
   endif()
+endforeach()
+
+# Copy synthetic blocks data files to <build-dir>/tests/synthetic-blocks-data
+set(SYNTHETIC_BLOCKS_DATA_DEST "${CMAKE_BINARY_DIR}/tests/synthetic-blocks-data")
+file(MAKE_DIRECTORY ${SYNTHETIC_BLOCKS_DATA_DEST})
+file(GLOB SYNTHETIC_BLOCKS_DATA_FILES "${CMAKE_SOURCE_DIR}/tests/data/synthetic-blocks/*")
+foreach(SYNTHETIC_BLOCKS_DATA_FILE ${SYNTHETIC_BLOCKS_DATA_FILES})
+  get_filename_component(FILE_NAME ${SYNTHETIC_BLOCKS_DATA_FILE} NAME)
+  configure_file(${SYNTHETIC_BLOCKS_DATA_FILE} ${SYNTHETIC_BLOCKS_DATA_DEST} COPYONLY)
 endforeach()
 
 #

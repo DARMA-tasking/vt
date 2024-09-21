@@ -5,7 +5,7 @@
 //                            pipe_manager_tl.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -228,7 +228,7 @@ auto PipeManagerTL::makeCallbackProxy(ProxyT proxy) {
 }
 
 template <auto f, bool is_bcast>
-auto PipeManagerTL::makeCallbackSingle(NodeType node) {
+auto PipeManagerTL::makeCallbackSingle([[maybe_unused]] NodeType node) {
   auto const new_pipe_id = makePipeID(true,false);
 
   using Trait = FuncTraits<decltype(f)>;
@@ -254,7 +254,7 @@ auto PipeManagerTL::makeCallbackSingle(NodeType node) {
 }
 
 template <typename FunctorT, bool is_bcast>
-auto PipeManagerTL::makeCallbackFunctor(NodeType node) {
+auto PipeManagerTL::makeCallbackFunctor([[maybe_unused]] NodeType node) {
   auto const new_pipe_id = makePipeID(true,false);
 
   using Trait = FunctorTraits<FunctorT, decltype(&FunctorT::operator())>;

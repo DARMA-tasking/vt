@@ -5,7 +5,7 @@
 //                             test_pending_send.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -60,7 +60,7 @@ struct TestPendingSend : TestParallelHarness {
     vt::NodeType sender = uninitialized_destination;
   };
   static void handlerPong(TestMsg*) { delivered = true; }
-  static void handlerPing(TestMsg* in_msg) {
+  static void handlerPing([[maybe_unused]] TestMsg* in_msg) {
     auto const this_node = theContext()->getNode();
     auto const num_nodes = theContext()->getNumNodes();
     auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;

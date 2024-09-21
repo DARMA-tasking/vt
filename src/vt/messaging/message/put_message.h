@@ -5,7 +5,7 @@
 //                                put_message.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -52,10 +52,10 @@ namespace vt { namespace messaging {
 
 template <typename MessageT>
 struct PutMessageComponent : MessageT {
-  void setPut(void const* const ptr, size_t const size) {
+  void setPut(std::byte const* const ptr, size_t const size) {
     envelopeSetPutPtr(MessageT::env, ptr, size);
   }
-  void* getPut() {
+  std::byte* getPut() {
     return envelopeGetPutPtr(MessageT::env);
   }
   size_t getPutSize() {

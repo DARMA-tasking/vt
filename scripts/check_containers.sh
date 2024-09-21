@@ -8,7 +8,7 @@ diff_latest() {
   git diff --name-only HEAD^1 HEAD | tee >(cat >&2)
 }
 
-# Decide which docker-compose command to use:
+# Decide which docker compose command to use:
 if diff_latest | grep -i dockerfile > /dev/null
 then
     echo "build --pull"

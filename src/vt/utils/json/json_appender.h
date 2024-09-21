@@ -5,7 +5,7 @@
 //                               json_appender.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -49,7 +49,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_CORE
 
 namespace vt { namespace util { namespace json {
 

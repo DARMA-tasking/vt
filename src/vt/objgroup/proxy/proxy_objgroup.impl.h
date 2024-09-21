@@ -5,7 +5,7 @@
 //                            proxy_objgroup.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -139,7 +139,8 @@ Proxy<ObjT>::multicast(GroupType type, Params&&... params) const{
 template <typename ObjT>
 template <auto f, typename... Params>
 typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::multicast(
-  group::region::Region::RegionUPtrType&& nodes, Params&&... params) const {
+  group::region::Region::RegionUPtrType&& nodes, Params&&... params
+) const {
   vtAssert(
     not dynamic_cast<group::region::ShallowList*>(nodes.get()),
     "multicast: range of nodes is not supported for ShallowList!"
@@ -150,11 +151,29 @@ typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::multicast(
 
   auto groupID = theGroup()->GetTempGroupForRange(range);
   if (!groupID.has_value()) {
-    groupID = theGroup()->newGroup(std::move(nodes), [](GroupType type) {});
-    theGroup()->AddNewTempGroup(range, groupID.value());
+    return typename Proxy<ObjT>::PendingSendType{
+      theTerm()->getCurrentEpoch(),
+      [&, this,
+       args = std::make_tuple(std::forward<Params>(params)...)] {
+        std::apply(
+          [&, this](auto&&... unpackedArgs) {
+            // Explicit copy, we move 'nodes' in group creation
+            auto range_copy = nodes->makeList();
+            auto id =
+              theGroup()->newGroup(std::move(nodes), [&, this](GroupType type) {
+                multicast<f>(
+                  type, std::forward<decltype(unpackedArgs)>(unpackedArgs)...);
+              });
+            theGroup()->AddNewTempGroup(range_copy, id);
+          },
+          std::move(args));
+      }};
+  } else {
+    return multicast<f>(groupID.value(), std::forward<Params>(params)...);
   }
 
-  return multicast<f>(groupID.value(), std::forward<Params>(params)...);
+  // Silence nvcc warning (no longer needed for CUDA 11.7 and up)
+  return typename Proxy<ObjT>::PendingSendType{std::nullptr_t{}};
 }
 
 template <typename ObjT>
@@ -279,7 +298,7 @@ typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceS
 template <typename ObjT>
 ObjT* Proxy<ObjT>::get() const {
   auto proxy = Proxy<ObjT>(*this);
-  return theObjGroup()->get<ObjT>(proxy);
+  return reinterpret_cast<ObjT*>(theObjGroup()->get<ObjT>(proxy));
 }
 
 template <typename ObjT>

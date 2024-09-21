@@ -5,7 +5,7 @@
 //                                rdma_common.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -75,6 +75,7 @@ enum Type {
   Uninitialized = 3
 };
 
+
 static constexpr BitCountType const rdma_type_num_bits = 4;
 static constexpr BitCountType const rdma_sized_num_bits = 1;
 static constexpr BitCountType const rdma_collective_num_bits = 1;
@@ -104,7 +105,7 @@ using ActiveGetFunctionType = RDMA_GetType(*)(BaseMessage*, ByteType, ByteType, 
 using ActivePutFunctionType = void(*)(BaseMessage*, RDMA_PtrType, ByteType, ByteType, TagType, bool);
 
 using RDMA_PtrContinuationType = std::function<void(RDMA_PtrType)>;
-using RDMA_RecvType = std::function<void(void* ptr, size_t num_bytes)>;
+using RDMA_RecvType = std::function<void(std::byte* ptr, size_t num_bytes)>;
 
 using RDMA_NumElemsType = int64_t;
 using RDMA_BlockElmRangeType = std::tuple<RDMA_BlockType,RDMA_ElmType,RDMA_ElmType>;
@@ -115,6 +116,39 @@ static constexpr Type uninitialized_rdma_type = Type::Uninitialized;
 static constexpr ByteType rdma_default_byte_size = sizeof(char);
 
 }} //end namespace vt::rdma
+
+VT_FMT_NAMESPACE_BEGIN
+
+template <>
+struct formatter<::vt::rdma::Type> {
+  constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
+
+  template <typename FormatContext>
+  auto format(::vt::rdma::Type t, FormatContext& ctx) const {
+    std::string_view name = "Unknown";
+    switch (t) {
+    case ::vt::rdma::Type::Get:
+      name = "Get";
+      break;
+    case ::vt::rdma::Type::Put:
+      name = "Put";
+      break;
+    case ::vt::rdma::Type::GetOrPut:
+      name = "GetOrPut";
+      break;
+    case ::vt::rdma::Type::Uninitialized:
+      name = "Uninitialized";
+      break;
+    default:
+      name = fmt::format(
+        "{}", static_cast<std::underlying_type_t<::vt::rdma::Type>>(t));
+    }
+
+    return fmt::format_to(ctx.out(), name);
+  }
+};
+
+VT_FMT_NAMESPACE_END
 
 #define PRINT_CHANNEL_TYPE(rdma_op_type) (                              \
   rdma_op_type == vt::rdma::Type::Get ? "rdma::Get" : (            \

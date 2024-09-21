@@ -5,7 +5,7 @@
 //                                scatter.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -65,10 +65,10 @@ void Scatter::scatter(
   auto scatter_msg =
     makeMessageSz<ScatterMsg>(combined_size, combined_size, elm_size);
   vtAssert(total_size == combined_size, "Sizes must be consistent");
-  auto ptr = reinterpret_cast<char*>(scatter_msg.get()) + sizeof(ScatterMsg);
+  auto ptr = reinterpret_cast<std::byte*>(scatter_msg.get()) + sizeof(ScatterMsg);
 #if vt_check_enabled(memory_pool)
   auto remaining_size =
-    thePool()->remainingSize(reinterpret_cast<void*>(scatter_msg.get()));
+    thePool()->remainingSize(reinterpret_cast<std::byte*>(scatter_msg.get()));
   vtAssertInfo(
     remaining_size >= combined_size, "Remaining size must be sufficient",
     total_size, combined_size, remaining_size, elm_size

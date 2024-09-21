@@ -5,7 +5,7 @@
 //                             naive_persistence.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -68,4 +68,4 @@ struct NaivePersistence : public ComposedModel {
 
 }}}} // end namespace
 
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_NAIVE_PERSISTENCE_H*/

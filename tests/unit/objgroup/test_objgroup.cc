@@ -5,7 +5,7 @@
 //                               test_objgroup.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -79,7 +79,7 @@ struct TestObjGroup : TestParallelHarness {
   void verifyVec(VectorPayload vec) {
     auto final_size = vec.vec_.size();
     auto n = vt::theContext()->getNumNodes();
-    EXPECT_EQ(final_size, n);
+    EXPECT_EQ(final_size, static_cast<std::size_t>(n));
     total_verify_expected_++;
   }
 };

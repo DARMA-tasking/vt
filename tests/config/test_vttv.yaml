@@ -1,0 +1,10 @@
+viz:
+  x_ranks: 2
+  y_ranks: 2
+  z_ranks: 1
+  object_jitter: 0.5
+  rank_qoi: load
+  object_qoi: load
+  save_meshes: false
+  save_pngs: false
+  force_continuous_object_qoi: true

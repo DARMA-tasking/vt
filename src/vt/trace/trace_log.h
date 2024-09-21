@@ -5,7 +5,7 @@
 //                                 trace_log.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -223,7 +223,6 @@ struct Log final {
     }
   };
 
-  // [[deprecated]]] - use appropriate ctor
   void setUserNote(std::string const& note) {
     if (data.user.data_type == LogDataType::user) {
       data.user.user_note = note;
@@ -259,7 +258,7 @@ struct Log final {
   // User event
   Log(
       TimeType const in_time, TraceConstantsType const in_type,
-      std::string const& in_note, UserDataType in_data
+      std::string const& in_note, [[maybe_unused]] UserDataType in_data
   ) : time(in_time), type(in_type),
       data(Data::UserData{in_note, 0, 0, false})
   {

@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                context_vrt.cc
+//                          test_collection_manager.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,9 +41,52 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/context/context_vrt.h"
+#include <vt/vrt/collection/manager.h>
 
-namespace vt { namespace vrt {
+#include <gtest/gtest.h>
 
-}} // end namespace vt::vrt
+#include "test_parallel_harness.h"
+#include "test_helpers.h"
+
+#include <memory>
+
+namespace vt { namespace tests { namespace unit {
+
+struct TestCollectionManager : TestParallelHarness {};
+
+struct TestCol : vt::Collection<TestCol,vt::Index1D> {
+  static void colHandler(TestCol*) {}
+};
+
+static constexpr int32_t const num_elms = 16;
+static constexpr int const num_phases = 5;
+
+TEST_F(TestCollectionManager, test_collection_manager_proxy_deletion) {
+  auto range = vt::Index1D(num_elms);
+
+  vt::vrt::collection::CollectionProxy<TestCol> proxy;
+
+  // Construct collection
+  runInEpochCollective([&]{
+    proxy = vt::theCollection()->constructCollective<TestCol>(
+      range, "test_collection_manager_proxy_deletion"
+    );
+  });
+
+  for (int i=0; i<num_phases; ++i) {
+    runInEpochCollective([&]{
+      // Do some work.
+      proxy.broadcastCollective<TestCol::colHandler>();
+    });
+
+    // Remove proxy prematurely
+    if (i == (num_phases - 1)) {
+        vt::theCollection()->destroy(proxy);
+    }
+
+    // Go to the next phase.
+    vt::thePhase()->nextPhaseCollective();
+  }
+}
+
+}}} // end namespace vt::tests::unit

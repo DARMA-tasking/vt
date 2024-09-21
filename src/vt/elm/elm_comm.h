@@ -5,7 +5,7 @@
 //                                  elm_comm.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -44,6 +44,7 @@
 #if !defined INCLUDED_VT_ELM_ELM_COMM_H
 #define INCLUDED_VT_ELM_ELM_COMM_H
 
+#include "vt/configs/types/types_type.h"
 #include "vt/elm/elm_id.h"
 
 #include <unordered_map>
@@ -58,7 +59,9 @@ enum struct CommCategory : int8_t {
   CollectionToNodeBcast = 5,
   NodeToCollectionBcast = 6,
   CollectiveToCollectionBcast = 7,
-  LocalInvoke = 8
+  LocalInvoke = 8,
+  WriteShared = 9,
+  ReadOnlyShared = 10
 };
 
 inline NodeType objGetNode(ElementIDStruct const id) {
@@ -71,6 +74,8 @@ struct CommKey {
   struct CollectionTag { };
   struct CollectionToNodeTag { };
   struct NodeToCollectionTag { };
+  struct WriteSharedTag { };
+  struct ReadOnlySharedTag { };
 
   CommKey() = default;
   CommKey(CommKey const&) = default;
@@ -107,12 +112,25 @@ struct CommKey {
       cat_(bcast ? CommCategory::NodeToCollectionBcast : CommCategory::NodeToCollection)
   { }
 
+  CommKey(
+    WriteSharedTag,
+    NodeType in_home, int in_shared_id
+  ) : nto_(in_home), shared_id_(in_shared_id), cat_(CommCategory::WriteShared)
+  { }
+
+  CommKey(
+    ReadOnlySharedTag,
+    NodeType in_home, int in_shared_id
+  ) : nto_(in_home), shared_id_(in_shared_id), cat_(CommCategory::ReadOnlyShared)
+  { }
+
   ElementIDStruct from_ = {};
   ElementIDStruct to_   = {};
 
   ElementIDStruct edge_id_ = {};
   NodeType nfrom_          = uninitialized_destination;
   NodeType nto_            = uninitialized_destination;
+  SharedIDType shared_id_  = no_shared_id;
   CommCategory  cat_       = CommCategory::SendRecv;
 
   ElementIDStruct fromObj()    const { return from_; }
@@ -121,6 +139,7 @@ struct CommKey {
   ElementIDType toNode()       const { return nto_; }
   ElementIDStruct edgeID()     const { return edge_id_; }
   CommCategory commCategory()  const { return cat_; }
+  int sharedID()               const { return shared_id_; }
 
   bool selfEdge() const { return cat_ == CommCategory::SendRecv and from_ == to_; }
   bool offNode() const {
@@ -140,12 +159,12 @@ struct CommKey {
     return
       k.from_  ==  from_ and k.to_  ==  to_ and
       k.nfrom_ == nfrom_ and k.nto_ == nto_ and
-      k.cat_   == cat_;
+      k.cat_   == cat_   and k.shared_id_ == shared_id_;
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | from_ | to_ | nfrom_ | nto_ | cat_ | edge_id_;
+    s | from_ | to_ | nfrom_ | nto_ | cat_ | edge_id_ | shared_id_;
   }
 };
 
@@ -189,7 +208,8 @@ struct hash<vt::elm::CommKey> {
   size_t operator()(vt::elm::CommKey const& in) const {
     return std::hash<uint64_t>()(
       std::hash<vt::elm::ElementIDStruct>()(in.from_) ^
-      std::hash<vt::elm::ElementIDStruct>()(in.to_) ^ in.nfrom_ ^ in.nto_
+      std::hash<vt::elm::ElementIDStruct>()(in.to_) ^ in.nfrom_ ^ in.nto_ ^
+      in.shared_id_
     );
   }
 };

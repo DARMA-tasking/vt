@@ -32,14 +32,14 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 4
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
           path: ~/.ccache
           key: ${{ runner.os }}-macosx-clang-14-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}-${{ hashFiles('**/*') }}
           restore-keys: |
             ${{ runner.os }}-macosx-clang-14-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: mpich-cache
         with:
           path: ~/.mpich

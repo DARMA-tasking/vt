@@ -5,7 +5,7 @@
 //                                  elm_id.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/context/context.h"
 #include "vt/elm/elm_id.h"
 #include "vt/elm/elm_id_bits.h"
 
@@ -56,6 +57,10 @@ NodeType ElementIDStruct::getHomeNode() const {
 
 NodeType ElementIDStruct::getCurrNode() const {
   return curr_node;
+}
+
+bool ElementIDStruct::isLocatedOnThisNode() const {
+  return theContext()->getNode() == curr_node and not isMigratable();
 }
 
 }} /* end namespace vt::elm */

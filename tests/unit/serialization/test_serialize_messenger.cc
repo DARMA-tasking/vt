@@ -5,7 +5,7 @@
 //                         test_serialize_messenger.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -98,6 +98,15 @@ static void myDataMsgHan(MyDataMsg* msg) {
   msg->check();
 }
 
+static void myDataHan(std::vector<int> const& vec) {
+  int i = 0;
+  EXPECT_EQ(vec.size(), 100ull);
+  for (auto&& x : vec) {
+    EXPECT_EQ(x, i);
+    i++;
+  }
+}
+
 struct TestSerialMessenger : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 };
@@ -113,6 +122,15 @@ TEST_F(TestSerialMessenger, test_serial_messenger_1) {
       SerializedMessenger::sendSerialMsg<MyDataMsg>(1, msg.get(), han);
     }
   }
+}
+
+TEST_F(TestSerialMessenger, test_serial_messenger_2) {
+  auto const& this_node = theContext()->getNode();
+  std::vector<int> vec;
+  for (int i = 0; i < 100; i++) {
+    vec.push_back(i);
+  }
+  theMsg()->send<&myDataHan>(vt::Node(this_node), vec);
 }
 
 TEST_F(TestSerialMessenger, test_serial_messenger_bcast_1) {

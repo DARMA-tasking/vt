@@ -5,7 +5,7 @@
 //                                 pipe_state.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -52,7 +52,7 @@
 namespace vt { namespace pipe {
 
 struct PipeState {
-  using DispatchFuncType = std::function<void(void*)>;
+  using DispatchFuncType = std::function<void(std::byte*)>;
 
   PipeState(
     PipeType const& in_pipe, PipeRefType const& in_signals, PipeRefType const& in_lis,
@@ -72,7 +72,7 @@ struct PipeState {
 
   bool hasDispatch() const;
   void setDispatch(DispatchFuncType in_dispatch);
-  void dispatch(void* ptr);
+  void dispatch(std::byte* ptr);
 
 private:
   bool automatic_                 = false;

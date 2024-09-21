@@ -5,7 +5,7 @@
 //                                  active.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -167,7 +167,9 @@ void ActiveMessenger::startup() {
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {}
 
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
-  HandlerType const handler, ByteType serialized_msg_size, bool is_bcast
+  [[maybe_unused]] HandlerType const handler,
+  [[maybe_unused]] ByteType serialized_msg_size,
+  [[maybe_unused]] bool is_bcast
 ) {
   #if vt_check_enabled(trace_enabled)
     trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler);
@@ -184,7 +186,7 @@ trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
 }
 
 MsgSizeType ActiveMessenger::packMsg(
-  MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
+  MessageType* msg, MsgSizeType size, std::byte* ptr, MsgSizeType ptr_bytes
 ) {
   vt_debug_print(
     verbose, active,
@@ -192,7 +194,7 @@ MsgSizeType ActiveMessenger::packMsg(
     size, ptr_bytes, print_ptr(ptr)
   );
 
-  auto const can_grow = thePool()->tryGrowAllocation(msg, ptr_bytes);
+  auto const can_grow = thePool()->tryGrowAllocation(reinterpret_cast<std::byte*>(msg), ptr_bytes);
   // Typically this should be checked by the caller in advance
   vtAssert(can_grow, "not enough space to pack message" );
 
@@ -236,7 +238,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     auto const& put_ptr = envelopeGetPutPtr(msg->env);
     auto const& put_size = envelopeGetPutSize(msg->env);
     bool const& memory_pool_active = thePool()->active_env();
-    auto const& rem_size = thePool()->remainingSize(msg);
+    auto const& rem_size = thePool()->remainingSize(reinterpret_cast<std::byte*>(msg));
     /*
      * Directly pack if the pool is active (which means it may have
      * overallocated and the remaining size of the (envelope) buffer is
@@ -255,7 +257,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
         verbose, active,
         "sendMsgBytesWithPut: (put) put_ptr={}, size:[msg={},put={},rem={}],"
         "dest={}, max_pack_size={}, direct_buf_pack={}\n",
-        put_ptr, base.size(), put_size, rem_size, dest, max_pack_direct_size,
+        print_ptr(put_ptr), base.size(), put_size, rem_size, dest, max_pack_direct_size,
         print_bool(direct_buf_pack)
       );
     }
@@ -300,7 +302,7 @@ private:
 }
 
 void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
-  auto buf = static_cast<char*>(thePool()->alloc(msg->getSize()));
+  auto buf = thePool()->alloc(msg->getSize());
 
   auto const size = msg->getSize();
   auto const info = msg->getInfo();
@@ -347,9 +349,9 @@ EventType ActiveMessenger::sendMsgMPI(
     {
       VT_ALLOW_MPI_CALLS;
       #if vt_check_enabled(trace_enabled)
-        auto tr_begin = TimeType{0.};
+        std::unique_ptr<trace::TraceScopedNote> trace_note;
         if (theConfig()->vt_trace_mpi) {
-          tr_begin = vt::timing::getCurrentTime();
+          trace_note = std::make_unique<trace::TraceScopedNote>(trace_isend);
         }
       #endif
       int const ret = MPI_Isend(
@@ -360,9 +362,9 @@ EventType ActiveMessenger::sendMsgMPI(
 
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
-          auto tr_end = vt::timing::getCurrentTime();
           auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
-          trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
+          trace_note->setNote(tr_note);
+          trace_note->end();
         }
       #endif
     }
@@ -376,7 +378,7 @@ EventType ActiveMessenger::sendMsgMPI(
     auto tag = allocateNewTag();
 
     // Send the actual data in multiple chunks
-    PtrLenPairType tup = std::make_tuple(untyped_msg, msg_size);
+    PtrLenPairType tup = std::make_tuple(reinterpret_cast<std::byte*>(untyped_msg), msg_size);
     SendInfo info = sendData(tup, dest, tag);
 
     auto event_id = info.getEvent();
@@ -539,7 +541,7 @@ SendInfo ActiveMessenger::sendData(
   vt_debug_print(
     terse, active,
     "sendData: ptr={}, num_bytes={} dest={}, tag={}, send_tag={}\n",
-    data_ptr, num_bytes, dest, tag, send_tag
+    print_ptr(data_ptr), num_bytes, dest, tag, send_tag
   );
 
   vtAbortIf(
@@ -564,7 +566,7 @@ SendInfo ActiveMessenger::sendData(
 std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
   PtrLenPairType const& payload, NodeType const& dest, TagType const& tag
 ) {
-  auto ptr = static_cast<char*>(std::get<0>(payload));
+  auto ptr = reinterpret_cast<char*>(std::get<0>(payload));
   auto remainder = std::get<1>(payload);
   int num_sends = 0;
   std::vector<EventType> events;
@@ -579,9 +581,9 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
     );
     {
       #if vt_check_enabled(trace_enabled)
-        auto tr_begin = TimeType{0.};
+        std::unique_ptr<trace::TraceScopedNote> trace_note;
         if (theConfig()->vt_trace_mpi) {
-          tr_begin = vt::timing::getCurrentTime();
+          trace_note = std::make_unique<trace::TraceScopedNote>(trace_isend);
         }
       #endif
 
@@ -601,9 +603,9 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
 
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
-          auto tr_end = vt::timing::getCurrentTime();
           auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, subsize);
-          trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
+          trace_note->setNote(tr_note);
+          trace_note->end();
         }
       #endif
     }
@@ -670,7 +672,7 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 }
 
 bool ActiveMessenger::recvDataMsgBuffer(
-  int nchunks, void* const user_buf, TagType const& tag,
+  int nchunks, std::byte* const user_buf, TagType const& tag,
   NodeType const& node, bool const& enqueue, ActionType dealloc,
   ContinuationDeleterType next, bool is_user_buf
 ) {
@@ -681,7 +683,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 }
 
 bool ActiveMessenger::recvDataMsgBuffer(
-  int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
+  int nchunks, std::byte* const user_buf, PriorityType priority, TagType const& tag,
   NodeType const& node, bool const& enqueue, ActionType dealloc_user_buf,
   ContinuationDeleterType next, bool is_user_buf
 ) {
@@ -702,9 +704,9 @@ bool ActiveMessenger::recvDataMsgBuffer(
     if (flag == 1) {
       MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-      char* buf = user_buf == nullptr ?
-        static_cast<char*>(thePool()->alloc(num_probe_bytes)) :
-        static_cast<char*>(user_buf);
+      std::byte* buf = user_buf == nullptr ?
+        thePool()->alloc(num_probe_bytes) :
+        user_buf;
 
       NodeType const sender = stat.MPI_SOURCE;
 
@@ -743,7 +745,7 @@ void ActiveMessenger::recvDataDirect(
   int nchunks, TagType const tag, NodeType const from, MsgSizeType len,
   ContinuationDeleterType next
 ) {
-  char* buf = static_cast<char*>(thePool()->alloc(len));
+  std::byte* buf = thePool()->alloc(len);
 
   recvDataDirect(
     nchunks, buf, tag, from, len, default_priority, nullptr, next, false
@@ -751,7 +753,7 @@ void ActiveMessenger::recvDataDirect(
 }
 
 void ActiveMessenger::recvDataDirect(
-  int nchunks, void* const buf, TagType const tag, NodeType const from,
+  int nchunks, std::byte* const buf, TagType const tag, NodeType const from,
   MsgSizeType len, PriorityType prio, ActionType dealloc,
   ContinuationDeleterType next, bool is_user_buf
 ) {
@@ -760,7 +762,7 @@ void ActiveMessenger::recvDataDirect(
   std::vector<MPI_Request> reqs;
   reqs.resize(nchunks);
 
-  char* cbuf = static_cast<char*>(buf);
+  std::byte* cbuf = buf;
   MsgSizeType remainder = len;
   auto const max_per_send = theConfig()->vt_max_mpi_send_size;
   for (int i = 0; i < nchunks; i++) {
@@ -769,9 +771,9 @@ void ActiveMessenger::recvDataDirect(
     );
 
     #if vt_check_enabled(trace_enabled)
-      auto tr_begin = TimeType{0.};
+      std::unique_ptr<trace::TraceScopedNote> trace_note;
       if (theConfig()->vt_trace_mpi) {
-        tr_begin = vt::timing::getCurrentTime();
+        trace_note = std::make_unique<trace::TraceScopedNote>(trace_irecv);
       }
     #endif
 
@@ -788,12 +790,12 @@ void ActiveMessenger::recvDataDirect(
 
     #if vt_check_enabled(trace_enabled)
       if (theConfig()->vt_trace_mpi) {
-        auto tr_end = vt::timing::getCurrentTime();
         auto tr_note = fmt::format(
           "Irecv(Data): from={}, bytes={}",
           from, sublen
         );
-        trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_irecv);
+        trace_note->setNote(tr_note);
+        trace_note->end();
       }
     #endif
 
@@ -838,7 +840,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     vt_debug_print(
       normal, active,
       "finishPendingDataMsgAsyncRecv: continuation user_buf={}, buf={}\n",
-      user_buf, buf
+      print_ptr(user_buf), print_ptr(buf)
     );
 
     if (user_buf == nullptr) {
@@ -998,7 +1000,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-    char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
+    std::byte* buf = thePool()->alloc(num_probe_bytes);
 
     NodeType const sender = stat.MPI_SOURCE;
 
@@ -1006,9 +1008,9 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
     {
       #if vt_check_enabled(trace_enabled)
-        auto tr_begin = TimeType{0.};
+        std::unique_ptr<trace::TraceScopedNote> trace_note;
         if (theConfig()->vt_trace_mpi) {
-          tr_begin = vt::timing::getCurrentTime();
+          trace_note = std::make_unique<trace::TraceScopedNote>(trace_irecv);
         }
       #endif
 
@@ -1022,12 +1024,12 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
-          auto tr_end = vt::timing::getCurrentTime();
           auto tr_note = fmt::format(
             "Irecv(AM): from={}, bytes={}",
             stat.MPI_SOURCE, num_probe_bytes
           );
-          trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_irecv);
+          trace_note->setNote(tr_note);
+          trace_note->end();
         }
       #endif
     }
@@ -1051,7 +1053,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 }
 
 void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
-  char* buf = irecv->buf;
+  std::byte* buf = irecv->buf;
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
 
@@ -1089,14 +1091,14 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
     if (put_tag == PutPackedTag) {
       auto const put_size = envelopeGetPutSize(msg->env);
       auto const msg_size = num_probe_bytes - put_size;
-      char* put_ptr = buf + msg_size;
+      std::byte* put_ptr = buf + msg_size;
 
       if (!is_term || vt_check_enabled(print_term_msgs)) {
         vt_debug_print(
           verbose, active,
           "finishPendingActiveMsgAsyncRecv: packed put: ptr={}, msg_size={}, "
           "put_size={}\n",
-          put_ptr, msg_size, put_size
+          print_ptr(put_ptr), msg_size, put_size
         );
       }
 
@@ -1152,7 +1154,7 @@ bool ActiveMessenger::testPendingAsyncOps() {
   );
 }
 
-int ActiveMessenger::progress(TimeType current_time) {
+int ActiveMessenger::progress([[maybe_unused]] TimeType current_time) {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   bool const received_active_msg = testPendingActiveMsgAsyncRecv();
@@ -1167,7 +1169,9 @@ void ActiveMessenger::registerAsyncOp(std::unique_ptr<AsyncOp> in) {
   in_progress_ops.emplace(AsyncOpWrapper{std::move(in)});
 }
 
-void ActiveMessenger::blockOnAsyncOp(std::unique_ptr<AsyncOp> op) {
+void ActiveMessenger::blockOnAsyncOp(
+  [[maybe_unused]] std::unique_ptr<AsyncOp> op
+) {
 #if vt_check_enabled(fcontext)
   using TA = sched::ThreadAction;
   auto tid = TA::getActiveThreadID();

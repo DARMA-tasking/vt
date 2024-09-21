@@ -5,7 +5,7 @@
 //                           test_parallel_harness.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,7 +41,7 @@
 //@HEADER
 */
 
-#if ! defined INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H
+#if !defined INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H
 #define INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H
 
 #include <vector>
@@ -60,7 +60,7 @@ extern char** test_argv;
 
 template <typename TestBase>
 struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
-  virtual void SetUp() {
+  virtual void SetUp() override {
     using namespace vt;
 
     TestHarnessAny<TestBase>::SetUp();
@@ -68,6 +68,11 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 #if vt_feature_cmake_test_trace_on
     static char traceon[]{"--vt_trace=1"};
     addArgs(traceon);
+#endif
+
+#if vt_feature_cmake_debug_verbose
+    static char verbose_on[]{"--vt_debug_level=verbose"};
+    addArgs(verbose_on);
 #endif
 
     static char throw_on_abort[]{"--vt_throw_on_abort=1"};
@@ -97,7 +102,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 #endif
   }
 
-  virtual void TearDown() {
+  virtual void TearDown() override {
     using namespace vt;
 
     try {
@@ -181,4 +186,4 @@ using TestParameterHarnessNode = TestParallelHarnessParam<vt::NodeType>;
 
 }}} // end namespace vt::tests::unit
 
-#endif /* INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H */
+#endif /*INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H*/

@@ -5,7 +5,7 @@
 //                             test_term_cleanup.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -57,7 +57,7 @@ using namespace vt::tests::unit;
 struct TestTermCleanup :  TestParallelHarness {
   using TestMsgType = TestStaticBytesNormalMsg<64>;
 
-  static void handler(TestMsgType* msg) {
+  static void handler([[maybe_unused]] TestMsgType* msg) {
     //fmt::print("receive msg\n");
   }
 };

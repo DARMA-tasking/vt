@@ -5,7 +5,7 @@
 //                           test_collection_common.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -47,8 +47,8 @@
 #include <vt/topos/index/index.h>
 #include <vt/context/context.h>
 
-#include <fmt-vt/core.h>
-#include <fmt-vt/ostream.h>
+#include INCLUDE_FMT_CORE
+#include INCLUDE_FMT_OSTREAM
 
 #include <gtest/gtest.h>
 
@@ -114,8 +114,8 @@ static test_data::C magic_C_t_       = test_data::C{"test123",34};
 template <typename Tuple, typename=void>
 struct ConstructTuple {
   static Tuple construct() { return Tuple{}; }
-  static void print(Tuple t) { }
-  static void isCorrect(Tuple t) { }
+  static void print([[maybe_unused]] Tuple t) { }
+  static void isCorrect([[maybe_unused]] Tuple t) { }
 };
 
 #define CONSTRUCT_TUPLE_TYPE(PARAM_TYPE,PARAM_NAME)                     \

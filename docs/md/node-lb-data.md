@@ -42,82 +42,7 @@ contains information about the task that performed this work. If that `entity`
 is a virtual collection object, it will specify the unique `id` for the object,
 and optionally the `index`, `home`, and `collection_id` for that object.
 
-\code{.json}
-{
-    "phases": [
-        {
-            "id": 0,
-            "tasks": [
-                {
-                    "entity": {
-                        "collection_id": 7,
-                        "home": 0,
-                        "id": 12884901888,
-                        "index": [
-                            3
-                        ],
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "subphases": [
-                        {
-                            "id": 0,
-                            "time": 0.014743804931640625
-                        }
-                    ],
-                    "time": 0.014743804931640625
-                },
-                {
-                    "entity": {
-                        "collection_id": 7,
-                        "home": 0,
-                        "id": 4294967296,
-                        "index": [
-                            1
-                        ],
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "subphases": [
-                        {
-                            "id": 0,
-                            "time": 0.013672113418579102
-                        }
-                    ],
-                    "time": 0.013672113418579102
-                }
-            ]
-        },
-        {
-            "id": 1,
-            "tasks": [
-                {
-                    "entity": {
-                        "collection_id": 7,
-                        "home": 0,
-                        "id": 12884901888,
-                        "index": [
-                            3
-                        ],
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "subphases": [
-                        {
-                            "id": 0,
-                            "time": 0.014104127883911133
-                        }
-                    ],
-                    "time": 0.014104127883911133
-                }
-            ]
-        }
-    ]
-}
-\endcode
+\include examples/lb_data/lb_data_file_example.json
 
 Each phase in the file may also have a `communications` array that specify any
 communication between tasks that occurred during the phase. Each communication
@@ -132,50 +57,40 @@ types, like an `object` or `node` depending on the type of communication.
         {
             "communications": [
                 {
-                    "bytes": 262.0,
+                    "bytes": 1456.0,
                     "from": {
-                        "home": 1,
+                        "home": 0,
                         "id": 1,
+                        "migratable": false,
                         "type": "object"
                     },
-                    "messages": 1,
+                    "messages": 26,
                     "to": {
-                        "home": 0,
-                        "id": 4294967296,
+                        "home": 1,
+                        "id": 5,
+                        "migratable": false,
                         "type": "object"
                     },
                     "type": "SendRecv"
                 },
                 {
-                    "bytes": 96.0,
+                    "bytes": 1456.0,
                     "from": {
                         "home": 0,
-                        "id": 4294967296,
-                        "type": "object"
-                    },
-                    "messages": 1,
-                    "to": {
                         "id": 1,
-                        "type": "node"
-                    },
-                    "type": "CollectionToNode"
-                },
-                {
-                    "bytes": 259.0,
-                    "from": {
-                        "id": 0,
-                        "type": "node"
-                    },
-                    "messages": 1,
-                    "to": {
-                        "home": 0,
-                        "id": 0,
+                        "migratable": false,
                         "type": "object"
                     },
-                    "type": "NodeToCollection"
+                    "messages": 26,
+                    "to": {
+                        "home": 2,
+                        "id": 9,
+                        "migratable": false,
+                        "type": "object"
+                    },
+                    "type": "SendRecv"
                 }
-            ],
-            "id": 0
+            ]
         }
     ]
 }
@@ -198,7 +113,14 @@ The type of communication lines up with the enum
 For all the broadcast-like edges, the communication logging will occur on the
 receive of the broadcast side (one entry per broadcast recipient).
 
+\section lb-data-file-validator LB Data File Validator
+
+All input JSON files will be validated using the `JSON_data_files_validator.py` found in the `scripts` directory, which ensures that a given JSON adheres to the following schema:
+
+\include scripts/LBDatafile_schema.py
+
 \section lb-spec-file LB Specification File
+
 In order to customize when LB output is enabled and disabled, a LB
 specification file can be passed to \vt via a command-line flag:
 `--vt_lb_spec --vt_lb_spec_file=filename.spec`.

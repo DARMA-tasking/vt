@@ -5,7 +5,7 @@
 //                               ping_pong_am.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -46,7 +46,7 @@
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_CORE
 
 using namespace vt;
 using namespace vt::tests::perf::common;
@@ -54,7 +54,9 @@ using namespace vt::tests::perf::common;
 static constexpr int num_iters = 10000;
 static int i = 0;
 
-struct MyTest : PerfTestHarness { };
+struct MyTest : PerfTestHarness {
+  MyTest() { DisableGlobalTimer(); }
+};
 
 struct MyMsg : vt::Message {};
 
@@ -79,14 +81,14 @@ struct NodeObj {
   }
 
   void complete() {
-    test_obj_->StopTimer(fmt::format("{} ping-pong", i));
+    test_obj_->StopTimer("ping-pong");
     if (theContext()->getNode() == 0) {
       theTerm()->enableTD();
     }
   }
 
   void perfPingPong(MyMsg* in_msg) {
-    test_obj_->StartTimer(fmt::format("{} ping-pong", i));
+    test_obj_->StartTimer("ping-pong");
     auto msg = makeMessage<MyMsg>();
     theMsg()->sendMsg<&handler>(1, msg);
   }

@@ -5,7 +5,7 @@
 //                                    ds.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -213,9 +213,7 @@ void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
 }
 
 template <typename CommType>
-void TermDS<CommType>::needAck(
-  NodeType const predecessor, CountType const count
-) {
+void TermDS<CommType>::needAck() {
   vtAssertInfo(
     5 && (C == processedSum - (ackedArbitrary + ackedParent)),
     "DS-invariant", C, D, processedSum, ackedArbitrary,

@@ -5,7 +5,7 @@
 //                                  interval.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -48,7 +48,7 @@
 
 #include <ostream>
 
-#include <fmt-vt/ostream.h>
+#include INCLUDE_FMT_OSTREAM
 
 namespace vt { namespace term { namespace interval {
 
@@ -229,5 +229,28 @@ template <typename DomainT>
 using Interval = term::interval::Interval<DomainT>;
 
 } /* end namespace vt */
+
+namespace vt { namespace term { namespace interval {
+
+template <typename DomainT, DomainT sentinel>
+struct Interval;
+
+}}}
+
+VT_FMT_NAMESPACE_BEGIN
+
+template <typename DomainT, DomainT sentinel>
+struct formatter<::vt::term::interval::Interval<DomainT, sentinel>>
+  : formatter<std::string> {
+  template <typename FormatContext>
+  auto format(
+    const ::vt::term::interval::Interval<DomainT, sentinel>& interval,
+    FormatContext& ctx) const {
+    return format_to(
+      ctx.out(), "Interval[{}, {}]", interval.lower(), interval.upper());
+  }
+};
+
+VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_TERMINATION_INTERVAL_INTERVAL_H*/

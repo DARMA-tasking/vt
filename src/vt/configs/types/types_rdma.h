@@ -5,7 +5,7 @@
 //                                 types_rdma.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -52,7 +52,7 @@
 
 namespace vt {
 
-using RDMA_PtrType                = void *;
+using RDMA_PtrType                = std::byte *;
 using RDMA_ElmType                = uint64_t;
 using RDMA_BlockType              = int64_t;
 using RDMA_HandleType             = int64_t;
@@ -67,4 +67,4 @@ using RDMA_PutSerialize = std::function<RDMA_PutRetType(RDMA_PutRetType)>;
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_RDMA_H*/
+#endif /*INCLUDED_VT_CONFIGS_TYPES_TYPES_RDMA_H*/

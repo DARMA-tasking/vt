@@ -5,7 +5,7 @@
 //                          test_mpi_access_guards.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -72,7 +72,7 @@ static void attempt_mpi_access() {
   }
 }
 
-static void message_handler(DummyMsg* msg) {
+static void message_handler([[maybe_unused]] DummyMsg* msg) {
   if (expected_to_fail_on_mpi_access) {
     ASSERT_THROW(attempt_mpi_access(), std::runtime_error) <<
       "MPI functions should not be used inside user code invoked from VT handlers";

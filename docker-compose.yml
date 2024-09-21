@@ -36,7 +36,7 @@
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics collection at runtime by default
 #   BUILD_TYPE=release        # CMake build type
 #   VT_CODE_COVERAGE=0        # Enable generation of code coverage reports
-#   VT_DEBUG_VERBOSE          # Enable verbose debug prints at compile-time
+#   VT_DEBUG_VERBOSE=0        # Enable verbose debug prints at compile-time
 #   VT_NO_COLOR_ENABLED=0     # Set --vt_no_color flag to true by default
 #   VT_BUILD_SHARED_LIBS=0    # Build VT as shared library
 #
@@ -51,19 +51,16 @@
 # $ export COMPILER=icpx
 # $ export HOST_COMPILER=icpx
 # $ export VT_TRACE=1
-# $ docker-compose pull ubuntu-cpp-interactive
-# $ docker-compose run ubuntu-cpp-interactive
+# $ docker compose pull ubuntu-cpp-interactive
+# $ docker compose run ubuntu-cpp-interactive
 # # /vt/ci/build_cpp.sh /vt /build
 #
 # For a non-interactive build with gcc-8, since gnu is the default compiler
 # type, one may do the following:
 #
-#  $ COMPILER=gcc-8 docker-compose pull ubuntu-cpp
-#  $ COMPILER=gcc-8 docker-compose run ubuntu-cpp
+#  $ COMPILER=gcc-8 docker compose pull ubuntu-cpp
+#  $ COMPILER=gcc-8 docker compose run ubuntu-cpp
 #
-
-# Need verision >= 3.5 for the features in use
-version: '3.8'
 
 # Volume will be created automatically for each combination of parameters.
 volumes:
@@ -105,25 +102,28 @@ x-vtopts: &vtopts
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
   VT_EXTENDED_TESTS_ENABLED: ${VT_EXTENDED_TESTS:-1}
   VT_CODE_COVERAGE: ${VT_CODE_COVERAGE:-0}
+  VT_KOKKOS_ENABLED: ${VT_KOKKOS_ENABLED:-0}
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
   LSAN_OPTIONS: ${LSAN_OPTIONS-}
   UBSAN_OPTIONS: ${UBSAN_OPTIONS-}
   VT_CI_BUILD: ${VT_CI_BUILD:-0}
-  VT_DEBUG_VERBOSE: ${VT_DEBUG_VERBOSE-}
+  VT_DEBUG_VERBOSE: ${VT_DEBUG_VERBOSE:-0}
   VT_TESTS_NUM_NODES: ${VT_TESTS_NUM_NODES:-}
+  VT_EXTERNAL_FMT: ${VT_EXTERNAL_FMT:-0}
   VT_NO_COLOR_ENABLED: ${VT_NO_COLOR:-0}
   BUILD_SHARED_LIBS: ${VT_BUILD_SHARED_LIBS:-0}
   VT_INCLUSION_TYPE: ${VT_INCLUSION:-TPL}
   CODECOV_TOKEN: ${CODECOV_TOKEN:-}
-  TEST_LB_SCHEMA: ${TEST_LB_SCHEMA:-0}
+  VT_CI_TEST_LB_SCHEMA: ${VT_CI_TEST_LB_SCHEMA:-0}
   CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD:-17}
+  VT_TV_ENABLED: ${VT_TV_ENABLED:-0}
 
 services:
   ##############################################################################
   # C++ builds of VT on ubuntu/alpine platform from container baseline
   # Ubuntu gcc-12 debug build:
-  #   docker-compose run -e CMAKE_BUILD_TYPE=debug ubuntu-cpp
+  #   docker compose run -e CMAKE_BUILD_TYPE=debug ubuntu-cpp
   ubuntu-cpp:
     image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     build:
@@ -137,7 +137,9 @@ services:
         host_compiler: ${HOST_COMPILER}
         ubuntu: ${UBUNTU}
         ubsan_enabled: ${VT_UBSAN:-0}
+        vt_tv_enabled: ${VT_TV_ENABLED:-0}
         zoltan_enabled: ${VT_ZOLTAN:-0}
+        external_fmt: ${VT_EXTERNAL_FMT:-0}
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     ulimits: &ulimits
@@ -154,11 +156,30 @@ services:
         /vt/ci/build_vt_sample.sh /vt /build"
 
   ##############################################################################
+  # C++ builds of VTK and VT on ubuntu/alpine platform from container baseline
+  # Ubuntu gcc-12 debug build:
+  #   docker compose run -e CMAKE_BUILD_TYPE=debug ubuntu-vtk-cpp
+  ubuntu-cpp-vtk:
+    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-vtk-cpp
+    build:
+      context: .
+      target: base
+      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-vtk-cpp.dockerfile
+      args: *default-args
+      cache_from:
+        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-vtk-cpp
+    ulimits: *ulimits
+    environment:
+      <<: [*ccache, *vtopts]
+    volumes: *ubuntu-volumes
+    command: *vt-cpp-command
+
+  ##############################################################################
   # C++ build/test/clean target for VT on ubuntu platform from container
   # baseline.
   #
   # Example:
-  #   docker-compose run ubuntu-cpp-clean
+  #   docker compose run ubuntu-cpp-clean
   ubuntu-cpp-clean:
     image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     build:
@@ -184,7 +205,7 @@ services:
   # baseline without installing.
   #
   # Example:
-  #   docker-compose run ubuntu-cpp-clean-noinstall
+  #   docker compose run ubuntu-cpp-clean-noinstall
   ubuntu-cpp-clean-noinstall:
     image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
     build:
@@ -208,7 +229,7 @@ services:
   # Interactive C++ setup of VT on ubuntu platform from container baseline.
   #
   # After running:
-  #   docker-compose run ubuntu-cpp-interactive
+  #   docker compose run ubuntu-cpp-interactive
   #
   # You will get a command line where you can run the build command:
   #   $ /vt/ci/build_cpp.sh /vt /build

@@ -5,7 +5,7 @@
 //                                   trace.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -211,7 +211,10 @@ void Trace::registerUserEventManual(
   user_event_.user(name, id);
 }
 
-void insertNewUserEvent(UserEventIDType event, std::string const& name) {
+void insertNewUserEvent(
+  [[maybe_unused]] UserEventIDType event,
+  [[maybe_unused]] std::string const& name
+) {
   #if vt_check_enabled(trace_enabled)
     theTrace()->user_event_.insertEvent(event, name);
   #endif
@@ -324,7 +327,8 @@ void Trace::addUserEventBracketedManual(
   );
 
   auto id = user_event_.createEvent(true, false, 0, event);
-  addUserEventBracketed(id, begin, end);
+  addUserEventBracketedBeginTime(id, begin);
+  addUserEventBracketedEndTime(id, end);
 }
 
 void Trace::addMemoryEvent(std::size_t memory, TimeType time) {
@@ -486,7 +490,7 @@ TraceEventIDType Trace::messageCreationBcast(
 
 TraceEventIDType Trace::messageRecv(
   TraceEntryIDType const ep, TraceMsgLenType const len,
-  NodeType const from_node, TimeType const time
+  [[maybe_unused]] NodeType const from_node, TimeType const time
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return no_trace_event;

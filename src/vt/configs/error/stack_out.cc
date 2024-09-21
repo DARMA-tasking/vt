@@ -5,7 +5,7 @@
 //                                 stack_out.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -47,7 +47,7 @@
 
 #include <cxxabi.h>
 
-#if defined(vt_has_libunwind_h)
+#if vt_check_enabled(libunwind)
 # define UNW_LOCAL_ONLY
 # include <libunwind.h>
 #elif defined(vt_has_execinfo_h)
@@ -59,7 +59,7 @@ namespace vt { namespace debug { namespace stack {
 
 DumpStackType dumpStack(int skip) {
   DumpStackType stack;
-  #if defined(vt_has_libunwind_h)
+  #if vt_check_enabled(libunwind)
 
     unw_cursor_t cursor;
     unw_context_t context;
@@ -122,7 +122,6 @@ DumpStackType dumpStack(int skip) {
     for (auto i = skip; i < num_frames; i++) {
       //printf("%s\n", symbols[i]);
 
-      std::string str = "";
       Dl_info info;
       if (dladdr(callstack[i], &info) && info.dli_sname) {
         char *demangled = nullptr;
@@ -140,12 +139,6 @@ DumpStackType dumpStack(int skip) {
           )
         );
 
-        auto const& t = stack.back();
-        str = fmt::format(
-          "{:<4} {:<4} {:<15} {} + {}\n",
-          i, std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t)
-        );
-
         std::free(demangled);
       } else {
         stack.emplace_back(
@@ -153,18 +146,14 @@ DumpStackType dumpStack(int skip) {
             static_cast<int>(2 + sizeof(void*) * 2), reinterpret_cast<long>(callstack[i]), symbols[i], 0
           )
         );
-
-        auto const& t = stack.back();
-        str = fmt::format(
-          "{:10} {} {} {}\n", i, std::get<0>(t), std::get<1>(t), std::get<2>(t)
-        );
       }
 
     }
     std::free(symbols);
 
     return stack;
-  #else //neither libnunwind.h or libexecinfo.h is available
+  #else // neither libunwind.h nor libexecinfo.h is available
+    (void)skip;
     return stack;
   #endif
 }
@@ -176,7 +165,7 @@ std::string prettyPrintStack(DumpStackType const& stack) {
   auto magenta    = ::vt::debug::magenta();
   auto yellow     = ::vt::debug::yellow();
   auto vt_pre     = ::vt::debug::vtPre();
-  auto node       = ::vt::theContext()->getNode();
+  auto node       = ::vt::theContext() ? ::vt::theContext()->getNode() : -1;
   auto node_str   = ::vt::debug::proc(node);
   auto prefix     = vt_pre + node_str + " ";
   auto separator  = fmt::format("{}{}{:-^120}{}\n", prefix, yellow, "", reset);

@@ -5,7 +5,7 @@
 //                          context_vrt_make_closure.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -99,4 +99,4 @@ struct VirtualMakeClosure {
 
 #include "vt/vrt/context/context_vrt_make_closure.impl.h"
 
-#endif /*INCLUDED_VT_VRT_CONTEXT/CONTEXT_VRT_MAKE_CLOSURE_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_MAKE_CLOSURE_H*/

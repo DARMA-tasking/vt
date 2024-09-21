@@ -5,7 +5,7 @@
 //                                termination.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -281,7 +281,7 @@ std::shared_ptr<TerminationDetector::EpochGraph> TerminationDetector::makeGraph(
     for (auto const& elm : epoch_state_) {
       auto const ep = elm.first;
       bool const rooted = epoch::EpochManip::isRooted(ep);
-      if (not rooted or (rooted and epoch::EpochManip::node(ep) == this_node_)) {
+      if (not rooted or (epoch::EpochManip::node(ep) == this_node_)) {
         if (not isEpochTerminated(elm.first)) {
           auto label = elm.second.getLabel();
           live_epochs[ep] = std::make_shared<EpochGraph>(ep, label);
@@ -542,7 +542,9 @@ void TerminationDetector::startEpochGraphBuild() {
   }
 }
 
-/*static*/ void TerminationDetector::hangCheckHandler(HangCheckMsg* msg) {
+/*static*/ void TerminationDetector::hangCheckHandler(
+  [[maybe_unused]] HangCheckMsg* msg
+) {
   fmt::print("{}:hangCheckHandler\n",theContext()->getNode());
   theTerm()->hang_.activateEpoch();
 }
@@ -1019,7 +1021,7 @@ EpochType TerminationDetector::makeEpochRooted(
   vt_debug_print(
     normal, term,
     "makeEpochRooted: root={}, use_ds={}, successor={:x}, label={}\n",
-    theContext()->getNode(), use_ds, (EpochType)successor, label
+    theContext()->getNode(), use_ds.use_it_, (EpochType)successor, label
   );
 
   bool const force_use_ds = vt::theConfig()->vt_term_rooted_use_ds;

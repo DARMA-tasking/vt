@@ -5,7 +5,7 @@
 //                                  barrier.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -107,11 +107,10 @@ struct Barrier : virtual collective::tree::Tree {
    * \internal \brief Remove the state of a barrier
    *
    * \param[in] is_named whether the barrier is named
-   * \param[in] is_wait whether the barrier is of waiting type
    * \param[in] barrier the barrier ID
    */
   void removeBarrier(
-    bool const& is_named, bool const& is_wait, BarrierType const& barrier
+    bool const& is_named, BarrierType const& barrier
   );
 
   /**

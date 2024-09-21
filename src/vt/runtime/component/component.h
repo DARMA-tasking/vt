@@ -5,7 +5,7 @@
 //                                 component.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -154,7 +154,9 @@ struct Component : BaseComponent {
    *
    * \return no units processed
    */
-  virtual int progress(TimeType current_time) override { return 0; }
+  virtual int progress([[maybe_unused]] TimeType current_time) override {
+    return 0;
+  }
 
   /**
    * \brief Empty default diagnostic dump state
@@ -188,7 +190,7 @@ struct PollableComponent : Component<T> {
    *
    * \return number of units processed---zero
    */
-  virtual int progress(TimeType current_time) override {
+  virtual int progress([[maybe_unused]] TimeType current_time) override {
     vtAbort("PollableComponent should override the empty progress function");
     return 0;
   }

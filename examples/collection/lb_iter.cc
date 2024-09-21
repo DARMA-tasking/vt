@@ -5,7 +5,7 @@
 //                                  lb_iter.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -61,7 +61,9 @@ private:
 
 static double weight = 1.0f;
 
-void IterCol::iterWork(int64_t work_amt, int64_t iter, int subphase) {
+void IterCol::iterWork(
+  int64_t work_amt, [[maybe_unused]] int64_t iter, int subphase
+) {
   this->lb_data_.setSubPhase(subphase);
   double val = 0.1f;
   double val2 = 0.4f * work_amt;

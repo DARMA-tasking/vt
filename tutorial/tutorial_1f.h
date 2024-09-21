@@ -5,7 +5,7 @@
 //                                tutorial_1f.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -40,6 +40,9 @@
 // *****************************************************************************
 //@HEADER
 */
+
+#if !defined INCLUDED_TUTORIAL_1F_H
+#define INCLUDED_TUTORIAL_1F_H
 
 #include "vt/transport.h"
 
@@ -92,7 +95,7 @@ static inline void activeMessageGroupCollective() {
 }
 
 // Message handler
-static void msgHandlerGroupB(MySimpleMsg2* msg) {
+static void msgHandlerGroupB([[maybe_unused]] MySimpleMsg2* msg) {
   auto const cur_node = ::vt::theContext()->getNode();
   vtAssert(cur_node % 2 == 0, "This handler should only execute on even nodes");
 
@@ -101,3 +104,4 @@ static void msgHandlerGroupB(MySimpleMsg2* msg) {
 /// [Tutorial1F]
 
 }} /* end namespace vt::tutorial */
+#endif /*INCLUDED_TUTORIAL_1F_H*/

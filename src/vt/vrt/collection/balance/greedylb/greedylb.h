@@ -5,7 +5,7 @@
 //                                  greedylb.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -125,5 +125,37 @@ private:
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
+
+VT_FMT_NAMESPACE_BEGIN
+
+template <>
+struct formatter<::vt::vrt::collection::lb::DataDistStrategy>
+  : formatter<std::string_view> {
+  template <typename FormatContext>
+  auto
+  format(::vt::vrt::collection::lb::DataDistStrategy c, FormatContext& ctx) {
+    std::string_view name = "Unknown";
+    switch (c) {
+    case ::vt::vrt::collection::lb::DataDistStrategy::scatter:
+      name = "scatter";
+      break;
+    case ::vt::vrt::collection::lb::DataDistStrategy::bcast:
+      name = "bcast";
+      break;
+    case ::vt::vrt::collection::lb::DataDistStrategy::pt2pt:
+      name = "pt2pt";
+      break;
+    default:
+      name = fmt::format(
+        "{}",
+        static_cast<
+          std::underlying_type_t<::vt::vrt::collection::lb::DataDistStrategy>>(
+          c));
+    }
+    return formatter<string_view>::format(name, ctx);
+  }
+};
+
+VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_H*/

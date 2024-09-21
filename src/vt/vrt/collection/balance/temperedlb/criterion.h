@@ -5,7 +5,7 @@
 //                                 criterion.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -53,6 +53,8 @@ enum struct CriterionEnum : uint8_t {
   ModifiedGrapevine = 1
 };
 
+
+
 struct GrapevineCriterion {
   bool operator()(LoadType, LoadType under, LoadType obj, LoadType avg) const {
     return not (under + obj > avg);
@@ -61,7 +63,7 @@ struct GrapevineCriterion {
 
 struct ModifiedGrapevineCriterion  {
   bool operator()(LoadType over, LoadType under, LoadType obj, LoadType) const {
-    return obj < over - under;
+    return obj <= over - under;
   }
 };
 
@@ -90,5 +92,28 @@ protected:
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
+
+VT_FMT_NAMESPACE_BEGIN
+
+template <>
+struct formatter<::vt::vrt::collection::lb::CriterionEnum> {
+  constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
+
+  template <typename FormatContext>
+  auto format(::vt::vrt::collection::lb::CriterionEnum c, FormatContext& ctx) const {
+    std::string_view name = "Unknown";
+    switch (c) {
+    case ::vt::vrt::collection::lb::CriterionEnum::Grapevine:
+      name = "Grapevine";
+      break;
+    case ::vt::vrt::collection::lb::CriterionEnum::ModifiedGrapevine:
+      name = "ModifiedGrapevine";
+      break;
+    }
+    return fmt::format_to(ctx.out(), name);
+  }
+};
+
+VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_CRITERION_H*/

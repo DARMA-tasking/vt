@@ -5,7 +5,7 @@
 //                              payload_envelope.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -50,8 +50,8 @@ namespace vt {
 
 /** \file */
 
-using PutPtrType = void*;
-using PutPtrConstType = void const*;
+using PutPtrType = std::byte*;
+using PutPtrConstType = std::byte const*;
 using PutEnvSizeType = size_t;
 using PutUnderEnvelopeT = EpochTagEnvelope;
 
@@ -64,7 +64,7 @@ using PutUnderEnvelopeT = EpochTagEnvelope;
 template <typename EnvelopeT, typename SizeT>
 struct PutEnvelope {
   using isByteCopyable = std::true_type;
-  using PtrType = void*;
+  using PtrType = std::byte*;
   using EnvSizeType = SizeT;
   using UnderEnvelopeT = EnvelopeT;
 

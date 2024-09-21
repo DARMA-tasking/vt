@@ -5,7 +5,7 @@
 //                                tutorial_2a.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_TUTORIAL_2A_H
+#define INCLUDED_TUTORIAL_2A_H
+
 #include "vt/transport.h"
 
 namespace vt { namespace tutorial {
@@ -66,7 +69,7 @@ struct MyCol : ::vt::Collection<MyCol,Index1D> {
 //                \                              /
 struct MyCollMsg : ::vt::CollectionMessage<MyCol> { };
 
-void MyCol::msgHandler(MyCollMsg* msg) {
+void MyCol::msgHandler([[maybe_unused]] MyCollMsg* msg) {
   auto cur_node = theContext()->getNode();
   auto idx = this->getIndex();
   ::fmt::print("MyCol::msgHandler index={}, node={}\n", idx.x(), cur_node);
@@ -109,3 +112,4 @@ static inline void collection() {
 /// [Tutorial2A]
 
 }} /* end namespace vt::tutorial */
+#endif /*INCLUDED_TUTORIAL_2A_H*/

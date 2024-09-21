@@ -5,7 +5,7 @@
 //                               group_manager.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -192,8 +192,8 @@ void GroupManager::triggerContinuation(RemoteOperationIDType const op) {
 }
 
 void GroupManager::initializeRemoteGroup(
-  GroupType const group, RegionPtrType in_region, bool const is_static,
-  RegionType::SizeType const group_size
+  GroupType const group, RegionPtrType in_region,
+  [[maybe_unused]] bool const is_static, RegionType::SizeType const group_size
 ) {
   auto group_info = std::make_unique<GroupInfoType>(
     info_rooted_remote_cons, default_comm_,
@@ -227,8 +227,8 @@ MPI_Comm GroupManager::getGroupComm(GroupType const group_id) {
 }
 
 void GroupManager::initializeLocalGroupCollective(
-  GroupType const group, bool const is_static, ActionType action,
-  bool const in_group, bool make_mpi_group
+  GroupType const group, [[maybe_unused]] bool const is_static,
+  ActionType action, bool const in_group, bool make_mpi_group
 ) {
   auto group_info = std::make_unique<GroupInfoType>(
     info_collective_cons, default_comm_,
@@ -244,7 +244,8 @@ void GroupManager::initializeLocalGroupCollective(
 }
 
 void GroupManager::initializeLocalGroup(
-  GroupType const group, RegionPtrType in_region, bool const is_static, ActionType action
+  GroupType const group, RegionPtrType in_region,
+  [[maybe_unused]] bool const is_static, ActionType action
 ) {
 
   auto const group_size = in_region->getSize();

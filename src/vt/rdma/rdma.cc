@@ -5,7 +5,7 @@
 //                                   rdma.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -120,7 +120,7 @@ RDMAManager::RDMAManager()
     normal, rdma,
     "getRecvMsg: op={}, tag={}, bytes={}, get_ptr={}, "
     "mpi_tag={}, send_back={}\n",
-    msg->op_id, msg_tag, msg->num_bytes, get_ptr,
+    msg->op_id, msg_tag, msg->num_bytes, print_ptr(get_ptr),
     msg->mpi_tag_to_recv, msg->send_back
   );
 
@@ -178,7 +178,7 @@ RDMAManager::RDMAManager()
   );
 
   if (direct) {
-    auto data_ptr = reinterpret_cast<char*>(msg) + sizeof(PutMessage);
+    auto data_ptr = reinterpret_cast<std::byte*>(msg) + sizeof(PutMessage);
     theRDMA()->triggerPutRecvData(
       msg->rdma_handle, msg_tag, data_ptr, msg->num_bytes, msg->offset, [=]{
         vt_debug_print(
@@ -206,7 +206,7 @@ RDMAManager::RDMAManager()
       normal, rdma,
       "putRecvMsg: recv_node={}, send_back={}, bytes={}, recv_tag={}, "
       "put_ptr={}\n",
-      recv_node, send_back, msg->num_bytes, msg->mpi_tag_to_recv, put_ptr
+      recv_node, send_back, msg->num_bytes, msg->mpi_tag_to_recv, print_ptr(put_ptr)
     );
 
     if (put_ptr == nullptr) {
@@ -238,11 +238,14 @@ RDMAManager::RDMAManager()
         });
     } else {
       auto const& put_ptr_offset =
-        msg->offset != no_byte ? static_cast<char*>(put_ptr) + msg->offset : put_ptr;
+        msg->offset != no_byte ? put_ptr + msg->offset : put_ptr;
       // do a direct recv into the user buffer
       theMsg()->recvDataMsgBuffer(
         msg->nchunks, put_ptr_offset, recv_tag, recv_node, true, []{},
-        [=](RDMA_GetType ptr, ActionType deleter){
+        [=](
+          [[maybe_unused]] RDMA_GetType ptr,
+          [[maybe_unused]] ActionType deleter
+        ){
           vt_debug_print(
             normal, rdma,
             "putData: recv_data_msg_buffer DIRECT: offset={}\n",
@@ -304,7 +307,8 @@ RDMAManager::RDMAManager()
 
 RDMA_HandleType RDMAManager::registerNewCollective(
   bool const& use_default, RDMA_PtrType const& ptr, ByteType const& num_bytes,
-  ByteType const& num_total_bytes, ByteType const& elm_size, RDMA_MapType const& map
+  [[maybe_unused]] ByteType const& num_total_bytes, ByteType const& elm_size,
+  RDMA_MapType const& map
 ) {
   auto const& han = registerNewRdmaHandler(use_default, ptr, num_bytes, true);
 
@@ -423,8 +427,8 @@ void RDMAManager::requestGetData(
 }
 
 void RDMAManager::triggerGetRecvData(
-  RDMA_OpType const& op, TagType const& tag, RDMA_PtrType ptr,
-  ByteType const& num_bytes, ActionType const& action
+  RDMA_OpType const& op, [[maybe_unused]] TagType const& tag,
+  RDMA_PtrType ptr, ByteType const& num_bytes, ActionType const& action
 ) {
   auto iter = pending_ops_.find(op);
 
@@ -518,7 +522,7 @@ void RDMAManager::triggerPutRecvData(
 
 RDMA_PtrType
 RDMAManager::tryPutPtr(
-  RDMA_HandleType const& han, TagType const& tag
+  RDMA_HandleType const& han, [[maybe_unused]] TagType const& tag
 ) {
   auto const& this_node = theContext()->getNode();
   auto const& is_collective = RDMA_HandleManagerType::isCollective(han);
@@ -677,7 +681,7 @@ void RDMAManager::putData(
             normal, rdma,
             "putData: sending direct: put_node={}, ptr={}, num_bytes={}, "
             "offset={}\n",
-            put_node, ptr, num_bytes, offset
+            put_node, print_ptr(ptr), num_bytes, offset
           );
 
         } else {
@@ -701,7 +705,7 @@ void RDMAManager::putData(
             normal, rdma,
             "putData: recvData before: put_node={}, ptr={}, num_bytes={}, "
             "send_tag={}, offset={}\n",
-            put_node, ptr, num_bytes, msg->mpi_tag_to_recv, offset
+            put_node, print_ptr(ptr), num_bytes, msg->mpi_tag_to_recv, offset
           );
 
           auto msg_send = promoteMsg(msg.get()); // msg in payload fn
@@ -713,7 +717,7 @@ void RDMAManager::putData(
             normal, rdma,
             "putData: recvData after: put_node={}, ptr={}, num_bytes={}, "
             "send_tag={}, offset={}\n",
-            put_node, ptr, num_bytes, msg->mpi_tag_to_recv, offset
+            put_node, print_ptr(ptr), num_bytes, msg->mpi_tag_to_recv, offset
           );
         }
 
@@ -729,7 +733,7 @@ void RDMAManager::putData(
       vt_debug_print(
         normal, rdma,
         "putData: local: put_node={}, ptr={}, num_bytes={}, offset={}\n",
-        put_node, ptr, num_bytes, offset
+        put_node, print_ptr(ptr), num_bytes, offset
       );
       theRDMA()->triggerPutRecvData(
         han, tag, ptr, num_bytes, offset, [=](){
@@ -756,7 +760,7 @@ void RDMAManager::putRegionTypeless(
     vt_debug_print(
       normal, rdma,
       "putRegionTypeless: han={}, ptr={}, region={}\n",
-      han,ptr,region.regionToBuf().c_str()
+      han,print_ptr(ptr),region.regionToBuf().c_str()
     );
 
     auto holder_iter = holder_.find(han);
@@ -780,7 +784,7 @@ void RDMAManager::putRegionTypeless(
       auto const& elm_size = region.elm_size;
       auto const& rlo = region.lo;
       auto const& roffset = lo - rlo;
-      auto const& ptr_offset = static_cast<char*>(ptr) + (roffset * elm_size);
+      auto const& ptr_offset = ptr + (roffset * elm_size);
       auto const& block_offset = (lo - blk_lo) * elm_size;
 
       vt_debug_print(
@@ -817,7 +821,7 @@ void RDMAManager::getRegionTypeless(
     vt_debug_print(
       normal, rdma,
       "getRegionTypeless: han={}, ptr={}, region={}\n",
-      han,ptr,region.regionToBuf().c_str()
+      han,print_ptr(ptr),region.regionToBuf().c_str()
     );
 
     auto holder_iter = holder_.find(han);
@@ -842,7 +846,7 @@ void RDMAManager::getRegionTypeless(
       auto const& elm_size = region.elm_size;
       auto const& rlo = region.lo;
       auto const& roffset = lo - rlo;
-      auto const& ptr_offset = static_cast<char*>(ptr) + (roffset * elm_size);
+      auto const& ptr_offset = ptr + (roffset * elm_size);
       auto const& block_offset = (lo - blk_lo) * elm_size;
 
       vt_debug_print(
@@ -883,7 +887,7 @@ void RDMAManager::putDataIntoBufCollective(
   vt_debug_print(
     normal, rdma,
     "putDataIntoBufCollective: han={}, ptr={}, bytes={}, offset={}\n",
-    han,ptr,num_bytes,offset
+    han,print_ptr(ptr),num_bytes,offset
   );
 
   auto const& a_offset = offset == no_offset ? 0 : offset;
@@ -901,7 +905,7 @@ void RDMAManager::getDataIntoBufCollective(
   vt_debug_print(
     normal, rdma,
     "getDataIntoBufCollective: han={}, ptr={}, bytes={}, offset={}\n",
-    han,ptr,num_bytes,offset
+    han,print_ptr(ptr),num_bytes,offset
   );
 
   auto const& a_offset = offset == no_offset ? 0 : offset;
@@ -976,7 +980,7 @@ void RDMAManager::getDataIntoBuf(
     } else {
       vt_debug_print(
         normal, rdma,
-        "getData: local direct into buf, ptr={}\n", ptr
+        "getData: local direct into buf, ptr={}\n", print_ptr(ptr)
       );
       theRDMA()->requestGetData(
         nullptr, false, han, tag, num_bytes, offset, true, ptr, this_node,
@@ -1147,7 +1151,7 @@ void RDMAManager::createDirectChannelFinish(
       normal, rdma_channel,
       "createDirectChannelFinish: han={}, is_target={}, state ptr={}, "
       "bytes={}, target={}, non_target={}\n",
-      han, print_bool(is_target), target_ptr, target_num_bytes, target,
+      han, print_bool(is_target), print_ptr(target_ptr), target_num_bytes, target,
       non_target
     );
   }
@@ -1195,7 +1199,8 @@ RDMAManager::RDMA_ChannelLookupType RDMAManager::makeChannelLookup(
 
 RDMAManager::RDMA_ChannelType* RDMAManager::findChannel(
   RDMA_HandleType const& han, RDMA_TypeType const& rdma_op_type, NodeType const& target,
-  NodeType const& non_target, bool const& should_insert, bool const& must_exist
+  NodeType const& non_target, [[maybe_unused]] bool const& should_insert,
+  [[maybe_unused]] bool const& must_exist
 ) {
   auto chan_iter = channels_.find(
     makeChannelLookup(han,rdma_op_type,target,non_target)

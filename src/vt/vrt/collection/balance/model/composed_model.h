@@ -5,7 +5,7 @@
 //                               composed_model.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -77,6 +77,7 @@ public:
   bool hasUserData() const override;
   ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
+  CommMapType getComm(PhaseOffset offset) const override;
 
   ObjectIterator begin() const override;
 
@@ -90,4 +91,4 @@ private:
 
 }}}} // namespaces
 
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_COMPOSED_MODEL_H*/

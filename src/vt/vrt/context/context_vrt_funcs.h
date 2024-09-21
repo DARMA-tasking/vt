@@ -5,7 +5,7 @@
 //                             context_vrt_funcs.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -58,4 +58,4 @@ using ActiveVrtTypedFnType = void(VirtualContextT*, MessageT*);
 
 }} /* end namespace vt::context */
 
-#endif /*INCLUDED_VT_VRT_CONTEXT/CONTEXT_VRT_FUNCS_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_FUNCS_H*/

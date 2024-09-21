@@ -5,7 +5,7 @@
 //                           test_lb_reader.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -44,6 +44,7 @@
 #include <vt/vrt/collection/balance/read_lb.h>
 
 #include "test_harness.h"
+#include "test_helpers.h"
 
 namespace vt { namespace tests { namespace unit {
 
@@ -51,7 +52,7 @@ using TestLBReader = TestHarness;
 
 TEST_F(TestLBReader, test_lb_read_1) {
 
-  std::string file_name = "test_lb_read_1.txt";
+  std::string file_name = getUniqueFilename(".txt");
   std::ofstream out(file_name);
   out << ""
     "0 NoLB\n"
@@ -66,9 +67,10 @@ TEST_F(TestLBReader, test_lb_read_1) {
   Config::clear();
   Config::openConfig(file_name);
 
+  EXPECT_EQ(Config::hasOfflineLB(), false);
   EXPECT_EQ(Config::numEntries(), 3);
-  EXPECT_EQ(Config::getExactEntries().size(), 2);
-  EXPECT_EQ(Config::getModEntries().size(), 1);
+  EXPECT_EQ(Config::getExactEntries().size(), 2u);
+  EXPECT_EQ(Config::getModEntries().size(), 1u);
 
   for (ConfigIdx i = 0; i < 21; i++) {
     auto entry = Config::entry(i);
@@ -104,7 +106,7 @@ TEST_F(TestLBReader, test_lb_read_1) {
 
 TEST_F(TestLBReader, test_lb_read_2) {
 
-  std::string file_name = "test_lb_read_2.txt";
+  std::string file_name = getUniqueFilename(".txt");
   std::ofstream out(file_name);
   out << ""
     "0 NoLB\n"
@@ -120,6 +122,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
   Config::clear();
   Config::openConfig(file_name);
 
+  EXPECT_EQ(Config::hasOfflineLB(), false);
   EXPECT_EQ(Config::numEntries(), 5);
   for (ConfigIdx i = 0; i < 121; i++) {
     auto entry = Config::entry(i);
@@ -193,6 +196,22 @@ TEST_F(TestLBReader, test_lb_read_2) {
     "vt: \tRun `GreedyLB` every 5 phases with arguments `min=1.0` excluding phases 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120\n"
     "vt: \tRun `TemperedLB` every 10 phases with arguments `c=1 f=2 i=10 k=5` excluding phases 120\n";
   EXPECT_EQ(Config::toString(), expected_config);
+}
+
+TEST_F(TestLBReader, test_lb_read_3_with_offline_lb) {
+  std::string file_name = getUniqueFilename(".txt");
+  std::ofstream out(file_name);
+  out << ""
+    "0 NoLB\n"
+    "1 OfflineLB\n"
+    "%10 OfflineLB\n";
+  out.close();
+
+  using Config = vt::vrt::collection::balance::ReadLBConfig;
+
+  Config::clear();
+  Config::openConfig(file_name);
+  EXPECT_EQ(Config::hasOfflineLB(), true);
 }
 
 }}} // end namespace vt::tests::unit

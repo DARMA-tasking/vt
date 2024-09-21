@@ -5,7 +5,7 @@
 //                                    pool.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -99,14 +99,14 @@ struct Pool : runtime::component::Component<Pool> {
    *
    * \return pointer to new allocation
    */
-  void* alloc(size_t const& num_bytes, size_t oversize = 0);
+  std::byte* alloc(size_t const& num_bytes, size_t oversize = 0);
 
   /**
    * \brief De-allocate a pool-allocated buffer
    *
    * \param[in] buf the buffer to deallocate
    */
-  void dealloc(void* const buf);
+  void dealloc(std::byte* const buf);
 
   /**
    * \internal \brief Decided which pool bucket to target based on size
@@ -130,7 +130,7 @@ struct Pool : runtime::component::Component<Pool> {
    *
    * \return number of extra bytes
    */
-  SizeType remainingSize(void* const buf) const;
+  SizeType remainingSize(std::byte* const buf) const;
 
   /**
    * \internal \brief Get total allocated bytes for a pool allocation
@@ -141,7 +141,7 @@ struct Pool : runtime::component::Component<Pool> {
    *
    * \return the total number of allocated bytes
    */
-  SizeType allocatedSize(void* const buf) const;
+  SizeType allocatedSize(std::byte* const buf) const;
 
   /**
    * \internal \brief Attempt to increase the size of an allocation without reallocating
@@ -157,7 +157,7 @@ struct Pool : runtime::component::Component<Pool> {
    * \return false if the grow_amount is too large for the allocated block, true if the operation
    * succeeded
    */
-  bool tryGrowAllocation(void* const buf, size_t grow_amount);
+  bool tryGrowAllocation(std::byte* const buf, size_t grow_amount);
 
   /**
    * \brief Whether the pool is enabled at compile-time
@@ -190,7 +190,7 @@ private:
    *
    * \return a pointer to memory if succeeds
    */
-  void* tryPooledAlloc(size_t const& num_bytes, size_t const& oversize);
+  std::byte* tryPooledAlloc(size_t const& num_bytes, size_t const& oversize);
 
   /**
    * \internal \brief Attempt to de-allocate a buffer
@@ -199,7 +199,7 @@ private:
    *
    * \return whether it succeeded or wasn't allocated by the pool
    */
-  bool tryPooledDealloc(void* const buf);
+  bool tryPooledDealloc(std::byte* const buf);
 
   /**
    * \internal \brief Allocate memory from a specific pool
@@ -210,7 +210,7 @@ private:
    *
    * \return the buffer allocated
    */
-  void* pooledAlloc(
+  std::byte* pooledAlloc(
     size_t const& num_bytes, size_t const& oversize, ePoolSize const pool_type
   );
 
@@ -220,7 +220,7 @@ private:
    * \param[in] buf the buffer
    * \param[in] pool_type which pool to target
    */
-  void poolDealloc(void* const buf, ePoolSize const pool_type);
+  void poolDealloc(std::byte* const buf, ePoolSize const pool_type);
 
   /**
    * \internal \brief Allocate from standard allocator
@@ -230,14 +230,14 @@ private:
    *
    * \return the allocated buffer
    */
-  void* defaultAlloc(size_t const& num_bytes, size_t const& oversize);
+  std::byte* defaultAlloc(size_t const& num_bytes, size_t const& oversize);
 
   /**
    * \internal \brief De-allocate from standard allocator
    *
    * \param[in] ptr buffer to deallocate
    */
-  void defaultDealloc(void* const ptr);
+  void defaultDealloc(std::byte* const ptr);
 
 private:
   using MemPoolSType = MemoryPoolPtrType<memory_size_small>;

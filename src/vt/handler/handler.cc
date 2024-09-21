@@ -5,7 +5,7 @@
 //                                  handler.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -70,7 +70,7 @@ namespace vt {
     verbose, handler,
     "HandlerManager::makeHandler: is_functor={}, is_auto={}, registry_type={}, "
     "id={:x}, control={:x}, han={:x}, is_trace={}\n",
-    is_functor, is_auto, registry_type, id, control, new_han, is_trace
+    is_functor, is_auto, static_cast<int32_t>(registry_type), id, control, new_han, is_trace
   );
 
   return new_han;

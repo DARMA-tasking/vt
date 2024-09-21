@@ -5,7 +5,7 @@
 //                                   comm.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -132,7 +132,7 @@ StateDS::getTerminator(EpochType const& epoch) {
 /*static*/ void StateDS::requestAckHan(AckMsg* msg) {
   auto const epoch = msg->getEpoch();
   auto term = getTerminator(epoch);
-  term->needAck(msg->getNode(),msg->getCount());
+  term->needAck();
 }
 
 /*static*/ void StateDS::acknowledgeHan(AckMsg* msg) {

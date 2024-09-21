@@ -5,7 +5,7 @@
 //                                   elm_id.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -78,6 +78,7 @@ struct ElementIDStruct {
   bool isMigratable() const;
   NodeType getHomeNode() const;
   NodeType getCurrNode() const;
+  bool isLocatedOnThisNode() const;
 };
 
 
@@ -94,9 +95,10 @@ struct hash<vt::elm::ElementIDStruct> {
 
 } /* end namespace std */
 
-#include <fmt-vt/format.h>
+#include "vt/cmake_config.h"
+#include INCLUDE_FMT_FORMAT
 
-namespace fmt {
+VT_FMT_NAMESPACE_BEGIN
 
 /// Custom fmt formatter/print for \c vt::elm::ElementIDStruct
 template <>
@@ -127,7 +129,7 @@ struct formatter<::vt::elm::ElementIDStruct> {
   /// Formats the epoch using the parsed format specification (presentation)
   /// stored in this formatter.
   template <typename FormatContext>
-  auto format(::vt::elm::ElementIDStruct const& e, FormatContext& ctx) {
+  auto format(::vt::elm::ElementIDStruct const& e, FormatContext& ctx) const {
     std::string id_format =
       presentation == 'b' ? "{:b}" : (presentation == 'd' ? "{:d}" : "{:x}");
     auto fmt_str = "(" + id_format + ",{},{},{})";
@@ -137,6 +139,6 @@ struct formatter<::vt::elm::ElementIDStruct> {
   }
 };
 
-} /* end namespace fmt */
+VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_ELM_ELM_ID_H*/

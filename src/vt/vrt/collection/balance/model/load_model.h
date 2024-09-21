@@ -5,7 +5,7 @@
 //                                 load_model.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -216,6 +216,17 @@ struct LoadModel
   virtual void updateLoads(PhaseType last_completed_phase) = 0;
 
   /**
+   * \brief Provide all the comm info for a given phase
+   *
+   * \param[in] when the interval in which comm is desired
+   *
+   * \return the comm info
+   */
+  virtual CommMapType getComm([[maybe_unused]] PhaseOffset when) const {
+    return CommMapType{};
+  }
+
+  /**
    * \brief Provide an estimate of the given object's load during a specified interval
    *
    * \param[in] object The object whose load is desired
@@ -241,7 +252,9 @@ struct LoadModel
    *
    * \return How much computation time the object required
    */
-  virtual LoadType getRawLoad(ElementIDStruct object, PhaseOffset when) const {
+  virtual LoadType getRawLoad(
+    [[maybe_unused]] ElementIDStruct object, [[maybe_unused]] PhaseOffset when
+  ) const {
     vtAbort(
       "LoadModel::getRawLoad() called on a model that does not implement it"
     );
@@ -261,7 +274,9 @@ struct LoadModel
    *
    * \return The user data associated with the object
    */
-  virtual ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const {
+  virtual ElmUserDataType getUserData(
+    [[maybe_unused]] ElementIDStruct object, [[maybe_unused]] PhaseOffset when
+  ) const {
     vtAbort(
       "LoadModel::getUserData() called on a model that does not implement it"
     );
@@ -280,7 +295,9 @@ struct LoadModel
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual LoadType getModeledComm(ElementIDStruct object, PhaseOffset when) const {
+  virtual LoadType getModeledComm(
+    [[maybe_unused]] ElementIDStruct object, [[maybe_unused]] PhaseOffset when
+  ) const {
     return {};
   }
 
@@ -345,9 +362,9 @@ struct LoadModel
   virtual int getNumSubphases() const = 0;
 
   template <typename Serializer>
-  void serialize(Serializer& s) {}
+  void serialize([[maybe_unused]] Serializer& s) {}
 }; // struct LoadModel
 
 }}}} // namespaces
 
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_LOAD_MODEL_H*/

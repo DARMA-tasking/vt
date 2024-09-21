@@ -5,7 +5,7 @@
 //                            component_pack.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -51,7 +51,9 @@ namespace vt { namespace runtime { namespace component {
 namespace {
 
 template <typename T, typename Tuple, size_t... I>
-std::unique_ptr<T> tupleConsImpl(Tuple&& tup, std::index_sequence<I...> seq) {
+std::unique_ptr<T> tupleConsImpl(
+  Tuple&& tup, [[maybe_unused]] std::index_sequence<I...> seq
+) {
   return T::template staticInit(std::get<I>(std::forward<Tuple>(tup))...);
 }
 

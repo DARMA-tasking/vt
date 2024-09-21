@@ -51,3 +51,48 @@ runtime.
 
 [Learn how to build](https://darma-tasking.github.io/docs/html/vt-build.html)
 *vt* with `cmake` or `docker`.
+
+## References
+
+Lifflander, J., M. Bettencourt, N. Slattengren, G. Templet, P. Miller,
+P. P. Pébaÿ, M. Perrinel, and F. Rizzi. 2019. “DARMA-EMPIRE Integration
+and Performance Assessment – Interim Report.” Sandia Report
+SAND2019-1134. https://www.osti.gov/servlets/purl/1493825.
+https://doi.org/<https://doi.org/10.2172/1493825>.
+
+Lifflander, Jonathan, Phil Miller, Nicole Lemaster Slattengren, Nicolas
+Morales, Paul Stickney, and Philippe P Pébaÿ. 2020. “Design and
+Implementation Techniques for an MPI-Oriented AMT Runtime.” In *2020
+Workshop on Exascale MPI (ExaMPI)*, 31–40.
+https://www.osti.gov/biblio/1825838: IEEE.
+
+Lifflander, Jonathan, Nicole Lemaster Slattengren, Philippe P Pébaÿ,
+Phil Miller, Francesco Rizzi, and Matthew T Bettencourt. 2021.
+“Optimizing Distributed Load Balancing for Workloads with Time-Varying
+Imbalance.” In *2021 IEEE International Conference on Cluster Computing
+(CLUSTER)*, 238–49. https://www.osti.gov/servlets/purl/1870576: IEEE.
+https://doi.org/<https://doi.org/10.1109/Cluster48925.2021.00039>.
+
+Lifflander, J., and P. P. Pébaÿ. 2020. “<span class="nocase">DARMA/vt
+FY20</span> Mid-Year Status Report.” Sandia Report SAND2020-3967.
+https://www.osti.gov/servlets/purl/1615717.
+https://doi.org/<https://doi.org/10.2172/1615717>.
+
+Pébaÿ, P. L., J. Lifflander, P. P. Pébaÿ, and Sean T. McGovern. 2023.
+“<span class="nocase">vt-tv: A New C++ Application to Efficiently
+Visualize and Analyze Asynchronous Many-Task Work Distributions and
+Attendant Quantities of Interest</span>.” Sandia Report SAND2023-09312.
+
+Pébaÿ, P. L., N. Slattengren, Sean T. McGovern, and J. Lifflander. 2023.
+“<span class="nocase">Modeling Workloads of a LinearElectromagnetic Code
+for Load BalancingMatrix Assembly</span>.” Sandia Report SAND2023-10469.
+
+Pébaÿ, P. P., and J. Lifflander. 2019a. “Using
+<span class="nocase">Sandia’s Automatic Report Generator</span> to
+Document EMPIRE-Based Electrostatic Simulations.” Sandia Report
+SAND2019-4269. https://www.osti.gov/servlets/purl/1762099.
+https://doi.org/<https://doi.org/10.2172/1762099>.
+
+———. 2019b. “Some Results about Distributed Load Balancing.” Sandia
+Report SAND2019-5139. https://www.osti.gov/servlets/purl/1762597.
+https://doi.org/<https://doi.org/10.2172/1762597>.

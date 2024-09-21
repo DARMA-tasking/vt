@@ -5,7 +5,7 @@
 //                                elm_lb_data.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -86,6 +86,22 @@ void ElementLBData::sendToEntity(
   sendComm(key, bytes);
 }
 
+void ElementLBData::addWritableSharedID(
+  NodeType home, int shared_id, double bytes
+) {
+  sendComm(
+    elm::CommKey{elm::CommKey::WriteSharedTag{}, home, shared_id}, bytes
+  );
+}
+
+void ElementLBData::addReadOnlySharedID(
+  NodeType home, int shared_id, double bytes
+) {
+  sendComm(
+    elm::CommKey{elm::CommKey::ReadOnlySharedTag{}, home, shared_id}, bytes
+  );
+}
+
 void ElementLBData::sendComm(elm::CommKey key, double bytes) {
   phase_comm_[cur_phase_][key].sendMsg(bytes);
   subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
@@ -133,8 +149,24 @@ void ElementLBData::addTime(LoadType const timeLoad) {
   vt_debug_print(
     verbose,lb,
     "ElementLBData: addTime: time={}, cur_load={}\n",
-    time,
+    timeLoad,
     phase_timings_[cur_phase_]
+  );
+}
+
+void ElementLBData::setTime(
+  LoadType const timeLoad,
+  std::vector<LoadType> const& subphaseLoads
+) {
+  // warning: this will override any existing time that might be there
+  phase_timings_[cur_phase_] = timeLoad;
+
+  subphase_timings_[cur_phase_] = subphaseLoads;
+
+  vt_debug_print(
+    verbose,lb,
+    "ElementLBData: setTime: time={}\n",
+    timeLoad
   );
 }
 

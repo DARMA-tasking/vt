@@ -5,7 +5,7 @@
 //                               lb_data_holder.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -46,12 +46,13 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/elm/elm_comm.h"
+
+#if vt_check_enabled(tv)
+#  include <vt-tv/api/info.h>
+#endif
 
 #include <unordered_map>
 #include <memory>
-#include <variant>
-#include <string>
 
 #include <nlohmann/json_fwd.hpp>
 
@@ -81,10 +82,11 @@ struct LBDataHolder {
     s | user_defined_json_;
     s | user_per_phase_json_;
     s | node_idx_;
-    s | count_;
     s | skipped_phases_;
     s | identical_phases_;
     s | user_defined_lb_info_;
+    s | node_user_attributes_;
+    s | rank_attributes_;
   }
 
   /**
@@ -96,12 +98,39 @@ struct LBDataHolder {
    */
   std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
 
+#if vt_check_enabled(tv)
   /**
-   * \brief Output a LB phase's metdadata to JSON
+   * \brief Generate vt-tv data structure for visualization
+   *
+   * \param[in] phase the phase to generate
+   *
+   * \return a \c vt::tv::PhaseWork data structure
+   */
+  std::unique_ptr<tv::PhaseWork> toTV(PhaseType phase) const;
+
+  /**
+   * \brief Get all object info mapped here for a given phase
+   *
+   * \return map with object info
+   */
+  std::unordered_map<ElementIDType, tv::ObjectInfo> getObjInfo(
+    PhaseType phase
+  ) const;
+#endif
+
+  /**
+   * \brief Output a LB phase's metadata to JSON
    *
    * \return the json data structure
    */
   std::unique_ptr<nlohmann::json> metadataToJson() const;
+
+  /**
+   * \brief Output a LB rank attributes metadata to JSON
+   *
+   * \return the json data structure
+   */
+  std::unique_ptr<nlohmann::json> rankAttributesToJson() const;
 
   /**
    * \brief Clear all LB data
@@ -117,6 +146,31 @@ private:
    */
   void outputEntity(nlohmann::json& j, ElementIDStruct const& elm_id) const;
 
+  void addInitialTask(nlohmann::json& j, std::size_t n) const;
+
+  /**
+   * \brief Determine the object ID from the tasks or communication field of
+   *        input JSON
+   *
+   * \param[in] field the json field containing an object ID
+   * \param[in] object empty json object to be populated with the object's ID
+   * \param[in] is_bitpacked empty bool to be populated with whether or not
+   *                         the ID is bit-encoded
+   * \param[in] is_collection empty bool to be populated with whether
+   *                          or not the object belongs to a collection
+   */
+  static void getObjectFromJsonField_(
+    nlohmann::json const& field, nlohmann::json& object,
+    bool& is_bitpacked, bool& is_collection);
+
+  /**
+   * \brief Create an ElementIDStruct for the communication object
+   *
+   * \param[in] field the communication field for the desired object
+   *                  e.g. communications["to"] or communications["from"]
+   */
+  ElementIDStruct getElmFromCommObject_(nlohmann::json const& field) const;
+
   /**
    * \brief Read the LB phase's metadata
    *
@@ -125,6 +179,10 @@ private:
   void readMetadata(nlohmann::json const& j);
 
 public:
+  /// The current node
+  NodeType this_node_ = vt::uninitialized_destination;
+  /// Node attributes for the current rank
+  ElmUserDataType rank_attributes_;
   /// Node timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;
   /// Node communication graph for each local object
@@ -139,12 +197,12 @@ public:
   std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
   /// User-defined data from each phase for LB
   std::unordered_map<PhaseType, DataMapType> user_defined_lb_info_;
+  /// User-defined attributes from each phase
+  std::unordered_map<PhaseType, DataMapType> node_user_attributes_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy
   std::unordered_map<ElementIDStruct, ObjGroupProxyType> node_objgroup_;
-  // Number of all phases including skipped and identical
-  PhaseType count_;
   // Set of phases that are skipped
   std::set<PhaseType> skipped_phases_;
   // Set of phases which are identical to previous

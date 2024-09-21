@@ -5,7 +5,7 @@
 //                                 collection.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -87,9 +87,9 @@ struct Collection {
   void resume();
 
 private:
-  std::function<void(void* in_elm)> set_;   /**< Set context function */
+  std::function<void(std::byte* in_elm)> set_;   /**< Set context function */
   std::function<void()> clear_;             /**< Clear context function */
-  void* elm_ = nullptr;                     /**< The element (untyped) */
+  std::byte* elm_ = nullptr;                     /**< The element (untyped) */
 };
 
 }} /* end namespace vt::ctx */

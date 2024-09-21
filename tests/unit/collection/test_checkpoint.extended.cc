@@ -5,7 +5,7 @@
 //                         test_checkpoint.extended.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -242,7 +242,7 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
     });
 
     // Ensure that all elements were properly destroyed
-    EXPECT_EQ(counter, 0);
+    EXPECT_EQ(counter, 0ull);
   }
 }
 
@@ -315,7 +315,7 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
   });
 
   // Ensure that all elements were properly destroyed
-  EXPECT_EQ(counter, 0);
+  EXPECT_EQ(counter, 0ull);
 }
 
 TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
@@ -389,7 +389,10 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
 //  2. Checkpoint the collection
 //  3. Restore the collection and validate it
 
-vt::NodeType map(vt::Index3D* idx, vt::Index3D* max_idx, vt::NodeType num_nodes) {
+vt::NodeType map(
+  vt::Index3D* idx, [[maybe_unused]] vt::Index3D* max_idx,
+  vt::NodeType num_nodes
+) {
   return (idx->x() % (num_nodes-1))+1;
 }
 
@@ -425,7 +428,7 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
     //verify that root node has no elements, by construction with map
     if(this_node == 0) {
       auto local_set = theCollection()->getLocalIndices(proxy);
-      EXPECT_EQ(local_set.size(), 0);
+      EXPECT_EQ(local_set.size(), 0ull);
     }
 
     vt_print(gen, "checkpointToFile\n");

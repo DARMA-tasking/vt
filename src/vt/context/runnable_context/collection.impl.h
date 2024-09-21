@@ -5,7 +5,7 @@
 //                              collection.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -54,9 +54,9 @@ template <typename IndexT>
 /*explicit*/ Collection::Collection(
   vrt::collection::Indexable<IndexT>* elm
 ) {
-  elm_ = elm;
-  set_ = [](void* in_elm){
-    auto e = static_cast<vrt::collection::Indexable<IndexT>*>(in_elm);
+  elm_ = reinterpret_cast<std::byte*>(elm);
+  set_ = [](std::byte* in_elm){
+    auto e = reinterpret_cast<vrt::collection::Indexable<IndexT>*>(in_elm);
     auto& idx_ = e->getIndex();
     auto proxy_ = e->getProxy();
     vrt::collection::CollectionContextHolder<IndexT>::set(&idx_, proxy_);

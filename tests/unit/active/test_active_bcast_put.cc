@@ -5,7 +5,7 @@
 //                           test_active_bcast_put.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -64,7 +64,7 @@ struct TestActiveBroadcastPut : TestParameterHarnessNode {
   static int num_msg_sent;
   static size_t put_size;
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParameterHarnessNode::SetUp();
     handler_count = 0;
     num_msg_sent = 1;
@@ -72,7 +72,7 @@ struct TestActiveBroadcastPut : TestParameterHarnessNode {
     SET_MIN_NUM_NODES_CONSTRAINT(2);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown() override {
     TestParameterHarnessNode::TearDown();
   }
 
@@ -82,7 +82,7 @@ struct TestActiveBroadcastPut : TestParameterHarnessNode {
       fmt::print("{}: test_handler: cnt={}\n", this_node, handler_count);
     #endif
 
-    auto const ptr = static_cast<int*>(msg->getPut());
+    auto const ptr = reinterpret_cast<int*>(msg->getPut());
     auto const size = msg->getPutSize();
 
     #if DEBUG_TEST_HARNESS_PRINT || 1
@@ -126,7 +126,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
       if (my_node == root) {
         for (int i = 0; i < num_msg_sent; i++) {
           auto msg = makeMessage<PutTestMessage>();
-          msg->setPut(put_payload.data(), put_size * sizeof(int));
+          msg->setPut(reinterpret_cast<std::byte*>(put_payload.data()), put_size * sizeof(int));
           theMsg()->broadcastMsg<test_handler>(msg);
         }
       }

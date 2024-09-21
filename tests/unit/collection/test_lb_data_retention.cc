@@ -5,7 +5,7 @@
 //                          test_lb_data_retention.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -107,7 +107,7 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
 static constexpr int32_t const num_elms = 16;
 
 struct TestLBDataRetention : TestParallelHarness {
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
 
     // We must have more or equal number of elements than nodes for this test to
@@ -116,7 +116,6 @@ struct TestLBDataRetention : TestParallelHarness {
   }
 };
 
-using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::PersistenceMedianLastN;
 
 TEST_F(TestLBDataRetention, test_lbdata_retention_last1) {

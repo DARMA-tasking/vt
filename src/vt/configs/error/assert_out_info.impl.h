@@ -5,7 +5,7 @@
 //                            assert_out_info.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -57,7 +57,7 @@
 #include <string>
 #include <sstream>
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_CORE
 
 namespace vt { namespace debug { namespace assert {
 
@@ -67,7 +67,8 @@ std::enable_if_t<std::tuple_size<std::tuple<Args...>>::value == 0>
 assertOutInfo(
   bool fail, std::string const cond, std::string const& str,
   std::string const& file, int const line, std::string const& func,
-  ErrorCodeType error, std::tuple<Args2...>&& tup, std::tuple<Args...>&& t2
+  ErrorCodeType error, [[maybe_unused]] std::tuple<Args2...>&& tup,
+  std::tuple<Args...>&& t2
 ) {
   return assertOut(
     fail,cond,str,file,line,func,error,std::forward<std::tuple<Args...>>(t2)

@@ -5,7 +5,7 @@
 //                                  read_lb.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -197,6 +197,7 @@ struct ReadLBConfig {
   static ConfigIndex numEntries() { return config_mod_.size() + config_exact_.size(); }
   static ConfigEntry* entry(ConfigIndex const& idx);
   static LBType getLB(ConfigIndex const& idx);
+  static bool hasOfflineLB() { return has_offline_lb_; };
   static ConfigMapType getModEntries() { return config_mod_; };
   static ConfigMapType getExactEntries() {return config_exact_; };
   static ParamMapType parseParams(std::vector<std::string> params);
@@ -208,6 +209,7 @@ private:
   static void readFile(std::string const& filename);
 
   static bool read_complete_;
+  static bool has_offline_lb_;
   static std::string open_filename_;
   static ConfigMapType config_mod_;
   static ConfigMapType config_exact_;

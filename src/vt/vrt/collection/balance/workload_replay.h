@@ -5,7 +5,7 @@
 //                              workload_replay.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -74,7 +74,7 @@ namespace balance { namespace replay {
  * object exists during any given phase.
  */
 void replayWorkloads(
-  PhaseType initial_phase, PhaseType phases_to_run
+  PhaseType initial_phase, PhaseType phases_to_run, PhaseType phase_mod
 );
 
 /**
@@ -92,7 +92,7 @@ void replayWorkloads(
  * same rank as the object exists during any given phase.
  */
 void replayWorkloads(
-  PhaseType initial_phase, PhaseType phases_to_run,
+  PhaseType initial_phase, PhaseType phases_to_run, PhaseType phase_mod,
   std::shared_ptr<LBDataHolder> workloads,
   Callback<std::vector<balance::LoadData>> stats_cb
 );

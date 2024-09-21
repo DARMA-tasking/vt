@@ -5,7 +5,7 @@
 //                               types_headers.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -51,4 +51,4 @@
 #include "vt/configs/types/types_sentinels.h"
 #include "vt/epoch/epoch_type.h"
 
-#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_HEADERS_H*/
+#endif /*INCLUDED_VT_CONFIGS_TYPES_TYPES_HEADERS_H*/

@@ -5,7 +5,7 @@
 //                                 store_elm.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -74,10 +74,12 @@ struct StoreElmBase {
    *
    * \param[in] dump_to_json whether to dump to JSON output
    * \param[in] provide_to_lb whether to provide to the LB
+   * \param[in] dump_to_attributes whether to dump to attributes in JSON output
    */
-  StoreElmBase(bool dump_to_json, bool provide_to_lb)
+  StoreElmBase(bool dump_to_json, bool provide_to_lb, bool dump_to_attributes)
     : dump_to_json_(dump_to_json),
-      provide_to_lb_(provide_to_lb)
+      provide_to_lb_(provide_to_lb),
+      dump_to_attributes_(dump_to_attributes)
   {}
 
   virtual ~StoreElmBase() {}
@@ -121,6 +123,7 @@ struct StoreElmBase {
   void serialize(SerializerT& s) {
     s | dump_to_json_;
     s | provide_to_lb_;
+    s | dump_to_attributes_;
   }
 
   /**
@@ -137,6 +140,15 @@ struct StoreElmBase {
    */
   bool provideToLB() const {
     return provide_to_lb_;
+  }
+
+  /**
+   * \brief Whether the value should be dumped to the json attributes field
+   *
+   * \return whether it is an attribute
+   */
+  bool isAttribute() const {
+    return dump_to_attributes_;
   }
 
   /**
@@ -177,6 +189,7 @@ struct StoreElmBase {
 protected:
   bool dump_to_json_ = false;
   bool provide_to_lb_ = false;
+  bool dump_to_attributes_ = false;
 };
 
 /**
@@ -209,10 +222,11 @@ struct StoreElm<
    * \param[in] u the value
    * \param[in] dump_to_json whether to dump to json
    * \param[in] provide_to_lb whether to provide to LB
+   * \param[in] dump_to_attributes whether to dump to attributes in JSON output
    */
   template <typename U>
-  explicit StoreElm(U&& u, bool dump_to_json, bool provide_to_lb)
-    : StoreElmBase(dump_to_json, provide_to_lb),
+  explicit StoreElm(U&& u, bool dump_to_json, bool provide_to_lb, bool dump_to_attributes)
+    : StoreElmBase(dump_to_json, provide_to_lb, dump_to_attributes),
       elm_(std::forward<U>(u))
   { }
 
@@ -328,10 +342,11 @@ struct StoreElm<
    * \param[in] u the value
    * \param[in] dump_to_json whether to dump to json
    * \param[in] provide_to_lb whether to provide to LB
+   * \param[in] dump_to_attributes whether to dump to attributes in JSON output
    */
   template <typename U>
-  explicit StoreElm(U&& u, bool dump_to_json, bool provide_to_lb)
-    : StoreElmBase(dump_to_json, provide_to_lb),
+  explicit StoreElm(U&& u, bool dump_to_json, bool provide_to_lb, bool dump_to_attributes)
+    : StoreElmBase(dump_to_json, provide_to_lb, dump_to_attributes),
       wrapper_(detail::ByteWrapper<T>{std::forward<U>(u)})
   { }
 

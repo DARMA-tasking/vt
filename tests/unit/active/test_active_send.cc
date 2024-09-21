@@ -5,7 +5,7 @@
 //                             test_active_send.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -83,7 +83,7 @@ struct TestActiveSend : TestParallelHarness {
   static int handler_count;
   static int num_msg_sent;
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
 
     handler_count = 0;
@@ -94,7 +94,7 @@ struct TestActiveSend : TestParallelHarness {
   }
 
   static void test_handler_small_put(PutTestMessage* msg) {
-    auto ptr = static_cast<int*>(msg->getPut());
+    auto ptr = reinterpret_cast<int*>(msg->getPut());
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
@@ -109,7 +109,7 @@ struct TestActiveSend : TestParallelHarness {
   }
 
   static void test_handler_large_put(PutTestMessage* msg) {
-    auto ptr = static_cast<int*>(msg->getPut());
+    auto ptr = reinterpret_cast<int*>(msg->getPut());
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
@@ -190,7 +190,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_small_put) {
   if (my_node == from_node) {
     for (int i = 0; i < num_msg_sent; i++) {
       auto msg = makeMessage<PutTestMessage>();
-      msg->setPut(test_vec.data(), sizeof(int)*test_vec.size());
+      msg->setPut(reinterpret_cast<std::byte*>(test_vec.data()), sizeof(int)*test_vec.size());
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
@@ -215,7 +215,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
   if (my_node == from_node) {
     for (int i = 0; i < num_msg_sent; i++) {
       auto msg = makeMessage<PutTestMessage>();
-      msg->setPut(test_vec_2.data(), sizeof(int)*test_vec_2.size());
+      msg->setPut(reinterpret_cast<std::byte*>(test_vec_2.data()), sizeof(int)*test_vec_2.size());
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
@@ -242,7 +242,7 @@ TEST_F(TestActiveSend, test_active_message_serialization) {
   EXPECT_EQ(handler_count, num_msg_sent);
 }
 
-void testPropertiesHandler(int a, double b) {
+void testPropertiesHandler([[maybe_unused]] int a, [[maybe_unused]] double b) {
   // do nothing
 }
 

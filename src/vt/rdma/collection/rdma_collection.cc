@@ -5,7 +5,7 @@
 //                              rdma_collection.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -61,7 +61,7 @@ namespace vt { namespace rdma {
 
   auto const& elm_size = sizeof(void*);
   auto const& num_bytes = elm_size * num_elms;
-  void* ptr = nullptr;
+  std::byte* ptr = nullptr;
   auto const& han = rdma->registerNewRdmaHandler(false, ptr, num_bytes, true);
 
   auto iter = rdma->holder_.find(han);

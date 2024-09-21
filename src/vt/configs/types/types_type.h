@@ -5,7 +5,7 @@
 //                                 types_type.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -117,6 +117,8 @@ using PriorityLevelType       = uint8_t;
 using ComponentIDType         = uint32_t;
 /// Used to hold a unique ID for a user-level thread on a particular node
 using ThreadIDType            = uint64_t;
+/// Used to hold a shared ID
+using SharedIDType            = int;
 
 // Action types for attaching a closure to a runtime function
 /// Used for generically store an action to perform
@@ -128,4 +130,4 @@ using ActionNodeType          = std::function<void(NodeType)>;
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_TYPE_H*/
+#endif /*INCLUDED_VT_CONFIGS_TYPES_TYPES_TYPE_H*/

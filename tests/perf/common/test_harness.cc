@@ -5,7 +5,7 @@
 //                               test_harness.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -235,6 +235,10 @@ std::string PerfTestHarness::OutputMemoryUse() const {
     auto const node = per_node_mem.first;
     auto const& memory_use = per_node_mem.second;
 
+    if(memory_use.empty()){
+      continue;
+    }
+
     std::size_t cur_min = std::numeric_limits<std::size_t>::max();
     std::size_t cur_max = 0;
 
@@ -317,11 +321,15 @@ void PerfTestHarness::DumpResults() {
     );
 
     auto const time_file_data = OutputTimeResults();
-    auto const memory_file = OutputMemoryUse();
-
     if (gen_file_) {
-      OutputToFile(fmt::format("{}_mem", name_), memory_file);
       OutputToFile(fmt::format("{}_time", name_), time_file_data);
+    }
+
+    if(print_memory_use_) {
+      auto const memory_file = OutputMemoryUse();
+      if (gen_file_) {
+        OutputToFile(fmt::format("{}_mem", name_), memory_file);
+      }
     }
   }
 }
@@ -443,6 +451,15 @@ void PerfTestHarness::SpinScheduler() {
 void PerfTestHarness::GetMemoryUsage() {
   // Memory footprint from PerfTestHarness' internal data structs are included
   memory_use_[current_run_].push_back(mem_tracker_.getUsage());
+  print_memory_use_ = true;
+}
+
+void PerfTestHarness::DisableGlobalTimer() {
+  print_total_time_ = false;
+}
+
+bool PerfTestHarness::ShouldOutputGlobalTimer() const {
+  return print_total_time_;
 }
 
 }}}} // namespace vt::tests::perf::common

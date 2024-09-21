@@ -5,7 +5,7 @@
 //                            objgroup_local_send.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -43,14 +43,16 @@
 #include "common/test_harness.h"
 #include <vt/transport.h>
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_CORE
 
 using namespace vt;
 using namespace vt::tests::perf::common;
 
 static constexpr int num_iters = 1000000;
 
-struct MyTest : PerfTestHarness { };
+struct MyTest : PerfTestHarness {
+  MyTest() { DisableGlobalTimer(); }
+};
 struct MyMsg : vt::Message {};
 
 struct NodeObj;
@@ -82,9 +84,9 @@ struct NodeObj {
 
     theTerm()->disableTD();
 
-    test_obj_->StartTimer(fmt::format("colSend {}", num_iters));
+    test_obj_->StartTimer(fmt::format("ObjGroup send {}", num_iters));
     perfRunBenchmark();
-    test_obj_->StopTimer(fmt::format("colSend {}", num_iters));
+    test_obj_->StopTimer(fmt::format("ObjGroup send {}", num_iters));
 
     theTerm()->enableTD();
   }

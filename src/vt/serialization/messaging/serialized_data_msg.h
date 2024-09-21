@@ -5,7 +5,7 @@
 //                            serialized_data_msg.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -97,4 +97,4 @@ using SerialEagerPayloadMsg = SerialPayloadMsg<
 
 }} /* end namespace vt::serialization */
 
-#endif /*INCLUDED_VT_SERIALIZATION_MESSAGING/SERIALIZED_DATA_MSG_H*/
+#endif /*INCLUDED_VT_SERIALIZATION_MESSAGING_SERIALIZED_DATA_MSG_H*/

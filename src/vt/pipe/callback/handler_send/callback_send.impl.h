@@ -5,7 +5,7 @@
 //                             callback_send.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -73,14 +73,16 @@ void CallbackSend<MsgT>::trigger_(SignalDataType* data, PipeType const& pid) {
 }
 
 template <typename MsgT>
-void CallbackSend<MsgT>::trigger_(SignalDataType* data) {
+void CallbackSend<MsgT>::trigger_([[maybe_unused]] SignalDataType* data) {
   vtAssert(0, "Should not be reachable in this derived class");
 }
 
 template <typename MsgT>
 template <typename T>
 typename CallbackSend<MsgT>::template IsVoidType<T>
-CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
+CallbackSend<MsgT>::triggerDispatch(
+  [[maybe_unused]] SignalDataType* data, PipeType const& pid
+) {
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
     terse, pipe,
@@ -100,7 +102,9 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
 template <typename MsgT>
 template <typename T>
 typename CallbackSend<MsgT>::template IsNotVoidType<T>
-CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
+CallbackSend<MsgT>::triggerDispatch(
+  SignalDataType* data, [[maybe_unused]] PipeType const& pid
+) {
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
     terse, pipe,

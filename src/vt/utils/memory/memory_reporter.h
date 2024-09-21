@@ -5,7 +5,7 @@
 //                              memory_reporter.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -55,7 +55,7 @@ struct Reporter {
   virtual std::string getName() = 0;
 
   template <typename Serializer>
-  void serialize(Serializer& s) { }
+  void serialize([[maybe_unused]] Serializer& s) { }
 };
 
 }}} /* end namespace vt::util::memory */

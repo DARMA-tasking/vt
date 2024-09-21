@@ -5,7 +5,7 @@
 //                          test_pool_message_sizes.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -65,7 +65,7 @@ static constexpr NodeType const to_node = 1;
 struct TestPoolMessageSizes : TestParallelHarness {
   static int count;
 
-  virtual void SetUp() {
+  virtual void SetUp() override {
     TestParallelHarness::SetUp();
     count = 0;
   }
@@ -87,7 +87,9 @@ struct TestPoolMessageSizes : TestParallelHarness {
 /*static*/ int TestPoolMessageSizes::count;
 
 template <int64_t num_bytes>
-void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
+void TestPoolMessageSizes::testPoolFun(
+  [[maybe_unused]] TestMsg<num_bytes>* prev_msg
+) {
   auto const& this_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
@@ -114,7 +116,9 @@ void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
 }
 
 template <>
-void TestPoolMessageSizes::testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
+void TestPoolMessageSizes::testPoolFun<max_bytes>(
+  [[maybe_unused]] TestMsg<max_bytes>* msg
+) { }
 
 TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
   SET_NUM_NODES_CONSTRAINT(2);
