@@ -519,10 +519,6 @@ private:
   std::unordered_map<ObjGroupProxyType, std::vector<ActionType>> pending_;
   /// Map of object groups' labels
   std::unordered_map<ObjGroupProxyType, std::string> labels_;
-  /// Recursive Doubling reducers
-  ReducerMapType reducers_recursive_doubling_;
-  /// Rabenseifner reducers
-  ReducerMapType reducers_rabenseifner_;
 };
 
 }} /* end namespace vt::objgroup */

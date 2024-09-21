@@ -55,8 +55,10 @@ objgroup::proxy::Proxy<Rabenseifner> AllreduceHolder::addRabensifnerAllreducer(
 
   col_reducers_[coll_proxy].first = obj_proxy.getProxy();
 
-  fmt::print(
-    "Adding new Rabenseifner reducer for collection={:x}\n", coll_proxy);
+  vt_debug_print(
+    verbose, allreduce, "Adding new Rabenseifner reducer for collection={:x}",
+    coll_proxy
+  );
 
   return obj_proxy;
 }
@@ -70,8 +72,11 @@ AllreduceHolder::addRecursiveDoublingAllreducer(
     "recursive_doubling_allreducer", strong_proxy, strong_group, num_elems);
 
   col_reducers_[coll_proxy].second = obj_proxy.getProxy();
-  fmt::print(
-    "Adding new RecursiveDoubling reducer for collection={:x}\n", coll_proxy);
+
+  vt_debug_print(
+    verbose, allreduce,
+    "Adding new RecursiveDoubling reducer for collection={:x}", coll_proxy
+  );
 
   return obj_proxy;
 }
@@ -85,9 +90,10 @@ AllreduceHolder::addRabensifnerAllreducer(detail::StrongGroup strong_group) {
 
   group_reducers_[group].first = obj_proxy.getProxy();
 
-  fmt::print(
-    "Adding new Rabenseifner reducer for group={:x} Size={}\n", group,
-    group_reducers_.size());
+  vt_debug_print(
+    verbose, allreduce,
+    "Adding new Rabenseifner reducer for group={:x}", group
+  );
 
   return obj_proxy;
 }
@@ -100,9 +106,47 @@ AllreduceHolder::addRecursiveDoublingAllreducer(
   auto obj_proxy = theObjGroup()->makeCollective<RecursiveDoubling>(
     "recursive_doubling_allreducer", strong_group);
 
-  fmt::print("Adding new RecursiveDoubling reducer for group={:x}\n", group);
+  vt_debug_print(
+    verbose, allreduce,
+    "Adding new Rabenseifner reducer for group={:x}", group
+  );
 
   group_reducers_[group].second = obj_proxy.getProxy();
+
+  return obj_proxy;
+}
+
+objgroup::proxy::Proxy<Rabenseifner>
+AllreduceHolder::addRabensifnerAllreducer(detail::StrongObjGroup strong_objgroup) {
+  auto const objgroup = strong_objgroup.get();
+
+  auto obj_proxy = theObjGroup()->makeCollective<Rabenseifner>(
+    "rabenseifer_allreducer", strong_objgroup);
+
+  objgroup_reducers_[objgroup].first = obj_proxy.getProxy();
+
+  vt_debug_print(
+    verbose, allreduce,
+    "Adding new Rabenseifner reducer for objgroup={:x} Size={}\n", objgroup
+  );
+
+  return obj_proxy;
+}
+
+objgroup::proxy::Proxy<RecursiveDoubling>
+AllreduceHolder::addRecursiveDoublingAllreducer(
+  detail::StrongObjGroup strong_objgroup) {
+  auto const objgroup = strong_objgroup.get();
+
+  auto obj_proxy = theObjGroup()->makeCollective<RecursiveDoubling>(
+    "recursive_doubling_allreducer", strong_objgroup);
+
+  vt_debug_print(
+    verbose, allreduce,
+    "Adding new RecursiveDoubling reducer for objgroup={:x}\n", objgroup
+  );
+
+  objgroup_reducers_[objgroup].second = obj_proxy.getProxy();
 
   return obj_proxy;
 }
@@ -124,6 +168,16 @@ void AllreduceHolder::remove(detail::StrongGroup strong_group) {
 
   if (it != group_reducers_.end()) {
     group_reducers_.erase(key);
+  }
+}
+
+void AllreduceHolder::remove(detail::StrongObjGroup strong_objgroup) {
+  auto const key = strong_objgroup.get();
+
+  auto it = objgroup_reducers_.find(key);
+
+  if (it != objgroup_reducers_.end()) {
+    objgroup_reducers_.erase(key);
   }
 }
 
