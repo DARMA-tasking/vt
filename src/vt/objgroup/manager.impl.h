@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/collective/reduce/allreduce/allreduce_holder.h"
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
@@ -357,44 +358,13 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   auto const this_node = vt::theContext()->getNode();
   auto const strong_proxy = vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()};
 
-  if constexpr (std::is_same_v<Type, RabenseifnerT>) {
-    using Reducer = Rabenseifner;
+  auto const id = StateHolder::getNextID<RabenseifnerT>(strong_proxy);
 
-    auto const id = StateHolder::getNextID<RabenseifnerT>(strong_proxy);
-
-    auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-      TypeToString(Reducer::type_), strong_proxy);
-    grp_proxy[this_node].get()->proxy_ = grp_proxy;
-    grp_proxy[this_node].get()->template setFinalHandler<DataT>(cb, id);
-    grp_proxy[this_node].get()->template localReduce<DataT, Op>(id, std::forward<Args>(data)...);
-    // return PendingSendType{
-    //   theTerm()->getEpoch(),
-    //   [&, this, args = std::make_tuple(std::forward<Args>(data)...)] {
-    //     std::apply(
-    //       [&, this](auto&&... unpackedArgs) {
-    //         grp_proxy[this_node].template invoke<&Reducer::template localReduce<DataT>>(
-    //           id, std::forward<Args>(unpackedArgs)...
-    //         );
-    //       },
-    //       std::move(args));
-    //   }};
-    return PendingSendType{nullptr};
-  } else if (std::is_same_v<Type, RecursiveDoublingT>) {
-    using Reducer = RecursiveDoubling;
-    auto const id = StateHolder::getNextID<RecursiveDoublingT>(strong_proxy);
-
-    auto grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-      TypeToString(Reducer::type_), strong_proxy
-    );
-    grp_proxy[this_node].get()->proxy_ = grp_proxy;
-    grp_proxy[this_node].get()->template setFinalHandler<DataT>(cb, id);
-    grp_proxy[this_node].get()->template localReduce<DataT, Op>(id, std::forward<Args>(data)...);
-    // return PendingSendType{
-    //   theTerm()->getEpoch(),
-    //   [=] { grp_proxy[this_node].template invoke<&Reducer::localReduce<DataT, Op>>(id); }};
-  } else {
-    vtAssert(true, "Unknown allreduce algorithm type!");
-  }
+  auto grp_proxy = AllreduceHolder::getAllreducer<Type>(strong_proxy);
+  grp_proxy[this_node].get()->proxy_ = grp_proxy;
+  grp_proxy[this_node].get()->template setFinalHandler<DataT>(cb, id);
+  grp_proxy[this_node].get()->template localReduce<DataT, Op>(
+    id, std::forward<Args>(data)...);
 
   // Silence nvcc warning
   return PendingSendType{nullptr};

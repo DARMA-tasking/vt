@@ -42,7 +42,6 @@
 */
 
 #include "vt/collective/reduce/allreduce/recursive_doubling.h"
-#include "vt/collective/reduce/scoping/strong_types.h"
 #include "vt/group/group_manager.h"
 
 namespace vt::collective::reduce::allreduce {
@@ -67,15 +66,7 @@ RecursiveDoubling::RecursiveDoubling(
 
   is_even_ = this_node_ % 2 == 0;
   is_part_of_adjustment_group_ = this_node_ < (2 * nprocs_rem_);
-  if (is_part_of_adjustment_group_) {
-    if (is_even_) {
-      vrt_node_ = this_node_ / 2;
-    } else {
-      vrt_node_ = -1;
-    }
-  } else {
-    vrt_node_ = this_node_ - nprocs_rem_;
-  }
+  initializeVrtNode();
 
   vt_debug_print(
     terse, allreduce,
@@ -83,8 +74,7 @@ RecursiveDoubling::RecursiveDoubling(
     print_ptr(this), proxy.get(), proxy_.getProxy(), local_num_elems_);
 }
 
-RecursiveDoubling::RecursiveDoubling(
-  detail::StrongObjGroup objgroup)
+RecursiveDoubling::RecursiveDoubling(detail::StrongObjGroup objgroup)
   : objgroup_proxy_(objgroup.get()),
     local_num_elems_(1),
     num_nodes_(theContext()->getNumNodes()),
@@ -94,15 +84,12 @@ RecursiveDoubling::RecursiveDoubling(
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_),
     is_part_of_adjustment_group_(this_node_ < (2 * nprocs_rem_)) {
-  if (is_part_of_adjustment_group_) {
-    if (is_even_) {
-      vrt_node_ = this_node_ / 2;
-    } else {
-      vrt_node_ = -1;
-    }
-  } else {
-    vrt_node_ = this_node_ - nprocs_rem_;
+  nodes_.resize(num_nodes_);
+  for (NodeType i = 0; i < theContext()->getNumNodes(); ++i) {
+    nodes_[i] = i;
   }
+
+  initializeVrtNode();
 }
 
 RecursiveDoubling::RecursiveDoubling(detail::StrongGroup group)
@@ -116,6 +103,10 @@ RecursiveDoubling::RecursiveDoubling(detail::StrongGroup group)
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_),
     is_part_of_adjustment_group_(this_node_ < (2 * nprocs_rem_)) {
+  initializeVrtNode();
+}
+
+void RecursiveDoubling::initializeVrtNode() {
   if (is_part_of_adjustment_group_) {
     if (is_even_) {
       vrt_node_ = this_node_ / 2;
@@ -128,11 +119,10 @@ RecursiveDoubling::RecursiveDoubling(detail::StrongGroup group)
 }
 
 RecursiveDoubling::~RecursiveDoubling() {
-  if (collection_proxy_ != u64empty) {
-   //  StateHolder::clearAll(detail::StrongVrtProxy{collection_proxy_});
-  } else if (objgroup_proxy_ != u64empty) {
+  if (objgroup_proxy_ != u64empty) {
     StateHolder::clearAll(detail::StrongObjGroup{objgroup_proxy_});
-  } else {
+    AllreduceHolder::remove(detail::StrongObjGroup{objgroup_proxy_});
+  } else if (group_ != u64empty) {
     StateHolder::clearAll(detail::StrongGroup{group_});
   }
 }
