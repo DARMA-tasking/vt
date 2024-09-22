@@ -60,6 +60,7 @@ struct StateBase {
   int32_t step_ = 0;
   bool initialized_ = false;
   bool completed_ = false;
+  bool active_ = false;
 };
 
 struct RabensiferBase : StateBase {
