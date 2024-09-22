@@ -76,7 +76,6 @@ RecursiveDoubling::RecursiveDoubling(
 
 RecursiveDoubling::RecursiveDoubling(detail::StrongObjGroup objgroup)
   : objgroup_proxy_(objgroup.get()),
-    local_num_elems_(1),
     num_nodes_(theContext()->getNumNodes()),
     this_node_(vt::theContext()->getNode()),
     is_even_(this_node_ % 2 == 0),
@@ -94,7 +93,6 @@ RecursiveDoubling::RecursiveDoubling(detail::StrongObjGroup objgroup)
 
 RecursiveDoubling::RecursiveDoubling(detail::StrongGroup group)
   : group_(group.get()),
-    local_num_elems_(1),
     nodes_(theGroup()->GetGroupNodes(group_)),
     num_nodes_(nodes_.size()),
     this_node_(vt::theContext()->getNode()),

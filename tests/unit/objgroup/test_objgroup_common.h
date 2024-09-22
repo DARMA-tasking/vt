@@ -47,6 +47,7 @@
 #include "test_parallel_harness.h"
 #include "vt/collective/reduce/operators/default_msg.h"
 #include "vt/collective/reduce/allreduce/data_handler.h"
+#include "vt/utils/kokkos/exec_space.h"
 
 #include <numeric>
 #include <vector>
@@ -151,13 +152,17 @@ struct MyObjA {
   }
 
 #if MAGISTRATE_KOKKOS_ENABLED
-  void verifyAllredView(Kokkos::View<float*, Kokkos::HostSpace> view) {
+  template <typename MemorySpace>
+  void verifyAllredView(Kokkos::View<float*, MemorySpace> view) {
     auto final_size = view.extent(0);
     EXPECT_EQ(final_size, 256);
 
     auto n = vt::theContext()->getNumNodes();
     auto const total_sum = n * (n - 1) / 2;
-    Kokkos::parallel_for("InitView", view.extent(0), KOKKOS_LAMBDA(const int i) {
+    using ExecSpace = typename utils::kokkos::AssociatedExecSpace<MemorySpace>::type;
+
+    Kokkos::RangePolicy<ExecSpace> policy(0, view.extent(0));
+    Kokkos::parallel_for("InitView", policy, KOKKOS_LAMBDA(const int i) {
       EXPECT_EQ(view(i), total_sum);
     });
 

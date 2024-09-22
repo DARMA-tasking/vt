@@ -79,8 +79,8 @@ void Rabenseifner::localReduce(size_t id, Args&&... data) {
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner (this={}): local_col_wait_count_={} ID={} initialized={}\n",
-    print_ptr(this), state.local_col_wait_count_, id, state.initialized_);
+    "Rabenseifner(ID = {}) localReduce (this={}): local_col_wait_count_={} initialized={}\n",
+    id, print_ptr(this), state.local_col_wait_count_, state.initialized_);
 
 
   if (DataHelperT::empty(state.val_)) {
@@ -175,6 +175,8 @@ void Rabenseifner::initialize(size_t id, Args&&... data) {
       step++;
     }
   }
+
+  state.active_ = true;
 
   vt_debug_print(
     terse, allreduce,
@@ -404,12 +406,6 @@ void Rabenseifner::scatterReduceIter(size_t id) {
   using DataHelperT = DataHelper<Scalar, DataT>;
   auto& state = getState<RabenseifnerT, DataT>(
     collection_proxy_, objgroup_proxy_, group_, id);
-  vt_debug_print(
-    terse, allreduce,
-    "Rabenseifner Scatter (Send step {}): s_index_.size() = {} and "
-    "s_count_.size() = {} ID = {} proxy_={} state = {}\n",
-    state.scatter_step_, state.s_index_.size(), state.s_count_.size(), id,
-    proxy_.getProxy(), print_ptr(&state));
 
   auto vdest = vrt_node_ ^ state.scatter_mask_;
   auto dest = (vdest < nprocs_rem_) ? vdest * 2 : vdest + nprocs_rem_;

@@ -101,6 +101,7 @@ void RecursiveDoubling::initialize(size_t id, Args&&... data) {
 
   state.val_ = DataT{std::forward<Args>(data)...};
   state.value_assigned_ = true;
+  state.active_ = true;
 
   vt_debug_print(
     terse, allreduce, "RecursiveDoubling Initialize: size {} ID {}\n",

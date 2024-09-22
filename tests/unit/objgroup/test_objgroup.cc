@@ -365,7 +365,7 @@ TEST_F(TestObjGroupKokkos, test_proxy_allreduce_kokkos) {
     }
 
     kokkos_proxy.allreduce<
-      &MyObjA::verifyAllredView, PlusOp, reduce::allreduce::RabenseifnerT>(
+      &MyObjA::verifyAllredView<Kokkos::HostSpace>, PlusOp, reduce::allreduce::RabenseifnerT>(
       view);
   });
 
