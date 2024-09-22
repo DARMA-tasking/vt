@@ -245,11 +245,13 @@ struct RecursiveDoubling {
 
   vt::objgroup::proxy::Proxy<RecursiveDoubling> proxy_ = {};
 
+private:
+
   VirtualProxyType collection_proxy_ = u64empty;
   ObjGroupProxyType objgroup_proxy_ = u64empty;
   GroupType group_ = u64empty;
 
-  size_t local_num_elems_ = {};
+  size_t local_num_elems_ = 1;
 
   std::vector<NodeType> nodes_ = {};
   NodeType num_nodes_ = {};

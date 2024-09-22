@@ -82,16 +82,64 @@ struct StateHolder {
 
   template <typename ReducerT>
   static size_t getNextID(detail::StrongVrtProxy proxy) {
-    return active_coll_states_[proxy.get()].size();
+    size_t id = 0;
+    auto& allreducers = active_coll_states_[proxy.get()];
+
+    if (not allreducers.empty()) {
+
+      // Last element is invalidated (allreduce completed) or not completed
+      // Generate new ID
+      if(not allreducers.back() or allreducers.back()->active_) {
+        id = allreducers.size();
+      }
+      // Most recent state is not active, don't generate new ID
+      else if(not allreducers.back()->active_){
+        id = allreducers.size() - 1;
+      }
+    }
+
+    return id;
   }
 
   template <typename ReducerT>
   static size_t getNextID(detail::StrongObjGroup proxy) {
-    return active_obj_states_[proxy.get()].size();
+    size_t id = 0;
+    auto& allreducers = active_obj_states_[proxy.get()];
+
+    if (not allreducers.empty()) {
+
+      // Last element is invalidated (allreduce completed) or not completed
+      // Generate new ID
+      if(not allreducers.back() or allreducers.back()->active_) {
+        id = allreducers.size();
+      }
+      // Most recent state is not active, don't generate new ID
+      else if(not allreducers.back()->active_){
+        id = allreducers.size() - 1;
+      }
+    }
+
+    return id;
   }
 
   static size_t getNextID(detail::StrongGroup group) {
-    return active_grp_states_[group.get()].size();
+    size_t id = 0;
+    auto& allreducers = active_grp_states_[group.get()];
+
+    if (not allreducers.empty()) {
+
+      // Last element is invalidated (allreduce completed) or not completed
+      // Generate new ID
+      if(not allreducers.back() or allreducers.back()->active_) {
+        id = allreducers.size();
+      }
+      // Most recent state is not active, don't generate new ID
+      else if(not allreducers.back()->active_){
+        id = allreducers.size() - 1;
+      }
+    }
+
+    return id;
   }
 
   static void clearSingle(detail::StrongVrtProxy proxy, size_t idx) {
