@@ -112,10 +112,10 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
         EXPECT_EQ(comm_phase_count,    buffers_size);
         EXPECT_EQ(sp_comm_phase_count, buffers_size);
       } else if (phase == 0) {
-        EXPECT_EQ(load_phase_count,    1);
-        EXPECT_EQ(sp_load_phase_count, 1);
-        EXPECT_EQ(comm_phase_count,    0);
-        EXPECT_EQ(sp_comm_phase_count, 0);
+        EXPECT_EQ(load_phase_count,    std::size_t{1});
+        EXPECT_EQ(sp_load_phase_count, std::size_t{1});
+        EXPECT_EQ(comm_phase_count,    std::size_t{0});
+        EXPECT_EQ(sp_comm_phase_count, std::size_t{0});
       } else {
         // updatePhase will have caused entries to be added for the
         // next phase already
@@ -125,10 +125,10 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
         EXPECT_EQ(sp_comm_phase_count, phase + 1);
       }
     #else
-      EXPECT_EQ(load_phase_count,    0);
-      EXPECT_EQ(sp_load_phase_count, 0);
-      EXPECT_EQ(comm_phase_count,    0);
-      EXPECT_EQ(sp_comm_phase_count, 0);
+      EXPECT_EQ(load_phase_count,    std::size_t{0});
+      EXPECT_EQ(sp_load_phase_count, std::size_t{0});
+      EXPECT_EQ(comm_phase_count,    std::size_t{0});
+      EXPECT_EQ(sp_comm_phase_count, std::size_t{0});
     #endif
   }
 };

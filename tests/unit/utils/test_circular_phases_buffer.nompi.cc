@@ -51,7 +51,7 @@ namespace vt { namespace tests { namespace unit {
 using TestCircularPhasesBuffer = TestHarness;
 
 struct Dummy {
-  int x;
+  PhaseType x;
 };
 
 using CircularBufferType = util::container::CircularPhasesBuffer<Dummy>;
@@ -103,8 +103,8 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_empty) {
   EXPECT_TRUE(buffer.contains(0));
   EXPECT_EQ(std::size_t{1}, buffer.size());
   EXPECT_FALSE(buffer.empty());
-  EXPECT_EQ(0, buffer.frontPhase());
-  EXPECT_EQ(0, buffer.frontData().x);
+  EXPECT_EQ(PhaseType{0}, buffer.frontPhase());
+  EXPECT_EQ(PhaseType{0}, buffer.frontData().x);
   EXPECT_NE(nullptr, buffer.find(0));
 
   buffer[1] = {1};
@@ -115,8 +115,8 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_empty) {
   EXPECT_TRUE(buffer.contains(1));
   EXPECT_EQ(std::size_t{4}, buffer.size());
   EXPECT_FALSE(buffer.empty());
-  EXPECT_EQ(4, buffer.frontPhase());
-  EXPECT_EQ(8, buffer.frontData().x);
+  EXPECT_EQ(PhaseType{4}, buffer.frontPhase());
+  EXPECT_EQ(PhaseType{8}, buffer.frontData().x);
   EXPECT_EQ(nullptr, buffer.find(0));
   EXPECT_NE(nullptr, buffer.find(3));
 
@@ -134,7 +134,7 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_single_element) {
 
   EXPECT_EQ(false, buffer.contains(0));
 
-  for (int i = 0; i < 5; i++) {
+  for (PhaseType i = 0; i < 5; i++) {
     buffer.store(i, {i});
     EXPECT_EQ(i == 0, buffer.contains(0));
     EXPECT_EQ(i == 1, buffer.contains(1));
@@ -154,7 +154,7 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_single_element) {
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_multi_elements) {
   CircularBufferType buffer{5};
 
-  for (int i = 0; i < 15; i++) {
+  for (PhaseType i = 0; i < 15; i++) {
     buffer.store(i, {i});
 
     EXPECT_EQ(i, buffer.frontPhase());
@@ -179,7 +179,7 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_store) {
   validateMissingPhases(buffer, {0, 1, 3, 4, 5, 6, 7, 8, 9});
 
   // store series of elements
-  for (int i = 3; i < 15; i++) {
+  for (PhaseType i = 3; i < 15; i++) {
     buffer.store(i, {i});
   }
 
@@ -191,7 +191,7 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_store) {
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_resize) {
   CircularBufferType buffer{10};
 
-  for (int i = 0; i <= 15; i++) {
+  for (PhaseType i = 0; i <= 15; i++) {
     buffer[i] = {i};
   }
   validatePresentPhases(buffer, {6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
@@ -200,7 +200,7 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_resize) {
   validatePresentPhases(buffer, {11, 12, 13, 14, 15});
   validateMissingPhases(buffer, {6, 7, 8, 9, 10});
 
-  for (int i = 15; i <= 32; i++) {
+  for (PhaseType i = 15; i <= 32; i++) {
     buffer[i] = {i};
   }
   validatePresentPhases(buffer, {28, 29, 30, 31, 32});
@@ -210,7 +210,7 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_resize) {
 
   validatePresentPhases(buffer, {28, 29, 30, 31, 32});
 
-  for (int i = 33; i <= 35; i++) {
+  for (PhaseType i = 33; i <= 35; i++) {
     buffer[i] = {i};
   }
   validatePresentPhases(buffer, {28, 29, 30, 31, 32, 33, 34, 35});
@@ -228,16 +228,16 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_restart_from) {
   EXPECT_EQ(std::numeric_limits<PhaseType>::max(), buffer.frontPhase());
 
   buffer[3] = {3};
-  EXPECT_EQ(3, buffer.frontPhase());
-  EXPECT_EQ(3, buffer.frontData().x);
+  EXPECT_EQ(PhaseType{3}, buffer.frontPhase());
+  EXPECT_EQ(PhaseType{3}, buffer.frontData().x);
 
   buffer.restartFrom(10);
-  EXPECT_EQ(10, buffer.frontPhase());
-  EXPECT_EQ(3, buffer.frontData().x);
+  EXPECT_EQ(PhaseType{10}, buffer.frontPhase());
+  EXPECT_EQ(PhaseType{3}, buffer.frontData().x);
 
   buffer.restartFrom(0);
-  EXPECT_EQ(0, buffer.frontPhase());
-  EXPECT_EQ(3, buffer.frontData().x);
+  EXPECT_EQ(PhaseType{0}, buffer.frontPhase());
+  EXPECT_EQ(PhaseType{3}, buffer.frontData().x);
 }
 
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_forward_iter) {
@@ -273,7 +273,7 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_forward_iter) {
     EXPECT_EQ(visited.size(), buffer.size());
   }
 
-  for (int i = 0; i <= 15; i++) {
+  for (PhaseType i = 0; i <= 15; i++) {
     buffer[i] = {i};
   }
 
