@@ -220,6 +220,26 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_resize) {
   validateMissingPhases(buffer, {28, 29, 30, 31, 32, 33, 34});
 }
 
+TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_restart_from) {
+  CircularBufferType buffer{1};
+
+  // do nothing on empty buffer
+  buffer.restartFrom(5);
+  EXPECT_EQ(std::numeric_limits<PhaseType>::max(), buffer.frontPhase());
+
+  buffer[3] = {3};
+  EXPECT_EQ(3, buffer.frontPhase());
+  EXPECT_EQ(3, buffer.frontData().x);
+
+  buffer.restartFrom(10);
+  EXPECT_EQ(10, buffer.frontPhase());
+  EXPECT_EQ(3, buffer.frontData().x);
+
+  buffer.restartFrom(0);
+  EXPECT_EQ(0, buffer.frontPhase());
+  EXPECT_EQ(3, buffer.frontData().x);
+}
+
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_forward_iter) {
   CircularBufferType buffer;
 

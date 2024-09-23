@@ -196,11 +196,11 @@ void ElementLBData::updatePhase(PhaseType const& inc) {
 
 void ElementLBData::resetPhase() {
   cur_phase_ = fst_lb_phase;
-  // Reset containers after resetting the current phase
-  phase_timings_.clear();
-  subphase_timings_.clear();
-  phase_comm_.clear();
-  subphase_comm_.clear();
+  // Resets the current phase in the containers without removing any phase data.
+  phase_timings_.restartFrom(fst_lb_phase);
+  subphase_timings_.restartFrom(fst_lb_phase);
+  phase_comm_.restartFrom(fst_lb_phase);
+  subphase_comm_.restartFrom(fst_lb_phase);
 }
 
 PhaseType ElementLBData::getPhase() const {

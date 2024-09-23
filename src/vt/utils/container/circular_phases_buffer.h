@@ -220,6 +220,25 @@ public:
   }
 
   /**
+   * \brief Shifts the buffer's head to the specified phase without removing any data.
+   *
+   * \param start_point the new start point for the buffer
+   */
+  void restartFrom(const PhaseType& start_point) {
+    if (empty()) {
+      return;
+    }
+
+    // copy data from head_phase_
+    if (phaseToIndex(head_phase_) != phaseToIndex(start_point)) {
+      buffer_[phaseToIndex(start_point)].second = buffer_[phaseToIndex(head_phase_)].second;
+    }
+
+    buffer_[phaseToIndex(start_point)].first = start_point;
+    head_phase_ = start_point;
+  }
+
+  /**
    * \brief Get the latest phase
    *
    * \return the latest phase
