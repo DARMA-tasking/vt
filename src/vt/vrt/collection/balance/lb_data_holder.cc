@@ -339,7 +339,7 @@ std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
 
   std::unordered_map<ElementIDType, ObjectWork> objects;
 
-  if (node_data_.find(phase) != node_data_.end()) {
+  if (node_data_.contains(phase)) {
     for (auto&& elm : node_data_.at(phase)) {
       ElementIDStruct id = elm.first;
       double whole_phase_load = elm.second.whole_phase_load;
@@ -347,7 +347,7 @@ std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
 
       ElmUserDataType user_defined;
       if (
-        user_defined_lb_info_.find(phase) != user_defined_lb_info_.end() and
+        user_defined_lb_info_.contains(phase) and
         user_defined_lb_info_.at(phase).find(id) !=
         user_defined_lb_info_.at(phase).end()
       ) {
@@ -367,7 +367,7 @@ std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
     }
   }
 
-  if (node_comm_.find(phase) != node_comm_.end()) {
+  if (node_comm_.contains(phase)) {
     for (auto&& elm : node_comm_.at(phase)) {
       auto const& key = elm.first;
       auto const& volume = elm.second;
@@ -398,7 +398,7 @@ std::unordered_map<ElementIDType, tv::ObjectInfo> LBDataHolder::getObjInfo(
   PhaseType phase
 ) const {
   std::unordered_map<ElementIDType, tv::ObjectInfo> map;
-  if (node_data_.find(phase) != node_data_.end()) {
+  if (node_data_.contains(phase)) {
     for (auto&& elm : node_data_.at(phase)) {
       ElementIDStruct id = elm.first;
 
