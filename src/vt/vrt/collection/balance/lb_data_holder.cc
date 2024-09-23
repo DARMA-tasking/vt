@@ -428,6 +428,15 @@ std::unordered_map<ElementIDType, tv::ObjectInfo> LBDataHolder::getObjInfo(
 
 #endif
 
+void LBDataHolder::resizeHistory(std::size_t num_to_retain) {
+  node_data_.resize(num_to_retain);
+  node_comm_.resize(num_to_retain);
+  node_subphase_comm_.resize(num_to_retain);
+  user_defined_json_.resize(num_to_retain);
+  user_defined_lb_info_.resize(num_to_retain);
+  node_user_attributes_.resize(num_to_retain);
+}
+
 LBDataHolder::LBDataHolder(nlohmann::json const& j)
 {
   this_node_ = theContext()->getNode();
