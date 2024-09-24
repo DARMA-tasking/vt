@@ -433,4 +433,81 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   validatePersistedPhases({16});
 }
 
+TEST_F(TestLBDataRetention, test_lbdata_retention_checkpoint) {
+  static constexpr int const num_phases = 8;
+  theConfig()->vt_lb_data_retention = 4;
+
+  auto this_node = theContext()->getNode();
+  std::string const checkpoint_name(getUniqueFilenameWithRanks());
+  auto range = vt::Index1D(num_elms);
+  vt::vrt::collection::CollectionProxy<TestCol> proxy;
+
+  runInEpochCollective([&]{
+    proxy = vt::theCollection()->constructCollective<TestCol>(
+      range, "test_lbdata_retention_checkpoint"
+    );
+    proxy.broadcastCollective<TestCol::insertValue>();
+  });
+
+  // Get the base model, assert it's valid
+  auto base = theLBManager()->getBaseLoadModel();
+  EXPECT_NE(base, nullptr);
+
+  // Create a new model
+  auto persist = std::make_shared<PersistenceMedianLastN>(base, 4U);
+
+  // Set the new model
+  theLBManager()->setLoadModel(persist);
+
+  for (int i=0; i<num_phases; ++i) {
+    runInEpochCollective([&]{
+      // Do some work.
+      proxy.broadcastCollective<TestCol::colHandler>();
+    });
+    // Go to the next phase.
+    vt::thePhase()->nextPhaseCollective();
+  }
+
+  // Check the phases persisted in the node
+  validatePersistedPhases({4,5,6,7});
+
+  vt::runInEpochCollective([&]{
+    vt_print(gen, "checkpointToFile\n");
+    vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
+  });
+
+  vt::runInEpochCollective([&]{
+    if (this_node == 0) {
+      proxy.destroy();
+    }
+  });
+
+  auto proxy_new = vt::theCollection()->constructCollective<TestCol>(
+    range, "test_lbdata_retention_checkpoint"
+  );
+
+  vt::runInEpochCollective([&]{
+    // Now, restore from the previous distribution
+    vt_print(gen, "restoreFromFileInPlace\n");
+    vt::theCollection()->restoreFromFileInPlace<TestCol>(
+      proxy_new, range, checkpoint_name
+    );
+  });
+
+  // Check the phases persisted in the node
+  validatePersistedPhases({4,5,6,7});
+
+  for (int i=0; i<num_phases; ++i) {
+    runInEpochCollective([&]{
+      // Do some work.
+      proxy_new.broadcastCollective<TestCol::colHandler>();
+    });
+    // Go to the next phase.
+    vt::thePhase()->nextPhaseCollective();
+  }
+
+  // Check the phases persisted in the node
+  validatePersistedPhases({12, 13, 14, 15});
+}
+
 }}}} // end namespace vt::tests::unit::TestLBDataRetention
