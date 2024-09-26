@@ -139,10 +139,17 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
     auto sp_load_phase_count = lb_data.getSubphaseLoadPhaseCount();
     auto sp_comm_phase_count = lb_data.getSubphaseCommPhaseCount();
 
-    EXPECT_EQ(load_phase_count,    std::size_t{1});
-    EXPECT_EQ(sp_load_phase_count, std::size_t{1});
-    EXPECT_EQ(comm_phase_count,    std::size_t{1});
-    EXPECT_EQ(sp_comm_phase_count, std::size_t{1});
+    #if vt_check_enabled(lblite)
+      EXPECT_EQ(load_phase_count,    std::size_t{1});
+      EXPECT_EQ(sp_load_phase_count, std::size_t{1});
+      EXPECT_EQ(comm_phase_count,    std::size_t{1});
+      EXPECT_EQ(sp_comm_phase_count, std::size_t{1});
+    #else
+      EXPECT_EQ(load_phase_count,    std::size_t{0});
+      EXPECT_EQ(sp_load_phase_count, std::size_t{0});
+      EXPECT_EQ(comm_phase_count,    std::size_t{0});
+      EXPECT_EQ(sp_comm_phase_count, std::size_t{0});
+    #endif
   }
 };
 
