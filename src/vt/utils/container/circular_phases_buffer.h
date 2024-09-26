@@ -221,22 +221,31 @@ public:
   }
 
   /**
-   * \brief Restart the buffer from a specific phase, shifting the head.
-   * This does not remove any existing data.
+   * \brief Resets the buffer to a specified phase, discarding all earlier phases
+   * and retaining only the most recent phase data that will be mapped to the new starting point.
    *
    * \param start_point The phase to start from.
    */
   void restartFrom(const PhaseType& start_point) {
     if (empty()) {
+      head_phase_ = start_point;
       return;
     }
 
-    // copy data from head_phase_
-    if (phaseToIndex(head_phase_) != phaseToIndex(start_point)) {
-      buffer_[phaseToIndex(start_point)].second = buffer_[phaseToIndex(head_phase_)].second;
+    std::size_t index = phaseToIndex(start_point);
+    if (std::size_t head_index = phaseToIndex(head_phase_); head_index != index) {
+      // copy data from head_phase_
+      buffer_[index].second = buffer_[head_index].second;
     }
 
-    buffer_[phaseToIndex(start_point)].first = start_point;
+    // clear rest of the data
+    for (std::size_t i = 0; i < buffer_.size(); i++) {
+      if (i != index) {
+        buffer_[i] = makeEmptyPair();
+      }
+    }
+
+    buffer_[index].first = start_point;
     head_phase_ = start_point;
   }
 

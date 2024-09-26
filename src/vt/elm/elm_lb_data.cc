@@ -195,12 +195,15 @@ void ElementLBData::updatePhase(PhaseType const& inc) {
 }
 
 void ElementLBData::resetPhase() {
-  // cur_phase_ = fst_lb_phase;
-  // // Resets the current phase in the containers without removing any phase data.
-  // phase_timings_.restartFrom(fst_lb_phase);
-  // subphase_timings_.restartFrom(fst_lb_phase);
-  // phase_comm_.restartFrom(fst_lb_phase);
-  // subphase_comm_.restartFrom(fst_lb_phase);
+  // This method will become obsolete once VT gains full restart capability,
+  // allowing it to load all necessary data (like PhaseManager state, NodeLBData, etc.) from a checkpoint.
+
+  cur_phase_ = fst_lb_phase;
+  // Resets the current phase in the containers.
+  phase_timings_.restartFrom(fst_lb_phase);
+  subphase_timings_.restartFrom(fst_lb_phase);
+  phase_comm_.restartFrom(fst_lb_phase);
+  subphase_comm_.restartFrom(fst_lb_phase);
 }
 
 PhaseType ElementLBData::getPhase() const {

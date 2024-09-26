@@ -223,21 +223,20 @@ TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_resize) {
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_restart_from) {
   CircularBufferType buffer{1};
 
-  // do nothing on empty buffer
   buffer.restartFrom(5);
-  EXPECT_EQ(std::numeric_limits<PhaseType>::max(), buffer.frontPhase());
+  EXPECT_EQ(PhaseType{5}, buffer.frontPhase());
 
-  buffer[3] = {3};
-  EXPECT_EQ(PhaseType{3}, buffer.frontPhase());
-  EXPECT_EQ(PhaseType{3}, buffer.frontData().x);
+  buffer[5] = {5};
+  EXPECT_EQ(PhaseType{5}, buffer.frontPhase());
+  EXPECT_EQ(PhaseType{5}, buffer.frontData().x);
 
   buffer.restartFrom(10);
   EXPECT_EQ(PhaseType{10}, buffer.frontPhase());
-  EXPECT_EQ(PhaseType{3}, buffer.frontData().x);
+  EXPECT_EQ(PhaseType{5}, buffer.frontData().x);
 
   buffer.restartFrom(0);
   EXPECT_EQ(PhaseType{0}, buffer.frontPhase());
-  EXPECT_EQ(PhaseType{3}, buffer.frontData().x);
+  EXPECT_EQ(PhaseType{5}, buffer.frontData().x);
 }
 
 TEST_F(TestCircularPhasesBuffer, test_circular_phases_buffer_forward_iter) {
