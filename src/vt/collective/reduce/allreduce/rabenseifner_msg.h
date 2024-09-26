@@ -5,7 +5,7 @@
 //                              rabenseifner_msg.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -97,9 +97,9 @@ struct RabenseifnerMsg : Message {
 };
 
 #if MAGISTRATE_KOKKOS_ENABLED
-template <typename Scalar>
-struct RabenseifnerMsg<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> : Message {
-  using ViewT = Kokkos::View<Scalar*, Kokkos::HostSpace>;
+template <typename Scalar, typename... Properties>
+struct RabenseifnerMsg<Scalar, Kokkos::View<Scalar*, Properties...>> : Message {
+  using ViewT = Kokkos::View<Scalar*, Properties...>;
   using MessageParentType = vt::Message;
   vt_msg_serialize_required();
 

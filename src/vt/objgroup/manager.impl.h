@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include "vt/collective/reduce/allreduce/allreduce_holder.h"
 #if !defined INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 #define INCLUDED_VT_OBJGROUP_MANAGER_IMPL_H
 
