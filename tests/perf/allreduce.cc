@@ -328,7 +328,6 @@ VT_PERF_TEST(MyTest, test_allreduce_collection_rabenseifner) {
                  .wait();
 
   auto const thisNode = vt::theContext()->getNode();
-  auto const nextNode = (thisNode + 1) % num_nodes_;
 
   theCollective()->barrier();
 
@@ -382,7 +381,6 @@ VT_PERF_TEST(MyTest, test_allreduce_collection_racursive_doubling) {
                  .wait();
 
   auto const thisNode = vt::theContext()->getNode();
-  auto const nextNode = (thisNode + 1) % num_nodes_;
 
   theCollective()->barrier();
 

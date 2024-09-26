@@ -159,12 +159,15 @@ struct MyObjA {
 
     auto n = vt::theContext()->getNumNodes();
     auto const total_sum = n * (n - 1) / 2;
-    using ExecSpace = typename utils::kokkos::AssociatedExecSpace<MemorySpace>::type;
 
-    Kokkos::RangePolicy<ExecSpace> policy(0, view.extent(0));
-    Kokkos::parallel_for("InitView", policy, KOKKOS_LAMBDA(const int i) {
-      EXPECT_EQ(view(i), total_sum);
-    });
+    // Just in case it's not Host space
+    auto view_host = Kokkos::create_mirror_view(view);
+    Kokkos::deep_copy(view_host, view);
+
+    vtAssert(view_host.extent(0) == 256, "View size is not right");
+    for(uint32_t i = 0; i < view_host.extent(0); ++i){
+      EXPECT_EQ(view_host(i), total_sum);
+    }
 
     total_verify_expected_++;
   }
