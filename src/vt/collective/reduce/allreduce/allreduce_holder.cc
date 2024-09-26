@@ -45,6 +45,11 @@
 
 namespace vt::collective::reduce::allreduce {
 
+void AllreduceHolder::createAllreducers(detail::StrongGroup strong_group) {
+  addRabensifnerAllreducer(strong_group);
+  addRecursiveDoublingAllreducer(strong_group);
+}
+
 objgroup::proxy::Proxy<Rabenseifner> AllreduceHolder::addRabensifnerAllreducer(
   detail::StrongVrtProxy strong_proxy, detail::StrongGroup strong_group,
   size_t num_elems) {
