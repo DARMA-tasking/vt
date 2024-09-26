@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    type.h
+//                                 reduce_op.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,26 +41,53 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_TYPE_H
-#define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_TYPE_H
+#if !defined INCLUDED_VT_UTILS_KOKKOS_REDUCE_OP_H
+#define INCLUDED_VT_UTILS_KOKKOS_REDUCE_OP_H
 
-#include <string>
+#include "vt/config.h"
 
-namespace vt::collective::reduce::allreduce {
+#if MAGISTRATE_KOKKOS_ENABLED
 
-struct RabenseifnerT {};
-struct RecursiveDoublingT {};
+#include "vt/collective/reduce/operators/default_op.h"
 
-enum class ReducerType { Rabenseifner, RecursiveDoubling };
+namespace vt::utils::kokkos {
 
-inline std::string TypeToString(ReducerType t) {
-  if (t == ReducerType::Rabenseifner) {
-    return "Rabenseifner";
-  } else {
-    return "RecursiveDoubling";
+template <typename Op>
+struct KokkosOp {
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(T& v1, T const& v2) {
+    if constexpr (std::is_same_v<
+                    Op, vt::collective::reduce::operators::AndOp<T>>) {
+      v1 = v1 && v2;
+    } else if constexpr (std::is_same_v<
+                           Op,
+                           vt::collective::reduce::operators::BitAndOp<T>>) {
+      v1 = v1 & v2;
+    } else if constexpr (std::is_same_v<
+                           Op, vt::collective::reduce::operators::BitOrOp<T>>) {
+      v1 = v1 | v2;
+    } else if constexpr (std::is_same_v<
+                           Op,
+                           vt::collective::reduce::operators::BitXorOp<T>>) {
+      v1 = v1 ^ v2;
+    } else if constexpr (std::is_same_v<
+                           Op, vt::collective::reduce::operators::MaxOp<T>>) {
+      v1 = std::max(v1, v2);
+    } else if constexpr (std::is_same_v<
+                           Op, vt::collective::reduce::operators::MinOp<T>>) {
+      v1 = std::min(v1, v2);
+    } else if constexpr (std::is_same_v<
+                           Op, vt::collective::reduce::operators::OrOp<T>>) {
+      v1 = v1 || v2;
+    } else if constexpr (std::is_same_v<
+                           Op, vt::collective::reduce::operators::PlusOp<T>>) {
+      v1 = v1 + v2;
+    }
   }
-}
+};
 
-} // namespace vt::collective::reduce::allreduce
+} // namespace vt::utils::kokkos
 
-#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_TYPE_H*/
+#endif // MAGISTRATE_KOKKOS_ENABLED
+#endif /*INCLUDED_VT_UTILS_KOKKOS_REDUCE_OP_H*/

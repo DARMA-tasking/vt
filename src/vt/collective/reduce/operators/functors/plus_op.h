@@ -69,23 +69,27 @@ struct PlusOp<std::tuple<Params...>> {
 
 #if MAGISTRATE_KOKKOS_ENABLED
 
-template <typename T, typename MemorySpace>
-struct PlusOp<Kokkos::View<T*, MemorySpace>> {
+template <typename T, typename... Properties>
+struct PlusOp<Kokkos::View<T*, Properties...>> {
   void operator()(
-    Kokkos::View<T*, MemorySpace>& v1,
-    Kokkos::View<T*, MemorySpace> const& v2) const {
+    Kokkos::View<T*, Properties...>& v1,
+    const Kokkos::View<T*, Properties...>& v2) const {
 
+    // Determine the associated execution space based on the memory space
+    using MemorySpace = typename Kokkos::View<T*, Properties...>::memory_space;
     using ExecSpace = typename utils::kokkos::AssociatedExecSpace<MemorySpace>::type;
 
     Kokkos::RangePolicy<ExecSpace> policy(0, v1.extent(0));
 
     Kokkos::parallel_for(
-      "PlusOp_Host",
+      "Kokkos_PlusOp",
       policy,
       KOKKOS_LAMBDA(const int i) {
         v1(i) += v2(i);
       }
     );
+
+    Kokkos::fence();
   }
 };
 #endif // MAGISTRATE_KOKKOS_ENABLED
