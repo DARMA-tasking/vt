@@ -5,7 +5,7 @@
 //                                  helpers.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -48,6 +48,7 @@
 #include "rabenseifner_msg.h"
 #include "vt/messaging/message/shared_message.h"
 #include "vt/utils/kokkos/exec_space.h"
+#include "vt/utils/kokkos/reduce_op.h"
 
 #include <vector>
 
@@ -119,10 +120,10 @@ struct DataHelper {
 
 #if MAGISTRATE_KOKKOS_ENABLED
 
-template <typename Scalar, typename MemorySpace>
-struct DataHelper<Scalar, Kokkos::View<Scalar*, MemorySpace>> {
-  using DataT = Kokkos::View<Scalar*, MemorySpace>;
-  using ExecSpace = typename utils::kokkos::AssociatedExecSpace<MemorySpace>::type;
+template <typename Scalar, typename... Properties>
+struct DataHelper<Scalar, Kokkos::View<Scalar*, Properties...>> {
+  using DataT = Kokkos::View<Scalar*, Properties...>;
+  using ExecSpace = typename utils::kokkos::AssociatedExecSpace<Properties...>::type;
   using DataType = DataHandler<DataT>;
 
   template <typename... Args>
@@ -155,7 +156,7 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, MemorySpace>> {
     Kokkos::RangePolicy<ExecSpace> policy(0, msg->val_.extent(0));
     Kokkos::parallel_for(
       "Rabenseifner::reduce", policy, KOKKOS_LAMBDA(const int i) {
-        Op<Scalar>()(dest(start_idx + i), msg->val_(i));
+        utils::kokkos::KokkosOp<Op<Scalar>>()(dest(start_idx + i), msg->val_(i));
       }
     );
   }
@@ -168,7 +169,7 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, MemorySpace>> {
     Kokkos::RangePolicy<ExecSpace> policy(0, view_val.extent(0));
     Kokkos::parallel_for(
       "Rabenseifner::reduce", policy, KOKKOS_LAMBDA(const int i) {
-        Op<Scalar>()(dest(i), view_val(i));
+        utils::kokkos::KokkosOp<Op<Scalar>>()(dest(i), view_val(i));
       }
     );
   }
