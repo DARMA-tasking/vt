@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/collective/reduce/allreduce/allreduce_holder.h"
 #include "vt/collective/reduce/operators/functors/plus_op.h"
 #include "vt/config.h"
 #include "vt/configs/types/types_type.h"
@@ -807,34 +808,12 @@ void InfoColl::finalize() {
       );
     }
 
-    // std::sort(nodes_.begin(), nodes_.end());
-    std::string nodes_info = "Nodes: ";
-    nodes_info.reserve(1024);
-    for (auto& node : nodes_) {
-      nodes_info += fmt::format("{} ", node);
-    }
-    nodes_info += "\n";
-    vt_debug_print(
-      terse, group, "InfoColl::finalize: group={:x}, {}\n", group_, nodes_info
+    collective::reduce::allreduce::AllreduceHolder::createAllreducers(
+      collective::reduce::detail::StrongGroup{group_}
     );
 
-
-    // TODO: initialize reducer here
-    // We pass groupType and nodes_. With this information,
-    // we can calculate group size and neighbour nodes
-    if (is_in_group) {
-      std::vector<NodeType> nodes(nodes_.begin(), nodes_.end());
-      // allreducer_ = collective::reduce::allreduce::RabenseifnerGroup(group_, nodes);
-      //vt::runInEpochCollective([&]{
-
-        // collective::reduce::allreduce::RabenseifnerGroup a(group_, nodes);
-        //a.allreduce(a.id_);
-      //});
-
-    }
-
-  auto const& children = collective_->getChildren();
-  for (auto&& c : children) {
+    auto const& children = collective_->getChildren();
+    for (auto&& c : children) {
 
       vt_debug_print(
         terse, group,

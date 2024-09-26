@@ -61,6 +61,8 @@ struct AllreduceHolder {
   using RabenseifnerProxy = ObjGroupProxyType;
   using RecursiveDoublingProxy = ObjGroupProxyType;
 
+  static void createAllreducers(detail::StrongGroup strong_group);
+
   template <typename ReducerT>
   static auto getAllreducer(
     detail::StrongVrtProxy strong_proxy, detail::StrongGroup strong_group,
