@@ -131,6 +131,19 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
       EXPECT_EQ(sp_comm_phase_count, std::size_t{0});
     #endif
   }
+
+  static void emptyDataHandler(TestCol* col) {
+    auto& lb_data = col->lb_data_;
+    auto load_phase_count = lb_data.getLoadPhaseCount();
+    auto comm_phase_count = lb_data.getCommPhaseCount();
+    auto sp_load_phase_count = lb_data.getSubphaseLoadPhaseCount();
+    auto sp_comm_phase_count = lb_data.getSubphaseCommPhaseCount();
+
+    EXPECT_EQ(load_phase_count,    std::size_t{1});
+    EXPECT_EQ(sp_load_phase_count, std::size_t{1});
+    EXPECT_EQ(comm_phase_count,    std::size_t{1});
+    EXPECT_EQ(sp_comm_phase_count, std::size_t{1});
+  }
 };
 
 static constexpr int32_t const num_elms = 16;
@@ -433,21 +446,76 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_model_switch_2) {
   validatePersistedPhases({16});
 }
 
-TEST_F(TestLBDataRetention, test_lbdata_retention_checkpoint) {
-  static constexpr int const num_phases = 8;
-  theConfig()->vt_lb_data_retention = 4;
+struct TestLBDataRetentionOnCheckpoint : TestParallelHarness {
+  virtual void SetUp() override {
+    TestParallelHarness::SetUp();
 
-  auto this_node = theContext()->getNode();
+    // We must have more or equal number of elements than nodes for this test to
+    // work properly
+    SET_MAX_NUM_NODES_CONSTRAINT(num_elms);
+  }
+};
+
+TEST_F(TestLBDataRetentionOnCheckpoint, test_lbdata_retention_checkpoint) {
+  static constexpr int const num_phases = 8;
   std::string const checkpoint_name(getUniqueFilenameWithRanks());
   auto range = vt::Index1D(num_elms);
-  vt::vrt::collection::CollectionProxy<TestCol> proxy;
 
-  runInEpochCollective([&]{
-    proxy = vt::theCollection()->constructCollective<TestCol>(
-      range, "test_lbdata_retention_checkpoint"
-    );
-    proxy.broadcastCollective<TestCol::insertValue>();
-  });
+  {
+    theConfig()->vt_lb_data_retention = 4;
+
+    auto this_node = theContext()->getNode();
+    vt::vrt::collection::CollectionProxy<TestCol> proxy;
+
+    runInEpochCollective([&]{
+      proxy = vt::theCollection()->constructCollective<TestCol>(
+        range, "test_lbdata_retention_checkpoint"
+      );
+      proxy.broadcastCollective<TestCol::insertValue>();
+    });
+
+    // Get the base model, assert it's valid
+    auto base = theLBManager()->getBaseLoadModel();
+    EXPECT_NE(base, nullptr);
+
+    // Create a new model
+    auto persist = std::make_shared<PersistenceMedianLastN>(base, 4U);
+
+    // Set the new model
+    theLBManager()->setLoadModel(persist);
+
+    for (int i=0; i<num_phases; ++i) {
+      runInEpochCollective([&]{
+        // Do some work.
+        proxy.broadcastCollective<TestCol::colHandler>();
+      });
+      // Go to the next phase.
+      vt::thePhase()->nextPhaseCollective();
+    }
+
+    // Check the phases persisted in the node
+    validatePersistedPhases({4,5,6,7});
+
+    vt::runInEpochCollective([&]{
+      vt_print(gen, "checkpointToFile\n");
+      vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
+    });
+
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.destroy();
+      }
+    });
+  }
+
+  // Destroy and init fresh instance
+  TestLBDataRetentionOnCheckpoint::destroyVt();
+  vt_print(gen, "newVtInstance\n");
+  TestLBDataRetentionOnCheckpoint::initVt();
+
+  auto proxy_new = vt::theCollection()->constructCollective<TestCol>(
+    range, "test_lbdata_retention_checkpoint"
+  );
 
   // Get the base model, assert it's valid
   auto base = theLBManager()->getBaseLoadModel();
@@ -459,33 +527,6 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_checkpoint) {
   // Set the new model
   theLBManager()->setLoadModel(persist);
 
-  for (int i=0; i<num_phases; ++i) {
-    runInEpochCollective([&]{
-      // Do some work.
-      proxy.broadcastCollective<TestCol::colHandler>();
-    });
-    // Go to the next phase.
-    vt::thePhase()->nextPhaseCollective();
-  }
-
-  // Check the phases persisted in the node
-  validatePersistedPhases({4,5,6,7});
-
-  vt::runInEpochCollective([&]{
-    vt_print(gen, "checkpointToFile\n");
-    vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
-  });
-
-  vt::runInEpochCollective([&]{
-    if (this_node == 0) {
-      proxy.destroy();
-    }
-  });
-
-  auto proxy_new = vt::theCollection()->constructCollective<TestCol>(
-    range, "test_lbdata_retention_checkpoint"
-  );
-
   vt::runInEpochCollective([&]{
     // Now, restore from the previous distribution
     vt_print(gen, "restoreFromFileInPlace\n");
@@ -494,12 +535,19 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_checkpoint) {
     );
   });
 
-  // Check the phases persisted in the node
-  validatePersistedPhases({4,5,6,7});
+  // After restore node LB data is empty
+  validatePersistedPhases({});
 
+  runInEpochCollective([&]{
+    proxy_new.broadcastCollective<TestCol::emptyDataHandler>();
+  });
+  vt::thePhase()->nextPhaseCollective();
+
+  validatePersistedPhases({0});
+
+  // Do more work.
   for (int i=0; i<num_phases; ++i) {
     runInEpochCollective([&]{
-      // Do some work.
       proxy_new.broadcastCollective<TestCol::colHandler>();
     });
     // Go to the next phase.
@@ -507,7 +555,7 @@ TEST_F(TestLBDataRetention, test_lbdata_retention_checkpoint) {
   }
 
   // Check the phases persisted in the node
-  validatePersistedPhases({12, 13, 14, 15});
+  validatePersistedPhases({5, 6, 7, 8});
 }
 
 }}}} // end namespace vt::tests::unit::TestLBDataRetention
