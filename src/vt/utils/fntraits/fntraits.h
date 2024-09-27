@@ -191,6 +191,7 @@ struct ObjFuncTraitsImpl<
   using ReturnT = Return;
   template <template <typename...> class U>
   using WrapType = U<MsgT>;
+  using TupleType = WrapType<std::tuple>;
 };
 
 template <typename Return>

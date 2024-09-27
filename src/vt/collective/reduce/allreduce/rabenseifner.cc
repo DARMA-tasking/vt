@@ -43,6 +43,8 @@
 
 #include "vt/collective/reduce/allreduce/rabenseifner.h"
 #include "vt/collective/reduce/allreduce/allreduce_holder.h"
+#include "vt/collective/reduce/allreduce/rabenseifner_msg.h"
+#include "vt/collective/reduce/allreduce/type.h"
 #include "vt/configs/error/config_assert.h"
 #include "vt/group/group_manager.h"
 
@@ -50,7 +52,7 @@ namespace vt::collective::reduce::allreduce {
 
 Rabenseifner::Rabenseifner(
   detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems)
-  : collection_proxy_(proxy.get()),
+  : info_({ComponentT::VrtColl, proxy.get()}),
     local_num_elems_(num_elems),
     nodes_(theGroup()->GetGroupNodes(group.get())),
     num_nodes_(nodes_.size()),
@@ -72,12 +74,12 @@ Rabenseifner::Rabenseifner(
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner (this={}): proxy={:x} proxy_={} local_num_elems={}\n",
-    print_ptr(this), proxy.get(), proxy_.getProxy(), local_num_elems_);
+    "Rabenseifner (this={}): proxy={:x} local_num_elems={}\n",
+    print_ptr(this), proxy.get(), local_num_elems_);
 }
 
 Rabenseifner::Rabenseifner(detail::StrongGroup group)
-  : group_(group.get()),
+  : info_({ComponentT::Group, group.get()}),
     local_num_elems_(1),
     nodes_(theGroup()->GetGroupNodes(group.get())),
     num_nodes_(nodes_.size()),
@@ -85,8 +87,8 @@ Rabenseifner::Rabenseifner(detail::StrongGroup group)
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_) {
-  auto const is_default_group = theGroup()->isGroupDefault(group_);
-  auto const in_group = theGroup()->inGroup(group_);
+  auto const is_default_group = theGroup()->isGroupDefault(info_.second);
+  auto const in_group = theGroup()->inGroup(info_.second);
   auto const is_part_of_allreduce =
     (not is_default_group and in_group) or is_default_group;
 
@@ -112,7 +114,7 @@ Rabenseifner::Rabenseifner(detail::StrongGroup group)
 }
 
 Rabenseifner::Rabenseifner(detail::StrongObjGroup objgroup)
-  : objgroup_proxy_(objgroup.get()),
+  : info_({ComponentT::ObjGroup, objgroup.get()}),
     local_num_elems_(1),
     num_nodes_(theContext()->getNumNodes()),
     this_node_(theContext()->getNode()),
@@ -148,11 +150,11 @@ void Rabenseifner::initializeVrtNode() {
 }
 
 Rabenseifner::~Rabenseifner() {
-  if (objgroup_proxy_ != u64empty) {
-    StateHolder::clearAll(detail::StrongObjGroup{objgroup_proxy_});
-    AllreduceHolder::remove(detail::StrongObjGroup{objgroup_proxy_});
-  } else if(group_ != u64empty){
-    StateHolder::clearAll(detail::StrongGroup{group_});
+  if (info_.first == ComponentT::ObjGroup) {
+    StateHolder::clearAll(detail::StrongObjGroup{info_.second});
+    AllreduceHolder::remove(detail::StrongObjGroup{info_.second});
+  } else if(info_.first == ComponentT::Group){
+    StateHolder::clearAll(detail::StrongGroup{info_.second});
   }
 }
 

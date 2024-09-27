@@ -156,7 +156,10 @@ struct RecursiveDoubling {
    * \param msg Pointer to the message.
    */
   template <typename DataT, template <typename Arg> class Op>
-  void adjustForPowerOfTwoHandler(RecursiveDoublingMsg<DataT>* msg);
+  static void adjustForPowerOfTwoHandler(RecursiveDoublingMsg<DataT>* msg);
+
+  template <typename DataT, template <typename Arg> class Op>
+  void adjustForPowerOfTwoHan(RecursiveDoublingMsg<DataT>* msg);
 
   /**
    * \brief Check if the allreduce operation is done.
@@ -217,7 +220,10 @@ struct RecursiveDoubling {
    * \param msg Pointer to the message.
    */
   template <typename DataT, template <typename Arg> class Op>
-  void reduceIterHandler(RecursiveDoublingMsg<DataT>* msg);
+  static void reduceIterHandler(RecursiveDoublingMsg<DataT>* msg);
+
+  template <typename DataT, template <typename Arg> class Op>
+  void reduceIterHan(RecursiveDoublingMsg<DataT>* msg);
 
   /**
    * \brief Send data to excluded nodes for finalization.
@@ -233,7 +239,10 @@ struct RecursiveDoubling {
    * \param msg Pointer to the message.
    */
   template <typename DataT>
-  void sendToExcludedNodesHandler(RecursiveDoublingMsg<DataT>* msg);
+  static void sendToExcludedNodesHandler(RecursiveDoublingMsg<DataT>* msg);
+
+  template <typename DataT>
+  void sendToExcludedNodesHan(RecursiveDoublingMsg<DataT>* msg);
 
   /**
    * \brief Perform the final part of the allreduce operation.
@@ -243,13 +252,9 @@ struct RecursiveDoubling {
   template <typename DataT>
   void finalPart(size_t id);
 
-  vt::objgroup::proxy::Proxy<RecursiveDoubling> proxy_ = {};
-
 private:
 
-  VirtualProxyType collection_proxy_ = u64empty;
-  ObjGroupProxyType objgroup_proxy_ = u64empty;
-  GroupType group_ = u64empty;
+  ComponentInfo info_ = {};
 
   size_t local_num_elems_ = 1;
 

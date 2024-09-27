@@ -922,12 +922,12 @@ messaging::PendingSend CollectionManager::reduceLocal(
   if (use_group) {
     // theGroup()->allreduce<f, Op>(group, );
   } else {
-    auto obj_proxy = AllreduceHolder::getAllreducer<ReducerT>(
+    auto* obj = AllreduceHolder::getOrCreateAllreducer<ReducerT>(
       collective::reduce::detail::StrongVrtProxy{col_proxy},
       collective::reduce::detail::StrongGroup{group}, num_elms);
 
-    auto* obj = obj_proxy[theContext()->getNode()].get();
-    obj->proxy_ = obj_proxy;
+    // auto* obj = obj_proxy[theContext()->getNode()].get();
+    // obj->proxy_ = obj_proxy;
 
     obj->template setFinalHandler<DataT>(cb, id);
     obj->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
