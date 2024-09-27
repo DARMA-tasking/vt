@@ -237,26 +237,26 @@ private:
 
 template <typename ReducerT, typename DataT>
 static inline auto&
-getState(VirtualProxyType coll, ObjGroupProxyType obj, GroupType g, size_t id) {
-  if (coll != u64empty) {
+getState(ComponentInfo info, size_t id) {
+  if (info.first == ComponentT::VrtColl) {
     return StateHolder::getState<ReducerT, DataT>(
-      detail::StrongVrtProxy{coll}, id);
-  } else if (obj != u64empty) {
+      detail::StrongVrtProxy{info.second}, id);
+  } else if (info.first == ComponentT::ObjGroup) {
     return StateHolder::getState<ReducerT, DataT>(
-      detail::StrongObjGroup{obj}, id);
+      detail::StrongObjGroup{info.second}, id);
   } else {
-    return StateHolder::getState<ReducerT, DataT>(detail::StrongGroup{g}, id);
+    return StateHolder::getState<ReducerT, DataT>(detail::StrongGroup{info.second}, id);
   }
 }
 
 static inline void cleanupState(
-  VirtualProxyType coll, ObjGroupProxyType obj, GroupType g, size_t id) {
-  if (coll != u64empty) {
-    StateHolder::clearSingle(detail::StrongVrtProxy{coll}, id);
-  } else if (obj != u64empty) {
-    StateHolder::clearSingle(detail::StrongObjGroup{obj}, id);
+  ComponentInfo info, size_t id) {
+  if (info.first == ComponentT::VrtColl) {
+    StateHolder::clearSingle(detail::StrongVrtProxy{info.second}, id);
+  } else if (info.first == ComponentT::ObjGroup) {
+    StateHolder::clearSingle(detail::StrongObjGroup{info.second}, id);
   } else {
-    StateHolder::clearSingle(detail::StrongGroup{g}, id);
+    StateHolder::clearSingle(detail::StrongGroup{info.second}, id);
   }
 }
 

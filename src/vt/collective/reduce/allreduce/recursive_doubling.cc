@@ -42,13 +42,14 @@
 */
 
 #include "vt/collective/reduce/allreduce/recursive_doubling.h"
+#include "vt/collective/reduce/allreduce/helpers.h"
 #include "vt/group/group_manager.h"
 
 namespace vt::collective::reduce::allreduce {
 
 RecursiveDoubling::RecursiveDoubling(
   detail::StrongVrtProxy proxy, detail::StrongGroup group, size_t num_elems)
-  : collection_proxy_(proxy.get()),
+  : info_({ComponentT::VrtColl, proxy.get()}),
     local_num_elems_(num_elems),
     nodes_(theGroup()->GetGroupNodes(group.get())),
     num_nodes_(nodes_.size()),
@@ -70,12 +71,12 @@ RecursiveDoubling::RecursiveDoubling(
 
   vt_debug_print(
     terse, allreduce,
-    "RecursiveDoubling (this={}): proxy={:x} proxy_={} local_num_elems={}\n",
-    print_ptr(this), proxy.get(), proxy_.getProxy(), local_num_elems_);
+    "RecursiveDoubling (this={}): proxy={:x} local_num_elems={}\n",
+    print_ptr(this), proxy.get(), local_num_elems_);
 }
 
 RecursiveDoubling::RecursiveDoubling(detail::StrongObjGroup objgroup)
-  : objgroup_proxy_(objgroup.get()),
+  : info_({ComponentT::ObjGroup, objgroup.get()}),
     num_nodes_(theContext()->getNumNodes()),
     this_node_(vt::theContext()->getNode()),
     is_even_(this_node_ % 2 == 0),
@@ -92,8 +93,8 @@ RecursiveDoubling::RecursiveDoubling(detail::StrongObjGroup objgroup)
 }
 
 RecursiveDoubling::RecursiveDoubling(detail::StrongGroup group)
-  : group_(group.get()),
-    nodes_(theGroup()->GetGroupNodes(group_)),
+  : info_({ComponentT::Group, group.get()}),
+    nodes_(theGroup()->GetGroupNodes(group.get())),
     num_nodes_(nodes_.size()),
     this_node_(vt::theContext()->getNode()),
     is_even_(this_node_ % 2 == 0),
@@ -117,11 +118,11 @@ void RecursiveDoubling::initializeVrtNode() {
 }
 
 RecursiveDoubling::~RecursiveDoubling() {
-  if (objgroup_proxy_ != u64empty) {
-    StateHolder::clearAll(detail::StrongObjGroup{objgroup_proxy_});
-    AllreduceHolder::remove(detail::StrongObjGroup{objgroup_proxy_});
-  } else if (group_ != u64empty) {
-    StateHolder::clearAll(detail::StrongGroup{group_});
+if (info_.first == ComponentT::ObjGroup) {
+    StateHolder::clearAll(detail::StrongObjGroup{info_.second});
+    AllreduceHolder::remove(detail::StrongObjGroup{info_.second});
+  } else if(info_.first == ComponentT::Group){
+    StateHolder::clearAll(detail::StrongGroup{info_.second});
   }
 }
 

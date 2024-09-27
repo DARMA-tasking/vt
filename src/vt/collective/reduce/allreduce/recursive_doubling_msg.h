@@ -45,7 +45,7 @@
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_MSG_H
 
 #include "vt/messaging/active.h"
-
+#include "type.h"
 namespace vt::collective::reduce::allreduce {
 
 template <typename DataT>
@@ -62,11 +62,12 @@ struct RecursiveDoublingMsg : Message {
     }
   }
 
-  RecursiveDoublingMsg(DataT const& in_val, size_t id, int step = 0)
+  RecursiveDoublingMsg(ComponentInfo info, DataT const& in_val, size_t id, int step = 0)
     : MessageParentType(),
       val_(&in_val),
       id_(id),
-      step_(step) { }
+      step_(step),
+      info_(info) { }
 
   template <typename SerializeT>
   void serialize(SerializeT& s) {
@@ -80,12 +81,14 @@ struct RecursiveDoublingMsg : Message {
     s | *val_;
     s | id_;
     s | step_;
+    s | info_;
   }
 
   const DataT* val_ = {};
   size_t id_ = {};
   int32_t step_ = {};
   bool owning_ = false;
+  ComponentInfo info_ = {};
 };
 
 } // namespace vt::collective::reduce::allreduce
