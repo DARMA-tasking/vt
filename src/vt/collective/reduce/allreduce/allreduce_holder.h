@@ -47,8 +47,6 @@
 #include "vt/configs/types/types_type.h"
 #include "vt/collective/reduce/allreduce/type.h"
 #include "vt/collective/reduce/scoping/strong_types.h"
-#include "vt/collective/reduce/allreduce/rabenseifner.h"
-#include "vt/collective/reduce/allreduce/recursive_doubling.h"
 #include "vt/configs/types/types_sentinels.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 
@@ -57,6 +55,8 @@
 
 namespace vt::collective::reduce::allreduce {
 
+struct Rabenseifner;
+struct RecursiveDoubling;
 struct AllreduceHolder {
   using RabenseifnerProxy = ObjGroupProxyType;
   using RecursiveDoublingProxy = ObjGroupProxyType;
@@ -65,105 +65,150 @@ struct AllreduceHolder {
 
   template <typename ReducerT>
   static auto getAllreducer(
+    detail::StrongVrtProxy strong_proxy) {
+    auto const coll_proxy = strong_proxy.get();
+
+    auto it = col_reducers_.find(coll_proxy);
+    if(it == col_reducers_.end()){
+      col_reducers_[coll_proxy] = {nullptr, nullptr};
+    }
+
+    if constexpr(std::is_same_v<ReducerT, RabenseifnerT>){
+      return col_reducers_.at(coll_proxy).first;
+    }else {
+      return col_reducers_.at(coll_proxy).second;
+    }
+  }
+
+  template <typename ReducerT>
+  static auto getAllreducer(
+    detail::StrongGroup strong_group) {
+    auto const group = strong_group.get();
+
+    auto it = group_reducers_.find(group);
+    if(it == group_reducers_.end()){
+      group_reducers_[group] = {nullptr, nullptr};
+    }
+
+    if constexpr(std::is_same_v<ReducerT, RabenseifnerT>){
+      return group_reducers_.at(group).first;
+    }else {
+      return group_reducers_.at(group).second;
+    }
+  }
+
+  template <typename ReducerT>
+  static auto getAllreducer(
+    detail::StrongObjGroup strong_objgroup) {
+    auto const objgroup = strong_objgroup.get();
+
+    auto it = objgroup_reducers_.find(objgroup);
+    if(it == objgroup_reducers_.end()){
+      objgroup_reducers_[objgroup] = {nullptr, nullptr};
+    }
+
+    if constexpr(std::is_same_v<ReducerT, RabenseifnerT>){
+      return objgroup_reducers_.at(objgroup).first;
+    }else {
+      return objgroup_reducers_.at(objgroup).second;
+    }
+  }
+
+  template <typename ReducerT>
+  static auto getOrCreateAllreducer(
     detail::StrongVrtProxy strong_proxy, detail::StrongGroup strong_group,
     size_t num_elems) {
     auto const coll_proxy = strong_proxy.get();
 
     if (col_reducers_.find(coll_proxy) == col_reducers_.end()) {
-      col_reducers_[coll_proxy] = {u64empty, u64empty};
+      col_reducers_[coll_proxy] = {nullptr, nullptr};
     }
 
     if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
-      auto untyped_proxy = col_reducers_.at(coll_proxy).first;
-      if (untyped_proxy == u64empty) {
+      auto reducer = col_reducers_.at(coll_proxy).first;
+      if (reducer == nullptr) {
         return addRabensifnerAllreducer(strong_proxy, strong_group, num_elems);
       } else {
-        return static_cast<vt::objgroup::proxy::Proxy<Rabenseifner>>(
-          untyped_proxy);
+        return reducer;
       }
     } else {
-      auto untyped_proxy = col_reducers_.at(coll_proxy).second;
-      if (untyped_proxy == u64empty) {
+      auto reducer = col_reducers_.at(coll_proxy).second;
+      if (reducer == nullptr) {
         return addRecursiveDoublingAllreducer(
           strong_proxy, strong_group, num_elems);
       } else {
-        return static_cast<vt::objgroup::proxy::Proxy<RecursiveDoubling>>(
-          untyped_proxy);
+        return reducer;
       }
     }
   }
 
   template <typename ReducerT>
-  static auto getAllreducer(detail::StrongGroup strong_group) {
+  static auto getOrCreateAllreducer(detail::StrongGroup strong_group) {
     auto const group = strong_group.get();
 
     if (auto it = group_reducers_.find(group); it == group_reducers_.end()) {
-      group_reducers_[group] = {u64empty, u64empty};
+      group_reducers_[group] = {nullptr, nullptr};
     }
 
     if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
-      auto untyped_proxy = group_reducers_.at(group).first;
-      if (untyped_proxy == u64empty) {
+      auto reducer = group_reducers_.at(group).first;
+      if (reducer == nullptr) {
         return addRabensifnerAllreducer(strong_group);
       } else {
-        return static_cast<vt::objgroup::proxy::Proxy<Rabenseifner>>(
-          untyped_proxy);
+        return reducer;
       }
     } else {
-      auto untyped_proxy = group_reducers_.at(group).second;
-      if (untyped_proxy == u64empty) {
+      auto reducer = group_reducers_.at(group).second;
+      if (reducer == nullptr) {
         return addRecursiveDoublingAllreducer(strong_group);
       } else {
-        return static_cast<vt::objgroup::proxy::Proxy<RecursiveDoubling>>(
-          untyped_proxy);
+        return reducer;
       }
     }
   }
 
   template <typename ReducerT>
-  static auto getAllreducer(detail::StrongObjGroup strong_objgroup) {
+  static auto getOrCreateAllreducer(detail::StrongObjGroup strong_objgroup) {
     auto const objgroup = strong_objgroup.get();
 
     if (auto it = objgroup_reducers_.find(objgroup); it == objgroup_reducers_.end()) {
-      objgroup_reducers_[objgroup] = {u64empty, u64empty};
+      objgroup_reducers_[objgroup] = {nullptr, nullptr};
     }
 
     if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
-      auto untyped_proxy = objgroup_reducers_.at(objgroup).first;
-      if (untyped_proxy == u64empty) {
+      auto reducer = objgroup_reducers_.at(objgroup).first;
+      if (reducer == nullptr) {
         return addRabensifnerAllreducer(strong_objgroup);
       } else {
-        return static_cast<vt::objgroup::proxy::Proxy<Rabenseifner>>(
-          untyped_proxy);
+        return reducer;
       }
     } else {
-      auto untyped_proxy = objgroup_reducers_.at(objgroup).second;
-      if (untyped_proxy == u64empty) {
+      auto reducer = objgroup_reducers_.at(objgroup).second;
+      if (reducer == nullptr) {
         return addRecursiveDoublingAllreducer(strong_objgroup);
       } else {
-        return static_cast<vt::objgroup::proxy::Proxy<RecursiveDoubling>>(
-          untyped_proxy);
+        return reducer;
       }
     }
   }
 
-  static objgroup::proxy::Proxy<Rabenseifner> addRabensifnerAllreducer(
+  static Rabenseifner* addRabensifnerAllreducer(
     detail::StrongVrtProxy strong_proxy, detail::StrongGroup strong_group,
     size_t num_elems);
 
-  static objgroup::proxy::Proxy<RecursiveDoubling>
+  static RecursiveDoubling*
   addRecursiveDoublingAllreducer(
     detail::StrongVrtProxy strong_proxy, detail::StrongGroup strong_group,
     size_t num_elems);
 
-  static objgroup::proxy::Proxy<Rabenseifner>
+  static Rabenseifner*
   addRabensifnerAllreducer(detail::StrongGroup strong_group);
-  static objgroup::proxy::Proxy<RecursiveDoubling>
+  static RecursiveDoubling*
   addRecursiveDoublingAllreducer(detail::StrongGroup strong_group);
 
-  static objgroup::proxy::Proxy<Rabenseifner>
+  static Rabenseifner*
   addRabensifnerAllreducer(detail::StrongObjGroup strong_group);
-  static objgroup::proxy::Proxy<RecursiveDoubling>
+  static RecursiveDoubling*
   addRecursiveDoublingAllreducer(detail::StrongObjGroup strong_group);
 
   static void remove(detail::StrongVrtProxy strong_proxy);
@@ -171,15 +216,29 @@ struct AllreduceHolder {
   static void remove(detail::StrongObjGroup strong_group);
 
   static inline std::unordered_map<
-    VirtualProxyType, std::pair<RabenseifnerProxy, RecursiveDoublingProxy>>
+    VirtualProxyType, std::pair<Rabenseifner*, RecursiveDoubling*>>
     col_reducers_ = {};
   static inline std::unordered_map<
-    GroupType, std::pair<RabenseifnerProxy, RecursiveDoublingProxy>>
+    GroupType, std::pair<Rabenseifner*, RecursiveDoubling*>>
     group_reducers_ = {};
   static inline std::unordered_map<
-    ObjGroupProxyType, std::pair<RabenseifnerProxy, RecursiveDoublingProxy>>
+    ObjGroupProxyType, std::pair<Rabenseifner*, RecursiveDoubling*>>
     objgroup_reducers_ = {};
 };
+
+template <typename ReducerT>
+static inline auto* getAllreducer(ComponentInfo type) {
+  if (type.first == ComponentT::VrtColl) {
+    return AllreduceHolder::getAllreducer<ReducerT>(
+      detail::StrongVrtProxy{type.second});
+  } else if (type.first == ComponentT::ObjGroup) {
+    return AllreduceHolder::getAllreducer<ReducerT>(
+      detail::StrongObjGroup{type.second});
+  } else {
+    return AllreduceHolder::getAllreducer<ReducerT>(
+      detail::StrongGroup{type.second});
+  }
+}
 
 } // namespace vt::collective::reduce::allreduce
 
