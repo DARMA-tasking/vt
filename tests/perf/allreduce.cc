@@ -253,14 +253,6 @@ MyTest* parent = {};
 } // namespace test_group
 
 void allreduce_group_han(std::vector<int32_t> result) {
-  // std::string result_s = "";
-  // for(auto val : result){
-  //   result_s.append(fmt::format("{} ", val));
-  // }
-  // fmt::print(
-  //   "[{}]: Allreduce handler (Values=[{}])\n",
-  //   theContext()->getNode(), result_s
-  // );
   test_group::parent->StopTimer(test_group::timer_names.at(result.size()));
   test_group::group_allreduce_done = true;
 }

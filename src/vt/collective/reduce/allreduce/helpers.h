@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include "vt/collective/reduce/allreduce/type.h"
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H
 
@@ -85,10 +86,11 @@ struct DataHelper {
   }
 
   static auto createMessage(
+    ComponentInfo info,
     const std::vector<Scalar>& payload, size_t begin, size_t count, size_t id,
     int32_t step = 0) {
     return vt::makeMessage<RabenseifnerMsg<Scalar, DataT>>(
-      payload.data() + begin, count, id, step);
+      info, payload.data() + begin, count, id, step);
   }
 
   static void copy(
@@ -132,9 +134,9 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Properties...>> {
   }
 
   static auto createMessage(
-    const DataT& payload, size_t begin, size_t count, size_t id,
+    ComponentInfo info, const DataT& payload, size_t begin, size_t count, size_t id,
     int32_t step = 0) {
-    return vt::makeMessage<RabenseifnerMsg<Scalar, DataT>>(
+    return vt::makeMessage<RabenseifnerMsg<Scalar, DataT>>(info,
       Kokkos::subview(payload, std::make_pair(begin, begin + count)), id, step
     );
   }

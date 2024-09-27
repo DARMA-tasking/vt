@@ -48,7 +48,7 @@
 #include "vt/messaging/active.h"
 #include "vt/configs/debug/debug_print.h"
 #include "vt/collective/reduce/operators/default_msg.h"
-
+#include "type.h"
 namespace vt::collective::reduce::allreduce {
 
 template <typename Scalar, typename DataT>
@@ -65,12 +65,13 @@ struct RabenseifnerMsg : Message {
     }
   }
 
-  RabenseifnerMsg(const Scalar* in_val, size_t size, size_t id, int step = 0)
+  RabenseifnerMsg(ComponentInfo info, const Scalar* in_val, size_t size, size_t id, int step = 0)
     : MessageParentType(),
       val_(in_val),
       size_(size),
       id_(id),
-      step_(step) { }
+      step_(step),
+      info_(info) { }
 
   template <typename SerializeT>
   void serialize(SerializeT& s) {
@@ -87,6 +88,7 @@ struct RabenseifnerMsg : Message {
 
     s | id_;
     s | step_;
+    s | info_;
   }
 
   const Scalar* val_ = {};
@@ -94,6 +96,7 @@ struct RabenseifnerMsg : Message {
   size_t id_ = {};
   int32_t step_ = {};
   bool owning_ = false;
+  ComponentInfo info_ = {};
 };
 
 #if MAGISTRATE_KOKKOS_ENABLED
@@ -107,11 +110,12 @@ struct RabenseifnerMsg<Scalar, Kokkos::View<Scalar*, Properties...>> : Message {
   RabenseifnerMsg(RabenseifnerMsg const&) = default;
   RabenseifnerMsg(RabenseifnerMsg&&) = default;
 
-  RabenseifnerMsg(const ViewT& in_val, size_t id, int step = 0)
+  RabenseifnerMsg(ComponentInfo info, const ViewT& in_val, size_t id, int step = 0)
     : MessageParentType(),
       val_(in_val),
       id_(id),
-      step_(step) { }
+      step_(step),
+      info_(info) { }
 
   template <typename SerializeT>
   void serialize(SerializeT& s) {
@@ -120,11 +124,13 @@ struct RabenseifnerMsg<Scalar, Kokkos::View<Scalar*, Properties...>> : Message {
     s | val_;
     s | id_;
     s | step_;
+    s | info_;
   }
 
   ViewT val_ = {};
   size_t id_ = {};
   int32_t step_ = {};
+  ComponentInfo info_ = {};
 };
 #endif // MAGISTRATE_KOKKOS_ENABLED
 

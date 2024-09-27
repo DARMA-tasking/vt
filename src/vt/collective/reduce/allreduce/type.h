@@ -61,6 +61,14 @@ inline std::string TypeToString(ReducerType t) {
   }
 }
 
+enum class ComponentT {
+  VrtColl = 0,
+  Group = 1,
+  ObjGroup = 2
+};
+
+using ComponentInfo = std::pair<ComponentT, uint64_t>;
+
 } // namespace vt::collective::reduce::allreduce
 
 #endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_TYPE_H*/

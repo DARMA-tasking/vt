@@ -165,6 +165,9 @@ struct Rabenseifner {
   template <typename DataT, typename Scalar, template <typename Arg> class Op>
   void adjustForPowerOfTwoRightHalf(RabenseifnerMsg<Scalar, DataT>* msg);
 
+  template <typename DataT, typename Scalar, template <typename Arg> class Op>
+  static void adjustForPowerOfTwoRightHalfHandler(RabenseifnerMsg<Scalar, DataT>* msg);
+
   /**
    * \brief Handler for adjusting the left half of the process group.
    *
@@ -175,6 +178,8 @@ struct Rabenseifner {
   template <typename DataT, typename Scalar, template <typename Arg> class Op>
   void adjustForPowerOfTwoLeftHalf(RabenseifnerMsg<Scalar, DataT>* msg);
 
+  template <typename DataT, typename Scalar, template <typename Arg> class Op>
+  static void adjustForPowerOfTwoLeftHalfHandler(RabenseifnerMsg<Scalar, DataT>* msg);
   /**
    * \brief Final adjustment step for non-power-of-two process counts.
    *
@@ -185,6 +190,8 @@ struct Rabenseifner {
   template <typename DataT, typename Scalar, template <typename Arg> class Op>
   void adjustForPowerOfTwoFinalPart(RabenseifnerMsg<Scalar, DataT>* msg);
 
+  template <typename DataT, typename Scalar, template <typename Arg> class Op>
+  static void adjustForPowerOfTwoFinalPartHandler(RabenseifnerMsg<Scalar, DataT>* msg);
   /**
    * \brief Check if all scatter messages have been received.
    *
@@ -238,7 +245,10 @@ struct Rabenseifner {
    * \param msg Message containing the data from the partner process.
    */
   template <typename DataT, typename Scalar, template <typename Arg> class Op>
-  void scatterReduceIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
+  static void scatterReduceIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
+
+  template <typename DataT, typename Scalar, template <typename Arg> class Op>
+  void scatterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Check if all gather messages have been received.
@@ -294,7 +304,10 @@ struct Rabenseifner {
    * \param msg Message containing the data from the partner process.
    */
   template <typename DataT, typename Scalar>
-  void gatherIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
+  static void gatherIterHandler(RabenseifnerMsg<Scalar, DataT>* msg);
+
+  template <typename DataT, typename Scalar>
+  void gatherIterHan(RabenseifnerMsg<Scalar, DataT>* msg);
 
   /**
    * \brief Perform the final part of the allreduce operation.
@@ -324,13 +337,12 @@ struct Rabenseifner {
    * \param msg Message containing the final result.
    */
   template <typename DataT, typename Scalar>
-  void sendToExcludedNodesHandler(RabenseifnerMsg<Scalar, DataT>* msg);
+  static void sendToExcludedNodesHandler(RabenseifnerMsg<Scalar, DataT>* msg);
 
-  vt::objgroup::proxy::Proxy<Rabenseifner> proxy_ = {};
+  template <typename DataT, typename Scalar>
+  void sendToExcludedNodesHan(RabenseifnerMsg<Scalar, DataT>* msg);
 
-  VirtualProxyType collection_proxy_ = u64empty;
-  ObjGroupProxyType objgroup_proxy_ = u64empty;
-  GroupType group_ = u64empty;
+  ComponentInfo info_ = {};
 
   size_t local_num_elems_ = {};
 

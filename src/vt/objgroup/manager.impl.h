@@ -272,69 +272,6 @@ ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> m
   return objgroup::broadcast(msg,han);
 }
 
-template <typename Reducer, typename ObjT, typename CbT, typename... Args>
-ObjGroupManager::PendingSendType ObjGroupManager::allreduce(
-  ProxyType<ObjT> proxy, CbT cb, size_t id, Args&&... data) {
-  using namespace vt::collective::reduce::allreduce;
-
-  auto const this_node = vt::theContext()->getNode();
-
-  proxy::Proxy<Reducer> grp_proxy = {};
-
-  vt_debug_print(
-    verbose, allreduce, "Creating reducer (type: {}) for proxy {:x}\n",
-    TypeToString(Reducer::type_), proxy.getProxy());
-
-  grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-    TypeToString(Reducer::type_),
-    vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()},
-    id, std::forward<Args>(data)...);
-  grp_proxy[this_node].get()->proxy_ = grp_proxy;
-  // reducers[key] = grp_proxy.getProxy();
-  // id = grp_proxy[this_node].get()->id_ - 1;
-
-  // auto& reducers = Reducer::type_ == ReducerType::Rabenseifner ?
-  //   reducers_rabenseifner_ :
-  //   reducers_recursive_doubling_;
-  // auto const key = std::make_tuple(
-  //   proxy.getProxy(), std::type_index(typeid(typename Reducer::Data)),
-  //   std::type_index(typeid(typename Reducer::ReduceOp))
-  // );
-  // if (reducers.find(key) != reducers.end()) {
-  //   vt_debug_print(
-  //     verbose, allreduce, "Found reducer (type: {}) for proxy {:x}",
-  //     TypeToString(Reducer::type_), proxy.getProxy()
-  //   );
-
-  //   auto* obj =
-  //     reinterpret_cast<Reducer*>(objs_.at(reducers.at(key))->getPtr());
-  //   id = obj->generateNewId();
-  //   obj->initialize(id, std::forward<Args>(data)...);
-  //   grp_proxy = obj->proxy_;
-  // } else {
-  //   vt_debug_print(
-  //     verbose, allreduce, "Creating reducer (type: {}) for proxy {:x}",
-  //     TypeToString(Reducer::type_), proxy.getProxy()
-  //   );
-
-  //   grp_proxy = vt::theObjGroup()->makeCollective<Reducer>(
-  //     TypeToString(Reducer::type_),
-  //     vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()},
-  //     std::forward<Args>(data)...
-  //   );
-  //   grp_proxy[this_node].get()->proxy_ = grp_proxy;
-  //   reducers[key] = grp_proxy.getProxy();
-  //   id = grp_proxy[this_node].get()->id_ - 1;
-  // }
-
-  grp_proxy[this_node].get()->template setFinalHandler<>(cb, id);
-
-  return PendingSendType{
-    theTerm()->getEpoch(),
-    [=] { grp_proxy[this_node].template invoke<&Reducer::allreduce>(id); }
-  };
-}
-
   template <
     typename Type, auto f, template <typename Arg> class Op, typename ObjT,
     typename... Args
@@ -359,10 +296,9 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
 
   auto const id = StateHolder::getNextID<RabenseifnerT>(strong_proxy);
 
-  auto grp_proxy = AllreduceHolder::getAllreducer<Type>(strong_proxy);
-  grp_proxy[this_node].get()->proxy_ = grp_proxy;
-  grp_proxy[this_node].get()->template setFinalHandler<DataT>(cb, id);
-  grp_proxy[this_node].get()->template localReduce<DataT, Op>(
+  auto* reducer = AllreduceHolder::getOrCreateAllreducer<Type>(strong_proxy);
+  reducer->template setFinalHandler<DataT>(cb, id);
+  reducer->template localReduce<DataT, Op>(
     id, std::forward<Args>(data)...);
 
   // Silence nvcc warning
