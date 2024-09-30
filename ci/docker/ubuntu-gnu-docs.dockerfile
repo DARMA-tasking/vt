@@ -3,7 +3,7 @@ ARG ubuntu=22.04
 FROM ${arch}/ubuntu:${ubuntu} as base
 
 ARG proxy=""
-ARG compiler=gcc-8
+ARG compiler=gcc-9
 ARG token
 
 ENV https_proxy=${proxy} \
