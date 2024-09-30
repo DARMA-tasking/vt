@@ -60,7 +60,7 @@ RecursiveDoubling::RecursiveDoubling(
   auto const is_default_group = theGroup()->isGroupDefault(group.get());
   if (not is_default_group) {
     auto it = std::find(nodes_.begin(), nodes_.end(), theContext()->getNode());
-    vtAssert(it != nodes_.end(), "This node was not found in group nodes!");
+    vtAssert(it != nodes_.end(), fmt::format("This node was not found in group nodes! Size={}", nodes_.size()));
 
     this_node_ = it - nodes_.begin();
   }

@@ -64,7 +64,6 @@ struct ObjFuncTraitsImpl<
   Return(*)(Obj, Msg*)
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = true;
   using ObjT = std::remove_pointer_t<Obj>;
   using MsgT = Msg;
   using ReturnT = Return;
@@ -86,7 +85,6 @@ struct ObjFuncTraitsImpl<
   Return(*)(Obj)
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = true;
   using ObjT = std::remove_pointer_t<Obj>;
   using MsgT = NoMsg;
   using Arg1 = Obj;
@@ -109,7 +107,6 @@ struct ObjFuncTraitsImpl<
   Return(*)(Obj*, Arg, Args...)
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = true;
   using ObjT = Obj;
   using MsgT = NoMsg;
   using ReturnT = Return;
@@ -129,7 +126,6 @@ struct ObjFuncTraitsImpl<
   Return(Obj::*)(Msg*)
 > {
   static constexpr bool is_member = true;
-  static constexpr bool is_objgroup = true;
   using ObjT = Obj;
   using MsgT = Msg;
   using ReturnT = Return;
@@ -143,7 +139,6 @@ struct ObjFuncTraitsImpl<
   Return(Obj::*)()
 > {
   static constexpr bool is_member = true;
-  static constexpr bool is_objgroup = true;
   using ObjT = Obj;
   using MsgT = NoMsg;
   using TupleType = std::tuple<>;
@@ -165,7 +160,6 @@ struct ObjFuncTraitsImpl<
   Return(Obj::*)(Arg, Args...)
 > {
   static constexpr bool is_member = true;
-  static constexpr bool is_objgroup = true;
   using ObjT = Obj;
   using MsgT = NoMsg;
   using ReturnT = Return;
@@ -185,13 +179,10 @@ struct ObjFuncTraitsImpl<
   Return(*)(Msg*)
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = false;
-  using ObjT = void;
   using MsgT = Msg;
   using ReturnT = Return;
   template <template <typename...> class U>
   using WrapType = U<MsgT>;
-  using TupleType = WrapType<std::tuple>;
 };
 
 template <typename Return>
@@ -200,8 +191,6 @@ struct ObjFuncTraitsImpl<
   Return(*)()
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = false;
-  using ObjT = void;
   using MsgT = NoMsg;
   using ReturnT = Return;
   template <template <typename...> class U>
@@ -217,8 +206,6 @@ struct ObjFuncTraitsImpl<
   Return(*)(Arg, Args...)
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = false;
-  using ObjT = void;
   using MsgT = NoMsg;
   using Arg1 = Arg;
   using ReturnT = Return;
@@ -244,7 +231,6 @@ struct FunctorTraitsImpl<
   Return(FunctorT::*)(Msg*)
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = false;
   using MsgT = Msg;
   using ReturnT = Return;
   template <template <typename...> class U>
@@ -259,7 +245,6 @@ struct FunctorTraitsImpl<
   Return(FunctorT::*)()
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = false;
   using MsgT = NoMsg;
   using ReturnT = Return;
   template <template <typename...> class U>
@@ -282,7 +267,6 @@ struct FunctorTraitsImpl<
   Return(FunctorT::*)(Arg, Args...)
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = false;
   using MsgT = NoMsg;
   using Arg1 = Arg;
   using ReturnT = Return;
@@ -304,7 +288,6 @@ struct FunctorTraitsImpl<
   Return(FunctorT::*)(Msg*) const
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = false;
   using MsgT = Msg;
   using ReturnT = Return;
   template <template <typename...> class U>
@@ -319,7 +302,6 @@ struct FunctorTraitsImpl<
   Return(FunctorT::*)() const
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = false;
   using MsgT = NoMsg;
   using ReturnT = Return;
   template <template <typename...> class U>
@@ -342,7 +324,6 @@ struct FunctorTraitsImpl<
   Return(FunctorT::*)(Arg, Args...) const
 > {
   static constexpr bool is_member = false;
-  static constexpr bool is_objgroup = false;
   using MsgT = NoMsg;
   using Arg1 = Arg;
   using ReturnT = Return;

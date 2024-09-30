@@ -283,7 +283,15 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   auto cb = theCB()->makeSend<f>(proxy[theContext()->getNode()]);
   if (theContext()->getNumNodes() < 2) {
     return PendingSendType{
-      theTerm()->getEpoch(), [&] { cb.send(std::forward<Args>(data)...); }};
+      theTerm()->getEpoch(),
+      [cb = std::move(cb),
+       args_tuple = std::make_tuple(std::forward<Args>(data)...)]() mutable {
+        std::apply(
+          [&cb](auto&&... args) {
+            cb.send(std::forward<decltype(args)>(args)...);
+          },
+          args_tuple);
+      }};
   }
 
   using Trait = ObjFuncTraits<decltype(f)>;

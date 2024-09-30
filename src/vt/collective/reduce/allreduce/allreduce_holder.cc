@@ -45,9 +45,23 @@
 
 namespace vt::collective::reduce::allreduce {
 
-void AllreduceHolder::createAllreducers(detail::StrongGroup strong_group) {
-  addRabensifnerAllreducer(strong_group);
-  addRecursiveDoublingAllreducer(strong_group);
+template <typename MapT>
+inline static void removeImpl(MapT& map, uint64_t key){
+  auto it = map.find(key);
+
+  if (it != map.end()) {
+    auto& [rabenseifner, recursive_doubling] = map.at(key);
+
+    if(rabenseifner) {
+      delete rabenseifner;
+    }
+
+    if(recursive_doubling) {
+      delete recursive_doubling;
+    }
+
+    map.erase(key);
+  }
 }
 
 Rabenseifner* AllreduceHolder::addRabensifnerAllreducer(
@@ -60,7 +74,7 @@ Rabenseifner* AllreduceHolder::addRabensifnerAllreducer(
   col_reducers_[coll_proxy].first = obj_proxy;
 
   vt_debug_print(
-    verbose, allreduce, "Adding new Rabenseifner reducer for collection={:x}",
+    verbose, allreduce, "Adding new Rabenseifner reducer for collection={:x}\n",
     coll_proxy
   );
 
@@ -79,7 +93,7 @@ AllreduceHolder::addRecursiveDoublingAllreducer(
 
   vt_debug_print(
     verbose, allreduce,
-    "Adding new RecursiveDoubling reducer for collection={:x}", coll_proxy
+    "Adding new RecursiveDoubling reducer for collection={:x}\n", coll_proxy
   );
 
   return obj_proxy;
@@ -96,7 +110,7 @@ AllreduceHolder::addRabensifnerAllreducer(detail::StrongGroup strong_group) {
 
   vt_debug_print(
     verbose, allreduce,
-    "Adding new Rabenseifner reducer for group={:x}", group
+    "Adding new Rabenseifner reducer for group={:x}\n", group
   );
 
   return obj_proxy;
@@ -112,7 +126,7 @@ AllreduceHolder::addRecursiveDoublingAllreducer(
 
   vt_debug_print(
     verbose, allreduce,
-    "Adding new Rabenseifner reducer for group={:x}", group
+    "Adding new RecursiveDoubling reducer for group={:x}\n", group
   );
 
   group_reducers_[group].second = obj_proxy;
@@ -157,32 +171,17 @@ AllreduceHolder::addRecursiveDoublingAllreducer(
 
 void AllreduceHolder::remove(detail::StrongVrtProxy strong_proxy) {
   auto const key = strong_proxy.get();
-
-  auto it = col_reducers_.find(key);
-
-  if (it != col_reducers_.end()) {
-    col_reducers_.erase(key);
-  }
+  removeImpl(col_reducers_, key);
 }
 
 void AllreduceHolder::remove(detail::StrongGroup strong_group) {
   auto const key = strong_group.get();
-
-  auto it = group_reducers_.find(key);
-
-  if (it != group_reducers_.end()) {
-    group_reducers_.erase(key);
-  }
+  removeImpl(group_reducers_, key);
 }
 
 void AllreduceHolder::remove(detail::StrongObjGroup strong_objgroup) {
   auto const key = strong_objgroup.get();
-
-  auto it = objgroup_reducers_.find(key);
-
-  if (it != objgroup_reducers_.end()) {
-    objgroup_reducers_.erase(key);
-  }
+  removeImpl(objgroup_reducers_, key);
 }
 
 } // namespace vt::collective::reduce::allreduce

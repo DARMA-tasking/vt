@@ -64,7 +64,7 @@ Rabenseifner::Rabenseifner(
   auto const is_default_group = theGroup()->isGroupDefault(group.get());
   if (not is_default_group) {
     auto it = std::find(nodes_.begin(), nodes_.end(), theContext()->getNode());
-    vtAssert(it != nodes_.end(), "This node was not found in group nodes!");
+    vtAssert(it != nodes_.end(), fmt::format("This node was not found in group nodes! Size={}", nodes_.size()));
 
     this_node_ = it - nodes_.begin();
   }
@@ -87,19 +87,25 @@ Rabenseifner::Rabenseifner(detail::StrongGroup group)
     num_steps_(static_cast<int32_t>(log2(num_nodes_))),
     nprocs_pof2_(1 << num_steps_),
     nprocs_rem_(num_nodes_ - nprocs_pof2_) {
-  auto const is_default_group = theGroup()->isGroupDefault(info_.second);
-  auto const in_group = theGroup()->inGroup(info_.second);
+  auto const is_default_group = theGroup()->isGroupDefault(group.get());
+  auto const in_group = theGroup()->inGroup(group.get());
   auto const is_part_of_allreduce =
     (not is_default_group and in_group) or is_default_group;
 
+  std::string nodes_info;
+    for(auto& node : nodes_){
+      nodes_info += fmt::format("{} ", node);
+    }
+
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner: is_default_group={} is_part_of_allreduce={} num_nodes_={} \n",
-    is_default_group, is_part_of_allreduce, num_nodes_);
+    "Rabenseifner: is_default_group={} is_part_of_allreduce={} nodes=[{}] \n",
+    is_default_group, is_part_of_allreduce, nodes_info);
 
   if (not is_default_group and in_group) {
     auto it = std::find(nodes_.begin(), nodes_.end(), theContext()->getNode());
-    vtAssert(it != nodes_.end(), "This node was not found in group nodes!");
+
+    vtAssert(it != nodes_.end(), fmt::format("This node was not found in group nodes! Nodes=[{}]", nodes_info));
 
     // index in group list
     this_node_ = it - nodes_.begin();
