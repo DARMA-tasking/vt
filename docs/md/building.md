@@ -139,7 +139,7 @@ which `docker compose` will read.
 # Variables:
 #   ARCH={amd64, arm64v8, ...}
 #   COMPILER_TYPE={gnu, clang, intel, nvidia}
-#   COMPILER={gcc-8, gcc-9, gcc-10,
+#   COMPILER={gcc-9, gcc-10,
 #             clang-8, clang-9, clang-10,
 #             icpc, icpx,
 #             nvcc-11, nvcc-11.2}

@@ -45,7 +45,6 @@
 #define INCLUDED_VT_RUNNABLE_RUNNABLE_H
 
 #include "vt/messaging/message/smart_ptr.h"
-#include "vt/configs/debug/debug_var_unused.h"
 #include "vt/context/runnable_context/td.h"
 #include "vt/context/runnable_context/trace.h"
 #include "vt/context/runnable_context/set_context.h"
@@ -121,13 +120,11 @@ struct RunnableNew {
    *
    * \param[in] in_is_threaded whether the handler can be run with a thread
    */
-  explicit RunnableNew(bool in_is_threaded)
+  explicit RunnableNew([[maybe_unused]] bool in_is_threaded)
 #if vt_check_enabled(fcontext)
     : is_threaded_(in_is_threaded)
 #endif
-  {
-    vt_force_use(in_is_threaded); // FIXME gcc-8 errors out on [[maybe_unused]]
-  }
+  { }
 
   RunnableNew(RunnableNew&&) = default;
   RunnableNew(RunnableNew const&) = delete;

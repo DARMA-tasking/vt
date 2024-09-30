@@ -38,7 +38,10 @@ RUN apt-get update -y -q && \
     mesa-common-dev \
     brotli \
     python3 \
+    python3-schema \
+    python3-deepdiff \
     python3-brotli \
+    python3-numpy \
     python3-pip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -90,9 +93,6 @@ RUN apt-get update -y -q && \
     lcov && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install --upgrade pip \
-    && pip3 install schema deepdiff
 
 FROM base as build
 COPY . /vt

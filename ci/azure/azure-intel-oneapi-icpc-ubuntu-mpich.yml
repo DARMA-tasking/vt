@@ -9,9 +9,10 @@ trigger:
     include:
       - develop
       - main
+      - 2286-remove-gcc-8-support
 
 pr:
-  drafts: false
+  drafts: true
   autoCancel: true
   branches:
     include:
