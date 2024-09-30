@@ -350,7 +350,7 @@ struct TestObjGroupKokkos : TestParallelHarness {
 TEST_F(TestObjGroupKokkos, test_proxy_allreduce_kokkos) {
   using namespace vt::collective;
 
-  TestObjGroup::total_verify_expected_ = 0;
+  MyObjA::total_verify_expected_ = 0;
   auto const my_node = vt::theContext()->getNode();
 
   auto kokkos_proxy =
@@ -365,8 +365,8 @@ TEST_F(TestObjGroupKokkos, test_proxy_allreduce_kokkos) {
     }
 
     kokkos_proxy.allreduce<
-      &MyObjA::verifyAllredView<Kokkos::HostSpace>, PlusOp, reduce::allreduce::RabenseifnerT>(
-      view);
+      &MyObjA::verifyAllredView<Kokkos::HostSpace>, PlusOp,
+      reduce::allreduce::RabenseifnerT>(view);
   });
 
   EXPECT_EQ(MyObjA::total_verify_expected_, 1);

@@ -280,20 +280,6 @@ ObjGroupManager::PendingSendType
 ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   using namespace collective::reduce::allreduce;
 
-  auto cb = theCB()->makeSend<f>(proxy[theContext()->getNode()]);
-  if (theContext()->getNumNodes() < 2) {
-    return PendingSendType{
-      theTerm()->getEpoch(),
-      [cb = std::move(cb),
-       args_tuple = std::make_tuple(std::forward<Args>(data)...)]() mutable {
-        std::apply(
-          [&cb](auto&&... args) {
-            cb.send(std::forward<decltype(args)>(args)...);
-          },
-          args_tuple);
-      }};
-  }
-
   using Trait = ObjFuncTraits<decltype(f)>;
 
   // We only support allreduce with a single data type
@@ -302,15 +288,18 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   auto const this_node = vt::theContext()->getNode();
   auto const strong_proxy = vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()};
 
-  auto const id = StateHolder::getNextID<RabenseifnerT>(strong_proxy);
+  auto const id = StateHolder::getNextID<Type>(strong_proxy);
 
   auto* reducer = AllreduceHolder::getOrCreateAllreducer<Type>(strong_proxy);
+
+  auto cb = theCB()->makeSend<f>(proxy[theContext()->getNode()]);
   reducer->template setFinalHandler<DataT>(cb, id);
-  reducer->template localReduce<DataT, Op>(
+  reducer->template storeData<DataT, Op>(
     id, std::forward<Args>(data)...);
 
-  // Silence nvcc warning
-  return PendingSendType{nullptr};
+  return PendingSendType{theTerm()->getEpoch(), [reducer, id] {
+                           reducer->template run<DataT, Op>(id);
+                         }};
 }
 
 template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>

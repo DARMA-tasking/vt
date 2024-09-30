@@ -162,30 +162,34 @@ void GroupManagerT<T>::triggerContinuationT(
   }
 }
 
-template <auto f, template <typename Arg> typename Op, typename... Args>
+template <
+  typename ReducerT, auto f, template <typename Arg> typename Op,
+  typename... Args>
 void GroupManager::allreduce(GroupType group, Args&&... args) {
   using namespace collective::reduce::allreduce;
 
   auto iter = local_collective_group_info_.find(group);
-  vtAssert(iter != local_collective_group_info_.end(), "Must exist");
+  vtAssert(
+    iter != local_collective_group_info_.end(),
+    "allreduce for groups is only supported for collective ones!");
 
-  using DataT = std::tuple_element_t<0, typename FuncTraits<decltype(f)>::TupleType>;
-
-  // using Reducer = Rabenseifner;
-  auto const strong_group = collective::reduce::detail::StrongGroup{group};
-  auto* reducer =
-    AllreduceHolder::getOrCreateAllreducer<RabenseifnerT>(strong_group);
+  using DataT =
+    std::tuple_element_t<0, typename FuncTraits<decltype(f)>::TupleType>;
 
   if (iter->second->is_in_group) {
+    auto const strong_group = collective::reduce::detail::StrongGroup{group};
+    auto* reducer =
+      AllreduceHolder::getOrCreateAllreducer<ReducerT>(strong_group);
+
     auto const this_node = theContext()->getNode();
     auto id = StateHolder::getNextID(strong_group);
-    reducer->template setFinalHandler<DataT>(theCB()->makeSend<f>(this_node), id);
-    reducer->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
-  }
+    reducer->template setFinalHandler<DataT>(
+      theCB()->makeSend<f>(this_node), id);
+    reducer->template storeData<DataT, Op>(id, std::forward<Args>(args)...);
+    reducer->template run<DataT, Op>(id);
 
-  addCleanupAction([strong_group] {
-    AllreduceHolder::remove(strong_group);
-  });
+    addCleanupAction([strong_group] { AllreduceHolder::remove(strong_group); });
+  }
 }
 
 }} /* end namespace vt::group */

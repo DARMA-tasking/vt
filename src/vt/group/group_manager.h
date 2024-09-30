@@ -223,7 +223,7 @@ struct GroupManager : runtime::component::Component<GroupManager> {
     return sendMsg<MsgT, f>(group, msg);
   }
 
-  template <auto f, template <typename Arg> typename Op, typename ...Args>
+  template <typename ReducerT, auto f, template <typename Arg> typename Op, typename ...Args>
   void
   allreduce(GroupType group, Args &&... args);
 

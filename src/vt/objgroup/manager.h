@@ -298,10 +298,6 @@ public:
     ProxyType<ObjT> proxy, std::string const& name, std::string const& parent = ""
   );
 
-  template <typename Reducer, typename ObjT, typename CbT, typename... Args>
-  ObjGroupManager::PendingSendType allreduce(
-    ProxyType<ObjT> proxy, CbT cb, size_t id, Args&&... data);
-
   template <
     typename Type, auto f, template <typename Arg> class Op, typename ObjT,
     typename... Args
