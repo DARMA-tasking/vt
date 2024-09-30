@@ -101,12 +101,9 @@ struct NodeObj {
 
 private:
   std::vector<MsgSharedPtr<MyMsg>> msgs;
-  HandlerType han;
   MyTest* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
   vt::objgroup::proxy::Proxy<TestObj> obj_proxy;
-  int reduce_counter_ = -1;
-  int i = 0;
 };
 
 VT_PERF_TEST(MyTest, test_objgroup_local_send) {
