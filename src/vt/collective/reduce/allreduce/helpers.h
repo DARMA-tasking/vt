@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include "vt/collective/reduce/allreduce/type.h"
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_HELPERS_H
 
@@ -77,6 +76,14 @@ struct DataHelper {
 
   template <typename... Args>
   static void assignFromMem(std::vector<Scalar>& dest, const Scalar* data, size_t size) {
+    vtAssert(
+      dest.size() == size,
+      fmt::format(
+        "DataHelper::assignFromMem vector(size={}) and memory(size={}) differ!",
+        dest.size(), size
+      )
+    );
+
     std::memcpy(dest.data(), data, size * sizeof(Scalar));
   }
 
@@ -157,7 +164,7 @@ struct DataHelper<Scalar, Kokkos::View<Scalar*, Properties...>> {
 
     Kokkos::RangePolicy<ExecSpace> policy(0, msg->val_.extent(0));
     Kokkos::parallel_for(
-      "Rabenseifner::reduce", policy, KOKKOS_LAMBDA(const int i) {
+      "Rabenseifner::reduceMsg", policy, KOKKOS_LAMBDA(const int i) {
         utils::kokkos::KokkosOp<Op<Scalar>>()(dest(start_idx + i), msg->val_(i));
       }
     );
