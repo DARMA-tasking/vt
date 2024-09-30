@@ -74,15 +74,15 @@ void Rabenseifner::setFinalHandler(const CallbackType& fin, size_t id) {
 }
 
 template <typename DataT, template <typename Arg> class Op, typename... Args>
-void Rabenseifner::localReduce(size_t id, Args&&... data) {
+void Rabenseifner::storeData(size_t id, Args&&... data) {
   using DataHelperT = DataHelper<typename DataHandler<DataT>::Scalar, DataT>;
   auto& state = getState<RabenseifnerT, DataT>(info_, id);
 
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner(ID = {}) localReduce (this={}): local_col_wait_count_={} "
+    "Rabenseifner(ID = {}) storeData: local_col_wait_count_={} "
     "initialized={}\n",
-    id, print_ptr(this), state.local_col_wait_count_, state.initialized_);
+    id, state.local_col_wait_count_, state.initialized_);
 
   if (DataHelperT::empty(state.val_)) {
     initialize<DataT>(id, std::forward<Args>(data)...);
@@ -92,6 +92,12 @@ void Rabenseifner::localReduce(size_t id, Args&&... data) {
   }
 
   state.local_col_wait_count_++;
+  auto const is_ready = state.local_col_wait_count_ == local_num_elems_;
+}
+
+template <typename DataT, template <typename Arg> class Op>
+void Rabenseifner::run(size_t id) {
+  auto& state = getState<RabenseifnerT, DataT>(info_, id);
   auto const is_ready = state.local_col_wait_count_ == local_num_elems_;
 
   if (is_ready) {

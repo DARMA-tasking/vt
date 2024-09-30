@@ -274,8 +274,10 @@ VT_PERF_TEST(MyTest, test_allreduce_group_rabenseifner) {
     std::vector<int32_t> payload(payload_size, theContext()->getNode());
 
     StartTimer(test_group::timer_names.at(payload_size));
-    vt::theGroup()->allreduce<allreduce_group_han, collective::PlusOp>(
-      g, std::move(payload));
+    vt::theGroup()
+      ->allreduce<
+        collective::reduce::allreduce::RabenseifnerT, allreduce_group_han,
+        collective::PlusOp>(g, std::move(payload));
 
     theSched()->runSchedulerWhile(
       [is_odd] { return is_odd and !test_group::group_allreduce_done; });
