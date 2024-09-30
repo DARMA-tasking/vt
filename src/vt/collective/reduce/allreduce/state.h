@@ -63,8 +63,8 @@ struct StateBase {
   bool active_ = false;
 };
 
-struct RabensiferBase : StateBase {
-  ~RabensiferBase() override = default;
+struct RabenseifnerBase : StateBase {
+  ~RabenseifnerBase() override = default;
   // Scatter
   int32_t scatter_mask_ = 1;
   int32_t scatter_step_ = 0;
@@ -102,7 +102,7 @@ struct RecursiveDoublingState : StateBase {
 };
 
 template <typename Scalar, typename DataT>
-struct RabenseifnerState : RabensiferBase {
+struct RabenseifnerState : RabenseifnerBase {
   ~RabenseifnerState() override = default;
 
   std::vector<Scalar> val_ = {};
@@ -120,7 +120,7 @@ struct RabenseifnerState : RabensiferBase {
 #if MAGISTRATE_KOKKOS_ENABLED
 template <typename Scalar>
 struct RabenseifnerState<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>>
-  : RabensiferBase {
+  : RabenseifnerBase {
   using DataT = Kokkos::View<Scalar*, Kokkos::HostSpace>;
   ~RabenseifnerState() override = default;
 

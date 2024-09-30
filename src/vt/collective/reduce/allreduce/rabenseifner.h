@@ -98,14 +98,17 @@ struct Rabenseifner {
   template <typename DataT, typename CallbackType>
   void setFinalHandler(const CallbackType& fin, size_t id);
 
+  template <typename DataT, template <typename Arg> class Op, typename... Args>
+  void storeData(size_t id, Args&&... args);
+
   /**
    * \brief Performs local reduce, and once the local one is done it starts up the global allreduce
    *
    * \param id Allreduce ID
    * \param args Data to be allreduced
    */
-  template <typename DataT, template <typename Arg> class Op, typename... Args>
-  void localReduce(size_t id, Args&&... args);
+  template <typename DataT, template <typename Arg> class Op>
+  void run(size_t id);
 
   /**
    * \brief Initialize the allreduce algorithm.

@@ -895,119 +895,38 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 }
 
 template <
-  typename ReducerT, auto f, typename ColT, template <typename Arg> class Op, typename... Args>
+  typename ReducerT, auto f, typename ColT, template <typename Arg> class Op,
+  typename... Args>
 messaging::PendingSend CollectionManager::reduceLocal(
   CollectionProxyWrapType<ColT> const& proxy, Args&&... args) {
   using namespace collective::reduce::allreduce;
 
-  using DataT = std::tuple_element_t<0, typename FuncTraits<decltype(f)>::TupleType>;
+  using DataT =
+    std::tuple_element_t<0, typename FuncTraits<decltype(f)>::TupleType>;
   using IndexT = typename ColT::IndexType;
 
   // Get the current running index context
   IndexT idx = *queryIndexContext<IndexT>();
   auto const col_proxy = proxy.getProxy();
+
   auto elm_holder = findElmHolder<IndexT>(col_proxy);
   std::size_t num_elms = elm_holder->numElements();
-
-  auto const group_ready = elm_holder->groupReady();
-  auto const send_group = elm_holder->useGroup();
   auto const group = elm_holder->group();
-  bool const use_group = group_ready && send_group;
 
   auto stamp = proxy(idx).tryGetLocalPtr()->getNextAllreduceStamp();
   auto const id = std::get<collective::reduce::detail::StrongSeq>(stamp).get();
 
   auto cb = vt::theCB()->makeCallbackBcastCollectiveProxy<f>(proxy);
 
-  if (use_group) {
-    // theGroup()->allreduce<f, Op>(group, );
-  } else {
-    auto* obj = AllreduceHolder::getOrCreateAllreducer<ReducerT>(
-      collective::reduce::detail::StrongVrtProxy{col_proxy},
-      collective::reduce::detail::StrongGroup{group}, num_elms);
+  auto* reducer = AllreduceHolder::getOrCreateAllreducer<ReducerT>(
+    collective::reduce::detail::StrongVrtProxy{col_proxy},
+    collective::reduce::detail::StrongGroup{group}, num_elms);
 
-    // auto* obj = obj_proxy[theContext()->getNode()].get();
-    // obj->proxy_ = obj_proxy;
+  reducer->template setFinalHandler<DataT>(cb, id);
+  reducer->template storeData<DataT, Op>(id, std::forward<Args>(args)...);
 
-    obj->template setFinalHandler<DataT>(cb, id);
-    obj->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
-  }
-
-  // if constexpr (std::is_same_v<ReducerT, RabenseifnerT>) {
-  //   using Reducer = collective::reduce::allreduce::Rabenseifner;
-  //   if (auto reducer = rabenseifner_reducers_.find(col_proxy);
-  //       reducer == rabenseifner_reducers_.end()) {
-  //     if (use_group) {
-  //       // theGroup()->allreduce<f, Op>(group, );
-  //     } else {
-  //       vt_debug_print(
-  //         terse, allreduce, "Creating Reducer on idx={} with id={}\n", idx, id);
-  //       auto obj_proxy = theObjGroup()->makeCollective<Reducer>(
-  //         "reducer", collective::reduce::detail::StrongVrtProxy{col_proxy},
-  //         collective::reduce::detail::StrongGroup{group}, num_elms);
-
-  //       rabenseifner_reducers_[col_proxy] = obj_proxy.getProxy();
-  //       auto* obj = obj_proxy[theContext()->getNode()].get();
-  //       obj->proxy_ = obj_proxy;
-
-  //       obj->template setFinalHandler<DataT>(cb, id);
-  //       obj->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
-  //     }
-  //   } else {
-  //     if (use_group) {
-  //       // theGroup()->allreduce<f, Op>(group, );
-  //     } else {
-  //       vt_debug_print(
-  //         terse, allreduce, "Reusing Reducer on idx={} with id={}\n", idx, id);
-  //       auto obj_proxy =
-  //         reducer->second; // rabenseifner_reducers_.at(col_proxy);
-  //       auto typed_proxy =
-  //         static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
-  //       auto* obj = typed_proxy[theContext()->getNode()].get();
-
-  //       obj->template setFinalHandler<DataT>(cb, id);
-  //       obj->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
-  //     }
-  //   }
-  // } else {
-  //   using Reducer = collective::reduce::allreduce::RecursiveDoubling;
-  //   if (auto reducer = recursive_doubling_reducers_.find(col_proxy);
-  //       reducer == recursive_doubling_reducers_.end()) {
-  //     if (use_group) {
-  //       // theGroup()->allreduce<f, Op>(group, );
-  //     } else {
-  //       vt_debug_print(
-  //         terse, allreduce, "Creating Reducer on idx={} with id={}\n", idx, id);
-  //       auto obj_proxy = theObjGroup()->makeCollective<Reducer>(
-  //         "reducer", collective::reduce::detail::StrongVrtProxy{col_proxy},
-  //         collective::reduce::detail::StrongGroup{group}, num_elms);
-
-  //       recursive_doubling_reducers_[col_proxy] = obj_proxy.getProxy();
-  //       auto* obj = obj_proxy[theContext()->getNode()].get();
-  //       obj->proxy_ = obj_proxy;
-
-  //       obj->template setFinalHandler<DataT>(cb, id);
-  //       obj->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
-  //     }
-  //   } else {
-  //     if (use_group) {
-  //       // theGroup()->allreduce<f, Op>(group, );
-  //     } else {
-  //       vt_debug_print(
-  //         terse, allreduce, "Reusing Reducer on idx={} with id={}\n", idx, id);
-  //       auto obj_proxy =
-  //         reducer->second; // rabenseifner_reducers_.at(col_proxy);
-  //       auto typed_proxy =
-  //         static_cast<vt::objgroup::proxy::Proxy<Reducer>>(obj_proxy);
-  //       auto* obj = typed_proxy[theContext()->getNode()].get();
-
-  //       obj->template setFinalHandler<DataT>(cb, id);
-  //       obj->template localReduce<DataT, Op>(id, std::forward<Args>(args)...);
-  //     }
-  //   }
-  // }
-
-  return messaging::PendingSend{nullptr};
+  return messaging::PendingSend{
+    theTerm()->getEpoch(), [reducer, id] { reducer->template run<DataT, Op>(id); }};
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>

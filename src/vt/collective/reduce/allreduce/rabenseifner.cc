@@ -92,20 +92,15 @@ Rabenseifner::Rabenseifner(detail::StrongGroup group)
   auto const is_part_of_allreduce =
     (not is_default_group and in_group) or is_default_group;
 
-  std::string nodes_info;
-    for(auto& node : nodes_){
-      nodes_info += fmt::format("{} ", node);
-    }
-
   vt_debug_print(
     terse, allreduce,
-    "Rabenseifner: is_default_group={} is_part_of_allreduce={} nodes=[{}] \n",
-    is_default_group, is_part_of_allreduce, nodes_info);
+    "Rabenseifner: is_default_group={} is_part_of_allreduce={} \n",
+    is_default_group, is_part_of_allreduce);
 
   if (not is_default_group and in_group) {
     auto it = std::find(nodes_.begin(), nodes_.end(), theContext()->getNode());
 
-    vtAssert(it != nodes_.end(), fmt::format("This node was not found in group nodes! Nodes=[{}]", nodes_info));
+    vtAssert(it != nodes_.end(), "This node was not found in group nodes!");
 
     // index in group list
     this_node_ = it - nodes_.begin();

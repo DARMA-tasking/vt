@@ -42,6 +42,7 @@
 */
 #include "allreduce_holder.h"
 #include "vt/objgroup/manager.h"
+#include "state_holder.h"
 
 namespace vt::collective::reduce::allreduce {
 
@@ -145,7 +146,7 @@ AllreduceHolder::addRabensifnerAllreducer(detail::StrongObjGroup strong_objgroup
 
   vt_debug_print(
     verbose, allreduce,
-    "Adding new Rabenseifner reducer for objgroup={:x} Size={}\n", objgroup
+    "Adding new Rabenseifner reducer for objgroup={:x}\n", objgroup
   );
 
   return obj_proxy;
@@ -171,16 +172,19 @@ AllreduceHolder::addRecursiveDoublingAllreducer(
 
 void AllreduceHolder::remove(detail::StrongVrtProxy strong_proxy) {
   auto const key = strong_proxy.get();
+  StateHolder::clearAll(strong_proxy);
   removeImpl(col_reducers_, key);
 }
 
 void AllreduceHolder::remove(detail::StrongGroup strong_group) {
   auto const key = strong_group.get();
+  StateHolder::clearAll(strong_group);
   removeImpl(group_reducers_, key);
 }
 
 void AllreduceHolder::remove(detail::StrongObjGroup strong_objgroup) {
   auto const key = strong_objgroup.get();
+  StateHolder::clearAll(strong_objgroup);
   removeImpl(objgroup_reducers_, key);
 }
 
