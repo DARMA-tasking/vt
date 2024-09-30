@@ -45,9 +45,6 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/configs/error/config_assert.h"
 #include "vt/context/context.h"
-#include "vt/group/group_manager.h"
-#include "vt/messaging/envelope/envelope_set.h"
-#include "vt/messaging/message/shared_message.h"
 #include "vt/scheduler/scheduler.h"
 #include <cstdint>
 #include <unistd.h>

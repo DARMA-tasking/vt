@@ -50,7 +50,7 @@
 using namespace vt;
 using namespace vt::tests::perf::common;
 
-static constexpr int num_iters = 1;
+static constexpr int num_iters = 100;
 
 struct MyTest : PerfTestHarness {
   MyTest() { DisableGlobalTimer(); }

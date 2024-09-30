@@ -64,6 +64,7 @@ struct StateBase {
 };
 
 struct RabensiferBase : StateBase {
+  ~RabensiferBase() override = default;
   // Scatter
   int32_t scatter_mask_ = 1;
   int32_t scatter_step_ = 0;
@@ -88,6 +89,8 @@ struct RabensiferBase : StateBase {
 
 template <typename DataT>
 struct RecursiveDoublingState : StateBase {
+  ~RecursiveDoublingState() override = default;
+
   DataT val_ = {};
   bool value_assigned_ = false;
   MsgSharedPtr<RecursiveDoublingMsg<DataT>> adjust_message_ = nullptr;
@@ -100,18 +103,7 @@ struct RecursiveDoublingState : StateBase {
 
 template <typename Scalar, typename DataT>
 struct RabenseifnerState : RabensiferBase {
-  ~RabenseifnerState() override {
-    left_adjust_message_ = nullptr;
-    right_adjust_message_ = nullptr;
-
-    for (auto& msg : scatter_messages_) {
-      msg = nullptr;
-    }
-
-    for (auto& msg : gather_messages_) {
-      msg = nullptr;
-    }
-  }
+  ~RabenseifnerState() override = default;
 
   std::vector<Scalar> val_ = {};
 
@@ -130,19 +122,7 @@ template <typename Scalar>
 struct RabenseifnerState<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>>
   : RabensiferBase {
   using DataT = Kokkos::View<Scalar*, Kokkos::HostSpace>;
-
-  ~RabenseifnerState() override {
-    left_adjust_message_ = nullptr;
-    right_adjust_message_ = nullptr;
-
-    for (auto& msg : scatter_messages_) {
-      msg = nullptr;
-    }
-
-    for (auto& msg : gather_messages_) {
-      msg = nullptr;
-    }
-  }
+  ~RabenseifnerState() override = default;
 
   Kokkos::View<Scalar*, Kokkos::HostSpace> val_ = {};
 
