@@ -63,7 +63,7 @@ void RecursiveDoubling::setFinalHandler(const CallbackType& fin, size_t id) {
 }
 
 template <typename DataT, template <typename Arg> class Op, typename... Args>
-void RecursiveDoubling::localReduce(size_t id, Args&&... data) {
+void RecursiveDoubling::storeData(size_t id, Args&&... data) {
   auto& state = getState<RecursiveDoublingT, DataT>(info_, id);
 
   vt_debug_print(
@@ -79,6 +79,11 @@ void RecursiveDoubling::localReduce(size_t id, Args&&... data) {
   }
 
   state.local_col_wait_count_++;
+}
+
+template <typename DataT, template <typename Arg> class Op>
+void RecursiveDoubling::run(size_t id) {
+  auto& state = getState<RecursiveDoublingT, DataT>(info_, id);
   auto const is_ready = state.local_col_wait_count_ == local_num_elems_;
 
   if (is_ready) {
@@ -174,7 +179,7 @@ void RecursiveDoubling::adjustForPowerOfTwoHan(
   RecursiveDoublingMsg<DataT>* msg) {
   using DataType = DataHandler<DataT>;
   auto& state = getState<RecursiveDoublingT, DataT>(info_, msg->id_);
-  if (DataType::size(state.val_) == 0) {
+  if (not state.value_assigned_) {
     if (not state.initialized_) {
       initializeState<DataT>(msg->id_);
     }
@@ -282,6 +287,12 @@ template <typename DataT, template <typename Arg> class Op>
 RecursiveDoubling::reduceIterHandler(RecursiveDoublingMsg<DataT>* msg) {
   auto* reducer = getAllreducer<RecursiveDoublingT>(msg->info_);
 
+  vt_debug_print(
+    terse, allreduce,
+    "RecursiveDoubling::reduceIterHandler reducer={} ID={} \n",
+    (reducer != nullptr), msg->id_
+  );
+
   if(reducer){
     reducer->template reduceIterHan<DataT, Op>(msg);
   }else{
@@ -303,7 +314,7 @@ void RecursiveDoubling::reduceIterHan(RecursiveDoublingMsg<DataT>* msg) {
   using DataType = DataHandler<DataT>;
   auto& state = getState<RecursiveDoublingT, DataT>(info_, msg->id_);
 
-  if (DataType::size(state.val_) == 0) {
+  if (not state.value_assigned_) {
     if (not state.initialized_) {
       initializeState<DataT>(msg->id_);
     }
@@ -377,10 +388,6 @@ void RecursiveDoubling::finalPart(size_t id) {
   if (state.completed_) {
     return;
   }
-
-  vt_debug_print(
-    terse, allreduce,
-    "RecursiveDoubling Part4: Executing final handler ID = {}\n", id);
 
   if (nprocs_rem_) {
     sendToExcludedNodes<DataT>(id);
