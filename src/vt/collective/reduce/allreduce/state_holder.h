@@ -86,14 +86,13 @@ struct StateHolder {
     auto& allreducers = active_coll_states_[proxy.get()];
 
     if (not allreducers.empty()) {
-
       // Last element is invalidated (allreduce completed) or not completed
       // Generate new ID
-      if(not allreducers.back() or allreducers.back()->active_) {
+      if (not allreducers.back() or allreducers.back()->active_) {
         id = allreducers.size();
       }
       // Most recent state is not active, don't generate new ID
-      else if(not allreducers.back()->active_){
+      else if (not allreducers.back()->active_) {
         id = allreducers.size() - 1;
       }
     }
@@ -107,14 +106,13 @@ struct StateHolder {
     auto& allreducers = active_obj_states_[proxy.get()];
 
     if (not allreducers.empty()) {
-
       // Last element is invalidated (allreduce completed) or not completed
       // Generate new ID
-      if(not allreducers.back() or allreducers.back()->active_) {
+      if (not allreducers.back() or allreducers.back()->active_) {
         id = allreducers.size();
       }
       // Most recent state is not active, don't generate new ID
-      else if(not allreducers.back()->active_){
+      else if (not allreducers.back()->active_) {
         id = allreducers.size() - 1;
       }
     }
@@ -127,14 +125,13 @@ struct StateHolder {
     auto& allreducers = active_grp_states_[group.get()];
 
     if (not allreducers.empty()) {
-
       // Last element is invalidated (allreduce completed) or not completed
       // Generate new ID
-      if(not allreducers.back() or allreducers.back()->active_) {
+      if (not allreducers.back() or allreducers.back()->active_) {
         id = allreducers.size();
       }
       // Most recent state is not active, don't generate new ID
-      else if(not allreducers.back()->active_){
+      else if (not allreducers.back()->active_) {
         id = allreducers.size() - 1;
       }
     }
@@ -176,7 +173,7 @@ private:
 
     auto const num_states = states.size();
     vtAssert(
-      num_states >= idx,
+      num_states > idx,
       fmt::format(
         "Attempting to access state {} with total numer of states {}!", idx,
         num_states));
@@ -190,35 +187,49 @@ private:
   }
 
   template <
-    typename ReduceT, typename DataT, typename ProxyT, typename MapT,
-    typename Scalar = typename DataHandler<DataT>::Scalar>
+    typename ReduceT, typename DataT,
+    typename Scalar = typename DataHandler<DataT>::Scalar, typename ProxyT,
+    typename MapT>
   static auto& getStateImpl(ProxyT proxy, MapT& states_map, size_t idx) {
     auto& states = states_map[proxy.get()];
-
     auto const num_states = states.size();
+
     vtAssert(
       num_states >= idx,
       fmt::format(
-        "Attempting to access state {} with total numer of states {}!", idx,
+        "Attempting to access state {} with total number of states {}!", idx,
         num_states));
 
-    if (idx >= num_states or (num_states == 0)) {
+    if (idx >= num_states || num_states == 0) {
       if constexpr (std::is_same_v<ReduceT, RabenseifnerT>) {
         states.push_back(std::make_unique<RabenseifnerState<Scalar, DataT>>());
       } else {
-        states.push_back(
-          std::make_unique<RecursiveDoublingState<DataT>>());
+        states.push_back(std::make_unique<RecursiveDoublingState<DataT>>());
       }
     }
 
     vtAssert(
       states.at(idx),
       fmt::format("Attempting to access invalidated state at idx={}!", idx));
+
     if constexpr (std::is_same_v<ReduceT, RabenseifnerT>) {
-      return dynamic_cast<RabenseifnerState<Scalar, DataT>&>(*(states.at(idx)));
+      auto* ptr =
+        dynamic_cast<RabenseifnerState<Scalar, DataT>*>(states.at(idx).get());
+      vtAssert(
+        ptr,
+        fmt::format(
+          "Invalid Rabenseifner cast at idx={} with size={}!", idx,
+          states.size()));
+      return *ptr;
     } else {
-      return dynamic_cast<RecursiveDoublingState<DataT>&>(
-        *(states.at(idx)));
+      auto* ptr =
+        dynamic_cast<RecursiveDoublingState<DataT>*>(states.at(idx).get());
+      vtAssert(
+        ptr,
+        fmt::format(
+          "Invalid RecursiveDoubling cast at idx={} with size={}!", idx,
+          states.size()));
+      return *ptr;
     }
   }
 
@@ -236,8 +247,7 @@ private:
 };
 
 template <typename ReducerT, typename DataT>
-static inline auto&
-getState(ComponentInfo info, size_t id) {
+static inline auto& getState(ComponentInfo info, size_t id) {
   if (info.first == ComponentT::VrtColl) {
     return StateHolder::getState<ReducerT, DataT>(
       detail::StrongVrtProxy{info.second}, id);
@@ -245,12 +255,12 @@ getState(ComponentInfo info, size_t id) {
     return StateHolder::getState<ReducerT, DataT>(
       detail::StrongObjGroup{info.second}, id);
   } else {
-    return StateHolder::getState<ReducerT, DataT>(detail::StrongGroup{info.second}, id);
+    return StateHolder::getState<ReducerT, DataT>(
+      detail::StrongGroup{info.second}, id);
   }
 }
 
-static inline void cleanupState(
-  ComponentInfo info, size_t id) {
+static inline void cleanupState(ComponentInfo info, size_t id) {
   if (info.first == ComponentT::VrtColl) {
     StateHolder::clearSingle(detail::StrongVrtProxy{info.second}, id);
   } else if (info.first == ComponentT::ObjGroup) {

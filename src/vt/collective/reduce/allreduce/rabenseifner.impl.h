@@ -118,7 +118,6 @@ void Rabenseifner::initializeState(size_t id) {
 
   state.scatter_mask_ = 1;
   state.scatter_step_ = 0;
-  // state.scatter_num_recv_ = 0;
   state.finished_scatter_part_ = false;
 
   state.gather_step_ = num_steps_ - 1;
@@ -549,7 +548,6 @@ bool Rabenseifner::gatherAllMessagesReceived(size_t id) {
 
 template <typename DataT>
 bool Rabenseifner::gatherIsDone(size_t id) {
-  //auto& state = states_.at(id);
   auto& state = getState<RabenseifnerT, DataT>(info_, id);
   return (state.gather_step_ < 0) and (state.gather_num_recv_ == num_steps_);
 }
@@ -629,7 +627,6 @@ Rabenseifner::gatherIterHandler(RabenseifnerMsg<Scalar, DataT>* msg) {
 
 template <typename DataT, typename Scalar>
 void Rabenseifner::gatherIterHan(RabenseifnerMsg<Scalar, DataT>* msg) {
-  //auto& state = states_.at(msg->id_);
   auto& state = getState<RabenseifnerT, DataT>(info_, msg->id_);
   vt_debug_print(
     terse, allreduce,
