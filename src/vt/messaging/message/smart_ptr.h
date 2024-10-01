@@ -236,7 +236,7 @@ struct MsgSharedPtr final {
   template <
     typename SerializerT,
     typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
+      checkpoint::is_footprinter_v<SerializerT>
     >
   >
   void serialize(SerializerT& s) {
