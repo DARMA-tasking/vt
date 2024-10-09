@@ -46,8 +46,11 @@
 
 #include "test_parallel_harness.h"
 #include "vt/collective/reduce/operators/default_msg.h"
+#include "vt/collective/reduce/allreduce/data_handler.h"
+#include "vt/utils/kokkos/exec_space.h"
 
 #include <numeric>
+#include <vector>
 
 namespace vt { namespace tests { namespace unit {
 
@@ -55,6 +58,24 @@ struct MyMsg : vt::Message {
 
   MyMsg() : from_(vt::theContext()->getNode()) {}
   vt::NodeType from_ = vt::uninitialized_destination;
+};
+
+struct VectorPayload {
+  VectorPayload() = default;
+
+  friend VectorPayload operator+(VectorPayload v1, VectorPayload const& v2) {
+    for (auto&& elm : v2.vec_) {
+      v1.vec_.push_back(elm);
+    }
+    return v1;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | vec_;
+  }
+
+  std::vector<int> vec_;
 };
 
 struct MyObjA {
@@ -97,6 +118,61 @@ struct MyObjA {
     return i;
   }
 
+  static inline int32_t total_verify_expected_ = 0;
+
+  template <int test>
+  void verifyAllred(int value) {
+    auto const n = vt::theContext()->getNumNodes();
+    switch (test) {
+    case 1: EXPECT_EQ(value, n * (n - 1)/2); break;
+    case 2: EXPECT_EQ(value, n * 4); break;
+    case 3: EXPECT_EQ(value, n - 1); break;
+    default: vtAbort("Failure: should not be reached"); break;
+    }
+    total_verify_expected_++;
+  }
+
+  template<typename Scalar, int32_t size>
+  void verifyAllredVec(std::vector<Scalar> const& vec) {
+    auto final_size = vec.size();
+    EXPECT_EQ(final_size, size);
+
+    auto const n = theContext()->getNumNodes();
+    auto const total_sum = n * (n - 1)/2;
+    for(auto val : vec){
+      EXPECT_EQ(val, total_sum);
+    }
+
+    total_verify_expected_++;
+  }
+
+  template <typename DataT, int32_t size>
+  void verifyAllredVecPayload(VectorPayload vec) {
+    verifyAllredVec<typename decltype(DataT::vec_)::value_type, size>(vec.vec_);
+  }
+
+#if MAGISTRATE_KOKKOS_ENABLED
+  template <typename MemorySpace>
+  void verifyAllredView(Kokkos::View<float*, MemorySpace> view) {
+    auto final_size = view.extent(0);
+    EXPECT_EQ(final_size, 256);
+
+    auto n = vt::theContext()->getNumNodes();
+    auto const total_sum = n * (n - 1) / 2;
+
+    // Just in case it's not Host space
+    auto view_host = Kokkos::create_mirror_view(view);
+    Kokkos::deep_copy(view_host, view);
+
+    vtAssert(view_host.extent(0) == 256, "View size is not right");
+    for(uint32_t i = 0; i < view_host.extent(0); ++i){
+      EXPECT_EQ(view_host(i), total_sum);
+    }
+
+    total_verify_expected_++;
+  }
+#endif // MAGISTRATE_KOKKOS_ENABLED
+
   int id_ = -1;
   int recv_ = 0;
   static int next_id;
@@ -136,26 +212,23 @@ struct MyObjB {
   }
 };
 
-struct VectorPayload {
-  VectorPayload() = default;
-
-  friend VectorPayload operator+(VectorPayload v1, VectorPayload const& v2) {
-    for (auto&& elm : v2.vec_) {
-      v1.vec_.push_back(elm);
-    }
-    return v1;
-  }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | vec_;
-  }
-
-  std::vector<int> vec_;
-};
-
 /*static*/ int MyObjA::next_id = 0;
 /*static*/ int MyObjB::next_id = 0;
 }}} // end namespace vt::tests::unit
+
+namespace vt::collective::reduce::allreduce {
+template<>
+class DataHandler<tests::unit::VectorPayload> {
+private:
+  using DataT = ::vt::tests::unit::VectorPayload;
+public:
+  using Scalar = typename decltype(DataT::vec_)::value_type;
+
+  static size_t size(const DataT& data) { return data.vec_.size(); }
+  static const std::vector<Scalar>& toVec(const DataT& data) { return data.vec_; }
+  static DataT fromVec(const std::vector<Scalar>& data) { return DataT{data}; }
+};
+
+} // namespace vt::collective::reduce::allreduce
 
 #endif /*INCLUDED_UNIT_OBJGROUP_TEST_OBJGROUP_COMMON_H*/

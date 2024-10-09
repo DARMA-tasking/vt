@@ -103,6 +103,14 @@ typename Indexable<IndexT>::ReduceStampType Indexable<IndexT>::getNextStamp() {
   return stamp;
 }
 
+template <typename IndexT>
+typename Indexable<IndexT>::ReduceStampType Indexable<IndexT>::getNextAllreduceStamp() {
+  ReduceStampType stamp;
+  stamp = ReduceSeqStampType{allreduce_stamp_};
+  *allreduce_stamp_ = *allreduce_stamp_ + 1;
+  return stamp;
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_INDEXABLE_IMPL_H*/
