@@ -137,6 +137,13 @@ struct LBDataHolder {
    */
   void clear();
 
+  /**
+   * \brief Resize internal buffers to hold specified amount of phases.
+   *
+   * \param[in] num_to_retain the number of phases to retain
+   */
+  void resizeHistory(std::size_t num_to_retain);
+
 private:
   /**
    * \brief Output an entity to json
@@ -184,21 +191,21 @@ public:
   /// Node attributes for the current rank
   ElmUserDataType rank_attributes_;
   /// Node timings for each local object
-  std::unordered_map<PhaseType, LoadMapType> node_data_;
+  LoadMapBufferType node_data_;
   /// Node communication graph for each local object
-  std::unordered_map<PhaseType, CommMapType> node_comm_;
+  CommMapBufferType node_comm_;
   /// Node communication graph for each subphase
-  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
+  util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// User-defined data from each phase for JSON output
-  std::unordered_map<PhaseType, std::unordered_map<
+  util::container::CircularPhasesBuffer<std::unordered_map<
     ElementIDStruct, std::shared_ptr<nlohmann::json>
   >> user_defined_json_;
 
   std::unordered_map<PhaseType, std::shared_ptr<nlohmann::json>> user_per_phase_json_;
   /// User-defined data from each phase for LB
-  std::unordered_map<PhaseType, DataMapType> user_defined_lb_info_;
+  DataMapBufferType user_defined_lb_info_;
   /// User-defined attributes from each phase
-  std::unordered_map<PhaseType, DataMapType> node_user_attributes_;
+  DataMapBufferType node_user_attributes_;
   /// Node indices for each ID along with the proxy ID
   std::unordered_map<ElementIDStruct, std::tuple<VirtualProxyType, std::vector<uint64_t>>> node_idx_;
   /// Map from id to objgroup proxy

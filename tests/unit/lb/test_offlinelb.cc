@@ -126,6 +126,7 @@ TEST_F(TestOfflineLB, test_offlinelb_1) {
   }
 
   LBDataHolder dh;
+  dh.resizeHistory(num_phases);
   for (PhaseType i = 0; i < num_phases; i++) {
     for (auto&& elm : ids[i]) {
       dh.node_data_[i][elm] = LoadSummary{3};
@@ -197,6 +198,7 @@ TEST_F(TestOfflineLB, test_offlinelb_2) {
   }
 
   LBDataHolder dh;
+  dh.resizeHistory(num_phases);
   for (PhaseType i = 0; i < num_phases; i++) {
     if (i != 1 and i != 2 and i != 5 and i != 8 and i != 9) {
       auto& elms = ids[i];

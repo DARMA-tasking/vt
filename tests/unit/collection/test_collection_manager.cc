@@ -52,7 +52,9 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestCollectionManager : TestParallelHarness {};
+namespace TestCollectionManager {
+
+struct TestCollectionManager : TestParallelHarness { };
 
 struct TestCol : vt::Collection<TestCol,vt::Index1D> {
   static void colHandler(TestCol*) {}
@@ -89,4 +91,4 @@ TEST_F(TestCollectionManager, test_collection_manager_proxy_deletion) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::TestCollectionManager

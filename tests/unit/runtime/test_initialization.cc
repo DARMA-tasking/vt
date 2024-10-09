@@ -544,6 +544,7 @@ void prepareLBDataFiles(const std::string file_name_without_ext) {
   }
 
   LBDataHolder dh;
+  dh.resizeHistory(num_phases);
   for (PhaseType i = 0; i < num_phases; i++) {
     for (auto&& elm : ids[i]) {
       dh.node_data_[i][elm] = LoadSummary{3};

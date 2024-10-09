@@ -66,6 +66,9 @@ using vt::vrt::collection::balance::CommMapType;
 using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
 using vt::vrt::collection::balance::DataMapType;
+using vt::vrt::collection::balance::LoadMapBufferType;
+using vt::vrt::collection::balance::CommMapBufferType;
+using vt::vrt::collection::balance::DataMapBufferType;
 
 struct StubModel : LoadModel {
 
@@ -73,9 +76,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const*,
-    std::unordered_map<PhaseType, DataMapType> const*) override {
+    LoadMapBufferType const* proc_load,
+    CommMapBufferType const*,
+    DataMapBufferType const*) override {
     proc_load_ = proc_load;
   }
 
@@ -95,7 +98,7 @@ struct StubModel : LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
-  std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
+  LoadMapBufferType const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) {
@@ -105,7 +108,7 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
   auto test_model =
     std::make_shared<PersistenceMedianLastN>(std::make_shared<StubModel>(), 4);
 
-  std::unordered_map<PhaseType, LoadMapType> proc_loads(num_total_phases);
+  LoadMapBufferType proc_loads(num_total_phases);
 
   test_model->setLoads(&proc_loads, nullptr, nullptr);
 
