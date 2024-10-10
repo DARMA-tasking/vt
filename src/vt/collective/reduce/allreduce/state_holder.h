@@ -45,205 +45,59 @@
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_STATE_HOLDER_H
 
 #include "vt/collective/reduce/allreduce/data_handler.h"
-#include "vt/collective/reduce/allreduce/helpers.h"
 #include "vt/collective/reduce/allreduce/type.h"
 #include "vt/collective/reduce/scoping/strong_types.h"
 #include "vt/configs/types/types_type.h"
-#include "vt/configs/debug/debug_print.h"
 #include "vt/collective/reduce/allreduce/state.h"
 
 #include <memory>
-#include <type_traits>
 #include <unordered_map>
 
 namespace vt::collective::reduce::allreduce {
 
 struct StateHolder {
-  template <
-    typename ReducerT, typename DataT,
-    typename Scalar = typename DataHandler<DataT>::Scalar>
-  static auto& getState(detail::StrongVrtProxy proxy, size_t idx) {
-    return getStateImpl<ReducerT, DataT>(proxy, active_coll_states_, idx);
-  }
+  using StatesVec = std::vector<std::unique_ptr<StateBase>>;
 
   template <
     typename ReducerT, typename DataT,
     typename Scalar = typename DataHandler<DataT>::Scalar>
-  static auto& getState(detail::StrongObjGroup proxy, size_t idx) {
-    return getStateImpl<ReducerT, DataT>(proxy, active_obj_states_, idx);
-  }
+  static decltype(auto) getState(detail::StrongVrtProxy proxy, size_t idx);
 
   template <
     typename ReducerT, typename DataT,
     typename Scalar = typename DataHandler<DataT>::Scalar>
-  static auto& getState(detail::StrongGroup proxy, size_t idx) {
-    return getStateImpl<ReducerT, DataT>(proxy, active_grp_states_, idx);
-  }
+  static decltype(auto) getState(detail::StrongObjGroup proxy, size_t idx);
 
-  template <typename ReducerT>
-  static size_t getNextID(detail::StrongVrtProxy proxy) {
-    size_t id = 0;
-    auto& allreducers = active_coll_states_[proxy.get()];
+  template <
+    typename ReducerT, typename DataT,
+    typename Scalar = typename DataHandler<DataT>::Scalar>
+  static decltype(auto) getState(detail::StrongGroup proxy, size_t idx);
 
-    if (not allreducers.empty()) {
-      // Last element is invalidated (allreduce completed) or not completed
-      // Generate new ID
-      if (not allreducers.back() or allreducers.back()->active_) {
-        id = allreducers.size();
-      }
-      // Most recent state is not active, don't generate new ID
-      else if (not allreducers.back()->active_) {
-        id = allreducers.size() - 1;
-      }
-    }
+  static size_t getNextID(detail::StrongVrtProxy proxy);
+  static size_t getNextID(detail::StrongObjGroup proxy);
+  static size_t getNextID(detail::StrongGroup group);
 
-    return id;
-  }
+  static void clearSingle(detail::StrongVrtProxy proxy, size_t idx);
+  static void clearSingle(detail::StrongObjGroup proxy, size_t idx);
+  static void clearSingle(detail::StrongGroup group, size_t idx);
 
-  template <typename ReducerT>
-  static size_t getNextID(detail::StrongObjGroup proxy) {
-    size_t id = 0;
-    auto& allreducers = active_obj_states_[proxy.get()];
-
-    if (not allreducers.empty()) {
-      // Last element is invalidated (allreduce completed) or not completed
-      // Generate new ID
-      if (not allreducers.back() or allreducers.back()->active_) {
-        id = allreducers.size();
-      }
-      // Most recent state is not active, don't generate new ID
-      else if (not allreducers.back()->active_) {
-        id = allreducers.size() - 1;
-      }
-    }
-
-    return id;
-  }
-
-  static size_t getNextID(detail::StrongGroup group) {
-    size_t id = 0;
-    auto& allreducers = active_grp_states_[group.get()];
-
-    if (not allreducers.empty()) {
-      // Last element is invalidated (allreduce completed) or not completed
-      // Generate new ID
-      if (not allreducers.back() or allreducers.back()->active_) {
-        id = allreducers.size();
-      }
-      // Most recent state is not active, don't generate new ID
-      else if (not allreducers.back()->active_) {
-        id = allreducers.size() - 1;
-      }
-    }
-
-    return id;
-  }
-
-  static void clearSingle(detail::StrongVrtProxy proxy, size_t idx) {
-    clearSingleImpl(proxy, active_coll_states_, idx);
-  }
-
-  static void clearSingle(detail::StrongObjGroup proxy, size_t idx) {
-    clearSingleImpl(proxy, active_obj_states_, idx);
-  }
-
-  static void clearSingle(detail::StrongGroup group, size_t idx) {
-    clearSingleImpl(group, active_grp_states_, idx);
-  }
-
-  static void clearAll(detail::StrongVrtProxy proxy) {
-    // fmt::print("Clearing all states for VrtProxy={:x}\n", proxy.get());
-    clearAllImpl(proxy, active_coll_states_);
-  }
-
-  static void clearAll(detail::StrongObjGroup proxy) {
-    // fmt::print("Clearing all states for Objgroup={:x}\n", proxy.get());
-    clearAllImpl(proxy, active_obj_states_);
-  }
-
-  static void clearAll(detail::StrongGroup group) {
-    // fmt::print("Clearing all states for group={:x}\n", group.get());
-    clearAllImpl(group, active_grp_states_);
-  }
+  static void clearAll(detail::StrongVrtProxy proxy);
+  static void clearAll(detail::StrongObjGroup proxy);
+  static void clearAll(detail::StrongGroup group);
 
 private:
-  template <typename ProxyT, typename MapT>
-  static void clearSingleImpl(ProxyT proxy, MapT& states_map, size_t idx) {
-    auto& states = states_map[proxy.get()];
+  static inline size_t collection_idx_ = 0;
+  static inline size_t objgroup_idx_ = 0;
+  static inline size_t group_idx_ = 0;
 
-    auto const num_states = states.size();
-    vtAssert(
-      num_states > idx,
-      fmt::format(
-        "Attempting to access state {} with total numer of states {}!", idx,
-        num_states));
-
-    states.at(idx).reset();
-  }
-
-  template <typename ProxyT, typename MapT>
-  static void clearAllImpl(ProxyT proxy, MapT& states_map) {
-    states_map.erase(proxy.get());
-  }
-
-  template <
-    typename ReduceT, typename DataT,
-    typename Scalar = typename DataHandler<DataT>::Scalar, typename ProxyT,
-    typename MapT>
-  static auto& getStateImpl(ProxyT proxy, MapT& states_map, size_t idx) {
-    auto& states = states_map[proxy.get()];
-    auto const num_states = states.size();
-
-    vtAssert(
-      num_states >= idx,
-      fmt::format(
-        "Attempting to access state {} with total number of states {}!", idx,
-        num_states));
-
-    if (idx >= num_states || num_states == 0) {
-      if constexpr (std::is_same_v<ReduceT, RabenseifnerT>) {
-        states.push_back(std::make_unique<RabenseifnerState<Scalar, DataT>>());
-      } else {
-        states.push_back(std::make_unique<RecursiveDoublingState<DataT>>());
-      }
-    }
-
-    vtAssert(
-      states.at(idx),
-      fmt::format("Attempting to access invalidated state at idx={}!", idx));
-
-    if constexpr (std::is_same_v<ReduceT, RabenseifnerT>) {
-      auto* ptr =
-        dynamic_cast<RabenseifnerState<Scalar, DataT>*>(states.at(idx).get());
-      vtAssert(
-        ptr,
-        fmt::format(
-          "Invalid Rabenseifner cast at idx={} with size={}!", idx,
-          states.size()));
-      return *ptr;
-    } else {
-      auto* ptr =
-        dynamic_cast<RecursiveDoublingState<DataT>*>(states.at(idx).get());
-      vtAssert(
-        ptr,
-        fmt::format(
-          "Invalid RecursiveDoubling cast at idx={} with size={}!", idx,
-          states.size()));
-      return *ptr;
-    }
-  }
-
-  static inline std::unordered_map<
-    VirtualProxyType, std::vector<std::unique_ptr<StateBase>>>
+  static inline std::unordered_map<VirtualProxyType, StatesVec>
     active_coll_states_ = {};
 
-  static inline std::unordered_map<
-    ObjGroupProxyType, std::vector<std::unique_ptr<StateBase>>>
+  static inline std::unordered_map<ObjGroupProxyType, StatesVec>
     active_obj_states_ = {};
 
-  static inline std::unordered_map<
-    GroupType, std::vector<std::unique_ptr<StateBase>>>
-    active_grp_states_ = {};
+  static inline std::unordered_map<GroupType, StatesVec> active_grp_states_ =
+    {};
 };
 
 template <typename ReducerT, typename DataT>
@@ -271,5 +125,7 @@ static inline void cleanupState(ComponentInfo info, size_t id) {
 }
 
 } // namespace vt::collective::reduce::allreduce
+
+#include "state_holder.impl.h"
 
 #endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_STATE_HOLDER_H*/
