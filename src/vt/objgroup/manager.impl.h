@@ -287,8 +287,7 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
 
   auto const this_node = vt::theContext()->getNode();
   auto const strong_proxy = vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()};
-
-  auto const id = StateHolder::getNextID<Type>(strong_proxy);
+  auto const id = StateHolder::getNextID(strong_proxy);
 
   auto* reducer = AllreduceHolder::getOrCreateAllreducer<Type>(strong_proxy);
 

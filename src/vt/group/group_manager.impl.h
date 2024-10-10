@@ -183,6 +183,7 @@ void GroupManager::allreduce(GroupType group, Args&&... args) {
 
     auto const this_node = theContext()->getNode();
     auto id = StateHolder::getNextID(strong_group);
+
     reducer->template setFinalHandler<DataT>(
       theCB()->makeSend<f>(this_node), id);
     reducer->template storeData<DataT, Op>(id, std::forward<Args>(args)...);

@@ -45,10 +45,9 @@
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RABENSEIFNER_MSG_H
 
 #include "vt/config.h"
-#include "vt/messaging/active.h"
-#include "vt/configs/debug/debug_print.h"
 #include "vt/collective/reduce/operators/default_msg.h"
 #include "type.h"
+
 namespace vt::collective::reduce::allreduce {
 
 template <typename Scalar, typename DataT>

@@ -46,6 +46,7 @@
 
 #include "vt/collective/reduce/allreduce/rabenseifner.h"
 #include "vt/collective/reduce/allreduce/data_handler.h"
+#include "vt/collective/reduce/allreduce/helpers.h"
 #include "vt/config.h"
 #include "vt/context/context.h"
 #include "vt/configs/error/config_assert.h"
@@ -469,6 +470,13 @@ template <typename DataT, typename Scalar, template <typename Arg> class Op>
 /*static*/ void
 Rabenseifner::scatterReduceIterHandler(RabenseifnerMsg<Scalar, DataT>* msg) {
   auto* reducer = getAllreducer<RabenseifnerT>(msg->info_);
+
+  vt_debug_print(
+    terse, allreduce,
+    "Rabenseifner::scatterReduceIterHandler reducer={} ID={} \n",
+    (reducer != nullptr), msg->id_
+  );
+
   if (reducer) {
     reducer->template scatterHandler<DataT, Scalar, Op>(msg);
   } else {

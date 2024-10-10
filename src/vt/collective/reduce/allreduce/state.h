@@ -103,35 +103,34 @@ struct RecursiveDoublingState : StateBase {
 
 template <typename Scalar, typename DataT>
 struct RabenseifnerState : RabenseifnerBase {
+  using RabenseifnerMsgT = MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>;
+
   ~RabenseifnerState() override = default;
 
   std::vector<Scalar> val_ = {};
 
-  MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> left_adjust_message_ = nullptr;
-  MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> right_adjust_message_ = nullptr;
-  std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> scatter_messages_ =
-    {};
-  std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> gather_messages_ =
-    {};
+  RabenseifnerMsgT left_adjust_message_ = nullptr;
+  RabenseifnerMsgT right_adjust_message_ = nullptr;
+  std::vector<RabenseifnerMsgT> scatter_messages_ = {};
+  std::vector<RabenseifnerMsgT> gather_messages_ = {};
 
   vt::pipe::callback::cbunion::CallbackTyped<DataT> final_handler_ = {};
 };
 
 #if MAGISTRATE_KOKKOS_ENABLED
-template <typename Scalar>
-struct RabenseifnerState<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>>
+template <typename Scalar, typename... Properties>
+struct RabenseifnerState<Scalar, Kokkos::View<Scalar*, Properties...>>
   : RabenseifnerBase {
-  using DataT = Kokkos::View<Scalar*, Kokkos::HostSpace>;
+  using DataT = Kokkos::View<Scalar*, Properties...>;
+  using RabenseifnerMsgT = MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>;
   ~RabenseifnerState() override = default;
 
-  Kokkos::View<Scalar*, Kokkos::HostSpace> val_ = {};
+  DataT val_ = {};
 
-  MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> left_adjust_message_ = nullptr;
-  MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>> right_adjust_message_ = nullptr;
-  std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> scatter_messages_ =
-    {};
-  std::vector<MsgSharedPtr<RabenseifnerMsg<Scalar, DataT>>> gather_messages_ =
-    {};
+  RabenseifnerMsgT left_adjust_message_ = nullptr;
+  RabenseifnerMsgT right_adjust_message_ = nullptr;
+  std::vector<RabenseifnerMsgT> scatter_messages_ = {};
+  std::vector<RabenseifnerMsgT> gather_messages_ = {};
 
   vt::pipe::callback::cbunion::CallbackTyped<DataT> final_handler_ = {};
 };
