@@ -60,8 +60,8 @@ struct ShouldUseView {
 };
 
 #if MAGISTRATE_KOKKOS_ENABLED
-template <typename Scalar>
-struct ShouldUseView<Scalar, Kokkos::View<Scalar*, Kokkos::HostSpace>> {
+template <typename Scalar, typename... Properties>
+struct ShouldUseView<Scalar, Kokkos::View<Scalar*, Properties...>> {
   static constexpr bool Value = true;
 };
 
