@@ -68,7 +68,7 @@ void RecursiveDoubling::storeData(size_t id, Args&&... data) {
 
   vt_debug_print(
     terse, allreduce,
-    "RecursiveDoubling (this={}): local_col_wait_count_={} ID={} "
+    "RecursiveDoubling::storeData (this={}): local_col_wait_count_={} ID={} "
     "initialized={}\n",
     print_ptr(this), state.local_col_wait_count_, id, state.initialized_);
 
