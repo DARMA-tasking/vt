@@ -177,7 +177,6 @@ template <typename DataT, template <typename Arg> class Op>
 template <typename DataT, template <typename Arg> class Op>
 void RecursiveDoubling::adjustForPowerOfTwoHan(
   RecursiveDoublingMsg<DataT>* msg) {
-  using DataType = DataHandler<DataT>;
   auto& state = getState<RecursiveDoublingT, DataT>(info_, msg->id_);
   if (not state.value_assigned_) {
     if (not state.initialized_) {
@@ -311,7 +310,6 @@ RecursiveDoubling::reduceIterHandler(RecursiveDoublingMsg<DataT>* msg) {
 
 template <typename DataT, template <typename Arg> class Op>
 void RecursiveDoubling::reduceIterHan(RecursiveDoublingMsg<DataT>* msg) {
-  using DataType = DataHandler<DataT>;
   auto& state = getState<RecursiveDoublingT, DataT>(info_, msg->id_);
 
   if (not state.value_assigned_) {

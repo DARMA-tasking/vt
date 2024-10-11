@@ -76,9 +76,6 @@ void TypelessHolder::destroyCollection(VirtualProxyType const proxy) {
     }
   }
 
-  vt::collective::reduce::allreduce::StateHolder::clearAll(
-    vt::collective::reduce::detail::StrongVrtProxy{proxy});
-
   vt::collective::reduce::allreduce::AllreduceHolder::remove(
     vt::collective::reduce::detail::StrongVrtProxy{proxy}
   );

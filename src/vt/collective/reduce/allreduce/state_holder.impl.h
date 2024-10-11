@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-#include "vt/collective/reduce/allreduce/state.h"
 #if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_STATE_HOLDER_IMPL_H
 #define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_STATE_HOLDER_IMPL_H
 
@@ -80,7 +79,7 @@ template <
   typename Scalar = typename DataHandler<DataT>::Scalar, typename ProxyT,
   typename MapT>
 static auto& getStateImpl(ProxyT proxy, MapT& states_map, size_t idx) {
-  auto& states = states_map[proxy.get()];
+  auto& [_, states] = states_map[proxy.get()];
   auto const num_states = states.size();
 
   if (idx >= num_states || num_states == 0) {

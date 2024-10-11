@@ -89,8 +89,6 @@ struct RecursiveDoubling {
    */
   void initializeVrtNode();
 
-  ~RecursiveDoubling();
-
   /**
    * \brief Execute the final handler callback with the reduced result.
    *

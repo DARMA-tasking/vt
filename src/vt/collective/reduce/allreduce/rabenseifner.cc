@@ -150,13 +150,4 @@ void Rabenseifner::initializeVrtNode() {
   }
 }
 
-Rabenseifner::~Rabenseifner() {
-  if (info_.first == ComponentT::ObjGroup) {
-    StateHolder::clearAll(detail::StrongObjGroup{info_.second});
-    AllreduceHolder::remove(detail::StrongObjGroup{info_.second});
-  } else if(info_.first == ComponentT::Group){
-    StateHolder::clearAll(detail::StrongGroup{info_.second});
-  }
-}
-
 } // namespace vt::collective::reduce::allreduce

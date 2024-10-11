@@ -52,6 +52,9 @@ size_t
 getNextIdImpl(StateHolder::StatesVec& states, size_t idx) {
   size_t id = u64empty;
 
+  vt_debug_print(
+    terse, allreduce, "getNextIdImpl idx={} size={} \n", idx, states.size());
+
   for (; idx < states.size(); ++idx) {
     auto& state = states.at(idx);
     if (not state or not state->active_) {
@@ -64,28 +67,35 @@ getNextIdImpl(StateHolder::StatesVec& states, size_t idx) {
     id = states.size();
   }
 
+
   return id;
 }
 
 size_t StateHolder::getNextID(detail::StrongVrtProxy proxy) {
-  auto& states = active_coll_states_[proxy.get()];
+  auto& [idx, states] = active_coll_states_[proxy.get()];
 
-  collection_idx_ = getNextIdImpl(states, collection_idx_);
-  return collection_idx_;
+  auto current_idx =  getNextIdImpl(states, idx);
+  idx = current_idx + 1;
+
+  return current_idx;
 }
 
 size_t StateHolder::getNextID(detail::StrongObjGroup proxy) {
-  auto& states = active_obj_states_[proxy.get()];
+  auto& [idx, states] = active_obj_states_[proxy.get()];
 
-  objgroup_idx_ = getNextIdImpl(states, objgroup_idx_);
-  return objgroup_idx_;
+  auto current_idx = getNextIdImpl(states, idx);
+  idx = current_idx + 1;
+
+  return current_idx;
 }
 
 size_t StateHolder::getNextID(detail::StrongGroup group) {
-  auto& states = active_grp_states_[group.get()];
+  auto& [idx, states] = active_grp_states_[group.get()];
 
-  group_idx_ = getNextIdImpl(states, group_idx_);
-  return group_idx_;
+  auto current_idx = getNextIdImpl(states, idx);
+
+  idx = current_idx + 1;
+  return current_idx;
 }
 
 static inline void
@@ -101,19 +111,19 @@ clearSingleImpl(StateHolder::StatesVec& states, size_t idx) {
 }
 
 void StateHolder::clearSingle(detail::StrongVrtProxy proxy, size_t idx) {
-  auto& states = active_coll_states_[proxy.get()];
+  auto& [_, states] = active_coll_states_[proxy.get()];
 
   clearSingleImpl(states, idx);
 }
 
 void StateHolder::clearSingle(detail::StrongObjGroup proxy, size_t idx) {
-  auto& states = active_obj_states_[proxy.get()];
+  auto& [_, states] = active_obj_states_[proxy.get()];
 
   clearSingleImpl(states, idx);
 }
 
 void StateHolder::clearSingle(detail::StrongGroup group, size_t idx) {
-  auto& states = active_grp_states_[group.get()];
+  auto& [_, states] = active_grp_states_[group.get()];
 
   clearSingleImpl(states, idx);
 }
