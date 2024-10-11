@@ -87,8 +87,6 @@ struct Rabenseifner {
 
   void initializeVrtNode();
 
-  ~Rabenseifner();
-
   /**
    * \brief Set final handler that will be executed with allreduce result
    *

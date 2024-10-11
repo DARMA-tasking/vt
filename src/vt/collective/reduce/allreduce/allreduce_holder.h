@@ -47,7 +47,6 @@
 #include "vt/configs/types/types_type.h"
 #include "vt/collective/reduce/allreduce/type.h"
 #include "vt/collective/reduce/scoping/strong_types.h"
-#include "vt/configs/types/types_sentinels.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 
 #include <unordered_map>
@@ -56,6 +55,7 @@ namespace vt::collective::reduce::allreduce {
 
 struct Rabenseifner;
 struct RecursiveDoubling;
+
 struct AllreduceHolder {
   using RabenseifnerProxy = ObjGroupProxyType;
   using RecursiveDoublingProxy = ObjGroupProxyType;
