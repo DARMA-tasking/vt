@@ -57,6 +57,7 @@ namespace vt::collective::reduce::allreduce {
 
 struct StateHolder {
   using StatesVec = std::vector<std::unique_ptr<StateBase>>;
+  using StatesInfo = std::pair<size_t, StatesVec>;
 
   template <
     typename ReducerT, typename DataT,
@@ -86,17 +87,13 @@ struct StateHolder {
   static void clearAll(detail::StrongGroup group);
 
 private:
-  static inline size_t collection_idx_ = 0;
-  static inline size_t objgroup_idx_ = 0;
-  static inline size_t group_idx_ = 0;
-
-  static inline std::unordered_map<VirtualProxyType, StatesVec>
+  static inline std::unordered_map<VirtualProxyType, StatesInfo>
     active_coll_states_ = {};
 
-  static inline std::unordered_map<ObjGroupProxyType, StatesVec>
+  static inline std::unordered_map<ObjGroupProxyType, StatesInfo>
     active_obj_states_ = {};
 
-  static inline std::unordered_map<GroupType, StatesVec> active_grp_states_ =
+  static inline std::unordered_map<GroupType, StatesInfo> active_grp_states_ =
     {};
 };
 

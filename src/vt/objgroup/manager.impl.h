@@ -63,7 +63,7 @@
 #include "vt/collective/reduce/allreduce/type.h"
 #include "vt/collective/reduce/allreduce/helpers.h"
 #include "vt/collective/reduce/scoping/strong_types.h"
-#include "vt/collective/reduce/allreduce/state_holder.h"
+#include "vt/collective/reduce/allreduce/allreduce_holder.h"
 #include "vt/pipe/pipe_manager.h"
 
 #include <utility>
@@ -147,6 +147,10 @@ void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   if (label_iter != labels_.end()) {
     labels_.erase(label_iter);
   }
+
+  vt::collective::reduce::allreduce::AllreduceHolder::remove(
+    vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()}
+  );
 }
 
 template <typename ObjT>
