@@ -48,6 +48,8 @@
 #include "vt/group/group_common.h"
 #include "vt/group/msg/group_msg.h"
 #include "vt/messaging/message.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/messaging/message/message_serialize.h"
 
 #include <cstdlib>
 
@@ -56,7 +58,7 @@ namespace vt { namespace group {
 template <typename MsgT>
 struct GroupCollectiveInfoMsg : MsgT {
   using MessageParentType = MsgT;
-  vt_msg_serialize_prohibited(); // no existing serialization function
+  vt_msg_serialize_required();
   static_assert(
     std::is_base_of<BaseMessage, MsgT>::value,
     "Base must derive from Message."
@@ -69,10 +71,11 @@ struct GroupCollectiveInfoMsg : MsgT {
     GroupType const& in_group, RemoteOperationIDType in_op, bool in_is_in_group,
     NodeType const& in_subtree,
     NodeType const& in_child_node = uninitialized_destination,
-    CountType const& level = 0, CountType const& extra_nodes = 0
+    CountType const& level = 0, CountType const& extra_nodes = 0,
+    std::set<NodeType> const& nodes = {}
   ) : MsgT(in_group, in_op), is_in_group(in_is_in_group),
       child_node_(in_child_node), subtree_size_(in_subtree),
-      extra_nodes_(extra_nodes), level_(level)
+      extra_nodes_(extra_nodes), level_(level), nodes_(nodes)
   { }
 
   NodeType getChild() const { return child_node_; }
@@ -81,6 +84,20 @@ struct GroupCollectiveInfoMsg : MsgT {
   bool isInGroup() const { return is_in_group; }
   CountType getExtraNodes() const { return extra_nodes_; }
   CountType getLevel() const { return level_; }
+  std::set<NodeType> const& getNodes() {return nodes_;}
+  void clearNodes() { nodes_.clear();}
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | is_in_group;
+    s | is_static_;
+    s | child_node_;
+    s | subtree_size_;
+    s | extra_nodes_;
+    s | level_;
+    s | nodes_;
+  }
 
 private:
   bool is_in_group = false;
@@ -89,9 +106,41 @@ private:
   NodeType subtree_size_ = 0;
   CountType extra_nodes_ = 0;
   CountType level_ = 0;
+  std::set<NodeType> nodes_ = {};
+};
+
+template <typename MsgT>
+struct GroupCollectiveFinalInfoMsg : MsgT {
+  using MessageParentType = MsgT;
+  vt_msg_serialize_required();
+
+  GroupCollectiveFinalInfoMsg() = default;
+  GroupCollectiveFinalInfoMsg(
+    GroupType const& in_group, RemoteOperationIDType const& in_op,
+    std::set<NodeType> const& nodes = {}
+  ) : MsgT(in_group, in_op), nodes_(nodes)
+  { }
+
+  GroupCollectiveFinalInfoMsg(
+    GroupType const& in_group, RemoteOperationIDType const& in_op,
+    NodeType const& in_root, bool const& in_default_group, std::set<NodeType> const& nodes = {}
+  ) : MsgT(in_group, in_op, in_root, in_default_group), nodes_(nodes)
+  { }
+
+  std::set<NodeType> const& getNodes() {return nodes_;}
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | nodes_;
+  }
+
+private:
+  std::set<NodeType> nodes_ = {};
 };
 
 using GroupCollectiveMsg = GroupCollectiveInfoMsg<GroupMsg<::vt::Message>>;
+using GroupCollectiveFinalMsg = GroupCollectiveFinalInfoMsg<GroupMsg<::vt::Message>>;
 
 }} /* end namespace vt::group */
 

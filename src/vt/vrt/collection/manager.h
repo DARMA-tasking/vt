@@ -743,6 +743,12 @@ struct CollectionManager
     bool instrument
   );
 
+
+  template <typename ReducerT, auto f, typename ColT, template <typename Arg> class Op, typename ...Args>
+  messaging::PendingSend reduceLocal(
+    CollectionProxyWrapType<ColT> const& proxy, Args &&... args
+  );
+
   /**
    * \brief Reduce over a collection
    *
@@ -883,6 +889,27 @@ struct CollectionManager
   messaging::PendingSend broadcastMsgUntypedHandler(
     CollectionProxyWrapType<ColT, IdxT> const& proxy, MsgT* msg,
     HandlerType const handler, bool instrument
+  );
+
+  /**
+   * \internal \brief Broadcast to collection with a collection message
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] handler the handler to invoke
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   */
+  template <typename MsgT, typename ColT>
+  IsNotColMsgType<MsgT> broadcastCollectiveMsgWithHan(
+    CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
+    HandlerType const handler, bool instrument = true
+  );
+
+  template <typename MsgT, typename ColT>
+  IsColMsgType<MsgT> broadcastCollectiveMsgWithHan(
+    CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
+    HandlerType const handler, bool instrument = true
   );
 
   /**
@@ -1766,6 +1793,10 @@ private:
   VirtualIDType next_rooted_id_ = 0;
   TypelessHolder typeless_holder_;
   std::unordered_map<VirtualProxyType, SequentialIDType> reduce_stamp_;
+
+  // Allreduce stuff, probably should be moved elsewhere
+  std::unordered_map<VirtualProxyType, ObjGroupProxyType> rabenseifner_reducers_;
+  std::unordered_map<VirtualProxyType, ObjGroupProxyType> recursive_doubling_reducers_;
 };
 
 }}} /* end namespace vt::vrt::collection */

@@ -60,6 +60,7 @@
 #include "vt/messaging/pending_send.h"
 #include "vt/utils/fntraits/fntraits.h"
 #include "vt/group/region/group_list.h"
+#include "vt/collective/reduce/allreduce/type.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -192,6 +193,16 @@ public:
   template <
     auto f,
     template <typename Arg> class Op = collective::NoneOp,
+    typename... Args
+  >
+  PendingSendType allreduce(
+    Args&&... args
+  ) const;
+
+  template <
+    auto f,
+    template <typename Arg> class Op = collective::NoneOp,
+    typename Type,
     typename... Args
   >
   PendingSendType allreduce(
