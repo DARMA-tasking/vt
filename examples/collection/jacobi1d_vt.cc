@@ -46,7 +46,7 @@
 //
 // This code applies a few steps of the Jacobi iteration to
 // the linear system  A x = 0
-// where is the tridiagonal matrix with pattern [-1 2 -1]
+// where A is a tridiagonal matrix with pattern [-1 2 -1]
 // The initial guess for x is a made-up non-zero vector.
 // The exact solution is the vector 0.
 //
@@ -61,11 +61,8 @@
 
 
 #include <vt/transport.h>
-#include <vt/runnable/invoke.h>
 
 #include <cstdlib>
-#include <cassert>
-#include <iostream>
 
 static constexpr std::size_t const default_nrow_object = 8;
 static constexpr std::size_t const default_num_objs = 4;
