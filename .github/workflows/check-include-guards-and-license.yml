@@ -13,7 +13,7 @@ jobs:
       - name: Setup Dependencies
         uses: actions/setup-python@v5
         with:
-            python-version: '3.7'
+            python-version: '3.13'
 
       - name: Check that for correct include guards and license
         run: ./scripts/check_guards.sh $(pwd)
