@@ -231,7 +231,7 @@ DenseIndexArray<IndexType, ndim>::operator-(DenseIndexArrayType const& other) co
   return val;
 }
 
-// special accessors (x,y,z) enabled depending on the number of dimensions
+// special accessors (x,y,z,u,v,w) enabled depending on the number of dimensions
 template <typename IndexType, NumDimensionsType ndim>
 template <typename T, typename>
 IndexType DenseIndexArray<IndexType, ndim>::x() const {
@@ -248,6 +248,24 @@ template <typename IndexType, NumDimensionsType ndim>
 template <typename T, typename>
 IndexType DenseIndexArray<IndexType, ndim>::z() const {
   return dims[2];
+}
+
+template <typename IndexType, NumDimensionsType ndim>
+template <typename T, typename>
+IndexType DenseIndexArray<IndexType, ndim>::u() const {
+  return dims[3];
+}
+
+template <typename IndexType, NumDimensionsType ndim>
+template <typename T, typename>
+IndexType DenseIndexArray<IndexType, ndim>::v() const {
+  return dims[4];
+}
+
+template <typename IndexType, NumDimensionsType ndim>
+template <typename T, typename>
+IndexType DenseIndexArray<IndexType, ndim>::w() const {
+  return dims[5];
 }
 
 template <typename IndexT, NumDimensionsType nd>

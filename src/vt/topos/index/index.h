@@ -59,11 +59,17 @@ using IdxBase = int32_t;
 template <typename T = IdxBase> using Index1D  = DenseIndexArray<T, 1>;
 template <typename T = IdxBase> using Index2D  = DenseIndexArray<T, 2>;
 template <typename T = IdxBase> using Index3D  = DenseIndexArray<T, 3>;
+template <typename T = IdxBase> using Index4D  = DenseIndexArray<T, 4>;
+template <typename T = IdxBase> using Index5D  = DenseIndexArray<T, 5>;
+template <typename T = IdxBase> using Index6D  = DenseIndexArray<T, 6>;
 template <typename T, int8_t N> using IdxType = DenseIndexArray<T, N>;
 
 static_assert(IndexTraits<Index1D<IdxBase>>::is_index, "Does not conform");
 static_assert(IndexTraits<Index2D<IdxBase>>::is_index, "Does not conform");
 static_assert(IndexTraits<Index3D<IdxBase>>::is_index, "Does not conform");
+static_assert(IndexTraits<Index4D<IdxBase>>::is_index, "Does not conform");
+static_assert(IndexTraits<Index5D<IdxBase>>::is_index, "Does not conform");
+static_assert(IndexTraits<Index6D<IdxBase>>::is_index, "Does not conform");
 
 }}  // end namespace vt::index
 
@@ -76,6 +82,9 @@ using IdxBase    = index::IdxBase;
 using Index1D  = index::Index1D<index::IdxBase>;
 using Index2D  = index::Index2D<index::IdxBase>;
 using Index3D  = index::Index3D<index::IdxBase>;
+using Index4D  = index::Index4D<index::IdxBase>;
+using Index5D  = index::Index5D<index::IdxBase>;
+using Index6D  = index::Index6D<index::IdxBase>;
 template <int8_t N>
 using IndexND  = index::IdxType<index::IdxBase, N>;
 
@@ -83,6 +92,9 @@ template <typename T, int8_t N> using IdxType   = index::IdxType<T, N>;
 template <typename T>           using IdxType1D = index::Index1D<T>;
 template <typename T>           using IdxType2D = index::Index2D<T>;
 template <typename T>           using IdxType3D = index::Index3D<T>;
+template <typename T>           using IdxType4D = index::Index4D<T>;
+template <typename T>           using IdxType5D = index::Index5D<T>;
+template <typename T>           using IdxType6D = index::Index6D<T>;
 
 }  // end namespace vt
 
