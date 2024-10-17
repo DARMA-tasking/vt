@@ -213,7 +213,8 @@ public:
       | model_
       | lb_instances_
       | stats
-      | created_lbstats_dir_;
+      | created_lbstats_dir_
+      | min_hist_lb_data_;
   }
 
   void stagePreLBStatistics(const StatisticMapType &statistics);
@@ -307,6 +308,8 @@ private:
   std::unique_ptr<util::json::BaseAppender> statistics_writer_ = nullptr;
   /// Whether the LB statistics directory has been created
   bool created_lbstats_dir_ = false;
+  //// The amount of phases of historical LB data to hold
+  uint32_t min_hist_lb_data_ = 0;
 };
 
 void makeGraphSymmetric(

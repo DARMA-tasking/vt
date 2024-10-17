@@ -64,13 +64,15 @@ using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::ElmUserDataType;
 using vt::vrt::collection::balance::DataMapType;
+using vt::vrt::collection::balance::LoadMapBufferType;
+using vt::vrt::collection::balance::DataMapBufferType;
 
 TEST_F(TestRawData, test_model_raw_data_scalar) {
   NodeType this_node = 0;
   auto test_model =
     std::make_shared<RawData>();
 
-  std::unordered_map<PhaseType, LoadMapType> proc_loads;
+  LoadMapBufferType proc_loads;
   test_model->setLoads(&proc_loads, nullptr, nullptr);
   EXPECT_TRUE(test_model->hasRawLoad());
   EXPECT_FALSE(test_model->hasUserData());  // because passed a nullptr
@@ -127,8 +129,8 @@ TEST_F(TestRawData, test_model_raw_user_data) {
   auto test_model =
     std::make_shared<RawData>();
 
-  std::unordered_map<PhaseType, LoadMapType> proc_loads;
-  std::unordered_map<PhaseType, DataMapType> user_data;
+  LoadMapBufferType proc_loads;
+  DataMapBufferType user_data;
   test_model->setLoads(&proc_loads, nullptr, &user_data);
   EXPECT_TRUE(test_model->hasRawLoad());
   EXPECT_TRUE(test_model->hasUserData());

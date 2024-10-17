@@ -61,8 +61,6 @@ extern char** test_argv;
 template <typename TestBase>
 struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
   virtual void SetUp() override {
-    using namespace vt;
-
     TestHarnessAny<TestBase>::SetUp();
 
 #if vt_feature_cmake_test_trace_on
@@ -84,15 +82,24 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     if (!init) {
       MPI_Init(&test_argc, &test_argv);
     }
-    MPI_Comm comm = MPI_COMM_WORLD;
-    auto const new_args = injectAdditionalArgs(test_argc, test_argv);
-    auto custom_argc = new_args.first;
-    auto custom_argv = new_args.second;
+
+    // inject args only once
+    injectAdditionalArgs(test_argc, test_argv);
+
+    initVt();
+  }
+
+  void initVt() {
+    using namespace vt;
+
+    int custom_argc = additional_args_.size() - 1;
+    char** custom_argv = additional_args_.data();
     vtAssert(
       custom_argv[custom_argc] == nullptr,
       "The value of argv[argc] should always be 0"
     );
     // communicator is duplicated.
+    MPI_Comm comm = MPI_COMM_WORLD;
     CollectiveOps::initialize(custom_argc, custom_argv, true, &comm);
 
 #if DEBUG_TEST_HARNESS_PRINT
@@ -103,6 +110,12 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
   }
 
   virtual void TearDown() override {
+    destroyVt();
+
+    TestHarnessAny<TestBase>::TearDown();
+  }
+
+  void destroyVt() {
     using namespace vt;
 
     try {
@@ -117,8 +130,6 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 #endif
 
     CollectiveOps::finalize();
-
-    TestHarnessAny<TestBase>::TearDown();
   }
 
 protected:
@@ -134,8 +145,7 @@ protected:
   }
 
 private:
-  std::pair<int, char**>
-  injectAdditionalArgs(int old_argc, char** old_argv) {
+  void injectAdditionalArgs(int old_argc, char** old_argv) {
     additional_args_.insert(
       additional_args_.begin(), old_argv, old_argv + old_argc
     );
@@ -143,10 +153,6 @@ private:
     addAdditionalArgs();
 
     additional_args_.emplace_back(nullptr);
-    int custom_argc = additional_args_.size() - 1;
-    char** custom_argv = additional_args_.data();
-
-    return std::make_pair(custom_argc, custom_argv);
   }
 
   /**

@@ -195,7 +195,15 @@ void ElementLBData::updatePhase(PhaseType const& inc) {
 }
 
 void ElementLBData::resetPhase() {
+  // This method will become obsolete once VT gains full restart capability,
+  // allowing it to load all necessary data (like PhaseManager state, NodeLBData, etc.) from a checkpoint.
+
   cur_phase_ = fst_lb_phase;
+  // Resets the current phase in the containers.
+  phase_timings_.restartFrom(fst_lb_phase);
+  subphase_timings_.restartFrom(fst_lb_phase);
+  phase_comm_.restartFrom(fst_lb_phase);
+  subphase_comm_.restartFrom(fst_lb_phase);
 }
 
 PhaseType ElementLBData::getPhase() const {
@@ -203,8 +211,7 @@ PhaseType ElementLBData::getPhase() const {
 }
 
 LoadType ElementLBData::getLoad(PhaseType const& phase) const {
-  auto iter = phase_timings_.find(phase);
-  if (iter != phase_timings_.end()) {
+  if (phase_timings_.contains(phase)) {
     auto const total_load = phase_timings_.at(phase);
 
     vt_debug_print(
@@ -276,13 +283,11 @@ SubphaseType ElementLBData::getSubPhase() const {
   return cur_subphase_;
 }
 
-void ElementLBData::releaseLBDataFromUnneededPhases(PhaseType phase, unsigned int look_back) {
-  if (phase >= look_back) {
-    phase_timings_.erase(phase - look_back);
-    subphase_timings_.erase(phase - look_back);
-    phase_comm_.erase(phase - look_back);
-    subphase_comm_.erase(phase - look_back);
-  }
+void ElementLBData::setHistoryCapacity(unsigned int hist_lb_data_count) {
+  phase_timings_.resize(hist_lb_data_count);
+  subphase_timings_.resize(hist_lb_data_count);
+  phase_comm_.resize(hist_lb_data_count);
+  subphase_comm_.resize(hist_lb_data_count);
 }
 
 std::size_t ElementLBData::getLoadPhaseCount() const {

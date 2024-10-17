@@ -64,6 +64,9 @@ using vt::vrt::collection::balance::CommMapType;
 using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
 using vt::vrt::collection::balance::DataMapType;
+using vt::vrt::collection::balance::LoadMapBufferType;
+using vt::vrt::collection::balance::CommMapBufferType;
+using vt::vrt::collection::balance::DataMapBufferType;
 
 struct StubModel : LoadModel {
 
@@ -71,9 +74,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const*,
-    std::unordered_map<PhaseType, DataMapType> const*) override {
+    LoadMapBufferType const* proc_load,
+    CommMapBufferType const*,
+    DataMapBufferType const*) override {
     proc_load_ = proc_load;
   }
 
@@ -95,24 +98,24 @@ struct StubModel : LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
-  std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
+  LoadMapBufferType const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   NodeType this_node = 0;
-  std::unordered_map<PhaseType, LoadMapType> proc_loads = {
-    {0, LoadMapType{
+  LoadMapBufferType proc_loads(4);
+  proc_loads[0] = LoadMapType{
       {ElementIDStruct{1,this_node}, {LoadType{10}, {}}},
-      {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}}},
-    {1, LoadMapType{
+      {ElementIDStruct{2,this_node}, {LoadType{40}, {}}}};
+  proc_loads[1] = LoadMapType{
       {ElementIDStruct{1,this_node}, {LoadType{20}, {}}},
-      {ElementIDStruct{2,this_node}, {LoadType{30}, {}}}}},
-    {2, LoadMapType{
+      {ElementIDStruct{2,this_node}, {LoadType{30}, {}}}};
+  proc_loads[2] = LoadMapType{
       {ElementIDStruct{1,this_node}, {LoadType{30}, {}}},
-      {ElementIDStruct{2,this_node}, {LoadType{10}, {}}}}},
-    {3, LoadMapType{
+      {ElementIDStruct{2,this_node}, {LoadType{10}, {}}}};
+  proc_loads[3] = LoadMapType{
       {ElementIDStruct{1,this_node}, {LoadType{40}, {}}},
-      {ElementIDStruct{2,this_node}, {LoadType{5}, {}}}}}};
+      {ElementIDStruct{2,this_node}, {LoadType{5}, {}}}};
 
   auto test_model =
     std::make_shared<MultiplePhases>(std::make_shared<StubModel>(), 4);

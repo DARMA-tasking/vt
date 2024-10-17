@@ -79,18 +79,8 @@ void LBDataRestartReader::startup() {
 }
 
 void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
-  auto find_max_data_phase = [&]() -> PhaseType {
-    if (lbdh.node_data_.empty()) {
-      return 0;
-    }
-    return std::max_element(
-             lbdh.node_data_.begin(), lbdh.node_data_.end(),
-             [](const auto& p1, const auto& p2) { return p1.first < p2.first; })
-      ->first;
-  };
-
   // Find last phase number
-  auto largest_data = find_max_data_phase();
+  auto largest_data = lbdh.node_data_.frontPhase();
   auto largest_identical =
     lbdh.identical_phases_.size() > 0 ? *lbdh.identical_phases_.rbegin() : 0;
   auto largest_skipped =
@@ -100,10 +90,9 @@ void LBDataRestartReader::readHistory(LBDataHolder const& lbdh) {
 
   PhaseType last_found_phase = 0;
   for (PhaseType phase = 0; phase < num_phases_; phase++) {
-    auto iter = lbdh.node_data_.find(phase);
-    if (iter != lbdh.node_data_.end()) {
+    if (lbdh.node_data_.contains(phase)) {
       last_found_phase = phase;
-      for (auto const& obj : iter->second) {
+      for (auto const& obj : lbdh.node_data_.at(phase)) {
         if (obj.first.isMigratable()) {
           if (history_[phase] == nullptr) {
             history_[phase] = std::make_shared<std::set<ElementIDStruct>>();

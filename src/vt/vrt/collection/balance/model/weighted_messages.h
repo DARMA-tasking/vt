@@ -65,9 +65,9 @@ struct WeightedMessages : public ComposedModel {
       per_byte_weight_(in_per_byte_weight) { }
 
   void setLoads(
-    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, CommMapType> const* proc_comm,
-    std::unordered_map<PhaseType, DataMapType> const* user_data
+    LoadMapBufferType const* proc_load,
+    CommMapBufferType const* proc_comm,
+    DataMapBufferType const* user_data
   ) override {
     proc_comm_ = proc_comm;
     ComposedModel::setLoads(proc_load, proc_comm, user_data);
@@ -77,7 +77,7 @@ struct WeightedMessages : public ComposedModel {
 
 private:
   // observer pointer to the underlying comm data
-  std::unordered_map<PhaseType, CommMapType> const* proc_comm_;
+  CommMapBufferType const* proc_comm_;
 
   LoadType per_msg_weight_;
   LoadType per_byte_weight_;
