@@ -125,7 +125,7 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   DenseIndexArrayType operator+(DenseIndexArrayType const& other) const;
   DenseIndexArrayType operator-(DenseIndexArrayType const& other) const;
 
-  // special accessors (x,y,z) enabled depending on the number of dimensions
+  // special accessors (x,y,z,u,v,w) enabled depending on the number of dimensions
   template <
     typename T = void, typename = typename std::enable_if<ndim >= 1, T>::type
   >
@@ -140,6 +140,21 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
     typename T = void, typename = typename std::enable_if<ndim >= 3, T>::type
   >
   IndexType z() const;
+
+  template <
+    typename T = void, typename = typename std::enable_if<ndim >= 4, T>::type
+  >
+  IndexType u() const;
+
+  template <
+    typename T = void, typename = typename std::enable_if<ndim >= 5, T>::type
+  >
+  IndexType v() const;
+
+  template <
+    typename T = void, typename = typename std::enable_if<ndim >= 6, T>::type
+  >
+  IndexType w() const;
 
   template <typename IndexT, NumDimensionsType nd>
   friend std::ostream& operator<<(

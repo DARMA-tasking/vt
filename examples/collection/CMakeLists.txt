@@ -10,6 +10,7 @@ set(
   insertable_collection
   reduce_integral
   transpose
+  4d_collection
 )
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})
