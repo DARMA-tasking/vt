@@ -44,15 +44,13 @@
 #include <vt/transport.h>
 
 #include <cstdlib>
-#include <cassert>
-#include <iostream>
 
 /// [Jacobi2D example]
 
 //
 // This code applies a few steps of the Jacobi iteration to
 // the linear system  A x = 0
-// where is a banded symmetric positive definite matrix.
+// where A is a banded symmetric positive definite matrix.
 // The initial guess for x is a made-up non-zero vector.
 // The exact solution is the vector 0.
 //
