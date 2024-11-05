@@ -71,7 +71,10 @@ static constexpr std::array<size_t, 9> const payloadSizes = {
   64, 128, 2048, 16384, 32768, 524288, 1048576, 2097152, 4194304};
 
 struct MyTest : PerfTestHarness {
-  MyTest() { DisableGlobalTimer(); }
+  MyTest() {
+    DisableGlobalTimer();
+    data.reserve(*std::max_element(payloadSizes.begin(), payloadSizes.end()));
+  }
 
   std::vector<int32_t> data;
 };

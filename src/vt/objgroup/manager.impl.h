@@ -289,7 +289,6 @@ ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
   // We only support allreduce with a single data type
   using DataT = typename std::tuple_element<0, typename Trait::TupleType>::type;
 
-  auto const this_node = vt::theContext()->getNode();
   auto const strong_proxy = vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()};
   auto const id = StateHolder::getNextID(strong_proxy);
 
