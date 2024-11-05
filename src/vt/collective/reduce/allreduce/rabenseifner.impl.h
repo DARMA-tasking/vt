@@ -93,7 +93,6 @@ void Rabenseifner::storeData(size_t id, Args&&... data) {
   }
 
   state.local_col_wait_count_++;
-  auto const is_ready = state.local_col_wait_count_ == local_num_elems_;
 }
 
 template <typename DataT, template <typename Arg> class Op>
