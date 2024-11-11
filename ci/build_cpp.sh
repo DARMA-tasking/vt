@@ -185,7 +185,6 @@ then
     git clone https://github.com/mosra/m.css
     cd m.css
     git checkout 699abdd5
-    sed -i '2600d' documentation/doxygen.py # remove incorrect assertion
     cd ../
 
     "$MCSS/documentation/doxygen.py" Doxyfile-mcss
