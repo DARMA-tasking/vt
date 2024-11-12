@@ -320,27 +320,25 @@ public:
    */
   BaseMsgType* getMsg() const { return msg_.get(); }
 
-#if vt_check_enabled(papi)
   /**
-   * \brief Start PAPI metrics map for the running context
+   * \brief Start metrics associated to this runnable for the running context
    */
-  void startPAPIMetrics() { contexts_.lb.startPAPIMetrics(); }
+  void startMetrics();
 
   /**
-   * \brief Stop PAPI metrics map for the running context
+   * \brief Stop metrics associated to this runnable for the running context
    * 
-   * \note has to be called after startPAPIMetrics
+   * \note has to be called after startMetrics
    * 
    */
-  void stopPAPIMetrics() { contexts_.lb.stopPAPIMetrics(); }
+  void stopMetrics();
 
   /**
-   * \brief Get the dictionnary of PAPI metrics associated with the runnable
+   * \brief Get the dictionnary of task metrics associated with this runnable
    *
    * \return the dictionnary
    */
-  std::unordered_map<std::string, uint64_t> getPAPIMetrics();
-#endif
+  std::unordered_map<std::string, uint64_t> getMetrics();
 
 #if vt_check_enabled(fcontext)
   /**

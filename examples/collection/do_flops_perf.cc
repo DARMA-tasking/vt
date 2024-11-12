@@ -148,7 +148,7 @@ public:
     iter_ += 1;
     fmt::print("-- Starting Iteration --\n");
 
-    vt::thePerfData()->startTaskMeasurement(vt::theContext()->getTask());
+    vt::theContext()->getTask()->startMetrics();
     
     // ----------------------------------------------------------
     // test non packed double precision floating point operations
@@ -164,8 +164,8 @@ public:
       proxy[0]
     );
 
-    vt::thePerfData()->stopTaskMeasurement(vt::theContext()->getTask());
-    std::unordered_map<std::string, uint64_t> res = vt::thePerfData()->getTaskMeasurements(vt::theContext()->getTask());
+    vt::theContext()->getTask()->stopMetrics();
+    std::unordered_map<std::string, uint64_t> res = vt::theContext()->getTask()->getMetrics();
     for (auto [name, value] : res) {
       fmt::print("  {}: {}\n", name, value);
     }

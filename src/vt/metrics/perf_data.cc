@@ -114,7 +114,7 @@ PerfData::~PerfData()
   }
 }
 
-void PerfData::startTaskMeasurement(runnable::RunnableNew* task)
+void PerfData::startTaskMeasurement()
 {
   for (int fd : event_fds_)
   {
@@ -125,7 +125,7 @@ void PerfData::startTaskMeasurement(runnable::RunnableNew* task)
   }
 }
 
-void PerfData::stopTaskMeasurement(runnable::RunnableNew* task)
+void PerfData::stopTaskMeasurement()
 {
   for (int fd : event_fds_)
   {
@@ -135,7 +135,7 @@ void PerfData::stopTaskMeasurement(runnable::RunnableNew* task)
   }
 }
 
-std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements(runnable::RunnableNew* task)
+std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements()
 {
   std::unordered_map<std::string, uint64_t> measurements;
   for (size_t i = 0; i < event_fds_.size(); ++i)
@@ -149,11 +149,6 @@ std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements(runnable
     }
   }
   return measurements;
-}
-
-void PerfData::purgeTask(runnable::RunnableNew* task)
-{
-  // No longer needed since we don't track tasks individually
 }
 
 std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> PerfData::getEventMap() const { return event_map_; }

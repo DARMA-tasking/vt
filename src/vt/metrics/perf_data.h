@@ -75,10 +75,9 @@ public:
   PerfData();
   ~PerfData();
 
-  void startTaskMeasurement(runnable::RunnableNew* task);
-  void stopTaskMeasurement(runnable::RunnableNew* task);
-  std::unordered_map<std::string, uint64_t> getTaskMeasurements(runnable::RunnableNew* task);
-  void purgeTask(runnable::RunnableNew* task);
+  void startTaskMeasurement();
+  void stopTaskMeasurement();
+  std::unordered_map<std::string, uint64_t> getTaskMeasurements();
 
   std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> getEventMap() const;
   void startup() override;

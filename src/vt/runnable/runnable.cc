@@ -199,16 +199,38 @@ void RunnableNew::run() {
 #endif
 }
 
+void RunnableNew::startMetrics() {
 #if vt_check_enabled(papi)
-std::unordered_map<std::string, uint64_t> RunnableNew::getPAPIMetrics() {
-  std::unordered_map<std::string, uint64_t> result = {};
+  contexts_.lb.startPAPIMetrics();
+#elif vt_check_enabled(perf)
+  vt::thePerfData()->startTaskMeasurement();
+#else
+  #error "vt wasn't configured with measurement options"
+#endif
+}
+
+void RunnableNew::stopMetrics() {
+#if vt_check_enabled(papi)
+  contexts_.lb.stopPAPIMetrics();
+#elif vt_check_enabled(perf)
+  vt::thePerfData()->stopTaskMeasurement();
+#else
+  #error "vt wasn't configured with measurement options"
+#endif
+}
+
+std::unordered_map<std::string, uint64_t> RunnableNew::getMetrics() {
+#if vt_check_enabled(papi)
   if (contexts_.has_lb)
   {
-    result = contexts_.lb.getPAPIMetrics();
+    return contexts_.lb.getPAPIMetrics();
   }
-  return result;
-}
+#elif vt_check_enabled(perf)
+  return vt::thePerfData()->getTaskMeasurements();
+#else
+  #error "vt wasn't configured with measurement options"
 #endif
+}
 
 void RunnableNew::start(TimeType time) {
   contexts_.setcontext.start();
@@ -267,12 +289,6 @@ void RunnableNew::send(elm::ElementIDStruct elm, MsgSizeType bytes) {
 
 /*static*/ void RunnableNew::operator delete(void* ptr) {
   RunnableNewAlloc::runnable->dealloc(reinterpret_cast<std::byte*>(ptr));
-  #if vt_check_enabled(perf)
-  if (vt::thePerfData() != nullptr && curRT->isInitialized())
-  {
-    vt::thePerfData()->purgeTask(reinterpret_cast<RunnableNew*>(ptr));
-  }
-  #endif
 }
 
 /*static*/
