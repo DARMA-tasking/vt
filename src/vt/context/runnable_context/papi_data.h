@@ -45,6 +45,7 @@
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_PAPI_DATA_H
 
 #include <papi.h>
+#include INCLUDE_FMT_CORE
 
 namespace vt { namespace ctx {
 
@@ -107,21 +108,18 @@ struct PAPIData {
       native = 0x0;
       retval = PAPI_event_name_to_code(native_events[i].c_str(), &native);
       if (retval != PAPI_OK) {
-        printf("Couldn't event_name_to_code for %s: PAPI error %d: %s\n",native_events[i].c_str(), retval, PAPI_strerror(retval));
-        exit(1);
+        vtAbort(fmt::format("Couldn't event_name_to_code for {}: PAPI error {}: {}\n", native_events[i].c_str(), retval, PAPI_strerror(retval)));
       }
       retval = PAPI_add_event(EventSet, native);
       if (retval != PAPI_OK) {
-        printf("Couldn't add %s to the PAPI Event Set: PAPI error %d: %s\n",native_events[i].c_str(), retval, PAPI_strerror(retval));
-        exit(1);
+        vtAbort(fmt::format("Couldn't add {} to the PAPI Event Set: PAPI error {}: {}\n", native_events[i].c_str(), retval, PAPI_strerror(retval)));
       }
     }
   }
 
   void handle_error (std::string info) const
   {
-    printf("%s: PAPI error %d: %s\n", info.c_str(), retval, PAPI_strerror(retval));
-    exit(1);
+    vtAbort(fmt::format("{}: PAPI error {}: {}\n", info.c_str(), retval, PAPI_strerror(retval)));
   }
 
   void start()

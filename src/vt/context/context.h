@@ -130,8 +130,7 @@ struct Context : runtime::component::Component<Context> {
 #if vt_check_enabled(papi)
   void handle_papi_error (int retval)
   {
-    printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
-    exit(1);
+    vtAbort(fmt::format("PAPI error {}: {}\n", retval, PAPI_strerror(retval)));
   }
 #endif
 
