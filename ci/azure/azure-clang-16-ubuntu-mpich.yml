@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (clang-16, ubuntu, mpich)
+name: PR tests (clang-16, ubuntu, mpich, json schema test)
 
 trigger:
   branches:
@@ -58,7 +58,7 @@ variables:
   VT_KOKKOS_ENABLED: 0
   VT_TV_ENABLED: 0
   CMAKE_CXX_STANDARD: 17
-  VT_CI_TEST_LB_SCHEMA: 0
+  VT_CI_TEST_LB_SCHEMA: 1
   RUN_FULL_CI: true
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-clang-16-cache
