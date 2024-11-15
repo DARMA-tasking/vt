@@ -101,7 +101,12 @@ struct TagPair {
   }
 
   TagType first() const { return t1_; }
+#pragma GCC diagnostic push  // ignore gcc-13 false positive
+#ifndef __clang__  // clang does not recognize "-Wmaybe-uninitialized"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
   TagType second() const { return t2_; }
+#pragma GCC diagnostic pop
 
 private:
   TagType t1_ = no_tag;
