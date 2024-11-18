@@ -23,7 +23,7 @@
         {
             "communications": [
                 {
-                    "bytes": 152.0,
+                    "bytes": 160.0,
                     "from": {
                         "collection_id": 7,
                         "home": 0,
