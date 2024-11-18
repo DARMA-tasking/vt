@@ -1,6 +1,6 @@
 ARG arch=amd64
 ARG ubuntu=20.04
-FROM ${arch}/ubuntu:${ubuntu} as base
+FROM ${arch}/ubuntu:${ubuntu} AS base
 
 ARG proxy=""
 ARG compiler=clang-11
@@ -14,22 +14,27 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
-    ${compiler} \
-    ${ubsan_enabled:+llvm-$(echo ${compiler} | cut -d- -f2)} \
-    ca-certificates \
-    ccache \
-    curl \
-    git \
-    less \
-    libomp-dev \
-    libomp5 \
-    make-guile \
-    ninja-build \
-    python3 \
-    valgrind \
-    wget \
-    zlib1g \
-    zlib1g-dev && \
+        ${compiler} \
+        ${ubsan_enabled:+llvm-$(echo ${compiler} | cut -d- -f2)} \
+        brotli \
+        ca-certificates \
+        ccache \
+        curl \
+        git \
+        less \
+        libomp-dev \
+        libomp5 \
+        make-guile \
+        ninja-build \
+        python3 \
+        python3-brotli \
+        python3-deepdiff \
+        python3-pip \
+        python3-schema \
+        valgrind \
+        wget \
+        zlib1g \
+        zlib1g-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -52,10 +57,7 @@ ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
 
 COPY ./ci/deps/mpich.sh mpich.sh
-RUN if [ "$ubuntu" = "18.04" ]; then \
-      ./mpich.sh 3.3.2 -j4; else \
-      ./mpich.sh 4.0.2 -j4; \
-    fi
+RUN ./mpich.sh 4.0.2 -j4
 
 ENV MPI_EXTRA_FLAGS="" \
     CMAKE_PREFIX_PATH="/lib/x86_64-linux-gnu/" \
@@ -109,7 +111,7 @@ ENV BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
 
 RUN /vt/ci/build_cpp.sh /vt /build
 
-FROM build as test
+FROM build AS test
 RUN /vt/ci/test_cpp.sh /vt /build
 
 RUN /vt/ci/build_vt_sample.sh /vt /build
