@@ -61,28 +61,6 @@ static constexpr std::size_t const default_num_objs = 1;
 static constexpr double const default_tol = 1.0e-02;
 static constexpr std::size_t const default_flops_per_iter = 100000;
 
-volatile double a = 0.5, b = 2.2;
-
-void
-dummy( void *array )
-{
-/* Confuse the compiler so as not to optimize
-   away the flops in the calling routine    */
-/* Cast the array as a void to eliminate unused argument warning */
-	( void ) array;
-}
-
-void
-do_flops( int n )
-{
-	int i;
-	double c = 0.11;
-
-	for ( i = 0; i < n; i++ ) {
-		c += a * b;
-	}
-	dummy( ( void * ) &c );
-}
 
 double pi(uint64_t n) {
   double sum = 0.0;
@@ -178,7 +156,7 @@ public:
 
     VecMsg() = default;
 
-    VecMsg(vt::IdxBase const& in_index) :
+    explicit VecMsg(vt::IdxBase const& in_index) :
       vt::CollectionMessage<GenericWork>(),
       from_index(in_index)
     { }
@@ -210,16 +188,15 @@ public:
     vt::IdxBase const myIdx = getIndex().x();
     auto proxy = this->getCollectionProxy();
 
-
     if (myIdx > 0) {
       proxy[myIdx - 1].send<VecMsg, &GenericWork::exchange>(
-        myIdx
+        VecMsg(myIdx)
       );
     }
 
     if (size_t(myIdx) < numObjs_ - 1) {
       proxy[myIdx + 1].send<VecMsg, &GenericWork::exchange>(
-        myIdx
+        VecMsg(myIdx)
       );
     }
   }
