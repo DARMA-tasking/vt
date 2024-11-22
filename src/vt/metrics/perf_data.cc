@@ -46,13 +46,13 @@
 namespace vt { namespace metrics {
 
 PerfData::PerfData()
+  : event_map_(example_event_map)
 {
-  event_map_ = example_event_map;
   const char* env_p = getenv("VT_EVENTS");
 
   // Check if the environment variable is set
   if (env_p == nullptr) {
-    vtWarn("Warning: Environment variable VT_EVENTS not set, defaulting to 'instructions' for the PAPI event set.\n");
+    // vtWarn("Warning: Environment variable VT_EVENTS not set, defaulting to 'instructions' for the perf event set.\n");
     event_names_.push_back("instructions");
   }
   else {
