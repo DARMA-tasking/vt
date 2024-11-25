@@ -135,27 +135,34 @@ void PerfData::stopTaskMeasurement()
   }
 }
 
-std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements()
-{
+std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
   std::unordered_map<std::string, uint64_t> measurements;
-  for (size_t i = 0; i < event_fds_.size(); ++i)
-  {
+
+  if (event_fds_.size() != event_names_.size()) {
+    vtAbort("Mismatch between event_fds_ and event_names_ sizes.");
+  }
+
+  for (size_t i = 0; i < event_fds_.size(); ++i) {
     uint64_t count = 0;
+
     if (event_fds_[i] != -1) {
       ssize_t bytesRead = read(event_fds_[i], &count, sizeof(uint64_t));
+
       if (bytesRead == sizeof(uint64_t)) {
         measurements[event_names_[i]] = count;
       } else if (bytesRead == -1) {
-        vtAbort("Failed to read perf event data for: " + event_names_[i] + ". Error: " + std::strerror(errno));
+        vtAbort("Failed to read perf event data for: " + event_names_[i] + 
+                ". Error: " + std::strerror(errno));
       } else {
-        vtAbort("Incomplete read for: " + event_names_[i] + ". Expected " + std::to_string(sizeof(uint64_t)) +
-               " bytes, but got " + std::to_string(bytesRead));
+        vtAbort("Incomplete read for: " + event_names_[i] + 
+                ". Expected " + std::to_string(sizeof(uint64_t)) +
+                " bytes, but got " + std::to_string(bytesRead));
       }
-    }
-    else {
+    } else {
       vtAbort("Invalid file descriptor for: " + event_names_[i]);
     }
   }
+
   return measurements;
 }
 
