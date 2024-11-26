@@ -151,10 +151,10 @@ std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
       if (bytesRead == sizeof(count)) {
         measurements[event_names_[i]] = count;
       } else if (bytesRead == -1) {
-        vtAbort("Failed to read perf event data for: " + event_names_[i] + 
+        vtAbort("Failed to read perf event data for: " + event_names_[i] +
                 ". Error: " + std::strerror(errno));
       } else {
-        vtAbort("Incomplete read for: " + event_names_[i] + 
+        vtAbort("Incomplete read for: " + event_names_[i] +
                 ". Expected " + std::to_string(sizeof(count)) +
                 " bytes, but got " + std::to_string(bytesRead));
       }

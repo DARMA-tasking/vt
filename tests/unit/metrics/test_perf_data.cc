@@ -63,18 +63,18 @@ double pi(uint64_t n) {
 
 TEST_F(TestPerfData, DefaultEventName) {
   unsetenv("VT_EVENTS");
-  
+
   vt::metrics::PerfData perf_data;
 
   auto event_map = perf_data.getEventMap();
-  
+
   ASSERT_NE(event_map.find("instructions"), event_map.end())
       << "Default event 'instructions' should be in the event map.";
 }
 
 TEST_F(TestPerfData, ValidCustomEventNames) {
   setenv("VT_EVENTS", "instructions,cache_references", 1);
-  
+
   vt::metrics::PerfData perf_data;
 
   auto event_map = perf_data.getEventMap();
@@ -98,7 +98,7 @@ TEST_F(TestPerfData, StartAndStopTaskMeasurement) {
   setenv("VT_EVENTS", "instructions", 1);
 
   vt::metrics::PerfData perf_data;
-  
+
   EXPECT_NO_THROW(perf_data.startTaskMeasurement())
       << "startTaskMeasurement() should not throw an exception.";
   EXPECT_NO_THROW(perf_data.stopTaskMeasurement())

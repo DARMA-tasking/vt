@@ -327,9 +327,9 @@ public:
 
   /**
    * \brief Stop metrics associated to this runnable for the running context
-   * 
+   *
    * \note has to be called after startMetrics
-   * 
+   *
    */
   void stopMetrics();
 

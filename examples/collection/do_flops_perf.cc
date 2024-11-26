@@ -126,7 +126,7 @@ public:
     fmt::print("-- Starting Iteration --\n");
 
     vt::theContext()->getTask()->startMetrics();
-    
+
     // ----------------------------------------------------------
     // test non packed double precision floating point operations
     // should result in ~4*n of these operations
