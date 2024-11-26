@@ -146,6 +146,11 @@ std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
     uint64_t count = 0;
 
     if (event_fds_[i] != -1) {
+      if (sizeof(count) != sizeof(uint64_t)) {
+          vtAbort("Buffer size mismatch: expected " + std::to_string(sizeof(uint64_t)) +
+                  " bytes, but got " + std::to_string(sizeof(count)));
+      }
+
       ssize_t bytesRead = read(event_fds_[i], &count, sizeof(count));
 
       if (bytesRead == sizeof(count)) {
