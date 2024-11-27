@@ -165,7 +165,8 @@ detail::ReduceStamp Reduce::reduceImmediate(
     envelopeSetGroup(msg->env, std::get<detail::StrongGroup>(scope_.get()).get());
   }
 
-  auto cur_id = id == detail::ReduceStamp{} ? generateNextID() : id;
+  auto default_stamp = detail::ReduceStamp{};
+  auto cur_id = id == default_stamp ? generateNextID() : id;
 
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
   msg->combine_handler_ = han;
