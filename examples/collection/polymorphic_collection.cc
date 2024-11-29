@@ -48,7 +48,7 @@ static constexpr int32_t const default_num_elms = 16;
 struct InitialConsTag{};
 
 struct Hello : vt::Collection<Hello, vt::Index1D> {
-  checkpoint_virtual_serialize_root()
+  magistrate_virtual_serialize_root()
 
   explicit Hello(InitialConsTag) {}
   explicit Hello(checkpoint::SERIALIZE_CONSTRUCT_TAG) {}
@@ -68,7 +68,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
 
 template <typename T>
 struct HelloTyped : Hello {
-  checkpoint_virtual_serialize_derived_from(Hello)
+  magistrate_virtual_serialize_derived_from(Hello)
 
   explicit HelloTyped(InitialConsTag);
   explicit HelloTyped(checkpoint::SERIALIZE_CONSTRUCT_TAG)
