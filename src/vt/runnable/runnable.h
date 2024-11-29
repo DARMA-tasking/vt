@@ -320,6 +320,7 @@ public:
    */
   BaseMsgType* getMsg() const { return msg_.get(); }
 
+#if vt_check_enabled(perf) || vt_check_enabled(papi)
   /**
    * \brief Start metrics associated to this runnable for the running context
    */
@@ -339,6 +340,7 @@ public:
    * \return the dictionnary
    */
   std::unordered_map<std::string, uint64_t> getMetrics();
+#endif
 
 #if vt_check_enabled(fcontext)
   /**

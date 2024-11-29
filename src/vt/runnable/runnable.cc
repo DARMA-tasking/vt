@@ -199,23 +199,26 @@ void RunnableNew::run() {
 #endif
 }
 
+#if vt_check_enabled(perf) || vt_check_enabled(papi)
 void RunnableNew::startMetrics() {
 #if vt_check_enabled(papi)
-  contexts_.lb.startPAPIMetrics();
+  if (contexts_.has_lb)
+  {
+    contexts_.lb.startPAPIMetrics();
+  }
 #elif vt_check_enabled(perf)
   vt::thePerfData()->startTaskMeasurement();
-#else
-  #error "vt wasn't configured with measurement options"
 #endif
 }
 
 void RunnableNew::stopMetrics() {
 #if vt_check_enabled(papi)
-  contexts_.lb.stopPAPIMetrics();
+  if (contexts_.has_lb)
+  {
+    contexts_.lb.stopPAPIMetrics();
+  }
 #elif vt_check_enabled(perf)
   vt::thePerfData()->stopTaskMeasurement();
-#else
-  #error "vt wasn't configured with measurement options"
 #endif
 }
 
@@ -227,10 +230,9 @@ std::unordered_map<std::string, uint64_t> RunnableNew::getMetrics() {
   }
 #elif vt_check_enabled(perf)
   return vt::thePerfData()->getTaskMeasurements();
-#else
-  #error "vt wasn't configured with measurement options"
 #endif
 }
+#endif
 
 void RunnableNew::start(TimeType time) {
   contexts_.setcontext.start();
