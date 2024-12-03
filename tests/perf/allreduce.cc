@@ -112,6 +112,17 @@ struct NodeObj {
   bool allreduce_done_ = false;
 };
 
+VT_PERF_TEST(MyTest, test_mpi_allreduce) {
+    for (auto payload_size : payloadSizes) {
+        data.resize(payload_size, theContext()->getNode() + 1);
+        std::vector<int> result(payload_size);
+        MPI_Barrier(MPI_COMM_WORLD);
+        StartTimer("MPI_Allreduce vector " + std::to_string(payload_size));
+        MPI_Allreduce(data.data(), result.data(), payload_size, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+        StopTimer("MPI_Allreduce vector " + std::to_string(payload_size));
+    }
+}
+
 VT_PERF_TEST(MyTest, test_reduce) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTest>>(
     "test_allreduce", this, "Reduce -> Bcast vector");
@@ -137,6 +148,17 @@ struct MyTestKokkos : PerfTestHarness {
 
   Kokkos::View<float*, Kokkos::HostSpace> view;
 };
+
+VT_PERF_TEST(MyTestKokkos, test_mpi_allreduce_kokkos) {
+    for (auto payload_size : payloadSizes) {
+        view = Kokkos::View<float*, Kokkos::HostSpace>("view", payload_size);
+        auto result = Kokkos::View<float*, Kokkos::HostSpace>("result", payload_size);
+        MPI_Barrier(MPI_COMM_WORLD);
+        StartTimer("MPI_Allreduce view " + std::to_string(payload_size));
+        MPI_Allreduce(view.data(), result.data(), payload_size, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        StopTimer("MPI_Allreduce view " + std::to_string(payload_size));
+    }
+}
 
 VT_PERF_TEST(MyTestKokkos, test_reduce_kokkos) {
   auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTestKokkos>>(
