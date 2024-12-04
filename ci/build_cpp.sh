@@ -116,7 +116,7 @@ fi
 
 if test "$VT_PAPI_ENABLED" -eq 1 && "$VT_PERF_ENABLED" -eq 1
 then
-    echo "Both PAPI and perf measurements are enabled; this isn't possible, please turn off one of these options. Exiting."
+    echo "Both PAPI and perf measurements are enabled; this is not supported. Please turn off one of these options. Exiting."
     exit
 fi
 
@@ -127,12 +127,13 @@ then
         { echo "papi already in lib... not downloading, building, and installing"; } 2>/dev/null
     else
         cd "${source_dir}/lib"
-        git clone --depth 1 https://github.com/icl-utk-edu/papi.git
+        papi_rev="papi-7-2-0b1-t"
+        git clone -b "${papi_rev}" --depth 1 https://github.com/icl-utk-edu/papi.git
         cd papi/src
         export PAPI_BUILD=${build_dir}/papi
         mkdir -p "$PAPI_BUILD"
         CC="${CC:-cc}" F77="${F77:-gfortran}" ./configure --prefix="$PAPI_BUILD/install"
-        make -j "${dashj}" && make install
+        make ${dashj} && make install
     fi
 fi
 

@@ -14,22 +14,22 @@ if (vt_perf_enabled)
             string(REPLACE "." ";" VERSION_LIST ${CMAKE_SYSTEM_VERSION})
             list(GET VERSION_LIST 0 KERNEL_MAJOR_VERSION)
             if (KERNEL_MAJOR_VERSION GREATER_EQUAL 4)
-                # # check if a simple perf stat runs without issues
-                # execute_process(
-                #     COMMAND "perf stat pwd"
-                #     RESULT_VARIABLE PERF_STAT_RESULT
-                #     OUTPUT_QUIET
-                #     ERROR_QUIET
-                # )
-                # if (PERF_STAT_RESULT EQUAL 0)
+                # check if a simple perf stat runs without issues
+                execute_process(
+                    COMMAND perf stat pwd
+                    RESULT_VARIABLE PERF_STAT_RESULT
+                    OUTPUT_QUIET
+                    ERROR_QUIET
+                )
+                if (PERF_STAT_RESULT EQUAL 0)
                     message(STATUS "Perf measurements enabled.")
                     set(vt_perf_enabled "1")
                     set(vt_perf_found "1")
-                # else ()
-                #     message(WARNING "Perf measurements enabled but couldn't run perf stat successfully. Disabling perf measurements.")
-                #     set(vt_perf_enabled "0")
-                #     set(vt_perf_found "0")
-                # endif ()
+                else ()
+                    message(WARNING "Perf measurements enabled but couldn't run perf stat successfully. Disabling perf measurements.")
+                    set(vt_perf_enabled "0")
+                    set(vt_perf_found "0")
+                endif ()
             else ()
                 message(WARNING "Perf measurements enabled but Kernel major version is less than 4. Disabling perf measurements.")
                 set(vt_perf_enabled "0")

@@ -52,7 +52,6 @@ PerfData::PerfData()
 
   // Check if the environment variable is set
   if (env_p == nullptr) {
-    // vtWarn("Warning: Environment variable VT_EVENTS not set, defaulting to 'instructions' for the perf event set.\n");
     event_names_.push_back("instructions");
   }
   else {

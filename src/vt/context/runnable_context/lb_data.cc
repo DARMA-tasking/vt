@@ -84,10 +84,10 @@ std::unordered_map<std::string, uint64_t> LBData::getPAPIMetrics() {
   for (size_t i = 0; i < papiData_->native_events.size(); i++) {
     papi_metrics[papiData_->native_events[i]] = papiData_->values[i];
   }
-  papi_metrics[std::string("real_time")] = papiData_->end_real_usec - papiData_->start_real_usec;
-  papi_metrics[std::string("real_cycles")] = papiData_->end_real_cycles - papiData_->start_real_cycles;
-  papi_metrics[std::string("virt_time")] = papiData_->end_virt_usec - papiData_->start_virt_usec;
-  papi_metrics[std::string("virt_cycles")] = papiData_->end_virt_cycles - papiData_->start_virt_cycles;
+  papi_metrics["real_time"] = papiData_->end_real_usec - papiData_->start_real_usec;
+  papi_metrics["real_cycles"] = papiData_->end_real_cycles - papiData_->start_real_cycles;
+  papi_metrics["virt_time"] = papiData_->end_virt_usec - papiData_->start_virt_usec;
+  papi_metrics["virt_cycles"] = papiData_->end_virt_cycles - papiData_->start_virt_cycles;
   return papi_metrics;
 }
 #endif
