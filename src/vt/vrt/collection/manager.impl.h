@@ -921,7 +921,8 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
   vtAssert(group_ready, "Must be ready");
 
   auto cur_stamp = stamp;
-  if (cur_stamp == ReduceStamp{}) {
+  auto default_stamp = ReduceStamp{};
+  if (cur_stamp == default_stamp) {
     cur_stamp = proxy(idx).tryGetLocalPtr()->getNextStamp();
   }
 

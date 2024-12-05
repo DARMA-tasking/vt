@@ -96,8 +96,6 @@ struct NodeObj {
 private:
   MyTest* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
-  int reduce_counter_ = -1;
-  int i = 0;
 };
 
 void handlerFinished(MyMsg* msg) {

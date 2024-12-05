@@ -102,8 +102,6 @@ private:
   HandlerType han;
   MyTest* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
-  int reduce_counter_ = -1;
-  int i = 0;
 };
 
 VT_PERF_TEST(MyTest, test_make_runnable_micro) {

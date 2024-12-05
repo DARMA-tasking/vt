@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (gcc-8, ubuntu, mpich, address sanitizer)
+name: PR tests (gcc-13, ubuntu, mpich, address sanitizer)
 
 trigger:
   branches:
@@ -25,10 +25,10 @@ variables:
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
-  UBUNTU: 18.04
+  UBUNTU: 24.04
   COMPILER_TYPE: gnu
-  COMPILER: gcc-8
-  HOST_COMPILER: gcc-8
+  COMPILER: gcc-13
+  HOST_COMPILER: gcc-13
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   VT_CODE_COVERAGE: 0
@@ -61,7 +61,7 @@ variables:
   VT_CI_TEST_LB_SCHEMA: 0
   RUN_FULL_CI: true
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: ubuntu-gcc-8-cache
+  cache_name: ubuntu-gcc-13-cache
   volume_name: ubuntu-cpp
   build_root: "$(CACHE)$(ARCH)-ubuntu-$(UBUNTU)-$(HOST_COMPILER)-$(COMPILER)-cache/"
   TS: 0

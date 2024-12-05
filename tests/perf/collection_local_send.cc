@@ -112,12 +112,9 @@ struct NodeObj {
 
 private:
   std::vector<MsgSharedPtr<TestCol::ColMsg>> msgs;
-  HandlerType han;
   MyTest* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
   vt::CollectionProxy<TestCol> col_proxy;
-  int reduce_counter_ = -1;
-  int i = 0;
   bool preallocate_ = false;
 };
 
