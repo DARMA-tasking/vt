@@ -131,7 +131,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: '$(compose_command) [% docker_target %] [% IF privileged %]--privileged[% END %]'
+          dockerComposeCommand: '$(compose_command) [% docker_target %][% IF privileged %] --privileged[% END %]'
       - task: DockerCompose@1
         displayName: Build container
         inputs:
