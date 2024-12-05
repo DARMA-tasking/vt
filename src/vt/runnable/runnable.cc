@@ -231,6 +231,7 @@ std::unordered_map<std::string, uint64_t> RunnableNew::getMetrics() {
 #elif vt_check_enabled(perf)
   return vt::thePerfData()->getTaskMeasurements();
 #endif
+  return {};
 }
 #endif
 

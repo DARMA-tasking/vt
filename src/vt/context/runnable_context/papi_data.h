@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  papi_data.h
+//                                 papi_data.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,11 +41,18 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_PAPI_DATA_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_PAPI_DATA_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_PAPI_DATA_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_PAPI_DATA_H
+
+#include "vt/config.h"
 
 #include <papi.h>
-#include INCLUDE_FMT_CORE
+
+#include <vector>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <cstdlib>
 
 namespace vt { namespace ctx {
 
@@ -56,98 +63,17 @@ namespace vt { namespace ctx {
  */
 struct PAPIData {
   int EventSet = PAPI_NULL;
-  int retval = 0;
+  int retval = PAPI_OK;
   uint64_t start_real_cycles = 0, end_real_cycles = 0, start_real_usec = 0, end_real_usec = 0;
   uint64_t start_virt_cycles = 0, end_virt_cycles = 0, start_virt_usec = 0, end_virt_usec = 0;
-  std::vector<std::string> native_events = {};
-  std::vector<uint64_t> values = {};
+  std::unordered_map<std::string, uint64_t> events = {};
 
-  PAPIData()
-  {
-    const char* env_p =  getenv("VT_EVENTS");
-
-    // check if the environment variable is set
-    if (env_p == nullptr) {
-      native_events.push_back("PAPI_TOT_INS");
-    }
-    else {
-      std::string env_str(env_p);
-
-      std::stringstream ss(env_str);
-      std::string item;
-
-      while (std::getline(ss, item, ','))
-      {
-        native_events.push_back(item);
-      }
-    }
-    values.resize(native_events.size());
-    std::fill(values.begin(), values.end(), 0);
-
-    /* Create an EventSet */
-    retval = PAPI_create_eventset(&EventSet);
-    if (retval != PAPI_OK)
-      handle_error("PAPIData Constructor: Couldn't create an event set: ");
-
-    /* Add one event to our EventSet,
-    must be done such that we can call PAPI_set_multiplex */
-    int native = 0x0;
-    retval = PAPI_event_name_to_code(native_events[0].c_str(), &native);
-    retval = PAPI_add_event(EventSet, native);
-    if (retval != PAPI_OK)
-      handle_error("PAPIData Constructor: Couldn't add instructions to event set: ");
-
-    /* Convert the EventSet to a multiplexed EventSet */
-    retval = PAPI_set_multiplex(EventSet);
-    if (retval != PAPI_OK)
-      handle_error("PAPIData Constructor: Couldn't convert event set to multiplexed: ");
-
-    // Starting at i=1 because we've already added the first event
-    for (size_t i = 1; i < native_events.size(); i++) {
-      native = 0x0;
-      retval = PAPI_event_name_to_code(native_events[i].c_str(), &native);
-      if (retval != PAPI_OK) {
-        vtAbort(fmt::format("Couldn't event_name_to_code for {}: PAPI error {}: {}\n", native_events[i].c_str(), retval, PAPI_strerror(retval)));
-      }
-      retval = PAPI_add_event(EventSet, native);
-      if (retval != PAPI_OK) {
-        vtAbort(fmt::format("Couldn't add {} to the PAPI Event Set: PAPI error {}: {}\n", native_events[i].c_str(), retval, PAPI_strerror(retval)));
-      }
-    }
-  }
-
-  void handle_error (std::string info) const
-  {
-    vtAbort(fmt::format("{}: PAPI error {}: {}\n", info.c_str(), retval, PAPI_strerror(retval)));
-  }
-
-  void start()
-  {
-    retval = PAPI_start(EventSet);
-    if (retval != PAPI_OK)
-      handle_error("PAPIData start: Starting counting events in the Event Set: ");
-
-    start_real_cycles = PAPI_get_real_cyc();
-    start_real_usec = PAPI_get_real_usec();
-    start_virt_cycles = PAPI_get_virt_cyc();
-    start_virt_usec = PAPI_get_virt_usec();
-  }
-
-  void stop()
-  {
-    retval = PAPI_stop(EventSet, reinterpret_cast<long long*>(values.data()));
-    if (retval != PAPI_OK)
-      handle_error("PAPIData stop: Stopping the counting of events in the Event Set: ");
-
-    end_real_cycles = PAPI_get_real_cyc();
-    end_real_usec = PAPI_get_real_usec();
-    end_virt_cycles = PAPI_get_virt_cyc();
-    end_virt_usec = PAPI_get_virt_usec();
-  }
-
-
+  PAPIData();
+  void start();
+  void stop();
+  void handle_error(const std::string &info) const;
 };
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_DATA_PAPI_DATA_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_PAPI_DATA_H*/

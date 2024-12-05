@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           test_papi_data.cc
+//                              test_papi_data.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -69,9 +69,9 @@ TEST_F(TestPAPIData, DefaultEventSet) {
 
   vt::ctx::PAPIData papi_data;
 
-  ASSERT_FALSE(papi_data.native_events.empty())
+  ASSERT_FALSE(papi_data.events.empty())
       << "Default event set should not be empty.";
-  EXPECT_EQ(papi_data.native_events[0], "PAPI_TOT_INS")
+  EXPECT_NE(papi_data.events.find("PAPI_TOT_INS"), papi_data.events.end())
       << "Default event should be 'PAPI_TOT_INS'.";
 }
 
@@ -80,11 +80,11 @@ TEST_F(TestPAPIData, CustomEventSet) {
 
   vt::ctx::PAPIData papi_data;
 
-  ASSERT_EQ(papi_data.native_events.size(), 2)
+  ASSERT_EQ(papi_data.events.size(), 2)
       << "Custom event set should have two events.";
-  EXPECT_EQ(papi_data.native_events[0], "PAPI_TOT_INS")
+  EXPECT_NE(papi_data.events.find("PAPI_TOT_INS"), papi_data.events.end())
       << "First event should be 'PAPI_TOT_INS'.";
-  EXPECT_EQ(papi_data.native_events[1], "PAPI_TOT_CYC")
+  EXPECT_NE(papi_data.events.find("PAPI_TOT_CYC"), papi_data.events.end())
       << "Second event should be 'PAPI_TOT_CYC'.";
 }
 
@@ -92,7 +92,7 @@ TEST_F(TestPAPIData, InvalidEventTriggersAbort) {
   setenv("VT_EVENTS", "invalid-event", 1);
 
   EXPECT_THROW(
-      vt::ctx::PAPIData(),
+      vt::ctx::PAPIData papi_data,
       std::runtime_error
   ) << "Invalid event names should trigger vtAbort and throw an exception.";
 }
@@ -128,11 +128,11 @@ TEST_F(TestPAPIData, MeasureMultipleEvents) {
   EXPECT_NO_THROW(papi_data.stop())
       << "Calling stop() should not throw.";
 
-  ASSERT_EQ(papi_data.values.size(), 2)
+  ASSERT_EQ(papi_data.events.size(), 2)
       << "Two events should be measured.";
-  EXPECT_GT(papi_data.values[0], 0)
+  EXPECT_GT(papi_data.events["PAPI_TOT_INS"], 0)
       << "First event (PAPI_TOT_INS) should record positive values.";
-  EXPECT_GT(papi_data.values[1], 0)
+  EXPECT_GT(papi_data.events["PAPI_TOT_CYC"], 0)
       << "Second event (PAPI_TOT_CYC) should record positive values.";
 }
 
@@ -141,7 +141,7 @@ TEST_F(TestPAPIData, MultiplexedEventSet) {
 
   vt::ctx::PAPIData papi_data;
 
-  ASSERT_EQ(papi_data.native_events.size(), 3)
+  ASSERT_EQ(papi_data.events.size(), 3)
       << "Custom event set should have three events.";
   EXPECT_NO_THROW(papi_data.start())
       << "Calling start() should not throw.";
@@ -153,13 +153,14 @@ TEST_F(TestPAPIData, MultiplexedEventSet) {
   EXPECT_NO_THROW(papi_data.stop())
       << "Calling stop() should not throw.";
 
-  ASSERT_EQ(papi_data.values.size(), 3)
+  ASSERT_EQ(papi_data.events.size(), 3)
       << "Three events should be measured.";
-  for (size_t i = 0; i < papi_data.values.size(); ++i) {
-    EXPECT_GT(papi_data.values[i], 0)
-        << fmt::format("Event {} should record positive values.", papi_data.native_events[i]);
+  for (const auto& event : papi_data.events) {
+    EXPECT_GT(event.second, 0)
+        << fmt::format("Event {} should record positive values.", event.first);
   }
 }
+
 
 #endif
 

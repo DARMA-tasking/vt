@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  perf_data.cc
+//                                 perf_data.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -91,7 +91,7 @@ PerfData::PerfData()
       pe.pinned = 1;
     }
 
-    int fd = perf_event_open(&pe, 0, -1, -1, PERF_FLAG_FD_CLOEXEC);
+    int fd = perfEventOpen(&pe, 0, -1, -1, PERF_FLAG_FD_CLOEXEC);
     if (fd == -1)
     {
       cleanupBeforeAbort();
@@ -193,7 +193,7 @@ void PerfData::cleanupBeforeAbort()
   event_fds_.clear();
 }
 
-long PerfData::perf_event_open(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags)
+long PerfData::perfEventOpen(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags)
 {
   return syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
 }

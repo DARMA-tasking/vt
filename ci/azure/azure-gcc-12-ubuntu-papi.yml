@@ -1,65 +1,77 @@
-[% warning %]
+###############################################################################
+############## Warning this is a generated file---do not modify ###############
+###############################################################################
 
-name: [% test_type %] ([% test_configuration %])
+name: PR tests (gcc-12, ubuntu, papi)
 
-[% triggers %]
+trigger:
+  branches:
+    include:
+      - develop
+      - main
 
-[% pr_pattern %]
+pr:
+  drafts: false
+  autoCancel: true
+  branches:
+    include:
+      - '*'
+
 
 resources:
 - repo: self
 
 variables:
   tag: '$(Build.BuildId)'
-  REPO: [% repo %]
-  ARCH: [% arch %]
-[% linux_env %]
-  COMPILER_TYPE: [% compiler_type %]
-  COMPILER: [% compiler %]
-  HOST_COMPILER: [% IF host_compiler %][% host_compiler %][% ELSE %][% compiler %][% END %]
-  BUILD_TYPE: [% build_type %]
-  ULIMIT_CORE: [% ulimit_core %]
-  VT_CODE_COVERAGE: [% vt_code_coverage %]
-  VT_LB: [% vt_lb %]
-  VT_TRACE: [% vt_trace %]
-  VT_TRACE_RT: [% vt_trace_rt %]
-  VT_TRACE_ONLY: [% vt_trace_only %]
-  VT_MIMALLOC: [% vt_mimalloc %]
-  VT_DOCS: [% vt_docs %]
-  VT_ASAN: [% vt_asan %]
-  VT_UBSAN: [% vt_ubsan %]
-  VT_WERROR: [% vt_werror %]
-  VT_POOL: [% vt_pool %]
-  VT_EXTENDED_TESTS: [% vt_extended_tests %]
-  VT_TESTS_NUM_NODES: [% vt_tests_num_nodes %]
-  VT_EXTERNAL_FMT: [% vt_external_fmt %]
-  VT_UNITY_BUILD: [% vt_unity_build %]
-  VT_PRODUCTION_BUILD: [% vt_production_build %]
-  VT_FCONTEXT: [% vt_fcontext %]
-  VT_ZOLTAN: [% vt_zoltan %]
-  VT_CI_BUILD: [% vt_ci_build %]
-  VT_DIAGNOSTICS: [% vt_diagnostics %]
-  VT_NO_COLOR: [% vt_no_color %]
-  VT_BUILD_SHARED_LIBS: [% vt_build_shared_libs %]
-  VT_INCLUSION: [% vt_inclusion %]
-  VT_DEBUG_VERBOSE: [% vt_debug_verbose %]
-  VT_KOKKOS_ENABLED: [% vt_kokkos_enabled %]
-  VT_TV_ENABLED: [% vt_tv_enabled %]
-  VT_PERF_ENABLED: [% vt_perf_enabled %]
-  VT_PAPI_ENABLED: [% vt_papi_enabled %]
-  CMAKE_CXX_STANDARD: [% cmake_cxx_standard %]
-  VT_CI_TEST_LB_SCHEMA: [% vt_ci_test_lb_schema %]
-  RUN_FULL_CI: [% run_full_ci %]
+  REPO: lifflander1/vt
+  ARCH: amd64
+  UBUNTU: 22.04
+  COMPILER_TYPE: gnu
+  COMPILER: gcc-12
+  HOST_COMPILER: gcc-12
+  BUILD_TYPE: release
+  ULIMIT_CORE: 0
+  VT_CODE_COVERAGE: 0
+  VT_LB: 1
+  VT_TRACE: 0
+  VT_TRACE_RT: 0
+  VT_TRACE_ONLY: 1
+  VT_MIMALLOC: 0
+  VT_DOCS: 0
+  VT_ASAN: 0
+  VT_UBSAN: 0
+  VT_WERROR: 1
+  VT_POOL: 1
+  VT_EXTENDED_TESTS: 1
+  VT_TESTS_NUM_NODES: 2
+  VT_EXTERNAL_FMT: 0
+  VT_UNITY_BUILD: 1
+  VT_PRODUCTION_BUILD: 0
+  VT_FCONTEXT: 0
+  VT_ZOLTAN: 0
+  VT_CI_BUILD: 1
+  VT_DIAGNOSTICS: 1
+  VT_NO_COLOR: 1
+  VT_BUILD_SHARED_LIBS: 0
+  VT_INCLUSION: TPL
+  VT_DEBUG_VERBOSE: 0
+  VT_KOKKOS_ENABLED: 0
+  VT_TV_ENABLED: 0
+  VT_PERF_ENABLED: 0
+  VT_PAPI_ENABLED: 1
+  CMAKE_CXX_STANDARD: 17
+  VT_CI_TEST_LB_SCHEMA: 0
+  RUN_FULL_CI: true
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: [% cache_name %]
-  volume_name: [% volume_name %]
-  build_root: "$(CACHE)[% build_root %]"
+  cache_name: ubuntu-gcc-12-cache
+  volume_name: ubuntu-cpp
+  build_root: "$(CACHE)$(ARCH)-ubuntu-$(UBUNTU)-$(HOST_COMPILER)-$(COMPILER)-cache/"
   TS: 0
   TS_YEAR: 0
   TS_MONTH: 0
   TS_DAY: 0
-[% IF lsan_options %]  LSAN_OPTIONS: [% lsan_options %][% END %]
-[% IF ubsan_options %]  UBSAN_OPTIONS: [% ubsan_options %][% END %]
+
+
 
 stages:
 - stage: Build
@@ -68,7 +80,7 @@ stages:
   - job: Build
     displayName: Build
     pool:
-      [% workflow_runs_on %]
+      vmImage: 'ubuntu-22.04'
     timeoutInMinutes: 180
     steps:
       - checkout: self
@@ -131,7 +143,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: '$(compose_command) [% docker_target %] [% IF privileged %]--privileged[% END %]'
+          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean '
       - task: DockerCompose@1
         displayName: Build container
         inputs:
@@ -139,7 +151,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'run [% IF privileged %]--privileged [% END %][% docker_target %]'
+          dockerComposeCommand: 'run ubuntu-cpp-clean'
         env:
           CODECOV_TOKEN: $(codecov_token)
       - task: Bash@3
@@ -171,7 +183,7 @@ stages:
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'push [% docker_target %]'
+          dockerComposeCommand: 'push ubuntu-cpp-clean'
       - task: Bash@3
         displayName: Create artifacts
         continueOnError: true
