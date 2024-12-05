@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (clang-14, ubuntu, mpich, verbose, papi)
+name: PR tests (clang-14, ubuntu, mpich, papi)
 
 trigger:
   branches:
