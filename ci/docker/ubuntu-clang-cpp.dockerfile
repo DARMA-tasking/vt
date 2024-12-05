@@ -18,6 +18,7 @@ RUN apt-get update -y -q && \
         ${ubsan_enabled:+llvm-$(echo ${compiler} | cut -d- -f2)} \
         brotli \
         ca-certificates \
+        linux-tools-$(uname -r) \
         ccache \
         curl \
         git \
