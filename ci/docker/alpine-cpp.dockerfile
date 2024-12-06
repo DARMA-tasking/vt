@@ -1,6 +1,6 @@
 
 ARG arch=amd64
-FROM alpine:3.16 as base
+FROM alpine:3.16 AS base
 
 ARG proxy=""
 
@@ -50,9 +50,9 @@ ENV CC=mpicc \
     CXX=mpicxx \
     PATH=/usr/lib/ccache/:$PATH
 
-FROM base as build
+FROM base AS build
 COPY . /vt
 RUN /vt/ci/build_cpp.sh /vt /build
 
-FROM build as test
+FROM build AS test
 RUN /vt/ci/test_cpp.sh /vt /build
