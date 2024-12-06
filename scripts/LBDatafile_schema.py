@@ -93,7 +93,65 @@ LBDatafile_schema = Schema(
                         'bytes': float
                     }
                 ],
-                Optional('user_defined'): dict
+                Optional('user_defined'): dict,
+                Optional('lb_iterations'): [
+                    {
+                        'id': int,
+                        'tasks': [
+                            {
+                                'entity': And({
+                                    Optional('collection_id'): int,
+                                    'home': int,
+                                    Optional('id'): int,
+                                    Optional('seq_id'): int,
+                                    Optional('index'): [int],
+                                    'type': str,
+                                    'migratable': bool,
+                                    Optional('objgroup_id'): int
+                                }, validate_ids),
+                                'node': int,
+                                'resource': str,
+                                Optional('subphases'): [
+                                    {
+                                        'id': int,
+                                        'time': float,
+                                    }
+                                ],
+                                'time': float,
+                                Optional('user_defined'): dict,
+                                Optional('attributes'): dict
+                            },
+                        ],
+                        Optional('communications'): [
+                            {
+                                'type': str,
+                                'to': And({
+                                    'type': str,
+                                    Optional('id'): int,
+                                    Optional('seq_id'): int,
+                                    Optional('home'): int,
+                                    Optional('collection_id'): int,
+                                    Optional('migratable'): bool,
+                                    Optional('index'): [int],
+                                    Optional('objgroup_id'): int,
+                                }, validate_ids),
+                                'messages': int,
+                                'from': And({
+                                    'type': str,
+                                    Optional('id'): int,
+                                    Optional('seq_id'): int,
+                                    Optional('home'): int,
+                                    Optional('collection_id'): int,
+                                    Optional('migratable'): bool,
+                                    Optional('index'): [int],
+                                    Optional('objgroup_id'): int,
+                                }, validate_ids),
+                                'bytes': float
+                            }
+                        ],
+                        Optional('user_defined'): dict
+                    }
+                ]
             },
         ]
     }
