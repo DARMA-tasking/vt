@@ -395,7 +395,7 @@ protected:
 template <typename T>
 struct DiagnosticValue : DiagnosticBase {
 #if !vt_check_enabled(trace_only)
-  checkpoint_virtual_serialize_derived_from(DiagnosticBase)
+  magistrate_virtual_serialize_derived_from(DiagnosticBase)
 #endif
   /**
    * \internal \brief Create a new typed diagnostic value

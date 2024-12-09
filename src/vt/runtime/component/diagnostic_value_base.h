@@ -69,7 +69,7 @@ namespace vt { namespace runtime { namespace component { namespace detail {
  */
 struct DiagnosticBase {
   #if !vt_check_enabled(trace_only)
-  checkpoint_virtual_serialize_root()
+  magistrate_virtual_serialize_root()
 #endif
   /**
    * \internal \brief Construct a new diagnostic base value

@@ -63,7 +63,7 @@ namespace vt { namespace vrt { namespace collection { namespace storage {
  */
 struct StoreElmBase {
   /// uses polymorphic serialization
-  checkpoint_virtual_serialize_root()
+  magistrate_virtual_serialize_root()
 
   using json = nlohmann::json;
 
@@ -214,7 +214,7 @@ struct StoreElm<
 > : StoreElmBase
 {
   /// polymorphic serializer for derived class
-  checkpoint_virtual_serialize_derived_from(StoreElmBase)
+  magistrate_virtual_serialize_derived_from(StoreElmBase)
 
   /**
    * \brief Construct with value
@@ -329,7 +329,7 @@ struct StoreElm<
 > : StoreElmBase
 {
   /// polymorphic serializer for derived class
-  checkpoint_virtual_serialize_derived_from(StoreElmBase)
+  magistrate_virtual_serialize_derived_from(StoreElmBase)
 
   static_assert(
     std::is_trivially_copyable<T>::value and not std::is_pointer<T>::value,
