@@ -142,17 +142,23 @@ std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
   }
 
   for (size_t i = 0; i < event_fds_.size(); ++i) {
-    uint64_t count = 0;
+    int buffer = 0;
 
     if (event_fds_[i] != -1) {
-      if (sizeof(count) != sizeof(uint64_t)) {
-          vtAbort("Buffer size mismatch: expected " + std::to_string(sizeof(uint64_t)) +
-                  " bytes, but got " + std::to_string(sizeof(count)));
+      if (sizeof(buffer) != sizeof(int)) {
+          vtAbort("Buffer size mismatch: expected " + std::to_string(sizeof(int)) +
+                  " bytes, but got " + std::to_string(sizeof(buffer)));
       }
 
-      ssize_t bytesRead = read(event_fds_[i], &count, sizeof(count));
+      ssize_t bytesRead = read(event_fds_[i], &buffer, sizeof(buffer));
 
-      if (bytesRead == sizeof(count)) {
+      if (bytesRead == sizeof(buffer)) {
+        if (buffer < 0) {
+          vtAbort("Negative value read from perf event data for: " + event_names_[i] +
+                  ". Value: " + std::to_string(buffer));
+        }
+
+        uint64_t count = static_cast<uint64_t>(buffer);
         measurements[event_names_[i]] = count;
       } else if (bytesRead == -1) {
         vtAbort("Failed to read perf event data for: " + event_names_[i] +
