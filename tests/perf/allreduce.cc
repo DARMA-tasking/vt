@@ -41,86 +41,47 @@
 //@HEADER
 */
 
-#include "common/test_harness.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/collective/reduce/allreduce/type.h"
-#include "vt/collective/reduce/operators/functors/max_op.h"
-#include "vt/collective/reduce/operators/functors/plus_op.h"
-#include "vt/configs/error/config_assert.h"
-#include "vt/configs/types/types_type.h"
-#include "vt/context/context.h"
-#include "vt/group/group_manager.h"
-#include "vt/scheduler/scheduler.h"
-#include <unordered_map>
-#include <vt/collective/collective_ops.h>
-#include <vt/objgroup/manager.h>
-#include <vt/messaging/active.h>
-#include <vt/collective/reduce/allreduce/rabenseifner.h>
-#include <vt/collective/reduce/allreduce/recursive_doubling.h>
-#include <vt/vrt/collection/manager.h>
-#include <vt/collective/reduce/allreduce/state_holder.h>
-
-#ifdef MAGISTRATE_KOKKOS_ENABLED
+#include <vt/transport.h>
 #include <Kokkos_Core.hpp>
-#endif
 
-using namespace vt;
-using namespace vt::tests::perf::common;
+static constexpr std::size_t PAYLOAD_SIZE = 2048;
 
-static constexpr std::array<size_t, 2> const payloadSizes = {
-  2048};
+struct MyTest {
+  MyTest() { data_.reserve(PAYLOAD_SIZE); }
 
-struct MyTest : PerfTestHarness {
-  MyTest() {
-    DisableGlobalTimer();
-    data.reserve(*std::max_element(payloadSizes.begin(), payloadSizes.end()));
-  }
-
-  std::vector<int32_t> data;
+  std::vector<int32_t> data_;
 };
 
 template <typename TestT>
 struct NodeObj {
-  explicit NodeObj(TestT* test_obj, const std::string& name)
-    : base_name_(name),
-      test_obj_(test_obj) {
-    for (auto const payload_size : payloadSizes) {
-      timer_names_[payload_size] =
-        fmt::format("{} {}", base_name_, payload_size);
-    }
-  }
+  explicit NodeObj(TestT* test_obj, const std::string&)
+    : test_obj_(test_obj) { }
 
   void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
 
-  void handlerVec(const std::vector<int32_t>& vec) {
-    test_obj_->StopTimer(timer_names_.at(vec.size()));
-    allreduce_done_ = true;
-  }
+  void handlerVec(const std::vector<int32_t>& vec) { allreduce_done_ = true; }
 
-#if MAGISTRATE_KOKKOS_ENABLED
   template <typename Scalar>
   void handlerView(Kokkos::View<Scalar*, Kokkos::HostSpace> view) {
-    test_obj_->StopTimer(timer_names_.at(view.extent(0)));
     allreduce_done_ = true;
   }
-#endif // MAGISTRATE_KOKKOS_ENABLED
 
-  std::string base_name_ = {};
-  std::unordered_map<size_t, std::string> timer_names_ = {};
   TestT* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
   bool allreduce_done_ = false;
 };
 
 // VT_PERF_TEST(MyTest, test_mpi_allreduce) {
-//     for (auto payload_size : payloadSizes) {
-//         data.resize(payload_size, theContext()->getNode() + 1);
-//         std::vector<int> result(payload_size);
-//         MPI_Barrier(MPI_COMM_WORLD);
-//         StartTimer("MPI_Allreduce vector " + std::to_string(payload_size));
-//         MPI_Allreduce(data.data(), result.data(), payload_size, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-//         StopTimer("MPI_Allreduce vector " + std::to_string(payload_size));
-//     }
+//   for (auto payload_size : payloadSizes) {
+//     data.resize(payload_size, theContext()->getNode() + 1);
+//     std::vector<int> result(payload_size);
+//     MPI_Barrier(MPI_COMM_WORLD);
+//     StartTimer("MPI_Allreduce vector " + std::to_string(payload_size));
+//     MPI_Allreduce(
+//       data.data(), result.data(), payload_size, MPI_INT, MPI_SUM,
+//       MPI_COMM_WORLD);
+//     StopTimer("MPI_Allreduce vector " + std::to_string(payload_size));
+//   }
 // }
 
 // VT_PERF_TEST(MyTest, test_reduce) {
@@ -141,48 +102,72 @@ struct NodeObj {
 //   }
 // }
 
-#if MAGISTRATE_KOKKOS_ENABLED
+struct MyTestKokkos {
+  MyTestKokkos() = default;
+  void TestFunc();
 
-struct MyTestKokkos : PerfTestHarness {
-  MyTestKokkos() { DisableGlobalTimer(); }
-
-  Kokkos::View<float*, Kokkos::HostSpace> view;
+  Kokkos::View<float*, Kokkos::HostSpace> view_;
 };
 
 // VT_PERF_TEST(MyTestKokkos, test_mpi_allreduce_kokkos) {
-//     for (auto payload_size : payloadSizes) {
-//         view = Kokkos::View<float*, Kokkos::HostSpace>("view", payload_size);
-//         auto result = Kokkos::View<float*, Kokkos::HostSpace>("result", payload_size);
-//         MPI_Barrier(MPI_COMM_WORLD);
-//         StartTimer("MPI_Allreduce view " + std::to_string(payload_size));
-//         MPI_Allreduce(view.data(), result.data(), payload_size, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-//         StopTimer("MPI_Allreduce view " + std::to_string(payload_size));
-//     }
+//   for (auto payload_size : payloadSizes) {
+//     view = Kokkos::View<float*, Kokkos::HostSpace>("view", payload_size);
+//     auto result =
+//       Kokkos::View<float*, Kokkos::HostSpace>("result", payload_size);
+//     MPI_Barrier(MPI_COMM_WORLD);
+//     StartTimer("MPI_Allreduce view " + std::to_string(payload_size));
+//     MPI_Allreduce(
+//       view.data(), result.data(), payload_size, MPI_FLOAT, MPI_SUM,
+//       MPI_COMM_WORLD);
+//     StopTimer("MPI_Allreduce view " + std::to_string(payload_size));
+//   }
 // }
 
-VT_PERF_TEST(MyTestKokkos, test_reduce_kokkos) {
+// VT_PERF_TEST(MyTestKokkos, test_reduce_kokkos) {
+void MyTestKokkos::TestFunc() {
   auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj<MyTestKokkos>>(
     "test_allreduce", this, "Reduce -> Bcast view");
+  auto my_node_ = vt::theContext()->getNode();
 
-  for (auto payload_size : payloadSizes) {
-    view = Kokkos::View<float*, Kokkos::HostSpace>("view", payload_size);
-    for (uint32_t i = 0; i < view.extent(0); ++i) {
-      view(i) = static_cast<float>(my_node_);
-    }
-
-    theCollective()->barrier();
-    auto* obj_ptr = grp_proxy[my_node_].get();
-    StartTimer(obj_ptr->timer_names_.at(payload_size));
-
-    grp_proxy.allreduce<
-      &NodeObj<MyTestKokkos>::handlerView<float>, collective::PlusOp>(view);
-
-    theSched()->runSchedulerWhile(
-      [obj_ptr] { return !obj_ptr->allreduce_done_; });
-    obj_ptr->allreduce_done_ = false;
-    // StopTimer(obj_ptr->timer_names_.at(payload_size)); // ?
+  view_ = Kokkos::View<float*, Kokkos::HostSpace>("view", PAYLOAD_SIZE);
+  for (uint32_t i = 0; i < view_.extent(0); ++i) {
+    view_(i) = static_cast<float>(my_node_);
   }
-}
-#endif
 
-VT_PERF_TEST_MAIN()
+  vt::theCollective()->barrier();
+  auto* obj_ptr = grp_proxy[my_node_].get();
+
+  grp_proxy.allreduce<
+    &NodeObj<MyTestKokkos>::handlerView<float>, vt::collective::PlusOp>(view_);
+
+  vt::theSched()->runSchedulerWhile(
+    [obj_ptr] { return !obj_ptr->allreduce_done_; });
+  obj_ptr->allreduce_done_ = false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+int main(int argc, char** argv) {
+  Kokkos::ScopeGuard guard(argc, argv);
+
+  // MPI_Init(&argc, &argv);
+  // int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  vt::initialize(argc, argv);
+  vt::NodeType this_node = vt::theContext()->getNode();
+
+  constexpr auto num_runs = 10000;
+  MyTestKokkos test;
+
+  for (uint32_t run_num = 1; run_num <= num_runs; ++run_num) {
+    test.TestFunc();
+    vt::theSched()->runSchedulerWhile([] { return !vt::rt->isTerminated(); });
+  }
+
+  // MPI_Finalize();
+  vt::finalize();
+
+  return 0;
+}
