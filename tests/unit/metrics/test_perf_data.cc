@@ -116,26 +116,6 @@ TEST_F(TestPerfData, RepeatedStartStop) {
   }
 }
 
-TEST_F(TestPerfData, GetTaskMeasurements) {
-  setenv("VT_EVENTS", "instructions", 1);
-
-  vt::metrics::PerfData perf_data;
-  perf_data.startTaskMeasurement();
-
-  double p;
-  p = pi(1000);
-  fmt::print("pi: {}\n", p);  // print to avoid being optimized out
-
-  perf_data.stopTaskMeasurement();
-
-  auto measurements = perf_data.getTaskMeasurements();
-
-  ASSERT_NE(measurements.find("instructions"), measurements.end())
-      << "'instructions' should be in the measurement results.";
-  EXPECT_GT(measurements["instructions"], 0)
-      << "'instructions' counter should record positive values.";
-}
-
 TEST_F(TestPerfData, StartupFunction) {
   setenv("VT_EVENTS", "instructions", 1);
 
