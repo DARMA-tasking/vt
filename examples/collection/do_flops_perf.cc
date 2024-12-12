@@ -41,25 +41,14 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
-#include <vt/metrics/perf_data.h>
-
-#include <cstdlib>
-#include <cassert>
-#include <iostream>
-
 /// [Do Flops example]
 
 #include <vt/transport.h>
 #include <vt/runnable/invoke.h>
 
 #include <cstdlib>
-#include <cassert>
-#include <iostream>
 
-static constexpr std::size_t const default_nrow_object = 8;
 static constexpr std::size_t const default_num_objs = 100;
-static constexpr double const default_tol = 1.0e-02;
 static constexpr std::size_t const default_flops_per_iter = 100000;
 
 double pi(uint64_t n) {
@@ -72,55 +61,7 @@ double pi(uint64_t n) {
   return 4.0*sum;
 }
 
-struct NodeObj {
-  bool is_finished_ = false;
-  void workFinishedHandler() { is_finished_ = true; }
-  bool isWorkFinished() { return is_finished_; }
-};
-using NodeObjProxy = vt::objgroup::proxy::Proxy<NodeObj>;
-
 struct GenericWork : vt::Collection<GenericWork, vt::Index1D> {
-
-private:
-  size_t iter_ = 0;
-  size_t msgReceived_ = 0, totalReceive_ = 0;
-  size_t numObjs_ = 1;
-  size_t flopsPerIter_ = default_flops_per_iter;
-  size_t maxIter_ = 8;
-  NodeObjProxy objProxy_;
-
-public:
-  explicit GenericWork() :
-    iter_(0), msgReceived_(0), totalReceive_(0),
-    numObjs_(1), flopsPerIter_(default_flops_per_iter), maxIter_(8)
-  { }
-
-  using BlankMsg = vt::CollectionMessage<GenericWork>;
-
-  struct WorkMsg : vt::CollectionMessage<GenericWork> {
-    size_t numObjects = 0;
-    size_t flopsPerIter = 0;
-    size_t iterMax = 0;
-    NodeObjProxy objProxy;
-
-    WorkMsg() = default;
-
-    WorkMsg(const size_t nobjs, const size_t flops, const size_t itMax, NodeObjProxy proxy) :
-      numObjects(nobjs), flopsPerIter(flops), iterMax(itMax), objProxy(proxy)
-    { }
-  };
-
-  void checkCompleteCB() {
-    auto const iter_max_reached = iter_ > maxIter_;
-
-    if (iter_max_reached) {
-      fmt::print("\n Maximum Number of Iterations Reached. \n\n");
-      objProxy_.broadcast<&NodeObj::workFinishedHandler>();
-    } else {
-      fmt::print(" ## ITER {} completed. \n", iter_);
-    }
-  }
-
   void doIteration() {
     iter_ += 1;
     fmt::print("-- Starting Iteration --\n");
@@ -130,16 +71,9 @@ public:
     // ----------------------------------------------------------
     // test non packed double precision floating point operations
     // should result in ~4*n of these operations
-
-    double p;
-    p = pi(10000000);
+    double p = pi(10000000);
     fmt::print("pi: {}\n", p);
     // ----------------------------------------------------------
-
-    auto proxy = this->getCollectionProxy();
-    proxy.reduce<&GenericWork::checkCompleteCB, vt::collective::MaxOp>(
-      proxy[0]
-    );
 
     vt::theContext()->getTask()->stopMetrics();
     std::unordered_map<std::string, uint64_t> res = vt::theContext()->getTask()->getMetrics();
@@ -150,83 +84,13 @@ public:
     fmt::print("-- Stopping Iteration --\n");
   }
 
-  struct VecMsg : vt::CollectionMessage<GenericWork> {
-    using MessageParentType = vt::CollectionMessage<GenericWork>;
-    vt_msg_serialize_if_needed_by_parent_or_type1(vt::IdxBase);
-
-    VecMsg() = default;
-
-    explicit VecMsg(vt::IdxBase const& in_index) :
-      vt::CollectionMessage<GenericWork>(),
-      from_index(in_index)
-    { }
-
-    template <typename Serializer>
-    void serialize(Serializer& s) {
-      MessageParentType::serialize(s);
-      s | from_index;
-    }
-
-    vt::IdxBase from_index = 0;
-  };
-
-  void exchange(VecMsg *msg) {
-    msgReceived_ += 1;
-
-    if (msgReceived_ == totalReceive_) {
-      msgReceived_ = 0;
-      doIteration();
-    }
+  void init(int in_flops_per_iter) {
+    flopsPerIter_ = in_flops_per_iter;
   }
 
-  void doIter([[maybe_unused]] BlankMsg *msg) {
-    if (numObjs_ == 1) {
-      doIteration();
-      return;
-    }
-
-    vt::IdxBase const myIdx = getIndex().x();
-    auto proxy = this->getCollectionProxy();
-
-    if (myIdx > 0) {
-      proxy[myIdx - 1].send<VecMsg, &GenericWork::exchange>(
-        VecMsg(myIdx)
-      );
-    }
-
-    if (size_t(myIdx) < numObjs_ - 1) {
-      proxy[myIdx + 1].send<VecMsg, &GenericWork::exchange>(
-        VecMsg(myIdx)
-      );
-    }
-  }
-
-  void init() {
-    totalReceive_ = 2;
-
-    if (getIndex().x() == 0) {
-      totalReceive_ -= 1;
-    }
-
-    if (getIndex().x() == numObjs_ - 1) {
-      totalReceive_ -= 1;
-    }
-  }
-
-  void init(WorkMsg* msg) {
-    numObjs_ = msg->numObjects;
-    flopsPerIter_ = msg->flopsPerIter;
-    maxIter_ = msg->iterMax;
-    objProxy_ = msg->objProxy;
-
-    init();
-  }
+private:
+  size_t flopsPerIter_ = 0;
 };
-
-bool isWorkDone(vt::objgroup::proxy::Proxy<NodeObj> const& proxy) {
-  auto const this_node = vt::theContext()->getNode();
-  return proxy[this_node].invoke<&NodeObj::isWorkFinished>();
-}
 
 int main(int argc, char** argv) {
   size_t num_objs = default_num_objs;
@@ -259,7 +123,6 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>("examples_generic_work");
   using BaseIndexType = typename vt::Index1D::DenseIndexType;
   auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
@@ -268,19 +131,14 @@ int main(int argc, char** argv) {
     .bulkInsert()
     .wait();
 
-  vt::runInEpochCollective([col_proxy, grp_proxy, num_objs, flopsPerIter, maxIter]{
-    col_proxy.broadcastCollective<GenericWork::WorkMsg, &GenericWork::init>(
-      num_objs, flopsPerIter, maxIter, grp_proxy
-    );
+  vt::runInEpochCollective([&]{
+    col_proxy.broadcastCollective<&GenericWork::init>(flopsPerIter);
   });
 
-  while(!isWorkDone(grp_proxy)) {
-    vt::runInEpochCollective([col_proxy]{
-      col_proxy.broadcastCollective<
-        GenericWork::BlankMsg, &GenericWork::doIter
-      >();
+  for (std::size_t i = 0; i < maxIter; i++) {
+    vt::runInEpochCollective([&]{
+      col_proxy.broadcastCollective<&GenericWork::doIteration>(flopsPerIter);
     });
-
     vt::thePhase()->nextPhaseCollective();
   }
 
