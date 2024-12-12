@@ -199,6 +199,42 @@ void RunnableNew::run() {
 #endif
 }
 
+#if vt_check_enabled(perf) || vt_check_enabled(papi)
+void RunnableNew::startMetrics() {
+#if vt_check_enabled(papi)
+  if (contexts_.has_lb)
+  {
+    contexts_.lb.startPAPIMetrics();
+  }
+#elif vt_check_enabled(perf)
+  vt::thePerfData()->startTaskMeasurement();
+#endif
+}
+
+void RunnableNew::stopMetrics() {
+#if vt_check_enabled(papi)
+  if (contexts_.has_lb)
+  {
+    contexts_.lb.stopPAPIMetrics();
+  }
+#elif vt_check_enabled(perf)
+  vt::thePerfData()->stopTaskMeasurement();
+#endif
+}
+
+std::unordered_map<std::string, uint64_t> RunnableNew::getMetrics() {
+#if vt_check_enabled(papi)
+  if (contexts_.has_lb)
+  {
+    return contexts_.lb.getPAPIMetrics();
+  }
+#elif vt_check_enabled(perf)
+  return vt::thePerfData()->getTaskMeasurements();
+#endif
+  return {};
+}
+#endif
+
 void RunnableNew::start(TimeType time) {
   contexts_.setcontext.start();
   if (contexts_.has_td) contexts_.td.start();

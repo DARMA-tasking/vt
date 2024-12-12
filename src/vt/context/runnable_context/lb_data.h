@@ -47,6 +47,10 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/elm/elm_lb_data.fwd.h"
 
+#if vt_check_enabled(papi)
+#include "vt/context/runnable_context/papi_data.h"
+#endif
+
 namespace vt { namespace ctx {
 
 /**
@@ -79,7 +83,11 @@ struct LBData {
     : lb_data_(in_lb_data),
       cur_elm_id_(in_elm_id),
       should_instrument_(true)
-  { }
+  {
+#if vt_check_enabled(papi)
+    papi_data_ = std::make_unique<PAPIData>();
+#endif
+  }
 
   /**
    * \brief Return whether time is required
@@ -115,10 +123,35 @@ struct LBData {
    */
   ElementIDStruct const& getCurrentElementID() const;
 
+#if vt_check_enabled(papi)
+  /**
+   * \brief Start PAPI metrics map for the running context
+   */
+  void startPAPIMetrics() { papi_data_->start(); }
+
+  /**
+   * \brief Stop PAPI metrics map for the running context
+   *
+   * \note has to be called after startPAPIMetrics
+   *
+   */
+  void stopPAPIMetrics() { papi_data_->stop(); }
+
+  /**
+   * \brief Get the current PAPI metrics map for the running context
+   *
+   * \return the PAPI metrics map
+   */
+  std::unordered_map<std::string, uint64_t> getPAPIMetrics();
+#endif
+
 private:
   ElementLBData* lb_data_ = nullptr;     /**< Element LB data */
   ElementIDStruct cur_elm_id_ = {};   /**< Current element ID  */
   bool should_instrument_ = false;    /**< Whether we are instrumenting */
+#if vt_check_enabled(papi)
+  std::unique_ptr<PAPIData> papi_data_;
+#endif
 };
 
 }} /* end namespace vt::ctx */

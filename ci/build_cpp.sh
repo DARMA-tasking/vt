@@ -114,6 +114,29 @@ then
     fi
 fi
 
+if test "$VT_PAPI_ENABLED" -eq 1 && "$VT_PERF_ENABLED" -eq 1
+then
+    echo "Both PAPI and perf measurements are enabled; this is not supported. Please turn off one of these options. Exiting."
+    exit
+fi
+
+if test "${VT_PAPI_ENABLED:-0}" -eq 1
+then
+    if test -d "${source_dir}/lib/papi"
+    then
+        { echo "papi already in lib... not downloading, building, and installing"; } 2>/dev/null
+    else
+        cd "${source_dir}/lib"
+        papi_rev="papi-7-2-0b1-t"
+        git clone -b "${papi_rev}" --depth 1 https://github.com/icl-utk-edu/papi.git
+        cd papi/src
+        export PAPI_BUILD=${build_dir}/papi
+        mkdir -p "$PAPI_BUILD"
+        CC="${CC:-cc}" F77="${F77:-gfortran}" ./configure --prefix="$PAPI_BUILD/install"
+        make "${dashj}" && make install
+    fi
+fi
+
 if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1
 then
     export Zoltan_DIR=${ZOLTAN_DIR:-""}
@@ -141,9 +164,12 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_ubsan_enabled="${VT_UBSAN_ENABLED:-0}" \
       -Dvt_werror_enabled="${VT_WERROR_ENABLED:-0}" \
       -Dvt_pool_enabled="${VT_POOL_ENABLED:-1}" \
+      -Dvt_build_tests="${VT_BUILD_TESTS:-1}" \
       -Dvt_build_extended_tests="${VT_EXTENDED_TESTS_ENABLED:-1}" \
       -Dvt_zoltan_enabled="${VT_ZOLTAN_ENABLED:-0}" \
       -Dvt_tv_enabled="${VT_TV_ENABLED:-0}" \
+      -Dvt_papi_enabled="${VT_PAPI_ENABLED:-0}" \
+      -Dvt_perf_enabled="${VT_PERF_ENABLED:-0}" \
       -Dvt_production_build_enabled="${VT_PRODUCTION_BUILD_ENABLED:-0}" \
       -Dvt_unity_build_enabled="${VT_UNITY_BUILD_ENABLED:-0}" \
       -Dvt_diagnostics_enabled="${VT_DIAGNOSTICS_ENABLED:-1}" \
@@ -163,6 +189,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_C_COMPILER="${CC:-cc}" \
       -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS:-}" \
       -Dmagistrate_ROOT="$MAGISTRATE_BUILD/install" \
+      -Dpapi_ROOT="${build_dir}/papi/install" \
       -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}" \
       -DCMAKE_INSTALL_PREFIX="$VT_BUILD/install" \
       -Dvt_ci_build="${VT_CI_BUILD:-0}" \

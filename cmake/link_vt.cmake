@@ -35,6 +35,7 @@ function(link_target_with_vt)
     LINK_JSON
     LINK_BROTLI
     LINK_VT_TV
+    LINK_PAPI
   )
   set(
     multiValueArg
@@ -228,6 +229,22 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${YAMLCPP_LIBRARY}
     )
+  endif()
+
+  if (NOT DEFINED ARG_LINK_PAPI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_PAPI)
+    if (vt_papi_enabled)
+      if (${ARG_DEBUG_LINK})
+        message(STATUS "link_target_with_vt: papi=${ARG_LINK_PAPI}")
+      endif()
+      # message(STATUS "target_link_libraries: ${ARG_TARGET} PUBLIC  ${ARG_BUILD_TYPE} ${PAPI_LIBRARY}")
+      # message(STATUS "target_include_directories: ${ARG_TARGET} PUBLIC  ${ARG_BUILD_TYPE} ${PAPI_INCLUDE_DIR}")
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${PAPI_LIBRARY}
+      )
+      target_include_directories(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${PAPI_INCLUDE_DIR}
+      )
+    endif()
   endif()
 
   if (${vt_mimalloc_enabled})

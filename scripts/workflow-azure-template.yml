@@ -45,6 +45,8 @@ variables:
   VT_DEBUG_VERBOSE: [% vt_debug_verbose %]
   VT_KOKKOS_ENABLED: [% vt_kokkos_enabled %]
   VT_TV_ENABLED: [% vt_tv_enabled %]
+  VT_PERF_ENABLED: [% vt_perf_enabled %]
+  VT_PAPI_ENABLED: [% vt_papi_enabled %]
   CMAKE_CXX_STANDARD: [% cmake_cxx_standard %]
   VT_CI_TEST_LB_SCHEMA: [% vt_ci_test_lb_schema %]
   RUN_FULL_CI: [% run_full_ci %]
@@ -129,7 +131,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: '$(compose_command) [% docker_target %]'
+          dockerComposeCommand: '$(compose_command) [% docker_target %][% IF privileged %] --privileged[% END %]'
       - task: DockerCompose@1
         displayName: Build container
         inputs:
@@ -137,7 +139,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'run [% docker_target %]'
+          dockerComposeCommand: 'run [% IF privileged %]--privileged [% END %][% docker_target %]'
         env:
           CODECOV_TOKEN: $(codecov_token)
       - task: Bash@3

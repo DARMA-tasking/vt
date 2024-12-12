@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (clang-13, alpine, mpich)
+name: PR tests (clang-18, ubuntu, papi)
 
 trigger:
   branches:
@@ -25,10 +25,10 @@ variables:
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
-
+  UBUNTU: 24.04
   COMPILER_TYPE: clang
-  COMPILER: clang-13
-  HOST_COMPILER: clang-13
+  COMPILER: clang-18
+  HOST_COMPILER: clang-18
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   VT_CODE_COVERAGE: 0
@@ -46,7 +46,7 @@ variables:
   VT_TESTS_NUM_NODES: 2
   VT_EXTERNAL_FMT: 0
   VT_UNITY_BUILD: 1
-  VT_PRODUCTION_BUILD: 1
+  VT_PRODUCTION_BUILD: 0
   VT_FCONTEXT: 0
   VT_ZOLTAN: 0
   VT_CI_BUILD: 1
@@ -58,14 +58,14 @@ variables:
   VT_KOKKOS_ENABLED: 0
   VT_TV_ENABLED: 0
   VT_PERF_ENABLED: 0
-  VT_PAPI_ENABLED: 0
+  VT_PAPI_ENABLED: 1
   CMAKE_CXX_STANDARD: 17
   VT_CI_TEST_LB_SCHEMA: 0
   RUN_FULL_CI: true
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: alpine-clang-13-cache
-  volume_name: alpine-cpp
-  build_root: "$(CACHE)$(ARCH)-alpine-$(HOST_COMPILER)-$(COMPILER)-cache/"
+  cache_name: ubuntu-clang-18-cache
+  volume_name: ubuntu-cpp
+  build_root: "$(CACHE)$(ARCH)-ubuntu-$(UBUNTU)-$(HOST_COMPILER)-$(COMPILER)-cache/"
   TS: 0
   TS_YEAR: 0
   TS_MONTH: 0
@@ -143,7 +143,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: '$(compose_command) alpine-cpp-clean'
+          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean'
       - task: DockerCompose@1
         displayName: Build container
         inputs:
@@ -151,7 +151,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'run alpine-cpp-clean'
+          dockerComposeCommand: 'run ubuntu-cpp-clean'
         env:
           CODECOV_TOKEN: $(codecov_token)
       - task: Bash@3
@@ -183,7 +183,7 @@ stages:
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'push alpine-cpp-clean'
+          dockerComposeCommand: 'push ubuntu-cpp-clean'
       - task: Bash@3
         displayName: Create artifacts
         continueOnError: true

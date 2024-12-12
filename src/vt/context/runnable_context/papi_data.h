@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           features_featureswitch.h
+//                                 papi_data.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,30 +41,43 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
-#define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_PAPI_DATA_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_PAPI_DATA_H
 
-/*
- * Strings for various vt features
+
+#include "vt/config.h"
+
+#if vt_check_enabled(papi)
+#include <papi.h>
+
+#include <vector>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <cstdlib>
+
+namespace vt { namespace ctx {
+
+/**
+ * \struct PAPIData
+ *
+ * \brief Structure for storing Performance API (PAPI) related data structures
  */
+struct PAPIData {
+  int event_set = PAPI_NULL;
+  int retval = PAPI_OK;
+  uint64_t start_real_cycles = 0, end_real_cycles = 0, start_real_usec = 0, end_real_usec = 0;
+  uint64_t start_virt_cycles = 0, end_virt_cycles = 0, start_virt_usec = 0, end_virt_usec = 0;
+  std::unordered_map<std::string, uint64_t> events = {};
 
-#define vt_feature_str_bit_check_overflow "Check bitfield overflow"
-#define vt_feature_str_diagnostics        "Performance analysis diagnostics"
-#define vt_feature_str_fcontext           "User-level threading with fcontext"
-#define vt_feature_str_lblite             "Load Balancing for Collections"
-#define vt_feature_str_memory_pool        "Memory Pooling"
-#define vt_feature_str_mimalloc           "mimalloc memory allocator"
-#define vt_feature_str_mpi_access_guards  "MPI access guards"
-#define vt_feature_str_mpi_rdma           "Native RDMA with MPI"
-#define vt_feature_str_no_feature         "No feature"
-#define vt_feature_str_no_pool_alloc_env  "No memory pool envelope"
-#define vt_feature_str_print_term_msgs    "Print Termination Control Messages"
-#define vt_feature_str_priorities         "Message priorities"
-#define vt_feature_str_production_build   "Production Build (assertions and " \
-                                          "debug prints disabled)"
-#define vt_feature_str_trace_enabled      "Tracing Projections"
-#define vt_feature_str_zoltan             "Zoltan for load balancing"
-#define vt_feature_str_papi               "PAPI for event measurement"
-#define vt_feature_str_perf               "perf for event measurement"
+  PAPIData();
+  void start();
+  void stop();
+  void handle_error(const std::string &info) const;
+};
 
-#endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/
+}} /* end namespace vt::ctx */
+
+#endif
+
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_PAPI_DATA_H*/
