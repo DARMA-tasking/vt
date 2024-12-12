@@ -142,12 +142,12 @@ std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
   }
 
   for (size_t i = 0; i < event_fds_.size(); ++i) {
-    int buffer = 0;
+    int64_t buffer = 0;
 
     if (event_fds_[i] != -1) {
-      if (sizeof(buffer) != sizeof(int)) {
-          vtAbort("Buffer size mismatch: expected " + std::to_string(sizeof(int)) +
-                  " bytes, but got " + std::to_string(sizeof(buffer)));
+      if (sizeof(buffer) != sizeof(int64_t)) {
+        vtAbort("Buffer size mismatch: expected " + std::to_string(sizeof(int64_t)) +
+                " bytes, but got " + std::to_string(sizeof(buffer)));
       }
 
       ssize_t bytesRead = read(event_fds_[i], &buffer, sizeof(buffer));
@@ -165,7 +165,7 @@ std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
                 ". Error: " + std::strerror(errno));
       } else {
         vtAbort("Incomplete read for: " + event_names_[i] +
-                ". Expected " + std::to_string(sizeof(count)) +
+                ". Expected " + std::to_string(sizeof(buffer)) +
                 " bytes, but got " + std::to_string(bytesRead));
       }
     } else {
