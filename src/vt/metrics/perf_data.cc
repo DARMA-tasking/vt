@@ -48,13 +48,12 @@ namespace vt { namespace metrics {
 PerfData::PerfData()
   : event_map_(example_event_map)
 {
-  const char* env_p = getenv("VT_EVENTS");
+  char const* env_p = getenv("VT_EVENTS");
 
   // Check if the environment variable is set
   if (env_p == nullptr) {
     event_names_.push_back("instructions");
-  }
-  else {
+  } else {
     std::string env_str(env_p);
     std::stringstream ss(env_str);
     std::string item;
@@ -65,18 +64,15 @@ PerfData::PerfData()
     }
   }
 
-  for (const auto &event_name : event_names_)
-  {
-    if (event_map_.find(event_name) == event_map_.end())
-    {
+  for (const auto &event_name : event_names_) {
+    if (event_map_.find(event_name) == event_map_.end()) {
       cleanupBeforeAbort();
       vtAbort("Event name isn't in known perf events map: " + event_name);
     }
   }
 
   // Initialize perf events once and store file descriptors
-  for (const auto &event_name : event_names_)
-  {
+  for (const auto &event_name : event_names_) {
     struct perf_event_attr pe = {};
     pe.type = event_map_.at(event_name).first;
     pe.size = sizeof(struct perf_event_attr);
@@ -92,8 +88,7 @@ PerfData::PerfData()
     }
 
     int fd = perfEventOpen(&pe, 0, -1, -1, PERF_FLAG_FD_CLOEXEC);
-    if (fd == -1)
-    {
+    if (fd == -1) {
       cleanupBeforeAbort();
       vtAbort("Error opening perf event: " + std::string(strerror(errno)));
     }
@@ -102,21 +97,16 @@ PerfData::PerfData()
   }
 }
 
-PerfData::~PerfData()
-{
-  for (int fd : event_fds_)
-  {
-    if (fd != -1)
-    {
+PerfData::~PerfData() {
+  for (int fd : event_fds_) {
+    if (fd != -1) {
       close(fd);
     }
   }
 }
 
-void PerfData::startTaskMeasurement()
-{
-  for (int fd : event_fds_)
-  {
+void PerfData::startTaskMeasurement() {
+  for (int fd : event_fds_) {
     if (fd != -1) {
       ioctl(fd, PERF_EVENT_IOC_RESET, 0);
       ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
@@ -124,10 +114,8 @@ void PerfData::startTaskMeasurement()
   }
 }
 
-void PerfData::stopTaskMeasurement()
-{
-  for (int fd : event_fds_)
-  {
+void PerfData::stopTaskMeasurement() {
+  for (int fd : event_fds_) {
     if (fd != -1) {
       ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
     }
@@ -182,25 +170,16 @@ void PerfData::startup() { event_map_ = example_event_map; }
 
 std::string PerfData::name() { return "PerfData"; }
 
-template <typename SerializerT>
-void PerfData::serialize(SerializerT& s) {
-  s | event_map_;
-}
-
-void PerfData::cleanupBeforeAbort()
-{
-  for (int fd : event_fds_)
-  {
-    if (fd != -1)
-    {
+void PerfData::cleanupBeforeAbort() {
+  for (int fd : event_fds_) {
+    if (fd != -1) {
       close(fd);
     }
   }
   event_fds_.clear();
 }
 
-long PerfData::perfEventOpen(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags)
-{
+long PerfData::perfEventOpen(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags) {
   return syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
 }
 

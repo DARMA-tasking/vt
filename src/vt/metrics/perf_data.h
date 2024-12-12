@@ -84,7 +84,11 @@ public:
   std::string name() override;
 
   template <typename SerializerT>
-  void serialize(SerializerT& s);
+  void PerfData::serialize(SerializerT& s) {
+    s | event_map_
+      | event_names_
+      | event_fds_;
+  }
 
 private:
   std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> event_map_;

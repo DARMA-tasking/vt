@@ -41,12 +41,6 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
-
-#include <cstdlib>
-#include <cassert>
-#include <iostream>
-
 /// [Do Flops example]
 
 #include <vt/transport.h>

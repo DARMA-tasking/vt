@@ -65,6 +65,14 @@ struct RunnableNew {};
 
 #include <mpi.h>
 
+#if vt_check_enabled(papi)
+# include <papi.h>
+void handle_papi_error (int retval)
+{
+  vtAbort(fmt::format("PAPI error {}: {}\n", retval, PAPI_strerror(retval)));
+}
+#endif
+
 // This cannot use the normal debug_print macros because they rely on context
 // being live to print contextual information
 #define DEBUG_VT_CONTEXT 0

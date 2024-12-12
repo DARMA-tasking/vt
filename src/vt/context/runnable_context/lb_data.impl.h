@@ -63,7 +63,7 @@ LBData::LBData(ElmT* in_elm, MsgT* msg)
     should_instrument_(msg->lbLiteInstrument())
 {
 #if vt_check_enabled(papi)
-  papiData_ = std::make_unique<PAPIData>();
+  papi_data_ = std::make_unique<PAPIData>();
 #endif
   // record the communication LB data right away!
   theCollection()->recordLBData(in_elm, msg);

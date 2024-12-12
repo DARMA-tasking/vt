@@ -50,7 +50,7 @@
 
 namespace vt { namespace metrics {
 
-const std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> example_event_map = {
+std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> const example_event_map = {
     {"cycles", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES)},
     {"instructions", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS)},
     {"cache_references", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_REFERENCES)},

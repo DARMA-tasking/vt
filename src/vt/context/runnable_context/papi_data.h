@@ -44,8 +44,10 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_PAPI_DATA_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_PAPI_DATA_H
 
+
 #include "vt/config.h"
 
+#if vt_check_enabled(papi)
 #include <papi.h>
 
 #include <vector>
@@ -62,7 +64,7 @@ namespace vt { namespace ctx {
  * \brief Structure for storing Performance API (PAPI) related data structures
  */
 struct PAPIData {
-  int EventSet = PAPI_NULL;
+  int event_set = PAPI_NULL;
   int retval = PAPI_OK;
   uint64_t start_real_cycles = 0, end_real_cycles = 0, start_real_usec = 0, end_real_usec = 0;
   uint64_t start_virt_cycles = 0, end_virt_cycles = 0, start_virt_usec = 0, end_virt_usec = 0;
@@ -75,5 +77,7 @@ struct PAPIData {
 };
 
 }} /* end namespace vt::ctx */
+
+#endif
 
 #endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_PAPI_DATA_H*/

@@ -40,16 +40,20 @@
 // *****************************************************************************
 //@HEADER
 */
+
+
 #include "vt/context/runnable_context/papi_data.h"
+
+#if vt_check_enabled(papi)
 
 namespace vt { namespace ctx {
 
 PAPIData::PAPIData()
-  : EventSet(PAPI_NULL), retval(0), 
+  : event_set(PAPI_NULL), retval(0),
     start_real_cycles(0), end_real_cycles(0), start_real_usec(0), end_real_usec(0),
-    start_virt_cycles(0), end_virt_cycles(0), start_virt_usec(0), end_virt_usec(0) 
+    start_virt_cycles(0), end_virt_cycles(0), start_virt_usec(0), end_virt_usec(0)
 {
-  const char* env_p = getenv("VT_EVENTS");
+  char const* env_p = getenv("VT_EVENTS");
 
   if (env_p == nullptr) {
     events["PAPI_TOT_INS"] = 0;
@@ -62,32 +66,34 @@ PAPIData::PAPIData()
     }
   }
 
-  retval = PAPI_create_eventset(&EventSet);
-  if (retval != PAPI_OK)
+  retval = PAPI_create_eventset(&event_set);
+  if (retval != PAPI_OK) {
     handle_error("PAPIData Constructor: Couldn't create an event set: ");
+  }
 
   // Add instructions before multiplexing (needed https://github.com/icl-utk-edu/papi/wiki/PAPI-Multiplexing)
-  retval = PAPI_add_event(EventSet, PAPI_TOT_INS);
-  if (retval != PAPI_OK)
+  retval = PAPI_add_event(event_set, PAPI_TOT_INS);
+  if (retval != PAPI_OK) {
     handle_error("PAPIData Constructor: Couldn't add instructions to event set: ");
+  }
 
-  retval = PAPI_set_multiplex(EventSet);
+  retval = PAPI_set_multiplex(event_set);
   if (retval != PAPI_OK) {
     handle_error("PAPIData Constructor: Couldn't convert event set to multiplexed: ");
   }
 
-  for (const auto& event : events) {
+  for (auto const& event : events) {
     // Skip adding instructions to the event set since it was already
     // added before making the event set multiplexed.
     if (event.first == "PAPI_TOT_INS") {
       continue;
     }
-    int native = 0x0;
+    int native = 0;
     retval = PAPI_event_name_to_code(event.first.c_str(), &native);
     if (retval != PAPI_OK) {
       handle_error(fmt::format("Couldn't event_name_to_code for {}: ", event.first.c_str()));
     }
-    retval = PAPI_add_event(EventSet, native);
+    retval = PAPI_add_event(event_set, native);
     if (retval != PAPI_OK) {
       handle_error(fmt::format("Couldn't add {} to the PAPI Event Set: ", event.first.c_str()));
     }
@@ -99,9 +105,10 @@ void PAPIData::handle_error(const std::string &info) const {
 }
 
 void PAPIData::start() {
-  retval = PAPI_start(EventSet);
-  if (retval != PAPI_OK)
+  retval = PAPI_start(event_set);
+  if (retval != PAPI_OK) {
     handle_error("PAPIData start: Starting counting events in the Event Set: ");
+  }
 
   start_real_cycles = PAPI_get_real_cyc();
   start_real_usec = PAPI_get_real_usec();
@@ -112,7 +119,7 @@ void PAPIData::start() {
 void PAPIData::stop() {
   std::vector<long long> aligned_values(events.size(), 0);
 
-  retval = PAPI_stop(EventSet, aligned_values.data());
+  retval = PAPI_stop(event_set, aligned_values.data());
   if (retval != PAPI_OK) {
     handle_error("PAPIData stop: Stopping the counting of events in the Event Set: ");
   }
@@ -134,3 +141,5 @@ void PAPIData::stop() {
   end_virt_usec = PAPI_get_virt_usec();
 }
 }} /* end namespace vt::ctx */
+
+#endif

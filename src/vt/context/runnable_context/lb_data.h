@@ -85,7 +85,7 @@ struct LBData {
       should_instrument_(true)
   {
 #if vt_check_enabled(papi)
-    papiData_ = std::make_unique<PAPIData>();
+    papi_data_ = std::make_unique<PAPIData>();
 #endif
   }
 
@@ -127,7 +127,7 @@ struct LBData {
   /**
    * \brief Start PAPI metrics map for the running context
    */
-  void startPAPIMetrics() { papiData_->start(); }
+  void startPAPIMetrics() { papi_data_->start(); }
 
   /**
    * \brief Stop PAPI metrics map for the running context
@@ -135,7 +135,7 @@ struct LBData {
    * \note has to be called after startPAPIMetrics
    *
    */
-  void stopPAPIMetrics() { papiData_->stop(); }
+  void stopPAPIMetrics() { papi_data_->stop(); }
 
   /**
    * \brief Get the current PAPI metrics map for the running context
@@ -150,7 +150,7 @@ private:
   ElementIDStruct cur_elm_id_ = {};   /**< Current element ID  */
   bool should_instrument_ = false;    /**< Whether we are instrumenting */
 #if vt_check_enabled(papi)
-  std::unique_ptr<PAPIData> papiData_;
+  std::unique_ptr<PAPIData> papi_data_;
 #endif
 };
 
