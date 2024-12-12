@@ -133,7 +133,7 @@ then
         export PAPI_BUILD=${build_dir}/papi
         mkdir -p "$PAPI_BUILD"
         CC="${CC:-cc}" F77="${F77:-gfortran}" ./configure --prefix="$PAPI_BUILD/install"
-        make ${dashj} && make install
+        make "${dashj}" && make install
     fi
 fi
 
