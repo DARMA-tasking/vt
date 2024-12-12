@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (gcc-12, ubuntu, papi)
+name: PR tests (gcc-14, ubuntu, perf)
 
 trigger:
   branches:
@@ -25,10 +25,10 @@ variables:
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
-  UBUNTU: 22.04
+  UBUNTU: 24.04
   COMPILER_TYPE: gnu
-  COMPILER: gcc-12
-  HOST_COMPILER: gcc-12
+  COMPILER: gcc-14
+  HOST_COMPILER: gcc-14
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   VT_CODE_COVERAGE: 0
@@ -57,13 +57,13 @@ variables:
   VT_DEBUG_VERBOSE: 0
   VT_KOKKOS_ENABLED: 0
   VT_TV_ENABLED: 0
-  VT_PERF_ENABLED: 0
-  VT_PAPI_ENABLED: 1
+  VT_PERF_ENABLED: 1
+  VT_PAPI_ENABLED: 0
   CMAKE_CXX_STANDARD: 17
   VT_CI_TEST_LB_SCHEMA: 0
   RUN_FULL_CI: true
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: ubuntu-gcc-12-cache
+  cache_name: ubuntu-gcc-14-cache
   volume_name: ubuntu-cpp
   build_root: "$(CACHE)$(ARCH)-ubuntu-$(UBUNTU)-$(HOST_COMPILER)-$(COMPILER)-cache/"
   TS: 0
