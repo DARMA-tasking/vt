@@ -2,14 +2,21 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: Build spack-package (gcc-10, ubuntu, openmpi)
+name: PR tests (clang-17, ubuntu, mpich, perf)
 
 trigger:
   branches:
     include:
       - develop
+      - main
 
-pr: none
+pr:
+  drafts: false
+  autoCancel: true
+  branches:
+    include:
+      - '*'
+
 
 resources:
 - repo: self
@@ -18,10 +25,10 @@ variables:
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
-  UBUNTU: 20.04
-  COMPILER_TYPE: gnu
-  COMPILER: gcc-10
-  HOST_COMPILER: gcc-10
+  UBUNTU: 22.04
+  COMPILER_TYPE: clang
+  COMPILER: clang-17
+  HOST_COMPILER: clang-17
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   VT_CODE_COVERAGE: 0
@@ -50,14 +57,14 @@ variables:
   VT_DEBUG_VERBOSE: 0
   VT_KOKKOS_ENABLED: 0
   VT_TV_ENABLED: 0
-  VT_PERF_ENABLED: 0
+  VT_PERF_ENABLED: 1
   CMAKE_CXX_STANDARD: 17
   VT_CI_TEST_LB_SCHEMA: 0
-  RUN_FULL_CI: false
+  RUN_FULL_CI: true
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: ubuntu-gcc-10-cache
-  volume_name: ubuntu-spack
-  build_root: "$(CACHE)$(ARCH)-ubuntu-$(UBUNTU)-$(HOST_COMPILER)-$(COMPILER)-openmpi-cpp/"
+  cache_name: ubuntu-clang-17-cache
+  volume_name: ubuntu-cpp
+  build_root: "$(CACHE)$(ARCH)-ubuntu-$(UBUNTU)-$(HOST_COMPILER)-$(COMPILER)-cache/"
   TS: 0
   TS_YEAR: 0
   TS_MONTH: 0
@@ -135,7 +142,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: '$(compose_command) ubuntu-spack'
+          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean --privileged'
       - task: DockerCompose@1
         displayName: Build container
         inputs:
@@ -143,7 +150,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'run ubuntu-spack'
+          dockerComposeCommand: 'run --privileged ubuntu-cpp-clean'
         env:
           CODECOV_TOKEN: $(codecov_token)
       - task: Bash@3
@@ -175,7 +182,7 @@ stages:
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'push ubuntu-spack'
+          dockerComposeCommand: 'push ubuntu-cpp-clean'
       - task: Bash@3
         displayName: Create artifacts
         continueOnError: true
