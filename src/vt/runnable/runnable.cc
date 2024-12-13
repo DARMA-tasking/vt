@@ -212,6 +212,20 @@ void RunnableNew::run() {
 #endif
 }
 
+#if vt_check_enabled(perf)
+void RunnableNew::startMetrics() {
+  vt::thePerfData()->startTaskMeasurement();
+}
+
+void RunnableNew::stopMetrics() {
+  vt::thePerfData()->stopTaskMeasurement();
+}
+
+std::unordered_map<std::string, uint64_t> RunnableNew::getMetrics() {
+  return vt::thePerfData()->getTaskMeasurements();
+}
+#endif
+
 void RunnableNew::start(TimeType time) {
   contexts_.setcontext.start();
   if (contexts_.has_td) contexts_.td.start();

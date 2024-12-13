@@ -142,6 +142,9 @@ void Runtime::printStartupBanner() {
 #if vt_check_enabled(debug_verbose)
   features.push_back(vt_feature_str_debug_verbose);
 #endif
+#if vt_check_enabled(perf)
+  features.push_back(vt_feature_str_perf);
+#endif
 
   std::string dirty = "";
   if (vt_git_clean_status == "DIRTY") {
