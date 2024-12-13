@@ -64,8 +64,9 @@
 #include "vt/timetrigger/time_trigger_manager.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/epoch/epoch_manip.h"
+#if vt_check_enabled(perf)
 #include "vt/metrics/perf_data.h"
-
+#endif
 #include <cassert>
 
 namespace vt {
