@@ -42,8 +42,11 @@
 */
 
 #include "test_parallel_harness.h"
-#include <vt/metrics/perf_data.h>
 #include <vt/transport.h>
+
+#if vt_check_enabled(perf)
+#include <vt/metrics/perf_data.h>
+#endif
 
 namespace vt { namespace tests { namespace unit {
 
