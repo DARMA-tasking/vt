@@ -144,6 +144,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_build_extended_tests="${VT_EXTENDED_TESTS_ENABLED:-1}" \
       -Dvt_zoltan_enabled="${VT_ZOLTAN_ENABLED:-0}" \
       -Dvt_tv_enabled="${VT_TV_ENABLED:-0}" \
+      -Dvt_perf_enabled="${VT_PERF_ENABLED:-0}" \
       -Dvt_production_build_enabled="${VT_PRODUCTION_BUILD_ENABLED:-0}" \
       -Dvt_unity_build_enabled="${VT_UNITY_BUILD_ENABLED:-0}" \
       -Dvt_diagnostics_enabled="${VT_DIAGNOSTICS_ENABLED:-1}" \
