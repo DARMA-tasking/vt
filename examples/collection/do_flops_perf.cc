@@ -63,7 +63,6 @@ double pi(uint64_t n) {
 
 struct GenericWork : vt::Collection<GenericWork, vt::Index1D> {
   void doIteration() {
-    iter_ += 1;
     fmt::print("-- Starting Iteration --\n");
 
     vt::theContext()->getTask()->startMetrics();
@@ -71,7 +70,7 @@ struct GenericWork : vt::Collection<GenericWork, vt::Index1D> {
     // ----------------------------------------------------------
     // test non packed double precision floating point operations
     // should result in ~4*n of these operations
-    double p = pi(10000000);
+    double p = pi(flopsPerIter_);
     fmt::print("pi: {}\n", p);
     // ----------------------------------------------------------
 
@@ -137,7 +136,7 @@ int main(int argc, char** argv) {
 
   for (std::size_t i = 0; i < maxIter; i++) {
     vt::runInEpochCollective([&]{
-      col_proxy.broadcastCollective<&GenericWork::doIteration>(flopsPerIter);
+      col_proxy.broadcastCollective<&GenericWork::doIteration>();
     });
     vt::thePhase()->nextPhaseCollective();
   }
