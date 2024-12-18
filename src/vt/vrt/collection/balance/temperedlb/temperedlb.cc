@@ -1195,7 +1195,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         double const memory_usage = computeMemoryUsage();
 
         vt_debug_print(
-          terse, temperedlb,
+          normal, temperedlb,
           "Current memory info: total memory usage={}, shared blocks here={}, "
           "memory_threshold={}\n", memory_usage,
           getSharedBlocksHere().size(), mem_thresh_
@@ -1472,7 +1472,7 @@ void TemperedLB::informAsync() {
 
   if (is_overloaded_) {
     vt_debug_print(
-      terse, temperedlb,
+      normal, temperedlb,
       "TemperedLB::informAsync: trial={}, iter={}, known underloaded={}\n",
       trial_, iter_, underloaded_.size()
     );
@@ -2510,8 +2510,8 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
 
   vt_debug_print(
     normal, temperedlb,
-    "lockObtained: is_locked_={}, is_swapping_={}\n",
-    is_locked_, is_swapping_
+    "lockObtained: is_locked_={}, is_swapping_={}, locking_rank_={}, msg->locked_node={}, is_swapping={}\n",
+    is_locked_, is_swapping_, locking_rank_, msg->locked_node, is_swapping_
   );
 
   auto cur_epoch = theMsg()->getEpoch();
@@ -2527,7 +2527,7 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
   if (is_locked_ && locking_rank_ <= msg->locked_node) {
     proxy_[msg->locked_node].template send<&TemperedLB::releaseLock>();
     theTerm()->consume(cur_epoch);
-    try_locks_.emplace(msg->locked_node, msg->locked_c_try);
+    try_locks_.emplace(msg->locked_node, msg->locked_c_try, 1);
     //pending_actions_.push_back(action);
   } else if (is_locked_) {
     pending_actions_.push_back(action);
@@ -2538,7 +2538,6 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
       normal, temperedlb,
       "lockObtained: running action immediately\n"
     );
-
 
     action();
   }
@@ -2551,13 +2550,21 @@ void TemperedLB::satisfyLockRequest() {
     for (auto&& tl : try_locks_) {
       vt_debug_print(
         verbose, temperedlb,
-        "satisfyLockRequest: node={}, c_try={}\n", tl.requesting_node, tl.c_try
+        "satisfyLockRequest: node={}, c_try={}, forced_release={}\n",
+	tl.requesting_node, tl.c_try, tl.forced_release
       );
     }
 
     auto iter = try_locks_.begin();
     auto lock = *iter;
     try_locks_.erase(iter);
+
+    if (lock.forced_release) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(5));
+      lock.forced_release = false;
+      try_locks_.insert(lock);
+      return;
+    }
 
     auto const this_node = theContext()->getNode();
 
