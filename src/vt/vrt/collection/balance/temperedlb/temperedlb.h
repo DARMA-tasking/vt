@@ -435,13 +435,15 @@ private:
   //////////////////////////////////////////////////////////////////////////////
 
   struct TryLock {
-    TryLock(NodeType in_requesting, double in_c_try)
+    TryLock(NodeType in_requesting, double in_c_try, int in_forced_release = 0)
       : requesting_node(in_requesting),
-        c_try(in_c_try)
+        c_try(in_c_try),
+	forced_release(in_forced_release)
     { }
 
     NodeType requesting_node = uninitialized_destination;
     double c_try = 0;
+    int forced_release = 0;
 
     double operator<(TryLock const& other) const {
       // sort in reverse order so the best is first!
