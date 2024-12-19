@@ -2722,7 +2722,7 @@ void TemperedLB::swapClusters() {
     auto remote_block_count = getRemoteBlockCountHere();
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_, iter_time_
+        n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_
       );
       proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
     });
