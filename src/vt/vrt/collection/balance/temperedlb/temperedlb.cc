@@ -1066,6 +1066,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
     for (iter_ = 0; iter_ < num_iters_; iter_++) {
       bool first_iter = iter_ == 0;
+      iter_time_ = MPI_Wtime();
 
       if (first_iter) {
         // Copy this node's object assignments to a local, mutable copy
@@ -1178,6 +1179,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         is_overloaded_ = is_underloaded_ = false;
         ready_to_satisfy_locks_ = false;
         other_rank_clusters_.clear();
+        cycle_locks_ = 0;
 
         // Not clearing shared_block_size_ because this never changes and
         // the knowledge might be useful
@@ -1408,7 +1410,7 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
 }
 
 void TemperedLB::rejectionStatsHandler(
-  int n_rejected, int n_transfers, int n_unhomed_blocks
+  int n_rejected, int n_transfers, int n_unhomed_blocks, int cycle_locks
 ) {
   double rej = static_cast<double>(n_rejected) /
     static_cast<double>(n_rejected + n_transfers) * 100.0;
@@ -1419,8 +1421,18 @@ void TemperedLB::rejectionStatsHandler(
       terse, temperedlb,
       "TemperedLB::rejectionStatsHandler: n_transfers={} n_unhomed_blocks={}"
       " n_rejected={} "
-      "rejection_rate={:0.1f}%\n",
-      n_transfers, n_unhomed_blocks, n_rejected, rej
+      "rejection_rate={:0.1f}%, total_cycle_locks={}\n",
+      n_transfers, n_unhomed_blocks, n_rejected, rej, cycle_locks
+    );
+  }
+}
+
+void TemperedLB::maxIterTime(double max_iter_time) {
+  auto this_node = theContext()->getNode();
+  if (this_node == 0) {
+    vt_debug_print(
+      terse, temperedlb,
+      "TemperedLB::maxIterTime: {}\n", max_iter_time
     );
   }
 }
@@ -2136,8 +2148,9 @@ void TemperedLB::originalTransfer() {
     // compute rejection rate because it will be printed
     runInEpochCollective("TemperedLB::originalTransfer -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers, 0
+        n_rejected, n_transfers, 0, 0
       );
+      proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
     });
   }
 }
@@ -2525,6 +2538,7 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
   };
 
   if (is_locked_ && locking_rank_ <= msg->locked_node) {
+    cycle_locks_++;
     proxy_[msg->locked_node].template send<&TemperedLB::releaseLock>();
     theTerm()->consume(cur_epoch);
     try_locks_.emplace(msg->locked_node, msg->locked_c_try, 1);
@@ -2708,8 +2722,9 @@ void TemperedLB::swapClusters() {
     auto remote_block_count = getRemoteBlockCountHere();
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers_swap_, remote_block_count
+        n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_, iter_time_
       );
+      proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
     });
   }
 }

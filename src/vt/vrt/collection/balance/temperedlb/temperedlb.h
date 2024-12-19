@@ -129,6 +129,7 @@ protected:
   void rejectionStatsHandler(
     int n_rejected, int n_transfers, int n_unhomed_blocks
   );
+  void maxIterTime(double max_iter_time);
   void remoteBlockCountHandler(int n_unhomed_blocks);
   void thunkMigrations();
 
@@ -424,6 +425,8 @@ private:
   StatisticMapType stats;
   LoadType this_load                                = 0.0f;
   LoadType this_work                                = 0.0f;
+  int cycle_locks_                                  = 0;
+  double iter_time_                                 = 0.0f;
   /// Whether any node has communication data
   bool has_comm_any_ = false;
 
