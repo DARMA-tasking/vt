@@ -2147,6 +2147,7 @@ void TemperedLB::originalTransfer() {
   if (theConfig()->vt_debug_temperedlb) {
     // compute rejection rate because it will be printed
     runInEpochCollective("TemperedLB::originalTransfer -> compute rejection", [=] {
+      iter_time_ = MPI_Wtime() - iter_time_;
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
         n_rejected, n_transfers, 0, 0
       );
@@ -2721,6 +2722,7 @@ void TemperedLB::swapClusters() {
     int n_rejected = 0;
     auto remote_block_count = getRemoteBlockCountHere();
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
+      iter_time_ = MPI_Wtime() - iter_time_;
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
         n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_
       );
