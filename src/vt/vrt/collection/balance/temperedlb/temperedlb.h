@@ -127,7 +127,7 @@ protected:
   void loadStatsHandler(std::vector<balance::LoadData> const& vec);
   void workStatsHandler(std::vector<balance::LoadData> const& vec);
   void rejectionStatsHandler(
-    int n_rejected, int n_transfers, int n_unhomed_blocks
+    int n_rejected, int n_transfers, int n_unhomed_blocks, int cycle_count
   );
   void maxIterTime(double max_iter_time);
   void remoteBlockCountHandler(int n_unhomed_blocks);
