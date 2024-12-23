@@ -2592,7 +2592,7 @@ void TemperedLB::satisfyLockRequest() {
     try_locks_.erase(iter);
 
     if (lock.forced_release) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(5));
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
       lock.forced_release = false;
       try_locks_.insert(lock);
       return;
