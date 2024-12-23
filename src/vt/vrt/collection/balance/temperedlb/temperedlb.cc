@@ -639,8 +639,9 @@ void TemperedLB::readClustersMemoryData() {
 }
 
 ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
+  auto const this_node = theContext()->getNode();
   auto const& [home_node, shared_volume] = shared_block_edge_[shared_id];
-  auto const shared_bytes = shared_block_size_[shared_id]
+  auto const shared_bytes = shared_block_size_[shared_id];
 
   ClusterInfo info;
   info.bytes = shared_bytes;
@@ -762,8 +763,6 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
 
 void TemperedLB::computeClusterSummary() {
   cur_clusters_.clear();
-
-  auto const this_node = theContext()->getNode();
 
   for (auto const& [shared_id, _] : shared_block_size_) {
     auto info = makeClusterSummary(shared_id);
@@ -2495,7 +2494,7 @@ void TemperedLB::giveCluster(
 
   auto id = give_shared_blocks_size.begin()->first;
   auto info = makeClusterSummary(id);
-  cur_clusters_.emplace(id, std::move(info))
+  cur_clusters_.emplace(id, std::move(info));
 
   //computeClusterSummary();
   this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
