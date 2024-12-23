@@ -1213,7 +1213,9 @@ void TemperedLB::doLBStages(LoadType start_imb) {
           vtAbort("This should never be possible to go over the threshold\n");
         }
 
-        computeClusterSummary();
+        if (iter_ == 0) {
+          computeClusterSummary();
+        }
 
         // Verbose printing about local clusters
         for (auto const& [shared_id, cluster_info] : cur_clusters_) {
