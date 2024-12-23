@@ -638,131 +638,136 @@ void TemperedLB::readClustersMemoryData() {
   }
 }
 
+ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
+  auto const& [home_node, shared_volume] = shared_block_edge_[shared_id];
+  auto const shared_bytes = shared_block_size_[shared_id]
+
+  ClusterInfo info;
+  info.bytes = shared_bytes;
+  info.home_node = home_node;
+  info.edge_weight = shared_volume;
+
+  std::set<ObjIDType> cluster_objs;
+  BytesType max_object_working_bytes = 0;
+  BytesType max_object_working_bytes_outside = 0;
+  BytesType max_object_serialized_bytes = 0;
+  BytesType max_object_serialized_bytes_outside = 0;
+  BytesType cluster_footprint = 0;
+
+  for (auto const& [obj_id, obj_load] : cur_objs_) {
+    if (auto iter = obj_shared_block_.find(obj_id); iter != obj_shared_block_.end()) {
+      if (iter->second == shared_id) {
+        cluster_objs.insert(obj_id);
+        info.load += obj_load;
+        if (
+          auto it = obj_working_bytes_.find(obj_id);
+          it != obj_working_bytes_.end()
+        ) {
+          max_object_working_bytes = std::max(
+            max_object_working_bytes, it->second
+          );
+        }
+        if (
+          auto it = obj_serialized_bytes_.find(obj_id);
+          it != obj_serialized_bytes_.end()
+        ) {
+          max_object_serialized_bytes = std::max(
+            max_object_serialized_bytes, it->second
+          );
+        }
+        if (
+          auto it = obj_footprint_bytes_.find(obj_id);
+          it != obj_footprint_bytes_.end()
+        ) {
+          cluster_footprint += it->second;
+        }
+      } else {
+        if (
+          auto it = obj_working_bytes_.find(obj_id);
+          it != obj_working_bytes_.end()
+        ) {
+          max_object_working_bytes_outside = std::max(
+            max_object_working_bytes_outside, it->second
+          );
+        }
+        if (
+          auto it = obj_serialized_bytes_.find(obj_id);
+          it != obj_serialized_bytes_.end()
+        ) {
+          max_object_serialized_bytes_outside = std::max(
+            max_object_serialized_bytes_outside, it->second
+          );
+        }
+      }
+    }
+  }
+
+  info.cluster_footprint = cluster_footprint;
+  info.max_object_working_bytes = max_object_working_bytes;
+  info.max_object_working_bytes_outside = max_object_working_bytes_outside;
+  info.max_object_serialized_bytes = max_object_serialized_bytes;
+  info.max_object_serialized_bytes_outside = max_object_serialized_bytes_outside;
+
+  if (info.load != 0) {
+    for (auto&& obj : cluster_objs) {
+      if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
+        for (auto const& [target, volume] : it->second) {
+          vt_debug_print(
+            verbose, temperedlb,
+            "computeClusterSummary: send obj={}, target={}\n",
+            obj, target
+          );
+
+          if (cluster_objs.find(target) != cluster_objs.end()) {
+            // intra-cluster edge
+            info.intra_send_vol += volume;
+          } else if (
+            cur_objs_.find(target) != cur_objs_.end() or
+            target.isLocatedOnThisNode()
+          ) {
+            // intra-rank edge
+            info.inter_send_vol[this_node] += volume;
+          } else {
+            // inter-rank edge
+            info.inter_send_vol[target.getCurrNode()] += volume;
+          }
+        }
+      }
+      if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
+        for (auto const& [target, volume] : it->second) {
+          vt_debug_print(
+            verbose, temperedlb,
+            "computeClusterSummary: recv obj={}, target={}\n",
+            obj, target
+          );
+          if (cluster_objs.find(target) != cluster_objs.end()) {
+            // intra-cluster edge
+            info.intra_recv_vol += volume;
+          } else if (
+            cur_objs_.find(target) != cur_objs_.end() or
+            target.isLocatedOnThisNode()
+          ) {
+            // intra-rank edge
+            info.inter_recv_vol[this_node] += volume;
+          } else {
+            // inter-rank edge
+            info.inter_recv_vol[target.getCurrNode()] += volume;
+          }
+        }
+      }
+    }
+  }
+  return info;
+}
+
 void TemperedLB::computeClusterSummary() {
   cur_clusters_.clear();
 
   auto const this_node = theContext()->getNode();
 
-  for (auto const& [shared_id, shared_bytes] : shared_block_size_) {
-    auto const& [home_node, shared_volume] = shared_block_edge_[shared_id];
-
-    ClusterInfo info;
-    info.bytes = shared_bytes;
-    info.home_node = home_node;
-    info.edge_weight = shared_volume;
-
-    std::set<ObjIDType> cluster_objs;
-    BytesType max_object_working_bytes = 0;
-    BytesType max_object_working_bytes_outside = 0;
-    BytesType max_object_serialized_bytes = 0;
-    BytesType max_object_serialized_bytes_outside = 0;
-    BytesType cluster_footprint = 0;
-
-    for (auto const& [obj_id, obj_load] : cur_objs_) {
-      if (auto iter = obj_shared_block_.find(obj_id); iter != obj_shared_block_.end()) {
-        if (iter->second == shared_id) {
-          cluster_objs.insert(obj_id);
-          info.load += obj_load;
-          if (
-            auto it = obj_working_bytes_.find(obj_id);
-            it != obj_working_bytes_.end()
-          ) {
-            max_object_working_bytes = std::max(
-              max_object_working_bytes, it->second
-            );
-          }
-          if (
-            auto it = obj_serialized_bytes_.find(obj_id);
-            it != obj_serialized_bytes_.end()
-          ) {
-            max_object_serialized_bytes = std::max(
-              max_object_serialized_bytes, it->second
-            );
-          }
-          if (
-            auto it = obj_footprint_bytes_.find(obj_id);
-            it != obj_footprint_bytes_.end()
-          ) {
-            cluster_footprint += it->second;
-          }
-        } else {
-          if (
-            auto it = obj_working_bytes_.find(obj_id);
-            it != obj_working_bytes_.end()
-          ) {
-            max_object_working_bytes_outside = std::max(
-              max_object_working_bytes_outside, it->second
-            );
-          }
-          if (
-            auto it = obj_serialized_bytes_.find(obj_id);
-            it != obj_serialized_bytes_.end()
-          ) {
-            max_object_serialized_bytes_outside = std::max(
-              max_object_serialized_bytes_outside, it->second
-            );
-          }
-        }
-      }
-    }
-
-    info.cluster_footprint = cluster_footprint;
-    info.max_object_working_bytes = max_object_working_bytes;
-    info.max_object_working_bytes_outside = max_object_working_bytes_outside;
-    info.max_object_serialized_bytes = max_object_serialized_bytes;
-    info.max_object_serialized_bytes_outside = max_object_serialized_bytes_outside;
-
-    if (info.load != 0) {
-      for (auto&& obj : cluster_objs) {
-        if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
-          for (auto const& [target, volume] : it->second) {
-            vt_debug_print(
-              verbose, temperedlb,
-              "computeClusterSummary: send obj={}, target={}\n",
-              obj, target
-            );
-
-            if (cluster_objs.find(target) != cluster_objs.end()) {
-              // intra-cluster edge
-              info.intra_send_vol += volume;
-            } else if (
-              cur_objs_.find(target) != cur_objs_.end() or
-              target.isLocatedOnThisNode()
-            ) {
-              // intra-rank edge
-              info.inter_send_vol[this_node] += volume;
-            } else {
-              // inter-rank edge
-              info.inter_send_vol[target.getCurrNode()] += volume;
-            }
-          }
-        }
-        if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
-          for (auto const& [target, volume] : it->second) {
-            vt_debug_print(
-              verbose, temperedlb,
-              "computeClusterSummary: recv obj={}, target={}\n",
-              obj, target
-            );
-            if (cluster_objs.find(target) != cluster_objs.end()) {
-              // intra-cluster edge
-              info.intra_recv_vol += volume;
-            } else if (
-              cur_objs_.find(target) != cur_objs_.end() or
-              target.isLocatedOnThisNode()
-            ) {
-              // intra-rank edge
-              info.inter_recv_vol[this_node] += volume;
-            } else {
-              // inter-rank edge
-              info.inter_recv_vol[target.getCurrNode()] += volume;
-            }
-          }
-        }
-      }
-
-      cur_clusters_.emplace(shared_id, std::move(info));
-    }
+  for (auto const& [shared_id, _] : shared_block_size_) {
+    auto info = makeClusterSummary(shared_id);
+    cur_clusters_.emplace(shared_id, std::move(info));
   }
 }
 
@@ -2180,6 +2185,11 @@ auto TemperedLB::removeClusterToSend(
 
   if (shared_id != no_shared_id) {
     give_shared_blocks_size[shared_id] = shared_block_size_[shared_id];
+
+    // Update cur_clusters_ to avoid recomputing it
+    if (auto it = cur_clusters_.find(shared_id); it != cur_clusters_.end()) {
+      cur_clusters_.erase(it);
+    }
   }
 
   if (objs.size() == 0) {
@@ -2406,7 +2416,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       );
     });
 
-    computeClusterSummary();
+    //computeClusterSummary();
     this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
     this_new_work_ = this_new_breakdown_.work;
     computeMemoryUsage();
@@ -2483,7 +2493,11 @@ void TemperedLB::giveCluster(
     );
   }
 
-  computeClusterSummary();
+  auto id = give_shared_blocks_size.begin()->first;
+  auto info = makeClusterSummary(id);
+  cur_clusters_.emplace(id, std::move(info))
+
+  //computeClusterSummary();
   this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
   this_new_work_ = this_new_breakdown_.work;
   computeMemoryUsage();
