@@ -170,6 +170,15 @@ protected:
   void computeClusterSummary();
 
   /**
+   * \brief Make cluster summary info
+   *
+   * \param[in] shared_id the shared ID
+   *
+   * \return the info
+   */
+  ClusterInfo makeClusterSummary(SharedIDType shared_id);
+
+  /**
    * \brief Try to lock a rank
    *
    * \param[in] requesting_node the requesting rank asking to lock
