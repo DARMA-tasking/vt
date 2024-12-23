@@ -766,7 +766,9 @@ void TemperedLB::computeClusterSummary() {
 
   for (auto const& [shared_id, _] : shared_block_size_) {
     auto info = makeClusterSummary(shared_id);
-    cur_clusters_.emplace(shared_id, std::move(info));
+    if (info.load != 0) {
+      cur_clusters_.emplace(shared_id, std::move(info));
+    }
   }
 }
 
