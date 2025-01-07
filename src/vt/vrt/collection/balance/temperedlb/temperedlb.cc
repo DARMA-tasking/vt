@@ -67,6 +67,8 @@ static trace::UserEventIDType removeClusterEvent = 0;
 static trace::UserEventIDType recomputeClusterEvent = 0;
 static trace::UserEventIDType computeClusterSummaryEvent = 0;
 static trace::UserEventIDType computeWorkBreakdownEvent = 0;
+static trace::UserEventIDType propagateMsgTraceEvent = 0;
+static trace::UserEventIDType informAsyncTraceEvent = 0;
 
 void TemperedLB::init(objgroup::proxy::Proxy<TemperedLB> in_proxy) {
   proxy_ = in_proxy;
@@ -81,6 +83,8 @@ void TemperedLB::init(objgroup::proxy::Proxy<TemperedLB> in_proxy) {
     recomputeClusterEvent = trace::registerEventCollective("recomputeClusterWork");
     computeClusterSummaryEvent = trace::registerEventCollective("computeClusterSummary");
     computeWorkBreakdownEvent = trace::registerEventCollective("computeWorkBreakdown");
+    propagateMsgTraceEvent = trace::registerEventCollective("propagateRound");
+    informAsyncTraceEvent = trace::registerEventCollective("informAsync");
   }
 }
 
@@ -1469,6 +1473,8 @@ void TemperedLB::remoteBlockCountHandler(int n_unhomed_blocks) {
 }
 
 void TemperedLB::informAsync() {
+  {
+  trace::TraceScopedEvent scope(informAsyncTraceEvent);
   propagated_k_.assign(k_max_, false);
 
   vt_debug_print(
@@ -1485,7 +1491,7 @@ void TemperedLB::informAsync() {
   if (is_underloaded_) {
     underloaded_.insert(this_node);
   }
-
+  }
   setup_done_ = false;
   proxy_.allreduce<&TemperedLB::setupDone>();
   theSched()->runSchedulerWhile([this]{ return not setup_done_; });
@@ -1586,6 +1592,7 @@ void TemperedLB::setupDone() {
 }
 
 void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
+  trace::TraceScopedEvent scope(propagateMsgTraceEvent);
   vt_debug_print(
     normal, temperedlb,
     "TemperedLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}\n",
