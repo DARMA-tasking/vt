@@ -64,5 +64,6 @@
                                           "debug prints disabled)"
 #define vt_feature_str_trace_enabled      "Tracing Projections"
 #define vt_feature_str_zoltan             "Zoltan for load balancing"
+#define vt_feature_str_debug_verbose      "Verbose Prints"
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/
