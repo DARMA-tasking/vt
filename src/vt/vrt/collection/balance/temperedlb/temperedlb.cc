@@ -61,11 +61,27 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+static trace::UserEventIDType considerSwapsAfterLockEvent = 0;
+static trace::UserEventIDType giveClusterEvent = 0;
+static trace::UserEventIDType removeClusterEvent = 0;
+static trace::UserEventIDType recomputeClusterEvent = 0;
+static trace::UserEventIDType computeClusterSummaryEvent = 0;
+static trace::UserEventIDType computeWorkBreakdownEvent = 0;
+
 void TemperedLB::init(objgroup::proxy::Proxy<TemperedLB> in_proxy) {
   proxy_ = in_proxy;
   auto const this_node = theContext()->getNode();
   gen_propagate_.seed(this_node + 12345);
   gen_sample_.seed(this_node + 54321);
+
+  if (considerSwapsAfterLockEvent == 0) {
+    considerSwapsAfterLockEvent = trace::registerEventCollective("considerSwapsAfterLock");
+    giveClusterEvent = trace::registerEventCollective("giveClusterWork");
+    removeClusterEvent = trace::registerEventCollective("removeClusterWork");
+    recomputeClusterEvent = trace::registerEventCollective("recomputeClusterWork");
+    computeClusterSummaryEvent = trace::registerEventCollective("computeClusterSummary");
+    computeWorkBreakdownEvent = trace::registerEventCollective("computeWorkBreakdown");
+  }
 }
 
 bool TemperedLB::isUnderloaded(LoadType load) const {
@@ -560,18 +576,10 @@ void TemperedLB::runLB(LoadType total_load) {
 
   // Perform load rebalancing when deemed necessary
   if (should_lb) {
-#if vt_check_enabled(trace_enabled)
-    theTrace()->disableTracing();
-#endif
-
     runInEpochCollective("doLBStages", [&,this]{
       auto this_node = theContext()->getNode();
       proxy_[this_node].template send<&TemperedLB::doLBStages>(imb);
     });
-
-#if vt_check_enabled(trace_enabled)
-    theTrace()->enableTracing();
-#endif
   }
 }
 
@@ -639,6 +647,8 @@ void TemperedLB::readClustersMemoryData() {
 }
 
 ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
+  trace::TraceScopedEvent scope(computeClusterSummaryEvent);
+
   auto const this_node = theContext()->getNode();
   auto const& [home_node, shared_volume] = shared_block_edge_[shared_id];
   auto const shared_bytes = shared_block_size_[shared_id];
@@ -875,6 +885,8 @@ WorkBreakdown TemperedLB::computeWorkBreakdown(
   std::set<ObjIDType> const& exclude,
   std::unordered_map<ObjIDType, LoadType> const& include
 ) {
+  trace::TraceScopedEvent scope(computeWorkBreakdownEvent);
+
   double load = 0;
 
   // Communication bytes sent/recv'ed within the rank
@@ -2274,6 +2286,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     consider_swaps_counter_
   );
 
+  trace::TraceScopedEvent scope(considerSwapsAfterLockEvent);
+
   auto const this_node = theContext()->getNode();
 
   NodeInfo this_info{
@@ -2460,25 +2474,29 @@ void TemperedLB::giveCluster(
 ) {
   auto const this_node = theContext()->getNode();
 
-  n_transfers_swap_++;
+  {
+    trace::TraceScopedEvent scope(giveClusterEvent);
+    n_transfers_swap_++;
 
-  vtAssert(give_shared_blocks_size.size() == 1, "Must be one block right now");
+    vtAssert(give_shared_blocks_size.size() == 1, "Must be one block right now");
 
-  for (auto const& [obj_id, obj_load] : give_objs) {
-    this_new_load_ += obj_load;
-    cur_objs_[obj_id] = obj_load;
-  }
-  for (auto const& [id, bytes] : give_shared_blocks_size) {
-    shared_block_size_[id] = bytes;
-  }
-  for (auto const& [obj_id, id] : give_obj_shared_block) {
-    obj_shared_block_[obj_id] = id;
-  }
-  for (auto const& elm : give_obj_working_bytes) {
-    obj_working_bytes_.emplace(elm);
+    for (auto const& [obj_id, obj_load] : give_objs) {
+      this_new_load_ += obj_load;
+      cur_objs_[obj_id] = obj_load;
+    }
+    for (auto const& [id, bytes] : give_shared_blocks_size) {
+      shared_block_size_[id] = bytes;
+    }
+    for (auto const& [obj_id, id] : give_obj_shared_block) {
+      obj_shared_block_[obj_id] = id;
+    }
+    for (auto const& elm : give_obj_working_bytes) {
+      obj_working_bytes_.emplace(elm);
+    }
   }
 
   if (take_cluster != no_shared_id) {
+    trace::TraceScopedEvent scope(removeClusterEvent);
     auto const& [
       take_objs,
       take_obj_shared_block,
