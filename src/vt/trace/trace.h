@@ -64,6 +64,8 @@
 
 namespace vt { namespace trace {
 
+extern std::unordered_map<std::string, TimeTypeWrapper> manual_timings;
+
 /// Tracking information for beginProcessing/endProcessing.
 struct TraceProcessingTag {
 

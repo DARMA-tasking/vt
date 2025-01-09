@@ -67,6 +67,8 @@
 
 namespace vt { namespace trace {
 
+std::unordered_map<std::string, TimeTypeWrapper> manual_timings;
+
 using TraceContainersType = TraceContainers;
 
 using LogType = Trace::LogType;
@@ -119,6 +121,13 @@ void Trace::finalize() /*override*/ {
   // Always end any between-loop event left open.
   endProcessing(between_sched_event_, timing::getCurrentTime());
   between_sched_event_ = TraceProcessingTag{};
+
+  fmt::print("{}: ", theContext()->getNode());
+  for (auto const& [name, time] : manual_timings) {
+    fmt::print("({},{}) ", name, time);
+  }
+  fmt::print("\n");
+  fflush(stdout);
 }
 
 void Trace::loadAndBroadcastSpec() {
