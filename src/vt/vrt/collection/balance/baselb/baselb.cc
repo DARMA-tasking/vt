@@ -77,9 +77,22 @@ std::shared_ptr<const balance::Reassignment> BaseLB::startLB(
   importProcessorData(in_stats, in_comm_lb_data, in_data_map);
 
   runInEpochCollective("BaseLB::startLB -> runLB", [this,total_load]{
+
+    auto t1 = timing::getCurrentTime();
     getArgs(phase_);
+    auto t2 = timing::getCurrentTime();
+    trace::manual_timings["getArgs"] = t2-t1;
+
     inputParams(config_entry_.get());
+
+    auto t3 = timing::getCurrentTime();
+    trace::manual_timings["inputParams"] = t3-t2;
+
     runLB(total_load);
+
+    auto t4 = timing::getCurrentTime();
+    trace::manual_timings["runLB"] = t4-t3;
+
   });
 
   return normalizeReassignments();
