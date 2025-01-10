@@ -84,11 +84,8 @@ UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
   auto id = std::get<0>(ret);
   auto inserted = std::get<1>(ret);
   if (inserted) {
-    auto const node  = theContext()->getNode();
-    if (node != 0) {
-      auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
-      theMsg()->sendMsg<newEventHan>(0, msg);
-    }
+    auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
+    theTrace->addHashedEventMsg(msg);
   }
   return id;
 }
