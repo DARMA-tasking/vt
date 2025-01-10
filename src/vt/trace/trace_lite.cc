@@ -549,6 +549,15 @@ void TraceLite::flushTracesFile(bool useGlobalSync) {
 void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
   auto const node = theContext()->getNode();
 
+  // Allreduce the hashed events to rank 0 before writing sts file
+  auto const root = 0;
+  std::vector<Message> all_hashed_events;
+  auto msg = makeMessage<ReduceVecMsg<Message>>(
+    theTrace()->user_hashed_events_);
+  theCollective()->global()->reduce<
+    PlusOp<std::vector<Message>>, Verify<ReduceOP::Plus>
+  >(root, msg.get());
+
   size_t to_write = traces_.size();
 
   if (traceWritingEnabled(node) and to_write > 0) {
