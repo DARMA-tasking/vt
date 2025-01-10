@@ -140,6 +140,7 @@ void printOverwrittens(
   printIfOverwritten(vt_lb_statistics_compress);
   printIfOverwritten(vt_lb_statistics_file);
   printIfOverwritten(vt_lb_statistics_dir);
+  printIfOverwritten(vt_lb_statistics_freq);
   printIfOverwritten(vt_lb_self_migration);
   printIfOverwritten(vt_help_lb_args);
   printIfOverwritten(vt_no_detect_hang);
