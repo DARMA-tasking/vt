@@ -127,11 +127,11 @@ void RunnableNew::run() {
 
   auto getTime = [&]() {
 #if vt_check_enabled(trace_enabled)
-  return theTrace() ? timing::getCurrentTime() : theSched()->getRecentTime();
-#else
-  return theSched()->getRecentTime();
+    if (theTrace()) return timing::getCurrentTime();
+    else
 #endif
-};
+    return theSched()->getRecentTime();
+  };
 
   TimeType start_time = needs_time ? getTime() : TimeType{NAN};
 
