@@ -945,7 +945,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto yy = app.add_flag("--vt_lb_statistics_compress", appConfig.vt_lb_statistics_compress, lb_statistics_comp);
   auto yz = app.add_option("--vt_lb_statistics_file",   appConfig.vt_lb_statistics_file,     lb_statistics_file)->capture_default_str();
   auto zz = app.add_option("--vt_lb_statistics_dir",    appConfig.vt_lb_statistics_dir,      lb_statistics_dir)->capture_default_str();
-  auto zy = app.add_option("--vt_lb_statistics_freq",    appConfig.vt_lb_statistics_freq,    lb_statistics_freq);
+  auto zy = app.add_option("--vt_lb_statistics_freq",   appConfig.vt_lb_statistics_freq,     lb_statistics_freq);
   auto lbasm = app.add_flag("--vt_lb_self_migration",   appConfig.vt_lb_self_migration,      lb_self_migration);
   auto lbspec = app.add_flag("--vt_lb_spec",            appConfig.vt_lb_spec,                lb_spec);
   auto lbspecfile = app.add_option("--vt_lb_spec_file", appConfig.vt_lb_spec_file,           lb_spec_file)->capture_default_str()->check(CLI::ExistingFile);
