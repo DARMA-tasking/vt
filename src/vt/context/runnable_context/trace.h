@@ -62,6 +62,20 @@ struct Trace {
   Trace() = default;
 
   /**
+   * \brief Construct a new trace context (basic processing) without a message
+   * directly
+   *
+   * \param[in] event the trace event
+   * \param[in] in_handler the handler
+   * \param[in] in_from_node from node
+   * \param[in] msg_size size of message/payload (zero of not serializable
+   */
+  Trace(
+    trace::TraceEventIDType event, HandlerType const in_handler,
+    NodeType const in_from_node, std::size_t msg_size
+  );
+
+  /**
    * \brief Construct a new trace context (basic processing event)
    *
    * \param[in] msg the associated message

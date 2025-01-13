@@ -54,6 +54,17 @@
 
 namespace vt { namespace ctx {
 
+Trace::Trace(
+  trace::TraceEventIDType event, HandlerType const in_handler,
+  NodeType const in_from_node, std::size_t msg_size
+) : is_collection_(false),
+    event_(event),
+    msg_size_(msg_size),
+    is_traced_(HandlerManager::isHandlerTrace(in_handler)),
+    from_node_(in_from_node),
+    handler_(in_handler)
+{ }
+
 void Trace::start(TimeType time) {
   if (not is_traced_) {
     return;
