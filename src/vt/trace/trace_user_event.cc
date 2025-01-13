@@ -84,7 +84,7 @@ UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
   auto id = std::get<0>(ret);
   auto inserted = std::get<1>(ret);
   if (inserted) {
-    theTrace->addHashedEvent(id);
+    vt::theTrace()->addHashedEvent(id);
   }
   return id;
 }
