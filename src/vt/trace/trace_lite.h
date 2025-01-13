@@ -427,7 +427,7 @@ protected:
   int incremental_flush_mode_ = 0;
 
   UserEventRegistry user_event_ = {};
-  std::vector<Message> user_hashed_events_;
+  std::vector<UserEventIDType> user_hashed_events_;
   EventHoldStackType event_holds_;
   TraceStackType open_events_;
   TraceContainerType traces_;
