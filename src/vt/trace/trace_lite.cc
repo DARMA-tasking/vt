@@ -551,11 +551,11 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
 
   // Allreduce the hashed events to rank 0 before writing sts file
   auto const root = 0;
-  std::vector<Message> all_hashed_events;
-  auto msg = makeMessage<ReduceVecMsg<Message>>(
+  std::vector<UserEventIDType> all_hashed_events;
+  auto msg = makeMessage<ReduceVecMsg<UserEventIDType>>(
     theTrace()->user_hashed_events_);
   theCollective()->global()->reduce<
-    PlusOp<std::vector<Message>>, Verify<ReduceOP::Plus>
+    PlusOp<std::vector<UserEventIDType>>, Verify<ReduceOP::Plus>
   >(root, msg.get());
 
   size_t to_write = traces_.size();
