@@ -59,6 +59,7 @@
 #include <sys/stat.h>
 #include <zlib.h>
 #include <map>
+#include <numeric>
 
 namespace vt {
 #if vt_check_enabled(trace_only)
@@ -548,15 +549,42 @@ void TraceLite::flushTracesFile(bool useGlobalSync) {
 
 void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
   auto const node = theContext()->getNode();
+  auto const comm = theContext()->getComm();
+  auto const comm_size = theContext()->getNumNodes();
 
-  // Allreduce the hashed events to rank 0 before writing sts file
+  // Gather all hashed events to rank 0 before writing sts file
+  using events_t = std::vector<UserEventIDType>;
   auto const root = 0;
-  std::vector<UserEventIDType> all_hashed_events;
-  auto msg = makeMessage<ReduceVecMsg<UserEventIDType>>(
-    theTrace()->user_hashed_events_);
-  theCollective()->global()->reduce<
-    PlusOp<std::vector<UserEventIDType>>, Verify<ReduceOP::Plus>
-  >(root, msg.get());
+  events_t local_hashed_events = theTrace()->user_hashed_events_;
+  int local_size = local_hashed_events.size();
+  std::vector<int> all_sizes(comm_size);
+  MPI_Gather(&local_size, 1, MPI_INT, all_sizes.data(), 1, MPI_INT, 0, comm);
+
+  // Compute displacements
+  std::vector<int> displs(comm_size, 0);
+  if (node == 0) {
+    std::partial_sum(all_sizes.begin(), all_sizes.end() - 1, displs.begin() + 1);
+  }
+
+  // Create vector in which to store all events
+  events_t all_hashed_events;
+  if (node == 0) {
+    int total_size = std::accumulate(all_sizes.begin(), all_sizes.end(), 0);
+    all_hashed_events.resize(total_size);
+  }
+
+  // Gather events
+  MPI_Gatherv(
+    local_hashed_events.data(),              // Send buffer
+    local_size,                              // Number of elements to send
+    MPI_UINT32_T,                            // Data type (adjust to match UserEventIDType)
+    all_hashed_events.data(),                // Receive buffer (on root)
+    all_sizes.data(),                        // Number of elements to receive from each rank
+    displs.data(),                           // Displacements for each rank
+    MPI_UINT32_T,                            // Data type (adjust to match UserEventIDType)
+    root,                                    // Root node
+    comm                                     // Communicator
+  );
 
   size_t to_write = traces_.size();
 
