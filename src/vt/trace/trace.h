@@ -223,13 +223,6 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
   void registerUserEventManual(std::string const& name, UserSpecEventIDType id);
 
   /**
-   * \brief Store a hashed event ID
-   *
-   * \param[in] event_id the hashed event ID
-   */
-  void addHashedEvent(UserEventIDType event_id);
-
-  /**
    * \brief Log a user event
    *
    * \param[in] event the event ID
@@ -399,7 +392,6 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
       | idle_begun_
       | start_time_
       | user_event_
-      | user_hashed_events_
       | prog_name_
       | trace_name_
       | full_trace_name_

@@ -220,10 +220,6 @@ void insertNewUserEvent(
   #endif
 }
 
-void Trace::addHashedEvent(UserEventIDType event_id) {
-  theTrace()->user_hashed_events_.push_back(event_id);
-}
-
 void Trace::addUserEvent(UserEventIDType event) {
   if (not checkDynamicRuntimeEnabled()) {
     return;
