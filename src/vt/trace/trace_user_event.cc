@@ -82,21 +82,12 @@ UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
   id_hash = id_hash & 0x0FFF;
   auto ret = newEventImpl(false, false, in_event_name, id_hash, true);
   auto id = std::get<0>(ret);
-  auto inserted = std::get<1>(ret);
-  if (inserted) {
-    vt::theTrace()->addHashedEvent(id);
-  }
   return id;
 }
 
 UserEventIDType UserEventRegistry::rooted(std::string const& in_event_name) {
   auto ret = newEventImpl(false, true, in_event_name, cur_root_event_++);
   auto id = std::get<0>(ret);
-  auto const node  = theContext()->getNode();
-  if (node != 0) {
-    auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
-    theMsg()->sendMsg<newEventHan>(0, msg);
-  }
   return id;
 }
 
@@ -105,11 +96,6 @@ UserEventIDType UserEventRegistry::user(
 ) {
   auto ret = newEventImpl(true, false, in_event_name, seq);
   auto id = std::get<0>(ret);
-  auto const node  = theContext()->getNode();
-  if (node != 0) {
-    auto msg = makeMessage<NewUserEventMsg>(true, id, in_event_name);
-    theMsg()->sendMsg<newEventHan>(0, msg);
-  }
   return id;
 }
 #endif
@@ -141,9 +127,18 @@ bool UserEventRegistry::insertEvent(
     );
     return true;
   } else {
+    user_event_[event] += " COLLISION " + name;
     return false;
   }
 }
 
+UserEventRegistry operator+(
+  UserEventRegistry r1, UserEventRegistry const& r2
+) {
+  for (auto& [hash, event_str] : r2.getEvents()) {
+    r1.insertEvent(hash, event_str);
+  }
+  return r1;
+}
 
 }} /* end namespace vt::trace */
