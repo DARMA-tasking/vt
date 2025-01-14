@@ -381,6 +381,9 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_lb_statistics_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+  } else {
+    auto f9 = opt_off("--vt_lb_statistics", "Load balancing statistics file dumping disabled");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
   }
 
   #if !vt_check_enabled(trace_enabled)
