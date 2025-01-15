@@ -91,7 +91,7 @@ public:
    * Cleans up resources, closing file descriptors associated with performance
    * counters.
    */
-  ~PerfData();
+  virtual ~PerfData();
 
   /**
    * \brief Start performance measurement for a task

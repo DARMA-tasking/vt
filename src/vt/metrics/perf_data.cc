@@ -64,7 +64,7 @@ PerfData::PerfData()
     }
   }
 
-  for (const auto &event_name : event_names_) {
+  for (auto const& event_name : event_names_) {
     if (event_map_.find(event_name) == event_map_.end()) {
       cleanupBeforeAbort();
       vtAbort("Event name isn't in known perf events map: " + event_name);
@@ -72,7 +72,7 @@ PerfData::PerfData()
   }
 
   // Initialize perf events once and store file descriptors
-  for (const auto &event_name : event_names_) {
+  for (auto const& event_name : event_names_) {
     struct perf_event_attr pe = {};
     pe.type = event_map_.at(event_name).first;
     pe.size = sizeof(struct perf_event_attr);
