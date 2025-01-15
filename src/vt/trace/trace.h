@@ -290,6 +290,11 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
   void addUserData(int32_t data);
 
   /**
+   * \brief Gathers all user-defined event hashes onto node 0.
+   */
+  void gatherUserEvents() override;
+
+  /**
    * \brief Log a memory usage event
    *
    * \param[in] memory the amount of memory used

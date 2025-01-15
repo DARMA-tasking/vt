@@ -549,10 +549,6 @@ void TraceLite::flushTracesFile(bool useGlobalSync) {
 void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
   auto const node = theContext()->getNode();
 
-  vt::runInEpochCollective([&]{
-    proxy.reduce<vt::collective::PlusOp>(0, std::move(user_event_));
-  });
-
   size_t to_write = traces_.size();
 
   if (traceWritingEnabled(node) and to_write > 0) {

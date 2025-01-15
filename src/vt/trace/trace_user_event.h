@@ -123,6 +123,8 @@ struct UserEventRegistry {
 
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
+  friend UserEventRegistry operator+(UserEventRegistry r1, UserEventRegistry const& r2);
+
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | cur_root_event_

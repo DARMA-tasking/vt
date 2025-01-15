@@ -197,6 +197,12 @@ void Trace::addUserData(int32_t data) {
   );
 }
 
+void Trace::gatherUserEvents() {
+  vt::runInEpochCollective([&]{
+    proxy.reduce<vt::collective::PlusOp>(0, std::move(user_event_));
+  });
+}
+
 UserEventIDType Trace::registerUserEventRoot(std::string const& name) {
   return user_event_.rooted(name);
 }
@@ -522,6 +528,7 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
       // Go ahead and perform a trace flush when tracing is disabled (and was
       // previously enabled) to reduce memory footprint.
       if (not ret and theConfig()->vt_trace_flush_size != 0) {
+        gatherUserEvents();
         writeTracesFile(incremental_flush_mode, true);
       }
     }
