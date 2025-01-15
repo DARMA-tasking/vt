@@ -126,10 +126,10 @@ bool UserEventRegistry::insertEvent(
       std::forward_as_tuple(name)
     );
     return true;
-  } else {
+  } else if (user_event_[event] != name){
     user_event_[event] += " COLLISION " + name;
-    return false;
   }
+  return false;
 }
 
 UserEventRegistry operator+(
