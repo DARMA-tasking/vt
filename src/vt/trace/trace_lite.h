@@ -83,11 +83,6 @@ struct TraceLite  {
   virtual ~TraceLite();
 
   /**
-   * \brief Gathers all user-defined event hashes onto node 0.
-   */
-  virtual void gatherUserEvents();
-
-  /**
    * \brief Set zlib incremental flush mode for trace file.
    *
    * Available options:
