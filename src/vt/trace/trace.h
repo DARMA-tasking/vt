@@ -126,6 +126,9 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
   void startup() override;
   void finalize() override;
 
+  void setProxy(objgroup::proxy::Proxy<Trace> in_proxy);
+  static std::unique_ptr<Trace> construct();
+
   /**
    * \brief Initiate a paired processing event.
    *
@@ -292,7 +295,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
   /**
    * \brief Gathers all user-defined event hashes onto node 0.
    */
-  void gatherUserEvents() override;
+  void gatherUserEvents();
 
   /**
    * \brief Log a memory usage event
@@ -405,6 +408,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
       | wrote_sts_file_
       | trace_write_count_
       | spec_proxy_
+      | proxy_
       | trace_enabled_cur_phase_
       | flush_event_
       | between_sched_event_type_
@@ -423,6 +427,11 @@ private:
 
 private:
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
+
+  /*
+   * Objgroup proxy
+   */
+  objgroup::proxy::Proxy<Trace> proxy_;
 
   // Processing event between top-level loops.
   TraceEntryIDType between_sched_event_type_ = no_trace_entry_id;

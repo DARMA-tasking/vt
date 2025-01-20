@@ -121,6 +121,19 @@ void Trace::finalize() /*override*/ {
   between_sched_event_ = TraceProcessingTag{};
 }
 
+void Trace::setProxy(objgroup::proxy::Proxy<Trace> in_proxy) {
+  proxy_ = in_proxy;
+}
+
+/*static*/ std::unique_ptr<Trace> Trace::construct() {
+  auto ptr = std::make_unique<Trace>();
+  auto proxy = theObjGroup()->makeCollective<Trace>(
+    ptr.get(), "Trace"
+  );
+  proxy.get()->setProxy(proxy);
+  return ptr;
+}
+
 void Trace::loadAndBroadcastSpec() {
   using namespace ::vt::utils::file_spec;
 
@@ -199,7 +212,7 @@ void Trace::addUserData(int32_t data) {
 
 void Trace::gatherUserEvents() {
   vt::runInEpochCollective([&]{
-    proxy.reduce<vt::collective::PlusOp>(0, std::move(user_event_));
+    proxy_.reduce<vt::collective::PlusOp>(0, std::move(user_event_));
   });
 }
 
