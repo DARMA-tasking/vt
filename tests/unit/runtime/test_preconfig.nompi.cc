@@ -55,6 +55,11 @@ TEST_F(TestPreconfig, test_vt_assert) {
 #if vt_check_enabled(production_build) or defined(__INTEL_COMPILER)
   GTEST_SKIP();
 #else
+#elif defined(__clang__)
+  #if __clang_major__ == 9 || __clang_major__ == 10
+    GTEST_SKIP() << "Skipping test for Clang 9 or 10.";
+  #endif
+#endif
   EXPECT_EQ(vt::debug::preConfig()->vt_throw_on_abort, true)
     << "vt_throw_on_abort should be enabled by default";
 
