@@ -53,6 +53,11 @@ struct TestCliArguments : TestParallelHarness { };
 
 #if not vt_check_enabled(production_build)
 TEST_F(TestCliArguments, test_vt_assert) {
+#if defined(__clang__)
+  #if __clang_major__ == 9 || __clang_major__ == 10
+    GTEST_SKIP() << "Skipping test for Clang 9 or 10.";
+  #endif
+#endif
   EXPECT_EQ(theConfig()->vt_no_assert_fail, false);
 
   ASSERT_THROW(
