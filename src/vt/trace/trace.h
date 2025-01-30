@@ -49,6 +49,7 @@
 #include "vt/trace/trace_log.h"
 #include "vt/trace/trace_registry.h"
 #include "vt/trace/trace_lite.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/runtime/component/component_pack.h"
 
 #include "vt/timing/timing.h"
