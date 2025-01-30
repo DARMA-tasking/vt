@@ -667,7 +667,8 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
   }
 
   #if vt_check_enabled(trace_enabled)
-  theTrace()->addUserEventBracketedBegin(1);
+  auto write_lb_stats_event = theTrace()->registerUserEventColl("write_lb_stats");
+  theTrace()->addUserEventBracketedBegin(write_lb_stats_event);
   #endif
 
   vt_debug_print(
@@ -688,7 +689,7 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
   writer->commitStaged();
 
   #if vt_check_enabled(trace_enabled)
-  theTrace()->addUserEventBracketedEnd(1);
+  theTrace()->addUserEventBracketedEnd(write_lb_stats_event);
   #endif
 }
 
