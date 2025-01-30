@@ -50,7 +50,7 @@
 #include "vt/objgroup/proxy/proxy_objgroup_elm.h"
 #include "vt/objgroup/active_func/active_func.h"
 #include "vt/messaging/message/smart_ptr.h"
-#include "vt/pipe/pipe_callback_only.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.fwd.h"
 #include "vt/collective/reduce/operators/functors/none_op.h"
 #include "vt/collective/reduce/operators/callback_op.h"
 #include "vt/collective/reduce/reduce_scope.h"
