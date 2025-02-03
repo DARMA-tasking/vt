@@ -294,6 +294,12 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
   void addUserData(int32_t data);
 
   /**
+   * \brief Update event registry on Node 0 with all gathered events
+   * \param[in] gathered_user_events summed registry of user events from all nodes
+   */
+  void reducedEventsHan(UserEventRegistry gathered_user_events);
+
+  /**
    * \brief Gathers all user-defined event hashes onto node 0.
    */
   void gatherUserEvents();
