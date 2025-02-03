@@ -229,6 +229,12 @@ void TraceLite::setupNames([[maybe_unused]] std::string const& in_prog_name) {
 }
 
 UserEventIDType TraceLite::registerUserEventColl(std::string const& name) {
+  auto const& events = user_event_.getEvents();
+  auto it = std::find_if(events.begin(), events.end(),
+                         [&](auto const& pair) { return pair.second == name; });
+  if (it != events.end()) {
+    return it->first;
+  }
   return user_event_.collective(name);
 }
 
