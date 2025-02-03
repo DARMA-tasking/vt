@@ -210,10 +210,13 @@ void Trace::addUserData(int32_t data) {
   );
 }
 
+void Trace::reducedEventsHan(UserEventRegistry gathered_user_events) {
+  vtAssert(theContext()->getNode() == 0, "Must be node 0");
+  user_event_ = gathered_user_events;
+}
+
 void Trace::gatherUserEvents() {
-  vt::runInEpochCollective([&]{
-    proxy_.reduce<vt::collective::PlusOp>(0, std::move(user_event_));
-  });
+  proxy_.reduce<&Trace::reducedEventsHan, vt::collective::PlusOp>(0, std::move(user_event_));
 }
 
 UserEventIDType Trace::registerUserEventRoot(std::string const& name) {
