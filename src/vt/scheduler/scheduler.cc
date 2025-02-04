@@ -303,11 +303,13 @@ void Scheduler::runSchedulerOnceImpl(bool msg_only) {
 
 Scheduler::SchedulerLoopGuard::SchedulerLoopGuard(Scheduler* scheduler)
   : scheduler_{scheduler} {
+  scheduler_->in_sched_depth_++;
   scheduler_->triggerEvent(SchedulerEventType::BeginSchedulerLoop);
 }
 
 Scheduler::SchedulerLoopGuard::~SchedulerLoopGuard() {
   scheduler_->triggerEvent(SchedulerEventType::EndSchedulerLoop);
+  scheduler_->in_sched_depth_--;
 }
 
 void Scheduler::runSchedulerWhile(std::function<bool()> cond) {

@@ -349,8 +349,9 @@ TraceProcessingTag Trace::beginProcessing(
 
   vt_debug_print(
     normal, trace,
-    "event_start: ep={}, event={}, time={}, from={}, entry chare={}\n",
-    ep, event, time, from_node, TraceRegistry::getEvent(ep).theEventSeq()
+    "event_start: ep={}, event={}, time={}, from={}, entry chare={}, name={}\n",
+    ep, event, time, from_node, TraceRegistry::getEvent(ep).theEventSeq(),
+    TraceRegistry::getEvent(ep).theEventName()
   );
 
   auto const type = TraceConstantsType::BeginProcessing;
@@ -394,9 +395,9 @@ void Trace::endProcessing(
 
   vt_debug_print(
     normal, trace,
-    "event_stop: ep={}, event={}, time={}, from_node={}, entry chare={}\n",
+    "event_stop: ep={}, event={}, time={}, from_node={}, entry chare={}, name={}\n",
     ep, event, time, open_events_.back().node,
-    TraceRegistry::getEvent(ep).theEventSeq()
+    TraceRegistry::getEvent(ep).theEventSeq(), TraceRegistry::getEvent(ep).theEventName()
   );
 
   vtAssert(

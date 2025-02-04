@@ -343,6 +343,11 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   void setRecentTimeToStale() { is_recent_time_stale_ = true; }
 
+  /**
+   * \brief Get the current recursive scheduler depth
+   */
+  unsigned int getSchedulerDepth() const { return in_sched_depth_; }
+
 #if vt_check_enabled(fcontext)
   /**
    * \brief Get the thread manager
@@ -363,6 +368,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
       | is_idle
       | is_idle_minus_term
       | action_depth_
+      | in_sched_depth_
       | num_term_msgs_
       | event_triggers
       | event_triggers_once
@@ -430,6 +436,8 @@ private:
   bool is_idle_minus_term = true;
   // The depth of work action currently executing.
   unsigned int action_depth_ = 0;
+  /// In-scheduler depth, zero indicates not in a scheduler
+  unsigned int in_sched_depth_ = 0;
 
   // The number of termination messages currently in the queue---they weakly
   // imply idleness for the stake of termination

@@ -70,6 +70,12 @@ void Trace::start(TimeType time) {
     return;
   }
 
+  // If our scheduler depth is zero, we need to end the between scheduler event
+  if (theSched()->getSchedulerDepth() == 0) {
+    at_sched_depth_zero_ = true;
+    theTrace()->beginSchedulerLoop();
+  }
+
   auto const trace_id = auto_registry::handlerTraceID(handler_);
 
   if (is_collection_) {
@@ -93,6 +99,10 @@ void Trace::finish(TimeType time) {
   }
 
   theTrace()->endProcessing(processing_tag_, time);
+
+  if (at_sched_depth_zero_) {
+    theTrace()->endSchedulerLoop();
+  }
 }
 
 void Trace::suspend(TimeType time) {

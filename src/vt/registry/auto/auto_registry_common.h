@@ -130,6 +130,8 @@ public:
       }
     } else if constexpr (std::is_same_v<ObjT, SentinelObject>) {
       std::apply(fp, msg->getTuple());
+    } else if constexpr (std::is_same_v<MsgT, void>) {
+      // do nothing
     } else {
       if constexpr (IsColTrait<ObjT>::value and IsWrapMsgTrait<MsgT>::value) {
         auto& m = msg->getMsg();
