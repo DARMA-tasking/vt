@@ -68,6 +68,11 @@ TEST_F(TestRunnableContextTrace, runnable_context_trace_test_1) {
 
   HandlerManager::setHandlerTrace(handler, true);
 
+  // Avoid special case in test, where we tell the trace component that we are
+  // in a direct invoke context to avoid the scheduler creating
+  // 'between-scheduler' events
+  theTrace()->setInInvokeContext(true);
+
   // Give some nonsense parameters but Trace shouldn't touch them
   auto t = ctx::Trace( msg, /* in_trace_event */ 7,
                   handler, /* in_from_node */ 3,
