@@ -71,8 +71,9 @@ void Trace::start(TimeType time) {
   }
 
   // If our scheduler depth is zero, we need to end the between scheduler event
-  if (theSched()->getSchedulerDepth() == 0) {
+  if (theSched()->getSchedulerDepth() == 0 and not theTrace()->inInvokeContext()) {
     at_sched_depth_zero_ = true;
+    theTrace()->setInInvokeContext(true);
     theTrace()->beginSchedulerLoop();
   }
 
@@ -102,6 +103,7 @@ void Trace::finish(TimeType time) {
 
   if (at_sched_depth_zero_) {
     theTrace()->endSchedulerLoop();
+    theTrace()->setInInvokeContext(false);
   }
 }
 
