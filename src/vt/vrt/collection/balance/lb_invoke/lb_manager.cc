@@ -366,7 +366,7 @@ void LBManager::startLB(
     break;
   }
 
-  runLB(phase, cb);
+  proxy_[theContext()->getNode()].template invoke<&LBManager::runLB>(phase, cb);
 }
 
 /*static*/
