@@ -137,6 +137,8 @@ private:
   uint64_t idx1_ = 0, idx2_ = 0, idx3_ = 0, idx4_ = 0;
   /// The open processing tag
   trace::TraceProcessingTag processing_tag_;
+  /// At scheduler depth zero
+  bool at_sched_depth_zero_ = false;
 };
 
 #else
