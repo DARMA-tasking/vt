@@ -172,8 +172,10 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
 
   /**
    * \brief Scheduler trigger for \c sched::SchedulerEvent::BeginSchedulerLoop
+   *
+   * \return the time the between scheduler event was ended
    */
-  void beginSchedulerLoop();
+  TimeType beginSchedulerLoop();
 
   /**
    * \brief Scheduler trigger for \c sched::SchedulerEvent::EndSchedulerLoop

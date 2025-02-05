@@ -74,7 +74,8 @@ void Trace::start(TimeType time) {
   if (theSched()->getSchedulerDepth() == 0 and not theTrace()->inInvokeContext()) {
     at_sched_depth_zero_ = true;
     theTrace()->setInInvokeContext(true);
-    theTrace()->beginSchedulerLoop();
+    auto const end_between_sched_time = theTrace()->beginSchedulerLoop();
+    time = std::max(time, end_between_sched_time);
   }
 
   auto const trace_id = auto_registry::handlerTraceID(handler_);
