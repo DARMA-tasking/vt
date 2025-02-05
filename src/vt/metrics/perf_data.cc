@@ -46,8 +46,7 @@
 namespace vt { namespace metrics {
 
 PerfData::PerfData()
-  : event_map_(example_event_map)
-{
+  : event_map_(example_event_map) {
   char const* env_p = getenv("VT_EVENTS");
 
   // Check if the environment variable is set
