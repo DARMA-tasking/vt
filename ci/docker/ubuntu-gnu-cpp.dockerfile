@@ -20,6 +20,7 @@ RUN apt-get update -y -q && \
         ${zoltan_enabled:+gfortran-$(echo ${compiler} | cut -d- -f2)} \
         brotli \
         ca-certificates \
+        linux-tools-generic \
         ccache \
         curl \
         git \

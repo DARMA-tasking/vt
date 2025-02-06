@@ -53,6 +53,10 @@
 #include "vt/context/runnable_context/continuation.h"
 #include "vt/pool/static_sized/memory_pool_equal.h"
 #include "vt/elm/elm_id.h"
+#if vt_check_enabled(perf)
+#include "vt/metrics/perf_data.h"
+#endif
+#include "vt/runtime/runtime_inst.h"
 
 // fwd-declarations for the element types
 namespace vt { namespace vrt {
@@ -317,6 +321,28 @@ public:
    * \return the message
    */
   BaseMsgType* getMsg() const { return msg_.get(); }
+
+#if vt_check_enabled(perf)
+  /**
+   * \brief Start metrics associated to this runnable for the running context
+   */
+  void startMetrics();
+
+  /**
+   * \brief Stop metrics associated to this runnable for the running context
+   *
+   * \note has to be called after startMetrics
+   *
+   */
+  void stopMetrics();
+
+  /**
+   * \brief Get the dictionnary of task metrics associated with this runnable
+   *
+   * \return the dictionnary
+   */
+  std::unordered_map<std::string, uint64_t> getMetrics();
+#endif
 
 #if vt_check_enabled(fcontext)
   /**

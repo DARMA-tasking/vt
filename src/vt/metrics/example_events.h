@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           features_featureswitch.h
+//                               example_events.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,30 +41,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
-#define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
+#if !defined INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H
+#define INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H
 
-/*
- * Strings for various vt features
- */
+#include <unordered_map>
+#include <string>
+#include <linux/perf_event.h>
 
-#define vt_feature_str_bit_check_overflow "Check bitfield overflow"
-#define vt_feature_str_diagnostics        "Performance analysis diagnostics"
-#define vt_feature_str_fcontext           "User-level threading with fcontext"
-#define vt_feature_str_lblite             "Load Balancing for Collections"
-#define vt_feature_str_memory_pool        "Memory Pooling"
-#define vt_feature_str_mimalloc           "mimalloc memory allocator"
-#define vt_feature_str_mpi_access_guards  "MPI access guards"
-#define vt_feature_str_mpi_rdma           "Native RDMA with MPI"
-#define vt_feature_str_no_feature         "No feature"
-#define vt_feature_str_no_pool_alloc_env  "No memory pool envelope"
-#define vt_feature_str_print_term_msgs    "Print Termination Control Messages"
-#define vt_feature_str_priorities         "Message priorities"
-#define vt_feature_str_production_build   "Production Build (assertions and " \
-                                          "debug prints disabled)"
-#define vt_feature_str_trace_enabled      "Tracing Projections"
-#define vt_feature_str_zoltan             "Zoltan for load balancing"
-#define vt_feature_str_debug_verbose      "Verbose Prints"
-#define vt_feature_str_perf               "perf for event measurement"
+namespace vt { namespace metrics {
 
-#endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/
+std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> const example_event_map = {
+    {"cycles", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES)},
+    {"instructions", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS)},
+    {"cache_references", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_REFERENCES)},
+    {"cache_misses", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES)},
+    {"branch_instructions", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS)},
+    {"branch_misses", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES)}
+};
+
+}} // end namespace vt::metrics
+
+#endif /*INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H*/

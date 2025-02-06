@@ -64,7 +64,9 @@
 #include "vt/timetrigger/time_trigger_manager.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/epoch/epoch_manip.h"
-
+#if vt_check_enabled(perf)
+#include "vt/metrics/perf_data.h"
+#endif
 #include <cassert>
 
 namespace vt {
@@ -122,6 +124,9 @@ trace::Trace*               theTrace()              { return curRT->theTrace;   
 #endif
 #if vt_check_enabled(mpi_access_guards)
 pmpi::PMPIComponent*        thePMPI()               { return curRT->thePMPI;           }
+#endif
+#if vt_check_enabled(perf)
+metrics::PerfData*          thePerfData()           { return curRT->thePerfData;       }
 #endif
 
 } /* end namespace vt */

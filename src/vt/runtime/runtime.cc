@@ -67,6 +67,9 @@
 #include "vt/timetrigger/time_trigger_manager.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/epoch/epoch_manip.h"
+#if vt_check_enabled(perf)
+#include "vt/metrics/perf_data.h"
+#endif
 
 #include "vt/configs/arguments/app_config.h"
 #include "vt/configs/arguments/args.h"
@@ -912,6 +915,14 @@ void Runtime::initializeComponents() {
     >{}
   );
 
+# if vt_check_enabled(perf)
+  p_->registerComponent<metrics::PerfData>(
+    &thePerfData, Deps<
+      ctx::Context                        // Everything depends on theContext
+    >{}
+  );
+# endif
+
   p_->add<arguments::ArgConfig>();
   p_->add<ctx::Context>();
   p_->add<util::memory::MemoryUsage>();
@@ -941,6 +952,9 @@ void Runtime::initializeComponents() {
   p_->add<vrt::collection::balance::LBManager>();
   p_->add<timetrigger::TimeTriggerManager>();
   p_->add<phase::PhaseManager>();
+# if vt_check_enabled(perf)
+  p_->add<metrics::PerfData>();
+# endif
 
   if (addLBDataRestartReader) {
     p_->add<vrt::collection::balance::LBDataRestartReader>();
