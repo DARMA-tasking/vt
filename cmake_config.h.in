@@ -98,6 +98,7 @@
   #define INCLUDE_FMT_CORE <fmt/core.h>
   #define INCLUDE_FMT_FORMAT <fmt/format.h>
   #define INCLUDE_FMT_OSTREAM <fmt/ostream.h>
+  #define INCLUDE_FMT_BASE <fmt/base.h>
 
   #define VT_FMT_NAMESPACE_BEGIN namespace fmt {
   #define VT_FMT_NAMESPACE_END }
@@ -105,6 +106,7 @@
   #define INCLUDE_FMT_CORE <fmt-vt/core.h>
   #define INCLUDE_FMT_FORMAT <fmt-vt/format.h>
   #define INCLUDE_FMT_OSTREAM <fmt-vt/ostream.h>
+  #define INCLUDE_FMT_BASE <fmt-vt/base.h>
 
   #define VT_FMT_NAMESPACE_BEGIN namespace fmt { inline namespace vt {
   #define VT_FMT_NAMESPACE_END } }

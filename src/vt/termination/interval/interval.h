@@ -218,6 +218,11 @@ struct IntervalCompare {
   }
 };
 
+template <typename DomainT, DomainT sentinel>
+auto format_as(Interval<DomainT, sentinel> i) {
+  return fmt::format("Interval[{}, {}]", i.lower(), i.upper());
+}
+
 }}} /* end namespace vt::term::interval */
 
 namespace vt {
@@ -236,21 +241,5 @@ template <typename DomainT, DomainT sentinel>
 struct Interval;
 
 }}}
-
-VT_FMT_NAMESPACE_BEGIN
-
-template <typename DomainT, DomainT sentinel>
-struct formatter<::vt::term::interval::Interval<DomainT, sentinel>>
-  : formatter<std::string> {
-  template <typename FormatContext>
-  auto format(
-    const ::vt::term::interval::Interval<DomainT, sentinel>& interval,
-    FormatContext& ctx) const {
-    return format_to(
-      ctx.out(), "Interval[{}, {}]", interval.lower(), interval.upper());
-  }
-};
-
-VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_TERMINATION_INTERVAL_INTERVAL_H*/

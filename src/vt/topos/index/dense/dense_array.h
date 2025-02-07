@@ -170,23 +170,12 @@ static_assert(
   "DenseIndexArray must follow the index concept"
 );
 
+template <typename T, NumDimensionsType nd>
+auto format_as(DenseIndexArray<T, nd> d) {
+  return d.toString();
+}
+
 }}  // end namespace vt::index
-
-VT_FMT_NAMESPACE_BEGIN
-
-template <typename IndexType, ::vt::index::NumDimensionsType ndim>
-struct formatter<::vt::index::DenseIndexArray<IndexType, ndim>> {
-  constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
-
-  template <typename FormatContext>
-  auto format(
-    const ::vt::index::DenseIndexArray<IndexType, ndim>& idx,
-    FormatContext& ctx) const {
-    return fmt::format_to(ctx.out(), idx.toString());
-  }
-};
-
-VT_FMT_NAMESPACE_END
 
 #include "vt/topos/index/dense/dense_array.impl.h"
 

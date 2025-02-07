@@ -47,6 +47,12 @@
 #include <limits>
 #include <algorithm>
 #include <cmath>
+#include <string>
+
+#include <EngFormat-Cpp/eng_format.hpp>
+
+#include "vt/cmake_config.h"
+#include INCLUDE_FMT_BASE
 
 namespace vt {
 
@@ -163,6 +169,10 @@ struct TimeTypeWrapper {
 private:
   TimeTypeInternal time_;
 };
+
+inline auto format_as(TimeTypeWrapper t) {
+  return to_engineering_string(t.seconds(), 5, eng_exponential, "s");
+}
 
 using TimeType = TimeTypeWrapper;
 

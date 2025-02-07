@@ -47,6 +47,9 @@
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
 
+#include "vt/cmake_config.h"
+#include INCLUDE_FMT_FORMAT
+
 namespace vt { namespace elm {
 
 /// The underlying element ID type
@@ -81,6 +84,12 @@ struct ElementIDStruct {
   bool isLocatedOnThisNode() const;
 };
 
+inline auto format_as(ElementIDStruct e) {
+  auto fmt_str = "({},{},{},{})";
+  return fmt::format(
+    fmt_str, e.id, e.getHomeNode(), e.curr_node, e.isMigratable()
+  );
+}
 
 }} /* end namespace vt::elm */
 
@@ -94,51 +103,5 @@ struct hash<vt::elm::ElementIDStruct> {
 };
 
 } /* end namespace std */
-
-#include "vt/cmake_config.h"
-#include INCLUDE_FMT_FORMAT
-
-VT_FMT_NAMESPACE_BEGIN
-
-/// Custom fmt formatter/print for \c vt::elm::ElementIDStruct
-template <>
-struct formatter<::vt::elm::ElementIDStruct> {
-  /// Presentation format:
-  ///  - 'x' - hex (default)
-  ///  - 'd' - decimal
-  ///  - 'b' - binary
-  char presentation = 'x';
-
-  /// Parses format specifications of the form ['x' | 'd' | 'b'].
-  auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-    // Parse the presentation format and store it in the formatter:
-    auto it = ctx.begin(), end = ctx.end();
-    if (it != end && (*it == 'x' || *it == 'd' || *it == 'b')) {
-      presentation = *it++;
-    }
-
-    // Check if reached the end of the range:
-    if (it != end && *it != '}') {
-      throw format_error("invalid format");
-    }
-
-    // Return an iterator past the end of the parsed range:
-    return it;
-  }
-
-  /// Formats the epoch using the parsed format specification (presentation)
-  /// stored in this formatter.
-  template <typename FormatContext>
-  auto format(::vt::elm::ElementIDStruct const& e, FormatContext& ctx) const {
-    std::string id_format =
-      presentation == 'b' ? "{:b}" : (presentation == 'd' ? "{:d}" : "{:x}");
-    auto fmt_str = "(" + id_format + ",{},{},{})";
-    return format_to(
-      ctx.out(), fmt_str, e.id, e.getHomeNode(), e.curr_node, e.isMigratable()
-    );
-  }
-};
-
-VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_ELM_ELM_ID_H*/
