@@ -44,12 +44,6 @@
 #if !defined INCLUDED_VT_TIMING_TIMING_H
 #define INCLUDED_VT_TIMING_TIMING_H
 
-#include <string>
-
-#include <EngFormat-Cpp/eng_format.hpp>
-#include "vt/cmake_config.h"
-#include INCLUDE_FMT_CORE
-
 #include "vt/timing/timing_type.h"
 
 namespace vt { namespace timing {
@@ -62,25 +56,5 @@ namespace vt { namespace timing {
 TimeType getCurrentTime();
 
 }} /* end namespace vt::timing */
-
-VT_FMT_NAMESPACE_BEGIN
-
-template<>
-struct formatter<::vt::TimeTypeWrapper> {
-  template<typename ParseContext>
-  constexpr auto parse(ParseContext& ctx) {
-    return ctx.begin();
-  }
-
-  template<typename FormatContext>
-  auto format(::vt::TimeTypeWrapper const& t, FormatContext& ctx) const {
-    return fmt::format_to(
-      ctx.out(), "{}",
-      to_engineering_string(t.seconds(), 5, eng_exponential, "s")
-    );
-  }
-};
-
-VT_FMT_NAMESPACE_END
 
 #endif /*INCLUDED_VT_TIMING_TIMING_H*/

@@ -115,40 +115,29 @@ using RDMA_ElmMapType = std::function<RDMA_BlockElmRangeType(RDMA_ElmType,RDMA_E
 static constexpr Type uninitialized_rdma_type = Type::Uninitialized;
 static constexpr ByteType rdma_default_byte_size = sizeof(char);
 
-}} //end namespace vt::rdma
-
-VT_FMT_NAMESPACE_BEGIN
-
-template <>
-struct formatter<::vt::rdma::Type> {
-  constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
-
-  template <typename FormatContext>
-  auto format(::vt::rdma::Type t, FormatContext& ctx) const {
-    std::string name = "Unknown";
-    switch (t) {
-    case ::vt::rdma::Type::Get:
-      name = "Get";
-      break;
-    case ::vt::rdma::Type::Put:
-      name = "Put";
-      break;
-    case ::vt::rdma::Type::GetOrPut:
-      name = "GetOrPut";
-      break;
-    case ::vt::rdma::Type::Uninitialized:
-      name = "Uninitialized";
-      break;
-    default:
-      name = fmt::format(
-        "{}", static_cast<std::underlying_type_t<::vt::rdma::Type>>(t));
-    }
-
-    return fmt::format_to(ctx.out(), name);
+inline auto format_as(Type t) {
+  std::string_view name = "Unknown";
+  switch (t) {
+  case ::vt::rdma::Type::Get:
+    name = "Get";
+    break;
+  case ::vt::rdma::Type::Put:
+    name = "Put";
+    break;
+  case ::vt::rdma::Type::GetOrPut:
+    name = "GetOrPut";
+    break;
+  case ::vt::rdma::Type::Uninitialized:
+    name = "Uninitialized";
+    break;
+  default:
+    name = "Unknown";
+    break;
   }
-};
+  return name;
+}
 
-VT_FMT_NAMESPACE_END
+}} //end namespace vt::rdma
 
 #define PRINT_CHANNEL_TYPE(rdma_op_type) (                              \
   rdma_op_type == vt::rdma::Type::Get ? "rdma::Get" : (            \

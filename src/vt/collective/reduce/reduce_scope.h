@@ -48,6 +48,9 @@
 
 #include <unordered_map>
 #include <variant>
+#include <string>
+
+#include INCLUDE_FMT_FORMAT
 
 namespace vt { namespace collective { namespace reduce { namespace detail {
 
