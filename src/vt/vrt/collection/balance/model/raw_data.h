@@ -66,9 +66,9 @@ struct RawData : public LoadModel {
   ElmUserDataType getUserData(ElementIDStruct object, PhaseOffset when) const override;
   CommMapType getComm(PhaseOffset when) const override;
 
-  void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                std::unordered_map<PhaseType, CommMapType> const* proc_comm,
-                std::unordered_map<PhaseType, DataMapType> const* user_data) override;
+  void setLoads(LoadMapBufferType const* proc_load,
+                CommMapBufferType const* proc_comm,
+                DataMapBufferType const* user_data) override;
 
   ObjectIterator begin() const override;
 
@@ -78,9 +78,9 @@ struct RawData : public LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) const override;
 
   // Observer pointers to the underlying data. In operation, these would be owned by NodeLBData
-  std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;
-  std::unordered_map<PhaseType, CommMapType>         const* proc_comm_;
-  std::unordered_map<PhaseType, DataMapType>         const* user_data_;
+  LoadMapBufferType         const* proc_load_;
+  CommMapBufferType         const* proc_comm_;
+  DataMapBufferType         const* user_data_;
   PhaseType last_completed_phase_ = ~0;
 }; // class RawData
 

@@ -65,11 +65,9 @@ using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
 using vt::vrt::collection::balance::DataMapType;
-
-using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
-using ProcSubphaseLoadMap = std::unordered_map<PhaseType, SubphaseLoadMapType>;
-using ProcCommMap = std::unordered_map<PhaseType, CommMapType>;
-using UserDataMap = std::unordered_map<PhaseType, DataMapType>;
+using vt::vrt::collection::balance::LoadMapBufferType;
+using vt::vrt::collection::balance::CommMapBufferType;
+using vt::vrt::collection::balance::DataMapBufferType;
 
 constexpr auto num_subphases = 3;
 
@@ -79,9 +77,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    ProcLoadMap const* proc_load,
-    ProcCommMap const*,
-    UserDataMap const*) override {
+    LoadMapBufferType const* proc_load,
+    CommMapBufferType const*,
+    DataMapBufferType const*) override {
     proc_load_ = proc_load;
   }
 
@@ -102,16 +100,17 @@ struct StubModel : LoadModel {
   unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) const override { return look_back; }
 
 private:
-  ProcLoadMap const* proc_load_ = nullptr;
+  LoadMapBufferType const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelNorm, test_model_norm_1) {
   NodeType this_node = 0;
-  ProcLoadMap proc_load = {
-    {0,
-     LoadMapType{
-       {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
-       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
+  LoadMapBufferType proc_load(1);
+  proc_load[0] = LoadMapType{
+    {ElementIDStruct{1, this_node},
+     {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
+    {ElementIDStruct{2, this_node},
+     {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}};
 
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
   test_model->setLoads(&proc_load, nullptr, nullptr);
@@ -138,11 +137,12 @@ TEST_F(TestModelNorm, test_model_norm_1) {
 
 TEST_F(TestModelNorm, test_model_norm_2) {
   NodeType this_node = 0;
-  ProcLoadMap proc_load = {
-    {0,
-     LoadMapType{
-       {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
-       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
+  LoadMapBufferType proc_load(1);
+  proc_load[0] = LoadMapType{
+    {ElementIDStruct{1, this_node},
+     {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
+    {ElementIDStruct{2, this_node},
+     {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}};
 
   // finite 'power' value
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
@@ -167,11 +167,10 @@ TEST_F(TestModelNorm, test_model_norm_2) {
 
 TEST_F(TestModelNorm, test_model_norm_3) {
   NodeType this_node = 0;
-  ProcLoadMap proc_load = {
-    {0,
-     LoadMapType{
+  LoadMapBufferType proc_load(1);
+  proc_load[0] = LoadMapType{
        {ElementIDStruct{1,this_node}, {LoadType{60}, {LoadType{10}, LoadType{20}, LoadType{30}}}},
-       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}}}};
+       {ElementIDStruct{2,this_node}, {LoadType{150}, {LoadType{40}, LoadType{50}, LoadType{60}}}}};
 
   // infinite 'power' value
   auto test_model = std::make_shared<Norm>(

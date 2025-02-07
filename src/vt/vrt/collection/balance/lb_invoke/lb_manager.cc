@@ -174,8 +174,11 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 }
 
 void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
-  model_ = model;
   auto nlb_data = theNodeLBData();
+  min_hist_lb_data_ = std::max(model->getNumPastPhasesNeeded(), theConfig()->vt_lb_data_retention);
+  nlb_data->resizeLBDataHistory(min_hist_lb_data_);
+
+  model_ = model;
   model_->setLoads(nlb_data->getNodeLoad(),
                    nlb_data->getNodeComm(),
                    nlb_data->getUserData());
@@ -254,15 +257,15 @@ LBManager::runLB(PhaseType phase, vt::Callback<ReassignmentMsg> cb) {
   elm::CommMapType const* comm = &empty_comm;
 
   auto const& node_comm = theNodeLBData()->getNodeComm();
-  if (auto iter = node_comm->find(phase); iter != node_comm->end()) {
-    comm = &iter->second;
+  if (node_comm->contains(phase)) {
+    comm = &node_comm->at(phase);
   }
 
   balance::DataMapType empty_data_map;
   balance::DataMapType const* data_map = &empty_data_map;
   auto const& node_data_map = theNodeLBData()->getUserData();
-  if (auto iter = node_data_map->find(phase); iter != node_data_map->end()) {
-    data_map = &iter->second;
+  if (node_data_map->contains(phase)) {
+    data_map = &node_data_map->at(phase);
   }
 
   vt_debug_print(terse, lb, "LBManager: running strategy\n");
@@ -539,7 +542,7 @@ void LBManager::finishedLB(PhaseType phase) {
     "finishedLB\n"
   );
 
-  theNodeLBData()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
+  theNodeLBData()->startIterCleanup();
   theNodeLBData()->outputLBDataForPhase(phase);
 
   destroyLB();
@@ -732,9 +735,8 @@ void LBManager::computeStatistics(
 
   elm::CommMapType empty_comm;
   elm::CommMapType const* comm_data = &empty_comm;
-  auto iter = theNodeLBData()->getNodeComm()->find(phase);
-  if (iter != theNodeLBData()->getNodeComm()->end()) {
-    comm_data = &iter->second;
+  if (theNodeLBData()->getNodeComm()->contains(phase)) {
+    comm_data = &theNodeLBData()->getNodeComm()->at(phase);
   }
 
   std::vector<LoadData> lstats;
@@ -894,12 +896,11 @@ getSharedEdges(elm::CommMapType const& comm_data) {
 void makeGraphSymmetric(
   PhaseType phase, objgroup::proxy::Proxy<lb::BaseLB> proxy
 ) {
-  auto iter = theNodeLBData()->getNodeComm()->find(phase);
-  if (iter == theNodeLBData()->getNodeComm()->end()) {
+  if (!theNodeLBData()->getNodeComm()->contains(phase)) {
     return;
   }
 
-  auto shared_edges = getSharedEdges(iter->second);
+  auto shared_edges = getSharedEdges(theNodeLBData()->getNodeComm()->at(phase));
 
   for (auto&& elm : shared_edges) {
     proxy[elm.first].send<lb::CommMsg, &lb::BaseLB::recvSharedEdges>(

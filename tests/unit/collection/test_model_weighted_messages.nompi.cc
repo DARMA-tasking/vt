@@ -66,10 +66,9 @@ using vt::vrt::collection::balance::ObjectIterator;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::LoadMapObjectIterator;
 using vt::vrt::collection::balance::DataMapType;
-
-using ProcLoadMap = std::unordered_map<PhaseType, LoadMapType>;
-using ProcCommMap = std::unordered_map<PhaseType, CommMapType>;
-using UserDataMap = std::unordered_map<PhaseType, DataMapType>;
+using vt::vrt::collection::balance::LoadMapBufferType;
+using vt::vrt::collection::balance::CommMapBufferType;
+using vt::vrt::collection::balance::DataMapBufferType;
 
 static auto num_phases = 0;
 
@@ -78,9 +77,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    ProcLoadMap const* proc_load,
-    ProcCommMap const*,
-    UserDataMap const*) override {
+    LoadMapBufferType const* proc_load,
+    CommMapBufferType const*,
+    DataMapBufferType const*) override {
     proc_load_ = proc_load;
   }
 
@@ -111,7 +110,7 @@ struct StubModel : LoadModel {
   }
 
 private:
-  ProcLoadMap const* proc_load_ = nullptr;
+  LoadMapBufferType const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelWeightedMessages, test_model) {
@@ -125,26 +124,22 @@ TEST_F(TestModelWeightedMessages, test_model) {
   // Element 3 (home node == 3)
   ElementIDStruct const elem3 = {3, 3};
 
-  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, {LoadType{150}, {}}}}}};
+  LoadMapBufferType proc_load(1);
+  proc_load[0] = LoadMapType{{elem2, {LoadType{150}, {}}}};
 
-  ProcCommMap proc_comm = {
-    {0,
-     CommMapType{// Node 1 -> Node 2
-                 {{CommKeyType::CollectionTag{}, elem1, elem2, false},
-                  CommVolume{20.0, 2}},
-                 // Node 3 -> Node 2
-                 {{CommKeyType::CollectionTag{}, elem3, elem2, false},
-                  CommVolume{5.0, 5}}}
-    },
-    {1,
-     CommMapType{// Node 3 -> Node 2
-                 {{CommKeyType::CollectionTag{}, elem3, elem2, false},
-                  CommVolume{500.0, 50}},
-                 // Node 1 -> Node 2
-                 {{CommKeyType::CollectionTag{}, elem1, elem2, false},
-                  CommVolume{25.0, 10}}}
-    }
-  };
+  CommMapBufferType proc_comm(2);
+  proc_comm[0] = CommMapType{
+    // Node 1 -> Node 2
+    {{CommKeyType::CollectionTag{}, elem1, elem2, false}, CommVolume{20.0, 2}},
+    // Node 3 -> Node 2
+    {{CommKeyType::CollectionTag{}, elem3, elem2, false}, CommVolume{5.0, 5}}};
+  proc_comm[1] =
+    CommMapType{// Node 3 -> Node 2
+                {{CommKeyType::CollectionTag{}, elem3, elem2, false},
+                 CommVolume{500.0, 50}},
+                // Node 1 -> Node 2
+                {{CommKeyType::CollectionTag{}, elem1, elem2, false},
+                 CommVolume{25.0, 10}}};
 
   constexpr auto per_msg_weight = 3.0;
   constexpr auto per_byte_weight = 5.0;

@@ -65,14 +65,14 @@ struct CommOverhead : public ComposedModel {
     LoadType in_per_byte_weight
   );
 
-  void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-                std::unordered_map<PhaseType, CommMapType> const* proc_comm,
-                std::unordered_map<PhaseType, DataMapType> const* user_data) override;
+  void setLoads(LoadMapBufferType const* proc_load,
+                CommMapBufferType const* proc_comm,
+                DataMapBufferType const* user_data) override;
 
   LoadType getModeledLoad(ElementIDStruct object, PhaseOffset when) const override;
 
 private:
-  std::unordered_map<PhaseType, CommMapType> const* proc_comm_; /**< Underlying comm data */
+  CommMapBufferType const* proc_comm_; /**< Underlying comm data */
   LoadType per_msg_weight_ = 0.001;           /**< Cost per message */
   LoadType per_byte_weight_ = 0.000001;       /**< Cost per bytes */
 }; // class CommOverhead

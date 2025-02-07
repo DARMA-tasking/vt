@@ -75,6 +75,7 @@ void addPhasesDataToJson(nlohmann::json& json, PhaseType amountOfPhasesToAdd, st
   }
 
   LBDataHolder dh;
+  dh.resizeHistory(amountOfPhasesToAdd);
   for (unsigned i = 0; i < amountOfPhasesToAdd; i++) {
     for (auto&& elm : ids[i]) {
       dh.node_data_[i][elm] = LoadSummary{3.};
@@ -370,7 +371,7 @@ TEST_F(TestLBDataHolder, test_lb_entity_attributes) {
   auto id = vt::vrt::collection::balance::ElementIDStruct{524291, 0};
 
   LBDataHolder testObj(json);
-  EXPECT_TRUE(testObj.node_user_attributes_.find(0) != testObj.node_user_attributes_.end());
+  EXPECT_TRUE(testObj.node_user_attributes_.contains(0));
   EXPECT_TRUE(testObj.node_user_attributes_[0].find(id) != testObj.node_user_attributes_[0].end());
   auto attributes = testObj.node_user_attributes_[0][id];
   EXPECT_EQ(123, std::get<int>(attributes["intSample"]));

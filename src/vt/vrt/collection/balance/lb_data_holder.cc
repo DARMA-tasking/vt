@@ -51,6 +51,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void LBDataHolder::getObjectFromJsonField_(
@@ -205,14 +207,14 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   j["id"] = phase;
 
   std::size_t i = 0;
-  if (node_data_.find(phase) != node_data_.end()) {
+  if (node_data_.contains(phase)) {
     for (auto&& elm : node_data_.at(phase)) {
       ElementIDStruct id = elm.first;
       LoadType time = elm.second.whole_phase_load;
       j["tasks"][i]["resource"] = "cpu";
       j["tasks"][i]["node"] = id.getCurrNode();
       j["tasks"][i]["time"] = time;
-      if (user_defined_json_.find(phase) != user_defined_json_.end()) {
+      if (user_defined_json_.contains(phase)) {
         auto &user_def_this_phase = user_defined_json_.at(phase);
         if (user_def_this_phase.find(id) != user_def_this_phase.end()) {
           auto &user_def = user_def_this_phase.at(id);
@@ -223,7 +225,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
       }
       outputEntity(j["tasks"][i]["entity"], id);
 
-      if (node_user_attributes_.find(phase) != node_user_attributes_.end()) {
+      if (node_user_attributes_.contains(phase)) {
         if (node_user_attributes_.at(phase).find(id) != node_user_attributes_.at(phase).end()) {
           for (auto const& [key, value] : node_user_attributes_.at(phase).at(id)) {
             if (std::holds_alternative<int>(value)) {
@@ -255,7 +257,7 @@ std::unique_ptr<nlohmann::json> LBDataHolder::toJson(PhaseType phase) const {
   }
 
   i = 0;
-  if (node_comm_.find(phase) != node_comm_.end()) {
+  if (node_comm_.contains(phase)) {
     for (auto const& [key, volume] : node_comm_.at(phase)) {
       j["communications"][i]["bytes"] = volume.bytes;
       j["communications"][i]["messages"] = volume.messages;
@@ -337,7 +339,7 @@ std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
 
   std::unordered_map<ElementIDType, ObjectWork> objects;
 
-  if (node_data_.find(phase) != node_data_.end()) {
+  if (node_data_.contains(phase)) {
     for (auto&& elm : node_data_.at(phase)) {
       ElementIDStruct id = elm.first;
       double whole_phase_load = elm.second.whole_phase_load;
@@ -345,7 +347,7 @@ std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
 
       ElmUserDataType user_defined;
       if (
-        user_defined_lb_info_.find(phase) != user_defined_lb_info_.end() and
+        user_defined_lb_info_.contains(phase) and
         user_defined_lb_info_.at(phase).find(id) !=
         user_defined_lb_info_.at(phase).end()
       ) {
@@ -365,7 +367,7 @@ std::unique_ptr<vt::tv::PhaseWork> LBDataHolder::toTV(PhaseType phase) const {
     }
   }
 
-  if (node_comm_.find(phase) != node_comm_.end()) {
+  if (node_comm_.contains(phase)) {
     for (auto&& elm : node_comm_.at(phase)) {
       auto const& key = elm.first;
       auto const& volume = elm.second;
@@ -396,7 +398,7 @@ std::unordered_map<ElementIDType, tv::ObjectInfo> LBDataHolder::getObjInfo(
   PhaseType phase
 ) const {
   std::unordered_map<ElementIDType, tv::ObjectInfo> map;
-  if (node_data_.find(phase) != node_data_.end()) {
+  if (node_data_.contains(phase)) {
     for (auto&& elm : node_data_.at(phase)) {
       ElementIDStruct id = elm.first;
 
@@ -426,6 +428,15 @@ std::unordered_map<ElementIDType, tv::ObjectInfo> LBDataHolder::getObjInfo(
 
 #endif
 
+void LBDataHolder::resizeHistory(std::size_t num_to_retain) {
+  node_data_.resize(num_to_retain);
+  node_comm_.resize(num_to_retain);
+  node_subphase_comm_.resize(num_to_retain);
+  user_defined_json_.resize(num_to_retain);
+  user_defined_lb_info_.resize(num_to_retain);
+  node_user_attributes_.resize(num_to_retain);
+}
+
 LBDataHolder::LBDataHolder(nlohmann::json const& j)
 {
   this_node_ = theContext()->getNode();
@@ -438,9 +449,6 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
     for (auto const& phase : phases) {
       auto id = phase["id"];
       auto tasks = phase["tasks"];
-
-      this->node_data_[id];
-      this->node_comm_[id];
 
       if (tasks.is_array()) {
         for (auto const& task : tasks) {
@@ -632,10 +640,16 @@ LBDataHolder::LBDataHolder(nlohmann::json const& j)
 }
 
 void LBDataHolder::readMetadata(nlohmann::json const& j) {
+  std::size_t num_phases = 0;
   if (j.find("metadata") != j.end()) {
     auto metadata = j["metadata"];
     if (metadata.find("phases") != metadata.end()) {
       auto phases = metadata["phases"];
+      // read the number of phases
+      if (phases.find("count") != phases.end()) {
+        num_phases = phases["count"];
+      }
+
       // load all skipped phases
       auto sl = phases["skipped"]["list"];
       if(sl.is_array()) {
@@ -681,6 +695,34 @@ void LBDataHolder::readMetadata(nlohmann::json const& j) {
         }
       }
     }
+  }
+
+  // Adjust the capacity of the data containers
+  if (num_phases > 0) {
+    resizeHistory(num_phases);
+  } else {
+    // find min and max phase
+    PhaseType min = std::numeric_limits<PhaseType>::max();
+    PhaseType max = 0;
+
+    if (identical_phases_.size() > 0) {
+      min = std::min(min, *identical_phases_.begin());
+      max = std::max(max, *identical_phases_.rbegin());
+    }
+
+    auto phases = j["phases"];
+    if (phases.is_array()) {
+      for (auto const& phase : phases) {
+        auto id = phase["id"];
+        if (id < min) {
+          min = id;
+        } else if (id > max) {
+          max = id;
+        }
+      }
+    }
+
+    resizeHistory((max - min) + 1);
   }
 }
 

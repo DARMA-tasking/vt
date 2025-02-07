@@ -57,6 +57,7 @@
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 #include "vt/vrt/collection/types/storage/storable.h"
 #include "vt/utils/file_spec/spec.h"
+#include "vt/utils/container/circular_phases_buffer.h"
 
 #include <string>
 #include <unordered_map>
@@ -146,7 +147,7 @@ public:
   /**
    * \internal \brief Cleanup after LB runs
    */
-  void startIterCleanup(PhaseType phase, unsigned int look_back);
+  void startIterCleanup();
 
   /**
    * \internal \brief Load and broadcast the LB specification file
@@ -172,28 +173,28 @@ public:
    *
    * \return an observer pointer to the load map
    */
-  std::unordered_map<PhaseType, LoadMapType> const* getNodeLoad() const;
+  LoadMapBufferType const* getNodeLoad() const;
 
   /**
    * \internal \brief Get stored object comm graph
    *
    * \return an observer pointer to the comm graph
    */
-  std::unordered_map<PhaseType, CommMapType> const* getNodeComm() const;
+  CommMapBufferType const* getNodeComm() const;
 
   /**
    * \internal \brief Get the user-defined LB data
    *
    * \return an observer pointer to the user-defined LB data
    */
-  std::unordered_map<PhaseType, DataMapType> const* getUserData() const;
+  DataMapBufferType const* getUserData() const;
 
   /**
    * \internal \brief Get the user-defined attributes
    *
    * \return an observer pointer to the user-defined attributes
    */
-  std::unordered_map<PhaseType, DataMapType> const* getPhaseAttributes() const;
+  DataMapBufferType const* getPhaseAttributes() const;
 
   /**
    * \internal \brief Get stored object comm data for a specific phase
@@ -209,7 +210,7 @@ public:
    *
    * \return an observer pointer to the comm subphase graph
    */
-  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
+  util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
 
   /**
    * \internal \brief Get stored node attributes
@@ -270,6 +271,13 @@ public:
    */
   LBDataHolder* getLBData() { return lb_data_.get(); }
 
+  /**
+   * \brief Set the amount of historical LB data which should be retained
+   *
+   * \param[in] new_hist_len the amount of LB data to retain
+   */
+  void resizeLBDataHistory(uint32_t new_hist_len);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | proxy_
@@ -280,7 +288,8 @@ public:
       | next_elm_
       | created_dir_
       | lb_data_writer_
-      | lb_data_;
+      | lb_data_
+      | hist_lb_data_size_;
   }
 
 private:
@@ -313,6 +322,8 @@ private:
   std::unique_ptr<util::json::BaseAppender> lb_data_writer_ = nullptr;
   /// The struct that holds all the LB data
   std::unique_ptr<LBDataHolder> lb_data_ = nullptr;
+  //// The amount of historical LB data to hold
+  uint32_t hist_lb_data_size_ = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

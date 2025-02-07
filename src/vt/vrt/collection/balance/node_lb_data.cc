@@ -90,26 +90,27 @@ bool NodeLBData::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
   return true;
 }
 
-std::unordered_map<PhaseType, LoadMapType> const*
+LoadMapBufferType const*
 NodeLBData::getNodeLoad() const {
   return &lb_data_->node_data_;
 }
 
-std::unordered_map<PhaseType, DataMapType> const*
+DataMapBufferType const*
 NodeLBData::getUserData() const {
   return &lb_data_->user_defined_lb_info_;
 }
 
-std::unordered_map<PhaseType, DataMapType> const*
+DataMapBufferType const*
 NodeLBData::getPhaseAttributes() const {
   return &lb_data_->node_user_attributes_;
 }
 
-std::unordered_map<PhaseType, CommMapType> const* NodeLBData::getNodeComm() const {
+CommMapBufferType const*
+NodeLBData::getNodeComm() const {
   return &lb_data_->node_comm_;
 }
 
-std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
+util::container::CircularPhasesBuffer<std::unordered_map<SubphaseType, CommMapType>> const* NodeLBData::getNodeSubphaseComm() const {
   return &lb_data_->node_subphase_comm_;
 }
 
@@ -118,8 +119,7 @@ ElmUserDataType const* NodeLBData::getNodeAttributes() const {
 }
 
 CommMapType* NodeLBData::getNodeComm(PhaseType phase) {
-  auto iter = lb_data_->node_comm_.find(phase);
-  return (iter != lb_data_->node_comm_.end()) ? &iter->second : nullptr;
+  return lb_data_->node_comm_.find(phase);
 }
 
 void NodeLBData::clearLBData() {
@@ -128,19 +128,21 @@ void NodeLBData::clearLBData() {
   next_elm_ = 1;
 }
 
-void NodeLBData::startIterCleanup(PhaseType phase, unsigned int look_back) {
-  if (phase >= look_back) {
-    lb_data_->node_data_.erase(phase - look_back);
-    lb_data_->node_comm_.erase(phase - look_back);
-    lb_data_->node_subphase_comm_.erase(phase - look_back);
-    lb_data_->user_defined_lb_info_.erase(phase - look_back);
-    lb_data_->node_user_attributes_.erase(phase - look_back);
-  }
-
+void NodeLBData::startIterCleanup() {
   // Clear migrate lambdas and proxy lookup since LB is complete
   NodeLBData::node_migrate_.clear();
   node_collection_lookup_.clear();
   node_objgroup_lookup_.clear();
+}
+
+void NodeLBData::resizeLBDataHistory(uint32_t new_hist_len) {
+  hist_lb_data_size_ = new_hist_len;
+
+  if (lb_data_) {
+    lb_data_->resizeHistory(hist_lb_data_size_);
+  }
+
+  startIterCleanup();
 }
 
 ElementIDType NodeLBData::getNextElm() {
@@ -149,6 +151,7 @@ ElementIDType NodeLBData::getNextElm() {
 
 void NodeLBData::initialize() {
   lb_data_ = std::make_unique<LBDataHolder>();
+  lb_data_->resizeHistory(hist_lb_data_size_);
 
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_data) {
@@ -328,6 +331,9 @@ void NodeLBData::addNodeLBData(
     "NodeLBData::addNodeLBData: id={}\n", id
   );
 
+  // Ensure that buffers can hold request amount of data
+  in->setHistoryCapacity(hist_lb_data_size_);
+
   auto const phase = in->getPhase();
   auto const& total_load = in->getLoad(phase, focused_subphase);
 
@@ -374,9 +380,6 @@ void NodeLBData::addNodeLBData(
   }
 
   in->updatePhase(1);
-
-  auto model = theLBManager()->getLoadModel();
-  in->releaseLBDataFromUnneededPhases(phase, model->getNumPastPhasesNeeded());
 }
 
 VirtualProxyType NodeLBData::getCollectionProxyForElement(
