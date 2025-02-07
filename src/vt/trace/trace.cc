@@ -84,6 +84,7 @@ void Trace::initialize() /*override*/ {
 
   // Register a trace user event to demarcate flushes that occur
   flush_event_ = trace::registerEventCollective("trace_flush");
+  write_stats_event_ = trace::registerEventCollective("write_lb_stats");
 #endif
 }
 
