@@ -45,7 +45,6 @@
 #define INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H
 
 #include "vt/config.h"
-#include "vt/pipe/pipe_callback_only.h"
 #include "vt/pipe/callback/cb_union/cb_raw_base.fwd.h"
 #include "vt/pipe/callback/cb_union/cb_raw.h"
 #include "vt/pipe/signal/signal.h"
