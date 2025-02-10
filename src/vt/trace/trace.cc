@@ -125,8 +125,8 @@ void Trace::setProxy(objgroup::proxy::Proxy<Trace> in_proxy) {
   proxy_ = in_proxy;
 }
 
-/*static*/ std::unique_ptr<Trace> Trace::construct() {
-  auto ptr = std::make_unique<Trace>();
+/*static*/ std::unique_ptr<Trace> Trace::construct(std::string const& in_prog_name) {
+  auto ptr = std::make_unique<Trace>(in_prog_name);
   auto proxy = theObjGroup()->makeCollective<Trace>(
     ptr.get(), "Trace"
   );
@@ -210,13 +210,12 @@ void Trace::addUserData(int32_t data) {
   );
 }
 
-void Trace::reducedEventsHan(UserEventRegistry gathered_user_events) {
-  vtAssert(theContext()->getNode() == 0, "Must be node 0");
-  user_event_ = gathered_user_events;
+void Trace::setUserEvents(const UserEventRegistry& events) {
+  user_event_ = std::move(events);
 }
 
 void Trace::gatherUserEvents() {
-  proxy_.reduce<&Trace::reducedEventsHan, vt::collective::PlusOp>(0, std::move(user_event_));
+  proxy_.reduce<&reducedEventsHan, vt::collective::PlusOp>(0, user_event_);
 }
 
 UserEventIDType Trace::registerUserEventRoot(std::string const& name) {
@@ -231,6 +230,11 @@ void Trace::registerUserEventManual(
   std::string const& name, UserSpecEventIDType id
 ) {
   user_event_.user(name, id);
+}
+
+void reducedEventsHan(const UserEventRegistry& gathered_user_events) {
+  vtAssert(theContext()->getNode() == 0, "Must be node 0");
+  theTrace()->setUserEvents(gathered_user_events);
 }
 
 void insertNewUserEvent(
