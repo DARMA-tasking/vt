@@ -65,6 +65,9 @@
 
 namespace vt { namespace trace {
 
+// Callback for gathering user events on node 0
+void reducedEventsHan(const UserEventRegistry& gathered_user_events);
+
 /// Tracking information for beginProcessing/endProcessing.
 struct TraceProcessingTag {
 
@@ -108,8 +111,6 @@ private:
  * java Projections tool.
  */
 struct Trace : runtime::component::Component<Trace>, TraceLite {
-
-
   /**
    * \internal \brief System call to construct the trace component
    *
@@ -123,12 +124,12 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
 
   friend struct Log;
 
+  static std::unique_ptr<Trace> construct(std::string const& in_prog_name = "Trace");
   void initialize() override;
   void startup() override;
   void finalize() override;
 
   void setProxy(objgroup::proxy::Proxy<Trace> in_proxy);
-  static std::unique_ptr<Trace> construct();
 
   /**
    * \brief Initiate a paired processing event.
@@ -297,7 +298,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    * \brief Update event registry on Node 0 with all gathered events
    * \param[in] gathered_user_events summed registry of user events from all nodes
    */
-  void reducedEventsHan(UserEventRegistry gathered_user_events);
+  void setUserEvents(const UserEventRegistry& events);
 
   /**
    * \brief Gathers all user-defined event hashes onto node 0.
