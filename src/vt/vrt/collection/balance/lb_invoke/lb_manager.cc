@@ -463,6 +463,10 @@ void LBManager::startup() {
     thePhase()->printSummary(last_phase_info_.get());
     theLBManager()->finishedLB(phase);
   });
+
+  #if vt_check_enabled(trace_enabled)
+  write_stats_event_ = theTrace()->registerUserEventColl("write_lb_stats");
+  #endif
 }
 
 void LBManager::destroyLB() {
@@ -667,8 +671,7 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
   }
 
   #if vt_check_enabled(trace_enabled)
-  auto write_lb_stats_event = theTrace()->getWriteStatsEvent();
-  theTrace()->addUserEventBracketedBegin(write_lb_stats_event);
+  theTrace()->addUserEventBracketedBegin(write_stats_event_);
   #endif
 
   vt_debug_print(
@@ -689,7 +692,7 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
   writer->commitStaged();
 
   #if vt_check_enabled(trace_enabled)
-  theTrace()->addUserEventBracketedEnd(write_lb_stats_event);
+  theTrace()->addUserEventBracketedEnd(write_stats_event_);
   #endif
 }
 
