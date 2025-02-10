@@ -232,9 +232,13 @@ void Trace::registerUserEventManual(
   user_event_.user(name, id);
 }
 
-void reducedEventsHan(const UserEventRegistry& gathered_user_events) {
-  vtAssert(theContext()->getNode() == 0, "Must be node 0");
+void reducedEventsHan(
+  [[maybe_unused]] const UserEventRegistry& gathered_user_events
+) {
+  #if vt_check_enabled(trace_enabled)
+  vtAssert(theContext()->getNode() == 0, "User events must be gathered on node 0");
   theTrace()->setUserEvents(gathered_user_events);
+  #endif
 }
 
 void insertNewUserEvent(
