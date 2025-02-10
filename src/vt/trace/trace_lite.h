@@ -296,15 +296,6 @@ struct TraceLite  {
   }
 
   /**
-   * @brief Get the LB Stats Write event
-   *
-   * @return the LB stats write event
-   */
-  UserEventIDType getWriteStatsEvent() const {
-    return write_stats_event_;
-  }
-
-  /**
    * @brief Get the last recorded trace event
    *
    * @return the last recorded trace event
@@ -439,21 +430,20 @@ protected:
   EventHoldStackType event_holds_;
   TraceStackType open_events_;
   TraceContainerType traces_;
-  TraceEventIDType cur_event_         = 1;
-  UserEventIDType write_stats_event_  = no_user_event_id;
-  UserEventIDType flush_event_        = no_user_event_id;
-  bool enabled_                       = true;
-  TimeType start_time_                = TimeType{0.0};
-  std::string prog_name_              = "";
-  std::string trace_name_             = "";
-  std::string full_trace_name_        = "";
-  std::string full_sts_name_          = "";
-  std::string full_dir_name_          = "";
-  bool wrote_sts_file_                = false;
-  size_t trace_write_count_           = 0;
-  bool standalone_initalized_         = false;
-  bool trace_enabled_cur_phase_       = true;
-  bool idle_begun_                    = false;
+  TraceEventIDType cur_event_   = 1;
+  UserEventIDType flush_event_  = no_user_event_id;
+  bool enabled_                 = true;
+  TimeType start_time_          = TimeType{0.0};
+  std::string prog_name_        = "";
+  std::string trace_name_       = "";
+  std::string full_trace_name_  = "";
+  std::string full_sts_name_    = "";
+  std::string full_dir_name_    = "";
+  bool wrote_sts_file_          = false;
+  size_t trace_write_count_     = 0;
+  bool standalone_initalized_   = false;
+  bool trace_enabled_cur_phase_ = true;
+  bool idle_begun_              = false;
   std::unique_ptr<vt_gzFile> log_file_;
   std::unordered_map<TraceEventIDType, std::stack<Log*>> incomplete_notes_ = {};
 };
