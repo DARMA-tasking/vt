@@ -111,6 +111,8 @@ private:
  * java Projections tool.
  */
 struct Trace : runtime::component::Component<Trace>, TraceLite {
+
+
   /**
    * \internal \brief System call to construct the trace component
    *
