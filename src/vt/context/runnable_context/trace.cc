@@ -65,6 +65,22 @@ Trace::Trace(
     handler_(in_handler)
 { }
 
+Trace::Trace(
+  trace::TraceEventIDType event, HandlerType const in_handler,
+  NodeType const in_from_node, std::size_t msg_size,
+  uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
+) : is_collection_(false),
+    event_(event),
+    msg_size_(msg_size),
+    is_traced_(HandlerManager::isHandlerTrace(in_handler)),
+    from_node_(in_from_node),
+    handler_(in_handler),
+    idx1_(in_idx1),
+    idx2_(in_idx2),
+    idx3_(in_idx3),
+    idx4_(in_idx4)
+{ }
+
 void Trace::start(TimeType time) {
   if (not is_traced_) {
     return;

@@ -76,6 +76,26 @@ struct Trace {
   );
 
   /**
+   * \brief Construct a new trace context (collection processing) without a
+   * message directly
+   *
+   * \param[in] event the trace event
+   * \param[in] in_handler the handler
+   * \param[in] in_from_node from node
+   * \param[in] msg_size size of message/payload (zero of not serializable
+   * \param[in] in_idx1 1-dimension index
+   * \param[in] in_idx2 2-dimension index
+   * \param[in] in_idx3 3-dimension index
+   * \param[in] in_idx4 4-dimension index
+   */
+  Trace(
+    trace::TraceEventIDType event, HandlerType const in_handler,
+    NodeType const in_from_node, std::size_t msg_size,
+    uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
+  );
+
+
+  /**
    * \brief Construct a new trace context (basic processing event)
    *
    * \param[in] msg the associated message
