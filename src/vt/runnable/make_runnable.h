@@ -399,6 +399,44 @@ inline RunnableMaker<BaseMsgType> makeRunnableVoidTraced(
   return RunnableMaker<BaseMsgType>{r, nullptr, handler, from};
 }
 
+/**
+ * \brief Make a new runnable without a message (void handler) with tracing for
+ * collections
+ *
+ * \param[in] is_threaded whether it is threaded
+ * \param[in] handler the handler bits
+ * \param[in] from the node that caused this runnable to execute
+ * \param[in] idx1 1-dimension index
+ * \param[in] idx2 2-dimension index
+ * \param[in] idx3 3-dimension index
+ * \param[in] idx4 4-dimension index
+ *
+ * \return the maker for further customization
+ */
+inline RunnableMaker<BaseMsgType> makeRunnableVoidTraced(
+  bool is_threaded, HandlerType handler, NodeType from,
+  [[maybe_unused]] trace::TraceEventIDType trace_event,
+  [[maybe_unused]] std::size_t msg_size,
+  uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
+) {
+  // These are currently only types of registry entries that can be void
+  auto r = new RunnableNew(is_threaded);
+  r->addContextSetContext(r, from);
+
+#if vt_check_enabled(trace_enabled)
+  auto const han_type = HandlerManager::getHandlerRegistryType(handler);
+  if (han_type == auto_registry::RegistryTypeEnum::RegVrtCollection or
+      han_type == auto_registry::RegistryTypeEnum::RegVrtCollectionMember) {
+    r->addContextTrace(
+      trace_event, handler, from, msg_size, idx1, idx2, idx3, idx4
+    );
+  }
+#endif
+
+  return RunnableMaker<BaseMsgType>{r, nullptr, handler, from};
+}
+
+
 }} /* end namespace vt::runnable */
 
 #include "vt/runnable/make_runnable.impl.h"
