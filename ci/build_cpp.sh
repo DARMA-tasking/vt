@@ -178,6 +178,11 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       "$VT"
 cmake_conf_ret=$?
 
+echo ===============================
+cd "$VT_BUILD"
+less CMakeCache.txt | grep checkpoint
+echo ===============================
+
 if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
 then
     MCSS=$PWD/m.css
