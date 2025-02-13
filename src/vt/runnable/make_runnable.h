@@ -417,7 +417,10 @@ inline RunnableMaker<BaseMsgType> makeRunnableVoidTraced(
   bool is_threaded, HandlerType handler, NodeType from,
   [[maybe_unused]] trace::TraceEventIDType trace_event,
   [[maybe_unused]] std::size_t msg_size,
-  uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
+  [[maybe_unused]] uint64_t idx1,
+  [[maybe_unused]] uint64_t idx2,
+  [[maybe_unused]] uint64_t idx3,
+  [[maybe_unused]] uint64_t idx4
 ) {
   // These are currently only types of registry entries that can be void
   auto r = new RunnableNew(is_threaded);
