@@ -169,6 +169,7 @@ static const std::string vt_lb_statistics_label = "Enabled";
 static const std::string vt_lb_statistics_compress_label = "Enable Compression";
 static const std::string vt_lb_statistics_file_label = "File";
 static const std::string vt_lb_statistics_dir_label = "Directory";
+static const std::string vt_lb_statistics_freq_label = "Frequency";
 static const std::string vt_lb_self_migration_label = "Enable Self Migration";
 static const std::string vt_lb_spec_label = "Enable Specification";
 static const std::string vt_lb_spec_file_label = "Specification File";
@@ -577,6 +578,7 @@ void parseYaml(AppConfig& appConfig, std::string const& inputFile) {
   update_config(appConfig.vt_lb_statistics_compress, vt_lb_statistics_compress_label, lb_stats);
   update_config(appConfig.vt_lb_statistics_file, vt_lb_statistics_file_label, lb_stats);
   update_config(appConfig.vt_lb_statistics_dir, vt_lb_statistics_dir_label, lb_stats);
+  update_config(appConfig.vt_lb_statistics_freq, vt_lb_statistics_freq_label, lb_stats);
 
   // Diagnostics
   YAML::Node diagnostics = yaml_input["Diagnostics"];
@@ -919,6 +921,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto lb_statistics_comp = "Compress load balancing statistics file with brotli";
   auto lb_statistics_file = "Load balancing statistics output file name";
   auto lb_statistics_dir  = "Load balancing statistics output directory name";
+  auto lb_statistics_freq = "Number of phases between load balancing statistics output";
   auto lb_self_migration = "Allow load balancer to migrate objects to the same node";
   auto lb_spec      = "Enable LB spec file (defines which phases output LB data)";
   auto lb_spec_file = "File containing LB spec; --vt_lb_spec to enable";
@@ -942,6 +945,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   auto yy = app.add_flag("--vt_lb_statistics_compress", appConfig.vt_lb_statistics_compress, lb_statistics_comp);
   auto yz = app.add_option("--vt_lb_statistics_file",   appConfig.vt_lb_statistics_file,     lb_statistics_file)->capture_default_str();
   auto zz = app.add_option("--vt_lb_statistics_dir",    appConfig.vt_lb_statistics_dir,      lb_statistics_dir)->capture_default_str();
+  auto zy = app.add_option("--vt_lb_statistics_freq",   appConfig.vt_lb_statistics_freq,     lb_statistics_freq);
   auto lbasm = app.add_flag("--vt_lb_self_migration",   appConfig.vt_lb_self_migration,      lb_self_migration);
   auto lbspec = app.add_flag("--vt_lb_spec",            appConfig.vt_lb_spec,                lb_spec);
   auto lbspecfile = app.add_option("--vt_lb_spec_file", appConfig.vt_lb_spec_file,           lb_spec_file)->capture_default_str()->check(CLI::ExistingFile);
@@ -971,6 +975,7 @@ void addLbArgs(CLI::App& app, AppConfig& appConfig) {
   yy->group(debugLB);
   yz->group(debugLB);
   zz->group(debugLB);
+  zy->group(debugLB);
   lbasm->group(debugLB);
   lbspec->group(debugLB);
   lbspecfile->group(debugLB);
@@ -1283,6 +1288,7 @@ std::string convertConfigToYamlString(AppConfig& appConfig) {
       {"Load Balancing/LB Statistics", vt_lb_statistics_compress_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics_compress)},
       {"Load Balancing/LB Statistics", vt_lb_statistics_file_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics_file)},
       {"Load Balancing/LB Statistics", vt_lb_statistics_dir_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics_dir)},
+      {"Load Balancing/LB Statistics", vt_lb_statistics_freq_label, static_cast<variantArg_t>(appConfig.vt_lb_statistics_freq)},
       {"Load Balancing", vt_lb_self_migration_label, static_cast<variantArg_t>(appConfig.vt_lb_self_migration)},
       {"Load Balancing", vt_lb_spec_label, static_cast<variantArg_t>(appConfig.vt_lb_spec)},
       {"Load Balancing", vt_lb_spec_file_label, static_cast<variantArg_t>(appConfig.vt_lb_spec_file)},

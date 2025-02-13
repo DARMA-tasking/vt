@@ -463,6 +463,10 @@ void LBManager::startup() {
     thePhase()->printSummary(last_phase_info_.get());
     theLBManager()->finishedLB(phase);
   });
+
+  #if vt_check_enabled(trace_enabled)
+  write_stats_event_ = theTrace()->registerUserEventColl("write_lb_stats");
+  #endif
 }
 
 void LBManager::destroyLB() {
@@ -658,10 +662,17 @@ void LBManager::stagePostLBStatistics(
 }
 
 void LBManager::commitPhaseStatistics(PhaseType phase) {
-  // Statistics output when LB is enabled and appropriate flag is enabled
-  if (theContext()->getNode() != 0 or !theConfig()->vt_lb_statistics) {
+  // Statistics output when LB is enabled, appropriate flag is enabled,
+  // and the user-defined frequency is respected
+  if (theContext()->getNode() != 0 \
+      or !theConfig()->vt_lb_statistics \
+      or phase % theConfig()->vt_lb_statistics_freq != 0) {
     return;
   }
+
+  #if vt_check_enabled(trace_enabled)
+  theTrace()->addUserEventBracketedBegin(write_stats_event_);
+  #endif
 
   vt_debug_print(
     terse, lb,
@@ -679,6 +690,10 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
   auto writer = static_cast<JSONAppender*>(statistics_writer_.get());
   writer->stageObject(j);
   writer->commitStaged();
+
+  #if vt_check_enabled(trace_enabled)
+  theTrace()->addUserEventBracketedEnd(write_stats_event_);
+  #endif
 }
 
 balance::LoadData reduceVec(

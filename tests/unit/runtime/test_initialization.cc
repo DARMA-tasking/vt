@@ -457,6 +457,7 @@ TEST_F(TestInitialization, test_initialize_with_yaml) {
   EXPECT_EQ(theConfig()->vt_lb_statistics_compress, true);
   EXPECT_EQ(theConfig()->vt_lb_statistics_file, "vt_lb_statistics.%t.json");
   EXPECT_EQ(theConfig()->vt_lb_statistics_dir, "");
+  EXPECT_EQ(theConfig()->vt_lb_statistics_freq, 100);
   EXPECT_EQ(theConfig()->vt_lb_self_migration, false);
   EXPECT_EQ(theConfig()->vt_lb_spec, false);
   EXPECT_EQ(theConfig()->vt_lb_spec_file, "");

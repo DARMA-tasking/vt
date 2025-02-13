@@ -55,6 +55,10 @@
 #include "vt/vrt/collection/balance/lb_invoke/phase_info.h"
 #include "vt/utils/json/base_appender.h"
 
+#if vt_check_enabled(trace_enabled)
+#include "vt/trace/trace_common.h"
+#endif
+
 #include <functional>
 #include <map>
 #include <unordered_map>
@@ -213,6 +217,9 @@ public:
       | model_
       | lb_instances_
       | stats
+      #if vt_check_enabled(trace_enabled)
+      | write_stats_event_
+      #endif
       | created_lbstats_dir_;
   }
 
@@ -305,6 +312,10 @@ private:
   bool before_lb_stats_ = true;
   /// The appender for outputting statistics in JSON format
   std::unique_ptr<util::json::BaseAppender> statistics_writer_ = nullptr;
+  /// Event ID for writing out the LB stats
+  #if vt_check_enabled(trace_enabled)
+  trace::UserEventIDType write_stats_event_ = trace::no_user_event_id;
+  #endif
   /// Whether the LB statistics directory has been created
   bool created_lbstats_dir_ = false;
 };
