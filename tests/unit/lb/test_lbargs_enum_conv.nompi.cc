@@ -163,4 +163,3 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_config) {
 }
 
 }}} // end namespace vt::tests::unit
-
