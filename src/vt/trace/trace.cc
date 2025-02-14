@@ -349,8 +349,9 @@ TraceProcessingTag Trace::beginProcessing(
 
   vt_debug_print(
     normal, trace,
-    "event_start: ep={}, event={}, time={}, from={}, entry chare={}\n",
-    ep, event, time, from_node, TraceRegistry::getEvent(ep).theEventSeq()
+    "event_start: ep={}, event={}, time={}, from={}, entry chare={}, name={}\n",
+    ep, event, time, from_node, TraceRegistry::getEvent(ep).theEventSeq(),
+    TraceRegistry::getEvent(ep).theEventName()
   );
 
   auto const type = TraceConstantsType::BeginProcessing;
@@ -394,9 +395,9 @@ void Trace::endProcessing(
 
   vt_debug_print(
     normal, trace,
-    "event_stop: ep={}, event={}, time={}, from_node={}, entry chare={}\n",
+    "event_stop: ep={}, event={}, time={}, from_node={}, entry chare={}, name={}\n",
     ep, event, time, open_events_.back().node,
-    TraceRegistry::getEvent(ep).theEventSeq()
+    TraceRegistry::getEvent(ep).theEventSeq(), TraceRegistry::getEvent(ep).theEventName()
   );
 
   vtAssert(
@@ -428,13 +429,15 @@ void Trace::pendingSchedulerLoop() {
   between_sched_event_ = TraceProcessingTag{};
 }
 
-void Trace::beginSchedulerLoop() {
+TimeType Trace::beginSchedulerLoop() {
+  auto const cur_time = timing::getCurrentTime();
   // Always end between-loop event. The pending case is not always triggered.
-  endProcessing(between_sched_event_, timing::getCurrentTime());
+  endProcessing(between_sched_event_, cur_time);
   between_sched_event_ = TraceProcessingTag{};
 
   // Capture the current open event depth.
   event_holds_.push_back(open_events_.size());
+  return cur_time;
 }
 
 void Trace::endSchedulerLoop() {

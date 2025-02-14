@@ -172,8 +172,10 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
 
   /**
    * \brief Scheduler trigger for \c sched::SchedulerEvent::BeginSchedulerLoop
+   *
+   * \return the time the between scheduler event was ended
    */
-  void beginSchedulerLoop();
+  TimeType beginSchedulerLoop();
 
   /**
    * \brief Scheduler trigger for \c sched::SchedulerEvent::EndSchedulerLoop
@@ -361,6 +363,22 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   bool inIdleEvent() const;
 
+  /**
+   * \brief Set if we are inside an invoke context
+   *
+   * \param[in] set the variable value to set
+   */
+  void setInInvokeContext(bool set) {
+    inside_invoke_context_ = set;
+  }
+
+  /**
+   * \brief Return if we are inside an invoke context
+   *
+   * \return whether we are inside an invoke context
+   */
+  bool inInvokeContext() const { return inside_invoke_context_; }
+
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
   template <typename SerializerT>
@@ -385,7 +403,8 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
       | trace_enabled_cur_phase_
       | flush_event_
       | between_sched_event_type_
-      | between_sched_event_;
+      | between_sched_event_
+      | inside_invoke_context_;
 
     s.skip(log_file_); // definition unavailable
   }
@@ -398,15 +417,12 @@ private:
   int incremental_flush_mode = 0;
 
 private:
-
-
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
-
-
 
   // Processing event between top-level loops.
   TraceEntryIDType between_sched_event_type_ = no_trace_entry_id;
   TraceProcessingTag between_sched_event_;
+  bool inside_invoke_context_ = false;
 };
 
 }} //end namespace vt::trace

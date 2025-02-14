@@ -465,10 +465,33 @@ auto CollectionManager::invoke(
 
   auto const this_node = theContext()->getNode();
 
+#if vt_check_enabled(trace_enabled)
+  auto const han = auto_registry::makeAutoHandlerCollectionMemParam<
+     ColT, decltype(f), f, void
+  >();
+  auto const trace_event = theMsg()->makeTraceCreationSend(han, 0, false);
+
+#if vt_check_enabled(trace_enabled)
+  auto idx = ptr->getIndex();
+  uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
+  uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
+  uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
+  uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+#endif
+
+  return runnable::makeRunnableVoidTraced(
+    false, han, this_node, trace_event, 0, idx1, idx2, idx3, idx4
+  )
+    .withCollection(ptr)
+    .withLBDataVoidMsg(ptr)
+    .runLambda(f, ptr, std::forward<Args>(args)...);
+
+#else
   return runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
     .withLBDataVoidMsg(ptr)
     .runLambda(f, ptr, std::forward<Args>(args)...);
+#endif
 }
 
 template <

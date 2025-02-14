@@ -220,11 +220,26 @@ ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
     dest_node == this_node,
     fmt::format(
       "Attempting to invoke handler on node:{} instead of node:{}!\n",
-      this_node, dest_node));
+      this_node, dest_node
+    )
+  );
 
+#if vt_check_enabled(trace_enabled)
+  auto const ctrl = proxy::ObjGroupProxy::getID(proxy.getProxy());
+  auto const han = auto_registry::makeAutoHandlerObjGroupParam<
+    ObjT, decltype(f), f, void
+  >(ctrl);
+  auto const trace_event = theMsg()->makeTraceCreationSend(han, 0, false);
+
+  return runnable::makeRunnableVoidTraced(false, han, this_node, trace_event, 0)
+    .withObjGroup(get(proxy))
+    .runLambda(f, get(proxy), std::forward<Args>(args)...);
+
+#else
   return runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withObjGroup(get(proxy))
     .runLambda(f, get(proxy), std::forward<Args>(args)...);
+#endif
 }
 
 
