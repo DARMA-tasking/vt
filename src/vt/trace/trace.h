@@ -49,7 +49,9 @@
 #include "vt/trace/trace_log.h"
 #include "vt/trace/trace_registry.h"
 #include "vt/trace/trace_lite.h"
+#if !vt_check_enabled(trace_only)
 #include "vt/objgroup/proxy/proxy_objgroup.h"
+#endif
 #include "vt/runtime/component/component_pack.h"
 
 #include "vt/timing/timing.h"
@@ -65,8 +67,10 @@
 
 namespace vt { namespace trace {
 
+#if !vt_check_enabled(trace_only)
 // Callback for gathering user events on node 0
 void reducedEventsHan(const UserEventRegistry& gathered_user_events);
+#endif
 
 /// Tracking information for beginProcessing/endProcessing.
 struct TraceProcessingTag {
@@ -131,7 +135,9 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
   void startup() override;
   void finalize() override;
 
+  #if !vt_check_enabled(trace_only)
   void setProxy(objgroup::proxy::Proxy<Trace> in_proxy);
+  #endif
 
   /**
    * \brief Initiate a paired processing event.
@@ -418,7 +424,9 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
       | wrote_sts_file_
       | trace_write_count_
       | spec_proxy_
+      #if !vt_check_enabled(trace_only)
       | proxy_
+      #endif
       | trace_enabled_cur_phase_
       | flush_event_
       | between_sched_event_type_
@@ -434,14 +442,16 @@ private:
    * header dependencies.
    */
   int incremental_flush_mode = 0;
+  UserEventRegistry user_event_ = {};
+
 
 private:
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
 
-  /*
-   * Objgroup proxy
-   */
+  #if !vt_check_enabled(trace_only)
+  // Objgroup proxy
   objgroup::proxy::Proxy<Trace> proxy_;
+  #endif
 
   // Processing event between top-level loops.
   TraceEntryIDType between_sched_event_type_ = no_trace_entry_id;

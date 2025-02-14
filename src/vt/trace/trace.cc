@@ -121,16 +121,20 @@ void Trace::finalize() /*override*/ {
   between_sched_event_ = TraceProcessingTag{};
 }
 
+#if !vt_check_enabled(trace_only)
 void Trace::setProxy(objgroup::proxy::Proxy<Trace> in_proxy) {
   proxy_ = in_proxy;
 }
+#endif
 
 /*static*/ std::unique_ptr<Trace> Trace::construct(std::string const& in_prog_name) {
   auto ptr = std::make_unique<Trace>(in_prog_name);
+  #if !vt_check_enabled(trace_only)
   auto proxy = theObjGroup()->makeCollective<Trace>(
     ptr.get(), "Trace"
   );
   proxy.get()->setProxy(proxy);
+  #endif
   return ptr;
 }
 
@@ -215,7 +219,9 @@ void Trace::setUserEvents(const UserEventRegistry& events) {
 }
 
 void Trace::gatherUserEvents() {
+  #if !vt_check_enabled(trace_only)
   proxy_.reduce<&reducedEventsHan, vt::collective::PlusOp>(0, user_event_);
+  #endif
 }
 
 UserEventIDType Trace::registerUserEventRoot(std::string const& name) {
