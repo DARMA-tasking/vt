@@ -442,10 +442,7 @@ private:
    * header dependencies.
    */
   int incremental_flush_mode = 0;
-  UserEventRegistry user_event_ = {};
 
-
-private:
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
 
   #if !vt_check_enabled(trace_only)
