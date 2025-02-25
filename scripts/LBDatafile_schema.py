@@ -13,6 +13,56 @@ def validate_ids(field):
 
     return field
 
+task = {
+    'entity': And({
+        Optional('collection_id'): int,
+        'home': int,
+        Optional('id'): int,
+        Optional('seq_id'): int,
+    Optional('index'): [int],
+        'type': str,
+        'migratable': bool,
+        Optional('objgroup_id'): int
+    }, validate_ids),
+    'node': int,
+    'resource': str,
+    Optional('subphases'): [
+        {
+            'id': int,
+            'time': float,
+        }
+    ],
+    'time': float,
+    Optional('user_defined'): dict,
+    Optional('attributes'): dict
+}
+
+communication = {
+    'type': str,
+    'to': And({
+        'type': str,
+        Optional('id'): int,
+        Optional('seq_id'): int,
+        Optional('home'): int,
+        Optional('collection_id'): int,
+        Optional('migratable'): bool,
+        Optional('index'): [int],
+        Optional('objgroup_id'): int,
+    }, validate_ids),
+    'messages': int,
+    'from': And({
+        'type': str,
+        Optional('id'): int,
+        Optional('seq_id'): int,
+        Optional('home'): int,
+        Optional('collection_id'): int,
+        Optional('migratable'): bool,
+        Optional('index'): [int],
+        Optional('objgroup_id'): int,
+    }, validate_ids),
+    'bytes': float
+}
+
 LBDatafile_schema = Schema(
     {
         Optional('type'): And(str, "LBDatafile", error="'LBDatafile' must be chosen."),
@@ -42,112 +92,20 @@ LBDatafile_schema = Schema(
             {
                 'id': int,
                 'tasks': [
-                    {
-                        'entity': And({
-                            Optional('collection_id'): int,
-                            'home': int,
-                            Optional('id'): int,
-                            Optional('seq_id'): int,
-                            Optional('index'): [int],
-                            'type': str,
-                            'migratable': bool,
-                            Optional('objgroup_id'): int
-                        }, validate_ids),
-                        'node': int,
-                        'resource': str,
-                        Optional('subphases'): [
-                            {
-                                'id': int,
-                                'time': float,
-                            }
-                        ],
-                        'time': float,
-                        Optional('user_defined'): dict,
-                        Optional('attributes'): dict
-                    },
+                    task
                 ],
                 Optional('communications'): [
-                    {
-                        'type': str,
-                        'to': And({
-                            'type': str,
-                            Optional('id'): int,
-                            Optional('seq_id'): int,
-                            Optional('home'): int,
-                            Optional('collection_id'): int,
-                            Optional('migratable'): bool,
-                            Optional('index'): [int],
-                            Optional('objgroup_id'): int,
-                        }, validate_ids),
-                        'messages': int,
-                        'from': And({
-                            'type': str,
-                            Optional('id'): int,
-                            Optional('seq_id'): int,
-                            Optional('home'): int,
-                            Optional('collection_id'): int,
-                            Optional('migratable'): bool,
-                            Optional('index'): [int],
-                            Optional('objgroup_id'): int,
-                        }, validate_ids),
-                        'bytes': float
-                    }
+                    communication
                 ],
                 Optional('user_defined'): dict,
                 Optional('lb_iterations'): [
                     {
                         'id': int,
                         'tasks': [
-                            {
-                                'entity': And({
-                                    Optional('collection_id'): int,
-                                    'home': int,
-                                    Optional('id'): int,
-                                    Optional('seq_id'): int,
-                                    Optional('index'): [int],
-                                    'type': str,
-                                    'migratable': bool,
-                                    Optional('objgroup_id'): int
-                                }, validate_ids),
-                                'node': int,
-                                'resource': str,
-                                Optional('subphases'): [
-                                    {
-                                        'id': int,
-                                        'time': float,
-                                    }
-                                ],
-                                'time': float,
-                                Optional('user_defined'): dict,
-                                Optional('attributes'): dict
-                            },
+                            task
                         ],
                         Optional('communications'): [
-                            {
-                                'type': str,
-                                'to': And({
-                                    'type': str,
-                                    Optional('id'): int,
-                                    Optional('seq_id'): int,
-                                    Optional('home'): int,
-                                    Optional('collection_id'): int,
-                                    Optional('migratable'): bool,
-                                    Optional('index'): [int],
-                                    Optional('objgroup_id'): int,
-                                }, validate_ids),
-                                'messages': int,
-                                'from': And({
-                                    'type': str,
-                                    Optional('id'): int,
-                                    Optional('seq_id'): int,
-                                    Optional('home'): int,
-                                    Optional('collection_id'): int,
-                                    Optional('migratable'): bool,
-                                    Optional('index'): [int],
-                                    Optional('objgroup_id'): int,
-                                }, validate_ids),
-                                'bytes': float
-                            }
+                            communication
                         ],
                         Optional('user_defined'): dict
                     }
