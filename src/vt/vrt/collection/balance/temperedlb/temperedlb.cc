@@ -2590,6 +2590,9 @@ void TemperedLB::satisfyLockRequest() {
     try_locks_.erase(iter);
 
     if (lock.forced_release) {
+      // Delay for 100 microseconds to give another rank a chance at obtaining a
+      // lock so the cycle isn't just created again. This number was found
+      // to be reasonable through some experimentation.
       std::this_thread::sleep_for(std::chrono::microseconds(100));
       lock.forced_release = false;
       try_locks_.insert(lock);
