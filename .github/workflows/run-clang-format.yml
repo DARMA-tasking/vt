@@ -1,0 +1,16 @@
+name: PR checks (clang-format)
+
+on: pull_request
+
+jobs:
+  check:
+    name: Run clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Run clang-format
+        shell: bash
+        run: git clang-format-16 --diff ${{ github.base_ref }}
