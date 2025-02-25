@@ -77,6 +77,7 @@ registry::AutoHandlerType ComponentPack::registerComponent(
 ) {
   ComponentRegistry::dependsOn<T, Deps...>();
   auto idx = registry::makeIdx<T>();
+  //fmt::print("registerComponent name={} idx={}\n", typeid(T).name(), idx);
 
   if (registered_set_.find(idx) == registered_set_.end()) {
     registered_set_.insert(idx);

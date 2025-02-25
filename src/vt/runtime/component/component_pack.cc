@@ -127,12 +127,13 @@ std::list<int> ComponentPack::topoSort() {
   }
 
   auto visited = std::make_unique<bool[]>(max_idx + 1);
+  auto visiting = std::make_unique<bool[]>(max_idx + 1);
   //fmt::print("added size={}\n", added_components_.size());
   for (auto&& i : registered_components_) {
     auto added_iter = added_components_.find(i);
     if (added_iter != added_components_.end()) {
       if (visited[i] == false) {
-        topoSortImpl(i, order, visited.get());
+        topoSortImpl(i, order, visited.get(), visiting.get());
       }
     }
   }
@@ -142,9 +143,10 @@ std::list<int> ComponentPack::topoSort() {
   return order;
 }
 
-void ComponentPack::topoSortImpl(int v, std::list<int>& order, bool* visited) {
+void ComponentPack::topoSortImpl(int v, std::list<int>& order, bool* visited, bool* visiting) {
   //fmt::print("impl v={}\n",v);
-  visited[v] = true;
+  vtAbortIf(visiting[v] == true, "Already visiting this node, cycle detected");
+  visiting[v] = true;
 
   auto v_list = registry::getIdx(v);
   for (auto&& vp : v_list) {
@@ -154,10 +156,12 @@ void ComponentPack::topoSortImpl(int v, std::list<int>& order, bool* visited) {
       //fmt::print("Adding component automatically due to dependencies\n");
     }
     if (not visited[vp]) {
-      topoSortImpl(vp, order, visited);
+      topoSortImpl(vp, order, visited, visiting);
     }
   }
 
+  visiting[v] = false;
+  visited[v] = true;
   order.push_front(v);
 }
 
