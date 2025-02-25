@@ -2419,7 +2419,6 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       );
     });
 
-    //computeClusterSummary();
     this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
     this_new_work_ = this_new_breakdown_.work;
     computeMemoryUsage();
@@ -2500,7 +2499,6 @@ void TemperedLB::giveCluster(
   auto info = makeClusterSummary(id);
   cur_clusters_.emplace(id, std::move(info));
 
-  //computeClusterSummary();
   this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
   this_new_work_ = this_new_breakdown_.work;
   computeMemoryUsage();
