@@ -60,12 +60,22 @@ struct ComponentPack;
  */
 struct BaseComponent : Diagnostic, Bufferable, Progressable {
   /**
-   * \struct DepsPack
+   * \struct StartupDepsPack
    *
-   * \brief Set of component types that given component is dependent on
+   * \brief Set of component types that given component is dependent on to start
+   * up (be constructed)
    */
   template <typename... Deps>
-  struct DepsPack { };
+  struct StartupDepsPack { };
+
+  /**
+   * \struct RuntimeDepsPack
+   *
+   * \brief Set of component types that given component is dependent on to run,
+   * automatically includes the \c StartupDepsPck
+   */
+  template <typename... Deps>
+  struct RuntimeDepsPack { };
 
   /**
    * \internal \brief Initialize the component. Invoked after the constructor

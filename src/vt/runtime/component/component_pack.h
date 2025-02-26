@@ -70,9 +70,9 @@ public:
   /**
    * \internal \brief Idempotent registration of a component into this runtime
    * pack. Component dependencies specified with variadic template parameters in
-   * \c DepsPack. Registration does not imply the component will be created; it
-   * must be added subsequently to be enabled. It simply declares its existence
-   * and connectivity with other components.
+   * \c StartupDepsPack and \c RuntimeDepsPack. Registration does not imply the
+   * component will be created; it must be added subsequently to be enabled. It
+   * simply declares its existence and connectivity with other components.
    *
    * \param[out] ref dumb pointer for access outside
    * \param[in] cons constructor arguments for the component---bound at
@@ -80,9 +80,17 @@ public:
    *
    * \return \c registry::AutoHandlerType with type ID for component
    */
-  template <typename T, typename... Deps, typename... Cons>
+  template <
+    typename T,
+    typename... StartupDeps,
+    typename... RuntimeDeps,
+    typename... Cons
+  >
   registry::AutoHandlerType registerComponent(
-    T** ref, typename BaseComponent::DepsPack<Deps...>, Cons&&... cons
+    T** ref,
+    typename BaseComponent::StartupDepsPack<StartupDeps...>,
+    typename BaseComponent::RuntimeDepsPack<RuntimeDeps...>,
+    Cons&&... cons
   );
 
   /**
@@ -207,8 +215,18 @@ private:
   ComponentIDType cur_id_ = 1;
 };
 
+/**
+ * \brief Type alias for a pack of startup dependencies
+ */
 template <typename... Ts>
-using Deps = typename BaseComponent::DepsPack<Ts...>;
+using StartupDeps = typename BaseComponent::StartupDepsPack<Ts...>;
+
+/**
+ * \brief Type alias for a pack of runtime dependencies, automatically including
+ * all startup dependencies
+ */
+template <typename... Ts>
+using RuntimeDeps = typename BaseComponent::RuntimeDepsPack<Ts...>;
 
 }}} /* end namespace vt::runtime::component */
 

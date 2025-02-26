@@ -709,7 +709,8 @@ void Runtime::initializeComponents() {
   vt_debug_print(normal, runtime, "begin: initializeComponents\n");
 
   using component::ComponentPack;
-  using component::Deps;
+  using component::StartupDeps;
+  using component::RuntimeDeps;
 
   p_ = std::make_unique<ComponentPack>();
   bool addLBDataRestartReader = needLBDataRestartReader();
@@ -719,149 +720,189 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<arguments::ArgConfig>(
     &theArgConfig,
-    Deps<>{},
+    StartupDeps<>{},
+    RuntimeDeps<>{},
     std::move(arg_config_)
   );
 
   p_->registerComponent<ctx::Context>(
     &theContext,
-    Deps<arguments::ArgConfig>{},
+    StartupDeps<arguments::ArgConfig>{},
+    RuntimeDeps<>{},
     is_interop_, initial_communicator_
   );
 
-  p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
-    ctx::Context,       // Everything depends on theContext
-    phase::PhaseManager // For outputting memory at phase boundaries
-  >{});
+  p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage,
+    StartupDeps<
+      ctx::Context,       // Everything depends on theContext
+      phase::PhaseManager // For outputting memory at phase boundaries
+    >{},
+    RuntimeDeps<>{}
+  );
 
-  p_->registerComponent<pool::Pool>(&thePool, Deps<
-    ctx::Context // Everything depends on theContext
-  >{});
+  p_->registerComponent<pool::Pool>(
+    &thePool,
+    StartupDeps<
+      ctx::Context // Everything depends on theContext
+    >{},
+    RuntimeDeps<>{}
+  );
 
-  p_->registerComponent<event::AsyncEvent>(&theEvent, Deps<
-#   if vt_check_enabled(trace_enabled)
-    trace::Trace,  // For trace user event registrations
-#   endif
-    ctx::Context,  // Everything depends on theContext
-    pool::Pool     // For memory allocations
-  >{});
+  p_->registerComponent<event::AsyncEvent>(
+    &theEvent,
+    StartupDeps<
+#     if vt_check_enabled(trace_enabled)
+      trace::Trace,  // For trace user event registrations
+#     endif
+      ctx::Context,  // Everything depends on theContext
+      pool::Pool     // For memory allocations
+    >{},
+    RuntimeDeps<>{}
+  );
 
 # if vt_check_enabled(trace_enabled)
   // The Trace and Scheduler components have a co-dependency. However,
   // the lifetime of theTrace should be longer than that of theSched.
-  p_->registerComponent<trace::Trace>(&theTrace, Deps<
-      ctx::Context,  // Everything depends on theContext
-      objgroup::ObjGroupManager
-  >{},
+  p_->registerComponent<trace::Trace>(
+    &theTrace,
+    StartupDeps<
+      ctx::Context,              // Everything depends on theContext
+      objgroup::ObjGroupManager  // Depends on objgroup for construction
+    >{},
+    RuntimeDeps<>{},
     prog_name
   );
 # endif
 
 # if vt_check_enabled(mpi_access_guards)
-  p_->registerComponent<pmpi::PMPIComponent>(&thePMPI, Deps<
-#   if vt_check_enabled(trace_enabled)
-    trace::Trace,  // For PMPI tracing, if tracing is enabled.
-#   endif
-    ctx::Context   // Everything depends on theContext
-    >{}
+  p_->registerComponent<pmpi::PMPIComponent>(
+    &thePMPI,
+    StartupDeps<
+#     if vt_check_enabled(trace_enabled)
+      trace::Trace,  // For PMPI tracing, if tracing is enabled.
+#     endif
+      ctx::Context   // Everything depends on theContext
+    >{},
+    RuntimeDeps<>{}
   );
 #endif
 
   p_->registerComponent<objgroup::ObjGroupManager>(
-    &theObjGroup, Deps<
-      ctx::Context              // Everything depends on theContext
-
-      // Break this dependency for startup ordering
-      // messaging::ActiveMessenger // Depends on active messenger to send
-    >{}
+    &theObjGroup,
+    StartupDeps<
+      ctx::Context,              // Everything depends on theContext
+      messaging::ActiveMessenger // Depends on active messenger to send
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<messaging::ActiveMessenger>(
-    &theMsg, Deps<
+    &theMsg,
+    StartupDeps<
 #     if vt_check_enabled(trace_enabled)
       trace::Trace,      // For trace user event registrations
 #     endif
       ctx::Context,      // Everything depends on theContext
       event::AsyncEvent, // Depends on event to send messages
       pool::Pool         // Depends on pool for message allocation
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<sched::Scheduler>(
-    &theSched, Deps<
+    &theSched,
+    StartupDeps<
 #     if vt_check_enabled(trace_enabled)
       trace::Trace,             // For scheduler-related trace events
 #     endif
       ctx::Context,             // Everything depends on theContext
       util::memory::MemoryUsage // Depends on memory usage for output
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<epoch::EpochManip>(
-    &theEpoch, Deps<
+    &theEpoch,
+    StartupDeps<
       ctx::Context                // Everything depends on theContext
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<term::TerminationDetector>(
-    &theTerm, Deps<
+    &theTerm,
+    StartupDeps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger to send term msgs
       sched::Scheduler,           // Depends on scheduler for idle checks
       epoch::EpochManip           // Depends on for generating epochs
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<collective::CollectiveAlg>(
-    &theCollective, Deps<
+    &theCollective,
+    StartupDeps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger for collectives
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<group::GroupManager>(
-    &theGroup, Deps<
+    &theGroup,
+    StartupDeps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for setting up
       collective::CollectiveAlg   // Depends on collective for spanning trees
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<pipe::PipeManager>(
-    &theCB, Deps<
+    &theCB,
+    StartupDeps<
       ctx::Context,                        // Everything depends on theContext
       messaging::ActiveMessenger,          // Depends on AM for callbacks
       collective::CollectiveAlg,           // Depends on collective for callbacks
       objgroup::ObjGroupManager,           // Depends on objgroup for callbacks
       vrt::collection::CollectionManager   // Depends collection for callbacks
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<rdma::RDMAManager>(
-    &theRDMA, Deps<
+    &theRDMA,
+    StartupDeps<
       ctx::Context,                 // Everything depends on theContext
       messaging::ActiveMessenger,   // Depends on active messenger for RDMA
       collective::CollectiveAlg     // Depends on collective scope
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<location::LocationManager>(
-    &theLocMan, Deps<
+    &theLocMan,
+    StartupDeps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger  // Depends on active messenger for sending
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<vrt::VirtualContextManager>(
-    &theVirtualManager, Deps<
+    &theVirtualManager,
+    StartupDeps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for messaging
       sched::Scheduler            // For scheduling work
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<vrt::collection::CollectionManager>(
-    &theCollection, Deps<
+    &theCollection,
+    StartupDeps<
       ctx::Context,                        // Everything depends on theContext
       messaging::ActiveMessenger,          // Depends on for messaging
       group::GroupManager,                 // For broadcasts
@@ -869,60 +910,75 @@ void Runtime::initializeComponents() {
       location::LocationManager,           // For element location
       vrt::collection::balance::NodeLBData, // For LB data collection
       vrt::collection::balance::LBManager  // For load balancing
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<rdma::Manager>(
-    &theHandleRDMA, Deps<
+    &theHandleRDMA,
+    StartupDeps<
       ctx::Context,                       // Everything depends on theContext
       messaging::ActiveMessenger,         // Depends on active messenger for messaging
       vrt::collection::CollectionManager, // For RDMA on collection elements
       objgroup::ObjGroupManager,          // For RDMA on objgroups
       collective::CollectiveAlg           // Depends on collective scope
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<vrt::collection::balance::NodeLBData>(
-    &theNodeLBData, Deps<
+    &theNodeLBData,
+    StartupDeps<
       ctx::Context,                       // Everything depends on theContext
       phase::PhaseManager                 // For phase structure
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<vrt::collection::balance::LBDataRestartReader>(
-    &theLBDataReader, Deps<
+    &theLBDataReader,
+    StartupDeps<
       ctx::Context,                        // Everything depends on theContext
       vrt::collection::balance::NodeLBData  // Depends on node LB data for input
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<vrt::collection::balance::LBManager>(
-    &theLBManager, Deps<
+    &theLBManager,
+    StartupDeps<
       ctx::Context,                        // Everything depends on theContext
       util::memory::MemoryUsage,           // Output mem usage on phase change
       vrt::collection::balance::NodeLBData, // For LB data collection
       phase::PhaseManager                  // For phase structure
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<timetrigger::TimeTriggerManager>(
-    &theTimeTrigger, Deps<
+    &theTimeTrigger,
+    StartupDeps<
       ctx::Context                         // Everything depends on theContext
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
   p_->registerComponent<phase::PhaseManager>(
-    &thePhase, Deps<
+    &thePhase,
+    StartupDeps<
       ctx::Context,                        // Everything depends on theContext
       objgroup::ObjGroupManager            // Since it's an objgroup
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
 # if vt_check_enabled(perf)
   p_->registerComponent<metrics::PerfData>(
-    &thePerfData, Deps<
+    &thePerfData,
+    StartupDeps<
       ctx::Context                        // Everything depends on theContext
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 # endif
 

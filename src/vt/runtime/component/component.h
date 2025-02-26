@@ -100,14 +100,14 @@ struct Component : BaseComponent {
    * \brief Constructor for a new component with the appropriate typed
    * dependencies
    *
-   * \param[in] DepsPack a pack of typed dependencies for the given component
-   * that it depends on
+   * \param[in] StartupDepsPack a pack of typed dependencies for the given
+   * component that it depends on
    *
    * \return the new component
    */
-  template <typename... Deps>
-  Component(DepsPack<Deps...>) {
-    ComponentRegistry::dependsOn<T, Deps...>();
+  template <typename... StartupDeps, typename... RuntimeDeps>
+  Component(StartupDepsPack<StartupDeps...>, RuntimeDepsPack<RuntimeDeps...>) {
+    ComponentRegistry::dependsOn<T, StartupDeps...>();
   }
 
   /**
