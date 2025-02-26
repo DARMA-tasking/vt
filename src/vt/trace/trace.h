@@ -130,7 +130,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
 
   friend struct Log;
 
-  static std::unique_ptr<Trace> construct(std::string const& in_prog_name = "Trace");
+  static std::unique_ptr<Trace> construct(std::string const& in_prog_name);
   void initialize() override;
   void startup() override;
   void finalize() override;
