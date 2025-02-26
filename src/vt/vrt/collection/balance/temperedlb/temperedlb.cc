@@ -638,129 +638,135 @@ void TemperedLB::readClustersMemoryData() {
   }
 }
 
-void TemperedLB::computeClusterSummary() {
-  cur_clusters_.clear();
-
+ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
   auto const this_node = theContext()->getNode();
+  auto const& [home_node, shared_volume] = shared_block_edge_[shared_id];
+  auto const shared_bytes = shared_block_size_[shared_id];
 
-  for (auto const& [shared_id, shared_bytes] : shared_block_size_) {
-    auto const& [home_node, shared_volume] = shared_block_edge_[shared_id];
+  ClusterInfo info;
+  info.bytes = shared_bytes;
+  info.home_node = home_node;
+  info.edge_weight = shared_volume;
 
-    ClusterInfo info;
-    info.bytes = shared_bytes;
-    info.home_node = home_node;
-    info.edge_weight = shared_volume;
+  std::set<ObjIDType> cluster_objs;
+  BytesType max_object_working_bytes = 0;
+  BytesType max_object_working_bytes_outside = 0;
+  BytesType max_object_serialized_bytes = 0;
+  BytesType max_object_serialized_bytes_outside = 0;
+  BytesType cluster_footprint = 0;
 
-    std::set<ObjIDType> cluster_objs;
-    BytesType max_object_working_bytes = 0;
-    BytesType max_object_working_bytes_outside = 0;
-    BytesType max_object_serialized_bytes = 0;
-    BytesType max_object_serialized_bytes_outside = 0;
-    BytesType cluster_footprint = 0;
+  for (auto const& [obj_id, obj_load] : cur_objs_) {
+    if (auto iter = obj_shared_block_.find(obj_id); iter != obj_shared_block_.end()) {
+      if (iter->second == shared_id) {
+        cluster_objs.insert(obj_id);
+        info.load += obj_load;
+        if (
+          auto it = obj_working_bytes_.find(obj_id);
+          it != obj_working_bytes_.end()
+        ) {
+          max_object_working_bytes = std::max(
+            max_object_working_bytes, it->second
+          );
+        }
+        if (
+          auto it = obj_serialized_bytes_.find(obj_id);
+          it != obj_serialized_bytes_.end()
+        ) {
+          max_object_serialized_bytes = std::max(
+            max_object_serialized_bytes, it->second
+          );
+        }
+        if (
+          auto it = obj_footprint_bytes_.find(obj_id);
+          it != obj_footprint_bytes_.end()
+        ) {
+          cluster_footprint += it->second;
+        }
+      } else {
+        if (
+          auto it = obj_working_bytes_.find(obj_id);
+          it != obj_working_bytes_.end()
+        ) {
+          max_object_working_bytes_outside = std::max(
+            max_object_working_bytes_outside, it->second
+          );
+        }
+        if (
+          auto it = obj_serialized_bytes_.find(obj_id);
+          it != obj_serialized_bytes_.end()
+        ) {
+          max_object_serialized_bytes_outside = std::max(
+            max_object_serialized_bytes_outside, it->second
+          );
+        }
+      }
+    }
+  }
 
-    for (auto const& [obj_id, obj_load] : cur_objs_) {
-      if (auto iter = obj_shared_block_.find(obj_id); iter != obj_shared_block_.end()) {
-        if (iter->second == shared_id) {
-          cluster_objs.insert(obj_id);
-          info.load += obj_load;
-          if (
-            auto it = obj_working_bytes_.find(obj_id);
-            it != obj_working_bytes_.end()
+  info.cluster_footprint = cluster_footprint;
+  info.max_object_working_bytes = max_object_working_bytes;
+  info.max_object_working_bytes_outside = max_object_working_bytes_outside;
+  info.max_object_serialized_bytes = max_object_serialized_bytes;
+  info.max_object_serialized_bytes_outside = max_object_serialized_bytes_outside;
+
+  if (info.load != 0) {
+    for (auto&& obj : cluster_objs) {
+      if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
+        for (auto const& [target, volume] : it->second) {
+          vt_debug_print(
+            verbose, temperedlb,
+            "computeClusterSummary: send obj={}, target={}\n",
+            obj, target
+          );
+
+          if (cluster_objs.find(target) != cluster_objs.end()) {
+            // intra-cluster edge
+            info.intra_send_vol += volume;
+          } else if (
+            cur_objs_.find(target) != cur_objs_.end() or
+            target.isLocatedOnThisNode()
           ) {
-            max_object_working_bytes = std::max(
-              max_object_working_bytes, it->second
-            );
+            // intra-rank edge
+            info.inter_send_vol[this_node] += volume;
+          } else {
+            // inter-rank edge
+            info.inter_send_vol[target.getCurrNode()] += volume;
           }
-          if (
-            auto it = obj_serialized_bytes_.find(obj_id);
-            it != obj_serialized_bytes_.end()
+        }
+      }
+      if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
+        for (auto const& [target, volume] : it->second) {
+          vt_debug_print(
+            verbose, temperedlb,
+            "computeClusterSummary: recv obj={}, target={}\n",
+            obj, target
+          );
+          if (cluster_objs.find(target) != cluster_objs.end()) {
+            // intra-cluster edge
+            info.intra_recv_vol += volume;
+          } else if (
+            cur_objs_.find(target) != cur_objs_.end() or
+            target.isLocatedOnThisNode()
           ) {
-            max_object_serialized_bytes = std::max(
-              max_object_serialized_bytes, it->second
-            );
-          }
-          if (
-            auto it = obj_footprint_bytes_.find(obj_id);
-            it != obj_footprint_bytes_.end()
-          ) {
-            cluster_footprint += it->second;
-          }
-        } else {
-          if (
-            auto it = obj_working_bytes_.find(obj_id);
-            it != obj_working_bytes_.end()
-          ) {
-            max_object_working_bytes_outside = std::max(
-              max_object_working_bytes_outside, it->second
-            );
-          }
-          if (
-            auto it = obj_serialized_bytes_.find(obj_id);
-            it != obj_serialized_bytes_.end()
-          ) {
-            max_object_serialized_bytes_outside = std::max(
-              max_object_serialized_bytes_outside, it->second
-            );
+            // intra-rank edge
+            info.inter_recv_vol[this_node] += volume;
+          } else {
+            // inter-rank edge
+            info.inter_recv_vol[target.getCurrNode()] += volume;
           }
         }
       }
     }
+  }
+  return info;
+}
 
-    info.cluster_footprint = cluster_footprint;
-    info.max_object_working_bytes = max_object_working_bytes;
-    info.max_object_working_bytes_outside = max_object_working_bytes_outside;
-    info.max_object_serialized_bytes = max_object_serialized_bytes;
-    info.max_object_serialized_bytes_outside = max_object_serialized_bytes_outside;
+void TemperedLB::computeClusterSummary() {
+  cur_clusters_.clear();
 
+  for (auto const& [shared_id, _] : shared_block_size_) {
+    auto info = makeClusterSummary(shared_id);
     if (info.load != 0) {
-      for (auto&& obj : cluster_objs) {
-        if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
-          for (auto const& [target, volume] : it->second) {
-            vt_debug_print(
-              verbose, temperedlb,
-              "computeClusterSummary: send obj={}, target={}\n",
-              obj, target
-            );
-
-            if (cluster_objs.find(target) != cluster_objs.end()) {
-              // intra-cluster edge
-              info.intra_send_vol += volume;
-            } else if (
-              cur_objs_.find(target) != cur_objs_.end() or
-              target.isLocatedOnThisNode()
-            ) {
-              // intra-rank edge
-              info.inter_send_vol[this_node] += volume;
-            } else {
-              // inter-rank edge
-              info.inter_send_vol[target.getCurrNode()] += volume;
-            }
-          }
-        }
-        if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
-          for (auto const& [target, volume] : it->second) {
-            vt_debug_print(
-              verbose, temperedlb,
-              "computeClusterSummary: recv obj={}, target={}\n",
-              obj, target
-            );
-            if (cluster_objs.find(target) != cluster_objs.end()) {
-              // intra-cluster edge
-              info.intra_recv_vol += volume;
-            } else if (
-              cur_objs_.find(target) != cur_objs_.end() or
-              target.isLocatedOnThisNode()
-            ) {
-              // intra-rank edge
-              info.inter_recv_vol[this_node] += volume;
-            } else {
-              // inter-rank edge
-              info.inter_recv_vol[target.getCurrNode()] += volume;
-            }
-          }
-        }
-      }
-
       cur_clusters_.emplace(shared_id, std::move(info));
     }
   }
@@ -1066,6 +1072,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
     for (iter_ = 0; iter_ < num_iters_; iter_++) {
       bool first_iter = iter_ == 0;
+      iter_time_ = MPI_Wtime();
 
       if (first_iter) {
         // Copy this node's object assignments to a local, mutable copy
@@ -1178,6 +1185,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         is_overloaded_ = is_underloaded_ = false;
         ready_to_satisfy_locks_ = false;
         other_rank_clusters_.clear();
+        cycle_locks_ = 0;
 
         // Not clearing shared_block_size_ because this never changes and
         // the knowledge might be useful
@@ -1195,7 +1203,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         double const memory_usage = computeMemoryUsage();
 
         vt_debug_print(
-          terse, temperedlb,
+          normal, temperedlb,
           "Current memory info: total memory usage={}, shared blocks here={}, "
           "memory_threshold={}\n", memory_usage,
           getSharedBlocksHere().size(), mem_thresh_
@@ -1205,7 +1213,9 @@ void TemperedLB::doLBStages(LoadType start_imb) {
           vtAbort("This should never be possible to go over the threshold\n");
         }
 
-        computeClusterSummary();
+        if (iter_ == 0) {
+          computeClusterSummary();
+        }
 
         // Verbose printing about local clusters
         for (auto const& [shared_id, cluster_info] : cur_clusters_) {
@@ -1408,7 +1418,7 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
 }
 
 void TemperedLB::rejectionStatsHandler(
-  int n_rejected, int n_transfers, int n_unhomed_blocks
+  int n_rejected, int n_transfers, int n_unhomed_blocks, int cycle_locks
 ) {
   double rej = static_cast<double>(n_rejected) /
     static_cast<double>(n_rejected + n_transfers) * 100.0;
@@ -1419,8 +1429,18 @@ void TemperedLB::rejectionStatsHandler(
       terse, temperedlb,
       "TemperedLB::rejectionStatsHandler: n_transfers={} n_unhomed_blocks={}"
       " n_rejected={} "
-      "rejection_rate={:0.1f}%\n",
-      n_transfers, n_unhomed_blocks, n_rejected, rej
+      "rejection_rate={:0.1f}%, total_cycle_locks={}\n",
+      n_transfers, n_unhomed_blocks, n_rejected, rej, cycle_locks
+    );
+  }
+}
+
+void TemperedLB::maxIterTime(double max_iter_time) {
+  auto this_node = theContext()->getNode();
+  if (this_node == 0) {
+    vt_debug_print(
+      terse, temperedlb,
+      "TemperedLB::maxIterTime: {}\n", max_iter_time
     );
   }
 }
@@ -1472,7 +1492,7 @@ void TemperedLB::informAsync() {
 
   if (is_overloaded_) {
     vt_debug_print(
-      terse, temperedlb,
+      normal, temperedlb,
       "TemperedLB::informAsync: trial={}, iter={}, known underloaded={}\n",
       trial_, iter_, underloaded_.size()
     );
@@ -2135,9 +2155,11 @@ void TemperedLB::originalTransfer() {
   if (theConfig()->vt_debug_temperedlb) {
     // compute rejection rate because it will be printed
     runInEpochCollective("TemperedLB::originalTransfer -> compute rejection", [=] {
+      iter_time_ = MPI_Wtime() - iter_time_;
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers, 0
+        n_rejected, n_transfers, 0, 0
       );
+      proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
     });
   }
 }
@@ -2166,6 +2188,11 @@ auto TemperedLB::removeClusterToSend(
 
   if (shared_id != no_shared_id) {
     give_shared_blocks_size[shared_id] = shared_block_size_[shared_id];
+
+    // Update cur_clusters_ to avoid recomputing it
+    if (auto it = cur_clusters_.find(shared_id); it != cur_clusters_.end()) {
+      cur_clusters_.erase(it);
+    }
   }
 
   if (objs.size() == 0) {
@@ -2392,7 +2419,6 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       );
     });
 
-    computeClusterSummary();
     this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
     this_new_work_ = this_new_breakdown_.work;
     computeMemoryUsage();
@@ -2469,7 +2495,10 @@ void TemperedLB::giveCluster(
     );
   }
 
-  computeClusterSummary();
+  auto id = give_shared_blocks_size.begin()->first;
+  auto info = makeClusterSummary(id);
+  cur_clusters_.emplace(id, std::move(info));
+
   this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
   this_new_work_ = this_new_breakdown_.work;
   computeMemoryUsage();
@@ -2510,8 +2539,8 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
 
   vt_debug_print(
     normal, temperedlb,
-    "lockObtained: is_locked_={}, is_swapping_={}\n",
-    is_locked_, is_swapping_
+    "lockObtained: is_locked_={}, is_swapping_={}, locking_rank_={}, msg->locked_node={}, is_swapping={}\n",
+    is_locked_, is_swapping_, locking_rank_, msg->locked_node, is_swapping_
   );
 
   auto cur_epoch = theMsg()->getEpoch();
@@ -2525,9 +2554,10 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
   };
 
   if (is_locked_ && locking_rank_ <= msg->locked_node) {
+    cycle_locks_++;
     proxy_[msg->locked_node].template send<&TemperedLB::releaseLock>();
     theTerm()->consume(cur_epoch);
-    try_locks_.emplace(msg->locked_node, msg->locked_c_try);
+    try_locks_.emplace(msg->locked_node, msg->locked_c_try, 1);
     //pending_actions_.push_back(action);
   } else if (is_locked_) {
     pending_actions_.push_back(action);
@@ -2538,7 +2568,6 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
       normal, temperedlb,
       "lockObtained: running action immediately\n"
     );
-
 
     action();
   }
@@ -2551,13 +2580,24 @@ void TemperedLB::satisfyLockRequest() {
     for (auto&& tl : try_locks_) {
       vt_debug_print(
         verbose, temperedlb,
-        "satisfyLockRequest: node={}, c_try={}\n", tl.requesting_node, tl.c_try
+        "satisfyLockRequest: node={}, c_try={}, forced_release={}\n",
+	tl.requesting_node, tl.c_try, tl.forced_release
       );
     }
 
     auto iter = try_locks_.begin();
     auto lock = *iter;
     try_locks_.erase(iter);
+
+    if (lock.forced_release) {
+      // Delay for 100 microseconds to give another rank a chance at obtaining a
+      // lock so the cycle isn't just created again. This number was found
+      // to be reasonable through some experimentation.
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
+      lock.forced_release = false;
+      try_locks_.insert(lock);
+      return;
+    }
 
     auto const this_node = theContext()->getNode();
 
@@ -2700,9 +2740,11 @@ void TemperedLB::swapClusters() {
     int n_rejected = 0;
     auto remote_block_count = getRemoteBlockCountHere();
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
+      iter_time_ = MPI_Wtime() - iter_time_;
       proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers_swap_, remote_block_count
+        n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_
       );
+      proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
     });
   }
 }

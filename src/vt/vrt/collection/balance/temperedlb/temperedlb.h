@@ -127,8 +127,9 @@ protected:
   void loadStatsHandler(std::vector<balance::LoadData> const& vec);
   void workStatsHandler(std::vector<balance::LoadData> const& vec);
   void rejectionStatsHandler(
-    int n_rejected, int n_transfers, int n_unhomed_blocks
+    int n_rejected, int n_transfers, int n_unhomed_blocks, int cycle_count
   );
+  void maxIterTime(double max_iter_time);
   void remoteBlockCountHandler(int n_unhomed_blocks);
   void thunkMigrations();
 
@@ -167,6 +168,15 @@ protected:
    * \brief Compute the current cluster assignment summary for this rank
    */
   void computeClusterSummary();
+
+  /**
+   * \brief Make cluster summary info
+   *
+   * \param[in] shared_id the shared ID
+   *
+   * \return the info
+   */
+  ClusterInfo makeClusterSummary(SharedIDType shared_id);
 
   /**
    * \brief Try to lock a rank
@@ -424,6 +434,8 @@ private:
   StatisticMapType stats;
   LoadType this_load                                = 0.0f;
   LoadType this_work                                = 0.0f;
+  int cycle_locks_                                  = 0;
+  double iter_time_                                 = 0.0f;
   /// Whether any node has communication data
   bool has_comm_any_ = false;
 
@@ -435,13 +447,15 @@ private:
   //////////////////////////////////////////////////////////////////////////////
 
   struct TryLock {
-    TryLock(NodeType in_requesting, double in_c_try)
+    TryLock(NodeType in_requesting, double in_c_try, int in_forced_release = 0)
       : requesting_node(in_requesting),
-        c_try(in_c_try)
+        c_try(in_c_try),
+	forced_release(in_forced_release)
     { }
 
     NodeType requesting_node = uninitialized_destination;
     double c_try = 0;
+    int forced_release = 0;
 
     double operator<(TryLock const& other) const {
       // sort in reverse order so the best is first!
