@@ -67,12 +67,15 @@ public:
 
 TEST_F(TestComponentConstruction, test_component_construct_dispatch_1) {
   using vt::runtime::component::ComponentPack;
-  using vt::runtime::component::Deps;
+  using vt::runtime::component::StartupDeps;
+  using vt::runtime::component::RuntimeDeps;
 
   MyComponent* my_dumb_pointer = nullptr;
 
   auto p = std::make_unique<ComponentPack>();
-  p->registerComponent<MyComponent>(&my_dumb_pointer, Deps<>{});
+  p->registerComponent<MyComponent>(
+    &my_dumb_pointer, StartupDeps<>{}, RuntimeDeps<>{}
+  );
   p->add<MyComponent>();
   p->construct();
 
@@ -100,7 +103,8 @@ public:
 
 TEST_F(TestComponentConstruction, test_component_construct_dispatch_args_2) {
   using vt::runtime::component::ComponentPack;
-  using vt::runtime::component::Deps;
+  using vt::runtime::component::StartupDeps;
+  using vt::runtime::component::RuntimeDeps;
 
   MyComponentArgs* my_dumb_pointer = nullptr;
 
@@ -108,7 +112,8 @@ TEST_F(TestComponentConstruction, test_component_construct_dispatch_args_2) {
 
   auto p = std::make_unique<ComponentPack>();
   p->registerComponent<MyComponentArgs>(
-    &my_dumb_pointer, Deps<>{}, 10, my_int, typename MyComponentArgs::MyTag{}
+    &my_dumb_pointer, StartupDeps<>{}, RuntimeDeps<>{},
+    10, my_int, typename MyComponentArgs::MyTag{}
   );
   p->add<MyComponentArgs>();
   p->construct();
@@ -136,7 +141,8 @@ public:
 
 TEST_F(TestComponentConstruction, test_component_construct_dispatch_move_3) {
   using vt::runtime::component::ComponentPack;
-  using vt::runtime::component::Deps;
+  using vt::runtime::component::StartupDeps;
+  using vt::runtime::component::RuntimeDeps;
 
   MyComponentMove* my_dumb_pointer = nullptr;
 
@@ -144,7 +150,7 @@ TEST_F(TestComponentConstruction, test_component_construct_dispatch_move_3) {
 
   auto p = std::make_unique<ComponentPack>();
   p->registerComponent<MyComponentMove>(
-    &my_dumb_pointer, Deps<>{}, std::move(ptr)
+    &my_dumb_pointer, StartupDeps<>{}, RuntimeDeps<>{}, std::move(ptr)
   );
   p->add<MyComponentMove>();
   p->construct();
