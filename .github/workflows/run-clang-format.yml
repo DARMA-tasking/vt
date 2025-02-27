@@ -1,0 +1,59 @@
+name: PR checks (clang-format)
+
+on: pull_request
+
+jobs:
+  check:
+    name: Run clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Run clang-format
+        run: |
+          {
+            echo 'CLANG_FORMAT_DIFF<<EOF'
+            git clang-format-16 --diff origin/${{ github.base_ref }} || true
+            echo EOF
+          } >> "$GITHUB_ENV"
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            let commentId = -1
+            for await (const { data: comments } of github.paginate.iterator(
+              github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              }
+            )) {
+              const foundComment = comments.find((comment) =>
+                comment.body.startsWith(
+                  '`clang-format` output for this changeset:'
+                )
+              )
+              if (foundComment) {
+                commentId = foundComment.id
+                break
+              }
+            }
+
+            const { CLANG_FORMAT_DIFF } = process.env
+            const commentBody = '`clang-format` output for this changeset:\n```diff\n' + CLANG_FORMAT_DIFF + '\n```'
+            if (commentId === -1) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              })
+            } else {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: commentId,
+                body: commentBody
+              })
+            }
