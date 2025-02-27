@@ -48,32 +48,37 @@
 
 namespace vt { namespace runtime { namespace component {
 
+namespace {
+
 template <typename... Args>
 struct AddDep;
 
 template <typename U, typename... Args>
 struct AddDep<U, Args...> {
-  static void add(registry::AutoHandlerType t) {
+  static void add(registry::AutoHandlerType t, bool startup) {
     auto u = registry::makeIdx<U>();
-    registry::getIdx(t).insert(u);
-    AddDep<Args...>::add(t);
+    if (startup) {
+      registry::getIdx(t).addStartupDep(u);
+    } else {
+      registry::getIdx(t).addRuntimeDep(u);
+    }
+    AddDep<Args...>::add(t, startup);
   }
 };
 
 template <>
 struct AddDep<> {
-  static void add([[maybe_unused]] registry::AutoHandlerType t) { }
+  static void add(registry::AutoHandlerType, bool) { }
 };
+
+} /* end anon namespace */
 
 struct ComponentRegistry {
 
-  template <typename U, typename... Args>
-  static void addDep(registry::AutoHandlerType t);
-
   template <typename T, typename... Deps>
-  static void dependsOn() {
+  static void dependsOn(bool startup) {
     auto t = registry::makeIdx<T>();
-    AddDep<Deps...>::add(t);
+    AddDep<Deps...>::add(t, startup);
   }
 
 };
