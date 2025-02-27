@@ -69,10 +69,24 @@ struct ComponentPack {
 public:
   /**
    * \internal \brief Idempotent registration of a component into this runtime
-   * pack. Component dependencies specified with variadic template parameters in
+   * pack.
+   *
+   * Component dependencies are specified with variadic template parameters in
    * \c StartupDepsPack and \c RuntimeDepsPack. Registration does not imply the
    * component will be created; it must be added subsequently to be enabled. It
    * simply declares its existence and connectivity with other components.
+   *
+   * Startup dependencies are ones that are required for the component to be
+   * constructed and fire the initialize method. Additionally, and importantly,
+   * they determine the order (reverse topological) in which components are torn
+   * down or finalized. Both orders are sensitive as components require other
+   * components to be live during construction/initialization and during
+   * finalization. Runtime dependencies indicate that a component requires
+   * another component to function and thus needs them to be loaded. Thus, for
+   * instance, if a VT runtime is created with just an \c ActiveMessenger, the
+   * runtime will add all the startup dependencies and runtime dependencies to
+   * create a runtime with a working \c ActiveMessenger that is able to
+   * function.
    *
    * \param[out] ref dumb pointer for access outside
    * \param[in] cons constructor arguments for the component---bound at
@@ -168,24 +182,16 @@ private:
    * \param[in] v current vertex
    * \param[in] order topological order derived so far
    * \param[in] visited array of visited vertices
-   * \param[in] visiting array of currently visiting vertices
+   * \param[in] visiting array of vertices currently being visited
    */
   void topoSortImpl(int v, std::list<int>& order, bool* visited, bool* visiting);
 
   /**
-   * \internal \brief Detect cycles in the dependence graph
-   *
-   * \param[in] root starting vertex
+   * \brief Based on the components that have been added along with their
+   * startup and runtime dependencies, add any additional components that are
+   * required for a complete VT runtime
    */
-  void detectCycles(int root);
-
-  /**
-   * \internal \brief Detect cycles in the dependence graph
-   *
-   * \param[in] stack current stack of traversed vertices
-   * \param[in] dep next vertex to consider
-   */
-  void detectCyclesImpl(std::list<int>& stack, int dep);
+  void addAllRequiredComponents();
 
 public:
 

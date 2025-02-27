@@ -83,7 +83,9 @@ registry::AutoHandlerType ComponentPack::registerComponent(
   typename BaseComponent::RuntimeDepsPack<RuntimeDeps...>,
   Cons&&... cons
 ) {
-  ComponentRegistry::dependsOn<T, StartupDeps...>();
+  ComponentRegistry::dependsOn<T, StartupDeps...>(true);
+  ComponentRegistry::dependsOn<T, RuntimeDeps...>(false);
+
   auto idx = registry::makeIdx<T>();
   //fmt::print("registerComponent name={} idx={}\n", typeid(T).name(), idx);
 

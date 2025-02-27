@@ -754,11 +754,10 @@ void Runtime::initializeComponents() {
 #     if vt_check_enabled(trace_enabled)
       trace::Trace,  // For trace user event registrations
 #     endif
-      ctx::Context,  // Everything depends on theContext
-    >{},
-    RuntimeDeps<
+      ctx::Context,   // Everything depends on theContext
       pool::Pool     // For memory allocations
-    >{}
+    >{},
+    RuntimeDeps<>{}
   );
 
 # if vt_check_enabled(trace_enabled)
@@ -791,7 +790,8 @@ void Runtime::initializeComponents() {
   p_->registerComponent<objgroup::ObjGroupManager>(
     &theObjGroup,
     StartupDeps<
-      ctx::Context               // Everything depends on theContext
+      ctx::Context,               // Everything depends on theContext
+      pool::Pool                  // For memory allocations
     >{},
     RuntimeDeps<
       messaging::ActiveMessenger // Depends on active messenger to send
@@ -802,14 +802,15 @@ void Runtime::initializeComponents() {
     &theMsg,
     StartupDeps<
 #     if vt_check_enabled(trace_enabled)
-      trace::Trace,      // For trace user event registrations
+      trace::Trace,             // For trace user event registrations
 #     endif
-      ctx::Context,      // Everything depends on theContext
+      ctx::Context,             // Everything depends on theContext
+      pool::Pool                // Depends on pool for message allocation
     >{},
     RuntimeDeps<
       phase::PhaseManager, // For data collection at phase boundaries
-      pool::Pool           // Depends on pool for message allocation
       event::AsyncEvent,   // Depends on event to send messages
+      sched::Scheduler     // For scheduling work through runnables
     >{}
   );
 
@@ -819,7 +820,7 @@ void Runtime::initializeComponents() {
 #     if vt_check_enabled(trace_enabled)
       trace::Trace,             // For scheduler-related trace events
 #     endif
-      ctx::Context,             // Everything depends on theContext
+      ctx::Context              // Everything depends on theContext
     >{},
     RuntimeDeps<
       util::memory::MemoryUsage // Depends on memory usage for output
@@ -842,14 +843,14 @@ void Runtime::initializeComponents() {
     >{},
     RuntimeDeps<
       messaging::ActiveMessenger, // Depends on active messenger to send term msgs
-      sched::Scheduler,           // Depends on scheduler for idle checks
+      sched::Scheduler            // Depends on scheduler for idle checks
     >{}
   );
 
   p_->registerComponent<collective::CollectiveAlg>(
     &theCollective,
     StartupDeps<
-      ctx::Context,              // Everything depends on theContext
+      ctx::Context               // Everything depends on theContext
     >{},
     RuntimeDeps<
       messaging::ActiveMessenger // Depends on active messenger for collectives
@@ -861,7 +862,11 @@ void Runtime::initializeComponents() {
     StartupDeps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for setting up
-      collective::CollectiveAlg   // Depends on collective for spanning trees
+      collective::CollectiveAlg,  // Depends on collective for spanning trees
+      sched::Scheduler,           // Depends on scheduler for starting up
+      pool::Pool,                 // Depends on pool for message allocation
+      term::TerminationDetector,  // Need TD to determine completion
+      event::AsyncEvent           // Depends on event to send messages
     >{},
     RuntimeDeps<>{}
   );
@@ -887,7 +892,7 @@ void Runtime::initializeComponents() {
       collective::CollectiveAlg     // Depends on collective scope
     >{},
     RuntimeDeps<
-      messaging::ActiveMessenger,   // Depends on active messenger for RDMA
+      messaging::ActiveMessenger    // Depends on active messenger for RDMA
     >{}
   );
 
@@ -904,7 +909,7 @@ void Runtime::initializeComponents() {
   p_->registerComponent<vrt::VirtualContextManager>(
     &theVirtualManager,
     StartupDeps<
-      ctx::Context,               // Everything depends on theContext
+      ctx::Context                // Everything depends on theContext
     >{},
     RuntimeDeps<
       messaging::ActiveMessenger, // Depends on active messenger for messaging
@@ -922,6 +927,8 @@ void Runtime::initializeComponents() {
       group::GroupManager,                 // For broadcasts
       sched::Scheduler,                    // For scheduling work
       location::LocationManager,           // For element location
+      objgroup::ObjGroupManager,           // Depends on objgroup
+      pipe::PipeManager,                   // Depends on using callbacks
       vrt::collection::balance::NodeLBData, // For LB data collection
       vrt::collection::balance::LBManager  // For load balancing
     >{}
@@ -967,11 +974,11 @@ void Runtime::initializeComponents() {
     &theLBManager,
     StartupDeps<
       ctx::Context,                         // Everything depends on theContext
-      objgroup::ObjGroupManager             // Since it's an objgroup
+      objgroup::ObjGroupManager,            // Since it's an objgroup
+      vrt::collection::balance::NodeLBData  // For LB data collection
     >{},
     RuntimeDeps<
       util::memory::MemoryUsage,           // Output mem usage on phase change
-      vrt::collection::balance::NodeLBData, // For LB data collection
       phase::PhaseManager                  // For phase structure
     >{}
   );
