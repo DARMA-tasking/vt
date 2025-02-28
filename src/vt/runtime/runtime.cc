@@ -943,8 +943,7 @@ void Runtime::initializeComponents() {
     >{},
     RuntimeDeps<
       messaging::ActiveMessenger,         // Depends on active messenger for messaging
-      vrt::collection::CollectionManager, // For RDMA on collection elements
-      objgroup::ObjGroupManager           // For RDMA on objgroups
+      vrt::collection::CollectionManager  // For RDMA on collection elements
     >{}
   );
 
