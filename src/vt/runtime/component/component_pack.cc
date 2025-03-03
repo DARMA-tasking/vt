@@ -121,20 +121,26 @@ bool ComponentPack::needsCurrentTime() {
 }
 
 void ComponentPack::addAllRequiredComponents() {
-  for (auto&& i : added_components_) {
-    auto s_deps = registry::getStartupDeps(i);
-    auto r_deps = registry::getRuntimeDeps(i);
-    for (auto&& sd : s_deps) {
-      if (added_components_.find(sd) == added_components_.end()) {
-        added_components_.insert(sd);
+  bool inserted = false;
+  do {
+    inserted = false;
+    for (auto&& i : added_components_) {
+      auto s_deps = registry::getStartupDeps(i);
+      auto r_deps = registry::getRuntimeDeps(i);
+      for (auto&& sd : s_deps) {
+        if (added_components_.find(sd) == added_components_.end()) {
+          added_components_.insert(sd);
+          inserted = true;
+        }
+      }
+      for (auto&& rd : r_deps) {
+        if (added_components_.find(rd) == added_components_.end()) {
+          added_components_.insert(rd);
+          inserted = true;
+        }
       }
     }
-    for (auto&& rd : r_deps) {
-      if (added_components_.find(rd) == added_components_.end()) {
-        added_components_.insert(rd);
-      }
-    }
-  }
+  } while (inserted);
 }
 
 std::list<int> ComponentPack::topoSort() {
