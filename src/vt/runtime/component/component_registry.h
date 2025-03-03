@@ -108,7 +108,7 @@ inline auto getStartupDeps(AutoHandlerType han) {
 }
 
 inline auto getRuntimeDeps(AutoHandlerType han) {
-  return getRegistry().at(han).getStartupDeps();
+  return getRegistry().at(han).getRuntimeDeps();
 }
 
 template <typename ObjT>
