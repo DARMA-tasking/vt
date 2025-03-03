@@ -66,22 +66,27 @@
                     "subphases": [
                         {
                             "id": 0,
-                            "time": 0.0003119999999999999
+                            "time": 0.0006935990001011305
                         }
                     ],
-                    "time": 0.0003119999999999999
+                    "time": 0.0006935990001011305
                 },
                 {
                     "entity": {
                         "home": 0,
-                        "id": 3145740,
+                        "id": 1,
                         "migratable": false,
-                        "objgroup_id": 786435,
                         "type": "object"
                     },
                     "node": 0,
                     "resource": "cpu",
-                    "time": 0.0
+                    "subphases": [
+                        {
+                            "id": 0,
+                            "time": 1.3809999472869094e-06
+                        }
+                    ],
+                    "time": 1.3809999472869094e-06
                 },
                 {
                     "entity": {
@@ -98,19 +103,14 @@
                 {
                     "entity": {
                         "home": 0,
-                        "id": 1,
+                        "id": 5242892,
                         "migratable": false,
+                        "objgroup_id": 1310723,
                         "type": "object"
                     },
                     "node": 0,
                     "resource": "cpu",
-                    "subphases": [
-                        {
-                            "id": 0,
-                            "time": 9.000000000000002e-06
-                        }
-                    ],
-                    "time": 9.000000000000002e-06
+                    "time": 0.0
                 },
                 {
                     "entity": {
