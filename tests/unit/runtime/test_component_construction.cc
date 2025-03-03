@@ -160,4 +160,86 @@ TEST_F(TestComponentConstruction, test_component_construct_dispatch_move_3) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+// Test dependencies -- runtime and startup to ensure they are being followed
+////////////////////////////////////////////////////////////////////////////////
+
+struct ComponentA;
+struct ComponentB;
+struct ComponentC;
+struct ComponentD;
+
+namespace comp_ptr {
+
+ComponentA* pointer_a = nullptr;
+ComponentB* pointer_b = nullptr;
+ComponentC* pointer_c = nullptr;
+ComponentD* pointer_d = nullptr;
+
+} /* end namespace comp_ptr */
+
+struct ComponentA : runtime::component::Component<ComponentA> {
+  ComponentA() {
+    EXPECT_NE(comp_ptr::pointer_b, nullptr);
+    EXPECT_NE(comp_ptr::pointer_c, nullptr);
+  }
+
+  std::string name() override { return "ComponentA"; }
+};
+
+struct ComponentB : runtime::component::Component<ComponentB> {
+  ComponentB() {
+    EXPECT_NE(comp_ptr::pointer_c, nullptr);
+  }
+
+  std::string name() override { return "ComponentB"; }
+};
+
+struct ComponentC : runtime::component::Component<ComponentC> {
+  void startup() override {
+    EXPECT_NE(comp_ptr::pointer_d, nullptr);
+  }
+
+  std::string name() override { return "ComponentC"; }
+};
+
+struct ComponentD : runtime::component::Component<ComponentD> {
+  void startup() override {
+    EXPECT_NE(comp_ptr::pointer_b, nullptr);
+  }
+
+  std::string name() override { return "ComponentD"; }
+};
+
+TEST_F(TestComponentConstruction, test_component_deps_1) {
+  using vt::runtime::component::ComponentPack;
+  using vt::runtime::component::StartupDeps;
+  using vt::runtime::component::RuntimeDeps;
+
+  auto p = std::make_unique<ComponentPack>();
+  p->registerComponent<ComponentA>(
+    &comp_ptr::pointer_a, StartupDeps<ComponentB, ComponentC>{}, RuntimeDeps<>{}
+  );
+  p->registerComponent<ComponentB>(
+    &comp_ptr::pointer_b, StartupDeps<ComponentC>{}, RuntimeDeps<>{}
+  );
+  p->registerComponent<ComponentC>(
+    &comp_ptr::pointer_c, StartupDeps<>{}, RuntimeDeps<ComponentD>{}
+  );
+  p->registerComponent<ComponentD>(
+    &comp_ptr::pointer_d, StartupDeps<>{}, RuntimeDeps<ComponentB>{}
+  );
+  p->add<ComponentA>();
+  p->construct();
+
+  // We should have all 4 components, just by adding ComponentA
+  EXPECT_NE(comp_ptr::pointer_a, nullptr);
+  EXPECT_NE(comp_ptr::pointer_b, nullptr);
+  EXPECT_NE(comp_ptr::pointer_c, nullptr);
+  EXPECT_NE(comp_ptr::pointer_d, nullptr);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 }}} /* end namespace vt::tests::unit */
