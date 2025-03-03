@@ -750,8 +750,9 @@ void Runtime::initializeComponents() {
   // The Trace and Scheduler components have a co-dependency. However,
   // the lifetime of theTrace should be longer than that of theSched.
   p_->registerComponent<trace::Trace>(&theTrace, Deps<
-      ctx::Context  // Everything depends on theContext
-    >{},
+      ctx::Context,  // Everything depends on theContext
+      objgroup::ObjGroupManager
+  >{},
     prog_name
   );
 # endif
@@ -768,8 +769,10 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<objgroup::ObjGroupManager>(
     &theObjGroup, Deps<
-      ctx::Context,              // Everything depends on theContext
-      messaging::ActiveMessenger // Depends on active messenger to send
+      ctx::Context              // Everything depends on theContext
+
+      // Break this dependency for startup ordering
+      // messaging::ActiveMessenger // Depends on active messenger to send
     >{}
   );
 

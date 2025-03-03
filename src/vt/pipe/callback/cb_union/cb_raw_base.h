@@ -45,6 +45,7 @@
 #define INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H
 
 #include "vt/config.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.fwd.h"
 #include "vt/pipe/callback/cb_union/cb_raw.h"
 #include "vt/pipe/signal/signal.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -68,9 +69,6 @@ static struct RawBcastColDirTagType { } RawBcastColDirTag { };
 static struct RawSendObjGrpTagType  { } RawSendObjGrpTag  { };
 static struct RawBcastObjGrpTagType { } RawBcastObjGrpTag { };
 #pragma GCC diagnostic pop
-
-template <typename... Args>
-struct CallbackTyped;
 
 struct CallbackRawBaseSingle {
   using AutoHandlerType = auto_registry::AutoHandlerType;
@@ -307,15 +305,6 @@ struct CallbackTyped : CallbackRawBaseSingle {
 };
 
 }}}} /* end namespace vt::pipe::callback::cbunion */
-
-namespace vt {
-
-template <typename... Args>
-using Callback = pipe::callback::cbunion::CallbackTyped<Args...>;
-
-using CallbackU = pipe::callback::cbunion::CallbackRawBaseSingle;
-
-} /* end namespace vt */
 
 #include "vt/pipe/callback/cb_union/cb_raw_base.impl.h"
 

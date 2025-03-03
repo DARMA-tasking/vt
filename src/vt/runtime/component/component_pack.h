@@ -160,8 +160,9 @@ private:
    * \param[in] v current vertex
    * \param[in] order topological order derived so far
    * \param[in] visited array of visited vertices
+   * \param[in] visiting array of currently visiting vertices
    */
-  void topoSortImpl(int v, std::list<int>& order, bool* visited);
+  void topoSortImpl(int v, std::list<int>& order, bool* visited, bool* visiting);
 
   /**
    * \internal \brief Detect cycles in the dependence graph
