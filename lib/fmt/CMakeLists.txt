@@ -72,7 +72,7 @@ option(FMT_WERROR "Halt the compilation with an error on compiler warnings."
        OFF)
 
 # Options that control generation of various targets.
-option(FMT_INSTALL "Generate the install target." ON)
+option(FMT_INSTALL "Generate the install target." OFF)
 option(FMT_OS "Include OS-specific APIs." OFF)
 option(FMT_MODULE "Build a module instead of a traditional library." OFF)
 option(FMT_SYSTEM_HEADERS "Expose headers with marking them as system." OFF)
@@ -186,6 +186,7 @@ function(add_module_library name)
 
   add_library(${name})
   set_target_properties(${name} PROPERTIES LINKER_LANGUAGE CXX)
+  set_target_properties(${name} PROPERTIES OUTPUT_NAME fmt-vt)
 
   if (NOT ${${AML_IF}})
     # Create a non-modular library.
