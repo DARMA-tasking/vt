@@ -42,6 +42,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <gtest/gtest-spi.h>
 
 #include <vt/runtime/component/component.h>
 #include "test_parallel_harness.h"
@@ -239,7 +240,28 @@ TEST_F(TestComponentConstruction, test_component_deps_1) {
   EXPECT_NE(comp_ptr::pointer_d, nullptr);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+TEST_F(TestComponentConstruction, test_component_deps_circular_2) {
+  theConfig()->vt_throw_on_abort = true;
 
+  using vt::runtime::component::ComponentPack;
+  using vt::runtime::component::StartupDeps;
+  using vt::runtime::component::RuntimeDeps;
+
+  auto p = std::make_unique<ComponentPack>();
+  p->registerComponent<ComponentA>(
+    &comp_ptr::pointer_a, StartupDeps<ComponentB>{}, RuntimeDeps<>{}
+  );
+  p->registerComponent<ComponentB>(
+    &comp_ptr::pointer_b, StartupDeps<ComponentC>{}, RuntimeDeps<>{}
+  );
+  p->registerComponent<ComponentC>(
+    &comp_ptr::pointer_c, StartupDeps<ComponentA>{}, RuntimeDeps<ComponentD>{}
+  );
+  p->add<ComponentA>();
+
+  EXPECT_THROW(p->construct(), std::runtime_error);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 }}} /* end namespace vt::tests::unit */
