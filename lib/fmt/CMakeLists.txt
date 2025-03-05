@@ -36,6 +36,20 @@ function(enable_module target)
   endif ()
 endfunction()
 
+function(join_paths joined_path first_path_segment)
+    set(temp_path "${first_path_segment}")
+    foreach(current_segment IN LISTS ARGN)
+        if(NOT ("${current_segment}" STREQUAL ""))
+            if(IS_ABSOLUTE "${current_segment}")
+                set(temp_path "${current_segment}")
+            else()
+                set(temp_path "${temp_path}/${current_segment}")
+            endif()
+        endif()
+    endforeach()
+    set(${joined_path} "${temp_path}" PARENT_SCOPE)
+endfunction()
+
 set(FMT_USE_CMAKE_MODULES FALSE)
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.28 AND
     CMAKE_GENERATOR STREQUAL "Ninja")
@@ -72,7 +86,7 @@ option(FMT_WERROR "Halt the compilation with an error on compiler warnings."
        OFF)
 
 # Options that control generation of various targets.
-option(FMT_INSTALL "Generate the install target." OFF)
+option(FMT_INSTALL "Generate the install target." ON)
 option(FMT_OS "Include OS-specific APIs." OFF)
 option(FMT_MODULE "Build a module instead of a traditional library." OFF)
 option(FMT_SYSTEM_HEADERS "Expose headers with marking them as system." OFF)
@@ -168,7 +182,7 @@ endif ()
 function(add_headers VAR)
   set(headers ${${VAR}})
   foreach (header ${ARGN})
-    set(headers ${headers} include/fmt-vt/${header})
+    set(headers ${headers} ${CMAKE_CURRENT_SOURCE_DIR}/include/fmt-vt/${header})
   endforeach()
   set(${VAR} ${headers} PARENT_SCOPE)
 endfunction()
@@ -364,13 +378,13 @@ if (FMT_INSTALL)
     VERSION ${FMT_VERSION}
     COMPATIBILITY AnyNewerVersion)
 
-  # join_paths(libdir_for_pc_file "\${exec_prefix}" "${FMT_LIB_DIR}")
-  # join_paths(includedir_for_pc_file "\${prefix}" "${FMT_INC_DIR}")
+  join_paths(libdir_for_pc_file "\${exec_prefix}" "${FMT_LIB_DIR}")
+  join_paths(includedir_for_pc_file "\${prefix}" "${FMT_INC_DIR}")
 
-  # configure_file(
-  #   "${PROJECT_SOURCE_DIR}/support/cmake/fmt.pc.in"
-  #   "${pkgconfig}"
-  #   @ONLY)
+  configure_file(
+    "${PROJECT_SOURCE_DIR}/support/cmake/fmt.pc.in"
+    "${pkgconfig}"
+    @ONLY)
   configure_package_config_file(
     ${PROJECT_SOURCE_DIR}/support/cmake/fmt-config.cmake.in
     ${project_config}

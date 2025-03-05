@@ -140,7 +140,7 @@ function(create_trace_only_target)
 
   install(
     TARGETS                   ${VT_TRACE_LIB}
-    EXPORT                    ${VT_TRACE_TARGETS}
+    EXPORT                    ${VT_TRACE_LIB}
     CONFIGURATIONS            ${build_type_list}
     LIBRARY DESTINATION       lib
     ARCHIVE DESTINATION       lib
@@ -149,15 +149,18 @@ function(create_trace_only_target)
   )
 
   install(
-    EXPORT                    ${VT_TRACE_TARGETS}
+    EXPORT                    ${VT_TRACE_LIB}
     DESTINATION               cmake
     NAMESPACE                 vt::
     FILE                      "vt-traceTargets.cmake"
     CONFIGURATIONS            ${build_type_list}
   )
 
+  install(TARGETS ${FMT_LIBRARY} EXPORT ${VT_TRACE_LIB})
+
   export(
     TARGETS                   ${VT_TRACE_LIB}
+                              ${FMT_LIBRARY}
     FILE                      "vt-traceTargets.cmake"
     NAMESPACE                 vt::
   )
