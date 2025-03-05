@@ -266,7 +266,7 @@ endfunction()
 
 # Define the fmt library, its includes and the needed defines.
 set(FMT_HEADERS)
-add_headers(FMT_HEADERS base.h  core.h format-inl.h ostream.h chrono.h)
+add_headers(FMT_HEADERS base.h  core.h format-inl.h ostream.h chrono.h format.h)
 # add_headers(FMT_HEADERS args.h base.h chrono.h color.h compile.h core.h format.h
 #                         format-inl.h os.h ostream.h printf.h ranges.h std.h
 #                         xchar.h)
@@ -394,7 +394,7 @@ if (FMT_INSTALL)
 
   set(INSTALL_FILE_SET)
   if (FMT_USE_CMAKE_MODULES)
-    set(INSTALL_FILE_SET FILE_SET fmt DESTINATION "${FMT_INC_DIR}/fmt")
+    set(INSTALL_FILE_SET FILE_SET fmt DESTINATION "${FMT_INC_DIR}/fmt-vt")
   endif()
 
   # Install the library and headers.
@@ -403,7 +403,7 @@ if (FMT_INSTALL)
           EXPORT ${targets_export_name}
           LIBRARY DESTINATION ${FMT_LIB_DIR}
           ARCHIVE DESTINATION ${FMT_LIB_DIR}
-          PUBLIC_HEADER DESTINATION "${FMT_INC_DIR}/fmt"
+          PUBLIC_HEADER DESTINATION "${FMT_INC_DIR}/fmt-vt"
           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
           ${INSTALL_FILE_SET})
 
