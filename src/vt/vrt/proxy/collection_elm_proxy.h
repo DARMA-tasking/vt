@@ -95,13 +95,12 @@ struct VrtElmProxy : ProxyCollectionElmTraits<ColT, IndexT> {
   IndexT getIndex(){
     return this->getElementProxy().getIndex();
   }
-  
-  template <typename SerT, typename SerT::has_not_traits_t<CheckpointTrait>* = nullptr>
+ 
+  template <typename SerT>
   void serialize(SerT& s);
   
-  template <typename SerT, typename SerT::has_traits_t<CheckpointTrait>* = nullptr>
-  void serialize(SerT& s);
-  
+  //Deserialize without placing values into the runtime,
+  //just return the element pointer.
   template <typename SerT>
   std::unique_ptr<ColT> deserializeToElm(SerT& s);
 };

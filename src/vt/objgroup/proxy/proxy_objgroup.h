@@ -456,8 +456,9 @@ public:
 
     using vt::vrt::CheckpointTrait;
     using vt::vrt::CheckpointInternalTrait;
+    using checkpoint::has_user_traits_v;
 
-    if constexpr(s.hasTraits(CheckpointTrait())){
+    if constexpr(has_user_traits_v<Serializer, CheckpointTrait>){
       vtAssert(old_proxy != no_obj_group, "ObjGroups must be pre-instantiated to be checkpointed or restored");
       vtAssert(old_proxy == proxy_, "The proxy ID bits of this ObjGroup do not match the ID found in the checkpoint!" \
                                     " Varying IDs is not yet supported.");
@@ -467,8 +468,8 @@ public:
       s | null;
 
       if(!null){
-        auto newS = s.withoutTraits(CheckpointTrait())
-                     .withTraits(CheckpointInternalTrait());
+        auto newS = s.template withoutTraits<CheckpointTrait>()
+                     .template withTraits<CheckpointInternalTrait>();
         newS | *objPtr;
       }
     } 

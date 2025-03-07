@@ -111,17 +111,17 @@ template <typename SerializerT>
 void CollectionProxy<ColT, IndexT>::serialize(
     SerializerT& s
 ){
-  //Save the proxy info we had before, to detect when 
+  //Save the proxy info we had before, to detect when
   //we need to create the proxy while unpacking a checkpoint.
   VirtualProxyType oldProxy = this->getProxy();
 
   ProxyCollectionTraits<ColT, IndexT>::serialize(s);
 
   //If not a checkpoint, we only serialize our reference info.
-  if constexpr( !s.hasTraits(CheckpointTrait()) ) {
+  if constexpr(!checkpoint::has_user_traits_v<SerializerT, CheckpointTrait>) {
     return;
   }
-     
+
   vtAssert(oldProxy != no_vrt_proxy || !s.isPacking(),
            "Proxy must be instantiated to checkpoint");
   VirtualProxyType proxy = this->getProxy();
@@ -130,12 +130,12 @@ void CollectionProxy<ColT, IndexT>::serialize(
   if(!s.isUnpacking()) label = vt::theCollection()->getLabel(proxy);
   s | label;
 
-  if(s.isUnpacking() && oldProxy == proxy) { 
+  if(s.isUnpacking() && oldProxy == proxy) {
     vtAssert(label == vt::theCollection()->getLabel(proxy),
              "Checkpointed proxy and deserialize target labels do not match!");
   }
 
-  
+
   std::set<IndexT> localElmSet;
   if(!s.isUnpacking()) localElmSet = vt::theCollection()->getLocalIndices(*this);
   s | localElmSet;
@@ -145,10 +145,10 @@ void CollectionProxy<ColT, IndexT>::serialize(
   s | bounds;
 
   bool isDynamic;
-  if(!s.isUnpacking()) 
+  if(!s.isUnpacking())
     isDynamic = vt::theCollection()->getDynamicMembership<ColT>(proxy);
   s | isDynamic;
-  
+
   //TODO: magistrate's virtualized serialization support may enable checkpointing
   //mapper objects. Pre-registered functions could be doable as well.
 
@@ -159,16 +159,16 @@ void CollectionProxy<ColT, IndexT>::serialize(
   if(s.isUnpacking() && oldProxy != proxy){
     vtAssert(oldProxy == no_vrt_proxy,
              "Checkpointed proxy and deserialize target do not match!");
-    
-    //The checkpointed proxy doesn't exist, we need to create it 
+
+    //The checkpointed proxy doesn't exist, we need to create it
     //First get all of the element unique_ptrs to hand off to the constructor
     std::vector<std::tuple<IndexT, std::unique_ptr<ColT>>> localElms;
     for(auto& idx : localElmSet){
       //Tell elements not to try verifying placement/migrating.
-      localElms.emplace_back(std::make_tuple(idx, 
+      localElms.emplace_back(std::make_tuple(idx,
                           std::move(ElmProxyType().deserializeToElm(s))));
     }
-    
+
     vt::makeCollection<ColT>(label)
       .bounds(bounds)
       .dynamicMembership(isDynamic)

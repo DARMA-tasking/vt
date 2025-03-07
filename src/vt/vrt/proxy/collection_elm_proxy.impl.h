@@ -50,58 +50,55 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-//Standard serialize, just pass along to base.
 template <typename ColT, typename IndexT>
-template <typename SerT, typename SerT::has_not_traits_t<CheckpointTrait>*>
+template <typename SerT>
 void VrtElmProxy<ColT, IndexT>::serialize(SerT& s) {
   ProxyCollectionElmTraits<ColT, IndexT>::serialize(s);
-}
 
-//Checkpoint serialize, actually serialize the element itself.
-template <typename ColT, typename IndexT>
-template <typename SerT, typename SerT::has_traits_t<CheckpointTrait>*>
-void VrtElmProxy<ColT, IndexT>::serialize(SerT& s) {
-  ProxyCollectionElmTraits<ColT, IndexT>::serialize(s);
-  
-  auto local_elm_ptr = this->tryGetLocalPtr();
-  vtAssert(local_elm_ptr != nullptr || s.isUnpacking(), "Must serialize/size elements from the node they are at");
-  
-  //Traits for nested serialize/deserialize
-  using CheckpointlessTraits = typename SerT::Traits::without<CheckpointTrait>::with<CheckpointInternalTrait>;
-  
-  //Weird nested serialization to enable asynchronous deserializing w/o changing semantics.
-  if(!(s.isPacking() || s.isUnpacking())){
-    int size = checkpoint::getSize(*local_elm_ptr);
-    s.contiguousBytes(nullptr, 1, size);
-  } else if(s.isPacking()){
-    auto serialized_elm = checkpoint::serialize<CheckpointlessTraits>(*local_elm_ptr);
-    int size = serialized_elm->getSize();
-    s | size;
-    s.contiguousBytes(serialized_elm->getBuffer(), 1, size);
-  } else if(s.isUnpacking()){
-    int size;
-    s | size;
-
-    auto buf = std::make_unique<char[]>(size);
-    s.contiguousBytes(buf.get(), 1, size);
+  //Only serialize the ColT object if checkpointing.
+  if constexpr(checkpoint::has_user_traits_v<SerT, CheckpointTrait>){
+    ColT* local_elm_ptr = this->tryGetLocalPtr();
+    vtAssert(local_elm_ptr != nullptr || s.isUnpacking(), "Must serialize/size elements from the node they are at");
     
-    if(local_elm_ptr != nullptr){
-      checkpoint::deserializeInPlace<CheckpointlessTraits>(buf.get(), local_elm_ptr);
-    } else {
-      //The element is somewhere else so we'll need to request a migration to here.
-      auto ep = theCollection()->requestMigrateDeferred(*this, theContext()->getNode());
+    //Traits for nested serialize/deserialize
+    using checkpoint::serializerUserTraits::CopyTraits;
+    using CheckpointlessTraits = CopyTraits<
+      typename SerT::TraitHolder::template Without<CheckpointTrait>
+                                ::template With<CheckpointInternalTrait>
+    >;
+    
+    //Weird nested serialization to enable asynchronous deserializing w/o changing semantics.
+    if(!(s.isPacking() || s.isUnpacking())){
+      int size = checkpoint::getSize(*local_elm_ptr);
+      s.contiguousBytes(nullptr, 1, size);
+    } else if(s.isPacking()){
+      auto serialized_elm = checkpoint::serialize<ColT, CheckpointlessTraits>(*local_elm_ptr);
+      int size = serialized_elm->getSize();
+      s | size;
+      s.contiguousBytes(serialized_elm->getBuffer(), 1, size);
+    } else if(s.isUnpacking()){
+      int size;
+      s | size;
 
-      theTerm()->addActionUnique(ep, std::move([elm_proxy = *this, buffer = std::move(buf)]{
-        auto elm_ptr = elm_proxy.tryGetLocalPtr();
-        assert(elm_ptr != nullptr);
-        checkpoint::deserializeInPlace<CheckpointlessTraits>(buffer.get(), elm_ptr);
-      }));
+      auto buf = std::make_unique<char[]>(size);
+      s.contiguousBytes(buf.get(), 1, size);
+      
+      if(local_elm_ptr != nullptr){
+        checkpoint::deserializeInPlace<ColT, CheckpointlessTraits>(buf.get(), local_elm_ptr);
+      } else {
+        //The element is somewhere else so we'll need to request a migration to here.
+        auto ep = theCollection()->requestMigrateDeferred(*this, theContext()->getNode());
+
+        theTerm()->addActionUnique(ep, std::move([elm_proxy = *this, buffer = std::move(buf)]{
+          auto elm_ptr = elm_proxy.tryGetLocalPtr();
+          assert(elm_ptr != nullptr);
+          checkpoint::deserializeInPlace<ColT, CheckpointlessTraits>(buffer.get(), elm_ptr);
+        }));
+      }
     }
   }
 }
 
-//Deserialize without placing values into the runtime, 
-//just return the element pointer.
 template <typename ColT, typename IndexT>
 template <typename SerT>
 std::unique_ptr<ColT> 
@@ -116,8 +113,12 @@ VrtElmProxy<ColT, IndexT>::deserializeToElm(SerT& s) {
 
   std::unique_ptr<ColT> elm(new ColT());
   
-  using CheckpointlessTraits = typename SerT::Traits::without<CheckpointTrait>::with<CheckpointInternalTrait>;
-  checkpoint::deserializeInPlace<CheckpointlessTraits>(buf.get(), elm.get());
+  using checkpoint::serializerUserTraits::CopyTraits;
+  using CheckpointlessTraits = CopyTraits<
+    typename SerT::TraitHolder::template Without<CheckpointTrait>
+                              ::template With<CheckpointInternalTrait>
+  >;
+  checkpoint::deserializeInPlace<ColT, CheckpointlessTraits>(buf.get(), elm.get());
   
   return elm;
 }

@@ -110,9 +110,12 @@ struct ElementLBData {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
+    using vt::vrt::CheckpointInternalTrait;
+    using checkpoint::has_user_traits_v;
+
     s | cur_time_started_;
     s | cur_time_;
-    if(!s.hasTraits(vt::vrt::CheckpointInternalTrait()))
+    if(!has_user_traits_v<Serializer, CheckpointInternalTrait>)
       s | cur_phase_;
     s | phase_timings_;
     s | phase_comm_;
