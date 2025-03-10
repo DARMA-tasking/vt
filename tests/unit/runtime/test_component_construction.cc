@@ -257,6 +257,9 @@ TEST_F(TestComponentConstruction, test_component_deps_circular_2) {
   p->registerComponent<ComponentC>(
     &comp_ptr::pointer_c, StartupDeps<ComponentA>{}, RuntimeDeps<ComponentD>{}
   );
+  p->registerComponent<ComponentD>(
+    &comp_ptr::pointer_d, StartupDeps<>{}, RuntimeDeps<ComponentB>{}
+  );
   p->add<ComponentA>();
 
   EXPECT_THROW(p->construct(), std::runtime_error);
