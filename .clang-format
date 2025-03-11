@@ -90,3 +90,7 @@ SpacesInContainerLiterals: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 Standard: c++17
+
+---
+Language: Json
+DisableFormat: true
