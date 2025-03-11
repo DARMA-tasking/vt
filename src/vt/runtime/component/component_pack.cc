@@ -49,6 +49,8 @@
 namespace vt { namespace runtime { namespace component {
 
 void ComponentPack::construct() {
+  addAllRequiredComponents();
+
   // Topologically sort the components based on dependencies to generate a
   // valid startup order
   auto order = topoSort();
@@ -118,6 +120,29 @@ bool ComponentPack::needsCurrentTime() {
   return needs_time;
 }
 
+void ComponentPack::addAllRequiredComponents() {
+  bool inserted = false;
+  do {
+    inserted = false;
+    for (auto&& i : added_components_) {
+      auto s_deps = registry::getStartupDeps(i);
+      auto r_deps = registry::getRuntimeDeps(i);
+      for (auto&& sd : s_deps) {
+        if (added_components_.find(sd) == added_components_.end()) {
+          added_components_.insert(sd);
+          inserted = true;
+        }
+      }
+      for (auto&& rd : r_deps) {
+        if (added_components_.find(rd) == added_components_.end()) {
+          added_components_.insert(rd);
+          inserted = true;
+        }
+      }
+    }
+  } while (inserted);
+}
+
 std::list<int> ComponentPack::topoSort() {
   std::list<int> order;
 
@@ -129,32 +154,27 @@ std::list<int> ComponentPack::topoSort() {
   auto visited = std::make_unique<bool[]>(max_idx + 1);
   auto visiting = std::make_unique<bool[]>(max_idx + 1);
   //fmt::print("added size={}\n", added_components_.size());
-  for (auto&& i : registered_components_) {
-    auto added_iter = added_components_.find(i);
-    if (added_iter != added_components_.end()) {
-      if (visited[i] == false) {
-        topoSortImpl(i, order, visited.get(), visiting.get());
-      }
+  for (auto&& i : added_components_) {
+    if (visited[i] == false) {
+      topoSortImpl(i, order, visited.get(), visiting.get());
     }
   }
-
-  detectCycles(order.front());
 
   return order;
 }
 
-void ComponentPack::topoSortImpl(int v, std::list<int>& order, bool* visited, bool* visiting) {
-  //fmt::print("impl v={}\n",v);
+void ComponentPack::topoSortImpl(
+  int v, std::list<int>& order, bool* visited, bool* visiting
+) {
+  //fmt::print("topoSortImpl v={}\n",v);
+
   vtAbortIf(visiting[v] == true, "Already visiting this node, cycle detected");
   visiting[v] = true;
 
-  auto v_list = registry::getIdx(v);
+  auto v_list = registry::getStartupDeps(v);
   for (auto&& vp : v_list) {
     //fmt::print("v={} vp={}, size={}\n",v,vp,v_list.size());
-    auto iter = added_components_.find(vp);
-    if (iter == added_components_.end()) {
-      //fmt::print("Adding component automatically due to dependencies\n");
-    }
+
     if (not visited[vp]) {
       topoSortImpl(vp, order, visited, visiting);
     }
@@ -163,26 +183,6 @@ void ComponentPack::topoSortImpl(int v, std::list<int>& order, bool* visited, bo
   visiting[v] = false;
   visited[v] = true;
   order.push_front(v);
-}
-
-void ComponentPack::detectCycles(int root) {
-  std::list<int> stack;
-  detectCyclesImpl(stack, root);
-}
-
-void ComponentPack::detectCyclesImpl(std::list<int>& stack, int dep) {
-  for (auto&& prev_dep : stack) {
-    if (prev_dep == dep) {
-      vtAbort("Cycle found in dependencies of registered components\n");
-    }
-  }
-
-  stack.push_back(dep);
-  auto vl = registry::getIdx(dep);
-  for (auto&& vp : vl) {
-    detectCyclesImpl(stack, vp);
-  }
-  stack.pop_back();
 }
 
 }}} /* end namespace vt::runtime::component */

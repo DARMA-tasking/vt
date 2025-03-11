@@ -42,6 +42,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <gtest/gtest-spi.h>
 
 #include <vt/runtime/component/component.h>
 #include "test_parallel_harness.h"
@@ -67,12 +68,15 @@ public:
 
 TEST_F(TestComponentConstruction, test_component_construct_dispatch_1) {
   using vt::runtime::component::ComponentPack;
-  using vt::runtime::component::Deps;
+  using vt::runtime::component::StartupDeps;
+  using vt::runtime::component::RuntimeDeps;
 
   MyComponent* my_dumb_pointer = nullptr;
 
   auto p = std::make_unique<ComponentPack>();
-  p->registerComponent<MyComponent>(&my_dumb_pointer, Deps<>{});
+  p->registerComponent<MyComponent>(
+    &my_dumb_pointer, StartupDeps<>{}, RuntimeDeps<>{}
+  );
   p->add<MyComponent>();
   p->construct();
 
@@ -100,7 +104,8 @@ public:
 
 TEST_F(TestComponentConstruction, test_component_construct_dispatch_args_2) {
   using vt::runtime::component::ComponentPack;
-  using vt::runtime::component::Deps;
+  using vt::runtime::component::StartupDeps;
+  using vt::runtime::component::RuntimeDeps;
 
   MyComponentArgs* my_dumb_pointer = nullptr;
 
@@ -108,7 +113,8 @@ TEST_F(TestComponentConstruction, test_component_construct_dispatch_args_2) {
 
   auto p = std::make_unique<ComponentPack>();
   p->registerComponent<MyComponentArgs>(
-    &my_dumb_pointer, Deps<>{}, 10, my_int, typename MyComponentArgs::MyTag{}
+    &my_dumb_pointer, StartupDeps<>{}, RuntimeDeps<>{},
+    10, my_int, typename MyComponentArgs::MyTag{}
   );
   p->add<MyComponentArgs>();
   p->construct();
@@ -136,7 +142,8 @@ public:
 
 TEST_F(TestComponentConstruction, test_component_construct_dispatch_move_3) {
   using vt::runtime::component::ComponentPack;
-  using vt::runtime::component::Deps;
+  using vt::runtime::component::StartupDeps;
+  using vt::runtime::component::RuntimeDeps;
 
   MyComponentMove* my_dumb_pointer = nullptr;
 
@@ -144,12 +151,118 @@ TEST_F(TestComponentConstruction, test_component_construct_dispatch_move_3) {
 
   auto p = std::make_unique<ComponentPack>();
   p->registerComponent<MyComponentMove>(
-    &my_dumb_pointer, Deps<>{}, std::move(ptr)
+    &my_dumb_pointer, StartupDeps<>{}, RuntimeDeps<>{}, std::move(ptr)
   );
   p->add<MyComponentMove>();
   p->construct();
 
   EXPECT_NE(my_dumb_pointer, nullptr);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Test dependencies -- runtime and startup to ensure they are being followed
+////////////////////////////////////////////////////////////////////////////////
+
+struct ComponentA;
+struct ComponentB;
+struct ComponentC;
+struct ComponentD;
+
+namespace comp_ptr {
+
+ComponentA* pointer_a = nullptr;
+ComponentB* pointer_b = nullptr;
+ComponentC* pointer_c = nullptr;
+ComponentD* pointer_d = nullptr;
+
+} /* end namespace comp_ptr */
+
+struct ComponentA : runtime::component::Component<ComponentA> {
+  ComponentA() {
+    EXPECT_NE(comp_ptr::pointer_b, nullptr);
+    EXPECT_NE(comp_ptr::pointer_c, nullptr);
+  }
+
+  std::string name() override { return "ComponentA"; }
+};
+
+struct ComponentB : runtime::component::Component<ComponentB> {
+  ComponentB() {
+    EXPECT_NE(comp_ptr::pointer_c, nullptr);
+  }
+
+  std::string name() override { return "ComponentB"; }
+};
+
+struct ComponentC : runtime::component::Component<ComponentC> {
+  void startup() override {
+    EXPECT_NE(comp_ptr::pointer_d, nullptr);
+  }
+
+  std::string name() override { return "ComponentC"; }
+};
+
+struct ComponentD : runtime::component::Component<ComponentD> {
+  void startup() override {
+    EXPECT_NE(comp_ptr::pointer_b, nullptr);
+  }
+
+  std::string name() override { return "ComponentD"; }
+};
+
+TEST_F(TestComponentConstruction, test_component_deps_1) {
+  using vt::runtime::component::ComponentPack;
+  using vt::runtime::component::StartupDeps;
+  using vt::runtime::component::RuntimeDeps;
+
+  auto p = std::make_unique<ComponentPack>();
+  p->registerComponent<ComponentA>(
+    &comp_ptr::pointer_a, StartupDeps<ComponentB, ComponentC>{}, RuntimeDeps<>{}
+  );
+  p->registerComponent<ComponentB>(
+    &comp_ptr::pointer_b, StartupDeps<ComponentC>{}, RuntimeDeps<>{}
+  );
+  p->registerComponent<ComponentC>(
+    &comp_ptr::pointer_c, StartupDeps<>{}, RuntimeDeps<ComponentD>{}
+  );
+  p->registerComponent<ComponentD>(
+    &comp_ptr::pointer_d, StartupDeps<>{}, RuntimeDeps<ComponentB>{}
+  );
+  p->add<ComponentA>();
+  p->construct();
+
+  // We should have all 4 components, just by adding ComponentA
+  EXPECT_NE(comp_ptr::pointer_a, nullptr);
+  EXPECT_NE(comp_ptr::pointer_b, nullptr);
+  EXPECT_NE(comp_ptr::pointer_c, nullptr);
+  EXPECT_NE(comp_ptr::pointer_d, nullptr);
+}
+
+TEST_F(TestComponentConstruction, test_component_deps_circular_2) {
+  theConfig()->vt_throw_on_abort = true;
+
+  using vt::runtime::component::ComponentPack;
+  using vt::runtime::component::StartupDeps;
+  using vt::runtime::component::RuntimeDeps;
+
+  auto p = std::make_unique<ComponentPack>();
+  p->registerComponent<ComponentA>(
+    &comp_ptr::pointer_a, StartupDeps<ComponentB>{}, RuntimeDeps<>{}
+  );
+  p->registerComponent<ComponentB>(
+    &comp_ptr::pointer_b, StartupDeps<ComponentC>{}, RuntimeDeps<>{}
+  );
+  p->registerComponent<ComponentC>(
+    &comp_ptr::pointer_c, StartupDeps<ComponentA>{}, RuntimeDeps<ComponentD>{}
+  );
+  p->registerComponent<ComponentD>(
+    &comp_ptr::pointer_d, StartupDeps<>{}, RuntimeDeps<ComponentB>{}
+  );
+  p->add<ComponentA>();
+
+  EXPECT_THROW(p->construct(), std::runtime_error);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

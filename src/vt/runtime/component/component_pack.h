@@ -69,10 +69,24 @@ struct ComponentPack {
 public:
   /**
    * \internal \brief Idempotent registration of a component into this runtime
-   * pack. Component dependencies specified with variadic template parameters in
-   * \c DepsPack. Registration does not imply the component will be created; it
-   * must be added subsequently to be enabled. It simply declares its existence
-   * and connectivity with other components.
+   * pack.
+   *
+   * Component dependencies are specified with variadic template parameters in
+   * \c StartupDepsPack and \c RuntimeDepsPack. Registration does not imply the
+   * component will be created; it must be added subsequently to be enabled. It
+   * simply declares its existence and connectivity with other components.
+   *
+   * Startup dependencies are ones that are required for the component to be
+   * constructed and fire the initialize method. Additionally, and importantly,
+   * they determine the order (reverse topological) in which components are torn
+   * down or finalized. Both orders are sensitive as components require other
+   * components to be live during construction/initialization and during
+   * finalization. Runtime dependencies indicate that a component requires
+   * another component to function and thus needs them to be loaded. Thus, for
+   * instance, if a VT runtime is created with just an \c ActiveMessenger, the
+   * runtime will add all the startup dependencies and runtime dependencies to
+   * create a runtime with a working \c ActiveMessenger that is able to
+   * function.
    *
    * \param[out] ref dumb pointer for access outside
    * \param[in] cons constructor arguments for the component---bound at
@@ -80,9 +94,17 @@ public:
    *
    * \return \c registry::AutoHandlerType with type ID for component
    */
-  template <typename T, typename... Deps, typename... Cons>
+  template <
+    typename T,
+    typename... StartupDeps,
+    typename... RuntimeDeps,
+    typename... Cons
+  >
   registry::AutoHandlerType registerComponent(
-    T** ref, typename BaseComponent::DepsPack<Deps...>, Cons&&... cons
+    T** ref,
+    typename BaseComponent::StartupDepsPack<StartupDeps...>,
+    typename BaseComponent::RuntimeDepsPack<RuntimeDeps...>,
+    Cons&&... cons
   );
 
   /**
@@ -160,24 +182,16 @@ private:
    * \param[in] v current vertex
    * \param[in] order topological order derived so far
    * \param[in] visited array of visited vertices
-   * \param[in] visiting array of currently visiting vertices
+   * \param[in] visiting array of vertices currently being visited
    */
   void topoSortImpl(int v, std::list<int>& order, bool* visited, bool* visiting);
 
   /**
-   * \internal \brief Detect cycles in the dependence graph
-   *
-   * \param[in] root starting vertex
+   * \brief Based on the components that have been added along with their
+   * startup and runtime dependencies, add any additional components that are
+   * required for a complete VT runtime
    */
-  void detectCycles(int root);
-
-  /**
-   * \internal \brief Detect cycles in the dependence graph
-   *
-   * \param[in] stack current stack of traversed vertices
-   * \param[in] dep next vertex to consider
-   */
-  void detectCyclesImpl(std::list<int>& stack, int dep);
+  void addAllRequiredComponents();
 
 public:
 
@@ -207,8 +221,18 @@ private:
   ComponentIDType cur_id_ = 1;
 };
 
+/**
+ * \brief Type alias for a pack of startup dependencies
+ */
 template <typename... Ts>
-using Deps = typename BaseComponent::DepsPack<Ts...>;
+using StartupDeps = typename BaseComponent::StartupDepsPack<Ts...>;
+
+/**
+ * \brief Type alias for a pack of runtime dependencies, automatically including
+ * all startup dependencies
+ */
+template <typename... Ts>
+using RuntimeDeps = typename BaseComponent::RuntimeDepsPack<Ts...>;
 
 }}} /* end namespace vt::runtime::component */
 

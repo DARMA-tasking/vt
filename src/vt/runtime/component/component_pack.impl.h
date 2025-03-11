@@ -71,11 +71,21 @@ std::unique_ptr<MovableFn> makeCallable(Callable&& c) {
 
 } /* end anon namespace */
 
-template <typename T, typename... Deps, typename... Cons>
+template <
+  typename T,
+  typename... StartupDeps,
+  typename... RuntimeDeps,
+  typename... Cons
+>
 registry::AutoHandlerType ComponentPack::registerComponent(
-  T** ref, typename BaseComponent::DepsPack<Deps...>, Cons&&... cons
+  T** ref,
+  typename BaseComponent::StartupDepsPack<StartupDeps...>,
+  typename BaseComponent::RuntimeDepsPack<RuntimeDeps...>,
+  Cons&&... cons
 ) {
-  ComponentRegistry::dependsOn<T, Deps...>();
+  ComponentRegistry::dependsOn<T, StartupDeps...>(true);
+  ComponentRegistry::dependsOn<T, RuntimeDeps...>(false);
+
   auto idx = registry::makeIdx<T>();
   //fmt::print("registerComponent name={} idx={}\n", typeid(T).name(), idx);
 
