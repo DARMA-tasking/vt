@@ -47,6 +47,8 @@
 #include "vt/config.h"
 #include "vt/collective/reduce/operators/functors/tuple_op_helper.h"
 
+#include "vt/utils/kokkos/exec_space.h"
+
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
 template <typename T>
@@ -65,10 +67,37 @@ struct PlusOp<std::tuple<Params...>> {
   }
 };
 
+#if MAGISTRATE_KOKKOS_ENABLED
+
+template <typename T, typename... Properties>
+struct PlusOp<Kokkos::View<T*, Properties...>> {
+  void operator()(
+    Kokkos::View<T*, Properties...>& v1,
+    const Kokkos::View<T*, Properties...>& v2) const {
+
+    // Determine the associated execution space based on the memory space
+    using MemorySpace = typename Kokkos::View<T*, Properties...>::memory_space;
+    using ExecSpace = typename utils::kokkos::AssociatedExecSpace<MemorySpace>::type;
+
+    Kokkos::RangePolicy<ExecSpace> policy(0, v1.extent(0));
+
+    Kokkos::parallel_for(
+      "Kokkos_PlusOp",
+      policy,
+      KOKKOS_LAMBDA(const int i) {
+        v1(i) += v2(i);
+      }
+    );
+
+    Kokkos::fence();
+  }
+};
+#endif // MAGISTRATE_KOKKOS_ENABLED
+
 template <typename T>
 struct PlusOp< std::vector<T> > {
   void operator()(std::vector<T>& v1, std::vector<T> const& v2) {
-    vtAssert(v1.size() == v2.size(), "Sizes of vectors in reduce must be equal");
+    vtAssert(v1.size() == v2.size(), fmt::format("Sizes of vectors in reduce must be equal v1={} v2={}", v1.size(), v2.size()));
     for (size_t ii = 0; ii < v1.size(); ++ii)
       v1[ii] = v1[ii] + v2[ii];
   }

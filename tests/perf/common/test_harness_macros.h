@@ -46,6 +46,10 @@
 
 #include "test_harness_base.h"
 
+#if MAGISTRATE_KOKKOS_ENABLED
+#include "Kokkos_Core.hpp"
+#endif // MAGISTRATE_KOKKOS_ENABLED
+
 #include <vector>
 #include <memory>
 
@@ -69,14 +73,12 @@ namespace vt { namespace tests { namespace perf { namespace common {
   *
   * VT_PERF_TEST_MAIN()
   */
-
-
 struct PerfTestRegistry{
   static void AddTest(std::unique_ptr<TestHarnessBase>&& test) {
     tests_.push_back(std::move(test));
   }
 
-  static const std::vector<std::unique_ptr<TestHarnessBase>>&
+  static std::vector<std::unique_ptr<TestHarnessBase>>&
   GetTests() {
     return tests_;
   }
@@ -106,10 +108,23 @@ struct PerfTestRegistry{
   } StructName##TestName##_registerer;                                     \
   void StructName##TestName::TestFunc()
 
+inline void tryInitializeKokkos() {
+#if MAGISTRATE_KOKKOS_ENABLED
+  Kokkos::initialize();
+#endif // MAGISTRATE_KOKKOS_ENABLED
+}
+
+inline void tryFinalizeKokkos() {
+#if MAGISTRATE_KOKKOS_ENABLED
+  Kokkos::finalize();
+#endif // MAGISTRATE_KOKKOS_ENABLED
+}
+
 #define VT_PERF_TEST_MAIN()                                                  \
   int main(int argc, char** argv) {                                          \
     using namespace vt::tests::perf::common;                                 \
     MPI_Init(&argc, &argv);                                                  \
+    tryInitializeKokkos();                                                   \
     int rank;                                                                \
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                    \
     auto& tests = PerfTestRegistry::GetTests();                              \
@@ -144,6 +159,8 @@ struct PerfTestRegistry{
       }                                                                      \
       test->DumpResults();                                                   \
     }                                                                        \
+    tests.clear();                                                           \
+    tryFinalizeKokkos();                                                     \
     MPI_Finalize();                                                          \
     return 0;                                                                \
   }

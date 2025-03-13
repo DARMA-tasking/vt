@@ -79,6 +79,7 @@
 #include "vt/scheduler/scheduler.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/runnable/make_runnable.h"
+#include "vt/collective/reduce/allreduce/allreduce_holder.h"
 
 #include <tuple>
 #include <utility>
@@ -662,6 +663,29 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   return ret;
 }
 
+template <typename MsgT, typename ColT>
+CollectionManager::IsNotColMsgType<MsgT>
+CollectionManager::broadcastCollectiveMsgWithHan(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT* msg, HandlerType const han,
+  bool instrument) {
+  auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(std::move(*msg));
+  wrap_msg->setVrtHandler(han);
+
+  return broadcastCollectiveMsgImpl<ColMsgWrap<ColT, MsgT>, ColT>(proxy, wrap_msg, instrument);
+}
+
+template <typename MsgT, typename ColT>
+CollectionManager::IsColMsgType<MsgT>
+CollectionManager::broadcastCollectiveMsgWithHan(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT* msg, HandlerType const han,
+  bool instrument) {
+
+  auto msgPtr = promoteMsg(msg);
+  msgPtr->setVrtHandler(han);
+
+  return broadcastCollectiveMsgImpl<MsgT, ColT>(proxy, msgPtr, instrument);
+}
+
 template <
   typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
 >
@@ -893,6 +917,41 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   }
 }
 
+template <
+  typename ReducerT, auto f, typename ColT, template <typename Arg> class Op,
+  typename... Args>
+messaging::PendingSend CollectionManager::reduceLocal(
+  CollectionProxyWrapType<ColT> const& proxy, Args&&... args) {
+  using namespace collective::reduce::allreduce;
+
+  using DataT =
+    std::tuple_element_t<0, typename FuncTraits<decltype(f)>::TupleType>;
+  using IndexT = typename ColT::IndexType;
+
+  // Get the current running index context
+  IndexT idx = *queryIndexContext<IndexT>();
+  auto const col_proxy = proxy.getProxy();
+
+  auto elm_holder = findElmHolder<IndexT>(col_proxy);
+  std::size_t num_elms = elm_holder->numElements();
+  auto const group = elm_holder->group();
+
+  auto stamp = proxy(idx).tryGetLocalPtr()->getNextAllreduceStamp();
+  auto const id = std::get<collective::reduce::detail::StrongSeq>(stamp).get();
+
+  auto cb = vt::theCB()->makeCallbackBcastCollectiveProxy<f>(proxy);
+
+  auto* reducer = AllreduceHolder::getOrCreateAllreducer<ReducerT>(
+    collective::reduce::detail::StrongVrtProxy{col_proxy},
+    collective::reduce::detail::StrongGroup{group}, num_elms);
+
+  reducer->template setFinalHandler<DataT>(cb, id);
+  reducer->template storeData<DataT, Op>(id, std::forward<Args>(args)...);
+
+  return messaging::PendingSend{
+    theTerm()->getEpoch(), [reducer, id] { reducer->template run<DataT, Op>(id); }};
+}
+
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 messaging::PendingSend CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT> const& proxy,
@@ -949,6 +1008,11 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
     cur_stamp = proxy(idx).tryGetLocalPtr()->getNextStamp();
   }
 
+  vt_debug_print(
+    terse, allreduce,
+    "reduceMsg: col_proxy={:x}, num_elms={}, send_group={}, use_group={} group={:x}\n",
+    col_proxy, num_elms, send_group, use_group, group
+  );
   collective::reduce::Reduce* r = nullptr;
   if (use_group) {
     r = theGroup()->groupReducer(group);

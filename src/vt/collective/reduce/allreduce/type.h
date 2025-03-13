@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  dispatch.h
+//                                    type.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,57 +41,34 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H
-#define INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_TYPE_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_TYPE_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/traits/coll_msg.h"
+#include <string>
 
-#include <type_traits>
+namespace vt::collective::reduce::allreduce {
 
-namespace vt { namespace vrt { namespace collection {
+struct RabenseifnerT {};
+struct RecursiveDoublingT {};
 
-struct DispatchCollectionBase {
-  template <typename T, typename U=void>
-  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
-  template <typename T, typename U=void>
-  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg>;
+enum class ReducerType { Rabenseifner, RecursiveDoubling };
 
-  DispatchCollectionBase() = default;
-  virtual ~DispatchCollectionBase() {}
-
-  virtual void
-  broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
-  virtual void
-  broadcastCollective(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
-  virtual void
-  send(VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han) = 0;
-
-  template <typename=void>
-  VirtualProxyType getDefaultProxy() const;
-
-  template <typename=void>
-  void setDefaultProxy(VirtualProxyType const& in_proxy);
-
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | default_proxy_;
+inline std::string TypeToString(ReducerType t) {
+  if (t == ReducerType::Rabenseifner) {
+    return "Rabenseifner";
+  } else {
+    return "RecursiveDoubling";
   }
+}
 
-private:
-  VirtualProxyType default_proxy_ = no_vrt_proxy;
+enum class ComponentT {
+  VrtColl = 0,
+  Group = 1,
+  ObjGroup = 2
 };
 
-template <typename ColT, typename MsgT>
-struct DispatchCollection final : DispatchCollectionBase {
-private:
-  void broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
-  void broadcastCollective(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
-  void send(
-    VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han
-  ) override;
-};
+using ComponentInfo = std::pair<ComponentT, uint64_t>;
 
-}}} /* end namespace vt::vrt::collection */
+} // namespace vt::collective::reduce::allreduce
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_TYPE_H*/

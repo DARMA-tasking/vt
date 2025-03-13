@@ -43,9 +43,16 @@
 
 #include "test_objgroup_common.h"
 #include "test_helpers.h"
+#include "vt/collective/reduce/allreduce/rabenseifner.h"
+#include "vt/collective/reduce/allreduce/type.h"
+#include "vt/configs/types/types_type.h"
 #include "vt/objgroup/manager.h"
 
 #include <typeinfo>
+
+#ifdef MAGISTRATE_KOKKOS_ENABLED
+#include <Kokkos_Core.hpp>
+#endif
 
 namespace vt { namespace tests { namespace unit {
 
@@ -255,6 +262,117 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
     EXPECT_EQ(TestObjGroup::total_verify_expected_, 4);
   }
 }
+
+TEST_F(TestObjGroup, test_proxy_allreduce) {
+  using namespace vt::collective;
+
+  auto const my_node = vt::theContext()->getNode();
+
+  TestObjGroup::total_verify_expected_ = 0;
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_allreduce");
+
+  vt::theCollective()->barrier();
+
+  runInEpochCollective([&] {
+    proxy.allreduce<
+      &MyObjA::verifyAllred<1>, PlusOp, reduce::allreduce::RecursiveDoublingT>(
+      int{my_node});
+  });
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 1);
+
+  runInEpochCollective([&] {
+    proxy.allreduce<
+      &MyObjA::verifyAllred<2>, PlusOp, reduce::allreduce::RecursiveDoublingT>(
+      4);
+  });
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 2);
+
+  runInEpochCollective([&] {
+    proxy.allreduce<
+      &MyObjA::verifyAllred<3>, MaxOp, reduce::allreduce::RecursiveDoublingT>(
+      int{my_node});
+  });
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 3);
+  runInEpochCollective([&] {
+    std::vector<int> payload(256, my_node);
+    proxy.allreduce<
+      &MyObjA::verifyAllredVec<int, 256>, PlusOp,
+      reduce::allreduce::RecursiveDoublingT>(payload);
+  });
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 4);
+
+  runInEpochCollective([&] {
+    std::vector<int> payload(2048, my_node);
+    proxy.allreduce<
+      &MyObjA::verifyAllredVec<int, 2048>, PlusOp, reduce::allreduce::RabenseifnerT>(
+      payload);
+
+    std::vector<short> payload_large(2048 * 2, my_node);
+    proxy.allreduce<
+      &MyObjA::verifyAllredVec<short, 2048 * 2>, PlusOp, reduce::allreduce::RabenseifnerT>(
+      payload_large);
+  });
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 6);
+
+  runInEpochCollective([&] {
+    std::vector<int> payload(256, my_node);
+    VectorPayload data{payload};
+    proxy.allreduce<
+      &MyObjA::verifyAllredVecPayload<VectorPayload, 256>, PlusOp,
+      reduce::allreduce::RabenseifnerT>(data);
+  });
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 7);
+}
+
+#if MAGISTRATE_KOKKOS_ENABLED
+struct TestObjGroupKokkos : TestParallelHarness {
+  void SetUp() override {
+    TestParallelHarness::SetUp();
+
+    Kokkos::initialize();
+
+    SET_MIN_NUM_NODES_CONSTRAINT(2);
+  }
+
+  void TearDown() override {
+    TestParallelHarness::TearDown();
+
+    Kokkos::finalize();
+  }
+};
+
+TEST_F(TestObjGroupKokkos, test_proxy_allreduce_kokkos) {
+  using namespace vt::collective;
+
+  MyObjA::total_verify_expected_ = 0;
+  auto const my_node = vt::theContext()->getNode();
+
+  auto kokkos_proxy =
+    vt::theObjGroup()->makeCollective<MyObjA>("test_proxy_reduce_kokkos");
+
+  vt::theCollective()->barrier();
+
+  runInEpochCollective([&] {
+    Kokkos::View<float*, Kokkos::HostSpace> view("view", 256);
+    for (uint32_t i = 0; i < view.extent(0); i++) {
+      view(i) = static_cast<float>(my_node);
+    }
+
+    kokkos_proxy.allreduce<
+      &MyObjA::verifyAllredView<Kokkos::HostSpace>, PlusOp,
+      reduce::allreduce::RabenseifnerT>(view);
+  });
+
+  EXPECT_EQ(MyObjA::total_verify_expected_, 1);
+}
+#endif // MAGISTRATE_KOKKOS_ENABLED
+
 
 TEST_F(TestObjGroup, test_proxy_invoke) {
   auto const& this_node = theContext()->getNode();

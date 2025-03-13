@@ -57,7 +57,17 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
 #include "vt/elm/elm_id_bits.h"
+#include "vt/messaging/message/smart_ptr.h"
+#include "vt/collective/reduce/allreduce/rabenseifner.h"
+#include "vt/collective/reduce/allreduce/recursive_doubling.h"
+#include "vt/collective/reduce/allreduce/type.h"
+#include "vt/collective/reduce/allreduce/helpers.h"
+#include "vt/collective/reduce/scoping/strong_types.h"
+#include "vt/collective/reduce/allreduce/allreduce_holder.h"
+#include "vt/pipe/pipe_manager.h"
 
+#include <utility>
+#include <array>
 #include <memory>
 
 namespace vt { namespace objgroup {
@@ -137,6 +147,10 @@ void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   if (label_iter != labels_.end()) {
     labels_.erase(label_iter);
   }
+
+  vt::collective::reduce::allreduce::AllreduceHolder::remove(
+    vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()}
+  );
 }
 
 template <typename ObjT>
@@ -275,6 +289,34 @@ decltype(auto) ObjGroupManager::invoke(
 template <typename MsgT>
 ObjGroupManager::PendingSendType ObjGroupManager::broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
   return objgroup::broadcast(msg,han);
+}
+
+  template <
+    typename Type, auto f, template <typename Arg> class Op, typename ObjT,
+    typename... Args
+  >
+ObjGroupManager::PendingSendType
+ObjGroupManager::allreduce(ProxyType<ObjT> proxy, Args&&... data) {
+  using namespace collective::reduce::allreduce;
+
+  using Trait = ObjFuncTraits<decltype(f)>;
+
+  // We only support allreduce with a single data type
+  using DataT = typename std::tuple_element<0, typename Trait::TupleType>::type;
+
+  auto const strong_proxy = vt::collective::reduce::detail::StrongObjGroup{proxy.getProxy()};
+  auto const id = StateHolder::getNextID(strong_proxy);
+
+  auto* reducer = AllreduceHolder::getOrCreateAllreducer<Type>(strong_proxy);
+
+  auto cb = theCB()->makeSend<f>(proxy[theContext()->getNode()]);
+  reducer->template setFinalHandler<DataT>(cb, id);
+  reducer->template storeData<DataT, Op>(
+    id, std::forward<Args>(data)...);
+
+  return PendingSendType{theTerm()->getEpoch(), [reducer, id] {
+                           reducer->template run<DataT, Op>(id);
+                         }};
 }
 
 template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>

@@ -43,6 +43,8 @@
 
 #include "vt/vrt/collection/holders/typeless_holder.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/collective/reduce/allreduce/state_holder.h"
+#include "vt/collective/reduce/allreduce/allreduce_holder.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -73,6 +75,10 @@ void TypelessHolder::destroyCollection(VirtualProxyType const proxy) {
       labels_.erase(iter);
     }
   }
+
+  vt::collective::reduce::allreduce::AllreduceHolder::remove(
+    vt::collective::reduce::detail::StrongVrtProxy{proxy}
+  );
 }
 
 void TypelessHolder::invokeAllGroupConstructors() {

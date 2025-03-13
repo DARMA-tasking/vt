@@ -41,6 +41,7 @@ set(
       collective/scatter/
       collective/reduce/
         collective/reduce/operators collective/reduce/functors
+        collective/reduce/allreduce
     elm
     group/id group/region group/global group/msg group/collective group/rooted
     group/base
@@ -105,7 +106,7 @@ set(
       serialization/messaging serialization/traits serialization/auto_dispatch
       serialization/sizing
     utils/demangle utils/container utils/bits utils/mutex utils/file_spec
-    utils/hash utils/atomic utils/static_checks utils/string
+    utils/hash utils/atomic utils/static_checks utils/string utils/kokkos
     utils/memory utils/mpi_limits utils/compress utils/json utils/strong
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection

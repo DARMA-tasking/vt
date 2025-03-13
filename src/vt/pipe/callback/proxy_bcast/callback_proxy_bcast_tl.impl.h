@@ -109,6 +109,28 @@ void CallbackProxyBcastDirect::trigger(MsgT* msg, PipeType const& pipe) {
   dispatcher->broadcast(proxy, reinterpret_cast<std::byte*>(msg), handler_);
 }
 
+template <typename SerializerT>
+void CallbackProxyLocalSendCollDirect::serialize(SerializerT& s) {
+  s | handler_;
+  s | vrt_dispatch_han_;
+  s | proxy_;
+}
+
+template <typename MsgT>
+void CallbackProxyLocalSendCollDirect::trigger(MsgT* msg, PipeType const& pipe) {
+  auto const& this_node = theContext()->getNode();
+  vt_debug_print(
+    terse, pipe,
+    "CallbackProxyLocalSendCollDirect: trigger_: pipe={:x}, this_node={}, "
+    "handler={}, vrt_handler={}\n",
+    pipe, this_node, handler_, vrt_dispatch_han_
+  );
+
+  auto dispatcher = vrt::collection::getDispatcher(vrt_dispatch_han_);
+  auto const& proxy = proxy_;
+  dispatcher->broadcastCollective(proxy, reinterpret_cast<std::byte*>(msg), handler_);
+}
+
 }}} /* end namespace vt::pipe::callback */
 
 #endif /*INCLUDED_VT_PIPE_CALLBACK_PROXY_BCAST_CALLBACK_PROXY_BCAST_TL_IMPL_H*/

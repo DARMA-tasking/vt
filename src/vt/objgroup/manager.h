@@ -58,11 +58,13 @@
 #include "vt/messaging/pending_send.h"
 #include "vt/elm/elm_id.h"
 #include "vt/utils/fntraits/fntraits.h"
+#include "vt/utils/hash/hash_tuple.h"
 
 #include <memory>
 #include <functional>
 #include <unordered_map>
 #include <vector>
+#include <typeindex>
 
 namespace vt { namespace objgroup {
 
@@ -91,6 +93,11 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   using HolderBaseType      = holder::HolderBase;
   using HolderBasePtrType   = std::unique_ptr<HolderBaseType>;
   using PendingSendType     = messaging::PendingSend;
+  using ReduceDataType      = std::type_index;
+  using ReduceOperandType   = std::type_index;
+  using ReducerMapType      = std::unordered_map<
+    std::tuple<ObjGroupProxyType, ReduceDataType, ReduceOperandType>,
+    ObjGroupProxyType>;
 
 public:
   /**
@@ -290,6 +297,13 @@ public:
   void setTraceName(
     ProxyType<ObjT> proxy, std::string const& name, std::string const& parent = ""
   );
+
+  template <
+    typename Type, auto f, template <typename Arg> class Op, typename ObjT,
+    typename... Args
+  >
+  ObjGroupManager::PendingSendType
+  allreduce(ProxyType<ObjT> proxy, Args&&... data);
 
   /**
    * \brief Perform a reduction over an objgroup

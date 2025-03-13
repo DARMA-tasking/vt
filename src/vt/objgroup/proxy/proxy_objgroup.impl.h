@@ -56,6 +56,7 @@
 #include "vt/messaging/param_msg.h"
 #include "vt/objgroup/proxy/proxy_bits.h"
 #include "vt/collective/reduce/get_reduce_stamp.h"
+#include "vt/collective/reduce/allreduce/helpers.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -201,6 +202,23 @@ Proxy<ObjT>::allreduce(
       MsgT, Op<Tuple>, collective::reduce::operators::ReduceCallback<MsgT>
     >
   >(proxy, msg.get(), stamp);
+}
+
+template <typename ObjT>
+template <
+  auto f,
+  template <typename Arg> class Op,
+  typename Type,
+  typename... Args
+>
+typename Proxy<ObjT>::PendingSendType
+Proxy<ObjT>::allreduce(
+  Args&&... args
+) const {
+  auto proxy = Proxy<ObjT>(*this);
+
+  return theObjGroup()->allreduce<Type, f, Op>(
+    proxy, std::forward<Args>(args)...);
 }
 
 template <typename ObjT>

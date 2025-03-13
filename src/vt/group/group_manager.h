@@ -63,6 +63,7 @@
 #include "vt/collective/collective_scope.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/utils/fntraits/fntraits.h"
+#include "vt/configs/types/types_type.h"
 
 #include <memory>
 #include <unordered_map>
@@ -198,6 +199,8 @@ struct GroupManager : runtime::component::Component<GroupManager> {
    */
   bool inGroup(GroupType const group);
 
+  std::vector<NodeType> GetGroupNodes(GroupType const group_id) const;
+
   /**
    * \brief Get MPI_Comm from VT group
    *
@@ -219,6 +222,10 @@ struct GroupManager : runtime::component::Component<GroupManager> {
     using MsgT = typename FuncTraits<decltype(f)>::MsgT;
     return sendMsg<MsgT, f>(group, msg);
   }
+
+  template <typename ReducerT, auto f, template <typename Arg> typename Op, typename ...Args>
+  void
+  allreduce(GroupType group, Args &&... args);
 
   friend struct Info;
   friend struct InfoColl;

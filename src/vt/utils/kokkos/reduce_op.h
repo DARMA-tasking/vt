@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  dispatch.h
+//                                 reduce_op.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,57 +41,53 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H
-#define INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H
+#if !defined INCLUDED_VT_UTILS_KOKKOS_REDUCE_OP_H
+#define INCLUDED_VT_UTILS_KOKKOS_REDUCE_OP_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/traits/coll_msg.h"
 
-#include <type_traits>
+#if MAGISTRATE_KOKKOS_ENABLED
 
-namespace vt { namespace vrt { namespace collection {
+#include "vt/collective/reduce/operators/default_op.h"
 
-struct DispatchCollectionBase {
-  template <typename T, typename U=void>
-  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
-  template <typename T, typename U=void>
-  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg>;
+namespace vt::utils::kokkos {
 
-  DispatchCollectionBase() = default;
-  virtual ~DispatchCollectionBase() {}
-
-  virtual void
-  broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
-  virtual void
-  broadcastCollective(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
-  virtual void
-  send(VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han) = 0;
-
-  template <typename=void>
-  VirtualProxyType getDefaultProxy() const;
-
-  template <typename=void>
-  void setDefaultProxy(VirtualProxyType const& in_proxy);
-
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | default_proxy_;
+template <typename Op>
+struct KokkosOp {
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION
+  void operator()(T& v1, T const& v2) {
+    if constexpr (std::is_same_v<
+                    Op, vt::collective::reduce::operators::AndOp<T>>) {
+      v1 = v1 && v2;
+    } else if constexpr (std::is_same_v<
+                           Op,
+                           vt::collective::reduce::operators::BitAndOp<T>>) {
+      v1 = v1 & v2;
+    } else if constexpr (std::is_same_v<
+                           Op, vt::collective::reduce::operators::BitOrOp<T>>) {
+      v1 = v1 | v2;
+    } else if constexpr (std::is_same_v<
+                           Op,
+                           vt::collective::reduce::operators::BitXorOp<T>>) {
+      v1 = v1 ^ v2;
+    } else if constexpr (std::is_same_v<
+                           Op, vt::collective::reduce::operators::MaxOp<T>>) {
+      v1 = std::max(v1, v2);
+    } else if constexpr (std::is_same_v<
+                           Op, vt::collective::reduce::operators::MinOp<T>>) {
+      v1 = std::min(v1, v2);
+    } else if constexpr (std::is_same_v<
+                           Op, vt::collective::reduce::operators::OrOp<T>>) {
+      v1 = v1 || v2;
+    } else if constexpr (std::is_same_v<
+                           Op, vt::collective::reduce::operators::PlusOp<T>>) {
+      v1 = v1 + v2;
+    }
   }
-
-private:
-  VirtualProxyType default_proxy_ = no_vrt_proxy;
 };
 
-template <typename ColT, typename MsgT>
-struct DispatchCollection final : DispatchCollectionBase {
-private:
-  void broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
-  void broadcastCollective(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
-  void send(
-    VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han
-  ) override;
-};
+} // namespace vt::utils::kokkos
 
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H*/
+#endif // MAGISTRATE_KOKKOS_ENABLED
+#endif /*INCLUDED_VT_UTILS_KOKKOS_REDUCE_OP_H*/

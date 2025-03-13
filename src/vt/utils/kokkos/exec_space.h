@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  dispatch.h
+//                                 exec_space.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,57 +41,33 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H
-#define INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H
+#if !defined INCLUDED_VT_UTILS_KOKKOS_EXEC_SPACE_H
+#define INCLUDED_VT_UTILS_KOKKOS_EXEC_SPACE_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/traits/coll_msg.h"
 
-#include <type_traits>
+#if MAGISTRATE_KOKKOS_ENABLED
 
-namespace vt { namespace vrt { namespace collection {
+#include <Kokkos_Core.hpp>
 
-struct DispatchCollectionBase {
-  template <typename T, typename U=void>
-  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
-  template <typename T, typename U=void>
-  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg>;
+namespace vt::utils::kokkos {
 
-  DispatchCollectionBase() = default;
-  virtual ~DispatchCollectionBase() {}
+template <typename MemorySpace>
+struct AssociatedExecSpace;
 
-  virtual void
-  broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
-  virtual void
-  broadcastCollective(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
-  virtual void
-  send(VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han) = 0;
-
-  template <typename=void>
-  VirtualProxyType getDefaultProxy() const;
-
-  template <typename=void>
-  void setDefaultProxy(VirtualProxyType const& in_proxy);
-
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | default_proxy_;
-  }
-
-private:
-  VirtualProxyType default_proxy_ = no_vrt_proxy;
+template <>
+struct AssociatedExecSpace<Kokkos::HostSpace> {
+  // TODO: check whether OpenMPi is available?
+  using type = Kokkos::Serial;
 };
 
-template <typename ColT, typename MsgT>
-struct DispatchCollection final : DispatchCollectionBase {
-private:
-  void broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
-  void broadcastCollective(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
-  void send(
-    VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han
-  ) override;
+#ifdef KOKKOS_ENABLE_CUDA
+template <>
+struct AssociatedExecSpace<Kokkos::CudaSpace> {
+  using type = Kokkos::Cuda;
 };
+#endif // KOKKOS_ENABLE_CUDA
+}
 
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H*/
+#endif // MAGISTRATE_KOKKOS_ENABLED
+#endif /*INCLUDED_VT_UTILS_KOKKOS_EXEC_SPACE_H*/

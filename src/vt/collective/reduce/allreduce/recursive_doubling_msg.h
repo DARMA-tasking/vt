@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  dispatch.h
+//                           recursive_doubling_msg.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,57 +41,56 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H
-#define INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_MSG_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_MSG_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/traits/coll_msg.h"
+#include "vt/messaging/active.h"
+#include "type.h"
+namespace vt::collective::reduce::allreduce {
 
-#include <type_traits>
+template <typename DataT>
+struct RecursiveDoublingMsg : Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_required();
 
-namespace vt { namespace vrt { namespace collection {
-
-struct DispatchCollectionBase {
-  template <typename T, typename U=void>
-  using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg>;
-  template <typename T, typename U=void>
-  using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg>;
-
-  DispatchCollectionBase() = default;
-  virtual ~DispatchCollectionBase() {}
-
-  virtual void
-  broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
-  virtual void
-  broadcastCollective(VirtualProxyType proxy, std::byte* msg, HandlerType han) = 0;
-  virtual void
-  send(VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han) = 0;
-
-  template <typename=void>
-  VirtualProxyType getDefaultProxy() const;
-
-  template <typename=void>
-  void setDefaultProxy(VirtualProxyType const& in_proxy);
-
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | default_proxy_;
+  RecursiveDoublingMsg() = default;
+  RecursiveDoublingMsg(RecursiveDoublingMsg const&) = default;
+  RecursiveDoublingMsg(RecursiveDoublingMsg&&) = default;
+  ~RecursiveDoublingMsg() {
+    if (owning_) {
+      delete val_;
+    }
   }
 
-private:
-  VirtualProxyType default_proxy_ = no_vrt_proxy;
+  RecursiveDoublingMsg(ComponentInfo info, DataT const& in_val, size_t id, int step = 0)
+    : MessageParentType(),
+      val_(&in_val),
+      id_(id),
+      step_(step),
+      info_(info) { }
+
+  template <typename SerializeT>
+  void serialize(SerializeT& s) {
+    MessageParentType::serialize(s);
+
+    if (s.isUnpacking()) {
+      owning_ = true;
+      val_ = new DataT();
+    }
+
+    s | *val_;
+    s | id_;
+    s | step_;
+    s | info_;
+  }
+
+  const DataT* val_ = {};
+  size_t id_ = {};
+  int32_t step_ = {};
+  bool owning_ = false;
+  ComponentInfo info_ = {};
 };
 
-template <typename ColT, typename MsgT>
-struct DispatchCollection final : DispatchCollectionBase {
-private:
-  void broadcast(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
-  void broadcastCollective(VirtualProxyType proxy, std::byte* msg, HandlerType han) override;
-  void send(
-    VirtualProxyType proxy, std::byte* idx, std::byte* msg, HandlerType han
-  ) override;
-};
+} // namespace vt::collective::reduce::allreduce
 
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_ALLREDUCE_RECURSIVE_DOUBLING_MSG_H*/
