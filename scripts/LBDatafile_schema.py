@@ -69,6 +69,9 @@ LBDatafile_schema = Schema(
         Optional('metadata'): {
             Optional('type'): And(str, "LBDatafile", error="'LBDatafile' must be chosen."),
             Optional('rank'): int,
+            Optional('rank_alpha'): And(
+                float, lambda x: x >= 0.0,
+                error="Should be of type 'float' and >= 0"),
             Optional('shared_node'): {
                 'id': int,
                 'size': int,
