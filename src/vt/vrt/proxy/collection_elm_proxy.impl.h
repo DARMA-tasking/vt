@@ -69,15 +69,17 @@ void VrtElmProxy<ColT, IndexT>::serialize(SerT& s) {
     
     //Weird nested serialization to enable asynchronous deserializing w/o changing semantics.
     if(!(s.isPacking() || s.isUnpacking())){
-      int size = checkpoint::getSize(*local_elm_ptr);
-      s.contiguousBytes(nullptr, 1, size);
+      int size = checkpoint::getSize<ColT, CheckpointlessTraits>(*local_elm_ptr);
+      s | size;
+      //Don't use nullptr to avoid warning
+      s.contiguousBytes(&size, 1, size);
     } else if(s.isPacking()){
       auto serialized_elm = checkpoint::serialize<ColT, CheckpointlessTraits>(*local_elm_ptr);
       int size = serialized_elm->getSize();
       s | size;
       s.contiguousBytes(serialized_elm->getBuffer(), 1, size);
     } else if(s.isUnpacking()){
-      int size;
+      int size = 0;
       s | size;
 
       auto buf = std::make_unique<char[]>(size);
@@ -106,7 +108,7 @@ VrtElmProxy<ColT, IndexT>::deserializeToElm(SerT& s) {
   //Still have to hit data in the same order.
   ProxyCollectionElmTraits<ColT, IndexT>::serialize(s);
   
-  int size;
+  int size = 0;
   s | size;
   auto buf = std::make_unique<char[]>(size);
   s.contiguousBytes(buf.get(), 1, size);

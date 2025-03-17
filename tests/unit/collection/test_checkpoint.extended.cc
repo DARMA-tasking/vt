@@ -382,7 +382,6 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
   });
 }
 
-
 // Goals for Test:
 //  1. Create a collection and get it into a state where there is a rank with zero elements
 //      (either by  (A) setting it up that way initially or (B) migrating everything off one rank)
@@ -461,5 +460,92 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
   });
 
 }
+
+
+TEST_F(TestCheckpoint, test_checkpoint_trait_1) {
+  using namespace magistrate;
+  using vt::vrt::CheckpointTrait;
+  using ProxyType = vt::CollectionProxy<TestCol, vt::Index3D>;
+
+  auto this_node = theContext()->getNode();
+  auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+
+  auto range = vt::Index3D(num_nodes, num_elms, 4);
+  std::string const expected_label{"test_checkpoint_trait_1"};
+
+  std::unique_ptr<SerializedInfo> checkpoint;
+
+  {
+    auto proxy = vt::theCollection()->constructCollective<TestCol>(
+      range, expected_label
+    );
+
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
+      }
+    });
+
+    for (int i = 0; i < 5; i++) {
+      vt::runInEpochCollective([&]{
+        if (this_node == 0) {
+          proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
+        }
+      });
+    }
+
+
+    checkpoint = serialize<ProxyType, CheckpointTrait>(proxy);
+
+    // Wait for all checkpoints to complete
+    vt::theCollective()->barrier();
+
+    // Null the token to ensure we don't end up getting the same instance
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.broadcast<TestCol::NullMsg,&TestCol::nullToken>();
+      }
+    });
+
+    vt::thePhase()->nextPhaseCollective();
+
+    // Destroy the collection
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.destroy();
+      }
+    });
+
+    vt::theCollective()->barrier();
+  }
+
+  {
+    auto proxy = *deserialize<ProxyType, CheckpointTrait>(
+        checkpoint->getBuffer()
+    );
+
+    // Restoration should be done now
+    vt::theCollective()->barrier();
+
+    runInEpochCollective([&] {
+      auto const got_label = vt::theCollection()->getLabel(proxy.getProxy());
+      EXPECT_EQ(got_label, expected_label);
+
+      if (this_node == 0) {
+        proxy.broadcast<TestCol::NullMsg, &TestCol::verify>();
+      }
+    });
+
+    runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.destroy();
+      }
+    });
+
+    // Ensure that all elements were properly destroyed
+    EXPECT_EQ(counter, 0ull);
+  }
+}
+
 
 }}} // end namespace vt::tests::unit
