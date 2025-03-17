@@ -1758,6 +1758,9 @@ void CollectionManager::destroyElm(
       auto elm = theCollection()->findElmHolder<IndexType>(untyped_proxy);
       if (elm->exists(idx)) {
         elm->remove(idx);
+        theLocMan()
+          ->getCollectionLM<IndexType>(untyped_proxy)
+          ->unregisterEntity(idx);
       }
     });
   } else {
@@ -2006,6 +2009,9 @@ void CollectionManager::destroyMatching(
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementDestroyed, idx, home
       );
+      theLocMan()
+        ->getCollectionLM<IndexT>(untyped_proxy)
+        ->unregisterEntity(idx);
     });
     elm_holder->destroyAll();
   }
