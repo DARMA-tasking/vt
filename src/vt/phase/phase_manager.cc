@@ -297,6 +297,7 @@ void PhaseManager::printSummary(vrt::collection::lb::PhaseInfo* last_phase_info)
       last_phase_info->lb_type
     ];
     auto const total_time = timing::getCurrentTime() - start_time_;
+    trace::manual_timings[fmt::format("phase{}dur", last_phase_info->phase)] = total_time;
     vt_print(
       phase,
       "phase={}, duration={}, rank_max_compute_time={}, rank_avg_compute_time={}, imbalance={:.4f}, "

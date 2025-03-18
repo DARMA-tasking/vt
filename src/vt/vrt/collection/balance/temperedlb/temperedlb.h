@@ -56,6 +56,7 @@
 #include <map>
 #include <unordered_set>
 #include <vector>
+#include <string>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -89,6 +90,7 @@ public:
   void inputParams(balance::ConfigEntry* config) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
+  static void printHistory();
 
   static std::vector<ObjIDType> orderObjects(
     ObjectOrderEnum obj_ordering,
@@ -524,6 +526,8 @@ private:
   /// Ready to satify looks
   bool ready_to_satisfy_locks_ = false;
   int consider_swaps_counter_ = 0;
+
+  static std::vector<std::string> history_str_;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

@@ -366,7 +366,7 @@ void LBManager::startLB(
     break;
   }
 
-  runLB(phase, cb);
+  proxy_[theContext()->getNode()].template send<&LBManager::runLB>(phase, cb);
 }
 
 /*static*/
@@ -475,6 +475,7 @@ void LBManager::destroyLB() {
 
 void LBManager::finalize() {
   closeStatisticsFile();
+  lb::TemperedLB::printHistory();
 }
 
 void LBManager::fatalError() {

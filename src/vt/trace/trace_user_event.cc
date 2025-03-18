@@ -83,6 +83,7 @@ UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
   auto ret = newEventImpl(false, false, in_event_name, id_hash, true);
   auto id = std::get<0>(ret);
   auto inserted = std::get<1>(ret);
+#if 0
   if (inserted) {
     auto const node  = theContext()->getNode();
     if (node != 0) {
@@ -90,6 +91,7 @@ UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
       theMsg()->sendMsg<newEventHan>(0, msg);
     }
   }
+#endif
   return id;
 }
 

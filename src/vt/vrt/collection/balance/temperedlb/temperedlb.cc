@@ -70,6 +70,15 @@ static trace::UserEventIDType computeWorkBreakdownEvent = 0;
 static trace::UserEventIDType propagateMsgTraceEvent = 0;
 static trace::UserEventIDType informAsyncTraceEvent = 0;
 
+/*static*/ std::vector<std::string> TemperedLB::history_str_;
+
+/*static*/ void
+TemperedLB::printHistory() {
+  for (auto &v : history_str_) {
+    fmt::print("{}", v);
+  }
+}
+
 void TemperedLB::init(objgroup::proxy::Proxy<TemperedLB> in_proxy) {
   proxy_ = in_proxy;
   auto const this_node = theContext()->getNode();
@@ -345,6 +354,9 @@ Description: ε in the work model (memory term in work model)
 }
 
 void TemperedLB::inputParams(balance::ConfigEntry* config) {
+  trace::TraceScopedEventHash scope("inputParams");
+
+#if 0
   auto keys_help = getInputKeysWithHelp();
 
   std::vector<std::string> allowed;
@@ -352,6 +364,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     allowed.push_back(elm.first);
   }
   config->checkAllowedKeys(allowed);
+#endif
 
   // the following options interact with each other, so we need to know
   // which were defaulted and which were explicitly specified
@@ -360,6 +373,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
   bool specified_fanout    = params.find("fanout")    != params.end();
   bool specified_rounds    = params.find("rounds")    != params.end();
 
+#if 0
   balance::LBArgsEnumConverter<KnowledgeEnum> knowledge_converter_(
     "knowledge", "KnowledgeEnum", {
       {KnowledgeEnum::UserDefined, "UserDefined"},
@@ -393,6 +407,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     "TemperedLB: You must explicitly set both fanout and rounds when "
     "knowledge=UserDefined"
   );
+#endif
 
   auto num_nodes = theContext()->getNumNodes();
   if (knowledge_ == KnowledgeEnum::Log) {
@@ -438,20 +453,21 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     vtAbort(s);
   }
 
-  alpha = config->getOrDefault<double>("alpha", alpha);
-  beta = config->getOrDefault<double>("beta", beta);
-  gamma = config->getOrDefault<double>("gamma", gamma);
+  //alpha = config->getOrDefault<double>("alpha", alpha);
+  //beta = config->getOrDefault<double>("beta", beta);
+  //gamma = config->getOrDefault<double>("gamma", gamma);
   delta = config->getOrDefault<double>("delta", delta);
-  epsilon = config->getOrDefault<double>("epsilon", epsilon);
+  //epsilon = config->getOrDefault<double>("epsilon", epsilon);
 
   num_iters_     = config->getOrDefault<int32_t>("iters", num_iters_);
-  num_trials_    = config->getOrDefault<int32_t>("trials", num_trials_);
+  //num_trials_    = config->getOrDefault<int32_t>("trials", num_trials_);
 
-  deterministic_ = config->getOrDefault<bool>("deterministic", deterministic_);
+  //deterministic_ = config->getOrDefault<bool>("deterministic", deterministic_);
   rollback_      = config->getOrDefault<bool>("rollback", rollback_);
-  target_pole_   = config->getOrDefault<bool>("targetpole", target_pole_);
+  //target_pole_   = config->getOrDefault<bool>("targetpole", target_pole_);
   mem_thresh_    = config->getOrDefault<double>("memory_threshold", mem_thresh_);
 
+#if 0
   balance::LBArgsEnumConverter<CriterionEnum> criterion_converter_(
     "criterion", "CriterionEnum", {
       {CriterionEnum::Grapevine,         "Grapevine"},
@@ -467,6 +483,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     }
   );
   inform_type_ = inform_type_converter_.getFromConfig(config, inform_type_);
+#endif
 
   balance::LBArgsEnumConverter<TransferTypeEnum> transfer_type_converter_(
     "transfer", "TransferTypeEnum", {
@@ -481,6 +498,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     rollback_ = false;
   }
 
+#if 0
   balance::LBArgsEnumConverter<ObjectOrderEnum> obj_ordering_converter_(
     "ordering", "ObjectOrderEnum", {
       {ObjectOrderEnum::Arbitrary,        "Arbitrary"},
@@ -526,6 +544,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
       cmf_type_converter_.getString(cmf_type_), rollback_, target_pole_
     );
   }
+#endif
 }
 
 void TemperedLB::runLB(LoadType total_load) {
@@ -563,12 +582,13 @@ void TemperedLB::runLB(LoadType total_load) {
 
   // Report statistics from head rank
   if (theContext()->getNode() == 0) {
-    vt_debug_print(
-      terse, temperedlb,
+    //vt_debug_print(
+    //  terse, temperedlb,
+    history_str_.push_back(fmt::format(
       "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
       LoadType(avg), LoadType(max), LoadType(pole), imb,
       LoadType(load), should_lb
-    );
+    ));
 
     if (!should_lb) {
       vt_print(
@@ -632,12 +652,14 @@ void TemperedLB::readClustersMemoryData() {
           }
         }
 
+#if 0
         vt_debug_print(
           verbose, temperedlb,
           "obj={} sid={} bytes={} footprint={} serialized={}, working={}\n",
           obj, shared_id, shared_bytes, footprint_bytes, serialized_bytes,
           working_bytes
         );
+#endif
 
         obj_shared_block_[obj] = shared_id;
         obj_working_bytes_[obj] = working_bytes;
@@ -727,11 +749,13 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
     for (auto&& obj : cluster_objs) {
       if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
         for (auto const& [target, volume] : it->second) {
+#if 0
           vt_debug_print(
             verbose, temperedlb,
             "computeClusterSummary: send obj={}, target={}\n",
             obj, target
           );
+#endif
 
           if (cluster_objs.find(target) != cluster_objs.end()) {
             // intra-cluster edge
@@ -750,11 +774,13 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
       }
       if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
         for (auto const& [target, volume] : it->second) {
+#if 0
           vt_debug_print(
             verbose, temperedlb,
             "computeClusterSummary: recv obj={}, target={}\n",
             obj, target
           );
+#endif
           if (cluster_objs.find(target) != cluster_objs.end()) {
             // intra-cluster edge
             info.intra_recv_vol += volume;
@@ -810,11 +836,13 @@ BytesType TemperedLB::computeMemoryUsage() {
     ) {
       max_object_working_bytes_ =
         std::max(max_object_working_bytes_, it->second);
+#if 0
     } else {
       vt_debug_print(
         verbose, temperedlb,
         "Warning: working bytes not found for object: {}\n", obj_id
       );
+#endif
     }
   }
 
@@ -902,11 +930,13 @@ WorkBreakdown TemperedLB::computeWorkBreakdown(
     if (exclude.find(obj) == exclude.end()) {
       if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
         for (auto const& [target, volume] : it->second) {
+#if 0
           vt_debug_print(
             verbose, temperedlb,
             "computeWorkBreakdown: send obj={}, target={}\n",
             obj, target
           );
+#endif
           if (
             cur_objs_.find(target) != cur_objs_.end() or
             target.isLocatedOnThisNode()
@@ -919,11 +949,13 @@ WorkBreakdown TemperedLB::computeWorkBreakdown(
       }
       if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
         for (auto const& [target, volume] : it->second) {
+#if 0
           vt_debug_print(
             verbose, temperedlb,
             "computeWorkBreakdown: recv obj={}, target={}\n",
             obj, target
           );
+#endif
           if (
             cur_objs_.find(target) != cur_objs_.end() or
             target.isLocatedOnThisNode()
@@ -1157,11 +1189,13 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
             for (auto const& [from_obj, to_edges] : send_edges_) {
               for (auto const& [to_obj, volume] : to_edges) {
+#if 0
                 vt_debug_print(
                   verbose, temperedlb,
                   "SymmEdges: from={}, to={}, volume={}\n",
                   from_obj, to_obj, volume
                 );
+#endif
                 auto curr_from_node = from_obj.getCurrNode();
                 if (curr_from_node != this_node) {
                   edges[curr_from_node][from_obj].emplace_back(to_obj, volume);
@@ -1233,6 +1267,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
           computeClusterSummary();
         }
 
+#if 0
         // Verbose printing about local clusters
         for (auto const& [shared_id, cluster_info] : cur_clusters_) {
           vt_debug_print(
@@ -1241,6 +1276,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
             shared_id, cluster_info
           );
         }
+#endif
       }
 
       if (isOverloaded(this_new_load_)) {
@@ -1261,6 +1297,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         vtAbort("TemperedLB:: Unsupported inform type");
       }
 
+#if 0
       // Some very verbose printing about all remote clusters we know about that
       // we can shut off later
       for (auto const& [node, clusters] : other_rank_clusters_) {
@@ -1272,6 +1309,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
           );
         }
       }
+#endif
 
       // Move remote cluster information to shared_block_size_ so we have all
       // the sizes in the same place
@@ -1298,6 +1336,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         vtAbort("TemperedLB:: Unsupported transfer type");
       }
 
+#if 0
       vt_debug_print(
         verbose, temperedlb,
         "TemperedLB::doLBStages: (after) running trial={}, iter={}, "
@@ -1305,6 +1344,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         trial_, iter_, num_iters_, LoadType(this_load),
         LoadType(this_new_load_)
       );
+#endif
 
       if (
         rollback_ ||
@@ -1372,8 +1412,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
     if (transfer_type_ == TransferTypeEnum::SwapClusters) {
       auto remote_block_count = getRemoteBlockCountHere();
       runInEpochCollective("TemperedLB::doLBStages -> compute unhomed", [=] {
-        proxy_.allreduce<&TemperedLB::remoteBlockCountHandler,
-                         collective::PlusOp>(remote_block_count);
+        proxy_.reduce<&TemperedLB::remoteBlockCountHandler,
+                      collective::PlusOp>(proxy_[0], remote_block_count);
       });
     }
   } else if (this_node == 0) {
@@ -1414,8 +1454,7 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
 
   auto this_node = theContext()->getNode();
   if (this_node == 0) {
-    vt_debug_print(
-      terse, temperedlb,
+    history_str_.push_back(fmt::format(
       "TemperedLB::loadStatsHandler: trial={} iter={}"
       " Load[max={:0.2f} min={:0.2f} avg={:0.2f} pole={:0.2f} imb={:0.4f}] "
       " Work[max={:0.2f} min={:0.2f} avg={:0.2f} imb={:0.4f}]\n",
@@ -1429,7 +1468,7 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
       LoadType(work.max()),
       LoadType(work.min()), LoadType(work.avg()),
       work.I()
-    );
+    ));
   }
 }
 
@@ -1441,34 +1480,31 @@ void TemperedLB::rejectionStatsHandler(
 
   auto this_node = theContext()->getNode();
   if (this_node == 0) {
-    vt_debug_print(
-      terse, temperedlb,
+    history_str_.push_back(fmt::format(
       "TemperedLB::rejectionStatsHandler: n_transfers={} n_unhomed_blocks={}"
       " n_rejected={} "
       "rejection_rate={:0.1f}%, total_cycle_locks={}\n",
       n_transfers, n_unhomed_blocks, n_rejected, rej, cycle_locks
-    );
+    ));
   }
 }
 
 void TemperedLB::maxIterTime(double max_iter_time) {
   auto this_node = theContext()->getNode();
   if (this_node == 0) {
-    vt_debug_print(
-      terse, temperedlb,
+    history_str_.push_back(fmt::format(
       "TemperedLB::maxIterTime: {}\n", max_iter_time
-    );
+    ));
   }
 }
 
 void TemperedLB::remoteBlockCountHandler(int n_unhomed_blocks) {
   auto this_node = theContext()->getNode();
   if (this_node == 0) {
-    vt_print(
-      temperedlb,
+    history_str_.push_back(fmt::format(
       "After load balancing, {} blocks will be off their home ranks\n",
       n_unhomed_blocks
-    );
+    ));
   }
 }
 
@@ -1516,12 +1552,14 @@ void TemperedLB::informAsync() {
     );
   }
 
+#if 0
   vt_debug_print(
     verbose, temperedlb,
     "TemperedLB::informAsync: finished inform phase: trial={}, iter={}, "
     "k_max={}\n",
     trial_, iter_, k_max_
   );
+#endif
 }
 
 void TemperedLB::informSync() {
@@ -1579,12 +1617,14 @@ void TemperedLB::informSync() {
     );
   }
 
+#if 0
   vt_debug_print(
     verbose, temperedlb,
     "TemperedLB::informSync: finished inform phase: trial={}, iter={}, "
     "k_max={}, k_cur={}\n",
     trial_, iter_, k_max_, k_cur_
   );
+#endif
 }
 
 void TemperedLB::setupDone() {
@@ -1615,12 +1655,14 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
 
   // Determine fanout factor capped by number of nodes
   auto const fanout = std::min(f_, static_cast<decltype(f_)>(num_nodes - 1));
+#if 0
   vt_debug_print(
     verbose, temperedlb,
     "TemperedLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}, "
     "selected.size()={}, fanout={}\n",
     trial_, iter_, k_max_, k_cur, selected.size(), fanout
   );
+#endif
 
   // Iterate over fanout factor
   for (int i = 0; i < fanout; i++) {
@@ -1640,12 +1682,14 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     );
     selected.insert(random_node);
 
+#if 0
     vt_debug_print(
       verbose, temperedlb,
       "TemperedLB::propagateRound: trial={}, iter={}, k_max={}, "
       "k_cur={}, sending={}\n",
       trial_, iter_, k_max_, k_cur, random_node
     );
+#endif
 
     // Send message with load
     if (sync) {
@@ -2098,11 +2142,13 @@ void TemperedLB::originalTransfer() {
         // Select a node using the CMF
         auto const selected_node = sampleFromCMF(under, cmf);
 
+#if 0
         vt_debug_print(
           verbose, temperedlb,
           "TemperedLB::originalTransfer: selected_node={}, load_info_.size()={}\n",
           selected_node, load_info_.size()
         );
+#endif
 
 	// Find load of selected node
         auto load_iter = load_info_.find(selected_node);
@@ -2114,6 +2160,7 @@ void TemperedLB::originalTransfer() {
         bool eval = Criterion(criterion_)(
           this_new_load_, selected_load, obj_load, target_max_load_
         );
+#if 0
         vt_debug_print(
           verbose, temperedlb,
           "TemperedLB::originalTransfer: trial={}, iter={}, under.size()={}, "
@@ -2133,6 +2180,7 @@ void TemperedLB::originalTransfer() {
           this_new_load_,
           eval
         );
+#endif
 
 	// Decide about proposed migration based on criterion evaluation
         if (is_migratable and eval) {
@@ -2171,16 +2219,16 @@ void TemperedLB::originalTransfer() {
 
   vt::runSchedulerThrough(lazy_epoch);
 
-  if (theConfig()->vt_debug_temperedlb) {
+//  if (theConfig()->vt_debug_temperedlb) {
     // compute rejection rate because it will be printed
     runInEpochCollective("TemperedLB::originalTransfer -> compute rejection", [=] {
       iter_time_ = MPI_Wtime() - iter_time_;
-      proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers, 0, 0
-      );
-      proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
+//      proxy_.reduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
+//        proxy_[0], n_rejected, n_transfers, 0, 0
+//      );
+      proxy_.reduce<&TemperedLB::maxIterTime, collective::MaxOp>(proxy_[0], iter_time_);
     });
-  }
+//  }
 }
 
 void TemperedLB::tryLock(NodeType requesting_node, double criterion_value) {
@@ -2199,11 +2247,13 @@ auto TemperedLB::removeClusterToSend(
   std::unordered_map<SharedIDType, BytesType> give_shared_blocks_size;
   std::unordered_map<ObjIDType, BytesType> give_obj_working_bytes;
 
+#if 0
   vt_debug_print(
     verbose, temperedlb,
     "removeClusterToSend: shared_id={}\n",
     shared_id
   );
+#endif
 
   if (shared_id != no_shared_id) {
     give_shared_blocks_size[shared_id] = shared_block_size_[shared_id];
@@ -2254,11 +2304,13 @@ auto TemperedLB::removeClusterToSend(
 
   auto const blocks_here_after = getSharedBlocksHere();
 
+#if 0
   vt_debug_print(
     verbose, temperedlb,
     "removeClusterToSend: before count={}, after count={}\n",
     blocks_here_before.size(), blocks_here_after.size()
   );
+#endif
 
   return std::make_tuple(
     give_objs,
@@ -2287,11 +2339,13 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   is_swapping_ = true;
   is_locked_ = true;
 
+#if 0
   vt_debug_print(
     verbose, temperedlb,
     "considerSwapsAfterLock: consider_swaps_counter_={} start\n",
     consider_swaps_counter_
   );
+#endif
 
   trace::TraceScopedEvent scope(considerSwapsAfterLockEvent);
 
@@ -2392,11 +2446,13 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
         try_rank, try_info, try_total_bytes, try_max_owm, try_max_osm,
         src_cluster, try_cluster
       );
+#if 0
       vt_debug_print(
         verbose, temperedlb,
         "testing a possible swap (rank {}): {} {} c_try={}\n",
         try_rank, src_shared_id, try_shared_id, c_try
       );
+#endif
       if (c_try >= 0.0) {
         if (c_try > best_c_try) {
           best_c_try = c_try;
@@ -2425,11 +2481,13 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     auto const& give_obj_working_bytes = std::get<3>(give_data);
 
     runInEpochRooted("giveCluster", [&]{
+#if 0
       vt_debug_print(
         verbose, temperedlb,
         "considerSwapsAfterLock: giveCluster swapping {} for {}, epoch={:x}\n",
         src_shared_id, try_shared_id, theMsg()->getEpoch()
       );
+#endif
       proxy_[try_rank].template send<&TemperedLB::giveCluster>(
         this_node,
         give_shared_blocks_size,
@@ -2454,11 +2512,13 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
 
   proxy_[try_rank].template send<&TemperedLB::releaseLock>();
 
+#if 0
   vt_debug_print(
     verbose, temperedlb,
     "considerSwapsAfterLock: consider_swaps_counter_={} finish\n",
     consider_swaps_counter_
   );
+#endif
 
   is_swapping_ = false;
   is_locked_ = false;
@@ -2603,6 +2663,7 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
 void TemperedLB::satisfyLockRequest() {
   vtAssert(not is_locked_, "Must not already be locked to satisfy a request");
   if (try_locks_.size() > 0) {
+#if 0
     // find the best lock to give
     for (auto&& tl : try_locks_) {
       vt_debug_print(
@@ -2611,6 +2672,7 @@ void TemperedLB::satisfyLockRequest() {
 	tl.requesting_node, tl.c_try, tl.forced_release
       );
     }
+#endif
 
     auto iter = try_locks_.begin();
     auto lock = *iter;
@@ -2760,17 +2822,17 @@ void TemperedLB::swapClusters() {
   );
 
   // Report on rejection rate in debug mode
-  if (theConfig()->vt_debug_temperedlb) {
-    int n_rejected = 0;
-    auto remote_block_count = getRemoteBlockCountHere();
+//  if (theConfig()->vt_debug_temperedlb) {
+//    int n_rejected = 0;
+//    auto remote_block_count = getRemoteBlockCountHere();
     runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
       iter_time_ = MPI_Wtime() - iter_time_;
-      proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_
-      );
-      proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
+//      proxy_.reduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
+//        proxy_[0], n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_
+//      );
+      proxy_.reduce<&TemperedLB::maxIterTime, collective::MaxOp>(proxy_[0], iter_time_);
     });
-  }
+//  }
 }
 
 void TemperedLB::thunkMigrations() {
