@@ -81,11 +81,12 @@ std::tuple<EpochType, VirtualProxyType> CollectionManager::makeCollection(
 }
 
 /*static*/ inline void CollectionManager::finishedRootedConstruction() {
-  theCollection()->has_pending_construction_ = false;
   if (theCollection()->pending_rooted_constructions_.size() > 0) {
     auto action = theCollection()->pending_rooted_constructions_.back();
     theCollection()->pending_rooted_constructions_.pop_back();
     action();
+  } else {
+    theCollection()->has_pending_construction_ = false;
   }
 }
 
@@ -104,6 +105,7 @@ template <typename ColT>
         theTerm()->popEpoch(ep);
       });
     } else {
+      theCollection()->has_pending_construction_ = true;
       theMsg()->broadcast<makeCollectionHandler<ColT>>(po, false);
     }
   } else {
