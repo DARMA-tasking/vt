@@ -920,17 +920,17 @@ void Runtime::initializeComponents() {
   p_->registerComponent<vrt::collection::CollectionManager>(
     &theCollection,
     StartupDeps<
-      ctx::Context                         // Everything depends on theContext
+      ctx::Context,             // Everything depends on theContext
+      location::LocationManager // For element location
     >{},
     RuntimeDeps<
-      messaging::ActiveMessenger,          // Depends on for messaging
-      group::GroupManager,                 // For broadcasts
-      sched::Scheduler,                    // For scheduling work
-      location::LocationManager,           // For element location
-      objgroup::ObjGroupManager,           // Depends on objgroup
-      pipe::PipeManager,                   // Depends on using callbacks
+      messaging::ActiveMessenger,           // Depends on for messaging
+      group::GroupManager,                  // For broadcasts
+      sched::Scheduler,                     // For scheduling work
+      objgroup::ObjGroupManager,            // Depends on objgroup
+      pipe::PipeManager,                    // Depends on using callbacks
       vrt::collection::balance::NodeLBData, // For LB data collection
-      vrt::collection::balance::LBManager  // For load balancing
+      vrt::collection::balance::LBManager   // For load balancing
     >{}
   );
 
