@@ -36,9 +36,15 @@ jobs:
               }
             }
 
-            const fs = require("fs").promises
-            var output = await fs.readFile("clang-format.diff")
-            const commentBody = '`clang-format` output for this changeset:\n```diff\n' + output + '\n```'
+            const fs = require("fs")
+            var output = fs.readFileSync("clang-format.diff", "utf8")
+            // make sure not to exceed maximum length of the comment
+            output = (output.length > 65000) ?
+              output.substring(0, 65000) + '\n(...)' : output
+            const commentBody =
+              '`clang-format` output for this changeset:\n```diff\n' +
+              output + '\n```'
+
             if (commentId === -1) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
