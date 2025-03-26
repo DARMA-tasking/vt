@@ -1,0 +1,5 @@
+# .clang-format-ignore is available for clang-format > 18. Use this instead as
+# we use clang-format 16 in CI.
+
+DisableFormat: true
+SortIncludes: Never
