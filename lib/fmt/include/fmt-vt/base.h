@@ -2031,7 +2031,14 @@ FMT_CONSTEXPR20 auto copy(InputIt begin, InputIt end, OutputIt out)
 template <typename T, typename InputIt, typename OutputIt,
           FMT_ENABLE_IF(!is_back_insert_iterator<OutputIt>::value)>
 FMT_CONSTEXPR auto copy(InputIt begin, InputIt end, OutputIt out) -> OutputIt {
+#if defined(__GNUC__) && !(defined(__clang__))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
   while (begin != end) *out++ = static_cast<T>(*begin++);
+#if defined(__GNUC__) && !(defined(__clang__))
+#pragma GCC diagnostic pop
+#endif
   return out;
 }
 
