@@ -423,4 +423,3 @@ if (FMT_INSTALL)
   install(FILES "${pkgconfig}" DESTINATION "${FMT_PKGCONFIG_DIR}"
           COMPONENT fmt-core)
 endif ()
-
