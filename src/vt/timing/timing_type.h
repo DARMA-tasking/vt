@@ -52,7 +52,6 @@
 #include <EngFormat-Cpp/eng_format.hpp>
 
 #include "vt/cmake_config.h"
-#include INCLUDE_FMT_BASE
 
 namespace vt {
 

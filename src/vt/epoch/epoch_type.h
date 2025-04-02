@@ -48,7 +48,6 @@
 #include "vt/epoch/epoch_impl_type.h"
 
 #include "vt/cmake_config.h"
-#include INCLUDE_FMT_BASE
 
 namespace vt { namespace epoch {
 
