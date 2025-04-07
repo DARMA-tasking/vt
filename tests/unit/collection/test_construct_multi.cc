@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            construct_params_msg.h
+//                           test_construct_multi.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,42 +41,44 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H
-#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H
+#include <gtest/gtest.h>
 
-#include "vt/vrt/collection/param/construct_params.h"
+#include "test_parallel_harness.h"
 
-namespace vt { namespace vrt { namespace collection { namespace param {
+#include <vt/transport.h>
 
-/**
- * \struct ConstructParamMsg
- *
- * \brief Construct PO configuration message for distributed construction
- */
-template <typename ColT>
-struct ConstructParamMsg : vt::Message {
-  using MessageParentType = ::vt::Message;
-  vt_msg_serialize_required(); // po
+#include <cstdint>
+#include <tuple>
+#include <string>
 
-  ConstructParamMsg() = default;
-  explicit ConstructParamMsg(param::ConstructParams<ColT>& in_po)
-    : po(std::make_unique<param::ConstructParams<ColT>>(in_po))
-  { }
+namespace vt { namespace tests { namespace unit {
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-    s | po;
+struct TestConstructMulti : TestParallelHarness {};
+
+namespace multi_ {
+struct TestCol1D : Collection<TestCol1D, vt::Index1D> { };
+} /* end namespace multi_ */
+
+TEST_F(TestConstructMulti, test_multi_construct) {
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+  auto const range = Index1D(num_nodes);
+  std::string const label = "test_multi_construct";
+
+  for (int j = 0; j < 4; j++) {
+    vt::runInEpochCollective([&]{
+      if (this_node == 1) {
+        for (int i = 0; i < 4; i++) {
+          auto proxy = makeCollection<multi_::TestCol1D>(label)
+            .bounds(range)
+            .bulkInsert()
+            .collective(false)
+            .wait();
+          (void)proxy;
+        }
+      }
+    });
   }
+}
 
-  /// Must use \c std::unique_ptr here because without the indirection,
-  /// AppleClang generates invalid alignment that causes a segfault when \c new
-  /// is called on this message type. The only other work around is some
-  /// seemingly arbitrary value to alignas (alignas(1024) seems to do the
-  /// trick).
-  std::unique_ptr<param::ConstructParams<ColT>> po = nullptr;
-};
-
-}}}} /* end namespace vt::vrt::collection::param */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H*/
+}}} // end namespace vt::tests::unit

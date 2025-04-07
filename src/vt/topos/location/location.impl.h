@@ -61,38 +61,6 @@
 namespace vt { namespace location {
 
 template <typename EntityID>
-EntityLocationCoord<EntityID>::EntityLocationCoord()
-  : EntityLocationCoord<EntityID>( LocationManager::cur_loc_inst++ )
-{ }
-
-template <typename EntityID>
-EntityLocationCoord<EntityID>::EntityLocationCoord(
-  collection_lm_tag_t, LocInstType identifier
-) : EntityLocationCoord<EntityID>(identifier)
-{ }
-
-template <typename EntityID>
-EntityLocationCoord<EntityID>::EntityLocationCoord(LocInstType const identifier)
-  : LocationCoord(),
-    this_inst(identifier),
-    recs_(default_max_cache_size, theContext()->getNode())
-{
-  vt_debug_print(
-    normal, location,
-    "EntityLocationCoord constructor: inst={}, this={}\n",
-    this_inst, print_ptr(this)
-  );
-
-  LocationManager::insertInstance<EntityLocationCoord<EntityID>>(
-    this_inst, this
-  );
-}
-
-template <typename EntityID>
-/*virtual*/ EntityLocationCoord<EntityID>::~EntityLocationCoord() {
-}
-
-template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntity(
   EntityID const& id, NodeType const& home, LocMsgActionType msg_action,
   bool const& migrated
@@ -107,9 +75,9 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   vt_debug_print(
     terse, location,
-    "EntityLocationCoord: registerEntity: inst={}, home={}, migrated={}, "
+    "EntityLocationCoord: registerEntity: home={}, migrated={}, "
     "id={}\n",
-    this_inst, home, migrated, id
+    home, migrated, id
   );
 
   local_registered_.insert(id);
@@ -121,15 +89,8 @@ void EntityLocationCoord<EntityID>::registerEntity(
     //   local_registered_msg_han_.find(id) == local_registered_msg_han_.end(),
     //   "Entity should not exist in local registered msg handler"
     // );
-    local_registered_msg_han_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(id),
-      std::forward_as_tuple(LocEntityMsg{id, msg_action})
-    );
+    local_registered_msg_han_.emplace(id, LocEntityMsg{id, msg_action});
   }
-
-  // trigger any pending actions upon registration
-  auto pending_lookup_iter = pending_lookups_.find(id);
 
   vt_debug_print(
     normal, location,
@@ -138,19 +99,21 @@ void EntityLocationCoord<EntityID>::registerEntity(
     pending_lookups_.size(), print_ptr(this), id
   );
 
-  if (pending_lookup_iter != pending_lookups_.end()) {
+  // trigger any pending actions upon registration
+  {
     auto const& node = theContext()->getNode();
     int action = 0;
-    for (auto&& pending_action : pending_lookup_iter->second) {
-      vt_debug_print(
-        verbose, location,
-        "EntityLocationCoord: registerEntity: running pending action {}\n",
-        action
-      );
-      action++;
-      pending_action(node);
+    if (auto lookups = pending_lookups_.extract(id); lookups) {
+      for (auto&& pending_action : lookups.mapped()) {
+        vt_debug_print(
+          verbose, location,
+          "EntityLocationCoord: registerEntity: running pending action {}\n",
+          action
+        );
+        action++;
+        pending_action(node);
+      }
     }
-    pending_lookups_.erase(pending_lookup_iter);
   }
 
   /*
@@ -168,13 +131,9 @@ void EntityLocationCoord<EntityID>::registerEntity(
       id, home, migrated
     );
 
-    auto const& ask_node = uninitialized_destination;
-    auto msg = makeMessage<LocMsgType>(
-      this_inst, id, no_location_event_id, ask_node, home
+    proxy_[home].template send<&ThisType::updateLocation>(
+      MsgProps().asLocationMsg(), id, this_node, home
     );
-    msg->setResolvedNode(this_node);
-    theMsg()->markAsLocationMessage(msg);
-    theMsg()->sendMsg<&EntityLocationCoord<EntityID>::updateLocation>(home, msg);
   }
 }
 
@@ -191,9 +150,9 @@ void EntityLocationCoord<EntityID>::registerEntityRemote(
 
   vt_debug_print(
     normal, location,
-    "EntityLocationCoord: registerEntityRemote: inst={}, home={}, "
+    "EntityLocationCoord: registerEntityRemote: home={}, "
     "create_node={}, id={}\n",
-    this_inst, home, create_node, id
+    home, create_node, id
   );
 
   auto const this_node = theContext()->getNode();
@@ -202,11 +161,7 @@ void EntityLocationCoord<EntityID>::registerEntityRemote(
   recs_.insert(id, home, LocRecType{id, eLocState::Remote, create_node});
 
   if (msg_action != nullptr) {
-    local_registered_msg_han_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(id),
-      std::forward_as_tuple(LocEntityMsg{id, msg_action})
-    );
+    local_registered_msg_han_.emplace(id, LocEntityMsg{id, msg_action});
   }
 }
 
@@ -319,17 +274,7 @@ void EntityLocationCoord<EntityID>::insertPendingEntityAction(
     print_ptr(this), id
   );
 
-  // this is the home node and there is no record on this entity
-  auto pending_iter = pending_lookups_.find(id);
-  if (pending_iter != pending_lookups_.end()) {
-    pending_iter->second.push_back(action);
-  } else {
-    pending_lookups_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(id),
-      std::forward_as_tuple(ActionListType{action})
-    );
-  }
+  pending_lookups_[id].push_back(action);
 }
 
 template <typename EntityID>
@@ -390,6 +335,24 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
 }
 
 template <typename EntityID>
+void EntityLocationCoord<EntityID>::getLocationRequest(
+  EntityID id, NodeType home_node,
+  Callback<EntityID, NodeType, NodeType> cb
+) {
+  getLocation(id, home_node, [=](NodeType n) mutable {
+    auto props = MsgProps().asLocationMsg();
+    cb.send(props, id, n, home_node);
+  });
+}
+
+template <typename EntityID>
+void EntityLocationCoord<EntityID>::updateLocation(
+  EntityID const& id, NodeType answer, NodeType home_node
+) {
+  updatePendingRequest(id, answer, home_node);
+}
+
+template <typename EntityID>
 void EntityLocationCoord<EntityID>::getLocation(
   EntityID const& id, NodeType const& home_node, NodeActionType const& action
 ) {
@@ -407,38 +370,28 @@ void EntityLocationCoord<EntityID>::getLocation(
     action(this_node);
     return;
   } else {
-    bool const& rec_exists = recs_.exists(id);
+    bool const rec_exists = recs_.exists(id);
 
     vt_debug_print(
       normal, location,
-      "EntityLocationCoord: getLocation: home_node={}, rec_exists={}, "
-      "msg size={}\n",
-      home_node, print_bool(rec_exists), sizeof(LocMsgType)
+      "EntityLocationCoord: getLocation: home_node={}, rec_exists={}\n",
+      home_node, print_bool(rec_exists)
     );
 
     if (not rec_exists) {
       if (home_node != this_node) {
-        auto const& event_id = fst_location_event_id++;
-        auto msg = makeMessage<LocMsgType>(
-          this_inst, id, event_id, this_node, home_node
+        auto cb = theCB()->makeSend<&ThisType::updateLocation>(proxy_[this_node]);
+        proxy_[home_node].template send<&ThisType::getLocationRequest>(
+          MsgProps().asLocationMsg(), id, home_node, cb
         );
-        theMsg()->markAsLocationMessage(msg);
-        theMsg()->sendMsg<&EntityLocationCoord<EntityID>::getLocationHandler>(home_node, msg);
-        // save a pending action when information about location arrives
-        pending_actions_.emplace(
-          std::piecewise_construct,
-          std::forward_as_tuple(event_id),
-          std::forward_as_tuple(PendingType{id, action})
-        );
-      } else {
-        // this is the home node and there is no record on this entity
-        insertPendingEntityAction(id, action);
       }
+
+      pending_lookups_[id].push_back(action);
     } else {
       auto const& rec = recs_.get(id);
 
       if (rec.isLocal()) {
-        vtAssert(0, "Should be registered if this is the case!");
+        vtAssert(false, "Should be registered if this is the case!");
         action(this_node);
       } else if (rec.isRemote()) {
         vt_debug_print(
@@ -493,10 +446,9 @@ void EntityLocationCoord<EntityID>::sendEagerUpdate(
   auto this_node = theContext()->getNode();
   if (ask_node != this_node) {
     vtAssert(ask_node != uninitialized_destination, "Ask node must be valid");
-    auto msg = makeMessage<LocMsgType>(
-      this_inst, id, ask_node, home_node, deliver_node
+    proxy_[ask_node].template send<&ThisType::handleEagerUpdate>(
+      id, home_node, deliver_node
     );
-    theMsg()->sendMsg<&EntityLocationCoord<EntityID>::recvEagerUpdate>(ask_node, msg);
   }
 }
 
@@ -511,9 +463,9 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
   vt_debug_print(
     normal, location,
-    "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: inst={}, "
+    "EntityLocationCoord: routeMsgNode: to_node={}, this_node={}: "
     "home_node={}, id={}, ref={}, from={}, msg={}, epoch={:x}\n",
-    to_node, this_node, this_inst, home_node, id,
+    to_node, this_node, home_node, id,
     envelopeGetRef(msg->env), msg->getLocFromNode(), print_ptr(msg.get()),
     epoch
   );
@@ -531,12 +483,9 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     // Update the new asking node, as this node is will be the next to ask
     msg->setAskNode(this_node);
 
-    // set the instance on the message to deliver to the correct manager
-    msg->setLocInst(this_inst);
-
     auto m = msg; //copy for msg thief
     // send to the node discovered by the location manager
-    theMsg()->sendMsg<MessageT, &EntityLocationCoord<EntityID>::routedHandler>(to_node, m);
+    proxy_[to_node].template sendMsg<&ThisType::routedHandler<MessageT>>(m);
   } else {
     vt_debug_print(
       normal, location,
@@ -693,7 +642,6 @@ void EntityLocationCoord<EntityID>::setupMessageForRouting(
   msg->setEntity(id);
   msg->setHomeNode(home_node);
   msg->setLocFromNode(theContext()->getNode());
-  msg->setLocInst(this_inst);
 }
 
 template <typename EntityID>
@@ -717,9 +665,9 @@ void EntityLocationCoord<EntityID>::routePreparedMsg(
 
   vt_debug_print(
     verbose, location,
-    "routeMsg: inst={}, home={}, msg_size={}, is_large_msg={}, eager={}, "
+    "routeMsg: home={}, msg_size={}, is_large_msg={}, eager={}, "
     "msg={}, from={}, epoch={:x}\n",
-    this_inst, msg->getHomeNode(), msg_size, msg_size > small_msg_max_size, use_eager,
+    msg->getHomeNode(), msg_size, msg_size > small_msg_max_size, use_eager,
     print_ptr(msg.get()), msg->getLocFromNode(),
     epoch
   );
@@ -762,46 +710,21 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::updatePendingRequest(
-  LocEventID const& event_id, EntityID const& id,
-  NodeType const& node, NodeType const& home_node
+  EntityID const& id, NodeType const& node, NodeType const& home_node
 ) {
 
   vt_debug_print(
     normal, location,
-    "EntityLocationCoord: updatePendingRequest: event_id={}, node={}\n",
-    event_id, node
+    "EntityLocationCoord: updatePendingRequest: node={}\n",
+    node
   );
 
-  if (event_id != no_location_event_id) {
-    auto pending_iter = pending_actions_.find(event_id);
+  recs_.insert(id, home_node, LocRecType{id, eLocState::Remote, node});
 
-    vtAssert(
-      pending_iter != pending_actions_.end(), "Event must exist in pending"
-    );
-
-    auto const& entity = pending_iter->second.entity_;
-
-    recs_.insert(entity, home_node, LocRecType{entity, eLocState::Remote, node});
-
-    pending_iter->second.applyNodeAction(node);
-
-    pending_actions_.erase(pending_iter);
-  } else {
-    recs_.insert(id, home_node, LocRecType{id, eLocState::Remote, node});
-
-    // trigger any pending actions upon registration
-    auto pending_lookup_iter = pending_lookups_.find(id);
-
-    vt_debug_print(
-      normal, location,
-      "EntityLocationCoord: updatePendingRequest: node={}\n", node
-    );
-
-    if (pending_lookup_iter != pending_lookups_.end()) {
-      for (auto&& pending_action : pending_lookup_iter->second) {
-        pending_action(node);
-      }
-      pending_lookups_.erase(pending_lookup_iter);
+  // trigger any pending actions upon registration
+  if (auto lookups = pending_lookups_.extract(id); lookups) {
+    for (auto&& action : lookups.mapped()) {
+      action(node);
     }
   }
 }
@@ -812,20 +735,14 @@ void EntityLocationCoord<EntityID>::printCurrentCache() const {
 }
 
 template <typename EntityID>
-LocInstType EntityLocationCoord<EntityID>::getInst() const {
-  return this_inst;
-}
-
-template <typename EntityID>
 template <typename MessageT>
-/*static*/ void EntityLocationCoord<EntityID>::routedHandler(MessageT *raw_msg) {
+void EntityLocationCoord<EntityID>::routedHandler(MessageT *raw_msg) {
   // Message may be re-routed (and sent) again from subsequent routeMsg.
   envelopeUnlockForForwarding(raw_msg->env);
 
   auto msg = promoteMsg(raw_msg);
   auto const entity_id = msg->getEntity();
   auto const home_node = msg->getHomeNode();
-  auto const inst = msg->getLocInst();
   auto const from_node = msg->getLocFromNode();
   auto const epoch = theMsg()->getEpochContextMsg(msg);
 
@@ -833,130 +750,13 @@ template <typename MessageT>
 
   vt_debug_print(
     verbose, location,
-    "routedHandler: msg={}, ref={}, loc_inst={}, id={}, from={}, "
+    "routedHandler: msg={}, ref={}, id={}, from={}, "
     "epoch={:x}, hops={}, ask={}\n",
-    print_ptr(msg.get()), envelopeGetRef(msg->env), inst, entity_id,
+    print_ptr(msg.get()), envelopeGetRef(msg->env), entity_id,
     from_node, epoch, msg->getHops(), msg->getAskNode()
   );
 
-  theTerm()->produce(epoch);
-  LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
-    inst, [=](EntityLocationCoord<EntityID>* loc) {
-      theMsg()->pushEpoch(epoch);
-      loc->routeMsg(entity_id, home_node, msg, from_node);
-      theMsg()->popEpoch(epoch);
-      theTerm()->consume(epoch);
-    }
-  );
-}
-
-template <typename EntityID>
-/*static*/ void EntityLocationCoord<EntityID>::getLocationHandler(
-  LocMsgType* raw_msg
-) {
-  auto msg = promoteMsg(raw_msg);
-  auto const& event_id = msg->loc_event;
-  auto const& inst = msg->loc_man_inst;
-  auto const& entity = msg->entity;
-  auto const& home_node = msg->home_node;
-  auto const& ask_node = msg->ask_node;
-  auto const epoch = theMsg()->getEpochContextMsg(msg);
-
-  vt_debug_print(
-    normal, location,
-    "getLocationHandler: event_id={}, home={}, ask={}, epoch={:x}\n",
-    event_id, home_node, ask_node, epoch
-  );
-
-  theTerm()->produce(epoch);
-  LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
-    inst, [=](EntityLocationCoord<EntityID>* loc) {
-      theMsg()->pushEpoch(epoch);
-
-      vt_debug_print(
-        verbose, location,
-        "getLocationHandler: calling getLocation event_id={}, epoch={:x}\n",
-        event_id, epoch
-      );
-
-      loc->getLocation(entity, home_node, [=](NodeType node) {
-        vt_debug_print(
-          verbose, location,
-          "getLocation: (action) event_id={}, epoch={:x}\n",
-          event_id, epoch
-        );
-
-        auto msg2 = makeMessage<LocMsgType>(
-          inst, entity, event_id, ask_node, home_node
-        );
-        msg2->setResolvedNode(node);
-        theMsg()->markAsLocationMessage(msg2);
-        theMsg()->sendMsg<&EntityLocationCoord<EntityID>::updateLocation>(ask_node, msg2);
-      });
-      theMsg()->popEpoch(epoch);
-      theTerm()->consume(epoch);
-    }
-  );
-}
-
-template <typename EntityID>
-/*static*/ void EntityLocationCoord<EntityID>::updateLocation(
-  LocMsgType *raw_msg
-) {
-  auto msg = promoteMsg(raw_msg);
-  auto const& event_id = msg->loc_event;
-  auto const& inst = msg->loc_man_inst;
-  auto const& entity = msg->entity;
-  auto const epoch = theMsg()->getEpochContextMsg(msg);
-
-  vt_debug_print(
-    verbose, location,
-    "updateLocation: event_id={}, resolved={}, id={}, epoch={:x}\n",
-    event_id, msg->resolved_node, entity, epoch
-  );
-
-  theTerm()->produce(epoch);
-  LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
-    inst, [=](EntityLocationCoord<EntityID>* loc) {
-      theMsg()->pushEpoch(epoch);
-      vt_debug_print(
-        verbose, location,
-        "updateLocation: event_id={}, running pending: resolved={}, id={}\n",
-        event_id, msg->resolved_node, entity
-      );
-      loc->updatePendingRequest(
-        event_id, entity, msg->resolved_node, msg->home_node
-      );
-      theMsg()->popEpoch(epoch);
-      theTerm()->consume(epoch);
-    }
-  );
-}
-
-template <typename EntityID>
-/*static*/ void EntityLocationCoord<EntityID>::recvEagerUpdate(
-  LocMsgType *raw_msg
-) {
-  auto msg = promoteMsg(raw_msg);
-  auto const& inst = msg->loc_man_inst;
-  auto const& entity = msg->entity;
-  auto const epoch = theMsg()->getEpochContextMsg(msg);
-
-  vt_debug_print(
-    verbose, location,
-    "recvEagerUpdate: resolved={}, id={}, epoch={:x}\n",
-    msg->resolved_node, entity, epoch
-  );
-
-  theTerm()->produce(epoch);
-  LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
-    inst, [=](EntityLocationCoord<EntityID>* loc) {
-      theMsg()->pushEpoch(epoch);
-      loc->handleEagerUpdate(entity, msg->home_node, msg->resolved_node);
-      theMsg()->popEpoch(epoch);
-      theTerm()->consume(epoch);
-    }
-  );
+  routeMsg(entity_id, home_node, msg, from_node);
 }
 
 }}  // end namespace vt::location

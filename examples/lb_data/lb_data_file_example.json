@@ -23,7 +23,7 @@
     {
       "communications": [
         {
-          "bytes": 160.0,
+          "bytes": 152.0,
           "from": {
             "collection_id": 7,
             "home": 0,
@@ -66,27 +66,10 @@
           "subphases": [
             {
               "id": 0,
-              "time": 0.00031375000025946065
+              "time": 0.0004248750001352164
             }
           ],
-          "time": 0.00031375000025946065
-        },
-        {
-          "entity": {
-            "home": 0,
-            "id": 1,
-            "migratable": false,
-            "type": "object"
-          },
-          "node": 0,
-          "resource": "cpu",
-          "subphases": [
-            {
-              "id": 0,
-              "time": 1.1669999366858974e-06
-            }
-          ],
-          "time": 1.1669999366858974e-06
+          "time": 0.0004248750001352164
         },
         {
           "entity": {
@@ -118,6 +101,59 @@
             "id": 5242892,
             "migratable": false,
             "objgroup_id": 1310723,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "time": 0.0
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 1,
+            "migratable": false,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "subphases": [
+            {
+              "id": 0,
+              "time": 1.041999894368928e-06
+            }
+          ],
+          "time": 1.041999894368928e-06
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 6291468,
+            "migratable": false,
+            "objgroup_id": 1572867,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "time": 0.0
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 7340044,
+            "migratable": false,
+            "objgroup_id": 1835011,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "time": 0.0
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 8388620,
+            "migratable": false,
+            "objgroup_id": 2097155,
             "type": "object"
           },
           "node": 0,
