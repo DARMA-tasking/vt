@@ -130,11 +130,11 @@ VT_FMT_NAMESPACE_BEGIN
 
 template <>
 struct formatter<::vt::vrt::collection::lb::DataDistStrategy>
-  : formatter<std::string_view> {
+  : formatter<std::string> {
   template <typename FormatContext>
   auto
   format(::vt::vrt::collection::lb::DataDistStrategy c, FormatContext& ctx) {
-    std::string_view name = "Unknown";
+    std::string name = "Unknown";
     switch (c) {
     case ::vt::vrt::collection::lb::DataDistStrategy::scatter:
       name = "scatter";
@@ -152,7 +152,7 @@ struct formatter<::vt::vrt::collection::lb::DataDistStrategy>
           std::underlying_type_t<::vt::vrt::collection::lb::DataDistStrategy>>(
           c));
     }
-    return formatter<string_view>::format(name, ctx);
+    return formatter<std::string>::format(name, ctx);
   }
 };
 
