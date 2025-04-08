@@ -64,7 +64,7 @@ struct CallbackBaseTL {
 
   void triggerVoid(PipeType const& pipe) {
     auto cb = static_cast<CallbackT&>(*this);
-    return cb.template triggerVoid(pipe);
+    return cb.triggerVoid(pipe);
   }
 };
 
