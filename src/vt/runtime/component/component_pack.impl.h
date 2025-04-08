@@ -54,7 +54,7 @@ template <typename T, typename Tuple, size_t... I>
 std::unique_ptr<T> tupleConsImpl(
   Tuple&& tup, [[maybe_unused]] std::index_sequence<I...> seq
 ) {
-  return T::template staticInit(std::get<I>(std::forward<Tuple>(tup))...);
+  return T::staticInit(std::get<I>(std::forward<Tuple>(tup))...);
 }
 
 template <typename T, typename Tuple>
