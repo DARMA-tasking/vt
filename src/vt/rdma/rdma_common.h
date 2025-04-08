@@ -125,7 +125,7 @@ struct formatter<::vt::rdma::Type> {
 
   template <typename FormatContext>
   auto format(::vt::rdma::Type t, FormatContext& ctx) const {
-    std::string_view name = "Unknown";
+    std::string name = "Unknown";
     switch (t) {
     case ::vt::rdma::Type::Get:
       name = "Get";
