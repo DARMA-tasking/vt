@@ -47,6 +47,8 @@
 #include "vt/termination/interval/strong_integral_set.h"
 #include "vt/utils/adt/ranged_counter.h"
 
+#include <memory>
+
 namespace vt { namespace epoch {
 
 /**

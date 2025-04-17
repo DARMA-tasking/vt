@@ -99,42 +99,15 @@ struct NodeInfo {
 using ClusterSummaryType = std::unordered_map<SharedIDType, ClusterInfo>;
 using RankSummaryType = std::tuple<BytesType, ClusterSummaryType>;
 
+inline auto format_as(ClusterInfo const& e) {
+  auto fmt_str = "(load={},bytes={},intra=({},{})),home={},edge={}";
+  return fmt::format(
+    fmt_str, e.load, e.bytes, e.intra_send_vol, e.intra_recv_vol,
+    e.home_node, e.edge_weight
+  );
+}
+
 } /* end namespace vt::vrt::collection::lb */
-
-VT_FMT_NAMESPACE_BEGIN
-
-/// Custom fmt formatter/print for \c vt::vrt::collection::lb::ClusterInfo
-template <>
-struct formatter<::vt::vrt::collection::lb::ClusterInfo> {
-  /// Parses format specifications of the form ['x' | 'd' | 'b'].
-  auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-    // Parse the presentation format and store it in the formatter:
-    auto it = ctx.begin(), end = ctx.end();
-
-    // Check if reached the end of the range:
-    if (it != end && *it != '}') {
-      throw format_error("invalid format");
-    }
-
-    // Return an iterator past the end of the parsed range:
-    return it;
-  }
-
-  /// Formats the epoch using the parsed format specification (presentation)
-  /// stored in this formatter.
-  template <typename FormatContext>
-  auto format(
-    ::vt::vrt::collection::lb::ClusterInfo const& e, FormatContext& ctx
-  ) {
-    auto fmt_str = "(load={},bytes={},intra=({},{})),home={},edge={}";
-    return format_to(
-      ctx.out(), fmt_str, e.load, e.bytes, e.intra_send_vol, e.intra_recv_vol,
-      e.home_node, e.edge_weight
-    );
-  }
-};
-
-VT_FMT_NAMESPACE_END
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 

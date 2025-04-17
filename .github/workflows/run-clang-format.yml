@@ -13,11 +13,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Run clang-format
         run: |
-          {
-            echo 'CLANG_FORMAT_DIFF<<EOF'
-            git clang-format-16 --diff origin/${{ github.base_ref }} || true
-            echo EOF
-          } >> "$GITHUB_ENV"
+          git clang-format-16 --diff origin/${{ github.base_ref }} > clang-format.diff || true
       - uses: actions/github-script@v7
         with:
           script: |
@@ -40,8 +36,15 @@ jobs:
               }
             }
 
-            const { CLANG_FORMAT_DIFF } = process.env
-            const commentBody = '`clang-format` output for this changeset:\n```diff\n' + CLANG_FORMAT_DIFF + '\n```'
+            const fs = require("fs")
+            var output = fs.readFileSync("clang-format.diff", "utf8")
+            // make sure not to exceed maximum length of the comment
+            output = (output.length > 65000) ?
+              output.substring(0, 65000) + '\n(...)' : output
+            const commentBody =
+              '`clang-format` output for this changeset:\n```diff\n' +
+              output + '\n```'
+
             if (commentId === -1) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
