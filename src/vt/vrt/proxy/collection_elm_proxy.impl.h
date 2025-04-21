@@ -58,7 +58,8 @@ void VrtElmProxy<ColT, IndexT>::serialize(SerT& s) {
   //Only serialize the ColT object if checkpointing.
   if constexpr(checkpoint::has_user_traits_v<SerT, CheckpointTrait>){
     ColT* local_elm_ptr = this->tryGetLocalPtr();
-    vtAssert(local_elm_ptr != nullptr || s.isUnpacking(), "Must serialize/size elements from the node they are at");
+    vtAssert(local_elm_ptr != nullptr || s.isUnpacking(),
+        "Must serialize/size elements from the node they are at");
     
     //Traits for nested serialize/deserialize
     using checkpoint::serializerUserTraits::CopyTraits;
@@ -67,14 +68,19 @@ void VrtElmProxy<ColT, IndexT>::serialize(SerT& s) {
                                 ::template With<CheckpointInternalTrait>
     >;
     
-    //Weird nested serialization to enable asynchronous deserializing w/o changing semantics.
+    //Weird nested serialization to enable asynchronous deserializing w/o
+    //changing semantics.
     if(!(s.isPacking() || s.isUnpacking())){
-      int size = checkpoint::getSize<ColT, CheckpointlessTraits>(*local_elm_ptr);
+      int size = checkpoint::getSize<ColT, CheckpointlessTraits>(
+        *local_elm_ptr
+      );
       s | size;
       //Don't use nullptr to avoid warning
       s.contiguousBytes(&size, 1, size);
     } else if(s.isPacking()){
-      auto serialized_elm = checkpoint::serialize<ColT, CheckpointlessTraits>(*local_elm_ptr);
+      auto serialized_elm = checkpoint::serialize<ColT, CheckpointlessTraits>(
+        *local_elm_ptr
+      );
       int size = serialized_elm->getSize();
       s | size;
       s.contiguousBytes(serialized_elm->getBuffer(), 1, size);
@@ -82,20 +88,45 @@ void VrtElmProxy<ColT, IndexT>::serialize(SerT& s) {
       int size = 0;
       s | size;
 
-      auto buf = std::make_unique<char[]>(size);
-      s.contiguousBytes(buf.get(), 1, size);
+      auto buf = std::make_shared<std::vector<char>>(size);
+      s.contiguousBytes(buf->data(), 1, size);
       
       if(local_elm_ptr != nullptr){
-        checkpoint::deserializeInPlace<ColT, CheckpointlessTraits>(buf.get(), local_elm_ptr);
+        checkpoint::deserializeInPlace<ColT, CheckpointlessTraits>(
+          buf->data(), local_elm_ptr
+        );
       } else {
-        //The element is somewhere else so we'll need to request a migration to here.
-        auto ep = theCollection()->requestMigrateDeferred(*this, theContext()->getNode());
+        //TODO: Investigate skipping the actual full migration and instead
+        //  simply deleting remote node's copy, building a fresh one here,
+        //  and updating system as if migration happened. Would probably be
+        //  noticeably faster on large systems and w/ large elements.
+        CollectionProxy<ColT, IndexT> col(this->getCollectionProxy());
+        std::shared_ptr<int> listener_id = std::make_shared<int>(-1);
 
-        theTerm()->addActionUnique(ep, std::move([elm_proxy = *this, buffer = std::move(buf)]{
-          auto elm_ptr = elm_proxy.tryGetLocalPtr();
-          assert(elm_ptr != nullptr);
-          checkpoint::deserializeInPlace<ColT, CheckpointlessTraits>(buffer.get(), elm_ptr);
-        }));
+        //Listen for this element to migrate in,
+        //then immediately deserialize
+        using listener::ElementEventEnum;
+        listener::ListenFnType<IndexT> m_listener =
+          [*this, buf, listener_id]
+          (ElementEventEnum event, IndexT idx, NodeType) mutable {
+            if(!(idx == getIndex())) return;
+            if(event != ElementEventEnum::ElementMigratedIn) return;
+
+            auto elm_ptr = this->tryGetLocalPtr();
+            checkpoint::deserializeInPlace<ColT, CheckpointlessTraits>(
+              buf->data(), elm_ptr
+            );
+            theCollection()->unregisterElementListener<ColT>(
+                this->getCollectionProxy(), *listener_id
+            );
+          };
+        *listener_id = theCollection()->registerElementListener<ColT>(
+          this->getCollectionProxy(), m_listener
+        );
+
+        theCollection()->migrateToRestoreLocation(
+          theContext()->getNode(), getIndex(), col
+        );
       }
     }
   }
@@ -103,7 +134,7 @@ void VrtElmProxy<ColT, IndexT>::serialize(SerT& s) {
 
 template <typename ColT, typename IndexT>
 template <typename SerT>
-std::unique_ptr<ColT> 
+std::unique_ptr<ColT>
 VrtElmProxy<ColT, IndexT>::deserializeToElm(SerT& s) {
   //Still have to hit data in the same order.
   ProxyCollectionElmTraits<ColT, IndexT>::serialize(s);

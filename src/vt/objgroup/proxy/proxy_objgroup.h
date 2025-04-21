@@ -460,8 +460,10 @@ public:
 
     if constexpr(has_user_traits_v<Serializer, CheckpointTrait>){
       vtAssert(old_proxy != no_obj_group, "ObjGroups must be pre-instantiated to be checkpointed or restored");
-      vtAssert(old_proxy == proxy_, "The proxy ID bits of this ObjGroup do not match the ID found in the checkpoint!" \
-                                    " Varying IDs is not yet supported.");
+      vtWarnIf(old_proxy != proxy_,
+               "Checkpointed ObjGroup and deserialize target do not match!");
+      proxy_ = old_proxy;
+
       auto objPtr = get();
 
       bool null = objPtr == nullptr;

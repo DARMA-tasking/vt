@@ -2249,39 +2249,27 @@ void CollectionManager::checkpointToFile(
 
 namespace detail {
 template <typename ColT>
-inline void MigrateRequestHandler (
-  ColT*, VrtElmProxy<ColT, typename ColT::IndexType> proxy_elm, NodeType dest
+inline void restoreOffHomeElement(
+  ColT*, NodeType node, typename ColT::IndexType idx,
+  CollectionProxy<ColT> proxy
 ) {
-  theCollection()->migrate(proxy_elm, dest);
+  theCollection()->migrate(proxy(idx), node);
 }
 } /* end namespace detail */
 
 template <typename ColT>
-EpochType CollectionManager::requestMigrateDeferred(
-  VrtElmProxy<ColT, typename ColT::IndexType> proxy_elm, NodeType destination
+/*static*/ void CollectionManager::migrateToRestoreLocation(
+  NodeType node, typename ColT::IndexType idx,
+  CollectionProxyWrapType<ColT> proxy
 ) {
-  auto ep = theTerm()->makeEpochRooted(
-      "Request element migration", term::UseDS{true}
-  );
-  theMsg()->pushEpoch(ep);
-
-  proxy_elm.template send<detail::MigrateRequestHandler<ColT>>(
-      proxy_elm, destination
-  );
-
-  theMsg()->popEpoch(ep);
-  theTerm()->finishedEpoch(ep);
-  return ep;
+  if (proxy(idx).tryGetLocalPtr() != nullptr) {
+    theCollection()->migrate(proxy(idx), node);
+  } else {
+    proxy(idx).template send<detail::restoreOffHomeElement<ColT>>(
+      node, idx, proxy
+    );
+  }
 }
-
-template <typename ColT>
-void CollectionManager::requestMigrate(
-  VrtElmProxy<ColT, typename ColT::IndexType> proxy_elem, NodeType destination
-) {
-   auto ep = requestMigrateDeferred(proxy_elem, destination);
-   vt::runSchedulerThrough(ep);
-}
-
 
 template <typename ColT>
 void CollectionManager::restoreFromFileInPlace(
@@ -2309,14 +2297,23 @@ void CollectionManager::restoreFromFileInPlace(
     metadata_file_name
   );
 
-  //Everyone shuffles any elements not where their data is
   runInEpochCollective([&]{
     for (auto&& elm : directory->elements_) {
       auto idx = elm.idx_;
       auto file_name = elm.file_name_;
 
       if (proxy(idx).tryGetLocalPtr() == nullptr) {
-        requestMigrateDeferred(proxy(idx), theContext()->getNode());
+        auto mapped_node = getMappedNode<ColT>(proxy, idx);
+        vtAssertExpr(mapped_node != uninitialized_destination);
+        auto this_node = theContext()->getNode();
+
+        if (mapped_node != this_node) {
+          theMsg()->send<migrateToRestoreLocation<ColT>>(
+            vt::Node{mapped_node}, this_node, idx, proxy
+          );
+        } else {
+          migrateToRestoreLocation<ColT>(this_node, idx, proxy);
+        }
       }
     }
   });

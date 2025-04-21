@@ -45,6 +45,7 @@
 #define INCLUDED_VT_VRT_PROXY_COLLECTION_PROXY_IMPL_H
 
 #include "vt/config.h"
+#include "vt/configs/error/soft_error.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/vrt/proxy/base_elm_proxy.h"
 #include "vt/vrt/collection/proxy_traits/proxy_col_traits.h"
@@ -152,12 +153,9 @@ void CollectionProxy<ColT, IndexT>::serialize(
   //TODO: magistrate's virtualized serialization support may enable checkpointing
   //mapper objects. Pre-registered functions could be doable as well.
 
-  //TODO: chkpt location manager so we don't have to message back and forth so much?
-  //auto lm = theLocMan()->getCollectionLM<IndexType>(proxy.getProxy());
-
   //If unpacking, we may need to make the collection to unpack into.
   if(s.isUnpacking() && oldProxy != proxy){
-    vtAssert(oldProxy == no_vrt_proxy,
+    vtWarnIf(oldProxy != no_vrt_proxy,
              "Checkpointed proxy and deserialize target do not match!");
 
     //The checkpointed proxy doesn't exist, we need to create it

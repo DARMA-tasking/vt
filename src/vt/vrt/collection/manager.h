@@ -352,7 +352,7 @@ struct CollectionManager
    * \param[in] is_collective whether the collection is collective
    * \param[in] is_migratable whether the collection is migratable
    * \param[in] request_match an input proxy which we would like to use, if
-   *            there are no existing conflicts. no_vrt_proxy indicates no 
+   *            there are no existing conflicts. no_vrt_proxy indicates no
    *            request.
    *
    * \return the collection proxy bits
@@ -1562,7 +1562,7 @@ public:
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   bool getDynamicMembership(VirtualProxyType proxy);
-  
+
   /**
    * \brief Get the local indices that are currently on this node
    *
@@ -1635,28 +1635,16 @@ public:
   );
 
   /**
-   * \internal \struct MigrateRequestMsg
+   * \internal \brief Migrate element to restore location from checkpoint
    *
-   * \brief Migrate local element, potentially requested by remote location
-   */
-
-  /**
-   * \brief Migrate a remote proxy element to a node, by messaging that
-   *        node to initiate a migration. Immediately returns a rooted epoch
-   *        containing the request message.
+   * \param[in] node the node
+   * \param[in] idx the element index
+   * \param[in] proxy the collection proxy
    */
   template <typename ColT>
-  EpochType requestMigrateDeferred(
-    VrtElmProxy<ColT, typename ColT::IndexType> proxy_elem, NodeType destination
-  );
-
-  /**
-   * \brief Migrate a remote proxy element to a node, by messaging that
-   *        node to initiate a migration. Returns after migration is complete.
-   */
-  template <typename ColT>
-  void requestMigrate(
-    VrtElmProxy<ColT, typename ColT::IndexType> proxy_elem, NodeType destination
+  static void migrateToRestoreLocation(
+    NodeType node, typename ColT::IndexType idx,
+    CollectionProxyWrapType<ColT> proxy
   );
 
   /**
