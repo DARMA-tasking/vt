@@ -30,7 +30,7 @@ if(${vt_external_fmt})
   else()
     message(STATUS "vt_external_fmt = ON but neither fmt_DIR nor fmt_ROOT is provided!")
   endif()
-  find_package(fmt 7.1.0 REQUIRED)
+  find_package(fmt 11.1.3 REQUIRED)
 
 else()
   set(FMT_LIBRARY fmt)
