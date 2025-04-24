@@ -45,6 +45,7 @@
 #include <vt/vrt/collection/balance/model/per_collection.h>
 
 #include <cstdlib>
+#include <random>
 
 int32_t N = 10;
 double slot_percent = 0.2;
@@ -177,6 +178,42 @@ struct MatrixBlock : vt::Collection<MatrixBlock, vt::Index2D> {
   void setTimeForLB() {
     std::vector<vt::LoadType> vec;
     getLBData().setTime(getWork(region), vec);
+  }
+
+  void communicate() {
+    std::mt19937 gen(vt::theContext()->getNode());
+    std::uniform_int_distribution<> distrib(0, 4);
+    int num_comm_links = distrib(gen);
+    auto this_index = getIndex();
+    auto proxy = getCollectionProxy();
+    std::vector<vt::Index2D> neighbors;
+    auto xp = (this_index.x()+1) % N;
+    auto yp = (this_index.y()+1) % N;
+    auto xm = (this_index.x()-1) < 0 ? N-1 : this_index.x()-1;
+    auto ym = (this_index.y()-1) < 0 ? N-1 : this_index.y()-1;
+
+    neighbors.emplace_back(xp, this_index.y());
+    neighbors.emplace_back(this_index.x(), yp);
+    neighbors.emplace_back(xm, this_index.y());
+    neighbors.emplace_back(this_index.x(), ym);
+    neighbors.emplace_back(xp, yp);
+    neighbors.emplace_back(xp, ym);
+    neighbors.emplace_back(xm, yp);
+    neighbors.emplace_back(xm, ym);
+    // fmt::print("{} sending {} messages\n", this_index, num_comm_links);
+    for (int c = 0; c < num_comm_links; c++) {
+      if (getRegion(neighbors[c]) !=  MatrixRegionEnum::ZEROS) {
+	proxy[neighbors[c]].template send<&MatrixBlock::incomingMessage>(std::array<int, 64>{});
+      }
+    }
+  }
+
+  void incomingMessage(std::array<int, 64> arr) {
+    // fmt::print("message arriving\n");
+  }
+
+  void checkComm() {
+    // fmt::print("size of comm={}\n", getLBData().getComm(getLBData().getPhase()).size());
   }
 
   void setUserDefined() {
@@ -314,9 +351,15 @@ int main(int argc, char** argv) {
     vt_print(gen, "Starting setRegion and set time\n");
   }
 
-  matrix.broadcastCollective<&MatrixBlock::setRegion>();
-  matrix.broadcastCollective<&MatrixBlock::setTimeForLB>();
-  matrix.broadcastCollective<&MatrixBlock::setUserDefined>();
+  vt::runInEpochCollective("setupLB", [&]{
+    matrix.broadcastCollective<&MatrixBlock::setRegion>();
+    matrix.broadcastCollective<&MatrixBlock::setTimeForLB>();
+    matrix.broadcastCollective<&MatrixBlock::setUserDefined>();
+    if (this_node == 0) {
+      matrix.broadcast<&MatrixBlock::communicate>();
+    }
+  });
+  matrix.broadcastCollective<&MatrixBlock::checkComm>();
 
   vt::thePhase()->nextPhaseCollective();
 

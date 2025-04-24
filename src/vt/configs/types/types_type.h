@@ -76,7 +76,7 @@ using BarrierType             = uint64_t;
 /// Used to identify a collective operation
 using CollectiveAlgType       = uint64_t;
 /// Used to hold the reference count for messages
-using RefType                 = uint16_t;
+using RefType                 = uint32_t;
 /// Used to hold the reference count for messages in pipes
 using PipeRefType             = int16_t;
 /// Used to store some number of bytes

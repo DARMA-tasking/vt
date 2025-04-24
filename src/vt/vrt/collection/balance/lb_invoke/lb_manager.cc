@@ -205,7 +205,7 @@ void LBManager::defaultPostLBWork(ReassignmentMsg* msg) {
   }
 
   auto const start_time = timing::getCurrentTime();
-  applyReassignment(reassignment);
+  //applyReassignment(reassignment);
   if (theContext()->getNode() == 0) {
     auto const mig_time = timing::getCurrentTime() - start_time;
     vt_debug_print(

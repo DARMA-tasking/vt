@@ -12,6 +12,7 @@ set(
   transpose
   4d_collection
   matrix
+  matrix-comm
 )
 if (vt_perf_enabled AND vt_perf_found)
   list(APPEND COLLECTION_EXAMPLES do_flops_perf)
