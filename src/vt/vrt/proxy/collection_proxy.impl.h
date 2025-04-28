@@ -109,9 +109,7 @@ CollectionProxy<ColT, IndexT>::setFocusedSubPhase(SubphaseType subphase) {
 
 template <typename ColT, typename IndexT>
 template <typename SerializerT>
-void CollectionProxy<ColT, IndexT>::serialize(
-    SerializerT& s
-){
+void CollectionProxy<ColT, IndexT>::serialize(SerializerT& s) {
   //Save the proxy info we had before, to detect when
   //we need to create the proxy while unpacking a checkpoint.
   VirtualProxyType oldProxy = this->getProxy();
@@ -119,35 +117,41 @@ void CollectionProxy<ColT, IndexT>::serialize(
   ProxyCollectionTraits<ColT, IndexT>::serialize(s);
 
   //If not a checkpoint, we only serialize our reference info.
-  if constexpr(!checkpoint::has_user_traits_v<SerializerT, CheckpointTrait>) {
+  if constexpr (!checkpoint::has_user_traits_v<SerializerT, CheckpointTrait>) {
     return;
   }
 
-  vtAssert(oldProxy != no_vrt_proxy || !s.isPacking(),
-           "Proxy must be instantiated to checkpoint");
+  vtAssert(
+    oldProxy != no_vrt_proxy || !s.isPacking(),
+    "Proxy must be instantiated to checkpoint"
+  );
   VirtualProxyType proxy = this->getProxy();
 
   std::string label;
-  if(!s.isUnpacking()) label = vt::theCollection()->getLabel(proxy);
+  if (!s.isUnpacking())
+    label = vt::theCollection()->getLabel(proxy);
   s | label;
 
-  if(s.isUnpacking() && oldProxy == proxy) {
-    vtAssert(label == vt::theCollection()->getLabel(proxy),
-             "Checkpointed proxy and deserialize target labels do not match!");
+  if (s.isUnpacking() && oldProxy == proxy) {
+    vtAssert(
+      label == vt::theCollection()->getLabel(proxy),
+      "Checkpointed proxy and deserialize target labels do not match!"
+    );
   }
 
-
   std::set<IndexT> localElmSet;
-  if(!s.isUnpacking()) localElmSet = vt::theCollection()->getLocalIndices(*this);
+  if (!s.isUnpacking())
+    localElmSet = vt::theCollection()->getLocalIndices(*this);
   s | localElmSet;
 
   IndexT bounds;
-  if(!s.isUnpacking()) bounds = vt::theCollection()->getRange<ColT>(proxy);
+  if (!s.isUnpacking())
+    bounds = vt::theCollection()->getRange<ColT>(proxy);
   s | bounds;
 
   //Avoid warnings on old compilers by initializing
   bool isDynamic = false;
-  if(!s.isUnpacking())
+  if (!s.isUnpacking())
     isDynamic = vt::theCollection()->getDynamicMembership<ColT>(proxy);
   s | isDynamic;
 
@@ -155,17 +159,20 @@ void CollectionProxy<ColT, IndexT>::serialize(
   //mapper objects. Pre-registered functions could be doable as well.
 
   //If unpacking, we may need to make the collection to unpack into.
-  if(s.isUnpacking() && oldProxy != proxy){
-    vtWarnIf(oldProxy != no_vrt_proxy,
-             "Checkpointed proxy and deserialize target do not match!");
+  if (s.isUnpacking() && oldProxy != proxy) {
+    vtWarnIf(
+      oldProxy != no_vrt_proxy,
+      "Checkpointed proxy and deserialize target do not match!"
+    );
 
     //The checkpointed proxy doesn't exist, we need to create it
     //First get all of the element unique_ptrs to hand off to the constructor
     std::vector<std::tuple<IndexT, std::unique_ptr<ColT>>> localElms;
-    for(auto& idx : localElmSet){
+    for (auto& idx : localElmSet) {
       //Tell elements not to try verifying placement/migrating.
-      localElms.emplace_back(std::make_tuple(idx,
-                          std::move(ElmProxyType().deserializeToElm(s))));
+      localElms.emplace_back(
+        std::make_tuple(idx, std::move(ElmProxyType().deserializeToElm(s)))
+      );
     }
 
     vt::makeCollection<ColT>(label)
@@ -173,14 +180,17 @@ void CollectionProxy<ColT, IndexT>::serialize(
       .dynamicMembership(isDynamic)
       .proxyBits(proxy)
       .listInsertHere(std::move(localElms))
-      .deferWithEpoch([=](CollectionProxy<ColT, IndexT> assigned_proxy){
-            vtAssert(assigned_proxy.getProxy() == proxy, "Proxy must be assigned as expected (for now)");
+      .deferWithEpoch([=](CollectionProxy<ColT, IndexT> assigned_proxy) {
+        vtAssert(
+          assigned_proxy.getProxy() == proxy,
+          "Proxy must be assigned as expected (for now)"
+        );
       });
   } else {
     //We're serializing or in-place deserializing
     //Serialize each element itself, the elements will handle
     //requesting migrations as needed.
-    for(auto& elm_idx : localElmSet){
+    for (auto& elm_idx : localElmSet) {
       auto elm = (*this)(elm_idx);
       s | elm;
     }

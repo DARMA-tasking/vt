@@ -347,7 +347,8 @@ typename ObjGroupManager::ProxyElmType<ObjT> ObjGroupManager::proxyElm(ObjT* obj
 }
 
 template <typename ObjT>
-typename ObjGroupManager::ProxyType<ObjT> ObjGroupManager::proxyGroup(ProxyElmType<ObjT> proxy_elm) {
+typename ObjGroupManager::ProxyType<ObjT>
+ObjGroupManager::proxyGroup(ProxyElmType<ObjT> proxy_elm) {
   return ProxyType<ObjT>(proxy_elm.getProxy());
 }
 

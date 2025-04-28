@@ -462,7 +462,6 @@ TEST_F(TestCheckpoint, test_checkpoint_no_elements_on_root_rank) {
 
 }
 
-
 TEST_F(TestCheckpoint, test_checkpoint_trait_1) {
   using namespace magistrate;
   using vt::vrt::CheckpointTrait;
@@ -477,24 +476,22 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_1) {
   std::string const expected_label{"test_checkpoint_trait_1"};
 
   {
-    auto proxy = vt::theCollection()->constructCollective<TestCol>(
-      range, expected_label
-    );
+    auto proxy =
+      vt::theCollection()->constructCollective<TestCol>(range, expected_label);
 
-    vt::runInEpochCollective([&]{
+    vt::runInEpochCollective([&] {
       if (this_node == 0) {
-        proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
+        proxy.broadcast<TestCol::NullMsg, &TestCol::init>();
       }
     });
 
     for (int i = 0; i < 5; i++) {
-      vt::runInEpochCollective([&]{
+      vt::runInEpochCollective([&] {
         if (this_node == 0) {
-          proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
+          proxy.broadcast<TestCol::NullMsg, &TestCol::doIter>();
         }
       });
     }
-
 
     checkpoint = serialize<ProxyType, CheckpointTrait>(proxy);
 
@@ -502,16 +499,16 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_1) {
     vt::theCollective()->barrier();
 
     // Null the token to ensure we don't end up getting the same instance
-    vt::runInEpochCollective([&]{
+    vt::runInEpochCollective([&] {
       if (this_node == 0) {
-        proxy.broadcast<TestCol::NullMsg,&TestCol::nullToken>();
+        proxy.broadcast<TestCol::NullMsg, &TestCol::nullToken>();
       }
     });
 
     vt::thePhase()->nextPhaseCollective();
 
     // Destroy the collection
-    vt::runInEpochCollective([&]{
+    vt::runInEpochCollective([&] {
       if (this_node == 0) {
         proxy.destroy();
       }
@@ -521,9 +518,8 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_1) {
   }
 
   {
-    auto proxy = *deserialize<ProxyType, CheckpointTrait>(
-        checkpoint->getBuffer()
-    );
+    auto proxy =
+      *deserialize<ProxyType, CheckpointTrait>(checkpoint->getBuffer());
 
     // Restoration should be done now
     vt::theCollective()->barrier();
@@ -537,7 +533,7 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_1) {
       }
     });
 
-    runInEpochCollective([&]{
+    runInEpochCollective([&] {
       if (this_node == 0) {
         proxy.destroy();
       }
@@ -564,16 +560,16 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_in_place_2) {
   theConfig()->vt_lb = true;
   theConfig()->vt_lb_name = "TemperedLB";
 
-  vt::runInEpochCollective([&]{
+  vt::runInEpochCollective([&] {
     if (this_node == 0) {
-      proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
+      proxy.broadcast<TestCol::NullMsg, &TestCol::init>();
     }
   });
 
   for (int i = 0; i < 5; i++) {
-    vt::runInEpochCollective([&]{
+    vt::runInEpochCollective([&] {
       if (this_node == 0) {
-        proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
+        proxy.template broadcast<TestCol::NullMsg, &TestCol::doIter>();
       }
     });
 
@@ -587,9 +583,9 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_in_place_2) {
   vt::theCollective()->barrier();
 
   // Do more work after the checkpoint
-  vt::runInEpochCollective([&]{
+  vt::runInEpochCollective([&] {
     if (this_node == 0) {
-      proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
+      proxy.template broadcast<TestCol::NullMsg, &TestCol::doIter>();
     }
   });
 
@@ -607,13 +603,13 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_in_place_2) {
   // Restoration should be done now
   vt::theCollective()->barrier();
 
-  runInEpochCollective([&]{
+  runInEpochCollective([&] {
     if (this_node == 0) {
-      proxy.broadcast<TestCol::NullMsg,&TestCol::verify>();
+      proxy.broadcast<TestCol::NullMsg, &TestCol::verify>();
     }
   });
 
-  runInEpochCollective([&]{
+  runInEpochCollective([&] {
     if (this_node == 0) {
       proxy.destroy();
     }
@@ -641,34 +637,34 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_in_place_3) {
   theConfig()->vt_lb = true;
   theConfig()->vt_lb_name = "TemperedLB";
 
-  vt::runInEpochCollective([&]{
+  vt::runInEpochCollective([&] {
     if (this_node == 0) {
-      proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
+      proxy.broadcast<TestCol::NullMsg, &TestCol::init>();
     }
   });
 
   for (int i = 0; i < 5; i++) {
-    vt::runInEpochCollective([&]{
+    vt::runInEpochCollective([&] {
       if (this_node == 0) {
-        proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
+        proxy.template broadcast<TestCol::NullMsg, &TestCol::doIter>();
       }
     });
 
     vt::thePhase()->nextPhaseCollective();
   }
 
-  vt::runInEpochCollective([&]{
+  vt::runInEpochCollective([&] {
     if (this_node == 0) {
-      proxy.broadcast<TestCol::NullMsg,&TestCol::saveNode>();
+      proxy.broadcast<TestCol::NullMsg, &TestCol::saveNode>();
     }
   });
 
-  vt::runInEpochCollective([&]{
+  vt::runInEpochCollective([&] {
     vt_print(gen, "serialize\n");
     checkpoint = serialize<ProxyType, CheckpointTrait>(proxy);
   });
 
-  vt::runInEpochCollective([&]{
+  vt::runInEpochCollective([&] {
     if (this_node == 0) {
       proxy.destroy();
     }
@@ -678,7 +674,7 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_in_place_3) {
     range, "test_checkpoint_trait_in_place_3"
   );
 
-  vt::runInEpochCollective([&]{
+  vt::runInEpochCollective([&] {
     // Now, restore from the previous distribution
     vt_print(gen, "deserialize\n");
     deserializeInPlace<ProxyType, CheckpointTrait>(
@@ -687,8 +683,8 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_in_place_3) {
   });
 
   // Do more work after the checkpoint
-  vt::runInEpochCollective([&]{
-    proxy_new.broadcastCollective<TestCol::NullMsg,&TestCol::checkNode>();
+  vt::runInEpochCollective([&] {
+    proxy_new.broadcastCollective<TestCol::NullMsg, &TestCol::checkNode>();
   });
 }
 
@@ -707,27 +703,29 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_no_elements_on_root_rank) {
   auto range = vt::Index3D(num_nodes, num_elms, 4);
 
   {
-    auto proxy = vt::makeCollection<TestCol>("test_checkpoint_trait_no_elements_on_root_rank")
-      .bounds(range)
-      .mapperFunc<map>()
-      .bulkInsert()
-      .wait();
+    auto proxy = vt::makeCollection<TestCol>(
+                   "test_checkpoint_trait_no_elements_on_root_rank"
+    )
+                   .bounds(range)
+                   .mapperFunc<map>()
+                   .bulkInsert()
+                   .wait();
 
-    vt::runInEpochCollective([&]{
+    vt::runInEpochCollective([&] {
       if (this_node == 0) {
         proxy.broadcast<TestCol::NullMsg, &TestCol::init>();
       }
     });
     //this number of iterations is expected in the verify member function
     for (int i = 0; i < 5; i++) {
-      vt::runInEpochCollective([&]{
-        if(this_node == 0) {
+      vt::runInEpochCollective([&] {
+        if (this_node == 0) {
           proxy.broadcast<TestCol::NullMsg, &TestCol::doIter>();
         }
       });
     }
     //verify that root node has no elements, by construction with map
-    if(this_node == 0) {
+    if (this_node == 0) {
       auto local_set = theCollection()->getLocalIndices(proxy);
       EXPECT_EQ(local_set.size(), 0ull);
     }
@@ -739,29 +737,26 @@ TEST_F(TestCheckpoint, test_checkpoint_trait_no_elements_on_root_rank) {
     vt::theCollective()->barrier();
 
     // Destroy the collection
-    vt::runInEpochCollective([&]{
+    vt::runInEpochCollective([&] {
       if (this_node == 0) {
         proxy.destroy();
       }
     });
-      // Wait for all checkpoints to complete
+    // Wait for all checkpoints to complete
     vt::theCollective()->barrier();
   }
 
-  auto proxy = *deserialize<ProxyType, CheckpointTrait>(
-    checkpoint->getBuffer()
-  );
+  auto proxy =
+    *deserialize<ProxyType, CheckpointTrait>(checkpoint->getBuffer());
 
   // Restoration should be done now
   vt::theCollective()->barrier();
 
-  runInEpochCollective([&]{
+  runInEpochCollective([&] {
     if (this_node == 0) {
-      proxy.broadcast<TestCol::NullMsg,&TestCol::verify>();
+      proxy.broadcast<TestCol::NullMsg, &TestCol::verify>();
     }
   });
-
 }
-
 
 }}} // end namespace vt::tests::unit

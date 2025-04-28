@@ -55,8 +55,7 @@ static constexpr std::size_t data1_len = 1024;
 static constexpr std::size_t data2_len = 64;
 
 struct TestObj {
-
-  struct NullMsg : vt::Message {};
+  struct NullMsg : vt::Message { };
 
   void init(NullMsg*) {
     auto idx = vt::theContext()->getNode();
@@ -77,13 +76,15 @@ struct TestObj {
 
   void doIter(NullMsg*) {
     iter++;
-    for (auto& elm : data1) { elm += 1.; }
-    for (auto& elm : data2) { elm += 1.; }
+    for (auto& elm : data1) {
+      elm += 1.;
+    }
+    for (auto& elm : data2) {
+      elm += 1.;
+    }
   }
 
-  void nullToken(NullMsg*) {
-    token = nullptr;
-  }
+  void nullToken(NullMsg*) { token = nullptr; }
 
   void verify(NullMsg*) {
     auto idx = vt::theContext()->getNode();
@@ -139,24 +140,22 @@ TEST_F(TestObjGroupCheckpoint, test_objgroup_checkpoint) {
   std::string const expected_label{"test_objgroup_checkpoint"};
 
   {
-    ProxyType proxy = vt::theObjGroup()->makeCollective<TestObj>(
-      expected_label
-    );
+    ProxyType proxy =
+      vt::theObjGroup()->makeCollective<TestObj>(expected_label);
 
-    vt::runInEpochCollective([&]{
+    vt::runInEpochCollective([&] {
       if (this_node == 0) {
-        proxy.broadcast<TestObj::NullMsg,&TestObj::init>();
+        proxy.broadcast<TestObj::NullMsg, &TestObj::init>();
       }
     });
 
     for (int i = 0; i < 5; i++) {
-      vt::runInEpochCollective([&]{
+      vt::runInEpochCollective([&] {
         if (this_node == 0) {
-          proxy.template broadcast<TestObj::NullMsg,&TestObj::doIter>();
+          proxy.template broadcast<TestObj::NullMsg, &TestObj::doIter>();
         }
       });
     }
-
 
     checkpoint = serialize<ProxyType, CheckpointTrait>(proxy);
 
@@ -164,14 +163,14 @@ TEST_F(TestObjGroupCheckpoint, test_objgroup_checkpoint) {
     vt::theCollective()->barrier();
 
     // Null the token to ensure we don't end up getting the same instance
-    vt::runInEpochCollective([&]{
+    vt::runInEpochCollective([&] {
       if (this_node == 0) {
-        proxy.broadcast<TestObj::NullMsg,&TestObj::nullToken>();
+        proxy.broadcast<TestObj::NullMsg, &TestObj::nullToken>();
       }
     });
 
     // Destroy the collection
-    vt::runInEpochCollective([&]{
+    vt::runInEpochCollective([&] {
       if (this_node == 0) {
         proxy.destroyCollective();
       }
@@ -181,9 +180,8 @@ TEST_F(TestObjGroupCheckpoint, test_objgroup_checkpoint) {
   }
 
   {
-    ProxyType proxy = vt::theObjGroup()->makeCollective<TestObj>(
-      expected_label
-    );
+    ProxyType proxy =
+      vt::theObjGroup()->makeCollective<TestObj>(expected_label);
 
     deserializeInPlace<ProxyType, CheckpointTrait>(
       checkpoint->getBuffer(), &proxy
@@ -201,10 +199,8 @@ TEST_F(TestObjGroupCheckpoint, test_objgroup_checkpoint) {
       }
     });
 
-    runInEpochCollective([&]{
-      proxy.destroyCollective();
-    });
+    runInEpochCollective([&] { proxy.destroyCollective(); });
   }
 }
 
-}}}
+}}} // namespace vt::tests::unit

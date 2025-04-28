@@ -458,11 +458,15 @@ public:
     using vt::vrt::CheckpointInternalTrait;
     using checkpoint::has_user_traits_v;
 
-    if constexpr(has_user_traits_v<Serializer, CheckpointTrait>){
-      vtAssert(old_proxy != no_obj_group,
-          "ObjGroups must be pre-instantiated to be checkpointed or restored");
-      vtWarnIf(old_proxy != proxy_,
-          "Checkpointed ObjGroup and deserialize target do not match!");
+    if constexpr (has_user_traits_v<Serializer, CheckpointTrait>) {
+      vtAssert(
+        old_proxy != no_obj_group,
+        "ObjGroups must be pre-instantiated to be checkpointed or restored"
+      );
+      vtWarnIf(
+        old_proxy != proxy_,
+        "Checkpointed ObjGroup and deserialize target do not match!"
+      );
       proxy_ = old_proxy;
 
       auto objPtr = get();
@@ -470,9 +474,9 @@ public:
       bool null = objPtr == nullptr;
       s | null;
 
-      if(!null){
+      if (!null) {
         auto newS = s.template withoutTraits<CheckpointTrait>()
-                     .template withTraits<CheckpointInternalTrait>();
+                      .template withTraits<CheckpointInternalTrait>();
         newS | *objPtr;
       }
     }

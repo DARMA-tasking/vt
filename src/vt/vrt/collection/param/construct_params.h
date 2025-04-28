@@ -150,14 +150,13 @@ protected:
    *
    * \param[in] in_proxy_bits_ the proxy bits to request
    */
-  ThisType&& proxyBits(VirtualProxyType in_proxy_bits){
+  ThisType&& proxyBits(VirtualProxyType in_proxy_bits) {
     proxy_bits_ = in_proxy_bits;
     migratable_ = VirtualProxyBuilder::isMigratable(in_proxy_bits);
     return std::move(*this);
   }
 
 public:
-
   /**
    * \brief Specify the bounds for the collection. If it doesn't have dynamic
    * membership this whole range will be constructed.
@@ -409,14 +408,14 @@ private:
         "Must have valid bounds or exactly one bulk insert or use list insertion"
       );
     }
-    if(proxy_bits_ != no_vrt_proxy){
+    if (proxy_bits_ != no_vrt_proxy) {
       using Bits = VirtualProxyBuilder;
       vtAssert(
         Bits::isCollection(proxy_bits_) == true and
-        Bits::isMigratable(proxy_bits_) == migratable_ and
-        Bits::isRemote(proxy_bits_) == collective_ and
-        ( collective_ or
-          Bits::getVirtualNode(proxy_bits_) == theContext()->getNode()),
+          Bits::isMigratable(proxy_bits_) == migratable_ and
+          Bits::isRemote(proxy_bits_) == collective_ and
+          (collective_ or
+           Bits::getVirtualNode(proxy_bits_) == theContext()->getNode()),
         "Requested proxy bits must match requested collection properties"
       );
     }

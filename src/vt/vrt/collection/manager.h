@@ -357,8 +357,10 @@ struct CollectionManager
    *
    * \return the collection proxy bits
    */
-  template<typename IndexT>
-  VirtualProxyType makeCollectionProxy(bool is_collective, bool is_migratable, VirtualProxyType request_match);
+  template <typename IndexT>
+  VirtualProxyType makeCollectionProxy(
+    bool is_collective, bool is_migratable, VirtualProxyType request_match
+  );
 
   /**
    * \brief Query the current index context of the running handler

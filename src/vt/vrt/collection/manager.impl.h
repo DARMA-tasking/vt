@@ -1369,32 +1369,33 @@ void CollectionManager::insertMetaCollection(
   };
 }
 
-template<typename IndexT>
+template <typename IndexT>
 VirtualProxyType CollectionManager::makeCollectionProxy(
   bool is_collective, bool is_migratable, VirtualProxyType requested
 ) {
-
-  if(requested != no_vrt_proxy){
+  if (requested != no_vrt_proxy) {
     auto conflicting_holder = findColHolder<IndexT>(requested);
 
-    if(conflicting_holder == nullptr){
+    if (conflicting_holder == nullptr) {
       VirtualIDType const req_id = VirtualProxyBuilder::getVirtualID(requested);
 
-      if(is_collective) next_collective_id_ = std::max(next_collective_id_, req_id+1);
-      else next_rooted_id_ = std::max(next_rooted_id_, req_id+1);
+      if (is_collective)
+        next_collective_id_ = std::max(next_collective_id_, req_id + 1);
+      else
+        next_rooted_id_ = std::max(next_rooted_id_, req_id + 1);
 
       vt_debug_print(
         verbose, vrt_coll,
-        "makeCollectionProxy: node={}, new_dist_id={}, proxy={:x} (by request)\n",
+        "makeCollectionProxy: node={}, new_dist_id={}, proxy={:x} (by "
+        "request)\n",
         theContext()->getNode(), req_id, requested
       );
       return requested;
     } // else ignore request, make as normal
   };
 
-  VirtualIDType const new_id = is_collective ?
-    next_collective_id_++ :
-    next_rooted_id_++;
+  VirtualIDType const new_id =
+    is_collective ? next_collective_id_++ : next_rooted_id_++;
 
   auto const this_node = theContext()->getNode();
   bool const is_collection = true;
@@ -1406,8 +1407,8 @@ VirtualProxyType CollectionManager::makeCollectionProxy(
 
   vt_debug_print(
     verbose, vrt_coll,
-    "makeCollectionProxy: node={}, new_dist_id={}, proxy={:x}\n",
-    this_node, new_id, proxy
+    "makeCollectionProxy: node={}, new_dist_id={}, proxy={:x}\n", this_node,
+    new_id, proxy
   );
 
   return proxy;

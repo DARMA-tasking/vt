@@ -92,9 +92,7 @@ struct VrtElmProxy : ProxyCollectionElmTraits<ColT, IndexT> {
 
   friend struct CollectionManager;
 
-  IndexT getIndex(){
-    return this->getElementProxy().getIndex();
-  }
+  IndexT getIndex() { return this->getElementProxy().getIndex(); }
 
   template <typename SerT>
   void serialize(SerT& s);
@@ -104,7 +102,6 @@ struct VrtElmProxy : ProxyCollectionElmTraits<ColT, IndexT> {
   template <typename SerT>
   std::unique_ptr<ColT> deserializeToElm(SerT& s);
 };
-
 
 template <typename ColT, typename IndexT>
 std::ostream& operator<<(
