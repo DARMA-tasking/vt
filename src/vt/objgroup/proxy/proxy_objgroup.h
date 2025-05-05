@@ -61,6 +61,8 @@
 #include "vt/utils/fntraits/fntraits.h"
 #include "vt/group/region/group_list.h"
 
+#include "vt/vrt/vrt_common.h"
+
 namespace vt { namespace objgroup { namespace proxy {
 
 /**
@@ -449,7 +451,30 @@ public:
 
   template <typename Serializer>
   void serialize(Serializer& s) {
+    auto old_proxy = proxy_;
     s | proxy_;
+
+    using vt::vrt::CheckpointTrait;
+    using vt::vrt::CheckpointInternalTrait;
+    using checkpoint::has_user_traits_v;
+
+    if constexpr(has_user_traits_v<Serializer, CheckpointTrait>){
+      vtAssert(old_proxy != no_obj_group, "ObjGroups must be pre-instantiated to be checkpointed or restored");
+      vtWarnIf(old_proxy != proxy_,
+               "Checkpointed ObjGroup and deserialize target do not match!");
+      proxy_ = old_proxy;
+
+      auto objPtr = get();
+
+      bool null = objPtr == nullptr;
+      s | null;
+
+      if(!null){
+        auto newS = s.template withoutTraits<CheckpointTrait>()
+                     .template withTraits<CheckpointInternalTrait>();
+        newS | *objPtr;
+      }
+    } 
   }
 
 private:
