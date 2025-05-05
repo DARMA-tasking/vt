@@ -77,7 +77,9 @@ ObjGroupManager::makeCollective(std::string const& label, Args&&... args) {
 template <typename ObjT>
 ObjGroupManager::ProxyType<ObjT>
 ObjGroupManager::makeCollective(ObjT* obj, std::string const& label) {
-  vtAssert(obj !=  nullptr, "Must be a valid obj pointer");
+  if (obj ==  nullptr) {
+    return makeCollective<ObjT>("unlabeled");
+  }
   auto holder_base = std::make_unique<holder::HolderBasic<ObjT>>(obj);
   return makeCollectiveObj<ObjT>(label, obj, std::move(holder_base));
 }
