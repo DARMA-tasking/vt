@@ -190,7 +190,7 @@ LoadSummary getNodeLoads(std::shared_ptr<LoadModel> model, PhaseOffset when);
 namespace lb {
 
 enum struct StatisticQuantity : int8_t {
-  min, max, avg, std, var, skw, kur, car, imb, npr, sum
+  min, max, avg, std, var, skw, kur, car, imb, npr, sum, lbh
 };
 
 enum struct Statistic : int8_t {
@@ -203,11 +203,17 @@ enum struct Statistic : int8_t {
   ObjectRatio,
   // EdgeCardinality,
   EdgeRatio,
+  LBHist,
   // ExternalEdgesCardinality,
   // InternalEdgesCardinality
 };
 
-using StatisticQuantityMap = std::map<StatisticQuantity, double>;
+using UnionValueType = vt::adt::SafeUnion<
+    double,
+    adt::HistogramApprox<double, int64_t>
+  >;
+
+using StatisticQuantityMap = std::map<StatisticQuantity, UnionValueType>;
 using StatisticMap = std::unordered_map<Statistic, StatisticQuantityMap>;
 
 nlohmann::json jsonifyPhaseStatistics(const StatisticMap &statistics);
