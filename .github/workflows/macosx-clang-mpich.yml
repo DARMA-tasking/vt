@@ -33,6 +33,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: DARMA-tasking/workflows
+          path: workflows
       - uses: actions/cache@v4
         with:
           path: ~/.ccache
@@ -54,7 +58,7 @@ jobs:
         if: steps.mpich-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          ci/deps/mpich.sh 3.3.2 -j4 $(grealpath ~/.mpich)
+          bash workflows/ci/shared/scripts/deps/mpich.sh 3.3.2 -j4 $(grealpath ~/.mpich)
       - name: Build
         shell: bash
         run: |
