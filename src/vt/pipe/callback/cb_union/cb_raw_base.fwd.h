@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            construct_params_msg.h
+//                             cb_raw_base_fwd.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,42 +41,22 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H
-#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_FWD_H
+#define INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_FWD_H
 
-#include "vt/vrt/collection/param/construct_params.h"
+namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
-namespace vt { namespace vrt { namespace collection { namespace param {
+template <typename... Args> struct CallbackTyped;
 
-/**
- * \struct ConstructParamMsg
- *
- * \brief Construct PO configuration message for distributed construction
- */
-template <typename ColT>
-struct ConstructParamMsg : vt::Message {
-  using MessageParentType = ::vt::Message;
-  vt_msg_serialize_required(); // po
+struct CallbackRawBaseSingle;
 
-  ConstructParamMsg() = default;
-  explicit ConstructParamMsg(param::ConstructParams<ColT>& in_po)
-    : po(std::make_unique<param::ConstructParams<ColT>>(in_po))
-  { }
+}}} // end namespace pipe::callback::cbunion
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-    s | po;
-  }
+template <typename... Args>
+using Callback = pipe::callback::cbunion::CallbackTyped<Args...>;
 
-  /// Must use \c std::unique_ptr here because without the indirection,
-  /// AppleClang generates invalid alignment that causes a segfault when \c new
-  /// is called on this message type. The only other work around is some
-  /// seemingly arbitrary value to alignas (alignas(1024) seems to do the
-  /// trick).
-  std::unique_ptr<param::ConstructParams<ColT>> po = nullptr;
-};
+using CallbackU = pipe::callback::cbunion::CallbackRawBaseSingle;
 
-}}}} /* end namespace vt::vrt::collection::param */
+} // end namespace vt
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_FWD_H*/

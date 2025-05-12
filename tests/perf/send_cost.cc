@@ -76,7 +76,6 @@ struct SendTest : PerfTestHarness {
 
 VT_PERF_TEST(SendTest, test_send) {
   auto const thisNode = vt::theContext()->getNode();
-  auto const lastNode = theContext()->getNumNodes() - 1;
 
   auto const prevNode = (thisNode - 1 + num_nodes_) % num_nodes_;
   auto const nextNode = (thisNode + 1) % num_nodes_;
@@ -164,9 +163,6 @@ VT_PERF_TEST(SendTest, test_objgroup_send) {
   grp_proxy[my_node_].invoke<&NodeObj::initialize>();
 
   auto const thisNode = vt::theContext()->getNode();
-  auto const lastNode = theContext()->getNumNodes() - 1;
-
-  auto const prevNode = (thisNode - 1 + num_nodes_) % num_nodes_;
   auto const nextNode = (thisNode + 1) % num_nodes_;
 
   for (auto size : payloadSizes) {

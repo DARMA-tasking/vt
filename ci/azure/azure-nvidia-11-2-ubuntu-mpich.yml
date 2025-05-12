@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (nvidia cuda 11.2, gcc-9, ubuntu, mpich)
+name: PR tests (nvidia cuda 11.4, gcc-9, ubuntu, mpich)
 
 trigger:
   branches:
@@ -27,7 +27,7 @@ variables:
   ARCH: amd64
   UBUNTU: 20.04
   COMPILER_TYPE: nvidia
-  COMPILER: 11.2.2
+  COMPILER: 11.4.3
   HOST_COMPILER: gcc-9
   BUILD_TYPE: release
   ULIMIT_CORE: 0
@@ -57,6 +57,7 @@ variables:
   VT_DEBUG_VERBOSE: 0
   VT_KOKKOS_ENABLED: 0
   VT_TV_ENABLED: 0
+  VT_PERF_ENABLED: 0
   CMAKE_CXX_STANDARD: 17
   VT_CI_TEST_LB_SCHEMA: 0
   RUN_FULL_CI: true

@@ -10,7 +10,11 @@ set(
   insertable_collection
   reduce_integral
   transpose
+  4d_collection
 )
+if (vt_perf_enabled AND vt_perf_found)
+  list(APPEND COLLECTION_EXAMPLES do_flops_perf)
+endif()
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})
   # message("Example: building collection example >>>>> ${EXAMPLE_NAME}")

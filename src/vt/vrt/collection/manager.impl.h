@@ -465,10 +465,33 @@ auto CollectionManager::invoke(
 
   auto const this_node = theContext()->getNode();
 
+#if vt_check_enabled(trace_enabled)
+  auto const han = auto_registry::makeAutoHandlerCollectionMemParam<
+     ColT, decltype(f), f, void
+  >();
+  auto const trace_event = theMsg()->makeTraceCreationSend(han, 0, false);
+
+#if vt_check_enabled(trace_enabled)
+  auto idx = ptr->getIndex();
+  uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
+  uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
+  uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
+  uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+#endif
+
+  return runnable::makeRunnableVoidTraced(
+    false, han, this_node, trace_event, 0, idx1, idx2, idx3, idx4
+  )
+    .withCollection(ptr)
+    .withLBDataVoidMsg(ptr)
+    .runLambda(f, ptr, std::forward<Args>(args)...);
+
+#else
   return runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
     .withCollection(ptr)
     .withLBDataVoidMsg(ptr)
     .runLambda(f, ptr, std::forward<Args>(args)...);
+#endif
 }
 
 template <
@@ -921,7 +944,8 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
   vtAssert(group_ready, "Must be ready");
 
   auto cur_stamp = stamp;
-  if (cur_stamp == ReduceStamp{}) {
+  auto default_stamp = ReduceStamp{};
+  if (cur_stamp == default_stamp) {
     cur_stamp = proxy(idx).tryGetLocalPtr()->getNextStamp();
   }
 
@@ -1141,7 +1165,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   return messaging::PendingSend{
     msg, [](MsgSharedPtr<BaseMsgType>& inner_msg){
       auto typed_msg = inner_msg.template to<MsgT>();
-      auto lm2 = theLocMan()->getCollectionLM<IdxT>(typed_msg->getLocInst());
+      auto lm2 = theLocMan()->getCollectionLM<IdxT>(typed_msg->getProxy().getCollectionProxy());
       lm2->template routePreparedMsgHandler<MsgT>(typed_msg);
     }
   };
@@ -1329,12 +1353,6 @@ void CollectionManager::insertMetaCollection(
   typeless_holder_.insertCollectionInfo(proxy, holder, [proxy]{
     theCollection()->constructGroup<ColT>(proxy);
   }, label);
-
-  /*
-   *  This is to ensure that the collection LM instance gets created so that
-   *  messages can be forwarded properly
-   */
-  theLocMan()->getCollectionLM<IndexType>(proxy);
 
   /**
    * Type-erase some lambdas for doing the collective broadcast that collects up
@@ -1734,6 +1752,9 @@ void CollectionManager::destroyElm(
       auto elm = theCollection()->findElmHolder<IndexType>(untyped_proxy);
       if (elm->exists(idx)) {
         elm->remove(idx);
+        theLocMan()
+          ->getCollectionLM<IndexType>(untyped_proxy)
+          ->unregisterEntity(idx);
       }
     });
   } else {
@@ -1982,11 +2003,17 @@ void CollectionManager::destroyMatching(
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementDestroyed, idx, home
       );
+      theLocMan()
+        ->getCollectionLM<IndexT>(untyped_proxy)
+        ->unregisterEntity(idx);
     });
     elm_holder->destroyAll();
   }
 
   EntireHolder<IndexT>::remove(untyped_proxy);
+
+  // destroy the location manager
+  theLocMan()->destroyCollectionLM<IndexT>(proxy.getProxy());
 
   auto iter = cleanup_fns_.find(untyped_proxy);
   if (iter != cleanup_fns_.end()) {

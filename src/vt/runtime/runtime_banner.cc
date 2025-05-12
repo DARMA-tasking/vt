@@ -139,6 +139,12 @@ void Runtime::printStartupBanner() {
 #if vt_check_enabled(diagnostics)
   features.push_back(vt_feature_str_diagnostics);
 #endif
+#if vt_check_enabled(debug_verbose)
+  features.push_back(vt_feature_str_debug_verbose);
+#endif
+#if vt_check_enabled(perf)
+  features.push_back(vt_feature_str_perf);
+#endif
 
   std::string dirty = "";
   if (vt_git_clean_status == "DIRTY") {
@@ -378,6 +384,14 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_lb_statistics_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+
+    auto f13 = opt_on_value("--vt_lb_statistics_freq",
+                            std::to_string(getAppConfig()->vt_lb_statistics_freq),
+                            "Phases between LB statistics output");
+    fmt::print("{}\t{}{}", vt_pre, f13, reset);
+  } else {
+    auto f9 = opt_off("--vt_lb_statistics", "Load balancing statistics file dumping disabled");
+    fmt::print("{}\t{}{}", vt_pre, f9, reset);
   }
 
   #if !vt_check_enabled(trace_enabled)

@@ -97,20 +97,6 @@ struct Component : BaseComponent {
   Component() = default;
 
   /**
-   * \brief Constructor for a new component with the appropriate typed
-   * dependencies
-   *
-   * \param[in] DepsPack a pack of typed dependencies for the given component
-   * that it depends on
-   *
-   * \return the new component
-   */
-  template <typename... Deps>
-  Component(DepsPack<Deps...>) {
-    ComponentRegistry::dependsOn<T, Deps...>();
-  }
-
-  /**
    * \brief Construct the component with the specialized construct method or the
    * normal component constructor depending on the type trait
    *

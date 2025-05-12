@@ -108,7 +108,7 @@ then
         { echo "vt-tv already in lib... not downloading"; } 2>/dev/null
     else
         cd "${source_dir}/lib"
-        vt_tv_rev="1.5.0"
+        vt_tv_rev="master"
         git clone -b "${vt_tv_rev}" --depth 1 https://github.com/DARMA-tasking/vt-tv.git
         cd -
     fi
@@ -144,6 +144,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_build_extended_tests="${VT_EXTENDED_TESTS_ENABLED:-1}" \
       -Dvt_zoltan_enabled="${VT_ZOLTAN_ENABLED:-0}" \
       -Dvt_tv_enabled="${VT_TV_ENABLED:-0}" \
+      -Dvt_perf_enabled="${VT_PERF_ENABLED:-0}" \
       -Dvt_production_build_enabled="${VT_PRODUCTION_BUILD_ENABLED:-0}" \
       -Dvt_unity_build_enabled="${VT_UNITY_BUILD_ENABLED:-0}" \
       -Dvt_diagnostics_enabled="${VT_DIAGNOSTICS_ENABLED:-1}" \
@@ -184,7 +185,7 @@ then
     git clone "https://${token}@github.com/DARMA-tasking/DARMA-tasking.github.io"
     git clone https://github.com/mosra/m.css
     cd m.css
-    git checkout master
+    git checkout 699abdd5
     cd ../
 
     "$MCSS/documentation/doxygen.py" Doxyfile-mcss
@@ -213,6 +214,11 @@ then
     # so it needs special treatment
     if test "$GENERATOR" = "Ninja"
     then
+        if test "$CXX" = "nvcc_wrapper"
+        then
+            # Limit parallelism to avoid memory exhaustion on Azure runners
+            dashj="-j 1"
+        fi
         # To easily tell if compilation of given file succeeded special progress bar is used
         # (controlled by variable NINJA_STATUS)
         export NINJA_STATUS="[ninja][%f/%t] "

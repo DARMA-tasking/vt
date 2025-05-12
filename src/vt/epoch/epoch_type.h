@@ -47,6 +47,8 @@
 #include "vt/utils/strong/strong_type.h"
 #include "vt/epoch/epoch_impl_type.h"
 
+#include "vt/cmake_config.h"
+
 namespace vt { namespace epoch {
 
 struct EpochType : Strong<
@@ -94,6 +96,8 @@ constexpr inline EpochType makeEpochZero() {
   return EpochType{static_cast<EpochType::ImplType>(0ull)};
 }
 
+inline auto format_as(EpochType e) { return *e; }
+
 }} /* end namespace vt::epoch */
 
 namespace std {
@@ -107,51 +111,6 @@ struct hash<vt::epoch::EpochType> {
 };
 
 } /* end namespace std */
-
-#include "vt/cmake_config.h"
-#include INCLUDE_FMT_FORMAT
-
-VT_FMT_NAMESPACE_BEGIN
-
-/// Custom fmt formatter/print for \c EpochType
-template <>
-struct formatter<::vt::epoch::EpochType> {
-  /// Presentation format:
-  ///  - 'x' - hex (default)
-  ///  - 'd' - decimal
-  ///  - 'b' - binary
-  char presentation = 'x';
-
-  /// Parses format specifications of the form ['x' | 'd' | 'b'].
-  auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
-    // Parse the presentation format and store it in the formatter:
-    auto it = ctx.begin(), end = ctx.end();
-    if (it != end && (*it == 'x' || *it == 'd' || *it == 'b')) {
-      presentation = *it++;
-    }
-
-    // Check if reached the end of the range:
-    if (it != end && *it != '}') {
-      throw format_error("invalid format");
-    }
-
-    // Return an iterator past the end of the parsed range:
-    return it;
-  }
-
-  /// Formats the epoch using the parsed format specification (presentation)
-  /// stored in this formatter.
-  template <typename FormatContext>
-  auto format(::vt::epoch::EpochType const& e, FormatContext& ctx) const {
-    return format_to(
-      ctx.out(),
-      presentation == 'b' ? "{:b}" : (presentation == 'd' ? "{:d}" : "{:x}"),
-      *e
-    );
-  }
-};
-
-VT_FMT_NAMESPACE_END
 
 namespace vt {
 

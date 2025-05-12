@@ -1,129 +1,177 @@
 {
-    "metadata": {
-        "phases": {
-            "identical_to_previous": {
-                "list": [],
-                "range": []
-            },
-            "skipped": {
-                "list": [],
-                "range": []
-            }
-        },
-        "rank": 0,
-        "shared_node": {
-            "id": 0,
-            "num_nodes": 1,
-            "rank": 0,
-            "size": 1
-        },
-        "type": "LBDatafile"
+  "metadata": {
+    "phases": {
+      "identical_to_previous": {
+        "list": [],
+        "range": []
+      },
+      "skipped": {
+        "list": [],
+        "range": []
+      }
     },
-    "phases": [
+    "rank": 0,
+    "shared_node": {
+      "id": 0,
+      "num_nodes": 1,
+      "rank": 0,
+      "size": 1
+    },
+    "type": "LBDatafile"
+  },
+  "phases": [
+    {
+      "communications": [
         {
-            "communications": [
-                {
-                    "bytes": 152.0,
-                    "from": {
-                        "collection_id": 7,
-                        "home": 0,
-                        "id": 262147,
-                        "index": [
-                            0
-                        ],
-                        "migratable": true,
-                        "type": "object"
-                    },
-                    "messages": 1,
-                    "to": {
-                        "collection_id": 7,
-                        "home": 0,
-                        "id": 262147,
-                        "index": [
-                            0
-                        ],
-                        "migratable": true,
-                        "type": "object"
-                    },
-                    "type": "SendRecv"
-                }
+          "bytes": 152.0,
+          "from": {
+            "collection_id": 7,
+            "home": 0,
+            "id": 262147,
+            "index": [
+              0
             ],
-            "id": 0,
-            "tasks": [
-                {
-                    "entity": {
-                        "collection_id": 7,
-                        "home": 0,
-                        "id": 262147,
-                        "index": [
-                            0
-                        ],
-                        "migratable": true,
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "subphases": [
-                        {
-                            "id": 0,
-                            "time": 0.0003119999999999999
-                        }
-                    ],
-                    "time": 0.0003119999999999999
-                },
-                {
-                    "entity": {
-                        "home": 0,
-                        "id": 3145740,
-                        "migratable": false,
-                        "objgroup_id": 786435,
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "time": 0.0
-                },
-                {
-                    "entity": {
-                        "home": 0,
-                        "id": 4194316,
-                        "migratable": false,
-                        "objgroup_id": 1048579,
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "time": 0.0
-                },
-                {
-                    "entity": {
-                        "home": 0,
-                        "id": 1,
-                        "migratable": false,
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "subphases": [
-                        {
-                            "id": 0,
-                            "time": 9.000000000000002e-06
-                        }
-                    ],
-                    "time": 9.000000000000002e-06
-                },
-                {
-                    "entity": {
-                        "home": 0,
-                        "id": 0,
-                        "migratable": false,
-                        "type": "object"
-                    },
-                    "node": 0,
-                    "resource": "cpu",
-                    "time": 0.0
-                }
-            ]
+            "migratable": true,
+            "type": "object"
+          },
+          "messages": 1,
+          "to": {
+            "collection_id": 7,
+            "home": 0,
+            "id": 262147,
+            "index": [
+              0
+            ],
+            "migratable": true,
+            "type": "object"
+          },
+          "type": "SendRecv"
         }
-    ]
+      ],
+      "id": 0,
+      "tasks": [
+        {
+          "entity": {
+            "collection_id": 7,
+            "home": 0,
+            "id": 262147,
+            "index": [
+              0
+            ],
+            "migratable": true,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "subphases": [
+            {
+              "id": 0,
+              "time": 0.0004248750001352164
+            }
+          ],
+          "time": 0.0004248750001352164
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 3145740,
+            "migratable": false,
+            "objgroup_id": 786435,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "time": 0.0
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 4194316,
+            "migratable": false,
+            "objgroup_id": 1048579,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "time": 0.0
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 5242892,
+            "migratable": false,
+            "objgroup_id": 1310723,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "time": 0.0
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 1,
+            "migratable": false,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "subphases": [
+            {
+              "id": 0,
+              "time": 1.041999894368928e-06
+            }
+          ],
+          "time": 1.041999894368928e-06
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 6291468,
+            "migratable": false,
+            "objgroup_id": 1572867,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "time": 0.0
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 7340044,
+            "migratable": false,
+            "objgroup_id": 1835011,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "time": 0.0
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 8388620,
+            "migratable": false,
+            "objgroup_id": 2097155,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "time": 0.0
+        },
+        {
+          "entity": {
+            "home": 0,
+            "id": 0,
+            "migratable": false,
+            "type": "object"
+          },
+          "node": 0,
+          "resource": "cpu",
+          "time": 0.0
+        }
+      ]
+    }
+  ]
 }

@@ -121,6 +121,23 @@ void Trace::finalize() /*override*/ {
   between_sched_event_ = TraceProcessingTag{};
 }
 
+#if !vt_check_enabled(trace_only)
+void Trace::setProxy(objgroup::proxy::Proxy<Trace> in_proxy) {
+  proxy_ = in_proxy;
+}
+#endif
+
+/*static*/ std::unique_ptr<Trace> Trace::construct(std::string const& in_prog_name) {
+  auto ptr = std::make_unique<Trace>(in_prog_name);
+  #if !vt_check_enabled(trace_only)
+  auto proxy = theObjGroup()->makeCollective<Trace>(
+    ptr.get(), "Trace"
+  );
+  proxy.get()->setProxy(proxy);
+  #endif
+  return ptr;
+}
+
 void Trace::loadAndBroadcastSpec() {
   using namespace ::vt::utils::file_spec;
 
@@ -197,6 +214,16 @@ void Trace::addUserData(int32_t data) {
   );
 }
 
+void Trace::setUserEvents(const UserEventRegistry& events) {
+  user_event_ = std::move(events);
+}
+
+void Trace::gatherUserEvents() {
+  #if !vt_check_enabled(trace_only)
+  proxy_.reduce<&reducedEventsHan, vt::collective::PlusOp>(0, user_event_);
+  #endif
+}
+
 UserEventIDType Trace::registerUserEventRoot(std::string const& name) {
   return user_event_.rooted(name);
 }
@@ -209,6 +236,15 @@ void Trace::registerUserEventManual(
   std::string const& name, UserSpecEventIDType id
 ) {
   user_event_.user(name, id);
+}
+
+void reducedEventsHan(
+  [[maybe_unused]] const UserEventRegistry& gathered_user_events
+) {
+  #if vt_check_enabled(trace_enabled)
+  vtAssert(theContext()->getNode() == 0, "User events must be gathered on node 0");
+  theTrace()->setUserEvents(gathered_user_events);
+  #endif
 }
 
 void insertNewUserEvent(
@@ -349,8 +385,9 @@ TraceProcessingTag Trace::beginProcessing(
 
   vt_debug_print(
     normal, trace,
-    "event_start: ep={}, event={}, time={}, from={}, entry chare={}\n",
-    ep, event, time, from_node, TraceRegistry::getEvent(ep).theEventSeq()
+    "event_start: ep={}, event={}, time={}, from={}, entry chare={}, name={}\n",
+    ep, event, time, from_node, TraceRegistry::getEvent(ep).theEventSeq(),
+    TraceRegistry::getEvent(ep).theEventName()
   );
 
   auto const type = TraceConstantsType::BeginProcessing;
@@ -394,9 +431,9 @@ void Trace::endProcessing(
 
   vt_debug_print(
     normal, trace,
-    "event_stop: ep={}, event={}, time={}, from_node={}, entry chare={}\n",
+    "event_stop: ep={}, event={}, time={}, from_node={}, entry chare={}, name={}\n",
     ep, event, time, open_events_.back().node,
-    TraceRegistry::getEvent(ep).theEventSeq()
+    TraceRegistry::getEvent(ep).theEventSeq(), TraceRegistry::getEvent(ep).theEventName()
   );
 
   vtAssert(
@@ -428,13 +465,15 @@ void Trace::pendingSchedulerLoop() {
   between_sched_event_ = TraceProcessingTag{};
 }
 
-void Trace::beginSchedulerLoop() {
+TimeType Trace::beginSchedulerLoop() {
+  auto const cur_time = timing::getCurrentTime();
   // Always end between-loop event. The pending case is not always triggered.
-  endProcessing(between_sched_event_, timing::getCurrentTime());
+  endProcessing(between_sched_event_, cur_time);
   between_sched_event_ = TraceProcessingTag{};
 
   // Capture the current open event depth.
   event_holds_.push_back(open_events_.size());
+  return cur_time;
 }
 
 void Trace::endSchedulerLoop() {
@@ -519,6 +558,7 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
       // Go ahead and perform a trace flush when tracing is disabled (and was
       // previously enabled) to reduce memory footprint.
       if (not ret and theConfig()->vt_trace_flush_size != 0) {
+        gatherUserEvents();
         writeTracesFile(incremental_flush_mode, true);
       }
     }

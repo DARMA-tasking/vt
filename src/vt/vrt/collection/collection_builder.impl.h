@@ -66,9 +66,7 @@ std::tuple<EpochType, VirtualProxyType> CollectionManager::makeCollection(
       "collection construction", term::UseDS{false}
     );
     theMsg()->pushEpoch(ep);
-    using MsgType = param::ConstructParamMsg<ColT>;
-    auto m = makeMessage<MsgType>(po);
-    theMsg()->broadcastMsg<MsgType, makeCollectionHandler>(m);
+    theMsg()->send<makeCollectionHandler<ColT>>(vt::Node(0), po, true);
     theMsg()->popEpoch(ep);
     theTerm()->finishedEpoch(ep);
     return std::make_tuple(ep, proxy_bits);
@@ -82,11 +80,39 @@ std::tuple<EpochType, VirtualProxyType> CollectionManager::makeCollection(
   }
 }
 
+/*static*/ inline void CollectionManager::finishedRootedConstruction() {
+  if (theCollection()->pending_rooted_constructions_.size() > 0) {
+    auto action = theCollection()->pending_rooted_constructions_.back();
+    theCollection()->pending_rooted_constructions_.pop_back();
+    action();
+  } else {
+    theCollection()->has_pending_construction_ = false;
+  }
+}
+
 template <typename ColT>
 /*static*/ void CollectionManager::makeCollectionHandler(
-  param::ConstructParamMsg<ColT>* msg
+  param::ConstructParams<ColT> po, bool is_root
 ) {
-  theCollection()->makeCollectionImpl(*msg->po);
+  if (is_root) {
+    if (theCollection()->has_pending_construction_) {
+      auto ep = theMsg()->getEpoch();
+      theTerm()->produce(ep);
+      theCollection()->pending_rooted_constructions_.push_back([=]{
+        theTerm()->pushEpoch(ep);
+        makeCollectionHandler(po, true);
+        theTerm()->consume(ep);
+        theTerm()->popEpoch(ep);
+      });
+    } else {
+      theCollection()->has_pending_construction_ = true;
+      theMsg()->broadcast<makeCollectionHandler<ColT>>(po, false);
+    }
+  } else {
+    theCollection()->makeCollectionImpl(po);
+    auto r = theCollection()->reducer();
+    r->reduce<finishedRootedConstruction>(vt::Node(0));
+  }
 }
 
 namespace detail {
@@ -129,9 +155,9 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
   auto const map_han = po.map_han_;
   auto const map_object = po.map_object_;
 
-  // Invoke getCollectionLM() to create a new location manager instance for
-  // this collection
-  theLocMan()->getCollectionLM<IndexType>(proxy);
+  // makeCollectionLM() to create a new location manager instance for this
+  // collection
+  theLocMan()->makeCollectionLM<IndexType>(proxy);
 
   // Insert action on cleanup for this collection
   addCleanupFn<ColT>(proxy);

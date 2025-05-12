@@ -54,7 +54,7 @@ template <typename T, typename Tuple, size_t... I>
 std::unique_ptr<T> tupleConsImpl(
   Tuple&& tup, [[maybe_unused]] std::index_sequence<I...> seq
 ) {
-  return T::template staticInit(std::get<I>(std::forward<Tuple>(tup))...);
+  return T::staticInit(std::get<I>(std::forward<Tuple>(tup))...);
 }
 
 template <typename T, typename Tuple>
@@ -71,12 +71,23 @@ std::unique_ptr<MovableFn> makeCallable(Callable&& c) {
 
 } /* end anon namespace */
 
-template <typename T, typename... Deps, typename... Cons>
+template <
+  typename T,
+  typename... StartupDeps,
+  typename... RuntimeDeps,
+  typename... Cons
+>
 registry::AutoHandlerType ComponentPack::registerComponent(
-  T** ref, typename BaseComponent::DepsPack<Deps...>, Cons&&... cons
+  T** ref,
+  typename BaseComponent::StartupDepsPack<StartupDeps...>,
+  typename BaseComponent::RuntimeDepsPack<RuntimeDeps...>,
+  Cons&&... cons
 ) {
-  ComponentRegistry::dependsOn<T, Deps...>();
+  ComponentRegistry::dependsOn<T, StartupDeps...>(true);
+  ComponentRegistry::dependsOn<T, RuntimeDeps...>(false);
+
   auto idx = registry::makeIdx<T>();
+  //fmt::print("registerComponent name={} idx={}\n", typeid(T).name(), idx);
 
   if (registered_set_.find(idx) == registered_set_.end()) {
     registered_set_.insert(idx);

@@ -43,12 +43,6 @@
 
 #include <vt/transport.h>
 
-struct HelloMsg : vt::Message {
-  HelloMsg(vt::NodeType in_from) : from(in_from) { }
-
-  vt::NodeType from = 0;
-};
-
 void hello_world(int a, int b, float c) {
   vt::NodeType this_node = vt::theContext()->getNode();
   fmt::print("{}: Hello from node vals = {} {} {}\n", this_node, a, b, c);

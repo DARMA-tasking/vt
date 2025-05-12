@@ -53,7 +53,28 @@
 namespace vt { namespace runtime { namespace component { namespace registry {
 
 using AutoHandlerType = HandlerType;
-using RegistryType = std::vector<std::tuple<int,std::unordered_set<int>>>;
+
+struct RegisteredDeps {
+
+  RegisteredDeps() = default;
+
+  void addStartupDep(AutoHandlerType dep) {
+    startup_deps_.insert(dep);
+  }
+
+  void addRuntimeDep(AutoHandlerType dep) {
+    runtime_deps_.insert(dep);
+  }
+
+  auto const& getStartupDeps() const { return startup_deps_; }
+  auto const& getRuntimeDeps() const { return runtime_deps_; }
+
+private:
+  std::unordered_set<AutoHandlerType> startup_deps_; /**< Startup dependencies */
+  std::unordered_set<AutoHandlerType> runtime_deps_; /**< Runtime dependencies */
+};
+
+using RegistryType = std::vector<RegisteredDeps>;
 
 inline RegistryType& getRegistry() {
   static RegistryType reg;
@@ -65,7 +86,7 @@ struct Registrar {
   Registrar() {
     auto& reg = getRegistry();
     index = reg.size();
-    reg.emplace_back(std::make_tuple(index,std::unordered_set<int>{}));
+    reg.emplace_back(RegisteredDeps{});
   }
   AutoHandlerType index;
 };
@@ -78,8 +99,16 @@ struct Type {
 template <typename ObjT>
 AutoHandlerType const Type<ObjT>::idx = Registrar<ObjT>().index;
 
-inline std::unordered_set<int>& getIdx(AutoHandlerType han) {
-  return std::get<1>(getRegistry().at(han));
+inline auto& getIdx(AutoHandlerType han) {
+  return getRegistry().at(han);
+}
+
+inline auto getStartupDeps(AutoHandlerType han) {
+  return getRegistry().at(han).getStartupDeps();
+}
+
+inline auto getRuntimeDeps(AutoHandlerType han) {
+  return getRegistry().at(han).getRuntimeDeps();
 }
 
 template <typename ObjT>
