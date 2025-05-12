@@ -223,14 +223,14 @@ struct TraceLite  {
    *
    * \param[in] time time it begins idle
    */
-  void beginIdle(TimeType const time = getCurrentTime());
+  void beginIdle(TimeType const time);
 
   /**
    * \brief Scheduler trigger for \c sched::SchedulerEvent::EndIdle
    *
    * \param[in] time time it ends idle
    */
-  void endIdle(TimeType const time = getCurrentTime());
+  void endIdle(TimeType const time);
 
   /**
    * \internal \brief Check if tracing is enabled
@@ -405,6 +405,15 @@ protected:
     return traces_.size() * sizeof(Log);
   }
 
+public:
+  TimeType getTraceTime() const {
+    return computeOffset(timing::getCurrentTime());
+  }
+
+  TimeType computeOffset(TimeType time) const {
+    return time - TimeTypeWrapper(time_offset_);
+  }
+
 private:
 
   /**
@@ -446,6 +455,7 @@ protected:
   bool idle_begun_              = false;
   std::unique_ptr<vt_gzFile> log_file_;
   std::unordered_map<TraceEventIDType, std::stack<Log*>> incomplete_notes_ = {};
+  double time_offset_ = 0;
 };
 
 }} //end namespace vt::trace

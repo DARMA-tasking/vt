@@ -137,6 +137,10 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
 
   #if !vt_check_enabled(trace_only)
   void setProxy(objgroup::proxy::Proxy<Trace> in_proxy);
+  void alignTimes(double rank_0_time);
+  void ping(double cur_time);
+  void pong(NodeType from_node);
+  bool recv_pong_ = false;
   #endif
 
   /**
@@ -320,8 +324,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    * \param[in] time the time it occurred
    */
   void addMemoryEvent(
-    std::size_t memory,
-    TimeType const time = getCurrentTime()
+    std::size_t memory, TimeType const time
   );
 
   /**
@@ -335,7 +338,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   TraceEventIDType messageCreation(
     TraceEntryIDType const ep, TraceMsgLenType const len,
-    TimeType const time = getCurrentTime()
+    TimeType const time
   );
 
   /**
@@ -349,7 +352,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   TraceEventIDType messageCreationBcast(
     TraceEntryIDType const ep, TraceMsgLenType const len,
-    TimeType const time = getCurrentTime()
+    TimeType const time
   );
 
   /**
@@ -364,7 +367,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
    */
   TraceEventIDType messageRecv(
     TraceEntryIDType const ep, TraceMsgLenType const len,
-    NodeType const from_node, TimeType const time = getCurrentTime()
+    NodeType const from_node, TimeType const time
   );
 
   /**
@@ -431,7 +434,8 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
       | flush_event_
       | between_sched_event_type_
       | between_sched_event_
-      | inside_invoke_context_;
+      | inside_invoke_context_
+      | time_offset_;
 
     s.skip(log_file_); // definition unavailable
   }

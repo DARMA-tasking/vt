@@ -99,10 +99,10 @@ void Trace::startup() /*override*/ {
     sched::SchedulerEvent::EndSchedulerLoop, [this]{ endSchedulerLoop(); }
   );
   theSched()->registerTrigger(
-    sched::SchedulerEvent::BeginIdle, [this]{ beginIdle(); }
+    sched::SchedulerEvent::BeginIdle, [this]{ beginIdle(getTraceTime()); }
   );
   theSched()->registerTrigger(
-    sched::SchedulerEvent::EndIdle, [this]{ endIdle(); }
+    sched::SchedulerEvent::EndIdle, [this]{ endIdle(getTraceTime()); }
   );
 
   thePhase()->registerHookUnsynchronized(phase::PhaseHook::End, [] {
@@ -112,12 +112,46 @@ void Trace::startup() /*override*/ {
   thePhase()->registerHookUnsynchronized(phase::PhaseHook::EndPostMigration, [] {
     theTrace()->flushTracesFile(false);
   });
+
+# if !vt_check_enabled(trace_only)
+  auto this_node = theContext()->getNode();
+  if (this_node == 1) {
+    double start = MPI_Wtime();
+    recv_pong_ = false;
+    proxy_[0].template send<&Trace::ping>(this_node);
+    runScheduleWhile([&]{ return not recv_pong_; });
+    double ping_pong_time = MPI_Wtime() - start;n
+  }
+
+  // if (theContext()->getNode() == 0) {
+    auto time = MPI_Wtime();
+    MPI_Bcast(&time, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    time_offset_ = MPI_Wtime() - time;
+    //proxy_.template broadcast<&Trace::alignTimes>(time);
+  // }
+# endif
+
 #endif
 }
 
+#if !vt_check_enabled(trace_only)
+void Trace::pong(double cur_time) {
+  recv_pong_ = true;
+}
+
+void Trace::ping(NodeType from_node) {
+  // send back pong
+  proxy_[from_node].template send<&Trace::pong>(MPI_Wtime());
+}
+
+void Trace::alignTimes(double rank_0_time) {
+  time_offset_ = MPI_Wtime() - rank_0_time;
+}
+#endif
+
 void Trace::finalize() /*override*/ {
   // Always end any between-loop event left open.
-  endProcessing(between_sched_event_, timing::getCurrentTime());
+  endProcessing(between_sched_event_, getTraceTime());
   between_sched_event_ = TraceProcessingTag{};
 }
 
@@ -188,7 +222,7 @@ void Trace::addUserNote(std::string const& note) {
   );
 
   auto const type = TraceConstantsType::UserSuppliedNote;
-  auto const time = getCurrentTime();
+  auto const time = getTraceTime();
 
   logEvent(
     LogType{time, type, note, Log::UserDataType{}}
@@ -207,7 +241,7 @@ void Trace::addUserData(int32_t data) {
   );
 
   auto const type = TraceConstantsType::UserSupplied;
-  auto const time = getCurrentTime();
+  auto const time = getTraceTime();
 
   logEvent(
     LogType{time, type, std::string{}, data}
@@ -268,7 +302,7 @@ void Trace::addUserEvent(UserEventIDType event) {
   );
 
   auto const type = TraceConstantsType::UserEvent;
-  auto const time = getCurrentTime();
+  auto const time = getTraceTime();
   NodeType const node = theContext()->getNode();
 
   logEvent(
@@ -303,7 +337,7 @@ void Trace::addUserEventBracketedBegin(UserEventIDType event) {
   );
 
   auto const type = TraceConstantsType::BeginUserEventPair;
-  auto const time = getCurrentTime();
+  auto const time = getTraceTime();
   NodeType const node = theContext()->getNode();
 
   logEvent(
@@ -323,7 +357,7 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
   );
 
   auto const type = TraceConstantsType::EndUserEventPair;
-  auto const time = getCurrentTime();
+  auto const time = getTraceTime();
   NodeType const node = theContext()->getNode();
 
   logEvent(
@@ -461,12 +495,12 @@ void Trace::endProcessing(
 
 void Trace::pendingSchedulerLoop() {
   // Always end between-loop event.
-  endProcessing(between_sched_event_, timing::getCurrentTime());
+  endProcessing(between_sched_event_, getTraceTime());
   between_sched_event_ = TraceProcessingTag{};
 }
 
 TimeType Trace::beginSchedulerLoop() {
-  auto const cur_time = timing::getCurrentTime();
+  auto const cur_time = getTraceTime();
   // Always end between-loop event. The pending case is not always triggered.
   endProcessing(between_sched_event_, cur_time);
   between_sched_event_ = TraceProcessingTag{};
@@ -492,7 +526,7 @@ void Trace::endSchedulerLoop() {
   // Start an event representing time outside of top-level scheduler.
   if (event_holds_.size() == 1) {
     between_sched_event_ = beginProcessing(
-      between_sched_event_type_, 0, trace::no_trace_event, 0, timing::getCurrentTime()
+      between_sched_event_type_, 0, trace::no_trace_event, 0, getTraceTime()
     );
   }
 }

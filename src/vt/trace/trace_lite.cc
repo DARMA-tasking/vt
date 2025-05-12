@@ -298,7 +298,7 @@ void TraceLite::addUserNoteBracketedBeginTime(
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
-  auto begin = getCurrentTime();
+  auto begin = getTraceTime();
 
   vt_debug_print(
     normal, trace,
@@ -338,7 +338,7 @@ void TraceLite::addUserNoteBracketedEndTime(TraceEventIDType const event) {
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
-  auto end = getCurrentTime();
+  auto end = getTraceTime();
 
   vt_debug_print(
     normal, trace,
@@ -357,7 +357,7 @@ void TraceLite::addUserNoteBracketedEndTime(
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
-  auto end = getCurrentTime();
+  auto end = getTraceTime();
 
   vt_debug_print(
     normal, trace,
@@ -509,7 +509,7 @@ void TraceLite::cleanupTracesFile() {
 
   // No more events can be written.
   // Close any idle for consistency.
-  endIdle();
+  endIdle(getTraceTime());
   disableTracing();
 
   //--- Dump everything into an output file and close.
@@ -819,7 +819,7 @@ void TraceLite::outputControlFile(std::ofstream& file) {
   gzFile gzfile = file->file_type;
   // Output footer for projections file,
   // '7' means COMPUTATION_END to Projections
-  gzprintf(gzfile, "7 %lld\n", timeToMicros(getCurrentTime() - start));
+  gzprintf(gzfile, "7 %lld\n", timeToMicros(theTrace()->getTraceTime() - start));
 }
 
 }} // end namespace vt::trace

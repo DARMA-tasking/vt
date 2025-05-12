@@ -175,9 +175,9 @@ trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
     trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler);
     trace::TraceEventIDType event = trace::no_trace_event;
     if (not is_bcast) {
-      event = theTrace()->messageCreation(ep, serialized_msg_size);
+      event = theTrace()->messageCreation(ep, serialized_msg_size, theTrace()->getTraceTime());
     } else {
-      event = theTrace()->messageCreationBcast(ep, serialized_msg_size);
+      event = theTrace()->messageCreationBcast(ep, serialized_msg_size, theTrace()->getTraceTime());
     }
     return event;
   #else
