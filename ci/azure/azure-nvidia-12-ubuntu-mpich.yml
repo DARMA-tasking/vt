@@ -27,7 +27,7 @@ variables:
   ARCH: amd64
   UBUNTU: 20.04
   COMPILER_TYPE: nvidia
-  COMPILER: 12.2.0
+  COMPILER: gcc-9-cuda-12.2.0
   HOST_COMPILER: gcc-9
   BUILD_TYPE: release
   ULIMIT_CORE: 0
