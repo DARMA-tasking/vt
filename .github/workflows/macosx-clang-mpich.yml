@@ -36,6 +36,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: DARMA-tasking/workflows
+          ref: 24-add-missing-dependencies
           path: workflows
       - uses: actions/cache@v4
         with:
