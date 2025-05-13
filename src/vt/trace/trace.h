@@ -138,9 +138,10 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
   #if !vt_check_enabled(trace_only)
   void setProxy(objgroup::proxy::Proxy<Trace> in_proxy);
   void alignTimes(double rank_0_time);
-  void ping(double cur_time);
-  void pong(NodeType from_node);
+  void ping(NodeType from_node);
+  void pong(double cur_time);
   bool recv_pong_ = false;
+  double cur_time_ = 0.0;
   #endif
 
   /**
