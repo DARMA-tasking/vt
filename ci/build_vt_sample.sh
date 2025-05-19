@@ -61,6 +61,11 @@ then
     cmake --build .
 
     # Try to actually run samples
-    mpiexec -n 2 ./vt-runtime-sample
-    mpiexec -n 2 ./vt-trace-only-sample
+    if [ -z "${MPI_EXTRA_FLAGS}" ]; then
+      mpiexec -n 2 ./vt-runtime-sample
+      mpiexec -n 2 ./vt-trace-only-sample
+    else
+      mpiexec --allow-run-as-root -n 2 ./vt-runtime-sample
+      mpiexec --allow-run-as-root -n 2 ./vt-trace-only-sample
+    fi
 fi
