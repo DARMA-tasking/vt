@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (gcc-9, ubuntu, mpich, zoltan)
+name: PR tests (gcc-9, ubuntu, mpich)
 
 trigger:
   branches:
@@ -48,7 +48,7 @@ variables:
   VT_UNITY_BUILD: 1
   VT_PRODUCTION_BUILD: 0
   VT_FCONTEXT: 0
-  VT_ZOLTAN: 1
+  VT_ZOLTAN: 0
   VT_CI_BUILD: 1
   VT_DIAGNOSTICS: 1
   VT_NO_COLOR: 1
