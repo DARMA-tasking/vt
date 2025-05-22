@@ -149,7 +149,7 @@ struct TraceScopedEventHash final {
    * \param[in] in_str the name of the event
    */
   explicit TraceScopedEventHash(std::string const& in_str)
-    : begin_(TraceLite::getCurrentTime()),
+    : begin_(theTrace()->getTraceTime()),
       str_(in_str)
   {
     event_ = registerEventHashed(str_);
@@ -165,7 +165,7 @@ struct TraceScopedEventHash final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      auto end = TraceLite::getCurrentTime();
+      auto end = theTrace()->getTraceTime();
       theTrace()->addUserEventBracketedEndTime(event_, end);
       event_ = no_user_event_id;
     }
@@ -194,7 +194,7 @@ struct TraceScopedEvent final {
    * \c registerEventCollective )
    */
   explicit TraceScopedEvent(UserEventIDType event)
-    : begin_(event != no_user_event_id ? TraceLite::getCurrentTime() : TimeType{0.}),
+    : begin_(event != no_user_event_id ? theTrace()->getTraceTime() : TimeType{0.}),
       event_(event)
   {
     if (event != no_user_event_id) {
@@ -224,7 +224,7 @@ struct TraceScopedEvent final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      auto end = TraceLite::getCurrentTime();
+      auto end = theTrace()->getTraceTime();
       theTrace()->addUserEventBracketedEndTime(event_, end);
       event_ = no_user_event_id;
     }

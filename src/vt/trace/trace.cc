@@ -114,11 +114,14 @@ void Trace::startup() /*override*/ {
   });
 
 # if !vt_check_enabled(trace_only)
+  theCollective()->barrier();
+
   auto num_nodes = theContext()->getNumNodes();
   auto this_node = theContext()->getNode();
   int num_iters = std::ceil(std::log2(num_nodes));
 
   for (int i = 0; i < num_iters; i++) {
+    theCollective()->barrier();
     runInEpochCollective([&]{
       auto level = i+1;
       auto this_level = std::floor(std::log2(this_node+1));
@@ -128,13 +131,20 @@ void Trace::startup() /*override*/ {
         NodeType parent = this_node / 2;
         proxy_[parent].template send<&Trace::ping>(this_node);
         theSched()->runSchedulerWhile([&]{ return not recv_pong_; });
-        double ping_pong_time = MPI_Wtime() - start;
-        time_offset_ = MPI_Wtime() - cur_time_ - ping_pong_time/2;
+	double now = MPI_Wtime();
+        double ping_pong_time = now - start;
+	if (cur_time_ - ping_pong_time/2 > now) {
+	  //time_offset_ = cur_time_ - ping_pong_time/2 - now;
+	} else if (cur_time_ - ping_pong_time/2 < now) {
+	  //time_offset_ = now - cur_time_ - ping_pong_time/2;
+	}
+	vt_print(trace, "this_node={}, num_iters={}, time_offset_={}, now={}, cur_time_={}, ping_pong_time={}, diff={}\n", this_node, num_iters, time_offset_, now, cur_time_, ping_pong_time, now-cur_time_);
+
       }
     });
   }
 
-  vt_print(trace, "num_iters={}\n", num_iters);
+  //vt_print(trace, "this_node={}, num_iters={}, time_offset_={}\n", this_node, num_iters, time_offset_);
 # endif
 
 #endif
@@ -148,7 +158,7 @@ void Trace::pong(double cur_time) {
 
 void Trace::ping(NodeType from_node) {
   // send back pong
-  proxy_[from_node].template send<&Trace::pong>(MPI_Wtime());
+  proxy_[from_node].template send<&Trace::pong>(MPI_Wtime() - time_offset_);
 }
 
 void Trace::alignTimes(double rank_0_time) {

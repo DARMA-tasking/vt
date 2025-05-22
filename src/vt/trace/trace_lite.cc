@@ -604,7 +604,7 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
   while (not traces.empty()) {
     LogType const& log = traces.front();
 
-    auto const& converted_time = timeToMicros(log.time - start_time);
+    auto const& converted_time = timeToMicros(log.time);
     auto const type =
       static_cast<std::underlying_type<decltype(log.type)>::type>(log.type);
 
@@ -696,7 +696,7 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
     }
     case TraceConstantsType::UserSuppliedBracketedNote: {
       auto const& udata = log.user_data();
-      auto const converted_end_time = timeToMicros(log.end_time - start_time);
+      auto const converted_end_time = timeToMicros(log.end_time);
       gzprintf(
         gzfile, "%d %lld %lld %d %zu %s\n", type, converted_time,
         converted_end_time, log.event, udata.user_note.length(),
