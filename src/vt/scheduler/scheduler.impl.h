@@ -51,7 +51,7 @@
 namespace vt {
 
 template <typename Callable>
-void runInEpoch(std::string const& label, EpochType ep, Callable&& fn) {
+void runInEpoch([[maybe_unused]] std::string const& label, EpochType ep, Callable&& fn) {
   theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
 
   theMsg()->pushEpoch(ep);
