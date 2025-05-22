@@ -127,14 +127,6 @@ stages:
             $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH)
             $(Agent.OS) | "$(cache_name)" | $(TS_YEAR)
             $(Agent.OS) | "$(cache_name)"
-      - task: Bash@3
-        displayName: Check for changes in containers
-        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
-        inputs:
-          targetType: 'inline'
-          script: |
-            val=$(./scripts/check_containers.sh)
-            echo "##vso[task.setvariable variable=compose_command]$val"
       - task: DockerCompose@1
         displayName: Pull container
         inputs:
@@ -142,9 +134,9 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean --privileged'
+          dockerComposeCommand: 'pull ubuntu-cpp-clean'
       - task: DockerCompose@1
-        displayName: Build container
+        displayName: Build and Test
         inputs:
           projectName: darma-tasking-vt
           containerregistrytype: 'Container Registry'
@@ -172,17 +164,6 @@ stages:
                 "$(Agent.JobStatus)"
         env:
           GITHUB_PAT: $(github_pat)
-      - task: DockerCompose@1
-        displayName: Push container to registry
-        continueOnError: true
-        condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
-        inputs:
-          projectName: darma-tasking-vt
-          containerregistrytype: 'Container Registry'
-          dockerRegistryEndpoint: 'dockerRegistryConnection1'
-          dockerComposeFile: '**/docker-compose.yml'
-          action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'push ubuntu-cpp-clean'
       - task: Bash@3
         displayName: Create artifacts
         continueOnError: true
