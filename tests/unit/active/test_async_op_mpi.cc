@@ -111,7 +111,7 @@ TEST_F(TestAsyncOp, test_async_op_1) {
   auto p = theObjGroup()->makeCollective<MyObjGroup>("test_async_op_1");
   auto ep = theTerm()->makeEpochRooted(term::UseDS{true});
   // When this returns all the MPI requests should be done
-  runInEpoch(ep, [p, this_node]{
+  runInEpoch("TestAsyncOp", ep, [p, this_node]{
     p[this_node].send<MyMsg, &MyObjGroup::handler>();
   });
   // Check async MPI ops are completed after return
