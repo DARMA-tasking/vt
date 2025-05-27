@@ -131,6 +131,7 @@ protected:
   );
   void maxIterTime(double max_iter_time);
   void remoteBlockCountHandler(int n_unhomed_blocks);
+  void timeLB(double total_time);
   void thunkMigrations();
 
   void setupDone();
@@ -524,6 +525,7 @@ private:
   /// Ready to satify looks
   bool ready_to_satisfy_locks_ = false;
   int consider_swaps_counter_ = 0;
+  std::vector<double> last_n_I;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

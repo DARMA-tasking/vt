@@ -391,7 +391,7 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
       k_max_ = static_cast<uint16_t>(std::max(1.0,
         std::round(std::sqrt(std::log(num_nodes)/std::log(2.0)))
       ));
-      f_ = static_cast<uint16_t>(std::ceil(std::pow(num_nodes, 1.0/k_max_)));
+      f_ = static_cast<uint16_t>(std::ceil(std::pow(std::log(num_nodes)/std::log(2.0), 1.0/k_max_)));
     }
   } else if (knowledge_ == KnowledgeEnum::Complete) {
     f_ = num_nodes - 1;
@@ -545,9 +545,9 @@ void TemperedLB::runLB(LoadType total_load) {
   if (theContext()->getNode() == 0) {
     vt_debug_print(
       terse, temperedlb,
-      "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
+      "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}, memory_threshold={}\n",
       LoadType(avg), LoadType(max), LoadType(pole), imb,
-      LoadType(load), should_lb
+      LoadType(load), should_lb, mem_thresh_
     );
 
     if (!should_lb) {
@@ -560,18 +560,18 @@ void TemperedLB::runLB(LoadType total_load) {
 
   // Perform load rebalancing when deemed necessary
   if (should_lb) {
-#if vt_check_enabled(trace_enabled)
-    theTrace()->disableTracing();
-#endif
+// #if vt_check_enabled(trace_enabled)
+//     theTrace()->disableTracing();
+// #endif
 
     runInEpochCollective("doLBStages", [&,this]{
       auto this_node = theContext()->getNode();
       proxy_[this_node].template send<&TemperedLB::doLBStages>(imb);
     });
 
-#if vt_check_enabled(trace_enabled)
-    theTrace()->enableTracing();
-#endif
+// #if vt_check_enabled(trace_enabled)
+//     theTrace()->enableTracing();
+// #endif
   }
 }
 
@@ -1051,6 +1051,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
   auto this_node = theContext()->getNode();
 
+  double start_time = MPI_Wtime();
+
   // Read in memory information if it's available before we do any trials
   readClustersMemoryData();
 
@@ -1096,10 +1098,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         send_edges_.clear();
         recv_edges_.clear();
         bool has_comm = false;
-        auto const& comm = load_model_->getComm(
-          {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-        );
-        // vt_print(temperedlb, "comm size={} {}\n", comm.size(), typeid(load_model_).name());
+        auto const& comm = *comm_data;
 
         for (auto const& [key, volume] : comm) {
           // vt_print(temperedlb, "Found comm: volume={}\n", volume.bytes);
@@ -1112,6 +1111,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
             auto const from_obj = key.fromObj();
             auto const to_obj = key.toObj();
             auto const bytes = volume.bytes;
+
+	    // vt_print(temperedlb, "Found comm: to={}, from={} volume={}\n", to_obj, from_obj, volume.bytes);
 
             send_edges_[from_obj].emplace_back(to_obj, bytes);
             recv_edges_[to_obj].emplace_back(from_obj, bytes);
@@ -1309,7 +1310,20 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         });
       }
 
-      if (rollback_ || (iter_ == num_iters_ - 1)) {
+      bool last_four_same = false;
+      if (last_n_I.size() >= 4) {
+	bool all_same = true;
+	for (int i = 1; i < 4; i++) {
+	  if (last_n_I[last_n_I.size()-1] != last_n_I[last_n_I.size()-1-i]) {
+	    all_same = false;
+	  }
+	}
+	if (all_same) {
+	  last_four_same = true;
+	}
+      }
+
+      if (rollback_ || (iter_ == num_iters_ - 1) || new_imbalance_ < 0.01 || last_four_same) {
         // if known, save the best iteration within any trial so we can roll back
         if (new_imbalance_ < best_imb && new_imbalance_ <= start_imb) {
           best_load = this_new_load_;
@@ -1320,6 +1334,10 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         if (new_imbalance_ < best_imb_this_trial) {
           best_imb_this_trial = new_imbalance_;
         }
+      }
+
+      if (new_imbalance_ < 0.01 || last_four_same) {
+	break;
       }
     }
 
@@ -1367,9 +1385,20 @@ void TemperedLB::doLBStages(LoadType start_imb) {
     );
   }
 
+  double end_time = MPI_Wtime();
+  proxy_.allreduce<&TemperedLB::timeLB,
+		   collective::MaxOp>(end_time-start_time);
+
   // Concretize lazy migrations by invoking the BaseLB object migration on new
   // object node assignments
   thunkMigrations();
+}
+
+void TemperedLB::timeLB(double total_time) {
+  auto const this_node = theContext()->getNode();
+  if (this_node == 0) {
+    vt_print(temperedlb, "total time={}\n", total_time);
+  }
 }
 
 void TemperedLB::giveEdges(EdgeMapType const& edge_map) {
@@ -1389,6 +1418,7 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
   auto const& in = vec[0];
   auto const& work = vec[1];
   new_imbalance_ = in.I();
+  last_n_I.push_back(std::round(new_imbalance_ * 10000.0) / 10000.0);
 
   work_mean_ = work.avg();
   work_max_ = work.max();
