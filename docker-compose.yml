@@ -237,7 +237,7 @@ services:
   # Build documentation for VT in the container on ubuntu platform from
   # container baseline.
   ubuntu-docs:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}
+    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
     ulimits: *ulimits
     environment:
       <<: *ccache
@@ -267,7 +267,7 @@ services:
   # Interactive build documentation for VT in the container on ubuntu platform
   # from container baseline.
   ubuntu-docs-interactive:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}
+    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
     ulimits: *ulimits
     environment:
       <<: *ccache
