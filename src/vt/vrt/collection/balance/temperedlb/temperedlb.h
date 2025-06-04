@@ -129,10 +129,12 @@ protected:
   void rejectionStatsHandler(
     int n_rejected, int n_transfers, int n_unhomed_blocks, int cycle_count
   );
+  void finishedSwaps();
   void maxIterTime(double max_iter_time);
   void remoteBlockCountHandler(int n_unhomed_blocks);
+  void timeLB(double total_time);
   void thunkMigrations();
-
+  void propsDone();
   void setupDone();
 
   /**
@@ -324,7 +326,7 @@ protected:
   /**
    * \brief Release a lock on a rank
    */
-  void releaseLock();
+  void releaseLock(bool try_again, NodeType try_lock_node, double c_try);
 
   /**
    * \brief Give a cluster to a rank
@@ -438,6 +440,14 @@ private:
   double iter_time_                                 = 0.0f;
   /// Whether any node has communication data
   bool has_comm_any_ = false;
+  bool done_with_swaps_ = false;
+  bool props_done_ = false;
+  int try_locks_pending_ = 0;
+  EpochType lb_stages_epoch_ = no_epoch;
+  int total_num_iters_ = 0;
+  bool work_stats_handler_ = false;
+  bool load_stats_handler_ = false;
+  bool compute_unhomed_done_ = false;
 
   void hasCommAny(bool has_comm_any);
   void giveEdges(EdgeMapType const& edge_map);
@@ -459,7 +469,7 @@ private:
 
     double operator<(TryLock const& other) const {
       // sort in reverse order so the best is first!
-      return c_try > other.c_try;
+      return c_try == other.c_try ? requesting_node < other.requesting_node : c_try > other.c_try;
     }
   };
 
@@ -524,6 +534,7 @@ private:
   /// Ready to satify looks
   bool ready_to_satisfy_locks_ = false;
   int consider_swaps_counter_ = 0;
+  std::vector<double> last_n_I;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

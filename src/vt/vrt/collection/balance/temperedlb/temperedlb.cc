@@ -391,7 +391,12 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
       k_max_ = static_cast<uint16_t>(std::max(1.0,
         std::round(std::sqrt(std::log(num_nodes)/std::log(2.0)))
       ));
-      f_ = static_cast<uint16_t>(std::ceil(std::pow(num_nodes, 1.0/k_max_)));
+      f_ = std::max(
+        static_cast<uint16_t>(1),
+        static_cast<uint16_t>(
+          std::ceil(std::pow(std::log(num_nodes)/std::log(2.0), 1.0/k_max_))
+        )
+      );
     }
   } else if (knowledge_ == KnowledgeEnum::Complete) {
     f_ = num_nodes - 1;
@@ -545,9 +550,9 @@ void TemperedLB::runLB(LoadType total_load) {
   if (theContext()->getNode() == 0) {
     vt_debug_print(
       terse, temperedlb,
-      "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
+      "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}, memory_threshold={}\n",
       LoadType(avg), LoadType(max), LoadType(pole), imb,
-      LoadType(load), should_lb
+      LoadType(load), should_lb, mem_thresh_
     );
 
     if (!should_lb) {
@@ -560,18 +565,17 @@ void TemperedLB::runLB(LoadType total_load) {
 
   // Perform load rebalancing when deemed necessary
   if (should_lb) {
-#if vt_check_enabled(trace_enabled)
-    theTrace()->disableTracing();
-#endif
+    lb_stages_epoch_ = theTerm()->makeEpochCollective("doLBStages");
 
-    runInEpochCollective("doLBStages", [&,this]{
-      auto this_node = theContext()->getNode();
-      proxy_[this_node].template send<&TemperedLB::doLBStages>(imb);
-    });
+    auto this_node = theContext()->getNode();
+    proxy_[this_node].template send<&TemperedLB::doLBStages>(imb);
 
-#if vt_check_enabled(trace_enabled)
-    theTrace()->enableTracing();
-#endif
+    // Disable epoch manually so propagation doesn't continue while we know it
+    // can't finish
+    theTerm()->finishedEpoch(lb_stages_epoch_);
+    theTerm()->disableTD(lb_stages_epoch_);
+    theTerm()->disableTD(vt::term::any_epoch_sentinel);
+    theTerm()->setLocalTerminated(false, true);
   }
 }
 
@@ -855,6 +859,7 @@ void TemperedLB::workStatsHandler(std::vector<balance::LoadData> const& vec) {
   work_mean_ = work.avg();
   work_max_ = work.max();
   new_work_imbalance_ = work.I();
+  work_stats_handler_ = true;
 }
 
 double TemperedLB::computeWork(
@@ -1051,6 +1056,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
   auto this_node = theContext()->getNode();
 
+  double start_time = MPI_Wtime();
+
   // Read in memory information if it's available before we do any trials
   readClustersMemoryData();
 
@@ -1073,6 +1080,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
     for (iter_ = 0; iter_ < num_iters_; iter_++) {
       bool first_iter = iter_ == 0;
       iter_time_ = MPI_Wtime();
+      done_with_swaps_ = false;
+      props_done_ = false;
 
       if (first_iter) {
         // Copy this node's object assignments to a local, mutable copy
@@ -1096,10 +1105,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         send_edges_.clear();
         recv_edges_.clear();
         bool has_comm = false;
-        auto const& comm = load_model_->getComm(
-          {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
-        );
-        // vt_print(temperedlb, "comm size={} {}\n", comm.size(), typeid(load_model_).name());
+        auto const& comm = *comm_data;
 
         for (auto const& [key, volume] : comm) {
           // vt_print(temperedlb, "Found comm: volume={}\n", volume.bytes);
@@ -1113,9 +1119,13 @@ void TemperedLB::doLBStages(LoadType start_imb) {
             auto const to_obj = key.toObj();
             auto const bytes = volume.bytes;
 
-            send_edges_[from_obj].emplace_back(to_obj, bytes);
-            recv_edges_[to_obj].emplace_back(from_obj, bytes);
-            has_comm = true;
+	    if (from_obj.isMigratable() or to_obj.isMigratable()) {
+	      //vt_print(temperedlb, "Found comm: to={}, from={} volume={}\n", to_obj, from_obj, volume.bytes);
+
+	      send_edges_[from_obj].emplace_back(to_obj, bytes);
+	      recv_edges_[to_obj].emplace_back(from_obj, bytes);
+	      has_comm = true;
+	    }
           } else if (key.commCategory() == elm::CommCategory::WriteShared) {
             auto const to_node = key.toNode();
             auto const shared_id = key.sharedID();
@@ -1167,16 +1177,15 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
         this_work = this_new_work_ = this_new_breakdown_.work;
 
-        runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
-          // Perform the reduction for Rank_load_modeled -> processor load only
-          proxy_.allreduce<&TemperedLB::workStatsHandler, collective::PlusOp>(
-            std::vector<balance::LoadData>{
-              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}},
-              {balance::LoadData{Statistic::Rank_strategy_specific_load_modeled, this_new_work_}}
-            }
-          );
-        });
-
+	work_stats_handler_ = false;
+	// Perform the reduction for Rank_load_modeled -> processor load only
+	proxy_.allreduce<&TemperedLB::workStatsHandler, collective::PlusOp>(
+          std::vector<balance::LoadData>{
+            {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}},
+            {balance::LoadData{Statistic::Rank_strategy_specific_load_modeled, this_new_work_}}
+          }
+       );
+       theSched()->runSchedulerWhile([this]{ return not work_stats_handler_; });
       } else {
         // Clear out data structures from previous iteration
         selected_.clear();
@@ -1200,7 +1209,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       );
 
       if (has_memory_data_) {
-        double const memory_usage = computeMemoryUsage();
+        double memory_usage = computeMemoryUsage();
 
         vt_debug_print(
           normal, temperedlb,
@@ -1215,15 +1224,6 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
         if (iter_ == 0) {
           computeClusterSummary();
-        }
-
-        // Verbose printing about local clusters
-        for (auto const& [shared_id, cluster_info] : cur_clusters_) {
-          vt_debug_print(
-            verbose, temperedlb,
-            "Local cluster: id={}: {}\n",
-            shared_id, cluster_info
-          );
         }
       }
 
@@ -1243,18 +1243,6 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         break;
       default:
         vtAbort("TemperedLB:: Unsupported inform type");
-      }
-
-      // Some very verbose printing about all remote clusters we know about that
-      // we can shut off later
-      for (auto const& [node, clusters] : other_rank_clusters_) {
-        for (auto const& [shared_id, cluster_info] : clusters) {
-          vt_debug_print(
-            verbose, temperedlb,
-            "Remote cluster: node={}, id={}, {}\n",
-            node, shared_id, cluster_info
-          );
-        }
       }
 
       // Move remote cluster information to shared_block_size_ so we have all
@@ -1282,6 +1270,8 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         vtAbort("TemperedLB:: Unsupported transfer type");
       }
 
+      total_num_iters_++;
+
       vt_debug_print(
         verbose, temperedlb,
         "TemperedLB::doLBStages: (after) running trial={}, iter={}, "
@@ -1298,18 +1288,31 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       ) {
         this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
         this_new_work_ = this_new_breakdown_.work;
-        runInEpochCollective("TemperedLB::doLBStages -> Rank_load_modeled", [=] {
-          // Perform the reduction for Rank_load_modeled -> processor load only
-          proxy_.allreduce<&TemperedLB::loadStatsHandler, collective::PlusOp>(
-            std::vector<balance::LoadData>{
-              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}},
-              {balance::LoadData{Statistic::Rank_strategy_specific_load_modeled, this_new_work_}}
-            }
-          );
-        });
+	load_stats_handler_ = false;
+        // Perform the reduction for Rank_load_modeled -> processor load only
+        proxy_.allreduce<&TemperedLB::loadStatsHandler, collective::PlusOp>(
+          std::vector<balance::LoadData>{
+            {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}},
+            {balance::LoadData{Statistic::Rank_strategy_specific_load_modeled, this_new_work_}}
+          }
+        );
+	theSched()->runSchedulerWhile([this]{ return not load_stats_handler_; });
       }
 
-      if (rollback_ || (iter_ == num_iters_ - 1)) {
+      bool last_four_same = false;
+      if (last_n_I.size() >= 4) {
+	bool all_same = true;
+	for (int i = 1; i < 4; i++) {
+	  if (last_n_I[last_n_I.size()-1] != last_n_I[last_n_I.size()-1-i]) {
+	    all_same = false;
+	  }
+	}
+	if (all_same) {
+	  last_four_same = true;
+	}
+      }
+
+      if (rollback_ || (iter_ == num_iters_ - 1) || new_imbalance_ < 0.01 || last_four_same) {
         // if known, save the best iteration within any trial so we can roll back
         if (new_imbalance_ < best_imb && new_imbalance_ <= start_imb) {
           best_load = this_new_load_;
@@ -1320,6 +1323,10 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         if (new_imbalance_ < best_imb_this_trial) {
           best_imb_this_trial = new_imbalance_;
         }
+      }
+
+      if (new_imbalance_ < 0.01 || last_four_same) {
+	break;
       }
     }
 
@@ -1355,10 +1362,10 @@ void TemperedLB::doLBStages(LoadType start_imb) {
     // Skip this block when not using SwapClusters
     if (transfer_type_ == TransferTypeEnum::SwapClusters) {
       auto remote_block_count = getRemoteBlockCountHere();
-      runInEpochCollective("TemperedLB::doLBStages -> compute unhomed", [=] {
-        proxy_.allreduce<&TemperedLB::remoteBlockCountHandler,
-                         collective::PlusOp>(remote_block_count);
-      });
+      compute_unhomed_done_ = false;
+      proxy_.allreduce<&TemperedLB::remoteBlockCountHandler,
+                       collective::PlusOp>(remote_block_count);
+      theSched()->runSchedulerWhile([this]{ return not compute_unhomed_done_; });
     }
   } else if (this_node == 0) {
     vt_debug_print(
@@ -1367,9 +1374,25 @@ void TemperedLB::doLBStages(LoadType start_imb) {
     );
   }
 
+  double end_time = MPI_Wtime();
+  proxy_.allreduce<&TemperedLB::timeLB,
+		   collective::MaxOp>(end_time-start_time);
+
   // Concretize lazy migrations by invoking the BaseLB object migration on new
   // object node assignments
   thunkMigrations();
+
+  theTerm()->setLocalTerminated(true, false);
+  theTerm()->enableTD(lb_stages_epoch_);
+  theTerm()->enableTD(vt::term::any_epoch_sentinel);
+  vt::runSchedulerThrough(lb_stages_epoch_);
+}
+
+void TemperedLB::timeLB(double total_time) {
+  auto const this_node = theContext()->getNode();
+  if (this_node == 0) {
+    vt_print(temperedlb, "total time={}, per iter={}\n", total_time, total_time/total_num_iters_);
+  }
 }
 
 void TemperedLB::giveEdges(EdgeMapType const& edge_map) {
@@ -1389,6 +1412,7 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
   auto const& in = vec[0];
   auto const& work = vec[1];
   new_imbalance_ = in.I();
+  last_n_I.push_back(std::round(new_imbalance_ * 10000.0) / 10000.0);
 
   work_mean_ = work.avg();
   work_max_ = work.max();
@@ -1415,6 +1439,7 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
       work.I()
     );
   }
+  load_stats_handler_ = true;
 }
 
 void TemperedLB::rejectionStatsHandler(
@@ -1454,6 +1479,11 @@ void TemperedLB::remoteBlockCountHandler(int n_unhomed_blocks) {
       n_unhomed_blocks
     );
   }
+  compute_unhomed_done_ = true;
+}
+
+void TemperedLB::propsDone() {
+  props_done_ = true;
 }
 
 void TemperedLB::informAsync() {
@@ -1478,17 +1508,16 @@ void TemperedLB::informAsync() {
   proxy_.allreduce<&TemperedLB::setupDone>();
   theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
-  auto propagate_epoch = theTerm()->makeEpochCollective("TemperedLB: informAsync");
-
   // Underloaded start the round
   if (is_underloaded_) {
-    uint8_t k_cur_async = 0;
-    propagateRound(k_cur_async, false, propagate_epoch);
+    runInEpochRooted("informAsync", [&]{
+      uint8_t k_cur_async = 0;
+      propagateRound(k_cur_async, false, no_epoch);
+    });
   }
 
-  theTerm()->finishedEpoch(propagate_epoch);
-
-  vt::runSchedulerThrough(propagate_epoch);
+  proxy_.allreduce<&TemperedLB::propsDone>();
+  theSched()->runSchedulerWhile([this]{ return not props_done_ ; });
 
   if (is_overloaded_) {
     vt_debug_print(
@@ -2154,21 +2183,11 @@ void TemperedLB::originalTransfer() {
 
   if (theConfig()->vt_debug_temperedlb) {
     // compute rejection rate because it will be printed
-    runInEpochCollective("TemperedLB::originalTransfer -> compute rejection", [=] {
-      iter_time_ = MPI_Wtime() - iter_time_;
-      proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers, 0, 0
-      );
-      proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
-    });
-  }
-}
-
-void TemperedLB::tryLock(NodeType requesting_node, double criterion_value) {
-  try_locks_.emplace(requesting_node, criterion_value);
-
-  if (ready_to_satisfy_locks_ and not is_locked_) {
-    satisfyLockRequest();
+    iter_time_ = MPI_Wtime() - iter_time_;
+    proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
+      n_rejected, n_transfers, 0, 0
+    );
+    proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
   }
 }
 
@@ -2430,7 +2449,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     );
   }
 
-  proxy_[try_rank].template send<&TemperedLB::releaseLock>();
+  proxy_[try_rank].template send<&TemperedLB::releaseLock>(false, this_node, 0.0);
 
   vt_debug_print(
     verbose, temperedlb,
@@ -2446,6 +2465,9 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     auto action = pending_actions_.back();
     pending_actions_.pop_back();
     action();
+  } else {
+    // satisfy another lock
+    satisfyLockRequest();
   }
 }
 
@@ -2514,11 +2536,25 @@ void TemperedLB::giveCluster(
   );
 }
 
-void TemperedLB::releaseLock() {
+void TemperedLB::tryLock(NodeType requesting_node, double criterion_value) {
   vt_debug_print(
     normal, temperedlb,
-    "releaseLock: pending size={}\n",
-    pending_actions_.size()
+    "tryLock: requesting_node={}, c_try={}\n",
+    requesting_node, criterion_value
+  );
+
+  try_locks_.emplace(requesting_node, criterion_value);
+
+  if (ready_to_satisfy_locks_ and not is_locked_) {
+    satisfyLockRequest();
+  }
+}
+
+void TemperedLB::releaseLock(bool try_again, NodeType try_lock_node, double c_try) {
+  vt_debug_print(
+    normal, temperedlb,
+    "releaseLock: pending size={}, try_again={}, try_lock_node={}, c_try={}\n",
+    pending_actions_.size(), try_again, try_lock_node, c_try
   );
 
   is_locked_ = false;
@@ -2543,22 +2579,22 @@ void TemperedLB::lockObtained(LockedInfoMsg* in_msg) {
     is_locked_, is_swapping_, locking_rank_, msg->locked_node, is_swapping_
   );
 
-  auto cur_epoch = theMsg()->getEpoch();
-  theTerm()->produce(cur_epoch);
+  auto action = [this, msg]{
+    try_locks_pending_--;
 
-  auto action = [this, msg, cur_epoch]{
-    theMsg()->pushEpoch(cur_epoch);
+    vt_debug_print(
+      normal, temperedlb,
+      "try locks pending={} run action\n", try_locks_pending_
+    );
+
     considerSwapsAfterLock(msg);
-    theMsg()->popEpoch(cur_epoch);
-    theTerm()->consume(cur_epoch);
   };
 
   if (is_locked_ && locking_rank_ <= msg->locked_node) {
     cycle_locks_++;
-    proxy_[msg->locked_node].template send<&TemperedLB::releaseLock>();
-    theTerm()->consume(cur_epoch);
-    try_locks_.emplace(msg->locked_node, msg->locked_c_try, 1);
-    //pending_actions_.push_back(action);
+    auto const this_node = theContext()->getNode();
+    proxy_[msg->locked_node].template send<&TemperedLB::releaseLock>(true, this_node, in_msg->locked_c_try);
+    try_locks_pending_--;
   } else if (is_locked_) {
     pending_actions_.push_back(action);
   } else if (is_swapping_) {
@@ -2579,8 +2615,8 @@ void TemperedLB::satisfyLockRequest() {
     // find the best lock to give
     for (auto&& tl : try_locks_) {
       vt_debug_print(
-        verbose, temperedlb,
-        "satisfyLockRequest: node={}, c_try={}, forced_release={}\n",
+        normal, temperedlb,
+        "satisfyLockRequest (iterate): node={}, c_try={}, forced_release={}\n",
 	tl.requesting_node, tl.c_try, tl.forced_release
       );
     }
@@ -2603,7 +2639,7 @@ void TemperedLB::satisfyLockRequest() {
 
     vt_debug_print(
       normal, temperedlb,
-      "satisfyLockRequest: locked obtained for node={}\n",
+      "satisfyLockRequest: lock obtained for node={}\n",
       lock.requesting_node
     );
 
@@ -2636,9 +2672,6 @@ void TemperedLB::swapClusters() {
     this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
     this_new_breakdown_.shared_vol
   };
-
-  auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: swapClusters");
-  theTerm()->pushEpoch(lazy_epoch);
 
   auto criterion = [&,this](
     auto try_rank, auto try_mem, auto const& src_cluster, auto const& try_cluster
@@ -2687,7 +2720,14 @@ void TemperedLB::swapClusters() {
         if (c_try >= 0.0) {
 	  // Try to obtain lock for feasible swap
           found_potential_good_swap = true;
+
+          vt_debug_print(
+            normal, temperedlb,
+	    "try lock rank={}, c_try={}\n", try_rank, c_try
+          );
+
           proxy_[try_rank].template send<&TemperedLB::tryLock>(this_node, c_try);
+	  try_locks_pending_++;
           break;
         }
       }
@@ -2699,7 +2739,14 @@ void TemperedLB::swapClusters() {
         if (c_try >= 0.0) {
 	  // Try to obtain lock for feasible swap
           found_potential_good_swap = true;
+
+          vt_debug_print(
+            normal, temperedlb,
+	    "try lock rank={}, c_try={}\n", try_rank, c_try
+          );
+
           proxy_[try_rank].template send<&TemperedLB::tryLock>(this_node, c_try);
+	  try_locks_pending_++;
           break;
         }
       } // try_clusters
@@ -2709,24 +2756,23 @@ void TemperedLB::swapClusters() {
     } // cur_clusters_
   } // other_rank_clusters
 
-  // We have to be very careful here since we will allow some reentrancy here.
-  constexpr int turn_scheduler_times = 10;
-  for (int i = 0; i < turn_scheduler_times; i++) {
-    theSched()->runSchedulerOnceImpl();
-  }
-
-  while (not theSched()->workQueueEmpty()) {
-    theSched()->runSchedulerOnceImpl();
-  }
-
   ready_to_satisfy_locks_ = true;
   satisfyLockRequest();
 
-  // Finalize epoch, we have sent our initial round of messages
-  // from here everything is message driven
-  theTerm()->finishedEpoch(lazy_epoch);
-  theTerm()->popEpoch(lazy_epoch);
-  vt::runSchedulerThrough(lazy_epoch);
+  vt_debug_print(
+    normal, temperedlb,
+    "try locks pending={}\n", try_locks_pending_
+  );
+
+  theSched()->runSchedulerWhile([this]{
+    if (not is_locked_) {
+      satisfyLockRequest();
+    }
+    return try_locks_pending_ > 0 or try_locks_.size() > 0;
+  });
+
+  proxy_.allreduce<&TemperedLB::finishedSwaps>();
+  theSched()->runSchedulerWhile([this]{ return not done_with_swaps_; });
 
   vt_debug_print(
     normal, temperedlb,
@@ -2739,14 +2785,16 @@ void TemperedLB::swapClusters() {
   if (theConfig()->vt_debug_temperedlb) {
     int n_rejected = 0;
     auto remote_block_count = getRemoteBlockCountHere();
-    runInEpochCollective("TemperedLB::swapClusters -> compute rejection", [=] {
-      iter_time_ = MPI_Wtime() - iter_time_;
-      proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-        n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_
-      );
-      proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
-    });
+    iter_time_ = MPI_Wtime() - iter_time_;
+    proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
+      n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_
+    );
+    proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
   }
+}
+
+void TemperedLB::finishedSwaps() {
+  done_with_swaps_ = true;
 }
 
 void TemperedLB::thunkMigrations() {
