@@ -1369,6 +1369,51 @@ void CollectionManager::insertMetaCollection(
   };
 }
 
+template <typename IndexT>
+VirtualProxyType CollectionManager::makeCollectionProxy(
+  bool is_collective, bool is_migratable, VirtualProxyType requested
+) {
+  if (requested != no_vrt_proxy) {
+    auto conflicting_holder = findColHolder<IndexT>(requested);
+
+    if (conflicting_holder == nullptr) {
+      VirtualIDType const req_id = VirtualProxyBuilder::getVirtualID(requested);
+
+      if (is_collective)
+        next_collective_id_ = std::max(next_collective_id_, req_id + 1);
+      else
+        next_rooted_id_ = std::max(next_rooted_id_, req_id + 1);
+
+      vt_debug_print(
+        verbose, vrt_coll,
+        "makeCollectionProxy: node={}, new_dist_id={}, proxy={:x} (by "
+        "request)\n",
+        theContext()->getNode(), req_id, requested
+      );
+      return requested;
+    } // else ignore request, make as normal
+  };
+
+  VirtualIDType const new_id =
+    is_collective ? next_collective_id_++ : next_rooted_id_++;
+
+  auto const this_node = theContext()->getNode();
+  bool const is_collection = true;
+
+  // Create the new proxy with the `new_dist_id`
+  auto const proxy = VirtualProxyBuilder::createProxy(
+    new_id, this_node, is_collection, is_migratable, is_collective
+  );
+
+  vt_debug_print(
+    verbose, vrt_coll,
+    "makeCollectionProxy: node={}, new_dist_id={}, proxy={:x}\n", this_node,
+    new_id, proxy
+  );
+
+  return proxy;
+}
+
 template <typename ColT>
 void CollectionManager::constructGroup(VirtualProxyType const& proxy) {
   /*
@@ -2085,6 +2130,12 @@ template <typename ColT, typename IndexT>
 IndexT CollectionManager::getRange(VirtualProxyType proxy) {
   auto col_holder = findColHolder<IndexT>(proxy);
   return col_holder->bounds;
+}
+
+template <typename ColT, typename IndexT>
+bool CollectionManager::getDynamicMembership(VirtualProxyType proxy) {
+  auto col_holder = findColHolder<IndexT>(proxy);
+  return col_holder->has_dynamic_membership_;
 }
 
 template <typename ColT, typename IndexT>
