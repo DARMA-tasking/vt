@@ -151,7 +151,7 @@ void validateAllTraceFiles() {
     ::testing::UnitTest::GetInstance()->current_test_info()->name();
   std::filesystem::path path = std::filesystem::current_path() / test_name / "";
   std::string ext = ".gz";
-  vt_print(gen, "validateAllTraceFiles: {}, {}\n", test_name, path);
+  vt_print(gen, "validateAllTraceFiles: {}\n", test_name);
 
   // iterate over files in test output directory
   for (const auto& file : std::filesystem::directory_iterator(path)) {
