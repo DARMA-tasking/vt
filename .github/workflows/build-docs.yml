@@ -14,10 +14,10 @@ jobs:
     env:
       REPO: lifflander1/vt
       ARCH: amd64
-      UBUNTU: 22.04
+      UBUNTU: 20.04
       COMPILER_TYPE: gnu
-      COMPILER: gcc-11
-      HOST_COMPILER: gcc-11
+      COMPILER: gcc-9
+      HOST_COMPILER: gcc-9
       BUILD_TYPE: release
       ULIMIT_CORE: 0
       VT_LB: 1
