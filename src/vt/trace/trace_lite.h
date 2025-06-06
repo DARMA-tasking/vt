@@ -322,35 +322,25 @@ protected:
    *
    * \param[in] file the gzip file to write to
    * \param[in] traces the container of collected traces
-   * \param[in] start_time the start time
    * \param[in] flush the flush mode
    */
   static void outputTraces(
-    vt_gzFile* file, TraceContainerType& traces,
-    TimeType start_time, int flush
+    vt_gzFile* file, TraceContainerType& traces, int flush
   );
 
   /**
    * \brief Output the tracing header
    *
    * \param[in] file the gzip file
-   * \param[in] node the node outputting on
-   * \param[in] start the start time
    */
-  static void outputHeader(
-    vt_gzFile* file, NodeType const node, TimeType const start
-  );
+  static void outputHeader(vt_gzFile* file);
 
   /**
    * \brief Output the tracing footer
    *
    * \param[in] file the gzip file
-   * \param[in] node the node outputting on
-   * \param[in] start the start time
    */
-  static void outputFooter(
-    vt_gzFile* file, NodeType const node, TimeType const start
-  );
+  static void outputFooter(vt_gzFile* file);
 
   /**
    * \brief Write traces to file
@@ -433,7 +423,6 @@ protected:
   TraceEventIDType cur_event_   = 1;
   UserEventIDType flush_event_  = no_user_event_id;
   bool enabled_                 = true;
-  TimeType start_time_          = TimeType{0.0};
   std::string prog_name_        = "";
   std::string trace_name_       = "";
   std::string full_trace_name_  = "";

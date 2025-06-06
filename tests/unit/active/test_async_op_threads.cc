@@ -209,7 +209,7 @@ TEST_F(TestAsyncOpThreads, test_async_op_threads_1) {
   auto ep = theTerm()->makeEpochRooted(term::UseDS{true});
 
   // When this returns all the MPI requests should be done
-  runInEpoch(ep, [p, this_node]{
+  runInEpoch("TestAsyncOpThreads1", ep, [p, this_node]{
     p[this_node].send<typename MyCol::MyMsg, &MyCol::handler>();
   });
 
@@ -229,7 +229,7 @@ TEST_F(TestAsyncOpThreads, test_async_op_threads_invoke_2) {
   auto ep = theTerm()->makeEpochRooted(term::UseDS{true});
 
   // When this returns all the MPI requests should be done
-  runInEpoch(ep, [p, this_node]{
+  runInEpoch("TestAsyncOpThreads2", ep, [p, this_node]{
     p[this_node].send<typename MyCol::MyMsg, &MyCol::handlerInvoke>();
   });
 
