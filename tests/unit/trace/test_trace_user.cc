@@ -101,7 +101,7 @@ void validateLine(const std::string line, int& time) {
     tokens.push_back(token);
   }
 
-  vt_print(gen, "validateLine: {}\n", line);
+  fmt::print("validateLine: {}\n", line);
 
   // validate the start time
   int start_time = 0, end_time = 0;
@@ -151,7 +151,7 @@ void validateAllTraceFiles() {
     ::testing::UnitTest::GetInstance()->current_test_info()->name();
   std::filesystem::path path = std::filesystem::current_path() / test_name / "";
   std::string ext = ".gz";
-  vt_print(gen, "validateAllTraceFiles: {}\n", test_name);
+  fmt::print("validateAllTraceFiles: {}\n", test_name);
 
   // iterate over files in test output directory
   for (const auto& file : std::filesystem::directory_iterator(path)) {
