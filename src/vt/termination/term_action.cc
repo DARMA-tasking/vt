@@ -115,8 +115,11 @@ void TermAction::addActionEpoch(EpochType const& epoch, ActionType action) {
     return addAction(action);
   } else {
     auto encapsulated_epoch = getCurrentEpoch();
-    theTerm()->produce(encapsulated_epoch);
     epoch_actions_[epoch][encapsulated_epoch].push_back(action);
+
+    if (encapsulated_epoch != term::any_epoch_sentinel) {
+      theTerm()->addDependency(epoch, encapsulated_epoch);
+    }
   }
   afterAddEpochAction(epoch);
 }
@@ -134,7 +137,6 @@ void TermAction::triggerAllEpochActions(
     if (auto iter2 = iter->second.find(encapsulated_epoch);
         iter2 != iter->second.end()) {
       for (auto&& action : iter2->second) {
-        theTerm()->consume(encapsulated_epoch);
         action();
       }
       iter->second.erase(iter2);

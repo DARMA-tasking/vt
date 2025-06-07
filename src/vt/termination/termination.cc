@@ -649,6 +649,9 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
     epoch, isRooted(epoch), isDS(epoch), from == CallFromEnum::Root ? true : false
   );
 
+  // Trigger actions associated with epoch
+  queueActions(epoch);
+
   // Clear all the successor epochs that are nested by this epoch (waiting on it
   // to complete)
   if (epoch != term::any_epoch_sentinel) {
@@ -657,9 +660,6 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
       dep->clearSuccessors();
     }
   }
-
-  // Trigger actions associated with epoch
-  queueActions(epoch);
 
   // Update the window for the epoch archetype
   updateResolvedEpochs(epoch);
