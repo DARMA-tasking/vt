@@ -199,7 +199,7 @@ TEST_F(TestAsyncOp, test_async_op_cuda) {
   auto ep = theTerm()->makeEpochRooted(term::UseDS{true});
 
   // When this returns all the CUDA streams should be done
-  runInEpoch(ep, [p, this_node] {
+  runInEpoch("TestAsyncOpCUDA", ep, [p, this_node] {
     p[this_node].send<MyMsg, &CUDAGroup::cudaHandler>();
   });
 
