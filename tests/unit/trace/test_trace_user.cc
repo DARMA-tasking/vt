@@ -86,7 +86,7 @@ private:
   std::string trace_dir;
 };
 
-void validateLine(const std::string line, int& time) {
+void validateLine(const std::string line, int64_t& time) {
   using vt::trace::eTraceConstants;
 
   // skip header (starts with P)
@@ -104,7 +104,7 @@ void validateLine(const std::string line, int& time) {
   fmt::print("validateLine: {}\n", line);
 
   // validate the start time
-  int start_time = 0, end_time = 0;
+  int64_t start_time = 0, end_time = 0;
   bool check_start_time = true, check_end_time = false;
   eTraceConstants type = static_cast<eTraceConstants>(std::stoi(tokens[0]));
   switch(type) {
@@ -112,25 +112,25 @@ void validateLine(const std::string line, int& time) {
     case eTraceConstants::BeginProcessing: // 2
     case eTraceConstants::EndProcessing: // 3
     case eTraceConstants::CreationBcast: // 20
-      start_time = std::stoi(tokens[3]);
+      start_time = strtoll(tokens[3].c_str(), nullptr, 10);
       break;
     case eTraceConstants::UserEvent: // 13
     case eTraceConstants::UserSupplied: // 26
     case eTraceConstants::BeginUserEventPair: // 98
     case eTraceConstants::EndUserEventPair: // 99
-      start_time = std::stoi(tokens[2]);
+      start_time = strtoll(tokens[2].c_str(), nullptr, 10);
       break;
     case eTraceConstants::BeginComputation: // 6
     case eTraceConstants::EndComputation: // 7
     case eTraceConstants::BeginIdle: // 14
     case eTraceConstants::EndIdle: // 15
     case eTraceConstants::UserSuppliedNote: // 28
-      start_time = std::stoi(tokens[1]);
+      start_time = strtoll(tokens[1].c_str(), nullptr, 10);
       break;
     // those with end time
     case eTraceConstants::UserSuppliedBracketedNote: // 29
-      start_time = std::stoi(tokens[1]);
-      end_time = std::stoi(tokens[2]);
+      start_time = strtoll(tokens[1].c_str(), nullptr, 10);
+      end_time = strtoll(tokens[2].c_str(), nullptr, 10);
       check_end_time = true;
       break;
     default:
@@ -167,7 +167,7 @@ void validateAllTraceFiles() {
 
       std::istringstream stream(std::string(buffer, bytesRead));
 
-      int lastStartTime = 0;
+      int64_t lastStartTime = 0;
       std::string line;
       // read line by line all validate start time
       while (std::getline(stream, line)) {
