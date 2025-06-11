@@ -396,6 +396,7 @@ private:
    * ("longest pole") instead of the processor-average load.
    */
   bool target_pole_                                 = false;
+  double converge_tolerance_ = 0.1;
   std::random_device seed_;
   std::unordered_map<NodeType, NodeInfo> load_info_ = {};
   std::unordered_map<NodeType, NodeInfo> new_load_info_ = {};
@@ -534,7 +535,7 @@ private:
   /// Ready to satify looks
   bool ready_to_satisfy_locks_ = false;
   int consider_swaps_counter_ = 0;
-  std::vector<double> last_n_I;
+  std::vector<double> last_n_work;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

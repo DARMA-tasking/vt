@@ -418,6 +418,9 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     vtAbort(s);
   }
 
+  converge_tolerance_ = config->getOrDefault<double>(
+    "converge_tolerance", converge_tolerance_
+  );
   alpha = config->getOrDefault<double>("alpha", alpha);
   beta = config->getOrDefault<double>("beta", beta);
   gamma = config->getOrDefault<double>("gamma", gamma);
@@ -987,6 +990,9 @@ double TemperedLB::computeWorkAfterClusterSwap(
     node_intra_recv - to_remove.intra_recv_vol + to_add.intra_recv_vol
   );
 
+  auto const new_intra_send = node_intra_send - to_remove.intra_send_vol + to_add.intra_send_vol;
+  auto const new_intra_recv = node_intra_recv - to_remove.intra_recv_vol + to_add.intra_recv_vol;
+
   // Uninitialized destination means that the cluster is empty
   // If to_remove was remote, remove that component from the work
   if (
@@ -1009,16 +1015,21 @@ double TemperedLB::computeWorkAfterClusterSwap(
   double node_inter_recv = info.inter_recv_vol;
   node_work -= beta * std::max(node_inter_send, node_inter_recv);
 
+  double sub_off_send = 0.0, sub_off_recv = 0.0;
+  double sub_add_send = 0.0, sub_add_recv = 0.0;
+
   // All edges outside the to_remove cluster that are also off the node need to
   // be removed from the inter-node volumes
   for (auto const& [target, volume] : to_remove.inter_send_vol) {
     if (target != node) {
       node_inter_send -= volume;
+      sub_off_send += volume;
     }
   }
   for (auto const& [target, volume] : to_remove.inter_recv_vol) {
     if (target != node) {
       node_inter_recv -= volume;
+      sub_off_recv += volume;
     }
   }
 
@@ -1027,15 +1038,21 @@ double TemperedLB::computeWorkAfterClusterSwap(
   for (auto const& [target, volume] : to_add.inter_send_vol) {
     if (target != node) {
       node_inter_send += volume;
+      sub_add_send += volume;
     }
   }
   for (auto const& [target, volume] : to_add.inter_recv_vol) {
     if (target != node) {
       node_inter_recv += volume;
+      sub_add_recv += volume;
     }
   }
 
   node_work += beta * std::max(node_inter_send, node_inter_recv);
+
+  vt_print(lb, "computeWorkAfterClusterSwap: info.work={} new_work={} {} {} {} {}, sub_off={} {}, sub_add={} {}\n", info.work, node_work, new_intra_send, new_intra_recv, node_inter_send, node_inter_recv, sub_off_send, sub_off_recv, sub_add_send, sub_add_recv);
+
+
 
   return node_work;
 }
@@ -1165,6 +1182,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
             }
 
             for (auto const& [dest_node, edge_map] : edges) {
+	      // vt_print(temperedlb, "Sending {} edges to {}\n", edge_map.size(), dest_node);
               proxy_[dest_node].template send<&TemperedLB::giveEdges>(edge_map);
             }
           });
@@ -1322,20 +1340,21 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 	theSched()->runSchedulerWhile([this]{ return not load_stats_handler_; });
       }
 
-      bool last_four_same = false;
-      if (last_n_I.size() >= 4) {
-	bool all_same = true;
-	for (int i = 1; i < 4; i++) {
-	  if (last_n_I[last_n_I.size()-1] != last_n_I[last_n_I.size()-1-i]) {
-	    all_same = false;
-	  }
+      bool within_tolerance = false;
+      int const last_num_iters = 8;
+      if (last_n_work.size() >= last_num_iters) {
+	double w_max_i = last_n_work[last_n_work.size()-last_num_iters];
+	double w_max_in = last_n_work[last_n_work.size()-1];
+	double w_max_rel_d = (w_max_i - w_max_in) / last_num_iters;
+	if (theContext()->getNode() == 0) {
+	  vt_print(temperedlb, "i={} in={} rel={}, tol={}\n", w_max_i, w_max_in, w_max_rel_d, converge_tolerance_);
 	}
-	if (all_same) {
-	  last_four_same = true;
+	if (w_max_rel_d < converge_tolerance_) {
+	  within_tolerance = true;
 	}
       }
 
-      if (rollback_ || (iter_ == num_iters_ - 1) || new_imbalance_ < 0.01 || last_four_same) {
+      if (rollback_ || (iter_ == num_iters_ - 1) || new_imbalance_ < 0.01 || within_tolerance) {
         // if known, save the best iteration within any trial so we can roll back
         if (new_imbalance_ < best_imb && new_imbalance_ <= start_imb) {
           best_load = this_new_load_;
@@ -1348,7 +1367,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         }
       }
 
-      if (new_imbalance_ < 0.01 || last_four_same) {
+      if (new_imbalance_ < 0.01 || within_tolerance) {
 	break;
       }
     }
@@ -1435,11 +1454,12 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
   auto const& in = vec[0];
   auto const& work = vec[1];
   new_imbalance_ = in.I();
-  last_n_I.push_back(std::round(new_imbalance_ * 10000.0) / 10000.0);
 
   work_mean_ = work.avg();
   work_max_ = work.max();
   new_work_imbalance_ = work.I();
+
+  last_n_work.push_back(work_max_);
 
   max_load_over_iters_.push_back(in.max());
 
@@ -2330,7 +2350,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     auto try_max_object_working_bytes,
     auto try_max_object_serialized_bytes,
     auto const& src_cluster, auto const& try_cluster
-  ) -> double {
+  ) -> std::tuple<double, double, double> {
     BytesType try_new_mem = try_mem;
     try_new_mem -= try_cluster.bytes;
     try_new_mem += src_cluster.bytes;
@@ -2348,7 +2368,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     try_new_mem += src_cluster.cluster_footprint;
 
     if (try_new_mem > mem_thresh_) {
-      return - epsilon;
+      return std::make_tuple(-epsilon, 10000000.0, 1000000.0);
     }
 
     BytesType src_new_mem = current_memory_usage_;
@@ -2368,7 +2388,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     src_new_mem -= src_cluster.cluster_footprint;
 
     if (src_new_mem > mem_thresh_) {
-      return - epsilon;
+      return std::make_tuple(-epsilon, 10000000.0, 1000000.0);
     }
 
     double const src_new_work =
@@ -2377,9 +2397,9 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       computeWorkAfterClusterSwap(try_rank, try_info, try_cluster, src_cluster);
 
     // Return load transfer criterion
-    return loadTransferCriterion(
+    return std::make_tuple(loadTransferCriterion(
       this_new_work_, try_info.work, src_new_work, dest_new_work
-    );
+    ), src_new_work, dest_new_work);
   };
 
   auto const& try_clusters = msg->locked_clusters;
@@ -2390,26 +2410,30 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   auto const& try_info = msg->locked_info;
 
   double best_c_try = -1.0;
+  double best_src_work = -1.0;
+  double best_dest_work = -1.0;
   std::tuple<SharedIDType, SharedIDType> best_swap =
     {no_shared_id, no_shared_id};
   for (auto const& [src_shared_id, src_cluster] : cur_clusters_) {
     // try swapping with empty cluster first
     {
       ClusterInfo empty_cluster;
-      double c_try = criterion(
+      auto [c_try, src_work, dest_work] = criterion(
         try_rank, try_info, try_total_bytes, try_max_owm, try_max_osm,
         src_cluster, empty_cluster
       );
       if (c_try >= 0.0) {
         if (c_try > best_c_try) {
           best_c_try = c_try;
+	  best_src_work = src_work;
+	  best_dest_work = dest_work;
           best_swap = std::make_tuple(src_shared_id, no_shared_id);
         }
       }
     }
 
     for (auto const& [try_shared_id, try_cluster] : try_clusters) {
-      double c_try = criterion(
+      auto [c_try, src_work, dest_work] = criterion(
         try_rank, try_info, try_total_bytes, try_max_owm, try_max_osm,
         src_cluster, try_cluster
       );
@@ -2421,11 +2445,15 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
       if (c_try >= 0.0) {
         if (c_try > best_c_try) {
           best_c_try = c_try;
+	  best_src_work = src_work;
+	  best_dest_work = dest_work;
           best_swap = std::make_tuple(src_shared_id, try_shared_id);
         }
       }
     }
   }
+
+  auto prev_work_breakdown = computeWorkBreakdown(this_node, cur_objs_);
 
   if (best_c_try >= 0) {
     // FIXME C++20: use structured binding
@@ -2463,6 +2491,14 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
 
     this_new_breakdown_ = computeWorkBreakdown(this_node, cur_objs_);
     this_new_work_ = this_new_breakdown_.work;
+    vt_print(
+      lb, "best_src_work={}, new_work={} {} {} {} {} {}, prev_work={} {} {} {} {} {}, src_id={}, dest_id={}\n",
+      best_src_work,
+      this_new_breakdown_.work, this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol, this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol, this_new_breakdown_.shared_vol,
+      prev_work_breakdown.work, prev_work_breakdown.intra_send_vol, prev_work_breakdown.intra_recv_vol, prev_work_breakdown.inter_send_vol, prev_work_breakdown.inter_recv_vol, prev_work_breakdown.shared_vol,
+      src_shared_id, try_shared_id
+    );
+    vtAbortIf(best_src_work != this_new_work_, "Must be equal");
     computeMemoryUsage();
 
     vt_debug_print(
