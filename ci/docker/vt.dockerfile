@@ -1,10 +1,8 @@
 ARG REPO=lifflander1/vt
 ARG ARCH=amd64
-ARG DISTRO=ubuntu
-ARG DISTRO_VERSION=22.04
-ARG COMPILER=clang-13
+ARG IMAGE=wf-amd64-ubuntu-22.04-gcc-12-cpp
 
-ARG BASE=${REPO}:wf-${ARCH}-${DISTRO}-${DISTRO_VERSION}-${COMPILER}-cpp
+ARG BASE=${REPO}:${IMAGE}
 
 FROM --platform=${ARCH} ${BASE} AS build
 

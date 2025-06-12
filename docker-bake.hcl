@@ -1,34 +1,10 @@
-variable "COMPILER_TYPE" {
-  default = "clang"
-}
-
-variable "HOST_COMPILER" {
-  default = "clang-14"
-}
-
-variable "COMPILER" {
-  default = "clang-14"
-}
-
 variable "REPO" {
   default = "lifflander1/vt"
 }
 
-variable "ARCH" {
-  default = "amd64"
-}
-
-variable "DISTRO" {
-  default = "ubuntu"
-
-  validation {
-    condition = DISTRO == "ubuntu" || DISTRO == "alpine"
-    error_message = "Supported configurations are ubuntu and alpine"
-  }
-}
-
-variable "DISTRO_VERSION" {
-  default = "22.04"
+function "arch" {
+  params = [item]
+  result = lookup(item, "arch", "amd64")
 }
 
 variable "VT_LB" {
@@ -66,16 +42,15 @@ target "vt-build" {
 }
 
 target "vt-build-all" {
-  name = "vt-build-${item.arch}-${item.distro}-${replace(item.distro_version, ".", "-")}-${item.compiler}-cpp"
+  name = "vt-build-${replace(item.image, ".", "-")}"
   inherits = ["vt-build"]
-  # tags = ["${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp"]
+  tags = ["${REPO}:vt-${item.image}"]
 
   args = {
-    ARCH = "${item.arch}"
-    DISTRO = "${item.distro}"
-    DISTRO_VERSION = "${item.distro_version}"
-    COMPILER = "${item.compiler}"
-    VT_LB_ENABLED = "${item.vt_lb}"
+    ARCH = arch(item)
+    IMAGE = "wf-${item.image}"
+    REPO = REPO
+    VT_LB_ENABLED = item.vt_lb
     VT_BUILD_TESTS = "0"
     VT_BUILD_EXAMPLES = "0"
   }
@@ -83,19 +58,11 @@ target "vt-build-all" {
   matrix = {
     item = [
       {
-        arch = "amd64"
-        distro = "ubuntu"
-        distro_version = "22.04"
-        compiler = "clang-13"
-        mpi = "mpich"
+        image = "amd64-ubuntu-22.04-clang-13-cpp"
         vt_lb = "1"
       },
       {
-        arch = "amd64"
-        distro = "ubuntu"
-        distro_version = "22.04"
-        compiler = "clang-14"
-        mpi = "mpich"
+        image = "amd64-ubuntu-22.04-clang-14-cpp"
         vt_lb = "0"
       }
 
