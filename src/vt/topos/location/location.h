@@ -110,11 +110,27 @@ struct EntityLocationCoord : LocationCoord {
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
 
   /**
-   * \internal \brief System call to construct a new entity coordinator
+   * \brief Construct a new location manager with defaults
    */
   EntityLocationCoord()
     : recs_(default_max_cache_size, theContext()->getNode())
   { }
+
+  /**
+   * \brief Construct with parameters
+   *
+   * \param[in] in_anytime_migration whether anytime migration is allowed
+   * \param[in] in_keep_cache_updated whether to keep the cache updated
+   * \param[in] in_max_cache_size what the max cache size is
+   */
+  explicit EntityLocationCoord(
+    bool in_anytime_migration, bool in_keep_cache_updated,
+    std::size_t in_max_cache_size = default_max_cache_size
+  ) : recs_(in_max_cache_size, theContext()->getNode()),
+      anytime_migration_(in_anytime_migration),
+      keep_cache_updated_(in_keep_cache_updated)
+  { }
+
 
   virtual ~EntityLocationCoord() {}
 
@@ -156,8 +172,21 @@ struct EntityLocationCoord : LocationCoord {
   void unregisterEntity(EntityID const& id);
 
   /**
-   * \brief Tell coordinator that the entity has migrated to another node
+   * \brief Tell the location manager that migrations are going to start
    *
+   * \note Must be used when anytime migration is off
+   */
+  void startMigrations();
+
+  /**
+   * \brief Indicate that migrations are complete
+   *
+   * \note Must be used when anytime migration is off
+   */
+  void doneMigrations();
+
+  /**
+   * \brief Tell coordinator that the entity has migrated to another node
    *
    * \param[in] id the entity ID
    * \param[in] new_node the node it was migrated to
@@ -359,7 +388,26 @@ struct EntityLocationCoord : LocationCoord {
     proxy_ = proxy;
   }
 
+  /**
+   * \brief All-reduce the global map of entity location
+   *
+   * \warning This is not scalable and will centralize all the data
+   *
+   * \return the global map of locations
+   */
+  std::unordered_map<EntityID, NodeType> buildGlobalMap();
+
 private:
+  /**
+   * \brief \internal The global map handler for the all-reduce to collect up
+   * entity location
+   *
+   *  \param[in] global_map the global map reduced
+   */
+  void globalMapHandler(
+    std::unordered_map<EntityID, NodeType> const& global_map
+  );
+
   /**
    * \internal \brief Handle relocation on different node.
    *
@@ -447,6 +495,21 @@ private:
 
   /// the location manager's objgroup proxy
   objgroup::proxy::Proxy<EntityLocationCoord<EntityID>> proxy_;
+
+  /// Whether anytime migration can happen for this LM
+  bool anytime_migration_ = true;
+
+  /// Whether migrations are allowed (required when anytime migration is off)
+  bool migrations_ongoing_ = false;
+
+  /// Waiting for global map handler to finish
+  bool waiting_global_map_handler_ = false;
+
+  /// Whether to keep the cache up-to-date at all times
+  bool keep_cache_updated_ = false;
+
+  /// Temporary storage for global map while reducing
+  std::unordered_map<EntityID, NodeType> global_map_temp_;
 };
 
 }}  // end namespace vt::location

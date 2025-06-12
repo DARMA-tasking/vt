@@ -64,6 +64,13 @@ struct Directory {
   void remove(KeyT const& key);
   void insert(KeyT const& key, ValueT const& value);
 
+  /**
+   * \brief Get the whole directory map
+   *
+   * \return the directory map
+   */
+  auto const& getMap() const { return dir_; }
+
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | dir_;

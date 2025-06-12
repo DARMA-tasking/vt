@@ -193,9 +193,23 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
 }
 
 template <typename EntityID>
+void EntityLocationCoord<EntityID>::startMigrations() {
+  migrations_ongoing_ = true;
+}
+
+template <typename EntityID>
+void EntityLocationCoord<EntityID>::doneMigrations() {
+  migrations_ongoing_ = false;
+}
+
+template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityEmigrated(
   EntityID const& id, NodeType const& new_node
 ) {
+  vtAssert(
+    anytime_migration_ or migrations_ongoing_, "Migrations must be allowed"
+  );
+
   vt_debug_print(
     normal, location,
     "EntityLocationCoord: entityEmigrated: id={}, new_node={}\n",
@@ -216,6 +230,10 @@ void EntityLocationCoord<EntityID>::entityImmigrated(
   EntityID const& id, NodeType const& home_node,
   [[maybe_unused]] NodeType const& from, LocMsgActionType msg_action
 ) {
+  vtAssert(
+    anytime_migration_ or migrations_ongoing_, "Migrations must be allowed"
+  );
+
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future
   return registerEntity(id, home_node, msg_action, true);
@@ -757,6 +775,39 @@ void EntityLocationCoord<EntityID>::routedHandler(MessageT *raw_msg) {
   );
 
   routeMsg(entity_id, home_node, msg, from_node);
+}
+
+template <typename EntityID>
+std::unordered_map<EntityID, NodeType>
+EntityLocationCoord<EntityID>::buildGlobalMap() {
+  std::unordered_map<EntityID, NodeType> local_map;
+
+  auto const& dir = recs_.getDirectory().getMap();
+  for (auto const& [key, value] : dir) {
+    if (value.isLocal()) {
+      local_map[key] = theContext()->getNode();
+    }
+  }
+
+  waiting_global_map_handler_ = true;
+
+  proxy_.template allreduce<
+    &EntityLocationCoord<EntityID>::globalMapHandler, collective::PlusOp
+  >(local_map);
+
+  runSchedulerWhile([&]{ return waiting_global_map_handler_; });
+
+  auto global_map = std::move(global_map_temp_);
+  global_map_temp_ = {};
+  return global_map;
+}
+
+template <typename EntityID>
+void EntityLocationCoord<EntityID>::globalMapHandler(
+  std::unordered_map<EntityID, NodeType> const& global_map
+) {
+  global_map_temp_ = global_map;
+  waiting_global_map_handler_ = false;
 }
 
 }}  // end namespace vt::location

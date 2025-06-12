@@ -91,6 +91,15 @@ struct PlusOp< std::array<T,N> > {
   }
 };
 
+template <typename T, typename U>
+struct PlusOp<std::unordered_map<T, U>> {
+  void operator()(std::unordered_map<T, U>& v1, std::unordered_map<T, U> const& v2) {
+    for (auto const& [key, value] : v2) {
+      vtAssert(v1.find(key) == v1.end(), "Key must not exist in other map");
+      v1[key] = value;
+    }
+  }
+};
 
 }}}} /* end namespace vt::collective::reduce::operators */
 
