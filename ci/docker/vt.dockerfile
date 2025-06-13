@@ -40,9 +40,5 @@ ARG VT_ZOLTAN_ENABLED
 
 COPY . /vt
 RUN /vt/ci/build_cpp.sh /vt /build
-
-FROM build AS test
 RUN /vt/ci/test_cpp.sh /vt /build
-
-FROM test AS test_sample
 RUN /vt/ci/build_vt_sample.sh /vt /build

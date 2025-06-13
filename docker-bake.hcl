@@ -351,8 +351,3 @@ target "vt-build-all" {
     ]
   }
 }
-
-target "vt-test" {
-  inherits = ["vt-build"]
-  target = "test"
-}
