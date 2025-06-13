@@ -222,56 +222,92 @@ target "vt-build-all" {
     item = [
       {
         image = "amd64-alpine-3.16-clang-cpp"
+        vt_production_build = 1
       },
       {
         image = "amd64-ubuntu-20.04-clang-10-cpp"
+        vt_tests_num_nodes = 4
+        vt_ubsan = 1
+        #FIXME
+        ubsan_options = "print_stacktrace=1"
       },
       {
         image = "amd64-ubuntu-20.04-clang-9-cpp"
+        vt_build_shared_libs = 1
+        vt_inclusion = "EXT_LIB"
+        vt_werror = 0
       },
       {
         image = "amd64-ubuntu-20.04-gcc-10-cpp"
       },
       {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
+        vt_lb = 0
+        vt_tests_num_nodes = 4
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-cpp"
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-cuda-11.4.3-cpp"
+        vt_diagnostics = 0
+        vt_extended_tests = 0
+        vt_external_fmt = 1
+        vt_pool = 0
+        vt_tests_num_nodes = 4
+        vt_trace = 1
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-cuda-12.2.0-cpp"
+        vt_debug_verbose = 1
+        vt_diagnostics = 0
+        vt_extended_tests = 0
+        vt_pool = 0
+        vt_tests_num_nodes = 4
+        vt_trace = 1
       },
       {
         image = "amd64-ubuntu-20.04-icpx-cpp"
+        vt_debug_verbose = 1
+        vt_extended_tests = 0
+        vt_pool = 0
+        vt_trace = 1
       },
       {
         image = "amd64-ubuntu-22.04-clang-11-cpp"
+        vt_fcontext = 1
       },
       {
         image = "amd64-ubuntu-22.04-clang-12-cpp"
       },
       {
         image = "amd64-ubuntu-22.04-clang-13-cpp"
-        vt_lb = "1"
       },
       {
         image = "amd64-ubuntu-22.04-clang-14-cpp"
-        vt_lb = "1"
+        vt_trace = 1
+        vt_debug_verbose = 1
       },
       {
         image = "amd64-ubuntu-22.04-clang-15-cpp"
       },
       {
         image = "amd64-ubuntu-22.04-gcc-11-cpp"
+        vt_trace = 1
+        vt_trace_rt = 1
+        vt_unity_build = 0
+        vt_code_coverage = 1
       },
       {
         image = "amd64-ubuntu-22.04-gcc-12-cpp"
+        vt_debug_verbose = 1
+        #FIXME
+        vt_kokkos_enabled = 1
       },
       {
         image = "amd64-ubuntu-22.04-gcc-12-vtk-cpp"
+        vt_tv_enabled = 1
+        vt_trace_only = 0
       },
       {
         image = "amd64-ubuntu-22.04-gcc-12-zoltan-cpp"
@@ -284,18 +320,33 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-24.04-clang-16-zoltan-cpp"
+        vt_ci_test_lb_schema = 1
+        vt_trace = 1
+        vt_zoltan = 1
       },
       {
         image = "amd64-ubuntu-24.04-clang-17-cpp"
+        vt_perf_enabled = 1
+        #FIXME
+        privileged = 1
       },
       {
         image = "amd64-ubuntu-24.04-clang-18-cpp"
       },
       {
         image = "amd64-ubuntu-24.04-gcc-13-cpp"
+        vt_trace = 1
+        vt_pool = 0
+        vt_asan = 1
+        vt_unity_build = 0
+        #FIXME
+        lsan_options = "suppressions=/vt/tests/lsan.supp"
       },
       {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
+        vt_perf_enabled = 1
+        #FIXME
+        privileged = 1
       },
     ]
   }
