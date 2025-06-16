@@ -67,6 +67,11 @@ function "vt_fcontext" {
   result = lookup(item, "vt_fcontext", "")
 }
 
+function "vt_kokkos" {
+  params = [item]
+  result = lookup(item, "vt_kokkos", "")
+}
+
 function "vt_lb" {
   params = [item]
   result = lookup(item, "vt_lb", "")
@@ -198,6 +203,7 @@ target "vt-build-all" {
     VT_EXTENDED_TESTS_ENABLED      = vt_extended_tests(item)
     VT_EXTERNAL_FMT                = vt_external_fmt(item)
     VT_FCONTEXT_ENABLED            = vt_fcontext(item)
+    VT_KOKKOS_ENABLED              = vt_kokkos(item)
     VT_LB_ENABLED                  = vt_lb(item)
     VT_MIMALLOC_ENABLED            = vt_mimalloc(item)
     VT_MPI_GUARD_ENABLED           = vt_mpi_guard(item)
@@ -301,8 +307,7 @@ target "vt-build-all" {
       {
         image = "amd64-ubuntu-22.04-gcc-12-cpp"
         vt_debug_verbose = 1
-        #FIXME
-        vt_kokkos_enabled = 1
+        vt_kokkos = 1
       },
       {
         image = "amd64-ubuntu-22.04-gcc-12-vtk-cpp"
@@ -339,8 +344,7 @@ target "vt-build-all" {
         vt_pool = 0
         vt_asan = 1
         vt_unity_build = 0
-        #FIXME
-        lsan_options = "suppressions=/vt/tests/lsan.supp"
+        #lsan_options = "suppressions=/vt/tests/lsan.supp"
       },
       {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"

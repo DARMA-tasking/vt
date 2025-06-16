@@ -1,4 +1,4 @@
-name: Build & Push Docker images
+name: CI
 
 on:
   push:
@@ -50,4 +50,4 @@ jobs:
         with:
           targets: ${{ matrix.target }}
           files: docker-bake.hcl
-          # push: true
+          push: ${{ github.ref == 'refs/heads/develop' }}
