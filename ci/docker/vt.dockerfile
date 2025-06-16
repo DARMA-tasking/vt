@@ -39,7 +39,7 @@ ARG VT_UNITY_BUILD_ENABLED
 ARG VT_WERROR_ENABLED
 ARG VT_ZOLTAN_ENABLED
 
-COPY . /vt
-RUN /vt/ci/build_cpp.sh /vt /build
-RUN /vt/ci/test_cpp.sh /vt /build
-RUN /vt/ci/build_vt_sample.sh /vt /build
+RUN --mount=target=/vt \
+        /vt/ci/build_cpp.sh /vt /build && \
+        /vt/ci/test_cpp.sh /vt /build  && \
+        /vt/ci/build_vt_sample.sh /vt /build
