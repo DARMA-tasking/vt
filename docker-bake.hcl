@@ -12,14 +12,19 @@ function "vt_asan" {
   result = lookup(item, "vt_asan", "")
 }
 
+function "vt_build_shared_libs" {
+  params = [item]
+  result = lookup(item, "vt_build_shared_libs", "")
+}
+
 function "vt_build_trace_only" {
   params = [item]
-  result = lookup(item, "vt_build_trace_only", "")
+  result = lookup(item, "vt_build_trace_only", "1")
 }
 
 function "vt_ci_build" {
   params = [item]
-  result = lookup(item, "vt_ci_build", "")
+  result = lookup(item, "vt_ci_build", "1")
 }
 
 function "vt_ci_test_lb_schema" {
@@ -65,6 +70,11 @@ function "vt_external_fmt" {
 function "vt_fcontext" {
   params = [item]
   result = lookup(item, "vt_fcontext", "")
+}
+
+function "vt_inclusion" {
+  params = [item]
+  result = lookup(item, "vt_inclusion", "TPL")
 }
 
 function "vt_kokkos" {
@@ -191,6 +201,7 @@ target "vt-build-all" {
     ARCH = arch(item)
     IMAGE = "wf-${item.image}"
     REPO = REPO
+    BUILD_SHARED_LIBS              = vt_build_shared_libs(item)
     VT_ASAN_ENABLED                = vt_asan(item)
     VT_BUILD_TRACE_ONLY            = vt_build_trace_only(item)
     VT_CI_BUILD                    = vt_ci_build(item)
@@ -203,6 +214,7 @@ target "vt-build-all" {
     VT_EXTENDED_TESTS_ENABLED      = vt_extended_tests(item)
     VT_EXTERNAL_FMT                = vt_external_fmt(item)
     VT_FCONTEXT_ENABLED            = vt_fcontext(item)
+    VT_INCLUSION_TYPE              = vt_inclusion(item)
     VT_KOKKOS_ENABLED              = vt_kokkos(item)
     VT_LB_ENABLED                  = vt_lb(item)
     VT_MIMALLOC_ENABLED            = vt_mimalloc(item)
