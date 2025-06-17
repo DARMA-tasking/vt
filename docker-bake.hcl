@@ -344,8 +344,6 @@ target "vt-build-all" {
       {
         image = "amd64-ubuntu-24.04-clang-17-cpp"
         vt_perf_enabled = 1
-        #FIXME
-        privileged = 1
       },
       {
         image = "amd64-ubuntu-24.04-clang-18-cpp"
@@ -361,8 +359,6 @@ target "vt-build-all" {
       {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
         vt_perf_enabled = 1
-        #FIXME
-        privileged = 1
       },
     ]
   }
