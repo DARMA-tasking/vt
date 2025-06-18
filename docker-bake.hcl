@@ -162,9 +162,6 @@ function "vt_zoltan" {
   result = lookup(item, "vt_zoltan", "")
 }
 
-variable "CCACHE_DIR" {
-  default = "/ccache"
-}
 
 target "vt-build" {
   target = "build"
@@ -178,16 +175,16 @@ target "vt-build" {
     "core=0"
   ]
   # FIXME: verify that caching works as intended
-  # cache_from = [
+  # cache-from = [
   #   {
   #     type = "local",
-  #     src = "/ccache"
+  #     src = "~/ccache"
   #   }
   # ]
-  # cache_to = [
+  # cache-to = [
   #   {
   #     type = "local",
-  #     dest = "/ccache"
+  #     dest = "~/ccache"
   #   }
   # ]
 }
