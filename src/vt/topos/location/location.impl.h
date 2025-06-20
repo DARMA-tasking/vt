@@ -199,6 +199,9 @@ void EntityLocationCoord<EntityID>::startMigrations() {
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::doneMigrations() {
+  if (keep_cache_updated_) {
+    clearCache();
+  }
   migrations_ongoing_ = false;
 }
 
