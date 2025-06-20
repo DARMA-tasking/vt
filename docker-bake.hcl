@@ -175,18 +175,18 @@ target "vt-build" {
     "core=0"
   ]
   # FIXME: verify that caching works as intended
-  # cache-from = [
-  #   {
-  #     type = "local",
-  #     src = "~/ccache"
-  #   }
-  # ]
-  # cache-to = [
-  #   {
-  #     type = "local",
-  #     dest = "~/ccache"
-  #   }
-  # ]
+  cache-from = [
+    {
+      type = "local",
+      src = "~/ccache"
+    }
+  ]
+  cache-to = [
+    {
+      type = "local",
+      dest = "~/ccache"
+    }
+  ]
 }
 
 target "vt-build-all" {
