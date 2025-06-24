@@ -44,7 +44,7 @@ case $CXX in
         && export NVCC_WRAPPER_DEFAULT_COMPILER;;
 esac
 
-if test "${VT_KOKKOS_ENABLED:-0}" -eq 1
+if test "${VT_KOKKOS_ENABLED:-0}" -eq 5
 then
   echo "The variable VT_KOKKOS_ENABLED is set."
 
@@ -141,6 +141,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_ubsan_enabled="${VT_UBSAN_ENABLED:-0}" \
       -Dvt_werror_enabled="${VT_WERROR_ENABLED:-0}" \
       -Dvt_pool_enabled="${VT_POOL_ENABLED:-1}" \
+      -Dvt_build_tests=0 -Dvt_build_examples=0 \
       -Dvt_build_extended_tests="${VT_EXTENDED_TESTS_ENABLED:-1}" \
       -Dvt_zoltan_enabled="${VT_ZOLTAN_ENABLED:-0}" \
       -Dvt_tv_enabled="${VT_TV_ENABLED:-0}" \
