@@ -96,7 +96,6 @@ public:
     LoadType this_new_load, LoadType target_max_load
   );
 
-protected:
   void doLBStages(LoadType start_imb);
   void informAsync();
   void informSync();
@@ -136,6 +135,29 @@ protected:
   void thunkMigrations();
   void propsDone();
   void setupDone();
+
+  void setAlpha(double in_alpha) { alpha = in_alpha; }
+  void setDelta(double in_delta) { delta = in_delta; }
+  void setBeta(double in_beta) { beta = in_beta; }
+  void setGamma(double in_gamma) { gamma = in_gamma; }
+  void setCurObjs(std::unordered_map<ObjIDType, LoadType> in_cur_objs) {
+    cur_objs_ = in_cur_objs;
+  }
+  void setRecvEdges(EdgeMapType in_recv_edges) { recv_edges_ = in_recv_edges; }
+  void setSendEdges(EdgeMapType in_send_edges) { send_edges_ = in_send_edges; }
+
+  void setObjSharedBlock(std::unordered_map<ObjIDType, SharedIDType> in_shared) {
+    obj_shared_block_ = in_shared;
+  }
+  void setSharedSize(std::unordered_map<SharedIDType, BytesType> in_size) {
+    shared_block_size_ = in_size;
+  }
+  void setSharedEdge(
+    std::unordered_map<SharedIDType, std::tuple<NodeType, BytesType>>
+    in_shared_edge
+  ) {
+    shared_block_edge_ = in_shared_edge;
+  }
 
   /**
    * \brief Read the memory data from the user-defined json blocks into data
@@ -309,12 +331,12 @@ protected:
     std::unordered_map<ObjIDType, LoadType> const& objs,
     std::set<ObjIDType> const& exclude = {},
     std::unordered_map<ObjIDType, LoadType> const& include = {}
-  );
+  ) const;
 
   double computeWorkAfterClusterSwap(
     NodeType node, NodeInfo const& info, ClusterInfo const& to_remove,
     ClusterInfo const& to_add
-  );
+  ) const;
 
   /**
    * \brief Consider possible swaps with all the up-to-date info from a rank
@@ -406,6 +428,7 @@ private:
   std::unordered_set<NodeType> underloaded_         = {};
   std::unordered_set<NodeType> new_underloaded_     = {};
   std::unordered_map<ObjIDType, LoadType> cur_objs_ = {};
+  std::set<ObjIDType> non_cluster_objs_             = {};
   EdgeMapType send_edges_;
   EdgeMapType recv_edges_;
   LoadType this_new_load_                           = 0.0;
@@ -450,7 +473,10 @@ private:
   bool compute_unhomed_done_ = false;
 
   void hasCommAny(bool has_comm_any);
-  void giveEdges(EdgeMapType const& edge_map);
+  void giveEdges(
+    EdgeMapType const& edge_map,
+    std::unordered_map<elm::ElementIDStruct, SharedIDType> obj_cluster_id
+  );
 
   //////////////////////////////////////////////////////////////////////////////
   // All the memory info (may or may not be present)

@@ -57,8 +57,11 @@ using BytesType        = double;
 struct ClusterInfo {
   LoadType load = 0;
   BytesType bytes = 0;
+  SharedIDType shared_id = -1;
   double intra_send_vol = 0, intra_recv_vol = 0;
-  std::unordered_map<NodeType, double> inter_send_vol, inter_recv_vol;
+  std::unordered_map<SharedIDType, double> inter_cluster_send_vol,
+    inter_cluster_recv_vol;
+  std::unordered_map<elm::ElementIDStruct, double> obj_send_vol, obj_recv_vol;
   NodeType home_node = uninitialized_destination;
   BytesType edge_weight = 0;
   BytesType max_object_working_bytes = 0;
@@ -69,8 +72,9 @@ struct ClusterInfo {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | load | bytes | intra_send_vol | intra_recv_vol;
-    s | inter_send_vol | inter_recv_vol;
+    s | load | shared_id | bytes | intra_send_vol | intra_recv_vol;
+    s | inter_cluster_send_vol | inter_cluster_recv_vol;
+    s | obj_send_vol | obj_recv_vol;
     s | home_node | edge_weight;
     s | max_object_working_bytes;
     s | max_object_working_bytes_outside;
@@ -86,6 +90,8 @@ struct NodeInfo {
   double inter_send_vol = 0, inter_recv_vol = 0;
   double intra_send_vol = 0, intra_recv_vol = 0;
   double shared_vol = 0;
+  std::set<SharedIDType> shared_ids;
+  std::set<elm::ElementIDStruct> non_cluster_objs;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -93,6 +99,8 @@ struct NodeInfo {
     s | inter_send_vol | inter_recv_vol;
     s | intra_send_vol | intra_recv_vol;
     s | shared_vol;
+    s | shared_ids;
+    s | non_cluster_objs;
   }
 };
 

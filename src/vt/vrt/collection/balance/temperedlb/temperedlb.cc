@@ -643,7 +643,6 @@ void TemperedLB::readClustersMemoryData() {
 }
 
 ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
-  auto const this_node = theContext()->getNode();
   auto const& [home_node, shared_volume] = shared_block_edge_[shared_id];
   auto const shared_bytes = shared_block_size_[shared_id];
 
@@ -651,6 +650,7 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
   info.bytes = shared_bytes;
   info.home_node = home_node;
   info.edge_weight = shared_volume;
+  info.shared_id = shared_id;
 
   std::set<ObjIDType> cluster_objs;
   BytesType max_object_working_bytes = 0;
@@ -716,47 +716,67 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
   if (info.load != 0) {
     for (auto&& obj : cluster_objs) {
       if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
-        for (auto const& [target, volume] : it->second) {
-          vt_debug_print(
-            verbose, temperedlb,
-            "computeClusterSummary: send obj={}, target={}\n",
-            obj, target
+        for (auto const& [recv_obj, volume] : it->second) {
+          vt_print(
+            temperedlb,
+            "computeClusterSummary: shared_id={} send obj={}, recv_obj={}\n",
+            shared_id, obj, recv_obj
           );
 
-          if (cluster_objs.find(target) != cluster_objs.end()) {
+          if (cluster_objs.find(recv_obj) != cluster_objs.end()) {
             // intra-cluster edge
             info.intra_send_vol += volume;
+
+            // intra-cluster (self-edge)
+            info.inter_cluster_send_vol[shared_id] += volume;
           } else if (
-            cur_objs_.find(target) != cur_objs_.end() or
-            target.isLocatedOnThisNode()
+            auto it2 = obj_shared_block_.find(recv_obj);
+            it2 != obj_shared_block_.end()
           ) {
-            // intra-rank edge
-            info.inter_send_vol[this_node] += volume;
+            // inter-cluster edge
+            info.inter_cluster_send_vol[it2->second] += volume;
+
+            vt_print(
+              temperedlb,
+              "computeClusterSummary: ADDING inter shared_id={} send obj={}, recv_obj={}\n",
+              shared_id, obj, recv_obj
+            );
+
           } else {
-            // inter-rank edge
-            info.inter_send_vol[target.getCurrNode()] += volume;
+            // across-object edge not part of a cluster
+            info.obj_send_vol[recv_obj] += volume;
           }
         }
       }
       if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
-        for (auto const& [target, volume] : it->second) {
-          vt_debug_print(
-            verbose, temperedlb,
-            "computeClusterSummary: recv obj={}, target={}\n",
-            obj, target
+        for (auto const& [send_obj, volume] : it->second) {
+          vt_print(
+            temperedlb,
+            "computeClusterSummary: shared_id={}, recv obj={}, send_obj={}\n",
+            shared_id, obj, send_obj
           );
-          if (cluster_objs.find(target) != cluster_objs.end()) {
+          if (cluster_objs.find(send_obj) != cluster_objs.end()) {
             // intra-cluster edge
             info.intra_recv_vol += volume;
+
+            // intra-cluster (self-edge)
+            info.inter_cluster_recv_vol[shared_id] += volume;
           } else if (
-            cur_objs_.find(target) != cur_objs_.end() or
-            target.isLocatedOnThisNode()
+            auto it2 = obj_shared_block_.find(send_obj);
+            it2 != obj_shared_block_.end()
           ) {
-            // intra-rank edge
-            info.inter_recv_vol[this_node] += volume;
+            // inter-cluster edge (on this node)
+            info.inter_cluster_recv_vol[it2->second] += volume;
+
+            vt_print(
+              temperedlb,
+              "computeClusterSummary: ADDING inter shared_id={} recv obj={}, send_obj={}\n",
+              shared_id, obj, send_obj
+            );
+
           } else {
-            // inter-rank edge
-            info.inter_recv_vol[target.getCurrNode()] += volume;
+            // across-object edge not part of a cluster
+            info.obj_recv_vol[send_obj] += volume;
           }
         }
       }
@@ -879,7 +899,7 @@ WorkBreakdown TemperedLB::computeWorkBreakdown(
   std::unordered_map<ObjIDType, LoadType> const& objs,
   std::set<ObjIDType> const& exclude,
   std::unordered_map<ObjIDType, LoadType> const& include
-) {
+) const {
   double load = 0;
 
   // Communication bytes sent/recv'ed within the rank
@@ -891,14 +911,14 @@ WorkBreakdown TemperedLB::computeWorkBreakdown(
     if (exclude.find(obj) == exclude.end()) {
       if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
         for (auto const& [target, volume] : it->second) {
-          vt_debug_print(
-            verbose, temperedlb,
+          vt_print(
+            temperedlb,
             "computeWorkBreakdown: send obj={}, target={}\n",
             obj, target
           );
           if (
-            cur_objs_.find(target) != cur_objs_.end() or
-            target.isLocatedOnThisNode()
+            objs.find(target) != objs.end() or
+            non_cluster_objs_.find(target) != non_cluster_objs_.end()
           ) {
             intra_rank_bytes_sent += volume;
           } else {
@@ -908,14 +928,14 @@ WorkBreakdown TemperedLB::computeWorkBreakdown(
       }
       if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
         for (auto const& [target, volume] : it->second) {
-          vt_debug_print(
-            verbose, temperedlb,
+          vt_print(
+            temperedlb,
             "computeWorkBreakdown: recv obj={}, target={}\n",
             obj, target
           );
           if (
-            cur_objs_.find(target) != cur_objs_.end() or
-            target.isLocatedOnThisNode()
+            objs.find(target) != objs.end() or
+            non_cluster_objs_.find(target) != non_cluster_objs_.end()
           ) {
             intra_rank_bytes_recv += volume;
           } else {
@@ -977,23 +997,151 @@ WorkBreakdown TemperedLB::computeWorkBreakdown(
 double TemperedLB::computeWorkAfterClusterSwap(
   NodeType node, NodeInfo const& info, ClusterInfo const& to_remove,
   ClusterInfo const& to_add
-) {
+) const {
   // Start with the existing work for the node and work backwards to compute the
   // new work with the cluster removed
   double node_work = info.work;
+
+  double node_intra_send = info.intra_send_vol;
+  double node_intra_recv = info.intra_recv_vol;
+  double node_inter_send = info.inter_send_vol;
+  double node_inter_recv = info.inter_recv_vol;
+
+  vt_print(
+    gen,
+    "computeWorkAfterClusterSwap: node_work={}, to_remove.load={}, intra={}, inter={}\n",
+    node_work,
+    to_remove.load,
+    gamma * std::max(node_intra_send, node_intra_recv),
+    beta * std::max(node_inter_send, node_inter_recv)
+  );
 
   // Remove/add clusters' load factor from work model
   node_work -= alpha * to_remove.load;
   node_work += alpha * to_add.load;
 
-  // Remove/add clusters' intra-comm
-  double const node_intra_send = info.intra_send_vol;
-  double const node_intra_recv = info.intra_recv_vol;
+  // Subtract out these factors to adjust them based on new situation
   node_work -= gamma * std::max(node_intra_send, node_intra_recv);
-  node_work += gamma * std::max(
-    node_intra_send - to_remove.intra_send_vol + to_add.intra_send_vol,
-    node_intra_recv - to_remove.intra_recv_vol + to_add.intra_recv_vol
+
+  vt_print(
+    gen,
+    "node_work (after gamma)={}, sub off={} {} {}\n", node_work, std::max(node_inter_send, node_inter_recv), beta, beta * std::max(node_inter_send, node_inter_recv)
   );
+
+  node_work -= beta * std::max(node_inter_send, node_inter_recv);
+
+  auto cur_shared_ids = info.shared_ids;
+
+  // All edges outside the to_remove cluster that are also off the node need to
+  // be removed from the inter-node volume, otherwise needs to be removed from
+  // intra-node volume.
+  for (auto const& [shared_id, volume] : to_remove.inter_cluster_send_vol) {
+    vt_print(gen, "to_remove.inter_cluster_send: shared_id={}, volume={}, exists={}\n", shared_id, volume, info.shared_ids.find(shared_id) != info.shared_ids.end());
+    // Local cluster edge if it's in our shared IDs, otherwise it's remote
+    if (shared_id == to_remove.shared_id) {
+      node_intra_send -= volume;
+    } else if (cur_shared_ids.find(shared_id) != cur_shared_ids.end()) {
+      node_intra_send -= volume;
+      node_intra_recv -= volume;
+
+      node_inter_recv += volume;
+    } else {
+      node_inter_send -= volume;
+    }
+  }
+
+  for (auto const& [shared_id, volume] : to_remove.inter_cluster_recv_vol) {
+    vt_print(gen, "to_remove.inter_cluster_recv: shared_id={}, volume={}, exists={}\n", shared_id, volume, info.shared_ids.find(shared_id) != info.shared_ids.end());
+    // Local cluster edge if it's in our shared IDs, otherwise it's remote
+    if (shared_id == to_remove.shared_id) {
+      node_intra_recv -= volume;
+    } else if (cur_shared_ids.find(shared_id) != cur_shared_ids.end()) {
+      node_intra_recv -= volume;
+      node_intra_send -= volume;
+
+      node_inter_send += volume;
+    } else {
+      node_inter_recv -= volume;
+    }
+  }
+
+  // @todo
+  // for (auto const& [recv_obj, volume] : to_remove.obj_send_vol) {
+  //   if (info.non_cluster_objs.find(recv_obj) != info.non_cluster_objs.end()) {
+  //     node_intra_send -= volume;
+  //   } else {
+  //     node_inter_send -= volume;
+  //   }
+  // }
+
+  // for (auto const& [send_obj, volume] : to_remove.obj_recv_vol) {
+  //   if (info.non_cluster_objs.find(send_obj) != info.non_cluster_objs.end()) {
+  //     node_intra_recv -= volume;
+  //   } else {
+  //     node_inter_recv -= volume;
+  //   }
+  // }
+
+  // Remove from list of shared IDs for add calculation
+  if (to_remove.shared_id != -1) {
+    cur_shared_ids.erase(cur_shared_ids.find(to_remove.shared_id));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  for (auto const& [shared_id, volume] : to_add.inter_cluster_send_vol) {
+    // Local cluster edge if it's in our shared IDs, otherwise it's remote
+    if (shared_id == to_add.shared_id) {
+      node_intra_send += volume;
+    } else if (cur_shared_ids.find(shared_id) != cur_shared_ids.end()) {
+      node_intra_send += volume;
+      node_intra_recv += volume;
+
+      node_inter_recv -= volume;
+    } else {
+      node_inter_send += volume;
+    }
+  }
+
+  for (auto const& [shared_id, volume] : to_add.inter_cluster_recv_vol) {
+    // Local cluster edge if it's in our shared IDs, otherwise it's remote
+    if (shared_id == to_add.shared_id) {
+      node_intra_recv += volume;
+    } else if (cur_shared_ids.find(shared_id) != cur_shared_ids.end()) {
+      node_intra_recv += volume;
+      node_intra_send += volume;
+
+      node_inter_send -= volume;
+    } else {
+      node_inter_recv += volume;
+    }
+  }
+
+  // @todo
+  // for (auto const& [recv_obj, volume] : to_add.obj_send_vol) {
+  //   if (info.non_cluster_objs.find(recv_obj) != info.non_cluster_objs.end()) {
+  //     node_intra_send += volume;
+  //   } else {
+  //     node_inter_send += volume;
+  //   }
+  // }
+
+  // for (auto const& [send_obj, volume] : to_add.obj_recv_vol) {
+  //   if (info.non_cluster_objs.find(send_obj) != info.non_cluster_objs.end()) {
+  //     node_intra_recv += volume;
+  //   } else {
+  //     node_inter_recv += volume;
+  //   }
+  // }
+
+  vt_print(
+    gen,
+    "node_work={}, intra {} {} inter {} {}\n",
+    node_work, node_intra_send, node_intra_recv, node_inter_send, node_inter_recv
+  );
+
+  node_work += gamma * std::max(node_intra_send, node_intra_recv);
+  node_work += beta  * std::max(node_inter_send, node_inter_recv);
 
   // Uninitialized destination means that the cluster is empty
   // If to_remove was remote, remove that component from the work
@@ -1011,39 +1159,6 @@ double TemperedLB::computeWorkAfterClusterSwap(
   ) {
     node_work += delta * to_add.edge_weight;
   }
-
-  // Update formulae for inter-node communication
-  double node_inter_send = info.inter_send_vol;
-  double node_inter_recv = info.inter_recv_vol;
-  node_work -= beta * std::max(node_inter_send, node_inter_recv);
-
-  // All edges outside the to_remove cluster that are also off the node need to
-  // be removed from the inter-node volumes
-  for (auto const& [target, volume] : to_remove.inter_send_vol) {
-    if (target != node) {
-      node_inter_send -= volume;
-    }
-  }
-  for (auto const& [target, volume] : to_remove.inter_recv_vol) {
-    if (target != node) {
-      node_inter_recv -= volume;
-    }
-  }
-
-  // All edges outside the to_add cluster that are now off the node need to
-  // be added from the inter-node volumes
-  for (auto const& [target, volume] : to_add.inter_send_vol) {
-    if (target != node) {
-      node_inter_send += volume;
-    }
-  }
-  for (auto const& [target, volume] : to_add.inter_recv_vol) {
-    if (target != node) {
-      node_inter_recv += volume;
-    }
-  }
-
-  node_work += beta * std::max(node_inter_send, node_inter_recv);
 
   return node_work;
 }
@@ -1086,6 +1201,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
       if (first_iter) {
         // Copy this node's object assignments to a local, mutable copy
         cur_objs_.clear();
+        non_cluster_objs_.clear();
         int total_num_objs = 0;
         int num_migratable_objs = 0;
         for (auto obj : *load_model_) {
@@ -1093,6 +1209,11 @@ void TemperedLB::doLBStages(LoadType start_imb) {
           if (obj.isMigratable()) {
             num_migratable_objs++;
             cur_objs_[obj] = getModeledValue(obj);
+            if (obj_shared_block_.find(obj) == obj_shared_block_.end()) {
+              non_cluster_objs_.insert(obj);
+            }
+          } else {
+            non_cluster_objs_.insert(obj);
           }
         }
 
@@ -1148,8 +1269,19 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         if (has_comm_any_) {
           runInEpochCollective("symmEdges", [&]{
             std::unordered_map<NodeType, EdgeMapType> edges;
+            std::unordered_map<elm::ElementIDStruct, SharedIDType> obj_cluster_id;
 
             for (auto const& [from_obj, to_edges] : send_edges_) {
+              if (from_obj.getCurrNode() == this_node) {
+                if (
+                  auto it = obj_shared_block_.find(from_obj);
+                  it != obj_shared_block_.end()
+                ) {
+                  obj_cluster_id[from_obj] = it->second;
+                } else {
+                  obj_cluster_id[from_obj] = -1;
+                }
+              }
               for (auto const& [to_obj, volume] : to_edges) {
                 vt_debug_print(
                   verbose, temperedlb,
@@ -1164,11 +1296,23 @@ void TemperedLB::doLBStages(LoadType start_imb) {
                 if (curr_to_node != this_node) {
                   edges[curr_to_node][from_obj].emplace_back(to_obj, volume);
                 }
+                if (to_obj.getCurrNode() == this_node) {
+                  if (
+                    auto it = obj_shared_block_.find(to_obj);
+                    it != obj_shared_block_.end()
+                  ) {
+                    obj_cluster_id[to_obj] = it->second;
+                  } else {
+                    obj_cluster_id[to_obj] = -1;
+                  }
+                }
               }
             }
 
             for (auto const& [dest_node, edge_map] : edges) {
-              proxy_[dest_node].template send<&TemperedLB::giveEdges>(edge_map);
+              proxy_[dest_node].template send<&TemperedLB::giveEdges>(
+                edge_map, obj_cluster_id
+              );
             }
           });
         }
@@ -1340,6 +1484,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 
     // Clear out for next try or for not migrating by default
     cur_objs_.clear();
+    non_cluster_objs_.clear();
     send_edges_.clear();
     recv_edges_.clear();
     this_new_load_ = this_load;
@@ -1395,12 +1540,18 @@ void TemperedLB::timeLB(double total_time) {
   }
 }
 
-void TemperedLB::giveEdges(EdgeMapType const& edge_map) {
+void TemperedLB::giveEdges(
+  EdgeMapType const& edge_map,
+  std::unordered_map<elm::ElementIDStruct, SharedIDType> obj_cluster_id
+) {
   for (auto const& [from_obj, to_edges] : edge_map) {
     for (auto const& [to_obj, volume] : to_edges) {
       send_edges_[from_obj].emplace_back(to_obj, volume);
       recv_edges_[to_obj].emplace_back(from_obj, volume);
     }
+  }
+  for (auto const& [key, value] : obj_cluster_id) {
+    obj_shared_block_.emplace(key, value);
   }
 }
 
@@ -1668,7 +1819,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
         this_new_load_, this_new_work_,
         this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
         this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
-        this_new_breakdown_.shared_vol
+        this_new_breakdown_.shared_vol, getSharedBlocksHere(), non_cluster_objs_
       };
       msg->addNodeInfo(this_node, info);
       if (has_memory_data_) {
@@ -1687,7 +1838,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
         this_new_load_, this_new_work_,
         this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
         this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
-        this_new_breakdown_.shared_vol
+        this_new_breakdown_.shared_vol, getSharedBlocksHere(), non_cluster_objs_
       };
       msg->addNodeInfo(this_node, info);
       if (has_memory_data_) {
@@ -2299,7 +2450,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     this_new_load_, this_new_work_,
     this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
     this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
-    this_new_breakdown_.shared_vol
+    this_new_breakdown_.shared_vol, getSharedBlocksHere(), non_cluster_objs_
   };
 
   auto criterion = [&,this](
@@ -2647,7 +2798,7 @@ void TemperedLB::satisfyLockRequest() {
       this_new_load_, this_new_work_,
       this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
       this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
-      this_new_breakdown_.shared_vol
+      this_new_breakdown_.shared_vol, getSharedBlocksHere(), non_cluster_objs_
     };
 
     proxy_[lock.requesting_node].template send<&TemperedLB::lockObtained>(
@@ -2670,7 +2821,7 @@ void TemperedLB::swapClusters() {
     this_new_load_, this_new_work_,
     this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
     this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
-    this_new_breakdown_.shared_vol
+    this_new_breakdown_.shared_vol, getSharedBlocksHere(), non_cluster_objs_
   };
 
   auto criterion = [&,this](
