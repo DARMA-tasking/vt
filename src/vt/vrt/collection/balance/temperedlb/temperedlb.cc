@@ -388,13 +388,11 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
       f_ = static_cast<uint16_t>(std::ceil(std::pow(num_nodes, 1.0/k_max_)));
     } else {
       // set both the fanout and the rounds
-      k_max_ = static_cast<uint16_t>(std::max(1.0,
-        std::round(std::sqrt(std::log(num_nodes)/std::log(2.0)))
-      ));
+      k_max_ = static_cast<uint16_t>(2);
       f_ = std::max(
         static_cast<uint16_t>(1),
         static_cast<uint16_t>(
-          std::ceil(std::pow(std::log(num_nodes)/std::log(2.0), 1.0/k_max_))
+          std::ceil(std::sqrt(std::log(num_nodes)/std::log(2.0)))
         )
       );
     }
