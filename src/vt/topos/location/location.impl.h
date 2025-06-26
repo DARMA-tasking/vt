@@ -206,6 +206,64 @@ void EntityLocationCoord<EntityID>::doneMigrations() {
 }
 
 template <typename EntityID>
+bool EntityLocationCoord<EntityID>::entityExistsLocal(EntityID const& id) const {
+  return local_registered_.find(id) != local_registered_.end();
+}
+
+template <typename EntityID>
+void EntityLocationCoord<EntityID>::entityExists(
+  EntityID const& id, NodeType const& home_node,
+  ExistsNodeActionType const& action
+) {
+  auto const this_node = theContext()->getNode();
+  if (entityExistsLocal(id)) {
+    // Update cache
+    recs_.insert(id, home_node, LocRecType{id, eLocState::Local, this_node});
+
+    // Trigger action true as it exists here
+    action(true, this_node);
+  } else {
+    bool const rec_exists = recs_.exists(id);
+    if (rec_exists) {
+      auto const& rec = recs_.get(id);
+      if (rec.isLocal()) {
+        vtAssert(false, "Should be registered if this is the case!");
+      } else if (rec.isRemote()) {
+        action(true, rec.getRemoteNode());
+      } else {
+        vtAssert(false, "Should not be able to reach this case");
+      }
+    } else {
+      if (home_node == this_node) {
+        // if the home node is this node, it does not exist
+        action(false, -1);
+      } else {
+        // Go to home node
+        auto cb = theCB()->makeSend<&ThisType::entityExistsResponse>(
+          proxy_[this_node]
+        );
+        proxy_[home_node].template send<&ThisType::entityExistsRequest>(
+          MsgProps().asLocationMsg(), id, home_node, cb
+        );
+
+        pending_exists_lookups_[id].push_back(action);
+      }
+    }
+  }
+}
+
+template <typename EntityID>
+void EntityLocationCoord<EntityID>::entityExistsRequest(
+  EntityID id, NodeType home_node,
+  Callback<EntityID, bool, NodeType, NodeType> cb
+) {
+  entityExists(id, home_node, [=](bool exists, NodeType node) mutable {
+    auto props = MsgProps().asLocationMsg();
+    cb.send(props, id, exists, node, home_node);
+  });
+}
+
+template <typename EntityID>
 void EntityLocationCoord<EntityID>::entityEmigrated(
   EntityID const& id, NodeType const& new_node
 ) {
@@ -374,6 +432,23 @@ void EntityLocationCoord<EntityID>::updateLocation(
 }
 
 template <typename EntityID>
+void EntityLocationCoord<EntityID>::entityExistsResponse(
+  EntityID const& id, bool exists, NodeType answer, NodeType home_node
+) {
+  // Update the cache
+  if (exists) {
+    recs_.insert(id, home_node, LocRecType{id, eLocState::Remote, answer});
+  }
+
+  // trigger any pending actions upon registration
+  if (auto lookups = pending_exists_lookups_.extract(id); lookups) {
+    for (auto&& action : lookups.mapped()) {
+      action(exists, answer);
+    }
+  }
+}
+
+template <typename EntityID>
 void EntityLocationCoord<EntityID>::getLocation(
   EntityID const& id, NodeType const& home_node, NodeActionType const& action
 ) {
@@ -401,7 +476,9 @@ void EntityLocationCoord<EntityID>::getLocation(
 
     if (not rec_exists) {
       if (home_node != this_node) {
-        auto cb = theCB()->makeSend<&ThisType::updateLocation>(proxy_[this_node]);
+        auto cb = theCB()->makeSend<&ThisType::updateLocation>(
+          proxy_[this_node]
+        );
         proxy_[home_node].template send<&ThisType::getLocationRequest>(
           MsgProps().asLocationMsg(), id, home_node, cb
         );

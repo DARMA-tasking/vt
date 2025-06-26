@@ -53,6 +53,7 @@
 namespace vt { namespace location {
 
 using NodeActionType = std::function<void(NodeType)>;
+using ExistsNodeActionType = std::function<void(bool, NodeType)>;
 using LocMsgActionType = std::function<void(BaseMessage * )>;
 using LocEventID = int64_t;
 

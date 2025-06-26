@@ -101,8 +101,10 @@ struct EntityLocationCoord : LocationCoord {
   using LocalRegisteredContType = std::unordered_set<EntityID>;
   using LocalRegisteredMsgContType = std::unordered_map<EntityID, LocEntityMsg>;
   using ActionListType = std::vector<NodeActionType>;
+  using ExistsListType = std::vector<ExistsNodeActionType>;
   using PendingType = PendingLocationLookup<EntityID>;
   using PendingLocLookupsType = std::unordered_map<EntityID, ActionListType>;
+  using PendingExistsLocType = std::unordered_map<EntityID, ExistsListType>;
   using ActionContainerType = std::unordered_map<LocEventID, PendingType>;
   using LocAsksType = std::unordered_map<EntityID, std::unordered_set<NodeType>>;
 
@@ -238,6 +240,27 @@ struct EntityLocationCoord : LocationCoord {
    */
   void getLocation(
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
+  );
+
+  /**
+   * \brief Check if the entity exists locally on this rank
+   *
+   * \param[in] id the entity ID
+   *
+   * \return whether it exists locally
+   */
+  bool entityExistsLocal(EntityID const& id) const;
+
+  /**
+   * \brief Check if an entity exists in the system
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node the home node for \c id
+   * \param[in] action the exists/node action
+   */
+  void entityExists(
+    EntityID const& id, NodeType const& home_node,
+    ExistsNodeActionType const& action
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
@@ -428,6 +451,31 @@ private:
   );
 
   /**
+   * \brief Check if entity exists
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node the home node
+   * \param[in] cb callback to invoke
+   */
+  void entityExistsRequest(
+    EntityID id, NodeType home_node,
+    Callback<EntityID, bool, NodeType, NodeType> cb
+  );
+
+  /**
+   * \brief Response callback when entity exists request comes back with the
+   * answer
+   *
+   * \param[in] id the entity ID
+   * \param[in] exists whether it exists
+   * \param[in] answer the rank it exists on
+   * \param[in] home_node the home node for the entity
+   */
+  void entityExistsResponse(
+    EntityID const& id, bool exists, NodeType answer, NodeType home_node
+  );
+
+  /**
    * \internal \brief Update the location on this node
    *
    * \param[in] id entity id
@@ -435,6 +483,18 @@ private:
    * \param[in] home_node the home node for the entity
    */
   void updateLocation(EntityID const& id, NodeType answer, NodeType home_node);
+
+  /**
+   * \internal \brief Update the location on this node
+   *
+   * \param[in] id entity id
+   * \param[in] exists whether it exists
+   * \param[in] answer the answer of where the entity is location
+   * \param[in] home_node the home node for the entity
+   */
+  void entityExistsAnswer(
+    EntityID const& id, bool exists, NodeType answer, NodeType home_node
+  );
 
   /**
    * \internal \brief Route a message to destination with eager protocol
@@ -489,6 +549,10 @@ private:
 
   /// pending lookup requests where this manager is the home node
   PendingLocLookupsType pending_lookups_;
+
+  /// Pending lookup requests for existence, does not buffer if it doesn't find
+  /// the entity
+  PendingExistsLocType pending_exists_lookups_;
 
   /// List of nodes that inquire about an entity that require an update
   LocAsksType loc_asks_;

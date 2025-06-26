@@ -89,5 +89,48 @@ TEST_F(TestLocationIndep, test_register_entity_locman) {
   vt::theLocMan()->destroyCollective(lm_proxy);
 }
 
+TEST_F(TestLocationIndep, test_entity_exists) {
+  using EntityType = uint64_t;
+
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+
+  auto lm_proxy = vt::theLocMan()->createCollective<EntityType>(
+    false /* no anytime migration */,
+    true /* keep cache up-to-date */,
+    256 /* size of cache */
+  );
+
+  auto lm = lm_proxy.get();
+
+  for (int i = 0; i < num_nodes; i++) {
+    auto const elm = num_nodes * this_node + i;
+    vt_print(gen, "registering i={} home={}\n", elm, this_node);
+    lm->registerEntity(elm, this_node);
+  }
+
+  vt::theCollective()->barrier();
+
+  for (int i = 0; i < num_nodes; i++) {
+    auto const elm = num_nodes * this_node + i;
+    EXPECT_TRUE(lm->entityExistsLocal(elm));
+  }
+
+  for (int elm = 0; elm < num_nodes*num_nodes; elm++) {
+    auto const home = elm/num_nodes;
+    // vt_print(gen, "calling elm={}, home={}\n", elm, home);
+    lm->entityExists(elm, home, [=](bool exists, NodeType answer) {
+      // vt_print(gen, "elm={}, home={}, exists={}, answer={}\n", elm, home, exists, answer);
+      EXPECT_TRUE(exists);
+      EXPECT_EQ(answer, home);
+    });
+  }
+
+  lm->entityExists(num_nodes*num_nodes, 0, [=](bool exists, NodeType answer) {
+    // vt_print(gen, "elm={}, home={}, exists={}, answer={}\n", num_nodes*num_nodes, 0, exists, answer);
+    EXPECT_FALSE(exists);
+  });
+
+}
 
 } /* end namespace vt::tests::unit::location */
