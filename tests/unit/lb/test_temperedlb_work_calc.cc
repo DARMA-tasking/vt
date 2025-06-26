@@ -60,31 +60,31 @@ using TestTemperedLBWorkCalc = TestParallelHarness;
 111111111111111111111111111111111111   2222222222222222222222222222222222222222
 1                                  1   2                                      2
 1                                  1   2                                      2
-1                                  1   2                                      2
-1       c1               c2        1   2                    c3                2
-1     .....            .....       1   2                 .......              2
-1    .     .          .     .      1   2              ...       ...           2
-1   .       .        .       .     1   2             .             .          2
-1  .         .      .         .    1   2            .               .         2
+1                                  1   2   ««o12»»                            2
+1       c1               c2        1   2«««       »»        c3                2
+1     .....            .....       1 «««            »»»  .......              2
+1    .     .          .     .      ««  2              .»»       ...           2
+1   .       .        .       .  «««1   2             .   »»        .          2
+1  .         .      .        «««   1   2            .      »»       .         2
 1  . o1»»»o2«««««««««««««o3«««««««««««««««««««««««««««««««««o4      .         2
-1  .  »      .      .     »   .    1   2            .       »«      .         2
-1   .  »»   .        .     » .     1   2             .    » «      .          2
-1    .   » .          .     »»     1   2              ..»   «   ...           2
-1     ....»            .....  »    1   2               »  .«....              2
-1          »                   »   1   2             »»   «                   2
-111111111111»1111111111111111111»111   2222222222222»2222«222222222222222222222
-             »                   »                »»     «                     
-             »                    »»            »»      «                      
-          3333»333333333333333333333»3333333333»3333333«3333333                
-          3    »                     »       »»        «      3                
-          3     »                     »     »         «       3                
-          3     »                      »  »»  c5     «        3                
-          3      »                      »»  ....... «         3                
-          3       »       c4           »  ».       .«         3                
-          3        »    .......      »»  . »o7«««o8« .        3                
-          3         »...       ...  »   .   »»    «   .       3                
-          3         »             »»    .    »    «   .       3                
-          3          »           » .    .    »»  ««   .       3                
+1  .  »    »».      . «« »»   .    1   2            .       »«      .         2
+1   .  »»   »»       «   » » .     1   2             .    » «      .          2
+1    .   » . »»    «« .  »  »»     1   2              ..»   «   ...           2
+1     ....»   »o10«    .»...  »    1   2               »  .«....              2
+1          »            »      »   1   2             »»   «                   2
+111111111111»11111111111»1111111»111   2222222222222»2222«222222222222222222222
+             »          »        »                »»     «                     
+             »          »         »»            »»      «                      
+          3333»33333333»333333333333»3333333333»3333333«3333333                
+          3    »       »             »       »»        «      3                
+          3     »      »o11«          »     »         «       3                
+          3     »          «           »  »»  c5     «        3                
+          3      »          «           »»  ....... «         3                
+          3       »       c4«          »  ».       .«         3                
+          3        »    .....«.      »»  . »o7«««o8« .        3                
+          3         »...     « ...  »   .   »»    «   .       3                
+          3         »         «   »»    .    »    «   .       3                
+          3          »        «  » .    .    »»  ««   .       3                
           3        .  »o5»»»»o6»»»»»»»»»»»»»»»o9««   .        3                
           3        .     ««««      .      ..       ..         3                
           3         .             .         .......           3                
@@ -92,7 +92,6 @@ using TestTemperedLBWorkCalc = TestParallelHarness;
           3             .......                               3                
           3                                                   3                
           33333333333333333333333333333333333333333333333333333                
-
 
 **/
 
@@ -142,10 +141,12 @@ auto computeOffHomeVolume(
   double total_bytes = 0;
   std::set<SharedIDType> shared_here;
   for (auto const& [obj_id, _] : objs) {
-    auto shared_id = obj_shared_block.find(obj_id)->second;
-    auto [shared_node, shared_bytes] = shared_edge.find(shared_id)->second;
-    if (shared_node != node) {
-      total_bytes += shared_bytes;
+    if (auto it = obj_shared_block.find(obj_id); it != obj_shared_block.end()) {
+      auto shared_id = it->second;
+      auto [shared_node, shared_bytes] = shared_edge.find(shared_id)->second;
+      if (shared_node != node) {
+        total_bytes += shared_bytes;
+      }
     }
   }
   return total_bytes;
@@ -194,6 +195,14 @@ auto testClusterSwap(
       cur_objs_add_remove.erase(cur_objs_add_remove.find(obj_id));
     }
   }
+
+  std::set<ObjIDType> non_cluster_objs;
+  for (auto const& [elm_id, _] : cur_objs[rank]) {
+    if (obj_shared_block.find(elm_id) == obj_shared_block.end()) {
+      non_cluster_objs.insert(elm_id);
+    }
+  }
+
   tlb->setCurObjs(cur_objs_add_remove);
   auto wb2 = tlb->computeWorkBreakdown(rank, cur_objs_add_remove);
 
@@ -202,7 +211,9 @@ auto testClusterSwap(
     work_init[rank].work,
     work_init[rank].inter_send_vol, work_init[rank].inter_recv_vol,
     work_init[rank].intra_send_vol, work_init[rank].intra_recv_vol,
-    work_init[rank].shared_vol, blocks_here_initial, {}
+    work_init[rank].shared_vol,
+    blocks_here_initial,
+    non_cluster_objs
   };
 
   ClusterInfo cluster_to_remove =
@@ -250,9 +261,11 @@ TEST_F(TestTemperedLBWorkCalc, test_work_calc_1) {
   auto o1 = elm::ElmIDBits::createCollectionImpl(true, 1, 1, 1);
   auto o2 = elm::ElmIDBits::createCollectionImpl(true, 2, 1, 1);
   auto o3 = elm::ElmIDBits::createCollectionImpl(true, 3, 1, 1);
+  auto o10 = elm::ElmIDBits::createCollectionImpl(true, 10, 1, 1);
 
   // rank 2 objects
   auto o4 = elm::ElmIDBits::createCollectionImpl(true, 4, 2, 2);
+  auto o12 = elm::ElmIDBits::createCollectionImpl(true, 12, 2, 2);
 
   // rank 3 objects
   auto o5 = elm::ElmIDBits::createCollectionImpl(true, 5, 3, 3);
@@ -260,6 +273,7 @@ TEST_F(TestTemperedLBWorkCalc, test_work_calc_1) {
   auto o7 = elm::ElmIDBits::createCollectionImpl(true, 7, 3, 3);
   auto o8 = elm::ElmIDBits::createCollectionImpl(true, 8, 3, 3);
   auto o9 = elm::ElmIDBits::createCollectionImpl(true, 9, 3, 3);
+  auto o11 = elm::ElmIDBits::createCollectionImpl(true, 11, 3, 3);
 
   // clusters
   std::unordered_map<ObjIDType, SharedIDType> obj_shared_block = {
@@ -282,17 +296,23 @@ TEST_F(TestTemperedLBWorkCalc, test_work_calc_1) {
     {1,
       {{o1, 20},
        {o2, 5},
-       {o3, 10}}
+       {o3, 10},
+       {o10, 3}
+      }
     },
     {2,
-      {{o4, 30}}
+     {{o4, 30},
+      {o12, 9}
+     }
     },
     {3,
       {{o5, 10},
        {o6, 15},
        {o7, 3},
        {o8, 2},
-       {o9, 8}}
+       {o9, 8},
+       {o11, 1}
+      }
     }
   };
 
@@ -310,23 +330,27 @@ TEST_F(TestTemperedLBWorkCalc, test_work_calc_1) {
 
   send_edges = {
     {o1, {{o2, 10}, {o5, 10}}},
-    {o3, {{o2, 10}, {o7, 10}}},
+    {o2, {{o10, 10}}},
+    {o3, {{o2, 10}, {o7, 10}, {o10, 10}, {o11, 10}}},
     {o4, {{o3, 10}, {o8, 10}}},
     {o5, {{o6, 10}}},
-    {o6, {{o4, 10}, {o5, 10}, {o9, 10}}},
+    {o6, {{o4, 10}, {o5, 10}, {o9, 10}, {o11, 10}}},
     {o7, {{o9, 10}}},
     {o8, {{o7, 10}, {o9, 10}}},
+    {o12, {{o3, 10}, {o4, 10}}}
   };
 
   recv_edges = {
     {o2, {{o1, 10}, {o3, 10}}},
-    {o3, {{o4, 10}}},
-    {o4, {{o6, 10}}},
+    {o3, {{o4, 10}, {o12, 10}}},
+    {o4, {{o6, 10}, {o12, 10}}},
     {o5, {{o1, 10}, {o6, 10}}},
     {o6, {{o5, 10}}},
     {o7, {{o3, 10}, {o8, 10}}},
     {o8, {{o4, 10}}},
     {o9, {{o6, 10}, {o7, 10}, {o8, 10}}},
+    {o10, {{o2, 10}, {o3, 10}}},
+    {o11, {{o3, 10}, {o6, 10}}}
   };
 
   tlb->setObjSharedBlock(obj_shared_block);

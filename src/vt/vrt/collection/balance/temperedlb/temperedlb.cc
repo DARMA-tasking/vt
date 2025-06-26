@@ -911,11 +911,6 @@ WorkBreakdown TemperedLB::computeWorkBreakdown(
     if (exclude.find(obj) == exclude.end()) {
       if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
         for (auto const& [target, volume] : it->second) {
-          vt_print(
-            temperedlb,
-            "computeWorkBreakdown: send obj={}, target={}\n",
-            obj, target
-          );
           if (
             objs.find(target) != objs.end() or
             non_cluster_objs_.find(target) != non_cluster_objs_.end()
@@ -928,11 +923,6 @@ WorkBreakdown TemperedLB::computeWorkBreakdown(
       }
       if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
         for (auto const& [target, volume] : it->second) {
-          vt_print(
-            temperedlb,
-            "computeWorkBreakdown: recv obj={}, target={}\n",
-            obj, target
-          );
           if (
             objs.find(target) != objs.end() or
             non_cluster_objs_.find(target) != non_cluster_objs_.end()
@@ -1041,11 +1031,13 @@ double TemperedLB::computeWorkAfterClusterSwap(
     if (shared_id == to_remove.shared_id) {
       node_intra_send -= volume;
     } else if (cur_shared_ids.find(shared_id) != cur_shared_ids.end()) {
+      // Send edge to cluster on this rank
       node_intra_send -= volume;
       node_intra_recv -= volume;
 
       node_inter_recv += volume;
     } else {
+      // Send edge to cluster *not* on this rank
       node_inter_send -= volume;
     }
   }
@@ -1056,6 +1048,30 @@ double TemperedLB::computeWorkAfterClusterSwap(
     if (shared_id == to_remove.shared_id) {
       node_intra_recv -= volume;
     } else if (cur_shared_ids.find(shared_id) != cur_shared_ids.end()) {
+      // Recv edge from cluster on this rank
+      node_intra_recv -= volume;
+      node_intra_send -= volume;
+
+      node_inter_send += volume;
+    } else {
+      // Recv edge from cluster *not* on this rank
+      node_inter_recv -= volume;
+    }
+  }
+
+  for (auto const& [recv_obj, volume] : to_remove.obj_send_vol) {
+    if (info.non_cluster_objs.find(recv_obj) != info.non_cluster_objs.end()) {
+      node_intra_recv -= volume;
+      node_intra_send -= volume;
+
+      node_inter_recv += volume;
+    } else {
+      node_inter_send -= volume;
+    }
+  }
+
+  for (auto const& [send_obj, volume] : to_remove.obj_recv_vol) {
+    if (info.non_cluster_objs.find(send_obj) != info.non_cluster_objs.end()) {
       node_intra_recv -= volume;
       node_intra_send -= volume;
 
@@ -1064,23 +1080,6 @@ double TemperedLB::computeWorkAfterClusterSwap(
       node_inter_recv -= volume;
     }
   }
-
-  // @todo
-  // for (auto const& [recv_obj, volume] : to_remove.obj_send_vol) {
-  //   if (info.non_cluster_objs.find(recv_obj) != info.non_cluster_objs.end()) {
-  //     node_intra_send -= volume;
-  //   } else {
-  //     node_inter_send -= volume;
-  //   }
-  // }
-
-  // for (auto const& [send_obj, volume] : to_remove.obj_recv_vol) {
-  //   if (info.non_cluster_objs.find(send_obj) != info.non_cluster_objs.end()) {
-  //     node_intra_recv -= volume;
-  //   } else {
-  //     node_inter_recv -= volume;
-  //   }
-  // }
 
   // Remove from list of shared IDs for add calculation
   if (to_remove.shared_id != -1) {
@@ -1117,22 +1116,27 @@ double TemperedLB::computeWorkAfterClusterSwap(
     }
   }
 
-  // @todo
-  // for (auto const& [recv_obj, volume] : to_add.obj_send_vol) {
-  //   if (info.non_cluster_objs.find(recv_obj) != info.non_cluster_objs.end()) {
-  //     node_intra_send += volume;
-  //   } else {
-  //     node_inter_send += volume;
-  //   }
-  // }
+  for (auto const& [recv_obj, volume] : to_add.obj_send_vol) {
+    if (info.non_cluster_objs.find(recv_obj) != info.non_cluster_objs.end()) {
+      node_intra_send += volume;
+      node_intra_recv += volume;
 
-  // for (auto const& [send_obj, volume] : to_add.obj_recv_vol) {
-  //   if (info.non_cluster_objs.find(send_obj) != info.non_cluster_objs.end()) {
-  //     node_intra_recv += volume;
-  //   } else {
-  //     node_inter_recv += volume;
-  //   }
-  // }
+      node_inter_recv -= volume;
+    } else {
+      node_inter_send += volume;
+    }
+  }
+
+  for (auto const& [send_obj, volume] : to_add.obj_recv_vol) {
+    if (info.non_cluster_objs.find(send_obj) != info.non_cluster_objs.end()) {
+      node_intra_recv += volume;
+      node_intra_send += volume;
+
+      node_inter_send -= volume;
+    } else {
+      node_inter_recv += volume;
+    }
+  }
 
   vt_print(
     gen,
