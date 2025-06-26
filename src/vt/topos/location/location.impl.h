@@ -207,7 +207,9 @@ void EntityLocationCoord<EntityID>::doneMigrations() {
 
 template <typename EntityID>
 bool EntityLocationCoord<EntityID>::entityExistsLocal(EntityID const& id) const {
-  return local_registered_.find(id) != local_registered_.end();
+  return
+    local_registered_.find(id) != local_registered_.end() or
+    local_registered_msg_han_.find(id) != local_registered_msg_han_.end();
 }
 
 template <typename EntityID>
@@ -858,6 +860,18 @@ void EntityLocationCoord<EntityID>::routedHandler(MessageT *raw_msg) {
 }
 
 template <typename EntityID>
+std::vector<EntityID> EntityLocationCoord<EntityID>::getLocalEntities() const {
+  std::vector<EntityID> local;
+  for (auto const& elm : local_registered_) {
+    local.push_back(elm);
+  }
+  for (auto const& [elm, _] : local_registered_msg_han_) {
+    local.push_back(elm);
+  }
+  return local;
+}
+
+template <typename EntityID>
 std::unordered_map<EntityID, NodeType>
 EntityLocationCoord<EntityID>::buildGlobalMap() {
   std::unordered_map<EntityID, NodeType> local_map;
@@ -875,7 +889,7 @@ EntityLocationCoord<EntityID>::buildGlobalMap() {
     &EntityLocationCoord<EntityID>::globalMapHandler, collective::PlusOp
   >(local_map);
 
-  runSchedulerWhile([&]{ return waiting_global_map_handler_; });
+  theSched()->runSchedulerWhile([&]{ return waiting_global_map_handler_; });
 
   auto global_map = std::move(global_map_temp_);
   global_map_temp_ = {};

@@ -111,6 +111,8 @@ TEST_F(TestLocationIndep, test_entity_exists) {
 
   vt::theCollective()->barrier();
 
+  EXPECT_EQ(lm->getLocalEntities().size(), num_nodes);
+
   for (int i = 0; i < num_nodes; i++) {
     auto const elm = num_nodes * this_node + i;
     EXPECT_TRUE(lm->entityExistsLocal(elm));
@@ -126,11 +128,17 @@ TEST_F(TestLocationIndep, test_entity_exists) {
     });
   }
 
-  lm->entityExists(num_nodes*num_nodes, 0, [=](bool exists, NodeType answer) {
+  lm->entityExists(num_nodes*num_nodes, 0, [=](bool exists, NodeType) {
     // vt_print(gen, "elm={}, home={}, exists={}, answer={}\n", num_nodes*num_nodes, 0, exists, answer);
     EXPECT_FALSE(exists);
   });
 
+  auto global_map = lm->buildGlobalMap();
+  EXPECT_EQ(global_map.size(), num_nodes*num_nodes);
+  for (int elm = 0; elm < num_nodes*num_nodes; elm++) {
+    auto const home = elm/num_nodes;
+    EXPECT_EQ(global_map.find(elm)->second, home);
+  }
 }
 
 } /* end namespace vt::tests::unit::location */

@@ -412,6 +412,13 @@ struct EntityLocationCoord : LocationCoord {
   }
 
   /**
+   * \brief Get local entities
+   *
+   * \return vector of local entities
+   */
+  std::vector<EntityID> getLocalEntities() const;
+
+  /**
    * \brief All-reduce the global map of entity location
    *
    * \warning This is not scalable and will centralize all the data
