@@ -40,7 +40,16 @@ ARG VT_UNITY_BUILD_ENABLED
 ARG VT_WERROR_ENABLED
 ARG VT_ZOLTAN_ENABLED
 
-RUN --mount=target=/vt --mount=type=cache,target=/build/ccache \
+RUN --mount=target=/vt \
+<<EOF
+if [ -d vt/docker-output/build/ccache ]; then
+    cp -r vt/docker-output/build/ccache /build
+    ccache -c
+    ccache -s
+fi
+EOF
+
+RUN --mount=target=/vt \
         /vt/ci/build_cpp.sh /vt /build && \
         /vt/ci/test_cpp.sh /vt /build  && \
         /vt/ci/build_vt_sample.sh /vt /build
