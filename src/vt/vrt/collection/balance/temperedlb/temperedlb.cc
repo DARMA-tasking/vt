@@ -717,11 +717,11 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
     for (auto&& obj : cluster_objs) {
       if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
         for (auto const& [recv_obj, volume] : it->second) {
-          vt_print(
-            temperedlb,
-            "computeClusterSummary: shared_id={} send obj={}, recv_obj={}\n",
-            shared_id, obj, recv_obj
-          );
+          // vt_print(
+          //   temperedlb,
+          //   "computeClusterSummary: shared_id={} send obj={}, recv_obj={}\n",
+          //   shared_id, obj, recv_obj
+          // );
 
           if (cluster_objs.find(recv_obj) != cluster_objs.end()) {
             // intra-cluster edge
@@ -736,11 +736,11 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
             // inter-cluster edge
             info.inter_cluster_send_vol[it2->second] += volume;
 
-            vt_print(
-              temperedlb,
-              "computeClusterSummary: ADDING inter shared_id={} send obj={}, recv_obj={}\n",
-              shared_id, obj, recv_obj
-            );
+            // vt_print(
+            //   temperedlb,
+            //   "computeClusterSummary: ADDING inter shared_id={} send obj={}, recv_obj={}\n",
+            //   shared_id, obj, recv_obj
+            // );
 
           } else {
             // across-object edge not part of a cluster
@@ -750,11 +750,11 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
       }
       if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
         for (auto const& [send_obj, volume] : it->second) {
-          vt_print(
-            temperedlb,
-            "computeClusterSummary: shared_id={}, recv obj={}, send_obj={}\n",
-            shared_id, obj, send_obj
-          );
+          // vt_print(
+          //   temperedlb,
+          //   "computeClusterSummary: shared_id={}, recv obj={}, send_obj={}\n",
+          //   shared_id, obj, send_obj
+          // );
           if (cluster_objs.find(send_obj) != cluster_objs.end()) {
             // intra-cluster edge
             info.intra_recv_vol += volume;
@@ -768,11 +768,11 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
             // inter-cluster edge (on this node)
             info.inter_cluster_recv_vol[it2->second] += volume;
 
-            vt_print(
-              temperedlb,
-              "computeClusterSummary: ADDING inter shared_id={} recv obj={}, send_obj={}\n",
-              shared_id, obj, send_obj
-            );
+            // vt_print(
+            //   temperedlb,
+            //   "computeClusterSummary: ADDING inter shared_id={} recv obj={}, send_obj={}\n",
+            //   shared_id, obj, send_obj
+            // );
 
           } else {
             // across-object edge not part of a cluster
@@ -997,8 +997,8 @@ double TemperedLB::computeWorkAfterClusterSwap(
   double node_inter_send = info.inter_send_vol;
   double node_inter_recv = info.inter_recv_vol;
 
-  vt_print(
-    gen,
+  vt_debug_print(
+    verbose, temperedlb,
     "computeWorkAfterClusterSwap: node_work={}, to_remove.load={}, intra={}, inter={}\n",
     node_work,
     to_remove.load,
@@ -1013,8 +1013,8 @@ double TemperedLB::computeWorkAfterClusterSwap(
   // Subtract out these factors to adjust them based on new situation
   node_work -= gamma * std::max(node_intra_send, node_intra_recv);
 
-  vt_print(
-    gen,
+  vt_debug_print(
+    verbose, temperedlb,
     "node_work (after gamma)={}, sub off={} {} {}\n", node_work, std::max(node_inter_send, node_inter_recv), beta, beta * std::max(node_inter_send, node_inter_recv)
   );
 
@@ -1026,7 +1026,6 @@ double TemperedLB::computeWorkAfterClusterSwap(
   // be removed from the inter-node volume, otherwise needs to be removed from
   // intra-node volume.
   for (auto const& [shared_id, volume] : to_remove.inter_cluster_send_vol) {
-    vt_print(gen, "to_remove.inter_cluster_send: shared_id={}, volume={}, exists={}\n", shared_id, volume, info.shared_ids.find(shared_id) != info.shared_ids.end());
     // Local cluster edge if it's in our shared IDs, otherwise it's remote
     if (shared_id == to_remove.shared_id) {
       node_intra_send -= volume;
@@ -1043,7 +1042,6 @@ double TemperedLB::computeWorkAfterClusterSwap(
   }
 
   for (auto const& [shared_id, volume] : to_remove.inter_cluster_recv_vol) {
-    vt_print(gen, "to_remove.inter_cluster_recv: shared_id={}, volume={}, exists={}\n", shared_id, volume, info.shared_ids.find(shared_id) != info.shared_ids.end());
     // Local cluster edge if it's in our shared IDs, otherwise it's remote
     if (shared_id == to_remove.shared_id) {
       node_intra_recv -= volume;
@@ -1138,8 +1136,8 @@ double TemperedLB::computeWorkAfterClusterSwap(
     }
   }
 
-  vt_print(
-    gen,
+  vt_debug_print(
+    verbose, temperedlb,
     "node_work={}, intra {} {} inter {} {}\n",
     node_work, node_intra_send, node_intra_recv, node_inter_send, node_inter_recv
   );
