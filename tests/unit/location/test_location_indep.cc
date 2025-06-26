@@ -111,7 +111,7 @@ TEST_F(TestLocationIndep, test_entity_exists) {
 
   vt::theCollective()->barrier();
 
-  EXPECT_EQ(lm->getLocalEntities().size(), num_nodes);
+  EXPECT_EQ(lm->getLocalEntities().size(), static_cast<std::size_t>(num_nodes));
 
   for (int i = 0; i < num_nodes; i++) {
     auto const elm = num_nodes * this_node + i;
