@@ -85,7 +85,7 @@ TEST_F(TestLocationIndep, test_register_entity_locman) {
       });
     }
   });
-  
+
   vt::theLocMan()->destroyCollective(lm_proxy);
 }
 
