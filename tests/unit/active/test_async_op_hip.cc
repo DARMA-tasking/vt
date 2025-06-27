@@ -200,7 +200,7 @@ TEST_F(TestAsyncOp, test_async_op_hip) {
   auto ep = theTerm()->makeEpochRooted(term::UseDS{true});
 
   // When this returns all the hip streams should be done
-  runInEpoch(ep, [p, this_node] {
+  runInEpoch("TestAsyncOpHIP", ep, [p, this_node] {
     p[this_node].send<MyMsg, &hipGroup::hipHandler>();
   });
 

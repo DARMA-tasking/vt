@@ -414,7 +414,6 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
       | cur_event_
       | enabled_
       | idle_begun_
-      | start_time_
       | user_event_
       | prog_name_
       | trace_name_
