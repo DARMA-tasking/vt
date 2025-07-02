@@ -2607,6 +2607,8 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
         give_objs,
         give_obj_shared_block,
         give_obj_working_bytes,
+        give_send,
+        give_recv,
         try_shared_id
       );
     });
