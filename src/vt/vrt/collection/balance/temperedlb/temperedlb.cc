@@ -275,7 +275,7 @@ Description:
       "memory_threshold",
       R"(
 Values: <double>
-Defaut: 0
+Default: 0
 Description: The memory threshold TemperedLB should strictly stay under which is
 respected if memory information is present in the user-defined data.
 )"
@@ -284,7 +284,7 @@ respected if memory information is present in the user-defined data.
       "alpha",
       R"(
 Values: <double>
-Defaut: 1.0
+Default: 1.0
 Description: α in the work model (load in work model)
 )"
     },
@@ -292,7 +292,7 @@ Description: α in the work model (load in work model)
       "beta",
       R"(
 Values: <double>
-Defaut: 0.0
+Default: 0.0
 Description: β in the work model (inter-node communication in work model)
 )"
     },
@@ -300,7 +300,7 @@ Description: β in the work model (inter-node communication in work model)
     "gamma",
       R"(
 Values: <double>
-Defaut: 0.0
+Default: 0.0
 Description: γ in the work model (intra-node communication in work model)
 )"
     },
@@ -308,7 +308,7 @@ Description: γ in the work model (intra-node communication in work model)
     "delta",
       R"(
 Values: <double>
-Defaut: 0.0
+Default: 0.0
 Description: δ in the work model (shared-memory-edges in work model)
 )"
     },
@@ -316,10 +316,17 @@ Description: δ in the work model (shared-memory-edges in work model)
     "epsilon",
       R"(
 Values: <double>
-Defaut: infinity
+Default: infinity
 Description: ε in the work model (memory term in work model)
 )"
-    }
+    },
+    "converge_tolerance",
+    R"(
+Values: <double>
+Default: 0.01
+Description: The relative tolerance across a window of 8 iterations of work
+to define convergence.
+)"
   };
   return keys_help;
 }
