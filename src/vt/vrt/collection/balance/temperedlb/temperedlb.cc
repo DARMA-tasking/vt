@@ -327,7 +327,8 @@ Default: 0.01
 Description: The relative tolerance across a window of 8 iterations of work
 to define convergence.
 )"
-  };
+  }
+};
   return keys_help;
 }
 
