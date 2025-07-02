@@ -492,6 +492,8 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
     "or another option"
   );
 
+  readAlphaFromFile();
+
   if (theContext()->getNode() == 0) {
     vt_debug_print(
       terse, temperedlb,
@@ -505,6 +507,69 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
       obj_ordering_converter_.getString(obj_ordering_),
       cmf_type_converter_.getString(cmf_type_), rollback_, target_pole_
     );
+  }
+}
+
+std::tuple<std::string, int, int> TemperedLB::getNodeRank() {
+  auto world_comm = theContext()->getComm();
+
+  int world_rank = -1, world_size = -1;
+  MPI_Comm_rank(world_comm, &world_rank);
+  MPI_Comm_size(world_comm, &world_size);
+
+  char hostname[MPI_MAX_PROCESSOR_NAME];
+  int hostname_len = -1;
+  MPI_Get_processor_name(hostname, &hostname_len);
+
+  MPI_Comm shared_comm;
+  MPI_Comm_split_type(world_comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &shared_comm);
+
+  int shared_rank = -1, shared_size = -1;
+  MPI_Comm_rank(shared_comm, &shared_rank);
+  MPI_Comm_size(shared_comm, &shared_size);
+
+  vt_debug_print(
+    verbose, temperedlb,
+    "hostname: {}, global rank: {}, local rank: {}\n",
+    hostname, world_rank, shared_rank
+  );
+
+  MPI_Comm_free(&shared_comm);
+
+  return std::make_tuple(std::string{hostname}, world_rank, shared_rank);
+}
+
+void TemperedLB::readAlphaFromFile() {
+  if (theConfig()->vt_user_str_1 != "") {
+    auto const& [hostname, world_rank, shared_rank] = getNodeRank();
+    auto const filename = theConfig()->vt_user_str_1;
+    std::ifstream file(filename);
+    if (not file.is_open()) {
+      vtAbort(fmt::format("Could not open file: {}\n", filename));
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+      std::istringstream iss(line);
+      std::string file_hostname = "";
+      int file_shared_rank = -1;
+      double rank_alpha = 0.0;
+
+      if (iss >> file_hostname >> file_shared_rank >> rank_alpha) {
+        if (file_hostname == hostname and shared_rank == file_shared_rank) {
+          alpha = rank_alpha;
+          vt_debug_print(
+            verbose, temperedlb,
+            "For rank {}, setting alpha to {}\n",
+            theContext()->getNode(),
+            alpha
+          );
+          break;
+        }
+      } else {
+        vtAbort("Error reading rank-alpha file");
+      }
+    }
+    file.close();
   }
 }
 
@@ -978,8 +1043,8 @@ double TemperedLB::computeWorkAfterClusterSwap(
   double node_work = info.work;
 
   // Remove/add clusters' load factor from work model
-  node_work -= alpha * to_remove.load;
-  node_work += alpha * to_add.load;
+  node_work -= info.rank_alpha * to_remove.load;
+  node_work += info.rank_alpha * to_add.load;
 
   // Remove/add clusters' intra-comm
   double const node_intra_send = info.intra_send_vol;
@@ -1636,6 +1701,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
         envelopeSetEpoch(msg->env, epoch);
       }
       NodeInfo info{
+        alpha,
         this_new_load_, this_new_work_,
         this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
         this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
@@ -1655,6 +1721,7 @@ void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
         envelopeSetEpoch(msg->env, epoch);
       }
       NodeInfo info{
+        alpha,
         this_new_load_, this_new_work_,
         this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
         this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
@@ -2277,6 +2344,7 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
   auto const this_node = theContext()->getNode();
 
   NodeInfo this_info{
+    alpha,
     this_new_load_, this_new_work_,
     this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
     this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
@@ -2608,6 +2676,7 @@ void TemperedLB::satisfyLockRequest() {
     );
 
     NodeInfo this_info{
+      alpha,
       this_new_load_, this_new_work_,
       this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
       this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
@@ -2631,6 +2700,7 @@ void TemperedLB::swapClusters() {
   auto const this_node = theContext()->getNode();
 
   NodeInfo this_info{
+    alpha,
     this_new_load_, this_new_work_,
     this_new_breakdown_.inter_send_vol, this_new_breakdown_.inter_recv_vol,
     this_new_breakdown_.intra_send_vol, this_new_breakdown_.intra_recv_vol,
