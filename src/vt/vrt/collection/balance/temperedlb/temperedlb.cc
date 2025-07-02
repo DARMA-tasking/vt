@@ -320,6 +320,7 @@ Default: infinity
 Description: ε in the work model (memory term in work model)
 )"
     },
+    {
     "converge_tolerance",
     R"(
 Values: <double>
@@ -327,8 +328,8 @@ Default: 0.01
 Description: The relative tolerance across a window of 8 iterations of work
 to define convergence.
 )"
-  }
-};
+    }
+  };
   return keys_help;
 }
 
