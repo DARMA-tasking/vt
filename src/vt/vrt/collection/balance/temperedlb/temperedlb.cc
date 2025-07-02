@@ -1236,7 +1236,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
           // Perform the reduction for Rank_load_modeled -> processor load only
           proxy_.allreduce<&TemperedLB::workStatsHandler, collective::PlusOp>(
             std::vector<balance::LoadData>{
-              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}},
+              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_ * alpha}},
               {balance::LoadData{Statistic::Rank_strategy_specific_load_modeled, this_new_work_}}
             }
           );
@@ -1367,7 +1367,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
           // Perform the reduction for Rank_load_modeled -> processor load only
           proxy_.allreduce<&TemperedLB::loadStatsHandler, collective::PlusOp>(
             std::vector<balance::LoadData>{
-              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_}},
+              {balance::LoadData{Statistic::Rank_load_modeled, this_new_load_ * alpha}},
               {balance::LoadData{Statistic::Rank_strategy_specific_load_modeled, this_new_work_}}
             }
           );
