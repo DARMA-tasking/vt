@@ -435,6 +435,10 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
   target_pole_   = config->getOrDefault<bool>("targetpole", target_pole_);
   mem_thresh_    = config->getOrDefault<double>("memory_threshold", mem_thresh_);
 
+  converge_tolerance_ = config->getOrDefault<double>(
+    "converge_tolerance", converge_tolerance_
+  );
+
   balance::LBArgsEnumConverter<CriterionEnum> criterion_converter_(
     "criterion", "CriterionEnum", {
       {CriterionEnum::Grapevine,         "Grapevine"},
@@ -1443,20 +1447,25 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 	theSched()->runSchedulerWhile([this]{ return not load_stats_handler_; });
       }
 
-      bool last_four_same = false;
-      if (last_n_I.size() >= 4) {
-	bool all_same = true;
-	for (int i = 1; i < 4; i++) {
-	  if (last_n_I[last_n_I.size()-1] != last_n_I[last_n_I.size()-1-i]) {
-	    all_same = false;
-	  }
-	}
-	if (all_same) {
-	  last_four_same = true;
-	}
+      bool within_tolerance = false;
+      int const last_num_iters = 8;
+      if (last_n_work.size() >= last_num_iters) {
+        double w_max_i = last_n_work[last_n_work.size()-last_num_iters];
+        double w_max_in = last_n_work[last_n_work.size()-1];
+        double w_max_rel_d = (w_max_i - w_max_in) / last_num_iters;
+        if (theContext()->getNode() == 0) {
+          vt_print(
+            temperedlb,
+            "i={} in={} rel={}, tol={}, rel_tol={}\n",
+            w_max_i, w_max_in, w_max_rel_d, converge_tolerance_, converge_tolerance_ * w_max_in
+          );
+        }
+        if (w_max_rel_d < converge_tolerance_ * w_max_in) {
+          within_tolerance = true;
+        }
       }
 
-      if (rollback_ || (iter_ == num_iters_ - 1) || new_imbalance_ < 0.01 || last_four_same) {
+      if (rollback_ || (iter_ == num_iters_ - 1) || new_imbalance_ < 0.01 || within_tolerance) {
         // if known, save the best iteration within any trial so we can roll back
         if (new_imbalance_ < best_imb && new_imbalance_ <= start_imb) {
           best_load = this_new_load_;
@@ -1469,7 +1478,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         }
       }
 
-      if (new_imbalance_ < 0.01 || last_four_same) {
+      if (new_imbalance_ < 0.01 || within_tolerance) {
 	break;
       }
     }
@@ -1563,11 +1572,12 @@ void TemperedLB::loadStatsHandler(std::vector<balance::LoadData> const& vec) {
   auto const& in = vec[0];
   auto const& work = vec[1];
   new_imbalance_ = in.I();
-  last_n_I.push_back(std::round(new_imbalance_ * 10000.0) / 10000.0);
 
   work_mean_ = work.avg();
   work_max_ = work.max();
   new_work_imbalance_ = work.I();
+
+  last_n_work.push_back(work_max_);
 
   max_load_over_iters_.push_back(in.max());
 
@@ -1667,6 +1677,7 @@ void TemperedLB::informAsync() {
     });
   }
 
+  props_done_ = false;
   proxy_.allreduce<&TemperedLB::propsDone>();
   theSched()->runSchedulerWhile([this]{ return not props_done_ ; });
 
@@ -2349,6 +2360,7 @@ auto TemperedLB::removeClusterToSend(
   std::unordered_map<ObjIDType, SharedIDType> give_obj_shared_block;
   std::unordered_map<SharedIDType, BytesType> give_shared_blocks_size;
   std::unordered_map<ObjIDType, BytesType> give_obj_working_bytes;
+  EdgeMapType give_send, give_recv;
 
   vt_debug_print(
     verbose, temperedlb,
@@ -2411,11 +2423,25 @@ auto TemperedLB::removeClusterToSend(
     blocks_here_before.size(), blocks_here_after.size()
   );
 
+  for (auto&& [elm, edge_map] : send_edges_) {
+    if (give_objs.find(elm) != give_objs.end()) {
+      give_send[elm] = edge_map;
+    }
+  }
+
+  for (auto&& [elm, edge_map] : recv_edges_) {
+    if (give_objs.find(elm) != give_objs.end()) {
+      give_recv[elm] = edge_map;
+    }
+  }
+
   return std::make_tuple(
     give_objs,
     give_obj_shared_block,
     give_shared_blocks_size,
-    give_obj_working_bytes
+    give_obj_working_bytes,
+    give_send,
+    give_recv
   );
 }
 
@@ -2560,18 +2586,14 @@ void TemperedLB::considerSwapsAfterLock(MsgSharedPtr<LockedInfoMsg> msg) {
     auto const src_shared_id = std::get<0>(best_swap);
     auto const try_shared_id = std::get<1>(best_swap);
 
-    vt_debug_print(
-      normal, temperedlb,
-      "best_c_try={}, swapping {} for {} on rank ={}\n",
-      best_c_try, src_shared_id, try_shared_id, try_rank
-    );
-
     // FIXME C++20: use structured binding
     auto const& give_data = removeClusterToSend(src_shared_id);
     auto const& give_objs = std::get<0>(give_data);
     auto const& give_obj_shared_block = std::get<1>(give_data);
     auto const& give_shared_blocks_size = std::get<2>(give_data);
     auto const& give_obj_working_bytes = std::get<3>(give_data);
+    auto const& give_send = std::get<4>(give_data);
+    auto const& give_recv = std::get<5>(give_data);
 
     runInEpochRooted("giveCluster", [&]{
       vt_debug_print(
@@ -2628,6 +2650,8 @@ void TemperedLB::giveCluster(
   std::unordered_map<ObjIDType, LoadType> const& give_objs,
   std::unordered_map<ObjIDType, SharedIDType> const& give_obj_shared_block,
   std::unordered_map<ObjIDType, BytesType> const& give_obj_working_bytes,
+  EdgeMapType const& give_send,
+  EdgeMapType const& give_recv,
   SharedIDType take_cluster
 ) {
   auto const this_node = theContext()->getNode();
@@ -2650,12 +2674,21 @@ void TemperedLB::giveCluster(
     obj_working_bytes_.emplace(elm);
   }
 
+  for (auto&& [elm, map] : give_send) {
+    send_edges_[elm] = map;
+  }
+  for (auto&& [elm, map] : give_recv) {
+    recv_edges_[elm] = map;
+  }
+
   if (take_cluster != no_shared_id) {
     auto const& [
       take_objs,
       take_obj_shared_block,
       take_shared_blocks_size,
-      take_obj_working_bytes
+      take_obj_working_bytes,
+      take_send,
+      take_recv
     ] = removeClusterToSend(take_cluster);
 
     proxy_[from_rank].template send<&TemperedLB::giveCluster>(
@@ -2664,6 +2697,8 @@ void TemperedLB::giveCluster(
       take_objs,
       take_obj_shared_block,
       take_obj_working_bytes,
+      take_send,
+      take_recv,
       no_shared_id
     );
   }
@@ -2922,6 +2957,7 @@ void TemperedLB::swapClusters() {
     return try_locks_pending_ > 0 or try_locks_.size() > 0;
   });
 
+  done_with_swaps_ = false;
   proxy_.allreduce<&TemperedLB::finishedSwaps>();
   theSched()->runSchedulerWhile([this]{ return not done_with_swaps_; });
 

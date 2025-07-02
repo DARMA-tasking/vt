@@ -358,6 +358,8 @@ public:
    * \param[in] give_objs the objects given
    * \param[in] give_obj_shared_block the shared block the objs are part of
    * \param[in] give_obj_working_bytes the working bytes for the objs
+   * \param[in] give_send send edges for given objects
+   * \param[in] give_recv recv edges for given objects
    * \param[in] take_cluster (optional) a cluster requested in return
    */
   void giveCluster(
@@ -366,6 +368,8 @@ public:
     std::unordered_map<ObjIDType, LoadType> const& give_objs,
     std::unordered_map<ObjIDType, SharedIDType> const& give_obj_shared_block,
     std::unordered_map<ObjIDType, BytesType> const& give_obj_working_bytes,
+    EdgeMapType const& give_send,
+    EdgeMapType const& give_recv,
     SharedIDType take_cluster
   );
 
@@ -560,7 +564,8 @@ private:
   /// Ready to satify looks
   bool ready_to_satisfy_locks_ = false;
   int consider_swaps_counter_ = 0;
-  std::vector<double> last_n_I;
+  std::vector<double> last_n_work;
+  double converge_tolerance_ = 0.01;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
