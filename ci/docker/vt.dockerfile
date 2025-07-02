@@ -49,7 +49,7 @@ if [ -d vt/docker-output/build/ccache ]; then
 fi
 EOF
 
-RUN --mount=target=/vt \
+RUN --mount=target=/vt,rw \
         /vt/ci/build_cpp.sh /vt /build && \
         /vt/ci/test_cpp.sh /vt /build  && \
         /vt/ci/build_vt_sample.sh /vt /build
