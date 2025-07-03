@@ -5,11 +5,9 @@ set -ex
 source_dir=${1}
 build_dir=${2}
 
-inclusion_type=""
-if test "$VT_INCLUSION_TYPE" = "TPL"
-then
-  inclusion_type="-Dbuild_with_tpl=1"
-elif test "$VT_INCLUSION_TYPE" = "EXT_LIB"
+# use TPL inclusion type by default
+inclusion_type="-Dbuild_with_tpl=1"
+if test "$VT_INCLUSION_TYPE" = "EXT_LIB"
 then
   inclusion_type="-Dbuild_with_libs=1"
 fi
@@ -25,7 +23,7 @@ then
 
     cd "$VT_BUILD"
 
-    if test "$VT_INCLUSION_TYPE" = "TPL"
+    if test "$inclusion_type" = "-Dbuild_with_tpl=1"
     then
         echo "Clean up before building vt-sample-project"
         cmake --build . --target clean
