@@ -5,6 +5,9 @@ set -ex
 source_dir=${1}
 build_dir=${2}
 
+# Dump environment variables for easier debugging
+env | sort
+
 # Dependency versions, when fetched via git.
 checkpoint_rev=develop
 
