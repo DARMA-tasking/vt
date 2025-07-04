@@ -19,7 +19,7 @@ function "vt_build_shared_libs" {
 
 function "vt_build_trace_only" {
   params = [item]
-  result = lookup(item, "vt_build_trace_only", "1")
+  result = lookup(item, "vt_trace_only", "1")
 }
 
 function "vt_ci_build" {
