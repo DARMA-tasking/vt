@@ -19,7 +19,7 @@ function "vt_build_shared_libs" {
 
 function "vt_build_trace_only" {
   params = [item]
-  result = lookup(item, "vt_build_trace_only", "1")
+  result = lookup(item, "vt_trace_only", "1")
 }
 
 function "vt_ci_build" {
@@ -99,7 +99,7 @@ function "vt_mpi_guard" {
 
 function "vt_no_color" {
   params = [item]
-  result = lookup(item, "vt_no_color", "")
+  result = lookup(item, "vt_no_color", "1")
 }
 
 function "vt_perf" {
@@ -149,12 +149,12 @@ function "vt_ubsan" {
 
 function "vt_unity_build" {
   params = [item]
-  result = lookup(item, "vt_unity_build", "")
+  result = lookup(item, "vt_unity_build", "1")
 }
 
 function "vt_werror" {
   params = [item]
-  result = lookup(item, "vt_werror", "")
+  result = lookup(item, "vt_werror", "1")
 }
 
 function "vt_zoltan" {
@@ -326,7 +326,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-22.04-gcc-12-vtk-cpp"
-        vt_tv_enabled = 1
+        vt_tv = 1
         vt_trace_only = 0
       },
       {

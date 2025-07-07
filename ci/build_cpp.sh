@@ -5,6 +5,9 @@ set -ex
 source_dir=${1}
 build_dir=${2}
 
+# Dump environment variables for easier debugging
+env | sort
+
 # Dependency versions, when fetched via git.
 checkpoint_rev=develop
 
@@ -215,11 +218,6 @@ then
     # so it needs special treatment
     if test "$GENERATOR" = "Ninja"
     then
-        if test "$CXX" = "nvcc_wrapper"
-        then
-            # Limit parallelism to avoid memory exhaustion on Azure runners
-            dashj="-j 1"
-        fi
         # To easily tell if compilation of given file succeeded special progress bar is used
         # (controlled by variable NINJA_STATUS)
         export NINJA_STATUS="[ninja][%f/%t] "
