@@ -134,7 +134,7 @@ TEST_F(TestLocationIndep, test_entity_exists) {
   });
 
   auto global_map = lm->buildGlobalMap();
-  EXPECT_EQ(global_map.size(), num_nodes*num_nodes);
+  EXPECT_EQ(global_map.size(), static_cast<std::size_t>(num_nodes*num_nodes));
   for (int elm = 0; elm < num_nodes*num_nodes; elm++) {
     auto const home = elm/num_nodes;
     EXPECT_EQ(global_map.find(elm)->second, home);
