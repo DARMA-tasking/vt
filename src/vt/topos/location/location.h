@@ -101,8 +101,10 @@ struct EntityLocationCoord : LocationCoord {
   using LocalRegisteredContType = std::unordered_set<EntityID>;
   using LocalRegisteredMsgContType = std::unordered_map<EntityID, LocEntityMsg>;
   using ActionListType = std::vector<NodeActionType>;
+  using ExistsListType = std::vector<ExistsNodeActionType>;
   using PendingType = PendingLocationLookup<EntityID>;
   using PendingLocLookupsType = std::unordered_map<EntityID, ActionListType>;
+  using PendingExistsLocType = std::unordered_map<EntityID, ExistsListType>;
   using ActionContainerType = std::unordered_map<LocEventID, PendingType>;
   using LocAsksType = std::unordered_map<EntityID, std::unordered_set<NodeType>>;
 
@@ -110,11 +112,27 @@ struct EntityLocationCoord : LocationCoord {
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
 
   /**
-   * \internal \brief System call to construct a new entity coordinator
+   * \brief Construct a new location manager with defaults
    */
   EntityLocationCoord()
     : recs_(default_max_cache_size, theContext()->getNode())
   { }
+
+  /**
+   * \brief Construct with parameters
+   *
+   * \param[in] in_anytime_migration whether anytime migration is allowed
+   * \param[in] in_keep_cache_updated whether to keep the cache updated
+   * \param[in] in_max_cache_size what the max cache size is
+   */
+  explicit EntityLocationCoord(
+    bool in_anytime_migration, bool in_keep_cache_updated,
+    std::size_t in_max_cache_size = default_max_cache_size
+  ) : recs_(in_max_cache_size, theContext()->getNode()),
+      anytime_migration_(in_anytime_migration),
+      keep_cache_updated_(in_keep_cache_updated)
+  { }
+
 
   virtual ~EntityLocationCoord() {}
 
@@ -156,8 +174,21 @@ struct EntityLocationCoord : LocationCoord {
   void unregisterEntity(EntityID const& id);
 
   /**
-   * \brief Tell coordinator that the entity has migrated to another node
+   * \brief Tell the location manager that migrations are going to start
    *
+   * \note Must be used when anytime migration is off
+   */
+  void startMigrations();
+
+  /**
+   * \brief Indicate that migrations are complete
+   *
+   * \note Must be used when anytime migration is off
+   */
+  void doneMigrations();
+
+  /**
+   * \brief Tell coordinator that the entity has migrated to another node
    *
    * \param[in] id the entity ID
    * \param[in] new_node the node it was migrated to
@@ -209,6 +240,27 @@ struct EntityLocationCoord : LocationCoord {
    */
   void getLocation(
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
+  );
+
+  /**
+   * \brief Check if the entity exists locally on this rank
+   *
+   * \param[in] id the entity ID
+   *
+   * \return whether it exists locally
+   */
+  bool entityExistsLocal(EntityID const& id) const;
+
+  /**
+   * \brief Check if an entity exists in the system
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node the home node for \c id
+   * \param[in] action the exists/node action
+   */
+  void entityExists(
+    EntityID const& id, NodeType const& home_node,
+    ExistsNodeActionType const& action
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
@@ -359,7 +411,33 @@ struct EntityLocationCoord : LocationCoord {
     proxy_ = proxy;
   }
 
+  /**
+   * \brief Get local entities
+   *
+   * \return vector of local entities
+   */
+  std::vector<EntityID> getLocalEntities() const;
+
+  /**
+   * \brief All-reduce the global map of entity location
+   *
+   * \warning This is not scalable and will centralize all the data
+   *
+   * \return the global map of locations
+   */
+  std::unordered_map<EntityID, NodeType> buildGlobalMap();
+
 private:
+  /**
+   * \brief \internal The global map handler for the all-reduce to collect up
+   * entity location
+   *
+   *  \param[in] global_map the global map reduced
+   */
+  void globalMapHandler(
+    std::unordered_map<EntityID, NodeType> const& global_map
+  );
+
   /**
    * \internal \brief Handle relocation on different node.
    *
@@ -380,6 +458,31 @@ private:
   );
 
   /**
+   * \brief Check if entity exists
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node the home node
+   * \param[in] cb callback to invoke
+   */
+  void entityExistsRequest(
+    EntityID id, NodeType home_node,
+    Callback<EntityID, bool, NodeType, NodeType> cb
+  );
+
+  /**
+   * \brief Response callback when entity exists request comes back with the
+   * answer
+   *
+   * \param[in] id the entity ID
+   * \param[in] exists whether it exists
+   * \param[in] answer the rank it exists on
+   * \param[in] home_node the home node for the entity
+   */
+  void entityExistsResponse(
+    EntityID const& id, bool exists, NodeType answer, NodeType home_node
+  );
+
+  /**
    * \internal \brief Update the location on this node
    *
    * \param[in] id entity id
@@ -387,6 +490,18 @@ private:
    * \param[in] home_node the home node for the entity
    */
   void updateLocation(EntityID const& id, NodeType answer, NodeType home_node);
+
+  /**
+   * \internal \brief Update the location on this node
+   *
+   * \param[in] id entity id
+   * \param[in] exists whether it exists
+   * \param[in] answer the answer of where the entity is location
+   * \param[in] home_node the home node for the entity
+   */
+  void entityExistsAnswer(
+    EntityID const& id, bool exists, NodeType answer, NodeType home_node
+  );
 
   /**
    * \internal \brief Route a message to destination with eager protocol
@@ -442,11 +557,30 @@ private:
   /// pending lookup requests where this manager is the home node
   PendingLocLookupsType pending_lookups_;
 
+  /// Pending lookup requests for existence, does not buffer if it doesn't find
+  /// the entity
+  PendingExistsLocType pending_exists_lookups_;
+
   /// List of nodes that inquire about an entity that require an update
   LocAsksType loc_asks_;
 
   /// the location manager's objgroup proxy
   objgroup::proxy::Proxy<EntityLocationCoord<EntityID>> proxy_;
+
+  /// Whether anytime migration can happen for this LM
+  bool anytime_migration_ = true;
+
+  /// Whether migrations are allowed (required when anytime migration is off)
+  bool migrations_ongoing_ = false;
+
+  /// Waiting for global map handler to finish
+  bool waiting_global_map_handler_ = false;
+
+  /// Whether to keep the cache up-to-date at all times
+  bool keep_cache_updated_ = false;
+
+  /// Temporary storage for global map while reducing
+  std::unordered_map<EntityID, NodeType> global_map_temp_;
 };
 
 }}  // end namespace vt::location

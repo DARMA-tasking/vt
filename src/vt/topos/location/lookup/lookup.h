@@ -69,6 +69,13 @@ struct LocLookup {
   void clearCache();
   void printCache() const;
 
+  /**
+   * \brief Get the whole directory
+   *
+   * \return the directory
+   */
+  auto const& getDirectory() const { return directory_; }
+
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | max_cache_size_
