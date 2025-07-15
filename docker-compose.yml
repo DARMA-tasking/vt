@@ -223,17 +223,6 @@ services:
     command: *vt-build-test-clean-cpp-command
 
   ##############################################################################
-  # Interactive C++ setup of VT on ubuntu platform from container baseline for
-  # OpenMPI.
-  ubuntu-cpp-interactive-openmpi:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-      OMPI_MCA_btl: "^vader"
-    volumes: *ubuntu-volumes
-
-  ##############################################################################
   # Build documentation for VT in the container on ubuntu platform from
   # container baseline.
   ubuntu-docs:
@@ -262,21 +251,6 @@ services:
     command:
       /bin/bash -c "
         /vt/ci/test_spack_package.sh"
-
-  ##############################################################################
-  # Interactive build documentation for VT in the container on ubuntu platform
-  # from container baseline.
-  ubuntu-docs-interactive:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: *ccache
-      VT_LB_ENABLED: ${VT_LB:-1}
-      VT_TRACE_ENABLED:  ${VT_TRACE:-1}
-      VT_DIAGNOSTICS_ENABLED: 1
-      VT_DOXYGEN_ENABLED: 1
-      CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
-    volumes: *ubuntu-volumes
 
   ##############################################################################
   # C++ build of VT within an alpine linux container (limited to clang
