@@ -198,7 +198,7 @@ then
     git config --global user.email "jliffla@sandia.gov"
     git config --global user.name "Jonathan Lifflander"
     git add docs
-    git commit -m "Update docs (auto-build)"
+    git commit --allow-empty -m "Update docs (auto-build)"
     git push origin master
 elif test "${VT_CI_BUILD:-0}" -eq 1
 then
