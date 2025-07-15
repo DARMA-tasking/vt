@@ -24,7 +24,7 @@ jobs:
       VT_TRACE: 1
       VT_TRACE_RT: 0
       VT_MIMALLOC: 0
-      VT_DOCS: 1
+      VT_DOXYGEN_ENABLED: 1
       VT_ASAN: 0
       VT_UBSAN: 0
       TOKEN: ${{ secrets.GH_PAT }}
