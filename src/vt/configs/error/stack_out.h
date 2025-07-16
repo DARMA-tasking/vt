@@ -49,6 +49,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <cstdint>
 
 namespace vt { namespace debug { namespace stack {
 

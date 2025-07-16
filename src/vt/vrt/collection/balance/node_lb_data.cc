@@ -326,7 +326,7 @@ void NodeLBData::outputLBDataForPhase(PhaseType phase) {
   writer->addElm(*j);
 }
 
-void NodeLBData::writeJSONToLDMS(nlohman::json& j) {
+void NodeLBData::writeJSONToLDMS(nlohmann::json& j) {
 #if vt_check_enabled(ldms)
   if (ldms_prev_submission_ == 0) {
     ldms_prev_submission_ = MPI_Wtime();

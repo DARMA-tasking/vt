@@ -278,7 +278,7 @@ public:
    *
    * \param[in] j the josn to write
    */
-  void writeJSONToLDMS(nlohman::json& j);
+  void writeJSONToLDMS(nlohmann::json& j);
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
