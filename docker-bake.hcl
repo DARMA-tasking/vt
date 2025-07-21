@@ -141,7 +141,7 @@ function "vt_trace" {
 
 function "vt_trace_runtime" {
   params = [item]
-  result = lookup(item, "vt_trace_runtime", "")
+  result = lookup(item, "vt_trace_rt", "")
 }
 
 function "vt_tv" {
