@@ -66,8 +66,6 @@
 volumes:
   ubuntu-cpp:
     name: "${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cache"
-  alpine-cpp:
-    name: "${ARCH}-alpine-${COMPILER}-cache"
 
 # Define basic rules for ccache used across multiple services. The beauty of
 # docker compose with cached volumes is that similarly configured builds will
@@ -172,24 +170,6 @@ services:
         /vt/ci/clean_cpp.sh /vt /build"
 
   ##############################################################################
-  # C++ build/test/clean target for VT on ubuntu platform from container
-  # baseline without installing.
-  #
-  # Example:
-  #   docker compose run ubuntu-cpp-clean-noinstall
-  ubuntu-cpp-clean-noinstall:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: *ubuntu-volumes
-    command: &vt-build-test-clean-noinstall-cpp-command >
-      /bin/bash -c "
-        /vt/ci/build_cpp.sh /vt /build all &&
-        /vt/ci/test_cpp.sh  /vt /build &&
-        /vt/ci/clean_cpp.sh /vt /build"
-
-  ##############################################################################
   # Interactive C++ setup of VT on ubuntu platform from container baseline.
   #
   # After running:
@@ -205,22 +185,6 @@ services:
     environment:
       <<: [*ccache, *vtopts]
     volumes: *ubuntu-volumes
-
-  ##############################################################################
-  # C++ build/test/clean target for VT using OpenMPI instead of the default
-  # mpich.
-  #
-  # Note: This is a separate target because it requires a different image and
-  # modifying all the other container/image names to be parameterized over
-  # MPI requires a lot of changes.
-  ubuntu-cpp-clean-openmpi:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-      OMPI_MCA_btl: "^vader"
-    volumes: *ubuntu-volumes
-    command: *vt-build-test-clean-cpp-command
 
   ##############################################################################
   # Build documentation for VT in the container on ubuntu platform from
@@ -251,27 +215,3 @@ services:
     command:
       /bin/bash -c "
         /vt/ci/test_spack_package.sh"
-
-  ##############################################################################
-  # C++ build of VT within an alpine linux container (limited to clang
-  # compilers)
-  alpine-cpp:
-    image: ${REPO}:wf-${ARCH}-alpine-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: &alpine-volumes
-      - .:/vt:delegated
-      - ${BUILD_ROOT}alpine-cpp:/build:delegated
-    command: *vt-cpp-command
-
-  ##############################################################################
-  # C++ build/test/clean target for VT on alpine platform from container
-  # baseline.
-  alpine-cpp-clean:
-    image: ${REPO}:wf-${ARCH}-alpine-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: *alpine-volumes
-    command: *vt-build-test-clean-cpp-command
