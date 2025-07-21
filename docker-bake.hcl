@@ -341,6 +341,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-24.04-clang-18-cpp"
+        vt_mpi_guard = 1
       },
       {
         image = "amd64-ubuntu-24.04-gcc-13-cpp"
