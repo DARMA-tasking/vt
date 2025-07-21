@@ -327,12 +327,6 @@ target "vt-build-all" {
         vt_trace_only = 0
       },
       {
-        image = "amd64-ubuntu-22.04-gcc-12-zoltan-cpp"
-      },
-      {
-        image = "amd64-ubuntu-24.04-clang-16-cpp"
-      },
-      {
         image = "amd64-ubuntu-24.04-clang-16-vtk-cpp"
       },
       {
