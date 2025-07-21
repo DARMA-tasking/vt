@@ -201,7 +201,7 @@ target "vt-build" {
 }
 
 target "vt-build-all" {
-  name = "vt-build-${replace(item.image, ".", "-")}"
+  name = "vt-build-${replace(item.image, ".", "-")}${vt_test_spack(item) == 1 ? "-spack" : ""}"
   inherits = ["vt-build"]
   tags = ["${REPO}:vt-${item.image}"]
 
@@ -271,6 +271,11 @@ target "vt-build-all" {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
         vt_lb = 0
         vt_tests_num_nodes = 4
+      },
+      {
+        image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
+        vt_lb = 1
+        vt_trace_only = 1
         vt_test_spack = 1
       },
       {
@@ -372,4 +377,41 @@ target "vt-build-all" {
       },
     ]
   }
+}
+
+
+group "vt-pull-request" {
+  targets = [
+    "vt-build-amd64-alpine-3-16-clang-cpp",
+    "vt-build-amd64-ubuntu-20-04-clang-10-cpp",
+    "vt-build-amd64-ubuntu-20-04-clang-9-cpp",
+    "vt-build-amd64-ubuntu-20-04-gcc-10-cpp",
+    "vt-build-amd64-ubuntu-20-04-gcc-10-openmpi-cpp",
+    "vt-build-amd64-ubuntu-20-04-gcc-9-cpp",
+    "vt-build-amd64-ubuntu-20-04-gcc-9-cuda-11-4-3-cpp",
+    "vt-build-amd64-ubuntu-20-04-gcc-9-cuda-12-2-0-cpp",
+    "vt-build-amd64-ubuntu-20-04-icpx-cpp",
+    "vt-build-amd64-ubuntu-22-04-clang-11-cpp",
+    "vt-build-amd64-ubuntu-22-04-clang-12-cpp",
+    "vt-build-amd64-ubuntu-22-04-clang-13-cpp",
+    "vt-build-amd64-ubuntu-22-04-clang-14-cpp",
+    "vt-build-amd64-ubuntu-22-04-clang-15-cpp",
+    "vt-build-amd64-ubuntu-22-04-gcc-11-cpp",
+    "vt-build-amd64-ubuntu-22-04-gcc-12-cpp",
+    "vt-build-amd64-ubuntu-22-04-gcc-12-vtk-cpp",
+    "vt-build-amd64-ubuntu-22-04-gcc-12-zoltan-cpp",
+    "vt-build-amd64-ubuntu-24-04-clang-16-cpp",
+    "vt-build-amd64-ubuntu-24-04-clang-16-vtk-cpp",
+    "vt-build-amd64-ubuntu-24-04-clang-16-zoltan-cpp",
+    "vt-build-amd64-ubuntu-24-04-clang-17-cpp",
+    "vt-build-amd64-ubuntu-24-04-clang-18-cpp",
+    "vt-build-amd64-ubuntu-24-04-gcc-13-cpp",
+    "vt-build-amd64-ubuntu-24-04-gcc-14-cpp",
+  ]
+}
+
+group "vt-develop" {
+  targets = [
+    "vt-build-amd64-ubuntu-20-04-gcc-10-openmpi-cpp-spack",
+  ]
 }
