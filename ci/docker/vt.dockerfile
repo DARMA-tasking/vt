@@ -34,6 +34,7 @@ ARG VT_RDMA_TESTS_ENABLED
 ARG VT_TESTS_NUM_NODES
 ARG VT_TRACE_ENABLED
 ARG VT_TRACE_RUNTIME_ENABLED
+ARG VT_TEST_SPACK
 ARG VT_TV_ENABLED
 ARG VT_UBSAN_ENABLED
 ARG VT_UNITY_BUILD_ENABLED
@@ -50,6 +51,10 @@ fi
 EOF
 
 RUN --mount=target=/vt,rw \
-        /vt/ci/build_cpp.sh /vt /build && \
-        /vt/ci/test_cpp.sh /vt /build  && \
-        /vt/ci/build_vt_sample.sh /vt /build
+        if [ "${VT_TEST_SPACK}" = "1" ]; then \
+            /vt/ci/test_spack_package.sh; \
+        else \
+            /vt/ci/build_cpp.sh /vt /build && \
+            /vt/ci/test_cpp.sh /vt /build  && \
+            /vt/ci/build_vt_sample.sh /vt /build; \
+        fi
