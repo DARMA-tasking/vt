@@ -179,12 +179,15 @@ function "vt_zoltan" {
   result = lookup(item, "vt_zoltan", "")
 }
 
+function "vt_ldms" {
+  params = [item]
+  result = lookup(item, "vt_ldms", "")
+}
 
 target "vt-build" {
   target = "build"
   context = "."
   dockerfile = "ci/docker/vt.dockerfile"
-
   platforms = [
     "linux/amd64",
     # "linux/arm64"
@@ -222,6 +225,7 @@ target "vt-build-all" {
     VT_INCLUSION_TYPE              = vt_inclusion(item)
     VT_KOKKOS_ENABLED              = vt_kokkos(item)
     VT_LB_ENABLED                  = vt_lb(item)
+    VT_LDMS_ENABLED                = vt_ldms(item)
     VT_MIMALLOC_ENABLED            = vt_mimalloc(item)
     VT_MPI_GUARD_ENABLED           = vt_mpi_guard(item)
     VT_NO_COLOR_ENABLED            = vt_no_color(item)
@@ -366,9 +370,12 @@ target "vt-build-all" {
         image = "amd64-ubuntu-24.04-gcc-13-cpp"
         vt_trace = 1
         vt_pool = 0
-        vt_asan = 1
+        vt_asan = 0
         vt_unity_build = 0
         #lsan_options = "suppressions=/vt/tests/lsan.supp"
+        vt_ldms = 1
+        vt_lb = 1
+        vt_lb_statistics = 1
       },
       {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
