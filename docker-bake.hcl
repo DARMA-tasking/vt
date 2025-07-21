@@ -131,7 +131,7 @@ function "vt_test_spack" {
 
 function "vt_tests_num_nodes" {
   params = [item]
-  result = lookup(item, "vt_tests_num_nodes", "")
+  result = lookup(item, "vt_tests_num_nodes", "2")
 }
 
 function "vt_trace" {
