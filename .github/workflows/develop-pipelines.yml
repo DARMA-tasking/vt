@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+  pull_request:
 
 jobs:
   prepare:
@@ -21,7 +22,7 @@ jobs:
         with:
           target: vt-develop
 
-  bake-develop:
+  bake:
     needs:
       - prepare
     runs-on: ubuntu-latest
