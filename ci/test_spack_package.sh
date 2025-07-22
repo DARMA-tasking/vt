@@ -5,8 +5,6 @@ set -euo pipefail
 cur_path=$(pwd)
 vt_spack_package="$cur_path/spack-package"
 
-apt update -y -q && apt install -y -q libssl-dev unzip patch xz-utils gfortran-10
-
 git clone --branch v0.23.1 --depth=2 https://github.com/spack/spack.git
 . spack/share/spack/setup-env.sh
 
@@ -42,11 +40,21 @@ do
 done
 
 install_cmd=$(printf " %s" "${cmd_vars[@]}")
-install_cmd="spack install darma-vt@develop build_type=Release ${install_cmd:1}"
+install_cmd="spack install darma-vt@develop build_type=Release ${install_cmd:1} ^openmpi@4.0.4"
+
+mkdir -p ~/.spack
+cat >> ~/.spack/packages.yaml <<'EOF'
+packages:
+  openmpi:
+    externals:
+    - spec: openmpi@4.0.4
+      prefix: /usr/local
+EOF
 
 spack clean --all
 spack repo add "$vt_spack_package"
 spack external find
+
 $install_cmd
 
 git clone https://github.com/DARMA-tasking/vt-sample-project

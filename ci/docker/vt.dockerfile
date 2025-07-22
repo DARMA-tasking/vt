@@ -52,6 +52,7 @@ EOF
 
 RUN --mount=target=/vt,rw \
         if [ "${VT_TEST_SPACK}" = "1" ]; then \
+            apt update -y -q && apt install -y -q libssl-dev unzip && \
             /vt/ci/test_spack_package.sh; \
         else \
             /vt/ci/build_cpp.sh /vt /build && \
