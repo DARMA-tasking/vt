@@ -54,6 +54,7 @@ EOF
 ENV GIT_BRANCH=${GIT_BRANCH}
 
 RUN --mount=target=/vt,rw \
+    --mount=type=secret,id=CODECOV_TOKEN,env=CODECOV_TOKEN \
         if [ "${VT_TEST_SPACK}" = "1" ]; then \
             apt update -y -q && apt install -y -q libssl-dev unzip && \
             /vt/ci/test_spack_package.sh; \

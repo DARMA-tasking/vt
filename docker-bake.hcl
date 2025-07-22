@@ -187,6 +187,8 @@ target "vt-build" {
   ulimits = [
     "core=0"
   ]
+
+  secret = ["id=CODECOV_TOKEN,env=CODECOV_TOKEN"]
   # FIXME: verify that caching works as intended
   # cache-from = [
   #   {

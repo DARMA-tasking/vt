@@ -14,6 +14,10 @@ ctest --output-on-failure -L 'unit_test|example' | tee cmake-output.log
 
 if test "${VT_CODE_COVERAGE:-0}" -eq 1
 then
+    if [ -z "$CODECOV_TOKEN" ]; then
+        echo "Error: CODECOV_TOKEN is not set"
+        exit 1
+    fi
     export CODECOV_TOKEN="$CODECOV_TOKEN"
     lcov --capture --directory . --output-file coverage.info
     lcov --remove coverage.info '/usr/*' --output-file coverage.info
