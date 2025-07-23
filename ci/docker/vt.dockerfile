@@ -9,6 +9,7 @@ FROM --platform=${ARCH} ${BASE} AS build
 ARG BUILD_SHARED_LIBS
 ARG CMAKE_BUILD_TYPE
 ARG CMAKE_CXX_STANDARD
+ARG GIT_BRANCH
 ARG VT_ASAN_ENABLED
 ARG VT_BUILD_TRACE_ONLY
 ARG VT_CI_BUILD
@@ -49,6 +50,8 @@ if [ -d vt/docker-output/build/ccache ]; then
     ccache -s
 fi
 EOF
+
+ENV GIT_BRANCH=${GIT_BRANCH}
 
 RUN --mount=target=/vt,rw \
         if [ "${VT_TEST_SPACK}" = "1" ]; then \

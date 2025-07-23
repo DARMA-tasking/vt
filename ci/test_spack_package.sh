@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -exo pipefail
 
 cur_path=$(pwd)
 vt_spack_package="$cur_path/spack-package"
@@ -9,6 +9,7 @@ git clone --branch v0.23.1 --depth=2 https://github.com/spack/spack.git
 . spack/share/spack/setup-env.sh
 
 git clone -b master https://github.com/DARMA-tasking/spack-package.git
+python3 spack-package/ci/add_vt_branch.py "${GIT_BRANCH}"
 
 declare -A variables_map
 variables_map["lb_enabled"]="${VT_LB_ENABLED:-0}"
@@ -40,7 +41,7 @@ do
 done
 
 install_cmd=$(printf " %s" "${cmd_vars[@]}")
-install_cmd="spack install darma-vt@develop build_type=Release ${install_cmd:1} ^openmpi@4.0.4"
+install_cmd="spack install darma-vt@${GIT_BRANCH} build_type=Release ${install_cmd:1} ^openmpi@4.0.4"
 
 mkdir -p ~/.spack
 cat >> ~/.spack/packages.yaml <<'EOF'

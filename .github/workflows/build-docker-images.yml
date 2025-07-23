@@ -63,3 +63,5 @@ jobs:
           targets: ${{ matrix.target }}
           files: docker-bake.hcl
           push: ${{ github.ref == 'refs/heads/develop' }}
+        env:
+          GIT_BRANCH: ${{ github.head_ref || github.ref_name }}

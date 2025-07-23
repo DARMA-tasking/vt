@@ -2,6 +2,8 @@ variable "REPO" {
   default = "lifflander1/vt"
 }
 
+variable "GIT_BRANCH" {}
+
 function "arch" {
   params = [item]
   result = lookup(item, "arch", "amd64")
@@ -207,6 +209,7 @@ target "vt-build-all" {
 
   args = {
     ARCH = arch(item)
+    GIT_BRANCH = "${GIT_BRANCH}"
     IMAGE = "wf-${item.image}"
     REPO = REPO
     BUILD_SHARED_LIBS              = vt_build_shared_libs(item)
@@ -407,11 +410,6 @@ group "vt-pull-request" {
     "vt-build-amd64-ubuntu-24-04-clang-18-cpp",
     "vt-build-amd64-ubuntu-24-04-gcc-13-cpp",
     "vt-build-amd64-ubuntu-24-04-gcc-14-cpp",
-  ]
-}
-
-group "vt-develop" {
-  targets = [
-    "vt-build-amd64-ubuntu-20-04-gcc-10-openmpi-cpp-spack",
+    "vt-build-amd64-ubuntu-20-04-gcc-10-openmpi-cpp-spack"
   ]
 }
