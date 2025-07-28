@@ -132,13 +132,41 @@ echo "  }"
 echo "}"
 } >> data.json
 
-# Send GitHub request to post a PR comment
-curl                                                                    \
-    --request POST                                                      \
-    --url https://api.github.com/repos/"$repository_name"/dispatches    \
-    --header "Accept: application/vnd.github.everest-preview+json"      \
-    --header "Authorization: token $github_pat"                         \
-    --data "@data.json"
+pat=$github_pat
+[[ -z $pat ]] && { echo "missing_token" >&2; exit 2; }
+
+headers=$(curl -s -D - -o /dev/null -H "Authorization: token $pat" https://api.github.com)
+status=$(awk 'NR==1 {print $2}' <<<"$headers")
+
+if [[ $status != 200 ]]; then
+  echo "expired_or_invalid"
+  exit 1
+fi
+
+exp=$(tr -d '\r' <<<"$headers" | grep -i '^github-authentication-token-expiration:' | cut -d' ' -f2-)
+
+if [[ -z $exp || $exp == "never" ]]; then
+  echo "valid_no_expiration"
+  exit 0
+fi
+
+now=$(date -u +%s)
+exp_epoch=$(date -d "$exp" +%s 2>/dev/null)
+
+if [[ -z $exp_epoch || $exp_epoch -le $now ]]; then
+  echo "expired"
+  exit 1
+fi
+
+echo "valid_until_$exp"
+
+curl -L \
+  -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer $github_pat" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/"$repository_name"/dispatches    \
+  --data "@data.json"
 
 # Clean up
 rm data.json
