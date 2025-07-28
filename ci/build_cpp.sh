@@ -138,7 +138,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_lb_enabled="${VT_LB_ENABLED:-1}" \
       -Dvt_ldms_enabled="${VT_LDMS_ENABLED:-1}" \
       -Dvt_ldms_includes="${VT_LDMS_INCLUDES_DIR:-/opt/ldms/include/}" \
-      -Dvt_ldms_libs="${VT_LDMS_LIBS_DIR:-}" \
+      -Dvt_ldms_libs="${VT_LDMS_LIBS_DIR:-/opt/ldms/lib}" \
       -Dvt_trace_enabled="${VT_TRACE_ENABLED:-0}" \
       -Dvt_trace_only="${VT_BUILD_TRACE_ONLY:-0}" \
       -Dvt_doxygen_enabled="${VT_DOXYGEN_ENABLED:-0}" \
