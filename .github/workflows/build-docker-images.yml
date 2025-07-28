@@ -24,7 +24,7 @@ jobs:
         id: list-targets
         uses: docker/bake-action/subaction/list-targets@v6
         with:
-          target: vt-pull-request
+          target: vt-build-all
 
   bake:
     runs-on: ubuntu-latest
