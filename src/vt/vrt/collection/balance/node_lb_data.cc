@@ -324,6 +324,7 @@ void NodeLBData::outputLBDataForPhase(PhaseType phase) {
   auto j = lb_data_->toJson(phase);
   auto writer = static_cast<JSONAppender*>(lb_data_writer_.get());
   writer->addElm(*j);
+  writeJSONToLDMS(*j);
 }
 
 void NodeLBData::writeJSONToLDMS([[maybe_unused]] nlohmann::json& j) {
