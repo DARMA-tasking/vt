@@ -2,6 +2,8 @@ variable "REPO" {
   default = "lifflander1/vt"
 }
 
+variable "GIT_BRANCH" {}
+
 function "arch" {
   params = [item]
   result = lookup(item, "arch", "amd64")
@@ -122,6 +124,11 @@ function "vt_rdma_tests" {
   result = lookup(item, "vt_rdma_tests", "")
 }
 
+function "vt_test_spack" {
+  params = [item]
+  result = lookup(item, "vt_test_spack", "0")
+}
+
 function "vt_tests_num_nodes" {
   params = [item]
   result = lookup(item, "vt_tests_num_nodes", "")
@@ -196,12 +203,13 @@ target "vt-build" {
 }
 
 target "vt-build-all" {
-  name = "vt-build-${replace(item.image, ".", "-")}"
+  name = "vt-build-${replace(item.image, ".", "-")}${vt_test_spack(item) == 1 ? "-spack" : ""}"
   inherits = ["vt-build"]
   tags = ["${REPO}:vt-${item.image}"]
 
   args = {
     ARCH = arch(item)
+    GIT_BRANCH = "${GIT_BRANCH}"
     IMAGE = "wf-${item.image}"
     REPO = REPO
     BUILD_SHARED_LIBS              = vt_build_shared_libs(item)
@@ -227,6 +235,7 @@ target "vt-build-all" {
     VT_POOL_ENABLED                = vt_pool(item)
     VT_PRODUCTION_BUILD_ENABLED    = vt_production_build(item)
     VT_RDMA_TESTS_ENABLED          = vt_rdma_tests(item)
+    VT_TEST_SPACK                  = vt_test_spack(item)
     VT_TESTS_NUM_NODES             = vt_tests_num_nodes(item)
     VT_TRACE_ENABLED               = vt_trace(item)
     VT_TRACE_RUNTIME_ENABLED       = vt_trace_runtime(item)
@@ -265,6 +274,12 @@ target "vt-build-all" {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
         vt_lb = 0
         vt_tests_num_nodes = 4
+      },
+      {
+        image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
+        vt_lb = 1
+        vt_trace_only = 1
+        vt_test_spack = 1
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-cpp"

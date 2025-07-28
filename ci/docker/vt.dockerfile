@@ -9,6 +9,7 @@ FROM --platform=${ARCH} ${BASE} AS build
 ARG BUILD_SHARED_LIBS
 ARG CMAKE_BUILD_TYPE
 ARG CMAKE_CXX_STANDARD
+ARG GIT_BRANCH
 ARG VT_ASAN_ENABLED
 ARG VT_BUILD_TRACE_ONLY
 ARG VT_CI_BUILD
@@ -31,6 +32,7 @@ ARG VT_PERF_ENABLED
 ARG VT_POOL_ENABLED
 ARG VT_PRODUCTION_BUILD_ENABLED
 ARG VT_RDMA_TESTS_ENABLED
+ARG VT_TEST_SPACK
 ARG VT_TESTS_NUM_NODES
 ARG VT_TRACE_ENABLED
 ARG VT_TRACE_RUNTIME_ENABLED
@@ -49,7 +51,14 @@ if [ -d vt/docker-output/build/ccache ]; then
 fi
 EOF
 
+ENV GIT_BRANCH=${GIT_BRANCH}
+
 RUN --mount=target=/vt,rw \
-        /vt/ci/build_cpp.sh /vt /build && \
-        /vt/ci/test_cpp.sh /vt /build  && \
-        /vt/ci/build_vt_sample.sh /vt /build
+        if [ "${VT_TEST_SPACK}" = "1" ]; then \
+            apt update -y -q && apt install -y -q libssl-dev unzip && \
+            /vt/ci/test_spack_package.sh; \
+        else \
+            /vt/ci/build_cpp.sh /vt /build && \
+            /vt/ci/test_cpp.sh /vt /build  && \
+            /vt/ci/build_vt_sample.sh /vt /build; \
+        fi
