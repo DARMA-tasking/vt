@@ -171,7 +171,7 @@ void NodeLBData::initialize() {
   }
   const auto xPtr = getenv("VT_LDMS_XPTR");
   const auto auth = getenv("VT_LDMS_AUTH");
-  ldms_ = ldms_xprt_new_with_auth(xPtr, auth, NULL);
+  ldms_ = ldms_xprt_new_with_auth(xPtr, NULL, auth, NULL);
   vtWarnIf(ldms_, "ldms_xprt_new_with_auth failed!");
 
   const auto hostname = getenv("VT_LDMS_HOSTNAME");
@@ -338,7 +338,7 @@ void NodeLBData::writeJSONToLDMS([[maybe_unused]] nlohmann::json& j) {
     ldms_prev_submission_ = MPI_Wtime();
   }
 
-  auto jsonStr = j->dump();
+  auto jsonStr = j.dump();
   const auto returnVal = ldmsd_stream_publish(
     ldms_, "vtLBStats", LDMSD_STREAM_JSON, jsonStr.c_str(), jsonStr.length() + 1
   );
