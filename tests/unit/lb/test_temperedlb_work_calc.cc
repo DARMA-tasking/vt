@@ -103,7 +103,7 @@ auto getObjLoads(
     load += value;
   }
   return load;
-};
+}
 
 auto getNodeEdges(
   std::unordered_map<elm::ElementIDStruct, LoadType> const& objs,
@@ -128,7 +128,7 @@ auto getNodeEdges(
     }
   }
   return total_bytes;
-};
+}
 
 auto computeOffHomeVolume(
   vt::NodeType node,
