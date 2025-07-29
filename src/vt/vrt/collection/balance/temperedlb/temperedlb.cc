@@ -653,6 +653,65 @@ void TemperedLB::readClustersMemoryData() {
   }
 }
 
+void TemperedLB::makeClusterSummaryAddEdges(
+  SharedIDType shared_id, ClusterInfo& info,
+  std::set<ObjIDType> const& cluster_objs,
+  ObjIDType obj, bool is_send, typename EdgeMapType::iterator iter
+) {
+  for (auto const& [send_or_recv_obj, volume] : iter->second) {
+    vt_debug_print(
+      verbose, temperedlb,
+      "computeClusterSummary: shared_id={} send obj={}, recv_obj={}\n",
+      shared_id,
+      is_send ? obj : send_or_recv_obj,
+      is_send ? send_or_recv_obj : obj
+    );
+
+    if (cluster_objs.find(send_or_recv_obj) != cluster_objs.end()) {
+      // intra-cluster edge
+      if (is_send) {
+        info.intra_send_vol += volume;
+      } else {
+        info.intra_recv_vol += volume;
+      }
+
+      // intra-cluster (self-edge)
+      if (is_send) {
+        info.inter_cluster_send_vol[shared_id] += volume;
+      } else {
+        info.inter_cluster_recv_vol[shared_id] += volume;
+      }
+    } else if (
+      auto it2 = obj_shared_block_.find(send_or_recv_obj);
+      it2 != obj_shared_block_.end()
+    ) {
+      // inter-cluster edge
+      if (is_send) {
+        info.inter_cluster_send_vol[it2->second] += volume;
+      } else {
+        info.inter_cluster_recv_vol[it2->second] += volume;
+      }
+
+      vt_debug_print(
+        verbose, temperedlb,
+        "computeClusterSummary: ADDING inter shared_id={} send obj={}, "
+        "recv_obj={}\n",
+        shared_id,
+        is_send ? obj : send_or_recv_obj,
+        is_send ? send_or_recv_obj : obj
+      );
+
+    } else {
+      // across-object edge not part of a cluster
+      if (is_send) {
+        info.obj_send_vol[send_or_recv_obj] += volume;
+      } else {
+        info.obj_recv_vol[send_or_recv_obj] += volume;
+      }
+    }
+  }
+}
+
 ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
   auto const& [home_node, shared_volume] = shared_block_edge_[shared_id];
   auto const shared_bytes = shared_block_size_[shared_id];
@@ -727,69 +786,10 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
   if (info.load != 0) {
     for (auto&& obj : cluster_objs) {
       if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
-        for (auto const& [recv_obj, volume] : it->second) {
-          // vt_print(
-          //   temperedlb,
-          //   "computeClusterSummary: shared_id={} send obj={}, recv_obj={}\n",
-          //   shared_id, obj, recv_obj
-          // );
-
-          if (cluster_objs.find(recv_obj) != cluster_objs.end()) {
-            // intra-cluster edge
-            info.intra_send_vol += volume;
-
-            // intra-cluster (self-edge)
-            info.inter_cluster_send_vol[shared_id] += volume;
-          } else if (
-            auto it2 = obj_shared_block_.find(recv_obj);
-            it2 != obj_shared_block_.end()
-          ) {
-            // inter-cluster edge
-            info.inter_cluster_send_vol[it2->second] += volume;
-
-            // vt_print(
-            //   temperedlb,
-            //   "computeClusterSummary: ADDING inter shared_id={} send obj={}, recv_obj={}\n",
-            //   shared_id, obj, recv_obj
-            // );
-
-          } else {
-            // across-object edge not part of a cluster
-            info.obj_send_vol[recv_obj] += volume;
-          }
-        }
+        makeClusterSummaryAddEdges(shared_id, info, cluster_objs, obj, true, it);
       }
       if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
-        for (auto const& [send_obj, volume] : it->second) {
-          // vt_print(
-          //   temperedlb,
-          //   "computeClusterSummary: shared_id={}, recv obj={}, send_obj={}\n",
-          //   shared_id, obj, send_obj
-          // );
-          if (cluster_objs.find(send_obj) != cluster_objs.end()) {
-            // intra-cluster edge
-            info.intra_recv_vol += volume;
-
-            // intra-cluster (self-edge)
-            info.inter_cluster_recv_vol[shared_id] += volume;
-          } else if (
-            auto it2 = obj_shared_block_.find(send_obj);
-            it2 != obj_shared_block_.end()
-          ) {
-            // inter-cluster edge (on this node)
-            info.inter_cluster_recv_vol[it2->second] += volume;
-
-            // vt_print(
-            //   temperedlb,
-            //   "computeClusterSummary: ADDING inter shared_id={} recv obj={}, send_obj={}\n",
-            //   shared_id, obj, send_obj
-            // );
-
-          } else {
-            // across-object edge not part of a cluster
-            info.obj_recv_vol[send_obj] += volume;
-          }
-        }
+        makeClusterSummaryAddEdges(shared_id, info, cluster_objs, obj, false, it);
       }
     }
   }
