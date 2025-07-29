@@ -1202,6 +1202,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
     max_load_over_iters_.clear();
     is_overloaded_ = is_underloaded_ = false;
     ready_to_satisfy_locks_ = false;
+    last_n_work.clear();
 
     LoadType best_imb_this_trial = start_imb + 10;
 
