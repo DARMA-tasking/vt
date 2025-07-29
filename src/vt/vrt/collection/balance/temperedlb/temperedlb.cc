@@ -1091,7 +1091,7 @@ double TemperedLB::computeWorkAfterClusterSwap(
   }
 
   // Remove from list of shared IDs for add calculation
-  if (to_remove.shared_id != -1) {
+  if (to_remove.shared_id != no_shared_id) {
     cur_shared_ids.erase(cur_shared_ids.find(to_remove.shared_id));
   }
 
