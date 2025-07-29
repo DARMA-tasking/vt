@@ -215,6 +215,22 @@ public:
   ClusterInfo makeClusterSummary(SharedIDType shared_id);
 
   /**
+   * \brief Helper to add edges to cluster summary
+   *
+   *  \param[in] shared_id the shared ID
+   *  \param[in] info cluster info
+   *  \param[in] cluster_objs cluster objs
+   *  \param[in] obj the sending or receiving object
+   *  \param[in] is_send whether it's a send or recv edge
+   *  \param[in] iter edge iterator
+   */
+  void makeClusterSummaryAddEdges(
+    SharedIDType shared_id, ClusterInfo& info,
+    std::set<ObjIDType> const& cluster_objs,
+    ObjIDType obj, bool is_send, typename EdgeMapType::iterator iter
+  );
+
+  /**
    * \brief Try to lock a rank
    *
    * \param[in] requesting_node the requesting rank asking to lock
@@ -529,6 +545,8 @@ private:
     }
   };
 
+  /// Whether a cluster does not have a shared ID
+  SharedIDType const no_shared_id = -1;
   /// Whether we have memory information
   bool has_memory_data_ = false;
   /// Working bytes for this rank
