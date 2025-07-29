@@ -136,28 +136,40 @@ public:
   void propsDone();
   void setupDone();
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Setters for the test harness
+  //////////////////////////////////////////////////////////////////////////////
   void setAlpha(double in_alpha) { alpha = in_alpha; }
   void setDelta(double in_delta) { delta = in_delta; }
   void setBeta(double in_beta) { beta = in_beta; }
   void setGamma(double in_gamma) { gamma = in_gamma; }
-  void setCurObjs(std::unordered_map<ObjIDType, LoadType> in_cur_objs) {
+  void setCurObjs(std::unordered_map<ObjIDType, LoadType> const& in_cur_objs) {
     cur_objs_ = in_cur_objs;
   }
-  void setRecvEdges(EdgeMapType in_recv_edges) { recv_edges_ = in_recv_edges; }
-  void setSendEdges(EdgeMapType in_send_edges) { send_edges_ = in_send_edges; }
+  void setRecvEdges(EdgeMapType const& in_recv_edges) {
+    recv_edges_ = in_recv_edges;
+  }
+  void setSendEdges(EdgeMapType const& in_send_edges) {
+    send_edges_ = in_send_edges;
+  }
 
-  void setObjSharedBlock(std::unordered_map<ObjIDType, SharedIDType> in_shared) {
+  void setObjSharedBlock(
+    std::unordered_map<ObjIDType, SharedIDType> const& in_shared
+  ) {
     obj_shared_block_ = in_shared;
   }
-  void setSharedSize(std::unordered_map<SharedIDType, BytesType> in_size) {
+  void setSharedSize(
+    std::unordered_map<SharedIDType, BytesType> const& in_size
+  ) {
     shared_block_size_ = in_size;
   }
   void setSharedEdge(
-    std::unordered_map<SharedIDType, std::tuple<NodeType, BytesType>>
+    std::unordered_map<SharedIDType, std::tuple<NodeType, BytesType>> const&
     in_shared_edge
   ) {
     shared_block_edge_ = in_shared_edge;
   }
+  //////////////////////////////////////////////////////////////////////////////
 
   /**
    * \brief Read the memory data from the user-defined json blocks into data
