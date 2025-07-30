@@ -82,3 +82,25 @@ jobs:
             *.args.CACHE_ID=${{ matrix.target }}
         env:
           GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
+
+      - name: Retrieve build artifacts
+        if: ${{ matrix.target == 'vt-build-amd64-ubuntu-22-04-gcc-11-cpp' }}
+        run: |
+          # We rely on the persistence of data on cache mounts with identical IDs and builders.
+          # This allows us to copy build artifacts from the "bake" step and use the Codecov action within the GitHub environment.
+
+          echo "
+          FROM ubuntu:latest
+          RUN --mount=type=cache,id=BUILD-${{ matrix.target }},target=/build/vt \
+          mkdir -p /vt \
+          && cp -p -R /build/vt/. /vt/ || true
+          " >> tmp_dockerfile
+
+          docker buildx build --builder ${{ steps.setup-buildx.outputs.name }} -f tmp_dockerfile --output type=local,dest=build .
+
+      - name: Upload coverage
+        if: ${{ matrix.target == 'vt-build-amd64-ubuntu-22-04-gcc-11-cpp' }}
+        uses: codecov/codecov-action@v5
+        with:
+          files: build/vt/coverage.info
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -14,17 +14,10 @@ ctest --output-on-failure -L 'unit_test|example' | tee cmake-output.log
 
 if test "${VT_CODE_COVERAGE:-0}" -eq 1
 then
-    if [ -z "$CODECOV_TOKEN" ]; then
-        echo "Error: CODECOV_TOKEN is not set"
-        exit 1
-    fi
     export CODECOV_TOKEN="$CODECOV_TOKEN"
     lcov --capture --directory . --output-file coverage.info
     lcov --remove coverage.info '/usr/*' --output-file coverage.info
     lcov --list coverage.info
-    pushd "$VT"
-    bash <(curl -s https://codecov.io/bash) -r DARMA-tasking/vt -f "${VT_BUILD}/coverage.info" || echo "Codecov did not collect coverage reports"
-    popd
 fi
 
 if test "${VT_CI_TEST_LB_SCHEMA:-0}" -eq 1
