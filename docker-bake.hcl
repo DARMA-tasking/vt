@@ -174,12 +174,7 @@ target "vt-build" {
   target = "build"
   context = "."
   dockerfile = "ci/docker/vt.dockerfile"
-  output = [
-    {
-      type = "local"
-      dest = "docker-output"
-    }
-  ]
+
   platforms = [
     "linux/amd64",
     # "linux/arm64"
@@ -187,21 +182,6 @@ target "vt-build" {
   ulimits = [
     "core=0"
   ]
-
-  secret = ["id=CODECOV_TOKEN,env=CODECOV_TOKEN"]
-  # FIXME: verify that caching works as intended
-  # cache-from = [
-  #   {
-  #     type = "local",
-  #     src = "~/ccache"
-  #   }
-  # ]
-  # cache-to = [
-  #   {
-  #     type = "local",
-  #     dest = "~/ccache"
-  #   }
-  # ]
 }
 
 target "vt-build-all" {

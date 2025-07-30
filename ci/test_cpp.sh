@@ -23,7 +23,7 @@ then
     lcov --remove coverage.info '/usr/*' --output-file coverage.info
     lcov --list coverage.info
     pushd "$VT"
-    bash <(curl -s https://codecov.io/bash) -f "${VT_BUILD}/coverage.info" || echo "Codecov did not collect coverage reports"
+    bash <(curl -s https://codecov.io/bash) -r DARMA-tasking/vt -f "${VT_BUILD}/coverage.info" || echo "Codecov did not collect coverage reports"
     popd
 fi
 

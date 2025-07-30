@@ -39,22 +39,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        id: setup-buildx
+        uses: docker/setup-buildx-action@v3
+
       - uses: actions/cache@v4
+        id: ccache-archive
         with:
-          path: docker-output/build/ccache
+          path: build/ccache
           key: ${{ matrix.target }}-${{ github.ref }}-${{ github.sha }}
           restore-keys: |
             ${{ matrix.target }}-${{ github.ref }}
             ${{ matrix.target }}-
+
+      - name: Inject ccache
+        uses: reproducible-containers/buildkit-cache-dance@v3
+        with:
+          builder: ${{ steps.setup-buildx.outputs.name }}
+          cache-map: |
+            {
+              "ccache-archive": {
+                "target": "/build/ccache",
+                "id": "${{ matrix.target }}"
+              }
+            }
+          skip-extraction: ${{ steps.ccache-archive.outputs.cache-hit }}
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Build
         uses: docker/bake-action@v6
@@ -63,6 +78,7 @@ jobs:
           targets: ${{ matrix.target }}
           files: docker-bake.hcl
           push: ${{ github.ref == 'refs/heads/develop' }}
+          set: |
+            *.args.CACHE_ID=${{ matrix.target }}
         env:
           GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
