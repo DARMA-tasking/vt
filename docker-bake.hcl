@@ -9,6 +9,16 @@ function "arch" {
   result = lookup(item, "arch", "amd64")
 }
 
+function "variant" {
+  params = [item]
+  result = lookup(item, "variant", "")
+}
+
+function "target_suffix" {
+  params = [item]
+  result = variant(item) == "" ? "" : "-${variant(item)}"
+}
+
 function "vt_asan" {
   params = [item]
   result = lookup(item, "vt_asan", "")
@@ -185,7 +195,7 @@ target "vt-build" {
 }
 
 target "vt-build-all" {
-  name = "vt-build-${replace(item.image, ".", "-")}${vt_test_spack(item) == 1 ? "-spack" : ""}"
+  name = "vt-build-${replace(item.image, ".", "-")}${target_suffix(item)}"
   inherits = ["vt-build"]
   tags = ["${REPO}:vt-${item.image}"]
 
@@ -262,9 +272,18 @@ target "vt-build-all" {
         vt_lb = 1
         vt_trace_only = 1
         vt_test_spack = 1
+        variant = "spack"
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-cpp"
+      },
+      {
+        image = "amd64-ubuntu-20.04-gcc-9-cpp"
+        vt_doxygen = 1
+        vt_trace = 1
+        variant = "docs"
+        # TODO: TOKEN: ${{ secrets.GH_PAT }}
+        # TODO: BUILD_TYPE: release
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-cuda-11.4.3-cpp"
