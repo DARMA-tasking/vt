@@ -46,7 +46,7 @@ jobs:
       - uses: actions/cache@v4
         id: ccache-archive
         with:
-          path: build/ccache
+          path: ccache-archive
           key: ${{ matrix.target }}-${{ github.ref }}-${{ github.sha }}
           restore-keys: |
             ${{ matrix.target }}-${{ github.ref }}
