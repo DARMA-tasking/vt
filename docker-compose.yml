@@ -185,33 +185,3 @@ services:
     environment:
       <<: [*ccache, *vtopts]
     volumes: *ubuntu-volumes
-
-  ##############################################################################
-  # Build documentation for VT in the container on ubuntu platform from
-  # container baseline.
-  ubuntu-docs:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: *ccache
-      VT_LB_ENABLED: ${VT_LB:-1}
-      VT_TRACE_ENABLED:  ${VT_TRACE:-1}
-      VT_DIAGNOSTICS_ENABLED: 1
-      VT_DOXYGEN_ENABLED: 1
-      CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
-    volumes: *ubuntu-volumes
-    command: &docs-cpp-command >
-      /bin/bash -c "
-        /vt/ci/build_cpp.sh /vt /build ${TOKEN}"
-
-  ##############################################################################
-  # Build vt sample project using DARMA-vt installed from spack package.
-  ubuntu-spack:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
-    ulimits: *ulimits
-    environment:
-      <<: *vtopts
-    volumes: *ubuntu-volumes
-    command:
-      /bin/bash -c "
-        /vt/ci/test_spack_package.sh"
