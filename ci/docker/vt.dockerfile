@@ -42,18 +42,14 @@ ARG VT_UNITY_BUILD_ENABLED
 ARG VT_WERROR_ENABLED
 ARG VT_ZOLTAN_ENABLED
 
-RUN --mount=target=/vt \
-<<EOF
-if [ -d vt/docker-output/build/ccache ]; then
-    cp -r vt/docker-output/build/ccache /build
-    ccache -c
-    ccache -s
-fi
-EOF
+ARG IMAGE
+ARG CACHE_ID=${IMAGE}
 
 ENV GIT_BRANCH=${GIT_BRANCH}
 
-RUN --mount=target=/vt,rw \
+RUN --mount=type=cache,id=${CACHE_ID},target=/build/ccache \
+    --mount=type=cache,id=BUILD-${CACHE_ID},target=/build/vt \
+    --mount=target=/vt,rw \
         if [ "${VT_TEST_SPACK}" = "1" ]; then \
             apt update -y -q && apt install -y -q libssl-dev unzip && \
             /vt/ci/test_spack_package.sh; \
