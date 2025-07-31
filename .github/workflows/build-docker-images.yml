@@ -85,6 +85,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
 
+      - name: Test
+        run: |
+          job_id=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id}}/attempts/${{ github.run_attempt }}/jobs | jq -r '.jobs | .[0].id')
+          matrix_job_html_url=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id}}/attempts/${{ github.run_attempt }}/jobs | jq -r '.jobs | map(select(.name | contains("${{ matrix.region }}"))) | .[0].html_url')
+          matrix_id=$( sed 's/.*\jobs\///' <<<$matrix_job_html_url)
+          echo "matrix job html url: $matrix_job_html_url"
+          echo "matrix id: $matrix_id" # i doubt this is of any use. in the github response this id is only present as part of the html_url
+          echo "job id: $job_id"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Retrieve build artifacts
         run: |
           # We rely on the persistence of data on cache mounts with identical IDs and builders.
