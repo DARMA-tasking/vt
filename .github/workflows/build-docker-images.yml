@@ -73,6 +73,7 @@ jobs:
 
       - name: Build
         uses: docker/bake-action@v6
+        id: build-image
         with:
           source: .
           targets: ${{ matrix.target }}
@@ -85,7 +86,6 @@ jobs:
           GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
 
       - name: Retrieve build artifacts
-        if: ${{ matrix.target == 'vt-build-amd64-ubuntu-22-04-gcc-11-cpp' }}
         run: |
           # We rely on the persistence of data on cache mounts with identical IDs and builders.
           # This allows us to copy build artifacts from the "bake" step and use the Codecov action within the GitHub environment.
@@ -98,6 +98,19 @@ jobs:
           " >> tmp_dockerfile
 
           docker buildx build --builder ${{ steps.setup-buildx.outputs.name }} -f tmp_dockerfile --output type=local,dest=build .
+
+      - name: Put compilation's and tests' logs in PR comment
+        run: |
+          ./scripts/report_logs_in_comment.sh           \
+            "build/vt/compilation_errors_warnings.out"  \
+            "build/vt/cmake-output.log"                 \
+            "${{ github.run_number }}"                  \
+            "${{ github.event.pull_request.number }}"   \
+            "${{ github.repository }}"                  \
+            "${{ secrets.GITHUB_TOKEN }}"               \
+            "${{ github.run_id }}"                      \
+            "${{ github.job }}"                         \
+            "${{ steps.build-image.outcome }}"
 
       - name: Upload coverage
         if: ${{ matrix.target == 'vt-build-amd64-ubuntu-22-04-gcc-11-cpp' }}
