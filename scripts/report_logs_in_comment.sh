@@ -53,6 +53,7 @@ job_name="$8"
 job_status="$9"
 commit_sha="${10}"
 commit_date="${11}"
+run_attempt="${12}"
 
 echo "job_status: $job_status"
 if [[ "$job_status" == "success" || "$job_status" == "failure" ]]; then
@@ -100,16 +101,21 @@ then
 fi
 
 # Fetch numeric job ID from GitHub API
-job_id=$(curl -s -H "Authorization: token $github_token" \
-  "https://api.github.com/repos/${repository_name}/actions/runs/${build_id}/jobs" | \
-  jq -r --arg name "$job_name" '.jobs[] | select(.name == $name) | .id')
+# job_id=$(curl -s -H "Authorization: token $github_token" \
+#   "https://api.github.com/repos/${repository_name}/actions/runs/${build_id}/jobs" | \
+#   jq -r --arg name "$job_name" '.jobs[] | select(.name == $name) | .id')
 
-# Fallback to run-level link if job ID is unavailable
-if [[ -n "$job_id" && "$job_id" != "null" ]]; then
-    build_link="[Build log](https://github.com/${repository_name}/actions/runs/${build_id}/job/${job_id})"
-else
-    build_link="[Build log](https://github.com/${repository_name}/actions/runs/${build_id})"
-fi
+# # Fallback to run-level link if job ID is unavailable
+# if [[ -n "$job_id" && "$job_id" != "null" ]]; then
+#     build_link="[Build log](https://github.com/${repository_name}/actions/runs/${build_id}/job/${job_id})"
+# else
+#     build_link="[Build log](https://github.com/${repository_name}/actions/runs/${build_id})"
+# fi
+
+build_link=$(
+  gh api "repos/${repository_name}/actions/runs/${build_id}/attempts/${run_attempt}/jobs" |
+  jq -r --arg target "$comment_title" '.jobs | map(select(.name | contains($target))) | .[0].html_url'
+)
 
 # Build comment
 comment_body="Build for $commit_sha ($commit_date UTC)\n\n"'```'"\n$val\n"'```'"\n\n$build_link"
