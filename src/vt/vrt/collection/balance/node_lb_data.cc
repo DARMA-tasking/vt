@@ -65,7 +65,8 @@
 #include <ovis_util/util.h>
 #endif
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_FORMAT
+
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
