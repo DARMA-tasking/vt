@@ -44,13 +44,15 @@
 
 compilation_errors_warnings_out="$1"
 cmake_output_log="$2"
-build_number="$3"
+comment_title="$3"
 pull_request_number="$4"
 repository_name="$5"
 github_token="$6"
 build_id="$7"
 job_name="$8"
 job_status="$9"
+commit_sha="${10}"
+commit_date="${11}"
 
 echo "job_status: $job_status"
 if [[ "$job_status" == "success" || "$job_status" == "failure" ]]; then
@@ -63,30 +65,39 @@ warnings_errors=$(cat "$compilation_errors_warnings_out")
 
 delimiter="-=-=-=-"
 tests_failures=""
-if [[ -f "$cmake_output_log" ]]; then
+if test -f "$cmake_output_log"
+then
     tests_failures=$(< "$cmake_output_log" sed -n -e '/The following tests FAILED:/,$p')
     tests_failures=${tests_failures//$'\n'/$delimiter}
     tabulation="  "
     tests_failures=${tests_failures//$'\t'/$tabulation}
 fi
 
-if [[ "$succeeded" -eq 1 ]]; then
-    [[ -z "$warnings_errors" ]] && warnings_errors='Compilation - successful'
-    [[ -z "$tests_failures" ]] && tests_failures='Testing - passed'
+if test "$succeeded" -eq 1
+then
+    if test -z "$warnings_errors"
+    then
+        warnings_errors='Compilation - successful'
+    fi
+
+    if test -z "$tests_failures"
+    then
+        tests_failures='Testing - passed'
+    fi
 else
-    if [[ -z "$warnings_errors" && -z "$tests_failures" ]]; then
+    if test -z "$warnings_errors" && test -z "$tests_failures"
+    then
         warnings_errors='Build failed for unknown reason. Check build logs'
     fi
 fi
 
+# Concatenate both reports into one
 val="$warnings_errors""$delimiter""$delimiter""$tests_failures"
 max_comment_size=3000
-if [[ ${#val} -gt "$max_comment_size" ]]; then
+if test ${#val} -gt "$max_comment_size"
+then
     val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read log. <=="
 fi
-
-commit_sha="$(git log --skip=1 -1  --pretty=format:%H)"
-commit_date="$(TZ=UTC0 git show -s --format=%cd --date=format-local:'%Y-%m-%d %H:%M:%S' "$commit_sha")"
 
 # Fetch numeric job ID from GitHub API
 job_id=$(curl -s -H "Authorization: token $github_token" \
@@ -100,9 +111,15 @@ else
     build_link="[Build log](https://github.com/${repository_name}/actions/runs/${build_id})"
 fi
 
+# Build comment
 comment_body="Build for $commit_sha ($commit_date UTC)\n\n"'```'"\n$val\n"'```'"\n\n$build_link"
-comment_body=${comment_body//$delimiter/$'\n'}
-comment_body=${comment_body//\"/\\\"}
+
+# Fix new lines
+new_line="\n"
+comment_body=${comment_body//$delimiter/$new_line}
+quotation_mark="\""
+new_quotation_mark="\\\""
+comment_body=${comment_body//$quotation_mark/$new_quotation_mark}
 
 rm -f data.json
 
@@ -110,7 +127,7 @@ rm -f data.json
 echo "{"
 echo '  "event_type": "comment-pr",'
 echo '  "client_payload": {'
-echo '    "comment_title": "'"$build_number"'",'
+echo '    "comment_title": "'"$comment_title"'",'
 echo '    "comment_content": "'"$comment_body"'",'
 echo '    "pr_number": "'"$pull_request_number"'"'
 echo "  }"
