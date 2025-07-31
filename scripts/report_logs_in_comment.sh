@@ -47,80 +47,65 @@ cmake_output_log="$2"
 build_number="$3"
 pull_request_number="$4"
 repository_name="$5"
-github_pat="$6"
+github_token="$6"
 build_id="$7"
-job_id="$8"
+job_name="$8"
 job_status="$9"
-task_id="28db5144-7e5d-5c90-2820-8676d630d9d2"
 
 echo "job_status: $job_status"
-if test "$job_status" = "Succeeded" || test "$job_status" = "SucceededWithIssues"
-then
+if [[ "$job_status" == "success" || "$job_status" == "failure" ]]; then
     succeeded=1
 else
     succeeded=0
 fi
 
-# Extract compilation's errors and warnings from log file
 warnings_errors=$(cat "$compilation_errors_warnings_out")
 
-# Extract tests' report from log file
 delimiter="-=-=-=-"
 tests_failures=""
-if test -f "$cmake_output_log"
-then
+if [[ -f "$cmake_output_log" ]]; then
     tests_failures=$(< "$cmake_output_log" sed -n -e '/The following tests FAILED:/,$p')
     tests_failures=${tests_failures//$'\n'/$delimiter}
     tabulation="  "
     tests_failures=${tests_failures//$'\t'/$tabulation}
 fi
 
-if test "$succeeded" -eq 1
-then
-    if test -z "$warnings_errors"
-    then
-        warnings_errors='Compilation - successful'
-    fi
-
-    if test -z "$tests_failures"
-    then
-        tests_failures='Testing - passed'
-    fi
+if [[ "$succeeded" -eq 1 ]]; then
+    [[ -z "$warnings_errors" ]] && warnings_errors='Compilation - successful'
+    [[ -z "$tests_failures" ]] && tests_failures='Testing - passed'
 else
-    if test -z "$warnings_errors" && test -z "$tests_failures"
-    then
+    if [[ -z "$warnings_errors" && -z "$tests_failures" ]]; then
         warnings_errors='Build failed for unknown reason. Check build logs'
     fi
 fi
 
-# Concatenate both reports into one
 val="$warnings_errors""$delimiter""$delimiter""$tests_failures"
 max_comment_size=3000
-if test ${#val} -gt "$max_comment_size"
-then
+if [[ ${#val} -gt "$max_comment_size" ]]; then
     val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read log. <=="
 fi
 
-# Build comment
 commit_sha="$(git log --skip=1 -1  --pretty=format:%H)"
 commit_date="$(TZ=UTC0 git show -s --format=%cd --date=format-local:'%Y-%m-%d %H:%M:%S' "$commit_sha")"
-build_link='[Build log](https://dev.azure.com/DARMA-tasking/DARMA/_build/results?buildId='"$build_id"'&view=logs&j='"$job_id"'&t='"$task_id)"
-comment_body="Build for $commit_sha ($commit_date UTC)\n\n"'```'"\n$val\n"'```'"\n\n$build_link"
 
-# Fix new lines
-new_line="\n"
-comment_body=${comment_body//$delimiter/$new_line}
-quotation_mark="\""
-new_quotation_mark="\\\""
-comment_body=${comment_body//$quotation_mark/$new_quotation_mark}
+# Fetch numeric job ID from GitHub API
+job_id=$(curl -s -H "Authorization: token $github_token" \
+  "https://api.github.com/repos/${repository_name}/actions/runs/${build_id}/jobs" | \
+  jq -r --arg name "$job_name" '.jobs[] | select(.name == $name) | .id')
 
-# Ensure there's no temporary json file
-if test -f data.json
-then
-    rm data.json
+# Fallback to run-level link if job ID is unavailable
+if [[ -n "$job_id" && "$job_id" != "null" ]]; then
+    build_link="[Build log](https://github.com/${repository_name}/actions/runs/${build_id}/job/${job_id})"
+else
+    build_link="[Build log](https://github.com/${repository_name}/actions/runs/${build_id})"
 fi
 
-# Prepare data send with request to GitHub
+comment_body="Build for $commit_sha ($commit_date UTC)\n\n"'```'"\n$val\n"'```'"\n\n$build_link"
+comment_body=${comment_body//$delimiter/$'\n'}
+comment_body=${comment_body//\"/\\\"}
+
+rm -f data.json
+
 {
 echo "{"
 echo '  "event_type": "comment-pr",'
@@ -132,13 +117,11 @@ echo "  }"
 echo "}"
 } >> data.json
 
-# Send GitHub request to post a PR comment
-curl                                                                    \
-    --request POST                                                      \
-    --url https://api.github.com/repos/"$repository_name"/dispatches    \
-    --header "Accept: application/vnd.github.everest-preview+json"      \
-    --header "Authorization: token $github_pat"                         \
-    --data "@data.json"
+curl \
+  --request POST \
+  --url "https://api.github.com/repos/${repository_name}/dispatches" \
+  --header "Accept: application/vnd.github.everest-preview+json" \
+  --header "Authorization: token ${github_token}" \
+  --data "@data.json"
 
-# Clean up
-rm data.json
+rm -f data.json
