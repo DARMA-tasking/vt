@@ -119,8 +119,9 @@ jobs:
             "${{ github.job }}"                         \
             "${{ steps.build-image.outcome }}"          \
             "${{ github.sha }} "                        \
-            "${{ github.event.head_commit.timestamp }}" \
             "${{ github.run_attempt }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload coverage
         if: ${{ matrix.target == 'vt-build-amd64-ubuntu-22-04-gcc-11-cpp' }}

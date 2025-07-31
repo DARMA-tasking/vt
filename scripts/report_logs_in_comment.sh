@@ -49,11 +49,9 @@ pull_request_number="$4"
 repository_name="$5"
 github_token="$6"
 build_id="$7"
-job_name="$8"
 job_status="$9"
 commit_sha="${10}"
-commit_date="${11}"
-run_attempt="${12}"
+run_attempt="${11}"
 
 echo "job_status: $job_status"
 if [[ "$job_status" == "success" || "$job_status" == "failure" ]]; then
@@ -117,8 +115,10 @@ build_link=$(
   jq -r --arg target "$comment_title" '.jobs | map(select(.name | contains($target))) | .[0].html_url'
 )
 
+echo "Build link for repos/${repository_name}/actions/runs/${build_id}/attempts/${run_attempt}/jobs: $build_link"
 # Build comment
-comment_body="Build for $commit_sha ($commit_date UTC)\n\n"'```'"\n$val\n"'```'"\n\n$build_link"
+commit_date=$(date -u -d "$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}" --jq '.commit.committer.date')" '+%Y-%m-%d %H:%M:%S %Z')
+comment_body="Build for $commit_sha ($commit_date)\n\n"'```'"\n$val\n"'```'"\n\n$build_link"
 
 # Fix new lines
 new_line="\n"
