@@ -34,10 +34,8 @@ bake_target="$3"
 repository_name="$4"
 run_id="$5"
 job_status="$6"
-commit_sha="$7"
-run_attempt="$8"
+run_attempt="$7"
 
-echo "job_status: $job_status"
 if [[ "$job_status" == "success" || "$job_status" == "failure" ]]; then
     succeeded=1
 else
@@ -46,7 +44,7 @@ fi
 
 warnings_errors=$(cat "$compilation_errors_warnings_out")
 
-delimiter="-=-=-=-"
+delimiter="\"$'\n\n'\""
 tests_failures=""
 if test -f "$cmake_output_log"
 then
@@ -89,13 +87,6 @@ build_link=$(
 
 # Build comment
 commit_date=$(date -u -d "$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}" --jq '.commit.committer.date')" '+%Y-%m-%d %H:%M:%S %Z')
-comment_body="Build for $commit_sha ($commit_date)\n\n"'```'"\n$val\n"'```'"\n\n[View job log]($build_link)"
-
-# Fix new lines
-new_line="\n"
-comment_body=${comment_body//$delimiter/$new_line}
-quotation_mark="\""
-new_quotation_mark="\\\""
-comment_body=${comment_body//$quotation_mark/$new_quotation_mark}
+comment_body="Build for $GITHUB_SHA ($commit_date)$delimiter"'```'"\n$val\n"'```'"${delimiter}[View job log]($build_link)"
 
 printf '%s\n' "$comment_body"

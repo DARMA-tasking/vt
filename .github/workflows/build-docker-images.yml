@@ -103,16 +103,20 @@ jobs:
         if: github.event_name == 'pull_request'
         id: generate_comment
         run: |
+          comment_content=$(
           ./scripts/generate_comment_body.sh           \
             "build/vt/compilation_errors_warnings.out" \
             "build/vt/cmake-output.log"                \
             "${{ matrix.target }}"                     \
             "${{ github.repository }}"                 \
             "${{ github.run_id }}"                     \
-            "${{ github.job }}"                        \
             "${{ steps.build-image.outcome }}"         \
-            "${{ github.sha }} "                       \
             "${{ github.run_attempt }}"
+          )
+
+          echo "comment_content<<EOF" >>"$GITHUB_OUTPUT"
+          echo "$comment_content" >>"$GITHUB_OUTPUT"
+          echo "EOF" >>"$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
