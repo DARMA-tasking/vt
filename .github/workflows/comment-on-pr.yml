@@ -11,10 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Comment on a PR
     steps:
-      - name: Test
-        run: |
-          echo "${{ github.event.repository.name }}-${{ github.event.client_payload.pr_number }}-${{ github.event.client_payload.comment_title }}"
-
       - uses: DARMA-tasking/comment-on-pr@master
         with:
           repo_owner: ${{ github.event.repository.owner.login }}

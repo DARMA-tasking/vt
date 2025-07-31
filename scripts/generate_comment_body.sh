@@ -5,10 +5,9 @@
 # * extracts failed tests from tests' log file (if any)
 # * if there aren't any errors or warnings - informs about it,
 # * if all tests passed - informs about it,
-# * puts a comment with both reports in PR thread on GitHub
 #
 #
-# Why max_comment_size=3000 ?
+# Why max_comment_size=2000 ?
 #
 # Maximum length of the comment body is 65536 characters.
 # https://github.community/t/maximum-length-for-the-comment-body-in-issues-and-pr/148867
@@ -17,21 +16,8 @@
 # There are 21 pipelines, so 64.5k/21 gives about 3k characters per pipeline.
 #
 #
-# What's going on with delimiter="-=-=-=-" and strange "%0D%0A"?
-#
-# Azure tasks have a problem with parsing newline, so it's basically a way
-# to properly move around strings with newlines in them. And "%0D%0A" is just a CRLF.
-#
-#
-# Why '\t' is replaced by "  "?
-#
-# After JSON standard:
-# "Whitespace is not allowed within any token, except that space is allowed in strings".
-# So all tabulations need to be changed into spaces.
-#
-#
 # Example of usage:
-# ./report_logs_in_comment.sh                           \
+# ./generate_comment_body.sh                           \
 #    "$(build_root)/vt/compilation_errors_warnings.out" \
 #    "$(build_root)/vt/cmake-output.log"                \
 #    "$(Build.BuildNumber)"                             \
@@ -44,14 +30,12 @@
 
 compilation_errors_warnings_out="$1"
 cmake_output_log="$2"
-comment_title="$3"
-pull_request_number="$4"
-repository_name="$5"
-github_token="$6"
-build_id="$7"
-job_status="$9"
-commit_sha="${10}"
-run_attempt="${11}"
+bake_target="$3"
+repository_name="$4"
+run_id="$5"
+job_status="$6"
+commit_sha="$7"
+run_attempt="$8"
 
 echo "job_status: $job_status"
 if [[ "$job_status" == "success" || "$job_status" == "failure" ]]; then
@@ -92,27 +76,15 @@ fi
 
 # Concatenate both reports into one
 val="$warnings_errors""$delimiter""$delimiter""$tests_failures"
-max_comment_size=3000
+max_comment_size=2000
 if test ${#val} -gt "$max_comment_size"
 then
     val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read log. <=="
 fi
 
-# Fetch numeric job ID from GitHub API
-# job_id=$(curl -s -H "Authorization: token $github_token" \
-#   "https://api.github.com/repos/${repository_name}/actions/runs/${build_id}/jobs" | \
-#   jq -r --arg name "$job_name" '.jobs[] | select(.name == $name) | .id')
-
-# # Fallback to run-level link if job ID is unavailable
-# if [[ -n "$job_id" && "$job_id" != "null" ]]; then
-#     build_link="[Build log](https://github.com/${repository_name}/actions/runs/${build_id}/job/${job_id})"
-# else
-#     build_link="[Build log](https://github.com/${repository_name}/actions/runs/${build_id})"
-# fi
-
 build_link=$(
-  gh api "repos/${repository_name}/actions/runs/${build_id}/attempts/${run_attempt}/jobs" |
-  jq -r --arg target "$comment_title" '.jobs | map(select(.name | contains($target))) | .[0].html_url'
+  gh api "repos/${repository_name}/actions/runs/${run_id}/attempts/${run_attempt}/jobs" |
+  jq -r --arg target "$bake_target" '.jobs | map(select(.name | contains($target))) | .[0].html_url'
 )
 
 # Build comment
@@ -126,24 +98,4 @@ quotation_mark="\""
 new_quotation_mark="\\\""
 comment_body=${comment_body//$quotation_mark/$new_quotation_mark}
 
-rm -f data.json
-
-{
-echo "{"
-echo '  "event_type": "comment-pr",'
-echo '  "client_payload": {'
-echo '    "comment_title": "'"$comment_title"'",'
-echo '    "comment_content": "'"$comment_body"'",'
-echo '    "pr_number": "'"$pull_request_number"'"'
-echo "  }"
-echo "}"
-} >> data.json
-
-curl \
-  --request POST \
-  --url "https://api.github.com/repos/${repository_name}/dispatches" \
-  --header "Accept: application/vnd.github.everest-preview+json" \
-  --header "Authorization: token ${github_token}" \
-  --data "@data.json"
-
-rm -f data.json
+printf '%s\n' "$comment_body"

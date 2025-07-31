@@ -85,13 +85,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
 
-      - name: Test
-        run: |
-          matrix_job_html_url=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id}}/attempts/${{ github.run_attempt }}/jobs | jq -r '.jobs | map(select(.name | contains("${{ matrix.target }}"))) | .[0].html_url')
-          echo "matrix job html url: $matrix_job_html_url"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Retrieve build artifacts
         run: |
           # We rely on the persistence of data on cache mounts with identical IDs and builders.
@@ -106,22 +99,32 @@ jobs:
 
           docker buildx build --builder ${{ steps.setup-buildx.outputs.name }} -f tmp_dockerfile --output type=local,dest=build .
 
-      - name: Put compilation's and tests' logs in PR comment
+      - name: Generate comment
+        if: github.event_name == 'pull_request'
+        id: generate_comment
         run: |
-          ./scripts/report_logs_in_comment.sh           \
-            "build/vt/compilation_errors_warnings.out"  \
-            "build/vt/cmake-output.log"                 \
-            "${{ matrix.target }}"                  \
-            "${{ github.event.pull_request.number }}"   \
-            "${{ github.repository }}"                  \
-            "${{ secrets.GITHUB_TOKEN }}"               \
-            "${{ github.run_id }}"                      \
-            "${{ github.job }}"                         \
-            "${{ steps.build-image.outcome }}"          \
-            "${{ github.sha }} "                        \
+          ./scripts/generate_comment_body.sh           \
+            "build/vt/compilation_errors_warnings.out" \
+            "build/vt/cmake-output.log"                \
+            "${{ matrix.target }}"                     \
+            "${{ github.repository }}"                 \
+            "${{ github.run_id }}"                     \
+            "${{ github.job }}"                        \
+            "${{ steps.build-image.outcome }}"         \
+            "${{ github.sha }} "                       \
             "${{ github.run_attempt }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: DARMA-tasking/comment-on-pr@master
+        if: github.event_name == 'pull_request'
+        with:
+          repo_owner: ${{ github.event.repository.owner.login }}
+          repo_name: ${{ github.event.repository.name }}
+          pr_number: ${{ github.event.pull_request.number }}
+          comment_title: ${{ matrix.target }}
+          comment_content: ${{ steps.generate_comment.outputs.comment_content }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload coverage
         if: ${{ matrix.target == 'vt-build-amd64-ubuntu-22-04-gcc-11-cpp' }}
