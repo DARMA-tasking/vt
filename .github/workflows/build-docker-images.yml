@@ -108,10 +108,7 @@ jobs:
             "build/vt/compilation_errors_warnings.out" \
             "build/vt/cmake-output.log"                \
             "${{ matrix.target }}"                     \
-            "${{ github.repository }}"                 \
-            "${{ github.run_id }}"                     \
-            "${{ steps.build-image.outcome }}"         \
-            "${{ github.run_attempt }}"
+            "${{ steps.build-image.outcome }}"
           )
 
           echo "comment_content<<EOF" >>"$GITHUB_OUTPUT"

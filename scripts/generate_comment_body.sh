@@ -12,13 +12,10 @@
 #   $1  compilation_errors_warnings.out   – file with compiler output
 #   $2  cmake-output.log                  – file with CTest output
 #   $3  bake_target                       – matrix target name (e.g. vt-build-…)
-#   $4  repository_name                   – owner/repo
-#   $5  run_id                            – GitHub Actions run ID
-#   $6  job_status                        – “success”, “failure”, “cancelled”, …
-#   $7  run_attempt                       – run attempt index
+#   $4  job_status                        – “success”, “failure”, “cancelled”, …
 #
-# Environment variables (read-only):
-#   GITHUB_REPOSITORY, GITHUB_SHA – provided by GitHub Actions
+# Environment variables (read-only) – provided by GitHub Actions:
+#   GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, GITHUB_SHA
 #
 # Output:
 #   The assembled markdown comment is printed to STDOUT.
@@ -29,10 +26,7 @@ set -euo pipefail
 compilation_errors_warnings_out="$1"
 cmake_output_log="$2"
 bake_target="$3"
-repository_name="$4"
-run_id="$5"
-job_status="$6"
-run_attempt="$7"
+job_status="$4"
 
 newline=$'\n'
 max_comment_size=2000
@@ -64,7 +58,7 @@ if (( ${#val} > max_comment_size )); then
     val="${val:0:max_comment_size}${newline}${newline} ==> And there is more. Read log. <=="
 fi
 
-build_link=$(gh api "repos/${repository_name}/actions/runs/${run_id}/attempts/${run_attempt}/jobs" |
+build_link=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs" |
   jq -r --arg target "$bake_target" '.jobs | map(select(.name | contains($target))) | .[0].html_url')
 
 commit_date=$(date -u -d "$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}" --jq '.commit.committer.date')" '+%Y-%m-%d %H:%M:%S %Z')
