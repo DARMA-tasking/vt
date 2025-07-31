@@ -115,10 +115,9 @@ build_link=$(
   jq -r --arg target "$comment_title" '.jobs | map(select(.name | contains($target))) | .[0].html_url'
 )
 
-echo "Build link for repos/${repository_name}/actions/runs/${build_id}/attempts/${run_attempt}/jobs: $build_link"
 # Build comment
 commit_date=$(date -u -d "$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}" --jq '.commit.committer.date')" '+%Y-%m-%d %H:%M:%S %Z')
-comment_body="Build for $commit_sha ($commit_date)\n\n"'```'"\n$val\n"'```'"\n\n$build_link"
+comment_body="Build for $commit_sha ($commit_date)\n\n"'```'"\n$val\n"'```'"\n\n[View job log]($build_link)"
 
 # Fix new lines
 new_line="\n"
