@@ -130,7 +130,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -Dvt_test_trace_runtime_enabled="${VT_TRACE_RUNTIME_ENABLED:-0}" \
       -Dvt_lb_enabled="${VT_LB_ENABLED:-1}" \
-      -Dvt_ldms_enabled="${VT_LDMS_ENABLED:-1}" \
+      -Dvt_ldms_enabled="${VT_LDMS_ENABLED:-0}" \
       -Dvt_ldms_includes="${VT_LDMS_INCLUDES_DIR:-/opt/ldms/include/}" \
       -Dvt_ldms_libs="${VT_LDMS_LIBS_DIR:-/opt/ldms/lib}" \
       -Dvt_trace_enabled="${VT_TRACE_ENABLED:-0}" \
@@ -150,7 +150,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_diagnostics_enabled="${VT_DIAGNOSTICS_ENABLED:-1}" \
       -Dvt_diagnostics_runtime_enabled="${VT_DIAGNOSTICS_RUNTIME_ENABLED:-0}" \
       -Dvt_fcontext_enabled="${VT_FCONTEXT_ENABLED:-0}" \
-      -Dvt_fcontext_build_tests_examples="${VT_FCONTEXT_BUILD_TESTS_EXAMPLES:-1}" \
+      -Dvt_fcontext_build_tests_examples="${VT_FCONTEXT_BUILD_TESTS_EXAMPLES:-0}" \
       -Dvt_rdma_tests_enabled="${VT_RDMA_TESTS_ENABLED:-1}" \
       -Dvt_code_coverage="${VT_CODE_COVERAGE:-0}" \
       -DMI_INTERPOSE:BOOL=ON \
