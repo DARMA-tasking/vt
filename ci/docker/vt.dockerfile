@@ -40,22 +40,16 @@ ARG VT_UNITY_BUILD_ENABLED
 ARG VT_WERROR_ENABLED
 ARG VT_ZOLTAN_ENABLED
 
-RUN --mount=target=/vt \
-<<EOF
-if [ -d vt/docker-output/build/ccache ]; then
-    cp -r vt/docker-output/build/ccache /build
-    ccache -c
-    ccache -s
-fi
-EOF
+ENV GIT_BRANCH=${GIT_BRANCH}
 
-RUN --mount=target=/vt,rw \
-        /vt/ci/build_cpp.sh /vt /build && \
-        /vt/ci/test_cpp.sh /vt /build  && \
-        /vt/ci/build_vt_sample.sh /vt /build
-
-FROM ubuntu:24.04
-
-COPY --from=build /build /build
-
-WORKDIR /build/examples/collection
+RUN --mount=type=cache,id=${CACHE_ID},target=/build/ccache \
+    --mount=type=cache,id=BUILD-${CACHE_ID},target=/build/vt \
+    --mount=target=/vt,rw \
+        if [ "${VT_TEST_SPACK}" = "1" ]; then \
+            apt update -y -q && apt install -y -q libssl-dev unzip && \
+            /vt/ci/test_spack_package.sh; \
+        else \
+            /vt/ci/build_cpp.sh /vt /build && \
+            /vt/ci/test_cpp.sh /vt /build  && \
+            /vt/ci/build_vt_sample.sh /vt /build; \
+        fi

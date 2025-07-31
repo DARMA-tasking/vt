@@ -171,13 +171,6 @@ target "vt-build" {
   target = "build"
   context = "."
   dockerfile = "ci/docker/vt.dockerfile"
-  #output = [
-   # {
-   #   type = "local"
-   #   dest = "docker-output"
-   # }
-  #]
-  tags = ["vt:amd64-ubuntu-24.04-gcc-13-cpp"]
   platforms = [
     "linux/amd64",
     # "linux/arm64"
