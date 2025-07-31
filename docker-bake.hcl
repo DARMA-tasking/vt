@@ -355,12 +355,9 @@ target "vt-build-all" {
         image = "amd64-ubuntu-24.04-gcc-13-cpp"
         vt_trace = 1
         vt_pool = 0
-        vt_asan = 0
+        vt_asan = 1
         vt_unity_build = 0
         #lsan_options = "suppressions=/vt/tests/lsan.supp"
-        vt_ldms = 1
-        vt_lb = 1
-        vt_lb_statistics = 1
       },
       {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
