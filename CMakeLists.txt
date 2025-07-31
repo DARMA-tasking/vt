@@ -4,6 +4,15 @@ file(READ "VERSION" _vt_version_str)
 string(STRIP "${_vt_version_str}" _vt_version_str)
 project(vt VERSION ${_vt_version_str})
 
+option(VT_LDMS_ENABLED "Enable LDMS support" OFF)
+
+if (VT_LDMS_ENABLED)
+  message(STATUS "VT: LDMS support enabled")
+  add_definitions(-DVT_ENABLED_ldms=1)
+  include_directories(SYSTEM /opt/ldms/include)
+else()
+  add_definitions(-DVT_ENABLED_ldms=0)
+endif()
 # To generate output file with compilation errors and warnings
 # CMake generator needs to be known
 set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
