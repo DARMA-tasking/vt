@@ -141,7 +141,7 @@ function "vt_test_spack" {
 
 function "vt_tests_num_nodes" {
   params = [item]
-  result = lookup(item, "vt_tests_num_nodes", "2")
+  result = lookup(item, "vt_tests_num_nodes", "4")
 }
 
 function "vt_trace" {
@@ -248,7 +248,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-20.04-clang-10-cpp"
-        vt_tests_num_nodes = 4
+        vt_tests_num_nodes = 8
         vt_ubsan = 1
         #FIXME
         ubsan_options = "print_stacktrace=1"
@@ -265,7 +265,7 @@ target "vt-build-all" {
       {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
         vt_lb = 0
-        vt_tests_num_nodes = 4
+        vt_tests_num_nodes = 8
       },
       {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
@@ -291,7 +291,7 @@ target "vt-build-all" {
         vt_extended_tests = 0
         vt_external_fmt = 1
         vt_pool = 0
-        vt_tests_num_nodes = 4
+        vt_tests_num_nodes = 8
         vt_trace = 1
       },
       {
@@ -300,7 +300,7 @@ target "vt-build-all" {
         vt_diagnostics = 0
         vt_extended_tests = 0
         vt_pool = 0
-        vt_tests_num_nodes = 4
+        vt_tests_num_nodes = 8
         vt_trace = 1
       },
       {
