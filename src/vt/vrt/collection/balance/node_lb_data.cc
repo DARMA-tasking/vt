@@ -170,9 +170,9 @@ void NodeLBData::initialize() {
   if (auto ldms_freq = getenv("VT_LDMS_MILLI_FREQ")) {
     ldms_milli_freq_ = atoi(ldms_freq);
   }
-  const auto xPtr = getenv("VT_LDMS_XPTR");
+  const auto xPrt = getenv("VT_LDMS_XPRT");
   const auto auth = getenv("VT_LDMS_AUTH");
-  ldms_ = ldms_xprt_new_with_auth(xPtr, NULL, auth, NULL);
+  ldms_ = ldms_xprt_new_with_auth(xPrt, NULL, auth, NULL);
   vtWarnIf(ldms_, "ldms_xprt_new_with_auth failed!");
 
   const auto hostname = getenv("VT_LDMS_HOSTNAME");
