@@ -4,15 +4,6 @@ file(READ "VERSION" _vt_version_str)
 string(STRIP "${_vt_version_str}" _vt_version_str)
 project(vt VERSION ${_vt_version_str})
 
-option(VT_LDMS_ENABLED "Enable LDMS support" OFF)
-
-if (VT_LDMS_ENABLED)
-  message(STATUS "VT: LDMS support enabled")
-  add_definitions(-DVT_ENABLED_ldms=1)
-  include_directories(SYSTEM /opt/ldms/include)
-else()
-  add_definitions(-DVT_ENABLED_ldms=0)
-endif()
 # To generate output file with compilation errors and warnings
 # CMake generator needs to be known
 set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
@@ -151,6 +142,15 @@ else()
     STATUS
     "VT: NOT building tests because vt_build_tests or BUILD_TESTING are not set"
   )
+endif()
+
+if (vt_ldms_enabled)
+  message(STATUS "VT: LDMS support enabled")
+  target_compile_definitions(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC VT_LDMS_ENABLED=1)
+  target_include_directories(${VIRTUAL_TRANSPORT_LIBRARY} SYSTEM PRIVATE "${vt_ldms_includes}")
+  target_link_directories(${VIRTUAL_TRANSPORT_LIBRARY} PRIVATE "${vt_ldms_libs}")
+else()
+  target_compile_definitions(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC VT_LDMS_ENABLED=0)
 endif()
 
 # Configure file for the VT package

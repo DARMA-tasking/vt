@@ -70,25 +70,6 @@ define_option(vt_mimalloc_enabled "mimalloc" "Build VT with fcontext (ULT) enabl
     OFF vt_feature_cmake_mimalloc
 )
 
-if (vt_ldms_enabled)
-    message(STATUS "LDMS enabled")
-    if("${vt_ldms_includes}" STREQUAL "")
-        message(STATUS "vt_ldms_includes CMake variable not set")
-    else()
-        message(STATUS "Using user provided vt_ldms_includes=${vt_ldms_includes}")
-    endif()
-
-    if("${vt_ldms_libs}" STREQUAL "")
-        message(STATUS "vt_ldms_libs CMake variable not set")
-    else()
-        message(STATUS "Using user provided vt_ldms_libs=${vt_ldms_libs}")
-    endif()
-
-    set(vt_feature_cmake_ldms "1")
-else()
-    message(STATUS "LDMS disabled")
-    set(vt_feature_cmake_ldms "0")
-endif()
 
 if (vt_mpi_guards AND NOT PERL_FOUND)
     # No perl? Can't generate wrapper source file.
@@ -105,6 +86,8 @@ define_option(vt_mpi_guards "user MPI prevention guards"
 )
 
 define_option(vt_tv_enabled "vt-tv" "Build VT with vt-tv" OFF vt_feature_cmake_tv)
+
+define_option(vt_ldms_enabled "LDMS" "Build VT with LDMS support" OFF vt_feature_cmake_ldms)
 
 define_option(vt_zoltan_enabled "Zoltan" "Build VT with Zoltan" OFF vt_feature_cmake_zoltan)
 
