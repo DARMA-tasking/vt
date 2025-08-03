@@ -379,6 +379,14 @@ target "vt-build-all" {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
         vt_perf = 1
       },
+      {
+        image = "amd64-ubuntu-20.04-gcc-9-ldms-cpp"
+        vt_ldms = 1
+        vt_lb = 0
+        vt_trace = 0
+        vt_trace_only = 0
+        vt_debug_verbose = 1
+      }
     ]
   }
 }
