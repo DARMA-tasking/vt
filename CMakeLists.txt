@@ -144,15 +144,6 @@ else()
   )
 endif()
 
-if (vt_ldms_enabled)
-  message(STATUS "VT: LDMS support enabled")
-  target_compile_definitions(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC VT_LDMS_ENABLED=1)
-  target_include_directories(${VIRTUAL_TRANSPORT_LIBRARY} SYSTEM PRIVATE "${vt_ldms_includes}")
-  target_link_directories(${VIRTUAL_TRANSPORT_LIBRARY} PRIVATE "${vt_ldms_libs}")
-else()
-  target_compile_definitions(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC VT_LDMS_ENABLED=0)
-endif()
-
 # Configure file for the VT package
 configure_file(
   cmake/vtConfig.cmake.in
