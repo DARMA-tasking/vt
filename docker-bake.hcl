@@ -284,8 +284,6 @@ target "vt-build-all" {
         vt_doxygen = 1
         vt_trace = 1
         variant = "docs"
-        # TODO: TOKEN: ${{ secrets.GH_PAT }}
-        # TODO: BUILD_TYPE: release
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-cuda-11.4.3-cpp"

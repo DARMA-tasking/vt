@@ -6,7 +6,6 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-orange.svg)](https://opensource.org/licenses/BSD-3-Clause)
 ![](https://github.com/DARMA-tasking/vt/workflows/Docker%20Image%20CI/badge.svg)
 ![apple clang, macosx, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(clang-14,%20macosx,%20mpich)/badge.svg?branch=develop)
-![Build Documentation](https://github.com/DARMA-tasking/vt/workflows/Build%20Documentation/badge.svg?branch=develop)
 [![](https://github.com/DARMA-tasking/vt/wiki/build_stats/build_status_badge.svg)](https://github.com/DARMA-tasking/vt/wiki/Build-Stats)
 
 ## Introduction : What is *vt*?
