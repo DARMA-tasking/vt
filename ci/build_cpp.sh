@@ -4,19 +4,13 @@ set -ex
 
 source_dir=${1}
 build_dir=${2}
+target=${3:-install}
 
 # Dump environment variables for easier debugging
 env | sort
 
 # Dependency versions, when fetched via git.
 checkpoint_rev=develop
-
-if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
-then
-    token=${3}
-else
-    target=${3:-install}
-fi
 
 if [ -z ${4} ]; then
     dashj=""
@@ -186,20 +180,24 @@ if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
 then
     MCSS=$PWD/m.css
     GHPAGE=$PWD/DARMA-tasking.github.io
-    git clone "https://${token}@github.com/DARMA-tasking/DARMA-tasking.github.io"
+    git clone --depth=1 "https://x-access-token:${GITHUB_TOKEN}@github.com/DARMA-tasking/DARMA-tasking.github.io"
     git clone https://github.com/mosra/m.css
     cd m.css
     git checkout 699abdd5
     cd ../
 
     "$MCSS/documentation/doxygen.py" Doxyfile-mcss
-    cp -R docs "$GHPAGE"
-    cd "$GHPAGE"
-    git config --global user.email "jliffla@sandia.gov"
-    git config --global user.name "Jonathan Lifflander"
-    git add docs
-    git commit --allow-empty -m "Update docs (auto-build)"
-    git push origin master
+
+    if test "${GIT_BRANCH:-}" = "develop"
+    then
+        cp -R docs "$GHPAGE"
+        cd "$GHPAGE"
+        git config --global user.email "jliffla@sandia.gov"
+        git config --global user.name "Jonathan Lifflander"
+        git add docs
+        git commit --allow-empty -m "Update docs (auto-build)"
+        git push origin master
+    fi
 elif test "${VT_CI_BUILD:-0}" -eq 1
 then
     # Generate output file with compilation warnings and errors
