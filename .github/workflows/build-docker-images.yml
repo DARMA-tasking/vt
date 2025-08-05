@@ -81,6 +81,7 @@ jobs:
           set: |
             *.args.CACHE_ID=${{ matrix.target }}
         env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
 
       - name: Retrieve build artifacts
