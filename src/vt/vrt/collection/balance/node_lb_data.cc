@@ -167,7 +167,7 @@ void NodeLBData::initialize() {
 #endif
 
 #if vt_check_enabled(ldms)
-  if (auto ldms_freq = getenv("VT_LDMS_MILLI_FREQ")) {
+  if (auto ldms_freq = getenv("VT_LDMS_MILLI_FREQ")) { // VT_LDMS_MILLI_FREQ: Optional environment variable to override LDMS sampling frequency (in milliseconds)
     ldms_milli_freq_ = atoi(ldms_freq);
   }
   const auto xPrt = getenv("VT_LDMS_XPRT");
