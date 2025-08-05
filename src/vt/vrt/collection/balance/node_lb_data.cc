@@ -157,16 +157,8 @@ ElementIDType NodeLBData::getNextElm() {
   return next_elm_++;
 }
 
-void NodeLBData::initialize() {
-  lb_data_ = std::make_unique<LBDataHolder>();
-
-#if vt_check_enabled(lblite)
-  if (theConfig()->vt_lb_data) {
-    theNodeLBData()->createLBDataFile();
-  }
-#endif
-
 #if vt_check_enabled(ldms)
+void NodeLBData::initializeLDMS() {
   if (auto ldms_freq = getenv("VT_LDMS_MILLI_FREQ")) { // VT_LDMS_MILLI_FREQ: Optional environment variable to override LDMS sampling frequency (in milliseconds)
     ldms_milli_freq_ = atoi(ldms_freq);
   }
@@ -179,6 +171,20 @@ void NodeLBData::initialize() {
   const auto port = getenv("VT_LDMS_PORT");
   const auto returnCode = ldms_xprt_connect_by_name(ldms_, hostname, port, NULL, NULL);
   vtWarnIf(returnCode == 0, fmt::format("ldms_xprt_connect_by_name failed with code {} \n", returnCode));
+}
+#endif
+
+void NodeLBData::initialize() {
+  lb_data_ = std::make_unique<LBDataHolder>();
+
+#if vt_check_enabled(lblite)
+  if (theConfig()->vt_lb_data) {
+    theNodeLBData()->createLBDataFile();
+  }
+#endif
+
+#if vt_check_enabled(ldms)
+  initializeLDMS();
 #endif
 }
 

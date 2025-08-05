@@ -327,6 +327,7 @@ private:
   ldms_xprt* ldms_ = nullptr;
   int ldms_milli_freq_ = 10;
   double ldms_prev_submission_ = 0;
+  void initializeLDMS();  // helper method for LDMS setup
 #endif
 };
 
