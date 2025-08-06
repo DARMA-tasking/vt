@@ -73,6 +73,7 @@ jobs:
 
       - name: Build
         uses: docker/bake-action@v6
+        id: build-image
         with:
           source: .
           targets: ${{ matrix.target }}
@@ -85,7 +86,6 @@ jobs:
           GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
 
       - name: Retrieve build artifacts
-        if: ${{ matrix.target == 'vt-build-amd64-ubuntu-22-04-gcc-11-cpp' }}
         run: |
           # We rely on the persistence of data on cache mounts with identical IDs and builders.
           # This allows us to copy build artifacts from the "bake" step and use the Codecov action within the GitHub environment.
@@ -98,6 +98,34 @@ jobs:
           " >> tmp_dockerfile
 
           docker buildx build --builder ${{ steps.setup-buildx.outputs.name }} -f tmp_dockerfile --output type=local,dest=build .
+
+      - name: Generate comment
+        if: github.event_name == 'pull_request'
+        id: generate_comment
+        run: |
+          comment_content=$(
+          ./scripts/generate_comment_body.sh           \
+            "build/vt/compilation_errors_warnings.out" \
+            "build/vt/cmake-output.log"                \
+            "${{ matrix.target }}"                     \
+            "${{ steps.build-image.outcome }}"
+          )
+
+          echo "comment_content<<EOF" >>"$GITHUB_OUTPUT"
+          echo "$comment_content" >>"$GITHUB_OUTPUT"
+          echo "EOF" >>"$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: DARMA-tasking/comment-on-pr@master
+        if: github.event_name == 'pull_request'
+        with:
+          repo_owner: ${{ github.event.repository.owner.login }}
+          repo_name: ${{ github.event.repository.name }}
+          pr_number: ${{ github.event.pull_request.number }}
+          comment_title: ${{ matrix.target }}
+          comment_content: ${{ steps.generate_comment.outputs.comment_content }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload coverage
         if: ${{ matrix.target == 'vt-build-amd64-ubuntu-22-04-gcc-11-cpp' }}

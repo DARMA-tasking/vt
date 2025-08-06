@@ -205,11 +205,6 @@ then
     GENERATOR=$(cmake -L . | grep USED_CMAKE_GENERATOR:STRING | cut -d"=" -f2)
     OUTPUT="$VT_BUILD"/compilation_errors_warnings.out
     OUTPUT_TMP="$OUTPUT".tmp
-
-    # Because of the problem with new lines in Azure pipelines, all of them will be
-    # converted to this unique delimiter
-    DELIMITER="-=-=-=-"
-
     WARNS_ERRS=""
 
     # Unfortunately Ninja doesn't output compilation warnings and errors to stderr
@@ -233,8 +228,6 @@ then
         WARNS_ERRS=$(cat "$OUTPUT_TMP")
     fi
 
-    # Convert new lines and redirect to an output file
-    WARNS_ERRS=${WARNS_ERRS//$'\n'/$DELIMITER}
     echo "$WARNS_ERRS" > "$OUTPUT"
 else
     time cmake --build . ${dashj} --target "${target}"
