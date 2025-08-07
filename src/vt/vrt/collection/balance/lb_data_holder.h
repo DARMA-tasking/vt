@@ -54,7 +54,7 @@
 #include <unordered_map>
 #include <memory>
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann-vt/json_fwd.hpp>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 

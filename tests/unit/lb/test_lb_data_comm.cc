@@ -49,7 +49,7 @@
 #include <vt/utils/json/decompression_input_container.h>
 #include <vt/utils/json/input_iterator.h>
 
-#include <nlohmann/json.hpp>
+#include <nlohmann-vt/json.hpp>
 
 #if vt_check_enabled(lblite)
 
