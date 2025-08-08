@@ -47,7 +47,7 @@
 #include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/scheduler/scheduler.h"
 
-#include <nlohmann/json.hpp>
+#include <nlohmann-vt/json.hpp>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 

@@ -48,7 +48,7 @@
 #include "vt/phase/phase_manager.h"
 #include "vt/utils/json/json_reader.h"
 
-#include <nlohmann/json.hpp>
+#include <nlohmann-vt/json.hpp>
 
 #include <set>
 

@@ -46,7 +46,7 @@
 
 #include "vt/config.h"
 
-#include <nlohmann/json.hpp>
+#include <nlohmann-vt/json.hpp>
 
 #include <checkpoint/checkpoint.h>
 

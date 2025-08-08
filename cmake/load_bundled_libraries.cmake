@@ -53,7 +53,7 @@ set_darma_compiler_flags(${ENG_FORMAT_LIBRARY})
 # json library always included in the build
 set(JSON_BuildTests OFF)
 set(JSON_MultipleHeaders ON)
-set(JSON_LIBRARY nlohmann_json)
+set(JSON_LIBRARY nlohmann_json-vt)
 add_subdirectory(${PROJECT_LIB_DIR}/json)
 
 # brotli library always included in the build

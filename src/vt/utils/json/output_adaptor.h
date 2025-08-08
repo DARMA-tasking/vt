@@ -46,7 +46,7 @@
 
 #include "vt/utils/compress/compressor.h"
 
-#include <nlohmann/json.hpp>
+#include <nlohmann-vt/json.hpp>
 
 namespace vt { namespace util { namespace json {
 

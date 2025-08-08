@@ -47,7 +47,7 @@
 #include "vt/utils/json/base_appender.h"
 #include "vt/utils/json/output_adaptor.h"
 
-#include <nlohmann/json.hpp>
+#include <nlohmann-vt/json.hpp>
 
 #include INCLUDE_FMT_CORE
 

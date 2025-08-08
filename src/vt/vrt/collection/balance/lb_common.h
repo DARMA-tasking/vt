@@ -50,7 +50,7 @@
 #include "vt/timing/timing_type.h"
 #include "vt/messaging/message/message.h"
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann-vt/json_fwd.hpp>
 
 #include <vector>
 #include <unordered_map>
