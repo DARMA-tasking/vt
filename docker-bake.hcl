@@ -171,7 +171,7 @@ target "vt-build" {
   target = "build"
   context = "."
   dockerfile = "ci/docker/vt.dockerfile"
-  
+
   platforms = [
     "linux/amd64",
     # "linux/arm64"
