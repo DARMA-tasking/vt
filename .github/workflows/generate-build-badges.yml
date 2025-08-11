@@ -1,10 +1,7 @@
 name: Generate Build Badges
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
+  pull_request
 
 jobs:
   generate:
@@ -12,7 +9,7 @@ jobs:
     steps:
       - id: extract
         run: |
-          data=$(gh api /repos/DARMA-tasking/vt/actions/runs/$RUN_ID/jobs)
+          data=$(gh api /repos/DARMA-tasking/vt/actions/runs/16839966664/jobs)
 
           printf "names<<EOF\n%s\nEOF\n"   "$(echo "$data" | jq -r '.jobs[] | select(.name | startswith("bake")) | .name | ltrimstr("bake (vt-build-amd64-") | rtrimstr(")")')" >>"$GITHUB_OUTPUT"
           printf "results<<EOF\n%s\nEOF\n" "$(echo "$data" | jq -r '.jobs[] | select(.name | startswith("bake")) | .conclusion')" >>"$GITHUB_OUTPUT"
