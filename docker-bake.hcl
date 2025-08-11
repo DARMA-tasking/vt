@@ -184,6 +184,11 @@ function "vt_ldms" {
   result = lookup(item, "vt_ldms", "")
 }
 
+function "ld_library_path" {
+  params = [item]
+  result = lookup(item, "ld_library_path", "")
+}
+
 target "vt-build" {
   target = "build"
   context = "."
@@ -210,6 +215,7 @@ target "vt-build-all" {
     GIT_BRANCH = "${GIT_BRANCH}"
     IMAGE = "wf-${item.image}"
     REPO = REPO
+    LD_LIBRARY_PATH                = ld_library_path(item)
     BUILD_SHARED_LIBS              = vt_build_shared_libs(item)
     VT_ASAN_ENABLED                = vt_asan(item)
     VT_BUILD_TRACE_ONLY            = vt_build_trace_only(item)
@@ -381,6 +387,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-ldms-cpp"
+        ld_library_path = "/opt/ldms/lib"
         vt_ldms = 1
         vt_lb = 0
         vt_trace = 0
