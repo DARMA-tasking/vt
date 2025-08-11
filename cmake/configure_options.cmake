@@ -70,7 +70,6 @@ define_option(vt_mimalloc_enabled "mimalloc" "Build VT with fcontext (ULT) enabl
     OFF vt_feature_cmake_mimalloc
 )
 
-
 if (vt_mpi_guards AND NOT PERL_FOUND)
     # No perl? Can't generate wrapper source file.
     message(STATUS "vt_mpi_guards=ON perl not found! Disabling user MPI prevention guards")

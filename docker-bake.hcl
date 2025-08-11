@@ -385,7 +385,6 @@ target "vt-build-all" {
         vt_lb = 0
         vt_trace = 0
         vt_trace_only = 0
-        vt_debug_verbose = 1
       }
     ]
   }
