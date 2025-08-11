@@ -159,7 +159,7 @@ ElementIDType NodeLBData::getNextElm() {
 
 #if vt_check_enabled(ldms)
 void NodeLBData::initializeLDMS() {
-  if (auto ldms_freq = getenv("VT_LDMS_MILLI_FREQ")) { // VT_LDMS_MILLI_FREQ: Optional environment variable to override LDMS sampling frequency (in milliseconds)
+  if (auto ldms_freq = getenv("VT_LDMS_MILLI_FREQ")) {
     ldms_milli_freq_ = atoi(ldms_freq);
   }
   const auto xPrt = getenv("VT_LDMS_XPRT");
