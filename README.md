@@ -30,7 +30,7 @@
 [![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-clang-18-cpp-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
 [![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-gcc-13-cpp-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
 [![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-gcc-14-cpp-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
-![apple clang, macosx, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(clang-14,%20macosx,%20mpich)/badge.svg?branch=develop)
+[![PR tests (clang-15, macosx, mpich)](https://github.com/DARMA-tasking/vt/actions/workflows/macosx-clang-mpich.yml/badge.svg?branch=develop)](https://github.com/DARMA-tasking/vt/actions/workflows/macosx-clang-mpich.yml)
 
 
 ## Introduction : What is *vt*?
