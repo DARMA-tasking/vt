@@ -278,7 +278,7 @@ public:
    *
    * \param[in] j the josn to write
    */
-  void writeJSONToLDMS(nlohmann::json& j);
+  void writeJSONToLDMS(const nlohmann::json& j);
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -327,6 +327,7 @@ private:
   ldms_xprt* ldms_ = nullptr;
   int ldms_milli_freq_ = 10;
   double ldms_prev_submission_ = 0;
+  void initializeLDMS();  // helper method for LDMS setup
 #endif
 };
 

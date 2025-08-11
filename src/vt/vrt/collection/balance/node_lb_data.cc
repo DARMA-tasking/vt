@@ -65,7 +65,8 @@
 #include <ovis_util/util.h>
 #endif
 
-#include <fmt-vt/core.h>
+#include INCLUDE_FMT_FORMAT
+
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -156,6 +157,23 @@ ElementIDType NodeLBData::getNextElm() {
   return next_elm_++;
 }
 
+#if vt_check_enabled(ldms)
+void NodeLBData::initializeLDMS() {
+  if (auto ldms_freq = getenv("VT_LDMS_MILLI_FREQ")) { // VT_LDMS_MILLI_FREQ: Optional environment variable to override LDMS sampling frequency (in milliseconds)
+    ldms_milli_freq_ = atoi(ldms_freq);
+  }
+  const auto xPrt = getenv("VT_LDMS_XPRT");
+  const auto auth = getenv("VT_LDMS_AUTH");
+  ldms_ = ldms_xprt_new_with_auth(xPrt, NULL, auth, NULL);
+  vtWarnIf(ldms_, "ldms_xprt_new_with_auth failed!");
+
+  const auto hostname = getenv("VT_LDMS_HOSTNAME");
+  const auto port = getenv("VT_LDMS_PORT");
+  const auto returnCode = ldms_xprt_connect_by_name(ldms_, hostname, port, NULL, NULL);
+  vtWarnIf(returnCode == 0, fmt::format("ldms_xprt_connect_by_name failed with code {} \n", returnCode));
+}
+#endif
+
 void NodeLBData::initialize() {
   lb_data_ = std::make_unique<LBDataHolder>();
 
@@ -166,18 +184,7 @@ void NodeLBData::initialize() {
 #endif
 
 #if vt_check_enabled(ldms)
-  if (auto ldms_freq = getenv("VT_LDMS_MILLI_FREQ")) {
-    ldms_milli_freq_ = atoi(ldms_freq);
-  }
-  const auto xPtr = getenv("VT_LDMS_XPTR");
-  const auto auth = getenv("VT_LDMS_AUTH");
-  ldms_ = ldms_xprt_new_with_auth(xPtr, auth, NULL);
-  vtWarnIf(ldms_, "ldms_xprt_new_with_auth failed!");
-
-  const auto hostname = getenv("VT_LDMS_HOSTNAME");
-  const auto port = getenv("VT_LDMS_PORT");
-  const auto returnCode = ldms_xprt_connect_by_name(ldms_, hostname, port, NULL, NULL);
-  vtWarnIf(returnCode == 0, fmt::format("ldms_xprt_connect_by_name failed with code {} \n", returnCode));
+  initializeLDMS();
 #endif
 }
 
@@ -324,9 +331,10 @@ void NodeLBData::outputLBDataForPhase(PhaseType phase) {
   auto j = lb_data_->toJson(phase);
   auto writer = static_cast<JSONAppender*>(lb_data_writer_.get());
   writer->addElm(*j);
+  writeJSONToLDMS(*j);
 }
 
-void NodeLBData::writeJSONToLDMS([[maybe_unused]] nlohmann::json& j) {
+void NodeLBData::writeJSONToLDMS([[maybe_unused]] const nlohmann::json& j) {
 #if vt_check_enabled(ldms)
   if (ldms_prev_submission_ == 0) {
     ldms_prev_submission_ = MPI_Wtime();
@@ -338,7 +346,7 @@ void NodeLBData::writeJSONToLDMS([[maybe_unused]] nlohmann::json& j) {
     ldms_prev_submission_ = MPI_Wtime();
   }
 
-  auto jsonStr = j->dump();
+  auto jsonStr = j.dump();
   const auto returnVal = ldmsd_stream_publish(
     ldms_, "vtLBStats", LDMSD_STREAM_JSON, jsonStr.c_str(), jsonStr.length() + 1
   );

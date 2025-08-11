@@ -24,6 +24,7 @@ ARG VT_FCONTEXT_ENABLED
 ARG VT_INCLUSION_TYPE
 ARG VT_KOKKOS_ENABLED
 ARG VT_LB_ENABLED
+ARG VT_LDMS_ENABLED
 ARG VT_MIMALLOC_ENABLED
 ARG VT_MPI_GUARD_ENABLED
 ARG VT_NO_COLOR_ENABLED
@@ -31,6 +32,7 @@ ARG VT_PERF_ENABLED
 ARG VT_POOL_ENABLED
 ARG VT_PRODUCTION_BUILD_ENABLED
 ARG VT_RDMA_TESTS_ENABLED
+ARG VT_TEST_SPACK
 ARG VT_TESTS_NUM_NODES
 ARG VT_TRACE_ENABLED
 ARG VT_TRACE_RUNTIME_ENABLED
@@ -40,22 +42,22 @@ ARG VT_UNITY_BUILD_ENABLED
 ARG VT_WERROR_ENABLED
 ARG VT_ZOLTAN_ENABLED
 
-RUN --mount=target=/vt \
-<<EOF
-if [ -d vt/docker-output/build/ccache ]; then
-    cp -r vt/docker-output/build/ccache /build
-    ccache -c
-    ccache -s
-fi
-EOF
+ARG IMAGE
+ARG CACHE_ID=${IMAGE}
 
-RUN --mount=target=/vt,rw \
-        /vt/ci/build_cpp.sh /vt /build && \
-        /vt/ci/test_cpp.sh /vt /build  && \
-        /vt/ci/build_vt_sample.sh /vt /build
+ENV GIT_BRANCH=${GIT_BRANCH}
 
-FROM ubuntu:24.04
-
-COPY --from=build /build /build
-
-WORKDIR /build/examples/collection
+RUN --mount=type=cache,id=${CACHE_ID},target=/build/ccache             \
+    --mount=type=cache,id=BUILD-${CACHE_ID},target=/build/vt           \
+    --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN               \
+    --mount=target=/vt,rw                                              \
+        if [ "${VT_TEST_SPACK}" = "1" ]; then                          \
+            apt update -y -q && apt install -y -q libssl-dev unzip &&  \
+            /vt/ci/test_spack_package.sh;                              \
+        elif [ "$VT_DOXYGEN_ENABLED" = "1" ]; then                     \
+            /vt/ci/build_cpp.sh /vt /build;                            \
+        else                                                           \
+            /vt/ci/build_cpp.sh /vt /build &&                          \
+            /vt/ci/test_cpp.sh /vt /build  &&                          \
+            /vt/ci/build_vt_sample.sh /vt /build;                      \
+        fi
