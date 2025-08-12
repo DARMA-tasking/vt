@@ -30,6 +30,7 @@
 [![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-clang-18-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
 [![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-gcc-13-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
 [![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-gcc-14-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-gcc-9-ldms-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
 [![PR tests (clang-15, macosx, mpich)](https://github.com/DARMA-tasking/vt/actions/workflows/macosx-clang-mpich.yml/badge.svg?branch=develop)](https://github.com/DARMA-tasking/vt/actions/workflows/macosx-clang-mpich.yml)
 
 
