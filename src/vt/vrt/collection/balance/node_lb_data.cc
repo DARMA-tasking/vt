@@ -331,11 +331,13 @@ void NodeLBData::outputLBDataForPhase(PhaseType phase) {
   auto j = lb_data_->toJson(phase);
   auto writer = static_cast<JSONAppender*>(lb_data_writer_.get());
   writer->addElm(*j);
+#if vt_check_enabled(ldms)
   writeJSONToLDMS(*j);
+#endif
 }
 
-void NodeLBData::writeJSONToLDMS([[maybe_unused]] const nlohmann::json& j) {
 #if vt_check_enabled(ldms)
+void NodeLBData::writeJSONToLDMS([[maybe_unused]] const nlohmann::json& j) {
   if (ldms_prev_submission_ == 0) {
     ldms_prev_submission_ = MPI_Wtime();
   } else if (
@@ -351,8 +353,8 @@ void NodeLBData::writeJSONToLDMS([[maybe_unused]] const nlohmann::json& j) {
     ldms_, "vtLBStats", LDMSD_STREAM_JSON, jsonStr.c_str(), jsonStr.length() + 1
   );
   vtWarnIf(returnVal == 0, fmt::format("ldmsd_stream_publish returned {}!\n", returnVal));
-#endif
 }
+#endif
 
 void NodeLBData::registerCollectionInfo(
   ElementIDStruct id, VirtualProxyType proxy,
