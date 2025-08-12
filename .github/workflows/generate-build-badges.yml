@@ -3,6 +3,7 @@ name: Generate Build Badges
 on:
   workflow_run:
     workflows: ["CI"]
+    branches: develop
     types:
       - completed
 
