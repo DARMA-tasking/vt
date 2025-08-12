@@ -631,6 +631,12 @@ void LBManager::stagePreLBStatistics(const StatisticMapType &statistics) {
   nlohmann::json j;
   j["pre-LB"] = lb::jsonifyPhaseStatistics(statistics);
 
+
+  #if vt_check_enabled(ldms)
+  j["ts"] = MPI_Wtime();
+  theNodeLBData()->writeJSONToLDMS(j);
+  #endif
+
   if (!statistics_writer_) {
     createStatisticsFile();
   }
@@ -681,6 +687,11 @@ void LBManager::commitPhaseStatistics(PhaseType phase) {
 
   nlohmann::json j;
   j["id"] = phase;
+#if vt_check_enabled(ldms)
+  j["ts"] = MPI_Wtime();
+
+  theNodeLBData()->writeJSONToLDMS(j);
+#endif
 
   if (!statistics_writer_) {
     createStatisticsFile();

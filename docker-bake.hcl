@@ -179,6 +179,10 @@ function "vt_zoltan" {
   result = lookup(item, "vt_zoltan", "")
 }
 
+function "vt_ldms" {
+  params = [item]
+  result = lookup(item, "vt_ldms", "")
+}
 
 target "vt-build" {
   target = "build"
@@ -222,6 +226,7 @@ target "vt-build-all" {
     VT_INCLUSION_TYPE              = vt_inclusion(item)
     VT_KOKKOS_ENABLED              = vt_kokkos(item)
     VT_LB_ENABLED                  = vt_lb(item)
+    VT_LDMS_ENABLED                = vt_ldms(item)
     VT_MIMALLOC_ENABLED            = vt_mimalloc(item)
     VT_MPI_GUARD_ENABLED           = vt_mpi_guard(item)
     VT_NO_COLOR_ENABLED            = vt_no_color(item)
@@ -374,6 +379,13 @@ target "vt-build-all" {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
         vt_perf = 1
       },
+      {
+        image = "amd64-ubuntu-20.04-gcc-9-ldms-cpp"
+        vt_ldms = 1
+        vt_lb = 0
+        vt_trace = 0
+        vt_trace_only = 0
+      }
     ]
   }
 }

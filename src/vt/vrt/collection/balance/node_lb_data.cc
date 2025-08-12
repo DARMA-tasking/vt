@@ -42,6 +42,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/configs/error/config_assert.h"
 #include "vt/vrt/collection/balance/node_lb_data.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 #include "vt/vrt/collection/manager.h"
@@ -57,6 +58,15 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <memory>
+
+#if vt_check_enabled(ldms)
+#include <ldms/ldms.h>
+#include <ldms/ldmsd_stream.h>
+#include <ovis_util/util.h>
+#endif
+
+#include INCLUDE_FMT_FORMAT
+
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -147,6 +157,23 @@ ElementIDType NodeLBData::getNextElm() {
   return next_elm_++;
 }
 
+#if vt_check_enabled(ldms)
+void NodeLBData::initializeLDMS() {
+  if (auto ldms_freq = getenv("VT_LDMS_MILLI_FREQ")) {
+    ldms_milli_freq_ = atoi(ldms_freq);
+  }
+  const auto xPrt = getenv("VT_LDMS_XPRT");
+  const auto auth = getenv("VT_LDMS_AUTH");
+  ldms_ = ldms_xprt_new_with_auth(xPrt, NULL, auth, NULL);
+  vtWarnIf(ldms_, "ldms_xprt_new_with_auth failed!");
+
+  const auto hostname = getenv("VT_LDMS_HOSTNAME");
+  const auto port = getenv("VT_LDMS_PORT");
+  const auto returnCode = ldms_xprt_connect_by_name(ldms_, hostname, port, NULL, NULL);
+  vtWarnIf(returnCode == 0, fmt::format("ldms_xprt_connect_by_name failed with code {} \n", returnCode));
+}
+#endif
+
 void NodeLBData::initialize() {
   lb_data_ = std::make_unique<LBDataHolder>();
 
@@ -154,6 +181,10 @@ void NodeLBData::initialize() {
   if (theConfig()->vt_lb_data) {
     theNodeLBData()->createLBDataFile();
   }
+#endif
+
+#if vt_check_enabled(ldms)
+  initializeLDMS();
 #endif
 }
 
@@ -300,7 +331,30 @@ void NodeLBData::outputLBDataForPhase(PhaseType phase) {
   auto j = lb_data_->toJson(phase);
   auto writer = static_cast<JSONAppender*>(lb_data_writer_.get());
   writer->addElm(*j);
+#if vt_check_enabled(ldms)
+  writeJSONToLDMS(*j);
+#endif
 }
+
+#if vt_check_enabled(ldms)
+void NodeLBData::writeJSONToLDMS([[maybe_unused]] const nlohmann::json& j) {
+  if (ldms_prev_submission_ == 0) {
+    ldms_prev_submission_ = MPI_Wtime();
+  } else if (
+    (MPI_Wtime() - ldms_prev_submission_) * 1000.0 < (double)ldms_milli_freq_
+  ) {
+    return;
+  } else {
+    ldms_prev_submission_ = MPI_Wtime();
+  }
+
+  auto jsonStr = j.dump();
+  const auto returnVal = ldmsd_stream_publish(
+    ldms_, "vtLBStats", LDMSD_STREAM_JSON, jsonStr.c_str(), jsonStr.length() + 1
+  );
+  vtWarnIf(returnVal == 0, fmt::format("ldmsd_stream_publish returned {}!\n", returnVal));
+}
+#endif
 
 void NodeLBData::registerCollectionInfo(
   ElementIDStruct id, VirtualProxyType proxy,
