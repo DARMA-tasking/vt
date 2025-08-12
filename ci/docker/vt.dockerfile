@@ -47,6 +47,7 @@ ARG IMAGE
 ARG CACHE_ID=${IMAGE}
 
 ENV GIT_BRANCH=${GIT_BRANCH}
+ENV VT_LDMS_XPRT=sock
 
 RUN --mount=type=cache,id=${CACHE_ID},target=/build/ccache             \
     --mount=type=cache,id=BUILD-${CACHE_ID},target=/build/vt           \
