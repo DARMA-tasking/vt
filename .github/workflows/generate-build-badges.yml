@@ -15,7 +15,7 @@ jobs:
         run: |
           data=$(gh api /repos/DARMA-tasking/vt/actions/runs/${{ github.event.workflow_run.id }}/jobs)
 
-          printf "names<<EOF\n%s\nEOF\n"   "$(echo "$data" | jq -r '.jobs[] | select(.name | startswith("bake")) | .name | ltrimstr("bake (vt-build-amd64-") | rtrimstr(")")')" >>"$GITHUB_OUTPUT"
+          printf "names<<EOF\n%s\nEOF\n"   "$(echo "$data" | jq -r '.jobs[] | select(.name | startswith("bake")) | .name | ltrimstr("bake (vt-build-amd64-") | rtrimstr(")") | gsub("-cpp"; "")')" >>"$GITHUB_OUTPUT"
           printf "results<<EOF\n%s\nEOF\n" "$(echo "$data" | jq -r '.jobs[] | select(.name | startswith("bake")) | .conclusion')" >>"$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
