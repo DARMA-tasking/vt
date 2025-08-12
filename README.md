@@ -1,12 +1,38 @@
 # *vt* => virtual transport
 
-[![CI](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml/badge.svg?branch=develop)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e21fba68df8947ecb9a9c51b5e159e56)](https://www.codacy.com/gh/DARMA-tasking/vt?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DARMA-tasking/vt&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/DARMA-tasking/vt/branch/develop/graph/badge.svg)](https://codecov.io/gh/DARMA-tasking/vt)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-orange.svg)](https://opensource.org/licenses/BSD-3-Clause)
-![](https://github.com/DARMA-tasking/vt/workflows/Docker%20Image%20CI/badge.svg)
-![apple clang, macosx, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(clang-14,%20macosx,%20mpich)/badge.svg?branch=develop)
 [![](https://github.com/DARMA-tasking/vt/wiki/build_stats/build_status_badge.svg)](https://github.com/DARMA-tasking/vt/wiki/Build-Stats)
+
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/alpine-3-16-clang-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-clang-10-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-clang-9-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-gcc-10-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-gcc-10-openmpi-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-gcc-10-openmpi-spack-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-gcc-9-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-gcc-9-docs-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-gcc-9-cuda-11-4-3-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-gcc-9-cuda-12-2-0-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-icpx-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-22-04-clang-11-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-22-04-clang-12-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-22-04-clang-13-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-22-04-clang-14-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-22-04-clang-15-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-22-04-gcc-11-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-22-04-gcc-12-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-22-04-gcc-12-vtk-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-clang-16-vtk-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-clang-16-zoltan-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-clang-17-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-clang-18-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-gcc-13-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-24-04-gcc-14-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![](https://github.com/DARMA-tasking/badge-generator/wiki/DARMA-tasking/vt/ubuntu-20-04-gcc-9-ldms-badge.svg)](https://github.com/DARMA-tasking/vt/actions/workflows/build-docker-images.yml?query=branch%3Adevelop)
+[![PR tests (clang-15, macosx, mpich)](https://github.com/DARMA-tasking/vt/actions/workflows/macosx-clang-mpich.yml/badge.svg?branch=develop)](https://github.com/DARMA-tasking/vt/actions/workflows/macosx-clang-mpich.yml)
+
 
 ## Introduction : What is *vt*?
 
