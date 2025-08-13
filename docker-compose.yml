@@ -65,7 +65,7 @@
 # Volume will be created automatically for each combination of parameters.
 volumes:
   ubuntu-cpp:
-    name: "${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cache"
+    name: "${IMAGE}-cache"
 
 # Define basic rules for ccache used across multiple services. The beauty of
 # docker compose with cached volumes is that similarly configured builds will
@@ -103,6 +103,7 @@ x-vtopts: &vtopts
   VT_INCLUSION_TYPE: ${VT_INCLUSION:-TPL}
   VT_KOKKOS_ENABLED: ${VT_KOKKOS_ENABLED:-0}
   VT_LB_ENABLED: ${VT_LB:-1}
+  VT_LDMS_ENABLED: ${VT_LDMS_ENABLED:-0}
   VT_MIMALLOC_ENABLED: ${VT_MIMALLOC:-0}
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
   VT_NO_COLOR_ENABLED: ${VT_NO_COLOR:-0}
@@ -120,11 +121,11 @@ x-vtopts: &vtopts
 
 services:
   ##############################################################################
-  # C++ builds of VT on ubuntu/alpine platform from container baseline
+  # C++ builds of VT on any platform from container baseline
   # Ubuntu gcc-12 debug build:
-  #   docker compose run -e CMAKE_BUILD_TYPE=debug ubuntu-cpp
-  ubuntu-cpp:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
+  #   docker compose run -e CMAKE_BUILD_TYPE=debug vt-cpp
+  vt-cpp:
+    image: ${REPO}:${IMAGE}
     ulimits: &ulimits
       core: ${ULIMIT_CORE}
     environment:
@@ -139,48 +140,17 @@ services:
         /vt/ci/build_vt_sample.sh /vt /build"
 
   ##############################################################################
-  # C++ builds of VTK and VT on ubuntu/alpine platform from container baseline
-  # Ubuntu gcc-12 debug build:
-  #   docker compose run -e CMAKE_BUILD_TYPE=debug ubuntu-vtk-cpp
-  ubuntu-cpp-vtk:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-vtk-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: *ubuntu-volumes
-    command: *vt-cpp-command
-
-  ##############################################################################
-  # C++ build/test/clean target for VT on ubuntu platform from container
-  # baseline.
-  #
-  # Example:
-  #   docker compose run ubuntu-cpp-clean
-  ubuntu-cpp-clean:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: *ubuntu-volumes
-    command: &vt-build-test-clean-cpp-command >
-      /bin/bash -c "
-        /vt/ci/build_cpp.sh /vt /build &&
-        /vt/ci/test_cpp.sh  /vt /build &&
-        /vt/ci/build_vt_sample.sh /vt /build &&
-        /vt/ci/clean_cpp.sh /vt /build"
-
-  ##############################################################################
-  # Interactive C++ setup of VT on ubuntu platform from container baseline.
+  # Interactive C++ setup of VT on any platform from container baseline.
   #
   # After running:
-  #   docker compose run ubuntu-cpp-interactive
+  #   docker compose run vt-cpp-interactive
   #
   # You will get a command line where you can run the build command:
   #   $ /vt/ci/build_cpp.sh /vt /build
   #   $ /vt/ci/test_cpp.sh  /vt /build
   #   $ /vt/ci/build_vt_sample.sh /vt /build
-  ubuntu-cpp-interactive:
-    image: ${REPO}:wf-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
+  vt-cpp-interactive:
+    image: ${REPO}:${IMAGE}
     ulimits: *ulimits
     environment:
       <<: [*ccache, *vtopts]
