@@ -81,6 +81,7 @@ struct ClusterInfo {
 };
 
 struct NodeInfo {
+  double rank_alpha = 1.0;
   LoadType load = 0;
   LoadType work = 0;
   double inter_send_vol = 0, inter_recv_vol = 0;
@@ -89,6 +90,7 @@ struct NodeInfo {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    s | rank_alpha;
     s | load | work;
     s | inter_send_vol | inter_recv_vol;
     s | intra_send_vol | intra_recv_vol;

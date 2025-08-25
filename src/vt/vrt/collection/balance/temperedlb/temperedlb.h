@@ -104,6 +104,9 @@ protected:
   void swapClusters();
   void migrate();
 
+  void readAlphaFromFile();
+  std::tuple<std::string, int, int> getNodeRank();
+
   void propagateRound(uint8_t k_cur_async, bool sync, EpochType epoch = no_epoch);
   void propagateIncomingAsync(LoadMsgAsync* msg);
   void propagateIncomingSync(LoadMsgSync* msg);
