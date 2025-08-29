@@ -70,6 +70,22 @@ struct ClusterInfo {
   BytesType max_object_serialized_bytes_outside = 0;
   BytesType cluster_footprint = 0;
 
+  void addInterClusterEdge(bool is_send, SharedIDType id, double volume) {
+    if (is_send) {
+      inter_cluster_send_vol[id] += volume;
+    } else {
+      inter_cluster_recv_vol[id] += volume;
+    }
+  }
+
+  void addObjEdge(bool is_send, elm::ElementIDStruct obj, double volume) {
+    if (is_send) {
+      obj_send_vol[obj] += volume;
+    } else {
+      obj_recv_vol[obj] += volume;
+    }
+  }
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | load | shared_id | bytes | intra_send_vol | intra_recv_vol;

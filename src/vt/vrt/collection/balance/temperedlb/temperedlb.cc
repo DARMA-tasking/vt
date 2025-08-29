@@ -676,22 +676,14 @@ void TemperedLB::makeClusterSummaryAddEdges(
         info.intra_recv_vol += volume;
       }
 
-      // intra-cluster (self-edge)
-      if (is_send) {
-        info.inter_cluster_send_vol[shared_id] += volume;
-      } else {
-        info.inter_cluster_recv_vol[shared_id] += volume;
-      }
+      // iter-cluster
+      info.addInterClusterEdge(is_send, shared_id, volume);
     } else if (
       auto it2 = obj_shared_block_.find(send_or_recv_obj);
       it2 != obj_shared_block_.end()
     ) {
       // inter-cluster edge
-      if (is_send) {
-        info.inter_cluster_send_vol[it2->second] += volume;
-      } else {
-        info.inter_cluster_recv_vol[it2->second] += volume;
-      }
+      info.addInterClusterEdge(is_send, it2->second, volume);
 
       vt_debug_print(
         verbose, temperedlb,
@@ -704,11 +696,7 @@ void TemperedLB::makeClusterSummaryAddEdges(
 
     } else {
       // across-object edge not part of a cluster
-      if (is_send) {
-        info.obj_send_vol[send_or_recv_obj] += volume;
-      } else {
-        info.obj_recv_vol[send_or_recv_obj] += volume;
-      }
+      info.addObjEdge(is_send, send_or_recv_obj, volume);
     }
   }
 }
