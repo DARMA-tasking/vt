@@ -656,9 +656,10 @@ void TemperedLB::readClustersMemoryData() {
 void TemperedLB::makeClusterSummaryAddEdges(
   SharedIDType shared_id, ClusterInfo& info,
   std::set<ObjIDType> const& cluster_objs,
-  ObjIDType obj, bool is_send, typename EdgeMapType::iterator iter
+  ObjIDType obj, bool is_send,
+  std::vector<std::tuple<elm::ElementIDStruct, double>> const& edges
 ) {
-  for (auto const& [send_or_recv_obj, volume] : iter->second) {
+  for (auto const& [send_or_recv_obj, volume] : edges) {
     vt_debug_print(
       verbose, temperedlb,
       "computeClusterSummary: shared_id={} send obj={}, recv_obj={}\n",
@@ -786,10 +787,14 @@ ClusterInfo TemperedLB::makeClusterSummary(SharedIDType shared_id) {
   if (info.load != 0) {
     for (auto&& obj : cluster_objs) {
       if (auto it = send_edges_.find(obj); it != send_edges_.end()) {
-        makeClusterSummaryAddEdges(shared_id, info, cluster_objs, obj, true, it);
+        makeClusterSummaryAddEdges(
+          shared_id, info, cluster_objs, obj, true, it->second
+        );
       }
       if (auto it = recv_edges_.find(obj); it != recv_edges_.end()) {
-        makeClusterSummaryAddEdges(shared_id, info, cluster_objs, obj, false, it);
+        makeClusterSummaryAddEdges(
+          shared_id, info, cluster_objs, obj, false, it->second
+        );
       }
     }
   }

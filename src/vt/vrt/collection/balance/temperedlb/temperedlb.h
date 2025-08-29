@@ -222,12 +222,13 @@ public:
    *  \param[in] cluster_objs cluster objs
    *  \param[in] obj the sending or receiving object
    *  \param[in] is_send whether it's a send or recv edge
-   *  \param[in] iter edge iterator
+   *  \param[in] edges the edges
    */
   void makeClusterSummaryAddEdges(
     SharedIDType shared_id, ClusterInfo& info,
     std::set<ObjIDType> const& cluster_objs,
-    ObjIDType obj, bool is_send, typename EdgeMapType::iterator iter
+    ObjIDType obj, bool is_send,
+    std::vector<std::tuple<elm::ElementIDStruct, double>> const& edges
   );
 
   /**
