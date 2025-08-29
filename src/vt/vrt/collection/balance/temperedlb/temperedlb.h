@@ -402,6 +402,15 @@ public:
   );
 
   /**
+   * \brief Check for work convergence within a threshold
+   *
+   * \param[in] last_num_iters number of iterations to check
+   *
+   * \return whether we have converged
+   */
+  bool checkConvergence(std::size_t last_num_iters = 8) const;
+
+  /**
    * \internal \brief Remove a cluster to send. Does all the bookkeeping
    * associated with removing the cluster
    *

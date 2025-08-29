@@ -1461,25 +1461,9 @@ void TemperedLB::doLBStages(LoadType start_imb) {
 	theSched()->runSchedulerWhile([this]{ return not load_stats_handler_; });
       }
 
-      bool within_tolerance = false;
-      int const last_num_iters = 8;
-      if (last_n_work.size() >= last_num_iters) {
-        double w_max_i = last_n_work[last_n_work.size()-last_num_iters];
-        double w_max_in = last_n_work[last_n_work.size()-1];
-        double w_max_rel_d = (w_max_i - w_max_in) / last_num_iters;
-        if (theContext()->getNode() == 0) {
-          vt_print(
-            temperedlb,
-            "i={} in={} rel={}, tol={}, rel_tol={}\n",
-            w_max_i, w_max_in, w_max_rel_d, converge_tolerance_, converge_tolerance_ * w_max_in
-          );
-        }
-        if (w_max_rel_d < converge_tolerance_ * w_max_in) {
-          within_tolerance = true;
-        }
-      }
+      bool const converged = checkConvergence();
 
-      if (rollback_ || (iter_ == num_iters_ - 1) || new_imbalance_ < 0.01 || within_tolerance) {
+      if (rollback_ || (iter_ == num_iters_ - 1) || converged) {
         // if known, save the best iteration within any trial so we can roll back
         if (new_imbalance_ < best_imb && new_imbalance_ <= start_imb) {
           best_load = this_new_load_;
@@ -1492,7 +1476,7 @@ void TemperedLB::doLBStages(LoadType start_imb) {
         }
       }
 
-      if (new_imbalance_ < 0.01 || within_tolerance) {
+      if (converged) {
 	break;
       }
     }
@@ -1554,6 +1538,26 @@ void TemperedLB::doLBStages(LoadType start_imb) {
   theTerm()->enableTD(lb_stages_epoch_);
   theTerm()->enableTD(vt::term::any_epoch_sentinel);
   vt::runSchedulerThrough(lb_stages_epoch_);
+}
+
+bool TemperedLB::checkConvergence(std::size_t last_num_iters) const {
+  if (last_n_work.size() >= last_num_iters) {
+    double w_max_i = last_n_work.at(last_n_work.size() - last_num_iters);
+    double w_max_in = last_n_work.at(last_n_work.size() - 1);
+    double w_max_rel_d = (w_max_i - w_max_in) / last_num_iters;
+    if (theContext()->getNode() == 0) {
+      vt_debug_print(
+        terse, temperedlb,
+        "i={} in={} rel={}, tol={}, rel_tol={}\n",
+        w_max_i, w_max_in, w_max_rel_d, converge_tolerance_,
+        converge_tolerance_ * w_max_in
+      );
+    }
+    if (w_max_rel_d < converge_tolerance_ * w_max_in) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void TemperedLB::timeLB(double total_time) {
