@@ -670,13 +670,9 @@ void TemperedLB::makeClusterSummaryAddEdges(
 
     if (cluster_objs.find(send_or_recv_obj) != cluster_objs.end()) {
       // intra-cluster edge
-      if (is_send) {
-        info.intra_send_vol += volume;
-      } else {
-        info.intra_recv_vol += volume;
-      }
+      info.addIntraVolume(is_send, volume);
 
-      // iter-cluster
+      // inter-cluster edge
       info.addInterClusterEdge(is_send, shared_id, volume);
     } else if (
       auto it2 = obj_shared_block_.find(send_or_recv_obj);

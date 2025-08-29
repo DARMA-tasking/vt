@@ -78,6 +78,14 @@ struct ClusterInfo {
     }
   }
 
+  void addIntraVolume(bool is_send, double volume) {
+    if (is_send) {
+      intra_send_vol += volume;
+    } else {
+      intra_recv_vol += volume;
+    }
+  }
+
   void addObjEdge(bool is_send, elm::ElementIDStruct obj, double volume) {
     if (is_send) {
       obj_send_vol[obj] += volume;
