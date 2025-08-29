@@ -1010,7 +1010,8 @@ double TemperedLB::computeWorkAfterClusterSwap(
 
   vt_debug_print(
     verbose, temperedlb,
-    "computeWorkAfterClusterSwap: node_work={}, to_remove.load={}, intra={}, inter={}\n",
+    "computeWorkAfterClusterSwap: node_work={}, to_remove.load={}, intra={}, "
+    "inter={}\n",
     node_work,
     to_remove.load,
     gamma * std::max(node_intra_send, node_intra_recv),
@@ -1026,7 +1027,9 @@ double TemperedLB::computeWorkAfterClusterSwap(
 
   vt_debug_print(
     verbose, temperedlb,
-    "node_work (after gamma)={}, sub off={} {} {}\n", node_work, std::max(node_inter_send, node_inter_recv), beta, beta * std::max(node_inter_send, node_inter_recv)
+    "node_work (after gamma)={}, sub off={} {} {}\n",
+    node_work, std::max(node_inter_send, node_inter_recv),
+    beta, beta * std::max(node_inter_send, node_inter_recv)
   );
 
   node_work -= beta * std::max(node_inter_send, node_inter_recv);
@@ -1150,7 +1153,8 @@ double TemperedLB::computeWorkAfterClusterSwap(
   vt_debug_print(
     verbose, temperedlb,
     "node_work={}, intra {} {} inter {} {}\n",
-    node_work, node_intra_send, node_intra_recv, node_inter_send, node_inter_recv
+    node_work,
+    node_intra_send, node_intra_recv, node_inter_send, node_inter_recv
   );
 
   node_work += gamma * std::max(node_intra_send, node_intra_recv);
