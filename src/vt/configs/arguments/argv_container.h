@@ -58,7 +58,7 @@ struct ArgvContainer {
     std::vector<char*> non_vt_args;
     for(int i = 0; i < argc; i++) {
       // cache original argv parameter
-      argv_.push_back(strdup(argv[i]));
+      argv_.push_back(argv[i]);
       // collect non vt params
       if (!((0 == strncmp(argv[i], "--vt_", 5)) ||
           (0 == strncmp(argv[i], "!--vt_", 6)))) {
