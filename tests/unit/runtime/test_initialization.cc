@@ -60,6 +60,29 @@ namespace vt { namespace tests { namespace unit {
 
 struct TestInitialization : TestParallelHarness { };
 
+TEST_F(TestInitialization, test_vt_preconfigure_args) {
+  int size = 4;
+  char** args_1 = new char*[size];
+  char** args_2 = new char*[size];
+
+  args_1[0] = strdup("test");
+  args_1[1] = strdup("10");
+  args_1[2] = strdup("20.4");
+  args_1[3] = strdup("--vt_lb");
+
+  for (int i = 0; i < 4; i++) {
+    args_2[i] = args_1[i];
+  }
+  vt::preconfigure(size, args_1);
+
+  for (int i = 0; i < 4; i++) {
+    free(args_1[i]);
+  }
+
+  delete [] args_1;
+  delete [] args_2;
+}
+
 TEST_F(TestInitialization, test_initialize_with_args) {
   MPI_Comm comm = MPI_COMM_WORLD;
 

@@ -79,9 +79,5 @@ TEST_F(TestPreconfig, test_vt_abort) {
   );
 }
 
-TEST_F(TestPreconfig, test_vt_preconfigure_args) {
-  vt::preconfigure(orig_args_.size(), &orig_args_[0]);
-}
-
 
 }}} // end namespace vt::tests::unit
