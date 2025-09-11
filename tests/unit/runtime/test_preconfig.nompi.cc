@@ -79,5 +79,4 @@ TEST_F(TestPreconfig, test_vt_abort) {
   );
 }
 
-
 }}} // end namespace vt::tests::unit
