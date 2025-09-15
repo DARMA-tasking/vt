@@ -65,9 +65,13 @@ RuntimePtrType initializePreconfigured(
   auto argv_container = args.getArgvDeepCopy();
   auto argv = argv_container.get();
   bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(
+  auto ptr = CollectiveOps::initialize(
     argc, argv, is_interop, comm, appConfig
   );
+  for (int i = 0; i < argc; i++) {
+    free(argv_container[i]);
+  };
+  return ptr;
 }
 
 // vt::{initialize,finalize} for main ::vt namespace
