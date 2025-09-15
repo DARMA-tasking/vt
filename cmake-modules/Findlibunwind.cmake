@@ -4,9 +4,9 @@
 #
 # LIBUNWIND_FOUND, LIBUNWIND_INCLUDE_DIRS, and LIBUNWIND_LIBRARIES are outputs
 
-if(LIBUNWIND_ROOT)
-    set(LIBUNWIND_INCLUDE_DIR ${LIBUNWIND_INCLUDE_DIR};${LIBUNWIND_ROOT}/include)
-    set(LIBUNWIND_LIBRARY ${LIBUNWIND_LIBRARY};${LIBUNWIND_ROOT}/lib64;${LIBUNWIND_ROOT}/lib)
+if(libunwind_ROOT)
+    set(LIBUNWIND_INCLUDE_DIR ${LIBUNWIND_INCLUDE_DIR};${libunwind_ROOT}/include)
+    set(LIBUNWIND_LIBRARY ${LIBUNWIND_LIBRARY};${libunwind_ROOT}/lib64;${libunwind_ROOT}/lib)
 endif()
 
 # First, check only in the hinted paths
