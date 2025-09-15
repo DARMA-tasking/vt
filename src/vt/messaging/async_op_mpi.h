@@ -45,6 +45,7 @@
 #define INCLUDED_VT_MESSAGING_ASYNC_OP_MPI_H
 
 #include "vt/messaging/async_op.h"
+#include "vt/runtime/mpi_access.h"
 
 namespace vt { namespace messaging {
 
