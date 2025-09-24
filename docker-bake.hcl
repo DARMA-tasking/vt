@@ -204,6 +204,11 @@ function "vt_find_override_cxx" {
   result = lookup(item, "override_cxx", "")
 }
 
+function "vt_asan_options" {
+  params = [item]
+  result = lookup(item, "vt_asan_options", "detect_leaks=1 abort_on_error=1")
+}
+
 target "vt-build" {
   target = "build"
   context = "."
@@ -267,6 +272,7 @@ target "vt-build-all" {
     VT_FIND_MPI                    = vt_find_mpi(item)
     OVERRIDE_CC                    = vt_find_override_cc(item)
     OVERRIDE_CXX                   = vt_find_override_cxx(item)
+    ASAN_OPTIONS                   = vt_asan_options(item)
   }
 
   # to get the list of available images from DARMA-tasking/workflows:
