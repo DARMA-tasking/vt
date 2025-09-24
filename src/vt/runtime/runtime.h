@@ -458,6 +458,7 @@ protected:
   std::unique_ptr<component::ComponentPack> p_;
   std::unique_ptr<arguments::ArgConfig> arg_config_;
   arguments::AppConfig const* app_config_;   /**< App config during startup */
+  MPI_Errhandler err_handler_ = 0;
 };
 
 }} /* end namespace vt::runtime */
