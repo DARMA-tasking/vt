@@ -107,11 +107,48 @@ struct Runtime {
     arguments::AppConfig const* appConfig = nullptr
   );
 
+  /**
+   * \internal \brief Initialize a VT runtime with app config
+   *
+   * Under interop mode, MPI is not initialized or finalized by the runtime.
+   * This can be used to embed VT into a larger context.
+   *
+   * When not running in interop mode, MPI is initialized in the constructor
+   * and finalized in the destructor.
+   *
+   * \param[in] arg_config argument configuration
+   * \param[in] in_comm the MPI communicator (if in interoperability mode)
+   * \param[in] in_instance the runtime instance to set
+   */
+  Runtime(
+    std::unique_ptr<arguments::ArgConfig> arg_config,
+    MPI_Comm in_comm = MPI_COMM_WORLD,
+    RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
+  );
+
   Runtime(Runtime const&) = delete;
   Runtime(Runtime&&) = delete;
   Runtime& operator=(Runtime const&) = delete;
 
   virtual ~Runtime();
+
+  void setUpSignals();
+
+  /**
+   * \brief Startup MPI if necessary and configure VT arguments based on \c argc
+   * and \c argv
+   *
+   * \param[in] argc argc
+   * \param[in] argv argv
+   * \param[in] is_interop whether we are running in interop mode
+   * \param[in] in_comm the comm
+   * \param[in] arg_config the arg config to fill
+   * \param[in] appConfig possible app config overrides
+   */
+  static void startupMPIConfigArgs(
+    int& argc, char**& argv, bool is_interop, MPI_Comm in_comm,
+    arguments::ArgConfig* arg_config, arguments::AppConfig const* appConfig
+  );
 
   /**
    * \brief Check if runtime is live

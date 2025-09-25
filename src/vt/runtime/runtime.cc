@@ -97,6 +97,19 @@ namespace vt { namespace runtime {
 /*static*/ bool volatile Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
+  std::unique_ptr<arguments::ArgConfig> arg_config,
+  MPI_Comm in_comm,
+  RuntimeInstType const in_instance
+) : instance_(in_instance), runtime_active_(false), is_interop_(true),
+    initial_communicator_(in_comm),
+    arg_config_(std::move(arg_config)),
+    app_config_(&arg_config_->config_)
+{
+  setUpSignals();
+  determinePhysicalNodeIDs();
+}
+
+Runtime::Runtime(
   int& argc, char**& argv, bool const interop_mode, MPI_Comm in_comm,
   RuntimeInstType const in_instance, arguments::AppConfig const* appConfig
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
@@ -132,10 +145,29 @@ Runtime::Runtime(
   ///
   /// =========================================================================
 
+  startupMPIConfigArgs(
+    argc, argv, is_interop_, initial_communicator_, arg_config_.get(),
+    appConfig
+  );
+  setUpSignals();
+  determinePhysicalNodeIDs();
+}
+
+void Runtime::setUpSignals() {
+  sig_user_1_ = false;
+  setupSignalHandler();
+  setupSignalHandlerINT();
+  setupTerminateHandler();
+}
+
+/*static*/ void Runtime::startupMPIConfigArgs(
+  int& argc, char**& argv, bool is_interop, MPI_Comm in_comm,
+  arguments::ArgConfig* arg_config, arguments::AppConfig const* appConfig
+) {
   int prev_initialized;
   MPI_Initialized(&prev_initialized);
 
-  if (not is_interop_) {
+  if (not is_interop) {
     vtAbortIf(
       prev_initialized, "MPI is already initialzed. Run VT under interop-mode?"
     );
@@ -150,18 +182,20 @@ Runtime::Runtime(
 
   // n.b. ref-update of args with pass-through arguments
   std::tuple<int, std::string> result =
-    arg_config_->parse(argc, argv, appConfig);
+    arg_config->parse(argc, argv, appConfig);
   int exit_code = std::get<0>(result);
 
-  if (getAppConfig()->vt_help_lb_args) {
+  if (arg_config->config_.vt_help_lb_args) {
     // Help requested or invalid argument(s).
     int rank = 0;
-    MPI_Comm_rank(initial_communicator_, &rank);
+    MPI_Comm_rank(in_comm, &rank);
 
     if (rank == 0) {
       // Help requested
       vt::debug::preConfigRef()->colorize_output = true;
-      vrt::collection::balance::LBManager::printLBArgsHelp(getAppConfig()->vt_lb_name);
+      vrt::collection::balance::LBManager::printLBArgsHelp(
+        arg_config->config_.vt_lb_name
+      );
     }
     if (exit_code == -1) {
       exit_code = 0;
@@ -170,7 +204,7 @@ Runtime::Runtime(
 
   if (exit_code not_eq -1) {
     // Help requested or invalid argument(s).
-    MPI_Comm comm = initial_communicator_;
+    MPI_Comm comm = in_comm;
 
     int rank = 0;
     MPI_Comm_rank(comm, &rank);
@@ -199,51 +233,44 @@ Runtime::Runtime(
 
     std::_Exit(exit_code); // no return
   }
-
-  sig_user_1_ = false;
-  setupSignalHandler();
-  setupSignalHandlerINT();
-  setupTerminateHandler();
-
-  if (arg_config_->config_.vt_lb_data) {
-    determinePhysicalNodeIDs();
-  }
 }
 
 void Runtime::determinePhysicalNodeIDs() {
-  MPI_Comm i_comm = initial_communicator_;
+  if (arg_config_->config_.vt_lb_data) {
+    MPI_Comm i_comm = initial_communicator_;
 
-  MPI_Comm shm_comm;
-  MPI_Comm_split_type(i_comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &shm_comm);
-  int shm_rank = -1;
-  int node_size = -1;
-  MPI_Comm_rank(shm_comm, &shm_rank);
-  MPI_Comm_size(shm_comm, &node_size);
+    MPI_Comm shm_comm;
+    MPI_Comm_split_type(i_comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &shm_comm);
+    int shm_rank = -1;
+    int node_size = -1;
+    MPI_Comm_rank(shm_comm, &shm_rank);
+    MPI_Comm_size(shm_comm, &node_size);
 
-  int num_nodes = -1;
-  int is_rank_0 = (shm_rank == 0) ? 1 : 0;
-  MPI_Allreduce(&is_rank_0, &num_nodes, 1, MPI_INT, MPI_SUM, i_comm);
+    int num_nodes = -1;
+    int is_rank_0 = (shm_rank == 0) ? 1 : 0;
+    MPI_Allreduce(&is_rank_0, &num_nodes, 1, MPI_INT, MPI_SUM, i_comm);
 
-  int starting_rank = -1;
-  MPI_Comm_rank(i_comm, &starting_rank);
+    int starting_rank = -1;
+    MPI_Comm_rank(i_comm, &starting_rank);
 
-  MPI_Comm node_number_comm;
-  MPI_Comm_split(i_comm, shm_rank, starting_rank, &node_number_comm);
+    MPI_Comm node_number_comm;
+    MPI_Comm_split(i_comm, shm_rank, starting_rank, &node_number_comm);
 
-  int node_id = -1;
-  if (shm_rank == 0) {
-    MPI_Comm_rank(node_number_comm, &node_id);
+    int node_id = -1;
+    if (shm_rank == 0) {
+      MPI_Comm_rank(node_number_comm, &node_id);
+    }
+    MPI_Bcast(&node_id, 1, MPI_INT, 0, shm_comm);
+
+    MPI_Comm_free(&shm_comm);
+    MPI_Comm_free(&node_number_comm);
+
+    has_physical_node_info = true;
+    physical_node_id = node_id;
+    physical_num_nodes = num_nodes;
+    physical_node_size = node_size;
+    physical_node_rank = shm_rank;
   }
-  MPI_Bcast(&node_id, 1, MPI_INT, 0, shm_comm);
-
-  MPI_Comm_free(&shm_comm);
-  MPI_Comm_free(&node_number_comm);
-
-  has_physical_node_info = true;
-  physical_node_id = node_id;
-  physical_num_nodes = num_nodes;
-  physical_node_size = node_size;
-  physical_node_rank = shm_rank;
 }
 
 bool Runtime::hasSchedRun() const {

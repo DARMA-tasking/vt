@@ -72,6 +72,20 @@ struct CollectiveAnyOps {
   {
     return initialize(argc, argv, is_interop, comm, appConfig);
   }
+
+  /**
+   * \brief Initialize a VT runtime with arguments preconfigured
+   *
+   * \param[in] arg_config the preconfigured arguments
+   * \param[in] comm the communicator for VT to use
+   *
+   * \return the runtime pointer
+   */
+  static RuntimePtrType initializePreconfigured(
+    std::unique_ptr<arguments::ArgConfig> arg_config,
+    MPI_Comm* comm = nullptr
+  );
+
   static void finalize(RuntimePtrType in_rt = nullptr);
   static void scheduleThenFinalize(RuntimePtrType in_rt = nullptr);
   static void setCurrentRuntimeTLS(RuntimeUnsafePtrType in_rt = nullptr);

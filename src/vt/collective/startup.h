@@ -46,28 +46,58 @@
 
 #include "vt/config.h"
 #include "vt/runtime/runtime_headers.h"
-#include "vt/configs/arguments/argv_container.h"
 #include <mpi.h>
 
 namespace vt {
 
-std::unique_ptr<arguments::ArgvContainer>
-preconfigure(int& argc, char**& argv);
+/**
+ * \brief Preconfigure VT with argc/argv. This will remove all VT arguments and
+ * create a configuration for VT that should be passed to
+ * \c initializePreconfigured. Optionally, one many specify an MPI communicator
+ * to use (otherwise, it defaults to \c MPI_COMM_WORLD). Additionally, a
+ * custom app configuration may be passed to directly configure VT.
+ *
+ * \note MPI must be initialized to call this function because if an error
+ * occurs it uses MPI rank to limit how many times the error text gets printed.
+ *
+ * \param[in] argc argc (modifies it to remove VT arguments)
+ * \param[in] argv argv (modifies it to remove VT arguments)
+ * \param[in] comm (optional) MPI communicator to use
+ * \param[in] app_config (optional) base VT configuration to use
+ *
+ * \return the \c arguments::ArgConfig to pass to VT
+ */
+std::unique_ptr<arguments::ArgConfig> preconfigure(
+  int& argc, char**& argv, MPI_Comm comm = MPI_COMM_WORLD,
+  arguments::AppConfig const* app_config = nullptr
+);
+
+/**
+ * \brief Initialize VT after it has been preconfigured
+ *
+ * \param[in] arg_config the arg config
+ * \param[in] comm optional communicator
+ *
+ * \return the runtime pointer
+ */
 RuntimePtrType initializePreconfigured(
-  MPI_Comm* comm = nullptr,
-  arguments::AppConfig const* appConfig = nullptr,
-  arguments::ArgvContainer const* preconfigure_args = nullptr);
+  std::unique_ptr<arguments::ArgConfig> arg_config,
+  MPI_Comm* comm = nullptr
+);
 
 RuntimePtrType initialize(
   int& argc, char**& argv, MPI_Comm* comm = nullptr,
   arguments::AppConfig const* appConfig = nullptr
 );
+
 RuntimePtrType initialize(MPI_Comm* comm = nullptr);
+
 RuntimePtrType initialize(
   int& argc, char**& argv, arguments::AppConfig const* appConfig
 );
 
 void finalize(RuntimePtrType in_rt);
+
 void finalize();
 
 } /* end namespace vt */

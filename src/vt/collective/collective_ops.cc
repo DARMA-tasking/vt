@@ -46,6 +46,7 @@
 #include "vt/runtime/runtime.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/runtime/runtime_inst.h"
+#include "vt/configs/arguments/args.h"
 
 #include <memory>
 #include <cstdlib>
@@ -242,6 +243,31 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
   if (appConfig && theContext()->getNode() == 0) {
     printOverwrittens(*rt->getAppConfig(), *appConfig);
   }
+
+  return runtime::makeRuntimePtr(rt_ptr);
+}
+
+template <runtime::RuntimeInstType instance>
+/*static*/ RuntimePtrType CollectiveAnyOps<instance>::initializePreconfigured(
+  std::unique_ptr<arguments::ArgConfig> arg_config, MPI_Comm* comm
+) {
+  using vt::runtime::RuntimeInst;
+  using vt::runtime::Runtime;
+  using vt::runtime::eRuntimeInstance;
+
+  MPI_Comm resolved_comm = comm not_eq nullptr ? *comm : MPI_COMM_WORLD;
+
+  RuntimeInst<instance>::rt = std::make_unique<Runtime>(
+    std::move(arg_config), resolved_comm, eRuntimeInstance::DefaultInstance
+  );
+
+  auto rt_ptr = RuntimeInst<instance>::rt.get();
+  if (instance == runtime::RuntimeInstType::DefaultInstance) {
+    // Set global variable for default instance for backward compatibility
+    ::vt::rt = rt_ptr;
+    curRT = rt_ptr;
+  }
+  RuntimeInst<instance>::rt->initialize();
 
   return runtime::makeRuntimePtr(rt_ptr);
 }
