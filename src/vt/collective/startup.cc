@@ -63,20 +63,22 @@ std::unique_ptr<StartupConfig> preconfigure(
 RuntimePtrType initializePreconfigured(
   std::unique_ptr<StartupConfig> startup_config,
   MPI_Comm* comm,
-  arguments::AppConfig const* app_config
+  arguments::AppConfig const* app_config,
+  bool print_startup_banner
 ) {
   return CollectiveOps::initializePreconfigured(
-    std::move(startup_config), comm, app_config
+    std::move(startup_config), comm, app_config, print_startup_banner
   );
 }
 
 // vt::{initialize,finalize} for main ::vt namespace
 RuntimePtrType initialize(
-  int& argc, char**& argv, MPI_Comm* comm, arguments::AppConfig const* appConfig
+  int& argc, char**& argv, MPI_Comm* comm, arguments::AppConfig const* appConfig,
+  bool print_startup_banner
 ) {
   bool const is_interop = comm != nullptr;
   return CollectiveOps::initialize(
-    argc, argv, is_interop, comm, appConfig
+    argc, argv, is_interop, comm, appConfig, print_startup_banner
   );
 }
 

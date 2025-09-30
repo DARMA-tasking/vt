@@ -77,18 +77,32 @@ std::unique_ptr<StartupConfig> preconfigure(
  * \param[in] startup_config the arg config
  * \param[in] comm optional communicator
  * \param[in] app_config (optional) base VT configuration to use
+ * \param[in] print_startup_banner (optional) whether to print startup banner
  *
  * \return the runtime pointer
  */
 RuntimePtrType initializePreconfigured(
   std::unique_ptr<StartupConfig> startup_config,
   MPI_Comm* comm = nullptr,
-  arguments::AppConfig const* app_config = nullptr
+  arguments::AppConfig const* app_config = nullptr,
+  bool print_startup_banner = true
 );
 
+/**
+ * \brief Initialize VT
+ *
+ * \param[in] argc (to modify)
+ * \param[in] argv (to modify)
+ * \param[in] comm optional communicator
+ * \param[in] app_config (optional) base VT configuration to use
+ * \param[in] print_startup_banner (optional) whether to print startup banner
+ *
+ * \return the runtime pointer
+ */
 RuntimePtrType initialize(
   int& argc, char**& argv, MPI_Comm* comm = nullptr,
-  arguments::AppConfig const* appConfig = nullptr
+  arguments::AppConfig const* appConfig = nullptr,
+  bool print_startup_banner = true
 );
 
 RuntimePtrType initialize(MPI_Comm* comm = nullptr);

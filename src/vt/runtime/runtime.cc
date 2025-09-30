@@ -494,7 +494,7 @@ bool Runtime::needLBDataRestartReader() {
   return needOfflineLB;
 }
 
-bool Runtime::initialize(bool const force_now) {
+bool Runtime::initialize(bool const force_now, bool print_startup_banner) {
   if (force_now) {
     initializeComponents();
     initializeOptionalComponents();
@@ -504,7 +504,9 @@ bool Runtime::initialize(bool const force_now) {
 
     MPI_Barrier(comm);
     if (theContext->getNode() == 0) {
-      printStartupBanner();
+      if (print_startup_banner) {
+        printStartupBanner();
+      }
       // Enqueue a check for later in case arguments are modified before work
       // actually executes
       theSched->enqueue([this]{

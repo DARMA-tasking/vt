@@ -217,7 +217,7 @@ void printOverwrittens(
 template <runtime::RuntimeInstType instance>
 RuntimePtrType CollectiveAnyOps<instance>::initialize(
   int& argc, char**& argv, bool is_interop, MPI_Comm* comm,
-  arguments::AppConfig const* appConfig
+  arguments::AppConfig const* appConfig, bool print_startup_banner
 ) {
   using vt::runtime::RuntimeInst;
   using vt::runtime::Runtime;
@@ -236,7 +236,7 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
     ::vt::rt = rt_ptr;
     curRT = rt_ptr;
   }
-  RuntimeInst<instance>::rt->initialize();
+  RuntimeInst<instance>::rt->initialize(false, print_startup_banner);
 
   // If appConfig is not nullptr, compare CLI arguments with user-defined ones,
   // and report overwritten ones.
@@ -250,7 +250,7 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
 template <runtime::RuntimeInstType instance>
 /*static*/ RuntimePtrType CollectiveAnyOps<instance>::initializePreconfigured(
   std::unique_ptr<StartupConfig> startup_config, MPI_Comm* comm,
-  arguments::AppConfig const* app_config
+  arguments::AppConfig const* app_config, bool print_startup_banner
 ) {
   using vt::runtime::RuntimeInst;
   using vt::runtime::Runtime;
@@ -269,7 +269,7 @@ template <runtime::RuntimeInstType instance>
     ::vt::rt = rt_ptr;
     curRT = rt_ptr;
   }
-  RuntimeInst<instance>::rt->initialize();
+  RuntimeInst<instance>::rt->initialize(false, print_startup_banner);
 
   return runtime::makeRuntimePtr(rt_ptr);
 }

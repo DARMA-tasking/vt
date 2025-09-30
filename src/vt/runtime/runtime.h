@@ -235,10 +235,11 @@ struct Runtime {
    * \internal \brief Initialize the runtime
    *
    * \param[in] force_now whether to force initialization regardless of state
+   * \param[in] print_startup_banner whether to print startup banner
    *
    * \return whether it initialized or not
    */
-  bool initialize(bool const force_now = false);
+  bool initialize(bool const force_now = false, bool print_startup_banner = true);
 
   /**
    * \internal \brief Finalize the runtime
@@ -293,6 +294,11 @@ struct Runtime {
    * \todo Remove this and fix the single one callsite in \c NodeLBData
    */
   void systemSync();
+
+  /**
+   * \brief Print a very informative startup banner
+   */
+  void printStartupBanner();
 
 public:
   /**
@@ -385,11 +391,6 @@ protected:
    * \internal \brief Handler when global termination is reached
    */
   void terminationHandler();
-
-  /**
-   * \internal \brief Print a very informative startup banner
-   */
-  void printStartupBanner();
 
   /**
    * \internal \brief Print the shutdown banner
