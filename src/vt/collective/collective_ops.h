@@ -76,14 +76,16 @@ struct CollectiveAnyOps {
   /**
    * \brief Initialize a VT runtime with arguments preconfigured
    *
-   * \param[in] arg_config the preconfigured arguments
+   * \param[in] startup_config startup config returned from \c preconfigure
    * \param[in] comm the communicator for VT to use
+   * \param[in] app_config the app config for overriding the config
    *
    * \return the runtime pointer
    */
   static RuntimePtrType initializePreconfigured(
-    std::unique_ptr<arguments::ArgConfig> arg_config,
-    MPI_Comm* comm = nullptr
+    std::unique_ptr<StartupConfig> startup_config,
+    MPI_Comm* comm = nullptr,
+    arguments::AppConfig const* app_config = nullptr
   );
 
   static void finalize(RuntimePtrType in_rt = nullptr);

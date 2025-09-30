@@ -97,14 +97,20 @@ namespace vt { namespace runtime {
 /*static*/ bool volatile Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
-  std::unique_ptr<arguments::ArgConfig> arg_config,
+  std::unique_ptr<StartupConfig> startup_config,
   MPI_Comm in_comm,
+  arguments::AppConfig const* appConfig,
   RuntimeInstType const in_instance
 ) : instance_(in_instance), runtime_active_(false), is_interop_(true),
     initial_communicator_(in_comm),
-    arg_config_(std::move(arg_config)),
+    arg_config_(std::move(startup_config->arg_config_)),
     app_config_(&arg_config_->config_)
 {
+  startupMPIConfigArgs(
+    std::move(startup_config->parse_input_holder_),
+    initial_communicator_, arg_config_.get(),
+    appConfig
+  );
   setUpSignals();
   determinePhysicalNodeIDs();
 }
@@ -180,9 +186,22 @@ void Runtime::setUpSignals() {
     );
   }
 
+  startupMPIConfigArgs(
+    arg_config->setupInputHolder(argc, argv),
+    in_comm,
+    arg_config,
+    appConfig
+  );
+}
+
+/*static*/ void Runtime::startupMPIConfigArgs(
+  std::unique_ptr<arguments::ParseInputHolder> pih,
+  MPI_Comm in_comm, arguments::ArgConfig* arg_config,
+  arguments::AppConfig const* appConfig
+) {
   // n.b. ref-update of args with pass-through arguments
   std::tuple<int, std::string> result =
-    arg_config->parse(argc, argv, appConfig);
+    arg_config->parse(std::move(pih), appConfig);
   int exit_code = std::get<0>(result);
 
   if (arg_config->config_.vt_help_lb_args) {

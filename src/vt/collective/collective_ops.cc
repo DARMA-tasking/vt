@@ -249,7 +249,8 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
 
 template <runtime::RuntimeInstType instance>
 /*static*/ RuntimePtrType CollectiveAnyOps<instance>::initializePreconfigured(
-  std::unique_ptr<arguments::ArgConfig> arg_config, MPI_Comm* comm
+  std::unique_ptr<StartupConfig> startup_config, MPI_Comm* comm,
+  arguments::AppConfig const* app_config
 ) {
   using vt::runtime::RuntimeInst;
   using vt::runtime::Runtime;
@@ -258,7 +259,8 @@ template <runtime::RuntimeInstType instance>
   MPI_Comm resolved_comm = comm not_eq nullptr ? *comm : MPI_COMM_WORLD;
 
   RuntimeInst<instance>::rt = std::make_unique<Runtime>(
-    std::move(arg_config), resolved_comm, eRuntimeInstance::DefaultInstance
+    std::move(startup_config), resolved_comm, app_config,
+    eRuntimeInstance::DefaultInstance
   );
 
   auto rt_ptr = RuntimeInst<instance>::rt.get();

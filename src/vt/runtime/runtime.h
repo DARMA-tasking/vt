@@ -49,6 +49,7 @@
 #include "vt/runtime/runtime_component_fwd.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/timing/timing_type.h"
+#include "vt/collective/startup_config.h"
 
 // Optional components
 #if vt_check_enabled(trace_enabled)
@@ -116,13 +117,15 @@ struct Runtime {
    * When not running in interop mode, MPI is initialized in the constructor
    * and finalized in the destructor.
    *
-   * \param[in] arg_config argument configuration
+   * \param[in] startup_config startup configuration
    * \param[in] in_comm the MPI communicator (if in interoperability mode)
+   * \param[in] app_config optional app configuration
    * \param[in] in_instance the runtime instance to set
    */
   Runtime(
-    std::unique_ptr<arguments::ArgConfig> arg_config,
+    std::unique_ptr<StartupConfig> startup_config,
     MPI_Comm in_comm = MPI_COMM_WORLD,
+    arguments::AppConfig const* appConfig = nullptr,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
   );
 
@@ -138,8 +141,8 @@ struct Runtime {
    * \brief Startup MPI if necessary and configure VT arguments based on \c argc
    * and \c argv
    *
-   * \param[in] argc argc
-   * \param[in] argv argv
+   * \param[in] argc argc (to modify)
+   * \param[in] argv argv (to modify)
    * \param[in] is_interop whether we are running in interop mode
    * \param[in] in_comm the comm
    * \param[in] arg_config the arg config to fill
@@ -148,6 +151,21 @@ struct Runtime {
   static void startupMPIConfigArgs(
     int& argc, char**& argv, bool is_interop, MPI_Comm in_comm,
     arguments::ArgConfig* arg_config, arguments::AppConfig const* appConfig
+  );
+
+  /**
+   * \brief Startup MPI if necessary and configure VT arguments based on parse
+   * input holder
+   *
+   * \param[in] pih parse input holder
+   * \param[in] in_comm the comm
+   * \param[in] arg_config the arg config to fill
+   * \param[in] appConfig possible app config overrides
+   */
+  static void startupMPIConfigArgs(
+    std::unique_ptr<arguments::ParseInputHolder> pih,
+    MPI_Comm in_comm, arguments::ArgConfig* arg_config,
+    arguments::AppConfig const* appConfig
   );
 
   /**

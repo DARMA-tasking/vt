@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  startup.cc
+//                               startup_config.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,74 +41,60 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/collective/startup.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/runtime/runtime_headers.h"
-#include "vt/context/context.h"
-#include "vt/configs/arguments/args.h"
+#if !defined INCLUDED_VT_COLLECTIVE_STARTUP_CONFIG_H
+#define INCLUDED_VT_COLLECTIVE_STARTUP_CONFIG_H
+
+#include <memory>
+
+namespace vt::arguments {
+
+struct ParseInputHolder;
+struct ArgConfig;
+
+} /* end namespace vt::arguments */
+
+namespace vt::runtime {
+
+struct Runtime;
+
+} /* end namespace vt::runtime */
 
 namespace vt {
 
+struct StartupConfig;
+
+// fwd-decl preconfigure function for friend decl
 std::unique_ptr<StartupConfig> preconfigure(
   int& argc, char**& argv
-) {
-  auto arg_config = std::make_unique<arguments::ArgConfig>();
-  auto parse_input_holder = arg_config->setupInputHolder(argc, argv);
-  return std::make_unique<StartupConfig>(
-    std::move(arg_config), std::move(parse_input_holder)
+);
+
+/**
+ * \brief StartupConfig for preconfiguring VT before starting up the runtime.
+ */
+struct StartupConfig {
+  friend std::unique_ptr<StartupConfig> preconfigure(
+    int& argc, char**& argv
   );
-}
 
-RuntimePtrType initializePreconfigured(
-  std::unique_ptr<StartupConfig> startup_config,
-  MPI_Comm* comm,
-  arguments::AppConfig const* app_config
-) {
-  return CollectiveOps::initializePreconfigured(
-    std::move(startup_config), comm, app_config
+  friend struct vt::runtime::Runtime;
+
+  using ParseInputHolder = arguments::ParseInputHolder;
+
+  /**
+   * \brief \internal Construct a \c StartupConfig
+   */
+  StartupConfig(
+    std::unique_ptr<arguments::ArgConfig> in_arg_config,
+    std::unique_ptr<ParseInputHolder> in_parse_input_holder
   );
-}
 
-// vt::{initialize,finalize} for main ::vt namespace
-RuntimePtrType initialize(
-  int& argc, char**& argv, MPI_Comm* comm, arguments::AppConfig const* appConfig
-) {
-  bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(
-    argc, argv, is_interop, comm, appConfig
-  );
-}
+  ~StartupConfig();
 
-RuntimePtrType initialize(MPI_Comm* comm) {
-  int argc = 0;
-  char** argv = nullptr;
-  bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(argc,argv,is_interop,comm);
-}
-
-RuntimePtrType initialize(
-  int& argc, char**& argv, arguments::AppConfig const* appConfig
-) {
-  return initialize(argc, argv, nullptr, appConfig);
-}
-
-RuntimePtrType initialize(arguments::AppConfig const* appConfig) {
- int argc = 0;
- char** argv = nullptr;
- return initialize(argc, argv, nullptr, appConfig);
-}
-
-void finalize(RuntimePtrType in_rt) {
-  if (in_rt) {
-    return CollectiveOps::finalize(std::move(in_rt));
-  } else {
-    return CollectiveOps::finalize(nullptr);
-  }
-}
-
-void finalize() {
-  CollectiveOps::finalize(nullptr);
-}
+private:
+  std::unique_ptr<arguments::ArgConfig> arg_config_;
+  std::unique_ptr<ParseInputHolder> parse_input_holder_;
+};
 
 } /* end namespace vt */
+
+#endif /*INCLUDED_VT_COLLECTIVE_STARTUP_CONFIG_H*/

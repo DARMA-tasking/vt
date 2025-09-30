@@ -46,43 +46,44 @@
 
 #include "vt/config.h"
 #include "vt/runtime/runtime_headers.h"
+#include "vt/collective/startup_config.h"
 #include <mpi.h>
+
+#include <memory>
 
 namespace vt {
 
 /**
  * \brief Preconfigure VT with argc/argv. This will remove all VT arguments and
- * create a configuration for VT that should be passed to
- * \c initializePreconfigured. Optionally, one many specify an MPI communicator
- * to use (otherwise, it defaults to \c MPI_COMM_WORLD). Additionally, a
- * custom app configuration may be passed to directly configure VT.
+ * create a \c StartupConfig for VT that should be passed to \c
+ * initializePreconfigured. Optionally, one many specify an MPI communicator to
+ * use (otherwise, it defaults to \c MPI_COMM_WORLD).
  *
  * \note MPI must be initialized to call this function because if an error
  * occurs it uses MPI rank to limit how many times the error text gets printed.
  *
  * \param[in] argc argc (modifies it to remove VT arguments)
  * \param[in] argv argv (modifies it to remove VT arguments)
- * \param[in] comm (optional) MPI communicator to use
- * \param[in] app_config (optional) base VT configuration to use
  *
- * \return the \c arguments::ArgConfig to pass to VT
+ * \return the \c StartupConfig to pass to VT
  */
-std::unique_ptr<arguments::ArgConfig> preconfigure(
-  int& argc, char**& argv, MPI_Comm comm = MPI_COMM_WORLD,
-  arguments::AppConfig const* app_config = nullptr
+std::unique_ptr<StartupConfig> preconfigure(
+  int& argc, char**& argv
 );
 
 /**
  * \brief Initialize VT after it has been preconfigured
  *
- * \param[in] arg_config the arg config
+ * \param[in] startup_config the arg config
  * \param[in] comm optional communicator
+ * \param[in] app_config (optional) base VT configuration to use
  *
  * \return the runtime pointer
  */
 RuntimePtrType initializePreconfigured(
-  std::unique_ptr<arguments::ArgConfig> arg_config,
-  MPI_Comm* comm = nullptr
+  std::unique_ptr<StartupConfig> startup_config,
+  MPI_Comm* comm = nullptr,
+  arguments::AppConfig const* app_config = nullptr
 );
 
 RuntimePtrType initialize(

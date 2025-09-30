@@ -60,29 +60,6 @@ namespace vt { namespace tests { namespace unit {
 
 struct TestInitialization : TestParallelHarness { };
 
-TEST_F(TestInitialization, test_vt_preconfigure_args) {
-  int size = 4;
-  char** args_1 = new char*[size];
-  char** args_2 = new char*[size];
-
-  args_1[0] = strdup("test");
-  args_1[1] = strdup("10");
-  args_1[2] = strdup("20.4");
-  args_1[3] = strdup("--vt_lb");
-
-  for (int i = 0; i < 4; i++) {
-    args_2[i] = args_1[i];
-  }
-  vt::preconfigure(size, args_1);
-
-  for (int i = 0; i < 4; i++) {
-    free(args_1[i]);
-  }
-
-  delete [] args_1;
-  delete [] args_2;
-}
-
 TEST_F(TestInitialization, test_initialize_with_args) {
   MPI_Comm comm = MPI_COMM_WORLD;
 
@@ -874,6 +851,36 @@ TEST_F(TestInitialization, test_initialize_with_yaml_toml_and_args) {
   EXPECT_EQ(theConfig()->vt_quiet, true);            // yaml
   EXPECT_EQ(theConfig()->vt_color, false);           // toml overwrites yaml
   EXPECT_EQ(theConfig()->vt_debug_level, "verbose"); // args overwrite everything
+}
+
+struct TestInitializationPreConfig : TestHarness { };
+
+TEST_F(TestInitializationPreConfig, test_vt_preconfigure_args_1) {
+  static char prog_name[]{"vt_program"};
+  static char random_argument[]{"--random_argument=100"};
+  static char vt_lb[]{"--vt_lb"};
+  static char vt_lb_name[]{"--vt_lb_name=TemperedLB"};
+
+  std::vector<char*> custom_args = {
+    prog_name, random_argument, vt_lb, vt_lb_name
+  };
+
+  int argc = static_cast<int>(custom_args.size());
+  char** argv = custom_args.data();
+
+  auto startup_config = vt::preconfigure(argc, argv);
+
+  MPI_Init(&argc, &argv);
+
+  EXPECT_EQ(argc, 2);
+
+  vt::initializePreconfigured(std::move(startup_config));
+
+  EXPECT_TRUE(theConfig()->vt_lb);
+  EXPECT_EQ(theConfig()->vt_lb_name, "TemperedLB");
+
+  vt::finalize();
+  MPI_Finalize();
 }
 
 }}} // end namespace vt::tests::unit

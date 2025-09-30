@@ -62,6 +62,20 @@ class App;
 namespace arguments {
 
 /**
+ * \struct ParseInputHolder
+ *
+ * \brief Internal structure to hold all the inputs for setting up a correct
+ * \c AppConfig from command line arguments.
+ */
+struct ParseInputHolder {
+  std::vector<std::string> vt_args_to_parse;
+  std::vector<std::string> vt_yaml_input_arg;
+  std::string clean_prog_name;
+  char* argv_prog_name = nullptr;
+  std::vector<char*> passthru_args;
+};
+
+/**
  * \struct ArgConfig
  *
  * \brief Component that manages the configuration for a VT instance, parsed
@@ -77,6 +91,21 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
     int& argc, char**& argv, AppConfig const* appConfig
   );
 
+  std::tuple<int, std::string> parse(
+    std::unique_ptr<ParseInputHolder> parse_input_holder,
+    AppConfig const* appConfig
+  );
+
+  /**
+   * \brief Setup the input holder and modify argc/argv
+   *
+   * \param[in] argc argc
+   * \param[in] argv argv
+   *
+   * \return the parse input holder
+   */
+  std::unique_ptr<ParseInputHolder> setupInputHolder(int& argc, char**& argv);
+
   static std::unique_ptr<ArgConfig> construct(std::unique_ptr<ArgConfig> arg);
 
   std::string name() override { return "ArgConfig"; }
@@ -91,7 +120,7 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
 
 private:
   std::tuple<int, std::string> parseToConfig(
-    int& argc, char**& argv, AppConfig& appConfig
+    std::unique_ptr<ParseInputHolder> pih, AppConfig& appConfig
   );
 
   bool parsed_ = false;

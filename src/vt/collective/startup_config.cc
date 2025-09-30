@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  startup.cc
+//                              startup_config.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,74 +41,18 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/collective/startup.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/runtime/runtime_headers.h"
-#include "vt/context/context.h"
+#include "vt/collective/startup_config.h"
 #include "vt/configs/arguments/args.h"
 
 namespace vt {
 
-std::unique_ptr<StartupConfig> preconfigure(
-  int& argc, char**& argv
-) {
-  auto arg_config = std::make_unique<arguments::ArgConfig>();
-  auto parse_input_holder = arg_config->setupInputHolder(argc, argv);
-  return std::make_unique<StartupConfig>(
-    std::move(arg_config), std::move(parse_input_holder)
-  );
-}
+StartupConfig::StartupConfig(
+  std::unique_ptr<arguments::ArgConfig> in_arg_config,
+  std::unique_ptr<ParseInputHolder> in_parse_input_holder
+) : arg_config_(std::move(in_arg_config)),
+    parse_input_holder_(std::move(in_parse_input_holder))
+{ }
 
-RuntimePtrType initializePreconfigured(
-  std::unique_ptr<StartupConfig> startup_config,
-  MPI_Comm* comm,
-  arguments::AppConfig const* app_config
-) {
-  return CollectiveOps::initializePreconfigured(
-    std::move(startup_config), comm, app_config
-  );
-}
-
-// vt::{initialize,finalize} for main ::vt namespace
-RuntimePtrType initialize(
-  int& argc, char**& argv, MPI_Comm* comm, arguments::AppConfig const* appConfig
-) {
-  bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(
-    argc, argv, is_interop, comm, appConfig
-  );
-}
-
-RuntimePtrType initialize(MPI_Comm* comm) {
-  int argc = 0;
-  char** argv = nullptr;
-  bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(argc,argv,is_interop,comm);
-}
-
-RuntimePtrType initialize(
-  int& argc, char**& argv, arguments::AppConfig const* appConfig
-) {
-  return initialize(argc, argv, nullptr, appConfig);
-}
-
-RuntimePtrType initialize(arguments::AppConfig const* appConfig) {
- int argc = 0;
- char** argv = nullptr;
- return initialize(argc, argv, nullptr, appConfig);
-}
-
-void finalize(RuntimePtrType in_rt) {
-  if (in_rt) {
-    return CollectiveOps::finalize(std::move(in_rt));
-  } else {
-    return CollectiveOps::finalize(nullptr);
-  }
-}
-
-void finalize() {
-  CollectiveOps::finalize(nullptr);
-}
+StartupConfig::~StartupConfig() = default;
 
 } /* end namespace vt */
