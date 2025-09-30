@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.17...4.0)
 
 cmake_policy(SET CMP0048 NEW)
 project(brotli VERSION 1.0.9)
