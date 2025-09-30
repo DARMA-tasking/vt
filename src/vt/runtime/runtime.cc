@@ -541,6 +541,7 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
     }
 
     MPI_Barrier(comm);
+    MPI_Errhandler_free(&err_handler_);
 
     theContext = nullptr; // used in some state checks
     context = nullptr;    // "use" to avoid warning
@@ -1077,9 +1078,8 @@ namespace {
 }
 
 void Runtime::initializeErrorHandlers() {
-  MPI_Errhandler err_handler = 0;
-  MPI_Comm_create_errhandler(&mpiErrorHandler, &err_handler);
-  MPI_Comm_set_errhandler(theContext->getComm(), err_handler);
+  MPI_Comm_create_errhandler(&mpiErrorHandler, &err_handler_);
+  MPI_Comm_set_errhandler(theContext->getComm(), err_handler_);
 }
 
 void Runtime::initializeOptionalComponents() {
