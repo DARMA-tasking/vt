@@ -858,11 +858,16 @@ struct TestInitializationPreConfig : TestHarness { };
 TEST_F(TestInitializationPreConfig, test_vt_preconfigure_args_1) {
   static char prog_name[]{"vt_program"};
   static char random_argument[]{"--random_argument=100"};
+#if vt_check_enabled(lblite)
   static char vt_lb[]{"--vt_lb"};
   static char vt_lb_name[]{"--vt_lb_name=TemperedLB"};
+#endif
 
   std::vector<char*> custom_args = {
-    prog_name, random_argument, vt_lb, vt_lb_name
+    prog_name, random_argument,
+#if vt_check_enabled(lblite)
+    vt_lb, vt_lb_name
+#endif
   };
 
   int argc = static_cast<int>(custom_args.size());
@@ -876,8 +881,10 @@ TEST_F(TestInitializationPreConfig, test_vt_preconfigure_args_1) {
 
   vt::initializePreconfigured(std::move(startup_config));
 
+#if vt_check_enabled(lblite)
   EXPECT_TRUE(theConfig()->vt_lb);
   EXPECT_EQ(theConfig()->vt_lb_name, "TemperedLB");
+#endif
 
   vt::finalize();
   MPI_Finalize();
