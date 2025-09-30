@@ -56,7 +56,7 @@ namespace vt {
 /**
  * \brief Preconfigure VT with argc/argv. This will remove all VT arguments and
  * create a \c StartupConfig for VT that should be passed to \c
- * initializePreconfigured. Optionally, one many specify an MPI communicator to
+ * initializePreconfigured. Optionally, one may specify an MPI communicator to
  * use (otherwise, it defaults to \c MPI_COMM_WORLD).
  *
  * \note MPI must be initialized to call this function because if an error
