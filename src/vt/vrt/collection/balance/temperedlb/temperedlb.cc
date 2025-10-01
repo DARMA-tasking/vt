@@ -561,9 +561,9 @@ void TemperedLB::runLB(LoadType total_load) {
   if (theContext()->getNode() == 0) {
     vt_debug_print(
       terse, temperedlb,
-      "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}, memory_threshold={}\n",
+      "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}, memory_threshold={}, converge_tolerance={}\n",
       LoadType(avg), LoadType(max), LoadType(pole), imb,
-      LoadType(load), should_lb, mem_thresh_
+      LoadType(load), should_lb, mem_thresh_, converge_tolerance_
     );
 
     if (!should_lb) {
@@ -1504,9 +1504,12 @@ void TemperedLB::doLBStages(LoadType start_imb) {
     if (transfer_type_ == TransferTypeEnum::SwapClusters) {
       auto remote_block_count = getRemoteBlockCountHere();
       compute_unhomed_done_ = false;
-      proxy_.allreduce<&TemperedLB::remoteBlockCountHandler,
-                       collective::PlusOp>(remote_block_count);
-      theSched()->runSchedulerWhile([this]{ return not compute_unhomed_done_; });
+      proxy_.reduce<
+        &TemperedLB::remoteBlockCountHandler, collective::PlusOp
+      >(proxy_[0], remote_block_count);
+      if (this_node == 0) {
+        theSched()->runSchedulerWhile([this]{ return not compute_unhomed_done_; });
+      }
     }
   } else if (this_node == 0) {
     vt_debug_print(
@@ -2353,10 +2356,12 @@ void TemperedLB::originalTransfer() {
   if (theConfig()->vt_debug_temperedlb) {
     // compute rejection rate because it will be printed
     iter_time_ = MPI_Wtime() - iter_time_;
-    proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-      n_rejected, n_transfers, 0, 0
+    proxy_.reduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
+      proxy_[0], n_rejected, n_transfers, 0, 0
     );
-    proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
+    proxy_.reduce<&TemperedLB::maxIterTime, collective::MaxOp>(
+      proxy_[0], iter_time_
+    );
   }
 }
 
