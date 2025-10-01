@@ -2987,10 +2987,12 @@ void TemperedLB::swapClusters() {
     int n_rejected = 0;
     auto remote_block_count = getRemoteBlockCountHere();
     iter_time_ = MPI_Wtime() - iter_time_;
-    proxy_.allreduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
-      n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_
+    proxy_.reduce<&TemperedLB::rejectionStatsHandler, collective::PlusOp>(
+      proxy_[0], n_rejected, n_transfers_swap_, remote_block_count, cycle_locks_
     );
-    proxy_.allreduce<&TemperedLB::maxIterTime, collective::MaxOp>(iter_time_);
+    proxy_.reduce<&TemperedLB::maxIterTime, collective::MaxOp>(
+      proxy_[0], iter_time_
+    );
   }
 }
 
