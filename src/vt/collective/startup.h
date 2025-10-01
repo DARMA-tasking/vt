@@ -46,28 +46,73 @@
 
 #include "vt/config.h"
 #include "vt/runtime/runtime_headers.h"
-#include "vt/configs/arguments/argv_container.h"
+#include "vt/collective/startup_config.h"
 #include <mpi.h>
+
+#include <memory>
 
 namespace vt {
 
-std::unique_ptr<arguments::ArgvContainer>
-preconfigure(int& argc, char**& argv);
-RuntimePtrType initializePreconfigured(
-  MPI_Comm* comm = nullptr,
-  arguments::AppConfig const* appConfig = nullptr,
-  arguments::ArgvContainer const* preconfigure_args = nullptr);
+/**
+ * \brief Preconfigure VT with argc/argv. This will remove all VT arguments and
+ * create a \c StartupConfig for VT that should be passed to \c
+ * initializePreconfigured. Optionally, one may specify an MPI communicator to
+ * use (otherwise, it defaults to \c MPI_COMM_WORLD).
+ *
+ * \note MPI must be initialized to call this function because if an error
+ * occurs it uses MPI rank to limit how many times the error text gets printed.
+ *
+ * \param[in] argc argc (modifies it to remove VT arguments)
+ * \param[in] argv argv (modifies it to remove VT arguments)
+ *
+ * \return the \c StartupConfig to pass to VT
+ */
+std::unique_ptr<StartupConfig> preconfigure(
+  int& argc, char**& argv
+);
 
+/**
+ * \brief Initialize VT after it has been preconfigured
+ *
+ * \param[in] startup_config the arg config
+ * \param[in] comm optional communicator
+ * \param[in] app_config (optional) base VT configuration to use
+ * \param[in] print_startup_banner (optional) whether to print startup banner
+ *
+ * \return the runtime pointer
+ */
+RuntimePtrType initializePreconfigured(
+  std::unique_ptr<StartupConfig> startup_config,
+  MPI_Comm* comm = nullptr,
+  arguments::AppConfig const* app_config = nullptr,
+  bool print_startup_banner = true
+);
+
+/**
+ * \brief Initialize VT
+ *
+ * \param[in] argc (to modify)
+ * \param[in] argv (to modify)
+ * \param[in] comm optional communicator
+ * \param[in] app_config (optional) base VT configuration to use
+ * \param[in] print_startup_banner (optional) whether to print startup banner
+ *
+ * \return the runtime pointer
+ */
 RuntimePtrType initialize(
   int& argc, char**& argv, MPI_Comm* comm = nullptr,
-  arguments::AppConfig const* appConfig = nullptr
+  arguments::AppConfig const* appConfig = nullptr,
+  bool print_startup_banner = true
 );
+
 RuntimePtrType initialize(MPI_Comm* comm = nullptr);
+
 RuntimePtrType initialize(
   int& argc, char**& argv, arguments::AppConfig const* appConfig
 );
 
 void finalize(RuntimePtrType in_rt);
+
 void finalize();
 
 } /* end namespace vt */

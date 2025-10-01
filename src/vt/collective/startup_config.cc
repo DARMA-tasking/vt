@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               argv_container.h
+//                              startup_config.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,71 +41,18 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGV_CONTAINER_H
-#define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGV_CONTAINER_H
-
-#include <memory>
-#include <string>
-#include <vector>
+#include "vt/collective/startup_config.h"
+#include "vt/configs/arguments/args.h"
 
 namespace vt {
 
-namespace arguments {
+StartupConfig::StartupConfig(
+  std::unique_ptr<arguments::ArgConfig> in_arg_config,
+  std::unique_ptr<ParseInputHolder> in_parse_input_holder
+) : arg_config_(std::move(in_arg_config)),
+    parse_input_holder_(std::move(in_parse_input_holder))
+{ }
 
-struct ArgvContainer {
-  ArgvContainer(int& argc, char**& argv)
-  {
-    std::vector<char*> non_vt_args;
-    for(int i = 0; i < argc; i++) {
-      // cache original argv parameter
-      argv_.push_back(strdup(argv[i]));
-      // collect non vt params
-      if (!((0 == strncmp(argv[i], "--vt_", 5)) ||
-          (0 == strncmp(argv[i], "!--vt_", 6)))) {
-        non_vt_args.push_back(argv[i]);
-      }
-    }
+StartupConfig::~StartupConfig() = default;
 
-    // Reconstruct argv without vt related params
-    int new_argc = non_vt_args.size();
-    static std::unique_ptr<char*[]> new_argv = nullptr;
-
-    new_argv = std::make_unique<char*[]>(new_argc + 1);
-
-    int i = 0;
-    for (auto&& arg : non_vt_args) {
-      new_argv[i++] = arg;
-    }
-    new_argv[i++] = nullptr;
-
-    argc = new_argc;
-    argv = new_argv.get();
-  }
-
-  ArgvContainer() = default;
-  ArgvContainer(const ArgvContainer&) = default;
-
-  int getArgc() const {
-    return argv_.size();
-  }
-
-  std::unique_ptr<char*[]> getArgvDeepCopy() const {
-    auto output = std::make_unique<char*[]>(argv_.size() + 1);
-
-    int i = 0;
-    for(auto&& arg : argv_) {
-      output[i++] = strdup(arg.c_str());
-    }
-    output[i++] = nullptr;
-
-    return output;
-  }
-
-private:
-  std::vector<std::string> argv_;
-};
-
-} // namespace arguments
-} // namespace vt
-
-#endif /*INCLUDED_VT_CONFIGS_ARGUMENTS_ARGV_CONTAINER_H*/
+} /* end namespace vt */

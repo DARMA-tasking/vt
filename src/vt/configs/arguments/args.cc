@@ -256,49 +256,15 @@ void parseYaml(AppConfig& appConfig,  std::string const& inputFile);
 void convertConfigToString(CLI::App& app, AppConfig& appConfig);
 
 std::tuple<int, std::string> parseArguments(
-  CLI::App& app, int& argc, char**& argv, AppConfig& appConfig
+  CLI::App& app, std::unique_ptr<ParseInputHolder> pih, AppConfig& appConfig
 ) {
-
-  std::vector<char*> vt_args;
-
-  // Load up vectors
-  // Has the ability to read interleaved arguments for vt, MPI, and others passed through to other libraries or the application.
-  std::vector<char*>* rargs = nullptr;
-  for (int i = 1; i < argc; i++) {
-    char* c = argv[i];
-    if (0 == strcmp(c, "--vt_args")) {
-      rargs = &vt_args;
-    } else if (0 == strcmp(c, "--")) {
-      rargs = &appConfig.passthru_args;
-    } else if (rargs) {
-      rargs->push_back(c);
-    } else if (0 == strncmp(c, "--vt_", 5)) {
-      // Implicit start of VT args allows pass-thru 'for compatibility'
-      // although the recommended calling pattern to always provide VT args first.
-      rargs = &vt_args;
-      rargs->push_back(c);
-    } else {
-      appConfig.passthru_args.push_back(c);
-    }
-  }
-
   // All must be accounted for
   app.allow_extras(false);
 
-  // Build string-vector and reverse order to parse (CLI quirk)
-  std::vector<std::string> args_to_parse, yaml_input_arg;
-  for (auto it = vt_args.crbegin(); it != vt_args.crend(); ++it) {
-    if (util::demangle::DemanglerUtils::splitString(*it,'=')[0] == "--vt_input_config_yaml") {
-      yaml_input_arg.push_back(*it);
-    } else {
-      args_to_parse.push_back(*it);
-    }
-  }
-
   // Identify input YAML file first, if present
-  if (!yaml_input_arg.empty()) {
+  if (!pih->vt_yaml_input_arg.empty()) {
     try {
-      app.parse(yaml_input_arg);
+      app.parse(pih->vt_yaml_input_arg);
     } catch (CLI::Error &ex) {
       // Return exit code and message, delaying logic processing of such.
       // The default exit code for 'help' is 0.
@@ -315,7 +281,7 @@ std::tuple<int, std::string> parseArguments(
 
   // Then parse the remaining arguments
   try {
-    app.parse(args_to_parse);
+    app.parse(pih->vt_args_to_parse);
   } catch (CLI::Error &ex) {
     std::stringstream message_stream;
     int result = app.exit(ex, message_stream, message_stream);
@@ -327,41 +293,7 @@ std::tuple<int, std::string> parseArguments(
   if (appConfig.vt_output_config) {
     convertConfigToString(app, appConfig);
   }
-
-  // Get the clean prog name; don't allow path bleed in usages.
-  // std::filesystem is C++17.
-  std::string clean_prog_name = argv[0];
-  size_t l = clean_prog_name.find_last_of("/\\");
-  if (l not_eq std::string::npos and l + 1 < clean_prog_name.size()) {
-    clean_prog_name = clean_prog_name.substr(l + 1, std::string::npos);
-  }
-
-  appConfig.prog_name = clean_prog_name;
-  appConfig.argv_prog_name = argv[0];
-
   postParseTransform(appConfig);
-
-  // Rebuild passthru into ref-returned argc/argv
-
-  // It should be possible to modify the original argv as the outgoing
-  // number of arguments is always less. As currently allocated here,
-  // ownership of the new object is ill-defined.
-  int new_argc = appConfig.passthru_args.size() + 1; // does not include argv[0]
-
-  static std::unique_ptr<char*[]> new_argv = nullptr;
-
-  new_argv = std::make_unique<char*[]>(new_argc + 1);
-
-  int i = 0;
-  new_argv[i++] = appConfig.argv_prog_name;
-  for (auto&& arg : appConfig.passthru_args) {
-    new_argv[i++] = arg;
-  }
-  new_argv[i++] = nullptr;
-
-  // Set them back with all vt (and MPI) arguments elided
-  argc = new_argc;
-  argv = new_argv.get();
 
   return std::make_tuple(-1, std::string{});
 }
@@ -1430,17 +1362,101 @@ public:
   }
 };
 
+std::unique_ptr<ParseInputHolder> ArgConfig::setupInputHolder(
+  int& argc, char**& argv
+) {
+  auto pih = std::make_unique<ParseInputHolder>();
+
+  if (argc == 0) {
+    return nullptr;
+  }
+
+  std::vector<char*> vt_args;
+
+  // Load up vectors
+  // Has the ability to read interleaved arguments for vt, MPI, and others passed through to other libraries or the application.
+  std::vector<char*>* rargs = nullptr;
+  for (int i = 1; i < argc; i++) {
+    char* c = argv[i];
+    if (0 == strcmp(c, "--vt_args")) {
+      rargs = &vt_args;
+    } else if (0 == strcmp(c, "--")) {
+      rargs = &pih->passthru_args;
+    } else if (rargs) {
+      rargs->push_back(c);
+    } else if (0 == strncmp(c, "--vt_", 5)) {
+      // Implicit start of VT args allows pass-thru 'for compatibility'
+      // although the recommended calling pattern to always provide VT args first.
+      rargs = &vt_args;
+      rargs->push_back(c);
+    } else {
+      pih->passthru_args.push_back(c);
+    }
+  }
+
+  // Build string-vector and reverse order to parse (CLI quirk)
+  for (auto it = vt_args.crbegin(); it != vt_args.crend(); ++it) {
+    if (util::demangle::DemanglerUtils::splitString(*it,'=')[0] == "--vt_input_config_yaml") {
+      pih->vt_yaml_input_arg.push_back(*it);
+    } else {
+      pih->vt_args_to_parse.push_back(*it);
+    }
+  }
+
+  // Get the clean prog name; don't allow path bleed in usages.
+  // std::filesystem is C++17.
+  std::string clean_prog_name = argv[0];
+  size_t l = clean_prog_name.find_last_of("/\\");
+  if (l not_eq std::string::npos and l + 1 < clean_prog_name.size()) {
+    clean_prog_name = clean_prog_name.substr(l + 1, std::string::npos);
+  }
+
+  pih->clean_prog_name = clean_prog_name;
+  pih->argv_prog_name = argv[0];
+
+  // Rebuild passthru into ref-returned argc/argv
+
+  // It should be possible to modify the original argv as the outgoing
+  // number of arguments is always less. As currently allocated here,
+  // ownership of the new object is ill-defined.
+  int new_argc = pih->passthru_args.size() + 1; // does not include argv[0]
+
+  static std::unique_ptr<char*[]> new_argv = nullptr;
+
+  new_argv = std::make_unique<char*[]>(new_argc + 1);
+
+  int i = 0;
+  new_argv[i++] = pih->argv_prog_name;
+  for (auto&& arg : pih->passthru_args) {
+    new_argv[i++] = arg;
+  }
+  new_argv[i++] = nullptr;
+
+  // Set them back with all vt (and MPI) arguments elided
+  argc = new_argc;
+  argv = new_argv.get();
+
+  return pih;
+}
+
 std::tuple<int, std::string> ArgConfig::parse(
   int& argc, char**& argv, AppConfig const* appConfig
 ) {
+  return parse(setupInputHolder(argc, argv), appConfig);
+}
+
+std::tuple<int, std::string> ArgConfig::parse(
+  std::unique_ptr<ParseInputHolder> pih,
+  AppConfig const* appConfig
+) {
   // If user didn't define appConfig, parse into this->config_.
   if (not appConfig) {
-    return parseToConfig(argc, argv, config_);
+    return parseToConfig(std::move(pih), config_);
   }
 
   // If user defines appConfig, parse into temporary config for later comparison.
   AppConfig config{*appConfig};
-  auto const parse_result = parseToConfig(argc, argv, config);
+  auto const parse_result = parseToConfig(std::move(pih), config);
 
   config_ = config;
 
@@ -1448,9 +1464,19 @@ std::tuple<int, std::string> ArgConfig::parse(
 }
 
 std::tuple<int, std::string> ArgConfig::parseToConfig(
-  int& argc, char**& argv, AppConfig& appConfig
+  std::unique_ptr<ParseInputHolder> pih, AppConfig& appConfig
 ) {
-  if (parsed_ || argc == 0 || argv == nullptr) {
+  if (pih == nullptr) {
+    return std::make_tuple(-1, std::string{});
+  }
+
+  bool const no_input_args =
+    pih->vt_args_to_parse.size() == 0 and pih->vt_yaml_input_arg.size() == 0;
+
+  appConfig.prog_name = pih->clean_prog_name;
+  appConfig.argv_prog_name = pih->argv_prog_name;
+
+  if (parsed_ || no_input_args) {
     // Odd case.. pretend nothing bad happened.
     return std::make_tuple(-1, std::string{});
   }
@@ -1488,7 +1514,9 @@ std::tuple<int, std::string> ArgConfig::parseToConfig(
   addTVArgs(app, appConfig);
   addThreadingArgs(app, appConfig);
 
-  std::tuple<int, std::string> result = parseArguments(app, argc, argv, appConfig);
+  std::tuple<int, std::string> result = parseArguments(
+    app, std::move(pih), appConfig
+  );
   if (std::get<0>(result) not_eq -1) {
     // non-success
     return result;

@@ -853,4 +853,41 @@ TEST_F(TestInitialization, test_initialize_with_yaml_toml_and_args) {
   EXPECT_EQ(theConfig()->vt_debug_level, "verbose"); // args overwrite everything
 }
 
+struct TestInitializationPreConfig : TestHarness { };
+
+TEST_F(TestInitializationPreConfig, test_vt_preconfigure_args_1) {
+  static char prog_name[]{"vt_program"};
+  static char random_argument[]{"--random_argument=100"};
+#if vt_check_enabled(lblite)
+  static char vt_lb[]{"--vt_lb"};
+  static char vt_lb_name[]{"--vt_lb_name=TemperedLB"};
+#endif
+
+  std::vector<char*> custom_args = {
+    prog_name, random_argument,
+#if vt_check_enabled(lblite)
+    vt_lb, vt_lb_name
+#endif
+  };
+
+  int argc = static_cast<int>(custom_args.size());
+  char** argv = custom_args.data();
+
+  auto startup_config = vt::preconfigure(argc, argv);
+
+  MPI_Init(&argc, &argv);
+
+  EXPECT_EQ(argc, 2);
+
+  vt::initializePreconfigured(std::move(startup_config));
+
+#if vt_check_enabled(lblite)
+  EXPECT_TRUE(theConfig()->vt_lb);
+  EXPECT_EQ(theConfig()->vt_lb_name, "TemperedLB");
+#endif
+
+  vt::finalize();
+  MPI_Finalize();
+}
+
 }}} // end namespace vt::tests::unit
