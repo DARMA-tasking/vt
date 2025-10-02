@@ -109,7 +109,7 @@ function(link_target_with_vt)
       endif()
       if (NOT DEFINED APPLE)
         target_link_libraries(
-          ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${LIBUNWIND_LIBRARIES}
+          ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${libunwind_LIBRARIES}
         )
       endif()
     endif()
