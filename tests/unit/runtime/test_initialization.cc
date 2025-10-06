@@ -41,8 +41,6 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-
 #include "test_parallel_harness.h"
 #include "test_helpers.h"
 
