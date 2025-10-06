@@ -338,7 +338,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-22.04-clang-15-cpp"
-        variant = cxx20
+        variant = "cxx20"
         vt_cmake_cxx_standard = 20
       },
       {
