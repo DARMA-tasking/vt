@@ -347,7 +347,7 @@ void CollectiveAnyOps<instance>::output(
   if (myrt) {
     myrt->output(str,code,error,decorate,formatted);
   } else {
-    ::fmt::print(str.c_str());
+    ::fmt::print("{}", str);
   }
   if (error and abort_out) {
     vt::abort("Assertion Failed", 129);

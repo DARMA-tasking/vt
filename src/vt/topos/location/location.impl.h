@@ -597,7 +597,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
     theTerm()->produce(epoch);
 
-    auto trigger_msg_handler_action = [=](EntityID const& hid) {
+    auto trigger_msg_handler_action = [=,this](EntityID const& hid) {
       bool const& has_handler = msg->hasHandler();
       auto const& from = msg->getLocFromNode();
       if (has_handler) {
@@ -662,7 +662,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
       EntityID id_ = id;
       // buffer the message here, the entity will be registered in the future
-      insertPendingEntityAction(id_, [=](NodeType resolved) {
+      insertPendingEntityAction(id_, [=,this](NodeType resolved) {
         auto const& my_node = theContext()->getNode();
 
         vt_debug_print(
@@ -779,7 +779,7 @@ void EntityLocationCoord<EntityID>::routePreparedMsg(
   } else {
     theTerm()->produce(epoch);
     // non-eager protocol: get location first then send message after resolution
-    getLocation(msg->getEntity(), msg->getHomeNode(), [=](NodeType node) {
+    getLocation(msg->getEntity(), msg->getHomeNode(), [=,this](NodeType node) {
       theMsg()->pushEpoch(epoch);
       routeMsgNode<MessageT>(
         msg->getEntity(), msg->getHomeNode(), node, msg

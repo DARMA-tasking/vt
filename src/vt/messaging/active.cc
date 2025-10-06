@@ -1107,7 +1107,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
     } else {
       /*bool const put_delivered = */recvDataMsg(
         1, put_tag, sender,
-        [=](PtrLenPairType ptr, ActionType deleter){
+        [=,this](PtrLenPairType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
           processActiveMsg(base, sender, true, deleter);
         }

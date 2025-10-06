@@ -85,7 +85,7 @@ struct ElementIDStruct {
 };
 
 inline auto format_as(ElementIDStruct e) {
-  auto fmt_str = "({},{},{},{})";
+  auto constexpr fmt_str = "({},{},{},{})";
   return fmt::format(
     fmt_str, e.id, e.getHomeNode(), e.curr_node, e.isMigratable()
   );

@@ -158,7 +158,7 @@ struct DiagnosticFormatter {
 
       if (multiplier == 0) {
         return fmt::format(
-          default_spec + " {}", val, unitFormat(unit_name, align)
+          fmt::runtime(default_spec + " {}"), val, unitFormat(unit_name, align)
         );
       } else {
         // Compute the new value with multiplier as a double
@@ -169,7 +169,7 @@ struct DiagnosticFormatter {
 
         auto decimal = std::string{decimal_format};
         return fmt::format(
-          decimal + " {}", new_value, unitFormat(unit_name, align)
+          fmt::runtime(decimal + " {}"), new_value, unitFormat(unit_name, align)
         );
       }
       break;
@@ -206,7 +206,7 @@ struct DiagnosticFormatter {
 
       if (multiplier == 0) {
         return fmt::format(
-          default_spec + " {}", val, unitFormat(unit_name, align)
+          fmt::runtime(default_spec + " {}"), val, unitFormat(unit_name, align)
         );
       } else {
         // Compute the new value with multiplier as a double
@@ -217,7 +217,7 @@ struct DiagnosticFormatter {
 
         auto decimal = std::string{decimal_format};
         return fmt::format(
-          decimal + " {}", new_value, unitFormat(unit_name, align)
+          fmt::runtime(decimal + " {}"), new_value, unitFormat(unit_name, align)
         );
       }
 
@@ -255,7 +255,7 @@ struct DiagnosticFormatter {
 
       if (multiplier == 0) {
         return fmt::format(
-          default_spec + " {}", val, unitFormat(unit_name, align)
+          fmt::runtime(default_spec + " {}"), val, unitFormat(unit_name, align)
         );
       } else {
         // Compute the new value with multiplier as a double
@@ -264,7 +264,7 @@ struct DiagnosticFormatter {
 
         auto decimal = std::string{decimal_format};
         return fmt::format(
-          decimal + " {}", new_value, unitFormat(unit_name, align)
+          fmt::runtime(decimal + " {}"), new_value, unitFormat(unit_name, align)
         );
       }
 
@@ -272,7 +272,7 @@ struct DiagnosticFormatter {
     }
     case DiagnosticUnit::UnitsPerSecond:
     default:
-      return fmt::format(default_spec, val);
+      return fmt::format(fmt::runtime(default_spec), val);
       break;
     }
     return "";
