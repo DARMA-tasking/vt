@@ -186,7 +186,7 @@ function "vt_ldms" {
 
 function "vt_cmake_cxx_standard" {
   params = [item]
-  result = lookup(item, "vt_cmake_cxx_standard", 1)
+  result = lookup(item, "vt_cmake_cxx_standard", 17)
 }
 
 target "vt-build" {
