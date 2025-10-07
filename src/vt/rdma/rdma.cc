@@ -1289,7 +1289,7 @@ void RDMAManager::createDirectChannelInternal(
     );
 
     auto cb = theCB()->makeFunc<GetInfoChannel>(
-      pipe::LifetimeEnum::Once, [=,this](GetInfoChannel* msg){
+      pipe::LifetimeEnum::Once, [this, type, han, non_target, action, unique_channel_tag, is_target, override_target](GetInfoChannel* msg){
         auto const& my_num_bytes = msg->num_bytes;
         createDirectChannelFinish(
           type, han, non_target, action, unique_channel_tag, is_target, my_num_bytes,
@@ -1326,7 +1326,7 @@ void RDMAManager::removeDirectChannel(
   auto const target = getTarget(han, override_target);
 
   if (this_node != target) {
-    auto cb = theCB()->makeFunc(pipe::LifetimeEnum::Once, [=,this]{
+    auto cb = theCB()->makeFunc(pipe::LifetimeEnum::Once, [this, han, action, target, this_node]{
       auto iter = channels_.find(
         makeChannelLookup(han,RDMA_TypeType::Put,target,this_node)
       );
