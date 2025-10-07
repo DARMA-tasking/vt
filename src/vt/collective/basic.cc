@@ -62,7 +62,7 @@ void output(
 #if !vt_check_enabled(trace_only)
   return CollectiveOps::output(str,code,error,decorate,formatted,abort_out);
 #else
-  ::fmt::print(str.c_str());
+  ::fmt::print("{}", str);
 #endif
 }
 
