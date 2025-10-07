@@ -597,7 +597,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
     theTerm()->produce(epoch);
 
-    auto trigger_msg_handler_action = [this, msg, home_node, epoch](EntityID const& hid) {
+    auto trigger_msg_handler_action = [this, msg, home_node](EntityID const& hid) {
       bool const& has_handler = msg->hasHandler();
       auto const& from = msg->getLocFromNode();
       if (has_handler) {
