@@ -135,7 +135,7 @@ public:
         "\n Maximum Number of Iterations Reached. \n\n" :
         fmt::format("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
 
-      fmt::print(to_print);
+      fmt::print(fmt::runtime(to_print));
 
       // Notify all nodes that computation is finished
       objProxy_.broadcast<&NodeObj::workFinishedHandler>();

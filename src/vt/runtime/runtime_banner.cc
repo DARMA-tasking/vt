@@ -292,7 +292,7 @@ void Runtime::printStartupBanner() {
       if (getAppConfig()->vt_lb_show_config) {
         auto s = opt_on("--vt_lb_show_config", "Showing LB specification");
         fmt::print("{}\t{}", vt_pre, s);
-        fmt::print(vrt::collection::balance::ReadLBConfig::toString());
+        fmt::print("{}", vrt::collection::balance::ReadLBConfig::toString());
       }
     } else {
       auto a3 = fmt::format("Load balancer name: \"{}\"", getAppConfig()->vt_lb_name);
@@ -950,7 +950,7 @@ void Runtime::printStartupBanner() {
   }
 
   //fmt::print("{}\n", reset);
-  fmt::print(reset);
+  fmt::print("{}", reset);
 
   // Enqueue a check for later in case arguments are modified before work
   // actually executes

@@ -132,7 +132,7 @@ using ClusterSummaryType = std::unordered_map<SharedIDType, ClusterInfo>;
 using RankSummaryType = std::tuple<BytesType, ClusterSummaryType>;
 
 inline auto format_as(ClusterInfo const& e) {
-  auto fmt_str = "(load={},bytes={},intra=({},{})),home={},edge={}";
+  auto constexpr fmt_str = "(load={},bytes={},intra=({},{})),home={},edge={}";
   return fmt::format(
     fmt_str, e.load, e.bytes, e.intra_send_vol, e.intra_recv_vol,
     e.home_node, e.edge_weight

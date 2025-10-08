@@ -83,13 +83,13 @@ struct FormatHelper {
     using DF = component::detail::DiagnosticFormatter;
     using component::detail::decimal_format;
 
-    bool const is_decimal =
+    constexpr bool is_decimal =
       std::is_same<T, float>::value or std::is_same<T, double>::value;
 
-    std::string default_format = is_decimal ? decimal_format : std::string{"{}"};
+    std::string default_format = is_decimal ? decimal_format : "{}";
 
     if (base_) {
-      return fmt::format(default_format, std::get<T>(eval));
+      return fmt::format(fmt::runtime(default_format), std::get<T>(eval));
     } else {
       return DF::getValueWithUnits(std::get<T>(eval), unit_, default_format, align_);
     }
@@ -299,9 +299,8 @@ void Runtime::computeAndPrintDiagnostics() {
     );
 
     auto out = fmt::format("{}", table.to_string());
-
     if (theConfig()->vt_diag_print_summary) {
-      fmt::print(out);
+      fmt::print("{}", out);
     }
 
     if (theConfig()->vt_diag_summary_file != "") {

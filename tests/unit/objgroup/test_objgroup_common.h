@@ -138,6 +138,7 @@ struct MyObjB {
 
 struct VectorPayload {
   VectorPayload() = default;
+  explicit VectorPayload(std::vector<int> in_vec) : vec_(std::move(in_vec)) {}
 
   friend VectorPayload operator+(VectorPayload v1, VectorPayload const& v2) {
     for (auto&& elm : v2.vec_) {

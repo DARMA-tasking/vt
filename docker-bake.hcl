@@ -184,6 +184,11 @@ function "vt_ldms" {
   result = lookup(item, "vt_ldms", "")
 }
 
+function "vt_cmake_cxx_standard" {
+  params = [item]
+  result = lookup(item, "vt_cmake_cxx_standard", 17)
+}
+
 target "vt-build" {
   target = "build"
   context = "."
@@ -243,6 +248,7 @@ target "vt-build-all" {
     VT_UNITY_BUILD_ENABLED         = vt_unity_build(item)
     VT_WERROR_ENABLED              = vt_werror(item)
     VT_ZOLTAN_ENABLED              = vt_zoltan(item)
+    CMAKE_CXX_STANDARD             = vt_cmake_cxx_standard(item)
   }
 
   # to get the list of available images from DARMA-tasking/workflows:
@@ -332,6 +338,8 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-22.04-clang-15-cpp"
+        variant = "cxx20"
+        vt_cmake_cxx_standard = 20
       },
       {
         image = "amd64-ubuntu-22.04-gcc-11-cpp"
