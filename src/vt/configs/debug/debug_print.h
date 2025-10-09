@@ -283,12 +283,14 @@ namespace vt { namespace config {
 template <CatEnum cat, CtxEnum ctx, ModeEnum mod>
 struct DebugPrintOp;
 
-template <CatEnum cat, ModeEnum mod, typename Arg, typename... Args>
-static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
+template <CatEnum cat, ModeEnum mod, typename... Args>
+static inline void debugPrintImpl(
+  NodeType node, fmt::format_string<Args...> arg, Args&&... args
+) {
   constexpr auto mask = ModeEnum::terse | ModeEnum::normal | ModeEnum::verbose;
   constexpr auto level = mod & mask;
   if (level <= vt::debug::preConfig()->vt_debug_level_val) {
-    auto user = fmt::format(std::forward<Arg>(arg),std::forward<Args>(args)...);
+    auto user = fmt::format(arg, std::forward<Args>(args)...);
     std::string debug_level = "";
     if (level == ModeEnum::terse) {
       debug_level = "(t)";
@@ -316,12 +318,13 @@ static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
 
 template <CatEnum cat, ModeEnum mod>
 struct DebugPrintOp<cat, CtxEnum::node, mod> {
-  template <typename Arg, typename... Args>
-  void operator()(bool const rt_option, Arg&& arg, Args&&... args) {
+  template <typename... Args>
+  void operator()(
+    bool const rt_option, fmt::format_string<Args...> arg, Args&&... args
+  ) {
     if (rt_option or vt::debug::preConfig()->vt_debug_all) {
       debugPrintImpl<cat, mod>(
-        vt::debug::preNode(), std::forward<Arg>(arg),
-        std::forward<Args>(args)...
+        vt::debug::preNode(), arg, std::forward<Args>(args)...
       );
     }
   }
@@ -329,10 +332,12 @@ struct DebugPrintOp<cat, CtxEnum::node, mod> {
 
 template <CatEnum cat, ModeEnum mod>
 struct DebugPrintOp<cat, CtxEnum::unknown, mod> {
-  template <typename Arg, typename... Args>
-  void operator()(bool const rt_option, Arg&& arg, Args&&... args) {
+  template <typename... Args>
+  void operator()(
+    bool const rt_option, fmt::format_string<Args...> arg, Args&&... args
+  ) {
     if (rt_option or vt::debug::preConfig()->vt_debug_all) {
-      debugPrintImpl<cat,mod>(-1,std::forward<Arg>(arg),std::forward<Args>(args)...);
+      debugPrintImpl<cat,mod>(-1, arg, std::forward<Args>(args)...);
     }
   }
 };
@@ -347,8 +352,10 @@ template <
 >
 struct DispatchOp {
   template <typename... Args>
-  static void apply(bool const op, Args&&... args) {
-    return Op<cat,ctx,mode>()(op,std::forward<Args>(args)...);
+  static void apply(
+    bool const op, fmt::format_string<Args...> arg, Args&&... args
+  ) {
+    return Op<cat,ctx,mode>()(op,arg,std::forward<Args>(args)...);
   }
 };
 
@@ -364,8 +371,10 @@ template <
 >
 struct CheckEnabled {
   template <typename... Args>
-  static void apply(bool const, Args&&... args) {
-    return vt::debug::useVars(std::forward<Args>(args)...);
+  static void apply(
+    bool const, fmt::format_string<Args...> arg, Args&&... args
+  ) {
+    return vt::debug::useVars(arg,std::forward<Args>(args)...);
   }
 };
 
@@ -384,8 +393,12 @@ struct CheckEnabled<
   >
 > {
   template <typename... Args>
-  static void apply(bool const op, Args&&... args) {
-    return DispatchOp<Op,C,cat,ctx,mod>::apply(op,std::forward<Args>(args)...);
+  static void apply(
+    bool const op, fmt::format_string<Args...> arg, Args&&... args
+  ) {
+    return DispatchOp<Op,C,cat,ctx,mod>::apply(
+      op, arg, std::forward<Args>(args)...
+    );
   }
 };
 
@@ -399,8 +412,12 @@ template <
 >
 struct ApplyOp {
   template <typename... Args>
-  static void apply(bool const op, Args&&... args) {
-    return CheckEnabled<Op,C,cat,ctx,mod>::apply(op,std::forward<Args>(args)...);
+  static void apply(
+    bool const op, fmt::format_string<Args...> arg, Args&&... args
+  ) {
+    return CheckEnabled<Op,C,cat,ctx,mod>::apply(
+      op, arg, std::forward<Args>(args)...
+    );
   }
 };
 
