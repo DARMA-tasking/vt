@@ -371,11 +371,11 @@ void MemoryUsage::initialize() {
         thePhase()->registerHookUnsynchronized(
           phase::PhaseHook::EndPostMigration, []{
             auto cur_phase = thePhase()->getCurrentPhase();
-            auto memory_usage_str = fmt::format(
+            vt_print(
+              gen,
               "Memory Usage: phase={}: {}\n", cur_phase,
               theMemUsage()->getUsageAll()
             );
-            vt_print(gen, memory_usage_str);
           }
         );
       }

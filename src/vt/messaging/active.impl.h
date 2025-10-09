@@ -165,13 +165,19 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   const bool is_bcast = dest == broadcast_dest;
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
-    vt_debug_print(
-      verbose, active,
-      is_bcast
-        ? "broadcastMsg of ptr={}, type={}\n"
-        : "sendMsg of ptr={}, type={}\n",
-      print_ptr(rawMsg), typeid(MsgT).name()
-    );
+    if (is_bcast) {
+      vt_debug_print(
+        verbose, active,
+        "broadcastMsg of ptr={}, type={}\n",
+        print_ptr(rawMsg), typeid(MsgT).name()
+      );
+    } else {
+      vt_debug_print(
+        verbose, active,
+        "sendMsg of ptr={}, type={}\n",
+        print_ptr(rawMsg), typeid(MsgT).name()
+      );
+    }
   }
 
   if (is_bcast) {
