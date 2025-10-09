@@ -340,6 +340,8 @@ target "vt-build-all" {
         image = "amd64-ubuntu-22.04-clang-15-cpp"
         variant = "cxx20"
         vt_cmake_cxx_standard = 20
+        vt_debug_verbose = 1
+        vt_production_build = 0
       },
       {
         image = "amd64-ubuntu-22.04-gcc-11-cpp"
