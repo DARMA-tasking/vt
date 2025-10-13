@@ -78,7 +78,10 @@
   vt_print_colorize_impl(::vt::debug::bd_green(), "vt", ":")
 
 #define vt_proc_print_colorize(proc)                                    \
-  vt_print_colorize_impl(::vt::debug::blue(), "[" + std::to_string(proc) + "]", "")
+  vt_print_colorize_impl(                                               \
+    ::vt::debug::blue(), std::string("[") + std::to_string(proc) + "]", \
+    ""                                                                  \
+  )
 
 #define vt_debug_argument_option(opt)                                   \
   ::vt::debug::preConfig()->vt_debug_ ## opt
