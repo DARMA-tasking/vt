@@ -92,6 +92,13 @@ template <typename MsgT, typename Op, typename ActOp>
     );
     while (cur_msg != nullptr) {
       ReduceCombine<>::combine<MsgT,Op,ActOp>(fst_msg, cur_msg);
+      if (!fst_msg->hasValidCallback() && cur_msg->hasValidCallback()) {
+        if (cur_msg->isParamCallback()) {
+          fst_msg->setCallback(cur_msg->getParamCallback());
+        } else {
+          fst_msg->setCallback(cur_msg->getMsgCallback());
+        }
+      }
       cur_msg = cur_msg->template getNext<MsgT>();
     }
   }
