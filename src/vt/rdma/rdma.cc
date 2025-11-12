@@ -275,7 +275,7 @@ RDMAManager::RDMAManager()
 
   if (not msg->has_bytes) {
     auto cbmsg = makeMessage<GetInfoChannel>(num_bytes);
-    msg->cb.sendMsg(cbmsg);
+    msg->cb.sendMsg<GetInfoChannel>(cbmsg);
   }
 
   theRDMA()->createDirectChannelInternal(

@@ -211,7 +211,7 @@ TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_msgptr) {
 ////////////////////////////////////////////////////////////////////////////////
 static void callbackHan(CallbackMsg<NormalTestMsg>* msg) {
   auto send_msg = makeMessage<NormalTestMsg>();
-  msg->cb_.send(send_msg.get());
+  msg->cb_.template sendMsg<NormalTestMsg>(send_msg.get());
 
   theTerm()->addAction([send_msg]{
     // Call event cleanup all pending MPI requests to clear
@@ -244,7 +244,7 @@ TEST_F(TestMemoryLifetime, test_active_send_callback_lifetime_1) {
 ////////////////////////////////////////////////////////////////////////////////
 static void callbackHan(CallbackMsg<SerialTestMsg>* msg) {
   auto send_msg = makeMessage<SerialTestMsg>();
-  msg->cb_.send(send_msg.get());
+  msg->cb_.template sendMsg<SerialTestMsg>(send_msg.get());
 
   theTerm()->addAction([send_msg]{
     // Call event cleanup all pending MPI requests to clear

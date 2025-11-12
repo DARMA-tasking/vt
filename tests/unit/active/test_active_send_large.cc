@@ -99,7 +99,7 @@ template <typename MsgT>
 void myHandler(MsgT* m) {
   checkMsg(m);
   auto msg = makeMessage<RecvMsg>();
-  m->cb_.send(msg.get());
+  m->cb_.template sendMsg<RecvMsg>(msg.get());
 }
 
 template <typename T>
