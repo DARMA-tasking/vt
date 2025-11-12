@@ -1,5 +1,5 @@
 set(JSON_TEST_DATA_URL     https://github.com/nlohmann/json_test_data)
-set(JSON_TEST_DATA_VERSION 3.0.0)
+set(JSON_TEST_DATA_VERSION 3.1.0)
 
 # if variable is set, use test data from given directory rather than downloading them
 if(JSON_TestDataDirectory)
@@ -48,7 +48,7 @@ message(STATUS "Operating system: ${OS_VERSION_STRINGS}")
 # determine the compiler (for debug and support purposes)
 if (MSVC)
     execute_process(COMMAND ${CMAKE_CXX_COMPILER} OUTPUT_VARIABLE CXX_VERSION_RESULT OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_VARIABLE CXX_VERSION_RESULT ERROR_STRIP_TRAILING_WHITESPACE)
-    set(CMAKE_CXX_COMPILER "${CXX_VERSION_RESULT}; MSVC_VERSION=${MSVC_VERSION}; MSVC_TOOLSET_VERSION=${MSVC_TOOLSET_VERSION}")
+    set(CXX_VERSION_RESULT "${CXX_VERSION_RESULT}; MSVC_VERSION=${MSVC_VERSION}; MSVC_TOOLSET_VERSION=${MSVC_TOOLSET_VERSION}")
 else()
     execute_process(COMMAND ${CMAKE_CXX_COMPILER} --version OUTPUT_VARIABLE CXX_VERSION_RESULT OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
