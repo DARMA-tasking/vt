@@ -45,8 +45,8 @@ option(JSON_GlobalUDLs                     "Place user-defined string literals i
 option(JSON_ImplicitConversions            "Enable implicit conversions." ON)
 option(JSON_DisableEnumSerialization       "Disable default integer enum serialization." OFF)
 option(JSON_LegacyDiscardedValueComparison "Enable legacy discarded value comparison." OFF)
-option(JSON_Install                        "Install CMake targets during install step." ${MAIN_PROJECT})
-option(JSON_MultipleHeaders                "Use non-amalgamated version of the library." ON)
+option(JSON_Install                        "Install CMake targets during install step." ON)
+option(JSON_MultipleHeaders                "Use non-amalgamated version of the library." OFF)
 option(JSON_SystemInclude                  "Include as system headers (skip for clang-tidy)." OFF)
 
 if (JSON_CI)
