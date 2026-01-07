@@ -3,13 +3,37 @@
 #  Load and discover MPI settings (required)
 #
 
-find_package(MPI REQUIRED)
-if(MPI_FOUND)
-  #include_directories(${ZLIB_INCLUDE_DIRS})
-else()
-  message(FATAL_ERROR "Failure to locate MPI: MPI is required for VT to build")
-endif(MPI_FOUND)
+# Add a user-configurable option to control whether find_package(MPI) is called
+option(vt_find_mpi "Enable find_package(MPI) (default: ON)" ON)
 
+if(vt_find_mpi)
+  message(STATUS "Using find_package(MPI)")
+  find_package(MPI REQUIRED)
+  if(MPI_FOUND)
+    # include_directories(${MPI_INCLUDE_PATH})  # Uncomment if needed
+  else()
+    message(FATAL_ERROR "Failure to locate MPI: MPI is required for VT to build")
+  endif()
+else()
+  message(STATUS "Skipping find_package(MPI). Ensure MPI compiler wrappers are used.")
+
+  # Provide reasonable defaults for MPI variables
+  if(NOT DEFINED MPIEXEC_EXECUTABLE)
+    set(MPIEXEC_EXECUTABLE "mpirun")  # Default to mpirun
+    message(WARNING "MPIEXEC_EXECUTABLE not set. Defaulting to 'mpirun'.")
+  endif()
+
+  if(NOT DEFINED MPIEXEC_NUMPROC_FLAG)
+    set(MPIEXEC_NUMPROC_FLAG "-n")  # Default to -n for number of processes
+    message(WARNING "MPIEXEC_NUMPROC_FLAG not set. Defaulting to '-n'.")
+  endif()
+
+  if(NOT DEFINED MPIEXEC_MAX_NUMPROCS)
+    # Default to a safe value or detect system cores
+    set(MPIEXEC_MAX_NUMPROCS 2)
+    message(WARNING "MPIEXEC_MAX_NUMPROCS not set. Defaulting to '2'.")
+  endif()
+endif()
 
 # Set default command for invoking MPI (mpirun) and flag for MPI nprocs
 set(MPI_RUN_COMMAND  "${MPIEXEC_EXECUTABLE}")
