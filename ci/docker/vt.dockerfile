@@ -43,14 +43,17 @@ ARG VT_UNITY_BUILD_ENABLED
 ARG VT_WERROR_ENABLED
 ARG VT_ZOLTAN_ENABLED
 ARG VT_FIND_MPI
-ARG CC
-ARG CXX
+ARG OVERRIDE_CC
+ARG OVERRIDE_CXX
 
 ARG IMAGE
 ARG CACHE_ID=${IMAGE}
 
 ENV GIT_BRANCH=${GIT_BRANCH}
 ENV VT_LDMS_XPRT=sock
+
+ENV CC=${OVERRIDE_CC:-${CC}}
+ENV CXX=${OVERRIDE_CXX:-${CXX}}
 
 RUN --mount=type=cache,id=${CACHE_ID},target=/build/ccache             \
     --mount=type=cache,id=BUILD-${CACHE_ID},target=/build/vt           \
