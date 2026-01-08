@@ -1727,6 +1727,36 @@ private:
     MsgSizeType const msg_size
   );
 
+  /**
+   * \brief Active receive broker that keeps a pool of pre-posted Irecv slots
+   * at various sizes to drain unexpected ActiveMsg traffic quickly.
+   *
+   * This broker only handles ActiveMsgTag receives to avoid interfering with
+   * data messages. Each completed slot dispatches directly
+   * to finishPendingActiveMsgAsyncRecv and is immediately reposted with a
+   * fresh buffer of the same capacity.
+   */
+  struct ActiveRecvBroker {
+    struct Slot {
+      int cap = 0;
+      std::byte* buf = nullptr;
+      MPI_Request req = MPI_REQUEST_NULL;
+      bool posted = false;
+    };
+
+    void setup(ActiveMessenger* self);
+    bool progress(ActiveMessenger* self);
+
+  private:
+    std::vector<Slot> slots_;
+    // Tunable capacities and per-size slot count; conservative defaults.
+    static constexpr int num_caps_ = 4;
+    static constexpr int caps_[num_caps_] = {256, 1024, 4096, 16384};
+    static constexpr int slots_per_size_ = 4;
+
+    void postSlot(ActiveMessenger* self, Slot& s);
+  };
+
 public:
   /**
    * \brief Get the rank-based LB data along with element ID for rank-based work
@@ -1784,6 +1814,9 @@ private:
   elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_data_ = {};
   elm::ElementLBData bare_handler_lb_data_;
   MPI_Comm comm_ = MPI_COMM_NULL;
+
+  // Active receive broker instance
+  ActiveRecvBroker active_broker_;
 };
 
 }} // end namespace vt::messaging

@@ -162,6 +162,9 @@ void ActiveMessenger::startup() {
     );
   });
 #endif
+
+  // Set up the active receive broker to pre-post wildcard receives
+  active_broker_.setup(this);
 }
 
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {}
@@ -1308,15 +1311,123 @@ bool ActiveMessenger::testPendingAsyncOps() {
   );
 }
 
+void ActiveMessenger::ActiveRecvBroker::postSlot(ActiveMessenger* self, Slot& s) {
+  // Allocate a fresh buffer for this slot and post a wildcard Irecv for ActiveMsgTag
+  s.buf = thePool()->alloc(s.cap);
+
+  #if vt_check_enabled(trace_enabled)
+    std::unique_ptr<trace::TraceScopedNote> trace_note;
+    if (theConfig()->vt_trace_mpi) {
+      trace_note = std::make_unique<trace::TraceScopedNote>(self->trace_irecv);
+    }
+  #endif
+
+  {
+    VT_ALLOW_MPI_CALLS;
+    int const ret = MPI_Irecv(
+      s.buf, s.cap, MPI_BYTE, MPI_ANY_SOURCE,
+      static_cast<MPI_TagType>(MPITag::ActiveMsgTag), self->comm_, &s.req
+    );
+    vtAssertMPISuccess(ret, "Broker MPI_Irecv");
+  }
+
+  self->amPostedCounterGauge.incrementUpdate(s.cap, 1);
+
+  #if vt_check_enabled(trace_enabled)
+    if (theConfig()->vt_trace_mpi) {
+      auto tr_note = fmt::format("Irecv(AM Broker): anysrc, cap={}", s.cap);
+      trace_note->setNote(tr_note);
+      trace_note->end();
+    }
+  #endif
+
+  s.posted = true;
+}
+
+void ActiveMessenger::ActiveRecvBroker::setup(ActiveMessenger* self) {
+  slots_.clear();
+  slots_.reserve(num_caps_ * slots_per_size_);
+
+  for (int i = 0; i < num_caps_; ++i) {
+    for (int k = 0; k < slots_per_size_; ++k) {
+      slots_.emplace_back(Slot{caps_[i], nullptr, MPI_REQUEST_NULL, false});
+    }
+  }
+
+  // Post all slots
+  for (auto& s : slots_) {
+    postSlot(self, s);
+  }
+
+  vt_debug_print(
+    normal, active,
+    "ActiveRecvBroker::setup: posted {} slots across caps\n",
+    slots_.size()
+  );
+}
+
+bool ActiveMessenger::ActiveRecvBroker::progress(ActiveMessenger* self) {
+  bool any_progress = false;
+  int tests = 0;
+
+  for (auto& s : slots_) {
+    if (!s.posted) continue;
+
+    int flag = 0;
+    MPI_Status stat;
+
+    {
+      VT_ALLOW_MPI_CALLS;
+      MPI_Test(&s.req, &flag, &stat);
+      tests++;
+    }
+
+    if (flag) {
+      int count_bytes = 0;
+      MPI_Get_count(&stat, MPI_BYTE, &count_bytes);
+
+      // If received size exceeds capacity, this indicates truncation; guard.
+      if (count_bytes > s.cap) {
+        vtWarn(
+          fmt::format("ActiveRecvBroker: received {} bytes > slot cap {}. "
+                      "Consider increasing broker caps.", count_bytes, s.cap)
+        );
+      }
+
+      NodeType sender = stat.MPI_SOURCE;
+
+      // Dispatch completion using the existing path
+      InProgressIRecv tmp(s.buf, count_bytes, sender);
+      self->finishPendingActiveMsgAsyncRecv(&tmp);
+
+      // Repost the slot with a fresh buffer
+      postSlot(self, s);
+
+      any_progress = true;
+    }
+  }
+
+  if (tests > 0) {
+    self->amPollCount.increment(tests);
+  }
+
+  return any_progress;
+}
+
+// -----------------------------------------------------------------------------
+
+
 int ActiveMessenger::progress([[maybe_unused]] TimeType current_time) {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   bool const received_active_msg = testPendingActiveMsgAsyncRecv();
   bool const received_data_msg = testPendingDataMsgAsyncRecv();
   bool const general_async = testPendingAsyncOps();
+  bool const broker_progress = active_broker_.progress(this);
 
   return started_irecv_active_msg or started_irecv_data_msg or
-         received_active_msg or received_data_msg or general_async;
+         received_active_msg or received_data_msg or general_async or
+         broker_progress;
 }
 
 void ActiveMessenger::registerAsyncOp(std::unique_ptr<AsyncOp> in) {
