@@ -10,7 +10,7 @@ if(vt_find_mpi)
   message(STATUS "Using find_package(MPI)")
   find_package(MPI REQUIRED)
   if(MPI_FOUND)
-    # include_directories(${MPI_INCLUDE_PATH})  # Uncomment if needed
+    message(STATUS "Found MPI")
   else()
     message(FATAL_ERROR "Failure to locate MPI: MPI is required for VT to build")
   endif()
@@ -29,7 +29,7 @@ else()
   endif()
 
   if(NOT DEFINED MPIEXEC_MAX_NUMPROCS)
-    # Default to a safe value or detect system cores
+    # Default to a safe value or detect system cores (maybe be possible to use ProcessorCount in the future)
     set(MPIEXEC_MAX_NUMPROCS 2)
     message(WARNING "MPIEXEC_MAX_NUMPROCS not set. Defaulting to '2'.")
   endif()
