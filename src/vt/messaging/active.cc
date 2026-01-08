@@ -692,6 +692,45 @@ bool ActiveMessenger::recvDataMsgBuffer(
     MPI_Status stat;
     int flag;
 
+#if MPI_VERSION >= 3
+    // MPI 3+: Use MPI_Improbe to claim the first chunk immediately
+    MPI_Message first_msg_handle;
+
+    {
+      VT_ALLOW_MPI_CALLS;
+      const int probe_ret = MPI_Improbe(
+        node == uninitialized_destination ? MPI_ANY_SOURCE : node,
+        tag, comm_, &flag, &first_msg_handle, &stat
+      );
+      vtAssertMPISuccess(probe_ret, "MPI_Improbe");
+    }
+
+    if (flag == 1) {
+      MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+
+      std::byte* buf = user_buf == nullptr ?
+        thePool()->alloc(num_probe_bytes) :
+        user_buf;
+
+      NodeType const sender = stat.MPI_SOURCE;
+
+      // Calculate first chunk size
+      auto const max_per_send = theConfig()->vt_max_mpi_send_size;
+      MsgSizeType first_chunk_bytes = static_cast<MsgSizeType>(
+        std::min(static_cast<std::size_t>(num_probe_bytes), max_per_send)
+      );
+
+      recvDataDirect(
+        nchunks, buf, tag, sender, num_probe_bytes, priority, dealloc_user_buf,
+        next, is_user_buf, first_msg_handle, first_chunk_bytes
+      );
+
+      return true;
+    } else {
+      return false;
+    }
+#else
+    // MPI < 3: Use existing MPI_Iprobe path
     {
       VT_ALLOW_MPI_CALLS;
       const int probe_ret = MPI_Iprobe(
@@ -719,6 +758,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
     } else {
       return false;
     }
+#endif
   } else {
     vt_debug_print(
       normal, active,
@@ -756,6 +796,9 @@ void ActiveMessenger::recvDataDirect(
   int nchunks, std::byte* const buf, TagType const tag, NodeType const from,
   MsgSizeType len, PriorityType prio, ActionType dealloc,
   ContinuationDeleterType next, bool is_user_buf
+#if MPI_VERSION >= 3
+  , MPI_Message first_msg, MsgSizeType first_chunk_bytes
+#endif
 ) {
   vtAssert(nchunks > 0, "Must have at least one chunk");
 
@@ -765,7 +808,49 @@ void ActiveMessenger::recvDataDirect(
   std::byte* cbuf = buf;
   MsgSizeType remainder = len;
   auto const max_per_send = theConfig()->vt_max_mpi_send_size;
+  
+#if MPI_VERSION >= 3
+  // If we have a pre-matched first message, use MPI_Imrecv for the first chunk
+  int start_chunk = 0;
+  if (first_msg != MPI_MESSAGE_NULL && first_chunk_bytes > 0) {
+    #if vt_check_enabled(trace_enabled)
+      std::unique_ptr<trace::TraceScopedNote> trace_note;
+      if (theConfig()->vt_trace_mpi) {
+        trace_note = std::make_unique<trace::TraceScopedNote>(trace_irecv);
+      }
+    #endif
+
+    {
+      VT_ALLOW_MPI_CALLS;
+      int const ret = MPI_Imrecv(
+        cbuf, first_chunk_bytes, MPI_BYTE,
+        &first_msg, &reqs[0]
+      );
+      vtAssertMPISuccess(ret, "MPI_Imrecv");
+    }
+
+    dmPostedCounterGauge.incrementUpdate(first_chunk_bytes, 1);
+
+    #if vt_check_enabled(trace_enabled)
+      if (theConfig()->vt_trace_mpi) {
+        auto tr_note = fmt::format(
+          "Imrecv(Data, first chunk): from={}, bytes={}",
+          from, first_chunk_bytes
+        );
+        trace_note->setNote(tr_note);
+        trace_note->end();
+      }
+    #endif
+
+    remainder -= first_chunk_bytes;
+    start_chunk = 1;
+  }
+
+  // Post remaining chunks using MPI_Irecv
+  for (int i = start_chunk; i < nchunks; i++) {
+#else
   for (int i = 0; i < nchunks; i++) {
+#endif
     auto sublen = static_cast<int>(
       std::min(static_cast<std::size_t>(remainder), max_per_send)
     );
@@ -786,7 +871,7 @@ void ActiveMessenger::recvDataDirect(
       vtAssertMPISuccess(ret, "MPI_Irecv");
     }
 
-    dmPostedCounterGauge.incrementUpdate(len, 1);
+    dmPostedCounterGauge.incrementUpdate(sublen, 1);
 
     #if vt_check_enabled(trace_enabled)
       if (theConfig()->vt_trace_mpi) {
@@ -988,6 +1073,74 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
   MPI_Status stat;
   int flag;
 
+#if MPI_VERSION >= 3
+  // MPI 3+: Use MPI_Improbe + MPI_Imrecv to claim message from unexpected queue
+  MPI_Message msg_handle;
+
+  {
+    VT_ALLOW_MPI_CALLS;
+
+    MPI_Improbe(
+      MPI_ANY_SOURCE, static_cast<MPI_TagType>(MPITag::ActiveMsgTag),
+      comm_, &flag, &msg_handle, &stat
+    );
+  }
+
+  if (flag == 1) {
+    MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+
+    std::byte* buf = thePool()->alloc(num_probe_bytes);
+
+    NodeType const sender = stat.MPI_SOURCE;
+
+    MPI_Request req;
+
+    {
+      #if vt_check_enabled(trace_enabled)
+        std::unique_ptr<trace::TraceScopedNote> trace_note;
+        if (theConfig()->vt_trace_mpi) {
+          trace_note = std::make_unique<trace::TraceScopedNote>(trace_irecv);
+        }
+      #endif
+
+      VT_ALLOW_MPI_CALLS;
+      MPI_Imrecv(
+        buf, num_probe_bytes, MPI_BYTE,
+        &msg_handle, &req
+      );
+
+      amPostedCounterGauge.incrementUpdate(num_probe_bytes, 1);
+
+      #if vt_check_enabled(trace_enabled)
+        if (theConfig()->vt_trace_mpi) {
+          auto tr_note = fmt::format(
+            "Imrecv(AM): from={}, bytes={}",
+            stat.MPI_SOURCE, num_probe_bytes
+          );
+          trace_note->setNote(tr_note);
+          trace_note->end();
+        }
+      #endif
+    }
+
+    InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
+
+    int num_mpi_tests = 0;
+    auto done = recv_holder.test(num_mpi_tests);
+    amPollCount.increment(num_mpi_tests);
+
+    if (done) {
+      finishPendingActiveMsgAsyncRecv(&recv_holder);
+    } else {
+      in_progress_active_msg_irecv.emplace(std::move(recv_holder));
+    }
+
+    return true;
+  } else {
+    return false;
+  }
+#else
+  // MPI < 3: Use existing MPI_Iprobe + MPI_Irecv path
   {
     VT_ALLOW_MPI_CALLS;
 
@@ -1050,6 +1203,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
   } else {
     return false;
   }
+#endif
 }
 
 void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {

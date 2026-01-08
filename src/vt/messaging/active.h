@@ -1375,11 +1375,16 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] dealloc the action to deallocate the buffer
    * \param[in] next the continuation that gets passed the data when ready
    * \param[in] is_user_buf is a user buffer that require user deallocation
+   * \param[in] first_msg (MPI >= 3) pre-matched message handle for first chunk
+   * \param[in] first_chunk_bytes (MPI >= 3) size of the first matched chunk
    */
   void recvDataDirect(
     int nchunks, std::byte* const buf, TagType const tag, NodeType const from,
     MsgSizeType len, PriorityType prio, ActionType dealloc = nullptr,
     ContinuationDeleterType next = nullptr, bool is_user_buf = false
+#if MPI_VERSION >= 3
+    , MPI_Message first_msg = MPI_MESSAGE_NULL, MsgSizeType first_chunk_bytes = 0
+#endif
   );
 
   /**
