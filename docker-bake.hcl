@@ -194,6 +194,16 @@ function "vt_find_mpi" {
   result = lookup(item, "vt_find_mpi", "1")
 }
 
+function "vt_find_cc" {
+  params = [item]
+  result = lookup(item, "cc", "")
+}
+
+function "vt_find_cxx" {
+  params = [item]
+  result = lookup(item, "cxx", "")
+}
+
 target "vt-build" {
   target = "build"
   context = "."
@@ -255,6 +265,8 @@ target "vt-build-all" {
     VT_ZOLTAN_ENABLED              = vt_zoltan(item)
     CMAKE_CXX_STANDARD             = vt_cmake_cxx_standard(item)
     VT_FIND_MPI                    = vt_find_mpi(item)
+    CC                             = vt_find_cc(item)
+    CXX                            = vt_find_cxx(item)
   }
 
   # to get the list of available images from DARMA-tasking/workflows:
@@ -334,6 +346,8 @@ target "vt-build-all" {
       {
         image = "amd64-ubuntu-22.04-clang-12-cpp",
         vt_find_mpi = 0
+        cc = "mpicc"
+        cxx = "mpicxx"
       },
       {
         image = "amd64-ubuntu-22.04-clang-13-cpp"
