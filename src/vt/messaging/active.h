@@ -105,7 +105,13 @@ static constexpr TagType const PutPackedTag =
 
 enum class MPITag : MPI_TagType {
   ActiveMsgTag = 1,
-  DataMsgTag = 2
+  DataMsgTag   = 2,
+
+  // Size-class active message tags
+  ActiveMsgS   = 11,  // <= 512 bytes
+  ActiveMsgM   = 12,  // <= 2048 bytes
+  ActiveMsgL   = 13,  // <= 8192 bytes
+  ActiveMsgXL  = 14   // <= 32768 bytes
 };
 
 static constexpr TagType const starting_direct_buffer_tag = 1000;
@@ -1495,13 +1501,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \param[in] dest the destination of the message
    * \param[in] base the message base pointer
-   * \param[in] send_tag the send tag on the message
    *
    * \return the event to test/wait for completion
    */
   EventType sendMsgBytesWithPut(
-    NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-    TagType const& send_tag
+    NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base
   );
 
   /**
@@ -1728,17 +1732,23 @@ private:
   );
 
   /**
-   * \brief Active receive broker that keeps a pool of pre-posted Irecv slots
-   * at various sizes to drain unexpected ActiveMsg traffic quickly.
+   * \brief Select an active message tag based on the size of the message
    *
-   * This broker only handles ActiveMsgTag receives to avoid interfering with
-   * data messages. Each completed slot dispatches directly
-   * to finishPendingActiveMsgAsyncRecv and is immediately reposted with a
-   * fresh buffer of the same capacity.
+   * \param[in] size the size of the message
+   */
+  static MPI_TagType selectActiveTag(MsgSizeType size);
+
+  /**
+   * \brief Active receive broker that keeps a pool of pre-posted Irecv slots
+   * per size-class tag to drain unexpected ActiveMsg traffic quickly.
+   *
+   * Each completed slot dispatches directly to finishPendingActiveMsgAsyncRecv
+   * and is immediately reposted with a fresh buffer of the same capacity.
    */
   struct ActiveRecvBroker {
     struct Slot {
       int cap = 0;
+      MPI_TagType tag = 0;
       std::byte* buf = nullptr;
       MPI_Request req = MPI_REQUEST_NULL;
       bool posted = false;
@@ -1747,12 +1757,17 @@ private:
     void setup(ActiveMessenger* self);
     bool progress(ActiveMessenger* self);
 
+    static constexpr int num_caps_ = 4;
+    static constexpr int caps_[num_caps_] = {512, 2048, 8192, 32768};
   private:
     std::vector<Slot> slots_;
-    // Tunable capacities and per-size slot count; conservative defaults.
-    static constexpr int num_caps_ = 4;
-    static constexpr int caps_[num_caps_] = {256, 1024, 4096, 16384};
-    static constexpr int slots_per_size_ = 4;
+    static constexpr MPI_TagType tags_[num_caps_] = {
+      static_cast<MPI_TagType>(MPITag::ActiveMsgS),
+      static_cast<MPI_TagType>(MPITag::ActiveMsgM),
+      static_cast<MPI_TagType>(MPITag::ActiveMsgL),
+      static_cast<MPI_TagType>(MPITag::ActiveMsgXL)
+    };
+    static constexpr int slots_per_class_ = 4;
 
     void postSlot(ActiveMessenger* self, Slot& s);
   };

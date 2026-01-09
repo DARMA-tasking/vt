@@ -172,10 +172,6 @@ namespace vt { namespace group { namespace global {
   );
 
   if ((num_children > 0 || send_to_root) && (!this_node_dest || first_send)) {
-    auto const& send_tag = static_cast<messaging::MPI_TagType>(
-      messaging::MPITag::ActiveMsgTag
-    );
-
     // Send to child nodes in the spanning tree
     if (num_children > 0) {
       default_group_->spanning_tree_->foreachChild([&](NodeType child) {
@@ -189,7 +185,7 @@ namespace vt { namespace group { namespace global {
         );
 
         if (send) {
-          theMsg()->sendMsgBytesWithPut(child, base, send_tag);
+          theMsg()->sendMsgBytesWithPut(child, base);
         }
       });
     }
@@ -204,7 +200,7 @@ namespace vt { namespace group { namespace global {
         print_bool(is_root), root_node, dest, print_ptr(msg)
       );
 
-      theMsg()->sendMsgBytesWithPut(root_node, base, send_tag);
+      theMsg()->sendMsgBytesWithPut(root_node, base);
     }
   }
 
