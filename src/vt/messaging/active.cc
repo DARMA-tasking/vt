@@ -1392,6 +1392,9 @@ bool ActiveMessenger::ActiveRecvBroker::progress(ActiveMessenger* self) {
       int count_bytes = 0;
       MPI_Get_count(&stat, MPI_BYTE, &count_bytes);
 
+      // Decrease the "allocated" size to the actual used size so we know the true length of the buffer
+      thePool()->setUsedSize(s.buf, count_bytes);
+
       if (count_bytes > s.cap) {
         vtWarn(fmt::format(
           "ActiveRecvBroker: received {} bytes > slot cap {} on tag {}",

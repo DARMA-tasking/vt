@@ -222,6 +222,11 @@ Pool::SizeType Pool::allocatedSize(std::byte* const buf) const {
   return HeaderManagerType::getHeaderBytes(buf) + HeaderManagerType::getHeaderOversizeBytes(buf);
 }
 
+void Pool::setUsedSize(std::byte* const buf, SizeType used_bytes) {
+  auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(buf));
+  header->alloc_size = used_bytes;
+}
+
 bool
 Pool::tryGrowAllocation(std::byte* buf, size_t grow_amount) {
   // For non-pooled alloc, this condition will always be true
