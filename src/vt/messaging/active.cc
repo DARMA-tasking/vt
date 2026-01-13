@@ -786,7 +786,7 @@ void ActiveMessenger::recvDataDirect(
       vtAssertMPISuccess(ret, "MPI_Irecv");
     }
 
-    dmPostedCounterGauge.incrementUpdate(len, 1);
+    dmPostedCounterGauge.incrementUpdate(sublen, 1);
 
     #if vt_check_enabled(trace_enabled)
       if (theConfig()->vt_trace_mpi) {
