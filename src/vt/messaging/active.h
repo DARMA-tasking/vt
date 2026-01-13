@@ -1770,6 +1770,9 @@ private:
     static constexpr int slots_per_class_ = 4;
 
     void postSlot(ActiveMessenger* self, Slot& s);
+  public:
+    // Cleanup outstanding posted receives and buffers to avoid leaks at shutdown
+    void cleanup();
   };
 
 public:

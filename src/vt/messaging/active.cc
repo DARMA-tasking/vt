@@ -167,7 +167,10 @@ void ActiveMessenger::startup() {
   active_broker_.setup(this);
 }
 
-/*virtual*/ ActiveMessenger::~ActiveMessenger() {}
+/*virtual*/ ActiveMessenger::~ActiveMessenger() {
+  // Ensure broker-posted receives/buffers are cleaned up to avoid leaks
+  active_broker_.cleanup();
+}
 
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   [[maybe_unused]] HandlerType const handler,
@@ -1419,6 +1422,26 @@ bool ActiveMessenger::ActiveRecvBroker::progress(ActiveMessenger* self) {
   }
 
   return any_progress;
+}
+
+void ActiveMessenger::ActiveRecvBroker::cleanup() {
+  // Cancel any outstanding receives and free any broker-owned buffers
+  for (auto& s : slots_) {
+    if (s.posted) {
+      VT_ALLOW_MPI_CALLS;
+      int ret = MPI_Cancel(&s.req);
+      vtAssertMPISuccess(ret, "Broker MPI_Cancel");
+      ret = MPI_Request_free(&s.req);
+      vtAssertMPISuccess(ret, "Broker MPI_Request_free");
+      s.posted = false;
+    }
+    if (s.buf != nullptr) {
+      thePool()->dealloc(s.buf);
+      s.buf = nullptr;
+    }
+    s.req = MPI_REQUEST_NULL;
+  }
+  slots_.clear();
 }
 
 int ActiveMessenger::progress([[maybe_unused]] TimeType current_time) {
