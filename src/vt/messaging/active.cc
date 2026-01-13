@@ -824,9 +824,10 @@ void ActiveMessenger::recvDataDirect(
   MsgSizeType remainder = len;
   auto const max_per_send = theConfig()->vt_max_mpi_send_size;
 
+  int start_chunk = 0;
+
 #if MPI_VERSION >= 3
   // If we have a pre-matched first message, use MPI_Imrecv for the first chunk
-  int start_chunk = 0;
   if (first_msg != MPI_MESSAGE_NULL && first_chunk_bytes > 0) {
     #if vt_check_enabled(trace_enabled)
       std::unique_ptr<trace::TraceScopedNote> trace_note;
@@ -860,12 +861,10 @@ void ActiveMessenger::recvDataDirect(
     remainder -= first_chunk_bytes;
     start_chunk = 1;
   }
+#endif
 
   // Post remaining chunks using MPI_Irecv
   for (int i = start_chunk; i < nchunks; i++) {
-#else
-  for (int i = 0; i < nchunks; i++) {
-#endif
     auto sublen = static_cast<int>(
       std::min(static_cast<std::size_t>(remainder), max_per_send)
     );
