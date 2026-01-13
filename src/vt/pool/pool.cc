@@ -235,7 +235,7 @@ Pool::tryGrowAllocation(std::byte* buf, size_t grow_amount) {
     return false;
 
   auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(buf));
-  header->alloc_size += grow_amount;
+  header->use_size += grow_amount;
   return true;
 }
 
