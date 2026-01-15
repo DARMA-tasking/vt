@@ -196,8 +196,8 @@ MsgSizeType ActiveMessenger::packMsg(
 ) {
   vt_debug_print(
     verbose, active,
-    "packMsg: msg_size={}, put_size={}, ptr={}, ptr_bytes={}\n",
-    size, ptr_bytes, print_ptr(ptr), ptr_bytes
+    "packMsg: msg_size={}, put_size={}, ptr={}\n",
+    size, ptr_bytes, print_ptr(ptr)
   );
 
   auto const can_grow = thePool()->tryGrowAllocation(reinterpret_cast<std::byte*>(msg), ptr_bytes);
