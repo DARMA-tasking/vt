@@ -80,7 +80,7 @@ endif()
 #
 # Test prep - ensures examples can be registered as tests.
 #
-if (vt_build_tests
+if ((vt_build_tests OR vt_build_examples)
    AND "${CMAKE_PROJECT_NAME}" STREQUAL "${PROJECT_NAME}")
   # CTest implies enable_testing() and defines the BUILD_TESTING option.
   # The default of BUILD_TESTING is ON.
