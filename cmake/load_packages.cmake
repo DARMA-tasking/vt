@@ -1,6 +1,6 @@
 get_directory_property(projHasParent PARENT_DIRECTORY)
 
-# MPI package
+# MPI package and, if enabled, test/example macros
 include(cmake/load_mpi_package.cmake)
 
 # ZLIB package
@@ -20,6 +20,3 @@ include(cmake/load_zoltan_package.cmake)
 
 # If enabled, test if perf is available and works
 include(cmake/load_perf.cmake)
-
-# Tests
-include(cmake/test_vt.cmake)
