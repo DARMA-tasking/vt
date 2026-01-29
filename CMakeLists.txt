@@ -45,12 +45,14 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 
+# Some options use TPL information (whether Perl was found etc.)
+include(cmake/configure_options.cmake)
+
 set(MPI_EXTRA_FLAGS "" CACHE STRING "Flags to pass to mpirun/mpiexec")
-string(REPLACE " " ";" MPI_EXTRA_FLAGS_LIST "${MPI_EXTRA_FLAGS}")
 if (vt_build_tests OR vt_build_examples)
+  string(REPLACE " " ";" MPI_EXTRA_FLAGS_LIST "${MPI_EXTRA_FLAGS}")
   message(STATUS "Running tests and examples with additional MPI flags = ${MPI_EXTRA_FLAGS_LIST}")
 endif()
-
 
 set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
@@ -63,9 +65,6 @@ include(cmake/link_vt.cmake)
 
 # Load packages that are required for core VT build
 include(cmake/load_packages.cmake)
-
-# Some options use TPL information (whether Perl was found etc.)
-include(cmake/configure_options.cmake)
 
 include(cmake/check_compiler.cmake)
 include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
