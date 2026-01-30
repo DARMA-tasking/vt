@@ -17,52 +17,55 @@ if(vt_find_mpi)
 else()
   message(STATUS "Skipping find_package(MPI). Ensure MPI compiler wrappers are used.")
 
-  # Provide reasonable defaults for MPI variables
-  if(NOT DEFINED MPIEXEC_EXECUTABLE)
-    set(MPIEXEC_EXECUTABLE "mpirun")  # Default to mpirun
-    message(WARNING "MPIEXEC_EXECUTABLE not set. Defaulting to 'mpirun'.")
-  endif()
+  if(vt_build_tests OR vt_build_examples)
+    # Provide reasonable defaults for MPI variables
+    if(NOT DEFINED MPIEXEC_EXECUTABLE)
+      set(MPIEXEC_EXECUTABLE "mpirun")  # Default to mpirun
+      message(WARNING "MPIEXEC_EXECUTABLE not set. Defaulting to 'mpirun'.")
+    endif()
 
-  if(NOT DEFINED MPIEXEC_NUMPROC_FLAG)
-    set(MPIEXEC_NUMPROC_FLAG "-n")  # Default to -n for number of processes
-    message(WARNING "MPIEXEC_NUMPROC_FLAG not set. Defaulting to '-n'.")
-  endif()
+    if(NOT DEFINED MPIEXEC_NUMPROC_FLAG)
+      set(MPIEXEC_NUMPROC_FLAG "-n")  # Default to -n for number of processes
+      message(WARNING "MPIEXEC_NUMPROC_FLAG not set. Defaulting to '-n'.")
+    endif()
 
-  if(NOT DEFINED MPIEXEC_MAX_NUMPROCS)
-    # Default to a safe value or detect system cores (maybe be possible to use ProcessorCount in the future)
-    set(MPIEXEC_MAX_NUMPROCS 2)
-    message(WARNING "MPIEXEC_MAX_NUMPROCS not set. Defaulting to '2'.")
+    if(NOT DEFINED MPIEXEC_MAX_NUMPROCS)
+      # Default to a safe value or detect system cores (maybe be possible to use ProcessorCount in the future)
+      set(MPIEXEC_MAX_NUMPROCS 2)
+      message(WARNING "MPIEXEC_MAX_NUMPROCS not set. Defaulting to '2'.")
+    endif()
   endif()
 endif()
 
-# Set default command for invoking MPI (mpirun) and flag for MPI nprocs
-set(MPI_RUN_COMMAND  "${MPIEXEC_EXECUTABLE}")
-set(MPI_PRE_FLAGS    "${MPIEXEC_PREFLAGS}")
-set(MPI_EPI_FLAGS    "${MPIEXEC_POSTFLAGS}")
-set(MPI_NUMPROC_FLAG "${MPIEXEC_NUMPROC_FLAG}")
+if(vt_build_tests OR vt_build_examples)
+  # Set default command for invoking MPI (mpirun) and flag for MPI nprocs
+  set(MPI_RUN_COMMAND  "${MPIEXEC_EXECUTABLE}")
+  set(MPI_PRE_FLAGS    "${MPIEXEC_PREFLAGS}")
+  set(MPI_EPI_FLAGS    "${MPIEXEC_POSTFLAGS}")
+  set(MPI_NUMPROC_FLAG "${MPIEXEC_NUMPROC_FLAG}")
 
-set(cmake_detected_max_num_nodes ${MPIEXEC_MAX_NUMPROCS})
+  set(cmake_detected_max_num_nodes ${MPIEXEC_MAX_NUMPROCS})
 
-set(MPI_MAX_NUMPROC "${MPIEXEC_MAX_NUMPROCS}")
+  set(MPI_MAX_NUMPROC "${MPIEXEC_MAX_NUMPROCS}")
 
-if(${vt_tests_num_nodes})
-  set(MPI_MAX_NUMPROC "${vt_tests_num_nodes}")
+  if(${vt_tests_num_nodes})
+    set(MPI_MAX_NUMPROC "${vt_tests_num_nodes}")
+  endif()
+
+  if(${MPI_MAX_NUMPROC} GREATER ${MPIEXEC_MAX_NUMPROCS})
+    message(STATUS "Oversubscribing number of nodes to ${MPI_MAX_NUMPROC} with detected ${MPIEXEC_MAX_NUMPROCS}")
+  endif()
+
+  message(STATUS "MPI max nproc: ${MPI_MAX_NUMPROC}")
+
+  include(cmake/test_vt.cmake)
+
+  set(PROC_TEST_LIST "")
+  build_mpi_proc_test_list(
+    MAX_PROC       ${MPI_MAX_NUMPROC}
+    VARIABLE_OUT   PROC_TEST_LIST
+  )
+
+  message(STATUS "MPI proc test list: ${PROC_TEST_LIST}")
+  message(STATUS "MPI exec: ${MPIEXEC_EXECUTABLE}")
 endif()
-
-if(${MPI_MAX_NUMPROC} GREATER ${MPIEXEC_MAX_NUMPROCS})
-  message(STATUS "Oversubscribing number of nodes to ${MPI_MAX_NUMPROC} with detected ${MPIEXEC_MAX_NUMPROCS}")
-endif()
-
-message(STATUS "MPI max nproc: ${MPI_MAX_NUMPROC}")
-
-include(cmake/test_vt.cmake)
-
-set(PROC_TEST_LIST "")
-build_mpi_proc_test_list(
-  MAX_PROC       ${MPI_MAX_NUMPROC}
-  VARIABLE_OUT   PROC_TEST_LIST
-)
-
-message(STATUS "MPI proc test list: ${PROC_TEST_LIST}")
-message(STATUS "MPI exec: ${MPIEXEC_EXECUTABLE}")
-

@@ -87,7 +87,7 @@ function(link_target_with_vt)
       endif()
 
       target_link_libraries(
-        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} zoltan
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${Zoltan_LIBRARIES}
         )
       target_include_directories(
         ${ARG_TARGET} PUBLIC $<BUILD_INTERFACE:${Zoltan_INCLUDE_DIRS}>
