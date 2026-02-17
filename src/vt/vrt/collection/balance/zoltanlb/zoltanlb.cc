@@ -563,7 +563,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
 
         vt_debug_print(
           verbose, lb,
-          "edge_id={:x} from={:x}, to={:x}\n",
+          "edge_id={} from={}, to={}\n",
           iter->first.edge_id_,
           iter->first.fromObj(), iter->first.toObj()
         );
