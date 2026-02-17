@@ -547,7 +547,7 @@ void EntityLocationCoord<EntityID>::sendEagerUpdate(
   if (ask_node != this_node) {
     vtAssert(ask_node != uninitialized_destination, "Ask node must be valid");
     proxy_[ask_node].template send<&ThisType::handleEagerUpdate>(
-      id, home_node, deliver_node
+      MsgProps().asLocationMsg(), id, home_node, deliver_node
     );
   }
 }
@@ -574,14 +574,14 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
   if (to_node != this_node) {
     // Get the current ask node, which is the from node for the first hop
-    auto ask_node = msg->getAskNode();
-    if (ask_node != uninitialized_destination) {
-      // Insert into the ask list for a later update when information is known
-      loc_asks_[id].insert(ask_node);
+    auto prev_ask = msg->getAskNode();
+    if (prev_ask != uninitialized_destination) {
+      // Record previous asker for cascaded updates
+      loc_asks_[id].insert(prev_ask);
+    } else {
+      // Set initial ask node to the sender for direct eager update later
+      msg->setAskNode(this_node);
     }
-
-    // Update the new asking node, as this node is will be the next to ask
-    msg->setAskNode(this_node);
 
     auto m = msg; //copy for msg thief
     // send to the node discovered by the location manager
@@ -630,7 +630,11 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
       if (ask_node != uninitialized_destination) {
         auto delivered_node = theContext()->getNode();
+        // Tie the eager update to the same epoch as the routed message
+        auto epoch_local = theMsg()->getEpochContextMsg(msg);
+        theMsg()->pushEpoch(epoch_local);
         sendEagerUpdate(hid, ask_node, home_node, delivered_node);
+        theMsg()->popEpoch(epoch_local);
       }
     };
 
