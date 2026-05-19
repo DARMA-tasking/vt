@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               example_events.h
+//                             perf_event_groups.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,25 +41,42 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H
-#define INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H
+#if !defined INCLUDED_VT_METRICS_PERF_EVENT_GROUPS_H
+#define INCLUDED_VT_METRICS_PERF_EVENT_GROUPS_H
 
 #include "vt/metrics/perf_event_descriptor.h"
 
+#include <string>
+#include <cstddef>
 #include <unordered_map>
-#include <linux/perf_event.h>
+#include <vector>
 
-namespace vt { namespace metrics {
+namespace vt::metrics {
 
-std::unordered_map<std::string, PerfEventDescriptor> const example_event_map = {
-    {"cycles", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES, "compute"}},
-    {"instructions", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, "compute"}},
-    {"cache_references", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_REFERENCES, "cache"}},
-    {"cache_misses", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES, "cache"}},
-    {"branch_instructions", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS, "branch"}},
-    {"branch_misses", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES, "branch"}}
+using PerfEventDescriptorMap =
+  std::unordered_map<std::string, PerfEventDescriptor>;
+
+struct PerfEventGroupInfo {
+  std::string group_name_;
+  std::string source_;
+  std::vector<std::string> event_names_;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | group_name_ | source_ | event_names_;
+  }
 };
 
-}} // end namespace vt::metrics
+bool isPerfEnvEnabled(char const* env_name);
 
-#endif /*INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H*/
+std::size_t getPerfGroupMaxSize(char const* env_name);
+
+std::vector<PerfEventGroupInfo> resolvePerfEventGroups(
+  std::string const& event_spec, PerfEventDescriptorMap const& event_map,
+  bool auto_group, std::size_t auto_group_max_size,
+  std::vector<std::string>& event_names
+);
+
+} // end namespace vt::metrics
+
+#endif /*INCLUDED_VT_METRICS_PERF_EVENT_GROUPS_H*/
