@@ -118,6 +118,27 @@ uint64_t scaleCounterValue(
 
 namespace vt::metrics {
 
+void PerfData::maybePrintEventGroups() const {
+  if (not isPerfEnvEnabled("VT_PERF_PRINT_GROUPS")) {
+    return;
+  }
+
+  if (not vt::theContext() or vt::theContext()->getNode() != 0) {
+    return;
+  }
+
+  fmt::print("Perf groups manifested:\n");
+  for (auto const& group : event_groups_) {
+    fmt::print(
+      "  {} [{}{}]: {}\n",
+      group.group_name_,
+      group.source_,
+      group.pinned_ ? ", pinned" : "",
+      joinEventNames(group.event_names_)
+    );
+  }
+}
+
 PerfData::PerfData()
   : event_map_(example_event_map)
 {
@@ -208,9 +229,8 @@ void PerfData::stopTaskMeasurement() {
   }
 }
 
-std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
-  std::unordered_map<std::string, uint64_t> measurements;
-
+std::vector<PerfData::TaskGroupMeasurements> PerfData::readTaskGroupMeasurements() const {
+  std::vector<TaskGroupMeasurements> groups;
   if (group_states_.size() != event_groups_.size()) {
     vtAbort("Mismatch between opened event groups and configured event groups.");
   }
@@ -250,6 +270,11 @@ std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
       );
     }
 
+    TaskGroupMeasurements group_measurements;
+    group_measurements.group_ = group_state.info_;
+    group_measurements.time_enabled_ = time_enabled;
+    group_measurements.time_running_ = time_running;
+
     for (size_t i = 0; i < event_count; ++i) {
       auto const value = buffer[3 + (i * 2)];
       auto const event_id = buffer[4 + (i * 2)];
@@ -261,9 +286,24 @@ std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
         );
       }
 
-      measurements[iter->second] = scaleCounterValue(
+      group_measurements.measurements_[iter->second] = scaleCounterValue(
         value, time_enabled, time_running
       );
+    }
+
+    groups.push_back(std::move(group_measurements));
+  }
+
+  return groups;
+}
+
+std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
+  std::unordered_map<std::string, uint64_t> measurements;
+  auto const groups = readTaskGroupMeasurements();
+
+  for (auto const& group : groups) {
+    for (auto const& measurement : group.measurements_) {
+      measurements[measurement.first] = measurement.second;
     }
   }
 
@@ -274,6 +314,10 @@ std::unordered_map<std::string, uint64_t> PerfData::getTaskMeasurements() {
   return measurements;
 }
 
+std::vector<PerfData::TaskGroupMeasurements> PerfData::getTaskGroupMeasurements() {
+  return readTaskGroupMeasurements();
+}
+
 std::unordered_map<std::string, PerfEventDescriptor> PerfData::getEventMap() const {
   return event_map_;
 }
@@ -282,7 +326,10 @@ std::vector<PerfEventGroupInfo> PerfData::getEventGroups() const {
   return event_groups_;
 }
 
-void PerfData::startup() { event_map_ = example_event_map; }
+void PerfData::startup() {
+  event_map_ = example_event_map;
+  maybePrintEventGroups();
+}
 
 std::string PerfData::name() { return "PerfData"; }
 

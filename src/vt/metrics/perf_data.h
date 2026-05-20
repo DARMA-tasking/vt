@@ -75,15 +75,40 @@ namespace vt::metrics {
 struct PerfData: runtime::component::Component<PerfData>
 {
 public:
+  struct TaskGroupMeasurements {
+    PerfEventGroupInfo group_;
+    uint64_t time_enabled_ = 0;
+    uint64_t time_running_ = 0;
+    std::unordered_map<std::string, uint64_t> measurements_;
+
+    long double getScalingRatio() const {
+      if (time_running_ == 0) {
+        return 0.0L;
+      }
+
+      return static_cast<long double>(time_enabled_) /
+        static_cast<long double>(time_running_);
+    }
+
+    long double getRunningFraction() const {
+      if (time_enabled_ == 0) {
+        return 0.0L;
+      }
+
+      return static_cast<long double>(time_running_) /
+        static_cast<long double>(time_enabled_);
+    }
+  };
+
   /**
    * \brief Constructor for PerfData
    *
    * Initializes performance counters based on the \c VT_EVENTS environment variable,
    * which is a comma separated list of events available in the events header
    * (example_events.h by default). Explicit groups may be provided with braces,
-  * such as \c VT_EVENTS="{instructions,cycles},cache_misses". Append
-  * \c ! to an event or explicit group to pin that group, such as
-  * \c VT_EVENTS="instructions!,{cycles,cache_misses}!". If
+   * such as \c VT_EVENTS="{instructions,cycles},cache_misses". Append
+   * \c ! to an event or explicit group to pin that group, such as
+   * \c VT_EVENTS="instructions!,{cycles,cache_misses}!". If
    * \c VT_PERF_AUTO_GROUP is enabled, ungrouped events are bucketed using the
    * descriptors from example_events.h. If \c VT_EVENTS isn't set, will default
    * to measuring instructions. Ensures only valid events are configured.
@@ -122,6 +147,14 @@ public:
    * \throws vtAbort if there is a mismatch in data or an error during reading.
    */
   std::unordered_map<std::string, uint64_t> getTaskMeasurements();
+
+  /**
+   * \brief Get grouped task measurements and raw perf multiplexing metadata
+   *
+   * Reads grouped counter values along with the raw \c time_enabled and
+   * \c time_running values returned by the perf subsystem.
+   */
+  std::vector<TaskGroupMeasurements> getTaskGroupMeasurements();
 
   /**
    * \brief Retrieve the current event map
@@ -193,6 +226,16 @@ private:
    * \brief Flat list of open file descriptors to simplify cleanup
    */
   std::vector<int> open_fds_;
+
+  /**
+   * \brief Common implementation for grouped perf reads
+   */
+  std::vector<TaskGroupMeasurements> readTaskGroupMeasurements() const;
+
+  /**
+   * \brief Print resolved perf event groups when requested by the environment
+   */
+  void maybePrintEventGroups() const;
 
   /**
    * \brief Cleanup resources before aborting
