@@ -60,10 +60,11 @@ struct PerfEventGroupInfo {
   std::string group_name_;
   std::string source_;
   std::vector<std::string> event_names_;
+  bool pinned_ = false;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | group_name_ | source_ | event_names_;
+    s | group_name_ | source_ | event_names_ | pinned_;
   }
 };
 

@@ -81,7 +81,9 @@ public:
    * Initializes performance counters based on the \c VT_EVENTS environment variable,
    * which is a comma separated list of events available in the events header
    * (example_events.h by default). Explicit groups may be provided with braces,
-   * such as \c VT_EVENTS="{instructions,cycles},cache_misses". If
+  * such as \c VT_EVENTS="{instructions,cycles},cache_misses". Append
+  * \c ! to an event or explicit group to pin that group, such as
+  * \c VT_EVENTS="instructions!,{cycles,cache_misses}!". If
    * \c VT_PERF_AUTO_GROUP is enabled, ungrouped events are bucketed using the
    * descriptors from example_events.h. If \c VT_EVENTS isn't set, will default
    * to measuring instructions. Ensures only valid events are configured.

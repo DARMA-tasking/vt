@@ -72,7 +72,9 @@ std::string makePerfOpenError(
     group.group_name_ + "' (source=" + group.source_ + ", attempted_size=" +
     std::to_string(attempted_group_size) + ", configured_size=" +
     std::to_string(group.event_names_.size()) + ", events=[" +
-    joinEventNames(group.event_names_) + "]): " + std::strerror(error_number);
+    joinEventNames(group.event_names_) + "], pinned=" +
+    std::string(group.pinned_ ? "true" : "false") + "): " +
+    std::strerror(error_number);
 
   if (group.event_names_.size() > 1) {
     message +=
@@ -145,6 +147,7 @@ PerfData::PerfData()
       pe.exclude_kernel = 1;
       pe.exclude_hv = 1;
       pe.inherit = 1;
+      pe.pinned = state.info_.pinned_ and state.leader_fd_ == -1 ? 1 : 0;
       pe.read_format = PERF_FORMAT_GROUP | PERF_FORMAT_TOTAL_TIME_ENABLED |
         PERF_FORMAT_TOTAL_TIME_RUNNING | PERF_FORMAT_ID;
 

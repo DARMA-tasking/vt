@@ -50,7 +50,11 @@
 
 namespace {
 
-using ParsedEventGroup = std::pair<std::vector<std::string>, bool>;
+struct ParsedEventGroup {
+  std::vector<std::string> event_names_;
+  bool explicit_group_ = false;
+  bool pinned_ = false;
+};
 
 struct AutoGroupState {
   std::size_t current_index_ = 0;
@@ -65,6 +69,36 @@ std::string trim(std::string value) {
 
   auto const last = value.find_last_not_of(" \t\n\r");
   return value.substr(first, last - first + 1);
+}
+
+std::pair<std::string, bool> splitPinnedSuffix(std::string token) {
+  auto trimmed = trim(std::move(token));
+  if (trimmed.empty()) {
+    return {{}, false};
+  }
+
+  auto const marker_pos = trimmed.find('!');
+  if (marker_pos == std::string::npos) {
+    return {trimmed, false};
+  }
+
+  if (
+    marker_pos != trimmed.size() - 1 or
+    trimmed.find('!', marker_pos + 1) != std::string::npos
+  ) {
+    vtAbort(
+      "Malformed VT_EVENTS specification: pin marker must appear once at the end of an event or group."
+    );
+  }
+
+  auto event_name = trim(trimmed.substr(0, marker_pos));
+  if (event_name.empty()) {
+    vtAbort(
+      "Malformed VT_EVENTS specification: pin marker must follow an event or grouped event list."
+    );
+  }
+
+  return {event_name, true};
 }
 
 void validateEventName(
@@ -100,6 +134,23 @@ std::vector<ParsedEventGroup> parseEventGroups(std::string const& event_spec) {
   for (char const ch : event_spec) {
     if (after_group) {
       if (std::isspace(static_cast<unsigned char>(ch))) {
+        continue;
+      }
+
+      if (ch == '!') {
+        if (parsed_groups.empty() or not parsed_groups.back().explicit_group_) {
+          vtAbort(
+            "Malformed VT_EVENTS specification: pin marker must follow a grouped event list or event name."
+          );
+        }
+
+        if (parsed_groups.back().pinned_) {
+          vtAbort(
+            "Malformed VT_EVENTS specification: duplicate pin marker after grouped events."
+          );
+        }
+
+        parsed_groups.back().pinned_ = true;
         continue;
       }
 
@@ -140,14 +191,21 @@ std::vector<ParsedEventGroup> parseEventGroups(std::string const& event_spec) {
       }
 
       auto const token = flushToken();
-      if (token.empty()) {
+      auto const parsed_token = splitPinnedSuffix(token);
+      if (parsed_token.first.empty()) {
         vtAbort(
           "Malformed VT_EVENTS specification: empty event in grouped configuration."
         );
       }
 
-      current_group.push_back(token);
-      parsed_groups.push_back({current_group, true});
+      if (parsed_token.second) {
+        vtAbort(
+          "Malformed VT_EVENTS specification: pin a grouped event list with a trailing '!' after the closing brace."
+        );
+      }
+
+      current_group.push_back(parsed_token.first);
+      parsed_groups.push_back({current_group, true, false});
       current_group.clear();
       in_group = false;
       after_group = true;
@@ -157,21 +215,28 @@ std::vector<ParsedEventGroup> parseEventGroups(std::string const& event_spec) {
 
     if (ch == ',') {
       auto const token = flushToken();
+      auto const parsed_token = splitPinnedSuffix(token);
 
       if (in_group) {
-        if (token.empty()) {
+        if (parsed_token.first.empty()) {
           vtAbort(
             "Malformed VT_EVENTS specification: empty event in grouped configuration."
           );
         }
 
-        current_group.push_back(token);
+        if (parsed_token.second) {
+          vtAbort(
+            "Malformed VT_EVENTS specification: pin a grouped event list with a trailing '!' after the closing brace."
+          );
+        }
+
+        current_group.push_back(parsed_token.first);
       } else {
-        if (token.empty()) {
+        if (parsed_token.first.empty()) {
           vtAbort("Malformed VT_EVENTS specification: empty event in event list.");
         }
 
-        parsed_groups.push_back({{token}, false});
+        parsed_groups.push_back({{parsed_token.first}, false, parsed_token.second});
       }
 
       saw_delimiter = true;
@@ -194,7 +259,8 @@ std::vector<ParsedEventGroup> parseEventGroups(std::string const& event_spec) {
   }
 
   auto const token = flushToken();
-  if (token.empty()) {
+  auto const parsed_token = splitPinnedSuffix(token);
+  if (parsed_token.first.empty()) {
     if (parsed_groups.empty()) {
       vtAbort("Malformed VT_EVENTS specification: no events were configured.");
     }
@@ -203,7 +269,7 @@ std::vector<ParsedEventGroup> parseEventGroups(std::string const& event_spec) {
       vtAbort("Malformed VT_EVENTS specification: trailing comma in event list.");
     }
   } else {
-    parsed_groups.push_back({{token}, false});
+    parsed_groups.push_back({{parsed_token.first}, false, parsed_token.second});
   }
 
   return parsed_groups;
@@ -220,7 +286,7 @@ void appendAutoGroupEvent(
   if (iter == auto_group_states.end()) {
     auto const new_index = resolved_groups.size();
     auto_group_states.emplace(auto_name, AutoGroupState{new_index, 0});
-    resolved_groups.push_back({auto_name, "auto", {event_name}});
+    resolved_groups.push_back({auto_name, "auto", {event_name}, false});
     return;
   }
 
@@ -244,7 +310,8 @@ void appendAutoGroupEvent(
   resolved_groups.push_back({
     auto_name + "-" + std::to_string(state.chunk_count_),
     "auto",
-    {event_name}
+    {event_name},
+    false
   });
 }
 
@@ -302,22 +369,33 @@ std::vector<PerfEventGroupInfo> resolvePerfEventGroups(
   std::size_t explicit_group_index = 0;
 
   for (auto const& parsed_group : parsed_groups) {
-    for (auto const& event_name : parsed_group.first) {
+    for (auto const& event_name : parsed_group.event_names_) {
       validateEventName(event_name, event_map, seen_events);
       event_names.push_back(event_name);
     }
 
-    if (parsed_group.second) {
+    if (parsed_group.explicit_group_) {
       resolved_groups.push_back({
         "explicit-" + std::to_string(explicit_group_index++),
         "explicit",
-        parsed_group.first
+        parsed_group.event_names_,
+        parsed_group.pinned_
       });
       continue;
     }
 
-    auto const& event_name = parsed_group.first.front();
+    auto const& event_name = parsed_group.event_names_.front();
     auto const& descriptor = event_map.at(event_name);
+
+    if (parsed_group.pinned_) {
+      resolved_groups.push_back({
+        "singleton-" + event_name,
+        "singleton",
+        {event_name},
+        true
+      });
+      continue;
+    }
 
     if (auto_group and not descriptor.auto_group_.empty()) {
       auto const auto_name = "auto-" + descriptor.auto_group_;
@@ -329,7 +407,8 @@ std::vector<PerfEventGroupInfo> resolvePerfEventGroups(
       resolved_groups.push_back({
         "singleton-" + event_name,
         "singleton",
-        {event_name}
+        {event_name},
+        false
       });
     }
   }
