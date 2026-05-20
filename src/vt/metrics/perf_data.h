@@ -81,22 +81,22 @@ public:
     uint64_t time_running_ = 0;
     std::unordered_map<std::string, uint64_t> measurements_;
 
-    long double getScalingRatio() const {
+    double getScalingRatio() const {
       if (time_running_ == 0) {
-        return 0.0L;
+        return 0.0;
       }
 
-      return static_cast<long double>(time_enabled_) /
-        static_cast<long double>(time_running_);
+      return static_cast<double>(time_enabled_) /
+        static_cast<double>(time_running_);
     }
 
-    long double getRunningFraction() const {
+    double getRunningFraction() const {
       if (time_enabled_ == 0) {
-        return 0.0L;
+        return 0.0;
       }
 
-      return static_cast<long double>(time_running_) /
-        static_cast<long double>(time_enabled_);
+      return static_cast<double>(time_running_) /
+        static_cast<double>(time_enabled_);
     }
   };
 

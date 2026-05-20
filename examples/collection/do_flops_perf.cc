@@ -67,7 +67,7 @@ void printMultiplexingInfo(
 ) {
   for (auto const& group : groups) {
     fmt::print(
-      "  group {}: time_enabled={}, time_running={}, enabled/running={:.6Lf}, running/enabled={:.6Lf}\n",
+      "  group {}: time_enabled={}, time_running={}, enabled/running={:.6f}, running/enabled={:.6f}\n",
       group.group_.group_name_,
       group.time_enabled_,
       group.time_running_,
@@ -109,9 +109,9 @@ struct GenericWork : vt::Collection<GenericWork, vt::Index1D> {
     for (auto const& [name, value] : ordered) {
       fmt::print("  {}: {}", name, value);
       if (expected_ops > 0) {
-        auto const ratio = static_cast<long double>(value) /
-          static_cast<long double>(expected_ops);
-        fmt::print(" (ratio to expected ops = {:.6Lf})", ratio);
+        auto const ratio = static_cast<double>(value) /
+          static_cast<double>(expected_ops);
+        fmt::print(" (ratio to expected ops = {:.6f})", ratio);
       }
       fmt::print("\n");
     }

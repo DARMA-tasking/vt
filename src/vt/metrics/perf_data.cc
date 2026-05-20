@@ -103,9 +103,9 @@ uint64_t scaleCounterValue(
     return value;
   }
 
-  auto const scale = static_cast<long double>(time_enabled) /
-    static_cast<long double>(time_running);
-  auto const scaled_value = std::llround(static_cast<long double>(value) * scale);
+  auto const scale = static_cast<double>(time_enabled) /
+    static_cast<double>(time_running);
+  auto const scaled_value = std::llround(static_cast<double>(value) * scale);
 
   if (scaled_value < 0) {
     vtAbort("Scaled perf counter value became negative.");
