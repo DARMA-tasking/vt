@@ -46,6 +46,7 @@
 #include <vt/transport.h>
 #include <vt/runnable/invoke.h>
 
+#include <algorithm>
 #include <cstdlib>
 
 static constexpr std::size_t const default_num_objs = 100;
@@ -59,6 +60,21 @@ double pi(uint64_t n) {
     sign *= -1;
   }
   return 4.0*sum;
+}
+
+void printMultiplexingInfo(
+  std::vector<vt::metrics::PerfData::TaskGroupMeasurements> const& groups
+) {
+  for (auto const& group : groups) {
+    fmt::print(
+      "  group {}: time_enabled={}, time_running={}, enabled/running={:.6f}, running/enabled={:.6f}\n",
+      group.group_.group_name_,
+      group.time_enabled_,
+      group.time_running_,
+      group.getScalingRatio(),
+      group.getRunningFraction()
+    );
+  }
 }
 
 struct GenericWork : vt::Collection<GenericWork, vt::Index1D> {
@@ -75,9 +91,29 @@ struct GenericWork : vt::Collection<GenericWork, vt::Index1D> {
     // ----------------------------------------------------------
 
     vt::theContext()->getTask()->stopMetrics();
-    std::unordered_map<std::string, uint64_t> res = vt::theContext()->getTask()->getMetrics();
-    for (auto [name, value] : res) {
-      fmt::print("  {}: {}\n", name, value);
+    auto const group_measurements = vt::thePerfData()->getTaskGroupMeasurements();
+    std::unordered_map<std::string, uint64_t> res;
+    for (auto const& group : group_measurements) {
+      for (auto const& measurement : group.measurements_) {
+        res[measurement.first] = measurement.second;
+      }
+    }
+
+    auto const expected_ops = 4ull * static_cast<uint64_t>(flopsPerIter_);
+    fmt::print("  expected scalar fp ops ~= {}\n", expected_ops);
+    printMultiplexingInfo(group_measurements);
+
+    std::vector<std::pair<std::string, uint64_t>> ordered(res.begin(), res.end());
+    std::sort(ordered.begin(), ordered.end());
+
+    for (auto const& [name, value] : ordered) {
+      fmt::print("  {}: {}", name, value);
+      if (expected_ops > 0) {
+        auto const ratio = static_cast<double>(value) /
+          static_cast<double>(expected_ops);
+        fmt::print(" (ratio to expected ops = {:.6f})", ratio);
+      }
+      fmt::print("\n");
     }
 
     fmt::print("-- Stopping Iteration --\n");
@@ -100,11 +136,10 @@ int main(int argc, char** argv) {
 
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (argc == 1) {
-    if (this_node == 0) {
+    if (vt::theContext()->getNode() == 0) {
       fmt::print(stderr, "{}: using default arguments since none provided\n", name);
     }
     num_objs = default_num_objs * num_nodes;

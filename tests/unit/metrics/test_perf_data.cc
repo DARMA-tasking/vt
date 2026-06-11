@@ -138,6 +138,73 @@ TEST_F(TestPerfData, ConstructorDestructorValidation) {
   }
 }
 
+TEST_F(TestPerfData, ResolvePinnedSingletonGroup) {
+  std::vector<std::string> event_names;
+  auto const groups = vt::metrics::resolvePerfEventGroups(
+    "instructions!", vt::metrics::example_event_map, true, 4, event_names
+  );
+
+  ASSERT_EQ(groups.size(), 1);
+  ASSERT_EQ(event_names.size(), 1);
+  EXPECT_EQ(event_names[0], "instructions");
+  EXPECT_EQ(groups[0].group_name_, "singleton-instructions");
+  EXPECT_EQ(groups[0].source_, "singleton");
+  ASSERT_EQ(groups[0].event_names_.size(), 1);
+  EXPECT_EQ(groups[0].event_names_[0], "instructions");
+  EXPECT_TRUE(groups[0].pinned_);
+}
+
+TEST_F(TestPerfData, ResolvePinnedExplicitGroup) {
+  std::vector<std::string> event_names;
+  auto const groups = vt::metrics::resolvePerfEventGroups(
+    "{instructions,cycles}!", vt::metrics::example_event_map, true, 4,
+    event_names
+  );
+
+  ASSERT_EQ(groups.size(), 1);
+  ASSERT_EQ(event_names.size(), 2);
+  EXPECT_EQ(event_names[0], "instructions");
+  EXPECT_EQ(event_names[1], "cycles");
+  EXPECT_EQ(groups[0].group_name_, "explicit-0");
+  EXPECT_EQ(groups[0].source_, "explicit");
+  ASSERT_EQ(groups[0].event_names_.size(), 2);
+  EXPECT_EQ(groups[0].event_names_[0], "instructions");
+  EXPECT_EQ(groups[0].event_names_[1], "cycles");
+  EXPECT_TRUE(groups[0].pinned_);
+}
+
+TEST_F(TestPerfData, PinnedSingletonSkipsAutoGrouping) {
+  std::vector<std::string> event_names;
+  auto const groups = vt::metrics::resolvePerfEventGroups(
+    "instructions!,cycles", vt::metrics::example_event_map, true, 4,
+    event_names
+  );
+
+  ASSERT_EQ(groups.size(), 2);
+  ASSERT_EQ(event_names.size(), 2);
+  EXPECT_EQ(event_names[0], "instructions");
+  EXPECT_EQ(event_names[1], "cycles");
+
+  EXPECT_EQ(groups[0].group_name_, "singleton-instructions");
+  EXPECT_EQ(groups[0].source_, "singleton");
+  EXPECT_TRUE(groups[0].pinned_);
+
+  EXPECT_EQ(groups[1].group_name_, "auto-compute");
+  EXPECT_EQ(groups[1].source_, "auto");
+  EXPECT_FALSE(groups[1].pinned_);
+  ASSERT_EQ(groups[1].event_names_.size(), 1);
+  EXPECT_EQ(groups[1].event_names_[0], "cycles");
+}
+
+TEST_F(TestPerfData, GroupMeasurementRatios) {
+  vt::metrics::PerfData::TaskGroupMeasurements group;
+  group.time_enabled_ = 200;
+  group.time_running_ = 125;
+
+  EXPECT_DOUBLE_EQ(static_cast<double>(group.getScalingRatio()), 1.6);
+  EXPECT_DOUBLE_EQ(static_cast<double>(group.getRunningFraction()), 0.625);
+}
+
 
 #endif
 
