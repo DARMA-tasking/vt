@@ -99,8 +99,8 @@ jobs:
             find /build/vt -type f | wc -l || true && \
             echo "=== Directory count ===" && \
             find /build/vt -type d | wc -l || true && \
-          mkdir -p /vt \
-          && cp -p -R /build/vt/. /vt/ || true
+          mkdir -p /vt && \
+          cp -p -R /build/vt/. /vt/ || true
           " >> tmp_dockerfile
 
           docker buildx build --builder ${{ steps.setup-buildx.outputs.name }} -f tmp_dockerfile --output type=local,dest=build .
