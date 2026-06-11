@@ -93,6 +93,12 @@ jobs:
           echo "
           FROM ubuntu:latest
           RUN --mount=type=cache,id=BUILD-${{ matrix.target }},target=/build/vt \
+            echo "=== Cache statistics ===" && \
+            du -sh /build/vt || true && \
+            echo "=== File count ===" && \
+            find /build/vt -type f | wc -l || true && \
+            echo "=== Directory count ===" && \
+            find /build/vt -type d | wc -l || true && \
           mkdir -p /vt \
           && cp -p -R /build/vt/. /vt/ || true
           " >> tmp_dockerfile
