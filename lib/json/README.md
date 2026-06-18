@@ -862,7 +862,7 @@ namespace ns {
         std::string street;
         int housenumber;
         int postcode;
-  
+
       public:
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(address, street, housenumber, postcode)
     };
@@ -1736,7 +1736,7 @@ I deeply appreciate the help of the following people.
 374. [Michael Valladolid](https://github.com/codenut) added support for BSON uint64 serialization/deserialization.
 375. [Nikhil](https://github.com/nikhilreddydev) updated the documentation.
 376. [Nebojša Cvetković](https://github.com/nebkat) added support for BJDATA optimized binary array type.
-377. [Sushrut Shringarputale](https://github.com/sushshring) added support for diagnostic positions. 
+377. [Sushrut Shringarputale](https://github.com/sushshring) added support for diagnostic positions.
 378. [kimci86](https://github.com/kimci86) templated to `NLOHMANN_DEFINE_TYPE` macros to also support `ordered_json`.
 379. [Richard Topchii](https://github.com/richardtop) added support for VisionOS in the Swift Package Manager.
 380. [Robert Chisholm](https://github.com/Robadob) fixed a typo.
@@ -1794,11 +1794,11 @@ This library does not support comments by default. It does so for three reasons:
 
 1. Comments are not part of the [JSON specification](https://tools.ietf.org/html/rfc8259). You may argue that `//` or `/* */` are allowed in JavaScript, but JSON is not JavaScript.
 2. This was not an oversight: Douglas Crockford [wrote on this](https://plus.google.com/118095276221607585885/posts/RK8qyGVaGSr) in May 2012:
-  
+
     > I removed comments from JSON because I saw people were using them to hold parsing directives, a practice which would have destroyed interoperability.  I know that the lack of comments makes some people sad, but it shouldn't.
     >
     > Suppose you are using JSON to keep configuration files, which you would like to annotate. Go ahead and insert all the comments you like. Then pipe it through JSMin before handing it to your JSON parser.
-  
+
 3. It is dangerous for interoperability if some libraries would add comment support while others don't. Please check [The Harmful Consequences of the Robustness Principle](https://tools.ietf.org/html/draft-iab-protocol-maintenance-01) on this.
 
 However, you can pass set parameter `ignore_comments` to true in the `parse` function to ignore `//` or `/* */` comments. Comments will then be treated as whitespace.
