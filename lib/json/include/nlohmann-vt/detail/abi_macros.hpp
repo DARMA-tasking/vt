@@ -101,13 +101,11 @@
     inline namespace NLOHMANN_JSON_NAMESPACE_CONCAT( \
                 NLOHMANN_JSON_ABI_TAGS,              \
                 NLOHMANN_JSON_NAMESPACE_VERSION)     \
-    {                                                \
-    inline namespace vt {
+    {
 #endif
 
 #ifndef NLOHMANN_JSON_NAMESPACE_END
 #define NLOHMANN_JSON_NAMESPACE_END                                     \
-    }  /* namespace vt */                                               \
     }  /* namespace (inline namespace) NOLINT(readability/namespace) */ \
     }  // namespace nlohmann
 #endif
