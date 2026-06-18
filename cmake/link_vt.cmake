@@ -87,7 +87,7 @@ function(link_target_with_vt)
       endif()
 
       target_link_libraries(
-        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} zoltan
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${Zoltan_LIBRARIES}
         )
       target_include_directories(
         ${ARG_TARGET} PUBLIC $<BUILD_INTERFACE:${Zoltan_INCLUDE_DIRS}>
@@ -147,13 +147,15 @@ function(link_target_with_vt)
   endif()
 
   if (NOT DEFINED ARG_LINK_MPI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MPI)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: MPI=${ARG_LINK_MPI}")
-    endif()
+    if (vt_find_mpi)
+      if (${ARG_DEBUG_LINK})
+        message(STATUS "link_target_with_vt: MPI=${ARG_LINK_MPI}")
+      endif()
 
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} MPI::MPI_CXX
-    )
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} MPI::MPI_CXX
+      )
+    endif()
   endif()
 
   if (${vt_fcontext_enabled})

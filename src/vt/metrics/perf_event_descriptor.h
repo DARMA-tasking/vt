@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               example_events.h
+//                           perf_event_descriptor.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2024 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,25 +41,25 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H
-#define INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H
+#if !defined INCLUDED_VT_METRICS_PERF_EVENT_DESCRIPTOR_H
+#define INCLUDED_VT_METRICS_PERF_EVENT_DESCRIPTOR_H
 
-#include "vt/metrics/perf_event_descriptor.h"
+#include <cstdint>
+#include <string>
 
-#include <unordered_map>
-#include <linux/perf_event.h>
+namespace vt::metrics {
 
-namespace vt { namespace metrics {
+struct PerfEventDescriptor {
+  uint64_t type = 0;
+  uint64_t config = 0;
+  std::string auto_group_;
 
-std::unordered_map<std::string, PerfEventDescriptor> const example_event_map = {
-    {"cycles", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES, "compute"}},
-    {"instructions", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, "compute"}},
-    {"cache_references", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_REFERENCES, "cache"}},
-    {"cache_misses", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES, "cache"}},
-    {"branch_instructions", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS, "branch"}},
-    {"branch_misses", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES, "branch"}}
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | type | config | auto_group_;
+  }
 };
 
-}} // end namespace vt::metrics
+} // end namespace vt::metrics
 
-#endif /*INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H*/
+#endif /*INCLUDED_VT_METRICS_PERF_EVENT_DESCRIPTOR_H*/

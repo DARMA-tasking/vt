@@ -54,6 +54,7 @@ namespace vt { namespace pool {
   view.buffer = buffer;
   view.layout->prealloc.alloc_size = num_bytes;
   view.layout->prealloc.oversize = oversize;
+  view.layout->prealloc.use_size = num_bytes;
   auto buf_start = buffer + sizeof(Header);
   return buf_start;
 }
@@ -62,6 +63,12 @@ namespace vt { namespace pool {
   AllocView view;
   view.buffer = buffer - sizeof(Header);
   return view.layout->prealloc.alloc_size;
+}
+
+/*static*/ size_t HeaderManager::getHeaderUsedBytes(std::byte* buffer) {
+  AllocView view;
+  view.buffer = buffer - sizeof(Header);
+  return view.layout->prealloc.use_size;
 }
 
 /*static*/ size_t HeaderManager::getHeaderOversizeBytes(std::byte* buffer) {

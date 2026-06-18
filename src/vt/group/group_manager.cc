@@ -314,9 +314,6 @@ EventType GroupManager::sendGroupCollective(
   bool const is_root,
   bool* const deliver
 ) {
-  auto const& send_tag = static_cast<messaging::MPI_TagType>(
-    messaging::MPITag::ActiveMsgTag
-  );
   auto const& msg = base.get();
   auto const& group = envelopeGetGroup(msg->env);
   auto iter = local_collective_group_info_.find(group);
@@ -376,7 +373,7 @@ EventType GroupManager::sendGroupCollective(
         );
 
         if (send) {
-          theMsg()->sendMsgBytesWithPut(child, base, send_tag);
+          theMsg()->sendMsgBytesWithPut(child, base);
         }
       });
 
@@ -384,7 +381,7 @@ EventType GroupManager::sendGroupCollective(
        *  Send message to the root node of the group
        */
       if (send_to_root) {
-        theMsg()->sendMsgBytesWithPut(root_node, base, send_tag);
+        theMsg()->sendMsgBytesWithPut(root_node, base);
       }
 
       if (!first_send && this_node_dest) {
@@ -422,7 +419,7 @@ EventType GroupManager::sendGroupCollective(
      *  must forward.
      */
     auto const put_event = theMsg()->sendMsgBytesWithPut(
-      root_node, base, send_tag
+      root_node, base
     );
     /*
      *  Do not deliver on this node since it is not part of the group and will
@@ -459,11 +456,7 @@ EventType GroupManager::sendGroup(
   );
 
   auto send_to_node = [&](NodeType node) -> EventType {
-    auto const& send_tag = static_cast<messaging::MPI_TagType>(
-      messaging::MPITag::ActiveMsgTag
-    );
-
-    return theMsg()->sendMsgBytesWithPut(node, base, send_tag);
+    return theMsg()->sendMsgBytesWithPut(node, base);
   };
 
   EventType ret_event = no_event;
@@ -503,9 +496,6 @@ EventType GroupManager::sendGroup(
           info.default_spanning_tree_ != nullptr, "Must have spanning tree"
         );
 
-        auto const& send_tag = static_cast<messaging::MPI_TagType>(
-          messaging::MPITag::ActiveMsgTag
-        );
         auto const& num_children = info.default_spanning_tree_->getNumChildren();
 
         // Send to child nodes in the group's spanning tree
@@ -518,7 +508,7 @@ EventType GroupManager::sendGroup(
             );
 
             if (child != this_node) {
-              theMsg()->sendMsgBytesWithPut(child, base, send_tag);
+              theMsg()->sendMsgBytesWithPut(child, base);
             }
           });
         }

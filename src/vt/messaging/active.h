@@ -105,7 +105,13 @@ static constexpr TagType const PutPackedTag =
 
 enum class MPITag : MPI_TagType {
   ActiveMsgTag = 1,
-  DataMsgTag = 2
+  DataMsgTag   = 2,
+
+  // Size-class active message tags
+  ActiveMsgS   = 11,  // <= 512 bytes
+  ActiveMsgM   = 12,  // <= 2048 bytes
+  ActiveMsgL   = 13,  // <= 8192 bytes
+  ActiveMsgXL  = 14   // <= 32768 bytes
 };
 
 static constexpr TagType const starting_direct_buffer_tag = 1000;
@@ -1375,11 +1381,16 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] dealloc the action to deallocate the buffer
    * \param[in] next the continuation that gets passed the data when ready
    * \param[in] is_user_buf is a user buffer that require user deallocation
+   * \param[in] first_msg (MPI >= 3) pre-matched message handle for first chunk
+   * \param[in] first_chunk_bytes (MPI >= 3) size of the first matched chunk
    */
   void recvDataDirect(
     int nchunks, std::byte* const buf, TagType const tag, NodeType const from,
     MsgSizeType len, PriorityType prio, ActionType dealloc = nullptr,
     ContinuationDeleterType next = nullptr, bool is_user_buf = false
+#if MPI_VERSION >= 3
+    , MPI_Message first_msg = MPI_MESSAGE_NULL, MsgSizeType first_chunk_bytes = 0
+#endif
   );
 
   /**
@@ -1490,13 +1501,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \param[in] dest the destination of the message
    * \param[in] base the message base pointer
-   * \param[in] send_tag the send tag on the message
    *
    * \return the event to test/wait for completion
    */
   EventType sendMsgBytesWithPut(
-    NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-    TagType const& send_tag
+    NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base
   );
 
   /**
@@ -1722,6 +1731,50 @@ private:
     MsgSizeType const msg_size
   );
 
+  /**
+   * \brief Select an active message tag based on the size of the message
+   *
+   * \param[in] size the size of the message
+   */
+  static MPI_TagType selectActiveTag(MsgSizeType size);
+
+  /**
+   * \brief Active receive broker that keeps a pool of pre-posted Irecv slots
+   * per size-class tag to drain unexpected ActiveMsg traffic quickly.
+   *
+   * Each completed slot dispatches directly to finishPendingActiveMsgAsyncRecv
+   * and is immediately reposted with a fresh buffer of the same capacity.
+   */
+  struct ActiveRecvBroker {
+    struct Slot {
+      int cap = 0;
+      MPI_TagType tag = 0;
+      std::byte* buf = nullptr;
+      MPI_Request req = MPI_REQUEST_NULL;
+      bool posted = false;
+    };
+
+    void setup(ActiveMessenger* self);
+    bool progress(ActiveMessenger* self);
+
+    static constexpr int num_caps_ = 4;
+    static constexpr int caps_[num_caps_] = {512, 2048, 8192, 32768};
+  private:
+    std::vector<Slot> slots_;
+    static constexpr MPI_TagType tags_[num_caps_] = {
+      static_cast<MPI_TagType>(MPITag::ActiveMsgS),
+      static_cast<MPI_TagType>(MPITag::ActiveMsgM),
+      static_cast<MPI_TagType>(MPITag::ActiveMsgL),
+      static_cast<MPI_TagType>(MPITag::ActiveMsgXL)
+    };
+    static constexpr int slots_per_class_ = 4;
+
+    void postSlot(ActiveMessenger* self, Slot& s);
+  public:
+    // Cleanup outstanding posted receives and buffers to avoid leaks at shutdown
+    void cleanup();
+  };
+
 public:
   /**
    * \brief Get the rank-based LB data along with element ID for rank-based work
@@ -1779,6 +1832,9 @@ private:
   elm::ElementIDStruct bare_handler_dummy_elm_id_for_lb_data_ = {};
   elm::ElementLBData bare_handler_lb_data_;
   MPI_Comm comm_ = MPI_COMM_NULL;
+
+  // Active receive broker instance
+  ActiveRecvBroker active_broker_;
 };
 
 }} // end namespace vt::messaging

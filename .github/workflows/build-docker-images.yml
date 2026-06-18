@@ -93,8 +93,10 @@ jobs:
           echo "
           FROM ubuntu:latest
           RUN --mount=type=cache,id=BUILD-${{ matrix.target }},target=/build/vt \
-          mkdir -p /vt \
-          && cp -p -R /build/vt/. /vt/ || true
+          mkdir -p /vt && \
+          cp -p /build/vt/compilation_errors_warnings.out /vt/ 2>/dev/null || true && \
+          cp -p /build/vt/cmake-output.log /vt/ 2>/dev/null || true && \
+          cp -p /build/vt/coverage.info /vt/ 2>/dev/null || true
           " >> tmp_dockerfile
 
           docker buildx build --builder ${{ steps.setup-buildx.outputs.name }} -f tmp_dockerfile --output type=local,dest=build .
