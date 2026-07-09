@@ -8,17 +8,10 @@
 
 #pragma once
 
-#include <nlohmann-vt/detail/abi_macros.hpp>
+#include <nlohmann-vt/detail/macro_scope.hpp>
 
 NLOHMANN_JSON_NAMESPACE_BEGIN
-namespace detail
-{
 
-template<typename ...Ts> struct make_void
-{
-    using type = void;
-};
-template<typename ...Ts> using void_t = typename make_void<Ts...>::type;
+NLOHMANN_CAN_CALL_STD_FUNC_IMPL(end);
 
-}  // namespace detail
 NLOHMANN_JSON_NAMESPACE_END

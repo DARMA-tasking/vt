@@ -333,7 +333,7 @@ target "vt-build-all" {
         vt_trace = 1
       },
       {
-        image = "amd64-ubuntu-20.04-icpx-cpp"
+        image = "amd64-ubuntu-24.04-icpx-cpp"
         vt_debug_verbose = 1
         vt_extended_tests = 0
         vt_pool = 0
