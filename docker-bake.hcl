@@ -206,7 +206,9 @@ function "vt_find_override_cxx" {
 
 function "vt_asan_options" {
   params = [item]
-  result = lookup(item, "vt_asan_options", "detect_leaks=1 abort_on_error=1")
+  result = lookup(item, "vt_asan_options", "detect_leaks=1 abort_on_error=1",
+    "fast_unwind_on_malloc=0", "malloc_context_size=150", "max_stack_depth=0"
+  )
 }
 
 target "vt-build" {
