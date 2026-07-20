@@ -47,6 +47,9 @@
 #include "vt/elm/elm_id.h"
 #include "vt/elm/elm_comm.h"
 #include "vt/timing/timing.h"
+#include "vt/vrt/vrt_common.h"
+
+#include "checkpoint/checkpoint.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -109,9 +112,13 @@ struct ElementLBData {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
+    using vt::vrt::CheckpointInternalTrait;
+    using checkpoint::has_user_traits_v;
+
     s | cur_time_started_;
     s | cur_time_;
-    s | cur_phase_;
+    if (!has_user_traits_v<Serializer, CheckpointInternalTrait>)
+      s | cur_phase_;
     s | phase_timings_;
     s | phase_comm_;
     s | cur_subphase_;

@@ -114,6 +114,9 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
    * This must be called on every process
    */
   void setFocusedSubPhase(SubphaseType subphase);
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s);
 };
 
 }}} /* end namespace vt::vrt::collection */
