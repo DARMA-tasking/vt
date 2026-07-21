@@ -48,11 +48,68 @@
 #include "vt/topos/location/location_common.h"
 #include "vt/messaging/message.h"
 
+#include <type_traits>
+#include <utility>
+
 namespace vt { namespace location {
 
+namespace detail {
+
+/// True if envelope type \c EnvT is able to carry an epoch (has an \c epoch
+/// member); such envelopes propagate the caller's epoch across location hops
+/// on their own, so no epoch needs to be carried in the message payload.
+template <typename EnvT, typename = void>
+struct EnvelopeHasEpoch : std::false_type {};
+
+template <typename EnvT>
+struct EnvelopeHasEpoch<
+  EnvT, std::void_t<decltype(std::declval<EnvT&>().epoch)>
+> : std::true_type {};
+
+/**
+ * \struct RouteEpochField
+ *
+ * \brief Storage for the caller's epoch carried by a routed location message.
+ *
+ * Messages whose envelope can hold an epoch (e.g. epoch/collection messages)
+ * propagate the caller's epoch across nodes via the envelope, so this stores
+ * nothing and is an empty base (no size cost on the common path). Messages
+ * whose envelope cannot hold an epoch (e.g. short messages) capture the
+ * caller's epoch here at origination so routing and the eager cache update
+ * stay enclosed by that epoch.
+ */
+template <bool CarryEpoch>
+struct RouteEpochField {
+  void setRouteEpoch(EpochType const&) {}
+  EpochType getRouteEpoch() const { return no_epoch; }
+  template <typename SerializerT>
+  void serializeRouteEpoch(SerializerT&) {}
+};
+
+template <>
+struct RouteEpochField<true> {
+  void setRouteEpoch(EpochType const& epoch) { route_epoch_ = epoch; }
+  EpochType getRouteEpoch() const { return route_epoch_; }
+  template <typename SerializerT>
+  void serializeRouteEpoch(SerializerT& s) { s | route_epoch_; }
+
+private:
+  EpochType route_epoch_ = no_epoch;
+};
+
+} /* end namespace detail */
+
 template <typename EntityID, typename ActiveMessageT>
-struct EntityMsg : ActiveMessageT {
+struct EntityMsg
+  : ActiveMessageT,
+    detail::RouteEpochField<
+      not detail::EnvelopeHasEpoch<typename ActiveMessageT::EnvelopeType>::value
+    >
+{
   using MessageParentType = ActiveMessageT;
+  using RouteEpochFieldType = detail::RouteEpochField<
+    not detail::EnvelopeHasEpoch<typename ActiveMessageT::EnvelopeType>::value
+  >;
   vt_msg_serialize_if_needed_by_parent();
 
   EntityMsg() = default;
@@ -73,8 +130,6 @@ struct EntityMsg : ActiveMessageT {
   int16_t getHops() const { return hops_; }
   void setAskNode(NodeType const& node) { ask_node_ = node; }
   NodeType getAskNode() const { return ask_node_; }
-  void setRouteEpoch(EpochType const& epoch) { route_epoch_ = epoch; }
-  EpochType getRouteEpoch() const { return route_epoch_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -85,7 +140,7 @@ struct EntityMsg : ActiveMessageT {
     s | handler_;
     s | hops_;
     s | ask_node_;
-    s | route_epoch_;
+    RouteEpochFieldType::serializeRouteEpoch(s);
   }
 
 private:
@@ -95,10 +150,6 @@ private:
   HandlerType handler_ = uninitialized_handler;
   int16_t hops_ = 0;
   NodeType ask_node_ =  uninitialized_destination;
-  // The caller's epoch, captured at origination for messages whose envelope
-  // cannot carry an epoch across location hops (e.g. short messages). Used to
-  // keep routing and eager cache updates enclosed by the caller's epoch.
-  EpochType route_epoch_ = no_epoch;
 };
 
 }}  // end namespace vt::location
