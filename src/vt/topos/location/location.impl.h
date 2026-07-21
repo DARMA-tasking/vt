@@ -53,6 +53,7 @@
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
 #include "vt/runnable/make_runnable.h"
+#include "vt/termination/term_common.h"
 
 #include <cstdint>
 #include <memory>
@@ -627,14 +628,27 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       }
 
       auto ask_node = msg->getAskNode();
+      auto const route_epoch = msg->getRouteEpoch();
 
       if (ask_node != uninitialized_destination) {
         auto delivered_node = theContext()->getNode();
-        // Tie the eager update to the same epoch as the routed message
-        auto epoch_local = theMsg()->getEpochContextMsg(msg);
+        // Tie the eager update to the same epoch as the routed message. Prefer
+        // the epoch explicitly carried in the message (set at origination for
+        // messages that cannot hold an epoch in their envelope); otherwise fall
+        // back to the envelope-derived epoch used by epoch-carrying messages.
+        auto epoch_local = route_epoch != no_epoch ?
+          route_epoch : theMsg()->getEpochContextMsg(msg);
         theMsg()->pushEpoch(epoch_local);
         sendEagerUpdate(hid, ask_node, home_node, delivered_node);
         theMsg()->popEpoch(epoch_local);
+      }
+
+      // Release the caller's epoch that was manually held at origination for a
+      // message that could not carry it in its envelope. The eager update above
+      // is produced on this same epoch before the consume below, so the epoch
+      // stays alive until the origin processes the cache update.
+      if (route_epoch != no_epoch) {
+        theTerm()->consume(route_epoch);
       }
     };
 
@@ -766,6 +780,22 @@ void EntityLocationCoord<EntityID>::routePreparedMsg(
   auto const msg_size = sizeof(*msg);
   bool const use_eager = useEagerProtocol(msg);
   auto const epoch = theMsg()->getEpochContextMsg(msg);
+
+  // Messages whose envelope cannot hold an epoch (e.g. short messages) lose the
+  // caller's epoch as soon as they hop to another node: getEpochContextMsg
+  // collapses to the "any epoch" sentinel even when the caller is inside a real
+  // collective epoch. Detect that case at origination and manually hold the
+  // caller's epoch across the whole route (including the eager cache update that
+  // comes back to the origin), releasing it at final delivery. This keeps the
+  // routed message and its cache update enclosed by the caller's epoch, exactly
+  // as an epoch-carrying (long) message already is via its envelope.
+  if (msg->getRouteEpoch() == no_epoch and epoch == term::any_epoch_sentinel) {
+    auto const cur_epoch = theMsg()->getEpoch();
+    if (cur_epoch != term::any_epoch_sentinel and cur_epoch != no_epoch) {
+      msg->setRouteEpoch(cur_epoch);
+      theTerm()->produce(cur_epoch);
+    }
+  }
 
   vt_debug_print(
     verbose, location,

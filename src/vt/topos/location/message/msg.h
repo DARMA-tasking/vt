@@ -73,6 +73,8 @@ struct EntityMsg : ActiveMessageT {
   int16_t getHops() const { return hops_; }
   void setAskNode(NodeType const& node) { ask_node_ = node; }
   NodeType getAskNode() const { return ask_node_; }
+  void setRouteEpoch(EpochType const& epoch) { route_epoch_ = epoch; }
+  EpochType getRouteEpoch() const { return route_epoch_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -83,6 +85,7 @@ struct EntityMsg : ActiveMessageT {
     s | handler_;
     s | hops_;
     s | ask_node_;
+    s | route_epoch_;
   }
 
 private:
@@ -92,6 +95,10 @@ private:
   HandlerType handler_ = uninitialized_handler;
   int16_t hops_ = 0;
   NodeType ask_node_ =  uninitialized_destination;
+  // The caller's epoch, captured at origination for messages whose envelope
+  // cannot carry an epoch across location hops (e.g. short messages). Used to
+  // keep routing and eager cache updates enclosed by the caller's epoch.
+  EpochType route_epoch_ = no_epoch;
 };
 
 }}  // end namespace vt::location
