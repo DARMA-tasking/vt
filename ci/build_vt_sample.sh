@@ -5,18 +5,16 @@ set -ex
 source_dir=${1}
 build_dir=${2}
 
-inclusion_type=""
-if test "$VT_INCLUSION_TYPE" = "TPL"
-then
-  inclusion_type="-Dbuild_with_tpl=1"
-elif test "$VT_INCLUSION_TYPE" = "EXT_LIB"
+# use TPL inclusion type by default
+inclusion_type="-Dbuild_with_tpl=1"
+if test "$VT_INCLUSION_TYPE" = "EXT_LIB"
 then
   inclusion_type="-Dbuild_with_libs=1"
 fi
 
 # Don't build vt-sample-project on Alpine Linux
 is_alpine="$(grep ID < /etc/os-release | grep -c alpine || true)"
-if test "$is_alpine" -eq 0 && test "${VT_CI_BUILD:-0}" -eq 1
+if test "$is_alpine" -eq 0
 then
     export VT=${source_dir}
     export VT_BUILD=${build_dir}/vt
@@ -25,7 +23,7 @@ then
 
     cd "$VT_BUILD"
 
-    if test "$VT_INCLUSION_TYPE" = "TPL"
+    if test "$inclusion_type" = "-Dbuild_with_tpl=1"
     then
         echo "Clean up before building vt-sample-project"
         cmake --build . --target clean
@@ -61,6 +59,11 @@ then
     cmake --build .
 
     # Try to actually run samples
-    mpiexec -n 2 ./vt-runtime-sample
-    mpiexec -n 2 ./vt-trace-only-sample
+    if [ -z "${MPI_EXTRA_FLAGS}" ]; then
+      mpiexec -n 2 ./vt-runtime-sample
+      mpiexec -n 2 ./vt-trace-only-sample
+    else
+      mpiexec --allow-run-as-root -n 2 ./vt-runtime-sample
+      mpiexec --allow-run-as-root -n 2 ./vt-trace-only-sample
+    fi
 fi

@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
+set -exo pipefail
+
 cur_path=$(pwd)
-spack_path="$cur_path/spack"
 vt_spack_package="$cur_path/spack-package"
 
-git clone https://github.com/spack/spack.git
-git clone https://github.com/DARMA-tasking/spack-package.git
+git clone --branch v0.23.1 --depth=2 https://github.com/spack/spack.git
+. spack/share/spack/setup-env.sh
 
-cd "$spack_path" || exit 1
-git checkout v0.16.3
-cd "$cur_path" || exit 1
+git clone -b master https://github.com/DARMA-tasking/spack-package.git
+python3 spack-package/ci/add_vt_branch.py "${GIT_BRANCH}"
 
 declare -A variables_map
 variables_map["lb_enabled"]="${VT_LB_ENABLED:-0}"
 variables_map["trace_enabled"]="${VT_TRACE_ENABLED:-0}"
-variables_map["trace_only"]="${VT_BUILD_TRACE_ONLY:-0}"
+variables_map["trace_only"]="${VT_BUILD_TRACE_ONLY:-1}"
 variables_map["doxygen_enabled"]="${VT_DOXYGEN_ENABLED:-0}"
 variables_map["mimalloc_enabled"]="${VT_MIMALLOC_ENABLED:-0}"
 variables_map["asan_enabled"]="${VT_ASAN_ENABLED:-0}"
@@ -26,6 +26,7 @@ variables_map["diagnostics_enabled"]="${VT_DIAGNOSTICS_ENABLED:-0}"
 variables_map["diagnostics_runtime_enabled"]="${VT_DIAGNOSTICS_RUNTIME_ENABLED:-0}"
 variables_map["unity_build_enabled"]="${VT_UNITY_BUILD_ENABLED:-0}"
 variables_map["fcontext_enabled"]="${VT_FCONTEXT_ENABLED:-0}"
+variables_map["kokkos"]="${VT_KOKKOS_ENABLED:-0}"
 
 cmd_vars=()
 for flag in "${!variables_map[@]}"
@@ -40,16 +41,27 @@ do
 done
 
 install_cmd=$(printf " %s" "${cmd_vars[@]}")
-install_cmd="$spack_path/bin/spack install darma-vt@develop build_type=Release ${install_cmd:1}"
+install_cmd="spack install darma-vt@${GIT_BRANCH} build_type=Release ${install_cmd:1} ^openmpi@4.0.4"
 
-"$spack_path"/bin/spack repo add "$vt_spack_package"
-"$spack_path"/bin/spack external find
+mkdir -p ~/.spack
+cat >> ~/.spack/packages.yaml <<'EOF'
+packages:
+  openmpi:
+    externals:
+    - spec: openmpi@4.0.4
+      prefix: /usr/local
+EOF
+
+spack clean --all
+spack repo add "$vt_spack_package"
+spack external find
+
 $install_cmd
 
 git clone https://github.com/DARMA-tasking/vt-sample-project
 mkdir -p vt-sample-project/build
 cd vt-sample-project/build || exit 1
-vt_DIR=$("$spack_path"/bin/spack location --install-dir darma-vt)
+vt_DIR=$(spack location --install-dir darma-vt)
 export vt_DIR
 cmake -G "${CMAKE_GENERATOR:-Ninja}" \
   -DCMAKE_BUILD_TYPE=Release \

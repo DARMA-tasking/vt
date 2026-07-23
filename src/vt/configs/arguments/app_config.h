@@ -47,6 +47,7 @@
 // do not pull in any VT dependencies here
 #include <string>
 #include <vector>
+#include <cstdint>
 
 namespace vt { namespace arguments {
 

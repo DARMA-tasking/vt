@@ -45,13 +45,11 @@
 
 #include "test_parallel_harness.h"
 #include "test_helpers.h"
-#include "test_collection_common.h"
 
 #include "vt/elm/elm_id_bits.h"
-#include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_data_holder.h"
 
-#include <nlohmann/json.hpp>
+#include <nlohmann-vt/json.hpp>
 
 #if vt_check_enabled(lblite)
 

@@ -46,37 +46,39 @@
 #include "vt/collective/collective_ops.h"
 #include "vt/runtime/runtime_headers.h"
 #include "vt/context/context.h"
+#include "vt/configs/arguments/args.h"
 
 namespace vt {
 
-std::unique_ptr<arguments::ArgvContainer>
-preconfigure(int& argc, char**& argv) {
-  return std::make_unique<arguments::ArgvContainer>(argc, argv);
+std::unique_ptr<StartupConfig> preconfigure(
+  int& argc, char**& argv
+) {
+  auto arg_config = std::make_unique<arguments::ArgConfig>();
+  auto parse_input_holder = arg_config->setupInputHolder(argc, argv);
+  return std::make_unique<StartupConfig>(
+    std::move(arg_config), std::move(parse_input_holder)
+  );
 }
 
 RuntimePtrType initializePreconfigured(
-  MPI_Comm* comm, arguments::AppConfig const* appConfig,
-  arguments::ArgvContainer const* preconfigure_args
+  std::unique_ptr<StartupConfig> startup_config,
+  MPI_Comm* comm,
+  arguments::AppConfig const* app_config,
+  bool print_startup_banner
 ) {
-  arguments::ArgvContainer args =
-    preconfigure_args ? *preconfigure_args : arguments::ArgvContainer{};
-
-  auto argc = args.getArgc();
-  auto argv_container = args.getArgvDeepCopy();
-  auto argv = argv_container.get();
-  bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(
-    argc, argv, is_interop, comm, appConfig
+  return CollectiveOps::initializePreconfigured(
+    std::move(startup_config), comm, app_config, print_startup_banner
   );
 }
 
 // vt::{initialize,finalize} for main ::vt namespace
 RuntimePtrType initialize(
-  int& argc, char**& argv, MPI_Comm* comm, arguments::AppConfig const* appConfig
+  int& argc, char**& argv, MPI_Comm* comm, arguments::AppConfig const* appConfig,
+  bool print_startup_banner
 ) {
   bool const is_interop = comm != nullptr;
   return CollectiveOps::initialize(
-    argc, argv, is_interop, comm, appConfig
+    argc, argv, is_interop, comm, appConfig, print_startup_banner
   );
 }
 

@@ -62,6 +62,9 @@
 #include <unordered_map>
 #include <vector>
 
+#if vt_check_enabled(ldms)
+struct ldms_xprt;
+#endif
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
@@ -270,6 +273,15 @@ public:
    */
   LBDataHolder* getLBData() { return lb_data_.get(); }
 
+#if vt_check_enabled(ldms)
+  /**
+   * \brief Write some JSON to the LDMS stream
+   *
+   * \param[in] j the josn to write
+   */
+  void writeJSONToLDMS(const nlohmann::json& j);
+#endif
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | proxy_
@@ -284,6 +296,19 @@ public:
   }
 
 private:
+#if vt_check_enabled(ldms)
+  /**
+   * Initialize LDMS using environmental variables.
+   *
+   * \param VT_LDMS_XPRT transport type name
+   * \param VT_LDMS_AUTH name of the authentication plugin
+   * \param VT_LDMS_MILLI_FREQ stream publish period
+   * \param VT_LDMS_HOSTNAME hostname
+   * \param VT_LDMS_PORT port number
+   */
+  void initializeLDMS();
+#endif
+
   /**
    * \internal \brief Create the LB data file
    */
@@ -313,6 +338,11 @@ private:
   std::unique_ptr<util::json::BaseAppender> lb_data_writer_ = nullptr;
   /// The struct that holds all the LB data
   std::unique_ptr<LBDataHolder> lb_data_ = nullptr;
+#if vt_check_enabled(ldms)
+  ldms_xprt* ldms_ = nullptr;
+  int ldms_milli_freq_ = 10;
+  double ldms_prev_submission_ = 0;
+#endif
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

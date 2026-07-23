@@ -87,7 +87,7 @@ function(link_target_with_vt)
       endif()
 
       target_link_libraries(
-        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} zoltan
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${Zoltan_LIBRARIES}
         )
       target_include_directories(
         ${ARG_TARGET} PUBLIC $<BUILD_INTERFACE:${Zoltan_INCLUDE_DIRS}>
@@ -109,7 +109,7 @@ function(link_target_with_vt)
       endif()
       if (NOT DEFINED APPLE)
         target_link_libraries(
-          ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${LIBUNWIND_LIBRARIES}
+          ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${libunwind_LIBRARIES}
         )
       endif()
     endif()
@@ -147,13 +147,15 @@ function(link_target_with_vt)
   endif()
 
   if (NOT DEFINED ARG_LINK_MPI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MPI)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: MPI=${ARG_LINK_MPI}")
-    endif()
+    if (vt_find_mpi)
+      if (${ARG_DEBUG_LINK})
+        message(STATUS "link_target_with_vt: MPI=${ARG_LINK_MPI}")
+      endif()
 
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} MPI::MPI_CXX
-    )
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} MPI::MPI_CXX
+      )
+    endif()
   endif()
 
   if (${vt_fcontext_enabled})
@@ -237,6 +239,26 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${MIMALLOC_LIBRARY}
     )
+  endif()
+
+  if (${vt_ldms_enabled})
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: ldms=${vt_ldms_enabled}")
+    endif()
+
+    if(NOT "${vt_ldms_includes}" STREQUAL "")
+      target_include_directories(${ARG_TARGET} SYSTEM PUBLIC
+        ${vt_ldms_includes}
+      )
+    endif()
+
+    if(NOT "${vt_ldms_libs}" STREQUAL "")
+      target_link_directories(${ARG_TARGET} PUBLIC ${vt_ldms_libs})
+    endif()
+
+    target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} :libldms.so :libldmsd_stream.so
+      )
   endif()
 
   if (${ARG_CUSTOM_LINK_ARGS})

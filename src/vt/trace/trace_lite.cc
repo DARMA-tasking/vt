@@ -99,7 +99,7 @@ struct TraceEventSeqCompare {
 };
 
 TraceLite::TraceLite(std::string const& in_prog_name)
-  : start_time_(getCurrentTime()), prog_name_(in_prog_name),
+  : prog_name_(in_prog_name),
     log_file_(nullptr) {
   /*
    * Incremental flush mode for zlib. Several options are available:
@@ -516,7 +516,7 @@ void TraceLite::cleanupTracesFile() {
   writeTracesFile(Z_FINISH, false);
 
   assert(log_file_ && "Trace file must be open"); // opened in writeTracesFile
-  outputFooter(log_file_.get(), node, start_time_);
+  outputFooter(log_file_.get());
   gzclose(log_file_.get()->file_type);
   log_file_ = nullptr;
 }
@@ -555,7 +555,7 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
     if (not log_file_) {
       auto path = full_trace_name_;
       log_file_ = std::make_unique<vt_gzFile>(gzopen(path.c_str(), "wb"));
-      outputHeader(log_file_.get(), node, start_time_);
+      outputHeader(log_file_.get());
     }
 
     vt_debug_print(
@@ -577,7 +577,7 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
 
     vt::trace::TraceScopedEvent scope(
       is_incremental_flush ? flush_event_ : no_user_event_id);
-    outputTraces(log_file_.get(), traces_, start_time_, flush);
+    outputTraces(log_file_.get(), traces_, flush);
 
     trace_write_count_ += to_write;
   }
@@ -597,14 +597,15 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
 }
 
 /*static*/ void TraceLite::outputTraces(
-  vt_gzFile* file, TraceContainerType& traces, TimeType start_time, int flush) {
+  vt_gzFile* file, TraceContainerType& traces, int flush
+) {
   auto const num_nodes = theContext()->getNumNodes();
   gzFile gzfile = file->file_type;
 
   while (not traces.empty()) {
     LogType const& log = traces.front();
 
-    auto const& converted_time = timeToMicros(log.time - start_time);
+    auto const& converted_time = timeToMicros(log.time);
     auto const type =
       static_cast<std::underlying_type<decltype(log.type)>::type>(log.type);
 
@@ -696,7 +697,7 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
     }
     case TraceConstantsType::UserSuppliedBracketedNote: {
       auto const& udata = log.user_data();
-      auto const converted_end_time = timeToMicros(log.end_time - start_time);
+      auto const converted_end_time = timeToMicros(log.end_time);
       gzprintf(
         gzfile, "%d %lld %lld %d %zu %s\n", type, converted_time,
         converted_end_time, log.event, udata.user_note.length(),
@@ -801,10 +802,7 @@ void TraceLite::outputControlFile(std::ofstream& file) {
        << std::endl;
 }
 
-/*static*/ void TraceLite::outputHeader(
-  vt_gzFile* file, [[maybe_unused]] NodeType const node,
-  [[maybe_unused]] TimeType const start
-) {
+/*static*/ void TraceLite::outputHeader(vt_gzFile* file) {
   gzFile gzfile = file->file_type;
   // Output header for projections file
   // '6' means COMPUTATION_BEGIN to Projections: this starts a trace
@@ -812,14 +810,11 @@ void TraceLite::outputControlFile(std::ofstream& file) {
   gzprintf(gzfile, "6 0\n");
 }
 
-/*static*/ void TraceLite::outputFooter(
-  vt_gzFile* file, [[maybe_unused]] NodeType const node,
-  TimeType const start
-) {
+/*static*/ void TraceLite::outputFooter(vt_gzFile* file) {
   gzFile gzfile = file->file_type;
   // Output footer for projections file,
   // '7' means COMPUTATION_END to Projections
-  gzprintf(gzfile, "7 %lld\n", timeToMicros(getCurrentTime() - start));
+  gzprintf(gzfile, "7 %lld\n", timeToMicros(getCurrentTime()));
 }
 
 }} // end namespace vt::trace

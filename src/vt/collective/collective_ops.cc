@@ -46,6 +46,7 @@
 #include "vt/runtime/runtime.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/runtime/runtime_inst.h"
+#include "vt/configs/arguments/args.h"
 
 #include <memory>
 #include <cstdlib>
@@ -216,7 +217,7 @@ void printOverwrittens(
 template <runtime::RuntimeInstType instance>
 RuntimePtrType CollectiveAnyOps<instance>::initialize(
   int& argc, char**& argv, bool is_interop, MPI_Comm* comm,
-  arguments::AppConfig const* appConfig
+  arguments::AppConfig const* appConfig, bool print_startup_banner
 ) {
   using vt::runtime::RuntimeInst;
   using vt::runtime::Runtime;
@@ -235,13 +236,40 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
     ::vt::rt = rt_ptr;
     curRT = rt_ptr;
   }
-  RuntimeInst<instance>::rt->initialize();
+  RuntimeInst<instance>::rt->initialize(false, print_startup_banner);
 
   // If appConfig is not nullptr, compare CLI arguments with user-defined ones,
   // and report overwritten ones.
   if (appConfig && theContext()->getNode() == 0) {
     printOverwrittens(*rt->getAppConfig(), *appConfig);
   }
+
+  return runtime::makeRuntimePtr(rt_ptr);
+}
+
+template <runtime::RuntimeInstType instance>
+/*static*/ RuntimePtrType CollectiveAnyOps<instance>::initializePreconfigured(
+  std::unique_ptr<StartupConfig> startup_config, MPI_Comm* comm,
+  arguments::AppConfig const* app_config, bool print_startup_banner
+) {
+  using vt::runtime::RuntimeInst;
+  using vt::runtime::Runtime;
+  using vt::runtime::eRuntimeInstance;
+
+  MPI_Comm resolved_comm = comm not_eq nullptr ? *comm : MPI_COMM_WORLD;
+
+  RuntimeInst<instance>::rt = std::make_unique<Runtime>(
+    std::move(startup_config), resolved_comm, app_config,
+    eRuntimeInstance::DefaultInstance
+  );
+
+  auto rt_ptr = RuntimeInst<instance>::rt.get();
+  if (instance == runtime::RuntimeInstType::DefaultInstance) {
+    // Set global variable for default instance for backward compatibility
+    ::vt::rt = rt_ptr;
+    curRT = rt_ptr;
+  }
+  RuntimeInst<instance>::rt->initialize(false, print_startup_banner);
 
   return runtime::makeRuntimePtr(rt_ptr);
 }
@@ -319,7 +347,7 @@ void CollectiveAnyOps<instance>::output(
   if (myrt) {
     myrt->output(str,code,error,decorate,formatted);
   } else {
-    ::fmt::print(str.c_str());
+    ::fmt::print("{}", str);
   }
   if (error and abort_out) {
     vt::abort("Assertion Failed", 129);

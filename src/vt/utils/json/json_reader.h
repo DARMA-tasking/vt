@@ -47,7 +47,7 @@
 #include <memory>
 #include <string>
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann-vt/json_fwd.hpp>
 
 namespace vt { namespace util { namespace json {
 

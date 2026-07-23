@@ -1,0 +1,27 @@
+name: Generate Build Badges
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: develop
+    types:
+      - completed
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - id: extract
+        run: |
+          data=$(gh api /repos/DARMA-tasking/vt/actions/runs/${{ github.event.workflow_run.id }}/jobs)
+
+          printf "names<<EOF\n%s\nEOF\n"   "$(echo "$data" | jq -r '.jobs[] | select(.name | startswith("bake")) | .name | ltrimstr("bake (vt-build-amd64-") | rtrimstr(")") | gsub("-cpp"; "")')" >>"$GITHUB_OUTPUT"
+          printf "results<<EOF\n%s\nEOF\n" "$(echo "$data" | jq -r '.jobs[] | select(.name | startswith("bake")) | .conclusion')" >>"$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: DARMA-tasking/badge-generator@master
+        with:
+          names:   ${{ steps.extract.outputs.names }}
+          results: ${{ steps.extract.outputs.results }}
+          github_token: ${{ secrets.BADGE_TOKEN }}

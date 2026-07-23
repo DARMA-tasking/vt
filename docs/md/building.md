@@ -151,7 +151,7 @@ which `docker compose` will read.
 #   VT_LB=1                   # Enable load balancing
 #   VT_TRACE=0                # Enable tracing
 #   VT_MIMALLOC=0             # Enable mimalloc memory allocator
-#   VT_DOCS=0                 # Enable doxygen build
+#   VT_DOXYGEN_ENABLED=0      # Enable doxygen build
 #   VT_TRACE_RT=0             # Enable tracing at runtime (for testing)
 #   VT_ASAN=0                 # Enable address sanitizer
 #   VT_UBSAN=0                # Enable undefined behavior sanitizer

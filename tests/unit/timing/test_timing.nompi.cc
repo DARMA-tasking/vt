@@ -45,7 +45,7 @@
 
 #include "test_harness.h"
 
-#include "vt/timing/timing.h"
+#include "vt/timing/timing_type.h"
 
 namespace vt { namespace tests { namespace unit {
 

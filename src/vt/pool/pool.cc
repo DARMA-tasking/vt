@@ -201,15 +201,15 @@ Pool::SizeType Pool::remainingSize(
   [[maybe_unused]] std::byte* const buf
 ) const {
   #if vt_check_enabled(memory_pool)
-    auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf);
+    auto const& actual_used_size = HeaderManagerType::getHeaderUsedBytes(buf);
     auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf);
 
-    ePoolSize const pool_type = getPoolType(actual_alloc_size, oversize);
+    ePoolSize const pool_type = getPoolType(actual_used_size, oversize);
 
     if (pool_type == ePoolSize::Small) {
-      return small_msg->getNumBytes() - actual_alloc_size;
+      return small_msg->getNumBytes() - actual_used_size;
     } else if (pool_type == ePoolSize::Medium) {
-      return medium_msg->getNumBytes() - actual_alloc_size;
+      return medium_msg->getNumBytes() - actual_used_size;
     } else {
       return oversize;
     }
@@ -219,18 +219,23 @@ Pool::SizeType Pool::remainingSize(
 }
 
 Pool::SizeType Pool::allocatedSize(std::byte* const buf) const {
-  return HeaderManagerType::getHeaderBytes(buf) + HeaderManagerType::getHeaderOversizeBytes(buf);
+  return HeaderManagerType::getHeaderUsedBytes(buf) + HeaderManagerType::getHeaderOversizeBytes(buf);
+}
+
+void Pool::setUsedSize(std::byte* const buf, SizeType used_bytes) {
+  auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(buf));
+  header->use_size = used_bytes;
 }
 
 bool
 Pool::tryGrowAllocation(std::byte* buf, size_t grow_amount) {
   // For non-pooled alloc, this condition will always be true
   // since remainingSize(buf) would be 0
-  if ( remainingSize(buf) < grow_amount )
+  if (remainingSize(buf) < grow_amount)
     return false;
 
   auto *header = reinterpret_cast<Header*>(HeaderManagerType::getHeaderPtr(buf));
-  header->alloc_size += grow_amount;
+  header->use_size += grow_amount;
   return true;
 }
 

@@ -49,7 +49,7 @@
 #  include <vt-tv/api/info.h>
 #endif
 
-#include <nlohmann/json.hpp>
+#include <nlohmann-vt/json.hpp>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 

@@ -49,6 +49,7 @@
 #include "vt/runtime/runtime_component_fwd.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/timing/timing_type.h"
+#include "vt/collective/startup_config.h"
 
 // Optional components
 #if vt_check_enabled(trace_enabled)
@@ -107,11 +108,65 @@ struct Runtime {
     arguments::AppConfig const* appConfig = nullptr
   );
 
+  /**
+   * \internal \brief Initialize a VT runtime with app config
+   *
+   * Under interop mode, MPI is not initialized or finalized by the runtime.
+   * This can be used to embed VT into a larger context.
+   *
+   * When not running in interop mode, MPI is initialized in the constructor
+   * and finalized in the destructor.
+   *
+   * \param[in] startup_config startup configuration
+   * \param[in] in_comm the MPI communicator (if in interoperability mode)
+   * \param[in] app_config optional app configuration
+   * \param[in] in_instance the runtime instance to set
+   */
+  Runtime(
+    std::unique_ptr<StartupConfig> startup_config,
+    MPI_Comm in_comm = MPI_COMM_WORLD,
+    arguments::AppConfig const* appConfig = nullptr,
+    RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
+  );
+
   Runtime(Runtime const&) = delete;
   Runtime(Runtime&&) = delete;
   Runtime& operator=(Runtime const&) = delete;
 
   virtual ~Runtime();
+
+  void setUpSignals();
+
+  /**
+   * \brief Startup MPI if necessary and configure VT arguments based on \c argc
+   * and \c argv
+   *
+   * \param[in] argc argc (to modify)
+   * \param[in] argv argv (to modify)
+   * \param[in] is_interop whether we are running in interop mode
+   * \param[in] in_comm the comm
+   * \param[in] arg_config the arg config to fill
+   * \param[in] appConfig possible app config overrides
+   */
+  static void startupMPIConfigArgs(
+    int& argc, char**& argv, bool is_interop, MPI_Comm in_comm,
+    arguments::ArgConfig* arg_config, arguments::AppConfig const* appConfig
+  );
+
+  /**
+   * \brief Startup MPI if necessary and configure VT arguments based on parse
+   * input holder
+   *
+   * \param[in] pih parse input holder
+   * \param[in] in_comm the comm
+   * \param[in] arg_config the arg config to fill
+   * \param[in] appConfig possible app config overrides
+   */
+  static void startupMPIConfigArgs(
+    std::unique_ptr<arguments::ParseInputHolder> pih,
+    MPI_Comm in_comm, arguments::ArgConfig* arg_config,
+    arguments::AppConfig const* appConfig
+  );
 
   /**
    * \brief Check if runtime is live
@@ -180,10 +235,11 @@ struct Runtime {
    * \internal \brief Initialize the runtime
    *
    * \param[in] force_now whether to force initialization regardless of state
+   * \param[in] print_startup_banner whether to print startup banner
    *
    * \return whether it initialized or not
    */
-  bool initialize(bool const force_now = false);
+  bool initialize(bool const force_now = false, bool print_startup_banner = true);
 
   /**
    * \internal \brief Finalize the runtime
@@ -238,6 +294,11 @@ struct Runtime {
    * \todo Remove this and fix the single one callsite in \c NodeLBData
    */
   void systemSync();
+
+  /**
+   * \brief Print a very informative startup banner
+   */
+  void printStartupBanner();
 
 public:
   /**
@@ -330,11 +391,6 @@ protected:
    * \internal \brief Handler when global termination is reached
    */
   void terminationHandler();
-
-  /**
-   * \internal \brief Print a very informative startup banner
-   */
-  void printStartupBanner();
 
   /**
    * \internal \brief Print the shutdown banner
@@ -458,6 +514,7 @@ protected:
   std::unique_ptr<component::ComponentPack> p_;
   std::unique_ptr<arguments::ArgConfig> arg_config_;
   arguments::AppConfig const* app_config_;   /**< App config during startup */
+  MPI_Errhandler err_handler_ = 0;
 };
 
 }} /* end namespace vt::runtime */

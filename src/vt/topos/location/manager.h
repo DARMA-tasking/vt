@@ -105,6 +105,30 @@ struct LocationManager : runtime::component::Component<LocationManager> {
   void initialize() override;
 
   /**
+   * \brief Collectively create a new location manager for managing instances of
+   * type \c EntityT
+   *
+   * \param[in] args the arguments to forward to the location
+   * manager. Specifically, whether anytime migration is allowed; whether to
+   * keep the cache up-to-date at all times; and, the overriding the default
+   * size of the location cache
+   *
+   * \return proxy to the new location manager
+   */
+  template <typename EntityT, typename... Args>
+  objgroup::proxy::Proxy<IndexedElmType<EntityT>> createCollective(
+    Args&&... args
+  );
+
+  /**
+   * \brief Collectively destroy a location manager
+   *
+   * \param[in] proxy the proxy of the LM to destroy
+   */
+  template <typename EntityT>
+  void destroyCollective(objgroup::proxy::Proxy<IndexedElmType<EntityT>> proxy);
+
+  /**
    * \internal \brief Make a new location coordinator for a collection
    *
    * \param[in] proxy the collection proxy bits

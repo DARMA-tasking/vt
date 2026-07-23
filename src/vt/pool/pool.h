@@ -144,6 +144,16 @@ struct Pool : runtime::component::Component<Pool> {
   SizeType allocatedSize(std::byte* const buf) const;
 
   /**
+   * \brief Set the actual used (requested) bytes for allocation
+   *   *
+   * \param[in] buf the buffer allocated from the pool
+   * \param[in] used_size the used size to set
+   *
+   * \return the total number of allocated bytes
+   */
+  void setUsedSize(std::byte* const buf, SizeType used_bytes);
+
+  /**
    * \internal \brief Attempt to increase the size of an allocation without reallocating
    *
    * The allocation will only be grown if grow_amount is less than or equal to the remaining

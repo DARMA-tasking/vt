@@ -1,5 +1,5 @@
 project(EngFormat-Cpp CXX)
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...4.0)
 
 add_library(${PROJECT_NAME} include/EngFormat-Cpp/eng_format.hpp src/eng_format.cpp)
 

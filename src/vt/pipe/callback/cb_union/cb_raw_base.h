@@ -229,73 +229,14 @@ struct CallbackTyped : CallbackRawBaseSingle {
   }
 
   template <typename... Params>
-  void sendTuple(std::tuple<Params...> tup) {
-    using Trait = CBTraits<Args...>;
-    using MsgT = messaging::ParamMsg<typename Trait::TupleType>;
-    auto msg = vt::makeMessage<MsgT>();
-    msg->setParams(std::move(tup));
-    CallbackRawBaseSingle::sendMsg<MsgT>(msg);
-  }
+  void sendTuple(std::tuple<Params...> tup);
 
   template <typename... Params>
-  void send(Params&&... params) {
-    using Trait = CBTraits<Args...>;
-    if constexpr (std::is_same_v<typename Trait::MsgT, NoMsg>) {
-      // We have to go through some tricky code to make the MsgProps case work
-      // If we use the type for Params to send, it's possible that we have a
-      // type mismatch in the actual handler type. A possible edge case is when
-      // a char const* is sent, but the handler is a std::string. In this case,
-      // the ParamMsg will be cast incorrectly during the virual dispatch to a
-      // collection because callbacks don't have the collection type. Thus, the
-      // wrong ParamMsg will be cast to which requires serialization, leading to
-      // a failure.
-      if constexpr (sizeof...(Params) == sizeof...(Args) + 1) {
-        using MsgT = messaging::ParamMsg<
-          std::tuple<
-            std::decay_t<std::tuple_element_t<0, std::tuple<Params...>>>,
-            std::decay_t<Args>...
-          >
-        >;
-        auto msg = vt::makeMessage<MsgT>();
-        msg->setParams(std::forward<Params>(params)...);
-        CallbackRawBaseSingle::sendMsg<MsgT>(msg);
-      } else {
-        using MsgT = messaging::ParamMsg<typename Trait::TupleType>;
-        auto msg = vt::makeMessage<MsgT>();
-        msg->setParams(std::forward<Params>(params)...);
-        CallbackRawBaseSingle::sendMsg<MsgT>(msg);
-      }
-    } else {
-      using MsgT = typename Trait::MsgT;
-      auto msg = makeMessage<MsgT>(std::forward<Params>(params)...);
-      sendMsg(msg.get());
-    }
-  }
-
-  void send(typename CBTraits<Args...>::MsgT* msg) {
-    using MsgT = typename CBTraits<Args...>::MsgT;
-    if constexpr (not std::is_same_v<MsgT, NoMsg>) {
-      CallbackRawBaseSingle::sendMsg<MsgT>(msg);
-    }
-  }
+  void send(Params&&... params);
 
   template <typename MsgT>
   void send(messaging::MsgPtrThief<MsgT> msg) {
     CallbackRawBaseSingle::sendMsg<MsgT>(msg);
-  }
-
-  void sendMsg(messaging::MsgPtrThief<typename CBTraits<Args...>::MsgT> msg) {
-    using MsgT = typename CBTraits<Args...>::MsgT;
-    if constexpr (not std::is_same_v<MsgT, NoMsg>) {
-      CallbackRawBaseSingle::sendMsg<MsgT>(msg);
-    }
-  }
-
-  void sendMsg(typename CBTraits<Args...>::MsgT* msg) {
-    using MsgT = typename CBTraits<Args...>::MsgT;
-    if constexpr (not std::is_same_v<MsgT, NoMsg>) {
-      CallbackRawBaseSingle::sendMsg<MsgT>(msg);
-    }
   }
 
   template <typename SerializerT>

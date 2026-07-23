@@ -56,6 +56,24 @@
 
 namespace vt { namespace location {
 
+template <typename EntityT, typename... Args>
+objgroup::proxy::Proxy<LocationManager::IndexedElmType<EntityT>>
+LocationManager::createCollective(Args&&... args) {
+  using LocType = IndexedElmType<EntityT>;
+  auto lm_proxy = theObjGroup()->makeCollective<LocType>(
+    "LocationManager", std::forward<Args>(args)...
+  );
+  lm_proxy.get()->setProxy(lm_proxy);
+  return lm_proxy;
+}
+
+template <typename EntityT>
+void LocationManager::destroyCollective(
+  objgroup::proxy::Proxy<IndexedElmType<EntityT>> proxy
+) {
+  theObjGroup()->destroyCollective(proxy);
+}
+
 template <typename IndexT>
 typename LocationManager::IndexedElmType<IndexT>*
 LocationManager::getCollectionLM(VirtualProxyType proxy) {

@@ -43,12 +43,9 @@
 
 #include <gtest/gtest.h>
 
-#include "nlohmann/detail/meta/is_sax.hpp"
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann-vt/json_fwd.hpp"
 #include "test_parallel_harness.h"
 #include "test_helpers.h"
-#include "test_collection_common.h"
-#include "data_message.h"
 
 #include "vt/phase/phase_manager.h"
 #include "vt/vrt/collection/manager.h"
@@ -58,9 +55,8 @@
 #include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/json_appender.h"
-#include "vt/utils/file_spec/spec.h"
 
-#include <nlohmann/json.hpp>
+#include <nlohmann-vt/json.hpp>
 #include <memory>
 #include <sstream>
 

@@ -96,7 +96,6 @@ public:
     LoadType this_new_load, LoadType target_max_load
   );
 
-protected:
   void doLBStages(LoadType start_imb);
   void informAsync();
   void informSync();
@@ -129,11 +128,48 @@ protected:
   void rejectionStatsHandler(
     int n_rejected, int n_transfers, int n_unhomed_blocks, int cycle_count
   );
+  void finishedSwaps();
   void maxIterTime(double max_iter_time);
   void remoteBlockCountHandler(int n_unhomed_blocks);
+  void timeLB(double total_time);
   void thunkMigrations();
-
+  void propsDone();
   void setupDone();
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Setters for the test harness
+  //////////////////////////////////////////////////////////////////////////////
+  void setAlpha(double in_alpha) { alpha = in_alpha; }
+  void setDelta(double in_delta) { delta = in_delta; }
+  void setBeta(double in_beta) { beta = in_beta; }
+  void setGamma(double in_gamma) { gamma = in_gamma; }
+  void setCurObjs(std::unordered_map<ObjIDType, LoadType> const& in_cur_objs) {
+    cur_objs_ = in_cur_objs;
+  }
+  void setRecvEdges(EdgeMapType const& in_recv_edges) {
+    recv_edges_ = in_recv_edges;
+  }
+  void setSendEdges(EdgeMapType const& in_send_edges) {
+    send_edges_ = in_send_edges;
+  }
+
+  void setObjSharedBlock(
+    std::unordered_map<ObjIDType, SharedIDType> const& in_shared
+  ) {
+    obj_shared_block_ = in_shared;
+  }
+  void setSharedSize(
+    std::unordered_map<SharedIDType, BytesType> const& in_size
+  ) {
+    shared_block_size_ = in_size;
+  }
+  void setSharedEdge(
+    std::unordered_map<SharedIDType, std::tuple<NodeType, BytesType>> const&
+    in_shared_edge
+  ) {
+    shared_block_edge_ = in_shared_edge;
+  }
+  //////////////////////////////////////////////////////////////////////////////
 
   /**
    * \brief Read the memory data from the user-defined json blocks into data
@@ -177,6 +213,23 @@ protected:
    * \return the info
    */
   ClusterInfo makeClusterSummary(SharedIDType shared_id);
+
+  /**
+   * \brief Helper to add edges to cluster summary
+   *
+   *  \param[in] shared_id the shared ID
+   *  \param[in] info cluster info
+   *  \param[in] cluster_objs cluster objs
+   *  \param[in] obj the sending or receiving object
+   *  \param[in] is_send whether it's a send or recv edge
+   *  \param[in] edges the edges
+   */
+  void makeClusterSummaryAddEdges(
+    SharedIDType shared_id, ClusterInfo& info,
+    std::set<ObjIDType> const& cluster_objs,
+    ObjIDType obj, bool is_send,
+    std::vector<std::tuple<elm::ElementIDStruct, double>> const& edges
+  );
 
   /**
    * \brief Try to lock a rank
@@ -307,12 +360,12 @@ protected:
     std::unordered_map<ObjIDType, LoadType> const& objs,
     std::set<ObjIDType> const& exclude = {},
     std::unordered_map<ObjIDType, LoadType> const& include = {}
-  );
+  ) const;
 
   double computeWorkAfterClusterSwap(
     NodeType node, NodeInfo const& info, ClusterInfo const& to_remove,
     ClusterInfo const& to_add
-  );
+  ) const;
 
   /**
    * \brief Consider possible swaps with all the up-to-date info from a rank
@@ -324,7 +377,7 @@ protected:
   /**
    * \brief Release a lock on a rank
    */
-  void releaseLock();
+  void releaseLock(bool try_again, NodeType try_lock_node, double c_try);
 
   /**
    * \brief Give a cluster to a rank
@@ -334,6 +387,8 @@ protected:
    * \param[in] give_objs the objects given
    * \param[in] give_obj_shared_block the shared block the objs are part of
    * \param[in] give_obj_working_bytes the working bytes for the objs
+   * \param[in] give_send send edges for given objects
+   * \param[in] give_recv recv edges for given objects
    * \param[in] take_cluster (optional) a cluster requested in return
    */
   void giveCluster(
@@ -342,8 +397,19 @@ protected:
     std::unordered_map<ObjIDType, LoadType> const& give_objs,
     std::unordered_map<ObjIDType, SharedIDType> const& give_obj_shared_block,
     std::unordered_map<ObjIDType, BytesType> const& give_obj_working_bytes,
+    EdgeMapType const& give_send,
+    EdgeMapType const& give_recv,
     SharedIDType take_cluster
   );
+
+  /**
+   * \brief Check for work convergence within a threshold
+   *
+   * \param[in] last_num_iters number of iterations to check
+   *
+   * \return whether we have converged
+   */
+  bool checkConvergence(std::size_t last_num_iters = 8) const;
 
   /**
    * \internal \brief Remove a cluster to send. Does all the bookkeeping
@@ -404,6 +470,7 @@ private:
   std::unordered_set<NodeType> underloaded_         = {};
   std::unordered_set<NodeType> new_underloaded_     = {};
   std::unordered_map<ObjIDType, LoadType> cur_objs_ = {};
+  std::set<ObjIDType> non_cluster_objs_             = {};
   EdgeMapType send_edges_;
   EdgeMapType recv_edges_;
   LoadType this_new_load_                           = 0.0;
@@ -438,9 +505,20 @@ private:
   double iter_time_                                 = 0.0f;
   /// Whether any node has communication data
   bool has_comm_any_ = false;
+  bool done_with_swaps_ = false;
+  bool props_done_ = false;
+  int try_locks_pending_ = 0;
+  EpochType lb_stages_epoch_ = no_epoch;
+  int total_num_iters_ = 0;
+  bool work_stats_handler_ = false;
+  bool load_stats_handler_ = false;
+  bool compute_unhomed_done_ = false;
 
   void hasCommAny(bool has_comm_any);
-  void giveEdges(EdgeMapType const& edge_map);
+  void giveEdges(
+    EdgeMapType const& edge_map,
+    std::unordered_map<elm::ElementIDStruct, SharedIDType> obj_cluster_id
+  );
 
   //////////////////////////////////////////////////////////////////////////////
   // All the memory info (may or may not be present)
@@ -459,7 +537,7 @@ private:
 
     double operator<(TryLock const& other) const {
       // sort in reverse order so the best is first!
-      return c_try > other.c_try;
+      return c_try == other.c_try ? requesting_node < other.requesting_node : c_try > other.c_try;
     }
   };
 
@@ -477,6 +555,8 @@ private:
     }
   };
 
+  /// Whether a cluster does not have a shared ID
+  SharedIDType const no_shared_id = -1;
   /// Whether we have memory information
   bool has_memory_data_ = false;
   /// Working bytes for this rank
@@ -524,6 +604,8 @@ private:
   /// Ready to satify looks
   bool ready_to_satisfy_locks_ = false;
   int consider_swaps_counter_ = 0;
+  std::vector<double> last_n_work;
+  double converge_tolerance_ = 0.01;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

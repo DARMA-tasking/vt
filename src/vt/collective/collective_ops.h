@@ -60,10 +60,26 @@ static constexpr runtime::RuntimeInstType const collective_default_inst =
 template <runtime::RuntimeInstType instance = collective_default_inst>
 struct CollectiveAnyOps {
   // The general methods that interact with the managed runtime holder
+
+  /**
+   * \brief Initialize VT
+   *
+   * \param[in] argc (to modify)
+   * \param[in] argv (to modify)
+   * \param[in] is_interop use interop mode (don't initialize MPI)
+   * \param[in] comm optional communicator
+   * \param[in] app_config (optional) base VT configuration to use
+   * \param[in] print_startup_banner (optional) whether to print startup banner
+   *
+   * \return runtime pointer
+   */
   static RuntimePtrType initialize(
     int& argc, char**& argv, bool is_interop = false, MPI_Comm* comm = nullptr,
-    arguments::AppConfig const* appConfig = nullptr
+    arguments::AppConfig const* appConfig = nullptr,
+    bool print_startup_banner = true
   );
+
+  //// Old version of initialize with number of worker threads
   [[deprecated]] static RuntimePtrType initialize(
     int& argc, char**& argv, PhysicalResourceType const /* num_workers */,
     bool is_interop = false, MPI_Comm* comm = nullptr,
@@ -72,6 +88,24 @@ struct CollectiveAnyOps {
   {
     return initialize(argc, argv, is_interop, comm, appConfig);
   }
+
+  /**
+   * \brief Initialize a VT runtime with arguments preconfigured
+   *
+   * \param[in] startup_config startup config returned from \c preconfigure
+   * \param[in] comm the communicator for VT to use
+   * \param[in] app_config the app config for overriding the config
+   * \param[in] print_startup_banner (optional) whether to print startup banner
+   *
+   * \return the runtime pointer
+   */
+  static RuntimePtrType initializePreconfigured(
+    std::unique_ptr<StartupConfig> startup_config,
+    MPI_Comm* comm = nullptr,
+    arguments::AppConfig const* app_config = nullptr,
+    bool print_startup_banner = true
+  );
+
   static void finalize(RuntimePtrType in_rt = nullptr);
   static void scheduleThenFinalize(RuntimePtrType in_rt = nullptr);
   static void setCurrentRuntimeTLS(RuntimeUnsafePtrType in_rt = nullptr);

@@ -4,16 +4,13 @@ set -ex
 
 source_dir=${1}
 build_dir=${2}
+target=${3:-install}
+
+# Dump environment variables for easier debugging
+env | sort
 
 # Dependency versions, when fetched via git.
 checkpoint_rev=develop
-
-if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
-then
-    token=${3}
-else
-    target=${3:-install}
-fi
 
 if [ -z ${4} ]; then
     dashj=""
@@ -133,6 +130,9 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -Dvt_test_trace_runtime_enabled="${VT_TRACE_RUNTIME_ENABLED:-0}" \
       -Dvt_lb_enabled="${VT_LB_ENABLED:-1}" \
+      -Dvt_ldms_enabled="${VT_LDMS_ENABLED:-0}" \
+      -Dvt_ldms_includes="${VT_LDMS_INCLUDES_DIR:-/opt/ldms/include/}" \
+      -Dvt_ldms_libs="${VT_LDMS_LIBS_DIR:-/opt/ldms/lib}" \
       -Dvt_trace_enabled="${VT_TRACE_ENABLED:-0}" \
       -Dvt_trace_only="${VT_BUILD_TRACE_ONLY:-0}" \
       -Dvt_doxygen_enabled="${VT_DOXYGEN_ENABLED:-0}" \
@@ -160,6 +160,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
       -DMPI_C_COMPILER="${MPICC:-mpicc}" \
       -DMPI_CXX_COMPILER="${MPICXX:-mpicxx}" \
+      -Dvt_find_mpi="${VT_FIND_MPI:-1}" \
       -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
       -DCMAKE_C_COMPILER="${CC:-cc}" \
       -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS:-}" \
@@ -171,7 +172,8 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_debug_verbose="${VT_DEBUG_VERBOSE:-0}" \
       -Dvt_tests_num_nodes="${VT_TESTS_NUM_NODES:-}" \
       -Dvt_external_fmt="${VT_EXTERNAL_FMT:-0}" \
-      -DLIBUNWIND_ROOT="${LIBUNWIND_ROOT:-/usr}" \
+      -Dfmt_DIR="${FMT_DIR}" \
+      -Dlibunwind_ROOT="${LIBUNWIND_ROOT:-/usr}" \
       -Dvt_no_color_enabled="${VT_NO_COLOR_ENABLED:-0}" \
       -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-17}" \
       -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS:-0}" \
@@ -182,20 +184,24 @@ if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
 then
     MCSS=$PWD/m.css
     GHPAGE=$PWD/DARMA-tasking.github.io
-    git clone "https://${token}@github.com/DARMA-tasking/DARMA-tasking.github.io"
+    git clone --depth=1 "https://x-access-token:${GITHUB_TOKEN}@github.com/DARMA-tasking/DARMA-tasking.github.io"
     git clone https://github.com/mosra/m.css
     cd m.css
     git checkout 699abdd5
     cd ../
 
     "$MCSS/documentation/doxygen.py" Doxyfile-mcss
-    cp -R docs "$GHPAGE"
-    cd "$GHPAGE"
-    git config --global user.email "jliffla@sandia.gov"
-    git config --global user.name "Jonathan Lifflander"
-    git add docs
-    git commit -m "Update docs (auto-build)"
-    git push origin master
+
+    if test "${GIT_BRANCH:-}" = "develop"
+    then
+        cp -R docs "$GHPAGE"
+        cd "$GHPAGE"
+        git config --global user.email "jliffla@sandia.gov"
+        git config --global user.name "Jonathan Lifflander"
+        git add docs
+        git commit --allow-empty -m "Update docs (auto-build)"
+        git push origin master
+    fi
 elif test "${VT_CI_BUILD:-0}" -eq 1
 then
     # Generate output file with compilation warnings and errors
@@ -203,22 +209,12 @@ then
     GENERATOR=$(cmake -L . | grep USED_CMAKE_GENERATOR:STRING | cut -d"=" -f2)
     OUTPUT="$VT_BUILD"/compilation_errors_warnings.out
     OUTPUT_TMP="$OUTPUT".tmp
-
-    # Because of the problem with new lines in Azure pipelines, all of them will be
-    # converted to this unique delimiter
-    DELIMITER="-=-=-=-"
-
     WARNS_ERRS=""
 
     # Unfortunately Ninja doesn't output compilation warnings and errors to stderr
     # so it needs special treatment
     if test "$GENERATOR" = "Ninja"
     then
-        if test "$CXX" = "nvcc_wrapper"
-        then
-            # Limit parallelism to avoid memory exhaustion on Azure runners
-            dashj="-j 1"
-        fi
         # To easily tell if compilation of given file succeeded special progress bar is used
         # (controlled by variable NINJA_STATUS)
         export NINJA_STATUS="[ninja][%f/%t] "
@@ -236,8 +232,6 @@ then
         WARNS_ERRS=$(cat "$OUTPUT_TMP")
     fi
 
-    # Convert new lines and redirect to an output file
-    WARNS_ERRS=${WARNS_ERRS//$'\n'/$DELIMITER}
     echo "$WARNS_ERRS" > "$OUTPUT"
 else
     time cmake --build . ${dashj} --target "${target}"

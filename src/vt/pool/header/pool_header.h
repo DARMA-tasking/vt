@@ -50,6 +50,7 @@ namespace vt { namespace pool {
 
 struct Header {
   size_t alloc_size;
+  size_t use_size;
   size_t oversize;
 };
 
@@ -67,6 +68,7 @@ struct HeaderManager {
     size_t const& num_bytes, size_t const& oversize, std::byte* buffer
   );
   static size_t getHeaderBytes(std::byte* buffer);
+  static size_t getHeaderUsedBytes(std::byte* buffer);
   static size_t getHeaderOversizeBytes(std::byte* buffer);
   static std::byte* getHeaderPtr(std::byte* buffer);
 };

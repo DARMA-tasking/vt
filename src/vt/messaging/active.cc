@@ -162,9 +162,15 @@ void ActiveMessenger::startup() {
     );
   });
 #endif
+
+  // Set up the active receive broker to pre-post wildcard receives
+  active_broker_.setup(this);
 }
 
-/*virtual*/ ActiveMessenger::~ActiveMessenger() {}
+/*virtual*/ ActiveMessenger::~ActiveMessenger() {
+  // Ensure broker-posted receives/buffers are cleaned up to avoid leaks
+  active_broker_.cleanup();
+}
 
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   [[maybe_unused]] HandlerType const handler,
@@ -207,9 +213,17 @@ MsgSizeType ActiveMessenger::packMsg(
   return size + ptr_bytes;
 }
 
+// Choose active message tag based on final size
+/*static*/ MPI_TagType ActiveMessenger::selectActiveTag(MsgSizeType size) {
+  if (size <= ActiveRecvBroker::caps_[0]) return static_cast<MPI_TagType>(MPITag::ActiveMsgS);
+  if (size <= ActiveRecvBroker::caps_[1]) return static_cast<MPI_TagType>(MPITag::ActiveMsgM);
+  if (size <= ActiveRecvBroker::caps_[2]) return static_cast<MPI_TagType>(MPITag::ActiveMsgL);
+  if (size <= ActiveRecvBroker::caps_[3]) return static_cast<MPI_TagType>(MPITag::ActiveMsgXL);
+  return static_cast<MPI_TagType>(MPITag::ActiveMsgTag); // fallback
+}
+
 EventType ActiveMessenger::sendMsgBytesWithPut(
-  NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-  TagType const& send_tag
+  NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base
 ) {
   auto msg = base.get();
   auto const is_term = envelopeIsTerm(msg->env);
@@ -275,7 +289,9 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     }
   }
 
-  sendMsgBytes(dest, base, new_msg_size, send_tag);
+  // Choose size-class tag for the active message
+  auto const chosen_tag = selectActiveTag(new_msg_size);
+  sendMsgBytes(dest, base, new_msg_size, chosen_tag);
 
   return no_event;
 }
@@ -440,8 +456,6 @@ EventType ActiveMessenger::sendMsgBytes(
 EventType ActiveMessenger::doMessageSend(
   MsgSharedPtr<BaseMsgType>& base
 ) {
-  auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
-
   auto msg = base.get();
 
   auto const dest = envelopeGetDest(msg->env);
@@ -493,7 +507,8 @@ EventType ActiveMessenger::doMessageSend(
   // Don't go through MPI with self-send, schedule the message locally instead
   if (deliver) {
     if (dest != this_node_) {
-      sendMsgBytesWithPut(dest, base, send_tag);
+      // Compute size-class tag internally in sendMsgBytesWithPut
+      sendMsgBytesWithPut(dest, base);
     } else {
       recordLBDataCommForSend(dest, base, base.size());
 
@@ -692,6 +707,45 @@ bool ActiveMessenger::recvDataMsgBuffer(
     MPI_Status stat;
     int flag;
 
+#if MPI_VERSION >= 3
+    // MPI 3+: Use MPI_Improbe to claim the first chunk immediately
+    MPI_Message first_msg_handle;
+
+    {
+      VT_ALLOW_MPI_CALLS;
+      const int probe_ret = MPI_Improbe(
+        node == uninitialized_destination ? MPI_ANY_SOURCE : node,
+        tag, comm_, &flag, &first_msg_handle, &stat
+      );
+      vtAssertMPISuccess(probe_ret, "MPI_Improbe");
+    }
+
+    if (flag == 1) {
+      MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+
+      std::byte* buf = user_buf == nullptr ?
+        thePool()->alloc(num_probe_bytes) :
+        user_buf;
+
+      NodeType const sender = stat.MPI_SOURCE;
+
+      // Calculate first chunk size
+      auto const max_per_send = theConfig()->vt_max_mpi_send_size;
+      MsgSizeType first_chunk_bytes = static_cast<MsgSizeType>(
+        std::min(static_cast<std::size_t>(num_probe_bytes), max_per_send)
+      );
+
+      recvDataDirect(
+        nchunks, buf, tag, sender, num_probe_bytes, priority, dealloc_user_buf,
+        next, is_user_buf, first_msg_handle, first_chunk_bytes
+      );
+
+      return true;
+    } else {
+      return false;
+    }
+#else
+    // MPI < 3: Use existing MPI_Iprobe path
     {
       VT_ALLOW_MPI_CALLS;
       const int probe_ret = MPI_Iprobe(
@@ -719,6 +773,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
     } else {
       return false;
     }
+#endif
   } else {
     vt_debug_print(
       normal, active,
@@ -756,6 +811,9 @@ void ActiveMessenger::recvDataDirect(
   int nchunks, std::byte* const buf, TagType const tag, NodeType const from,
   MsgSizeType len, PriorityType prio, ActionType dealloc,
   ContinuationDeleterType next, bool is_user_buf
+#if MPI_VERSION >= 3
+  , MPI_Message first_msg, MsgSizeType first_chunk_bytes
+#endif
 ) {
   vtAssert(nchunks > 0, "Must have at least one chunk");
 
@@ -765,7 +823,48 @@ void ActiveMessenger::recvDataDirect(
   std::byte* cbuf = buf;
   MsgSizeType remainder = len;
   auto const max_per_send = theConfig()->vt_max_mpi_send_size;
-  for (int i = 0; i < nchunks; i++) {
+
+  int start_chunk = 0;
+
+#if MPI_VERSION >= 3
+  // If we have a pre-matched first message, use MPI_Imrecv for the first chunk
+  if (first_msg != MPI_MESSAGE_NULL && first_chunk_bytes > 0) {
+    #if vt_check_enabled(trace_enabled)
+      std::unique_ptr<trace::TraceScopedNote> trace_note;
+      if (theConfig()->vt_trace_mpi) {
+        trace_note = std::make_unique<trace::TraceScopedNote>(trace_irecv);
+      }
+    #endif
+
+    {
+      VT_ALLOW_MPI_CALLS;
+      int const ret = MPI_Imrecv(
+        cbuf, first_chunk_bytes, MPI_BYTE,
+        &first_msg, &reqs[0]
+      );
+      vtAssertMPISuccess(ret, "MPI_Imrecv");
+    }
+
+    dmPostedCounterGauge.incrementUpdate(first_chunk_bytes, 1);
+
+    #if vt_check_enabled(trace_enabled)
+      if (theConfig()->vt_trace_mpi) {
+        auto tr_note = fmt::format(
+          "Imrecv(Data, first chunk): from={}, bytes={}",
+          from, first_chunk_bytes
+        );
+        trace_note->setNote(tr_note);
+        trace_note->end();
+      }
+    #endif
+
+    remainder -= first_chunk_bytes;
+    start_chunk = 1;
+  }
+#endif
+
+  // Post remaining chunks using MPI_Irecv
+  for (int i = start_chunk; i < nchunks; i++) {
     auto sublen = static_cast<int>(
       std::min(static_cast<std::size_t>(remainder), max_per_send)
     );
@@ -786,7 +885,7 @@ void ActiveMessenger::recvDataDirect(
       vtAssertMPISuccess(ret, "MPI_Irecv");
     }
 
-    dmPostedCounterGauge.incrementUpdate(len, 1);
+    dmPostedCounterGauge.incrementUpdate(sublen, 1);
 
     #if vt_check_enabled(trace_enabled)
       if (theConfig()->vt_trace_mpi) {
@@ -929,6 +1028,142 @@ void ActiveMessenger::processActiveMsg(
   }
 }
 
+// Try to process one incoming active message via Improbe/Iprobe for any size tag
+bool ActiveMessenger::tryProcessIncomingActiveMsg() {
+  struct TagEntry { MPI_TagType tag; };
+  static constexpr TagEntry active_tags[] = {
+    { static_cast<MPI_TagType>(MPITag::ActiveMsgS)  },
+    { static_cast<MPI_TagType>(MPITag::ActiveMsgM)  },
+    { static_cast<MPI_TagType>(MPITag::ActiveMsgL)  },
+    { static_cast<MPI_TagType>(MPITag::ActiveMsgXL) },
+    { static_cast<MPI_TagType>(MPITag::ActiveMsgTag) }
+  };
+
+  for (auto const& te : active_tags) {
+    CountType num_probe_bytes = 0;
+    MPI_Status stat{};
+    int flag = 0;
+
+#if MPI_VERSION >= 3
+    MPI_Message msg_handle = MPI_MESSAGE_NULL;
+    {
+      VT_ALLOW_MPI_CALLS;
+      MPI_Improbe(
+        MPI_ANY_SOURCE, te.tag, comm_, &flag, &msg_handle, &stat
+      );
+    }
+
+    if (flag == 1) {
+      MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+
+      std::byte* buf = thePool()->alloc(num_probe_bytes);
+      NodeType const sender = stat.MPI_SOURCE;
+
+      MPI_Request req = MPI_REQUEST_NULL;
+
+      {
+        #if vt_check_enabled(trace_enabled)
+          std::unique_ptr<trace::TraceScopedNote> trace_note;
+          if (theConfig()->vt_trace_mpi) {
+            trace_note = std::make_unique<trace::TraceScopedNote>(trace_irecv);
+          }
+        #endif
+
+        VT_ALLOW_MPI_CALLS;
+        MPI_Imrecv(buf, num_probe_bytes, MPI_BYTE, &msg_handle, &req);
+
+        amPostedCounterGauge.incrementUpdate(num_probe_bytes, 1);
+
+        #if vt_check_enabled(trace_enabled)
+          if (theConfig()->vt_trace_mpi) {
+            auto tr_note = fmt::format(
+              "Imrecv(AM): from={}, bytes={}, tag={}",
+              stat.MPI_SOURCE, num_probe_bytes, te.tag
+            );
+            trace_note->setNote(tr_note);
+            trace_note->end();
+          }
+        #endif
+      }
+
+      InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
+
+      int num_mpi_tests = 0;
+      auto done = recv_holder.test(num_mpi_tests);
+      amPollCount.increment(num_mpi_tests);
+
+      if (done) {
+        finishPendingActiveMsgAsyncRecv(&recv_holder);
+      } else {
+        in_progress_active_msg_irecv.emplace(std::move(recv_holder));
+      }
+
+      return true;
+    }
+#else
+    {
+      VT_ALLOW_MPI_CALLS;
+      MPI_Iprobe(
+        MPI_ANY_SOURCE, te.tag, comm_, &flag, &stat
+      );
+    }
+
+    if (flag == 1) {
+      MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
+
+      std::byte* buf = thePool()->alloc(num_probe_bytes);
+      NodeType const sender = stat.MPI_SOURCE;
+
+      MPI_Request req;
+
+      {
+        #if vt_check_enabled(trace_enabled)
+          std::unique_ptr<trace::TraceScopedNote> trace_note;
+          if (theConfig()->vt_trace_mpi) {
+            trace_note = std::make_unique<trace::TraceScopedNote>(trace_irecv);
+          }
+        #endif
+
+        VT_ALLOW_MPI_CALLS;
+        MPI_Irecv(
+          buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
+          comm_, &req
+        );
+
+        amPostedCounterGauge.incrementUpdate(num_probe_bytes, 1);
+
+        #if vt_check_enabled(trace_enabled)
+          if (theConfig()->vt_trace_mpi) {
+            auto tr_note = fmt::format(
+              "Irecv(AM): from={}, bytes={}, tag={}",
+              stat.MPI_SOURCE, num_probe_bytes, stat.MPI_TAG
+            );
+            trace_note->setNote(tr_note);
+            trace_note->end();
+          }
+        #endif
+      }
+
+      InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
+
+      int num_mpi_tests = 0;
+      auto done = recv_holder.test(num_mpi_tests);
+      amPollCount.increment(num_mpi_tests);
+
+      if (done) {
+        finishPendingActiveMsgAsyncRecv(&recv_holder);
+      } else {
+        in_progress_active_msg_irecv.emplace(std::move(recv_holder));
+      }
+
+      return true;
+    }
+#endif
+  }
+
+  return false;
+}
+
 void ActiveMessenger::prepareActiveMsgToRun(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& in_from_node,
   bool insert, ActionType cont
@@ -980,75 +1215,6 @@ void ActiveMessenger::prepareActiveMsgToRun(
   if (not is_term) {
     theTerm()->consume(epoch,1,in_from_node);
     theTerm()->hangDetectRecv();
-  }
-}
-
-bool ActiveMessenger::tryProcessIncomingActiveMsg() {
-  CountType num_probe_bytes;
-  MPI_Status stat;
-  int flag;
-
-  {
-    VT_ALLOW_MPI_CALLS;
-
-    MPI_Iprobe(
-      MPI_ANY_SOURCE, static_cast<MPI_TagType>(MPITag::ActiveMsgTag),
-      comm_, &flag, &stat
-    );
-  }
-
-  if (flag == 1) {
-    MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
-
-    std::byte* buf = thePool()->alloc(num_probe_bytes);
-
-    NodeType const sender = stat.MPI_SOURCE;
-
-    MPI_Request req;
-
-    {
-      #if vt_check_enabled(trace_enabled)
-        std::unique_ptr<trace::TraceScopedNote> trace_note;
-        if (theConfig()->vt_trace_mpi) {
-          trace_note = std::make_unique<trace::TraceScopedNote>(trace_irecv);
-        }
-      #endif
-
-      VT_ALLOW_MPI_CALLS;
-      MPI_Irecv(
-        buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
-        comm_, &req
-      );
-
-      amPostedCounterGauge.incrementUpdate(num_probe_bytes, 1);
-
-      #if vt_check_enabled(trace_enabled)
-        if (theConfig()->vt_trace_mpi) {
-          auto tr_note = fmt::format(
-            "Irecv(AM): from={}, bytes={}",
-            stat.MPI_SOURCE, num_probe_bytes
-          );
-          trace_note->setNote(tr_note);
-          trace_note->end();
-        }
-      #endif
-    }
-
-    InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
-
-    int num_mpi_tests = 0;
-    auto done = recv_holder.test(num_mpi_tests);
-    amPollCount.increment(num_mpi_tests);
-
-    if (done) {
-      finishPendingActiveMsgAsyncRecv(&recv_holder);
-    } else {
-      in_progress_active_msg_irecv.emplace(std::move(recv_holder));
-    }
-
-    return true;
-  } else {
-    return false;
   }
 }
 
@@ -1107,7 +1273,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
     } else {
       /*bool const put_delivered = */recvDataMsg(
         1, put_tag, sender,
-        [=](PtrLenPairType ptr, ActionType deleter){
+        [this, base, sender](PtrLenPairType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
           processActiveMsg(base, sender, true, deleter);
         }
@@ -1154,15 +1320,140 @@ bool ActiveMessenger::testPendingAsyncOps() {
   );
 }
 
+void ActiveMessenger::ActiveRecvBroker::postSlot(ActiveMessenger* self, Slot& s) {
+  // Allocate a fresh buffer for this slot and post a Irecv for the corresponding tag
+  s.buf = thePool()->alloc(s.cap);
+
+  #if vt_check_enabled(trace_enabled)
+    std::unique_ptr<trace::TraceScopedNote> trace_note;
+    if (theConfig()->vt_trace_mpi) {
+      trace_note = std::make_unique<trace::TraceScopedNote>(self->trace_irecv);
+    }
+  #endif
+
+  {
+    VT_ALLOW_MPI_CALLS;
+    int const ret = MPI_Irecv(
+      s.buf, s.cap, MPI_BYTE, MPI_ANY_SOURCE,
+      s.tag, self->comm_, &s.req
+    );
+    vtAssertMPISuccess(ret, "Broker MPI_Irecv");
+  }
+
+  self->amPostedCounterGauge.incrementUpdate(s.cap, 1);
+
+  #if vt_check_enabled(trace_enabled)
+    if (theConfig()->vt_trace_mpi) {
+      auto tr_note = fmt::format("Irecv(AM Broker): tag={}, cap={}", s.tag, s.cap);
+      trace_note->setNote(tr_note);
+      trace_note->end();
+    }
+  #endif
+
+  s.posted = true;
+}
+
+void ActiveMessenger::ActiveRecvBroker::setup(ActiveMessenger* self) {
+  slots_.clear();
+  slots_.reserve(num_caps_ * slots_per_class_);
+
+  for (int ci = 0; ci < num_caps_; ++ci) {
+    for (int k = 0; k < slots_per_class_; ++k) {
+      slots_.emplace_back(Slot{caps_[ci], tags_[ci], nullptr, MPI_REQUEST_NULL, false});
+    }
+  }
+
+  for (auto& s : slots_) {
+    postSlot(self, s);
+  }
+
+  vt_debug_print(
+    normal, active,
+    "ActiveRecvBroker::setup: posted {} slots across size classes\n",
+    slots_.size()
+  );
+}
+
+bool ActiveMessenger::ActiveRecvBroker::progress(ActiveMessenger* self) {
+  bool any_progress = false;
+  int tests = 0;
+
+  for (auto& s : slots_) {
+    if (!s.posted) continue;
+
+    int flag = 0;
+    MPI_Status stat{};
+
+    {
+      VT_ALLOW_MPI_CALLS;
+      MPI_Test(&s.req, &flag, &stat);
+      tests++;
+    }
+
+    if (flag) {
+      int count_bytes = 0;
+      MPI_Get_count(&stat, MPI_BYTE, &count_bytes);
+
+      // Decrease the "allocated" size to the actual used size so we know the true length of the buffer
+      thePool()->setUsedSize(s.buf, count_bytes);
+
+      if (count_bytes > s.cap) {
+        vtWarn(fmt::format(
+          "ActiveRecvBroker: received {} bytes > slot cap {} on tag {}",
+          count_bytes, s.cap, s.tag
+        ));
+      }
+
+      NodeType sender = stat.MPI_SOURCE;
+
+      InProgressIRecv tmp(s.buf, count_bytes, sender);
+      self->finishPendingActiveMsgAsyncRecv(&tmp);
+
+      // Repost with a fresh buffer
+      postSlot(self, s);
+
+      any_progress = true;
+    }
+  }
+
+  if (tests > 0) {
+    self->amPollCount.increment(tests);
+  }
+
+  return any_progress;
+}
+
+void ActiveMessenger::ActiveRecvBroker::cleanup() {
+  // Cancel any outstanding receives and free any broker-owned buffers
+  for (auto& s : slots_) {
+    if (s.posted) {
+      VT_ALLOW_MPI_CALLS;
+      int ret = MPI_Cancel(&s.req);
+      vtAssertMPISuccess(ret, "Broker MPI_Cancel");
+      ret = MPI_Request_free(&s.req);
+      vtAssertMPISuccess(ret, "Broker MPI_Request_free");
+      s.posted = false;
+    }
+    if (s.buf != nullptr) {
+      thePool()->dealloc(s.buf);
+      s.buf = nullptr;
+    }
+    s.req = MPI_REQUEST_NULL;
+  }
+  slots_.clear();
+}
+
 int ActiveMessenger::progress([[maybe_unused]] TimeType current_time) {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   bool const received_active_msg = testPendingActiveMsgAsyncRecv();
   bool const received_data_msg = testPendingDataMsgAsyncRecv();
   bool const general_async = testPendingAsyncOps();
+  bool const broker_progress = active_broker_.progress(this);
 
   return started_irecv_active_msg or started_irecv_data_msg or
-         received_active_msg or received_data_msg or general_async;
+         received_active_msg or received_data_msg or general_async or
+         broker_progress;
 }
 
 void ActiveMessenger::registerAsyncOp(std::unique_ptr<AsyncOp> in) {

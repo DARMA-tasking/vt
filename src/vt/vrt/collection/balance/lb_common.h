@@ -50,7 +50,7 @@
 #include "vt/timing/timing_type.h"
 #include "vt/messaging/message/message.h"
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann-vt/json_fwd.hpp>
 
 #include <vector>
 #include <unordered_map>
@@ -76,6 +76,10 @@ static constexpr ElementIDType const no_element_id = elm::no_element_id;
  */
 struct PhaseOffset {
   PhaseOffset() = delete;
+
+  PhaseOffset(int in_phases, unsigned int in_subphase)
+    : phases(in_phases), subphase(in_subphase)
+  {}
 
   int phases;
   static constexpr unsigned int NEXT_PHASE = 0;

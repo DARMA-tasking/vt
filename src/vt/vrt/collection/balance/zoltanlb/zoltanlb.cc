@@ -369,7 +369,7 @@ void ZoltanLB::allocateShareEdgeGIDs() {
 
       vt_debug_print(
         verbose, lb,
-        "allocate: local edge_id={:x}, from={:x}, to={:x}\n",
+        "allocate: local edge_id={:x}, from={}, to={}\n",
         key.edge_id_.id,
         key.fromObj(),
         key.toObj()
@@ -386,7 +386,7 @@ void ZoltanLB::allocateShareEdgeGIDs() {
 
         vt_debug_print(
           verbose, lb,
-          "allocate: remote edge_id={:x}, from={:x}, to={:x}\n",
+          "allocate: remote edge_id={:x}, from={}, to={}\n",
           key.edge_id_.id,
           key.fromObj(),
           key.toObj()
@@ -563,7 +563,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
 
         vt_debug_print(
           verbose, lb,
-          "edge_id={:x} from={:x}, to={:x}\n",
+          "edge_id={} from={}, to={}\n",
           iter->first.edge_id_,
           iter->first.fromObj(), iter->first.toObj()
         );

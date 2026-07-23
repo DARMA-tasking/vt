@@ -44,19 +44,20 @@
 #if !defined INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H
 #define INCLUDED_VT_METRICS_EXAMPLE_EVENTS_H
 
+#include "vt/metrics/perf_event_descriptor.h"
+
 #include <unordered_map>
-#include <string>
 #include <linux/perf_event.h>
 
 namespace vt { namespace metrics {
 
-std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> const example_event_map = {
-    {"cycles", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES)},
-    {"instructions", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS)},
-    {"cache_references", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_REFERENCES)},
-    {"cache_misses", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES)},
-    {"branch_instructions", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS)},
-    {"branch_misses", std::make_pair(PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES)}
+std::unordered_map<std::string, PerfEventDescriptor> const example_event_map = {
+    {"cycles", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES, "compute"}},
+    {"instructions", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, "compute"}},
+    {"cache_references", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_REFERENCES, "cache"}},
+    {"cache_misses", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES, "cache"}},
+    {"branch_instructions", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS, "branch"}},
+    {"branch_misses", PerfEventDescriptor{PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES, "branch"}}
 };
 
 }} // end namespace vt::metrics

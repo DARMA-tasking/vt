@@ -47,19 +47,20 @@
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/context/context.h"
-#include "example_events.h"
+#include "vt/metrics/perf_event_groups.h"
+#include "vt/metrics/example_events.h"
 
 #include <linux/perf_event.h>
 #include <sys/ioctl.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <cstdint>
 #include <cstring>
 #include <unordered_map>
 #include <vector>
 #include <string>
-#include <sstream>
 
-namespace vt { namespace metrics {
+namespace vt::metrics {
 
 /** \file */
 
@@ -74,14 +75,43 @@ namespace vt { namespace metrics {
 struct PerfData: runtime::component::Component<PerfData>
 {
 public:
+  struct TaskGroupMeasurements {
+    PerfEventGroupInfo group_;
+    uint64_t time_enabled_ = 0;
+    uint64_t time_running_ = 0;
+    std::unordered_map<std::string, uint64_t> measurements_;
+
+    double getScalingRatio() const {
+      if (time_running_ == 0) {
+        return 0.0;
+      }
+
+      return static_cast<double>(time_enabled_) /
+        static_cast<double>(time_running_);
+    }
+
+    double getRunningFraction() const {
+      if (time_enabled_ == 0) {
+        return 0.0;
+      }
+
+      return static_cast<double>(time_running_) /
+        static_cast<double>(time_enabled_);
+    }
+  };
+
   /**
    * \brief Constructor for PerfData
    *
    * Initializes performance counters based on the \c VT_EVENTS environment variable,
-   * which is a comma seperated list of events available in the events header
-   * (example_events.h by default). For example: \c VT_EVENTS="cache-misses,instructions".
-   * If \c VT_EVENTS isn't set, will default to measuring instructions.
-   * Ensures only valid events are configured.
+   * which is a comma separated list of events available in the events header
+   * (example_events.h by default). Explicit groups may be provided with braces,
+   * such as \c VT_EVENTS="{instructions,cycles},cache_misses". Append
+   * \c ! to an event or explicit group to pin that group, such as
+   * \c VT_EVENTS="instructions!,{cycles,cache_misses}!". If
+   * \c VT_PERF_AUTO_GROUP is enabled, ungrouped events are bucketed using the
+   * descriptors from example_events.h. If \c VT_EVENTS isn't set, will default
+   * to measuring instructions. Ensures only valid events are configured.
    */
   PerfData();
 
@@ -119,13 +149,29 @@ public:
   std::unordered_map<std::string, uint64_t> getTaskMeasurements();
 
   /**
+   * \brief Get grouped task measurements and raw perf multiplexing metadata
+   *
+   * Reads grouped counter values along with the raw \c time_enabled and
+   * \c time_running values returned by the perf subsystem.
+   */
+  std::vector<TaskGroupMeasurements> getTaskGroupMeasurements();
+
+  /**
    * \brief Retrieve the current event map
    *
    * Returns the mapping of event names to their type and configuration values.
    *
-   * \return A map of event names to pairs of event type and configuration values.
+   * \return A map of event names to their performance event descriptors.
    */
-  std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> getEventMap() const;
+  std::unordered_map<std::string, PerfEventDescriptor> getEventMap() const;
+
+  /**
+   * \brief Retrieve resolved event grouping metadata
+   *
+   * Returns the final event groups after explicit parsing and optional
+   * auto-group resolution.
+   */
+  std::vector<PerfEventGroupInfo> getEventGroups() const;
 
   /**
    * \brief Component startup method
@@ -146,14 +192,20 @@ public:
   void serialize(SerializerT& s) {
     s | event_map_
       | event_names_
-      | event_fds_;
+      | event_groups_;
   }
 
 private:
+  struct GroupState {
+    PerfEventGroupInfo info_;
+    int leader_fd_ = -1;
+    std::unordered_map<uint64_t, std::string> event_ids_;
+  };
+
   /**
    * \brief Map of event names to event type and configuration
    */
-  std::unordered_map<std::string, std::pair<uint64_t,uint64_t>> event_map_;
+  PerfEventDescriptorMap event_map_;
 
   /**
    * \brief List of event names being tracked
@@ -161,9 +213,29 @@ private:
   std::vector<std::string> event_names_;
 
   /**
-   * \brief List of file descriptors associated with performance counters
+   * \brief Resolved event groups after explicit and automatic grouping
    */
-  std::vector<int> event_fds_;
+  std::vector<PerfEventGroupInfo> event_groups_;
+
+  /**
+   * \brief Runtime state for each opened event group
+   */
+  std::vector<GroupState> group_states_;
+
+  /**
+   * \brief Flat list of open file descriptors to simplify cleanup
+   */
+  std::vector<int> open_fds_;
+
+  /**
+   * \brief Common implementation for grouped perf reads
+   */
+  std::vector<TaskGroupMeasurements> readTaskGroupMeasurements() const;
+
+  /**
+   * \brief Print resolved perf event groups when requested by the environment
+   */
+  void maybePrintEventGroups() const;
 
   /**
    * \brief Cleanup resources before aborting
@@ -188,7 +260,7 @@ private:
   static long perfEventOpen(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags);
 };
 
-}} // end namespace vt::metrics
+} // end namespace vt::metrics
 
 namespace vt {
 

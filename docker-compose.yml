@@ -22,7 +22,7 @@
 #   VT_LB=1                   # Enable load balancing
 #   VT_TRACE=0                # Enable tracing
 #   VT_MIMALLOC=0             # Enable mimalloc memory allocator
-#   VT_DOCS=0                 # Enable doxygen build
+#   VT_DOXYGEN_ENABLED=0      # Enable doxygen build
 #   VT_TRACE_RT=0             # Enable tracing at runtime (for testing)
 #   VT_ASAN=0                 # Enable address sanitizer
 #   VT_UBSAN=0                # Enable undefined behavior sanitizer
@@ -65,9 +65,7 @@
 # Volume will be created automatically for each combination of parameters.
 volumes:
   ubuntu-cpp:
-    name: "${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cache"
-  alpine-cpp:
-    name: "${ARCH}-alpine-${HOST_COMPILER}-${COMPILER}-cache"
+    name: "${IMAGE}-cache"
 
 # Define basic rules for ccache used across multiple services. The beauty of
 # docker compose with cached volumes is that similarly configured builds will
@@ -82,67 +80,52 @@ x-ccache: &ccache
 
 # Define rules for VT configuration options across various services
 x-vtopts: &vtopts
-  VT_LB_ENABLED: ${VT_LB:-1}
-  VT_TRACE_ENABLED:  ${VT_TRACE:-0}
-  VT_MIMALLOC_ENABLED: ${VT_MIMALLOC:-0}
-  VT_DOXYGEN_ENABLED: ${VT_DOCS:-0}
-  VT_TRACE_RUNTIME_ENABLED: ${VT_TRACE_RT:-0}
-  VT_BUILD_TRACE_ONLY: ${VT_TRACE_ONLY:-0}
-  VT_ASAN_ENABLED: ${VT_ASAN:-0}
-  VT_UBSAN_ENABLED: ${VT_UBSAN:-0}
-  VT_WERROR_ENABLED: ${VT_WERROR:-1}
-  VT_POOL_ENABLED: ${VT_POOL:-1}
-  VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
-  VT_UNITY_BUILD_ENABLED: ${VT_UNITY_BUILD:-0}
-  VT_PRODUCTION_BUILD_ENABLED: ${VT_PRODUCTION_BUILD:-0}
-  VT_FCONTEXT_ENABLED: ${VT_FCONTEXT:-0}
-  VT_DIAGNOSTICS_ENABLED: ${VT_DIAGNOSTICS:-1}
-  VT_DIAGNOSTICS_RUNTIME_ENABLED: ${VT_DIAGNOSTICS_RUNTIME:-0}
+  BUILD_SHARED_LIBS: ${VT_BUILD_SHARED_LIBS:-0}
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
-  VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
-  VT_EXTENDED_TESTS_ENABLED: ${VT_EXTENDED_TESTS:-1}
-  VT_CODE_COVERAGE: ${VT_CODE_COVERAGE:-0}
-  VT_KOKKOS_ENABLED: ${VT_KOKKOS_ENABLED:-0}
-  VT_PERF_ENABLED: ${VT_PERF_ENABLED:-0}
-  https_proxy: ${PROXY-}
+  CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD:-17}
+  CODECOV_TOKEN: ${CODECOV_TOKEN:-}
   http_proxy: ${PROXY-}
+  https_proxy: ${PROXY-}
   LSAN_OPTIONS: ${LSAN_OPTIONS-}
   UBSAN_OPTIONS: ${UBSAN_OPTIONS-}
+  VT_ASAN_ENABLED: ${VT_ASAN:-0}
+  VT_BUILD_TRACE_ONLY: ${VT_TRACE_ONLY:-0}
   VT_CI_BUILD: ${VT_CI_BUILD:-0}
-  VT_DEBUG_VERBOSE: ${VT_DEBUG_VERBOSE:-0}
-  VT_TESTS_NUM_NODES: ${VT_TESTS_NUM_NODES:-}
-  VT_EXTERNAL_FMT: ${VT_EXTERNAL_FMT:-0}
-  VT_NO_COLOR_ENABLED: ${VT_NO_COLOR:-0}
-  BUILD_SHARED_LIBS: ${VT_BUILD_SHARED_LIBS:-0}
-  VT_INCLUSION_TYPE: ${VT_INCLUSION:-TPL}
-  CODECOV_TOKEN: ${CODECOV_TOKEN:-}
   VT_CI_TEST_LB_SCHEMA: ${VT_CI_TEST_LB_SCHEMA:-0}
-  CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD:-17}
+  VT_CODE_COVERAGE: ${VT_CODE_COVERAGE:-0}
+  VT_DEBUG_VERBOSE: ${VT_DEBUG_VERBOSE:-0}
+  VT_DIAGNOSTICS_ENABLED: ${VT_DIAGNOSTICS:-1}
+  VT_DIAGNOSTICS_RUNTIME_ENABLED: ${VT_DIAGNOSTICS_RUNTIME:-0}
+  VT_DOXYGEN_ENABLED: ${VT_DOCS:-0}
+  VT_EXTENDED_TESTS_ENABLED: ${VT_EXTENDED_TESTS:-1}
+  VT_EXTERNAL_FMT: ${VT_EXTERNAL_FMT:-0}
+  VT_FCONTEXT_ENABLED: ${VT_FCONTEXT:-0}
+  VT_INCLUSION_TYPE: ${VT_INCLUSION:-TPL}
+  VT_KOKKOS_ENABLED: ${VT_KOKKOS_ENABLED:-0}
+  VT_LB_ENABLED: ${VT_LB:-1}
+  VT_LDMS_ENABLED: ${VT_LDMS_ENABLED:-0}
+  VT_MIMALLOC_ENABLED: ${VT_MIMALLOC:-0}
+  VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
+  VT_NO_COLOR_ENABLED: ${VT_NO_COLOR:-0}
+  VT_PERF_ENABLED: ${VT_PERF_ENABLED:-0}
+  VT_POOL_ENABLED: ${VT_POOL:-1}
+  VT_PRODUCTION_BUILD_ENABLED: ${VT_PRODUCTION_BUILD:-0}
+  VT_TESTS_NUM_NODES: ${VT_TESTS_NUM_NODES:-}
+  VT_TRACE_ENABLED:  ${VT_TRACE:-0}
+  VT_TRACE_RUNTIME_ENABLED: ${VT_TRACE_RT:-0}
   VT_TV_ENABLED: ${VT_TV_ENABLED:-0}
+  VT_UBSAN_ENABLED: ${VT_UBSAN:-0}
+  VT_UNITY_BUILD_ENABLED: ${VT_UNITY_BUILD:-0}
+  VT_WERROR_ENABLED: ${VT_WERROR:-1}
+  VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
 
 services:
   ##############################################################################
-  # C++ builds of VT on ubuntu/alpine platform from container baseline
+  # C++ builds of VT on any platform from container baseline
   # Ubuntu gcc-12 debug build:
-  #   docker compose run -e CMAKE_BUILD_TYPE=debug ubuntu-cpp
-  ubuntu-cpp:
-    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
-      args: &default-args
-        arch: ${ARCH}
-        proxy: ${PROXY}
-        compiler: ${COMPILER}
-        host_compiler: ${HOST_COMPILER}
-        ubuntu: ${UBUNTU}
-        ubsan_enabled: ${VT_UBSAN:-0}
-        vt_tv_enabled: ${VT_TV_ENABLED:-0}
-        zoltan_enabled: ${VT_ZOLTAN:-0}
-        external_fmt: ${VT_EXTERNAL_FMT:-0}
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
+  #   docker compose run -e CMAKE_BUILD_TYPE=debug vt-cpp
+  vt-cpp:
+    image: ${REPO}:${IMAGE}
     ulimits: &ulimits
       core: ${ULIMIT_CORE}
     environment:
@@ -157,264 +140,18 @@ services:
         /vt/ci/build_vt_sample.sh /vt /build"
 
   ##############################################################################
-  # C++ builds of VTK and VT on ubuntu/alpine platform from container baseline
-  # Ubuntu gcc-12 debug build:
-  #   docker compose run -e CMAKE_BUILD_TYPE=debug ubuntu-vtk-cpp
-  ubuntu-cpp-vtk:
-    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-vtk-cpp
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-vtk-cpp.dockerfile
-      args: *default-args
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-vtk-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: *ubuntu-volumes
-    command: *vt-cpp-command
-
-  ##############################################################################
-  # C++ build/test/clean target for VT on ubuntu platform from container
-  # baseline.
-  #
-  # Example:
-  #   docker compose run ubuntu-cpp-clean
-  ubuntu-cpp-clean:
-    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
-      args: *default-args
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: *ubuntu-volumes
-    command: &vt-build-test-clean-cpp-command >
-      /bin/bash -c "
-        /vt/ci/build_cpp.sh /vt /build &&
-        /vt/ci/test_cpp.sh  /vt /build &&
-        /vt/ci/build_vt_sample.sh /vt /build &&
-        /vt/ci/clean_cpp.sh /vt /build"
-
-  ##############################################################################
-  # C++ build/test/clean target for VT on ubuntu platform from container
-  # baseline without installing.
-  #
-  # Example:
-  #   docker compose run ubuntu-cpp-clean-noinstall
-  ubuntu-cpp-clean-noinstall:
-    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
-      args: *default-args
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: *ubuntu-volumes
-    command: &vt-build-test-clean-noinstall-cpp-command >
-      /bin/bash -c "
-        /vt/ci/build_cpp.sh /vt /build all &&
-        /vt/ci/test_cpp.sh  /vt /build &&
-        /vt/ci/clean_cpp.sh /vt /build"
-
-  ##############################################################################
-  # Interactive C++ setup of VT on ubuntu platform from container baseline.
+  # Interactive C++ setup of VT on any platform from container baseline.
   #
   # After running:
-  #   docker compose run ubuntu-cpp-interactive
+  #   docker compose run vt-cpp-interactive
   #
   # You will get a command line where you can run the build command:
   #   $ /vt/ci/build_cpp.sh /vt /build
   #   $ /vt/ci/test_cpp.sh  /vt /build
   #   $ /vt/ci/build_vt_sample.sh /vt /build
-  ubuntu-cpp-interactive:
-    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
-      args: *default-args
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
+  vt-cpp-interactive:
+    image: ${REPO}:${IMAGE}
     ulimits: *ulimits
     environment:
       <<: [*ccache, *vtopts]
     volumes: *ubuntu-volumes
-
-  ##############################################################################
-  # C++ build/test/clean target for VT using OpenMPI instead of the default
-  # mpich.
-  #
-  # Note: This is a separate target because it requires a different image and
-  # modifying all the other container/image names to be parameterized over
-  # MPI requires a lot of changes.
-  ubuntu-cpp-clean-openmpi:
-    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-openmpi-cpp
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-openmpi-cpp.dockerfile
-      args: *default-args
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-openmpi-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-      OMPI_MCA_btl: "^vader"
-    volumes: *ubuntu-volumes
-    command: *vt-build-test-clean-cpp-command
-
-  ##############################################################################
-  # Interactive C++ setup of VT on ubuntu platform from container baseline for
-  # OpenMPI.
-  ubuntu-cpp-interactive-openmpi:
-    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-openmpi-cpp
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-openmpi-cpp.dockerfile
-      args: *default-args
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-openmpi-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-      OMPI_MCA_btl: "^vader"
-    volumes: *ubuntu-volumes
-
-  ##############################################################################
-  # Build C++ container with VT installed in the container on ubuntu platform
-  # from container baseline.
-  ubuntu-vt:
-    image: ${REPO}:vt-${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
-    build:
-      context: .
-      target: build
-      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-cpp.dockerfile
-      args:
-        <<: [*default-args, *vtopts]
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: *ubuntu-volumes
-    command: &cpp-command >
-      /bin/bash -c "
-        /vt/ci/test_cpp.sh  /vt /build"
-
-  ##############################################################################
-  # Build documentation for VT in the container on ubuntu platform from
-  # container baseline.
-  ubuntu-docs:
-    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-docs
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/ubuntu-${COMPILER_TYPE}-docs.dockerfile
-      args:
-        <<: *default-args
-        token: ${TOKEN}
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: *ccache
-      VT_LB_ENABLED: ${VT_LB:-1}
-      VT_TRACE_ENABLED:  ${VT_TRACE:-1}
-      VT_DIAGNOSTICS_ENABLED: 1
-      VT_DOXYGEN_ENABLED: 1
-      CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
-    volumes: *ubuntu-volumes
-    command: &docs-cpp-command >
-      /bin/bash -c "
-        /vt/ci/build_cpp.sh /vt /build ${TOKEN}"
-
-  ##############################################################################
-  # Build vt sample project using DARMA-vt installed from spack package.
-  ubuntu-spack:
-    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-openmpi-cpp
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-openmpi-cpp.dockerfile
-      args: *default-args
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-openmpi-cpp
-    ulimits: *ulimits
-    environment:
-      <<: *vtopts
-    volumes: *ubuntu-volumes
-    command:
-      /bin/bash -c "
-        /vt/ci/test_spack_package.sh"
-
-  ##############################################################################
-  # Interactive build documentation for VT in the container on ubuntu platform
-  # from container baseline.
-  ubuntu-docs-interactive:
-    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-docs
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-docs.dockerfile
-      args:
-        <<: *default-args
-      cache_from:
-        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${HOST_COMPILER}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: *ccache
-      VT_LB_ENABLED: ${VT_LB:-1}
-      VT_TRACE_ENABLED:  ${VT_TRACE:-1}
-      VT_DIAGNOSTICS_ENABLED: 1
-      VT_DOXYGEN_ENABLED: 1
-      CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
-    volumes: *ubuntu-volumes
-
-  ##############################################################################
-  # C++ build of VT within an alpine linux container (limited to clang
-  # compilers)
-  alpine-cpp:
-    image: ${REPO}:${ARCH}-alpine-${HOST_COMPILER}-${COMPILER}-cpp
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/alpine-cpp.dockerfile
-      args: *default-args
-      cache_from:
-        - ${REPO}:${ARCH}-alpine-${HOST_COMPILER}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: &alpine-volumes
-      - .:/vt:delegated
-      - ${BUILD_ROOT}alpine-cpp:/build:delegated
-    command: *vt-cpp-command
-
-  ##############################################################################
-  # C++ build/test/clean target for VT on alpine platform from container
-  # baseline.
-  alpine-cpp-clean:
-    image: ${REPO}:${ARCH}-alpine-${HOST_COMPILER}-${COMPILER}-cpp
-    build:
-      context: .
-      target: base
-      dockerfile: ci/docker/alpine-cpp.dockerfile
-      args: *default-args
-      cache_from:
-        - ${REPO}:${ARCH}-alpine-${HOST_COMPILER}-${COMPILER}-cpp
-    ulimits: *ulimits
-    environment:
-      <<: [*ccache, *vtopts]
-    volumes: *alpine-volumes
-    command: *vt-build-test-clean-cpp-command
