@@ -47,7 +47,7 @@
 #include <vt/topos/index/index.h>
 #include <vt/context/context.h>
 
-#include INCLUDE_FMT_CORE
+#include INCLUDE_FMT_FORMAT
 #include INCLUDE_FMT_OSTREAM
 
 #include <gtest/gtest.h>

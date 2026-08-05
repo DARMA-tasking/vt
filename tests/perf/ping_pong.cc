@@ -45,7 +45,7 @@
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
 
-#include INCLUDE_FMT_CORE
+#include INCLUDE_FMT_FORMAT
 
 using namespace vt;
 using namespace vt::tests::perf::common;
