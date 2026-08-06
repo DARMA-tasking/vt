@@ -101,7 +101,7 @@ void runTest(std::string const& lb_name, std::string const& label) {
     lb_name.compare("TemperedLB") == 0 ||
     lb_name.compare("TemperedWMin") == 0
   ) {
-    std::string lb_args("ordering=Arbitrary rollback=false");
+    std::string lb_args("ordering=ElmID deterministic=true iters=2 trials=1");
     vt::theConfig()->vt_lb_args = lb_args;
     if (vt::theContext()->getNode() == 0) {
       fmt::print("Using lb_args {}\n", lb_args);
