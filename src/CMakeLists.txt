@@ -180,6 +180,17 @@ foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
   )
 endforeach()
 
+if (vt_lb_enabled)
+  list(APPEND SOURCE_FILES ${VT_EXTERNAL_LB_SOURCE_FILES})
+  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set_source_files_properties(
+      ${VT_EXTERNAL_LB_SOURCE_FILES}
+      PROPERTIES COMPILE_OPTIONS
+        "-Wno-unused-variable;-Wno-unused-but-set-variable;-Wno-missing-braces"
+    )
+  endif()
+endif()
+
 # Generate PMPI wrappers, if enabled and possible.
 if((vt_mpi_guards OR vt_trace_only) AND PERL_FOUND)
   set(MPI_WRAP_GENERATED "${PROJECT_BIN_DIR}/src/vt/pmpi/generated/mpiwrap.cc")
@@ -211,10 +222,11 @@ add_library(
 
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/build_git_info.cmake)
 
-target_compile_features(
-  ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-  cxx_std_17
-)
+if (vt_lb_enabled)
+  target_compile_features(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC cxx_std_20)
+else()
+  target_compile_features(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC cxx_std_17)
+endif()
 
 include(turn_on_warnings)
 turn_on_warnings(${VIRTUAL_TRANSPORT_LIBRARY})
@@ -265,6 +277,12 @@ target_include_directories(
   $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/src>
   $<INSTALL_INTERFACE:${VT_EXTERNAL_DESTINATION}>
 )
+
+if (vt_lb_enabled)
+  target_include_directories(
+    ${VIRTUAL_TRANSPORT_LIBRARY} SYSTEM PRIVATE ${VT_EXTERNAL_LB_INCLUDE_DIRS}
+  )
+endif()
 
 if(${vt_code_coverage} AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   message(STATUS "VT: enabling code coverage generation")

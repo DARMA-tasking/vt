@@ -10,18 +10,23 @@ To build \vt, one must obtain the following dependencies:
 
 \subsection required-deps Required
   - checkpoint, (*vt* ecosystem)
+  - LB, (*vt* ecosystem, when `vt_lb_enabled=1`)
+  - comm, (*vt* ecosystem, when `vt_lb_enabled=1`)
   - MPI         (mpich/openmpi/mvapich/IBM Spectrum MPI/Cray MPICH/etc.)
 
 \subsection automatic-build-deps Automatically build dependencies
 
-Assuming MPI is installed and accessible via CC/CXX, the only other dependency
-that is required is checkpoint. The easiest way to get these
-built are to clone it inside `vt/lib`:
+Assuming MPI is installed and accessible via CC/CXX, checkpoint is required.
+When load balancing is enabled (the default), the LB and comm repositories are
+also required. The easiest way to get these
+built is to clone them inside `vt/lib`:
 
 ```bash
 $ git clone git@github.com:DARMA-tasking/vt
 $ cd vt/lib
 $ git clone git@github.com:DARMA-tasking/checkpoint
+$ git clone git@github.com:DARMA-tasking/LB
+$ git clone git@github.com:DARMA-tasking/comm
 ```
 
 With these in `vt/lib`, cmake will automatically build them and stitch them into
@@ -37,6 +42,8 @@ build configuration:
 | CMake Variable                   | Default Value   | Description                                                                                        |
 | -------------------------------- | --------------- | -------------------------------------------------------------------------------------------------- |
 | `vt_lb_enabled`                  | 1               | Compile with support for runtime load balancing                                                    |
+| `VT_LB_REPOSITORY_DIR`           | `vt/lib/LB`     | Path to a DARMA-tasking/LB source checkout                                                         |
+| `VT_COMM_REPOSITORY_DIR`         | `vt/lib/comm`   | Path to a DARMA-tasking/comm source checkout                                                       |
 | `vt_trace_enabled`               | 0               | Compile with support for runtime tracing (Projections-format)                                      |
 | `vt_trace_only`                  | 0               | Compile vt in trace-only mode (stripped down version for tracing MPI calls)                        |
 | `vt_test_trace_runtime_enabled`  | 0               | Force tracing on at runtime for VT tests                                                           |

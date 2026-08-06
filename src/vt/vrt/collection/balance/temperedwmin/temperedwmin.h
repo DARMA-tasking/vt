@@ -44,32 +44,22 @@
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDWMIN_TEMPEREDWMIN_H
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDWMIN_TEMPEREDWMIN_H
 
-#include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
-
-#include <memory>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct TemperedWMin : TemperedLB {
-  TemperedWMin() { comm_aware_ = true; }
+  TemperedWMin() = default;
   TemperedWMin(TemperedWMin const&) = delete;
 
-  virtual ~TemperedWMin();
+  ~TemperedWMin() override = default;
 
 public:
-  void init(objgroup::proxy::Proxy<TemperedWMin> in_proxy);
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 
   void inputParams(balance::ConfigEntry* config) override;
 
-protected:
-  LoadType getModeledValue(const elm::ElementIDStruct& obj) override;
-
 private:
-  std::shared_ptr<balance::LoadModel> total_work_model_ = nullptr;
-  balance::LoadModel* load_model_ptr = nullptr;
-
   double alpha_ = 1.0;
   double beta_  = 0.0;
   double gamma_ = 0.0;
