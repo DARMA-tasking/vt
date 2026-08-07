@@ -182,13 +182,22 @@ endforeach()
 
 if (vt_lb_enabled)
   list(APPEND SOURCE_FILES ${VT_EXTERNAL_LB_SOURCE_FILES})
-  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    set_source_files_properties(
-      ${VT_EXTERNAL_LB_SOURCE_FILES}
-      PROPERTIES COMPILE_OPTIONS
-        "-Wno-unused-variable;-Wno-unused-but-set-variable;-Wno-missing-braces"
+
+  set(vt_external_lb_warning_options
+    -Wno-unused-variable
+    -Wno-missing-braces
+  )
+
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    list(APPEND vt_external_lb_warning_options
+      -Wno-unused-but-set-variable
     )
   endif()
+
+  set_source_files_properties(
+    ${VT_EXTERNAL_LB_SOURCE_FILES}
+    PROPERTIES COMPILE_OPTIONS "${vt_external_lb_warning_options}"
+  )
 endif()
 
 # Generate PMPI wrappers, if enabled and possible.
@@ -223,7 +232,7 @@ add_library(
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/build_git_info.cmake)
 
 if (vt_lb_enabled)
-  target_compile_features(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC cxx_std_20)
+  target_compile_features(${VIRTUAL_TRANSPORT_LIBRARY} PRIVATE cxx_std_20)
 else()
   target_compile_features(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC cxx_std_17)
 endif()
