@@ -289,6 +289,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-20.04-clang-10-cpp"
+        vt_lb = 0
         vt_tests_num_nodes = 8
         vt_ubsan = 1
         #FIXME
@@ -296,6 +297,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-20.04-clang-9-cpp"
+        vt_lb = 0
         vt_build_shared_libs = 1
         vt_inclusion = "EXT_LIB"
         vt_werror = 0
