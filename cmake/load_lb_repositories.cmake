@@ -39,6 +39,7 @@ set(VT_EXTERNAL_LB_SOURCE_FILES
   "${VT_LB_REPOSITORY_DIR}/src/vt-lb/algo/temperedlb/temperedlb.cc"
   "${VT_LB_REPOSITORY_DIR}/src/vt-lb/algo/temperedlb/transfer_util.cc"
   "${VT_LB_REPOSITORY_DIR}/src/vt-lb/algo/temperedlb/work_model.cc"
+  "${VT_LB_REPOSITORY_DIR}/src/vt-lb/util/logging.cc"
 )
 
 set(vt_backend_feature_enabled 1)
@@ -52,5 +53,6 @@ set(VT_EXTERNAL_LB_INCLUDE_DIRS
   "${VT_COMM_REPOSITORY_DIR}/lib/fmt/include"
   "${VT_COMM_REPOSITORY_DIR}/src"
   "${VT_LB_REPOSITORY_DIR}/src"
+  "${VT_LB_REPOSITORY_DIR}/tpl/fmt/include"
   "${PROJECT_BIN_DIR}/external"
 )
