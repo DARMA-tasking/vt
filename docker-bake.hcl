@@ -356,6 +356,7 @@ target "vt-build-all" {
       {
         image = "amd64-ubuntu-22.04-clang-11-cpp"
         vt_fcontext = 1
+        vt_lb = 0
       },
       {
         image = "amd64-ubuntu-22.04-clang-12-cpp",
