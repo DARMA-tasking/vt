@@ -49,6 +49,9 @@ then
       -Dvt_build_examples="0" \
       -Dvt_build_tests="0" \
       -Dvt_external_fmt="${VT_EXTERNAL_FMT:-0}" \
+      -Dvt_lb_enabled="${VT_LB_ENABLED:-1}" \
+      -DVT_LB_REPOSITORY_DIR="${source_dir}/lib/LB" \
+      -DVT_COMM_REPOSITORY_DIR="${source_dir}/lib/comm" \
       -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-20}" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
