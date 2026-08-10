@@ -45,7 +45,7 @@
 
 #include "test_parallel_harness.h"
 #include "vt/configs/error/stack_out.h"
-#include INCLUDE_FMT_CORE
+#include INCLUDE_FMT_FORMAT
 
 namespace vt { namespace tests { namespace unit {
 

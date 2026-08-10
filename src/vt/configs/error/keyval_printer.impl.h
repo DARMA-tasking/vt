@@ -53,7 +53,7 @@
 #include <string>
 #include <vector>
 
-#include INCLUDE_FMT_CORE
+#include INCLUDE_FMT_FORMAT
 
 namespace vt { namespace util { namespace error {
 
