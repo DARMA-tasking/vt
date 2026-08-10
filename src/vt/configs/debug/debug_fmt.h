@@ -46,7 +46,7 @@
 
 #include "vt/config.h"
 
-#include INCLUDE_FMT_CORE
+#include INCLUDE_FMT_FORMAT
 
 #include <iosfwd>
 
