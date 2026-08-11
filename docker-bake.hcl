@@ -321,12 +321,6 @@ target "vt-build-all" {
         image = "amd64-ubuntu-20.04-gcc-9-cpp"
       },
       {
-        image = "amd64-ubuntu-20.04-gcc-9-cpp"
-        vt_doxygen = 1
-        vt_trace = 1
-        variant = "docs"
-      },
-      {
         image = "amd64-ubuntu-20.04-gcc-9-cuda-11.4.3-cpp"
         vt_lb = 0
         vt_diagnostics = 0
@@ -424,6 +418,12 @@ target "vt-build-all" {
       {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
         vt_perf = 1
+      },
+      {
+        image = "amd64-ubuntu-24.04-gcc-14-cpp"
+        vt_doxygen = 1
+        vt_trace = 1
+        variant = "docs"
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-ldms-cpp"
