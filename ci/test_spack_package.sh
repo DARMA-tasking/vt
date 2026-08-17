@@ -5,7 +5,9 @@ set -exo pipefail
 cur_path=$(pwd)
 vt_spack_package="$cur_path/spack-package"
 
-git clone --branch v0.23.1 --depth=2 https://github.com/spack/spack.git
+# DARMA-tasking/spack-package uses Spack's v2 repository API, including the
+# spack_repo.builtin build-system imports introduced in Spack 1.x.
+git clone --branch v1.0.4 --depth=2 https://github.com/spack/spack.git
 . spack/share/spack/setup-env.sh
 
 git clone -b master https://github.com/DARMA-tasking/spack-package.git
