@@ -192,6 +192,14 @@ if (vt_lb_enabled)
     list(APPEND vt_external_lb_warning_options
       -Wno-unused-but-set-variable
     )
+
+    # GCC 12 produces a false-positive -Wrestrict diagnostic while inlining
+    # string concatenation in the external LB full-graph visualizer. The
+    # instantiation happens in VT's adapter, so suppress it for that source.
+    set_source_files_properties(
+      vt/vrt/collection/balance/temperedlb/temperedlb.cc
+      PROPERTIES COMPILE_OPTIONS "-Wno-restrict"
+    )
   endif()
 
   set_source_files_properties(
