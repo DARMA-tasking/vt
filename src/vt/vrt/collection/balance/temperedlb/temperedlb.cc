@@ -93,7 +93,7 @@ TemperedLB::getInputKeysWithHelp() {
     {"trials", "Values: <positive integer>\nDefault: 1\nIndependent trials.\n"},
     {"criterion", "Values: {Grapevine, ModifiedGrapevine}\nDefault: ModifiedGrapevine\n"},
     {"ordering", "Values: {Arbitrary, ElmID, FewestMigrations, SmallObjects, LargestObjects}\nDefault: ElmID\n"},
-    {"cmf", "Values: {Original, NormByMax, NormByMaxExcludeIneligible}\nDefault: Original\n"},
+    {"cmf", "Values: {Original, NormByMax, NormByMaxExcludeIneligible}\nDefault: NormByMax\n"},
     {"deterministic", "Values: {true, false}\nDefault: true\n"},
     {"seed", "Values: <integer>\nDefault: 29\nRandom seed used in deterministic mode.\n"},
     {"alpha", "Values: <double>\nDefault: 1.0\nCompute-load coefficient.\n"},
