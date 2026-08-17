@@ -312,13 +312,16 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
-        vt_lb = 1
+        # The Spack package does not yet stage the external LB and comm sources.
+        vt_lb = 0
         vt_trace_only = 1
         vt_test_spack = 1
         variant = "spack"
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-cpp"
+        # DARMA-tasking/LB requires the C++20 <concepts> header (GCC 10+).
+        vt_lb = 0
       },
       {
         image = "amd64-ubuntu-20.04-gcc-9-cuda-11.4.3-cpp"
