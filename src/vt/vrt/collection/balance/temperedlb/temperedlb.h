@@ -117,7 +117,7 @@ private:
 
   std::string criterion_ = "ModifiedGrapevine";
   std::string ordering_ = "ElmID";
-  std::string cmf_ = "Original";
+  std::string cmf_ = "NormByMax";
 
   objgroup::proxy::Proxy<TemperedLB> proxy_ = {};
   Mapping global_mapping_ = {};
