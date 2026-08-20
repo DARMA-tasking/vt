@@ -17,17 +17,11 @@ declare -A variables_map
 variables_map["lb_enabled"]="${VT_LB_ENABLED:-0}"
 variables_map["trace_enabled"]="${VT_TRACE_ENABLED:-0}"
 variables_map["trace_only"]="${VT_BUILD_TRACE_ONLY:-1}"
-variables_map["doxygen_enabled"]="${VT_DOXYGEN_ENABLED:-0}"
 variables_map["mimalloc_enabled"]="${VT_MIMALLOC_ENABLED:-0}"
 variables_map["asan_enabled"]="${VT_ASAN_ENABLED:-0}"
 variables_map["werror_enabled"]="${VT_WERROR_ENABLED:-0}"
 variables_map["pool_enabled"]="${VT_POOL_ENABLED:-0}"
-variables_map["zoltan_enabled"]="${VT_ZOLTAN_ENABLED:-0}"
 variables_map["mpi_guards"]="${VT_MPI_GUARD_ENABLED:-0}"
-variables_map["diagnostics_enabled"]="${VT_DIAGNOSTICS_ENABLED:-0}"
-variables_map["diagnostics_runtime_enabled"]="${VT_DIAGNOSTICS_RUNTIME_ENABLED:-0}"
-variables_map["unity_build_enabled"]="${VT_UNITY_BUILD_ENABLED:-0}"
-variables_map["fcontext_enabled"]="${VT_FCONTEXT_ENABLED:-0}"
 variables_map["kokkos"]="${VT_KOKKOS_ENABLED:-0}"
 
 cmd_vars=()
