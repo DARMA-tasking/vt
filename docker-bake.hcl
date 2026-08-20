@@ -313,7 +313,6 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
-        vt_lb = 0
         vt_tests_num_nodes = 8
       },
       {
@@ -354,6 +353,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-22.04-clang-13-cpp"
+        vt_build_shared_libs = 1
       },
       {
         image = "amd64-ubuntu-22.04-clang-14-cpp"
