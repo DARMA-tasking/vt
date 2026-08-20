@@ -285,6 +285,7 @@ target "vt-build-all" {
     item = [
       {
         image = "amd64-alpine-3.16-clang-cpp"
+        vt_extended_tests = 0
         vt_production_build = 1
       },
       {
@@ -335,6 +336,8 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-24.04-gcc-13-cuda-12.9.0-cpp"
+        # The external LB/comm C++20 stack does not yet compile with nvcc_wrapper.
+        vt_lb = 0
         vt_debug_verbose = 1
         vt_diagnostics = 0
         vt_extended_tests = 0
