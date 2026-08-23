@@ -114,6 +114,7 @@ struct LoadData {
     a1.sum_ += a2.sum_;
     a1.P_   += a2.P_;
     a1.stat_ = a2.stat_;
+    a1.lb_hist_.mergeIn(a2.lb_hist_);
 
     return a1;
   }
@@ -149,6 +150,7 @@ struct LoadData {
   LoadType I() const { return avg() > 0.0 ? (max() / avg()) - 1.0f : 0.0; }
   LoadType stdv() const { return std::sqrt(var()); }
   int32_t  npr() const { return P_; }
+  adt::HistogramApprox<double, int64_t> lbhist() const {return lb_hist_; }
 
   static_assert(
     std::is_same<LoadType, double>::value == true,
@@ -165,12 +167,19 @@ struct LoadData {
   int32_t  N_ = 0;
   int32_t  P_ = 0;
   lb::Statistic stat_ = lb::Statistic::Rank_load_modeled;
+  adt::HistogramApprox<double, int64_t> lb_hist_;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | max_ | sum_ | min_ | avg_ | M2_ | M3_ | M4_ |
+     N_ | P_ | stat_| lb_hist_;
+  }
 };
 
-static_assert(
-  vt::messaging::is_byte_copyable_t<LoadData>::value,
-  "Must be trivially copyable to avoid serialization."
-);
+// static_assert(
+//   vt::messaging::is_byte_copyable_t<LoadData>::value,
+//   "Must be trivially copyable to avoid serialization."
+// );
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
