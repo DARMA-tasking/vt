@@ -53,6 +53,8 @@
 
 #include <cstdint>
 
+#define PRINT_CONSTRUCTOR_VALUES 1
+
 namespace vt { namespace tests { namespace unit { namespace bcast {
 
 using namespace vt;
@@ -115,8 +117,11 @@ struct BroadcastHandlers {
 
 template <typename CollectionT>
 struct TestBroadcast : TestParallelHarness {};
+template <typename CollectionT>
+struct TestBroadcastDynamic : TestParallelHarness {};
 
 TYPED_TEST_SUITE_P(TestBroadcast);
+TYPED_TEST_SUITE_P(TestBroadcastDynamic);
 
 template<typename ColType>
 void test_broadcast_1(std::string const& label) {
@@ -138,6 +143,85 @@ void test_broadcast_1(std::string const& label) {
     proxy.template broadcastMsg<
       BroadcastHandlers<ColType>::handler
     >(msg);
+  }
+}
+
+struct DynamicCountMsg : vt::Message {
+  TestIndex idx;
+};
+
+struct DynamicCountFun {
+  static std::unordered_map<TestIndex, bool> index_map;
+  void operator()(DynamicCountMsg *msg) const {
+    index_map.at(msg->idx) = true;
+  }
+};
+
+template <
+  typename CollectionT,
+  typename MessageT = typename CollectionT::MsgType,
+  typename TupleT   = typename MessageT::TupleType
+  >
+struct DynamicBroadcastHandlers : BroadcastHandlers<CollectionT, MessageT, TupleT> {
+  static void track_handler(MessageT* msg, CollectionT* col) {
+    BroadcastHandlers<CollectionT, MessageT, TupleT>::handler(msg, col);
+    fmt::print("{}: setting index at {} to true\n", ::vt::theContext()->getNode(), col->getIndex());
+    DynamicCountFun::index_map.at(col->getIndex()) = true;
+  }
+};
+
+template<typename ColType>
+void test_broadcast_dynamic_1(std::string const& label) {
+  using MsgType = typename ColType::MsgType;
+  using TestParamType = typename ColType::ParamType;
+
+  auto const& this_node = theContext()->getNode();
+  typename ColType::CollectionProxyType proxy = {};
+
+  auto const& col_size = 32;
+  auto range = TestIndex(col_size);
+  proxy = makeCollection<ColType>(label).collective(true).dynamicMembership(true).bounds(range).wait();
+
+  DynamicCountFun::index_map = std::unordered_map<TestIndex, bool>{
+    { TestIndex{0}, false },
+    { TestIndex{7}, false },
+    { TestIndex{23}, false },
+    { TestIndex{31}, false }
+  };
+
+  auto modify_token = proxy.beginModification(fmt::format("{}.beginModification", label));
+  if (this_node == 0) {
+    int count = 0;
+    for ( auto &&entry : DynamicCountFun::index_map )
+    {
+      proxy[entry.first].insertAt(modify_token, count++ % theContext()->getNumNodes());
+    }
+  }
+  proxy.finishModification(std::move(modify_token));
+
+  runInEpochCollective([this_node, proxy](){
+    if (this_node == 0) {
+      TestParamType args = ConstructTuple<TestParamType>::construct();
+      proxy.template broadcast<
+        MsgType,
+        BroadcastHandlers<ColType>::handler
+        >(args);
+
+      auto msg = makeMessage<MsgType>(args);
+      theCollection()->broadcastMsg<
+        MsgType,DynamicBroadcastHandlers<ColType>::track_handler
+        >(proxy, msg.get());
+    }
+  });
+
+  // Check to make sure we received the broadcast
+  int count = 0;
+  for ( auto &&entry : DynamicCountFun::index_map )
+  {
+    if ((count++ % theContext()->getNumNodes()) == this_node) {
+      fmt::print("{}: index at {} is {}\n", ::vt::theContext()->getNode(), entry.first, entry.second);
+      EXPECT_TRUE(entry.second);
+    }
   }
 }
 
