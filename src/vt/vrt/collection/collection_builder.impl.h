@@ -58,7 +58,7 @@ std::tuple<EpochType, VirtualProxyType> CollectionManager::makeCollection(
   auto const is_collective = po.collective_;
 
   // Generate a new proxy for this new collection
-  auto const proxy_bits = makeCollectionProxy(is_collective, is_migratable);
+  auto const proxy_bits = makeCollectionProxy<typename ColT::IndexType>(is_collective, is_migratable, po.proxy_bits_);
   po.proxy_bits_ = proxy_bits;
 
   if (not is_collective) {

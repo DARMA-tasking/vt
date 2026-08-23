@@ -44,11 +44,16 @@
 #if !defined INCLUDED_VT_VRT_VRT_COMMON_H
 #define INCLUDED_VT_VRT_VRT_COMMON_H
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 
 namespace vt { namespace vrt {
 
 static constexpr NodeType const default_collection_reduce_root_node = 0;
+
+struct CheckpointTrait {};
+struct CheckpointInternalTrait {};
 
 }} /* end namespace vt::vrt */
 
