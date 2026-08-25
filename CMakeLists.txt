@@ -41,7 +41,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard to use")
+  set(CMAKE_CXX_STANDARD 20 CACHE STRING "The C++ standard to use")
 endif()
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 
@@ -70,6 +70,7 @@ include(cmake/check_compiler.cmake)
 include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 include(cmake/load_bundled_libraries.cmake)
 include(cmake/load_local_packages.cmake)
+include(cmake/load_loc_repositories.cmake)
 
 # Primary VT build
 add_subdirectory(src)
