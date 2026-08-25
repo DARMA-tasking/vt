@@ -159,7 +159,7 @@ void someFunc_2(A, B) { }
 TEST_F(TestDemanglerUtils, test_lastNamedPfType) {
   std::vector<std::tuple<std::string, std::string>> data;
   data.emplace_back("", "");
-  data.emplace_back(__PRETTY_FUNCTION__, "");
+  data.emplace_back(std::string{__PRETTY_FUNCTION__}, std::string{});
   data.emplace_back(TestFunctor<helpers::someFunc_0>{}());
   data.emplace_back(TestFunctor<helpers::someFunc_1>{}());
   data.emplace_back(TestFunctor<helpers::someFunc_2<int, float>>{}());
