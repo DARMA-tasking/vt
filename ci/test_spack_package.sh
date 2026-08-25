@@ -11,7 +11,7 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 git clone --branch v1.2.2 --depth=2 https://github.com/spack/spack.git
 . spack/share/spack/setup-env.sh
 
-git clone -b master https://github.com/DARMA-tasking/spack-package.git
+git clone -b 35-spack-package-fix https://github.com/DARMA-tasking/spack-package.git
 python3 spack-package/ci/add_vt_branch.py "${GIT_BRANCH}"
 python3 "${script_dir}/add_spack_loc_resource.py" \
   spack-package/packages/darma-vt/package.py "${GIT_BRANCH}"
