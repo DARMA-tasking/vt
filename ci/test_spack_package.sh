@@ -10,7 +10,7 @@ vt_spack_package="$cur_path/spack-package"
 git clone --branch v1.0.4 --depth=2 https://github.com/spack/spack.git
 . spack/share/spack/setup-env.sh
 
-git clone -b master https://github.com/DARMA-tasking/spack-package.git
+git clone -b 35-spack-package-fix https://github.com/DARMA-tasking/spack-package.git
 python3 spack-package/ci/add_vt_branch.py "${GIT_BRANCH}"
 
 declare -A variables_map
