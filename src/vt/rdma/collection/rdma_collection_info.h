@@ -45,12 +45,12 @@
 #define INCLUDED_VT_RDMA_COLLECTION_RDMA_COLLECTION_INFO_H
 
 #include "vt/config.h"
-#include "vt/topos/location/cache/cache.h"
-#include "vt/topos/location/record/record.h"
+#include <loc/cache/cache.h>
+#include <loc/record/record.h>
 
 namespace vt { namespace rdma {
 
-namespace loc = ::vt::location;
+namespace loc = ::loc;
 
 struct CollectionInfo {
   using ElmType = RDMA_ElmType;

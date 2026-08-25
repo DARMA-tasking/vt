@@ -7,7 +7,20 @@
 # Compute paths
 get_filename_component (VT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
+include(FetchContent)
+
+if (NOT TARGET loc::loc)
+  FetchContent_Declare(
+    loc
+    GIT_REPOSITORY "@VT_LOC_GIT_REPOSITORY@"
+    GIT_TAG "@VT_LOC_GIT_TAG@"
+    GIT_PROGRESS TRUE
+  )
+  FetchContent_MakeAvailable(loc)
+endif()
+
 include(${VT_CMAKE_DIR}/vtTargets.cmake)
+target_link_libraries(vt::runtime::vt INTERFACE loc::loc)
 if (@vt_trace_only@)
   include(${VT_CMAKE_DIR}/vt-traceTargets.cmake)
 endif()

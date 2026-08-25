@@ -175,7 +175,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dfmt_DIR="${FMT_DIR}" \
       -Dlibunwind_ROOT="${LIBUNWIND_ROOT:-/usr}" \
       -Dvt_no_color_enabled="${VT_NO_COLOR_ENABLED:-0}" \
-      -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-17}" \
+      -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-20}" \
       -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS:-0}" \
       "$VT"
 cmake_conf_ret=$?
