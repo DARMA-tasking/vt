@@ -47,7 +47,6 @@ management.
 | \subpage event              | `vt::theEvent()`       | \copybrief event            | @m_class{m-label m-success} **Core**           |
 | \subpage group              | `vt::theGroup()`       | \copybrief group            | @m_class{m-label m-success} **Core**           |
 | \subpage lb-manager         | `vt::theLBManager()`   | \copybrief lb-manager       | @m_class{m-label m-warning} **Optional**       |
-| \subpage location           | `vt::theLocMan()`      | \copybrief location         | @m_class{m-label m-success} **Core**           |
 | \subpage mem-usage          | `vt::theMemUsage()`    | \copybrief mem-usage        | @m_class{m-label m-warning} **Optional**       |
 | \subpage objgroup           | `vt::theObjGroup()`    | \copybrief objgroup         | @m_class{m-label m-success} **Core**           |
 | \subpage pipe               | `vt::theCB()`          | \copybrief pipe             | @m_class{m-label m-success} **Core**           |
