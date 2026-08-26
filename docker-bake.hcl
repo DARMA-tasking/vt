@@ -288,6 +288,19 @@ target "vt-build-all" {
         vt_production_build = 1
       },
       {
+        image = "amd64-ubuntu-20.04-clang-14-cpp"
+        vt_tests_num_nodes = 8
+        vt_ubsan = 1
+        #FIXME
+        ubsan_options = "print_stacktrace=1"
+      },
+      {
+        image = "amd64-ubuntu-20.04-clang-15-cpp"
+        vt_build_shared_libs = 1
+        vt_inclusion = "EXT_LIB"
+        vt_werror = 0
+      },
+      {
         image = "amd64-ubuntu-20.04-gcc-10-cpp"
       },
       {
@@ -305,6 +318,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-24.04-gcc-13-cuda-12.9.0-cpp"
+        vt_external_fmt = 1
         vt_debug_verbose = 1
         vt_diagnostics = 0
         vt_extended_tests = 0
