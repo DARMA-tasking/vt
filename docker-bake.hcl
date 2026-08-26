@@ -288,14 +288,16 @@ target "vt-build-all" {
         vt_production_build = 1
       },
       {
-        image = "amd64-ubuntu-20.04-clang-14-cpp"
+        image = "amd64-ubuntu-22.04-clang-14-cpp"
+        variant = "ubsan"
         vt_tests_num_nodes = 8
         vt_ubsan = 1
         #FIXME
         ubsan_options = "print_stacktrace=1"
       },
       {
-        image = "amd64-ubuntu-20.04-clang-15-cpp"
+        image = "amd64-ubuntu-22.04-clang-15-cpp"
+        variant = "shared-ext-lib"
         vt_build_shared_libs = 1
         vt_inclusion = "EXT_LIB"
         vt_werror = 0
@@ -334,6 +336,10 @@ target "vt-build-all" {
         vt_trace = 1
       },
       {
+        image = "amd64-ubuntu-22.04-clang-13-cpp"
+        vt_fcontext = 1
+      },
+      {
         image = "amd64-ubuntu-22.04-clang-12-cpp",
         vt_find_mpi = 0
         override_cc = "mpicc"
@@ -341,16 +347,16 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-22.04-clang-13-cpp"
-        vt_fcontext = 1
       },
       {
         image = "amd64-ubuntu-22.04-clang-14-cpp"
+        variant = "trace-debug"
         vt_trace = 1
         vt_debug_verbose = 1
       },
       {
         image = "amd64-ubuntu-22.04-clang-15-cpp"
-        variant = "cxx20"
+        variant = "debug"
         vt_cmake_cxx_standard = 20
         vt_debug_verbose = 1
         vt_production_build = 0
