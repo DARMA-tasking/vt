@@ -337,6 +337,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-22.04-clang-13-cpp"
+        variant = "fcontext"
         vt_fcontext = 1
       },
       {
