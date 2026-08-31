@@ -49,7 +49,7 @@ then
       -Dvt_build_examples="0" \
       -Dvt_build_tests="0" \
       -Dvt_external_fmt="${VT_EXTERNAL_FMT:-0}" \
-      -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-17}" \
+      -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-20}" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
       -DCMAKE_CXX_COMPILER="${CXX:-c++}" \

@@ -186,7 +186,7 @@ function "vt_ldms" {
 
 function "vt_cmake_cxx_standard" {
   params = [item]
-  result = lookup(item, "vt_cmake_cxx_standard", 17)
+  result = lookup(item, "vt_cmake_cxx_standard", 20)
 }
 
 function "vt_find_mpi" {
@@ -288,14 +288,16 @@ target "vt-build-all" {
         vt_production_build = 1
       },
       {
-        image = "amd64-ubuntu-20.04-clang-10-cpp"
+        image = "amd64-ubuntu-22.04-clang-14-cpp"
+        variant = "ubsan"
         vt_tests_num_nodes = 8
         vt_ubsan = 1
         #FIXME
         ubsan_options = "print_stacktrace=1"
       },
       {
-        image = "amd64-ubuntu-20.04-clang-9-cpp"
+        image = "amd64-ubuntu-22.04-clang-15-cpp"
+        variant = "shared-ext-lib"
         vt_build_shared_libs = 1
         vt_inclusion = "EXT_LIB"
         vt_werror = 0
@@ -310,25 +312,15 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
-        vt_lb = 1
+        # The Spack package does not stage the external LB and comm sources.
+        vt_lb = 0
         vt_trace_only = 1
         vt_test_spack = 1
         variant = "spack"
       },
       {
-        image = "amd64-ubuntu-20.04-gcc-9-cpp"
-      },
-      {
-        image = "amd64-ubuntu-20.04-gcc-9-cuda-11.4.3-cpp"
-        vt_diagnostics = 0
-        vt_extended_tests = 0
+        image = "amd64-ubuntu-24.04-gcc-13-cuda-12.9.0-cpp"
         vt_external_fmt = 1
-        vt_pool = 0
-        vt_tests_num_nodes = 8
-        vt_trace = 1
-      },
-      {
-        image = "amd64-ubuntu-20.04-gcc-9-cuda-12.2.0-cpp"
         vt_debug_verbose = 1
         vt_diagnostics = 0
         vt_extended_tests = 0
@@ -344,7 +336,8 @@ target "vt-build-all" {
         vt_trace = 1
       },
       {
-        image = "amd64-ubuntu-22.04-clang-11-cpp"
+        image = "amd64-ubuntu-22.04-clang-13-cpp"
+        variant = "fcontext"
         vt_fcontext = 1
       },
       {
@@ -358,12 +351,13 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-22.04-clang-14-cpp"
+        variant = "trace-debug"
         vt_trace = 1
         vt_debug_verbose = 1
       },
       {
         image = "amd64-ubuntu-22.04-clang-15-cpp"
-        variant = "cxx20"
+        variant = "debug"
         vt_cmake_cxx_standard = 20
         vt_debug_verbose = 1
         vt_production_build = 0
@@ -421,7 +415,7 @@ target "vt-build-all" {
         variant = "docs"
       },
       {
-        image = "amd64-ubuntu-20.04-gcc-9-ldms-cpp"
+        image = "amd64-ubuntu-20.04-gcc-10-ldms-cpp"
         vt_ldms = 1
         vt_lb = 0
         vt_trace = 0
