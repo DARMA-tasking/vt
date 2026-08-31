@@ -415,7 +415,7 @@ target "vt-build-all" {
         variant = "docs"
       },
       {
-        image = "amd64-ubuntu-20.04-gcc-9-ldms-cpp"
+        image = "amd64-ubuntu-20.04-gcc-10-ldms-cpp"
         vt_ldms = 1
         vt_lb = 0
         vt_trace = 0

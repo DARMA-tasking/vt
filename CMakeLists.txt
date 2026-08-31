@@ -4,6 +4,10 @@ file(READ "VERSION" _vt_version_str)
 string(STRIP "${_vt_version_str}" _vt_version_str)
 project(vt VERSION ${_vt_version_str})
 
+# VT does not use C++ modules. Disable CMake's automatic C++20 module
+# dependency scanning so builds do not require clang-scan-deps.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 # To generate output file with compilation errors and warnings
 # CMake generator needs to be known
 set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
