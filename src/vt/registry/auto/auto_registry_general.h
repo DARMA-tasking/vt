@@ -87,7 +87,7 @@ template <typename FunctorT, typename MsgT>
 struct GetFnPtr<FunctorT, true, MsgT> {
   using FunctionPtrType = void(*)(MsgT*);
 
-  static constexpr FunctionPtrType getFunction() {
+  static FunctionPtrType getFunction() {
     return &proxyOperatorToNewInstanceReg<FunctorT, MsgT*>;
   }
 };
@@ -99,7 +99,7 @@ struct GetFnPtr<FunctorT, false, MsgT> {
       FunctorT, decltype(&FunctorT::operator())
     >::FuncPtrType;
 
-  static constexpr FunctionPtrType getFunction() {
+  static FunctionPtrType getFunction() {
     return &proxyOperatorToNewInstanceReg<FunctorT>;
   }
 };
@@ -111,7 +111,7 @@ struct FunctorAdapterArgs {
   using ObjType = SentinelObject;
   using MsgType = MsgT;
 
-  static constexpr FunctionPtrType getFunction() {
+  static FunctionPtrType getFunction() {
     return GetPtr::getFunction();
   }
 
@@ -149,7 +149,7 @@ struct FunctorAdapterParam {
   using ObjType = SentinelObject;
   using MsgType = MsgT;
 
-  static constexpr FunctionPtrType getFunction() { return f; }
+  static FunctionPtrType getFunction() { return f; }
 
   static NumArgsType getNumArgs() {
     return 0; // lies - see NumArgsTag, perhaps
@@ -181,7 +181,7 @@ struct FunctorAdapter {
   using ObjType = ObjT;
   using MsgType = MsgT;
 
-  static constexpr FunctionPtrType getFunction() { return f; }
+  static FunctionPtrType getFunction() { return f; }
 
   static NumArgsType getNumArgs() {
     return 0; // lies - see NumArgsTag, perhaps
@@ -213,7 +213,7 @@ struct FunctorAdapterMember {
   using ObjType = ObjT;
   using MsgType = MsgT;
 
-  static constexpr FunctionPtrType getFunction() { return f; }
+  static FunctionPtrType getFunction() { return f; }
 
   static NumArgsType getNumArgs() {
     return 0; // lies - see NumArgsTag, perhaps
@@ -270,7 +270,6 @@ struct RunnableGen {
   using ObjType = typename AdapterType::ObjType;
 
   static AutoHandlerType const idx;
-  static constexpr FunctionPtrType getFunction();
 
   RunnableGen() = default;
 };
