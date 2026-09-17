@@ -7,6 +7,7 @@ build_dir=${2}
 
 # Dependency versions, when fetched via git.
 checkpoint_rev=develop
+loc_rev=master
 
     export parallel_level=4
 if [ -z ${4} ]; then
@@ -59,6 +60,14 @@ else
               "$CHECKPOINT"
         cmake --build . ${dashj} --target install
     fi
+fi
+
+if test -d "${source_dir}/lib/loc"
+then
+    { echo "loc already in lib... not downloading"; } 2>/dev/null
+else
+    cd "${source_dir}/lib"
+    git clone -b "${loc_rev}" --depth 1 https://github.com/DARMA-tasking/loc.git
 fi
 
 if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1
