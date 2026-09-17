@@ -1,31 +1,23 @@
-include(FetchContent)
-
-set(
-  VT_LOC_GIT_REPOSITORY
-  "https://github.com/DARMA-tasking/loc.git"
-  CACHE STRING
-  "Git repository used to obtain DARMA/loc"
-)
-set(
-  VT_LOC_GIT_TAG
-  "0649b54065cfd566549e38a3a5c96f417fd513ca"
-  CACHE STRING
-  "DARMA/loc commit, tag, or branch used by VT"
-)
-
-if (NOT TARGET loc::loc)
-  FetchContent_Declare(
-    loc
-    GIT_REPOSITORY "${VT_LOC_GIT_REPOSITORY}"
-    GIT_TAG "${VT_LOC_GIT_TAG}"
-    GIT_PROGRESS TRUE
-  )
-
+if (EXISTS "${PROJECT_LIB_DIR}/loc")
   # loc detects that it is embedded and disables its standalone comm/MPI
   # backend, examples, tests, and documentation. VT supplies LocCommunicator.
-  FetchContent_MakeAvailable(loc)
+  add_subdirectory(${PROJECT_LIB_DIR}/loc)
+else()
+  message(
+    FATAL_ERROR
+    "DARMA/loc was not found. Clone https://github.com/DARMA-tasking/loc.git "
+    "into ${PROJECT_LIB_DIR}/loc before configuring VT."
+  )
 endif()
 
 get_target_property(
   VT_LOC_INCLUDE_DIRECTORIES loc::loc INTERFACE_INCLUDE_DIRECTORIES
+)
+
+# loc is header-only and does not currently define install rules. Install its
+# public headers with VT so installed VT packages do not need the source tree.
+install(
+  DIRECTORY "${PROJECT_LIB_DIR}/loc/src/loc"
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
 )
