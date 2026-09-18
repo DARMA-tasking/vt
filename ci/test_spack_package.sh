@@ -4,6 +4,7 @@ set -exo pipefail
 
 cur_path=$(pwd)
 vt_spack_package="$cur_path/spack-package"
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 # DARMA-tasking/spack-package uses Spack's v2 repository API, including the
 # spack_repo.builtin build-system imports introduced in Spack 1.x.
@@ -12,7 +13,7 @@ git clone --branch v1.2.2 --depth=2 https://github.com/spack/spack.git
 
 git clone -b master https://github.com/DARMA-tasking/spack-package.git
 python3 spack-package/ci/add_vt_branch.py "${GIT_BRANCH}"
-python3 "${cur_path}/ci/add_spack_loc_resource.py" \
+python3 "${script_dir}/add_spack_loc_resource.py" \
   spack-package/packages/darma-vt/package.py "${GIT_BRANCH}"
 
 declare -A variables_map
