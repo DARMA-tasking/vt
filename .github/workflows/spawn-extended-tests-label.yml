@@ -1,4 +1,4 @@
-name: Spawn extended tests (intel-18, nvcc-10.1, nvcc-11)
+name: Spawn extended tests (CUDA 12.9, Intel oneAPI)
 
 on:
   pull_request:
@@ -19,8 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - vt-build-amd64-ubuntu-20-04-gcc-9-cuda-11-4-3-cpp
-          - vt-build-amd64-ubuntu-20-04-gcc-9-cuda-12-2-0-cpp
+          - vt-build-amd64-ubuntu-24-04-gcc-13-cuda-12-9-0-cpp
           - vt-build-amd64-ubuntu-24-04-icpx-cpp
 
     steps:
