@@ -12,6 +12,8 @@ git clone --branch v1.2.2 --depth=2 https://github.com/spack/spack.git
 
 git clone -b master https://github.com/DARMA-tasking/spack-package.git
 python3 spack-package/ci/add_vt_branch.py "${GIT_BRANCH}"
+python3 "${cur_path}/ci/add_spack_loc_resource.py" \
+  spack-package/packages/darma-vt/package.py "${GIT_BRANCH}"
 
 declare -A variables_map
 variables_map["lb_enabled"]="${VT_LB_ENABLED:-0}"
