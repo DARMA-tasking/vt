@@ -27,7 +27,7 @@ else()
     endif()
 endif()
 
-set(VT_GIT_CONFIG_FILE "${PROJECT_BIN_DIR}/src/vt/configs/generated/vt_git_revision.cc")
+set(VT_GIT_CONFIG_FILE "${CMAKE_SOURCE_DIR}/src/vt/configs/generated/vt_git_revision.cc")
 add_custom_command(
         OUTPUT ${VT_GIT_CONFIG_FILE}
         COMMAND ${CMAKE_COMMAND}
