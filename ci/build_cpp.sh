@@ -11,6 +11,7 @@ env | sort
 
 # Dependency versions, when fetched via git.
 checkpoint_rev=develop
+loc_rev=master
 
 if [ -z ${4} ]; then
     dashj=""
@@ -98,6 +99,14 @@ else
     fi
 fi
 
+if test -d "${source_dir}/lib/loc"
+then
+    { echo "loc already in lib... not downloading"; } 2>/dev/null
+else
+    cd "${source_dir}/lib"
+    git clone -b "${loc_rev}" --depth 1 https://github.com/DARMA-tasking/loc.git
+fi
+
 if test "${VT_TV_ENABLED}" -eq 1
 then
     if test -d "${source_dir}/lib/vt-tv"
@@ -175,7 +184,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dfmt_DIR="${FMT_DIR}" \
       -Dlibunwind_ROOT="${LIBUNWIND_ROOT:-/usr}" \
       -Dvt_no_color_enabled="${VT_NO_COLOR_ENABLED:-0}" \
-      -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-17}" \
+      -DCMAKE_CXX_STANDARD="${CMAKE_CXX_STANDARD:-20}" \
       -DBUILD_SHARED_LIBS="${BUILD_SHARED_LIBS:-0}" \
       "$VT"
 cmake_conf_ret=$?
