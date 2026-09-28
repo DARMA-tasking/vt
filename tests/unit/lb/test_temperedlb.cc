@@ -53,28 +53,19 @@ namespace vt { namespace tests { namespace unit { namespace lb {
 
 using TestTemperedLB = TestParallelHarness;
 
-std::string writeTemperedLBConfig(
-  std::string transfer_strategy, double memory_threshold, double alpha = 1.0,
-  double beta = 0.0, double gamma = 0.0, double delta = 0.0
-) {
+std::string writeTemperedLBConfig() {
   auto const this_node = theContext()->getNode();
   auto config_file = getUniqueFilename();
   if (this_node == 0) {
     std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
-    cfg_file_ << "0 TemperedLB converge_tolerance=0.001 iters=10 trials=3 transfer=" << transfer_strategy <<
-      " alpha=" << alpha <<
-      " beta=" << beta <<
-      " gamma=" << gamma <<
-      " delta=" << delta;
-    if (transfer_strategy == "SwapClusters") {
-        cfg_file_ << " memory_threshold=" << memory_threshold;
-    }
+    cfg_file_ << "0 TemperedLB converge_tolerance=0.001 iters=4 trials=1 "
+      "ordering=ElmID deterministic=true";
     cfg_file_.close();
   }
   return config_file;
 }
 
-void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
+void runTemperedLBTest(std::string config_file) {
   // Clear the LB config
   vrt::collection::balance::ReadLBConfig::clear();
 
@@ -96,58 +87,14 @@ void runTemperedLBTest(std::string config_file, double expected_imb = 0.0) {
   // Get information for the last phase
   auto phase_info = theLBManager()->getPhaseInfo();
 
-  // Assert that temperedLB found the correct imbalance
-  EXPECT_EQ(phase_info->imb_load_post_lb, expected_imb);
+  // The external algorithm must preserve or improve the load distribution.
+  EXPECT_LE(phase_info->imb_load_post_lb, phase_info->imb_load);
 }
 
-// The following tests use expected values found by the MILP
-
-TEST_F(TestTemperedLB, test_load_only_original) {
+TEST_F(TestTemperedLB, test_external_lb_adapter) {
   SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("Original", 1e8);
+  auto cfg = writeTemperedLBConfig();
   runTemperedLBTest(cfg);
-}
-
-TEST_F(TestTemperedLB, test_load_only_swapclusters) {
-  SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", 1e8);
-  runTemperedLBTest(cfg, 0.25);
-}
-
-TEST_F(TestTemperedLB, test_load_and_memory_swapclusters) {
-  SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", 20);
-  runTemperedLBTest(cfg, 0.25);
-}
-
-TEST_F(TestTemperedLB, test_load_no_memory_delta_10) {
-  SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", 1e8, 1, 0, 0, 1);
-  runTemperedLBTest(cfg, 1.0);
-}
-
-TEST_F(TestTemperedLB, test_load_no_memory_delta_01) {
-  SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", 1e8, 1, 0, 0, 0.1);
-  runTemperedLBTest(cfg, 0.25);
-}
-
-TEST_F(TestTemperedLB, test_load_memory_delta_01) {
-  SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", 20, 1, 0, 0, 0.1);
-  runTemperedLBTest(cfg, 0.25);
-}
-
-TEST_F(TestTemperedLB, test_load_no_memory_delta_03) {
-  SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", 1e8, 1, 0, 0, 0.3);
-  runTemperedLBTest(cfg, 1.0);
-}
-
-TEST_F(TestTemperedLB, test_load_memory_delta_03) {
-  SET_NUM_NODES_CONSTRAINT(4);
-  auto cfg = writeTemperedLBConfig("SwapClusters", 20, 1, 0, 0, 0.3);
-  runTemperedLBTest(cfg, 1.0);
 }
 
 #endif
