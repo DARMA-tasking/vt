@@ -162,7 +162,9 @@ function(create_trace_only_target)
     CONFIGURATIONS            ${build_type_list}
   )
 
-  install(TARGETS ${FMT_LIBRARY} EXPORT ${VT_TRACE_LIB})
+  if(FMT_LIBRARY)
+    install(TARGETS ${FMT_LIBRARY} EXPORT ${VT_TRACE_LIB})
+  endif()
 
   export(
     TARGETS                   ${VT_TRACE_LIB}
