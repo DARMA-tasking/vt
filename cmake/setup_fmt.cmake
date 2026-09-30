@@ -2,10 +2,10 @@ include_guard(GLOBAL)
 
 # Configure one compiled fmt provider across a hierarchy of DARMA projects.
 #
-# A top-level project builds its vendored fmt. An embedded project reuses the
-# parent's fmt::fmt target and only contributes its local include layout (for
-# example fmt-vt, fmt, or fmt-lb). Exact FMT_VERSION equality is required so
-# local headers never call into an incompatible compiled fmt implementation.
+# The first project in a hierarchy builds its vendored fmt. Later projects
+# reuse that fmt::fmt target and only contribute their local include layout
+# (for example fmt-vt, fmt, or fmt-lb). Exact FMT_VERSION equality is required
+# so local headers never call into an incompatible compiled fmt implementation.
 #
 # Copy this file into each repository and replace add_subdirectory(fmt) with:
 #
@@ -69,17 +69,10 @@ function(darma_setup_fmt)
   endif()
   set(local_fmt_version "${CMAKE_MATCH_1}")
 
-  # Use the source-directory comparison rather than PROJECT_IS_TOP_LEVEL so
-  # the same module also works with LB's current CMake 3.20 minimum.
-  if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-    if(TARGET fmt::fmt)
-      message(
-        FATAL_ERROR
-        "${PROJECT_NAME} is top-level, but fmt::fmt already exists. The "
-        "top-level DARMA project must be the sole compiled fmt provider."
-      )
-    endif()
-
+  # The first DARMA project in the CMake hierarchy owns fmt. It need not be
+  # the top-level CMake project: consumers commonly add VT as a subdirectory
+  # without configuring fmt themselves (for example vt-sample-project).
+  if(NOT TARGET fmt::fmt)
     add_subdirectory("${fmt_source_dir}")
 
     if(NOT TARGET ${DARMA_FMT_VENDORED_TARGET})
@@ -117,14 +110,6 @@ function(darma_setup_fmt)
       "${PROJECT_NAME}: building vendored fmt ${local_fmt_version}"
     )
   else()
-    if(NOT TARGET fmt::fmt)
-      message(
-        FATAL_ERROR
-        "${PROJECT_NAME} is embedded, but its parent did not provide "
-        "fmt::fmt. Configure fmt before add_subdirectory(${PROJECT_NAME})."
-      )
-    endif()
-
     get_target_property(fmt_provider_target fmt::fmt ALIASED_TARGET)
     if(NOT fmt_provider_target)
       set(fmt_provider_target fmt::fmt)
