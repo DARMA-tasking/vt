@@ -73,6 +73,10 @@ function(darma_setup_fmt)
   # the top-level CMake project: consumers commonly add VT as a subdirectory
   # without configuring fmt themselves (for example vt-sample-project).
   if(NOT TARGET fmt::fmt)
+    # fmt is compiled as ordinary C++20 and its module target is disabled by
+    # the caller. Prevent CMP0155 from requiring a compiler dependency scanner
+    # (for example clang-scan-deps) for these non-module sources.
+    set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
     add_subdirectory("${fmt_source_dir}")
 
     if(NOT TARGET ${DARMA_FMT_VENDORED_TARGET})
