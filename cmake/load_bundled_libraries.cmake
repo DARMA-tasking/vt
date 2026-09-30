@@ -20,7 +20,7 @@ endif()
 # CLI11 always included in the build
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 
-# use included fmt or external one
+# Use an external fmt package or configure VT's shared DARMA fmt provider.
 if(${vt_external_fmt})
   # user should provide 'fmt_DIR' or 'fmt_ROOT' to CMake (unless fmt is installed in system libs)
   if(fmt_ROOT)
@@ -31,11 +31,23 @@ if(${vt_external_fmt})
     message(STATUS "vt_external_fmt = ON but neither fmt_DIR nor fmt_ROOT is provided!")
   endif()
   find_package(fmt 10.2.1 REQUIRED)
-
+  set(FMT_LIBRARY "")
+  set(FMT_LINK_TARGET fmt::fmt)
+  set(vt_uses_parent_fmt 0)
 else()
-  set(FMT_LIBRARY fmt)
-  add_subdirectory(${PROJECT_LIB_DIR}/fmt)
-  set_darma_compiler_flags(${FMT_LIBRARY})
+  include(setup_fmt)
+  darma_setup_fmt(
+    SOURCE_DIR         "${PROJECT_LIB_DIR}/fmt"
+    VENDORED_TARGET    fmt
+    OUT_LIBRARY        FMT_LIBRARY
+    OUT_LINK_TARGET    FMT_LINK_TARGET
+    POST_ADD_COMMAND set_darma_compiler_flags
+  )
+  if(FMT_LIBRARY)
+    set(vt_uses_parent_fmt 0)
+  else()
+    set(vt_uses_parent_fmt 1)
+  endif()
 endif()
 
 # yaml-cpp always included in the build
