@@ -97,6 +97,7 @@ parameters.
 | `VT_DIAGNOSTICS_RUNTIME_ENABLED` | 0             | Enable VT component diagnostics at runtime by default                                              |
 | `VT_DEBUG_VERBOSE`               | <empty>       | Enable VT verbose debug prints at compile-time                                                     |
 | `VT_TESTS_NUM_NODES`             | <empty>       | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
+| `VT_TESTS_ALL_PROC_SCALES`       | 0             | Test on all powers of 2 up to the detected max nodes instead of 1, 2, a middle count, and the max  |
 | `VT_NO_COLOR_ENABLED`            | 0             | Set `--vt_no_color` flag to true by default                                                        |
 | `BUILD_SHARED_LIBS`              | 0             | Build VT as shared library                                                                         |
 
