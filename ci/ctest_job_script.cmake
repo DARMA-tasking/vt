@@ -154,6 +154,7 @@ set(configureOpts
     "-Dvt_ci_build=$ENV{VT_CI_BUILD}"
     "-Dvt_debug_verbose=$ENV{VT_DEBUG_VERBOSE}"
     "-Dvt_tests_num_nodes=$ENV{VT_TESTS_NUM_NODES}"
+    "-Dvt_tests_all_proc_scales=$ENV{VT_TESTS_ALL_PROC_SCALES}"
     "-Dvt_no_color_enabled=$ENV{VT_NO_COLOR_ENABLED}"
     "-DBUILD_SHARED_LIBS=$ENV{BUILD_SHARED_LIBS}"
     "-DCMAKE_JOB_POOLS=default_pool=$ENV{parallel_level}"
