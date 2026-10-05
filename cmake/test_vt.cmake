@@ -61,7 +61,8 @@ function(run_executable_with_mpi)
 endfunction()
 
 # Build the list of MPI process counts to test with: 1, 2, a middle power of 2,
-# and MAX_PROC by default, or all powers of 2 up to MAX_PROC with ALL_SCALES.
+# and the largest power of 2 <= MAX_PROC by default, or all powers of 2 up to
+# MAX_PROC with ALL_SCALES.
 function(build_mpi_proc_test_list)
   if (ARGC LESS 1)
     message(FATAL_ERROR "no arguments supplied to build_mpi_proc_test_list")
@@ -95,10 +96,18 @@ function(build_mpi_proc_test_list)
     )
   endif()
 
+  # Some tests and examples only support power-of-2 counts, so round down
+  set(MAX_POW2_PROC "1")
+  math(EXPR NEXT_POW2 "${MAX_POW2_PROC} * 2")
+  while(NEXT_POW2 LESS_EQUAL "${ARG_MAX_PROC}")
+    set(MAX_POW2_PROC "${NEXT_POW2}")
+    math(EXPR NEXT_POW2 "${MAX_POW2_PROC} * 2")
+  endwhile()
+
   if (ARG_ALL_SCALES)
     set(CUR_N_PROC "1")
     set(CUR_PROC_LIST "")
-    while(CUR_N_PROC LESS_EQUAL "${ARG_MAX_PROC}")
+    while(CUR_N_PROC LESS_EQUAL "${MAX_POW2_PROC}")
       #message("${CUR_N_PROC}")
       list(APPEND CUR_PROC_LIST ${CUR_N_PROC})
       math(EXPR NEW_VAL "${CUR_N_PROC} * 2")
@@ -108,11 +117,11 @@ function(build_mpi_proc_test_list)
     # Middle is the largest power of 2 at or below sqrt(2 * MAX_PROC)
     set(MID_PROC "2")
     math(EXPR NEXT_SQUARE "2 * ${MID_PROC} * ${MID_PROC}")
-    while(NEXT_SQUARE LESS_EQUAL "${ARG_MAX_PROC}")
+    while(NEXT_SQUARE LESS_EQUAL "${MAX_POW2_PROC}")
       math(EXPR MID_PROC "${MID_PROC} * 2")
       math(EXPR NEXT_SQUARE "2 * ${MID_PROC} * ${MID_PROC}")
     endwhile()
-    set(CUR_PROC_LIST 1 2 ${MID_PROC} ${ARG_MAX_PROC})
+    set(CUR_PROC_LIST 1 2 ${MID_PROC} ${MAX_POW2_PROC})
     list(REMOVE_DUPLICATES CUR_PROC_LIST)
   endif()
 
