@@ -183,8 +183,6 @@ cmake_conf_ret=$?
 if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
 then
     MCSS=$PWD/m.css
-    GHPAGE=$PWD/DARMA-tasking.github.io
-    git clone --depth=1 "https://x-access-token:${GITHUB_TOKEN}@github.com/DARMA-tasking/DARMA-tasking.github.io"
     git clone https://github.com/mosra/m.css
     cd m.css
     git checkout 699abdd5
@@ -194,6 +192,8 @@ then
 
     if test "${GIT_BRANCH:-}" = "develop"
     then
+        GHPAGE=$PWD/DARMA-tasking.github.io
+        git clone --depth=1 "https://x-access-token:${GITHUB_TOKEN}@github.com/DARMA-tasking/DARMA-tasking.github.io"
         cp -R docs "$GHPAGE"
         cd "$GHPAGE"
         git config --global user.email "jliffla@sandia.gov"
