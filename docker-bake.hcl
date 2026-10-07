@@ -312,7 +312,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
-        vt_lb = 1
+        vt_lb = 0 # Spack pack. does not stage exter. LB and comm src
         vt_trace_only = 1
         vt_test_spack = 1
         variant = "spack"
