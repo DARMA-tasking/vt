@@ -183,15 +183,9 @@ function(link_target_with_vt)
       message(STATUS "link_target_with_vt: fmt=${ARG_LINK_FMT}")
     endif()
 
-    if(${vt_external_fmt})
-      target_link_libraries(
-        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} fmt::fmt
-      )
-    else()
-      target_link_libraries(
-        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FMT_LIBRARY}
-      )
-    endif()
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FMT_LINK_TARGET}
+    )
 
   endif()
 
