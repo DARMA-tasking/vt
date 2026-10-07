@@ -545,7 +545,7 @@ void EntityLocationCoord<EntityID>::sendEagerUpdate(
   );
 
   auto this_node = theContext()->getNode();
-  if (ask_node != this_node) {
+  if (ask_node != this_node and ask_node != deliver_node) {
     vtAssert(ask_node != uninitialized_destination, "Ask node must be valid");
     proxy_[ask_node].template send<&ThisType::handleEagerUpdate>(
       MsgProps().asLocationMsg(), id, home_node, deliver_node
