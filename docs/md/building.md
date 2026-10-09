@@ -57,6 +57,7 @@ build configuration:
 | `vt_unity_build_enabled`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16)                                       |
 | `vt_fcontext_enabled`            | 0               | Force use of fcontext for threading                                                                |
 | `vt_tests_num_nodes`             | -               | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
+| `vt_tests_all_proc_scales`       | 0               | Test on all powers of 2 up to the max nodes instead of 1, 2, a middle count, and the max           |
 | `vt_code_coverage`               | 0               | Enable code coverage for VT examples/tests                                                         |
 | `vt_build_tests`                 | 1               | Build all VT tests                                                                                 |
 | `vt_build_examples`              | 1               | Build all VT examples                                                                              |
@@ -96,6 +97,7 @@ parameters.
 | `VT_DIAGNOSTICS_RUNTIME_ENABLED` | 0             | Enable VT component diagnostics at runtime by default                                              |
 | `VT_DEBUG_VERBOSE`               | <empty>       | Enable VT verbose debug prints at compile-time                                                     |
 | `VT_TESTS_NUM_NODES`             | <empty>       | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
+| `VT_TESTS_ALL_PROC_SCALES`       | 0             | Test on all powers of 2 up to the max nodes instead of 1, 2, a middle count, and the max           |
 | `VT_NO_COLOR_ENABLED`            | 0             | Set `--vt_no_color` flag to true by default                                                        |
 | `BUILD_SHARED_LIBS`              | 0             | Build VT as shared library                                                                         |
 

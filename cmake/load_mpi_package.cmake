@@ -60,10 +60,19 @@ if(vt_build_tests OR vt_build_examples)
 
   include(cmake/test_vt.cmake)
 
+  option(vt_tests_all_proc_scales "Test on all powers of 2 up to the detected max nproc" OFF)
+
+  # A user-provided max, or the override flag, tests every power of 2
+  set(PROC_SCALE_FLAG "")
+  if(vt_tests_num_nodes OR vt_tests_all_proc_scales)
+    set(PROC_SCALE_FLAG ALL_SCALES)
+  endif()
+
   set(PROC_TEST_LIST "")
   build_mpi_proc_test_list(
     MAX_PROC       ${MPI_MAX_NUMPROC}
     VARIABLE_OUT   PROC_TEST_LIST
+    ${PROC_SCALE_FLAG}
   )
 
   message(STATUS "MPI proc test list: ${PROC_TEST_LIST}")
