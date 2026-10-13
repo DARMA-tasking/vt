@@ -4,6 +4,10 @@ file(READ "VERSION" _vt_version_str)
 string(STRIP "${_vt_version_str}" _vt_version_str)
 project(vt VERSION ${_vt_version_str})
 
+# VT does not use C++ modules. Disable CMake's automatic C++20 module
+# dependency scanning so builds do not require clang-scan-deps.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 # To generate output file with compilation errors and warnings
 # CMake generator needs to be known
 set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
@@ -41,7 +45,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard to use")
+  set(CMAKE_CXX_STANDARD 20 CACHE STRING "The C++ standard to use")
 endif()
 message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 
@@ -70,6 +74,7 @@ include(cmake/check_compiler.cmake)
 include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 include(cmake/load_bundled_libraries.cmake)
 include(cmake/load_local_packages.cmake)
+include(cmake/load_loc_repositories.cmake)
 
 # Primary VT build
 add_subdirectory(src)
