@@ -146,6 +146,22 @@ function(darma_setup_fmt)
       $<BUILD_INTERFACE:${fmt_source_dir}/include>
     )
 
+    # The provider may install a different header layout (for example fmt-lb).
+    # Consumers of this project's installed headers still need its local fmt
+    # include names, even though they link to the parent's compiled library.
+    if(FMT_INC_DIR)
+      set(fmt_install_include_dir "${FMT_INC_DIR}")
+    else()
+      include(GNUInstallDirs)
+      set(fmt_install_include_dir "${CMAKE_INSTALL_INCLUDEDIR}")
+    endif()
+    install(
+      DIRECTORY "${fmt_source_dir}/include/"
+      DESTINATION "${fmt_install_include_dir}"
+      COMPONENT fmt-core
+      FILES_MATCHING PATTERN "*.h"
+    )
+
     set(fmt_owned_library "")
     message(
       STATUS
