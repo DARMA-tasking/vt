@@ -68,7 +68,7 @@ TemplateExtract::singlePfType(std::string const& pf) {
 
 /*static*/ std::string
 TemplateExtract::lastNamedPfType(std::string const& pf, std::string const& tparam) {
-#if defined(__INTEL_LLVM_COMPILER) || defined(__INTEL_COMPILER)
+#if defined(__INTEL_LLVM_COMPILER)
   // For Intel, we have a different format to parse (we can't just
   // look for 'TPARAM = '
 

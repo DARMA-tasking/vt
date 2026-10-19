@@ -458,9 +458,8 @@ private:
  * \brief Group manager that handles typed actions that are registered for
  * system use.
  *
- * This is a separate template class because Intel 18 didn't like static members
- * that were variable templates. These are all the members of GroupManager that
- * were under a template <typename T>
+ * These are all the members of GroupManager that are under a
+ * template <typename T>
  */
 template <typename T>
 struct GroupManagerT : public GroupManager
