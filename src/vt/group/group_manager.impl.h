@@ -60,20 +60,20 @@ namespace vt { namespace group {
 
 template <typename T>
 /*static*/ GroupManager::ActionContainerTType<T>
-GroupManager::continuation_actions_t_ = {};
+  GroupManager::continuation_actions_t_ = {};
 
 template <typename T>
 /*static*/ std::unordered_map<RemoteOperationIDType, std::vector<T>>
-GroupManager::waiting_cont_ = {};
+  GroupManager::waiting_cont_ = {};
 
 template <typename T>
 /*static*/ void GroupManager::pushCleanupAction() {
   // Push the typeless cleanup actions
   if (continuation_actions_t_<T>.size() == 0) {
-    theGroup()->addCleanupAction([]{ continuation_actions_t_<T>.clear(); });
+    theGroup()->addCleanupAction([] { continuation_actions_t_<T>.clear(); });
   }
   if (waiting_cont_<T>.size() == 0) {
-    theGroup()->addCleanupAction([]{ waiting_cont_<T>.clear(); });
+    theGroup()->addCleanupAction([] { waiting_cont_<T>.clear(); });
   }
 }
 
@@ -84,8 +84,7 @@ GroupManager::registerContinuationT(ActionTType<T> act) {
 
   RemoteOperationIDType next_id = theGroup()->getNextOpID();
   continuation_actions_t_<T>.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(next_id),
+    std::piecewise_construct, std::forward_as_tuple(next_id),
     std::forward_as_tuple(ActionListTType<T>{act})
   );
   return next_id;
@@ -106,9 +105,8 @@ template <typename T>
 }
 
 template <typename T>
-/*static*/ void GroupManager::triggerWaitingContinuations(
-  RemoteOperationIDType const op
-) {
+/*static*/ void
+GroupManager::triggerWaitingContinuations(RemoteOperationIDType const op) {
   auto action_iter = continuation_actions_t_<T>.find(op);
   auto const found = action_iter != continuation_actions_t_<T>.end();
 
@@ -126,16 +124,15 @@ template <typename T>
 }
 
 template <typename T>
-/*static*/ void GroupManager::triggerContinuationT(
-  RemoteOperationIDType const op, T t
-) {
+/*static*/ void
+GroupManager::triggerContinuationT(RemoteOperationIDType const op, T t) {
   auto iter = continuation_actions_t_<T>.find(op);
   auto const& found = iter != continuation_actions_t_<T>.end();
 
   vt_debug_print(
     verbose, group,
-    "GroupManager::triggerContinuationT: op={:x}, found={}, size={}\n",
-    op, found, continuation_actions_t_<T>.size()
+    "GroupManager::triggerContinuationT: op={:x}, found={}, size={}\n", op,
+    found, continuation_actions_t_<T>.size()
   );
 
   if (found) {
@@ -146,8 +143,7 @@ template <typename T>
     auto iter_wait = waiting_cont_<T>.find(op);
     if (iter_wait == waiting_cont_<T>.end()) {
       waiting_cont_<T>.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(op),
+        std::piecewise_construct, std::forward_as_tuple(op),
         std::forward_as_tuple(std::vector<T>{t})
       );
     } else {

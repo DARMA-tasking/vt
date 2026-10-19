@@ -105,9 +105,8 @@ struct GroupManager : runtime::component::Component<GroupManager> {
   template <typename T>
   using ActionListTType = std::vector<ActionTType<T>>;
   template <typename T>
-  using ActionContainerTType = std::unordered_map<
-    RemoteOperationIDType, ActionListTType<T>
-  >;
+  using ActionContainerTType =
+    std::unordered_map<RemoteOperationIDType, ActionListTType<T>>;
 
   /**
    * \internal \brief Construct the GroupManager
@@ -352,9 +351,8 @@ private:
    * \param[in] action the continuation
    */
   template <typename T>
-  static void registerContinuationT(
-    RemoteOperationIDType const op, ActionTType<T> action
-  );
+  static void
+  registerContinuationT(RemoteOperationIDType const op, ActionTType<T> action);
 
   /**
    * \internal \brief Trigger a typed continuation, or buffer the value if no
