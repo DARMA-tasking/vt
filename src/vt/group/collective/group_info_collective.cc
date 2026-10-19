@@ -157,10 +157,10 @@ void InfoColl::setupCollective() {
   new_tree_cont_      = theGroup()->nextCollectiveID();
   new_root_cont_      = theGroup()->nextCollectiveID();
 
-  using GroupCollectiveTMsg = GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>;
-  using GroupOnlyTMsg       = GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>;
+  using CollectiveMsgPtr = MsgSharedPtr<GroupCollectiveMsg>;
+  using OnlyMsgPtr       = MsgSharedPtr<GroupOnlyMsg>;
 
-  GroupCollectiveTMsg::registerContinuationT(
+  GroupManager::registerContinuationT<CollectiveMsgPtr>(
     down_tree_cont_,
     [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -168,7 +168,7 @@ void InfoColl::setupCollective() {
       iter->second->downTree(msg.get());
     }
   );
-  GroupOnlyTMsg::registerContinuationT(
+  GroupManager::registerContinuationT<OnlyMsgPtr>(
     down_tree_fin_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -176,7 +176,7 @@ void InfoColl::setupCollective() {
       iter->second->downTreeFinished(msg.get());
     }
   );
-  GroupOnlyTMsg::registerContinuationT(
+  GroupManager::registerContinuationT<OnlyMsgPtr>(
     finalize_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -184,7 +184,7 @@ void InfoColl::setupCollective() {
       iter->second->finalizeTree(msg.get());
     }
   );
-  GroupOnlyTMsg::registerContinuationT(
+  GroupManager::registerContinuationT<OnlyMsgPtr>(
     new_tree_cont_,
     [group_]([[maybe_unused]] MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -193,7 +193,7 @@ void InfoColl::setupCollective() {
       iter->second->newTree(from);
     }
   );
-  GroupCollectiveTMsg::registerContinuationT(
+  GroupManager::registerContinuationT<CollectiveMsgPtr>(
     new_root_cont_,
     [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -208,12 +208,12 @@ void InfoColl::setupCollective() {
   // secondary continuation.
   up_tree_cont_ = makeCollectiveContinuation(group_);
 
-  GroupCollectiveTMsg::triggerWaitingContinuations(new_root_cont_);
-  GroupCollectiveTMsg::triggerWaitingContinuations(down_tree_cont_);
-  GroupOnlyTMsg::triggerWaitingContinuations(down_tree_fin_cont_);
-  GroupOnlyTMsg::triggerWaitingContinuations(finalize_cont_);
-  GroupOnlyTMsg::triggerWaitingContinuations(new_tree_cont_);
-  GroupCollectiveTMsg::triggerWaitingContinuations(up_tree_cont_);
+  GroupManager::triggerWaitingContinuations<CollectiveMsgPtr>(new_root_cont_);
+  GroupManager::triggerWaitingContinuations<CollectiveMsgPtr>(down_tree_cont_);
+  GroupManager::triggerWaitingContinuations<OnlyMsgPtr>(down_tree_fin_cont_);
+  GroupManager::triggerWaitingContinuations<OnlyMsgPtr>(finalize_cont_);
+  GroupManager::triggerWaitingContinuations<OnlyMsgPtr>(new_tree_cont_);
+  GroupManager::triggerWaitingContinuations<CollectiveMsgPtr>(up_tree_cont_);
 
   vt_debug_print(
     normal, group,
@@ -516,7 +516,7 @@ RemoteOperationIDType InfoColl::makeCollectiveContinuation(
   GroupType const group_
 ) {
   auto const& id = theGroup()->nextCollectiveID();
-  GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>::registerContinuationT(
+  GroupManager::registerContinuationT<MsgSharedPtr<GroupCollectiveMsg>>(
     id, [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
@@ -603,7 +603,9 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
   auto const& op_id = msg->getOpID();
   vtAssert(op_id != no_op_id, "Must have valid op");
   auto msg_ptr = promoteMsg(msg);
-  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::triggerContinuationT(op_id,msg_ptr);
+  GroupManager::triggerContinuationT<MsgSharedPtr<GroupOnlyMsg>>(
+    op_id, msg_ptr
+  );
 }
 
 /*static*/ void InfoColl::upHan(GroupCollectiveMsg* msg) {
@@ -617,8 +619,8 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
   auto const& op_id = msg->getOpID();
   vtAssert(op_id != no_op_id, "Must have valid op");
   auto msg_ptr = promoteMsg(msg);
-  GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>::triggerContinuationT(
-    op_id,msg_ptr
+  GroupManager::triggerContinuationT<MsgSharedPtr<GroupCollectiveMsg>>(
+    op_id, msg_ptr
   );
 }
 
