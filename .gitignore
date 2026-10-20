@@ -3,6 +3,7 @@ build
 transport
 lib/*-build
 lib/checkpoint
+lib/loc
 lib/googletest
 lib/kokkos
 lib/vt-tv
