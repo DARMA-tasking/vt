@@ -325,7 +325,6 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-24.04-gcc-13-cuda-12.9.0-cpp"
-        vt_external_fmt = 1
         vt_debug_verbose = 1
         vt_diagnostics = 0
         vt_extended_tests = 0

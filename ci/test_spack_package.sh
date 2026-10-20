@@ -38,7 +38,8 @@ do
 done
 
 install_cmd=$(printf " %s" "${cmd_vars[@]}")
-install_cmd="spack install darma-vt@${GIT_BRANCH} build_type=Release ${install_cmd:1} ^openmpi@4.0.4"
+# Match VT/loc's fmt headers, including when Spack has not listed this release.
+install_cmd="spack install darma-vt@${GIT_BRANCH} build_type=Release ${install_cmd:1} ^openmpi@4.0.4 ^fmt@git.12.2.0=12.2.0"
 
 mkdir -p ~/.spack
 cat >> ~/.spack/packages.yaml <<'EOF'
