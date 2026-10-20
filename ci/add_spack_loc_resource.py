@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-LOC_COMMIT = "0649b54065cfd566549e38a3a5c96f417fd513ca"
+LOC_BRANCH = "develop"
 
 
 if len(sys.argv) != 3 or not sys.argv[2].strip():
@@ -22,7 +22,7 @@ text = package_file.read_text()
 resource = f'''    resource(
         name="loc",
         git="https://github.com/DARMA-tasking/loc.git",
-        commit="{LOC_COMMIT}",
+        branch="{LOC_BRANCH}",
         destination="lib",
         placement="loc",
         when="@{version}",
