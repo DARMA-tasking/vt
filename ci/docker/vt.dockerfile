@@ -62,6 +62,10 @@ RUN --mount=type=cache,id=${CACHE_ID},target=/build/ccache             \
     --mount=type=cache,id=BUILD-${CACHE_ID},target=/build/vt           \
     --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN               \
     --mount=target=/vt,rw                                              \
+        if [ "${VT_TV_ENABLED}" = "1" ]; then                         \
+            apt-get update -y -q &&                                   \
+            apt-get install -y -q --no-install-recommends nlohmann-json3-dev; \
+        fi &&                                                        \
         if [ "${VT_TEST_SPACK}" = "1" ]; then                          \
             apt update -y -q && apt install -y -q libssl-dev unzip &&  \
             /vt/ci/test_spack_package.sh;                              \
