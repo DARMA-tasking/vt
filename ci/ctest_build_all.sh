@@ -7,7 +7,7 @@ build_dir=${2}
 
 # Dependency versions, when fetched via git.
 checkpoint_rev=develop
-loc_rev=master
+loc_rev=develop
 
     export parallel_level=4
 if [ -z ${4} ]; then

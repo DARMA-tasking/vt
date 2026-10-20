@@ -11,7 +11,7 @@ env | sort
 
 # Dependency versions, when fetched via git.
 checkpoint_rev=develop
-loc_rev=master
+loc_rev=develop
 
 if [ -z ${4} ]; then
     dashj=""
