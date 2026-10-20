@@ -139,6 +139,11 @@ function "vt_test_spack" {
   result = lookup(item, "vt_test_spack", "0")
 }
 
+function "vt_tests_all_proc_scales" {
+  params = [item]
+  result = lookup(item, "vt_tests_all_proc_scales", "0")
+}
+
 function "vt_tests_num_nodes" {
   params = [item]
   result = lookup(item, "vt_tests_num_nodes", "4")
@@ -264,6 +269,7 @@ target "vt-build-all" {
     VT_PRODUCTION_BUILD_ENABLED    = vt_production_build(item)
     VT_RDMA_TESTS_ENABLED          = vt_rdma_tests(item)
     VT_TEST_SPACK                  = vt_test_spack(item)
+    VT_TESTS_ALL_PROC_SCALES       = vt_tests_all_proc_scales(item)
     VT_TESTS_NUM_NODES             = vt_tests_num_nodes(item)
     VT_TRACE_ENABLED               = vt_trace(item)
     VT_TRACE_RUNTIME_ENABLED       = vt_trace_runtime(item)
