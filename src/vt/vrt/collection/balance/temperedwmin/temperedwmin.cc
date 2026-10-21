@@ -43,23 +43,7 @@
 
 #include "vt/vrt/collection/balance/temperedwmin/temperedwmin.h"
 
-#include "vt/configs/error/config_assert.h"
-#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
-#include "vt/vrt/collection/balance/model/weighted_communication_volume.h"
-
 namespace vt { namespace vrt { namespace collection { namespace lb {
-
-TemperedWMin::~TemperedWMin() {
-  setStrategySpecificModel(nullptr);
-}
-
-void TemperedWMin::init(objgroup::proxy::Proxy<TemperedWMin> in_proxy) {
-  auto proxy_bits = in_proxy.getProxy();
-  auto proxy = objgroup::proxy::Proxy<TemperedLB>(proxy_bits);
-  auto strat = proxy.get();
-  strat->init(proxy);
-}
 
 /*static*/ std::unordered_map<std::string, std::string>
 TemperedWMin::getInputKeysWithHelp() {
@@ -101,24 +85,7 @@ void TemperedWMin::inputParams(balance::ConfigEntry* config) {
     alpha_, beta_, gamma_
   );
 
-  total_work_model_ = std::make_shared<balance::WeightedCommunicationVolume>(
-    theLBManager()->getLoadModel(), alpha_, beta_, gamma_
-  );
-  setStrategySpecificModel(total_work_model_);
-
-  // for later assertion only
-  load_model_ptr = theLBManager()->getLoadModel().get();
-}
-
-LoadType TemperedWMin::getModeledValue(const elm::ElementIDStruct& obj) {
-  vtAssert(
-    theLBManager()->getLoadModel().get() == load_model_ptr,
-    "Load model must not change"
-  );
-  balance::PhaseOffset when =
-      {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE};
-
-  return total_work_model_->getModeledLoad(obj, when);
+  setWorkModel(alpha_, beta_, gamma_);
 }
 
 }}}} // namespace vt::vrt::collection::lb
