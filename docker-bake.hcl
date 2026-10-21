@@ -291,7 +291,8 @@ target "vt-build-all" {
     item = [
       {
         image = "amd64-alpine-3.16-clang-cpp"
-        vt_extended_tests = 0
+        vt_extended_tests = 1
+        vt_lb = 1
         vt_production_build = 1
       },
       {
@@ -429,6 +430,9 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
+        vt_lb = 1
+        vt_extended_tests = 1
+        vt_tests_num_nodes = 4
         vt_perf = 1
       },
       {
