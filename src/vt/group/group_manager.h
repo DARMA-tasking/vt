@@ -100,6 +100,13 @@ struct GroupManager : runtime::component::Component<GroupManager> {
   using ReduceType = collective::reduce::Reduce;
   using ReducePtrType = ReduceType*;
   using CollectiveScopeType = collective::CollectiveScope;
+  template <typename T>
+  using ActionTType = std::function<void(T)>;
+  template <typename T>
+  using ActionListTType = std::vector<ActionTType<T>>;
+  template <typename T>
+  using ActionContainerTType =
+    std::unordered_map<RemoteOperationIDType, ActionListTType<T>>;
 
   /**
    * \internal \brief Construct the GroupManager
@@ -328,6 +335,50 @@ private:
   void triggerContinuation(RemoteOperationIDType const op);
 
   /**
+   * \internal \brief Register a typed operation ID continuation
+   *
+   * \param[in] action the continuation
+   *
+   * \return the operation ID
+   */
+  template <typename T>
+  static RemoteOperationIDType registerContinuationT(ActionTType<T> action);
+
+  /**
+   * \internal \brief Register a typed operation ID continuation
+   *
+   * \param[in] op the operation ID
+   * \param[in] action the continuation
+   */
+  template <typename T>
+  static void
+  registerContinuationT(RemoteOperationIDType const op, ActionTType<T> action);
+
+  /**
+   * \internal \brief Trigger a typed continuation, or buffer the value if no
+   * continuation has been registered yet
+   *
+   * \param[in] op the operation ID
+   * \param[in] t the value to pass to the continuation
+   */
+  template <typename T>
+  static void triggerContinuationT(RemoteOperationIDType const op, T t);
+
+  /**
+   * \internal \brief Trigger typed continuations with any buffered values
+   *
+   * \param[in] op the operation ID
+   */
+  template <typename T>
+  static void triggerWaitingContinuations(RemoteOperationIDType const op);
+
+  /**
+   * \internal \brief Register cleanup of the typed continuation storage
+   */
+  template <typename T>
+  static void pushCleanupAction();
+
+  /**
    * \internal \brief Send message to a rooted group
    *
    * \param[in] base the message to send
@@ -450,38 +501,13 @@ private:
   CollectiveScopeType   collective_scope_;
   std::unordered_map<region::Region::ListType, GroupType, region::ListHash>
     temporary_groups_ = {};
-};
 
-/**
- * \internal \struct GroupManagerT
- *
- * \brief Group manager that handles typed actions that are registered for
- * system use.
- *
- * This is a separate template class because Intel 18 didn't like static members
- * that were variable templates. These are all the members of GroupManager that
- * were under a template <typename T>
- */
-template <typename T>
-struct GroupManagerT : public GroupManager
-{
-  using ActionTType = std::function<void(T)>;
-  using ActionListTType = std::vector<ActionTType>;
-  using ActionContainerTType = std::unordered_map<
-    RemoteOperationIDType, ActionListTType
-  >;
-
-  GroupManagerT() = default;
-
-  static void pushCleanupAction();
-  static RemoteOperationIDType registerContinuationT(ActionTType action);
-  static void registerContinuationT(RemoteOperationIDType const op, ActionTType a);
-  static void triggerContinuationT(RemoteOperationIDType const op, T t);
-  static void triggerWaitingContinuations(RemoteOperationIDType const op);
-
-private:
-  static ActionContainerTType continuation_actions_t_;
-  static std::unordered_map<RemoteOperationIDType,std::vector<T>> waiting_cont_;
+  // Typed continuations used by the system, keyed on the continuation's type
+  template <typename T>
+  static ActionContainerTType<T> continuation_actions_t_;
+  template <typename T>
+  static std::unordered_map<RemoteOperationIDType, std::vector<T>>
+    waiting_cont_;
 };
 
 } /* end namespace group */

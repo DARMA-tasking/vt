@@ -143,7 +143,7 @@ which `docker compose` will read.
 #   COMPILER_TYPE={gnu, clang, intel, nvidia}
 #   COMPILER={gcc-9, gcc-10,
 #             clang-8, clang-9, clang-10,
-#             icpc, icpx,
+#             icpx,
 #             nvcc-11, nvcc-11.2}
 #   REPO=lifflander1/vt
 #   UBUNTU={18.04, 20.04, 22.04}
