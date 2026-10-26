@@ -59,82 +59,80 @@
 namespace vt { namespace group {
 
 template <typename T>
-/*static*/ typename GroupManagerT<T>::ActionContainerTType
-GroupManagerT<T>::continuation_actions_t_ = {};
+/*static*/ GroupManager::ActionContainerTType<T>
+  GroupManager::continuation_actions_t_ = {};
 
 template <typename T>
-/*static*/ std::unordered_map<RemoteOperationIDType,std::vector<T>>
-GroupManagerT<T>::waiting_cont_ = {};
+/*static*/ std::unordered_map<RemoteOperationIDType, std::vector<T>>
+  GroupManager::waiting_cont_ = {};
 
 template <typename T>
-void GroupManagerT<T>::pushCleanupAction() {
+/*static*/ void GroupManager::pushCleanupAction() {
   // Push the typeless cleanup actions
-  if (continuation_actions_t_.size() == 0) {
-    theGroup()->addCleanupAction([]{ continuation_actions_t_.clear(); });
+  if (continuation_actions_t_<T>.size() == 0) {
+    theGroup()->addCleanupAction([] { continuation_actions_t_<T>.clear(); });
   }
-  if (waiting_cont_.size() == 0) {
-    theGroup()->addCleanupAction([]{ waiting_cont_.clear(); });
+  if (waiting_cont_<T>.size() == 0) {
+    theGroup()->addCleanupAction([] { waiting_cont_<T>.clear(); });
   }
 }
 
 template <typename T>
-RemoteOperationIDType GroupManagerT<T>::registerContinuationT(ActionTType act) {
-  pushCleanupAction();
+/*static*/ RemoteOperationIDType
+GroupManager::registerContinuationT(ActionTType<T> act) {
+  pushCleanupAction<T>();
 
   RemoteOperationIDType next_id = theGroup()->getNextOpID();
-  continuation_actions_t_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(next_id),
-    std::forward_as_tuple(ActionListTType{act})
+  continuation_actions_t_<T>.emplace(
+    std::piecewise_construct, std::forward_as_tuple(next_id),
+    std::forward_as_tuple(ActionListTType<T>{act})
   );
   return next_id;
 }
 
 template <typename T>
-void GroupManagerT<T>::registerContinuationT(
-  RemoteOperationIDType const op, ActionTType action
+/*static*/ void GroupManager::registerContinuationT(
+  RemoteOperationIDType const op, ActionTType<T> action
 ) {
   vt_debug_print(
     verbose, group,
     "GroupManager::registerContinuationT: op={:x}\n", op
   );
 
-  pushCleanupAction();
+  pushCleanupAction<T>();
 
-  continuation_actions_t_[op].push_back(action);
+  continuation_actions_t_<T>[op].push_back(action);
 }
 
 template <typename T>
-/*static*/ void GroupManagerT<T>::triggerWaitingContinuations(
-  RemoteOperationIDType const op
-) {
-  auto action_iter = continuation_actions_t_.find(op);
-  auto const found = action_iter != continuation_actions_t_.end();
+/*static*/ void
+GroupManager::triggerWaitingContinuations(RemoteOperationIDType const op) {
+  auto action_iter = continuation_actions_t_<T>.find(op);
+  auto const found = action_iter != continuation_actions_t_<T>.end();
 
   if (found) {
-    auto iter = waiting_cont_.find(op);
-    if (iter != waiting_cont_.end()) {
+    auto iter = waiting_cont_<T>.find(op);
+    if (iter != waiting_cont_<T>.end()) {
       for (auto&& elm : iter->second) {
         for (auto&& action : action_iter->second) {
           action(elm);
         }
       }
-      waiting_cont_.clear();
+      waiting_cont_<T>.clear();
     }
   }
 }
 
 template <typename T>
-void GroupManagerT<T>::triggerContinuationT(
-  RemoteOperationIDType const op, T t
-) {
-  auto iter = continuation_actions_t_.find(op);
-  auto const& found = iter != continuation_actions_t_.end();
+/*static*/ void
+GroupManager::triggerContinuationT(RemoteOperationIDType const op, T t) {
+  auto iter = continuation_actions_t_<T>.find(op);
+  auto const& found = iter != continuation_actions_t_<T>.end();
 
   vt_debug_print(
     verbose, group,
-    "GroupManager::triggerContinuationT: op={:x}, found={}, size={}\n",
-    op, found, continuation_actions_t_.size()
+    "GroupManager::triggerContinuationT: op={:x}, found={}, size={}\n", op,
+    found, continuation_actions_t_<T>.size()
   );
 
   if (found) {
@@ -142,15 +140,14 @@ void GroupManagerT<T>::triggerContinuationT(
       elm(t);
     }
   } else {
-    auto iter_wait = waiting_cont_.find(op);
-    if (iter_wait == waiting_cont_.end()) {
-      waiting_cont_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(op),
+    auto iter_wait = waiting_cont_<T>.find(op);
+    if (iter_wait == waiting_cont_<T>.end()) {
+      waiting_cont_<T>.emplace(
+        std::piecewise_construct, std::forward_as_tuple(op),
         std::forward_as_tuple(std::vector<T>{t})
       );
     } else {
-      waiting_cont_[op].push_back(t);
+      waiting_cont_<T>[op].push_back(t);
     }
   }
 }

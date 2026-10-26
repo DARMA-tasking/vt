@@ -12,12 +12,8 @@ function(set_darma_compiler_flags vt_target)
   elseif (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 2021.3.0)
     list(APPEND TARGET_PRIVATE_CXX_FLAGS -fhonor-infinites -fhonor-nans)
   elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
-    # Intel classic (icpc)
-    # Set as PUBLIC because we want to propagate it to "derived" targets
-    # gtest-main links with gtest, while VT's tests link with base VT
-    list(APPEND TARGET_PUBLIC_CXX_FLAGS -diag-disable=10441)
-    list(APPEND TARGET_PUBLIC_LINK_FLAGS -diag-disable=10441)
-  elseif (NOT ${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
+    message(FATAL_ERROR "The Intel classic compiler (icpc) is no longer supported; please use icpx.")
+  elseif (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "IntelLLVM")
     message(FATAL_ERROR "Your C++ compiler may not support C++14.")
   endif ()
 

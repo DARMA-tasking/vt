@@ -12,7 +12,7 @@
 #   COMPILER_TYPE={gnu, clang, intel, nvidia}
 #   COMPILER={gcc-9, gcc-10, gcc-11, gcc-12, gcc-13
 #             clang-9, clang-10, clang-11, clang-12, clang-13, clang-14
-#             icpc, icpx,
+#             icpx,
 #             nvcc-11, nvcc-11.2}
 #   REPO=lifflander1/vt
 #   UBUNTU={20.04, 22.04, 24.04}

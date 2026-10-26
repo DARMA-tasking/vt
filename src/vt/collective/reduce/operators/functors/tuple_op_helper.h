@@ -71,7 +71,7 @@ struct ApplyOp<Op, cur, max, std::enable_if_t<cur == max>> {
 };
 
 //
-// This is the cleaner way that is rejected by NVCC and Intel
+// This is the cleaner way that is rejected by NVCC
 //
 // template <
 //   template <typename X> class Op,

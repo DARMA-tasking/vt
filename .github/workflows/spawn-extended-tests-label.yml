@@ -1,4 +1,4 @@
-name: Spawn extended tests (intel-18, nvcc-10.1, nvcc-11)
+name: Spawn extended tests (icpx, nvcc-11.4, nvcc-12.2)
 
 on:
   pull_request:

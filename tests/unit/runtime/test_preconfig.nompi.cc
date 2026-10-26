@@ -52,7 +52,7 @@ namespace vt { namespace tests { namespace unit {
 struct TestPreconfig : TestHarness { };
 
 TEST_F(TestPreconfig, test_vt_assert) {
-#if vt_check_enabled(production_build) or defined(__INTEL_COMPILER)
+#if vt_check_enabled(production_build)
   GTEST_SKIP();
 #elif defined(__clang__)
   #if __clang_major__ == 9 || __clang_major__ == 10
