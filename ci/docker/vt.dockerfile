@@ -58,6 +58,13 @@ ENV ASAN_OPTIONS=${ASAN_OPTIONS}
 ENV CC=${OVERRIDE_CC:-${CC}}
 ENV CXX=${OVERRIDE_CXX:-${CXX}}
 
+# vt-tv requires an external nlohmann_json CMake package.
+RUN if [ "${VT_TV_ENABLED}" = "1" ]; then \
+        apt-get update && \
+        apt-get install -y --no-install-recommends nlohmann-json3-dev && \
+        rm -rf /var/lib/apt/lists/*; \
+    fi
+
 RUN --mount=type=cache,id=${CACHE_ID},target=/build/ccache             \
     --mount=type=cache,id=BUILD-${CACHE_ID},target=/build/vt           \
     --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN               \
