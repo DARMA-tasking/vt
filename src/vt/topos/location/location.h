@@ -47,28 +47,60 @@
 #include "vt/config.h"
 #include "vt/topos/location/location_common.h"
 #include "vt/topos/location/location.fwd.h"
-#include "vt/topos/location/utility/pending.h"
 #include "vt/topos/location/utility/entity.h"
-#include "vt/topos/location/utility/coord.h"
 #include "vt/topos/location/message/msg.h"
-#include "vt/topos/location/lookup/lookup.h"
-#include "vt/topos/location/record/record.h"
-#include "vt/topos/location/record/state.h"
 #include "vt/context/context.h"
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/objgroup/manager.h"
 
+#include <loc/coordinator.h>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <list>
 #include <unordered_set>
 #include <unordered_map>
+#include <type_traits>
+#include <utility>
 
 namespace vt { namespace location {
 
 struct collection_lm_tag_t {};
+
+template <typename EntityID>
+struct EntityLocationCoord;
+
+/**
+ * \brief Adapter satisfying loc::Communicator with VT objgroup messaging.
+ *
+ * The containing EntityLocationCoord is already a collectively-created
+ * objgroup, so its proxy is also the collective instance handle expected by
+ * loc. Control-plane RPCs are dispatched to the embedded loc coordinator.
+ */
+template <typename EntityID>
+struct LocCommunicator {
+  using OwnerType = EntityLocationCoord<EntityID>;
+
+  template <typename Instance>
+  using HandleType = objgroup::proxy::Proxy<OwnerType>;
+
+  explicit LocCommunicator(OwnerType* in_owner) : owner_(in_owner) { }
+
+  int getRank() const;
+
+  template <typename Instance>
+  HandleType<Instance> registerInstanceCollective(Instance* instance);
+
+  template <auto Handler, typename... Args>
+  void send(
+    ::loc::NodeType node, objgroup::proxy::Proxy<OwnerType> handle,
+    Args&&... args
+  );
+
+private:
+  OwnerType* owner_ = nullptr;
+};
 
 /**
  * \struct EntityLocationCoord
@@ -77,12 +109,10 @@ struct collection_lm_tag_t {};
  * virtual entities.
  *
  * Allows general registration of an \c EntityID that is tracked across the
- * system as it migrates. Routes messages to the appropriate node by inheriting
- * from \c EntityMsg and sending it through the routing algorithm. Manages a
- * distributed table of entities and their location allowing an entity to be
- * found anywhere in the system. Caches locations to speed up resolution once a
- * location is known. Allows migration of an entity at any time; forwards
- * messages if they miss in the cache.
+ * system as it migrates. DARMA/loc owns the distributed directory, resolution,
+ * and cache-coherence protocol through \c ResolverType. VT retains the entity
+ * message delivery, handler dispatch, and termination-epoch integration layered
+ * on top of the resolved node.
  *
  * The \c registerEntity method allows an external component to locally register
  * an entity as existing on this node. If the entity is deleted, \c
@@ -93,20 +123,15 @@ struct collection_lm_tag_t {};
  *
  */
 template <typename EntityID>
-struct EntityLocationCoord : LocationCoord {
+struct EntityLocationCoord {
   using ThisType = EntityLocationCoord<EntityID>;
-  using LocRecType = LocRecord<EntityID>;
-  using LocCacheType = LocLookup<EntityID, LocRecType>;
+  using ResolverCommType = LocCommunicator<EntityID>;
+  using ResolverType = ::loc::Coordinator<EntityID, ResolverCommType>;
   using LocEntityMsg = LocEntity<EntityID>;
   using LocalRegisteredContType = std::unordered_set<EntityID>;
   using LocalRegisteredMsgContType = std::unordered_map<EntityID, LocEntityMsg>;
   using ActionListType = std::vector<NodeActionType>;
-  using ExistsListType = std::vector<ExistsNodeActionType>;
-  using PendingType = PendingLocationLookup<EntityID>;
   using PendingLocLookupsType = std::unordered_map<EntityID, ActionListType>;
-  using PendingExistsLocType = std::unordered_map<EntityID, ExistsListType>;
-  using ActionContainerType = std::unordered_map<LocEventID, PendingType>;
-  using LocAsksType = std::unordered_map<EntityID, std::unordered_set<NodeType>>;
 
   template <typename MessageT>
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
@@ -114,9 +139,7 @@ struct EntityLocationCoord : LocationCoord {
   /**
    * \brief Construct a new location manager with defaults
    */
-  EntityLocationCoord()
-    : recs_(default_max_cache_size, theContext()->getNode())
-  { }
+  EntityLocationCoord() : resolver_comm_(this) { }
 
   /**
    * \brief Construct with parameters
@@ -127,10 +150,11 @@ struct EntityLocationCoord : LocationCoord {
    */
   explicit EntityLocationCoord(
     bool in_anytime_migration, bool in_keep_cache_updated,
-    std::size_t in_max_cache_size = default_max_cache_size
-  ) : recs_(in_max_cache_size, theContext()->getNode()),
+    std::size_t in_max_cache_size = ::loc::default_max_cache_size
+  ) : resolver_comm_(this),
       anytime_migration_(in_anytime_migration),
-      keep_cache_updated_(in_keep_cache_updated)
+      keep_cache_updated_(in_keep_cache_updated),
+      max_cache_size_(in_max_cache_size)
   { }
 
 
@@ -333,17 +357,6 @@ struct EntityLocationCoord : LocationCoord {
   );
 
   /**
-   * \internal \brief Update location
-   *
-   * \param[in] id the entity ID
-   * \param[in] resolved_node the node reported to have the entity
-   * \param[in] home_node the home node for the entity
-   */
-  void updatePendingRequest(
-    EntityID const& id, NodeType const& resolved_node, NodeType const& home_node
-  );
-
-  /**
    * \internal \brief Output the current cache state
    */
   void printCurrentCache() const;
@@ -363,37 +376,11 @@ struct EntityLocationCoord : LocationCoord {
   void clearCache();
 
   /**
-   * \internal \brief Send back an eager update on a discovered location
+   * \internal \brief Classify the legacy eager/rendezvous message size
    *
-   * \param[in] id the entity ID
-   * \param[in] ask_node the asking node
-   * \param[in] home_node the home node
-   * \param[in] deliver_node the node discovered which delivered the message
-   */
-  void sendEagerUpdate(
-    EntityID const& id, NodeType ask_node, NodeType home_node,
-    NodeType deliver_node
-  );
-
-  /**
-   * \internal \brief Update cache on eager update received
-   *
-   * \param[in] id the entity ID
-   * \param[in] home_node the home node
-   * \param[in] deliver_node the node discovered which delivered the message
-   */
-  void handleEagerUpdate(
-    EntityID const& id, NodeType home_node, NodeType deliver_node
-  );
-
-  /**
-   * \internal \brief Check if the eager or rendezvous protocol should be used
-   *
-   * The eager protocol, typically used for small messages, forwards the message
-   * even if the location is stale or unknown (to the home node). The rendezvous
-   * protocol, typically used for large messages, will send a control message to
-   * determine the location of the entity before sending the actual data. The
-   * threshold between these two modes is controlled by \c small_msg_max_size
+   * Kept for source compatibility and diagnostics. The loc-backed coordinator
+   * resolves both sizes before VT delivers them; the threshold remains \c
+   * small_msg_max_size.
    *
    * \param[in] msg the message to check
    *
@@ -409,6 +396,13 @@ struct EntityLocationCoord : LocationCoord {
    */
   void setProxy(objgroup::proxy::Proxy<EntityLocationCoord<EntityID>> proxy) {
     proxy_ = proxy;
+    resolver_ = std::make_unique<ResolverType>(resolver_comm_, max_cache_size_);
+  }
+
+  template <auto Handler, typename... Args>
+  void locControlHandler(Args... args) {
+    vtAssert(resolver_ != nullptr, "loc resolver must be initialized");
+    std::invoke(Handler, resolver_.get(), std::move(args)...);
   }
 
   /**
@@ -428,6 +422,8 @@ struct EntityLocationCoord : LocationCoord {
   std::unordered_map<EntityID, NodeType> buildGlobalMap();
 
 private:
+  friend struct LocCommunicator<EntityID>;
+
   /**
    * \brief \internal The global map handler for the all-reduce to collect up
    * entity location
@@ -445,76 +441,6 @@ private:
    */
   template <typename MessageT>
   void routedHandler(MessageT *msg);
-
-  /**
-   * \internal \brief Request location handler from this node
-   *
-   * \param[in] id entity id
-   * \param[in] home_node the home node for the entity
-   * \param[in] cb the callback to trigger
-   */
-  void getLocationRequest(
-    EntityID id, NodeType home_node, Callback<EntityID, NodeType, NodeType> cb
-  );
-
-  /**
-   * \brief Check if entity exists
-   *
-   * \param[in] id the entity ID
-   * \param[in] home_node the home node
-   * \param[in] cb callback to invoke
-   */
-  void entityExistsRequest(
-    EntityID id, NodeType home_node,
-    Callback<EntityID, bool, NodeType, NodeType> cb
-  );
-
-  /**
-   * \brief Response callback when entity exists request comes back with the
-   * answer
-   *
-   * \param[in] id the entity ID
-   * \param[in] exists whether it exists
-   * \param[in] answer the rank it exists on
-   * \param[in] home_node the home node for the entity
-   */
-  void entityExistsResponse(
-    EntityID const& id, bool exists, NodeType answer, NodeType home_node
-  );
-
-  /**
-   * \internal \brief Update the location on this node
-   *
-   * \param[in] id entity id
-   * \param[in] answer the answer of where the entity is location
-   * \param[in] home_node the home node for the entity
-   */
-  void updateLocation(EntityID const& id, NodeType answer, NodeType home_node);
-
-  /**
-   * \internal \brief Update the location on this node
-   *
-   * \param[in] id entity id
-   * \param[in] exists whether it exists
-   * \param[in] answer the answer of where the entity is location
-   * \param[in] home_node the home node for the entity
-   */
-  void entityExistsAnswer(
-    EntityID const& id, bool exists, NodeType answer, NodeType home_node
-  );
-
-  /**
-   * \internal \brief Route a message to destination with eager protocol
-   *
-   * \param[in] id the entity ID
-   * \param[in] home_node the home node
-   * \param[in] msg the message to route
-   */
-  template <typename MessageT>
-  void routeMsgEager(
-    EntityID const& id, NodeType const& home_node,
-    MsgSharedPtr<MessageT> const& msg
-  );
 
   /**
    * \internal \brief Route a message to destination with rendezvous protocol
@@ -548,24 +474,15 @@ private:
   /// registered entities
   LocalRegisteredContType local_registered_;
 
-  /// the cached location records
-  LocCacheType recs_;
-
-  /// hold pending actions that this location manager is waiting on
-  ActionContainerType pending_actions_;
-
-  /// pending lookup requests where this manager is the home node
+  /// routed deliveries waiting for local entity registration
   PendingLocLookupsType pending_lookups_;
-
-  /// Pending lookup requests for existence, does not buffer if it doesn't find
-  /// the entity
-  PendingExistsLocType pending_exists_lookups_;
-
-  /// List of nodes that inquire about an entity that require an update
-  LocAsksType loc_asks_;
 
   /// the location manager's objgroup proxy
   objgroup::proxy::Proxy<EntityLocationCoord<EntityID>> proxy_;
+
+  /// VT transport adapter and the backend-neutral resolver from DARMA/loc
+  ResolverCommType resolver_comm_;
+  std::unique_ptr<ResolverType> resolver_;
 
   /// Whether anytime migration can happen for this LM
   bool anytime_migration_ = true;
@@ -578,6 +495,9 @@ private:
 
   /// Whether to keep the cache up-to-date at all times
   bool keep_cache_updated_ = false;
+
+  /// Maximum number of non-home records cached by loc
+  std::size_t max_cache_size_ = ::loc::default_max_cache_size;
 
   /// Temporary storage for global map while reducing
   std::unordered_map<EntityID, NodeType> global_map_temp_;
