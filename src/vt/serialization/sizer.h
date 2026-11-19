@@ -67,7 +67,7 @@ struct MsgSizer<
 > {
   static std::size_t get(MsgT* msg) {
     auto& msg_ref = *msg;
-    return ::checkpoint::getSize<MsgT>(msg_ref);
+    return ::checkpoint::getSize(msg_ref);
   }
 };
 

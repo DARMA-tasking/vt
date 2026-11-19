@@ -45,6 +45,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H
 
 #include "vt/config.h"
+#include "vt/vrt/vrt_common.h"
 #include "vt/vrt/collection/types/migratable.h"
 
 namespace vt { namespace vrt { namespace collection {
