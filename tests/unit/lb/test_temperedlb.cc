@@ -53,13 +53,13 @@ namespace vt { namespace tests { namespace unit { namespace lb {
 
 using TestTemperedLB = TestParallelHarness;
 
-std::string writeTemperedLBConfig() {
+std::string writeTemperedLBConfig(std::string const& extra_args = "") {
   auto const this_node = theContext()->getNode();
   auto config_file = getUniqueFilename();
   if (this_node == 0) {
     std::ofstream cfg_file_{config_file.c_str(), std::ofstream::out | std::ofstream::trunc};
     cfg_file_ << "0 TemperedLB converge_tolerance=0.001 iters=4 trials=1 "
-      "ordering=ElmID deterministic=true";
+      "ordering=ElmID deterministic=true " << extra_args;
     cfg_file_.close();
   }
   return config_file;
@@ -94,6 +94,14 @@ void runTemperedLBTest(std::string config_file) {
 TEST_F(TestTemperedLB, test_external_lb_adapter) {
   SET_NUM_NODES_CONSTRAINT(4);
   auto cfg = writeTemperedLBConfig();
+  runTemperedLBTest(cfg);
+}
+
+TEST_F(TestTemperedLB, test_external_lb_adapter_with_shared_blocks) {
+  SET_NUM_NODES_CONSTRAINT(4);
+  auto cfg = writeTemperedLBConfig(
+    "criterion=Grapevine delta=0.1 memory_threshold=20"
+  );
   runTemperedLBTest(cfg);
 }
 

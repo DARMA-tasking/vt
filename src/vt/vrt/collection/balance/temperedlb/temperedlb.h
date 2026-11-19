@@ -101,6 +101,18 @@ protected:
   }
 
 private:
+  struct MemoryInfo {
+    bool working = false;
+    bool footprint = false;
+    bool serialized = false;
+    bool shared = false;
+    bool rank_footprint = false;
+  };
+
+  void collectMemoryInfo(
+    bool working, bool footprint, bool serialized, bool shared, bool rank_footprint
+  );
+
   int32_t fanout_ = 2;
   int32_t rounds_ = 1;
   int32_t num_iters_ = 10;
@@ -121,6 +133,7 @@ private:
 
   objgroup::proxy::Proxy<TemperedLB> proxy_ = {};
   Mapping global_mapping_ = {};
+  MemoryInfo global_memory_info_ = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

@@ -147,6 +147,12 @@ void TemperedLB::inputParams(balance::ConfigEntry* config) {
   vtAbortIf(num_trials_ < 1, "TemperedLB trials must be positive");
 }
 
+void TemperedLB::collectMemoryInfo(
+  bool working, bool footprint, bool serialized, bool shared, bool rank_footprint
+) {
+  global_memory_info_ = {working, footprint, serialized, shared, rank_footprint};
+}
+
 void TemperedLB::runLB([[maybe_unused]] LoadType total_load) {
 #if vt_check_enabled(lblite)
   using ExternalLB = vt_lb::algo::temperedlb::TemperedLB<comm::CommVT>;
@@ -168,11 +174,7 @@ void TemperedLB::runLB([[maybe_unused]] LoadType total_load) {
     gamma_ != 0.0 || delta_ != 0.0 || memory_threshold_ > 0.0;
 
   bool const has_user_data = load_model_->hasUserData();
-  bool has_memory_info = false;
-  bool has_working_memory = false;
-  bool has_footprint_memory = false;
-  bool has_serialized_memory = false;
-  bool has_shared_memory = false;
+  MemoryInfo memory_info;
   double rank_footprint = 0.0;
 
   for (auto it = load_model_->begin(); it != load_model_->end(); ++it) {
@@ -196,13 +198,13 @@ void TemperedLB::runLB([[maybe_unused]] LoadType total_load) {
         }
         if (key == "task_working_bytes") {
           working = *numeric;
-          has_working_memory = true;
+          memory_info.working = true;
         } else if (key == "task_footprint_bytes") {
           footprint = *numeric;
-          has_footprint_memory = true;
+          memory_info.footprint = true;
         } else if (key == "task_serialized_bytes") {
           serialized = *numeric;
-          has_serialized_memory = true;
+          memory_info.serialized = true;
         } else if (key == "rank_working_bytes") {
           rank_footprint = *numeric;
         } else if (key == "shared_id") {
@@ -226,7 +228,7 @@ void TemperedLB::runLB([[maybe_unused]] LoadType total_load) {
     if (shared_id && use_shared_blocks) {
       task.addSharedBlock(*shared_id);
       shared_ids.insert(*shared_id);
-      has_shared_memory = true;
+      memory_info.shared = true;
       if (shared_size) {
         shared_sizes[*shared_id] = *shared_size;
       }
@@ -263,7 +265,7 @@ void TemperedLB::runLB([[maybe_unused]] LoadType total_load) {
       shared_ids.insert(shared_id);
       shared_homes[shared_id] = key.toNode();
       shared_sizes[shared_id] = volume.bytes;
-      has_shared_memory = true;
+      memory_info.shared = true;
     }
   }
 
@@ -279,10 +281,16 @@ void TemperedLB::runLB([[maybe_unused]] LoadType total_load) {
   phase_data->setRankFootprintBytes(rank_footprint);
   phase_data->setRankMaxMemoryAvailable(memory_threshold_);
 
-  has_memory_info = memory_threshold_ > 0.0 && (
-    has_working_memory || has_footprint_memory || has_serialized_memory ||
-    has_shared_memory || rank_footprint > 0.0
-  );
+  if (memory_threshold_ > 0.0) {
+    // LB computes memory statistics collectively, even on ranks without tasks.
+    runInEpochCollective("TemperedLB: gather memory availability", [&] {
+      proxy_.allreduce<&TemperedLB::collectMemoryInfo, collective::OrOp>(
+        memory_info.working, memory_info.footprint, memory_info.serialized,
+        memory_info.shared, rank_footprint > 0.0
+      );
+    });
+    memory_info = global_memory_info_;
+  }
 
   ExternalConfig external_config{static_cast<int>(theContext()->getNumNodes())};
   external_config.f_ = fanout_;
@@ -296,11 +304,14 @@ void TemperedLB::runLB([[maybe_unused]] LoadType total_load) {
   external_config.work_model_.beta = beta_;
   external_config.work_model_.gamma = gamma_;
   external_config.work_model_.delta = delta_;
-  external_config.work_model_.has_memory_info = has_memory_info;
-  external_config.work_model_.has_task_working_memory_info = has_working_memory;
-  external_config.work_model_.has_task_footprint_memory_info = has_footprint_memory;
-  external_config.work_model_.has_task_serialized_memory_info = has_serialized_memory;
-  external_config.work_model_.has_shared_block_memory_info = has_shared_memory;
+  external_config.work_model_.has_memory_info = memory_threshold_ > 0.0 && (
+    memory_info.working || memory_info.footprint || memory_info.serialized ||
+    memory_info.shared || memory_info.rank_footprint
+  );
+  external_config.work_model_.has_task_working_memory_info = memory_info.working;
+  external_config.work_model_.has_task_footprint_memory_info = memory_info.footprint;
+  external_config.work_model_.has_task_serialized_memory_info = memory_info.serialized;
+  external_config.work_model_.has_shared_block_memory_info = memory_info.shared;
   external_config.cluster_based_on_communication_ = beta_ != 0.0 || gamma_ != 0.0;
   external_config.cluster_based_on_shared_blocks_ = delta_ != 0.0;
 

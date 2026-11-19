@@ -16,7 +16,9 @@ if test "${VT_CODE_COVERAGE:-0}" -eq 1
 then
     export CODECOV_TOKEN="$CODECOV_TOKEN"
     lcov --capture --directory . --output-file coverage.info
-    lcov --remove coverage.info '/usr/*' --output-file coverage.info
+    # Codecov can match the external temperedlb.h to VT's same-named adapter.
+    lcov --remove coverage.info '/usr/*' "${VT}/lib/LB/*" "${VT}/lib/comm/*" \
+        --output-file coverage.info
     lcov --list coverage.info
 fi
 
