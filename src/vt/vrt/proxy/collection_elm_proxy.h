@@ -46,10 +46,12 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/proxy_traits/proxy_elm_traits.h"
+#include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/vrt/collection/send/sendable.h"
 #include "vt/vrt/collection/insert/insertable.h"
 #include "vt/vrt/proxy/base_elm_proxy.h"
+#include "vt/vrt/vrt_common.h"
 
 #include <iosfwd>
 
@@ -83,17 +85,22 @@ struct VrtElmProxy : ProxyCollectionElmTraits<ColT, IndexT> {
            other.elm_proxy_ == this->elm_proxy_;
   }
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    ProxyCollectionElmTraits<ColT, IndexT>::serialize(s);
-  }
-
   template <typename ColU, typename IndexU>
   friend std::ostream& operator<<(
     std::ostream& os, VrtElmProxy<ColU,IndexU> const& vrt
   );
 
   friend struct CollectionManager;
+
+  IndexT getIndex() { return this->getElementProxy().getIndex(); }
+
+  template <typename SerT>
+  void serialize(SerT& s);
+
+  //Deserialize without placing values into the runtime,
+  //just return the element pointer.
+  template <typename SerT>
+  std::unique_ptr<ColT> deserializeToElm(SerT& s);
 };
 
 template <typename ColT, typename IndexT>

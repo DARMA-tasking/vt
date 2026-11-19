@@ -50,7 +50,11 @@ namespace vt { namespace vrt { namespace collection { namespace storage {
 
 template <typename SerializerT>
 void Storable::serialize(SerializerT& s) {
-  s | map_;
+  //We need a traitless serializer, since StoreElmBase uses virtual
+  //serialization. It doesn't use any traits to specialize serializing
+  //though, so this is fine.
+  auto clean_s = s.setTraits();
+  clean_s | map_;
 }
 
 template <typename U>
