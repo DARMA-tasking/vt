@@ -82,7 +82,7 @@ x-ccache: &ccache
 x-vtopts: &vtopts
   BUILD_SHARED_LIBS: ${VT_BUILD_SHARED_LIBS:-0}
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
-  CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD:-17}
+  CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD:-20}
   CODECOV_TOKEN: ${CODECOV_TOKEN:-}
   http_proxy: ${PROXY-}
   https_proxy: ${PROXY-}

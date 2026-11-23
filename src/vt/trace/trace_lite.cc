@@ -218,7 +218,7 @@ void TraceLite::setupNames([[maybe_unused]] std::string const& in_prog_name) {
   auto const trace_name = tc[tc.size() - 1];
   auto const prog_name = pc[pc.size() - 1];
 
-  auto const node_str = "." + std::to_string(node) + ".log.gz";
+  auto const node_str = std::string{"."} + std::to_string(node) + ".log.gz";
   if (theConfig()->vt_trace_file.empty()) {
     full_trace_name_ = full_dir_name_ + trace_name;
     full_sts_name_ = full_dir_name_ + prog_name + ".sts";

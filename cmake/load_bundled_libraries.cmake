@@ -21,33 +21,23 @@ endif()
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 
 # Use an external fmt package or configure VT's shared DARMA fmt provider.
-if(${vt_external_fmt})
-  # user should provide 'fmt_DIR' or 'fmt_ROOT' to CMake (unless fmt is installed in system libs)
-  if(fmt_ROOT)
-    message(STATUS "vt_external_fmt = ON. Using fmt located at ${fmt_ROOT}")
-  elseif(fmt_DIR)
-    message(STATUS "vt_external_fmt = ON. Using fmt located at ${fmt_DIR}")
-  else()
-    message(STATUS "vt_external_fmt = ON but neither fmt_DIR nor fmt_ROOT is provided!")
-  endif()
-  find_package(fmt 10.2.1 REQUIRED)
-  set(FMT_LIBRARY "")
-  set(FMT_LINK_TARGET fmt::fmt)
+include(setup_fmt)
+if(vt_external_fmt AND NOT TARGET fmt::fmt)
+  find_package(fmt 12.2.0 EXACT CONFIG REQUIRED)
+  # Record the verified package version for setup_fmt's existing reuse check.
+  set_property(TARGET fmt::fmt PROPERTY INTERFACE_DARMA_FMT_VERSION 120200)
+endif()
+darma_setup_fmt(
+  SOURCE_DIR         "${PROJECT_LIB_DIR}/fmt"
+  VENDORED_TARGET    fmt
+  OUT_LIBRARY        FMT_LIBRARY
+  OUT_LINK_TARGET    FMT_LINK_TARGET
+  POST_ADD_COMMAND set_darma_compiler_flags
+)
+if(FMT_LIBRARY OR vt_external_fmt)
   set(vt_uses_parent_fmt 0)
 else()
-  include(setup_fmt)
-  darma_setup_fmt(
-    SOURCE_DIR         "${PROJECT_LIB_DIR}/fmt"
-    VENDORED_TARGET    fmt
-    OUT_LIBRARY        FMT_LIBRARY
-    OUT_LINK_TARGET    FMT_LINK_TARGET
-    POST_ADD_COMMAND set_darma_compiler_flags
-  )
-  if(FMT_LIBRARY)
-    set(vt_uses_parent_fmt 0)
-  else()
-    set(vt_uses_parent_fmt 1)
-  endif()
+  set(vt_uses_parent_fmt 1)
 endif()
 
 # yaml-cpp always included in the build

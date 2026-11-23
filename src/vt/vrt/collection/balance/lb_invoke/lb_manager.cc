@@ -488,8 +488,6 @@ void LBManager::fatalError() {
 
 #if vt_check_enabled(tv)
 struct GatherTVInfo {
-  GatherTVInfo() = default;
-
   std::unordered_map<NodeType, tv::Rank> rank_map;
   std::unordered_map<ElementIDType, tv::ObjectInfo> info;
   PhaseType phase = 0;

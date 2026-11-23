@@ -64,10 +64,7 @@ set(
     rdma/channel rdma/collection rdma/group rdma/state
     rdmahandle
     topos/location
-      topos/location/cache topos/location/message topos/location/record
-      topos/location/utility
-      topos/location/directory
-      topos/location/lookup
+      topos/location/message topos/location/utility
     topos/index
       topos/index/dense topos/index/traits topos/index/printer
     topos/mapping
@@ -138,6 +135,7 @@ install(
   DESTINATION                ${VT_INSTALL_DESTINATION}
   CONFIGURATIONS             ${build_type_list}
 )
+
 file(
   GLOB
   HEADER_FILES
@@ -213,7 +211,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/../cmake/build_git_info.cmake)
 
 target_compile_features(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
-  cxx_std_17
+  cxx_std_20
 )
 
 include(turn_on_warnings)
@@ -263,6 +261,7 @@ include(../cmake/define_build_types.cmake)
 target_include_directories(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/src>
+  $<BUILD_INTERFACE:${VT_LOC_INCLUDE_DIRECTORIES}>
   $<INSTALL_INTERFACE:${VT_EXTERNAL_DESTINATION}>
 )
 

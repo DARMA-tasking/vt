@@ -55,23 +55,7 @@ namespace vt { namespace location {
 using NodeActionType = std::function<void(NodeType)>;
 using ExistsNodeActionType = std::function<void(bool, NodeType)>;
 using LocMsgActionType = std::function<void(BaseMessage * )>;
-using LocEventID = int64_t;
-
-static constexpr LocEventID const no_location_event_id = -1;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-static LocEventID fst_location_event_id = 0;
-#pragma GCC diagnostic pop
-
-using LocationSizeType = size_t;
-static constexpr LocationSizeType const default_max_cache_size = 4096;
-
 static constexpr ByteType const small_msg_max_size = 256;
-
-using LocInstType = int64_t;
-
-static constexpr LocInstType const no_loc_inst = -1;
 
 }}  // end namespace vt::location
 

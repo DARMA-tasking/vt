@@ -43,6 +43,10 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
+#include <string>
+#include <utility>
+
 #include "vt/utils/demangle/demangle.h"
 #include "test_harness.h"
 
@@ -95,52 +99,49 @@ struct TestDemanglerUtils : TestHarness {
 using TE = vt::util::demangle::TemplateExtract;
 
 TEST_F(TestDemanglerUtils, test_getVoidFuncStrArgs) {
-  std::vector<std::tuple<std::string, std::string>> data;
-  data.emplace_back("", "");
-  data.emplace_back("not-starting-void", "not-starting-void");
-  data.emplace_back("void(with-extra-at)end", "void(with-extra-at)end");
-  data.emplace_back("void ()", "");
-  data.emplace_back("void (foo)", "foo");
-  data.emplace_back("void(foo)", "foo");
-  data.emplace_back("void (dontcare-unbalanced))", "dontcare-unbalanced)");
-  data.emplace_back("void (fn())", "fn()");
-  data.emplace_back("void (fn(a))", "fn(a)");
-  data.emplace_back("void (fn(*)(a,b,c,d))", "fn(*)(a,b,c,d)");
+  std::array<std::pair<std::string, std::string>, 10> const data = {{
+    {"", ""},
+    {"not-starting-void", "not-starting-void"},
+    {"void(with-extra-at)end", "void(with-extra-at)end"},
+    {"void ()", ""},
+    {"void (foo)", "foo"},
+    {"void(foo)", "foo"},
+    {"void (dontcare-unbalanced))", "dontcare-unbalanced)"},
+    {"void (fn())", "fn()"},
+    {"void (fn(a))", "fn(a)"},
+    {"void (fn(*)(a,b,c,d))", "fn(*)(a,b,c,d)"}
+  }};
 
-  for (auto& t : data) {
-    std::string& given = std::get<0>(t);
-    std::string& expected = std::get<1>(t);
+  for (auto const& [given, expected] : data) {
     EXPECT_EQ(TE::getVoidFuncStrArgs(given), expected);
   }
 }
 
 TEST_F(TestDemanglerUtils, test_getNamespace) {
-  std::vector<std::tuple<std::string, std::string>> data;
-  data.emplace_back("", "");
-  data.emplace_back("aa", "");
-  data.emplace_back("aa::bb", "aa");
-  data.emplace_back("&aa::bb", "aa");
-  data.emplace_back("aa::dd<bb::cc<r>>::bare", "aa::dd<bb::cc<r>>");
-  data.emplace_back("aa<a>::dd<d>::bare<e>", "aa<a>::dd<d>");
+  std::array<std::pair<std::string, std::string>, 6> const data = {{
+    {"", ""},
+    {"aa", ""},
+    {"aa::bb", "aa"},
+    {"&aa::bb", "aa"},
+    {"aa::dd<bb::cc<r>>::bare", "aa::dd<bb::cc<r>>"},
+    {"aa<a>::dd<d>::bare<e>", "aa<a>::dd<d>"}
+  }};
 
-  for (auto& t : data) {
-    std::string& given = std::get<0>(t);
-    std::string& expected = std::get<1>(t);
+  for (auto const& [given, expected] : data) {
     EXPECT_EQ(TE::getNamespace(given), expected);
   }
 }
 
 TEST_F(TestDemanglerUtils, test_getBarename) {
-  std::vector<std::tuple<std::string, std::string>> data;
-  data.emplace_back("", "");
-  data.emplace_back("aa", "aa");
-  data.emplace_back("aa::bb", "bb");
-  data.emplace_back("aa::dd<bb::cc<r>>::bare", "bare");
-  data.emplace_back("aa<a>::dd<d>::bare<e>", "bare<e>");
+  std::array<std::pair<std::string, std::string>, 5> const data = {{
+    {"", ""},
+    {"aa", "aa"},
+    {"aa::bb", "bb"},
+    {"aa::dd<bb::cc<r>>::bare", "bare"},
+    {"aa<a>::dd<d>::bare<e>", "bare<e>"}
+  }};
 
-  for (auto& t : data) {
-    std::string& given = std::get<0>(t);
-    std::string& expected = std::get<1>(t);
+  for (auto const& [given, expected] : data) {
     EXPECT_EQ(TE::getBarename(given), expected);
   }
 }
@@ -157,20 +158,18 @@ void someFunc_2(A, B) { }
 } // namespace helpers
 
 TEST_F(TestDemanglerUtils, test_lastNamedPfType) {
-  std::vector<std::tuple<std::string, std::string>> data;
-  data.emplace_back("", "");
-  data.emplace_back(__PRETTY_FUNCTION__, "");
-  data.emplace_back(TestFunctor<helpers::someFunc_0>{}());
-  data.emplace_back(TestFunctor<helpers::someFunc_1>{}());
-  data.emplace_back(TestFunctor<helpers::someFunc_2<int, float>>{}());
-  data.emplace_back(SecondTestFunctor<int, float, helpers::someFunc_0>{}());
-  data.emplace_back(SecondTestFunctor<double, char, helpers::someFunc_1>{}());
-  data.emplace_back(
-    SecondTestFunctor<unsigned, int, helpers::someFunc_2<int, float>>{}());
+  std::array<std::pair<std::string, std::string>, 8> const data = {{
+    {"", ""},
+    {std::string{__PRETTY_FUNCTION__}, std::string{}},
+    TestFunctor<helpers::someFunc_0>{}(),
+    TestFunctor<helpers::someFunc_1>{}(),
+    TestFunctor<helpers::someFunc_2<int, float>>{}(),
+    SecondTestFunctor<int, float, helpers::someFunc_0>{}(),
+    SecondTestFunctor<double, char, helpers::someFunc_1>{}(),
+    SecondTestFunctor<unsigned, int, helpers::someFunc_2<int, float>>{}()
+  }};
 
-  for (auto& t : data) {
-    std::string& spf = std::get<0>(t);
-    std::string& expected = std::get<1>(t);
+  for (auto const& [spf, expected] : data) {
     EXPECT_EQ(TE::lastNamedPfType(spf, "PF_VALUE_NAME"), expected)
       << "spf: " << spf << std::endl;
   }

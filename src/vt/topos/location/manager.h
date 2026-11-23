@@ -48,7 +48,6 @@
 #include "vt/topos/location/location_common.h"
 #include "vt/topos/location/location.fwd.h"
 #include "vt/topos/location/manager.fwd.h"
-#include "vt/topos/location/utility/coord.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/collection/proxy.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
@@ -78,8 +77,6 @@ namespace vt { namespace location {
 struct LocationManager : runtime::component::Component<LocationManager> {
   template <typename LocType>
   using PtrType = LocType*;
-  using LocCoordPtrType = LocationCoord*;
-  using LocInstContainerType = std::unordered_map<LocInstType, LocCoordPtrType>;
   using VrtLocType = EntityLocationCoord<int32_t>;
   using VrtLocProxyType = EntityLocationCoord<VirtualProxyType>;
 
