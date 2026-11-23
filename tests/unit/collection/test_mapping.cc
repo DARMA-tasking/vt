@@ -222,8 +222,9 @@ struct MyDistMapper : vt::mapping::BaseMapper<IndexT> {
     return madeProxy.getProxy();
   }
 
+  // Flip the low bit so that placement differs from the mapper rank at two ranks.
   MyDistMapper()
-    : my_state((theContext()->getNode() * 2993ull) << 5)
+    : my_state(((theContext()->getNode() * 2993ull) << 5) | 1ull)
   { }
 
   struct GetMapMsg : vt::Message {

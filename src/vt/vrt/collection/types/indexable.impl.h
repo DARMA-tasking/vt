@@ -91,6 +91,18 @@ void Indexable<IndexT>::setIndex(IndexT const& in_index) {
 }
 
 template <typename IndexT>
+NodeType Indexable<IndexT>::getCollectionHomeNode() const {
+  return collection_home_override_ == uninitialized_destination
+    ? getElmID().getHomeNode() : collection_home_override_;
+}
+
+template <typename IndexT>
+void Indexable<IndexT>::setCollectionHomeNode(NodeType home) {
+  collection_home_override_ =
+    home == getElmID().getHomeNode() ? uninitialized_destination : home;
+}
+
+template <typename IndexT>
 void Indexable<IndexT>::zeroReduceStamp() {
   *reduce_stamp_ = 0;
 }
