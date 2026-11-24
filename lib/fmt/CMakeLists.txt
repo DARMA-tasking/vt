@@ -305,7 +305,6 @@ set(FMT_DEBUG_POSTFIX d CACHE STRING "Debug library postfix.")
 
 set_target_properties(fmt PROPERTIES
   VERSION ${FMT_VERSION} SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR}
-  PUBLIC_HEADER "${FMT_HEADERS}"
   DEBUG_POSTFIX "${FMT_DEBUG_POSTFIX}"
 
   # Workaround for Visual Studio 2017:
@@ -403,9 +402,14 @@ if (FMT_INSTALL)
           EXPORT ${targets_export_name}
           LIBRARY DESTINATION ${FMT_LIB_DIR}
           ARCHIVE DESTINATION ${FMT_LIB_DIR}
-          PUBLIC_HEADER DESTINATION "${FMT_INC_DIR}/fmt-vt"
           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
           ${INSTALL_FILE_SET})
+
+  # VT also installs fmt into its own export sets. Install headers separately
+  # so those install(TARGETS) calls do not install them again in include/.
+  install(FILES ${FMT_HEADERS}
+          DESTINATION "${FMT_INC_DIR}/fmt-vt"
+          COMPONENT fmt-core)
 
   # Use a namespace because CMake provides better diagnostics for namespaced
   # imported targets.
