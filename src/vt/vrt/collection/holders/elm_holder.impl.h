@@ -56,8 +56,8 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
-ElementHolder<IndexT>::ElementHolder(VirtualPtrType in_vc_ptr)
-  : vc_ptr_(std::move(in_vc_ptr))
+ElementHolder<IndexT>::ElementHolder(VirtualPtrType in_vc_ptr_)
+  : vc_ptr_(std::move(in_vc_ptr_))
 { }
 
 template <typename IndexT>

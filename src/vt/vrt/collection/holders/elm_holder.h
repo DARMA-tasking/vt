@@ -63,7 +63,7 @@ template <typename IndexT>
 struct ElementHolder {
   using VirtualPtrType = std::unique_ptr<Indexable<IndexT>>;
 
-  explicit ElementHolder(VirtualPtrType in_vc_ptr);
+  explicit ElementHolder(VirtualPtrType in_vc_ptr_);
   ElementHolder(ElementHolder&&) = default;
 
   virtual ~ElementHolder() = default;
