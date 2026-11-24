@@ -1210,6 +1210,7 @@ bool CollectionManager::insertCollectionElement(
   );
 
   if (!destroyed) {
+    vc->setCollectionHomeNode(home_node);
     elm_holder->insert(idx, typename Holder<IndexT>::InnerHolder{
       std::move(vc)
     });
@@ -1998,8 +1999,9 @@ void CollectionManager::destroyMatching(
   typeless_holder_.destroyCollection(untyped_proxy);
   auto elm_holder = findElmHolder<IndexT>(untyped_proxy);
   if (elm_holder) {
-    elm_holder->foreach([&](IndexT const& idx, Indexable<IndexT>*) {
-      auto const home = getMappedNode<IndexT>(untyped_proxy, idx);
+    elm_holder->foreach([&](IndexT const& idx, Indexable<IndexT>* elm) {
+      // Cleanup can run after termination, when a mapper cannot communicate.
+      auto const home = elm->getCollectionHomeNode();
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementDestroyed, idx, home
       );
@@ -2281,7 +2283,10 @@ void CollectionManager::restoreFromFileInPlace(
     vtAssertExpr(elm_exists);
 
     auto ptr = elm_holder->lookup(idx).getRawPtr();
+    // Deserialization can change the element ID without changing its registration.
+    auto const home_node = ptr->getCollectionHomeNode();
     checkpoint::deserializeInPlaceFromFile<ColT>(file_name, static_cast<ColT*>(ptr));
+    ptr->setCollectionHomeNode(home_node);
     ptr->lb_data_.resetPhase();
   }
 }

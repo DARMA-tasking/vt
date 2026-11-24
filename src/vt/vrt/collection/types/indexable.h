@@ -74,6 +74,9 @@ private:
 
   void setIndex(IndexT const& in_index);
 
+  NodeType getCollectionHomeNode() const;
+  void setCollectionHomeNode(NodeType home);
+
 private:
   // The index stored with the collection element
   IndexT index_;
@@ -81,6 +84,9 @@ private:
   // constructor overload has no index, it will not be set until the its set
   // through the `CollectionTypeAttorney`
   bool set_index_ = false;
+  // Local registration state for elements whose routing home differs from
+  // the home encoded in their element ID (e.g., an off-home insertion).
+  NodeType collection_home_override_ = uninitialized_destination;
 
 public:
   /**

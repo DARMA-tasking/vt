@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/manager.h"
 
 #include <cstdint>
+#include <map>
 
 namespace vt { namespace tests { namespace unit { namespace insert {
 
@@ -157,6 +158,8 @@ TEST_F(TestInsert, test_insert_sparse_1) {
 }
 
 TEST_F(TestInsert, test_insert_dense_node_1) {
+  using vrt::collection::listener::ElementEventEnum;
+
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
 
@@ -166,6 +169,20 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
     .dynamicMembership(true)
     .bounds(range)
     .wait();
+
+  std::map<Index1D, NodeType> registered_homes;
+  theCollection()->registerElementListener<InsertTest, Index1D>(
+    proxy.getProxy(), [&](ElementEventEnum event, Index1D idx, NodeType home) {
+      if (event == ElementEventEnum::ElementCreated) {
+        registered_homes.emplace(idx, home);
+      } else if (event == ElementEventEnum::ElementDestroyed) {
+        auto const iter = registered_homes.find(idx);
+        ASSERT_NE(iter, registered_homes.end());
+        EXPECT_EQ(home, iter->second);
+        registered_homes.erase(iter);
+      }
+    }
+  );
 
   auto token = proxy.beginModification();
   if (this_node == 0) {
@@ -180,6 +197,14 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
   if (this_node == 0) {
     EXPECT_EQ(num_inserted, num_elms_per_node * num_nodes);
   }
+  EXPECT_EQ(registered_homes.size(), static_cast<std::size_t>(num_inserted));
+
+  vt::runInEpochCollective([&]{
+    if (this_node == 0) {
+      proxy.destroy();
+    }
+  });
+  EXPECT_TRUE(registered_homes.empty());
   num_inserted = 0;
 }
 
