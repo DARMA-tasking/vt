@@ -92,14 +92,18 @@ void Indexable<IndexT>::setIndex(IndexT const& in_index) {
 
 template <typename IndexT>
 NodeType Indexable<IndexT>::getCollectionHomeNode() const {
-  return collection_home_override_ == uninitialized_destination
-    ? getElmID().getHomeNode() : collection_home_override_;
+  auto const home_override = collection_home_override_;
+  auto const has_home_override = home_override != uninitialized_destination;
+  return has_home_override ? home_override : getElmID().getHomeNode();
 }
 
 template <typename IndexT>
 void Indexable<IndexT>::setCollectionHomeNode(NodeType home) {
-  collection_home_override_ =
-    home == getElmID().getHomeNode() ? uninitialized_destination : home;
+  if (home == getElmID().getHomeNode()) {
+    collection_home_override_ = uninitialized_destination;
+  } else {
+    collection_home_override_ = home;
+  }
 }
 
 template <typename IndexT>
