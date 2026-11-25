@@ -291,6 +291,8 @@ target "vt-build-all" {
     item = [
       {
         image = "amd64-alpine-3.16-clang-cpp"
+        vt_extended_tests = 1
+        vt_lb = 1
         vt_production_build = 1
       },
       {
@@ -313,18 +315,20 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
-        vt_lb = 0
         vt_tests_num_nodes = 8
       },
       {
         image = "amd64-ubuntu-20.04-gcc-10-openmpi-cpp"
-        vt_lb = 0 # Spack pack. does not stage exter. LB and comm src
+        # The Spack package does not yet stage the external LB and comm sources.
+        vt_lb = 0
         vt_trace_only = 1
         vt_test_spack = 1
         variant = "spack"
       },
       {
         image = "amd64-ubuntu-24.04-gcc-13-cuda-12.9.0-cpp"
+        # The external LB/comm C++20 stack does not yet compile with nvcc_wrapper.
+        vt_lb = 0
         vt_debug_verbose = 1
         vt_diagnostics = 0
         vt_extended_tests = 0
@@ -343,6 +347,7 @@ target "vt-build-all" {
         image = "amd64-ubuntu-22.04-clang-13-cpp"
         variant = "fcontext"
         vt_fcontext = 1
+        vt_lb = 0
       },
       {
         image = "amd64-ubuntu-22.04-clang-12-cpp",
@@ -352,6 +357,7 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-22.04-clang-13-cpp"
+        vt_build_shared_libs = 1
       },
       {
         image = "amd64-ubuntu-22.04-clang-14-cpp"
@@ -410,6 +416,9 @@ target "vt-build-all" {
       },
       {
         image = "amd64-ubuntu-24.04-gcc-14-cpp"
+        vt_lb = 1
+        vt_extended_tests = 1
+        vt_tests_num_nodes = 4
         vt_perf = 1
       },
       {

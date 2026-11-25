@@ -13,6 +13,8 @@ env | sort
 checkpoint_rev=develop
 loc_rev=develop
 
+source "$(dirname "${BASH_SOURCE[0]}")/lb_repositories.sh"
+
 if [ -z ${4} ]; then
     dashj=""
 else
@@ -118,6 +120,11 @@ then
         git clone -b "${vt_tv_rev}" --depth 1 https://github.com/DARMA-tasking/vt-tv.git
         cd -
     fi
+fi
+
+if test "${VT_LB_ENABLED:-1}" -eq 1
+then
+    clone_lb_repositories "$source_dir"
 fi
 
 if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1

@@ -81,6 +81,7 @@ jobs:
           push: ${{ github.ref == 'refs/heads/develop' }}
           set: |
             *.args.CACHE_ID=${{ matrix.target }}
+            *.args.GITHUB_BASE_REF=${{ github.base_ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           GIT_BRANCH: ${{ github.head_ref || github.ref_name }}

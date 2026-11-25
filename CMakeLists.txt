@@ -75,6 +75,7 @@ include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 include(cmake/load_bundled_libraries.cmake)
 include(cmake/load_local_packages.cmake)
 include(cmake/load_loc_repositories.cmake)
+include(cmake/load_lb_repositories.cmake)
 
 # Primary VT build
 add_subdirectory(src)

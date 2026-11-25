@@ -9,6 +9,8 @@ build_dir=${2}
 checkpoint_rev=develop
 loc_rev=develop
 
+source "$(dirname "${BASH_SOURCE[0]}")/lb_repositories.sh"
+
     export parallel_level=4
 if [ -z ${4} ]; then
     export dashj=""
@@ -68,6 +70,11 @@ then
 else
     cd "${source_dir}/lib"
     git clone -b "${loc_rev}" --depth 1 https://github.com/DARMA-tasking/loc.git
+fi
+
+if test "${VT_LB_ENABLED:-1}" -eq 1
+then
+    clone_lb_repositories "$source_dir"
 fi
 
 if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1
