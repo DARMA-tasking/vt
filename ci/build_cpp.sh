@@ -12,8 +12,8 @@ env | sort
 # Dependency versions, when fetched via git.
 checkpoint_rev=develop
 loc_rev=develop
-lb_rev=${LB_REV:-master}
-comm_rev=${COMM_REV:-master}
+
+source "$(dirname "${BASH_SOURCE[0]}")/lb_repositories.sh"
 
 if [ -z ${4} ]; then
     dashj=""
@@ -124,16 +124,7 @@ fi
 
 if test "${VT_LB_ENABLED:-1}" -eq 1
 then
-    if test ! -f "${source_dir}/lib/LB/CMakeLists.txt"
-    then
-        git clone -b "${lb_rev}" --depth 1 \
-            https://github.com/DARMA-tasking/LB.git "${source_dir}/lib/LB"
-    fi
-    if test ! -f "${source_dir}/lib/comm/CMakeLists.txt"
-    then
-        git clone -b "${comm_rev}" --depth 1 \
-            https://github.com/DARMA-tasking/comm.git "${source_dir}/lib/comm"
-    fi
+    clone_lb_repositories "$source_dir"
 fi
 
 if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1

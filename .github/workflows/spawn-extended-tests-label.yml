@@ -68,6 +68,7 @@ jobs:
           push: false
           set: |
             *.args.CACHE_ID=${{ matrix.target }}-extended
+            *.args.GITHUB_BASE_REF=${{ github.base_ref }}
             *.args.VT_EXTENDED_TESTS_ENABLED=1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}

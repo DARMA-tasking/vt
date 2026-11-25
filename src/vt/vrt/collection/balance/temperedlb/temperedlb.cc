@@ -48,7 +48,11 @@
 #include "vt/vrt/collection/balance/model/load_model.h"
 
 #if vt_check_enabled(lblite)
-#  include <comm/comm/vt/comm_vt.h>
+#  if __has_include(<vt-lb/comm/vt/comm_vt.h>)
+#    include <vt-lb/comm/vt/comm_vt.h>
+#  else
+#    include <comm/comm/vt/comm_vt.h>
+#  endif
 #  include <vt-lb/algo/temperedlb/configuration.h>
 #  include <vt-lb/algo/temperedlb/temperedlb.h>
 #  include <vt-lb/algo/temperedlb/transfer_util.h>
@@ -70,6 +74,14 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 namespace {
+
+#if vt_check_enabled(lblite)
+#  if __has_include(<vt-lb/comm/vt/comm_vt.h>)
+using LBCommunicator = vt_lb::comm::CommVT;
+#  else
+using LBCommunicator = comm::CommVT;
+#  endif
+#endif
 
 template <typename T>
 std::optional<double> numericValue(T const& value) {
@@ -155,7 +167,7 @@ void TemperedLB::collectMemoryInfo(
 
 void TemperedLB::runLB([[maybe_unused]] LoadType total_load) {
 #if vt_check_enabled(lblite)
-  using ExternalLB = vt_lb::algo::temperedlb::TemperedLB<comm::CommVT>;
+  using ExternalLB = vt_lb::algo::temperedlb::TemperedLB<LBCommunicator>;
   using ExternalConfig = vt_lb::algo::temperedlb::Configuration;
   using ExternalTransferUtil = vt_lb::algo::temperedlb::TransferUtil;
   using ExternalTaskType = vt_lb::model::TaskType;
@@ -346,7 +358,7 @@ void TemperedLB::runLB([[maybe_unused]] LoadType total_load) {
   vtAbortIf(cmf == cmfs.end(), "Unknown TemperedLB cmf: " + cmf_);
   external_config.cmf_type_ = cmf->second;
 
-  comm::CommVT communicator;
+  LBCommunicator communicator;
   ExternalLB lb{communicator, external_config};
   lb.inputData(std::move(phase_data));
   auto const local_after = lb.run();

@@ -12,23 +12,25 @@ To build \vt, one must obtain the following dependencies:
   - checkpoint, (*vt* ecosystem)
   - loc,        (*vt* ecosystem)
   - LB, (*vt* ecosystem, when `vt_lb_enabled=1`)
-  - comm, (*vt* ecosystem, when `vt_lb_enabled=1`)
+  - comm, (*vt* ecosystem, when using LB `develop`)
   - MPI         (mpich/openmpi/mvapich/IBM Spectrum MPI/Cray MPICH/etc.)
 
 \subsection automatic-build-deps Automatically build dependencies
 
 Assuming MPI is installed and accessible via CC/CXX, the other required
 dependencies are checkpoint and loc.
-When load balancing is enabled (the default), the LB and comm repositories are
-also required. The easiest way to build them is to clone them inside `vt/lib`:
+When load balancing is enabled (the default), use LB `develop` and comm
+`develop` with VT `develop`. Use LB `master` with VT `main` or `master`.
+LB `master` includes its own communicator. For a VT `develop` build, clone
+the dependencies inside `vt/lib`:
 
 ```bash
 $ git clone git@github.com:DARMA-tasking/vt
 $ cd vt/lib
 $ git clone git@github.com:DARMA-tasking/checkpoint
 $ git clone git@github.com:DARMA-tasking/loc
-$ git clone git@github.com:DARMA-tasking/LB
-$ git clone git@github.com:DARMA-tasking/comm
+$ git clone -b develop git@github.com:DARMA-tasking/LB
+$ git clone -b develop git@github.com:DARMA-tasking/comm
 ```
 
 With these in `vt/lib`, cmake will automatically build them and stitch them into
