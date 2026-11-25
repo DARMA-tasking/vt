@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 clone_lb_repositories() {
     local source_dir=$1
     local vt_branch=${GITHUB_BASE_REF:-${GIT_BRANCH:-${GITHUB_REF_NAME:-}}}
