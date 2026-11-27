@@ -372,7 +372,7 @@ public:
     //
     if (idx.x() == 0) {
       for (size_t jy = 0; jy < ldy; ++jy)
-        tcur_[jy * ldy] = 0.0;
+        tcur_[jy * ldx] = 0.0;
       totalReceive_ -= 1;
     }
 
@@ -384,13 +384,13 @@ public:
 
     if (numObjsX_ == size_t(idx.x()) + 1) {
       for (size_t jy = 0; jy < ldy; ++jy)
-        tcur_[jy * ldy + (ldx - 1)] = 0.0;
+        tcur_[ldx - 1 + jy * ldx] = 0.0;
       totalReceive_ -= 1;
     }
 
     if (numObjsY_ == size_t(idx.y()) + 1) {
       for (size_t jx = 0; jx < ldx; ++jx)
-        tcur_[jx + (ldx - 1)*ldy] = 0.0;
+        tcur_[jx + (ldy - 1) * ldx] = 0.0;
       totalReceive_ -= 1;
     }
 
