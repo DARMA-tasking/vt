@@ -6,6 +6,10 @@ external dependencies come bundled with \vt for ease of compiling.
 
 \section how-to-build Building
 
+C++20 is the minimum language standard for building \vt and applications that
+use it. The CMake build defaults to C++20, and the `vt` target propagates this
+minimum to targets that link against it.
+
 To build \vt, one must obtain the following dependencies:
 
 \subsection required-deps Required
