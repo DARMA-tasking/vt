@@ -59,6 +59,8 @@ runtime.
 
 ## Building
 
+*vt* requires a compiler with C++20 support.
+
 [Learn how to build](https://darma-tasking.github.io/docs/html/vt-build.html)
 *vt* with `cmake` or `docker`.
 
