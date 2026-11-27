@@ -94,8 +94,8 @@ Visualize and Analyze Asynchronous Many-Task Work Distributions and
 Attendant Quantities of Interest</span>.” Sandia Report SAND2023-09312.
 
 Pébaÿ, P. L., N. Slattengren, Sean T. McGovern, and J. Lifflander. 2023.
-“<span class="nocase">Modeling Workloads of a LinearElectromagnetic Code
-for Load BalancingMatrix Assembly</span>.” Sandia Report SAND2023-10469.
+“<span class="nocase">Modeling Workloads of a Linear Electromagnetic Code
+for Load Balancing Matrix Assembly</span>.” Sandia Report SAND2023-10469.
 
 Pébaÿ, P. P., and J. Lifflander. 2019a. “Using
 <span class="nocase">Sandia’s Automatic Report Generator</span> to
